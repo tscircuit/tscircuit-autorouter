@@ -23,42 +23,66 @@ type RepairSampleEntry = {
   sample: DatasetSample
 }
 
+type RepairEntrySelection = {
+  sampleEntries: RepairSampleEntry[]
+  skippedOversizedSampleCount: number
+}
+
 const DEFAULT_REPAIR_MARGIN = 0.2
 
 const selectHighestViolationRepairEntries = ({
   sampleEntries,
   maxSampleEntries,
+  maxRoutePointCountPerSample,
   repairMargin,
 }: {
   sampleEntries: RepairSampleEntry[]
   maxSampleEntries: number | undefined
+  maxRoutePointCountPerSample: number | undefined
   repairMargin: number
-}): RepairSampleEntry[] => {
+}): RepairEntrySelection => {
+  const repairableSampleEntries = sampleEntries.filter(
+    (sampleEntry) =>
+      maxRoutePointCountPerSample === undefined ||
+      (sampleEntry.sample.nodeHdRoutes ?? []).reduce(
+        (total, route) => total + (route.route?.length ?? 0),
+        0,
+      ) <= maxRoutePointCountPerSample,
+  )
+  const skippedOversizedSampleCount =
+    sampleEntries.length - repairableSampleEntries.length
+
   if (maxSampleEntries === undefined) {
-    return sampleEntries
+    return {
+      sampleEntries: repairableSampleEntries,
+      skippedOversizedSampleCount,
+    }
   }
 
-  return sampleEntries
-    .map((sampleEntry, sampleIndex) => ({
-      sampleEntry,
-      sampleIndex,
-      totalViolationCount: getHighDensityRepairViolationCounts({
-        nodeWithPortPoints: sampleEntry.sample.nodeWithPortPoints,
-        nodeHdRoutes: sampleEntry.sample.nodeHdRoutes ?? [],
-        fixedHdRoutes: sampleEntry.fixedHdRoutes,
-        margin: repairMargin,
-      }).totalViolationCount,
-    }))
-    .filter(({ totalViolationCount }) => totalViolationCount > 0)
-    .sort(
-      (firstEntry, secondEntry) =>
-        secondEntry.totalViolationCount - firstEntry.totalViolationCount ||
-        secondEntry.sampleEntry.routeIndexes.length -
-          firstEntry.sampleEntry.routeIndexes.length ||
-        firstEntry.sampleIndex - secondEntry.sampleIndex,
-    )
-    .slice(0, maxSampleEntries)
-    .map(({ sampleEntry }) => sampleEntry)
+  return {
+    sampleEntries: repairableSampleEntries
+      .map((sampleEntry, sampleIndex) => ({
+        sampleEntry,
+        sampleIndex,
+        totalViolationCount: getHighDensityRepairViolationCounts({
+          nodeWithPortPoints: sampleEntry.sample.nodeWithPortPoints,
+          nodeHdRoutes: sampleEntry.sample.nodeHdRoutes ?? [],
+          fixedHdRoutes: sampleEntry.fixedHdRoutes,
+          margin: repairMargin,
+        }).totalViolationCount,
+      }))
+      .filter(({ totalViolationCount }) => totalViolationCount > 0)
+      .sort(
+        (firstEntry, secondEntry) =>
+          secondEntry.totalViolationCount - firstEntry.totalViolationCount ||
+          secondEntry.sampleEntry.routeIndexes.length -
+            firstEntry.sampleEntry.routeIndexes.length ||
+          firstEntry.sampleIndex - secondEntry.sampleIndex,
+      )
+      .slice(0, maxSampleEntries)
+      .map(({ sampleEntry }) => sampleEntry),
+    skippedOversizedSampleCount,
+  }
 }
 
 const doesRectOverlap = (
@@ -234,6 +258,7 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
   readonly obstacleSHI: ObstacleSpatialHashIndex
   readonly colorMap: Record<string, string>
   readonly skippedSampleCount: number
+  readonly skippedOversizedSampleCount: number
 
   repairedRoutesByIndex = new Map<number, HighDensityRoute>()
   activeSampleIndex = 0
@@ -247,6 +272,7 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
     repairMargin?: number
     colorMap?: Record<string, string>
     maxSampleEntries?: number
+    maxRoutePointCountPerSample?: number
   }) {
     super()
     this.repairMargin = params.repairMargin ?? DEFAULT_REPAIR_MARGIN
@@ -264,6 +290,15 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
         params.maxSampleEntries < 0)
     ) {
       throw new Error("maxSampleEntries must be a non-negative integer")
+    }
+    if (
+      params.maxRoutePointCountPerSample !== undefined &&
+      (!Number.isInteger(params.maxRoutePointCountPerSample) ||
+        params.maxRoutePointCountPerSample < 0)
+    ) {
+      throw new Error(
+        "maxRoutePointCountPerSample must be a non-negative integer",
+      )
     }
 
     const routeIndexesByNode = new Map<number, number[]>()
@@ -323,17 +358,22 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
         }
       },
     )
-    this.sampleEntries = selectHighestViolationRepairEntries({
+    const repairEntrySelection = selectHighestViolationRepairEntries({
       sampleEntries,
       maxSampleEntries: params.maxSampleEntries,
+      maxRoutePointCountPerSample: params.maxRoutePointCountPerSample,
       repairMargin: this.repairMargin,
     })
+    this.sampleEntries = repairEntrySelection.sampleEntries
+    this.skippedOversizedSampleCount =
+      repairEntrySelection.skippedOversizedSampleCount
     this.skippedSampleCount = sampleEntries.length - this.sampleEntries.length
 
     this.MAX_ITERATIONS = Math.max(this.sampleEntries.length * 1_000, 100_000)
     this.stats = {
       sampleCount: this.sampleEntries.length,
       skippedSampleCount: this.skippedSampleCount,
+      skippedOversizedSampleCount: this.skippedOversizedSampleCount,
       repairedNodeCount: 0,
       repairedRouteCount: 0,
     }
@@ -398,6 +438,7 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
       this.stats = {
         sampleCount: this.sampleEntries.length,
         skippedSampleCount: this.skippedSampleCount,
+        skippedOversizedSampleCount: this.skippedOversizedSampleCount,
         repairedNodeCount: this.activeSampleIndex,
         repairedRouteCount: this.repairedRoutesByIndex.size,
       }
