@@ -2,10 +2,10 @@ import type { SimpleRouteConnection } from "lib/types"
 import type { HighDensityRoute } from "lib/types/high-density-types"
 
 /**
- * Restores stitched route endpoints to their authoritative PCB port positions
- * and marks them as fixed. Earlier geometric cleanup can slide an endpoint
- * within a pad's axis-aligned obstacle bounds, which is unsafe for a rotated
- * pad.
+ * Finalizes generated routes by restoring authoritative PCB terminal positions,
+ * deriving vias from layer transitions, and clearing stale same-layer segment
+ * markers. Earlier geometric cleanup can slide an endpoint within a pad's
+ * axis-aligned obstacle bounds, which is unsafe for a rotated pad.
  */
 export const lockHdRouteTerminals = (
   hdRoutes: ReadonlyArray<HighDensityRoute>,
@@ -53,33 +53,34 @@ export const lockHdRouteTerminals = (
       }
       terminalByPcbPortId.set(terminal.pcb_port_id, terminal)
     }
-    if (terminalByPcbPortId.size === 0) return hdRoute
-
     const routeEndpointPcbPortIds = [
       terminalIdentity.startPcbPortId,
       terminalIdentity.endPcbPortId,
     ].filter((pcbPortId): pcbPortId is string => pcbPortId !== undefined)
-    if (routeEndpointPcbPortIds.length === 0) return hdRoute
-
-    const uniqueRouteEndpointPcbPortIds = new Set(routeEndpointPcbPortIds)
-    if (
-      uniqueRouteEndpointPcbPortIds.size !== routeEndpointPcbPortIds.length ||
-      routeEndpointPcbPortIds.some(
-        (pcbPortId) => !terminalByPcbPortId.has(pcbPortId),
-      )
-    ) {
-      throw new Error(
-        `Cannot lock PCB terminals for "${hdRoute.connectionName}": route endpoint IDs do not match connection terminal IDs`,
-      )
+    let startTerminal: (typeof connection.pointsToConnect)[number] | undefined
+    let endTerminal: (typeof connection.pointsToConnect)[number] | undefined
+    if (terminalByPcbPortId.size > 0 && routeEndpointPcbPortIds.length > 0) {
+      const uniqueRouteEndpointPcbPortIds = new Set(routeEndpointPcbPortIds)
+      if (
+        uniqueRouteEndpointPcbPortIds.size !== routeEndpointPcbPortIds.length ||
+        routeEndpointPcbPortIds.some(
+          (pcbPortId) => !terminalByPcbPortId.has(pcbPortId),
+        )
+      ) {
+        throw new Error(
+          `Cannot lock PCB terminals for "${hdRoute.connectionName}": route endpoint IDs do not match connection terminal IDs`,
+        )
+      }
+      if (terminalIdentity.startPcbPortId) {
+        startTerminal = terminalByPcbPortId.get(terminalIdentity.startPcbPortId)
+      }
+      if (terminalIdentity.endPcbPortId) {
+        endTerminal = terminalByPcbPortId.get(terminalIdentity.endPcbPortId)
+      }
     }
 
-    const startTerminal = terminalIdentity.startPcbPortId
-      ? terminalByPcbPortId.get(terminalIdentity.startPcbPortId)
-      : undefined
-    const endTerminal = terminalIdentity.endPcbPortId
-      ? terminalByPcbPortId.get(terminalIdentity.endPcbPortId)
-      : undefined
-
+    const hasLockedTerminals =
+      startTerminal !== undefined || endTerminal !== undefined
     const route = hdRoute.route.map((point, pointIndex) => {
       if (pointIndex === 0 && startTerminal) {
         return {
@@ -98,10 +99,34 @@ export const lockHdRouteTerminals = (
         }
       }
       const interiorPoint = { ...point }
-      delete interiorPoint.pcb_port_id
+      if (hasLockedTerminals) delete interiorPoint.pcb_port_id
       return interiorPoint
     })
 
-    return { ...hdRoute, route }
+    const finalizedRoute = route.map((point, pointIndex, points) => {
+      const finalizedPoint = { ...point }
+      const nextPoint = points[pointIndex + 1]
+      if (
+        finalizedPoint.toNextSegmentType === "through_obstacle" &&
+        (!nextPoint || finalizedPoint.z === nextPoint.z)
+      ) {
+        delete finalizedPoint.toNextSegmentType
+      }
+      return finalizedPoint
+    })
+    const vias: HighDensityRoute["vias"] = []
+    for (
+      let pointIndex = 0;
+      pointIndex < finalizedRoute.length - 1;
+      pointIndex++
+    ) {
+      const point = finalizedRoute[pointIndex]!
+      const nextPoint = finalizedRoute[pointIndex + 1]!
+      if (point.z === nextPoint.z) continue
+      if (point.toNextSegmentType === "through_obstacle") continue
+      vias.push({ x: point.x, y: point.y })
+    }
+
+    return { ...hdRoute, route: finalizedRoute, vias }
   })
 }
