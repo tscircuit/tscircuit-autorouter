@@ -20,6 +20,9 @@ approximate hypergraph topologies. It is not the default autorouter.
 - Assign real boundary ports with a greedy layer, reuse, and local-crossing
   penalty. This avoids tiny-hypergraph's expensive exact port assignment and
   rip-up loop.
+- Preserve graph reachability with strongly penalized approximate bridges only
+  where obstacle sampling removes every boundary choice or an exact component
+  terminal has no usable escape into the global mesh.
 - Route exact component-topology cells and high-risk approximate cells with
   the normal intra-node solver. Lower-risk cells use direct geometry and rely
   on the retained force-improvement, stitching, simplification, and exact DRC

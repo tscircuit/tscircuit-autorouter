@@ -133,7 +133,19 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
     if (!includesSharedRootBridge || pathRoutes.length >= sameRootRoutes.length)
       return null
 
-    return pathRoutes
+    return pathRoutes.map((route) =>
+      currentRouteSet.has(route)
+        ? route
+        : {
+            ...route,
+            // Same-root bridge routes can pass through PCB terminals belonging
+            // to another point-pair connection. Those identities are internal
+            // to this stitched path and must not replace this connection's two
+            // terminal identities.
+            startPcbPortId: undefined,
+            endPcbPortId: undefined,
+          },
+    )
   }
 
   constructor(params: {

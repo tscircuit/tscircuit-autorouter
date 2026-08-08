@@ -64,6 +64,7 @@ export class ApproximatePortPointLimiterSolver extends BaseSolver {
     let outputPortCount = 0
     let preservedExactSegmentCount = 0
     let obstacleRejectedPortCount = 0
+    let bridgedObstacleSegmentCount = 0
     const obstacleZLayers = new Map(
       this.params.obstacles.map((obstacle) => [
         obstacle,
@@ -132,9 +133,26 @@ export class ApproximatePortPointLimiterSolver extends BaseSolver {
           ).map((portPoint) => portPoint.segmentPortPointId),
         ),
       )
-      const portPoints = candidatePortPoints.filter((portPoint) =>
+      let portPoints = candidatePortPoints.filter((portPoint) =>
         selectedPortPointIds.has(portPoint.segmentPortPointId),
       )
+      if (portPoints.length === 0 && segment.portPoints.length > 0) {
+        const bridgePort = [...segment.portPoints].sort(
+          (a, b) =>
+            a.distToCentermostPortOnZ - b.distToCentermostPortOnZ ||
+            a.segmentPortPointId.localeCompare(b.segmentPortPointId),
+        )[0]!
+        portPoints = [
+          {
+            ...bridgePort,
+            tinyHypergraphPortPenalty: Math.max(
+              bridgePort.tinyHypergraphPortPenalty ?? 0,
+              1_000,
+            ),
+          },
+        ]
+        bridgedObstacleSegmentCount++
+      }
       outputPortCount += portPoints.length
 
       return {
@@ -152,6 +170,7 @@ export class ApproximatePortPointLimiterSolver extends BaseSolver {
       removedPortCount: inputPortCount - outputPortCount,
       preservedExactSegmentCount,
       obstacleRejectedPortCount,
+      bridgedObstacleSegmentCount,
     }
     this.solved = true
   }

@@ -48,6 +48,8 @@ const DEFAULT_LAYER_CHANGE_COST = 4
 const DEFAULT_REGION_CAPACITY_COST = 20
 
 class ApproximateCapacityRegionPathSolver extends RegionPathSolver {
+  private readonly maxEdgeCenterDistance: number
+
   constructor(
     topology: TinyHyperGraphTopology,
     problem: TinyHyperGraphProblem,
@@ -57,6 +59,160 @@ class ApproximateCapacityRegionPathSolver extends RegionPathSolver {
     super(topology, problem, {
       MM_COST_FOR_FULL_REGION: regionCapacityCost,
     })
+    this.maxEdgeCenterDistance = this.regionGraph.edges.reduce(
+      (maximum, edge) => Math.max(maximum, edge.centerDistance),
+      1e-6,
+    )
+  }
+
+  private getGeometricHeuristic(regionId: number, goalRegionId: number) {
+    return (
+      50 *
+      Math.hypot(
+        this.regionGraph.regionCenterX[regionId] -
+          this.regionGraph.regionCenterX[goalRegionId],
+        this.regionGraph.regionCenterY[regionId] -
+          this.regionGraph.regionCenterY[goalRegionId],
+      ) / this.maxEdgeCenterDistance
+    )
+  }
+
+  private hasStaticReachability(
+    startRegionId: number,
+    goalRegionId: number,
+  ): boolean {
+    const seen = new Uint8Array(this.regionGraph.regionCount)
+    const queue = new Int32Array(this.regionGraph.regionCount)
+    let head = 0
+    let tail = 0
+    queue[tail++] = startRegionId
+    seen[startRegionId] = 1
+
+    while (head < tail) {
+      const regionId = queue[head++]!
+      if (regionId === goalRegionId) return true
+      for (const edge of this.regionGraph.incidentEdges[regionId] ?? []) {
+        const nextRegionId =
+          edge.regionIdA === regionId ? edge.regionIdB : edge.regionIdA
+        if (
+          seen[nextRegionId] ||
+          this.isRegionReservedForDifferentNet(nextRegionId)
+        ) {
+          continue
+        }
+        seen[nextRegionId] = 1
+        queue[tail++] = nextRegionId
+      }
+    }
+    return false
+  }
+
+  override _step(): void {
+    const routeIdAtStart =
+      this.state.currentRouteId ?? this.state.unroutedRoutes[0]
+    do {
+      this.stepCandidate()
+    } while (
+      !this.solved &&
+      !this.failed &&
+      this.state.currentRouteId === routeIdAtStart
+    )
+  }
+
+  private stepCandidate(): void {
+    const { state, regionProblem } = this
+    if (state.currentRouteId === undefined) {
+      if (state.unroutedRoutes.length === 0) {
+        this.solved = true
+        this.updateStats()
+        return
+      }
+      const nextRouteId = state.unroutedRoutes.shift()
+      if (nextRouteId === undefined) {
+        this.failed = true
+        this.error = "Failed to pull the next route from the region-route queue"
+        return
+      }
+      state.currentRouteId = nextRouteId
+      state.currentRouteNetId = regionProblem.routeNet[nextRouteId]
+      state.goalRegionId = regionProblem.routeEndRegion[nextRouteId]
+      const startRegionId = regionProblem.routeStartRegion[nextRouteId]
+      if (startRegionId === undefined || state.goalRegionId === undefined) {
+        this.failed = true
+        this.error = `Route ${nextRouteId} is missing region endpoints`
+        return
+      }
+      if (!this.hasStaticReachability(startRegionId, state.goalRegionId)) {
+        this.failed = true
+        this.error = `No static region path found for route ${nextRouteId}`
+        return
+      }
+      state.candidateQueue.clear()
+      this.resetCandidateBestCosts()
+      const g = this.computeRegionEntryCost(startRegionId)
+      const h = this.getGeometricHeuristic(startRegionId, state.goalRegionId)
+      state.candidateQueue.queue({
+        regionId: startRegionId,
+        g,
+        h,
+        f: g + h,
+      })
+      this.setCandidateBestCost(startRegionId, g)
+      this.updateStats()
+      if (startRegionId === state.goalRegionId) {
+        this.onPathFound(state.candidateQueue.dequeue()!)
+        return
+      }
+    }
+
+    const currentCandidate = state.candidateQueue.dequeue()
+    if (!currentCandidate) {
+      this.failed = true
+      this.error = `No region path found for route ${state.currentRouteId}`
+      return
+    }
+    if (
+      currentCandidate.g >
+      this.getCandidateBestCost(currentCandidate.regionId) + Number.EPSILON
+    ) {
+      return
+    }
+    if (currentCandidate.regionId === state.goalRegionId) {
+      this.onPathFound(currentCandidate)
+      return
+    }
+    if (this.isRegionReservedForDifferentNet(currentCandidate.regionId)) {
+      return
+    }
+
+    for (const edge of this.regionGraph.incidentEdges[
+      currentCandidate.regionId
+    ] ?? []) {
+      const nextRegionId =
+        edge.regionIdA === currentCandidate.regionId
+          ? edge.regionIdB
+          : edge.regionIdA
+      if (this.isRegionReservedForDifferentNet(nextRegionId)) continue
+      const g =
+        currentCandidate.g + this.computeRegionEntryCost(nextRegionId)
+      if (
+        !Number.isFinite(g) ||
+        g >= this.getCandidateBestCost(nextRegionId) - Number.EPSILON
+      ) {
+        continue
+      }
+      const h = this.getGeometricHeuristic(nextRegionId, state.goalRegionId)
+      const nextCandidate = {
+        regionId: nextRegionId,
+        prevRegionId: currentCandidate.regionId,
+        prevCandidate: currentCandidate,
+        g,
+        h,
+        f: g + h,
+      }
+      this.setCandidateBestCost(nextRegionId, g)
+      state.candidateQueue.queue(nextCandidate)
+    }
   }
 
   override computeRegionEntryCost(regionId: number): number {
@@ -132,6 +288,87 @@ const getConnectionOrThrow = (
   return connection.simpleRouteConnection
 }
 
+const addIsolatedTerminalEscapeBridges = (
+  params: TinyHypergraphRegionPathingSolverParams,
+): number => {
+  let bridgeCount = 0
+  const bridgedRegionAndZ = new Set<string>()
+  for (const connection of params.connections) {
+    const simpleRouteConnection = getConnectionOrThrow(connection)
+    for (const { endpointIndex, endpoint } of [
+      { endpointIndex: 0 as const, endpoint: "start" as const },
+      { endpointIndex: 1 as const, endpoint: "end" as const },
+    ]) {
+      const endpointRegion =
+        endpointIndex === 0 ? connection.startRegion : connection.endRegion
+      const hasUsableEscapePort = endpointRegion.ports.some((port) => {
+        const otherRegion =
+          port.region1 === endpointRegion ? port.region2 : port.region1
+        return (
+          !otherRegion.d._containsObstacle ||
+          otherRegion.d._connectedTo?.includes(
+            connection.mutuallyConnectedNetworkId,
+          ) ||
+          otherRegion.d._connectedTo?.includes(connection.connectionId)
+        )
+      })
+      if (hasUsableEscapePort) continue
+      const point = simpleRouteConnection.pointsToConnect[endpointIndex]
+      const z = getConnectionPointZ({
+        point,
+        region: endpointRegion,
+        layerCount: params.layerCount,
+      })
+      const bridgeKey = `${endpointRegion.regionId}\u0000${z}`
+      if (bridgedRegionAndZ.has(bridgeKey)) continue
+
+      const candidates = params.graph.regions
+        .filter(
+          (region) =>
+            region !== endpointRegion &&
+            region.d.availableZ.includes(z) &&
+            region.d._skipEndpointNetReservation,
+        )
+        .sort(
+          (a, b) =>
+            Math.hypot(
+              a.d.center.x - point.x,
+              a.d.center.y - point.y,
+            ) -
+              Math.hypot(
+                b.d.center.x - point.x,
+                b.d.center.y - point.y,
+              ) || a.regionId.localeCompare(b.regionId),
+        )
+      const escapeRegion = candidates[0]
+      if (!escapeRegion) continue
+
+      const portId = `approx-terminal-escape:${connection.connectionId}:${endpoint}:z${z}`
+      const port: RegionPortHg = {
+        portId,
+        region1: endpointRegion,
+        region2: escapeRegion,
+        d: {
+          portId,
+          x: point.x,
+          y: point.y,
+          z,
+          distToCentermostPortOnZ: 0,
+          cramped: true,
+          regions: [endpointRegion, escapeRegion],
+          tinyHypergraphPortPenalty: 2_000,
+        },
+      }
+      endpointRegion.ports.push(port)
+      escapeRegion.ports.push(port)
+      params.graph.ports.push(port)
+      bridgedRegionAndZ.add(bridgeKey)
+      bridgeCount++
+    }
+  }
+  return bridgeCount
+}
+
 const buildInputNodesWithPortPoints = (
   params: HgPortPointPathingSolverParams,
 ): InputNodeWithPortPoints[] =>
@@ -180,12 +417,14 @@ export class TinyHypergraphRegionPathingSolver extends BaseSolver {
   private readonly connectionById: Map<string, ConnectionHgWithNetId>
   private readonly portsByRegionPair = new Map<string, RegionPortHg[]>()
   private readonly assignedPortUsage = new Map<string, number>()
+  private readonly terminalEscapeBridgeCount: number
   private output?: MaterializedOutput
 
   constructor(
     private readonly params: TinyHypergraphRegionPathingSolverParams,
   ) {
     super()
+    this.terminalEscapeBridgeCount = addIsolatedTerminalEscapeBridges(params)
     const serializedGraph = buildSerializedTinyGraphForRegionPathing(params)
     const { topology, problem } = loadSerializedHyperGraph(serializedGraph)
     this.regionPathSolver = new ApproximateCapacityRegionPathSolver(
@@ -246,6 +485,7 @@ export class TinyHypergraphRegionPathingSolver extends BaseSolver {
         (sum, node) => sum + (node.portPointsInPairs?.length ?? 0),
         0,
       ),
+      terminalEscapeBridgeCount: this.terminalEscapeBridgeCount,
     }
     this.solved = true
   }
