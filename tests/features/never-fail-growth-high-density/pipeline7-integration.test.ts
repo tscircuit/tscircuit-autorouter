@@ -31,7 +31,7 @@ test("Pipeline7 high-density stage opts into GrowShrinkHighDensityIntraNodeSolve
   ).toBe(true)
   expect(
     (highDensityParams as any).growShrinkFallbackToInvalidGeometryOnFailure,
-  ).toBe(true)
+  ).toBe(false)
   expect(
     (highDensityParams as any).growShrinkMaxInnerIterationsPerGrowthAttempt,
   ).toBeUndefined()

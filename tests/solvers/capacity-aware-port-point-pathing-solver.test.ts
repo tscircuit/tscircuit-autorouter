@@ -1,5 +1,6 @@
 import { expect, test } from "bun:test"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
+import { CapacityAwarePortPointPathingSolver } from "lib/solvers/PortPointPathingSolver/CapacityAwarePortPointPathingSolver"
 import { buildHyperGraph } from "lib/solvers/PortPointPathingSolver/hgportpointpathingsolver"
 import type { CapacityMeshNode, SimpleRouteConnection } from "lib/types"
 import { getGraphicsSvgFrames } from "tests/fixtures/solver-svg-frames"
@@ -26,7 +27,7 @@ const connections: SimpleRouteConnection[] = [-0.2, 0.2].map((y, index) => ({
   ],
 }))
 
-test("reproduces two nets competing for one physical shortcut lane", async () => {
+test("capacity-aware pathing avoids an oversubscribed shortcut", async () => {
   const connectivityMap = new ConnectivityMap({})
   for (const connection of connections) {
     connectivityMap.addConnections([[connection.name]])
@@ -50,59 +51,81 @@ test("reproduces two nets competing for one physical shortcut lane", async () =>
       cramped: false,
     }),
   )
-  const { graph } = buildHyperGraph({
+  const { graph, connections: graphConnections } = buildHyperGraph({
     capacityMeshNodes,
     segmentPortPoints,
     layerCount: 1,
     connectivityMap,
     simpleRouteJsonConnections: connections,
   })
+  const solver = new CapacityAwarePortPointPathingSolver({
+    graph,
+    connections: graphConnections,
+    layerCount: 1,
+    effort: 1,
+    preserveTerminalPcbPortIds: true,
+    minViaPadDiameter: 0.3,
+  })
 
-  expect(connections).toHaveLength(2)
-  expect(graph.ports).toHaveLength(4)
-  expect(graph.ports.every((port) => port.d.z === 0)).toBe(true)
+  solver.solve()
 
+  expect(solver.failed).toBe(false)
+  expect(solver.solved).toBe(true)
+  expect(solver.connectionsWithResults).toHaveLength(2)
+  expect(solver.stats.negotiationPasses).toBe(1)
+  expect(solver.stats.totalPortalOverflow).toBe(0)
+  const portalPaths = solver.connectionsWithResults.map((result) =>
+    result.portPoints!.map((point) => point.portPointId).join(" -> "),
+  )
+  expect(new Set(portalPaths).size).toBe(2)
+  const inputGraphics = {
+    rects: graph.regions.map((region) => ({
+      center: region.d.center,
+      width: region.d.width,
+      height: region.d.height,
+      fill: "rgba(226, 232, 240, 0.25)",
+      stroke: "#94a3b8",
+      label: region.regionId,
+    })),
+    circles: graph.ports.map((port) => ({
+      center: port.d,
+      radius: 0.09,
+      fill: "#cbd5e1",
+      stroke: "#334155",
+      label: "1 physical lane",
+    })),
+    lines: connections.map((connection, index) => ({
+      points: connection.pointsToConnect,
+      strokeColor: index === 0 ? "#ef4444" : "#2563eb",
+      strokeWidth: 0.05,
+      label: connection.name,
+    })),
+    texts: graph.regions.map((region) => ({
+      x: region.d.center.x,
+      y: region.d.center.y + 0.5,
+      text:
+        region.regionId === "shortcut" || region.regionId === "detour"
+          ? `${region.regionId}: 1 lane`
+          : region.regionId,
+      fontSize: 0.14,
+      anchorSide: "center" as const,
+    })),
+  }
   const svg = getGraphicsSvgFrames({
     frames: [
       {
         name: "Input: 2 nets compete for a 1-lane shortcut",
         step: 0,
-        graphics: {
-          rects: graph.regions.map((region) => ({
-            center: region.d.center,
-            width: region.d.width,
-            height: region.d.height,
-            fill: "rgba(226, 232, 240, 0.25)",
-            stroke: "#94a3b8",
-            label: region.regionId,
-          })),
-          circles: graph.ports.map((port) => ({
-            center: port.d,
-            radius: 0.09,
-            fill: "#cbd5e1",
-            stroke: "#334155",
-            label: "1 physical lane",
-          })),
-          lines: connections.map((connection, index) => ({
-            points: connection.pointsToConnect,
-            strokeColor: index === 0 ? "#ef4444" : "#2563eb",
-            strokeWidth: 0.05,
-            label: connection.name,
-          })),
-          texts: graph.regions.map((region) => ({
-            x: region.d.center.x,
-            y: region.d.center.y + 0.5,
-            text:
-              region.regionId === "shortcut" || region.regionId === "detour"
-                ? `${region.regionId}: 1 lane`
-                : region.regionId,
-            fontSize: 0.14,
-            anchorSide: "center" as const,
-          })),
-        },
+        graphics: inputGraphics,
+      },
+      {
+        name: "Result: shortcut + detour, 0 overflow",
+        step: 1,
+        iteration: solver.iterations,
+        graphics: solver.visualize(),
       },
     ],
-    columns: 1,
+    columns: 2,
     cellWidth: 5.5,
     cellHeight: 4.5,
   })

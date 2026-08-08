@@ -1,12 +1,14 @@
 import type {
   ConnectionHgWithSimpleRouteConnection,
-  HgPortPointPathingSolverParams,
+  HyperGraphHg,
 } from "../hgportpointpathingsolver/types"
 import { checkIfConnectionPointIsInRegion } from "../hgportpointpathingsolver/checkIfConnectionPointIsInRegion"
 import type { TinyRouteNetIndexer } from "./createTinyRouteNetIndexer"
 
 export function getRegionNetIdByRegionId(input: {
-  params: Omit<HgPortPointPathingSolverParams, "connections"> & {
+  params: {
+    graph: HyperGraphHg
+    layerCount: number
     connections: ConnectionHgWithSimpleRouteConnection[]
   }
   getNetIndex: TinyRouteNetIndexer

@@ -22,7 +22,7 @@ test("pipeline7 dataset01 circuit119 solves pathing with only global topology", 
   expect(
     solver.topologyPlanningSolver?.getOutput().componentMeshNodes,
   ).toHaveLength(0)
-  expect(solver.getCurrentPhase()).toBe("uniformPortDistributionSolver")
+  expect(solver.getCurrentPhase()).toBe("multiSectionPortPointOptimizer")
   expect(solver.failed).toBe(false)
   expect(solver.portPointPathingSolver?.failed).toBe(false)
   expect(solver.portPointPathingSolver?.solved).toBe(true)

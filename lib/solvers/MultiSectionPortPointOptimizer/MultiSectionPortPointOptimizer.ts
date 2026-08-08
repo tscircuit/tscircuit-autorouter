@@ -477,20 +477,20 @@ export class MultiSectionPortPointOptimizer extends BaseSolver {
    */
   findHighestPfNode(): CapacityMeshNodeId | null {
     let highestPfNodeId: CapacityMeshNodeId | null = null
-    let highestPf = 0
+    let highestReducedPf = 0
 
     for (const [nodeId, pf] of this.nodePfMap.entries()) {
       // Reduce effective Pf based on number of attempts
       const attempts = this.attemptsToFixNode.get(nodeId) ?? 0
       const pfReduced = pf * (1 - attempts / this.MAX_ATTEMPTS_PER_NODE) ** 2
 
-      if (pfReduced > highestPf) {
-        highestPf = pf
+      if (pfReduced > highestReducedPf) {
+        highestReducedPf = pfReduced
         highestPfNodeId = nodeId
       }
     }
 
-    if (!highestPfNodeId || highestPf < this.ACCEPTABLE_PF) {
+    if (!highestPfNodeId || highestReducedPf < this.ACCEPTABLE_PF) {
       return null
     }
 

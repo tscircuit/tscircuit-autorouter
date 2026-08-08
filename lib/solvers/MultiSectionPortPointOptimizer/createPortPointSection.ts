@@ -236,46 +236,21 @@ function cutPathsToSection(
     const firstIndexInSection = indicesInSection[0]
     const lastIndexInSection = indicesInSection[indicesInSection.length - 1]
 
-    // Determine the actual range to include in the merged segment
-    let segmentStartIndex = firstIndexInSection
-    let segmentEndIndex = lastIndexInSection
+    // Keep one point outside each crossed boundary. Those points become the
+    // fixed endpoints of the synthetic connection that reroutes this section.
+    const segmentStartIndex = Math.max(0, firstIndexInSection - 1)
+    const segmentEndIndex = Math.min(
+      result.path.length - 1,
+      lastIndexInSection + 1,
+    )
 
-    // IMPORTANT: If the connection starts/ends OUTSIDE the section, but the adjacent
-    // point is inside, we need to include the endpoint to preserve the connection
-    // Check if index 0 (start endpoint) should be included
-    if (firstIndexInSection > 0) {
-      // There are points before the first section point
-      // If index 0 is a connection endpoint, include it
-      const firstNodeId = result.path[0].currentNodeId
-      const isStartEndpoint =
-        result.nodeIds[0] === firstNodeId || result.nodeIds[1] === firstNodeId
-      if (isStartEndpoint) {
-        segmentStartIndex = 0
-      }
-    }
-
-    // Check if last index (end endpoint) should be included
-    if (lastIndexInSection < result.path.length - 1) {
-      // There are points after the last section point
-      // If the last index is a connection endpoint, include it
-      const lastPathIdx = result.path.length - 1
-      const lastNodeId = result.path[lastPathIdx].currentNodeId
-      const isEndEndpoint =
-        result.nodeIds[0] === lastNodeId || result.nodeIds[1] === lastNodeId
-      if (isEndEndpoint) {
-        segmentEndIndex = lastPathIdx
-      }
-    }
-
-    // Create a single merged section path that spans from first to last occurrence
-    // This includes any points BETWEEN section nodes that m  // Filter capacity mesh nodes to those in sectionight be outside the section
     const mergedSegment = result.path.slice(
       segmentStartIndex,
       segmentEndIndex + 1,
     )
 
-    const actualHasEntryFromOutside = segmentStartIndex > 0
-    const actualHasExitToOutside = segmentEndIndex < result.path.length - 1
+    const actualHasEntryFromOutside = firstIndexInSection > 0
+    const actualHasExitToOutside = lastIndexInSection < result.path.length - 1
 
     sectionPaths.push({
       connectionName,

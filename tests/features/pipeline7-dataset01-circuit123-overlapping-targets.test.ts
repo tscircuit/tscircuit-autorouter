@@ -19,7 +19,7 @@ test("pipeline7 dataset01 circuit123 keeps overlapping targets reachable", (): v
     solver.step()
   }
 
-  expect(solver.getCurrentPhase()).toBe("uniformPortDistributionSolver")
+  expect(solver.getCurrentPhase()).toBe("multiSectionPortPointOptimizer")
   expect(solver.failed).toBe(false)
   expect(solver.portPointPathingSolver?.failed).toBe(false)
   expect(solver.portPointPathingSolver?.solved).toBe(true)

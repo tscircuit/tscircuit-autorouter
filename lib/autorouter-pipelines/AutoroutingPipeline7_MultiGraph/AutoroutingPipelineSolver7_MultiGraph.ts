@@ -12,8 +12,8 @@ import { CacheProvider } from "lib/cache/types"
 import { ComponentDetectionSolver } from "lib/solvers/ComponentDetectionSolver/ComponentDetectionSolver"
 import { MultiTargetNecessaryCrampedPortPointSolver } from "lib/solvers/NecessaryCrampedPortPointSolver/MultiTargetNecessaryCrampedPortPointSolver"
 import { NodeDimensionSubdivisionSolver } from "lib/solvers/NodeDimensionSubdivisionSolver/NodeDimensionSubdivisionSolver"
+import { CapacityAwarePortPointPathingSolver } from "lib/solvers/PortPointPathingSolver/CapacityAwarePortPointPathingSolver"
 import { buildHyperGraph } from "lib/solvers/PortPointPathingSolver/hgportpointpathingsolver"
-import { TinyHypergraphPortPointPathingSolver } from "lib/solvers/PortPointPathingSolver/tinyhypergraph/TinyHypergraphPortPointPathingSolver"
 import { TopologyMergingSolver } from "lib/solvers/TopologyMergingSolver/TopologyMergingSolver"
 import { MultiGraphTopologyPlannerSolver } from "lib/solvers/TopologyPlanningSolver/MultiGraphTopologyPlannerSolver"
 import { UniformPortDistributionSolver } from "lib/solvers/UniformPortDistributionSolver/UniformPortDistributionSolver"
@@ -58,7 +58,10 @@ import { DeadEndSolver } from "../../solvers/DeadEndSolver/DeadEndSolver"
 import { EscapeViaLocationSolver } from "../../solvers/EscapeViaLocationSolver/EscapeViaLocationSolver"
 import { Pipeline4HighDensityRepairSolver } from "../../solvers/HighDensityRepairSolver/Pipeline4HighDensityRepairSolver"
 import { HighDensitySolver } from "../../solvers/HighDensitySolver/HighDensitySolver"
-import { MultiSectionPortPointOptimizer } from "../../solvers/MultiSectionPortPointOptimizer"
+import {
+  MultiSectionPortPointOptimizer,
+  type MultiSectionPortPointOptimizerParams,
+} from "../../solvers/MultiSectionPortPointOptimizer"
 import { NetToPointPairsSolver } from "../../solvers/NetToPointPairsSolver/NetToPointPairsSolver"
 import { NetToPointPairsSolver2_OffBoardConnection } from "../../solvers/NetToPointPairsSolver2_OffBoardConnection/NetToPointPairsSolver2_OffBoardConnection"
 import { MultipleHighDensityRouteStitchSolver3 } from "../../solvers/RouteStitchingSolver/MultipleHighDensityRouteStitchSolver3"
@@ -235,7 +238,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
   lengthMatchingPostProcessingSolver?: DifferentialPairPostProcessingSolver
   powerTraceExpansionSolver?: PowerTraceExpansionSolver
   availableSegmentPointSolver?: AvailableSegmentPointSolver
-  portPointPathingSolver?: TinyHypergraphPortPointPathingSolver
+  portPointPathingSolver?: CapacityAwarePortPointPathingSolver
   multiSectionPortPointOptimizer?: MultiSectionPortPointOptimizer
   uniformPortDistributionSolver?: UniformPortDistributionSolver
   traceWidthSolver?: TraceWidthSolver
@@ -462,7 +465,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
     ),
     definePipelineStep(
       "portPointPathingSolver",
-      TinyHypergraphPortPointPathingSolver,
+      CapacityAwarePortPointPathingSolver,
       (cms) => {
         const sharedEdgeSegments =
           cms.sharedEdgeSegmentsWithNecessaryCrampedPortPoints ??
@@ -486,32 +489,44 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
             effort: cms.effort,
             preserveTerminalPcbPortIds: true,
             minViaPadDiameter: cms.viaDiameter,
-            flags: {
-              FORCE_CENTER_FIRST: true,
-              RIPPING_ENABLED: true,
-              USE_SELECTIVE_RERIP_ROUTING: true,
-            },
-            weights: {
-              SHUFFLE_SEED: 0,
-              MEMORY_PF_FACTOR: 4,
-              CENTER_OFFSET_DIST_PENALTY_FACTOR: 0,
-              CENTER_OFFSET_FOCUS_SHIFT: 0,
-              NODE_PF_FACTOR: 0,
-              LAYER_CHANGE_COST: 0,
-              RIPPING_PF_COST: 0.0,
-              NODE_PF_MAX_PENALTY: 100,
-              BASE_CANDIDATE_COST: 0.6,
-              MAX_ITERATIONS_PER_PATH: 0,
-              RANDOM_WALK_DISTANCE: 0,
-              START_RIPPING_PF_THRESHOLD: 0.3,
-              END_RIPPING_PF_THRESHOLD: 1,
-              MAX_RIPS: 1000,
-              RANDOM_RIP_FRACTION: 0.3,
-              STRAIGHT_LINE_DEVIATION_PENALTY_FACTOR: 4,
-              GREEDY_MULTIPLIER: 0.7,
-              MIN_ALLOWED_BOARD_SCORE: -10000,
-            },
+            obstacleMargin: cms.srj.defaultObstacleMargin ?? 0.15,
           },
+        ]
+      },
+    ),
+    definePipelineStep(
+      "multiSectionPortPointOptimizer",
+      MultiSectionPortPointOptimizer,
+      (cms) => {
+        const portPointSolver = cms.portPointPathingSolver!
+        const output = portPointSolver.getOutput()
+        return [
+          {
+            simpleRouteJson: cms.srjWithPointPairs!,
+            inputNodes: output.inputNodeWithPortPoints,
+            capacityMeshNodes: cms.capacityNodes!,
+            capacityMeshEdges: cms.capacityEdges!,
+            colorMap: cms.colorMap,
+            initialConnectionResults: portPointSolver.connectionsWithResults,
+            initialAssignedPortPoints: portPointSolver.assignedPortPoints,
+            initialNodeAssignedPortPoints:
+              portPointSolver.nodeAssignedPortPoints,
+            effort: cms.effort,
+            FRACTION_TO_REPLACE: 0,
+            MAX_SECTION_ATTEMPTS: Math.max(15, Math.round(60 * cms.effort)),
+            HYPERPARAMETER_SCHEDULE: [
+              {
+                SHUFFLE_SEED: 100,
+                NODE_PF_FACTOR: 100,
+                NODE_PF_MAX_PENALTY: 100,
+                MEMORY_PF_FACTOR: 0,
+                EXPANSION_DEGREES: 4,
+                FORCE_CENTER_FIRST: true,
+                FORCE_OFF_BOARD_FREQUENCY: 0,
+                CENTER_OFFSET_DIST_PENALTY_FACTOR: 0,
+              },
+            ],
+          } as MultiSectionPortPointOptimizerParams,
         ]
       },
     ),
@@ -521,7 +536,9 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
       (cms) => [
         {
           nodeWithPortPoints:
-            cms.portPointPathingSolver?.getOutput().nodesWithPortPoints ?? [],
+            cms.multiSectionPortPointOptimizer?.getNodesWithPortPoints() ??
+            cms.portPointPathingSolver?.getOutput().nodesWithPortPoints ??
+            [],
           inputNodesWithPortPoints:
             cms.portPointPathingSolver?.getOutput().inputNodeWithPortPoints ??
             [],
@@ -534,7 +551,9 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
     definePipelineStep("highDensityRouteSolver", HighDensitySolver, (cms) => {
       const uniformNodes = cms.uniformPortDistributionSolver?.getOutput() ?? []
       const fallbackNodes =
-        cms.portPointPathingSolver?.getOutput().nodesWithPortPoints ?? []
+        cms.multiSectionPortPointOptimizer?.getNodesWithPortPoints() ??
+        cms.portPointPathingSolver?.getOutput().nodesWithPortPoints ??
+        []
       const nodePortPointsSource =
         uniformNodes.length > 0 ? uniformNodes : fallbackNodes
 
@@ -549,7 +568,11 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
               []
             ).map((node) => [
               node.capacityMeshNodeId,
-              cms.portPointPathingSolver?.computeNodePf(node) ?? null,
+              cms.multiSectionPortPointOptimizer?.nodePfMap.get(
+                node.capacityMeshNodeId,
+              ) ??
+                cms.portPointPathingSolver?.computeNodePf(node) ??
+                null,
             ]),
           ),
           colorMap: cms.colorMap,
@@ -561,7 +584,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
           layerCount: cms.srj.layerCount,
           useGrowShrinkHighDensityIntraNodeSolver: true,
           preserveTerminalPcbPortIds: true,
-          growShrinkFallbackToInvalidGeometryOnFailure: true,
+          growShrinkFallbackToInvalidGeometryOnFailure: false,
         },
       ]
     }),
