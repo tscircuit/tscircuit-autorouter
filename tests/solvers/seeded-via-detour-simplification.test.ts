@@ -132,9 +132,7 @@ test("seeded added-via detours simplify back to the known optimum", () => {
       hdRoutes: [generated.routeWithAddedVias],
       obstacles: generated.obstacles,
       connMap: new ConnectivityMap({
-        [`seeded_net_${seed}`]: [
-          generated.routeWithAddedVias.connectionName,
-        ],
+        [`seeded_net_${seed}`]: [generated.routeWithAddedVias.connectionName],
       }),
       colorMap: {},
       defaultViaDiameter: VIA_DIAMETER,

@@ -275,7 +275,11 @@ export class SingleRouteUselessViaRemovalSolver extends BaseSolver {
     ) {
       anchorPairs.push([previousIndex, 0])
     }
-    for (let nextIndex = 1; nextIndex < nextSection.points.length; nextIndex++) {
+    for (
+      let nextIndex = 1;
+      nextIndex < nextSection.points.length;
+      nextIndex++
+    ) {
       anchorPairs.push([transitionIndex, nextIndex])
     }
 
