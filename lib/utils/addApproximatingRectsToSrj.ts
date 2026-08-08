@@ -17,7 +17,6 @@ const SLENDER_OBSTACLE_MAX_APPROX_RECT_LENGTH = 0.75
 const SLENDER_OBSTACLE_ASPECT_RATIO = 2
 const WIDE_SLENDER_OBSTACLE_MIN_SHORT_SIDE = 0.9
 const CENTERLINE_APPROX_RECT_SIZE_FACTOR = 0.75
-const MANY_CONNECTED_ROTATED_OBSTACLES_THRESHOLD = 20
 
 const isAxisAlignedRotation = (rotationDegrees: number) => {
   const normalizedRotation = normalizeRotation(rotationDegrees)
@@ -215,7 +214,7 @@ const generateGridApproximatingRects = (
   return rects
 }
 
-const generateSparseConservativeApproximatingRects = (
+const generateConservativeApproximatingRects = (
   rotatedRect: RotatedRect,
 ): Rect[] => {
   // Slice along the shorter world-space axis, clip the rotated polygon into
@@ -384,10 +383,7 @@ const getRotatedObstacleApproximationRectCount = (
   )
 }
 
-const convertObstacleToOldFormat = (
-  obstacle: Obstacle,
-  opts: { useSparseConservativeApproximation?: boolean } = {},
-): Obstacle[] => {
+const convertObstacleToOldFormat = (obstacle: Obstacle): Obstacle[] => {
   const rotationDegrees = obstacle.ccwRotationDegrees
 
   if (
@@ -413,8 +409,11 @@ const convertObstacleToOldFormat = (
     rotation: rotationDegrees,
   }
   const rectCount = getRotatedObstacleApproximationRectCount(obstacle)
-  const rects = opts.useSparseConservativeApproximation
-    ? generateSparseConservativeApproximatingRects(rotatedRect)
+  const useConservativeApproximation =
+    obstacle.connectedTo.length > 0 &&
+    !obstacle.obstacleId?.startsWith("trace_obstacle_")
+  const rects = useConservativeApproximation
+    ? generateConservativeApproximatingRects(rotatedRect)
     : rectCount === null
       ? generateGridApproximatingRects(
           rotatedRect,
@@ -459,23 +458,9 @@ export const addApproximatingRectsToSrj = (
   const obstaclesByRect = new Map<string, Obstacle>()
   const approximatedObstaclesBySource = new Map<string, Obstacle[]>()
   const originalObstaclesBySource = new Map<string, Obstacle>()
-  const connectedRotatedObstacleCount = srj.obstacles.filter(
-    (obstacle) =>
-      obstacle.connectedTo.length > 0 &&
-      typeof obstacle.ccwRotationDegrees === "number" &&
-      Number.isFinite(obstacle.ccwRotationDegrees) &&
-      !isAxisAlignedRotation(obstacle.ccwRotationDegrees),
-  ).length
-  const useSparseConservativeApproximation =
-    connectedRotatedObstacleCount > MANY_CONNECTED_ROTATED_OBSTACLES_THRESHOLD
 
   for (const [obstacleIndex, obstacle] of srj.obstacles.entries()) {
-    const convertedObstacle = convertObstacleToOldFormat(obstacle, {
-      useSparseConservativeApproximation:
-        useSparseConservativeApproximation &&
-        obstacle.connectedTo.length > 0 &&
-        !obstacle.obstacleId?.startsWith("trace_obstacle_"),
-    })
+    const convertedObstacle = convertObstacleToOldFormat(obstacle)
     const sourceKey = getObstacleKey(obstacle, obstacleIndex)
     approximatedObstaclesBySource.set(sourceKey, convertedObstacle)
     originalObstaclesBySource.set(sourceKey, obstacle)
