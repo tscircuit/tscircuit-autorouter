@@ -75,6 +75,7 @@ import { PreloadedTraceGraphSolver } from "./preloaded-trace-graph-solver"
 import { PreprocessSimpleRouteJsonWithoutTraceObstaclesSolver } from "./preprocess-simple-route-json-without-trace-obstacles-solver"
 import { MergedComponentTopologyView } from "../AutoroutingPipeline7_MultiGraph/MergedComponentTopologyView"
 import { convertPipeline7HdRoutesToSimplifiedPcbTraces } from "../AutoroutingPipeline7_MultiGraph/convertPipeline7HdRoutesToSimplifiedPcbTraces"
+import { lockHdRouteTerminals } from "../AutoroutingPipeline7_MultiGraph/lock-hd-route-terminals"
 
 interface CapacityMeshSolverOptions {
   capacityDepth?: number
@@ -684,7 +685,15 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       (cms) => [
         {
           srj: cms.srjWithPointPairs! as any,
-          hdRoutes: cms.traceWidthSolver!.getHdRoutesWithWidths(),
+          hdRoutes: lockHdRouteTerminals(
+            cms.traceWidthSolver!.getHdRoutesWithWidths(),
+            cms.netToPointPairsSolver?.newConnections ?? [],
+            new Map(
+              (cms.highDensityStitchSolver?.mergedHdRoutes ?? []).map(
+                (route) => [route.connectionName, route],
+              ),
+            ),
+          ),
           connMap: cms.connMap,
           effort: cms.effort,
           maxIterations: 16,

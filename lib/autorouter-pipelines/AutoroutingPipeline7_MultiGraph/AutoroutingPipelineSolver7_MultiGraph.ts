@@ -1,4 +1,4 @@
-import { PostProcessingSolver } from "@tscircuit/length-matching-solver"
+import { PostProcessingSolver as DifferentialPairPostProcessingSolver } from "@tscircuit/length-matching-solver"
 import type { PowerTraceExpanderOptions } from "@tscircuit/power-trace-expander"
 import { RectDiffPipeline } from "@tscircuit/rectdiff"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
@@ -73,6 +73,7 @@ import { PowerTraceExpansionSolver } from "./PowerTraceExpansionSolver"
 import { convertPipeline7HdRoutesToSimplifiedPcbTraces } from "./convertPipeline7HdRoutesToSimplifiedPcbTraces"
 import { createPipeline7AutoroutingDrcEvaluator } from "./create-pipeline7-autorouting-drc-evaluator"
 import { getPowerTraceExpansionConnectionNames } from "./getPowerTraceExpansionConnectionNames"
+import { lockHdRouteTerminals } from "./lock-hd-route-terminals"
 import { preparePipeline7PowerTraceExpansionInput } from "./prepare-pipeline7-power-trace-expansion-input"
 
 interface CapacityMeshSolverOptions {
@@ -231,7 +232,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
   strawSolver?: StrawSolver
   deadEndSolver?: DeadEndSolver
   traceSimplificationSolver?: TraceSimplificationSolver
-  lengthMatchingPostProcessingSolver?: PostProcessingSolver
+  lengthMatchingPostProcessingSolver?: DifferentialPairPostProcessingSolver
   powerTraceExpansionSolver?: PowerTraceExpansionSolver
   availableSegmentPointSolver?: AvailableSegmentPointSolver
   portPointPathingSolver?: TinyHypergraphPortPointPathingSolver
@@ -645,7 +646,15 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
       (cms) => [
         {
           srj: cms.srjWithPointPairs! as any,
-          hdRoutes: cms.traceWidthSolver!.getHdRoutesWithWidths(),
+          hdRoutes: lockHdRouteTerminals(
+            cms.traceWidthSolver!.getHdRoutesWithWidths(),
+            cms.netToPointPairsSolver?.newConnections ?? [],
+            new Map(
+              (cms.highDensityStitchSolver?.mergedHdRoutes ?? []).map(
+                (route) => [route.connectionName, route],
+              ),
+            ),
+          ),
           connMap: cms.connMap,
           effort: cms.effort,
           maxIterations: 16,
@@ -693,7 +702,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
     ),
     definePipelineStep(
       "lengthMatchingPostProcessingSolver",
-      PostProcessingSolver,
+      DifferentialPairPostProcessingSolver,
       (cms) => {
         const netToPointPairsSolver = cms.netToPointPairsSolver
         if (!netToPointPairsSolver)
