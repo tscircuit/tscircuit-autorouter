@@ -238,6 +238,9 @@ function getOutputNodeMetadata({
       _isComponentTopologyNode: isComponentTopologyNode
         ? true
         : sourceNodes[0]!._isComponentTopologyNode,
+      _skipEndpointNetReservation: isComponentTopologyNode
+        ? undefined
+        : sourceNodes[0]!._skipEndpointNetReservation,
     }
   }
 
@@ -294,6 +297,11 @@ function getOutputNodeMetadata({
     ),
     _isComponentTopologyNode: isComponentTopologyNode || undefined,
     _connectedTo: connectedTo.length > 0 ? connectedTo : undefined,
+    _skipEndpointNetReservation:
+      !isComponentTopologyNode &&
+      sourceNodes.every((node) => node._skipEndpointNetReservation)
+        ? true
+        : undefined,
   }
 }
 

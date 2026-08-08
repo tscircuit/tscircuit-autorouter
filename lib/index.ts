@@ -27,6 +27,7 @@ export { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "./autorouter-pip
 export { AutoroutingPipelineSolver10_ApproximateHypergraph } from "./autorouter-pipelines/AutoroutingPipeline10_ApproximateHypergraph/AutoroutingPipelineSolver10_ApproximateHypergraph"
 export { ApproximateHypergraphTopologySolver } from "./autorouter-pipelines/AutoroutingPipeline10_ApproximateHypergraph/ApproximateHypergraphTopologySolver"
 export { ApproximateLayerTransitionSolver } from "./autorouter-pipelines/AutoroutingPipeline10_ApproximateHypergraph/ApproximateLayerTransitionSolver"
+export { ApproximateMultiGraphTopologyPlannerSolver } from "./autorouter-pipelines/AutoroutingPipeline10_ApproximateHypergraph/ApproximateMultiGraphTopologyPlannerSolver"
 export { PolyHighDensitySolver } from "./autorouter-pipelines/AutoroutingPipeline6_PolyHypergraph/PolyHighDensitySolver"
 export { PolySingleIntraNodeSolver } from "./autorouter-pipelines/AutoroutingPipeline6_PolyHypergraph/PolySingleIntraNodeSolver"
 export { PolyIntraNodeSolver } from "./autorouter-pipelines/AutoroutingPipeline6_PolyHypergraph/PolyIntraNodeSolver"

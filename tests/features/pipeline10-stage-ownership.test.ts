@@ -1,8 +1,9 @@
 import { expect, test } from "bun:test"
 import { AutoroutingPipelineSolver10_ApproximateHypergraph } from "lib/autorouter-pipelines/AutoroutingPipeline10_ApproximateHypergraph/AutoroutingPipelineSolver10_ApproximateHypergraph"
+import { ApproximateMultiGraphTopologyPlannerSolver } from "lib/autorouter-pipelines/AutoroutingPipeline10_ApproximateHypergraph/ApproximateMultiGraphTopologyPlannerSolver"
 import type { SimpleRouteJson } from "lib/types"
 
-test("Pipeline10 replaces exact topology stages and keeps exact post-processing", () => {
+test("Pipeline10 approximates global topology and keeps exact local topology and post-processing", () => {
   const srj: SimpleRouteJson = {
     layerCount: 2,
     minTraceWidth: 0.15,
@@ -24,12 +25,17 @@ test("Pipeline10 replaces exact topology stages and keeps exact post-processing"
   })
   const stageNames = solver.pipelineDef.map((stage) => stage.solverName)
 
-  expect(stageNames).toContain("approximateHypergraphTopologySolver")
+  expect(stageNames).toContain("componentDetectionSolver")
+  expect(stageNames).toContain("topologyPlanningSolver")
+  expect(stageNames).toContain("topologyMergingSolver")
+  expect(stageNames).toContain("nodeDimensionSubdivisionSolver")
   expect(stageNames).toContain("approximateLayerTransitionSolver")
   expect(stageNames).toContain("exactGeometryDrcForceImproveSolver")
-  expect(stageNames).not.toContain("topologyPlanningSolver")
-  expect(stageNames).not.toContain("topologyMergingSolver")
-  expect(stageNames).not.toContain("nodeDimensionSubdivisionSolver")
+  expect(
+    solver.pipelineDef.find(
+      (stage) => stage.solverName === "topologyPlanningSolver",
+    )?.solverClass,
+  ).toBe(ApproximateMultiGraphTopologyPlannerSolver)
   expect(stageNames.indexOf("approximateLayerTransitionSolver")).toBe(
     stageNames.indexOf("highDensityStitchSolver") + 1,
   )

@@ -3,8 +3,8 @@ import {
   type AutoroutingPipelineSolverOptions as Pipeline7Options,
   AutoroutingPipelineSolver7_MultiGraph,
 } from "../AutoroutingPipeline7_MultiGraph/AutoroutingPipelineSolver7_MultiGraph"
-import { ApproximateHypergraphTopologySolver } from "./ApproximateHypergraphTopologySolver"
 import { ApproximateLayerTransitionSolver } from "./ApproximateLayerTransitionSolver"
+import { ApproximateMultiGraphTopologyPlannerSolver } from "./ApproximateMultiGraphTopologyPlannerSolver"
 
 export interface AutoroutingPipelineSolver10Options extends Pipeline7Options {
   approximateCellSize?: number
@@ -13,7 +13,6 @@ export interface AutoroutingPipelineSolver10Options extends Pipeline7Options {
 }
 
 export class AutoroutingPipelineSolver10_ApproximateHypergraph extends AutoroutingPipelineSolver7_MultiGraph {
-  approximateHypergraphTopologySolver?: ApproximateHypergraphTopologySolver
   approximateLayerTransitionSolver?: ApproximateLayerTransitionSolver
   readonly pipeline10Opts: AutoroutingPipelineSolver10Options
 
@@ -24,27 +23,22 @@ export class AutoroutingPipelineSolver10_ApproximateHypergraph extends Autorouti
     super(srj, opts)
     this.pipeline10Opts = { ...opts }
 
-    const preprocessStep = this.getPipelineStepOrThrow(
-      "preprocessSimpleRouteJsonSolver",
+    const topologyPlanningIndex = this.pipelineDef.findIndex(
+      (step) => step.solverName === "topologyPlanningSolver",
     )
-    const escapeStep = this.getPipelineStepOrThrow("escapeViaLocationSolver")
-    const pointPairsStep = this.getPipelineStepOrThrow("netToPointPairsSolver")
-    const portPathingIndex = this.pipelineDef.findIndex(
-      (step) => step.solverName === "portPointPathingSolver",
-    )
-    if (portPathingIndex < 0) {
-      throw new Error("Pipeline10 requires Pipeline7 portPointPathingSolver")
+    if (topologyPlanningIndex < 0) {
+      throw new Error("Pipeline10 requires Pipeline7 topologyPlanningSolver")
     }
     const highDensityStitchIndex = this.pipelineDef.findIndex(
       (step) => step.solverName === "highDensityStitchSolver",
     )
-    if (highDensityStitchIndex < portPathingIndex) {
+    if (highDensityStitchIndex < topologyPlanningIndex) {
       throw new Error("Pipeline10 requires Pipeline7 highDensityStitchSolver")
     }
 
-    const approximateTopologyStep = {
-      solverName: "approximateHypergraphTopologySolver",
-      solverClass: ApproximateHypergraphTopologySolver,
+    const approximateTopologyPlanningStep = {
+      solverName: "topologyPlanningSolver",
+      solverClass: ApproximateMultiGraphTopologyPlannerSolver,
       getConstructorParams: (
         instance: AutoroutingPipelineSolver7_MultiGraph,
       ) => {
@@ -52,15 +46,18 @@ export class AutoroutingPipelineSolver10_ApproximateHypergraph extends Autorouti
           instance as AutoroutingPipelineSolver10_ApproximateHypergraph
         if (!pipeline10.srjWithPointPairs) {
           throw new Error(
-            "Pipeline10 requires point-pair connections before approximate topology generation",
+            "Pipeline10 requires point-pair connections before approximate topology planning",
           )
         }
         return [
           {
-            simpleRouteJson: pipeline10.srjWithPointPairs,
+            inputSrj: pipeline10.srjWithPointPairs,
+            componentDetectionOutput:
+              pipeline10.componentDetectionSolver!.getOutput(),
+            viaDiameter: pipeline10.viaDiameter,
+            obstacleMargin:
+              pipeline10.srj.defaultObstacleMargin ?? 0.15,
             targetCellSize: pipeline10.pipeline10Opts.approximateCellSize,
-            maxPortsPerLayerPerEdge:
-              pipeline10.pipeline10Opts.approximateMaxPortsPerLayerPerEdge,
             obstacleSamplingMargin:
               pipeline10.pipeline10Opts.approximateObstacleSamplingMargin,
           },
@@ -69,16 +66,43 @@ export class AutoroutingPipelineSolver10_ApproximateHypergraph extends Autorouti
       onSolved: (instance: AutoroutingPipelineSolver7_MultiGraph): void => {
         const pipeline10 =
           instance as AutoroutingPipelineSolver10_ApproximateHypergraph
-        const output = pipeline10.approximateHypergraphTopologySolver?.getOutput()
-        if (!output) {
+        const planner =
+          pipeline10.topologyPlanningSolver as ApproximateMultiGraphTopologyPlannerSolver
+        if (!planner) {
           throw new Error(
-            "Pipeline10 approximate topology solver finished without output",
+            "Pipeline10 approximate topology planner finished without output",
           )
         }
-        pipeline10.capacityNodes = output.capacityMeshNodes
-        pipeline10.capacityEdges = output.capacityMeshEdges
-        pipeline10.sharedEdgeSegmentsWithNecessaryCrampedPortPoints =
-          output.sharedEdgeSegments
+        pipeline10.componentTopologyGeneratorSolver = undefined
+        pipeline10.globalTopologyGeneratorSolver = undefined
+      },
+    } as unknown as (typeof this.pipelineDef)[number]
+
+    const necessaryCrampedIndex = this.pipelineDef.findIndex(
+      (step) => step.solverName === "necessaryCrampedPortPointSolver",
+    )
+    if (necessaryCrampedIndex < 0) {
+      throw new Error(
+        "Pipeline10 requires Pipeline7 necessaryCrampedPortPointSolver",
+      )
+    }
+    const baseNecessaryCrampedStep = this.pipelineDef[necessaryCrampedIndex]!
+    const cappedNecessaryCrampedStep = {
+      ...baseNecessaryCrampedStep,
+      getConstructorParams: (
+        instance: AutoroutingPipelineSolver7_MultiGraph,
+      ) => {
+        const [params] = baseNecessaryCrampedStep.getConstructorParams(instance)
+        const pipeline10 =
+          instance as AutoroutingPipelineSolver10_ApproximateHypergraph
+        return [
+          {
+            ...params,
+            numberOfCrampedPortPointsToKeep:
+              pipeline10.pipeline10Opts
+                .approximateMaxPortsPerLayerPerEdge ?? 6,
+          },
+        ]
       },
     } as unknown as (typeof this.pipelineDef)[number]
 
@@ -111,23 +135,13 @@ export class AutoroutingPipelineSolver10_ApproximateHypergraph extends Autorouti
       },
     } as unknown as (typeof this.pipelineDef)[number]
 
-    const downstreamSteps = this.pipelineDef.slice(portPathingIndex)
-    const relativeStitchIndex = downstreamSteps.findIndex(
-      (step) => step.solverName === "highDensityStitchSolver",
-    )
-    downstreamSteps.splice(
-      relativeStitchIndex + 1,
+    this.pipelineDef[topologyPlanningIndex] = approximateTopologyPlanningStep
+    this.pipelineDef[necessaryCrampedIndex] = cappedNecessaryCrampedStep
+    this.pipelineDef.splice(
+      highDensityStitchIndex + 1,
       0,
       approximateLayerTransitionStep,
     )
-
-    this.pipelineDef = [
-      preprocessStep,
-      escapeStep,
-      pointPairsStep,
-      approximateTopologyStep,
-      ...downstreamSteps,
-    ]
   }
 
   override getSolverName(): string {
@@ -139,15 +153,5 @@ export class AutoroutingPipelineSolver10_ApproximateHypergraph extends Autorouti
     AutoroutingPipelineSolver10Options,
   ] {
     return [this.srj, this.pipeline10Opts]
-  }
-
-  private getPipelineStepOrThrow(solverName: string) {
-    const pipelineStep = this.pipelineDef.find(
-      (step) => step.solverName === solverName,
-    )
-    if (!pipelineStep) {
-      throw new Error(`Pipeline10 requires Pipeline7 stage "${solverName}"`)
-    }
-    return pipelineStep
   }
 }

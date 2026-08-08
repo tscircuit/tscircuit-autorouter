@@ -1,5 +1,5 @@
 import type { GraphicsObject } from "graphics-debug"
-import { BaseSolver } from "lib/solvers/BaseSolver"
+import { BaseSolver } from "@tscircuit/solver-utils"
 import type {
   SegmentPortPoint,
   SharedEdgeSegment,
@@ -18,6 +18,7 @@ export interface ApproximateHypergraphTopologySolverParams {
   targetCellSize?: number
   maxPortsPerLayerPerEdge?: number
   obstacleSamplingMargin?: number
+  generatePortsAndEdges?: boolean
 }
 
 export interface ApproximateHypergraphTopologyStats {
@@ -423,15 +424,22 @@ export class ApproximateHypergraphTopologySolver extends BaseSolver {
       simpleRouteJson: this.params.simpleRouteJson,
       dimensions,
     })
-    const topology = getGridEdgesAndSegments({
-      simpleRouteJson: this.params.simpleRouteJson,
-      dimensions,
-      nodes: capacityMeshNodes,
-      maxPortsPerLayerPerEdge,
-      obstacleSamplingMargin:
-        this.params.obstacleSamplingMargin ??
-        this.params.simpleRouteJson.minTraceWidth / 2,
-    })
+    const topology =
+      this.params.generatePortsAndEdges === false
+        ? {
+            capacityMeshEdges: [],
+            sharedEdgeSegments: [],
+            rejectedPortCount: 0,
+          }
+        : getGridEdgesAndSegments({
+            simpleRouteJson: this.params.simpleRouteJson,
+            dimensions,
+            nodes: capacityMeshNodes,
+            maxPortsPerLayerPerEdge,
+            obstacleSamplingMargin:
+              this.params.obstacleSamplingMargin ??
+              this.params.simpleRouteJson.minTraceWidth / 2,
+          })
     const portCount = topology.sharedEdgeSegments.reduce(
       (total, segment) => total + segment.portPoints.length,
       0,
