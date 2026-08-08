@@ -114,7 +114,7 @@ const createRepairCapReproInput = (): {
   return { nodeWithPortPoints, hdRoutes, obstacles }
 }
 
-test("high-density repair skips every region when the sample cap is exceeded", (): void => {
+test("high-density repair processes the highest-risk regions within its sample cap", (): void => {
   const { nodeWithPortPoints, hdRoutes, obstacles } =
     createRepairCapReproInput()
   const solver = new Pipeline4HighDensityRepairSolver({
@@ -128,11 +128,12 @@ test("high-density repair skips every region when the sample cap is exceeded", (
   solver.solve()
 
   expect(solver.stats).toMatchObject({
-    sampleCount: 0,
-    skippedSampleCount: 3,
-    repairedNodeCount: 0,
-    repairedRouteCount: 0,
+    sampleCount: 2,
+    skippedSampleCount: 1,
+    repairedNodeCount: 2,
+    repairedRouteCount: 4,
   })
-  expect(solver.getOutput()).toEqual(hdRoutes)
+  expect(solver.getOutput().slice(0, 4)).not.toEqual(hdRoutes.slice(0, 4))
+  expect(solver.getOutput().slice(4)).toEqual(hdRoutes.slice(4))
   expect(solver.visualize()).toMatchGraphicsSvg(import.meta.path)
 })

@@ -1,5 +1,8 @@
 import type { GraphicsObject } from "graphics-debug"
-import { HighDensityRepairSolver } from "high-density-repair02"
+import {
+  getHighDensityRepairViolationCounts,
+  HighDensityRepairSolver,
+} from "high-density-repair02"
 import type {
   DatasetSample,
   HdRoute as RepairHdRoute,
@@ -20,6 +23,43 @@ type RepairSampleEntry = {
 }
 
 const DEFAULT_REPAIR_MARGIN = 0.2
+
+const selectHighestViolationRepairEntries = ({
+  sampleEntries,
+  maxSampleEntries,
+  repairMargin,
+}: {
+  sampleEntries: RepairSampleEntry[]
+  maxSampleEntries: number | undefined
+  repairMargin: number
+}): RepairSampleEntry[] => {
+  if (
+    maxSampleEntries === undefined ||
+    sampleEntries.length <= maxSampleEntries
+  ) {
+    return sampleEntries
+  }
+
+  return sampleEntries
+    .map((sampleEntry, sampleIndex) => ({
+      sampleEntry,
+      sampleIndex,
+      totalViolationCount: getHighDensityRepairViolationCounts({
+        nodeWithPortPoints: sampleEntry.sample.nodeWithPortPoints,
+        nodeHdRoutes: sampleEntry.sample.nodeHdRoutes ?? [],
+        margin: repairMargin,
+      }).totalViolationCount,
+    }))
+    .sort(
+      (firstEntry, secondEntry) =>
+        secondEntry.totalViolationCount - firstEntry.totalViolationCount ||
+        secondEntry.sampleEntry.routeIndexes.length -
+          firstEntry.sampleEntry.routeIndexes.length ||
+        firstEntry.sampleIndex - secondEntry.sampleIndex,
+    )
+    .slice(0, maxSampleEntries)
+    .map(({ sampleEntry }) => sampleEntry)
+}
 
 const doesRectOverlap = (
   a: { minX: number; maxX: number; minY: number; maxY: number },
@@ -193,6 +233,7 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
   readonly originalObstacles: Obstacle[]
   readonly obstacleSHI: ObstacleSpatialHashIndex
   readonly colorMap: Record<string, string>
+  readonly skippedSampleCount: number
 
   repairedRoutesByIndex = new Map<number, HighDensityRoute>()
   activeSampleIndex = 0
@@ -217,6 +258,13 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
       this.originalObstacles,
     )
     this.colorMap = params.colorMap ?? {}
+    if (
+      params.maxSampleEntries !== undefined &&
+      (!Number.isInteger(params.maxSampleEntries) ||
+        params.maxSampleEntries < 0)
+    ) {
+      throw new Error("maxSampleEntries must be a non-negative integer")
+    }
 
     const routeIndexesByNode = new Map<number, number[]>()
     for (let i = 0; i < params.hdRoutes.length; i++) {
@@ -270,19 +318,18 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
         }
       },
     )
-    this.sampleEntries =
-      params.maxSampleEntries !== undefined &&
-      sampleEntries.length > params.maxSampleEntries
-        ? []
-        : sampleEntries
+    this.sampleEntries = selectHighestViolationRepairEntries({
+      sampleEntries,
+      maxSampleEntries: params.maxSampleEntries,
+      repairMargin: this.repairMargin,
+    })
+    this.skippedSampleCount =
+      sampleEntries.length - this.sampleEntries.length
 
     this.MAX_ITERATIONS = Math.max(this.sampleEntries.length * 1_000, 100_000)
     this.stats = {
       sampleCount: this.sampleEntries.length,
-      skippedSampleCount:
-        sampleEntries.length > this.sampleEntries.length
-          ? sampleEntries.length
-          : 0,
+      skippedSampleCount: this.skippedSampleCount,
       repairedNodeCount: 0,
       repairedRouteCount: 0,
     }
@@ -346,6 +393,7 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
       this.activeSampleIndex += 1
       this.stats = {
         sampleCount: this.sampleEntries.length,
+        skippedSampleCount: this.skippedSampleCount,
         repairedNodeCount: this.activeSampleIndex,
         repairedRouteCount: this.repairedRoutesByIndex.size,
       }
