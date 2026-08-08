@@ -249,9 +249,7 @@ const getCrossingDistances = (
         continue
       }
 
-      crossingDistances.push(
-        traversedDistance + distanceFromTransitionStart,
-      )
+      crossingDistances.push(traversedDistance + distanceFromTransitionStart)
     }
     traversedDistance += transitionSegmentLength
   }
@@ -319,10 +317,9 @@ export class CrossingViaReductionSolver extends BaseSolver {
     this.traceMargin = input.traceMargin ?? DEFAULT_TRACE_MARGIN
     this.obstacleMargin = input.obstacleMargin ?? DEFAULT_OBSTACLE_MARGIN
     this.reducedHdRoutes = structuredClone([...input.inputHdRoutes])
-    this.obstacleSHI = new ObstacleSpatialHashIndex(
-      "flatbush",
-      [...this.input.obstacles],
-    )
+    this.obstacleSHI = new ObstacleSpatialHashIndex("flatbush", [
+      ...this.input.obstacles,
+    ])
     this.MAX_ITERATIONS = 1e6
   }
 
@@ -340,7 +337,9 @@ export class CrossingViaReductionSolver extends BaseSolver {
       z: targetZ,
     }))
     const routePoints = removeConsecutiveDuplicatePoints([
-      ...route.route.slice(0, section.startIndex).map((point) => ({ ...point })),
+      ...route.route
+        .slice(0, section.startIndex)
+        .map((point) => ({ ...point })),
       ...collapsedPoints,
       ...route.route.slice(section.endIndex + 1).map((point) => ({ ...point })),
     ])
@@ -363,7 +362,10 @@ export class CrossingViaReductionSolver extends BaseSolver {
     targetZ: number
     side: TransitionSide
     newViaDistance: number
-  }): { route: HighDensityRoute; relocatedVia: { x: number; y: number } } | null {
+  }): {
+    route: HighDensityRoute
+    relocatedVia: { x: number; y: number }
+  } | null {
     const split = splitSectionAtDistance(section.points, newViaDistance)
     if (!split) return null
 
@@ -374,7 +376,9 @@ export class CrossingViaReductionSolver extends BaseSolver {
       ...split.suffix.map((point) => ({ ...point, z: suffixZ })),
     ]
     const routePoints = removeConsecutiveDuplicatePoints([
-      ...route.route.slice(0, section.startIndex).map((point) => ({ ...point })),
+      ...route.route
+        .slice(0, section.startIndex)
+        .map((point) => ({ ...point })),
       ...replacementPoints,
       ...route.route.slice(section.endIndex + 1).map((point) => ({ ...point })),
     ])
@@ -469,7 +473,8 @@ export class CrossingViaReductionSolver extends BaseSolver {
     if (this.input.outline) {
       for (let index = 0; index < this.input.outline.length; index++) {
         const edgeStart = this.input.outline[index]
-        const edgeEnd = this.input.outline[(index + 1) % this.input.outline.length]
+        const edgeEnd =
+          this.input.outline[(index + 1) % this.input.outline.length]
         if (
           pointToSegmentDistance(relocatedVia, edgeStart, edgeEnd) <
           viaRadius + this.traceMargin
@@ -481,9 +486,7 @@ export class CrossingViaReductionSolver extends BaseSolver {
     return true
   }
 
-  private candidateIsClear(
-    candidate: CrossingReductionCandidate,
-  ): boolean {
+  private candidateIsClear(candidate: CrossingReductionCandidate): boolean {
     const unchangedRoutes = this.reducedHdRoutes.filter(
       (_, routeIndex) =>
         routeIndex !== candidate.detourRouteIndex &&
@@ -573,7 +576,8 @@ export class CrossingViaReductionSolver extends BaseSolver {
       targetZ,
     })
     const viasRemoved =
-      detourRoute.vias.length + transitionRoute.vias.length -
+      detourRoute.vias.length +
+      transitionRoute.vias.length -
       collapsedDetour.vias.length -
       relocatedTransition.route.vias.length
     if (viasRemoved !== 2) return null
@@ -622,11 +626,7 @@ export class CrossingViaReductionSolver extends BaseSolver {
           const transitionRoute = this.reducedHdRoutes[transitionRouteIndex]
           if (
             transitionRoute.jumpers?.length ||
-            routesAreSameNet(
-              detourRoute,
-              transitionRoute,
-              this.input.connMap,
-            )
+            routesAreSameNet(detourRoute, transitionRoute, this.input.connMap)
           ) {
             continue
           }
@@ -637,8 +637,7 @@ export class CrossingViaReductionSolver extends BaseSolver {
             transitionSectionIndex < transitionSections.length;
             transitionSectionIndex++
           ) {
-            const transitionSection =
-              transitionSections[transitionSectionIndex]
+            const transitionSection = transitionSections[transitionSectionIndex]
             if (
               transitionSection.z !== previousSection.z ||
               sectionHasProtectedGeometry(transitionSection)
