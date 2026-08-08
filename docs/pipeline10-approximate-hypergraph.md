@@ -61,6 +61,33 @@ by routed paths, and the region-only path solve took about `52ms`.
 Blacksmith ran samples 1, 3, 6, 12, and 15 concurrently with a 600-second
 per-sample timeout. Pipeline10 used 6 mm cells and six ports per layer.
 
+The current region-only implementation completed all five samples. On the
+three samples completed by both solvers, aggregate runtime fell from `587.1s`
+to `336.0s`, a `1.75x` end-to-end speedup. Sample 6 and sample 15 changed from
+timeouts to completions. The baseline's lower successful-sample p50 is not a
+like-for-like comparison because it excludes those two timed-out boards.
+
+| Sample | Pipeline7 | Region-only Pipeline10 | Speedup | Relaxed DRC errors | Vias |
+| ---: | ---: | ---: | ---: | ---: | ---: |
+| 1 | 84.3s | 65.0s | 1.30x | 210 | 215 |
+| 3 | 62.4s | 25.6s | 2.44x | 69 | 105 |
+| 6 | timeout | 334.1s | completion | 271 | 244 |
+| 12 | 440.4s | 245.4s | 1.79x | 349 | 337 |
+| 15 | timeout | 166.2s | completion | 154 | 300 |
+
+The region-only Pipeline10 run had 100% solver completion, no timeouts, a
+166.2-second p50, and a 316.3-second p95. It had a 0% relaxed DRC pass rate.
+This means the retained post-processors can consume the approximate topology
+without structural solver failures, but they cannot yet repair its geometric
+error load completely.
+
+[Region-only Pipeline10 Blacksmith testbox run](https://github.com/tscircuit/tscircuit-autorouter/actions/runs/31272452830)
+
+### Earlier full tiny-hypergraph matrix
+
+The earlier experiment sent the approximate graph through tiny-hypergraph's
+full port assignment and rip-up solver:
+
 | Solver | Refinement | Completed | Relaxed DRC pass | Timeouts | Successful p50 | Sample 3 time / DRC / vias |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
 | Pipeline7 baseline | n/a | 60% | 40% | 2/5 | 84.3s | 62.4s / 8 / 92 |
@@ -79,9 +106,9 @@ These runs predate region-only pathing. Depth `1` was the old full
 tiny-hypergraph default; Pipeline10 now uses depth `2` because the larger
 region graph solves in milliseconds and reduces downstream node congestion.
 
-The matrix also establishes a release boundary: spatial grid approximation is
-not yet precise enough for the current post-processors. No Pipeline10 setting
-passed relaxed DRC, and the harder boards either timed out or failed in
-high-density routing, tiny-hypergraph reripping, or trace simplification.
-Pipeline10 should remain opt-in until obstacle-aware local topology or stronger
-post-processing closes that gap.
+The combined results establish a release boundary: region-only pathing removes
+the dominant hypergraph solve cost and reachability failures, while retaining
+exact component detection and local component topology. Spatial grid
+approximation is still not precise enough for the current post-processors,
+however. Pipeline10 should remain opt-in until obstacle-aware local geometry or
+stronger post-processing closes the relaxed-DRC gap.
