@@ -172,7 +172,10 @@ export class CachedIntraNodeRouteSolver
       normalizedConnMap,
     }
 
-    const cacheKey = `intranode-solver:${objectHash(keyData)}`
+    const cacheKey = `intranode-solver:${objectHash(keyData, {
+      respectType: false,
+      unorderedObjects: false,
+    })}`
     const cacheToSolveSpaceTransform: CacheToIntraNodeSolverTransform = {}
 
     this.cacheKey = cacheKey
