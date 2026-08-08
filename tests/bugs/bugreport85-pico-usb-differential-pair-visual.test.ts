@@ -15,11 +15,8 @@ test("bugreport85 Pico USB differential-pair best-effort visualization", (): voi
   solver.solve()
 
   expect(
-    getSvgFromGraphicsObject(
-      solver.lengthMatchingPostProcessingSolver!.visualize(),
-      {
-        backgroundColor: "white",
-      },
-    ),
+    getSvgFromGraphicsObject(solver.visualize(), {
+      backgroundColor: "white",
+    }),
   ).toMatchSvgSnapshot(import.meta.path)
 })
