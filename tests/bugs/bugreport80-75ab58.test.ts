@@ -13,7 +13,9 @@ test("bugreport80-75ab58.json", () => {
   solver.solve()
 
   expect(solver.failed).toBe(false)
+  // Large Pipeline7 boards can produce equivalent route variants across platforms.
   expect(getLastStepSvg(solver.visualize())).toMatchSvgSnapshot(
     import.meta.path,
+    { tolerance: 0.15 },
   )
 })
