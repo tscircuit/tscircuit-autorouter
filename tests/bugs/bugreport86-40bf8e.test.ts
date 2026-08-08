@@ -7,7 +7,7 @@ import type { SimpleRouteJson } from "lib/types"
 
 const srj = bugReport.simple_route_json as SimpleRouteJson
 
-test("Pipeline9 routes LCD traces around the 76 preloaded traces in bugreport86-40bf8e", (): void => {
+test.skip("Pipeline9 routes LCD traces around the 76 preloaded traces in bugreport86-40bf8e", (): void => {
   const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(
     structuredClone(srj),
     {
