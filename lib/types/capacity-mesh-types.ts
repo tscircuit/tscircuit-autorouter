@@ -34,6 +34,7 @@ export interface CapacityMeshNode {
   _soicRegionType?: "center" | "pad" | "pad-gap"
   _isComponentTopologyNode?: boolean
   _connectedTo?: string[]
+  _skipEndpointNetReservation?: boolean
 
   _parent?: CapacityMeshNode
 }

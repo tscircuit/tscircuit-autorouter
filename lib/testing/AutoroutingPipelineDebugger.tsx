@@ -16,6 +16,7 @@ import { AutoroutingPipelineSolver6 } from "lib/autorouter-pipelines/Autorouting
 import { AutoroutingPipelineSolver7_MultiGraph } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/AutoroutingPipelineSolver7_MultiGraph"
 import { AutoroutingPipelineSolver8 } from "lib/autorouter-pipelines/AutoroutingPipeline8/AutoroutingPipelineSolver8"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/autorouting-pipeline-solver9-preloaded-trace-graph"
+import { AutoroutingPipelineSolver10_ApproximateHypergraph } from "lib/autorouter-pipelines/AutoroutingPipeline10_ApproximateHypergraph/AutoroutingPipelineSolver10_ApproximateHypergraph"
 import {
   AutoroutingPipelineSolver2_PortPointPathing,
   CapacityMeshSolver,
@@ -62,6 +63,7 @@ const PIPELINE_SOLVERS = {
   AutoroutingPipelineSolver7_MultiGraph,
   AutoroutingPipelineSolver8,
   AutoroutingPipelineSolver9_PreloadedTraceGraph,
+  AutoroutingPipelineSolver10_ApproximateHypergraph,
   AssignableAutoroutingPipeline1Solver,
   AssignableAutoroutingPipeline2,
   AssignableAutoroutingPipeline3,

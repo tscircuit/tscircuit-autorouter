@@ -6,6 +6,10 @@ export type BenchmarkTask = {
   scenarioName: string
   sampleNumber: number
   scenario: SimpleRouteJson
+  solverOptions?: {
+    approximateCellSize?: number
+    approximateMaxPortsPerLayerPerEdge?: number
+  }
 }
 
 export type BenchmarkSnapshot = {

@@ -66,6 +66,10 @@ export const PIPELINE_OPTIONS = [
     label: "Pipeline9 Preloaded Trace Graph",
   },
   {
+    id: "AutoroutingPipelineSolver10_ApproximateHypergraph",
+    label: "Pipeline10 Approximate Hypergraph",
+  },
+  {
     id: "AssignableAutoroutingPipeline1Solver",
     label: "Assignable Pipeline 1",
   },

@@ -24,6 +24,7 @@ export function getRegionNetIdByRegionId(input: {
     }
     for (const point of connection.simpleRouteConnection.pointsToConnect) {
       for (const region of input.params.graph.regions) {
+        if (region.d._skipEndpointNetReservation) continue
         if (
           !checkIfConnectionPointIsInRegion({
             point,

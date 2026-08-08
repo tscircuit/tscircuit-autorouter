@@ -39,6 +39,8 @@ type SolverInstance = {
 
 type SolverOptions = {
   effort?: number
+  approximateCellSize?: number
+  approximateMaxPortsPerLayerPerEdge?: number
 }
 
 type SolverConstructor = new (
@@ -78,6 +80,7 @@ const countTraceVias = (traces: SimplifiedPcbTrace[]) =>
 
 export const getBenchmarkSolverOptions = (
   scenario: SimpleRouteJson,
+  taskOptions: BenchmarkTask["solverOptions"] = {},
 ): SolverOptions | undefined => {
   const rawEffort = (scenario as SimpleRouteJson & { effort?: number }).effort
   const effort =
@@ -85,12 +88,13 @@ export const getBenchmarkSolverOptions = (
       ? rawEffort
       : undefined
 
-  if (effort === undefined) {
+  if (effort === undefined && Object.keys(taskOptions).length === 0) {
     return undefined
   }
 
   return {
     effort,
+    ...taskOptions,
   }
 }
 
@@ -110,7 +114,7 @@ export const createSolverForTask = (task: BenchmarkTask): SolverInstance => {
   const SolverConstructor = getSolverConstructor(task.solverName)
   return new SolverConstructor(
     task.scenario,
-    getBenchmarkSolverOptions(task.scenario),
+    getBenchmarkSolverOptions(task.scenario, task.solverOptions),
   )
 }
 

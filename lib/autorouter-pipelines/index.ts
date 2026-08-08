@@ -22,3 +22,6 @@ export {
 } from "./AutoroutingPipeline7_MultiGraph/AutoroutingPipelineSolver7_MultiGraph"
 export { AutoroutingPipelineSolver8 } from "./AutoroutingPipeline8/AutoroutingPipelineSolver8"
 export { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "./AutoroutingPipeline9_PreloadedTraceGraph/autorouting-pipeline-solver9-preloaded-trace-graph"
+export { AutoroutingPipelineSolver10_ApproximateHypergraph } from "./AutoroutingPipeline10_ApproximateHypergraph/AutoroutingPipelineSolver10_ApproximateHypergraph"
+export { ApproximateHypergraphTopologySolver } from "./AutoroutingPipeline10_ApproximateHypergraph/ApproximateHypergraphTopologySolver"
+export { ApproximateLayerTransitionSolver } from "./AutoroutingPipeline10_ApproximateHypergraph/ApproximateLayerTransitionSolver"

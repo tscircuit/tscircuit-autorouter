@@ -32,6 +32,8 @@ type BenchmarkOptions = {
   sampleNumbers?: number[]
   concurrency: number
   effort?: number
+  approximateCellSize?: number
+  approximateMaxPortsPerLayerPerEdge?: number
   sampleTimeoutMs?: number
   excludeAssignable: boolean
   datasetName: DatasetName
@@ -734,6 +736,19 @@ const parseArgs = (): BenchmarkOptions => {
       i += 1
       continue
     }
+    if (arg === "--approximate-cell-size") {
+      options.approximateCellSize = Number.parseFloat(args[i + 1] ?? "")
+      i += 1
+      continue
+    }
+    if (arg === "--approximate-max-ports") {
+      options.approximateMaxPortsPerLayerPerEdge = Number.parseInt(
+        args[i + 1] ?? "",
+        10,
+      )
+      i += 1
+      continue
+    }
     if (arg === "--exclude-assignable") {
       options.excludeAssignable = true
       continue
@@ -772,6 +787,20 @@ const parseArgs = (): BenchmarkOptions => {
     (!Number.isFinite(options.effort) || options.effort < 1)
   ) {
     throw new Error("--effort must be a positive integer")
+  }
+  if (
+    options.approximateCellSize !== undefined &&
+    (!Number.isFinite(options.approximateCellSize) ||
+      options.approximateCellSize <= 0)
+  ) {
+    throw new Error("--approximate-cell-size must be greater than zero")
+  }
+  if (
+    options.approximateMaxPortsPerLayerPerEdge !== undefined &&
+    (!Number.isInteger(options.approximateMaxPortsPerLayerPerEdge) ||
+      options.approximateMaxPortsPerLayerPerEdge <= 0)
+  ) {
+    throw new Error("--approximate-max-ports must be a positive integer")
   }
 
   return options
@@ -1478,6 +1507,8 @@ const main = async () => {
     sampleNumbers,
     concurrency,
     effort,
+    approximateCellSize,
+    approximateMaxPortsPerLayerPerEdge,
     sampleTimeoutMs,
     excludeAssignable,
     datasetName,
@@ -1536,6 +1567,10 @@ const main = async () => {
           scenarioName,
           sampleNumber,
           scenario,
+          solverOptions: {
+            approximateCellSize,
+            approximateMaxPortsPerLayerPerEdge,
+          },
         }) satisfies BenchmarkTask,
     ),
   )
