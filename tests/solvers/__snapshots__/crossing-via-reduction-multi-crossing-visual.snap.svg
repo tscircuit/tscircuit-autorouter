@@ -1,0 +1,94 @@
+<svg width="1012" height="696" viewBox="0 0 1012 696" xmlns="http://www.w3.org/2000/svg">
+  <g transform="translate(0, 0) scale(1, 1) translate(0, 0)">
+    <rect width="100%" height="100%" fill="white"/><text x="16" y="22" font-family="monospace" font-size="15" font-weight="700" fill="#111">BEFORE • 4 VIAS</text><text x="16" y="43" font-family="monospace" font-size="12" fill="#444">One detour crosses two routes on its terminal layer.</text><text x="16" y="61" font-family="monospace" font-size="12" fill="#444">Each crossing route already has an adjacent via.</text><g transform="translate(0 76)"><rect width="100%" height="100%" fill="#0d1b2a"/><g><polyline data-points="-2,4 -2,3" data-type="line" data-label="detour (z=0)" points="182.5,40 182.5,107.5" fill="none" stroke="#d32f2f" stroke-width="10.125"/></g><g><polyline data-points="-2,3 -2,-3" data-type="line" data-label="detour (z=1)" points="182.5,107.5 182.5,512.5" fill="none" stroke="#3367a8" stroke-width="10.125"/></g><g><polyline data-points="-2,-3 -2,-4" data-type="line" data-label="detour (z=0)" points="182.5,512.5 182.5,580" fill="none" stroke="#d32f2f" stroke-width="10.125"/></g><g><polyline data-points="1,1 0,1" data-type="line" data-label="transition-a (z=1)" points="385,242.5 317.5,242.5" fill="none" stroke="#3367a8" stroke-width="10.125"/></g><g><polyline data-points="0,1 -3,1" data-type="line" data-label="transition-a (z=0)" points="317.5,242.5 115,242.5" fill="none" stroke="#d32f2f" stroke-width="10.125"/></g><g><polyline data-points="1,-1 0,-1" data-type="line" data-label="transition-b (z=1)" points="385,377.5 317.5,377.5" fill="none" stroke="#3367a8" stroke-width="10.125"/></g><g><polyline data-points="0,-1 -3,-1" data-type="line" data-label="transition-b (z=0)" points="317.5,377.5 115,377.5" fill="none" stroke="#d32f2f" stroke-width="10.125"/></g><circle data-type="circle" data-label="" data-x="-2" data-y="3" cx="182.5" cy="107.5" r="13.5" fill="#ff20d6" stroke="black" stroke-width="0.014814814814814815"/><circle data-type="circle" data-label="" data-x="-2" data-y="-3" cx="182.5" cy="512.5" r="13.5" fill="#ff20d6" stroke="black" stroke-width="0.014814814814814815"/><circle data-type="circle" data-label="" data-x="0" data-y="1" cx="317.5" cy="242.5" r="13.5" fill="#ff20d6" stroke="black" stroke-width="0.014814814814814815"/><circle data-type="circle" data-label="" data-x="0" data-y="-1" cx="317.5" cy="377.5" r="13.5" fill="#ff20d6" stroke="black" stroke-width="0.014814814814814815"/><g id="crosshair" style="display: none"><line id="crosshair-h" y1="0" y2="620" stroke="#666" stroke-width="0.5"/><line id="crosshair-v" x1="0" x2="500" stroke="#666" stroke-width="0.5"/><text id="coordinates" font-family="monospace" font-size="12" fill="#666"></text></g><script><![CDATA[
+              document.currentScript.parentElement.addEventListener('mousemove', (e) => {
+                const svg = e.currentTarget;
+                const rect = svg.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                const crosshair = svg.getElementById('crosshair');
+                const h = svg.getElementById('crosshair-h');
+                const v = svg.getElementById('crosshair-v');
+                const coords = svg.getElementById('coordinates');
+
+                crosshair.style.display = 'block';
+                h.setAttribute('x1', '0');
+                h.setAttribute('x2', '500');
+                h.setAttribute('y1', y);
+                h.setAttribute('y2', y);
+                v.setAttribute('x1', x);
+                v.setAttribute('x2', x);
+                v.setAttribute('y1', '0');
+                v.setAttribute('y2', '620');
+
+                // Calculate real coordinates using inverse transformation
+                const matrix = {"a":67.5,"c":0,"e":317.5,"b":0,"d":-67.5,"f":310};
+                // Manually invert and apply the affine transform
+                // Since we only use translate and scale, we can directly compute:
+                // x' = (x - tx) / sx
+                // y' = (y - ty) / sy
+                const sx = matrix.a;
+                const sy = matrix.d;
+                const tx = matrix.e;
+                const ty = matrix.f;
+                const realPoint = {
+                  x: (x - tx) / sx,
+                  y: (y - ty) / sy // Flip y back since we used negative scale
+                }
+
+                coords.textContent = `(${realPoint.x.toFixed(2)}, ${realPoint.y.toFixed(2)})`;
+                coords.setAttribute('x', (x + 5).toString());
+                coords.setAttribute('y', (y - 5).toString());
+              });
+              document.currentScript.parentElement.addEventListener('mouseleave', () => {
+                document.currentScript.parentElement.getElementById('crosshair').style.display = 'none';
+              });
+            ]]></script></g>
+  </g>
+  <g transform="translate(512, 0) scale(1, 1) translate(0, 0)">
+    <rect width="100%" height="100%" fill="white"/><text x="16" y="22" font-family="monospace" font-size="15" font-weight="700" fill="#111">AFTER • 2 VIAS</text><text x="16" y="43" font-family="monospace" font-size="12" fill="#444">Both existing vias move past the crossings atomically.</text><text x="16" y="61" font-family="monospace" font-size="12" fill="#444">The detour stays on one layer and loses its via pair.</text><g transform="translate(0 76)"><rect width="100%" height="100%" fill="#0d1b2a"/><g><polyline data-points="-2,4 -2,3" data-type="line" data-label="detour (z=0)" points="182.5,40 182.5,107.5" fill="none" stroke="#d32f2f" stroke-width="10.125"/></g><g><polyline data-points="-2,3 -2,-3" data-type="line" data-label="detour (z=0)" points="182.5,107.5 182.5,512.5" fill="none" stroke="#d32f2f" stroke-width="10.125"/></g><g><polyline data-points="-2,-3 -2,-4" data-type="line" data-label="detour (z=0)" points="182.5,512.5 182.5,580" fill="none" stroke="#d32f2f" stroke-width="10.125"/></g><g><polyline data-points="1,1 0,1" data-type="line" data-label="transition-a (z=1)" points="385,242.5 317.5,242.5" fill="none" stroke="#3367a8" stroke-width="10.125"/></g><g><polyline data-points="0,1 -2.375001,1" data-type="line" data-label="transition-a (z=1)" points="317.5,242.5 157.1874325,242.5" fill="none" stroke="#3367a8" stroke-width="10.125"/></g><g><polyline data-points="-2.375001,1 -3,1" data-type="line" data-label="transition-a (z=0)" points="157.1874325,242.5 115,242.5" fill="none" stroke="#d32f2f" stroke-width="10.125"/></g><g><polyline data-points="1,-1 0,-1" data-type="line" data-label="transition-b (z=1)" points="385,377.5 317.5,377.5" fill="none" stroke="#3367a8" stroke-width="10.125"/></g><g><polyline data-points="0,-1 -2.375001,-1" data-type="line" data-label="transition-b (z=1)" points="317.5,377.5 157.1874325,377.5" fill="none" stroke="#3367a8" stroke-width="10.125"/></g><g><polyline data-points="-2.375001,-1 -3,-1" data-type="line" data-label="transition-b (z=0)" points="157.1874325,377.5 115,377.5" fill="none" stroke="#d32f2f" stroke-width="10.125"/></g><circle data-type="circle" data-label="" data-x="-2.375001" data-y="1" cx="157.1874325" cy="242.5" r="13.5" fill="#ff20d6" stroke="black" stroke-width="0.014814814814814815"/><circle data-type="circle" data-label="" data-x="-2.375001" data-y="-1" cx="157.1874325" cy="377.5" r="13.5" fill="#ff20d6" stroke="black" stroke-width="0.014814814814814815"/><g id="crosshair__stack1" style="display: none"><line id="crosshair-h__stack1" y1="0" y2="620" stroke="#666" stroke-width="0.5"/><line id="crosshair-v__stack1" x1="0" x2="500" stroke="#666" stroke-width="0.5"/><text id="coordinates__stack1" font-family="monospace" font-size="12" fill="#666"></text></g><script><![CDATA[
+              document.currentScript.parentElement.addEventListener('mousemove', (e) => {
+                const svg = e.currentTarget;
+                const rect = svg.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                const crosshair = svg.getElementById('crosshair');
+                const h = svg.getElementById('crosshair-h');
+                const v = svg.getElementById('crosshair-v');
+                const coords = svg.getElementById('coordinates');
+
+                crosshair.style.display = 'block';
+                h.setAttribute('x1', '0');
+                h.setAttribute('x2', '500');
+                h.setAttribute('y1', y);
+                h.setAttribute('y2', y);
+                v.setAttribute('x1', x);
+                v.setAttribute('x2', x);
+                v.setAttribute('y1', '0');
+                v.setAttribute('y2', '620');
+
+                // Calculate real coordinates using inverse transformation
+                const matrix = {"a":67.5,"c":0,"e":317.5,"b":0,"d":-67.5,"f":310};
+                // Manually invert and apply the affine transform
+                // Since we only use translate and scale, we can directly compute:
+                // x' = (x - tx) / sx
+                // y' = (y - ty) / sy
+                const sx = matrix.a;
+                const sy = matrix.d;
+                const tx = matrix.e;
+                const ty = matrix.f;
+                const realPoint = {
+                  x: (x - tx) / sx,
+                  y: (y - ty) / sy // Flip y back since we used negative scale
+                }
+
+                coords.textContent = `(${realPoint.x.toFixed(2)}, ${realPoint.y.toFixed(2)})`;
+                coords.setAttribute('x', (x + 5).toString());
+                coords.setAttribute('y', (y - 5).toString());
+              });
+              document.currentScript.parentElement.addEventListener('mouseleave', () => {
+                document.currentScript.parentElement.getElementById('crosshair').style.display = 'none';
+              });
+            ]]></script></g>
+  </g>
+</svg>
