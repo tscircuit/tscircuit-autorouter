@@ -19,7 +19,10 @@ export const canSectionMoveToLayer = ({
   currentSection: RouteSection
   targetZ: number
   route: HighDensityRoute
-  hdRouteSHI: HighDensityRouteSpatialIndex
+  hdRouteSHI: Pick<
+    HighDensityRouteSpatialIndex,
+    "getConflictingRoutesForSegment"
+  >
   obstacleSHI: ObstacleSpatialHashIndex
   connMap: ConnectivityMap
   defaultTraceThickness: number
