@@ -597,7 +597,11 @@ export class CrossingViaReductionSolver extends BaseSolver {
     ) {
       if (this.reducedHdRoutes[routeIndex].jumpers?.length) continue
       const sections = sectionsByRoute[routeIndex]
-      for (let sectionIndex = 0; sectionIndex < sections.length; sectionIndex++) {
+      for (
+        let sectionIndex = 0;
+        sectionIndex < sections.length;
+        sectionIndex++
+      ) {
         const section = sections[sectionIndex]
         if (sectionHasProtectedGeometry(section)) continue
 
@@ -620,10 +624,7 @@ export class CrossingViaReductionSolver extends BaseSolver {
           ) {
             const start = section.points[segmentIndex - 1]
             const end = section.points[segmentIndex]
-            const segmentLength = Math.hypot(
-              end.x - start.x,
-              end.y - start.y,
-            )
+            const segmentLength = Math.hypot(end.x - start.x, end.y - start.y)
             if (segmentLength > EPSILON) {
               indexedSegments.push({
                 routeIndex,
@@ -681,10 +682,8 @@ export class CrossingViaReductionSolver extends BaseSolver {
       const detourStart = detourSection.points[detourSegmentIndex - 1]
       const detourEnd = detourSection.points[detourSegmentIndex]
       if (
-        Math.hypot(
-          detourEnd.x - detourStart.x,
-          detourEnd.y - detourStart.y,
-        ) <= EPSILON
+        Math.hypot(detourEnd.x - detourStart.x, detourEnd.y - detourStart.y) <=
+        EPSILON
       ) {
         continue
       }
@@ -859,9 +858,7 @@ export class CrossingViaReductionSolver extends BaseSolver {
           section: detourSection,
           targetZ: previousSection.z,
         })
-        relevantLayerTransitions.add(
-          `${previousSection.z}:${detourSection.z}`,
-        )
+        relevantLayerTransitions.add(`${previousSection.z}:${detourSection.z}`)
       }
     }
     if (detourCandidates.length === 0) return null
@@ -897,9 +894,7 @@ export class CrossingViaReductionSolver extends BaseSolver {
         const transitionSection =
           transitionSections[crossingGroup.transitionSectionIndex]
         baseClearanceIndexes ??= {
-          mutableRoutes: new HighDensityRouteSpatialIndex(
-            this.reducedHdRoutes,
-          ),
+          mutableRoutes: new HighDensityRouteSpatialIndex(this.reducedHdRoutes),
           immutableRoutes: this.input.otherHdRoutes?.length
             ? new HighDensityRouteSpatialIndex([...this.input.otherHdRoutes])
             : null,
