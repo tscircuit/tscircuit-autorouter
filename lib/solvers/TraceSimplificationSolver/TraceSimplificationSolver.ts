@@ -33,8 +33,8 @@ const isMultilayerObstacle = (obstacle: Obstacle) =>
 /**
  * TraceSimplificationSolver consolidates trace optimization by iteratively applying
  * via removal, crossing via reduction, via merging, and path simplification
- * phases. It reduces redundant vias and simplifies routing paths through
- * configurable iterations.
+ * phases. The second via-removal pass can route short local detours around
+ * blocking pads while removing a via pair.
  *
  * The solver operates in four alternating phases per iteration:
  * 1. "via_removal" - Removes unnecessary vias from routes using UselessViaRemovalSolver
@@ -268,6 +268,8 @@ export class TraceSimplificationSolver extends BaseSolver {
             // Delay the quadratic anchor search until the first path pass has
             // reduced the route point count.
             enableGeometryShortcuts: this.simplificationPipelineLoops > 0,
+            enableObstacleDetourShortcuts:
+              this.simplificationPipelineLoops > 0,
           })
           this.extractResult = (s) =>
             (s as UselessViaRemovalSolver).getOptimizedHdRoutes() ?? []

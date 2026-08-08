@@ -46,7 +46,9 @@ export class SingleRouteUselessViaRemovalSolver extends BaseSolver {
   OBSTACLE_MARGIN = 0.1
   GEOMETRY_SHORTCUT_TRACE_MARGIN = 0.1
   GEOMETRY_SHORTCUT_OBSTACLE_MARGIN = 0.15
+  MAX_GEOMETRY_SHORTCUT_ADDED_LENGTH = 4
   ENABLE_GEOMETRY_SHORTCUTS = true
+  ENABLE_OBSTACLE_DETOUR_SHORTCUTS = false
 
   geometryShortcutsApplied = 0
   multilayerSectionsCollapsed = 0
@@ -60,6 +62,7 @@ export class SingleRouteUselessViaRemovalSolver extends BaseSolver {
     geometryShortcutTraceMargin?: number
     geometryShortcutObstacleMargin?: number
     enableGeometryShortcuts?: boolean
+    enableObstacleDetourShortcuts?: boolean
   }) {
     super()
     this.currentSectionIndex = 0 // Start at 0 to check first section for MLCP via removal
@@ -74,6 +77,8 @@ export class SingleRouteUselessViaRemovalSolver extends BaseSolver {
       params.geometryShortcutObstacleMargin ??
       this.GEOMETRY_SHORTCUT_OBSTACLE_MARGIN
     this.ENABLE_GEOMETRY_SHORTCUTS = params.enableGeometryShortcuts ?? true
+    this.ENABLE_OBSTACLE_DETOUR_SHORTCUTS =
+      params.enableObstacleDetourShortcuts ?? false
 
     this.routeSections = breakRouteIntoSections(this.unsimplifiedRoute)
   }
@@ -127,18 +132,68 @@ export class SingleRouteUselessViaRemovalSolver extends BaseSolver {
     return false
   }
 
-  private findGeometryShortcut(
+  private getObstacleDetourPaths(
+    start: RoutePoint,
+    end: RoutePoint,
+    targetZ: number,
+  ): RoutePoint[][] {
+    const traceThickness =
+      this.unsimplifiedRoute.traceThickness ?? this.TRACE_THICKNESS
+    const corridorMargin =
+      traceThickness / 2 + this.GEOMETRY_SHORTCUT_OBSTACLE_MARGIN + 1e-6
+    const searchExpansion =
+      this.MAX_GEOMETRY_SHORTCUT_ADDED_LENGTH / 2 + corridorMargin
+    const minX = Math.min(start.x, end.x) - searchExpansion
+    const maxX = Math.max(start.x, end.x) + searchExpansion
+    const minY = Math.min(start.y, end.y) - searchExpansion
+    const maxY = Math.max(start.y, end.y) + searchExpansion
+    const obstacles = this.obstacleSHI
+      .search({ minX, minY, maxX, maxY })
+      .filter((obstacle) => obstacle.__zLayers?.includes(targetZ))
+    if (obstacles.length === 0) return []
+
+    const corridorXs = new Set<number>()
+    const corridorYs = new Set<number>()
+    for (const obstacle of obstacles) {
+      corridorXs.add(obstacle.center.x - obstacle.width / 2 - corridorMargin)
+      corridorXs.add(obstacle.center.x + obstacle.width / 2 + corridorMargin)
+      corridorYs.add(obstacle.center.y - obstacle.height / 2 - corridorMargin)
+      corridorYs.add(obstacle.center.y + obstacle.height / 2 + corridorMargin)
+    }
+
+    const paths: RoutePoint[][] = []
+    const pathKeys = new Set<string>()
+    const addPath = (points: Array<{ x: number; y: number }>) => {
+      const path = this.normalizeShortcutPath(points, start, end)
+      const key = path.map((point) => `${point.x}:${point.y}`).join("|")
+      if (pathKeys.has(key)) return
+      pathKeys.add(key)
+      paths.push(path)
+    }
+    for (const corridorY of corridorYs) {
+      addPath([
+        start,
+        { x: start.x, y: corridorY },
+        { x: end.x, y: corridorY },
+        end,
+      ])
+    }
+    for (const corridorX of corridorXs) {
+      addPath([
+        start,
+        { x: corridorX, y: start.y },
+        { x: corridorX, y: end.y },
+        end,
+      ])
+    }
+    return paths
+  }
+
+  private getDirectGeometryShortcut(
     previousSection: RouteSection,
     currentSection: RouteSection,
     nextSection: RouteSection,
   ): ViaPairShortcut | null {
-    if (
-      !this.ENABLE_GEOMETRY_SHORTCUTS ||
-      this.unsimplifiedRoute.jumpers?.length
-    ) {
-      return null
-    }
-
     let bestShortcut: ViaPairShortcut | null = null
     for (
       let previousPointIndex = 0;
@@ -202,6 +257,112 @@ export class SingleRouteUselessViaRemovalSolver extends BaseSolver {
       }
     }
     return bestShortcut
+  }
+
+  private getObstacleDetourShortcut(
+    previousSection: RouteSection,
+    currentSection: RouteSection,
+    nextSection: RouteSection,
+  ): ViaPairShortcut | null {
+    const transitionIndex = previousSection.points.length - 1
+    const anchorPairs: Array<[number, number]> = []
+    // Keep one anchor at a layer transition so candidate growth is P + N,
+    // rather than the quadratic P * N direct-shortcut search above.
+    for (
+      let previousIndex = 0;
+      previousIndex <= transitionIndex;
+      previousIndex++
+    ) {
+      anchorPairs.push([previousIndex, 0])
+    }
+    for (let nextIndex = 1; nextIndex < nextSection.points.length; nextIndex++) {
+      anchorPairs.push([transitionIndex, nextIndex])
+    }
+
+    let bestShortcut: ViaPairShortcut | null = null
+    for (const [previousPointIndex, nextPointIndex] of anchorPairs) {
+      const start = previousSection.points[previousPointIndex]
+      const end = nextSection.points[nextPointIndex]
+      const replacedPoints = [
+        ...previousSection.points.slice(previousPointIndex),
+        ...currentSection.points,
+        ...nextSection.points.slice(0, nextPointIndex + 1),
+      ]
+      if (
+        replacedPoints.some(
+          (point) => point.insideJumperPad || point.toNextSegmentType,
+        )
+      ) {
+        continue
+      }
+
+      for (const path of this.getObstacleDetourPaths(
+        start,
+        end,
+        previousSection.z,
+      )) {
+        const savedLength =
+          this.getPathLength(replacedPoints) - this.getPathLength(path)
+        if (
+          savedLength < -this.MAX_GEOMETRY_SHORTCUT_ADDED_LENGTH - 1e-6 ||
+          this.shortcutCrossesOutline(path)
+        ) {
+          continue
+        }
+
+        const candidateSection: RouteSection = {
+          startIndex: previousSection.startIndex + previousPointIndex,
+          endIndex: nextSection.startIndex + nextPointIndex,
+          z: previousSection.z,
+          points: path,
+        }
+        const pathIsClear = canSectionMoveToLayer({
+          currentSection: candidateSection,
+          targetZ: previousSection.z,
+          route: this.unsimplifiedRoute,
+          hdRouteSHI: this.hdRouteSHI,
+          obstacleSHI: this.obstacleSHI,
+          connMap: this.connMap,
+          defaultTraceThickness: this.TRACE_THICKNESS,
+          obstacleMargin: this.GEOMETRY_SHORTCUT_OBSTACLE_MARGIN,
+          traceMargin: this.GEOMETRY_SHORTCUT_TRACE_MARGIN,
+        })
+        if (!pathIsClear) continue
+
+        if (!bestShortcut || savedLength > bestShortcut.savedLength) {
+          bestShortcut = {
+            path,
+            previousPointIndex,
+            nextPointIndex,
+            savedLength,
+          }
+        }
+      }
+    }
+    return bestShortcut
+  }
+
+  private findGeometryShortcut(
+    previousSection: RouteSection,
+    currentSection: RouteSection,
+    nextSection: RouteSection,
+  ): ViaPairShortcut | null {
+    if (this.unsimplifiedRoute.jumpers?.length) return null
+
+    if (this.ENABLE_GEOMETRY_SHORTCUTS) {
+      const directShortcut = this.getDirectGeometryShortcut(
+        previousSection,
+        currentSection,
+        nextSection,
+      )
+      if (directShortcut) return directShortcut
+    }
+    if (!this.ENABLE_OBSTACLE_DETOUR_SHORTCUTS) return null
+    return this.getObstacleDetourShortcut(
+      previousSection,
+      currentSection,
+      nextSection,
+    )
   }
 
   private applyGeometryShortcut(shortcut: ViaPairShortcut): void {
@@ -497,6 +658,7 @@ export class SingleRouteUselessViaRemovalSolver extends BaseSolver {
       geometryShortcutTraceMargin: this.GEOMETRY_SHORTCUT_TRACE_MARGIN,
       geometryShortcutObstacleMargin: this.GEOMETRY_SHORTCUT_OBSTACLE_MARGIN,
       enableGeometryShortcuts: this.ENABLE_GEOMETRY_SHORTCUTS,
+      enableObstacleDetourShortcuts: this.ENABLE_OBSTACLE_DETOUR_SHORTCUTS,
     }
   }
 

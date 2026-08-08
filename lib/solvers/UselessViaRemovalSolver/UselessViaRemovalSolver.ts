@@ -23,6 +23,7 @@ export interface UselessViaRemovalSolverInput {
   geometryShortcutTraceMargin?: number
   geometryShortcutObstacleMargin?: number
   enableGeometryShortcuts?: boolean
+  enableObstacleDetourShortcuts?: boolean
 }
 
 export class UselessViaRemovalSolver extends BaseSolver {
@@ -91,6 +92,8 @@ export class UselessViaRemovalSolver extends BaseSolver {
       geometryShortcutTraceMargin: this.input.geometryShortcutTraceMargin,
       geometryShortcutObstacleMargin: this.input.geometryShortcutObstacleMargin,
       enableGeometryShortcuts: this.input.enableGeometryShortcuts,
+      enableObstacleDetourShortcuts:
+        this.input.enableObstacleDetourShortcuts,
     })
   }
 
