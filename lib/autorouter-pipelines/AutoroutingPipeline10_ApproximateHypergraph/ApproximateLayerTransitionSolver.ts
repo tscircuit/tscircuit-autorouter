@@ -28,6 +28,7 @@ const materializeLayerTransitions = (
   }
 
   const vias: HighDensityRoute["vias"] = []
+  const viaLocationKeys = new Set<string>()
   for (let pointIndex = 0; pointIndex < points.length - 1; pointIndex++) {
     const start = points[pointIndex]!
     const end = points[pointIndex + 1]!
@@ -36,6 +37,9 @@ const materializeLayerTransitions = (
       Math.abs(start.x - end.x) <= POINT_EPSILON &&
       Math.abs(start.y - end.y) <= POINT_EPSILON
     ) {
+      const viaLocationKey = `${end.x}:${end.y}`
+      if (viaLocationKeys.has(viaLocationKey)) continue
+      viaLocationKeys.add(viaLocationKey)
       vias.push({ x: end.x, y: end.y })
     }
   }

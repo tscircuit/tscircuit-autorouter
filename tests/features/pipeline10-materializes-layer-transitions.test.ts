@@ -15,6 +15,17 @@ test("Pipeline10 materializes approximate layer changes before exact repair", ()
         ],
         vias: [],
       },
+      {
+        connectionName: "source_trace_2",
+        traceThickness: 0.15,
+        viaDiameter: 0.6,
+        route: [
+          { x: 0, y: 0, z: 0 },
+          { x: 2, y: 1, z: 1 },
+          { x: 2, y: 1, z: 2 },
+        ],
+        vias: [],
+      },
     ],
   })
 
@@ -27,5 +38,6 @@ test("Pipeline10 materializes approximate layer changes before exact repair", ()
     { x: 4, y: 1, z: 1 },
   ])
   expect(solver.getOutput()[0]!.vias).toEqual([{ x: 2, y: 1 }])
-  expect(solver.stats.materializedTransitionCount).toBe(1)
+  expect(solver.getOutput()[1]!.vias).toEqual([{ x: 2, y: 1 }])
+  expect(solver.stats.materializedTransitionCount).toBe(2)
 })

@@ -43,7 +43,7 @@ export class ApproximateMultiGraphTopologyPlannerSolver extends MultiGraphTopolo
             instance.approximateParams.obstacleSamplingMargin,
           generatePortsAndEdges: false,
           localRefinementDepth:
-            instance.approximateParams.localRefinementDepth ?? 2,
+            instance.approximateParams.localRefinementDepth ?? 1,
         },
       ],
     ),
