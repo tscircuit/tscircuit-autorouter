@@ -171,10 +171,10 @@ const getGridNodes = (params: {
       obstacleOverlapsNode(obstacle, node),
     )
     node._completelyInsideObstacle = false
-    // Terminal-adjacent leaves are local precision regions. Preserve their
-    // cramped boundary candidates just like generated component topology so
-    // the approximate graph cannot isolate a pad before repair gets a chance.
-    node._isComponentTopologyNode = node._containsTarget || undefined
+    // Terminal-adjacent leaves are local precision regions, but they are not
+    // component topology. Keeping the markers distinct lets Pipeline10 retain
+    // exact component routing without sending every refined terminal cell
+    // through the expensive exact intra-node solver.
     node._isApproximateTerminalRefinement = node._containsTarget || undefined
     return node
   }

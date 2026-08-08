@@ -7,12 +7,17 @@ import { ApproximateLayerTransitionSolver } from "./ApproximateLayerTransitionSo
 import { ApproximateMultiGraphTopologyPlannerSolver } from "./ApproximateMultiGraphTopologyPlannerSolver"
 import { ApproximatePortPointLimiterSolver } from "./ApproximatePortPointLimiterSolver"
 import type { HgPortPointPathingSolverParams } from "lib/solvers/PortPointPathingSolver/hgportpointpathingsolver/types"
+import { TinyHypergraphRegionPathingSolver } from "./TinyHypergraphRegionPathingSolver"
+import { ApproximateHighDensityRouteSolver } from "./ApproximateHighDensityRouteSolver"
 
 export interface AutoroutingPipelineSolver10Options extends Pipeline7Options {
   approximateCellSize?: number
   approximateMaxPortsPerLayerPerEdge?: number
   approximateObstacleSamplingMargin?: number
   approximateRefinementDepth?: number
+  approximateLayerChangeCost?: number
+  approximateRegionCapacityCost?: number
+  approximateExactHighDensityPfThreshold?: number
 }
 
 export class AutoroutingPipelineSolver10_ApproximateHypergraph extends AutoroutingPipelineSolver7_MultiGraph {
@@ -65,7 +70,7 @@ export class AutoroutingPipelineSolver10_ApproximateHypergraph extends Autorouti
             obstacleSamplingMargin:
               pipeline10.pipeline10Opts.approximateObstacleSamplingMargin,
             localRefinementDepth:
-              pipeline10.pipeline10Opts.approximateRefinementDepth,
+              pipeline10.pipeline10Opts.approximateRefinementDepth ?? 2,
           },
         ] as const
       },
@@ -136,9 +141,12 @@ export class AutoroutingPipelineSolver10_ApproximateHypergraph extends Autorouti
     const basePortPathingStep = this.pipelineDef[portPathingIndex]!
     const approximatePortPathingStep = {
       ...basePortPathingStep,
+      solverClass: TinyHypergraphRegionPathingSolver,
       getConstructorParams: (
         instance: AutoroutingPipelineSolver7_MultiGraph,
       ) => {
+        const pipeline10 =
+          instance as AutoroutingPipelineSolver10_ApproximateHypergraph
         const [rawParams] =
           basePortPathingStep.getConstructorParams(instance)
         const params = rawParams as HgPortPointPathingSolverParams
@@ -150,6 +158,10 @@ export class AutoroutingPipelineSolver10_ApproximateHypergraph extends Autorouti
               USE_DUPLICATE_CONGESTED_PORT_PREPASS: false,
               USE_SYNTHETIC_TERMINAL_REGION_RESERVATIONS: true,
             },
+            approximateLayerChangeCost:
+              pipeline10.pipeline10Opts.approximateLayerChangeCost,
+            approximateRegionCapacityCost:
+              pipeline10.pipeline10Opts.approximateRegionCapacityCost,
           },
         ]
       },
@@ -184,8 +196,37 @@ export class AutoroutingPipelineSolver10_ApproximateHypergraph extends Autorouti
       },
     } as unknown as (typeof this.pipelineDef)[number]
 
+    const highDensityRouteIndex = this.pipelineDef.findIndex(
+      (step) => step.solverName === "highDensityRouteSolver",
+    )
+    if (highDensityRouteIndex < 0) {
+      throw new Error("Pipeline10 requires Pipeline7 highDensityRouteSolver")
+    }
+    const baseHighDensityRouteStep = this.pipelineDef[highDensityRouteIndex]!
+    const approximateHighDensityRouteStep = {
+      ...baseHighDensityRouteStep,
+      solverClass: ApproximateHighDensityRouteSolver,
+      getConstructorParams: (
+        instance: AutoroutingPipelineSolver7_MultiGraph,
+      ) => {
+        const pipeline10 =
+          instance as AutoroutingPipelineSolver10_ApproximateHypergraph
+        const [rawParams] =
+          baseHighDensityRouteStep.getConstructorParams(instance)
+        return [
+          {
+            ...rawParams,
+            approximateExactPfThreshold:
+              pipeline10.pipeline10Opts
+                .approximateExactHighDensityPfThreshold,
+          },
+        ]
+      },
+    } as unknown as (typeof this.pipelineDef)[number]
+
     this.pipelineDef[topologyPlanningIndex] = approximateTopologyPlanningStep
     this.pipelineDef[portPathingIndex] = approximatePortPathingStep
+    this.pipelineDef[highDensityRouteIndex] = approximateHighDensityRouteStep
     this.pipelineDef.splice(
       portPathingIndex,
       0,

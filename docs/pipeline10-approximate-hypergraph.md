@@ -8,14 +8,22 @@ approximate hypergraph topologies. It is not the default autorouter.
 - Cover global free space with a bounded uniform grid.
 - Preserve the existing exact component topology for detected BGA, QFP, and
   SOIC regions.
-- Optionally refine grid cells near every obstacle and terminal with a local
-  quadtree. The default refinement depth is `1`.
+- Refine grid cells near every obstacle and terminal with a local quadtree.
+  The Pipeline10 default refinement depth is `2`; region-only pathing makes
+  this extra spatial detail inexpensive.
 - Cap non-component boundary choices per layer before tiny-hypergraph.
 - Sample approximate boundary choices against rotated obstacle geometry.
-- Keep coarse regions shareable between nets and reserve only synthetic
-  terminal regions. The ordinary tiny-hypergraph duplicate-port prepass is
-  disabled because it reintroduces precise per-net reservations into coarse
-  cells.
+- Solve only region adjacency and rough region capacity with
+  tiny-hypergraph's `RegionPathSolver`. Coarse cells remain shareable between
+  nets, while synthetic terminal regions and exact component regions retain
+  net ownership.
+- Assign real boundary ports with a greedy layer, reuse, and local-crossing
+  penalty. This avoids tiny-hypergraph's expensive exact port assignment and
+  rip-up loop.
+- Route exact component-topology cells and high-risk approximate cells with
+  the normal intra-node solver. Lower-risk cells use direct geometry and rely
+  on the retained force-improvement, stitching, simplification, and exact DRC
+  repair stages.
 - Materialize and deduplicate implied layer transitions before Pipeline7's
   exact simplification and DRC repair stages.
 
@@ -25,7 +33,25 @@ Benchmark controls are available through `benchmark.sh`:
 --approximate-cell-size N
 --approximate-max-ports N
 --approximate-refinement-depth N
+--approximate-exact-pf-threshold N
 ```
+
+The exact-Pf threshold defaults to `0.3`. Lower values route more approximate
+cells exactly, increasing runtime in exchange for fewer rough intra-node
+segments. Detected component-topology cells are always exact regardless of the
+threshold.
+
+## Region-path prototype result
+
+On a local dataset18 sample 3 run, the region-only solver reduced the
+`portPointPathingSolver` stage from about `6.8s` to `40ms`. End-to-end runtime
+fell from about `22.0s` to `8.7s`. The approximation is still intentionally
+rough: the relaxed evaluator reported 107 errors and 130 vias, so this is a
+speed prototype rather than a release candidate.
+
+Dataset18 sample 1 verifies the component boundary: one component was
+detected, 112 component-topology cells survived topology merging, 12 were used
+by routed paths, and the region-only path solve took about `52ms`.
 
 ## Dataset18 result
 
@@ -46,9 +72,9 @@ Runs:
 - [Pipeline10 refinement 1](https://github.com/tscircuit/tscircuit-autorouter/actions/runs/31270122462)
 - [Pipeline10 refinement 2](https://github.com/tscircuit/tscircuit-autorouter/actions/runs/31270123651)
 
-Depth `1` is the experimental default because it produced the best DRC and via
-tradeoff on the boards that completed while retaining a smaller graph than
-depth `2`.
+These runs predate region-only pathing. Depth `1` was the old full
+tiny-hypergraph default; Pipeline10 now uses depth `2` because the larger
+region graph solves in milliseconds and reduces downstream node congestion.
 
 The matrix also establishes a release boundary: spatial grid approximation is
 not yet precise enough for the current post-processors. No Pipeline10 setting

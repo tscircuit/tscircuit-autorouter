@@ -42,6 +42,7 @@ type SolverOptions = {
   approximateCellSize?: number
   approximateMaxPortsPerLayerPerEdge?: number
   approximateRefinementDepth?: number
+  approximateExactHighDensityPfThreshold?: number
 }
 
 type SolverConstructor = new (

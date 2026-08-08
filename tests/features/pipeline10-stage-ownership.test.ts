@@ -1,6 +1,8 @@
 import { expect, test } from "bun:test"
 import { AutoroutingPipelineSolver10_ApproximateHypergraph } from "lib/autorouter-pipelines/AutoroutingPipeline10_ApproximateHypergraph/AutoroutingPipelineSolver10_ApproximateHypergraph"
 import { ApproximateMultiGraphTopologyPlannerSolver } from "lib/autorouter-pipelines/AutoroutingPipeline10_ApproximateHypergraph/ApproximateMultiGraphTopologyPlannerSolver"
+import { TinyHypergraphRegionPathingSolver } from "lib/autorouter-pipelines/AutoroutingPipeline10_ApproximateHypergraph/TinyHypergraphRegionPathingSolver"
+import { ApproximateHighDensityRouteSolver } from "lib/autorouter-pipelines/AutoroutingPipeline10_ApproximateHypergraph/ApproximateHighDensityRouteSolver"
 import type { SimpleRouteJson } from "lib/types"
 
 test("Pipeline10 approximates global topology and keeps exact local topology and post-processing", () => {
@@ -37,6 +39,16 @@ test("Pipeline10 approximates global topology and keeps exact local topology and
       (stage) => stage.solverName === "topologyPlanningSolver",
     )?.solverClass,
   ).toBe(ApproximateMultiGraphTopologyPlannerSolver)
+  expect(
+    solver.pipelineDef.find(
+      (stage) => stage.solverName === "portPointPathingSolver",
+    )?.solverClass.name,
+  ).toBe(TinyHypergraphRegionPathingSolver.name)
+  expect(
+    solver.pipelineDef.find(
+      (stage) => stage.solverName === "highDensityRouteSolver",
+    )?.solverClass.name,
+  ).toBe(ApproximateHighDensityRouteSolver.name)
   expect(stageNames.indexOf("approximateLayerTransitionSolver")).toBe(
     stageNames.indexOf("highDensityStitchSolver") + 1,
   )

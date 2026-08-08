@@ -35,6 +35,7 @@ type BenchmarkOptions = {
   approximateCellSize?: number
   approximateMaxPortsPerLayerPerEdge?: number
   approximateRefinementDepth?: number
+  approximateExactHighDensityPfThreshold?: number
   sampleTimeoutMs?: number
   excludeAssignable: boolean
   datasetName: DatasetName
@@ -758,6 +759,13 @@ const parseArgs = (): BenchmarkOptions => {
       i += 1
       continue
     }
+    if (arg === "--approximate-exact-pf-threshold") {
+      options.approximateExactHighDensityPfThreshold = Number.parseFloat(
+        args[i + 1] ?? "",
+      )
+      i += 1
+      continue
+    }
     if (arg === "--exclude-assignable") {
       options.excludeAssignable = true
       continue
@@ -789,6 +797,15 @@ const parseArgs = (): BenchmarkOptions => {
     (!Number.isFinite(options.scenarioLimit) || options.scenarioLimit < 1)
   ) {
     throw new Error("--scenario-limit must be a positive integer")
+  }
+  if (
+    options.approximateExactHighDensityPfThreshold !== undefined &&
+    (!Number.isFinite(options.approximateExactHighDensityPfThreshold) ||
+      options.approximateExactHighDensityPfThreshold < 0)
+  ) {
+    throw new Error(
+      "--approximate-exact-pf-threshold must be zero or greater",
+    )
   }
 
   if (
@@ -1529,6 +1546,7 @@ const main = async () => {
     approximateCellSize,
     approximateMaxPortsPerLayerPerEdge,
     approximateRefinementDepth,
+    approximateExactHighDensityPfThreshold,
     sampleTimeoutMs,
     excludeAssignable,
     datasetName,
@@ -1591,6 +1609,7 @@ const main = async () => {
             approximateCellSize,
             approximateMaxPortsPerLayerPerEdge,
             approximateRefinementDepth,
+            approximateExactHighDensityPfThreshold,
           },
         }) satisfies BenchmarkTask,
     ),

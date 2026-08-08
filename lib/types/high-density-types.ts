@@ -18,6 +18,7 @@ export type NodeWithPortPoints = {
   portPoints: PortPoint[]
   availableZ?: number[]
   portPointsInPairs?: [PortPoint, PortPoint][]
+  _isComponentTopologyNode?: boolean
 }
 
 /**

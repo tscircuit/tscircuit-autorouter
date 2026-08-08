@@ -501,6 +501,24 @@ const buildSerializedTinyGraph = (
   return serializedHyperGraph
 }
 
+/**
+ * Builds the same serialized graph used by the full tiny-hypergraph solver,
+ * with synthetic terminal reservations. Region-only pathing uses this to
+ * avoid reserving large approximate endpoint cells while retaining explicit
+ * component-region net reservations.
+ */
+export const buildSerializedTinyGraphForRegionPathing = (
+  params: HgPortPointPathingSolverParams,
+): SerializedHyperGraph =>
+  buildSerializedTinyGraph({
+    ...params,
+    connections: getTinyRouteConnectionsOrThrow(params.connections),
+    flags: {
+      ...params.flags,
+      USE_SYNTHETIC_TERMINAL_REGION_RESERVATIONS: true,
+    },
+  })
+
 const buildInputNodesWithPortPoints = (
   params: HgPortPointPathingSolverParams,
   serializedHyperGraph: SerializedHyperGraph,

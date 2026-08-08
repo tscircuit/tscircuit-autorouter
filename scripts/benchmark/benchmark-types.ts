@@ -10,6 +10,7 @@ export type BenchmarkTask = {
     approximateCellSize?: number
     approximateMaxPortsPerLayerPerEdge?: number
     approximateRefinementDepth?: number
+    approximateExactHighDensityPfThreshold?: number
   }
 }
 
