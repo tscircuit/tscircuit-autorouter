@@ -1,4 +1,5 @@
 import {
+  LengthMatchingNoSolutionError,
   LengthMatchingSolver,
   PostProcessingSolver,
   type PostProcessingSolverOutput,
@@ -92,7 +93,16 @@ export class DifferentialPairPostProcessingSolver extends BaseSolver {
 
   override _step(): void {
     if (this.phase === "length-matching") {
-      this.lengthMatchingSolver!.step()
+      try {
+        this.lengthMatchingSolver!.step()
+      } catch (error) {
+        if (!(error instanceof LengthMatchingNoSolutionError)) throw error
+        // The autorouter intentionally consumes only the best-effort routes.
+        this.finishLengthMatchingPhase(
+          this.lengthMatchingSolver!.getBestEffortOutput().matchedHdRoutes,
+        )
+        return
+      }
       this.progress = this.lengthMatchingSolver!.progress
       this.stats = {
         phase: "length-matching",
@@ -101,20 +111,7 @@ export class DifferentialPairPostProcessingSolver extends BaseSolver {
       if (!this.lengthMatchingSolver!.solved) return
       const matchedHdRoutes =
         this.lengthMatchingSolver!.getOutput().matchedHdRoutes
-      if (this.coupledPairs.length === 0) {
-        this.outputHdRoutes = matchedHdRoutes
-        this.phase = "complete"
-        this.solved = true
-        this.progress = 1
-        return
-      }
-      this.postProcessingSolver = new PostProcessingSolver({
-        ...this.inputProblem,
-        hdRoutes: matchedHdRoutes,
-        differentialPairs: this.coupledPairs,
-      })
-      this.MAX_ITERATIONS += this.postProcessingSolver.MAX_ITERATIONS + 1
-      this.phase = "coupled-rerouting"
+      this.finishLengthMatchingPhase(matchedHdRoutes)
       return
     }
 
@@ -131,6 +128,25 @@ export class DifferentialPairPostProcessingSolver extends BaseSolver {
       this.solved = true
       this.progress = 1
     }
+  }
+
+  private finishLengthMatchingPhase(
+    matchedHdRoutes: PostProcessingSolverParams["hdRoutes"],
+  ): void {
+    if (this.coupledPairs.length === 0) {
+      this.outputHdRoutes = matchedHdRoutes
+      this.phase = "complete"
+      this.solved = true
+      this.progress = 1
+      return
+    }
+    this.postProcessingSolver = new PostProcessingSolver({
+      ...this.inputProblem,
+      hdRoutes: matchedHdRoutes,
+      differentialPairs: this.coupledPairs,
+    })
+    this.MAX_ITERATIONS += this.postProcessingSolver.MAX_ITERATIONS + 1
+    this.phase = "coupled-rerouting"
   }
 
   override getConstructorParams(): [
