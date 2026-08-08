@@ -20,10 +20,8 @@ const createRepairCapReproInput = (): {
     const xOffset = copyIndex * 2
     const copySuffix = `copy_${copyIndex}`
     const capacityMeshNodeId = `cmn_11__sub_1_0_${copySuffix}`
-    const sourceTrace18ConnectionName =
-      `source_trace_18__source_net_18_mst3_${copySuffix}`
-    const sourceTrace5ConnectionName =
-      `source_trace_5__source_net_5_mst12_${copySuffix}`
+    const sourceTrace18ConnectionName = `source_trace_18__source_net_18_mst3_${copySuffix}`
+    const sourceTrace5ConnectionName = `source_trace_5__source_net_5_mst12_${copySuffix}`
 
     nodeWithPortPoints.push({
       capacityMeshNodeId,

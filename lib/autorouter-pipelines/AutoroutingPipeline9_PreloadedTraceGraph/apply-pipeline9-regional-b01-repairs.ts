@@ -23,7 +23,7 @@ type RegionalB01RepairResult = {
   fallbackCandidateCount: number
 }
 
-const REGION_SIZES = [3, 4, 5]
+const REGION_SIZES = [3, 4, 5, 8]
 
 const getErrorCenter = (error: Pipeline9DrcError) => {
   const center = error.center

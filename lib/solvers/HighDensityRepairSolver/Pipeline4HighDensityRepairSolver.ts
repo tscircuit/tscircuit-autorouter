@@ -323,8 +323,7 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
       maxSampleEntries: params.maxSampleEntries,
       repairMargin: this.repairMargin,
     })
-    this.skippedSampleCount =
-      sampleEntries.length - this.sampleEntries.length
+    this.skippedSampleCount = sampleEntries.length - this.sampleEntries.length
 
     this.MAX_ITERATIONS = Math.max(this.sampleEntries.length * 1_000, 100_000)
     this.stats = {
