@@ -19,6 +19,8 @@ export type NodeWithPortPoints = {
   availableZ?: number[]
   portPointsInPairs?: [PortPoint, PortPoint][]
   _isComponentTopologyNode?: boolean
+  /** The assigned boundary pairs have a topologically unavoidable crossing. */
+  _requiresExactRouting?: boolean
 }
 
 /**

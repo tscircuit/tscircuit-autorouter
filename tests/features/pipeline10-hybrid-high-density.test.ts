@@ -51,12 +51,37 @@ test("Pipeline10 routes component nodes exactly and simple approximate nodes dir
         ],
       ],
     },
+    {
+      capacityMeshNodeId: "crossing",
+      center: { x: 6, y: 0 },
+      width: 2,
+      height: 2,
+      availableZ: [0, 1],
+      _requiresExactRouting: true,
+      portPoints: [
+        { connectionName: "crossing-a", x: 5, y: -1, z: 0 },
+        { connectionName: "crossing-a", x: 7, y: 1, z: 0 },
+        { connectionName: "crossing-b", x: 5, y: 1, z: 0 },
+        { connectionName: "crossing-b", x: 7, y: -1, z: 0 },
+      ],
+      portPointsInPairs: [
+        [
+          { connectionName: "crossing-a", x: 5, y: -1, z: 0 },
+          { connectionName: "crossing-a", x: 7, y: 1, z: 0 },
+        ],
+        [
+          { connectionName: "crossing-b", x: 5, y: 1, z: 0 },
+          { connectionName: "crossing-b", x: 7, y: -1, z: 0 },
+        ],
+      ],
+    },
   ]
   const solver = new ApproximateHighDensityRouteSolver({
     nodePortPoints: nodes,
     nodePfById: new Map([
       ["component", 0],
       ["approximate", 0],
+      ["crossing", 0.001],
     ]),
     layerCount: 2,
     traceWidth: 0.15,
@@ -69,8 +94,9 @@ test("Pipeline10 routes component nodes exactly and simple approximate nodes dir
 
   expect(solver.stats).toMatchObject({
     approximateNodeCount: 1,
-    exactNodeCount: 1,
-    routeCount: 2,
+    exactNodeCount: 2,
+    crossingExactNodeCount: 1,
+    routeCount: 4,
   })
   expect(
     solver.routes.find((route) => route.connectionName === "approximate"),

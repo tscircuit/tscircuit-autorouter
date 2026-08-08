@@ -121,6 +121,34 @@ const recomputeVias = (
   return vias
 }
 
+const materializeLayerTransitions = (
+  route: HighDensityRoute,
+): { route: HighDensityRoute; materializedTransitionCount: number } => {
+  const routePoints: HighDensityRoute["route"] = []
+  let materializedTransitionCount = 0
+  for (const point of route.route) {
+    const previousPoint = routePoints.at(-1)
+    if (
+      previousPoint &&
+      previousPoint.z !== point.z &&
+      previousPoint.toNextSegmentType !== "through_obstacle" &&
+      (previousPoint.x !== point.x || previousPoint.y !== point.y)
+    ) {
+      routePoints.push({ ...point, z: previousPoint.z })
+      materializedTransitionCount++
+    }
+    routePoints.push({ ...point })
+  }
+  return {
+    route: {
+      ...route,
+      route: routePoints,
+      vias: recomputeVias(routePoints),
+    },
+    materializedTransitionCount,
+  }
+}
+
 const getRouteIds = (route: HighDensityRoute): string[] => {
   const routeIds = [route.connectionName]
   if (route.rootConnectionName) {
@@ -386,7 +414,15 @@ export class CrossingViaReductionSolver extends BaseSolver {
     }
     this.traceMargin = input.traceMargin ?? DEFAULT_TRACE_MARGIN
     this.obstacleMargin = input.obstacleMargin ?? DEFAULT_OBSTACLE_MARGIN
-    this.reducedHdRoutes = structuredClone([...input.inputHdRoutes])
+    let materializedTransitionCount = 0
+    this.reducedHdRoutes = structuredClone([...input.inputHdRoutes]).map(
+      (route) => {
+        const normalized = materializeLayerTransitions(route)
+        materializedTransitionCount += normalized.materializedTransitionCount
+        return normalized.route
+      },
+    )
+    this.stats.materializedTransitionCount = materializedTransitionCount
     this.obstacleSHI = new ObstacleSpatialHashIndex("flatbush", [
       ...this.input.obstacles,
     ])

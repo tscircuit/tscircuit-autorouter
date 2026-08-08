@@ -11,6 +11,9 @@ approximate hypergraph topologies. It is not the default autorouter.
 - Refine grid cells near every obstacle and terminal with a local quadtree.
   The Pipeline10 default refinement depth is `2`; region-only pathing makes
   this extra spatial detail inexpensive.
+- Refine otherwise coarse cells when at least six point-pair connection hints
+  cross the cell. This selectively splits likely congestion hot spots without
+  paying for a uniformly fine global grid.
 - Cap non-component boundary choices per layer before tiny-hypergraph.
 - Sample approximate boundary choices against rotated obstacle geometry.
 - Solve only region adjacency and rough region capacity with
@@ -26,10 +29,10 @@ approximate hypergraph topologies. It is not the default autorouter.
 - Preserve graph reachability with strongly penalized approximate bridges only
   where obstacle sampling removes every boundary choice or an exact component
   terminal has no usable escape into the global mesh.
-- Route exact component-topology cells and high-risk approximate cells with
-  the normal intra-node solver. Lower-risk cells use direct geometry and rely
-  on the retained force-improvement, stitching, simplification, and exact DRC
-  repair stages.
+- Route exact component-topology cells, cells with topologically crossing
+  boundary pairs, and high-risk approximate cells with the normal intra-node
+  solver. Lower-risk cells use direct geometry and rely on the retained
+  force-improvement, stitching, simplification, and exact DRC repair stages.
 - Materialize and deduplicate implied layer transitions before Pipeline7's
   exact simplification and DRC repair stages.
 
@@ -43,16 +46,61 @@ Benchmark controls are available through `benchmark.sh`:
 --approximate-obstacle-occupancy-cost N
 ```
 
-The exact-Pf threshold defaults to `0.3`. Lower values route more approximate
+The exact-Pf threshold defaults to `0.01`. Lower values route more approximate
 cells exactly, increasing runtime in exchange for fewer rough intra-node
 segments. Detected component-topology cells are always exact regardless of the
-threshold.
+threshold, as are cells whose assigned boundary pairs contain a topologically
+necessary crossing.
 
 Obstacle occupancy includes the configured sampling margin and is weighted by
 layer: an obstacle covering half a cell on one of two available layers yields
 an occupancy fraction of `0.25`. The default full-occupancy entry cost is
 `50`, configurable with `approximateObstacleOccupancyCost` when constructing
 Pipeline10.
+
+## Dataset01 refinement result
+
+Dataset01 exposed two problems that the earlier dataset18 prototype did not
+isolate clearly:
+
+- a low normalized node-Pf could still contain a guaranteed same-layer
+  crossing, causing direct geometry to emit a known DRC violation;
+- a coarse, unobstructed grid cell could collect enough routes to make exact
+  intra-node routing and downstream DRC repair pathological.
+
+Pipeline10 now marks crossing cells for exact routing, uses a `0.01` default
+Pf threshold, and selectively refines coarse cells crossed by at least six
+straight point-pair hints. Crossing-via reduction also materializes any
+remaining diagonal layer change into planar geometry plus an explicit via
+instead of failing trace simplification.
+
+Blacksmith ran dataset01 samples 1, 2, 3, 8, 18, 21, 27, 32, 37, 49, 66,
+and 85 concurrently on the same 4-vCPU testbox. Compared with the previous
+Pipeline10 defaults:
+
+| Metric | Previous Pipeline10 | Refined Pipeline10 | Change |
+| --- | ---: | ---: | ---: |
+| Solver completion | 12/12 | 12/12 | preserved |
+| Relaxed DRC pass | 2/12 | 5/12 | +3 clean boards |
+| Relaxed DRC issues | 620 | 19 | 96.9% lower |
+| Aggregate runtime | 1056.9s | 379.8s | 64.1% lower |
+| p50 runtime | 65.3s | 31.1s | 52.4% lower |
+| p95 runtime | 279.7s | 62.7s | 77.6% lower |
+| Average vias | 85.08 | 118.50 | 39.3% higher |
+
+The dense sample 32 changed from `352.4s / 225 issues / 138 vias` to
+`66.0s / 4 issues / 228 vias` under concurrent Blacksmith load. A local
+single-sample run completed in `15.3s`; profiling showed tiny-hypergraph region
+pathing at `7ms` and exact high-density routing at `6.0s`, down from `80.8s`
+before congestion refinement.
+
+Pipeline7 remains the quality target on this cohort: it passed 10/12 boards
+with a 25.7s p50 and 44.4s p95. The refined Pipeline10 result is therefore a
+large improvement over the first approximation, but not yet a replacement for
+Pipeline7. The remaining seven failing samples have only one to four relaxed
+DRC issues each.
+
+[Dataset01 Blacksmith testbox run](https://github.com/tscircuit/tscircuit-autorouter/actions/runs/31275848311)
 
 ## Region-path prototype result
 

@@ -546,7 +546,7 @@ export class TinyHypergraphRegionPathingSolver extends BaseSolver {
     for (const [regionId, portPointsInPairs] of pairsByRegionId) {
       const region = this.regionById.get(regionId)
       if (!region || portPointsInPairs.length === 0) continue
-      nodesWithPortPoints.push({
+      const node: NodeWithPortPoints = {
         capacityMeshNodeId: region.d.capacityMeshNodeId,
         center: region.d.center,
         width: region.d.width,
@@ -555,7 +555,12 @@ export class TinyHypergraphRegionPathingSolver extends BaseSolver {
         portPointsInPairs,
         availableZ: region.d.availableZ,
         _isComponentTopologyNode: region.d._isComponentTopologyNode,
-      })
+      }
+      const crossings = getIntraNodeCrossingsUsingCircle(node)
+      node._requiresExactRouting =
+        crossings.numSameLayerCrossings > 0 ||
+        crossings.numTransitionPairCrossings > 0
+      nodesWithPortPoints.push(node)
     }
 
     return {

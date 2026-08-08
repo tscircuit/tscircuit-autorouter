@@ -11,6 +11,8 @@ type HighDensitySolverParams = ConstructorParameters<
   typeof HighDensitySolver
 >[0]
 
+const DEFAULT_EXACT_PF_THRESHOLD = 0.01
+
 export type ApproximateHighDensityRouteSolverParams =
   HighDensitySolverParams & {
     approximateExactPfThreshold?: number
@@ -48,7 +50,8 @@ export class ApproximateHighDensityRouteSolver extends BaseSolver {
     this.traceWidth = params.traceWidth ?? 0.15
     this.preserveTerminalPcbPortIds =
       params.preserveTerminalPcbPortIds ?? false
-    this.exactPfThreshold = params.approximateExactPfThreshold ?? 0.3
+    this.exactPfThreshold =
+      params.approximateExactPfThreshold ?? DEFAULT_EXACT_PF_THRESHOLD
     this.MAX_ITERATIONS = 1
   }
 
@@ -67,13 +70,16 @@ export class ApproximateHighDensityRouteSolver extends BaseSolver {
         : new Map(Object.entries(this.params.nodePfById ?? {}))
     const exactNodes: NodeWithPortPoints[] = []
     const approximateNodes: NodeWithPortPoints[] = []
+    let crossingExactNodeCount = 0
     for (const node of this.params.nodePortPoints) {
       const nodePf = nodePfById.get(node.capacityMeshNodeId) ?? null
       if (
         node._isComponentTopologyNode ||
+        node._requiresExactRouting ||
         (nodePf !== null && nodePf >= this.exactPfThreshold)
       ) {
         exactNodes.push(node)
+        if (node._requiresExactRouting) crossingExactNodeCount++
       } else {
         approximateNodes.push(node)
       }
@@ -82,6 +88,14 @@ export class ApproximateHighDensityRouteSolver extends BaseSolver {
     this.addApproximateRoutes(approximateNodes)
 
     let exactSolveTimeMs = 0
+    let exactSolverStats: Record<string, unknown> = {}
+    let mostExpensiveExactNodes: Array<{
+      capacityMeshNodeId: string
+      iterations: number
+      routeCount: number
+      solverType: string
+      nodePf: number | null
+    }> = []
     if (exactNodes.length > 0) {
       const exactSolver = new HighDensitySolver({
         ...this.params,
@@ -96,6 +110,24 @@ export class ApproximateHighDensityRouteSolver extends BaseSolver {
         return
       }
       this.routes.push(...exactSolver.routes)
+      exactSolverStats = {
+        solverNodeCount: exactSolver.stats.solverNodeCount,
+        highDensityResizeCount: exactSolver.stats.highDensityResizeCount,
+        intraNodeCacheHits: exactSolver.stats.intraNodeCacheHits,
+        intraNodeCacheMisses: exactSolver.stats.intraNodeCacheMisses,
+      }
+      mostExpensiveExactNodes = [
+        ...exactSolver.nodeSolveMetadataById.entries(),
+      ]
+        .map(([capacityMeshNodeId, metadata]) => ({
+          capacityMeshNodeId,
+          iterations: metadata.iterations,
+          routeCount: metadata.routeCount,
+          solverType: metadata.solverType,
+          nodePf: metadata.nodePf,
+        }))
+        .sort((a, b) => b.iterations - a.iterations)
+        .slice(0, 5)
     }
 
     const layerTransitionCount = this.routes.reduce(
@@ -107,8 +139,11 @@ export class ApproximateHighDensityRouteSolver extends BaseSolver {
       inputNodeCount: this.params.nodePortPoints.length,
       approximateNodeCount: approximateNodes.length,
       exactNodeCount: exactNodes.length,
+      crossingExactNodeCount,
       exactPfThreshold: this.exactPfThreshold,
       exactSolveTimeMs,
+      exactSolverStats,
+      mostExpensiveExactNodes,
       routeCount: this.routes.length,
       layerTransitionCount,
     }

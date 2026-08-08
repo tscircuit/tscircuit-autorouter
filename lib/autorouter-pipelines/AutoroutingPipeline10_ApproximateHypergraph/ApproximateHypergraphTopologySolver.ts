@@ -1,3 +1,4 @@
+import { doSegmentsIntersect } from "@tscircuit/math-utils"
 import type { GraphicsObject } from "graphics-debug"
 import { BaseSolver } from "@tscircuit/solver-utils"
 import type {
@@ -72,6 +73,7 @@ type PolygonClipBoundary = {
 
 const DEFAULT_TARGET_CELL_SIZE = 6
 const DEFAULT_MAX_PORTS_PER_LAYER_PER_EDGE = 6
+const DEFAULT_CONGESTION_REFINEMENT_THRESHOLD = 6
 
 const getObstaclePolygon = (obstacle: Obstacle, margin: number): Point[] => {
   const halfWidth = obstacle.width / 2 + margin
@@ -223,6 +225,31 @@ const pointIsInsideNode = (
   )
 }
 
+const segmentIntersectsNode = (
+  segment: { start: Point; end: Point },
+  node: CapacityMeshNode,
+): boolean => {
+  if (
+    pointIsInsideNode(segment.start, node) ||
+    pointIsInsideNode(segment.end, node)
+  ) {
+    return true
+  }
+  const minX = node.center.x - node.width / 2
+  const maxX = node.center.x + node.width / 2
+  const minY = node.center.y - node.height / 2
+  const maxY = node.center.y + node.height / 2
+  const nodeEdges: Array<[Point, Point]> = [
+    [{ x: minX, y: minY }, { x: maxX, y: minY }],
+    [{ x: maxX, y: minY }, { x: maxX, y: maxY }],
+    [{ x: maxX, y: maxY }, { x: minX, y: maxY }],
+    [{ x: minX, y: maxY }, { x: minX, y: minY }],
+  ]
+  return nodeEdges.some(([start, end]) =>
+    doSegmentsIntersect(segment.start, segment.end, start, end),
+  )
+}
+
 const obstacleOverlapsNode = (
   obstacle: Obstacle,
   node: CapacityMeshNode,
@@ -315,6 +342,13 @@ const getGridNodes = (params: {
     (_, z) => z,
   )
   const connectionPoints = getConnectionPoints(simpleRouteJson)
+  const connectionSegments = simpleRouteJson.connections.flatMap(
+    (connection) => {
+      const start = connection.pointsToConnect[0]
+      const end = connection.pointsToConnect.at(-1)
+      return start && end && start !== end ? [{ start, end }] : []
+    },
+  )
   const nodes: CapacityMeshNode[] = []
 
   const finalizeNode = (node: CapacityMeshNode): CapacityMeshNode => {
@@ -338,12 +372,24 @@ const getGridNodes = (params: {
   }
 
   const shouldRefineNode = (node: CapacityMeshNode): boolean => {
-    return (
+    if (
       connectionPoints.some((point) => pointIsInsideNode(point, node)) ||
       simpleRouteJson.obstacles.some((obstacle) =>
         obstacleOverlapsNode(obstacle, node, params.refinementMargin),
       )
-    )
+    ) {
+      return true
+    }
+
+    let crossingHintCount = 0
+    for (const segment of connectionSegments) {
+      if (!segmentIntersectsNode(segment, node)) continue
+      crossingHintCount++
+      if (crossingHintCount >= DEFAULT_CONGESTION_REFINEMENT_THRESHOLD) {
+        return true
+      }
+    }
+    return false
   }
 
   const refineNode = (
