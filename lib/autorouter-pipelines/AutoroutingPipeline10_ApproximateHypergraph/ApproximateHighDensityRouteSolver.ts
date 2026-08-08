@@ -48,8 +48,7 @@ export class ApproximateHighDensityRouteSolver extends BaseSolver {
     super()
     this.viaDiameter = params.viaDiameter ?? 0.6
     this.traceWidth = params.traceWidth ?? 0.15
-    this.preserveTerminalPcbPortIds =
-      params.preserveTerminalPcbPortIds ?? false
+    this.preserveTerminalPcbPortIds = params.preserveTerminalPcbPortIds ?? false
     this.exactPfThreshold =
       params.approximateExactPfThreshold ?? DEFAULT_EXACT_PF_THRESHOLD
     this.MAX_ITERATIONS = 1
@@ -116,9 +115,7 @@ export class ApproximateHighDensityRouteSolver extends BaseSolver {
         intraNodeCacheHits: exactSolver.stats.intraNodeCacheHits,
         intraNodeCacheMisses: exactSolver.stats.intraNodeCacheMisses,
       }
-      mostExpensiveExactNodes = [
-        ...exactSolver.nodeSolveMetadataById.entries(),
-      ]
+      mostExpensiveExactNodes = [...exactSolver.nodeSolveMetadataById.entries()]
         .map(([capacityMeshNodeId, metadata]) => ({
           capacityMeshNodeId,
           iterations: metadata.iterations,
@@ -157,10 +154,7 @@ export class ApproximateHighDensityRouteSolver extends BaseSolver {
           start,
           this.preserveTerminalPcbPortIds,
         )
-        const endRoutePoint = toRoutePoint(
-          end,
-          this.preserveTerminalPcbPortIds,
-        )
+        const endRoutePoint = toRoutePoint(end, this.preserveTerminalPcbPortIds)
         const route: HighDensityIntraNodeRoute["route"] = [startRoutePoint]
         const vias: Array<{ x: number; y: number }> = []
 

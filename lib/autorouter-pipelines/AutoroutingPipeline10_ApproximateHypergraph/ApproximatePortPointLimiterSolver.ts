@@ -23,9 +23,7 @@ const selectEvenlySpaced = <T>(items: T[], limit: number): T[] => {
 
   const selectedIndexes = new Set<number>()
   for (let index = 0; index < limit; index++) {
-    selectedIndexes.add(
-      Math.round((index * (items.length - 1)) / (limit - 1)),
-    )
+    selectedIndexes.add(Math.round((index * (items.length - 1)) / (limit - 1)))
   }
   return [...selectedIndexes].map((index) => items[index]!)
 }
@@ -34,9 +32,7 @@ const selectEvenlySpaced = <T>(items: T[], limit: number): T[] => {
 export class ApproximatePortPointLimiterSolver extends BaseSolver {
   private output: SharedEdgeSegment[] = []
 
-  constructor(
-    public readonly params: ApproximatePortPointLimiterSolverParams,
-  ) {
+  constructor(public readonly params: ApproximatePortPointLimiterSolverParams) {
     super()
     this.MAX_ITERATIONS = 1
     if (

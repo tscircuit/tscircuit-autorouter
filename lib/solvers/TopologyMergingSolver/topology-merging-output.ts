@@ -314,9 +314,7 @@ function getOutputNodeMetadata({
       ? undefined
       : Math.max(
           0,
-          ...sourceNodes.map(
-            (node) => node._obstacleOccupancyFraction ?? 0,
-          ),
+          ...sourceNodes.map((node) => node._obstacleOccupancyFraction ?? 0),
         ),
   }
 }

@@ -27,8 +27,7 @@ test("Pipeline10 bounds the global topology without constructing discarded grid 
 
   solver.solve()
   const output = solver.getOutput()
-  const approximateOutput =
-    solver.approximateGlobalTopologySolver?.getOutput()
+  const approximateOutput = solver.approximateGlobalTopologySolver?.getOutput()
 
   expect(solver.pipelineDef.map((stage) => stage.solverName)).toEqual([
     "approximateGlobalTopologySolver",

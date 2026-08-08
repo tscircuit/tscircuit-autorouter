@@ -27,9 +27,7 @@ test("Pipeline10 region pathing avoids heavily obstacle-occupied cells", () => {
     },
     ports: [],
   }))
-  const regionById = new Map(
-    regions.map((region) => [region.regionId, region]),
-  )
+  const regionById = new Map(regions.map((region) => [region.regionId, region]))
   const ports: RegionPortHg[] = []
   for (const [regionIdA, regionIdB] of [
     ["start", "occupied"],

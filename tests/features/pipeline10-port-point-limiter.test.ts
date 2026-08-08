@@ -46,7 +46,11 @@ test("Pipeline10 evenly caps approximate ports per layer", () => {
   const output = solver.getOutput()[0]!
 
   expect(output.portPoints).toHaveLength(6)
-  expect(output.portPoints.filter((port) => port.availableZ[0] === 0)).toHaveLength(3)
-  expect(output.portPoints.filter((port) => port.availableZ[0] === 1)).toHaveLength(3)
+  expect(
+    output.portPoints.filter((port) => port.availableZ[0] === 0),
+  ).toHaveLength(3)
+  expect(
+    output.portPoints.filter((port) => port.availableZ[0] === 1),
+  ).toHaveLength(3)
   expect(solver.stats.removedPortCount).toBe(10)
 })

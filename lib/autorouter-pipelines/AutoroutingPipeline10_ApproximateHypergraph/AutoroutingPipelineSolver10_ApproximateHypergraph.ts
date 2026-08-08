@@ -65,8 +65,7 @@ export class AutoroutingPipelineSolver10_ApproximateHypergraph extends Autorouti
             componentDetectionOutput:
               pipeline10.componentDetectionSolver!.getOutput(),
             viaDiameter: pipeline10.viaDiameter,
-            obstacleMargin:
-              pipeline10.srj.defaultObstacleMargin ?? 0.15,
+            obstacleMargin: pipeline10.srj.defaultObstacleMargin ?? 0.15,
             targetCellSize: pipeline10.pipeline10Opts.approximateCellSize,
             obstacleSamplingMargin:
               pipeline10.pipeline10Opts.approximateObstacleSamplingMargin,
@@ -108,13 +107,9 @@ export class AutoroutingPipelineSolver10_ApproximateHypergraph extends Autorouti
           instance as AutoroutingPipelineSolver10_ApproximateHypergraph
         return [
           {
-            sharedEdgeSegments:
-              pipeline10.sharedEdgeSegmentsWithNecessaryCrampedPortPoints ??
-              [],
+            sharedEdgeSegments: pipeline10.sharedEdgeSegmentsWithNecessaryCrampedPortPoints ?? [],
             capacityMeshNodes: pipeline10.capacityNodes ?? [],
-            maxPortsPerLayerPerEdge:
-              pipeline10.pipeline10Opts
-                .approximateMaxPortsPerLayerPerEdge ?? 6,
+            maxPortsPerLayerPerEdge: pipeline10.pipeline10Opts.approximateMaxPortsPerLayerPerEdge ?? 6,
             obstacles: pipeline10.srj.obstacles,
             layerCount: pipeline10.srj.layerCount,
             obstacleSamplingMargin:
@@ -148,8 +143,7 @@ export class AutoroutingPipelineSolver10_ApproximateHypergraph extends Autorouti
       ) => {
         const pipeline10 =
           instance as AutoroutingPipelineSolver10_ApproximateHypergraph
-        const [rawParams] =
-          basePortPathingStep.getConstructorParams(instance)
+        const [rawParams] = basePortPathingStep.getConstructorParams(instance)
         const params = rawParams as HgPortPointPathingSolverParams
         return [
           {
@@ -219,9 +213,7 @@ export class AutoroutingPipelineSolver10_ApproximateHypergraph extends Autorouti
         return [
           {
             ...rawParams,
-            approximateExactPfThreshold:
-              pipeline10.pipeline10Opts
-                .approximateExactHighDensityPfThreshold,
+            approximateExactPfThreshold: pipeline10.pipeline10Opts.approximateExactHighDensityPfThreshold,
           },
         ]
       },

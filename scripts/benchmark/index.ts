@@ -820,9 +820,7 @@ const parseArgs = (): BenchmarkOptions => {
     (!Number.isFinite(options.approximateExactHighDensityPfThreshold) ||
       options.approximateExactHighDensityPfThreshold < 0)
   ) {
-    throw new Error(
-      "--approximate-exact-pf-threshold must be zero or greater",
-    )
+    throw new Error("--approximate-exact-pf-threshold must be zero or greater")
   }
 
   if (

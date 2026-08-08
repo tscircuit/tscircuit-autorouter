@@ -240,10 +240,22 @@ const segmentIntersectsNode = (
   const minY = node.center.y - node.height / 2
   const maxY = node.center.y + node.height / 2
   const nodeEdges: Array<[Point, Point]> = [
-    [{ x: minX, y: minY }, { x: maxX, y: minY }],
-    [{ x: maxX, y: minY }, { x: maxX, y: maxY }],
-    [{ x: maxX, y: maxY }, { x: minX, y: maxY }],
-    [{ x: minX, y: maxY }, { x: minX, y: minY }],
+    [
+      { x: minX, y: minY },
+      { x: maxX, y: minY },
+    ],
+    [
+      { x: maxX, y: minY },
+      { x: maxX, y: maxY },
+    ],
+    [
+      { x: maxX, y: maxY },
+      { x: minX, y: maxY },
+    ],
+    [
+      { x: minX, y: maxY },
+      { x: minX, y: minY },
+    ],
   ]
   return nodeEdges.some(([start, end]) =>
     doSegmentsIntersect(segment.start, segment.end, start, end),
@@ -337,10 +349,7 @@ const getGridNodes = (params: {
   obstacleGeometry: PreparedObstacleGeometry[]
 }): CapacityMeshNode[] => {
   const { simpleRouteJson, dimensions } = params
-  const allZ = Array.from(
-    { length: simpleRouteJson.layerCount },
-    (_, z) => z,
-  )
+  const allZ = Array.from({ length: simpleRouteJson.layerCount }, (_, z) => z)
   const connectionPoints = getConnectionPoints(simpleRouteJson)
   const connectionSegments = simpleRouteJson.connections.flatMap(
     (connection) => {
@@ -428,13 +437,10 @@ const getGridNodes = (params: {
     for (let column = 0; column < dimensions.columnCount; column++) {
       const node: CapacityMeshNode = {
         capacityMeshNodeId: `approx-grid:r${row}:c${column}`,
-        center: {
-          x:
-            simpleRouteJson.bounds.minX +
-            (column + 0.5) * dimensions.cellWidth,
-          y:
-            simpleRouteJson.bounds.minY +
-            (row + 0.5) * dimensions.cellHeight,
+          center: {
+            x:
+              simpleRouteJson.bounds.minX + (column + 0.5) * dimensions.cellWidth,
+            y: simpleRouteJson.bounds.minY + (row + 0.5) * dimensions.cellHeight,
         },
         width: dimensions.cellWidth,
         height: dimensions.cellHeight,
@@ -649,8 +655,7 @@ export class ApproximateHypergraphTopologySolver extends BaseSolver {
     this.MAX_ITERATIONS = 1
     const targetCellSize = params.targetCellSize ?? DEFAULT_TARGET_CELL_SIZE
     const maxPorts =
-      params.maxPortsPerLayerPerEdge ??
-      DEFAULT_MAX_PORTS_PER_LAYER_PER_EDGE
+      params.maxPortsPerLayerPerEdge ?? DEFAULT_MAX_PORTS_PER_LAYER_PER_EDGE
     const localRefinementDepth = params.localRefinementDepth ?? 0
     if (!Number.isFinite(targetCellSize) || targetCellSize <= 0) {
       throw new Error("Pipeline10 targetCellSize must be greater than zero")
@@ -669,10 +674,7 @@ export class ApproximateHypergraphTopologySolver extends BaseSolver {
         "Pipeline10 localRefinementDepth must be an integer between 0 and 6",
       )
     }
-    if (
-      localRefinementDepth > 0 &&
-      params.generatePortsAndEdges !== false
-    ) {
+    if (localRefinementDepth > 0 && params.generatePortsAndEdges !== false) {
       throw new Error(
         "Pipeline10 adaptive refinement requires downstream edge generation",
       )

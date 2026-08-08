@@ -49,8 +49,6 @@ test("Pipeline10 creates a bounded obstacle-sampled approximate topology", () =>
   expect(output.stats.portCount).toBeLessThan(10)
   expect(output.stats.rejectedPortCount).toBeGreaterThan(0)
   expect(
-    output.capacityMeshNodes.every(
-      (node) => node._skipEndpointNetReservation,
-    ),
+    output.capacityMeshNodes.every((node) => node._skipEndpointNetReservation),
   ).toBe(true)
 })

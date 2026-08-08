@@ -31,9 +31,10 @@ test("Pipeline10 measures obstacle occupancy across region layers", () => {
   const output = solver.getOutput()
 
   expect(output.capacityMeshNodes).toHaveLength(1)
-  expect(
-    output.capacityMeshNodes[0]!._obstacleOccupancyFraction,
-  ).toBeCloseTo(0.25, 8)
+  expect(output.capacityMeshNodes[0]!._obstacleOccupancyFraction).toBeCloseTo(
+    0.25,
+    8,
+  )
   expect(output.stats).toMatchObject({
     obstacleOccupiedRegionCount: 1,
     meanObstacleOccupancyFraction: 0.25,

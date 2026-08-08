@@ -70,13 +70,14 @@ class ApproximateCapacityRegionPathSolver extends RegionPathSolver {
 
   private getGeometricHeuristic(regionId: number, goalRegionId: number) {
     return (
-      50 *
-      Math.hypot(
-        this.regionGraph.regionCenterX[regionId] -
-          this.regionGraph.regionCenterX[goalRegionId],
-        this.regionGraph.regionCenterY[regionId] -
-          this.regionGraph.regionCenterY[goalRegionId],
-      ) / this.maxEdgeCenterDistance
+      (50 *
+        Math.hypot(
+          this.regionGraph.regionCenterX[regionId] -
+            this.regionGraph.regionCenterX[goalRegionId],
+          this.regionGraph.regionCenterY[regionId] -
+            this.regionGraph.regionCenterY[goalRegionId],
+        )) /
+      this.maxEdgeCenterDistance
     )
   }
 
@@ -196,8 +197,7 @@ class ApproximateCapacityRegionPathSolver extends RegionPathSolver {
           ? edge.regionIdB
           : edge.regionIdA
       if (this.isRegionReservedForDifferentNet(nextRegionId)) continue
-      const g =
-        currentCandidate.g + this.computeRegionEntryCost(nextRegionId)
+      const g = currentCandidate.g + this.computeRegionEntryCost(nextRegionId)
       if (
         !Number.isFinite(g) ||
         g >= this.getCandidateBestCost(nextRegionId) - Number.EPSILON
@@ -274,14 +274,10 @@ const pointToLineSegmentDistance = (
     0,
     Math.min(
       1,
-      ((point.x - start.x) * dx + (point.y - start.y) * dy) /
-        lengthSquared,
+      ((point.x - start.x) * dx + (point.y - start.y) * dy) / lengthSquared,
     ),
   )
-  return Math.hypot(
-    point.x - (start.x + t * dx),
-    point.y - (start.y + t * dy),
-  )
+  return Math.hypot(point.x - (start.x + t * dx), point.y - (start.y + t * dy))
 }
 
 const getConnectionPointZ = (params: {
@@ -292,14 +288,14 @@ const getConnectionPointZ = (params: {
   const pointZ = getConnectionPointLayers(params.point).map((layerName) =>
     mapLayerNameToZ(layerName, params.layerCount),
   )
-  return params.region.d.availableZ.find((z) => pointZ.includes(z)) ??
+  return (
+    params.region.d.availableZ.find((z) => pointZ.includes(z)) ??
     params.region.d.availableZ[0] ??
     0
+  )
 }
 
-const getConnectionOrThrow = (
-  connection: ConnectionHgWithNetId,
-) => {
+const getConnectionOrThrow = (connection: ConnectionHgWithNetId) => {
   if (!connection.simpleRouteConnection) {
     throw new Error(
       `TinyHypergraphRegionPathingSolver requires a SimpleRouteConnection for "${connection.connectionId}"`,
@@ -351,14 +347,9 @@ const addIsolatedTerminalEscapeBridges = (
         )
         .sort(
           (a, b) =>
-            Math.hypot(
-              a.d.center.x - point.x,
-              a.d.center.y - point.y,
-            ) -
-              Math.hypot(
-                b.d.center.x - point.x,
-                b.d.center.y - point.y,
-              ) || a.regionId.localeCompare(b.regionId),
+            Math.hypot(a.d.center.x - point.x, a.d.center.y - point.y) -
+              Math.hypot(b.d.center.x - point.x, b.d.center.y - point.y) ||
+            a.regionId.localeCompare(b.regionId),
         )
       const escapeRegion = candidates[0]
       if (!escapeRegion) continue
@@ -409,10 +400,7 @@ const buildInputNodesWithPortPoints = (
         z: port.d.z,
         prevPortPointId: portPointChain.prevPortPointId,
         nextPortPointId: portPointChain.nextPortPointId,
-        connectionNodeIds: [
-          port.region1.regionId,
-          port.region2.regionId,
-        ],
+        connectionNodeIds: [port.region1.regionId, port.region2.regionId],
         distToCentermostPortOnZ: port.d.distToCentermostPortOnZ,
         cramped: port.d.cramped,
         connectsToOffBoardNode: Boolean(
@@ -448,8 +436,7 @@ export class TinyHypergraphRegionPathingSolver extends BaseSolver {
     const serializedGraph = buildSerializedTinyGraphForRegionPathing(params)
     const { topology, problem } = loadSerializedHyperGraph(serializedGraph)
     const obstacleOccupancyCost =
-      params.approximateObstacleOccupancyCost ??
-      DEFAULT_OBSTACLE_OCCUPANCY_COST
+      params.approximateObstacleOccupancyCost ?? DEFAULT_OBSTACLE_OCCUPANCY_COST
     if (!Number.isFinite(obstacleOccupancyCost) || obstacleOccupancyCost < 0) {
       throw new Error(
         "Pipeline10 approximateObstacleOccupancyCost must be zero or greater",
@@ -472,10 +459,7 @@ export class TinyHypergraphRegionPathingSolver extends BaseSolver {
       ]),
     )
     for (const port of params.graph.ports) {
-      const key = getRegionPairKey(
-        port.region1.regionId,
-        port.region2.regionId,
-      )
+      const key = getRegionPairKey(port.region1.regionId, port.region2.regionId)
       const ports = this.portsByRegionPair.get(key) ?? []
       ports.push(port)
       this.portsByRegionPair.set(key, ports)
@@ -607,8 +591,7 @@ export class TinyHypergraphRegionPathingSolver extends BaseSolver {
       )
     }
     const connectionName = simpleRouteConnection.name
-    const rootConnectionName =
-      simpleRouteConnection.__rootConnectionNames?.[0]
+    const rootConnectionName = simpleRouteConnection.__rootConnectionNames?.[0]
 
     for (let regionIndex = 0; regionIndex < regionIds.length; regionIndex++) {
       const regionId = regionIds[regionIndex]!
@@ -752,8 +735,7 @@ export class TinyHypergraphRegionPathingSolver extends BaseSolver {
           regionId: params.regionIds[params.regionIds.length - 1]!,
           start: choice.port.d,
           end: { ...endPoint, z: params.endZ },
-          rootConnectionName:
-            simpleRouteConnection.__rootConnectionNames?.[0],
+          rootConnectionName: simpleRouteConnection.__rootConnectionNames?.[0],
           pairsByRegionId: params.pairsByRegionId,
         })
       if (cost < selectedCost) {
@@ -783,8 +765,9 @@ export class TinyHypergraphRegionPathingSolver extends BaseSolver {
     pairsByRegionId: Map<string, [PortPoint, PortPoint][]>
   }): number {
     let penalty = 0
-    for (const [existingStart, existingEnd] of
-      params.pairsByRegionId.get(params.regionId) ?? []) {
+    for (const [existingStart, existingEnd] of params.pairsByRegionId.get(
+      params.regionId,
+    ) ?? []) {
       const existingRoot =
         existingStart.rootConnectionName ?? existingStart.connectionName
       if (
