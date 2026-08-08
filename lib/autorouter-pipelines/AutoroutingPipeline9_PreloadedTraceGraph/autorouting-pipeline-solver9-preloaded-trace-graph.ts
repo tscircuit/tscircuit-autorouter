@@ -1,5 +1,4 @@
 import { RectDiffPipeline } from "@tscircuit/rectdiff"
-import { PostProcessingSolver } from "@tscircuit/length-matching-solver"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { GraphicsObject, Line } from "graphics-debug"
 import { HighDensityForceImproveSolver } from "high-density-repair01/lib/HighDensityForceImproveSolver"
@@ -75,6 +74,7 @@ import { PreloadedTraceGraphSolver } from "./preloaded-trace-graph-solver"
 import { PreprocessSimpleRouteJsonWithoutTraceObstaclesSolver } from "./preprocess-simple-route-json-without-trace-obstacles-solver"
 import { MergedComponentTopologyView } from "../AutoroutingPipeline7_MultiGraph/MergedComponentTopologyView"
 import { convertPipeline7HdRoutesToSimplifiedPcbTraces } from "../AutoroutingPipeline7_MultiGraph/convertPipeline7HdRoutesToSimplifiedPcbTraces"
+import { DifferentialPairPostProcessingSolver } from "../AutoroutingPipeline7_MultiGraph/differential-pair-post-processing-solver"
 import { lockHdRouteTerminals } from "../AutoroutingPipeline7_MultiGraph/lock-hd-route-terminals"
 
 interface CapacityMeshSolverOptions {
@@ -236,7 +236,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
   strawSolver?: StrawSolver
   deadEndSolver?: DeadEndSolver
   traceSimplificationSolver?: TraceSimplificationSolver
-  lengthMatchingPostProcessingSolver?: PostProcessingSolver
+  lengthMatchingPostProcessingSolver?: DifferentialPairPostProcessingSolver
   availableSegmentPointSolver?: AvailableSegmentPointSolver
   portPointPathingSolver?: TinyHypergraphPortPointPathingSolver
   multiSectionPortPointOptimizer?: MultiSectionPortPointOptimizer
@@ -735,7 +735,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     ),
     definePipelineStep(
       "lengthMatchingPostProcessingSolver",
-      PostProcessingSolver,
+      DifferentialPairPostProcessingSolver,
       (cms) => {
         const netToPointPairsSolver = cms.netToPointPairsSolver
         if (!netToPointPairsSolver)

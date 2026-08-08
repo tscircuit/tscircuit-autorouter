@@ -34,6 +34,14 @@ export class DifferentialPairPostProcessingSolver extends BaseSolver {
         pair.minimumCenterlineDistance !== undefined ||
         pair.maximumCenterlineDistance !== undefined,
     )
+    if (inputProblem.differentialPairs.length === 0) {
+      this.outputHdRoutes = structuredClone(inputProblem.hdRoutes)
+      this.phase = "complete"
+      this.solved = true
+      this.progress = 1
+      this.MAX_ITERATIONS = 1
+      return
+    }
     if (this.lengthOnlyPairs.length > 0) {
       const originalConnections = this.lengthOnlyPairs.flatMap((pair) =>
         pair.connectionNames.map((connectionName) => {
@@ -145,9 +153,15 @@ export class DifferentialPairPostProcessingSolver extends BaseSolver {
   override visualize(): GraphicsObject {
     if (this.phase === "length-matching")
       return this.lengthMatchingSolver!.visualize()
-    return (
-      this.postProcessingSolver?.visualize() ??
-      this.lengthMatchingSolver!.visualize()
-    )
+    if (this.postProcessingSolver) return this.postProcessingSolver.visualize()
+    if (this.lengthMatchingSolver) return this.lengthMatchingSolver.visualize()
+    return {
+      lines: (this.outputHdRoutes ?? [])
+        .filter((route) => route.route.length > 1)
+        .map((route) => ({
+          points: route.route.map((point) => ({ x: point.x, y: point.y })),
+          strokeWidth: route.traceThickness,
+        })),
+    }
   }
 }

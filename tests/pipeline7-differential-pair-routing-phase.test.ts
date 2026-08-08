@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test"
 import { AutoroutingPipelineSolver7_MultiGraph } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/AutoroutingPipelineSolver7_MultiGraph"
 
-test("Pipeline7 completes post-processing for a routed differential pair", () => {
+test("Pipeline7 surfaces infeasible differential-pair post-processing", () => {
   const solver = new AutoroutingPipelineSolver7_MultiGraph({
     bounds: { minX: -10, maxX: 10, minY: -10, maxY: 10 },
     obstacles: [
@@ -164,15 +164,16 @@ test("Pipeline7 completes post-processing for a routed differential pair", () =>
     minViaPadDiameter: 0.3,
   })
 
-  solver.solve()
+  expect(() => solver.solve()).toThrow(
+    "could not be improved without violating bounds, copper clearance, or coupled-via constraints",
+  )
 
-  expect(solver.failed).toBe(false)
-  expect(solver.solved).toBe(true)
+  expect(solver.failed).toBe(true)
+  expect(solver.solved).toBe(false)
   expect(
     solver.lengthMatchingPostProcessingSolver?.postProcessingSolver,
   ).toBeDefined()
   expect(
     solver.lengthMatchingPostProcessingSolver?.lengthMatchingSolver,
   ).toBeUndefined()
-  expect(solver.getOutputSimpleRouteJson().traces).toHaveLength(2)
 })
