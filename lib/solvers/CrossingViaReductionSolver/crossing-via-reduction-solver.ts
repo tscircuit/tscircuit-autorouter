@@ -69,6 +69,16 @@ type DetourCandidate = {
   targetZ: number
 }
 
+type RouteClearanceIndex = Pick<
+  HighDensityRouteSpatialIndex,
+  "getConflictingRoutesForSegment" | "getConflictingRoutesNearPoint"
+>
+
+type BaseClearanceIndexes = {
+  mutableRoutes: HighDensityRouteSpatialIndex
+  immutableRoutes: HighDensityRouteSpatialIndex | null
+}
+
 const EPSILON = 1e-6
 const DEFAULT_TRACE_MARGIN = 0.1
 const DEFAULT_OBSTACLE_MARGIN = 0.15
@@ -306,6 +316,49 @@ const hasTransitionOnSide = ({
   return getTransitionAdjacentZ({ sections, sectionIndex, side }) === targetZ
 }
 
+const createCandidateClearanceIndex = ({
+  baseIndexes,
+  candidatePairRoute,
+  ignoredConnectionNames,
+}: {
+  baseIndexes: BaseClearanceIndexes
+  candidatePairRoute: HighDensityRoute
+  ignoredConnectionNames: ReadonlySet<string>
+}): RouteClearanceIndex => {
+  const candidatePairIndex = new HighDensityRouteSpatialIndex([
+    candidatePairRoute,
+  ])
+  return {
+    getConflictingRoutesForSegment: (start, end, margin) => [
+      ...baseIndexes.mutableRoutes
+        .getConflictingRoutesForSegment(start, end, margin)
+        .filter(
+          ({ conflictingRoute }) =>
+            !ignoredConnectionNames.has(conflictingRoute.connectionName),
+        ),
+      ...(baseIndexes.immutableRoutes?.getConflictingRoutesForSegment(
+        start,
+        end,
+        margin,
+      ) ?? []),
+      ...candidatePairIndex.getConflictingRoutesForSegment(start, end, margin),
+    ],
+    getConflictingRoutesNearPoint: (point, margin) => [
+      ...baseIndexes.mutableRoutes
+        .getConflictingRoutesNearPoint(point, margin)
+        .filter(
+          ({ conflictingRoute }) =>
+            !ignoredConnectionNames.has(conflictingRoute.connectionName),
+        ),
+      ...(baseIndexes.immutableRoutes?.getConflictingRoutesNearPoint(
+        point,
+        margin,
+      ) ?? []),
+      ...candidatePairIndex.getConflictingRoutesNearPoint(point, margin),
+    ],
+  }
+}
+
 /**
  * Removes the two-via layer detour in an A-B-A route when it crosses an
  * A-layer section whose existing via is adjacent to the crossing. The change
@@ -411,7 +464,7 @@ export class CrossingViaReductionSolver extends BaseSolver {
 
   private routeIsClear(
     route: HighDensityRoute,
-    hdRouteSHI: HighDensityRouteSpatialIndex,
+    hdRouteSHI: RouteClearanceIndex,
   ): boolean {
     for (const section of breakRouteIntoSections(route)) {
       for (let index = 1; index < section.points.length; index++) {
@@ -450,7 +503,7 @@ export class CrossingViaReductionSolver extends BaseSolver {
   private relocatedViaIsClear(
     route: HighDensityRoute,
     relocatedVia: { x: number; y: number },
-    hdRouteSHI: HighDensityRouteSpatialIndex,
+    hdRouteSHI: RouteClearanceIndex,
   ): boolean {
     const viaRadius = route.viaDiameter / 2
     for (let z = 0; z < this.input.layerCount; z++) {
@@ -501,29 +554,26 @@ export class CrossingViaReductionSolver extends BaseSolver {
     return true
   }
 
-  private candidateIsClear(candidate: CrossingReductionCandidate): boolean {
-    const unchangedRoutes = this.reducedHdRoutes.filter(
-      (_, routeIndex) =>
-        routeIndex !== candidate.detourRouteIndex &&
-        routeIndex !== candidate.transitionRouteIndex,
-    )
-    const immutableRoutes = [...(this.input.otherHdRoutes ?? [])]
-    const detourObstacles = [
-      ...unchangedRoutes,
-      ...immutableRoutes,
-      candidate.transitionRoute,
-    ]
-    const transitionObstacles = [
-      ...unchangedRoutes,
-      ...immutableRoutes,
-      candidate.detourRoute,
-    ]
-    const detourObstacleIndex = new HighDensityRouteSpatialIndex(
-      detourObstacles,
-    )
-    const transitionObstacleIndex = new HighDensityRouteSpatialIndex(
-      transitionObstacles,
-    )
+  private candidateIsClear(
+    candidate: CrossingReductionCandidate,
+    baseIndexes: BaseClearanceIndexes,
+  ): boolean {
+    const ignoredConnectionNames = new Set([
+      this.reducedHdRoutes[candidate.detourRouteIndex].connectionName,
+      this.reducedHdRoutes[candidate.transitionRouteIndex].connectionName,
+    ])
+    const detourObstacleIndex = createCandidateClearanceIndex({
+      baseIndexes,
+      candidatePairRoute: candidate.transitionRoute,
+      ignoredConnectionNames,
+    })
+    const transitionObstacleIndex = createCandidateClearanceIndex({
+      baseIndexes,
+      candidatePairRoute: candidate.detourRoute,
+      ignoredConnectionNames,
+    })
+    this.stats.candidateClearanceChecks =
+      (this.stats.candidateClearanceChecks ?? 0) + 1
     return (
       this.routeIsClear(candidate.detourRoute, detourObstacleIndex) &&
       this.routeIsClear(candidate.transitionRoute, transitionObstacleIndex) &&
@@ -706,6 +756,7 @@ export class CrossingViaReductionSolver extends BaseSolver {
     transitionSectionIndex,
     side,
     crossingDistances,
+    baseClearanceIndexes,
   }: {
     detourRouteIndex: number
     detourSection: RouteSection
@@ -716,6 +767,7 @@ export class CrossingViaReductionSolver extends BaseSolver {
     transitionSectionIndex: number
     side: TransitionSide
     crossingDistances: number[]
+    baseClearanceIndexes: BaseClearanceIndexes
   }): CrossingReductionCandidate | null {
     if (
       !hasTransitionOnSide({
@@ -769,7 +821,9 @@ export class CrossingViaReductionSolver extends BaseSolver {
       transitionRoute: relocatedTransition.route,
       relocatedVia: relocatedTransition.relocatedVia,
     }
-    return this.candidateIsClear(candidate) ? candidate : null
+    return this.candidateIsClear(candidate, baseClearanceIndexes)
+      ? candidate
+      : null
   }
 
   private findCrossingReduction(): CrossingReductionCandidate | null {
@@ -817,6 +871,7 @@ export class CrossingViaReductionSolver extends BaseSolver {
       relevantLayerTransitions,
     )
     if (!transitionSegmentIndex) return null
+    let baseClearanceIndexes: BaseClearanceIndexes | null = null
 
     for (const detourCandidate of detourCandidates) {
       const detourRouteIndex = detourCandidate.routeIndex
@@ -841,6 +896,14 @@ export class CrossingViaReductionSolver extends BaseSolver {
         const transitionSections = sectionsByRoute[transitionRouteIndex]
         const transitionSection =
           transitionSections[crossingGroup.transitionSectionIndex]
+        baseClearanceIndexes ??= {
+          mutableRoutes: new HighDensityRouteSpatialIndex(
+            this.reducedHdRoutes,
+          ),
+          immutableRoutes: this.input.otherHdRoutes?.length
+            ? new HighDensityRouteSpatialIndex([...this.input.otherHdRoutes])
+            : null,
+        }
         const candidate = this.tryCreateCandidate({
           detourRouteIndex,
           detourSection,
@@ -851,6 +914,7 @@ export class CrossingViaReductionSolver extends BaseSolver {
           transitionSectionIndex: crossingGroup.transitionSectionIndex,
           side: crossingGroup.side,
           crossingDistances: crossingGroup.crossingDistances,
+          baseClearanceIndexes,
         })
         if (candidate) return candidate
       }
