@@ -79,6 +79,11 @@ type BaseClearanceIndexes = {
   immutableRoutes: HighDensityRouteSpatialIndex | null
 }
 
+const STATIC_GEOMETRY_ONLY_CLEARANCE_INDEX: RouteClearanceIndex = {
+  getConflictingRoutesForSegment: () => [],
+  getConflictingRoutesNearPoint: () => [],
+}
+
 const EPSILON = 1e-6
 const DEFAULT_TRACE_MARGIN = 0.1
 const DEFAULT_OBSTACLE_MARGIN = 0.15
@@ -593,6 +598,59 @@ export class CrossingViaReductionSolver extends BaseSolver {
     return true
   }
 
+  /**
+   * Removing the detour vias can merge changed and unchanged copper into one
+   * layer section. Recheck that merged section at the relaxed DRC clearance,
+   * while leaving unrelated sections on the delta-only fast path.
+   */
+  private changedSectionsAreStaticallyClear(
+    route: HighDensityRoute,
+    originalRouteSegmentKeys: ReadonlySet<string>,
+  ): boolean {
+    for (const section of breakRouteIntoSections(route)) {
+      const containsChangedSegment = section.points.some((point, index) => {
+        const previousPoint = section.points[index - 1]
+        return (
+          previousPoint !== undefined &&
+          !originalRouteSegmentKeys.has(getSegmentKey(previousPoint, point))
+        )
+      })
+      if (!containsChangedSegment) continue
+
+      if (this.input.outline) {
+        for (let index = 1; index < section.points.length; index++) {
+          if (
+            doesSegmentCrossPolygonBoundary({
+              start: section.points[index - 1],
+              end: section.points[index],
+              polygon: [...this.input.outline],
+              margin: route.traceThickness / 2,
+            })
+          ) {
+            return false
+          }
+        }
+      }
+
+      if (
+        !canSectionMoveToLayer({
+          currentSection: section,
+          targetZ: section.z,
+          route,
+          hdRouteSHI: STATIC_GEOMETRY_ONLY_CLEARANCE_INDEX,
+          obstacleSHI: this.obstacleSHI,
+          connMap: this.input.connMap,
+          defaultTraceThickness: route.traceThickness,
+          obstacleMargin: Math.min(this.obstacleMargin, 0.1),
+          traceMargin: this.traceMargin,
+        })
+      ) {
+        return false
+      }
+    }
+    return true
+  }
+
   private candidateIsClear(
     candidate: CrossingReductionCandidate,
     baseIndexes: BaseClearanceIndexes,
@@ -636,6 +694,10 @@ export class CrossingViaReductionSolver extends BaseSolver {
         candidate.transitionRoute,
         candidate.relocatedVia,
         transitionObstacleIndex,
+      ) &&
+      this.changedSectionsAreStaticallyClear(
+        candidate.detourRoute,
+        originalDetourRouteSegmentKeys,
       )
     )
   }

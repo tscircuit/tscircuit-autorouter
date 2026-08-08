@@ -36,7 +36,44 @@ test("keeps the three-via crossing when the relocated via is blocked", () => {
   ])
 })
 
-test("ignores pre-existing obstacle clearance on unchanged geometry", () => {
+test("ignores pre-existing obstacle clearance outside changed sections", () => {
+  const obstacle: Obstacle = {
+    type: "rect",
+    layers: ["top"],
+    __zLayers: [0],
+    center: { x: -5.5, y: 4 },
+    width: 0.2,
+    height: 0.2,
+    connectedTo: ["blocked_net"],
+  }
+  const routes = createCrossingViaReductionRoutes()
+  routes[0].route.unshift(
+    { x: -6, y: 4, z: 0, pcb_port_id: "detour-prefix" },
+    { x: -5, y: 4, z: 0 },
+    { x: -5, y: 4, z: 1, insideJumperPad: true },
+    { x: -4, y: 4, z: 1, insideJumperPad: true },
+    { x: -4, y: 4, z: 0 },
+  )
+  routes[0].vias.unshift({ x: -5, y: 4 }, { x: -4, y: 4 })
+  const solver = new CrossingViaReductionSolver({
+    inputHdRoutes: routes,
+    obstacles: [obstacle],
+    connMap: new ConnectivityMap({
+      detour_net: ["detour"],
+      transition_net: ["transition"],
+      blocked_net: ["blocked_net"],
+    }),
+    layerCount: 2,
+  })
+
+  solver.solve()
+
+  expect(solver.failed).toBe(false)
+  expect(solver.stats.crossingViaReductions).toBe(1)
+  expect(solver.stats.viasRemovedByCrossingReductions).toBe(2)
+})
+
+test("keeps vias that isolate unchanged obstacle conflicts from a changed section", () => {
   const obstacle: Obstacle = {
     type: "rect",
     layers: ["top"],
@@ -60,8 +97,7 @@ test("ignores pre-existing obstacle clearance on unchanged geometry", () => {
   solver.solve()
 
   expect(solver.failed).toBe(false)
-  expect(solver.stats.crossingViaReductions).toBe(1)
-  expect(solver.stats.viasRemovedByCrossingReductions).toBe(2)
+  expect(solver.stats.crossingViaReductions).toBeUndefined()
 })
 
 test("checks changed geometry against static obstacles", () => {
