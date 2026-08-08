@@ -47,7 +47,7 @@ type MaterializedOutput = {
 
 const DEFAULT_LAYER_CHANGE_COST = 4
 const DEFAULT_REGION_CAPACITY_COST = 20
-const DEFAULT_OBSTACLE_OCCUPANCY_COST = 200
+const DEFAULT_OBSTACLE_OCCUPANCY_COST = 50
 
 class ApproximateCapacityRegionPathSolver extends RegionPathSolver {
   private readonly maxEdgeCenterDistance: number

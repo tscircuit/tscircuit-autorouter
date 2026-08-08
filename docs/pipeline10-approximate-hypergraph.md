@@ -51,7 +51,7 @@ threshold.
 Obstacle occupancy includes the configured sampling margin and is weighted by
 layer: an obstacle covering half a cell on one of two available layers yields
 an occupancy fraction of `0.25`. The default full-occupancy entry cost is
-`200`, configurable with `approximateObstacleOccupancyCost` when constructing
+`50`, configurable with `approximateObstacleOccupancyCost` when constructing
 Pipeline10.
 
 ## Region-path prototype result
@@ -66,39 +66,49 @@ Dataset18 sample 1 verifies the component boundary: one component was
 detected, 112 component-topology cells survived topology merging, 12 were used
 by routed paths, and the region-only path solve took about `52ms`.
 
-After adding obstacle-occupancy region costs, a local sample 3 rerun completed
-in `11.2s` with 59 relaxed DRC errors and 118 vias. The earlier local
-region-only prototype completed in `8.7s` with 107 errors and 130 vias. This is
-a 45% reduction in reported errors for a 2.5-second end-to-end cost on that
-sample; multi-sample Blacksmith validation is still required before treating
-that tradeoff as representative.
+An initial local full-occupancy-cost probe at `200` reduced sample 3 to 59
+relaxed DRC errors, but multi-sample validation showed that weight was too
+aggressive: sample 12 timed out in trace simplification. The tuned default of
+`50` retains the occupancy preference without that completion regression.
 
 ## Dataset18 result
 
 Blacksmith ran samples 1, 3, 6, 12, and 15 concurrently with a 600-second
 per-sample timeout. Pipeline10 used 6 mm cells and six ports per layer.
 
-The current region-only implementation completed all five samples. On the
+The current occupancy-aware implementation completed all five samples. On the
 three samples completed by both solvers, aggregate runtime fell from `587.1s`
-to `336.0s`, a `1.75x` end-to-end speedup. Sample 6 and sample 15 changed from
+to `323.6s`, a `1.81x` end-to-end speedup. Sample 6 and sample 15 changed from
 timeouts to completions. The baseline's lower successful-sample p50 is not a
 like-for-like comparison because it excludes those two timed-out boards.
 
-| Sample | Pipeline7 | Region-only Pipeline10 | Speedup | Relaxed DRC errors | Vias |
+| Sample | Pipeline7 | Occupancy-aware Pipeline10 | Speedup | Relaxed DRC errors | Vias |
 | ---: | ---: | ---: | ---: | ---: | ---: |
-| 1 | 84.3s | 65.0s | 1.30x | 210 | 215 |
-| 3 | 62.4s | 25.6s | 2.44x | 69 | 105 |
-| 6 | timeout | 334.1s | completion | 271 | 244 |
-| 12 | 440.4s | 245.4s | 1.79x | 349 | 337 |
-| 15 | timeout | 166.2s | completion | 154 | 300 |
+| 1 | 84.3s | 69.5s | 1.21x | 159 | 220 |
+| 3 | 62.4s | 34.8s | 1.79x | 63 | 101 |
+| 6 | timeout | 280.7s | completion | 210 | 253 |
+| 12 | 440.4s | 219.4s | 2.01x | 243 | 351 |
+| 15 | timeout | 149.7s | completion | 138 | 295 |
 
-The region-only Pipeline10 run had 100% solver completion, no timeouts, a
-166.2-second p50, and a 316.3-second p95. It had a 0% relaxed DRC pass rate.
-This means the retained post-processors can consume the approximate topology
+The tuned cost `50` reduced aggregate runtime by 10% and relaxed DRC errors by
+23% versus the same region-only solver with occupancy costs disabled. Average
+vias increased by 1.6%. Cost `200` was the rejected high-penalty point because
+it caused sample 12 to time out.
+
+| Full-occupancy cost | Completed | Aggregate runtime | Relaxed DRC errors | p50 | p95 | Average vias |
+| ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| 0 | 5/5 | 836.3s | 1,053 | 166.2s | 316.3s | 240.2 |
+| 50 | 5/5 | 754.0s | 813 | 149.7s | 268.4s | 244.0 |
+| 200 | 4/5 | sample 12 timeout | 604 on 4 completed | 105.2s successful-only | 405.7s successful-only | 218.3 successful-only |
+
+The occupancy-aware Pipeline10 run still had a 0% relaxed DRC pass rate. This
+means the retained post-processors can consume the approximate topology
 without structural solver failures, but they cannot yet repair its geometric
 error load completely.
 
 [Region-only Pipeline10 Blacksmith testbox run](https://github.com/tscircuit/tscircuit-autorouter/actions/runs/31272452830)
+
+[Obstacle-occupancy tuning Blacksmith testbox run](https://github.com/tscircuit/tscircuit-autorouter/actions/runs/31274043833)
 
 ### Earlier full tiny-hypergraph matrix
 
