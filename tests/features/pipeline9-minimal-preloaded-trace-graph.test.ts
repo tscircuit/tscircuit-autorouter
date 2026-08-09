@@ -74,7 +74,8 @@ test("Pipeline9 owns copied stages with minimal preloaded-trace changes", () => 
   const pipeline7SharedStageCount = pipeline7.pipelineDef.filter(
     (step) =>
       step.solverName !== "powerTraceExpansionSolver" &&
-      step.solverName !== "exactGeometryDrcForceImproveSolver",
+      step.solverName !== "exactGeometryDrcForceImproveSolver" &&
+      step.solverName !== "finalEndpointViaRemovalSolver",
   ).length
   expect(solver.pipelineDef).toHaveLength(pipeline7SharedStageCount + 2)
   for (const stageName of [
