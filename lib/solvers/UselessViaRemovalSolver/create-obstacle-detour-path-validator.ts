@@ -83,10 +83,7 @@ export const createObstacleDetourPathValidator = ({
       (connectedId === routeRootConnectionName ||
         connMap.areIdsConnected(connectedId, routeRootConnectionName)))
 
-  return (
-    path: readonly RoutePoint[],
-    firstSegmentIndex: number,
-  ): boolean => {
+  return (path: readonly RoutePoint[], firstSegmentIndex: number): boolean => {
     const segmentCount = path.length - 1
     for (let orderIndex = 0; orderIndex < segmentCount; orderIndex++) {
       const naturalIndex = orderIndex - 1
@@ -164,10 +161,7 @@ export const createObstacleDetourPathValidator = ({
             isConnectedToRoute(conflictingRoute.connectionName) ||
             (conflictingRoute.rootConnectionName !== undefined &&
               isConnectedToRoute(conflictingRoute.rootConnectionName))
-          routeIsSameNetCache.set(
-            conflictingRoute,
-            conflictingRouteIsSameNet,
-          )
+          routeIsSameNetCache.set(conflictingRoute, conflictingRouteIsSameNet)
         }
         if (conflictingRouteIsSameNet) continue
 
