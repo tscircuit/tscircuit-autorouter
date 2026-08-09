@@ -47,8 +47,6 @@ export class SingleRouteUselessViaRemovalSolver extends BaseSolver {
   GEOMETRY_SHORTCUT_TRACE_MARGIN = 0.1
   GEOMETRY_SHORTCUT_OBSTACLE_MARGIN = 0.15
   MAX_GEOMETRY_SHORTCUT_ADDED_LENGTH = 4
-  MAX_OBSTACLE_DETOUR_OUTLINE_EDGE_CHECKS = 16_384
-  MIN_OBSTACLE_DETOUR_CANDIDATE_CHECKS = 128
   ENABLE_GEOMETRY_SHORTCUTS = true
   ENABLE_OBSTACLE_DETOUR_SHORTCUTS = false
 
@@ -321,25 +319,11 @@ export class SingleRouteUselessViaRemovalSolver extends BaseSolver {
         })
       }
     }
-    // Rank cheap geometry first. Outline and collision checks are much more
-    // expensive than constructing candidates on detailed board outlines.
+    // Rank cheap geometry first so the first fully valid path is the same
+    // maximum-saved-length shortcut as the exhaustive scan.
     candidateShortcuts.sort((a, b) => b.savedLength - a.savedLength)
 
-    const outlineEdgeCount = this.outline?.length ?? 0
-    const candidateCheckLimit =
-      outlineEdgeCount > 0
-        ? Math.max(
-            this.MIN_OBSTACLE_DETOUR_CANDIDATE_CHECKS,
-            Math.floor(
-              this.MAX_OBSTACLE_DETOUR_OUTLINE_EDGE_CHECKS / outlineEdgeCount,
-            ),
-          )
-        : Number.MAX_SAFE_INTEGER
-    let candidateChecks = 0
     for (const shortcut of candidateShortcuts) {
-      if (candidateChecks >= candidateCheckLimit) break
-      candidateChecks++
-      if (this.shortcutCrossesOutline(shortcut.path)) continue
       const { path, previousPointIndex, nextPointIndex } = shortcut
       const candidateSection: RouteSection = {
         startIndex: previousSection.startIndex + previousPointIndex,
@@ -359,6 +343,9 @@ export class SingleRouteUselessViaRemovalSolver extends BaseSolver {
         traceMargin: this.GEOMETRY_SHORTCUT_TRACE_MARGIN,
       })
       if (!pathIsClear) continue
+      // Most candidates collide. Only run the comparatively expensive polygon
+      // boundary scan for candidates that pass the spatial-index checks.
+      if (this.shortcutCrossesOutline(path)) continue
 
       return shortcut
     }
