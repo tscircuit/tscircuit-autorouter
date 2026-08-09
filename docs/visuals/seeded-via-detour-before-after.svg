@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="520" viewBox="0 0 1200 520">
+  <defs>
+    <pattern id="grid" width="45" height="45" patternUnits="userSpaceOnUse">
+      <path d="M 45 0 L 0 0 0 45" fill="none" stroke="#24445a" stroke-width="1" opacity="0.55"/>
+    </pattern>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="3" stdDeviation="4" flood-opacity="0.28"/>
+    </filter>
+  </defs>
+
+  <rect width="1200" height="520" fill="#071421"/>
+  <text x="36" y="38" fill="#f8fafc" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="22" font-weight="700">Seed 1 · obstacle-detour via simplification</text>
+  <text x="36" y="64" fill="#94a3b8" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="14">Same DRC-clean connection and top-layer obstacle · two vias removed</text>
+
+  <g filter="url(#shadow)">
+    <rect x="20" y="88" width="560" height="400" rx="12" fill="#0f2538" stroke="#36566e"/>
+    <rect x="620" y="88" width="560" height="400" rx="12" fill="#0f2538" stroke="#36566e"/>
+  </g>
+  <rect x="38" y="142" width="524" height="324" fill="url(#grid)"/>
+  <rect x="638" y="142" width="524" height="324" fill="url(#grid)"/>
+
+  <text x="42" y="120" fill="#f8fafc" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="17" font-weight="700">BEFORE · ADDED LAYER DETOUR</text>
+  <text x="642" y="120" fill="#f8fafc" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="17" font-weight="700">AFTER · TOP-LAYER CORRIDOR</text>
+  <text x="42" y="448" fill="#fda4af" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="14">2 vias · top → bottom → top</text>
+  <text x="642" y="448" fill="#86efac" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="14">0 vias · bounded local detour</text>
+
+  <!-- Seeded top-layer obstacle. -->
+  <rect x="219.5" y="207.2" width="73.1" height="132" rx="5" fill="#7f1d1d" stroke="#f87171" stroke-width="3"/>
+  <rect x="819.5" y="207.2" width="73.1" height="132" rx="5" fill="#7f1d1d" stroke="#f87171" stroke-width="3"/>
+  <text x="256" y="278" text-anchor="middle" fill="#fecaca" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="12">TOP PAD</text>
+  <text x="856" y="278" text-anchor="middle" fill="#fecaca" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="12">TOP PAD</text>
+
+  <!-- Before: the bottom-layer segment crosses beneath the obstacle. -->
+  <path d="M 70 273.2 L 201.6 273.2" fill="none" stroke="#ef4444" stroke-width="12" stroke-linecap="round"/>
+  <path d="M 201.6 273.2 L 310.7 273.2" fill="none" stroke="#60a5fa" stroke-width="12" stroke-linecap="round"/>
+  <path d="M 310.7 273.2 L 520 273.2" fill="none" stroke="#ef4444" stroke-width="12" stroke-linecap="round"/>
+  <circle cx="201.6" cy="273.2" r="14" fill="#f0abfc" stroke="#f43f5e" stroke-width="8"/>
+  <circle cx="310.7" cy="273.2" r="14" fill="#f0abfc" stroke="#f43f5e" stroke-width="8"/>
+
+  <!-- After: the solver chooses a DRC-clear top-layer corridor. -->
+  <path d="M 670 273.2 L 701.3 370.7 L 908.7 370.7 L 1088.7 370.7 L 1120 273.2" fill="none" stroke="#ef4444" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <g font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="12">
+    <line x1="44" y1="472" x2="74" y2="472" stroke="#ef4444" stroke-width="7" stroke-linecap="round"/>
+    <text x="82" y="476" fill="#cbd5e1">top copper</text>
+    <line x1="164" y1="472" x2="194" y2="472" stroke="#60a5fa" stroke-width="7" stroke-linecap="round"/>
+    <text x="202" y="476" fill="#cbd5e1">bottom copper</text>
+    <circle cx="338" cy="472" r="7" fill="#f0abfc" stroke="#f43f5e" stroke-width="4"/>
+    <text x="352" y="476" fill="#cbd5e1">via</text>
+    <rect x="418" y="464" width="16" height="16" rx="2" fill="#7f1d1d" stroke="#f87171" stroke-width="2"/>
+    <text x="442" y="476" fill="#cbd5e1">top obstacle</text>
+  </g>
+</svg>
