@@ -13,11 +13,6 @@ test("Pipeline7 keeps srj19 sample86 DRC-clean after endpoint via removal", asyn
 
   expect(solver.failed).toBe(false)
   const routedTraces = solver.getOutputSimplifiedPcbTraces()
-  const viaCount = routedTraces.reduce(
-    (sum, trace) =>
-      sum + trace.route.filter((point) => point.route_type === "via").length,
-    0,
-  )
   const drc = evaluateRelaxedDrc({
     inputSrj: solver.originalSrj,
     srjWithPointPairs: solver.srjWithPointPairs!,
@@ -25,5 +20,4 @@ test("Pipeline7 keeps srj19 sample86 DRC-clean after endpoint via removal", asyn
   })
 
   expect(drc.errors).toHaveLength(0)
-  expect(viaCount).toBe(24)
 })

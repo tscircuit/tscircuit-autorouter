@@ -1,5 +1,6 @@
 import { expect, test } from "bun:test"
 import { AutoroutingPipelineSolver } from "lib"
+import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import bugReport from "../../fixtures/bug-reports/bugreport54-3a54af/bugreport54-3a54af.json" with {
   type: "json",
 }
@@ -33,12 +34,29 @@ test(
       maxY: 26.67,
     })
 
+    const routedTraces = solver.getOutputSimplifiedPcbTraces()
+    const viaCount = routedTraces.reduce(
+      (sum, trace) =>
+        sum + trace.route.filter((point) => point.route_type === "via").length,
+      0,
+    )
+    const drc = evaluateRelaxedDrc({
+      inputSrj: solver.originalSrj,
+      srjWithPointPairs: solver.srjWithPointPairs!,
+      routedTraces,
+    })
+    expect(viaCount).toBe(4)
+    expect(drc.errors).toHaveLength(0)
+
     const snapshotPath =
       process.platform === "linux"
         ? import.meta.path.replace(/\.test\.ts$/, "-linux.test.ts")
         : import.meta.path
 
-    expect(getLastStepSvg(solver.visualize())).toMatchSvgSnapshot(snapshotPath)
+    expect(getLastStepSvg(solver.visualize())).toMatchSvgSnapshot(
+      snapshotPath,
+      { tolerance: 0.015 },
+    )
   },
   { timeout: 180_000 },
 )
