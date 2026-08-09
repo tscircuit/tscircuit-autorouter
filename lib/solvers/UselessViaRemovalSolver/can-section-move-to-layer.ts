@@ -16,6 +16,7 @@ export const canSectionMoveToLayer = ({
   obstacleMargin,
   traceMargin,
   shouldCheckStaticGeometryForSegment,
+  segmentOrder,
 }: {
   currentSection: RouteSection
   targetZ: number
@@ -33,6 +34,7 @@ export const canSectionMoveToLayer = ({
     start: RouteSection["points"][number],
     end: RouteSection["points"][number],
   ) => boolean
+  segmentOrder?: readonly number[]
 }): boolean => {
   const currentTraceThickness = route.traceThickness ?? defaultTraceThickness
   const minTraceMargin = traceMargin ?? 0
@@ -40,9 +42,54 @@ export const canSectionMoveToLayer = ({
     (id): id is string => id !== undefined,
   )
 
-  for (let i = 0; i < currentSection.points.length - 1; i++) {
+  const segmentCount = currentSection.points.length - 1
+  for (let orderIndex = 0; orderIndex < segmentCount; orderIndex++) {
+    const i = segmentOrder?.[orderIndex] ?? orderIndex
     const A = { ...currentSection.points[i], z: targetZ }
     const B = { ...currentSection.points[i + 1], z: targetZ }
+
+    if (shouldCheckStaticGeometryForSegment?.(A, B) !== false) {
+      const segmentBox = {
+        centerX: (A.x + B.x) / 2,
+        centerY: (A.y + B.y) / 2,
+        width: Math.abs(A.x - B.x),
+        height: Math.abs(A.y - B.y),
+      }
+      const searchMargin = currentTraceThickness / 2 + obstacleMargin
+      const obstacles = obstacleSHI.searchArea(
+        segmentBox.centerX,
+        segmentBox.centerY,
+        segmentBox.width + searchMargin * 2,
+        segmentBox.height + searchMargin * 2,
+      )
+
+      for (const obstacle of obstacles) {
+        // Same-net pads and copper should not block via removal collision checks.
+        const obstacleIsSameNet = routeIds.some((routeId) =>
+          obstacle.connectedTo.some(
+            (connectedId) =>
+              connectedId === routeId ||
+              connMap.areIdsConnected(connectedId, routeId),
+          ),
+        )
+        if (obstacleIsSameNet) continue
+
+        if (obstacle.__zLayers?.includes(targetZ)) {
+          const isAtObstacle =
+            (Math.abs(A.x - obstacle.center.x) < 0.01 &&
+              Math.abs(A.y - obstacle.center.y) < 0.01) ||
+            (Math.abs(B.x - obstacle.center.x) < 0.01 &&
+              Math.abs(B.y - obstacle.center.y) < 0.01)
+          if (isAtObstacle) continue
+        }
+
+        const distToObstacle = segmentToBoxMinDistance(A, B, obstacle)
+        if (distToObstacle < searchMargin) {
+          return false
+        }
+      }
+    }
+
     const conflictingRoutes = hdRouteSHI.getConflictingRoutesForSegment(
       A,
       B,
@@ -71,47 +118,9 @@ export const canSectionMoveToLayer = ({
           : otherTraceThickness / 2
       const minDistance =
         currentTraceThickness / 2 + otherCopperRadius + minTraceMargin
-      if (distance < minDistance) return false
-    }
-
-    if (shouldCheckStaticGeometryForSegment?.(A, B) === false) continue
-
-    const segmentBox = {
-      centerX: (A.x + B.x) / 2,
-      centerY: (A.y + B.y) / 2,
-      width: Math.abs(A.x - B.x),
-      height: Math.abs(A.y - B.y),
-    }
-    const searchMargin = currentTraceThickness / 2 + obstacleMargin
-    const obstacles = obstacleSHI.searchArea(
-      segmentBox.centerX,
-      segmentBox.centerY,
-      segmentBox.width + searchMargin * 2,
-      segmentBox.height + searchMargin * 2,
-    )
-
-    for (const obstacle of obstacles) {
-      // Same-net pads and copper should not block via removal collision checks.
-      const obstacleIsSameNet = routeIds.some((routeId) =>
-        obstacle.connectedTo.some(
-          (connectedId) =>
-            connectedId === routeId ||
-            connMap.areIdsConnected(connectedId, routeId),
-        ),
-      )
-      if (obstacleIsSameNet) continue
-
-      if (obstacle.__zLayers?.includes(targetZ)) {
-        const isAtObstacle =
-          (Math.abs(A.x - obstacle.center.x) < 0.01 &&
-            Math.abs(A.y - obstacle.center.y) < 0.01) ||
-          (Math.abs(B.x - obstacle.center.x) < 0.01 &&
-            Math.abs(B.y - obstacle.center.y) < 0.01)
-        if (isAtObstacle) continue
+      if (distance < minDistance) {
+        return false
       }
-
-      const distToObstacle = segmentToBoxMinDistance(A, B, obstacle)
-      if (distToObstacle < searchMargin) return false
     }
   }
 
