@@ -11,6 +11,7 @@ import { calculate45DegreePaths } from "lib/utils/calculate45DegreePaths"
 import { breakRouteIntoSections } from "./break-route-into-sections"
 import { canEndpointConnectOnLayer } from "./can-endpoint-connect-on-layer"
 import { canSectionMoveToLayer } from "./can-section-move-to-layer"
+import { createObstacleDetourPathValidator } from "./create-obstacle-detour-path-validator"
 import type { RouteSection } from "./route-section"
 
 type RoutePoint = HighDensityRoute["route"][number]
@@ -20,6 +21,13 @@ type ViaPairShortcut = {
   previousPointIndex: number
   nextPointIndex: number
   savedLength: number
+  validationFirstSegmentIndex?: number
+}
+
+type ObstacleDetourPath = {
+  path: RoutePoint[]
+  length: number
+  longestSegmentIndex: number
 }
 
 type MultilayerSectionCollapse = {
@@ -52,6 +60,7 @@ export class SingleRouteUselessViaRemovalSolver extends BaseSolver {
 
   geometryShortcutsApplied = 0
   multilayerSectionsCollapsed = 0
+  obstacleDetourCandidatesValidated = 0
 
   constructor(params: {
     obstacleSHI: ObstacleSpatialHashIndex
@@ -136,7 +145,8 @@ export class SingleRouteUselessViaRemovalSolver extends BaseSolver {
     start: RoutePoint,
     end: RoutePoint,
     targetZ: number,
-  ): RoutePoint[][] {
+    maxPathLength: number,
+  ): ObstacleDetourPath[] {
     const traceThickness =
       this.unsimplifiedRoute.traceThickness ?? this.TRACE_THICKNESS
     const corridorMargin =
@@ -161,14 +171,34 @@ export class SingleRouteUselessViaRemovalSolver extends BaseSolver {
       corridorYs.add(obstacle.center.y + obstacle.height / 2 + corridorMargin)
     }
 
-    const paths: RoutePoint[][] = []
+    const paths: ObstacleDetourPath[] = []
     const pathKeys = new Set<string>()
     const addPath = (points: Array<{ x: number; y: number }>) => {
+      let pathLength = 0
+      for (let index = 1; index < points.length; index++) {
+        pathLength += Math.hypot(
+          points[index].x - points[index - 1].x,
+          points[index].y - points[index - 1].y,
+        )
+      }
+      if (pathLength > maxPathLength) return
+
       const path = this.normalizeShortcutPath(points, start, end)
+      let longestSegmentIndex = 0
+      let longestSegmentLengthSquared = -1
+      for (let index = 0; index < path.length - 1; index++) {
+        const dx = path[index + 1].x - path[index].x
+        const dy = path[index + 1].y - path[index].y
+        const lengthSquared = dx * dx + dy * dy
+        if (lengthSquared > longestSegmentLengthSquared) {
+          longestSegmentIndex = index
+          longestSegmentLengthSquared = lengthSquared
+        }
+      }
       const key = path.map((point) => `${point.x}:${point.y}`).join("|")
       if (pathKeys.has(key)) return
       pathKeys.add(key)
-      paths.push(path)
+      paths.push({ path, length: pathLength, longestSegmentIndex })
     }
     for (const corridorY of corridorYs) {
       addPath([
@@ -301,12 +331,17 @@ export class SingleRouteUselessViaRemovalSolver extends BaseSolver {
       }
       const replacedLength = this.getPathLength(replacedPoints)
 
-      for (const path of this.getObstacleDetourPaths(
+      for (const {
+        path,
+        length: pathLength,
+        longestSegmentIndex,
+      } of this.getObstacleDetourPaths(
         start,
         end,
         previousSection.z,
+        replacedLength + this.MAX_GEOMETRY_SHORTCUT_ADDED_LENGTH + 1e-6,
       )) {
-        const savedLength = replacedLength - this.getPathLength(path)
+        const savedLength = replacedLength - pathLength
         if (savedLength < -this.MAX_GEOMETRY_SHORTCUT_ADDED_LENGTH - 1e-6) {
           continue
         }
@@ -316,6 +351,7 @@ export class SingleRouteUselessViaRemovalSolver extends BaseSolver {
           previousPointIndex,
           nextPointIndex,
           savedLength,
+          validationFirstSegmentIndex: longestSegmentIndex,
         })
       }
     }
@@ -323,32 +359,42 @@ export class SingleRouteUselessViaRemovalSolver extends BaseSolver {
     // maximum-saved-length shortcut as the exhaustive scan.
     candidateShortcuts.sort((a, b) => b.savedLength - a.savedLength)
 
+    let candidatesValidated = 0
+    // String keys are faster to initialize for small searches. Large exhaustive
+    // searches switch to numeric IDs to avoid rebuilding coordinate strings for
+    // thousands of candidates that repeatedly share corridor segments.
+    const shouldUseNumericSegmentKeys = candidateShortcuts.length >= 256
+    const validateObstacleDetourPath = createObstacleDetourPathValidator({
+      targetZ: previousSection.z,
+      route: this.unsimplifiedRoute,
+      hdRouteSHI: this.hdRouteSHI,
+      obstacleSHI: this.obstacleSHI,
+      connMap: this.connMap,
+      defaultTraceThickness: this.TRACE_THICKNESS,
+      obstacleMargin: this.GEOMETRY_SHORTCUT_OBSTACLE_MARGIN,
+      traceMargin: this.GEOMETRY_SHORTCUT_TRACE_MARGIN,
+      useNumericSegmentKeys: shouldUseNumericSegmentKeys,
+    })
     for (const shortcut of candidateShortcuts) {
-      const { path, previousPointIndex, nextPointIndex } = shortcut
-      const candidateSection: RouteSection = {
-        startIndex: previousSection.startIndex + previousPointIndex,
-        endIndex: nextSection.startIndex + nextPointIndex,
-        z: previousSection.z,
-        points: path,
-      }
-      const pathIsClear = canSectionMoveToLayer({
-        currentSection: candidateSection,
-        targetZ: previousSection.z,
-        route: this.unsimplifiedRoute,
-        hdRouteSHI: this.hdRouteSHI,
-        obstacleSHI: this.obstacleSHI,
-        connMap: this.connMap,
-        defaultTraceThickness: this.TRACE_THICKNESS,
-        obstacleMargin: this.GEOMETRY_SHORTCUT_OBSTACLE_MARGIN,
-        traceMargin: this.GEOMETRY_SHORTCUT_TRACE_MARGIN,
-      })
+      candidatesValidated++
+      const { path } = shortcut
+      const pathIsClear = validateObstacleDetourPath(
+        path,
+        shortcut.validationFirstSegmentIndex ?? 0,
+      )
       if (!pathIsClear) continue
       // Most candidates collide. Only run the comparatively expensive polygon
       // boundary scan for candidates that pass the spatial-index checks.
       if (this.shortcutCrossesOutline(path)) continue
 
+      this.obstacleDetourCandidatesValidated += candidatesValidated
+      this.stats.obstacleDetourCandidatesValidated =
+        this.obstacleDetourCandidatesValidated
       return shortcut
     }
+    this.obstacleDetourCandidatesValidated += candidatesValidated
+    this.stats.obstacleDetourCandidatesValidated =
+      this.obstacleDetourCandidatesValidated
     return null
   }
 
