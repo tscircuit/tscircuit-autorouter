@@ -17,6 +17,7 @@ export const canSectionMoveToLayer = ({
   traceMargin,
   shouldCheckStaticGeometryForSegment,
   segmentOrder,
+  segmentClearanceCache,
 }: {
   currentSection: RouteSection
   targetZ: number
@@ -35,6 +36,8 @@ export const canSectionMoveToLayer = ({
     end: RouteSection["points"][number],
   ) => boolean
   segmentOrder?: readonly number[]
+  /** Reuse only while route geometry and all validation parameters are fixed. */
+  segmentClearanceCache?: Map<string, boolean>
 }): boolean => {
   const currentTraceThickness = route.traceThickness ?? defaultTraceThickness
   const minTraceMargin = traceMargin ?? 0
@@ -47,6 +50,17 @@ export const canSectionMoveToLayer = ({
     const i = segmentOrder?.[orderIndex] ?? orderIndex
     const A = { ...currentSection.points[i], z: targetZ }
     const B = { ...currentSection.points[i + 1], z: targetZ }
+    let segmentCacheKey: string | undefined
+    if (segmentClearanceCache) {
+      const aKey = `${A.x}:${A.y}:${A.z}`
+      const bKey = `${B.x}:${B.y}:${B.z}`
+      segmentCacheKey = aKey < bKey ? `${aKey}|${bKey}` : `${bKey}|${aKey}`
+      const cachedClearance = segmentClearanceCache.get(segmentCacheKey)
+      if (cachedClearance !== undefined) {
+        if (!cachedClearance) return false
+        continue
+      }
+    }
 
     if (shouldCheckStaticGeometryForSegment?.(A, B) !== false) {
       const segmentBox = {
@@ -85,6 +99,9 @@ export const canSectionMoveToLayer = ({
 
         const distToObstacle = segmentToBoxMinDistance(A, B, obstacle)
         if (distToObstacle < searchMargin) {
+          if (segmentClearanceCache && segmentCacheKey !== undefined) {
+            segmentClearanceCache.set(segmentCacheKey, false)
+          }
           return false
         }
       }
@@ -119,8 +136,14 @@ export const canSectionMoveToLayer = ({
       const minDistance =
         currentTraceThickness / 2 + otherCopperRadius + minTraceMargin
       if (distance < minDistance) {
+        if (segmentClearanceCache && segmentCacheKey !== undefined) {
+          segmentClearanceCache.set(segmentCacheKey, false)
+        }
         return false
       }
+    }
+    if (segmentClearanceCache && segmentCacheKey !== undefined) {
+      segmentClearanceCache.set(segmentCacheKey, true)
     }
   }
 

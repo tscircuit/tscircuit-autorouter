@@ -52,9 +52,6 @@ export class SingleRouteUselessViaRemovalSolver extends BaseSolver {
   GEOMETRY_SHORTCUT_TRACE_MARGIN = 0.1
   GEOMETRY_SHORTCUT_OBSTACLE_MARGIN = 0.15
   MAX_GEOMETRY_SHORTCUT_ADDED_LENGTH = 4
-  // Candidates are ranked by saved length. Bound the low-yield tail so a
-  // blocked via pair cannot trigger thousands of full clearance checks.
-  MAX_OBSTACLE_DETOUR_CANDIDATE_VALIDATIONS = 256
   ENABLE_GEOMETRY_SHORTCUTS = true
   ENABLE_OBSTACLE_DETOUR_SHORTCUTS = false
 
@@ -344,12 +341,11 @@ export class SingleRouteUselessViaRemovalSolver extends BaseSolver {
     candidateShortcuts.sort((a, b) => b.savedLength - a.savedLength)
 
     let candidatesValidated = 0
+    // Corridor candidates frequently share their longest segment. Cache exact
+    // segment clearance within this immutable search so exhaustive ranking
+    // does not repeat spatial-index work.
+    const segmentClearanceCache = new Map<string, boolean>()
     for (const shortcut of candidateShortcuts) {
-      if (
-        candidatesValidated >= this.MAX_OBSTACLE_DETOUR_CANDIDATE_VALIDATIONS
-      ) {
-        break
-      }
       candidatesValidated++
       const { path, previousPointIndex, nextPointIndex } = shortcut
       const candidateSection: RouteSection = {
@@ -383,6 +379,7 @@ export class SingleRouteUselessViaRemovalSolver extends BaseSolver {
         obstacleMargin: this.GEOMETRY_SHORTCUT_OBSTACLE_MARGIN,
         traceMargin: this.GEOMETRY_SHORTCUT_TRACE_MARGIN,
         segmentOrder,
+        segmentClearanceCache,
       })
       if (!pathIsClear) continue
       // Most candidates collide. Only run the comparatively expensive polygon
