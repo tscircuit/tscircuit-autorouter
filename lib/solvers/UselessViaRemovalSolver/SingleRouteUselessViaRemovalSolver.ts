@@ -346,8 +346,7 @@ export class SingleRouteUselessViaRemovalSolver extends BaseSolver {
     let candidatesValidated = 0
     for (const shortcut of candidateShortcuts) {
       if (
-        candidatesValidated >=
-        this.MAX_OBSTACLE_DETOUR_CANDIDATE_VALIDATIONS
+        candidatesValidated >= this.MAX_OBSTACLE_DETOUR_CANDIDATE_VALIDATIONS
       ) {
         break
       }
