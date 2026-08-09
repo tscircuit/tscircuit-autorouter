@@ -28,6 +28,8 @@ export interface UselessViaRemovalSolverInput {
   enableEndpointGeometryShortcuts?: boolean
   enableObstacleDetourShortcuts?: boolean
   onlyEndpointLayerChanges?: boolean
+  /** Reject rewrites unless the route's explicit via count strictly decreases. */
+  onlyAcceptViaCountReduction?: boolean
 }
 
 export class UselessViaRemovalSolver extends BaseSolver {
@@ -97,9 +99,15 @@ export class UselessViaRemovalSolver extends BaseSolver {
       this.activeSubSolver.step()
       if (this.activeSubSolver.solved) {
         const optimizedRoute = this.activeSubSolver.getOptimizedHdRoute()
-        this.hdRouteSHI!.removeRoute(optimizedRoute.connectionName)
-        this.hdRouteSHI!.addRoute(optimizedRoute)
-        this.optimizedHdRoutes.push(optimizedRoute)
+        const originalRoute = this.activeSubSolver.unsimplifiedRoute
+        const acceptedRoute =
+          this.input.onlyAcceptViaCountReduction &&
+          optimizedRoute.vias.length >= originalRoute.vias.length
+            ? originalRoute
+            : optimizedRoute
+        this.hdRouteSHI!.removeRoute(originalRoute.connectionName)
+        this.hdRouteSHI!.addRoute(acceptedRoute)
+        this.optimizedHdRoutes.push(acceptedRoute)
         this.activeSubSolver = null
       } else if (this.activeSubSolver.failed || this.activeSubSolver.error) {
         this.error = this.activeSubSolver.error

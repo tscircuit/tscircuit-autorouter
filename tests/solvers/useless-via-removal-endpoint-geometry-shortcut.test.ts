@@ -5,6 +5,7 @@ import { HighDensityRouteSpatialIndex } from "lib/data-structures/HighDensityRou
 import { ObstacleSpatialHashIndex } from "lib/data-structures/ObstacleTree"
 import { TraceSimplificationSolver } from "lib/solvers/TraceSimplificationSolver/TraceSimplificationSolver"
 import { SingleRouteUselessViaRemovalSolver } from "lib/solvers/UselessViaRemovalSolver/SingleRouteUselessViaRemovalSolver"
+import { UselessViaRemovalSolver } from "lib/solvers/UselessViaRemovalSolver/UselessViaRemovalSolver"
 import type { Obstacle } from "lib/types"
 import type { HighDensityRoute } from "lib/types/high-density-types"
 import { stackSvgsHorizontally } from "stack-svgs"
@@ -163,6 +164,31 @@ test("can defer endpoint geometry rerouting to a later pipeline stage", () => {
 
   expect(visitedPhases.has("final_endpoint_via_removal")).toBe(false)
   expect(solver.simplificationPipelineLoops).toBe(2)
+})
+
+test("rejects endpoint rewrites that do not reduce the explicit via count", () => {
+  const route = createRoute()
+  route.vias = []
+  const connMap = new ConnectivityMap({
+    shortcut_net: [route.connectionName],
+    blocking_net: ["blocking_net"],
+  })
+  const solver = new UselessViaRemovalSolver({
+    unsimplifiedHdRoutes: [route],
+    obstacles: [multilayerEndpoint, blockingBottomObstacle],
+    colorMap: {},
+    layerCount: 2,
+    connMap,
+    enableGeometryShortcuts: false,
+    enableEndpointGeometryShortcuts: true,
+    enableObstacleDetourShortcuts: false,
+    onlyEndpointLayerChanges: true,
+    onlyAcceptViaCountReduction: true,
+  })
+
+  solver.solve()
+
+  expect(solver.getOptimizedHdRoutes()).toEqual([route])
 })
 
 test("keeps the endpoint via when alternate geometry is blocked", () => {

@@ -725,6 +725,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
           enableEndpointGeometryShortcuts: true,
           enableObstacleDetourShortcuts: false,
           onlyEndpointLayerChanges: true,
+          onlyAcceptViaCountReduction: true,
         },
       ],
     ),
