@@ -215,6 +215,19 @@ function convertHdRouteToCircuitJsonTraces(
 const getObstacleConnectivityIds = (obstacles: Obstacle[]) =>
   Array.from(new Set(obstacles.flatMap((obstacle) => obstacle.connectedTo)))
 
+const getPcbPortIdsDeclaredByTraceRoute = (
+  trace: SimplifiedPcbTrace,
+): string[] => {
+  const pcbPortIds = trace.route.flatMap((segment) =>
+    segment.route_type === "wire"
+      ? [segment.start_pcb_port_id, segment.end_pcb_port_id]
+      : [],
+  )
+  return Array.from(
+    new Set(pcbPortIds.filter((id): id is string => Boolean(id))),
+  )
+}
+
 declare const connectivityNetIdBrand: unique symbol
 type ConnectivityNetId = string & {
   readonly [connectivityNetIdBrand]: "ConnectivityNetId"
@@ -458,14 +471,13 @@ function createSourceTraces(
       connections.map((connection) => [connection.name, connection]),
     )
     for (const trace of hdRoutes as SimplifiedPcbTrace[]) {
-      const connectedSourcePortIds = [
-        ...new Set(
-          (trace.connectsTo ?? []).filter((id) => id.startsWith("pcb_port_")),
-        ),
-      ]
+      const connectedSourcePortIds = getPcbPortIdsDeclaredByTraceRoute(trace)
+      const connectedSourcePortIdSet = new Set(connectedSourcePortIds)
       const connectedSourceNetIds = [
         ...new Set(
-          (trace.connectsTo ?? []).filter((id) => !id.startsWith("pcb_port_")),
+          (trace.connectsTo ?? []).filter(
+            (id) => !connectedSourcePortIdSet.has(id),
+          ),
         ),
       ]
       if (
