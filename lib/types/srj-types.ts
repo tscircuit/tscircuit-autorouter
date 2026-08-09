@@ -119,6 +119,10 @@ export interface Obstacle {
 
 export interface SimpleRouteConnection {
   name: string
+  /** Legacy source trace identity retained by several dataset producers. */
+  source_trace_id?: TraceId
+  /** Electrical net identity retained by several dataset producers. */
+  connectedNet?: NetId
   rootConnectionName?: RootConnectionName
   mergedConnectionNames?: string[]
   __rootConnectionNames?: string[]

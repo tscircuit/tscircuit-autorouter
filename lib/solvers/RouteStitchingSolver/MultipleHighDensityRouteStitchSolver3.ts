@@ -1,7 +1,7 @@
 import { distance, type Point3 } from "@tscircuit/math-utils"
 import { ConnectivityMap } from "connectivity-map"
 import { GraphicsObject } from "graphics-debug"
-import { SimpleRouteConnection } from "lib/types"
+import { type Obstacle, SimpleRouteConnection } from "lib/types"
 import { HighDensityIntraNodeRoute } from "lib/types/high-density-types"
 import { getConnectionPointLayer } from "lib/types/srj-types"
 import { getJumpersGraphics } from "lib/utils/getJumperGraphics"
@@ -27,6 +27,25 @@ export type UnsolvedRoute3 = {
   hdRoutes: HighDensityIntraNodeRoute[]
   start: Point3
   end: Point3
+}
+
+const getConnectionIds = (connection: SimpleRouteConnection) => {
+  return new Set(
+    [
+      connection.name,
+      connection.rootConnectionName,
+      ...(connection.__rootConnectionNames ?? []),
+      connection.netConnectionName,
+      connection.__netConnectionName,
+      ...(connection.mergedConnectionNames ?? []),
+      connection.connectedNet,
+      connection.source_trace_id,
+      ...connection.pointsToConnect.flatMap((point) => [
+        point.pointId,
+        point.pcb_port_id,
+      ]),
+    ].filter((id): id is string => Boolean(id)),
+  )
 }
 
 export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
@@ -141,6 +160,8 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
     hdRoutes: HighDensityIntraNodeRoute[]
     colorMap?: Record<string, string>
     layerCount: number
+    obstacles?: Obstacle[]
+    obstacleClearance?: number
     defaultViaDiameter?: number
     allowedLayerTransitionPointKeys?: Set<string>
     preserveTerminalPcbPortIds?: boolean
@@ -152,8 +173,18 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
     this.preserveTerminalPcbPortIds = params.preserveTerminalPcbPortIds ?? false
 
     const canonicalHdRoutes = [...params.hdRoutes].sort(compareRoutes)
+    const connectionIdsByName = new Map(
+      params.connections.map((connection) => [
+        connection.name,
+        getConnectionIds(connection),
+      ]),
+    )
     this.clearanceValidator = new RouteStitchClearanceValidator({
       hdRoutes: canonicalHdRoutes,
+      obstacles: params.obstacles,
+      layerCount: params.layerCount,
+      obstacleClearance: params.obstacleClearance,
+      connectionIdsByName,
     })
 
     const firstRoute = canonicalHdRoutes[0]

@@ -1,5 +1,11 @@
-import { pointToSegmentDistance, type Point3 } from "@tscircuit/math-utils"
+import {
+  pointToSegmentDistance,
+  segmentToBoxMinDistance,
+  type Point3,
+} from "@tscircuit/math-utils"
+import type { Obstacle } from "lib/types"
 import type { HighDensityIntraNodeRoute } from "lib/types/high-density-types"
+import { createObjectsWithZLayers } from "lib/utils/createObjectsWithZLayers"
 import { minimumDistanceBetweenSegments } from "lib/utils/minimumDistanceBetweenSegments"
 
 export type StitchSegment = {
@@ -24,6 +30,8 @@ type RouteVia = {
   y: number
   diameter: number
 }
+
+type LayeredObstacle = Obstacle & { __zLayers: number[] }
 
 const DEFAULT_AUTOROUTING_CLEARANCE = 0.1
 const CLEARANCE_TOLERANCE = 1e-6
@@ -61,21 +69,56 @@ const preservesEndpointClearance = ({
 
 export class RouteStitchClearanceValidator {
   private readonly minClearance: number
+  private readonly obstacleClearance: number
+  private readonly obstacles: LayeredObstacle[]
   private readonly rootsByConnection = new Map<
     ConnectionName,
     Set<RootConnectionName>
+  >()
+  private readonly connectionIdsByName: ReadonlyMap<
+    ConnectionName,
+    ReadonlySet<string>
+  >
+  private readonly ownedComponentIdsByConnection = new Map<
+    ConnectionName,
+    ReadonlySet<string>
   >()
   private readonly segments: RouteSegment[] = []
   private readonly vias: RouteVia[] = []
 
   constructor({
     hdRoutes,
+    obstacles = [],
+    layerCount = 2,
     minClearance = DEFAULT_AUTOROUTING_CLEARANCE,
+    obstacleClearance = minClearance,
+    connectionIdsByName = new Map(),
   }: {
     hdRoutes: HighDensityIntraNodeRoute[]
+    obstacles?: Obstacle[]
+    layerCount?: number
     minClearance?: number
+    obstacleClearance?: number
+    connectionIdsByName?: ReadonlyMap<ConnectionName, ReadonlySet<string>>
   }) {
     this.minClearance = minClearance
+    this.obstacleClearance = obstacleClearance
+    this.obstacles = createObjectsWithZLayers(obstacles, layerCount)
+    this.connectionIdsByName = connectionIdsByName
+    for (const [connectionName, connectionIds] of connectionIdsByName) {
+      const ownedComponentIds = new Set<string>()
+      for (const obstacle of this.obstacles) {
+        if (
+          obstacle.componentId &&
+          obstacle.connectedTo.some((connectedId) =>
+            connectionIds.has(connectedId),
+          )
+        ) {
+          ownedComponentIds.add(obstacle.componentId)
+        }
+      }
+      this.ownedComponentIdsByConnection.set(connectionName, ownedComponentIds)
+    }
     for (const hdRoute of hdRoutes) {
       this.addRoute(hdRoute)
     }
@@ -121,6 +164,32 @@ export class RouteStitchClearanceValidator {
     return [...firstRoots].some((root) => secondRoots.has(root))
   }
 
+  private isObstacleOnSameNet(
+    connectionName: ConnectionName,
+    obstacle: Obstacle,
+  ): boolean {
+    const connectionIds = new Set<string>([
+      connectionName,
+      ...(this.rootsByConnection.get(connectionName) ?? []),
+      ...(this.connectionIdsByName.get(connectionName) ?? []),
+    ])
+    return obstacle.connectedTo.some((connectedId) =>
+      connectionIds.has(connectedId),
+    )
+  }
+
+  private isObstacleInsideTerminalComponent(
+    connectionName: ConnectionName,
+    obstacle: Obstacle,
+  ): boolean {
+    return Boolean(
+      obstacle.componentId &&
+        this.ownedComponentIdsByConnection
+          .get(connectionName)
+          ?.has(obstacle.componentId),
+    )
+  }
+
   isSegmentClear({
     connectionName,
     start,
@@ -164,6 +233,28 @@ export class RouteStitchClearanceValidator {
         !preservesEndpointClearance({
           startGap: Math.hypot(start.x - via.x, start.y - via.y),
           endGap: Math.hypot(end.x - via.x, end.y - via.y),
+          segmentGap,
+          requiredGap,
+        })
+      ) {
+        return false
+      }
+    }
+
+    for (const obstacle of this.obstacles) {
+      if (!obstacle.componentId) continue
+      if (!obstacle.__zLayers.includes(start.z)) continue
+      if (this.isObstacleOnSameNet(connectionName, obstacle)) continue
+      if (this.isObstacleInsideTerminalComponent(connectionName, obstacle))
+        continue
+
+      const requiredGap = this.obstacleClearance + traceRadius
+      const segmentGap = segmentToBoxMinDistance(start, end, obstacle)
+      if (
+        segmentGap < requiredGap &&
+        !preservesEndpointClearance({
+          startGap: segmentToBoxMinDistance(start, start, obstacle),
+          endGap: segmentToBoxMinDistance(end, end, obstacle),
           segmentGap,
           requiredGap,
         })

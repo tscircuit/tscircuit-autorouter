@@ -624,6 +624,9 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             cms.highDensityRouteSolver!.routes,
           colorMap: cms.colorMap,
           layerCount: cms.srj.layerCount,
+          obstacles: cms.srj.obstacles,
+          obstacleClearance:
+            cms.srj.minTraceToPadEdgeClearance ?? cms.srj.defaultObstacleMargin,
           defaultViaDiameter: cms.viaDiameter,
           preserveTerminalPcbPortIds: true,
         },
