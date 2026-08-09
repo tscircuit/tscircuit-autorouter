@@ -341,10 +341,39 @@ export class SingleRouteUselessViaRemovalSolver extends BaseSolver {
     candidateShortcuts.sort((a, b) => b.savedLength - a.savedLength)
 
     let candidatesValidated = 0
-    // Corridor candidates frequently share their longest segment. Cache exact
-    // segment clearance within this immutable search so exhaustive ranking
-    // does not repeat spatial-index work.
-    const segmentClearanceCache = new Map<string, boolean>()
+    // String keys are faster to initialize for small searches. Large exhaustive
+    // searches switch to numeric IDs to avoid rebuilding coordinate strings for
+    // thousands of candidates that repeatedly share corridor segments.
+    const shouldUseNumericSegmentKeys = candidateShortcuts.length >= 256
+    const segmentClearanceCache = new Map<string | number, boolean>()
+    const pointIdsByX = shouldUseNumericSegmentKeys
+      ? new Map<number, Map<number, number>>()
+      : undefined
+    let nextPointId = 0
+    const getPointId = shouldUseNumericSegmentKeys
+      ? (point: RoutePoint) => {
+          let pointIdsByY = pointIdsByX!.get(point.x)
+          if (!pointIdsByY) {
+            pointIdsByY = new Map<number, number>()
+            pointIdsByX!.set(point.x, pointIdsByY)
+          }
+          let pointId = pointIdsByY.get(point.y)
+          if (pointId === undefined) {
+            pointId = nextPointId++
+            pointIdsByY.set(point.y, pointId)
+          }
+          return pointId
+        }
+      : undefined
+    const getSegmentClearanceCacheKey = shouldUseNumericSegmentKeys
+      ? (start: RoutePoint, end: RoutePoint) => {
+          const startId = getPointId!(start)
+          const endId = getPointId!(end)
+          const highId = Math.max(startId, endId)
+          const lowId = Math.min(startId, endId)
+          return (highId * (highId + 1)) / 2 + lowId
+        }
+      : undefined
     for (const shortcut of candidateShortcuts) {
       candidatesValidated++
       const { path, previousPointIndex, nextPointIndex } = shortcut
@@ -354,20 +383,41 @@ export class SingleRouteUselessViaRemovalSolver extends BaseSolver {
         z: previousSection.z,
         points: path,
       }
-      const segmentOrder = Array.from(
-        { length: path.length - 1 },
-        (_, index) => index,
-      ).sort((a, b) => {
-        const aLength = Math.hypot(
-          path[a + 1].x - path[a].x,
-          path[a + 1].y - path[a].y,
-        )
-        const bLength = Math.hypot(
-          path[b + 1].x - path[b].x,
-          path[b + 1].y - path[b].y,
-        )
-        return bLength - aLength
-      })
+      let segmentOrder: number[] | undefined
+      if (shouldUseNumericSegmentKeys) {
+        let longestSegmentIndex = 0
+        let longestSegmentLengthSquared = -1
+        for (let index = 0; index < path.length - 1; index++) {
+          const dx = path[index + 1].x - path[index].x
+          const dy = path[index + 1].y - path[index].y
+          const lengthSquared = dx * dx + dy * dy
+          if (lengthSquared > longestSegmentLengthSquared) {
+            longestSegmentIndex = index
+            longestSegmentLengthSquared = lengthSquared
+          }
+        }
+        if (longestSegmentIndex !== 0) {
+          segmentOrder = [longestSegmentIndex]
+          for (let index = 0; index < path.length - 1; index++) {
+            if (index !== longestSegmentIndex) segmentOrder.push(index)
+          }
+        }
+      } else {
+        segmentOrder = Array.from(
+          { length: path.length - 1 },
+          (_, index) => index,
+        ).sort((a, b) => {
+          const aLength = Math.hypot(
+            path[a + 1].x - path[a].x,
+            path[a + 1].y - path[a].y,
+          )
+          const bLength = Math.hypot(
+            path[b + 1].x - path[b].x,
+            path[b + 1].y - path[b].y,
+          )
+          return bLength - aLength
+        })
+      }
       const pathIsClear = canSectionMoveToLayer({
         currentSection: candidateSection,
         targetZ: previousSection.z,
@@ -380,6 +430,8 @@ export class SingleRouteUselessViaRemovalSolver extends BaseSolver {
         traceMargin: this.GEOMETRY_SHORTCUT_TRACE_MARGIN,
         segmentOrder,
         segmentClearanceCache,
+        getSegmentClearanceCacheKey,
+        checkStaticGeometryFirst: true,
       })
       if (!pathIsClear) continue
       // Most candidates collide. Only run the comparatively expensive polygon
