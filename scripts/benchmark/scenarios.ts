@@ -1,3 +1,4 @@
+import { migrateLegacyObstacleCircuitJsonMetadata } from "../../lib/testing/utils/migrate-legacy-obstacle-circuit-json-metadata"
 import type { SimpleRouteJson } from "../../lib/types/srj-types"
 
 export const DATASET_NAMES = [
@@ -316,15 +317,17 @@ export const loadScenarios = async (
     .filter((entry): entry is [string, SimpleRouteJson] => Boolean(entry[1]))
     .filter(([name]) => scenarioKeyPattern.test(name))
     .sort(([a], [b]) => a.localeCompare(b))
-    .map(
-      ([name, scenario]) =>
-        [
-          name,
-          opts.effort === undefined
-            ? scenario
-            : applyEffortOverride(scenario, opts.effort),
-        ] as const,
-    )
+    .map(([name, scenario]) => {
+      const scenarioWithCircuitJsonMetadata =
+        migrateLegacyObstacleCircuitJsonMetadata(scenario)
+
+      return [
+        name,
+        opts.effort === undefined
+          ? scenarioWithCircuitJsonMetadata
+          : applyEffortOverride(scenarioWithCircuitJsonMetadata, opts.effort),
+      ] as const
+    })
 
   return opts.scenarioLimit
     ? allScenarios.slice(0, opts.scenarioLimit)

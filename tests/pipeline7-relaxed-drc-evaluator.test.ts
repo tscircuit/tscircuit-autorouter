@@ -33,6 +33,7 @@ test("Pipeline7 repair uses the benchmark relaxed DRC path", () => {
         width: 0.2,
         height: 0.2,
         connectedTo: ["pcb_smtpad_foreign"],
+        circuitJsonMetadata: { pcb_smtpad_id: "pcb_smtpad_foreign" },
       },
     ],
   }
