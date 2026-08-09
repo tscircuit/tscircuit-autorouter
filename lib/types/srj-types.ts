@@ -5,6 +5,14 @@ export type PointId = string
 export type OffBoardConnectionId = string
 export type ObstacleId = string
 export type RootConnectionName = string
+export type CircuitJsonMetadata = {
+  pcb_smtpad_id?: string
+  pcb_plated_hole_id?: string
+  pcb_port_id?: string
+  pcb_via_id?: string
+  source_component_name?: string
+  source_port_name?: string
+}
 export type TerminalViaHint = {
   toLayer: string
   viaDiameter?: number
@@ -100,6 +108,11 @@ export interface Obstacle {
   obstacleId?: string
   /** Optional source component identifier associated with this obstacle. */
   componentId?: string
+  /**
+   * Optional Circuit JSON provenance carried through SRJ.
+   * Routing algorithms must not use this field.
+   */
+  circuitJsonMetadata?: CircuitJsonMetadata
   type: "rect"
   layers: string[]
   /** Public z-layer indexes supplied by SimpleRouteJson producers. */

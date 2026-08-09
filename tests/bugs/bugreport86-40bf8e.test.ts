@@ -1,11 +1,15 @@
 import { expect, test } from "bun:test"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib"
+import { migrateLegacyObstacleCircuitJsonMetadata } from "lib/testing/utils/migrate-legacy-obstacle-circuit-json-metadata"
+import type { SimpleRouteJson } from "lib/types"
 import bugReport from "../../fixtures/bug-reports/bugreport86-40bf8e/bugreport86-40bf8e.json" with {
   type: "json",
 }
-import type { SimpleRouteJson } from "lib/types"
+import { getLastStepSvg } from "../fixtures/getLastStepSvg"
 
-const srj = bugReport.simple_route_json as SimpleRouteJson
+const srj = migrateLegacyObstacleCircuitJsonMetadata(
+  structuredClone(bugReport.simple_route_json) as SimpleRouteJson,
+)
 
 test.skip("Pipeline9 routes LCD traces around the 76 preloaded traces in bugreport86-40bf8e", (): void => {
   const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(
@@ -16,16 +20,12 @@ test.skip("Pipeline9 routes LCD traces around the 76 preloaded traces in bugrepo
     },
   )
 
-  // Pipeline9 currently injects boundary-crossing preloads into the
-  // hypergraph, but rebuilds the later high-density geometry from the
-  // original SRJ. Local fanout stubs that never cross a graph boundary are
-  // therefore only movable through the broad regional fallback. That fallback
-  // currently promotes every XY-overlapping section without layer filtering;
-  // cmn_4 consequently considers 139 fragments for rerouting, including 127
-  // top-layer-only fragments despite its target pairs using inner layers.
   solver.solve()
 
   expect(solver.error).toBeNull()
   expect(solver.failed).toBeFalse()
   expect(solver.solved).toBeTrue()
+  expect(getLastStepSvg(solver.visualize())).toMatchSvgSnapshot(
+    import.meta.path,
+  )
 })
