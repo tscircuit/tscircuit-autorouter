@@ -365,10 +365,20 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       this.expandAdaptiveSearch()
     }
 
+    const activeCandidate = this.getSupervisedSolverWithBestFitness()?.solver
+    const activeCandidateIterationLimit = activeCandidate?.MAX_ITERATIONS
     super._step()
 
     if (!this.solved && !this.failed && this.shouldExpandPortfolio()) {
       this.expandAdaptiveSearch()
+    }
+
+    if (
+      !this.solved &&
+      !this.failed &&
+      activeCandidate?.MAX_ITERATIONS !== activeCandidateIterationLimit
+    ) {
+      this.refreshDynamicIterationLimit()
     }
   }
 
