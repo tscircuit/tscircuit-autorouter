@@ -59,6 +59,7 @@ import { DeadEndSolver } from "../../solvers/DeadEndSolver/DeadEndSolver"
 import { EscapeViaLocationSolver } from "../../solvers/EscapeViaLocationSolver/EscapeViaLocationSolver"
 import { Pipeline4HighDensityRepairSolver } from "../../solvers/HighDensityRepairSolver/Pipeline4HighDensityRepairSolver"
 import { HighDensitySolver } from "../../solvers/HighDensitySolver/HighDensitySolver"
+import { GlobalLayerAssignmentSolver } from "../../solvers/GlobalLayerAssignmentSolver/GlobalLayerAssignmentSolver"
 import { MultiSectionPortPointOptimizer } from "../../solvers/MultiSectionPortPointOptimizer"
 import { NetToPointPairsSolver } from "../../solvers/NetToPointPairsSolver/NetToPointPairsSolver"
 import { NetToPointPairsSolver2_OffBoardConnection } from "../../solvers/NetToPointPairsSolver2_OffBoardConnection/NetToPointPairsSolver2_OffBoardConnection"
@@ -75,6 +76,7 @@ import { createPipeline7AutoroutingDrcEvaluator } from "./create-pipeline7-autor
 import { getPowerTraceExpansionConnectionNames } from "./getPowerTraceExpansionConnectionNames"
 import { lockHdRouteTerminals } from "./lock-hd-route-terminals"
 import { preparePipeline7PowerTraceExpansionInput } from "./prepare-pipeline7-power-trace-expansion-input"
+import { convertPreloadedTraceToHdRoutes } from "../AutoroutingPipeline9_PreloadedTraceGraph/convert-preloaded-traces-to-hd-routes"
 
 interface CapacityMeshSolverOptions {
   capacityDepth?: number
@@ -227,6 +229,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
   highDensityRepairSolver?: Pipeline4HighDensityRepairSolver
   highDensityStitchSolver?: MultipleHighDensityRouteStitchSolver3
   globalDrcForceImproveSolver?: GlobalDrcForceImproveSolver
+  globalLayerAssignmentSolver?: GlobalLayerAssignmentSolver
   exactGeometryDrcForceImproveSolver?: GlobalDrcBranchPortfolioSolver
   singleLayerNodeMerger?: SingleLayerNodeMergerSolver
   strawSolver?: StrawSolver
@@ -665,6 +668,35 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
       ],
     ),
     definePipelineStep(
+      "globalLayerAssignmentSolver",
+      GlobalLayerAssignmentSolver,
+      (cms) => [
+        {
+          hdRoutes: cms.globalDrcForceImproveSolver!.getOutput(),
+          fixedHdRoutes: (cms.originalSrj.traces ?? []).flatMap(
+            (trace, traceIndex) =>
+              convertPreloadedTraceToHdRoutes(
+                trace,
+                traceIndex,
+                cms.srj.layerCount,
+                cms.viaDiameter,
+                cms.connMap,
+              ),
+          ),
+          obstacles: cms.srj.obstacles,
+          connMap: cms.connMap,
+          layerCount: cms.srj.layerCount,
+          traceClearance: 0.1,
+          obstacleClearance: cms.srj.minTraceToPadEdgeClearance ?? 0.1,
+          protectedConnectionNames: new Set(
+            (cms.srj.differentialPairs ?? []).flatMap(
+              (pair) => pair.connectionNames,
+            ),
+          ),
+        },
+      ],
+    ),
+    definePipelineStep(
       "exactGeometryDrcForceImproveSolver",
       GlobalDrcBranchPortfolioSolver,
       (cms) => {
@@ -682,7 +714,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
         return [
           {
             srj: cms.srjWithPointPairs! as any,
-            hdRoutes: cms.globalDrcForceImproveSolver!.getOutput(),
+            hdRoutes: cms.globalLayerAssignmentSolver!.getOutput(),
             connMap: cms.connMap,
             effort: cms.effort,
             viaHoleDiameter: cms.viaHoleDiameter,
@@ -1043,6 +1075,8 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
       this.preprocessSimpleRouteJsonSolver?.visualize()
     const globalDrcForceImproveViz =
       this.globalDrcForceImproveSolver?.visualize()
+    const globalLayerAssignmentViz =
+      this.globalLayerAssignmentSolver?.visualize()
     const exactGeometryDrcForceImproveViz =
       this.exactGeometryDrcForceImproveSolver?.visualize()
     const visualizations = [
@@ -1074,6 +1108,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
       traceSimplificationViz,
       traceWidthViz,
       globalDrcForceImproveViz,
+      globalLayerAssignmentViz,
       exactGeometryDrcForceImproveViz,
       lengthMatchingPostProcessingViz,
       this.solved
@@ -1158,6 +1193,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
     }
     return (
       this.exactGeometryDrcForceImproveSolver?.getOutput() ??
+      this.globalLayerAssignmentSolver?.getOutput() ??
       this.globalDrcForceImproveSolver?.getOutput() ??
       this.traceWidthSolver?.getHdRoutesWithWidths() ??
       this.traceSimplificationSolver?.simplifiedHdRoutes ??
