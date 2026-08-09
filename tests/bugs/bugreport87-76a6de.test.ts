@@ -13,6 +13,18 @@ test(
   () => {
     const solver = new AutoroutingPipelineSolver(srj)
     solver.solve()
+    const hasWideTraceViaArray = solver
+      .getOutputSimplifiedPcbTraces()
+      .filter((trace) => trace.connection_name === "source_net_0")
+      .some((trace) =>
+        trace.route.some(
+          (point, index) =>
+            point.route_type === "via" &&
+            trace.route[index + 1]?.route_type === "via",
+        ),
+      )
+
+    expect(hasWideTraceViaArray).toBe(true)
     expect(getLastStepSvg(solver.visualize())).toMatchSvgSnapshot(
       import.meta.path,
     )

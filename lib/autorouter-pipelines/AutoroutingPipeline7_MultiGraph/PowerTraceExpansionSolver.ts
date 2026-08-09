@@ -5,7 +5,9 @@ import {
 } from "@tscircuit/power-trace-expander"
 import type { GraphicsObject } from "graphics-debug"
 import type { SimpleRouteJson, SimplifiedPcbTraces } from "lib/types"
+import { addViaArraysToWideTraces } from "lib/utils/add-via-arrays-to-wide-traces"
 import { convertSrjToGraphicsObject } from "lib/utils/convertSrjToGraphicsObject"
+import { getViaDimensions } from "lib/utils/getViaDimensions"
 import { BaseSolver } from "../../solvers/BaseSolver"
 
 export class PowerTraceExpansionSolver extends BaseSolver {
@@ -58,7 +60,10 @@ export class PowerTraceExpansionSolver extends BaseSolver {
       throw new Error("Cannot get power trace expansion output before solving")
     }
 
-    return this.powerTraceExpanderSolver.getOutput() as SimplifiedPcbTraces
+    return addViaArraysToWideTraces({
+      traces: this.powerTraceExpanderSolver.getOutput() as SimplifiedPcbTraces,
+      defaultViaDiameter: getViaDimensions(this.inputSrj).padDiameter,
+    })
   }
 
   override visualize(): GraphicsObject {
