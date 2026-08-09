@@ -1,5 +1,6 @@
 import { expect, test } from "bun:test"
 import { AutoroutingPipelineSolver } from "lib"
+import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import bugReport from "../../fixtures/bug-reports/bugreport87-76a6de/bugreport87-76a6de.json" with {
   type: "json",
 }
@@ -13,8 +14,8 @@ test(
   () => {
     const solver = new AutoroutingPipelineSolver(srj)
     solver.solve()
-    const hasWideTraceViaArray = solver
-      .getOutputSimplifiedPcbTraces()
+    const output = solver.getOutputSimplifiedPcbTraces()
+    const hasWideTraceViaArray = output
       .filter((trace) => trace.connection_name === "source_net_0")
       .some((trace) =>
         trace.route.some(
@@ -25,6 +26,20 @@ test(
       )
 
     expect(hasWideTraceViaArray).toBe(true)
+    const srjWithPointPairs = solver.srjWithPointPairs ?? srj
+    const preExpansionDrc = evaluateRelaxedDrc({
+      inputSrj: srj,
+      srjWithPointPairs,
+      routedTraces: solver.getPrePowerTraceOutputSimplifiedPcbTraces(),
+    })
+    const postExpansionDrc = evaluateRelaxedDrc({
+      inputSrj: srj,
+      srjWithPointPairs,
+      routedTraces: output,
+    })
+    expect(postExpansionDrc.errors.length).toBeLessThanOrEqual(
+      preExpansionDrc.errors.length,
+    )
     expect(getLastStepSvg(solver.visualize())).toMatchSvgSnapshot(
       import.meta.path,
     )

@@ -38,6 +38,7 @@ test("Pipeline7 solves and power-expands the SRJ27 dataset without DRC regressio
   const failedScenarios: string[] = []
   const preExpansionDrcPasses: string[] = []
   const postExpansionDrcPasses: string[] = []
+  const viaArrayScenarios: string[] = []
 
   for (const [scenarioName, scenario] of scenarios) {
     const input = structuredClone(scenario)
@@ -72,13 +73,9 @@ test("Pipeline7 solves and power-expands the SRJ27 dataset without DRC regressio
     expect(
       solver.powerTraceExpansionSolver?.stats.selectedTraceCount,
     ).toBeGreaterThan(0)
-    const preExpansionViaCount = preExpansionTraces
-      .flatMap((trace) => trace.route)
-      .filter((point) => point.route_type === "via").length
-    const postExpansionViaCount = postExpansionTraces
-      .flatMap((trace) => trace.route)
-      .filter((point) => point.route_type === "via").length
-    expect(postExpansionViaCount).toBeLessThanOrEqual(preExpansionViaCount)
+    if ((solver.powerTraceExpansionSolver?.stats.addedViaArrayCount ?? 0) > 0) {
+      viaArrayScenarios.push(scenarioName)
+    }
     const srjWithPointPairs = solver.srjWithPointPairs ?? input
     const preExpansionDrc = evaluateRelaxedDrc({
       inputSrj: input,
@@ -164,4 +161,5 @@ test("Pipeline7 solves and power-expands the SRJ27 dataset without DRC regressio
       postExpansionDrcPasses.includes(scenarioName),
     ),
   ).toBe(true)
+  expect(viaArrayScenarios).toContain("sample001")
 })

@@ -802,6 +802,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
           }),
           {
             allowNewVias: false,
+            addViaArrays: true,
             ...configuredOptions,
             onlyConnectionNames,
           },
