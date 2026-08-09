@@ -47,6 +47,7 @@ export class SingleRouteUselessViaRemovalSolver extends BaseSolver {
   GEOMETRY_SHORTCUT_TRACE_MARGIN = 0.1
   GEOMETRY_SHORTCUT_OBSTACLE_MARGIN = 0.15
   MAX_GEOMETRY_SHORTCUT_ADDED_LENGTH = 4
+  MAX_OBSTACLE_DETOUR_COLLISION_CHECKS = 128
   ENABLE_GEOMETRY_SHORTCUTS = true
   ENABLE_OBSTACLE_DETOUR_SHORTCUTS = false
 
@@ -283,7 +284,7 @@ export class SingleRouteUselessViaRemovalSolver extends BaseSolver {
       anchorPairs.push([transitionIndex, nextIndex])
     }
 
-    let bestShortcut: ViaPairShortcut | null = null
+    const candidateShortcuts: ViaPairShortcut[] = []
     for (const [previousPointIndex, nextPointIndex] of anchorPairs) {
       const start = previousSection.points[previousPointIndex]
       const end = nextSection.points[nextPointIndex]
@@ -299,51 +300,58 @@ export class SingleRouteUselessViaRemovalSolver extends BaseSolver {
       ) {
         continue
       }
+      const replacedLength = this.getPathLength(replacedPoints)
 
       for (const path of this.getObstacleDetourPaths(
         start,
         end,
         previousSection.z,
       )) {
-        const savedLength =
-          this.getPathLength(replacedPoints) - this.getPathLength(path)
-        if (
-          savedLength < -this.MAX_GEOMETRY_SHORTCUT_ADDED_LENGTH - 1e-6 ||
-          this.shortcutCrossesOutline(path)
-        ) {
+        const savedLength = replacedLength - this.getPathLength(path)
+        if (savedLength < -this.MAX_GEOMETRY_SHORTCUT_ADDED_LENGTH - 1e-6) {
           continue
         }
 
-        const candidateSection: RouteSection = {
-          startIndex: previousSection.startIndex + previousPointIndex,
-          endIndex: nextSection.startIndex + nextPointIndex,
-          z: previousSection.z,
-          points: path,
-        }
-        const pathIsClear = canSectionMoveToLayer({
-          currentSection: candidateSection,
-          targetZ: previousSection.z,
-          route: this.unsimplifiedRoute,
-          hdRouteSHI: this.hdRouteSHI,
-          obstacleSHI: this.obstacleSHI,
-          connMap: this.connMap,
-          defaultTraceThickness: this.TRACE_THICKNESS,
-          obstacleMargin: this.GEOMETRY_SHORTCUT_OBSTACLE_MARGIN,
-          traceMargin: this.GEOMETRY_SHORTCUT_TRACE_MARGIN,
+        candidateShortcuts.push({
+          path,
+          previousPointIndex,
+          nextPointIndex,
+          savedLength,
         })
-        if (!pathIsClear) continue
-
-        if (!bestShortcut || savedLength > bestShortcut.savedLength) {
-          bestShortcut = {
-            path,
-            previousPointIndex,
-            nextPointIndex,
-            savedLength,
-          }
-        }
       }
     }
-    return bestShortcut
+    // Rank cheap geometry first. Outline and collision checks are much more
+    // expensive than constructing candidates on detailed board outlines.
+    candidateShortcuts.sort((a, b) => b.savedLength - a.savedLength)
+
+    let collisionChecks = 0
+    for (const shortcut of candidateShortcuts) {
+      if (this.shortcutCrossesOutline(shortcut.path)) continue
+      if (collisionChecks >= this.MAX_OBSTACLE_DETOUR_COLLISION_CHECKS) break
+      collisionChecks++
+      const { path, previousPointIndex, nextPointIndex } = shortcut
+      const candidateSection: RouteSection = {
+        startIndex: previousSection.startIndex + previousPointIndex,
+        endIndex: nextSection.startIndex + nextPointIndex,
+        z: previousSection.z,
+        points: path,
+      }
+      const pathIsClear = canSectionMoveToLayer({
+        currentSection: candidateSection,
+        targetZ: previousSection.z,
+        route: this.unsimplifiedRoute,
+        hdRouteSHI: this.hdRouteSHI,
+        obstacleSHI: this.obstacleSHI,
+        connMap: this.connMap,
+        defaultTraceThickness: this.TRACE_THICKNESS,
+        obstacleMargin: this.GEOMETRY_SHORTCUT_OBSTACLE_MARGIN,
+        traceMargin: this.GEOMETRY_SHORTCUT_TRACE_MARGIN,
+      })
+      if (!pathIsClear) continue
+
+      return shortcut
+    }
+    return null
   }
 
   private findGeometryShortcut(
