@@ -44,6 +44,7 @@ type SolverOptions = {
   approximateRefinementDepth?: number
   approximateExactHighDensityPfThreshold?: number
   approximateObstacleOccupancyCost?: number
+  approximateObstacleOccupancyExponent?: number
 }
 
 type SolverConstructor = new (

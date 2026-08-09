@@ -9,7 +9,9 @@ SAMPLE_NUMBERS=""
 APPROXIMATE_CELL_SIZE=""
 APPROXIMATE_MAX_PORTS=""
 APPROXIMATE_REFINEMENT_DEPTH=""
+APPROXIMATE_EXACT_PF_THRESHOLD=""
 APPROXIMATE_OBSTACLE_OCCUPANCY_COST=""
+APPROXIMATE_OBSTACLE_OCCUPANCY_EXPONENT=""
 INCLUDE_ASSIGNABLE=false
 DATASET="dataset01"
 DEFAULT_SOLVER_NAME="AutoroutingPipelineSolver7_MultiGraph"
@@ -81,8 +83,8 @@ get_solvers() {
 print_help() {
   cat <<'EOF'
 Usage:
-  ./benchmark.sh [solver-name|all] [scenario-limit] [--concurrency N] [--effort N] [--sample-timeout DURATION] [--sample-numbers LIST] [--dataset NAME] [--approximate-cell-size N] [--approximate-max-ports N] [--approximate-refinement-depth N] [--approximate-obstacle-occupancy-cost N] [--include-assignable]
-  ./benchmark.sh [--solver NAME] [--pipeline ID] [--scenario-limit N] [--concurrency N] [--effort N] [--sample-timeout DURATION] [--sample-numbers LIST] [--dataset NAME] [--approximate-cell-size N] [--approximate-max-ports N] [--approximate-refinement-depth N] [--approximate-obstacle-occupancy-cost N] [--include-assignable]
+  ./benchmark.sh [solver-name|all] [scenario-limit] [--concurrency N] [--effort N] [--sample-timeout DURATION] [--sample-numbers LIST] [--dataset NAME] [--approximate-cell-size N] [--approximate-max-ports N] [--approximate-refinement-depth N] [--approximate-exact-pf-threshold N] [--approximate-obstacle-occupancy-cost N] [--approximate-obstacle-occupancy-exponent N] [--include-assignable]
+  ./benchmark.sh [--solver NAME] [--pipeline ID] [--scenario-limit N] [--concurrency N] [--effort N] [--sample-timeout DURATION] [--sample-numbers LIST] [--dataset NAME] [--approximate-cell-size N] [--approximate-max-ports N] [--approximate-refinement-depth N] [--approximate-exact-pf-threshold N] [--approximate-obstacle-occupancy-cost N] [--approximate-obstacle-occupancy-exponent N] [--include-assignable]
 
 Options:
   --solver NAME        Run only one solver (same as first positional arg)
@@ -96,7 +98,9 @@ Options:
   --approximate-cell-size N  Pipeline10 target grid-cell size in millimeters
   --approximate-max-ports N  Pipeline10 maximum ports per layer on each grid edge
   --approximate-refinement-depth N  Pipeline10 local quadtree refinement depth (0-6)
+  --approximate-exact-pf-threshold N  Pipeline10 node-Pf threshold for exact intra-node routing
   --approximate-obstacle-occupancy-cost N  Pipeline10 entry cost for a fully obstacle-occupied region
+  --approximate-obstacle-occupancy-exponent N  Pipeline10 exponent applied to obstacle occupancy (greater than zero)
   --include-assignable Include assignable pipelines (excluded by default)
   -h, --help           Show this help
 
@@ -214,8 +218,16 @@ while [ "$#" -gt 0 ]; do
       APPROXIMATE_REFINEMENT_DEPTH="${2:-}"
       shift 2
       ;;
+    --approximate-exact-pf-threshold)
+      APPROXIMATE_EXACT_PF_THRESHOLD="${2:-}"
+      shift 2
+      ;;
     --approximate-obstacle-occupancy-cost)
       APPROXIMATE_OBSTACLE_OCCUPANCY_COST="${2:-}"
+      shift 2
+      ;;
+    --approximate-obstacle-occupancy-exponent)
+      APPROXIMATE_OBSTACLE_OCCUPANCY_EXPONENT="${2:-}"
       shift 2
       ;;
     --include-assignable)
@@ -282,8 +294,16 @@ if [ -n "$APPROXIMATE_REFINEMENT_DEPTH" ]; then
   CMD+=("--approximate-refinement-depth" "$APPROXIMATE_REFINEMENT_DEPTH")
 fi
 
+if [ -n "$APPROXIMATE_EXACT_PF_THRESHOLD" ]; then
+  CMD+=("--approximate-exact-pf-threshold" "$APPROXIMATE_EXACT_PF_THRESHOLD")
+fi
+
 if [ -n "$APPROXIMATE_OBSTACLE_OCCUPANCY_COST" ]; then
   CMD+=("--approximate-obstacle-occupancy-cost" "$APPROXIMATE_OBSTACLE_OCCUPANCY_COST")
+fi
+
+if [ -n "$APPROXIMATE_OBSTACLE_OCCUPANCY_EXPONENT" ]; then
+  CMD+=("--approximate-obstacle-occupancy-exponent" "$APPROXIMATE_OBSTACLE_OCCUPANCY_EXPONENT")
 fi
 
 if [ -n "$DATASET" ]; then

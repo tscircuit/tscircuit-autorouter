@@ -37,6 +37,7 @@ type BenchmarkOptions = {
   approximateRefinementDepth?: number
   approximateExactHighDensityPfThreshold?: number
   approximateObstacleOccupancyCost?: number
+  approximateObstacleOccupancyExponent?: number
   sampleTimeoutMs?: number
   excludeAssignable: boolean
   datasetName: DatasetName
@@ -774,6 +775,13 @@ const parseArgs = (): BenchmarkOptions => {
       i += 1
       continue
     }
+    if (arg === "--approximate-obstacle-occupancy-exponent") {
+      options.approximateObstacleOccupancyExponent = Number.parseFloat(
+        args[i + 1] ?? "",
+      )
+      i += 1
+      continue
+    }
     if (arg === "--exclude-assignable") {
       options.excludeAssignable = true
       continue
@@ -816,13 +824,21 @@ const parseArgs = (): BenchmarkOptions => {
     )
   }
   if (
+    options.approximateObstacleOccupancyExponent !== undefined &&
+    (!Number.isFinite(options.approximateObstacleOccupancyExponent) ||
+      options.approximateObstacleOccupancyExponent <= 0)
+  ) {
+    throw new Error(
+      "--approximate-obstacle-occupancy-exponent must be greater than zero",
+    )
+  }
+  if (
     options.approximateExactHighDensityPfThreshold !== undefined &&
     (!Number.isFinite(options.approximateExactHighDensityPfThreshold) ||
       options.approximateExactHighDensityPfThreshold < 0)
   ) {
     throw new Error("--approximate-exact-pf-threshold must be zero or greater")
   }
-
   if (
     options.effort !== undefined &&
     (!Number.isFinite(options.effort) || options.effort < 1)
@@ -1563,6 +1579,7 @@ const main = async () => {
     approximateRefinementDepth,
     approximateExactHighDensityPfThreshold,
     approximateObstacleOccupancyCost,
+    approximateObstacleOccupancyExponent,
     sampleTimeoutMs,
     excludeAssignable,
     datasetName,
@@ -1627,6 +1644,7 @@ const main = async () => {
             approximateRefinementDepth,
             approximateExactHighDensityPfThreshold,
             approximateObstacleOccupancyCost,
+            approximateObstacleOccupancyExponent,
           },
         }) satisfies BenchmarkTask,
     ),

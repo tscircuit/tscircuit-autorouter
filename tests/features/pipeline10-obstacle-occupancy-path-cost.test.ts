@@ -6,11 +6,12 @@ import type {
   RegionPortHg,
 } from "lib/solvers/PortPointPathingSolver/hgportpointpathingsolver/types"
 
-test("Pipeline10 region pathing avoids heavily obstacle-occupied cells", () => {
+test("Pipeline10 concave occupancy cost avoids partially occupied cells", () => {
   const regionDefinitions = [
     { regionId: "start", x: 0, y: 0, occupancy: 0 },
-    { regionId: "occupied", x: 1, y: 0, occupancy: 1 },
-    { regionId: "clear-detour", x: 1, y: 2, occupancy: 0 },
+    { regionId: "occupied", x: 1, y: 0, occupancy: 0.5 },
+    { regionId: "clear-detour-1", x: 0.5, y: 0.1, occupancy: 0 },
+    { regionId: "clear-detour-2", x: 1.5, y: 0.1, occupancy: 0 },
     { regionId: "end", x: 2, y: 0, occupancy: 0 },
   ]
   const regions: RegionHg[] = regionDefinitions.map((definition) => ({
@@ -32,8 +33,9 @@ test("Pipeline10 region pathing avoids heavily obstacle-occupied cells", () => {
   for (const [regionIdA, regionIdB] of [
     ["start", "occupied"],
     ["occupied", "end"],
-    ["start", "clear-detour"],
-    ["clear-detour", "end"],
+    ["start", "clear-detour-1"],
+    ["clear-detour-1", "clear-detour-2"],
+    ["clear-detour-2", "end"],
   ] as const) {
     const region1 = regionById.get(regionIdA)!
     const region2 = regionById.get(regionIdB)!
@@ -98,7 +100,7 @@ test("Pipeline10 region pathing avoids heavily obstacle-occupied cells", () => {
   }
   const solver = new TinyHypergraphRegionPathingSolver({
     ...params,
-    approximateObstacleOccupancyCost: 500,
+    approximateRegionCapacityCost: 0,
   })
 
   solver.solve()
@@ -106,6 +108,7 @@ test("Pipeline10 region pathing avoids heavily obstacle-occupied cells", () => {
     .getOutput()
     .nodesWithPortPoints.map((node) => node.capacityMeshNodeId)
 
-  expect(routedRegionIds).toContain("clear-detour")
+  expect(routedRegionIds).toContain("clear-detour-1")
+  expect(routedRegionIds).toContain("clear-detour-2")
   expect(routedRegionIds).not.toContain("occupied")
 })

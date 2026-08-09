@@ -20,9 +20,10 @@ approximate hypergraph topologies. It is not the default autorouter.
   tiny-hypergraph's `RegionPathSolver`. Coarse cells remain shareable between
   nets, while synthetic terminal regions and exact component regions retain
   net ownership.
-- Add a linear region-entry penalty based on the fraction of each approximate
-  cell's layer-area occupied by obstacles. Exact component-topology cells do
-  not receive this approximate penalty.
+- Add a concave region-entry penalty based on the fraction of each approximate
+  cell's layer-area occupied by obstacles. This steers paths away from partial
+  occupancy without increasing the full-occupancy penalty. Exact
+  component-topology cells do not receive this approximate penalty.
 - Assign real boundary ports with a greedy layer, reuse, and local-crossing
   penalty. This avoids tiny-hypergraph's expensive exact port assignment and
   rip-up loop.
@@ -44,6 +45,7 @@ Benchmark controls are available through `benchmark.sh`:
 --approximate-refinement-depth N
 --approximate-exact-pf-threshold N
 --approximate-obstacle-occupancy-cost N
+--approximate-obstacle-occupancy-exponent N
 ```
 
 The exact-Pf threshold defaults to `0.01`. Lower values route more approximate
@@ -56,7 +58,9 @@ Obstacle occupancy includes the configured sampling margin and is weighted by
 layer: an obstacle covering half a cell on one of two available layers yields
 an occupancy fraction of `0.25`. The default full-occupancy entry cost is
 `50`, configurable with `approximateObstacleOccupancyCost` when constructing
-Pipeline10.
+Pipeline10. The occupancy exponent defaults to `0.65`, increasing sensitivity
+to small occupied fractions while preserving the configured cost at full
+occupancy.
 
 ## Dataset01 refinement result
 
@@ -101,6 +105,45 @@ Pipeline7. The remaining seven failing samples have only one to four relaxed
 DRC issues each.
 
 [Dataset01 Blacksmith testbox run](https://github.com/tscircuit/tscircuit-autorouter/actions/runs/31275848311)
+
+### Obstacle occupancy exponent
+
+Raising the linear full-occupancy cost improved some boards but produced large
+DRC and runtime outliers on dense layouts. A concave exponent instead makes
+partial occupancy more visible to region pathing while keeping the existing
+full-occupancy cost of `50`.
+
+A Blacksmith sweep over the same 12-board dataset01 cohort selected `0.65`:
+it completed 12/12, passed relaxed DRC on 7/12, and emitted 16 violations. The
+previous linear default passed 5/12 and emitted 19 violations. More aggressive
+weighting at `0.5` regressed to 5/12 clean, emitted 117 violations, and raised
+p95 runtime from 62.7s to 185.9s.
+
+The selected exponent was then validated on all 85 dataset01 boards:
+
+| Metric | Linear occupancy | Exponent `0.65` | Change |
+| --- | ---: | ---: | ---: |
+| Solver completion | 82/85 | 82/85 | preserved |
+| Relaxed DRC pass | 60/85 | 68/85 | +8 clean boards |
+| Relaxed DRC issues | 89 | 53 | 40.4% lower |
+| p50 runtime | 3.36s | 3.24s | 3.7% lower |
+| p95 runtime | 41.99s | 42.72s | 1.7% higher |
+| Average vias | 54.23 | 54.37 | 0.3% higher |
+
+Samples 8, 9, 35, 61, 67, 73, 82, and 85 became clean, with no regression
+among boards that passed under the linear cost.
+
+[Occupancy exponent Blacksmith testbox run](https://github.com/tscircuit/tscircuit-autorouter/actions/runs/31300837475)
+
+The full 16-board SRJ18 guardrail preserved 12/16 completion and reduced
+violations on completed boards from 1,123 to 949 (15.5%). Among the 11 boards
+completed by both configurations, eight improved, one tied, and two regressed
+by five or fewer violations. Runtime remains a hard-board tradeoff: p50 rose
+from 121.4s to 171.5s, sample 15 changed from a timeout to a 224.0s completion,
+and sample 11 changed from a 118.9s completion to a timeout. Both runs had two
+timeouts and the same two stitching failures overall.
+
+[SRJ18 occupancy exponent Blacksmith testbox run](https://github.com/tscircuit/tscircuit-autorouter/actions/runs/31300837515)
 
 ## Region-path prototype result
 

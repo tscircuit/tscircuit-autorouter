@@ -12,6 +12,7 @@ export type BenchmarkTask = {
     approximateRefinementDepth?: number
     approximateExactHighDensityPfThreshold?: number
     approximateObstacleOccupancyCost?: number
+    approximateObstacleOccupancyExponent?: number
   }
 }
 

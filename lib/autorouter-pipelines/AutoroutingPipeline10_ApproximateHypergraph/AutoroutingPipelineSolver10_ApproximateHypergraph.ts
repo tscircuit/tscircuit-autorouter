@@ -18,6 +18,7 @@ export interface AutoroutingPipelineSolver10Options extends Pipeline7Options {
   approximateLayerChangeCost?: number
   approximateRegionCapacityCost?: number
   approximateObstacleOccupancyCost?: number
+  approximateObstacleOccupancyExponent?: number
   approximateExactHighDensityPfThreshold?: number
 }
 
@@ -161,6 +162,8 @@ export class AutoroutingPipelineSolver10_ApproximateHypergraph extends Autorouti
               pipeline10.pipeline10Opts.approximateRegionCapacityCost,
             approximateObstacleOccupancyCost:
               pipeline10.pipeline10Opts.approximateObstacleOccupancyCost,
+            approximateObstacleOccupancyExponent:
+              pipeline10.pipeline10Opts.approximateObstacleOccupancyExponent,
           },
         ]
       },

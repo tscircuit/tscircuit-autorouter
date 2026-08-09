@@ -32,6 +32,7 @@ export interface TinyHypergraphRegionPathingSolverParams
   approximateLayerChangeCost?: number
   approximateRegionCapacityCost?: number
   approximateObstacleOccupancyCost?: number
+  approximateObstacleOccupancyExponent?: number
 }
 
 type BoundaryPortChoice = {
@@ -48,6 +49,7 @@ type MaterializedOutput = {
 const DEFAULT_LAYER_CHANGE_COST = 4
 const DEFAULT_REGION_CAPACITY_COST = 20
 const DEFAULT_OBSTACLE_OCCUPANCY_COST = 50
+const DEFAULT_OBSTACLE_OCCUPANCY_EXPONENT = 0.65
 
 class ApproximateCapacityRegionPathSolver extends RegionPathSolver {
   private readonly maxEdgeCenterDistance: number
@@ -58,6 +60,7 @@ class ApproximateCapacityRegionPathSolver extends RegionPathSolver {
     private readonly routingPitch: number,
     regionCapacityCost: number,
     private readonly obstacleOccupancyCost: number,
+    private readonly obstacleOccupancyExponent: number,
   ) {
     super(topology, problem, {
       MM_COST_FOR_FULL_REGION: regionCapacityCost,
@@ -248,7 +251,8 @@ class ApproximateCapacityRegionPathSolver extends RegionPathSolver {
 
     return (
       1 +
-      obstacleOccupancyFraction * this.obstacleOccupancyCost +
+      obstacleOccupancyFraction ** this.obstacleOccupancyExponent *
+        this.obstacleOccupancyCost +
       utilization ** 4 * this.MM_COST_FOR_FULL_REGION
     )
   }
@@ -442,12 +446,24 @@ export class TinyHypergraphRegionPathingSolver extends BaseSolver {
         "Pipeline10 approximateObstacleOccupancyCost must be zero or greater",
       )
     }
+    const obstacleOccupancyExponent =
+      params.approximateObstacleOccupancyExponent ??
+      DEFAULT_OBSTACLE_OCCUPANCY_EXPONENT
+    if (
+      !Number.isFinite(obstacleOccupancyExponent) ||
+      obstacleOccupancyExponent <= 0
+    ) {
+      throw new Error(
+        "Pipeline10 approximateObstacleOccupancyExponent must be greater than zero",
+      )
+    }
     this.regionPathSolver = new ApproximateCapacityRegionPathSolver(
       topology,
       problem,
       Math.max(params.minViaPadDiameter ?? 0.6, 0.2),
       params.approximateRegionCapacityCost ?? DEFAULT_REGION_CAPACITY_COST,
       obstacleOccupancyCost,
+      obstacleOccupancyExponent,
     )
     this.regionById = new Map(
       params.graph.regions.map((region) => [region.regionId, region]),
