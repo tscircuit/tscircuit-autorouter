@@ -215,18 +215,52 @@ function convertHdRouteToCircuitJsonTraces(
 const getObstacleConnectivityIds = (obstacles: Obstacle[]) =>
   Array.from(new Set(obstacles.flatMap((obstacle) => obstacle.connectedTo)))
 
-const getPcbPortIdsDeclaredByTraceRoute = (
-  trace: SimplifiedPcbTrace,
-): string[] => {
-  const pcbPortIds = trace.route.flatMap((segment) =>
-    segment.route_type === "wire"
-      ? [segment.start_pcb_port_id, segment.end_pcb_port_id]
-      : [],
-  )
-  return Array.from(
-    new Set(pcbPortIds.filter((id): id is string => Boolean(id))),
-  )
+type CircuitJsonObstacleMetadata = {
+  pcb_smtpad_id?: string
+  pcb_plated_hole_id?: string
+  pcb_port_id?: string
+  pcb_via_id?: string
 }
+
+const getCircuitJsonObstacleMetadata = (
+  obstacle: Obstacle,
+): CircuitJsonObstacleMetadata => {
+  const metadata = obstacle.metadata
+  if (!metadata) return {}
+
+  return {
+    pcb_smtpad_id:
+      typeof metadata.pcb_smtpad_id === "string"
+        ? metadata.pcb_smtpad_id
+        : undefined,
+    pcb_plated_hole_id:
+      typeof metadata.pcb_plated_hole_id === "string"
+        ? metadata.pcb_plated_hole_id
+        : undefined,
+    pcb_port_id:
+      typeof metadata.pcb_port_id === "string"
+        ? metadata.pcb_port_id
+        : undefined,
+    pcb_via_id:
+      typeof metadata.pcb_via_id === "string" ? metadata.pcb_via_id : undefined,
+  }
+}
+
+const getSrjDeclaredPcbPortIds = ({
+  connections,
+  obstacles,
+}: Pick<SimpleRouteJson, "connections" | "obstacles">): Set<string> =>
+  new Set([
+    ...connections.flatMap((connection) =>
+      connection.pointsToConnect.flatMap((point) =>
+        point.pcb_port_id ? [point.pcb_port_id] : [],
+      ),
+    ),
+    ...obstacles.flatMap((obstacle) => {
+      const pcbPortId = getCircuitJsonObstacleMetadata(obstacle).pcb_port_id
+      return pcbPortId ? [pcbPortId] : []
+    }),
+  ])
 
 declare const connectivityNetIdBrand: unique symbol
 type ConnectivityNetId = string & {
@@ -279,9 +313,8 @@ const getSrjDeclaredConnectionReferences = (
         point.pcb_port_id,
       ]),
     ]),
-  ).filter(
-    (reference): reference is SrjDeclaredConnectionReference =>
-      Boolean(reference),
+  ).filter((reference): reference is SrjDeclaredConnectionReference =>
+    Boolean(reference),
   )
 
 const createCircuitJsonSourceTraceIdResolver = (
@@ -381,6 +414,10 @@ function createSourceTraces(
         sourceSrj === srj ? srj : { ...sourceSrj, connections },
       ),
     )
+  const declaredPcbPortIds = getSrjDeclaredPcbPortIds({
+    connections,
+    obstacles,
+  })
 
   // Process each connection to create a source_trace
   connections.forEach((connection) => {
@@ -388,6 +425,13 @@ function createSourceTraces(
     const connectedPortIds = connection.pointsToConnect
       .map((point) => point.pcb_port_id)
       .filter((pointId): pointId is string => Boolean(pointId))
+    const connectedPortIdSet = new Set(connectedPortIds)
+    const getNonEndpointObstacleConnectivityIds = (
+      matchingObstacles: Obstacle[],
+    ) =>
+      getObstacleConnectivityIds(matchingObstacles).filter(
+        (id) => !connectedPortIdSet.has(id),
+      )
     const connectedPointIds = connection.pointsToConnect
       .map((point) => point.pointId)
       .filter((pointId): pointId is string => Boolean(pointId))
@@ -450,7 +494,9 @@ function createSourceTraces(
         ...new Set([
           ...(sourceTrace.connected_source_net_ids ?? []),
           ...connectedPointIds,
-          ...getObstacleConnectivityIds(obstaclesContainingEndpoints),
+          ...getNonEndpointObstacleConnectivityIds(
+            obstaclesContainingEndpoints,
+          ),
         ]),
       ]
     } else {
@@ -459,7 +505,7 @@ function createSourceTraces(
         type: "source_trace",
         source_trace_id: netConnectionName,
         connected_source_port_ids: connectedPortIds,
-        connected_source_net_ids: getObstacleConnectivityIds(
+        connected_source_net_ids: getNonEndpointObstacleConnectivityIds(
           obstaclesContainingEndpoints,
         ).concat(connectedPointIds),
       })
@@ -471,7 +517,11 @@ function createSourceTraces(
       connections.map((connection) => [connection.name, connection]),
     )
     for (const trace of hdRoutes as SimplifiedPcbTrace[]) {
-      const connectedSourcePortIds = getPcbPortIdsDeclaredByTraceRoute(trace)
+      const connectedSourcePortIds = [
+        ...new Set(
+          (trace.connectsTo ?? []).filter((id) => declaredPcbPortIds.has(id)),
+        ),
+      ]
       const connectedSourcePortIdSet = new Set(connectedSourcePortIds)
       const connectedSourceNetIds = [
         ...new Set(
@@ -623,18 +673,23 @@ function createPcbPadElements(srj: SimpleRouteJson): AnyCircuitElement[] {
   const addedSmtPadIds = new Set<string>()
   const addedPlatedHoleIds = new Set<string>()
   const portPositionMap = getPcbPortPositionMap(srj)
+  const declaredPcbPortIds = getSrjDeclaredPcbPortIds(srj)
 
   for (const obstacle of srj.obstacles) {
     const connectedTo = obstacle.connectedTo
-    const smtPadId: string | undefined = connectedTo.find((id) =>
-      id.startsWith("pcb_smtpad_"),
-    )
-    const platedHoleId: string | undefined = connectedTo.find((id) =>
-      id.startsWith("pcb_plated_hole_"),
-    )
-    const candidatePortIds = connectedTo.filter((id) =>
-      id.startsWith("pcb_port_"),
-    )
+    const circuitJsonMetadata = getCircuitJsonObstacleMetadata(obstacle)
+    if (circuitJsonMetadata.pcb_via_id) continue
+
+    const smtPadId = circuitJsonMetadata.pcb_smtpad_id
+    const platedHoleId = circuitJsonMetadata.pcb_plated_hole_id
+    const candidatePortIds = [
+      ...new Set([
+        ...(circuitJsonMetadata.pcb_port_id
+          ? [circuitJsonMetadata.pcb_port_id]
+          : []),
+        ...connectedTo.filter((id) => declaredPcbPortIds.has(id)),
+      ]),
+    ]
     const pcbPortId = getBestObstaclePcbPortId(
       obstacle.center,
       candidatePortIds,
@@ -652,7 +707,7 @@ function createPcbPadElements(srj: SimpleRouteJson): AnyCircuitElement[] {
     const y = obstacle.center.y
     const rotationDegrees = obstacle.ccwRotationDegrees
 
-    const isMultiLayerObstacle = layers.length > 1
+    const isMultiLayerObstacle = Boolean(platedHoleId) || layers.length > 1
 
     if (isMultiLayerObstacle) {
       const id =

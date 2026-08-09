@@ -100,6 +100,8 @@ export interface Obstacle {
   obstacleId?: string
   /** Optional source component identifier associated with this obstacle. */
   componentId?: string
+  /** Opaque producer metadata; autorouters must not use this for routing. */
+  metadata?: Record<string, unknown>
   type: "rect"
   layers: string[]
   /** Public z-layer indexes supplied by SimpleRouteJson producers. */
