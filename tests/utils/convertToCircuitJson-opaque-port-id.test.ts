@@ -2,7 +2,7 @@ import { expect, test } from "bun:test"
 import { convertToCircuitJson } from "lib/testing/utils/convertToCircuitJson"
 import type { SimpleRouteJson, SimplifiedPcbTrace } from "lib/types"
 
-test("uses declared SRJ metadata instead of pcb port ID prefixes", () => {
+test("uses declared Circuit JSON metadata instead of pcb port ID prefixes", () => {
   const opaquePcbPortId = "opaque-port-reference"
   const srj: SimpleRouteJson = {
     layerCount: 2,
@@ -16,9 +16,11 @@ test("uses declared SRJ metadata instead of pcb port ID prefixes", () => {
         width: 0.5,
         height: 0.5,
         connectedTo: [opaquePcbPortId],
-        metadata: {
+        circuitJsonMetadata: {
           pcb_smtpad_id: "opaque-pad-reference",
           pcb_port_id: opaquePcbPortId,
+          source_component_name: "U_OPAQUE",
+          source_port_name: "DATA",
         },
       },
     ],

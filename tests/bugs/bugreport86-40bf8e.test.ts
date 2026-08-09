@@ -1,13 +1,13 @@
 import { expect, test } from "bun:test"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib"
+import type { SimpleRouteJson } from "lib/types"
 import bugReport from "../../fixtures/bug-reports/bugreport86-40bf8e/bugreport86-40bf8e.json" with {
   type: "json",
 }
-import type { SimpleRouteJson } from "lib/types"
 import { getLastStepSvg } from "../fixtures/getLastStepSvg"
 
 const srj = structuredClone(bugReport.simple_route_json) as SimpleRouteJson
-// This report predates opaque SRJ metadata. Its producer placed the obstacle's
+// This report predates Circuit JSON metadata in SRJ. Its producer placed the obstacle's
 // own identity first in connectedTo and repeated it immediately before the
 // associated port identity. Migrate that historical structure without parsing
 // either ID. Current Core emits this metadata directly. Pipeline9 ignores it;
@@ -19,7 +19,7 @@ for (const obstacle of srj.obstacles) {
   if (repeatedElementIndex === -1) continue
   const pcbPortId = obstacle.connectedTo[repeatedElementIndex + 1]
 
-  obstacle.metadata =
+  obstacle.circuitJsonMetadata =
     obstacle.layers.length > 1
       ? { pcb_plated_hole_id: elementId, pcb_port_id: pcbPortId }
       : { pcb_smtpad_id: elementId, pcb_port_id: pcbPortId }

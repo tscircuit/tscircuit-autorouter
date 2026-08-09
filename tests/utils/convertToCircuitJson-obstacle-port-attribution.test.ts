@@ -126,7 +126,7 @@ test("uses original SRJ obstacle rotation when creating circuit-json pads", () =
         height: 0.4,
         ccwRotationDegrees: 45,
         connectedTo: ["pcb_smtpad_0", "pcb_port_0"],
-        metadata: {
+        circuitJsonMetadata: {
           pcb_smtpad_id: "pcb_smtpad_0",
           pcb_port_id: "pcb_port_0",
         },

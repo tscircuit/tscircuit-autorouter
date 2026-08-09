@@ -1,6 +1,6 @@
 import { pointToBoxDistance } from "@tscircuit/math-utils"
-import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { AnyCircuitElement, PcbTrace, PcbVia } from "circuit-json"
+import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import { Obstacle, SimpleRouteJson, SimplifiedPcbTrace } from "lib/types"
 import { HighDensityRoute } from "lib/types/high-density-types"
 import { getConnectionPointLayers } from "lib/types/srj-types"
@@ -215,36 +215,8 @@ function convertHdRouteToCircuitJsonTraces(
 const getObstacleConnectivityIds = (obstacles: Obstacle[]) =>
   Array.from(new Set(obstacles.flatMap((obstacle) => obstacle.connectedTo)))
 
-type CircuitJsonObstacleMetadata = {
-  pcb_smtpad_id?: string
-  pcb_plated_hole_id?: string
-  pcb_port_id?: string
-  pcb_via_id?: string
-}
-
-const getCircuitJsonObstacleMetadata = (
-  obstacle: Obstacle,
-): CircuitJsonObstacleMetadata => {
-  const metadata = obstacle.metadata
-  if (!metadata) return {}
-
-  return {
-    pcb_smtpad_id:
-      typeof metadata.pcb_smtpad_id === "string"
-        ? metadata.pcb_smtpad_id
-        : undefined,
-    pcb_plated_hole_id:
-      typeof metadata.pcb_plated_hole_id === "string"
-        ? metadata.pcb_plated_hole_id
-        : undefined,
-    pcb_port_id:
-      typeof metadata.pcb_port_id === "string"
-        ? metadata.pcb_port_id
-        : undefined,
-    pcb_via_id:
-      typeof metadata.pcb_via_id === "string" ? metadata.pcb_via_id : undefined,
-  }
-}
+const getCircuitJsonMetadata = (obstacle: Obstacle) =>
+  obstacle.circuitJsonMetadata ?? {}
 
 const getSrjDeclaredPcbPortIds = ({
   connections,
@@ -257,7 +229,7 @@ const getSrjDeclaredPcbPortIds = ({
       ),
     ),
     ...obstacles.flatMap((obstacle) => {
-      const pcbPortId = getCircuitJsonObstacleMetadata(obstacle).pcb_port_id
+      const pcbPortId = getCircuitJsonMetadata(obstacle).pcb_port_id
       return pcbPortId ? [pcbPortId] : []
     }),
   ])
@@ -677,7 +649,7 @@ function createPcbPadElements(srj: SimpleRouteJson): AnyCircuitElement[] {
 
   for (const obstacle of srj.obstacles) {
     const connectedTo = obstacle.connectedTo
-    const circuitJsonMetadata = getCircuitJsonObstacleMetadata(obstacle)
+    const circuitJsonMetadata = getCircuitJsonMetadata(obstacle)
     if (circuitJsonMetadata.pcb_via_id) continue
 
     const smtPadId = circuitJsonMetadata.pcb_smtpad_id
