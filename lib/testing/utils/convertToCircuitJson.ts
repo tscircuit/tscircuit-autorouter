@@ -225,13 +225,13 @@ type CircuitJsonSourceTraceId = string & {
   readonly [circuitJsonSourceTraceIdBrand]: "CircuitJsonSourceTraceId"
 }
 
-declare const srjLogicalConnectionAliasBrand: unique symbol
-type SrjLogicalConnectionAlias = string & {
-  readonly [srjLogicalConnectionAliasBrand]: "SrjLogicalConnectionAlias"
+declare const srjDeclaredConnectionReferenceBrand: unique symbol
+type SrjDeclaredConnectionReference = string & {
+  readonly [srjDeclaredConnectionReferenceBrand]: "SrjDeclaredConnectionReference"
 }
 
-type CircuitJsonSourceTraceIdBySrjLogicalConnectionAlias = ReadonlyMap<
-  SrjLogicalConnectionAlias,
+type CircuitJsonSourceTraceIdBySrjDeclaredConnectionReference = ReadonlyMap<
+  SrjDeclaredConnectionReference,
   CircuitJsonSourceTraceId
 >
 
@@ -242,7 +242,7 @@ type CircuitJsonSourceTraceIdsByConnectivityNetId = ReadonlyMap<
 
 type CircuitJsonSourceTraceIdResolver = {
   connMap: ConnectivityMap
-  circuitJsonSourceTraceIdBySrjLogicalConnectionAlias: CircuitJsonSourceTraceIdBySrjLogicalConnectionAlias
+  circuitJsonSourceTraceIdBySrjDeclaredConnectionReference: CircuitJsonSourceTraceIdBySrjDeclaredConnectionReference
   circuitJsonSourceTraceIdsByConnectivityNetId: CircuitJsonSourceTraceIdsByConnectivityNetId
 }
 
@@ -253,9 +253,9 @@ const getCircuitJsonSourceTraceId = (
     connection.__rootConnectionNames?.[0] ??
     connection.name) as CircuitJsonSourceTraceId
 
-const getSrjLogicalConnectionAliases = (
+const getSrjDeclaredConnectionReferences = (
   connection: SimpleRouteJson["connections"][number],
-): SrjLogicalConnectionAlias[] =>
+): SrjDeclaredConnectionReference[] =>
   Array.from(
     new Set([
       connection.name,
@@ -266,33 +266,38 @@ const getSrjLogicalConnectionAliases = (
         point.pcb_port_id,
       ]),
     ]),
-  ).filter((alias): alias is SrjLogicalConnectionAlias => Boolean(alias))
+  ).filter(
+    (reference): reference is SrjDeclaredConnectionReference =>
+      Boolean(reference),
+  )
 
 const createCircuitJsonSourceTraceIdResolver = (
   connections: SimpleRouteJson["connections"],
   connMap: ConnectivityMap,
 ): CircuitJsonSourceTraceIdResolver => {
-  const circuitJsonSourceTraceIdBySrjLogicalConnectionAlias = new Map<
-    SrjLogicalConnectionAlias,
+  const circuitJsonSourceTraceIdBySrjDeclaredConnectionReference = new Map<
+    SrjDeclaredConnectionReference,
     CircuitJsonSourceTraceId
   >()
-  const ambiguousSrjLogicalConnectionAliases =
-    new Set<SrjLogicalConnectionAlias>()
+  const ambiguousSrjDeclaredConnectionReferences =
+    new Set<SrjDeclaredConnectionReference>()
   const circuitJsonSourceTraceIdsByConnectivityNetId = new Map<
     ConnectivityNetId,
     Set<CircuitJsonSourceTraceId>
   >()
   for (const connection of connections) {
     const sourceTraceId = getCircuitJsonSourceTraceId(connection)
-    for (const alias of getSrjLogicalConnectionAliases(connection)) {
+    for (const reference of getSrjDeclaredConnectionReferences(connection)) {
       const existingSourceTraceId =
-        circuitJsonSourceTraceIdBySrjLogicalConnectionAlias.get(alias)
+        circuitJsonSourceTraceIdBySrjDeclaredConnectionReference.get(reference)
       if (existingSourceTraceId && existingSourceTraceId !== sourceTraceId) {
-        circuitJsonSourceTraceIdBySrjLogicalConnectionAlias.delete(alias)
-        ambiguousSrjLogicalConnectionAliases.add(alias)
-      } else if (!ambiguousSrjLogicalConnectionAliases.has(alias)) {
-        circuitJsonSourceTraceIdBySrjLogicalConnectionAlias.set(
-          alias,
+        circuitJsonSourceTraceIdBySrjDeclaredConnectionReference.delete(
+          reference,
+        )
+        ambiguousSrjDeclaredConnectionReferences.add(reference)
+      } else if (!ambiguousSrjDeclaredConnectionReferences.has(reference)) {
+        circuitJsonSourceTraceIdBySrjDeclaredConnectionReference.set(
+          reference,
           sourceTraceId,
         )
       }
@@ -313,7 +318,7 @@ const createCircuitJsonSourceTraceIdResolver = (
   }
   return {
     connMap,
-    circuitJsonSourceTraceIdBySrjLogicalConnectionAlias,
+    circuitJsonSourceTraceIdBySrjDeclaredConnectionReference,
     circuitJsonSourceTraceIdsByConnectivityNetId,
   }
 }
@@ -322,11 +327,13 @@ const resolveCircuitJsonSourceTraceId = (
   resolver: CircuitJsonSourceTraceIdResolver,
   srjConnectivityId: string,
 ): CircuitJsonSourceTraceId | undefined => {
-  const sourceTraceIdForLogicalAlias =
-    resolver.circuitJsonSourceTraceIdBySrjLogicalConnectionAlias.get(
-      srjConnectivityId as SrjLogicalConnectionAlias,
+  const sourceTraceIdForDeclaredConnectionReference =
+    resolver.circuitJsonSourceTraceIdBySrjDeclaredConnectionReference.get(
+      srjConnectivityId as SrjDeclaredConnectionReference,
     )
-  if (sourceTraceIdForLogicalAlias) return sourceTraceIdForLogicalAlias
+  if (sourceTraceIdForDeclaredConnectionReference) {
+    return sourceTraceIdForDeclaredConnectionReference
+  }
 
   const connectivityNetId =
     resolver.connMap.getNetConnectedToId(srjConnectivityId)
