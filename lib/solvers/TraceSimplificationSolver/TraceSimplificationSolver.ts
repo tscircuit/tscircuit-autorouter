@@ -1,20 +1,21 @@
-import { BaseSolver } from "../BaseSolver"
-import { HighDensityRoute } from "lib/types/high-density-types"
-import { Obstacle } from "lib/types"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
-import { UselessViaRemovalSolver } from "lib/solvers/UselessViaRemovalSolver/UselessViaRemovalSolver"
-import { MultiSimplifiedPathSolver } from "lib/solvers/SimplifiedPathSolver/MultiSimplifiedPathSolver"
-import { SameNetViaMergerSolver } from "lib/solvers/SameNetViaMergerSolver/SameNetViaMergerSolver"
 import { GraphicsObject } from "graphics-debug"
-import { getJumpersGraphics } from "lib/utils/getJumperGraphics"
-import { createObjectsWithZLayers } from "lib/utils/createObjectsWithZLayers"
 import { CrossingViaReductionSolver } from "lib/solvers/CrossingViaReductionSolver/crossing-via-reduction-solver"
+import { SameNetViaMergerSolver } from "lib/solvers/SameNetViaMergerSolver/SameNetViaMergerSolver"
+import { MultiSimplifiedPathSolver } from "lib/solvers/SimplifiedPathSolver/MultiSimplifiedPathSolver"
+import { UselessViaRemovalSolver } from "lib/solvers/UselessViaRemovalSolver/UselessViaRemovalSolver"
+import { Obstacle } from "lib/types"
+import { HighDensityRoute } from "lib/types/high-density-types"
+import { createObjectsWithZLayers } from "lib/utils/createObjectsWithZLayers"
+import { getJumpersGraphics } from "lib/utils/getJumperGraphics"
+import { BaseSolver } from "../BaseSolver"
 
 type Phase =
   | "via_removal"
   | "crossing_via_reduction"
   | "via_merging"
   | "path_simplification"
+  | "final_endpoint_via_removal"
 
 const VIA_INSIDE_OBSTACLE_TOLERANCE = 1e-6
 
@@ -32,15 +33,18 @@ const isMultilayerObstacle = (obstacle: Obstacle) =>
 
 /**
  * TraceSimplificationSolver consolidates trace optimization by iteratively applying
- * via removal, crossing via reduction, via merging, and path simplification
- * phases. The second via-removal pass can route short local detours around
- * blocking pads while removing a via pair.
+ * via removal, crossing via reduction, via merging, path simplification, and a
+ * final endpoint-only pass. The second via-removal pass can route short local
+ * detours around blocking pads while removing a via pair. The endpoint-only
+ * pass runs last so its replacement geometry cannot block a larger reduction.
  *
- * The solver operates in four alternating phases per iteration:
+ * The solver operates in four alternating phases per iteration, followed by a
+ * final endpoint-only pass:
  * 1. "via_removal" - Removes unnecessary vias from routes using UselessViaRemovalSolver
  * 2. "crossing_via_reduction" - Swaps layer ownership at crossings to remove via pairs
  * 3. "via_merging" - Merges redundant vias on the same net using SameNetViaMergerSolver
  * 4. "path_simplification" - Simplifies routing paths using MultiSimplifiedPathSolver
+ * 5. "final_endpoint_via_removal" - Reroutes multilayer endpoints to remove one via
  *
  * Each iteration consists of all phases executed sequentially.
  */
@@ -60,6 +64,7 @@ export class TraceSimplificationSolver extends BaseSolver {
     "crossing_via_reduction",
     "via_merging",
     "path_simplification",
+    "final_endpoint_via_removal",
   ]
 
   currentPhase: Phase = "via_removal"
@@ -86,6 +91,7 @@ export class TraceSimplificationSolver extends BaseSolver {
    *   - otherHdRoutes: Immutable routed traces to avoid while simplifying
    *   - netByConnectionName: Explicit net metadata for synthetic route names
    *   - enableCrossingViaReduction: Enables coordinated crossing layer swaps
+   *   - enableEndpointViaRemoval: Runs the final endpoint-only via pass (default: true)
    *   - iterations: Number of complete simplification iterations (default: 2)
    */
   constructor(
@@ -101,6 +107,7 @@ export class TraceSimplificationSolver extends BaseSolver {
       readonly otherHdRoutes?: ReadonlyArray<HighDensityRoute>
       readonly netByConnectionName?: ReadonlyMap<string, string>
       readonly enableCrossingViaReduction?: boolean
+      readonly enableEndpointViaRemoval?: boolean
     },
   ) {
     super()
@@ -226,6 +233,21 @@ export class TraceSimplificationSolver extends BaseSolver {
           this.currentPhase = "via_merging"
         } else if (this.currentPhase === "via_merging") {
           this.currentPhase = "path_simplification"
+        } else if (this.currentPhase === "path_simplification") {
+          if (
+            this.simplificationPipelineLoops + 1 >=
+            this.MAX_SIMPLIFICATION_PIPELINE_LOOPS
+          ) {
+            if (this.simplificationConfig.enableEndpointViaRemoval === false) {
+              this.currentPhase = "via_removal"
+              this.simplificationPipelineLoops++
+            } else {
+              this.currentPhase = "final_endpoint_via_removal"
+            }
+          } else {
+            this.currentPhase = "via_removal"
+            this.simplificationPipelineLoops++
+          }
         } else {
           this.currentPhase = "via_removal"
           this.simplificationPipelineLoops++
@@ -268,9 +290,35 @@ export class TraceSimplificationSolver extends BaseSolver {
             // Delay the quadratic anchor search until the first path pass has
             // reduced the route point count.
             enableGeometryShortcuts: this.simplificationPipelineLoops > 0,
+            // Endpoint reroutes run only after every other simplifier so their
+            // new geometry cannot block a larger reduction later in the pass.
+            enableEndpointGeometryShortcuts: false,
             enableObstacleDetourShortcuts:
               this.simplificationConfig.enableCrossingViaReduction === true &&
               this.simplificationPipelineLoops > 0,
+          })
+          this.extractResult = (s) =>
+            (s as UselessViaRemovalSolver).getOptimizedHdRoutes() ?? []
+          break
+
+        case "final_endpoint_via_removal":
+          this.activeSubSolver = new UselessViaRemovalSolver({
+            unsimplifiedHdRoutes: this.hdRoutes,
+            otherHdRoutes: [...(this.simplificationConfig.otherHdRoutes ?? [])],
+            obstacles: [...this.simplificationConfig.obstacles],
+            colorMap: { ...this.simplificationConfig.colorMap },
+            layerCount: this.simplificationConfig.layerCount,
+            connMap: this.simplificationConfig.connMap,
+            outline: this.simplificationConfig.outline
+              ? [...this.simplificationConfig.outline]
+              : undefined,
+            geometryShortcutTraceMargin: 0.1,
+            geometryShortcutObstacleMargin:
+              this.simplificationConfig.minTraceToPadEdgeClearance ?? 0.15,
+            enableGeometryShortcuts: false,
+            enableEndpointGeometryShortcuts: true,
+            enableObstacleDetourShortcuts: false,
+            onlyEndpointLayerChanges: true,
           })
           this.extractResult = (s) =>
             (s as UselessViaRemovalSolver).getOptimizedHdRoutes() ?? []

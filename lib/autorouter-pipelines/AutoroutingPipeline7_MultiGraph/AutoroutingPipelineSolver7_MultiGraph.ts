@@ -67,6 +67,7 @@ import { SingleLayerNodeMergerSolver } from "../../solvers/SingleLayerNodeMerger
 import { StrawSolver } from "../../solvers/StrawSolver/StrawSolver"
 import { TraceSimplificationSolver } from "../../solvers/TraceSimplificationSolver/TraceSimplificationSolver"
 import { TraceWidthSolver } from "../../solvers/TraceWidthSolver/TraceWidthSolver"
+import { UselessViaRemovalSolver } from "../../solvers/UselessViaRemovalSolver/UselessViaRemovalSolver"
 import { PreprocessSimpleRouteJsonSolver } from "../AutoroutingPipeline4_TinyHypergraph/PreprocessSimpleRouteJsonSolver"
 import { MergedComponentTopologyView } from "./MergedComponentTopologyView"
 import { PowerTraceExpansionSolver } from "./PowerTraceExpansionSolver"
@@ -228,6 +229,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
   highDensityStitchSolver?: MultipleHighDensityRouteStitchSolver3
   globalDrcForceImproveSolver?: GlobalDrcForceImproveSolver
   exactGeometryDrcForceImproveSolver?: GlobalDrcBranchPortfolioSolver
+  finalEndpointViaRemovalSolver?: UselessViaRemovalSolver
   singleLayerNodeMerger?: SingleLayerNodeMergerSolver
   strawSolver?: StrawSolver
   deadEndSolver?: DeadEndSolver
@@ -625,6 +627,9 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
           layerCount: cms.srj.layerCount,
           minTraceToPadEdgeClearance: cms.srj.minTraceToPadEdgeClearance,
           enableCrossingViaReduction: true,
+          // Run endpoint reroutes after exact DRC repair so they cannot alter
+          // the repair solver's search path or push near-limit cases to timeout.
+          enableEndpointViaRemoval: false,
           iterations: 2,
         },
       ],
@@ -702,6 +707,28 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
       },
     ),
     definePipelineStep(
+      "finalEndpointViaRemovalSolver",
+      UselessViaRemovalSolver,
+      (cms) => [
+        {
+          unsimplifiedHdRoutes:
+            cms.exactGeometryDrcForceImproveSolver!.getOutput(),
+          obstacles: cms.srj.obstacles,
+          colorMap: cms.colorMap,
+          layerCount: cms.srj.layerCount,
+          connMap: cms.connMap,
+          outline: cms.srj.outline,
+          geometryShortcutTraceMargin: 0.1,
+          geometryShortcutObstacleMargin:
+            cms.srj.minTraceToPadEdgeClearance ?? 0.15,
+          enableGeometryShortcuts: false,
+          enableEndpointGeometryShortcuts: true,
+          enableObstacleDetourShortcuts: false,
+          onlyEndpointLayerChanges: true,
+        },
+      ],
+    ),
+    definePipelineStep(
       "lengthMatchingPostProcessingSolver",
       DifferentialPairPostProcessingSolver,
       (cms) => {
@@ -730,7 +757,9 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
             )
           }
         }
-        const hdRoutes = cms.exactGeometryDrcForceImproveSolver!.getOutput()
+        const hdRoutes =
+          cms.finalEndpointViaRemovalSolver?.getOptimizedHdRoutes() ??
+          cms.exactGeometryDrcForceImproveSolver!.getOutput()
         const differentialPairs = (cms.srj.differentialPairs ?? []).map(
           (pair) => {
             const connectionNames = pair.connectionNames.map(
@@ -1157,6 +1186,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
       return hdRoutes
     }
     return (
+      this.finalEndpointViaRemovalSolver?.getOptimizedHdRoutes() ??
       this.exactGeometryDrcForceImproveSolver?.getOutput() ??
       this.globalDrcForceImproveSolver?.getOutput() ??
       this.traceWidthSolver?.getHdRoutesWithWidths() ??

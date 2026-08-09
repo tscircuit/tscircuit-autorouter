@@ -1,15 +1,17 @@
+import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
+import { GraphicsObject } from "graphics-debug"
+import { HighDensityRouteSpatialIndex } from "lib/data-structures/HighDensityRouteSpatialIndex"
 import { ObstacleSpatialHashIndex } from "lib/data-structures/ObstacleTree"
 import { SegmentTree } from "lib/data-structures/SegmentTree"
-import { BaseSolver } from "../BaseSolver"
-import { HighDensityRoute } from "lib/types/high-density-types"
 import { Obstacle } from "lib/types"
-import { GraphicsObject } from "graphics-debug"
-import { mapZToLayerName } from "lib/utils/mapZToLayerName"
-import { HighDensityRouteSpatialIndex } from "lib/data-structures/HighDensityRouteSpatialIndex"
-import { SingleRouteUselessViaRemovalSolver } from "./SingleRouteUselessViaRemovalSolver"
-import { getJumpersGraphics } from "lib/utils/getJumperGraphics"
+import { HighDensityRoute } from "lib/types/high-density-types"
 import { createObjectsWithZLayers } from "lib/utils/createObjectsWithZLayers"
-import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
+import { getJumpersGraphics } from "lib/utils/getJumperGraphics"
+import { mapZToLayerName } from "lib/utils/mapZToLayerName"
+import { BaseSolver } from "../BaseSolver"
+import { SingleRouteUselessViaRemovalSolver } from "./SingleRouteUselessViaRemovalSolver"
+import { breakRouteIntoSections } from "./break-route-into-sections"
+import { canEndpointConnectOnLayer } from "./can-endpoint-connect-on-layer"
 
 export interface UselessViaRemovalSolverInput {
   unsimplifiedHdRoutes: HighDensityRoute[]
@@ -23,7 +25,9 @@ export interface UselessViaRemovalSolverInput {
   geometryShortcutTraceMargin?: number
   geometryShortcutObstacleMargin?: number
   enableGeometryShortcuts?: boolean
+  enableEndpointGeometryShortcuts?: boolean
   enableObstacleDetourShortcuts?: boolean
+  onlyEndpointLayerChanges?: boolean
 }
 
 export class UselessViaRemovalSolver extends BaseSolver {
@@ -61,6 +65,33 @@ export class UselessViaRemovalSolver extends BaseSolver {
     ])
   }
 
+  private endpointCanChangeLayer(route: HighDensityRoute): boolean {
+    const sections = breakRouteIntoSections(route)
+    if (sections.length < 2) return false
+
+    const firstPoint = sections[0].points[0]
+    const lastSection = sections.at(-1)!
+    const lastPoint = lastSection.points.at(-1)!
+    return (
+      canEndpointConnectOnLayer({
+        endpointX: firstPoint.x,
+        endpointY: firstPoint.y,
+        targetZ: sections[1].z,
+        obstacleSHI: this.obstacleSHI!,
+        route,
+        connMap: this.input.connMap,
+      }) ||
+      canEndpointConnectOnLayer({
+        endpointX: lastPoint.x,
+        endpointY: lastPoint.y,
+        targetZ: sections.at(-2)!.z,
+        obstacleSHI: this.obstacleSHI!,
+        route,
+        connMap: this.input.connMap,
+      })
+    )
+  }
+
   _step() {
     if (this.activeSubSolver) {
       this.activeSubSolver.step()
@@ -83,6 +114,14 @@ export class UselessViaRemovalSolver extends BaseSolver {
       return
     }
 
+    if (
+      this.input.onlyEndpointLayerChanges &&
+      !this.endpointCanChangeLayer(unprocessedRoute)
+    ) {
+      this.optimizedHdRoutes.push(unprocessedRoute)
+      return
+    }
+
     this.activeSubSolver = new SingleRouteUselessViaRemovalSolver({
       hdRouteSHI: this.hdRouteSHI!,
       obstacleSHI: this.obstacleSHI!,
@@ -92,7 +131,10 @@ export class UselessViaRemovalSolver extends BaseSolver {
       geometryShortcutTraceMargin: this.input.geometryShortcutTraceMargin,
       geometryShortcutObstacleMargin: this.input.geometryShortcutObstacleMargin,
       enableGeometryShortcuts: this.input.enableGeometryShortcuts,
+      enableEndpointGeometryShortcuts:
+        this.input.enableEndpointGeometryShortcuts,
       enableObstacleDetourShortcuts: this.input.enableObstacleDetourShortcuts,
+      onlyEndpointLayerChanges: this.input.onlyEndpointLayerChanges,
     })
   }
 
