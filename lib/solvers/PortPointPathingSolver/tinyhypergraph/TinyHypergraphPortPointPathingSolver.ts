@@ -149,7 +149,9 @@ const TINY_SOLVE_GRAPH_BASE_OPTIONS: TinyHyperGraphSolverOptions = {
   PARTIAL_RIP_WARMUP_FULL_RIP_ATTEMPTS: 1,
   PARTIAL_RIP_COMPLEXITY_SELECTION_MIN_ROUTE_COUNT: 100,
   PARTIAL_RIP_TARGET_MAX_COST_IMPROVEMENT_RATIO: 0.02,
-  PARTIAL_RIP_MAX_REGION_COST_GROWTH_RATIO: 0.2,
+  // Keep the downstream-friendly segment selector, but no longer let it buy
+  // simpler topology with a large peak-congestion regression.
+  PARTIAL_RIP_MAX_REGION_COST_GROWTH_RATIO: 0.05,
   PARTIAL_RIP_MAX_TOTAL_COST_GROWTH_RATIO: 0.1,
 }
 const TINY_SECTION_SOLVER_BASE_OPTIONS: TinyHyperGraphSectionSolverOptions = {
