@@ -264,7 +264,9 @@ export const applyPipeline9RegionalB01Repairs = ({
   let acceptedCandidateCount = 0
   let fallbackCandidateCount = 0
 
-  for (let pass = 0; pass < 2; pass++) {
+  // A large-window candidate accepted late in a pass can relocate the final
+  // violation. Leave one follow-up pass to repair that new location.
+  for (let pass = 0; pass < 3; pass++) {
     let acceptedOnPass = false
     const routeIndexByTraceId = getPipeline9RouteIndexByTraceId({
       routes: currentRoutes,
