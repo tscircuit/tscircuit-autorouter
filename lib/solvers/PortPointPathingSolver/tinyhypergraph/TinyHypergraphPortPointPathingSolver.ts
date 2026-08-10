@@ -981,13 +981,12 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       params.flags.USE_PARTIAL_RIP_ROUTING_WITH_PRELOADED_TRACES === true
     // A small number of long preloaded routes can occupy as much of the
     // hypergraph as a much larger set of ordinary routes.
-    const partialRipEligibilityCount =
-      usePartialRipRoutingWithPreloadedTraces
-        ? Math.max(
-            serializedGraph.connections?.length ?? 0,
-            preloadedTraceStats.preloadedAssignmentCount,
-          )
-        : undefined
+    const partialRipEligibilityCount = usePartialRipRoutingWithPreloadedTraces
+      ? Math.max(
+          serializedGraph.connections?.length ?? 0,
+          preloadedTraceStats.preloadedAssignmentCount,
+        )
+      : undefined
     const shouldRunDuplicateCongestedPortPrepass =
       !hasPreloadedTraceOccupancy &&
       connections.length <= MAX_CONNECTIONS_FOR_DUPLICATE_CONGESTED_PORT_PREPASS
@@ -1036,8 +1035,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       },
       params.effort,
       params.minViaPadDiameter,
-      !hasPreloadedTraceOccupancy ||
-        usePartialRipRoutingWithPreloadedTraces,
+      !hasPreloadedTraceOccupancy || usePartialRipRoutingWithPreloadedTraces,
       partialRipEligibilityCount,
     )
     this.tinyPipelineSolver =
