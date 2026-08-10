@@ -22,5 +22,5 @@ test("Pipeline9 makes every preloaded trace in an SRJ23 sample 46 DRC region rer
     srjWithPointPairs: solver.srjWithPointPairs!,
     routedTraces: solver.getOutputSimplifiedPcbTraces(),
   })
-  expect(errors).toHaveLength(0)
+  expect(errors).toEqual([])
 })
