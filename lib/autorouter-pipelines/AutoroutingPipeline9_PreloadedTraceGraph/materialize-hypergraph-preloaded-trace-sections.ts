@@ -17,10 +17,7 @@ const ENDPOINT_POSITION_EPSILON = 1e-6
 const getSectionEndpoints = (
   section: ChangedPreloadedTraceSection,
   layerCount: number,
-): [
-  HighDensityRoute["route"][number],
-  HighDensityRoute["route"][number],
-] => {
+): [HighDensityRoute["route"][number], HighDensityRoute["route"][number]] => {
   const endpoints = section.connection.pointsToConnect.map((point) => ({
     x: point.x,
     y: point.y,

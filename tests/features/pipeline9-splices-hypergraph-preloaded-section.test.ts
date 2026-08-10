@@ -111,10 +111,7 @@ test("Pipeline9 splices a routed hypergraph section into its original trace ID",
   const materializedRoutes = getMaterializedPreloadedSectionHdRoutes({
     traces: [trace],
     sections: [section],
-    stitchedHdRoutes: [
-      ...stitchSolver.mergedHdRoutes,
-      disconnectedIsland,
-    ],
+    stitchedHdRoutes: [...stitchSolver.mergedHdRoutes, disconnectedIsland],
     layerCount: 2,
   })
 

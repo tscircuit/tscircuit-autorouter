@@ -176,8 +176,7 @@ export const applyFixedRouteReplacementsToPreloadedTraces = ({
     const combinedRoute: HighDensityRoute = {
       connectionName: trace.connection_name,
       rootConnectionName,
-      traceThickness:
-        getMaximumOriginalTraceThickness(trace) ?? traceThickness,
+      traceThickness: getMaximumOriginalTraceThickness(trace) ?? traceThickness,
       viaDiameter,
       route: combinedPoints,
       vias: combinedPoints.slice(0, -1).flatMap((point, pointIndex) => {
