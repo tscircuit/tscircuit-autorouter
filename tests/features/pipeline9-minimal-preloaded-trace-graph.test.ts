@@ -40,6 +40,20 @@ test("Pipeline9 owns copied stages with minimal preloaded-trace changes", () => 
   expect(
     solver.preprocessSimpleRouteJsonSolver?.getOutputSimpleRouteJson().traces,
   ).toEqual(srj.traces)
+  const portPointPathingStep = solver.pipelineDef.find(
+    (step) => step.solverName === "portPointPathingSolver",
+  )
+  const [portPointPathingParams] =
+    portPointPathingStep!.getConstructorParams(solver)
+  expect(
+    (
+      portPointPathingParams as {
+        flags: {
+          USE_PARTIAL_RIP_ROUTING_WITH_PRELOADED_TRACES?: boolean
+        }
+      }
+    ).flags.USE_PARTIAL_RIP_ROUTING_WITH_PRELOADED_TRACES,
+  ).toBeTrue()
   expect(solver.preloadedTraceGraphSolver?.stats).toMatchObject({
     preloadedTraceCount: 1,
     topologyChanged: false,

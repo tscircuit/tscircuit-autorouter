@@ -1,5 +1,8 @@
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
-import type { DrcEvaluator } from "high-density-repair03/lib"
+import {
+  GlobalDrcForceImproveSolver,
+  type DrcEvaluator,
+} from "high-density-repair03/lib"
 import type { SimpleRouteConnection, SimpleRouteJson } from "lib/types"
 import type { HighDensityRoute } from "lib/types/high-density-types"
 import type { PreloadedHighDensityRoute } from "./convert-preloaded-traces-to-hd-routes"
@@ -23,7 +26,7 @@ type RegionalB01RepairResult = {
   fallbackCandidateCount: number
 }
 
-const REGION_SIZES = [3, 4, 5]
+const REGION_SIZES = [3, 4, 5, 6]
 
 const getErrorCenter = (error: Pipeline9DrcError) => {
   const center = error.center
@@ -362,6 +365,39 @@ export const applyPipeline9RegionalB01Repairs = ({
       }
     }
     if (!acceptedOnPass || currentErrors.length === 0) break
+  }
+
+  const hasSafeLayerRepairableError = currentErrors.some(
+    (error) =>
+      error.type === "pcb_trace_error" ||
+      error.type === "pcb_pad_trace_clearance_error",
+  )
+  if (hasSafeLayerRepairableError) {
+    const safeTraceLayerSolver = new GlobalDrcForceImproveSolver({
+      srj: { ...srj, traces: undefined },
+      hdRoutes: currentRoutes,
+      connMap,
+      effort,
+      drcEvaluator,
+      maxIterations: 8,
+      enableLargeBoardBroadFallback: false,
+      enableTargetedErrorSweep: false,
+      enablePostSolveClearanceRelaxation: false,
+      enableSafeTraceLayerMoves: true,
+      enableViaInPadLayerMoves: false,
+    })
+    safeTraceLayerSolver.solve()
+    if (safeTraceLayerSolver.failed) {
+      throw new Error(
+        `Pipeline9 post-regional safe trace-layer repair failed: ${safeTraceLayerSolver.error ?? "unknown error"}`,
+      )
+    }
+    const safeLayerRoutes = safeTraceLayerSolver.getOutput()
+    const safeLayerErrors = getPipeline9DrcErrors(drcEvaluator, safeLayerRoutes)
+    if (isPipeline9DrcCandidateBetter(safeLayerErrors, currentErrors)) {
+      currentRoutes = safeLayerRoutes
+      currentErrors = safeLayerErrors
+    }
   }
 
   return {

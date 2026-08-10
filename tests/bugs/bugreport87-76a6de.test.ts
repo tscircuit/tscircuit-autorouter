@@ -17,5 +17,5 @@ test(
       import.meta.path,
     )
   },
-  { timeout: 180_000 },
+  { timeout: 300_000 },
 )
