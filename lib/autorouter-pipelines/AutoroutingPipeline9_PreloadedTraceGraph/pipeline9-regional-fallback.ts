@@ -379,6 +379,9 @@ export const spliceFixedRouteSection = (
 
   return {
     ...firstSourceRoute,
+    preloadedRoutePositionStart:
+      firstSourceRoute.preloadedRoutePositionStart,
+    preloadedRoutePositionEnd: lastSourceRoute.preloadedRoutePositionEnd,
     traceThickness: Math.max(
       ...section.sourceRoutes.map((sourceRoute) => sourceRoute.traceThickness),
     ),

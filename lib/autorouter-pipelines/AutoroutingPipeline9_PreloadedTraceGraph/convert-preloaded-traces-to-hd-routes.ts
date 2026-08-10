@@ -8,6 +8,8 @@ const MIN_ROUTE_DIMENSION = 1e-9
 export type PreloadedHighDensityRoute = HighDensityRoute & {
   preloadedTraceIndex: number
   preloadedRouteIndex: number
+  preloadedRoutePositionStart?: number
+  preloadedRoutePositionEnd?: number
 }
 
 export const convertPreloadedTraceToHdRoutes = (
@@ -25,6 +27,8 @@ export const convertPreloadedTraceToHdRoutes = (
     traceThickness: number,
     viaDiameter = defaultViaDiameter,
     vias: Array<{ x: number; y: number }> = [],
+    routePositionStart?: number,
+    routePositionEnd?: number,
   ) => {
     if (route.length < 2) return
     routes.push({
@@ -32,6 +36,8 @@ export const convertPreloadedTraceToHdRoutes = (
       rootConnectionName,
       preloadedTraceIndex: traceIndex,
       preloadedRouteIndex: routes.length,
+      preloadedRoutePositionStart: routePositionStart,
+      preloadedRoutePositionEnd: routePositionEnd,
       traceThickness: Math.max(MIN_ROUTE_DIMENSION, traceThickness),
       viaDiameter: Math.max(MIN_ROUTE_DIMENSION, viaDiameter),
       route,
@@ -58,6 +64,8 @@ export const convertPreloadedTraceToHdRoutes = (
         MIN_ROUTE_DIMENSION,
         point.via_diameter ?? defaultViaDiameter,
         [{ x: point.x, y: point.y }],
+        pointIndex,
+        pointIndex,
       )
       continue
     }
@@ -72,6 +80,10 @@ export const convertPreloadedTraceToHdRoutes = (
             { ...point.end, z },
           ],
           point.width,
+          defaultViaDiameter,
+          [],
+          pointIndex,
+          pointIndex + 1,
         )
       }
       continue
@@ -100,6 +112,10 @@ export const convertPreloadedTraceToHdRoutes = (
         },
       ],
       Math.max(point.width, nextPoint.width),
+      defaultViaDiameter,
+      [],
+      pointIndex,
+      pointIndex + 1,
     )
   }
 

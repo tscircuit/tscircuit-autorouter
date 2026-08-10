@@ -55,6 +55,24 @@ const appendConnectedRoute = (
   )
 }
 
+const comparePreloadedRouteOrder = (
+  left: PreloadedHighDensityRoute,
+  right: PreloadedHighDensityRoute,
+) => {
+  const leftStart =
+    left.preloadedRoutePositionStart ?? left.preloadedRouteIndex
+  const rightStart =
+    right.preloadedRoutePositionStart ?? right.preloadedRouteIndex
+  const leftEnd = left.preloadedRoutePositionEnd ?? leftStart
+  const rightEnd = right.preloadedRoutePositionEnd ?? rightStart
+  return (
+    leftStart - rightStart ||
+    leftEnd - rightEnd ||
+    left.preloadedRouteIndex - right.preloadedRouteIndex ||
+    left.connectionName.localeCompare(right.connectionName)
+  )
+}
+
 /**
  * Rebuilds only the preloaded traces touched by a regional fallback. Untouched
  * traces retain their original serialized representation and PCB trace ids.
@@ -105,7 +123,7 @@ export const applyFixedRouteReplacementsToPreloadedTraces = ({
   const updatedPreloadedTraces = originalTraces.map((trace, traceIndex) => {
     const originalTraceRoutes = (
       originalFixedRoutesByTraceIndex.get(traceIndex) ?? []
-    ).sort((a, b) => a.preloadedRouteIndex - b.preloadedRouteIndex)
+    ).sort(comparePreloadedRouteOrder)
     const traceWasMutated = originalTraceRoutes.some((route) =>
       replacedConnectionNames.has(route.connectionName),
     )
@@ -127,7 +145,7 @@ export const applyFixedRouteReplacementsToPreloadedTraces = ({
 
     const updatedTraceRoutes = (
       updatedFixedRoutesByTraceIndex.get(traceIndex) ?? []
-    ).sort((a, b) => a.preloadedRouteIndex - b.preloadedRouteIndex)
+    ).sort(comparePreloadedRouteOrder)
     if (updatedTraceRoutes.length === 0) {
       throw new Error(
         `Pipeline9 lost every fixed route for mutated trace "${trace.pcb_trace_id}"`,
