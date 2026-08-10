@@ -32,12 +32,12 @@ test("Pipeline9 splices a routed hypergraph section into its original trace ID",
     connMap,
   )
   const section = {
-    connectionName: "__tscircuit_preloaded_trace__:[\"pcb_trace_preloaded\",0]",
+    connectionName: '__tscircuit_preloaded_trace__:["pcb_trace_preloaded",0]',
     traceId: trace.pcb_trace_id,
     startRoutePosition: 0.25,
     endRoutePosition: 0.75,
     connection: {
-      name: "__tscircuit_preloaded_trace__:[\"pcb_trace_preloaded\",0]",
+      name: '__tscircuit_preloaded_trace__:["pcb_trace_preloaded",0]',
       __rootConnectionNames: ["preloaded-root"],
       pointsToConnect: [
         { x: 2.5, y: 0, layer: "top" },

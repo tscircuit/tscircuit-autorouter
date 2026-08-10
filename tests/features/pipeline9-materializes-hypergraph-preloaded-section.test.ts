@@ -117,8 +117,7 @@ test("Pipeline9 exposes an accepted preloaded hypergraph route change", () => {
     throw new Error("Test hypergraph is missing preloaded route metadata")
   }
   tinySolver.state.regionSegments = tinySolver.state.regionSegments.map(
-    (segments) =>
-      segments.filter(([routeId]) => routeId !== preloadedRouteId),
+    (segments) => segments.filter(([routeId]) => routeId !== preloadedRouteId),
   )
   tinySolver.state.regionSegments[centerRegionId]!.push([
     preloadedRouteId,

@@ -1194,8 +1194,8 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
 
   private getChangedPreloadedTraceSections(): ChangedPreloadedTraceSection[] {
     return (
-      this.portPointPathingSolver?.getOutput()
-        .changedPreloadedTraceSections ?? []
+      this.portPointPathingSolver?.getOutput().changedPreloadedTraceSections ??
+      []
     )
   }
 

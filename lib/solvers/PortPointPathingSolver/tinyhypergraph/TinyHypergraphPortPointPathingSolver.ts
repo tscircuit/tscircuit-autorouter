@@ -1136,7 +1136,8 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
     const initialSegmentKeysByRouteId = new Map<number, Set<string>>()
     const solvedSegmentKeysByRouteId = new Map<number, Set<string>>()
 
-    for (const assignment of solvedTinySolver.problem.initialAssignments ?? []) {
+    for (const assignment of solvedTinySolver.problem.initialAssignments ??
+      []) {
       const routeSegmentKeys =
         initialSegmentKeysByRouteId.get(assignment.routeId) ?? new Set<string>()
       routeSegmentKeys.add(
@@ -1191,10 +1192,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
 
       const portPointsInPairs = regionSegments[regionId]
         .filter(([routeId]) => {
-          const routeMetadata = this.getRouteMetadata(
-            solvedTinySolver,
-            routeId,
-          )
+          const routeMetadata = this.getRouteMetadata(solvedTinySolver, routeId)
           return (
             !hasPreloadedTraceSectionMetadata(routeMetadata) ||
             changedPreloadedRouteIds.has(routeId)
@@ -1234,45 +1232,45 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       })
     }
 
-    const changedPreloadedTraceSections = [
-      ...changedPreloadedRouteIds,
-    ].map((routeId): ChangedPreloadedTraceSection => {
-      const routeMetadata = this.getRouteMetadata(solvedTinySolver, routeId)
-      if (!hasPreloadedTraceSectionMetadata(routeMetadata)) {
-        throw new Error(
-          `Changed preloaded hypergraph route ${routeId} is missing section metadata`,
-        )
-      }
-      const section = routeMetadata.preloadedTraceSection
-      return {
-        connectionName: routeMetadata.connectionId,
-        traceId: section.traceId,
-        startRoutePosition: section.startRoutePosition,
-        endRoutePosition: section.endRoutePosition,
-        connection: {
-          name: routeMetadata.connectionId,
-          __rootConnectionNames: [routeMetadata.mutuallyConnectedNetworkId],
-          pointsToConnect: [
-            {
-              x: section.startPoint.x,
-              y: section.startPoint.y,
-              layer: mapZToLayerName(
-                section.startPoint.z,
-                this.params.layerCount,
-              ),
-            },
-            {
-              x: section.endPoint.x,
-              y: section.endPoint.y,
-              layer: mapZToLayerName(
-                section.endPoint.z,
-                this.params.layerCount,
-              ),
-            },
-          ],
-        },
-      }
-    })
+    const changedPreloadedTraceSections = [...changedPreloadedRouteIds].map(
+      (routeId): ChangedPreloadedTraceSection => {
+        const routeMetadata = this.getRouteMetadata(solvedTinySolver, routeId)
+        if (!hasPreloadedTraceSectionMetadata(routeMetadata)) {
+          throw new Error(
+            `Changed preloaded hypergraph route ${routeId} is missing section metadata`,
+          )
+        }
+        const section = routeMetadata.preloadedTraceSection
+        return {
+          connectionName: routeMetadata.connectionId,
+          traceId: section.traceId,
+          startRoutePosition: section.startRoutePosition,
+          endRoutePosition: section.endRoutePosition,
+          connection: {
+            name: routeMetadata.connectionId,
+            __rootConnectionNames: [routeMetadata.mutuallyConnectedNetworkId],
+            pointsToConnect: [
+              {
+                x: section.startPoint.x,
+                y: section.startPoint.y,
+                layer: mapZToLayerName(
+                  section.startPoint.z,
+                  this.params.layerCount,
+                ),
+              },
+              {
+                x: section.endPoint.x,
+                y: section.endPoint.y,
+                layer: mapZToLayerName(
+                  section.endPoint.z,
+                  this.params.layerCount,
+                ),
+              },
+            ],
+          },
+        }
+      },
+    )
     this.stats.changedPreloadedTraceSectionCount =
       changedPreloadedTraceSections.length
 

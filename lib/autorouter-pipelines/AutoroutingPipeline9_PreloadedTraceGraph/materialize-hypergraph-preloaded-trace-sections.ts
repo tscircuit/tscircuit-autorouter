@@ -39,7 +39,9 @@ const getSectionRangesByTraceIndex = ({
   }
 
   for (const ranges of rangesByTraceIndex.values()) {
-    ranges.sort((left, right) => left.start - right.start || left.end - right.end)
+    ranges.sort(
+      (left, right) => left.start - right.start || left.end - right.end,
+    )
   }
   return rangesByTraceIndex
 }
@@ -82,9 +84,7 @@ export const removeChangedSectionsFromFixedHdRoutes = ({
   const rangesByTraceIndex = getSectionRangesByTraceIndex({ traces, sections })
 
   return fixedHdRoutes.flatMap((fixedRoute) => {
-    const sectionRanges = rangesByTraceIndex.get(
-      fixedRoute.preloadedTraceIndex,
-    )
+    const sectionRanges = rangesByTraceIndex.get(fixedRoute.preloadedTraceIndex)
     if (!sectionRanges?.length) return [fixedRoute]
 
     const routeStart = fixedRoute.preloadedRoutePositionStart
@@ -111,8 +111,7 @@ export const removeChangedSectionsFromFixedHdRoutes = ({
     for (const removedRange of sectionRanges) {
       remainingRanges = remainingRanges.flatMap((remainingRange) => {
         if (
-          removedRange.end <=
-            remainingRange.start + ROUTE_POSITION_EPSILON ||
+          removedRange.end <= remainingRange.start + ROUTE_POSITION_EPSILON ||
           removedRange.start >= remainingRange.end - ROUTE_POSITION_EPSILON
         ) {
           return [remainingRange]
@@ -128,9 +127,7 @@ export const removeChangedSectionsFromFixedHdRoutes = ({
             end: Math.min(removedRange.start, remainingRange.end),
           })
         }
-        if (
-          removedRange.end < remainingRange.end - ROUTE_POSITION_EPSILON
-        ) {
+        if (removedRange.end < remainingRange.end - ROUTE_POSITION_EPSILON) {
           splitRanges.push({
             start: Math.max(removedRange.end, remainingRange.start),
             end: remainingRange.end,

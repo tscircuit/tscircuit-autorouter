@@ -59,8 +59,7 @@ const comparePreloadedRouteOrder = (
   left: PreloadedHighDensityRoute,
   right: PreloadedHighDensityRoute,
 ) => {
-  const leftStart =
-    left.preloadedRoutePositionStart ?? left.preloadedRouteIndex
+  const leftStart = left.preloadedRoutePositionStart ?? left.preloadedRouteIndex
   const rightStart =
     right.preloadedRoutePositionStart ?? right.preloadedRouteIndex
   const leftEnd = left.preloadedRoutePositionEnd ?? leftStart
