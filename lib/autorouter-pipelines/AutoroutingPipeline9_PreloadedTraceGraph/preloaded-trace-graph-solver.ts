@@ -206,6 +206,10 @@ const preloadPort = (
     routePosition:
       primitive.routePositionStart +
       projection * (primitive.routePositionEnd - primitive.routePositionStart),
+    tracePoint: {
+      x: primitive.start.x + projection * dx,
+      y: primitive.start.y + projection * dy,
+    },
     z,
   }
   const existingAssignments = portPoint._preloadedTracePortAssignments ?? []

@@ -7,13 +7,18 @@ import type {
   InputPortPoint,
 } from "lib/solvers/PortPointPathingSolver/PortPointPathingSolver"
 import { calculateNodeProbabilityOfFailure } from "lib/solvers/UnravelSolver/calculateCrossingProbabilityOfFailure"
-import { type CapacityMeshNodeId, getConnectionPointLayers } from "lib/types"
+import {
+  type CapacityMeshNodeId,
+  getConnectionPointLayers,
+  type SimpleRouteConnection,
+} from "lib/types"
 import type {
   NodeWithPortPoints,
   PortPoint,
 } from "lib/types/high-density-types"
 import { getIntraNodeCrossingsUsingCircle } from "lib/utils/getIntraNodeCrossingsUsingCircle"
 import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
+import { mapZToLayerName } from "lib/utils/mapZToLayerName"
 import {
   DuplicateCongestedPortSolver,
   orderConnectionsByNetCardinality,
@@ -35,7 +40,9 @@ import { getRegionNetIdByRegionId } from "./getRegionNetIdByRegionId"
 import { SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments } from "./SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments"
 import {
   getSerializedPreloadedTraceStats,
-  isPreloadedTraceConnectionId,
+  hasPreloadedTraceSectionMetadata,
+  type PreloadedTraceConnectionId,
+  type PreloadedTraceSectionMetadata,
   serializePreloadedTraceAssignments,
 } from "./serializePreloadedTraceAssignments"
 
@@ -45,6 +52,15 @@ type RouteMetadata = {
   startRegionId?: string
   endRegionId?: string
   simpleRouteConnection?: HgPortPointPathingSolverParams["connections"][number]["simpleRouteConnection"]
+  preloadedTraceSection?: PreloadedTraceSectionMetadata
+}
+
+export type ChangedPreloadedTraceSection = {
+  connectionName: PreloadedTraceConnectionId
+  traceId: string
+  startRoutePosition: number
+  endRoutePosition: number
+  connection: SimpleRouteConnection
 }
 
 type SerializedTinyConnection = NonNullable<
@@ -609,7 +625,7 @@ const clearPreloadedEndpointRegionNetIds = (loaded: LoadedTinyGraph) => {
 
   const activeEndpointRegionIds = new Set<string>()
   for (const routeMetadata of loaded.problem.routeMetadata ?? []) {
-    if (isPreloadedTraceConnectionId(routeMetadata.connectionId)) continue
+    if (hasPreloadedTraceSectionMetadata(routeMetadata)) continue
     if (typeof routeMetadata.startRegionId === "string") {
       activeEndpointRegionIds.add(routeMetadata.startRegionId)
     }
@@ -619,7 +635,7 @@ const clearPreloadedEndpointRegionNetIds = (loaded: LoadedTinyGraph) => {
   }
 
   for (const routeMetadata of loaded.problem.routeMetadata ?? []) {
-    if (!isPreloadedTraceConnectionId(routeMetadata.connectionId)) continue
+    if (!hasPreloadedTraceSectionMetadata(routeMetadata)) continue
     for (const serializedRegionId of [
       routeMetadata.startRegionId,
       routeMetadata.endRegionId,
@@ -1142,7 +1158,9 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       ? getRouteConnectionName(routeMetadata)
       : `route-${routeId}`
     const rootConnectionName = routeMetadata
-      ? this.rootConnectionNameByConnectionId.get(routeMetadata.connectionId)
+      ? (this.rootConnectionNameByConnectionId.get(
+          routeMetadata.connectionId,
+        ) ?? routeMetadata.mutuallyConnectedNetworkId)
       : undefined
     const portMetadata = solvedTinySolver.topology.portMetadata?.[portId]
 
@@ -1175,11 +1193,59 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
   getOutput(): {
     nodesWithPortPoints: NodeWithPortPoints[]
     inputNodeWithPortPoints: InputNodeWithPortPoints[]
+    changedPreloadedTraceSections: ChangedPreloadedTraceSection[]
   } {
     const solvedTinySolver = this.getSolvedTinySolver()
     const nodesWithPortPoints: NodeWithPortPoints[] = []
     const regionSegments = solvedTinySolver.state.regionSegments
     const regionMetadata = solvedTinySolver.topology.regionMetadata ?? []
+    const initialSegmentKeysByRouteId = new Map<number, Set<string>>()
+    const solvedSegmentKeysByRouteId = new Map<number, Set<string>>()
+
+    for (const assignment of solvedTinySolver.problem.initialAssignments ??
+      []) {
+      const routeSegmentKeys =
+        initialSegmentKeysByRouteId.get(assignment.routeId) ?? new Set<string>()
+      routeSegmentKeys.add(
+        `${assignment.regionId}:${Math.min(assignment.fromPortId, assignment.toPortId)}:${Math.max(assignment.fromPortId, assignment.toPortId)}`,
+      )
+      initialSegmentKeysByRouteId.set(assignment.routeId, routeSegmentKeys)
+    }
+    for (let regionId = 0; regionId < regionSegments.length; regionId++) {
+      for (const [routeId, fromPortId, toPortId] of regionSegments[regionId]) {
+        const routeSegmentKeys =
+          solvedSegmentKeysByRouteId.get(routeId) ?? new Set<string>()
+        routeSegmentKeys.add(
+          `${regionId}:${Math.min(fromPortId, toPortId)}:${Math.max(fromPortId, toPortId)}`,
+        )
+        solvedSegmentKeysByRouteId.set(routeId, routeSegmentKeys)
+      }
+    }
+
+    const changedPreloadedRouteIds = new Set<number>()
+    for (
+      let routeId = 0;
+      routeId < solvedTinySolver.problem.routeCount;
+      routeId++
+    ) {
+      const routeMetadata = this.getRouteMetadata(solvedTinySolver, routeId)
+      if (!hasPreloadedTraceSectionMetadata(routeMetadata)) {
+        continue
+      }
+      const initialKeys = initialSegmentKeysByRouteId.get(routeId) ?? new Set()
+      const solvedKeys = solvedSegmentKeysByRouteId.get(routeId) ?? new Set()
+      if (initialKeys.size > 0 && solvedKeys.size === 0) {
+        throw new Error(
+          `Tiny hypergraph lost preloaded trace section "${routeMetadata.connectionId}"`,
+        )
+      }
+      if (
+        initialKeys.size !== solvedKeys.size ||
+        [...initialKeys].some((key) => !solvedKeys.has(key))
+      ) {
+        changedPreloadedRouteIds.add(routeId)
+      }
+    }
 
     for (let regionId = 0; regionId < regionSegments.length; regionId++) {
       const originalRegionId = regionMetadata[regionId]?.capacityMeshNodeId
@@ -1192,13 +1258,10 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
 
       const portPointsInPairs = regionSegments[regionId]
         .filter(([routeId]) => {
-          const connectionId = this.getRouteMetadata(
-            solvedTinySolver,
-            routeId,
-          )?.connectionId
+          const routeMetadata = this.getRouteMetadata(solvedTinySolver, routeId)
           return (
-            typeof connectionId !== "string" ||
-            !isPreloadedTraceConnectionId(connectionId)
+            !hasPreloadedTraceSectionMetadata(routeMetadata) ||
+            changedPreloadedRouteIds.has(routeId)
           )
         })
         .map(([routeId, fromPortId, toPortId]) => {
@@ -1235,9 +1298,52 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       })
     }
 
+    const changedPreloadedTraceSections = [...changedPreloadedRouteIds].map(
+      (routeId): ChangedPreloadedTraceSection => {
+        const routeMetadata = this.getRouteMetadata(solvedTinySolver, routeId)
+        if (!hasPreloadedTraceSectionMetadata(routeMetadata)) {
+          throw new Error(
+            `Changed preloaded hypergraph route ${routeId} is missing section metadata`,
+          )
+        }
+        const section = routeMetadata.preloadedTraceSection
+        return {
+          connectionName: routeMetadata.connectionId,
+          traceId: section.traceId,
+          startRoutePosition: section.startRoutePosition,
+          endRoutePosition: section.endRoutePosition,
+          connection: {
+            name: routeMetadata.connectionId,
+            __rootConnectionNames: [routeMetadata.mutuallyConnectedNetworkId],
+            pointsToConnect: [
+              {
+                x: section.startPoint.x,
+                y: section.startPoint.y,
+                layer: mapZToLayerName(
+                  section.startPoint.z,
+                  this.params.layerCount,
+                ),
+              },
+              {
+                x: section.endPoint.x,
+                y: section.endPoint.y,
+                layer: mapZToLayerName(
+                  section.endPoint.z,
+                  this.params.layerCount,
+                ),
+              },
+            ],
+          },
+        }
+      },
+    )
+    this.stats.changedPreloadedTraceSectionCount =
+      changedPreloadedTraceSections.length
+
     return {
       nodesWithPortPoints,
       inputNodeWithPortPoints: this.inputNodeWithPortPoints,
+      changedPreloadedTraceSections,
     }
   }
 
