@@ -48,9 +48,7 @@ test("escape vias honor the explicit via-to-pad clearance", () => {
     connections: [
       {
         name: "net.GND",
-        pointsToConnect: [
-          { x: 0, y: 0, layer: "top", pointId: "source-pad" },
-        ],
+        pointsToConnect: [{ x: 0, y: 0, layer: "top", pointId: "source-pad" }],
       },
     ],
   }
@@ -66,8 +64,7 @@ test("escape vias honor the explicit via-to-pad clearance", () => {
 
   expect(escapePoint).toBeDefined()
   for (const pad of neighboringPads) {
-    const clearance =
-      pointToBoxDistance(escapePoint!, pad) - viaDiameter / 2
+    const clearance = pointToBoxDistance(escapePoint!, pad) - viaDiameter / 2
     expect(clearance).toBeGreaterThanOrEqual(requiredClearance - 1e-4)
   }
 })

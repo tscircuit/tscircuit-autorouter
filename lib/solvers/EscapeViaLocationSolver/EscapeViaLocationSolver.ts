@@ -615,10 +615,7 @@ export class EscapeViaLocationSolver extends BaseSolver {
       const clearance = pointToBoxDistance(candidate, obstacle) - this.viaRadius
       minClearance = Math.min(minClearance, clearance)
 
-      if (
-        minClearance + GEOMETRIC_TOLERANCE <
-        this.requiredViaToPadClearance
-      ) {
+      if (minClearance + GEOMETRIC_TOLERANCE < this.requiredViaToPadClearance) {
         return minClearance
       }
     }
