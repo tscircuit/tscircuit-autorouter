@@ -43,6 +43,39 @@ export type WorkerProgress = {
   activeSubSolverIterations?: number
 }
 
+export type TinyHypergraphBenchmarkMetrics = {
+  routeCount: number
+  iterations: number
+  timeMs?: number
+  ripCount?: number
+  partialRipCount?: number
+  partiallyRippedRouteCount?: number
+  partiallyRippedSegmentCount?: number
+  retainedPartialRipSegmentCount?: number
+  firstMaxRegionCost?: number
+  bestMaxRegionCost?: number
+  firstTotalRegionCost?: number
+  bestTotalRegionCost?: number
+  firstSegmentCount?: number
+  bestSolvedSegmentCount?: number
+  bestSolvedMaxRegionSegmentCount?: number
+  bestSolvedSquaredRegionSegmentCount?: number
+  finalMaxRegionSegmentCount: number
+  finalSquaredRegionSegmentCount: number
+  warmupFullRipAttempts?: number
+  complexityAwareSelection?: boolean
+  targetReached?: boolean
+  outsideInCompletedRouteCount?: number
+  outsideInFallbackRouteCount?: number
+  outsideInForwardExpansionCount?: number
+  outsideInReverseExpansionCount?: number
+}
+
+export type RoutingBenchmarkMetrics = {
+  tinyHypergraph?: TinyHypergraphBenchmarkMetrics
+  highDensityIterations?: number
+}
+
 export type WorkerResult<
   TBenchmarkSnapshot extends BenchmarkSnapshot = BenchmarkSnapshot,
 > = {
@@ -63,6 +96,7 @@ export type WorkerResult<
   errorPhaseName?: string
   errorSolverName?: string
   error?: string
+  routingMetrics?: RoutingBenchmarkMetrics
   benchmarkSnapshot?: TBenchmarkSnapshot
 }
 

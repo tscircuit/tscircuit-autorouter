@@ -127,6 +127,13 @@ const TINY_SOLVE_GRAPH_BASE_OPTIONS: TinyHyperGraphSolverOptions = {
   RIP_CONGESTION_REGION_COST_FACTOR: 0.1,
   ACCEPT_BEST_SOLUTION_ON_TIMEOUT: true,
   GREEDY_FINAL_ROUTE_ITERS: 4,
+  PARTIAL_RIP_MIN_ROUTE_COUNT: 20,
+  PARTIAL_RIP_MAX_ATTEMPTS: 10,
+  PARTIAL_RIP_WARMUP_FULL_RIP_ATTEMPTS: 1,
+  PARTIAL_RIP_COMPLEXITY_SELECTION_MIN_ROUTE_COUNT: 100,
+  PARTIAL_RIP_TARGET_MAX_COST_IMPROVEMENT_RATIO: 0.02,
+  PARTIAL_RIP_MAX_REGION_COST_GROWTH_RATIO: 0.2,
+  PARTIAL_RIP_MAX_TOTAL_COST_GROWTH_RATIO: 0.1,
 }
 const TINY_SECTION_SOLVER_BASE_OPTIONS: TinyHyperGraphSectionSolverOptions = {
   DISTANCE_TO_COST: 0.05,
@@ -183,13 +190,19 @@ const getTinyHyperGraphPipelineInput = (
   serializedHyperGraph: SerializedHyperGraph,
   effort: number,
   minViaPadDiameter?: number,
+  enablePartialRip = true,
 ): TinyHyperGraphSectionPipelineInput => ({
   serializedHyperGraph,
   createSectionMask: ({ topology }) => new Int8Array(topology.portCount),
-  solveGraphOptions: getTinyHyperGraphSolveGraphOptions(
-    effort,
-    minViaPadDiameter,
-  ),
+  solveGraphOptions: {
+    ...getTinyHyperGraphSolveGraphOptions(effort, minViaPadDiameter),
+    ...(enablePartialRip
+      ? {}
+      : {
+          PARTIAL_RIP_ENABLED: false,
+          OUTSIDE_IN_ROUTING: false,
+        }),
+  },
   sectionSolverOptions: getTinyHyperGraphSectionSolverOptions(
     effort,
     minViaPadDiameter,
@@ -955,6 +968,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       },
       params.effort,
       params.minViaPadDiameter,
+      !hasPreloadedTraceOccupancy,
     )
     this.tinyPipelineSolver =
       new TinyHyperGraphSectionPipelineWithTerminalNetIds(
@@ -976,6 +990,57 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
 
   getSolverName(): string {
     return "TinyHypergraphPortPointPathingSolver"
+  }
+
+  getSolveGraphBenchmarkMetrics() {
+    const solveGraphSolver =
+      this.tinyPipelineSolver.getSolver<TinyHyperGraphSolver>("solveGraph")
+    if (!solveGraphSolver) return undefined
+
+    const regionSegmentCounts = solveGraphSolver.state.regionSegments.map(
+      (segments) => segments.length,
+    )
+    const solveGraphStats = solveGraphSolver.stats
+    const solveGraphStageStats =
+      this.tinyPipelineSolver.getStageStats().solveGraph
+
+    return {
+      routeCount: solveGraphSolver.problem.routeCount,
+      iterations: solveGraphSolver.iterations,
+      timeMs: solveGraphStageStats?.timeSpent,
+      ripCount: solveGraphStats.ripCount,
+      partialRipCount: solveGraphStats.partialRipCount,
+      partiallyRippedRouteCount: solveGraphStats.partiallyRippedRouteCount,
+      partiallyRippedSegmentCount: solveGraphStats.partiallyRippedSegmentCount,
+      retainedPartialRipSegmentCount:
+        solveGraphStats.retainedPartialRipSegmentCount,
+      firstMaxRegionCost: solveGraphStats.firstMaxRegionCost,
+      bestMaxRegionCost: solveGraphStats.bestMaxRegionCost,
+      firstTotalRegionCost: solveGraphStats.firstTotalRegionCost,
+      bestTotalRegionCost: solveGraphStats.bestTotalRegionCost,
+      firstSegmentCount: solveGraphStats.firstSegmentCount,
+      bestSolvedSegmentCount: solveGraphStats.bestSolvedSegmentCount,
+      bestSolvedMaxRegionSegmentCount:
+        solveGraphStats.bestSolvedMaxRegionSegmentCount,
+      bestSolvedSquaredRegionSegmentCount:
+        solveGraphStats.bestSolvedSquaredRegionSegmentCount,
+      finalMaxRegionSegmentCount: Math.max(0, ...regionSegmentCounts),
+      finalSquaredRegionSegmentCount: regionSegmentCounts.reduce(
+        (sum, count) => sum + count * count,
+        0,
+      ),
+      warmupFullRipAttempts: solveGraphStats.partialRipWarmupFullRipAttempts,
+      complexityAwareSelection:
+        solveGraphStats.partialRipComplexityAwareSelection,
+      targetReached: solveGraphStats.partialRipTargetReached,
+      outsideInCompletedRouteCount:
+        solveGraphStats.outsideInCompletedRouteCount,
+      outsideInFallbackRouteCount: solveGraphStats.outsideInFallbackRouteCount,
+      outsideInForwardExpansionCount:
+        solveGraphStats.outsideInForwardExpansionCount,
+      outsideInReverseExpansionCount:
+        solveGraphStats.outsideInReverseExpansionCount,
+    }
   }
 
   _step() {
