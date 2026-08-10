@@ -97,6 +97,7 @@ export class EscapeViaLocationSolver extends BaseSolver {
   obstacleMargin: number
   escapeOffset: number
   requiredTraceClearance: number
+  requiredViaToPadClearance: number
   requiredViaToViaClearance: number
   outputSrj: SimpleRouteJson
   escapeViaMetadataByPointId: Map<string, EscapeViaMetadata>
@@ -113,8 +114,13 @@ export class EscapeViaLocationSolver extends BaseSolver {
     this.minTraceWidth = opts.minTraceWidth ?? ogSrj.minTraceWidth
     this.obstacleMargin =
       opts.obstacleMargin ?? ogSrj.defaultObstacleMargin ?? 0.15
+    this.requiredViaToPadClearance = Math.max(
+      this.obstacleMargin,
+      ogSrj.minViaEdgeToPadEdgeClearance ?? 0,
+    )
     this.escapeOffset =
-      this.viaRadius + Math.max(this.minTraceWidth / 2, this.obstacleMargin)
+      this.viaRadius +
+      Math.max(this.minTraceWidth / 2, this.requiredViaToPadClearance)
     this.requiredTraceClearance =
       this.minTraceWidth / 2 + this.obstacleMargin / 2
     this.requiredViaToViaClearance = this.viaDiameter + this.obstacleMargin
@@ -609,7 +615,10 @@ export class EscapeViaLocationSolver extends BaseSolver {
       const clearance = pointToBoxDistance(candidate, obstacle) - this.viaRadius
       minClearance = Math.min(minClearance, clearance)
 
-      if (minClearance + GEOMETRIC_TOLERANCE < this.obstacleMargin) {
+      if (
+        minClearance + GEOMETRIC_TOLERANCE <
+        this.requiredViaToPadClearance
+      ) {
         return minClearance
       }
     }
@@ -738,7 +747,12 @@ export class EscapeViaLocationSolver extends BaseSolver {
           sourceZ,
           targetZ,
         })
-        if (minClearance + GEOMETRIC_TOLERANCE < this.obstacleMargin) continue
+        if (
+          minClearance + GEOMETRIC_TOLERANCE <
+          this.requiredViaToPadClearance
+        ) {
+          continue
+        }
         const minPlacedEscapeViaClearance =
           this.getMinPlacedEscapeViaClearance(candidate)
         if (
