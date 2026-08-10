@@ -1219,6 +1219,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             sections: changedSections,
             stitchedHdRoutes:
               this.highDensityStitchSolver?.mergedHdRoutes ?? [],
+            layerCount: this.originalSrj.layerCount,
           })
     const materializedTraceIds = new Set(
       changedSections.map((section) => section.traceId),

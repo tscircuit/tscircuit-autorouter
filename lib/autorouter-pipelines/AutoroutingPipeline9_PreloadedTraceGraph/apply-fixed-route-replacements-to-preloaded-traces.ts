@@ -72,6 +72,18 @@ const comparePreloadedRouteOrder = (
   )
 }
 
+const getMaximumOriginalTraceThickness = (
+  trace: SimplifiedPcbTrace,
+): number | undefined => {
+  const traceWidths = trace.route.flatMap((routePoint) =>
+    routePoint.route_type === "wire" ||
+    routePoint.route_type === "through_obstacle"
+      ? [routePoint.width]
+      : [],
+  )
+  return traceWidths.length > 0 ? Math.max(...traceWidths) : undefined
+}
+
 /**
  * Rebuilds only the preloaded traces touched by a regional fallback. Untouched
  * traces retain their original serialized representation and PCB trace ids.
@@ -164,7 +176,8 @@ export const applyFixedRouteReplacementsToPreloadedTraces = ({
     const combinedRoute: HighDensityRoute = {
       connectionName: trace.connection_name,
       rootConnectionName,
-      traceThickness,
+      traceThickness:
+        getMaximumOriginalTraceThickness(trace) ?? traceThickness,
       viaDiameter,
       route: combinedPoints,
       vias: combinedPoints.slice(0, -1).flatMap((point, pointIndex) => {

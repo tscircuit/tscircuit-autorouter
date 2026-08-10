@@ -1,6 +1,9 @@
+import { distance } from "@tscircuit/math-utils"
 import type { ChangedPreloadedTraceSection } from "lib/solvers/PortPointPathingSolver/tinyhypergraph/TinyHypergraphPortPointPathingSolver"
 import type { SimplifiedPcbTrace } from "lib/types"
 import type { HighDensityRoute } from "lib/types/high-density-types"
+import { getConnectionPointLayer } from "lib/types/srj-types"
+import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
 import type { PreloadedHighDensityRoute } from "./convert-preloaded-traces-to-hd-routes"
 
 type RoutePositionRange = {
@@ -9,6 +12,113 @@ type RoutePositionRange = {
 }
 
 const ROUTE_POSITION_EPSILON = 1e-9
+const ENDPOINT_POSITION_EPSILON = 1e-6
+
+const getSectionEndpoints = (
+  section: ChangedPreloadedTraceSection,
+  layerCount: number,
+): [
+  HighDensityRoute["route"][number],
+  HighDensityRoute["route"][number],
+] => {
+  const endpoints = section.connection.pointsToConnect.map((point) => ({
+    x: point.x,
+    y: point.y,
+    z: mapLayerNameToZ(getConnectionPointLayer(point), layerCount),
+  }))
+  if (!endpoints[0] || !endpoints[1]) {
+    throw new Error(
+      `Pipeline9 changed section "${section.connectionName}" is missing an endpoint`,
+    )
+  }
+  return [endpoints[0], endpoints[1]]
+}
+
+const getEndpointAlignment = ({
+  route,
+  sectionStart,
+  sectionEnd,
+}: {
+  route: HighDensityRoute
+  sectionStart: HighDensityRoute["route"][number]
+  sectionEnd: HighDensityRoute["route"][number]
+}): { score: number; reverse: boolean } | null => {
+  const routeStart = route.route[0]
+  const routeEnd = route.route.at(-1)
+  if (!routeStart || !routeEnd) return null
+
+  const directLayersMatch =
+    routeStart.z === sectionStart.z && routeEnd.z === sectionEnd.z
+  const reverseLayersMatch =
+    routeStart.z === sectionEnd.z && routeEnd.z === sectionStart.z
+  const directScore = directLayersMatch
+    ? distance(routeStart, sectionStart) + distance(routeEnd, sectionEnd)
+    : Number.POSITIVE_INFINITY
+  const reverseScore = reverseLayersMatch
+    ? distance(routeStart, sectionEnd) + distance(routeEnd, sectionStart)
+    : Number.POSITIVE_INFINITY
+  if (!Number.isFinite(directScore) && !Number.isFinite(reverseScore)) {
+    return null
+  }
+  return directScore <= reverseScore
+    ? { score: directScore, reverse: false }
+    : { score: reverseScore, reverse: true }
+}
+
+const reverseRoutePoints = (
+  route: HighDensityRoute["route"],
+): HighDensityRoute["route"] => {
+  const reversed = [...route].reverse().map((point) => {
+    const { toNextSegmentType, ...pointWithoutSegmentType } = point
+    return pointWithoutSegmentType
+  }) as HighDensityRoute["route"]
+
+  for (let pointIndex = 0; pointIndex < route.length - 1; pointIndex++) {
+    const segmentType = route[pointIndex]?.toNextSegmentType
+    if (!segmentType) continue
+    reversed[route.length - pointIndex - 2] = {
+      ...reversed[route.length - pointIndex - 2]!,
+      toNextSegmentType: segmentType,
+    }
+  }
+  return reversed
+}
+
+const pointsMatch = (
+  left: HighDensityRoute["route"][number],
+  right: HighDensityRoute["route"][number],
+): boolean =>
+  Math.abs(left.x - right.x) <= ENDPOINT_POSITION_EPSILON &&
+  Math.abs(left.y - right.y) <= ENDPOINT_POSITION_EPSILON &&
+  left.z === right.z
+
+const connectRouteToSectionEndpoints = ({
+  route,
+  reverse,
+  sectionStart,
+  sectionEnd,
+}: {
+  route: HighDensityRoute
+  reverse: boolean
+  sectionStart: HighDensityRoute["route"][number]
+  sectionEnd: HighDensityRoute["route"][number]
+}): HighDensityRoute => {
+  const routePoints = reverse
+    ? reverseRoutePoints(route.route)
+    : [...route.route]
+  if (!routePoints[0] || !routePoints.at(-1)) {
+    throw new Error(
+      `Pipeline9 cannot materialize empty route "${route.connectionName}"`,
+    )
+  }
+  if (!pointsMatch(routePoints[0], sectionStart)) {
+    routePoints.unshift(sectionStart)
+  }
+  if (!pointsMatch(routePoints.at(-1)!, sectionEnd)) {
+    routePoints.push(sectionEnd)
+  }
+  return { ...route, route: routePoints }
+}
 
 const getTraceIndexById = (traces: SimplifiedPcbTrace[]) =>
   new Map(traces.map((trace, traceIndex) => [trace.pcb_trace_id, traceIndex]))
@@ -165,10 +275,12 @@ export const getMaterializedPreloadedSectionHdRoutes = ({
   traces,
   sections,
   stitchedHdRoutes,
+  layerCount,
 }: {
   traces: SimplifiedPcbTrace[]
   sections: ChangedPreloadedTraceSection[]
   stitchedHdRoutes: HighDensityRoute[]
+  layerCount: number
 }): PreloadedHighDensityRoute[] => {
   const traceIndexById = getTraceIndexById(traces)
 
@@ -179,15 +291,35 @@ export const getMaterializedPreloadedSectionHdRoutes = ({
         `Pipeline9 cannot materialize missing preloaded trace "${section.traceId}"`,
       )
     }
-    const stitchedRoutes = stitchedHdRoutes.filter(
-      (route) => route.connectionName === section.connectionName,
-    )
-    if (stitchedRoutes.length !== 1) {
+    const [sectionStart, sectionEnd] = getSectionEndpoints(section, layerCount)
+    const alignedRoutes = stitchedHdRoutes.flatMap((route) => {
+      if (route.connectionName !== section.connectionName) return []
+      const alignment = getEndpointAlignment({
+        route,
+        sectionStart,
+        sectionEnd,
+      })
+      return alignment ? [{ route, ...alignment }] : []
+    })
+    alignedRoutes.sort((left, right) => left.score - right.score)
+    const selectedRoute = alignedRoutes[0]
+    const nextRoute = alignedRoutes[1]
+    if (
+      !selectedRoute ||
+      (nextRoute &&
+        Math.abs(nextRoute.score - selectedRoute.score) <=
+          ENDPOINT_POSITION_EPSILON)
+    ) {
       throw new Error(
-        `Pipeline9 expected one stitched route for changed preloaded section "${section.connectionName}", got ${stitchedRoutes.length}`,
+        `Pipeline9 expected one nearest stitched route for changed preloaded section "${section.connectionName}", got ${alignedRoutes.length}`,
       )
     }
-    const stitchedRoute = stitchedRoutes[0]!
+    const stitchedRoute = connectRouteToSectionEndpoints({
+      route: selectedRoute.route,
+      reverse: selectedRoute.reverse,
+      sectionStart,
+      sectionEnd,
+    })
 
     return {
       ...stitchedRoute,

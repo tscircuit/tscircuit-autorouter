@@ -18,7 +18,7 @@ test("bugreport88-9a86ed.json", () => {
     routedTraces: solver.getOutputSimplifiedPcbTraces(),
   })
 
-  expect(errors).toHaveLength(3)
+  expect(errors).toHaveLength(0)
   expect(getLastStepSvg(solver.visualize())).toMatchSvgSnapshot(
     import.meta.path,
   )

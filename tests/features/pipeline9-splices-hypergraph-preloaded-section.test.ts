@@ -18,8 +18,8 @@ test("Pipeline9 splices a routed hypergraph section into its original trace ID",
     pcb_trace_id: "pcb_trace_preloaded",
     connection_name: "preloaded-connection",
     route: [
-      { route_type: "wire", x: 0, y: 0, width: 0.15, layer: "top" },
-      { route_type: "wire", x: 10, y: 0, width: 0.15, layer: "top" },
+      { route_type: "wire", x: 0, y: 0, width: 0.1, layer: "top" },
+      { route_type: "wire", x: 10, y: 0, width: 0.1, layer: "top" },
     ],
   }
   const connMap = new ConnectivityMap({})
@@ -101,10 +101,21 @@ test("Pipeline9 splices a routed hypergraph section into its original trace ID",
   })
   stitchSolver.solve()
   expect(stitchSolver.failed).toBeFalse()
+  const disconnectedIsland = {
+    ...stitchSolver.mergedHdRoutes[0]!,
+    route: [
+      { x: 4, y: 4, z: 0 },
+      { x: 6, y: 4, z: 0 },
+    ],
+  }
   const materializedRoutes = getMaterializedPreloadedSectionHdRoutes({
     traces: [trace],
     sections: [section],
-    stitchedHdRoutes: stitchSolver.mergedHdRoutes,
+    stitchedHdRoutes: [
+      ...stitchSolver.mergedHdRoutes,
+      disconnectedIsland,
+    ],
+    layerCount: 2,
   })
 
   expect(fixedRoutes.map((route) => route.route)).toEqual([
@@ -140,6 +151,12 @@ test("Pipeline9 splices a routed hypergraph section into its original trace ID",
   expect(
     updatedPreloadedTraces[0]!.route.some(
       (routePoint) => routePoint.route_type === "wire" && routePoint.y === 1,
+    ),
+  ).toBeTrue()
+  expect(
+    updatedPreloadedTraces[0]!.route.every(
+      (routePoint) =>
+        routePoint.route_type !== "wire" || routePoint.width === 0.1,
     ),
   ).toBeTrue()
 })
