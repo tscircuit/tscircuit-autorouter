@@ -208,8 +208,10 @@ const getTinyHyperGraphPipelineInput = (
   effort: number,
   minViaPadDiameter?: number,
   enablePartialRip = true,
+  partialRipEligibilityCount?: number,
 ): TinyHyperGraphSectionPipelineInput => {
   const routeCount = serializedHyperGraph.connections?.length ?? 0
+  const eligibilityCount = partialRipEligibilityCount ?? routeCount
   const minPartialRipRouteCount =
     TINY_SOLVE_GRAPH_BASE_OPTIONS.PARTIAL_RIP_MIN_ROUTE_COUNT ?? 0
   const maxPartialRipRouteCount =
@@ -217,8 +219,8 @@ const getTinyHyperGraphPipelineInput = (
     Number.POSITIVE_INFINITY
   const enablePartialRipForGraph =
     enablePartialRip &&
-    routeCount >= minPartialRipRouteCount &&
-    routeCount <= maxPartialRipRouteCount
+    eligibilityCount >= minPartialRipRouteCount &&
+    eligibilityCount <= maxPartialRipRouteCount
 
   return {
     serializedHyperGraph,
@@ -226,7 +228,11 @@ const getTinyHyperGraphPipelineInput = (
     solveGraphOptions: {
       ...getTinyHyperGraphSolveGraphOptions(effort, minViaPadDiameter),
       ...(enablePartialRipForGraph
-        ? {}
+        ? {
+            PARTIAL_RIP_MIN_ROUTE_COUNT: 0,
+            PARTIAL_RIP_MAX_ROUTE_COUNT: Number.POSITIVE_INFINITY,
+            PARTIAL_RIP_COMPLEXITY_SELECTION_MIN_ROUTE_COUNT: 0,
+          }
         : {
             PARTIAL_RIP_ENABLED: false,
             OUTSIDE_IN_ROUTING: false,
@@ -970,6 +976,18 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       getSerializedPreloadedTraceStats(serializedGraph)
     const hasPreloadedTraceOccupancy =
       preloadedTraceStats.preloadedPortCount > 0
+    const usePartialRipRoutingWithPreloadedTraces =
+      hasPreloadedTraceOccupancy &&
+      params.flags.USE_PARTIAL_RIP_ROUTING_WITH_PRELOADED_TRACES === true
+    // A small number of long preloaded routes can occupy as much of the
+    // hypergraph as a much larger set of ordinary routes.
+    const partialRipEligibilityCount =
+      usePartialRipRoutingWithPreloadedTraces
+        ? Math.max(
+            serializedGraph.connections?.length ?? 0,
+            preloadedTraceStats.preloadedAssignmentCount,
+          )
+        : undefined
     const shouldRunDuplicateCongestedPortPrepass =
       !hasPreloadedTraceOccupancy &&
       connections.length <= MAX_CONNECTIONS_FOR_DUPLICATE_CONGESTED_PORT_PREPASS
@@ -1018,7 +1036,9 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       },
       params.effort,
       params.minViaPadDiameter,
-      !hasPreloadedTraceOccupancy,
+      !hasPreloadedTraceOccupancy ||
+        usePartialRipRoutingWithPreloadedTraces,
+      partialRipEligibilityCount,
     )
     this.tinyPipelineSolver =
       new TinyHyperGraphSectionPipelineWithTerminalNetIds(
