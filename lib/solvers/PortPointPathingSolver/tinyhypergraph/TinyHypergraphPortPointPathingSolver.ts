@@ -143,6 +143,14 @@ const TINY_SOLVE_GRAPH_BASE_OPTIONS: TinyHyperGraphSolverOptions = {
   RIP_CONGESTION_REGION_COST_FACTOR: 0.1,
   ACCEPT_BEST_SOLUTION_ON_TIMEOUT: true,
   GREEDY_FINAL_ROUTE_ITERS: 4,
+  PARTIAL_RIP_MIN_ROUTE_COUNT: 100,
+  PARTIAL_RIP_MAX_ROUTE_COUNT: 350,
+  PARTIAL_RIP_MAX_ATTEMPTS: 10,
+  PARTIAL_RIP_WARMUP_FULL_RIP_ATTEMPTS: 1,
+  PARTIAL_RIP_COMPLEXITY_SELECTION_MIN_ROUTE_COUNT: 100,
+  PARTIAL_RIP_TARGET_MAX_COST_IMPROVEMENT_RATIO: 0.02,
+  PARTIAL_RIP_MAX_REGION_COST_GROWTH_RATIO: 0.2,
+  PARTIAL_RIP_MAX_TOTAL_COST_GROWTH_RATIO: 0.1,
 }
 const TINY_SECTION_SOLVER_BASE_OPTIONS: TinyHyperGraphSectionSolverOptions = {
   DISTANCE_TO_COST: 0.05,
@@ -199,18 +207,37 @@ const getTinyHyperGraphPipelineInput = (
   serializedHyperGraph: SerializedHyperGraph,
   effort: number,
   minViaPadDiameter?: number,
-): TinyHyperGraphSectionPipelineInput => ({
-  serializedHyperGraph,
-  createSectionMask: ({ topology }) => new Int8Array(topology.portCount),
-  solveGraphOptions: getTinyHyperGraphSolveGraphOptions(
-    effort,
-    minViaPadDiameter,
-  ),
-  sectionSolverOptions: getTinyHyperGraphSectionSolverOptions(
-    effort,
-    minViaPadDiameter,
-  ),
-})
+  enablePartialRip = true,
+): TinyHyperGraphSectionPipelineInput => {
+  const routeCount = serializedHyperGraph.connections?.length ?? 0
+  const minPartialRipRouteCount =
+    TINY_SOLVE_GRAPH_BASE_OPTIONS.PARTIAL_RIP_MIN_ROUTE_COUNT ?? 0
+  const maxPartialRipRouteCount =
+    TINY_SOLVE_GRAPH_BASE_OPTIONS.PARTIAL_RIP_MAX_ROUTE_COUNT ??
+    Number.POSITIVE_INFINITY
+  const enablePartialRipForGraph =
+    enablePartialRip &&
+    routeCount >= minPartialRipRouteCount &&
+    routeCount <= maxPartialRipRouteCount
+
+  return {
+    serializedHyperGraph,
+    createSectionMask: ({ topology }) => new Int8Array(topology.portCount),
+    solveGraphOptions: {
+      ...getTinyHyperGraphSolveGraphOptions(effort, minViaPadDiameter),
+      ...(enablePartialRipForGraph
+        ? {}
+        : {
+            PARTIAL_RIP_ENABLED: false,
+            OUTSIDE_IN_ROUTING: false,
+          }),
+    },
+    sectionSolverOptions: getTinyHyperGraphSectionSolverOptions(
+      effort,
+      minViaPadDiameter,
+    ),
+  }
+}
 
 const getTinyHyperGraphPipelineMaxIterations = (
   inputProblem: TinyHyperGraphSectionPipelineInput,
@@ -680,6 +707,25 @@ const applyMetadataPortPenalties = (loaded: LoadedTinyGraph) => {
   }
 
   let metadataPortPenaltyCount = 0
+  let metadataPenaltiesAlreadyLoaded = loaded.problem.portPenalty !== undefined
+  for (let portId = 0; portId < loaded.topology.portCount; portId++) {
+    const rawPenalty = Number(
+      loaded.topology.portMetadata?.[portId]?.tinyHypergraphPortPenalty,
+    )
+    const metadataPenalty =
+      Number.isFinite(rawPenalty) && rawPenalty > 0 ? rawPenalty : 0
+    if (metadataPenalty > 0) metadataPortPenaltyCount++
+    if (loaded.problem.portPenalty?.[portId] !== metadataPenalty) {
+      metadataPenaltiesAlreadyLoaded = false
+    }
+  }
+
+  if (metadataPenaltiesAlreadyLoaded) {
+    loaded.problem.metadataPortPenaltiesApplied = true
+    return metadataPortPenaltyCount
+  }
+
+  metadataPortPenaltyCount = 0
   const portPenalty = loaded.problem.portPenalty
     ? new Float64Array(loaded.problem.portPenalty)
     : new Float64Array(loaded.topology.portCount)
@@ -933,6 +979,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
         serializedGraph,
         {
           duplicatePortProximity: 0.05,
+          useSerializedPortPenalties: false,
           routeSolveOptions: {
             ...getTinyViaSizeOptions(params.minViaPadDiameter),
             USE_SPARSE_CANDIDATE_STORAGE: true,
@@ -971,6 +1018,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       },
       params.effort,
       params.minViaPadDiameter,
+      !hasPreloadedTraceOccupancy,
     )
     this.tinyPipelineSolver =
       new TinyHyperGraphSectionPipelineWithTerminalNetIds(
@@ -992,6 +1040,57 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
 
   getSolverName(): string {
     return "TinyHypergraphPortPointPathingSolver"
+  }
+
+  getSolveGraphBenchmarkMetrics() {
+    const solveGraphSolver =
+      this.tinyPipelineSolver.getSolver<TinyHyperGraphSolver>("solveGraph")
+    if (!solveGraphSolver) return undefined
+
+    const regionSegmentCounts = solveGraphSolver.state.regionSegments.map(
+      (segments) => segments.length,
+    )
+    const solveGraphStats = solveGraphSolver.stats
+    const solveGraphStageStats =
+      this.tinyPipelineSolver.getStageStats().solveGraph
+
+    return {
+      routeCount: solveGraphSolver.problem.routeCount,
+      iterations: solveGraphSolver.iterations,
+      timeMs: solveGraphStageStats?.timeSpent,
+      ripCount: solveGraphStats.ripCount,
+      partialRipCount: solveGraphStats.partialRipCount,
+      partiallyRippedRouteCount: solveGraphStats.partiallyRippedRouteCount,
+      partiallyRippedSegmentCount: solveGraphStats.partiallyRippedSegmentCount,
+      retainedPartialRipSegmentCount:
+        solveGraphStats.retainedPartialRipSegmentCount,
+      firstMaxRegionCost: solveGraphStats.firstMaxRegionCost,
+      bestMaxRegionCost: solveGraphStats.bestMaxRegionCost,
+      firstTotalRegionCost: solveGraphStats.firstTotalRegionCost,
+      bestTotalRegionCost: solveGraphStats.bestTotalRegionCost,
+      firstSegmentCount: solveGraphStats.firstSegmentCount,
+      bestSolvedSegmentCount: solveGraphStats.bestSolvedSegmentCount,
+      bestSolvedMaxRegionSegmentCount:
+        solveGraphStats.bestSolvedMaxRegionSegmentCount,
+      bestSolvedSquaredRegionSegmentCount:
+        solveGraphStats.bestSolvedSquaredRegionSegmentCount,
+      finalMaxRegionSegmentCount: Math.max(0, ...regionSegmentCounts),
+      finalSquaredRegionSegmentCount: regionSegmentCounts.reduce(
+        (sum, count) => sum + count * count,
+        0,
+      ),
+      warmupFullRipAttempts: solveGraphStats.partialRipWarmupFullRipAttempts,
+      complexityAwareSelection:
+        solveGraphStats.partialRipComplexityAwareSelection,
+      targetReached: solveGraphStats.partialRipTargetReached,
+      outsideInCompletedRouteCount:
+        solveGraphStats.outsideInCompletedRouteCount,
+      outsideInFallbackRouteCount: solveGraphStats.outsideInFallbackRouteCount,
+      outsideInForwardExpansionCount:
+        solveGraphStats.outsideInForwardExpansionCount,
+      outsideInReverseExpansionCount:
+        solveGraphStats.outsideInReverseExpansionCount,
+    }
   }
 
   _step() {

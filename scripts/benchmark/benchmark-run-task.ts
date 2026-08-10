@@ -10,6 +10,8 @@ import type {
 import type {
   BenchmarkSnapshotWithImage,
   BenchmarkTask,
+  RoutingBenchmarkMetrics,
+  TinyHypergraphBenchmarkMetrics,
   WorkerProgress,
   WorkerResultWithImage,
 } from "./benchmark-types"
@@ -35,6 +37,14 @@ type SolverInstance = {
   getOutputSimplifiedPcbTraces?: () => SimplifiedPcbTrace[]
   getOutputSimpleRouteJson?: () => SimpleRouteJson
   getSolverName?: () => string
+  portPointPathingSolver?: {
+    getSolveGraphBenchmarkMetrics?: () =>
+      | TinyHypergraphBenchmarkMetrics
+      | undefined
+  }
+  highDensityRouteSolver?: {
+    iterations?: number
+  }
 }
 
 type SolverOptions = {
@@ -268,6 +278,22 @@ const getProgressInfo = (
 const getProgressKey = (progress: WorkerProgress) =>
   [progress.phaseName ?? "", progress.phaseSolverName ?? ""].join("|")
 
+const getRoutingBenchmarkMetrics = (
+  solver: SolverInstance,
+): RoutingBenchmarkMetrics | undefined => {
+  const tinyHypergraph =
+    solver.portPointPathingSolver?.getSolveGraphBenchmarkMetrics?.()
+  const highDensityIterations = solver.highDensityRouteSolver?.iterations
+  if (tinyHypergraph === undefined && highDensityIterations === undefined) {
+    return undefined
+  }
+
+  return {
+    tinyHypergraph,
+    highDensityIterations,
+  }
+}
+
 const solveWithProgress = async (
   task: BenchmarkTask,
   solver: SolverInstance,
@@ -395,6 +421,7 @@ export const runTask = async (
 
   const elapsedTimeMs = performance.now() - start
   const didSolve = Boolean(solver.solved)
+  const routingMetrics = getRoutingBenchmarkMetrics(solver)
 
   if (!didSolve) {
     const failureInfo = getFailureInfo(solver, solveError)
@@ -406,6 +433,7 @@ export const runTask = async (
       didSolve,
       didTimeout: false,
       relaxedDrcPassed: false,
+      routingMetrics,
       ...failureInfo,
     }
   }
@@ -449,6 +477,7 @@ export const runTask = async (
       didTimeout: false,
       relaxedDrcPassed,
       viaCount,
+      routingMetrics,
       benchmarkSnapshot,
       ...drcSummary,
     }
@@ -461,6 +490,7 @@ export const runTask = async (
       didSolve,
       didTimeout: false,
       relaxedDrcPassed: false,
+      routingMetrics,
       error: error instanceof Error ? error.message : String(error),
     }
   }
