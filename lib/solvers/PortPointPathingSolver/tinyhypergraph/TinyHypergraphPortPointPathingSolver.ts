@@ -208,23 +208,36 @@ const getTinyHyperGraphPipelineInput = (
   effort: number,
   minViaPadDiameter?: number,
   enablePartialRip = true,
-): TinyHyperGraphSectionPipelineInput => ({
-  serializedHyperGraph,
-  createSectionMask: ({ topology }) => new Int8Array(topology.portCount),
-  solveGraphOptions: {
-    ...getTinyHyperGraphSolveGraphOptions(effort, minViaPadDiameter),
-    ...(enablePartialRip
-      ? {}
-      : {
-          PARTIAL_RIP_ENABLED: false,
-          OUTSIDE_IN_ROUTING: false,
-        }),
-  },
-  sectionSolverOptions: getTinyHyperGraphSectionSolverOptions(
-    effort,
-    minViaPadDiameter,
-  ),
-})
+): TinyHyperGraphSectionPipelineInput => {
+  const routeCount = serializedHyperGraph.connections?.length ?? 0
+  const minPartialRipRouteCount =
+    TINY_SOLVE_GRAPH_BASE_OPTIONS.PARTIAL_RIP_MIN_ROUTE_COUNT ?? 0
+  const maxPartialRipRouteCount =
+    TINY_SOLVE_GRAPH_BASE_OPTIONS.PARTIAL_RIP_MAX_ROUTE_COUNT ??
+    Number.POSITIVE_INFINITY
+  const enablePartialRipForGraph =
+    enablePartialRip &&
+    routeCount >= minPartialRipRouteCount &&
+    routeCount <= maxPartialRipRouteCount
+
+  return {
+    serializedHyperGraph,
+    createSectionMask: ({ topology }) => new Int8Array(topology.portCount),
+    solveGraphOptions: {
+      ...getTinyHyperGraphSolveGraphOptions(effort, minViaPadDiameter),
+      ...(enablePartialRipForGraph
+        ? {}
+        : {
+            PARTIAL_RIP_ENABLED: false,
+            OUTSIDE_IN_ROUTING: false,
+          }),
+    },
+    sectionSolverOptions: getTinyHyperGraphSectionSolverOptions(
+      effort,
+      minViaPadDiameter,
+    ),
+  }
+}
 
 const getTinyHyperGraphPipelineMaxIterations = (
   inputProblem: TinyHyperGraphSectionPipelineInput,
@@ -694,6 +707,25 @@ const applyMetadataPortPenalties = (loaded: LoadedTinyGraph) => {
   }
 
   let metadataPortPenaltyCount = 0
+  let metadataPenaltiesAlreadyLoaded = loaded.problem.portPenalty !== undefined
+  for (let portId = 0; portId < loaded.topology.portCount; portId++) {
+    const rawPenalty = Number(
+      loaded.topology.portMetadata?.[portId]?.tinyHypergraphPortPenalty,
+    )
+    const metadataPenalty =
+      Number.isFinite(rawPenalty) && rawPenalty > 0 ? rawPenalty : 0
+    if (metadataPenalty > 0) metadataPortPenaltyCount++
+    if (loaded.problem.portPenalty?.[portId] !== metadataPenalty) {
+      metadataPenaltiesAlreadyLoaded = false
+    }
+  }
+
+  if (metadataPenaltiesAlreadyLoaded) {
+    loaded.problem.metadataPortPenaltiesApplied = true
+    return metadataPortPenaltyCount
+  }
+
+  metadataPortPenaltyCount = 0
   const portPenalty = loaded.problem.portPenalty
     ? new Float64Array(loaded.problem.portPenalty)
     : new Float64Array(loaded.topology.portCount)
@@ -947,6 +979,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
         serializedGraph,
         {
           duplicatePortProximity: 0.05,
+          useSerializedPortPenalties: false,
           routeSolveOptions: {
             ...getTinyViaSizeOptions(params.minViaPadDiameter),
             USE_SPARSE_CANDIDATE_STORAGE: true,
