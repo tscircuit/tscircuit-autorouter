@@ -167,6 +167,15 @@ const TINY_SECTION_SOLVER_BASE_OPTIONS: TinyHyperGraphSectionSolverOptions = {
 const DUPLICATE_PORT_TRAVERSAL_PENALTY = 150
 const DEFAULT_CRAMPED_PORT_TRAVERSAL_PENALTY = 150
 const MAX_CONNECTIONS_FOR_DUPLICATE_CONGESTED_PORT_PREPASS = 180
+const MAX_DENSE_CANDIDATE_HOPS = 4_000_000
+
+export const shouldUseSparseCandidateStorage = (
+  portCount: number,
+  regionCount: number,
+): boolean => {
+  const hopCount = portCount * regionCount
+  return hopCount > MAX_DENSE_CANDIDATE_HOPS
+}
 
 const getEffortScale = (effort: number) => Math.max(effort, 1e-2)
 
@@ -180,12 +189,13 @@ const getTinyViaSizeOptions = (
 const getTinyHyperGraphSolveGraphOptions = (
   effort: number,
   minViaPadDiameter?: number,
+  useSparseCandidateStorage = true,
 ): TinyHyperGraphSolverOptions => {
   const effortScale = getEffortScale(effort)
   return {
     ...TINY_SOLVE_GRAPH_BASE_OPTIONS,
     ...getTinyViaSizeOptions(minViaPadDiameter),
-    USE_SPARSE_CANDIDATE_STORAGE: true,
+    USE_SPARSE_CANDIDATE_STORAGE: useSparseCandidateStorage,
     RIP_THRESHOLD_RAMP_ATTEMPTS: Math.ceil(10 * effortScale),
     MAX_ITERATIONS: Math.ceil(2_000_000 * effortScale),
   }
@@ -194,12 +204,13 @@ const getTinyHyperGraphSolveGraphOptions = (
 const getTinyHyperGraphSectionSolverOptions = (
   effort: number,
   minViaPadDiameter?: number,
+  useSparseCandidateStorage = true,
 ): TinyHyperGraphSectionSolverOptions => {
   const effortScale = getEffortScale(effort)
   return {
     ...TINY_SECTION_SOLVER_BASE_OPTIONS,
     ...getTinyViaSizeOptions(minViaPadDiameter),
-    USE_SPARSE_CANDIDATE_STORAGE: true,
+    USE_SPARSE_CANDIDATE_STORAGE: useSparseCandidateStorage,
     RIP_THRESHOLD_RAMP_ATTEMPTS: Math.ceil(16 * effortScale),
     MAX_ITERATIONS: Math.ceil(1_000_000 * effortScale),
   }
@@ -228,7 +239,14 @@ const getTinyHyperGraphPipelineInput = (
     serializedHyperGraph,
     createSectionMask: ({ topology }) => new Int8Array(topology.portCount),
     solveGraphOptions: {
-      ...getTinyHyperGraphSolveGraphOptions(effort, minViaPadDiameter),
+      ...getTinyHyperGraphSolveGraphOptions(
+        effort,
+        minViaPadDiameter,
+        shouldUseSparseCandidateStorage(
+          serializedHyperGraph.ports.length,
+          serializedHyperGraph.regions.length,
+        ),
+      ),
       ...(enablePartialRipForGraph
         ? {
             PARTIAL_RIP_MIN_ROUTE_COUNT: 0,
@@ -243,6 +261,10 @@ const getTinyHyperGraphPipelineInput = (
     sectionSolverOptions: getTinyHyperGraphSectionSolverOptions(
       effort,
       minViaPadDiameter,
+      shouldUseSparseCandidateStorage(
+        serializedHyperGraph.ports.length,
+        serializedHyperGraph.regions.length,
+      ),
     ),
   }
 }
