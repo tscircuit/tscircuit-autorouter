@@ -9,8 +9,7 @@ import { getLastStepSvg } from "../fixtures/getLastStepSvg"
 
 const srj = bugReport.simple_route_json as SimpleRouteJson
 
-// This fixture exceeded 4.3 GB RSS before completion in an isolated run.
-test.skip("bugreport88-9a86ed.json", () => {
+test("bugreport88-9a86ed.json", () => {
   const solver = new AutoroutingPipelineSolver(structuredClone(srj))
   solver.solve()
   const { errors } = evaluateRelaxedDrc({
