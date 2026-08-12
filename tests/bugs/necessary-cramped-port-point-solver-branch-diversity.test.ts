@@ -1,5 +1,10 @@
 import { expect, test } from "bun:test"
-import type { CapacityMeshNode, SimpleRouteJson } from "lib/types"
+import type {
+  CapacityMeshNode,
+  SimpleRouteConnection,
+  SimpleRouteJson,
+  SimplifiedPcbTrace,
+} from "lib/types"
 import type {
   SegmentPortPoint,
   SharedEdgeSegment,
@@ -53,7 +58,7 @@ const makeSegment = (portPoint: SegmentPortPoint): SharedEdgeSegment => ({
   portPoints: [portPoint],
 })
 
-test("necessary cramped port selection preserves branches only for unmerged sparse source terminals", () => {
+test("necessary cramped port selection uses route metadata instead of ID prefixes", () => {
   const entry = makeNode("entry")
   const narrowExit = makeNode("narrow-exit", {
     width: 0.1,
@@ -91,7 +96,17 @@ test("necessary cramped port selection preserves branches only for unmerged spar
     },
     countOfCrampedPortPointsInPath: 1,
   })
-  const getKeptPortIds = (connectedTo: string[]): string[] => {
+  const getKeptPortIds = ({
+    connection,
+    originalConnections = [connection],
+    connectedTo = [],
+    traces = [],
+  }: {
+    connection: SimpleRouteConnection
+    originalConnections?: SimpleRouteConnection[]
+    connectedTo?: string[]
+    traces?: SimplifiedPcbTrace[]
+  }): string[] => {
     const target = makeNode("target", {
       _containsObstacle: true,
       _containsTarget: true,
@@ -105,16 +120,10 @@ test("necessary cramped port selection preserves branches only for unmerged spar
         minTraceWidth: 0.1,
         bounds: { minX: 0, maxX: 100, minY: 0, maxY: 100 },
         obstacles: [],
-        connections: [
-          {
-            name: "route",
-            pointsToConnect: [
-              { x: 0, y: 0, layer: "top" },
-              { x: 100, y: 100, layer: "top" },
-            ],
-          },
-        ],
+        connections: [connection],
+        traces,
       } satisfies SimpleRouteJson,
+      originalConnections,
       numberOfCrampedPortPointsToKeep: 1,
     })
     Object.assign(solver, {
@@ -136,19 +145,70 @@ test("necessary cramped port selection preserves branches only for unmerged spar
       .map((portPoint) => portPoint.segmentPortPointId)
   }
 
-  const sparseTerminalPortIds = getKeptPortIds([
-    "connectivity_net1",
-    "source_trace_1",
-  ])
+  const pointsToConnect: SimpleRouteConnection["pointsToConnect"] = [
+    { x: 0, y: 0, layer: "top" },
+    { x: 100, y: 100, layer: "top" },
+  ]
+  const sparseTerminalPortIds = getKeptPortIds({
+    connection: {
+      name: "source_net_misleading",
+      __rootConnectionNames: ["source_net_misleading"],
+      source_trace_id: "opaque-source-trace",
+      pointsToConnect,
+    },
+    connectedTo: ["opaque-source-trace"],
+  })
   expect(sparseTerminalPortIds).toContain("entry")
   expect(sparseTerminalPortIds).toContain("small-branch")
   expect(sparseTerminalPortIds).toContain("open-branch")
 
-  const mergedTerminalPortIds = getKeptPortIds([
-    "connectivity_net1",
-    "source_trace_1",
-    "source_net_1",
-  ])
+  const mergedTraceTerminalPortIds = getKeptPortIds({
+    connection: {
+      name: "merged-trace-pair",
+      __rootConnectionNames: ["trace-a", "trace-b"],
+      pointsToConnect,
+    },
+    originalConnections: [
+      { name: "route-a", source_trace_id: "trace-a", pointsToConnect },
+      { name: "route-b", source_trace_id: "trace-b", pointsToConnect },
+    ],
+    connectedTo: ["trace-a", "trace-b"],
+  })
+  expect(mergedTraceTerminalPortIds).toContain("small-branch")
+  expect(mergedTraceTerminalPortIds).toContain("open-branch")
+
+  const mergedTerminalPortIds = getKeptPortIds({
+    connection: {
+      name: "source_trace_misleading",
+      __rootConnectionNames: ["actual-net"],
+      __netConnectionName: "actual-net",
+      pointsToConnect,
+    },
+    connectedTo: ["source_trace_misleading"],
+  })
   expect(mergedTerminalPortIds).toContain("small-branch")
   expect(mergedTerminalPortIds).not.toContain("open-branch")
+
+  const preloadedTerminalPortIds = getKeptPortIds({
+    connection: {
+      name: "standalone-route",
+      __rootConnectionNames: ["standalone-route"],
+      source_trace_id: "standalone-source-trace",
+      pointsToConnect,
+    },
+    connectedTo: [
+      "standalone-source-trace",
+      "source_trace_misleading_preloaded_id",
+    ],
+    traces: [
+      {
+        type: "pcb_trace",
+        pcb_trace_id: "source_trace_misleading_preloaded_id",
+        connection_name: "standalone-route",
+        route: [],
+      },
+    ],
+  })
+  expect(preloadedTerminalPortIds).toContain("small-branch")
+  expect(preloadedTerminalPortIds).not.toContain("open-branch")
 })

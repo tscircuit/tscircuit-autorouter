@@ -135,6 +135,7 @@ export interface SimpleRouteConnection {
   rootConnectionName?: RootConnectionName
   mergedConnectionNames?: string[]
   __rootConnectionNames?: string[]
+  source_trace_id?: string
   isOffBoard?: boolean
   netConnectionName?: string
   __netConnectionName?: string

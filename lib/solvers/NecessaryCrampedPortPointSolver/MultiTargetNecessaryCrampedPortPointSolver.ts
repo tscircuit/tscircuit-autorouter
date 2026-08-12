@@ -2,6 +2,7 @@ import { BaseSolver } from "@tscircuit/solver-utils"
 import {
   CapacityMeshNode,
   CapacityMeshNodeId,
+  SimpleRouteConnection,
   SimpleRouteJson,
 } from "lib/types"
 import {
@@ -21,11 +22,12 @@ export type MultiTargetNecessaryCrampedPortPointSolverInput = {
   sharedEdgeSegments: SharedEdgeSegment[]
   capacityMeshNodes: CapacityMeshNode[]
   simpleRouteJson: SimpleRouteJson
+  originalConnections: SimpleRouteConnection[]
   /**
    * The minimum number of cramped escape paths to keep.
    * This is useful when there are multiple connections.
    * Setting this to more than one (e.g., 2) ensures that at least two connections can be routed.
-   * Distinct local branches from sparse, unmerged source terminals are also
+   * Distinct local branches from sparse source-trace terminals are also
    * preserved so the limit cannot erase a valid escape direction.
    * Higher values may be beneficial, but can lead to more DRC errors.
    */
@@ -58,6 +60,10 @@ export class MultiTargetNecessaryCrampedPortPointSolver extends BaseSolver {
     CapacityMeshNodeId,
     SegmentPortPoint[]
   >()
+  private sourceTraceConnectionIds = new Set<string>()
+  private netConnectionIds = new Set<string>()
+  private preloadedTraceIds = new Set<string>()
+  private preloadedConnectionNames = new Set<string>()
   constructor(private input: MultiTargetNecessaryCrampedPortPointSolverInput) {
     super()
     /**
@@ -72,22 +78,37 @@ export class MultiTargetNecessaryCrampedPortPointSolver extends BaseSolver {
   }
 
   override _setup(): void {
+    this.sourceTraceConnectionIds.clear()
+    this.netConnectionIds.clear()
+    for (const connection of this.input.originalConnections) {
+      const connectionIds = [
+        connection.name,
+        ...(connection.__rootConnectionNames ?? []),
+        ...(connection.source_trace_id ? [connection.source_trace_id] : []),
+      ]
+      const destination = connection.source_trace_id
+        ? this.sourceTraceConnectionIds
+        : this.netConnectionIds
+      for (const connectionId of connectionIds) destination.add(connectionId)
+    }
+    this.preloadedTraceIds = new Set(
+      this.input.simpleRouteJson.traces?.map((trace) => trace.pcb_trace_id),
+    )
+    this.preloadedConnectionNames = new Set(
+      this.input.simpleRouteJson.traces?.map((trace) => trace.connection_name),
+    )
     this.targetNode = this.input.capacityMeshNodes.filter(
       (cm) => cm._containsObstacle,
     )
-    const collectPointsToConnect =
-      this.input.simpleRouteJson.connections.flatMap(
-        (connection) => connection.pointsToConnect,
-      )
     this.targetNode = this.targetNode.filter((cmNode) => {
-      let pointIsInsideObstacle = false
-      collectPointsToConnect.forEach((point) => {
-        const distance = pointToBoxDistance(point, cmNode)
-        if (distance <= 0) {
-          pointIsInsideObstacle = true
+      for (const connection of this.input.simpleRouteJson.connections) {
+        for (const point of connection.pointsToConnect) {
+          if (pointToBoxDistance(point, cmNode) <= 0) {
+            return true
+          }
         }
-      })
-      return pointIsInsideObstacle
+      }
+      return false
     })
     this.unprocessedTargets = [...this.targetNode]
     this.unprocessedTargets.sort((a, b) => a.center.x - b.center.x)
@@ -143,8 +164,8 @@ export class MultiTargetNecessaryCrampedPortPointSolver extends BaseSolver {
         })
 
         if (areAllCandidatesBlocked || this.candidatesAtDepth.length === 0) {
-          // Sparse source terminals can be nested behind consecutive cramped
-          // boundaries. Dense/internal/merged topology and preloaded traces
+          // Sparse source-trace terminals can be nested behind consecutive
+          // cramped boundaries. Dense/net topology and preloaded traces
           // keep the legacy selection so this pass cannot reshape their graph.
           const shouldPreserveNestedCrampedEscapes =
             this.shouldPreserveNestedCrampedEscapes(this.currentTarget)
@@ -321,6 +342,19 @@ export class MultiTargetNecessaryCrampedPortPointSolver extends BaseSolver {
     target: CapacityMeshNode,
   ): boolean {
     const connectedTo = target._connectedTo ?? []
+    const isSourceTraceConnection = connectedTo.some((connectionId) =>
+      this.sourceTraceConnectionIds.has(connectionId),
+    )
+    const isNetConnection = connectedTo.some((connectionId) =>
+      this.netConnectionIds.has(connectionId),
+    )
+    const hasPreloadedTrace =
+      connectedTo.some((connectionId) =>
+        this.preloadedConnectionNames.has(connectionId),
+      ) ||
+      connectedTo.some((connectionId) =>
+        this.preloadedTraceIds.has(connectionId),
+      )
     // The setup lifecycle can index the same port object more than once, so
     // sparsity must be measured by stable port IDs rather than array length.
     const incidentPortCount = new Set(
@@ -333,15 +367,9 @@ export class MultiTargetNecessaryCrampedPortPointSolver extends BaseSolver {
     const maximumSparseTerminalPortCount =
       this.input.numberOfCrampedPortPointsToKeep + 2
     return (
-      connectedTo.some((connectionId) =>
-        connectionId.startsWith("source_trace_"),
-      ) &&
-      !connectedTo.some((connectionId) =>
-        connectionId.startsWith("pcb_trace_"),
-      ) &&
-      !connectedTo.some((connectionId) =>
-        connectionId.startsWith("source_net_"),
-      ) &&
+      isSourceTraceConnection &&
+      !isNetConnection &&
+      !hasPreloadedTrace &&
       incidentPortCount <= maximumSparseTerminalPortCount
     )
   }
