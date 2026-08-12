@@ -89,8 +89,16 @@ test("same-machine benchmark comments compare matching reports", () => {
     "| Pipeline7 | Completion | 50.0% (🕒50.0%) | 100.0% (🕒0.0%) | +50.0 pp |",
   )
   expect(markdown).toContain("| Pipeline7 | Timeouts | 1 | 0 | -1 |")
-  expect(markdown).toContain("| Pipeline7 | P50 time | 1.0s | 900ms | -10.0% |")
+  expect(markdown).toContain("| Pipeline7 | P50 time | 1.5s | 1.4s | -6.7% |")
+  expect(markdown).toContain("| Pipeline7 | P60 time |")
+  expect(markdown).toContain("| Pipeline7 | P70 time |")
+  expect(markdown).toContain("| Pipeline7 | P80 time |")
+  expect(markdown).toContain("| Pipeline7 | P90 time |")
+  expect(markdown).toContain("| Pipeline7 | P95 time |")
   expect(markdown).toContain("Outcome changes: **1 improved**, **0 regressed**")
+  expect(markdown).toContain(
+    "Timing percentiles include solved and timed-out samples",
+  )
   expect(markdown).toContain("| Pipeline7 | 1 | Timeout | DRC passed |")
   expect(() =>
     renderSameMachineBenchmarkResults({

@@ -53,6 +53,29 @@ const formatRelativeDelta = (
   return formatSigned(((prValue - mainValue) / mainValue) * 100, "%")
 }
 
+const getTimePercentile = (
+  report: BenchmarkReport,
+  solverName: string,
+  percentile: number,
+): number | null => {
+  const elapsedTimes = report.tests
+    .filter(
+      (test) =>
+        test.solverName === solverName && (test.didSolve || test.didTimeout),
+    )
+    .map((test) => test.elapsedTimeMs)
+    .sort((a, b) => a - b)
+  if (elapsedTimes.length === 0) return null
+
+  const index = (elapsedTimes.length - 1) * percentile
+  const lowerIndex = Math.floor(index)
+  const upperIndex = Math.ceil(index)
+  const lowerValue = elapsedTimes[lowerIndex]
+  const upperValue = elapsedTimes[upperIndex]
+  if (lowerValue === undefined || upperValue === undefined) return null
+  return lowerValue + (upperValue - lowerValue) * (index - lowerIndex)
+}
+
 const outcomeScore = (test: WorkerResult): number => {
   if (!test.didSolve) return 0
   return test.relaxedDrcPassed ? 2 : 1
@@ -142,13 +165,25 @@ export const renderSameMachineBenchmarkResults = ({
     const prTimeouts = prReport.tests.filter(
       (test) => test.solverName === prSummary.solverName && test.didTimeout,
     ).length
+    const timePercentiles = [50, 60, 70, 80, 90, 95].map((percentile) => {
+      const mainTime = getTimePercentile(
+        mainReport,
+        prSummary.solverName,
+        percentile / 100,
+      )
+      const prTime = getTimePercentile(
+        prReport,
+        prSummary.solverName,
+        percentile / 100,
+      )
+      return `| ${solver} | P${percentile} time | ${formatTime(mainTime)} | ${formatTime(prTime)} | ${formatRelativeDelta(mainTime, prTime)} |`
+    })
 
     lines.push(
       `| ${solver} | Completion | ${mainSummary.completedRateLabel} | ${prSummary.completedRateLabel} | ${formatPercentPointDelta(mainSummary.completedRateLabel, prSummary.completedRateLabel)} |`,
       `| ${solver} | Relaxed DRC pass | ${mainSummary.relaxedDrcRateLabel} | ${prSummary.relaxedDrcRateLabel} | ${formatPercentPointDelta(mainSummary.relaxedDrcRateLabel, prSummary.relaxedDrcRateLabel)} |`,
       `| ${solver} | Timeouts | ${mainTimeouts} | ${prTimeouts} | ${prTimeouts - mainTimeouts > 0 ? "+" : ""}${prTimeouts - mainTimeouts} |`,
-      `| ${solver} | P50 time | ${formatTime(mainSummary.p50TimeMs)} | ${formatTime(prSummary.p50TimeMs)} | ${formatRelativeDelta(mainSummary.p50TimeMs, prSummary.p50TimeMs)} |`,
-      `| ${solver} | P95 time | ${formatTime(mainSummary.p95TimeMs)} | ${formatTime(prSummary.p95TimeMs)} | ${formatRelativeDelta(mainSummary.p95TimeMs, prSummary.p95TimeMs)} |`,
+      ...timePercentiles,
       `| ${solver} | Average vias | ${formatAverage(mainSummary.avgVia)} | ${formatAverage(prSummary.avgVia)} | ${formatRelativeDelta(mainSummary.avgVia, prSummary.avgVia)} |`,
     )
   }
@@ -159,7 +194,7 @@ export const renderSameMachineBenchmarkResults = ({
   const regressionCount = changedOutcomes.length - improvementCount
   lines.push(
     "",
-    `Outcome changes: **${improvementCount} improved**, **${regressionCount} regressed**. Negative timing deltas are faster.`,
+    `Outcome changes: **${improvementCount} improved**, **${regressionCount} regressed**. Timing percentiles include solved and timed-out samples; negative timing deltas are faster.`,
   )
 
   if (changedOutcomes.length > 0) {

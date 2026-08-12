@@ -487,6 +487,11 @@ jobs:
           github-token: ${{ secrets.TSCIRCUIT_BOT_GITHUB_TOKEN }}
           script: |
             const fs = require('node:fs')
+            const { pathToFileURL } = require('node:url')
+            const comparisonUrl = pathToFileURL(
+              `${process.env.GITHUB_WORKSPACE}/scripts/benchmark/benchmark-comment-comparison.js`,
+            ).href
+            const { renderBenchmarkComparison } = await import(comparisonUrl)
             const maxLength = 60000
             const truncate = (s, max) => s.length > max ? `${s.slice(0, max)}\n\n...truncated...` : s
             const formatTime = (timeMs) => {
@@ -724,9 +729,14 @@ jobs:
                     '',
                   ]
                 : []),
-              '### Previous main run',
+              '### Main vs PR',
               '',
-              ...renderPreviousMainSummary(mainDatasetReport, benchmarkDatasetName),
+              ...renderBenchmarkComparison({
+                mainReport: mainDatasetReport,
+                prReport,
+                fallbackText: prText ?? '(benchmark results were not produced)',
+                maxLength,
+              }),
               '',
               ...renderReport(mainDatasetReport, '', {
                 detailsLabel: 'Previous main run details',
@@ -735,6 +745,7 @@ jobs:
               '',
               ...renderReport(prReport, prText ?? '(benchmark results were not produced)', {
                 detailsLabel: 'PR run details',
+                omitSummary: true,
                 includeDelta: true,
                 mainIndex,
                 viaCellIndex,
@@ -970,6 +981,11 @@ jobs:
           github-token: ${{ secrets.TSCIRCUIT_BOT_GITHUB_TOKEN }}
           script: |
             const fs = require('node:fs')
+            const { pathToFileURL } = require('node:url')
+            const comparisonUrl = pathToFileURL(
+              `${process.env.GITHUB_WORKSPACE}/scripts/benchmark/benchmark-comment-comparison.js`,
+            ).href
+            const { renderBenchmarkComparison } = await import(comparisonUrl)
             const maxLength = 60000
             const truncate = (s, max) => s.length > max ? `${s.slice(0, max)}\n\n...truncated...` : s
             const formatTime = (timeMs) => {
@@ -1328,9 +1344,14 @@ jobs:
                     '',
                   ]
                 : []),
-              '### Previous main run',
+              '### Main vs PR',
               '',
-              ...renderPreviousMainSummary(mainDatasetReport, benchmarkDatasetName),
+              ...renderBenchmarkComparison({
+                mainReport: mainDatasetReport,
+                prReport,
+                fallbackText: prText ?? '(benchmark results were not produced)',
+                maxLength,
+              }),
               '',
               ...renderReport(mainDatasetReport, '', {
                 detailsLabel: 'Previous main run details',
@@ -1345,6 +1366,7 @@ jobs:
               '',
               ...renderReport(prReport, prText ?? '(benchmark results were not produced)', {
                 detailsLabel: 'PR run details',
+                omitSummary: true,
                 includeDelta: true,
                 mainIndex,
                 viaCellIndex,
