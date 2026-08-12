@@ -106,9 +106,7 @@ test("bugreport91 broad repulsion introduces a via-to-trace clearance error", ()
   for (const [index, error] of focusedErrors.entries()) {
     const viaId = "pcb_via_id" in error ? error.pcb_via_id : undefined
     const via = beforeFix.circuitJson.find(
-      (element) =>
-        element.type === "pcb_via" &&
-        element.pcb_via_id === viaId,
+      (element) => element.type === "pcb_via" && element.pcb_via_id === viaId,
     )
     const viaPoint = getPoint(via)
     const errorCenter = getPoint("center" in error ? error.center : undefined)
