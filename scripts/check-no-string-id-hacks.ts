@@ -32,7 +32,8 @@ export const findStringIdPrefixHacks = (
     /\.startsWith\s*\(\s*(["'`])([^"'`\r\n]*_[^"'`\r\n]*)\1/g
 
   for (const match of source.matchAll(hardCodedPrefixPattern)) {
-    if (match.index === undefined || isInsideComment(source, match.index)) continue
+    if (match.index === undefined || isInsideComment(source, match.index))
+      continue
     const prefix = match[2]!
     if (prefix.includes("${")) continue
 
@@ -57,9 +58,7 @@ export const getAddedProductionLines = (diff: string): AddedLine[] => {
       continue
     }
 
-    const hunk = diffLine.match(
-      /^@@ -\d+(?:,\d+)? \+(\d+)(?:,\d+)? @@/,
-    )
+    const hunk = diffLine.match(/^@@ -\d+(?:,\d+)? \+(\d+)(?:,\d+)? @@/)
     if (hunk) {
       currentNewLine = Number(hunk[1])
       continue
@@ -81,15 +80,7 @@ export const getAddedProductionLines = (diff: string): AddedLine[] => {
 const getAddedLines = (baseSha: string, headSha: string): AddedLine[] => {
   const diff = spawnSync(
     "git",
-    [
-      "diff",
-      "--unified=0",
-      "--no-ext-diff",
-      baseSha,
-      headSha,
-      "--",
-      "lib",
-    ],
+    ["diff", "--unified=0", "--no-ext-diff", baseSha, headSha, "--", "lib"],
     { encoding: "utf8" },
   )
   if (diff.status !== 0) {
