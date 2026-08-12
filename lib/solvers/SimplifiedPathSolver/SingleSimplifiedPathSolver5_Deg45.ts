@@ -438,6 +438,8 @@ export class SingleSimplifiedPathSolver5 extends SingleSimplifiedPathSolver {
         start: { x: start.x, y: start.y },
         end: { x: end.x, y: end.y },
         polygon: this.outline,
+        margin:
+          this.minBoardEdgeClearance + this.inputRoute.traceThickness / 2,
       })
 
       if (crossesOutline) {
