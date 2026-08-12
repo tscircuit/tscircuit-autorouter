@@ -128,6 +128,11 @@ export type SolverRunSummary = {
   relaxedDrcRateLabel: string
   timedOutLabel: string
   p50TimeMs: number | null
+  // Optional so previously published version 1 artifacts remain readable.
+  p60TimeMs?: number | null
+  p70TimeMs?: number | null
+  p80TimeMs?: number | null
+  p90TimeMs?: number | null
   p95TimeMs: number | null
   avgVia: number | null
 }

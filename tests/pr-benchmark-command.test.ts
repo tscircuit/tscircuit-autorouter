@@ -118,6 +118,10 @@ test("PR benchmark commands preserve arguments and fan-out behavior", () => {
   expect(benchmarkWorkflow).toContain("same_machine_compare:")
   expect(benchmarkWorkflow).toContain("inputs.same_machine_compare == true")
   expect(benchmarkWorkflow).toContain("## Same Machine Benchmark Results")
+  expect(benchmarkWorkflow.match(/### Main vs PR/g)).toHaveLength(2)
+  expect(
+    benchmarkWorkflow.match(/benchmark-comment-comparison\.js/g),
+  ).toHaveLength(2)
   expect(benchmarkWorkflow).toContain("Checkout benchmark controller")
   expect(benchmarkWorkflow).toContain(
     "working-directory: same-machine-controller",
