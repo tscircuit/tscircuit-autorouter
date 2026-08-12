@@ -1,7 +1,7 @@
 {
   "name": "@tscircuit/capacity-autorouter",
   "main": "./dist/index.js",
-  "version": "0.0.792",
+  "version": "0.0.798",
   "type": "module",
   "files": [
     "dist"
@@ -66,7 +66,7 @@
     "dataset-srj18": "git+https://github.com/tscircuit/dataset-srj18.git#c0aad90256a95256fcac814f9f7da81a82a2fdea",
     "flatbush": "^4.4.0",
     "format-si-unit": "0.0.10",
-    "graphics-debug": "0.0.96",
+    "graphics-debug": "0.0.99",
     "high-density-dataset-z04": "git+https://github.com/tscircuit/high-density-dataset-z04.git#b9128ed52f5a50102b6526319be1d4ec33dca2c2",
     "kicad-to-circuit-json": "0.0.77",
     "kleur": "^4.1.5",
@@ -81,7 +81,7 @@
     "recharts": "^2.15.1",
     "tailwind-merge": "^3.2.0",
     "terser": "^5.43.1",
-    "tiny-hypergraph": "git+https://github.com/tscircuit/tiny-hypergraph.git#e6f350eaf3d9ff3f9620a83b051ea8f17483d49f",
+    "tiny-hypergraph": "git+https://github.com/tscircuit/tiny-hypergraph.git#c60c55266323974507ca3de06ff6ff3c4860436d",
     "tiny-hypergraph-poly": "git+https://github.com/tscircuit/tiny-hypergraph.git#7b93b4c",
     "tsup": "^8.3.6",
     "typescript": "^5.9.3",

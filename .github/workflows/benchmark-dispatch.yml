@@ -58,6 +58,7 @@ jobs:
                   pr_number: String(context.issue.number),
                   profile_solvers: String(command.profileSolvers),
                   long_benchmark: String(command.kind === 'benchmark-long'),
+                  same_machine_compare: String(command.sameMachineCompare),
                   ...(command.kind !== 'benchmark-all'
                     ? { benchmark_args_json: JSON.stringify(command.benchmarkArgs) }
                     : {}),
