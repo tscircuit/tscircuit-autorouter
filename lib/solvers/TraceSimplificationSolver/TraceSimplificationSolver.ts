@@ -83,6 +83,7 @@ export class TraceSimplificationSolver extends BaseSolver {
    *   - defaultViaDiameter: Default diameter for vias
    *   - layerCount: Number of routing layers
    *   - minTraceToPadEdgeClearance: Minimum trace-edge clearance to pads/vias
+   *   - minBoardEdgeClearance: Minimum trace-edge clearance to the board outline
    *   - otherHdRoutes: Immutable routed traces to avoid while simplifying
    *   - netByConnectionName: Explicit net metadata for synthetic route names
    *   - enableCrossingViaReduction: Enables coordinated crossing layer swaps
@@ -98,6 +99,7 @@ export class TraceSimplificationSolver extends BaseSolver {
       readonly defaultViaDiameter: number
       readonly layerCount: number
       readonly minTraceToPadEdgeClearance?: number
+      readonly minBoardEdgeClearance?: number
       readonly otherHdRoutes?: ReadonlyArray<HighDensityRoute>
       readonly netByConnectionName?: ReadonlyMap<string, string>
       readonly enableCrossingViaReduction?: boolean
@@ -321,6 +323,8 @@ export class TraceSimplificationSolver extends BaseSolver {
             outline: this.simplificationConfig.outline
               ? [...this.simplificationConfig.outline]
               : undefined,
+            minBoardEdgeClearance:
+              this.simplificationConfig.minBoardEdgeClearance,
             defaultViaDiameter: this.simplificationConfig.defaultViaDiameter,
           })
           this.extractResult = (s) =>

@@ -25,6 +25,7 @@ export class MultiSimplifiedPathSolver extends BaseSolver {
   connMap: ConnectivityMap
   colorMap: Record<string, string>
   outline?: Array<{ x: number; y: number }>
+  minBoardEdgeClearance: number
   defaultViaDiameter: number
 
   constructor(params: {
@@ -35,6 +36,7 @@ export class MultiSimplifiedPathSolver extends BaseSolver {
     connMap?: ConnectivityMap
     colorMap?: Record<string, string>
     outline?: Array<{ x: number; y: number }>
+    minBoardEdgeClearance?: number
     defaultViaDiameter?: number
   }) {
     super()
@@ -56,6 +58,7 @@ export class MultiSimplifiedPathSolver extends BaseSolver {
     this.connMap = params.connMap || new ConnectivityMap({})
     this.colorMap = params.colorMap || {}
     this.outline = params.outline
+    this.minBoardEdgeClearance = params.minBoardEdgeClearance ?? 0.2
     this.defaultViaDiameter = params.defaultViaDiameter ?? 0.3
 
     this.simplifiedHdRoutes = []
@@ -81,6 +84,7 @@ export class MultiSimplifiedPathSolver extends BaseSolver {
         connMap: this.connMap,
         colorMap: this.colorMap,
         outline: this.outline,
+        minBoardEdgeClearance: this.minBoardEdgeClearance,
       })
       this.currentUnsimplifiedHdRouteIndex++
       return
