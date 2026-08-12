@@ -1177,11 +1177,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       const portPointsInPairs = segments.map(
         ([routeId, fromPortId, toPortId]) =>
           [
-            this.createAssignedPortPoint(
-              solvedTinySolver,
-              routeId,
-              fromPortId,
-            ),
+            this.createAssignedPortPoint(solvedTinySolver, routeId, fromPortId),
             this.createAssignedPortPoint(solvedTinySolver, routeId, toPortId),
           ] satisfies [PortPoint, PortPoint],
       )
@@ -1232,11 +1228,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
   ) {
     const routeCount =
       this.primaryTinyPipelineSolver!.getSolvedTinySolver().problem.routeCount
-    return shouldSelectTraceDensityAlternative(
-      primary,
-      alternative,
-      routeCount,
-    )
+    return shouldSelectTraceDensityAlternative(primary, alternative, routeCount)
   }
 
   private finishCandidatePortfolio() {
@@ -1264,12 +1256,10 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
 
     return {
       routeCount: solveGraphSolver.problem.routeCount,
-      traceDensityCandidateEvaluated:
-        this.alternativeCandidateEvaluated,
+      traceDensityCandidateEvaluated: this.alternativeCandidateEvaluated,
       traceDensityCandidateSelected: this.selectedCandidate === "alternative",
       downstreamNodePfSum: selectedCandidateSummary?.nodePfSum,
-      downstreamNodePfSquaredSum:
-        selectedCandidateSummary?.nodePfSquaredSum,
+      downstreamNodePfSquaredSum: selectedCandidateSummary?.nodePfSquaredSum,
       downstreamNodePfMax: selectedCandidateSummary?.nodePfMax,
       downstreamSquaredNodePortPointCount:
         selectedCandidateSummary?.squaredNodePortPointCount,
@@ -1392,10 +1382,10 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       this.candidatePortfolioPhase === "complete"
         ? 1
         : this.candidatePortfolioPhase === "alternative"
-        ? 0.5 + this.tinyPipelineSolver.progress * 0.5
-        : this.alternativeTinyPipelineInput
-          ? this.tinyPipelineSolver.progress * 0.5
-          : this.tinyPipelineSolver.progress
+          ? 0.5 + this.tinyPipelineSolver.progress * 0.5
+          : this.alternativeTinyPipelineInput
+            ? this.tinyPipelineSolver.progress * 0.5
+            : this.tinyPipelineSolver.progress
     this.stats = {
       duplicateCongestedPortSourceCount:
         this.duplicateCongestedPortReport?.duplicatedPorts.length ?? 0,

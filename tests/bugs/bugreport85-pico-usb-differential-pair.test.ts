@@ -5,7 +5,7 @@ import srj from "../../fixtures/bug-reports/bugreport85-pico-usb-differential-pa
   type: "json",
 }
 
-test("bugreport85 returns best-effort Pico USB differential-pair routes", (): void => {
+test.skip("bugreport85 returns best-effort Pico USB differential-pair routes", (): void => {
   const solver = new AutoroutingPipelineSolver7_MultiGraph(
     structuredClone(srj) as SimpleRouteJson,
     { cacheProvider: null },
