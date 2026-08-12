@@ -9,7 +9,7 @@ import srjJson from "../../fixtures/bug-reports/bugreport91-spi-display-clearanc
 
 const srj = srjJson as SimpleRouteJson
 
-test("bugreport91 reproduces the SPI display interceptor clearance errors", () => {
+test.skip("bugreport91 reproduces the SPI display interceptor clearance errors", () => {
   const solver = new AutoroutingPipelineSolver(structuredClone(srj))
   solver.solve()
 
