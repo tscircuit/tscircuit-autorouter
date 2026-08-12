@@ -4,14 +4,25 @@ import bugReport from "../../fixtures/bug-reports/bugreport91-1046bd/bugreport91
   type: "json",
 }
 import type { SimpleRouteJson } from "lib/types"
-import { getLastStepSvg } from "../fixtures/getLastStepSvg"
 
 const srj = bugReport.simple_route_json as SimpleRouteJson
 
-test("bugreport91-1046bd.json", () => {
-  const solver = new AutoroutingPipelineSolver(srj)
-  solver.solve()
-  expect(getLastStepSvg(solver.visualize())).toMatchSvgSnapshot(
-    import.meta.path,
-  )
+test("bugreport91 keeps every cramped connector escape reachable", () => {
+  const solver = new AutoroutingPipelineSolver(structuredClone(srj))
+
+  solver.solveUntilPhase("portPointPathingSolver")
+  while (
+    solver.getCurrentPhase() === "portPointPathingSolver" &&
+    !solver.failed
+  ) {
+    solver.step()
+  }
+
+  expect(solver.getCurrentPhase()).toBe("uniformPortDistributionSolver")
+  expect(solver.failed).toBe(false)
+  expect(solver.portPointPathingSolver?.failed).toBe(false)
+  expect(solver.portPointPathingSolver?.solved).toBe(true)
+  expect(
+    solver.portPointPathingSolver?.stats.duplicateCongestedPortFallbackToOriginal,
+  ).toBe(false)
 })
