@@ -1,20 +1,55 @@
 import { expect, test } from "bun:test"
-import type { GraphicsObject } from "graphics-debug"
+import type { SimpleRouteJson } from "lib/types"
+import { convertSrjToGraphicsObject } from "lib/utils/convertSrjToGraphicsObject"
 
-test("renders autorouter visualization lines with round joins", async () => {
-  const visualization: GraphicsObject = {
-    lines: [
+test("keeps consecutive routed segments in one rounded polyline", async () => {
+  const srj: SimpleRouteJson = {
+    layerCount: 2,
+    minTraceWidth: 0.8,
+    obstacles: [],
+    connections: [
       {
-        points: [
-          { x: -1.5, y: 2 },
-          { x: 0, y: -2 },
-          { x: 1.5, y: 2 },
+        name: "signal",
+        pointsToConnect: [
+          { x: -1.5, y: 2, layer: "top" },
+          { x: 1.5, y: 2, layer: "top" },
         ],
-        strokeColor: "#2563eb",
-        strokeWidth: 0.8,
+      },
+    ],
+    bounds: { minX: -2, maxX: 2, minY: -2.5, maxY: 2.5 },
+    traces: [
+      {
+        type: "pcb_trace",
+        pcb_trace_id: "trace_signal",
+        connection_name: "signal",
+        route: [
+          {
+            route_type: "wire",
+            x: -1.5,
+            y: 2,
+            width: 0.8,
+            layer: "top",
+          },
+          {
+            route_type: "wire",
+            x: 0,
+            y: -2,
+            width: 0.8,
+            layer: "top",
+          },
+          {
+            route_type: "wire",
+            x: 1.5,
+            y: 2,
+            width: 0.8,
+            layer: "top",
+          },
+        ],
       },
     ],
   }
 
-  await expect(visualization).toMatchGraphicsSvg(import.meta.path)
+  await expect(convertSrjToGraphicsObject(srj)).toMatchGraphicsSvg(
+    import.meta.path,
+  )
 })
