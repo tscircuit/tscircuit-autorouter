@@ -79,7 +79,9 @@ const getChangedOutcomes = (
   mainReport: BenchmarkReport,
   prReport: BenchmarkReport,
 ) => {
-  const mainTests = new Map(mainReport.tests.map((test) => [testKey(test), test]))
+  const mainTests = new Map(
+    mainReport.tests.map((test) => [testKey(test), test]),
+  )
   return prReport.tests.flatMap((prTest) => {
     const mainTest = mainTests.get(testKey(prTest))
     if (!mainTest || outcomeScore(mainTest) === outcomeScore(prTest)) return []
