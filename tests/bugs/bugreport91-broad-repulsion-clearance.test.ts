@@ -82,7 +82,7 @@ const evaluateRoutes = (
   })
 }
 
-test("bugreport91 broad repulsion introduces a via-to-trace clearance error", () => {
+test("bugreport91 broad repulsion preserves via-to-trace clearance", () => {
   const connMap = getConnectivityMapFromSimpleRouteJson(fixture.srj)
   const outputHdRoutes = applyBroadRepulsionForces(
     fixture.srj as Parameters<typeof applyBroadRepulsionForces>[0],
@@ -120,9 +120,10 @@ test("bugreport91 broad repulsion introduces a via-to-trace clearance error", ()
     } as AnyCircuitElement)
   }
 
-  expect(viaTraceErrors).toHaveLength(1)
-  expect(viaTraceErrors[0]).toMatchObject({ minimum_clearance: 0.1 })
-  expect(viaTraceErrors[0]!.actual_clearance).toBeCloseTo(0.083, 3)
+  expect(viaTraceErrors).toHaveLength(0)
+  expect(focusedErrors).toHaveLength(1)
+  expect(focusedErrors[0]).toMatchObject({ minimum_clearance: 0.1 })
+  expect(focusedErrors[0]!.actual_clearance).toBeCloseTo(0.083, 3)
   expect(
     convertCircuitJsonToPcbSvg([...focusedCircuitJson, ...visualErrors], {
       backgroundColor: "white",
