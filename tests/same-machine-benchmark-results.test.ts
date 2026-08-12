@@ -39,8 +39,8 @@ test("same-machine benchmark comments compare matching reports", () => {
     summary: [
       {
         solverName,
-        completedRateLabel: "50.0%",
-        relaxedDrcRateLabel: "50.0%",
+        completedRateLabel: "50.0% (🕒50.0%)",
+        relaxedDrcRateLabel: "50.0% (🕒50.0%)",
         timedOutLabel: "1/2",
         p50TimeMs: 1_000,
         p95TimeMs: 2_000,
@@ -61,8 +61,8 @@ test("same-machine benchmark comments compare matching reports", () => {
     summary: [
       {
         solverName,
-        completedRateLabel: "100.0%",
-        relaxedDrcRateLabel: "100.0%",
+        completedRateLabel: "100.0% (🕒0.0%)",
+        relaxedDrcRateLabel: "100.0% (🕒0.0%)",
         timedOutLabel: "0/2",
         p50TimeMs: 900,
         p95TimeMs: 1_800,
@@ -86,7 +86,7 @@ test("same-machine benchmark comments compare matching reports", () => {
     "Both revisions ran sequentially in one Blacksmith job",
   )
   expect(markdown).toContain(
-    "| Pipeline7 | Completion | 50.0% | 100.0% | +50.0 pp |",
+    "| Pipeline7 | Completion | 50.0% (🕒50.0%) | 100.0% (🕒0.0%) | +50.0 pp |",
   )
   expect(markdown).toContain("| Pipeline7 | Timeouts | 1 | 0 | -1 |")
   expect(markdown).toContain("| Pipeline7 | P50 time | 1.0s | 900ms | -10.0% |")

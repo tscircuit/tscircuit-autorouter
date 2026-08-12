@@ -21,7 +21,7 @@ const formatAverage = (value: number | null): string =>
   value === null || !Number.isFinite(value) ? "n/a" : value.toFixed(2)
 
 const parsePercentLabel = (label: string): number | null => {
-  const match = label.trim().match(/^(-?\d+(?:\.\d+)?)%$/)
+  const match = label.trim().match(/^(-?\d+(?:\.\d+)?)%/)
   if (!match) return null
   const value = Number(match[1])
   return Number.isFinite(value) ? value : null
