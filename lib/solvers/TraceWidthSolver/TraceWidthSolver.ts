@@ -198,13 +198,6 @@ export class TraceWidthSolver extends BaseSolver {
     // Step the cursor forward along the trace
     const stepped = this.stepCursorForward()
 
-    if (!stepped) {
-      // Reached end of trace without collision - this width works!
-      // Use this width and finalize immediately (widest possible that fits)
-      this.finalizeCurrentTrace(this.currentTargetWidth)
-      return
-    }
-
     // Check clearance at current cursor position
     const clearance = this.getClearanceAtPosition(this.cursorPosition!)
 
@@ -224,6 +217,13 @@ export class TraceWidthSolver extends BaseSolver {
         // Exhausted all widths in schedule, use minTraceWidth as fallback
         this.finalizeCurrentTrace(this.minTraceWidth)
       }
+      return
+    }
+
+    if (!stepped) {
+      // The endpoint must be checked before accepting the width. A collision can
+      // exist entirely within the final cursor step next to a terminal pad.
+      this.finalizeCurrentTrace(this.currentTargetWidth)
     }
   }
 

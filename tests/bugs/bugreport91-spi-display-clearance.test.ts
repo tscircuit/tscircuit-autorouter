@@ -9,7 +9,7 @@ import srjJson from "../../fixtures/bug-reports/bugreport91-spi-display-clearanc
 
 const srj = srjJson as SimpleRouteJson
 
-test.skip("bugreport91 reproduces the SPI display interceptor clearance errors", () => {
+test.skip("bugreport91 reproduces the remaining SPI display via clearance error", () => {
   const solver = new AutoroutingPipelineSolver(structuredClone(srj))
   solver.solve()
 
@@ -30,10 +30,7 @@ test.skip("bugreport91 reproduces the SPI display interceptor clearance errors",
     .map((error) => error.type)
     .sort()
 
-  expect(clearanceErrorTypes).toEqual([
-    "pcb_pad_trace_clearance_error",
-    "pcb_via_trace_clearance_error",
-  ])
+  expect(clearanceErrorTypes).toEqual(["pcb_via_trace_clearance_error"])
   expect(
     convertCircuitJsonToPcbSvg([...circuitJson, ...errors], {
       backgroundColor: "white",
