@@ -74,6 +74,7 @@ import {
 } from "./materialize-hypergraph-preloaded-trace-sections"
 import {
   convertPreloadedTraceToHdRoutes,
+  materializeImpliedViasInPreloadedTraces,
   type PreloadedHighDensityRoute,
 } from "./convert-preloaded-traces-to-hd-routes"
 import { Pipeline9HighDensitySolver } from "./pipeline9-high-density-solver"
@@ -831,8 +832,15 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     public readonly opts: CapacityMeshSolverOptions = {},
   ) {
     super()
+    const inputViaDimensions = getViaDimensions(srj)
     const srjWithBoardValidObstacleLayers =
-      createSrjWithBoardValidObstacleLayers(srj)
+      createSrjWithBoardValidObstacleLayers(
+        materializeImpliedViasInPreloadedTraces(
+          srj,
+          inputViaDimensions.padDiameter,
+          inputViaDimensions.holeDiameter,
+        ),
+      )
     this.originalSrj = srjWithBoardValidObstacleLayers
     this.opts = { ...opts }
     const mutableOpts = this.opts

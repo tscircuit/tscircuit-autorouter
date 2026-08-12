@@ -1,5 +1,5 @@
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
-import type { SimplifiedPcbTrace } from "lib/types"
+import type { SimpleRouteJson, SimplifiedPcbTrace } from "lib/types"
 import type { HighDensityRoute } from "lib/types/high-density-types"
 import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
 
@@ -11,6 +11,55 @@ export type PreloadedHighDensityRoute = HighDensityRoute & {
   preloadedRoutePositionStart?: number
   preloadedRoutePositionEnd?: number
 }
+
+/**
+ * Canonicalizes legacy Pipeline9 output that encoded an implied via as two
+ * wire points.
+ */
+export const materializeImpliedViasInPreloadedTraces = (
+  srj: SimpleRouteJson,
+  defaultViaDiameter: number,
+  defaultViaHoleDiameter: number,
+): SimpleRouteJson => ({
+  ...srj,
+  traces: srj.traces?.map((trace) => ({
+    ...trace,
+    route: trace.route.flatMap((point, pointIndex) => {
+      const nextPoint = trace.route[pointIndex + 1]
+      if (
+        point.route_type !== "wire" ||
+        nextPoint?.route_type !== "wire" ||
+        point.layer === nextPoint.layer
+      ) {
+        return [point]
+      }
+
+      return [
+        point,
+        ...(point.x !== nextPoint.x || point.y !== nextPoint.y
+          ? [
+              {
+                route_type: "wire" as const,
+                x: nextPoint.x,
+                y: nextPoint.y,
+                width: Math.max(point.width, nextPoint.width),
+                layer: point.layer,
+              },
+            ]
+          : []),
+        {
+          route_type: "via" as const,
+          x: nextPoint.x,
+          y: nextPoint.y,
+          from_layer: point.layer,
+          to_layer: nextPoint.layer,
+          via_diameter: defaultViaDiameter,
+          via_hole_diameter: defaultViaHoleDiameter,
+        },
+      ]
+    }),
+  })),
+})
 
 export const convertPreloadedTraceToHdRoutes = (
   trace: SimplifiedPcbTrace,
@@ -90,6 +139,39 @@ export const convertPreloadedTraceToHdRoutes = (
     }
 
     const nextPoint = trace.route[pointIndex + 1]
+    if (
+      point.route_type === "wire" &&
+      nextPoint?.route_type === "wire" &&
+      point.layer !== nextPoint.layer
+    ) {
+      const currentZ = mapLayerNameToZ(point.layer, layerCount)
+      const nextZ = mapLayerNameToZ(nextPoint.layer, layerCount)
+      if (point.x !== nextPoint.x || point.y !== nextPoint.y) {
+        addRoute(
+          [
+            { x: point.x, y: point.y, z: currentZ },
+            { x: nextPoint.x, y: nextPoint.y, z: currentZ },
+          ],
+          Math.max(point.width, nextPoint.width),
+          defaultViaDiameter,
+          [],
+          pointIndex,
+          pointIndex + 1,
+        )
+      }
+      addRoute(
+        [
+          { x: nextPoint.x, y: nextPoint.y, z: currentZ },
+          { x: nextPoint.x, y: nextPoint.y, z: nextZ },
+        ],
+        MIN_ROUTE_DIMENSION,
+        defaultViaDiameter,
+        [{ x: nextPoint.x, y: nextPoint.y }],
+        pointIndex + 1,
+        pointIndex + 1,
+      )
+      continue
+    }
     if (
       point.route_type !== "wire" ||
       nextPoint?.route_type !== "wire" ||

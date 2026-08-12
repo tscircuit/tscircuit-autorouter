@@ -44,6 +44,48 @@ const reverseRoutePoints = (points: RoutePoint[]): RoutePoint[] => {
   return reversed
 }
 
+/** Makes every stitched layer change satisfy the HD-route via invariant. */
+const materializeLayerTransitions = (
+  route: HighDensityIntraNodeRoute,
+): HighDensityIntraNodeRoute => {
+  const routePoints: RoutePoint[] = []
+  const vias = route.vias.map((via) => ({ ...via }))
+
+  for (const point of route.route) {
+    const previousPoint = routePoints.at(-1)
+    if (
+      previousPoint &&
+      previousPoint.z !== point.z &&
+      previousPoint.toNextSegmentType !== "through_obstacle"
+    ) {
+      if (
+        Math.hypot(previousPoint.x - point.x, previousPoint.y - point.y) >
+        GEOMETRIC_TOLERANCE
+      ) {
+        routePoints.push({
+          x: point.x,
+          y: point.y,
+          z: previousPoint.z,
+          traceThickness: point.traceThickness,
+          insideJumperPad: point.insideJumperPad,
+        })
+      }
+      if (
+        !vias.some(
+          (via) =>
+            Math.abs(via.x - point.x) <= GEOMETRIC_TOLERANCE &&
+            Math.abs(via.y - point.y) <= GEOMETRIC_TOLERANCE,
+        )
+      ) {
+        vias.push({ x: point.x, y: point.y })
+      }
+    }
+    routePoints.push(point)
+  }
+
+  return { ...route, route: routePoints, vias }
+}
+
 export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
   override getSolverName(): string {
     return "SingleHighDensityRouteStitchSolver3"
@@ -335,6 +377,7 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
         })
       }
 
+      this.mergedHdRoute = materializeLayerTransitions(this.mergedHdRoute)
       this.solved = true
       return
     }

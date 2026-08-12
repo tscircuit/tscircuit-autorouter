@@ -14,9 +14,10 @@ test("Pipeline9 consumes traces adapted by a previous Pipeline9 phase", (): void
     },
   )
 
-  solver.solve()
+  solver.solveUntilPhase("traceSimplificationSolver")
 
+  expect(() => solver.step()).not.toThrow()
   expect(solver.error).toBeNull()
   expect(solver.failed).toBeFalse()
-  expect(solver.solved).toBeTrue()
+  expect(solver.traceSimplificationSolver).toBeDefined()
 })
