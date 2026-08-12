@@ -1477,10 +1477,23 @@ jobs:
       - name: Benchmark current main
         working-directory: same-machine-main
         env:
+          BENCHMARK_ARGS_JSON: ${{ inputs.benchmark_args_json }}
           BENCHMARK_DATASET: ${{ steps.refs.outputs.dataset }}
         run: |
           chmod +x ./benchmark.sh
-          ./benchmark.sh --dataset "$BENCHMARK_DATASET"
+          node <<'NODE'
+          const { spawnSync } = require('node:child_process')
+          const args = JSON.parse(process.env.BENCHMARK_ARGS_JSON || '[]')
+          if (!Array.isArray(args) || args.some((arg) => typeof arg !== 'string')) {
+            throw new Error('benchmark_args_json must be a JSON array of strings')
+          }
+          if (!args.includes('--dataset')) {
+            args.push('--dataset', process.env.BENCHMARK_DATASET)
+          }
+          const result = spawnSync('./benchmark.sh', args, { stdio: 'inherit' })
+          if (result.error) throw result.error
+          process.exit(result.status ?? 1)
+          NODE
           cp benchmark-result.json ../same-machine-results/main/benchmark-result.json
           cp benchmark-result.txt ../same-machine-results/main/benchmark-result.txt
           cp benchmark-snapshots.html ../same-machine-results/main/benchmark-snapshots.html
@@ -1488,10 +1501,23 @@ jobs:
       - name: Benchmark PR head
         working-directory: same-machine-pr
         env:
+          BENCHMARK_ARGS_JSON: ${{ inputs.benchmark_args_json }}
           BENCHMARK_DATASET: ${{ steps.refs.outputs.dataset }}
         run: |
           chmod +x ./benchmark.sh
-          ./benchmark.sh --dataset "$BENCHMARK_DATASET"
+          node <<'NODE'
+          const { spawnSync } = require('node:child_process')
+          const args = JSON.parse(process.env.BENCHMARK_ARGS_JSON || '[]')
+          if (!Array.isArray(args) || args.some((arg) => typeof arg !== 'string')) {
+            throw new Error('benchmark_args_json must be a JSON array of strings')
+          }
+          if (!args.includes('--dataset')) {
+            args.push('--dataset', process.env.BENCHMARK_DATASET)
+          }
+          const result = spawnSync('./benchmark.sh', args, { stdio: 'inherit' })
+          if (result.error) throw result.error
+          process.exit(result.status ?? 1)
+          NODE
           cp benchmark-result.json ../same-machine-results/pr/benchmark-result.json
           cp benchmark-result.txt ../same-machine-results/pr/benchmark-result.txt
           cp benchmark-snapshots.html ../same-machine-results/pr/benchmark-snapshots.html
