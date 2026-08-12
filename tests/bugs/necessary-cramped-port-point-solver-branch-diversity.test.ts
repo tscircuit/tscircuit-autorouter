@@ -91,7 +91,7 @@ test("necessary cramped port selection preserves branches only for unmerged spar
     },
     countOfCrampedPortPointsInPath: 1,
   })
-  const getKeptPortIds = (connectedTo: string[]) => {
+  const getKeptPortIds = (connectedTo: string[]): string[] => {
     const target = makeNode("target", {
       _containsObstacle: true,
       _containsTarget: true,
@@ -103,17 +103,18 @@ test("necessary cramped port selection preserves branches only for unmerged spar
       simpleRouteJson: {
         layerCount: 1,
         minTraceWidth: 0.1,
+        bounds: { minX: 0, maxX: 100, minY: 0, maxY: 100 },
         obstacles: [],
         connections: [
           {
             name: "route",
             pointsToConnect: [
-              { x: 0, y: 0 },
-              { x: 100, y: 100 },
+              { x: 0, y: 0, layer: "top" },
+              { x: 100, y: 100, layer: "top" },
             ],
           },
         ],
-      } as SimpleRouteJson,
+      } satisfies SimpleRouteJson,
       numberOfCrampedPortPointsToKeep: 1,
     })
     Object.assign(solver, {
