@@ -122,8 +122,12 @@ test("bugreport91 broad repulsion preserves via-to-trace clearance", () => {
 
   expect(viaTraceErrors).toHaveLength(0)
   expect(focusedErrors).toHaveLength(1)
-  expect(focusedErrors[0]).toMatchObject({ minimum_clearance: 0.1 })
-  expect(focusedErrors[0]!.actual_clearance).toBeCloseTo(0.083, 3)
+  const focusedError = focusedErrors[0]!
+  expect(focusedError).toMatchObject({ minimum_clearance: 0.1 })
+  if (focusedError.type !== "pcb_via_trace_clearance_error") {
+    throw new Error(`Expected via-to-trace error, got ${focusedError.type}`)
+  }
+  expect(focusedError.actual_clearance).toBeCloseTo(0.083, 3)
   expect(
     convertCircuitJsonToPcbSvg([...focusedCircuitJson, ...visualErrors], {
       backgroundColor: "white",
