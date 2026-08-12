@@ -20,7 +20,8 @@ const formatSolverDisplayName = (solverName, effortLabel) => {
     "Pipeline$1",
   )
   const match = String(effortLabel ?? "").match(/^(\d+)x effort$/)
-  if (!match) return `${solver}${effortLabel === "mixed effort" ? "(mixed)" : ""}`
+  if (!match)
+    return `${solver}${effortLabel === "mixed effort" ? "(mixed)" : ""}`
   const effort = Number.parseInt(match[1], 10)
   return `${solver}${Number.isFinite(effort) && effort > 1 ? `(${effort}x)` : ""}`
 }
