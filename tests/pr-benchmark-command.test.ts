@@ -74,9 +74,7 @@ test("PR benchmark commands preserve arguments and fan-out behavior", () => {
     profileSolvers: false,
     sameMachineCompare: true,
   })
-  expect(
-    parsePrBenchmarkCommand("/benchmark-all --same-machine\n"),
-  ).toEqual({
+  expect(parsePrBenchmarkCommand("/benchmark-all --same-machine\n")).toEqual({
     kind: "benchmark-all",
     benchmarkArgs: [],
     datasetName: "dataset01",
