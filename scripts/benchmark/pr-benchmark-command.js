@@ -79,12 +79,21 @@ const splitShellArgs = (input) => {
 
 export const parsePrBenchmarkCommand = (body) => {
   const command = body.trim()
-  if (command === "/benchmark-all") {
+  const isBenchmarkAll = /^\/benchmark-all(?:\s|$)/.test(command)
+  if (isBenchmarkAll) {
+    const parsedArgs = splitShellArgs(
+      command.slice("/benchmark-all".length).trim(),
+    )
+    if (parsedArgs.some((arg) => arg !== "--same-machine")) {
+      throw new Error("/benchmark-all only accepts --same-machine")
+    }
+
     return {
       kind: "benchmark-all",
       benchmarkArgs: [],
       datasetName: "dataset01",
       profileSolvers: false,
+      sameMachineCompare: parsedArgs.includes("--same-machine"),
     }
   }
 
@@ -103,9 +112,14 @@ export const parsePrBenchmarkCommand = (body) => {
       : []
   let datasetName = "dataset01"
   let profileSolvers = false
+  let sameMachineCompare = false
 
   for (let index = 0; index < parsedArgs.length; index += 1) {
     const arg = parsedArgs[index]
+    if (arg === "--same-machine") {
+      sameMachineCompare = true
+      continue
+    }
     if (arg === "--profile-solvers" || arg === "--show-profile-solvers") {
       profileSolvers = true
       continue
@@ -121,5 +135,6 @@ export const parsePrBenchmarkCommand = (body) => {
     benchmarkArgs,
     datasetName,
     profileSolvers,
+    sameMachineCompare,
   }
 }

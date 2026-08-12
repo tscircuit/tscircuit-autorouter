@@ -56,6 +56,11 @@ on:
         required: false
         default: false
         type: boolean
+      same_machine_compare:
+        description: Run current main and the PR head sequentially on one Blacksmith runner
+        required: false
+        default: false
+        type: boolean
 
 permissions:
   contents: read
@@ -65,7 +70,10 @@ jobs:
   benchmark:
     name: Run benchmark
     if: |
-      github.event_name == 'workflow_dispatch' || (
+      (
+        github.event_name == 'workflow_dispatch' &&
+        inputs.same_machine_compare != true
+      ) || (
         github.event_name == 'push' &&
         github.ref_name == 'main'
       ) || (
@@ -1368,6 +1376,207 @@ jobs:
               repo: context.repo.repo,
               comment_id: Number(process.env.STATUS_COMMENT_ID),
               body: finalBody,
+            })
+
+  same-machine-benchmark:
+    name: Same machine benchmark
+    if: github.event_name == 'workflow_dispatch' && inputs.same_machine_compare == true
+    runs-on: blacksmith-8vcpu-ubuntu-2404-arm
+    timeout-minutes: 180
+    env:
+      BENCHMARK_TASK_TIMEOUT_PER_EFFORT_MS: ${{ vars.BENCHMARK_TASK_TIMEOUT_PER_EFFORT_MS || vars.BENCHMARK_TASK_TIMEOUT_MS || '60000' }}
+      BENCHMARK_HEARTBEAT_INTERVAL_MS: ${{ vars.BENCHMARK_HEARTBEAT_INTERVAL_MS || '30000' }}
+      BENCHMARK_TERMINATE_TIMEOUT_MS: ${{ vars.BENCHMARK_TERMINATE_TIMEOUT_MS || '1000' }}
+
+    steps:
+      - name: Resolve comparison refs
+        id: refs
+        uses: actions/github-script@v7
+        env:
+          PR_NUMBER: ${{ inputs.pr_number }}
+          DATASET_NAME: ${{ inputs.dataset_name }}
+        with:
+          github-token: ${{ secrets.TSCIRCUIT_BOT_GITHUB_TOKEN }}
+          script: |
+            const prNumber = Number.parseInt(process.env.PR_NUMBER || '', 10)
+            if (!Number.isInteger(prNumber) || prNumber < 1) {
+              throw new Error('same_machine_compare requires a valid pr_number')
+            }
+
+            const dataset = (process.env.DATASET_NAME || '').trim() || 'srj18'
+            const pr = await github.rest.pulls.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: prNumber,
+            })
+            const base = await github.rest.repos.getBranch({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              branch: pr.data.base.ref,
+            })
+            const mainSha = base.data.commit.sha
+            const prSha = pr.data.head.sha
+            const runUrl = `${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}`
+            const statusComment = await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: prNumber,
+              body: [
+                '## Same Machine Benchmark Results',
+                '',
+                `Queued \`${dataset}\` on current main \`${mainSha.slice(0, 7)}\` and PR head \`${prSha.slice(0, 7)}\`.`,
+                '',
+                'Both revisions will run sequentially in one Blacksmith job.',
+                '',
+                `Workflow: [View run](${runUrl})`,
+              ].join('\n'),
+            })
+
+            core.setOutput('dataset', dataset)
+            core.setOutput('main_sha', mainSha)
+            core.setOutput('pr_sha', prSha)
+            core.setOutput('status_comment_id', String(statusComment.data.id))
+
+      - name: Checkout benchmark controller
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          path: same-machine-controller
+          persist-credentials: false
+
+      - name: Checkout current main
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.refs.outputs.main_sha }}
+          path: same-machine-main
+          persist-credentials: false
+
+      - name: Checkout PR head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.refs.outputs.pr_sha }}
+          path: same-machine-pr
+          persist-credentials: false
+
+      - name: Setup bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install main dependencies
+        working-directory: same-machine-main
+        run: bun install
+
+      - name: Install PR dependencies
+        working-directory: same-machine-pr
+        run: bun install
+
+      - name: Prepare comparison artifacts
+        run: mkdir -p same-machine-results/main same-machine-results/pr
+
+      - name: Benchmark current main
+        working-directory: same-machine-main
+        env:
+          BENCHMARK_ARGS_JSON: ${{ inputs.benchmark_args_json }}
+          BENCHMARK_DATASET: ${{ steps.refs.outputs.dataset }}
+        run: |
+          chmod +x ./benchmark.sh
+          node <<'NODE'
+          const { spawnSync } = require('node:child_process')
+          const args = JSON.parse(process.env.BENCHMARK_ARGS_JSON || '[]')
+          if (!Array.isArray(args) || args.some((arg) => typeof arg !== 'string')) {
+            throw new Error('benchmark_args_json must be a JSON array of strings')
+          }
+          if (!args.includes('--dataset')) {
+            args.push('--dataset', process.env.BENCHMARK_DATASET)
+          }
+          const result = spawnSync('./benchmark.sh', args, { stdio: 'inherit' })
+          if (result.error) throw result.error
+          process.exit(result.status ?? 1)
+          NODE
+          cp benchmark-result.json ../same-machine-results/main/benchmark-result.json
+          cp benchmark-result.txt ../same-machine-results/main/benchmark-result.txt
+          cp benchmark-snapshots.html ../same-machine-results/main/benchmark-snapshots.html
+
+      - name: Benchmark PR head
+        working-directory: same-machine-pr
+        env:
+          BENCHMARK_ARGS_JSON: ${{ inputs.benchmark_args_json }}
+          BENCHMARK_DATASET: ${{ steps.refs.outputs.dataset }}
+        run: |
+          chmod +x ./benchmark.sh
+          node <<'NODE'
+          const { spawnSync } = require('node:child_process')
+          const args = JSON.parse(process.env.BENCHMARK_ARGS_JSON || '[]')
+          if (!Array.isArray(args) || args.some((arg) => typeof arg !== 'string')) {
+            throw new Error('benchmark_args_json must be a JSON array of strings')
+          }
+          if (!args.includes('--dataset')) {
+            args.push('--dataset', process.env.BENCHMARK_DATASET)
+          }
+          const result = spawnSync('./benchmark.sh', args, { stdio: 'inherit' })
+          if (result.error) throw result.error
+          process.exit(result.status ?? 1)
+          NODE
+          cp benchmark-result.json ../same-machine-results/pr/benchmark-result.json
+          cp benchmark-result.txt ../same-machine-results/pr/benchmark-result.txt
+          cp benchmark-snapshots.html ../same-machine-results/pr/benchmark-snapshots.html
+
+      - name: Render same-machine comparison
+        working-directory: same-machine-controller
+        env:
+          MAIN_SHA: ${{ steps.refs.outputs.main_sha }}
+          PR_SHA: ${{ steps.refs.outputs.pr_sha }}
+          RUNNER_NAME: ${{ runner.name }}
+        run: |
+          bun scripts/benchmark/same-machine-results.ts \
+            --main-report ../same-machine-results/main/benchmark-result.json \
+            --pr-report ../same-machine-results/pr/benchmark-result.json \
+            --main-sha "$MAIN_SHA" \
+            --pr-sha "$PR_SHA" \
+            --repository "${{ github.repository }}" \
+            --runner-name "$RUNNER_NAME" \
+            --output ../same-machine-results/comment.md
+
+      - name: Upload same-machine benchmark results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: same-machine-benchmark-${{ steps.refs.outputs.dataset }}
+          path: same-machine-results
+          if-no-files-found: warn
+
+      - name: Post same-machine benchmark comment
+        if: always() && steps.refs.outputs.status_comment_id != ''
+        uses: actions/github-script@v7
+        env:
+          STATUS_COMMENT_ID: ${{ steps.refs.outputs.status_comment_id }}
+          JOB_STATUS: ${{ job.status }}
+        with:
+          github-token: ${{ secrets.TSCIRCUIT_BOT_GITHUB_TOKEN }}
+          script: |
+            const fs = require('node:fs')
+            const runUrl = `${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}`
+            const resultPath = 'same-machine-results/comment.md'
+            const resultBody = fs.existsSync(resultPath)
+              ? fs.readFileSync(resultPath, 'utf8').trim()
+              : [
+                  '## Same Machine Benchmark Results',
+                  '',
+                  `The paired benchmark ended with **${process.env.JOB_STATUS}** before both reports were produced.`,
+                ].join('\n')
+            const body = [
+              resultBody,
+              '',
+              `Workflow: [View run](${runUrl})`,
+              `Artifact: [Download raw reports](${runUrl})`,
+            ].join('\n')
+
+            await github.rest.issues.updateComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              comment_id: Number(process.env.STATUS_COMMENT_ID),
+              body,
             })
 
   benchmark-history:
