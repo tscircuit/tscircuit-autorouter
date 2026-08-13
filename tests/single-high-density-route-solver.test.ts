@@ -145,6 +145,36 @@ test("Future-cost solver rejects vias that violate future via-to-trace clearance
   expect(neighbors.some((neighbor) => neighbor.z !== currentNode.z)).toBe(false)
 })
 
+test("Future-cost solver computes combined node costs identically", () => {
+  const solver = new SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost({
+    ...baseOpts,
+    obstacleRoutes: [],
+    futureConnections: [
+      {
+        connectionName: "future-conn",
+        points: [
+          { x: 2, y: 8, z: 0 },
+          { x: 8, y: 2, z: 1 },
+        ],
+      },
+    ],
+  })
+  const parent = { x: 3, y: 4, z: 0, g: 2.5, h: 0, f: 0, parent: null }
+  for (const node of [
+    { x: 3.5, y: 4.5, z: 0, g: 0, h: 0, f: 0, parent },
+    { x: 3.5, y: 4.5, z: 1, g: 0, h: 0, f: 0, parent },
+  ]) {
+    const expectedG = solver.computeG(node as any)
+    const expectedH = solver.computeH(node as any)
+
+    solver.setNodeCosts(node as any)
+
+    expect(node.g).toBe(expectedG)
+    expect(node.h).toBe(expectedH)
+    expect(node.f).toBe(solver.computeF(expectedG, expectedH))
+  }
+})
+
 test("SingleHighDensityRouteSolver numeric node keys are collision-free across its grid", () => {
   const solver = new SingleHighDensityRouteSolver({
     ...baseOpts,

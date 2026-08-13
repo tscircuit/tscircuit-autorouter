@@ -192,4 +192,34 @@ export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends Sing
       this.getFutureConnectionPenalty(node, node.z !== node.parent?.z)
     )
   }
+
+  override setNodeCosts(node: Node) {
+    const dx = Math.abs(node.x - node.parent!.x)
+    const dy = Math.abs(node.y - node.parent!.y)
+    const dist = Math.sqrt(dx ** 2 + dy ** 2)
+    const isEvenLayer = node.z % 2 === 0
+    const misalignedDist = !this.FLIP_TRACE_ALIGNMENT_DIRECTION
+      ? isEvenLayer
+        ? dy
+        : dx
+      : isEvenLayer
+        ? dx
+        : dy
+    const baseG =
+      (node.parent?.g ?? 0) +
+      (node.z === node.parent?.z ? 0 : this.viaPenaltyDistance) +
+      dist +
+      misalignedDist * this.MISALIGNED_DIST_PENALTY_FACTOR
+
+    const goalDist = distance(node, this.B) ** 1.6
+    const baseH = goalDist + (node.z !== this.B.z ? this.viaPenaltyDistance : 0)
+    const futureConnectionPenalty = this.getFutureConnectionPenalty(
+      node,
+      node.z !== node.parent?.z,
+    )
+
+    node.g = baseG + futureConnectionPenalty
+    node.h = baseH + futureConnectionPenalty
+    node.f = this.computeF(node.g, node.h)
+  }
 }

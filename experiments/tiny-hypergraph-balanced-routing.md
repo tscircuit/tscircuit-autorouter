@@ -194,7 +194,9 @@ bookkeeping in the high-density A* loop. The accepted implementation:
 - disables visualization-only search history in Pipeline 7 while preserving
   it by default for direct/debug solver use; and
 - uses inlined hole-sifting in the candidate heap while preserving its exact
-  comparison and tie behavior.
+  comparison and tie behavior; and
+- computes each neighbor's `g` and `h` together so the future-connection
+  penalty is scanned once instead of twice, with exact score equivalence.
 
 Matched one-worker dataset01 trials used eight high-density-heavy cases
 (samples 32, 37, 39, 49, 58, 67, 73, and 77). All eight retained identical
@@ -203,21 +205,21 @@ status.
 
 | Metric | PR baseline | Optimized | Change |
 | --- | ---: | ---: | ---: |
-| High-density route time | 20.84 s | 13.68 s | -34.4% (1.52x faster) |
-| End-to-end time | 43.24 s | 35.88 s | -17.0% (1.21x faster) |
+| High-density route time | 20.84 s | 13.29 s | -36.2% (1.57x faster) |
+| End-to-end time | 43.24 s | 35.86 s | -17.1% (1.21x faster) |
 | Completed / relaxed DRC | 8 / 8 | 8 / 8 | identical |
 
 Every case improved end-to-end. A larger SRJ18 control confirmed that the gain
 scales: sample 11 retained 206,760 high-density iterations, 179 vias, and zero
-DRC errors while high-density time fell from 27.48 to 19.55 seconds (-28.9%)
-and total time fell from 54.22 to 46.17 seconds (-14.9%).
+DRC errors while high-density time fell from 27.48 to 18.23 seconds (-33.7%,
+1.51x faster) and total time fell from 54.22 to 44.71 seconds (-17.5%).
 
 A same-process dataset01 sample 32 memory comparison also improved: maximum
 RSS fell from 858 MB to 842 MB, and macOS peak memory footprint fell from 662
 MB to 625 MB.
 
 Rejected downstream micro-optimizations were also kept out of the patch:
-batching cache-stat reads was noise, two future-connection penalty rewrites
-regressed the canary, and precomputing penalty constants caused a 21% runtime
-regression under Bun's JIT. All trials used one local worker and excluded
-bugreport88.
+batching cache-stat reads was noise, WeakMap and direct-property penalty caches
+regressed or were neutral, two future-connection penalty rewrites regressed the
+canary, and precomputing penalty constants caused a 21% runtime regression
+under Bun's JIT. All trials used one local worker and excluded bugreport88.

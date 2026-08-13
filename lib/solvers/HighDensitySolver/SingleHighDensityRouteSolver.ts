@@ -472,6 +472,12 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     return g + h * this.GREEDY_MULTIPLER
   }
 
+  setNodeCosts(node: Node) {
+    node.g = this.computeG(node)
+    node.h = this.computeH(node)
+    node.f = this.computeF(node.g, node.h)
+  }
+
   getNodeKey(node: Node) {
     const xIndex = Math.round(node.x / this.cellStep) - this.gridMinXIndex
     const yIndex = Math.round(node.y / this.cellStep) - this.gridMinYIndex
@@ -524,9 +530,7 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
           continue
         }
 
-        neighbor.g = this.computeG(neighbor)
-        neighbor.h = this.computeH(neighbor)
-        neighbor.f = this.computeF(neighbor.g, neighbor.h)
+        this.setNodeCosts(neighbor)
 
         neighbors.push(neighbor)
       }
@@ -555,9 +559,7 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
         ) &&
         !this.isNodeTooCloseToEdge(viaNeighbor, true)
       ) {
-        viaNeighbor.g = this.computeG(viaNeighbor)
-        viaNeighbor.h = this.computeH(viaNeighbor)
-        viaNeighbor.f = this.computeF(viaNeighbor.g, viaNeighbor.h)
+        this.setNodeCosts(viaNeighbor)
 
         neighbors.push(viaNeighbor)
       }
