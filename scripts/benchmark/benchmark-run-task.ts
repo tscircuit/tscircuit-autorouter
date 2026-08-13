@@ -45,6 +45,7 @@ type SolverInstance = {
   highDensityRouteSolver?: {
     iterations?: number
   }
+  timeSpentOnPhase?: Record<string, number>
 }
 
 type SolverOptions = {
@@ -284,13 +285,19 @@ const getRoutingBenchmarkMetrics = (
   const tinyHypergraph =
     solver.portPointPathingSolver?.getSolveGraphBenchmarkMetrics?.()
   const highDensityIterations = solver.highDensityRouteSolver?.iterations
-  if (tinyHypergraph === undefined && highDensityIterations === undefined) {
+  const phaseTimeMs = solver.timeSpentOnPhase
+  if (
+    tinyHypergraph === undefined &&
+    highDensityIterations === undefined &&
+    phaseTimeMs === undefined
+  ) {
     return undefined
   }
 
   return {
     tinyHypergraph,
     highDensityIterations,
+    phaseTimeMs,
   }
 }
 

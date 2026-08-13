@@ -84,6 +84,80 @@ type TinyBounds = {
   maxY: number
 }
 
+export type DownstreamCandidateSummary = {
+  nodePfSum: number
+  nodePfSquaredSum: number
+  nodePfMax: number
+  squaredNodePortPointCount: number
+  segmentCount: number
+  layerChangeCount: number
+}
+
+type CandidatePortfolioPhase = "primary" | "alternative" | "complete"
+
+// A second global-routing candidate is only worthwhile when the primary
+// candidate predicts downstream congestion. Selection requires meaningful
+// trace dispersion without materially increasing predicted failure pressure.
+const TRACE_DENSITY_PORTFOLIO_MIN_ROUTE_COUNT = 30
+const TRACE_DENSITY_PORTFOLIO_MAX_ROUTE_COUNT = 99
+const TRACE_DENSITY_PORTFOLIO_MIN_PF_SUM = 4
+const TRACE_DENSITY_PORTFOLIO_MIN_PF_MAX = 1
+const TRACE_DENSITY_PORTFOLIO_MIN_CONCENTRATION_PER_ROUTE = 125
+const TRACE_DENSITY_PORTFOLIO_MAX_PF_SUM_GROWTH = 1.03
+const TRACE_DENSITY_PORTFOLIO_MAX_PF_SQUARED_GROWTH = 1.06
+const TRACE_DENSITY_PORTFOLIO_SMALL_GRAPH_MAX_ROUTE_COUNT = 40
+const TRACE_DENSITY_PORTFOLIO_SMALL_GRAPH_MAX_CONCENTRATION_RATIO = 0.95
+const TRACE_DENSITY_PORTFOLIO_LARGE_GRAPH_MAX_CONCENTRATION_RATIO = 0.92
+const TRACE_DENSITY_PORTFOLIO_STRONG_PF_SUM_RATIO = 0.9
+const TRACE_DENSITY_PORTFOLIO_STRONG_PF_SQUARED_RATIO = 0.85
+const TRACE_DENSITY_PORTFOLIO_STRONG_PF_MAX_RATIO = 0.85
+const TRACE_DENSITY_PORTFOLIO_STRONG_CONCENTRATION_RATIO = 0.98
+const TRACE_DENSITY_PORTFOLIO_STRONG_SEGMENT_RATIO = 0.97
+
+export const shouldEvaluateTraceDensityAlternative = (
+  summary: DownstreamCandidateSummary,
+  routeCount: number,
+) =>
+  summary.nodePfSum > TRACE_DENSITY_PORTFOLIO_MIN_PF_SUM &&
+  summary.nodePfMax > TRACE_DENSITY_PORTFOLIO_MIN_PF_MAX &&
+  summary.squaredNodePortPointCount / Math.max(1, routeCount) >=
+    TRACE_DENSITY_PORTFOLIO_MIN_CONCENTRATION_PER_ROUTE
+
+export const shouldSelectTraceDensityAlternative = (
+  primary: DownstreamCandidateSummary,
+  alternative: DownstreamCandidateSummary,
+  routeCount: number,
+) => {
+  const maxConcentrationRatio =
+    routeCount > TRACE_DENSITY_PORTFOLIO_SMALL_GRAPH_MAX_ROUTE_COUNT
+      ? TRACE_DENSITY_PORTFOLIO_LARGE_GRAPH_MAX_CONCENTRATION_RATIO
+      : TRACE_DENSITY_PORTFOLIO_SMALL_GRAPH_MAX_CONCENTRATION_RATIO
+  const stronglyReducesDownstreamPressure =
+    alternative.nodePfSum <=
+      primary.nodePfSum * TRACE_DENSITY_PORTFOLIO_STRONG_PF_SUM_RATIO &&
+    alternative.nodePfSquaredSum <=
+      primary.nodePfSquaredSum *
+        TRACE_DENSITY_PORTFOLIO_STRONG_PF_SQUARED_RATIO &&
+    alternative.nodePfMax <=
+      primary.nodePfMax * TRACE_DENSITY_PORTFOLIO_STRONG_PF_MAX_RATIO &&
+    alternative.squaredNodePortPointCount <
+      primary.squaredNodePortPointCount *
+        TRACE_DENSITY_PORTFOLIO_STRONG_CONCENTRATION_RATIO &&
+    alternative.segmentCount <=
+      primary.segmentCount * TRACE_DENSITY_PORTFOLIO_STRONG_SEGMENT_RATIO
+
+  return (
+    alternative.nodePfSum <=
+      primary.nodePfSum * TRACE_DENSITY_PORTFOLIO_MAX_PF_SUM_GROWTH &&
+    alternative.nodePfSquaredSum <=
+      primary.nodePfSquaredSum *
+        TRACE_DENSITY_PORTFOLIO_MAX_PF_SQUARED_GROWTH &&
+    (alternative.squaredNodePortPointCount <
+      primary.squaredNodePortPointCount * maxConcentrationRatio ||
+      stronglyReducesDownstreamPressure)
+  )
+}
+
 type TinyRegionMetadata = {
   bounds?: TinyBounds
   netId?: number
@@ -185,7 +259,7 @@ const getTinyHyperGraphSolveGraphOptions = (
   return {
     ...TINY_SOLVE_GRAPH_BASE_OPTIONS,
     ...getTinyViaSizeOptions(minViaPadDiameter),
-    USE_SPARSE_CANDIDATE_STORAGE: true,
+    USE_SPARSE_CANDIDATE_STORAGE: false,
     RIP_THRESHOLD_RAMP_ATTEMPTS: Math.ceil(10 * effortScale),
     MAX_ITERATIONS: Math.ceil(2_000_000 * effortScale),
   }
@@ -199,7 +273,7 @@ const getTinyHyperGraphSectionSolverOptions = (
   return {
     ...TINY_SECTION_SOLVER_BASE_OPTIONS,
     ...getTinyViaSizeOptions(minViaPadDiameter),
-    USE_SPARSE_CANDIDATE_STORAGE: true,
+    USE_SPARSE_CANDIDATE_STORAGE: false,
     RIP_THRESHOLD_RAMP_ATTEMPTS: Math.ceil(16 * effortScale),
     MAX_ITERATIONS: Math.ceil(1_000_000 * effortScale),
   }
@@ -223,7 +297,6 @@ const getTinyHyperGraphPipelineInput = (
     enablePartialRip &&
     eligibilityCount >= minPartialRipRouteCount &&
     eligibilityCount <= maxPartialRipRouteCount
-
   return {
     serializedHyperGraph,
     createSectionMask: ({ topology }) => new Int8Array(topology.portCount),
@@ -945,6 +1018,14 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
 
 export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
   private tinyPipelineSolver: TinyHyperGraphSectionPipelineWithTerminalNetIds
+  private primaryTinyPipelineSolver?: TinyHyperGraphSectionPipelineWithTerminalNetIds
+  private alternativeTinyPipelineSolver?: TinyHyperGraphSectionPipelineWithTerminalNetIds
+  private alternativeTinyPipelineInput?: TinyHyperGraphSectionPipelineInput
+  private candidatePortfolioPhase: CandidatePortfolioPhase = "primary"
+  private primaryCandidateSummary?: DownstreamCandidateSummary
+  private alternativeCandidateSummary?: DownstreamCandidateSummary
+  private alternativeCandidateEvaluated = false
+  private selectedCandidate: "primary" | "alternative" = "primary"
   private duplicateCongestedPortReport?: DuplicateCongestedPortSolverReport
   private duplicateCongestedPortError?: string
   private duplicatedPortCount = 0
@@ -1001,7 +1082,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
           useSerializedPortPenalties: false,
           routeSolveOptions: {
             ...getTinyViaSizeOptions(params.minViaPadDiameter),
-            USE_SPARSE_CANDIDATE_STORAGE: true,
+            USE_SPARSE_CANDIDATE_STORAGE: false,
             ACCEPT_BEST_SOLUTION_ON_TIMEOUT: true,
             GREEDY_FINAL_ROUTE_ITERS: 4,
             MAX_ITERATIONS: Math.ceil(
@@ -1045,8 +1126,23 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
         tinyPipelineInput,
         params.flags.USE_SELECTIVE_RERIP_ROUTING === true,
       )
+    this.primaryTinyPipelineSolver = this.tinyPipelineSolver
+    if (
+      !hasPreloadedTraceOccupancy &&
+      connections.length >= TRACE_DENSITY_PORTFOLIO_MIN_ROUTE_COUNT &&
+      connections.length <= TRACE_DENSITY_PORTFOLIO_MAX_ROUTE_COUNT
+    ) {
+      this.alternativeTinyPipelineInput = {
+        ...tinyPipelineInput,
+        solveGraphOptions: {
+          ...tinyPipelineInput.solveGraphOptions,
+          TRACE_DENSITY_COST_FACTOR: 1,
+        },
+      }
+    }
     this.MAX_ITERATIONS =
-      getTinyHyperGraphPipelineMaxIterations(tinyPipelineInput)
+      getTinyHyperGraphPipelineMaxIterations(tinyPipelineInput) *
+      (this.alternativeTinyPipelineInput ? 2 : 1)
 
     this.originalRegionById = new Map(
       params.graph.regions.map((region) => [region.regionId, region]),
@@ -1062,6 +1158,105 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
     return "TinyHypergraphPortPointPathingSolver"
   }
 
+  private summarizePipelineCandidate(
+    pipeline: TinyHyperGraphSectionPipelineWithTerminalNetIds,
+  ): DownstreamCandidateSummary {
+    const solvedTinySolver = pipeline.getSolvedTinySolver()
+    let nodePfSum = 0
+    let nodePfSquaredSum = 0
+    let nodePfMax = 0
+    let squaredNodePortPointCount = 0
+    let segmentCount = 0
+    let layerChangeCount = 0
+    const regionMetadata = solvedTinySolver.topology.regionMetadata ?? []
+
+    for (
+      let regionId = 0;
+      regionId < solvedTinySolver.state.regionSegments.length;
+      regionId++
+    ) {
+      const segments = solvedTinySolver.state.regionSegments[regionId]
+      segmentCount += segments.length
+      for (const [, fromPortId, toPortId] of segments) {
+        if (
+          solvedTinySolver.topology.portZ[fromPortId] !==
+          solvedTinySolver.topology.portZ[toPortId]
+        ) {
+          layerChangeCount += 1
+        }
+      }
+
+      const originalRegionId = regionMetadata[regionId]?.capacityMeshNodeId
+      if (!originalRegionId || !this.originalRegionIds.has(originalRegionId)) {
+        continue
+      }
+      const originalRegion = this.originalRegionById.get(originalRegionId)
+      if (!originalRegion || segments.length === 0) continue
+
+      const portPointsInPairs = segments.map(
+        ([routeId, fromPortId, toPortId]) =>
+          [
+            this.createAssignedPortPoint(solvedTinySolver, routeId, fromPortId),
+            this.createAssignedPortPoint(solvedTinySolver, routeId, toPortId),
+          ] satisfies [PortPoint, PortPoint],
+      )
+      const solvedNode: NodeWithPortPoints = {
+        capacityMeshNodeId: originalRegion.d.capacityMeshNodeId,
+        center: originalRegion.d.center,
+        width: originalRegion.d.width,
+        height: originalRegion.d.height,
+        portPoints: portPointsInPairs.flat(),
+        portPointsInPairs,
+        availableZ: originalRegion.d.availableZ,
+      }
+      const crossings = getIntraNodeCrossingsUsingCircle(solvedNode)
+      const nodePf = calculateNodeProbabilityOfFailure(
+        originalRegion.d,
+        crossings.numSameLayerCrossings,
+        crossings.numEntryExitLayerChanges,
+        crossings.numTransitionPairCrossings,
+      )
+      nodePfSum += nodePf
+      nodePfSquaredSum += nodePf * nodePf
+      nodePfMax = Math.max(nodePfMax, nodePf)
+      squaredNodePortPointCount += solvedNode.portPoints.length ** 2
+    }
+
+    return {
+      nodePfSum,
+      nodePfSquaredSum,
+      nodePfMax,
+      squaredNodePortPointCount,
+      segmentCount,
+      layerChangeCount,
+    }
+  }
+
+  private shouldEvaluateAlternative(summary: DownstreamCandidateSummary) {
+    const routeCount =
+      this.primaryTinyPipelineSolver!.getSolvedTinySolver().problem.routeCount
+    return (
+      this.alternativeTinyPipelineInput !== undefined &&
+      shouldEvaluateTraceDensityAlternative(summary, routeCount)
+    )
+  }
+
+  private shouldSelectAlternative(
+    primary: DownstreamCandidateSummary,
+    alternative: DownstreamCandidateSummary,
+  ) {
+    const routeCount =
+      this.primaryTinyPipelineSolver!.getSolvedTinySolver().problem.routeCount
+    return shouldSelectTraceDensityAlternative(primary, alternative, routeCount)
+  }
+
+  private finishCandidatePortfolio() {
+    this.candidatePortfolioPhase = "complete"
+    this.solved = this.tinyPipelineSolver.solved
+    this.failed = this.tinyPipelineSolver.failed
+    this.error = this.tinyPipelineSolver.error ?? null
+  }
+
   getSolveGraphBenchmarkMetrics() {
     const solveGraphSolver =
       this.tinyPipelineSolver.getSolver<TinyHyperGraphSolver>("solveGraph")
@@ -1070,12 +1265,23 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
     const regionSegmentCounts = solveGraphSolver.state.regionSegments.map(
       (segments) => segments.length,
     )
+    const selectedCandidateSummary =
+      this.selectedCandidate === "alternative"
+        ? this.alternativeCandidateSummary
+        : this.primaryCandidateSummary
     const solveGraphStats = solveGraphSolver.stats
     const solveGraphStageStats =
       this.tinyPipelineSolver.getStageStats().solveGraph
 
     return {
       routeCount: solveGraphSolver.problem.routeCount,
+      traceDensityCandidateEvaluated: this.alternativeCandidateEvaluated,
+      traceDensityCandidateSelected: this.selectedCandidate === "alternative",
+      downstreamNodePfSum: selectedCandidateSummary?.nodePfSum,
+      downstreamNodePfSquaredSum: selectedCandidateSummary?.nodePfSquaredSum,
+      downstreamNodePfMax: selectedCandidateSummary?.nodePfMax,
+      downstreamSquaredNodePortPointCount:
+        selectedCandidateSummary?.squaredNodePortPointCount,
       iterations: solveGraphSolver.iterations,
       timeMs: solveGraphStageStats?.timeSpent,
       ripCount: solveGraphStats.ripCount,
@@ -1099,6 +1305,8 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
         (sum, count) => sum + count * count,
         0,
       ),
+      finalSegmentCount: selectedCandidateSummary?.segmentCount,
+      finalLayerChangeCount: selectedCandidateSummary?.layerChangeCount,
       warmupFullRipAttempts: solveGraphStats.partialRipWarmupFullRipAttempts,
       complexityAwareSelection:
         solveGraphStats.partialRipComplexityAwareSelection,
@@ -1122,16 +1330,81 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       throw error
     }
 
+    if (
+      this.candidatePortfolioPhase === "primary" &&
+      this.primaryTinyPipelineSolver!.failed
+    ) {
+      this.alternativeTinyPipelineInput = undefined
+      this.finishCandidatePortfolio()
+    } else if (
+      this.candidatePortfolioPhase === "primary" &&
+      this.primaryTinyPipelineSolver!.solved
+    ) {
+      this.primaryCandidateSummary = this.summarizePipelineCandidate(
+        this.primaryTinyPipelineSolver!,
+      )
+      if (this.shouldEvaluateAlternative(this.primaryCandidateSummary)) {
+        this.alternativeCandidateEvaluated = true
+        this.alternativeTinyPipelineSolver =
+          new TinyHyperGraphSectionPipelineWithTerminalNetIds(
+            this.alternativeTinyPipelineInput!,
+            this.params.flags.USE_SELECTIVE_RERIP_ROUTING === true,
+          )
+        this.tinyPipelineSolver = this.alternativeTinyPipelineSolver
+        this.candidatePortfolioPhase = "alternative"
+      } else {
+        this.alternativeTinyPipelineInput = undefined
+        this.finishCandidatePortfolio()
+      }
+    } else if (
+      this.candidatePortfolioPhase === "alternative" &&
+      (this.tinyPipelineSolver.solved || this.tinyPipelineSolver.failed)
+    ) {
+      if (this.tinyPipelineSolver.solved && !this.tinyPipelineSolver.failed) {
+        this.alternativeCandidateSummary = this.summarizePipelineCandidate(
+          this.tinyPipelineSolver,
+        )
+      }
+      if (
+        this.alternativeCandidateSummary &&
+        this.primaryCandidateSummary &&
+        this.shouldSelectAlternative(
+          this.primaryCandidateSummary,
+          this.alternativeCandidateSummary,
+        )
+      ) {
+        this.selectedCandidate = "alternative"
+        this.primaryTinyPipelineSolver = undefined
+        this.alternativeTinyPipelineSolver = undefined
+      } else {
+        this.tinyPipelineSolver = this.primaryTinyPipelineSolver!
+        this.alternativeTinyPipelineSolver = undefined
+      }
+      this.alternativeTinyPipelineInput = undefined
+      this.finishCandidatePortfolio()
+    }
+
     const optimizeSectionSolver =
       this.tinyPipelineSolver.getSolver<TinyHyperGraphSectionSolver>(
         "optimizeSection",
       )
     const currentTinySolver = this.getCurrentTinySolver()
 
-    this.solved = this.tinyPipelineSolver.solved
-    this.failed = this.tinyPipelineSolver.failed
-    this.error = this.tinyPipelineSolver.error ?? null
-    this.progress = this.tinyPipelineSolver.progress
+    this.solved =
+      this.candidatePortfolioPhase === "complete" &&
+      this.tinyPipelineSolver.solved
+    this.failed =
+      this.candidatePortfolioPhase === "complete" &&
+      this.tinyPipelineSolver.failed
+    this.error = this.failed ? (this.tinyPipelineSolver.error ?? null) : null
+    this.progress =
+      this.candidatePortfolioPhase === "complete"
+        ? 1
+        : this.candidatePortfolioPhase === "alternative"
+          ? 0.5 + this.tinyPipelineSolver.progress * 0.5
+          : this.alternativeTinyPipelineInput
+            ? this.tinyPipelineSolver.progress * 0.5
+            : this.tinyPipelineSolver.progress
     this.stats = {
       duplicateCongestedPortSourceCount:
         this.duplicateCongestedPortReport?.duplicatedPorts.length ?? 0,
@@ -1155,6 +1428,10 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       preloadedFixedSegmentCount:
         this.tinyPipelineSolver.preloadedFixedSegmentCount,
       duplicateCongestedPortError: this.duplicateCongestedPortError,
+      candidatePortfolioPhase: this.candidatePortfolioPhase,
+      candidatePortfolioSelectedCandidate: this.selectedCandidate,
+      candidatePortfolioPrimarySummary: this.primaryCandidateSummary,
+      candidatePortfolioAlternativeSummary: this.alternativeCandidateSummary,
       ...(this.tinyPipelineSolver.stats ?? {}),
       ...(currentTinySolver?.stats ?? {}),
       ...(optimizeSectionSolver?.stats ?? {}),

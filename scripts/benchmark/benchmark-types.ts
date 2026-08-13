@@ -45,6 +45,12 @@ export type WorkerProgress = {
 
 export type TinyHypergraphBenchmarkMetrics = {
   routeCount: number
+  traceDensityCandidateEvaluated?: boolean
+  traceDensityCandidateSelected?: boolean
+  downstreamNodePfSum?: number
+  downstreamNodePfSquaredSum?: number
+  downstreamNodePfMax?: number
+  downstreamSquaredNodePortPointCount?: number
   iterations: number
   timeMs?: number
   ripCount?: number
@@ -62,6 +68,8 @@ export type TinyHypergraphBenchmarkMetrics = {
   bestSolvedSquaredRegionSegmentCount?: number
   finalMaxRegionSegmentCount: number
   finalSquaredRegionSegmentCount: number
+  finalSegmentCount?: number
+  finalLayerChangeCount?: number
   warmupFullRipAttempts?: number
   complexityAwareSelection?: boolean
   targetReached?: boolean
@@ -74,6 +82,7 @@ export type TinyHypergraphBenchmarkMetrics = {
 export type RoutingBenchmarkMetrics = {
   tinyHypergraph?: TinyHypergraphBenchmarkMetrics
   highDensityIterations?: number
+  phaseTimeMs?: Record<string, number>
 }
 
 export type WorkerResult<

@@ -1,7 +1,7 @@
 {
   "name": "@tscircuit/capacity-autorouter",
   "main": "./dist/index.js",
-  "version": "0.0.798",
+  "version": "0.0.801",
   "type": "module",
   "files": [
     "dist"
@@ -31,7 +31,7 @@
     "@tsci/tscircuit.dataset-srj20-partial-bga-breakouts": "git+https://github.com/tscircuit/dataset-srj20.git#9384fb8f45fb479b97178ddfa42fc74c69afbbec",
     "@tsci/0hmX.multi-component-dataset-srj01": "git+https://github.com/tscircuit/multi-component-dataset-srj01.git#abf9d17c966d466b56ac21b735c6bb6f4518919d",
     "@tsci/tscircuit.dataset-srj12-bus-routing": "git+https://github.com/tscircuit/dataset-srj12-bus-routing.git#ba82f86a7d1288566b7144eb8661ad2549c5f328",
-    "@tscircuit/autorouting-dataset-01": "git+https://github.com/tscircuit/autorouting-dataset-01.git#4f795dcfee01db1573670e1edac52814457b666c",
+    "@tscircuit/autorouting-dataset-01": "git+https://github.com/tscircuit/autorouting-dataset-01.git#b97f5052a2359ab2da3f186765c6a5e839535efb",
     "@tscircuit/checks": "^0.0.145",
     "@tscircuit/circuit-json-util": "^0.0.94",
     "@tscircuit/core": "0.0.337",
@@ -81,7 +81,7 @@
     "recharts": "^2.15.1",
     "tailwind-merge": "^3.2.0",
     "terser": "^5.43.1",
-    "tiny-hypergraph": "git+https://github.com/tscircuit/tiny-hypergraph.git#e7ba41dd894f39eae3782a773daf3ab742dc133e",
+    "tiny-hypergraph": "git+https://github.com/tscircuit/tiny-hypergraph.git#3fef9682a69da844cd2d853bd41bdd66c4de6c8d",
     "tiny-hypergraph-poly": "git+https://github.com/tscircuit/tiny-hypergraph.git#7b93b4c",
     "tsup": "^8.3.6",
     "typescript": "^5.9.3",
@@ -89,7 +89,7 @@
     "vite": "^6.0.11",
     "vite-tsconfig-paths": "^5.1.4",
     "zdwiel-dataset": "git+https://github.com/dwiel/tscircuit-benchmark.git#be36518b5bf51755dae92c230061ab3cf4e3e063",
-    "high-density-repair01": "git+https://github.com/tscircuit/high-density-repair01.git#cefc7be547ff727bd31573ac096b850da847af46",
+    "high-density-repair01": "git+https://github.com/tscircuit/high-density-repair01.git#8eaa775e7c7a2c32c12a82da4edef22477549027",
     "high-density-repair02": "https://codeload.github.com/tscircuit/high-density-repair02/tar.gz/2afc0cbba3bf2f7eb6b9cd33615d21e9ad9352d4",
     "high-density-repair03": "git+https://github.com/tscircuit/high-density-repair03.git#ac9d26fdba4098374aa22edc3aea92b7211e76dd",
     "@tscircuit/high-density-a01": "git+https://github.com/tscircuit/high-density-a01.git#9a3a3d",
