@@ -1444,7 +1444,10 @@ export class SingleHighDensityRouteWithJumpersSolver extends BaseSolver {
     }
   }
 
-  computeProgress(currentNode: JumperNode, goalDist: number) {
+  computeProgress(currentNode?: JumperNode, goalDist?: number) {
+    // BaseSolver probes computeProgress() without arguments after every step.
+    // Preserve the legacy NaN result without repeating the trigonometry.
+    if (goalDist === undefined) return Number.NaN
     const goalDistPercent = 1 - goalDist / this.straightLineDistance
 
     return Math.max(
