@@ -9,6 +9,7 @@ import { GraphicsObject } from "graphics-debug"
 import { getJumpersGraphics } from "lib/utils/getJumperGraphics"
 import { createObjectsWithZLayers } from "lib/utils/createObjectsWithZLayers"
 import { CrossingViaReductionSolver } from "lib/solvers/CrossingViaReductionSolver/crossing-via-reduction-solver"
+import { breakRouteIntoSections } from "lib/solvers/UselessViaRemovalSolver/break-route-into-sections"
 
 type Phase =
   | "via_removal"
@@ -53,7 +54,10 @@ export class TraceSimplificationSolver extends BaseSolver {
 
   simplificationPipelineLoops = 0
 
-  MAX_SIMPLIFICATION_PIPELINE_LOOPS: number = 2
+  /** Optional test/debug override; production scheduling is progress-driven. */
+  MAX_SIMPLIFICATION_PIPELINE_LOOPS = Number.POSITIVE_INFINITY
+
+  structuralComplexityBeforeLoop: number
 
   PHASE_ORDER: Phase[] = [
     "via_removal",
@@ -87,7 +91,8 @@ export class TraceSimplificationSolver extends BaseSolver {
    *   - otherHdRoutes: Immutable routed traces to avoid while simplifying
    *   - netByConnectionName: Explicit net metadata for synthetic route names
    *   - enableCrossingViaReduction: Enables coordinated crossing layer swaps
-   *   - iterations: Number of complete simplification iterations (default: 2)
+   *   - useProgressiveGeometrySearch: Runs a cheap structural pass before
+   *     admitting geometry search according to the observed savings
    */
   constructor(
     private readonly simplificationConfig: {
@@ -103,17 +108,10 @@ export class TraceSimplificationSolver extends BaseSolver {
       readonly otherHdRoutes?: ReadonlyArray<HighDensityRoute>
       readonly netByConnectionName?: ReadonlyMap<string, string>
       readonly enableCrossingViaReduction?: boolean
-      readonly iterations?: number
+      readonly useProgressiveGeometrySearch?: boolean
     },
   ) {
     super()
-    if (
-      simplificationConfig.iterations !== undefined &&
-      (!Number.isInteger(simplificationConfig.iterations) ||
-        simplificationConfig.iterations < 1)
-    ) {
-      throw new Error("Trace simplification iterations must be a positive integer")
-    }
     this.simplificationConfig = {
       ...simplificationConfig,
       obstacles: createObjectsWithZLayers(
@@ -124,9 +122,44 @@ export class TraceSimplificationSolver extends BaseSolver {
     this.hdRoutes = this.markThroughObstacleSegments(
       simplificationConfig.hdRoutes,
     )
-    this.MAX_SIMPLIFICATION_PIPELINE_LOOPS =
-      simplificationConfig.iterations ?? 2
+    this.structuralComplexityBeforeLoop = this.getStructuralComplexity(
+      this.hdRoutes,
+    )
     this.MAX_ITERATIONS = 100e6
+  }
+
+  private getStructuralComplexity(routes: HighDensityRoute[]): number {
+    return routes.reduce(
+      (total, route) => total + route.route.length + route.vias.length,
+      0,
+    )
+  }
+
+  private getGeometryShortcutSearchWork(routes: HighDensityRoute[]): number {
+    let candidateCount = 0
+    for (const route of routes) {
+      const sections = breakRouteIntoSections(route)
+      for (let index = 1; index < sections.length - 1; index++) {
+        const previousSection = sections[index - 1]
+        const currentSection = sections[index]
+        const nextSection = sections[index + 1]
+        if (
+          previousSection.z === nextSection.z &&
+          previousSection.z !== currentSection.z
+        ) {
+          candidateCount +=
+            previousSection.points.length * nextSection.points.length
+        }
+      }
+    }
+    return candidateCount
+  }
+
+  private shouldRunGeometrySearch(): boolean {
+    return (
+      !this.simplificationConfig.useProgressiveGeometrySearch ||
+      this.simplificationPipelineLoops > 0
+    )
   }
 
   private isSameNetObstacle(route: HighDensityRoute, obstacle: Obstacle) {
@@ -230,10 +263,11 @@ export class TraceSimplificationSolver extends BaseSolver {
 
         // Advance phase
         if (this.currentPhase === "via_removal") {
-          this.currentPhase = this.simplificationConfig
-            .enableCrossingViaReduction
-            ? "crossing_via_reduction"
-            : "via_merging"
+          this.currentPhase =
+            this.simplificationConfig.enableCrossingViaReduction &&
+            this.shouldRunGeometrySearch()
+              ? "crossing_via_reduction"
+              : "via_merging"
         } else if (this.currentPhase === "crossing_via_reduction") {
           this.currentPhase = "via_merging"
         } else if (this.currentPhase === "via_merging") {
@@ -241,15 +275,46 @@ export class TraceSimplificationSolver extends BaseSolver {
         } else {
           this.currentPhase = "via_removal"
           this.simplificationPipelineLoops++
-        }
+          const structuralComplexity = this.getStructuralComplexity(
+            this.hdRoutes,
+          )
+          const structuralSavings = Math.max(
+            0,
+            this.structuralComplexityBeforeLoop - structuralComplexity,
+          )
+          const nextLoopSearchWork = this.getGeometryShortcutSearchWork(
+            this.hdRoutes,
+          )
+          // Each removed point/via earns one unit of follow-up search. This
+          // admits another pass only when its known combinatorial search can
+          // break even with the simplification just achieved.
+          this.stats.simplificationPipelineLoops =
+            this.simplificationPipelineLoops
+          this.stats.lastLoopStructuralSavings = structuralSavings
+          this.stats.nextLoopGeometrySearchWork = nextLoopSearchWork
 
-        // Check if all iterations are complete
-        if (
-          this.simplificationPipelineLoops >=
-          this.MAX_SIMPLIFICATION_PIPELINE_LOOPS
-        ) {
-          this.solved = true
-          return
+          if (
+            this.simplificationPipelineLoops >=
+            this.MAX_SIMPLIFICATION_PIPELINE_LOOPS
+          ) {
+            this.stats.adaptiveSimplificationStopReason =
+              "configured_loop_limit"
+            this.solved = true
+            return
+          }
+
+          if (
+            structuralSavings === 0 ||
+            nextLoopSearchWork > structuralSavings
+          ) {
+            this.stats.adaptiveSimplificationStopReason =
+              structuralSavings === 0
+                ? "fixed_point"
+                : "search_work_exceeds_previous_savings"
+            this.solved = true
+            return
+          }
+          this.structuralComplexityBeforeLoop = structuralComplexity
         }
       } else if (this.activeSubSolver.failed) {
         this.failed = true
@@ -278,9 +343,14 @@ export class TraceSimplificationSolver extends BaseSolver {
             geometryShortcutObstacleMargin:
               this.simplificationConfig.minTraceToPadEdgeClearance ?? 0.15,
             // Delay the quadratic anchor search until the first path pass has
-            // reduced the route point count.
-            enableGeometryShortcuts: this.simplificationPipelineLoops > 0,
+            // reduced the route point count when progressive search is enabled.
+            enableGeometryShortcuts:
+              this.simplificationConfig.useProgressiveGeometrySearch === true
+                ? this.simplificationPipelineLoops > 0
+                : false,
             enableObstacleDetourShortcuts:
+              this.simplificationConfig.useProgressiveGeometrySearch ===
+                true &&
               this.simplificationConfig.enableCrossingViaReduction === true &&
               this.simplificationPipelineLoops > 0,
           })

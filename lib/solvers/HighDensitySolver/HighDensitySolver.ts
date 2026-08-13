@@ -14,7 +14,10 @@ import {
   DEFAULT_MAX_GROWTH_ATTEMPTS,
   GrowShrinkHighDensityIntraNodeSolver,
 } from "../HyperHighDensitySolver/GrowShrinkHighDensityIntraNodeSolver"
-import { PortfolioSingleIntraNodeSolver } from "../HyperHighDensitySolver/PortfolioSingleIntraNodeSolver"
+import {
+  type PortfolioSearchMode,
+  PortfolioSingleIntraNodeSolver,
+} from "../HyperHighDensitySolver/PortfolioSingleIntraNodeSolver"
 import { safeTransparentize } from "../colors"
 import { CachedIntraNodeRouteSolver } from "./CachedIntraNodeRouteSolver"
 import { IntraNodeRouteSolver } from "./IntraNodeSolver"
@@ -76,6 +79,8 @@ export class HighDensitySolver extends BaseSolver {
       iterations: number
       routeCount: number
       nodePf: number | null
+      searchMode?: PortfolioSearchMode
+      usedPrioritySearch?: boolean
       error?: string
     }
   >
@@ -182,6 +187,18 @@ export class HighDensitySolver extends BaseSolver {
       iterations: solver.iterations,
       routeCount: solver.solvedRoutes.length,
       nodePf,
+      searchMode:
+        solver instanceof GrowShrinkHighDensityIntraNodeSolver
+          ? solver.winningSolver?.searchMode ?? solver.searchMode
+          : solver instanceof PortfolioSingleIntraNodeSolver
+            ? solver.searchMode
+            : undefined,
+      usedPrioritySearch:
+        solver instanceof GrowShrinkHighDensityIntraNodeSolver
+          ? solver.stats.prioritySearchEnabled === true
+          : solver instanceof PortfolioSingleIntraNodeSolver
+            ? solver.searchMode === "priority"
+            : false,
       error: solver.error ?? undefined,
     })
   }
@@ -194,6 +211,8 @@ export class HighDensitySolver extends BaseSolver {
       iterations: number
       routeCount: number
       nodePf: number | null
+      searchMode?: PortfolioSearchMode
+      usedPrioritySearch?: boolean
       node: NodeWithPortPoints
       error?: string
     },

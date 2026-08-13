@@ -20,7 +20,6 @@ type PortfolioSingleIntraNodeSolverParams = ConstructorParameters<
 >[0]
 
 export const DEFAULT_MAX_GROWTH_ATTEMPTS = 3
-export const PRIORITY_SEARCH_MIN_SEGMENT_COUNT = 12
 
 export type GrowShrinkHighDensityIntraNodeSolverParams =
   PortfolioSingleIntraNodeSolverParams & {
@@ -131,8 +130,21 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
           ),
         ).size,
     )
+    const fullPortfolioCandidateCount =
+      new PortfolioSingleIntraNodeSolver({
+        ...params,
+        searchMode: "full",
+      }).getInitialCandidateCount()
+    // A sequential route placement exposes 1 + ... + n interactions between
+    // routes and previously placed copper. Prefer the focused solver once that
+    // interaction surface outgrows the general portfolio's search lanes.
+    const routeInteractionCount = (segmentCount * (segmentCount + 1)) / 2
     this.searchMode =
-      segmentCount >= PRIORITY_SEARCH_MIN_SEGMENT_COUNT ? "priority" : "full"
+      routeInteractionCount > fullPortfolioCandidateCount
+        ? "priority"
+        : "full"
+    this.stats.routeInteractionCount = routeInteractionCount
+    this.stats.fullPortfolioCandidateCount = fullPortfolioCandidateCount
     this.stats.prioritySearchEnabled = this.searchMode === "priority"
     this.MAX_ITERATIONS =
       20_000_000 * (params.effort ?? 1) * (this.maxGrowthAttempts + 1)
@@ -202,16 +214,13 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
     }
 
     this.activeSubSolver!.step()
-
     if (this.activeSubSolver!.solved) {
       this.acceptSolution(this.activeSubSolver!)
       this.activeSubSolver = null
       return
     }
 
-    if (!this.activeSubSolver!.failed) {
-      return
-    }
+    if (!this.activeSubSolver!.failed) return
 
     this.failedSolvers.push(this.activeSubSolver!)
     this.error = this.activeSubSolver!.error

@@ -113,6 +113,9 @@ test("the srj18 sample002 large node is solved at its physical size", () => {
   expect(solver.scaleFactor).toBe(1)
   expect(solver.winningSolver!.adaptiveSearchExpanded).toBe(false)
   expect(solver.winningSolver!.stats.searchMode).toBe("priority")
+  expect(solver.stats.routeInteractionCount).toBeGreaterThan(
+    solver.stats.fullPortfolioCandidateCount,
+  )
   expect(
     (solver.winningSolver!.winningSolver as any).hyperParameters.shuffleSeed,
   ).toBe(2)

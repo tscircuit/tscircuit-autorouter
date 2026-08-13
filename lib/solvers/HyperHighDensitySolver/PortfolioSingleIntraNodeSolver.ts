@@ -261,15 +261,20 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       },
       {
         name: "highDensityA01",
-        possibleValues: [
-          {
-            HIGH_DENSITY_A01: true,
-            SHUFFLE_SEED:
-              this.searchMode === "priority"
-                ? ORDERING_SHUFFLE_SEEDS[2]
-                : ORDERING_SHUFFLE_SEEDS[0],
-          },
-        ],
+        possibleValues:
+          this.searchMode === "priority"
+            ? [
+                {
+                  HIGH_DENSITY_A01: true,
+                  SHUFFLE_SEED: ORDERING_SHUFFLE_SEEDS[2],
+                },
+              ]
+            : [
+                {
+                  HIGH_DENSITY_A01: true,
+                  SHUFFLE_SEED: ORDERING_SHUFFLE_SEEDS[0],
+                },
+              ],
       },
       {
         name: "highDensityA03",
@@ -280,6 +285,20 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
         ],
       },
     ]
+  }
+
+  getInitialCandidateCount(): number {
+    const hyperParameterDefs = this.getHyperParameterDefs()
+    return this.getCombinationDefs().reduce(
+      (count, combinationDef) =>
+        count +
+        this.getHyperParameterCombinations(
+          hyperParameterDefs.filter((definition) =>
+            combinationDef.includes(definition.name),
+          ),
+        ).length,
+      0,
+    )
   }
 
   /**

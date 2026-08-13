@@ -4,10 +4,6 @@ import { RectDiffPipeline } from "@tscircuit/rectdiff"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { GraphicsObject, Line } from "graphics-debug"
 import { HighDensityForceImproveSolver } from "high-density-repair01/lib/HighDensityForceImproveSolver"
-import {
-  GlobalDrcBranchPortfolioSolver,
-  GlobalDrcForceImproveSolver,
-} from "high-density-repair03/lib"
 import { getGlobalInMemoryCache } from "lib/cache/setupGlobalCaches"
 import { CacheProvider } from "lib/cache/types"
 import { ComponentDetectionSolver } from "lib/solvers/ComponentDetectionSolver/ComponentDetectionSolver"
@@ -59,7 +55,6 @@ import { DeadEndSolver } from "../../solvers/DeadEndSolver/DeadEndSolver"
 import { EscapeViaLocationSolver } from "../../solvers/EscapeViaLocationSolver/EscapeViaLocationSolver"
 import { Pipeline4HighDensityRepairSolver } from "../../solvers/HighDensityRepairSolver/Pipeline4HighDensityRepairSolver"
 import { HighDensitySolver } from "../../solvers/HighDensitySolver/HighDensitySolver"
-import { PRIORITY_SEARCH_MIN_SEGMENT_COUNT } from "../../solvers/HyperHighDensitySolver/GrowShrinkHighDensityIntraNodeSolver"
 import { MultiSectionPortPointOptimizer } from "../../solvers/MultiSectionPortPointOptimizer"
 import { NetToPointPairsSolver } from "../../solvers/NetToPointPairsSolver/NetToPointPairsSolver"
 import { NetToPointPairsSolver2_OffBoardConnection } from "../../solvers/NetToPointPairsSolver2_OffBoardConnection/NetToPointPairsSolver2_OffBoardConnection"
@@ -71,7 +66,7 @@ import { TraceWidthSolver } from "../../solvers/TraceWidthSolver/TraceWidthSolve
 import { PreprocessSimpleRouteJsonSolver } from "../AutoroutingPipeline4_TinyHypergraph/PreprocessSimpleRouteJsonSolver"
 import { MergedComponentTopologyView } from "./MergedComponentTopologyView"
 import { PowerTraceExpansionSolver } from "./PowerTraceExpansionSolver"
-import { Pipeline7ExactDrcBranchPortfolioSolver } from "./Pipeline7ExactDrcBranchPortfolioSolver"
+import { Pipeline7AdaptiveGlobalDrcSolver } from "./Pipeline7AdaptiveGlobalDrcSolver"
 import { convertPipeline7HdRoutesToSimplifiedPcbTraces } from "./convertPipeline7HdRoutesToSimplifiedPcbTraces"
 import { createPipeline7AutoroutingDrcEvaluator } from "./create-pipeline7-autorouting-drc-evaluator"
 import { getPowerTraceExpansionConnectionNames } from "./getPowerTraceExpansionConnectionNames"
@@ -90,10 +85,6 @@ interface CapacityMeshSolverOptions {
   powerTraceExpansion?: PowerTraceExpanderOptions
 }
 export type AutoroutingPipelineSolverOptions = CapacityMeshSolverOptions
-
-const LARGE_ROUTE_POINT_COUNT = 20_000
-const LARGE_ROUTE_DRC_POINT_COUNT = 10_000
-const HIGH_EXACT_DRC_ISSUE_COUNT = 64
 
 type PipelineStep<T extends new (...args: any[]) => BaseSolver> = {
   solverName: string
@@ -232,8 +223,8 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
   highDensityForceImproveSolver?: HighDensityForceImproveSolver
   highDensityRepairSolver?: Pipeline4HighDensityRepairSolver
   highDensityStitchSolver?: MultipleHighDensityRouteStitchSolver3
-  globalDrcForceImproveSolver?: GlobalDrcForceImproveSolver
-  exactGeometryDrcForceImproveSolver?: GlobalDrcBranchPortfolioSolver
+  globalDrcForceImproveSolver?: Pipeline7AdaptiveGlobalDrcSolver
+  exactGeometryDrcForceImproveSolver?: Pipeline7AdaptiveGlobalDrcSolver
   singleLayerNodeMerger?: SingleLayerNodeMergerSolver
   strawSolver?: StrawSolver
   deadEndSolver?: DeadEndSolver
@@ -577,16 +568,15 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
       HighDensityForceImproveSolver,
       (cms) => {
         const allNodesWithPortPoints = cms.highDensityNodePortPoints ?? []
-        const useLargeNodeBudget = allNodesWithPortPoints.some(
-          (node) =>
-            (node.portPointsInPairs?.length ?? 0) >=
-            PRIORITY_SEARCH_MIN_SEGMENT_COUNT,
-        )
-        const nodeWithPortPoints = useLargeNodeBudget
+        const prioritySearchWasUsed = [
+          ...(cms.highDensityRouteSolver?.nodeSolveMetadataById.values() ?? []),
+        ].some(({ usedPrioritySearch }) => usedPrioritySearch)
+        // Focused A01/A03 routes already perform their own clearance search.
+        // Preserve the legacy force pass when the general portfolio handled
+        // the whole board, and avoid reprocessing focused routes otherwise.
+        const nodeWithPortPoints = prioritySearchWasUsed
           ? allNodesWithPortPoints.filter((node) => {
-              const segmentCount = node.portPointsInPairs?.length ?? 0
-              if (segmentCount < 2) return false
-              if (segmentCount < PRIORITY_SEARCH_MIN_SEGMENT_COUNT) return true
+              if ((node.portPointsInPairs?.length ?? 0) < 2) return false
 
               const solverType =
                 cms.highDensityRouteSolver?.nodeSolveMetadataById.get(
@@ -646,30 +636,21 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
     definePipelineStep(
       "traceSimplificationSolver",
       TraceSimplificationSolver,
-      (cms) => {
-        const hdRoutes = cms.highDensityStitchSolver!.mergedHdRoutes
-        const routePointCount = hdRoutes.reduce(
-          (sum, route) => sum + route.route.length,
-          0,
-        )
-        const useLargeRouteBudget = routePointCount >= LARGE_ROUTE_POINT_COUNT
-
-        return [
-          {
-            hdRoutes,
-            obstacles: cms.srj.obstacles,
-            connMap: cms.connMap,
-            colorMap: cms.colorMap,
-            outline: cms.srj.outline,
-            defaultViaDiameter: cms.viaDiameter,
-            layerCount: cms.srj.layerCount,
-            minTraceToPadEdgeClearance: cms.srj.minTraceToPadEdgeClearance,
-            minBoardEdgeClearance: cms.srj.minBoardEdgeClearance,
-            enableCrossingViaReduction: !useLargeRouteBudget,
-            iterations: useLargeRouteBudget ? 1 : 2,
-          },
-        ]
-      },
+      (cms) => [
+        {
+          hdRoutes: cms.highDensityStitchSolver!.mergedHdRoutes,
+          obstacles: cms.srj.obstacles,
+          connMap: cms.connMap,
+          colorMap: cms.colorMap,
+          outline: cms.srj.outline,
+          defaultViaDiameter: cms.viaDiameter,
+          layerCount: cms.srj.layerCount,
+          minTraceToPadEdgeClearance: cms.srj.minTraceToPadEdgeClearance,
+          minBoardEdgeClearance: cms.srj.minBoardEdgeClearance,
+          enableCrossingViaReduction: true,
+          useProgressiveGeometrySearch: true,
+        },
+      ],
     ),
     definePipelineStep("traceWidthSolver", TraceWidthSolver, (cms) => [
       {
@@ -685,7 +666,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
     ]),
     definePipelineStep(
       "globalDrcForceImproveSolver",
-      GlobalDrcForceImproveSolver,
+      Pipeline7AdaptiveGlobalDrcSolver,
       (cms) => {
         const hdRoutes = lockHdRouteTerminals(
           cms.traceWidthSolver!.getHdRoutesWithWidths(),
@@ -697,19 +678,12 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
             ]),
           ),
         )
-        const routePointCount = hdRoutes.reduce(
-          (sum, route) => sum + route.route.length,
-          0,
-        )
-
         return [
           {
             srj: cms.srjWithPointPairs! as any,
             hdRoutes,
             connMap: cms.connMap,
             effort: cms.effort,
-            maxIterations:
-              routePointCount >= LARGE_ROUTE_DRC_POINT_COUNT ? 4 : 16,
             enableLargeBoardBroadFallback: false,
             enablePostSolveClearanceRelaxation: false,
           },
@@ -718,7 +692,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
     ),
     definePipelineStep(
       "exactGeometryDrcForceImproveSolver",
-      Pipeline7ExactDrcBranchPortfolioSolver,
+      Pipeline7AdaptiveGlobalDrcSolver,
       (cms) => {
         const autoroutingDrcEvaluator = createPipeline7AutoroutingDrcEvaluator({
           connections: cms.netToPointPairsSolver?.newConnections ?? [],
@@ -730,12 +704,6 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
           srjWithPointPairs: cms.srjWithPointPairs!,
           originalSrj: cms.originalSrj,
         })
-        const finalGlobalDrcIssueCount =
-          cms.globalDrcForceImproveSolver?.stats?.finalDrcIssueCount
-        const useHighResidueBudget =
-          typeof finalGlobalDrcIssueCount === "number" &&
-          finalGlobalDrcIssueCount >= HIGH_EXACT_DRC_ISSUE_COUNT
-
         return [
           {
             srj: cms.srjWithPointPairs! as any,
@@ -744,18 +712,11 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
             effort: cms.effort,
             viaHoleDiameter: cms.viaHoleDiameter,
             drcEvaluator: autoroutingDrcEvaluator,
-            viaInPadDrcEvaluator: autoroutingDrcEvaluator,
-            maxIterations: useHighResidueBudget ? 1 : 32,
             enableLargeBoardBroadFallback: false,
-            enableTargetedErrorSweep: !useHighResidueBudget,
+            enableTargetedErrorSweep: true,
             enablePostSolveClearanceRelaxation: false,
-            enableSafeTraceLayerMoves: !useHighResidueBudget,
+            enableSafeTraceLayerMoves: true,
             enableViaInPadLayerMoves: cms.originalSrj.allowViaInPad ?? false,
-            viaInPadMaxIterations: 32,
-            broadMaxIterations: useHighResidueBudget ? 1 : 12,
-            broadPassMultiplier: 3,
-            skipExpensiveBranches: useHighResidueBudget,
-            inputDrcIssueCount: finalGlobalDrcIssueCount,
           },
         ]
       },
