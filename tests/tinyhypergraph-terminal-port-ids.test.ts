@@ -25,4 +25,5 @@ test("TinyHypergraph port-point pathing assigns PCB terminal identities", () => 
     { x: -4, y: -3, pcb_port_id: "pcb_port_start" },
     { x: 4, y: -3, pcb_port_id: "pcb_port_end" },
   ])
+  expect(solver.getSolveGraphBenchmarkMetrics()?.optimizer).toBeUndefined()
 })

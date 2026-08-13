@@ -24,4 +24,13 @@ test("pipeline7 dataset-srj18 sample008 picks routable overlapping endpoint regi
   expect(
     solver.portPointPathingSolver?.stats.staticallyUnroutableRouteCount ?? 0,
   ).toBe(0)
+  const optimizerMetrics =
+    solver.portPointPathingSolver?.getSolveGraphBenchmarkMetrics()?.optimizer
+  expect(optimizerMetrics).toBeDefined()
+  expect(optimizerMetrics!.finalMaxRegionCost).toBeLessThan(
+    optimizerMetrics!.initialMaxRegionCost,
+  )
+  expect(optimizerMetrics!.segmentDelta).toBeLessThanOrEqual(
+    optimizerMetrics!.acceptedMutationCount * 4,
+  )
 })
