@@ -69,6 +69,23 @@ export type TinyHypergraphBenchmarkMetrics = {
   outsideInFallbackRouteCount?: number
   outsideInForwardExpansionCount?: number
   outsideInReverseExpansionCount?: number
+  optimizer?: {
+    timeMs?: number
+    initialMaxRegionCost: number
+    finalMaxRegionCost: number
+    initialTotalRegionCost: number
+    finalTotalRegionCost: number
+    acceptedMutationCount: number
+    evaluatedMutationCount: number
+    rejectedRerouteDetourCount: number
+    initialSegmentCount: number
+    finalSegmentCount: number
+    segmentDelta: number
+    initialMaxRegionSegmentCount: number
+    finalMaxRegionSegmentCount: number
+    initialSquaredRegionSegmentCount: number
+    finalSquaredRegionSegmentCount: number
+  }
 }
 
 export type RoutingBenchmarkMetrics = {

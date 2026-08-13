@@ -1080,12 +1080,31 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       this.tinyPipelineSolver.getSolver<TinyHyperGraphSolver>("solveGraph")
     if (!solveGraphSolver) return undefined
 
+    const optimizeRegionCostsSolver =
+      this.tinyPipelineSolver.getSolver<UnravelTinyHyperGraphSolver>(
+        "optimizeRegionCosts",
+      )
+
     const regionSegmentCounts = solveGraphSolver.state.regionSegments.map(
       (segments) => segments.length,
     )
     const solveGraphStats = solveGraphSolver.stats
     const solveGraphStageStats =
       this.tinyPipelineSolver.getStageStats().solveGraph
+    const optimizerStageStats =
+      this.tinyPipelineSolver.getStageStats().optimizeRegionCosts
+    const optimizerInputRegionSegmentCounts =
+      optimizeRegionCostsSolver?.inputSolver.state.regionSegments.map(
+        (segments) => segments.length,
+      )
+    const optimizerFinalRegionSegmentCounts =
+      optimizeRegionCostsSolver?.state.regionSegments.map(
+        (segments) => segments.length,
+      )
+    const sum = (values: number[]) =>
+      values.reduce((total, value) => total + value, 0)
+    const sumOfSquares = (values: number[]) =>
+      values.reduce((total, value) => total + value * value, 0)
 
     return {
       routeCount: solveGraphSolver.problem.routeCount,
@@ -1123,6 +1142,48 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
         solveGraphStats.outsideInForwardExpansionCount,
       outsideInReverseExpansionCount:
         solveGraphStats.outsideInReverseExpansionCount,
+      ...(optimizeRegionCostsSolver &&
+      optimizerInputRegionSegmentCounts &&
+      optimizerFinalRegionSegmentCounts
+        ? {
+            optimizer: {
+              timeMs: optimizerStageStats?.timeSpent,
+              initialMaxRegionCost:
+                optimizeRegionCostsSolver.initialSummary.maxRegionCost,
+              finalMaxRegionCost:
+                optimizeRegionCostsSolver.currentSummary.maxRegionCost,
+              initialTotalRegionCost:
+                optimizeRegionCostsSolver.initialSummary.totalRegionCost,
+              finalTotalRegionCost:
+                optimizeRegionCostsSolver.currentSummary.totalRegionCost,
+              acceptedMutationCount:
+                optimizeRegionCostsSolver.acceptedMutationCount,
+              evaluatedMutationCount:
+                optimizeRegionCostsSolver.evaluatedMutationCount,
+              rejectedRerouteDetourCount:
+                optimizeRegionCostsSolver.rejectedRerouteDetourCount,
+              initialSegmentCount: sum(optimizerInputRegionSegmentCounts),
+              finalSegmentCount: sum(optimizerFinalRegionSegmentCounts),
+              segmentDelta:
+                sum(optimizerFinalRegionSegmentCounts) -
+                sum(optimizerInputRegionSegmentCounts),
+              initialMaxRegionSegmentCount: Math.max(
+                0,
+                ...optimizerInputRegionSegmentCounts,
+              ),
+              finalMaxRegionSegmentCount: Math.max(
+                0,
+                ...optimizerFinalRegionSegmentCounts,
+              ),
+              initialSquaredRegionSegmentCount: sumOfSquares(
+                optimizerInputRegionSegmentCounts,
+              ),
+              finalSquaredRegionSegmentCount: sumOfSquares(
+                optimizerFinalRegionSegmentCounts,
+              ),
+            },
+          }
+        : {}),
     }
   }
 
