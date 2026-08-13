@@ -29,6 +29,7 @@ import {
   type TinyHyperGraphSectionPipelineInput,
   type TinyHyperGraphSectionSolverOptions,
   type TinyHyperGraphSolverOptions,
+  UnravelTinyHyperGraphSolver,
 } from "tiny-hypergraph/lib/index"
 import type {
   ConnectionHg,
@@ -794,7 +795,9 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
     }
     if (preloadedStats.preloadedAssignmentCount > 0) {
       this.pipelineDef = this.pipelineDef.filter(
-        (pipelineStep) => pipelineStep.solverName !== "optimizeSection",
+        (pipelineStep) =>
+          pipelineStep.solverName !== "optimizeSection" &&
+          pipelineStep.solverName !== "optimizeRegionCosts",
       )
     }
     this.MAX_ITERATIONS = getTinyHyperGraphPipelineMaxIterations(inputProblem)
@@ -855,6 +858,16 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
   }
 
   getSolvedTinySolver(): TinyHyperGraphSolver {
+    const optimizeRegionCostsSolver =
+      this.getSolver<UnravelTinyHyperGraphSolver>("optimizeRegionCosts")
+
+    if (
+      optimizeRegionCostsSolver?.solved &&
+      !optimizeRegionCostsSolver.failed
+    ) {
+      return optimizeRegionCostsSolver
+    }
+
     const optimizeSectionSolver =
       this.getSolver<TinyHyperGraphSectionSolver>("optimizeSection")
 
@@ -1126,6 +1139,10 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       this.tinyPipelineSolver.getSolver<TinyHyperGraphSectionSolver>(
         "optimizeSection",
       )
+    const optimizeRegionCostsSolver =
+      this.tinyPipelineSolver.getSolver<UnravelTinyHyperGraphSolver>(
+        "optimizeRegionCosts",
+      )
     const currentTinySolver = this.getCurrentTinySolver()
 
     this.solved = this.tinyPipelineSolver.solved
@@ -1158,6 +1175,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       ...(this.tinyPipelineSolver.stats ?? {}),
       ...(currentTinySolver?.stats ?? {}),
       ...(optimizeSectionSolver?.stats ?? {}),
+      ...(optimizeRegionCostsSolver?.stats ?? {}),
       currentStage: this.tinyPipelineSolver.getCurrentStageName(),
       stageStats: this.tinyPipelineSolver.getStageStats(),
     }
@@ -1169,6 +1187,15 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
   }
 
   private getCurrentTinySolver(): TinyHyperGraphSolver | undefined {
+    const optimizeRegionCostsSolver =
+      this.tinyPipelineSolver.getSolver<UnravelTinyHyperGraphSolver>(
+        "optimizeRegionCosts",
+      )
+
+    if (optimizeRegionCostsSolver) {
+      return optimizeRegionCostsSolver
+    }
+
     const optimizeSectionSolver =
       this.tinyPipelineSolver.getSolver<TinyHyperGraphSectionSolver>(
         "optimizeSection",
