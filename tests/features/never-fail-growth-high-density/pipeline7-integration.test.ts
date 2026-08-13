@@ -1,5 +1,6 @@
 import { expect, test } from "bun:test"
 import { AutoroutingPipelineSolver7_MultiGraph } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/AutoroutingPipelineSolver7_MultiGraph"
+import { Pipeline7AdaptiveDrcBranchPortfolioSolver } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/Pipeline7AdaptiveDrcBranchPortfolioSolver"
 
 test("Pipeline7 high-density stage opts into GrowShrinkHighDensityIntraNodeSolver", () => {
   const solver = new AutoroutingPipelineSolver7_MultiGraph({
@@ -85,7 +86,7 @@ test("Pipeline7 uses a DRC-validated fast probe for two-layer exact repair", () 
   expect((exactGeometryDrcParams as any).broadMaxIterations).toBe(12)
   expect((exactGeometryDrcParams as any).broadPassMultiplier).toBe(3)
 
-  const adaptiveTwoLayerSolver = new exactGeometryDrcStep!.solverClass(
+  const adaptiveTwoLayerSolver = new Pipeline7AdaptiveDrcBranchPortfolioSolver(
     exactGeometryDrcParams as any,
   )
   adaptiveTwoLayerSolver.solve()
@@ -109,7 +110,7 @@ test("Pipeline7 uses a DRC-validated fast probe for two-layer exact repair", () 
       globalDrcForceImproveSolver: { getOutput: () => [] },
       netToPointPairsSolver: { newConnections: [] },
     } as any)
-  const fourLayerSolver = new exactGeometryDrcStep!.solverClass(
+  const fourLayerSolver = new Pipeline7AdaptiveDrcBranchPortfolioSolver(
     fourLayerExactGeometryDrcParams as any,
   )
   fourLayerSolver.solve()
