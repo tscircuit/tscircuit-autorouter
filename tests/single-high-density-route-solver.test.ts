@@ -44,6 +44,47 @@ test("SingleHighDensityRouteSolver indexes obstacle segments and vias", () => {
   )
 })
 
+test("SingleHighDensityRouteSolver reuses one layer-specific query for planar checks", () => {
+  const solver = new SingleHighDensityRouteSolver({
+    ...baseOpts,
+    obstacleRoutes: [
+      {
+        connectionName: "conn-obstacle",
+        traceThickness: 0.2,
+        viaDiameter: 0.3,
+        route: [
+          { x: 2, y: 2, z: 0 },
+          { x: 8, y: 2, z: 0 },
+          { x: 8, y: 2, z: 1 },
+          { x: 8, y: 8, z: 1 },
+        ],
+        vias: [{ x: 8, y: 2 }],
+      },
+    ],
+  })
+  const node = {
+    x: 5,
+    y: 3,
+    z: 0,
+    parent: { x: 4.5, y: 3, z: 0 },
+  } as any
+  const layerIndex = solver.obstacleSegmentIndexByLayer.get(0)!
+  const originalSearch = layerIndex.search.bind(layerIndex)
+  let searchCount = 0
+  layerIndex.search = (...args: Parameters<typeof originalSearch>) => {
+    searchCount++
+    return originalSearch(...args)
+  }
+
+  const query = solver.getPlanarObstacleQuery(node)
+  expect(query?.segments.every((segment) => segment.z === 0)).toBe(true)
+  expect(solver.isNodeTooCloseToObstacle(node, undefined, false, query)).toBe(
+    false,
+  )
+  expect(solver.doesPathToParentIntersectObstacle(node, query)).toBe(false)
+  expect(searchCount).toBe(1)
+})
+
 test("SingleHighDensityRouteSolver ignores connected obstacle segments for clearance/intersection", () => {
   const obstacleRoutes: HighDensityIntraNodeRoute[] = [
     {
@@ -175,6 +216,30 @@ test("Future-cost solver computes combined node costs identically", () => {
   }
 })
 
+test("Future-cost solver flattens points and caches immutable segments", () => {
+  const solver = new SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost({
+    ...baseOpts,
+    obstacleRoutes: [],
+    futureConnections: [
+      {
+        connectionName: "future-conn",
+        points: [
+          { x: 2, y: 8, z: 0 },
+          { x: 8, y: 2, z: 1 },
+        ],
+      },
+    ],
+  })
+  const node = { x: 7.9, y: 2.1, z: 1 } as any
+
+  expect(solver.futureConnectionPoints).toHaveLength(2)
+  expect(solver.getClosestFutureConnectionPoint(node)).toBe(
+    solver.futureConnectionPoints[1],
+  )
+  const segments = solver.getFutureConnectionSegments()
+  expect(solver.getFutureConnectionSegments()).toBe(segments)
+})
+
 test("SingleHighDensityRouteSolver numeric node keys are collision-free across its grid", () => {
   const solver = new SingleHighDensityRouteSolver({
     ...baseOpts,
@@ -223,6 +288,7 @@ test("SingleHighDensityRouteSolver can skip search visualization history", () =>
   const debugSolver = createSolver()
   debugSolver.step()
   expect(debugSolver.debug_exploredNodesOrdered.length).toBeGreaterThan(0)
+  expect(Number.isNaN(debugSolver.progress)).toBe(true)
 })
 
 test("SingleHighDensityRouteSolver caches immutable via ancestry", () => {

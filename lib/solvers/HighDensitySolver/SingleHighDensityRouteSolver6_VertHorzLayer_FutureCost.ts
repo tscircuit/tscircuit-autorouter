@@ -10,6 +10,8 @@ export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends Sing
   VIA_PENALTY_FACTOR_2 = 1
   FLIP_TRACE_ALIGNMENT_DIRECTION = false
   FUTURE_CONNECTION_VIA_TRACE_CLEARANCE = 0.1
+  futureConnectionPoints: Array<{ x: number; y: number; z: number }>
+  futureConnectionSegmentsCache: FutureConnectionSegment[] | null = null
 
   constructor(
     opts: ConstructorParameters<typeof SingleHighDensityRouteSolver>[0],
@@ -31,21 +33,22 @@ export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends Sing
     const routeCount = Math.max(1, this.numRoutes)
     this.VIA_PENALTY_FACTOR =
       0.3 * (viasThatCanFitHorz / routeCount) * this.VIA_PENALTY_FACTOR_2
+    this.futureConnectionPoints = this.futureConnections.flatMap(
+      (connection) => connection.points,
+    )
   }
 
   getClosestFutureConnectionPoint(node: Node) {
     let minDist = Infinity
     let closestPoint = null
 
-    for (const futureConnection of this.futureConnections) {
-      for (const point of futureConnection.points) {
-        const dist =
-          distance(node, point) +
-          (node.z !== point.z ? this.viaPenaltyDistance : 0)
-        if (dist < minDist) {
-          minDist = dist
-          closestPoint = point
-        }
+    for (const point of this.futureConnectionPoints) {
+      const dist =
+        distance(node, point) +
+        (node.z !== point.z ? this.viaPenaltyDistance : 0)
+      if (dist < minDist) {
+        minDist = dist
+        closestPoint = point
       }
     }
 
@@ -53,11 +56,10 @@ export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends Sing
   }
 
   getFutureConnectionSegments() {
-    const segments: Array<{
-      connectionName: string
-      start: { x: number; y: number; z: number }
-      end: { x: number; y: number; z: number }
-    }> = []
+    if (this.futureConnectionSegmentsCache) {
+      return this.futureConnectionSegmentsCache
+    }
+    const segments: FutureConnectionSegment[] = []
 
     for (const futureConnection of this.futureConnections) {
       const isConnected =
@@ -87,6 +89,7 @@ export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends Sing
       }
     }
 
+    this.futureConnectionSegmentsCache = segments
     return segments
   }
 
@@ -112,8 +115,13 @@ export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends Sing
     node: Node,
     margin?: number,
     isVia?: boolean,
+    planarObstacleQuery?: Parameters<
+      SingleHighDensityRouteSolver["isNodeTooCloseToObstacle"]
+    >[3],
   ) {
-    if (super.isNodeTooCloseToObstacle(node, margin, isVia)) {
+    if (
+      super.isNodeTooCloseToObstacle(node, margin, isVia, planarObstacleQuery)
+    ) {
       return true
     }
 
@@ -222,4 +230,10 @@ export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends Sing
     node.h = baseH + futureConnectionPenalty
     node.f = this.computeF(node.g, node.h)
   }
+}
+
+type FutureConnectionSegment = {
+  connectionName: string
+  start: { x: number; y: number; z: number }
+  end: { x: number; y: number; z: number }
 }

@@ -223,3 +223,59 @@ batching cache-stat reads was noise, WeakMap and direct-property penalty caches
 regressed or were neutral, two future-connection penalty rewrites regressed the
 canary, and precomputing penalty constants caused a 21% runtime regression
 under Bun's JIT. All trials used one local worker and excluded bugreport88.
+
+## Further improvement: share spatial work inside detailed A*
+
+The optimized CPU profile showed that each planar neighbor still performed two
+nearly identical Flatbush searches: one for point clearance and one for the
+short parent edge. The accepted follow-up:
+
+- builds blocker-only spatial indexes per copper layer, while retaining the
+  all-layer index needed for vias;
+- queries the union of the point- and edge-clearance bounds once and reuses the
+  candidates for both exact checks;
+- applies the original query bounds before exact geometry, so the union query
+  evaluates the same candidate subsets as the two old queries;
+- flattens immutable future-connection points once and caches their immutable
+  trace segments instead of rebuilding arrays for every via candidate; and
+- short-circuits the argument-less `BaseSolver` progress probe to its existing
+  `NaN` result, avoiding redundant trigonometry without changing portfolio
+  scheduling.
+
+The same eight dataset01 cases were run in fresh, alternating one-worker
+processes. The spatial/future-connection changes preserved high-density
+iterations, via counts, DRC messages, completion, relaxed DRC, and byte-for-byte
+final output in every case.
+
+| Metric | `4b97a6c` | Spatial query sharing | Change |
+| --- | ---: | ---: | ---: |
+| High-density route time | 17.18 s | 14.79 s | -13.9% |
+| End-to-end time | 40.59 s | 38.34 s | -5.5% |
+
+The progress-probe guard was measured separately on the same panel and saved a
+further 1.5% of high-density time while preserving every output. Applying the
+two matched ratios to the earlier exact PR-baseline comparison puts the full
+accepted stack at approximately 1.85x faster in high-density A* and 22% faster
+end-to-end. On the larger SRJ18 sample 11, the follow-up alone reduced the
+high-density phase from 21.65 s to 19.35 s (-10.6%) with the same 206,760
+iterations, 179 vias, zero DRC errors, and byte-identical output. Its total time
+was intentionally not used because unrelated stitch time varied by 2.5 s in
+that pair.
+
+The cleaned final sample-32 memory run used 841 MB maximum RSS and a 623 MB
+peak footprint, slightly below the preceding `4b97a6c` measurements of 842 MB
+and 625 MB. The additional per-layer indexes therefore did not create a peak
+RAM regression.
+
+Rejected follow-ups remained out of the patch:
+
+- caching exact obstacle results by coordinate saved only 3.4% of the detailed
+  phase and added three full-grid arrays per active layer;
+- deduplicating the A* open set saved 12.9% of the detailed phase but selected
+  different paths and regressed one dense case;
+- reusing goal/closest-point distances and a hand-inlined numeric point loop
+  were mixed across the canaries; and
+- trace-density factor 2 still only moved timeouts between downstream phases.
+
+All new trials remained sequential, excluded bugreport88, and did not increase
+any timeout.
