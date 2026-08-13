@@ -1,7 +1,7 @@
 {
   "name": "@tscircuit/capacity-autorouter",
   "main": "./dist/index.js",
-  "version": "0.0.799",
+  "version": "0.0.800",
   "type": "module",
   "files": [
     "dist"
