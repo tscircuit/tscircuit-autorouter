@@ -180,20 +180,9 @@ export class MultiTargetNecessaryCrampedPortPointSolver extends BaseSolver {
         this.error = `All candidates are blocked by obstacles even after including cramped port points for capacity mesh node ${this.currentTarget.capacityMeshNodeId}`
       }
 
-      this.candidatesAtDepth = [...crampedCandidates].sort((a, b) => {
-        const costDifference = costFunction(a) - costFunction(b)
-        if (costDifference !== 0) {
-          return costDifference
-        }
-        const aExitRegion = this.getCandidateExitRegion(a)
-        const bExitRegion = this.getCandidateExitRegion(b)
-        return (
-          bExitRegion.width *
-            bExitRegion.height *
-            bExitRegion.availableZ.length -
-          aExitRegion.width * aExitRegion.height * aExitRegion.availableZ.length
-        )
-      })
+      this.candidatesAtDepth = [...crampedCandidates].sort(
+        (a, b) => costFunction(a) - costFunction(b),
+      )
       if (this.candidatesAtDepth.length === 0) {
         this.error = `No candidates found for capacity mesh node ${this.currentTarget.capacityMeshNodeId} even after including cramped port points`
       } else {
@@ -202,8 +191,7 @@ export class MultiTargetNecessaryCrampedPortPointSolver extends BaseSolver {
           ExploredPortPoint
         >()
         for (const candidate of this.candidatesAtDepth) {
-          const exitRegionId =
-            this.getCandidateExitRegion(candidate).capacityMeshNodeId
+          const exitRegionId = this.getCandidateExitRegionId(candidate)
           if (!bestCandidateByExitRegion.has(exitRegionId)) {
             bestCandidateByExitRegion.set(exitRegionId, candidate)
           }
@@ -218,9 +206,7 @@ export class MultiTargetNecessaryCrampedPortPointSolver extends BaseSolver {
           for (const candidate of this.candidatesAtDepth) {
             if (candidatesToKeepSet.has(candidate)) continue
             candidatesToKeep.push(candidate)
-            if (
-              candidatesToKeep.length === MAX_CRAMPED_EXIT_REGIONS_TO_KEEP
-            ) {
+            if (candidatesToKeep.length === MAX_CRAMPED_EXIT_REGIONS_TO_KEEP) {
               break
             }
           }
@@ -282,9 +268,9 @@ export class MultiTargetNecessaryCrampedPortPointSolver extends BaseSolver {
     return this.filteredOutput
   }
 
-  private getCandidateExitRegion(
+  private getCandidateExitRegionId(
     candidate: ExploredPortPoint,
-  ): CapacityMeshNode {
+  ): CapacityMeshNodeId {
     if (!candidate.parent) {
       throw new Error(
         `Missing parent for cramped escape candidate ${candidate.port.segmentPortPointId}`,
@@ -299,11 +285,7 @@ export class MultiTargetNecessaryCrampedPortPointSolver extends BaseSolver {
         `Could not find exit region for cramped escape candidate ${candidate.port.segmentPortPointId}`,
       )
     }
-    const exitRegion = this.nodeMap.get(exitRegionId)
-    if (!exitRegion) {
-      throw new Error(`Could not find capacity mesh node for id ${exitRegionId}`)
-    }
-    return exitRegion
+    return exitRegionId
   }
 
   private keepCandidatePath(candidate: ExploredPortPoint): void {
