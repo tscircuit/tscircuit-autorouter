@@ -122,3 +122,48 @@ condition was traced to two unrelated `tsci build --site` processes in another
 workspace using about 4.7 GB and 2.7 GB RSS. Benchmarks were paused until those
 processes completed. The portfolio also drops references to the losing solver
 before detailed routing to avoid retaining both graph states.
+
+## Selector tuning after aggregate benchmark
+
+The first six-dataset same-machine run showed a 1.55% aggregate improvement:
+completion increased from 490/587 to 495/587, DRC passes increased from 266 to
+268, and timeouts fell from 96 to 91. All 11 selected candidates won in that
+run, but 54 computed alternatives were rejected. The selected subset was 30.8%
+faster in aggregate; the remaining 576 cases were effectively neutral.
+
+To find missed wins without repeatedly running expensive detailed routing, a
+tiny-stage scanner captured both candidate summaries for every evaluated
+SRJ19/SRJ20 case and every current timeout. Runs were sequential, excluded
+bugreport88, and stayed below 1 GB RSS. Promising candidates were then compared
+end-to-end in fresh one-worker processes with equal 150 second caps.
+
+Accepted selector changes:
+
+- large-graph concentration improvement changes from 10% to 8%; and
+- a candidate may instead qualify when it reduces PF sum by 10%, squared PF by
+  15%, max PF by 15%, concentration by 2%, and segment count by 3%.
+
+The completed-case audit covered every previously evaluated SRJ19/SRJ20
+candidate. The new rules add five candidates. Known regressions (including
+SRJ20 samples 6, 28, and 143) and all other rejected candidates remain on the
+primary topology.
+
+| Dataset/sample | Primary | Alternative | Outcome |
+| --- | ---: | ---: | --- |
+| SRJ19 48 | 150 s timeout | 77.2 s complete | timeout converted; 3 DRC errors |
+| SRJ19 91 | 150 s timeout | 148.7 s complete | boundary timeout converted in isolated run |
+| SRJ19 117 | 150 s timeout | 95.4 s complete | timeout converted; 5 DRC errors |
+| SRJ20 132 | 65.9 s, 4 DRC errors | 58.1 s, DRC pass | 11.9% faster; 166 to 146 vias |
+| SRJ20 189 | 43.2 s, 9 DRC errors | 35.0 s, DRC pass | 19.0% faster; 130 to 114 vias |
+
+Negative controls ruled out broader policies: SRJ20 sample 6 changed an 81.1
+second completion into a timeout; sample 143 slowed from 81.7 to 92.9 seconds;
+SRJ19 sample 173 remained a high-density timeout; and SRJ20 sample 119 remained
+an exact-repair timeout. SRJ19 sample 121 was neutral at 87.7 versus 87.9
+seconds. These cases are all rejected by the final selector.
+
+During a final combined local canary, an unrelated benchmark process grew to
+8.4 GB RSS. Samples 48 and 117 still reproduced at 72.0 and 96.6 seconds;
+sample 91 narrowly missed the 150 second cap after completing at 148.7 seconds
+in its isolated matched run. System memory remained 79% free. The official
+same-machine CI comparison is used for the final aggregate measurement.

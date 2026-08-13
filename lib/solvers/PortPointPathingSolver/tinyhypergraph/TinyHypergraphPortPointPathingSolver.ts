@@ -107,7 +107,12 @@ const TRACE_DENSITY_PORTFOLIO_MAX_PF_SUM_GROWTH = 1.03
 const TRACE_DENSITY_PORTFOLIO_MAX_PF_SQUARED_GROWTH = 1.06
 const TRACE_DENSITY_PORTFOLIO_SMALL_GRAPH_MAX_ROUTE_COUNT = 40
 const TRACE_DENSITY_PORTFOLIO_SMALL_GRAPH_MAX_CONCENTRATION_RATIO = 0.95
-const TRACE_DENSITY_PORTFOLIO_LARGE_GRAPH_MAX_CONCENTRATION_RATIO = 0.9
+const TRACE_DENSITY_PORTFOLIO_LARGE_GRAPH_MAX_CONCENTRATION_RATIO = 0.92
+const TRACE_DENSITY_PORTFOLIO_STRONG_PF_SUM_RATIO = 0.9
+const TRACE_DENSITY_PORTFOLIO_STRONG_PF_SQUARED_RATIO = 0.85
+const TRACE_DENSITY_PORTFOLIO_STRONG_PF_MAX_RATIO = 0.85
+const TRACE_DENSITY_PORTFOLIO_STRONG_CONCENTRATION_RATIO = 0.98
+const TRACE_DENSITY_PORTFOLIO_STRONG_SEGMENT_RATIO = 0.97
 
 export const shouldEvaluateTraceDensityAlternative = (
   summary: DownstreamCandidateSummary,
@@ -127,6 +132,19 @@ export const shouldSelectTraceDensityAlternative = (
     routeCount > TRACE_DENSITY_PORTFOLIO_SMALL_GRAPH_MAX_ROUTE_COUNT
       ? TRACE_DENSITY_PORTFOLIO_LARGE_GRAPH_MAX_CONCENTRATION_RATIO
       : TRACE_DENSITY_PORTFOLIO_SMALL_GRAPH_MAX_CONCENTRATION_RATIO
+  const stronglyReducesDownstreamPressure =
+    alternative.nodePfSum <=
+      primary.nodePfSum * TRACE_DENSITY_PORTFOLIO_STRONG_PF_SUM_RATIO &&
+    alternative.nodePfSquaredSum <=
+      primary.nodePfSquaredSum *
+        TRACE_DENSITY_PORTFOLIO_STRONG_PF_SQUARED_RATIO &&
+    alternative.nodePfMax <=
+      primary.nodePfMax * TRACE_DENSITY_PORTFOLIO_STRONG_PF_MAX_RATIO &&
+    alternative.squaredNodePortPointCount <
+      primary.squaredNodePortPointCount *
+        TRACE_DENSITY_PORTFOLIO_STRONG_CONCENTRATION_RATIO &&
+    alternative.segmentCount <=
+      primary.segmentCount * TRACE_DENSITY_PORTFOLIO_STRONG_SEGMENT_RATIO
 
   return (
     alternative.nodePfSum <=
@@ -134,8 +152,9 @@ export const shouldSelectTraceDensityAlternative = (
     alternative.nodePfSquaredSum <=
       primary.nodePfSquaredSum *
         TRACE_DENSITY_PORTFOLIO_MAX_PF_SQUARED_GROWTH &&
-    alternative.squaredNodePortPointCount <
-      primary.squaredNodePortPointCount * maxConcentrationRatio
+    (alternative.squaredNodePortPointCount <
+      primary.squaredNodePortPointCount * maxConcentrationRatio ||
+      stronglyReducesDownstreamPressure)
   )
 }
 

@@ -54,6 +54,46 @@ test("trace-density portfolio requires downstream pressure and scale-aware conce
   expect(
     shouldSelectTraceDensityAlternative(
       candidate(),
+      candidate({ squaredNodePortPointCount: 4_550 }),
+      60,
+    ),
+  ).toBe(true)
+  expect(
+    shouldSelectTraceDensityAlternative(
+      candidate(),
+      candidate({ squaredNodePortPointCount: 4_650 }),
+      60,
+    ),
+  ).toBe(false)
+  expect(
+    shouldSelectTraceDensityAlternative(
+      candidate(),
+      candidate({
+        nodePfSum: 4.4,
+        nodePfSquaredSum: 2.4,
+        nodePfMax: 0.9,
+        squaredNodePortPointCount: 4_800,
+        segmentCount: 380,
+      }),
+      60,
+    ),
+  ).toBe(true)
+  expect(
+    shouldSelectTraceDensityAlternative(
+      candidate(),
+      candidate({
+        nodePfSum: 4.2,
+        nodePfSquaredSum: 2.1,
+        nodePfMax: 0.9,
+        squaredNodePortPointCount: 5_100,
+        segmentCount: 380,
+      }),
+      60,
+    ),
+  ).toBe(false)
+  expect(
+    shouldSelectTraceDensityAlternative(
+      candidate(),
       candidate({
         nodePfSum: 5.2,
         nodePfSquaredSum: 3,
