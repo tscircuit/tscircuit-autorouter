@@ -4,7 +4,8 @@
     "31331389173",
     "31331961586",
     "31432202969",
-    "31436492559"
+    "31436492559",
+    "31646368017"
   ],
   "timings": {
     "tests/auto-capacity-depth.test.ts": 0,
@@ -86,7 +87,7 @@
     "tests/bugs/bugreport82-0e99ec.test.ts": 29.6,
     "tests/bugs/bugreport84-726193.test.ts": 9.4,
     "tests/bugs/bugreport85-pico-usb-differential-pair-visual.test.ts": 220.5,
-    "tests/bugs/bugreport85-pico-usb-differential-pair.test.ts": 195.8,
+    "tests/bugs/bugreport85-pico-usb-differential-pair.test.ts": 254.5,
     "tests/bugs/bugreport86-40bf8e.test.ts": 0,
     "tests/bugs/bugreport87-76a6de.test.ts": 190.5,
     "tests/bugs/bugreport88-9a86ed.test.ts": 168.8,

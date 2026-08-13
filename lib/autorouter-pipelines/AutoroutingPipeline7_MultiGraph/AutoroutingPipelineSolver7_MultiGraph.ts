@@ -625,6 +625,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
           defaultViaDiameter: cms.viaDiameter,
           layerCount: cms.srj.layerCount,
           minTraceToPadEdgeClearance: cms.srj.minTraceToPadEdgeClearance,
+          minBoardEdgeClearance: cms.srj.minBoardEdgeClearance,
           enableCrossingViaReduction: true,
           iterations: 2,
         },
