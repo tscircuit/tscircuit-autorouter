@@ -144,3 +144,74 @@ test("Future-cost solver rejects vias that violate future via-to-trace clearance
   const neighbors = solver.getNeighbors(currentNode as any)
   expect(neighbors.some((neighbor) => neighbor.z !== currentNode.z)).toBe(false)
 })
+
+test("SingleHighDensityRouteSolver numeric node keys are collision-free across its grid", () => {
+  const solver = new SingleHighDensityRouteSolver({
+    ...baseOpts,
+    bounds: { minX: -1, maxX: 1, minY: -1, maxY: 1 },
+    A: { x: -1, y: -0.8, z: 0 },
+    B: { x: -1, y: 0.8, z: 0 },
+    obstacleRoutes: [],
+    availableZ: [0, 2, 5],
+    captureSearchDebug: false,
+  })
+  const minXIndex = Math.round(solver.bounds.minX / solver.cellStep)
+  const maxXIndex = Math.round(solver.bounds.maxX / solver.cellStep)
+  const minYIndex = Math.round(solver.bounds.minY / solver.cellStep)
+  const maxYIndex = Math.round(solver.bounds.maxY / solver.cellStep)
+  const keys = new Set<number>()
+
+  for (const z of solver.availableZ) {
+    for (let xIndex = minXIndex; xIndex <= maxXIndex; xIndex++) {
+      for (let yIndex = minYIndex; yIndex <= maxYIndex; yIndex++) {
+        const key = solver.getNodeKey({
+          x: xIndex * solver.cellStep,
+          y: yIndex * solver.cellStep,
+          z,
+        } as any)
+        expect(keys.has(key)).toBe(false)
+        keys.add(key)
+      }
+    }
+  }
+})
+
+test("SingleHighDensityRouteSolver can skip search visualization history", () => {
+  const createSolver = (captureSearchDebug?: boolean) =>
+    new SingleHighDensityRouteSolver({
+      ...baseOpts,
+      A: { x: 0, y: 1, z: 0 },
+      B: { x: 0, y: 9, z: 0 },
+      obstacleRoutes: [],
+      captureSearchDebug,
+    })
+
+  const headlessSolver = createSolver(false)
+  headlessSolver.step()
+  expect(headlessSolver.debug_exploredNodesOrdered).toHaveLength(0)
+
+  const debugSolver = createSolver()
+  debugSolver.step()
+  expect(debugSolver.debug_exploredNodesOrdered.length).toBeGreaterThan(0)
+})
+
+test("SingleHighDensityRouteSolver caches immutable via ancestry", () => {
+  const solver = new SingleHighDensityRouteSolver({
+    ...baseOpts,
+    A: { x: 0, y: 1, z: 0 },
+    B: { x: 0, y: 9, z: 0 },
+    obstacleRoutes: [],
+    captureSearchDebug: false,
+  })
+  const root = { x: 0, y: 1, z: 0, parent: null }
+  const firstVia = { x: 0, y: 1, z: 1, parent: root }
+  const sameLayer = { x: 0.2, y: 1, z: 1, parent: firstVia }
+  const secondVia = { x: 0.2, y: 1, z: 0, parent: sameLayer }
+
+  const firstResult = solver.getViasInNodePath(secondVia as any)
+  expect(firstResult).toEqual([
+    { x: 0.2, y: 1 },
+    { x: 0, y: 1 },
+  ])
+  expect(solver.getViasInNodePath(secondVia as any)).toBe(firstResult)
+})

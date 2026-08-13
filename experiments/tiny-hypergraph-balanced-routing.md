@@ -167,3 +167,57 @@ During a final combined local canary, an unrelated benchmark process grew to
 sample 91 narrowly missed the 150 second cap after completing at 148.7 seconds
 in its isolated matched run. System memory remained 79% free. The official
 same-machine CI comparison is used for the final aggregate measurement.
+
+## Stronger balancing trial: optimize the downstream A* hot loop
+
+Increasing trace-density cost further did not produce a larger system-level
+win. Factor 2 substantially reduced tiny-stage pressure on several SRJ19
+timeouts, but only moved the bottleneck downstream:
+
+- sample 31 still timed out in high-density improvement;
+- sample 196 still timed out in exact-geometry DRC repair; and
+- sample 189 reduced PF sum to 87.5%, squared PF to 80.6%, max PF to 65.0%,
+  concentration to 90.7%, and segments to 84.8% of primary, but still timed
+  out after 180 seconds in exact-geometry DRC repair.
+
+This rejects a third tiny-hypergraph candidate: lower region pressure alone is
+not sufficient once detailed routing becomes the dominant cost.
+
+A CPU profile of the balanced pipeline instead found behavior-independent
+bookkeeping in the high-density A* loop. The accepted implementation:
+
+- replaces floating-point string cell keys with collision-free numeric grid
+  ids;
+- avoids cloning whole node objects for each planar and via neighbor;
+- caches immutable via ancestry instead of walking the parent chain for every
+  via-clearance probe;
+- disables visualization-only search history in Pipeline 7 while preserving
+  it by default for direct/debug solver use; and
+- uses inlined hole-sifting in the candidate heap while preserving its exact
+  comparison and tie behavior.
+
+Matched one-worker dataset01 trials used eight high-density-heavy cases
+(samples 32, 37, 39, 49, 58, 67, 73, and 77). All eight retained identical
+high-density iteration counts, via counts, DRC messages, completion, and DRC
+status.
+
+| Metric | PR baseline | Optimized | Change |
+| --- | ---: | ---: | ---: |
+| High-density route time | 20.84 s | 13.68 s | -34.4% (1.52x faster) |
+| End-to-end time | 43.24 s | 35.88 s | -17.0% (1.21x faster) |
+| Completed / relaxed DRC | 8 / 8 | 8 / 8 | identical |
+
+Every case improved end-to-end. A larger SRJ18 control confirmed that the gain
+scales: sample 11 retained 206,760 high-density iterations, 179 vias, and zero
+DRC errors while high-density time fell from 27.48 to 19.55 seconds (-28.9%)
+and total time fell from 54.22 to 46.17 seconds (-14.9%).
+
+A same-process dataset01 sample 32 memory comparison also improved: maximum
+RSS fell from 858 MB to 842 MB, and macOS peak memory footprint fell from 662
+MB to 625 MB.
+
+Rejected downstream micro-optimizations were also kept out of the patch:
+batching cache-stat reads was noise, two future-connection penalty rewrites
+regressed the canary, and precomputing penalty constants caused a 21% runtime
+regression under Bun's JIT. All trials used one local worker and excluded
+bugreport88.

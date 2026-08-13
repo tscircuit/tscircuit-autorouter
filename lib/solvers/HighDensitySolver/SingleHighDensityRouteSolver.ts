@@ -63,7 +63,13 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
   CELL_SIZE_FACTOR: number
   NEARBY_SEGMENT_CLEARANCE: number
 
-  exploredNodes: Set<string>
+  exploredNodes: Set<number>
+  viasInPathByNode = new WeakMap<Node, { x: number; y: number }[]>()
+
+  gridMinXIndex: number
+  gridMinYIndex: number
+  gridWidth: number
+  gridHeight: number
 
   candidates: SingleRouteCandidatePriorityQueue
 
@@ -83,11 +89,16 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
   obstacleViaIndex: Flatbush | null = null
 
   /** For debugging/animating the exploration */
-  debug_exploredNodesOrdered: string[]
-  debug_nodesTooCloseToObstacle: Set<string>
-  debug_nodePathToParentIntersectsObstacle: Set<string>
+  debug_exploredNodesOrdered: Array<{
+    key: number
+    x: number
+    y: number
+    z: number
+  }>
+  debug_nodesTooCloseToObstacle: Set<number>
+  debug_nodePathToParentIntersectsObstacle: Set<number>
 
-  debugEnabled = true
+  debugEnabled: boolean
 
   initialNodeGridOffset: { x: number; y: number }
 
@@ -109,6 +120,7 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     hyperParameters?: Partial<HighDensityHyperParameters>
     connMap?: ConnectivityMap
     nearbySegmentClearance?: number
+    captureSearchDebug?: boolean
   }) {
     super()
     this.bounds = opts.bounds
@@ -141,6 +153,7 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     this.straightLineDistance = distance(this.A, this.B)
     this.futureConnections = opts.futureConnections ?? []
     this.NEARBY_SEGMENT_CLEARANCE = opts.nearbySegmentClearance ?? 0.15
+    this.debugEnabled = opts.captureSearchDebug ?? true
     this.MAX_ITERATIONS = 10e3 // 5000
 
     this.debug_exploredNodesOrdered = []
@@ -162,6 +175,13 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     }
 
     this.cellStep *= this.CELL_SIZE_FACTOR
+
+    this.gridMinXIndex = Math.round(this.bounds.minX / this.cellStep) - 1
+    this.gridMinYIndex = Math.round(this.bounds.minY / this.cellStep) - 1
+    const gridMaxXIndex = Math.round(this.bounds.maxX / this.cellStep) + 1
+    const gridMaxYIndex = Math.round(this.bounds.maxY / this.cellStep) + 1
+    this.gridWidth = gridMaxXIndex - this.gridMinXIndex + 1
+    this.gridHeight = gridMaxYIndex - this.gridMinYIndex + 1
 
     const isOnSameEdge =
       (Math.abs(this.A.x - this.bounds.minX) < 0.001 &&
@@ -453,7 +473,9 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
   }
 
   getNodeKey(node: Node) {
-    return `${Math.round(node.x / this.cellStep) * this.cellStep},${Math.round(node.y / this.cellStep) * this.cellStep},${node.z}`
+    const xIndex = Math.round(node.x / this.cellStep) - this.gridMinXIndex
+    const yIndex = Math.round(node.y / this.cellStep) - this.gridMinYIndex
+    return (node.z * this.gridHeight + yIndex) * this.gridWidth + xIndex
   }
 
   getNeighbors(node: Node) {
@@ -465,11 +487,14 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
       for (let y = -1; y <= 1; y++) {
         if (x === 0 && y === 0) continue
 
-        const neighbor = {
-          ...node,
-          parent: node,
+        const neighbor: Node = {
           x: clamp(node.x + x * this.cellStep, minX, maxX),
           y: clamp(node.y + y * this.cellStep, minY, maxY),
+          z: node.z,
+          g: node.g,
+          h: node.h,
+          f: node.f,
+          parent: node,
         }
 
         const neighborKey = this.getNodeKey(neighbor)
@@ -479,7 +504,9 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
         }
 
         if (this.isNodeTooCloseToObstacle(neighbor)) {
-          this.debug_nodesTooCloseToObstacle.add(neighborKey)
+          if (this.debugEnabled) {
+            this.debug_nodesTooCloseToObstacle.add(neighborKey)
+          }
           this.exploredNodes.add(neighborKey)
           continue
         }
@@ -490,7 +517,9 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
         }
 
         if (this.doesPathToParentIntersectObstacle(neighbor)) {
-          this.debug_nodePathToParentIntersectsObstacle.add(neighborKey)
+          if (this.debugEnabled) {
+            this.debug_nodePathToParentIntersectsObstacle.add(neighborKey)
+          }
           this.exploredNodes.add(neighborKey)
           continue
         }
@@ -507,10 +536,14 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     for (const newZ of this.availableZ) {
       if (newZ === node.z) continue
 
-      const viaNeighbor = {
-        ...node,
-        parent: node,
+      const viaNeighbor: Node = {
+        x: node.x,
+        y: node.y,
         z: newZ,
+        g: node.g,
+        h: node.h,
+        f: node.f,
+        parent: node,
       }
 
       if (
@@ -542,14 +575,19 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     return path
   }
 
-  getViasInNodePath(node: Node) {
-    const path = this.getNodePath(node)
-    const vias: { x: number; y: number }[] = []
-    for (let i = 0; i < path.length - 1; i++) {
-      if (path[i].z !== path[i + 1].z) {
-        vias.push({ x: path[i].x, y: path[i].y })
-      }
-    }
+  getViasInNodePath(node: Node): { x: number; y: number }[] {
+    const cachedVias = this.viasInPathByNode.get(node)
+    if (cachedVias) return cachedVias
+
+    const parent = node.parent
+    const parentVias: { x: number; y: number }[] = parent
+      ? this.getViasInNodePath(parent)
+      : []
+    const vias: { x: number; y: number }[] =
+      parent && node.z !== parent.z
+        ? [{ x: node.x, y: node.y }, ...parentVias]
+        : parentVias
+    this.viasInPathByNode.set(node, vias)
     return vias
   }
 
@@ -615,7 +653,18 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
       return
     }
     this.exploredNodes.add(currentNodeKey)
-    this.debug_exploredNodesOrdered.push(currentNodeKey)
+    if (this.debugEnabled) {
+      this.debug_exploredNodesOrdered.push({
+        key: currentNodeKey,
+        x:
+          Math.round(currentNode.x / this.cellStep) * this.cellStep +
+          this.initialNodeGridOffset.x,
+        y:
+          Math.round(currentNode.y / this.cellStep) * this.cellStep +
+          this.initialNodeGridOffset.y,
+        z: currentNode.z,
+      })
+    }
 
     const goalDist = distance(currentNode, this.B)
 
@@ -744,14 +793,13 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
 
     // Optionally, visualize explored nodes for debugging purposes
     for (let i = 0; i < this.debug_exploredNodesOrdered.length; i++) {
-      const nodeKey = this.debug_exploredNodesOrdered[i]
-      const [x, y, z] = nodeKey.split(",").map(Number)
+      const { key: nodeKey, x, y, z } = this.debug_exploredNodesOrdered[i]
       if (this.debug_nodesTooCloseToObstacle.has(nodeKey)) continue
       if (this.debug_nodePathToParentIntersectsObstacle.has(nodeKey)) continue
       graphics.rects!.push({
         center: {
-          x: x + this.initialNodeGridOffset.x + (z * this.cellStep) / 20,
-          y: y + this.initialNodeGridOffset.y + (z * this.cellStep) / 20,
+          x: x + (z * this.cellStep) / 20,
+          y: y + (z * this.cellStep) / 20,
         },
         fill:
           z === 0
