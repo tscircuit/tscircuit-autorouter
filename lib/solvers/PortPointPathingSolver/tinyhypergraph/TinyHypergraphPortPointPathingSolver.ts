@@ -95,6 +95,22 @@ type TinyRegionMetadata = {
   _offBoardConnectionId?: string
 }
 
+type RegionOptimizerRiskSummary = {
+  totalProbabilityOfFailure: number
+  maxProbabilityOfFailure: number
+  highRiskNodeCount: number
+  probabilityOfFailureByNodeId: Map<CapacityMeshNodeId, number>
+}
+
+type RegionOptimizerAcceptance = {
+  accepted: boolean
+  rejectionReason?: string
+  baseline: RegionOptimizerRiskSummary
+  optimized: RegionOptimizerRiskSummary
+  totalProbabilityOfFailureReductionRatio: number
+  maxNodeProbabilityOfFailureIncrease: number
+}
+
 type TinyPortMetadata = {
   x?: number
   y?: number
@@ -169,7 +185,10 @@ const DUPLICATE_PORT_TRAVERSAL_PENALTY = 150
 const DEFAULT_CRAMPED_PORT_TRAVERSAL_PENALTY = 150
 const MAX_CONNECTIONS_FOR_DUPLICATE_CONGESTED_PORT_PREPASS = 180
 const MIN_CONNECTIONS_FOR_REGION_COST_OPTIMIZER = 100
-const MAX_CONNECTIONS_FOR_REGION_COST_OPTIMIZER = 400
+const MAX_CONNECTIONS_FOR_REGION_COST_OPTIMIZER = 300
+const REGION_COST_OPTIMIZER_MIN_PF_REDUCTION_RATIO = 0.02
+const REGION_COST_OPTIMIZER_MAX_NODE_PF_INCREASE = 0.1
+const REGION_COST_OPTIMIZER_HIGH_RISK_PF = 0.3
 
 const getEffortScale = (effort: number) => Math.max(effort, 1e-2)
 
@@ -915,6 +934,15 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
       clearPreloadedEndpointRegionNetIds(loadedSolver)
     }
 
+    if (solver instanceof UnravelTinyHyperGraphSolver) {
+      // Autorouter candidates are screened against downstream capacity-node
+      // risk after optimization. Keep this speculative search substantially
+      // smaller than the standalone tiny-hypergraph benchmark budget.
+      solver.MAX_MUTATIONS = 8
+      solver.REROUTE_MAX_ITERATIONS = 3_000
+      solver.MAX_REROUTE_ROUTES = 12
+    }
+
     this.configuredSolvers.add(solver)
   }
 
@@ -983,6 +1011,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
   >
   private originalRegionIds: Set<CapacityMeshNodeId>
   private rootConnectionNameByConnectionId: Map<string, string | undefined>
+  private regionOptimizerAcceptance?: RegionOptimizerAcceptance
 
   constructor(private params: HgPortPointPathingSolverParams) {
     super()
@@ -1116,6 +1145,16 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       optimizeRegionCostsSolver?.state.regionSegments.map(
         (segments) => segments.length,
       )
+    if (
+      optimizeRegionCostsSolver?.solved &&
+      !optimizeRegionCostsSolver.failed &&
+      !this.regionOptimizerAcceptance
+    ) {
+      this.regionOptimizerAcceptance = this.evaluateRegionOptimizerCandidate(
+        optimizeRegionCostsSolver,
+      )
+    }
+    const optimizerAcceptance = this.regionOptimizerAcceptance
     const sum = (values: number[]) =>
       values.reduce((total, value) => total + value, 0)
     const sumOfSquares = (values: number[]) =>
@@ -1196,6 +1235,25 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
               finalSquaredRegionSegmentCount: sumOfSquares(
                 optimizerFinalRegionSegmentCounts,
               ),
+              downstreamAccepted: optimizerAcceptance?.accepted ?? false,
+              downstreamRejectionReason: optimizerAcceptance?.rejectionReason,
+              initialTotalProbabilityOfFailure:
+                optimizerAcceptance?.baseline.totalProbabilityOfFailure ?? 0,
+              finalTotalProbabilityOfFailure:
+                optimizerAcceptance?.optimized.totalProbabilityOfFailure ?? 0,
+              totalProbabilityOfFailureReductionRatio:
+                optimizerAcceptance?.totalProbabilityOfFailureReductionRatio ??
+                0,
+              initialMaxProbabilityOfFailure:
+                optimizerAcceptance?.baseline.maxProbabilityOfFailure ?? 0,
+              finalMaxProbabilityOfFailure:
+                optimizerAcceptance?.optimized.maxProbabilityOfFailure ?? 0,
+              initialHighRiskNodeCount:
+                optimizerAcceptance?.baseline.highRiskNodeCount ?? 0,
+              finalHighRiskNodeCount:
+                optimizerAcceptance?.optimized.highRiskNodeCount ?? 0,
+              maxNodeProbabilityOfFailureIncrease:
+                optimizerAcceptance?.maxNodeProbabilityOfFailureIncrease ?? 0,
             },
           }
         : {}),
@@ -1292,7 +1350,116 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
   }
 
   private getSolvedTinySolver(): TinyHyperGraphSolver {
-    return this.tinyPipelineSolver.getSolvedTinySolver()
+    const solvedTinySolver = this.tinyPipelineSolver.getSolvedTinySolver()
+    if (!(solvedTinySolver instanceof UnravelTinyHyperGraphSolver)) {
+      return solvedTinySolver
+    }
+
+    this.regionOptimizerAcceptance =
+      this.evaluateRegionOptimizerCandidate(solvedTinySolver)
+    return this.regionOptimizerAcceptance.accepted
+      ? solvedTinySolver
+      : solvedTinySolver.inputSolver
+  }
+
+  private summarizeDownstreamRisk(
+    nodesWithPortPoints: NodeWithPortPoints[],
+  ): RegionOptimizerRiskSummary {
+    let totalProbabilityOfFailure = 0
+    let maxProbabilityOfFailure = 0
+    let highRiskNodeCount = 0
+    const probabilityOfFailureByNodeId = new Map<CapacityMeshNodeId, number>()
+
+    for (const node of nodesWithPortPoints) {
+      const originalRegion = this.originalRegionById.get(
+        node.capacityMeshNodeId,
+      )
+      if (!originalRegion) continue
+      const crossings = getIntraNodeCrossingsUsingCircle(node)
+      const probabilityOfFailure = calculateNodeProbabilityOfFailure(
+        originalRegion.d,
+        crossings.numSameLayerCrossings,
+        crossings.numEntryExitLayerChanges,
+        crossings.numTransitionPairCrossings,
+      )
+      totalProbabilityOfFailure += probabilityOfFailure
+      maxProbabilityOfFailure = Math.max(
+        maxProbabilityOfFailure,
+        probabilityOfFailure,
+      )
+      if (probabilityOfFailure >= REGION_COST_OPTIMIZER_HIGH_RISK_PF) {
+        highRiskNodeCount += 1
+      }
+      probabilityOfFailureByNodeId.set(
+        node.capacityMeshNodeId,
+        probabilityOfFailure,
+      )
+    }
+
+    return {
+      totalProbabilityOfFailure,
+      maxProbabilityOfFailure,
+      highRiskNodeCount,
+      probabilityOfFailureByNodeId,
+    }
+  }
+
+  private evaluateRegionOptimizerCandidate(
+    optimizer: UnravelTinyHyperGraphSolver,
+  ): RegionOptimizerAcceptance {
+    const baseline = this.summarizeDownstreamRisk(
+      this.getOutputForSolvedTinySolver(optimizer.inputSolver, false)
+        .nodesWithPortPoints,
+    )
+    const optimized = this.summarizeDownstreamRisk(
+      this.getOutputForSolvedTinySolver(optimizer, false).nodesWithPortPoints,
+    )
+    const totalProbabilityOfFailureReductionRatio =
+      baseline.totalProbabilityOfFailure > 0
+        ? (baseline.totalProbabilityOfFailure -
+            optimized.totalProbabilityOfFailure) /
+          baseline.totalProbabilityOfFailure
+        : 0
+    let maxNodeProbabilityOfFailureIncrease = 0
+    for (const [
+      nodeId,
+      optimizedProbabilityOfFailure,
+    ] of optimized.probabilityOfFailureByNodeId) {
+      maxNodeProbabilityOfFailureIncrease = Math.max(
+        maxNodeProbabilityOfFailureIncrease,
+        optimizedProbabilityOfFailure -
+          (baseline.probabilityOfFailureByNodeId.get(nodeId) ?? 0),
+      )
+    }
+
+    let rejectionReason: string | undefined
+    if (
+      totalProbabilityOfFailureReductionRatio <
+      REGION_COST_OPTIMIZER_MIN_PF_REDUCTION_RATIO
+    ) {
+      rejectionReason = "insufficient_total_pf_reduction"
+    } else if (
+      optimized.maxProbabilityOfFailure >
+      baseline.maxProbabilityOfFailure + 1e-9
+    ) {
+      rejectionReason = "max_pf_increased"
+    } else if (optimized.highRiskNodeCount > baseline.highRiskNodeCount) {
+      rejectionReason = "high_risk_node_count_increased"
+    } else if (
+      maxNodeProbabilityOfFailureIncrease >
+      REGION_COST_OPTIMIZER_MAX_NODE_PF_INCREASE + 1e-9
+    ) {
+      rejectionReason = "individual_node_pf_increased"
+    }
+
+    return {
+      accepted: rejectionReason === undefined,
+      ...(rejectionReason ? { rejectionReason } : {}),
+      baseline,
+      optimized,
+      totalProbabilityOfFailureReductionRatio,
+      maxNodeProbabilityOfFailureIncrease,
+    }
   }
 
   private getRouteMetadata(
@@ -1351,7 +1518,17 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
     inputNodeWithPortPoints: InputNodeWithPortPoints[]
     changedPreloadedTraceSections: ChangedPreloadedTraceSection[]
   } {
-    const solvedTinySolver = this.getSolvedTinySolver()
+    return this.getOutputForSolvedTinySolver(this.getSolvedTinySolver(), true)
+  }
+
+  private getOutputForSolvedTinySolver(
+    solvedTinySolver: TinyHyperGraphSolver,
+    recordStats: boolean,
+  ): {
+    nodesWithPortPoints: NodeWithPortPoints[]
+    inputNodeWithPortPoints: InputNodeWithPortPoints[]
+    changedPreloadedTraceSections: ChangedPreloadedTraceSection[]
+  } {
     const nodesWithPortPoints: NodeWithPortPoints[] = []
     const regionSegments = solvedTinySolver.state.regionSegments
     const regionMetadata = solvedTinySolver.topology.regionMetadata ?? []
@@ -1493,8 +1670,10 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
         }
       },
     )
-    this.stats.changedPreloadedTraceSectionCount =
-      changedPreloadedTraceSections.length
+    if (recordStats) {
+      this.stats.changedPreloadedTraceSectionCount =
+        changedPreloadedTraceSections.length
+    }
 
     return {
       nodesWithPortPoints,

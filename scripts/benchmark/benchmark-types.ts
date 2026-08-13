@@ -85,6 +85,16 @@ export type TinyHypergraphBenchmarkMetrics = {
     finalMaxRegionSegmentCount: number
     initialSquaredRegionSegmentCount: number
     finalSquaredRegionSegmentCount: number
+    downstreamAccepted: boolean
+    downstreamRejectionReason?: string
+    initialTotalProbabilityOfFailure: number
+    finalTotalProbabilityOfFailure: number
+    totalProbabilityOfFailureReductionRatio: number
+    initialMaxProbabilityOfFailure: number
+    finalMaxProbabilityOfFailure: number
+    initialHighRiskNodeCount: number
+    finalHighRiskNodeCount: number
+    maxNodeProbabilityOfFailureIncrease: number
   }
 }
 
