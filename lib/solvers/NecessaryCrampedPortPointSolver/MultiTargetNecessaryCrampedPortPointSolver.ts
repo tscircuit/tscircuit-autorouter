@@ -16,6 +16,7 @@ import { pointToBoxDistance } from "@tscircuit/math-utils"
 import { SingleTargetNecessaryCrampedPortPointSolver } from "./SingleTargetNecessaryCrampedPortPointSolver"
 
 const CRAMPED_NON_NECESSARY_PORT_PENALTY = 1_000
+const MAX_CRAMPED_ESCAPE_BRANCHES_TO_KEEP = 5
 
 export type MultiTargetNecessaryCrampedPortPointSolverInput = {
   sharedEdgeSegments: SharedEdgeSegment[]
@@ -197,6 +198,12 @@ export class MultiTargetNecessaryCrampedPortPointSolver extends BaseSolver {
           const branchPathId = `${candidate.parent.port.segmentPortPointId}->${candidate.port.segmentPortPointId}`
           if (!firstCandidateByBranchPath.has(branchPathId)) {
             firstCandidateByBranchPath.set(branchPathId, candidate)
+            if (
+              firstCandidateByBranchPath.size ===
+              MAX_CRAMPED_ESCAPE_BRANCHES_TO_KEEP
+            ) {
+              break
+            }
           }
         }
         const diverseCandidates = [...firstCandidateByBranchPath.values()]
