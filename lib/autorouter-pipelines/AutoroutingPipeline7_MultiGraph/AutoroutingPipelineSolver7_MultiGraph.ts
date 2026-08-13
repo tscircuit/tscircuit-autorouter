@@ -560,6 +560,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
           useGrowShrinkHighDensityIntraNodeSolver: true,
           preserveTerminalPcbPortIds: true,
           growShrinkFallbackToInvalidGeometryOnFailure: true,
+          captureSearchDebug: false,
         },
       ]
     }),
