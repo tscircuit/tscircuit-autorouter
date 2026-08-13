@@ -2,7 +2,6 @@ import { BaseSolver } from "@tscircuit/solver-utils"
 import {
   CapacityMeshNode,
   CapacityMeshNodeId,
-  SimpleRouteConnection,
   SimpleRouteJson,
 } from "lib/types"
 import {
@@ -22,16 +21,6 @@ export type MultiTargetNecessaryCrampedPortPointSolverInput = {
   sharedEdgeSegments: SharedEdgeSegment[]
   capacityMeshNodes: CapacityMeshNode[]
   simpleRouteJson: SimpleRouteJson
-  originalConnections: SimpleRouteConnection[]
-  /**
-   * The minimum number of cramped escape paths to keep.
-   * This is useful when there are multiple connections.
-   * Setting this to more than one (e.g., 2) ensures that at least two connections can be routed.
-   * Distinct local branches from sparse source-trace terminals are also
-   * preserved so the limit cannot erase a valid escape direction.
-   * Higher values may be beneficial, but can lead to more DRC errors.
-   */
-  numberOfCrampedPortPointsToKeep: number
 }
 
 /**
@@ -60,10 +49,6 @@ export class MultiTargetNecessaryCrampedPortPointSolver extends BaseSolver {
     CapacityMeshNodeId,
     SegmentPortPoint[]
   >()
-  private sourceTraceConnectionIds = new Set<string>()
-  private netConnectionIds = new Set<string>()
-  private preloadedTraceIds = new Set<string>()
-  private preloadedConnectionNames = new Set<string>()
   constructor(private input: MultiTargetNecessaryCrampedPortPointSolverInput) {
     super()
     /**
@@ -78,25 +63,6 @@ export class MultiTargetNecessaryCrampedPortPointSolver extends BaseSolver {
   }
 
   override _setup(): void {
-    this.sourceTraceConnectionIds.clear()
-    this.netConnectionIds.clear()
-    for (const connection of this.input.originalConnections) {
-      const connectionIds = [
-        connection.name,
-        ...(connection.__rootConnectionNames ?? []),
-        ...(connection.source_trace_id ? [connection.source_trace_id] : []),
-      ]
-      const destination = connection.source_trace_id
-        ? this.sourceTraceConnectionIds
-        : this.netConnectionIds
-      for (const connectionId of connectionIds) destination.add(connectionId)
-    }
-    this.preloadedTraceIds = new Set(
-      this.input.simpleRouteJson.traces?.map((trace) => trace.pcb_trace_id),
-    )
-    this.preloadedConnectionNames = new Set(
-      this.input.simpleRouteJson.traces?.map((trace) => trace.connection_name),
-    )
     this.targetNode = this.input.capacityMeshNodes.filter(
       (cm) => cm._containsObstacle,
     )
@@ -164,16 +130,11 @@ export class MultiTargetNecessaryCrampedPortPointSolver extends BaseSolver {
         })
 
         if (areAllCandidatesBlocked || this.candidatesAtDepth.length === 0) {
-          // Sparse source-trace terminals can be nested behind consecutive
-          // cramped boundaries. Dense/net topology and preloaded traces
-          // keep the legacy selection so this pass cannot reshape their graph.
-          const shouldPreserveNestedCrampedEscapes =
-            this.shouldPreserveNestedCrampedEscapes(this.currentTarget)
           this.isRunningCrampedPass = true
           this.activeSubSolver =
             new SingleTargetNecessaryCrampedPortPointSolver({
               target: this.currentTarget,
-              depthLimit: shouldPreserveNestedCrampedEscapes ? 3 : 2,
+              depthLimit: 3,
               shouldIgnoreCrampedPortPoints: false,
               mapOfCapacityMeshNodeIdToSegmentPortPoints:
                 this.mapOfCapacityMeshNodeIdToSegmentPortPoints,
@@ -214,56 +175,32 @@ export class MultiTargetNecessaryCrampedPortPointSolver extends BaseSolver {
         this.error = `All candidates are blocked by obstacles even after including cramped port points for capacity mesh node ${this.currentTarget.capacityMeshNodeId}`
       }
 
-      const shouldPreserveNestedCrampedEscapes =
-        this.shouldPreserveNestedCrampedEscapes(this.currentTarget)
-      this.candidatesAtDepth = [...crampedCandidates].sort(
-        (a, b) =>
-          costFunction(a) - costFunction(b) ||
-          (shouldPreserveNestedCrampedEscapes
-            ? this.getCandidateExitCapacity(b) -
-              this.getCandidateExitCapacity(a)
-            : 0),
-      )
+      this.candidatesAtDepth = [...crampedCandidates].sort((a, b) => {
+        const costDifference = costFunction(a) - costFunction(b)
+        if (costDifference !== 0) {
+          return costDifference
+        }
+        return (
+          this.getCandidateExitCapacity(b) - this.getCandidateExitCapacity(a)
+        )
+      })
       if (this.candidatesAtDepth.length === 0) {
         this.error = `No candidates found for capacity mesh node ${this.currentTarget.capacityMeshNodeId} even after including cramped port points`
       } else {
-        let candidatesToKeep: ExploredPortPoint[]
-        if (!shouldPreserveNestedCrampedEscapes) {
-          candidatesToKeep = this.candidatesAtDepth.slice(
-            0,
-            this.input.numberOfCrampedPortPointsToKeep,
-          )
-        } else {
-          const firstCandidateByBranchPath = new Map<
-            string,
-            ExploredPortPoint
-          >()
-          for (const candidate of this.candidatesAtDepth) {
-            const branchPathId = [candidate.parent?.port, candidate.port]
-              .filter((port): port is SegmentPortPoint => Boolean(port))
-              .map((port) => port.segmentPortPointId)
-              .join("->")
-            if (!firstCandidateByBranchPath.has(branchPathId)) {
-              firstCandidateByBranchPath.set(branchPathId, candidate)
-            }
+        const firstCandidateByBranchPath = new Map<string, ExploredPortPoint>()
+        for (const candidate of this.candidatesAtDepth) {
+          if (!candidate.parent) {
+            throw new Error(
+              `Missing parent for cramped escape candidate ${candidate.port.segmentPortPointId}`,
+            )
           }
-          const diverseCandidates = [...firstCandidateByBranchPath.values()]
-          const diverseCandidateSet = new Set(diverseCandidates)
-          candidatesToKeep = [
-            ...diverseCandidates,
-            ...this.candidatesAtDepth.filter(
-              (candidate) => !diverseCandidateSet.has(candidate),
-            ),
-          ].slice(
-            0,
-            Math.max(
-              this.input.numberOfCrampedPortPointsToKeep,
-              diverseCandidates.length,
-            ),
-          )
+          const branchPathId = `${candidate.parent.port.segmentPortPointId}->${candidate.port.segmentPortPointId}`
+          if (!firstCandidateByBranchPath.has(branchPathId)) {
+            firstCandidateByBranchPath.set(branchPathId, candidate)
+          }
         }
-
-        for (const candidate of candidatesToKeep) {
+        const diverseCandidates = [...firstCandidateByBranchPath.values()]
+        for (const candidate of diverseCandidates) {
           this.keepCandidatePath(candidate)
         }
       }
@@ -321,56 +258,31 @@ export class MultiTargetNecessaryCrampedPortPointSolver extends BaseSolver {
   }
 
   private getCandidateExitCapacity(candidate: ExploredPortPoint): number {
-    const previousNodeIds = new Set(candidate.parent?.port.nodeIds ?? [])
+    if (!candidate.parent) {
+      throw new Error(
+        `Missing parent for cramped escape candidate ${candidate.port.segmentPortPointId}`,
+      )
+    }
+    const previousNodeIds = new Set(candidate.parent.port.nodeIds)
     const exitNodes = candidate.port.nodeIds
       .filter((nodeId) => !previousNodeIds.has(nodeId))
-      .map((nodeId) => this.nodeMap.get(nodeId))
-      .filter((node): node is CapacityMeshNode => Boolean(node))
-    const nodesToMeasure =
-      exitNodes.length > 0
-        ? exitNodes
-        : candidate.port.nodeIds.map((nodeId) => this.nodeMap.get(nodeId)!)
+      .map((nodeId) => {
+        const node = this.nodeMap.get(nodeId)
+        if (!node) {
+          throw new Error(`Could not find capacity mesh node for id ${nodeId}`)
+        }
+        return node
+      })
+    if (exitNodes.length === 0) {
+      throw new Error(
+        `Could not find exit node for cramped escape candidate ${candidate.port.segmentPortPointId}`,
+      )
+    }
     return Math.max(
       0,
-      ...nodesToMeasure.map(
+      ...exitNodes.map(
         (node) => node.width * node.height * node.availableZ.length,
       ),
-    )
-  }
-
-  private shouldPreserveNestedCrampedEscapes(
-    target: CapacityMeshNode,
-  ): boolean {
-    const connectedTo = target._connectedTo ?? []
-    const isSourceTraceConnection = connectedTo.some((connectionId) =>
-      this.sourceTraceConnectionIds.has(connectionId),
-    )
-    const isNetConnection = connectedTo.some((connectionId) =>
-      this.netConnectionIds.has(connectionId),
-    )
-    const hasPreloadedTrace =
-      connectedTo.some((connectionId) =>
-        this.preloadedConnectionNames.has(connectionId),
-      ) ||
-      connectedTo.some((connectionId) =>
-        this.preloadedTraceIds.has(connectionId),
-      )
-    // The setup lifecycle can index the same port object more than once, so
-    // sparsity must be measured by stable port IDs rather than array length.
-    const incidentPortCount = new Set(
-      (
-        this.mapOfCapacityMeshNodeIdToSegmentPortPoints.get(
-          target.capacityMeshNodeId,
-        ) ?? []
-      ).map((port) => port.segmentPortPointId),
-    ).size
-    const maximumSparseTerminalPortCount =
-      this.input.numberOfCrampedPortPointsToKeep + 2
-    return (
-      isSourceTraceConnection &&
-      !isNetConnection &&
-      !hasPreloadedTrace &&
-      incidentPortCount <= maximumSparseTerminalPortCount
     )
   }
 

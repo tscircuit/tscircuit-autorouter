@@ -439,8 +439,6 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
               componentCapacityMeshNodeIds,
             }),
             simpleRouteJson: cms.srjWithPointPairs!,
-            originalConnections: cms.originalSrj.connections,
-            numberOfCrampedPortPointsToKeep: 5,
           },
         ]
       },

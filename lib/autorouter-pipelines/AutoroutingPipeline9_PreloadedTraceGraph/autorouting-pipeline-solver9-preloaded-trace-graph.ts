@@ -450,8 +450,6 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
               componentCapacityMeshNodeIds,
             }),
             simpleRouteJson: cms.srjWithPointPairs!,
-            originalConnections: cms.originalSrj.connections,
-            numberOfCrampedPortPointsToKeep: 5,
           },
         ]
       },
