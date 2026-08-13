@@ -1,7 +1,7 @@
 import type { AnyCircuitElement } from "circuit-json"
 import type { SimpleRouteJson, SimplifiedPcbTrace } from "lib/types"
 import { RELAXED_DRC_OPTIONS } from "./drcPresets"
-import { type GetDrcErrorsResult, getDrcErrors } from "./getDrcErrors"
+import { getDrcErrors, type GetDrcErrorsResult } from "./getDrcErrors"
 import { convertToCircuitJson } from "./utils/convertToCircuitJson"
 
 /** Inputs used by the benchmark's relaxed DRC evaluation. */
@@ -10,8 +10,6 @@ export interface EvaluateRelaxedDrcInput {
   srjWithPointPairs: SimpleRouteJson
   /** Newly routed traces. Input traces are always included automatically. */
   routedTraces: SimplifiedPcbTrace[]
-  /** Treat physically touching preloaded pad-edge endpoints as connected. */
-  normalizePreloadedTracePadEdgeEndpoints?: boolean
 }
 
 /** Benchmark relaxed DRC errors and the Circuit JSON evaluated to produce them. */
@@ -45,7 +43,6 @@ export const evaluateRelaxedDrc = ({
   inputSrj,
   srjWithPointPairs,
   routedTraces,
-  normalizePreloadedTracePadEdgeEndpoints = false,
 }: EvaluateRelaxedDrcInput): EvaluateRelaxedDrcResult => {
   const preloadedTraces = inputSrj.traces ?? []
   const jointTraces = combinePreloadedAndRoutedTraces(
@@ -57,7 +54,6 @@ export const evaluateRelaxedDrc = ({
     minViaDiameter: inputSrj.minViaDiameter,
     originalSrj: inputSrj,
     includeOriginalConnections: true,
-    normalizePreloadedTracePadEdgeEndpoints,
   })
 
   return {
