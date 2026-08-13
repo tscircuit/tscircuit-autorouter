@@ -16,7 +16,7 @@ import { pointToBoxDistance } from "@tscircuit/math-utils"
 import { SingleTargetNecessaryCrampedPortPointSolver } from "./SingleTargetNecessaryCrampedPortPointSolver"
 
 const CRAMPED_NON_NECESSARY_PORT_PENALTY = 1_000
-const MAX_CRAMPED_EXIT_REGIONS_TO_KEEP = 5
+const MAX_CRAMPED_ESCAPE_CANDIDATES_TO_KEEP = 5
 
 export type MultiTargetNecessaryCrampedPortPointSolverInput = {
   sharedEdgeSegments: SharedEdgeSegment[]
@@ -216,14 +216,23 @@ export class MultiTargetNecessaryCrampedPortPointSolver extends BaseSolver {
           }
         }
 
-        const maximumExitRegionsToKeep = Math.min(
-          MAX_CRAMPED_EXIT_REGIONS_TO_KEEP,
+        const maximumCandidatesToKeep = Math.min(
+          MAX_CRAMPED_ESCAPE_CANDIDATES_TO_KEEP,
           this.input.numberOfCrampedPortPointsToKeep,
         )
-        for (const candidate of [...bestCandidateByExitRegion.values()].slice(
+        const candidatesToKeep = [...bestCandidateByExitRegion.values()].slice(
           0,
-          maximumExitRegionsToKeep,
-        )) {
+          maximumCandidatesToKeep,
+        )
+        if (candidatesToKeep.length < maximumCandidatesToKeep) {
+          const candidatesToKeepSet = new Set(candidatesToKeep)
+          for (const candidate of this.candidatesAtDepth) {
+            if (candidatesToKeepSet.has(candidate)) continue
+            candidatesToKeep.push(candidate)
+            if (candidatesToKeep.length === maximumCandidatesToKeep) break
+          }
+        }
+        for (const candidate of candidatesToKeep) {
           this.keepCandidatePath(candidate)
         }
       }
