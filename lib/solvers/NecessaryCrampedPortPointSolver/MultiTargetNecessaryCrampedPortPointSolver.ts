@@ -16,19 +16,12 @@ import { pointToBoxDistance } from "@tscircuit/math-utils"
 import { SingleTargetNecessaryCrampedPortPointSolver } from "./SingleTargetNecessaryCrampedPortPointSolver"
 
 const CRAMPED_NON_NECESSARY_PORT_PENALTY = 1_000
-const MAX_CRAMPED_ESCAPE_CANDIDATES_TO_KEEP = 5
+const MAX_CRAMPED_EXIT_REGIONS_TO_KEEP = 5
 
 export type MultiTargetNecessaryCrampedPortPointSolverInput = {
   sharedEdgeSegments: SharedEdgeSegment[]
   capacityMeshNodes: CapacityMeshNode[]
   simpleRouteJson: SimpleRouteJson
-  /**
-   * The number of cramped port points to keep.
-   * This is useful when there are multiple connections.
-   * Setting this to more than one (e.g., 2) ensures that at least two connections can be routed.
-   * Higher values may be beneficial, but can lead to more DRC errors.
-   */
-  numberOfCrampedPortPointsToKeep: number
 }
 
 /**
@@ -216,20 +209,20 @@ export class MultiTargetNecessaryCrampedPortPointSolver extends BaseSolver {
           }
         }
 
-        const maximumCandidatesToKeep = Math.min(
-          MAX_CRAMPED_ESCAPE_CANDIDATES_TO_KEEP,
-          this.input.numberOfCrampedPortPointsToKeep,
-        )
         const candidatesToKeep = [...bestCandidateByExitRegion.values()].slice(
           0,
-          maximumCandidatesToKeep,
+          MAX_CRAMPED_EXIT_REGIONS_TO_KEEP,
         )
-        if (candidatesToKeep.length < maximumCandidatesToKeep) {
+        if (candidatesToKeep.length < MAX_CRAMPED_EXIT_REGIONS_TO_KEEP) {
           const candidatesToKeepSet = new Set(candidatesToKeep)
           for (const candidate of this.candidatesAtDepth) {
             if (candidatesToKeepSet.has(candidate)) continue
             candidatesToKeep.push(candidate)
-            if (candidatesToKeep.length === maximumCandidatesToKeep) break
+            if (
+              candidatesToKeep.length === MAX_CRAMPED_EXIT_REGIONS_TO_KEEP
+            ) {
+              break
+            }
           }
         }
         for (const candidate of candidatesToKeep) {
