@@ -28,6 +28,8 @@ import { repairDisconnectedSameRootPortPoints } from "./repairDisconnectedSameRo
 // derived exploration budget or exhausts all of its candidates.
 const ORDERING_SHUFFLE_SEEDS = Array.from({ length: 6 }, (_, seed) => seed)
 
+export type PortfolioSearchMode = "full" | "priority"
+
 /** Coordinates a fitness-scheduled portfolio of intra-node routing solvers. */
 export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolver<
   | IntraNodeRouteSolver
@@ -48,6 +50,8 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
   connMap?: ConnectivityMap
   effort: number
   adaptiveSearchExpanded = false
+  searchMode: PortfolioSearchMode
+  priorityA03Added = false
 
   private getSolvedSegmentCount(solver: unknown): number | null {
     const solvedConnectionsMap = (solver as any).solvedConnectionsMap
@@ -103,6 +107,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
   constructor(
     opts: ConstructorParameters<typeof CachedIntraNodeRouteSolver>[0] & {
       effort?: number
+      searchMode?: PortfolioSearchMode
     },
   ) {
     super()
@@ -110,12 +115,17 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     this.connMap = opts.connMap
     this.constructorParams = opts
     this.effort = opts.effort ?? 1
+    this.searchMode = opts.searchMode ?? "full"
     this.MAX_ITERATIONS = 20_000_000 * this.effort
     this.GREEDY_MULTIPLIER = 5
     this.MIN_SUBSTEPS = 100
   }
 
   getCombinationDefs() {
+    if (this.searchMode === "priority") {
+      return [["highDensityA01"]]
+    }
+
     return [
       ["throughObstacle"],
       ["singleLayerNoDifferentRootIntersections"],
@@ -254,7 +264,10 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
         possibleValues: [
           {
             HIGH_DENSITY_A01: true,
-            SHUFFLE_SEED: ORDERING_SHUFFLE_SEEDS[0],
+            SHUFFLE_SEED:
+              this.searchMode === "priority"
+                ? ORDERING_SHUFFLE_SEEDS[2]
+                : ORDERING_SHUFFLE_SEEDS[0],
           },
         ],
       },
@@ -309,6 +322,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       this.initializeCandidateBudget(solver)
     }
     this.stats.dynamicExpansionWorkBudget = this.getDynamicExpansionWorkBudget()
+    this.stats.searchMode = this.searchMode
     this.refreshDynamicIterationLimit()
   }
 
@@ -357,6 +371,17 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
 
   override _step() {
     if (!this.supervisedSolvers) this.initializeSolvers()
+
+    if (this.searchMode === "priority") {
+      if (!this.getSupervisedSolverWithBestFitness() && !this.priorityA03Added) {
+        this.priorityA03Added = true
+        this.addSupervisedCandidate({ HIGH_DENSITY_A03: true })
+        this.refreshDynamicIterationLimit()
+        this.stats.priorityA03AddedAtIteration = this.iterations
+      }
+      super._step()
+      return
+    }
 
     if (
       !this.adaptiveSearchExpanded &&

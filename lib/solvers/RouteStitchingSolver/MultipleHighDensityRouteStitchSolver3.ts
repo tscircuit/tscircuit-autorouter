@@ -22,11 +22,13 @@ import {
   MAX_TERMINAL_STITCH_GAP_DISTANCE_3,
 } from "./routeStitchingShared"
 
+type StitchTerminal = Point3 & { pcb_port_id?: string }
+
 export type UnsolvedRoute3 = {
   connectionName: string
   hdRoutes: HighDensityIntraNodeRoute[]
-  start: Point3
-  end: Point3
+  start: StitchTerminal
+  end: StitchTerminal
 }
 
 export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
@@ -109,7 +111,14 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
       (route) =>
         (route.rootConnectionName ?? route.connectionName) ===
         rootConnectionName,
-    )
+    ).map((route) => {
+      if (currentRouteSet.has(route)) return route
+
+      const bridgeRoute = { ...route }
+      delete bridgeRoute.startPcbPortId
+      delete bridgeRoute.endPcbPortId
+      return bridgeRoute
+    })
 
     if (sameRootRoutes.every((route) => currentRouteSet.has(route))) {
       return null
@@ -260,20 +269,21 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
           globalEnd,
         }))
 
-        if (
-          distance(start, connection.pointsToConnect[1]) <
-          distance(end, connection.pointsToConnect[0])
-        ) {
+        const directTerminalDistance =
+          distance(start, globalStart) + distance(end, globalEnd)
+        const swappedTerminalDistance =
+          distance(start, globalEnd) + distance(end, globalStart)
+        if (swappedTerminalDistance < directTerminalDistance) {
           ;[start, end] = [end, start]
         }
 
         start = snapIslandEndpointToNearestTerminal({
           islandEndpoint: start,
-          terminals: [globalStart, globalEnd],
+          terminals: [globalStart],
         })
         end = snapIslandEndpointToNearestTerminal({
           islandEndpoint: end,
-          terminals: [globalStart, globalEnd],
+          terminals: [globalEnd],
         })
       } else {
         start = {

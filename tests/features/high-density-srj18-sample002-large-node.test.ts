@@ -111,7 +111,11 @@ test("the srj18 sample002 large node is solved at its physical size", () => {
   expect(solver.failed).toBe(false)
   expect(solver.growthAttempts).toBe(0)
   expect(solver.scaleFactor).toBe(1)
-  expect(solver.winningSolver!.adaptiveSearchExpanded).toBe(true)
+  expect(solver.winningSolver!.adaptiveSearchExpanded).toBe(false)
+  expect(solver.winningSolver!.stats.searchMode).toBe("priority")
+  expect(
+    (solver.winningSolver!.winningSolver as any).hyperParameters.shuffleSeed,
+  ).toBe(2)
   expect(solver.stats.invalidGeometryFallback).not.toBe(true)
   expect(solver.winningSolver!.iterations).toBeLessThanOrEqual(
     solver.winningSolver!.MAX_ITERATIONS,

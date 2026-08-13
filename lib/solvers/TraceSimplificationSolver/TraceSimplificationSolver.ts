@@ -103,9 +103,17 @@ export class TraceSimplificationSolver extends BaseSolver {
       readonly otherHdRoutes?: ReadonlyArray<HighDensityRoute>
       readonly netByConnectionName?: ReadonlyMap<string, string>
       readonly enableCrossingViaReduction?: boolean
+      readonly iterations?: number
     },
   ) {
     super()
+    if (
+      simplificationConfig.iterations !== undefined &&
+      (!Number.isInteger(simplificationConfig.iterations) ||
+        simplificationConfig.iterations < 1)
+    ) {
+      throw new Error("Trace simplification iterations must be a positive integer")
+    }
     this.simplificationConfig = {
       ...simplificationConfig,
       obstacles: createObjectsWithZLayers(
@@ -116,6 +124,8 @@ export class TraceSimplificationSolver extends BaseSolver {
     this.hdRoutes = this.markThroughObstacleSegments(
       simplificationConfig.hdRoutes,
     )
+    this.MAX_SIMPLIFICATION_PIPELINE_LOOPS =
+      simplificationConfig.iterations ?? 2
     this.MAX_ITERATIONS = 100e6
   }
 

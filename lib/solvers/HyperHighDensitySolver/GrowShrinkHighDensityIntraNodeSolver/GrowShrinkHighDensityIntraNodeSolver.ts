@@ -5,7 +5,10 @@ import type {
   PortPoint,
 } from "lib/types/high-density-types"
 import { BaseSolver } from "../../BaseSolver"
-import { PortfolioSingleIntraNodeSolver } from "../PortfolioSingleIntraNodeSolver"
+import {
+  type PortfolioSearchMode,
+  PortfolioSingleIntraNodeSolver,
+} from "../PortfolioSingleIntraNodeSolver"
 import {
   createInvalidDirectConnectionRoutes,
   createInvalidSameLayerCrossingRoutes,
@@ -17,6 +20,7 @@ type PortfolioSingleIntraNodeSolverParams = ConstructorParameters<
 >[0]
 
 export const DEFAULT_MAX_GROWTH_ATTEMPTS = 3
+export const PRIORITY_SEARCH_MIN_SEGMENT_COUNT = 12
 
 export type GrowShrinkHighDensityIntraNodeSolverParams =
   PortfolioSingleIntraNodeSolverParams & {
@@ -110,6 +114,7 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
   scaleFactor = 1
   growthAttempts = 0
   maxGrowthAttempts: number
+  searchMode: PortfolioSearchMode
 
   constructor(params: GrowShrinkHighDensityIntraNodeSolverParams) {
     super()
@@ -117,6 +122,18 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
     this.nodeWithPortPoints = params.nodeWithPortPoints
     this.maxGrowthAttempts =
       params.maxGrowthAttempts ?? DEFAULT_MAX_GROWTH_ATTEMPTS
+    const segmentCount = Math.max(
+      1,
+      this.nodeWithPortPoints.portPointsInPairs?.length ??
+        new Set(
+          this.nodeWithPortPoints.portPoints.map(
+            (portPoint) => portPoint.connectionName,
+          ),
+        ).size,
+    )
+    this.searchMode =
+      segmentCount >= PRIORITY_SEARCH_MIN_SEGMENT_COUNT ? "priority" : "full"
+    this.stats.prioritySearchEnabled = this.searchMode === "priority"
     this.MAX_ITERATIONS =
       20_000_000 * (params.effort ?? 1) * (this.maxGrowthAttempts + 1)
 
@@ -146,6 +163,7 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
         this.nodeWithPortPoints,
         this.scaleFactor,
       ),
+      searchMode: this.searchMode,
     })
     if (this.constructorParams.maxInnerIterationsPerGrowthAttempt) {
       this.activeSubSolver.MAX_ITERATIONS =
@@ -167,6 +185,7 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
           )
     this.solved = true
     this.failed = false
+    this.stats.searchMode = this.searchMode
   }
 
   computeProgress() {
@@ -199,6 +218,14 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
     this.activeSubSolver = null
 
     if (this.growthAttempts >= this.maxGrowthAttempts) {
+      if (this.searchMode === "priority") {
+        this.searchMode = "full"
+        this.growthAttempts = 0
+        this.scaleFactor = 1
+        this.stats.prioritySearchExhausted = true
+        return
+      }
+
       if (this.constructorParams.fallbackToInvalidGeometryOnFailure) {
         this.solvedRoutes = createInvalidDirectConnectionRoutes(
           this.nodeWithPortPoints,
