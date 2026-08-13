@@ -15,49 +15,29 @@ import { mapZToLayerName } from "lib/utils/mapZToLayerName"
 function convertSimplifiedPcbTraceToCircuitJson(
   simplifiedTrace: SimplifiedPcbTrace,
   connectionName: string,
-  inferredEndpointPcbPortIds: {
-    start?: { pcbPortId: string; x: number; y: number }
-    end?: { pcbPortId: string; x: number; y: number }
-  } = {},
 ): PcbTrace {
-  const firstWireIndex = simplifiedTrace.route.findIndex(
-    (segment) => segment.route_type === "wire" && isLayerName(segment.layer),
-  )
-  const lastWireIndex = simplifiedTrace.route.findLastIndex(
-    (segment) => segment.route_type === "wire" && isLayerName(segment.layer),
-  )
-
   return {
     type: "pcb_trace",
     pcb_trace_id: simplifiedTrace.pcb_trace_id,
     source_trace_id: connectionName,
     route: simplifiedTrace.route
-      .map((segment, segmentIndex) => {
+      .map((segment) => {
         if (segment.route_type === "wire") {
           if (!isLayerName(segment.layer)) return null
-          const inferredStart =
-            segmentIndex === firstWireIndex
-              ? inferredEndpointPcbPortIds.start
-              : undefined
-          const inferredEnd =
-            segmentIndex === lastWireIndex
-              ? inferredEndpointPcbPortIds.end
-              : undefined
           const startPcbPortId =
             "start_pcb_port_id" in segment &&
             typeof segment.start_pcb_port_id === "string"
               ? segment.start_pcb_port_id
-              : inferredStart?.pcbPortId
+              : undefined
           const endPcbPortId =
             "end_pcb_port_id" in segment &&
             typeof segment.end_pcb_port_id === "string"
               ? segment.end_pcb_port_id
-              : inferredEnd?.pcbPortId
-          const inferredEndpoint = inferredStart ?? inferredEnd
+              : undefined
           return {
             route_type: "wire" as const,
-            x: inferredEndpoint?.x ?? segment.x,
-            y: inferredEndpoint?.y ?? segment.y,
+            x: segment.x,
+            y: segment.y,
             width: segment.width,
             layer: segment.layer,
             ...(startPcbPortId ? { start_pcb_port_id: startPcbPortId } : {}),
@@ -253,90 +233,6 @@ const getSrjDeclaredPcbPortIds = ({
       return pcbPortId ? [pcbPortId] : []
     }),
   ])
-
-const PRELOADED_TRACE_PAD_EDGE_TOLERANCE = 1e-6
-
-/**
- * SRJ preloaded traces may stop exactly at a pad edge while declaring the pad
- * through `connectsTo`. Preserve that terminal metadata for Circuit JSON DRC,
- * but only when the copper endpoint physically touches the declared pad.
- */
-const inferTraceEndpointPcbPortIds = (
-  trace: SimplifiedPcbTrace,
-  srj: SimpleRouteJson,
-): {
-  start?: { pcbPortId: string; x: number; y: number }
-  end?: { pcbPortId: string; x: number; y: number }
-} => {
-  const declaredPcbPortIds = getSrjDeclaredPcbPortIds(srj)
-  const connectedPcbPortIds = [
-    ...new Set(
-      (trace.connectsTo ?? []).filter((id) => declaredPcbPortIds.has(id)),
-    ),
-  ]
-  if (connectedPcbPortIds.length === 0) return {}
-
-  const obstaclesByPcbPortId = new Map<string, Obstacle[]>()
-  for (const obstacle of srj.obstacles) {
-    const metadataPcbPortId = obstacle.circuitJsonMetadata?.pcb_port_id
-    const obstaclePcbPortIds = metadataPcbPortId
-      ? [metadataPcbPortId]
-      : obstacle.connectedTo.filter((id) => declaredPcbPortIds.has(id))
-    for (const pcbPortId of obstaclePcbPortIds) {
-      const obstacles = obstaclesByPcbPortId.get(pcbPortId) ?? []
-      obstacles.push(obstacle)
-      obstaclesByPcbPortId.set(pcbPortId, obstacles)
-    }
-  }
-
-  const wirePoints = trace.route.filter(
-    (segment) => segment.route_type === "wire" && isLayerName(segment.layer),
-  )
-  const startPoint = wirePoints[0]
-  const endPoint = wirePoints.at(-1)
-
-  const findTouchingPcbPortId = (
-    point: (typeof wirePoints)[number] | undefined,
-  ): { pcbPortId: string; x: number; y: number } | undefined => {
-    if (!point || point.route_type !== "wire") return undefined
-    const match = connectedPcbPortIds
-      .flatMap((pcbPortId) =>
-        (obstaclesByPcbPortId.get(pcbPortId) ?? []).map((obstacle) => ({
-          pcbPortId,
-          obstacle,
-        })),
-      )
-      .filter(
-        ({ obstacle }) =>
-          obstacle.type === "rect" &&
-          obstacle.layers.includes(point.layer) &&
-          pointToBoxDistance(point, obstacle) <=
-            PRELOADED_TRACE_PAD_EDGE_TOLERANCE,
-      )
-      .sort(
-        (a, b) =>
-          Math.hypot(
-            point.x - a.obstacle.center.x,
-            point.y - a.obstacle.center.y,
-          ) -
-          Math.hypot(
-            point.x - b.obstacle.center.x,
-            point.y - b.obstacle.center.y,
-          ),
-      )[0]
-    if (!match) return undefined
-    return {
-      pcbPortId: match.pcbPortId,
-      x: match.obstacle.center.x,
-      y: match.obstacle.center.y,
-    }
-  }
-
-  return {
-    start: findTouchingPcbPortId(startPoint),
-    end: findTouchingPcbPortId(endPoint),
-  }
-}
 
 declare const connectivityNetIdBrand: unique symbol
 type ConnectivityNetId = string & {
@@ -992,7 +888,6 @@ export type ConvertToCircuitJsonOptions = {
   minViaHoleDiameter?: number
   originalSrj?: SimpleRouteJson
   includeOriginalConnections?: boolean
-  normalizePreloadedTracePadEdgeEndpoints?: boolean
 }
 
 export function convertToCircuitJson(
@@ -1006,7 +901,6 @@ export function convertToCircuitJson(
     minViaHoleDiameter,
     originalSrj,
     includeOriginalConnections = false,
-    normalizePreloadedTracePadEdgeEndpoints = false,
   } = options
   const viaDimensions = getViaDimensions(srjWithPointPairs)
   const resolvedMinViaDiameter = minViaDiameter ?? viaDimensions.padDiameter
@@ -1085,10 +979,6 @@ export function convertToCircuitJson(
           convertSimplifiedPcbTraceToCircuitJson(
             trace,
             connectionName,
-            normalizePreloadedTracePadEdgeEndpoints &&
-              originalSrj?.traces?.includes(trace)
-              ? inferTraceEndpointPcbPortIds(trace, originalSrj)
-              : undefined,
           ) as AnyCircuitElement,
         )
       })
