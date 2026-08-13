@@ -37,7 +37,7 @@ test("Pipeline7 high-density stage opts into GrowShrinkHighDensityIntraNodeSolve
   ).toBeUndefined()
 })
 
-test("Pipeline7 caps expensive post-processing stages for benchmark completion", () => {
+test("Pipeline7 uses a DRC-validated fast probe for two-layer exact repair", () => {
   const solver = new AutoroutingPipelineSolver7_MultiGraph({
     layerCount: 2,
     minTraceWidth: 0.15,
@@ -84,43 +84,38 @@ test("Pipeline7 caps expensive post-processing stages for benchmark completion",
   expect((exactGeometryDrcParams as any).broadMaxIterations).toBe(12)
   expect((exactGeometryDrcParams as any).broadPassMultiplier).toBe(3)
 
-  const largeBoardConnections = Array.from({ length: 100 }, (_, index) => ({
-    name: `large_connection_${index}`,
-    pointsToConnect: [],
-  }))
-  const largeBoardRoutes = Array.from({ length: 200 }, () => ({}))
-  const [largeBoardExactGeometryDrcParams] =
-    exactGeometryDrcStep!.getConstructorParams({
-      ...solver,
-      originalSrj: {
-        ...solver.originalSrj,
-        connections: largeBoardConnections,
-      },
-      srjWithPointPairs: solver.srj,
-      globalDrcForceImproveSolver: { getOutput: () => largeBoardRoutes },
-      netToPointPairsSolver: { newConnections: [] },
-    } as any)
-  expect((largeBoardExactGeometryDrcParams as any).maxIterations).toBe(4)
-  expect((largeBoardExactGeometryDrcParams as any).broadPassMultiplier).toBe(
-    0.1,
+  const adaptiveTwoLayerSolver = new exactGeometryDrcStep!.solverClass(
+    exactGeometryDrcParams as any,
   )
+  adaptiveTwoLayerSolver.solve()
+  expect(
+    adaptiveTwoLayerSolver.stats.pipeline7AdaptiveExactDrcFastProbeAttempted,
+  ).toBe(true)
+  expect(
+    adaptiveTwoLayerSolver.stats.pipeline7AdaptiveExactDrcFastProbeAccepted,
+  ).toBe(true)
 
   const fourLayerSrj = { ...solver.srj, layerCount: 4 }
-  const [largeFourLayerExactGeometryDrcParams] =
+  const [fourLayerExactGeometryDrcParams] =
     exactGeometryDrcStep!.getConstructorParams({
       ...solver,
       srj: fourLayerSrj,
       originalSrj: {
         ...solver.originalSrj,
         layerCount: 4,
-        connections: largeBoardConnections,
       },
       srjWithPointPairs: fourLayerSrj,
-      globalDrcForceImproveSolver: { getOutput: () => largeBoardRoutes },
+      globalDrcForceImproveSolver: { getOutput: () => [] },
       netToPointPairsSolver: { newConnections: [] },
     } as any)
-  expect((largeFourLayerExactGeometryDrcParams as any).maxIterations).toBe(32)
+  const fourLayerSolver = new exactGeometryDrcStep!.solverClass(
+    fourLayerExactGeometryDrcParams as any,
+  )
+  fourLayerSolver.solve()
   expect(
-    (largeFourLayerExactGeometryDrcParams as any).broadPassMultiplier,
-  ).toBe(3)
+    fourLayerSolver.stats.pipeline7AdaptiveExactDrcFastProbeAttempted,
+  ).toBe(false)
+  expect(fourLayerSolver.stats.pipeline7AdaptiveExactDrcFastProbeAccepted).toBe(
+    false,
+  )
 })

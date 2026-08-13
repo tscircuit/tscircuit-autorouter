@@ -56,8 +56,7 @@ export const convertPipeline7HdRoutesToSimplifiedPcbTraces = ({
     const netConnectionName =
       connection.__netConnectionName ??
       netConnectionNameByOriginalConnectionName.get(connection.name)
-    const connectionRoutes =
-      routesByConnectionName.get(connection.name) ?? []
+    const connectionRoutes = routesByConnectionName.get(connection.name) ?? []
 
     if (connection.pointsToConnect.length !== 2) {
       throw new Error(

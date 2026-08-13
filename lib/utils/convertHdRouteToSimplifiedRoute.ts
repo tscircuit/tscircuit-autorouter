@@ -1,5 +1,6 @@
 import { distance, pointToBoxDistance } from "@tscircuit/math-utils"
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
+import { isObstacleConnectedToRoute } from "lib/solvers/TraceWidthSolver/isObstacleConnectedToRoute"
 import {
   type ConnectionPoint,
   type Obstacle,
@@ -8,7 +9,6 @@ import {
   isSingleLayerConnectionPoint,
 } from "lib/types"
 import { HighDensityIntraNodeRoute, Jumper } from "lib/types/high-density-types"
-import { isObstacleConnectedToRoute } from "lib/solvers/TraceWidthSolver/isObstacleConnectedToRoute"
 import { mapZToLayerName } from "./mapZToLayerName"
 
 type Point = {
