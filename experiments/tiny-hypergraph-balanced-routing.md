@@ -277,5 +277,54 @@ Rejected follow-ups remained out of the patch:
   were mixed across the canaries; and
 - trace-density factor 2 still only moved timeouts between downstream phases.
 
+An additional indexed-geometry specialization cached obstacle vectors and
+segment lengths, then replaced generic point/segment and segment-intersection
+helpers with equivalent scalar math. Across the same eight-case panel it kept
+all iteration counts, vias, DRC results, and output hashes identical, but only
+reduced high-density time from 14.19 s to 14.14 s (-0.4%); two cases regressed.
+The 148-line specialization was rejected as insufficient.
+
+An allocation-free rewrite of `minimumDistanceBetweenSegments` was also
+behavior-identical across the eight-case panel, but improved total time by only
+1.1% with mixed individual results. It was removed before testing the larger
+route-stitching optimization.
+
+## Further improvement: spatially index stitch-clearance checks
+
+A fresh dense-case profile found that route stitching performed a full scan of
+all routed copper for each tentative connector. Dataset01 sample 32 made 710
+clearance probes against up to 14,968 segments and 370 vias, causing 3.56
+million same-net checks. Validator work consumed about 843 ms, including path
+selection performed before the nominal stitch phase.
+
+The accepted implementation builds dynamic R-tree indexes for copper segments
+and vias. Stored geometry is expanded by its copper radius; each stitch query
+is expanded by the stitch radius plus required clearance. This conservatively
+returns every candidate that could fail the original exact check. The exact
+distance and endpoint-escape checks are unchanged, accepted stitched routes are
+inserted immediately, and a same-net cache is invalidated whenever connectivity
+grows.
+
+On sample 32, the same 710 probes made only 6,086 same-net checks (-99.8%).
+Validator time fell from about 843 ms to 2.6 ms and the stitch phase from 533 ms
+to 24 ms. The matched eight-case dataset01 panel preserved high-density
+iterations, vias, DRC results, and byte-for-byte output hashes in every case:
+
+| Metric | `125edc34` | Indexed stitching | Change |
+| --- | ---: | ---: | ---: |
+| End-to-end time | 41.22 s | 36.60 s | -11.2% |
+| Stitch phase | 3.26 s | 0.147 s | -95.5% |
+
+SRJ18 sample 11 was also byte-identical and improved from 48.38 s to 43.24 s
+(-10.6%), with stitch time falling from 3.35 s to 44 ms (-98.7%). SRJ23 sample
+39 was byte-identical and improved from 31.87 s to 31.56 s; stitching was only
+0.30 s of that sample and fell to 9 ms.
+
+A matched dataset01 sample-32 memory pair measured 833 MB to 864 MB maximum
+RSS and 639 MB to 667 MB peak footprint. The roughly 3-4% index overhead stays
+below the 1 GB safety ceiling and buys a 14% wall-time reduction in that pair.
+All trials remained one-worker, excluded bugreport88, and kept existing timeout
+limits.
+
 All new trials remained sequential, excluded bugreport88, and did not increase
 any timeout.
