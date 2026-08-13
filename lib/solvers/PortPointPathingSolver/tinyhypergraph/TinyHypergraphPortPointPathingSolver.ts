@@ -259,7 +259,7 @@ const getTinyHyperGraphSolveGraphOptions = (
   return {
     ...TINY_SOLVE_GRAPH_BASE_OPTIONS,
     ...getTinyViaSizeOptions(minViaPadDiameter),
-    USE_SPARSE_CANDIDATE_STORAGE: true,
+    USE_SPARSE_CANDIDATE_STORAGE: false,
     RIP_THRESHOLD_RAMP_ATTEMPTS: Math.ceil(10 * effortScale),
     MAX_ITERATIONS: Math.ceil(2_000_000 * effortScale),
   }
@@ -273,7 +273,7 @@ const getTinyHyperGraphSectionSolverOptions = (
   return {
     ...TINY_SECTION_SOLVER_BASE_OPTIONS,
     ...getTinyViaSizeOptions(minViaPadDiameter),
-    USE_SPARSE_CANDIDATE_STORAGE: true,
+    USE_SPARSE_CANDIDATE_STORAGE: false,
     RIP_THRESHOLD_RAMP_ATTEMPTS: Math.ceil(16 * effortScale),
     MAX_ITERATIONS: Math.ceil(1_000_000 * effortScale),
   }
@@ -1082,7 +1082,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
           useSerializedPortPenalties: false,
           routeSolveOptions: {
             ...getTinyViaSizeOptions(params.minViaPadDiameter),
-            USE_SPARSE_CANDIDATE_STORAGE: true,
+            USE_SPARSE_CANDIDATE_STORAGE: false,
             ACCEPT_BEST_SOLUTION_ON_TIMEOUT: true,
             GREEDY_FINAL_ROUTE_ITERS: 4,
             MAX_ITERATIONS: Math.ceil(
