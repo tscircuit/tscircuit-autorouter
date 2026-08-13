@@ -89,6 +89,9 @@ interface CapacityMeshSolverOptions {
 }
 export type AutoroutingPipelineSolverOptions = CapacityMeshSolverOptions
 
+const LARGE_TWO_LAYER_DRC_MIN_CONNECTIONS = 100
+const LARGE_TWO_LAYER_DRC_MIN_ROUTES = 200
+
 type PipelineStep<T extends new (...args: any[]) => BaseSolver> = {
   solverName: string
   solverClass: T
@@ -669,6 +672,14 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
       "exactGeometryDrcForceImproveSolver",
       GlobalDrcBranchPortfolioSolver,
       (cms) => {
+        const hdRoutes = cms.globalDrcForceImproveSolver!.getOutput()
+        // Large two-layer boards can rely on the dedicated safe-layer phase;
+        // keep the preliminary branches from dominating candidate scoring.
+        const useLargeTwoLayerFastPortfolio =
+          cms.srj.layerCount === 2 &&
+          cms.originalSrj.connections.length >=
+            LARGE_TWO_LAYER_DRC_MIN_CONNECTIONS &&
+          hdRoutes.length >= LARGE_TWO_LAYER_DRC_MIN_ROUTES
         const autoroutingDrcEvaluator = createPipeline7AutoroutingDrcEvaluator({
           connections: cms.netToPointPairsSolver?.newConnections ?? [],
           originalConnections: cms.originalSrj.connections,
@@ -683,13 +694,13 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
         return [
           {
             srj: cms.srjWithPointPairs! as any,
-            hdRoutes: cms.globalDrcForceImproveSolver!.getOutput(),
+            hdRoutes,
             connMap: cms.connMap,
             effort: cms.effort,
             viaHoleDiameter: cms.viaHoleDiameter,
             drcEvaluator: autoroutingDrcEvaluator,
             viaInPadDrcEvaluator: autoroutingDrcEvaluator,
-            maxIterations: 32,
+            maxIterations: useLargeTwoLayerFastPortfolio ? 4 : 32,
             enableLargeBoardBroadFallback: false,
             enableTargetedErrorSweep: true,
             enablePostSolveClearanceRelaxation: false,
@@ -697,7 +708,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
             enableViaInPadLayerMoves: cms.originalSrj.allowViaInPad ?? false,
             viaInPadMaxIterations: 32,
             broadMaxIterations: 12,
-            broadPassMultiplier: 3,
+            broadPassMultiplier: useLargeTwoLayerFastPortfolio ? 0.1 : 3,
           },
         ]
       },

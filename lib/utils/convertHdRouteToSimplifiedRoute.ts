@@ -66,9 +66,9 @@ const isThroughObstacleSegment = (
     opts.obstacles?.some(
       (obstacle) =>
         isMultilayerObstacle(obstacle) &&
-        isObstacleConnectedToRoute(obstacle, hdRoute, opts.connMap) &&
         pointInsideObstacle(start, obstacle) &&
-        pointInsideObstacle(end, obstacle),
+        pointInsideObstacle(end, obstacle) &&
+        isObstacleConnectedToRoute(obstacle, hdRoute, opts.connMap),
     ) ?? false
   )
 }

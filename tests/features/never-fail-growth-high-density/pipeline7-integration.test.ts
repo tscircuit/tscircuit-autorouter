@@ -83,4 +83,44 @@ test("Pipeline7 caps expensive post-processing stages for benchmark completion",
   ).toBe(false)
   expect((exactGeometryDrcParams as any).broadMaxIterations).toBe(12)
   expect((exactGeometryDrcParams as any).broadPassMultiplier).toBe(3)
+
+  const largeBoardConnections = Array.from({ length: 100 }, (_, index) => ({
+    name: `large_connection_${index}`,
+    pointsToConnect: [],
+  }))
+  const largeBoardRoutes = Array.from({ length: 200 }, () => ({}))
+  const [largeBoardExactGeometryDrcParams] =
+    exactGeometryDrcStep!.getConstructorParams({
+      ...solver,
+      originalSrj: {
+        ...solver.originalSrj,
+        connections: largeBoardConnections,
+      },
+      srjWithPointPairs: solver.srj,
+      globalDrcForceImproveSolver: { getOutput: () => largeBoardRoutes },
+      netToPointPairsSolver: { newConnections: [] },
+    } as any)
+  expect((largeBoardExactGeometryDrcParams as any).maxIterations).toBe(4)
+  expect((largeBoardExactGeometryDrcParams as any).broadPassMultiplier).toBe(
+    0.1,
+  )
+
+  const fourLayerSrj = { ...solver.srj, layerCount: 4 }
+  const [largeFourLayerExactGeometryDrcParams] =
+    exactGeometryDrcStep!.getConstructorParams({
+      ...solver,
+      srj: fourLayerSrj,
+      originalSrj: {
+        ...solver.originalSrj,
+        layerCount: 4,
+        connections: largeBoardConnections,
+      },
+      srjWithPointPairs: fourLayerSrj,
+      globalDrcForceImproveSolver: { getOutput: () => largeBoardRoutes },
+      netToPointPairsSolver: { newConnections: [] },
+    } as any)
+  expect((largeFourLayerExactGeometryDrcParams as any).maxIterations).toBe(32)
+  expect(
+    (largeFourLayerExactGeometryDrcParams as any).broadPassMultiplier,
+  ).toBe(3)
 })

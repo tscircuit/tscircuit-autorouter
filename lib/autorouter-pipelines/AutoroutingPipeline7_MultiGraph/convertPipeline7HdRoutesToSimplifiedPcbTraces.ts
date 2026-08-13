@@ -29,16 +29,35 @@ export const convertPipeline7HdRoutesToSimplifiedPcbTraces = ({
   connMap,
 }: ConvertPipeline7HdRoutesOptions): SimplifiedPcbTraces => {
   const traces: SimplifiedPcbTraces = []
+  // Candidate DRC calls this conversion repeatedly, so index both lookups once.
+  const netConnectionNameByOriginalConnectionName = new Map<
+    string,
+    string | undefined
+  >()
+  for (const connection of originalConnections) {
+    if (!netConnectionNameByOriginalConnectionName.has(connection.name)) {
+      netConnectionNameByOriginalConnectionName.set(
+        connection.name,
+        connection.__netConnectionName,
+      )
+    }
+  }
+  const routesByConnectionName = new Map<string, HighDensityRoute[]>()
+  for (const route of hdRoutes) {
+    const connectionRoutes = routesByConnectionName.get(route.connectionName)
+    if (connectionRoutes) {
+      connectionRoutes.push(route)
+    } else {
+      routesByConnectionName.set(route.connectionName, [route])
+    }
+  }
 
   for (const connection of connections) {
     const netConnectionName =
       connection.__netConnectionName ??
-      originalConnections.find(
-        (candidate) => candidate.name === connection.name,
-      )?.__netConnectionName
-    const connectionRoutes = hdRoutes.filter(
-      (route) => route.connectionName === connection.name,
-    )
+      netConnectionNameByOriginalConnectionName.get(connection.name)
+    const connectionRoutes =
+      routesByConnectionName.get(connection.name) ?? []
 
     if (connection.pointsToConnect.length !== 2) {
       throw new Error(
