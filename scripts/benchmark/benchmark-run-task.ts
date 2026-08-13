@@ -454,6 +454,7 @@ export const runTask = async (
       inputSrj: task.scenario,
       srjWithPointPairs: solver.srjWithPointPairs ?? task.scenario,
       routedTraces: traces,
+      normalizePreloadedTracePadEdgeEndpoints: true,
     })
     const relaxedDrcPassed = errors.length === 0
     const drcSummary = summarizeDrcErrors(errors as object[])

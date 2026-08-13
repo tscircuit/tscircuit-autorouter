@@ -809,6 +809,7 @@ export const AutoroutingPipelineDebugger = ({
           inputSrj: srj,
           srjWithPointPairs: solver.srjWithPointPairs ?? srj,
           routedTraces: traces,
+          normalizePreloadedTracePadEdgeEndpoints: true,
         })
       } else {
         const circuitJson =
