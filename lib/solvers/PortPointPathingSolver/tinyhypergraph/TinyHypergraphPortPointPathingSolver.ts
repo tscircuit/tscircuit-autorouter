@@ -168,6 +168,8 @@ const TINY_SECTION_SOLVER_BASE_OPTIONS: TinyHyperGraphSectionSolverOptions = {
 const DUPLICATE_PORT_TRAVERSAL_PENALTY = 150
 const DEFAULT_CRAMPED_PORT_TRAVERSAL_PENALTY = 150
 const MAX_CONNECTIONS_FOR_DUPLICATE_CONGESTED_PORT_PREPASS = 180
+const MIN_CONNECTIONS_FOR_REGION_COST_OPTIMIZER = 100
+const MAX_CONNECTIONS_FOR_REGION_COST_OPTIMIZER = 400
 
 const getEffortScale = (effort: number) => Math.max(effort, 1e-2)
 
@@ -781,6 +783,11 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
     )
     this.preloadedPortCount = preloadedStats.preloadedPortCount
     this.preloadedFixedSegmentCount = preloadedStats.preloadedAssignmentCount
+    const routeCount =
+      inputProblem.serializedHyperGraph.connections?.length ?? 0
+    const enableRegionCostOptimizerForGraph =
+      routeCount >= MIN_CONNECTIONS_FOR_REGION_COST_OPTIMIZER &&
+      routeCount <= MAX_CONNECTIONS_FOR_REGION_COST_OPTIMIZER
     if (useSelectiveReripRouting) {
       const solveGraphStep = this.pipelineDef.find(
         (pipelineStep) => pipelineStep.solverName === "solveGraph",
@@ -798,6 +805,14 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
         (pipelineStep) =>
           pipelineStep.solverName !== "optimizeSection" &&
           pipelineStep.solverName !== "optimizeRegionCosts",
+      )
+    }
+    if (!enableRegionCostOptimizerForGraph) {
+      // Post-solve mutation is aimed at the dense routing window. Keeping
+      // small graphs unchanged avoids perturbing already-simple topologies,
+      // while the upper bound caps whole-graph replacement search.
+      this.pipelineDef = this.pipelineDef.filter(
+        (pipelineStep) => pipelineStep.solverName !== "optimizeRegionCosts",
       )
     }
     this.MAX_ITERATIONS = getTinyHyperGraphPipelineMaxIterations(inputProblem)
