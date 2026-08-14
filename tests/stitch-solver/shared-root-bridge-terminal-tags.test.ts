@@ -83,8 +83,7 @@ test("a borrowed same-root bridge does not import sibling terminal identities", 
   expect(bridgeRoute.startPcbPortId).toBeUndefined()
   expect(bridgeRoute.endPcbPortId).toBeUndefined()
   expect(
-    currentRoute.hdRoutes.find((route) => route.startPcbPortId)
-      ?.startPcbPortId,
+    currentRoute.hdRoutes.find((route) => route.startPcbPortId)?.startPcbPortId,
   ).toBe("current_start")
   expect(
     currentRoute.hdRoutes.find((route) => route.endPcbPortId)?.endPcbPortId,

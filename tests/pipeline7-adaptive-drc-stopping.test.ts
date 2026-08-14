@@ -24,8 +24,6 @@ test("Pipeline7 stops DRC repair after a step finds no improving candidate", () 
   solver.step()
 
   expect(solver.solved).toBe(true)
-  expect(solver.stats.adaptiveDrcStopReason).toBe(
-    "no_improving_candidate",
-  )
+  expect(solver.stats.adaptiveDrcStopReason).toBe("no_improving_candidate")
   expect(solver.stats.adaptiveDrcIssueCountAtStop).toBe(1)
 })

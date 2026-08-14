@@ -189,7 +189,7 @@ export class HighDensitySolver extends BaseSolver {
       nodePf,
       searchMode:
         solver instanceof GrowShrinkHighDensityIntraNodeSolver
-          ? solver.winningSolver?.searchMode ?? solver.searchMode
+          ? (solver.winningSolver?.searchMode ?? solver.searchMode)
           : solver instanceof PortfolioSingleIntraNodeSolver
             ? solver.searchMode
             : undefined,

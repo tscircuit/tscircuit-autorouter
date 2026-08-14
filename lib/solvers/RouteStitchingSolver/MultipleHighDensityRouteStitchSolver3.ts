@@ -107,18 +107,20 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
     if (!rootConnectionName) return null
 
     const currentRouteSet = new Set(params.hdRoutes)
-    const sameRootRoutes = params.allHdRoutes.filter(
-      (route) =>
-        (route.rootConnectionName ?? route.connectionName) ===
-        rootConnectionName,
-    ).map((route) => {
-      if (currentRouteSet.has(route)) return route
+    const sameRootRoutes = params.allHdRoutes
+      .filter(
+        (route) =>
+          (route.rootConnectionName ?? route.connectionName) ===
+          rootConnectionName,
+      )
+      .map((route) => {
+        if (currentRouteSet.has(route)) return route
 
-      const bridgeRoute = { ...route }
-      delete bridgeRoute.startPcbPortId
-      delete bridgeRoute.endPcbPortId
-      return bridgeRoute
-    })
+        const bridgeRoute = { ...route }
+        delete bridgeRoute.startPcbPortId
+        delete bridgeRoute.endPcbPortId
+        return bridgeRoute
+      })
 
     if (sameRootRoutes.every((route) => currentRouteSet.has(route))) {
       return null

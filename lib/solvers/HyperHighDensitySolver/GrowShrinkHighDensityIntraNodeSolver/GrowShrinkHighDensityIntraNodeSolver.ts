@@ -130,19 +130,16 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
           ),
         ).size,
     )
-    const fullPortfolioCandidateCount =
-      new PortfolioSingleIntraNodeSolver({
-        ...params,
-        searchMode: "full",
-      }).getInitialCandidateCount()
+    const fullPortfolioCandidateCount = new PortfolioSingleIntraNodeSolver({
+      ...params,
+      searchMode: "full",
+    }).getInitialCandidateCount()
     // A sequential route placement exposes 1 + ... + n interactions between
     // routes and previously placed copper. Prefer the focused solver once that
     // interaction surface outgrows the general portfolio's search lanes.
     const routeInteractionCount = (segmentCount * (segmentCount + 1)) / 2
     this.searchMode =
-      routeInteractionCount > fullPortfolioCandidateCount
-        ? "priority"
-        : "full"
+      routeInteractionCount > fullPortfolioCandidateCount ? "priority" : "full"
     this.stats.routeInteractionCount = routeInteractionCount
     this.stats.fullPortfolioCandidateCount = fullPortfolioCandidateCount
     this.stats.prioritySearchEnabled = this.searchMode === "priority"

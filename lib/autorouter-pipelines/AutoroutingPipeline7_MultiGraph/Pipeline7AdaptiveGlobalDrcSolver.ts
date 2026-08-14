@@ -14,8 +14,7 @@ export class Pipeline7AdaptiveGlobalDrcSolver extends GlobalDrcForceImproveSolve
     if (this.solved || this.failed) return
 
     const finalDrcIssueCount = this.stats.finalDrcIssueCount
-    const candidateAttempts =
-      this.stats.globalDrcForceImproveCandidateAttempts
+    const candidateAttempts = this.stats.globalDrcForceImproveCandidateAttempts
     if (
       typeof finalDrcIssueCount !== "number" ||
       typeof candidateAttempts !== "number"
@@ -36,8 +35,7 @@ export class Pipeline7AdaptiveGlobalDrcSolver extends GlobalDrcForceImproveSolve
     this.previousDrcIssueCount = finalDrcIssueCount
     this.previousCandidateAttempts = candidateAttempts
 
-    const stalledIterations =
-      this.stats.globalDrcForceImproveStalledIterations
+    const stalledIterations = this.stats.globalDrcForceImproveStalledIterations
     const stopReason =
       typeof stalledIterations === "number" && stalledIterations > 0
         ? "no_improving_candidate"

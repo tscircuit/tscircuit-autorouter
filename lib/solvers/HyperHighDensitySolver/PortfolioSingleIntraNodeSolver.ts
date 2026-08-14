@@ -392,7 +392,10 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     if (!this.supervisedSolvers) this.initializeSolvers()
 
     if (this.searchMode === "priority") {
-      if (!this.getSupervisedSolverWithBestFitness() && !this.priorityA03Added) {
+      if (
+        !this.getSupervisedSolverWithBestFitness() &&
+        !this.priorityA03Added
+      ) {
         this.priorityA03Added = true
         this.addSupervisedCandidate({ HIGH_DENSITY_A03: true })
         this.refreshDynamicIterationLimit()

@@ -349,8 +349,7 @@ export class TraceSimplificationSolver extends BaseSolver {
                 ? this.simplificationPipelineLoops > 0
                 : false,
             enableObstacleDetourShortcuts:
-              this.simplificationConfig.useProgressiveGeometrySearch ===
-                true &&
+              this.simplificationConfig.useProgressiveGeometrySearch === true &&
               this.simplificationConfig.enableCrossingViaReduction === true &&
               this.simplificationPipelineLoops > 0,
           })
