@@ -9,11 +9,27 @@ const rangeSelect = getRequiredElement("range")
 const chart = getRequiredElement("chart")
 const chartTooltip = getRequiredElement("chart-tooltip")
 const samplesTable = getRequiredElement("samples")
+const stageTimePanel = getRequiredElement("stage-time-panel")
+const stageTimeContent = getRequiredElement("stage-time-content")
 const recentRunsTable = getRequiredElement("recent-runs")
 const sampleStatusSelect = getRequiredElement("sample-status")
 const sampleSearchInput = getRequiredElement("sample-search")
 const initialHash = new URLSearchParams(location.hash.slice(1))
 const chartColor = "#67e8c1"
+const stageColors = [
+  "#67e8c1",
+  "#79b8ff",
+  "#f6c76e",
+  "#ff8ea1",
+  "#c4a7ff",
+  "#5dd7f3",
+  "#f59e6b",
+  "#a7d46f",
+  "#f28bd3",
+  "#8aa8ff",
+  "#d7b26d",
+  "#62c7aa",
+]
 const metricDefinitions = [
   {
     key: "completedRate",
@@ -798,6 +814,255 @@ function renderError(sample) {
   )
 }
 
+function humanizeStageName(stageName) {
+  const humanized = stageName
+    .replace(/([a-z0-9])([A-Z])/g, "$1 $2")
+    .replace(/[_-]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+  return humanized.charAt(0).toUpperCase() + humanized.slice(1)
+}
+
+function getStageColor(stageName) {
+  let hash = 0
+  for (let index = 0; index < stageName.length; index++) {
+    hash = (hash * 31 + stageName.charCodeAt(index)) | 0
+  }
+  return stageColors[Math.abs(hash) % stageColors.length]
+}
+
+function formatExactMilliseconds(value) {
+  if (!Number.isFinite(value) || value < 0) {
+    throw new Error("Cannot format an invalid stage duration")
+  }
+  return String(value) + " ms"
+}
+
+function getStageTimingChartData(samples) {
+  const timedSamples = samples.filter(
+    (sample) => sample.stageTiming && Array.isArray(sample.stageTiming.stages),
+  )
+  const stageTotals = new Map()
+  let includedElapsedTimeMs = 0
+  let partialCount = 0
+  for (const sample of timedSamples) {
+    includedElapsedTimeMs += sample.elapsedTimeMs
+    if (sample.stageTiming.status === "partial") partialCount += 1
+    for (const stage of sample.stageTiming.stages) {
+      stageTotals.set(
+        stage.stageName,
+        (stageTotals.get(stage.stageName) ?? 0) + stage.elapsedTimeMs,
+      )
+    }
+  }
+  const slices = [...stageTotals].map(([stageName, elapsedTimeMs]) => ({
+    stageName,
+    elapsedTimeMs,
+    color: getStageColor(stageName),
+  }))
+  const trackedElapsedTimeMs = slices.reduce(
+    (total, slice) => total + slice.elapsedTimeMs,
+    0,
+  )
+  const untrackedElapsedTimeMs = includedElapsedTimeMs - trackedElapsedTimeMs
+  const meaningfulRemainderMs = Math.max(1, includedElapsedTimeMs * 0.005)
+  if (untrackedElapsedTimeMs > meaningfulRemainderMs) {
+    slices.push({
+      stageName: "Other / untracked overhead",
+      elapsedTimeMs: untrackedElapsedTimeMs,
+      color: "#7d899b",
+    })
+  }
+  return {
+    slices,
+    timedSamples,
+    partialCount,
+    trackedElapsedTimeMs,
+  }
+}
+
+function renderStageDonut(slices, accessibleTitle, accessibleDescription) {
+  const totalElapsedTimeMs = slices.reduce(
+    (total, slice) => total + slice.elapsedTimeMs,
+    0,
+  )
+  const circumference = 2 * Math.PI * 76
+  let elapsedFraction = 0
+  const arcs = slices
+    .filter((slice) => slice.elapsedTimeMs > 0 && totalElapsedTimeMs > 0)
+    .map((slice) => {
+      const fraction = slice.elapsedTimeMs / totalElapsedTimeMs
+      const dashLength = fraction * circumference
+      const dashOffset = -elapsedFraction * circumference
+      elapsedFraction += fraction
+      return (
+        '<circle cx="110" cy="110" r="76" fill="none" stroke="' +
+        escapeHtml(slice.color) +
+        '" stroke-width="32" stroke-dasharray="' +
+        dashLength +
+        " " +
+        (circumference - dashLength) +
+        '" stroke-dashoffset="' +
+        dashOffset +
+        '" transform="rotate(-90 110 110)"><title>' +
+        escapeHtml(
+          slice.stageName +
+            ": " +
+            formatExactMilliseconds(slice.elapsedTimeMs) +
+            " (" +
+            ((slice.elapsedTimeMs / totalElapsedTimeMs) * 100).toFixed(1) +
+            "%)",
+        ) +
+        "</title></circle>"
+      )
+    })
+    .join("")
+  return (
+    '<svg class="stage-donut" viewBox="0 0 220 220" role="img" aria-labelledby="stage-chart-title stage-chart-description"><title id="stage-chart-title">' +
+    escapeHtml(accessibleTitle) +
+    '</title><desc id="stage-chart-description">' +
+    escapeHtml(accessibleDescription) +
+    '</desc><circle cx="110" cy="110" r="76" fill="none" stroke="var(--border)" stroke-width="32" />' +
+    arcs +
+    '<text class="stage-donut-value" x="110" y="107">' +
+    escapeHtml(formatDuration(totalElapsedTimeMs)) +
+    '</text><text class="stage-donut-label" x="110" y="126">displayed time</text></svg>'
+  )
+}
+
+function renderStageLegend(slices) {
+  const totalElapsedTimeMs = slices.reduce(
+    (total, slice) => total + slice.elapsedTimeMs,
+    0,
+  )
+  return (
+    '<ul class="stage-time-legend">' +
+    slices
+      .map((slice) => {
+        let percentage = 0
+        if (totalElapsedTimeMs !== 0) {
+          percentage = (slice.elapsedTimeMs / totalElapsedTimeMs) * 100
+        }
+        return (
+          '<li><span class="stage-swatch" style="background:' +
+          escapeHtml(slice.color) +
+          '" aria-hidden="true"></span><span class="stage-name" title="' +
+          escapeHtml(slice.stageName) +
+          '">' +
+          escapeHtml(humanizeStageName(slice.stageName)) +
+          '</span><span class="stage-duration">' +
+          escapeHtml(formatExactMilliseconds(slice.elapsedTimeMs)) +
+          '</span><span class="stage-percentage">' +
+          percentage.toFixed(1) +
+          "%</span></li>"
+        )
+      })
+      .join("") +
+    "</ul>"
+  )
+}
+
+function renderStageTiming(point) {
+  const selectedSampleNumber = sampleSelect.value
+  const isSampleScope = selectedSampleNumber !== ""
+  const chartData = getStageTimingChartData(point.samples)
+  let stageTimeContext = "All samples"
+  if (isSampleScope) {
+    stageTimeContext = "Sample " + selectedSampleNumber
+  }
+  getRequiredElement("stage-time-context").textContent = stageTimeContext
+  if (chartData.timedSamples.length === 0) {
+    stageTimeContent.innerHTML =
+      '<div class="stage-time-empty">Stage timing was not recorded for this run. It will appear for benchmarks produced after this change.</div>'
+    return
+  }
+
+  let title = "Aggregate stage time for the selected benchmark"
+  let description =
+    "Aggregate sample compute time for " +
+    chartData.timedSamples.length +
+    " samples. Samples run concurrently, so this is not workflow wall-clock duration."
+  let coverageClass = ""
+  if (chartData.partialCount > 0) {
+    coverageClass = "partial"
+  }
+  let partialSampleLabel = "samples are"
+  if (chartData.partialCount === 1) {
+    partialSampleLabel = "sample is"
+  }
+  let coverage =
+    '<span class="stage-time-chip">Timing available for ' +
+    chartData.timedSamples.length +
+    " of " +
+    point.samples.length +
+    ' samples</span><span class="stage-time-chip ' +
+    coverageClass +
+    '">' +
+    chartData.partialCount +
+    " included " +
+    partialSampleLabel +
+    " partial</span>"
+  let explainer =
+    "Aggregate sample compute time, not workflow wall-clock duration. Benchmark samples execute concurrently."
+  if (isSampleScope) {
+    const timingStatus = chartData.timedSamples[0].stageTiming.status
+    let timingStatusClass = ""
+    if (timingStatus === "partial") {
+      timingStatusClass = "partial"
+    }
+    title = "Stage time for sample " + selectedSampleNumber
+    description =
+      "Pipeline stage compute time for sample " +
+      selectedSampleNumber +
+      ". The breakdown is " +
+      timingStatus +
+      "."
+    coverage =
+      '<span class="stage-time-chip ' +
+      timingStatusClass +
+      '">' +
+      escapeHtml(humanizeStageName(timingStatus)) +
+      " breakdown</span>"
+    explainer =
+      "This sample’s wall-clock time is reconciled with its recorded pipeline stages."
+  }
+  let zeroNote = ""
+  if (!chartData.slices.some((slice) => slice.elapsedTimeMs > 0)) {
+    zeroNote =
+      '<div class="stage-zero-note">Timing is available, but no positive stage duration was recorded.</div>'
+  }
+  stageTimeContent.innerHTML =
+    '<p class="muted">' +
+    escapeHtml(explainer) +
+    '</p><div class="stage-time-summary">' +
+    coverage +
+    '</div><div class="stage-time-layout"><div class="stage-chart-wrap">' +
+    renderStageDonut(chartData.slices, title, description) +
+    "</div><div>" +
+    renderStageLegend(chartData.slices) +
+    zeroNote +
+    "</div></div>"
+}
+
+async function selectSampleStageTiming(sampleNumber) {
+  if (
+    ![...sampleSelect.options].some((option) => option.value === sampleNumber)
+  ) {
+    sampleSelect.add(new Option("Sample " + sampleNumber, sampleNumber))
+  }
+  sampleSelect.value = sampleNumber
+  await renderDashboard(false)
+  let scrollBehavior = "smooth"
+  if (matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    scrollBehavior = "auto"
+  }
+  stageTimePanel.scrollIntoView({
+    behavior: scrollBehavior,
+    block: "start",
+  })
+  stageTimePanel.focus({ preventScroll: true })
+}
+
 function renderSamples(point, previous) {
   const samples = getFilteredSortedSamples(point)
   const previousByNumber = new Map(
@@ -872,7 +1137,9 @@ function renderSamples(point, previous) {
         : "") +
       '</td><td class="error-cell">' +
       renderError(sample) +
-      "</td></tr>"
+      '</td><td><button class="stage-action" type="button" data-stage-sample="' +
+      sample.sampleNumber +
+      '">View stages</button></td></tr>'
     )
   })
   samplesTable.innerHTML =
@@ -887,7 +1154,7 @@ function renderSamples(point, previous) {
     header("DRC", "drc") +
     "</th><th>" +
     header("Vias", "vias") +
-    "</th><th>Error</th></tr></thead><tbody>" +
+    "</th><th>Error</th><th>Stages</th></tr></thead><tbody>" +
     rows.join("") +
     "</tbody>"
   getRequiredElement("sample-result-count").textContent =
@@ -904,6 +1171,11 @@ function renderSamples(point, previous) {
       renderSamples(point, previous)
     })
   })
+  samplesTable.querySelectorAll("[data-stage-sample]").forEach((button) => {
+    button.addEventListener("click", () =>
+      runDashboardTask(selectSampleStageTiming(button.dataset.stageSample)),
+    )
+  })
 }
 
 async function renderRunDetails() {
@@ -915,6 +1187,9 @@ async function renderRunDetails() {
       "No run matches the selected filters."
     runMeta.innerHTML = ""
     getRequiredElement("selected-metrics").innerHTML = ""
+    getRequiredElement("stage-time-context").textContent = ""
+    stageTimeContent.innerHTML =
+      '<div class="stage-time-empty">No run is selected.</div>'
     samplesTable.innerHTML =
       '<tbody><tr><td class="muted">No samples to display.</td></tr></tbody>'
     return
@@ -996,6 +1271,7 @@ async function renderRunDetails() {
       )
     })
     .join("")
+  renderStageTiming(detailPoint)
   renderSamples(detailPoint, detailPrevious)
 }
 
@@ -1370,10 +1646,21 @@ getRequiredElement("download-csv").addEventListener("click", () =>
           "previous_via_count",
           "error_phase",
           "error",
+          "stage_timing_status",
+          "stage_timings_json",
         ],
       ]
       for (const sample of point.samples) {
         const previousSample = previousByNumber.get(sample.sampleNumber)
+        let stageTimingsJson
+        if (sample.stageTiming) {
+          stageTimingsJson = JSON.stringify(
+            sample.stageTiming.stages.map((stage) => ({
+              stageName: stage.stageName,
+              elapsedTimeMs: stage.elapsedTimeMs,
+            })),
+          )
+        }
         rows.push([
           sample.scenarioName,
           sample.sampleNumber,
@@ -1386,6 +1673,8 @@ getRequiredElement("download-csv").addEventListener("click", () =>
           previousSample?.viaCount,
           sample.errorPhaseName,
           sample.error,
+          sample.stageTiming?.status,
+          stageTimingsJson,
         ])
       }
       downloadBlob(

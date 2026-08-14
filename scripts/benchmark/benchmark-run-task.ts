@@ -15,6 +15,7 @@ import type {
   WorkerProgress,
   WorkerResultWithImage,
 } from "./benchmark-types"
+import { extractBenchmarkStageTiming } from "./benchmark-stage-timing"
 
 type SolverInstance = {
   solved?: boolean
@@ -45,6 +46,8 @@ type SolverInstance = {
   highDensityRouteSolver?: {
     iterations?: number
   }
+  startTimeOfPhase?: Record<string, number>
+  endTimeOfPhase?: Record<string, number>
   timeSpentOnPhase?: Record<string, number>
 }
 
@@ -273,6 +276,7 @@ const getProgressInfo = (
     solverIterations: solver.iterations,
     activeSubSolverProgress: activeSubSolver?.progress,
     activeSubSolverIterations: activeSubSolver?.iterations,
+    stageTiming: extractBenchmarkStageTiming(solver, "partial"),
   }
 }
 
@@ -429,6 +433,11 @@ export const runTask = async (
   const elapsedTimeMs = performance.now() - start
   const didSolve = Boolean(solver.solved)
   const routingMetrics = getRoutingBenchmarkMetrics(solver)
+  let stageTimingStatus: "complete" | "partial" = "partial"
+  if (didSolve) {
+    stageTimingStatus = "complete"
+  }
+  const stageTiming = extractBenchmarkStageTiming(solver, stageTimingStatus)
 
   if (!didSolve) {
     const failureInfo = getFailureInfo(solver, solveError)
@@ -440,6 +449,7 @@ export const runTask = async (
       didSolve,
       didTimeout: false,
       relaxedDrcPassed: false,
+      stageTiming,
       routingMetrics,
       ...failureInfo,
     }
@@ -484,6 +494,7 @@ export const runTask = async (
       didTimeout: false,
       relaxedDrcPassed,
       viaCount,
+      stageTiming,
       routingMetrics,
       benchmarkSnapshot,
       ...drcSummary,
@@ -497,6 +508,7 @@ export const runTask = async (
       didSolve,
       didTimeout: false,
       relaxedDrcPassed: false,
+      stageTiming,
       routingMetrics,
       error: error instanceof Error ? error.message : String(error),
     }

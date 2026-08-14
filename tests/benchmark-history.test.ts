@@ -3,7 +3,10 @@ import { existsSync } from "node:fs"
 import { mkdir, mkdtemp, readFile, writeFile } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
-import type { BenchmarkReport } from "../scripts/benchmark/benchmark-types"
+import type {
+  BenchmarkReport,
+  BenchmarkStageTimingBreakdown,
+} from "../scripts/benchmark/benchmark-types"
 import {
   appendHistoryRun,
   createBenchmarkHistoryDashboardIndex,
@@ -60,6 +63,13 @@ const makeRun = (runId: string): BenchmarkHistoryRun => ({
         didTimeout: false,
         relaxedDrcPassed: true,
         viaCount: 2,
+        stageTiming: {
+          status: "complete",
+          stages: [
+            { stageName: "preprocessSolver", elapsedTimeMs: 20 },
+            { stageName: "routeSolver", elapsedTimeMs: 50 },
+          ],
+        },
       },
       {
         solverName: "Pipeline7",
@@ -69,6 +79,13 @@ const makeRun = (runId: string): BenchmarkHistoryRun => ({
         didSolve: false,
         didTimeout: true,
         relaxedDrcPassed: false,
+        stageTiming: {
+          status: "partial",
+          stages: [
+            { stageName: "preprocessSolver", elapsedTimeMs: 50 },
+            { stageName: "routeSolver", elapsedTimeMs: 350 },
+          ],
+        },
       },
     ],
   } satisfies BenchmarkReport,
@@ -222,6 +239,7 @@ test("benchmark history retains full sample records and publishes a static dashb
   legacyRun.report.tests.forEach((sample, index) => {
     sample.scenarioName = `circuit${String(index + 1).padStart(3, "0")}`
     delete sample.sampleNumber
+    delete sample.stageTiming
   })
   const legacyPoint = getDashboardPoints([legacyRun])[0]
 
@@ -276,6 +294,60 @@ test("benchmark history retains full sample records and publishes a static dashb
   const invalidStateSample = invalidSampleStateRun.report.tests[0]
   if (!invalidStateSample) throw new Error("Expected a benchmark sample")
   invalidStateSample.didTimeout = true
+
+  const malformedStageStatusRun = makeRun("15")
+  if (malformedStageStatusRun.report.version !== 1) {
+    throw new Error("Expected a single report")
+  }
+  const malformedStageStatusSample = malformedStageStatusRun.report.tests[0]
+  if (!malformedStageStatusSample) throw new Error("Expected a sample")
+  malformedStageStatusSample.stageTiming = {
+    status: "invalid",
+    stages: [],
+  } as unknown as BenchmarkStageTimingBreakdown
+
+  const duplicateStageRun = makeRun("16")
+  if (duplicateStageRun.report.version !== 1) {
+    throw new Error("Expected a single report")
+  }
+  const duplicateStageSample = duplicateStageRun.report.tests[0]
+  if (!duplicateStageSample?.stageTiming) throw new Error("Expected timing")
+  duplicateStageSample.stageTiming.stages[1] = {
+    stageName: "preprocessSolver",
+    elapsedTimeMs: 10,
+  }
+
+  const emptyStageNameRun = makeRun("17")
+  if (emptyStageNameRun.report.version !== 1) {
+    throw new Error("Expected a single report")
+  }
+  const emptyStageNameSample = emptyStageNameRun.report.tests[0]
+  if (!emptyStageNameSample?.stageTiming) throw new Error("Expected timing")
+  emptyStageNameSample.stageTiming.stages[0] = {
+    stageName: " ",
+    elapsedTimeMs: 10,
+  }
+
+  const negativeStageDurationRun = makeRun("18")
+  if (negativeStageDurationRun.report.version !== 1) {
+    throw new Error("Expected a single report")
+  }
+  const negativeStageDurationSample = negativeStageDurationRun.report.tests[0]
+  if (!negativeStageDurationSample?.stageTiming) {
+    throw new Error("Expected timing")
+  }
+  negativeStageDurationSample.stageTiming.stages[0]!.elapsedTimeMs = -1
+
+  const inconsistentStageStatusRun = makeRun("19")
+  if (inconsistentStageStatusRun.report.version !== 1) {
+    throw new Error("Expected a single report")
+  }
+  const inconsistentStageStatusSample =
+    inconsistentStageStatusRun.report.tests[0]
+  if (!inconsistentStageStatusSample?.stageTiming) {
+    throw new Error("Expected timing")
+  }
+  inconsistentStageStatusSample.stageTiming.status = "partial"
 
   const invalidIndexDirectory = await mkdtemp(
     join(tmpdir(), "benchmark-history-invalid-index-"),
@@ -362,6 +434,36 @@ test("benchmark history retains full sample records and publishes a static dashb
       run: invalidSampleStateRun,
     }),
   ).rejects.toThrow("both solved and timed out")
+  await expect(
+    appendHistoryRun({
+      historyDirectory: malformedAppendDirectory,
+      run: malformedStageStatusRun,
+    }),
+  ).rejects.toThrow("Invalid stageTiming")
+  await expect(
+    appendHistoryRun({
+      historyDirectory: malformedAppendDirectory,
+      run: duplicateStageRun,
+    }),
+  ).rejects.toThrow("Duplicate stageTiming stage preprocessSolver")
+  await expect(
+    appendHistoryRun({
+      historyDirectory: malformedAppendDirectory,
+      run: emptyStageNameRun,
+    }),
+  ).rejects.toThrow("Invalid stageTiming stage")
+  await expect(
+    appendHistoryRun({
+      historyDirectory: malformedAppendDirectory,
+      run: negativeStageDurationRun,
+    }),
+  ).rejects.toThrow("Invalid stageTiming stage")
+  await expect(
+    appendHistoryRun({
+      historyDirectory: malformedAppendDirectory,
+      run: inconsistentStageStatusRun,
+    }),
+  ).rejects.toThrow("Inconsistent stageTiming status")
   expect(existsSync(join(malformedAppendDirectory, "index.json"))).toBeFalse()
   expect(existsSync(join(malformedAppendDirectory, "runs"))).toBeFalse()
   expect(points).toHaveLength(2)
@@ -377,17 +479,24 @@ test("benchmark history retains full sample records and publishes a static dashb
   expect(dashboard).not.toContain('"sampleNumber":1')
   expect(dashboardData.points).toHaveLength(2)
   expect(dashboardData.points[0]).not.toHaveProperty("samples")
+  expect(JSON.stringify(dashboardData)).not.toContain("stageTiming")
   expect(dashboardData.runs[0]).not.toHaveProperty("report")
   expect(dashboardData.runs[0]).not.toHaveProperty("metadata")
   expect(dashboardData.runs[0]?.path).toBe("runs/1-1.json")
-  expect(
-    JSON.parse(
-      await readFile(
-        join(dashboardDirectory, "data", "runs", "1-1.json"),
-        "utf8",
-      ),
-    ).report.tests,
-  ).toHaveLength(2)
+  const fullDashboardRun = JSON.parse(
+    await readFile(
+      join(dashboardDirectory, "data", "runs", "1-1.json"),
+      "utf8",
+    ),
+  )
+  expect(fullDashboardRun.report.tests).toHaveLength(2)
+  expect(fullDashboardRun.report.tests[0].stageTiming).toEqual({
+    status: "complete",
+    stages: [
+      { stageName: "preprocessSolver", elapsedTimeMs: 20 },
+      { stageName: "routeSolver", elapsedTimeMs: 50 },
+    ],
+  })
   expect(fullDashboardData.runs).toHaveLength(101)
   expect(fullDashboardData.points).toHaveLength(100)
   expect(fullDashboardData.points[0]?.runId).toBe("2-1")
@@ -396,12 +505,18 @@ test("benchmark history retains full sample records and publishes a static dashb
   expect(dashboard).toContain("Recent comparable runs")
   expect(dashboard).toContain("Copy summary")
   expect(dashboard).toContain("Export CSV")
+  expect(dashboard).toContain("Stage time breakdown")
   expect(dashboardScript).toContain("Solve time")
   expect(dashboardScript).toContain("Average vias")
   expect(dashboard).toContain('role="img"')
   expect(dashboardScript).toContain("data-metric")
   expect(dashboardScript).toContain("./data/index.json")
   expect(dashboardScript).toContain("loadRun")
+  expect(dashboardScript).toContain(
+    "Stage timing was not recorded for this run. It will appear for benchmarks produced after this change.",
+  )
+  expect(dashboardScript).toContain("View stages")
+  expect(dashboardScript).toContain("stage_timing_status")
   expect(dashboardScript).toContain("axis in")
   expect(() => new Function(dashboardScript)).not.toThrow()
   expect(recordProcess.stderr.toString()).toBe("")

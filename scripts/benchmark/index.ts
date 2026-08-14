@@ -19,6 +19,7 @@ import type {
   WorkerResultWithImage,
   WorkerTaskMessage,
 } from "./benchmark-types"
+import { extendPartialBenchmarkStageTiming } from "./benchmark-stage-timing"
 import {
   DATASET_OPTIONS_LABEL,
   type DatasetName,
@@ -1083,7 +1084,7 @@ const replaceWorker = async (slot: WorkerSlot) => {
   await terminateWorker(previousWorker, `replacing worker ${slot.id}`)
 }
 
-const createFailedResult = (
+export const createFailedResult = (
   task: BenchmarkTask,
   elapsedTimeMs: number,
   error: string,
@@ -1100,6 +1101,12 @@ const createFailedResult = (
   errorPhaseName: latestProgress?.phaseName,
   errorSolverName: latestProgress?.phaseSolverName,
   error,
+  stageTiming: extendPartialBenchmarkStageTiming({
+    stageTiming: latestProgress?.stageTiming,
+    activeStageName: latestProgress?.phaseName,
+    progressElapsedTimeMs: latestProgress?.elapsedTimeMs,
+    finalElapsedTimeMs: elapsedTimeMs,
+  }),
 })
 
 const getTaskEffort = (task: BenchmarkTask) => {
