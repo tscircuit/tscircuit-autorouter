@@ -80,6 +80,7 @@ test("Pipeline7 uses a DRC-validated fast probe for two-layer exact repair", () 
   expect((exactGeometryDrcParams as any).enableLargeBoardBroadFallback).toBe(
     false,
   )
+  expect((exactGeometryDrcParams as any).enableBroadFallback).toBe(false)
   expect(
     (exactGeometryDrcParams as any).enablePostSolveClearanceRelaxation,
   ).toBe(false)
