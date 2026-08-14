@@ -226,6 +226,7 @@ const parseBenchmarkSummaryOrThrow = (
 
 const parseBenchmarkStageTimingOrThrow = (
   value: unknown,
+  expectedStatus: BenchmarkStageTimingBreakdown["status"],
   sourceLabel: string,
 ): BenchmarkStageTimingBreakdown => {
   if (
@@ -238,6 +239,9 @@ const parseBenchmarkStageTimingOrThrow = (
     !Array.isArray(value.stages)
   ) {
     throw new Error(`Invalid stageTiming in ${sourceLabel}`)
+  }
+  if (value.status !== expectedStatus) {
+    throw new Error(`Inconsistent stageTiming status in ${sourceLabel}`)
   }
   const stageNames = new Set<string>()
   const stages = value.stages.map((stage, index) => {
@@ -266,7 +270,7 @@ const parseBenchmarkStageTimingOrThrow = (
       elapsedTimeMs: stage.elapsedTimeMs,
     }
   })
-  return { status: value.status, stages }
+  return { status: expectedStatus, stages }
 }
 
 const parseBenchmarkSampleOrThrow = (
@@ -331,20 +335,14 @@ const parseBenchmarkSampleOrThrow = (
       `Unsolved benchmark sample passed relaxed DRC in ${sourceLabel}`,
     )
   }
-  let stageTiming: BenchmarkStageTimingBreakdown | undefined
-  if ("stageTiming" in value) {
-    stageTiming = parseBenchmarkStageTimingOrThrow(
-      value.stageTiming,
-      sourceLabel,
-    )
-  }
-  if (
-    stageTiming &&
-    ((value.didSolve && stageTiming.status !== "complete") ||
-      (!value.didSolve && stageTiming.status !== "partial"))
-  ) {
-    throw new Error(`Inconsistent stageTiming status in ${sourceLabel}`)
-  }
+  const stageTiming =
+    "stageTiming" in value
+      ? parseBenchmarkStageTimingOrThrow(
+          value.stageTiming,
+          value.didSolve ? "complete" : "partial",
+          sourceLabel,
+        )
+      : undefined
   return {
     ...value,
     solverName: value.solverName,
