@@ -35,7 +35,22 @@ export const createPipeline7AutoroutingDrcEvaluator = (
       obstacle.width,
       obstacle.height,
     ].join(":")
+  const getPhysicalObstacleIdentityKey = (
+    obstacle: SimpleRouteJson["obstacles"][number],
+  ) => {
+    const metadata = obstacle.circuitJsonMetadata
+    if (metadata?.pcb_smtpad_id) return `pcb_smtpad:${metadata.pcb_smtpad_id}`
+    if (metadata?.pcb_plated_hole_id) {
+      return `pcb_plated_hole:${metadata.pcb_plated_hole_id}`
+    }
+    if (metadata?.pcb_via_id) return `pcb_via:${metadata.pcb_via_id}`
+    return undefined
+  }
   const originalObstaclesByGeometry = new Map<
+    string,
+    SimpleRouteJson["obstacles"]
+  >()
+  const originalObstaclesByPhysicalIdentity = new Map<
     string,
     SimpleRouteJson["obstacles"]
   >()
@@ -44,22 +59,90 @@ export const createPipeline7AutoroutingDrcEvaluator = (
     const matchingObstacles = originalObstaclesByGeometry.get(key) ?? []
     matchingObstacles.push(obstacle)
     originalObstaclesByGeometry.set(key, matchingObstacles)
+
+    const identityKey = getPhysicalObstacleIdentityKey(obstacle)
+    if (identityKey) {
+      const matchingPhysicalObstacles =
+        originalObstaclesByPhysicalIdentity.get(identityKey) ?? []
+      matchingPhysicalObstacles.push(obstacle)
+      originalObstaclesByPhysicalIdentity.set(
+        identityKey,
+        matchingPhysicalObstacles,
+      )
+    }
+  }
+  const processedObstaclesByPhysicalIdentity = new Map<
+    string,
+    SimpleRouteJson["obstacles"]
+  >()
+  for (const obstacle of conversionOptions.srjWithPointPairs.obstacles) {
+    const identityKey = getPhysicalObstacleIdentityKey(obstacle)
+    if (!identityKey) continue
+    const matchingProcessedObstacles =
+      processedObstaclesByPhysicalIdentity.get(identityKey) ?? []
+    matchingProcessedObstacles.push(obstacle)
+    processedObstaclesByPhysicalIdentity.set(
+      identityKey,
+      matchingProcessedObstacles,
+    )
+  }
+  const restoredPhysicalObstacleIdentities = new Set<string>()
+  const engineObstacles: SimpleRouteJson["obstacles"] = []
+  for (const obstacle of conversionOptions.srjWithPointPairs.obstacles) {
+    const identityKey = getPhysicalObstacleIdentityKey(obstacle)
+    const originalPhysicalObstacles = identityKey
+      ? originalObstaclesByPhysicalIdentity.get(identityKey)
+      : undefined
+    if (identityKey && originalPhysicalObstacles?.length) {
+      if (restoredPhysicalObstacleIdentities.has(identityKey)) continue
+
+      const originalObstacle = originalPhysicalObstacles[0]!
+      const processedFragments = processedObstaclesByPhysicalIdentity.get(
+        identityKey,
+      ) ?? [obstacle]
+      engineObstacles.push({
+        ...originalObstacle,
+        // Point-pair preprocessing can split one rotated physical pad into
+        // several axis-aligned routing fragments. Candidate DRC must restore
+        // the original copper geometry exactly while retaining every alias
+        // learned during preprocessing.
+        connectedTo: Array.from(
+          new Set([
+            ...originalObstacle.connectedTo,
+            ...processedFragments.flatMap((fragment) => fragment.connectedTo),
+          ]),
+        ),
+      })
+      restoredPhysicalObstacleIdentities.add(identityKey)
+      continue
+    }
+
+    const originalCandidates =
+      originalObstaclesByGeometry.get(getObstacleGeometryKey(obstacle)) ?? []
+    const originalObstacle =
+      originalCandidates.find((candidate) =>
+        candidate.connectedTo.some((id) => obstacle.connectedTo.includes(id)),
+      ) ?? originalCandidates[0]
+    engineObstacles.push(
+      originalObstacle ? { ...originalObstacle, ...obstacle } : obstacle,
+    )
+    const restoredIdentityKey = originalObstacle
+      ? getPhysicalObstacleIdentityKey(originalObstacle)
+      : undefined
+    if (restoredIdentityKey) {
+      restoredPhysicalObstacleIdentities.add(restoredIdentityKey)
+    }
+  }
+  for (const [
+    identityKey,
+    originalPhysicalObstacles,
+  ] of originalObstaclesByPhysicalIdentity) {
+    if (restoredPhysicalObstacleIdentities.has(identityKey)) continue
+    engineObstacles.push(originalPhysicalObstacles[0]!)
   }
   const engineSrj = {
     ...conversionOptions.srjWithPointPairs,
-    // Point-pair preprocessing rewrites layer availability but historically
-    // discarded physical shape metadata such as plated-hole pad rotation.
-    // Reattach the original geometry fields while retaining the processed
-    // layers/connectivity used by Pipeline7.
-    obstacles: conversionOptions.srjWithPointPairs.obstacles.map((obstacle) => {
-      const originalCandidates =
-        originalObstaclesByGeometry.get(getObstacleGeometryKey(obstacle)) ?? []
-      const originalObstacle =
-        originalCandidates.find((candidate) =>
-          candidate.connectedTo.some((id) => obstacle.connectedTo.includes(id)),
-        ) ?? originalCandidates[0]
-      return originalObstacle ? { ...originalObstacle, ...obstacle } : obstacle
-    }),
+    obstacles: engineObstacles,
     minTraceWidth: conversionOptions.originalSrj.minTraceWidth,
     minViaDiameter:
       conversionOptions.originalSrj.minViaDiameter ??

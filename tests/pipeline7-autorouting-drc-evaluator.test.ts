@@ -99,6 +99,120 @@ test("Pipeline7 autorouting DRC finds every reference trace collision", () => {
   })
 })
 
+test("Pipeline7 autorouting DRC restores split rotated pads by physical identity", () => {
+  const routeConnection = {
+    name: "route",
+    pointsToConnect: [
+      { x: -0.2, y: 0.2, layer: "top" as const, pointId: "route_start" },
+      { x: 0.5, y: 0.2, layer: "top" as const, pointId: "route_end" },
+    ],
+  }
+  const originalSrj: SimpleRouteJson = {
+    layerCount: 2,
+    minTraceWidth: 0.1,
+    bounds: { minX: -1, minY: -1, maxX: 1, maxY: 1 },
+    connections: [routeConnection],
+    obstacles: [
+      {
+        componentId: "component_1",
+        type: "rect",
+        layers: ["top"],
+        center: { x: 0, y: 0 },
+        width: 1,
+        height: 0.2,
+        ccwRotationDegrees: 45,
+        connectedTo: ["pcb_smtpad_1", "pad_port"],
+        circuitJsonMetadata: {
+          pcb_smtpad_id: "pcb_smtpad_1",
+          pcb_port_id: "pad_port",
+        },
+      },
+    ],
+  }
+  const srjWithPointPairs: SimpleRouteJson = {
+    ...originalSrj,
+    obstacles: [
+      {
+        componentId: "component_1",
+        type: "rect",
+        layers: ["top"],
+        center: { x: -0.35, y: -0.35 },
+        width: 0.15,
+        height: 0.15,
+        connectedTo: ["pcb_smtpad_1", "pad_port", "processed_pad_net"],
+        circuitJsonMetadata: {
+          pcb_smtpad_id: "pcb_smtpad_1",
+          pcb_port_id: "pad_port",
+        },
+      },
+      {
+        componentId: "component_1",
+        type: "rect",
+        layers: ["top"],
+        center: { x: 0.35, y: 0.35 },
+        width: 0.15,
+        height: 0.15,
+        connectedTo: ["pcb_smtpad_1", "pad_port", "processed_pad_net"],
+        circuitJsonMetadata: {
+          pcb_smtpad_id: "pcb_smtpad_1",
+          pcb_port_id: "pad_port",
+        },
+      },
+    ],
+  }
+  const connMap = getConnectivityMapFromSimpleRouteJson(srjWithPointPairs)
+  const conversionOptions = {
+    connections: srjWithPointPairs.connections,
+    originalConnections: originalSrj.connections,
+    layerCount: srjWithPointPairs.layerCount,
+    obstacles: srjWithPointPairs.obstacles,
+    defaultViaHoleDiameter: 0.15,
+    connMap,
+    srjWithPointPairs,
+    originalSrj,
+  }
+  const routes: HighDensityRoute[] = [
+    {
+      connectionName: "route",
+      route: [
+        { x: -0.2, y: 0.2, z: 0 },
+        { x: 0.5, y: 0.2, z: 0 },
+      ],
+      vias: [],
+      traceThickness: 0.1,
+      viaDiameter: 0.3,
+    },
+  ]
+  const traces = convertPipeline7HdRoutesToSimplifiedPcbTraces({
+    ...conversionOptions,
+    hdRoutes: routes,
+  })
+  const referenceResult = evaluateRelaxedDrc({
+    inputSrj: originalSrj,
+    srjWithPointPairs,
+    routedTraces: traces,
+  })
+  const optimizedResult = createPipeline7AutoroutingDrcEvaluator(
+    conversionOptions,
+  )({ traces: [], routes })
+
+  if (Array.isArray(optimizedResult)) {
+    throw new Error("Autorouting DRC evaluator returned errors without centers")
+  }
+
+  expect(
+    referenceResult.errors.some(
+      (error) =>
+        ("pcb_pad_id" in error && error.pcb_pad_id === "pcb_smtpad_1") ||
+        ("pcb_trace_error_id" in error &&
+          String(error.pcb_trace_error_id).includes("pcb_smtpad_1")),
+    ),
+  ).toBe(true)
+  expect(
+    optimizedResult.errors.some((error) => error.pcb_pad_id === "pcb_smtpad_1"),
+  ).toBe(true)
+})
+
 test("Pipeline7 candidate conversion reuses static obstacle connectivity", () => {
   let connectivityChecks = 0
   const connMap = {
