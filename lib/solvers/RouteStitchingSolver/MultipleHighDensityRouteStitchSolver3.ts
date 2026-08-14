@@ -51,6 +51,30 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
     start: Point3
     end: Point3
   }) {
+    if (this.preserveTerminalPcbPortIds) {
+      const terminalPcbPortIds = new Set(
+        [params.start, params.end]
+          .map(
+            (point) => (point as Point3 & { pcb_port_id?: string }).pcb_port_id,
+          )
+          .filter((pcbPortId): pcbPortId is string => pcbPortId !== undefined),
+      )
+      if (
+        terminalPcbPortIds.size > 0 &&
+        params.hdRoutes.some((route) =>
+          [route.startPcbPortId, route.endPcbPortId].some(
+            (pcbPortId) =>
+              pcbPortId !== undefined && !terminalPcbPortIds.has(pcbPortId),
+          ),
+        )
+      ) {
+        // Shared-root path search is speculative. A route tagged with a third
+        // physical terminal belongs to another branch of the net, so it cannot
+        // be used as a linear bridge between this point pair.
+        return false
+      }
+    }
+
     const stitchSolver = new SingleHighDensityRouteStitchSolver3({
       connectionName: params.connectionName,
       hdRoutes: params.hdRoutes,
