@@ -731,10 +731,10 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         regionalB01RepairResult.acceptedCandidateCount,
       regionalB01RepairFallbackCandidateCount:
         regionalB01RepairResult.fallbackCandidateCount,
-      regionalB01RepairSafeTraceLayerPassCount:
-        regionalB01RepairResult.safeTraceLayerPassCount,
-      regionalB01RepairSafeTraceLayerAcceptedCount:
-        regionalB01RepairResult.safeTraceLayerAcceptedCount,
+      regionalB01RepairPostRegionalExactPassCount:
+        regionalB01RepairResult.postRegionalExactPassCount,
+      regionalB01RepairPostRegionalExactAcceptedCount:
+        regionalB01RepairResult.postRegionalExactAcceptedCount,
       terminalEscapeCandidateCount:
         terminalEscapeResult.attemptedCandidateCount,
       terminalEscapeAcceptedCount: terminalEscapeResult.acceptedCandidateCount,

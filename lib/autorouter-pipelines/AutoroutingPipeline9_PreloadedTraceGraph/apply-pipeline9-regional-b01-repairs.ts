@@ -24,8 +24,8 @@ type RegionalB01RepairResult = {
   attemptedCandidateCount: number
   acceptedCandidateCount: number
   fallbackCandidateCount: number
-  safeTraceLayerPassCount: number
-  safeTraceLayerAcceptedCount: number
+  postRegionalExactPassCount: number
+  postRegionalExactAcceptedCount: number
 }
 
 const REGION_SIZES = [3, 4, 5, 6]
@@ -287,8 +287,8 @@ export const applyPipeline9RegionalB01Repairs = ({
   let attemptedCandidateCount = 0
   let acceptedCandidateCount = 0
   let fallbackCandidateCount = 0
-  let safeTraceLayerPassCount = 0
-  let safeTraceLayerAcceptedCount = 0
+  let postRegionalExactPassCount = 0
+  let postRegionalExactAcceptedCount = 0
   const getRouteStateKey = (candidateRoutes: HighDensityRoute[]) =>
     JSON.stringify(
       candidateRoutes.map((route) => [
@@ -301,7 +301,7 @@ export const applyPipeline9RegionalB01Repairs = ({
         ]),
       ]),
     )
-  const seenSafeTraceLayerRouteStates = new Set([
+  const seenPostRegionalExactRouteStates = new Set([
     getRouteStateKey(currentRoutes),
   ])
 
@@ -401,11 +401,12 @@ export const applyPipeline9RegionalB01Repairs = ({
     currentErrors.some(
       (error) =>
         error.type === "pcb_trace_error" ||
-        error.type === "pcb_pad_trace_clearance_error",
+        error.type === "pcb_pad_trace_clearance_error" ||
+        error.type === "pcb_via_clearance_error",
     )
   ) {
-    safeTraceLayerPassCount++
-    const safeTraceLayerSolver = new GlobalDrcForceImproveSolver({
+    postRegionalExactPassCount++
+    const postRegionalExactSolver = new GlobalDrcForceImproveSolver({
       srj: { ...srj, traces: undefined },
       hdRoutes: currentRoutes,
       connMap,
@@ -422,22 +423,22 @@ export const applyPipeline9RegionalB01Repairs = ({
       enableSafeTraceLayerMoves: true,
       enableViaInPadLayerMoves: false,
     })
-    safeTraceLayerSolver.solve()
-    if (safeTraceLayerSolver.failed) {
+    postRegionalExactSolver.solve()
+    if (postRegionalExactSolver.failed) {
       throw new Error(
-        `Pipeline9 post-regional safe trace-layer repair failed: ${safeTraceLayerSolver.error ?? "unknown error"}`,
+        `Pipeline9 post-regional exact repair failed: ${postRegionalExactSolver.error ?? "unknown error"}`,
       )
     }
-    const safeLayerRoutes = safeTraceLayerSolver.getOutput()
-    const safeLayerErrors = getPipeline9DrcErrors(drcEvaluator, safeLayerRoutes)
-    if (!isPipeline9DrcCandidateBetter(safeLayerErrors, currentErrors)) break
+    const exactRoutes = postRegionalExactSolver.getOutput()
+    const exactErrors = getPipeline9DrcErrors(drcEvaluator, exactRoutes)
+    if (!isPipeline9DrcCandidateBetter(exactErrors, currentErrors)) break
 
-    const safeLayerRouteStateKey = getRouteStateKey(safeLayerRoutes)
-    if (seenSafeTraceLayerRouteStates.has(safeLayerRouteStateKey)) break
-    seenSafeTraceLayerRouteStates.add(safeLayerRouteStateKey)
-    currentRoutes = safeLayerRoutes
-    currentErrors = safeLayerErrors
-    safeTraceLayerAcceptedCount++
+    const exactRouteStateKey = getRouteStateKey(exactRoutes)
+    if (seenPostRegionalExactRouteStates.has(exactRouteStateKey)) break
+    seenPostRegionalExactRouteStates.add(exactRouteStateKey)
+    currentRoutes = exactRoutes
+    currentErrors = exactErrors
+    postRegionalExactAcceptedCount++
     if (currentErrors.length === 0) break
   }
 
@@ -446,7 +447,7 @@ export const applyPipeline9RegionalB01Repairs = ({
     attemptedCandidateCount,
     acceptedCandidateCount,
     fallbackCandidateCount,
-    safeTraceLayerPassCount,
-    safeTraceLayerAcceptedCount,
+    postRegionalExactPassCount,
+    postRegionalExactAcceptedCount,
   }
 }
