@@ -505,7 +505,7 @@ test("benchmark history retains full sample records and publishes a static dashb
   expect(dashboard).toContain("Recent comparable runs")
   expect(dashboard).toContain("Copy summary")
   expect(dashboard).toContain("Export CSV")
-  expect(dashboard).toContain("Stage time breakdown")
+  expect(dashboard).toContain("Total stage time")
   expect(dashboardScript).toContain("Solve time")
   expect(dashboardScript).toContain("Average vias")
   expect(dashboard).toContain('role="img"')
@@ -513,9 +513,14 @@ test("benchmark history retains full sample records and publishes a static dashb
   expect(dashboardScript).toContain("./data/index.json")
   expect(dashboardScript).toContain("loadRun")
   expect(dashboardScript).toContain(
-    "Stage timing was not recorded for this run. It will appear for benchmarks produced after this change.",
+    "No successful samples with complete stage timing were recorded for this run.",
   )
-  expect(dashboardScript).toContain("View stages")
+  expect(dashboardScript).toContain(
+    'sample.didSolve && sample.stageTiming?.status === "complete"',
+  )
+  expect(dashboardScript).toContain("right.elapsedTimeMs - left.elapsedTimeMs")
+  expect(dashboardScript).toContain("total solve time")
+  expect(dashboardScript).not.toContain("View stages")
   expect(dashboardScript).toContain("stage_timing_status")
   expect(dashboardScript).toContain("axis in")
   expect(() => new Function(dashboardScript)).not.toThrow()

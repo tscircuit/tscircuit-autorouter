@@ -192,8 +192,6 @@ input {
 select:focus-visible,
 input:focus-visible,
 .metric-button:focus-visible,
-.stage-action:focus-visible,
-.stage-time-panel:focus-visible,
 .signal-card:focus-visible,
 tr[tabindex]:focus-visible {
   outline: 3px solid rgba(121, 184, 255, 0.48);
@@ -622,25 +620,6 @@ code {
   font-size: 15px;
   font-weight: 800;
 }
-.stage-time-summary {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 7px;
-  margin-bottom: 12px;
-}
-.stage-time-chip {
-  padding: 5px 8px;
-  border: 1px solid var(--border);
-  border-radius: 999px;
-  background: var(--panel);
-  color: var(--muted);
-  font-size: 11px;
-  font-weight: 700;
-}
-.stage-time-chip.partial {
-  border-color: color-mix(in srgb, var(--warn) 45%, var(--border));
-  color: var(--warn);
-}
 .stage-time-legend {
   display: grid;
   gap: 6px;
@@ -767,21 +746,6 @@ tbody tr:hover {
   font-weight: 800;
   text-transform: inherit;
   cursor: pointer;
-}
-.stage-action {
-  padding: 5px 8px;
-  border: 1px solid var(--border);
-  border-radius: 7px;
-  background: transparent;
-  color: var(--blue);
-  font: inherit;
-  font-weight: 750;
-  white-space: nowrap;
-  cursor: pointer;
-}
-.stage-action:hover {
-  border-color: var(--blue);
-  background: var(--blue-soft);
 }
 .scenario-cell {
   min-width: 190px;

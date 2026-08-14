@@ -9,7 +9,6 @@ const rangeSelect = getRequiredElement("range")
 const chart = getRequiredElement("chart")
 const chartTooltip = getRequiredElement("chart-tooltip")
 const samplesTable = getRequiredElement("samples")
-const stageTimePanel = getRequiredElement("stage-time-panel")
 const stageTimeContent = getRequiredElement("stage-time-content")
 const recentRunsTable = getRequiredElement("recent-runs")
 const sampleStatusSelect = getRequiredElement("sample-status")
@@ -831,18 +830,14 @@ function getStageColor(stageName) {
   return stageColors[Math.abs(hash) % stageColors.length]
 }
 
-function formatExactMilliseconds(value) {
-  return String(value) + " ms"
-}
-
 function getStageTimingChartData(samples) {
-  const timedSamples = samples.filter((sample) => sample.stageTiming)
+  const successfulSamples = samples.filter(
+    (sample) => sample.didSolve && sample.stageTiming?.status === "complete",
+  )
   const stageTotals = new Map()
   let includedElapsedTimeMs = 0
-  let partialCount = 0
-  for (const sample of timedSamples) {
+  for (const sample of successfulSamples) {
     includedElapsedTimeMs += sample.elapsedTimeMs
-    if (sample.stageTiming.status === "partial") partialCount += 1
     for (const stage of sample.stageTiming.stages) {
       stageTotals.set(
         stage.stageName,
@@ -868,19 +863,25 @@ function getStageTimingChartData(samples) {
       color: "#7d899b",
     })
   }
+  slices.sort(
+    (left, right) =>
+      right.elapsedTimeMs - left.elapsedTimeMs ||
+      left.stageName.localeCompare(right.stageName),
+  )
   return {
     slices,
-    timedSamples,
-    partialCount,
-    trackedElapsedTimeMs,
+    successfulSamples,
+    stageCount: stageTotals.size,
+    totalElapsedTimeMs: includedElapsedTimeMs,
   }
 }
 
-function renderStageDonut(slices, accessibleTitle, accessibleDescription) {
-  const totalElapsedTimeMs = slices.reduce(
-    (total, slice) => total + slice.elapsedTimeMs,
-    0,
-  )
+function renderStageDonut(
+  slices,
+  totalElapsedTimeMs,
+  accessibleTitle,
+  accessibleDescription,
+) {
   const circumference = 2 * Math.PI * 76
   let elapsedFraction = 0
   const arcs = slices
@@ -903,7 +904,7 @@ function renderStageDonut(slices, accessibleTitle, accessibleDescription) {
         escapeHtml(
           slice.stageName +
             ": " +
-            formatExactMilliseconds(slice.elapsedTimeMs) +
+            formatDuration(slice.elapsedTimeMs) +
             " (" +
             ((slice.elapsedTimeMs / totalElapsedTimeMs) * 100).toFixed(1) +
             "%)",
@@ -921,15 +922,11 @@ function renderStageDonut(slices, accessibleTitle, accessibleDescription) {
     arcs +
     '<text class="stage-donut-value" x="110" y="107">' +
     escapeHtml(formatDuration(totalElapsedTimeMs)) +
-    '</text><text class="stage-donut-label" x="110" y="126">displayed time</text></svg>'
+    '</text><text class="stage-donut-label" x="110" y="126">total solve time</text></svg>'
   )
 }
 
-function renderStageLegend(slices) {
-  const totalElapsedTimeMs = slices.reduce(
-    (total, slice) => total + slice.elapsedTimeMs,
-    0,
-  )
+function renderStageLegend(slices, totalElapsedTimeMs) {
   return (
     '<ul class="stage-time-legend">' +
     slices
@@ -946,7 +943,7 @@ function renderStageLegend(slices) {
           '">' +
           escapeHtml(humanizeStageName(slice.stageName)) +
           '</span><span class="stage-duration">' +
-          escapeHtml(formatExactMilliseconds(slice.elapsedTimeMs)) +
+          escapeHtml(formatDuration(slice.elapsedTimeMs)) +
           '</span><span class="stage-percentage">' +
           percentage.toFixed(1) +
           "%</span></li>"
@@ -957,105 +954,43 @@ function renderStageLegend(slices) {
   )
 }
 
-function renderStageTiming(point) {
-  const selectedSampleNumber = sampleSelect.value
-  const isSampleScope = selectedSampleNumber !== ""
-  const chartData = getStageTimingChartData(point.samples)
-  let stageTimeContext = "All samples"
-  if (isSampleScope) {
-    stageTimeContext = "Sample " + selectedSampleNumber
-  }
-  getRequiredElement("stage-time-context").textContent = stageTimeContext
-  if (chartData.timedSamples.length === 0) {
+function renderStageTiming(samples) {
+  const chartData = getStageTimingChartData(samples)
+  const successfulSampleCount = chartData.successfulSamples.length
+  const sampleLabel = successfulSampleCount === 1 ? "sample" : "samples"
+  getRequiredElement("stage-time-context").textContent =
+    chartData.stageCount +
+    " recorded stages · " +
+    successfulSampleCount +
+    " successful " +
+    sampleLabel
+  if (successfulSampleCount === 0) {
     stageTimeContent.innerHTML =
-      '<div class="stage-time-empty">Stage timing was not recorded for this run. It will appear for benchmarks produced after this change.</div>'
+      '<div class="stage-time-empty">No successful samples with complete stage timing were recorded for this run.</div>'
     return
   }
 
-  let title = "Aggregate stage time for the selected benchmark"
-  let description =
-    "Aggregate sample compute time for " +
-    chartData.timedSamples.length +
-    " samples. Samples run concurrently, so this is not workflow wall-clock duration."
-  let coverageClass = ""
-  if (chartData.partialCount > 0) {
-    coverageClass = "partial"
-  }
-  let partialSampleLabel = "samples are"
-  if (chartData.partialCount === 1) {
-    partialSampleLabel = "sample is"
-  }
-  let coverage =
-    '<span class="stage-time-chip">Timing available for ' +
-    chartData.timedSamples.length +
-    " of " +
-    point.samples.length +
-    ' samples</span><span class="stage-time-chip ' +
-    coverageClass +
-    '">' +
-    chartData.partialCount +
-    " included " +
-    partialSampleLabel +
-    " partial</span>"
-  let explainer =
-    "Aggregate sample compute time, not workflow wall-clock duration. Benchmark samples execute concurrently."
-  if (isSampleScope) {
-    const timingStatus = chartData.timedSamples[0].stageTiming.status
-    let timingStatusClass = ""
-    if (timingStatus === "partial") {
-      timingStatusClass = "partial"
-    }
-    title = "Stage time for sample " + selectedSampleNumber
-    description =
-      "Pipeline stage compute time for sample " +
-      selectedSampleNumber +
-      ". The breakdown is " +
-      timingStatus +
-      "."
-    coverage =
-      '<span class="stage-time-chip ' +
-      timingStatusClass +
-      '">' +
-      escapeHtml(humanizeStageName(timingStatus)) +
-      " breakdown</span>"
-    explainer =
-      "This sample’s wall-clock time is reconciled with its recorded pipeline stages."
-  }
   let zeroNote = ""
   if (!chartData.slices.some((slice) => slice.elapsedTimeMs > 0)) {
     zeroNote =
       '<div class="stage-zero-note">Timing is available, but no positive stage duration was recorded.</div>'
   }
   stageTimeContent.innerHTML =
-    '<p class="muted">' +
-    escapeHtml(explainer) +
-    '</p><div class="stage-time-summary">' +
-    coverage +
-    '</div><div class="stage-time-layout"><div class="stage-chart-wrap">' +
-    renderStageDonut(chartData.slices, title, description) +
+    '<div class="stage-time-layout"><div class="stage-chart-wrap">' +
+    renderStageDonut(
+      chartData.slices,
+      chartData.totalElapsedTimeMs,
+      "Total stage time for the selected benchmark",
+      "Pipeline stage totals across " +
+        successfulSampleCount +
+        " successful " +
+        sampleLabel +
+        ".",
+    ) +
     "</div><div>" +
-    renderStageLegend(chartData.slices) +
+    renderStageLegend(chartData.slices, chartData.totalElapsedTimeMs) +
     zeroNote +
     "</div></div>"
-}
-
-async function selectSampleStageTiming(sampleNumber) {
-  if (
-    ![...sampleSelect.options].some((option) => option.value === sampleNumber)
-  ) {
-    sampleSelect.add(new Option("Sample " + sampleNumber, sampleNumber))
-  }
-  sampleSelect.value = sampleNumber
-  await renderDashboard(false)
-  let scrollBehavior = "smooth"
-  if (matchMedia("(prefers-reduced-motion: reduce)").matches) {
-    scrollBehavior = "auto"
-  }
-  stageTimePanel.scrollIntoView({
-    behavior: scrollBehavior,
-    block: "start",
-  })
-  stageTimePanel.focus({ preventScroll: true })
 }
 
 function renderSamples(point, previous) {
@@ -1132,9 +1067,7 @@ function renderSamples(point, previous) {
         : "") +
       '</td><td class="error-cell">' +
       renderError(sample) +
-      '</td><td><button class="stage-action" type="button" data-stage-sample="' +
-      sample.sampleNumber +
-      '">View stages</button></td></tr>'
+      "</td></tr>"
     )
   })
   samplesTable.innerHTML =
@@ -1149,7 +1082,7 @@ function renderSamples(point, previous) {
     header("DRC", "drc") +
     "</th><th>" +
     header("Vias", "vias") +
-    "</th><th>Error</th><th>Stages</th></tr></thead><tbody>" +
+    "</th><th>Error</th></tr></thead><tbody>" +
     rows.join("") +
     "</tbody>"
   getRequiredElement("sample-result-count").textContent =
@@ -1165,11 +1098,6 @@ function renderSamples(point, previous) {
       }
       renderSamples(point, previous)
     })
-  })
-  samplesTable.querySelectorAll("[data-stage-sample]").forEach((button) => {
-    button.addEventListener("click", () =>
-      runDashboardTask(selectSampleStageTiming(button.dataset.stageSample)),
-    )
   })
 }
 
@@ -1266,7 +1194,11 @@ async function renderRunDetails() {
       )
     })
     .join("")
-  renderStageTiming(detailPoint)
+  const stageTimingSamples =
+    sampleSelect.value === ""
+      ? detailPoint.samples
+      : await getPointSamples(point)
+  renderStageTiming(stageTimingSamples)
   renderSamples(detailPoint, detailPrevious)
 }
 
