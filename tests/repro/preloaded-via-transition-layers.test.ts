@@ -1,4 +1,4 @@
-import { expect, spyOn, test } from "bun:test"
+import { expect, test } from "bun:test"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import { SameNetViaMergerSolver } from "lib/solvers/SameNetViaMergerSolver/SameNetViaMergerSolver"
 import type { HighDensityRoute } from "lib/types/high-density-types"
@@ -24,7 +24,7 @@ const makeViaRoute = ({
   vias: [{ x: viaX, y: 0 }],
 })
 
-test("repro: preloaded via rounding hides valid transition layers", () => {
+test("preloaded via merging tolerates serialized transition drift", () => {
   const solver = new SameNetViaMergerSolver({
     inputHdRoutes: [
       makeViaRoute({ connectionName: "route-a", viaX: 0 }),
@@ -45,17 +45,16 @@ test("repro: preloaded via rounding hides valid transition layers", () => {
     }),
   })
 
-  const consoleError = spyOn(console, "error").mockImplementation(() => {})
-  try {
-    expect(() => solver.solve()).toThrow(
-      "could not find transition layers for via at (0.4, 0)",
-    )
-  } finally {
-    consoleError.mockRestore()
-  }
-  expect(solver.failed).toBe(true)
-  expect(String(solver.error)).toContain(
-    "could not find transition layers for via at (0.4, 0)",
-  )
+  solver.solve()
+
+  expect(solver.failed).toBe(false)
+  const routes = solver.getMergedViaHdRoutes()
+  expect(routes?.[1]?.vias).toEqual([{ x: 0, y: 0 }])
+  expect(
+    routes?.[1]?.route.filter(
+      (point, pointIndex) =>
+        pointIndex > 0 && point.z !== routes[1]!.route[pointIndex - 1]!.z,
+    ),
+  ).toEqual([{ x: 0, y: 0, z: 1 }])
   expect(solver.visualize()).toMatchGraphicsSvg(import.meta.path)
 })
