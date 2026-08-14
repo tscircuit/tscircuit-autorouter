@@ -1,8 +1,24 @@
-import { sample001, sample004 } from "@tscircuit/dataset-srj29-ddr3-bga-pairs"
+import {
+  sample001,
+  sample004,
+  sample008,
+  sample013,
+  sample020,
+} from "@tscircuit/dataset-srj29-ddr3-bga-pairs"
 import { expect, test } from "bun:test"
 import { Ddr3BgaRoutingPipelineSolver } from "fixtures/benchmarks/Ddr3BgaRoutingPipelineSolver"
 import type { DetectedComponent } from "lib/solvers/ComponentDetectionSolver/ComponentDetectionSolver"
 import type { ConnectionPoint, SimpleRouteJson } from "lib/types"
+
+type Srj29Metadata = {
+  referenceDesign: {
+    repository: string
+    endpointMapSha256: string
+    directConnectionCount: number
+  }
+  ddr3: { padCount: number }
+  controller: { padCount: number }
+}
 
 function pointIsInsideComponent(
   point: ConnectionPoint,
@@ -16,19 +32,37 @@ function pointIsInsideComponent(
 }
 
 test("detects and fans out both SRJ29 BGAs before starting Pipeline 7", () => {
-  for (const inputSrj of [sample001, sample004] as SimpleRouteJson[]) {
-    expect(inputSrj.connections).toHaveLength(50)
-    expect(inputSrj.layerCount).toBeGreaterThanOrEqual(12)
+  const inputs = [
+    sample001,
+    sample004,
+    sample008,
+    sample013,
+    sample020,
+  ] as SimpleRouteJson[]
+  const sourceRepositories = new Set<string>()
+  const endpointMaps = new Set<string>()
+
+  for (const inputSrj of inputs) {
+    const metadata = (
+      inputSrj as SimpleRouteJson & { metadata: Srj29Metadata }
+    ).metadata
+
+    expect(inputSrj.connections).toHaveLength(
+      metadata.referenceDesign.directConnectionCount,
+    )
+    expect(inputSrj.layerCount).toBeGreaterThanOrEqual(18)
     expect(
       inputSrj.obstacles.filter(
         (obstacle) => obstacle.componentId === "ddr3_bga",
       ),
-    ).toHaveLength(96)
+    ).toHaveLength(metadata.ddr3.padCount)
     expect(
       inputSrj.obstacles.filter(
         (obstacle) => obstacle.componentId === "controller_bga",
       ),
-    ).toHaveLength(324)
+    ).toHaveLength(metadata.controller.padCount)
+    sourceRepositories.add(metadata.referenceDesign.repository)
+    endpointMaps.add(metadata.referenceDesign.endpointMapSha256)
 
     const pipeline = new Ddr3BgaRoutingPipelineSolver({ inputSrj })
     pipeline.solveUntilStage("autoroutingPipelineSolver")
@@ -69,4 +103,7 @@ test("detects and fans out both SRJ29 BGAs before starting Pipeline 7", () => {
       pipeline.autoroutingPipelineSolver!.autoroutingPipelineSolver.iterations,
     ).toBe(1)
   }
+
+  expect(sourceRepositories.size).toBe(inputs.length)
+  expect(endpointMaps.size).toBe(inputs.length)
 })

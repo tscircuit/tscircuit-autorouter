@@ -24,7 +24,7 @@ import {
 import type { SimpleRouteJson } from "lib/types"
 import { convertSrjToGraphicsObject } from "lib/utils/convertSrjToGraphicsObject"
 
-const MAX_FANOUT_BOUNDARY_MARGIN_MM = 3
+const MAX_FANOUT_BOUNDARY_MARGIN_MM = 4.5
 const MIN_FANOUT_BOUNDARY_MARGIN_MM = 2
 const MIN_POST_FANOUT_CORRIDOR_MM = 2
 const MIN_LAYER_COUNT = 12
@@ -104,6 +104,49 @@ function getHorizontalGap(
   return right.bounds.minX - left.bounds.maxX
 }
 
+function getFixturePhysicalComponent(
+  inputSrj: SimpleRouteJson,
+  detectedComponent: DetectedComponent,
+): DetectedComponent {
+  // Detection may classify an irregular BGA from its largest uniform sub-grid.
+  // Fanout still has to contain every physical package ball with that component ID.
+  const memberObstacles = inputSrj.obstacles.filter(
+    (obstacle) => obstacle.componentId === detectedComponent.componentId,
+  )
+  if (memberObstacles.length === 0) {
+    throw new Error(
+      `Detected component ${detectedComponent.componentId} has no physical obstacles`,
+    )
+  }
+
+  return {
+    ...detectedComponent,
+    bounds: {
+      __type: "rect",
+      minX: Math.min(
+        ...memberObstacles.map(
+          (obstacle) => obstacle.center.x - obstacle.width / 2,
+        ),
+      ),
+      maxX: Math.max(
+        ...memberObstacles.map(
+          (obstacle) => obstacle.center.x + obstacle.width / 2,
+        ),
+      ),
+      minY: Math.min(
+        ...memberObstacles.map(
+          (obstacle) => obstacle.center.y - obstacle.height / 2,
+        ),
+      ),
+      maxY: Math.max(
+        ...memberObstacles.map(
+          (obstacle) => obstacle.center.y + obstacle.height / 2,
+        ),
+      ),
+    },
+  }
+}
+
 function getFanoutBoundaryMargin(
   first: DetectedComponent,
   second: DetectedComponent,
@@ -123,18 +166,20 @@ function getFixtureComponentRoles(
   )
   const ddr3ComponentId = getMetadataComponentId(inputSrj, "ddr3")
   const controllerComponentId = getMetadataComponentId(inputSrj, "controller")
-  const ddr3 = bgaComponents.find(
+  const detectedDdr3 = bgaComponents.find(
     (component) => component.componentId === ddr3ComponentId,
   )
-  const controller = bgaComponents.find(
+  const detectedController = bgaComponents.find(
     (component) => component.componentId === controllerComponentId,
   )
 
-  if (bgaComponents.length !== 2 || !ddr3 || !controller) {
+  if (bgaComponents.length !== 2 || !detectedDdr3 || !detectedController) {
     throw new Error(
       `SRJ29 fixture expected exactly the detected BGAs ${ddr3ComponentId} and ${controllerComponentId}; found ${bgaComponents.map((component) => component.componentId).join(", ") || "none"}`,
     )
   }
+  const ddr3 = getFixturePhysicalComponent(inputSrj, detectedDdr3)
+  const controller = getFixturePhysicalComponent(inputSrj, detectedController)
   if (ddr3.componentId === controller.componentId) {
     throw new Error("SRJ29 fixture DDR3 and controller must be distinct BGAs")
   }
@@ -191,6 +236,8 @@ function getPhysicalFanoutBuses(
   const boundary = getExpandedBounds(source, fanoutBoundaryMargin)
   const inwardDirection: FanoutDirection =
     getCenterX(target) > getCenterX(source) ? "right" : "left"
+  const outwardDirection: FanoutDirection =
+    inwardDirection === "right" ? "left" : "right"
 
   return inputSrj.connections.map((connection, connectionIndex) => {
     const sourcePoints = connection.pointsToConnect.filter(
@@ -211,20 +258,27 @@ function getPhysicalFanoutBuses(
       inwardDirection === "right"
         ? boundary.maxX - sourcePoint.x
         : sourcePoint.x - boundary.minX
-    const verticalCandidates: Array<{
-      direction: "up" | "down"
+    const nonInwardCandidates: Array<{
+      direction: FanoutDirection
       distance: number
     }> = [
       { direction: "up", distance: boundary.maxY - sourcePoint.y },
       { direction: "down", distance: sourcePoint.y - boundary.minY },
+      {
+        direction: outwardDirection,
+        distance:
+          outwardDirection === "right"
+            ? boundary.maxX - sourcePoint.x
+            : sourcePoint.x - boundary.minX,
+      },
     ]
-    const nearestVerticalDirection = verticalCandidates.toSorted(
+    const nearestNonInwardDirection = nonInwardCandidates.toSorted(
       (first, second) => first.distance - second.distance,
     )[0]!.direction
     const direction: FanoutDirection =
       inwardDistance <= fanoutBoundaryMargin + INWARD_ESCAPE_DEPTH_MM
         ? inwardDirection
-        : nearestVerticalDirection
+        : nearestNonInwardDirection
     let preferredExit: FanoutBorderTarget =
       direction === "up" ? "top" : direction === "down" ? "bottom" : direction
     if (direction === "up") {
@@ -255,32 +309,21 @@ function getFanoutOptions(
   source: DetectedComponent,
   target: DetectedComponent,
 ): FanoutSolverOptions {
-  const exitsRight = getCenterX(target) > getCenterX(source)
   const fanoutBoundaryMargin = getFanoutBoundaryMargin(source, target)
-  const availableCornersAndSides: FanoutAvailableCornerAndSideInput[] =
-    exitsRight
-      ? [
-          "top_left",
-          "top_middle",
-          "top_right",
-          "right_top",
-          "right_middle",
-          "right_bottom",
-          "bottom_right",
-          "bottom_middle",
-          "bottom_left",
-        ]
-      : [
-          "top_left",
-          "top_middle",
-          "top_right",
-          "left_top",
-          "left_middle",
-          "left_bottom",
-          "bottom_right",
-          "bottom_middle",
-          "bottom_left",
-        ]
+  const availableCornersAndSides: FanoutAvailableCornerAndSideInput[] = [
+    "top_left",
+    "top_middle",
+    "top_right",
+    "right_top",
+    "right_middle",
+    "right_bottom",
+    "bottom_right",
+    "bottom_middle",
+    "bottom_left",
+    "left_bottom",
+    "left_middle",
+    "left_top",
+  ]
 
   return {
     buses: getPhysicalFanoutBuses(inputSrj, source, target),
