@@ -30,6 +30,16 @@ export type WorkerTaskMessage = {
   task: BenchmarkTask
 }
 
+export type BenchmarkStageTiming = {
+  stageName: string
+  elapsedTimeMs: number
+}
+
+export type BenchmarkStageTimingBreakdown = {
+  status: "complete" | "partial"
+  stages: BenchmarkStageTiming[]
+}
+
 export type WorkerProgress = {
   solverName: string
   scenarioName: string
@@ -41,6 +51,7 @@ export type WorkerProgress = {
   solverIterations?: number
   activeSubSolverProgress?: number
   activeSubSolverIterations?: number
+  stageTiming?: BenchmarkStageTimingBreakdown
 }
 
 export type TinyHypergraphBenchmarkMetrics = {
@@ -105,6 +116,7 @@ export type WorkerResult<
   errorPhaseName?: string
   errorSolverName?: string
   error?: string
+  stageTiming?: BenchmarkStageTimingBreakdown
   routingMetrics?: RoutingBenchmarkMetrics
   benchmarkSnapshot?: TBenchmarkSnapshot
 }

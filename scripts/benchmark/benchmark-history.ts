@@ -11,9 +11,10 @@ import {
 } from "node:fs/promises"
 import { join } from "node:path"
 import stableStringify from "fast-json-stable-stringify"
+import type { BenchmarkStageTimingBreakdown } from "./benchmark-types"
 
-// Older benchmark artifacts predate avgVia and sampleNumber. The parser accepts
-// those two omissions only, then normalizes them before building dashboard data.
+// Older benchmark artifacts predate avgVia, sampleNumber, and stageTiming. The
+// parser accepts those omissions, then normalizes them for dashboard data.
 type BenchmarkHistorySummary = {
   [key: string]: unknown
   solverName: string
@@ -37,6 +38,7 @@ type BenchmarkHistorySample = {
   viaCount?: number
   errorPhaseName?: string
   error?: string
+  stageTiming?: BenchmarkStageTimingBreakdown
 }
 
 type BenchmarkHistoryReport = {
@@ -222,6 +224,55 @@ const parseBenchmarkSummaryOrThrow = (
   }
 }
 
+const parseBenchmarkStageTimingOrThrow = (
+  value: unknown,
+  expectedStatus: BenchmarkStageTimingBreakdown["status"],
+  sourceLabel: string,
+): BenchmarkStageTimingBreakdown => {
+  if (
+    typeof value !== "object" ||
+    value === null ||
+    Array.isArray(value) ||
+    !("status" in value) ||
+    (value.status !== "complete" && value.status !== "partial") ||
+    !("stages" in value) ||
+    !Array.isArray(value.stages)
+  ) {
+    throw new Error(`Invalid stageTiming in ${sourceLabel}`)
+  }
+  if (value.status !== expectedStatus) {
+    throw new Error(`Inconsistent stageTiming status in ${sourceLabel}`)
+  }
+  const stageNames = new Set<string>()
+  const stages = value.stages.map((stage, index) => {
+    if (
+      typeof stage !== "object" ||
+      stage === null ||
+      Array.isArray(stage) ||
+      !("stageName" in stage) ||
+      typeof stage.stageName !== "string" ||
+      stage.stageName.trim() === "" ||
+      !("elapsedTimeMs" in stage) ||
+      typeof stage.elapsedTimeMs !== "number" ||
+      !Number.isFinite(stage.elapsedTimeMs) ||
+      stage.elapsedTimeMs < 0
+    ) {
+      throw new Error(`Invalid stageTiming stage ${index} in ${sourceLabel}`)
+    }
+    if (stageNames.has(stage.stageName)) {
+      throw new Error(
+        `Duplicate stageTiming stage ${stage.stageName} in ${sourceLabel}`,
+      )
+    }
+    stageNames.add(stage.stageName)
+    return {
+      stageName: stage.stageName,
+      elapsedTimeMs: stage.elapsedTimeMs,
+    }
+  })
+  return { status: expectedStatus, stages }
+}
+
 const parseBenchmarkSampleOrThrow = (
   value: unknown,
   sourceLabel: string,
@@ -284,6 +335,14 @@ const parseBenchmarkSampleOrThrow = (
       `Unsolved benchmark sample passed relaxed DRC in ${sourceLabel}`,
     )
   }
+  const stageTiming =
+    "stageTiming" in value
+      ? parseBenchmarkStageTimingOrThrow(
+          value.stageTiming,
+          value.didSolve ? "complete" : "partial",
+          sourceLabel,
+        )
+      : undefined
   return {
     ...value,
     solverName: value.solverName,
@@ -296,6 +355,7 @@ const parseBenchmarkSampleOrThrow = (
     viaCount,
     errorPhaseName,
     error,
+    stageTiming,
   }
 }
 

@@ -15,20 +15,28 @@ import type {
   WorkerProgress,
   WorkerResultWithImage,
 } from "./benchmark-types"
+import {
+  extractBenchmarkStageTiming,
+  type PipelineStageTimingSource,
+} from "./benchmark-stage-timing"
 
-type SolverInstance = {
+type SubSolverInstance = {
+  progress?: number
+  iterations?: number
+  error?: string | null
+  getSolverName?: () => string
+}
+
+type SolverInstance = PipelineStageTimingSource & {
   solved?: boolean
   failed?: boolean
   progress?: number
   iterations?: number
   error?: string | null
-  activeSubSolver?: SolverInstance | null
-  currentPipelineStepIndex?: number
-  pipelineDef?: Array<{
-    solverName?: string
-    solverClass?: {
-      name?: string
-    }
+  activeSubSolver?: SubSolverInstance | null
+  pipelineDef: ReadonlyArray<{
+    solverName: string
+    solverClass?: Function
   }>
   srjWithPointPairs?: SimpleRouteJson
   step?: () => void
@@ -45,7 +53,7 @@ type SolverInstance = {
   highDensityRouteSolver?: {
     iterations?: number
   }
-  timeSpentOnPhase?: Record<string, number>
+  timeSpentOnPhase: Record<string, number>
 }
 
 type SolverOptions = {
@@ -105,9 +113,9 @@ export const getBenchmarkSolverOptions = (
   }
 }
 
-const getSolverConstructor = (solverName: string) => {
+const getSolverConstructor = (solverName: string): SolverConstructor => {
   if (solverName === "KrtAutoroutingPipelineSolver") {
-    return KrtAutoroutingPipelineSolver as SolverConstructor
+    return KrtAutoroutingPipelineSolver
   }
 
   const ctor = (autorouterModule as Record<string, unknown>)[solverName]
@@ -214,7 +222,9 @@ const summarizeDrcErrors = (errors: object[]): DrcSummary => {
   }
 }
 
-const getSolverInstanceName = (solver: SolverInstance | null | undefined) => {
+const getSolverInstanceName = (
+  solver: SubSolverInstance | null | undefined,
+) => {
   if (!solver) {
     return undefined
   }
@@ -231,11 +241,7 @@ const getFailureInfo = (
   solver: SolverInstance,
   fallbackError?: string,
 ): FailureInfo => {
-  const pipelineStep =
-    Array.isArray(solver.pipelineDef) &&
-    typeof solver.currentPipelineStepIndex === "number"
-      ? solver.pipelineDef[solver.currentPipelineStepIndex]
-      : undefined
+  const pipelineStep = solver.pipelineDef[solver.currentPipelineStepIndex]
   const activeSubSolver = solver.activeSubSolver ?? null
 
   return {
@@ -254,11 +260,7 @@ const getProgressInfo = (
   solver: SolverInstance,
   elapsedTimeMs: number,
 ): WorkerProgress => {
-  const pipelineStep =
-    Array.isArray(solver.pipelineDef) &&
-    typeof solver.currentPipelineStepIndex === "number"
-      ? solver.pipelineDef[solver.currentPipelineStepIndex]
-      : undefined
+  const pipelineStep = solver.pipelineDef[solver.currentPipelineStepIndex]
   const activeSubSolver = solver.activeSubSolver ?? null
 
   return {
@@ -273,6 +275,7 @@ const getProgressInfo = (
     solverIterations: solver.iterations,
     activeSubSolverProgress: activeSubSolver?.progress,
     activeSubSolverIterations: activeSubSolver?.iterations,
+    stageTiming: extractBenchmarkStageTiming(solver, "partial"),
   }
 }
 
@@ -281,23 +284,12 @@ const getProgressKey = (progress: WorkerProgress) =>
 
 const getRoutingBenchmarkMetrics = (
   solver: SolverInstance,
-): RoutingBenchmarkMetrics | undefined => {
-  const tinyHypergraph =
-    solver.portPointPathingSolver?.getSolveGraphBenchmarkMetrics?.()
-  const highDensityIterations = solver.highDensityRouteSolver?.iterations
-  const phaseTimeMs = solver.timeSpentOnPhase
-  if (
-    tinyHypergraph === undefined &&
-    highDensityIterations === undefined &&
-    phaseTimeMs === undefined
-  ) {
-    return undefined
-  }
-
+): RoutingBenchmarkMetrics => {
   return {
-    tinyHypergraph,
-    highDensityIterations,
-    phaseTimeMs,
+    tinyHypergraph:
+      solver.portPointPathingSolver?.getSolveGraphBenchmarkMetrics?.(),
+    highDensityIterations: solver.highDensityRouteSolver?.iterations,
+    phaseTimeMs: solver.timeSpentOnPhase,
   }
 }
 
@@ -429,6 +421,11 @@ export const runTask = async (
   const elapsedTimeMs = performance.now() - start
   const didSolve = Boolean(solver.solved)
   const routingMetrics = getRoutingBenchmarkMetrics(solver)
+  let stageTimingStatus: "complete" | "partial" = "partial"
+  if (didSolve) {
+    stageTimingStatus = "complete"
+  }
+  const stageTiming = extractBenchmarkStageTiming(solver, stageTimingStatus)
 
   if (!didSolve) {
     const failureInfo = getFailureInfo(solver, solveError)
@@ -440,6 +437,7 @@ export const runTask = async (
       didSolve,
       didTimeout: false,
       relaxedDrcPassed: false,
+      stageTiming,
       routingMetrics,
       ...failureInfo,
     }
@@ -484,6 +482,7 @@ export const runTask = async (
       didTimeout: false,
       relaxedDrcPassed,
       viaCount,
+      stageTiming,
       routingMetrics,
       benchmarkSnapshot,
       ...drcSummary,
@@ -497,6 +496,7 @@ export const runTask = async (
       didSolve,
       didTimeout: false,
       relaxedDrcPassed: false,
+      stageTiming,
       routingMetrics,
       error: error instanceof Error ? error.message : String(error),
     }
