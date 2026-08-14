@@ -1175,7 +1175,6 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
     let squaredNodePortPointCount = 0
     let segmentCount = 0
     let layerChangeCount = 0
-    const nodePfById = new Map<CapacityMeshNodeId, number>()
     const regionMetadata = solvedTinySolver.topology.regionMetadata ?? []
 
     for (
@@ -1224,14 +1223,11 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
         crossings.numEntryExitLayerChanges,
         crossings.numTransitionPairCrossings,
       )
-      nodePfById.set(originalRegion.d.capacityMeshNodeId, nodePf)
       nodePfSum += nodePf
       nodePfSquaredSum += nodePf * nodePf
       nodePfMax = Math.max(nodePfMax, nodePf)
       squaredNodePortPointCount += solvedNode.portPoints.length ** 2
     }
-
-    this.solvedNodePfById = nodePfById
 
     return {
       nodePfSum,
@@ -1837,17 +1833,11 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
     }
   }
 
-  computeNodePf(node: InputNodeWithPortPoints): number | null {
-    if (this.solvedNodePfById) {
-      return this.solvedNodePfById.get(node.capacityMeshNodeId) ?? null
-    }
-
-    const solvedNode = this.getOutput().nodesWithPortPoints.find(
-      (candidate) => candidate.capacityMeshNodeId === node.capacityMeshNodeId,
+  private computeSolvedNodePf(solvedNode: NodeWithPortPoints): number | null {
+    const originalRegion = this.originalRegionById.get(
+      solvedNode.capacityMeshNodeId,
     )
-    const originalRegion = this.originalRegionById.get(node.capacityMeshNodeId)
-
-    if (!solvedNode || !originalRegion) {
+    if (!originalRegion) {
       return null
     }
 
@@ -1859,6 +1849,27 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       crossings.numEntryExitLayerChanges,
       crossings.numTransitionPairCrossings,
     )
+  }
+
+  computeNodePf(node: InputNodeWithPortPoints): number | null {
+    if (this.solved) {
+      if (!this.solvedNodePfById) {
+        const nodePfById = new Map<CapacityMeshNodeId, number>()
+        for (const solvedNode of this.getOutput().nodesWithPortPoints) {
+          const nodePf = this.computeSolvedNodePf(solvedNode)
+          if (nodePf !== null) {
+            nodePfById.set(solvedNode.capacityMeshNodeId, nodePf)
+          }
+        }
+        this.solvedNodePfById = nodePfById
+      }
+      return this.solvedNodePfById.get(node.capacityMeshNodeId) ?? null
+    }
+
+    const solvedNode = this.getOutput().nodesWithPortPoints.find(
+      (candidate) => candidate.capacityMeshNodeId === node.capacityMeshNodeId,
+    )
+    return solvedNode ? this.computeSolvedNodePf(solvedNode) : null
   }
 
   tryFinalAcceptance() {}
