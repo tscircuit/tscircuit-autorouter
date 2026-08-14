@@ -43,9 +43,8 @@ test("detects and fans out both SRJ29 BGAs before starting Pipeline 7", () => {
   const endpointMaps = new Set<string>()
 
   for (const inputSrj of inputs) {
-    const metadata = (
-      inputSrj as SimpleRouteJson & { metadata: Srj29Metadata }
-    ).metadata
+    const metadata = (inputSrj as SimpleRouteJson & { metadata: Srj29Metadata })
+      .metadata
 
     expect(inputSrj.connections).toHaveLength(
       metadata.referenceDesign.directConnectionCount,
