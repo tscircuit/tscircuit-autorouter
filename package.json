@@ -1,7 +1,7 @@
 {
   "name": "@tscircuit/capacity-autorouter",
   "main": "./dist/index.js",
-  "version": "0.0.800",
+  "version": "0.0.802",
   "type": "module",
   "files": [
     "dist"
@@ -31,7 +31,7 @@
     "@tsci/tscircuit.dataset-srj20-partial-bga-breakouts": "git+https://github.com/tscircuit/dataset-srj20.git#9384fb8f45fb479b97178ddfa42fc74c69afbbec",
     "@tsci/0hmX.multi-component-dataset-srj01": "git+https://github.com/tscircuit/multi-component-dataset-srj01.git#abf9d17c966d466b56ac21b735c6bb6f4518919d",
     "@tsci/tscircuit.dataset-srj12-bus-routing": "git+https://github.com/tscircuit/dataset-srj12-bus-routing.git#ba82f86a7d1288566b7144eb8661ad2549c5f328",
-    "@tscircuit/autorouting-dataset-01": "git+https://github.com/tscircuit/autorouting-dataset-01.git#4f795dcfee01db1573670e1edac52814457b666c",
+    "@tscircuit/autorouting-dataset-01": "git+https://github.com/tscircuit/autorouting-dataset-01.git#b97f5052a2359ab2da3f186765c6a5e839535efb",
     "@tscircuit/checks": "^0.0.145",
     "@tscircuit/circuit-json-util": "^0.0.94",
     "@tscircuit/core": "0.0.337",
