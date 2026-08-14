@@ -1,7 +1,7 @@
 import type { SerializedHyperGraph } from "@tscircuit/hypergraph"
 import type { GraphicsObject } from "graphics-debug"
-import { BaseSolver } from "lib/solvers/BaseSolver"
 import type { PreloadedTracePortAssignment } from "lib/solvers/AvailableSegmentPointSolver/AvailableSegmentPointSolver"
+import { BaseSolver } from "lib/solvers/BaseSolver"
 import type {
   InputNodeWithPortPoints,
   InputPortPoint,
@@ -9,8 +9,8 @@ import type {
 import { calculateNodeProbabilityOfFailure } from "lib/solvers/UnravelSolver/calculateCrossingProbabilityOfFailure"
 import {
   type CapacityMeshNodeId,
-  getConnectionPointLayers,
   type SimpleRouteConnection,
+  getConnectionPointLayers,
 } from "lib/types"
 import type {
   NodeWithPortPoints,
@@ -21,29 +21,29 @@ import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
 import { mapZToLayerName } from "lib/utils/mapZToLayerName"
 import {
   DuplicateCongestedPortSolver,
-  orderConnectionsByNetCardinality,
   type DuplicateCongestedPortSolverReport,
+  type TinyHyperGraphSectionPipelineInput,
   TinyHyperGraphSectionPipelineSolver,
   TinyHyperGraphSectionSolver,
-  TinyHyperGraphSolver,
-  type TinyHyperGraphSectionPipelineInput,
   type TinyHyperGraphSectionSolverOptions,
+  TinyHyperGraphSolver,
   type TinyHyperGraphSolverOptions,
   UnravelTinyHyperGraphSolver,
+  orderConnectionsByNetCardinality,
 } from "tiny-hypergraph/lib/index"
 import type {
   ConnectionHg,
   ConnectionHgWithSimpleRouteConnection,
   HgPortPointPathingSolverParams,
 } from "../hgportpointpathingsolver/types"
+import { SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments } from "./SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments"
 import { createTinyRouteNetIndexer } from "./createTinyRouteNetIndexer"
 import { getRegionNetIdByRegionId } from "./getRegionNetIdByRegionId"
-import { SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments } from "./SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments"
 import {
-  getSerializedPreloadedTraceStats,
-  hasPreloadedTraceSectionMetadata,
   type PreloadedTraceConnectionId,
   type PreloadedTraceSectionMetadata,
+  getSerializedPreloadedTraceStats,
+  hasPreloadedTraceSectionMetadata,
   serializePreloadedTraceAssignments,
 } from "./serializePreloadedTraceAssignments"
 
@@ -1046,6 +1046,7 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
 export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
   private tinyPipelineSolver: TinyHyperGraphSectionPipelineWithTerminalNetIds
   private solvedCandidateSummary?: DownstreamCandidateSummary
+  private solvedNodePfById?: Map<CapacityMeshNodeId, number>
   private duplicateCongestedPortReport?: DuplicateCongestedPortSolverReport
   private duplicateCongestedPortError?: string
   private duplicatedPortCount = 0
@@ -1174,6 +1175,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
     let squaredNodePortPointCount = 0
     let segmentCount = 0
     let layerChangeCount = 0
+    const nodePfById = new Map<CapacityMeshNodeId, number>()
     const regionMetadata = solvedTinySolver.topology.regionMetadata ?? []
 
     for (
@@ -1222,11 +1224,14 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
         crossings.numEntryExitLayerChanges,
         crossings.numTransitionPairCrossings,
       )
+      nodePfById.set(originalRegion.d.capacityMeshNodeId, nodePf)
       nodePfSum += nodePf
       nodePfSquaredSum += nodePf * nodePf
       nodePfMax = Math.max(nodePfMax, nodePf)
       squaredNodePortPointCount += solvedNode.portPoints.length ** 2
     }
+
+    this.solvedNodePfById = nodePfById
 
     return {
       nodePfSum,
@@ -1833,6 +1838,10 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
   }
 
   computeNodePf(node: InputNodeWithPortPoints): number | null {
+    if (this.solvedNodePfById) {
+      return this.solvedNodePfById.get(node.capacityMeshNodeId) ?? null
+    }
+
     const solvedNode = this.getOutput().nodesWithPortPoints.find(
       (candidate) => candidate.capacityMeshNodeId === node.capacityMeshNodeId,
     )

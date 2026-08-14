@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test"
-import input from "../fixtures/features/portpointpathing/tinyhypergraph-port-bridge-repro-input.json"
 import { TinyHypergraphPortPointPathingSolver } from "lib/solvers/PortPointPathingSolver/tinyhypergraph/TinyHypergraphPortPointPathingSolver"
+import input from "../fixtures/features/portpointpathing/tinyhypergraph-port-bridge-repro-input.json"
 
 test("TinyHypergraph port-point pathing assigns PCB terminal identities", () => {
   const params = structuredClone(input) as any
@@ -30,4 +30,19 @@ test("TinyHypergraph port-point pathing assigns PCB terminal identities", () => 
     acceptedMutationCount: 0,
     optimizationStopReason: "local_optimum",
   })
+
+  const output = solver.getOutput()
+  const solvedNodeIds = new Set(
+    output.nodesWithPortPoints.map((node) => node.capacityMeshNodeId),
+  )
+  const solvedInputNode = output.inputNodeWithPortPoints.find((node) =>
+    solvedNodeIds.has(node.capacityMeshNodeId),
+  )!
+  const nodePf = solver.computeNodePf(solvedInputNode)
+  expect(nodePf).not.toBeNull()
+
+  solver.getOutput = () => {
+    throw new Error("computeNodePf rematerialized the solved output")
+  }
+  expect(solver.computeNodePf(solvedInputNode)).toBe(nodePf)
 })
