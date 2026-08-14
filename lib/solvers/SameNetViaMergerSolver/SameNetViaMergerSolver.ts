@@ -37,8 +37,22 @@ type Via = {
   mutable: boolean
 }
 
+type ZLayer = HighDensityRoute["route"][number]["z"]
+
 const NEAR_VIA_MERGE_DISTANCE_MULTIPLIER = 2.5
 const OBSTACLE_MARGIN = 0.1
+const VIA_POSITION_TOLERANCE = 1e-3
+
+const positionsMatchWithinViaTolerance = (
+  first: Pick<HighDensityRoute["route"][number], "x" | "y">,
+  second: Pick<HighDensityRoute["route"][number], "x" | "y">,
+): boolean => {
+  const xDistance = Math.abs(first.x - second.x)
+  const yDistance = Math.abs(first.y - second.y)
+  return (
+    xDistance <= VIA_POSITION_TOLERANCE && yDistance <= VIA_POSITION_TOLERANCE
+  )
+}
 
 const viaTransitionClusterTouchesRouteEndpoint = (
   route: HighDensityRoute,
@@ -138,27 +152,28 @@ const canMoveViaTo = (
     )
   }
 
-  const transitionLayers = new Set<number>()
+  const transitionPointByLayer = new Map<ZLayer, { x: number; y: number }>()
   for (let i = 1; i < route.route.length; i++) {
     const prev = route.route[i - 1]
     const curr = route.route[i]
     if (prev.z === curr.z) continue
-    if (prev.x !== viaToRemove.x || prev.y !== viaToRemove.y) continue
-    if (curr.x !== viaToRemove.x || curr.y !== viaToRemove.y) continue
+    if (!positionsMatchWithinViaTolerance(prev, viaToRemove)) continue
+    if (!positionsMatchWithinViaTolerance(curr, viaToRemove)) continue
+    if (!positionsMatchWithinViaTolerance(prev, curr)) continue
 
-    transitionLayers.add(prev.z)
-    transitionLayers.add(curr.z)
+    transitionPointByLayer.set(prev.z, { x: prev.x, y: prev.y })
+    transitionPointByLayer.set(curr.z, { x: curr.x, y: curr.y })
   }
 
-  if (transitionLayers.size === 0) {
+  if (transitionPointByLayer.size === 0) {
     throw new Error(
       `SameNetViaMergerSolver could not find transition layers for via at (${viaToRemove.x}, ${viaToRemove.y})`,
     )
   }
 
-  for (const z of transitionLayers) {
+  for (const [z, transitionPoint] of transitionPointByLayer) {
     const traceThickness = route.traceThickness
-    const start = { x: viaToRemove.x, y: viaToRemove.y, z }
+    const start = { ...transitionPoint, z }
     const end = { x: viaKeep.x, y: viaKeep.y, z }
 
     if (start.x === end.x && start.y === end.y) continue
@@ -495,14 +510,17 @@ export class SameNetViaMergerSolver extends BaseSolver {
       const prev = route[j - 1]
       const curr = route[j]
       if (prev.z === curr.z) continue
-      if (prev.x !== viaToRemove.x || prev.y !== viaToRemove.y) continue
-      if (curr.x !== viaToRemove.x || curr.y !== viaToRemove.y) continue
+      if (!positionsMatchWithinViaTolerance(prev, viaToRemove)) continue
+      if (!positionsMatchWithinViaTolerance(curr, viaToRemove)) continue
+      if (!positionsMatchWithinViaTolerance(prev, curr)) continue
 
       let clusterStartIndex = j - 1
       while (
         clusterStartIndex > 0 &&
-        route[clusterStartIndex - 1]!.x === viaToRemove.x &&
-        route[clusterStartIndex - 1]!.y === viaToRemove.y
+        positionsMatchWithinViaTolerance(
+          route[clusterStartIndex - 1]!,
+          viaToRemove,
+        )
       ) {
         clusterStartIndex--
       }
@@ -510,8 +528,10 @@ export class SameNetViaMergerSolver extends BaseSolver {
       let clusterEndIndex = j
       while (
         clusterEndIndex < route.length - 1 &&
-        route[clusterEndIndex + 1]!.x === viaToRemove.x &&
-        route[clusterEndIndex + 1]!.y === viaToRemove.y
+        positionsMatchWithinViaTolerance(
+          route[clusterEndIndex + 1]!,
+          viaToRemove,
+        )
       ) {
         clusterEndIndex++
       }
@@ -533,7 +553,7 @@ export class SameNetViaMergerSolver extends BaseSolver {
     }
 
     routeToUpdate.vias = routeToUpdate.vias.flatMap((vx) => {
-      if (vx.x !== viaToRemove.x || vx.y !== viaToRemove.y) return vx
+      if (!positionsMatchWithinViaTolerance(vx, viaToRemove)) return vx
       replacedVia = true
       return viaKeep.mutable ? [{ x: viaKeep.x, y: viaKeep.y }] : []
     })
