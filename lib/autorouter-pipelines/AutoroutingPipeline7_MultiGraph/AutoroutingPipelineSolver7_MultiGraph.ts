@@ -484,6 +484,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
             connections,
             layerCount: cms.srj.layerCount,
             effort: cms.effort,
+            simpleRouteJson: cms.srjWithPointPairs!,
             preserveTerminalPcbPortIds: true,
             minViaPadDiameter: cms.viaDiameter,
             flags: {

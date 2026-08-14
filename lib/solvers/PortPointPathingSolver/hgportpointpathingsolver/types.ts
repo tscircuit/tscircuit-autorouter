@@ -12,6 +12,7 @@ import type {
   CapacityMeshNode,
   CapacityMeshNodeId,
   SimpleRouteConnection,
+  SimpleRouteJson,
 } from "lib/types"
 import type { PreloadedTracePortAssignment } from "lib/solvers/AvailableSegmentPointSolver/AvailableSegmentPointSolver"
 
@@ -98,6 +99,8 @@ export interface HgPortPointPathingSolverParams {
   effort: number
   preserveTerminalPcbPortIds?: boolean
   minViaPadDiameter?: number
+  /** Physical terminal geometry used by post-solve topology optimization. */
+  simpleRouteJson?: SimpleRouteJson
   flags: {
     FORCE_CENTER_FIRST: boolean
     RIPPING_ENABLED: boolean

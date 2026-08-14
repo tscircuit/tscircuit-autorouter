@@ -308,6 +308,7 @@ export class AutoroutingPipelineSolver8 extends BaseSolver {
             connections,
             layerCount: cms.srj.layerCount,
             effort: cms.effort,
+            simpleRouteJson: cms.srjWithPointPairs!,
             minViaPadDiameter: cms.viaDiameter,
             flags: {
               FORCE_CENTER_FIRST: true,

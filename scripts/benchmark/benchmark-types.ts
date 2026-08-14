@@ -45,8 +45,6 @@ export type WorkerProgress = {
 
 export type TinyHypergraphBenchmarkMetrics = {
   routeCount: number
-  traceDensityCandidateEvaluated?: boolean
-  traceDensityCandidateSelected?: boolean
   downstreamNodePfSum?: number
   downstreamNodePfSquaredSum?: number
   downstreamNodePfMax?: number
@@ -85,11 +83,33 @@ export type TinyHypergraphBenchmarkMetrics = {
     initialTotalRegionCost: number
     finalTotalRegionCost: number
     acceptedMutationCount: number
+    acceptedSwapMutationCount: number
+    acceptedRerouteMutationCount: number
+    acceptedPairRerouteMutationCount: number
     evaluatedMutationCount: number
     rejectedRerouteDetourCount: number
+    rejectedRerouteLayerChangeCount: number
+    rejectedRerouteEndpointKeepoutCount: number
+    prunedRerouteEndpointKeepoutSegmentCount: number
+    rejectedBoundaryEndpointKeepoutCount: number
+    terminalKeepoutCount: number
+    terminalKeepoutBroadPhaseQueryCount: number
+    terminalKeepoutBroadPhaseCandidateCount: number
+    terminalKeepoutExactCheckCount: number
+    terminalKeepoutGeometryCacheHitCount: number
+    terminalKeepoutGeometryCacheSize: number
+    terminalKeepoutPhysicalNeighborCacheHitCount: number
+    terminalKeepoutPhysicalNeighborCacheMissCount: number
+    rejectedCrossLayerSwapCount: number
     prunedRerouteSearchCount: number
     rerouteSearchCount: number
     rerouteSearchIterationCount: number
+    singleRerouteSearchCount: number
+    singleRerouteSearchIterationCount: number
+    pairRerouteSearchCount: number
+    pairRerouteSearchIterationCount: number
+    reusedRerouteCandidateCount: number
+    optimizationStopReason?: unknown
     initialSegmentCount: number
     finalSegmentCount: number
     segmentDelta: number

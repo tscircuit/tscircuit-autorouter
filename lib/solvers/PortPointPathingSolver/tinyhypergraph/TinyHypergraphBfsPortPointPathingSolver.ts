@@ -236,6 +236,7 @@ const createRuntimeParams = (
     layerCount: params.layerCount,
     effort: params.effort,
     minViaPadDiameter: params.minViaPadDiameter,
+    simpleRouteJson: params.simpleRouteJson,
     flags: params.flags,
     weights: params.weights,
     opts: params.opts,
