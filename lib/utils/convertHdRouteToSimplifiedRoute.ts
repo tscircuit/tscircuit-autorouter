@@ -1,5 +1,6 @@
 import { distance, pointToBoxDistance } from "@tscircuit/math-utils"
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
+import { isObstacleConnectedToRoute } from "lib/solvers/TraceWidthSolver/isObstacleConnectedToRoute"
 import {
   type ConnectionPoint,
   type Obstacle,
@@ -8,7 +9,6 @@ import {
   isSingleLayerConnectionPoint,
 } from "lib/types"
 import { HighDensityIntraNodeRoute, Jumper } from "lib/types/high-density-types"
-import { isObstacleConnectedToRoute } from "lib/solvers/TraceWidthSolver/isObstacleConnectedToRoute"
 import { mapZToLayerName } from "./mapZToLayerName"
 
 type Point = {
@@ -27,6 +27,7 @@ export interface ConvertHdRouteToSimplifiedRouteOptions {
   terminalViaAttachTolerance?: number
   defaultViaHoleDiameter?: number
   obstacles?: ReadonlyArray<Obstacle>
+  connectedMultilayerObstacles?: ReadonlyArray<Obstacle>
   connMap?: ConnectivityMap
 }
 
@@ -62,13 +63,21 @@ const isThroughObstacleSegment = (
 ) => {
   if (start.toNextSegmentType === "through_obstacle") return true
 
+  if (opts.connectedMultilayerObstacles) {
+    return opts.connectedMultilayerObstacles.some(
+      (obstacle) =>
+        pointInsideObstacle(start, obstacle) &&
+        pointInsideObstacle(end, obstacle),
+    )
+  }
+
   return (
     opts.obstacles?.some(
       (obstacle) =>
         isMultilayerObstacle(obstacle) &&
-        isObstacleConnectedToRoute(obstacle, hdRoute, opts.connMap) &&
         pointInsideObstacle(start, obstacle) &&
-        pointInsideObstacle(end, obstacle),
+        pointInsideObstacle(end, obstacle) &&
+        isObstacleConnectedToRoute(obstacle, hdRoute, opts.connMap),
     ) ?? false
   )
 }
@@ -125,6 +134,13 @@ const attachTerminalViasToSimplifiedRoute = ({
     route.length === 0 ||
     hdRoute.route.length === 0 ||
     !connectionPoints.length
+  ) {
+    return route
+  }
+  if (
+    !connectionPoints.some(
+      (point) => isSingleLayerConnectionPoint(point) && point.terminalVia,
+    )
   ) {
     return route
   }

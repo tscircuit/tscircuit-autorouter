@@ -1,5 +1,6 @@
 import { expect, test } from "bun:test"
 import { AutoroutingPipelineSolver7_MultiGraph } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/AutoroutingPipelineSolver7_MultiGraph"
+import { Pipeline7AdaptiveDrcBranchPortfolioSolver } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/Pipeline7AdaptiveDrcBranchPortfolioSolver"
 
 test("Pipeline7 high-density stage opts into GrowShrinkHighDensityIntraNodeSolver", () => {
   const solver = new AutoroutingPipelineSolver7_MultiGraph({
@@ -38,7 +39,7 @@ test("Pipeline7 high-density stage opts into GrowShrinkHighDensityIntraNodeSolve
   expect((highDensityParams as any).captureSearchDebug).toBe(false)
 })
 
-test("Pipeline7 caps expensive post-processing stages for benchmark completion", () => {
+test("Pipeline7 uses a DRC-validated fast probe for two-layer exact repair", () => {
   const solver = new AutoroutingPipelineSolver7_MultiGraph({
     layerCount: 2,
     minTraceWidth: 0.15,
@@ -79,9 +80,45 @@ test("Pipeline7 caps expensive post-processing stages for benchmark completion",
   expect((exactGeometryDrcParams as any).enableLargeBoardBroadFallback).toBe(
     false,
   )
+  expect((exactGeometryDrcParams as any).enableBroadFallback).toBe(false)
   expect(
     (exactGeometryDrcParams as any).enablePostSolveClearanceRelaxation,
   ).toBe(false)
   expect((exactGeometryDrcParams as any).broadMaxIterations).toBe(12)
   expect((exactGeometryDrcParams as any).broadPassMultiplier).toBe(3)
+
+  const adaptiveTwoLayerSolver = new Pipeline7AdaptiveDrcBranchPortfolioSolver(
+    exactGeometryDrcParams as any,
+  )
+  adaptiveTwoLayerSolver.solve()
+  expect(
+    adaptiveTwoLayerSolver.stats.pipeline7AdaptiveExactDrcFastProbeAttempted,
+  ).toBe(true)
+  expect(
+    adaptiveTwoLayerSolver.stats.pipeline7AdaptiveExactDrcFastProbeAccepted,
+  ).toBe(true)
+
+  const fourLayerSrj = { ...solver.srj, layerCount: 4 }
+  const [fourLayerExactGeometryDrcParams] =
+    exactGeometryDrcStep!.getConstructorParams({
+      ...solver,
+      srj: fourLayerSrj,
+      originalSrj: {
+        ...solver.originalSrj,
+        layerCount: 4,
+      },
+      srjWithPointPairs: fourLayerSrj,
+      globalDrcForceImproveSolver: { getOutput: () => [] },
+      netToPointPairsSolver: { newConnections: [] },
+    } as any)
+  const fourLayerSolver = new Pipeline7AdaptiveDrcBranchPortfolioSolver(
+    fourLayerExactGeometryDrcParams as any,
+  )
+  fourLayerSolver.solve()
+  expect(
+    fourLayerSolver.stats.pipeline7AdaptiveExactDrcFastProbeAttempted,
+  ).toBe(false)
+  expect(fourLayerSolver.stats.pipeline7AdaptiveExactDrcFastProbeAccepted).toBe(
+    false,
+  )
 })
