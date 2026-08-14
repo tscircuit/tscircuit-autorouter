@@ -1,6 +1,9 @@
 import { expect, test } from "bun:test"
+import {
+  convertPipeline7HdRoutesToSimplifiedPcbTraces,
+  createPipeline7HdRoutesToSimplifiedPcbTracesConverter,
+} from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/convertPipeline7HdRoutesToSimplifiedPcbTraces"
 import { createPipeline7AutoroutingDrcEvaluator } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/create-pipeline7-autorouting-drc-evaluator"
-import { convertPipeline7HdRoutesToSimplifiedPcbTraces } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/convertPipeline7HdRoutesToSimplifiedPcbTraces"
 import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import type { SimpleRouteJson } from "lib/types"
 import type { HighDensityRoute } from "lib/types/high-density-types"
@@ -94,4 +97,64 @@ test("Pipeline7 autorouting DRC finds every reference trace collision", () => {
     x: 0,
     y: 0,
   })
+})
+
+test("Pipeline7 candidate conversion reuses static obstacle connectivity", () => {
+  let connectivityChecks = 0
+  const connMap = {
+    areIdsConnected: (left: string, right: string) => {
+      connectivityChecks += 1
+      return left === "route" && right === "pad"
+    },
+  } as any
+  const connection = {
+    name: "route",
+    pointsToConnect: [
+      { x: 0, y: 0, layer: "top", pointId: "start" },
+      { x: 2, y: 0, layer: "bottom", pointId: "end" },
+    ],
+  }
+  const routes: HighDensityRoute[] = [
+    {
+      connectionName: "route",
+      route: [
+        { x: 0, y: 0, z: 0 },
+        { x: 1, y: 0, z: 0 },
+        { x: 1, y: 0, z: 1 },
+        { x: 2, y: 0, z: 1 },
+      ],
+      vias: [{ x: 1, y: 0 }],
+      traceThickness: 0.1,
+      viaDiameter: 0.3,
+    },
+  ]
+  const convertCandidateRoutes =
+    createPipeline7HdRoutesToSimplifiedPcbTracesConverter({
+      connections: [connection],
+      originalConnections: [connection],
+      layerCount: 2,
+      obstacles: [
+        {
+          type: "rect",
+          layers: ["top", "bottom"],
+          center: { x: 1, y: 0 },
+          width: 0.5,
+          height: 0.5,
+          connectedTo: ["pad"],
+        },
+      ],
+      defaultViaHoleDiameter: 0.15,
+      connMap,
+    })
+
+  const firstResult = convertCandidateRoutes(routes)
+  const secondResult = convertCandidateRoutes(structuredClone(routes))
+
+  expect(firstResult).toEqual(secondResult)
+  expect(
+    firstResult[0]?.route.some(
+      (routePoint) => routePoint.route_type === "through_obstacle",
+    ),
+  ).toBe(true)
+  expect(connectivityChecks).toBe(1)
 })

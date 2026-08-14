@@ -27,6 +27,7 @@ export interface ConvertHdRouteToSimplifiedRouteOptions {
   terminalViaAttachTolerance?: number
   defaultViaHoleDiameter?: number
   obstacles?: ReadonlyArray<Obstacle>
+  connectedMultilayerObstacles?: ReadonlyArray<Obstacle>
   connMap?: ConnectivityMap
 }
 
@@ -61,6 +62,14 @@ const isThroughObstacleSegment = (
   opts: ConvertHdRouteToSimplifiedRouteOptions,
 ) => {
   if (start.toNextSegmentType === "through_obstacle") return true
+
+  if (opts.connectedMultilayerObstacles) {
+    return opts.connectedMultilayerObstacles.some(
+      (obstacle) =>
+        pointInsideObstacle(start, obstacle) &&
+        pointInsideObstacle(end, obstacle),
+    )
+  }
 
   return (
     opts.obstacles?.some(
@@ -125,6 +134,13 @@ const attachTerminalViasToSimplifiedRoute = ({
     route.length === 0 ||
     hdRoute.route.length === 0 ||
     !connectionPoints.length
+  ) {
+    return route
+  }
+  if (
+    !connectionPoints.some(
+      (point) => isSingleLayerConnectionPoint(point) && point.terminalVia,
+    )
   ) {
     return route
   }
