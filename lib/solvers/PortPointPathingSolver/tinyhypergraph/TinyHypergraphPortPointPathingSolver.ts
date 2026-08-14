@@ -1401,6 +1401,10 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
                 optimizeRegionCostsSolver.pairRerouteSearchIterationCount,
               reusedRerouteCandidateCount:
                 optimizeRegionCostsSolver.reusedRerouteCandidateCount,
+              replacementRegionCostCacheHitCount:
+                optimizeRegionCostsSolver.replacementRegionCostCacheHitCount,
+              replacementRegionCostCacheMissCount:
+                optimizeRegionCostsSolver.replacementRegionCostCacheMissCount,
               optimizationStopReason:
                 optimizeRegionCostsSolver.stats.optimizationStopReason,
               initialSegmentCount: sum(optimizerInputRegionSegmentCounts),
