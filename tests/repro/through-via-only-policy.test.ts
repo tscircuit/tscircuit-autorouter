@@ -50,7 +50,22 @@ test("repro: four-layer output can only emit blind and buried via spans", () => 
     ],
   }
 
-  expect(convertSrjToGraphicsObject(output)).toMatchGraphicsSvg(
-    import.meta.path,
-  )
+  const graphics = {
+    ...convertSrjToGraphicsObject(output),
+    texts: route.flatMap((segment) =>
+      segment.route_type === "via"
+        ? [
+            {
+              x: segment.x,
+              y: 0.8,
+              text: `${segment.from_layer} -> ${segment.to_layer}`,
+              anchorSide: "center" as const,
+              fontSize: 0.25,
+              color: "black",
+            },
+          ]
+        : [],
+    ),
+  }
+  expect(graphics).toMatchGraphicsSvg(import.meta.path)
 })
