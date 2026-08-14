@@ -285,6 +285,7 @@ const getTinyHyperGraphPipelineInput = (
   minViaPadDiameter?: number,
   enablePartialRip = true,
   partialRipEligibilityCount?: number,
+  optimizeRegionCosts = false,
 ): TinyHyperGraphSectionPipelineInput => {
   const routeCount = serializedHyperGraph.connections?.length ?? 0
   const eligibilityCount = partialRipEligibilityCount ?? routeCount
@@ -317,6 +318,18 @@ const getTinyHyperGraphPipelineInput = (
       effort,
       minViaPadDiameter,
     ),
+    ...(optimizeRegionCosts
+      ? {
+          unravelSolverOptions: {
+            REGION_COST_MODEL: "routing-complexity" as const,
+            FIXED_ROUTE_IDS: (
+              serializedHyperGraph.connections ?? []
+            ).flatMap((connection, routeId) =>
+              hasPreloadedTraceSectionMetadata(connection) ? [routeId] : [],
+            ),
+          },
+        }
+      : {}),
   }
 }
 
@@ -870,6 +883,11 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
         (pipelineStep) => pipelineStep.solverName !== "optimizeSection",
       )
     }
+    if (!inputProblem.unravelSolverOptions) {
+      this.pipelineDef = this.pipelineDef.filter(
+        (pipelineStep) => pipelineStep.solverName !== "optimizeRegionCosts",
+      )
+    }
     this.MAX_ITERATIONS = getTinyHyperGraphPipelineMaxIterations(inputProblem)
   }
 
@@ -928,6 +946,20 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
   }
 
   getSolvedTinySolver(): TinyHyperGraphSolver {
+    if (this.inputProblem.unravelSolverOptions) {
+      const optimizeRegionCostsSolver =
+        this.getSolver<TinyHyperGraphSolver>("optimizeRegionCosts")
+      if (
+        !optimizeRegionCostsSolver?.solved ||
+        optimizeRegionCostsSolver.failed
+      ) {
+        throw new Error(
+          "TinyHyperGraph region-cost optimizer did not produce a solved graph",
+        )
+      }
+      return optimizeRegionCostsSolver
+    }
+
     const optimizeSectionSolver =
       this.getSolver<TinyHyperGraphSectionSolver>("optimizeSection")
 
@@ -1120,6 +1152,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       params.minViaPadDiameter,
       !hasPreloadedTraceOccupancy || usePartialRipRoutingWithPreloadedTraces,
       partialRipEligibilityCount,
+      params.optimizeRegionCosts === true,
     )
     this.tinyPipelineSolver =
       new TinyHyperGraphSectionPipelineWithTerminalNetIds(
@@ -1446,6 +1479,15 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
   }
 
   private getCurrentTinySolver(): TinyHyperGraphSolver | undefined {
+    const optimizeRegionCostsSolver =
+      this.tinyPipelineSolver.getSolver<TinyHyperGraphSolver>(
+        "optimizeRegionCosts",
+      )
+
+    if (optimizeRegionCostsSolver) {
+      return optimizeRegionCostsSolver
+    }
+
     const optimizeSectionSolver =
       this.tinyPipelineSolver.getSolver<TinyHyperGraphSectionSolver>(
         "optimizeSection",

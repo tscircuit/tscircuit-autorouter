@@ -484,6 +484,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
             effort: cms.effort,
             preserveTerminalPcbPortIds: true,
             minViaPadDiameter: cms.viaDiameter,
+            optimizeRegionCosts: true,
             flags: {
               FORCE_CENTER_FIRST: true,
               RIPPING_ENABLED: true,
