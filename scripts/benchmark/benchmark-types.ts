@@ -78,6 +78,7 @@ export type TinyHypergraphBenchmarkMetrics = {
   outsideInForwardExpansionCount?: number
   outsideInReverseExpansionCount?: number
   optimizer?: {
+    regionCostModel: "legacy" | "routing-risk" | "routing-complexity"
     timeMs?: number
     initialMaxRegionCost: number
     finalMaxRegionCost: number
@@ -86,6 +87,9 @@ export type TinyHypergraphBenchmarkMetrics = {
     acceptedMutationCount: number
     evaluatedMutationCount: number
     rejectedRerouteDetourCount: number
+    prunedRerouteSearchCount: number
+    rerouteSearchCount: number
+    rerouteSearchIterationCount: number
     initialSegmentCount: number
     finalSegmentCount: number
     segmentDelta: number
@@ -93,16 +97,12 @@ export type TinyHypergraphBenchmarkMetrics = {
     finalMaxRegionSegmentCount: number
     initialSquaredRegionSegmentCount: number
     finalSquaredRegionSegmentCount: number
-    downstreamAccepted: boolean
-    downstreamRejectionReason?: string
+    downstreamRiskImproved: boolean
     initialTotalProbabilityOfFailure: number
     finalTotalProbabilityOfFailure: number
     totalProbabilityOfFailureReductionRatio: number
     initialMaxProbabilityOfFailure: number
     finalMaxProbabilityOfFailure: number
-    initialHighRiskNodeCount: number
-    finalHighRiskNodeCount: number
-    maxNodeProbabilityOfFailureIncrease: number
   }
 }
 

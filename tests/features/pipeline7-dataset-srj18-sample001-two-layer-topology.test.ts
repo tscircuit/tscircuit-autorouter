@@ -29,7 +29,7 @@ test("pipeline7 dataset-srj18 sample001 keeps topology within its two board laye
   ).toBe(true)
 })
 
-test("pipeline7 rejects dense region optimization that worsens downstream risk", async (): Promise<void> => {
+test("pipeline7 region optimization reduces detailed-routing complexity", async (): Promise<void> => {
   const { scenario } = await loadScenarioBySampleNumber("srj18", 1, 0.1)
   const solver = new AutoroutingPipelineSolver7_MultiGraph(scenario, {
     effort: 0.1,
@@ -49,16 +49,12 @@ test("pipeline7 rejects dense region optimization that worsens downstream risk",
     solver.portPointPathingSolver?.getSolveGraphBenchmarkMetrics()?.optimizer
   expect(solver.failed).toBe(false)
   expect(optimizerMetrics).toBeDefined()
-  expect(optimizerMetrics!.downstreamAccepted).toBe(false)
-  expect(optimizerMetrics!.downstreamRejectionReason).toBeDefined()
-  expect(optimizerMetrics!.finalMaxRegionCost).toBeLessThan(
+  expect(optimizerMetrics!.finalMaxRegionCost).toBeLessThanOrEqual(
     optimizerMetrics!.initialMaxRegionCost,
   )
-  expect(
-    optimizerMetrics!.finalMaxProbabilityOfFailure >
-      optimizerMetrics!.initialMaxProbabilityOfFailure ||
-      optimizerMetrics!.totalProbabilityOfFailureReductionRatio < 0.02,
-  ).toBe(true)
+  expect(optimizerMetrics!.finalTotalRegionCost).toBeLessThan(
+    optimizerMetrics!.initialTotalRegionCost,
+  )
   expect(optimizerMetrics!.segmentDelta).toBeLessThanOrEqual(
     optimizerMetrics!.acceptedMutationCount * 4,
   )
