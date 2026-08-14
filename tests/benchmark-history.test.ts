@@ -338,6 +338,18 @@ test("benchmark history retains full sample records and publishes a static dashb
   }
   negativeStageDurationSample.stageTiming.stages[0]!.elapsedTimeMs = -1
 
+  const nonNumberStageDurationRun = makeRun("20")
+  if (nonNumberStageDurationRun.report.version !== 1) {
+    throw new Error("Expected a single report")
+  }
+  const nonNumberStageDurationSample =
+    nonNumberStageDurationRun.report.tests[0]
+  if (!nonNumberStageDurationSample?.stageTiming) {
+    throw new Error("Expected timing")
+  }
+  nonNumberStageDurationSample.stageTiming.stages[0]!.elapsedTimeMs =
+    "invalid" as unknown as number
+
   const inconsistentStageStatusRun = makeRun("19")
   if (inconsistentStageStatusRun.report.version !== 1) {
     throw new Error("Expected a single report")
@@ -456,6 +468,12 @@ test("benchmark history retains full sample records and publishes a static dashb
     appendHistoryRun({
       historyDirectory: malformedAppendDirectory,
       run: negativeStageDurationRun,
+    }),
+  ).rejects.toThrow("Invalid stageTiming stage")
+  await expect(
+    appendHistoryRun({
+      historyDirectory: malformedAppendDirectory,
+      run: nonNumberStageDurationRun,
     }),
   ).rejects.toThrow("Invalid stageTiming stage")
   await expect(

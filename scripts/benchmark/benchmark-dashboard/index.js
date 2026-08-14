@@ -832,16 +832,11 @@ function getStageColor(stageName) {
 }
 
 function formatExactMilliseconds(value) {
-  if (!Number.isFinite(value) || value < 0) {
-    throw new Error("Cannot format an invalid stage duration")
-  }
   return String(value) + " ms"
 }
 
 function getStageTimingChartData(samples) {
-  const timedSamples = samples.filter(
-    (sample) => sample.stageTiming && Array.isArray(sample.stageTiming.stages),
-  )
+  const timedSamples = samples.filter((sample) => sample.stageTiming)
   const stageTotals = new Map()
   let includedElapsedTimeMs = 0
   let partialCount = 0
