@@ -758,6 +758,7 @@ export class AutoroutingPipelineSolver4_TinyHypergraph extends BaseSolver {
             defaultViaHoleDiameter: this.viaHoleDiameter,
             obstacles: this.srj.obstacles,
             connMap: this.connMap,
+            viaSpanPolicy: this.srj.viaSpanPolicy,
           }),
         }
 

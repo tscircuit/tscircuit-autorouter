@@ -696,7 +696,9 @@ export class AutoroutingPipelineSolver2_PortPointPathing extends BaseSolver {
             netConnectionName ??
             connection.__rootConnectionNames?.[0] ??
             connection.name,
-          route: convertHdRouteToSimplifiedRoute(hdRoute, this.srj.layerCount),
+          route: convertHdRouteToSimplifiedRoute(hdRoute, this.srj.layerCount, {
+            viaSpanPolicy: this.srj.viaSpanPolicy,
+          }),
         }
 
         traces.push(simplifiedPcbTrace)

@@ -739,7 +739,9 @@ export class AssignableAutoroutingPipeline1Solver extends BaseSolver {
           pcb_trace_id: `${connection.name}_${i}`,
           connection_name:
             netConnectionName ?? rootConnectionName ?? connection.name,
-          route: convertHdRouteToSimplifiedRoute(hdRoute, this.srj.layerCount),
+          route: convertHdRouteToSimplifiedRoute(hdRoute, this.srj.layerCount, {
+            viaSpanPolicy: this.srj.viaSpanPolicy,
+          }),
         }
 
         traces.push(simplifiedPcbTrace)

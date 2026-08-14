@@ -629,6 +629,7 @@ export class AutoroutingPipelineSolver6_PolyHypergraph extends BaseSolver {
           route: convertHdRouteToSimplifiedRoute(hdRoute, this.srj.layerCount, {
             connectionPoints: connection.pointsToConnect,
             defaultViaHoleDiameter: this.viaHoleDiameter,
+            viaSpanPolicy: this.srj.viaSpanPolicy,
           }),
         }
 

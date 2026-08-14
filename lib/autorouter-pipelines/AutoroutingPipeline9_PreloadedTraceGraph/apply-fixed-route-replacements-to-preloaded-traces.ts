@@ -1,7 +1,7 @@
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { SimplifiedPcbTrace } from "lib/types"
 import type { HighDensityRoute } from "lib/types/high-density-types"
-import type { Obstacle } from "lib/types/srj-types"
+import type { Obstacle, ViaSpanPolicy } from "lib/types/srj-types"
 import { convertHdRouteToSimplifiedRoute } from "lib/utils/convertHdRouteToSimplifiedRoute"
 import type { PreloadedHighDensityRoute } from "./convert-preloaded-traces-to-hd-routes"
 
@@ -14,6 +14,7 @@ type ApplyFixedRouteReplacementsParams = {
   defaultViaHoleDiameter: number
   obstacles: Obstacle[]
   connMap: ConnectivityMap
+  viaSpanPolicy?: ViaSpanPolicy
 }
 
 type ApplyFixedRouteReplacementsResult = {
@@ -97,6 +98,7 @@ export const applyFixedRouteReplacementsToPreloadedTraces = ({
   defaultViaHoleDiameter,
   obstacles,
   connMap,
+  viaSpanPolicy,
 }: ApplyFixedRouteReplacementsParams): ApplyFixedRouteReplacementsResult => {
   const originalFixedRoutesByTraceIndex = new Map<
     number,
@@ -195,6 +197,7 @@ export const applyFixedRouteReplacementsToPreloadedTraces = ({
         defaultViaHoleDiameter,
         obstacles,
         connMap,
+        viaSpanPolicy,
       }),
     }
     mutatedPreloadedTraces.push(mutatedTrace)

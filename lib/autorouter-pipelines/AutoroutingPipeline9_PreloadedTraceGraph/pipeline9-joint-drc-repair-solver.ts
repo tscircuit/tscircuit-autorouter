@@ -330,6 +330,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       obstacles: params.obstacles,
       defaultViaHoleDiameter: params.defaultViaHoleDiameter,
       connMap: params.connMap,
+      viaSpanPolicy: params.srj.viaSpanPolicy,
     })
     const preparedCurrentOutput = preparePipeline9DrcRoutedTracesWithMetadata({
       originalPreloadedTraces: params.originalSrj.traces ?? [],
@@ -542,6 +543,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         obstacles: params.obstacles,
         defaultViaHoleDiameter: params.defaultViaHoleDiameter,
         connMap: params.connMap,
+        viaSpanPolicy: params.srj.viaSpanPolicy,
       })
       const uniquelyNamedNewTraces = assignUniquePcbTraceIdsToNewTraces(
         evaluatedNewTraces,
@@ -568,6 +570,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
                 defaultViaHoleDiameter: params.defaultViaHoleDiameter,
                 obstacles: params.obstacles,
                 connMap: params.connMap,
+                viaSpanPolicy: params.srj.viaSpanPolicy,
               },
             ),
           }
@@ -774,6 +777,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
                 defaultViaHoleDiameter: this.params.defaultViaHoleDiameter,
                 obstacles: this.params.obstacles,
                 connMap: this.params.connMap,
+                viaSpanPolicy: this.params.srj.viaSpanPolicy,
               },
             ),
           },

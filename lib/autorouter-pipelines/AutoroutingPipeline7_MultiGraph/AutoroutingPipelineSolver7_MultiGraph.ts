@@ -676,6 +676,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
           obstacles: cms.srj.obstacles,
           defaultViaHoleDiameter: cms.viaHoleDiameter,
           connMap: cms.connMap,
+          viaSpanPolicy: cms.srj.viaSpanPolicy,
           srjWithPointPairs: cms.srjWithPointPairs!,
           originalSrj: cms.originalSrj,
         })
@@ -1188,6 +1189,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
       obstacles: this.srj.obstacles,
       defaultViaHoleDiameter: this.viaHoleDiameter,
       connMap: this.connMap,
+      viaSpanPolicy: this.srj.viaSpanPolicy,
     })
   }
 

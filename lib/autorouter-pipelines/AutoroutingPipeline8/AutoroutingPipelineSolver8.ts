@@ -893,6 +893,7 @@ export class AutoroutingPipelineSolver8 extends BaseSolver {
             defaultViaHoleDiameter: this.viaHoleDiameter,
             obstacles: this.srj.obstacles,
             connMap: this.connMap,
+            viaSpanPolicy: this.srj.viaSpanPolicy,
           }),
         }
 

@@ -4,6 +4,7 @@ import type {
   Obstacle,
   SimpleRouteConnection,
   SimplifiedPcbTraces,
+  ViaSpanPolicy,
 } from "lib/types"
 import type { HighDensityRoute } from "lib/types/high-density-types"
 import { convertHdRouteToSimplifiedRoute } from "lib/utils/convertHdRouteToSimplifiedRoute"
@@ -16,6 +17,7 @@ export interface ConvertPipeline7HdRoutesOptions {
   obstacles: Obstacle[]
   defaultViaHoleDiameter: number
   connMap: ConnectivityMap
+  viaSpanPolicy?: ViaSpanPolicy
 }
 
 type StaticConvertPipeline7HdRoutesOptions = Omit<
@@ -36,6 +38,7 @@ export const createPipeline7HdRoutesToSimplifiedPcbTracesConverter = ({
   obstacles,
   defaultViaHoleDiameter,
   connMap,
+  viaSpanPolicy,
 }: StaticConvertPipeline7HdRoutesOptions) => {
   const netConnectionNameByOriginalConnectionName = new Map<
     string,
@@ -134,6 +137,7 @@ export const createPipeline7HdRoutesToSimplifiedPcbTracesConverter = ({
             connectedMultilayerObstacles:
               getConnectedMultilayerObstacles(hdRoute),
             connMap,
+            viaSpanPolicy,
           }),
         })
       }
@@ -152,6 +156,7 @@ export const convertPipeline7HdRoutesToSimplifiedPcbTraces = ({
   obstacles,
   defaultViaHoleDiameter,
   connMap,
+  viaSpanPolicy,
 }: ConvertPipeline7HdRoutesOptions): SimplifiedPcbTraces =>
   createPipeline7HdRoutesToSimplifiedPcbTracesConverter({
     connections,
@@ -160,4 +165,5 @@ export const convertPipeline7HdRoutesToSimplifiedPcbTraces = ({
     obstacles,
     defaultViaHoleDiameter,
     connMap,
+    viaSpanPolicy,
   })(hdRoutes)

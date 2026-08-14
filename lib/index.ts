@@ -87,4 +87,5 @@ export type {
   SimplifiedPcbTraces,
   SingleLayerConnectionPoint,
   TerminalViaHint,
+  ViaSpanPolicy,
 } from "./types/srj-types"
