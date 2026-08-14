@@ -336,9 +336,7 @@ const getTinyTerminalKeepouts = ({
     0.3
   const viaCenterClearance =
     viaPadDiameter / 2 +
-    (srj.minViaEdgeToPadEdgeClearance ??
-      srj.minTraceToPadEdgeClearance ??
-      0.1)
+    (srj.minViaEdgeToPadEdgeClearance ?? srj.minTraceToPadEdgeClearance ?? 0.1)
   const keepouts = srj.obstacles
     .filter((obstacle) => obstacle.connectedTo.includes(pcbPortId))
     .flatMap((obstacle) => {
@@ -1220,7 +1218,8 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
         crossings.numSameLayerCrossings,
         crossings.numEntryExitLayerChanges,
         crossings.numTransitionPairCrossings,
-        new Set(solvedNode.portPoints.map((point) => point.connectionName)).size,
+        new Set(solvedNode.portPoints.map((point) => point.connectionName))
+          .size,
         this.params.minViaPadDiameter,
       )
       nodePfSum += nodePf

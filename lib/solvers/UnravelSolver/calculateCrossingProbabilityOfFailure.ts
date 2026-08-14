@@ -45,8 +45,7 @@ export const calculateNodeProbabilityOfFailure = (
 
   const effectiveSpan = Math.sqrt(node.width * node.height)
   const traceOccupancy =
-    (Math.max(0, traceCount) * ROUTED_TRACE_WIDTH) /
-    (effectiveSpan * numLayers)
+    (Math.max(0, traceCount) * ROUTED_TRACE_WIDTH) / (effectiveSpan * numLayers)
   const remainingCapacityFraction = 1 - traceOccupancy
   if (
     !Number.isFinite(remainingCapacityFraction) ||
@@ -55,8 +54,7 @@ export const calculateNodeProbabilityOfFailure = (
     return estUsedCapacity > 0 ? 1 : 0
   }
 
-  const approxProb =
-    estUsedCapacity / totalCapacity / remainingCapacityFraction
+  const approxProb = estUsedCapacity / totalCapacity / remainingCapacityFraction
   if (Number.isNaN(approxProb)) {
     throw new Error("calculateNodeProbabilityOfFailure returned NaN")
   }
