@@ -24,6 +24,8 @@ type RegionalB01RepairResult = {
   attemptedCandidateCount: number
   acceptedCandidateCount: number
   fallbackCandidateCount: number
+  safeTraceLayerPassCount: number
+  safeTraceLayerAcceptedCount: number
 }
 
 const REGION_SIZES = [3, 4, 5, 6]
@@ -58,6 +60,25 @@ const getRepairCenter = (error: Pipeline9DrcError, srj: SimpleRouteJson) => {
     if (obstacle) return obstacle.center
   }
   return getErrorCenter(error)
+}
+
+const getTraceIdsForPairError = (error: Pipeline9DrcError): string[] => {
+  if (typeof error.pcb_trace_id !== "string") return []
+  const encodedPairPrefix = `overlap_${error.pcb_trace_id}_`
+  const encodedOtherTraceId =
+    typeof error.pcb_trace_error_id === "string" &&
+    error.pcb_trace_error_id.startsWith(encodedPairPrefix)
+      ? error.pcb_trace_error_id.slice(encodedPairPrefix.length)
+      : undefined
+
+  return [
+    error.pcb_trace_id,
+    ...(Array.isArray(error.pcb_trace_ids) ? error.pcb_trace_ids : []),
+    ...(encodedOtherTraceId ? [encodedOtherTraceId] : []),
+  ].filter(
+    (traceId, traceIndex, traceIds): traceId is string =>
+      typeof traceId === "string" && traceIds.indexOf(traceId) === traceIndex,
+  )
 }
 
 const asRegionalRoutes = (
@@ -266,6 +287,23 @@ export const applyPipeline9RegionalB01Repairs = ({
   let attemptedCandidateCount = 0
   let acceptedCandidateCount = 0
   let fallbackCandidateCount = 0
+  let safeTraceLayerPassCount = 0
+  let safeTraceLayerAcceptedCount = 0
+  const getRouteStateKey = (candidateRoutes: HighDensityRoute[]) =>
+    JSON.stringify(
+      candidateRoutes.map((route) => [
+        route.connectionName,
+        route.route.map((point) => [
+          point.x,
+          point.y,
+          point.z,
+          point.pcb_port_id ?? null,
+        ]),
+      ]),
+    )
+  const seenSafeTraceLayerRouteStates = new Set([
+    getRouteStateKey(currentRoutes),
+  ])
 
   for (let pass = 0; pass < 2; pass++) {
     let acceptedOnPass = false
@@ -283,18 +321,10 @@ export const applyPipeline9RegionalB01Repairs = ({
     )
     for (const error of repairableErrors) {
       const center = getRepairCenter(error, srj)
-      const traceIds = [
-        error.pcb_trace_id,
-        ...(Array.isArray(error.pcb_trace_ids) ? error.pcb_trace_ids : []),
-      ]
-        .filter(
-          (traceId): traceId is string =>
-            typeof traceId === "string" && routeIndexByTraceId.has(traceId),
-        )
-        .filter(
-          (traceId, traceIndex, allTraceIds) =>
-            allTraceIds.indexOf(traceId) === traceIndex,
-        )
+      const traceIds = getTraceIdsForPairError(error).filter(
+        (traceId): traceId is string =>
+          typeof traceId === "string" && routeIndexByTraceId.has(traceId),
+      )
       if (!center) continue
       let bestRoutes = currentRoutes
       let bestErrors = currentErrors
@@ -367,12 +397,14 @@ export const applyPipeline9RegionalB01Repairs = ({
     if (!acceptedOnPass || currentErrors.length === 0) break
   }
 
-  const hasSafeLayerRepairableError = currentErrors.some(
-    (error) =>
-      error.type === "pcb_trace_error" ||
-      error.type === "pcb_pad_trace_clearance_error",
-  )
-  if (hasSafeLayerRepairableError) {
+  while (
+    currentErrors.some(
+      (error) =>
+        error.type === "pcb_trace_error" ||
+        error.type === "pcb_pad_trace_clearance_error",
+    )
+  ) {
+    safeTraceLayerPassCount++
     const safeTraceLayerSolver = new GlobalDrcForceImproveSolver({
       srj: { ...srj, traces: undefined },
       hdRoutes: currentRoutes,
@@ -381,7 +413,11 @@ export const applyPipeline9RegionalB01Repairs = ({
       drcEvaluator,
       maxIterations: 8,
       enableLargeBoardBroadFallback: false,
-      enableTargetedErrorSweep: false,
+      // Regional rerouting can trade one local contact for another. Re-run the
+      // exact pair-aware repair portfolio before trying layer moves so trace
+      // crossings, via pairs, and obstacle contacts are scored against the
+      // complete post-regional copper set.
+      enableTargetedErrorSweep: true,
       enablePostSolveClearanceRelaxation: false,
       enableSafeTraceLayerMoves: true,
       enableViaInPadLayerMoves: false,
@@ -394,10 +430,15 @@ export const applyPipeline9RegionalB01Repairs = ({
     }
     const safeLayerRoutes = safeTraceLayerSolver.getOutput()
     const safeLayerErrors = getPipeline9DrcErrors(drcEvaluator, safeLayerRoutes)
-    if (isPipeline9DrcCandidateBetter(safeLayerErrors, currentErrors)) {
-      currentRoutes = safeLayerRoutes
-      currentErrors = safeLayerErrors
-    }
+    if (!isPipeline9DrcCandidateBetter(safeLayerErrors, currentErrors)) break
+
+    const safeLayerRouteStateKey = getRouteStateKey(safeLayerRoutes)
+    if (seenSafeTraceLayerRouteStates.has(safeLayerRouteStateKey)) break
+    seenSafeTraceLayerRouteStates.add(safeLayerRouteStateKey)
+    currentRoutes = safeLayerRoutes
+    currentErrors = safeLayerErrors
+    safeTraceLayerAcceptedCount++
+    if (currentErrors.length === 0) break
   }
 
   return {
@@ -405,5 +446,7 @@ export const applyPipeline9RegionalB01Repairs = ({
     attemptedCandidateCount,
     acceptedCandidateCount,
     fallbackCandidateCount,
+    safeTraceLayerPassCount,
+    safeTraceLayerAcceptedCount,
   }
 }

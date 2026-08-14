@@ -26,8 +26,40 @@ export const createPipeline7AutoroutingDrcEvaluator = (
     originalSrj: SimpleRouteJson
   },
 ): DrcEvaluator => {
+  const getObstacleGeometryKey = (
+    obstacle: SimpleRouteJson["obstacles"][number],
+  ) =>
+    [
+      obstacle.center.x,
+      obstacle.center.y,
+      obstacle.width,
+      obstacle.height,
+    ].join(":")
+  const originalObstaclesByGeometry = new Map<
+    string,
+    SimpleRouteJson["obstacles"]
+  >()
+  for (const obstacle of conversionOptions.originalSrj.obstacles) {
+    const key = getObstacleGeometryKey(obstacle)
+    const matchingObstacles = originalObstaclesByGeometry.get(key) ?? []
+    matchingObstacles.push(obstacle)
+    originalObstaclesByGeometry.set(key, matchingObstacles)
+  }
   const engineSrj = {
     ...conversionOptions.srjWithPointPairs,
+    // Point-pair preprocessing rewrites layer availability but historically
+    // discarded physical shape metadata such as plated-hole pad rotation.
+    // Reattach the original geometry fields while retaining the processed
+    // layers/connectivity used by Pipeline7.
+    obstacles: conversionOptions.srjWithPointPairs.obstacles.map((obstacle) => {
+      const originalCandidates =
+        originalObstaclesByGeometry.get(getObstacleGeometryKey(obstacle)) ?? []
+      const originalObstacle =
+        originalCandidates.find((candidate) =>
+          candidate.connectedTo.some((id) => obstacle.connectedTo.includes(id)),
+        ) ?? originalCandidates[0]
+      return originalObstacle ? { ...originalObstacle, ...obstacle } : obstacle
+    }),
     minTraceWidth: conversionOptions.originalSrj.minTraceWidth,
     minViaDiameter:
       conversionOptions.originalSrj.minViaDiameter ??

@@ -120,6 +120,12 @@ test("Pipeline9 owns copied stages with minimal preloaded-trace changes", () => 
   expect(
     Number(solver.portPointPathingSolver?.stats.preloadedFixedSegmentCount),
   ).toBeGreaterThan(0)
+  expect(
+    Number(solver.portPointPathingSolver?.stats.fixedRouteCount),
+  ).toBeGreaterThan(0)
+  expect(
+    solver.portPointPathingSolver?.stats.optimizationStopReason,
+  ).toBeDefined()
   const traceSimplificationStep = solver.pipelineDef.find(
     (step) => step.solverName === "traceSimplificationSolver",
   )

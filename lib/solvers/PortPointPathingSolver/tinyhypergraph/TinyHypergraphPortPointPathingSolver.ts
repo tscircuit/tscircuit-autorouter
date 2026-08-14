@@ -246,6 +246,10 @@ const getTinyHyperGraphPipelineInput = (
   partialRipEligibilityCount?: number,
 ): TinyHyperGraphSectionPipelineInput => {
   const routeCount = serializedHyperGraph.connections?.length ?? 0
+  const fixedRouteIds = (serializedHyperGraph.connections ?? []).flatMap(
+    (connection, routeId) =>
+      hasPreloadedTraceSectionMetadata(connection) ? [routeId] : [],
+  )
   const eligibilityCount = partialRipEligibilityCount ?? routeCount
   const minPartialRipRouteCount =
     TINY_SOLVE_GRAPH_BASE_OPTIONS.PARTIAL_RIP_MIN_ROUTE_COUNT ?? 0
@@ -278,6 +282,7 @@ const getTinyHyperGraphPipelineInput = (
     ),
     unravelSolverOptions: {
       REGION_COST_MODEL: "routing-complexity",
+      FIXED_ROUTE_IDS: fixedRouteIds,
     },
   }
 }
@@ -879,9 +884,7 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
     }
     if (preloadedStats.preloadedAssignmentCount > 0) {
       this.pipelineDef = this.pipelineDef.filter(
-        (pipelineStep) =>
-          pipelineStep.solverName !== "optimizeSection" &&
-          pipelineStep.solverName !== "optimizeRegionCosts",
+        (pipelineStep) => pipelineStep.solverName !== "optimizeSection",
       )
     }
     this.MAX_ITERATIONS = getTinyHyperGraphPipelineMaxIterations(inputProblem)
@@ -1218,9 +1221,6 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
         crossings.numSameLayerCrossings,
         crossings.numEntryExitLayerChanges,
         crossings.numTransitionPairCrossings,
-        new Set(solvedNode.portPoints.map((point) => point.connectionName))
-          .size,
-        this.params.minViaPadDiameter,
       )
       nodePfSum += nodePf
       nodePfSquaredSum += nodePf * nodePf
@@ -1564,8 +1564,6 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
         crossings.numSameLayerCrossings,
         crossings.numEntryExitLayerChanges,
         crossings.numTransitionPairCrossings,
-        new Set(node.portPoints.map((point) => point.connectionName)).size,
-        this.params.minViaPadDiameter,
       )
       totalProbabilityOfFailure += probabilityOfFailure
       maxProbabilityOfFailure = Math.max(
@@ -1847,8 +1845,6 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       crossings.numSameLayerCrossings,
       crossings.numEntryExitLayerChanges,
       crossings.numTransitionPairCrossings,
-      new Set(solvedNode.portPoints.map((point) => point.connectionName)).size,
-      this.params.minViaPadDiameter,
     )
   }
 

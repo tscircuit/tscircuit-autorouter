@@ -701,7 +701,11 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       drcEvaluator: this.drcEvaluator!,
     })
     const regionalB01RepairResult = applyPipeline9RegionalB01Repairs({
-      srj: this.params.srj,
+      // Keep synthetic movable-preload connections available to every repair
+      // phase. Without them the post-regional solver cannot map the exact
+      // trace pair back to its HD routes, even though its DRC evaluator reports
+      // the collision correctly.
+      srj: this.exactRepairSolver.params.srj,
       routes: terminalEscapeResult.routes,
       fixedObstacleRoutes: this.fixedPreloadedObstacleRoutes,
       newConnections: this.params.newConnections,
@@ -727,6 +731,10 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         regionalB01RepairResult.acceptedCandidateCount,
       regionalB01RepairFallbackCandidateCount:
         regionalB01RepairResult.fallbackCandidateCount,
+      regionalB01RepairSafeTraceLayerPassCount:
+        regionalB01RepairResult.safeTraceLayerPassCount,
+      regionalB01RepairSafeTraceLayerAcceptedCount:
+        regionalB01RepairResult.safeTraceLayerAcceptedCount,
       terminalEscapeCandidateCount:
         terminalEscapeResult.attemptedCandidateCount,
       terminalEscapeAcceptedCount: terminalEscapeResult.acceptedCandidateCount,

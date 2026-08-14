@@ -1,15 +1,11 @@
 import { CapacityMeshNode } from "lib/types"
 import { getTunedTotalCapacity1 } from "lib/utils/getTunedTotalCapacity1"
 
-const ROUTED_TRACE_WIDTH = 0.15
-
 export const calculateNodeProbabilityOfFailure = (
   node: CapacityMeshNode,
   numSameLayerCrossings: number,
   numEntryExitLayerChanges: number,
   numTransitionCrossings: number,
-  traceCount = 0,
-  minViaPadDiameter = 0.3,
 ): number => {
   if (node?._containsTarget) return 0
 
@@ -36,25 +32,13 @@ export const calculateNodeProbabilityOfFailure = (
   }
 
   // Number of traces through the node
-  const totalCapacity = getTunedTotalCapacity1(node, 1, {
-    viaDiameter: minViaPadDiameter,
-  })
+  const totalCapacity = getTunedTotalCapacity1(node)
   if (!Number.isFinite(totalCapacity) || totalCapacity <= 0) {
     return estUsedCapacity > 0 ? 1 : 0
   }
 
-  const effectiveSpan = Math.sqrt(node.width * node.height)
-  const traceOccupancy =
-    (Math.max(0, traceCount) * ROUTED_TRACE_WIDTH) / (effectiveSpan * numLayers)
-  const remainingCapacityFraction = 1 - traceOccupancy
-  if (
-    !Number.isFinite(remainingCapacityFraction) ||
-    remainingCapacityFraction <= 0
-  ) {
-    return estUsedCapacity > 0 ? 1 : 0
-  }
-
-  const approxProb = estUsedCapacity / totalCapacity / remainingCapacityFraction
+  // We could refine this with actual trace capacity
+  const approxProb = estUsedCapacity / totalCapacity
   if (Number.isNaN(approxProb)) {
     throw new Error("calculateNodeProbabilityOfFailure returned NaN")
   }
