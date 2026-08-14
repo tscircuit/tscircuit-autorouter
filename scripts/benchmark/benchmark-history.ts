@@ -11,6 +11,7 @@ import {
 } from "node:fs/promises"
 import { join } from "node:path"
 import stableStringify from "fast-json-stable-stringify"
+import { parseBenchmarkStageTimingOrThrow } from "./benchmark-stage-timing-schema"
 import type { BenchmarkStageTimingBreakdown } from "./benchmark-types"
 
 // Older benchmark artifacts predate avgVia, sampleNumber, and stageTiming. The
@@ -222,51 +223,6 @@ const parseBenchmarkSummaryOrThrow = (
     p95TimeMs,
     avgVia,
   }
-}
-
-const parseBenchmarkStageTimingOrThrow = (
-  value: unknown,
-  sourceLabel: string,
-): BenchmarkStageTimingBreakdown => {
-  if (
-    typeof value !== "object" ||
-    value === null ||
-    Array.isArray(value) ||
-    !("status" in value) ||
-    (value.status !== "complete" && value.status !== "partial") ||
-    !("stages" in value) ||
-    !Array.isArray(value.stages)
-  ) {
-    throw new Error(`Invalid stageTiming in ${sourceLabel}`)
-  }
-  const stageNames = new Set<string>()
-  const stages = value.stages.map((stage, index) => {
-    if (
-      typeof stage !== "object" ||
-      stage === null ||
-      Array.isArray(stage) ||
-      !("stageName" in stage) ||
-      typeof stage.stageName !== "string" ||
-      stage.stageName.trim() === "" ||
-      !("elapsedTimeMs" in stage) ||
-      typeof stage.elapsedTimeMs !== "number" ||
-      !Number.isFinite(stage.elapsedTimeMs) ||
-      stage.elapsedTimeMs < 0
-    ) {
-      throw new Error(`Invalid stageTiming stage ${index} in ${sourceLabel}`)
-    }
-    if (stageNames.has(stage.stageName)) {
-      throw new Error(
-        `Duplicate stageTiming stage ${stage.stageName} in ${sourceLabel}`,
-      )
-    }
-    stageNames.add(stage.stageName)
-    return {
-      stageName: stage.stageName,
-      elapsedTimeMs: stage.elapsedTimeMs,
-    }
-  })
-  return { status: value.status, stages }
 }
 
 const parseBenchmarkSampleOrThrow = (
