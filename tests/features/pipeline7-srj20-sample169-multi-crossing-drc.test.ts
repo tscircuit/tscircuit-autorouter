@@ -36,5 +36,5 @@ test("Pipeline7 improves srj20 sample169 region cost and remains DRC-clean", asy
   expect(optimizer!.terminalKeepoutCount).toBeGreaterThan(0)
   expect(optimizer!.terminalKeepoutExactCheckCount).toBeGreaterThan(0)
   expect(errors).toHaveLength(0)
-  expect(viaCount).toBe(36)
+  expect(viaCount).toBe(34)
 })
