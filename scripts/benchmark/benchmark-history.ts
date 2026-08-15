@@ -120,6 +120,7 @@ type RecordCommand = {
   command: "record"
   historyDirectory: string
   outputDirectory: string
+  publishedHistoryDirectory?: string
   reportPath: string
   metadataPath: string
   runUrl: string
@@ -716,16 +717,150 @@ export const readHistoryRuns = async (
   return runs
 }
 
+export const mergePublishedHistoryRuns = async ({
+  historyDirectory,
+  publishedHistoryDirectory,
+}: {
+  historyDirectory: string
+  publishedHistoryDirectory: string
+}): Promise<BenchmarkHistoryRun[]> => {
+  const historyRuns = await readHistoryRuns(historyDirectory)
+  const indexPath = join(publishedHistoryDirectory, HISTORY_INDEX_NAME)
+  const publishedRunsDirectory = join(
+    publishedHistoryDirectory,
+    HISTORY_RUNS_DIRECTORY,
+  )
+  if (!existsSync(indexPath)) {
+    if (
+      existsSync(publishedRunsDirectory) &&
+      (await readdir(publishedRunsDirectory)).length > 0
+    ) {
+      throw new Error(`Published benchmark history index is missing: ${indexPath}`)
+    }
+    return historyRuns
+  }
+  const value = await readJsonFileOrThrow(indexPath)
+  if (
+    typeof value !== "object" ||
+    value === null ||
+    Array.isArray(value) ||
+    !("kind" in value) ||
+    value.kind !== "benchmark-history-dashboard-index" ||
+    !("runs" in value)
+  ) {
+    throw new Error(`Invalid published benchmark history index: ${indexPath}`)
+  }
+  const publishedIndex = parseHistoryIndexOrThrow(
+    { version: 1, runs: value.runs },
+    indexPath,
+  )
+  if (existsSync(publishedRunsDirectory)) {
+    const indexedFileNames = new Set(
+      publishedIndex.runs.map((entry) => `${entry.runId}.json`),
+    )
+    const unindexedFileName = (await readdir(publishedRunsDirectory)).find(
+      (fileName) => !indexedFileNames.has(fileName),
+    )
+    if (unindexedFileName) {
+      throw new Error(
+        `Published benchmark history contains unindexed run file: ${join(publishedRunsDirectory, unindexedFileName)}`,
+      )
+    }
+  }
+  const runsById = new Map(historyRuns.map((run) => [run.runId, run]))
+  const importedRuns: BenchmarkHistoryRun[] = []
+  for (const entry of publishedIndex.runs) {
+    const publishedRunPath = join(publishedHistoryDirectory, entry.path)
+    const historyRun = runsById.get(entry.runId)
+    if (historyRun) {
+      if (historyRun.createdAt !== entry.createdAt) {
+        throw new Error(
+          `Published benchmark history index entry ${entry.runId} does not match ${publishedRunPath}`,
+        )
+      }
+      const [historyContents, publishedContents] = await Promise.all([
+        readFile(
+          join(
+            historyDirectory,
+            HISTORY_RUNS_DIRECTORY,
+            `${historyRun.runId}.json`,
+          ),
+        ),
+        readFile(publishedRunPath),
+      ])
+      if (
+        historyContents.toString("utf8") !== publishedContents.toString("utf8")
+      ) {
+        const publishedRun = parseBenchmarkHistoryRunOrThrow(
+          JSON.parse(publishedContents.toString("utf8")),
+          publishedRunPath,
+        )
+        if (stableStringify(historyRun) !== stableStringify(publishedRun)) {
+          throw new Error(
+            `Published benchmark history conflicts with workflow run ${publishedRun.runId}`,
+          )
+        }
+      }
+      continue
+    }
+    const publishedRun = parseBenchmarkHistoryRunOrThrow(
+      await readJsonFileOrThrow(publishedRunPath),
+      publishedRunPath,
+    )
+    if (
+      publishedRun.runId !== entry.runId ||
+      publishedRun.createdAt !== entry.createdAt
+    ) {
+      throw new Error(
+        `Published benchmark history index entry ${entry.runId} does not match ${publishedRunPath}`,
+      )
+    }
+    getDashboardPoints([publishedRun])
+    runsById.set(publishedRun.runId, publishedRun)
+    importedRuns.push(publishedRun)
+  }
+  if (importedRuns.length === 0) return historyRuns
+  const sortedRuns = [...runsById.values()].sort((left, right) =>
+    left.createdAt.localeCompare(right.createdAt),
+  )
+  await mkdir(join(historyDirectory, HISTORY_RUNS_DIRECTORY), {
+    recursive: true,
+  })
+  await Promise.all(
+    importedRuns.map((run) =>
+      writeJsonFileAtomically(
+        join(historyDirectory, HISTORY_RUNS_DIRECTORY, `${run.runId}.json`),
+        run,
+      ),
+    ),
+  )
+  const index: BenchmarkHistoryIndex = {
+    version: 1,
+    runs: sortedRuns.map((run) => ({
+      runId: run.runId,
+      createdAt: run.createdAt,
+      path: join(HISTORY_RUNS_DIRECTORY, `${run.runId}.json`),
+    })),
+  }
+  await writeJsonFileAtomically(
+    join(historyDirectory, HISTORY_INDEX_NAME),
+    index,
+  )
+  return sortedRuns
+}
+
 export const appendHistoryRun = async ({
   historyDirectory,
+  historyRuns,
   run,
 }: {
   historyDirectory: string
+  historyRuns?: BenchmarkHistoryRun[]
   run: BenchmarkHistoryRun
 }): Promise<BenchmarkHistoryRun[]> => {
   const validatedRun = parseBenchmarkHistoryRunOrThrow(run, "new history run")
   getDashboardPoints([validatedRun])
-  const runs = await readHistoryRuns(historyDirectory)
+  const runs = historyRuns ?? (await readHistoryRuns(historyDirectory))
   const existingRun = runs.find((entry) => entry.runId === validatedRun.runId)
   if (existingRun) {
     if (stableStringify(existingRun) !== stableStringify(validatedRun)) {
@@ -951,6 +1086,7 @@ const parseHistoryIndexOrThrow = (
 const parseFlagValuesOrThrow = (
   args: string[],
   expectedFlags: string[],
+  requiredFlags = expectedFlags,
 ): Map<string, string> => {
   const expected = new Set(expectedFlags)
   const values = new Map<string, string>()
@@ -967,7 +1103,7 @@ const parseFlagValuesOrThrow = (
     }
     values.set(flag, value)
   }
-  for (const flag of expectedFlags) {
+  for (const flag of requiredFlags) {
     if (!values.has(flag)) throw new Error(`Missing ${flag}`)
   }
   return values
@@ -984,8 +1120,18 @@ const parseCommandOrThrow = (args: string[]): BenchmarkHistoryCommand => {
   const expectedFlags =
     command === "render"
       ? commonFlags
+      : [
+          ...commonFlags,
+          "--report",
+          "--metadata",
+          "--run-url",
+          "--published-history-dir",
+        ]
+  const requiredFlags =
+    command === "render"
+      ? expectedFlags
       : [...commonFlags, "--report", "--metadata", "--run-url"]
-  const values = parseFlagValuesOrThrow(args, expectedFlags)
+  const values = parseFlagValuesOrThrow(args, expectedFlags, requiredFlags)
   const historyDirectory = values.get("--history-dir")
   const outputDirectory = values.get("--out-dir")
   if (!historyDirectory || !outputDirectory) {
@@ -1004,6 +1150,7 @@ const parseCommandOrThrow = (args: string[]): BenchmarkHistoryCommand => {
     command,
     historyDirectory,
     outputDirectory,
+    publishedHistoryDirectory: values.get("--published-history-dir"),
     reportPath,
     metadataPath,
     runUrl,
@@ -1027,8 +1174,15 @@ const main = async (): Promise<void> => {
     await readJsonFileOrThrow(command.metadataPath),
     command.metadataPath,
   )
+  const historyRuns = command.publishedHistoryDirectory
+    ? await mergePublishedHistoryRuns({
+        historyDirectory: command.historyDirectory,
+        publishedHistoryDirectory: command.publishedHistoryDirectory,
+      })
+    : undefined
   const runs = await appendHistoryRun({
     historyDirectory: command.historyDirectory,
+    historyRuns,
     run: {
       version: 1,
       runId: `${metadata.workflowRunId}-${metadata.workflowRunAttempt}`,

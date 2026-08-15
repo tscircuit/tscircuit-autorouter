@@ -11,6 +11,7 @@ import {
   appendHistoryRun,
   createBenchmarkHistoryDashboardIndex,
   getDashboardPoints,
+  mergePublishedHistoryRuns,
   writeBenchmarkHistoryDashboard,
   readHistoryRuns,
   type BenchmarkHistoryRun,
@@ -136,6 +137,36 @@ test("benchmark history retains full sample records and publishes a static dashb
     outputDirectory: fullDashboardDirectory,
     runs: Array.from({ length: 101 }, (_, index) => makeRun(String(index + 1))),
   })
+  const publishedHistoryDirectory = await mkdtemp(
+    join(tmpdir(), "benchmark-published-history-"),
+  )
+  await writeBenchmarkHistoryDashboard({
+    outputDirectory: publishedHistoryDirectory,
+    runs: [makeRun("3")],
+  })
+  const mergedRuns = await mergePublishedHistoryRuns({
+    historyDirectory: directory,
+    publishedHistoryDirectory: join(publishedHistoryDirectory, "data"),
+  })
+  const retriedMergedRuns = await mergePublishedHistoryRuns({
+    historyDirectory: directory,
+    publishedHistoryDirectory: join(publishedHistoryDirectory, "data"),
+  })
+  const conflictingPublishedHistoryDirectory = await mkdtemp(
+    join(tmpdir(), "benchmark-conflicting-published-history-"),
+  )
+  await writeBenchmarkHistoryDashboard({
+    outputDirectory: conflictingPublishedHistoryDirectory,
+    runs: [conflictingRun],
+  })
+  const missingPublishedIndexDirectory = await mkdtemp(
+    join(tmpdir(), "benchmark-missing-published-index-"),
+  )
+  await mkdir(join(missingPublishedIndexDirectory, "runs"))
+  await writeFile(
+    join(missingPublishedIndexDirectory, "runs", "4-1.json"),
+    JSON.stringify(makeRun("4")),
+  )
   const dashboard = await readFile(
     join(dashboardDirectory, "index.html"),
     "utf8",
@@ -164,6 +195,14 @@ test("benchmark history retains full sample records and publishes a static dashb
       runner: { name: "metadata-runner" },
     }),
   )
+  const cliPublishedHistoryDirectory = join(
+    cliDirectory,
+    "published-dashboard",
+  )
+  await writeBenchmarkHistoryDashboard({
+    outputDirectory: cliPublishedHistoryDirectory,
+    runs: [makeRun("20")],
+  })
   const recordProcess = Bun.spawnSync({
     cmd: [
       "bun",
@@ -175,6 +214,8 @@ test("benchmark history retains full sample records and publishes a static dashb
       join(cliDirectory, "history"),
       "--out-dir",
       join(cliDirectory, "dashboard"),
+      "--published-history-dir",
+      join(cliPublishedHistoryDirectory, "data"),
       "--run-url",
       "https://example.com/runs/987654321",
       "--metadata",
@@ -184,9 +225,10 @@ test("benchmark history retains full sample records and publishes a static dashb
     stdout: "pipe",
     stderr: "pipe",
   })
-  const recordedCliRun = (
-    await readHistoryRuns(join(cliDirectory, "history"))
-  )[0]
+  const recordedCliRuns = await readHistoryRuns(join(cliDirectory, "history"))
+  const recordedCliRun = recordedCliRuns.find(
+    (run) => run.runId === "987654321-2",
+  )
   const invalidMetadataPath = join(cliDirectory, "invalid-metadata.json")
   await writeFile(
     invalidMetadataPath,
@@ -391,6 +433,23 @@ test("benchmark history retains full sample records and publishes a static dashb
     makeRun("1").report,
   )
   expect(retriedRuns).toHaveLength(2)
+  expect(mergedRuns.map((run) => run.runId)).toEqual(["1-1", "2-1", "3-1"])
+  expect(retriedMergedRuns).toHaveLength(3)
+  await expect(
+    mergePublishedHistoryRuns({
+      historyDirectory: directory,
+      publishedHistoryDirectory: join(
+        conflictingPublishedHistoryDirectory,
+        "data",
+      ),
+    }),
+  ).rejects.toThrow("conflicts with workflow run 2-1")
+  await expect(
+    mergePublishedHistoryRuns({
+      historyDirectory: directory,
+      publishedHistoryDirectory: missingPublishedIndexDirectory,
+    }),
+  ).rejects.toThrow("Published benchmark history index is missing")
   await expect(
     appendHistoryRun({ historyDirectory: directory, run: conflictingRun }),
   ).rejects.toThrow("conflicting workflow run 2-1")
@@ -531,6 +590,7 @@ test("benchmark history retains full sample records and publishes a static dashb
     "Invalid benchmark metadata fields",
   )
   expect(recordedCliRun?.runId).toBe("987654321-2")
+  expect(recordedCliRuns.map((run) => run.runId)).toContain("20-1")
   expect(existsSync(join(cliDirectory, "dashboard", "index.html"))).toBeTrue()
   expect(
     existsSync(join(cliDirectory, "dashboard", "data", "index.json")),

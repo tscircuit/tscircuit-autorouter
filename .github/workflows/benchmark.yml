@@ -1632,6 +1632,14 @@ jobs:
           name: benchmark-result
           path: ./benchmark-artifact
 
+      - name: Checkout benchmark dashboard
+        uses: actions/checkout@v4
+        with:
+          repository: tscircuit/autorouter-benchmark-dashboard
+          ref: main
+          token: ${{ secrets.TSCIRCUIT_BOT_GITHUB_TOKEN }}
+          path: .benchmark-dashboard
+
       - name: Checkout or create benchmark history branch
         env:
           GH_TOKEN: ${{ github.token }}
@@ -1663,6 +1671,7 @@ jobs:
             --report ./benchmark-artifact/benchmark-result.json \
             --history-dir ./.benchmark-history/history \
             --out-dir benchmark-dashboard \
+            --published-history-dir ./.benchmark-dashboard/data \
             --run-url "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" \
             --metadata ./benchmark-artifact/benchmark-run-metadata.json
 
@@ -1684,14 +1693,6 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: git config --global --unset-all url."https://x-access-token:${GH_TOKEN}@github.com/".insteadOf
-
-      - name: Checkout benchmark dashboard
-        uses: actions/checkout@v4
-        with:
-          repository: tscircuit/autorouter-benchmark-dashboard
-          ref: main
-          token: ${{ secrets.TSCIRCUIT_BOT_GITHUB_TOKEN }}
-          path: .benchmark-dashboard
 
       - name: Publish benchmark history dashboard
         run: |
