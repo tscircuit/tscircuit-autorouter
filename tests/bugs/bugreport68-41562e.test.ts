@@ -11,7 +11,9 @@ const srj = bugReport.simple_route_json as SimpleRouteJson
 test("bugreport68-41562e.json", () => {
   const solver = new AutoroutingPipelineSolver7_MultiGraph(srj)
   solver.solve()
-  expect(getLastStepSvg(solver.visualize())).toMatchSvgSnapshot(
-    import.meta.path,
-  )
+  const snapshotPath =
+    process.platform === "linux"
+      ? import.meta.path.replace(/\.test\.ts$/, "-linux.test.ts")
+      : import.meta.path
+  expect(getLastStepSvg(solver.visualize())).toMatchSvgSnapshot(snapshotPath)
 }, 300_000)

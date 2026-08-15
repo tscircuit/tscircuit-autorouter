@@ -59,9 +59,11 @@ const getConnectedPointKeys = (
 test("repro117 standalone simple route pipeline4 snapshot", () => {
   const solver = getSolvedRepro117()
 
-  expect(getLastStepSvg(solver.visualize())).toMatchSvgSnapshot(
-    import.meta.path,
-  )
+  const snapshotPath =
+    process.platform === "linux"
+      ? import.meta.path.replace(/\.test\.ts$/, "-linux.test.ts")
+      : import.meta.path
+  expect(getLastStepSvg(solver.visualize())).toMatchSvgSnapshot(snapshotPath)
 })
 
 test("repro117 keeps cmn_68 same-root mst route fragments connected", () => {
