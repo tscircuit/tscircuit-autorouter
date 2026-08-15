@@ -79,10 +79,7 @@ const getDrcIssueCount = (report, solverName) => {
   ) {
     return null
   }
-  return completedTests.reduce(
-    (total, test) => total + test.drcErrorCount,
-    0,
-  )
+  return completedTests.reduce((total, test) => total + test.drcErrorCount, 0)
 }
 
 const getTimePercentile = (report, solverName, percentile) => {

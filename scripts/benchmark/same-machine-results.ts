@@ -188,10 +188,7 @@ export const renderSameMachineBenchmarkResults = ({
     const prTimeouts = prReport.tests.filter(
       (test) => test.solverName === prSummary.solverName && test.didTimeout,
     ).length
-    const mainDrcIssues = getDrcIssueCount(
-      mainReport,
-      prSummary.solverName,
-    )
+    const mainDrcIssues = getDrcIssueCount(mainReport, prSummary.solverName)
     const prDrcIssues = getDrcIssueCount(prReport, prSummary.solverName)
     const timePercentiles = [50, 60, 70, 80, 90, 95].map((percentile) => {
       const mainTime = getTimePercentile(
