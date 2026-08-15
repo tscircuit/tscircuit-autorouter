@@ -334,8 +334,6 @@ function getFanoutOptions(
     maxLayerCombinations: 256,
     balanceLayerLoadByConnectionCount: true,
     compactBusTracks: true,
-    // Pipeline 7, not the fanout prefix, owns inter-chip track alignment.
-    preferOriginalEndpointTracks: false,
     borderDistribution: "even",
   }
 }
