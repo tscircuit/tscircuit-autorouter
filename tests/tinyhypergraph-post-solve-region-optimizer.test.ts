@@ -7,21 +7,10 @@ import type {
   UnravelTinyHyperGraphSolver,
 } from "tiny-hypergraph/lib/index"
 
-test("TinyHypergraph pathing consumes the post-solve region optimizer", () => {
-  const defaultSolver = new TinyHypergraphPortPointPathingSolver(input as any)
-  const optimizedParams = structuredClone(input) as any
-  optimizedParams.optimizeRegionCosts = true
-  const solver = new TinyHypergraphPortPointPathingSolver(optimizedParams)
-  defaultSolver.solve()
+test("TinyHypergraph pathing always consumes the post-solve region optimizer", () => {
+  const solver = new TinyHypergraphPortPointPathingSolver(input as any)
   solver.solve()
 
-  const defaultPipeline = (
-    defaultSolver as unknown as {
-      tinyPipelineSolver: {
-        getSolver: <Solver>(name: string) => Solver | undefined
-      }
-    }
-  ).tinyPipelineSolver
   const pipeline = (
     solver as unknown as {
       tinyPipelineSolver: {
@@ -38,7 +27,6 @@ test("TinyHypergraph pathing consumes the post-solve region optimizer", () => {
     throw new Error("Tiny hypergraph pipeline is missing the optimizer stage")
   }
 
-  expect(defaultPipeline.getSolver("optimizeRegionCosts")).toBeUndefined()
   expect(optimizer.solved).toBeTrue()
   expect(optimizer.failed).toBeFalse()
   expect(pipeline.getSolvedTinySolver()).toBe(optimizer)

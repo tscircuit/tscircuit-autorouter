@@ -98,8 +98,6 @@ export interface HgPortPointPathingSolverParams {
   effort: number
   preserveTerminalPcbPortIds?: boolean
   minViaPadDiameter?: number
-  /** Run the hypergraph-native post-solve region-cost optimizer. */
-  optimizeRegionCosts?: boolean
   flags: {
     FORCE_CENTER_FIRST: boolean
     RIPPING_ENABLED: boolean
