@@ -243,12 +243,6 @@ const getTinyHyperGraphPipelineInput = (
       effort,
       minViaPadDiameter,
     ),
-    unravelSolverOptions: {
-      FIXED_ROUTE_IDS: (serializedHyperGraph.connections ?? []).flatMap(
-        (connection, routeId) =>
-          hasPreloadedTraceSectionMetadata(connection) ? [routeId] : [],
-      ),
-    },
   }
 }
 
@@ -860,18 +854,32 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
   }
 
   getSolvedTinySolver(): TinyHyperGraphSolver {
-    const optimizeRegionCostsSolver = this.getSolver<TinyHyperGraphSolver>(
-      "optimizeRegionCosts",
-    )
-    if (
-      !optimizeRegionCostsSolver?.solved ||
-      optimizeRegionCostsSolver.failed
-    ) {
-      throw new Error(
-        "TinyHyperGraph region-cost optimizer did not produce a solved graph",
-      )
+    const optimizeSectionSolver =
+      this.getSolver<TinyHyperGraphSectionSolver>("optimizeSection")
+
+    if (optimizeSectionSolver?.solved && !optimizeSectionSolver.failed) {
+      return optimizeSectionSolver.getSolvedSolver()
     }
-    return optimizeRegionCostsSolver
+
+    const solveGraphSolver = this.getSolver<TinyHyperGraphSolver>("solveGraph")
+    if (solveGraphSolver?.solved && !solveGraphSolver.failed) {
+      return solveGraphSolver
+    }
+
+    throw new Error(
+      "TinyHyperGraph section pipeline does not have a solved graph",
+    )
+  }
+
+  getCurrentTinySolver(): TinyHyperGraphSolver | undefined {
+    const optimizeSectionSolver =
+      this.getSolver<TinyHyperGraphSectionSolver>("optimizeSection")
+
+    if (optimizeSectionSolver?.solved && !optimizeSectionSolver.failed) {
+      return optimizeSectionSolver.getSolvedSolver()
+    }
+
+    return this.getSolver<TinyHyperGraphSolver>("solveGraph")
   }
 
   private configureSolver(solver?: BaseSolver | null) {
@@ -942,6 +950,58 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
       ...this.stats,
       ...extraStats,
     }
+  }
+}
+
+class TinyHyperGraphSectionPipelineWithoutUnravel extends TinyHyperGraphSectionPipelineWithTerminalNetIds {
+  constructor(
+    inputProblem: TinyHyperGraphSectionPipelineInput,
+    useSelectiveReripRouting: boolean,
+  ) {
+    super(inputProblem, useSelectiveReripRouting)
+    this.pipelineDef = this.pipelineDef.filter(
+      (pipelineStep) => pipelineStep.solverName !== "optimizeRegionCosts",
+    )
+  }
+}
+
+class TinyHyperGraphSectionPipelineWithUnravel extends TinyHyperGraphSectionPipelineWithTerminalNetIds {
+  constructor(
+    inputProblem: TinyHyperGraphSectionPipelineInput,
+    useSelectiveReripRouting: boolean,
+  ) {
+    super(
+      {
+        ...inputProblem,
+        unravelSolverOptions: {
+          FIXED_ROUTE_IDS: (
+            inputProblem.serializedHyperGraph.connections ?? []
+          ).flatMap((connection, routeId) =>
+            hasPreloadedTraceSectionMetadata(connection) ? [routeId] : [],
+          ),
+        },
+      },
+      useSelectiveReripRouting,
+    )
+  }
+
+  override getSolvedTinySolver(): TinyHyperGraphSolver {
+    const optimizer = this.getSolver<TinyHyperGraphSolver>(
+      "optimizeRegionCosts",
+    )
+    if (!optimizer?.solved || optimizer.failed) {
+      throw new Error(
+        "TinyHyperGraph region-cost optimizer did not produce a solved graph",
+      )
+    }
+    return optimizer
+  }
+
+  override getCurrentTinySolver(): TinyHyperGraphSolver | undefined {
+    return (
+      this.getSolver<TinyHyperGraphSolver>("optimizeRegionCosts") ??
+      super.getCurrentTinySolver()
+    )
   }
 }
 
@@ -1042,11 +1102,10 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       !hasPreloadedTraceOccupancy || usePartialRipRoutingWithPreloadedTraces,
       partialRipEligibilityCount,
     )
-    this.tinyPipelineSolver =
-      new TinyHyperGraphSectionPipelineWithTerminalNetIds(
-        tinyPipelineInput,
-        params.flags.USE_SELECTIVE_RERIP_ROUTING === true,
-      )
+    this.tinyPipelineSolver = this.createTinyPipelineSolver(
+      tinyPipelineInput,
+      params.flags.USE_SELECTIVE_RERIP_ROUTING === true,
+    )
     this.MAX_ITERATIONS =
       getTinyHyperGraphPipelineMaxIterations(tinyPipelineInput)
 
@@ -1057,6 +1116,16 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
     this.inputNodeWithPortPoints = buildInputNodesWithPortPoints(
       params,
       graphForTiny,
+    )
+  }
+
+  protected createTinyPipelineSolver(
+    inputProblem: TinyHyperGraphSectionPipelineInput,
+    useSelectiveReripRouting: boolean,
+  ): TinyHyperGraphSectionPipelineWithTerminalNetIds {
+    return new TinyHyperGraphSectionPipelineWithoutUnravel(
+      inputProblem,
+      useSelectiveReripRouting,
     )
   }
 
@@ -1171,32 +1240,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
   }
 
   private getCurrentTinySolver(): TinyHyperGraphSolver | undefined {
-    const optimizeRegionCostsSolver =
-      this.tinyPipelineSolver.getSolver<TinyHyperGraphSolver>(
-        "optimizeRegionCosts",
-      )
-
-    if (optimizeRegionCostsSolver) {
-      return optimizeRegionCostsSolver
-    }
-
-    const optimizeSectionSolver =
-      this.tinyPipelineSolver.getSolver<TinyHyperGraphSectionSolver>(
-        "optimizeSection",
-      )
-
-    if (optimizeSectionSolver?.solved && !optimizeSectionSolver.failed) {
-      return optimizeSectionSolver.getSolvedSolver()
-    }
-
-    const solveGraphSolver =
-      this.tinyPipelineSolver.getSolver<TinyHyperGraphSolver>("solveGraph")
-
-    if (solveGraphSolver) {
-      return solveGraphSolver
-    }
-
-    return undefined
+    return this.tinyPipelineSolver.getCurrentTinySolver()
   }
 
   private getSolvedTinySolver(): TinyHyperGraphSolver {
@@ -1439,5 +1483,17 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
 
   visualize(): GraphicsObject {
     return this.tinyPipelineSolver.visualize()
+  }
+}
+
+export class TinyHypergraphUnravelPortPointPathingSolver extends TinyHypergraphPortPointPathingSolver {
+  protected override createTinyPipelineSolver(
+    inputProblem: TinyHyperGraphSectionPipelineInput,
+    useSelectiveReripRouting: boolean,
+  ): TinyHyperGraphSectionPipelineWithTerminalNetIds {
+    return new TinyHyperGraphSectionPipelineWithUnravel(
+      inputProblem,
+      useSelectiveReripRouting,
+    )
   }
 }
