@@ -896,17 +896,7 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
   }
 
   override _step() {
-    try {
-      super._step()
-    } catch (error) {
-      if (this.tryAcceptSolveGraphWithoutSerializedOutput(error)) {
-        return
-      }
-      if (this.trySkipOptimizeSection(error)) {
-        return
-      }
-      throw error
-    }
+    super._step()
     this.configureSolver(this.activeSubSolver)
   }
 
@@ -961,58 +951,6 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
     }
 
     this.configuredSolvers.add(solver)
-  }
-
-  private trySkipOptimizeSection(error: unknown) {
-    if (this.getCurrentStageName() !== "optimizeSection") {
-      return false
-    }
-
-    const solveGraphOutput =
-      this.getStageOutput<SerializedHyperGraph>("solveGraph")
-
-    if (!solveGraphOutput) {
-      return false
-    }
-
-    this.pipelineOutputs.optimizeSection = solveGraphOutput
-    this.finishWithExistingSolverState({
-      sectionOptimizationSkipped: true,
-      sectionOptimizationError:
-        error instanceof Error ? error.message : String(error),
-    })
-    return true
-  }
-
-  private tryAcceptSolveGraphWithoutSerializedOutput(error: unknown) {
-    if (this.getCurrentStageName() !== "solveGraph") {
-      return false
-    }
-
-    const solveGraphSolver = this.getSolver<TinyHyperGraphSolver>("solveGraph")
-    if (!solveGraphSolver?.solved || solveGraphSolver.failed) {
-      return false
-    }
-
-    this.finishWithExistingSolverState({
-      solveGraphSerializationSkipped: true,
-      sectionOptimizationSkipped: true,
-      sectionOptimizationError:
-        error instanceof Error ? error.message : String(error),
-    })
-    return true
-  }
-
-  private finishWithExistingSolverState(extraStats: Record<string, unknown>) {
-    this.currentPipelineStageIndex = this.pipelineDef.length
-    this.activeSubSolver = null
-    this.solved = true
-    this.failed = false
-    this.error = null
-    this.stats = {
-      ...this.stats,
-      ...extraStats,
-    }
   }
 }
 
@@ -1322,13 +1260,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
   }
 
   _step() {
-    try {
-      this.tinyPipelineSolver.step()
-    } catch (error) {
-      this.error = `${this.getSolverName()} error: ${error}`
-      this.failed = true
-      throw error
-    }
+    this.tinyPipelineSolver.step()
 
     if (
       this.candidatePortfolioPhase === "primary" &&
