@@ -19,6 +19,7 @@ test("PR benchmark comments render one main-versus-PR comparison table", () => {
     didSolve: true,
     didTimeout: false,
     relaxedDrcPassed: true,
+    drcErrorCount: 0,
     ...overrides,
   })
   const makeReport = (
@@ -62,14 +63,20 @@ test("PR benchmark comments render one main-versus-PR comparison table", () => {
       {
         solverName,
         completedRateLabel: "100.0%",
-        relaxedDrcRateLabel: "100.0%",
+        relaxedDrcRateLabel: "50.0%",
         timedOutLabel: "0/2",
         p50TimeMs: 1_350,
         p95TimeMs: 1_755,
         avgVia: 2.2,
       },
     ],
-    [makeTest(1, 900), makeTest(2, 1_800)],
+    [
+      makeTest(1, 900),
+      makeTest(2, 1_800, {
+        relaxedDrcPassed: false,
+        drcErrorCount: 3,
+      }),
+    ],
   )
 
   expect(
@@ -79,7 +86,8 @@ test("PR benchmark comments render one main-versus-PR comparison table", () => {
 | Solver | Metric | Main | PR | Change |
 | --- | --- | ---: | ---: | ---: |
 | Pipeline7 | Completion | 50.0% (🕒50.0%) | 100.0% | +50.0 pp |
-| Pipeline7 | Relaxed DRC pass | 50.0% (🕒50.0%) | 100.0% | +50.0 pp |
+| Pipeline7 | Relaxed DRC pass | 50.0% (🕒50.0%) | 50.0% | 0.0 pp |
+| Pipeline7 | DRC issues | 0 | 3 | +3 |
 | Pipeline7 | Timeouts | 1 | 0 | -1 |
 | Pipeline7 | P50 time | 1.5s | 1.4s | -10.0% |
 | Pipeline7 | P60 time | 1.6s | 1.4s | -10.0% |
@@ -88,6 +96,8 @@ test("PR benchmark comments render one main-versus-PR comparison table", () => {
 | Pipeline7 | P90 time | 1.9s | 1.7s | -10.0% |
 | Pipeline7 | P95 time | 1.9s | 1.8s | -10.0% |
 | Pipeline7 | Average vias | 2.00 | 2.20 | +10.0% |
+
+_DRC issue totals include completed samples; fewer is better._
 
 _Timing percentiles include solved and timed-out samples. Negative timing changes are faster._`)
 })

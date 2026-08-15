@@ -64,6 +64,27 @@ const getTimeoutCount = (report, solverName) => {
   ).length
 }
 
+const getDrcIssueCount = (report, solverName) => {
+  if (!Array.isArray(report?.tests)) return null
+  const completedTests = report.tests.filter(
+    (test) => test.solverName === solverName && test.didSolve,
+  )
+  if (
+    completedTests.length === 0 ||
+    completedTests.some(
+      (test) =>
+        typeof test.drcErrorCount !== "number" ||
+        !Number.isFinite(test.drcErrorCount),
+    )
+  ) {
+    return null
+  }
+  return completedTests.reduce(
+    (total, test) => total + test.drcErrorCount,
+    0,
+  )
+}
+
 const getTimePercentile = (report, solverName, percentile) => {
   if (!Array.isArray(report?.tests)) return null
   const elapsedTimes = report.tests
@@ -122,9 +143,12 @@ export const renderBenchmarkComparison = ({
     )
     const mainTimeouts = getTimeoutCount(mainReport, prSummary.solverName)
     const prTimeouts = getTimeoutCount(prReport, prSummary.solverName)
+    const mainDrcIssues = getDrcIssueCount(mainReport, prSummary.solverName)
+    const prDrcIssues = getDrcIssueCount(prReport, prSummary.solverName)
     rows.push(
       `| ${solver} | Completion | ${mainSummary?.completedRateLabel ?? "n/a"} | ${prSummary.completedRateLabel} | ${formatPercentPointDelta(mainSummary?.completedRateLabel, prSummary.completedRateLabel)} |`,
       `| ${solver} | Relaxed DRC pass | ${mainSummary?.relaxedDrcRateLabel ?? "n/a"} | ${prSummary.relaxedDrcRateLabel} | ${formatPercentPointDelta(mainSummary?.relaxedDrcRateLabel, prSummary.relaxedDrcRateLabel)} |`,
+      `| ${solver} | DRC issues | ${mainDrcIssues ?? "n/a"} | ${prDrcIssues ?? "n/a"} | ${formatCountDelta(mainDrcIssues, prDrcIssues)} |`,
       `| ${solver} | Timeouts | ${mainTimeouts ?? "n/a"} | ${prTimeouts ?? "n/a"} | ${formatCountDelta(mainTimeouts, prTimeouts)} |`,
     )
     for (const percentile of [50, 60, 70, 80, 90, 95]) {
@@ -153,6 +177,8 @@ export const renderBenchmarkComparison = ({
     "| Solver | Metric | Main | PR | Change |",
     "| --- | --- | ---: | ---: | ---: |",
     ...rows,
+    "",
+    "_DRC issue totals include completed samples; fewer is better._",
     "",
     "_Timing percentiles include solved and timed-out samples. Negative timing changes are faster._",
   ]

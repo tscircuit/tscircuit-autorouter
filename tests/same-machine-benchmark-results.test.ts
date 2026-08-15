@@ -18,6 +18,7 @@ test("same-machine benchmark comments compare matching reports", () => {
     didSolve: true,
     didTimeout: false,
     relaxedDrcPassed: true,
+    drcErrorCount: 0,
     ...overrides,
   })
   const makeReport = (
@@ -62,14 +63,21 @@ test("same-machine benchmark comments compare matching reports", () => {
       {
         solverName,
         completedRateLabel: "100.0% (🕒0.0%)",
-        relaxedDrcRateLabel: "100.0% (🕒0.0%)",
+        relaxedDrcRateLabel: "50.0% (🕒0.0%)",
         timedOutLabel: "0/2",
         p50TimeMs: 900,
         p95TimeMs: 1_800,
         avgVia: 2.2,
       },
     ],
-    tests: [makeTest(1, { elapsedTimeMs: 1_800 }), makeTest(2, {})],
+    tests: [
+      makeTest(1, {
+        elapsedTimeMs: 1_800,
+        relaxedDrcPassed: false,
+        drcErrorCount: 3,
+      }),
+      makeTest(2, {}),
+    ],
   })
 
   const markdown = renderSameMachineBenchmarkResults({
@@ -88,6 +96,7 @@ test("same-machine benchmark comments compare matching reports", () => {
   expect(markdown).toContain(
     "| Pipeline7 | Completion | 50.0% (🕒50.0%) | 100.0% (🕒0.0%) | +50.0 pp |",
   )
+  expect(markdown).toContain("| Pipeline7 | DRC issues | 0 | 3 | +3 |")
   expect(markdown).toContain("| Pipeline7 | Timeouts | 1 | 0 | -1 |")
   expect(markdown).toContain("| Pipeline7 | P50 time | 1.5s | 1.4s | -6.7% |")
   expect(markdown).toContain("| Pipeline7 | P60 time |")
@@ -97,9 +106,14 @@ test("same-machine benchmark comments compare matching reports", () => {
   expect(markdown).toContain("| Pipeline7 | P95 time |")
   expect(markdown).toContain("Outcome changes: **1 improved**, **0 regressed**")
   expect(markdown).toContain(
+    "DRC issue totals include completed samples; fewer is better",
+  )
+  expect(markdown).toContain(
     "Timing percentiles include solved and timed-out samples",
   )
-  expect(markdown).toContain("| Pipeline7 | 1 | Timeout | DRC passed |")
+  expect(markdown).toContain(
+    "| Pipeline7 | 1 | Timeout | Solved (DRC failed) |",
+  )
   expect(() =>
     renderSameMachineBenchmarkResults({
       mainReport,
