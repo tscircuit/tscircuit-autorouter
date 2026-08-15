@@ -1,11 +1,11 @@
 import { dataset as datasetSrj29 } from "@tscircuit/dataset-srj29-ddr3-bga-pairs"
 import { GenericSolverDebugger } from "@tscircuit/solver-utils/react"
+import { AutoroutingPipelineSolver10_BgaFanout } from "lib/autorouter-pipelines/AutoroutingPipeline10_BgaFanout/AutoroutingPipelineSolver10_BgaFanout"
 import type { SimpleRouteJson } from "lib/types"
 import {
   DatasetBenchmarkFixture,
   type DatasetCircuit,
 } from "./DatasetBenchmarkFixture"
-import { Ddr3BgaRoutingPipelineSolver } from "./Ddr3BgaRoutingPipelineSolver"
 
 const sampleKeyPattern = /^sample(\d{3})$/
 
@@ -30,7 +30,7 @@ export default () => (
       <GenericSolverDebugger
         key={`dataset-srj29-ddr3-bga-pairs-${circuit.id}`}
         createSolver={() =>
-          new Ddr3BgaRoutingPipelineSolver({ inputSrj: circuit.srj })
+          new AutoroutingPipelineSolver10_BgaFanout(circuit.srj)
         }
       />
     )}

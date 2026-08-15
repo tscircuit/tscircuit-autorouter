@@ -15,13 +15,16 @@ import {
   type PipelineStep,
 } from "@tscircuit/solver-utils"
 import type { GraphicsObject } from "graphics-debug"
-import { AutoroutingPipelineSolver7_MultiGraph } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/AutoroutingPipelineSolver7_MultiGraph"
+import {
+  AutoroutingPipelineSolver9_PreloadedTraceGraph,
+  type AutoroutingPipelineSolverOptions,
+} from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/autorouting-pipeline-solver9-preloaded-trace-graph"
 import {
   ComponentDetectionSolver,
   type ComponentDetectionSolverOutput,
   type DetectedComponent,
 } from "lib/solvers/ComponentDetectionSolver/ComponentDetectionSolver"
-import type { SimpleRouteJson } from "lib/types"
+import type { SimpleRouteJson, SimplifiedPcbTraces } from "lib/types"
 import { convertSrjToGraphicsObject } from "lib/utils/convertSrjToGraphicsObject"
 
 const MAX_FANOUT_BOUNDARY_MARGIN_MM = 4.5
@@ -30,13 +33,14 @@ const MIN_POST_FANOUT_CORRIDOR_MM = 2
 const MIN_LAYER_COUNT = 12
 const INWARD_ESCAPE_DEPTH_MM = 1.2
 
-type Ddr3BgaRoutingPipelineInput = {
+type AutoroutingPipeline10Input = {
   inputSrj: SimpleRouteJson
+  options: AutoroutingPipelineSolverOptions
 }
 
-type FixtureComponentRoles = {
-  ddr3: DetectedComponent
-  controller: DetectedComponent
+type BgaPair = {
+  first: DetectedComponent
+  second: DetectedComponent
 }
 
 type FanoutStageParams = {
@@ -46,28 +50,7 @@ type FanoutStageParams = {
 
 type AutoroutingStageParams = {
   inputSrj: SimpleRouteJson
-}
-
-type FixtureMetadata = {
-  ddr3?: { componentId?: unknown }
-  controller?: { componentId?: unknown }
-}
-
-function getMetadataComponentId(
-  inputSrj: SimpleRouteJson,
-  role: keyof FixtureMetadata,
-): string {
-  const metadata = (
-    inputSrj as SimpleRouteJson & { metadata?: FixtureMetadata }
-  ).metadata
-  const componentId = metadata?.[role]?.componentId
-
-  if (typeof componentId !== "string" || componentId.length === 0) {
-    throw new Error(
-      `SRJ29 fixture requires metadata.${role}.componentId to select the detected BGA`,
-    )
-  }
-  return componentId
+  options: AutoroutingPipelineSolverOptions
 }
 
 function getCenterX(component: DetectedComponent): number {
@@ -104,7 +87,7 @@ function getHorizontalGap(
   return right.bounds.minX - left.bounds.maxX
 }
 
-function getFixturePhysicalComponent(
+function getPhysicalComponent(
   inputSrj: SimpleRouteJson,
   detectedComponent: DetectedComponent,
 ): DetectedComponent {
@@ -157,46 +140,38 @@ function getFanoutBoundaryMargin(
   return Math.min(MAX_FANOUT_BOUNDARY_MARGIN_MM, maximumMarginForCorridor)
 }
 
-function getFixtureComponentRoles(
+function getBgaPair(
   inputSrj: SimpleRouteJson,
   detectedComponents: ComponentDetectionSolverOutput,
-): FixtureComponentRoles {
-  const bgaComponents = detectedComponents.filter(
-    (component) => component.componentKind === "bga",
-  )
-  const ddr3ComponentId = getMetadataComponentId(inputSrj, "ddr3")
-  const controllerComponentId = getMetadataComponentId(inputSrj, "controller")
-  const detectedDdr3 = bgaComponents.find(
-    (component) => component.componentId === ddr3ComponentId,
-  )
-  const detectedController = bgaComponents.find(
-    (component) => component.componentId === controllerComponentId,
-  )
+): BgaPair {
+  const bgaComponents = detectedComponents
+    .filter((component) => component.componentKind === "bga")
+    .map((component) => getPhysicalComponent(inputSrj, component))
+    .toSorted((first, second) => getCenterX(first) - getCenterX(second))
 
-  if (bgaComponents.length !== 2 || !detectedDdr3 || !detectedController) {
+  if (bgaComponents.length !== 2) {
     throw new Error(
-      `SRJ29 fixture expected exactly the detected BGAs ${ddr3ComponentId} and ${controllerComponentId}; found ${bgaComponents.map((component) => component.componentId).join(", ") || "none"}`,
+      `Pipeline 10 requires exactly two detected BGAs; found ${bgaComponents.map((component) => component.componentId).join(", ") || "none"}`,
     )
   }
-  const ddr3 = getFixturePhysicalComponent(inputSrj, detectedDdr3)
-  const controller = getFixturePhysicalComponent(inputSrj, detectedController)
-  if (ddr3.componentId === controller.componentId) {
-    throw new Error("SRJ29 fixture DDR3 and controller must be distinct BGAs")
+  const [first, second] = bgaComponents as [DetectedComponent, DetectedComponent]
+  if (first.componentId === second.componentId) {
+    throw new Error("Pipeline 10 requires two distinct BGA component IDs")
   }
   if (inputSrj.layerCount < MIN_LAYER_COUNT) {
     throw new Error(
-      `SRJ29 fixture requires at least ${MIN_LAYER_COUNT} copper layers, received ${inputSrj.layerCount}`,
+      `Pipeline 10 requires at least ${MIN_LAYER_COUNT} copper layers, received ${inputSrj.layerCount}`,
     )
   }
 
-  const fanoutBoundaryMargin = getFanoutBoundaryMargin(ddr3, controller)
+  const fanoutBoundaryMargin = getFanoutBoundaryMargin(first, second)
   if (fanoutBoundaryMargin < MIN_FANOUT_BOUNDARY_MARGIN_MM) {
     throw new Error(
-      `SRJ29 fixture cannot provide ${MIN_FANOUT_BOUNDARY_MARGIN_MM}mm fanout margins while retaining a ${MIN_POST_FANOUT_CORRIDOR_MM}mm routing corridor`,
+      `Pipeline 10 cannot provide ${MIN_FANOUT_BOUNDARY_MARGIN_MM}mm fanout margins while retaining a ${MIN_POST_FANOUT_CORRIDOR_MM}mm routing corridor`,
     )
   }
 
-  return { ddr3, controller }
+  return { first, second }
 }
 
 function getExpandedBounds(
@@ -294,7 +269,7 @@ function getPhysicalFanoutBuses(
     }
 
     return {
-      busId: `fixture_fanout:${source.componentId}:${connectionIndex}`,
+      busId: `pipeline10_fanout:${source.componentId}:${connectionIndex}`,
       connectionNames: [connection.name],
       sourceComponentId: source.componentId,
       direction,
@@ -338,7 +313,7 @@ function getFanoutOptions(
   }
 }
 
-class FanoutFixtureStage extends BaseSolver {
+class FanoutStage extends BaseSolver {
   readonly fanoutSolver: FanoutSolver
 
   constructor(public readonly inputProblem: FanoutStageParams) {
@@ -389,14 +364,16 @@ class FanoutFixtureStage extends BaseSolver {
   }
 }
 
-class AutoroutingFixtureStage extends BaseSolver {
-  readonly autoroutingPipelineSolver: AutoroutingPipelineSolver7_MultiGraph
+class AutoroutingStage extends BaseSolver {
+  readonly autoroutingPipelineSolver: AutoroutingPipelineSolver9_PreloadedTraceGraph
 
   constructor(public readonly inputProblem: AutoroutingStageParams) {
     super()
-    this.autoroutingPipelineSolver = new AutoroutingPipelineSolver7_MultiGraph(
-      inputProblem.inputSrj,
-    )
+    this.autoroutingPipelineSolver =
+      new AutoroutingPipelineSolver9_PreloadedTraceGraph(
+        inputProblem.inputSrj,
+        inputProblem.options,
+      )
     this.activeSubSolver = this
       .autoroutingPipelineSolver as unknown as BaseSolver
     this.MAX_ITERATIONS = this.autoroutingPipelineSolver.MAX_ITERATIONS + 1
@@ -437,25 +414,25 @@ class AutoroutingFixtureStage extends BaseSolver {
   }
 }
 
-export class Ddr3BgaRoutingPipelineSolver extends BasePipelineSolver<Ddr3BgaRoutingPipelineInput> {
+export class AutoroutingPipelineSolver10_BgaFanout extends BasePipelineSolver<AutoroutingPipeline10Input> {
   componentDetectionSolver?: ComponentDetectionSolver
-  ddr3FanoutSolver?: FanoutFixtureStage
-  controllerFanoutSolver?: FanoutFixtureStage
-  autoroutingPipelineSolver?: AutoroutingFixtureStage
+  firstBgaFanoutSolver?: FanoutStage
+  secondBgaFanoutSolver?: FanoutStage
+  autoroutingPipelineSolver?: AutoroutingStage
 
   pipelineDef: PipelineStep<BaseSolver>[] = [
     definePipelineStep(
       "componentDetectionSolver",
       ComponentDetectionSolver,
-      (pipeline: Ddr3BgaRoutingPipelineSolver) => [
+      (pipeline: AutoroutingPipelineSolver10_BgaFanout) => [
         { inputSrj: pipeline.inputProblem.inputSrj },
       ],
     ),
     definePipelineStep(
-      "ddr3FanoutSolver",
-      FanoutFixtureStage,
-      (pipeline: Ddr3BgaRoutingPipelineSolver) => {
-        const roles = getFixtureComponentRoles(
+      "firstBgaFanoutSolver",
+      FanoutStage,
+      (pipeline: AutoroutingPipelineSolver10_BgaFanout) => {
+        const pair = getBgaPair(
           pipeline.inputProblem.inputSrj,
           pipeline.componentDetectionSolver!.getOutput(),
         )
@@ -464,30 +441,30 @@ export class Ddr3BgaRoutingPipelineSolver extends BasePipelineSolver<Ddr3BgaRout
             inputSrj: pipeline.inputProblem.inputSrj,
             options: getFanoutOptions(
               pipeline.inputProblem.inputSrj,
-              roles.ddr3,
-              roles.controller,
+              pair.first,
+              pair.second,
             ),
           },
         ]
       },
     ),
     definePipelineStep(
-      "controllerFanoutSolver",
-      FanoutFixtureStage,
-      (pipeline: Ddr3BgaRoutingPipelineSolver) => {
-        const roles = getFixtureComponentRoles(
+      "secondBgaFanoutSolver",
+      FanoutStage,
+      (pipeline: AutoroutingPipelineSolver10_BgaFanout) => {
+        const pair = getBgaPair(
           pipeline.inputProblem.inputSrj,
           pipeline.componentDetectionSolver!.getOutput(),
         )
-        const ddr3FanoutSrj =
-          pipeline.ddr3FanoutSolver!.getOutputSimpleRouteJson()
+        const firstBgaFanoutSrj =
+          pipeline.firstBgaFanoutSolver!.getOutputSimpleRouteJson()
         return [
           {
-            inputSrj: ddr3FanoutSrj,
+            inputSrj: firstBgaFanoutSrj,
             options: getFanoutOptions(
-              ddr3FanoutSrj,
-              roles.controller,
-              roles.ddr3,
+              firstBgaFanoutSrj,
+              pair.second,
+              pair.first,
             ),
           },
         ]
@@ -495,29 +472,57 @@ export class Ddr3BgaRoutingPipelineSolver extends BasePipelineSolver<Ddr3BgaRout
     ),
     definePipelineStep(
       "autoroutingPipelineSolver",
-      AutoroutingFixtureStage,
-      (pipeline: Ddr3BgaRoutingPipelineSolver) => [
+      AutoroutingStage,
+      (pipeline: AutoroutingPipelineSolver10_BgaFanout) => [
         {
-          inputSrj: pipeline.controllerFanoutSolver!.getOutputSimpleRouteJson(),
+          inputSrj:
+            pipeline.secondBgaFanoutSolver!.getOutputSimpleRouteJson(),
+          options: pipeline.inputProblem.options,
         },
       ],
     ),
   ]
 
-  constructor(inputProblem: Ddr3BgaRoutingPipelineInput) {
-    super(inputProblem)
-    this.MAX_ITERATIONS = 100e6 + 1_024
+  constructor(
+    inputSrj: SimpleRouteJson,
+    options: AutoroutingPipelineSolverOptions = {},
+  ) {
+    super({ inputSrj, options })
+    this.MAX_ITERATIONS = 100e6 * (options.effort ?? 1) + 1_024
   }
 
-  override getConstructorParams(): readonly [Ddr3BgaRoutingPipelineInput] {
-    return [this.inputProblem] as const
+  override getSolverName(): string {
+    return "AutoroutingPipelineSolver10_BgaFanout"
+  }
+
+  override getConstructorParams(): readonly [
+    SimpleRouteJson,
+    AutoroutingPipelineSolverOptions,
+  ] {
+    return [this.inputProblem.inputSrj, this.inputProblem.options] as const
   }
 
   override getOutput(): SimpleRouteJson {
     if (!this.autoroutingPipelineSolver?.solved) {
-      throw new Error("DDR3 BGA routing pipeline has not solved yet")
+      throw new Error("Pipeline 10 has not solved yet")
     }
     return this.autoroutingPipelineSolver.getOutput()
+  }
+
+  getOutputSimpleRouteJson(): SimpleRouteJson {
+    return this.getOutput()
+  }
+
+  getOutputSimplifiedPcbTraces(): SimplifiedPcbTraces {
+    if (!this.autoroutingPipelineSolver?.solved) {
+      throw new Error("Pipeline 10 has not solved yet")
+    }
+    return this.autoroutingPipelineSolver.autoroutingPipelineSolver.getOutputSimplifiedPcbTraces()
+  }
+
+  get srjWithPointPairs(): SimpleRouteJson | undefined {
+    return this.autoroutingPipelineSolver?.autoroutingPipelineSolver
+      .srjWithPointPairs
   }
 
   override initialVisualize(): GraphicsObject {

@@ -6,7 +6,7 @@ import {
   sample020,
 } from "@tscircuit/dataset-srj29-ddr3-bga-pairs"
 import { expect, test } from "bun:test"
-import { Ddr3BgaRoutingPipelineSolver } from "fixtures/benchmarks/Ddr3BgaRoutingPipelineSolver"
+import { AutoroutingPipelineSolver10_BgaFanout } from "lib/autorouter-pipelines/AutoroutingPipeline10_BgaFanout/AutoroutingPipelineSolver10_BgaFanout"
 import type { DetectedComponent } from "lib/solvers/ComponentDetectionSolver/ComponentDetectionSolver"
 import type { ConnectionPoint, SimpleRouteJson } from "lib/types"
 
@@ -31,7 +31,7 @@ function pointIsInsideComponent(
   )
 }
 
-test("detects and fans out both SRJ29 BGAs before starting Pipeline 7", () => {
+test("Pipeline 10 detects and fans out both SRJ29 BGAs before Pipeline 9", () => {
   const inputs = [
     sample001,
     sample004,
@@ -63,7 +63,7 @@ test("detects and fans out both SRJ29 BGAs before starting Pipeline 7", () => {
     sourceRepositories.add(metadata.referenceDesign.repository)
     endpointMaps.add(metadata.referenceDesign.endpointMapSha256)
 
-    const pipeline = new Ddr3BgaRoutingPipelineSolver({ inputSrj })
+    const pipeline = new AutoroutingPipelineSolver10_BgaFanout(inputSrj)
     pipeline.solveUntilStage("autoroutingPipelineSolver")
 
     expect(pipeline.failed).toBe(false)
@@ -75,13 +75,15 @@ test("detects and fans out both SRJ29 BGAs before starting Pipeline 7", () => {
     expect(
       detectedBgas.map((component) => component.componentId).sort(),
     ).toEqual(["controller_bga", "ddr3_bga"])
-    expect(pipeline.ddr3FanoutSolver!.getOutput().validation.valid).toBe(true)
-    expect(pipeline.controllerFanoutSolver!.getOutput().validation.valid).toBe(
+    expect(pipeline.firstBgaFanoutSolver!.getOutput().validation.valid).toBe(
+      true,
+    )
+    expect(pipeline.secondBgaFanoutSolver!.getOutput().validation.valid).toBe(
       true,
     )
 
     const fannedOutSrj =
-      pipeline.controllerFanoutSolver!.getOutputSimpleRouteJson()
+      pipeline.secondBgaFanoutSolver!.getOutputSimpleRouteJson()
     expect(fannedOutSrj.traces!.length).toBeGreaterThanOrEqual(
       inputSrj.connections.length * 2,
     )
