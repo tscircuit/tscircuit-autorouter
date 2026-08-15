@@ -154,7 +154,10 @@ function getBgaPair(
       `Pipeline 10 requires exactly two detected BGAs; found ${bgaComponents.map((component) => component.componentId).join(", ") || "none"}`,
     )
   }
-  const [first, second] = bgaComponents as [DetectedComponent, DetectedComponent]
+  const [first, second] = bgaComponents as [
+    DetectedComponent,
+    DetectedComponent,
+  ]
   if (first.componentId === second.componentId) {
     throw new Error("Pipeline 10 requires two distinct BGA component IDs")
   }
@@ -420,6 +423,18 @@ export class AutoroutingPipelineSolver10_BgaFanout extends BasePipelineSolver<Au
   secondBgaFanoutSolver?: FanoutStage
   autoroutingPipelineSolver?: AutoroutingStage
 
+  get currentPipelineStepIndex(): number {
+    return this.currentPipelineStageIndex
+  }
+
+  get startTimeOfPhase(): Record<string, number> {
+    return this.startTimeOfStage
+  }
+
+  get timeSpentOnPhase(): Record<string, number> {
+    return this.timeSpentOnStage
+  }
+
   pipelineDef: PipelineStep<BaseSolver>[] = [
     definePipelineStep(
       "componentDetectionSolver",
@@ -475,8 +490,7 @@ export class AutoroutingPipelineSolver10_BgaFanout extends BasePipelineSolver<Au
       AutoroutingStage,
       (pipeline: AutoroutingPipelineSolver10_BgaFanout) => [
         {
-          inputSrj:
-            pipeline.secondBgaFanoutSolver!.getOutputSimpleRouteJson(),
+          inputSrj: pipeline.secondBgaFanoutSolver!.getOutputSimpleRouteJson(),
           options: pipeline.inputProblem.options,
         },
       ],
