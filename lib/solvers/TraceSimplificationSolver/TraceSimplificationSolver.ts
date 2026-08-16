@@ -169,19 +169,27 @@ export class TraceSimplificationSolver extends BaseSolver {
       ...route,
       route: route.route.map((point, index, points) => {
         const nextPoint = points[index + 1]
-        if (
+        const sameNetObstacle =
           nextPoint &&
           point.z !== nextPoint.z &&
           this.getSameNetObstacleForSegment(route, point, nextPoint)
-        ) {
+
+        if (sameNetObstacle) {
           return {
             ...point,
             toNextSegmentType: "through_obstacle" as const,
+            ...(sameNetObstacle.circuitJsonMetadata
+              ? {
+                  toNextSegmentCircuitJsonMetadata:
+                    sameNetObstacle.circuitJsonMetadata,
+                }
+              : {}),
           }
         }
 
         const finalizedPoint = { ...point }
         delete finalizedPoint.toNextSegmentType
+        delete finalizedPoint.toNextSegmentCircuitJsonMetadata
         return finalizedPoint
       }),
       vias: route.vias.filter(

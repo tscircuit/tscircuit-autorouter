@@ -1,3 +1,5 @@
+import type { CircuitJsonMetadata } from "./srj-types"
+
 export type PortPoint = {
   connectionName: string
   rootConnectionName?: string
@@ -51,6 +53,7 @@ export type HighDensityIntraNodeRoute = {
     pcb_port_id?: string
     insideJumperPad?: boolean
     toNextSegmentType?: "through_obstacle"
+    toNextSegmentCircuitJsonMetadata?: CircuitJsonMetadata
   }>
   vias: Array<{ x: number; y: number }>
   jumpers?: Jumper[]
