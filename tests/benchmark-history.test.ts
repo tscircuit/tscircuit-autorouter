@@ -195,10 +195,7 @@ test("benchmark history retains full sample records and publishes a static dashb
       runner: { name: "metadata-runner" },
     }),
   )
-  const cliPublishedHistoryDirectory = join(
-    cliDirectory,
-    "published-dashboard",
-  )
+  const cliPublishedHistoryDirectory = join(cliDirectory, "published-dashboard")
   await writeBenchmarkHistoryDashboard({
     outputDirectory: cliPublishedHistoryDirectory,
     runs: [makeRun("20")],

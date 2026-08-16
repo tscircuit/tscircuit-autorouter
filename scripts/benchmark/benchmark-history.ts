@@ -735,7 +735,9 @@ export const mergePublishedHistoryRuns = async ({
       existsSync(publishedRunsDirectory) &&
       (await readdir(publishedRunsDirectory)).length > 0
     ) {
-      throw new Error(`Published benchmark history index is missing: ${indexPath}`)
+      throw new Error(
+        `Published benchmark history index is missing: ${indexPath}`,
+      )
     }
     return historyRuns
   }
