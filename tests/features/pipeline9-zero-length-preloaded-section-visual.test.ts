@@ -4,7 +4,7 @@ import { AutoroutingPipelineSolver10_BgaFanout } from "lib/autorouter-pipelines/
 import type { SimpleRouteJson } from "lib/types"
 import { getDdr3PipelinePcbSvg } from "tests/fixtures/getDdr3PipelinePcbSvg"
 
-test("visual repro: a zero-length fixed section prevents reconnecting a real fanout trace", async () => {
+test("visual: zero-length fixed sections do not block reconnecting a real fanout trace", async () => {
   const inputSrj = structuredClone(sample011) as SimpleRouteJson
   const pipeline = new AutoroutingPipelineSolver10_BgaFanout(inputSrj)
   pipeline.solveUntilStage("autoroutingPipelineSolver")
@@ -29,17 +29,19 @@ test("visual repro: a zero-length fixed section prevents reconnecting a real fan
     repairError = error
   }
 
-  expect(repairError).toBeInstanceOf(Error)
-  expect((repairError as Error).message).toContain(
-    'could not reconnect mutated preloaded segment "DDR3_a3_i_mx6ull_main_ram_ddr3_dram_data15_fixed_27_1"',
+  expect(repairError).toBeUndefined()
+  expect(autorouter.failed).toBeFalse()
+  expect(autorouter.getCurrentPhase()).toBe(
+    "lengthMatchingPostProcessingSolver",
   )
+  expect(autorouter.pipeline9JointDrcRepairSolver!.solved).toBeTrue()
 
   await expect(
     getDdr3PipelinePcbSvg({
       originalSrj: inputSrj,
       fannedOutSrj,
       autorouterSrj: autorouter.srjWithPointPairs!,
-      autoroutedRoutes: autorouter.highDensityStitchSolver!.mergedHdRoutes,
+      autoroutedRoutes: autorouter.pipeline9JointDrcRepairSolver!.getOutput(),
     }),
   ).toMatchSvgSnapshot(import.meta.path)
 })
