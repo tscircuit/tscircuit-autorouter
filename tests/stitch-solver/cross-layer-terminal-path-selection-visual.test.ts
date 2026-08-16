@@ -8,7 +8,7 @@ const affectedConnectionName =
   '__tscircuit_preloaded_trace__:["fanout:DDR3_k1_ram_odt:source-1",1]'
 const affectedTraceId = "fanout:DDR3_k1_ram_odt:source-1"
 
-test("visual repro: stitching drops the via beside a real inner-layer terminal", async () => {
+test("visual: stitching keeps the via beside a real inner-layer terminal", async () => {
   const inputSrj = structuredClone(sample004) as SimpleRouteJson
   const pipeline = new AutoroutingPipelineSolver10_BgaFanout(inputSrj)
   pipeline.solveUntilStage("autoroutingPipelineSolver")
@@ -37,8 +37,21 @@ test("visual repro: stitching drops the via beside a real inner-layer terminal",
   expect([
     affectedRoute.route[0]!.z,
     affectedRoute.route.at(-1)!.z,
-  ]).not.toContain(10)
-  expect(affectedRoute.vias).not.toContainEqual({ x: -3.933, y: 3.165 })
+  ]).toContain(10)
+  const viaTransition = affectedRoute.route.find((point, pointIndex, route) => {
+    const nextPoint = route[pointIndex + 1]
+    return (
+      nextPoint !== undefined &&
+      point.z !== nextPoint.z &&
+      Math.abs(point.x - nextPoint.x) < 1e-6 &&
+      Math.abs(point.y - nextPoint.y) < 1e-6
+    )
+  })!
+  expect(viaTransition).toBeDefined()
+  expect(affectedRoute.vias).toContainEqual({
+    x: viaTransition.x,
+    y: viaTransition.y,
+  })
 
   const focusedFannedOutSrj = {
     ...fannedOutSrj,
