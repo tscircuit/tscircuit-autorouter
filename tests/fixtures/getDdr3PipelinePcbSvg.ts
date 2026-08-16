@@ -9,6 +9,7 @@ type Ddr3PipelinePcbSvgInput = {
   fannedOutSrj: SimpleRouteJson
   autorouterSrj: SimpleRouteJson
   autoroutedRoutes: HighDensityRoute[]
+  focusBounds?: SimpleRouteJson["bounds"]
 }
 
 type PhysicalComponentMetadata = {
@@ -35,6 +36,7 @@ export function getDdr3PipelinePcbSvg({
   fannedOutSrj,
   autorouterSrj,
   autoroutedRoutes,
+  focusBounds,
 }: Ddr3PipelinePcbSvgInput): string {
   const preloadedElements = convertToCircuitJson(
     fannedOutSrj,
@@ -69,6 +71,15 @@ export function getDdr3PipelinePcbSvg({
 
   for (const obstacle of originalSrj.obstacles) {
     if (!obstacle.componentId) continue
+    if (
+      focusBounds &&
+      (obstacle.center.x < focusBounds.minX ||
+        obstacle.center.x > focusBounds.maxX ||
+        obstacle.center.y < focusBounds.minY ||
+        obstacle.center.y > focusBounds.maxY)
+    ) {
+      continue
+    }
     const componentObstacles =
       obstaclesByComponent.get(obstacle.componentId) ?? []
     componentObstacles.push(obstacle)
@@ -85,6 +96,7 @@ export function getDdr3PipelinePcbSvg({
   }
 
   for (const [componentId, obstacles] of obstaclesByComponent) {
+    if (focusBounds) continue
     const minX = Math.min(
       ...obstacles.map((obstacle) => obstacle.center.x - obstacle.width / 2),
     )
@@ -133,7 +145,7 @@ export function getDdr3PipelinePcbSvg({
     )
   }
 
-  const { bounds } = originalSrj
+  const bounds = focusBounds ?? originalSrj.bounds
   const board: AnyCircuitElement = {
     type: "pcb_board",
     pcb_board_id: "pcb_board_ddr3_pipeline_repro",
