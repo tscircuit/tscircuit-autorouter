@@ -4,7 +4,7 @@ import { AutoroutingPipelineSolver10_BgaFanout } from "lib/autorouter-pipelines/
 import type { SimpleRouteJson } from "lib/types"
 import { getDdr3PipelinePcbSvg } from "tests/fixtures/getDdr3PipelinePcbSvg"
 
-test("visual repro: exact repair rejects a real through-obstacle fanout trace", async () => {
+test("visual: exact repair preserves a real through-obstacle fanout trace", async () => {
   const inputSrj = structuredClone(sample003) as SimpleRouteJson
   const pipeline = new AutoroutingPipelineSolver10_BgaFanout(inputSrj)
   pipeline.solveUntilStage("autoroutingPipelineSolver")
@@ -29,17 +29,19 @@ test("visual repro: exact repair rejects a real through-obstacle fanout trace", 
     repairError = error
   }
 
-  expect(repairError).toBeInstanceOf(Error)
-  expect((repairError as Error).message).toContain(
-    'cannot exactly repair through-obstacle preloaded trace "fanout:DDR3_a2_dram_dq13:source-1"',
+  expect(repairError).toBeUndefined()
+  expect(autorouter.failed).toBeFalse()
+  expect(autorouter.getCurrentPhase()).toBe(
+    "lengthMatchingPostProcessingSolver",
   )
+  expect(autorouter.pipeline9JointDrcRepairSolver!.solved).toBeTrue()
 
   await expect(
     getDdr3PipelinePcbSvg({
       originalSrj: inputSrj,
       fannedOutSrj,
       autorouterSrj: autorouter.srjWithPointPairs!,
-      autoroutedRoutes: autorouter.globalDrcForceImproveSolver!.getOutput(),
+      autoroutedRoutes: autorouter.pipeline9JointDrcRepairSolver!.getOutput(),
     }),
   ).toMatchSvgSnapshot(import.meta.path)
 })

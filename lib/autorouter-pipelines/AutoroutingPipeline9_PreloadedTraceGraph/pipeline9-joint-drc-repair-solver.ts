@@ -15,6 +15,7 @@ import type {
 import type { HighDensityRoute } from "lib/types/high-density-types"
 import { convertHdRouteToSimplifiedRoute } from "lib/utils/convertHdRouteToSimplifiedRoute"
 import { mapZToLayerName } from "lib/utils/mapZToLayerName"
+import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
 import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import { convertPipeline7HdRoutesToSimplifiedPcbTraces } from "../AutoroutingPipeline7_MultiGraph/convertPipeline7HdRoutesToSimplifiedPcbTraces"
 import { assignUniquePcbTraceIdsToNewTraces } from "./assign-unique-pcb-trace-ids-to-new-traces"
@@ -77,7 +78,7 @@ const pointsHaveSamePosition = (
   Math.abs(left.x - right.x) <= POINT_EPSILON &&
   Math.abs(left.y - right.y) <= POINT_EPSILON
 
-const convertPreloadedTraceToSingleHdRoute = ({
+export const convertPreloadedTraceToSingleHdRoute = ({
   trace,
   traceIndex,
   syntheticConnectionName,
@@ -92,14 +93,114 @@ const convertPreloadedTraceToSingleHdRoute = ({
   defaultViaDiameter: number
   connMap: ConnectivityMap
 }): HighDensityRoute => {
-  if (
-    trace.route.some(
-      (routePoint) => routePoint.route_type === "through_obstacle",
-    )
-  ) {
-    throw new Error(
-      `Pipeline9 cannot exactly repair through-obstacle preloaded trace "${trace.pcb_trace_id}"`,
-    )
+  const hasThroughObstacleSegment = trace.route.some(
+    (routePoint) => routePoint.route_type === "through_obstacle",
+  )
+
+  if (hasThroughObstacleSegment) {
+    const route: HighDensityRoute["route"] = []
+    const vias: HighDensityRoute["vias"] = []
+    let traceThickness = 0
+    let viaDiameter = defaultViaDiameter
+    const appendPoint = (
+      point: HighDensityRoute["route"][number],
+    ): void => {
+      const previousPoint = route.at(-1)
+      if (previousPoint && pointsAreEqual(previousPoint, point)) {
+        route[route.length - 1] = {
+          ...previousPoint,
+          ...(point.traceThickness === undefined
+            ? {}
+            : { traceThickness: point.traceThickness }),
+          ...(point.toNextSegmentType === undefined
+            ? {}
+            : { toNextSegmentType: point.toNextSegmentType }),
+          ...(point.toNextSegmentCircuitJsonMetadata === undefined
+            ? {}
+            : {
+                toNextSegmentCircuitJsonMetadata:
+                  point.toNextSegmentCircuitJsonMetadata,
+              }),
+        }
+        return
+      }
+      route.push(point)
+    }
+
+    for (const routePoint of trace.route) {
+      if (routePoint.route_type === "wire") {
+        traceThickness = Math.max(traceThickness, routePoint.width)
+        appendPoint({
+          x: routePoint.x,
+          y: routePoint.y,
+          z: mapLayerNameToZ(routePoint.layer, layerCount),
+          traceThickness: routePoint.width,
+        })
+      } else if (routePoint.route_type === "via") {
+        viaDiameter = Math.max(
+          viaDiameter,
+          routePoint.via_diameter ?? defaultViaDiameter,
+        )
+        appendPoint({
+          x: routePoint.x,
+          y: routePoint.y,
+          z: mapLayerNameToZ(routePoint.from_layer, layerCount),
+        })
+        appendPoint({
+          x: routePoint.x,
+          y: routePoint.y,
+          z: mapLayerNameToZ(routePoint.to_layer, layerCount),
+        })
+        vias.push({ x: routePoint.x, y: routePoint.y })
+      } else if (routePoint.route_type === "through_obstacle") {
+        traceThickness = Math.max(traceThickness, routePoint.width)
+        appendPoint({
+          ...routePoint.start,
+          z: mapLayerNameToZ(routePoint.from_layer, layerCount),
+          traceThickness: routePoint.width,
+          toNextSegmentType: "through_obstacle",
+          ...(routePoint.circuitJsonMetadata
+            ? {
+                toNextSegmentCircuitJsonMetadata:
+                  routePoint.circuitJsonMetadata,
+              }
+            : {}),
+        })
+        appendPoint({
+          ...routePoint.end,
+          z: mapLayerNameToZ(routePoint.to_layer, layerCount),
+          traceThickness: routePoint.width,
+        })
+      }
+    }
+
+    if (route.length < 2) {
+      throw new Error(
+        `Pipeline9 cannot exactly repair empty preloaded trace "${trace.pcb_trace_id}"`,
+      )
+    }
+    const startPcbPortId = trace.connectsTo?.[0]
+    const endPcbPortId = trace.connectsTo?.at(-1)
+    if (typeof startPcbPortId === "string") {
+      route[0] = { ...route[0]!, pcb_port_id: startPcbPortId }
+    }
+    if (typeof endPcbPortId === "string") {
+      route[route.length - 1] = {
+        ...route.at(-1)!,
+        pcb_port_id: endPcbPortId,
+      }
+    }
+
+    return {
+      connectionName: syntheticConnectionName,
+      rootConnectionName:
+        connMap.getNetConnectedToId(trace.connection_name) ??
+        trace.connection_name,
+      traceThickness,
+      viaDiameter,
+      route,
+      vias,
+    }
   }
 
   const traceSections = convertPreloadedTraceToHdRoutes(
