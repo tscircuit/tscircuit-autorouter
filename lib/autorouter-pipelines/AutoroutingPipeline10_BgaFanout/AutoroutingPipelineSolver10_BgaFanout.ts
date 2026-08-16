@@ -43,14 +43,20 @@ type BgaPair = {
   second: DetectedComponent
 }
 
-type FanoutStageParams = {
+type FanoutStageInput = {
   inputSrj: SimpleRouteJson
   options: FanoutSolverOptions
 }
 
-type AutoroutingStageParams = {
+type AutoroutingStageInput = {
   inputSrj: SimpleRouteJson
   options: AutoroutingPipelineSolverOptions
+}
+
+type FanoutPairInput = {
+  inputSrj: SimpleRouteJson
+  source: DetectedComponent
+  target: DetectedComponent
 }
 
 function getCenterX(component: DetectedComponent): number {
@@ -202,11 +208,11 @@ function getPlainBounds(component: DetectedComponent): FanoutBounds {
   }
 }
 
-function getPhysicalFanoutBuses(
-  inputSrj: SimpleRouteJson,
-  source: DetectedComponent,
-  target: DetectedComponent,
-): FanoutBusSpec[] {
+function getPhysicalFanoutBuses({
+  inputSrj,
+  source,
+  target,
+}: FanoutPairInput): FanoutBusSpec[] {
   // The fanout solver assigns one layer to an entire bus. Keep the dataset's
   // logical DDR buses in the SRJ, but use per-signal physical buses here so a
   // 25-signal address group is not incorrectly forced through one BGA layer.
@@ -282,11 +288,11 @@ function getPhysicalFanoutBuses(
   })
 }
 
-function getFanoutOptions(
-  inputSrj: SimpleRouteJson,
-  source: DetectedComponent,
-  target: DetectedComponent,
-): FanoutSolverOptions {
+function getFanoutOptions({
+  inputSrj,
+  source,
+  target,
+}: FanoutPairInput): FanoutSolverOptions {
   const fanoutBoundaryMargin = getFanoutBoundaryMargin(source, target)
   const availableCornersAndSides: FanoutAvailableCornerAndSideInput[] = [
     "top_left",
@@ -304,7 +310,7 @@ function getFanoutOptions(
   ]
 
   return {
-    buses: getPhysicalFanoutBuses(inputSrj, source, target),
+    buses: getPhysicalFanoutBuses({ inputSrj, source, target }),
     sourceComponentId: source.componentId,
     availableCornersAndSides,
     componentBounds: { [source.componentId]: getPlainBounds(source) },
@@ -319,7 +325,7 @@ function getFanoutOptions(
 class FanoutStage extends BaseSolver {
   readonly fanoutSolver: FanoutSolver
 
-  constructor(public readonly inputProblem: FanoutStageParams) {
+  constructor(public readonly inputProblem: FanoutStageInput) {
     super()
     this.fanoutSolver = new FanoutSolver(
       inputProblem.inputSrj,
@@ -346,7 +352,7 @@ class FanoutStage extends BaseSolver {
     }
   }
 
-  override getConstructorParams(): readonly [FanoutStageParams] {
+  override getConstructorParams(): readonly [FanoutStageInput] {
     return [this.inputProblem] as const
   }
 
@@ -370,7 +376,7 @@ class FanoutStage extends BaseSolver {
 class AutoroutingStage extends BaseSolver {
   readonly autoroutingPipelineSolver: AutoroutingPipelineSolver9_PreloadedTraceGraph
 
-  constructor(public readonly inputProblem: AutoroutingStageParams) {
+  constructor(public readonly inputProblem: AutoroutingStageInput) {
     super()
     this.autoroutingPipelineSolver =
       new AutoroutingPipelineSolver9_PreloadedTraceGraph(
@@ -400,7 +406,7 @@ class AutoroutingStage extends BaseSolver {
     }
   }
 
-  override getConstructorParams(): readonly [AutoroutingStageParams] {
+  override getConstructorParams(): readonly [AutoroutingStageInput] {
     return [this.inputProblem] as const
   }
 
@@ -454,11 +460,11 @@ export class AutoroutingPipelineSolver10_BgaFanout extends BasePipelineSolver<Au
         return [
           {
             inputSrj: pipeline.inputProblem.inputSrj,
-            options: getFanoutOptions(
-              pipeline.inputProblem.inputSrj,
-              pair.first,
-              pair.second,
-            ),
+            options: getFanoutOptions({
+              inputSrj: pipeline.inputProblem.inputSrj,
+              source: pair.first,
+              target: pair.second,
+            }),
           },
         ]
       },
@@ -476,11 +482,11 @@ export class AutoroutingPipelineSolver10_BgaFanout extends BasePipelineSolver<Au
         return [
           {
             inputSrj: firstBgaFanoutSrj,
-            options: getFanoutOptions(
-              firstBgaFanoutSrj,
-              pair.second,
-              pair.first,
-            ),
+            options: getFanoutOptions({
+              inputSrj: firstBgaFanoutSrj,
+              source: pair.second,
+              target: pair.first,
+            }),
           },
         ]
       },
