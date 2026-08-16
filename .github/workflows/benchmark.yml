@@ -107,6 +107,7 @@ jobs:
                 if (
                   [
                     '--scenario-limit',
+                    '--limit',
                     '--dataset',
                     '--effort',
                     '--concurrency',
@@ -115,7 +116,10 @@ jobs:
                 ) {
                   const value = args[i + 1]
                   if (value && !value.startsWith('-')) {
-                    profileArgs.push(arg, value)
+                    profileArgs.push(
+                      arg === '--limit' ? '--scenario-limit' : arg,
+                      value,
+                    )
                     i += 1
                   }
                   continue

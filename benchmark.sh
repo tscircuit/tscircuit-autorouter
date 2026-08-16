@@ -77,17 +77,19 @@ get_solvers() {
 print_help() {
   cat <<'EOF'
 Usage:
-  ./benchmark.sh [solver-name|all] [scenario-limit] [--concurrency N] [--effort N] [--sample-timeout DURATION] [--sample-numbers LIST] [--dataset NAME] [--include-assignable]
-  ./benchmark.sh [--solver NAME] [--pipeline ID] [--scenario-limit N] [--concurrency N] [--effort N] [--sample-timeout DURATION] [--sample-numbers LIST] [--dataset NAME] [--include-assignable]
+  ./benchmark.sh [solver-name|all] [scenario-limit] [--concurrency N] [--effort N] [--sample-timeout DURATION] [--sample N] [--dataset NAME] [--include-assignable]
+  ./benchmark.sh [--solver NAME] [--pipeline ID] [--limit N] [--concurrency N] [--effort N] [--sample-timeout DURATION] [--sample N] [--dataset NAME] [--include-assignable]
 
 Options:
   --solver NAME        Run only one solver (same as first positional arg)
   --pipeline ID        Run a pipeline alias (1-7, 9, 10, or krt)
-  --scenario-limit N   Run only first N scenarios (same as second positional arg)
+  --limit N            Run only first N scenarios (same as second positional arg)
+  --scenario-limit N   Backward-compatible alias for --limit
   --concurrency N      Number of Bun workers used per solver, or "auto"
   --effort N           Override scenario effort multiplier
   --sample-timeout D   Override per-sample timeout directly; otherwise timeout is 300s + 60s * effort
-  --sample-numbers L   Run comma-separated 1-based sample numbers from the dataset order
+  --sample N           Run one 1-based sample number from the dataset order
+  --sample-numbers L   Run comma-separated 1-based sample numbers
   --dataset NAME       Dataset to benchmark: 1/dataset01 (default), zdwiel, 5/srj05, 11/srj11, 12/srj12, 13/srj13, 14/srj14, 15/srj15, 16/srj16, 18/srj18, 19/srj19, 20/srj20, 21/srj21, 23/srj23, 24/srj24, 27/srj27, 28/srj28, or 29/srj29
   --include-assignable Include assignable pipelines (excluded by default)
   -h, --help           Show this help
@@ -102,6 +104,8 @@ Examples:
   ./benchmark.sh all 20 --concurrency auto
   ./benchmark.sh --solver AutoroutingPipelineSolver7_MultiGraph --effort 2
   ./benchmark.sh --solver AutoroutingPipelineSolver7_MultiGraph --sample-timeout 90s
+  ./benchmark.sh --pipeline 10 --dataset 29 --sample 1
+  ./benchmark.sh --pipeline 10 --dataset 29 --limit 5
   ./benchmark.sh --sample-numbers 120,139,148 --concurrency 8 --sample-timeout 120s
   ./benchmark.sh --solver AutoroutingPipelineSolver7_MultiGraph --scenario-limit 20
   ./benchmark.sh --solver AutoroutingPipelineSolver7_MultiGraph --dataset zdwiel --scenario-limit 20
@@ -167,7 +171,7 @@ while [ "$#" -gt 0 ]; do
       PIPELINE_ID="${2:-}"
       shift 2
       ;;
-    --scenario-limit)
+    --limit|--scenario-limit)
       SCENARIO_LIMIT="${2:-}"
       shift 2
       ;;
@@ -187,7 +191,7 @@ while [ "$#" -gt 0 ]; do
       SAMPLE_TIMEOUT="${2:-}"
       shift 2
       ;;
-    --sample-numbers)
+    --sample|--sample-numbers)
       SAMPLE_NUMBERS="${2:-}"
       shift 2
       ;;
