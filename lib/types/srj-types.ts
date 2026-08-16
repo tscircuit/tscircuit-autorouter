@@ -189,6 +189,7 @@ export interface SimplifiedPcbTrace {
         from_layer: string
         to_layer: string
         width: number
+        circuitJsonMetadata?: CircuitJsonMetadata
       }
   >
 }
