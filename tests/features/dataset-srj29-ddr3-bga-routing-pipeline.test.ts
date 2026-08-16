@@ -2,6 +2,7 @@ import { sample001 } from "@tscircuit/dataset-srj29-ddr3-bga-pairs"
 import { expect, test } from "bun:test"
 import { AutoroutingPipelineSolver10_BgaFanout } from "lib/autorouter-pipelines/AutoroutingPipeline10_BgaFanout/AutoroutingPipelineSolver10_BgaFanout"
 import type { DetectedComponent } from "lib/solvers/ComponentDetectionSolver/ComponentDetectionSolver"
+import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import type { ConnectionPoint, SimpleRouteJson } from "lib/types"
 
 type Srj29Metadata = {
@@ -81,4 +82,29 @@ test("Pipeline 10 detects and fans out both SRJ29 BGAs before Pipeline 9", () =>
   expect(
     pipeline.autoroutingPipelineSolver!.autoroutingPipelineSolver.iterations,
   ).toBe(1)
+})
+
+test("Pipeline 10 reports its fanout traces as routed output", () => {
+  const inputSrj = structuredClone(sample001) as SimpleRouteJson
+  inputSrj.connections = inputSrj.connections.slice(0, 1)
+  inputSrj.buses = []
+  inputSrj.differentialPairs = []
+
+  const pipeline = new AutoroutingPipelineSolver10_BgaFanout(inputSrj, {
+    cacheProvider: null,
+  })
+  pipeline.solve()
+
+  expect(pipeline.solved).toBe(true)
+  expect(pipeline.failed).toBe(false)
+  const outputTraces = pipeline.getOutputSimpleRouteJson().traces ?? []
+  expect(pipeline.getOutputSimplifiedPcbTraces()).toEqual(outputTraces)
+  expect(outputTraces.length).toBeGreaterThan(1)
+  expect(
+    evaluateRelaxedDrc({
+      inputSrj,
+      srjWithPointPairs: pipeline.srjWithPointPairs ?? inputSrj,
+      routedTraces: pipeline.getOutputSimplifiedPcbTraces(),
+    }).errors,
+  ).toHaveLength(0)
 })

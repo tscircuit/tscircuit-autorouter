@@ -534,10 +534,7 @@ export class AutoroutingPipelineSolver10_BgaFanout extends BasePipelineSolver<Au
   }
 
   getOutputSimplifiedPcbTraces(): SimplifiedPcbTraces {
-    if (!this.autoroutingPipelineSolver?.solved) {
-      throw new Error("Pipeline 10 has not solved yet")
-    }
-    return this.autoroutingPipelineSolver.autoroutingPipelineSolver.getOutputSimplifiedPcbTraces()
+    return this.getOutput().traces ?? []
   }
 
   get srjWithPointPairs(): SimpleRouteJson | undefined {
