@@ -60,7 +60,8 @@ test("Pipeline 10 detects and fans out both SRJ29 BGAs before Pipeline 9", () =>
     true,
   )
 
-  const fannedOutSrj = pipeline.secondBgaFanoutSolver!.getOutputSimpleRouteJson()
+  const fannedOutSrj =
+    pipeline.secondBgaFanoutSolver!.getOutputSimpleRouteJson()
   expect(fannedOutSrj.traces!.length).toBeGreaterThanOrEqual(
     inputSrj.connections.length * 2,
   )
