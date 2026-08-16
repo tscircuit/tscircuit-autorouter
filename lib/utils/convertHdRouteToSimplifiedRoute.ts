@@ -17,8 +17,7 @@ type Point = {
   z: number
   traceThickness?: number
   toNextSegmentType?: "through_obstacle"
-  toNextSegmentCircuitJsonMetadata?:
-    HighDensityIntraNodeRoute["route"][number]["toNextSegmentCircuitJsonMetadata"]
+  toNextSegmentCircuitJsonMetadata?: HighDensityIntraNodeRoute["route"][number]["toNextSegmentCircuitJsonMetadata"]
 }
 const DEFAULT_TERMINAL_VIA_ATTACH_TOLERANCE = 0.25
 const SAME_POINT_TOLERANCE = 1e-12
