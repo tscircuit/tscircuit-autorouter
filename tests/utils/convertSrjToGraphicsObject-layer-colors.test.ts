@@ -205,3 +205,52 @@ test("colors traces and obstacles by layer and traces by connection in net mode"
     true,
   )
 })
+
+test("colors traces on inner layers beyond the fixed palette", () => {
+  const srj: SimpleRouteJson = {
+    layerCount: 20,
+    minTraceWidth: 0.1,
+    obstacles: [],
+    connections: [
+      {
+        name: "inner10-net",
+        pointsToConnect: [
+          { x: 0, y: 0, layer: "inner10" },
+          { x: 1, y: 0, layer: "inner10" },
+        ],
+      },
+    ],
+    bounds: { minX: 0, maxX: 1, minY: -1, maxY: 1 },
+    traces: [
+      {
+        type: "pcb_trace",
+        pcb_trace_id: "inner10-trace",
+        connection_name: "inner10-net",
+        route: [
+          {
+            route_type: "wire",
+            x: 0,
+            y: 0,
+            width: 0.1,
+            layer: "inner10",
+          },
+          {
+            route_type: "wire",
+            x: 1,
+            y: 0,
+            width: 0.1,
+            layer: "inner10",
+          },
+        ],
+      },
+    ],
+  }
+
+  const graphics = convertSrjToGraphicsObject(srj)
+
+  expect(graphics.lines).toHaveLength(1)
+  expect(graphics.lines[0]).toMatchObject({
+    layer: "z10",
+    strokeColor: safeTransparentize("hsl(290, 70%, 45%)", 0.5),
+  })
+})

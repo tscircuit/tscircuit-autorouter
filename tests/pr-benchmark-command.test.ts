@@ -35,6 +35,35 @@ test("PR benchmark commands preserve arguments and fan-out behavior", () => {
     profileSolvers: true,
     sameMachineCompare: false,
   })
+  expect(
+    parsePrBenchmarkCommand("/benchmark --pipeline 10 --dataset 29"),
+  ).toEqual({
+    kind: "benchmark",
+    benchmarkArgs: ["--pipeline", "10", "--dataset", "29"],
+    datasetName: "29",
+    profileSolvers: false,
+    sameMachineCompare: false,
+  })
+  expect(
+    parsePrBenchmarkCommand(
+      "/benchmark --pipeline 10 --dataset 29 --limit 5 --sample 2",
+    ),
+  ).toEqual({
+    kind: "benchmark",
+    benchmarkArgs: [
+      "--pipeline",
+      "10",
+      "--dataset",
+      "29",
+      "--limit",
+      "5",
+      "--sample",
+      "2",
+    ],
+    datasetName: "29",
+    profileSolvers: false,
+    sameMachineCompare: false,
+  })
   expect(parsePrBenchmarkCommand("/benchmark-long --dataset srj18")).toEqual({
     kind: "benchmark-long",
     benchmarkArgs: ["--concurrency", "8", "--dataset", "srj18"],

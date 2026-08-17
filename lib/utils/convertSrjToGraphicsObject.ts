@@ -36,11 +36,17 @@ export type ConvertSrjToGraphicsObjectOptions = {
 }
 
 function getGraphicsLayerColor(layerName: string): string {
-  if (!Object.hasOwn(GRAPHICS_LAYER_COLORS, layerName)) {
-    throw new Error(`No visualization color for layer "${layerName}"`)
+  if (Object.hasOwn(GRAPHICS_LAYER_COLORS, layerName)) {
+    return GRAPHICS_LAYER_COLORS[layerName as LayerName]
   }
 
-  return GRAPHICS_LAYER_COLORS[layerName as LayerName]
+  const innerLayerMatch = /^inner([1-9]\d*)$/.exec(layerName)
+  if (innerLayerMatch) {
+    const innerLayerIndex = Number(innerLayerMatch[1])
+    return `hsl(${(innerLayerIndex * 137) % 360}, 70%, 45%)`
+  }
+
+  throw new Error(`No visualization color for layer "${layerName}"`)
 }
 
 export const convertSrjToGraphicsObject = (

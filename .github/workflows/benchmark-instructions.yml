@@ -38,7 +38,7 @@ jobs:
               "Append `--same-machine` to `/benchmark` or `/benchmark-all` to compare current main and the PR head sequentially on the same 8-vCPU Blacksmith runner.",
               "",
               "Everything after `/benchmark` or `/benchmark-long` is safely forwarded to `./benchmark.sh`, except `--profile-solvers`, which enables profile comparison tables, and `--same-machine`, which enables the paired runner.",
-              "Examples: `/benchmark --dataset 18 --sample-timeout 2000s`, `/benchmark --pipeline 7 --scenario-limit 20`, `/benchmark all 20 --concurrency 8`, `/benchmark --same-machine`, `/benchmark-all --same-machine`, and `/benchmark-long --dataset 18`.",
+              "Examples: `/benchmark --dataset 18 --sample-timeout 2000s`, `/benchmark --pipeline 10 --dataset 29`, `/benchmark --pipeline 10 --dataset 29 --sample 1`, `/benchmark --pipeline 7 --limit 20`, `/benchmark all 20 --concurrency 8`, `/benchmark --same-machine`, `/benchmark-all --same-machine`, and `/benchmark-long --dataset 18`.",
               "",
               "Use `/update-snapshots` (or `/us`) to run `BUN_UPDATE_SNAPSHOTS=1 bun test --timeout 120_000` on the PR branch and auto-commit snapshot updates.",
               "Use `/usf` to read recent failed test files, update and verify their exact CI test shards, and auto-commit only their snapshots. It uses the configured fast benchmark runner by default; use `/usf --ubuntu-latest` for GitHub-hosted x64 CI parity.",
