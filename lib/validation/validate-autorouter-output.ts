@@ -858,11 +858,7 @@ const validateAutorouterOutputWithinBudget = ({
         }
         const via: ViaPoint = {
           point: { x: routeItem.x, y: routeItem.y },
-          layers: layersTraversedByVia(
-            fromLayer,
-            toLayer,
-            inputSrj.layerCount,
-          ),
+          layers: layersTraversedByVia(fromLayer, toLayer, inputSrj.layerCount),
           routeIndex,
         }
         vias.push(via)
