@@ -1,4 +1,7 @@
-import { convertToCircuitJson } from "lib/testing/utils/convertToCircuitJson"
+import {
+  convertToCircuitJson,
+  createPcbBoardElement,
+} from "lib/testing/utils/convertToCircuitJson"
 import type { SimpleRouteJson, SimplifiedPcbTrace } from "lib/types"
 
 type SolverLike = {
@@ -36,9 +39,11 @@ export const getCurrentCircuitJson = (
   const inputSrj = solver.originalSrj ?? solver.srj
   const jointTraces = [...(inputSrj.traces ?? []), ...routedTraces]
 
-  return convertToCircuitJson(srjWithPointPairs, jointTraces, {
+  const circuitJson = convertToCircuitJson(srjWithPointPairs, jointTraces, {
     minTraceWidth: inputSrj.minTraceWidth,
     originalSrj: inputSrj,
     includeOriginalConnections: (inputSrj.traces?.length ?? 0) > 0,
   })
+
+  return [createPcbBoardElement(inputSrj), ...circuitJson]
 }

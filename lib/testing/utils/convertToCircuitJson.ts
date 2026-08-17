@@ -1,5 +1,10 @@
 import { pointToBoxDistance } from "@tscircuit/math-utils"
-import type { AnyCircuitElement, PcbTrace, PcbVia } from "circuit-json"
+import type {
+  AnyCircuitElement,
+  PcbBoard,
+  PcbTrace,
+  PcbVia,
+} from "circuit-json"
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import { Obstacle, SimpleRouteJson, SimplifiedPcbTrace } from "lib/types"
 import { HighDensityRoute } from "lib/types/high-density-types"
@@ -888,6 +893,27 @@ export type ConvertToCircuitJsonOptions = {
   minViaHoleDiameter?: number
   originalSrj?: SimpleRouteJson
   includeOriginalConnections?: boolean
+}
+
+export function createPcbBoardElement(srj: SimpleRouteJson): PcbBoard {
+  const { minX, maxX, minY, maxY } = srj.bounds
+
+  return {
+    type: "pcb_board",
+    pcb_board_id: "__autorouting_board__",
+    thickness: 1.6,
+    num_layers: srj.layerCount,
+    center: { x: (minX + maxX) / 2, y: (minY + maxY) / 2 },
+    width: maxX - minX,
+    height: maxY - minY,
+    ...(srj.outline
+      ? { outline: srj.outline, shape: "polygon" as const }
+      : { shape: "rect" as const }),
+    material: "fr4",
+    ...(srj.minBoardEdgeClearance !== undefined
+      ? { min_board_edge_clearance: srj.minBoardEdgeClearance }
+      : {}),
+  }
 }
 
 export function convertToCircuitJson(
