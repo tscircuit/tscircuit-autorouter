@@ -48,6 +48,15 @@ export {
   reconnectReroutedSimpleRouteJsonRegion,
 } from "./utils/getRerouteSimpleRouteJson"
 export type { RerouteRectRegion } from "./utils/getRerouteSimpleRouteJson"
+export {
+  assertValidAutorouterOutput,
+  AutorouterOutputValidationError,
+  validateAutorouterOutput,
+  type AutorouterOutputDiagnostic,
+  type AutorouterOutputDiagnosticCode,
+  type AutorouterOutputValidationResult,
+  type ValidateAutorouterOutputInput,
+} from "./validation/validate-autorouter-output"
 
 // Jumper-based solvers for single-layer PCBs
 export { IntraNodeSolverWithJumpers } from "./solvers/HighDensitySolver/IntraNodeSolverWithJumpers"
