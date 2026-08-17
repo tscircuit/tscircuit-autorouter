@@ -313,6 +313,50 @@ test("validates complete autorouter output topology without claiming clearance",
       .valid,
   ).toBe(true)
 
+  const innerLayerViaInput: SimpleRouteJson = {
+    ...viaInput,
+    layerCount: 4,
+    connections: [
+      {
+        name: "horizontal",
+        pointsToConnect: [
+          { x: -4, y: 0, layer: "top", pointId: "h-left" },
+          { x: 4, y: 0, layer: "inner1", pointId: "h-right" },
+        ],
+      },
+    ],
+  }
+  const innerLayerViaOutput: SimpleRouteJson = {
+    ...innerLayerViaInput,
+    traces: [
+      {
+        type: "pcb_trace",
+        pcb_trace_id: "trace-through-inner-layer",
+        connection_name: "horizontal",
+        connectsTo: ["h-left", "h-right"],
+        route: [
+          { route_type: "wire", x: -4, y: 0, width: 0.1, layer: "top" },
+          { route_type: "wire", x: 0, y: 0, width: 0.1, layer: "top" },
+          {
+            route_type: "via",
+            x: 0,
+            y: 0,
+            from_layer: "top",
+            to_layer: "bottom",
+          },
+          { route_type: "wire", x: 0, y: 0, width: 0.1, layer: "inner1" },
+          { route_type: "wire", x: 4, y: 0, width: 0.1, layer: "inner1" },
+        ],
+      },
+    ],
+  }
+  expect(
+    validateAutorouterOutput({
+      inputSrj: innerLayerViaInput,
+      outputSrj: innerLayerViaOutput,
+    }),
+  ).toEqual({ valid: true, diagnostics: [] })
+
   const unsupported = structuredClone(viaOutput)
   unsupported.traces![0]!.route[2] = {
     route_type: "jumper",

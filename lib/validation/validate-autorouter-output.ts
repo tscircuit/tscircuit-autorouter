@@ -6,6 +6,7 @@ import type {
   SimpleRouteJson,
 } from "../types/srj-types"
 import { mapLayerNameToZ } from "../utils/mapLayerNameToZ"
+import { mapZToLayerName } from "../utils/mapZToLayerName"
 
 export type AutorouterOutputDiagnosticCode =
   | "UNKNOWN_CONNECTION"
@@ -62,7 +63,7 @@ type WireSegment = Readonly<{
 }>
 type ViaPoint = Readonly<{
   point: Point
-  layers: readonly [string, string]
+  layers: readonly string[]
   routeIndex: number
 }>
 type ConnectedObstacle = Readonly<{ owner: string; obstacle: Obstacle }>
@@ -165,6 +166,20 @@ const connectivityPointIdentifier = (
     .sort()
     .join("-")
   return `${Math.round(point.x * 100)},${Math.round(point.y * 100)}:${zLayers}`
+}
+
+const layersTraversedByVia = (
+  fromLayer: string,
+  toLayer: string,
+  layerCount: number,
+): string[] => {
+  const fromZ = mapLayerNameToZ(fromLayer, layerCount)
+  const toZ = mapLayerNameToZ(toLayer, layerCount)
+  const firstZ = Math.min(fromZ, toZ)
+  const lastZ = Math.max(fromZ, toZ)
+  return Array.from({ length: lastZ - firstZ + 1 }, (_, offset) =>
+    mapZToLayerName(firstZ + offset, layerCount),
+  )
 }
 
 const isRecord = (value: unknown): value is Record<string, unknown> => {
@@ -697,7 +712,7 @@ const validateAutorouterOutputWithinBudget = ({
       | Readonly<{
           kind: "via"
           point: Point
-          layers: readonly [string, string]
+          layers: readonly string[]
           routeIndex: number
         }>
       | null
@@ -843,7 +858,11 @@ const validateAutorouterOutputWithinBudget = ({
         }
         const via: ViaPoint = {
           point: { x: routeItem.x, y: routeItem.y },
-          layers: [fromLayer, toLayer],
+          layers: layersTraversedByVia(
+            fromLayer,
+            toLayer,
+            inputSrj.layerCount,
+          ),
           routeIndex,
         }
         vias.push(via)
