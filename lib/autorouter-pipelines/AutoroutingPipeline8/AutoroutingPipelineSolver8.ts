@@ -263,7 +263,6 @@ export class AutoroutingPipelineSolver8 extends BaseSolver {
           capacityMeshNodes: cms.capacityNodes!,
           sharedEdgeSegments: cms.availableSegmentPointSolver!.getOutput(),
           simpleRouteJson: cms.srjWithPointPairs!,
-          numberOfCrampedPortPointsToKeep: 5,
         },
       ],
     ),
