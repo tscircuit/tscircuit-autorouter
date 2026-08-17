@@ -41,7 +41,7 @@
     "@tscircuit/dataset-srj27-power-traces": "git+https://github.com/tscircuit/dataset-srj27-power-traces.git#eb24d36",
     "@tscircuit/dataset-srj28-partially-prerouted": "git+https://github.com/tscircuit/dataset-srj28-partially-prerouted.git#5b1673544b6ade4480612539ba6574ad414fddc0",
     "@tscircuit/dataset-srj29-ddr3-bga-pairs": "git+https://github.com/ShiboSoftwareDev/dataset-srj29-ddr3-bga-pairs.git#f7fef97392872c67a40e9ce10800657144a0c57f",
-    "@tscircuit/fanout-solver": "git+https://github.com/tscircuit/fanout-solver.git#0107db31b2f562e05ccc920a423b697a5002c2a1",
+    "@tscircuit/fanout-solver": "git+https://github.com/tscircuit/fanout-solver.git#57400618478cbf95af17adcac2774e4b44613811",
     "@tscircuit/fixed-via-hypergraph-solver": "https://codeload.github.com/tscircuit/fixed-via-hypergraph-solver/tar.gz/bed37a6201b5dd07c9cc68b828917ecc20d6d049",
     "@tscircuit/hypergraph": "^0.0.71",
     "@tscircuit/jumper-topology-generator": "^0.0.4",
