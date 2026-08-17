@@ -7,46 +7,28 @@ import {
   type DatasetCircuit,
 } from "./DatasetBenchmarkFixture"
 
-const samplePathPattern = /\/sample(\d{3})\.json$/
-
-const sampleUrlModules = import.meta.glob(
-  "../../node_modules/@tscircuit/dataset-srj29-ddr3-bga-pairs/samples/sample*.json",
-  { import: "default", query: "?url" },
-) as Record<string, () => Promise<string>>
+const sampleKeyPattern = /^sample(\d{3})$/
 
 type DatasetLoadState =
   | { status: "loading" }
   | { status: "ready"; circuits: DatasetCircuit[] }
   | { status: "error"; message: string }
 
-const loadSample = async (
-  loadSampleUrl: () => Promise<string>,
-): Promise<SimpleRouteJson> => {
-  const sampleUrl = await loadSampleUrl()
-  const response = await fetch(sampleUrl)
-  if (!response.ok) {
-    throw new Error(`Failed to load ${sampleUrl}: ${response.status}`)
-  }
-  return (await response.json()) as SimpleRouteJson
-}
-
-const loadCircuits = async (): Promise<DatasetCircuit[]> => {
-  const circuits = await Promise.all(
-    Object.entries(sampleUrlModules).map(async ([path, loadSampleUrl]) => {
-      const sampleMatch = path.match(samplePathPattern)
+const indexDataset = (
+  datasetModule: Record<string, unknown>,
+): DatasetCircuit[] =>
+  Object.entries(datasetModule)
+    .map(([key, srj]) => {
+      const sampleMatch = key.match(sampleKeyPattern)
       if (!sampleMatch) return null
 
       return {
         id: sampleMatch[1],
-        srj: await loadSample(loadSampleUrl),
+        srj: srj as SimpleRouteJson,
       }
-    }),
-  )
-
-  return circuits
+    })
     .filter((circuit): circuit is DatasetCircuit => circuit !== null)
     .sort((a, b) => Number(a.id) - Number(b.id))
-}
 
 export default () => {
   const [loadState, setLoadState] = useState<DatasetLoadState>({
@@ -58,12 +40,14 @@ export default () => {
 
     const loadDataset = async (): Promise<void> => {
       try {
-        const circuits = await loadCircuits()
+        const datasetModule = await import(
+          "@tscircuit/dataset-srj29-ddr3-bga-pairs"
+        )
         if (!isMounted) return
 
         setLoadState({
           status: "ready",
-          circuits,
+          circuits: indexDataset(datasetModule),
         })
       } catch (error) {
         if (!isMounted) return
