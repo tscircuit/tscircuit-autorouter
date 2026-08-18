@@ -99,6 +99,8 @@ function definePipelineStep<
 }
 
 export class AutoroutingPipelineSolver4_TinyHypergraph extends BaseSolver {
+  static solverName = "AutoroutingPipelineSolver4_TinyHypergraph"
+
   preprocessSimpleRouteJsonSolver?: PreprocessSimpleRouteJsonSolver
   escapeViaLocationSolver?: EscapeViaLocationSolver
   netToPointPairsSolver?: NetToPointPairsSolver

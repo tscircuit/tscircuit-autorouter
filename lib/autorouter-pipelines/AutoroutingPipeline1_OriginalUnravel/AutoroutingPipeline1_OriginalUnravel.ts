@@ -100,6 +100,8 @@ function definePipelineStep<
 }
 
 export class AutoroutingPipeline1_OriginalUnravel extends BaseSolver {
+  static solverName = "AutoroutingPipeline1_OriginalUnravel"
+
   override getSolverName(): string {
     return "AutoroutingPipeline1_OriginalUnravel"
   }

@@ -109,6 +109,8 @@ function definePipelineStep<
 }
 
 export class AssignableAutoroutingPipeline3 extends BaseSolver {
+  static solverName = "AssignableAutoroutingPipeline3"
+
   override getSolverName(): string {
     return "AssignableAutoroutingPipeline3"
   }

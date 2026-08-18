@@ -14,6 +14,8 @@ export type AutoroutingPipelineSolver5Options =
   }
 
 export class AutoroutingPipelineSolver5_HdCache extends AutoroutingPipelineSolver4_TinyHypergraph {
+  static solverName = "AutoroutingPipelineSolver5_HdCache"
+
   readonly hdCacheBaseUrl: string
   readonly hdCacheFetch?: typeof fetch
 
