@@ -30,7 +30,6 @@ import { convertSrjToGraphicsObject } from "lib/utils/convertSrjToGraphicsObject
 const MAX_FANOUT_BOUNDARY_MARGIN_MM = 4.5
 const MIN_FANOUT_BOUNDARY_MARGIN_MM = 2
 const MIN_POST_FANOUT_CORRIDOR_MM = 2
-const MIN_LAYER_COUNT = 12
 const INWARD_ESCAPE_DEPTH_MM = 1.2
 
 type AutoroutingPipeline10Input = {
@@ -166,11 +165,6 @@ function getBgaPair(
   ]
   if (first.componentId === second.componentId) {
     throw new Error("Pipeline 10 requires two distinct BGA component IDs")
-  }
-  if (inputSrj.layerCount < MIN_LAYER_COUNT) {
-    throw new Error(
-      `Pipeline 10 requires at least ${MIN_LAYER_COUNT} copper layers, received ${inputSrj.layerCount}`,
-    )
   }
 
   const fanoutBoundaryMargin = getFanoutBoundaryMargin(first, second)

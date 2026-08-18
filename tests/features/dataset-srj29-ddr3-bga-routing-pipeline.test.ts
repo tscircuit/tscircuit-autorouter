@@ -84,6 +84,21 @@ test("Pipeline 10 detects and fans out both SRJ29 BGAs before Pipeline 9", () =>
   ).toBe(1)
 })
 
+test("Pipeline 10 accepts an 8-layer two-BGA input", () => {
+  const inputSrj = structuredClone(sample001) as SimpleRouteJson
+  inputSrj.layerCount = 8
+  inputSrj.connections = inputSrj.connections.slice(0, 1)
+  inputSrj.buses = []
+  inputSrj.differentialPairs = []
+
+  const pipeline = new AutoroutingPipelineSolver10_BgaFanout(inputSrj)
+  pipeline.solveUntilStage("firstBgaFanoutSolver")
+  pipeline.step()
+
+  expect(pipeline.failed).toBe(false)
+  expect(pipeline.firstBgaFanoutSolver).toBeDefined()
+})
+
 test("Pipeline 10 reports its fanout traces as routed output", () => {
   const inputSrj = structuredClone(sample001) as SimpleRouteJson
   inputSrj.connections = inputSrj.connections.slice(0, 1)
