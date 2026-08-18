@@ -79,6 +79,26 @@ const splitShellArgs = (input) => {
 
 export const parsePrBenchmarkCommand = (body) => {
   const command = body.trim()
+  const isProfile = /^\/profile(?:\s|$)/.test(command)
+  if (isProfile) {
+    const parsedArgs = splitShellArgs(command.slice("/profile".length).trim())
+    let datasetName = "dataset01"
+
+    for (let index = 0; index < parsedArgs.length; index += 1) {
+      if (parsedArgs[index] === "--dataset" && parsedArgs[index + 1]) {
+        datasetName = parsedArgs[index + 1]
+      }
+    }
+
+    return {
+      kind: "profile",
+      benchmarkArgs: parsedArgs,
+      datasetName,
+      profileSolvers: true,
+      sameMachineCompare: true,
+    }
+  }
+
   const isBenchmarkAll = /^\/benchmark-all(?:\s|$)/.test(command)
   if (isBenchmarkAll) {
     const parsedArgs = splitShellArgs(
@@ -101,7 +121,7 @@ export const parsePrBenchmarkCommand = (body) => {
   const commandPrefix = isLongBenchmark ? "/benchmark-long" : "/benchmark"
   if (!isLongBenchmark && !/^\/benchmark(?:\s|$)/.test(command)) {
     throw new Error(
-      "Expected /benchmark [args...], /benchmark-long [args...], or /benchmark-all",
+      "Expected /profile [args...], /benchmark [args...], /benchmark-long [args...], or /benchmark-all",
     )
   }
 
