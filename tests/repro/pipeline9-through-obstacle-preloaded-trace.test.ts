@@ -3,15 +3,14 @@ import { sample003 } from "@tscircuit/dataset-srj29-ddr3-bga-pairs"
 import { convertCircuitJsonToPcbSvg } from "circuit-to-svg"
 import { AutoroutingPipelineSolver10_BgaFanout } from "lib/autorouter-pipelines/AutoroutingPipeline10_BgaFanout/AutoroutingPipelineSolver10_BgaFanout"
 import { convertToCircuitJson } from "lib/testing/utils/convertToCircuitJson"
+import type { SimpleRouteJson } from "lib/types"
 
 test("Pipeline9 rejects a materialized through-obstacle fanout trace", () => {
-  const solver = new AutoroutingPipelineSolver10_BgaFanout(
-    structuredClone(sample003),
-    {
-      cacheProvider: null,
-      effort: 1,
-    },
-  )
+  const inputSrj = structuredClone(sample003) as SimpleRouteJson
+  const solver = new AutoroutingPipelineSolver10_BgaFanout(inputSrj, {
+    cacheProvider: null,
+    effort: 1,
+  })
   let thrownError: Error | undefined
 
   try {
@@ -25,8 +24,7 @@ test("Pipeline9 rejects a materialized through-obstacle fanout trace", () => {
   )
   expect(solver.failed).toBe(true)
 
-  const pipeline9 =
-    solver.autoroutingPipelineSolver?.autoroutingPipelineSolver
+  const pipeline9 = solver.autoroutingPipelineSolver?.autoroutingPipelineSolver
   if (!pipeline9?.srjWithPointPairs) {
     throw new Error("Expected Pipeline9 to reach joint DRC repair")
   }
@@ -43,9 +41,9 @@ test("Pipeline9 rejects a materialized through-obstacle fanout trace", () => {
     pipeline9.srjWithPointPairs,
     failedBoardTraces,
     {
-      minTraceWidth: sample003.minTraceWidth,
-      minViaDiameter: sample003.minViaDiameter,
-      originalSrj: sample003,
+      minTraceWidth: inputSrj.minTraceWidth,
+      minViaDiameter: inputSrj.minViaDiameter,
+      originalSrj: inputSrj,
       includeOriginalConnections: true,
     },
   )
