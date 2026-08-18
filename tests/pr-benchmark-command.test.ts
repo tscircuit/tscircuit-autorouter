@@ -121,9 +121,9 @@ test("PR benchmark commands preserve arguments and fan-out behavior", () => {
     profileSolvers: true,
     sameMachineCompare: true,
   })
-  expect(() =>
-    parsePrBenchmarkCommand("/benchmark-all --dataset 18"),
-  ).toThrow("does not accept --dataset")
+  expect(() => parsePrBenchmarkCommand("/benchmark-all --dataset 18")).toThrow(
+    "does not accept --dataset",
+  )
   expect(() => parsePrBenchmarkCommand("/benchmark-all --dataset")).toThrow(
     "does not accept --dataset",
   )
