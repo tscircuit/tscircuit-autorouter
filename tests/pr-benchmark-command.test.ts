@@ -140,7 +140,9 @@ test("PR benchmark commands preserve arguments and fan-out behavior", () => {
   expect(dispatchWorkflow).toContain(
     "startsWith(github.event.comment.body, '/profile')",
   )
-  expect(dispatchWorkflow).toContain("isProfile ? 'profile.yml' : 'benchmark.yml'")
+  expect(dispatchWorkflow).toContain(
+    "isProfile ? 'profile.yml' : 'benchmark.yml'",
+  )
   expect(dispatchWorkflow).toContain(
     "profile_args_json: JSON.stringify(command.benchmarkArgs)",
   )

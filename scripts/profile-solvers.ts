@@ -397,9 +397,8 @@ const renderScenarioTimingMarkdown = ({
           0,
         )
         const stageTimeMs =
-          scenario.stageTimings.find(
-            (stage) => stage.solverName === solverName,
-          )?.timeMs ?? 0
+          scenario.stageTimings.find((stage) => stage.solverName === solverName)
+            ?.timeMs ?? 0
         return totalStageTimeMs === 0
           ? 0
           : (stageTimeMs / totalStageTimeMs) * 100
@@ -411,8 +410,7 @@ const renderScenarioTimingMarkdown = ({
     })
     .sort(
       (a, b) =>
-        b.p50Percent - a.p50Percent ||
-        a.solverName.localeCompare(b.solverName),
+        b.p50Percent - a.p50Percent || a.solverName.localeCompare(b.solverName),
     )
 
   return [
