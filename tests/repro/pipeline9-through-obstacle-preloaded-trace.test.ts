@@ -20,6 +20,28 @@ test("Pipeline9 preserves a materialized through-obstacle fanout trace", () => {
   if (!pipeline9?.srjWithPointPairs) {
     throw new Error("Expected Pipeline9 to reach joint DRC repair")
   }
+  const jointDrcRepair = pipeline9.pipeline9JointDrcRepairSolver
+  if (!jointDrcRepair) {
+    throw new Error("Expected Pipeline9 to construct joint DRC repair")
+  }
+  const movableSectionsFromThroughObstacleTraces =
+    jointDrcRepair.movablePreloadedSections.filter((section) =>
+      section.originalTrace.route.some(
+        (routePoint) => routePoint.route_type === "through_obstacle",
+      ),
+    )
+  expect(movableSectionsFromThroughObstacleTraces.length).toBeGreaterThan(0)
+  expect(
+    movableSectionsFromThroughObstacleTraces.every((section) =>
+      section.originalTrace.route.every(
+        (routePoint, routePosition) =>
+          routePoint.route_type !== "through_obstacle" ||
+          routePosition < section.originalRoutePositionStart ||
+          routePosition > section.originalRoutePositionEnd,
+      ),
+    ),
+  ).toBe(true)
+
   const routedBoard = solver.getOutput()
   const routedBoardTraces = routedBoard.traces ?? []
   expect(

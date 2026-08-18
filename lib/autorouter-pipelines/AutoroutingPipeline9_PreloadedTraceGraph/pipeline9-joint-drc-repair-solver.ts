@@ -54,10 +54,19 @@ type Pipeline9JointDrcRepairSolverParams = {
   colorMap: Record<string, string>
 }
 
-type MovablePreloadedTrace = {
+type MovablePreloadedSection = {
   originalTrace: SimplifiedPcbTrace
+  originalRoutePositionStart: number
+  originalRoutePositionEnd: number
   syntheticConnectionName: string
+  evaluationTraceId: string
   hdRoute: HighDensityRoute
+}
+
+type PreloadedTraceSectionGroup = {
+  routePositionStart: number
+  routePositionEnd: number
+  routes: PreloadedHighDensityRoute[]
 }
 
 const POINT_EPSILON = 1e-9
@@ -77,41 +86,21 @@ const pointsHaveSamePosition = (
   Math.abs(left.x - right.x) <= POINT_EPSILON &&
   Math.abs(left.y - right.y) <= POINT_EPSILON
 
-const convertPreloadedTraceToSingleHdRoute = ({
+const combinePreloadedTraceSectionGroup = ({
   trace,
-  traceIndex,
+  sectionGroup,
   syntheticConnectionName,
-  layerCount,
-  defaultViaDiameter,
   connMap,
 }: {
   trace: SimplifiedPcbTrace
-  traceIndex: number
+  sectionGroup: PreloadedTraceSectionGroup
   syntheticConnectionName: string
-  layerCount: number
-  defaultViaDiameter: number
   connMap: ConnectivityMap
 }): HighDensityRoute => {
-  if (
-    trace.route.some(
-      (routePoint) => routePoint.route_type === "through_obstacle",
-    )
-  ) {
-    throw new Error(
-      `Pipeline9 cannot exactly repair through-obstacle preloaded trace "${trace.pcb_trace_id}"`,
-    )
-  }
-
-  const traceSections = convertPreloadedTraceToHdRoutes(
-    trace,
-    traceIndex,
-    layerCount,
-    defaultViaDiameter,
-    connMap,
-  )
+  const traceSections = sectionGroup.routes
   if (traceSections.length === 0) {
     throw new Error(
-      `Pipeline9 cannot exactly repair empty preloaded trace "${trace.pcb_trace_id}"`,
+      `Pipeline9 cannot exactly repair empty preloaded section for trace "${trace.pcb_trace_id}"`,
     )
   }
 
@@ -138,12 +127,15 @@ const convertPreloadedTraceToSingleHdRoute = ({
     )
   }
 
-  const startPcbPortId = trace.connectsTo?.[0]
-  const endPcbPortId = trace.connectsTo?.at(-1)
-  if (typeof startPcbPortId === "string" && route[0]) {
+  const startsAtTraceTerminal = sectionGroup.routePositionStart === 0
+  const endsAtTraceTerminal =
+    sectionGroup.routePositionEnd === trace.route.length - 1
+  const startPcbPortId = startsAtTraceTerminal ? trace.connectsTo?.[0] : null
+  const endPcbPortId = endsAtTraceTerminal ? trace.connectsTo?.at(-1) : null
+  if (startPcbPortId && route[0]) {
     route[0] = { ...route[0], pcb_port_id: startPcbPortId }
   }
-  if (typeof endPcbPortId === "string" && route.at(-1)) {
+  if (endPcbPortId && route.at(-1)) {
     route[route.length - 1] = {
       ...route.at(-1)!,
       pcb_port_id: endPcbPortId,
@@ -169,6 +161,66 @@ const convertPreloadedTraceToSingleHdRoute = ({
         : []
     }),
   }
+}
+
+const getPreloadedTraceSectionGroups = ({
+  trace,
+  traceIndex,
+  layerCount,
+  defaultViaDiameter,
+  connMap,
+}: {
+  trace: SimplifiedPcbTrace
+  traceIndex: number
+  layerCount: number
+  defaultViaDiameter: number
+  connMap: ConnectivityMap
+}): PreloadedTraceSectionGroup[] => {
+  const throughObstaclePositions = trace.route.flatMap(
+    (routePoint, routePosition) =>
+      routePoint.route_type === "through_obstacle" ? [routePosition] : [],
+  )
+  const sectionGroups = new Map<number, PreloadedTraceSectionGroup>()
+  const primitiveRoutes = convertPreloadedTraceToHdRoutes(
+    trace,
+    traceIndex,
+    layerCount,
+    defaultViaDiameter,
+    connMap,
+  )
+
+  for (const primitiveRoute of primitiveRoutes) {
+    const routePositionStart = primitiveRoute.preloadedRoutePositionStart
+    const routePositionEnd = primitiveRoute.preloadedRoutePositionEnd
+    if (routePositionStart === undefined || routePositionEnd === undefined) {
+      throw new Error(
+        `Pipeline9 preloaded trace section is missing route positions for "${trace.pcb_trace_id}"`,
+      )
+    }
+    if (trace.route[routePositionStart]?.route_type === "through_obstacle") {
+      continue
+    }
+    const sectionIndex = throughObstaclePositions.filter(
+      (routePosition) => routePosition < routePositionStart,
+    ).length
+    const sectionGroup = sectionGroups.get(sectionIndex) ?? {
+      routePositionStart,
+      routePositionEnd,
+      routes: [],
+    }
+    sectionGroup.routePositionStart = Math.min(
+      sectionGroup.routePositionStart,
+      routePositionStart,
+    )
+    sectionGroup.routePositionEnd = Math.max(
+      sectionGroup.routePositionEnd,
+      routePositionEnd,
+    )
+    sectionGroup.routes.push(primitiveRoute)
+    sectionGroups.set(sectionIndex, sectionGroup)
+  }
+
+  return [...sectionGroups.values()]
 }
 
 const getTraceIdsFromDrcErrors = ({
@@ -271,30 +323,69 @@ const remapDrcTraceIds = (
   })
 
 const createSyntheticConnection = (
-  movableTrace: MovablePreloadedTrace,
+  movableSection: MovablePreloadedSection,
   layerCount: number,
 ): SimpleRouteConnection => {
-  const start = movableTrace.hdRoute.route[0]!
-  const end = movableTrace.hdRoute.route.at(-1)!
+  const start = movableSection.hdRoute.route[0]!
+  const end = movableSection.hdRoute.route.at(-1)!
   return {
-    name: movableTrace.syntheticConnectionName,
-    rootConnectionName: movableTrace.hdRoute.rootConnectionName,
-    __netConnectionName: movableTrace.originalTrace.connection_name,
-    nominalTraceWidth: movableTrace.hdRoute.traceThickness,
+    name: movableSection.syntheticConnectionName,
+    rootConnectionName: movableSection.hdRoute.rootConnectionName,
+    __netConnectionName: movableSection.originalTrace.connection_name,
+    nominalTraceWidth: movableSection.hdRoute.traceThickness,
     pointsToConnect: [
       {
         x: start.x,
         y: start.y,
         layer: mapZToLayerName(start.z, layerCount),
-        pointId: `${movableTrace.syntheticConnectionName}:start`,
+        pointId: `${movableSection.syntheticConnectionName}:start`,
       },
       {
         x: end.x,
         y: end.y,
         layer: mapZToLayerName(end.z, layerCount),
-        pointId: `${movableTrace.syntheticConnectionName}:end`,
+        pointId: `${movableSection.syntheticConnectionName}:end`,
       },
     ],
+  }
+}
+
+const rebuildPreloadedTraceFromSections = ({
+  originalTrace,
+  repairedSections,
+}: {
+  originalTrace: SimplifiedPcbTrace
+  repairedSections: Array<{
+    routePositionStart: number
+    routePositionEnd: number
+    route: SimplifiedPcbTrace["route"]
+  }>
+}): SimplifiedPcbTrace => {
+  const rebuiltRoute: SimplifiedPcbTrace["route"] = []
+  let originalRoutePosition = 0
+  for (const repairedSection of [...repairedSections].sort(
+    (left, right) => left.routePositionStart - right.routePositionStart,
+  )) {
+    if (repairedSection.routePositionStart < originalRoutePosition) {
+      throw new Error(
+        `Pipeline9 found overlapping repaired sections for preloaded trace "${originalTrace.pcb_trace_id}"`,
+      )
+    }
+    rebuiltRoute.push(
+      ...originalTrace.route.slice(
+        originalRoutePosition,
+        repairedSection.routePositionStart,
+      ),
+      ...repairedSection.route,
+    )
+    originalRoutePosition = repairedSection.routePositionEnd + 1
+  }
+  rebuiltRoute.push(...originalTrace.route.slice(originalRoutePosition))
+
+  return {
+    ...originalTrace,
+    __replaces_pcb_trace_id: originalTrace.pcb_trace_id,
+    route: rebuiltRoute,
   }
 }
 
@@ -306,7 +397,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
   readonly params: Pipeline9JointDrcRepairSolverParams
   readonly inputNewHdRoutes: HighDensityRoute[]
   readonly inputUpdatedPreloadedTraces: SimplifiedPcbTrace[]
-  readonly movablePreloadedTraces: MovablePreloadedTrace[]
+  readonly movablePreloadedSections: MovablePreloadedSection[]
   readonly fixedPreloadedObstacleRoutes: PreloadedHighDensityRoute[]
   readonly syntheticConnectionNames: ReadonlySet<string>
   readonly exactRepairSolver?: GlobalDrcBranchPortfolioSolver
@@ -399,11 +490,10 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       candidateMovablePreloadedTraceIds.add(traceId)
     }
 
-    // A through-obstacle segment represents connectivity supplied by an
-    // existing connected obstacle, not a via or wire exact repair may relocate.
-    // Preserve the complete preloaded trace as fixed copper and repair the
-    // conflicting routed traces around it.
-    const movablePreloadedTraceIds = new Set<string>()
+    // Through-obstacle connectivity belongs to the connected component
+    // obstacle. Keep that primitive fixed and give exact repair ownership of
+    // the ordinary copper sections anchored on either side of it.
+    this.movablePreloadedSections = []
     for (const traceId of candidateMovablePreloadedTraceIds) {
       const trace = updatedPreloadedTraceById.get(traceId)
       if (!trace) {
@@ -411,86 +501,109 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
           `Pipeline9 cannot find preloaded trace "${traceId}" selected for exact repair`,
         )
       }
-      if (
-        trace.route.some(
-          (routePoint) => routePoint.route_type === "through_obstacle",
-        )
-      ) {
-        continue
-      }
-      movablePreloadedTraceIds.add(traceId)
-    }
-
-    this.movablePreloadedTraces = [...movablePreloadedTraceIds].map(
-      (traceId, movableTraceIndex) => {
-        const originalTrace = updatedPreloadedTraceById.get(traceId)!
-        const originalTraceIndex = params.updatedPreloadedTraces.findIndex(
-          (trace) => trace.pcb_trace_id === traceId,
-        )
-        const syntheticConnectionName = `pipeline9_preloaded_drc_${movableTraceIndex}`
-        return {
-          originalTrace,
+      const traceIndex = params.updatedPreloadedTraces.findIndex(
+        (updatedTrace) => updatedTrace.pcb_trace_id === traceId,
+      )
+      const sectionGroups = getPreloadedTraceSectionGroups({
+        trace,
+        traceIndex,
+        layerCount: params.layerCount,
+        defaultViaDiameter: params.defaultViaDiameter,
+        connMap: params.connMap,
+      })
+      for (const [traceSectionIndex, sectionGroup] of sectionGroups.entries()) {
+        const movableSectionIndex = this.movablePreloadedSections.length
+        const syntheticConnectionName = `pipeline9_preloaded_drc_${movableSectionIndex}`
+        this.movablePreloadedSections.push({
+          originalTrace: trace,
+          originalRoutePositionStart: sectionGroup.routePositionStart,
+          originalRoutePositionEnd: sectionGroup.routePositionEnd,
           syntheticConnectionName,
-          hdRoute: convertPreloadedTraceToSingleHdRoute({
-            trace: originalTrace,
-            traceIndex: originalTraceIndex,
+          evaluationTraceId: `${trace.pcb_trace_id}__pipeline9_section_${traceSectionIndex}`,
+          hdRoute: combinePreloadedTraceSectionGroup({
+            trace,
+            sectionGroup,
             syntheticConnectionName,
-            layerCount: params.layerCount,
-            defaultViaDiameter: params.defaultViaDiameter,
             connMap: params.connMap,
           }),
-        }
-      },
-    )
+        })
+      }
+    }
     this.syntheticConnectionNames = new Set(
-      this.movablePreloadedTraces.map(
-        (movableTrace) => movableTrace.syntheticConnectionName,
+      this.movablePreloadedSections.map(
+        (movableSection) => movableSection.syntheticConnectionName,
+      ),
+    )
+    const movablePreloadedTraceIds = new Set(
+      this.movablePreloadedSections.map(
+        (movableSection) => movableSection.originalTrace.pcb_trace_id,
       ),
     )
     this.fixedPreloadedObstacleRoutes = params.updatedPreloadedTraces.flatMap(
-      (trace, traceIndex) =>
-        movablePreloadedTraceIds.has(trace.pcb_trace_id)
-          ? []
-          : convertPreloadedTraceToHdRoutes(
-              trace,
-              traceIndex,
-              params.layerCount,
-              params.defaultViaDiameter,
-              params.connMap,
-            ),
+      (trace, traceIndex) => {
+        const fixedRoutes = convertPreloadedTraceToHdRoutes(
+          trace,
+          traceIndex,
+          params.layerCount,
+          params.defaultViaDiameter,
+          params.connMap,
+        )
+        if (!movablePreloadedTraceIds.has(trace.pcb_trace_id)) {
+          return fixedRoutes
+        }
+        return fixedRoutes.filter((route) => {
+          const routePosition = route.preloadedRoutePositionStart
+          return (
+            routePosition !== undefined &&
+            trace.route[routePosition]?.route_type === "through_obstacle"
+          )
+        })
+      },
     )
-    const movableTraceIndexByOriginalTraceId = new Map(
-      this.movablePreloadedTraces.map((movableTrace, movableTraceIndex) => [
-        movableTrace.originalTrace.pcb_trace_id,
-        movableTraceIndex,
-      ]),
-    )
+    const movableSectionIndexesByOriginalTraceId = new Map<string, number[]>()
+    for (const [
+      movableSectionIndex,
+      movableSection,
+    ] of this.movablePreloadedSections.entries()) {
+      const originalTraceId = movableSection.originalTrace.pcb_trace_id
+      const sectionIndexes =
+        movableSectionIndexesByOriginalTraceId.get(originalTraceId) ?? []
+      sectionIndexes.push(movableSectionIndex)
+      movableSectionIndexesByOriginalTraceId.set(
+        originalTraceId,
+        sectionIndexes,
+      )
+    }
     for (const originalTraceIds of getPipeline9PreloadedViaPairTraceGroups({
       errors: currentDrc.errors as unknown as Array<Record<string, unknown>>,
       circuitJson: currentDrc.circuitJson,
       originalTraceIdByPreparedTraceId:
         preparedCurrentOutput.originalPreloadedTraceIdByPreparedTraceId,
     })) {
-      const movableTraceIndexes = originalTraceIds.flatMap((traceId) => {
-        const movableTraceIndex =
-          movableTraceIndexByOriginalTraceId.get(traceId)
-        return movableTraceIndex === undefined ? [] : [movableTraceIndex]
-      })
-      if (movableTraceIndexes.length === 0) continue
-      const movableTraceIndexSet = new Set(movableTraceIndexes)
+      const movableSectionIndexes = originalTraceIds
+        .flatMap(
+          (traceId) =>
+            movableSectionIndexesByOriginalTraceId.get(traceId) ?? [],
+        )
+        .filter(
+          (sectionIndex, index, sectionIndexes) =>
+            sectionIndexes.indexOf(sectionIndex) === index,
+        )
+      if (movableSectionIndexes.length === 0) continue
+      const movableSectionIndexSet = new Set(movableSectionIndexes)
       const mergedRoutes = mergePipeline9MovablePreloadedVias({
-        routes: movableTraceIndexes.map(
-          (movableTraceIndex) =>
-            this.movablePreloadedTraces[movableTraceIndex]!.hdRoute,
+        routes: movableSectionIndexes.map(
+          (movableSectionIndex) =>
+            this.movablePreloadedSections[movableSectionIndex]!.hdRoute,
         ),
         otherHdRoutes: [
           ...params.newHdRoutes,
           ...this.fixedPreloadedObstacleRoutes,
-          ...this.movablePreloadedTraces.flatMap(
-            (movableTrace, movableTraceIndex) =>
-              movableTraceIndexSet.has(movableTraceIndex)
+          ...this.movablePreloadedSections.flatMap(
+            (movableSection, movableSectionIndex) =>
+              movableSectionIndexSet.has(movableSectionIndex)
                 ? []
-                : [movableTrace.hdRoute],
+                : [movableSection.hdRoute],
           ),
         ],
         obstacles: params.obstacles,
@@ -500,11 +613,12 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       })
       for (
         let groupIndex = 0;
-        groupIndex < movableTraceIndexes.length;
+        groupIndex < movableSectionIndexes.length;
         groupIndex++
       ) {
-        this.movablePreloadedTraces[movableTraceIndexes[groupIndex]!]!.hdRoute =
-          mergedRoutes[groupIndex]!
+        this.movablePreloadedSections[
+          movableSectionIndexes[groupIndex]!
+        ]!.hdRoute = mergedRoutes[groupIndex]!
       }
     }
     this.stats = {
@@ -517,7 +631,8 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         counts[errorType] = (counts[errorType] ?? 0) + 1
         return counts
       }, {}),
-      movablePreloadedTraceCount: this.movablePreloadedTraces.length,
+      movablePreloadedTraceCount: movablePreloadedTraceIds.size,
+      movablePreloadedSectionCount: this.movablePreloadedSections.length,
     }
 
     if (currentDrc.errors.length === 0) {
@@ -526,8 +641,8 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     }
 
     const movableOriginalTraceIds = new Set(
-      this.movablePreloadedTraces.map(
-        (movableTrace) => movableTrace.originalTrace.pcb_trace_id,
+      this.movablePreloadedSections.map(
+        (movableSection) => movableSection.originalTrace.pcb_trace_id,
       ),
     )
     const nonMovableMutatedPreloadedTraces =
@@ -535,9 +650,9 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         (trace) => !movableOriginalTraceIds.has(trace.pcb_trace_id),
       )
     const syntheticConnectionByName = new Map(
-      this.movablePreloadedTraces.map((movableTrace) => [
-        movableTrace.syntheticConnectionName,
-        createSyntheticConnection(movableTrace, params.layerCount),
+      this.movablePreloadedSections.map((movableSection) => [
+        movableSection.syntheticConnectionName,
+        createSyntheticConnection(movableSection, params.layerCount),
       ]),
     )
     const extendedSrjWithPointPairs: SimpleRouteJson = {
@@ -569,20 +684,28 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         evaluatedNewTraces,
         params.originalSrj.traces ?? [],
       )
-      const evaluatedMovablePreloadedTraces = this.movablePreloadedTraces.map(
-        (movableTrace) => {
+      const replacedOriginalTraceIds = new Set<string>()
+      const evaluatedMovablePreloadedTraces = this.movablePreloadedSections.map(
+        (movableSection) => {
           const evaluatedRoute = evaluatedRoutes.find(
             (route) =>
-              route.connectionName === movableTrace.syntheticConnectionName,
+              route.connectionName === movableSection.syntheticConnectionName,
           )
           if (!evaluatedRoute) {
             throw new Error(
-              `Pipeline9 joint DRC repair lost preloaded route "${movableTrace.originalTrace.pcb_trace_id}"`,
+              `Pipeline9 joint DRC repair lost preloaded section "${movableSection.syntheticConnectionName}"`,
             )
           }
+          const originalTraceId = movableSection.originalTrace.pcb_trace_id
+          const replacesOriginalTrace =
+            !replacedOriginalTraceIds.has(originalTraceId)
+          replacedOriginalTraceIds.add(originalTraceId)
           return {
-            ...movableTrace.originalTrace,
-            __replaces_pcb_trace_id: movableTrace.originalTrace.pcb_trace_id,
+            ...movableSection.originalTrace,
+            pcb_trace_id: movableSection.evaluationTraceId,
+            ...(replacesOriginalTrace
+              ? { __replaces_pcb_trace_id: originalTraceId }
+              : { __replaces_pcb_trace_id: undefined }),
             route: convertHdRouteToSimplifiedRoute(
               evaluatedRoute,
               params.layerCount,
@@ -606,10 +729,10 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
           evaluatedNewTraces[traceIndex]!.pcb_trace_id,
         )
       }
-      for (const movableTrace of this.movablePreloadedTraces) {
+      for (const movableSection of this.movablePreloadedSections) {
         solverTraceIdByEvaluationTraceId.set(
-          movableTrace.originalTrace.pcb_trace_id,
-          `${movableTrace.syntheticConnectionName}_0`,
+          movableSection.evaluationTraceId,
+          `${movableSection.syntheticConnectionName}_0`,
         )
       }
       const movableTraceIds = new Set(solverTraceIdByEvaluationTraceId.values())
@@ -677,8 +800,8 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       srj: extendedSrjWithPointPairs as any,
       hdRoutes: [
         ...params.newHdRoutes,
-        ...this.movablePreloadedTraces.map(
-          (movableTrace) => movableTrace.hdRoute,
+        ...this.movablePreloadedSections.map(
+          (movableSection) => movableSection.hdRoute,
         ),
       ],
       connMap: params.connMap,
@@ -774,33 +897,61 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     const outputRouteByConnectionName = new Map(
       this.getCombinedOutput().map((route) => [route.connectionName, route]),
     )
-    const repairedTraceById = new Map(
-      this.movablePreloadedTraces.map((movableTrace) => {
-        const outputRoute = outputRouteByConnectionName.get(
-          movableTrace.syntheticConnectionName,
+    const repairedSectionsByOriginalTraceId = new Map<
+      string,
+      Array<{
+        routePositionStart: number
+        routePositionEnd: number
+        route: SimplifiedPcbTrace["route"]
+      }>
+    >()
+    for (const movableSection of this.movablePreloadedSections) {
+      const outputRoute = outputRouteByConnectionName.get(
+        movableSection.syntheticConnectionName,
+      )
+      if (!outputRoute) {
+        throw new Error(
+          `Pipeline9 joint DRC repair output is missing "${movableSection.syntheticConnectionName}"`,
         )
-        if (!outputRoute) {
-          throw new Error(
-            `Pipeline9 joint DRC repair output is missing "${movableTrace.syntheticConnectionName}"`,
-          )
-        }
-        return [
-          movableTrace.originalTrace.pcb_trace_id,
+      }
+      const originalTraceId = movableSection.originalTrace.pcb_trace_id
+      const repairedSections =
+        repairedSectionsByOriginalTraceId.get(originalTraceId) ?? []
+      repairedSections.push({
+        routePositionStart: movableSection.originalRoutePositionStart,
+        routePositionEnd: movableSection.originalRoutePositionEnd,
+        route: convertHdRouteToSimplifiedRoute(
+          outputRoute,
+          this.params.layerCount,
           {
-            ...movableTrace.originalTrace,
-            __replaces_pcb_trace_id: movableTrace.originalTrace.pcb_trace_id,
-            route: convertHdRouteToSimplifiedRoute(
-              outputRoute,
-              this.params.layerCount,
-              {
-                defaultViaHoleDiameter: this.params.defaultViaHoleDiameter,
-                obstacles: this.params.obstacles,
-                connMap: this.params.connMap,
-              },
-            ),
+            defaultViaHoleDiameter: this.params.defaultViaHoleDiameter,
+            obstacles: this.params.obstacles,
+            connMap: this.params.connMap,
           },
-        ] as const
-      }),
+        ),
+      })
+      repairedSectionsByOriginalTraceId.set(originalTraceId, repairedSections)
+    }
+    const repairedTraceById = new Map(
+      [...repairedSectionsByOriginalTraceId].map(
+        ([originalTraceId, repairedSections]) => {
+          const originalTrace = this.inputUpdatedPreloadedTraces.find(
+            (trace) => trace.pcb_trace_id === originalTraceId,
+          )
+          if (!originalTrace) {
+            throw new Error(
+              `Pipeline9 cannot find preloaded trace "${originalTraceId}" while rebuilding repaired sections`,
+            )
+          }
+          return [
+            originalTraceId,
+            rebuildPreloadedTraceFromSections({
+              originalTrace,
+              repairedSections,
+            }),
+          ] as const
+        },
+      ),
     )
     return this.inputUpdatedPreloadedTraces.map(
       (trace) => repairedTraceById.get(trace.pcb_trace_id) ?? trace,
@@ -810,8 +961,8 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
   getMutatedPreloadedTraces(): SimplifiedPcbTrace[] {
     const mutatedTraceIds = new Set([
       ...this.params.mutatedPreloadedTraceIds,
-      ...this.movablePreloadedTraces.map(
-        (movableTrace) => movableTrace.originalTrace.pcb_trace_id,
+      ...this.movablePreloadedSections.map(
+        (movableSection) => movableSection.originalTrace.pcb_trace_id,
       ),
     ])
     return this.getUpdatedPreloadedTraces().filter((trace) =>
