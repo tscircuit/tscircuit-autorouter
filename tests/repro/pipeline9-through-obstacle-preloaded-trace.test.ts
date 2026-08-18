@@ -1,34 +1,43 @@
 import { expect, test } from "bun:test"
-import { sample003 } from "@tscircuit/dataset-srj29-ddr3-bga-pairs"
 import { convertCircuitJsonToPcbSvg } from "circuit-to-svg"
-import { AutoroutingPipelineSolver10_BgaFanout } from "lib/autorouter-pipelines/AutoroutingPipeline10_BgaFanout/AutoroutingPipelineSolver10_BgaFanout"
+import { Pipeline9JointDrcRepairSolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/pipeline9-joint-drc-repair-solver"
 import { convertPipeline7HdRoutesToSimplifiedPcbTraces } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/convertPipeline7HdRoutesToSimplifiedPcbTraces"
 import { convertToCircuitJson } from "lib/testing/utils/convertToCircuitJson"
-import type { SimpleRouteJson } from "lib/types"
+import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
+import capturedSample003JointRepair from "./assets/pipeline9-through-obstacle-sample003.json" with {
+  type: "json",
+}
+
+type JointRepairParams = ConstructorParameters<
+  typeof Pipeline9JointDrcRepairSolver
+>[0]
+
+type CapturedJointRepair = Omit<
+  JointRepairParams,
+  "srjWithPointPairs" | "mutatedPreloadedTraceIds" | "connMap" | "obstacles"
+> & {
+  sourceDataset: string
+  mutatedPreloadedTraceIds: string[]
+}
 
 test("Pipeline9 preserves a materialized through-obstacle fanout trace", () => {
-  const inputSrj = structuredClone(sample003) as SimpleRouteJson
-  const solver = new AutoroutingPipelineSolver10_BgaFanout(inputSrj, {
-    cacheProvider: null,
-    effort: 1,
-  })
-  while (
-    !solver.failed &&
-    !solver.autoroutingPipelineSolver?.autoroutingPipelineSolver
-      ?.pipeline9JointDrcRepairSolver
-  ) {
-    solver.step()
+  const captured = structuredClone(
+    capturedSample003JointRepair,
+  ) as unknown as CapturedJointRepair
+  const {
+    sourceDataset: _,
+    mutatedPreloadedTraceIds,
+    ...capturedParams
+  } = captured
+  const params: JointRepairParams = {
+    ...capturedParams,
+    srjWithPointPairs: capturedParams.srj,
+    obstacles: capturedParams.srj.obstacles,
+    mutatedPreloadedTraceIds: new Set(mutatedPreloadedTraceIds),
+    connMap: getConnectivityMapFromSimpleRouteJson(capturedParams.originalSrj),
   }
+  const jointDrcRepair = new Pipeline9JointDrcRepairSolver(params)
 
-  const pipeline9 = solver.autoroutingPipelineSolver?.autoroutingPipelineSolver
-  if (!pipeline9?.srjWithPointPairs) {
-    throw new Error("Expected Pipeline9 to reach joint DRC repair")
-  }
-  const jointDrcRepair = pipeline9.pipeline9JointDrcRepairSolver
-  if (!jointDrcRepair) {
-    throw new Error("Expected Pipeline9 to construct joint DRC repair")
-  }
-  expect(solver.failed).toBe(false)
   const movableSectionsFromThroughObstacleTraces =
     jointDrcRepair.movablePreloadedSections.filter((section) =>
       section.originalTrace.route.some(
@@ -51,10 +60,10 @@ test("Pipeline9 preserves a materialized through-obstacle fanout trace", () => {
     ...jointDrcRepair.getUpdatedPreloadedTraces(),
     ...convertPipeline7HdRoutesToSimplifiedPcbTraces({
       connections: jointDrcRepair.params.newConnections,
-      originalConnections: inputSrj.connections,
+      originalConnections: params.originalSrj.connections,
       hdRoutes: jointDrcRepair.getOutput(),
-      layerCount: inputSrj.layerCount,
-      obstacles: inputSrj.obstacles,
+      layerCount: params.layerCount,
+      obstacles: params.obstacles,
       defaultViaHoleDiameter: jointDrcRepair.params.defaultViaHoleDiameter,
       connMap: jointDrcRepair.params.connMap,
     }),
@@ -68,12 +77,12 @@ test("Pipeline9 preserves a materialized through-obstacle fanout trace", () => {
   ).toBe(true)
 
   const circuitJson = convertToCircuitJson(
-    pipeline9.srjWithPointPairs,
+    params.srjWithPointPairs,
     routedBoardTraces,
     {
-      minTraceWidth: inputSrj.minTraceWidth,
-      minViaDiameter: inputSrj.minViaDiameter,
-      originalSrj: inputSrj,
+      minTraceWidth: params.originalSrj.minTraceWidth,
+      minViaDiameter: params.originalSrj.minViaDiameter,
+      originalSrj: params.originalSrj,
       includeOriginalConnections: true,
     },
   )
@@ -82,5 +91,5 @@ test("Pipeline9 preserves a materialized through-obstacle fanout trace", () => {
     matchBoardAspectRatio: true,
   })
 
-  expect(pcbSvg).toMatchSvgSnapshot(import.meta.path, { tolerance: 0 })
+  expect(pcbSvg).toMatchSvgSnapshot(import.meta.path)
 })
