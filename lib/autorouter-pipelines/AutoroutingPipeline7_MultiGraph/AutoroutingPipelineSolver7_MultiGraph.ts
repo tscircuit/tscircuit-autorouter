@@ -56,6 +56,8 @@ import { DeadEndSolver } from "../../solvers/DeadEndSolver/DeadEndSolver"
 import { EscapeViaLocationSolver } from "../../solvers/EscapeViaLocationSolver/EscapeViaLocationSolver"
 import { Pipeline4HighDensityRepairSolver } from "../../solvers/HighDensityRepairSolver/Pipeline4HighDensityRepairSolver"
 import { HighDensitySolver } from "../../solvers/HighDensitySolver/HighDensitySolver"
+import { ParallelHighDensitySolver } from "../../solvers/HighDensitySolver/ParallelHighDensitySolver"
+import type { HighDensitySolverExecutor } from "../../solvers/HighDensitySolver/high-density-parallel-types"
 import { MultiSectionPortPointOptimizer } from "../../solvers/MultiSectionPortPointOptimizer"
 import { NetToPointPairsSolver } from "../../solvers/NetToPointPairsSolver/NetToPointPairsSolver"
 import { NetToPointPairsSolver2_OffBoardConnection } from "../../solvers/NetToPointPairsSolver2_OffBoardConnection/NetToPointPairsSolver2_OffBoardConnection"
@@ -64,6 +66,7 @@ import { SingleLayerNodeMergerSolver } from "../../solvers/SingleLayerNodeMerger
 import { StrawSolver } from "../../solvers/StrawSolver/StrawSolver"
 import { TraceSimplificationSolver } from "../../solvers/TraceSimplificationSolver/TraceSimplificationSolver"
 import { TraceWidthSolver } from "../../solvers/TraceWidthSolver/TraceWidthSolver"
+import { solveSolverAsync, stepSolverAsync } from "../../solvers/runSolverAsync"
 import { PreprocessSimpleRouteJsonSolver } from "../AutoroutingPipeline4_TinyHypergraph/PreprocessSimpleRouteJsonSolver"
 import { MergedComponentTopologyView } from "./MergedComponentTopologyView"
 import { Pipeline7AdaptiveDrcBranchPortfolioSolver } from "./Pipeline7AdaptiveDrcBranchPortfolioSolver"
@@ -84,6 +87,12 @@ interface CapacityMeshSolverOptions {
   minNodeArea?: number
   visualizationTraceColorMode?: TraceColorMode
   powerTraceExpansion?: PowerTraceExpanderOptions
+  /** Number of independent high-density nodes to solve concurrently. */
+  highDensitySolverParallelism?: number
+  /** Runtime-local override for browser, Node, or test executor implementations. */
+  highDensitySolverExecutor?: HighDensitySolverExecutor
+  /** Optional module URL used by the built-in Web Worker executor. */
+  highDensitySolverWorkerUrl?: string
 }
 export type AutoroutingPipelineSolverOptions = CapacityMeshSolverOptions
 
@@ -528,41 +537,49 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
         },
       ],
     ),
-    definePipelineStep("highDensityRouteSolver", HighDensitySolver, (cms) => {
-      const uniformNodes = cms.uniformPortDistributionSolver?.getOutput() ?? []
-      const fallbackNodes =
-        cms.portPointPathingSolver?.getOutput().nodesWithPortPoints ?? []
-      const nodePortPointsSource =
-        uniformNodes.length > 0 ? uniformNodes : fallbackNodes
+    definePipelineStep(
+      "highDensityRouteSolver",
+      ParallelHighDensitySolver,
+      (cms) => {
+        const uniformNodes =
+          cms.uniformPortDistributionSolver?.getOutput() ?? []
+        const fallbackNodes =
+          cms.portPointPathingSolver?.getOutput().nodesWithPortPoints ?? []
+        const nodePortPointsSource =
+          uniformNodes.length > 0 ? uniformNodes : fallbackNodes
 
-      cms.highDensityNodePortPoints = structuredClone(nodePortPointsSource)
+        cms.highDensityNodePortPoints = structuredClone(nodePortPointsSource)
 
-      return [
-        {
-          nodePortPoints: nodePortPointsSource,
-          nodePfById: new Map(
-            (
-              cms.portPointPathingSolver?.getOutput().inputNodeWithPortPoints ??
-              []
-            ).map((node) => [
-              node.capacityMeshNodeId,
-              cms.portPointPathingSolver?.computeNodePf(node) ?? null,
-            ]),
-          ),
-          colorMap: cms.colorMap,
-          connMap: cms.connMap,
-          viaDiameter: cms.viaDiameter,
-          traceWidth: cms.minTraceWidth,
-          obstacleMargin: cms.srj.defaultObstacleMargin ?? 0.15,
-          obstacles: cms.srj.obstacles,
-          layerCount: cms.srj.layerCount,
-          useGrowShrinkHighDensityIntraNodeSolver: true,
-          preserveTerminalPcbPortIds: true,
-          growShrinkFallbackToInvalidGeometryOnFailure: true,
-          captureSearchDebug: false,
-        },
-      ]
-    }),
+        return [
+          {
+            nodePortPoints: nodePortPointsSource,
+            nodePfById: new Map(
+              (
+                cms.portPointPathingSolver?.getOutput()
+                  .inputNodeWithPortPoints ?? []
+              ).map((node) => [
+                node.capacityMeshNodeId,
+                cms.portPointPathingSolver?.computeNodePf(node) ?? null,
+              ]),
+            ),
+            colorMap: cms.colorMap,
+            connMap: cms.connMap,
+            viaDiameter: cms.viaDiameter,
+            traceWidth: cms.minTraceWidth,
+            obstacleMargin: cms.srj.defaultObstacleMargin ?? 0.15,
+            obstacles: cms.srj.obstacles,
+            layerCount: cms.srj.layerCount,
+            useGrowShrinkHighDensityIntraNodeSolver: true,
+            preserveTerminalPcbPortIds: true,
+            growShrinkFallbackToInvalidGeometryOnFailure: true,
+            captureSearchDebug: false,
+            parallelism: cms.opts.highDensitySolverParallelism,
+            executor: cms.opts.highDensitySolverExecutor,
+            workerUrl: cms.opts.highDensitySolverWorkerUrl,
+          },
+        ]
+      },
+    ),
     definePipelineStep(
       "highDensityForceImproveSolver",
       HighDensityForceImproveSolver,
@@ -821,6 +838,16 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
     this.originalSrj = srjWithBoardValidObstacleLayers
     this.opts = { ...opts }
     const mutableOpts = this.opts
+    const highDensitySolverParallelism =
+      mutableOpts.highDensitySolverParallelism ?? 1
+    if (
+      !Number.isInteger(highDensitySolverParallelism) ||
+      highDensitySolverParallelism < 1
+    ) {
+      throw new Error(
+        `highDensitySolverParallelism must be a positive integer, received ${highDensitySolverParallelism}`,
+      )
+    }
     this.effort = mutableOpts.effort ?? 1
     // scale with effort so the outer cap never decapitates inner solvers
     this.MAX_ITERATIONS = 100e6 * this.effort
@@ -909,9 +936,47 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
     this.startTimeOfPhase[pipelineStepDef.solverName] = performance.now()
   }
 
+  async stepAsync(): Promise<void> {
+    await stepSolverAsync(this)
+  }
+
+  async solveAsync(): Promise<void> {
+    await solveSolverAsync(this)
+  }
+
+  override solve(): void {
+    if ((this.opts.highDensitySolverParallelism ?? 1) > 1) {
+      throw new Error(
+        "AutoroutingPipelineSolver7_MultiGraph requires async execution when highDensitySolverParallelism is greater than 1. Use solveAsync() or stepAsync().",
+      )
+    }
+    super.solve()
+  }
+
+  async dispose(): Promise<void> {
+    const activeSolver = this.activeSubSolver as
+      | (BaseSolver & { dispose?: () => void | Promise<void> })
+      | null
+      | undefined
+    if (typeof activeSolver?.dispose === "function") {
+      await activeSolver.dispose()
+    }
+  }
+
   solveUntilPhase(phase: string) {
+    if ((this.opts.highDensitySolverParallelism ?? 1) > 1) {
+      throw new Error(
+        "Parallel Pipeline7 execution requires solveUntilPhaseAsync()",
+      )
+    }
     while (this.getCurrentPhase() !== phase) {
       this.step()
+    }
+  }
+
+  async solveUntilPhaseAsync(phase: string): Promise<void> {
+    while (this.getCurrentPhase() !== phase && !this.solved && !this.failed) {
+      await this.stepAsync()
     }
   }
 

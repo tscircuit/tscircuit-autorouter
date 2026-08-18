@@ -17,12 +17,14 @@ import {
 import { PortfolioSingleIntraNodeSolver } from "../HyperHighDensitySolver/PortfolioSingleIntraNodeSolver"
 import { safeTransparentize } from "../colors"
 import { CachedIntraNodeRouteSolver } from "./CachedIntraNodeRouteSolver"
+import type { FailedHighDensityNodeSolver } from "./FailedHighDensityNodeSolver"
 import { IntraNodeRouteSolver } from "./IntraNodeSolver"
 
 type HighDensityIntraNodeSolver =
   | IntraNodeRouteSolver
   | PortfolioSingleIntraNodeSolver
   | GrowShrinkHighDensityIntraNodeSolver
+  | FailedHighDensityNodeSolver
 
 const connectionLabel = (
   connectionName: string,
@@ -38,6 +40,26 @@ const connectionLabel = (
   ]
     .filter(Boolean)
     .join("\n")
+
+export interface HighDensitySolverParams {
+  nodePortPoints: NodeWithPortPoints[]
+  colorMap?: Record<string, string>
+  connMap?: ConnectivityMap
+  viaDiameter?: number
+  traceWidth?: number
+  obstacleMargin?: number
+  effort?: number
+  obstacles?: Obstacle[]
+  layerCount?: number
+  useGrowShrinkHighDensityIntraNodeSolver?: boolean
+  preserveTerminalPcbPortIds?: boolean
+  growShrinkMaxInnerIterationsPerGrowthAttempt?: number
+  growShrinkFallbackToInvalidGeometryOnFailure?: boolean
+  captureSearchDebug?: boolean
+  nodePfById?:
+    | Map<CapacityMeshNodeId, number | null>
+    | Record<string, number | null>
+}
 
 export class HighDensitySolver extends BaseSolver {
   override getSolverName(): string {
@@ -96,25 +118,7 @@ export class HighDensitySolver extends BaseSolver {
     growShrinkMaxInnerIterationsPerGrowthAttempt,
     growShrinkFallbackToInvalidGeometryOnFailure,
     captureSearchDebug,
-  }: {
-    nodePortPoints: NodeWithPortPoints[]
-    colorMap?: Record<string, string>
-    connMap?: ConnectivityMap
-    viaDiameter?: number
-    traceWidth?: number
-    obstacleMargin?: number
-    effort?: number
-    obstacles?: Obstacle[]
-    layerCount?: number
-    useGrowShrinkHighDensityIntraNodeSolver?: boolean
-    preserveTerminalPcbPortIds?: boolean
-    growShrinkMaxInnerIterationsPerGrowthAttempt?: number
-    growShrinkFallbackToInvalidGeometryOnFailure?: boolean
-    captureSearchDebug?: boolean
-    nodePfById?:
-      | Map<CapacityMeshNodeId, number | null>
-      | Record<string, number | null>
-  }) {
+  }: HighDensitySolverParams) {
     super()
     this.unsolvedNodePortPoints = nodePortPoints
     this.colorMap = colorMap ?? {}

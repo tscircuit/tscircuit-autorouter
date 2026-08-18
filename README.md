@@ -153,6 +153,31 @@ const solver = new CapacityMeshSolver(simpleRouteJson, {
 
 By default, the solver will automatically calculate the optimal `capacityDepth` to achieve a target minimum capacity of 0.5 based on the board dimensions. This automatic calculation ensures that the smallest subdivision cells have an appropriate capacity for routing.
 
+#### Parallel high-density routing
+
+Pipeline 7 can solve independent high-density capacity-mesh nodes in parallel:
+
+```typescript
+const solver = new AutoroutingPipelineSolver(simpleRouteJson, {
+  highDensitySolverParallelism: 4,
+})
+
+await solver.solveAsync()
+```
+
+Parallel mode uses module Web Workers by default and requires asynchronous
+`stepAsync()` or `solveAsync()` execution. The pipeline sends plain
+structured-cloneable node tasks to the workers and commits results in a stable
+order, independent of which worker finishes first.
+
+Hosts can set `highDensitySolverWorkerUrl` when the packaged worker needs a
+custom URL, or provide a runtime-local `highDensitySolverExecutor` implementing
+the exported executor interface. Keeping the executor outside the routing
+algorithm allows browser Workers, Node worker threads, and test executors to use
+the same pipeline API. Node.js hosts without a global Web Worker API must supply
+a `highDensitySolverExecutor` backed by worker threads. Hosts that cancel an
+active route can await `solver.dispose()` to terminate its worker session.
+
 ### Visualization Support
 
 For debugging or interactive applications, you can use the `visualize()` method to get a visualization of the current routing state:

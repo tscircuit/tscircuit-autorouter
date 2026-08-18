@@ -1,5 +1,6 @@
 import type { GraphicsObject } from "graphics-debug"
 import { CachableSolver, CacheProvider } from "lib/cache/types"
+import { getPendingEffectsFromSolverTree } from "./getPendingEffectsFromSolverTree"
 
 export type PendingEffect = {
   name: string
@@ -33,6 +34,7 @@ export class BaseSolver {
   step() {
     if (this.solved) return
     if (this.failed) return
+    if (getPendingEffectsFromSolverTree(this).length > 0) return
     this.iterations++
     try {
       this._step()
@@ -65,6 +67,11 @@ export class BaseSolver {
     const startTime = Date.now()
     while (!this.solved && !this.failed) {
       this.step()
+      if (getPendingEffectsFromSolverTree(this).length > 0) {
+        throw new Error(
+          `${this.getSolverName()} requires asynchronous execution while effects are pending`,
+        )
+      }
     }
     const endTime = Date.now()
     this.timeToSolve = endTime - startTime

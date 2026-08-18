@@ -1,6 +1,6 @@
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { CapacityMeshNodeId } from "lib/types/capacity-mesh-types"
-import { getPendingEffectsFromSolverTree } from "lib/solvers/getPendingEffectsFromSolverTree"
+import { solveSolverAsync, stepSolverAsync } from "lib/solvers/runSolverAsync"
 import {
   AutoroutingPipelineSolver4_TinyHypergraph,
   type AutoroutingPipelineSolverOptions,
@@ -83,38 +83,12 @@ export class AutoroutingPipelineSolver5_HdCache extends AutoroutingPipelineSolve
     } as any
   }
 
-  async stepAsync() {
-    if (this.solved || this.failed) return
-
-    this.step()
-
-    const pendingEffects = getPendingEffectsFromSolverTree(this)
-    if (pendingEffects.length === 0) {
-      return
-    }
-
-    await Promise.race(
-      pendingEffects.map((effect) =>
-        effect.promise.then(
-          () => effect.name,
-          () => effect.name,
-        ),
-      ),
-    )
-
-    if (!this.solved && !this.failed) {
-      this.step()
-    }
+  async stepAsync(): Promise<void> {
+    await stepSolverAsync(this)
   }
 
-  async solveAsync() {
-    const startTime = Date.now()
-
-    while (!this.solved && !this.failed) {
-      await this.stepAsync()
-    }
-
-    this.timeToSolve = Date.now() - startTime
+  async solveAsync(): Promise<void> {
+    await solveSolverAsync(this)
   }
 
   override solve() {

@@ -21,6 +21,7 @@ export {
 export {
   AutoroutingPipelineSolver7_MultiGraph,
   AutoroutingPipelineSolver7_MultiGraph as AutoroutingPipelineSolver,
+  type AutoroutingPipelineSolverOptions,
 } from "./autorouter-pipelines/AutoroutingPipeline7_MultiGraph/AutoroutingPipelineSolver7_MultiGraph"
 export { AutoroutingPipelineSolver8 } from "./autorouter-pipelines/AutoroutingPipeline8/AutoroutingPipelineSolver8"
 export { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "./autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/autorouting-pipeline-solver9-preloaded-trace-graph"
@@ -63,6 +64,16 @@ export { PortfolioSingleIntraNodeSolver } from "./solvers/HyperHighDensitySolver
 /** @deprecated Use `PortfolioSingleIntraNodeSolver` instead. */
 export { HyperSingleIntraNodeSolver } from "./solvers/HyperHighDensitySolver/HyperSingleIntraNodeSolver"
 export { GrowShrinkHighDensityIntraNodeSolver } from "./solvers/HyperHighDensitySolver/GrowShrinkHighDensityIntraNodeSolver"
+export { ParallelHighDensitySolver } from "./solvers/HighDensitySolver/ParallelHighDensitySolver"
+export { createHighDensityNodeTaskHandler } from "./solvers/HighDensitySolver/solveHighDensityNodeTask"
+export type {
+  HighDensityNodeSolveResult,
+  HighDensityNodeSolveTask,
+  HighDensitySolverExecutionContext,
+  HighDensitySolverExecutor,
+  HighDensitySolverExecutorSession,
+} from "./solvers/HighDensitySolver/high-density-parallel-types"
+export { WebWorkerHighDensitySolverExecutor } from "./WebWorkerHighDensitySolverExecutor"
 export {
   GlobalDrcBranchPortfolioSolver,
   GlobalDrcForceImproveSolver,
