@@ -317,6 +317,13 @@ const getTinyHyperGraphPipelineInput = (
       effort,
       minViaPadDiameter,
     ),
+    unravelSolverOptions: {
+      REGION_COST_MODEL: "routing-complexity",
+      FIXED_ROUTE_IDS: (serializedHyperGraph.connections ?? []).flatMap(
+        (connection, routeId) =>
+          hasPreloadedTraceSectionMetadata(connection) ? [routeId] : [],
+      ),
+    },
   }
 }
 
@@ -918,21 +925,18 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
   }
 
   getSolvedTinySolver(): TinyHyperGraphSolver {
-    const optimizeSectionSolver =
-      this.getSolver<TinyHyperGraphSectionSolver>("optimizeSection")
-
-    if (optimizeSectionSolver?.solved && !optimizeSectionSolver.failed) {
-      return optimizeSectionSolver.getSolvedSolver()
-    }
-
-    const solveGraphSolver = this.getSolver<TinyHyperGraphSolver>("solveGraph")
-    if (solveGraphSolver?.solved && !solveGraphSolver.failed) {
-      return solveGraphSolver
-    }
-
-    throw new Error(
-      "TinyHyperGraph section pipeline does not have a solved graph",
+    const optimizeRegionCostsSolver = this.getSolver<TinyHyperGraphSolver>(
+      "optimizeRegionCosts",
     )
+    if (
+      !optimizeRegionCostsSolver?.solved ||
+      optimizeRegionCostsSolver.failed
+    ) {
+      throw new Error(
+        "TinyHyperGraph region-cost optimizer did not produce a solved graph",
+      )
+    }
+    return optimizeRegionCostsSolver
   }
 
   private configureSolver(solver?: BaseSolver | null) {
@@ -1378,6 +1382,15 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
   }
 
   private getCurrentTinySolver(): TinyHyperGraphSolver | undefined {
+    const optimizeRegionCostsSolver =
+      this.tinyPipelineSolver.getSolver<TinyHyperGraphSolver>(
+        "optimizeRegionCosts",
+      )
+
+    if (optimizeRegionCostsSolver) {
+      return optimizeRegionCostsSolver
+    }
+
     const optimizeSectionSolver =
       this.tinyPipelineSolver.getSolver<TinyHyperGraphSectionSolver>(
         "optimizeSection",
