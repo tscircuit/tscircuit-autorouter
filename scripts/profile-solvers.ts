@@ -30,6 +30,7 @@ type ProfileOptions = {
   effort?: number
   concurrency: number
   sampleTimeoutMs?: number
+  markdownOutput?: string
 }
 
 type ProfileSolverRow = {
@@ -44,6 +45,28 @@ type ProfileSolverRow = {
   p95TimeMs: number | null
   p50Iterations: number | null
   p95Iterations: number | null
+}
+
+type ProfileScenarioSolverRow = {
+  solverName: string
+  attemptCount: number
+  successfulAttemptCount: number
+  totalIterations: number
+  totalTimeMs: number
+}
+
+type ProfileScenarioRow = {
+  scenarioName: string
+  elapsedTimeMs: number
+  solverTimeMs: number
+  solvers: ProfileScenarioSolverRow[]
+}
+
+type IncompleteProfileScenario = {
+  scenarioName: string
+  elapsedTimeMs: number
+  error: string | null
+  didTimeout: boolean
 }
 
 type ProfileTask = {
@@ -248,6 +271,13 @@ const parseArgs = (): ProfileOptions => {
         "--sample-timeout",
       )
       i += 1
+    } else if (arg === "--markdown-output") {
+      const markdownOutput = args[i + 1]
+      if (!markdownOutput || markdownOutput.startsWith("-")) {
+        throw new Error("--markdown-output requires a path")
+      }
+      options.markdownOutput = markdownOutput
+      i += 1
     } else if (arg === "-h" || arg === "--help") {
       console.log(
         [
@@ -260,6 +290,7 @@ const parseArgs = (): ProfileOptions => {
           "  --effort N           Override scenario effort multiplier",
           "  --concurrency N      Number of worker processes to use, or auto",
           "  --sample-timeout D   Per-scenario timeout, e.g. 120s or 2m",
+          "  --markdown-output P  Write the completed-scenario timing matrix to P",
           "  -h, --help           Show this help",
         ].join("\n"),
       )
@@ -343,6 +374,96 @@ const formatDurationLabel = (timeMs: number) => {
     return `${Math.round(timeMs)}ms`
   }
   return `${(timeMs / 1000).toFixed(1)}s`
+}
+
+const escapeMarkdownCell = (value: string): string =>
+  value.replaceAll("|", "\\|").replaceAll("\n", " ")
+
+const renderScenarioTimingMarkdown = ({
+  datasetName,
+  scenarioCount,
+  solved,
+  failed,
+  concurrency,
+  totalTimeMs,
+  completedScenarios,
+  incompleteScenarios,
+}: {
+  datasetName: DatasetName
+  scenarioCount: number
+  solved: number
+  failed: number
+  concurrency: number
+  totalTimeMs: number
+  completedScenarios: ProfileScenarioRow[]
+  incompleteScenarios: IncompleteProfileScenario[]
+}): string => {
+  const scenarios = completedScenarios
+  const solverNames = [
+    ...new Set(
+      scenarios.flatMap((scenario) =>
+        scenario.solvers.map((solver) => solver.solverName),
+      ),
+    ),
+  ].sort((a, b) => {
+    const totalFor = (name: string) =>
+      scenarios.reduce(
+        (sum, scenario) =>
+          sum +
+          (scenario.solvers.find((solver) => solver.solverName === name)
+            ?.totalTimeMs ?? 0),
+        0,
+      )
+    return totalFor(b) - totalFor(a) || a.localeCompare(b)
+  })
+
+  const headers = [
+    "Solver",
+    ...scenarios.map((row) => row.scenarioName),
+    "Total",
+  ]
+  const separator = headers.map((_, index) => (index === 0 ? ":---" : "---:"))
+  const rows = solverNames.map((solverName) => {
+    const times = scenarios.map(
+      (scenario) =>
+        scenario.solvers.find((solver) => solver.solverName === solverName)
+          ?.totalTimeMs ?? null,
+    )
+    const total = times.reduce<number>(
+      (sum, timeMs) => sum + (timeMs ?? 0),
+      0,
+    )
+    return [
+      escapeMarkdownCell(solverName),
+      ...times.map((timeMs) => (timeMs === null ? "—" : formatTime(timeMs))),
+      formatTime(total),
+    ]
+  })
+  const problemWallTimes = [
+    "**Problem wall time**",
+    ...scenarios.map((scenario) => `**${formatTime(scenario.elapsedTimeMs)}**`),
+    `**${formatTime(scenarios.reduce((sum, row) => sum + row.elapsedTimeMs, 0))}**`,
+  ]
+
+  return [
+    `# ${datasetName.toUpperCase()} solver profile`,
+    "",
+    `Profiled ${solved} completed problems out of ${scenarioCount} (${failed} incomplete) with concurrency ${concurrency}. The profiling command took ${formatTime(totalTimeMs)} wall-clock time.`,
+    "",
+    ...(incompleteScenarios.length > 0
+      ? [
+          `Incomplete problems excluded from the table: ${incompleteScenarios.map((scenario) => scenario.scenarioName).join(", ")}.`,
+          "",
+        ]
+      : []),
+    "Each cell is the inclusive wall-clock time accumulated by every completed instance of that solver for the problem. Nested solver timings can overlap, so solver rows should not be added together to infer problem wall time. An em dash means the solver did not run.",
+    "",
+    `| ${headers.join(" | ")} |`,
+    `| ${separator.join(" | ")} |`,
+    `| ${problemWallTimes.join(" | ")} |`,
+    ...rows.map((row) => `| ${row.join(" | ")} |`),
+    "",
+  ].join("\n")
 }
 
 const getTaskEffort = (scenario: SimpleRouteJson) => {
@@ -896,6 +1017,62 @@ const main = async () => {
     totalTimeMs,
     solved,
     failed,
+    incompleteScenarios: results
+      .filter((result) => !result.solved)
+      .map(
+        (result): IncompleteProfileScenario => ({
+          scenarioName: result.scenarioName,
+          elapsedTimeMs: result.elapsedTimeMs,
+          error: result.error ?? null,
+          didTimeout: result.didTimeout ?? false,
+        }),
+      ),
+    completedScenarios: results
+      .filter((result) => result.solved)
+      .map((result): ProfileScenarioRow => {
+        const records = result.records.filter(
+          (record) =>
+            !record.name.startsWith("AutoroutingPipelineSolver"),
+        )
+        const recordsBySolver = new Map<string, SolverRecord[]>()
+        for (const record of records) {
+          const existing = recordsBySolver.get(record.name) ?? []
+          existing.push(record)
+          recordsBySolver.set(record.name, existing)
+        }
+        const solvers = [...recordsBySolver.entries()]
+          .map(
+            ([solverName, solverRecords]): ProfileScenarioSolverRow => ({
+              solverName,
+              attemptCount: solverRecords.length,
+              successfulAttemptCount: solverRecords.filter(
+                (record) => record.success,
+              ).length,
+              totalIterations: solverRecords.reduce(
+                (sum, record) => sum + record.iterations,
+                0,
+              ),
+              totalTimeMs: solverRecords.reduce(
+                (sum, record) => sum + record.timeMs,
+                0,
+              ),
+            }),
+          )
+          .sort(
+            (a, b) =>
+              b.totalTimeMs - a.totalTimeMs ||
+              a.solverName.localeCompare(b.solverName),
+          )
+        return {
+          scenarioName: result.scenarioName,
+          elapsedTimeMs: result.elapsedTimeMs,
+          solverTimeMs: solvers.reduce(
+            (sum, solver) => sum + solver.totalTimeMs,
+            0,
+          ),
+          solvers,
+        }
+      }),
     rows: rows.map(
       (r): ProfileSolverRow => ({
         solverName: r.name,
@@ -917,6 +1094,16 @@ const main = async () => {
     "profile-solvers.json",
     JSON.stringify(profileReport, null, 2),
   )
+
+  if (opts.markdownOutput) {
+    await Bun.write(
+      opts.markdownOutput,
+      renderScenarioTimingMarkdown(profileReport),
+    )
+    console.log(
+      `Wrote completed-scenario timing matrix to ${opts.markdownOutput}`,
+    )
+  }
 }
 
 if (isWorkerProcess) {
