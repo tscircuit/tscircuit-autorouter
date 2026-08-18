@@ -60,9 +60,7 @@ test("Pipeline7 uses a DRC-validated fast probe for two-layer exact repair", () 
   } as any)
   expect((globalDrcParams as any).maxIterations).toBe(16)
   expect((globalDrcParams as any).enableLargeBoardBroadFallback).toBe(false)
-  expect(
-    (globalDrcParams as any).deferViaPadRepairsUntilLegacyClear,
-  ).toBe(true)
+  expect((globalDrcParams as any).deferViaPadRepairsUntilLegacyClear).toBe(true)
 
   const exactGeometryDrcStep = solver.pipelineDef.find(
     (step) => step.solverName === "exactGeometryDrcForceImproveSolver",
