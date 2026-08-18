@@ -377,14 +377,14 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     const updatedPreloadedTraceById = new Map(
       params.updatedPreloadedTraces.map((trace) => [trace.pcb_trace_id, trace]),
     )
-    const movablePreloadedTraceIds = new Set<string>()
+    const candidateMovablePreloadedTraceIds = new Set<string>()
     for (const preparedTraceId of preparedTraceIdsInErrors) {
       const originalTraceId =
         preparedCurrentOutput.originalPreloadedTraceIdByPreparedTraceId.get(
           preparedTraceId,
         ) ?? preparedTraceId
       if (updatedPreloadedTraceById.has(originalTraceId)) {
-        movablePreloadedTraceIds.add(originalTraceId)
+        candidateMovablePreloadedTraceIds.add(originalTraceId)
       }
     }
     for (const traceId of getPipeline9PreloadedTraceIdsInInitialDrcRegions({
@@ -396,6 +396,28 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       defaultViaDiameter: params.defaultViaDiameter,
       connMap: params.connMap,
     })) {
+      candidateMovablePreloadedTraceIds.add(traceId)
+    }
+
+    // A through-obstacle segment represents connectivity supplied by an
+    // existing connected obstacle, not a via or wire exact repair may relocate.
+    // Preserve the complete preloaded trace as fixed copper and repair the
+    // conflicting routed traces around it.
+    const movablePreloadedTraceIds = new Set<string>()
+    for (const traceId of candidateMovablePreloadedTraceIds) {
+      const trace = updatedPreloadedTraceById.get(traceId)
+      if (!trace) {
+        throw new Error(
+          `Pipeline9 cannot find preloaded trace "${traceId}" selected for exact repair`,
+        )
+      }
+      if (
+        trace.route.some(
+          (routePoint) => routePoint.route_type === "through_obstacle",
+        )
+      ) {
+        continue
+      }
       movablePreloadedTraceIds.add(traceId)
     }
 
