@@ -29,6 +29,7 @@ import {
   type TinyHyperGraphSectionPipelineInput,
   type TinyHyperGraphSectionSolverOptions,
   type TinyHyperGraphSolverOptions,
+  type UnravelTinyHyperGraphSolver,
 } from "tiny-hypergraph/lib/index"
 import type {
   ConnectionHg,
@@ -53,6 +54,18 @@ type RouteMetadata = {
   endRegionId?: string
   simpleRouteConnection?: HgPortPointPathingSolverParams["connections"][number]["simpleRouteConnection"]
   preloadedTraceSection?: PreloadedTraceSectionMetadata
+}
+
+type RegionCostOptimizerStats = {
+  initialMaxRegionCost?: number
+  finalMaxRegionCost?: number
+  initialTotalRegionCost?: number
+  finalTotalRegionCost?: number
+  acceptedMutationCount?: number
+  evaluatedMutationCount?: number
+  optimizationStopReason?: "local_optimum" | "mutation_limit" | "reroute_limit"
+  rolledBackPlateauMutations?: boolean
+  optimized?: boolean
 }
 
 export type ChangedPreloadedTraceSection = {
@@ -1204,6 +1217,14 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       this.tinyPipelineSolver.getSolver<TinyHyperGraphSolver>("solveGraph")
     if (!solveGraphSolver) return undefined
 
+    const optimizer =
+      this.tinyPipelineSolver.getSolver<UnravelTinyHyperGraphSolver>(
+        "optimizeRegionCosts",
+      )
+    const optimizerStats = optimizer?.stats as
+      | RegionCostOptimizerStats
+      | undefined
+
     const regionSegmentCounts = solveGraphSolver.state.regionSegments.map(
       (segments) => segments.length,
     )
@@ -1214,6 +1235,8 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
     const solveGraphStats = solveGraphSolver.stats
     const solveGraphStageStats =
       this.tinyPipelineSolver.getStageStats().solveGraph
+    const optimizerStageStats =
+      this.tinyPipelineSolver.getStageStats().optimizeRegionCosts
 
     return {
       routeCount: solveGraphSolver.problem.routeCount,
@@ -1260,6 +1283,17 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
         solveGraphStats.outsideInForwardExpansionCount,
       outsideInReverseExpansionCount:
         solveGraphStats.outsideInReverseExpansionCount,
+      optimizerTimeMs: optimizerStageStats?.timeSpent,
+      optimizerInitialMaxRegionCost: optimizerStats?.initialMaxRegionCost,
+      optimizerFinalMaxRegionCost: optimizerStats?.finalMaxRegionCost,
+      optimizerInitialTotalRegionCost: optimizerStats?.initialTotalRegionCost,
+      optimizerFinalTotalRegionCost: optimizerStats?.finalTotalRegionCost,
+      optimizerAcceptedMutationCount: optimizerStats?.acceptedMutationCount,
+      optimizerEvaluatedMutationCount: optimizerStats?.evaluatedMutationCount,
+      optimizerStopReason: optimizerStats?.optimizationStopReason,
+      optimizerRolledBackPlateauMutations:
+        optimizerStats?.rolledBackPlateauMutations,
+      optimizerOptimized: optimizerStats?.optimized,
     }
   }
 

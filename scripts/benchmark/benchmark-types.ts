@@ -88,6 +88,16 @@ export type TinyHypergraphBenchmarkMetrics = {
   outsideInFallbackRouteCount?: number
   outsideInForwardExpansionCount?: number
   outsideInReverseExpansionCount?: number
+  optimizerTimeMs?: number
+  optimizerInitialMaxRegionCost?: number
+  optimizerFinalMaxRegionCost?: number
+  optimizerInitialTotalRegionCost?: number
+  optimizerFinalTotalRegionCost?: number
+  optimizerAcceptedMutationCount?: number
+  optimizerEvaluatedMutationCount?: number
+  optimizerStopReason?: "local_optimum" | "mutation_limit" | "reroute_limit"
+  optimizerRolledBackPlateauMutations?: boolean
+  optimizerOptimized?: boolean
 }
 
 export type RoutingBenchmarkMetrics = {

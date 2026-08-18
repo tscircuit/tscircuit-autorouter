@@ -34,4 +34,28 @@ test("TinyHypergraph pathing consumes the post-solve region optimizer", () => {
     REGION_COST_MODEL: "routing-complexity",
     FIXED_ROUTE_IDS: [],
   })
+
+  const optimizerStats = optimizer.stats as {
+    initialMaxRegionCost: number
+    finalMaxRegionCost: number
+    initialTotalRegionCost: number
+    finalTotalRegionCost: number
+    acceptedMutationCount: number
+    evaluatedMutationCount: number
+    optimizationStopReason: string
+    rolledBackPlateauMutations: boolean
+    optimized: boolean
+  }
+  expect(solver.getSolveGraphBenchmarkMetrics()).toMatchObject({
+    optimizerInitialMaxRegionCost: optimizerStats.initialMaxRegionCost,
+    optimizerFinalMaxRegionCost: optimizerStats.finalMaxRegionCost,
+    optimizerInitialTotalRegionCost: optimizerStats.initialTotalRegionCost,
+    optimizerFinalTotalRegionCost: optimizerStats.finalTotalRegionCost,
+    optimizerAcceptedMutationCount: optimizerStats.acceptedMutationCount,
+    optimizerEvaluatedMutationCount: optimizerStats.evaluatedMutationCount,
+    optimizerStopReason: optimizerStats.optimizationStopReason,
+    optimizerRolledBackPlateauMutations:
+      optimizerStats.rolledBackPlateauMutations,
+    optimizerOptimized: optimizerStats.optimized,
+  })
 })
