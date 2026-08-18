@@ -136,39 +136,36 @@ function cropSvgToSectionView(svg: string, sectionView: SectionView): string {
   )
 }
 
-test.skip(
-  "bugreport93 reproduces overlapping vias near the reported DRC location",
-  () => {
-    const solver = new AutoroutingPipelineSolver(structuredClone(srj))
-    solver.solve()
+test.skip("bugreport93 reproduces overlapping vias near the reported DRC location", () => {
+  const solver = new AutoroutingPipelineSolver(structuredClone(srj))
+  solver.solve()
 
-    expect(solver.failed).toBe(false)
-    expect(solver.solved).toBe(true)
-    const [viaA, viaB] = reportedViaCenters.map(getReportedVia)
-    const centerDistance = Math.hypot(viaA.x - viaB.x, viaA.y - viaB.y)
-    const requiredCenterSpacing =
-      (viaA.via_diameter + viaB.via_diameter) / 2 +
-      srjJson.minPadEdgeToPadEdgeClearance
-    const errorCircles: Circle[] = [
-      {
-        center: badViaClearanceView.center,
-        radius: 0.75,
-        stroke: "red",
-        fill: "rgba(255, 0, 0, 0.25)",
-        label: `Via centers are ${centerDistance.toFixed(3)}mm apart; ${requiredCenterSpacing.toFixed(3)}mm required`,
-      },
-    ]
-    const annotatedOutput = mergeGraphics(
-      convertSrjToGraphicsObject(reportedOutputSrj),
-      { circles: errorCircles },
-    )
-    const annotatedSvg = getSvgFromGraphicsObject(annotatedOutput, {
-      backgroundColor: "white",
-    })
+  expect(solver.failed).toBe(false)
+  expect(solver.solved).toBe(true)
+  const [viaA, viaB] = reportedViaCenters.map(getReportedVia)
+  const centerDistance = Math.hypot(viaA.x - viaB.x, viaA.y - viaB.y)
+  const requiredCenterSpacing =
+    (viaA.via_diameter + viaB.via_diameter) / 2 +
+    srjJson.minPadEdgeToPadEdgeClearance
+  const errorCircles: Circle[] = [
+    {
+      center: badViaClearanceView.center,
+      radius: 0.75,
+      stroke: "red",
+      fill: "rgba(255, 0, 0, 0.25)",
+      label: `Via centers are ${centerDistance.toFixed(3)}mm apart; ${requiredCenterSpacing.toFixed(3)}mm required`,
+    },
+  ]
+  const annotatedOutput = mergeGraphics(
+    convertSrjToGraphicsObject(reportedOutputSrj),
+    { circles: errorCircles },
+  )
+  const annotatedSvg = getSvgFromGraphicsObject(annotatedOutput, {
+    backgroundColor: "white",
+  })
 
-    expect(centerDistance).toBeLessThan(requiredCenterSpacing)
-    expect(
-      cropSvgToSectionView(annotatedSvg, badViaClearanceView),
-    ).toMatchSvgSnapshot(import.meta.path)
-  },
-)
+  expect(centerDistance).toBeLessThan(requiredCenterSpacing)
+  expect(
+    cropSvgToSectionView(annotatedSvg, badViaClearanceView),
+  ).toMatchSvgSnapshot(import.meta.path)
+})
