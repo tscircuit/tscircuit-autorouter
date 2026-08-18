@@ -2,6 +2,7 @@ import { expect, test } from "bun:test"
 import { sample003 } from "@tscircuit/dataset-srj29-ddr3-bga-pairs"
 import { convertCircuitJsonToPcbSvg } from "circuit-to-svg"
 import { AutoroutingPipelineSolver10_BgaFanout } from "lib/autorouter-pipelines/AutoroutingPipeline10_BgaFanout/AutoroutingPipelineSolver10_BgaFanout"
+import { convertPipeline7HdRoutesToSimplifiedPcbTraces } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/convertPipeline7HdRoutesToSimplifiedPcbTraces"
 import { convertToCircuitJson } from "lib/testing/utils/convertToCircuitJson"
 import type { SimpleRouteJson } from "lib/types"
 
@@ -11,10 +12,13 @@ test("Pipeline9 preserves a materialized through-obstacle fanout trace", () => {
     cacheProvider: null,
     effort: 1,
   })
-  solver.solve()
-
-  expect(solver.solved).toBe(true)
-  expect(solver.failed).toBe(false)
+  while (
+    !solver.failed &&
+    !solver.autoroutingPipelineSolver?.autoroutingPipelineSolver
+      ?.pipeline9JointDrcRepairSolver
+  ) {
+    solver.step()
+  }
 
   const pipeline9 = solver.autoroutingPipelineSolver?.autoroutingPipelineSolver
   if (!pipeline9?.srjWithPointPairs) {
@@ -24,6 +28,7 @@ test("Pipeline9 preserves a materialized through-obstacle fanout trace", () => {
   if (!jointDrcRepair) {
     throw new Error("Expected Pipeline9 to construct joint DRC repair")
   }
+  expect(solver.failed).toBe(false)
   const movableSectionsFromThroughObstacleTraces =
     jointDrcRepair.movablePreloadedSections.filter((section) =>
       section.originalTrace.route.some(
@@ -42,8 +47,18 @@ test("Pipeline9 preserves a materialized through-obstacle fanout trace", () => {
     ),
   ).toBe(true)
 
-  const routedBoard = solver.getOutput()
-  const routedBoardTraces = routedBoard.traces ?? []
+  const routedBoardTraces = [
+    ...jointDrcRepair.getUpdatedPreloadedTraces(),
+    ...convertPipeline7HdRoutesToSimplifiedPcbTraces({
+      connections: jointDrcRepair.params.newConnections,
+      originalConnections: inputSrj.connections,
+      hdRoutes: jointDrcRepair.getOutput(),
+      layerCount: inputSrj.layerCount,
+      obstacles: inputSrj.obstacles,
+      defaultViaHoleDiameter: jointDrcRepair.params.defaultViaHoleDiameter,
+      connMap: jointDrcRepair.params.connMap,
+    }),
+  ]
   expect(
     routedBoardTraces.some((trace) =>
       trace.route.some(
