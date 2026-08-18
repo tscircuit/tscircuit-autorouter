@@ -47,19 +47,15 @@ type ProfileSolverRow = {
   p95Iterations: number | null
 }
 
-type ProfileScenarioSolverRow = {
+type PipelineStageTiming = {
   solverName: string
-  attemptCount: number
-  successfulAttemptCount: number
-  totalIterations: number
-  totalTimeMs: number
+  timeMs: number
 }
 
-type ProfileScenarioRow = {
+type CompletedProfileScenario = {
   scenarioName: string
   elapsedTimeMs: number
-  solverTimeMs: number
-  solvers: ProfileScenarioSolverRow[]
+  stageTimings: PipelineStageTiming[]
 }
 
 type IncompleteProfileScenario = {
@@ -84,6 +80,7 @@ type ProfileTaskResult = {
   solved: boolean
   elapsedTimeMs: number
   records: SolverRecord[]
+  stageTimings: PipelineStageTiming[]
   error?: string
   didTimeout?: boolean
 }
@@ -376,92 +373,64 @@ const formatDurationLabel = (timeMs: number) => {
   return `${(timeMs / 1000).toFixed(1)}s`
 }
 
-const escapeMarkdownCell = (value: string): string =>
-  value.replaceAll("|", "\\|").replaceAll("\n", " ")
-
 const renderScenarioTimingMarkdown = ({
   datasetName,
-  scenarioCount,
-  solved,
-  failed,
-  concurrency,
-  totalTimeMs,
   completedScenarios,
   incompleteScenarios,
 }: {
   datasetName: DatasetName
-  scenarioCount: number
-  solved: number
-  failed: number
-  concurrency: number
-  totalTimeMs: number
-  completedScenarios: ProfileScenarioRow[]
+  completedScenarios: CompletedProfileScenario[]
   incompleteScenarios: IncompleteProfileScenario[]
 }): string => {
-  const scenarios = completedScenarios
-  const solverNames = [
+  const stageNames = [
     ...new Set(
-      scenarios.flatMap((scenario) =>
-        scenario.solvers.map((solver) => solver.solverName),
+      completedScenarios.flatMap((scenario) =>
+        scenario.stageTimings.map((stage) => stage.solverName),
       ),
     ),
-  ].sort((a, b) => {
-    const totalFor = (name: string) =>
-      scenarios.reduce(
-        (sum, scenario) =>
-          sum +
-          (scenario.solvers.find((solver) => solver.solverName === name)
-            ?.totalTimeMs ?? 0),
-        0,
-      )
-    return totalFor(b) - totalFor(a) || a.localeCompare(b)
-  })
-
-  const headers = [
-    "Solver",
-    ...scenarios.map((row) => row.scenarioName),
-    "Total",
   ]
-  const separator = headers.map((_, index) => (index === 0 ? ":---" : "---:"))
-  const rows = solverNames.map((solverName) => {
-    const times = scenarios.map(
-      (scenario) =>
-        scenario.solvers.find((solver) => solver.solverName === solverName)
-          ?.totalTimeMs ?? null,
+  const rows = stageNames
+    .map((solverName) => {
+      const percentages = completedScenarios.map((scenario) => {
+        const totalStageTimeMs = scenario.stageTimings.reduce(
+          (sum, stage) => sum + stage.timeMs,
+          0,
+        )
+        const stageTimeMs =
+          scenario.stageTimings.find(
+            (stage) => stage.solverName === solverName,
+          )?.timeMs ?? 0
+        return totalStageTimeMs === 0
+          ? 0
+          : (stageTimeMs / totalStageTimeMs) * 100
+      })
+      return {
+        solverName,
+        p50Percent: getPercentile(percentages, 0.5) ?? 0,
+      }
+    })
+    .sort(
+      (a, b) =>
+        b.p50Percent - a.p50Percent ||
+        a.solverName.localeCompare(b.solverName),
     )
-    const total = times.reduce<number>(
-      (sum, timeMs) => sum + (timeMs ?? 0),
-      0,
-    )
-    return [
-      escapeMarkdownCell(solverName),
-      ...times.map((timeMs) => (timeMs === null ? "—" : formatTime(timeMs))),
-      formatTime(total),
-    ]
-  })
-  const problemWallTimes = [
-    "**Problem wall time**",
-    ...scenarios.map((scenario) => `**${formatTime(scenario.elapsedTimeMs)}**`),
-    `**${formatTime(scenarios.reduce((sum, row) => sum + row.elapsedTimeMs, 0))}**`,
-  ]
 
   return [
     `# ${datasetName.toUpperCase()} solver profile`,
     "",
-    `Profiled ${solved} completed problems out of ${scenarioCount} (${failed} incomplete) with concurrency ${concurrency}. The profiling command took ${formatTime(totalTimeMs)} wall-clock time.`,
-    "",
     ...(incompleteScenarios.length > 0
       ? [
-          `Incomplete problems excluded from the table: ${incompleteScenarios.map((scenario) => scenario.scenarioName).join(", ")}.`,
+          `Based on completed problems only; excluded: ${incompleteScenarios.map((scenario) => scenario.scenarioName).join(", ")}.`,
           "",
         ]
       : []),
-    "Each cell is the inclusive wall-clock time accumulated by every completed instance of that solver for the problem. Nested solver timings can overlap, so solver rows should not be added together to infer problem wall time. An em dash means the solver did not run.",
+    "P50 is the median, across completed problems, of the percentage of direct Pipeline 7 stage time spent in each solver. Conditional stages that did not run count as 0% for that problem.",
     "",
-    `| ${headers.join(" | ")} |`,
-    `| ${separator.join(" | ")} |`,
-    `| ${problemWallTimes.join(" | ")} |`,
-    ...rows.map((row) => `| ${row.join(" | ")} |`),
+    "| Pipeline 7 solver | P50 time spent |",
+    "| :--- | ---: |",
+    ...rows.map(
+      (row) => `| ${row.solverName} | ${row.p50Percent.toFixed(2)}% |`,
+    ),
     "",
   ].join("\n")
 }
@@ -528,6 +497,7 @@ const createFailedTaskResult = (
   solved: false,
   elapsedTimeMs,
   records: [],
+  stageTimings: [],
   error,
   didTimeout,
 })
@@ -557,6 +527,9 @@ const runProfileTask = (task: ProfileTask): ProfileTaskResult => {
     solved: Boolean(solver.solved),
     elapsedTimeMs,
     records: allRecords.map((record) => ({ ...record })),
+    stageTimings: Object.entries(solver.timeSpentOnPhase).map(
+      ([solverName, timeMs]) => ({ solverName, timeMs }),
+    ),
     error: solveError,
   }
 }
@@ -1029,50 +1002,13 @@ const main = async () => {
       ),
     completedScenarios: results
       .filter((result) => result.solved)
-      .map((result): ProfileScenarioRow => {
-        const records = result.records.filter(
-          (record) =>
-            !record.name.startsWith("AutoroutingPipelineSolver"),
-        )
-        const recordsBySolver = new Map<string, SolverRecord[]>()
-        for (const record of records) {
-          const existing = recordsBySolver.get(record.name) ?? []
-          existing.push(record)
-          recordsBySolver.set(record.name, existing)
-        }
-        const solvers = [...recordsBySolver.entries()]
-          .map(
-            ([solverName, solverRecords]): ProfileScenarioSolverRow => ({
-              solverName,
-              attemptCount: solverRecords.length,
-              successfulAttemptCount: solverRecords.filter(
-                (record) => record.success,
-              ).length,
-              totalIterations: solverRecords.reduce(
-                (sum, record) => sum + record.iterations,
-                0,
-              ),
-              totalTimeMs: solverRecords.reduce(
-                (sum, record) => sum + record.timeMs,
-                0,
-              ),
-            }),
-          )
-          .sort(
-            (a, b) =>
-              b.totalTimeMs - a.totalTimeMs ||
-              a.solverName.localeCompare(b.solverName),
-          )
-        return {
+      .map(
+        (result): CompletedProfileScenario => ({
           scenarioName: result.scenarioName,
           elapsedTimeMs: result.elapsedTimeMs,
-          solverTimeMs: solvers.reduce(
-            (sum, solver) => sum + solver.totalTimeMs,
-            0,
-          ),
-          solvers,
-        }
-      }),
+          stageTimings: result.stageTimings,
+        }),
+      ),
     rows: rows.map(
       (r): ProfileSolverRow => ({
         solverName: r.name,
