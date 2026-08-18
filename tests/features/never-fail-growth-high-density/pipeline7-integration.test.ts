@@ -122,3 +122,40 @@ test("Pipeline7 uses a DRC-validated fast probe for two-layer exact repair", () 
     false,
   )
 })
+
+test("Pipeline7 accepts a fast probe that preserves legacy DRC cleanliness", () => {
+  const solver = new Pipeline7AdaptiveDrcBranchPortfolioSolver({
+    srj: {
+      layerCount: 2,
+      minTraceWidth: 0.15,
+      minViaDiameter: 0.3,
+      bounds: { minX: 0, minY: 0, maxX: 2, maxY: 2 },
+      obstacles: [],
+      connections: [],
+    },
+    hdRoutes: [],
+    effort: 1,
+    maxIterations: 1,
+    broadMaxIterations: 1,
+    broadPassMultiplier: 1,
+    viaInPadMaxIterations: 1,
+    enableSafeTraceLayerMoves: true,
+    drcEvaluator: () => ({
+      errors: [
+        {
+          type: "pcb_pad_pad_clearance_error",
+          pcb_via_ids: ["via_0"],
+          center: { x: 1, y: 1 },
+        },
+      ],
+    }),
+  } as any)
+
+  solver.solve()
+
+  expect(solver.stats.pipeline7AdaptiveExactDrcFastProbeAccepted).toBe(true)
+  expect(solver.stats.pipeline7AdaptiveExactDrcFastProbeDrcIssueCount).toBe(1)
+  expect(
+    solver.stats.pipeline7AdaptiveExactDrcFastProbeNonViaPadDrcIssueCount,
+  ).toBe(0)
+})

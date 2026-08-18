@@ -25,6 +25,7 @@ export class Pipeline7AdaptiveDrcBranchPortfolioSolver extends BaseSolver {
   private fallbackSolver?: GlobalDrcBranchPortfolioSolver
   private selectedSolver?: GlobalDrcBranchPortfolioSolver
   private fastProbeDrcIssueCount?: number
+  private fastProbeNonViaPadDrcIssueCount?: number
   private fastProbeAttempted = false
 
   constructor(params: GlobalDrcBranchPortfolioSolverParams) {
@@ -101,6 +102,8 @@ export class Pipeline7AdaptiveDrcBranchPortfolioSolver extends BaseSolver {
       pipeline7AdaptiveExactDrcFastProbeAccepted: fastProbeAccepted,
       pipeline7AdaptiveExactDrcFastProbeDrcIssueCount:
         this.fastProbeDrcIssueCount,
+      pipeline7AdaptiveExactDrcFastProbeNonViaPadDrcIssueCount:
+        this.fastProbeNonViaPadDrcIssueCount,
     }
     this.solved = true
   }
@@ -135,11 +138,18 @@ export class Pipeline7AdaptiveDrcBranchPortfolioSolver extends BaseSolver {
       try {
         this.fastProbeDrcIssueCount =
           this.evaluateFastProbeDrcIssueCount(fastProbeRoutes)
+        const solverReportedNonViaPadCount =
+          this.fastProbeSolver!.stats
+            .drcBranchPortfolioFinalNonViaPadDrcIssueCount
+        this.fastProbeNonViaPadDrcIssueCount =
+          typeof solverReportedNonViaPadCount === "number"
+            ? solverReportedNonViaPadCount
+            : this.fastProbeDrcIssueCount
       } catch {
         this.startFallback()
         return
       }
-      if (this.fastProbeDrcIssueCount === 0) {
+      if (this.fastProbeNonViaPadDrcIssueCount === 0) {
         this.finish(this.fastProbeSolver!, true)
       } else {
         this.startFallback()
