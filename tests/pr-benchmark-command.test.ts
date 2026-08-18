@@ -110,7 +110,23 @@ test("PR benchmark commands preserve arguments and fan-out behavior", () => {
     profileSolvers: false,
     sameMachineCompare: true,
   })
-  expect(() => parsePrBenchmarkCommand("/benchmark-all --dataset 18")).toThrow()
+  expect(
+    parsePrBenchmarkCommand(
+      "/benchmark-all --pipeline 9 --same-machine --profile-solvers",
+    ),
+  ).toEqual({
+    kind: "benchmark-all",
+    benchmarkArgs: ["--pipeline", "9"],
+    datasetName: "dataset01",
+    profileSolvers: true,
+    sameMachineCompare: true,
+  })
+  expect(() =>
+    parsePrBenchmarkCommand("/benchmark-all --dataset 18"),
+  ).toThrow("does not accept --dataset")
+  expect(() => parsePrBenchmarkCommand("/benchmark-all --dataset")).toThrow(
+    "does not accept --dataset",
+  )
   expect(() =>
     parsePrBenchmarkCommand('/benchmark --solver "unterminated'),
   ).toThrow("Unterminated quote")
@@ -133,7 +149,10 @@ test("PR benchmark commands preserve arguments and fan-out behavior", () => {
     "['dataset01', 'srj18', 'srj19', 'srj20', 'srj21', 'srj23']",
   )
   expect(dispatchWorkflow).toContain(
-    "benchmark_args_json: JSON.stringify(command.benchmarkArgs)",
+    "? [...command.benchmarkArgs, '--dataset', dataset]",
+  )
+  expect(dispatchWorkflow).toContain(
+    "benchmark_args_json: JSON.stringify(benchmarkArgs)",
   )
   expect(dispatchWorkflow).toContain(
     "long_benchmark: String(command.kind === 'benchmark-long')",
