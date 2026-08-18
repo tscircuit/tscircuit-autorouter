@@ -32,6 +32,7 @@ test("TinyHypergraph pathing consumes the post-solve region optimizer", () => {
   expect(pipeline.getSolvedTinySolver()).toBe(optimizer)
   expect(pipeline.inputProblem.unravelSolverOptions).toEqual({
     REGION_COST_MODEL: "routing-complexity",
+    REROUTE_CONGESTION_FACTORS: [0, 0.25, 0.5, 1, 2, 4, 8],
     FIXED_ROUTE_IDS: [],
   })
 

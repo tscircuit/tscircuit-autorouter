@@ -254,6 +254,13 @@ const TINY_SECTION_SOLVER_BASE_OPTIONS: TinyHyperGraphSectionSolverOptions = {
 const DUPLICATE_PORT_TRAVERSAL_PENALTY = 150
 const DEFAULT_CRAMPED_PORT_TRAVERSAL_PENALTY = 150
 const MAX_CONNECTIONS_FOR_DUPLICATE_CONGESTED_PORT_PREPASS = 180
+const TINY_REGION_COST_OPTIMIZER_MAX_ITERATIONS = 10_000_000
+// Sweep increasingly strong congestion biases so the post-solve optimizer
+// evaluates alternate corridors, then let its exact objective and downstream
+// risk checks decide whether any candidate is safe to accept.
+const TINY_REGION_COST_REROUTE_CONGESTION_FACTORS = [
+  0, 0.25, 0.5, 1, 2, 4, 8,
+]
 
 const getEffortScale = (effort: number) => Math.max(effort, 1e-2)
 
@@ -332,6 +339,8 @@ const getTinyHyperGraphPipelineInput = (
     ),
     unravelSolverOptions: {
       REGION_COST_MODEL: "routing-complexity",
+      REROUTE_CONGESTION_FACTORS:
+        TINY_REGION_COST_REROUTE_CONGESTION_FACTORS,
       FIXED_ROUTE_IDS: (serializedHyperGraph.connections ?? []).flatMap(
         (connection, routeId) =>
           hasPreloadedTraceSectionMetadata(connection) ? [routeId] : [],
@@ -345,7 +354,7 @@ const getTinyHyperGraphPipelineMaxIterations = (
 ) =>
   (inputProblem.solveGraphOptions?.MAX_ITERATIONS ?? 1_000_000) +
   (inputProblem.sectionSolverOptions?.MAX_ITERATIONS ?? 1_000_000) +
-  1_000_000
+  TINY_REGION_COST_OPTIMIZER_MAX_ITERATIONS
 
 const getRouteConnectionName = (routeMetadata: RouteMetadata) =>
   routeMetadata.simpleRouteConnection?.name ?? routeMetadata.connectionId
