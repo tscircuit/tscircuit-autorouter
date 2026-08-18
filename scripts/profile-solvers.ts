@@ -424,7 +424,7 @@ const renderScenarioTimingMarkdown = ({
           "",
         ]
       : []),
-    "P50 is the median, across completed problems, of the percentage of direct Pipeline 7 stage time spent in each solver. Conditional stages that did not run count as 0% for that problem.",
+    "P50 is the median, across completed problems, of the percentage of direct Pipeline 7 stage time spent in each solver. Conditional stages that did not run count as 0% for that problem. Rows are independent medians, so they do not sum to 100%.",
     "",
     "| Pipeline 7 solver | P50 time spent |",
     "| :--- | ---: |",
