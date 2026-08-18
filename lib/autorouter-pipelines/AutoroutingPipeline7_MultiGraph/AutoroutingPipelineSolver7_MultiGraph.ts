@@ -205,8 +205,6 @@ function definePipelineStep<
 }
 
 export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
-  static solverName = "AutoroutingPipelineSolver7_MultiGraph"
-
   override getSolverName(): string {
     return "AutoroutingPipelineSolver7_MultiGraph"
   }

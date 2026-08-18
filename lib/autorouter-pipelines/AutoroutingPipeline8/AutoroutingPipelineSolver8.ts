@@ -103,7 +103,9 @@ function definePipelineStep<
 
 // Pipeline8 is a pipeline4 copy for fab autorouting with preplaced assignable vias
 export class AutoroutingPipelineSolver8 extends BaseSolver {
-  static solverName = "AutoroutingPipelineSolver8"
+  override getSolverName(): string {
+    return "AutoroutingPipelineSolver8"
+  }
 
   preprocessSimpleRouteJsonSolver?: PreprocessSimpleRouteJsonSolver
   escapeViaLocationSolver?: EscapeViaLocationSolver

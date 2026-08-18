@@ -218,8 +218,6 @@ function definePipelineStep<
 }
 
 export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
-  static solverName = "AutoroutingPipelineSolver9_PreloadedTraceGraph"
-
   override getSolverName(): string {
     return "AutoroutingPipelineSolver9_PreloadedTraceGraph"
   }

@@ -12,35 +12,39 @@ import {
   AutoroutingPipelineSolver9_PreloadedTraceGraph,
 } from "lib"
 
+const getSolverName = (solverClass: {
+  prototype: { getSolverName(): string }
+}) => Object.create(solverClass.prototype).getSolverName()
+
 test("core autorouter exports have stable solver names", () => {
-  expect(AssignableAutoroutingPipeline2.solverName).toBe(
+  expect(getSolverName(AssignableAutoroutingPipeline2)).toBe(
     "AssignableAutoroutingPipeline2",
   )
-  expect(AssignableAutoroutingPipeline3.solverName).toBe(
+  expect(getSolverName(AssignableAutoroutingPipeline3)).toBe(
     "AssignableAutoroutingPipeline3",
   )
-  expect(AutoroutingPipeline1_OriginalUnravel.solverName).toBe(
+  expect(getSolverName(AutoroutingPipeline1_OriginalUnravel)).toBe(
     "AutoroutingPipeline1_OriginalUnravel",
   )
-  expect(AutoroutingPipelineSolver3_HgPortPointPathing.solverName).toBe(
+  expect(getSolverName(AutoroutingPipelineSolver3_HgPortPointPathing)).toBe(
     "AutoroutingPipelineSolver3_HgPortPointPathing",
   )
-  expect(AutoroutingPipelineSolver4.solverName).toBe(
+  expect(getSolverName(AutoroutingPipelineSolver4)).toBe(
     "AutoroutingPipelineSolver4_TinyHypergraph",
   )
-  expect(AutoroutingPipelineSolver5.solverName).toBe(
+  expect(getSolverName(AutoroutingPipelineSolver5)).toBe(
     "AutoroutingPipelineSolver5_HdCache",
   )
-  expect(AutoroutingPipelineSolver.solverName).toBe(
+  expect(getSolverName(AutoroutingPipelineSolver)).toBe(
     "AutoroutingPipelineSolver7_MultiGraph",
   )
-  expect(AutoroutingPipelineSolver7_MultiGraph.solverName).toBe(
+  expect(getSolverName(AutoroutingPipelineSolver7_MultiGraph)).toBe(
     "AutoroutingPipelineSolver7_MultiGraph",
   )
-  expect(AutoroutingPipelineSolver8.solverName).toBe(
+  expect(getSolverName(AutoroutingPipelineSolver8)).toBe(
     "AutoroutingPipelineSolver8",
   )
-  expect(AutoroutingPipelineSolver9_PreloadedTraceGraph.solverName).toBe(
+  expect(getSolverName(AutoroutingPipelineSolver9_PreloadedTraceGraph)).toBe(
     "AutoroutingPipelineSolver9_PreloadedTraceGraph",
   )
 })

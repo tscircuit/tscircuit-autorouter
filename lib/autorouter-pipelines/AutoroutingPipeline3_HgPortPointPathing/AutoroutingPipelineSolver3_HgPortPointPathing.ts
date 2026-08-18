@@ -89,7 +89,9 @@ function definePipelineStep<
 }
 
 export class AutoroutingPipelineSolver3_HgPortPointPathing extends BaseSolver {
-  static solverName = "AutoroutingPipelineSolver3_HgPortPointPathing"
+  override getSolverName(): string {
+    return "AutoroutingPipelineSolver3_HgPortPointPathing"
+  }
 
   netToPointPairsSolver?: NetToPointPairsSolver
   nodeSolver?: RectDiffPipeline
