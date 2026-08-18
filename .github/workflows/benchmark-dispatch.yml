@@ -51,6 +51,9 @@ jobs:
               pull_number: context.issue.number,
             })
             for (const dataset of datasets) {
+              const benchmarkArgs = command.kind === 'benchmark-all'
+                ? [...command.benchmarkArgs, '--dataset', dataset]
+                : command.benchmarkArgs
               await github.rest.actions.createWorkflowDispatch({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
@@ -66,10 +69,8 @@ jobs:
                         profile_solvers: String(command.profileSolvers),
                         long_benchmark: String(command.kind === 'benchmark-long'),
                         same_machine_compare: String(command.sameMachineCompare),
+                        benchmark_args_json: JSON.stringify(benchmarkArgs),
                       }),
-                  ...(command.kind !== 'benchmark-all' && !isProfile
-                    ? { benchmark_args_json: JSON.stringify(command.benchmarkArgs) }
-                    : {}),
                 },
               })
             }

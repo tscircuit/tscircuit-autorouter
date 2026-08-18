@@ -100,31 +100,19 @@ export const parsePrBenchmarkCommand = (body) => {
   }
 
   const isBenchmarkAll = /^\/benchmark-all(?:\s|$)/.test(command)
-  if (isBenchmarkAll) {
-    const parsedArgs = splitShellArgs(
-      command.slice("/benchmark-all".length).trim(),
-    )
-    if (parsedArgs.some((arg) => arg !== "--same-machine")) {
-      throw new Error("/benchmark-all only accepts --same-machine")
-    }
-
-    return {
-      kind: "benchmark-all",
-      benchmarkArgs: [],
-      datasetName: "dataset01",
-      profileSolvers: false,
-      sameMachineCompare: parsedArgs.includes("--same-machine"),
-    }
-  }
-
   const isLongBenchmark = /^\/benchmark-long(?:\s|$)/.test(command)
-  const commandPrefix = isLongBenchmark ? "/benchmark-long" : "/benchmark"
-  if (!isLongBenchmark && !/^\/benchmark(?:\s|$)/.test(command)) {
+  const isBenchmark = /^\/benchmark(?:\s|$)/.test(command)
+  if (!isBenchmarkAll && !isLongBenchmark && !isBenchmark) {
     throw new Error(
       "Expected /profile [args...], /benchmark [args...], /benchmark-long [args...], or /benchmark-all",
     )
   }
 
+  const commandPrefix = isBenchmarkAll
+    ? "/benchmark-all"
+    : isLongBenchmark
+      ? "/benchmark-long"
+      : "/benchmark"
   const parsedArgs = splitShellArgs(command.slice(commandPrefix.length).trim())
   const benchmarkArgs =
     isLongBenchmark && !parsedArgs.includes("--concurrency")
@@ -144,14 +132,23 @@ export const parsePrBenchmarkCommand = (body) => {
       profileSolvers = true
       continue
     }
-    if (arg === "--dataset" && parsedArgs[index + 1]) {
-      datasetName = parsedArgs[index + 1]
+    if (arg === "--dataset") {
+      if (isBenchmarkAll) {
+        throw new Error(
+          "/benchmark-all selects every configured dataset and does not accept --dataset",
+        )
+      }
+      if (parsedArgs[index + 1]) datasetName = parsedArgs[index + 1]
     }
     benchmarkArgs.push(arg)
   }
 
   return {
-    kind: isLongBenchmark ? "benchmark-long" : "benchmark",
+    kind: isBenchmarkAll
+      ? "benchmark-all"
+      : isLongBenchmark
+        ? "benchmark-long"
+        : "benchmark",
     benchmarkArgs,
     datasetName,
     profileSolvers,
