@@ -1,0 +1,44 @@
+name: Format and verify issue 2106 fix
+
+on:
+  push:
+    branches:
+      - fix/2106-map-entry-browser-compat
+
+permissions:
+  contents: write
+
+jobs:
+  format-and-verify:
+    if: ${{ !contains(github.event.head_commit.message, '[issue-2106 formatted]') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fix/2106-map-entry-browser-compat
+
+      - uses: oven-sh/setup-bun@v2
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Format changed files
+        run: bunx biome format --write lib/solvers/HighDensitySolver/IntraNodeSolver.ts tests/bugs/issue2106-map-iterator-compat.test.ts
+
+      - name: Run focused regression test
+        run: bun test tests/bugs/issue2106-map-iterator-compat.test.ts --timeout 9999999
+
+      - name: Build package
+        run: bun run build
+
+      - name: Commit verified formatting
+        run: |
+          rm .github/workflows/format-issue-2106.yml
+          git config user.name "obmakesomething"
+          git config user.email "107823004+obmakesomething@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            exit 0
+          fi
+          git commit -m "fix: format Map iterator compatibility patch [issue-2106 formatted]"
+          git push origin HEAD:fix/2106-map-entry-browser-compat
