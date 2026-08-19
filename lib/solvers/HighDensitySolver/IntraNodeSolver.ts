@@ -143,14 +143,14 @@ export class IntraNodeRouteSolver extends BaseSolver {
         ],
       ),
     )
-    this.unsolvedConnections = Array.from(
-      unsolvedConnectionsMap.entries(),
-    ).map(([connectionName, points]) => ({
-      connectionName,
-      rootConnectionName:
-        this.rootConnectionNameByConnectionName.get(connectionName),
-      points: dedupeConnectionPoints(points),
-    }))
+    this.unsolvedConnections = Array.from(unsolvedConnectionsMap.entries()).map(
+      ([connectionName, points]) => ({
+        connectionName,
+        rootConnectionName:
+          this.rootConnectionNameByConnectionName.get(connectionName),
+        points: dedupeConnectionPoints(points),
+      }),
+    )
     this.rerouteAttemptsByConnection = new Map()
 
     if (this.hyperParameters.SHUFFLE_SEED) {
