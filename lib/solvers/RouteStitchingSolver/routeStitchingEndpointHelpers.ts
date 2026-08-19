@@ -126,6 +126,30 @@ const addAdjacencyEdge = (
   adjacency.set(fromHash, entries)
 }
 
+const hasRouteOnlyPathWithinHops = (
+  adjacency: ReadonlyMap<string, EndpointEdge[]>,
+  startHash: string,
+  endHash: string,
+  maxHops: number,
+) => {
+  const queue = [{ hash: startHash, hops: 0 }]
+  const visited = new Set([startHash])
+
+  while (queue.length > 0) {
+    const current = queue.shift()!
+    if (current.hops >= maxHops) continue
+    for (const edge of adjacency.get(current.hash) ?? []) {
+      if (edge.routeIndex === null) continue
+      if (edge.nextHash === endHash) return true
+      if (visited.has(edge.nextHash)) continue
+      visited.add(edge.nextHash)
+      queue.push({ hash: edge.nextHash, hops: current.hops + 1 })
+    }
+  }
+
+  return false
+}
+
 /**
  * Chooses the island endpoints that best align to the requested connection
  * terminals, with deterministic tie-breaking.
@@ -262,6 +286,23 @@ export const selectRoutesAlongEndpointPath = (params: {
         distance(endpointA.point, endpointB.point) > MAX_STITCH_GAP_DISTANCE_3
       )
         continue
+
+      // A short detailed route is safer than replacing it with a straight
+      // terminal stitch, which may cut across a neighboring terminal obstacle.
+      if (
+        (endpointA.key === startHash ||
+          endpointA.key === endHash ||
+          endpointB.key === startHash ||
+          endpointB.key === endHash) &&
+        hasRouteOnlyPathWithinHops(
+          adjacency,
+          endpointA.key,
+          endpointB.key,
+          2,
+        )
+      ) {
+        continue
+      }
 
       addAdjacencyEdge(adjacency, endpointA.key, {
         nextHash: endpointB.key,
