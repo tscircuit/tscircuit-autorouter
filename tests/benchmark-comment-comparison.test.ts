@@ -41,7 +41,7 @@ test("PR benchmark comments render one main-versus-PR comparison table", () => {
       {
         solverName,
         completedRateLabel: "50.0% (🕒50.0%)",
-        relaxedDrcRateLabel: "50.0% (🕒50.0%)",
+        relaxedDrcRateLabel: "0.0% (🕒50.0%)",
         timedOutLabel: "1/2",
         p50TimeMs: 1_000,
         p95TimeMs: 1_000,
@@ -49,7 +49,10 @@ test("PR benchmark comments render one main-versus-PR comparison table", () => {
       },
     ],
     [
-      makeTest(1, 1_000),
+      makeTest(1, 1_000, {
+        relaxedDrcPassed: false,
+        drcErrorCount: 3,
+      }),
       makeTest(2, 2_000, {
         didSolve: false,
         didTimeout: true,
@@ -62,14 +65,20 @@ test("PR benchmark comments render one main-versus-PR comparison table", () => {
       {
         solverName,
         completedRateLabel: "100.0%",
-        relaxedDrcRateLabel: "100.0%",
+        relaxedDrcRateLabel: "50.0%",
         timedOutLabel: "0/2",
         p50TimeMs: 1_350,
         p95TimeMs: 1_755,
         avgVia: 2.2,
       },
     ],
-    [makeTest(1, 900), makeTest(2, 1_800)],
+    [
+      makeTest(1, 900, { drcErrorCount: 0 }),
+      makeTest(2, 1_800, {
+        relaxedDrcPassed: false,
+        drcErrorCount: 1,
+      }),
+    ],
   )
 
   expect(
@@ -79,7 +88,8 @@ test("PR benchmark comments render one main-versus-PR comparison table", () => {
 | Solver | Metric | Main | PR | Change |
 | --- | --- | ---: | ---: | ---: |
 | Pipeline7 | Completion | 50.0% (🕒50.0%) | 100.0% | +50.0 pp |
-| Pipeline7 | Relaxed DRC pass | 50.0% (🕒50.0%) | 100.0% | +50.0 pp |
+| Pipeline7 | Relaxed DRC pass | 0.0% (🕒50.0%) | 50.0% | +50.0 pp |
+| Pipeline7 | DRC issues | 3 | 1 | -2 |
 | Pipeline7 | Timeouts | 1 | 0 | -1 |
 | Pipeline7 | P50 time | 1.5s | 1.4s | -10.0% |
 | Pipeline7 | P60 time | 1.6s | 1.4s | -10.0% |
@@ -89,5 +99,5 @@ test("PR benchmark comments render one main-versus-PR comparison table", () => {
 | Pipeline7 | P95 time | 1.9s | 1.8s | -10.0% |
 | Pipeline7 | Average vias | 2.00 | 2.20 | +10.0% |
 
-_Timing percentiles include solved and timed-out samples. Negative timing changes are faster._`)
+_DRC issues are totaled across solved samples. Timing percentiles include solved and timed-out samples; negative timing changes are faster._`)
 })
