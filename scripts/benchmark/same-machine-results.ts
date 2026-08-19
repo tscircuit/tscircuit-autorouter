@@ -53,6 +53,37 @@ const formatRelativeDelta = (
   return formatSigned(((prValue - mainValue) / mainValue) * 100, "%")
 }
 
+const formatCountDelta = (
+  mainValue: number | null,
+  prValue: number | null,
+): string => {
+  if (mainValue === null || prValue === null) return "n/a"
+  const delta = prValue - mainValue
+  return `${delta > 0 ? "+" : ""}${delta}`
+}
+
+const getDrcIssueCount = (
+  report: BenchmarkReport,
+  solverName: string,
+): number | null => {
+  const solvedTests = report.tests.filter(
+    (test) => test.solverName === solverName && test.didSolve,
+  )
+  if (solvedTests.length === 0) return null
+  let drcIssueCount = 0
+  for (const test of solvedTests) {
+    if (
+      typeof test.drcErrorCount !== "number" ||
+      !Number.isInteger(test.drcErrorCount) ||
+      test.drcErrorCount < 0
+    ) {
+      return null
+    }
+    drcIssueCount += test.drcErrorCount
+  }
+  return drcIssueCount
+}
+
 const getTimePercentile = (
   report: BenchmarkReport,
   solverName: string,
@@ -165,6 +196,8 @@ export const renderSameMachineBenchmarkResults = ({
     const prTimeouts = prReport.tests.filter(
       (test) => test.solverName === prSummary.solverName && test.didTimeout,
     ).length
+    const mainDrcIssues = getDrcIssueCount(mainReport, prSummary.solverName)
+    const prDrcIssues = getDrcIssueCount(prReport, prSummary.solverName)
     const timePercentiles = [50, 60, 70, 80, 90, 95].map((percentile) => {
       const mainTime = getTimePercentile(
         mainReport,
@@ -182,6 +215,7 @@ export const renderSameMachineBenchmarkResults = ({
     lines.push(
       `| ${solver} | Completion | ${mainSummary.completedRateLabel} | ${prSummary.completedRateLabel} | ${formatPercentPointDelta(mainSummary.completedRateLabel, prSummary.completedRateLabel)} |`,
       `| ${solver} | Relaxed DRC pass | ${mainSummary.relaxedDrcRateLabel} | ${prSummary.relaxedDrcRateLabel} | ${formatPercentPointDelta(mainSummary.relaxedDrcRateLabel, prSummary.relaxedDrcRateLabel)} |`,
+      `| ${solver} | DRC issues | ${mainDrcIssues ?? "n/a"} | ${prDrcIssues ?? "n/a"} | ${formatCountDelta(mainDrcIssues, prDrcIssues)} |`,
       `| ${solver} | Timeouts | ${mainTimeouts} | ${prTimeouts} | ${prTimeouts - mainTimeouts > 0 ? "+" : ""}${prTimeouts - mainTimeouts} |`,
       ...timePercentiles,
       `| ${solver} | Average vias | ${formatAverage(mainSummary.avgVia)} | ${formatAverage(prSummary.avgVia)} | ${formatRelativeDelta(mainSummary.avgVia, prSummary.avgVia)} |`,
@@ -194,7 +228,7 @@ export const renderSameMachineBenchmarkResults = ({
   const regressionCount = changedOutcomes.length - improvementCount
   lines.push(
     "",
-    `Outcome changes: **${improvementCount} improved**, **${regressionCount} regressed**. Timing percentiles include solved and timed-out samples; negative timing deltas are faster.`,
+    `Outcome changes: **${improvementCount} improved**, **${regressionCount} regressed**. DRC issues are totaled across solved samples. Timing percentiles include solved and timed-out samples; negative timing deltas are faster.`,
   )
 
   if (changedOutcomes.length > 0) {
