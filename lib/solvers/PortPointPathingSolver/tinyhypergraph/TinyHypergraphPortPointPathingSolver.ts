@@ -278,9 +278,7 @@ const TINY_REGION_COST_OPTIMIZER_MAX_ITERATIONS = 10_000_000
 // Sweep increasingly strong congestion biases so the post-solve optimizer
 // evaluates alternate corridors, then let its exact objective and downstream
 // risk checks decide whether any candidate is safe to accept.
-const TINY_REGION_COST_REROUTE_CONGESTION_FACTORS = [
-  0, 0.25, 0.5, 1, 2, 4, 8,
-]
+const TINY_REGION_COST_REROUTE_CONGESTION_FACTORS = [0, 0.25, 0.5, 1, 2, 4, 8]
 
 const getEffortScale = (effort: number) => Math.max(effort, 1e-2)
 
@@ -359,8 +357,7 @@ const getTinyHyperGraphPipelineInput = (
     ),
     unravelSolverOptions: {
       REGION_COST_MODEL: "routing-complexity",
-      REROUTE_CONGESTION_FACTORS:
-        TINY_REGION_COST_REROUTE_CONGESTION_FACTORS,
+      REROUTE_CONGESTION_FACTORS: TINY_REGION_COST_REROUTE_CONGESTION_FACTORS,
       FIXED_ROUTE_IDS: (serializedHyperGraph.connections ?? []).flatMap(
         (connection, routeId) =>
           hasPreloadedTraceSectionMetadata(connection) ? [routeId] : [],
@@ -930,8 +927,7 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
       throw new Error("Tiny hypergraph pipeline is missing the optimizer stage")
     }
     broadOptimizerStep.solverName = "optimizeRegionCostsBroad"
-    const broadOptimizerStepIndex =
-      this.pipelineDef.indexOf(broadOptimizerStep)
+    const broadOptimizerStepIndex = this.pipelineDef.indexOf(broadOptimizerStep)
     this.pipelineDef.splice(broadOptimizerStepIndex, 0, {
       solverName: "optimizeRegionCosts",
       solverClass: UnravelTinyHyperGraphSolver,
@@ -996,9 +992,8 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
   }
 
   getRegionCostOptimizerInputTinySolver(): TinyHyperGraphSolver {
-    const optimizeSectionSolver = this.getSolver<TinyHyperGraphSectionSolver>(
-      "optimizeSection",
-    )
+    const optimizeSectionSolver =
+      this.getSolver<TinyHyperGraphSectionSolver>("optimizeSection")
     if (optimizeSectionSolver) {
       if (!optimizeSectionSolver.solved || optimizeSectionSolver.failed) {
         throw new Error(
@@ -1018,11 +1013,8 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
   }
 
   getNarrowRegionCostOptimizedTinySolver(): TinyHyperGraphSolver {
-    const optimizeRegionCostsSolver = this.getSolver<
-      UnravelTinyHyperGraphSolver
-    >(
-      "optimizeRegionCosts",
-    )
+    const optimizeRegionCostsSolver =
+      this.getSolver<UnravelTinyHyperGraphSolver>("optimizeRegionCosts")
     if (
       !optimizeRegionCostsSolver?.solved ||
       optimizeRegionCostsSolver.failed
@@ -1035,9 +1027,8 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
   }
 
   getBroadRegionCostOptimizedTinySolver(): TinyHyperGraphSolver {
-    const optimizeRegionCostsSolver = this.getSolver<
-      UnravelTinyHyperGraphSolver
-    >("optimizeRegionCostsBroad")
+    const optimizeRegionCostsSolver =
+      this.getSolver<UnravelTinyHyperGraphSolver>("optimizeRegionCostsBroad")
     if (
       !optimizeRegionCostsSolver?.solved ||
       optimizeRegionCostsSolver.failed
