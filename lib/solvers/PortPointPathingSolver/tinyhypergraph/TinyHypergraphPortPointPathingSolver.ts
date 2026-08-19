@@ -29,7 +29,7 @@ import {
   type TinyHyperGraphSectionPipelineInput,
   type TinyHyperGraphSectionSolverOptions,
   type TinyHyperGraphSolverOptions,
-  type UnravelTinyHyperGraphSolver,
+  UnravelTinyHyperGraphSolver,
 } from "tiny-hypergraph/lib/index"
 import type {
   ConnectionHg,
@@ -107,6 +107,7 @@ export type DownstreamCandidateSummary = {
 }
 
 type CandidatePortfolioPhase = "primary" | "alternative" | "complete"
+type RegionCostCandidate = "input" | "narrow" | "broad"
 
 // A second global-routing candidate is only worthwhile when the primary
 // candidate predicts downstream congestion. Selection requires meaningful
@@ -169,6 +170,25 @@ export const shouldSelectTraceDensityAlternative = (
       primary.squaredNodePortPointCount * maxConcentrationRatio ||
       stronglyReducesDownstreamPressure)
   )
+}
+
+export const shouldSelectRegionCostOptimizedCandidate = (
+  input: DownstreamCandidateSummary,
+  optimized: DownstreamCandidateSummary,
+): boolean => {
+  const isNoWorse =
+    optimized.squaredNodePortPointCount <= input.squaredNodePortPointCount &&
+    optimized.layerChangeCount <= input.layerChangeCount &&
+    optimized.nodePfMax <= input.nodePfMax &&
+    optimized.nodePfSquaredSum <= input.nodePfSquaredSum &&
+    optimized.nodePfSum <= input.nodePfSum
+  const improvesDownstreamProxy =
+    optimized.squaredNodePortPointCount < input.squaredNodePortPointCount ||
+    optimized.layerChangeCount < input.layerChangeCount ||
+    optimized.nodePfSquaredSum < input.nodePfSquaredSum ||
+    optimized.nodePfSum < input.nodePfSum
+
+  return isNoWorse && improvesDownstreamProxy
 }
 
 type TinyRegionMetadata = {
@@ -869,6 +889,10 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
   preloadedFixedSegmentCount = 0
   readonly crampedPortTraversalPenalty: number
   readonly useSelectiveReripRouting: boolean
+  regionCostOptimizerInputSummary?: DownstreamCandidateSummary
+  regionCostOptimizerNarrowSummary?: DownstreamCandidateSummary
+  regionCostOptimizerBroadSummary?: DownstreamCandidateSummary
+  selectedRegionCostCandidate: RegionCostCandidate = "broad"
 
   constructor(
     inputProblem: TinyHyperGraphSectionPipelineInput,
@@ -899,6 +923,31 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
         (pipelineStep) => pipelineStep.solverName !== "optimizeSection",
       )
     }
+    const broadOptimizerStep = this.pipelineDef.find(
+      (pipelineStep) => pipelineStep.solverName === "optimizeRegionCosts",
+    )
+    if (!broadOptimizerStep) {
+      throw new Error("Tiny hypergraph pipeline is missing the optimizer stage")
+    }
+    broadOptimizerStep.solverName = "optimizeRegionCostsBroad"
+    const broadOptimizerStepIndex =
+      this.pipelineDef.indexOf(broadOptimizerStep)
+    this.pipelineDef.splice(broadOptimizerStepIndex, 0, {
+      solverName: "optimizeRegionCosts",
+      solverClass: UnravelTinyHyperGraphSolver,
+      getConstructorParams: (
+        instance: TinyHyperGraphSectionPipelineSolver,
+      ): ConstructorParameters<typeof UnravelTinyHyperGraphSolver> => {
+        const [inputSolver] = instance.getUnravelStageParams()
+        return [
+          inputSolver,
+          {
+            ...instance.inputProblem.unravelSolverOptions,
+            REROUTE_CONGESTION_FACTORS: [0],
+          },
+        ]
+      },
+    })
     this.MAX_ITERATIONS = getTinyHyperGraphPipelineMaxIterations(inputProblem)
   }
 
@@ -946,8 +995,32 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
     return solver
   }
 
-  getSolvedTinySolver(): TinyHyperGraphSolver {
-    const optimizeRegionCostsSolver = this.getSolver<TinyHyperGraphSolver>(
+  getRegionCostOptimizerInputTinySolver(): TinyHyperGraphSolver {
+    const optimizeSectionSolver = this.getSolver<TinyHyperGraphSectionSolver>(
+      "optimizeSection",
+    )
+    if (optimizeSectionSolver) {
+      if (!optimizeSectionSolver.solved || optimizeSectionSolver.failed) {
+        throw new Error(
+          "TinyHyperGraph section optimizer did not produce a solved graph",
+        )
+      }
+      return optimizeSectionSolver.getSolvedSolver()
+    }
+
+    const solveGraphSolver = this.getSolver<TinyHyperGraphSolver>("solveGraph")
+    if (!solveGraphSolver?.solved || solveGraphSolver.failed) {
+      throw new Error(
+        "TinyHyperGraph solve stage did not produce a solved graph",
+      )
+    }
+    return solveGraphSolver
+  }
+
+  getNarrowRegionCostOptimizedTinySolver(): TinyHyperGraphSolver {
+    const optimizeRegionCostsSolver = this.getSolver<
+      UnravelTinyHyperGraphSolver
+    >(
       "optimizeRegionCosts",
     )
     if (
@@ -959,6 +1032,54 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
       )
     }
     return optimizeRegionCostsSolver
+  }
+
+  getBroadRegionCostOptimizedTinySolver(): TinyHyperGraphSolver {
+    const optimizeRegionCostsSolver = this.getSolver<
+      UnravelTinyHyperGraphSolver
+    >("optimizeRegionCostsBroad")
+    if (
+      !optimizeRegionCostsSolver?.solved ||
+      optimizeRegionCostsSolver.failed
+    ) {
+      throw new Error(
+        "TinyHyperGraph broad region-cost optimizer did not produce a solved graph",
+      )
+    }
+    return optimizeRegionCostsSolver
+  }
+
+  selectRegionCostOptimizerOutput(
+    inputSummary: DownstreamCandidateSummary,
+    narrowSummary: DownstreamCandidateSummary,
+    broadSummary: DownstreamCandidateSummary,
+  ): void {
+    this.regionCostOptimizerInputSummary = inputSummary
+    this.regionCostOptimizerNarrowSummary = narrowSummary
+    this.regionCostOptimizerBroadSummary = broadSummary
+    this.selectedRegionCostCandidate = "input"
+    let selectedSummary = inputSummary
+    if (
+      shouldSelectRegionCostOptimizedCandidate(selectedSummary, narrowSummary)
+    ) {
+      this.selectedRegionCostCandidate = "narrow"
+      selectedSummary = narrowSummary
+    }
+    if (
+      shouldSelectRegionCostOptimizedCandidate(selectedSummary, broadSummary)
+    ) {
+      this.selectedRegionCostCandidate = "broad"
+    }
+  }
+
+  getSolvedTinySolver(): TinyHyperGraphSolver {
+    if (this.selectedRegionCostCandidate === "narrow") {
+      return this.getNarrowRegionCostOptimizedTinySolver()
+    }
+    if (this.selectedRegionCostCandidate === "broad") {
+      return this.getBroadRegionCostOptimizedTinySolver()
+    }
+    return this.getRegionCostOptimizerInputTinySolver()
   }
 
   private configureSolver(solver?: BaseSolver | null) {
@@ -1122,10 +1243,9 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
     return "TinyHypergraphPortPointPathingSolver"
   }
 
-  private summarizePipelineCandidate(
-    pipeline: TinyHyperGraphSectionPipelineWithTerminalNetIds,
+  private summarizeTinySolverCandidate(
+    solvedTinySolver: TinyHyperGraphSolver,
   ): DownstreamCandidateSummary {
-    const solvedTinySolver = pipeline.getSolvedTinySolver()
     let nodePfSum = 0
     let nodePfSquaredSum = 0
     let nodePfMax = 0
@@ -1196,6 +1316,33 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
     }
   }
 
+  private summarizePipelineCandidate(
+    pipeline: TinyHyperGraphSectionPipelineWithTerminalNetIds,
+  ): DownstreamCandidateSummary {
+    const inputSummary = this.summarizeTinySolverCandidate(
+      pipeline.getRegionCostOptimizerInputTinySolver(),
+    )
+    const narrowSummary = this.summarizeTinySolverCandidate(
+      pipeline.getNarrowRegionCostOptimizedTinySolver(),
+    )
+    const broadSummary = this.summarizeTinySolverCandidate(
+      pipeline.getBroadRegionCostOptimizedTinySolver(),
+    )
+    pipeline.selectRegionCostOptimizerOutput(
+      inputSummary,
+      narrowSummary,
+      broadSummary,
+    )
+
+    if (pipeline.selectedRegionCostCandidate === "narrow") {
+      return narrowSummary
+    }
+    if (pipeline.selectedRegionCostCandidate === "broad") {
+      return broadSummary
+    }
+    return inputSummary
+  }
+
   private shouldEvaluateAlternative(summary: DownstreamCandidateSummary) {
     const routeCount =
       this.primaryTinyPipelineSolver!.getSolvedTinySolver().problem.routeCount
@@ -1226,11 +1373,18 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       this.tinyPipelineSolver.getSolver<TinyHyperGraphSolver>("solveGraph")
     if (!solveGraphSolver) return undefined
 
-    const optimizer =
+    const narrowOptimizer =
       this.tinyPipelineSolver.getSolver<UnravelTinyHyperGraphSolver>(
         "optimizeRegionCosts",
       )
-    const optimizerStats = optimizer?.stats as
+    const broadOptimizer =
+      this.tinyPipelineSolver.getSolver<UnravelTinyHyperGraphSolver>(
+        "optimizeRegionCostsBroad",
+      )
+    const optimizerStats = broadOptimizer?.stats as
+      | RegionCostOptimizerStats
+      | undefined
+    const narrowOptimizerStats = narrowOptimizer?.stats as
       | RegionCostOptimizerStats
       | undefined
 
@@ -1244,8 +1398,9 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
     const solveGraphStats = solveGraphSolver.stats
     const solveGraphStageStats =
       this.tinyPipelineSolver.getStageStats().solveGraph
-    const optimizerStageStats =
-      this.tinyPipelineSolver.getStageStats().optimizeRegionCosts
+    const pipelineStageStats = this.tinyPipelineSolver.getStageStats()
+    const optimizerStageStats = pipelineStageStats.optimizeRegionCostsBroad
+    const narrowOptimizerStageStats = pipelineStageStats.optimizeRegionCosts
 
     return {
       routeCount: solveGraphSolver.problem.routeCount,
@@ -1303,6 +1458,54 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       optimizerRolledBackPlateauMutations:
         optimizerStats?.rolledBackPlateauMutations,
       optimizerOptimized: optimizerStats?.optimized,
+      optimizerNarrowTimeMs: narrowOptimizerStageStats?.timeSpent,
+      optimizerNarrowFinalMaxRegionCost:
+        narrowOptimizerStats?.finalMaxRegionCost,
+      optimizerNarrowFinalTotalRegionCost:
+        narrowOptimizerStats?.finalTotalRegionCost,
+      optimizerNarrowEvaluatedMutationCount:
+        narrowOptimizerStats?.evaluatedMutationCount,
+      optimizerSelectedCandidate:
+        this.tinyPipelineSolver.selectedRegionCostCandidate,
+      optimizerInputNodePfSum:
+        this.tinyPipelineSolver.regionCostOptimizerInputSummary?.nodePfSum,
+      optimizerNarrowNodePfSum:
+        this.tinyPipelineSolver.regionCostOptimizerNarrowSummary?.nodePfSum,
+      optimizerBroadNodePfSum:
+        this.tinyPipelineSolver.regionCostOptimizerBroadSummary?.nodePfSum,
+      optimizerInputNodePfSquaredSum:
+        this.tinyPipelineSolver.regionCostOptimizerInputSummary
+          ?.nodePfSquaredSum,
+      optimizerNarrowNodePfSquaredSum:
+        this.tinyPipelineSolver.regionCostOptimizerNarrowSummary
+          ?.nodePfSquaredSum,
+      optimizerBroadNodePfSquaredSum:
+        this.tinyPipelineSolver.regionCostOptimizerBroadSummary
+          ?.nodePfSquaredSum,
+      optimizerInputSquaredNodePortPointCount:
+        this.tinyPipelineSolver.regionCostOptimizerInputSummary
+          ?.squaredNodePortPointCount,
+      optimizerNarrowSquaredNodePortPointCount:
+        this.tinyPipelineSolver.regionCostOptimizerNarrowSummary
+          ?.squaredNodePortPointCount,
+      optimizerBroadSquaredNodePortPointCount:
+        this.tinyPipelineSolver.regionCostOptimizerBroadSummary
+          ?.squaredNodePortPointCount,
+      optimizerInputSegmentCount:
+        this.tinyPipelineSolver.regionCostOptimizerInputSummary?.segmentCount,
+      optimizerNarrowSegmentCount:
+        this.tinyPipelineSolver.regionCostOptimizerNarrowSummary?.segmentCount,
+      optimizerBroadSegmentCount:
+        this.tinyPipelineSolver.regionCostOptimizerBroadSummary?.segmentCount,
+      optimizerInputLayerChangeCount:
+        this.tinyPipelineSolver.regionCostOptimizerInputSummary
+          ?.layerChangeCount,
+      optimizerNarrowLayerChangeCount:
+        this.tinyPipelineSolver.regionCostOptimizerNarrowSummary
+          ?.layerChangeCount,
+      optimizerBroadLayerChangeCount:
+        this.tinyPipelineSolver.regionCostOptimizerBroadSummary
+          ?.layerChangeCount,
     }
   }
 

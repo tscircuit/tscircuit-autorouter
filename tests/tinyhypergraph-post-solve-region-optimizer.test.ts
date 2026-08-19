@@ -16,20 +16,30 @@ test("TinyHypergraph pathing consumes the post-solve region optimizer", () => {
       tinyPipelineSolver: {
         inputProblem: TinyHyperGraphSectionPipelineInput
         getSolver: <Solver>(name: string) => Solver | undefined
+        getRegionCostOptimizerInputTinySolver: () => TinyHyperGraphSolver
         getSolvedTinySolver: () => TinyHyperGraphSolver
       }
     }
   ).tinyPipelineSolver
-  const optimizer = pipeline.getSolver<UnravelTinyHyperGraphSolver>(
+  const narrowOptimizer = pipeline.getSolver<UnravelTinyHyperGraphSolver>(
     "optimizeRegionCosts",
   )
+  const optimizer = pipeline.getSolver<UnravelTinyHyperGraphSolver>(
+    "optimizeRegionCostsBroad",
+  )
+  if (!narrowOptimizer) {
+    throw new Error("Tiny hypergraph pipeline is missing the narrow optimizer")
+  }
   if (!optimizer) {
-    throw new Error("Tiny hypergraph pipeline is missing the optimizer stage")
+    throw new Error("Tiny hypergraph pipeline is missing the broad optimizer")
   }
 
+  expect(narrowOptimizer.solved).toBeTrue()
   expect(optimizer.solved).toBeTrue()
   expect(optimizer.failed).toBeFalse()
-  expect(pipeline.getSolvedTinySolver()).toBe(optimizer)
+  expect(pipeline.getSolvedTinySolver()).toBe(
+    pipeline.getRegionCostOptimizerInputTinySolver(),
+  )
   expect(pipeline.inputProblem.unravelSolverOptions).toEqual({
     REGION_COST_MODEL: "routing-complexity",
     REROUTE_CONGESTION_FACTORS: [0, 0.25, 0.5, 1, 2, 4, 8],
@@ -58,5 +68,6 @@ test("TinyHypergraph pathing consumes the post-solve region optimizer", () => {
     optimizerRolledBackPlateauMutations:
       optimizerStats.rolledBackPlateauMutations,
     optimizerOptimized: optimizerStats.optimized,
+    optimizerSelectedCandidate: "input",
   })
 })

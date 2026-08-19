@@ -98,6 +98,26 @@ export type TinyHypergraphBenchmarkMetrics = {
   optimizerStopReason?: "local_optimum" | "mutation_limit" | "reroute_limit"
   optimizerRolledBackPlateauMutations?: boolean
   optimizerOptimized?: boolean
+  optimizerNarrowTimeMs?: number
+  optimizerNarrowFinalMaxRegionCost?: number
+  optimizerNarrowFinalTotalRegionCost?: number
+  optimizerNarrowEvaluatedMutationCount?: number
+  optimizerSelectedCandidate?: "input" | "narrow" | "broad"
+  optimizerInputNodePfSum?: number
+  optimizerNarrowNodePfSum?: number
+  optimizerBroadNodePfSum?: number
+  optimizerInputNodePfSquaredSum?: number
+  optimizerNarrowNodePfSquaredSum?: number
+  optimizerBroadNodePfSquaredSum?: number
+  optimizerInputSquaredNodePortPointCount?: number
+  optimizerNarrowSquaredNodePortPointCount?: number
+  optimizerBroadSquaredNodePortPointCount?: number
+  optimizerInputSegmentCount?: number
+  optimizerNarrowSegmentCount?: number
+  optimizerBroadSegmentCount?: number
+  optimizerInputLayerChangeCount?: number
+  optimizerNarrowLayerChangeCount?: number
+  optimizerBroadLayerChangeCount?: number
 }
 
 export type RoutingBenchmarkMetrics = {
