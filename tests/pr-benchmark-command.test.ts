@@ -3,6 +3,13 @@ import { readFileSync } from "node:fs"
 import { parsePrBenchmarkCommand } from "../scripts/benchmark/pr-benchmark-command.js"
 
 test("PR benchmark commands preserve arguments and fan-out behavior", () => {
+  expect(parsePrBenchmarkCommand("/profile --dataset 18")).toEqual({
+    kind: "profile",
+    benchmarkArgs: ["--dataset", "18"],
+    datasetName: "18",
+    profileSolvers: true,
+    sameMachineCompare: true,
+  })
   expect(parsePrBenchmarkCommand("/benchmark")).toEqual({
     kind: "benchmark",
     benchmarkArgs: [],
@@ -33,6 +40,35 @@ test("PR benchmark commands preserve arguments and fan-out behavior", () => {
     benchmarkArgs: ["--solver", "Solver With Spaces"],
     datasetName: "dataset01",
     profileSolvers: true,
+    sameMachineCompare: false,
+  })
+  expect(
+    parsePrBenchmarkCommand("/benchmark --pipeline 10 --dataset 29"),
+  ).toEqual({
+    kind: "benchmark",
+    benchmarkArgs: ["--pipeline", "10", "--dataset", "29"],
+    datasetName: "29",
+    profileSolvers: false,
+    sameMachineCompare: false,
+  })
+  expect(
+    parsePrBenchmarkCommand(
+      "/benchmark --pipeline 10 --dataset 29 --limit 5 --sample 2",
+    ),
+  ).toEqual({
+    kind: "benchmark",
+    benchmarkArgs: [
+      "--pipeline",
+      "10",
+      "--dataset",
+      "29",
+      "--limit",
+      "5",
+      "--sample",
+      "2",
+    ],
+    datasetName: "29",
+    profileSolvers: false,
     sameMachineCompare: false,
   })
   expect(parsePrBenchmarkCommand("/benchmark-long --dataset srj18")).toEqual({
@@ -94,8 +130,21 @@ test("PR benchmark commands preserve arguments and fan-out behavior", () => {
     new URL("../.github/workflows/benchmark.yml", import.meta.url),
     "utf8",
   )
+  const profileWorkflow = readFileSync(
+    new URL("../.github/workflows/profile.yml", import.meta.url),
+    "utf8",
+  )
   expect(dispatchWorkflow).toContain(
     "startsWith(github.event.comment.body, '/benchmark')",
+  )
+  expect(dispatchWorkflow).toContain(
+    "startsWith(github.event.comment.body, '/profile')",
+  )
+  expect(dispatchWorkflow).toContain(
+    "isProfile ? 'profile.yml' : 'benchmark.yml'",
+  )
+  expect(dispatchWorkflow).toContain(
+    "profile_args_json: JSON.stringify(command.benchmarkArgs)",
   )
   expect(dispatchWorkflow).toContain(
     "parsePrBenchmarkCommand(context.payload.comment.body)",
@@ -131,4 +180,8 @@ test("PR benchmark commands preserve arguments and fan-out behavior", () => {
   expect(benchmarkWorkflow).toContain(
     "BENCHMARK_ARGS_JSON: ${{ inputs.benchmark_args_json }}",
   )
+  expect(profileWorkflow).toContain("blacksmith-8vcpu-ubuntu-2404-arm")
+  expect(profileWorkflow).toContain("Profile current main")
+  expect(profileWorkflow).toContain("Profile PR head")
+  expect(profileWorkflow).toContain("profile-comparison.ts")
 })

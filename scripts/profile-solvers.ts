@@ -30,6 +30,7 @@ type ProfileOptions = {
   effort?: number
   concurrency: number
   sampleTimeoutMs?: number
+  markdownOutput?: string
 }
 
 type ProfileSolverRow = {
@@ -44,6 +45,24 @@ type ProfileSolverRow = {
   p95TimeMs: number | null
   p50Iterations: number | null
   p95Iterations: number | null
+}
+
+type PipelineStageTiming = {
+  solverName: string
+  timeMs: number
+}
+
+type CompletedProfileScenario = {
+  scenarioName: string
+  elapsedTimeMs: number
+  stageTimings: PipelineStageTiming[]
+}
+
+type IncompleteProfileScenario = {
+  scenarioName: string
+  elapsedTimeMs: number
+  error: string | null
+  didTimeout: boolean
 }
 
 type ProfileTask = {
@@ -61,6 +80,7 @@ type ProfileTaskResult = {
   solved: boolean
   elapsedTimeMs: number
   records: SolverRecord[]
+  stageTimings: PipelineStageTiming[]
   error?: string
   didTimeout?: boolean
 }
@@ -248,6 +268,13 @@ const parseArgs = (): ProfileOptions => {
         "--sample-timeout",
       )
       i += 1
+    } else if (arg === "--markdown-output") {
+      const markdownOutput = args[i + 1]
+      if (!markdownOutput || markdownOutput.startsWith("-")) {
+        throw new Error("--markdown-output requires a path")
+      }
+      options.markdownOutput = markdownOutput
+      i += 1
     } else if (arg === "-h" || arg === "--help") {
       console.log(
         [
@@ -260,6 +287,7 @@ const parseArgs = (): ProfileOptions => {
           "  --effort N           Override scenario effort multiplier",
           "  --concurrency N      Number of worker processes to use, or auto",
           "  --sample-timeout D   Per-scenario timeout, e.g. 120s or 2m",
+          "  --markdown-output P  Write the completed-scenario timing matrix to P",
           "  -h, --help           Show this help",
         ].join("\n"),
       )
@@ -345,6 +373,66 @@ const formatDurationLabel = (timeMs: number) => {
   return `${(timeMs / 1000).toFixed(1)}s`
 }
 
+const renderScenarioTimingMarkdown = ({
+  datasetName,
+  completedScenarios,
+  incompleteScenarios,
+}: {
+  datasetName: DatasetName
+  completedScenarios: CompletedProfileScenario[]
+  incompleteScenarios: IncompleteProfileScenario[]
+}): string => {
+  const stageNames = [
+    ...new Set(
+      completedScenarios.flatMap((scenario) =>
+        scenario.stageTimings.map((stage) => stage.solverName),
+      ),
+    ),
+  ]
+  const rows = stageNames
+    .map((solverName) => {
+      const percentages = completedScenarios.map((scenario) => {
+        const totalStageTimeMs = scenario.stageTimings.reduce(
+          (sum, stage) => sum + stage.timeMs,
+          0,
+        )
+        const stageTimeMs =
+          scenario.stageTimings.find((stage) => stage.solverName === solverName)
+            ?.timeMs ?? 0
+        return totalStageTimeMs === 0
+          ? 0
+          : (stageTimeMs / totalStageTimeMs) * 100
+      })
+      return {
+        solverName,
+        p50Percent: getPercentile(percentages, 0.5) ?? 0,
+      }
+    })
+    .sort(
+      (a, b) =>
+        b.p50Percent - a.p50Percent || a.solverName.localeCompare(b.solverName),
+    )
+
+  return [
+    `# ${datasetName.toUpperCase()} solver profile`,
+    "",
+    ...(incompleteScenarios.length > 0
+      ? [
+          `Based on completed problems only; excluded: ${incompleteScenarios.map((scenario) => scenario.scenarioName).join(", ")}.`,
+          "",
+        ]
+      : []),
+    "P50 is the median, across completed problems, of the percentage of direct Pipeline 7 stage time spent in each solver. Conditional stages that did not run count as 0% for that problem. Rows are independent medians, so they do not sum to 100%.",
+    "",
+    "| Pipeline 7 solver | P50 time spent |",
+    "| :--- | ---: |",
+    ...rows.map(
+      (row) => `| ${row.solverName} | ${row.p50Percent.toFixed(2)}% |`,
+    ),
+    "",
+  ].join("\n")
+}
+
 const getTaskEffort = (scenario: SimpleRouteJson) => {
   const rawEffort = (scenario as SimpleRouteJson & { effort?: number }).effort
   if (!Number.isFinite(rawEffort) || rawEffort === undefined || rawEffort < 1) {
@@ -407,6 +495,7 @@ const createFailedTaskResult = (
   solved: false,
   elapsedTimeMs,
   records: [],
+  stageTimings: [],
   error,
   didTimeout,
 })
@@ -436,6 +525,9 @@ const runProfileTask = (task: ProfileTask): ProfileTaskResult => {
     solved: Boolean(solver.solved),
     elapsedTimeMs,
     records: allRecords.map((record) => ({ ...record })),
+    stageTimings: Object.entries(solver.timeSpentOnPhase).map(
+      ([solverName, timeMs]) => ({ solverName, timeMs }),
+    ),
     error: solveError,
   }
 }
@@ -896,6 +988,25 @@ const main = async () => {
     totalTimeMs,
     solved,
     failed,
+    incompleteScenarios: results
+      .filter((result) => !result.solved)
+      .map(
+        (result): IncompleteProfileScenario => ({
+          scenarioName: result.scenarioName,
+          elapsedTimeMs: result.elapsedTimeMs,
+          error: result.error ?? null,
+          didTimeout: result.didTimeout ?? false,
+        }),
+      ),
+    completedScenarios: results
+      .filter((result) => result.solved)
+      .map(
+        (result): CompletedProfileScenario => ({
+          scenarioName: result.scenarioName,
+          elapsedTimeMs: result.elapsedTimeMs,
+          stageTimings: result.stageTimings,
+        }),
+      ),
     rows: rows.map(
       (r): ProfileSolverRow => ({
         solverName: r.name,
@@ -917,6 +1028,16 @@ const main = async () => {
     "profile-solvers.json",
     JSON.stringify(profileReport, null, 2),
   )
+
+  if (opts.markdownOutput) {
+    await Bun.write(
+      opts.markdownOutput,
+      renderScenarioTimingMarkdown(profileReport),
+    )
+    console.log(
+      `Wrote completed-scenario timing matrix to ${opts.markdownOutput}`,
+    )
+  }
 }
 
 if (isWorkerProcess) {

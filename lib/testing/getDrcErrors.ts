@@ -2,6 +2,7 @@ import {
   checkDifferentNetViaSpacing,
   checkEachPcbTraceNonOverlapping,
   checkPadTraceClearance,
+  checkPcbTracesOutOfBoard,
   checkSameNetViaSpacing,
   checkTracesAreContiguous,
   checkViaTraceClearance,
@@ -108,6 +109,7 @@ export const getDrcErrors = (
 
   const errors: DrcError[] = [
     ...traceErrors,
+    ...checkPcbTracesOutOfBoard(circuitJson),
     ...(options.includeTraceContinuity === false
       ? []
       : checkTracesAreContiguous(circuitJson)),
