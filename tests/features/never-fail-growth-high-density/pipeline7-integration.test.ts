@@ -60,7 +60,6 @@ test("Pipeline7 uses a DRC-validated fast probe for two-layer exact repair", () 
   } as any)
   expect((globalDrcParams as any).maxIterations).toBe(16)
   expect((globalDrcParams as any).enableLargeBoardBroadFallback).toBe(false)
-  expect((globalDrcParams as any).deferViaPadRepairsUntilLegacyClear).toBe(true)
 
   const exactGeometryDrcStep = solver.pipelineDef.find(
     (step) => step.solverName === "exactGeometryDrcForceImproveSolver",
@@ -82,9 +81,6 @@ test("Pipeline7 uses a DRC-validated fast probe for two-layer exact repair", () 
     false,
   )
   expect((exactGeometryDrcParams as any).enableBroadFallback).toBe(false)
-  expect(
-    (exactGeometryDrcParams as any).deferViaPadRepairsUntilLegacyClear,
-  ).toBe(true)
   expect(
     (exactGeometryDrcParams as any).enablePostSolveClearanceRelaxation,
   ).toBe(false)
@@ -127,7 +123,7 @@ test("Pipeline7 uses a DRC-validated fast probe for two-layer exact repair", () 
   )
 })
 
-test("Pipeline7 accepts a fast probe that preserves legacy DRC cleanliness", () => {
+test("Pipeline7 rejects a fast probe with a via-to-pad DRC", () => {
   const solver = new Pipeline7AdaptiveDrcBranchPortfolioSolver({
     srj: {
       layerCount: 2,
@@ -157,9 +153,6 @@ test("Pipeline7 accepts a fast probe that preserves legacy DRC cleanliness", () 
 
   solver.solve()
 
-  expect(solver.stats.pipeline7AdaptiveExactDrcFastProbeAccepted).toBe(true)
+  expect(solver.stats.pipeline7AdaptiveExactDrcFastProbeAccepted).toBe(false)
   expect(solver.stats.pipeline7AdaptiveExactDrcFastProbeDrcIssueCount).toBe(1)
-  expect(
-    solver.stats.pipeline7AdaptiveExactDrcFastProbeNonViaPadDrcIssueCount,
-  ).toBe(0)
 })

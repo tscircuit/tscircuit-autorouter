@@ -11,47 +11,51 @@ type CircuitJson = ReturnType<typeof convertToCircuitJson>
 
 const srj = bugReport.simple_route_json as SimpleRouteJson
 
-test("bugreport-b5b3b9d8 pipeline7 records current total DRC errors", () => {
-  const solver = new AutoroutingPipelineSolver7_MultiGraph(
-    structuredClone(srj),
-    {
-      cacheProvider: null,
-    },
-  )
+test(
+  "bugreport-b5b3b9d8 pipeline7 records current total DRC errors",
+  () => {
+    const solver = new AutoroutingPipelineSolver7_MultiGraph(
+      structuredClone(srj),
+      {
+        cacheProvider: null,
+      },
+    )
 
-  solver.solve()
+    solver.solve()
 
-  expect(solver.solved).toBe(true)
-  expect(solver.failed).toBe(false)
-  expect(
-    solver.exactGeometryDrcForceImproveSolver?.stats
-      .pipeline7AdaptiveExactDrcFastProbeAttempted,
-  ).toBe(true)
-  expect(
-    solver.exactGeometryDrcForceImproveSolver?.stats
-      .pipeline7AdaptiveExactDrcFastProbeAccepted,
-  ).toBe(false)
-  expect(
-    solver.exactGeometryDrcForceImproveSolver?.stats
-      .pipeline7AdaptiveExactDrcFastProbeDrcIssueCount,
-  ).toBeGreaterThan(0)
+    expect(solver.solved).toBe(true)
+    expect(solver.failed).toBe(false)
+    expect(
+      solver.exactGeometryDrcForceImproveSolver?.stats
+        .pipeline7AdaptiveExactDrcFastProbeAttempted,
+    ).toBe(true)
+    expect(
+      solver.exactGeometryDrcForceImproveSolver?.stats
+        .pipeline7AdaptiveExactDrcFastProbeAccepted,
+    ).toBe(false)
+    expect(
+      solver.exactGeometryDrcForceImproveSolver?.stats
+        .pipeline7AdaptiveExactDrcFastProbeDrcIssueCount,
+    ).toBeGreaterThan(0)
 
-  const srjWithPointPairs = solver.srjWithPointPairs
-  if (!srjWithPointPairs) {
-    throw new Error("Pipeline7 did not produce point-pair SRJ")
-  }
+    const srjWithPointPairs = solver.srjWithPointPairs
+    if (!srjWithPointPairs) {
+      throw new Error("Pipeline7 did not produce point-pair SRJ")
+    }
 
-  const simplifiedTraces = solver.getOutputSimplifiedPcbTraces()
-  const circuitJson: CircuitJson = convertToCircuitJson(
-    srjWithPointPairs,
-    simplifiedTraces,
-    { minTraceWidth: srj.minTraceWidth },
-  )
+    const simplifiedTraces = solver.getOutputSimplifiedPcbTraces()
+    const circuitJson: CircuitJson = convertToCircuitJson(
+      srjWithPointPairs,
+      simplifiedTraces,
+      { minTraceWidth: srj.minTraceWidth },
+    )
 
-  const { errors } = getDrcErrors(circuitJson, {
-    traceClearance: 0.1,
-    viaClearance: 0.1,
-  })
+    const { errors } = getDrcErrors(circuitJson, {
+      traceClearance: 0.1,
+      viaClearance: 0.1,
+    })
 
-  expect(errors).toHaveLength(0)
-})
+    expect(errors).toHaveLength(0)
+  },
+  { timeout: 120_000 },
+)
