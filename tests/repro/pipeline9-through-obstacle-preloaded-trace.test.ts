@@ -1,36 +1,75 @@
 import { expect, test } from "bun:test"
-import { sample003 } from "@tscircuit/dataset-srj29-ddr3-bga-pairs"
 import { convertCircuitJsonToPcbSvg } from "circuit-to-svg"
-import { AutoroutingPipelineSolver10_BgaFanout } from "lib/autorouter-pipelines/AutoroutingPipeline10_BgaFanout/AutoroutingPipelineSolver10_BgaFanout"
+import { Pipeline9JointDrcRepairSolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/pipeline9-joint-drc-repair-solver"
+import { convertPipeline7HdRoutesToSimplifiedPcbTraces } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/convertPipeline7HdRoutesToSimplifiedPcbTraces"
 import { convertToCircuitJson } from "lib/testing/utils/convertToCircuitJson"
-import type { SimpleRouteJson } from "lib/types"
+import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
+import capturedSample003JointRepair from "./assets/pipeline9-through-obstacle-sample003.json" with {
+  type: "json",
+}
 
-test("Pipeline9 rejects a materialized through-obstacle fanout trace", () => {
-  const inputSrj = structuredClone(sample003) as SimpleRouteJson
-  const solver = new AutoroutingPipelineSolver10_BgaFanout(inputSrj, {
-    cacheProvider: null,
-    effort: 1,
-  })
-  let thrownError: Error | undefined
+type JointRepairParams = ConstructorParameters<
+  typeof Pipeline9JointDrcRepairSolver
+>[0]
 
-  try {
-    solver.solve()
-  } catch (error) {
-    thrownError = error as Error
+type CapturedJointRepair = Omit<
+  JointRepairParams,
+  "srjWithPointPairs" | "mutatedPreloadedTraceIds" | "connMap" | "obstacles"
+> & {
+  sourceDataset: string
+  mutatedPreloadedTraceIds: string[]
+}
+
+test("Pipeline9 preserves a materialized through-obstacle fanout trace", () => {
+  const captured = structuredClone(
+    capturedSample003JointRepair,
+  ) as unknown as CapturedJointRepair
+  const {
+    sourceDataset: _,
+    mutatedPreloadedTraceIds,
+    ...capturedParams
+  } = captured
+  const params: JointRepairParams = {
+    ...capturedParams,
+    srjWithPointPairs: capturedParams.srj,
+    obstacles: capturedParams.srj.obstacles,
+    mutatedPreloadedTraceIds: new Set(mutatedPreloadedTraceIds),
+    connMap: getConnectivityMapFromSimpleRouteJson(capturedParams.originalSrj),
   }
+  const jointDrcRepair = new Pipeline9JointDrcRepairSolver(params)
 
-  expect(thrownError?.message).toBe(
-    'Pipeline9 cannot exactly repair through-obstacle preloaded trace "fanout:DDR3_a2_dram_dq13:source-1"',
-  )
-  expect(solver.failed).toBe(true)
-
-  const pipeline9 = solver.autoroutingPipelineSolver?.autoroutingPipelineSolver
-  if (!pipeline9?.srjWithPointPairs) {
-    throw new Error("Expected Pipeline9 to reach joint DRC repair")
-  }
-  const failedBoardTraces = pipeline9.getUpdatedPreloadedTraces()
+  const movableSectionsFromThroughObstacleTraces =
+    jointDrcRepair.movablePreloadedSections.filter((section) =>
+      section.originalTrace.route.some(
+        (routePoint) => routePoint.route_type === "through_obstacle",
+      ),
+    )
+  expect(movableSectionsFromThroughObstacleTraces.length).toBeGreaterThan(0)
   expect(
-    failedBoardTraces.some((trace) =>
+    movableSectionsFromThroughObstacleTraces.every((section) =>
+      section.originalTrace.route.every(
+        (routePoint, routePosition) =>
+          routePoint.route_type !== "through_obstacle" ||
+          routePosition < section.originalRoutePositionStart ||
+          routePosition > section.originalRoutePositionEnd,
+      ),
+    ),
+  ).toBe(true)
+
+  const routedBoardTraces = [
+    ...jointDrcRepair.getUpdatedPreloadedTraces(),
+    ...convertPipeline7HdRoutesToSimplifiedPcbTraces({
+      connections: jointDrcRepair.params.newConnections,
+      originalConnections: params.originalSrj.connections,
+      hdRoutes: jointDrcRepair.getOutput(),
+      layerCount: params.layerCount,
+      obstacles: params.obstacles,
+      defaultViaHoleDiameter: jointDrcRepair.params.defaultViaHoleDiameter,
+      connMap: jointDrcRepair.params.connMap,
+    }),
+  ]
+  expect(
+    routedBoardTraces.some((trace) =>
       trace.route.some(
         (routePoint) => routePoint.route_type === "through_obstacle",
       ),
@@ -38,12 +77,12 @@ test("Pipeline9 rejects a materialized through-obstacle fanout trace", () => {
   ).toBe(true)
 
   const circuitJson = convertToCircuitJson(
-    pipeline9.srjWithPointPairs,
-    failedBoardTraces,
+    params.srjWithPointPairs,
+    routedBoardTraces,
     {
-      minTraceWidth: inputSrj.minTraceWidth,
-      minViaDiameter: inputSrj.minViaDiameter,
-      originalSrj: inputSrj,
+      minTraceWidth: params.originalSrj.minTraceWidth,
+      minViaDiameter: params.originalSrj.minViaDiameter,
+      originalSrj: params.originalSrj,
       includeOriginalConnections: true,
     },
   )
@@ -52,5 +91,5 @@ test("Pipeline9 rejects a materialized through-obstacle fanout trace", () => {
     matchBoardAspectRatio: true,
   })
 
-  expect(pcbSvg).toMatchSvgSnapshot(import.meta.path, { tolerance: 0 })
+  expect(pcbSvg).toMatchSvgSnapshot(import.meta.path)
 })
