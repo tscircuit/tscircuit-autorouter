@@ -11,9 +11,9 @@ type AdaptivePortfolioPhase = "start" | "fastProbe" | "fallback" | "done"
 /**
  * Tries Pipeline7's inexpensive two-layer repair portfolio first, then accepts
  * it only when the same DRC evaluator used for candidate scoring reports a
- * clean result. A non-clean probe continues through the full portfolio from
- * its improved routes, avoiding duplicate repair work while still requiring
- * every DRC type to be cleared.
+ * clean result. Failed probes are discarded before the original full
+ * portfolio runs, so routing behavior is selected by the result rather than
+ * board-size thresholds.
  */
 export class Pipeline7AdaptiveDrcBranchPortfolioSolver extends BaseSolver {
   readonly params: GlobalDrcBranchPortfolioSolverParams
@@ -55,10 +55,10 @@ export class Pipeline7AdaptiveDrcBranchPortfolioSolver extends BaseSolver {
     this.phase = "fastProbe"
   }
 
-  private startFallback(routes = this.inputHdRoutes) {
+  private startFallback() {
     this.fallbackSolver = new GlobalDrcBranchPortfolioSolver({
       ...this.params,
-      hdRoutes: routes,
+      hdRoutes: this.inputHdRoutes,
     })
     this.activeSubSolver = this.fallbackSolver
     this.phase = "fallback"
@@ -142,7 +142,7 @@ export class Pipeline7AdaptiveDrcBranchPortfolioSolver extends BaseSolver {
       if (this.fastProbeDrcIssueCount === 0) {
         this.finish(this.fastProbeSolver!, true)
       } else {
-        this.startFallback(fastProbeRoutes)
+        this.startFallback()
       }
       return
     }
