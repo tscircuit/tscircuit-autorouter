@@ -70,6 +70,7 @@ import { Pipeline7AdaptiveDrcBranchPortfolioSolver } from "./Pipeline7AdaptiveDr
 import { PowerTraceExpansionSolver } from "./PowerTraceExpansionSolver"
 import { convertPipeline7HdRoutesToSimplifiedPcbTraces } from "./convertPipeline7HdRoutesToSimplifiedPcbTraces"
 import { createPipeline7AutoroutingDrcEvaluator } from "./create-pipeline7-autorouting-drc-evaluator"
+import { createPipeline7RelaxedDrcEvaluator } from "./create-pipeline7-relaxed-drc-evaluator"
 import { getPowerTraceExpansionConnectionNames } from "./getPowerTraceExpansionConnectionNames"
 import { lockHdRouteTerminals } from "./lock-hd-route-terminals"
 import { preparePipeline7PowerTraceExpansionInput } from "./prepare-pipeline7-power-trace-expansion-input"
@@ -643,32 +644,17 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
     definePipelineStep(
       "globalDrcForceImproveSolver",
       GlobalDrcForceImproveSolver,
-      (cms) => [
-        {
-          srj: cms.srjWithPointPairs! as any,
-          hdRoutes: lockHdRouteTerminals(
-            cms.traceWidthSolver!.getHdRoutesWithWidths(),
-            cms.netToPointPairsSolver?.newConnections ?? [],
-            new Map(
-              (cms.highDensityStitchSolver?.mergedHdRoutes ?? []).map(
-                (route) => [route.connectionName, route],
-              ),
+      (cms) => {
+        const hdRoutes = lockHdRouteTerminals(
+          cms.traceWidthSolver!.getHdRoutesWithWidths(),
+          cms.netToPointPairsSolver?.newConnections ?? [],
+          new Map(
+            (cms.highDensityStitchSolver?.mergedHdRoutes ?? []).map(
+              (route) => [route.connectionName, route],
             ),
           ),
-          connMap: cms.connMap,
-          effort: cms.effort,
-          maxIterations: 16,
-          enableLargeBoardBroadFallback: false,
-          enablePostSolveClearanceRelaxation: false,
-        },
-      ],
-    ),
-    definePipelineStep(
-      "exactGeometryDrcForceImproveSolver",
-      Pipeline7AdaptiveDrcBranchPortfolioSolver,
-      (cms) => {
-        const hdRoutes = cms.globalDrcForceImproveSolver!.getOutput()
-        const autoroutingDrcEvaluator = createPipeline7AutoroutingDrcEvaluator({
+        )
+        const referenceDrcEvaluator = createPipeline7RelaxedDrcEvaluator({
           connections: cms.netToPointPairsSolver?.newConnections ?? [],
           originalConnections: cms.originalSrj.connections,
           layerCount: cms.srj.layerCount,
@@ -685,9 +671,44 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
             hdRoutes,
             connMap: cms.connMap,
             effort: cms.effort,
+            referenceDrcEvaluator,
+            maxIterations: 16,
+            enableLargeBoardBroadFallback: false,
+            enablePostSolveClearanceRelaxation: false,
+          },
+        ]
+      },
+    ),
+    definePipelineStep(
+      "exactGeometryDrcForceImproveSolver",
+      Pipeline7AdaptiveDrcBranchPortfolioSolver,
+      (cms) => {
+        const hdRoutes = cms.globalDrcForceImproveSolver!.getOutput()
+        const drcConversionOptions = {
+          connections: cms.netToPointPairsSolver?.newConnections ?? [],
+          originalConnections: cms.originalSrj.connections,
+          layerCount: cms.srj.layerCount,
+          obstacles: cms.srj.obstacles,
+          defaultViaHoleDiameter: cms.viaHoleDiameter,
+          connMap: cms.connMap,
+          srjWithPointPairs: cms.srjWithPointPairs!,
+          originalSrj: cms.originalSrj,
+        }
+        const autoroutingDrcEvaluator =
+          createPipeline7AutoroutingDrcEvaluator(drcConversionOptions)
+        const referenceDrcEvaluator =
+          createPipeline7RelaxedDrcEvaluator(drcConversionOptions)
+
+        return [
+          {
+            srj: cms.srjWithPointPairs! as any,
+            hdRoutes,
+            connMap: cms.connMap,
+            effort: cms.effort,
             viaHoleDiameter: cms.viaHoleDiameter,
             drcEvaluator: autoroutingDrcEvaluator,
             viaInPadDrcEvaluator: autoroutingDrcEvaluator,
+            referenceDrcEvaluator,
             maxIterations: 32,
             enableLargeBoardBroadFallback: false,
             enableBroadFallback: false,

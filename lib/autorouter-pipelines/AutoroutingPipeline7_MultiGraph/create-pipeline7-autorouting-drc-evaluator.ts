@@ -51,7 +51,10 @@ export const createPipeline7AutoroutingDrcEvaluator = (
     createPipeline7HdRoutesToSimplifiedPcbTracesConverter(conversionOptions)
   const originalTraces = conversionOptions.originalSrj.traces ?? []
 
-  return ({ routes, hdRoutes }) => {
+  const getTracesToEvaluate = ({
+    routes,
+    hdRoutes,
+  }: Parameters<DrcEvaluator>[0]) => {
     const evaluatedRoutes = routes ?? hdRoutes
     if (!evaluatedRoutes) {
       throw new Error("Pipeline7 autorouting DRC evaluation requires HD routes")
@@ -64,6 +67,13 @@ export const createPipeline7AutoroutingDrcEvaluator = (
         : candidateTraces
     ) as RepairSimplifiedPcbTraces
 
-    return engine.evaluate(tracesToEvaluate)
+    return tracesToEvaluate
   }
+
+  const evaluator = ((input) =>
+    engine.evaluate(getTracesToEvaluate(input))) as DrcEvaluator
+  evaluator.evaluateLegacy = (input) =>
+    engine.evaluateLegacy(getTracesToEvaluate(input))
+
+  return evaluator
 }

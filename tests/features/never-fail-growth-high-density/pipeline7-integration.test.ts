@@ -73,6 +73,7 @@ test("Pipeline7 uses a DRC-validated fast probe for two-layer exact repair", () 
   } as any)
   expect((exactGeometryDrcParams as any).maxIterations).toBe(32)
   expect((exactGeometryDrcParams as any).drcEvaluator).toBeFunction()
+  expect((exactGeometryDrcParams as any).referenceDrcEvaluator).toBeFunction()
   expect((exactGeometryDrcParams as any).viaInPadDrcEvaluator).toBe(
     (exactGeometryDrcParams as any).drcEvaluator,
   )
