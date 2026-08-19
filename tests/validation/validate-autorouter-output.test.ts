@@ -357,6 +357,146 @@ test("validates complete autorouter output topology without claiming clearance",
     }),
   ).toEqual({ valid: true, diagnostics: [] })
 
+  const crossNetViaInput: SimpleRouteJson = {
+    ...createInput(),
+    layerCount: 4,
+    connections: [
+      {
+        name: "inner-wire",
+        pointsToConnect: [
+          { x: -4, y: 0, layer: "inner1", pointId: "inner-left" },
+          { x: 4, y: 0, layer: "inner1", pointId: "inner-right" },
+        ],
+      },
+      {
+        name: "through-via",
+        pointsToConnect: [
+          { x: 0, y: -4, layer: "top", pointId: "via-top" },
+          { x: 0, y: 4, layer: "bottom", pointId: "via-bottom" },
+        ],
+      },
+    ],
+  }
+  const crossNetViaOutput: SimpleRouteJson = {
+    ...crossNetViaInput,
+    traces: [
+      wireTrace({
+        traceId: "inner-wire-trace",
+        connectionName: "inner-wire",
+        connectsTo: ["inner-left", "inner-right"],
+        start: { x: -4, y: 0 },
+        end: { x: 4, y: 0 },
+        layer: "inner1",
+      }),
+      {
+        type: "pcb_trace",
+        pcb_trace_id: "through-via-trace",
+        connection_name: "through-via",
+        connectsTo: ["via-top", "via-bottom"],
+        route: [
+          { route_type: "wire", x: 0, y: -4, width: 0.1, layer: "top" },
+          { route_type: "wire", x: 0, y: 0, width: 0.1, layer: "top" },
+          {
+            route_type: "via",
+            x: 0,
+            y: 0,
+            from_layer: "top",
+            to_layer: "bottom",
+          },
+          { route_type: "wire", x: 0, y: 0, width: 0.1, layer: "bottom" },
+          { route_type: "wire", x: 0, y: 4, width: 0.1, layer: "bottom" },
+        ],
+      },
+    ],
+  }
+  expect(
+    validateAutorouterOutput({
+      inputSrj: crossNetViaInput,
+      outputSrj: crossNetViaOutput,
+    }).diagnostics,
+  ).toContainEqual({
+    code: "DIFFERENT_CONNECTION_SAME_LAYER_CROSSING",
+    connectionName: "inner-wire",
+    traceId: "inner-wire-trace",
+    peerConnectionName: "through-via",
+    peerTraceId: "through-via-trace",
+    layer: "inner1",
+    segmentIndex: 0,
+    peerSegmentIndex: 2,
+    coordinate: { x: 0, y: 0 },
+  })
+
+  const coincidentViasInput: SimpleRouteJson = {
+    ...createInput(),
+    connections: [
+      {
+        name: "left-via",
+        pointsToConnect: [
+          { x: -4, y: -1, layer: "top", pointId: "left-top" },
+          { x: -4, y: 1, layer: "bottom", pointId: "left-bottom" },
+        ],
+      },
+      {
+        name: "right-via",
+        pointsToConnect: [
+          { x: 4, y: -1, layer: "top", pointId: "right-top" },
+          { x: 4, y: 1, layer: "bottom", pointId: "right-bottom" },
+        ],
+      },
+    ],
+  }
+  const routeThroughCenterVia = (
+    traceId: string,
+    connectionName: string,
+    connectsTo: [string, string],
+    terminalX: number,
+  ): SimplifiedPcbTrace => ({
+    type: "pcb_trace",
+    pcb_trace_id: traceId,
+    connection_name: connectionName,
+    connectsTo,
+    route: [
+      { route_type: "wire", x: terminalX, y: -1, width: 0.1, layer: "top" },
+      { route_type: "wire", x: 0, y: 0, width: 0.1, layer: "top" },
+      { route_type: "via", x: 0, y: 0, from_layer: "top", to_layer: "bottom" },
+      { route_type: "wire", x: 0, y: 0, width: 0.1, layer: "bottom" },
+      { route_type: "wire", x: terminalX, y: 1, width: 0.1, layer: "bottom" },
+    ],
+  })
+  const coincidentViasOutput: SimpleRouteJson = {
+    ...coincidentViasInput,
+    traces: [
+      routeThroughCenterVia(
+        "left-via-trace",
+        "left-via",
+        ["left-top", "left-bottom"],
+        -4,
+      ),
+      routeThroughCenterVia(
+        "right-via-trace",
+        "right-via",
+        ["right-top", "right-bottom"],
+        4,
+      ),
+    ],
+  }
+  expect(
+    validateAutorouterOutput({
+      inputSrj: coincidentViasInput,
+      outputSrj: coincidentViasOutput,
+    }).diagnostics,
+  ).toContainEqual({
+    code: "DIFFERENT_CONNECTION_SAME_LAYER_CROSSING",
+    connectionName: "left-via",
+    traceId: "left-via-trace",
+    peerConnectionName: "right-via",
+    peerTraceId: "right-via-trace",
+    layer: "top",
+    segmentIndex: 2,
+    peerSegmentIndex: 2,
+    coordinate: { x: 0, y: 0 },
+  })
+
   const unsupported = structuredClone(viaOutput)
   unsupported.traces![0]!.route[2] = {
     route_type: "jumper",

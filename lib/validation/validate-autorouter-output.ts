@@ -1037,6 +1037,68 @@ const validateAutorouterOutputWithinBudget = ({
             coordinate: getIntersectionCoordinate(leftSegment, rightSegment),
           })
         }
+        for (const rightVia of right.vias) {
+          consumeWork()
+          if (
+            !rightVia.layers.includes(leftSegment.layer) ||
+            !pointIsOnSegment(rightVia.point, leftSegment)
+          ) {
+            continue
+          }
+          pushDiagnostic({
+            code: "DIFFERENT_CONNECTION_SAME_LAYER_CROSSING",
+            connectionName: left.connectionName,
+            traceId: left.traceId,
+            peerConnectionName: right.connectionName,
+            peerTraceId: right.traceId,
+            layer: leftSegment.layer,
+            segmentIndex: leftSegment.routeIndex,
+            peerSegmentIndex: rightVia.routeIndex,
+            coordinate: rightVia.point,
+          })
+        }
+      }
+      for (const leftVia of left.vias) {
+        for (const rightSegment of right.segments) {
+          consumeWork()
+          if (
+            !leftVia.layers.includes(rightSegment.layer) ||
+            !pointIsOnSegment(leftVia.point, rightSegment)
+          ) {
+            continue
+          }
+          pushDiagnostic({
+            code: "DIFFERENT_CONNECTION_SAME_LAYER_CROSSING",
+            connectionName: left.connectionName,
+            traceId: left.traceId,
+            peerConnectionName: right.connectionName,
+            peerTraceId: right.traceId,
+            layer: rightSegment.layer,
+            segmentIndex: leftVia.routeIndex,
+            peerSegmentIndex: rightSegment.routeIndex,
+            coordinate: leftVia.point,
+          })
+        }
+        for (const rightVia of right.vias) {
+          consumeWork()
+          const sharedLayer = leftVia.layers.find((layer) =>
+            rightVia.layers.includes(layer),
+          )
+          if (!pointsAreEqual(leftVia.point, rightVia.point) || !sharedLayer) {
+            continue
+          }
+          pushDiagnostic({
+            code: "DIFFERENT_CONNECTION_SAME_LAYER_CROSSING",
+            connectionName: left.connectionName,
+            traceId: left.traceId,
+            peerConnectionName: right.connectionName,
+            peerTraceId: right.traceId,
+            layer: sharedLayer,
+            segmentIndex: leftVia.routeIndex,
+            peerSegmentIndex: rightVia.routeIndex,
+            coordinate: leftVia.point,
+          })
+        }
       }
     }
   }
