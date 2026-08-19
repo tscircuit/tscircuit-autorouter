@@ -30,11 +30,11 @@ test("bugreport-b5b3b9d8 pipeline7 records current total DRC errors", () => {
   expect(
     solver.exactGeometryDrcForceImproveSolver?.stats
       .pipeline7AdaptiveExactDrcFastProbeAccepted,
-  ).toBe(false)
+  ).toBe(true)
   expect(
     solver.exactGeometryDrcForceImproveSolver?.stats
       .pipeline7AdaptiveExactDrcFastProbeDrcIssueCount,
-  ).toBeGreaterThan(0)
+  ).toBe(0)
 
   const srjWithPointPairs = solver.srjWithPointPairs
   if (!srjWithPointPairs) {
