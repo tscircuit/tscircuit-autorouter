@@ -21,11 +21,11 @@ const reproduceParentRoutingFailure =
  * RUN_RP2350_PARENT_ROUTING_FAILURE=1 bun test --timeout 9999999 \
  *   tests/bugs/bugreport95-rp2350-parent-routing.test.ts
  */
-test("Pipeline 9 routes the RP2350 parent around preserved child traces", () => {
+test("Pipeline 9 routes the RP2350 parent around preserved child traces", async () => {
   expect(srj.connections).toHaveLength(33)
   expect(srj.obstacles).toHaveLength(165)
   expect(srj.traces).toHaveLength(37)
-  expect(
+  await expect(
     getSvgFromGraphicsObject(convertSrjToGraphicsObject(srj), {
       backgroundColor: "white",
     }),
@@ -46,4 +46,10 @@ test("Pipeline 9 routes the RP2350 parent around preserved child traces", () => 
   expect(solver.error).toBeNull()
   expect(solver.failed).toBeFalse()
   expect(solver.solved).toBeTrue()
+  await expect(
+    getSvgFromGraphicsObject(
+      convertSrjToGraphicsObject(solver.getOutputSimpleRouteJson()),
+      { backgroundColor: "white" },
+    ),
+  ).toMatchSvgSnapshot(import.meta.path, { svgName: "routed" })
 })
