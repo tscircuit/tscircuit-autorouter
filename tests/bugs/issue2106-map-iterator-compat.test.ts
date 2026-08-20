@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test"
 import { IntraNodeRouteSolver } from "../../lib/solvers/HighDensitySolver/IntraNodeSolver"
 
-test("constructs connections when Map iterators lack helper methods", () => {
+test("issue 2106: constructs connections without Iterator Helpers", () => {
   const nativeEntries = Map.prototype.entries
 
   Object.defineProperty(Map.prototype, "entries", {
