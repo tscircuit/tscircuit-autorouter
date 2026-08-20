@@ -20,7 +20,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        node: [1, 2, 3, 4, 5, 6, 7, 8]
+        node: [1, 2, 3, 4, 5, 6, 7, 8, 9]
 
     steps:
       - name: Checkout code
@@ -40,7 +40,7 @@ jobs:
       - name: Generate balanced test plans
         run: bun scripts/generate-balanced-test-plan.ts
         env:
-          NODE_COUNT: 8
+          NODE_COUNT: 9
 
       - name: Run tests for node ${{ matrix.node }}
         run: |
