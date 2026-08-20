@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test"
 import { mergeConnections } from "lib/solvers/NetToPointPairsSolver/mergeConnections"
 
-test("merged connections keep the strictest via limit", () => {
+test("merged connections retain each original via limit", () => {
   const [mergedConnection] = mergeConnections([
     {
       name: "XTAL_OUT",
@@ -21,5 +21,9 @@ test("merged connections keep the strictest via limit", () => {
     },
   ])
 
-  expect(mergedConnection?.maxViaCount).toBe(0)
+  expect(mergedConnection?.maxViaCount).toBeUndefined()
+  expect(mergedConnection?.maxViaCountByRootConnectionName).toEqual({
+    XTAL_OUT: 2,
+    XTAL_LOAD_OUT: 0,
+  })
 })

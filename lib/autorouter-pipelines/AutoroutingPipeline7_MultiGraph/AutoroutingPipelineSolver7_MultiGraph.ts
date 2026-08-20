@@ -875,9 +875,14 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
       const traces = this.powerTraceExpansionSolver
         ? this.powerTraceExpansionSolver.getOutput()
         : this.getPrePowerTraceOutputSimplifiedPcbTraces()
+      if (!this.srjWithPointPairs) {
+        throw new Error(
+          "Pipeline7 cannot evaluate maxViaCount before point-pair routing",
+        )
+      }
       const viaCountViolation = getMaxViaCountViolation({
         connections: this.originalSrj.connections,
-        routedConnections: this.srjWithPointPairs?.connections,
+        routedConnections: this.srjWithPointPairs.connections,
         traces,
       })
       if (viaCountViolation) {
