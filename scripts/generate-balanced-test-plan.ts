@@ -15,7 +15,7 @@
 import { Glob } from "bun"
 import { mkdirSync, writeFileSync, existsSync, readFileSync, rmSync } from "fs"
 
-const NODE_COUNT = Number(process.env.NODE_COUNT ?? 8)
+const NODE_COUNT = Number(process.env.NODE_COUNT ?? 9)
 const TIMINGS_FILE = "test-timings.json"
 const GLOB = "tests/**/*.test.{ts,tsx}"
 
