@@ -71,6 +71,37 @@ test("Pipeline 9 cannot reconnect a zero-length SRJ29 fanout section", () => {
     (route) =>
       belongsToTargetConnection(route.connectionName, route.rootConnectionName),
   )
+  const targetOriginalSrj = {
+    ...inputSrj,
+    connections: inputSrj.connections.filter((connection) =>
+      belongsToTargetConnection(
+        connection.name,
+        connection.rootConnectionName,
+        ...(connection.__rootConnectionNames ?? []),
+      ),
+    ),
+    obstacles: inputSrj.obstacles.filter((obstacle) =>
+      obstacle.connectedTo.some((connectionName) =>
+        belongsToTargetConnection(connectionName),
+      ),
+    ),
+  }
+  const targetPointPairSrj = {
+    ...srjWithPointPairs,
+    connections: srjWithPointPairs.connections.filter((connection) =>
+      belongsToTargetConnection(
+        connection.name,
+        connection.rootConnectionName,
+        ...(connection.__rootConnectionNames ?? []),
+      ),
+    ),
+    obstacles: targetOriginalSrj.obstacles,
+  }
+  const materializedTargetFanoutTraces = reconnectError
+    ? []
+    : pipeline9
+        .getUpdatedPreloadedTraces()
+        .filter((trace) => belongsToTargetConnection(trace.connection_name))
   const fanoutCircuitJson = convertToCircuitJson(
     fannedOutSrj,
     targetFanoutTraces,
@@ -98,4 +129,34 @@ test("Pipeline 9 cannot reconnect a zero-length SRJ29 fanout section", () => {
   )
 
   expect(pcbSvg).toMatchSvgSnapshot(import.meta.path, { tolerance: 0.3 })
+
+  const materializedFanoutCircuitJson = convertToCircuitJson(
+    targetPointPairSrj,
+    materializedTargetFanoutTraces,
+    {
+      originalSrj: targetOriginalSrj,
+      includeOriginalConnections: true,
+    },
+  )
+  const targetRoutedCircuitJson = convertToCircuitJson(
+    targetPointPairSrj,
+    targetAutoroutedRoutes,
+    {
+      originalSrj: targetOriginalSrj,
+      includeOriginalConnections: true,
+    },
+  ).filter(
+    (element) => element.type === "pcb_trace" || element.type === "pcb_via",
+  )
+  const materializedTargetNetSvg = convertCircuitJsonToPcbSvg(
+    [...materializedFanoutCircuitJson, ...targetRoutedCircuitJson],
+    {
+      backgroundColor: "#0f172a",
+      matchBoardAspectRatio: true,
+    },
+  )
+
+  expect(materializedTargetNetSvg).toMatchSvgSnapshot(import.meta.path, {
+    svgName: "materialized-target-net",
+  })
 })
