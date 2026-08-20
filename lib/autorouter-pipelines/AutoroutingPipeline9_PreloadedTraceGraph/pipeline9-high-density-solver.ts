@@ -64,27 +64,71 @@ const routeOverlapsNode = (
   route: HighDensityRoute,
   nodeBounds: NodeBounds,
 ): boolean => {
-  const routePoints = [...route.route, ...route.vias.map((via) => ({ ...via }))]
-  if (routePoints.length === 0) return false
-
-  const minX = Math.min(...routePoints.map((point) => point.x))
-  const maxX = Math.max(...routePoints.map((point) => point.x))
-  const minY = Math.min(...routePoints.map((point) => point.y))
-  const maxY = Math.max(...routePoints.map((point) => point.y))
   const routeMargin = Math.max(route.traceThickness / 2, route.viaDiameter / 2)
+  const geometryOverlapsNode = (
+    start: { x: number; y: number },
+    end: { x: number; y: number },
+  ) =>
+    Math.min(start.x, end.x) - routeMargin <= nodeBounds.maxX &&
+    Math.max(start.x, end.x) + routeMargin >= nodeBounds.minX &&
+    Math.min(start.y, end.y) - routeMargin <= nodeBounds.maxY &&
+    Math.max(start.y, end.y) + routeMargin >= nodeBounds.minY
 
   return (
-    minX - routeMargin <= nodeBounds.maxX &&
-    maxX + routeMargin >= nodeBounds.minX &&
-    minY - routeMargin <= nodeBounds.maxY &&
-    maxY + routeMargin >= nodeBounds.minY
+    route.route.some((point, pointIndex) => {
+      const nextPoint = route.route[pointIndex + 1]
+      return nextPoint
+        ? geometryOverlapsNode(point, nextPoint)
+        : route.route.length === 1 && geometryOverlapsNode(point, point)
+    }) ||
+    route.vias.some((via) => geometryOverlapsNode(via, via))
   )
 }
 
-const convertFixedRouteToB01Obstacle = (
+const clipSegmentToBounds = ({
+  start,
+  end,
+  bounds,
+}: {
+  start: HighDensityRoute["route"][number]
+  end: HighDensityRoute["route"][number]
+  bounds: NodeBounds
+}): [HighDensityRoute["route"][number], HighDensityRoute["route"][number]] | undefined => {
+  const dx = end.x - start.x
+  const dy = end.y - start.y
+  let entry = 0
+  let exit = 1
+  const boundaries = [
+    [-dx, start.x - bounds.minX],
+    [dx, bounds.maxX - start.x],
+    [-dy, start.y - bounds.minY],
+    [dy, bounds.maxY - start.y],
+  ] as const
+
+  for (const [direction, distance] of boundaries) {
+    if (direction === 0) {
+      if (distance < 0) return undefined
+      continue
+    }
+    const ratio = distance / direction
+    if (direction < 0) entry = Math.max(entry, ratio)
+    else exit = Math.min(exit, ratio)
+    if (entry > exit) return undefined
+  }
+
+  const interpolate = (amount: number) => ({
+    ...start,
+    x: start.x + dx * amount,
+    y: start.y + dy * amount,
+  })
+  return [interpolate(entry), { ...interpolate(exit), z: end.z }]
+}
+
+const convertFixedRouteToB01Obstacles = (
   route: PreloadedHighDensityRoute,
   node: NodeWithPortPoints,
-): HighDensityRouteObstacle | undefined => {
+  obstacleMargin: number,
+): HighDensityRouteObstacle[] => {
   const availableZ = new Set(
     node.availableZ ?? node.portPoints.map((portPoint) => portPoint.z),
   )
@@ -94,19 +138,39 @@ const convertFixedRouteToB01Obstacle = (
     )
   }
 
-  if (!route.route.every((point) => availableZ.has(point.z))) {
-    return undefined
+  const routeMargin = Math.max(route.traceThickness / 2, route.viaDiameter / 2)
+  const clipBounds = {
+    minX: node.center.x - node.width / 2 - routeMargin - obstacleMargin,
+    maxX: node.center.x + node.width / 2 + routeMargin + obstacleMargin,
+    minY: node.center.y - node.height / 2 - routeMargin - obstacleMargin,
+    maxY: node.center.y + node.height / 2 + routeMargin + obstacleMargin,
   }
-
-  return {
-    type: "route",
-    connectionName: route.connectionName,
-    rootConnectionName: route.rootConnectionName,
-    traceThickness: route.traceThickness,
-    viaDiameter: route.viaDiameter,
-    route: route.route,
-    vias: [],
+  const obstacles: HighDensityRouteObstacle[] = []
+  for (let pointIndex = 1; pointIndex < route.route.length; pointIndex++) {
+    const start = route.route[pointIndex - 1]!
+    const end = route.route[pointIndex]!
+    if (!availableZ.has(start.z) || !availableZ.has(end.z)) continue
+    const clippedRoute =
+      start.z === end.z
+        ? clipSegmentToBounds({ start, end, bounds: clipBounds })
+        : start.x >= clipBounds.minX &&
+            start.x <= clipBounds.maxX &&
+            start.y >= clipBounds.minY &&
+            start.y <= clipBounds.maxY
+          ? ([start, end] as const)
+          : undefined
+    if (!clippedRoute) continue
+    obstacles.push({
+      type: "route",
+      connectionName: route.connectionName,
+      rootConnectionName: route.rootConnectionName,
+      traceThickness: route.traceThickness,
+      viaDiameter: route.viaDiameter,
+      route: [...clippedRoute],
+      vias: [],
+    })
   }
+  return obstacles
 }
 
 const obstacleOverlapsNode = (
@@ -453,10 +517,8 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     const nodeBounds = getNodeBounds(node, this.obstacleMargin)
     const fixedObstacles = this.getUpdatedFixedHdRoutes()
       .filter((route) => routeOverlapsNode(route, nodeBounds))
-      .map((route) => convertFixedRouteToB01Obstacle(route, node))
-      .filter(
-        (obstacle): obstacle is HighDensityRouteObstacle =>
-          obstacle !== undefined,
+      .flatMap((route) =>
+        convertFixedRouteToB01Obstacles(route, node, this.obstacleMargin),
       )
     const boardObstacles = (this.includeBoardObstacles ? this.obstacles : [])
       .filter((obstacle) => obstacleOverlapsNode(obstacle, nodeBounds))

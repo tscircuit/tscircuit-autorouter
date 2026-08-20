@@ -2,8 +2,10 @@ import type { AnyCircuitElement } from "circuit-json"
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { GraphicsObject } from "graphics-debug"
 import {
+  AutoroutingDrcEngine,
   GlobalDrcBranchPortfolioSolver,
   type DrcEvaluator,
+  type SimplifiedPcbTraces as RepairSimplifiedPcbTraces,
 } from "high-density-repair03/lib"
 import { BaseSolver } from "lib/solvers/BaseSolver"
 import type {
@@ -15,7 +17,11 @@ import type {
 import type { HighDensityRoute } from "lib/types/high-density-types"
 import { convertHdRouteToSimplifiedRoute } from "lib/utils/convertHdRouteToSimplifiedRoute"
 import { mapZToLayerName } from "lib/utils/mapZToLayerName"
-import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
+import {
+  combinePreloadedAndRoutedTraces,
+  evaluateRelaxedDrc,
+} from "lib/testing/evaluate-relaxed-drc"
+import { RELAXED_DRC_OPTIONS } from "lib/testing/drcPresets"
 import { convertPipeline7HdRoutesToSimplifiedPcbTraces } from "../AutoroutingPipeline7_MultiGraph/convertPipeline7HdRoutesToSimplifiedPcbTraces"
 import { assignUniquePcbTraceIdsToNewTraces } from "./assign-unique-pcb-trace-ids-to-new-traces"
 import {
@@ -70,6 +76,84 @@ type PreloadedTraceSectionGroup = {
 }
 
 const POINT_EPSILON = 1e-9
+
+const getAutoroutingViaElements = (
+  traces: readonly SimplifiedPcbTrace[],
+): AnyCircuitElement[] => {
+  const viaLocations = new Set<string>()
+  const vias: AnyCircuitElement[] = []
+  for (const trace of traces) {
+    for (const routePoint of trace.route) {
+      if (routePoint.route_type !== "via") continue
+      const locationKey = `${routePoint.x},${routePoint.y},${routePoint.from_layer},${routePoint.to_layer}`
+      if (viaLocations.has(locationKey)) continue
+      viaLocations.add(locationKey)
+      vias.push({
+        type: "pcb_via",
+        pcb_via_id: `via_${vias.length}`,
+        pcb_trace_id: trace.pcb_trace_id,
+      } as AnyCircuitElement)
+    }
+  }
+  return vias
+}
+
+const addAutoroutingViaTraceIds = ({
+  errors,
+  circuitJson,
+}: {
+  errors: Array<Record<string, unknown>>
+  circuitJson: AnyCircuitElement[]
+}): Array<Record<string, unknown>> => {
+  const traceIdByViaId = new Map(
+    circuitJson.flatMap((element) =>
+      element.type === "pcb_via" &&
+      typeof element.pcb_via_id === "string" &&
+      typeof element.pcb_trace_id === "string"
+        ? [[element.pcb_via_id, element.pcb_trace_id] as const]
+        : [],
+    ),
+  )
+  return errors.map((error) => {
+    const encodedViaId =
+      typeof error.pcb_trace_error_id === "string"
+        ? error.pcb_trace_error_id.match(/_(via_\d+)$/)?.[1]
+        : undefined
+    const viaIds = [
+      ...(typeof error.pcb_via_id === "string" ? [error.pcb_via_id] : []),
+      ...(Array.isArray(error.pcb_via_ids)
+        ? error.pcb_via_ids.filter(
+            (viaId): viaId is string => typeof viaId === "string",
+          )
+        : []),
+      ...(encodedViaId ? [encodedViaId] : []),
+    ].filter(
+      (viaId, viaIndex, allViaIds) => allViaIds.indexOf(viaId) === viaIndex,
+    )
+    const traceIds = [
+      ...(typeof error.pcb_trace_id === "string" ? [error.pcb_trace_id] : []),
+      ...(Array.isArray(error.pcb_trace_ids)
+        ? error.pcb_trace_ids.filter(
+            (traceId): traceId is string => typeof traceId === "string",
+          )
+        : []),
+      ...viaIds.flatMap((viaId) => {
+        const traceId = traceIdByViaId.get(viaId)
+        return traceId ? [traceId] : []
+      }),
+    ].filter(
+      (traceId, traceIndex, allTraceIds) =>
+        allTraceIds.indexOf(traceId) === traceIndex,
+    )
+    return {
+      ...error,
+      ...(viaIds.length > 0
+        ? { pcb_via_id: viaIds[0], pcb_via_ids: viaIds }
+        : {}),
+      ...(traceIds.length > 0 ? { pcb_trace_ids: traceIds } : {}),
+    }
+  })
+}
 
 const pointsAreEqual = (
   left: HighDensityRoute["route"][number],
@@ -662,6 +746,27 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         ...syntheticConnectionByName.values(),
       ],
     }
+    const traceClearance = RELAXED_DRC_OPTIONS.traceClearance ?? 0.1
+    const viaClearance = RELAXED_DRC_OPTIONS.viaClearance ?? 0.1
+    const autoroutingDrcEngine = new AutoroutingDrcEngine(
+      {
+        ...extendedSrjWithPointPairs,
+        minTraceWidth: params.originalSrj.minTraceWidth,
+        minViaDiameter:
+          params.originalSrj.minViaDiameter ?? params.defaultViaDiameter,
+      } as any,
+      {
+        connMap: params.connMap,
+        traceClearance,
+        viaClearance,
+        spatialCellSize:
+          Math.max(params.defaultViaDiameter, params.originalSrj.minTraceWidth) +
+          Math.max(traceClearance, viaClearance),
+      },
+    )
+    const autoroutingBaselineDrc = autoroutingDrcEngine.evaluate(
+      (params.originalSrj.traces ?? []) as RepairSimplifiedPcbTraces,
+    )
 
     const drcEvaluator: DrcEvaluator = ({ routes, hdRoutes }) => {
       const evaluatedRoutes = routes ?? hdRoutes
@@ -736,33 +841,44 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         )
       }
       const movableTraceIds = new Set(solverTraceIdByEvaluationTraceId.values())
-      const evaluatedDrc = evaluateRelaxedDrc({
-        inputSrj: params.originalSrj,
-        srjWithPointPairs: params.srjWithPointPairs,
-        routedTraces: [
+      const evaluatedTraces = combinePreloadedAndRoutedTraces(
+        params.originalSrj.traces ?? [],
+        [
           ...nonMovableMutatedPreloadedTraces,
           ...evaluatedMovablePreloadedTraces,
           ...uniquelyNamedNewTraces,
         ],
-      })
-      const evaluatedNewErrors = filterPipeline9DrcErrorsAgainstBaseline({
+      )
+      const evaluatedDrc = autoroutingDrcEngine.evaluate(
+        evaluatedTraces as RepairSimplifiedPcbTraces,
+      )
+      const viaCircuitJson = getAutoroutingViaElements(evaluatedTraces)
+      const evaluatedErrors = addAutoroutingViaTraceIds({
         errors: evaluatedDrc.errors as unknown as Array<
           Record<string, unknown>
         >,
-        baselineErrors: baselineDrc.errors as unknown as Array<
+        circuitJson: viaCircuitJson,
+      })
+      const evaluatedErrorsWithCenters = addAutoroutingViaTraceIds({
+        errors: evaluatedDrc.errorsWithCenters as unknown as Array<
+          Record<string, unknown>
+        >,
+        circuitJson: viaCircuitJson,
+      })
+      const evaluatedNewErrors = filterPipeline9DrcErrorsAgainstBaseline({
+        errors: evaluatedErrors,
+        baselineErrors: autoroutingBaselineDrc.errors as unknown as Array<
           Record<string, unknown>
         >,
       })
       const evaluatedNewErrorsWithCenters =
         filterPipeline9DrcErrorsAgainstBaseline({
-          errors: evaluatedDrc.errorsWithCenters as unknown as Array<
-            Record<string, unknown>
-          >,
-          baselineErrors: baselineDrc.errors as unknown as Array<
+          errors: evaluatedErrorsWithCenters,
+          baselineErrors: autoroutingBaselineDrc.errors as unknown as Array<
             Record<string, unknown>
           >,
         })
-      const remappedCircuitJson = evaluatedDrc.circuitJson.map((element) => {
+      const remappedCircuitJson = viaCircuitJson.map((element) => {
         if (
           !("pcb_trace_id" in element) ||
           typeof element.pcb_trace_id !== "string"
@@ -809,6 +925,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       viaHoleDiameter: params.defaultViaHoleDiameter,
       drcEvaluator,
       maxIterations: PRELIMINARY_EXACT_REPAIR_MAX_ITERATIONS,
+      enableBroadFallback: false,
       enableLargeBoardBroadFallback: false,
       enableTargetedErrorSweep: true,
       enablePostSolveClearanceRelaxation: false,
