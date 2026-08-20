@@ -1,7 +1,4 @@
-import type {
-  SimpleRouteConnection,
-  SimplifiedPcbTraces,
-} from "lib/types"
+import type { SimpleRouteConnection, SimplifiedPcbTraces } from "lib/types"
 
 export interface MaxViaCountViolation {
   connectionName: string
@@ -29,8 +26,9 @@ export const getMaxViaCountViolation = ({
         trace.pcb_trace_id.startsWith(`${connection.name}_`),
       )
       .sort((a, b) => b.name.length - a.name.length)[0]
-    const rootConnectionNames =
-      routedConnection?.__rootConnectionNames ?? [trace.connection_name]
+    const rootConnectionNames = routedConnection?.__rootConnectionNames ?? [
+      trace.connection_name,
+    ]
 
     for (const connectionName of rootConnectionNames) {
       viaCountByConnectionName.set(
