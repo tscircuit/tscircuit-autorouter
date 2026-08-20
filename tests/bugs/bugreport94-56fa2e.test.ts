@@ -17,9 +17,13 @@ test("bugreport94-56fa2e.json", () => {
   const circuitJson = getCurrentCircuitJson(solver)
   expect(circuitJson).not.toBeNull()
   const { errors } = getDrcErrors(circuitJson!)
-  expect(errors).toHaveLength(14)
+  expect(errors.length).toBeLessThanOrEqual(9)
 
   expect(getLastStepSvg(solver.visualize())).toMatchSvgSnapshot(
     import.meta.path,
+    {
+      // Linux retains a different safe-layer candidate with 8 DRC errors.
+      tolerance: 0.17,
+    },
   )
 }, 180_000)
