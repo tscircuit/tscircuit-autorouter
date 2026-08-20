@@ -36,6 +36,7 @@ import {
 import { createSrjWithBoardValidObstacleLayers } from "lib/utils/create-srj-with-board-valid-obstacle-layers"
 import { createObstacleLabelFormatter } from "lib/utils/formatObstacleLabel"
 import { getInitiallyConnectedMapFromSimpleRouteJson } from "lib/utils/get-initially-connected-map-from-simple-route-json"
+import { getMaxViaCountViolation } from "lib/utils/get-max-via-count-violation"
 import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
 import {
   getGraphicsLayerForConnectionPoint,
@@ -871,6 +872,19 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
   _step() {
     const pipelineStepDef = this.pipelineDef[this.currentPipelineStepIndex]
     if (!pipelineStepDef) {
+      const traces = this.powerTraceExpansionSolver
+        ? this.powerTraceExpansionSolver.getOutput()
+        : this.getPrePowerTraceOutputSimplifiedPcbTraces()
+      const viaCountViolation = getMaxViaCountViolation({
+        connections: this.originalSrj.connections,
+        routedConnections: this.srjWithPointPairs?.connections,
+        traces,
+      })
+      if (viaCountViolation) {
+        this.error = `Connection "${viaCountViolation.connectionName}" uses ${viaCountViolation.actualViaCount} vias, exceeding maxViaCount=${viaCountViolation.maxViaCount}`
+        this.failed = true
+        return
+      }
       this.solved = true
       return
     }
