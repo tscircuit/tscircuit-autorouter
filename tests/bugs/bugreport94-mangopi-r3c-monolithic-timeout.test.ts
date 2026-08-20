@@ -10,10 +10,13 @@ test.skip("bugreport94 routes the phase-free MangoPi R3C board", async () => {
   const { AutoroutingPipelineSolver7_MultiGraph } = await import(
     "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/AutoroutingPipelineSolver7_MultiGraph"
   )
-  const solver = new AutoroutingPipelineSolver7_MultiGraph(structuredClone(srj), {
-    effort: 1,
-    cacheProvider: null,
-  })
+  const solver = new AutoroutingPipelineSolver7_MultiGraph(
+    structuredClone(srj),
+    {
+      effort: 1,
+      cacheProvider: null,
+    },
+  )
 
   solver.solve()
 
