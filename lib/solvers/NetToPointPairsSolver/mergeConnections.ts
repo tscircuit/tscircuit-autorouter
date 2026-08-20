@@ -89,7 +89,7 @@ export function mergeConnections(
     const mergedExternallyConnectedPointIds: PointId[][] = []
     const mergedNetConnectionNames: Set<string> = new Set()
     let nominalTraceWidth: number | undefined = undefined
-    let maxViaCount: number | undefined = undefined
+    const maxViaCountByRootConnectionName: Record<string, number> = {}
 
     simpleRouteConnectionGroup.forEach((simpleRouteConnection) => {
       // Collect unique points
@@ -101,12 +101,11 @@ export function mergeConnections(
       )
 
       const rootConnectionNames = simpleRouteConnection.__rootConnectionNames
-      if (rootConnectionNames && rootConnectionNames.length > 0) {
-        for (const rootConnectionName of rootConnectionNames) {
-          mergedRootConnectionNames.add(rootConnectionName)
-        }
-      } else {
-        mergedRootConnectionNames.add(simpleRouteConnection.name)
+        ?.length
+        ? simpleRouteConnection.__rootConnectionNames
+        : [simpleRouteConnection.name]
+      for (const rootConnectionName of rootConnectionNames) {
+        mergedRootConnectionNames.add(rootConnectionName)
       }
 
       // Merge isOffBoard property
@@ -135,13 +134,28 @@ export function mergeConnections(
         nominalTraceWidth = simpleRouteConnection.nominalTraceWidth
       }
 
-      if (simpleRouteConnection.maxViaCount !== undefined) {
-        maxViaCount = Math.min(
-          maxViaCount ?? Number.POSITIVE_INFINITY,
-          simpleRouteConnection.maxViaCount,
+      for (const [rootConnectionName, maxViaCount] of Object.entries(
+        simpleRouteConnection.maxViaCountByRootConnectionName ?? {},
+      )) {
+        maxViaCountByRootConnectionName[rootConnectionName] = Math.min(
+          maxViaCountByRootConnectionName[rootConnectionName] ??
+            Number.POSITIVE_INFINITY,
+          maxViaCount,
         )
       }
+
+      if (simpleRouteConnection.maxViaCount !== undefined) {
+        for (const rootConnectionName of rootConnectionNames) {
+          maxViaCountByRootConnectionName[rootConnectionName] = Math.min(
+            maxViaCountByRootConnectionName[rootConnectionName] ??
+              Number.POSITIVE_INFINITY,
+            simpleRouteConnection.maxViaCount,
+          )
+        }
+      }
     })
+
+    const [onlyRootConnectionName] = mergedRootConnectionNames
 
     // Create the new merged SimpleRouteConnection
     const newSimpleRouteConnection: SimpleRouteConnection = {
@@ -161,7 +175,14 @@ export function mergeConnections(
           : undefined,
       __rootConnectionNames: Array.from(mergedRootConnectionNames),
       nominalTraceWidth: nominalTraceWidth, // Keep the first found nominalTraceWidth
-      maxViaCount,
+      maxViaCount:
+        mergedRootConnectionNames.size === 1 && onlyRootConnectionName
+          ? maxViaCountByRootConnectionName[onlyRootConnectionName]
+          : undefined,
+      maxViaCountByRootConnectionName:
+        Object.keys(maxViaCountByRootConnectionName).length > 0
+          ? maxViaCountByRootConnectionName
+          : undefined,
     }
 
     mergedSimpleRouteConnections.push(newSimpleRouteConnection)

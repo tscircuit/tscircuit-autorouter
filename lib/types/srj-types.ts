@@ -140,8 +140,10 @@ export interface SimpleRouteConnection {
   netConnectionName?: string
   __netConnectionName?: string
   nominalTraceWidth?: number
-  /** Maximum number of vias permitted across this routed connection. */
+  /** Maximum vias permitted on the routed path connecting this connection's points. */
   maxViaCount?: number
+  /** @internal Original-connection via limits retained after connections merge. */
+  maxViaCountByRootConnectionName?: Record<string, number>
   pointsToConnect: Array<ConnectionPoint>
 
   /** @deprecated DO NOT USE **/
