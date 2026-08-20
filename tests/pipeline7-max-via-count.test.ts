@@ -19,10 +19,11 @@ test("Pipeline7 fails when a routed connection exceeds maxViaCount", () => {
     ],
   })
   solver.pipelineDef = []
+  solver.srjWithPointPairs = structuredClone(solver.srj)
   solver.getPrePowerTraceOutputSimplifiedPcbTraces = () => [
     {
       type: "pcb_trace",
-      pcb_trace_id: "pcb_trace_xtal_in",
+      pcb_trace_id: "XTAL_IN_0",
       connection_name: "XTAL_IN",
       route: [
         { route_type: "wire", x: 1, y: 1, width: 0.15, layer: "top" },
