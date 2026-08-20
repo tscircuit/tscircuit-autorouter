@@ -38,9 +38,7 @@ test("Pipeline7 disables speculative fallback inside its exact DRC portfolio", (
   expect(exactSolver?.params.enableTargetedErrorSweep).toBe(true)
   expect(exactSolver?.params.enableLargeBoardBroadFallback).toBe(false)
   expect(exactSolver?.params.enableBroadFallback).toBe(false)
-  expect(
-    exactSolver?.params.enablePostSolveClearanceRelaxation,
-  ).toBe(false)
+  expect(exactSolver?.params.enablePostSolveClearanceRelaxation).toBe(false)
   expect(exactSolver?.params.broadMaxIterations).toBe(12)
   expect(exactSolver?.params.broadPassMultiplier).toBe(3)
   expect(
