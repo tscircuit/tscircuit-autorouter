@@ -140,6 +140,8 @@ export interface SimpleRouteConnection {
   netConnectionName?: string
   __netConnectionName?: string
   nominalTraceWidth?: number
+  /** Maximum number of vias permitted across this routed connection. */
+  maxViaCount?: number
   pointsToConnect: Array<ConnectionPoint>
 
   /** @deprecated DO NOT USE **/

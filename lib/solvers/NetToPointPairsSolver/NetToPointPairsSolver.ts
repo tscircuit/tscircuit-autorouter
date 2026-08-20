@@ -83,6 +83,7 @@ export class NetToPointPairsSolver extends BaseSolver {
           connection.name,
         ],
         __netConnectionName: connection.__netConnectionName,
+        maxViaCount: connection.maxViaCount,
       })
     }
   }

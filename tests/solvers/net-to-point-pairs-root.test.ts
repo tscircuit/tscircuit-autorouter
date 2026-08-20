@@ -13,6 +13,7 @@ const baseSrj = {
     {
       name: "reroute_a",
       __rootConnectionNames: ["source_net_1"],
+      maxViaCount: 0,
       pointsToConnect: [
         { x: 0, y: 0, layer: "top" },
         { x: 1, y: 0, layer: "top" },
@@ -41,15 +42,18 @@ test("NetToPointPairsSolver preserves existing reroute root connection names", (
     solver.getNewSimpleRouteJson().connections.map((conn) => ({
       name: conn.name,
       __rootConnectionNames: conn.__rootConnectionNames,
+      maxViaCount: conn.maxViaCount,
     })),
   ).toEqual([
     {
       name: "reroute_a__reroute_b_mst0",
       __rootConnectionNames: ["source_net_1"],
+      maxViaCount: 0,
     },
     {
       name: "reroute_a__reroute_b_mst1",
       __rootConnectionNames: ["source_net_1"],
+      maxViaCount: 0,
     },
   ])
 })
@@ -66,15 +70,18 @@ test("NetToPointPairsSolver2_OffBoardConnection preserves existing reroute root 
     solver.getNewSimpleRouteJson().connections.map((conn) => ({
       name: conn.name,
       __rootConnectionNames: conn.__rootConnectionNames,
+      maxViaCount: conn.maxViaCount,
     })),
   ).toEqual([
     {
       name: "reroute_a__reroute_b_mst0",
       __rootConnectionNames: ["source_net_1"],
+      maxViaCount: 0,
     },
     {
       name: "reroute_a__reroute_b_mst1",
       __rootConnectionNames: ["source_net_1"],
+      maxViaCount: 0,
     },
   ])
 })
