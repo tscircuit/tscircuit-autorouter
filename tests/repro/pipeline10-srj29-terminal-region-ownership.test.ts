@@ -29,8 +29,8 @@ test("Pipeline 10 routes SRJ29 sample007 without reserving whole terminal region
   pathing.MAX_ITERATIONS = PATHING_ITERATION_BUDGET
   pathing.solve()
 
-  expect(pathing.failed).toBe(true)
-  expect(pathing.error).toContain("ran out of iterations")
+  expect(pathing.solved).toBe(true)
+  expect(pathing.failed).toBe(false)
 
   const fannedOutSrj =
     pipeline.secondBgaFanoutSolver!.getOutputSimpleRouteJson()
