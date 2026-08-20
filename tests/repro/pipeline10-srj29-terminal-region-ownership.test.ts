@@ -2,6 +2,7 @@ import { expect, test } from "bun:test"
 import { sample007 } from "@tscircuit/dataset-srj29-ddr3-bga-pairs"
 import { convertCircuitJsonToPcbSvg } from "circuit-to-svg"
 import { convertPipeline7HdRoutesToSimplifiedPcbTraces } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/convertPipeline7HdRoutesToSimplifiedPcbTraces"
+import { Pipeline9HighDensitySolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/pipeline9-high-density-solver"
 import { AutoroutingPipelineSolver10_BgaFanout } from "lib/autorouter-pipelines/AutoroutingPipeline10_BgaFanout/AutoroutingPipelineSolver10_BgaFanout"
 import { MultipleHighDensityRouteStitchSolver3 } from "lib/solvers/RouteStitchingSolver/MultipleHighDensityRouteStitchSolver3"
 import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
@@ -45,23 +46,72 @@ test("Pipeline 10 routes SRJ29 sample007 without reserving whole terminal region
     if (!highDensityRouteSolver) {
       throw new Error("Pipeline 9 high-density route stage was not created")
     }
-    highDensityRouteSolver.solve()
-    if (!highDensityRouteSolver.solved) {
+
+    const belongsToTargetNet = (...connectionNames: (string | undefined)[]) =>
+      connectionNames.some(
+        (name) =>
+          name === TARGET_CONNECTION_NAME ||
+          (name !== undefined &&
+            pipeline9.connMap.areIdsConnected(name, TARGET_CONNECTION_NAME)),
+      )
+    const targetNodePortPoints = highDensityRouteSolver.unsolvedNodePortPoints
+      .map((node) => ({
+        ...node,
+        portPoints: node.portPoints.filter((point) =>
+          belongsToTargetNet(point.connectionName, point.rootConnectionName),
+        ),
+        portPointsInPairs: node.portPointsInPairs?.filter(([start, end]) =>
+          [start, end].every((point) =>
+            belongsToTargetNet(point.connectionName, point.rootConnectionName),
+          ),
+        ),
+      }))
+      .filter((node) =>
+        node.portPointsInPairs !== undefined
+          ? node.portPointsInPairs.length > 0
+          : node.portPoints.length >= 2,
+      )
+    const targetHighDensityRouteSolver = new Pipeline9HighDensitySolver({
+      nodePortPoints: targetNodePortPoints,
+      fixedHdRoutes: highDensityRouteSolver.fixedHdRoutes,
+      connMap: highDensityRouteSolver.connMap,
+      colorMap: highDensityRouteSolver.colorMap,
+      obstacles: highDensityRouteSolver.obstacles,
+      layerCount: highDensityRouteSolver.layerCount,
+      viaDiameter: highDensityRouteSolver.viaDiameter,
+      traceWidth: highDensityRouteSolver.traceWidth,
+      obstacleMargin: highDensityRouteSolver.obstacleMargin,
+      effort: highDensityRouteSolver.effort,
+      preserveTerminalPcbPortIds:
+        highDensityRouteSolver.preserveTerminalPcbPortIds,
+      includeBoardObstacles: highDensityRouteSolver.includeBoardObstacles,
+      enableRegionalFallback: highDensityRouteSolver.enableRegionalFallback,
+      maxB01Rips: highDensityRouteSolver.maxB01Rips,
+    })
+    targetHighDensityRouteSolver.solve()
+    if (!targetHighDensityRouteSolver.solved) {
       throw new Error(
-        highDensityRouteSolver.error ?? "High-density routing failed",
+        targetHighDensityRouteSolver.error ?? "High-density routing failed",
       )
     }
 
     const pointPairSrj = pipeline9.srjWithPointPairs
     if (!pointPairSrj) throw new Error("Pipeline 9 point pairs are missing")
+    const targetConnections = [
+      ...pointPairSrj.connections,
+      ...pathingOutput.changedPreloadedTraceSections.map(
+        (section) => section.connection,
+      ),
+    ].filter((connection) =>
+      belongsToTargetNet(
+        connection.name,
+        connection.rootConnectionName,
+        ...(connection.__rootConnectionNames ?? []),
+      ),
+    )
     const stitchSolver = new MultipleHighDensityRouteStitchSolver3({
-      connections: [
-        ...pointPairSrj.connections,
-        ...pathingOutput.changedPreloadedTraceSections.map(
-          (section) => section.connection,
-        ),
-      ],
-      hdRoutes: highDensityRouteSolver.routes,
+      connections: targetConnections,
+      hdRoutes: targetHighDensityRouteSolver.routes,
       layerCount: inputSrj.layerCount,
       defaultViaDiameter: pipeline9.viaDiameter,
       preserveTerminalPcbPortIds: true,
