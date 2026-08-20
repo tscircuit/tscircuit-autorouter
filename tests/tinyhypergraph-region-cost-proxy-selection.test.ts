@@ -1,6 +1,8 @@
 import { expect, test } from "bun:test"
 import {
   type DownstreamCandidateSummary,
+  estimateHighDensityHardSearchProbability,
+  getHighDensityFailureBurden,
   shouldSelectRegionCostOptimizedCandidate,
 } from "lib/solvers/PortPointPathingSolver/tinyhypergraph/TinyHypergraphPortPointPathingSolver"
 
@@ -13,18 +15,37 @@ const input: DownstreamCandidateSummary = {
   layerChangeCount: 20,
 }
 
-test("region optimizer output must improve the downstream proxy without regressions", () => {
+test("estimates hard-search probability from compounded node failure burden", () => {
+  expect(getHighDensityFailureBurden(input)).toBe(12.5)
+  expect(estimateHighDensityHardSearchProbability(input)).toBeCloseTo(0.628, 3)
+  expect(
+    estimateHighDensityHardSearchProbability({
+      ...input,
+      nodePfSum: 5,
+      nodePfSquaredSum: 2,
+    }),
+  ).toBeLessThan(estimateHighDensityHardSearchProbability(input))
+})
+
+test("region optimizer output must meaningfully reduce estimated failure burden", () => {
   expect(
     shouldSelectRegionCostOptimizedCandidate(input, {
       ...input,
       squaredNodePortPointCount: 900,
       segmentCount: 110,
     }),
-  ).toBeTrue()
+  ).toBeFalse()
   expect(
     shouldSelectRegionCostOptimizedCandidate(input, {
       ...input,
       nodePfSum: 9,
+      nodePfSquaredSum: 4,
+    }),
+  ).toBeTrue()
+  expect(
+    shouldSelectRegionCostOptimizedCandidate(input, {
+      ...input,
+      nodePfSum: 8,
       layerChangeCount: 21,
     }),
   ).toBeFalse()

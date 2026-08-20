@@ -61,6 +61,8 @@ export type TinyHypergraphBenchmarkMetrics = {
   downstreamNodePfSum?: number
   downstreamNodePfSquaredSum?: number
   downstreamNodePfMax?: number
+  downstreamFailureBurden?: number
+  estimatedHighDensityHardSearchProbability?: number
   downstreamSquaredNodePortPointCount?: number
   iterations: number
   timeMs?: number
@@ -106,6 +108,9 @@ export type TinyHypergraphBenchmarkMetrics = {
   optimizerInputNodePfSum?: number
   optimizerNarrowNodePfSum?: number
   optimizerBroadNodePfSum?: number
+  optimizerInputHardSearchProbability?: number
+  optimizerNarrowHardSearchProbability?: number
+  optimizerBroadHardSearchProbability?: number
   optimizerInputNodePfSquaredSum?: number
   optimizerNarrowNodePfSquaredSum?: number
   optimizerBroadNodePfSquaredSum?: number

@@ -128,6 +128,29 @@ const TRACE_DENSITY_PORTFOLIO_STRONG_PF_MAX_RATIO = 0.85
 const TRACE_DENSITY_PORTFOLIO_STRONG_CONCENTRATION_RATIO = 0.98
 const TRACE_DENSITY_PORTFOLIO_STRONG_SEGMENT_RATIO = 0.97
 
+// Fitted on 536 benchmark routes, with each dataset held out in turn. This
+// estimates P(high-density routing takes more than 100k iterations) from the
+// second-order negative-log-success burden across capacity nodes.
+const HARD_SEARCH_LOGIT_INTERCEPT = -3.528
+const HARD_SEARCH_LOG_BURDEN_COEFFICIENT = 1.557
+const MIN_REGION_OPTIMIZER_FAILURE_BURDEN_REDUCTION = 0.1
+
+export const getHighDensityFailureBurden = (
+  summary: DownstreamCandidateSummary,
+) => Math.max(0, summary.nodePfSum) + Math.max(0, summary.nodePfSquaredSum) / 2
+
+export const estimateHighDensityHardSearchProbability = (
+  summary: DownstreamCandidateSummary,
+) => {
+  const logit =
+    HARD_SEARCH_LOGIT_INTERCEPT +
+    HARD_SEARCH_LOG_BURDEN_COEFFICIENT *
+      Math.log1p(getHighDensityFailureBurden(summary))
+  if (logit >= 0) return 1 / (1 + Math.exp(-logit))
+  const exponential = Math.exp(logit)
+  return exponential / (1 + exponential)
+}
+
 export const shouldEvaluateTraceDensityAlternative = (
   summary: DownstreamCandidateSummary,
   routeCount: number,
@@ -182,13 +205,14 @@ export const shouldSelectRegionCostOptimizedCandidate = (
     optimized.nodePfMax <= input.nodePfMax &&
     optimized.nodePfSquaredSum <= input.nodePfSquaredSum &&
     optimized.nodePfSum <= input.nodePfSum
-  const improvesDownstreamProxy =
-    optimized.squaredNodePortPointCount < input.squaredNodePortPointCount ||
-    optimized.layerChangeCount < input.layerChangeCount ||
-    optimized.nodePfSquaredSum < input.nodePfSquaredSum ||
-    optimized.nodePfSum < input.nodePfSum
+  const inputFailureBurden = getHighDensityFailureBurden(input)
+  const optimizedFailureBurden = getHighDensityFailureBurden(optimized)
+  const meaningfullyReducesFailureBurden =
+    inputFailureBurden > 0 &&
+    optimizedFailureBurden <=
+      inputFailureBurden * (1 - MIN_REGION_OPTIMIZER_FAILURE_BURDEN_REDUCTION)
 
-  return isNoWorse && improvesDownstreamProxy
+  return isNoWorse && meaningfullyReducesFailureBurden
 }
 
 type TinyRegionMetadata = {
@@ -1400,6 +1424,12 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       downstreamNodePfSum: selectedCandidateSummary?.nodePfSum,
       downstreamNodePfSquaredSum: selectedCandidateSummary?.nodePfSquaredSum,
       downstreamNodePfMax: selectedCandidateSummary?.nodePfMax,
+      downstreamFailureBurden: selectedCandidateSummary
+        ? getHighDensityFailureBurden(selectedCandidateSummary)
+        : undefined,
+      estimatedHighDensityHardSearchProbability: selectedCandidateSummary
+        ? estimateHighDensityHardSearchProbability(selectedCandidateSummary)
+        : undefined,
       downstreamSquaredNodePortPointCount:
         selectedCandidateSummary?.squaredNodePortPointCount,
       iterations: solveGraphSolver.iterations,
@@ -1464,6 +1494,24 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
         this.tinyPipelineSolver.regionCostOptimizerNarrowSummary?.nodePfSum,
       optimizerBroadNodePfSum:
         this.tinyPipelineSolver.regionCostOptimizerBroadSummary?.nodePfSum,
+      optimizerInputHardSearchProbability: this.tinyPipelineSolver
+        .regionCostOptimizerInputSummary
+        ? estimateHighDensityHardSearchProbability(
+            this.tinyPipelineSolver.regionCostOptimizerInputSummary,
+          )
+        : undefined,
+      optimizerNarrowHardSearchProbability: this.tinyPipelineSolver
+        .regionCostOptimizerNarrowSummary
+        ? estimateHighDensityHardSearchProbability(
+            this.tinyPipelineSolver.regionCostOptimizerNarrowSummary,
+          )
+        : undefined,
+      optimizerBroadHardSearchProbability: this.tinyPipelineSolver
+        .regionCostOptimizerBroadSummary
+        ? estimateHighDensityHardSearchProbability(
+            this.tinyPipelineSolver.regionCostOptimizerBroadSummary,
+          )
+        : undefined,
       optimizerInputNodePfSquaredSum:
         this.tinyPipelineSolver.regionCostOptimizerInputSummary
           ?.nodePfSquaredSum,
