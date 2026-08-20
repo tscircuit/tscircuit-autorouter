@@ -73,7 +73,8 @@ test("Pipeline9 clips crossing fixed traces to the local B01 window", () => {
   expect(routeObstacle.route).toHaveLength(2)
   expect(routeObstacle.route[0]!.x).toBeCloseTo(-1.3)
   expect(routeObstacle.route[1]!.x).toBeCloseTo(1.3)
-  expect(routeObstacle.route.every((point) => point.y === 0 && point.z === 0))
-    .toBeTrue()
+  expect(
+    routeObstacle.route.every((point) => point.y === 0 && point.z === 0),
+  ).toBeTrue()
   expect(solver.stats.fixedObstacleUses).toBe(1)
 })

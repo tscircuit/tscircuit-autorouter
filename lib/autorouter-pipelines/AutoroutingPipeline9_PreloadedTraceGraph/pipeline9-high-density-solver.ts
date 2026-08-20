@@ -80,8 +80,7 @@ const routeOverlapsNode = (
       return nextPoint
         ? geometryOverlapsNode(point, nextPoint)
         : route.route.length === 1 && geometryOverlapsNode(point, point)
-    }) ||
-    route.vias.some((via) => geometryOverlapsNode(via, via))
+    }) || route.vias.some((via) => geometryOverlapsNode(via, via))
   )
 }
 
@@ -93,7 +92,9 @@ const clipSegmentToBounds = ({
   start: HighDensityRoute["route"][number]
   end: HighDensityRoute["route"][number]
   bounds: NodeBounds
-}): [HighDensityRoute["route"][number], HighDensityRoute["route"][number]] | undefined => {
+}):
+  | [HighDensityRoute["route"][number], HighDensityRoute["route"][number]]
+  | undefined => {
   const dx = end.x - start.x
   const dy = end.y - start.y
   let entry = 0

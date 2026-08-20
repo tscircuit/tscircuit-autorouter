@@ -760,8 +760,10 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         traceClearance,
         viaClearance,
         spatialCellSize:
-          Math.max(params.defaultViaDiameter, params.originalSrj.minTraceWidth) +
-          Math.max(traceClearance, viaClearance),
+          Math.max(
+            params.defaultViaDiameter,
+            params.originalSrj.minTraceWidth,
+          ) + Math.max(traceClearance, viaClearance),
       },
     )
     const autoroutingBaselineDrc = autoroutingDrcEngine.evaluate(
