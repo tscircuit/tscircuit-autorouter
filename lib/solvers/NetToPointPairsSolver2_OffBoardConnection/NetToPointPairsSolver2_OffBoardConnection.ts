@@ -177,6 +177,7 @@ export class NetToPointPairsSolver2_OffBoardConnection extends NetToPointPairsSo
           currentConnection.name,
         ],
         __netConnectionName: currentConnection.__netConnectionName,
+        maxViaCount: currentConnection.maxViaCount,
       })
     }
   }
