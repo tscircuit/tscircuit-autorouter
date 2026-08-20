@@ -1,8 +1,5 @@
 import { expect, test } from "bun:test"
-import type {
-  SimpleRouteConnection,
-  SimplifiedPcbTraces,
-} from "lib/types"
+import type { SimpleRouteConnection, SimplifiedPcbTraces } from "lib/types"
 import { getMaxViaCountViolation } from "lib/utils/get-max-via-count-violation"
 
 test("detects a via violation on a merged root connection", () => {
