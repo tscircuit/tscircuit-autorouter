@@ -5,11 +5,9 @@ import { AutoroutingPipelineSolver10_BgaFanout } from "lib/autorouter-pipelines/
 import { convertToCircuitJson } from "lib/testing/utils/convertToCircuitJson"
 import type { SimpleRouteJson } from "lib/types"
 
-const FAILED_PRELOADED_SECTION_NAME =
-  "DDR3_a3_i_mx6ull_main_ram_ddr3_dram_data15_fixed_27_1"
 const TARGET_CONNECTION_NAME = "DDR3_a3_i_mx6ull_main_ram_ddr3_dram_data15"
 
-test("Pipeline 9 cannot reconnect a zero-length SRJ29 fanout section", () => {
+test("Pipeline 9 reconnects SRJ29 after omitting a zero-length fanout section", () => {
   const inputSrj = structuredClone(sample011) as SimpleRouteJson
   const pipeline = new AutoroutingPipelineSolver10_BgaFanout(inputSrj, {
     cacheProvider: null,
@@ -34,7 +32,7 @@ test("Pipeline 9 cannot reconnect a zero-length SRJ29 fanout section", () => {
   try {
     while (
       !pipeline9.failed &&
-      pipeline9.getCurrentPhase() !== "lengthMatchingPostProcessingSolver"
+      pipeline9.getCurrentPhase() !== "traceSimplificationSolver"
     ) {
       pipeline9.step()
     }
@@ -43,15 +41,16 @@ test("Pipeline 9 cannot reconnect a zero-length SRJ29 fanout section", () => {
     reconnectError = error
   }
 
-  expect(reconnectError?.message).toContain(
-    `could not reconnect mutated preloaded segment "${FAILED_PRELOADED_SECTION_NAME}"`,
-  )
+  expect(reconnectError).toBeUndefined()
+  expect(pipeline9.failed).toBe(false)
+  expect(pipeline9.getCurrentPhase()).toBe("traceSimplificationSolver")
 
   const srjWithPointPairs = pipeline9.srjWithPointPairs
   const highDensityStitchSolver = pipeline9.highDensityStitchSolver
   if (!srjWithPointPairs || !highDensityStitchSolver) {
-    throw new Error("Pipeline 9 did not reach high-density route stitching")
+    throw new Error("Pipeline 9 did not materialize its reconnected routes")
   }
+  expect(highDensityStitchSolver.solved).toBe(true)
   const belongsToTargetConnection = (
     ...connectionNames: (string | undefined)[]
   ): boolean =>
@@ -64,9 +63,9 @@ test("Pipeline 9 cannot reconnect a zero-length SRJ29 fanout section", () => {
             TARGET_CONNECTION_NAME,
           )),
     )
-  const targetFanoutTraces = (fannedOutSrj.traces ?? []).filter((trace) =>
-    belongsToTargetConnection(trace.connection_name),
-  )
+  const targetFanoutTraces = pipeline9
+    .getUpdatedPreloadedTraces()
+    .filter((trace) => belongsToTargetConnection(trace.connection_name))
   const targetAutoroutedRoutes = highDensityStitchSolver.mergedHdRoutes.filter(
     (route) =>
       belongsToTargetConnection(route.connectionName, route.rootConnectionName),

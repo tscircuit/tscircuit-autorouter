@@ -30,7 +30,19 @@ export const convertPreloadedTraceToHdRoutes = (
     routePositionStart?: number,
     routePositionEnd?: number,
   ) => {
-    if (route.length < 2) return
+    const firstPoint = route[0]
+    if (
+      !firstPoint ||
+      route.length < 2 ||
+      route.every(
+        (point) =>
+          point.x === firstPoint.x &&
+          point.y === firstPoint.y &&
+          point.z === firstPoint.z,
+      )
+    ) {
+      return
+    }
     routes.push({
       connectionName: `${trace.connection_name}_fixed_${traceIndex}_${routes.length}`,
       rootConnectionName,
