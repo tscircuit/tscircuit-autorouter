@@ -37,6 +37,7 @@ import type {
 } from "../hgportpointpathingsolver/types"
 import { createTinyRouteNetIndexer } from "./createTinyRouteNetIndexer"
 import { getRegionNetIdByRegionId } from "./getRegionNetIdByRegionId"
+import { MaxViaCountTinyHyperGraphSolver } from "./MaxViaCountTinyHyperGraphSolver"
 import { SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments } from "./SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments"
 import {
   getSerializedPreloadedTraceStats,
@@ -831,6 +832,34 @@ const applyMetadataPortPenalties = (loaded: LoadedTinyGraph) => {
   return metadataPortPenaltyCount
 }
 
+const hasMaxViaCountConstraint = (
+  inputProblem: TinyHyperGraphSectionPipelineInput,
+): boolean =>
+  inputProblem.serializedHyperGraph.connections?.some(
+    (connection) =>
+      (connection as RouteMetadata).simpleRouteConnection?.maxViaCount !==
+      undefined,
+  ) ?? false
+
+const disableIncompatibleMaxViaCountRoutingModes = (
+  inputProblem: TinyHyperGraphSectionPipelineInput,
+): TinyHyperGraphSectionPipelineInput => {
+  if (!hasMaxViaCountConstraint(inputProblem)) {
+    return inputProblem
+  }
+
+  return {
+    ...inputProblem,
+    solveGraphOptions: {
+      ...inputProblem.solveGraphOptions,
+      ACCEPT_BEST_SOLUTION_ON_TIMEOUT: false,
+      GREEDY_FINAL_ROUTE_ITERS: 0,
+      PARTIAL_RIP_ENABLED: false,
+      OUTSIDE_IN_ROUTING: false,
+    },
+  }
+}
+
 class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSectionPipelineSolver {
   private configuredSolvers = new WeakSet<BaseSolver>()
   duplicatePortPenaltyCount = 0
@@ -840,20 +869,22 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
   preloadedFixedSegmentCount = 0
   readonly crampedPortTraversalPenalty: number
   readonly useSelectiveReripRouting: boolean
+  readonly hasMaxViaCountConstraint: boolean
 
   constructor(
     inputProblem: TinyHyperGraphSectionPipelineInput,
     useSelectiveReripRouting: boolean,
   ) {
-    super(inputProblem)
+    super(disableIncompatibleMaxViaCountRoutingModes(inputProblem))
     this.useSelectiveReripRouting = useSelectiveReripRouting
+    this.hasMaxViaCountConstraint = hasMaxViaCountConstraint(inputProblem)
     this.crampedPortTraversalPenalty = DEFAULT_CRAMPED_PORT_TRAVERSAL_PENALTY
     const preloadedStats = getSerializedPreloadedTraceStats(
       inputProblem.serializedHyperGraph,
     )
     this.preloadedPortCount = preloadedStats.preloadedPortCount
     this.preloadedFixedSegmentCount = preloadedStats.preloadedAssignmentCount
-    if (useSelectiveReripRouting) {
+    if (useSelectiveReripRouting || this.hasMaxViaCountConstraint) {
       const solveGraphStep = this.pipelineDef.find(
         (pipelineStep) => pipelineStep.solverName === "solveGraph",
       )
@@ -862,10 +893,14 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
           "Tiny hypergraph pipeline is missing the solveGraph stage",
         )
       }
-      solveGraphStep.solverClass =
-        SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments
+      solveGraphStep.solverClass = this.hasMaxViaCountConstraint
+        ? MaxViaCountTinyHyperGraphSolver
+        : SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments
     }
-    if (preloadedStats.preloadedAssignmentCount > 0) {
+    if (
+      preloadedStats.preloadedAssignmentCount > 0 ||
+      this.hasMaxViaCountConstraint
+    ) {
       this.pipelineDef = this.pipelineDef.filter(
         (pipelineStep) => pipelineStep.solverName !== "optimizeSection",
       )
@@ -901,16 +936,21 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
   }
 
   override getInitialVisualizationSolver() {
-    if (this.useSelectiveReripRouting && !this.initialVisualizationSolver) {
+    if (
+      (this.useSelectiveReripRouting || this.hasMaxViaCountConstraint) &&
+      !this.initialVisualizationSolver
+    ) {
       const { topology, problem } = this.loadHyperGraph(
         this.inputProblem.serializedHyperGraph,
       )
-      this.initialVisualizationSolver =
-        new SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments(
-          topology,
-          problem,
-          this.getSolveGraphOptions(),
-        )
+      const SolverClass = this.hasMaxViaCountConstraint
+        ? MaxViaCountTinyHyperGraphSolver
+        : SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments
+      this.initialVisualizationSolver = new SolverClass(
+        topology,
+        problem,
+        this.getSolveGraphOptions(),
+      )
     }
     const solver = super.getInitialVisualizationSolver()
     this.configureSolver(solver)

@@ -2,6 +2,7 @@ import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import { GraphicsObject } from "graphics-debug"
 import { SimpleRouteConnection, SimpleRouteJson } from "lib/types"
 import { seededRandom } from "lib/utils/cloneAndShuffleArray"
+import { getConnectionPointPairKey } from "lib/utils/getConnectionPointPairKey"
 import { BaseSolver } from "../BaseSolver"
 import { buildMinimumSpanningTree } from "./buildMinimumSpanningTree"
 import { getInitiallyConnectedStateForConnection } from "./get-initially-connected-state-for-connection"
@@ -83,7 +84,10 @@ export class NetToPointPairsSolver extends BaseSolver {
           connection.name,
         ],
         __netConnectionName: connection.__netConnectionName,
-        maxViaCount: connection.maxViaCount,
+        maxViaCount:
+          connection.maxViaCountByPointPair?.[
+            getConnectionPointPairKey(edge.from, edge.to)
+          ] ?? connection.maxViaCount,
         maxViaCountByRootConnectionName:
           connection.maxViaCountByRootConnectionName,
       })

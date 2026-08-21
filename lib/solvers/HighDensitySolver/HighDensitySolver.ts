@@ -62,6 +62,7 @@ export class HighDensitySolver extends BaseSolver {
   growShrinkMaxInnerIterationsPerGrowthAttempt?: number
   growShrinkFallbackToInvalidGeometryOnFailure: boolean
   captureSearchDebug: boolean
+  remainingViaCountByConnectionName: Record<string, number>
 
   failedSolvers: HighDensityIntraNodeSolver[]
   activeSubSolver: HighDensityIntraNodeSolver | null = null
@@ -96,6 +97,7 @@ export class HighDensitySolver extends BaseSolver {
     growShrinkMaxInnerIterationsPerGrowthAttempt,
     growShrinkFallbackToInvalidGeometryOnFailure,
     captureSearchDebug,
+    maxViaCountByConnectionName,
   }: {
     nodePortPoints: NodeWithPortPoints[]
     colorMap?: Record<string, string>
@@ -111,6 +113,7 @@ export class HighDensitySolver extends BaseSolver {
     growShrinkMaxInnerIterationsPerGrowthAttempt?: number
     growShrinkFallbackToInvalidGeometryOnFailure?: boolean
     captureSearchDebug?: boolean
+    maxViaCountByConnectionName?: Record<string, number>
     nodePfById?:
       | Map<CapacityMeshNodeId, number | null>
       | Record<string, number | null>
@@ -135,6 +138,9 @@ export class HighDensitySolver extends BaseSolver {
     this.growShrinkFallbackToInvalidGeometryOnFailure =
       growShrinkFallbackToInvalidGeometryOnFailure ?? false
     this.captureSearchDebug = captureSearchDebug ?? true
+    this.remainingViaCountByConnectionName = {
+      ...maxViaCountByConnectionName,
+    }
     this.MAX_ITERATIONS =
       10e6 *
       this.effort *
@@ -319,6 +325,34 @@ export class HighDensitySolver extends BaseSolver {
     }))
   }
 
+  private getMaxViaCountViolation(routes: HighDensityIntraNodeRoute[]):
+    | {
+        connectionName: string
+        actualViaCount: number
+        maxViaCount: number
+      }
+    | undefined {
+    const viaCountByConnectionName = new Map<string, number>()
+    for (const route of routes) {
+      viaCountByConnectionName.set(
+        route.connectionName,
+        (viaCountByConnectionName.get(route.connectionName) ?? 0) +
+          route.vias.length,
+      )
+    }
+
+    for (const [connectionName, maxViaCount] of Object.entries(
+      this.remainingViaCountByConnectionName,
+    )) {
+      const actualViaCount = viaCountByConnectionName.get(connectionName) ?? 0
+      if (actualViaCount > maxViaCount) {
+        return { connectionName, actualViaCount, maxViaCount }
+      }
+    }
+
+    return undefined
+  }
+
   /**
    * Each iteration, pop an unsolved node and attempt to find the routes inside
    * of it.
@@ -328,11 +362,29 @@ export class HighDensitySolver extends BaseSolver {
     if (this.activeSubSolver) {
       this.activeSubSolver.step()
       if (this.activeSubSolver.solved) {
-        this.routes.push(
-          ...(this.preserveTerminalPcbPortIds
-            ? this.getSolvedRoutesWithTerminalPcbPortIds(this.activeSubSolver)
-            : this.activeSubSolver.solvedRoutes),
-        )
+        const solvedRoutes = this.preserveTerminalPcbPortIds
+          ? this.getSolvedRoutesWithTerminalPcbPortIds(this.activeSubSolver)
+          : this.activeSubSolver.solvedRoutes
+        const maxViaCountViolation =
+          this.getMaxViaCountViolation(solvedRoutes)
+        if (maxViaCountViolation) {
+          this.activeSubSolver.solved = false
+          this.activeSubSolver.failed = true
+          this.activeSubSolver.error = `Connection "${maxViaCountViolation.connectionName}" uses ${maxViaCountViolation.actualViaCount} vias in this node, exceeding the remaining maxViaCount=${maxViaCountViolation.maxViaCount}`
+          this.recordNodeSolveMetadata(this.activeSubSolver, "failed")
+          this.failedSolvers.push(this.activeSubSolver)
+          this.activeSubSolver = null
+          return
+        }
+
+        this.routes.push(...solvedRoutes)
+        for (const route of solvedRoutes) {
+          const remainingViaCount =
+            this.remainingViaCountByConnectionName[route.connectionName]
+          if (remainingViaCount === undefined) continue
+          this.remainingViaCountByConnectionName[route.connectionName] =
+            remainingViaCount - route.vias.length
+        }
         this.recordNodeSolveMetadata(this.activeSubSolver, "solved")
         this.recordSolvedNodeStats(
           this.activeSubSolver,
@@ -380,6 +432,9 @@ export class HighDensitySolver extends BaseSolver {
       fallbackToInvalidGeometryOnFailure:
         this.growShrinkFallbackToInvalidGeometryOnFailure,
       captureSearchDebug: this.captureSearchDebug,
+      maxViaCountByConnectionName: {
+        ...this.remainingViaCountByConnectionName,
+      },
     }
     this.activeSubSolver = this.useGrowShrinkHighDensityIntraNodeSolver
       ? new GrowShrinkHighDensityIntraNodeSolver(intraNodeSolverParams)

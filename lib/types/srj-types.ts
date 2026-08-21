@@ -144,6 +144,8 @@ export interface SimpleRouteConnection {
   maxViaCount?: number
   /** @internal Original-connection via limits retained after connections merge. */
   maxViaCountByRootConnectionName?: Record<string, number>
+  /** @internal Via limits keyed by the original unordered point pair. */
+  maxViaCountByPointPair?: Record<string, number>
   pointsToConnect: Array<ConnectionPoint>
 
   /** @deprecated DO NOT USE **/

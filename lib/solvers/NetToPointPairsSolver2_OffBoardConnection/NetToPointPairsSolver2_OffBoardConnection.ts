@@ -5,6 +5,7 @@ import {
 } from "lib/types"
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import { DSU } from "lib/utils/dsu"
+import { getConnectionPointPairKey } from "lib/utils/getConnectionPointPairKey"
 import { NetToPointPairsSolver } from "../NetToPointPairsSolver/NetToPointPairsSolver"
 import { buildMinimumSpanningTree } from "../NetToPointPairsSolver/buildMinimumSpanningTree"
 import { getInitiallyConnectedStateForConnection } from "../NetToPointPairsSolver/get-initially-connected-state-for-connection"
@@ -146,6 +147,10 @@ export class NetToPointPairsSolver2_OffBoardConnection extends NetToPointPairsSo
       this.newConnections.push({
         ...currentConnection,
         pointsToConnect: optimizedConnection.pointsToConnect,
+        maxViaCount:
+          currentConnection.maxViaCountByPointPair?.[
+            getConnectionPointPairKey(startPoint, endPoint)
+          ] ?? currentConnection.maxViaCount,
         __rootConnectionNames: currentConnection.__rootConnectionNames ?? [
           currentConnection.name,
         ],
@@ -176,7 +181,10 @@ export class NetToPointPairsSolver2_OffBoardConnection extends NetToPointPairsSo
           currentConnection.name,
         ],
         __netConnectionName: currentConnection.__netConnectionName,
-        maxViaCount: currentConnection.maxViaCount,
+        maxViaCount:
+          currentConnection.maxViaCountByPointPair?.[
+            getConnectionPointPairKey(mstEdge.from, mstEdge.to)
+          ] ?? currentConnection.maxViaCount,
         maxViaCountByRootConnectionName:
           currentConnection.maxViaCountByRootConnectionName,
       })

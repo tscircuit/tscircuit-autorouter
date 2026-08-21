@@ -561,6 +561,14 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
           preserveTerminalPcbPortIds: true,
           growShrinkFallbackToInvalidGeometryOnFailure: true,
           captureSearchDebug: false,
+          maxViaCountByConnectionName: Object.fromEntries(
+            (cms.srjWithPointPairs?.connections ?? [])
+              .filter((connection) => connection.maxViaCount !== undefined)
+              .map((connection) => [
+                connection.name,
+                connection.maxViaCount!,
+              ]),
+          ),
         },
       ]
     }),
