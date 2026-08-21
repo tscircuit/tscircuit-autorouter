@@ -56,18 +56,10 @@ const getViaClearanceErrorIdentity = (
     typeof centerCandidate.y === "number"
       ? { x: centerCandidate.x, y: centerCandidate.y }
       : undefined
-  const encodedNetRelation =
-    typeof error.pcb_error_id === "string" &&
-    error.pcb_error_id.startsWith("same_net_vias_close_")
-      ? "same_net"
-      : typeof error.pcb_error_id === "string" &&
-          error.pcb_error_id.startsWith("different_net_vias_close_")
-        ? "different_net"
-        : undefined
   const netRelation =
     typeof error.pcb_via_pair_net_relation === "string"
       ? error.pcb_via_pair_net_relation
-      : encodedNetRelation
+      : undefined
 
   // Sequential via IDs depend on trace iteration order, so they cannot prove
   // that a candidate violation was inherited. Missing stable metadata is kept

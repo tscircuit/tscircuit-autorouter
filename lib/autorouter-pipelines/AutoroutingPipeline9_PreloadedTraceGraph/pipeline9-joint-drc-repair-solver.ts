@@ -666,9 +666,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         explicitOriginalPreloadedTraceId &&
         updatedPreloadedTraceById.has(explicitOriginalPreloadedTraceId)
       ) {
-        candidateMovablePreloadedTraceIds.add(
-          explicitOriginalPreloadedTraceId,
-        )
+        candidateMovablePreloadedTraceIds.add(explicitOriginalPreloadedTraceId)
         continue
       }
       if (

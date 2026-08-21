@@ -66,9 +66,7 @@ type AxisAlignedRect = {
 }
 
 type FixedRouteCopperSpatialIndex = {
-  getRoutesOverlappingBounds: (
-    bounds: Bounds,
-  ) => PreloadedHighDensityRoute[]
+  getRoutesOverlappingBounds: (bounds: Bounds) => PreloadedHighDensityRoute[]
 }
 
 const REGION_SIZES = [3, 4, 5, 6, 8]
@@ -182,10 +180,7 @@ const getRouteCopperGeometry = (
       start.traceThickness ?? route.traceThickness,
       end.traceThickness ?? route.traceThickness,
     )
-    if (
-      start.z !== end.z &&
-      start.toNextSegmentType === "through_obstacle"
-    ) {
+    if (start.z !== end.z && start.toNextSegmentType === "through_obstacle") {
       const minZ = Math.min(start.z, end.z)
       const maxZ = Math.max(start.z, end.z)
       if (xyDistance <= 1e-9) {
@@ -277,10 +272,8 @@ const getAxisAlignedWireApproximations = (
     return [
       {
         center,
-        width:
-          Math.abs(dx) > Math.abs(dy) ? segmentLength : segment.width,
-        height:
-          Math.abs(dx) > Math.abs(dy) ? segment.width : segmentLength,
+        width: Math.abs(dx) > Math.abs(dy) ? segmentLength : segment.width,
+        height: Math.abs(dx) > Math.abs(dy) ? segment.width : segmentLength,
       },
     ]
   }
@@ -307,9 +300,7 @@ const routeCopperOverlapsBounds = (
     geometry.wireSegments.some((segment) =>
       boundsOverlap(wireSegmentBounds(segment), bounds),
     ) ||
-    geometry.viaSpans.some((via) =>
-      boundsOverlap(viaSpanBounds(via), bounds),
-    )
+    geometry.viaSpans.some((via) => boundsOverlap(viaSpanBounds(via), bounds))
   )
 }
 
@@ -380,12 +371,8 @@ export const getPipeline9FixedRouteObstacles = ({
   srj: SimpleRouteJson
 }): Obstacle[] => {
   return fixedObstacleRoutes.flatMap((route, routeIndex) => {
-    const connectedTo = [
-      route.connectionName,
-      route.rootConnectionName,
-    ].filter(
-      (connectedId): connectedId is string =>
-        typeof connectedId === "string",
+    const connectedTo = [route.connectionName, route.rootConnectionName].filter(
+      (connectedId): connectedId is string => typeof connectedId === "string",
     )
     const geometry = getRouteCopperGeometry(route)
     return [
@@ -405,19 +392,21 @@ export const getPipeline9FixedRouteObstacles = ({
           connectedTo,
         }))
       }),
-      ...geometry.viaSpans.map((via, viaIndex): Obstacle => ({
-        obstacleId: `pipeline9_fixed_obstacle_${routeIndex}_via_${viaIndex}`,
-        type: "rect",
-        layers: Array.from(
-          { length: via.maxZ - via.minZ + 1 },
-          (_, layerOffset) =>
-            mapZToLayerName(via.minZ + layerOffset, srj.layerCount),
-        ),
-        center: via.center,
-        width: via.diameter,
-        height: via.diameter,
-        connectedTo,
-      })),
+      ...geometry.viaSpans.map(
+        (via, viaIndex): Obstacle => ({
+          obstacleId: `pipeline9_fixed_obstacle_${routeIndex}_via_${viaIndex}`,
+          type: "rect",
+          layers: Array.from(
+            { length: via.maxZ - via.minZ + 1 },
+            (_, layerOffset) =>
+              mapZToLayerName(via.minZ + layerOffset, srj.layerCount),
+          ),
+          center: via.center,
+          width: via.diameter,
+          height: via.diameter,
+          connectedTo,
+        }),
+      ),
     ]
   })
 }
@@ -513,11 +502,7 @@ const routesHaveCopperConflict = ({
       }
     }
     for (const rightVia of rightGeometry.viaSpans) {
-      if (
-        leftVia.minZ > rightVia.maxZ ||
-        rightVia.minZ > leftVia.maxZ
-      )
-        continue
+      if (leftVia.minZ > rightVia.maxZ || rightVia.minZ > leftVia.maxZ) continue
       const requiredClearance =
         leftVia.diameter / 2 + rightVia.diameter / 2 + clearance
       if (
@@ -703,26 +688,10 @@ const getRegularRegionalCandidate = ({
     Math.max(traceWidth / 2, viaDiameter / 2),
   )
   const candidateBounds: Bounds = {
-    minX:
-      center.x -
-      regionSize / 2 -
-      obstacleMargin -
-      maxRegionalCopperRadius,
-    maxX:
-      center.x +
-      regionSize / 2 +
-      obstacleMargin +
-      maxRegionalCopperRadius,
-    minY:
-      center.y -
-      regionSize / 2 -
-      obstacleMargin -
-      maxRegionalCopperRadius,
-    maxY:
-      center.y +
-      regionSize / 2 +
-      obstacleMargin +
-      maxRegionalCopperRadius,
+    minX: center.x - regionSize / 2 - obstacleMargin - maxRegionalCopperRadius,
+    maxX: center.x + regionSize / 2 + obstacleMargin + maxRegionalCopperRadius,
+    minY: center.y - regionSize / 2 - obstacleMargin - maxRegionalCopperRadius,
+    maxY: center.y + regionSize / 2 + obstacleMargin + maxRegionalCopperRadius,
   }
   const localFixedObstacleRoutes =
     fixedRouteCopperSpatialIndex.getRoutesOverlappingBounds(candidateBounds)
@@ -818,9 +787,8 @@ export const applyPipeline9RegionalB01Repairs = ({
   let attemptedCandidateCount = 0
   let acceptedCandidateCount = 0
   let fallbackCandidateCount = 0
-  const fixedRouteCopperSpatialIndex = createFixedRouteCopperSpatialIndex(
-    fixedObstacleRoutes,
-  )
+  const fixedRouteCopperSpatialIndex =
+    createFixedRouteCopperSpatialIndex(fixedObstacleRoutes)
 
   for (let pass = 0; pass < 2; pass++) {
     let acceptedOnPass = false

@@ -251,16 +251,15 @@ test("Pipeline9 selects the detailed solver by local preload overlap", () => {
   expect(buriedViaSolver.routes[0]!.route.every(({ z }) => z === 0)).toBeTrue()
   expect(
     Math.min(
-      ...buriedViaSolver.routes[0]!.route
-        .slice(0, -1)
-        .map((point, pointIndex) =>
+      ...buriedViaSolver.routes[0]!.route.slice(0, -1).map(
+        (point, pointIndex) =>
           minimumDistanceBetweenSegments(
             point,
             buriedViaSolver.routes[0]!.route[pointIndex + 1]!,
             { x: 0, y: 0 },
             { x: 0, y: 0 },
           ),
-        ),
+      ),
     ),
   ).toBeLessThan(1e-9)
 

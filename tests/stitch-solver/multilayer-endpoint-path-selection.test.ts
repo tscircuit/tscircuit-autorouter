@@ -21,14 +21,8 @@ test("endpoint paths retain a farther same-layer branch before a buried via", ()
     { x: 1, y: 0, z: 0 },
     { x: 0, y: 0, z: 1 },
   )
-  const middleBranch = makeRoute(
-    { x: 0, y: 0, z: 1 },
-    { x: 2, y: 0, z: 1 },
-  )
-  const endBranch = makeRoute(
-    { x: 2, y: 0, z: 1 },
-    { x: 3, y: 0, z: 1 },
-  )
+  const middleBranch = makeRoute({ x: 0, y: 0, z: 1 }, { x: 2, y: 0, z: 1 })
+  const endBranch = makeRoute({ x: 2, y: 0, z: 1 }, { x: 3, y: 0, z: 1 })
 
   const selectedRoutes = selectRoutesAlongEndpointPath({
     connectionName: "preloaded_section",
