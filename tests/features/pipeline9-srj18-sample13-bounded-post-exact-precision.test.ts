@@ -3,8 +3,8 @@ import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-p
 import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import { loadScenarioBySampleNumber } from "../../scripts/benchmark/scenarios"
 
-test("Pipeline9 preserves SRJ18 sample 9's reference-clean exact output", async () => {
-  const { scenario } = await loadScenarioBySampleNumber("srj18", 9)
+test("Pipeline9 bounds SRJ18 sample 13's high-residual precision pass", async () => {
+  const { scenario } = await loadScenarioBySampleNumber("srj18", 13)
   const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(
     structuredClone(scenario),
     { cacheProvider: null, effort: 1 },
@@ -15,23 +15,26 @@ test("Pipeline9 preserves SRJ18 sample 9's reference-clean exact output", async 
   expect(solver.solved).toBeTrue()
   expect(solver.failed).toBeFalse()
   const repairStats = solver.pipeline9JointDrcRepairSolver?.stats
-  expect(Number(repairStats?.finalDrcIssueCount)).toBeGreaterThan(0)
+  expect(Number(repairStats?.postExactIndexedDrcIssueCount)).toBeGreaterThan(16)
   expect(repairStats).toMatchObject({
-    postExactPrecisionPassAttempted: true,
-    postExactReferenceValidationAttempted: true,
-    postExactReferenceValidationSkippedForIndexedIssueCount: false,
-    postExactReferenceDrcIssueCount: 0,
-    postExactReferenceAccepted: true,
-    terminalEscapeSkippedForIndexedIssueCount: false,
+    postExactPrecisionPassMaxIndexedIssueCount: 16,
+    postExactPrecisionPassAttempted: false,
+    postExactReferenceValidationAttempted: false,
+    postExactReferenceValidationSkippedForIndexedIssueCount: true,
+    postExactReferenceAccepted: false,
+    terminalEscapeSkippedForIndexedIssueCount: true,
     terminalEscapeCandidateCount: 0,
     terminalEscapeAcceptedCount: 0,
     regionalB01RepairAttempted: false,
     regionalB01RepairCandidateSearchCount: 0,
   })
+  expect(
+    Number(repairStats?.regionalB01RepairRemainingDrcIssueCount),
+  ).toBeGreaterThan(16)
   const { errors } = evaluateRelaxedDrc({
     inputSrj: scenario,
     srjWithPointPairs: solver.srjWithPointPairs!,
     routedTraces: solver.getOutputSimplifiedPcbTraces(),
   })
-  expect(errors).toHaveLength(0)
-})
+  expect(errors.length).toBeGreaterThan(0)
+}, 180_000)

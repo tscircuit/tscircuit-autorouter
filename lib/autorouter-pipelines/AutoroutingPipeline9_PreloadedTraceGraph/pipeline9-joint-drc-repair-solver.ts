@@ -37,6 +37,7 @@ import { getPipeline9PreloadedViaPairTraceGroups } from "./get-pipeline9-preload
 import { mergePipeline9MovablePreloadedVias } from "./merge-pipeline9-movable-preloaded-vias"
 import { normalizePipeline9DrcErrorsForRepair } from "./normalize-pipeline9-drc-errors-for-repair"
 import {
+  getPipeline9DrcErrors,
   getPipeline9RouteIndexByTraceId,
   type Pipeline9CollapsedTraceParticipant,
   type Pipeline9PreloadRepairTraceIds,
@@ -45,6 +46,10 @@ import { preparePipeline9DrcRoutedTracesWithMetadata } from "./prepare-pipeline9
 
 const EXACT_REPAIR_MAX_ITERATIONS = 32
 const EXACT_REPAIR_BROAD_MAX_ITERATIONS = 12
+// Reference validation and terminal relocation are precision passes for small
+// residual sets. Keep that exhaustive search for compact residues while
+// bounding terminal relocation's repeated whole-board indexed DRC scans.
+const MAX_POST_EXACT_PRECISION_PASS_INDEXED_ISSUE_COUNT = 16
 
 type Pipeline9JointDrcRepairSolverParams = {
   srj: SimpleRouteJson
@@ -1331,50 +1336,83 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     }
     if (!this.exactRepairSolver.solved) return
     const exactOutput = this.exactRepairSolver.getOutput()
-    // The indexed evaluator can retain conservative false positives after the
-    // exact portfolio has produced a reference-clean result. Do not let later
-    // heuristic repairs degrade an output already accepted by benchmark DRC.
-    const exactReferenceDrcResult = this.cachedReferenceDrcEvaluator!({
-      traces: [],
-      routes: exactOutput,
-      hdRoutes: exactOutput,
-    })
-    const exactReferenceDrcErrors = Array.isArray(exactReferenceDrcResult)
-      ? exactReferenceDrcResult
-      : exactReferenceDrcResult.errors
-    if (exactReferenceDrcErrors.length === 0) {
-      this.combinedOutput = exactOutput
-      this.stats = {
-        ...this.stats,
-        ...this.exactRepairSolver.stats,
-        postExactReferenceDrcIssueCount: 0,
-        postExactReferenceAccepted: true,
-        regionalB01RepairCandidateCount: 0,
-        regionalB01RepairAcceptedCount: 0,
-        regionalB01RepairFallbackCandidateCount: 0,
-        regionalB01RepairCandidateSearchCount: 0,
-        regionalB01RepairCandidateSearchBudget: 0,
-        regionalB01RepairCandidateSearchBudgetExhausted: false,
-        regionalB01RepairSafeTraceLayerSkippedForBudget: false,
-        regionalB01RepairRemainingDrcIssueCount: 0,
-        regionalB01RepairPreloadEligibleDrcIssueCount: 0,
-        regionalB01RepairAttempted: false,
-        regionalB01RepairTraceIdCount: 0,
-        terminalEscapeCandidateCount: 0,
-        terminalEscapeAcceptedCount: 0,
-        referenceDrcValidationCount: this.referenceDrcValidationCount,
-        referenceDrcFalseNegativeCount: this.referenceDrcFalseNegativeCount,
+    const exactIndexedDrcIssueCountStat =
+      this.exactRepairSolver.stats.finalDrcIssueCount
+    const exactIndexedDrcIssueCount =
+      typeof exactIndexedDrcIssueCountStat === "number" &&
+      Number.isFinite(exactIndexedDrcIssueCountStat) &&
+      exactIndexedDrcIssueCountStat >= 0
+        ? exactIndexedDrcIssueCountStat
+        : undefined
+    const shouldRunPostExactPrecisionPass =
+      exactIndexedDrcIssueCount === undefined ||
+      exactIndexedDrcIssueCount <=
+        MAX_POST_EXACT_PRECISION_PASS_INDEXED_ISSUE_COUNT
+    let postExactReferenceDrcIssueCount: number | undefined
+    if (shouldRunPostExactPrecisionPass) {
+      // The indexed evaluator can retain conservative false positives after the
+      // exact portfolio has produced a reference-clean result. Do not let later
+      // heuristic repairs degrade an output already accepted by benchmark DRC.
+      const exactReferenceDrcResult = this.cachedReferenceDrcEvaluator!({
+        traces: [],
+        routes: exactOutput,
+        hdRoutes: exactOutput,
+      })
+      const exactReferenceDrcErrors = Array.isArray(exactReferenceDrcResult)
+        ? exactReferenceDrcResult
+        : exactReferenceDrcResult.errors
+      postExactReferenceDrcIssueCount = exactReferenceDrcErrors.length
+      if (exactReferenceDrcErrors.length === 0) {
+        this.combinedOutput = exactOutput
+        this.stats = {
+          ...this.stats,
+          ...this.exactRepairSolver.stats,
+          postExactIndexedDrcIssueCount: exactIndexedDrcIssueCount,
+          postExactPrecisionPassMaxIndexedIssueCount:
+            MAX_POST_EXACT_PRECISION_PASS_INDEXED_ISSUE_COUNT,
+          postExactPrecisionPassAttempted: true,
+          postExactReferenceValidationAttempted: true,
+          postExactReferenceValidationSkippedForIndexedIssueCount: false,
+          postExactReferenceDrcIssueCount: 0,
+          postExactReferenceAccepted: true,
+          regionalB01RepairCandidateCount: 0,
+          regionalB01RepairAcceptedCount: 0,
+          regionalB01RepairFallbackCandidateCount: 0,
+          regionalB01RepairCandidateSearchCount: 0,
+          regionalB01RepairCandidateSearchBudget: 0,
+          regionalB01RepairCandidateSearchBudgetExhausted: false,
+          regionalB01RepairSafeTraceLayerSkippedForBudget: false,
+          regionalB01RepairRemainingDrcIssueCount: 0,
+          regionalB01RepairPreloadEligibleDrcIssueCount: 0,
+          regionalB01RepairAttempted: false,
+          regionalB01RepairTraceIdCount: 0,
+          terminalEscapeSkippedForIndexedIssueCount: false,
+          terminalEscapeCandidateCount: 0,
+          terminalEscapeAcceptedCount: 0,
+          referenceDrcValidationCount: this.referenceDrcValidationCount,
+          referenceDrcFalseNegativeCount: this.referenceDrcFalseNegativeCount,
+        }
+        this.solved = true
+        return
       }
-      this.solved = true
-      return
     }
-    const terminalEscapeResult = applyPipeline9TerminalEscapeRelocations({
-      srj: this.params.srj,
-      routes: exactOutput,
-      newConnections: this.params.newConnections,
-      syntheticConnectionNames: this.syntheticConnectionNames,
-      drcEvaluator: this.drcEvaluator!,
-    })
+    const terminalEscapeResult = shouldRunPostExactPrecisionPass
+      ? applyPipeline9TerminalEscapeRelocations({
+          srj: this.params.srj,
+          routes: exactOutput,
+          newConnections: this.params.newConnections,
+          syntheticConnectionNames: this.syntheticConnectionNames,
+          drcEvaluator: this.drcEvaluator!,
+        })
+      : {
+          routes: exactOutput,
+          attemptedCandidateCount: 0,
+          acceptedCandidateCount: 0,
+          remainingErrors: getPipeline9DrcErrors(
+            this.drcEvaluator!,
+            exactOutput,
+          ),
+        }
     const preloadRepairTraceIds = getPipeline9PreloadRepairTraceIds({
       routes: terminalEscapeResult.routes,
       newConnections: this.params.newConnections,
@@ -1405,7 +1443,15 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     this.stats = {
       ...this.stats,
       ...this.exactRepairSolver.stats,
-      postExactReferenceDrcIssueCount: exactReferenceDrcErrors.length,
+      postExactIndexedDrcIssueCount: exactIndexedDrcIssueCount,
+      postExactPrecisionPassMaxIndexedIssueCount:
+        MAX_POST_EXACT_PRECISION_PASS_INDEXED_ISSUE_COUNT,
+      postExactPrecisionPassAttempted: shouldRunPostExactPrecisionPass,
+      postExactReferenceValidationAttempted:
+        shouldRunPostExactPrecisionPass,
+      postExactReferenceValidationSkippedForIndexedIssueCount:
+        !shouldRunPostExactPrecisionPass,
+      postExactReferenceDrcIssueCount,
       postExactReferenceAccepted: false,
       regionalB01RepairCandidateCount:
         regionalB01RepairResult.attemptedCandidateCount,
@@ -1430,6 +1476,8 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       regionalB01RepairTraceIdCount:
         preloadRepairTraceIds.size +
         (preloadRepairTraceIds.collidingFixedTraceIds?.size ?? 0),
+      terminalEscapeSkippedForIndexedIssueCount:
+        !shouldRunPostExactPrecisionPass,
       terminalEscapeCandidateCount:
         terminalEscapeResult.attemptedCandidateCount,
       terminalEscapeAcceptedCount: terminalEscapeResult.acceptedCandidateCount,
