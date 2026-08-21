@@ -71,21 +71,19 @@ const getPipeline9DrcErrorParticipantTraceIds = (
     }
     return participantTraceIds
   }
-  return [primaryTraceId, encodedOtherTraceId]
-    .filter(
-      (traceId): traceId is string =>
-        typeof traceId === "string" && !viaIds.includes(traceId),
-    )
+  return [primaryTraceId, encodedOtherTraceId].filter(
+    (traceId): traceId is string =>
+      typeof traceId === "string" && !viaIds.includes(traceId),
+  )
 }
 
 export const getPipeline9DrcErrorTraceIds = (
   error: Pipeline9DrcError,
 ): string[] => {
-  return getPipeline9DrcErrorParticipantTraceIds(error)
-    .filter(
-      (traceId, traceIndex, allTraceIds) =>
-        allTraceIds.indexOf(traceId) === traceIndex,
-    )
+  return getPipeline9DrcErrorParticipantTraceIds(error).filter(
+    (traceId, traceIndex, allTraceIds) =>
+      allTraceIds.indexOf(traceId) === traceIndex,
+  )
 }
 
 export const isPipeline9DrcErrorOwnedByPreloadRepair = ({

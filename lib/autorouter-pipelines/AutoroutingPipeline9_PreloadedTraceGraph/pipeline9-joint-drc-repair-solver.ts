@@ -446,16 +446,15 @@ export const remapDrcTraceIds = (
       primaryEvaluationTraceId,
       ...explicitEvaluationTraceIds,
       encodedIdentityIsVia ? undefined : encodedOtherEvaluationTraceId,
-    ].filter(
-      (traceId): traceId is string => typeof traceId === "string",
-    )
+    ].filter((traceId): traceId is string => typeof traceId === "string")
     const evaluationTraceIdsBySolverTraceId = new Map<string, Set<string>>()
     for (const evaluationTraceId of evaluationTraceIds) {
       const solverTraceId =
         solverTraceIdByEvaluationTraceId.get(evaluationTraceId) ??
         evaluationTraceId
       const collapsedEvaluationTraceIds =
-        evaluationTraceIdsBySolverTraceId.get(solverTraceId) ?? new Set<string>()
+        evaluationTraceIdsBySolverTraceId.get(solverTraceId) ??
+        new Set<string>()
       collapsedEvaluationTraceIds.add(evaluationTraceId)
       evaluationTraceIdsBySolverTraceId.set(
         solverTraceId,
@@ -1186,7 +1185,10 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
           candidateDrcInput.solverTraceIdByEvaluationTraceId,
       })
     }
-    const cachedReferenceDrcEvaluator: DrcEvaluator = ({ routes, hdRoutes }) => {
+    const cachedReferenceDrcEvaluator: DrcEvaluator = ({
+      routes,
+      hdRoutes,
+    }) => {
       const evaluatedRoutes = routes ?? hdRoutes
       if (!evaluatedRoutes) {
         throw new Error("Pipeline9 cached reference DRC requires HD routes")

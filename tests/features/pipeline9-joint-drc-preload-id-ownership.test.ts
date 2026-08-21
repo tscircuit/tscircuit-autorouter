@@ -187,8 +187,7 @@ test("Pipeline9 joint DRC distinguishes a new trace id from its preloaded alias"
     syntheticConnectionNames: newRouteErrorSolver.syntheticConnectionNames,
     fixedPreloadedObstacleRoutes:
       newRouteErrorSolver.fixedPreloadedObstacleRoutes,
-    updatedPreloadedTraces:
-      newRouteErrorSolver.params.updatedPreloadedTraces,
+    updatedPreloadedTraces: newRouteErrorSolver.params.updatedPreloadedTraces,
   })
   expect(collisionAwarePreloadTraceIds.has("route_0")).toBeFalse()
   expect(collisionAwarePreloadTraceIds.collidingFixedTraceIds).toEqual(
@@ -218,39 +217,36 @@ test("Pipeline9 joint DRC distinguishes a new trace id from its preloaded alias"
       preloadRepairTraceIds: collisionAwarePreloadTraceIds,
     }),
   ).toBeTrue()
-  const [normalizedTraceViaCollision] =
-    normalizePipeline9DrcErrorsForRepair({
-      errors: remapDrcTraceIds(
-        [
-          {
-            type: "pcb_trace_error",
-            pcb_trace_id: "route_0_routed",
-            pcb_trace_ids: ["route_0_routed", "route_0"],
-            pcb_via_id: "via_0",
-            pcb_via_ids: ["via_0"],
-            pcb_trace_error_id: "overlap_route_0_routed_via_0",
-          },
-        ],
-        new Map([["route_0_routed", "route_0"]]),
-      ),
-      circuitJson: [
+  const [normalizedTraceViaCollision] = normalizePipeline9DrcErrorsForRepair({
+    errors: remapDrcTraceIds(
+      [
         {
-          type: "pcb_via",
+          type: "pcb_trace_error",
+          pcb_trace_id: "route_0_routed",
+          pcb_trace_ids: ["route_0_routed", "route_0"],
           pcb_via_id: "via_0",
-          pcb_trace_id: "route_0",
-          x: 0,
-          y: 0,
-          outer_diameter: 0.3,
-          hole_diameter: 0.15,
-          layers: ["top", "bottom"],
+          pcb_via_ids: ["via_0"],
+          pcb_trace_error_id: "overlap_route_0_routed_via_0",
         },
       ],
-      newTraceIds: new Set(["route_0"]),
-    })
+      new Map([["route_0_routed", "route_0"]]),
+    ),
+    circuitJson: [
+      {
+        type: "pcb_via",
+        pcb_via_id: "via_0",
+        pcb_trace_id: "route_0",
+        x: 0,
+        y: 0,
+        outer_diameter: 0.3,
+        hole_diameter: 0.15,
+        layers: ["top", "bottom"],
+      },
+    ],
+    newTraceIds: new Set(["route_0"]),
+  })
   expect(normalizedTraceViaCollision?.pcb_trace_ids).toEqual(["route_0"])
-  expect(
-    normalizedTraceViaCollision?.__collapsed_trace_participants,
-  ).toEqual([
+  expect(normalizedTraceViaCollision?.__collapsed_trace_participants).toEqual([
     {
       solverTraceId: "route_0",
       evaluationTraceIds: ["route_0_routed", "route_0"],
