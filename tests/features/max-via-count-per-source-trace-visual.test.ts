@@ -50,7 +50,7 @@ test("repro: maxViaCount is ignored on a source trace in a net", (): void => {
     "source_trace_16",
   ])
   const connectedNetTraces = traces.filter((trace) =>
-      trace.pcb_trace_id.startsWith(`${constrainedRoutedConnection.name}_`),
+    trace.pcb_trace_id.startsWith(`${constrainedRoutedConnection.name}_`),
   )
   const constrainedTraceViaCount = connectedNetTraces
     .flatMap((trace) => trace.route)
