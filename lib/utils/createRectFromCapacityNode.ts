@@ -1,14 +1,14 @@
-import { Rect } from "graphics-debug"
-import { CapacityMeshNode } from "lib/types"
+import { Rect } from "graphics-debug";
+import { CapacityMeshNode } from "lib/types";
 
 export const createRectFromCapacityNode = (
   node: CapacityMeshNode,
   opts: {
-    rectMargin?: number
-    zOffset?: number
+    rectMargin?: number;
+    zOffset?: number;
   } = {},
 ): Rect => {
-  const lowestZ = Math.min(...node.availableZ)
+  const lowestZ = Math.min(...node.availableZ);
   return {
     center:
       !opts.rectMargin || opts.zOffset
@@ -39,5 +39,5 @@ export const createRectFromCapacityNode = (
     ]
       .filter(Boolean)
       .join("\n"),
-  }
-}
+  };
+};

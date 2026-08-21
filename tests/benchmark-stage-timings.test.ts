@@ -1,5 +1,5 @@
-import { expect, test } from "bun:test"
-import { extractBenchmarkStageTiming } from "../scripts/benchmark/benchmark-stage-timing"
+import { expect, test } from "bun:test";
+import { extractBenchmarkStageTiming } from "../scripts/benchmark/benchmark-stage-timing";
 
 test("benchmark stage timing extraction preserves pipeline order and live timing", () => {
   const completed = extractBenchmarkStageTiming(
@@ -23,7 +23,7 @@ test("benchmark stage timing extraction preserves pipeline order and live timing
     },
     "complete",
     100,
-  )
+  );
   expect(completed).toEqual({
     status: "complete",
     stages: [
@@ -31,7 +31,7 @@ test("benchmark stage timing extraction preserves pipeline order and live timing
       { stageName: "routeSolver", elapsedTimeMs: 39 },
       { stageName: "postprocessSolver", elapsedTimeMs: 12 },
     ],
-  })
+  });
 
   const partial = extractBenchmarkStageTiming(
     {
@@ -46,14 +46,14 @@ test("benchmark stage timing extraction preserves pipeline order and live timing
     },
     "partial",
     75,
-  )
+  );
   expect(partial).toEqual({
     status: "partial",
     stages: [
       { stageName: "preprocessSolver", elapsedTimeMs: 17 },
       { stageName: "routeSolver", elapsedTimeMs: 35 },
     ],
-  })
+  });
 
   const waitingToStart = extractBenchmarkStageTiming(
     {
@@ -68,11 +68,11 @@ test("benchmark stage timing extraction preserves pipeline order and live timing
     },
     "partial",
     75,
-  )
+  );
   expect(waitingToStart).toEqual({
     status: "partial",
     stages: [{ stageName: "preprocessSolver", elapsedTimeMs: 17 }],
-  })
+  });
 
   expect(() =>
     extractBenchmarkStageTiming(
@@ -85,5 +85,5 @@ test("benchmark stage timing extraction preserves pipeline order and live timing
       "complete",
       75,
     ),
-  ).toThrow("Completed benchmark stage routeSolver is missing elapsed time")
-})
+  ).toThrow("Completed benchmark stage routeSolver is missing elapsed time");
+});

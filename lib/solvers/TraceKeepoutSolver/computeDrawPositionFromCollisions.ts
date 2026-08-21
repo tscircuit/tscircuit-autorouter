@@ -1,20 +1,20 @@
-import { segmentToSegmentMinDistance } from "@tscircuit/math-utils"
+import { segmentToSegmentMinDistance } from "@tscircuit/math-utils";
 
 interface Point2D {
-  x: number
-  y: number
+  x: number;
+  y: number;
 }
 
 export interface Segment {
-  start: Point2D
-  end: Point2D
+  start: Point2D;
+  end: Point2D;
 }
 
 export interface ComputeDrawPositionInput {
-  cursorPosition: Point2D
-  lastCursorPosition: Point2D
-  collidingSegments: Segment[]
-  keepoutRadius: number
+  cursorPosition: Point2D;
+  lastCursorPosition: Point2D;
+  collidingSegments: Segment[];
+  keepoutRadius: number;
 }
 
 /**
@@ -23,24 +23,24 @@ export interface ComputeDrawPositionInput {
  * then computes the minimum segment-to-segment distance.
  */
 function getMinClearance(params: {
-  pos: Point2D
-  segments: Segment[]
-  dir: { x: number; y: number }
-  keepoutRadius: number
+  pos: Point2D;
+  segments: Segment[];
+  dir: { x: number; y: number };
+  keepoutRadius: number;
 }): number {
-  const { pos, segments, dir, keepoutRadius } = params
-  let minClearance = Infinity
+  const { pos, segments, dir, keepoutRadius } = params;
+  let minClearance = Infinity;
 
   // Project a segment centered on pos in the direction of dir with length keepoutRadius
-  const halfLength = keepoutRadius / 4
+  const halfLength = keepoutRadius / 4;
   const segmentStart = {
     x: pos.x - dir.x * halfLength,
     y: pos.y - dir.y * halfLength,
-  }
+  };
   const segmentEnd = {
     x: pos.x + dir.x * halfLength,
     y: pos.y + dir.y * halfLength,
-  }
+  };
 
   for (const seg of segments) {
     const dist = segmentToSegmentMinDistance(
@@ -48,10 +48,10 @@ function getMinClearance(params: {
       segmentEnd,
       seg.start,
       seg.end,
-    )
-    minClearance = Math.min(minClearance, dist)
+    );
+    minClearance = Math.min(minClearance, dist);
   }
-  return minClearance
+  return minClearance;
 }
 
 /**
@@ -63,29 +63,29 @@ function segmentsIntersect(
   b1: Point2D,
   b2: Point2D,
 ): boolean {
-  const d1 = direction(b1, b2, a1)
-  const d2 = direction(b1, b2, a2)
-  const d3 = direction(a1, a2, b1)
-  const d4 = direction(a1, a2, b2)
+  const d1 = direction(b1, b2, a1);
+  const d2 = direction(b1, b2, a2);
+  const d3 = direction(a1, a2, b1);
+  const d4 = direction(a1, a2, b2);
 
   if (
     ((d1 > 0 && d2 < 0) || (d1 < 0 && d2 > 0)) &&
     ((d3 > 0 && d4 < 0) || (d3 < 0 && d4 > 0))
   ) {
-    return true
+    return true;
   }
 
-  const eps = 0.0001
-  if (Math.abs(d1) < eps && onSegment(b1, b2, a1)) return true
-  if (Math.abs(d2) < eps && onSegment(b1, b2, a2)) return true
-  if (Math.abs(d3) < eps && onSegment(a1, a2, b1)) return true
-  if (Math.abs(d4) < eps && onSegment(a1, a2, b2)) return true
+  const eps = 0.0001;
+  if (Math.abs(d1) < eps && onSegment(b1, b2, a1)) return true;
+  if (Math.abs(d2) < eps && onSegment(b1, b2, a2)) return true;
+  if (Math.abs(d3) < eps && onSegment(a1, a2, b1)) return true;
+  if (Math.abs(d4) < eps && onSegment(a1, a2, b2)) return true;
 
-  return false
+  return false;
 }
 
 function direction(a: Point2D, b: Point2D, c: Point2D): number {
-  return (c.x - a.x) * (b.y - a.y) - (b.x - a.x) * (c.y - a.y)
+  return (c.x - a.x) * (b.y - a.y) - (b.x - a.x) * (c.y - a.y);
 }
 
 function onSegment(a: Point2D, b: Point2D, c: Point2D): boolean {
@@ -94,7 +94,7 @@ function onSegment(a: Point2D, b: Point2D, c: Point2D): boolean {
     c.x <= Math.max(a.x, b.x) + 0.0001 &&
     c.y >= Math.min(a.y, b.y) - 0.0001 &&
     c.y <= Math.max(a.y, b.y) + 0.0001
-  )
+  );
 }
 
 /**
@@ -107,10 +107,10 @@ function isPathClear(
 ): boolean {
   for (const seg of segments) {
     if (segmentsIntersect(cursor, pos, seg.start, seg.end)) {
-      return false
+      return false;
     }
   }
-  return true
+  return true;
 }
 
 /**
@@ -139,20 +139,20 @@ export function computeDrawPositionFromCollisions(
     lastCursorPosition,
     collidingSegments,
     keepoutRadius,
-  } = input
-  if (collidingSegments.length === 0) return null
+  } = input;
+  if (collidingSegments.length === 0) return null;
 
-  const epsilon = 0.0001
+  const epsilon = 0.0001;
 
   // Calculate trace direction
-  const tdx = cursorPosition.x - lastCursorPosition.x
-  const tdy = cursorPosition.y - lastCursorPosition.y
-  const tLen = Math.sqrt(tdx * tdx + tdy * tdy)
+  const tdx = cursorPosition.x - lastCursorPosition.x;
+  const tdy = cursorPosition.y - lastCursorPosition.y;
+  const tLen = Math.sqrt(tdx * tdx + tdy * tdy);
   const traceDir =
-    tLen > epsilon ? { x: tdx / tLen, y: tdy / tLen } : { x: 1, y: 0 }
+    tLen > epsilon ? { x: tdx / tLen, y: tdy / tLen } : { x: 1, y: 0 };
 
   // Barrier direction (perpendicular to trace)
-  const barrierDir = { x: -traceDir.y, y: traceDir.x }
+  const barrierDir = { x: -traceDir.y, y: traceDir.x };
 
   // Check if cursor position itself is valid
   const cursorClearance = getMinClearance({
@@ -160,57 +160,57 @@ export function computeDrawPositionFromCollisions(
     segments: collidingSegments,
     dir: traceDir,
     keepoutRadius,
-  })
+  });
   if (cursorClearance >= keepoutRadius) {
-    return null // No adjustment needed
+    return null; // No adjustment needed
   }
 
   // Search outward from cursor along barrier line in both directions
   // Stop as soon as we find a valid position (minimal displacement)
-  const steps = 20
+  const steps = 20;
 
   // Search both directions simultaneously, increasing distance from cursor
   for (let i = 1; i <= steps; i++) {
-    const d = (i / steps) * keepoutRadius
+    const d = (i / steps) * keepoutRadius;
 
     // Test positive direction
     const posPlus = {
       x: cursorPosition.x + barrierDir.x * d,
       y: cursorPosition.y + barrierDir.y * d,
-    }
+    };
     const clearancePlus = getMinClearance({
       pos: posPlus,
       segments: collidingSegments,
       dir: traceDir,
       keepoutRadius,
-    })
+    });
 
     // Test negative direction
     const posMinus = {
       x: cursorPosition.x - barrierDir.x * d,
       y: cursorPosition.y - barrierDir.y * d,
-    }
+    };
     const clearanceMinus = getMinClearance({
       pos: posMinus,
       segments: collidingSegments,
       dir: traceDir,
       keepoutRadius,
-    })
+    });
 
     // Return the first valid position found (minimal displacement)
     // Position must have sufficient clearance AND path from cursor must be clear
     const validPlus =
       clearancePlus >= keepoutRadius &&
-      isPathClear(cursorPosition, posPlus, collidingSegments)
+      isPathClear(cursorPosition, posPlus, collidingSegments);
     const validMinus =
       clearanceMinus >= keepoutRadius &&
-      isPathClear(cursorPosition, posMinus, collidingSegments)
+      isPathClear(cursorPosition, posMinus, collidingSegments);
 
     if (validPlus && validMinus) {
-      return clearancePlus >= clearanceMinus ? posPlus : posMinus
+      return clearancePlus >= clearanceMinus ? posPlus : posMinus;
     }
-    if (validPlus) return posPlus
-    if (validMinus) return posMinus
+    if (validPlus) return posPlus;
+    if (validMinus) return posMinus;
   }
 
   // No valid position found - search for the position with maximum clearance
@@ -219,116 +219,116 @@ export function computeDrawPositionFromCollisions(
   // Strategy: Search outward from cursor in both directions, find the first
   // local maximum in each direction, then pick the better one.
   // Only consider reachable positions (paths that don't cross segments).
-  const searchRange = keepoutRadius
-  const searchSteps = 60
+  const searchRange = keepoutRadius;
+  const searchSteps = 60;
 
   // Sample clearance at each position
   const samples: Array<{
-    pos: Point2D
-    clearance: number
-    dist: number
-    pathClear: boolean
-    index: number
-  }> = []
+    pos: Point2D;
+    clearance: number;
+    dist: number;
+    pathClear: boolean;
+    index: number;
+  }> = [];
   for (let i = -searchSteps; i <= searchSteps; i++) {
-    const d = (i / searchSteps) * searchRange
+    const d = (i / searchSteps) * searchRange;
     const testPos = {
       x: cursorPosition.x + barrierDir.x * d,
       y: cursorPosition.y + barrierDir.y * d,
-    }
+    };
     const clearance = getMinClearance({
       pos: testPos,
       segments: collidingSegments,
       dir: traceDir,
       keepoutRadius,
-    })
-    const pathClear = isPathClear(cursorPosition, testPos, collidingSegments)
+    });
+    const pathClear = isPathClear(cursorPosition, testPos, collidingSegments);
     samples.push({
       pos: testPos,
       clearance,
       dist: Math.abs(d),
       pathClear,
       index: i,
-    })
+    });
   }
 
   // Filter to reachable positions (paths don't cross segments)
-  const reachableSamples = samples.filter((s) => s.pathClear)
+  const reachableSamples = samples.filter((s) => s.pathClear);
 
   // Find center index in all samples array
-  const centerIdx = samples.findIndex((s) => s.index === 0)
+  const centerIdx = samples.findIndex((s) => s.index === 0);
   const actualCenterIdx =
-    centerIdx >= 0 ? centerIdx : Math.floor(samples.length / 2)
+    centerIdx >= 0 ? centerIdx : Math.floor(samples.length / 2);
 
   // Search ALL samples to find local maxima in both directions
   // This ensures we find gaps even if path to them crosses segments
-  let posMax: (typeof samples)[0] | null = null
+  let posMax: (typeof samples)[0] | null = null;
   for (let i = actualCenterIdx + 1; i < samples.length - 1; i++) {
-    const prev = samples[i - 1]!
-    const curr = samples[i]!
-    const next = samples[i + 1]!
+    const prev = samples[i - 1]!;
+    const curr = samples[i]!;
+    const next = samples[i + 1]!;
 
     if (curr.clearance >= prev.clearance && curr.clearance >= next.clearance) {
-      posMax = curr
-      break // Take the first (closest) local max
+      posMax = curr;
+      break; // Take the first (closest) local max
     }
   }
 
-  let negMax: (typeof samples)[0] | null = null
+  let negMax: (typeof samples)[0] | null = null;
   for (let i = actualCenterIdx - 1; i > 0; i--) {
-    const prev = samples[i - 1]!
-    const curr = samples[i]!
-    const next = samples[i + 1]!
+    const prev = samples[i - 1]!;
+    const curr = samples[i]!;
+    const next = samples[i + 1]!;
 
     if (curr.clearance >= prev.clearance && curr.clearance >= next.clearance) {
-      negMax = curr
-      break // Take the first (closest) local max
+      negMax = curr;
+      break; // Take the first (closest) local max
     }
   }
 
   // Also search reachable samples for local maxima (prefer these if available)
-  let reachablePosMax: (typeof samples)[0] | null = null
-  let reachableNegMax: (typeof samples)[0] | null = null
+  let reachablePosMax: (typeof samples)[0] | null = null;
+  let reachableNegMax: (typeof samples)[0] | null = null;
 
   if (reachableSamples.length > 0) {
-    const reachableCenterIdx = reachableSamples.findIndex((s) => s.index === 0)
+    const reachableCenterIdx = reachableSamples.findIndex((s) => s.index === 0);
     const actualReachableCenterIdx =
       reachableCenterIdx >= 0
         ? reachableCenterIdx
-        : Math.floor(reachableSamples.length / 2)
+        : Math.floor(reachableSamples.length / 2);
 
     for (
       let i = actualReachableCenterIdx + 1;
       i < reachableSamples.length - 1;
       i++
     ) {
-      const prev = reachableSamples[i - 1]!
-      const curr = reachableSamples[i]!
-      const next = reachableSamples[i + 1]!
+      const prev = reachableSamples[i - 1]!;
+      const curr = reachableSamples[i]!;
+      const next = reachableSamples[i + 1]!;
       if (
         curr.clearance >= prev.clearance &&
         curr.clearance >= next.clearance
       ) {
-        reachablePosMax = curr
-        break
+        reachablePosMax = curr;
+        break;
       }
     }
 
     for (let i = actualReachableCenterIdx - 1; i > 0; i--) {
-      const prev = reachableSamples[i - 1]!
-      const curr = reachableSamples[i]!
-      const next = reachableSamples[i + 1]!
+      const prev = reachableSamples[i - 1]!;
+      const curr = reachableSamples[i]!;
+      const next = reachableSamples[i + 1]!;
       if (
         curr.clearance >= prev.clearance &&
         curr.clearance >= next.clearance
       ) {
-        reachableNegMax = curr
-        break
+        reachableNegMax = curr;
+        break;
       }
     }
   }
 
-  const centerSample = samples.find((s) => s.index === 0)
+  const centerSample = samples.find((s) => s.index === 0);
 
   // Build candidates list: prefer reachable maxima, but include unreachable
   // if they have significantly better clearance
@@ -338,31 +338,31 @@ export function computeDrawPositionFromCollisions(
     reachablePosMax,
     reachableNegMax,
     centerSample,
-  ].filter((c): c is NonNullable<typeof c> => c !== null && c !== undefined)
+  ].filter((c): c is NonNullable<typeof c> => c !== null && c !== undefined);
 
   // Remove duplicates (same position might be found multiple times)
-  const seen = new Set<string>()
+  const seen = new Set<string>();
   const candidates = allMaxima.filter((c) => {
-    const key = `${c.pos.x.toFixed(6)},${c.pos.y.toFixed(6)}`
-    if (seen.has(key)) return false
-    seen.add(key)
-    return true
-  })
+    const key = `${c.pos.x.toFixed(6)},${c.pos.y.toFixed(6)}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
 
   if (candidates.length === 0) {
     // No local maxima found - fall back to sample with best clearance
-    let bestSample = samples[0]
-    if (!bestSample) return null
+    let bestSample = samples[0];
+    if (!bestSample) return null;
     for (const s of samples) {
       if (s.clearance > bestSample.clearance) {
-        bestSample = s
+        bestSample = s;
       }
     }
     const movedDist = Math.sqrt(
       (bestSample.pos.x - cursorPosition.x) ** 2 +
         (bestSample.pos.y - cursorPosition.y) ** 2,
-    )
-    return movedDist > epsilon ? bestSample.pos : null
+    );
+    return movedDist > epsilon ? bestSample.pos : null;
   }
 
   // Decision logic depends on cursor state:
@@ -370,27 +370,27 @@ export function computeDrawPositionFromCollisions(
   //   segments to escape - pick best clearance regardless of reachability
   // - If cursor has moderate clearance (in a gap), prefer reachable positions
   //   to avoid crossing segments unnecessarily
-  const cursorTrapped = cursorClearance < keepoutRadius * 0.15
+  const cursorTrapped = cursorClearance < keepoutRadius * 0.15;
 
-  let bestMax: (typeof candidates)[0]
+  let bestMax: (typeof candidates)[0];
   if (cursorTrapped) {
     // Trapped - pick best clearance regardless of reachability
-    bestMax = candidates[0]!
+    bestMax = candidates[0]!;
     for (const c of candidates) {
       if (c.clearance > bestMax.clearance) {
-        bestMax = c
+        bestMax = c;
       }
     }
   } else {
     // In a gap - prefer reachable candidates
-    const reachableCandidates = candidates.filter((c) => c.pathClear)
+    const reachableCandidates = candidates.filter((c) => c.pathClear);
     const candidatesToChooseFrom =
-      reachableCandidates.length > 0 ? reachableCandidates : candidates
+      reachableCandidates.length > 0 ? reachableCandidates : candidates;
 
-    bestMax = candidatesToChooseFrom[0]!
+    bestMax = candidatesToChooseFrom[0]!;
     for (const c of candidatesToChooseFrom) {
       if (c.clearance > bestMax.clearance) {
-        bestMax = c
+        bestMax = c;
       }
     }
   }
@@ -398,33 +398,33 @@ export function computeDrawPositionFromCollisions(
   const movedDist = Math.sqrt(
     (bestMax.pos.x - cursorPosition.x) ** 2 +
       (bestMax.pos.y - cursorPosition.y) ** 2,
-  )
-  return movedDist > epsilon ? bestMax.pos : null
+  );
+  return movedDist > epsilon ? bestMax.pos : null;
 }
 /**
  * Converts an obstacle (rectangular) to its 4 edge segments
  */
 export function obstacleToSegments(obstacle: {
-  center: { x: number; y: number }
-  width: number
-  height: number
+  center: { x: number; y: number };
+  width: number;
+  height: number;
 }): Segment[] {
-  const halfW = obstacle.width / 2
-  const halfH = obstacle.height / 2
-  const cx = obstacle.center.x
-  const cy = obstacle.center.y
+  const halfW = obstacle.width / 2;
+  const halfH = obstacle.height / 2;
+  const cx = obstacle.center.x;
+  const cy = obstacle.center.y;
 
-  const topLeft = { x: cx - halfW, y: cy + halfH }
-  const topRight = { x: cx + halfW, y: cy + halfH }
-  const bottomLeft = { x: cx - halfW, y: cy - halfH }
-  const bottomRight = { x: cx + halfW, y: cy - halfH }
+  const topLeft = { x: cx - halfW, y: cy + halfH };
+  const topRight = { x: cx + halfW, y: cy + halfH };
+  const bottomLeft = { x: cx - halfW, y: cy - halfH };
+  const bottomRight = { x: cx + halfW, y: cy - halfH };
 
   return [
     { start: topLeft, end: topRight },
     { start: topRight, end: bottomRight },
     { start: bottomRight, end: bottomLeft },
     { start: bottomLeft, end: topLeft },
-  ]
+  ];
 }
 
 /**
@@ -436,17 +436,17 @@ export function traceSegmentToOutlineSegments(
   segmentEnd: Point2D,
   traceWidth: number = 0.1,
 ): Segment[] {
-  const dx = segmentEnd.x - segmentStart.x
-  const dy = segmentEnd.y - segmentStart.y
-  const len = Math.sqrt(dx * dx + dy * dy)
+  const dx = segmentEnd.x - segmentStart.x;
+  const dy = segmentEnd.y - segmentStart.y;
+  const len = Math.sqrt(dx * dx + dy * dy);
 
-  if (len === 0) return []
+  if (len === 0) return [];
 
-  const nx = dx / len
-  const ny = dy / len
-  const px = -ny
-  const py = nx
-  const halfW = traceWidth / 2
+  const nx = dx / len;
+  const ny = dy / len;
+  const px = -ny;
+  const py = nx;
+  const halfW = traceWidth / 2;
 
   return [
     {
@@ -457,7 +457,7 @@ export function traceSegmentToOutlineSegments(
       start: { x: segmentStart.x - px * halfW, y: segmentStart.y - py * halfW },
       end: { x: segmentEnd.x - px * halfW, y: segmentEnd.y - py * halfW },
     },
-  ]
+  ];
 }
 
 /**
@@ -467,11 +467,11 @@ export function routeToOutlineSegments(
   route: Array<{ x: number; y: number }>,
   traceWidth: number = 0.1,
 ): Segment[] {
-  const segments: Segment[] = []
+  const segments: Segment[] = [];
   for (let i = 0; i < route.length - 1; i++) {
     segments.push(
       ...traceSegmentToOutlineSegments(route[i]!, route[i + 1]!, traceWidth),
-    )
+    );
   }
-  return segments
+  return segments;
 }

@@ -1,8 +1,8 @@
-import { expect, test } from "bun:test"
+import { expect, test } from "bun:test";
 import {
   createTopologyMergingTestNode,
   solveTopologyMergingTestGroups,
-} from "../../../fixtures/topology-merging-test-utils"
+} from "../../../fixtures/topology-merging-test-utils";
 
 test("topology merging restores a global target over a partial component overlap", (): void => {
   const globalTarget = {
@@ -16,7 +16,7 @@ test("topology merging restores a global target over a partial component overlap
     _completelyInsideObstacle: true,
     _containsTarget: true,
     _targetConnectionName: "target-connection",
-  }
+  };
   const output = solveTopologyMergingTestGroups([
     { groupId: "global", nodes: [globalTarget], isComponent: false },
     {
@@ -30,11 +30,11 @@ test("topology merging restores a global target over a partial component overlap
       ],
       isComponent: true,
     },
-  ])
+  ]);
 
   expect(
     output.find((node) => node.capacityMeshNodeId === "global-target"),
-  ).toMatchObject(globalTarget)
+  ).toMatchObject(globalTarget);
   expect(
     output.find(
       (node) =>
@@ -48,7 +48,7 @@ test("topology merging restores a global target over a partial component overlap
     width: 1,
     height: 2,
     availableZ: [0, 1],
-  })
+  });
   expect(
     output.find(
       (node) =>
@@ -61,5 +61,5 @@ test("topology merging restores a global target over a partial component overlap
     width: 1,
     height: 2,
     availableZ: [1],
-  })
-})
+  });
+});

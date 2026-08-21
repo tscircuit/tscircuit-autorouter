@@ -1,8 +1,8 @@
-import { expect, test } from "bun:test"
+import { expect, test } from "bun:test";
 import {
   createTopologyMergingTestNode,
   solveTopologyMergingTestGroups,
-} from "../../../fixtures/topology-merging-test-utils"
+} from "../../../fixtures/topology-merging-test-utils";
 
 test("topology merging reconstructs same-group overlapping targets with another group present", (): void => {
   const targetNodes = [
@@ -30,7 +30,7 @@ test("topology merging reconstructs same-group overlapping targets with another 
       _containsTarget: true,
       _targetConnectionName: "connection-b",
     },
-  ]
+  ];
   const output = solveTopologyMergingTestGroups([
     { groupId: "global", nodes: targetNodes, isComponent: false },
     {
@@ -44,9 +44,9 @@ test("topology merging reconstructs same-group overlapping targets with another 
       ],
       isComponent: true,
     },
-  ])
-  const restoredTargets = output.filter((node) => node._containsTarget)
+  ]);
+  const restoredTargets = output.filter((node) => node._containsTarget);
 
-  expect(restoredTargets).toHaveLength(2)
-  expect(restoredTargets).toMatchObject(targetNodes)
-})
+  expect(restoredTargets).toHaveLength(2);
+  expect(restoredTargets).toMatchObject(targetNodes);
+});

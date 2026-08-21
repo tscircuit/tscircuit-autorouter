@@ -1,5 +1,5 @@
-import { expect, test } from "bun:test"
-import type { BenchmarkReport } from "../scripts/benchmark/benchmark-types"
+import { expect, test } from "bun:test";
+import type { BenchmarkReport } from "../scripts/benchmark/benchmark-types";
 import {
   buildSummaryEntryMap,
   DEFAULT_THRESHOLDS,
@@ -7,7 +7,7 @@ import {
   normalizeBenchmarkReports,
   parseRateLabel,
   type RegressionReport,
-} from "../scripts/benchmark/detect-benchmark-regressions"
+} from "../scripts/benchmark/detect-benchmark-regressions";
 
 const makeReport = ({
   datasetName,
@@ -19,14 +19,14 @@ const makeReport = ({
   p95TimeMs = null,
   avgVia = null,
 }: {
-  datasetName: string
-  solverName?: string
-  effortLabel?: string
-  completedRateLabel: string
-  relaxedDrcRateLabel?: string
-  p50TimeMs: number | null
-  p95TimeMs?: number | null
-  avgVia?: number | null
+  datasetName: string;
+  solverName?: string;
+  effortLabel?: string;
+  completedRateLabel: string;
+  relaxedDrcRateLabel?: string;
+  p50TimeMs: number | null;
+  p95TimeMs?: number | null;
+  avgVia?: number | null;
 }): BenchmarkReport =>
   ({
     version: 1,
@@ -49,7 +49,7 @@ const makeReport = ({
     failureSummary: [],
     snapshots: [],
     tests: [],
-  }) as BenchmarkReport
+  }) as BenchmarkReport;
 
 const compare = (
   current: BenchmarkReport[],
@@ -60,18 +60,18 @@ const compare = (
     baseline: buildSummaryEntryMap(baseline, "baseline"),
     thresholds: DEFAULT_THRESHOLDS,
     baselineMissing: false,
-  })
+  });
 
 test("detects benchmark regressions and ignores expected noise", () => {
-  expect(parseRateLabel({ label: "97.5%" })).toBe(97.5)
-  expect(parseRateLabel({ label: "97.5% (timed out 2.5%)" })).toBe(97.5)
-  expect(parseRateLabel({ label: "n/a" })).toBeNull()
+  expect(parseRateLabel({ label: "97.5%" })).toBe(97.5);
+  expect(parseRateLabel({ label: "97.5% (timed out 2.5%)" })).toBe(97.5);
+  expect(parseRateLabel({ label: "n/a" })).toBeNull();
   expect(() => parseRateLabel({ label: "bad data" })).toThrow(
     "Malformed rate label",
-  )
+  );
   expect(() => parseRateLabel({ label: "97.5% garbage" })).toThrow(
     "Malformed rate label",
-  )
+  );
   expect(() =>
     normalizeBenchmarkReports(
       {
@@ -82,13 +82,13 @@ test("detects benchmark regressions and ignores expected noise", () => {
       },
       "empty-summary",
     ),
-  ).toThrow("Malformed benchmark report")
+  ).toThrow("Malformed benchmark report");
   expect(() =>
     normalizeBenchmarkReports(
       { version: 2, kind: "benchmark-report-collection", reports: [] },
       "empty-collection",
     ),
-  ).toThrow("Malformed benchmark report")
+  ).toThrow("Malformed benchmark report");
 
   let report = compare(
     [
@@ -105,12 +105,12 @@ test("detects benchmark regressions and ignores expected noise", () => {
         p50TimeMs: 1000,
       }),
     ],
-  )
-  expect(report.hasRegressions).toBe(true)
-  let regression = report.regressions.find((r) => r.metric === "completedRate")
-  expect(regression).toBeDefined()
-  expect(regression?.datasetName).toBe("srj16")
-  expect(regression?.delta).toBeCloseTo(-5)
+  );
+  expect(report.hasRegressions).toBe(true);
+  let regression = report.regressions.find((r) => r.metric === "completedRate");
+  expect(regression).toBeDefined();
+  expect(regression?.datasetName).toBe("srj16");
+  expect(regression?.delta).toBeCloseTo(-5);
 
   report = compare(
     [
@@ -127,8 +127,8 @@ test("detects benchmark regressions and ignores expected noise", () => {
         p50TimeMs: 1000,
       }),
     ],
-  )
-  expect(report.hasRegressions).toBe(false)
+  );
+  expect(report.hasRegressions).toBe(false);
 
   report = compare(
     [
@@ -145,8 +145,8 @@ test("detects benchmark regressions and ignores expected noise", () => {
         p50TimeMs: 4,
       }),
     ],
-  )
-  expect(report.hasRegressions).toBe(false)
+  );
+  expect(report.hasRegressions).toBe(false);
 
   report = compare(
     [
@@ -163,10 +163,10 @@ test("detects benchmark regressions and ignores expected noise", () => {
         p50TimeMs: 1000,
       }),
     ],
-  )
-  regression = report.regressions.find((r) => r.metric === "p50TimeMs")
-  expect(regression).toBeDefined()
-  expect(regression?.deltaPct).toBeCloseTo(50)
+  );
+  regression = report.regressions.find((r) => r.metric === "p50TimeMs");
+  expect(regression).toBeDefined();
+  expect(regression?.deltaPct).toBeCloseTo(50);
 
   report = compare(
     [
@@ -183,13 +183,13 @@ test("detects benchmark regressions and ignores expected noise", () => {
         p50TimeMs: 1000,
       }),
     ],
-  )
+  );
   regression = report.regressions.find(
     (r) => r.metric === "p50TimeMs" && r.kind === "metric-null",
-  )
-  expect(regression).toBeDefined()
-  expect(regression?.currentValue).toBeNull()
-  expect(regression?.baselineValue).toBe(1000)
+  );
+  expect(regression).toBeDefined();
+  expect(regression?.currentValue).toBeNull();
+  expect(regression?.baselineValue).toBe(1000);
 
   report = compare(
     [
@@ -211,10 +211,10 @@ test("detects benchmark regressions and ignores expected noise", () => {
         p50TimeMs: 500,
       }),
     ],
-  )
-  const dropped = report.regressions.find((r) => r.kind === "dataset-dropped")
-  expect(dropped).toBeDefined()
-  expect(dropped?.datasetName).toBe("dataset01")
+  );
+  const dropped = report.regressions.find((r) => r.kind === "dataset-dropped");
+  expect(dropped).toBeDefined();
+  expect(dropped?.datasetName).toBe("dataset01");
 
   report = compare(
     [
@@ -236,10 +236,10 @@ test("detects benchmark regressions and ignores expected noise", () => {
         p50TimeMs: 1000,
       }),
     ],
-  )
-  expect(report.hasRegressions).toBe(false)
-  expect(report.newDatasets).toHaveLength(1)
-  expect(report.newDatasets[0].datasetName).toBe("srj18")
+  );
+  expect(report.hasRegressions).toBe(false);
+  expect(report.newDatasets).toHaveLength(1);
+  expect(report.newDatasets[0].datasetName).toBe("srj18");
 
   report = detectRegressions({
     current: buildSummaryEntryMap(
@@ -255,9 +255,9 @@ test("detects benchmark regressions and ignores expected noise", () => {
     baseline: new Map(),
     thresholds: DEFAULT_THRESHOLDS,
     baselineMissing: true,
-  })
-  expect(report.hasRegressions).toBe(false)
-  expect(report.regressions).toHaveLength(0)
+  });
+  expect(report.hasRegressions).toBe(false);
+  expect(report.regressions).toHaveLength(0);
 
   const summaryMap = buildSummaryEntryMap(
     [
@@ -275,8 +275,8 @@ test("detects benchmark regressions and ignores expected noise", () => {
       }),
     ],
     "current",
-  )
-  expect(summaryMap.size).toBe(2)
+  );
+  expect(summaryMap.size).toBe(2);
 
   expect(() =>
     buildSummaryEntryMap(
@@ -294,5 +294,5 @@ test("detects benchmark regressions and ignores expected noise", () => {
       ],
       "current",
     ),
-  ).toThrow("Duplicate benchmark summary key")
-})
+  ).toThrow("Duplicate benchmark summary key");
+});

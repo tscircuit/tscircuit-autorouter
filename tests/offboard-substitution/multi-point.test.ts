@@ -1,8 +1,8 @@
-import { expect, test } from "bun:test"
-import { AutoroutingPipelineSolver } from "lib"
-import type { SimpleRouteJson } from "lib/types"
-import { getLastStepSvg } from "../fixtures/getLastStepSvg"
-import multiPointSrjData from "./srj/multi-point.srj.json"
+import { expect, test } from "bun:test";
+import { AutoroutingPipelineSolver } from "lib";
+import type { SimpleRouteJson } from "lib/types";
+import { getLastStepSvg } from "../fixtures/getLastStepSvg";
+import multiPointSrjData from "./srj/multi-point.srj.json";
 
 /**
  * Tests how the substitution logic applies to a multi-point on-board net.
@@ -20,19 +20,19 @@ import multiPointSrjData from "./srj/multi-point.srj.json"
  * more optimal B', resulting in two final traces: A -> B' and C -> B'.
  */
 test("multi-point on-board net", () => {
-  const srj: SimpleRouteJson = multiPointSrjData as any
-  const solver = new AutoroutingPipelineSolver(srj)
-  solver.solve()
+  const srj: SimpleRouteJson = multiPointSrjData as any;
+  const solver = new AutoroutingPipelineSolver(srj);
+  solver.solve();
 
-  const newConnections = solver.srjWithPointPairs!.connections
-  expect(newConnections).toHaveLength(2)
+  const newConnections = solver.srjWithPointPairs!.connections;
+  expect(newConnections).toHaveLength(2);
   const connectionsAsPointIdPairs = newConnections.map((c) =>
     c.pointsToConnect.map((p) => p.pointId).sort(),
-  )
-  expect(connectionsAsPointIdPairs).toContainEqual(["A", "B_prime"].sort())
-  expect(connectionsAsPointIdPairs).toContainEqual(["C", "B_prime"].sort())
+  );
+  expect(connectionsAsPointIdPairs).toContainEqual(["A", "B_prime"].sort());
+  expect(connectionsAsPointIdPairs).toContainEqual(["C", "B_prime"].sort());
 
   expect(getLastStepSvg(solver.visualize())).toMatchSvgSnapshot(
     import.meta.path,
-  )
-})
+  );
+});

@@ -1,9 +1,9 @@
-import { expect, test } from "bun:test"
-import { mergeGraphics, type GraphicsObject } from "graphics-debug"
-import { RouteStitchClearanceValidator } from "lib/solvers/RouteStitchingSolver/route-stitch-clearance-validator"
-import { SingleHighDensityRouteStitchSolver3 } from "lib/solvers/RouteStitchingSolver/SingleHighDensityRouteStitchSolver3"
-import type { HighDensityIntraNodeRoute } from "lib/types/high-density-types"
-import { getGraphicsSvgFrames } from "tests/fixtures/solver-svg-frames"
+import { expect, test } from "bun:test";
+import { mergeGraphics, type GraphicsObject } from "graphics-debug";
+import { RouteStitchClearanceValidator } from "lib/solvers/RouteStitchingSolver/route-stitch-clearance-validator";
+import { SingleHighDensityRouteStitchSolver3 } from "lib/solvers/RouteStitchingSolver/SingleHighDensityRouteStitchSolver3";
+import type { HighDensityIntraNodeRoute } from "lib/types/high-density-types";
+import { getGraphicsSvgFrames } from "tests/fixtures/solver-svg-frames";
 
 test("visualizes choosing a clear stitch instead of the nearest colliding stitch", async () => {
   const unsafeNearestRoute: HighDensityIntraNodeRoute = {
@@ -16,7 +16,7 @@ test("visualizes choosing a clear stitch instead of the nearest colliding stitch
     ],
     vias: [],
     jumpers: [],
-  }
+  };
   const clearRoute: HighDensityIntraNodeRoute = {
     connectionName: "target",
     traceThickness: 0.15,
@@ -27,7 +27,7 @@ test("visualizes choosing a clear stitch instead of the nearest colliding stitch
     ],
     vias: [],
     jumpers: [],
-  }
+  };
   const foreignRoute: HighDensityIntraNodeRoute = {
     connectionName: "foreign",
     traceThickness: 0.15,
@@ -38,17 +38,17 @@ test("visualizes choosing a clear stitch instead of the nearest colliding stitch
     ],
     vias: [],
     jumpers: [],
-  }
+  };
   const clearanceValidator = new RouteStitchClearanceValidator({
     hdRoutes: [unsafeNearestRoute, clearRoute, foreignRoute],
-  })
+  });
   const existingViolationStitch = {
     connectionName: "existing-violation",
     start: { x: 0.2, y: -0.1, z: 0 },
     end: { x: 0.2, y: 0.1, z: 0 },
     traceThickness: 0.15,
-  }
-  expect(clearanceValidator.isSegmentClear(existingViolationStitch)).toBe(true)
+  };
+  expect(clearanceValidator.isSegmentClear(existingViolationStitch)).toBe(true);
   const solver = new SingleHighDensityRouteStitchSolver3({
     connectionName: "target",
     start: { x: 0, y: 0, z: 0 },
@@ -57,7 +57,7 @@ test("visualizes choosing a clear stitch instead of the nearest colliding stitch
     isStitchSegmentClear: (stitchSegment) =>
       clearanceValidator.isSegmentClear(stitchSegment),
     stitchClearanceMode: "prefer_clear",
-  })
+  });
   const foreignCopperGraphics: GraphicsObject = {
     lines: [
       {
@@ -67,7 +67,7 @@ test("visualizes choosing a clear stitch instead of the nearest colliding stitch
         label: "foreign copper",
       },
     ],
-  }
+  };
   const beforeSelectionGraphics: GraphicsObject = mergeGraphics(
     mergeGraphics(solver.visualize(), foreignCopperGraphics),
     {
@@ -86,31 +86,31 @@ test("visualizes choosing a clear stitch instead of the nearest colliding stitch
         },
       ],
     },
-  )
+  );
 
-  solver.step()
+  solver.step();
 
-  expect(solver.failed).toBe(false)
+  expect(solver.failed).toBe(false);
   expect(solver.mergedHdRoute.route).toEqual([
     { x: 0, y: 0, z: 0 },
     ...clearRoute.route,
-  ])
-  clearanceValidator.addRoute(solver.mergedHdRoute)
+  ]);
+  clearanceValidator.addRoute(solver.mergedHdRoute);
   const laterCrossingStitch = {
     connectionName: "later",
     start: { x: -0.5, y: 0.75, z: 0 },
     end: { x: 0.5, y: 0.75, z: 0 },
     traceThickness: 0.15,
-  }
-  expect(clearanceValidator.isSegmentClear(laterCrossingStitch)).toBe(false)
+  };
+  expect(clearanceValidator.isSegmentClear(laterCrossingStitch)).toBe(false);
 
   const fallbackRoute: HighDensityIntraNodeRoute = {
     ...unsafeNearestRoute,
     connectionName: "fallback",
-  }
+  };
   const fallbackValidator = new RouteStitchClearanceValidator({
     hdRoutes: [fallbackRoute, foreignRoute],
-  })
+  });
   expect(
     fallbackValidator.isSegmentClear({
       connectionName: "fallback",
@@ -118,7 +118,7 @@ test("visualizes choosing a clear stitch instead of the nearest colliding stitch
       end: fallbackRoute.route[0]!,
       traceThickness: fallbackRoute.traceThickness,
     }),
-  ).toBe(false)
+  ).toBe(false);
   const fallbackSolver = new SingleHighDensityRouteStitchSolver3({
     connectionName: "fallback",
     start: { x: 0, y: 0, z: 0 },
@@ -127,13 +127,13 @@ test("visualizes choosing a clear stitch instead of the nearest colliding stitch
     isStitchSegmentClear: (stitchSegment) =>
       fallbackValidator.isSegmentClear(stitchSegment),
     stitchClearanceMode: "prefer_clear",
-  })
-  fallbackSolver.step()
-  expect(fallbackSolver.failed).toBe(false)
+  });
+  fallbackSolver.step();
+  expect(fallbackSolver.failed).toBe(false);
   expect(fallbackSolver.mergedHdRoute.route).toEqual([
     { x: 0, y: 0, z: 0 },
     ...fallbackRoute.route,
-  ])
+  ]);
 
   await expect(
     getGraphicsSvgFrames({
@@ -204,5 +204,5 @@ test("visualizes choosing a clear stitch instead of the nearest colliding stitch
       columns: 2,
       backgroundColor: "white",
     }),
-  ).toMatchSvgSnapshot(import.meta.path, { tolerance: 0 })
-})
+  ).toMatchSvgSnapshot(import.meta.path, { tolerance: 0 });
+});

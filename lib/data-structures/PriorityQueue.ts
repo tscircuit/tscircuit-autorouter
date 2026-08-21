@@ -1,13 +1,13 @@
 export type Node = {
-  f: number
+  f: number;
   // Other properties can exist here, but 'f' is required for prioritization
-  [key: string]: any // Allow other properties
-}
+  [key: string]: any; // Allow other properties
+};
 
 export class PriorityQueue<T extends Node = Node> {
   // Store the heap as an array. Index 0 is the root (highest priority/smallest 'f').
-  private heap: T[] = []
-  private maxSize: number
+  private heap: T[] = [];
+  private maxSize: number;
 
   /**
    * Creates a new Priority Queue.
@@ -15,14 +15,14 @@ export class PriorityQueue<T extends Node = Node> {
    * @param maxSize The maximum number of elements the queue can hold. Defaults to 10,000.
    */
   constructor(nodes: T[] = [], maxSize = 10_000) {
-    this.maxSize = maxSize
+    this.maxSize = maxSize;
     // More efficient heap construction (Heapify) - O(n)
     if (nodes.length > 0) {
       // Ensure initial nodes don't exceed maxSize immediately
-      this.heap = [...nodes].sort((a, b) => a.f - b.f).slice(0, this.maxSize)
+      this.heap = [...nodes].sort((a, b) => a.f - b.f).slice(0, this.maxSize);
       // Build the heap property starting from the last non-leaf node
       for (let i = Math.floor(this.heap.length / 2) - 1; i >= 0; i--) {
-        this._siftDown(i)
+        this._siftDown(i);
       }
     }
 
@@ -36,14 +36,14 @@ export class PriorityQueue<T extends Node = Node> {
    * Returns the number of elements currently in the queue.
    */
   get size(): number {
-    return this.heap.length
+    return this.heap.length;
   }
 
   /**
    * Checks if the queue is empty.
    */
   isEmpty(): boolean {
-    return this.heap.length === 0
+    return this.heap.length === 0;
   }
 
   /**
@@ -53,9 +53,9 @@ export class PriorityQueue<T extends Node = Node> {
    */
   peek(): T | null {
     if (this.isEmpty()) {
-      return null
+      return null;
     }
-    return this.heap[0]
+    return this.heap[0];
   }
 
   /**
@@ -66,25 +66,25 @@ export class PriorityQueue<T extends Node = Node> {
    */
   dequeue(): T | null {
     if (this.isEmpty()) {
-      return null
+      return null;
     }
 
-    const minNode = this.heap[0]
-    const lastNode = this.heap.pop() // Remove last element
+    const minNode = this.heap[0];
+    const lastNode = this.heap.pop(); // Remove last element
 
     // If heap is now empty (was size 1), just return the minNode
     if (this.heap.length === 0 && lastNode !== undefined) {
       // This branch means pop() removed the only element, which was minNode
-      return minNode
+      return minNode;
     }
     // If heap is not empty after pop(), move the last node to the root
     // Use non-null assertion as we know pop returned a value if heap wasn't empty before
     if (lastNode !== undefined) {
-      this.heap[0] = lastNode
-      this._siftDown(0) // Restore heap property from the root
+      this.heap[0] = lastNode;
+      this._siftDown(0); // Restore heap property from the root
     }
 
-    return minNode
+    return minNode;
   }
 
   /**
@@ -98,11 +98,11 @@ export class PriorityQueue<T extends Node = Node> {
       // Optional: Could implement logic here to replace the *worst* node
       // if the new node is better, but current spec is just to not add.
       // console.warn("Priority Queue is full. Cannot enqueue node.");
-      return
+      return;
     }
 
-    this.heap.push(node) // Add to the end
-    this._siftUp(this.heap.length - 1) // Restore heap property from the new node
+    this.heap.push(node); // Add to the end
+    this._siftUp(this.heap.length - 1); // Restore heap property from the new node
   }
 
   // --- Private Helper Methods ---
@@ -112,16 +112,16 @@ export class PriorityQueue<T extends Node = Node> {
    * @param index The index of the node to sift up.
    */
   private _siftUp(index: number): void {
-    let currentIndex = index
+    let currentIndex = index;
     while (currentIndex > 0) {
-      const parentIndex = this._parentIndex(currentIndex)
+      const parentIndex = this._parentIndex(currentIndex);
       // If parent's f is smaller or equal, heap property is satisfied
       if (this.heap[parentIndex].f <= this.heap[currentIndex].f) {
-        break
+        break;
       }
       // Otherwise, swap and continue sifting up
-      this._swap(currentIndex, parentIndex)
-      currentIndex = parentIndex
+      this._swap(currentIndex, parentIndex);
+      currentIndex = parentIndex;
     }
   }
 
@@ -130,20 +130,20 @@ export class PriorityQueue<T extends Node = Node> {
    * @param index The index of the node to sift down.
    */
   private _siftDown(index: number): void {
-    let currentIndex = index
-    const heapSize = this.heap.length
+    let currentIndex = index;
+    const heapSize = this.heap.length;
 
     while (true) {
-      const leftChildIndex = this._leftChildIndex(currentIndex)
-      const rightChildIndex = this._rightChildIndex(currentIndex)
-      let smallestIndex = currentIndex // Assume current is smallest
+      const leftChildIndex = this._leftChildIndex(currentIndex);
+      const rightChildIndex = this._rightChildIndex(currentIndex);
+      let smallestIndex = currentIndex; // Assume current is smallest
 
       // Check left child
       if (
         leftChildIndex < heapSize &&
         this.heap[leftChildIndex].f < this.heap[smallestIndex].f
       ) {
-        smallestIndex = leftChildIndex
+        smallestIndex = leftChildIndex;
       }
 
       // Check right child
@@ -151,16 +151,16 @@ export class PriorityQueue<T extends Node = Node> {
         rightChildIndex < heapSize &&
         this.heap[rightChildIndex].f < this.heap[smallestIndex].f
       ) {
-        smallestIndex = rightChildIndex
+        smallestIndex = rightChildIndex;
       }
 
       // If the smallest is not the current node, swap and continue sifting down
       if (smallestIndex !== currentIndex) {
-        this._swap(currentIndex, smallestIndex)
-        currentIndex = smallestIndex // Move down to the swapped position
+        this._swap(currentIndex, smallestIndex);
+        currentIndex = smallestIndex; // Move down to the swapped position
       } else {
         // Heap property is satisfied for this subtree
-        break
+        break;
       }
     }
   }
@@ -171,21 +171,21 @@ export class PriorityQueue<T extends Node = Node> {
    * @param j Index of the second element.
    */
   private _swap(i: number, j: number): void {
-    ;[this.heap[i], this.heap[j]] = [this.heap[j], this.heap[i]]
+    [this.heap[i], this.heap[j]] = [this.heap[j], this.heap[i]];
   }
 
   /** Calculates the parent index of a node. */
   private _parentIndex(index: number): number {
-    return Math.floor((index - 1) / 2)
+    return Math.floor((index - 1) / 2);
   }
 
   /** Calculates the left child index of a node. */
   private _leftChildIndex(index: number): number {
-    return 2 * index + 1
+    return 2 * index + 1;
   }
 
   /** Calculates the right child index of a node. */
   private _rightChildIndex(index: number): number {
-    return 2 * index + 2
+    return 2 * index + 2;
   }
 }

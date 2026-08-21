@@ -1,49 +1,49 @@
 #!/usr/bin/env bun
 
-import { readFile, writeFile } from "node:fs/promises"
+import { readFile, writeFile } from "node:fs/promises";
 
 type PipelineStageTiming = {
-  solverName: string
-  timeMs: number
-}
+  solverName: string;
+  timeMs: number;
+};
 
 type CompletedProfileScenario = {
-  scenarioName: string
-  elapsedTimeMs: number
-  stageTimings: PipelineStageTiming[]
-}
+  scenarioName: string;
+  elapsedTimeMs: number;
+  stageTimings: PipelineStageTiming[];
+};
 
 type ProfileReport = {
-  datasetName: string
-  scenarioCount: number
-  solved: number
-  failed: number
-  completedScenarios: CompletedProfileScenario[]
-}
+  datasetName: string;
+  scenarioCount: number;
+  solved: number;
+  failed: number;
+  completedScenarios: CompletedProfileScenario[];
+};
 
 type ProfileComparisonInput = {
-  mainReport: ProfileReport
-  prReport: ProfileReport
-  mainSha: string
-  prSha: string
-  repository: string
-  runnerName: string
-}
+  mainReport: ProfileReport;
+  prReport: ProfileReport;
+  mainSha: string;
+  prSha: string;
+  repository: string;
+  runnerName: string;
+};
 
-const MINIMUM_DISPLAY_PERCENT = 4
-const PERCENTILES = [50, 80, 95] as const
+const MINIMUM_DISPLAY_PERCENT = 4;
+const PERCENTILES = [50, 80, 95] as const;
 
 const getPercentile = (values: number[], percentile: number): number => {
-  if (values.length === 0) return 0
-  const sorted = [...values].sort((a, b) => a - b)
-  const index = (sorted.length - 1) * percentile
-  const lower = Math.floor(index)
-  const upper = Math.ceil(index)
-  if (lower === upper) return sorted[lower] ?? 0
-  const lowerValue = sorted[lower] ?? 0
-  const upperValue = sorted[upper] ?? 0
-  return lowerValue + (upperValue - lowerValue) * (index - lower)
-}
+  if (values.length === 0) return 0;
+  const sorted = [...values].sort((a, b) => a - b);
+  const index = (sorted.length - 1) * percentile;
+  const lower = Math.floor(index);
+  const upper = Math.ceil(index);
+  if (lower === upper) return sorted[lower] ?? 0;
+  const lowerValue = sorted[lower] ?? 0;
+  const upperValue = sorted[upper] ?? 0;
+  return lowerValue + (upperValue - lowerValue) * (index - lower);
+};
 
 const getStagePercentiles = (
   report: ProfileReport,
@@ -56,22 +56,22 @@ const getStagePercentiles = (
       const totalTimeMs = scenario.stageTimings.reduce(
         (sum, stage) => sum + stage.timeMs,
         0,
-      )
+      );
       const stageTimeMs =
         scenario.stageTimings.find((stage) => stage.solverName === solverName)
-          ?.timeMs ?? 0
-      return totalTimeMs === 0 ? 0 : (stageTimeMs / totalTimeMs) * 100
-    })
+          ?.timeMs ?? 0;
+      return totalTimeMs === 0 ? 0 : (stageTimeMs / totalTimeMs) * 100;
+    });
 
   return Object.fromEntries(
     PERCENTILES.map((percentile) => [
       percentile,
       getPercentile(percentages, percentile / 100),
     ]),
-  ) as Record<(typeof PERCENTILES)[number], number>
-}
+  ) as Record<(typeof PERCENTILES)[number], number>;
+};
 
-const formatPercent = (value: number): string => `${value.toFixed(1)}%`
+const formatPercent = (value: number): string => `${value.toFixed(1)}%`;
 
 export const renderProfileComparison = ({
   mainReport,
@@ -84,19 +84,19 @@ export const renderProfileComparison = ({
   if (mainReport.datasetName !== prReport.datasetName) {
     throw new Error(
       `Dataset mismatch: main=${mainReport.datasetName}, PR=${prReport.datasetName}`,
-    )
+    );
   }
 
   const prCompletedScenarioNames = new Set(
     prReport.completedScenarios.map((scenario) => scenario.scenarioName),
-  )
+  );
   const commonCompletedScenarioNames = new Set(
     mainReport.completedScenarios
       .map((scenario) => scenario.scenarioName)
       .filter((scenarioName) => prCompletedScenarioNames.has(scenarioName)),
-  )
+  );
   if (commonCompletedScenarioNames.size === 0) {
-    throw new Error("Main and PR have no commonly completed profile problems")
+    throw new Error("Main and PR have no commonly completed profile problems");
   }
 
   const solverNames = [
@@ -107,7 +107,7 @@ export const renderProfileComparison = ({
         ),
       ),
     ),
-  ]
+  ];
   const rows = solverNames
     .map((solverName) => ({
       solverName,
@@ -134,7 +134,7 @@ export const renderProfileComparison = ({
         Math.max(b.main[50], b.pr[50]) - Math.max(a.main[50], a.pr[50]) ||
         Math.max(b.main[95], b.pr[95]) - Math.max(a.main[95], a.pr[95]) ||
         a.solverName.localeCompare(b.solverName),
-    )
+    );
 
   return [
     "## Pipeline 7 Profile Comparison",
@@ -156,23 +156,23 @@ export const renderProfileComparison = ({
     "",
     "Each percentile is calculated independently from per-problem stage shares, so columns do not sum to 100%.",
     "",
-  ].join("\n")
-}
+  ].join("\n");
+};
 
 const getRequiredArg = (name: string): string => {
-  const index = process.argv.indexOf(name)
-  const value = index >= 0 ? process.argv[index + 1] : undefined
-  if (!value) throw new Error(`Missing required argument ${name}`)
-  return value
-}
+  const index = process.argv.indexOf(name);
+  const value = index >= 0 ? process.argv[index + 1] : undefined;
+  if (!value) throw new Error(`Missing required argument ${name}`);
+  return value;
+};
 
 if (import.meta.main) {
   const mainReport = JSON.parse(
     await readFile(getRequiredArg("--main-report"), "utf8"),
-  ) as ProfileReport
+  ) as ProfileReport;
   const prReport = JSON.parse(
     await readFile(getRequiredArg("--pr-report"), "utf8"),
-  ) as ProfileReport
+  ) as ProfileReport;
 
   await writeFile(
     getRequiredArg("--output"),
@@ -184,5 +184,5 @@ if (import.meta.main) {
       repository: getRequiredArg("--repository"),
       runnerName: getRequiredArg("--runner-name"),
     }),
-  )
+  );
 }

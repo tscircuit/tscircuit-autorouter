@@ -1,32 +1,30 @@
-import { expect, test } from "bun:test"
-import { CurvyTraceSolver } from "@tscircuit/curvy-trace-solver"
-import { PortfolioSingleIntraNodeSolver } from "lib/solvers/HyperHighDensitySolver/PortfolioSingleIntraNodeSolver"
-import { SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost } from "lib/solvers/HighDensitySolver/SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost"
-import { createSrjFromNodeWithPortPoints } from "lib/utils/createSrjFromNodeWithPortPoints"
-import { convertToCircuitJson } from "lib/testing/utils/convertToCircuitJson"
-import { getDrcErrors } from "lib/testing/getDrcErrors"
-import type { HighDensityIntraNodeRoute } from "lib/types/high-density-types"
-import cmn159Data from "../../fixtures/bug-reports/dataset01-circuit102-cmn_159/cmn_159-node-data.json" with {
-  type: "json",
-}
+import { expect, test } from "bun:test";
+import { CurvyTraceSolver } from "@tscircuit/curvy-trace-solver";
+import { PortfolioSingleIntraNodeSolver } from "lib/solvers/HyperHighDensitySolver/PortfolioSingleIntraNodeSolver";
+import { SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost } from "lib/solvers/HighDensitySolver/SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost";
+import { createSrjFromNodeWithPortPoints } from "lib/utils/createSrjFromNodeWithPortPoints";
+import { convertToCircuitJson } from "lib/testing/utils/convertToCircuitJson";
+import { getDrcErrors } from "lib/testing/getDrcErrors";
+import type { HighDensityIntraNodeRoute } from "lib/types/high-density-types";
+import cmn159Data from "../../fixtures/bug-reports/dataset01-circuit102-cmn_159/cmn_159-node-data.json" with { type: "json" };
 
 const getBounds = () => {
-  const node = cmn159Data.nodeWithPortPoints
+  const node = cmn159Data.nodeWithPortPoints;
   return {
     minX: node.center.x - node.width / 2,
     maxX: node.center.x + node.width / 2,
     minY: node.center.y - node.height / 2,
     maxY: node.center.y + node.height / 2,
-  }
-}
+  };
+};
 
 const getPerimeterPosition = (point: { x: number; y: number }) => {
-  const bounds = getBounds()
+  const bounds = getBounds();
   if (Math.abs(point.y - bounds.minY) < 1e-6) {
-    return point.x - bounds.minX
+    return point.x - bounds.minX;
   }
   if (Math.abs(point.x - bounds.maxX) < 1e-6) {
-    return bounds.maxX - bounds.minX + (point.y - bounds.minY)
+    return bounds.maxX - bounds.minX + (point.y - bounds.minY);
   }
   if (Math.abs(point.y - bounds.maxY) < 1e-6) {
     return (
@@ -35,21 +33,21 @@ const getPerimeterPosition = (point: { x: number; y: number }) => {
       bounds.maxY -
       bounds.minY +
       (bounds.maxX - point.x)
-    )
+    );
   }
   return (
     2 * (bounds.maxX - bounds.minX) +
     (bounds.maxY - bounds.minY) +
     (bounds.maxY - point.y)
-  )
-}
+  );
+};
 
 test("cmn_159 is solved directly by the single-layer no-different-root-intersection fallback", () => {
-  const node = structuredClone(cmn159Data.nodeWithPortPoints)
+  const node = structuredClone(cmn159Data.nodeWithPortPoints);
 
   const perimeterOrder = [...node.portPoints]
     .sort((a, b) => getPerimeterPosition(a) - getPerimeterPosition(b))
-    .map((point) => point.connectionName)
+    .map((point) => point.connectionName);
 
   expect(perimeterOrder).toEqual([
     "source_net_3_mst1",
@@ -60,7 +58,7 @@ test("cmn_159 is solved directly by the single-layer no-different-root-intersect
     "source_net_3_mst1",
     "source_net_2_mst1",
     "source_net_3_mst1",
-  ])
+  ]);
 
   const portfolioSolver = new PortfolioSingleIntraNodeSolver({
     nodeWithPortPoints: node,
@@ -68,35 +66,35 @@ test("cmn_159 is solved directly by the single-layer no-different-root-intersect
     traceWidth: 0.15,
     viaDiameter: 0.3,
     cacheProvider: null,
-  })
+  });
 
-  portfolioSolver.solve()
+  portfolioSolver.solve();
 
-  expect(portfolioSolver.solved).toBe(true)
-  expect(portfolioSolver.failed).toBe(false)
-  expect(portfolioSolver.error).toBeNull()
+  expect(portfolioSolver.solved).toBe(true);
+  expect(portfolioSolver.failed).toBe(false);
+  expect(portfolioSolver.error).toBeNull();
   expect(portfolioSolver.winningSolver?.getSolverName()).toBe(
     "SingleLayerNoDifferentRootIntersectionsIntraNodeSolver",
-  )
-  expect(portfolioSolver.solvedRoutes).toHaveLength(5)
-}, 60_000)
+  );
+  expect(portfolioSolver.solvedRoutes).toHaveLength(5);
+}, 60_000);
 
 test("cmn_159 net6 route is sensitive to the current obstacle margin", () => {
-  const node = structuredClone(cmn159Data.nodeWithPortPoints)
-  const bounds = getBounds()
+  const node = structuredClone(cmn159Data.nodeWithPortPoints);
+  const bounds = getBounds();
   const connectionGroups = new Map<
     string,
     Array<{ x: number; y: number; z: number }>
-  >()
+  >();
 
   for (const portPoint of node.portPoints) {
-    const points = connectionGroups.get(portPoint.connectionName) ?? []
-    points.push({ x: portPoint.x, y: portPoint.y, z: portPoint.z })
-    connectionGroups.set(portPoint.connectionName, points)
+    const points = connectionGroups.get(portPoint.connectionName) ?? [];
+    points.push({ x: portPoint.x, y: portPoint.y, z: portPoint.z });
+    connectionGroups.set(portPoint.connectionName, points);
   }
 
-  const net3 = connectionGroups.get("source_net_3_mst1")!
-  const net6 = connectionGroups.get("source_net_6_mst2")!
+  const net3 = connectionGroups.get("source_net_3_mst1")!;
+  const net6 = connectionGroups.get("source_net_6_mst2")!;
 
   const topRoute = {
     connectionName: "source_net_3_mst1",
@@ -128,7 +126,7 @@ test("cmn_159 net6 route is sensitive to the current obstacle margin", () => {
       net3[3]!,
     ],
     vias: [],
-  }
+  };
 
   const rightRoute = {
     connectionName: "source_net_3_mst1",
@@ -149,7 +147,7 @@ test("cmn_159 net6 route is sensitive to the current obstacle margin", () => {
       net3[2]!,
     ],
     vias: [],
-  }
+  };
 
   const leftRoute = {
     connectionName: "source_net_3_mst1",
@@ -169,7 +167,7 @@ test("cmn_159 net6 route is sensitive to the current obstacle margin", () => {
       net3[1]!,
     ],
     vias: [],
-  }
+  };
 
   const failedAtDefaultMargin =
     new SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost({
@@ -187,12 +185,12 @@ test("cmn_159 net6 route is sensitive to the current obstacle margin", () => {
       futureConnections: [],
       connMap: { areIdsConnected: (a: string, b: string) => a === b } as any,
       hyperParameters: {},
-    })
+    });
 
-  failedAtDefaultMargin.solve()
+  failedAtDefaultMargin.solve();
 
-  expect(failedAtDefaultMargin.solved).toBe(false)
-  expect(failedAtDefaultMargin.failed).toBe(true)
+  expect(failedAtDefaultMargin.solved).toBe(false);
+  expect(failedAtDefaultMargin.failed).toBe(true);
 
   const solvedAtLowerMargin =
     new SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost({
@@ -210,37 +208,37 @@ test("cmn_159 net6 route is sensitive to the current obstacle margin", () => {
       futureConnections: [],
       connMap: { areIdsConnected: (a: string, b: string) => a === b } as any,
       hyperParameters: {},
-    })
+    });
 
-  solvedAtLowerMargin.solve()
+  solvedAtLowerMargin.solve();
 
-  expect(solvedAtLowerMargin.solved).toBe(true)
-  expect(solvedAtLowerMargin.failed).toBe(false)
-}, 60_000)
+  expect(solvedAtLowerMargin.solved).toBe(true);
+  expect(solvedAtLowerMargin.failed).toBe(false);
+}, 60_000);
 
 test("cmn_159 still produces DRC overlap with a whole-node curvy chain construction", () => {
-  const node = structuredClone(cmn159Data.nodeWithPortPoints)
-  const bounds = getBounds()
+  const node = structuredClone(cmn159Data.nodeWithPortPoints);
+  const bounds = getBounds();
   const connectionGroups = new Map<
     string,
     Array<{
-      x: number
-      y: number
-      z: number
-      connectionName: string
-      rootConnectionName?: string
+      x: number;
+      y: number;
+      z: number;
+      connectionName: string;
+      rootConnectionName?: string;
     }>
-  >()
+  >();
 
   for (const portPoint of node.portPoints) {
-    const points = connectionGroups.get(portPoint.connectionName) ?? []
-    points.push(portPoint)
-    connectionGroups.set(portPoint.connectionName, points)
+    const points = connectionGroups.get(portPoint.connectionName) ?? [];
+    points.push(portPoint);
+    connectionGroups.set(portPoint.connectionName, points);
   }
 
-  const net2 = connectionGroups.get("source_net_2_mst1")!
-  const net3 = connectionGroups.get("source_net_3_mst1")!
-  const net6 = connectionGroups.get("source_net_6_mst2")!
+  const net2 = connectionGroups.get("source_net_2_mst1")!;
+  const net3 = connectionGroups.get("source_net_3_mst1")!;
+  const net6 = connectionGroups.get("source_net_6_mst2")!;
 
   const curvySolver = new CurvyTraceSolver({
     bounds,
@@ -274,12 +272,12 @@ test("cmn_159 still produces DRC overlap with a whole-node curvy chain construct
     obstacles: [],
     preferredTraceToTraceSpacing: 0.3,
     preferredObstacleToTraceSpacing: 0.3,
-  })
+  });
 
-  curvySolver.solve()
+  curvySolver.solve();
 
-  expect(curvySolver.solved).toBe(true)
-  expect(curvySolver.failed).toBe(false)
+  expect(curvySolver.solved).toBe(true);
+  expect(curvySolver.failed).toBe(false);
 
   const rootConnectionNameByConnectionName = new Map<
     string,
@@ -289,7 +287,7 @@ test("cmn_159 still produces DRC overlap with a whole-node curvy chain construct
       portPoint.connectionName,
       portPoint.rootConnectionName,
     ]),
-  )
+  );
 
   const routes: HighDensityIntraNodeRoute[] = curvySolver.outputTraces.map(
     (trace) => ({
@@ -302,14 +300,14 @@ test("cmn_159 still produces DRC overlap with a whole-node curvy chain construct
       route: trace.points.map((point) => ({ ...point, z: 1 })),
       vias: [],
     }),
-  )
+  );
 
-  const srj = createSrjFromNodeWithPortPoints(node)
+  const srj = createSrjFromNodeWithPortPoints(node);
   const drc = getDrcErrors(
     convertToCircuitJson(srj, routes, { minTraceWidth: srj.minTraceWidth }),
-  )
+  );
 
-  expect(drc.errors.length).toBeGreaterThan(0)
+  expect(drc.errors.length).toBeGreaterThan(0);
   expect(
     drc.errors.some(
       (error) =>
@@ -317,5 +315,5 @@ test("cmn_159 still produces DRC overlap with a whole-node curvy chain construct
         typeof error.message === "string" &&
         error.message.includes("is too close to trace"),
     ),
-  ).toBe(true)
-}, 60_000)
+  ).toBe(true);
+}, 60_000);

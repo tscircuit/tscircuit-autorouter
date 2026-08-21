@@ -1,13 +1,13 @@
-import type { AnyCircuitElement } from "circuit-json"
+import type { AnyCircuitElement } from "circuit-json";
 
 export const getPipeline9PreloadedViaPairTraceGroups = ({
   errors,
   circuitJson,
   originalTraceIdByPreparedTraceId,
 }: {
-  errors: Array<Record<string, unknown>>
-  circuitJson: AnyCircuitElement[]
-  originalTraceIdByPreparedTraceId: ReadonlyMap<string, string>
+  errors: Array<Record<string, unknown>>;
+  circuitJson: AnyCircuitElement[];
+  originalTraceIdByPreparedTraceId: ReadonlyMap<string, string>;
 }): string[][] => {
   const preparedTraceIdByViaId = new Map(
     circuitJson.flatMap((element) =>
@@ -17,7 +17,7 @@ export const getPipeline9PreloadedViaPairTraceGroups = ({
         ? [[element.pcb_via_id, element.pcb_trace_id] as const]
         : [],
     ),
-  )
+  );
 
   return errors.flatMap((error) => {
     if (
@@ -26,21 +26,21 @@ export const getPipeline9PreloadedViaPairTraceGroups = ({
       typeof error.actual_clearance !== "number" ||
       error.actual_clearance >= 0
     )
-      return []
+      return [];
     const originalTraceIds = error.pcb_via_ids
       .flatMap((viaId) => {
-        if (typeof viaId !== "string") return []
-        const preparedTraceId = preparedTraceIdByViaId.get(viaId)
-        if (!preparedTraceId) return []
+        if (typeof viaId !== "string") return [];
+        const preparedTraceId = preparedTraceIdByViaId.get(viaId);
+        if (!preparedTraceId) return [];
         return [
           originalTraceIdByPreparedTraceId.get(preparedTraceId) ??
             preparedTraceId,
-        ]
+        ];
       })
       .filter(
         (traceId, traceIndex, allTraceIds) =>
           allTraceIds.indexOf(traceId) === traceIndex,
-      )
-    return originalTraceIds.length > 0 ? [originalTraceIds] : []
-  })
-}
+      );
+    return originalTraceIds.length > 0 ? [originalTraceIds] : [];
+  });
+};

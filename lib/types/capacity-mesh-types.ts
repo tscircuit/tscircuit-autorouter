@@ -1,46 +1,46 @@
-export type CapacityMeshNodeId = string
+export type CapacityMeshNodeId = string;
 
 export interface CapacityMesh {
-  nodes: CapacityMeshNode[]
-  edges: CapacityMeshEdge[]
+  nodes: CapacityMeshNode[];
+  edges: CapacityMeshEdge[];
 }
 
 export interface CapacityMeshNode {
-  capacityMeshNodeId: string
-  center: { x: number; y: number }
-  width: number
-  height: number
-  layer: string
-  availableZ: number[]
+  capacityMeshNodeId: string;
+  center: { x: number; y: number };
+  width: number;
+  height: number;
+  layer: string;
+  availableZ: number[];
 
-  _depth?: number
+  _depth?: number;
 
-  _completelyInsideObstacle?: boolean
-  _containsObstacle?: boolean
-  _containsTarget?: boolean
-  _targetConnectionName?: string
-  _strawNode?: boolean
-  _strawParentCapacityMeshNodeId?: CapacityMeshNodeId
-  _isVirtualOffboard?: boolean
-  _offboardNetName?: string
+  _completelyInsideObstacle?: boolean;
+  _containsObstacle?: boolean;
+  _containsTarget?: boolean;
+  _targetConnectionName?: string;
+  _strawNode?: boolean;
+  _strawParentCapacityMeshNodeId?: CapacityMeshNodeId;
+  _isVirtualOffboard?: boolean;
+  _offboardNetName?: string;
 
-  _adjacentNodeIds?: CapacityMeshNodeId[]
+  _adjacentNodeIds?: CapacityMeshNodeId[];
 
-  _offBoardConnectionId?: string
-  _offBoardConnectedCapacityMeshNodeIds?: CapacityMeshNodeId[]
+  _offBoardConnectionId?: string;
+  _offBoardConnectedCapacityMeshNodeIds?: CapacityMeshNodeId[];
 
-  _qfpRegionType?: "center" | "pad" | "pad-gap" | "corner"
-  _isNarrowQfpPadGap?: boolean
-  _soicRegionType?: "center" | "pad" | "pad-gap"
-  _isComponentTopologyNode?: boolean
-  _connectedTo?: string[]
+  _qfpRegionType?: "center" | "pad" | "pad-gap" | "corner";
+  _isNarrowQfpPadGap?: boolean;
+  _soicRegionType?: "center" | "pad" | "pad-gap";
+  _isComponentTopologyNode?: boolean;
+  _connectedTo?: string[];
 
-  _parent?: CapacityMeshNode
+  _parent?: CapacityMeshNode;
 }
 
 export interface CapacityMeshEdge {
-  capacityMeshEdgeId: string
-  nodeIds: [CapacityMeshNodeId, CapacityMeshNodeId]
-  isOffboardEdge?: boolean
-  offboardNetName?: string
+  capacityMeshEdgeId: string;
+  nodeIds: [CapacityMeshNodeId, CapacityMeshNodeId];
+  isOffboardEdge?: boolean;
+  offboardNetName?: string;
 }

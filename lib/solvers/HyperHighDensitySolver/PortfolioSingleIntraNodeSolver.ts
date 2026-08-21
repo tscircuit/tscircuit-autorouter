@@ -1,32 +1,32 @@
 import {
   HighDensitySolverA03 as HighDensityA03Solver,
   HighDensitySolverA01,
-} from "@tscircuit/high-density-a01"
-import { ConnectivityMap } from "circuit-json-to-connectivity-map"
+} from "@tscircuit/high-density-a01";
+import { ConnectivityMap } from "circuit-json-to-connectivity-map";
 import {
   HighDensityIntraNodeRoute,
   NodeWithPortPoints,
-} from "lib/types/high-density-types"
-import { CachedIntraNodeRouteSolver } from "../HighDensitySolver/CachedIntraNodeRouteSolver"
-import { IntraNodeRouteSolver } from "../HighDensitySolver/IntraNodeSolver"
-import { MultiHeadPolyLineIntraNodeSolver2 } from "../HighDensitySolver/MultiHeadPolyLineIntraNodeSolver/MultiHeadPolyLineIntraNodeSolver2_Optimized"
-import { MultiHeadPolyLineIntraNodeSolver3 } from "../HighDensitySolver/MultiHeadPolyLineIntraNodeSolver/MultiHeadPolyLineIntraNodeSolver3_ViaPossibilitiesSolverIntegration"
-import { SingleLayerNoDifferentRootIntersectionsIntraNodeSolver } from "../HighDensitySolver/SingleLayerNoDifferentRootIntersectionsIntraNodeSolver"
-import { SingleTransitionIntraNodeSolver } from "../HighDensitySolver/SingleTransitionIntraNodeSolver"
-import { SingleTransitionThroughObstacleIntraNodeSolver } from "../HighDensitySolver/SingleTransitionThroughObstacleIntraNodeSolver"
-import { SingleTransitionCrossingRouteSolver } from "../HighDensitySolver/TwoRouteHighDensitySolver/SingleTransitionCrossingRouteSolver"
-import { TwoCrossingRoutesHighDensitySolver } from "../HighDensitySolver/TwoRouteHighDensitySolver/TwoCrossingRoutesHighDensitySolver"
+} from "lib/types/high-density-types";
+import { CachedIntraNodeRouteSolver } from "../HighDensitySolver/CachedIntraNodeRouteSolver";
+import { IntraNodeRouteSolver } from "../HighDensitySolver/IntraNodeSolver";
+import { MultiHeadPolyLineIntraNodeSolver2 } from "../HighDensitySolver/MultiHeadPolyLineIntraNodeSolver/MultiHeadPolyLineIntraNodeSolver2_Optimized";
+import { MultiHeadPolyLineIntraNodeSolver3 } from "../HighDensitySolver/MultiHeadPolyLineIntraNodeSolver/MultiHeadPolyLineIntraNodeSolver3_ViaPossibilitiesSolverIntegration";
+import { SingleLayerNoDifferentRootIntersectionsIntraNodeSolver } from "../HighDensitySolver/SingleLayerNoDifferentRootIntersectionsIntraNodeSolver";
+import { SingleTransitionIntraNodeSolver } from "../HighDensitySolver/SingleTransitionIntraNodeSolver";
+import { SingleTransitionThroughObstacleIntraNodeSolver } from "../HighDensitySolver/SingleTransitionThroughObstacleIntraNodeSolver";
+import { SingleTransitionCrossingRouteSolver } from "../HighDensitySolver/TwoRouteHighDensitySolver/SingleTransitionCrossingRouteSolver";
+import { TwoCrossingRoutesHighDensitySolver } from "../HighDensitySolver/TwoRouteHighDensitySolver/TwoCrossingRoutesHighDensitySolver";
 import {
   HyperParameterSupervisorSolver,
   SupervisedSolver,
-} from "../HyperParameterSupervisorSolver"
-import { repairDisconnectedSameRootPortPoints } from "./repairDisconnectedSameRootPortPoints"
+} from "../HyperParameterSupervisorSolver";
+import { repairDisconnectedSameRootPortPoints } from "./repairDisconnectedSameRootPortPoints";
 
 // Match the existing six-ordering portfolio used by the other intra-node
 // solver. The first ordering remains in the normal portfolio; the remaining
 // orderings are introduced only after that portfolio spends its dynamically
 // derived exploration budget or exhausts all of its candidates.
-const ORDERING_SHUFFLE_SEEDS = Array.from({ length: 6 }, (_, seed) => seed)
+const ORDERING_SHUFFLE_SEEDS = Array.from({ length: 6 }, (_, seed) => seed);
 
 /** Coordinates a fitness-scheduled portfolio of intra-node routing solvers. */
 export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolver<
@@ -39,25 +39,27 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
   | HighDensityA03Solver
 > {
   override getSolverName(): string {
-    return "PortfolioSingleIntraNodeSolver"
+    return "PortfolioSingleIntraNodeSolver";
   }
 
-  constructorParams: ConstructorParameters<typeof CachedIntraNodeRouteSolver>[0]
-  solvedRoutes: HighDensityIntraNodeRoute[] = []
-  nodeWithPortPoints: NodeWithPortPoints
-  connMap?: ConnectivityMap
-  effort: number
-  adaptiveSearchExpanded = false
+  constructorParams: ConstructorParameters<
+    typeof CachedIntraNodeRouteSolver
+  >[0];
+  solvedRoutes: HighDensityIntraNodeRoute[] = [];
+  nodeWithPortPoints: NodeWithPortPoints;
+  connMap?: ConnectivityMap;
+  effort: number;
+  adaptiveSearchExpanded = false;
 
   private getSolvedSegmentCount(solver: unknown): number | null {
-    const solvedConnectionsMap = (solver as any).solvedConnectionsMap
-    if (!(solvedConnectionsMap instanceof Map)) return null
+    const solvedConnectionsMap = (solver as any).solvedConnectionsMap;
+    if (!(solvedConnectionsMap instanceof Map)) return null;
 
-    let solvedSegmentCount = 0
+    let solvedSegmentCount = 0;
     for (const routes of solvedConnectionsMap.values()) {
-      if (Array.isArray(routes)) solvedSegmentCount += routes.length
+      if (Array.isArray(routes)) solvedSegmentCount += routes.length;
     }
-    return solvedSegmentCount
+    return solvedSegmentCount;
   }
 
   private getNodeSegmentCount(): number {
@@ -69,22 +71,22 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
             (portPoint) => portPoint.connectionName,
           ),
         ).size,
-    )
+    );
   }
 
   private getCandidateProgress(solver: { progress: number }): number {
-    const solvedSegmentCount = this.getSolvedSegmentCount(solver)
+    const solvedSegmentCount = this.getSolvedSegmentCount(solver);
     if (solvedSegmentCount !== null) {
-      return Math.min(1, solvedSegmentCount / this.getNodeSegmentCount())
+      return Math.min(1, solvedSegmentCount / this.getNodeSegmentCount());
     }
-    return Math.max(0, Math.min(1, solver.progress || 0))
+    return Math.max(0, Math.min(1, solver.progress || 0));
   }
 
   private getTotalCandidateWork(): number {
     return (this.supervisedSolvers ?? []).reduce(
       (total, { solver }) => total + solver.iterations,
       0,
-    )
+    );
   }
 
   private getDynamicExpansionWorkBudget(): number {
@@ -97,22 +99,22 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       ...(this.supervisedSolvers ?? []).map(
         ({ solver }) => solver.MAX_ITERATIONS,
       ),
-    )
+    );
   }
 
   constructor(
     opts: ConstructorParameters<typeof CachedIntraNodeRouteSolver>[0] & {
-      effort?: number
+      effort?: number;
     },
   ) {
-    super()
-    this.nodeWithPortPoints = opts.nodeWithPortPoints
-    this.connMap = opts.connMap
-    this.constructorParams = opts
-    this.effort = opts.effort ?? 1
-    this.MAX_ITERATIONS = 20_000_000 * this.effort
-    this.GREEDY_MULTIPLIER = 5
-    this.MIN_SUBSTEPS = 100
+    super();
+    this.nodeWithPortPoints = opts.nodeWithPortPoints;
+    this.connMap = opts.connMap;
+    this.constructorParams = opts;
+    this.effort = opts.effort ?? 1;
+    this.MAX_ITERATIONS = 20_000_000 * this.effort;
+    this.GREEDY_MULTIPLIER = 5;
+    this.MIN_SUBSTEPS = 100;
   }
 
   getCombinationDefs() {
@@ -128,7 +130,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       // ["closedFormTwoTrace"],
       ["highDensityA01"],
       ["highDensityA03"],
-    ]
+    ];
   }
 
   getHyperParameterDefs() {
@@ -266,7 +268,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
           },
         ],
       },
-    ]
+    ];
   }
 
   /**
@@ -275,100 +277,101 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
    * not advance the solver or give it preference in the portfolio.
    */
   private initializeCandidateBudget(solver: unknown) {
-    const setup = (solver as any).setup
-    if (typeof setup === "function") setup.call(solver)
+    const setup = (solver as any).setup;
+    if (typeof setup === "function") setup.call(solver);
   }
 
   private refreshDynamicIterationLimit() {
     const remainingSupervisorIterations = (this.supervisedSolvers ?? []).reduce(
       (total, { solver }) => {
-        if (solver.solved || solver.failed) return total
+        if (solver.solved || solver.failed) return total;
         const remainingCandidateIterations = Math.max(
           0,
           solver.MAX_ITERATIONS - solver.iterations + 1,
-        )
+        );
         return (
           total + Math.ceil(remainingCandidateIterations / this.MIN_SUBSTEPS)
-        )
+        );
       },
       0,
-    )
+    );
 
     // Keep one supervisor step available to observe that the current
     // portfolio is exhausted and expand it before BaseSolver can fail.
     this.MAX_ITERATIONS = Math.max(
       this.iterations + 1,
       this.iterations + remainingSupervisorIterations,
-    )
-    this.stats.dynamicSupervisorIterationLimit = this.MAX_ITERATIONS
+    );
+    this.stats.dynamicSupervisorIterationLimit = this.MAX_ITERATIONS;
   }
 
   override initializeSolvers() {
-    super.initializeSolvers()
+    super.initializeSolvers();
     for (const { solver } of this.supervisedSolvers ?? []) {
-      this.initializeCandidateBudget(solver)
+      this.initializeCandidateBudget(solver);
     }
-    this.stats.dynamicExpansionWorkBudget = this.getDynamicExpansionWorkBudget()
-    this.refreshDynamicIterationLimit()
+    this.stats.dynamicExpansionWorkBudget =
+      this.getDynamicExpansionWorkBudget();
+    this.refreshDynamicIterationLimit();
   }
 
   private addSupervisedCandidate(hyperParameters: Record<string, any>) {
-    const solver = this.generateSolver(hyperParameters)
-    this.initializeCandidateBudget(solver)
-    const g = this.computeG(solver)
+    const solver = this.generateSolver(hyperParameters);
+    this.initializeCandidateBudget(solver);
+    const g = this.computeG(solver);
     this.supervisedSolvers!.push({
       hyperParameters,
       solver,
       h: 0,
       g,
       f: g,
-    })
+    });
   }
 
   private expandAdaptiveSearch() {
-    if (this.adaptiveSearchExpanded) return
+    if (this.adaptiveSearchExpanded) return;
 
-    this.adaptiveSearchExpanded = true
+    this.adaptiveSearchExpanded = true;
     for (const shuffleSeed of ORDERING_SHUFFLE_SEEDS.slice(1)) {
       this.addSupervisedCandidate({
         HIGH_DENSITY_A01: true,
         SHUFFLE_SEED: shuffleSeed,
-      })
+      });
     }
-    this.refreshDynamicIterationLimit()
-    this.stats.adaptiveSearchExpanded = true
-    this.stats.adaptiveSearchExpandedAtIteration = this.iterations
-    this.stats.candidateWorkAtExpansion = this.getTotalCandidateWork()
+    this.refreshDynamicIterationLimit();
+    this.stats.adaptiveSearchExpanded = true;
+    this.stats.adaptiveSearchExpandedAtIteration = this.iterations;
+    this.stats.candidateWorkAtExpansion = this.getTotalCandidateWork();
     this.stats.bestProgressAtExpansion = Math.max(
       0,
       ...(this.supervisedSolvers ?? []).map(({ solver }) =>
         this.getCandidateProgress(solver),
       ),
-    )
+    );
   }
 
   private shouldExpandPortfolio(): boolean {
-    if (this.adaptiveSearchExpanded) return false
+    if (this.adaptiveSearchExpanded) return false;
 
-    const expansionWorkBudget = this.getDynamicExpansionWorkBudget()
-    this.stats.dynamicExpansionWorkBudget = expansionWorkBudget
-    return this.getTotalCandidateWork() >= expansionWorkBudget
+    const expansionWorkBudget = this.getDynamicExpansionWorkBudget();
+    this.stats.dynamicExpansionWorkBudget = expansionWorkBudget;
+    return this.getTotalCandidateWork() >= expansionWorkBudget;
   }
 
   override _step() {
-    if (!this.supervisedSolvers) this.initializeSolvers()
+    if (!this.supervisedSolvers) this.initializeSolvers();
 
     if (
       !this.adaptiveSearchExpanded &&
       !this.getSupervisedSolverWithBestFitness()
     ) {
-      this.expandAdaptiveSearch()
+      this.expandAdaptiveSearch();
     }
 
-    super._step()
+    super._step();
 
     if (!this.solved && !this.failed && this.shouldExpandPortfolio()) {
-      this.expandAdaptiveSearch()
+      this.expandAdaptiveSearch();
     }
   }
 
@@ -377,7 +380,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       (solver as any) instanceof HighDensitySolverA01 ||
       (solver as any) instanceof HighDensityA03Solver
     ) {
-      return (solver as any).iterations / 1_000_000
+      return (solver as any).iterations / 1_000_000;
     }
     if (solver?.hyperParameters?.MULTI_HEAD_POLYLINE_SOLVER) {
       return (
@@ -385,18 +388,18 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
         ((solver.hyperParameters?.ITERATION_PENALTY ?? 0) + solver.iterations) /
           10_000 +
         10_000 * (solver.hyperParameters.SEGMENTS_PER_POLYLINE! - 3)
-      )
+      );
     }
     return (
       solver.iterations / 10_000 // + solver.hyperParameters.SHUFFLE_SEED! * 0.05
-    )
+    );
   }
 
   computeH(solver: IntraNodeRouteSolver) {
     if (this.adaptiveSearchExpanded) {
-      return 1 - this.getCandidateProgress(solver)
+      return 1 - this.getCandidateProgress(solver);
     }
-    return 1 - (solver.progress || 0)
+    return 1 - (solver.progress || 0);
   }
 
   generateSolver(hyperParameters: any): IntraNodeRouteSolver {
@@ -412,18 +415,18 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
           traceWidth: this.constructorParams.traceWidth,
           viaDiameter: this.constructorParams.viaDiameter,
           obstacleMargin: this.constructorParams.obstacleMargin,
-        })
-        ineligibleSolver.failed = true
+        });
+        ineligibleSolver.failed = true;
         ineligibleSolver.error =
-          "Single-layer no-different-root-intersection solver not applicable"
-        return ineligibleSolver as any
+          "Single-layer no-different-root-intersection solver not applicable";
+        return ineligibleSolver as any;
       }
 
       return new SingleLayerNoDifferentRootIntersectionsIntraNodeSolver({
         nodeWithPortPoints: this.nodeWithPortPoints,
         traceWidth: this.constructorParams.traceWidth,
         viaDiameter: this.constructorParams.viaDiameter,
-      }) as any
+      }) as any;
     }
 
     if (hyperParameters.HIGH_DENSITY_A01) {
@@ -438,8 +441,8 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
         hyperParameters: {
           shuffleSeed: hyperParameters.SHUFFLE_SEED ?? 0,
         },
-      })
-      return solver as any
+      });
+      return solver as any;
     }
     if (hyperParameters.HIGH_DENSITY_A03) {
       const solver = new HighDensityA03Solver({
@@ -457,26 +460,26 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
         traceThickness: 0.1, // this.constructorParams.traceWidth ?? 0.15,
         effort: this.effort,
         hyperParameters,
-      })
-      return solver as any
+      });
+      return solver as any;
     }
     if (hyperParameters.CLOSED_FORM_TWO_TRACE_SAME_LAYER) {
       return new TwoCrossingRoutesHighDensitySolver({
         nodeWithPortPoints: this.nodeWithPortPoints,
         viaDiameter: this.constructorParams.viaDiameter,
-      }) as any
+      }) as any;
     }
     if (hyperParameters.CLOSED_FORM_TWO_TRACE_TRANSITION_CROSSING) {
       return new SingleTransitionCrossingRouteSolver({
         nodeWithPortPoints: this.nodeWithPortPoints,
         viaDiameter: this.constructorParams.viaDiameter,
-      }) as any
+      }) as any;
     }
     if (hyperParameters.CLOSED_FORM_SINGLE_TRANSITION) {
       return new SingleTransitionIntraNodeSolver({
         nodeWithPortPoints: this.nodeWithPortPoints,
         viaDiameter: this.constructorParams.viaDiameter,
-      }) as any
+      }) as any;
     }
     if (hyperParameters.THROUGH_OBSTACLE) {
       return new SingleTransitionThroughObstacleIntraNodeSolver({
@@ -486,7 +489,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
         layerCount: this.constructorParams.layerCount,
         viaDiameter: this.constructorParams.viaDiameter,
         traceThickness: this.constructorParams.traceWidth,
-      }) as any
+      }) as any;
     }
     if (hyperParameters.MULTI_HEAD_POLYLINE_SOLVER) {
       return new MultiHeadPolyLineIntraNodeSolver3({
@@ -494,40 +497,40 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
         connMap: this.connMap,
         hyperParameters: hyperParameters,
         viaDiameter: this.constructorParams.viaDiameter,
-      }) as any
+      }) as any;
     }
     return new CachedIntraNodeRouteSolver({
       ...this.constructorParams,
       hyperParameters,
-    })
+    });
   }
 
   onSolve(solver: SupervisedSolver<IntraNodeRouteSolver>) {
-    let routes: HighDensityIntraNodeRoute[]
+    let routes: HighDensityIntraNodeRoute[];
     if (
       (solver.solver as any) instanceof HighDensitySolverA01 ||
       (solver.solver as any) instanceof HighDensityA03Solver
     ) {
-      routes = (solver.solver as any).getOutput()
+      routes = (solver.solver as any).getOutput();
     } else {
-      routes = solver.solver.solvedRoutes
+      routes = solver.solver.solvedRoutes;
     }
     const routesWithRootConnectionNames = routes.map((route) => {
       const matchingPortPoint = this.nodeWithPortPoints.portPoints.find(
         (p) => p.connectionName === route.connectionName,
-      )
+      );
       if (matchingPortPoint?.rootConnectionName) {
         return {
           ...route,
           rootConnectionName: matchingPortPoint.rootConnectionName,
-        }
+        };
       }
-      return route
-    })
+      return route;
+    });
 
     this.solvedRoutes = repairDisconnectedSameRootPortPoints(
       routesWithRootConnectionNames,
       this.nodeWithPortPoints,
-    )
+    );
   }
 }

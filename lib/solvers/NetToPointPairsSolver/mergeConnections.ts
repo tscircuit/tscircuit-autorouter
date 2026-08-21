@@ -4,9 +4,9 @@ import {
   PointId,
   PointKey,
   ConnectionTempId,
-} from "lib/types"
-import { DSU } from "lib/utils/dsu"
-import { getPointKey } from "lib/utils/getPointKey"
+} from "lib/types";
+import { DSU } from "lib/utils/dsu";
+import { getPointKey } from "lib/utils/getPointKey";
 
 /**
  * Merges SimpleRouteConnections that share common ConnectionPoints into single connections.
@@ -20,39 +20,39 @@ export function mergeConnections(
   simpleRouteConnections: SimpleRouteConnection[],
 ): SimpleRouteConnection[] {
   if (simpleRouteConnections.length === 0) {
-    return []
+    return [];
   }
 
   // Assign a unique temporary ID to each connection for DSU tracking
   const connectionTempIds: ConnectionTempId[] = simpleRouteConnections.map(
     (_, i) => `conn_${i}`,
-  )
-  const disjointSetUnion = new DSU(connectionTempIds)
+  );
+  const disjointSetUnion = new DSU(connectionTempIds);
 
   // Map each unique point to the list of connection IDs that touch it
-  const pointKeyToConnectionTempIds = new Map<PointKey, ConnectionTempId[]>()
+  const pointKeyToConnectionTempIds = new Map<PointKey, ConnectionTempId[]>();
 
   simpleRouteConnections.forEach((simpleRouteConnection, index) => {
-    const connectionTempId: ConnectionTempId = `conn_${index}`
+    const connectionTempId: ConnectionTempId = `conn_${index}`;
     simpleRouteConnection.pointsToConnect.forEach((connectionPoint) => {
-      const pointKey: PointKey = getPointKey(connectionPoint)
+      const pointKey: PointKey = getPointKey(connectionPoint);
       if (!pointKeyToConnectionTempIds.has(pointKey)) {
-        pointKeyToConnectionTempIds.set(pointKey, [])
+        pointKeyToConnectionTempIds.set(pointKey, []);
       }
-      pointKeyToConnectionTempIds.get(pointKey)!.push(connectionTempId)
-    })
-  })
+      pointKeyToConnectionTempIds.get(pointKey)!.push(connectionTempId);
+    });
+  });
 
   // Perform unions for connections that share any common point
   for (const connectionTempIdsSharingPoint of pointKeyToConnectionTempIds.values()) {
     if (connectionTempIdsSharingPoint.length > 1) {
       // Union all connections that share this point
-      const firstConnectionTempId = connectionTempIdsSharingPoint[0]
+      const firstConnectionTempId = connectionTempIdsSharingPoint[0];
       for (let i = 1; i < connectionTempIdsSharingPoint.length; i++) {
         disjointSetUnion.union(
           firstConnectionTempId,
           connectionTempIdsSharingPoint[i],
-        )
+        );
       }
     }
   }
@@ -61,34 +61,34 @@ export function mergeConnections(
   const connectionTempIdGroups = new Map<
     ConnectionTempId,
     SimpleRouteConnection[]
-  >() // Key is ConnectionTempId (the root)
+  >(); // Key is ConnectionTempId (the root)
   simpleRouteConnections.forEach((simpleRouteConnection, index) => {
-    const connectionTempId: ConnectionTempId = `conn_${index}`
+    const connectionTempId: ConnectionTempId = `conn_${index}`;
     const rootConnectionTempId: ConnectionTempId =
-      disjointSetUnion.find(connectionTempId)
+      disjointSetUnion.find(connectionTempId);
     if (!connectionTempIdGroups.has(rootConnectionTempId)) {
-      connectionTempIdGroups.set(rootConnectionTempId, [])
+      connectionTempIdGroups.set(rootConnectionTempId, []);
     }
     connectionTempIdGroups
       .get(rootConnectionTempId)!
-      .push(simpleRouteConnection)
-  })
+      .push(simpleRouteConnection);
+  });
 
-  const mergedSimpleRouteConnections: SimpleRouteConnection[] = []
+  const mergedSimpleRouteConnections: SimpleRouteConnection[] = [];
 
   // Construct the new merged connections
   for (const simpleRouteConnectionGroup of connectionTempIdGroups.values()) {
     if (simpleRouteConnectionGroup.length === 1) {
-      mergedSimpleRouteConnections.push(simpleRouteConnectionGroup[0])
-      continue // No merging needed for groups of one
+      mergedSimpleRouteConnections.push(simpleRouteConnectionGroup[0]);
+      continue; // No merging needed for groups of one
     }
 
-    const uniqueConnectionPoints = new Map<PointKey, ConnectionPoint>()
-    const mergedRootConnectionNames: Set<string> = new Set()
-    let isOffBoard = false
-    const mergedExternallyConnectedPointIds: PointId[][] = []
-    const mergedNetConnectionNames: Set<string> = new Set()
-    let nominalTraceWidth: number | undefined = undefined
+    const uniqueConnectionPoints = new Map<PointKey, ConnectionPoint>();
+    const mergedRootConnectionNames: Set<string> = new Set();
+    let isOffBoard = false;
+    const mergedExternallyConnectedPointIds: PointId[][] = [];
+    const mergedNetConnectionNames: Set<string> = new Set();
+    let nominalTraceWidth: number | undefined = undefined;
 
     simpleRouteConnectionGroup.forEach((simpleRouteConnection) => {
       // Collect unique points
@@ -97,32 +97,32 @@ export function mergeConnections(
           getPointKey(connectionPoint),
           connectionPoint,
         ),
-      )
+      );
 
-      const rootConnectionNames = simpleRouteConnection.__rootConnectionNames
+      const rootConnectionNames = simpleRouteConnection.__rootConnectionNames;
       if (rootConnectionNames && rootConnectionNames.length > 0) {
         for (const rootConnectionName of rootConnectionNames) {
-          mergedRootConnectionNames.add(rootConnectionName)
+          mergedRootConnectionNames.add(rootConnectionName);
         }
       } else {
-        mergedRootConnectionNames.add(simpleRouteConnection.name)
+        mergedRootConnectionNames.add(simpleRouteConnection.name);
       }
 
       // Merge isOffBoard property
       if (simpleRouteConnection.isOffBoard) {
-        isOffBoard = true
+        isOffBoard = true;
       }
 
       // Merge externallyConnectedPointIds
       if (simpleRouteConnection.externallyConnectedPointIds) {
         mergedExternallyConnectedPointIds.push(
           ...simpleRouteConnection.externallyConnectedPointIds,
-        )
+        );
       }
 
       // Collect netConnectionNames (deduplicate)
       if (simpleRouteConnection.__netConnectionName) {
-        mergedNetConnectionNames.add(simpleRouteConnection.__netConnectionName)
+        mergedNetConnectionNames.add(simpleRouteConnection.__netConnectionName);
       }
 
       // Take the nominalTraceWidth from the first connection for now
@@ -131,9 +131,9 @@ export function mergeConnections(
         nominalTraceWidth === undefined &&
         simpleRouteConnection.nominalTraceWidth !== undefined
       ) {
-        nominalTraceWidth = simpleRouteConnection.nominalTraceWidth
+        nominalTraceWidth = simpleRouteConnection.nominalTraceWidth;
       }
-    })
+    });
 
     // Create the new merged SimpleRouteConnection
     const newSimpleRouteConnection: SimpleRouteConnection = {
@@ -153,10 +153,10 @@ export function mergeConnections(
           : undefined,
       __rootConnectionNames: Array.from(mergedRootConnectionNames),
       nominalTraceWidth: nominalTraceWidth, // Keep the first found nominalTraceWidth
-    }
+    };
 
-    mergedSimpleRouteConnections.push(newSimpleRouteConnection)
+    mergedSimpleRouteConnections.push(newSimpleRouteConnection);
   }
 
-  return mergedSimpleRouteConnections
+  return mergedSimpleRouteConnections;
 }

@@ -1,8 +1,8 @@
-import { expect, test } from "bun:test"
-import { AutoroutingPipelineSolver } from "lib"
-import type { SimpleRouteJson } from "lib/types"
-import { getLastStepSvg } from "../fixtures/getLastStepSvg"
-import bothPointsEquivalentSrjData from "./srj/both-points-equivalent.srj.json"
+import { expect, test } from "bun:test";
+import { AutoroutingPipelineSolver } from "lib";
+import type { SimpleRouteJson } from "lib/types";
+import { getLastStepSvg } from "../fixtures/getLastStepSvg";
+import bothPointsEquivalentSrjData from "./srj/both-points-equivalent.srj.json";
 
 /**
  * Tests a scenario where both points of an on-board connection have their own,
@@ -20,18 +20,18 @@ import bothPointsEquivalentSrjData from "./srj/both-points-equivalent.srj.json"
  * is the globally shortest route and create a trace between them.
  */
 test("both points equivalent", () => {
-  const srj: SimpleRouteJson = bothPointsEquivalentSrjData as any
-  const solver = new AutoroutingPipelineSolver(srj)
-  solver.solve()
+  const srj: SimpleRouteJson = bothPointsEquivalentSrjData as any;
+  const solver = new AutoroutingPipelineSolver(srj);
+  solver.solve();
 
-  const newConnections = solver.srjWithPointPairs!.connections
-  expect(newConnections).toHaveLength(1)
+  const newConnections = solver.srjWithPointPairs!.connections;
+  expect(newConnections).toHaveLength(1);
   const pointIds = newConnections[0].pointsToConnect
     .map((p) => p.pointId)
-    .sort()
-  expect(pointIds).toEqual(["A_prime", "B_prime"])
+    .sort();
+  expect(pointIds).toEqual(["A_prime", "B_prime"]);
 
   expect(getLastStepSvg(solver.visualize())).toMatchSvgSnapshot(
     import.meta.path,
-  )
-})
+  );
+});

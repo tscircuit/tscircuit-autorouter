@@ -2,32 +2,32 @@ import {
   doBoundsOverlap,
   getBoundFromCenteredRect,
   getBoundingBox,
-} from "@tscircuit/math-utils"
-import type { Bounds } from "@tscircuit/math-utils"
-import type { CapacityMeshNode, Obstacle, SimpleRouteJson } from "lib/types"
+} from "@tscircuit/math-utils";
+import type { Bounds } from "@tscircuit/math-utils";
+import type { CapacityMeshNode, Obstacle, SimpleRouteJson } from "lib/types";
 import {
   getUniqueValidZLayers,
   getUniqueValidZLayersFromLayerNames,
-} from "lib/utils/mapLayerNameToZ"
+} from "lib/utils/mapLayerNameToZ";
 
-const CORNER_SPLIT_RATIO = 0.25
-const MIN_AXIS_EPSILON = 1e-6
+const CORNER_SPLIT_RATIO = 0.25;
+const MIN_AXIS_EPSILON = 1e-6;
 
 type RectRegion = {
-  center: { x: number; y: number }
-  width: number
-  height: number
-}
+  center: { x: number; y: number };
+  width: number;
+  height: number;
+};
 
 type CreateMeshNodesForSrjParams = {
-  bounds: SimpleRouteJson["bounds"]
-  obstacles: Obstacle[]
-  availableZ: number[]
-  layerCount: number
-  nodeScopeId: string
-  rowCount: number
-  colCount: number
-}
+  bounds: SimpleRouteJson["bounds"];
+  obstacles: Obstacle[];
+  availableZ: number[];
+  layerCount: number;
+  nodeScopeId: string;
+  rowCount: number;
+  colCount: number;
+};
 
 /** Converts bounds into the centered-rectangle representation used by routing regions. */
 function createRectRegion(bounds: Bounds): RectRegion {
@@ -38,23 +38,23 @@ function createRectRegion(bounds: Bounds): RectRegion {
     },
     width: bounds.maxX - bounds.minX,
     height: bounds.maxY - bounds.minY,
-  }
+  };
 }
 
 function getTopologyAxisObstacles({
   bounds,
   obstacles,
 }: {
-  bounds: Bounds
-  obstacles: Obstacle[]
+  bounds: Bounds;
+  obstacles: Obstacle[];
 }): Obstacle[] {
   return obstacles.filter((obstacle) =>
     doBoundsOverlap(getBoundingBox(obstacle), bounds),
-  )
+  );
 }
 
 function clusterBoundaryValues(values: number[]): number[] {
-  return clusterAxisValues(values)
+  return clusterAxisValues(values);
 }
 
 /** Resolves the obstacle's traversable z values from explicit `zLayers` or named layers. */
@@ -64,7 +64,7 @@ export function getObstacleAvailableZ(
 ): number[] {
   return obstacle.__zLayers && obstacle.__zLayers.length > 0
     ? getUniqueValidZLayers(obstacle.__zLayers, layerCount)
-    : getUniqueValidZLayersFromLayerNames(obstacle.layers, layerCount)
+    : getUniqueValidZLayersFromLayerNames(obstacle.layers, layerCount);
 }
 
 /**
@@ -77,31 +77,31 @@ function regionContainsObstacle({
   availableZ,
   layerCount,
 }: {
-  region: RectRegion
-  obstacle: Obstacle
-  availableZ: number[]
-  layerCount: number
+  region: RectRegion;
+  obstacle: Obstacle;
+  availableZ: number[];
+  layerCount: number;
 }): boolean {
-  const regionBounds = getBoundFromCenteredRect(region)
-  const obstacleBounds = getBoundingBox(obstacle)
+  const regionBounds = getBoundFromCenteredRect(region);
+  const obstacleBounds = getBoundingBox(obstacle);
 
   if (!doBoundsOverlap(regionBounds, obstacleBounds)) {
-    return false
+    return false;
   }
 
   const overlapWidth =
     Math.min(regionBounds.maxX, obstacleBounds.maxX) -
-    Math.max(regionBounds.minX, obstacleBounds.minX)
+    Math.max(regionBounds.minX, obstacleBounds.minX);
   const overlapHeight =
     Math.min(regionBounds.maxY, obstacleBounds.maxY) -
-    Math.max(regionBounds.minY, obstacleBounds.minY)
+    Math.max(regionBounds.minY, obstacleBounds.minY);
 
   if (overlapWidth <= MIN_AXIS_EPSILON || overlapHeight <= MIN_AXIS_EPSILON) {
-    return false
+    return false;
   }
 
-  const obstacleAvailableZ = getObstacleAvailableZ(obstacle, layerCount)
-  return availableZ.some((z) => obstacleAvailableZ.includes(z))
+  const obstacleAvailableZ = getObstacleAvailableZ(obstacle, layerCount);
+  return availableZ.some((z) => obstacleAvailableZ.includes(z));
 }
 
 /** Convenience wrapper for deciding whether a region must be treated as obstacle-occupied. */
@@ -111,10 +111,10 @@ function regionContainsAnyObstacle({
   availableZ,
   layerCount,
 }: {
-  region: RectRegion
-  obstacles: Obstacle[]
-  availableZ: number[]
-  layerCount: number
+  region: RectRegion;
+  obstacles: Obstacle[];
+  availableZ: number[];
+  layerCount: number;
 }): boolean {
   return obstacles.some((obstacle) =>
     regionContainsObstacle({
@@ -123,7 +123,7 @@ function regionContainsAnyObstacle({
       availableZ,
       layerCount,
     }),
-  )
+  );
 }
 
 /**
@@ -137,11 +137,11 @@ function createMeshNode({
   obstacles,
   layerCount,
 }: {
-  nodeId: string
-  region: RectRegion
-  availableZ: number[]
-  obstacles?: Obstacle[]
-  layerCount?: number
+  nodeId: string;
+  region: RectRegion;
+  availableZ: number[];
+  obstacles?: Obstacle[];
+  layerCount?: number;
 }): CapacityMeshNode {
   return {
     capacityMeshNodeId: nodeId,
@@ -161,7 +161,7 @@ function createMeshNode({
             }),
           )
         : undefined,
-  }
+  };
 }
 
 /**
@@ -178,16 +178,16 @@ function createFallbackRingNodes({
   layerCount,
   nodeScopeId,
 }: {
-  bounds: SimpleRouteJson["bounds"]
-  obstacles: Obstacle[]
-  availableZ: number[]
-  layerCount: number
-  nodeScopeId: string
+  bounds: SimpleRouteJson["bounds"];
+  obstacles: Obstacle[];
+  availableZ: number[];
+  layerCount: number;
+  nodeScopeId: string;
 }): CapacityMeshNode[] {
-  const x1 = bounds.minX + (bounds.maxX - bounds.minX) * CORNER_SPLIT_RATIO
-  const x2 = bounds.maxX - (bounds.maxX - bounds.minX) * CORNER_SPLIT_RATIO
-  const y1 = bounds.minY + (bounds.maxY - bounds.minY) * CORNER_SPLIT_RATIO
-  const y2 = bounds.maxY - (bounds.maxY - bounds.minY) * CORNER_SPLIT_RATIO
+  const x1 = bounds.minX + (bounds.maxX - bounds.minX) * CORNER_SPLIT_RATIO;
+  const x2 = bounds.maxX - (bounds.maxX - bounds.minX) * CORNER_SPLIT_RATIO;
+  const y1 = bounds.minY + (bounds.maxY - bounds.minY) * CORNER_SPLIT_RATIO;
+  const y2 = bounds.maxY - (bounds.maxY - bounds.minY) * CORNER_SPLIT_RATIO;
 
   const diagonalBounds = [
     {
@@ -206,7 +206,7 @@ function createFallbackRingNodes({
       key: "sw",
       bounds: { minX: bounds.minX, maxX: x1, minY: y2, maxY: bounds.maxY },
     },
-  ] as const
+  ] as const;
 
   const sideBounds = [
     {
@@ -225,17 +225,17 @@ function createFallbackRingNodes({
       key: "left",
       bounds: { minX: bounds.minX, maxX: x1, minY: y1, maxY: y2 },
     },
-  ] as const
+  ] as const;
 
   return [
     ...diagonalBounds.flatMap(({ key, bounds }) => {
-      const region = createRectRegion(bounds)
+      const region = createRectRegion(bounds);
       const shouldSplitByLayer = regionContainsAnyObstacle({
         region,
         obstacles,
         availableZ,
         layerCount,
-      })
+      });
 
       if (!shouldSplitByLayer) {
         return [
@@ -246,7 +246,7 @@ function createFallbackRingNodes({
             obstacles,
             layerCount,
           }),
-        ]
+        ];
       }
 
       return availableZ.map((z) =>
@@ -257,7 +257,7 @@ function createFallbackRingNodes({
           obstacles,
           layerCount,
         }),
-      )
+      );
     }),
     ...sideBounds.flatMap(({ key, bounds }) =>
       availableZ.map((z) =>
@@ -270,7 +270,7 @@ function createFallbackRingNodes({
         }),
       ),
     ),
-  ]
+  ];
 }
 
 function createGridAxisEdges({
@@ -279,29 +279,29 @@ function createGridAxisEdges({
   obstacles,
   axis,
 }: {
-  start: number
-  end: number
-  obstacles: Obstacle[]
-  axis: "x" | "y"
+  start: number;
+  end: number;
+  obstacles: Obstacle[];
+  axis: "x" | "y";
 }): number[] {
-  const rawEdges = [start, end]
+  const rawEdges = [start, end];
 
   for (const obstacle of obstacles) {
     if (axis === "x") {
       rawEdges.push(
         obstacle.center.x - obstacle.width / 2,
         obstacle.center.x + obstacle.width / 2,
-      )
-      continue
+      );
+      continue;
     }
 
     rawEdges.push(
       obstacle.center.y - obstacle.height / 2,
       obstacle.center.y + obstacle.height / 2,
-    )
+    );
   }
 
-  return clusterBoundaryValues(rawEdges)
+  return clusterBoundaryValues(rawEdges);
 }
 
 function createCellRegion({
@@ -310,39 +310,39 @@ function createCellRegion({
   xEdges,
   yEdges,
 }: {
-  row: number
-  col: number
-  xEdges: number[]
-  yEdges: number[]
+  row: number;
+  col: number;
+  xEdges: number[];
+  yEdges: number[];
 }): RectRegion {
   return createRectRegion({
     minX: xEdges[col]!,
     maxX: xEdges[col + 1]!,
     minY: yEdges[row]!,
     maxY: yEdges[row + 1]!,
-  })
+  });
 }
 
 function getExactObstacleForRegion({
   region,
   obstacles,
 }: {
-  region: RectRegion
-  obstacles: Obstacle[]
+  region: RectRegion;
+  obstacles: Obstacle[];
 }): Obstacle | null {
-  const regionBounds = getBoundFromCenteredRect(region)
+  const regionBounds = getBoundFromCenteredRect(region);
 
   return (
     obstacles.find((obstacle) => {
-      const obstacleBounds = getBoundingBox(obstacle)
+      const obstacleBounds = getBoundingBox(obstacle);
       return (
         Math.abs(regionBounds.minX - obstacleBounds.minX) <= MIN_AXIS_EPSILON &&
         Math.abs(regionBounds.maxX - obstacleBounds.maxX) <= MIN_AXIS_EPSILON &&
         Math.abs(regionBounds.minY - obstacleBounds.minY) <= MIN_AXIS_EPSILON &&
         Math.abs(regionBounds.maxY - obstacleBounds.maxY) <= MIN_AXIS_EPSILON
-      )
+      );
     }) ?? null
-  )
+  );
 }
 
 function isFreeSpaceCellSurroundedByDiagonalObstacles({
@@ -352,11 +352,11 @@ function isFreeSpaceCellSurroundedByDiagonalObstacles({
   yEdges,
   obstacles,
 }: {
-  row: number
-  col: number
-  xEdges: number[]
-  yEdges: number[]
-  obstacles: Obstacle[]
+  row: number;
+  col: number;
+  xEdges: number[];
+  yEdges: number[];
+  obstacles: Obstacle[];
 }): boolean {
   if (
     row <= 0 ||
@@ -364,7 +364,7 @@ function isFreeSpaceCellSurroundedByDiagonalObstacles({
     row >= yEdges.length - 2 ||
     col >= xEdges.length - 2
   ) {
-    return false
+    return false;
   }
 
   const diagonalCells = [
@@ -372,7 +372,7 @@ function isFreeSpaceCellSurroundedByDiagonalObstacles({
     { row: row - 1, col: col + 1 },
     { row: row + 1, col: col - 1 },
     { row: row + 1, col: col + 1 },
-  ]
+  ];
 
   return diagonalCells.every(({ row: diagonalRow, col: diagonalCol }) =>
     Boolean(
@@ -386,7 +386,7 @@ function isFreeSpaceCellSurroundedByDiagonalObstacles({
         obstacles,
       }),
     ),
-  )
+  );
 }
 
 /**
@@ -405,26 +405,26 @@ function createCellMeshNodes({
   layerCount,
   nodeScopeId,
 }: {
-  row: number
-  col: number
-  xEdges: number[]
-  yEdges: number[]
-  availableZ: number[]
-  obstacles: Obstacle[]
-  layerCount: number
-  nodeScopeId: string
+  row: number;
+  col: number;
+  xEdges: number[];
+  yEdges: number[];
+  availableZ: number[];
+  obstacles: Obstacle[];
+  layerCount: number;
+  nodeScopeId: string;
 }): CapacityMeshNode[] {
   const region = createCellRegion({
     row,
     col,
     xEdges,
     yEdges,
-  })
+  });
 
   const exactObstacle = getExactObstacleForRegion({
     region,
     obstacles,
-  })
+  });
 
   if (exactObstacle) {
     return [
@@ -435,7 +435,7 @@ function createCellMeshNodes({
         obstacles: [exactObstacle],
         layerCount,
       }),
-    ]
+    ];
   }
 
   if (
@@ -455,7 +455,7 @@ function createCellMeshNodes({
         obstacles,
         layerCount,
       }),
-    ]
+    ];
   }
 
   return availableZ.map((z) =>
@@ -466,39 +466,39 @@ function createCellMeshNodes({
       obstacles,
       layerCount,
     }),
-  )
+  );
 }
 
 /** Clusters nearly-equal axis values so pad-center jitter does not create extra rows/columns. */
 export function clusterAxisValues(values: number[]): number[] {
-  const sortedValues = [...values].sort((a, b) => a - b)
-  const gaps: number[] = []
+  const sortedValues = [...values].sort((a, b) => a - b);
+  const gaps: number[] = [];
 
   for (let index = 1; index < sortedValues.length; index++) {
-    const gap = sortedValues[index]! - sortedValues[index - 1]!
-    if (gap > MIN_AXIS_EPSILON) gaps.push(gap)
+    const gap = sortedValues[index]! - sortedValues[index - 1]!;
+    if (gap > MIN_AXIS_EPSILON) gaps.push(gap);
   }
 
   const tolerance =
-    gaps.length > 0 ? Math.max(MIN_AXIS_EPSILON, Math.min(...gaps) / 4) : 1e-3
-  const clustered: number[] = []
+    gaps.length > 0 ? Math.max(MIN_AXIS_EPSILON, Math.min(...gaps) / 4) : 1e-3;
+  const clustered: number[] = [];
 
   for (const value of sortedValues) {
-    const previousValue = clustered[clustered.length - 1]
+    const previousValue = clustered[clustered.length - 1];
     if (
       previousValue === undefined ||
       Math.abs(value - previousValue) > tolerance
     ) {
-      clustered.push(value)
+      clustered.push(value);
     }
   }
 
-  return clustered
+  return clustered;
 }
 
 /** Returns `[0..layerCount-1]` for the solver's z-axis iteration. */
 export function getLayerRange(layerCount: number): number[] {
-  return Array.from({ length: Math.max(0, layerCount) }, (_, z) => z)
+  return Array.from({ length: Math.max(0, layerCount) }, (_, z) => z);
 }
 
 /**
@@ -523,23 +523,23 @@ export function createMeshNodesForSrj({
       availableZ,
       layerCount,
       nodeScopeId,
-    })
+    });
   }
 
-  const axisObstacles = getTopologyAxisObstacles({ bounds, obstacles })
+  const axisObstacles = getTopologyAxisObstacles({ bounds, obstacles });
   const xEdges = createGridAxisEdges({
     start: bounds.minX,
     end: bounds.maxX,
     obstacles: axisObstacles,
     axis: "x",
-  })
+  });
   const yEdges = createGridAxisEdges({
     start: bounds.minY,
     end: bounds.maxY,
     obstacles: axisObstacles,
     axis: "y",
-  })
-  const meshNodes: CapacityMeshNode[] = []
+  });
+  const meshNodes: CapacityMeshNode[] = [];
 
   for (let row = 0; row < yEdges.length - 1; row++) {
     for (let col = 0; col < xEdges.length - 1; col++) {
@@ -554,9 +554,9 @@ export function createMeshNodesForSrj({
           layerCount,
           nodeScopeId,
         }),
-      )
+      );
     }
   }
 
-  return meshNodes
+  return meshNodes;
 }

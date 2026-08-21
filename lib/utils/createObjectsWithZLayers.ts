@@ -1,12 +1,12 @@
 import {
   getUniqueValidZLayers,
   getUniqueValidZLayersFromLayerNames,
-} from "lib/utils/mapLayerNameToZ"
+} from "lib/utils/mapLayerNameToZ";
 
 type LayerMappedObject = {
-  __zLayers?: number[]
-  layers?: string[]
-}
+  __zLayers?: number[];
+  layers?: string[];
+};
 
 /**
  * Produces a derived object array where every item has a valid `__zLayers` array.
@@ -19,7 +19,7 @@ export const createObjectsWithZLayers = <T extends LayerMappedObject>(
   objects: ReadonlyArray<T>,
   layerCount: number = 2,
 ): Array<T & { __zLayers: number[] }> => {
-  const allZLayers = Array.from({ length: layerCount }, (_, i) => i)
+  const allZLayers = Array.from({ length: layerCount }, (_, i) => i);
 
   return objects.map((object) => {
     const candidateZLayers =
@@ -27,10 +27,10 @@ export const createObjectsWithZLayers = <T extends LayerMappedObject>(
       (object.layers
         ? getUniqueValidZLayersFromLayerNames(object.layers, layerCount)
         : undefined) ??
-      allZLayers
+      allZLayers;
 
-    const zLayers = getUniqueValidZLayers(candidateZLayers, layerCount)
+    const zLayers = getUniqueValidZLayers(candidateZLayers, layerCount);
 
-    return { ...object, __zLayers: zLayers.length > 0 ? zLayers : allZLayers }
-  })
-}
+    return { ...object, __zLayers: zLayers.length > 0 ? zLayers : allZLayers };
+  });
+};

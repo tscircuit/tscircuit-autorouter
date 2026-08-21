@@ -1,12 +1,12 @@
-import { expect, test } from "bun:test"
-import { GrowShrinkHighDensityIntraNodeSolver } from "lib/solvers/HyperHighDensitySolver/GrowShrinkHighDensityIntraNodeSolver"
-import { emptyVisualization, makeNode } from "./test-helpers"
+import { expect, test } from "bun:test";
+import { GrowShrinkHighDensityIntraNodeSolver } from "lib/solvers/HyperHighDensitySolver/GrowShrinkHighDensityIntraNodeSolver";
+import { emptyVisualization, makeNode } from "./test-helpers";
 
 test("GrowShrinkHighDensityIntraNodeSolver grows after an inner solver failure", () => {
   const solver = new GrowShrinkHighDensityIntraNodeSolver({
     nodeWithPortPoints: makeNode(),
     maxGrowthAttempts: 1,
-  })
+  });
 
   solver.activeSubSolver = {
     failed: false,
@@ -14,16 +14,16 @@ test("GrowShrinkHighDensityIntraNodeSolver grows after an inner solver failure",
     error: null,
     solvedRoutes: [],
     step() {
-      this.failed = true
-      this.error = "forced failure"
+      this.failed = true;
+      this.error = "forced failure";
     },
     visualize: emptyVisualization,
-  } as any
+  } as any;
 
-  solver.step()
+  solver.step();
 
-  expect(solver.failed).toBe(false)
-  expect(solver.growthAttempts).toBe(1)
-  expect(solver.scaleFactor).toBe(2)
-  expect(solver.failedSolvers.length).toBe(1)
-})
+  expect(solver.failed).toBe(false);
+  expect(solver.growthAttempts).toBe(1);
+  expect(solver.scaleFactor).toBe(2);
+  expect(solver.failedSolvers.length).toBe(1);
+});

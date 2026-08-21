@@ -3,46 +3,46 @@
  * Usage: bun run scripts/bugreports/bugreport23/search-optimization-schedule.ts
  */
 
-import { spawn } from "child_process"
-import * as fs from "fs"
-import * as path from "path"
-import type { PortPointPathingHyperParameters } from "../../../lib/solvers/PortPointPathingSolver/PortPointPathingSolver"
+import { spawn } from "child_process";
+import * as fs from "fs";
+import * as path from "path";
+import type { PortPointPathingHyperParameters } from "../../../lib/solvers/PortPointPathingSolver/PortPointPathingSolver";
 
 // Type for schedule entry
 type ScheduleEntry = PortPointPathingHyperParameters & {
-  EXPANSION_DEGREES: number
-}
+  EXPANSION_DEGREES: number;
+};
 
 const OPTIMIZER_PATH = path.resolve(
   __dirname,
   "../../../lib/solvers/MultiSectionPortPointOptimizer/MultiSectionPortPointOptimizer.ts",
-)
+);
 
 // Run a single test with a specific schedule
 async function runTest(schedule: ScheduleEntry[]): Promise<{
-  currentBoardScore: number
-  initialBoardScore: number
-  successfulOptimizations: number
-  failedOptimizations: number
+  currentBoardScore: number;
+  initialBoardScore: number;
+  successfulOptimizations: number;
+  failedOptimizations: number;
 }> {
   // Read original file
-  const originalContent = fs.readFileSync(OPTIMIZER_PATH, "utf-8")
+  const originalContent = fs.readFileSync(OPTIMIZER_PATH, "utf-8");
 
   // Create modified content with new schedule
   const scheduleStr = JSON.stringify(schedule, null, 2)
     .split("\n")
     .map((line, i) => (i === 0 ? line : "  " + line))
-    .join("\n")
+    .join("\n");
 
   const modifiedContent = originalContent.replace(
     /const OPTIMIZATION_SCHEDULE[\s\S]*?\n\]/,
     `const OPTIMIZATION_SCHEDULE: (PortPointPathingHyperParameters & {
   EXPANSION_DEGREES: number
 })[] = ${scheduleStr}`,
-  )
+  );
 
   // Write modified file
-  fs.writeFileSync(OPTIMIZER_PATH, modifiedContent)
+  fs.writeFileSync(OPTIMIZER_PATH, modifiedContent);
 
   try {
     // Run test in subprocess
@@ -61,54 +61,54 @@ async function runTest(schedule: ScheduleEntry[]): Promise<{
           successfulOptimizations: stats.successfulOptimizations,
           failedOptimizations: stats.failedOptimizations,
         }))
-      `
+      `;
 
       const child = spawn("bun", ["--eval", testScript], {
         cwd: path.resolve(__dirname, "../../.."),
         stdio: ["pipe", "pipe", "pipe"],
-      })
+      });
 
-      let stdout = ""
-      let stderr = ""
+      let stdout = "";
+      let stderr = "";
 
       child.stdout.on("data", (data) => {
-        stdout += data.toString()
-      })
+        stdout += data.toString();
+      });
 
       child.stderr.on("data", (data) => {
-        stderr += data.toString()
-      })
+        stderr += data.toString();
+      });
 
       child.on("close", (code) => {
         if (code !== 0) {
-          reject(new Error(`Test failed with code ${code}: ${stderr}`))
-          return
+          reject(new Error(`Test failed with code ${code}: ${stderr}`));
+          return;
         }
 
         try {
           // Find the JSON line in stdout
-          const lines = stdout.trim().split("\n")
-          const jsonLine = lines.find((line) => line.startsWith("{"))
+          const lines = stdout.trim().split("\n");
+          const jsonLine = lines.find((line) => line.startsWith("{"));
           if (!jsonLine) {
-            reject(new Error(`No JSON output found: ${stdout}`))
-            return
+            reject(new Error(`No JSON output found: ${stdout}`));
+            return;
           }
-          resolve(JSON.parse(jsonLine))
+          resolve(JSON.parse(jsonLine));
         } catch (e) {
-          reject(new Error(`Failed to parse output: ${stdout}`))
+          reject(new Error(`Failed to parse output: ${stdout}`));
         }
-      })
-    })
+      });
+    });
   } finally {
     // Restore original content
-    fs.writeFileSync(OPTIMIZER_PATH, originalContent)
+    fs.writeFileSync(OPTIMIZER_PATH, originalContent);
   }
 }
 
 // Generate different schedule configurations to test
 function* generateSchedules(): Generator<{
-  name: string
-  schedule: ScheduleEntry[]
+  name: string;
+  schedule: ScheduleEntry[];
 }> {
   // Baseline (current schedule)
   yield {
@@ -132,7 +132,7 @@ function* generateSchedules(): Generator<{
         GREEDY_MULTIPLIER: 2,
       },
     ],
-  }
+  };
 
   // Test single-entry schedules with different expansion degrees
   for (const expDeg of [2, 3, 4, 5, 6, 8]) {
@@ -145,13 +145,13 @@ function* generateSchedules(): Generator<{
           EXPANSION_DEGREES: expDeg,
         },
       ],
-    }
+    };
   }
 
   // Test combinations of 2 entries
   for (const exp1 of [2, 3, 4]) {
     for (const exp2 of [4, 5, 6, 8]) {
-      if (exp1 >= exp2) continue
+      if (exp1 >= exp2) continue;
       yield {
         name: `two_exp${exp1}_${exp2}`,
         schedule: [
@@ -166,7 +166,7 @@ function* generateSchedules(): Generator<{
             EXPANSION_DEGREES: exp2,
           },
         ],
-      }
+      };
     }
   }
 
@@ -191,7 +191,7 @@ function* generateSchedules(): Generator<{
           EXPANSION_DEGREES: exp3,
         },
       ],
-    }
+    };
   }
 
   // Test CENTER_OFFSET_DIST_PENALTY_FACTOR
@@ -215,7 +215,7 @@ function* generateSchedules(): Generator<{
           EXPANSION_DEGREES: 4,
         },
       ],
-    }
+    };
   }
 
   // Test NODE_PF_FACTOR
@@ -242,7 +242,7 @@ function* generateSchedules(): Generator<{
           NODE_PF_FACTOR: npf,
         },
       ],
-    }
+    };
   }
 
   // Test GREEDY_MULTIPLIER
@@ -269,20 +269,20 @@ function* generateSchedules(): Generator<{
           GREEDY_MULTIPLIER: gm,
         },
       ],
-    }
+    };
   }
 
   // Test more seeds
   for (const numSeeds of [4, 5, 6, 8, 10]) {
-    const schedule: ScheduleEntry[] = []
+    const schedule: ScheduleEntry[] = [];
     for (let i = 0; i < numSeeds; i++) {
       schedule.push({
         SHUFFLE_SEED: i,
         CENTER_OFFSET_DIST_PENALTY_FACTOR: 1,
         EXPANSION_DEGREES: i < numSeeds / 2 ? 3 : 4,
-      })
+      });
     }
-    yield { name: `seeds_${numSeeds}`, schedule }
+    yield { name: `seeds_${numSeeds}`, schedule };
   }
 
   // Test larger expansion degrees
@@ -306,7 +306,7 @@ function* generateSchedules(): Generator<{
           EXPANSION_DEGREES: maxExp,
         },
       ],
-    }
+    };
   }
 
   // Combined parameter tests
@@ -336,7 +336,7 @@ function* generateSchedules(): Generator<{
               GREEDY_MULTIPLIER: gm,
             },
           ],
-        }
+        };
       }
     }
   }
@@ -362,7 +362,7 @@ function* generateSchedules(): Generator<{
           EXPANSION_DEGREES: 10,
         },
       ],
-    }
+    };
   }
 
   // Test all zeros/minimal penalties
@@ -388,7 +388,7 @@ function* generateSchedules(): Generator<{
         GREEDY_MULTIPLIER: 1,
       },
     ],
-  }
+  };
 
   // High exploration (many seeds, varied expansion)
   yield {
@@ -425,7 +425,7 @@ function* generateSchedules(): Generator<{
         EXPANSION_DEGREES: 8,
       },
     ],
-  }
+  };
 
   // Aggressive greedy with high NODE_PF_FACTOR
   yield {
@@ -446,37 +446,37 @@ function* generateSchedules(): Generator<{
         NODE_PF_FACTOR: 100,
       },
     ],
-  }
+  };
 }
 
 // Main function
 async function main() {
-  console.log("Starting OPTIMIZATION_SCHEDULE search for bugreport23...")
-  console.log("=".repeat(80))
+  console.log("Starting OPTIMIZATION_SCHEDULE search for bugreport23...");
+  console.log("=".repeat(80));
 
   const results: {
-    name: string
-    schedule: ScheduleEntry[]
-    currentBoardScore: number
-    initialBoardScore: number
-    improvement: number
-    successfulOptimizations: number
-  }[] = []
+    name: string;
+    schedule: ScheduleEntry[];
+    currentBoardScore: number;
+    initialBoardScore: number;
+    improvement: number;
+    successfulOptimizations: number;
+  }[] = [];
 
-  let count = 0
+  let count = 0;
   for (const { name, schedule } of generateSchedules()) {
-    count++
-    process.stdout.write(`[${count}] Testing ${name}... `)
+    count++;
+    process.stdout.write(`[${count}] Testing ${name}... `);
 
     try {
-      const result = await runTest(schedule)
-      const improvement = result.currentBoardScore - result.initialBoardScore
+      const result = await runTest(schedule);
+      const improvement = result.currentBoardScore - result.initialBoardScore;
 
       console.log(
         `score: ${result.currentBoardScore.toFixed(4)}, ` +
           `improvement: ${improvement.toFixed(4)}, ` +
           `success: ${result.successfulOptimizations}`,
-      )
+      );
 
       results.push({
         name,
@@ -485,38 +485,38 @@ async function main() {
         initialBoardScore: result.initialBoardScore,
         improvement,
         successfulOptimizations: result.successfulOptimizations,
-      })
+      });
     } catch (e: any) {
-      console.log(`ERROR: ${e.message?.slice(0, 100)}`)
+      console.log(`ERROR: ${e.message?.slice(0, 100)}`);
     }
   }
 
-  console.log("\n" + "=".repeat(80))
-  console.log(`Completed ${count} tests`)
-  console.log("=".repeat(80))
+  console.log("\n" + "=".repeat(80));
+  console.log(`Completed ${count} tests`);
+  console.log("=".repeat(80));
 
   // Sort by currentBoardScore (higher is better)
-  results.sort((a, b) => b.currentBoardScore - a.currentBoardScore)
+  results.sort((a, b) => b.currentBoardScore - a.currentBoardScore);
 
-  console.log("\nTop 20 results (by currentBoardScore - higher is better):")
-  console.log("-".repeat(80))
+  console.log("\nTop 20 results (by currentBoardScore - higher is better):");
+  console.log("-".repeat(80));
   for (let i = 0; i < Math.min(20, results.length); i++) {
-    const r = results[i]
+    const r = results[i];
     console.log(
       `${i + 1}. ${r.name}: score=${r.currentBoardScore.toFixed(4)}, ` +
         `improvement=${r.improvement.toFixed(4)}, success=${r.successfulOptimizations}`,
-    )
+    );
   }
 
-  console.log("\n" + "=".repeat(80))
-  console.log("BEST SCHEDULE CONFIGURATION:")
-  console.log("-".repeat(80))
-  const best = results[0]
-  console.log(`Name: ${best.name}`)
-  console.log(`Score: ${best.currentBoardScore}`)
-  console.log(`Improvement: ${best.improvement}`)
-  console.log(`Schedule:`)
-  console.log(JSON.stringify(best.schedule, null, 2))
+  console.log("\n" + "=".repeat(80));
+  console.log("BEST SCHEDULE CONFIGURATION:");
+  console.log("-".repeat(80));
+  const best = results[0];
+  console.log(`Name: ${best.name}`);
+  console.log(`Score: ${best.currentBoardScore}`);
+  console.log(`Improvement: ${best.improvement}`);
+  console.log(`Schedule:`);
+  console.log(JSON.stringify(best.schedule, null, 2));
 }
 
-main().catch(console.error)
+main().catch(console.error);

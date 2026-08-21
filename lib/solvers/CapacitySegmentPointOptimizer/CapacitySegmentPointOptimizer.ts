@@ -1,40 +1,40 @@
-import { CapacityMeshNode, CapacityMeshNodeId } from "lib/types"
-import { BaseSolver } from "../BaseSolver"
-import { NodePortSegment } from "lib/types/capacity-edges-to-port-segments-types"
-import { SegmentWithAssignedPoints } from "../CapacityMeshSolver/CapacitySegmentToPointSolver"
-import { GraphicsObject, Line, Rect } from "graphics-debug"
-import { getTunedTotalCapacity1 } from "lib/utils/getTunedTotalCapacity1"
-import { getIntraNodeCrossingsFromSegments } from "lib/utils/getIntraNodeCrossingsFromSegments"
-import { NodeWithPortPoints } from "lib/types/high-density-types"
+import { CapacityMeshNode, CapacityMeshNodeId } from "lib/types";
+import { BaseSolver } from "../BaseSolver";
+import { NodePortSegment } from "lib/types/capacity-edges-to-port-segments-types";
+import { SegmentWithAssignedPoints } from "../CapacityMeshSolver/CapacitySegmentToPointSolver";
+import { GraphicsObject, Line, Rect } from "graphics-debug";
+import { getTunedTotalCapacity1 } from "lib/utils/getTunedTotalCapacity1";
+import { getIntraNodeCrossingsFromSegments } from "lib/utils/getIntraNodeCrossingsFromSegments";
+import { NodeWithPortPoints } from "lib/types/high-density-types";
 
-type NodePortSegmentId = string
+type NodePortSegmentId = string;
 
 interface ChangeLayerOperation {
-  op: "changeLayer"
-  segmentId: string
-  pointIndex: number
-  newLayer: number
+  op: "changeLayer";
+  segmentId: string;
+  pointIndex: number;
+  newLayer: number;
 
   /** Operation is mutated and oldLayer is added to allow reversal */
-  oldLayer?: number
-  cost?: number
+  oldLayer?: number;
+  cost?: number;
 }
 
 interface SwitchOperation {
-  op: "switch"
-  segmentId: string
-  point1Index: number
-  point2Index: number
-  cost?: number
+  op: "switch";
+  segmentId: string;
+  point1Index: number;
+  point2Index: number;
+  cost?: number;
 }
 
 interface CombinedOperation {
-  op: "combined"
-  subOperations: Array<SwitchOperation | ChangeLayerOperation>
-  cost?: number
+  op: "combined";
+  subOperations: Array<SwitchOperation | ChangeLayerOperation>;
+  cost?: number;
 }
 
-type Operation = ChangeLayerOperation | SwitchOperation | CombinedOperation
+type Operation = ChangeLayerOperation | SwitchOperation | CombinedOperation;
 
 /**
  * Use simulated annealing to try to improve the placement of points (via
@@ -57,37 +57,37 @@ type Operation = ChangeLayerOperation | SwitchOperation | CombinedOperation
  */
 export class CapacitySegmentPointOptimizer extends BaseSolver {
   override getSolverName(): string {
-    return "CapacitySegmentPointOptimizer"
+    return "CapacitySegmentPointOptimizer";
   }
 
-  assignedSegments: SegmentWithAssignedPoints[]
-  colorMap: Record<string, string>
-  nodeMap: Map<CapacityMeshNodeId, CapacityMeshNode>
+  assignedSegments: SegmentWithAssignedPoints[];
+  colorMap: Record<string, string>;
+  nodeMap: Map<CapacityMeshNodeId, CapacityMeshNode>;
 
-  nodeIdToSegmentIds: Map<string, string[]>
-  segmentIdToNodeIds: Map<string, string[]>
-  currentMutatedSegments: Map<NodePortSegmentId, SegmentWithAssignedPoints>
-  allSegmentIds: string[]
-  lastAppliedOperation: Operation | null = null
-  lastCreatedOperation: Operation | null = null
+  nodeIdToSegmentIds: Map<string, string[]>;
+  segmentIdToNodeIds: Map<string, string[]>;
+  currentMutatedSegments: Map<NodePortSegmentId, SegmentWithAssignedPoints>;
+  allSegmentIds: string[];
+  lastAppliedOperation: Operation | null = null;
+  lastCreatedOperation: Operation | null = null;
 
-  currentNodeCosts: Map<CapacityMeshNodeId, number>
-  lastAcceptedIteration = 0
+  currentNodeCosts: Map<CapacityMeshNodeId, number>;
+  lastAcceptedIteration = 0;
 
-  currentCost: number
-  randomSeed: number
-  numNodes: number
+  currentCost: number;
+  randomSeed: number;
+  numNodes: number;
 
-  probabilityOfFailure: number
-  nodesThatCantFitVias: Set<CapacityMeshNodeId>
-  mutableSegments: Set<NodePortSegmentId>
+  probabilityOfFailure: number;
+  nodesThatCantFitVias: Set<CapacityMeshNodeId>;
+  mutableSegments: Set<NodePortSegmentId>;
 
-  VIA_DIAMETER = 0.6
-  OBSTACLE_MARGIN = 0.15
-  MAX_OPERATIONS_PER_MUTATION = 5
-  MAX_NODE_CHAIN_PER_MUTATION = 2
+  VIA_DIAMETER = 0.6;
+  OBSTACLE_MARGIN = 0.15;
+  MAX_OPERATIONS_PER_MUTATION = 5;
+  MAX_NODE_CHAIN_PER_MUTATION = 2;
 
-  NOOP_ITERATIONS_BEFORE_EARLY_STOP = 20_000
+  NOOP_ITERATIONS_BEFORE_EARLY_STOP = 20_000;
 
   // We use an extra property on segments to remember assigned points.
   // Each segment will get an added property "assignedPoints" which is an array of:
@@ -99,41 +99,41 @@ export class CapacitySegmentPointOptimizer extends BaseSolver {
     nodes,
     viaDiameter,
   }: {
-    assignedSegments: NodePortSegment[]
-    colorMap?: Record<string, string>
+    assignedSegments: NodePortSegment[];
+    colorMap?: Record<string, string>;
     /**
      * This isn't used by the algorithm, but allows associating metadata
      * for the result datatype (the center, width, height of the node)
      */
-    nodes: CapacityMeshNode[]
-    viaDiameter?: number
+    nodes: CapacityMeshNode[];
+    viaDiameter?: number;
   }) {
-    super()
-    this.MAX_ITERATIONS = 500_000
+    super();
+    this.MAX_ITERATIONS = 500_000;
 
-    this.assignedSegments = assignedSegments
-    this.VIA_DIAMETER = viaDiameter ?? this.VIA_DIAMETER
+    this.assignedSegments = assignedSegments;
+    this.VIA_DIAMETER = viaDiameter ?? this.VIA_DIAMETER;
 
-    const dedupedSegments: SegmentWithAssignedPoints[] = []
-    type SegKey = `${number}-${number}-${number}-${number}`
-    const dedupedSegPointMap: Map<SegKey, NodePortSegment> = new Map()
-    let highestSegmentId = -1
+    const dedupedSegments: SegmentWithAssignedPoints[] = [];
+    type SegKey = `${number}-${number}-${number}-${number}`;
+    const dedupedSegPointMap: Map<SegKey, NodePortSegment> = new Map();
+    let highestSegmentId = -1;
     for (const seg of this.assignedSegments) {
       // Check if there's another segment with the same start and end
-      const segKey: SegKey = `${seg.start.x}-${seg.start.y}-${seg.end.x}-${seg.end.y}`
-      const existingSeg = dedupedSegPointMap.get(segKey)
+      const segKey: SegKey = `${seg.start.x}-${seg.start.y}-${seg.end.x}-${seg.end.y}`;
+      const existingSeg = dedupedSegPointMap.get(segKey);
       if (!existingSeg) {
-        highestSegmentId++
-        seg.nodePortSegmentId = `SEG${highestSegmentId}`
-        dedupedSegPointMap.set(segKey, seg)
-        dedupedSegments.push(seg)
-        continue
+        highestSegmentId++;
+        seg.nodePortSegmentId = `SEG${highestSegmentId}`;
+        dedupedSegPointMap.set(segKey, seg);
+        dedupedSegments.push(seg);
+        continue;
       }
 
-      seg.nodePortSegmentId = existingSeg.nodePortSegmentId
+      seg.nodePortSegmentId = existingSeg.nodePortSegmentId;
     }
 
-    this.currentMutatedSegments = new Map()
+    this.currentMutatedSegments = new Map();
     // Deep clone of segments with assigned points so that we can mutate them
     for (const seg of dedupedSegments) {
       this.currentMutatedSegments.set(seg.nodePortSegmentId!, {
@@ -142,67 +142,67 @@ export class CapacitySegmentPointOptimizer extends BaseSolver {
           ...p,
           point: { x: p.point.x, y: p.point.y, z: p.point.z },
         })),
-      })
+      });
     }
 
-    this.nodeIdToSegmentIds = new Map()
-    this.segmentIdToNodeIds = new Map()
+    this.nodeIdToSegmentIds = new Map();
+    this.segmentIdToNodeIds = new Map();
 
     for (const segment of this.assignedSegments) {
       this.segmentIdToNodeIds.set(segment.nodePortSegmentId!, [
         ...(this.segmentIdToNodeIds.get(segment.nodePortSegmentId!) ?? []),
         segment.capacityMeshNodeId,
-      ])
+      ]);
       this.nodeIdToSegmentIds.set(segment.capacityMeshNodeId, [
         ...(this.nodeIdToSegmentIds.get(segment.capacityMeshNodeId) ?? []),
         segment.nodePortSegmentId!,
-      ])
+      ]);
     }
 
-    this.colorMap = colorMap ?? {}
-    this.nodeMap = new Map()
+    this.colorMap = colorMap ?? {};
+    this.nodeMap = new Map();
     for (const node of nodes) {
-      this.nodeMap.set(node.capacityMeshNodeId, node)
+      this.nodeMap.set(node.capacityMeshNodeId, node);
     }
 
-    this.numNodes = this.segmentIdToNodeIds.size
-    const { cost, nodeCosts, probabilityOfFailure } = this.computeCurrentCost()
-    this.currentCost = cost
-    this.currentNodeCosts = nodeCosts
-    this.probabilityOfFailure = probabilityOfFailure
+    this.numNodes = this.segmentIdToNodeIds.size;
+    const { cost, nodeCosts, probabilityOfFailure } = this.computeCurrentCost();
+    this.currentCost = cost;
+    this.currentNodeCosts = nodeCosts;
+    this.probabilityOfFailure = probabilityOfFailure;
 
-    this.randomSeed = 1
-    this.allSegmentIds = Array.from(this.currentMutatedSegments.keys())
+    this.randomSeed = 1;
+    this.allSegmentIds = Array.from(this.currentMutatedSegments.keys());
 
-    this.nodesThatCantFitVias = new Set()
+    this.nodesThatCantFitVias = new Set();
     for (const nodeId of this.nodeIdToSegmentIds.keys()) {
-      const node = this.nodeMap.get(nodeId)!
+      const node = this.nodeMap.get(nodeId)!;
       if (node.width < this.VIA_DIAMETER + this.OBSTACLE_MARGIN) {
-        this.nodesThatCantFitVias.add(nodeId)
+        this.nodesThatCantFitVias.add(nodeId);
       }
     }
-    this.mutableSegments = this.getMutableSegments()
+    this.mutableSegments = this.getMutableSegments();
   }
 
   random() {
-    this.randomSeed = (this.randomSeed * 16807) % 2147483647 // A simple linear congruential generator (LCG)
-    return (this.randomSeed - 1) / 2147483646
+    this.randomSeed = (this.randomSeed * 16807) % 2147483647; // A simple linear congruential generator (LCG)
+    return (this.randomSeed - 1) / 2147483646;
   }
 
   /**
    * The cost is the "probability of failure" of the node.
    */
   computeNodeCost(nodeId: CapacityMeshNodeId) {
-    const node = this.nodeMap.get(nodeId)
-    if (node?._containsTarget) return 0
+    const node = this.nodeMap.get(nodeId);
+    if (node?._containsTarget) return 0;
     const totalCapacity = getTunedTotalCapacity1(node!, 1, {
       viaDiameter: this.VIA_DIAMETER,
-    })
-    const usedViaCapacity = this.getUsedViaCapacity(nodeId)
-    const usedTraceCapacity = this.getUsedTraceCapacity(nodeId)
+    });
+    const usedViaCapacity = this.getUsedViaCapacity(nodeId);
+    const usedTraceCapacity = this.getUsedTraceCapacity(nodeId);
 
     const approxProb =
-      (usedViaCapacity * usedTraceCapacity) / totalCapacity ** 2
+      (usedViaCapacity * usedTraceCapacity) / totalCapacity ** 2;
 
     // 1 - e^(-K * approxProb)
     // x = 0, y = 0
@@ -210,9 +210,9 @@ export class CapacitySegmentPointOptimizer extends BaseSolver {
     // x = 2, y = 0.98
     // etc.
     // Just a way of bounding the probability betwene 0 and 1
-    const K = -2.3
+    const K = -2.3;
 
-    return 1 - Math.exp(approxProb * K)
+    return 1 - Math.exp(approxProb * K);
   }
 
   /**
@@ -220,15 +220,15 @@ export class CapacitySegmentPointOptimizer extends BaseSolver {
    * straight without crossings
    */
   getUsedTraceCapacity(nodeId: CapacityMeshNodeId) {
-    const segmentIds = this.nodeIdToSegmentIds.get(nodeId)!
-    const segments = segmentIds.map(
-      (segmentId) => this.currentMutatedSegments.get(segmentId)!,
-    )!
-    const points = segments.flatMap((s) => s.assignedPoints!)
-    const numTracesThroughNode = points.length / 2
-    const numLayers = 2
+    const segmentIds = this.nodeIdToSegmentIds.get(nodeId)!;
+    const segments = segmentIds.map((segmentId) =>
+      this.currentMutatedSegments.get(segmentId)!,
+    )!;
+    const points = segments.flatMap((s) => s.assignedPoints!);
+    const numTracesThroughNode = points.length / 2;
+    const numLayers = 2;
 
-    return numTracesThroughNode / numLayers
+    return numTracesThroughNode / numLayers;
   }
 
   /**
@@ -250,10 +250,10 @@ export class CapacitySegmentPointOptimizer extends BaseSolver {
    *   be created using the formula (viaFitAcross / 2) ** 1.1
    */
   getUsedViaCapacity(nodeId: CapacityMeshNodeId) {
-    const segmentIds = this.nodeIdToSegmentIds.get(nodeId)!
-    const segments = segmentIds.map(
-      (segmentId) => this.currentMutatedSegments.get(segmentId)!,
-    )!
+    const segmentIds = this.nodeIdToSegmentIds.get(nodeId)!;
+    const segments = segmentIds.map((segmentId) =>
+      this.currentMutatedSegments.get(segmentId)!,
+    )!;
 
     // const points = segments.flatMap((s) => s.assignedPoints!)
 
@@ -268,89 +268,89 @@ export class CapacitySegmentPointOptimizer extends BaseSolver {
       numEntryExitLayerChanges,
       numSameLayerCrossings,
       numTransitionCrossings,
-    } = getIntraNodeCrossingsFromSegments(segments)
+    } = getIntraNodeCrossingsFromSegments(segments);
 
     const estNumVias =
       numSameLayerCrossings * 0.82 +
       numEntryExitLayerChanges * 0.41 +
-      numTransitionCrossings * 0.2
+      numTransitionCrossings * 0.2;
 
-    const estUsedCapacity = (estNumVias / 2) ** 1.1
+    const estUsedCapacity = (estNumVias / 2) ** 1.1;
 
-    return estUsedCapacity
+    return estUsedCapacity;
   }
 
   getRandomWeightedNodeId(): CapacityMeshNodeId {
     // return "cn7009"
     const nodeIdsWithCosts = [...this.currentNodeCosts.entries()]
       .filter(([nodeId, cost]) => cost > 0.00001)
-      .filter(([nodeId]) => !this.nodeMap.get(nodeId)?._containsTarget)
+      .filter(([nodeId]) => !this.nodeMap.get(nodeId)?._containsTarget);
 
     if (nodeIdsWithCosts.length === 0) {
       console.error(
         "No nodes with cost > 0.00001 (why are you even running this solver)",
-      )
-      return this.currentNodeCosts.keys().next().value!
+      );
+      return this.currentNodeCosts.keys().next().value!;
     }
 
-    const totalCost = nodeIdsWithCosts.reduce((acc, [, cost]) => acc + cost, 0)
-    const randomValue = this.random() * totalCost
-    let cumulativeCost = 0
+    const totalCost = nodeIdsWithCosts.reduce((acc, [, cost]) => acc + cost, 0);
+    const randomValue = this.random() * totalCost;
+    let cumulativeCost = 0;
     for (let i = 0; i < nodeIdsWithCosts.length; i++) {
-      const [nodeId, cost] = nodeIdsWithCosts[i]
-      cumulativeCost += cost
+      const [nodeId, cost] = nodeIdsWithCosts[i];
+      cumulativeCost += cost;
       if (cumulativeCost >= randomValue) {
-        return nodeId
+        return nodeId;
       }
     }
-    throw new Error("RANDOM SELECTION FAILURE FOR NODES (this is a bug)")
+    throw new Error("RANDOM SELECTION FAILURE FOR NODES (this is a bug)");
   }
 
   getRandomWeightedSegmentId(): string {
-    const nodeId = this.getRandomWeightedNodeId()
+    const nodeId = this.getRandomWeightedNodeId();
     const segmentsIds = this.nodeIdToSegmentIds
       .get(nodeId)!
-      .filter((s) => this.isSegmentMutable(s))
-    return segmentsIds[Math.floor(this.random() * segmentsIds.length)]
+      .filter((s) => this.isSegmentMutable(s));
+    return segmentsIds[Math.floor(this.random() * segmentsIds.length)];
   }
 
   getMutableSegments() {
-    const mutableSegments = new Set<NodePortSegmentId>()
+    const mutableSegments = new Set<NodePortSegmentId>();
     for (const segmentId of this.currentMutatedSegments.keys()) {
-      const segment = this.currentMutatedSegments.get(segmentId)!
-      const nodes = this.segmentIdToNodeIds.get(segmentId)!
+      const segment = this.currentMutatedSegments.get(segmentId)!;
+      const nodes = this.segmentIdToNodeIds.get(segmentId)!;
       const isMutable = nodes.every(
         (nodeId) => !this.nodeMap.get(nodeId)?._containsTarget,
-      )
+      );
       if (isMutable) {
-        mutableSegments.add(segmentId)
+        mutableSegments.add(segmentId);
       }
     }
-    return mutableSegments
+    return mutableSegments;
   }
   isSegmentMutable(segmentId: string) {
-    return this.mutableSegments.has(segmentId)
+    return this.mutableSegments.has(segmentId);
   }
 
   getRandomOperationForSegment(
     randomSegmentId: string,
   ): SwitchOperation | ChangeLayerOperation | null {
-    const segment = this.currentMutatedSegments.get(randomSegmentId)!
+    const segment = this.currentMutatedSegments.get(randomSegmentId)!;
 
-    let operationType = this.random() < 0.5 ? "switch" : "changeLayer"
+    let operationType = this.random() < 0.5 ? "switch" : "changeLayer";
     if (segment.assignedPoints!.length <= 1) {
-      operationType = "changeLayer"
+      operationType = "changeLayer";
     }
 
     if (operationType === "switch") {
       const randomPointIndex1 = Math.floor(
         this.random() * segment.assignedPoints!.length,
-      )
-      let randomPointIndex2 = randomPointIndex1
+      );
+      let randomPointIndex2 = randomPointIndex1;
       while (randomPointIndex1 === randomPointIndex2) {
         randomPointIndex2 = Math.floor(
           this.random() * segment.assignedPoints!.length,
-        )
+        );
       }
 
       return {
@@ -358,37 +358,37 @@ export class CapacitySegmentPointOptimizer extends BaseSolver {
         segmentId: randomSegmentId,
         point1Index: randomPointIndex1,
         point2Index: randomPointIndex2,
-      } as SwitchOperation
+      } as SwitchOperation;
     }
 
     const randomPointIndex = Math.floor(
       this.random() * segment.assignedPoints!.length,
-    )
+    );
 
-    const point = segment.assignedPoints![randomPointIndex]
+    const point = segment.assignedPoints![randomPointIndex];
 
     return {
       op: "changeLayer",
       segmentId: randomSegmentId,
       pointIndex: randomPointIndex,
       newLayer: point.point.z === 0 ? 1 : 0,
-    } as ChangeLayerOperation
+    } as ChangeLayerOperation;
   }
 
   getNodesNearNode(nodeId: CapacityMeshNodeId, hops = 1): CapacityMeshNodeId[] {
-    if (hops === 0) return [nodeId]
-    const segments = this.nodeIdToSegmentIds.get(nodeId)!
-    const nodes = new Set<CapacityMeshNodeId>()
+    if (hops === 0) return [nodeId];
+    const segments = this.nodeIdToSegmentIds.get(nodeId)!;
+    const nodes = new Set<CapacityMeshNodeId>();
     for (const segmentId of segments) {
-      const adjacentNodeIds = this.segmentIdToNodeIds.get(segmentId)!
+      const adjacentNodeIds = this.segmentIdToNodeIds.get(segmentId)!;
       for (const adjacentNodeId of adjacentNodeIds) {
-        const ancestors = this.getNodesNearNode(adjacentNodeId, hops - 1)
+        const ancestors = this.getNodesNearNode(adjacentNodeId, hops - 1);
         for (const ancestor of ancestors) {
-          nodes.add(ancestor)
+          nodes.add(ancestor);
         }
       }
     }
-    return Array.from(nodes)
+    return Array.from(nodes);
   }
 
   getRandomCombinedOperationNearNode(
@@ -397,26 +397,26 @@ export class CapacitySegmentPointOptimizer extends BaseSolver {
     const adjacentNodeIds = this.getNodesNearNode(
       nodeId,
       this.MAX_NODE_CHAIN_PER_MUTATION,
-    )
-    const subOperations: Array<SwitchOperation | ChangeLayerOperation> = []
+    );
+    const subOperations: Array<SwitchOperation | ChangeLayerOperation> = [];
     const adjacentSegments = adjacentNodeIds
       .flatMap((nodeId) => this.nodeIdToSegmentIds.get(nodeId)!)
-      .filter((s) => this.isSegmentMutable(s))
+      .filter((s) => this.isSegmentMutable(s));
     const numOperations =
-      Math.floor(this.random() * this.MAX_OPERATIONS_PER_MUTATION) + 1
+      Math.floor(this.random() * this.MAX_OPERATIONS_PER_MUTATION) + 1;
     for (let i = 0; i < numOperations; i++) {
       const randomSegmentId =
-        adjacentSegments[Math.floor(this.random() * adjacentSegments.length)]
-      const newOp = this.getRandomOperationForSegment(randomSegmentId)
+        adjacentSegments[Math.floor(this.random() * adjacentSegments.length)];
+      const newOp = this.getRandomOperationForSegment(randomSegmentId);
       if (newOp) {
-        subOperations.push(newOp)
+        subOperations.push(newOp);
       }
     }
 
     return {
       op: "combined",
       subOperations,
-    } as CombinedOperation
+    } as CombinedOperation;
   }
 
   /**
@@ -425,34 +425,35 @@ export class CapacitySegmentPointOptimizer extends BaseSolver {
    * operations
    */
   getRandomCombinedOperationOnSingleNode(max = 7): CombinedOperation {
-    const numSubOperations = max === 1 ? 1 : Math.floor(this.random() * max) + 1
-    const subOperations: Array<SwitchOperation | ChangeLayerOperation> = []
-    const nodeId = this.getRandomWeightedNodeId()
+    const numSubOperations =
+      max === 1 ? 1 : Math.floor(this.random() * max) + 1;
+    const subOperations: Array<SwitchOperation | ChangeLayerOperation> = [];
+    const nodeId = this.getRandomWeightedNodeId();
     const segmentsIds = this.nodeIdToSegmentIds
       .get(nodeId)!
-      .filter((s) => this.isSegmentMutable(s))
+      .filter((s) => this.isSegmentMutable(s));
     for (let i = 0; i < numSubOperations; i++) {
       const randomSegmentId =
-        segmentsIds[Math.floor(this.random() * segmentsIds.length)]
-      const newOp = this.getRandomOperationForSegment(randomSegmentId)
+        segmentsIds[Math.floor(this.random() * segmentsIds.length)];
+      const newOp = this.getRandomOperationForSegment(randomSegmentId);
       if (newOp) {
-        subOperations.push(newOp)
+        subOperations.push(newOp);
       }
     }
     return {
       op: "combined",
       subOperations,
-    } as CombinedOperation
+    } as CombinedOperation;
   }
 
   getRandomOperation(): Operation {
-    const randomSegmentId = this.getRandomWeightedSegmentId()
+    const randomSegmentId = this.getRandomWeightedSegmentId();
 
-    const newOp = this.getRandomOperationForSegment(randomSegmentId)
+    const newOp = this.getRandomOperationForSegment(randomSegmentId);
     if (newOp) {
-      return newOp
+      return newOp;
     }
-    return this.getRandomOperation()
+    return this.getRandomOperation();
   }
 
   /**
@@ -460,111 +461,111 @@ export class CapacitySegmentPointOptimizer extends BaseSolver {
    * linearize it to make it easier to work with
    */
   computeCurrentCost(): {
-    cost: number
-    nodeCosts: Map<CapacityMeshNodeId, number>
-    probabilityOfFailure: number
-    linearizedCost: number
+    cost: number;
+    nodeCosts: Map<CapacityMeshNodeId, number>;
+    probabilityOfFailure: number;
+    linearizedCost: number;
   } {
-    let logProbabilityOfSuccess = 0 // Start with log(1) = 0
-    let costSum = 0
-    const nodeCosts: Map<CapacityMeshNodeId, number> = new Map()
+    let logProbabilityOfSuccess = 0; // Start with log(1) = 0
+    let costSum = 0;
+    const nodeCosts: Map<CapacityMeshNodeId, number> = new Map();
 
     for (const nodeId of this.nodeIdToSegmentIds.keys()) {
-      const nodeProbOfFailure = this.computeNodeCost(nodeId)
-      nodeCosts.set(nodeId, nodeProbOfFailure)
-      costSum += nodeProbOfFailure
+      const nodeProbOfFailure = this.computeNodeCost(nodeId);
+      nodeCosts.set(nodeId, nodeProbOfFailure);
+      costSum += nodeProbOfFailure;
 
       // Instead of multiplication, use addition of logarithms
       // log(a*b) = log(a) + log(b)
       // log(1 - p) is always negative for 0 < p < 1
       if (nodeProbOfFailure < 1) {
         // Protect against log(0)
-        logProbabilityOfSuccess += Math.log(1 - nodeProbOfFailure)
+        logProbabilityOfSuccess += Math.log(1 - nodeProbOfFailure);
       } else {
         // If any node has 100% failure probability, the entire system fails
-        logProbabilityOfSuccess = -Infinity
+        logProbabilityOfSuccess = -Infinity;
       }
     }
 
     // Convert back from logarithm to probability
     // e^(log(p)) = p
-    const probabilityOfSuccess = Math.exp(logProbabilityOfSuccess)
-    const probabilityOfFailure = 1 - probabilityOfSuccess
+    const probabilityOfSuccess = Math.exp(logProbabilityOfSuccess);
+    const probabilityOfFailure = 1 - probabilityOfSuccess;
 
     // Compute a linearized cost metric
     // This avoids the floating point issues by working with the log values directly
-    const numNodes = this.nodeIdToSegmentIds.size
+    const numNodes = this.nodeIdToSegmentIds.size;
 
     // Calculate linearized cost based on the log probability
     // This is effectively -log(probability of success) / numNodes
     // which gives an average "failure contribution" per node
     const linearizedCost =
-      numNodes > 0 ? -logProbabilityOfSuccess / numNodes : 0
+      numNodes > 0 ? -logProbabilityOfSuccess / numNodes : 0;
 
     return {
       cost: linearizedCost, // Replace cost with linearized version
       nodeCosts,
       probabilityOfFailure,
       linearizedCost, // Also return as separate value if you need original cost sum
-    }
+    };
   }
 
   applyOperation(op: Operation) {
     if (op.op === "combined") {
       for (const subOp of op.subOperations) {
-        this.applyOperation(subOp)
+        this.applyOperation(subOp);
       }
-      return
+      return;
     }
 
-    const segment = this.currentMutatedSegments.get(op.segmentId)!
-    if (!segment || !segment.assignedPoints) return
+    const segment = this.currentMutatedSegments.get(op.segmentId)!;
+    if (!segment || !segment.assignedPoints) return;
     if (op.op === "changeLayer") {
       // Save original layer in the operation object to allow reversal
-      op.oldLayer = segment.assignedPoints[op.pointIndex].point.z
-      segment.assignedPoints[op.pointIndex].point.z = op.newLayer
+      op.oldLayer = segment.assignedPoints[op.pointIndex].point.z;
+      segment.assignedPoints[op.pointIndex].point.z = op.newLayer;
     } else if (op.op === "switch") {
-      const point1 = segment.assignedPoints[op.point1Index].point
-      const point2 = segment.assignedPoints[op.point2Index].point
-      const tempX = point1.x
-      const tempY = point1.y
-      const tempZ = point1.z
-      point1.x = point2.x
-      point1.y = point2.y
-      point1.z = point2.z
-      point2.x = tempX
-      point2.y = tempY
-      point2.z = tempZ
+      const point1 = segment.assignedPoints[op.point1Index].point;
+      const point2 = segment.assignedPoints[op.point2Index].point;
+      const tempX = point1.x;
+      const tempY = point1.y;
+      const tempZ = point1.z;
+      point1.x = point2.x;
+      point1.y = point2.y;
+      point1.z = point2.z;
+      point2.x = tempX;
+      point2.y = tempY;
+      point2.z = tempZ;
     }
   }
 
   reverseOperation(op: Operation) {
     if (op.op === "combined") {
       for (const subOp of [...op.subOperations].reverse()) {
-        this.reverseOperation(subOp)
+        this.reverseOperation(subOp);
       }
-      return
+      return;
     }
 
-    const segment = this.currentMutatedSegments.get(op.segmentId)
-    if (!segment || !segment.assignedPoints) return
+    const segment = this.currentMutatedSegments.get(op.segmentId);
+    if (!segment || !segment.assignedPoints) return;
     if (op.op === "changeLayer") {
-      const oldLayer = op.oldLayer
-      if (oldLayer === undefined) return
-      segment.assignedPoints[op.pointIndex].point.z = oldLayer
+      const oldLayer = op.oldLayer;
+      if (oldLayer === undefined) return;
+      segment.assignedPoints[op.pointIndex].point.z = oldLayer;
     } else if (op.op === "switch") {
       // Reversing a switch is simply swapping the points back
-      const point1 = segment.assignedPoints[op.point1Index].point
-      const point2 = segment.assignedPoints[op.point2Index].point
-      const tempX = point1.x
-      const tempY = point1.y
-      const tempZ = point1.z
-      point1.x = point2.x
-      point1.y = point2.y
-      point1.z = point2.z
-      point2.x = tempX
-      point2.y = tempY
-      point2.z = tempZ
+      const point1 = segment.assignedPoints[op.point1Index].point;
+      const point2 = segment.assignedPoints[op.point2Index].point;
+      const tempX = point1.x;
+      const tempY = point1.y;
+      const tempZ = point1.z;
+      point1.x = point2.x;
+      point1.y = point2.y;
+      point1.z = point2.z;
+      point2.x = tempX;
+      point2.y = tempY;
+      point2.z = tempZ;
     }
   }
 
@@ -578,8 +579,8 @@ export class CapacitySegmentPointOptimizer extends BaseSolver {
     // const temperature = INITIAL_TEMPERATURE * COOLING_RATE ** this.iterations
 
     // If new cost is better, accept it
-    if (newPf < oldPf) return true
-    return false
+    if (newPf < oldPf) return true;
+    return false;
 
     // const probDelta = newPf - oldPf
     // TODO we could use the probability delta to determine if this is a big
@@ -595,12 +596,12 @@ export class CapacitySegmentPointOptimizer extends BaseSolver {
     if (!this.solved) {
       throw new Error(
         "CapacitySegmentToPointSolver not solved, can't give port points yet",
-      )
+      );
     }
-    const map = new Map<string, NodeWithPortPoints>()
+    const map = new Map<string, NodeWithPortPoints>();
     for (const segId of this.allSegmentIds) {
       for (const nodeId of this.segmentIdToNodeIds.get(segId)!) {
-        const node = this.nodeMap.get(nodeId)!
+        const node = this.nodeMap.get(nodeId)!;
         if (!map.has(nodeId)) {
           map.set(nodeId, {
             capacityMeshNodeId: nodeId,
@@ -608,7 +609,7 @@ export class CapacitySegmentPointOptimizer extends BaseSolver {
             center: node.center,
             width: node.width,
             height: node.height,
-          })
+          });
         }
         map.get(nodeId)!.portPoints.push(
           ...this.currentMutatedSegments
@@ -617,53 +618,53 @@ export class CapacitySegmentPointOptimizer extends BaseSolver {
               ...ap.point,
               connectionName: ap.connectionName,
             })),
-        )
+        );
       }
     }
-    return Array.from(map.values())
+    return Array.from(map.values());
   }
 
   _step() {
     if (this.iterations === this.MAX_ITERATIONS - 1) {
-      this.solved = true
-      return
+      this.solved = true;
+      return;
     }
     if (this.currentCost < 0.001) {
-      this.solved = true
-      return
+      this.solved = true;
+      return;
     }
-    const op = this.getRandomCombinedOperationOnSingleNode()
+    const op = this.getRandomCombinedOperationOnSingleNode();
     // const op = this.getRandomCombinedOperationNearNode(
     //   this.getRandomWeightedNodeId(),
     // )
-    this.lastCreatedOperation = op
-    this.applyOperation(op)
+    this.lastCreatedOperation = op;
+    this.applyOperation(op);
     const {
       cost: newCost,
       nodeCosts: newNodeCosts,
       probabilityOfFailure: newProbabilityOfFailure,
-    } = this.computeCurrentCost()
-    op.cost = newCost
+    } = this.computeCurrentCost();
+    op.cost = newCost;
 
     // TODO determine if we should keep the new state
-    const keepChange = this.isNewCostAcceptable(this.currentCost, newCost)
+    const keepChange = this.isNewCostAcceptable(this.currentCost, newCost);
 
     if (!keepChange) {
-      this.reverseOperation(op)
+      this.reverseOperation(op);
       if (
         this.iterations - this.lastAcceptedIteration >
         this.NOOP_ITERATIONS_BEFORE_EARLY_STOP
       ) {
-        this.solved = true
+        this.solved = true;
       }
-      return
+      return;
     }
 
-    this.lastAcceptedIteration = this.iterations
-    this.currentCost = newCost
-    this.currentNodeCosts = newNodeCosts
-    this.lastAppliedOperation = op
-    this.probabilityOfFailure = newProbabilityOfFailure
+    this.lastAcceptedIteration = this.iterations;
+    this.currentCost = newCost;
+    this.currentNodeCosts = newNodeCosts;
+    this.lastAppliedOperation = op;
+    this.probabilityOfFailure = newProbabilityOfFailure;
   }
 
   visualize(): GraphicsObject {
@@ -671,7 +672,7 @@ export class CapacitySegmentPointOptimizer extends BaseSolver {
       [...this.currentMutatedSegments.values()].filter(
         (seg) => !this.isSegmentMutable(seg.nodePortSegmentId!),
       ),
-    )
+    );
     const graphics: GraphicsObject &
       Pick<Required<GraphicsObject>, "points" | "lines" | "rects" | "circles"> =
       {
@@ -691,19 +692,19 @@ export class CapacitySegmentPointOptimizer extends BaseSolver {
             .map((node) => {
               const segmentIds = this.nodeIdToSegmentIds.get(
                 node.capacityMeshNodeId,
-              )
-              if (!segmentIds) return null
+              );
+              if (!segmentIds) return null;
 
-              const segments = segmentIds.map(
-                (segmentId) => this.currentMutatedSegments.get(segmentId)!,
-              )!
-              let label: string
+              const segments = segmentIds.map((segmentId) =>
+                this.currentMutatedSegments.get(segmentId)!,
+              )!;
+              let label: string;
               if (node._containsTarget) {
-                label = `${node.capacityMeshNodeId}\n${node.width.toFixed(2)}x${node.height.toFixed(2)}`
+                label = `${node.capacityMeshNodeId}\n${node.width.toFixed(2)}x${node.height.toFixed(2)}`;
               } else {
                 const intraNodeCrossings =
-                  getIntraNodeCrossingsFromSegments(segments)
-                label = `${node.capacityMeshNodeId}\n${this.computeNodeCost(node.capacityMeshNodeId).toFixed(2)}/${getTunedTotalCapacity1(node, 1, { viaDiameter: this.VIA_DIAMETER }).toFixed(2)}\nTrace Capacity: ${this.getUsedTraceCapacity(node.capacityMeshNodeId).toFixed(2)}\nX'ings: ${intraNodeCrossings.numSameLayerCrossings}\nEnt/Ex LC: ${intraNodeCrossings.numEntryExitLayerChanges}\nT X'ings: ${intraNodeCrossings.numTransitionCrossings}\n${node.width.toFixed(2)}x${node.height.toFixed(2)}`
+                  getIntraNodeCrossingsFromSegments(segments);
+                label = `${node.capacityMeshNodeId}\n${this.computeNodeCost(node.capacityMeshNodeId).toFixed(2)}/${getTunedTotalCapacity1(node, 1, { viaDiameter: this.VIA_DIAMETER }).toFixed(2)}\nTrace Capacity: ${this.getUsedTraceCapacity(node.capacityMeshNodeId).toFixed(2)}\nX'ings: ${intraNodeCrossings.numSameLayerCrossings}\nEnt/Ex LC: ${intraNodeCrossings.numEntryExitLayerChanges}\nT X'ings: ${intraNodeCrossings.numTransitionCrossings}\n${node.width.toFixed(2)}x${node.height.toFixed(2)}`;
               }
 
               return {
@@ -712,71 +713,71 @@ export class CapacitySegmentPointOptimizer extends BaseSolver {
                 color: "red",
                 width: node.width / 8,
                 height: node.height / 8,
-              } as Rect
+              } as Rect;
             })
             .filter((r) => r !== null),
         ],
         circles: [],
         coordinateSystem: "cartesian",
         title: "Capacity Segment Point Optimizer",
-      }
+      };
 
     // Add a dashed line connecting the assignment points with the same
     // connection name within the same node
-    const dashedLines: Line[] = []
+    const dashedLines: Line[] = [];
     const nodeConnections: Record<
       CapacityMeshNodeId,
       Record<string, { x: number; y: number; z: number }[]>
-    > = {}
+    > = {};
     for (const seg of this.currentMutatedSegments.values()) {
-      const nodeIds = this.segmentIdToNodeIds.get(seg.nodePortSegmentId!)!
+      const nodeIds = this.segmentIdToNodeIds.get(seg.nodePortSegmentId!)!;
       for (const nodeId of nodeIds) {
         if (!nodeConnections[nodeId]) {
-          nodeConnections[nodeId] = {}
+          nodeConnections[nodeId] = {};
         }
         for (const ap of seg.assignedPoints!) {
           if (!nodeConnections[nodeId][ap.connectionName]) {
-            nodeConnections[nodeId][ap.connectionName] = []
+            nodeConnections[nodeId][ap.connectionName] = [];
           }
-          nodeConnections[nodeId][ap.connectionName].push(ap.point)
+          nodeConnections[nodeId][ap.connectionName].push(ap.point);
         }
       }
     }
     for (const nodeId in nodeConnections) {
       for (const conn in nodeConnections[nodeId]) {
-        const points = nodeConnections[nodeId][conn]
-        if (points.length <= 1) continue
+        const points = nodeConnections[nodeId][conn];
+        if (points.length <= 1) continue;
 
-        const sameLayer = points[0].z === points[1].z
-        const commonLayer = points[0].z
+        const sameLayer = points[0].z === points[1].z;
+        const commonLayer = points[0].z;
 
         const type = sameLayer
           ? commonLayer === 0
             ? "top"
             : "bottom"
-          : "transition"
+          : "transition";
 
         dashedLines.push({
           points,
           strokeDash:
             type === "top" ? undefined : type === "bottom" ? "10 5" : "3 3 10",
           strokeColor: this.colorMap[conn] || "#000",
-        } as Line)
+        } as Line);
       }
     }
-    graphics.lines.push(...(dashedLines as any))
+    graphics.lines.push(...(dashedLines as any));
 
     // Add visualization for the last applied operation
-    const operationsToShow: (SwitchOperation | ChangeLayerOperation)[] = []
+    const operationsToShow: (SwitchOperation | ChangeLayerOperation)[] = [];
     if (this.lastCreatedOperation?.op === "combined") {
-      operationsToShow.push(...this.lastCreatedOperation.subOperations)
+      operationsToShow.push(...this.lastCreatedOperation.subOperations);
     } else if (this.lastCreatedOperation) {
-      operationsToShow.push(this.lastCreatedOperation)
+      operationsToShow.push(this.lastCreatedOperation);
     }
 
     for (const op of operationsToShow) {
-      const segment = this.currentMutatedSegments.get(op.segmentId)!
-      const node = this.nodeMap.get(segment.capacityMeshNodeId)!
+      const segment = this.currentMutatedSegments.get(op.segmentId)!;
+      const node = this.nodeMap.get(segment.capacityMeshNodeId)!;
       // Create a circle around the node
       graphics.circles.push({
         center: { x: node.center.x, y: node.center.y },
@@ -784,22 +785,22 @@ export class CapacitySegmentPointOptimizer extends BaseSolver {
         stroke: "#0000ff",
         fill: "rgba(0, 0, 255, 0.2)",
         label: `LAST OPERATION: ${op.op}\nCost: ${op.cost?.toString()}\n${node.capacityMeshNodeId}\n${this.currentNodeCosts.get(node.capacityMeshNodeId)}/${getTunedTotalCapacity1(node, 1, { viaDiameter: this.VIA_DIAMETER })}\n${node.width.toFixed(2)}x${node.height.toFixed(2)}`,
-      })
+      });
 
       // For both operation types, we'll highlight the affected points
       if (op.op === "changeLayer") {
-        const point = segment.assignedPoints![op.pointIndex]
+        const point = segment.assignedPoints![op.pointIndex];
         graphics.circles.push({
           center: { x: point.point.x, y: point.point.y },
           radius: this.nodeMap.get(segment.capacityMeshNodeId)!.width / 8,
           stroke: "#ff0000",
           fill: "rgba(255, 0, 0, 0.2)",
           label: `Layer Changed\noldLayer: ${op.oldLayer}\nnewLayer: ${op.newLayer}`,
-        })
+        });
       } else if (op.op === "switch") {
         // For switch operations, highlight both points that were swapped
-        const point1 = segment.assignedPoints![op.point1Index]
-        const point2 = segment.assignedPoints![op.point2Index]
+        const point1 = segment.assignedPoints![op.point1Index];
+        const point2 = segment.assignedPoints![op.point2Index];
 
         // Add circles around both swapped points
         graphics.circles.push(
@@ -817,7 +818,7 @@ export class CapacitySegmentPointOptimizer extends BaseSolver {
             fill: "rgba(0, 255, 0, 0.2)",
             label: `Swapped 2\n${segment.nodePortSegmentId!}`,
           },
-        )
+        );
 
         // Add a connecting line between the swapped points
         graphics.lines.push({
@@ -828,10 +829,10 @@ export class CapacitySegmentPointOptimizer extends BaseSolver {
           strokeColor: "#00ff00",
           strokeDash: "3 3",
           strokeWidth: node.width / 32,
-        })
+        });
       }
     }
 
-    return graphics
+    return graphics;
   }
 }

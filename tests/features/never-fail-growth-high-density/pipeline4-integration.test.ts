@@ -1,5 +1,5 @@
-import { expect, test } from "bun:test"
-import { AutoroutingPipelineSolver4 } from "lib/autorouter-pipelines/AutoroutingPipeline4_TinyHypergraph/AutoroutingPipelineSolver4_TinyHypergraph"
+import { expect, test } from "bun:test";
+import { AutoroutingPipelineSolver4 } from "lib/autorouter-pipelines/AutoroutingPipeline4_TinyHypergraph/AutoroutingPipelineSolver4_TinyHypergraph";
 
 test("Pipeline4 high-density stage opts into GrowShrinkHighDensityIntraNodeSolver", () => {
   const solver = new AutoroutingPipelineSolver4({
@@ -9,12 +9,12 @@ test("Pipeline4 high-density stage opts into GrowShrinkHighDensityIntraNodeSolve
     bounds: { minX: 0, minY: 0, maxX: 2, maxY: 2 },
     obstacles: [],
     connections: [],
-  } as any)
+  } as any);
 
   const highDensityStep = solver.pipelineDef.find(
     (step) => step.solverName === "highDensityRouteSolver",
-  )
-  expect(highDensityStep).toBeDefined()
+  );
+  expect(highDensityStep).toBeDefined();
   const [highDensityParams] = highDensityStep!.getConstructorParams({
     ...solver,
     uniformPortDistributionSolver: { getOutput: () => [] } as any,
@@ -24,9 +24,9 @@ test("Pipeline4 high-density stage opts into GrowShrinkHighDensityIntraNodeSolve
         inputNodeWithPortPoints: [],
       }),
     } as any,
-  } as any)
+  } as any);
 
   expect(
     (highDensityParams as any).useGrowShrinkHighDensityIntraNodeSolver,
-  ).toBe(true)
-})
+  ).toBe(true);
+});

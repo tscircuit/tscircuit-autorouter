@@ -1,6 +1,6 @@
-import { expect, test } from "bun:test"
-import { AttachProjectedRectsSolver } from "lib/autorouter-pipelines/AutoroutingPipeline6_PolyHypergraph/AttachProjectedRectsSolver"
-import { PolySingleIntraNodeSolver } from "lib/autorouter-pipelines/AutoroutingPipeline6_PolyHypergraph/PolySingleIntraNodeSolver"
+import { expect, test } from "bun:test";
+import { AttachProjectedRectsSolver } from "lib/autorouter-pipelines/AutoroutingPipeline6_PolyHypergraph/AttachProjectedRectsSolver";
+import { PolySingleIntraNodeSolver } from "lib/autorouter-pipelines/AutoroutingPipeline6_PolyHypergraph/PolySingleIntraNodeSolver";
 
 test("pipeline6 free-6 extracted node uses conservative sliver projection", () => {
   const polygon = [
@@ -12,7 +12,7 @@ test("pipeline6 free-6 extracted node uses conservative sliver projection", () =
     { x: -2.7249969999999997, y: 1.999998 },
     { x: -2.725001, y: 2.624999 },
     { x: -3.2700010000000024, y: 9.08764216995614 },
-  ]
+  ];
 
   const attachProjectedRectsSolver = new AttachProjectedRectsSolver({
     equivalentAreaExpansionFactor: 2,
@@ -144,27 +144,27 @@ test("pipeline6 free-6 extracted node uses conservative sliver projection", () =
         ],
       },
     ],
-  })
-  attachProjectedRectsSolver.solve()
+  });
+  attachProjectedRectsSolver.solve();
 
-  const nodeWithPortPoints = attachProjectedRectsSolver.outputNodes[0]!
+  const nodeWithPortPoints = attachProjectedRectsSolver.outputNodes[0]!;
   const solver = new PolySingleIntraNodeSolver({
     nodeWithPortPoints,
     traceWidth: 0.15,
     viaDiameter: 0.6,
     obstacleMargin: 0.15,
     effort: 1,
-  })
+  });
 
-  solver.solve()
+  solver.solve();
 
-  expect(solver.solved).toBe(true)
-  expect(solver.failed).toBe(false)
-  expect(solver.solvedRoutes.length).toBeGreaterThan(0)
+  expect(solver.solved).toBe(true);
+  expect(solver.failed).toBe(false);
+  expect(solver.solvedRoutes.length).toBeGreaterThan(0);
   expect(
     attachProjectedRectsSolver.projectionAdjustmentByNodeId.get("free-6"),
-  ).toBe("corridor-expansion-factor-1")
+  ).toBe("corridor-expansion-factor-1");
   expect(nodeWithPortPoints.projectedRect?.equivalentAreaExpansionFactor).toBe(
     1,
-  )
-})
+  );
+});

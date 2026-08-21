@@ -1,7 +1,7 @@
-import { expect, test } from "bun:test"
-import { NetToPointPairsSolver } from "lib/solvers/NetToPointPairsSolver/NetToPointPairsSolver"
-import type { SimpleRouteJson } from "lib/types"
-import { getInitiallyConnectedMapFromSimpleRouteJson } from "lib/utils/get-initially-connected-map-from-simple-route-json"
+import { expect, test } from "bun:test";
+import { NetToPointPairsSolver } from "lib/solvers/NetToPointPairsSolver/NetToPointPairsSolver";
+import type { SimpleRouteJson } from "lib/types";
+import { getInitiallyConnectedMapFromSimpleRouteJson } from "lib/utils/get-initially-connected-map-from-simple-route-json";
 
 test("the point-pair MST adapts canonical initially connected groups", () => {
   const srj = {
@@ -35,14 +35,14 @@ test("the point-pair MST adapts canonical initially connected groups", () => {
         route: [],
       },
     ],
-  } satisfies SimpleRouteJson
+  } satisfies SimpleRouteJson;
 
   const solver = new NetToPointPairsSolver(
     structuredClone(srj),
     {},
     getInitiallyConnectedMapFromSimpleRouteJson(srj),
-  )
-  solver.solve()
+  );
+  solver.solve();
 
-  expect(solver.newConnections).toHaveLength(0)
-})
+  expect(solver.newConnections).toHaveLength(0);
+});

@@ -1,8 +1,6 @@
-import { test, expect } from "bun:test"
-import { JumperPrepatternSolver } from "lib/solvers/JumperPrepatternSolver"
-import input from "../../../fixtures/jumper-prepattern/prepattern01-input.json" with {
-  type: "json",
-}
+import { test, expect } from "bun:test";
+import { JumperPrepatternSolver } from "lib/solvers/JumperPrepatternSolver";
+import input from "../../../fixtures/jumper-prepattern/prepattern01-input.json" with { type: "json" };
 
 test("prepattern01-staggered - solves prepattern routes", () => {
   const solver = new JumperPrepatternSolver({
@@ -12,10 +10,10 @@ test("prepattern01-staggered - solves prepattern routes", () => {
       PATTERN_TYPE: "staggered_grid",
     },
     traceWidth: input.traceWidth,
-  })
+  });
 
-  solver.solve()
+  solver.solve();
 
-  expect(solver.solved).toBe(true)
-  expect(solver.visualize()).toMatchGraphicsSvg(import.meta.path)
-})
+  expect(solver.solved).toBe(true);
+  expect(solver.visualize()).toMatchGraphicsSvg(import.meta.path);
+});

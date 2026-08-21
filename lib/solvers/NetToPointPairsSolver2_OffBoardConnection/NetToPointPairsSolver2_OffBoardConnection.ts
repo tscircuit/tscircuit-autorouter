@@ -2,12 +2,12 @@ import {
   SimpleRouteConnection,
   SimpleRouteJson,
   ConnectionPoint,
-} from "lib/types"
-import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
-import { DSU } from "lib/utils/dsu"
-import { NetToPointPairsSolver } from "../NetToPointPairsSolver/NetToPointPairsSolver"
-import { buildMinimumSpanningTree } from "../NetToPointPairsSolver/buildMinimumSpanningTree"
-import { getInitiallyConnectedStateForConnection } from "../NetToPointPairsSolver/get-initially-connected-state-for-connection"
+} from "lib/types";
+import type { ConnectivityMap } from "circuit-json-to-connectivity-map";
+import { DSU } from "lib/utils/dsu";
+import { NetToPointPairsSolver } from "../NetToPointPairsSolver/NetToPointPairsSolver";
+import { buildMinimumSpanningTree } from "../NetToPointPairsSolver/buildMinimumSpanningTree";
+import { getInitiallyConnectedStateForConnection } from "../NetToPointPairsSolver/get-initially-connected-state-for-connection";
 
 /**
  * Extends the base NetToPointPairsSolver with an optimization that utilizes
@@ -27,11 +27,11 @@ import { getInitiallyConnectedStateForConnection } from "../NetToPointPairsSolve
  */
 export class NetToPointPairsSolver2_OffBoardConnection extends NetToPointPairsSolver {
   override getSolverName(): string {
-    return "NetToPointPairsSolver2_OffBoardConnection"
+    return "NetToPointPairsSolver2_OffBoardConnection";
   }
 
-  connectionPointDsu: DSU
-  connectionPointMap: Map<string, ConnectionPoint>
+  connectionPointDsu: DSU;
+  connectionPointMap: Map<string, ConnectionPoint>;
 
   constructor(
     public ogSrj: SimpleRouteJson,
@@ -40,20 +40,20 @@ export class NetToPointPairsSolver2_OffBoardConnection extends NetToPointPairsSo
   ) {
     const allConnectionPoints = ogSrj.connections.flatMap(
       (connection) => connection.pointsToConnect,
-    )
-    const connectionPointMap = new Map<string, ConnectionPoint>()
+    );
+    const connectionPointMap = new Map<string, ConnectionPoint>();
     for (const connectionPoint of allConnectionPoints) {
       if (connectionPoint.pointId) {
-        connectionPointMap.set(connectionPoint.pointId, connectionPoint)
+        connectionPointMap.set(connectionPoint.pointId, connectionPoint);
       }
     }
 
     const allConnectionPointIds = allConnectionPoints
       .map((connectionPoint) => connectionPoint.pointId)
-      .filter((id): id is string => !!id)
-    const connectionPointDsu = new DSU(allConnectionPointIds)
+      .filter((id): id is string => !!id);
+    const connectionPointDsu = new DSU(allConnectionPointIds);
 
-    const onBoardConnections: SimpleRouteConnection[] = []
+    const onBoardConnections: SimpleRouteConnection[] = [];
     for (const currentConnection of ogSrj.connections) {
       if (currentConnection.isOffBoard) {
         if (
@@ -64,10 +64,10 @@ export class NetToPointPairsSolver2_OffBoardConnection extends NetToPointPairsSo
           connectionPointDsu.union(
             currentConnection.pointsToConnect[0].pointId,
             currentConnection.pointsToConnect[1].pointId,
-          )
+          );
         }
       } else {
-        onBoardConnections.push(currentConnection)
+        onBoardConnections.push(currentConnection);
       }
     }
 
@@ -76,98 +76,98 @@ export class NetToPointPairsSolver2_OffBoardConnection extends NetToPointPairsSo
       { ...ogSrj, connections: onBoardConnections },
       colorMap,
       initiallyConnectedMap,
-    )
+    );
 
-    this.connectionPointDsu = connectionPointDsu
-    this.connectionPointMap = connectionPointMap
-    this.ogSrj = ogSrj // Ensure the original SRJ is stored for the final output
+    this.connectionPointDsu = connectionPointDsu;
+    this.connectionPointMap = connectionPointMap;
+    this.ogSrj = ogSrj; // Ensure the original SRJ is stored for the final output
   }
 
   _findBestConnectionPointsFromDisjointSets(
     sourcePoint: ConnectionPoint,
     targetPoint: ConnectionPoint,
   ): {
-    pointsToConnect: [ConnectionPoint, ConnectionPoint]
+    pointsToConnect: [ConnectionPoint, ConnectionPoint];
   } {
     if (!sourcePoint.pointId || !targetPoint.pointId)
-      return { pointsToConnect: [sourcePoint, targetPoint] }
+      return { pointsToConnect: [sourcePoint, targetPoint] };
 
     const sourcePointEquivalenceGroup = this.connectionPointDsu
       .getGroup(sourcePoint.pointId)
-      .map((id) => this.connectionPointMap.get(id)!)
+      .map((id) => this.connectionPointMap.get(id)!);
     const targetPointEquivalenceGroup = this.connectionPointDsu
       .getGroup(targetPoint.pointId)
-      .map((id) => this.connectionPointMap.get(id)!)
+      .map((id) => this.connectionPointMap.get(id)!);
 
-    let bestSourcePoint = sourcePoint
-    let bestTargetPoint = targetPoint
-    let minimumDistance = Infinity
+    let bestSourcePoint = sourcePoint;
+    let bestTargetPoint = targetPoint;
+    let minimumDistance = Infinity;
 
     for (const currentSourceCandidate of sourcePointEquivalenceGroup) {
       for (const currentTargetCandidate of targetPointEquivalenceGroup) {
         const distance = Math.sqrt(
           Math.pow(currentSourceCandidate.x - currentTargetCandidate.x, 2) +
             Math.pow(currentSourceCandidate.y - currentTargetCandidate.y, 2),
-        )
+        );
         if (distance < minimumDistance) {
-          minimumDistance = distance
-          bestSourcePoint = currentSourceCandidate
-          bestTargetPoint = currentTargetCandidate
+          minimumDistance = distance;
+          bestSourcePoint = currentSourceCandidate;
+          bestTargetPoint = currentTargetCandidate;
         }
       }
     }
-    return { pointsToConnect: [bestSourcePoint, bestTargetPoint] }
+    return { pointsToConnect: [bestSourcePoint, bestTargetPoint] };
   }
 
   _step() {
     if (this.unprocessedConnections.length === 0) {
-      this.solved = true
-      return
+      this.solved = true;
+      return;
     }
-    const currentConnection = this.unprocessedConnections.pop()!
+    const currentConnection = this.unprocessedConnections.pop()!;
 
     // This logic is copied from the parent class
     const { zeroWeightEdges, arePointsConnected } =
       getInitiallyConnectedStateForConnection(
         currentConnection,
         this.initiallyConnectedMap,
-      )
+      );
 
     if (currentConnection.pointsToConnect.length === 2) {
-      const [startPoint, endPoint] = currentConnection.pointsToConnect
+      const [startPoint, endPoint] = currentConnection.pointsToConnect;
       if (startPoint && endPoint && arePointsConnected(startPoint, endPoint)) {
-        return
+        return;
       }
       const optimizedConnection =
         this._findBestConnectionPointsFromDisjointSets(
           currentConnection.pointsToConnect[0],
           currentConnection.pointsToConnect[1],
-        )
+        );
       this.newConnections.push({
         ...currentConnection,
         pointsToConnect: optimizedConnection.pointsToConnect,
         __rootConnectionNames: currentConnection.__rootConnectionNames ?? [
           currentConnection.name,
         ],
-      })
-      return
+      });
+      return;
     }
 
     const minimumSpanningTreeEdges = buildMinimumSpanningTree(
       currentConnection.pointsToConnect,
       { extraEdges: zeroWeightEdges },
-    )
+    );
 
-    let mstEdgeIndex = 0
+    let mstEdgeIndex = 0;
     for (const mstEdge of minimumSpanningTreeEdges) {
       if (arePointsConnected(mstEdge.from, mstEdge.to)) {
-        continue
+        continue;
       }
 
       const optimizedMstEdge = this._findBestConnectionPointsFromDisjointSets(
         mstEdge.from,
         mstEdge.to,
-      )
+      );
 
       this.newConnections.push({
         pointsToConnect: optimizedMstEdge.pointsToConnect,
@@ -176,7 +176,7 @@ export class NetToPointPairsSolver2_OffBoardConnection extends NetToPointPairsSo
           currentConnection.name,
         ],
         __netConnectionName: currentConnection.__netConnectionName,
-      })
+      });
     }
   }
 }

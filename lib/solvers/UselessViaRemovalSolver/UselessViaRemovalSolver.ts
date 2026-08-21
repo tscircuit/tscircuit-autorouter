@@ -1,86 +1,87 @@
-import { ObstacleSpatialHashIndex } from "lib/data-structures/ObstacleTree"
-import { SegmentTree } from "lib/data-structures/SegmentTree"
-import { BaseSolver } from "../BaseSolver"
-import { HighDensityRoute } from "lib/types/high-density-types"
-import { Obstacle } from "lib/types"
-import { GraphicsObject } from "graphics-debug"
-import { mapZToLayerName } from "lib/utils/mapZToLayerName"
-import { HighDensityRouteSpatialIndex } from "lib/data-structures/HighDensityRouteSpatialIndex"
-import { SingleRouteUselessViaRemovalSolver } from "./SingleRouteUselessViaRemovalSolver"
-import { getJumpersGraphics } from "lib/utils/getJumperGraphics"
-import { createObjectsWithZLayers } from "lib/utils/createObjectsWithZLayers"
-import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
+import { ObstacleSpatialHashIndex } from "lib/data-structures/ObstacleTree";
+import { SegmentTree } from "lib/data-structures/SegmentTree";
+import { BaseSolver } from "../BaseSolver";
+import { HighDensityRoute } from "lib/types/high-density-types";
+import { Obstacle } from "lib/types";
+import { GraphicsObject } from "graphics-debug";
+import { mapZToLayerName } from "lib/utils/mapZToLayerName";
+import { HighDensityRouteSpatialIndex } from "lib/data-structures/HighDensityRouteSpatialIndex";
+import { SingleRouteUselessViaRemovalSolver } from "./SingleRouteUselessViaRemovalSolver";
+import { getJumpersGraphics } from "lib/utils/getJumperGraphics";
+import { createObjectsWithZLayers } from "lib/utils/createObjectsWithZLayers";
+import type { ConnectivityMap } from "circuit-json-to-connectivity-map";
 
 export interface UselessViaRemovalSolverInput {
-  unsimplifiedHdRoutes: HighDensityRoute[]
+  unsimplifiedHdRoutes: HighDensityRoute[];
   /** Routed copper that participates in collision checks but is never changed. */
-  otherHdRoutes?: ReadonlyArray<HighDensityRoute>
-  obstacles: Obstacle[]
-  colorMap: Record<string, string>
-  layerCount: number
-  connMap: ConnectivityMap
-  outline?: Array<{ x: number; y: number }>
-  geometryShortcutTraceMargin?: number
-  geometryShortcutObstacleMargin?: number
-  enableGeometryShortcuts?: boolean
-  enableObstacleDetourShortcuts?: boolean
+  otherHdRoutes?: ReadonlyArray<HighDensityRoute>;
+  obstacles: Obstacle[];
+  colorMap: Record<string, string>;
+  layerCount: number;
+  connMap: ConnectivityMap;
+  outline?: Array<{ x: number; y: number }>;
+  geometryShortcutTraceMargin?: number;
+  geometryShortcutObstacleMargin?: number;
+  enableGeometryShortcuts?: boolean;
+  enableObstacleDetourShortcuts?: boolean;
 }
 
 export class UselessViaRemovalSolver extends BaseSolver {
   override getSolverName(): string {
-    return "UselessViaRemovalSolver"
+    return "UselessViaRemovalSolver";
   }
 
-  unsimplifiedHdRoutes: HighDensityRoute[]
-  optimizedHdRoutes: HighDensityRoute[]
-  unprocessedRoutes: HighDensityRoute[]
+  unsimplifiedHdRoutes: HighDensityRoute[];
+  optimizedHdRoutes: HighDensityRoute[];
+  unprocessedRoutes: HighDensityRoute[];
 
-  activeSubSolver?: SingleRouteUselessViaRemovalSolver | null | undefined = null
+  activeSubSolver?: SingleRouteUselessViaRemovalSolver | null | undefined =
+    null;
 
-  obstacleSHI: ObstacleSpatialHashIndex | null = null
-  hdRouteSHI: HighDensityRouteSpatialIndex | null = null
+  obstacleSHI: ObstacleSpatialHashIndex | null = null;
+  hdRouteSHI: HighDensityRouteSpatialIndex | null = null;
 
   constructor(private input: UselessViaRemovalSolverInput) {
-    super()
+    super();
     this.input = {
       ...input,
       obstacles: createObjectsWithZLayers(input.obstacles, input.layerCount),
-    }
-    this.MAX_ITERATIONS = 1e6
-    this.unsimplifiedHdRoutes = input.unsimplifiedHdRoutes
-    this.optimizedHdRoutes = []
-    this.unprocessedRoutes = [...input.unsimplifiedHdRoutes]
+    };
+    this.MAX_ITERATIONS = 1e6;
+    this.unsimplifiedHdRoutes = input.unsimplifiedHdRoutes;
+    this.optimizedHdRoutes = [];
+    this.unprocessedRoutes = [...input.unsimplifiedHdRoutes];
 
     this.obstacleSHI = new ObstacleSpatialHashIndex(
       "flatbush",
       this.input.obstacles,
-    )
+    );
     this.hdRouteSHI = new HighDensityRouteSpatialIndex([
       ...this.unsimplifiedHdRoutes,
       ...(input.otherHdRoutes ?? []),
-    ])
+    ]);
   }
 
   _step() {
     if (this.activeSubSolver) {
-      this.activeSubSolver.step()
+      this.activeSubSolver.step();
       if (this.activeSubSolver.solved) {
-        const optimizedRoute = this.activeSubSolver.getOptimizedHdRoute()
-        this.hdRouteSHI!.removeRoute(optimizedRoute.connectionName)
-        this.hdRouteSHI!.addRoute(optimizedRoute)
-        this.optimizedHdRoutes.push(optimizedRoute)
-        this.activeSubSolver = null
+        const optimizedRoute = this.activeSubSolver.getOptimizedHdRoute();
+        this.hdRouteSHI!.removeRoute(optimizedRoute.connectionName);
+        this.hdRouteSHI!.addRoute(optimizedRoute);
+        this.optimizedHdRoutes.push(optimizedRoute);
+        this.activeSubSolver = null;
       } else if (this.activeSubSolver.failed || this.activeSubSolver.error) {
-        this.error = this.activeSubSolver.error
-        this.failed = true
+        this.error = this.activeSubSolver.error;
+        this.failed = true;
       }
-      return
+      return;
     }
 
-    const unprocessedRoute = this.unprocessedRoutes.shift()
+    const unprocessedRoute = this.unprocessedRoutes.shift();
     if (!unprocessedRoute) {
-      this.solved = true
-      return
+      this.solved = true;
+      return;
     }
 
     this.activeSubSolver = new SingleRouteUselessViaRemovalSolver({
@@ -93,11 +94,11 @@ export class UselessViaRemovalSolver extends BaseSolver {
       geometryShortcutObstacleMargin: this.input.geometryShortcutObstacleMargin,
       enableGeometryShortcuts: this.input.enableGeometryShortcuts,
       enableObstacleDetourShortcuts: this.input.enableObstacleDetourShortcuts,
-    })
+    });
   }
 
   getOptimizedHdRoutes(): HighDensityRoute[] | null {
-    return this.optimizedHdRoutes
+    return this.optimizedHdRoutes;
   }
 
   visualize(): GraphicsObject {
@@ -110,21 +111,21 @@ export class UselessViaRemovalSolver extends BaseSolver {
         circles: [],
         coordinateSystem: "cartesian",
         title: "Useless Via Removal Solver",
-      }
+      };
 
     // Visualize obstacles
     for (const obstacle of this.input.obstacles) {
-      let fillColor = "rgba(128, 128, 128, 0.2)" // Default faded gray
-      const strokeColor = "rgba(128, 128, 128, 0.5)"
-      const isOnLayer0 = obstacle.__zLayers?.includes(0)
-      const isOnLayer1 = obstacle.__zLayers?.includes(1)
+      let fillColor = "rgba(128, 128, 128, 0.2)"; // Default faded gray
+      const strokeColor = "rgba(128, 128, 128, 0.5)";
+      const isOnLayer0 = obstacle.__zLayers?.includes(0);
+      const isOnLayer1 = obstacle.__zLayers?.includes(1);
 
       if (isOnLayer0 && isOnLayer1) {
-        fillColor = "rgba(128, 0, 128, 0.2)" // Faded purple for both layers
+        fillColor = "rgba(128, 0, 128, 0.2)"; // Faded purple for both layers
       } else if (isOnLayer0) {
-        fillColor = "rgba(255, 0, 0, 0.2)" // Faded red for layer 0
+        fillColor = "rgba(255, 0, 0, 0.2)"; // Faded red for layer 0
       } else if (isOnLayer1) {
-        fillColor = "rgba(0, 0, 255, 0.2)" // Faded blue for layer 1
+        fillColor = "rgba(0, 0, 255, 0.2)"; // Faded blue for layer 1
       }
 
       visualization.rects.push({
@@ -133,20 +134,20 @@ export class UselessViaRemovalSolver extends BaseSolver {
         height: obstacle.height,
         fill: fillColor,
         label: `Obstacle (Z: ${obstacle.__zLayers?.join(", ")})`,
-      })
+      });
     }
 
     // Display each optimized route
     for (const route of this.optimizedHdRoutes) {
       // Skip routes with no points
-      if (route.route.length === 0) continue
+      if (route.route.length === 0) continue;
 
-      const color = this.input.colorMap[route.connectionName] || "#888888"
+      const color = this.input.colorMap[route.connectionName] || "#888888";
 
       // Add lines connecting route points on the same layer
       for (let i = 0; i < route.route.length - 1; i++) {
-        const current = route.route[i]
-        const next = route.route[i + 1]
+        const current = route.route[i];
+        const next = route.route[i + 1];
 
         // Only draw segments that are on the same layer
         if (current.z === next.z) {
@@ -158,7 +159,7 @@ export class UselessViaRemovalSolver extends BaseSolver {
             strokeColor: current.z === 0 ? "red" : "blue",
             strokeWidth: route.traceThickness,
             label: `${route.connectionName} (z=${current.z})`,
-          })
+          });
         }
       }
 
@@ -169,7 +170,7 @@ export class UselessViaRemovalSolver extends BaseSolver {
           radius: route.viaDiameter / 2,
           fill: "rgba(255, 0, 255, 0.5)",
           label: `${route.connectionName} via`,
-        })
+        });
       }
 
       // Draw jumpers
@@ -177,18 +178,18 @@ export class UselessViaRemovalSolver extends BaseSolver {
         const jumperGraphics = getJumpersGraphics(route.jumpers, {
           color,
           label: route.connectionName,
-        })
-        visualization.rects.push(...(jumperGraphics.rects ?? []))
-        visualization.lines.push(...(jumperGraphics.lines ?? []))
+        });
+        visualization.rects.push(...(jumperGraphics.rects ?? []));
+        visualization.lines.push(...(jumperGraphics.lines ?? []));
       }
     }
 
     if (this.activeSubSolver) {
       visualization.lines.push(
         ...(this.activeSubSolver.visualize().lines ?? []),
-      )
+      );
     }
 
-    return visualization
+    return visualization;
   }
 }

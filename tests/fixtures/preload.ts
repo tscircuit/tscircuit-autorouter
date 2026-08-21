@@ -1,2 +1,2 @@
-import "./svg-matcher"
-import "graphics-debug/matcher"
+import "./svg-matcher";
+import "graphics-debug/matcher";

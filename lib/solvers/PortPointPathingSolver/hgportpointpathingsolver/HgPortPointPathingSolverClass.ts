@@ -1,21 +1,21 @@
-import { HyperGraphSolver, RegionPortAssignment } from "@tscircuit/hypergraph"
+import { HyperGraphSolver, RegionPortAssignment } from "@tscircuit/hypergraph";
 import {
   distance,
   doSegmentsIntersect,
   pointToSegmentDistance,
-} from "@tscircuit/math-utils"
-import { NodeWithPortPoints, PortPoint } from "@tscircuit/high-density-a01"
-import { cloneAndShuffleArray } from "lib/utils/cloneAndShuffleArray"
-import { getIntraNodeCrossingsUsingCircle } from "lib/utils/getIntraNodeCrossingsUsingCircle"
-import { calculateNodeProbabilityOfFailure } from "lib/solvers/UnravelSolver/calculateCrossingProbabilityOfFailure"
-import type { CapacityMeshNodeId } from "lib/types"
+} from "@tscircuit/math-utils";
+import { NodeWithPortPoints, PortPoint } from "@tscircuit/high-density-a01";
+import { cloneAndShuffleArray } from "lib/utils/cloneAndShuffleArray";
+import { getIntraNodeCrossingsUsingCircle } from "lib/utils/getIntraNodeCrossingsUsingCircle";
+import { calculateNodeProbabilityOfFailure } from "lib/solvers/UnravelSolver/calculateCrossingProbabilityOfFailure";
+import type { CapacityMeshNodeId } from "lib/types";
 import type {
   InputNodeWithPortPoints,
   InputPortPoint,
-} from "lib/solvers/PortPointPathingSolver/PortPointPathingSolver"
-import type { GraphicsObject } from "graphics-debug"
-import { assertDefined } from "./assertDefined"
-import { mergeGraphicsArray } from "./mergeGraphicsArray"
+} from "lib/solvers/PortPointPathingSolver/PortPointPathingSolver";
+import type { GraphicsObject } from "graphics-debug";
+import { assertDefined } from "./assertDefined";
+import { mergeGraphicsArray } from "./mergeGraphicsArray";
 import type {
   HgPortPointPathingSolverParams,
   RegionId,
@@ -26,21 +26,21 @@ import type {
   RegionHg,
   RegionPortHg,
   SolvedRoutesHg,
-} from "./types"
-import { visualizeCandidate } from "./visualize/visualizeCandidate"
-import { visualizeSolvedRoute } from "./visualize/visualizeSolvedRoute"
-import { visualizeHgConnections } from "./visualize/visualizeHgConnections"
-import { visualizeHgHyperGraph } from "./visualize/visualizeHgHyperGraph"
+} from "./types";
+import { visualizeCandidate } from "./visualize/visualizeCandidate";
+import { visualizeSolvedRoute } from "./visualize/visualizeSolvedRoute";
+import { visualizeHgConnections } from "./visualize/visualizeHgConnections";
+import { visualizeHgHyperGraph } from "./visualize/visualizeHgHyperGraph";
 
 /** Solves port-point routing over an HG hypergraph using heuristics and optional ripping. */
 export class HgPortPointPathingSolver extends HyperGraphSolver<
   RegionHg,
   RegionPortHg
 > {
-  private regionMemoryPfMap: RegionMemoryPfMap
-  private baseRegionFailureCostMap: Map<RegionId, number>
-  private regionRipCountMap: RegionRipCountMap
-  private totalRipCount: number
+  private regionMemoryPfMap: RegionMemoryPfMap;
+  private baseRegionFailureCostMap: Map<RegionId, number>;
+  private regionRipCountMap: RegionRipCountMap;
+  private totalRipCount: number;
   constructor(private params: HgPortPointPathingSolverParams) {
     super({
       inputConnections: params.connections,
@@ -49,55 +49,55 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
       greedyMultiplier: params.weights.GREEDY_MULTIPLIER,
       ripCost: params.weights.RIPPING_PF_COST,
       rippingEnabled: params.flags.RIPPING_ENABLED,
-    })
-    this.regionMemoryPfMap = params.opts?.regionMemoryPfMap ?? new Map()
-    this.baseRegionFailureCostMap = new Map()
-    this.regionRipCountMap = new Map()
-    this.totalRipCount = 0
+    });
+    this.regionMemoryPfMap = params.opts?.regionMemoryPfMap ?? new Map();
+    this.baseRegionFailureCostMap = new Map();
+    this.regionRipCountMap = new Map();
+    this.totalRipCount = 0;
     if (params.weights.MAX_ITERATIONS_PER_PATH > 0) {
       this.MAX_ITERATIONS =
-        params.weights.MAX_ITERATIONS_PER_PATH * params.effort
+        params.weights.MAX_ITERATIONS_PER_PATH * params.effort;
     }
   }
 
   override estimateCostToEnd(port: RegionPortHg): number {
-    const endRegion = this.currentEndRegion
-    assertDefined(endRegion, "Current end region is undefined")
-    return distance(port.d, endRegion.d.center)
+    const endRegion = this.currentEndRegion;
+    assertDefined(endRegion, "Current end region is undefined");
+    return distance(port.d, endRegion.d.center);
   }
 
   override computeH(candidate: CandidateHg): number {
-    const hgCandidate = candidate as CandidateHg
-    const distanceTraveled = this.computeDistanceTraveled(hgCandidate)
+    const hgCandidate = candidate as CandidateHg;
+    const distanceTraveled = this.computeDistanceTraveled(hgCandidate);
     if (
       this.params.weights.RANDOM_WALK_DISTANCE > 0 &&
       distanceTraveled < this.params.weights.RANDOM_WALK_DISTANCE
     ) {
-      return 0
+      return 0;
     }
 
-    const distanceToEnd = this.estimateCostToEnd(candidate.port)
+    const distanceToEnd = this.estimateCostToEnd(candidate.port);
     const centeredOffset =
       candidate.port.d.distToCentermostPortOnZ -
-      this.params.weights.CENTER_OFFSET_FOCUS_SHIFT
+      this.params.weights.CENTER_OFFSET_FOCUS_SHIFT;
     const centerOffsetPenalty =
-      centeredOffset * this.params.weights.CENTER_OFFSET_DIST_PENALTY_FACTOR
+      centeredOffset * this.params.weights.CENTER_OFFSET_DIST_PENALTY_FACTOR;
     const regionIdForMemoryPf =
-      candidate.nextRegion?.regionId ?? candidate.lastRegion?.regionId
+      candidate.nextRegion?.regionId ?? candidate.lastRegion?.regionId;
     const memoryPf = regionIdForMemoryPf
       ? (this.regionMemoryPfMap.get(regionIdForMemoryPf) ?? 0)
-      : 0
-    const memoryPfPenalty = this.computeMemoryPfPenalty(memoryPf)
+      : 0;
+    const memoryPfPenalty = this.computeMemoryPfPenalty(memoryPf);
     const straightLineDeviationPenalty =
       this.computeDeviation(candidate) *
-      this.params.weights.STRAIGHT_LINE_DEVIATION_PENALTY_FACTOR
+      this.params.weights.STRAIGHT_LINE_DEVIATION_PENALTY_FACTOR;
 
     return (
       distanceToEnd +
       centerOffsetPenalty +
       memoryPfPenalty +
       straightLineDeviationPenalty
-    )
+    );
   }
 
   override computeIncreasedRegionCostIfPortsAreUsed(
@@ -105,57 +105,57 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
     port1: RegionPortHg,
     port2: RegionPortHg,
   ): number {
-    const currentConnection = this.currentConnection
-    assertDefined(currentConnection, "Current connection is undefined")
+    const currentConnection = this.currentConnection;
+    assertDefined(currentConnection, "Current connection is undefined");
 
-    const baseCost = this.getBaseRegionFailureCost(region)
+    const baseCost = this.getBaseRegionFailureCost(region);
     const pfAfter = this.computeRegionPfWithAdditionalSegment(
       region,
       port1,
       port2,
       currentConnection.connectionId,
       currentConnection.mutuallyConnectedNetworkId,
-    )
+    );
     if (pfAfter >= this.NODE_MAX_PF) {
-      return this.params.weights.NODE_PF_MAX_PENALTY
+      return this.params.weights.NODE_PF_MAX_PENALTY;
     }
-    const afterCost = this.pfToFailureCost(pfAfter)
-    const delta = Math.max(0, afterCost - baseCost)
+    const afterCost = this.pfToFailureCost(pfAfter);
+    const delta = Math.max(0, afterCost - baseCost);
     return Math.min(
       this.params.weights.NODE_PF_MAX_PENALTY,
       delta * this.params.weights.NODE_PF_FACTOR,
-    )
+    );
   }
 
   override computeG(candidate: CandidateHg): number {
-    const hgCandidate = candidate
-    let baseCost = super.computeG(candidate)
+    const hgCandidate = candidate;
+    let baseCost = super.computeG(candidate);
     if (
       hgCandidate.lastPort &&
       hgCandidate.lastPort.d.z !== hgCandidate.port.d.z
     ) {
-      baseCost += this.params.weights.LAYER_CHANGE_COST
+      baseCost += this.params.weights.LAYER_CHANGE_COST;
     }
     if (hgCandidate.nextRegion !== this.currentEndRegion) {
-      return baseCost
+      return baseCost;
     }
-    return baseCost + this.computeEndRegionCloseCost(hgCandidate)
+    return baseCost + this.computeEndRegionCloseCost(hgCandidate);
   }
 
   override getPortUsagePenalty(port: RegionPortHg): number {
-    const assignment = port.assignment
-    if (!assignment) return 0
+    const assignment = port.assignment;
+    if (!assignment) return 0;
 
-    const currentNetId = this.currentConnection?.mutuallyConnectedNetworkId
+    const currentNetId = this.currentConnection?.mutuallyConnectedNetworkId;
     if (assignment.connection.mutuallyConnectedNetworkId === currentNetId) {
-      return 0
+      return 0;
     }
 
     // Discourage reusing a port that is already occupied by a different net.
     return (
       Math.max(1, this.params.weights.NODE_PF_FACTOR) * 0.5 +
       this.params.weights.BASE_CANDIDATE_COST
-    )
+    );
   }
 
   override getRipsRequiredForPortUsage(
@@ -163,8 +163,8 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
     port1: RegionPortHg,
     port2: RegionPortHg,
   ): RegionPortAssignment[] {
-    const assignment: RegionPortAssignment[] = region.assignments ?? []
-    if (assignment.length === 0) return []
+    const assignment: RegionPortAssignment[] = region.assignments ?? [];
+    if (assignment.length === 0) return [];
 
     const ripsRequired: RegionPortAssignment[] = assignment.filter(
       (assignment) => {
@@ -172,21 +172,21 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
           assignment.connection.mutuallyConnectedNetworkId ===
           this.currentConnection?.mutuallyConnectedNetworkId
         ) {
-          return false
+          return false;
         }
 
         if (
           assignment.regionPort1 === port1 ||
           assignment.regionPort2 === port1
         ) {
-          return false
+          return false;
         }
 
         if (
           assignment.regionPort1 === port2 ||
           assignment.regionPort2 === port2
         ) {
-          return false
+          return false;
         }
 
         return doSegmentsIntersect(
@@ -194,67 +194,67 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
           assignment.regionPort2.d,
           port1.d,
           port2.d,
-        )
+        );
       },
-    )
+    );
 
-    return ripsRequired
+    return ripsRequired;
   }
 
   override selectCandidatesForEnteringRegion(
     candidates: CandidateHg[],
   ): CandidateHg[] {
-    const startRegion = this.currentConnection?.startRegion
-    const endRegion = this.currentConnection?.endRegion
+    const startRegion = this.currentConnection?.startRegion;
+    const endRegion = this.currentConnection?.endRegion;
     assertDefined(
       startRegion,
       "Current connection or start region is undefined",
-    )
-    assertDefined(endRegion, "Current connection or end region is undefined")
+    );
+    assertDefined(endRegion, "Current connection or end region is undefined");
 
     const filterCandidates = candidates.filter((candidate) => {
-      const nextRegion = candidate.nextRegion
+      const nextRegion = candidate.nextRegion;
       if (!nextRegion?.d._containsObstacle) {
-        return true
+        return true;
       }
-      return nextRegion === startRegion || nextRegion === endRegion
-    })
+      return nextRegion === startRegion || nextRegion === endRegion;
+    });
 
     let centerFirstCandidates = this.params.flags.FORCE_CENTER_FIRST
       ? this.getCenterFirstEnteringRegionCandidates(filterCandidates)
-      : filterCandidates
+      : filterCandidates;
 
-    const maxAllowedCost = -this.params.weights.MIN_ALLOWED_BOARD_SCORE
+    const maxAllowedCost = -this.params.weights.MIN_ALLOWED_BOARD_SCORE;
     if (maxAllowedCost > 0) {
       const affordableCandidates = centerFirstCandidates.filter(
         (candidate) => candidate.g + candidate.h <= maxAllowedCost,
-      )
+      );
       if (affordableCandidates.length > 0) {
-        centerFirstCandidates = affordableCandidates
+        centerFirstCandidates = affordableCandidates;
       }
     }
 
-    return centerFirstCandidates
+    return centerFirstCandidates;
   }
 
   override routeSolvedHook(solvedRoute: SolvedRoutesHg): void {
-    this.baseRegionFailureCostMap.clear()
-    const traversedRegions = new Set<RegionHg>()
+    this.baseRegionFailureCostMap.clear();
+    const traversedRegions = new Set<RegionHg>();
     for (const candidate of solvedRoute.path) {
-      const region = candidate.lastRegion
-      if (region) traversedRegions.add(region)
+      const region = candidate.lastRegion;
+      if (region) traversedRegions.add(region);
     }
     for (const region of traversedRegions) {
-      const regionPf = this.computeRegionPfFromAssignments(region)
-      this.regionMemoryPfMap.set(region.regionId, regionPf)
+      const regionPf = this.computeRegionPfFromAssignments(region);
+      this.regionMemoryPfMap.set(region.regionId, regionPf);
     }
 
-    if (!solvedRoute.requiredRip) return
-    if (this.unprocessedConnections.length < 2) return
+    if (!solvedRoute.requiredRip) return;
+    if (this.unprocessedConnections.length < 2) return;
 
     // TODO: not sure if we need to do this
-    const [next, ...rest] = this.unprocessedConnections
-    this.unprocessedConnections = [...rest, next]
+    const [next, ...rest] = this.unprocessedConnections;
+    this.unprocessedConnections = [...rest, next];
   }
 
   override computeRoutesToRip(
@@ -262,194 +262,203 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
   ): Set<SolvedRoutesHg> {
     const portOverlapRoutesToRip = super.computePortOverlapRoutes(
       newlySolvedRoute,
-    )
-    const routesToRip = new Set<SolvedRoutesHg>(portOverlapRoutesToRip)
+    );
+    const routesToRip = new Set<SolvedRoutesHg>(portOverlapRoutesToRip);
 
-    const crossingRoutesByRegion: Map<RegionHg, Set<SolvedRoutesHg>> = new Map()
+    const crossingRoutesByRegion: Map<
+      RegionHg,
+      Set<SolvedRoutesHg>
+    > = new Map();
     newlySolvedRoute.path.map((candidate) => {
-      if (!candidate.lastPort || !candidate.lastRegion) return
+      if (!candidate.lastPort || !candidate.lastRegion) return;
       const crossingAssignments = this.getRipsRequiredForPortUsage(
         candidate.lastRegion,
         candidate.lastPort,
         candidate.port,
-      )
-      if (crossingAssignments.length === 0) return null
+      );
+      if (crossingAssignments.length === 0) return null;
       const crossingRoutesInRegion =
-        crossingRoutesByRegion.get(candidate.lastRegion) ?? new Set()
+        crossingRoutesByRegion.get(candidate.lastRegion) ?? new Set();
       for (const assignment of crossingAssignments) {
-        crossingRoutesInRegion.add(assignment.solvedRoute)
+        crossingRoutesInRegion.add(assignment.solvedRoute);
       }
-      crossingRoutesByRegion.set(candidate.lastRegion, crossingRoutesInRegion)
-    })
+      crossingRoutesByRegion.set(candidate.lastRegion, crossingRoutesInRegion);
+    });
     const traversedRegions = newlySolvedRoute.path.flatMap((candidate) => {
-      if (!candidate.lastRegion) return []
-      return [candidate.lastRegion]
-    })
+      if (!candidate.lastRegion) return [];
+      return [candidate.lastRegion];
+    });
 
     const allRegionIdsForRipping = Array.from(
       new Set<RegionHg>([
         ...crossingRoutesByRegion.keys(),
         ...traversedRegions,
       ]),
-    )
+    );
     const rippingRandomSeed =
       this.params.weights.SHUFFLE_SEED +
       this.iterations +
       this.solvedRoutes.length +
-      this.totalRipCount
+      this.totalRipCount;
     const orderedRegionIdsForRipping = cloneAndShuffleArray(
       allRegionIdsForRipping,
       rippingRandomSeed,
-    )
+    );
     for (const region of orderedRegionIdsForRipping) {
-      if (this.totalRipCount >= this.params.weights.MAX_RIPS) break
-      const rippingThreshold = this.getRegionRippingPfThreshold(region.regionId)
+      if (this.totalRipCount >= this.params.weights.MAX_RIPS) break;
+      const rippingThreshold = this.getRegionRippingPfThreshold(
+        region.regionId,
+      );
       let currentPf = this.computeRegionPf({
         region,
         newlySolvedRoute,
         routesToRip,
-      })
-      this.regionMemoryPfMap.set(region.regionId, currentPf)
+      });
+      this.regionMemoryPfMap.set(region.regionId, currentPf);
 
-      if (currentPf <= rippingThreshold) continue
+      if (currentPf <= rippingThreshold) continue;
 
-      const testedConnection = new Set<ConnectionHg>()
-      let ripCountForRegionLoop = 0
+      const testedConnection = new Set<ConnectionHg>();
+      let ripCountForRegionLoop = 0;
 
       while (currentPf > rippingThreshold) {
-        if (this.totalRipCount >= this.params.weights.MAX_RIPS) break
+        if (this.totalRipCount >= this.params.weights.MAX_RIPS) break;
         if (!region.assignments || region.assignments.length === 0) {
           throw new Error(
             "We are trying to rip a region with no assignments, this should not happen",
-          )
+          );
         }
 
         const availableRoutesToRegion = region.assignments
           .map((e) => {
-            const route = e.solvedRoute
-            const routeConnection = e.connection
+            const route = e.solvedRoute;
+            const routeConnection = e.connection;
             if (
               routeConnection.connectionId ===
               newlySolvedRoute.connection.connectionId
             ) {
-              return null
+              return null;
             }
             if (!routesToRip.has(route)) {
-              return route
+              return route;
             }
           })
-          .filter((route) => !!route)
+          .filter((route) => !!route);
 
-        if (availableRoutesToRegion.length === 0) break
+        if (availableRoutesToRegion.length === 0) break;
 
         const shuffledRoutesInRegion = cloneAndShuffleArray(
           availableRoutesToRegion,
           rippingRandomSeed + ripCountForRegionLoop + testedConnection.size,
-        )
+        );
 
-        const routeToRip = shuffledRoutesInRegion[0]
-        if (!routeToRip) break
-        testedConnection.add(routeToRip.connection)
+        const routeToRip = shuffledRoutesInRegion[0];
+        if (!routeToRip) break;
+        testedConnection.add(routeToRip.connection);
 
-        routesToRip.add(routeToRip)
-        this.totalRipCount++
-        ripCountForRegionLoop++
+        routesToRip.add(routeToRip);
+        this.totalRipCount++;
+        ripCountForRegionLoop++;
         this.regionRipCountMap.set(
           region.regionId,
           (this.regionRipCountMap.get(region.regionId) ?? 0) + 1,
-        )
+        );
 
         currentPf = this.computeRegionPf({
           region,
           newlySolvedRoute,
           routesToRip,
-        })
-        this.regionMemoryPfMap.set(region.regionId, currentPf)
+        });
+        this.regionMemoryPfMap.set(region.regionId, currentPf);
       }
     }
-    const didRipAnyLoop = routesToRip.size > portOverlapRoutesToRip.size
+    const didRipAnyLoop = routesToRip.size > portOverlapRoutesToRip.size;
     if (didRipAnyLoop) {
-      if (this.totalRipCount >= this.params.weights.MAX_RIPS) return routesToRip
+      if (this.totalRipCount >= this.params.weights.MAX_RIPS)
+        return routesToRip;
 
       const eligibleRoutes = this.solvedRoutes.filter((route) => {
-        if (routesToRip.has(route)) return false
+        if (routesToRip.has(route)) return false;
         return (
           route.connection.connectionId !==
           newlySolvedRoute.connection.connectionId
-        )
-      })
+        );
+      });
 
-      if (eligibleRoutes.length === 0) return routesToRip
+      if (eligibleRoutes.length === 0) return routesToRip;
 
       const randomRipCount = Math.max(
         1,
         Math.floor(
           this.params.weights.RANDOM_RIP_FRACTION * eligibleRoutes.length,
         ),
-      )
+      );
       const shuffledEligibleRoutes = cloneAndShuffleArray(
         eligibleRoutes,
         rippingRandomSeed,
-      )
+      );
 
-      let addedRandomRips = 0
+      let addedRandomRips = 0;
       for (const route of shuffledEligibleRoutes) {
-        if (addedRandomRips >= randomRipCount) break
-        if (this.totalRipCount >= this.params.weights.MAX_RIPS) break
-        if (routesToRip.has(route)) continue
+        if (addedRandomRips >= randomRipCount) break;
+        if (this.totalRipCount >= this.params.weights.MAX_RIPS) break;
+        if (routesToRip.has(route)) continue;
 
-        routesToRip.add(route)
-        addedRandomRips++
-        this.totalRipCount++
+        routesToRip.add(route);
+        addedRandomRips++;
+        this.totalRipCount++;
       }
     }
 
-    return routesToRip
+    return routesToRip;
   }
 
   private computeDeviation(candidate: CandidateHg) {
-    const startPoint = this.currentConnection?.startRegion.d.center
-    const endPoint = this.currentConnection?.endRegion.d.center
-    assertDefined(startPoint, "Current connection or start region is undefined")
-    assertDefined(endPoint, "Current connection or end region is undefined")
-    const portPoint = candidate.port.d
-    const deviation = pointToSegmentDistance(portPoint, startPoint, endPoint)
-    return deviation
+    const startPoint = this.currentConnection?.startRegion.d.center;
+    const endPoint = this.currentConnection?.endRegion.d.center;
+    assertDefined(
+      startPoint,
+      "Current connection or start region is undefined",
+    );
+    assertDefined(endPoint, "Current connection or end region is undefined");
+    const portPoint = candidate.port.d;
+    const deviation = pointToSegmentDistance(portPoint, startPoint, endPoint);
+    return deviation;
   }
 
   private computeDistanceTraveled(candidate: CandidateHg): number {
-    let distanceTraveled = 0
-    let currentCandidate: CandidateHg | undefined = candidate
+    let distanceTraveled = 0;
+    let currentCandidate: CandidateHg | undefined = candidate;
     while (currentCandidate?.parent) {
       distanceTraveled += distance(
         currentCandidate.parent.port.d,
         currentCandidate.port.d,
-      )
-      currentCandidate = currentCandidate.parent
+      );
+      currentCandidate = currentCandidate.parent;
     }
-    return distanceTraveled
+    return distanceTraveled;
   }
 
   private computeMemoryPfPenalty(memoryPf: number): number {
-    const clampedPf = Math.min(Math.max(memoryPf, 0), 0.999999)
+    const clampedPf = Math.min(Math.max(memoryPf, 0), 0.999999);
     const failureCost = Math.min(
       this.params.weights.NODE_PF_MAX_PENALTY,
       -Math.log(1 - clampedPf),
-    )
+    );
 
     return (
       failureCost * this.params.weights.MEMORY_PF_FACTOR +
       failureCost * this.params.weights.NODE_PF_FACTOR * 0.01
-    )
+    );
   }
 
   private computeEndRegionCloseCost(candidate: CandidateHg): number {
-    const currentConnection = this.currentConnection
-    const endRegion = this.currentEndRegion
-    assertDefined(currentConnection, "Current connection is undefined")
-    assertDefined(endRegion, "Current end region is undefined")
+    const currentConnection = this.currentConnection;
+    const endRegion = this.currentEndRegion;
+    assertDefined(currentConnection, "Current connection is undefined");
+    assertDefined(endRegion, "Current end region is undefined");
 
-    const endPoint = currentConnection.endRegion.d.center
+    const endPoint = currentConnection.endRegion.d.center;
 
     const endTargetPort: RegionPortHg = {
       portId: `end-target:${currentConnection.connectionId}`,
@@ -463,136 +472,136 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
         distToCentermostPortOnZ: 0,
         regions: [endRegion, endRegion],
       },
-    }
+    };
 
     return this.computeIncreasedRegionCostIfPortsAreUsed(
       endRegion,
       candidate.port,
       endTargetPort,
-    )
+    );
   }
 
   private getCenterFirstEnteringRegionCandidates(
     candidates: CandidateHg[],
   ): CandidateHg[] {
-    const byZ = new Map<number, CandidateHg[]>()
+    const byZ = new Map<number, CandidateHg[]>();
     for (const candidate of candidates) {
-      const z = candidate.port.d.z
-      const candidatesOnZ = byZ.get(z) ?? []
-      candidatesOnZ.push(candidate)
-      byZ.set(z, candidatesOnZ)
+      const z = candidate.port.d.z;
+      const candidatesOnZ = byZ.get(z) ?? [];
+      candidatesOnZ.push(candidate);
+      byZ.set(z, candidatesOnZ);
     }
 
-    const selected: CandidateHg[] = []
+    const selected: CandidateHg[] = [];
 
     for (const candidatesOnZ of byZ.values()) {
       const sortedByCenterOffsetCandidates = candidatesOnZ.sort(
         (a, b) =>
           a.port.d.distToCentermostPortOnZ - b.port.d.distToCentermostPortOnZ,
-      )
-      const currentCandidate = sortedByCenterOffsetCandidates[0]
-      if (!currentCandidate) continue
+      );
+      const currentCandidate = sortedByCenterOffsetCandidates[0];
+      if (!currentCandidate) continue;
 
       if (this.isPortAvailableForCurrentNet(currentCandidate.port)) {
-        selected.push(currentCandidate)
-        continue
+        selected.push(currentCandidate);
+        continue;
       }
 
       const sortedByPositionCandidates = candidatesOnZ.sort((a, b) => {
         if (a.port.d.x !== b.port.d.x) {
-          return a.port.d.x - b.port.d.x
+          return a.port.d.x - b.port.d.x;
         }
-        return a.port.d.y - b.port.d.y
-      })
+        return a.port.d.y - b.port.d.y;
+      });
 
-      const availableRangesCandidate: CandidateHg[][] = []
-      let currentRangeCandidate: CandidateHg[] = []
+      const availableRangesCandidate: CandidateHg[][] = [];
+      let currentRangeCandidate: CandidateHg[] = [];
 
       for (const candidate of sortedByPositionCandidates) {
         if (this.isPortAvailableForCurrentNet(candidate.port)) {
-          currentRangeCandidate.push(candidate)
-          continue
+          currentRangeCandidate.push(candidate);
+          continue;
         }
 
         if (currentRangeCandidate.length > 0) {
-          availableRangesCandidate.push(currentRangeCandidate)
-          currentRangeCandidate = []
+          availableRangesCandidate.push(currentRangeCandidate);
+          currentRangeCandidate = [];
         }
       }
 
       if (currentRangeCandidate.length > 0) {
-        availableRangesCandidate.push(currentRangeCandidate)
+        availableRangesCandidate.push(currentRangeCandidate);
       }
 
       for (const range of availableRangesCandidate) {
-        selected.push(range[Math.floor(range.length / 2)])
+        selected.push(range[Math.floor(range.length / 2)]);
       }
     }
 
-    return selected
+    return selected;
   }
 
   private isPortAvailableForCurrentNet(port: RegionPortHg): boolean {
-    const assignment = port.assignment
-    if (!assignment) return true
+    const assignment = port.assignment;
+    if (!assignment) return true;
 
-    const currentNetId = this.currentConnection?.mutuallyConnectedNetworkId
-    return assignment.connection.mutuallyConnectedNetworkId === currentNetId
+    const currentNetId = this.currentConnection?.mutuallyConnectedNetworkId;
+    return assignment.connection.mutuallyConnectedNetworkId === currentNetId;
   }
 
   private computeRegionPfFromAssignments(region: RegionHg): number {
-    const existingPortPoints = this.getRegionAssignedPortPoints(region)
+    const existingPortPoints = this.getRegionAssignedPortPoints(region);
 
     const nodeWithPortPoints: NodeWithPortPoints = {
       ...region.d,
       portPoints: existingPortPoints,
-    }
+    };
 
-    const crossings = getIntraNodeCrossingsUsingCircle(nodeWithPortPoints)
-    const capacityMeshNode = region.d
+    const crossings = getIntraNodeCrossingsUsingCircle(nodeWithPortPoints);
+    const capacityMeshNode = region.d;
 
     return calculateNodeProbabilityOfFailure(
       capacityMeshNode,
       crossings.numSameLayerCrossings,
       crossings.numEntryExitLayerChanges,
       crossings.numTransitionPairCrossings,
-    )
+    );
   }
 
   private clampPf(pf: number): number {
-    return Math.min(Math.max(pf, 0), 0.999999)
+    return Math.min(Math.max(pf, 0), 0.999999);
   }
 
   private get NODE_MAX_PF() {
     return Math.min(
       0.99999,
       1 - Math.exp(-this.params.weights.NODE_PF_MAX_PENALTY),
-    )
+    );
   }
 
   private pfToFailureCost(pf: number): number {
-    const p = this.clampPf(pf)
-    if (p >= this.NODE_MAX_PF) return this.params.weights.NODE_PF_MAX_PENALTY
-    return -Math.log(1 - p)
+    const p = this.clampPf(pf);
+    if (p >= this.NODE_MAX_PF) return this.params.weights.NODE_PF_MAX_PENALTY;
+    return -Math.log(1 - p);
   }
 
   private getBaseRegionFailureCost(region: RegionHg): number {
-    const cached = this.baseRegionFailureCostMap.get(region.regionId)
-    if (cached != null) return cached
-    const pfBefore = this.computeRegionPfFromAssignments(region)
-    const baseCost = this.pfToFailureCost(pfBefore)
-    this.baseRegionFailureCostMap.set(region.regionId, baseCost)
-    return baseCost
+    const cached = this.baseRegionFailureCostMap.get(region.regionId);
+    if (cached != null) return cached;
+    const pfBefore = this.computeRegionPfFromAssignments(region);
+    const baseCost = this.pfToFailureCost(pfBefore);
+    this.baseRegionFailureCostMap.set(region.regionId, baseCost);
+    return baseCost;
   }
 
   private getRegionAssignedPortPoints(region: RegionHg): PortPoint[] {
-    const existingAssignments = region.assignments ?? []
+    const existingAssignments = region.assignments ?? [];
     return existingAssignments.flatMap((assignment) => {
-      const region1PortPoint = assignment.regionPort1.d
-      const region2PortPoint = assignment.regionPort2.d
-      const connectionName = assignment.connection.connectionId
+      const region1PortPoint = assignment.regionPort1.d;
+      const region2PortPoint = assignment.regionPort2.d;
+      const connectionName = assignment.connection.connectionId;
       const rootConnectionName =
-        assignment.connection.simpleRouteConnection?.__rootConnectionNames?.[0]
+        assignment.connection.simpleRouteConnection?.__rootConnectionNames?.[0];
       return [
         {
           x: region1PortPoint.x,
@@ -608,8 +617,8 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
           connectionName,
           rootConnectionName,
         },
-      ] as PortPoint[]
-    })
+      ] as PortPoint[];
+    });
   }
 
   private computeRegionPfWithAdditionalSegment(
@@ -619,7 +628,7 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
     connectionName: string,
     rootConnectionName?: string,
   ): number {
-    const existingPortPoints = this.getRegionAssignedPortPoints(region)
+    const existingPortPoints = this.getRegionAssignedPortPoints(region);
     const additionalPortPoints: PortPoint[] = [
       {
         x: port1.d.x,
@@ -635,37 +644,37 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
         connectionName,
         rootConnectionName,
       },
-    ]
+    ];
 
     const nodeWithPortPoints: NodeWithPortPoints = {
       ...region.d,
       portPoints: [...existingPortPoints, ...additionalPortPoints],
-    }
-    const crossings = getIntraNodeCrossingsUsingCircle(nodeWithPortPoints)
+    };
+    const crossings = getIntraNodeCrossingsUsingCircle(nodeWithPortPoints);
 
     return calculateNodeProbabilityOfFailure(
       region.d,
       crossings.numSameLayerCrossings,
       crossings.numEntryExitLayerChanges,
       crossings.numTransitionPairCrossings,
-    )
+    );
   }
 
   private getRegionRippingPfThreshold(regionId: RegionId): number {
-    const regionRipCount = this.regionRipCountMap.get(regionId) ?? 0
+    const regionRipCount = this.regionRipCountMap.get(regionId) ?? 0;
     const maxRegionRips = Math.max(
       1,
       Math.floor(this.params.weights.MAX_RIPS / 10),
-    )
-    const regionRipFraction = Math.min(1, regionRipCount / maxRegionRips)
+    );
+    const regionRipFraction = Math.min(1, regionRipCount / maxRegionRips);
     const startRippingPfThreshold =
-      this.params.weights.START_RIPPING_PF_THRESHOLD || 0.3
+      this.params.weights.START_RIPPING_PF_THRESHOLD || 0.3;
     const endRippingPfThreshold =
-      this.params.weights.END_RIPPING_PF_THRESHOLD || 1
+      this.params.weights.END_RIPPING_PF_THRESHOLD || 1;
     const threshold =
       startRippingPfThreshold * (1 - regionRipFraction) +
-      endRippingPfThreshold * regionRipFraction
-    return threshold
+      endRippingPfThreshold * regionRipFraction;
+    return threshold;
   }
 
   private computeRegionPf({
@@ -673,19 +682,19 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
     newlySolvedRoute,
     routesToRip,
   }: {
-    region: RegionHg
-    newlySolvedRoute: SolvedRoutesHg
-    routesToRip: Set<SolvedRoutesHg>
+    region: RegionHg;
+    newlySolvedRoute: SolvedRoutesHg;
+    routesToRip: Set<SolvedRoutesHg>;
   }): number {
     const existingAssignments = (region.assignments ?? []).filter(
       (assignment) => !routesToRip.has(assignment.solvedRoute),
-    )
+    );
     const existingPortPoints = existingAssignments.flatMap((assignment) => {
-      const regionPort1 = assignment.regionPort1
-      const regionPort2 = assignment.regionPort2
-      const connectionName = assignment.connection.connectionId
+      const regionPort1 = assignment.regionPort1;
+      const regionPort2 = assignment.regionPort2;
+      const connectionName = assignment.connection.connectionId;
       const rootConnectionName =
-        assignment.connection.simpleRouteConnection?.__rootConnectionNames?.[0]
+        assignment.connection.simpleRouteConnection?.__rootConnectionNames?.[0];
       return [
         {
           x: regionPort1.d.x,
@@ -701,16 +710,16 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
           connectionName,
           rootConnectionName,
         },
-      ] as PortPoint[]
-    })
+      ] as PortPoint[];
+    });
     const newlySolvedRoutePortPoints = newlySolvedRoute.path.flatMap(
       (candidate) => {
         if (!candidate.lastPort || candidate.lastRegion !== region) {
-          return []
+          return [];
         }
 
-        const lastPort = candidate.lastPort
-        const currentPort = candidate.port
+        const lastPort = candidate.lastPort;
+        const currentPort = candidate.port;
 
         return [
           {
@@ -731,11 +740,11 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
               newlySolvedRoute.connection.simpleRouteConnection
                 ?.__rootConnectionNames?.[0],
           },
-        ] as PortPoint[]
+        ] as PortPoint[];
       },
-    )
+    );
 
-    const portPoints = [...existingPortPoints, ...newlySolvedRoutePortPoints]
+    const portPoints = [...existingPortPoints, ...newlySolvedRoutePortPoints];
 
     const nodeWithPortPoints: NodeWithPortPoints = {
       capacityMeshNodeId: region.d.capacityMeshNodeId,
@@ -744,70 +753,70 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
       height: region.d.height,
       portPoints,
       availableZ: region.d.availableZ,
-    }
-    const crossings = getIntraNodeCrossingsUsingCircle(nodeWithPortPoints)
-    const capacityMeshNode = region.d
+    };
+    const crossings = getIntraNodeCrossingsUsingCircle(nodeWithPortPoints);
+    const capacityMeshNode = region.d;
 
     const pf = calculateNodeProbabilityOfFailure(
       capacityMeshNode,
       crossings.numSameLayerCrossings,
       crossings.numEntryExitLayerChanges,
       crossings.numTransitionPairCrossings,
-    )
+    );
 
-    return pf
+    return pf;
   }
 
   computeNodePf(node: InputNodeWithPortPoints): number | null {
     const solvedNode = this.getOutput().nodesWithPortPoints.find(
       (candidate) => candidate.capacityMeshNodeId === node.capacityMeshNodeId,
-    )
+    );
     const region = this.params.graph.regions.find(
       (candidate) => candidate.d.capacityMeshNodeId === node.capacityMeshNodeId,
-    )
+    );
 
-    if (!solvedNode || !region) return null
+    if (!solvedNode || !region) return null;
 
-    const crossings = getIntraNodeCrossingsUsingCircle(solvedNode)
+    const crossings = getIntraNodeCrossingsUsingCircle(solvedNode);
 
     return calculateNodeProbabilityOfFailure(
       region.d,
       crossings.numSameLayerCrossings,
       crossings.numEntryExitLayerChanges,
       crossings.numTransitionPairCrossings,
-    )
+    );
   }
 
   override getOutput(): {
-    nodesWithPortPoints: NodeWithPortPoints[]
-    inputNodeWithPortPoints: InputNodeWithPortPoints[]
+    nodesWithPortPoints: NodeWithPortPoints[];
+    inputNodeWithPortPoints: InputNodeWithPortPoints[];
   } {
     const regionById = new Map(
       this.params.graph.regions.map((region) => [region.regionId, region]),
-    )
-    const endpointRegionIds = new Set<RegionId>()
+    );
+    const endpointRegionIds = new Set<RegionId>();
     for (const connection of this.params.connections) {
-      endpointRegionIds.add(connection.startRegion.regionId)
-      endpointRegionIds.add(connection.endRegion.regionId)
+      endpointRegionIds.add(connection.startRegion.regionId);
+      endpointRegionIds.add(connection.endRegion.regionId);
     }
-    const endpointPortPointsByRegion = new Map<RegionId, PortPoint[]>()
+    const endpointPortPointsByRegion = new Map<RegionId, PortPoint[]>();
     for (const route of this.solvedRoutes) {
-      const path = route.path as CandidateHg[]
-      if (path.length === 0) continue
-      const firstPort = path[0]?.port
-      const lastPort = path[path.length - 1]?.port
-      if (!firstPort || !lastPort) continue
+      const path = route.path as CandidateHg[];
+      if (path.length === 0) continue;
+      const firstPort = path[0]?.port;
+      const lastPort = path[path.length - 1]?.port;
+      if (!firstPort || !lastPort) continue;
 
-      const connectionName = route.connection.connectionId
-      const connection = route.connection as ConnectionHg
+      const connectionName = route.connection.connectionId;
+      const connection = route.connection as ConnectionHg;
       const rootConnectionName =
-        connection.simpleRouteConnection?.__rootConnectionNames?.[0]
+        connection.simpleRouteConnection?.__rootConnectionNames?.[0];
 
-      const startRegionId = route.connection.startRegion.regionId
-      const endRegionId = route.connection.endRegion.regionId
+      const startRegionId = route.connection.startRegion.regionId;
+      const endRegionId = route.connection.endRegion.regionId;
 
       const startPortPoints =
-        endpointPortPointsByRegion.get(startRegionId) ?? []
+        endpointPortPointsByRegion.get(startRegionId) ?? [];
       startPortPoints.push({
         portPointId: firstPort.d.portId,
         x: firstPort.d.x,
@@ -815,10 +824,10 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
         z: firstPort.d.z,
         connectionName,
         rootConnectionName,
-      })
-      endpointPortPointsByRegion.set(startRegionId, startPortPoints)
+      });
+      endpointPortPointsByRegion.set(startRegionId, startPortPoints);
 
-      const endPortPoints = endpointPortPointsByRegion.get(endRegionId) ?? []
+      const endPortPoints = endpointPortPointsByRegion.get(endRegionId) ?? [];
       endPortPoints.push({
         portPointId: lastPort.d.portId,
         x: lastPort.d.x,
@@ -826,20 +835,20 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
         z: lastPort.d.z,
         connectionName,
         rootConnectionName,
-      })
-      endpointPortPointsByRegion.set(endRegionId, endPortPoints)
+      });
+      endpointPortPointsByRegion.set(endRegionId, endPortPoints);
     }
 
-    const nodesWithPortPoints: NodeWithPortPoints[] = []
-    const inputNodeWithPortPoints: InputNodeWithPortPoints[] = []
+    const nodesWithPortPoints: NodeWithPortPoints[] = [];
+    const inputNodeWithPortPoints: InputNodeWithPortPoints[] = [];
 
     for (const region of this.params.graph.regions) {
-      const assignments = region.assignments ?? []
+      const assignments = region.assignments ?? [];
       const edgePortPoints = assignments.flatMap((assignment) => {
-        const connectionName = assignment.connection.connectionId
+        const connectionName = assignment.connection.connectionId;
         const rootConnectionName =
           assignment.connection.simpleRouteConnection
-            ?.__rootConnectionNames?.[0]
+            ?.__rootConnectionNames?.[0];
         const startPoint: PortPoint = {
           portPointId: assignment.regionPort1.d.portId,
           x: assignment.regionPort1.d.x,
@@ -848,7 +857,7 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
           connectionName,
           rootConnectionName,
           nextPortPointId: assignment.regionPort2.d.portId,
-        }
+        };
         const endPoint: PortPoint = {
           portPointId: assignment.regionPort2.d.portId,
           x: assignment.regionPort2.d.x,
@@ -857,44 +866,44 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
           connectionName,
           rootConnectionName,
           prevPortPointId: assignment.regionPort1.d.portId,
-        }
+        };
 
-        return [startPoint, endPoint] as PortPoint[]
-      })
+        return [startPoint, endPoint] as PortPoint[];
+      });
 
-      const centerPortPoints: PortPoint[] = []
+      const centerPortPoints: PortPoint[] = [];
       if (
         region.d._containsObstacle &&
         endpointRegionIds.has(region.regionId)
       ) {
         const endpointPortPoints =
-          endpointPortPointsByRegion.get(region.regionId) ?? []
-        const supplementalEndpointPortPoints: PortPoint[] = []
+          endpointPortPointsByRegion.get(region.regionId) ?? [];
+        const supplementalEndpointPortPoints: PortPoint[] = [];
         for (const endpointPort of endpointPortPoints) {
           const alreadyExists = edgePortPoints.some(
             (p) =>
               p.connectionName === endpointPort.connectionName &&
               p.rootConnectionName === endpointPort.rootConnectionName &&
               p.portPointId === endpointPort.portPointId,
-          )
+          );
           if (!alreadyExists) {
-            supplementalEndpointPortPoints.push(endpointPort)
+            supplementalEndpointPortPoints.push(endpointPort);
           }
         }
-        edgePortPoints.push(...supplementalEndpointPortPoints)
+        edgePortPoints.push(...supplementalEndpointPortPoints);
 
-        const edgePortPointsByConnection = new Map<string, PortPoint[]>()
+        const edgePortPointsByConnection = new Map<string, PortPoint[]>();
         for (const portPoint of edgePortPoints) {
-          const key = `${portPoint.connectionName}::${portPoint.rootConnectionName ?? ""}`
-          const points = edgePortPointsByConnection.get(key) ?? []
-          points.push(portPoint)
-          edgePortPointsByConnection.set(key, points)
+          const key = `${portPoint.connectionName}::${portPoint.rootConnectionName ?? ""}`;
+          const points = edgePortPointsByConnection.get(key) ?? [];
+          points.push(portPoint);
+          edgePortPointsByConnection.set(key, points);
         }
 
         for (const [key, points] of edgePortPointsByConnection.entries()) {
-          const [connectionName, rootConnectionName = ""] = key.split("::")
-          const firstPoint = points[0]
-          if (!firstPoint) continue
+          const [connectionName, rootConnectionName = ""] = key.split("::");
+          const firstPoint = points[0];
+          if (!firstPoint) continue;
           const centerPortPoint: PortPoint = {
             portPointId: `center:${region.regionId}:${connectionName}:${rootConnectionName}`,
             x: region.d.center.x,
@@ -902,23 +911,23 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
             z: firstPoint.z,
             connectionName,
             rootConnectionName: rootConnectionName || undefined,
-          }
+          };
           if (points.length >= 2) {
-            const lastPoint = points[points.length - 1]!
+            const lastPoint = points[points.length - 1]!;
             if (firstPoint.portPointId) {
-              firstPoint.nextPortPointId = centerPortPoint.portPointId
-              centerPortPoint.prevPortPointId = firstPoint.portPointId
+              firstPoint.nextPortPointId = centerPortPoint.portPointId;
+              centerPortPoint.prevPortPointId = firstPoint.portPointId;
             }
             if (lastPoint.portPointId) {
-              lastPoint.prevPortPointId = centerPortPoint.portPointId
-              centerPortPoint.nextPortPointId = lastPoint.portPointId
+              lastPoint.prevPortPointId = centerPortPoint.portPointId;
+              centerPortPoint.nextPortPointId = lastPoint.portPointId;
             }
           }
-          centerPortPoints.push(centerPortPoint)
+          centerPortPoints.push(centerPortPoint);
         }
       }
 
-      const nodePortPoints = [...edgePortPoints, ...centerPortPoints]
+      const nodePortPoints = [...edgePortPoints, ...centerPortPoints];
 
       if (nodePortPoints.length > 0) {
         nodesWithPortPoints.push({
@@ -928,17 +937,17 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
           height: region.d.height,
           portPoints: nodePortPoints,
           availableZ: region.d.availableZ,
-        })
+        });
       }
 
       const inputPortPoints: InputPortPoint[] = region.ports.map((port) => {
         const portPointChain = port.d as typeof port.d & {
-          prevPortPointId?: string
-          nextPortPointId?: string
-        }
+          prevPortPointId?: string;
+          nextPortPointId?: string;
+        };
         const connectsToOffBoardNode = port.d.regions.some((region) =>
           Boolean(region.d._offBoardConnectionId),
-        )
+        );
         return {
           portPointId: port.d.portId,
           x: port.d.x,
@@ -951,8 +960,8 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
           ) as [CapacityMeshNodeId, CapacityMeshNodeId],
           distToCentermostPortOnZ: port.d.distToCentermostPortOnZ,
           connectsToOffBoardNode,
-        }
-      })
+        };
+      });
 
       inputNodeWithPortPoints.push({
         capacityMeshNodeId: region.d.capacityMeshNodeId,
@@ -966,13 +975,13 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
         _offBoardConnectionId: region.d._offBoardConnectionId,
         _offBoardConnectedCapacityMeshNodeIds:
           region.d._offBoardConnectedCapacityMeshNodeIds,
-      })
+      });
     }
 
     return {
       nodesWithPortPoints,
       inputNodeWithPortPoints,
-    }
+    };
   }
 
   override visualize(): GraphicsObject {
@@ -988,41 +997,41 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
         this.currentConnection?.startRegion.d.center,
       ),
       visualizeSolvedRoute(this.solvedRoutes, this.params.colorMap ?? {}),
-    ])
+    ]);
   }
 
   private visualizePfOverlay(): GraphicsObject {
-    const output = this.getOutput()
-    const nodes = output?.inputNodeWithPortPoints ?? []
+    const output = this.getOutput();
+    const nodes = output?.inputNodeWithPortPoints ?? [];
     const nodesWithPortPointsById = new Map(
       (output?.nodesWithPortPoints ?? []).map((node) => [
         node.capacityMeshNodeId,
         node,
       ]),
-    )
-    const graphics: GraphicsObject = { rects: [] }
+    );
+    const graphics: GraphicsObject = { rects: [] };
 
     for (const node of nodes) {
-      const pfValue = this.computeNodePf(node)
-      const pf = pfValue ?? 0
-      const solvedNode = nodesWithPortPointsById.get(node.capacityMeshNodeId)
+      const pfValue = this.computeNodePf(node);
+      const pf = pfValue ?? 0;
+      const solvedNode = nodesWithPortPointsById.get(node.capacityMeshNodeId);
       const crossings = solvedNode
         ? getIntraNodeCrossingsUsingCircle(solvedNode)
         : {
             numSameLayerCrossings: 0,
             numEntryExitLayerChanges: 0,
             numTransitionPairCrossings: 0,
-          }
-      const red = Math.min(255, Math.floor(pf * 512))
-      const greenAndBlue = Math.max(0, 255 - Math.floor(pf * 512))
-      let color = `rgba(${red}, ${greenAndBlue}, ${greenAndBlue}, ${pf < 0.001 ? "0.1" : "0.3"})`
+          };
+      const red = Math.min(255, Math.floor(pf * 512));
+      const greenAndBlue = Math.max(0, 255 - Math.floor(pf * 512));
+      let color = `rgba(${red}, ${greenAndBlue}, ${greenAndBlue}, ${pf < 0.001 ? "0.1" : "0.3"})`;
 
       if (node._containsObstacle) {
-        color = "rgba(255, 0, 0, 0.3)"
+        color = "rgba(255, 0, 0, 0.3)";
       }
 
       if (node._offBoardConnectedCapacityMeshNodeIds?.length) {
-        color = "rgba(255, 165, 0, 0.3)"
+        color = "rgba(255, 165, 0, 0.3)";
       }
 
       graphics.rects!.push({
@@ -1032,9 +1041,9 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
         layer: `z${node?.availableZ?.join(",")}`,
         fill: color,
         label: `${node.capacityMeshNodeId}\npf: ${pfValue === null ? "n/a" : pfValue.toFixed(3)}\nxSame: ${crossings.numSameLayerCrossings}, xLC: ${crossings.numEntryExitLayerChanges}, xTransition: ${crossings.numTransitionPairCrossings}`,
-      })
+      });
     }
 
-    return graphics
+    return graphics;
   }
 }

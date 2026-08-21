@@ -1,8 +1,6 @@
-import { test, expect } from "bun:test"
-import { HyperJumperPrepatternSolver2 } from "lib/solvers/JumperPrepatternSolver/HyperJumperPrepatternSolver2"
-import input from "../../../fixtures/hyper-jumper-prepattern/hyper-jumper-prepattern03-input.json" with {
-  type: "json",
-}
+import { test, expect } from "bun:test";
+import { HyperJumperPrepatternSolver2 } from "lib/solvers/JumperPrepatternSolver/HyperJumperPrepatternSolver2";
+import input from "../../../fixtures/hyper-jumper-prepattern/hyper-jumper-prepattern03-input.json" with { type: "json" };
 
 test(
   "HyperJumperPrepatternSolver2_03 - solves prepattern routes",
@@ -12,12 +10,12 @@ test(
       colorMap: input.colorMap,
       traceWidth: input.traceWidth,
       availableJumperTypes: ["1206x4", "0603"],
-    })
+    });
 
-    solver.solve()
+    solver.solve();
 
-    expect(solver.solved).toBe(true)
-    expect(solver.visualize()).toMatchGraphicsSvg(import.meta.path)
+    expect(solver.solved).toBe(true);
+    expect(solver.visualize()).toMatchGraphicsSvg(import.meta.path);
   },
   { timeout: 30_000 },
-)
+);

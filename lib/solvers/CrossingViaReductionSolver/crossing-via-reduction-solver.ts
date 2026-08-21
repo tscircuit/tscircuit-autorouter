@@ -2,252 +2,252 @@ import {
   getSegmentIntersection,
   pointToSegmentDistance,
   segmentToBoxMinDistance,
-} from "@tscircuit/math-utils"
-import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
-import type { GraphicsObject } from "graphics-debug"
-import { FlatbushIndex } from "lib/data-structures/FlatbushIndex"
-import { HighDensityRouteSpatialIndex } from "lib/data-structures/HighDensityRouteSpatialIndex"
-import { ObstacleSpatialHashIndex } from "lib/data-structures/ObstacleTree"
-import type { Obstacle } from "lib/types"
-import type { HighDensityRoute } from "lib/types/high-density-types"
-import { createObjectsWithZLayers } from "lib/utils/createObjectsWithZLayers"
-import { doesSegmentCrossPolygonBoundary } from "lib/utils/polygonContainment"
-import { BaseSolver } from "../BaseSolver"
-import { breakRouteIntoSections } from "../UselessViaRemovalSolver/break-route-into-sections"
-import { canSectionMoveToLayer } from "../UselessViaRemovalSolver/can-section-move-to-layer"
-import type { RouteSection } from "../UselessViaRemovalSolver/route-section"
+} from "@tscircuit/math-utils";
+import type { ConnectivityMap } from "circuit-json-to-connectivity-map";
+import type { GraphicsObject } from "graphics-debug";
+import { FlatbushIndex } from "lib/data-structures/FlatbushIndex";
+import { HighDensityRouteSpatialIndex } from "lib/data-structures/HighDensityRouteSpatialIndex";
+import { ObstacleSpatialHashIndex } from "lib/data-structures/ObstacleTree";
+import type { Obstacle } from "lib/types";
+import type { HighDensityRoute } from "lib/types/high-density-types";
+import { createObjectsWithZLayers } from "lib/utils/createObjectsWithZLayers";
+import { doesSegmentCrossPolygonBoundary } from "lib/utils/polygonContainment";
+import { BaseSolver } from "../BaseSolver";
+import { breakRouteIntoSections } from "../UselessViaRemovalSolver/break-route-into-sections";
+import { canSectionMoveToLayer } from "../UselessViaRemovalSolver/can-section-move-to-layer";
+import type { RouteSection } from "../UselessViaRemovalSolver/route-section";
 
 export interface CrossingViaReductionSolverInput {
-  inputHdRoutes: ReadonlyArray<HighDensityRoute>
-  otherHdRoutes?: ReadonlyArray<HighDensityRoute>
-  obstacles: ReadonlyArray<Obstacle>
-  connMap: ConnectivityMap
-  layerCount: number
-  outline?: ReadonlyArray<{ x: number; y: number }>
-  traceMargin?: number
-  obstacleMargin?: number
+  inputHdRoutes: ReadonlyArray<HighDensityRoute>;
+  otherHdRoutes?: ReadonlyArray<HighDensityRoute>;
+  obstacles: ReadonlyArray<Obstacle>;
+  connMap: ConnectivityMap;
+  layerCount: number;
+  outline?: ReadonlyArray<{ x: number; y: number }>;
+  traceMargin?: number;
+  obstacleMargin?: number;
 }
 
-type RoutePoint = HighDensityRoute["route"][number]
+type RoutePoint = HighDensityRoute["route"][number];
 
 type SectionSplit = {
-  prefix: RoutePoint[]
-  suffix: RoutePoint[]
-  point: RoutePoint
-}
+  prefix: RoutePoint[];
+  suffix: RoutePoint[];
+  point: RoutePoint;
+};
 
-type TransitionSide = "start" | "end"
+type TransitionSide = "start" | "end";
 
 type CrossingReductionCandidate = {
-  detourRouteIndex: number
-  detourRoute: HighDensityRoute
+  detourRouteIndex: number;
+  detourRoute: HighDensityRoute;
   transitionUpdates: Array<{
-    routeIndex: number
-    route: HighDensityRoute
-    relocatedVias: Array<{ x: number; y: number }>
-  }>
-}
+    routeIndex: number;
+    route: HighDensityRoute;
+    relocatedVias: Array<{ x: number; y: number }>;
+  }>;
+};
 
 type IndexedTransitionSegment = {
-  routeIndex: number
-  sectionIndex: number
-  side: TransitionSide
-  adjacentZ: number
-  start: RoutePoint
-  end: RoutePoint
-  distanceFromSectionStart: number
-}
+  routeIndex: number;
+  sectionIndex: number;
+  side: TransitionSide;
+  adjacentZ: number;
+  start: RoutePoint;
+  end: RoutePoint;
+  distanceFromSectionStart: number;
+};
 
 type IndexedCrossingGroup = {
-  transitionRouteIndex: number
-  transitionSectionIndex: number
-  side: TransitionSide
-  crossingDistances: number[]
-}
+  transitionRouteIndex: number;
+  transitionSectionIndex: number;
+  side: TransitionSide;
+  crossingDistances: number[];
+};
 
 type DetourCandidate = {
-  routeIndex: number
-  section: RouteSection
-  targetZ: number
-}
+  routeIndex: number;
+  section: RouteSection;
+  targetZ: number;
+};
 
 type RouteClearanceIndex = Pick<
   HighDensityRouteSpatialIndex,
   "getConflictingRoutesForSegment" | "getConflictingRoutesNearPoint"
->
+>;
 
 type BaseClearanceIndexes = {
-  mutableRoutes: HighDensityRouteSpatialIndex
-  immutableRoutes: HighDensityRouteSpatialIndex | null
-}
+  mutableRoutes: HighDensityRouteSpatialIndex;
+  immutableRoutes: HighDensityRouteSpatialIndex | null;
+};
 
 const STATIC_GEOMETRY_ONLY_CLEARANCE_INDEX: RouteClearanceIndex = {
   getConflictingRoutesForSegment: () => [],
   getConflictingRoutesNearPoint: () => [],
-}
+};
 
-const EPSILON = 1e-6
-const DEFAULT_TRACE_MARGIN = 0.1
-const DEFAULT_OBSTACLE_MARGIN = 0.15
-const MAX_MULTI_CROSSING_SELECTIONS = 4
+const EPSILON = 1e-6;
+const DEFAULT_TRACE_MARGIN = 0.1;
+const DEFAULT_OBSTACLE_MARGIN = 0.15;
+const MAX_MULTI_CROSSING_SELECTIONS = 4;
 
 const getSegmentKey = (start: RoutePoint, end: RoutePoint): string => {
-  const startKey = `${start.x}:${start.y}:${start.z}`
-  const endKey = `${end.x}:${end.y}:${end.z}`
-  return startKey < endKey ? `${startKey}|${endKey}` : `${endKey}|${startKey}`
-}
+  const startKey = `${start.x}:${start.y}:${start.z}`;
+  const endKey = `${end.x}:${end.y}:${end.z}`;
+  return startKey < endKey ? `${startKey}|${endKey}` : `${endKey}|${startKey}`;
+};
 
 const getRouteSegmentKeys = (route: HighDensityRoute): ReadonlySet<string> => {
-  const segmentKeys = new Set<string>()
+  const segmentKeys = new Set<string>();
   for (let index = 1; index < route.route.length; index++) {
-    const start = route.route[index - 1]
-    const end = route.route[index]
+    const start = route.route[index - 1];
+    const end = route.route[index];
     if (start.z === end.z) {
-      segmentKeys.add(getSegmentKey(start, end))
+      segmentKeys.add(getSegmentKey(start, end));
     }
   }
-  return segmentKeys
-}
+  return segmentKeys;
+};
 
 const removeConsecutiveDuplicatePoints = (
   points: RoutePoint[],
 ): RoutePoint[] => {
   return points.filter((point, index) => {
-    const previousPoint = points[index - 1]
+    const previousPoint = points[index - 1];
     return (
       !previousPoint ||
       point.x !== previousPoint.x ||
       point.y !== previousPoint.y ||
       point.z !== previousPoint.z
-    )
-  })
-}
+    );
+  });
+};
 
 const recomputeVias = (
   route: ReadonlyArray<RoutePoint>,
 ): HighDensityRoute["vias"] => {
-  const vias: HighDensityRoute["vias"] = []
-  const seenLocations = new Set<string>()
+  const vias: HighDensityRoute["vias"] = [];
+  const seenLocations = new Set<string>();
   for (let index = 1; index < route.length; index++) {
-    const previousPoint = route[index - 1]
-    const point = route[index]
-    if (previousPoint.z === point.z) continue
-    if (previousPoint.toNextSegmentType === "through_obstacle") continue
+    const previousPoint = route[index - 1];
+    const point = route[index];
+    if (previousPoint.z === point.z) continue;
+    if (previousPoint.toNextSegmentType === "through_obstacle") continue;
     if (previousPoint.x !== point.x || previousPoint.y !== point.y) {
       throw new Error(
         `CrossingViaReductionSolver found a layer transition without a via at route point ${index}`,
-      )
+      );
     }
 
-    const key = `${point.x}:${point.y}`
-    if (seenLocations.has(key)) continue
-    seenLocations.add(key)
-    vias.push({ x: point.x, y: point.y })
+    const key = `${point.x}:${point.y}`;
+    if (seenLocations.has(key)) continue;
+    seenLocations.add(key);
+    vias.push({ x: point.x, y: point.y });
   }
-  return vias
-}
+  return vias;
+};
 
 const getRouteIds = (route: HighDensityRoute): string[] => {
-  const routeIds = [route.connectionName]
+  const routeIds = [route.connectionName];
   if (route.rootConnectionName) {
-    routeIds.push(route.rootConnectionName)
+    routeIds.push(route.rootConnectionName);
   }
-  return routeIds
-}
+  return routeIds;
+};
 
 const routesAreSameNet = (
   firstRoute: HighDensityRoute,
   secondRoute: HighDensityRoute,
   connMap: ConnectivityMap,
 ): boolean => {
-  const firstRouteIds = getRouteIds(firstRoute)
-  const secondRouteIds = getRouteIds(secondRoute)
+  const firstRouteIds = getRouteIds(firstRoute);
+  const secondRouteIds = getRouteIds(secondRoute);
   return firstRouteIds.some((firstId) =>
     secondRouteIds.some(
       (secondId) =>
         firstId === secondId || connMap.areIdsConnected(firstId, secondId),
     ),
-  )
-}
+  );
+};
 
 const obstacleIsSameNet = (
   obstacle: Obstacle,
   route: HighDensityRoute,
   connMap: ConnectivityMap,
 ): boolean => {
-  const routeIds = getRouteIds(route)
+  const routeIds = getRouteIds(route);
   return obstacle.connectedTo.some((connectedId) =>
     routeIds.some(
       (routeId) =>
         connectedId === routeId ||
         connMap.areIdsConnected(connectedId, routeId),
     ),
-  )
-}
+  );
+};
 
 const getSectionLength = (points: ReadonlyArray<RoutePoint>): number => {
-  let length = 0
+  let length = 0;
   for (let index = 1; index < points.length; index++) {
     length += Math.hypot(
       points[index].x - points[index - 1].x,
       points[index].y - points[index - 1].y,
-    )
+    );
   }
-  return length
-}
+  return length;
+};
 
 const splitSectionAtDistance = (
   points: ReadonlyArray<RoutePoint>,
   distanceFromStart: number,
 ): SectionSplit | null => {
-  const sectionLength = getSectionLength(points)
+  const sectionLength = getSectionLength(points);
   if (
     distanceFromStart <= EPSILON ||
     distanceFromStart >= sectionLength - EPSILON
   ) {
-    return null
+    return null;
   }
 
-  let traversedDistance = 0
+  let traversedDistance = 0;
   for (let index = 1; index < points.length; index++) {
-    const start = points[index - 1]
-    const end = points[index]
-    const segmentLength = Math.hypot(end.x - start.x, end.y - start.y)
+    const start = points[index - 1];
+    const end = points[index];
+    const segmentLength = Math.hypot(end.x - start.x, end.y - start.y);
     if (traversedDistance + segmentLength < distanceFromStart - EPSILON) {
-      traversedDistance += segmentLength
-      continue
+      traversedDistance += segmentLength;
+      continue;
     }
 
-    const distanceOnSegment = distanceFromStart - traversedDistance
+    const distanceOnSegment = distanceFromStart - traversedDistance;
     if (distanceOnSegment <= EPSILON) {
       return {
         prefix: points.slice(0, index).map((point) => ({ ...point })),
         suffix: points.slice(index - 1).map((point) => ({ ...point })),
         point: { ...start },
-      }
+      };
     }
     if (segmentLength - distanceOnSegment <= EPSILON) {
       return {
         prefix: points.slice(0, index + 1).map((point) => ({ ...point })),
         suffix: points.slice(index).map((point) => ({ ...point })),
         point: { ...end },
-      }
+      };
     }
 
-    const ratio = distanceOnSegment / segmentLength
+    const ratio = distanceOnSegment / segmentLength;
     const point: RoutePoint = {
       x: start.x + (end.x - start.x) * ratio,
       y: start.y + (end.y - start.y) * ratio,
       z: start.z,
-    }
+    };
     return {
       prefix: [...points.slice(0, index), point].map((item) => ({ ...item })),
       suffix: [point, ...points.slice(index)].map((item) => ({ ...item })),
       point,
-    }
+    };
   }
-  return null
-}
+  return null;
+};
 
 const getInteriorIntersectionDistance = (
   transitionStart: RoutePoint,
@@ -260,25 +260,25 @@ const getInteriorIntersectionDistance = (
     transitionEnd,
     detourStart,
     detourEnd,
-  )
-  if (!intersection) return null
+  );
+  if (!intersection) return null;
 
   const distanceFromTransitionStart = Math.hypot(
     intersection.x - transitionStart.x,
     intersection.y - transitionStart.y,
-  )
+  );
   const distanceFromTransitionEnd = Math.hypot(
     intersection.x - transitionEnd.x,
     intersection.y - transitionEnd.y,
-  )
+  );
   const distanceFromDetourStart = Math.hypot(
     intersection.x - detourStart.x,
     intersection.y - detourStart.y,
-  )
+  );
   const distanceFromDetourEnd = Math.hypot(
     intersection.x - detourEnd.x,
     intersection.y - detourEnd.y,
-  )
+  );
   if (
     Math.min(
       distanceFromTransitionStart,
@@ -287,46 +287,46 @@ const getInteriorIntersectionDistance = (
       distanceFromDetourEnd,
     ) <= EPSILON
   ) {
-    return null
+    return null;
   }
 
-  return distanceFromTransitionStart
-}
+  return distanceFromTransitionStart;
+};
 
 const sectionHasProtectedGeometry = (section: RouteSection): boolean => {
   return section.points.some(
     (point) => point.insideJumperPad || point.toNextSegmentType,
-  )
-}
+  );
+};
 
 const getTransitionAdjacentZ = ({
   sections,
   sectionIndex,
   side,
 }: {
-  sections: RouteSection[]
-  sectionIndex: number
-  side: TransitionSide
+  sections: RouteSection[];
+  sectionIndex: number;
+  side: TransitionSide;
 }): number | null => {
-  const section = sections[sectionIndex]
+  const section = sections[sectionIndex];
   const adjacentSection =
-    side === "start" ? sections[sectionIndex - 1] : sections[sectionIndex + 1]
-  if (!adjacentSection) return null
+    side === "start" ? sections[sectionIndex - 1] : sections[sectionIndex + 1];
+  if (!adjacentSection) return null;
 
   const sectionPoint =
-    side === "start" ? section.points[0] : section.points.at(-1)!
+    side === "start" ? section.points[0] : section.points.at(-1)!;
   const adjacentPoint =
     side === "start"
       ? adjacentSection.points.at(-1)!
-      : adjacentSection.points[0]
+      : adjacentSection.points[0];
   if (
     sectionPoint.x !== adjacentPoint.x ||
     sectionPoint.y !== adjacentPoint.y
   ) {
-    return null
+    return null;
   }
-  return adjacentSection.z
-}
+  return adjacentSection.z;
+};
 
 const hasTransitionOnSide = ({
   sections,
@@ -334,13 +334,13 @@ const hasTransitionOnSide = ({
   targetZ,
   side,
 }: {
-  sections: RouteSection[]
-  sectionIndex: number
-  targetZ: number
-  side: TransitionSide
+  sections: RouteSection[];
+  sectionIndex: number;
+  targetZ: number;
+  side: TransitionSide;
 }): boolean => {
-  return getTransitionAdjacentZ({ sections, sectionIndex, side }) === targetZ
-}
+  return getTransitionAdjacentZ({ sections, sectionIndex, side }) === targetZ;
+};
 
 const createCandidateClearanceIndex = ({
   baseIndexes,
@@ -348,19 +348,19 @@ const createCandidateClearanceIndex = ({
   ignoredConnectionNames,
   originalRouteSegmentKeys,
 }: {
-  baseIndexes: BaseClearanceIndexes
-  otherCandidateRoutes: ReadonlyArray<HighDensityRoute>
-  ignoredConnectionNames: ReadonlySet<string>
-  originalRouteSegmentKeys: ReadonlySet<string>
+  baseIndexes: BaseClearanceIndexes;
+  otherCandidateRoutes: ReadonlyArray<HighDensityRoute>;
+  ignoredConnectionNames: ReadonlySet<string>;
+  originalRouteSegmentKeys: ReadonlySet<string>;
 }): RouteClearanceIndex => {
   const candidatePairIndex = new HighDensityRouteSpatialIndex([
     ...otherCandidateRoutes,
-  ])
+  ]);
   return {
     getConflictingRoutesForSegment: (start, end, margin) => {
       const segmentWasUnchanged = originalRouteSegmentKeys.has(
         getSegmentKey(start, end),
-      )
+      );
       return [
         ...(segmentWasUnchanged
           ? []
@@ -382,7 +382,7 @@ const createCandidateClearanceIndex = ({
           end,
           margin,
         ),
-      ]
+      ];
     },
     getConflictingRoutesNearPoint: (point, margin) => [
       ...baseIndexes.mutableRoutes
@@ -397,8 +397,8 @@ const createCandidateClearanceIndex = ({
       ) ?? []),
       ...candidatePairIndex.getConflictingRoutesNearPoint(point, margin),
     ],
-  }
-}
+  };
+};
 
 /**
  * Removes the two-via layer detour in an A-B-A route when it crosses an
@@ -408,30 +408,30 @@ const createCandidateClearanceIndex = ({
  * clearance-checked before any route is changed.
  */
 export class CrossingViaReductionSolver extends BaseSolver {
-  private readonly input: CrossingViaReductionSolverInput
-  private readonly obstacleSHI: ObstacleSpatialHashIndex
-  private readonly traceMargin: number
-  private readonly obstacleMargin: number
+  private readonly input: CrossingViaReductionSolverInput;
+  private readonly obstacleSHI: ObstacleSpatialHashIndex;
+  private readonly traceMargin: number;
+  private readonly obstacleMargin: number;
 
-  reducedHdRoutes: HighDensityRoute[]
+  reducedHdRoutes: HighDensityRoute[];
 
   override getSolverName(): string {
-    return "CrossingViaReductionSolver"
+    return "CrossingViaReductionSolver";
   }
 
   constructor(input: CrossingViaReductionSolverInput) {
-    super()
+    super();
     this.input = {
       ...input,
       obstacles: createObjectsWithZLayers(input.obstacles, input.layerCount),
-    }
-    this.traceMargin = input.traceMargin ?? DEFAULT_TRACE_MARGIN
-    this.obstacleMargin = input.obstacleMargin ?? DEFAULT_OBSTACLE_MARGIN
-    this.reducedHdRoutes = structuredClone([...input.inputHdRoutes])
+    };
+    this.traceMargin = input.traceMargin ?? DEFAULT_TRACE_MARGIN;
+    this.obstacleMargin = input.obstacleMargin ?? DEFAULT_OBSTACLE_MARGIN;
+    this.reducedHdRoutes = structuredClone([...input.inputHdRoutes]);
     this.obstacleSHI = new ObstacleSpatialHashIndex("flatbush", [
       ...this.input.obstacles,
-    ])
-    this.MAX_ITERATIONS = 1e6
+    ]);
+    this.MAX_ITERATIONS = 1e6;
   }
 
   private collapseDetourSection({
@@ -439,26 +439,26 @@ export class CrossingViaReductionSolver extends BaseSolver {
     section,
     targetZ,
   }: {
-    route: HighDensityRoute
-    section: RouteSection
-    targetZ: number
+    route: HighDensityRoute;
+    section: RouteSection;
+    targetZ: number;
   }): HighDensityRoute {
     const collapsedPoints = section.points.map((point) => ({
       ...point,
       z: targetZ,
-    }))
+    }));
     const routePoints = removeConsecutiveDuplicatePoints([
       ...route.route
         .slice(0, section.startIndex)
         .map((point) => ({ ...point })),
       ...collapsedPoints,
       ...route.route.slice(section.endIndex + 1).map((point) => ({ ...point })),
-    ])
+    ]);
     return {
       ...route,
       route: routePoints,
       vias: recomputeVias(routePoints),
-    }
+    };
   }
 
   private relocateTransitionVia({
@@ -468,31 +468,31 @@ export class CrossingViaReductionSolver extends BaseSolver {
     side,
     newViaDistance,
   }: {
-    route: HighDensityRoute
-    section: RouteSection
-    targetZ: number
-    side: TransitionSide
-    newViaDistance: number
+    route: HighDensityRoute;
+    section: RouteSection;
+    targetZ: number;
+    side: TransitionSide;
+    newViaDistance: number;
   }): {
-    route: HighDensityRoute
-    relocatedVia: { x: number; y: number }
+    route: HighDensityRoute;
+    relocatedVia: { x: number; y: number };
   } | null {
-    const split = splitSectionAtDistance(section.points, newViaDistance)
-    if (!split) return null
+    const split = splitSectionAtDistance(section.points, newViaDistance);
+    if (!split) return null;
 
-    const prefixZ = side === "start" ? targetZ : section.z
-    const suffixZ = side === "start" ? section.z : targetZ
+    const prefixZ = side === "start" ? targetZ : section.z;
+    const suffixZ = side === "start" ? section.z : targetZ;
     const replacementPoints = [
       ...split.prefix.map((point) => ({ ...point, z: prefixZ })),
       ...split.suffix.map((point) => ({ ...point, z: suffixZ })),
-    ]
+    ];
     const routePoints = removeConsecutiveDuplicatePoints([
       ...route.route
         .slice(0, section.startIndex)
         .map((point) => ({ ...point })),
       ...replacementPoints,
       ...route.route.slice(section.endIndex + 1).map((point) => ({ ...point })),
-    ])
+    ]);
     return {
       route: {
         ...route,
@@ -500,7 +500,7 @@ export class CrossingViaReductionSolver extends BaseSolver {
         vias: recomputeVias(routePoints),
       },
       relocatedVia: { x: split.point.x, y: split.point.y },
-    }
+    };
   }
 
   private relocateTransitionVias({
@@ -510,38 +510,38 @@ export class CrossingViaReductionSolver extends BaseSolver {
     detourZ,
     detourTraceThickness,
   }: {
-    route: HighDensityRoute
-    sections: RouteSection[]
-    crossingGroups: IndexedCrossingGroup[]
-    detourZ: number
-    detourTraceThickness: number
+    route: HighDensityRoute;
+    sections: RouteSection[];
+    crossingGroups: IndexedCrossingGroup[];
+    detourZ: number;
+    detourTraceThickness: number;
   }): {
-    route: HighDensityRoute
-    relocatedVias: Array<{ x: number; y: number }>
+    route: HighDensityRoute;
+    relocatedVias: Array<{ x: number; y: number }>;
   } | null {
-    const groupsBySection = new Map<number, IndexedCrossingGroup[]>()
+    const groupsBySection = new Map<number, IndexedCrossingGroup[]>();
     for (const crossingGroup of crossingGroups) {
       const groups =
-        groupsBySection.get(crossingGroup.transitionSectionIndex) ?? []
-      groups.push(crossingGroup)
-      groupsBySection.set(crossingGroup.transitionSectionIndex, groups)
+        groupsBySection.get(crossingGroup.transitionSectionIndex) ?? [];
+      groups.push(crossingGroup);
+      groupsBySection.set(crossingGroup.transitionSectionIndex, groups);
     }
 
     const replacements: Array<{
-      section: RouteSection
-      points: RoutePoint[]
-    }> = []
-    const relocatedVias: Array<{ x: number; y: number }> = []
+      section: RouteSection;
+      points: RoutePoint[];
+    }> = [];
+    const relocatedVias: Array<{ x: number; y: number }> = [];
     const viaClearance =
       route.viaDiameter / 2 +
       detourTraceThickness / 2 +
       this.traceMargin +
-      EPSILON
+      EPSILON;
 
     for (const [sectionIndex, sectionGroups] of groupsBySection) {
-      if (sectionGroups.length !== 1) return null
-      const section = sections[sectionIndex]
-      const crossingGroup = sectionGroups[0]
+      if (sectionGroups.length !== 1) return null;
+      const section = sections[sectionIndex];
+      const crossingGroup = sectionGroups[0];
       if (
         !hasTransitionOnSide({
           sections,
@@ -550,27 +550,27 @@ export class CrossingViaReductionSolver extends BaseSolver {
           side: crossingGroup.side,
         })
       ) {
-        return null
+        return null;
       }
       const newViaDistance =
         crossingGroup.side === "start"
           ? Math.max(...crossingGroup.crossingDistances) + viaClearance
-          : Math.min(...crossingGroup.crossingDistances) - viaClearance
-      const split = splitSectionAtDistance(section.points, newViaDistance)
-      if (!split) return null
-      const prefixZ = crossingGroup.side === "start" ? detourZ : section.z
-      const suffixZ = crossingGroup.side === "start" ? section.z : detourZ
+          : Math.min(...crossingGroup.crossingDistances) - viaClearance;
+      const split = splitSectionAtDistance(section.points, newViaDistance);
+      if (!split) return null;
+      const prefixZ = crossingGroup.side === "start" ? detourZ : section.z;
+      const suffixZ = crossingGroup.side === "start" ? section.z : detourZ;
       replacements.push({
         section,
         points: [
           ...split.prefix.map((point) => ({ ...point, z: prefixZ })),
           ...split.suffix.map((point) => ({ ...point, z: suffixZ })),
         ],
-      })
-      relocatedVias.push({ x: split.point.x, y: split.point.y })
+      });
+      relocatedVias.push({ x: split.point.x, y: split.point.y });
     }
 
-    let routePoints = route.route.map((point) => ({ ...point }))
+    let routePoints = route.route.map((point) => ({ ...point }));
     for (const replacement of replacements.sort(
       (first, second) => second.section.startIndex - first.section.startIndex,
     )) {
@@ -578,9 +578,9 @@ export class CrossingViaReductionSolver extends BaseSolver {
         ...routePoints.slice(0, replacement.section.startIndex),
         ...replacement.points,
         ...routePoints.slice(replacement.section.endIndex + 1),
-      ]
+      ];
     }
-    routePoints = removeConsecutiveDuplicatePoints(routePoints)
+    routePoints = removeConsecutiveDuplicatePoints(routePoints);
     return {
       route: {
         ...route,
@@ -588,7 +588,7 @@ export class CrossingViaReductionSolver extends BaseSolver {
         vias: recomputeVias(routePoints),
       },
       relocatedVias,
-    }
+    };
   }
 
   private routeIsClear(
@@ -598,8 +598,8 @@ export class CrossingViaReductionSolver extends BaseSolver {
   ): boolean {
     for (const section of breakRouteIntoSections(route)) {
       for (let index = 1; index < section.points.length; index++) {
-        const start = section.points[index - 1]
-        const end = section.points[index]
+        const start = section.points[index - 1];
+        const end = section.points[index];
         if (
           !originalRouteSegmentKeys.has(getSegmentKey(start, end)) &&
           this.input.outline &&
@@ -610,7 +610,7 @@ export class CrossingViaReductionSolver extends BaseSolver {
             margin: route.traceThickness / 2,
           })
         ) {
-          return false
+          return false;
         }
       }
 
@@ -629,10 +629,10 @@ export class CrossingViaReductionSolver extends BaseSolver {
             !originalRouteSegmentKeys.has(getSegmentKey(start, end)),
         })
       ) {
-        return false
+        return false;
       }
     }
-    return true
+    return true;
   }
 
   private relocatedViaIsClear(
@@ -640,53 +640,53 @@ export class CrossingViaReductionSolver extends BaseSolver {
     relocatedVia: { x: number; y: number },
     hdRouteSHI: RouteClearanceIndex,
   ): boolean {
-    const viaRadius = route.viaDiameter / 2
+    const viaRadius = route.viaDiameter / 2;
     for (let z = 0; z < this.input.layerCount; z++) {
       const conflicts = hdRouteSHI.getConflictingRoutesNearPoint(
         { ...relocatedVia, z },
         viaRadius + this.traceMargin,
-      )
+      );
       if (
         conflicts.some(
           ({ conflictingRoute }) =>
             !routesAreSameNet(route, conflictingRoute, this.input.connMap),
         )
       ) {
-        return false
+        return false;
       }
     }
 
-    const obstacleSearchMargin = viaRadius + this.obstacleMargin
+    const obstacleSearchMargin = viaRadius + this.obstacleMargin;
     const nearbyObstacles = this.obstacleSHI.searchArea(
       relocatedVia.x,
       relocatedVia.y,
       obstacleSearchMargin * 2,
       obstacleSearchMargin * 2,
-    )
+    );
     for (const obstacle of nearbyObstacles) {
-      if (obstacleIsSameNet(obstacle, route, this.input.connMap)) continue
+      if (obstacleIsSameNet(obstacle, route, this.input.connMap)) continue;
       if (
         segmentToBoxMinDistance(relocatedVia, relocatedVia, obstacle) <
         obstacleSearchMargin
       ) {
-        return false
+        return false;
       }
     }
 
     if (this.input.outline) {
       for (let index = 0; index < this.input.outline.length; index++) {
-        const edgeStart = this.input.outline[index]
+        const edgeStart = this.input.outline[index];
         const edgeEnd =
-          this.input.outline[(index + 1) % this.input.outline.length]
+          this.input.outline[(index + 1) % this.input.outline.length];
         if (
           pointToSegmentDistance(relocatedVia, edgeStart, edgeEnd) <
           viaRadius + this.traceMargin
         ) {
-          return false
+          return false;
         }
       }
     }
-    return true
+    return true;
   }
 
   /**
@@ -700,13 +700,13 @@ export class CrossingViaReductionSolver extends BaseSolver {
   ): boolean {
     for (const section of breakRouteIntoSections(route)) {
       const containsChangedSegment = section.points.some((point, index) => {
-        const previousPoint = section.points[index - 1]
+        const previousPoint = section.points[index - 1];
         return (
           previousPoint !== undefined &&
           !originalRouteSegmentKeys.has(getSegmentKey(previousPoint, point))
-        )
-      })
-      if (!containsChangedSegment) continue
+        );
+      });
+      if (!containsChangedSegment) continue;
 
       if (this.input.outline) {
         for (let index = 1; index < section.points.length; index++) {
@@ -718,7 +718,7 @@ export class CrossingViaReductionSolver extends BaseSolver {
               margin: route.traceThickness / 2,
             })
           ) {
-            return false
+            return false;
           }
         }
       }
@@ -736,10 +736,10 @@ export class CrossingViaReductionSolver extends BaseSolver {
           traceMargin: this.traceMargin,
         })
       ) {
-        return false
+        return false;
       }
     }
-    return true
+    return true;
   }
 
   private candidateIsClear(
@@ -752,15 +752,15 @@ export class CrossingViaReductionSolver extends BaseSolver {
         route: candidate.detourRoute,
       },
       ...candidate.transitionUpdates,
-    ]
+    ];
     const ignoredConnectionNames = new Set(
       candidateRoutes.map(
         ({ routeIndex }) => this.reducedHdRoutes[routeIndex].connectionName,
       ),
-    )
+    );
     const originalDetourRouteSegmentKeys = getRouteSegmentKeys(
       this.reducedHdRoutes[candidate.detourRouteIndex],
-    )
+    );
     const detourObstacleIndex = createCandidateClearanceIndex({
       baseIndexes,
       otherCandidateRoutes: candidate.transitionUpdates.map(
@@ -768,9 +768,9 @@ export class CrossingViaReductionSolver extends BaseSolver {
       ),
       ignoredConnectionNames,
       originalRouteSegmentKeys: originalDetourRouteSegmentKeys,
-    })
+    });
     this.stats.candidateClearanceChecks =
-      (this.stats.candidateClearanceChecks ?? 0) + 1
+      (this.stats.candidateClearanceChecks ?? 0) + 1;
     if (
       !this.routeIsClear(
         candidate.detourRoute,
@@ -778,13 +778,13 @@ export class CrossingViaReductionSolver extends BaseSolver {
         originalDetourRouteSegmentKeys,
       )
     ) {
-      return false
+      return false;
     }
 
     for (const transitionUpdate of candidate.transitionUpdates) {
       const originalSegmentKeys = getRouteSegmentKeys(
         this.reducedHdRoutes[transitionUpdate.routeIndex],
-      )
+      );
       const transitionObstacleIndex = createCandidateClearanceIndex({
         baseIndexes,
         otherCandidateRoutes: candidateRoutes
@@ -794,7 +794,7 @@ export class CrossingViaReductionSolver extends BaseSolver {
           .map(({ route }) => route),
         ignoredConnectionNames,
         originalRouteSegmentKeys: originalSegmentKeys,
-      })
+      });
       if (
         !this.routeIsClear(
           transitionUpdate.route,
@@ -810,14 +810,14 @@ export class CrossingViaReductionSolver extends BaseSolver {
             ),
         )
       ) {
-        return false
+        return false;
       }
     }
 
     return this.changedSectionsAreStaticallyClear(
       candidate.detourRoute,
       originalDetourRouteSegmentKeys,
-    )
+    );
   }
 
   /**
@@ -836,20 +836,20 @@ export class CrossingViaReductionSolver extends BaseSolver {
     const candidateRoutes = [
       candidate.detourRoute,
       ...candidate.transitionUpdates.map(({ route }) => route),
-    ]
+    ];
     const candidateConnectionNames = new Set(
       candidateRoutes.map(({ connectionName }) => connectionName),
-    )
+    );
     const routeIndexes = [
       baseIndexes.mutableRoutes,
       ...(baseIndexes.immutableRoutes ? [baseIndexes.immutableRoutes] : []),
-    ]
+    ];
 
     for (const route of candidateRoutes) {
       for (const section of breakRouteIntoSections(route)) {
         for (let index = 1; index < section.points.length; index++) {
-          const start = section.points[index - 1]
-          const end = section.points[index]
+          const start = section.points[index - 1];
+          const end = section.points[index];
           for (const routeIndex of routeIndexes) {
             const hasExternalConflict = routeIndex
               .getConflictingRoutesForSegment(
@@ -867,55 +867,55 @@ export class CrossingViaReductionSolver extends BaseSolver {
                     conflictingRoute,
                     this.input.connMap,
                   ),
-              )
-            if (hasExternalConflict) return false
+              );
+            if (hasExternalConflict) return false;
           }
         }
       }
     }
-    return true
+    return true;
   }
 
   private buildTransitionSegmentIndex(
     sectionsByRoute: RouteSection[][],
     relevantLayerTransitions: ReadonlySet<string>,
   ): FlatbushIndex<IndexedTransitionSegment> | null {
-    const indexedSegments: IndexedTransitionSegment[] = []
+    const indexedSegments: IndexedTransitionSegment[] = [];
     for (
       let routeIndex = 0;
       routeIndex < this.reducedHdRoutes.length;
       routeIndex++
     ) {
-      if (this.reducedHdRoutes[routeIndex].jumpers?.length) continue
-      const sections = sectionsByRoute[routeIndex]
+      if (this.reducedHdRoutes[routeIndex].jumpers?.length) continue;
+      const sections = sectionsByRoute[routeIndex];
       for (
         let sectionIndex = 0;
         sectionIndex < sections.length;
         sectionIndex++
       ) {
-        const section = sections[sectionIndex]
-        if (sectionHasProtectedGeometry(section)) continue
+        const section = sections[sectionIndex];
+        if (sectionHasProtectedGeometry(section)) continue;
 
         for (const side of ["start", "end"] as const) {
           const adjacentZ = getTransitionAdjacentZ({
             sections,
             sectionIndex,
             side,
-          })
-          if (adjacentZ === null || adjacentZ === section.z) continue
+          });
+          if (adjacentZ === null || adjacentZ === section.z) continue;
           if (!relevantLayerTransitions.has(`${section.z}:${adjacentZ}`)) {
-            continue
+            continue;
           }
 
-          let distanceFromSectionStart = 0
+          let distanceFromSectionStart = 0;
           for (
             let segmentIndex = 1;
             segmentIndex < section.points.length;
             segmentIndex++
           ) {
-            const start = section.points[segmentIndex - 1]
-            const end = section.points[segmentIndex]
-            const segmentLength = Math.hypot(end.x - start.x, end.y - start.y)
+            const start = section.points[segmentIndex - 1];
+            const end = section.points[segmentIndex];
+            const segmentLength = Math.hypot(end.x - start.x, end.y - start.y);
             if (segmentLength > EPSILON) {
               indexedSegments.push({
                 routeIndex,
@@ -925,21 +925,21 @@ export class CrossingViaReductionSolver extends BaseSolver {
                 start,
                 end,
                 distanceFromSectionStart,
-              })
+              });
             }
-            distanceFromSectionStart += segmentLength
+            distanceFromSectionStart += segmentLength;
           }
         }
       }
     }
 
     this.stats.transitionSegmentsIndexed =
-      (this.stats.transitionSegmentsIndexed ?? 0) + indexedSegments.length
-    if (indexedSegments.length === 0) return null
+      (this.stats.transitionSegmentsIndexed ?? 0) + indexedSegments.length;
+    if (indexedSegments.length === 0) return null;
 
     const index = new FlatbushIndex<IndexedTransitionSegment>(
       indexedSegments.length,
-    )
+    );
     for (const segment of indexedSegments) {
       index.insert(
         segment,
@@ -947,10 +947,10 @@ export class CrossingViaReductionSolver extends BaseSolver {
         Math.min(segment.start.y, segment.end.y),
         Math.max(segment.start.x, segment.end.x),
         Math.max(segment.start.y, segment.end.y),
-      )
+      );
     }
-    index.finish()
-    return index
+    index.finish();
+    return index;
   }
 
   private getIndexedCrossingGroups({
@@ -959,81 +959,81 @@ export class CrossingViaReductionSolver extends BaseSolver {
     targetZ,
     transitionSegmentIndex,
   }: {
-    detourRouteIndex: number
-    detourSection: RouteSection
-    targetZ: number
-    transitionSegmentIndex: FlatbushIndex<IndexedTransitionSegment>
+    detourRouteIndex: number;
+    detourSection: RouteSection;
+    targetZ: number;
+    transitionSegmentIndex: FlatbushIndex<IndexedTransitionSegment>;
   }): IndexedCrossingGroup[] {
-    const groups = new Map<string, IndexedCrossingGroup>()
+    const groups = new Map<string, IndexedCrossingGroup>();
     for (
       let detourSegmentIndex = 1;
       detourSegmentIndex < detourSection.points.length;
       detourSegmentIndex++
     ) {
-      const detourStart = detourSection.points[detourSegmentIndex - 1]
-      const detourEnd = detourSection.points[detourSegmentIndex]
+      const detourStart = detourSection.points[detourSegmentIndex - 1];
+      const detourEnd = detourSection.points[detourSegmentIndex];
       if (
         Math.hypot(detourEnd.x - detourStart.x, detourEnd.y - detourStart.y) <=
         EPSILON
       ) {
-        continue
+        continue;
       }
 
       this.stats.indexedDetourSegmentQueries =
-        (this.stats.indexedDetourSegmentQueries ?? 0) + 1
+        (this.stats.indexedDetourSegmentQueries ?? 0) + 1;
       const nearbySegments = transitionSegmentIndex.search(
         Math.min(detourStart.x, detourEnd.x) - EPSILON,
         Math.min(detourStart.y, detourEnd.y) - EPSILON,
         Math.max(detourStart.x, detourEnd.x) + EPSILON,
         Math.max(detourStart.y, detourEnd.y) + EPSILON,
-      )
+      );
       for (const transitionSegment of nearbySegments) {
         if (
           transitionSegment.routeIndex === detourRouteIndex ||
           transitionSegment.start.z !== targetZ ||
           transitionSegment.adjacentZ !== detourSection.z
         ) {
-          continue
+          continue;
         }
 
         this.stats.exactSegmentIntersectionChecks =
-          (this.stats.exactSegmentIntersectionChecks ?? 0) + 1
+          (this.stats.exactSegmentIntersectionChecks ?? 0) + 1;
         const distanceOnTransitionSegment = getInteriorIntersectionDistance(
           transitionSegment.start,
           transitionSegment.end,
           detourStart,
           detourEnd,
-        )
-        if (distanceOnTransitionSegment === null) continue
+        );
+        if (distanceOnTransitionSegment === null) continue;
 
-        const key = `${transitionSegment.routeIndex}:${transitionSegment.sectionIndex}:${transitionSegment.side}`
-        let group = groups.get(key)
+        const key = `${transitionSegment.routeIndex}:${transitionSegment.sectionIndex}:${transitionSegment.side}`;
+        let group = groups.get(key);
         if (!group) {
           group = {
             transitionRouteIndex: transitionSegment.routeIndex,
             transitionSectionIndex: transitionSegment.sectionIndex,
             side: transitionSegment.side,
             crossingDistances: [],
-          }
-          groups.set(key, group)
+          };
+          groups.set(key, group);
         }
         group.crossingDistances.push(
           transitionSegment.distanceFromSectionStart +
             distanceOnTransitionSegment,
-        )
+        );
       }
     }
 
     return [...groups.values()].sort((first, second) => {
       if (first.transitionRouteIndex !== second.transitionRouteIndex) {
-        return first.transitionRouteIndex - second.transitionRouteIndex
+        return first.transitionRouteIndex - second.transitionRouteIndex;
       }
       if (first.transitionSectionIndex !== second.transitionSectionIndex) {
-        return first.transitionSectionIndex - second.transitionSectionIndex
+        return first.transitionSectionIndex - second.transitionSectionIndex;
       }
-      if (first.side === second.side) return 0
-      return first.side === "start" ? -1 : 1
-    })
+      if (first.side === second.side) return 0;
+      return first.side === "start" ? -1 : 1;
+    });
   }
 
   private tryCreateCandidate({
@@ -1048,16 +1048,16 @@ export class CrossingViaReductionSolver extends BaseSolver {
     crossingDistances,
     baseClearanceIndexes,
   }: {
-    detourRouteIndex: number
-    detourSection: RouteSection
-    targetZ: number
-    transitionRouteIndex: number
-    transitionSection: RouteSection
-    transitionSections: RouteSection[]
-    transitionSectionIndex: number
-    side: TransitionSide
-    crossingDistances: number[]
-    baseClearanceIndexes: BaseClearanceIndexes
+    detourRouteIndex: number;
+    detourSection: RouteSection;
+    targetZ: number;
+    transitionRouteIndex: number;
+    transitionSection: RouteSection;
+    transitionSections: RouteSection[];
+    transitionSectionIndex: number;
+    side: TransitionSide;
+    crossingDistances: number[];
+    baseClearanceIndexes: BaseClearanceIndexes;
   }): CrossingReductionCandidate | null {
     if (
       !hasTransitionOnSide({
@@ -1067,42 +1067,42 @@ export class CrossingViaReductionSolver extends BaseSolver {
         side,
       })
     ) {
-      return null
+      return null;
     }
 
-    const detourRoute = this.reducedHdRoutes[detourRouteIndex]
-    const transitionRoute = this.reducedHdRoutes[transitionRouteIndex]
-    if (crossingDistances.length === 0) return null
+    const detourRoute = this.reducedHdRoutes[detourRouteIndex];
+    const transitionRoute = this.reducedHdRoutes[transitionRouteIndex];
+    if (crossingDistances.length === 0) return null;
 
     const viaClearance =
       transitionRoute.viaDiameter / 2 +
       detourRoute.traceThickness / 2 +
       this.traceMargin +
-      EPSILON
+      EPSILON;
     const newViaDistance =
       side === "start"
         ? Math.max(...crossingDistances) + viaClearance
-        : Math.min(...crossingDistances) - viaClearance
+        : Math.min(...crossingDistances) - viaClearance;
     const relocatedTransition = this.relocateTransitionVia({
       route: transitionRoute,
       section: transitionSection,
       targetZ: detourSection.z,
       side,
       newViaDistance,
-    })
-    if (!relocatedTransition) return null
+    });
+    if (!relocatedTransition) return null;
 
     const collapsedDetour = this.collapseDetourSection({
       route: detourRoute,
       section: detourSection,
       targetZ,
-    })
+    });
     const viasRemoved =
       detourRoute.vias.length +
       transitionRoute.vias.length -
       collapsedDetour.vias.length -
-      relocatedTransition.route.vias.length
-    if (viasRemoved !== 2) return null
+      relocatedTransition.route.vias.length;
+    if (viasRemoved !== 2) return null;
 
     const candidate: CrossingReductionCandidate = {
       detourRouteIndex,
@@ -1114,10 +1114,10 @@ export class CrossingViaReductionSolver extends BaseSolver {
           relocatedVias: [relocatedTransition.relocatedVia],
         },
       ],
-    }
+    };
     return this.candidateIsClear(candidate, baseClearanceIndexes)
       ? candidate
-      : null
+      : null;
   }
 
   private tryCreateMultiCrossingCandidate({
@@ -1128,66 +1128,66 @@ export class CrossingViaReductionSolver extends BaseSolver {
     sectionsByRoute,
     baseClearanceIndexes,
   }: {
-    detourRouteIndex: number
-    detourSection: RouteSection
-    targetZ: number
-    crossingGroups: IndexedCrossingGroup[]
-    sectionsByRoute: RouteSection[][]
-    baseClearanceIndexes: BaseClearanceIndexes
+    detourRouteIndex: number;
+    detourSection: RouteSection;
+    targetZ: number;
+    crossingGroups: IndexedCrossingGroup[];
+    sectionsByRoute: RouteSection[][];
+    baseClearanceIndexes: BaseClearanceIndexes;
   }): CrossingReductionCandidate | null {
-    if (crossingGroups.length < 2) return null
-    const detourRoute = this.reducedHdRoutes[detourRouteIndex]
+    if (crossingGroups.length < 2) return null;
+    const detourRoute = this.reducedHdRoutes[detourRouteIndex];
     const transitionUpdates: CrossingReductionCandidate["transitionUpdates"] =
-      []
-    const groupsByRoute = new Map<number, IndexedCrossingGroup[]>()
+      [];
+    const groupsByRoute = new Map<number, IndexedCrossingGroup[]>();
     for (const crossingGroup of crossingGroups) {
       const routeGroups =
-        groupsByRoute.get(crossingGroup.transitionRouteIndex) ?? []
-      routeGroups.push(crossingGroup)
-      groupsByRoute.set(crossingGroup.transitionRouteIndex, routeGroups)
+        groupsByRoute.get(crossingGroup.transitionRouteIndex) ?? [];
+      routeGroups.push(crossingGroup);
+      groupsByRoute.set(crossingGroup.transitionRouteIndex, routeGroups);
     }
     for (const [routeIndex, routeGroups] of groupsByRoute) {
-      const transitionRoute = this.reducedHdRoutes[routeIndex]
+      const transitionRoute = this.reducedHdRoutes[routeIndex];
       const relocatedTransition = this.relocateTransitionVias({
         route: transitionRoute,
         sections: sectionsByRoute[routeIndex],
         crossingGroups: routeGroups,
         detourZ: detourSection.z,
         detourTraceThickness: detourRoute.traceThickness,
-      })
-      if (!relocatedTransition) return null
+      });
+      if (!relocatedTransition) return null;
       transitionUpdates.push({
         routeIndex,
         route: relocatedTransition.route,
         relocatedVias: relocatedTransition.relocatedVias,
-      })
+      });
     }
 
     const collapsedDetour = this.collapseDetourSection({
       route: detourRoute,
       section: detourSection,
       targetZ,
-    })
+    });
     const originalViaCount =
       detourRoute.vias.length +
       [...groupsByRoute.keys()].reduce(
         (sum, transitionRouteIndex) =>
           sum + this.reducedHdRoutes[transitionRouteIndex].vias.length,
         0,
-      )
+      );
     const candidateViaCount =
       collapsedDetour.vias.length +
-      transitionUpdates.reduce((sum, { route }) => sum + route.vias.length, 0)
-    if (originalViaCount - candidateViaCount !== 2) return null
+      transitionUpdates.reduce((sum, { route }) => sum + route.vias.length, 0);
+    if (originalViaCount - candidateViaCount !== 2) return null;
 
     this.stats.multiCrossingCandidates =
-      (this.stats.multiCrossingCandidates ?? 0) + 1
+      (this.stats.multiCrossingCandidates ?? 0) + 1;
     const candidate: CrossingReductionCandidate = {
       detourRouteIndex,
       detourRoute: collapsedDetour,
       transitionUpdates,
-    }
-    if (!this.candidateIsClear(candidate, baseClearanceIndexes)) return null
+    };
+    if (!this.candidateIsClear(candidate, baseClearanceIndexes)) return null;
     if (
       !this.candidateRoutesHaveNoExternalCopperConflicts(
         candidate,
@@ -1195,87 +1195,87 @@ export class CrossingViaReductionSolver extends BaseSolver {
       )
     ) {
       this.stats.multiCrossingPreexistingConflictRejections =
-        (this.stats.multiCrossingPreexistingConflictRejections ?? 0) + 1
-      return null
+        (this.stats.multiCrossingPreexistingConflictRejections ?? 0) + 1;
+      return null;
     }
     this.stats.multiCrossingReductions =
-      (this.stats.multiCrossingReductions ?? 0) + 1
+      (this.stats.multiCrossingReductions ?? 0) + 1;
     this.stats.transitionRoutesMovedByMultiCrossingReductions =
       (this.stats.transitionRoutesMovedByMultiCrossingReductions ?? 0) +
-      transitionUpdates.length
-    return candidate
+      transitionUpdates.length;
+    return candidate;
   }
 
   private findCrossingReduction(): CrossingReductionCandidate | null {
     const sectionsByRoute = this.reducedHdRoutes.map((route) =>
       breakRouteIntoSections(route),
-    )
-    const detourCandidates: DetourCandidate[] = []
-    const relevantLayerTransitions = new Set<string>()
+    );
+    const detourCandidates: DetourCandidate[] = [];
+    const relevantLayerTransitions = new Set<string>();
     for (
       let detourRouteIndex = 0;
       detourRouteIndex < this.reducedHdRoutes.length;
       detourRouteIndex++
     ) {
-      if (this.reducedHdRoutes[detourRouteIndex].jumpers?.length) continue
-      const detourSections = sectionsByRoute[detourRouteIndex]
+      if (this.reducedHdRoutes[detourRouteIndex].jumpers?.length) continue;
+      const detourSections = sectionsByRoute[detourRouteIndex];
       for (
         let detourSectionIndex = 1;
         detourSectionIndex < detourSections.length - 1;
         detourSectionIndex++
       ) {
-        const previousSection = detourSections[detourSectionIndex - 1]
-        const detourSection = detourSections[detourSectionIndex]
-        const nextSection = detourSections[detourSectionIndex + 1]
+        const previousSection = detourSections[detourSectionIndex - 1];
+        const detourSection = detourSections[detourSectionIndex];
+        const nextSection = detourSections[detourSectionIndex + 1];
         if (
           previousSection.z !== nextSection.z ||
           previousSection.z === detourSection.z ||
           sectionHasProtectedGeometry(detourSection)
         ) {
-          continue
+          continue;
         }
         detourCandidates.push({
           routeIndex: detourRouteIndex,
           section: detourSection,
           targetZ: previousSection.z,
-        })
-        relevantLayerTransitions.add(`${previousSection.z}:${detourSection.z}`)
+        });
+        relevantLayerTransitions.add(`${previousSection.z}:${detourSection.z}`);
       }
     }
-    if (detourCandidates.length === 0) return null
+    if (detourCandidates.length === 0) return null;
 
     const transitionSegmentIndex = this.buildTransitionSegmentIndex(
       sectionsByRoute,
       relevantLayerTransitions,
-    )
-    if (!transitionSegmentIndex) return null
-    let baseClearanceIndexes: BaseClearanceIndexes | null = null
+    );
+    if (!transitionSegmentIndex) return null;
+    let baseClearanceIndexes: BaseClearanceIndexes | null = null;
 
     for (const detourCandidate of detourCandidates) {
-      const detourRouteIndex = detourCandidate.routeIndex
-      const detourSection = detourCandidate.section
-      const detourRoute = this.reducedHdRoutes[detourRouteIndex]
+      const detourRouteIndex = detourCandidate.routeIndex;
+      const detourSection = detourCandidate.section;
+      const detourRoute = this.reducedHdRoutes[detourRouteIndex];
       const crossingGroups = this.getIndexedCrossingGroups({
         detourRouteIndex,
         detourSection,
         targetZ: detourCandidate.targetZ,
         transitionSegmentIndex,
-      })
+      });
       const actionableCrossingGroups = crossingGroups.filter(
         ({ transitionRouteIndex }) => {
-          const transitionRoute = this.reducedHdRoutes[transitionRouteIndex]
+          const transitionRoute = this.reducedHdRoutes[transitionRouteIndex];
           return (
             !transitionRoute.jumpers?.length &&
             !routesAreSameNet(detourRoute, transitionRoute, this.input.connMap)
-          )
+          );
         },
-      )
-      const crossingGroupOptions = new Map<string, IndexedCrossingGroup[]>()
+      );
+      const crossingGroupOptions = new Map<string, IndexedCrossingGroup[]>();
       for (const crossingGroup of actionableCrossingGroups) {
-        const key = `${crossingGroup.transitionRouteIndex}:${crossingGroup.transitionSectionIndex}`
-        const options = crossingGroupOptions.get(key) ?? []
-        options.push(crossingGroup)
-        crossingGroupOptions.set(key, options)
+        const key = `${crossingGroup.transitionRouteIndex}:${crossingGroup.transitionSectionIndex}`;
+        const options = crossingGroupOptions.get(key) ?? [];
+        options.push(crossingGroup);
+        crossingGroupOptions.set(key, options);
       }
       if (crossingGroupOptions.size > 1) {
         baseClearanceIndexes ??= {
@@ -1283,34 +1283,34 @@ export class CrossingViaReductionSolver extends BaseSolver {
           immutableRoutes: this.input.otherHdRoutes?.length
             ? new HighDensityRouteSpatialIndex([...this.input.otherHdRoutes])
             : null,
-        }
+        };
         let selections: Array<{
-          groups: IndexedCrossingGroup[]
-          movement: number
-        }> = [{ groups: [], movement: 0 }]
+          groups: IndexedCrossingGroup[];
+          movement: number;
+        }> = [{ groups: [], movement: 0 }];
         const getMovementDistance = (group: IndexedCrossingGroup) => {
-          const route = this.reducedHdRoutes[group.transitionRouteIndex]
+          const route = this.reducedHdRoutes[group.transitionRouteIndex];
           const section =
             sectionsByRoute[group.transitionRouteIndex][
               group.transitionSectionIndex
-            ]
+            ];
           const viaClearance =
             route.viaDiameter / 2 +
             detourRoute.traceThickness / 2 +
             this.traceMargin +
-            EPSILON
+            EPSILON;
           const newViaDistance =
             group.side === "start"
               ? Math.max(...group.crossingDistances) + viaClearance
-              : Math.min(...group.crossingDistances) - viaClearance
+              : Math.min(...group.crossingDistances) - viaClearance;
           return group.side === "start"
             ? newViaDistance
-            : getSectionLength(section.points) - newViaDistance
-        }
+            : getSectionLength(section.points) - newViaDistance;
+        };
         for (const options of crossingGroupOptions.values()) {
           const sortedOptions = options
             .map((group) => ({ group, movement: getMovementDistance(group) }))
-            .sort((first, second) => first.movement - second.movement)
+            .sort((first, second) => first.movement - second.movement);
           selections = selections
             .flatMap((selection) =>
               sortedOptions.map((option) => ({
@@ -1319,7 +1319,7 @@ export class CrossingViaReductionSolver extends BaseSolver {
               })),
             )
             .sort((first, second) => first.movement - second.movement)
-            .slice(0, MAX_MULTI_CROSSING_SELECTIONS)
+            .slice(0, MAX_MULTI_CROSSING_SELECTIONS);
         }
         for (const selection of selections) {
           const candidate = this.tryCreateMultiCrossingCandidate({
@@ -1329,25 +1329,25 @@ export class CrossingViaReductionSolver extends BaseSolver {
             crossingGroups: selection.groups,
             sectionsByRoute,
             baseClearanceIndexes,
-          })
-          if (candidate) return candidate
+          });
+          if (candidate) return candidate;
         }
-        continue
+        continue;
       }
 
       const singleGroupOptions =
-        crossingGroupOptions.values().next().value ?? []
+        crossingGroupOptions.values().next().value ?? [];
       for (const crossingGroup of singleGroupOptions) {
-        const transitionRouteIndex = crossingGroup.transitionRouteIndex
-        const transitionSections = sectionsByRoute[transitionRouteIndex]
+        const transitionRouteIndex = crossingGroup.transitionRouteIndex;
+        const transitionSections = sectionsByRoute[transitionRouteIndex];
         const transitionSection =
-          transitionSections[crossingGroup.transitionSectionIndex]
+          transitionSections[crossingGroup.transitionSectionIndex];
         baseClearanceIndexes ??= {
           mutableRoutes: new HighDensityRouteSpatialIndex(this.reducedHdRoutes),
           immutableRoutes: this.input.otherHdRoutes?.length
             ? new HighDensityRouteSpatialIndex([...this.input.otherHdRoutes])
             : null,
-        }
+        };
         const candidate = this.tryCreateCandidate({
           detourRouteIndex,
           detourSection,
@@ -1359,32 +1359,33 @@ export class CrossingViaReductionSolver extends BaseSolver {
           side: crossingGroup.side,
           crossingDistances: crossingGroup.crossingDistances,
           baseClearanceIndexes,
-        })
-        if (candidate) return candidate
+        });
+        if (candidate) return candidate;
       }
     }
-    return null
+    return null;
   }
 
   _step(): void {
-    const candidate = this.findCrossingReduction()
+    const candidate = this.findCrossingReduction();
     if (!candidate) {
-      this.solved = true
-      return
+      this.solved = true;
+      return;
     }
 
-    this.reducedHdRoutes[candidate.detourRouteIndex] = candidate.detourRoute
+    this.reducedHdRoutes[candidate.detourRouteIndex] = candidate.detourRoute;
     for (const transitionUpdate of candidate.transitionUpdates) {
-      this.reducedHdRoutes[transitionUpdate.routeIndex] = transitionUpdate.route
+      this.reducedHdRoutes[transitionUpdate.routeIndex] =
+        transitionUpdate.route;
     }
     this.stats.crossingViaReductions =
-      (this.stats.crossingViaReductions ?? 0) + 1
+      (this.stats.crossingViaReductions ?? 0) + 1;
     this.stats.viasRemovedByCrossingReductions =
-      (this.stats.viasRemovedByCrossingReductions ?? 0) + 2
+      (this.stats.viasRemovedByCrossingReductions ?? 0) + 2;
   }
 
   getReducedHdRoutes(): HighDensityRoute[] {
-    return this.reducedHdRoutes
+    return this.reducedHdRoutes;
   }
 
   visualize(): GraphicsObject {
@@ -1395,26 +1396,26 @@ export class CrossingViaReductionSolver extends BaseSolver {
       rects: [],
       coordinateSystem: "cartesian",
       title: "Crossing Via Reduction Solver",
-    }
+    };
     for (const obstacle of this.input.obstacles) {
       graphics.rects.push({
         center: obstacle.center,
         width: obstacle.width,
         height: obstacle.height,
         fill: "rgba(128, 128, 128, 0.2)",
-      })
+      });
     }
     for (const route of this.reducedHdRoutes) {
       for (let index = 1; index < route.route.length; index++) {
-        const start = route.route[index - 1]
-        const end = route.route[index]
-        if (start.z !== end.z) continue
+        const start = route.route[index - 1];
+        const end = route.route[index];
+        if (start.z !== end.z) continue;
         graphics.lines.push({
           points: [start, end],
           strokeColor: start.z === 0 ? "#d32f2f" : "#3367a8",
           strokeWidth: route.traceThickness,
           label: `${route.connectionName} (z=${start.z})`,
-        })
+        });
       }
       for (const via of route.vias) {
         graphics.circles.push({
@@ -1422,9 +1423,9 @@ export class CrossingViaReductionSolver extends BaseSolver {
           radius: route.viaDiameter / 2,
           fill: "#ff20d6",
           label: `${route.connectionName} via`,
-        })
+        });
       }
     }
-    return graphics
+    return graphics;
   }
 }

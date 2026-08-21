@@ -1,11 +1,11 @@
-import { expect, test } from "bun:test"
-import { PreloadedTraceGraphSolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/preloaded-trace-graph-solver"
+import { expect, test } from "bun:test";
+import { PreloadedTraceGraphSolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/preloaded-trace-graph-solver";
 import type {
   SegmentPortPoint,
   SharedEdgeSegment,
-} from "lib/solvers/AvailableSegmentPointSolver/AvailableSegmentPointSolver"
-import type { SimpleRouteJson } from "lib/types"
-import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
+} from "lib/solvers/AvailableSegmentPointSolver/AvailableSegmentPointSolver";
+import type { SimpleRouteJson } from "lib/types";
+import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson";
 
 const createPort = (id: string, y: number, z: number): SegmentPortPoint => ({
   segmentPortPointId: id,
@@ -17,7 +17,7 @@ const createPort = (id: string, y: number, z: number): SegmentPortPoint => ({
   connectionName: null,
   distToCentermostPortOnZ: Math.abs(y),
   cramped: false,
-})
+});
 
 test("preloaded traces reserve existing ports without changing graph topology", () => {
   const sharedEdgeSegments: SharedEdgeSegment[] = [
@@ -34,8 +34,8 @@ test("preloaded traces reserve existing ports without changing graph topology", 
         createPort("bottom-high", 0.5, 1),
       ],
     },
-  ]
-  const topologyBefore = structuredClone(sharedEdgeSegments)
+  ];
+  const topologyBefore = structuredClone(sharedEdgeSegments);
   const srj: SimpleRouteJson = {
     layerCount: 2,
     minTraceWidth: 0.1,
@@ -63,14 +63,14 @@ test("preloaded traces reserve existing ports without changing graph topology", 
         ],
       },
     ],
-  }
+  };
   const fixedNetId =
     getConnectivityMapFromSimpleRouteJson(srj).getNetConnectedToId(
       "fixed-trace",
-    )
-  const solver = new PreloadedTraceGraphSolver(sharedEdgeSegments, srj)
+    );
+  const solver = new PreloadedTraceGraphSolver(sharedEdgeSegments, srj);
 
-  solver.solve()
+  solver.solve();
 
   expect(
     solver.getOutput().map((segment) => ({
@@ -91,7 +91,7 @@ test("preloaded traces reserve existing ports without changing graph topology", 
         cramped: port.cramped,
       })),
     })),
-  ).toEqual(topologyBefore)
+  ).toEqual(topologyBefore);
   expect(sharedEdgeSegments[0]!.portPoints[2]).toMatchObject({
     segmentPortPointId: "top-high",
     _preloadedFixedNetIds: [fixedNetId],
@@ -104,7 +104,7 @@ test("preloaded traces reserve existing ports without changing graph topology", 
         z: 0,
       },
     ],
-  })
+  });
   expect(solver.stats).toMatchObject({
     inputBoundaryCount: 1,
     outputBoundaryCount: 1,
@@ -113,5 +113,5 @@ test("preloaded traces reserve existing ports without changing graph topology", 
     preloadedPortCount: 1,
     tracePortAssignmentCount: 1,
     topologyChanged: false,
-  })
-})
+  });
+});

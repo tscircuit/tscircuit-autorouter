@@ -1,34 +1,34 @@
-import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
+import type { ConnectivityMap } from "circuit-json-to-connectivity-map";
 import {
   getGlobalInMemoryCache,
   setupGlobalCaches,
-} from "lib/cache/setupGlobalCaches"
-import { CachableSolver, CacheProvider } from "lib/cache/types"
+} from "lib/cache/setupGlobalCaches";
+import { CachableSolver, CacheProvider } from "lib/cache/types";
 import type {
   HighDensityIntraNodeRoute,
   NodeWithPortPoints,
   PortPoint,
-} from "lib/types/high-density-types"
-import objectHash from "object-hash"
-import type { HighDensityHyperParameters } from "../HighDensitySolver/HighDensityHyperParameters"
-import { PortfolioSingleIntraNodeSolver } from "./PortfolioSingleIntraNodeSolver"
+} from "lib/types/high-density-types";
+import objectHash from "object-hash";
+import type { HighDensityHyperParameters } from "../HighDensitySolver/HighDensityHyperParameters";
+import { PortfolioSingleIntraNodeSolver } from "./PortfolioSingleIntraNodeSolver";
 
 // Define the structure of the cached data
 type CachedSolvedPortfolioSingleIntraNode =
   | { success: true; solvedRoutes: HighDensityIntraNodeRoute[] }
-  | { success: false }
+  | { success: false };
 
 // Define the transform type (currently unused but required by the interface)
-type CacheToPortfolioSingleIntraNodeTransform = Record<string, never> // Or define specific transform data if needed
+type CacheToPortfolioSingleIntraNodeTransform = Record<string, never>; // Or define specific transform data if needed
 
 // Round coordinates to mitigate floating point inconsistencies in cache keys
 
 // Round to nearest 5um (0.005mm)
-const roundCoord = (n: number) => Math.round(n * 200) / 200
+const roundCoord = (n: number) => Math.round(n * 200) / 200;
 
-setupGlobalCaches()
+setupGlobalCaches();
 
-const PORTFOLIO_SINGLE_INTRA_NODE_CACHE_SCHEMA_VERSION = 3
+const PORTFOLIO_SINGLE_INTRA_NODE_CACHE_SCHEMA_VERSION = 3;
 
 export class CachedPortfolioSingleIntraNodeSolver
   extends PortfolioSingleIntraNodeSolver
@@ -38,58 +38,57 @@ export class CachedPortfolioSingleIntraNodeSolver
       CachedSolvedPortfolioSingleIntraNode
     >
 {
-  cacheHit = false
-  cacheProvider: CacheProvider | null
-  declare cacheKey?: string | undefined
+  cacheHit = false;
+  cacheProvider: CacheProvider | null;
+  declare cacheKey?: string | undefined;
   declare cacheToSolveSpaceTransform?:
-    | CacheToPortfolioSingleIntraNodeTransform
-    | undefined
-  hasAttemptedToUseCache = false
+    CacheToPortfolioSingleIntraNodeTransform | undefined;
+  hasAttemptedToUseCache = false;
 
   constructor(
     params: ConstructorParameters<typeof PortfolioSingleIntraNodeSolver>[0] & {
-      cacheProvider?: CacheProvider | null
+      cacheProvider?: CacheProvider | null;
     },
   ) {
-    super(params)
+    super(params);
     this.cacheProvider =
       params.cacheProvider === undefined
         ? getGlobalInMemoryCache() // Default to in-memory if undefined
-        : params.cacheProvider // Use null if explicitly passed as null
+        : params.cacheProvider; // Use null if explicitly passed as null
   }
 
   _step(): void {
     if (!this.hasAttemptedToUseCache && this.cacheProvider) {
       if (this.attemptToUseCacheSync()) {
         // If cache hit and applied, we might be done or failed based on cache
-        return
+        return;
       }
     }
-    super._step()
+    super._step();
     if ((this.solved || this.failed) && this.cacheProvider && !this.cacheHit) {
       // Save to cache only if it wasn't a cache hit initially
-      this.saveToCacheSync()
+      this.saveToCacheSync();
     }
   }
 
   computeCacheKeyAndTransform(): {
-    cacheKey: string
-    cacheToSolveSpaceTransform: CacheToPortfolioSingleIntraNodeTransform
+    cacheKey: string;
+    cacheToSolveSpaceTransform: CacheToPortfolioSingleIntraNodeTransform;
   } {
-    const connectionNameToNormNameMap = new Map<string, string>()
+    const connectionNameToNormNameMap = new Map<string, string>();
 
     // TODO connection names need proper normalization
 
     // 1. Normalize NodeWithPortPoints
-    const node = this.nodeWithPortPoints
-    const center = node.center
+    const node = this.nodeWithPortPoints;
+    const center = node.center;
     const normalizedPortPoints = [...node.portPoints]
       .sort((a, b) => {
         if (a.connectionName !== b.connectionName)
-          return a.connectionName.localeCompare(b.connectionName)
-        if (a.x !== b.x) return a.x - b.x
-        if (a.y !== b.y) return a.y - b.y
-        return (a.z ?? 0) - (b.z ?? 0)
+          return a.connectionName.localeCompare(b.connectionName);
+        if (a.x !== b.x) return a.x - b.x;
+        if (a.y !== b.y) return a.y - b.y;
+        return (a.z ?? 0) - (b.z ?? 0);
       })
       .map((pp) => {
         return {
@@ -102,8 +101,8 @@ export class CachedPortfolioSingleIntraNodeSolver
           nextPortPointId: pp.nextPortPointId,
           // Include other relevant properties if they affect routing
           // e.g., traceThickness, viaDiameter if they vary per portPoint
-        }
-      })
+        };
+      });
 
     const normalizedNodeData = {
       width: roundCoord(node.width),
@@ -114,16 +113,16 @@ export class CachedPortfolioSingleIntraNodeSolver
       },
       availableZ: node.availableZ ? [...node.availableZ].sort() : undefined,
       portPoints: normalizedPortPoints,
-    }
+    };
 
-    const normalizedRelevantConnMap: string[][] = []
+    const normalizedRelevantConnMap: string[][] = [];
 
     for (const portPoint of normalizedPortPoints) {
       const relevantConnMap = this.connMap?.getIdsConnectedToNet(
         portPoint.connectionName,
-      )
+      );
       if (relevantConnMap) {
-        normalizedRelevantConnMap.push(relevantConnMap)
+        normalizedRelevantConnMap.push(relevantConnMap);
       }
     }
 
@@ -131,7 +130,7 @@ export class CachedPortfolioSingleIntraNodeSolver
       Object.entries(this.constructorParams.hyperParameters ?? {})
         .filter(([, value]) => value !== undefined)
         .sort(([a], [b]) => a.localeCompare(b)),
-    )
+    );
 
     // Note: connMap is omitted as hashing it is complex and might be too broad.
     const keyData = {
@@ -142,15 +141,15 @@ export class CachedPortfolioSingleIntraNodeSolver
       viaDiameter: roundCoord(this.constructorParams.viaDiameter ?? 0.3),
       obstacleMargin: roundCoord(this.constructorParams.obstacleMargin ?? 0.15),
       // TODO connMap
-    }
+    };
 
-    const cacheKey = `intranode:${objectHash(keyData)}`
-    const cacheToSolveSpaceTransform = {} // No transform needed for this approach
+    const cacheKey = `intranode:${objectHash(keyData)}`;
+    const cacheToSolveSpaceTransform = {}; // No transform needed for this approach
 
-    this.cacheKey = cacheKey
-    this.cacheToSolveSpaceTransform = cacheToSolveSpaceTransform
+    this.cacheKey = cacheKey;
+    this.cacheToSolveSpaceTransform = cacheToSolveSpaceTransform;
 
-    return { cacheKey, cacheToSolveSpaceTransform }
+    return { cacheKey, cacheToSolveSpaceTransform };
   }
 
   applyCachedSolution(
@@ -159,101 +158,101 @@ export class CachedPortfolioSingleIntraNodeSolver
     if (cachedSolution.success) {
       // Important: Deep clone the cached routes if they might be mutated later
       // For now, assuming they are treated as immutable after retrieval.
-      this.solvedRoutes = cachedSolution.solvedRoutes
-      this.solved = true
-      this.failed = false
+      this.solvedRoutes = cachedSolution.solvedRoutes;
+      this.solved = true;
+      this.failed = false;
     } else {
-      this.solvedRoutes = []
-      this.solved = false
-      this.failed = true
+      this.solvedRoutes = [];
+      this.solved = false;
+      this.failed = true;
     }
-    this.cacheHit = true // Mark that we used a cached result
-    this.progress = 1 // Mark as complete
+    this.cacheHit = true; // Mark that we used a cached result
+    this.progress = 1; // Mark as complete
   }
 
   attemptToUseCacheSync(): boolean {
-    this.hasAttemptedToUseCache = true
+    this.hasAttemptedToUseCache = true;
     if (!this.cacheProvider?.isSyncCache) {
       // console.log("Cache provider is not synchronous, skipping sync cache check.")
-      return false
+      return false;
     }
 
     if (!this.cacheKey) {
       try {
-        this.computeCacheKeyAndTransform()
+        this.computeCacheKeyAndTransform();
       } catch (error) {
-        console.error("Error computing cache key:", error)
-        return false // Cannot use cache if key generation fails
+        console.error("Error computing cache key:", error);
+        return false; // Cannot use cache if key generation fails
       }
     }
 
     if (!this.cacheKey) {
-      console.error("Failed to compute cache key.")
-      return false
+      console.error("Failed to compute cache key.");
+      return false;
     }
 
     try {
       const cachedSolution = this.cacheProvider.getCachedSolutionSync(
         this.cacheKey,
-      )
+      );
 
       if (cachedSolution !== undefined && cachedSolution !== null) {
         // console.log(`Cache hit for PortfolioSingleIntraNodeSolver: ${this.cacheKey}`)
         this.applyCachedSolution(
           cachedSolution as CachedSolvedPortfolioSingleIntraNode,
-        )
-        return true // Cache hit and applied
+        );
+        return true; // Cache hit and applied
       } else {
         // console.log(`Cache miss for PortfolioSingleIntraNodeSolver: ${this.cacheKey}`)
       }
     } catch (error) {
-      console.error("Error attempting to use cache:", error)
+      console.error("Error attempting to use cache:", error);
       // Decide how to handle cache read errors, e.g., treat as miss
     }
 
-    return false // Cache miss or error
+    return false; // Cache miss or error
   }
 
   saveToCacheSync(): void {
     if (!this.cacheKey) {
       console.error(
         "Cannot save to cache without cache key. Trying to compute.",
-      )
+      );
       try {
-        this.computeCacheKeyAndTransform()
+        this.computeCacheKeyAndTransform();
         if (!this.cacheKey) {
-          console.error("Still failed to compute cache key. Cannot save.")
-          return
+          console.error("Still failed to compute cache key. Cannot save.");
+          return;
         }
       } catch (error) {
-        console.error("Error computing cache key during save:", error)
-        return
+        console.error("Error computing cache key during save:", error);
+        return;
       }
     }
 
     if (!this.cacheProvider?.isSyncCache) {
       // console.log("Cache provider is not synchronous, skipping sync cache save.")
-      return
+      return;
     }
 
-    let solutionToCache: CachedSolvedPortfolioSingleIntraNode
+    let solutionToCache: CachedSolvedPortfolioSingleIntraNode;
 
     if (this.failed) {
-      solutionToCache = { success: false }
+      solutionToCache = { success: false };
     } else if (this.solved) {
       // Important: Deep clone routes if necessary before caching
-      solutionToCache = { success: true, solvedRoutes: this.solvedRoutes }
+      solutionToCache = { success: true, solvedRoutes: this.solvedRoutes };
     } else {
       // Solver finished without being solved or failed? Should not happen in typical flow.
       // console.warn("Attempting to save cache for solver that is neither solved nor failed.")
-      return // Don't cache intermediate states unless intended
+      return; // Don't cache intermediate states unless intended
     }
 
     try {
       // console.log(`Saving to cache for PortfolioSingleIntraNodeSolver: ${this.cacheKey}`)
-      this.cacheProvider.setCachedSolutionSync(this.cacheKey, solutionToCache)
+      this.cacheProvider.setCachedSolutionSync(this.cacheKey, solutionToCache);
     } catch (error) {
-      console.error("Error saving solution to cache:", error)
+      console.error("Error saving solution to cache:", error);
       // Handle cache write errors if necessary
     }
   }

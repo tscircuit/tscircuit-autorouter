@@ -1,26 +1,26 @@
-import type { CircuitJsonMetadata } from "./srj-types"
+import type { CircuitJsonMetadata } from "./srj-types";
 
 export type PortPoint = {
-  connectionName: string
-  rootConnectionName?: string
-  portPointId?: string
-  pcb_port_id?: string
-  x: number
-  y: number
-  z: number
-  prevPortPointId?: string
-  nextPortPointId?: string
-}
+  connectionName: string;
+  rootConnectionName?: string;
+  portPointId?: string;
+  pcb_port_id?: string;
+  x: number;
+  y: number;
+  z: number;
+  prevPortPointId?: string;
+  nextPortPointId?: string;
+};
 
 export type NodeWithPortPoints = {
-  capacityMeshNodeId: string
-  center: { x: number; y: number }
-  width: number
-  height: number
-  portPoints: PortPoint[]
-  availableZ?: number[]
-  portPointsInPairs?: [PortPoint, PortPoint][]
-}
+  capacityMeshNodeId: string;
+  center: { x: number; y: number };
+  width: number;
+  height: number;
+  portPoints: PortPoint[];
+  availableZ?: number[];
+  portPointsInPairs?: [PortPoint, PortPoint][];
+};
 
 /**
  * A path for a wire in high-density intra-node routing.
@@ -37,30 +37,30 @@ export type NodeWithPortPoints = {
  * z must be an integer
  */
 export type HighDensityIntraNodeRoute = {
-  connectionName: string
-  rootConnectionName?: string
+  connectionName: string;
+  rootConnectionName?: string;
   /** Terminal identities in route order, kept inert until terminal locking. */
-  startPcbPortId?: string
-  endPcbPortId?: string
-  traceThickness: number
-  viaDiameter: number
+  startPcbPortId?: string;
+  endPcbPortId?: string;
+  traceThickness: number;
+  viaDiameter: number;
   route: Array<{
-    x: number
-    y: number
-    z: number
-    traceThickness?: number
+    x: number;
+    y: number;
+    z: number;
+    traceThickness?: number;
     /** Keeps routed terminals fixed during post-route DRC optimization. */
-    pcb_port_id?: string
-    insideJumperPad?: boolean
-    toNextSegmentType?: "through_obstacle"
-    toNextSegmentCircuitJsonMetadata?: CircuitJsonMetadata
-  }>
-  vias: Array<{ x: number; y: number }>
-  jumpers?: Jumper[]
-  regionId?: string
-}
+    pcb_port_id?: string;
+    insideJumperPad?: boolean;
+    toNextSegmentType?: "through_obstacle";
+    toNextSegmentCircuitJsonMetadata?: CircuitJsonMetadata;
+  }>;
+  vias: Array<{ x: number; y: number }>;
+  jumpers?: Jumper[];
+  regionId?: string;
+};
 
-export type HighDensityRoute = HighDensityIntraNodeRoute
+export type HighDensityRoute = HighDensityIntraNodeRoute;
 
 /**
  * Extended HD route with segment ordering information for proper stitching.
@@ -68,8 +68,8 @@ export type HighDensityRoute = HighDensityIntraNodeRoute
  * path from start to end (0 = first segment, 1 = second, etc.)
  */
 export type HighDensityRouteWithOrder = HighDensityIntraNodeRoute & {
-  segmentOrder: number
-}
+  segmentOrder: number;
+};
 
 /**
  * A jumper component used to allow traces to cross on single-layer PCBs.
@@ -78,23 +78,23 @@ export type HighDensityRouteWithOrder = HighDensityIntraNodeRoute & {
  * - "1206x4_pair": One of 4 internal jumper pairs in a 1206x4 resistor array
  */
 export type Jumper = {
-  route_type: "jumper"
+  route_type: "jumper";
   /** Starting point of the jumper */
-  start: { x: number; y: number }
+  start: { x: number; y: number };
   /** Ending point of the jumper */
-  end: { x: number; y: number }
+  end: { x: number; y: number };
   /** Footprint size */
-  footprint: "0603" | "1206" | "1206x4_pair"
-}
+  footprint: "0603" | "1206" | "1206x4_pair";
+};
 
 /**
  * An intra-node route that uses jumpers instead of vias for single-layer PCBs.
  */
 export type HighDensityIntraNodeRouteWithJumpers = {
-  connectionName: string
-  rootConnectionName?: string
-  regionId?: string
-  traceThickness: number
-  route: Array<{ x: number; y: number; z: number }>
-  jumpers: Jumper[]
-}
+  connectionName: string;
+  rootConnectionName?: string;
+  regionId?: string;
+  traceThickness: number;
+  route: Array<{ x: number; y: number; z: number }>;
+  jumpers: Jumper[];
+};

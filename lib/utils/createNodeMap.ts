@@ -1,4 +1,4 @@
-import type { CapacityMeshNode } from "lib/types"
+import type { CapacityMeshNode } from "lib/types";
 
 /**
  * Creates a Map from an array of capacity nodes, keyed by capacityMeshNodeId.
@@ -7,9 +7,9 @@ import type { CapacityMeshNode } from "lib/types"
 export function createNodeMap(
   nodes: CapacityMeshNode[],
 ): Map<string, CapacityMeshNode> {
-  const map = new Map<string, CapacityMeshNode>()
+  const map = new Map<string, CapacityMeshNode>();
   for (const node of nodes) {
-    map.set(node.capacityMeshNodeId, node)
+    map.set(node.capacityMeshNodeId, node);
   }
-  return map
+  return map;
 }

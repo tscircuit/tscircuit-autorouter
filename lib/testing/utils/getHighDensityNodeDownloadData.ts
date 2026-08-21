@@ -1,86 +1,86 @@
-import type { CapacityMeshNode } from "lib/types"
-import type { NodeWithPortPoints } from "lib/types/high-density-types"
-import type { InputNodeWithPortPoints } from "lib/solvers/PortPointPathingSolver/PortPointPathingSolver"
+import type { CapacityMeshNode } from "lib/types";
+import type { NodeWithPortPoints } from "lib/types/high-density-types";
+import type { InputNodeWithPortPoints } from "lib/solvers/PortPointPathingSolver/PortPointPathingSolver";
 
 type NodeLike = {
-  capacityMeshNodeId: string
-}
+  capacityMeshNodeId: string;
+};
 
 type NodeSolverOutput = {
-  meshNodes?: CapacityMeshNode[]
-}
+  meshNodes?: CapacityMeshNode[];
+};
 
 type PortPointPathingOutput = {
-  nodesWithPortPoints?: NodeWithPortPoints[]
-  inputNodeWithPortPoints?: InputNodeWithPortPoints[]
-}
+  nodesWithPortPoints?: NodeWithPortPoints[];
+  inputNodeWithPortPoints?: InputNodeWithPortPoints[];
+};
 
 type HighDensityRouteSolver = {
-  unsolvedNodePortPoints?: NodeWithPortPoints[]
-  allNodes?: NodeWithPortPoints[]
-  unsolvedNodes?: NodeWithPortPoints[]
+  unsolvedNodePortPoints?: NodeWithPortPoints[];
+  allNodes?: NodeWithPortPoints[];
+  unsolvedNodes?: NodeWithPortPoints[];
   nodeSolveMetadataById?: Map<
     string,
     {
-      node: NodeWithPortPoints
+      node: NodeWithPortPoints;
     }
-  >
-}
+  >;
+};
 
 type HighDensityDownloadSolver = {
   nodeTargetMerger?: {
-    newNodes?: CapacityMeshNode[]
-  }
+    newNodes?: CapacityMeshNode[];
+  };
   nodeSolver?: {
-    finishedNodes?: CapacityMeshNode[]
-    getOutput?: () => NodeSolverOutput
-  }
-  capacityNodes?: CapacityMeshNode[]
-  highDensityNodePortPoints?: NodeWithPortPoints[]
-  highDensityRouteSolver?: HighDensityRouteSolver
+    finishedNodes?: CapacityMeshNode[];
+    getOutput?: () => NodeSolverOutput;
+  };
+  capacityNodes?: CapacityMeshNode[];
+  highDensityNodePortPoints?: NodeWithPortPoints[];
+  highDensityRouteSolver?: HighDensityRouteSolver;
   uniformPortDistributionSolver?: {
-    getOutput?: () => NodeWithPortPoints[]
-  }
+    getOutput?: () => NodeWithPortPoints[];
+  };
   multiSectionPortPointOptimizer?: {
-    getNodesWithPortPoints?: () => NodeWithPortPoints[]
-  }
+    getNodesWithPortPoints?: () => NodeWithPortPoints[];
+  };
   segmentToPointOptimizer?: {
-    getNodesWithPortPoints?: () => NodeWithPortPoints[]
-  }
+    getNodesWithPortPoints?: () => NodeWithPortPoints[];
+  };
   unravelMultiSectionSolver?: {
-    getNodesWithPortPoints?: () => NodeWithPortPoints[]
-  }
+    getNodesWithPortPoints?: () => NodeWithPortPoints[];
+  };
   portPointPathingSolver?: {
-    getNodesWithPortPoints?: () => NodeWithPortPoints[]
-    getOutput?: () => PortPointPathingOutput
-  }
-}
+    getNodesWithPortPoints?: () => NodeWithPortPoints[];
+    getOutput?: () => PortPointPathingOutput;
+  };
+};
 
 type HighDensityNodeDownloadData = {
-  nodeId: string
-  capacityMeshNode: CapacityMeshNode | null
-  nodeWithPortPoints: NodeWithPortPoints | null
-  inputNodeWithPortPoints: InputNodeWithPortPoints | null
-}
+  nodeId: string;
+  capacityMeshNode: CapacityMeshNode | null;
+  nodeWithPortPoints: NodeWithPortPoints | null;
+  inputNodeWithPortPoints: InputNodeWithPortPoints | null;
+};
 
 const isRecord = (value: unknown): value is Record<string, any> =>
-  value !== null && typeof value === "object"
+  value !== null && typeof value === "object";
 
 type SolverLike = Record<string, any> & {
-  getNodesWithPortPoints?: () => unknown
-  getOutput?: () => unknown
-  getConstructorParams?: () => unknown
-}
+  getNodesWithPortPoints?: () => unknown;
+  getOutput?: () => unknown;
+  getConstructorParams?: () => unknown;
+};
 
 const hasPortPoints = (
   value: unknown,
 ): value is {
-  capacityMeshNodeId: string
-  portPoints: unknown[]
+  capacityMeshNodeId: string;
+  portPoints: unknown[];
 } =>
   isRecord(value) &&
   typeof value.capacityMeshNodeId === "string" &&
-  Array.isArray(value.portPoints)
+  Array.isArray(value.portPoints);
 
 const isInputPortPointNode = (
   value: unknown,
@@ -92,7 +92,7 @@ const isInputPortPointNode = (
       !("x" in portPoint) &&
       !("y" in portPoint) &&
       !("z" in portPoint),
-  )
+  );
 
 const isResolvedPortPointNode = (value: unknown): value is NodeWithPortPoints =>
   hasPortPoints(value) &&
@@ -101,30 +101,30 @@ const isResolvedPortPointNode = (value: unknown): value is NodeWithPortPoints =>
       isRecord(portPoint) &&
       typeof portPoint.x === "number" &&
       typeof portPoint.y === "number",
-  )
+  );
 
 const findNodeById = <T extends NodeLike>(
   nodeId: string,
   ...collections: Array<T[] | undefined>
 ): T | null => {
   for (const nodes of collections) {
-    const match = nodes?.find((node) => node.capacityMeshNodeId === nodeId)
+    const match = nodes?.find((node) => node.capacityMeshNodeId === nodeId);
     if (match) {
-      return match
+      return match;
     }
   }
 
-  return null
-}
+  return null;
+};
 
 const findHighDensityNodeById = (
   solver: HighDensityDownloadSolver,
   nodeId: string,
 ): NodeWithPortPoints | null => {
   const solverMetadataNode =
-    solver.highDensityRouteSolver?.nodeSolveMetadataById?.get(nodeId)?.node
+    solver.highDensityRouteSolver?.nodeSolveMetadataById?.get(nodeId)?.node;
   if (solverMetadataNode) {
-    return solverMetadataNode
+    return solverMetadataNode;
   }
 
   return findNodeById(
@@ -133,21 +133,21 @@ const findHighDensityNodeById = (
     solver.highDensityRouteSolver?.unsolvedNodePortPoints,
     solver.highDensityRouteSolver?.allNodes,
     solver.highDensityRouteSolver?.unsolvedNodes,
-  )
-}
+  );
+};
 
 const safelyCall = <T>(fn: () => T): T | null => {
   try {
-    return fn()
+    return fn();
   } catch {
-    return null
+    return null;
   }
-}
+};
 
 const findPortPointNodeInUnknownValue = <
   T extends {
-    capacityMeshNodeId: string
-    portPoints: unknown[]
+    capacityMeshNodeId: string;
+    portPoints: unknown[];
   },
 >(
   nodeId: string,
@@ -162,23 +162,23 @@ const findPortPointNodeInUnknownValue = <
         item,
         predicate,
         seen,
-      )
-      if (match) return match
+      );
+      if (match) return match;
     }
-    return null
+    return null;
   }
 
   if (!isRecord(value)) {
-    return null
+    return null;
   }
 
-  const solverLike = value as SolverLike
+  const solverLike = value as SolverLike;
 
   if (value instanceof Map) {
     if (seen.has(value)) {
-      return null
+      return null;
     }
-    seen.add(value)
+    seen.add(value);
 
     for (const [key, item] of value.entries()) {
       const directMatch =
@@ -188,77 +188,77 @@ const findPortPointNodeInUnknownValue = <
               predicate(item.node) &&
               item.node.capacityMeshNodeId === nodeId
             ? item.node
-            : null
-      if (directMatch) return directMatch
+            : null;
+      if (directMatch) return directMatch;
 
       const keyMatch = findPortPointNodeInUnknownValue(
         nodeId,
         key,
         predicate,
         seen,
-      )
-      if (keyMatch) return keyMatch
+      );
+      if (keyMatch) return keyMatch;
 
       const valueMatch = findPortPointNodeInUnknownValue(
         nodeId,
         item,
         predicate,
         seen,
-      )
-      if (valueMatch) return valueMatch
+      );
+      if (valueMatch) return valueMatch;
     }
-    return null
+    return null;
   }
 
   if (seen.has(value)) {
-    return null
+    return null;
   }
-  seen.add(value)
+  seen.add(value);
 
   if (predicate(value) && value.capacityMeshNodeId === nodeId) {
-    return value
+    return value;
   }
 
   if (typeof solverLike.getNodesWithPortPoints === "function") {
     const nodesWithPortPoints = safelyCall(() =>
       solverLike.getNodesWithPortPoints!(),
-    )
+    );
     if (nodesWithPortPoints !== null) {
       const match = findPortPointNodeInUnknownValue(
         nodeId,
         nodesWithPortPoints,
         predicate,
         seen,
-      )
-      if (match) return match
+      );
+      if (match) return match;
     }
   }
 
   if (typeof solverLike.getOutput === "function") {
-    const output = safelyCall(() => solverLike.getOutput!())
+    const output = safelyCall(() => solverLike.getOutput!());
     if (output !== null) {
       const match = findPortPointNodeInUnknownValue(
         nodeId,
         output,
         predicate,
         seen,
-      )
-      if (match) return match
+      );
+      if (match) return match;
     }
   }
 
   if (typeof solverLike.getConstructorParams === "function") {
     const constructorParams = safelyCall(() =>
       solverLike.getConstructorParams!(),
-    )
+    );
     if (constructorParams !== null) {
       const match = findPortPointNodeInUnknownValue(
         nodeId,
         constructorParams,
         predicate,
         seen,
-      )
-      if (match) return match
+      );
+      if (match) return match;
     }
   }
 
@@ -268,21 +268,21 @@ const findPortPointNodeInUnknownValue = <
       propertyValue,
       predicate,
       seen,
-    )
+    );
     if (match) {
-      return match
+      return match;
     }
   }
 
-  return null
-}
+  return null;
+};
 
 export const getHighDensityNodeDownloadData = (
   solver: HighDensityDownloadSolver,
   nodeId: string,
 ): HighDensityNodeDownloadData => {
-  const nodeSolverOutput = solver.nodeSolver?.getOutput?.()
-  const portPointPathingOutput = solver.portPointPathingSolver?.getOutput?.()
+  const nodeSolverOutput = solver.nodeSolver?.getOutput?.();
+  const portPointPathingOutput = solver.portPointPathingSolver?.getOutput?.();
   const knownResolvedPortPointNode =
     findHighDensityNodeById(solver, nodeId) ??
     findNodeById(
@@ -293,11 +293,11 @@ export const getHighDensityNodeDownloadData = (
       solver.unravelMultiSectionSolver?.getNodesWithPortPoints?.(),
       solver.portPointPathingSolver?.getNodesWithPortPoints?.(),
       portPointPathingOutput?.nodesWithPortPoints,
-    )
+    );
   const knownInputPortPointNode = findNodeById(
     nodeId,
     portPointPathingOutput?.inputNodeWithPortPoints,
-  )
+  );
 
   return {
     nodeId,
@@ -314,5 +314,5 @@ export const getHighDensityNodeDownloadData = (
     inputNodeWithPortPoints:
       knownInputPortPointNode ??
       findPortPointNodeInUnknownValue(nodeId, solver, isInputPortPointNode),
-  }
-}
+  };
+};

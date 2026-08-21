@@ -1,6 +1,6 @@
-import { expect, test } from "bun:test"
-import { migrateLegacyObstacleCircuitJsonMetadata } from "lib/testing/utils/migrate-legacy-obstacle-circuit-json-metadata"
-import type { SimpleRouteJson } from "lib/types"
+import { expect, test } from "bun:test";
+import { migrateLegacyObstacleCircuitJsonMetadata } from "lib/testing/utils/migrate-legacy-obstacle-circuit-json-metadata";
+import type { SimpleRouteJson } from "lib/types";
 
 test("migrates legacy obstacle ordering without parsing opaque IDs", () => {
   const legacySrj: SimpleRouteJson = {
@@ -36,17 +36,17 @@ test("migrates legacy obstacle ordering without parsing opaque IDs", () => {
         ],
       },
     ],
-  }
+  };
 
-  const migratedSrj = migrateLegacyObstacleCircuitJsonMetadata(legacySrj)
+  const migratedSrj = migrateLegacyObstacleCircuitJsonMetadata(legacySrj);
 
-  expect(legacySrj.obstacles[0].circuitJsonMetadata).toBeUndefined()
+  expect(legacySrj.obstacles[0].circuitJsonMetadata).toBeUndefined();
   expect(migratedSrj.obstacles[0].circuitJsonMetadata).toEqual({
     pcb_smtpad_id: "opaque-smt-element",
     pcb_port_id: "opaque-smt-port",
-  })
+  });
   expect(migratedSrj.obstacles[1].circuitJsonMetadata).toEqual({
     pcb_plated_hole_id: "opaque-through-element",
     pcb_port_id: "opaque-through-port",
-  })
-})
+  });
+});

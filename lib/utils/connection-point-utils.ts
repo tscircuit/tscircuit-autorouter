@@ -2,19 +2,19 @@ import type {
   ConnectionPoint,
   MultiLayerConnectionPoint,
   SingleLayerConnectionPoint,
-} from "../types/srj-types"
+} from "../types/srj-types";
 
 // Type guards and helpers for ConnectionPoint types
 export function isMultiLayerConnectionPoint(
   point: ConnectionPoint,
 ): point is MultiLayerConnectionPoint {
-  return "layers" in point && Array.isArray((point as any).layers)
+  return "layers" in point && Array.isArray((point as any).layers);
 }
 
 export function isSingleLayerConnectionPoint(
   point: ConnectionPoint,
 ): point is SingleLayerConnectionPoint {
-  return "layer" in point && typeof (point as any).layer === "string"
+  return "layer" in point && typeof (point as any).layer === "string";
 }
 
 /**
@@ -23,9 +23,9 @@ export function isSingleLayerConnectionPoint(
  */
 export function getConnectionPointLayer(point: ConnectionPoint): string {
   if (isMultiLayerConnectionPoint(point)) {
-    return point.layers[0]
+    return point.layers[0];
   }
-  return point.layer
+  return point.layer;
 }
 
 /**
@@ -34,7 +34,7 @@ export function getConnectionPointLayer(point: ConnectionPoint): string {
  */
 export function getConnectionPointLayers(point: ConnectionPoint): string[] {
   if (isMultiLayerConnectionPoint(point)) {
-    return point.layers
+    return point.layers;
   }
-  return [point.layer]
+  return [point.layer];
 }

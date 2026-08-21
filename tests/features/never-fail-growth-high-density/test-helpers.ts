@@ -1,7 +1,7 @@
 import type {
   HighDensityIntraNodeRoute,
   NodeWithPortPoints,
-} from "lib/types/high-density-types"
+} from "lib/types/high-density-types";
 
 export const makeNode = (): NodeWithPortPoints => ({
   capacityMeshNodeId: "cn1",
@@ -12,7 +12,7 @@ export const makeNode = (): NodeWithPortPoints => ({
     { connectionName: "a", x: 9.5, y: 20, z: 0 },
     { connectionName: "a", x: 10.5, y: 20, z: 0 },
   ],
-})
+});
 
 export const makeCrossingSingleLayerNode = (): NodeWithPortPoints => ({
   capacityMeshNodeId: "cn_crossing",
@@ -26,7 +26,7 @@ export const makeCrossingSingleLayerNode = (): NodeWithPortPoints => ({
     { connectionName: "b", x: 0, y: -1, z: 0 },
     { connectionName: "b", x: 0, y: 1, z: 0 },
   ],
-})
+});
 
 export const makeStraightRoute = (): HighDensityIntraNodeRoute => ({
   connectionName: "a",
@@ -37,7 +37,7 @@ export const makeStraightRoute = (): HighDensityIntraNodeRoute => ({
     { x: 10.5, y: 20, z: 0 },
   ],
   vias: [],
-})
+});
 
 export const makeScaledRoute = (): HighDensityIntraNodeRoute => ({
   connectionName: "a",
@@ -49,11 +49,11 @@ export const makeScaledRoute = (): HighDensityIntraNodeRoute => ({
     { x: 11, y: 20, z: 0 },
   ],
   vias: [{ x: 10, y: 22 }],
-})
+});
 
 export const emptyVisualization = () => ({
   lines: [],
   points: [],
   rects: [],
   circles: [],
-})
+});

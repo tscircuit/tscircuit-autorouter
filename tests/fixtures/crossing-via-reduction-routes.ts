@@ -1,4 +1,4 @@
-import type { HighDensityRoute } from "lib/types/high-density-types"
+import type { HighDensityRoute } from "lib/types/high-density-types";
 
 export const createCrossingViaReductionRoutes = (): HighDensityRoute[] => {
   return [
@@ -32,5 +32,5 @@ export const createCrossingViaReductionRoutes = (): HighDensityRoute[] => {
       ],
       vias: [{ x: 0, y: 0 }],
     },
-  ]
-}
+  ];
+};

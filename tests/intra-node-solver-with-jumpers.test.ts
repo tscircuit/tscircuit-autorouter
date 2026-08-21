@@ -1,7 +1,7 @@
-import { test, expect } from "bun:test"
-import { IntraNodeSolverWithJumpers } from "lib/solvers/HighDensitySolver/IntraNodeSolverWithJumpers"
-import { SingleHighDensityRouteWithJumpersSolver } from "lib/solvers/HighDensitySolver/SingleHighDensityRouteWithJumpersSolver"
-import type { NodeWithPortPoints } from "lib/types/high-density-types"
+import { test, expect } from "bun:test";
+import { IntraNodeSolverWithJumpers } from "lib/solvers/HighDensitySolver/IntraNodeSolverWithJumpers";
+import { SingleHighDensityRouteWithJumpersSolver } from "lib/solvers/HighDensitySolver/SingleHighDensityRouteWithJumpersSolver";
+import type { NodeWithPortPoints } from "lib/types/high-density-types";
 
 test("SingleHighDensityRouteWithJumpersSolver - simple route without obstacles", () => {
   const solver = new SingleHighDensityRouteWithJumpersSolver({
@@ -11,15 +11,15 @@ test("SingleHighDensityRouteWithJumpersSolver - simple route without obstacles",
     bounds: { minX: 0, maxX: 5, minY: 0, maxY: 5 },
     A: { x: 0.5, y: 2.5, z: 0 },
     B: { x: 4.5, y: 2.5, z: 0 },
-  })
+  });
 
-  solver.solve()
+  solver.solve();
 
-  expect(solver.solved).toBe(true)
-  expect(solver.solvedPath).not.toBeNull()
-  expect(solver.solvedPath!.jumpers.length).toBe(0) // No jumpers needed
-  expect(solver.solvedPath!.route.length).toBeGreaterThan(0)
-})
+  expect(solver.solved).toBe(true);
+  expect(solver.solvedPath).not.toBeNull();
+  expect(solver.solvedPath!.jumpers.length).toBe(0); // No jumpers needed
+  expect(solver.solvedPath!.route.length).toBeGreaterThan(0);
+});
 
 test("IntraNodeSolverWithJumpers - simple node routing", () => {
   const nodeWithPortPoints: NodeWithPortPoints = {
@@ -31,19 +31,19 @@ test("IntraNodeSolverWithJumpers - simple node routing", () => {
       { connectionName: "conn1", x: 0.5, y: 2.5, z: 0 },
       { connectionName: "conn1", x: 4.5, y: 2.5, z: 0 },
     ],
-  }
+  };
 
   const solver = new IntraNodeSolverWithJumpers({
     nodeWithPortPoints,
     colorMap: { conn1: "blue" },
-  })
+  });
 
-  solver.solve()
+  solver.solve();
 
-  expect(solver.solved).toBe(true)
-  expect(solver.solvedRoutes.length).toBe(1)
-  expect(solver.solvedRoutes[0].connectionName).toBe("conn1")
-})
+  expect(solver.solved).toBe(true);
+  expect(solver.solvedRoutes.length).toBe(1);
+  expect(solver.solvedRoutes[0].connectionName).toBe("conn1");
+});
 
 test("IntraNodeSolverWithJumpers - multiple connections", () => {
   const nodeWithPortPoints: NodeWithPortPoints = {
@@ -59,18 +59,18 @@ test("IntraNodeSolverWithJumpers - multiple connections", () => {
       { connectionName: "conn2", x: 0.5, y: 4, z: 0 },
       { connectionName: "conn2", x: 4.5, y: 4, z: 0 },
     ],
-  }
+  };
 
   const solver = new IntraNodeSolverWithJumpers({
     nodeWithPortPoints,
     colorMap: { conn1: "blue", conn2: "red" },
-  })
+  });
 
-  solver.solve()
+  solver.solve();
 
-  expect(solver.solved).toBe(true)
-  expect(solver.solvedRoutes.length).toBe(2)
-})
+  expect(solver.solved).toBe(true);
+  expect(solver.solvedRoutes.length).toBe(2);
+});
 
 test("IntraNodeSolverWithJumpers - visualize() includes jumper pads", () => {
   const nodeWithPortPoints: NodeWithPortPoints = {
@@ -82,28 +82,28 @@ test("IntraNodeSolverWithJumpers - visualize() includes jumper pads", () => {
       { connectionName: "conn1", x: 0.5, y: 2.5, z: 0 },
       { connectionName: "conn1", x: 4.5, y: 2.5, z: 0 },
     ],
-  }
+  };
 
   const solver = new IntraNodeSolverWithJumpers({
     nodeWithPortPoints,
     colorMap: { conn1: "blue" },
-  })
+  });
 
-  solver.solve()
+  solver.solve();
 
-  const graphics = solver.visualize()
+  const graphics = solver.visualize();
 
   // Should have visualization data
-  expect(graphics.points).toBeDefined()
-  expect(graphics.lines).toBeDefined()
-  expect(graphics.rects).toBeDefined()
+  expect(graphics.points).toBeDefined();
+  expect(graphics.lines).toBeDefined();
+  expect(graphics.rects).toBeDefined();
 
   // Should have port points visualized
-  expect(graphics.points!.length).toBeGreaterThan(0)
+  expect(graphics.points!.length).toBeGreaterThan(0);
 
   // Should have route lines visualized
-  expect(graphics.lines!.length).toBeGreaterThan(0)
-})
+  expect(graphics.lines!.length).toBeGreaterThan(0);
+});
 
 test("IntraNodeSolverWithJumpers - forces single layer (z=0)", () => {
   const nodeWithPortPoints: NodeWithPortPoints = {
@@ -116,21 +116,21 @@ test("IntraNodeSolverWithJumpers - forces single layer (z=0)", () => {
       { connectionName: "conn1", x: 0.5, y: 2.5, z: 1 },
       { connectionName: "conn1", x: 4.5, y: 2.5, z: 0 },
     ],
-  }
+  };
 
   const solver = new IntraNodeSolverWithJumpers({
     nodeWithPortPoints,
     colorMap: { conn1: "blue" },
-  })
+  });
 
-  solver.solve()
+  solver.solve();
 
-  expect(solver.solved).toBe(true)
+  expect(solver.solved).toBe(true);
 
   // All route points should be on layer 0
   for (const route of solver.solvedRoutes) {
     for (const point of route.route) {
-      expect(point.z).toBe(0)
+      expect(point.z).toBe(0);
     }
   }
-})
+});

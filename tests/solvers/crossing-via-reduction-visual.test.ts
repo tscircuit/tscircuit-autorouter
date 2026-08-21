@@ -1,24 +1,24 @@
-import { expect, test } from "bun:test"
-import { ConnectivityMap } from "circuit-json-to-connectivity-map"
-import { getSvgFromGraphicsObject, type GraphicsObject } from "graphics-debug"
-import { CrossingViaReductionSolver } from "lib/solvers/CrossingViaReductionSolver/crossing-via-reduction-solver"
-import { stackSvgsHorizontally } from "stack-svgs"
-import { createCrossingViaReductionRoutes } from "tests/fixtures/crossing-via-reduction-routes"
+import { expect, test } from "bun:test";
+import { ConnectivityMap } from "circuit-json-to-connectivity-map";
+import { getSvgFromGraphicsObject, type GraphicsObject } from "graphics-debug";
+import { CrossingViaReductionSolver } from "lib/solvers/CrossingViaReductionSolver/crossing-via-reduction-solver";
+import { stackSvgsHorizontally } from "stack-svgs";
+import { createCrossingViaReductionRoutes } from "tests/fixtures/crossing-via-reduction-routes";
 
 const addPanelHeader = ({
   svg,
   title,
   details,
 }: {
-  svg: string
-  title: string
-  details: [string, string]
+  svg: string;
+  title: string;
+  details: [string, string];
 }): string => {
-  const headerHeight = 76
-  const bodyStart = svg.indexOf(">") + 1
-  const bodyEnd = svg.lastIndexOf("</svg>")
-  const width = Number(svg.match(/\bwidth="([^"]+)"/)?.[1] ?? 500)
-  const height = Number(svg.match(/\bheight="([^"]+)"/)?.[1] ?? 620)
+  const headerHeight = 76;
+  const bodyStart = svg.indexOf(">") + 1;
+  const bodyEnd = svg.lastIndexOf("</svg>");
+  const width = Number(svg.match(/\bwidth="([^"]+)"/)?.[1] ?? 500);
+  const height = Number(svg.match(/\bheight="([^"]+)"/)?.[1] ?? 620);
   return `<svg width="${width}" height="${
     height + headerHeight
   }" viewBox="0 0 ${width} ${
@@ -26,8 +26,8 @@ const addPanelHeader = ({
   }" xmlns="http://www.w3.org/2000/svg"><rect width="100%" height="100%" fill="white"/><text x="16" y="22" font-family="monospace" font-size="15" font-weight="700" fill="#111">${title}</text><text x="16" y="43" font-family="monospace" font-size="12" fill="#444">${details[0]}</text><text x="16" y="61" font-family="monospace" font-size="12" fill="#444">${details[1]}</text><g transform="translate(0 ${headerHeight})">${svg.slice(
     bodyStart,
     bodyEnd,
-  )}</g></svg>`
-}
+  )}</g></svg>`;
+};
 
 test("visualizes the Pipeline7 crossing via reduction", () => {
   const solver = new CrossingViaReductionSolver({
@@ -38,10 +38,10 @@ test("visualizes the Pipeline7 crossing via reduction", () => {
       transition_net: ["transition"],
     }),
     layerCount: 2,
-  })
-  const beforeGraphics = solver.visualize()
+  });
+  const beforeGraphics = solver.visualize();
 
-  solver.solve()
+  solver.solve();
 
   const renderFrame = (graphics: GraphicsObject): string => {
     return getSvgFromGraphicsObject(graphics, {
@@ -49,8 +49,8 @@ test("visualizes the Pipeline7 crossing via reduction", () => {
       svgWidth: 500,
       svgHeight: 620,
       hideInlineLabels: true,
-    })
-  }
+    });
+  };
   expect(
     stackSvgsHorizontally(
       [
@@ -73,5 +73,5 @@ test("visualizes the Pipeline7 crossing via reduction", () => {
       ],
       { gap: 12, normalizeSize: false },
     ),
-  ).toMatchSvgSnapshot(import.meta.path)
-})
+  ).toMatchSvgSnapshot(import.meta.path);
+});

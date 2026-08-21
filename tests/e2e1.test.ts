@@ -1,34 +1,32 @@
-import { expect, test, describe } from "bun:test"
-import { CapacityMeshSolver } from "../lib"
-import keyboardRoutes from "../fixtures/legacy/assets/growing-grid-keyboard-sample-sample95-unrouted_simple_route.json" with {
-  type: "json",
-}
+import { expect, test, describe } from "bun:test";
+import { CapacityMeshSolver } from "../lib";
+import keyboardRoutes from "../fixtures/legacy/assets/growing-grid-keyboard-sample-sample95-unrouted_simple_route.json" with { type: "json" };
 import type {
   SimpleRouteJson,
   SimplifiedPcbTraces,
   Obstacle,
-} from "../lib/types"
-import { Line, Rect } from "graphics-debug"
-import { convertSrjToGraphicsObject } from "../lib"
+} from "../lib/types";
+import { Line, Rect } from "graphics-debug";
+import { convertSrjToGraphicsObject } from "../lib";
 
 test.skip("should solve keyboard1 board and produce valid SimpleRouteJson output", async () => {
   // Create a solver with the keyboard1 input
   const solver = new CapacityMeshSolver(
     keyboardRoutes as unknown as SimpleRouteJson,
-  )
+  );
 
   // Run the solver until completion or failure
-  solver.solve()
+  solver.solve();
 
   // Verify solver completed successfully
-  expect(solver.failed).toBe(false)
-  expect(solver.solved).toBe(true)
+  expect(solver.failed).toBe(false);
+  expect(solver.solved).toBe(true);
 
   // Get output SimpleRouteJson
-  const output = solver.getOutputSimpleRouteJson()
+  const output = solver.getOutputSimpleRouteJson();
 
   // console.log(output.traces?.flatMap((t) => t.route))
   expect(convertSrjToGraphicsObject(output)).toMatchGraphicsSvg(
     import.meta.path,
-  )
-}, 20_000)
+  );
+}, 20_000);

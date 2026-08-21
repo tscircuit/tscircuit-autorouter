@@ -1,4 +1,4 @@
-import { afterAll, expect, test } from "bun:test"
+import { afterAll, expect, test } from "bun:test";
 import {
   mkdirSync,
   mkdtempSync,
@@ -7,31 +7,31 @@ import {
   rmSync,
   statSync,
   writeFileSync,
-} from "node:fs"
-import os from "node:os"
-import path from "node:path"
+} from "node:fs";
+import os from "node:os";
+import path from "node:path";
 import {
   AutoroutingPipelineSolver4,
   AutoroutingPipelineSolver7_MultiGraph,
-} from "lib"
-import { PipelineStageDebugRunner } from "lib/testing/PipelineStageDebugRunner"
-import type { SimpleRouteJson } from "lib/types"
+} from "lib";
+import { PipelineStageDebugRunner } from "lib/testing/PipelineStageDebugRunner";
+import type { SimpleRouteJson } from "lib/types";
 import {
   loadScenarioBySampleNumber,
   parseDatasetName,
-} from "../scripts/benchmark/scenarios"
+} from "../scripts/benchmark/scenarios";
 
-const tempDirs: string[] = []
-const repoTempPaths: string[] = []
+const tempDirs: string[] = [];
+const repoTempPaths: string[] = [];
 
 afterAll(() => {
   for (const tempDir of tempDirs) {
-    rmSync(tempDir, { recursive: true, force: true })
+    rmSync(tempDir, { recursive: true, force: true });
   }
   for (const repoTempPath of repoTempPaths) {
-    rmSync(repoTempPath, { recursive: true, force: true })
+    rmSync(repoTempPath, { recursive: true, force: true });
   }
-})
+});
 
 const srj: SimpleRouteJson = {
   layerCount: 2,
@@ -53,63 +53,63 @@ const srj: SimpleRouteJson = {
     minY: -5,
     maxY: 5,
   },
-}
+};
 
 const getPipeline4StageNumber = (stageName: string) => {
   const stageIndex = new AutoroutingPipelineSolver4(srj).pipelineDef.findIndex(
     (stage) => stage.solverName === stageName,
-  )
+  );
 
   if (stageIndex === -1) {
-    throw new Error(`Missing pipeline4 stage: ${stageName}`)
+    throw new Error(`Missing pipeline4 stage: ${stageName}`);
   }
 
-  return stageIndex + 1
-}
+  return stageIndex + 1;
+};
 
 const getPipeline7StageNumber = (stageName: string) => {
   const stageIndex = new AutoroutingPipelineSolver7_MultiGraph(
     srj,
-  ).pipelineDef.findIndex((stage) => stage.solverName === stageName)
+  ).pipelineDef.findIndex((stage) => stage.solverName === stageName);
 
   if (stageIndex === -1) {
-    throw new Error(`Missing pipeline7 stage: ${stageName}`)
+    throw new Error(`Missing pipeline7 stage: ${stageName}`);
   }
 
-  return stageIndex + 1
-}
+  return stageIndex + 1;
+};
 
 const formatStageArtifactName = (stageNumber: number, stageName: string) =>
-  `stage${String(stageNumber).padStart(2, "0")}-${stageName}.png`
+  `stage${String(stageNumber).padStart(2, "0")}-${stageName}.png`;
 
 test("loadScenarioBySampleNumber follows benchmark dataset ordering", async () => {
-  const sample = await loadScenarioBySampleNumber("dataset01", 1)
+  const sample = await loadScenarioBySampleNumber("dataset01", 1);
 
-  expect(sample.sampleNumber).toBe(1)
-  expect(sample.scenarioName).toBe("circuit001")
-  expect(sample.totalSamples).toBeGreaterThan(1)
-  expect(sample.scenario.bounds).toBeDefined()
-})
+  expect(sample.sampleNumber).toBe(1);
+  expect(sample.scenarioName).toBe("circuit001");
+  expect(sample.totalSamples).toBeGreaterThan(1);
+  expect(sample.scenario.bounds).toBeDefined();
+});
 
 test("dataset 13 alias loads srj13 samples in example order", async () => {
-  const datasetName = parseDatasetName("13")
-  expect(datasetName).toBe("srj13")
+  const datasetName = parseDatasetName("13");
+  expect(datasetName).toBe("srj13");
 
-  const sample = await loadScenarioBySampleNumber(datasetName!, 1)
+  const sample = await loadScenarioBySampleNumber(datasetName!, 1);
 
-  expect(sample.sampleNumber).toBe(1)
-  expect(sample.scenarioName).toBe("example_01")
-  expect(sample.totalSamples).toBe(50)
-  expect(sample.scenario.bounds).toBeDefined()
-})
+  expect(sample.sampleNumber).toBe(1);
+  expect(sample.scenarioName).toBe("example_01");
+  expect(sample.totalSamples).toBe(50);
+  expect(sample.scenario.bounds).toBeDefined();
+});
 
 test(
   "PipelineStageDebugRunner writes per-stage PNGs and logs for pipeline4",
   async () => {
     const outputDir = mkdtempSync(
       path.join(os.tmpdir(), "pipeline-stage-debug-runner-"),
-    )
-    tempDirs.push(outputDir)
+    );
+    tempDirs.push(outputDir);
 
     const runner = new PipelineStageDebugRunner({
       pipelineSolver: new AutoroutingPipelineSolver4(srj),
@@ -119,47 +119,49 @@ test(
       context: {
         scenarioName: "test-srj",
       },
-    })
+    });
 
-    const result = await runner.run()
-    const outputFiles = readdirSync(outputDir).sort()
-    const logs = readFileSync(path.join(outputDir, "logs.txt"), "utf8")
+    const result = await runner.run();
+    const outputFiles = readdirSync(outputDir).sort();
+    const logs = readFileSync(path.join(outputDir, "logs.txt"), "utf8");
     const netToPointPairsStage = getPipeline4StageNumber(
       "netToPointPairsSolver",
-    )
+    );
     const highDensityRepairStage = getPipeline4StageNumber(
       "highDensityRepairSolver",
-    )
-    const traceWidthStage = getPipeline4StageNumber("traceWidthSolver")
+    );
+    const traceWidthStage = getPipeline4StageNumber("traceWidthSolver");
 
-    expect(result.solved).toBe(true)
-    expect(result.failed).toBe(false)
+    expect(result.solved).toBe(true);
+    expect(result.failed).toBe(false);
     expect(result.stageArtifacts.length).toBe(
       runner.pipelineSolver.pipelineDef.length,
-    )
-    expect(outputFiles).toContain("logs.txt")
+    );
+    expect(outputFiles).toContain("logs.txt");
     expect(outputFiles).toContain(
       formatStageArtifactName(1, "preprocessSimpleRouteJsonSolver"),
-    )
+    );
     expect(outputFiles).toContain(
       formatStageArtifactName(netToPointPairsStage, "netToPointPairsSolver"),
-    )
+    );
     expect(outputFiles).toContain(
       formatStageArtifactName(
         highDensityRepairStage,
         "highDensityRepairSolver",
       ),
-    )
+    );
     expect(outputFiles).toContain(
       formatStageArtifactName(traceWidthStage, "traceWidthSolver"),
-    )
-    expect(logs).toContain("enter stage=1 name=preprocessSimpleRouteJsonSolver")
+    );
+    expect(logs).toContain(
+      "enter stage=1 name=preprocessSimpleRouteJsonSolver",
+    );
     expect(logs).toContain(
       `enter stage=${netToPointPairsStage} name=netToPointPairsSolver`,
-    )
+    );
     expect(logs).toContain(
       `captured stage=${highDensityRepairStage} name=highDensityRepairSolver`,
-    )
+    );
     expect(
       statSync(
         path.join(
@@ -167,10 +169,10 @@ test(
           formatStageArtifactName(traceWidthStage, "traceWidthSolver"),
         ),
       ).size,
-    ).toBeGreaterThan(0)
+    ).toBeGreaterThan(0);
   },
   { timeout: 120_000 },
-)
+);
 
 test(
   "run-sample emits relative paths and appends DRC summary to logs",
@@ -179,13 +181,13 @@ test(
       process.cwd(),
       "tmp",
       `run-sample-test-${Date.now()}`,
-    )
-    const srjPath = path.join(inputDir, "input.json")
-    const outputDir = path.join(inputDir, "output")
-    repoTempPaths.push(inputDir)
+    );
+    const srjPath = path.join(inputDir, "input.json");
+    const outputDir = path.join(inputDir, "output");
+    repoTempPaths.push(inputDir);
 
-    mkdirSync(inputDir, { recursive: true })
-    writeFileSync(srjPath, JSON.stringify(srj))
+    mkdirSync(inputDir, { recursive: true });
+    writeFileSync(srjPath, JSON.stringify(srj));
 
     const proc = Bun.spawnSync({
       cmd: [
@@ -202,50 +204,50 @@ test(
       cwd: process.cwd(),
       stdout: "pipe",
       stderr: "pipe",
-    })
+    });
 
-    const stdout = proc.stdout.toString()
-    const stderr = proc.stderr.toString()
-    const logs = readFileSync(path.join(outputDir, "logs.txt"), "utf8")
+    const stdout = proc.stdout.toString();
+    const stderr = proc.stderr.toString();
+    const logs = readFileSync(path.join(outputDir, "logs.txt"), "utf8");
     const netToPointPairsStage = getPipeline7StageNumber(
       "netToPointPairsSolver",
-    )
+    );
     const topologyPlanningStage = getPipeline7StageNumber(
       "topologyPlanningSolver",
-    )
-    const traceWidthStage = getPipeline7StageNumber("traceWidthSolver")
+    );
+    const traceWidthStage = getPipeline7StageNumber("traceWidthSolver");
 
-    expect(proc.exitCode).toBe(0)
-    expect(stderr).toBe("")
-    expect(stdout).toContain("startedAt=")
-    expect(stdout).toContain("pipeline=7")
+    expect(proc.exitCode).toBe(0);
+    expect(stderr).toBe("");
+    expect(stdout).toContain("startedAt=");
+    expect(stdout).toContain("pipeline=7");
     expect(stdout).toContain(
       `enter stage=${netToPointPairsStage} name=netToPointPairsSolver`,
-    )
+    );
     expect(stdout).toContain(
       `captured stage=${topologyPlanningStage} name=topologyPlanningSolver`,
-    )
+    );
     expect(stdout).toContain(
       `captured stage=${traceWidthStage} name=traceWidthSolver`,
-    )
-    expect(stdout).toContain("postrun")
-    expect(stdout).toContain("drc.relaxedPassed=false")
-    expect(stdout).toContain("drc.errorCount=2")
-    expect(stdout).toContain("Success: yes")
-    expect(stdout).toContain("Relaxed DRC: fail")
-    expect(stdout).toContain("DRC errors: 2")
+    );
+    expect(stdout).toContain("postrun");
+    expect(stdout).toContain("drc.relaxedPassed=false");
+    expect(stdout).toContain("drc.errorCount=2");
+    expect(stdout).toContain("Success: yes");
+    expect(stdout).toContain("Relaxed DRC: fail");
+    expect(stdout).toContain("DRC errors: 2");
     expect(stdout).toContain(
       `Output dir: ./${path.relative(process.cwd(), outputDir)}`,
-    )
+    );
     expect(stdout).toContain(
       `Logs: ./${path.relative(process.cwd(), path.join(outputDir, "logs.txt"))}`,
-    )
-    expect(logs).toContain("postrun")
-    expect(logs).toContain("drc.relaxedPassed=false")
-    expect(logs).toContain("drc.errorCount=2")
+    );
+    expect(logs).toContain("postrun");
+    expect(logs).toContain("drc.relaxedPassed=false");
+    expect(logs).toContain("drc.errorCount=2");
     expect(logs).toContain(
       `srjSource=./${path.relative(process.cwd(), srjPath)}`,
-    )
+    );
   },
   { timeout: 120_000 },
-)
+);

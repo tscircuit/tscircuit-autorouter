@@ -1,14 +1,14 @@
-import { CachedPortfolioSingleIntraNodeSolver } from "./CachedPortfolioSingleIntraNodeSolver"
+import { CachedPortfolioSingleIntraNodeSolver } from "./CachedPortfolioSingleIntraNodeSolver";
 
 /**
  * @deprecated Use `CachedPortfolioSingleIntraNodeSolver` instead.
  */
 export const CachedHyperSingleIntraNodeSolver =
-  CachedPortfolioSingleIntraNodeSolver
+  CachedPortfolioSingleIntraNodeSolver;
 
 /**
  * @deprecated Use `CachedPortfolioSingleIntraNodeSolver` instead.
  */
 export type CachedHyperSingleIntraNodeSolver = InstanceType<
   typeof CachedPortfolioSingleIntraNodeSolver
->
+>;

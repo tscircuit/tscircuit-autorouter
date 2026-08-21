@@ -1,8 +1,8 @@
-import { expect, test } from "bun:test"
-import { NetToPointPairsSolver } from "lib/solvers/NetToPointPairsSolver/NetToPointPairsSolver"
-import { NetToPointPairsSolver2_OffBoardConnection } from "lib/solvers/NetToPointPairsSolver2_OffBoardConnection/NetToPointPairsSolver2_OffBoardConnection"
-import type { SimpleRouteJson } from "lib/types"
-import { getInitiallyConnectedMapFromSimpleRouteJson } from "lib/utils/get-initially-connected-map-from-simple-route-json"
+import { expect, test } from "bun:test";
+import { NetToPointPairsSolver } from "lib/solvers/NetToPointPairsSolver/NetToPointPairsSolver";
+import { NetToPointPairsSolver2_OffBoardConnection } from "lib/solvers/NetToPointPairsSolver2_OffBoardConnection/NetToPointPairsSolver2_OffBoardConnection";
+import type { SimpleRouteJson } from "lib/types";
+import { getInitiallyConnectedMapFromSimpleRouteJson } from "lib/utils/get-initially-connected-map-from-simple-route-json";
 
 const baseSrj = {
   bounds: { minX: 0, maxX: 3, minY: 0, maxY: 1 },
@@ -27,15 +27,15 @@ const baseSrj = {
       ],
     },
   ],
-} satisfies SimpleRouteJson
+} satisfies SimpleRouteJson;
 
 test("NetToPointPairsSolver preserves existing reroute root connection names", () => {
   const solver = new NetToPointPairsSolver(
     structuredClone(baseSrj),
     {},
     getInitiallyConnectedMapFromSimpleRouteJson(baseSrj),
-  )
-  solver.solve()
+  );
+  solver.solve();
 
   expect(
     solver.getNewSimpleRouteJson().connections.map((conn) => ({
@@ -51,16 +51,16 @@ test("NetToPointPairsSolver preserves existing reroute root connection names", (
       name: "reroute_a__reroute_b_mst1",
       __rootConnectionNames: ["source_net_1"],
     },
-  ])
-})
+  ]);
+});
 
 test("NetToPointPairsSolver2_OffBoardConnection preserves existing reroute root connection names", () => {
   const solver = new NetToPointPairsSolver2_OffBoardConnection(
     structuredClone(baseSrj),
     {},
     getInitiallyConnectedMapFromSimpleRouteJson(baseSrj),
-  )
-  solver.solve()
+  );
+  solver.solve();
 
   expect(
     solver.getNewSimpleRouteJson().connections.map((conn) => ({
@@ -76,5 +76,5 @@ test("NetToPointPairsSolver2_OffBoardConnection preserves existing reroute root 
       name: "reroute_a__reroute_b_mst1",
       __rootConnectionNames: ["source_net_1"],
     },
-  ])
-})
+  ]);
+});

@@ -1,84 +1,82 @@
-import { RectDiffPipeline } from "@tscircuit/rectdiff"
-import { ConnectivityMap } from "circuit-json-to-connectivity-map"
-import type { GraphicsObject } from "graphics-debug"
-import { JUMPER_DIMENSIONS, JumperFootprint } from "lib/utils/jumperSizes"
-import { RelateNodesToOffBoardConnectionsSolver } from "../../autorouter-pipelines/AssignableAutoroutingPipeline2/RelateNodesToOffBoardConnectionsSolver"
-import { SimpleHighDensitySolver } from "../../autorouter-pipelines/AssignableAutoroutingPipeline2/SimpleHighDensitySolver"
-import type { SimpleRouteConnection, SimpleRouteJson } from "../../types"
-import type { CapacityMeshEdge, CapacityMeshNode } from "../../types"
+import { RectDiffPipeline } from "@tscircuit/rectdiff";
+import { ConnectivityMap } from "circuit-json-to-connectivity-map";
+import type { GraphicsObject } from "graphics-debug";
+import { JUMPER_DIMENSIONS, JumperFootprint } from "lib/utils/jumperSizes";
+import { RelateNodesToOffBoardConnectionsSolver } from "../../autorouter-pipelines/AssignableAutoroutingPipeline2/RelateNodesToOffBoardConnectionsSolver";
+import { SimpleHighDensitySolver } from "../../autorouter-pipelines/AssignableAutoroutingPipeline2/SimpleHighDensitySolver";
+import type { SimpleRouteConnection, SimpleRouteJson } from "../../types";
+import type { CapacityMeshEdge, CapacityMeshNode } from "../../types";
 import type {
   HighDensityIntraNodeRoute,
   HighDensityIntraNodeRouteWithJumpers,
   Jumper,
   NodeWithPortPoints,
   PortPoint,
-} from "../../types/high-density-types"
-import { getConnectivityMapFromSimpleRouteJson } from "../../utils/getConnectivityMapFromSimpleRouteJson"
-import { AvailableSegmentPointSolver } from "../AvailableSegmentPointSolver/AvailableSegmentPointSolver"
-import { BaseSolver } from "../BaseSolver"
-import { CapacityMeshEdgeSolver2_NodeTreeOptimization } from "../CapacityMeshSolver/CapacityMeshEdgeSolver2_NodeTreeOptimization"
-import { MultiSectionPortPointOptimizer } from "../MultiSectionPortPointOptimizer"
+} from "../../types/high-density-types";
+import { getConnectivityMapFromSimpleRouteJson } from "../../utils/getConnectivityMapFromSimpleRouteJson";
+import { AvailableSegmentPointSolver } from "../AvailableSegmentPointSolver/AvailableSegmentPointSolver";
+import { BaseSolver } from "../BaseSolver";
+import { CapacityMeshEdgeSolver2_NodeTreeOptimization } from "../CapacityMeshSolver/CapacityMeshEdgeSolver2_NodeTreeOptimization";
+import { MultiSectionPortPointOptimizer } from "../MultiSectionPortPointOptimizer";
 import {
   HyperPortPointPathingSolver,
   HyperPortPointPathingSolverParams,
-} from "../PortPointPathingSolver/HyperPortPointPathingSolver"
+} from "../PortPointPathingSolver/HyperPortPointPathingSolver";
 import {
   InputNodeWithPortPoints,
   InputPortPoint,
   PortPointPathingSolver,
-} from "../PortPointPathingSolver/PortPointPathingSolver"
-import { MultipleHighDensityRouteStitchSolver } from "../RouteStitchingSolver/MultipleHighDensityRouteStitchSolver"
-import { safeTransparentize } from "../colors"
-import { getColorMap } from "../colors"
-import { RemoveUnnecessaryJumpersSolver } from "./RemoveUnnecessaryJumpersSolver"
+} from "../PortPointPathingSolver/PortPointPathingSolver";
+import { MultipleHighDensityRouteStitchSolver } from "../RouteStitchingSolver/MultipleHighDensityRouteStitchSolver";
+import { safeTransparentize } from "../colors";
+import { getColorMap } from "../colors";
+import { RemoveUnnecessaryJumpersSolver } from "./RemoveUnnecessaryJumpersSolver";
 import {
   type PatternResult,
   type PrepatternJumper,
   alternatingGrid,
-} from "./patterns/alternatingGrid"
-import { staggeredGrid } from "./patterns/staggeredGrid"
-import { processPathingSolverResults } from "./processPathingSolverResults"
+} from "./patterns/alternatingGrid";
+import { staggeredGrid } from "./patterns/staggeredGrid";
+import { processPathingSolverResults } from "./processPathingSolverResults";
 
-export type PatternType = "alternating_grid" | "staggered_grid"
+export type PatternType = "alternating_grid" | "staggered_grid";
 
 export interface JumperPrepatternSolverHyperParameters {
   /** Orientation of jumpers - "horizontal" or "vertical" */
-  FIRST_ORIENTATION?: "horizontal" | "vertical"
+  FIRST_ORIENTATION?: "horizontal" | "vertical";
   /** Jumper footprint size - defaults to "0603" */
-  JUMPER_FOOTPRINT?: JumperFootprint
+  JUMPER_FOOTPRINT?: JumperFootprint;
   /** Pattern type for jumper placement - defaults to "alternating_grid" */
-  PATTERN_TYPE?: PatternType
+  PATTERN_TYPE?: PatternType;
 }
 
 export interface JumperPrepatternSolverParams {
-  nodeWithPortPoints: NodeWithPortPoints
-  colorMap?: Record<string, string>
-  traceWidth?: number
-  jumperFootprint?: JumperFootprint
-  hyperParameters?: JumperPrepatternSolverHyperParameters
-  connMap?: ConnectivityMap
+  nodeWithPortPoints: NodeWithPortPoints;
+  colorMap?: Record<string, string>;
+  traceWidth?: number;
+  jumperFootprint?: JumperFootprint;
+  hyperParameters?: JumperPrepatternSolverHyperParameters;
+  connMap?: ConnectivityMap;
 }
 
 type PipelineStep<T extends new (...args: any[]) => BaseSolver> = {
-  solverName: string
-  solverClass: T
+  solverName: string;
+  solverClass: T;
   getConstructorParams: (
     instance: JumperPrepatternSolver,
-  ) => ConstructorParameters<T>
-  onSolved?: (instance: JumperPrepatternSolver) => void
-}
+  ) => ConstructorParameters<T>;
+  onSolved?: (instance: JumperPrepatternSolver) => void;
+};
 
 function definePipelineStep<
-  T extends new (
-    ...args: any[]
-  ) => BaseSolver,
+  T extends new (...args: any[]) => BaseSolver,
   const P extends ConstructorParameters<T>,
 >(
   solverName: keyof JumperPrepatternSolver,
   solverClass: T,
   getConstructorParams: (instance: JumperPrepatternSolver) => P,
   opts: {
-    onSolved?: (instance: JumperPrepatternSolver) => void
+    onSolved?: (instance: JumperPrepatternSolver) => void;
   } = {},
 ): PipelineStep<T> {
   return {
@@ -86,59 +84,59 @@ function definePipelineStep<
     solverClass,
     getConstructorParams,
     onSolved: opts.onSolved,
-  }
+  };
 }
 
 export class JumperPrepatternSolver extends BaseSolver {
   override getSolverName(): string {
-    return "JumperPrepatternSolver"
+    return "JumperPrepatternSolver";
   }
 
   // Input parameters
-  nodeWithPortPoints: NodeWithPortPoints
-  colorMap: Record<string, string>
-  traceWidth: number
-  jumperFootprint: JumperFootprint
-  hyperParameters: JumperPrepatternSolverHyperParameters
-  connMap: ConnectivityMap
+  nodeWithPortPoints: NodeWithPortPoints;
+  colorMap: Record<string, string>;
+  traceWidth: number;
+  jumperFootprint: JumperFootprint;
+  hyperParameters: JumperPrepatternSolverHyperParameters;
+  connMap: ConnectivityMap;
 
   // Generated data
-  prepatternJumpers: PrepatternJumper[] = []
-  patternResult: PatternResult | null = null
-  capacityNodes: CapacityMeshNode[] = []
-  capacityEdges: CapacityMeshEdge[] = []
-  inputNodes: InputNodeWithPortPoints[] = []
-  connections: SimpleRouteConnection[] = []
-  srjWithPointPairs: SimpleRouteJson
+  prepatternJumpers: PrepatternJumper[] = [];
+  patternResult: PatternResult | null = null;
+  capacityNodes: CapacityMeshNode[] = [];
+  capacityEdges: CapacityMeshEdge[] = [];
+  inputNodes: InputNodeWithPortPoints[] = [];
+  connections: SimpleRouteConnection[] = [];
+  srjWithPointPairs: SimpleRouteJson;
 
   // Sub-solvers
-  nodeSolver?: RectDiffPipeline
-  relateNodesToOffBoardConnections?: RelateNodesToOffBoardConnectionsSolver
-  edgeSolver?: CapacityMeshEdgeSolver2_NodeTreeOptimization
-  availableSegmentPointSolver?: AvailableSegmentPointSolver
-  portPointPathingSolver?: HyperPortPointPathingSolver
-  multiSectionPortPointOptimizer?: MultiSectionPortPointOptimizer
-  removeUnnecessaryJumpersSolver?: RemoveUnnecessaryJumpersSolver
-  highDensitySolver?: SimpleHighDensitySolver
-  highDensityStitchSolver?: MultipleHighDensityRouteStitchSolver
+  nodeSolver?: RectDiffPipeline;
+  relateNodesToOffBoardConnections?: RelateNodesToOffBoardConnectionsSolver;
+  edgeSolver?: CapacityMeshEdgeSolver2_NodeTreeOptimization;
+  availableSegmentPointSolver?: AvailableSegmentPointSolver;
+  portPointPathingSolver?: HyperPortPointPathingSolver;
+  multiSectionPortPointOptimizer?: MultiSectionPortPointOptimizer;
+  removeUnnecessaryJumpersSolver?: RemoveUnnecessaryJumpersSolver;
+  highDensitySolver?: SimpleHighDensitySolver;
+  highDensityStitchSolver?: MultipleHighDensityRouteStitchSolver;
 
-  activeSubSolver?: BaseSolver | null = null
-  currentPipelineStepIndex = 0
+  activeSubSolver?: BaseSolver | null = null;
+  currentPipelineStepIndex = 0;
 
-  startTimeOfPhase: Record<string, number> = {}
-  endTimeOfPhase: Record<string, number> = {}
-  timeSpentOnPhase: Record<string, number> = {}
+  startTimeOfPhase: Record<string, number> = {};
+  endTimeOfPhase: Record<string, number> = {};
+  timeSpentOnPhase: Record<string, number> = {};
 
   // Output
-  solvedRoutes: HighDensityIntraNodeRouteWithJumpers[] = []
+  solvedRoutes: HighDensityIntraNodeRouteWithJumpers[] = [];
 
   // Tracks which jumper off-board connection net IDs are NECESSARY (visualized)
-  usedJumperOffBoardObstacleIds: Set<string> = new Set()
+  usedJumperOffBoardObstacleIds: Set<string> = new Set();
   // Tracks ALL jumper off-board connection net IDs that are USED (not removed)
   // This includes both necessary and unnecessary-but-used jumpers
-  allUsedJumperOffBoardIds: Set<string> = new Set()
+  allUsedJumperOffBoardIds: Set<string> = new Set();
   // Connectivity map for off-board obstacles (built once for checking used jumpers)
-  offBoardConnMap: ConnectivityMap | null = null
+  offBoardConnMap: ConnectivityMap | null = null;
 
   pipelineDef = [
     definePipelineStep(
@@ -152,7 +150,7 @@ export class JumperPrepatternSolver extends BaseSolver {
       ],
       {
         onSolved: (solver) => {
-          solver.capacityNodes = solver.nodeSolver?.getOutput().meshNodes ?? []
+          solver.capacityNodes = solver.nodeSolver?.getOutput().meshNodes ?? [];
         },
       },
     ),
@@ -168,7 +166,7 @@ export class JumperPrepatternSolver extends BaseSolver {
       {
         onSolved: (solver) => {
           solver.capacityNodes =
-            solver.relateNodesToOffBoardConnections?.getOutput().capacityNodes!
+            solver.relateNodesToOffBoardConnections?.getOutput().capacityNodes!;
         },
       },
     ),
@@ -178,7 +176,7 @@ export class JumperPrepatternSolver extends BaseSolver {
       (solver) => [solver.capacityNodes],
       {
         onSolved: (solver) => {
-          solver.capacityEdges = solver.edgeSolver?.edges ?? []
+          solver.capacityEdges = solver.edgeSolver?.edges ?? [];
         },
       },
     ),
@@ -214,18 +212,18 @@ export class JumperPrepatternSolver extends BaseSolver {
             _offBoardConnectedCapacityMeshNodeIds:
               node._offBoardConnectedCapacityMeshNodeIds,
           }),
-        )
+        );
 
         // Build a map for quick lookup
         const nodeMap = new Map(
           inputNodes.map((n) => [n.capacityMeshNodeId, n]),
-        )
+        );
 
         // Add port points from the available segment point solver
-        const segmentPointSolver = solver.availableSegmentPointSolver!
+        const segmentPointSolver = solver.availableSegmentPointSolver!;
         for (const segment of segmentPointSolver.sharedEdgeSegments) {
           for (const segmentPortPoint of segment.portPoints) {
-            const [nodeId1, nodeId2] = segmentPortPoint.nodeIds
+            const [nodeId1, nodeId2] = segmentPortPoint.nodeIds;
             const inputPortPoint: InputPortPoint = {
               portPointId: segmentPortPoint.segmentPortPointId,
               x: segmentPortPoint.x,
@@ -236,17 +234,17 @@ export class JumperPrepatternSolver extends BaseSolver {
               connectsToOffBoardNode: segment.nodeIds.some(
                 (n) => nodeMap.get(n)?._offBoardConnectionId,
               ),
-            }
+            };
 
             // Add to first node
-            const node1 = nodeMap.get(nodeId1)
+            const node1 = nodeMap.get(nodeId1);
             if (node1) {
-              node1.portPoints.push(inputPortPoint)
+              node1.portPoints.push(inputPortPoint);
             }
           }
         }
 
-        solver.inputNodes = inputNodes
+        solver.inputNodes = inputNodes;
 
         return [
           {
@@ -268,24 +266,24 @@ export class JumperPrepatternSolver extends BaseSolver {
               MAX_RIPS: 1000,
             },
           } as HyperPortPointPathingSolverParams,
-        ]
+        ];
       },
       {
         onSolved: (solver) => {
-          const pathingSolver = solver.portPointPathingSolver
-          if (!pathingSolver) return
+          const pathingSolver = solver.portPointPathingSolver;
+          if (!pathingSolver) return;
 
           const result = processPathingSolverResults({
             pathingSolver,
             connMap: solver.connMap,
             prepatternJumpers: solver.prepatternJumpers,
             srjWithPointPairs: solver.srjWithPointPairs,
-          })
+          });
 
-          solver.offBoardConnMap = result.offBoardConnMap
+          solver.offBoardConnMap = result.offBoardConnMap;
           solver.usedJumperOffBoardObstacleIds =
-            result.usedJumperOffBoardObstacleIds
-          solver.allUsedJumperOffBoardIds = result.allUsedJumperOffBoardIds
+            result.usedJumperOffBoardObstacleIds;
+          solver.allUsedJumperOffBoardIds = result.allUsedJumperOffBoardIds;
         },
       },
     ),
@@ -326,7 +324,7 @@ export class JumperPrepatternSolver extends BaseSolver {
           // Update inputNodes with the nodes that have unused jumpers removed
           solver.inputNodes =
             solver.removeUnnecessaryJumpersSolver?.getOutput() ??
-            solver.inputNodes
+            solver.inputNodes;
         },
       },
     ),
@@ -360,78 +358,84 @@ export class JumperPrepatternSolver extends BaseSolver {
       ],
       {
         onSolved: (solver) => {
-          solver._combineResults()
+          solver._combineResults();
         },
       },
     ),
-  ]
+  ];
 
   constructor(params: JumperPrepatternSolverParams) {
-    super()
-    this.nodeWithPortPoints = params.nodeWithPortPoints
-    this.colorMap = params.colorMap ?? {}
-    this.traceWidth = params.traceWidth ?? 0.15
-    this.hyperParameters = params.hyperParameters ?? {}
+    super();
+    this.nodeWithPortPoints = params.nodeWithPortPoints;
+    this.colorMap = params.colorMap ?? {};
+    this.traceWidth = params.traceWidth ?? 0.15;
+    this.hyperParameters = params.hyperParameters ?? {};
     // Use hyperparameter for jumper footprint, fall back to params, then default to "0603"
     this.jumperFootprint =
-      this.hyperParameters.JUMPER_FOOTPRINT ?? params.jumperFootprint ?? "0603"
-    this.MAX_ITERATIONS = 1e6
+      this.hyperParameters.JUMPER_FOOTPRINT ?? params.jumperFootprint ?? "0603";
+    this.MAX_ITERATIONS = 1e6;
 
     // Generate jumpers using the pattern function (before creating SimpleRouteJson since it needs the obstacles)
-    const patternType = this.hyperParameters.PATTERN_TYPE ?? "alternating_grid"
+    const patternType = this.hyperParameters.PATTERN_TYPE ?? "alternating_grid";
     if (patternType === "staggered_grid") {
-      this.patternResult = staggeredGrid(this)
+      this.patternResult = staggeredGrid(this);
     } else {
-      this.patternResult = alternatingGrid(this)
+      this.patternResult = alternatingGrid(this);
     }
-    this.prepatternJumpers = this.patternResult.prepatternJumpers
+    this.prepatternJumpers = this.patternResult.prepatternJumpers;
 
     // Initialize data before pipeline starts
-    this.srjWithPointPairs = this._createSimpleRouteJson()
+    this.srjWithPointPairs = this._createSimpleRouteJson();
     this.connMap =
       params.connMap ??
-      getConnectivityMapFromSimpleRouteJson(this.srjWithPointPairs)
-    this.colorMap = getColorMap(this.srjWithPointPairs, this.connMap)
+      getConnectivityMapFromSimpleRouteJson(this.srjWithPointPairs);
+    this.colorMap = getColorMap(this.srjWithPointPairs, this.connMap);
   }
 
   getCurrentStageName(): string {
-    return this.pipelineDef[this.currentPipelineStepIndex]?.solverName ?? "done"
+    return (
+      this.pipelineDef[this.currentPipelineStepIndex]?.solverName ?? "done"
+    );
   }
 
   _step() {
-    const pipelineStepDef = this.pipelineDef[this.currentPipelineStepIndex]
+    const pipelineStepDef = this.pipelineDef[this.currentPipelineStepIndex];
     if (!pipelineStepDef) {
-      this.solved = true
-      return
+      this.solved = true;
+      return;
     }
 
     if (this.activeSubSolver) {
-      this.activeSubSolver.step()
+      this.activeSubSolver.step();
       if (this.activeSubSolver.solved) {
-        this.endTimeOfPhase[pipelineStepDef.solverName] = performance.now()
+        this.endTimeOfPhase[pipelineStepDef.solverName] = performance.now();
         this.timeSpentOnPhase[pipelineStepDef.solverName] =
           this.endTimeOfPhase[pipelineStepDef.solverName] -
-          this.startTimeOfPhase[pipelineStepDef.solverName]
-        pipelineStepDef.onSolved?.(this)
-        this.activeSubSolver = null
-        this.currentPipelineStepIndex++
+          this.startTimeOfPhase[pipelineStepDef.solverName];
+        pipelineStepDef.onSolved?.(this);
+        this.activeSubSolver = null;
+        this.currentPipelineStepIndex++;
       } else if (this.activeSubSolver.failed) {
-        this.error = this.activeSubSolver?.error
-        this.failed = true
+        this.error = this.activeSubSolver?.error;
+        this.failed = true;
       }
-      return
+      return;
     }
 
-    const constructorParams = pipelineStepDef.getConstructorParams(this)
+    const constructorParams = pipelineStepDef.getConstructorParams(this);
     // @ts-ignore
-    this.activeSubSolver = new pipelineStepDef.solverClass(...constructorParams)
-    ;(this as any)[pipelineStepDef.solverName] = this.activeSubSolver
-    this.timeSpentOnPhase[pipelineStepDef.solverName] = 0
-    this.startTimeOfPhase[pipelineStepDef.solverName] = performance.now()
+    this.activeSubSolver = new pipelineStepDef.solverClass(
+      ...constructorParams,
+    );
+    (this as any)[pipelineStepDef.solverName] = this.activeSubSolver;
+    this.timeSpentOnPhase[pipelineStepDef.solverName] = 0;
+    this.startTimeOfPhase[pipelineStepDef.solverName] = performance.now();
   }
 
   getCurrentPhase(): string {
-    return this.pipelineDef[this.currentPipelineStepIndex]?.solverName ?? "done"
+    return (
+      this.pipelineDef[this.currentPipelineStepIndex]?.solverName ?? "done"
+    );
   }
 
   _createSimpleRouteJson(): SimpleRouteJson {
@@ -439,20 +443,20 @@ export class JumperPrepatternSolver extends BaseSolver {
     const connectionMap = new Map<
       string,
       {
-        points: { x: number; y: number; z: number }[]
-        rootConnectionName?: string
+        points: { x: number; y: number; z: number }[];
+        rootConnectionName?: string;
       }
-    >()
+    >();
 
     for (const pp of this.nodeWithPortPoints.portPoints) {
-      const existing = connectionMap.get(pp.connectionName)
+      const existing = connectionMap.get(pp.connectionName);
       if (existing) {
-        existing.points.push({ x: pp.x, y: pp.y, z: pp.z })
+        existing.points.push({ x: pp.x, y: pp.y, z: pp.z });
       } else {
         connectionMap.set(pp.connectionName, {
           points: [{ x: pp.x, y: pp.y, z: pp.z }],
           rootConnectionName: pp.rootConnectionName,
-        })
+        });
       }
     }
 
@@ -466,15 +470,15 @@ export class JumperPrepatternSolver extends BaseSolver {
           layer: "top" as const,
         })),
       }),
-    )
+    );
 
     // Create obstacles for jumper pads
-    const obstacles = this._createJumperPadObstacles()
+    const obstacles = this._createJumperPadObstacles();
 
     // Add obstacles for port points (the pads/pins that traces connect to)
-    this._addPortPointObstacles(obstacles)
+    this._addPortPointObstacles(obstacles);
 
-    const node = this.nodeWithPortPoints
+    const node = this.nodeWithPortPoints;
     return {
       layerCount: 1,
       minTraceWidth: this.traceWidth,
@@ -486,18 +490,18 @@ export class JumperPrepatternSolver extends BaseSolver {
         minY: node.center.y - node.height / 2,
         maxY: node.center.y + node.height / 2,
       },
-    }
+    };
   }
 
   _createJumperPadObstacles(): SimpleRouteJson["obstacles"] {
     // Return obstacles from the pattern result
-    return this.patternResult?.jumperPadObstacles ?? []
+    return this.patternResult?.jumperPadObstacles ?? [];
   }
 
   _addPortPointObstacles(obstacles: SimpleRouteJson["obstacles"]) {
     // Add an obstacle for each port point so the autorouter knows
     // these are connection terminals that traces can connect to
-    const padSize = this.traceWidth * 2
+    const padSize = this.traceWidth * 2;
 
     for (const pp of this.nodeWithPortPoints.portPoints) {
       obstacles.push({
@@ -508,7 +512,7 @@ export class JumperPrepatternSolver extends BaseSolver {
         width: padSize,
         height: padSize,
         connectedTo: [pp.connectionName],
-      })
+      });
     }
   }
 
@@ -517,13 +521,13 @@ export class JumperPrepatternSolver extends BaseSolver {
     const finalRoutes =
       this.highDensityStitchSolver?.mergedHdRoutes ??
       this.highDensitySolver?.routes ??
-      []
+      [];
 
     // Get all used jumpers (converted to Jumper format)
-    const usedJumpers = this._getUsedJumpers()
+    const usedJumpers = this._getUsedJumpers();
 
     for (let i = 0; i < finalRoutes.length; i++) {
-      const hdRoute = finalRoutes[i]
+      const hdRoute = finalRoutes[i];
 
       this.solvedRoutes.push({
         connectionName: hdRoute.connectionName,
@@ -533,7 +537,7 @@ export class JumperPrepatternSolver extends BaseSolver {
         // Attach all used jumpers to the first route for visualization
         // (jumpers in prepattern are shared resources, not per-route)
         jumpers: i === 0 ? usedJumpers : [],
-      })
+      });
     }
   }
 
@@ -541,24 +545,24 @@ export class JumperPrepatternSolver extends BaseSolver {
    * Get all used jumpers converted to the Jumper type format
    */
   _getUsedJumpers(): Jumper[] {
-    const jumpers: Jumper[] = []
+    const jumpers: Jumper[] = [];
 
     for (const prepatternJumper of this.prepatternJumpers) {
       // Check if this jumper is used
-      let isUsed = false
+      let isUsed = false;
 
       if (this.offBoardConnMap) {
         const jumperNet = this.offBoardConnMap.getNetConnectedToId(
           prepatternJumper.offBoardConnectionId,
-        )
+        );
         if (jumperNet && this.usedJumperOffBoardObstacleIds.has(jumperNet)) {
-          isUsed = true
+          isUsed = true;
         }
       } else {
         // Fallback to direct match if no connectivity map
         isUsed = this.usedJumperOffBoardObstacleIds.has(
           prepatternJumper.offBoardConnectionId,
-        )
+        );
       }
 
       if (isUsed) {
@@ -567,15 +571,15 @@ export class JumperPrepatternSolver extends BaseSolver {
           start: prepatternJumper.start,
           end: prepatternJumper.end,
           footprint: prepatternJumper.footprint as "0603" | "1206",
-        })
+        });
       }
     }
 
-    return jumpers
+    return jumpers;
   }
 
   getOutput(): HighDensityIntraNodeRouteWithJumpers[] {
-    return this.solvedRoutes
+    return this.solvedRoutes;
   }
 
   /**
@@ -584,19 +588,19 @@ export class JumperPrepatternSolver extends BaseSolver {
   private _drawJumperPads(
     graphics: GraphicsObject,
     jumper: {
-      start: { x: number; y: number }
-      end: { x: number; y: number }
-      footprint: JumperFootprint
+      start: { x: number; y: number };
+      end: { x: number; y: number };
+      footprint: JumperFootprint;
     },
     color: string,
   ) {
-    const dims = JUMPER_DIMENSIONS[jumper.footprint]
-    const dx = jumper.end.x - jumper.start.x
-    const dy = jumper.end.y - jumper.start.y
+    const dims = JUMPER_DIMENSIONS[jumper.footprint];
+    const dx = jumper.end.x - jumper.start.x;
+    const dy = jumper.end.y - jumper.start.y;
 
-    const isHorizontal = Math.abs(dx) > Math.abs(dy)
-    const rectWidth = isHorizontal ? dims.padLength : dims.padWidth
-    const rectHeight = isHorizontal ? dims.padWidth : dims.padLength
+    const isHorizontal = Math.abs(dx) > Math.abs(dy);
+    const rectWidth = isHorizontal ? dims.padLength : dims.padWidth;
+    const rectHeight = isHorizontal ? dims.padWidth : dims.padLength;
 
     graphics.rects!.push({
       center: { x: jumper.start.x, y: jumper.start.y },
@@ -605,7 +609,7 @@ export class JumperPrepatternSolver extends BaseSolver {
       fill: color,
       stroke: "rgba(0, 0, 0, 0.5)",
       layer: "jumper",
-    })
+    });
 
     graphics.rects!.push({
       center: { x: jumper.end.x, y: jumper.end.y },
@@ -614,19 +618,19 @@ export class JumperPrepatternSolver extends BaseSolver {
       fill: color,
       stroke: "rgba(0, 0, 0, 0.5)",
       layer: "jumper",
-    })
+    });
 
     graphics.lines!.push({
       points: [jumper.start, jumper.end],
       strokeColor: "rgba(100, 100, 100, 0.8)",
       strokeWidth: dims.padWidth * 0.3,
       layer: "jumper-body",
-    })
+    });
   }
 
   visualize(): GraphicsObject {
     if (!this.solved && this.activeSubSolver) {
-      return this.activeSubSolver.visualize()
+      return this.activeSubSolver.visualize();
     }
 
     const graphics: GraphicsObject = {
@@ -634,7 +638,7 @@ export class JumperPrepatternSolver extends BaseSolver {
       points: [],
       rects: [],
       circles: [],
-    }
+    };
 
     const bounds = {
       minX:
@@ -645,7 +649,7 @@ export class JumperPrepatternSolver extends BaseSolver {
         this.nodeWithPortPoints.center.y - this.nodeWithPortPoints.height / 2,
       maxY:
         this.nodeWithPortPoints.center.y + this.nodeWithPortPoints.height / 2,
-    }
+    };
 
     graphics.lines!.push({
       points: [
@@ -658,7 +662,7 @@ export class JumperPrepatternSolver extends BaseSolver {
       strokeColor: "rgba(255, 0, 0, 0.25)",
       strokeDash: "4 4",
       layer: "border",
-    })
+    });
 
     for (const pp of this.nodeWithPortPoints.portPoints) {
       graphics.points!.push({
@@ -666,52 +670,52 @@ export class JumperPrepatternSolver extends BaseSolver {
         y: pp.y,
         label: pp.connectionName,
         color: this.colorMap[pp.connectionName] ?? "blue",
-      })
+      });
     }
 
     // Only draw jumpers that are used (if portPointPathingSolver has run)
     // After routing completes, usedJumperOffBoardObstacleIds contains net IDs of used jumpers
-    const hasRunPathing = this.portPointPathingSolver?.solved
+    const hasRunPathing = this.portPointPathingSolver?.solved;
     const jumpersToVisualize = hasRunPathing
       ? this.prepatternJumpers.filter((jumper) => {
           // Check if the jumper's offBoardConnectionId maps to a used net ID
           if (this.offBoardConnMap) {
             const jumperNet = this.offBoardConnMap.getNetConnectedToId(
               jumper.offBoardConnectionId,
-            )
+            );
             // The usedJumperOffBoardObstacleIds contains net IDs directly
             if (
               jumperNet &&
               this.usedJumperOffBoardObstacleIds.has(jumperNet)
             ) {
-              return true
+              return true;
             }
-            return false
+            return false;
           }
           // Fallback to direct match if no connectivity map
           return this.usedJumperOffBoardObstacleIds.has(
             jumper.offBoardConnectionId,
-          )
+          );
         })
-      : this.prepatternJumpers
+      : this.prepatternJumpers;
 
     for (const jumper of jumpersToVisualize) {
-      this._drawJumperPads(graphics, jumper, "rgba(128, 128, 128, 0.5)")
+      this._drawJumperPads(graphics, jumper, "rgba(128, 128, 128, 0.5)");
     }
 
     for (const route of this.solvedRoutes) {
-      const color = this.colorMap[route.connectionName] ?? "blue"
+      const color = this.colorMap[route.connectionName] ?? "blue";
 
       for (let i = 0; i < route.route.length - 1; i++) {
-        const p1 = route.route[i]
-        const p2 = route.route[i + 1]
+        const p1 = route.route[i];
+        const p2 = route.route[i + 1];
 
         graphics.lines!.push({
           points: [p1, p2],
           strokeColor: safeTransparentize(color, 0.2),
           strokeWidth: route.traceThickness,
           layer: "route-layer-0",
-        })
+        });
       }
 
       for (const jumper of route.jumpers) {
@@ -719,7 +723,7 @@ export class JumperPrepatternSolver extends BaseSolver {
           graphics,
           { ...jumper, footprint: jumper.footprint },
           safeTransparentize(color, 0.5),
-        )
+        );
       }
     }
 
@@ -728,8 +732,8 @@ export class JumperPrepatternSolver extends BaseSolver {
       y: bounds.maxY + 0.5,
       label: `Phase: ${this.getCurrentPhase()}`,
       color: "black",
-    })
+    });
 
-    return graphics
+    return graphics;
   }
 }

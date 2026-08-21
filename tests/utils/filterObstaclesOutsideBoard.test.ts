@@ -1,6 +1,6 @@
-import { expect, test } from "bun:test"
-import type { Obstacle, SimpleRouteJson } from "lib/types"
-import { filterObstaclesOutsideBoard } from "lib/utils/filterObstaclesOutsideBoard"
+import { expect, test } from "bun:test";
+import type { Obstacle, SimpleRouteJson } from "lib/types";
+import { filterObstaclesOutsideBoard } from "lib/utils/filterObstaclesOutsideBoard";
 
 const createObstacle = (
   obstacle: Partial<Obstacle> & Pick<Obstacle, "center">,
@@ -11,7 +11,7 @@ const createObstacle = (
   height: 1,
   connectedTo: [],
   ...obstacle,
-})
+});
 
 const createSrj = (obstacles: Obstacle[]): SimpleRouteJson => ({
   layerCount: 2,
@@ -25,7 +25,7 @@ const createSrj = (obstacles: Obstacle[]): SimpleRouteJson => ({
   ],
   connections: [],
   obstacles,
-})
+});
 
 test("filters unconnected obstacles that are fully outside the board outline", () => {
   const srj = createSrj([
@@ -45,7 +45,7 @@ test("filters unconnected obstacles that are fully outside the board outline", (
       obstacleId: "overlapping-edge",
       center: { x: 5.25, y: 0 },
     }),
-  ])
+  ]);
 
   expect(
     filterObstaclesOutsideBoard(srj).obstacles.map(
@@ -56,14 +56,14 @@ test("filters unconnected obstacles that are fully outside the board outline", (
     "connected-outside",
     "assignable-outside",
     "overlapping-edge",
-  ])
+  ]);
   expect(filterObstaclesOutsideBoard(srj).bounds).toMatchObject({
     minX: -5,
     maxX: 5,
     minY: -5,
     maxY: 5,
-  })
-})
+  });
+});
 
 test("falls back to bounds when no board outline is provided", () => {
   const srj = {
@@ -75,11 +75,11 @@ test("falls back to bounds when no board outline is provided", () => {
       }),
     ]),
     outline: undefined,
-  }
+  };
 
   expect(
     filterObstaclesOutsideBoard(srj).obstacles.map(
       (obstacle) => obstacle.obstacleId,
     ),
-  ).toEqual(["inside-bounds"])
-})
+  ).toEqual(["inside-bounds"]);
+});

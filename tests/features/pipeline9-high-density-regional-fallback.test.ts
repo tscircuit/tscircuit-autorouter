@@ -1,10 +1,10 @@
-import { expect, test } from "bun:test"
-import { ConnectivityMap } from "circuit-json-to-connectivity-map"
-import { applyFixedRouteReplacementsToPreloadedTraces } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/apply-fixed-route-replacements-to-preloaded-traces"
-import type { PreloadedHighDensityRoute } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/convert-preloaded-traces-to-hd-routes"
-import { Pipeline9HighDensitySolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/pipeline9-high-density-solver"
-import type { SimplifiedPcbTrace } from "lib/types"
-import type { NodeWithPortPoints } from "lib/types/high-density-types"
+import { expect, test } from "bun:test";
+import { ConnectivityMap } from "circuit-json-to-connectivity-map";
+import { applyFixedRouteReplacementsToPreloadedTraces } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/apply-fixed-route-replacements-to-preloaded-traces";
+import type { PreloadedHighDensityRoute } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/convert-preloaded-traces-to-hd-routes";
+import { Pipeline9HighDensitySolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/pipeline9-high-density-solver";
+import type { SimplifiedPcbTrace } from "lib/types";
+import type { NodeWithPortPoints } from "lib/types/high-density-types";
 
 const node: NodeWithPortPoints = {
   capacityMeshNodeId: "cmn_4",
@@ -70,7 +70,7 @@ const node: NodeWithPortPoints = {
       rootConnectionName: "connectivity_net1",
     },
   ],
-}
+};
 
 const fixedRoutes: PreloadedHighDensityRoute[] = [
   {
@@ -112,7 +112,7 @@ const fixedRoutes: PreloadedHighDensityRoute[] = [
     preloadedTraceIndex: 0,
     preloadedRouteIndex: 2,
   },
-]
+];
 
 const preloadedTrace: SimplifiedPcbTrace = {
   type: "pcb_trace",
@@ -127,7 +127,7 @@ const preloadedTrace: SimplifiedPcbTrace = {
       layer: "top",
     })),
   ),
-}
+};
 
 test("Pipeline9 falls back to regional rerouting and splices fixed traces", () => {
   const solver = new Pipeline9HighDensitySolver({
@@ -148,30 +148,30 @@ test("Pipeline9 falls back to regional rerouting and splices fixed traces", () =
     traceWidth: 0.1,
     obstacleMargin: 0.15,
     effort: 1,
-  })
+  });
 
-  solver.solve()
+  solver.solve();
 
-  expect(solver.solved).toBeTrue()
-  expect(solver.failed).toBeFalse()
-  expect(solver.failedSolvers).toHaveLength(1)
+  expect(solver.solved).toBeTrue();
+  expect(solver.failed).toBeFalse();
+  expect(solver.failedSolvers).toHaveLength(1);
   expect(solver.stats).toMatchObject({
     fallbackNodeCount: 1,
     reroutedFixedRouteCount: 2,
     reroutedFixedRouteSectionCount: 1,
-  })
-  expect(solver.routes).toHaveLength(4)
+  });
+  expect(solver.routes).toHaveLength(4);
   expect([...solver.fixedRouteReplacements.keys()]).toEqual([
     "source_net_0_fixed_0_0",
-  ])
+  ]);
 
-  const updatedFixedRoutes = solver.getUpdatedFixedHdRoutes()
-  expect(updatedFixedRoutes).toHaveLength(2)
-  expect(updatedFixedRoutes[0]!.route[0]).toEqual(fixedRoutes[0]!.route[0])
+  const updatedFixedRoutes = solver.getUpdatedFixedHdRoutes();
+  expect(updatedFixedRoutes).toHaveLength(2);
+  expect(updatedFixedRoutes[0]!.route[0]).toEqual(fixedRoutes[0]!.route[0]);
   expect(updatedFixedRoutes[0]!.route.at(-1)).toEqual(
     fixedRoutes[1]!.route.at(-1),
-  )
-  expect(updatedFixedRoutes[1]).toBe(fixedRoutes[2])
+  );
+  expect(updatedFixedRoutes[1]).toBe(fixedRoutes[2]);
 
   const { updatedPreloadedTraces, mutatedPreloadedTraces } =
     applyFixedRouteReplacementsToPreloadedTraces({
@@ -183,18 +183,18 @@ test("Pipeline9 falls back to regional rerouting and splices fixed traces", () =
       defaultViaHoleDiameter: 0.15,
       obstacles: [],
       connMap: solver.connMap,
-    })
-  expect(mutatedPreloadedTraces).toHaveLength(1)
+    });
+  expect(mutatedPreloadedTraces).toHaveLength(1);
   expect(updatedPreloadedTraces[0]!.pcb_trace_id).toBe(
     preloadedTrace.pcb_trace_id,
-  )
+  );
   expect(updatedPreloadedTraces[0]!.route[0]).toMatchObject(
     preloadedTrace.route[0]!,
-  )
+  );
   expect(updatedPreloadedTraces[0]!.route.at(-1)).toMatchObject(
     preloadedTrace.route.at(-1)!,
-  )
+  );
   expect(updatedPreloadedTraces[0]!.route.length).toBeGreaterThan(
     preloadedTrace.route.length,
-  )
-})
+  );
+});

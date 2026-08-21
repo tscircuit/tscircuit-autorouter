@@ -1,17 +1,17 @@
-import type { Obstacle, SimpleRouteJson } from "lib/types"
-import { mapZToLayerName } from "lib/utils/mapZToLayerName"
+import type { Obstacle, SimpleRouteJson } from "lib/types";
+import { mapZToLayerName } from "lib/utils/mapZToLayerName";
 
-const LAYER_COUNT = 10
-const ALL_Z_LAYERS = Array.from({ length: LAYER_COUNT }, (_, z) => z)
+const LAYER_COUNT = 10;
+const ALL_Z_LAYERS = Array.from({ length: LAYER_COUNT }, (_, z) => z);
 const GATE_Y_POSITIONS = Array.from(
   { length: LAYER_COUNT },
   (_, index) => 9 - index * 2,
-)
-const CONNECTION_NAME = "ten-layer-maze"
+);
+const CONNECTION_NAME = "ten-layer-maze";
 
 export function createTenLayerLayerMaze(): SimpleRouteJson {
   const gates: Obstacle[] = GATE_Y_POSITIONS.map((y, passableZ) => {
-    const blockedZLayers = ALL_Z_LAYERS.filter((z) => z !== passableZ)
+    const blockedZLayers = ALL_Z_LAYERS.filter((z) => z !== passableZ);
 
     // Each gate spans the board width and blocks every copper layer except
     // its assigned one, so crossing all ten gates requires all ten layers.
@@ -24,8 +24,8 @@ export function createTenLayerLayerMaze(): SimpleRouteJson {
       layers: blockedZLayers.map((z) => mapZToLayerName(z, LAYER_COUNT)),
       __zLayers: blockedZLayers,
       connectedTo: [],
-    }
-  })
+    };
+  });
 
   return {
     layerCount: LAYER_COUNT,
@@ -67,5 +67,5 @@ export function createTenLayerLayerMaze(): SimpleRouteJson {
         ],
       },
     ],
-  }
+  };
 }

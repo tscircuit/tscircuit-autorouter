@@ -1,4 +1,4 @@
-import { CapacityMeshNode, CapacityMeshEdge } from "lib/types"
+import { CapacityMeshNode, CapacityMeshEdge } from "lib/types";
 
 // Node Definitions based on multisectioncapacitypathing3.json section* fields
 // Includes nodeA0 from main nodes list as it's referenced in sectionEdges/Terminals
@@ -12,7 +12,7 @@ const nodeA0 = {
   layer: "top",
   _containsTarget: true,
   _containsObstacle: true,
-}
+};
 const nodeA = {
   capacityMeshNodeId: "nodeA",
   center: { x: 1, y: 3 },
@@ -21,7 +21,7 @@ const nodeA = {
   availableZ: [0, 1],
   layer: "top",
   _containsTarget: false, // Updated from JSON sectionNodes
-}
+};
 const nodeF = {
   capacityMeshNodeId: "nodeF",
   center: { x: 7, y: 1 },
@@ -30,7 +30,7 @@ const nodeF = {
   availableZ: [0, 1],
   layer: "top",
   _containsTarget: false, // Updated from JSON sectionNodes
-}
+};
 const nodeC = {
   capacityMeshNodeId: "nodeC",
   center: { x: 5, y: 1 },
@@ -40,7 +40,7 @@ const nodeC = {
   layer: "top",
   _containsTarget: true, // From JSON sectionNodes
   _containsObstacle: true, // From JSON sectionNodes
-}
+};
 const nodeR2C2 = {
   capacityMeshNodeId: "nodeR2C2",
   center: { x: 3, y: 3 },
@@ -49,7 +49,7 @@ const nodeR2C2 = {
   availableZ: [0, 1],
   layer: "top",
   _containsTarget: false, // Updated from JSON sectionNodes
-}
+};
 const nodeR2C3 = {
   capacityMeshNodeId: "nodeR2C3",
   center: { x: 5, y: 3 },
@@ -58,7 +58,7 @@ const nodeR2C3 = {
   availableZ: [0, 1],
   layer: "top",
   _containsTarget: false, // Updated from JSON sectionNodes
-}
+};
 const nodeR2C4 = {
   capacityMeshNodeId: "nodeR2C4",
   center: { x: 7, y: 3 },
@@ -67,7 +67,7 @@ const nodeR2C4 = {
   availableZ: [0, 1],
   layer: "top",
   _containsTarget: false, // Updated from JSON sectionNodes
-}
+};
 const nodeR3C3 = {
   capacityMeshNodeId: "nodeR3C3",
   center: { x: 5, y: 5 },
@@ -76,7 +76,7 @@ const nodeR3C3 = {
   availableZ: [0, 1],
   layer: "top",
   _containsTarget: false, // Updated from JSON sectionNodes
-}
+};
 const nodeR3C4 = {
   capacityMeshNodeId: "nodeR3C4",
   center: { x: 7, y: 5 },
@@ -85,7 +85,7 @@ const nodeR3C4 = {
   availableZ: [0, 1],
   layer: "top",
   _containsTarget: false, // Updated from JSON sectionNodes
-}
+};
 const nodeB = {
   capacityMeshNodeId: "nodeB",
   center: { x: 1, y: 7 },
@@ -94,7 +94,7 @@ const nodeB = {
   availableZ: [0, 1],
   layer: "top",
   _containsTarget: false, // Updated from JSON sectionNodes
-}
+};
 const nodeR4C2 = {
   capacityMeshNodeId: "nodeR4C2",
   center: { x: 3, y: 7 },
@@ -103,7 +103,7 @@ const nodeR4C2 = {
   availableZ: [0, 1],
   layer: "top",
   _containsTarget: false, // Updated from JSON sectionNodes
-}
+};
 const nodeR4C3 = {
   capacityMeshNodeId: "nodeR4C3",
   center: { x: 5, y: 7 },
@@ -112,7 +112,7 @@ const nodeR4C3 = {
   availableZ: [0, 1],
   layer: "top",
   _containsTarget: false, // Updated from JSON sectionNodes
-}
+};
 const nodeD = {
   capacityMeshNodeId: "nodeD",
   center: { x: 5, y: 9 },
@@ -121,7 +121,7 @@ const nodeD = {
   availableZ: [0, 1],
   layer: "top",
   _containsTarget: false, // Updated from JSON sectionNodes
-}
+};
 const nodeB1 = {
   capacityMeshNodeId: "nodeB1",
   center: { x: 1, y: 9 },
@@ -130,7 +130,7 @@ const nodeB1 = {
   availableZ: [0, 1],
   layer: "top",
   _containsTarget: false, // From JSON sectionNodes
-}
+};
 const nodeB2 = {
   capacityMeshNodeId: "nodeB2",
   center: { x: 1, y: 11 },
@@ -140,7 +140,7 @@ const nodeB2 = {
   layer: "top",
   _containsTarget: true, // From JSON sectionNodes
   _containsObstacle: true, // From JSON sectionNodes
-}
+};
 const nodeE = {
   capacityMeshNodeId: "nodeE",
   center: { x: 7, y: 9 },
@@ -149,7 +149,7 @@ const nodeE = {
   availableZ: [0, 1],
   layer: "top",
   _containsTarget: false, // Updated from JSON sectionNodes
-}
+};
 
 export const sectionNodes: CapacityMeshNode[] = [
   nodeA0, // Added
@@ -168,7 +168,7 @@ export const sectionNodes: CapacityMeshNode[] = [
   nodeB1, // Added
   nodeB2, // Added
   nodeE,
-]
+];
 
 // Edge Definitions (from JSON sectionEdges)
 export const sectionEdges: CapacityMeshEdge[] = [
@@ -210,13 +210,13 @@ export const sectionEdges: CapacityMeshEdge[] = [
   { nodeIds: ["nodeD", "nodeE"], capacityMeshEdgeId: "edgeD_E" },
   { nodeIds: ["nodeB", "nodeB1"], capacityMeshEdgeId: "edgeB_B1" },
   { nodeIds: ["nodeB1", "nodeB2"], capacityMeshEdgeId: "edgeB1_B2" },
-]
+];
 
 // Connection Terminals (from JSON sectionConnectionTerminals)
 export const sectionConnectionTerminals: Array<{
-  connectionName: string
-  startNodeId: string
-  endNodeId: string
+  connectionName: string;
+  startNodeId: string;
+  endNodeId: string;
 }> = [
   {
     connectionName: "connection_A_B",
@@ -228,18 +228,18 @@ export const sectionConnectionTerminals: Array<{
     startNodeId: "nodeC", // Updated from JSON
     endNodeId: "nodeD", // Updated from JSON
   },
-]
+];
 
 // Create node map
 export const nodeMap = new Map(
   sectionNodes.map((node) => [node.capacityMeshNodeId, node]),
-)
+);
 
 // Create node edge map
-export const nodeEdgeMap = new Map<string, CapacityMeshEdge[]>()
+export const nodeEdgeMap = new Map<string, CapacityMeshEdge[]>();
 for (const node of sectionNodes) {
   const edges = sectionEdges.filter((edge) =>
     edge.nodeIds.includes(node.capacityMeshNodeId),
-  )
-  nodeEdgeMap.set(node.capacityMeshNodeId, edges)
+  );
+  nodeEdgeMap.set(node.capacityMeshNodeId, edges);
 }

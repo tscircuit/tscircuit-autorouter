@@ -1,7 +1,7 @@
-import { expect, test, describe } from "bun:test"
-import { convertHdRouteToSimplifiedRoute } from "../../lib/utils/convertHdRouteToSimplifiedRoute"
-import type { ConnectionPoint } from "../../lib/types"
-import { HighDensityIntraNodeRoute } from "../../lib/types/high-density-types"
+import { expect, test, describe } from "bun:test";
+import { convertHdRouteToSimplifiedRoute } from "../../lib/utils/convertHdRouteToSimplifiedRoute";
+import type { ConnectionPoint } from "../../lib/types";
+import { HighDensityIntraNodeRoute } from "../../lib/types/high-density-types";
 
 describe("convertHdRouteToSimplifiedRoute", () => {
   test("converts a simple single layer route correctly", () => {
@@ -15,9 +15,9 @@ describe("convertHdRouteToSimplifiedRoute", () => {
         { x: 3, y: 2, z: 0 },
       ],
       vias: [],
-    }
+    };
 
-    const result = convertHdRouteToSimplifiedRoute(input, 2)
+    const result = convertHdRouteToSimplifiedRoute(input, 2);
     expect(result).toMatchInlineSnapshot(`
       [
         {
@@ -42,8 +42,8 @@ describe("convertHdRouteToSimplifiedRoute", () => {
           "y": 2,
         },
       ]
-    `)
-  })
+    `);
+  });
 
   test("converts a route with layer changes and puts vias after corresponding segments", () => {
     const input: HighDensityIntraNodeRoute = {
@@ -63,9 +63,9 @@ describe("convertHdRouteToSimplifiedRoute", () => {
         { x: 2, y: 2 }, // Via connecting top to bottom
         { x: 4, y: 4 }, // Via connecting bottom to layer2
       ],
-    }
+    };
 
-    const result = convertHdRouteToSimplifiedRoute(input, 4)
+    const result = convertHdRouteToSimplifiedRoute(input, 4);
     expect(result).toMatchInlineSnapshot(`
       [
         {
@@ -134,8 +134,8 @@ describe("convertHdRouteToSimplifiedRoute", () => {
           "y": 5,
         },
       ]
-    `)
-  })
+    `);
+  });
 
   test("serializes marked layer changes as through_obstacle segments", () => {
     const input: HighDensityIntraNodeRoute = {
@@ -149,9 +149,9 @@ describe("convertHdRouteToSimplifiedRoute", () => {
         { x: 2, y: 0, z: 1 },
       ],
       vias: [{ x: 1, y: 0 }],
-    }
+    };
 
-    const result = convertHdRouteToSimplifiedRoute(input, 2)
+    const result = convertHdRouteToSimplifiedRoute(input, 2);
     expect(result).toMatchInlineSnapshot(`
       [
         {
@@ -197,8 +197,8 @@ describe("convertHdRouteToSimplifiedRoute", () => {
           "y": 0,
         },
       ]
-    `)
-  })
+    `);
+  });
 
   test("handles empty route correctly", () => {
     const input: HighDensityIntraNodeRoute = {
@@ -207,11 +207,11 @@ describe("convertHdRouteToSimplifiedRoute", () => {
       viaDiameter: 0.6,
       route: [],
       vias: [],
-    }
+    };
 
-    const result = convertHdRouteToSimplifiedRoute(input, 2)
-    expect(result).toMatchInlineSnapshot(`[]`)
-  })
+    const result = convertHdRouteToSimplifiedRoute(input, 2);
+    expect(result).toMatchInlineSnapshot(`[]`);
+  });
 
   test("correctly ignores via data when actual z-level change doesn't have a matching via", () => {
     const input: HighDensityIntraNodeRoute = {
@@ -230,9 +230,9 @@ describe("convertHdRouteToSimplifiedRoute", () => {
         // Only one via at (2,2), missing the one at (3,3)
         { x: 2, y: 2 },
       ],
-    }
+    };
 
-    const result = convertHdRouteToSimplifiedRoute(input, 4)
+    const result = convertHdRouteToSimplifiedRoute(input, 4);
     expect(result).toMatchInlineSnapshot(`
       [
         {
@@ -286,8 +286,8 @@ describe("convertHdRouteToSimplifiedRoute", () => {
           "y": 4,
         },
       ]
-    `)
-  })
+    `);
+  });
 
   test("removes consecutive duplicate points on the same layer", () => {
     const input: HighDensityIntraNodeRoute = {
@@ -300,9 +300,9 @@ describe("convertHdRouteToSimplifiedRoute", () => {
         { x: 2, y: 1, z: 0 },
       ],
       vias: [],
-    }
+    };
 
-    const result = convertHdRouteToSimplifiedRoute(input, 2)
+    const result = convertHdRouteToSimplifiedRoute(input, 2);
     expect(result).toMatchInlineSnapshot(`
       [
         {
@@ -320,8 +320,8 @@ describe("convertHdRouteToSimplifiedRoute", () => {
           "y": 1,
         },
       ]
-    `)
-  })
+    `);
+  });
 
   test("zero-length segment repro preserves the original duplicate point pair", () => {
     const route = [
@@ -339,7 +339,7 @@ describe("convertHdRouteToSimplifiedRoute", () => {
         width: 0.6,
         layer: "top",
       },
-    ]
+    ];
 
     expect(route).toMatchInlineSnapshot(`
       [
@@ -358,8 +358,8 @@ describe("convertHdRouteToSimplifiedRoute", () => {
           "y": 18.50630157447545,
         },
       ]
-    `)
-  })
+    `);
+  });
 
   test("serializes terminal vias from single-layer connection points", () => {
     const input: HighDensityIntraNodeRoute = {
@@ -371,7 +371,7 @@ describe("convertHdRouteToSimplifiedRoute", () => {
         { x: 2, y: 1, z: 0 },
       ],
       vias: [],
-    }
+    };
     const connectionPoints = [
       {
         x: 1,
@@ -387,11 +387,11 @@ describe("convertHdRouteToSimplifiedRoute", () => {
         pointId: "end",
         terminalVia: { toLayer: "inner2" },
       },
-    ] satisfies ConnectionPoint[]
+    ] satisfies ConnectionPoint[];
 
     const result = convertHdRouteToSimplifiedRoute(input, 4, {
       connectionPoints,
-    })
+    });
 
     expect(result).toMatchInlineSnapshot(`
       [
@@ -426,6 +426,6 @@ describe("convertHdRouteToSimplifiedRoute", () => {
           "y": 1,
         },
       ]
-    `)
-  })
-})
+    `);
+  });
+});

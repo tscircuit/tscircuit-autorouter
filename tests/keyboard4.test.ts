@@ -1,52 +1,52 @@
-import { beforeAll, describe, expect, test } from "bun:test"
-import { convertCircuitJsonToPcbSvg } from "circuit-to-svg"
-import type { AnyCircuitElement } from "circuit-json"
-import keyboard4 from "../fixtures/legacy/assets/keyboard4.json" with {
-  type: "json",
-}
-import { CapacityMeshSolver } from "../lib"
-import { convertToCircuitJson } from "lib/testing/utils/convertToCircuitJson"
-import { getDrcErrors } from "lib/testing/getDrcErrors"
-import type { SimpleRouteJson } from "lib/types"
-import { AutoroutingPipelineSolver2_PortPointPathing } from "lib/autorouter-pipelines"
+import { beforeAll, describe, expect, test } from "bun:test";
+import { convertCircuitJsonToPcbSvg } from "circuit-to-svg";
+import type { AnyCircuitElement } from "circuit-json";
+import keyboard4 from "../fixtures/legacy/assets/keyboard4.json" with { type: "json" };
+import { CapacityMeshSolver } from "../lib";
+import { convertToCircuitJson } from "lib/testing/utils/convertToCircuitJson";
+import { getDrcErrors } from "lib/testing/getDrcErrors";
+import type { SimpleRouteJson } from "lib/types";
+import { AutoroutingPipelineSolver2_PortPointPathing } from "lib/autorouter-pipelines";
 
 describe.skip("keyboard4 autorouting", () => {
-  const keyboard4Srj = keyboard4 as unknown as SimpleRouteJson
+  const keyboard4Srj = keyboard4 as unknown as SimpleRouteJson;
 
-  let circuitJson: AnyCircuitElement[]
-  let pcbSvg: string
+  let circuitJson: AnyCircuitElement[];
+  let pcbSvg: string;
 
   beforeAll(() => {
-    const solver = new AutoroutingPipelineSolver2_PortPointPathing(keyboard4Srj)
-    solver.solve()
+    const solver = new AutoroutingPipelineSolver2_PortPointPathing(
+      keyboard4Srj,
+    );
+    solver.solve();
 
     if (solver.failed || !solver.solved) {
-      throw new Error(`Keyboard4 solver failed: ${solver.error ?? "unknown"}`)
+      throw new Error(`Keyboard4 solver failed: ${solver.error ?? "unknown"}`);
     }
 
-    const srjWithPointPairs = solver.srjWithPointPairs
+    const srjWithPointPairs = solver.srjWithPointPairs;
     if (!srjWithPointPairs) {
-      throw new Error("Keyboard4 solver did not produce point pairs SRJ")
+      throw new Error("Keyboard4 solver did not produce point pairs SRJ");
     }
 
-    const simplifiedTraces = solver.getOutputSimplifiedPcbTraces()
+    const simplifiedTraces = solver.getOutputSimplifiedPcbTraces();
 
     circuitJson = convertToCircuitJson(srjWithPointPairs, simplifiedTraces, {
       minTraceWidth: keyboard4Srj.minTraceWidth,
-    })
+    });
 
-    pcbSvg = convertCircuitJsonToPcbSvg(circuitJson)
-  })
+    pcbSvg = convertCircuitJsonToPcbSvg(circuitJson);
+  });
 
   test("matches the expected PCB snapshot", () => {
     expect(pcbSvg).toMatchSvgSnapshot(import.meta.path, {
       tolerance: 0.1,
-    })
-  })
+    });
+  });
 
   test("produces routes without DRC violations", () => {
-    const { errors } = getDrcErrors(circuitJson)
+    const { errors } = getDrcErrors(circuitJson);
 
-    expect(errors).toHaveLength(0)
-  })
-})
+    expect(errors).toHaveLength(0);
+  });
+});

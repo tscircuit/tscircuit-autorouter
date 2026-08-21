@@ -1,14 +1,14 @@
 interface RoutePoint {
-  x: number
-  y: number
-  z: number
+  x: number;
+  y: number;
+  z: number;
 }
 
 interface MergedSegment {
-  points: { x: number; y: number }[]
-  z: number
-  connectionName: string
-  color: string
+  points: { x: number; y: number }[];
+  z: number;
+  connectionName: string;
+  color: string;
 }
 
 /**
@@ -23,11 +23,11 @@ export function mergeRouteSegments(
   connectionName: string,
   color: string,
 ): MergedSegment[] {
-  const segments: MergedSegment[] = []
-  let currentSegment: MergedSegment | null = null
+  const segments: MergedSegment[] = [];
+  let currentSegment: MergedSegment | null = null;
 
   for (let i = 0; i < route.length; i++) {
-    const point = route[i]
+    const point = route[i];
 
     if (!currentSegment) {
       currentSegment = {
@@ -35,24 +35,24 @@ export function mergeRouteSegments(
         z: point.z,
         connectionName,
         color,
-      }
+      };
     } else if (currentSegment.z === point.z) {
-      currentSegment.points.push({ x: point.x, y: point.y })
+      currentSegment.points.push({ x: point.x, y: point.y });
     } else {
-      segments.push(currentSegment)
+      segments.push(currentSegment);
       currentSegment = {
         points: [{ x: point.x, y: point.y }],
         z: point.z,
         connectionName,
         color,
-      }
+      };
     }
 
     // Add final segment if we're at the last point
     if (i === route.length - 1 && currentSegment) {
-      segments.push(currentSegment)
+      segments.push(currentSegment);
     }
   }
 
-  return segments
+  return segments;
 }

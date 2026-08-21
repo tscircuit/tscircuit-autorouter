@@ -1,5 +1,5 @@
-import { NodePortSegment } from "lib/types/capacity-edges-to-port-segments-types"
-import { SegmentWithAssignedPoints } from "../CapacityMeshSolver/CapacitySegmentToPointSolver"
+import { NodePortSegment } from "lib/types/capacity-edges-to-port-segments-types";
+import { SegmentWithAssignedPoints } from "../CapacityMeshSolver/CapacitySegmentToPointSolver";
 
 /**
  * Deduplicates segments with the same start and end points.
@@ -11,26 +11,26 @@ import { SegmentWithAssignedPoints } from "../CapacityMeshSolver/CapacitySegment
 export const getDedupedSegments = (
   assignedSegments: NodePortSegment[],
 ): SegmentWithAssignedPoints[] => {
-  const dedupedSegments: SegmentWithAssignedPoints[] = []
-  type SegKey = `${number}-${number}-${number}-${number}-${string}`
-  const dedupedSegPointMap: Map<SegKey, NodePortSegment> = new Map()
-  let highestSegmentId = -1
+  const dedupedSegments: SegmentWithAssignedPoints[] = [];
+  type SegKey = `${number}-${number}-${number}-${number}-${string}`;
+  const dedupedSegPointMap: Map<SegKey, NodePortSegment> = new Map();
+  let highestSegmentId = -1;
 
   for (const seg of assignedSegments) {
     // Check if there's another segment with the same start and end and availableZ
-    const segKey: SegKey = `${seg.start.x}-${seg.start.y}-${seg.end.x}-${seg.end.y}-${seg.availableZ.join(",")}`
-    const existingSeg = dedupedSegPointMap.get(segKey)
+    const segKey: SegKey = `${seg.start.x}-${seg.start.y}-${seg.end.x}-${seg.end.y}-${seg.availableZ.join(",")}`;
+    const existingSeg = dedupedSegPointMap.get(segKey);
 
     if (!existingSeg) {
-      highestSegmentId++
-      seg.nodePortSegmentId = `SEG${highestSegmentId}`
-      dedupedSegPointMap.set(segKey, seg)
-      dedupedSegments.push(seg)
-      continue
+      highestSegmentId++;
+      seg.nodePortSegmentId = `SEG${highestSegmentId}`;
+      dedupedSegPointMap.set(segKey, seg);
+      dedupedSegments.push(seg);
+      continue;
     }
 
-    seg.nodePortSegmentId = existingSeg.nodePortSegmentId
+    seg.nodePortSegmentId = existingSeg.nodePortSegmentId;
   }
 
-  return dedupedSegments
-}
+  return dedupedSegments;
+};

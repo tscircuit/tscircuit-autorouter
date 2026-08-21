@@ -3,56 +3,56 @@
  * Uses a direct test approach with proper backup/restore
  */
 
-import * as fs from "fs"
-import * as path from "path"
-import { execSync } from "child_process"
-import type { PortPointPathingHyperParameters } from "../../../lib/solvers/PortPointPathingSolver/PortPointPathingSolver"
+import * as fs from "fs";
+import * as path from "path";
+import { execSync } from "child_process";
+import type { PortPointPathingHyperParameters } from "../../../lib/solvers/PortPointPathingSolver/PortPointPathingSolver";
 
 type ScheduleEntry = PortPointPathingHyperParameters & {
-  EXPANSION_DEGREES: number
-}
+  EXPANSION_DEGREES: number;
+};
 
 const OPTIMIZER_PATH = path.resolve(
   __dirname,
   "../../../lib/solvers/MultiSectionPortPointOptimizer/MultiSectionPortPointOptimizer.ts",
-)
+);
 
 // Store original content at startup
-const ORIGINAL_CONTENT = fs.readFileSync(OPTIMIZER_PATH, "utf-8")
+const ORIGINAL_CONTENT = fs.readFileSync(OPTIMIZER_PATH, "utf-8");
 
 // Restore on exit
 process.on("exit", () => {
-  fs.writeFileSync(OPTIMIZER_PATH, ORIGINAL_CONTENT)
-  console.log("\nRestored original file on exit")
-})
+  fs.writeFileSync(OPTIMIZER_PATH, ORIGINAL_CONTENT);
+  console.log("\nRestored original file on exit");
+});
 process.on("SIGINT", () => {
-  fs.writeFileSync(OPTIMIZER_PATH, ORIGINAL_CONTENT)
-  console.log("\nRestored original file on interrupt")
-  process.exit(1)
-})
+  fs.writeFileSync(OPTIMIZER_PATH, ORIGINAL_CONTENT);
+  console.log("\nRestored original file on interrupt");
+  process.exit(1);
+});
 process.on("SIGTERM", () => {
-  fs.writeFileSync(OPTIMIZER_PATH, ORIGINAL_CONTENT)
-  process.exit(1)
-})
+  fs.writeFileSync(OPTIMIZER_PATH, ORIGINAL_CONTENT);
+  process.exit(1);
+});
 
 function runTest(schedule: ScheduleEntry[]): {
-  currentBoardScore: number
-  initialBoardScore: number
-  successfulOptimizations: number
+  currentBoardScore: number;
+  initialBoardScore: number;
+  successfulOptimizations: number;
 } | null {
   const scheduleStr = JSON.stringify(schedule, null, 2)
     .split("\n")
     .map((line, i) => (i === 0 ? line : "  " + line))
-    .join("\n")
+    .join("\n");
 
   const modifiedContent = ORIGINAL_CONTENT.replace(
     /const OPTIMIZATION_SCHEDULE[\s\S]*?\n\]/,
     `const OPTIMIZATION_SCHEDULE: (PortPointPathingHyperParameters & {
   EXPANSION_DEGREES: number
 })[] = ${scheduleStr}`,
-  )
+  );
 
-  fs.writeFileSync(OPTIMIZER_PATH, modifiedContent)
+  fs.writeFileSync(OPTIMIZER_PATH, modifiedContent);
 
   try {
     const result = execSync(
@@ -74,20 +74,20 @@ function runTest(schedule: ScheduleEntry[]): {
         timeout: 60000,
         stdio: ["pipe", "pipe", "pipe"],
       },
-    )
-    const lines = result.trim().split("\n")
-    const jsonLine = lines.find((line) => line.startsWith("{"))
+    );
+    const lines = result.trim().split("\n");
+    const jsonLine = lines.find((line) => line.startsWith("{"));
     if (jsonLine) {
-      return JSON.parse(jsonLine)
+      return JSON.parse(jsonLine);
     }
   } catch (e: any) {
     // Ignore errors, return null
   }
-  return null
+  return null;
 }
 
 // Generate test configurations - GREEDY_MULTIPLIER >= 1.1
-const schedules: { name: string; schedule: ScheduleEntry[] }[] = []
+const schedules: { name: string; schedule: ScheduleEntry[] }[] = [];
 
 // Base config
 const base = {
@@ -95,7 +95,7 @@ const base = {
   CENTER_OFFSET_DIST_PENALTY_FACTOR: 1,
   EXPANSION_DEGREES: 3,
   GREEDY_MULTIPLIER: 3,
-}
+};
 
 // 1. NODE_PF_FACTOR variations
 for (const npf of [10, 20, 30, 40, 50, 60, 70, 80, 100, 150, 200]) {
@@ -106,7 +106,7 @@ for (const npf of [10, 20, 30, 40, 50, 60, 70, 80, 100, 150, 200]) {
       { ...base, SHUFFLE_SEED: 1, NODE_PF_FACTOR: npf },
       { ...base, SHUFFLE_SEED: 2, EXPANSION_DEGREES: 4, NODE_PF_FACTOR: npf },
     ],
-  })
+  });
 }
 
 // 2. GREEDY_MULTIPLIER variations (>= 1.1)
@@ -118,7 +118,7 @@ for (const gm of [1.5, 2, 2.5, 3, 3.5, 4, 5, 6, 8, 10]) {
       { ...base, SHUFFLE_SEED: 1, GREEDY_MULTIPLIER: gm },
       { ...base, SHUFFLE_SEED: 2, EXPANSION_DEGREES: 4, GREEDY_MULTIPLIER: gm },
     ],
-  })
+  });
 }
 
 // 3. CENTER_OFFSET_DIST_PENALTY_FACTOR variations
@@ -135,7 +135,7 @@ for (const cof of [0, 0.5, 1, 2, 3, 5]) {
         CENTER_OFFSET_DIST_PENALTY_FACTOR: cof,
       },
     ],
-  })
+  });
 }
 
 // 4. Expansion degree variations
@@ -147,7 +147,7 @@ for (const exp of [2, 3, 4, 5, 6, 8]) {
       { ...base, SHUFFLE_SEED: 1, EXPANSION_DEGREES: exp },
       { ...base, SHUFFLE_SEED: 2, EXPANSION_DEGREES: exp + 1 },
     ],
-  })
+  });
 }
 
 // 5. Combined: Best GM with NPF
@@ -176,7 +176,7 @@ for (const npf of [30, 50, 70, 100]) {
           NODE_PF_FACTOR: npf,
         },
       ],
-    })
+    });
   }
 }
 
@@ -206,7 +206,7 @@ for (const cof of [0, 0.5, 1]) {
           GREEDY_MULTIPLIER: gm,
         },
       ],
-    })
+    });
   }
 }
 
@@ -240,57 +240,57 @@ for (const npf of [50, 100]) {
             CENTER_OFFSET_DIST_PENALTY_FACTOR: cof,
           },
         ],
-      })
+      });
     }
   }
 }
 
 // 8. More seeds
 for (const numSeeds of [4, 5, 6, 8]) {
-  const schedule: ScheduleEntry[] = []
+  const schedule: ScheduleEntry[] = [];
   for (let i = 0; i < numSeeds; i++) {
     schedule.push({
       SHUFFLE_SEED: i,
       CENTER_OFFSET_DIST_PENALTY_FACTOR: 1,
       EXPANSION_DEGREES: i < numSeeds - 1 ? 3 : 4,
       GREEDY_MULTIPLIER: 3,
-    })
+    });
   }
-  schedules.push({ name: `seeds_${numSeeds}`, schedule })
+  schedules.push({ name: `seeds_${numSeeds}`, schedule });
 }
 
 // Run tests
-console.log("Safe OPTIMIZATION_SCHEDULE search for bugreport23")
-console.log("=".repeat(70))
-console.log(`Testing ${schedules.length} configurations...`)
-console.log("")
+console.log("Safe OPTIMIZATION_SCHEDULE search for bugreport23");
+console.log("=".repeat(70));
+console.log(`Testing ${schedules.length} configurations...`);
+console.log("");
 
 const results: {
-  name: string
-  schedule: ScheduleEntry[]
-  score: number
-  improvement: number
-  success: number
-}[] = []
+  name: string;
+  schedule: ScheduleEntry[];
+  score: number;
+  improvement: number;
+  success: number;
+}[] = [];
 
-let bestScore = -Infinity
+let bestScore = -Infinity;
 
 for (let i = 0; i < schedules.length; i++) {
-  const { name, schedule } = schedules[i]
-  process.stdout.write(`[${i + 1}/${schedules.length}] ${name.padEnd(25)} `)
+  const { name, schedule } = schedules[i];
+  process.stdout.write(`[${i + 1}/${schedules.length}] ${name.padEnd(25)} `);
 
-  const result = runTest(schedule)
+  const result = runTest(schedule);
   if (result) {
-    const improvement = result.currentBoardScore - result.initialBoardScore
-    const isBest = result.currentBoardScore > bestScore
-    if (isBest) bestScore = result.currentBoardScore
+    const improvement = result.currentBoardScore - result.initialBoardScore;
+    const isBest = result.currentBoardScore > bestScore;
+    if (isBest) bestScore = result.currentBoardScore;
 
     console.log(
       `score: ${result.currentBoardScore.toFixed(4)}, ` +
         `imp: ${improvement.toFixed(4)}, ` +
         `succ: ${result.successfulOptimizations}` +
         (isBest ? " ***BEST***" : ""),
-    )
+    );
 
     results.push({
       name,
@@ -298,32 +298,32 @@ for (let i = 0; i < schedules.length; i++) {
       score: result.currentBoardScore,
       improvement,
       success: result.successfulOptimizations,
-    })
+    });
   } else {
-    console.log("ERROR")
+    console.log("ERROR");
   }
 }
 
 // Restore original
-fs.writeFileSync(OPTIMIZER_PATH, ORIGINAL_CONTENT)
+fs.writeFileSync(OPTIMIZER_PATH, ORIGINAL_CONTENT);
 
 // Results
-console.log("\n" + "=".repeat(70))
-results.sort((a, b) => b.score - a.score)
+console.log("\n" + "=".repeat(70));
+results.sort((a, b) => b.score - a.score);
 
-console.log("Top 20 results:")
-console.log("-".repeat(70))
+console.log("Top 20 results:");
+console.log("-".repeat(70));
 for (let i = 0; i < Math.min(20, results.length); i++) {
-  const r = results[i]
+  const r = results[i];
   console.log(
     `${(i + 1).toString().padStart(2)}. ${r.name.padEnd(25)} score=${r.score.toFixed(4)} imp=${r.improvement.toFixed(4)}`,
-  )
+  );
 }
 
-console.log("\n" + "=".repeat(70))
-console.log("BEST CONFIG:")
-const best = results[0]
-console.log(`Name: ${best.name}`)
-console.log(`Score: ${best.score}`)
-console.log("Schedule:")
-console.log(JSON.stringify(best.schedule, null, 2))
+console.log("\n" + "=".repeat(70));
+console.log("BEST CONFIG:");
+const best = results[0];
+console.log(`Name: ${best.name}`);
+console.log(`Score: ${best.score}`);
+console.log("Schedule:");
+console.log(JSON.stringify(best.schedule, null, 2));

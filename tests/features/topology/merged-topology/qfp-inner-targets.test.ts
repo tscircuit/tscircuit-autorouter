@@ -1,23 +1,23 @@
-import { expect, test } from "bun:test"
-import type { Obstacle, SimpleRouteJson } from "lib/types"
+import { expect, test } from "bun:test";
+import type { Obstacle, SimpleRouteJson } from "lib/types";
 import {
   getGraphicsSvgFrames,
   getSolverGraphicsFrames,
-} from "../../../fixtures/solver-svg-frames"
+} from "../../../fixtures/solver-svg-frames";
 import {
   createTopologyMergingSolverFromPlanning,
   createTopologyPlanningSolverForMerging,
-} from "../../../fixtures/topology-merging-test-utils"
+} from "../../../fixtures/topology-merging-test-utils";
 
 type RectSpec = {
-  id: string
-  x: number
-  y: number
-  width: number
-  height: number
-  componentId?: string
-  connectedTo?: string[]
-}
+  id: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  componentId?: string;
+  connectedTo?: string[];
+};
 
 function createObstacle({
   id,
@@ -38,12 +38,12 @@ function createObstacle({
     width,
     height,
     connectedTo,
-  }
+  };
 }
 
 function createQfpMergedTopologySrj(): SimpleRouteJson {
-  const obstacles: Obstacle[] = []
-  const positions = [-1.2, 0, 1.2]
+  const obstacles: Obstacle[] = [];
+  const positions = [-1.2, 0, 1.2];
 
   for (const x of positions) {
     obstacles.push(
@@ -63,7 +63,7 @@ function createQfpMergedTopologySrj(): SimpleRouteJson {
         width: 0.36,
         height: 0.9,
       }),
-    )
+    );
   }
 
   for (const y of positions) {
@@ -84,7 +84,7 @@ function createQfpMergedTopologySrj(): SimpleRouteJson {
         width: 0.9,
         height: 0.36,
       }),
-    )
+    );
   }
 
   return {
@@ -128,13 +128,13 @@ function createQfpMergedTopologySrj(): SimpleRouteJson {
         ],
       },
     ],
-  }
+  };
 }
 
 test("merged topology preserves inner targets in QFP center", async (): Promise<void> => {
-  const inputSrj = createQfpMergedTopologySrj()
+  const inputSrj = createQfpMergedTopologySrj();
   const topologyPlanningSolver =
-    createTopologyPlanningSolverForMerging(inputSrj)
+    createTopologyPlanningSolverForMerging(inputSrj);
   const planningFrames = getSolverGraphicsFrames({
     solver: topologyPlanningSolver,
     frames: [
@@ -163,24 +163,24 @@ test("merged topology preserves inner targets in QFP center", async (): Promise<
       { type: "pipeline", step: 218, layer: "split" },
       { type: "pipeline", step: "end", layer: "split" },
     ],
-  })
+  });
   const topologyMergingSolver = createTopologyMergingSolverFromPlanning({
     inputSrj,
     topologyPlanningSolver,
-  })
+  });
   const mergingFrames = getSolverGraphicsFrames({
     solver: topologyMergingSolver,
     frames: [{ type: "pipeline", step: "end", layer: "split" }],
-  })
+  });
 
-  expect(topologyPlanningSolver.getOutput().componentMeshNodes).toHaveLength(1)
-  expect(topologyMergingSolver.solved).toBe(true)
-  expect(topologyMergingSolver.failed).toBe(false)
-  expect(topologyMergingSolver.getOutput().length).toBeGreaterThan(0)
+  expect(topologyPlanningSolver.getOutput().componentMeshNodes).toHaveLength(1);
+  expect(topologyMergingSolver.solved).toBe(true);
+  expect(topologyMergingSolver.failed).toBe(false);
+  expect(topologyMergingSolver.getOutput().length).toBeGreaterThan(0);
   await expect(
     getGraphicsSvgFrames({
       frames: [...planningFrames, ...mergingFrames],
       columns: 3,
     }),
-  ).toMatchSvgSnapshot(import.meta.path)
-})
+  ).toMatchSvgSnapshot(import.meta.path);
+});

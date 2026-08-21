@@ -1,15 +1,15 @@
-import { distance } from "@tscircuit/math-utils"
-import type { CapacityMeshNodeId, SimpleRouteJson } from "../../types"
+import { distance } from "@tscircuit/math-utils";
+import type { CapacityMeshNodeId, SimpleRouteJson } from "../../types";
 import type {
   ConnectionPathResult,
   InputNodeWithPortPoints,
-} from "./PortPointPathingSolver"
+} from "./PortPointPathingSolver";
 
 export interface GetConnectionsWithNodesResult {
   /** Connections with their node assignments (NOT shuffled) */
-  unshuffledConnectionsWithResults: ConnectionPathResult[]
+  unshuffledConnectionsWithResults: ConnectionPathResult[];
   /** Map from connection name to goal node IDs */
-  connectionNameToGoalNodeIds: Map<string, CapacityMeshNodeId[]>
+  connectionNameToGoalNodeIds: Map<string, CapacityMeshNodeId[]>;
 }
 
 /**
@@ -21,39 +21,39 @@ export function getConnectionsWithNodes(
   simpleRouteJson: SimpleRouteJson,
   inputNodes: InputNodeWithPortPoints[],
 ): GetConnectionsWithNodesResult {
-  const connectionsWithResults: ConnectionPathResult[] = []
-  const nodesWithTargets = inputNodes.filter((n) => n._containsTarget)
-  const connectionNameToGoalNodeIds = new Map<string, CapacityMeshNodeId[]>()
+  const connectionsWithResults: ConnectionPathResult[] = [];
+  const nodesWithTargets = inputNodes.filter((n) => n._containsTarget);
+  const connectionNameToGoalNodeIds = new Map<string, CapacityMeshNodeId[]>();
 
   for (const connection of simpleRouteJson.connections) {
-    const nodesForConnection: InputNodeWithPortPoints[] = []
+    const nodesForConnection: InputNodeWithPortPoints[] = [];
 
     for (const point of connection.pointsToConnect) {
-      let closestNode = inputNodes[0]
-      let minDistance = Number.MAX_VALUE
+      let closestNode = inputNodes[0];
+      let minDistance = Number.MAX_VALUE;
 
       for (const node of nodesWithTargets) {
         const dist = Math.sqrt(
           (node.center.x - point.x) ** 2 + (node.center.y - point.y) ** 2,
-        )
+        );
         if (dist < minDistance) {
-          minDistance = dist
-          closestNode = node
+          minDistance = dist;
+          closestNode = node;
         }
       }
-      nodesForConnection.push(closestNode)
+      nodesForConnection.push(closestNode);
     }
 
     if (nodesForConnection.length < 2) {
       throw new Error(
         `Not enough nodes for connection "${connection.name}", only ${nodesForConnection.length} found`,
-      )
+      );
     }
 
     connectionNameToGoalNodeIds.set(
       connection.name,
       nodesForConnection.map((n) => n.capacityMeshNodeId),
-    )
+    );
 
     connectionsWithResults.push({
       connection,
@@ -65,11 +65,11 @@ export function getConnectionsWithNodes(
         nodesForConnection[0].center,
         nodesForConnection[nodesForConnection.length - 1].center,
       ),
-    })
+    });
   }
 
   return {
     unshuffledConnectionsWithResults: connectionsWithResults,
     connectionNameToGoalNodeIds,
-  }
+  };
 }

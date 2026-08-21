@@ -1,26 +1,26 @@
-import type { CapacityMeshNode } from "lib/types"
-import { CapacityPathingSolver, type Candidate } from "./CapacityPathingSolver"
-import { getTunedTotalCapacity1 } from "lib/utils/getTunedTotalCapacity1"
+import type { CapacityMeshNode } from "lib/types";
+import { CapacityPathingSolver, type Candidate } from "./CapacityPathingSolver";
+import { getTunedTotalCapacity1 } from "lib/utils/getTunedTotalCapacity1";
 
 export class CapacityPathingSolver5 extends CapacityPathingSolver {
   override getSolverName(): string {
-    return "CapacityPathingSolver5"
+    return "CapacityPathingSolver5";
   }
 
-  NEGATIVE_CAPACITY_PENALTY_FACTOR = 1
-  REDUCED_CAPACITY_PENALTY_FACTOR = 1
+  NEGATIVE_CAPACITY_PENALTY_FACTOR = 1;
+  REDUCED_CAPACITY_PENALTY_FACTOR = 1;
 
   constructor(...args: ConstructorParameters<typeof CapacityPathingSolver>) {
-    super(...args)
-    this.GREEDY_MULTIPLIER = 2.5
+    super(...args);
+    this.GREEDY_MULTIPLIER = 2.5;
   }
 
   get maxCapacityFactor() {
-    return this.hyperParameters.MAX_CAPACITY_FACTOR ?? 1
+    return this.hyperParameters.MAX_CAPACITY_FACTOR ?? 1;
   }
 
   getTotalCapacity(node: CapacityMeshNode): number {
-    return getTunedTotalCapacity1(node, this.maxCapacityFactor)
+    return getTunedTotalCapacity1(node, this.maxCapacityFactor);
   }
 
   /**
@@ -29,18 +29,18 @@ export class CapacityPathingSolver5 extends CapacityPathingSolver {
   getNodeCapacityPenalty(node: CapacityMeshNode): number {
     // return 0.05
 
-    const MAX_PENALTY = node.width + node.height
-    const MIN_PENALTY = 0.05
+    const MAX_PENALTY = node.width + node.height;
+    const MIN_PENALTY = 0.05;
 
-    const START_PENALIZING_CAPACITY_WHEN_IT_DROPS_BELOW = 2
+    const START_PENALIZING_CAPACITY_WHEN_IT_DROPS_BELOW = 2;
 
-    const totalCapacity = this.getTotalCapacity(node)
+    const totalCapacity = this.getTotalCapacity(node);
     const usedCapacity =
-      this.usedNodeCapacityMap.get(node.capacityMeshNodeId) ?? 0
-    const remainingCapacity = totalCapacity - usedCapacity
+      this.usedNodeCapacityMap.get(node.capacityMeshNodeId) ?? 0;
+    const remainingCapacity = totalCapacity - usedCapacity;
 
     if (remainingCapacity > START_PENALIZING_CAPACITY_WHEN_IT_DROPS_BELOW) {
-      return MIN_PENALTY
+      return MIN_PENALTY;
     }
 
     const penalty =
@@ -50,9 +50,9 @@ export class CapacityPathingSolver5 extends CapacityPathingSolver {
           (START_PENALIZING_CAPACITY_WHEN_IT_DROPS_BELOW - remainingCapacity) /
             (MAX_PENALTY - MIN_PENALTY),
         ) +
-      MIN_PENALTY
+      MIN_PENALTY;
 
-    return penalty
+    return penalty;
     // const penalty =
     //   (MAX_PENALTY - MIN_PENALTY) *
     //   (remainingCapacity / START_PENALIZING_CAPACITY_WHEN_IT_DROPS_BELOW)
@@ -98,10 +98,10 @@ export class CapacityPathingSolver5 extends CapacityPathingSolver {
    * To minimize shortest path, you'd want to comment this out.
    */
   getDistanceBetweenNodes(A: CapacityMeshNode, B: CapacityMeshNode) {
-    const dx = A.center.x - B.center.x
-    const dy = A.center.y - B.center.y
+    const dx = A.center.x - B.center.x;
+    const dy = A.center.y - B.center.y;
 
-    return Math.sqrt(dx ** 2 + dy ** 2)
+    return Math.sqrt(dx ** 2 + dy ** 2);
 
     // REWARD BIG NODE TRAVEL
     // const szx = Math.max(A.width, B.width)
@@ -121,7 +121,7 @@ export class CapacityPathingSolver5 extends CapacityPathingSolver {
       prevCandidate.g +
       this.getDistanceBetweenNodes(prevCandidate.node, node) +
       this.getNodeCapacityPenalty(node)
-    )
+    );
   }
 
   computeH(
@@ -132,6 +132,6 @@ export class CapacityPathingSolver5 extends CapacityPathingSolver {
     return (
       this.getDistanceBetweenNodes(node, endGoal) +
       this.getNodeCapacityPenalty(node)
-    )
+    );
   }
 }

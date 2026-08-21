@@ -1,76 +1,76 @@
-import { ConnectivityMap } from "circuit-json-to-connectivity-map"
-import { GraphicsObject } from "graphics-debug"
-import { Obstacle } from "lib/types"
-import { HighDensityIntraNodeRoute } from "lib/types/high-density-types"
-import { combineVisualizations } from "lib/utils/combineVisualizations"
-import { createObjectsWithZLayers } from "lib/utils/createObjectsWithZLayers"
-import { BaseSolver } from "../BaseSolver"
-import { SingleSimplifiedPathSolver } from "./SingleSimplifiedPathSolver"
-import { SingleSimplifiedPathSolver5 } from "./SingleSimplifiedPathSolver5_Deg45"
+import { ConnectivityMap } from "circuit-json-to-connectivity-map";
+import { GraphicsObject } from "graphics-debug";
+import { Obstacle } from "lib/types";
+import { HighDensityIntraNodeRoute } from "lib/types/high-density-types";
+import { combineVisualizations } from "lib/utils/combineVisualizations";
+import { createObjectsWithZLayers } from "lib/utils/createObjectsWithZLayers";
+import { BaseSolver } from "../BaseSolver";
+import { SingleSimplifiedPathSolver } from "./SingleSimplifiedPathSolver";
+import { SingleSimplifiedPathSolver5 } from "./SingleSimplifiedPathSolver5_Deg45";
 
 export class MultiSimplifiedPathSolver extends BaseSolver {
   override getSolverName(): string {
-    return "MultiSimplifiedPathSolver"
+    return "MultiSimplifiedPathSolver";
   }
 
-  simplifiedHdRoutes: HighDensityIntraNodeRoute[]
+  simplifiedHdRoutes: HighDensityIntraNodeRoute[];
 
-  currentUnsimplifiedHdRouteIndex = 0
+  currentUnsimplifiedHdRouteIndex = 0;
 
-  activeSubSolver: SingleSimplifiedPathSolver | null = null
+  activeSubSolver: SingleSimplifiedPathSolver | null = null;
 
-  unsimplifiedHdRoutes: HighDensityIntraNodeRoute[]
-  otherHdRoutes: ReadonlyArray<HighDensityIntraNodeRoute>
-  obstacles: Obstacle[]
-  connMap: ConnectivityMap
-  colorMap: Record<string, string>
-  outline?: Array<{ x: number; y: number }>
-  minBoardEdgeClearance: number
-  defaultViaDiameter: number
+  unsimplifiedHdRoutes: HighDensityIntraNodeRoute[];
+  otherHdRoutes: ReadonlyArray<HighDensityIntraNodeRoute>;
+  obstacles: Obstacle[];
+  connMap: ConnectivityMap;
+  colorMap: Record<string, string>;
+  outline?: Array<{ x: number; y: number }>;
+  minBoardEdgeClearance: number;
+  defaultViaDiameter: number;
 
   constructor(params: {
-    unsimplifiedHdRoutes: HighDensityIntraNodeRoute[]
+    unsimplifiedHdRoutes: HighDensityIntraNodeRoute[];
     /** Routed copper that participates in collision checks but is never changed. */
-    otherHdRoutes?: ReadonlyArray<HighDensityIntraNodeRoute>
-    obstacles: Obstacle[]
-    connMap?: ConnectivityMap
-    colorMap?: Record<string, string>
-    outline?: Array<{ x: number; y: number }>
-    minBoardEdgeClearance?: number
-    defaultViaDiameter?: number
+    otherHdRoutes?: ReadonlyArray<HighDensityIntraNodeRoute>;
+    obstacles: Obstacle[];
+    connMap?: ConnectivityMap;
+    colorMap?: Record<string, string>;
+    outline?: Array<{ x: number; y: number }>;
+    minBoardEdgeClearance?: number;
+    defaultViaDiameter?: number;
   }) {
-    super()
-    this.MAX_ITERATIONS = 100e6
+    super();
+    this.MAX_ITERATIONS = 100e6;
 
-    this.unsimplifiedHdRoutes = params.unsimplifiedHdRoutes
-    this.otherHdRoutes = params.otherHdRoutes ?? []
+    this.unsimplifiedHdRoutes = params.unsimplifiedHdRoutes;
+    this.otherHdRoutes = params.otherHdRoutes ?? [];
     const inferredLayerCount =
       Math.max(
         2,
         ...[...params.unsimplifiedHdRoutes, ...this.otherHdRoutes].flatMap(
           (r) => r.route.map((p) => p.z + 1),
         ),
-      ) || 2
+      ) || 2;
     this.obstacles = createObjectsWithZLayers(
       params.obstacles,
       inferredLayerCount,
-    )
-    this.connMap = params.connMap || new ConnectivityMap({})
-    this.colorMap = params.colorMap || {}
-    this.outline = params.outline
-    this.minBoardEdgeClearance = params.minBoardEdgeClearance ?? 0.2
-    this.defaultViaDiameter = params.defaultViaDiameter ?? 0.3
+    );
+    this.connMap = params.connMap || new ConnectivityMap({});
+    this.colorMap = params.colorMap || {};
+    this.outline = params.outline;
+    this.minBoardEdgeClearance = params.minBoardEdgeClearance ?? 0.2;
+    this.defaultViaDiameter = params.defaultViaDiameter ?? 0.3;
 
-    this.simplifiedHdRoutes = []
+    this.simplifiedHdRoutes = [];
   }
 
   _step() {
     const hdRoute =
-      this.unsimplifiedHdRoutes[this.currentUnsimplifiedHdRouteIndex]
+      this.unsimplifiedHdRoutes[this.currentUnsimplifiedHdRouteIndex];
     if (!this.activeSubSolver) {
       if (!hdRoute) {
-        this.solved = true
-        return
+        this.solved = true;
+        return;
       }
 
       this.activeSubSolver = new SingleSimplifiedPathSolver5({
@@ -85,21 +85,21 @@ export class MultiSimplifiedPathSolver extends BaseSolver {
         colorMap: this.colorMap,
         outline: this.outline,
         minBoardEdgeClearance: this.minBoardEdgeClearance,
-      })
-      this.currentUnsimplifiedHdRouteIndex++
-      return
+      });
+      this.currentUnsimplifiedHdRouteIndex++;
+      return;
     }
 
-    this.activeSubSolver.step()
+    this.activeSubSolver.step();
     if (this.activeSubSolver.solved) {
-      this.simplifiedHdRoutes.push(this.activeSubSolver.simplifiedRoute)
-      this.activeSubSolver = null
+      this.simplifiedHdRoutes.push(this.activeSubSolver.simplifiedRoute);
+      this.activeSubSolver = null;
     }
   }
 
   visualize(): GraphicsObject {
     if (this.activeSubSolver) {
-      return this.activeSubSolver.visualize()
+      return this.activeSubSolver.visualize();
     }
 
     const graphics: GraphicsObject &
@@ -111,7 +111,7 @@ export class MultiSimplifiedPathSolver extends BaseSolver {
         rects: [],
         coordinateSystem: "cartesian",
         title: "Multi Simplified Path Solver",
-      }
+      };
 
     // Visualize the original unsimplified routes in red with transparency
     for (const route of this.unsimplifiedHdRoutes) {
@@ -120,7 +120,7 @@ export class MultiSimplifiedPathSolver extends BaseSolver {
           (r) => r.connectionName === route.connectionName,
         )
       ) {
-        continue
+        continue;
       }
 
       for (let i = 0; i < route.route.length - 1; i++) {
@@ -135,7 +135,7 @@ export class MultiSimplifiedPathSolver extends BaseSolver {
               : "rgba(255, 0, 0, 0.4)",
           strokeWidth: 0.15,
           strokeDash: route.route[i].z === 1 ? [0.5, 0.5] : undefined,
-        })
+        });
       }
 
       // Draw vias for unsimplified routes
@@ -144,14 +144,14 @@ export class MultiSimplifiedPathSolver extends BaseSolver {
           center: via,
           radius: (route.viaDiameter ?? this.defaultViaDiameter) / 2,
           fill: "rgba(0, 0, 255, 0.4)",
-        })
+        });
       }
     }
 
     // Visualize the simplified routes with colors from colorMap or gray if not found
     for (const route of this.simplifiedHdRoutes) {
       const routeColor =
-        this.colorMap?.[route.connectionName] || "rgba(128, 128, 128, 0.8)"
+        this.colorMap?.[route.connectionName] || "rgba(128, 128, 128, 0.8)";
 
       // Draw the route lines
       for (let i = 0; i < route.route.length - 1; i++) {
@@ -164,7 +164,7 @@ export class MultiSimplifiedPathSolver extends BaseSolver {
           strokeColor: routeColor,
           strokeDash: route.route[i].z === 1 ? [0.5, 0.5] : undefined,
           step: 1,
-        })
+        });
       }
 
       // Visualize vias
@@ -174,7 +174,7 @@ export class MultiSimplifiedPathSolver extends BaseSolver {
           radius: route.viaDiameter / 2,
           fill: "rgba(0, 0, 255, 0.5)",
           step: 1,
-        })
+        });
       }
     }
 
@@ -192,7 +192,7 @@ export class MultiSimplifiedPathSolver extends BaseSolver {
           strokeDash: [0.5, 0.5],
           step: 0,
           layer: `z${route.route[i].z.toString()}`,
-        })
+        });
       }
 
       // Add small circles at each point of the original route
@@ -202,7 +202,7 @@ export class MultiSimplifiedPathSolver extends BaseSolver {
           radius: route.viaDiameter / 2,
           fill: "rgba(255, 0, 0, 0.2)",
           step: 0,
-        })
+        });
       }
     }
 
@@ -217,7 +217,7 @@ export class MultiSimplifiedPathSolver extends BaseSolver {
           : obstacle.layers?.includes("bottom")
             ? "rgba(0, 0, 255, 0.3)"
             : "rgba(128, 128, 128, 0.3)",
-      })
+      });
     }
 
     // Highlight the current route being processed
@@ -225,7 +225,7 @@ export class MultiSimplifiedPathSolver extends BaseSolver {
       this.currentUnsimplifiedHdRouteIndex < this.unsimplifiedHdRoutes.length
     ) {
       const currentRoute =
-        this.unsimplifiedHdRoutes[this.currentUnsimplifiedHdRouteIndex]
+        this.unsimplifiedHdRoutes[this.currentUnsimplifiedHdRouteIndex];
 
       // Add a label to the first point of the current route
       if (currentRoute.route.length > 0) {
@@ -237,10 +237,10 @@ export class MultiSimplifiedPathSolver extends BaseSolver {
           radius: 0.2,
           fill: "yellow",
           label: "Current",
-        })
+        });
       }
     }
 
-    return graphics
+    return graphics;
   }
 }

@@ -1,39 +1,39 @@
 declare module "@tscircuit/autorouting-dataset-01" {
-  const dataset: any
-  export = dataset
+  const dataset: any;
+  export = dataset;
 }
 
 declare module "@tsci/dataset-srj23-partially-routed-subcircuits" {
-  const dataset: Record<string, any>
-  export = dataset
+  const dataset: Record<string, any>;
+  export = dataset;
 }
 
 declare module "@tscircuit/dataset-srj05" {
-  const dataset: any
-  export = dataset
+  const dataset: any;
+  export = dataset;
 }
 
 declare module "@tsci/seveibar.dataset-srj13" {
-  const dataset: any
-  export = dataset
+  const dataset: any;
+  export = dataset;
 }
 
 declare module "dataset-srj18" {
-  export const dataset: any
+  export const dataset: any;
 }
 
 declare module "@tsci/tscircuit.dataset-srj19-bga-passive-overlays" {
   export const samples: Array<{
-    sampleName: string
-    srj: any
-  }>
+    sampleName: string;
+    srj: any;
+  }>;
 }
 
 declare module "zdwiel-dataset" {
-  const dataset: any
-  export = dataset
+  const dataset: any;
+  export = dataset;
 }
 
 declare module "high-density-dataset-z04" {
-  export const hgProblems: any
+  export const hgProblems: any;
 }

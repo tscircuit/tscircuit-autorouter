@@ -3,37 +3,37 @@ import {
   distance,
   doSegmentsIntersect,
   pointToSegmentDistance,
-} from "@tscircuit/math-utils"
-import type { GraphicsObject } from "graphics-debug"
-import { BaseSolver } from "lib/solvers/BaseSolver"
+} from "@tscircuit/math-utils";
+import type { GraphicsObject } from "graphics-debug";
+import { BaseSolver } from "lib/solvers/BaseSolver";
 import {
   HighDensityIntraNodeRoute,
   NodeWithPortPoints,
-} from "lib/types/high-density-types"
-import { calculatePerpendicularPointsAtDistance } from "lib/utils/calculatePointsAtDistance"
+} from "lib/types/high-density-types";
+import { calculatePerpendicularPointsAtDistance } from "lib/utils/calculatePointsAtDistance";
 import {
   type PointBoundsPosition,
   classifyPointInBounds,
-} from "lib/utils/classifyPointInBounds"
-import { findClosestPointToABCWithinBounds } from "lib/utils/findClosestPointToABCWithinBounds"
-import { findPointToGetAroundCircle } from "lib/utils/findPointToGetAroundCircle"
-import { getIntraNodeCrossings } from "lib/utils/getIntraNodeCrossings"
-import { snapToNearestBound } from "lib/utils/snapToNearestBound"
+} from "lib/utils/classifyPointInBounds";
+import { findClosestPointToABCWithinBounds } from "lib/utils/findClosestPointToABCWithinBounds";
+import { findPointToGetAroundCircle } from "lib/utils/findPointToGetAroundCircle";
+import { getIntraNodeCrossings } from "lib/utils/getIntraNodeCrossings";
+import { snapToNearestBound } from "lib/utils/snapToNearestBound";
 import {
   calculateTraversalPercentages,
   pointToAngle,
-} from "./calculateSideTraversal"
-import { computeTurnDirection } from "./computeTurnDirection"
-import { findCircleLineIntersections } from "./findCircleLineIntersections"
+} from "./calculateSideTraversal";
+import { computeTurnDirection } from "./computeTurnDirection";
+import { findCircleLineIntersections } from "./findCircleLineIntersections";
 
-type Point = { x: number; y: number; z?: number }
+type Point = { x: number; y: number; z?: number };
 type Route = {
-  A: Point
-  B: Point
-  connectionName: string
-}
+  A: Point;
+  B: Point;
+  connectionName: string;
+};
 
-type PortPointBoundsPosition = PointBoundsPosition
+type PortPointBoundsPosition = PointBoundsPosition;
 
 /**
  * Solver for exactly two crossing routes where exactly one route transitions
@@ -45,88 +45,88 @@ type PortPointBoundsPosition = PointBoundsPosition
  */
 export class SingleTransitionCrossingRouteSolver extends BaseSolver {
   override getSolverName(): string {
-    return "SingleTransitionCrossingRouteSolver"
+    return "SingleTransitionCrossingRouteSolver";
   }
 
   // Input parameters
-  nodeWithPortPoints: NodeWithPortPoints
-  routes: Route[]
+  nodeWithPortPoints: NodeWithPortPoints;
+  routes: Route[];
 
   // Configuration parameters
-  viaDiameter: number
-  traceThickness: number
-  obstacleMargin: number
-  layerCount: number = 2
+  viaDiameter: number;
+  traceThickness: number;
+  obstacleMargin: number;
+  layerCount: number = 2;
 
   debugViaPositions: {
-    via: Point
-  }[]
+    via: Point;
+  }[];
 
   // Solution state
-  solvedRoutes: HighDensityIntraNodeRoute[] = []
+  solvedRoutes: HighDensityIntraNodeRoute[] = [];
 
   // Bounds
-  bounds: { minX: number; maxX: number; minY: number; maxY: number }
+  bounds: { minX: number; maxX: number; minY: number; maxY: number };
 
   constructor(params: {
-    nodeWithPortPoints: NodeWithPortPoints
-    viaDiameter?: number
-    traceThickness?: number
-    obstacleMargin?: number
-    layerCount?: number
+    nodeWithPortPoints: NodeWithPortPoints;
+    viaDiameter?: number;
+    traceThickness?: number;
+    obstacleMargin?: number;
+    layerCount?: number;
   }) {
-    super()
+    super();
 
-    this.nodeWithPortPoints = params.nodeWithPortPoints
-    this.viaDiameter = params?.viaDiameter ?? 0.3
-    this.traceThickness = params?.traceThickness ?? 0.15
-    this.obstacleMargin = params?.obstacleMargin ?? 0.1
-    this.layerCount = params?.layerCount ?? 2
-    this.debugViaPositions = []
+    this.nodeWithPortPoints = params.nodeWithPortPoints;
+    this.viaDiameter = params?.viaDiameter ?? 0.3;
+    this.traceThickness = params?.traceThickness ?? 0.15;
+    this.obstacleMargin = params?.obstacleMargin ?? 0.1;
+    this.layerCount = params?.layerCount ?? 2;
+    this.debugViaPositions = [];
 
     // Extract routes from the node data
-    this.routes = this.extractRoutesFromNode()
+    this.routes = this.extractRoutesFromNode();
 
     // Calculate bounds
-    this.bounds = this.calculateBounds()
+    this.bounds = this.calculateBounds();
 
     if (this.routes.length !== 2) {
-      this.failed = true
-      this.error = `Expected 2 routes, but got ${this.routes.length}`
-      return
+      this.failed = true;
+      this.error = `Expected 2 routes, but got ${this.routes.length}`;
+      return;
     }
 
-    const routePoints = this.routes.flatMap((route) => [route.A, route.B])
+    const routePoints = this.routes.flatMap((route) => [route.A, route.B]);
     const pointPositions = routePoints.map((point) =>
       this.getPortPointBoundsPosition(point),
-    )
+    );
 
     if (pointPositions.includes("outside")) {
-      this.failed = true
+      this.failed = true;
       this.error =
-        "Invalid route input: SingleTransitionCrossingRouteSolver received port point(s) outside node bounds"
-      return
+        "Invalid route input: SingleTransitionCrossingRouteSolver received port point(s) outside node bounds";
+      return;
     }
 
     if (pointPositions.includes("inside")) {
-      this.failed = true
-      return
+      this.failed = true;
+      return;
     }
 
-    const [routeA, routeB] = this.routes
+    const [routeA, routeB] = this.routes;
 
     // Check if one route has a layer transition and the other doesn't
-    const routeAHasTransition = routeA.A.z !== routeA.B.z
-    const routeBHasTransition = routeB.A.z !== routeB.B.z
+    const routeAHasTransition = routeA.A.z !== routeA.B.z;
+    const routeBHasTransition = routeB.A.z !== routeB.B.z;
 
     // We need exactly one route with a transition
     if (
       (routeAHasTransition && routeBHasTransition) ||
       (!routeAHasTransition && !routeBHasTransition)
     ) {
-      this.failed = true
-      this.error = "Exactly one route must have a layer transition"
-      return
+      this.failed = true;
+      this.error = "Exactly one route must have a layer transition";
+      return;
     }
   }
 
@@ -134,18 +134,18 @@ export class SingleTransitionCrossingRouteSolver extends BaseSolver {
    * Extract routes that need to be connected from the node data
    */
   private extractRoutesFromNode(): Route[] {
-    const routes: Route[] = []
-    const connectedPorts = this.nodeWithPortPoints.portPoints!
+    const routes: Route[] = [];
+    const connectedPorts = this.nodeWithPortPoints.portPoints!;
 
     // Group ports by connection name
-    const connectionGroups = new Map<string, Point[]>()
+    const connectionGroups = new Map<string, Point[]>();
 
     for (const connectedPort of connectedPorts) {
-      const { connectionName } = connectedPort
+      const { connectionName } = connectedPort;
       if (!connectionGroups.has(connectionName)) {
-        connectionGroups.set(connectionName, [])
+        connectionGroups.set(connectionName, []);
       }
-      connectionGroups.get(connectionName)?.push(connectedPort)
+      connectionGroups.get(connectionName)?.push(connectedPort);
     }
 
     // Create routes for each connection (assuming each connection has exactly 2 points)
@@ -155,11 +155,11 @@ export class SingleTransitionCrossingRouteSolver extends BaseSolver {
           A: { ...points[0], z: points[0].z ?? 0 },
           B: { ...points[1], z: points[1].z ?? 0 },
           connectionName,
-        })
+        });
       }
     }
 
-    return routes
+    return routes;
   }
 
   /**
@@ -175,7 +175,7 @@ export class SingleTransitionCrossingRouteSolver extends BaseSolver {
         this.nodeWithPortPoints.center.y - this.nodeWithPortPoints.height / 2,
       maxY:
         this.nodeWithPortPoints.center.y + this.nodeWithPortPoints.height / 2,
-    }
+    };
   }
 
   /**
@@ -190,7 +190,7 @@ export class SingleTransitionCrossingRouteSolver extends BaseSolver {
       point,
       bounds: this.bounds,
       epsilon,
-    })
+    });
   }
 
   /**
@@ -199,37 +199,39 @@ export class SingleTransitionCrossingRouteSolver extends BaseSolver {
   private doRoutesCross(routeA: Route, routeB: Route): boolean {
     // For this specific solver, we want to check if the 2D projections intersect
     // (ignoring z values)
-    return doSegmentsIntersect(routeA.A, routeA.B, routeB.A, routeB.B)
+    return doSegmentsIntersect(routeA.A, routeA.B, routeB.A, routeB.B);
   }
 
   private calculateViaPosition(
     transitionRoute: Route,
     flatRoute: Route,
   ): Point | null {
-    const flatRouteZ = flatRoute.A.z
+    const flatRouteZ = flatRoute.A.z;
     const ntrP1 =
-      transitionRoute.A.z !== flatRouteZ ? transitionRoute.A : transitionRoute.B
+      transitionRoute.A.z !== flatRouteZ
+        ? transitionRoute.A
+        : transitionRoute.B;
 
     // ntrP1 is always on the opposite layer as the flat route, the trace must always
     // weave between ntrP1 and the via
     // The via must also be far enough from the flat route
     const marginFromBorderWithTrace =
-      this.obstacleMargin * 2 + this.viaDiameter / 2 + this.traceThickness
+      this.obstacleMargin * 2 + this.viaDiameter / 2 + this.traceThickness;
     const marginFromBorderWithoutTrace =
-      this.obstacleMargin + this.viaDiameter / 2
+      this.obstacleMargin + this.viaDiameter / 2;
 
-    const A = flatRoute.A
-    const B = ntrP1
-    const C = flatRoute.B
+    const A = flatRoute.A;
+    const B = ntrP1;
+    const C = flatRoute.B;
 
-    const turnDirection = computeTurnDirection(A, B, C, this.bounds)
+    const turnDirection = computeTurnDirection(A, B, C, this.bounds);
     const sideTraversal = calculateTraversalPercentages(
       A,
       B,
       C,
       this.bounds,
       turnDirection,
-    )
+    );
 
     const viaBounds = {
       minX:
@@ -252,16 +254,16 @@ export class SingleTransitionCrossingRouteSolver extends BaseSolver {
         (sideTraversal.top > 0.5
           ? marginFromBorderWithTrace
           : marginFromBorderWithoutTrace),
-    }
+    };
 
     if (viaBounds.maxY < viaBounds.minY) {
-      viaBounds.minY = (viaBounds.minY + viaBounds.maxY) / 2
-      viaBounds.maxY = viaBounds.minY
+      viaBounds.minY = (viaBounds.minY + viaBounds.maxY) / 2;
+      viaBounds.maxY = viaBounds.minY;
     }
 
     if (viaBounds.maxX < viaBounds.minX) {
-      viaBounds.minX = (viaBounds.minX + viaBounds.maxX) / 2
-      viaBounds.maxX = viaBounds.minX
+      viaBounds.minX = (viaBounds.minX + viaBounds.maxX) / 2;
+      viaBounds.maxX = viaBounds.minX;
     }
 
     return findClosestPointToABCWithinBounds(
@@ -270,7 +272,7 @@ export class SingleTransitionCrossingRouteSolver extends BaseSolver {
       C,
       marginFromBorderWithTrace,
       viaBounds,
-    )
+    );
   }
   /**
    * Create a single transition route with properly placed via
@@ -287,7 +289,7 @@ export class SingleTransitionCrossingRouteSolver extends BaseSolver {
       { x: via.x, y: via.y, z: start.z ?? 0 },
       { x: via.x, y: via.y, z: end.z ?? 0 },
       { x: end.x, y: end.y, z: end.z ?? 0 },
-    ]
+    ];
 
     return {
       connectionName,
@@ -296,7 +298,7 @@ export class SingleTransitionCrossingRouteSolver extends BaseSolver {
       traceThickness: this.traceThickness,
       viaDiameter: this.viaDiameter,
       vias: [via],
-    }
+    };
   }
 
   /**
@@ -311,15 +313,15 @@ export class SingleTransitionCrossingRouteSolver extends BaseSolver {
     flatRouteConnectionName: string,
   ): HighDensityIntraNodeRoute {
     const ntrP1 =
-      otherRouteStart.z !== flatStart.z ? otherRouteStart : otherRouteEnd
+      otherRouteStart.z !== flatStart.z ? otherRouteStart : otherRouteEnd;
     // We need to navigate around the via
 
     const middle = (a: Point, b: Point) => {
       return {
         x: (a.x + b.x) / 2,
         y: (a.y + b.y) / 2,
-      }
-    }
+      };
+    };
 
     const middleWithMargin = (
       a: Point,
@@ -327,36 +329,36 @@ export class SingleTransitionCrossingRouteSolver extends BaseSolver {
       b: Point,
       bMargin: number,
     ) => {
-      const dx = b.x - a.x
-      const dy = b.y - a.y
+      const dx = b.x - a.x;
+      const dy = b.y - a.y;
 
       const effectiveA = {
         x: a.x + dx * aMargin,
         y: a.y + dy * aMargin,
-      }
+      };
 
       const effectiveB = {
         x: b.x - dx * bMargin,
         y: b.y - dy * bMargin,
-      }
+      };
 
-      return middle(effectiveA, effectiveB)
-    }
+      return middle(effectiveA, effectiveB);
+    };
 
     const minDistFromViaToTrace =
-      this.viaDiameter / 2 + this.traceThickness / 2 + this.obstacleMargin
+      this.viaDiameter / 2 + this.traceThickness / 2 + this.obstacleMargin;
     const p2 = middleWithMargin(
       via,
       this.viaDiameter,
       otherRouteStart.z !== flatStart.z ? otherRouteStart : otherRouteEnd,
       this.traceThickness,
-    )
+    );
     const viaCircle = {
       center: { x: via.x, y: via.y },
       radius: minDistFromViaToTrace,
-    }
-    const p1 = findPointToGetAroundCircle(flatStart, p2, viaCircle).E
-    const p3 = findPointToGetAroundCircle(p2, flatEnd, viaCircle).E
+    };
+    const p1 = findPointToGetAroundCircle(flatStart, p2, viaCircle).E;
+    const p3 = findPointToGetAroundCircle(p2, flatEnd, viaCircle).E;
 
     // Determine if we need p1 or if we can just go from flatStart to p2 without
     // intersecting the via
@@ -365,12 +367,12 @@ export class SingleTransitionCrossingRouteSolver extends BaseSolver {
     // const p3IsNeeded = pointToSegmentDistance(via, p2, flatEnd) < minDistFromViaToTrace
 
     // flatStart -> p0_5 -> p1 -> p1_5 -> p2 -> p2_5 -> p3 -> p3_5 -> flatEnd
-    const p0_5 = findPointToGetAroundCircle(flatStart, p1, viaCircle).E
-    const p1_5 = findPointToGetAroundCircle(p1, p2, viaCircle).E
-    const p2_5 = findPointToGetAroundCircle(p2, p3, viaCircle).E
-    const p3_5 = findPointToGetAroundCircle(p3, flatEnd, viaCircle).E
+    const p0_5 = findPointToGetAroundCircle(flatStart, p1, viaCircle).E;
+    const p1_5 = findPointToGetAroundCircle(p1, p2, viaCircle).E;
+    const p2_5 = findPointToGetAroundCircle(p2, p3, viaCircle).E;
+    const p3_5 = findPointToGetAroundCircle(p3, flatEnd, viaCircle).E;
 
-    const p2_better = findPointToGetAroundCircle(p1_5, p2_5, viaCircle).E
+    const p2_better = findPointToGetAroundCircle(p1_5, p2_5, viaCircle).E;
 
     // We need to navigate around the via
     return {
@@ -391,26 +393,26 @@ export class SingleTransitionCrossingRouteSolver extends BaseSolver {
       traceThickness: this.traceThickness,
       viaDiameter: this.viaDiameter,
       vias: [],
-    }
+    };
   }
 
   /**
    * Try to solve with one route having a transition and the other staying flat
    */
   private trySolve(): boolean {
-    const [routeA, routeB] = this.routes
+    const [routeA, routeB] = this.routes;
 
     // Determine which route has the transition
-    const routeAHasTransition = routeA.A.z !== routeA.B.z
+    const routeAHasTransition = routeA.A.z !== routeA.B.z;
 
-    const transitionRoute = routeAHasTransition ? routeA : routeB
-    const flatRoute = routeAHasTransition ? routeB : routeA
+    const transitionRoute = routeAHasTransition ? routeA : routeB;
+    const flatRoute = routeAHasTransition ? routeB : routeA;
 
-    const viaPosition = this.calculateViaPosition(transitionRoute, flatRoute)
+    const viaPosition = this.calculateViaPosition(transitionRoute, flatRoute);
     if (viaPosition) {
-      this.debugViaPositions.push({ via: viaPosition })
+      this.debugViaPositions.push({ via: viaPosition });
     } else {
-      return false
+      return false;
     }
 
     // Create transition route with via
@@ -419,7 +421,7 @@ export class SingleTransitionCrossingRouteSolver extends BaseSolver {
       transitionRoute.B,
       viaPosition,
       transitionRoute.connectionName,
-    )
+    );
 
     // Create flat route
     const flatRouteSolution = this.createFlatRoute(
@@ -429,10 +431,10 @@ export class SingleTransitionCrossingRouteSolver extends BaseSolver {
       transitionRoute.A,
       transitionRoute.B,
       flatRoute.connectionName,
-    )
+    );
 
-    this.solvedRoutes.push(transitionRouteSolution, flatRouteSolution)
-    return true
+    this.solvedRoutes.push(transitionRouteSolution, flatRouteSolution);
+    return true;
   }
 
   /**
@@ -441,21 +443,21 @@ export class SingleTransitionCrossingRouteSolver extends BaseSolver {
   _step() {
     // Check if routes are actually crossing
     if (!this.doRoutesCross(this.routes[0], this.routes[1])) {
-      this.failed = true
+      this.failed = true;
       this.error =
-        "Can only solve routes that have a single transition crossing"
-      return
+        "Can only solve routes that have a single transition crossing";
+      return;
     }
 
     // Try to solve
     if (this.trySolve()) {
-      this.solved = true
-      return
+      this.solved = true;
+      return;
     }
 
     // If approach fails, mark as failed
-    this.failed = true
-    this.error = "Failed to find a valid via position and route path"
+    this.failed = true;
+    this.error = "Failed to find a valid via position and route path";
   }
 
   /**
@@ -467,7 +469,7 @@ export class SingleTransitionCrossingRouteSolver extends BaseSolver {
       points: [],
       rects: [],
       circles: [],
-    }
+    };
 
     // Draw PCB bounds
     graphics.rects!.push({
@@ -480,7 +482,7 @@ export class SingleTransitionCrossingRouteSolver extends BaseSolver {
       stroke: "rgba(0, 0, 0, 0.5)",
       fill: "rgba(240, 240, 240, 0.1)",
       label: "PCB Bounds",
-    })
+    });
 
     // Draw original routes
     for (const route of this.routes) {
@@ -490,26 +492,26 @@ export class SingleTransitionCrossingRouteSolver extends BaseSolver {
         y: route.A.y,
         label: `${route.connectionName} start (z=${route.A.z})`,
         color: "orange",
-      })
+      });
 
       graphics.points!.push({
         x: route.B.x,
         y: route.B.y,
         label: `${route.connectionName} end (z=${route.B.z})`,
         color: "orange",
-      })
+      });
 
       // Draw direct connection line
       graphics.lines!.push({
         points: [route.A, route.B],
         strokeColor: "rgba(255, 0, 0, 0.5)",
         label: `${route.connectionName} direct`,
-      })
+      });
     }
 
     // Draw debug via positions (even if solution failed)
     for (let i = 0; i < this.debugViaPositions.length; i++) {
-      const { via } = this.debugViaPositions[i]
+      const { via } = this.debugViaPositions[i];
 
       // Draw computed via
       graphics.circles!.push({
@@ -518,27 +520,27 @@ export class SingleTransitionCrossingRouteSolver extends BaseSolver {
         fill: "rgba(255, 165, 0, 0.7)",
         stroke: "rgba(0, 0, 0, 0.5)",
         label: `Computed Via (attempt ${i + 1})`,
-      })
+      });
 
       // Draw safety margin around via
-      const safetyMargin = this.viaDiameter / 2 + this.obstacleMargin
+      const safetyMargin = this.viaDiameter / 2 + this.obstacleMargin;
       graphics.circles!.push({
         center: via,
         radius: safetyMargin,
         stroke: "rgba(255, 165, 0, 0.7)",
         fill: "rgba(0, 0, 0, 0)",
         label: "Safety Margin",
-      })
+      });
     }
 
     // Draw solved routes if available
     for (let si = 0; si < this.solvedRoutes.length; si++) {
-      const route = this.solvedRoutes[si]
+      const route = this.solvedRoutes[si];
       const routeColor =
-        si % 2 === 0 ? "rgba(0, 255, 0, 0.75)" : "rgba(255, 0, 255, 0.75)"
+        si % 2 === 0 ? "rgba(0, 255, 0, 0.75)" : "rgba(255, 0, 255, 0.75)";
       for (let i = 0; i < route.route.length - 1; i++) {
-        const pointA = route.route[i]
-        const pointB = route.route[i + 1]
+        const pointA = route.route[i];
+        const pointB = route.route[i + 1];
 
         graphics.lines!.push({
           points: [pointA, pointB],
@@ -546,7 +548,7 @@ export class SingleTransitionCrossingRouteSolver extends BaseSolver {
           strokeDash: pointA.z !== route.route[0].z ? [0.2, 0.2] : undefined,
           strokeWidth: route.traceThickness,
           label: `${route.connectionName} z=${pointA.z}`,
-        })
+        });
       }
 
       // Draw vias in solved routes
@@ -557,24 +559,24 @@ export class SingleTransitionCrossingRouteSolver extends BaseSolver {
           fill: "rgba(0, 0, 255, 0.8)",
           stroke: "black",
           label: "Solved Via",
-        })
+        });
         graphics.circles!.push({
           center: via,
           radius: this.viaDiameter / 2 + this.obstacleMargin,
           fill: "rgba(0, 0, 255, 0.3)",
           stroke: "black",
           label: "Via Margin",
-        })
+        });
       }
     }
 
-    return graphics
+    return graphics;
   }
 
   /**
    * Get the solved routes
    */
   getSolvedRoutes(): HighDensityIntraNodeRoute[] {
-    return this.solvedRoutes
+    return this.solvedRoutes;
   }
 }

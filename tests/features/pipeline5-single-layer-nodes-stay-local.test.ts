@@ -1,6 +1,6 @@
-import { expect, test } from "bun:test"
-import { Pipeline5HdCacheHighDensitySolver } from "lib/autorouter-pipelines/AutoroutingPipeline5_HdCache/Pipeline5HdCacheHighDensitySolver"
-import type { NodeWithPortPoints } from "lib/types/high-density-types"
+import { expect, test } from "bun:test";
+import { Pipeline5HdCacheHighDensitySolver } from "lib/autorouter-pipelines/AutoroutingPipeline5_HdCache/Pipeline5HdCacheHighDensitySolver";
+import type { NodeWithPortPoints } from "lib/types/high-density-types";
 
 test.skip("pipeline5 keeps single-layer high-density nodes local even when pair count is >= 3", () => {
   const singleLayerNode: NodeWithPortPoints = {
@@ -17,43 +17,43 @@ test.skip("pipeline5 keeps single-layer high-density nodes local even when pair 
       { x: -2, y: 1.5, z: 1, connectionName: "C" },
       { x: 2, y: 1.5, z: 1, connectionName: "C" },
     ],
-  }
+  };
 
-  let fetchCallCount = 0
+  let fetchCallCount = 0;
   const fetchImpl = Object.assign(
     async () => {
-      fetchCallCount += 1
-      throw new Error("single-layer nodes should not reach hd-cache")
+      fetchCallCount += 1;
+      throw new Error("single-layer nodes should not reach hd-cache");
     },
     {
       preconnect: () => {},
     },
-  ) as typeof fetch
+  ) as typeof fetch;
 
   const solver = new Pipeline5HdCacheHighDensitySolver({
     nodePortPoints: [singleLayerNode],
     fetchImpl,
-  })
+  });
 
   const localSolveCalls: Array<{
-    node: NodeWithPortPoints
-    nodeIndex: number
-  }> = []
-  ;(solver as any).solveNodeLocally = (
+    node: NodeWithPortPoints;
+    nodeIndex: number;
+  }> = [];
+  (solver as any).solveNodeLocally = (
     node: NodeWithPortPoints,
     nodeIndex: number,
   ) => {
-    localSolveCalls.push({ node, nodeIndex })
-  }
-  ;(solver as any).launchRemoteSolves()
+    localSolveCalls.push({ node, nodeIndex });
+  };
+  (solver as any).launchRemoteSolves();
 
-  expect(fetchCallCount).toBe(0)
+  expect(fetchCallCount).toBe(0);
   expect(localSolveCalls).toEqual([
     {
       node: singleLayerNode,
       nodeIndex: 0,
     },
-  ])
-  expect(solver.stats.remoteRequestsStarted).toBe(0)
-  expect(solver.pendingEffects).toEqual([])
-})
+  ]);
+  expect(solver.stats.remoteRequestsStarted).toBe(0);
+  expect(solver.pendingEffects).toEqual([]);
+});

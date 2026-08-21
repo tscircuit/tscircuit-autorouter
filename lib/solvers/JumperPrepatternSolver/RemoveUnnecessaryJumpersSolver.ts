@@ -1,24 +1,24 @@
-import { BaseSolver } from "../BaseSolver"
-import type { GraphicsObject } from "graphics-debug"
-import type { InputNodeWithPortPoints } from "../PortPointPathingSolver/PortPointPathingSolver"
-import type { CapacityMeshNodeId } from "../../types"
-import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
+import { BaseSolver } from "../BaseSolver";
+import type { GraphicsObject } from "graphics-debug";
+import type { InputNodeWithPortPoints } from "../PortPointPathingSolver/PortPointPathingSolver";
+import type { CapacityMeshNodeId } from "../../types";
+import type { ConnectivityMap } from "circuit-json-to-connectivity-map";
 
 export interface RemoveUnnecessaryJumpersSolverParams {
   /**
    * Input nodes from the PortPointPathingSolver
    */
-  inputNodes: InputNodeWithPortPoints[]
+  inputNodes: InputNodeWithPortPoints[];
 
   /**
    * Set of jumper off-board connection IDs that were actually used by routes
    */
-  usedJumperOffBoardObstacleIds: Set<string>
+  usedJumperOffBoardObstacleIds: Set<string>;
 
   /**
    * Connectivity map for off-board obstacles (used to check if a jumper net was used)
    */
-  offBoardConnMap?: ConnectivityMap | null
+  offBoardConnMap?: ConnectivityMap | null;
 }
 
 /**
@@ -30,29 +30,29 @@ export interface RemoveUnnecessaryJumpersSolverParams {
  */
 export class RemoveUnnecessaryJumpersSolver extends BaseSolver {
   override getSolverName(): string {
-    return "RemoveUnnecessaryJumpersSolver"
+    return "RemoveUnnecessaryJumpersSolver";
   }
 
-  inputNodes: InputNodeWithPortPoints[]
-  usedJumperOffBoardObstacleIds: Set<string>
-  offBoardConnMap: ConnectivityMap | null
+  inputNodes: InputNodeWithPortPoints[];
+  usedJumperOffBoardObstacleIds: Set<string>;
+  offBoardConnMap: ConnectivityMap | null;
 
   /**
    * Output nodes with unused jumper nodes converted to regular nodes
    */
-  outputNodes: InputNodeWithPortPoints[] = []
+  outputNodes: InputNodeWithPortPoints[] = [];
 
   /**
    * Set of off-board connection IDs that were removed
    */
-  removedOffBoardConnectionIds: Set<string> = new Set()
+  removedOffBoardConnectionIds: Set<string> = new Set();
 
   constructor(params: RemoveUnnecessaryJumpersSolverParams) {
-    super()
-    this.inputNodes = params.inputNodes
-    this.usedJumperOffBoardObstacleIds = params.usedJumperOffBoardObstacleIds
-    this.offBoardConnMap = params.offBoardConnMap ?? null
-    this.MAX_ITERATIONS = 1
+    super();
+    this.inputNodes = params.inputNodes;
+    this.usedJumperOffBoardObstacleIds = params.usedJumperOffBoardObstacleIds;
+    this.offBoardConnMap = params.offBoardConnMap ?? null;
+    this.MAX_ITERATIONS = 1;
   }
 
   /**
@@ -61,36 +61,36 @@ export class RemoveUnnecessaryJumpersSolver extends BaseSolver {
   private isJumperUsed(offBoardConnectionId: string): boolean {
     // Direct match
     if (this.usedJumperOffBoardObstacleIds.has(offBoardConnectionId)) {
-      return true
+      return true;
     }
 
     // Check via connectivity map if available
     if (this.offBoardConnMap) {
       const netId =
-        this.offBoardConnMap.getNetConnectedToId(offBoardConnectionId)
+        this.offBoardConnMap.getNetConnectedToId(offBoardConnectionId);
       if (netId && this.usedJumperOffBoardObstacleIds.has(netId)) {
-        return true
+        return true;
       }
     }
 
-    return false
+    return false;
   }
 
   _step(): void {
     // Build a map of off-board connection ID -> list of node IDs
-    const offBoardConnectionToNodeIds = new Map<string, CapacityMeshNodeId[]>()
+    const offBoardConnectionToNodeIds = new Map<string, CapacityMeshNodeId[]>();
 
     for (const node of this.inputNodes) {
       if (node._offBoardConnectionId) {
         const existing = offBoardConnectionToNodeIds.get(
           node._offBoardConnectionId,
-        )
+        );
         if (existing) {
-          existing.push(node.capacityMeshNodeId)
+          existing.push(node.capacityMeshNodeId);
         } else {
           offBoardConnectionToNodeIds.set(node._offBoardConnectionId, [
             node.capacityMeshNodeId,
-          ])
+          ]);
         }
       }
     }
@@ -98,7 +98,7 @@ export class RemoveUnnecessaryJumpersSolver extends BaseSolver {
     // Determine which off-board connection IDs to remove
     for (const [offBoardConnectionId] of offBoardConnectionToNodeIds) {
       if (!this.isJumperUsed(offBoardConnectionId)) {
-        this.removedOffBoardConnectionIds.add(offBoardConnectionId)
+        this.removedOffBoardConnectionIds.add(offBoardConnectionId);
       }
     }
 
@@ -113,7 +113,7 @@ export class RemoveUnnecessaryJumpersSolver extends BaseSolver {
           ...node,
           _offBoardConnectionId: undefined,
           _offBoardConnectedCapacityMeshNodeIds: undefined,
-        }
+        };
       }
 
       // For nodes that reference removed off-board connections in their
@@ -127,17 +127,17 @@ export class RemoveUnnecessaryJumpersSolver extends BaseSolver {
           node._offBoardConnectedCapacityMeshNodeIds.filter((connectedId) => {
             const connectedNode = this.inputNodes.find(
               (n) => n.capacityMeshNodeId === connectedId,
-            )
+            );
             if (
               connectedNode?._offBoardConnectionId &&
               this.removedOffBoardConnectionIds.has(
                 connectedNode._offBoardConnectionId,
               )
             ) {
-              return false
+              return false;
             }
-            return true
-          })
+            return true;
+          });
 
         if (
           updatedConnectedIds.length !==
@@ -147,18 +147,18 @@ export class RemoveUnnecessaryJumpersSolver extends BaseSolver {
             ...node,
             _offBoardConnectedCapacityMeshNodeIds:
               updatedConnectedIds.length > 0 ? updatedConnectedIds : undefined,
-          }
+          };
         }
       }
 
-      return node
-    })
+      return node;
+    });
 
-    this.solved = true
+    this.solved = true;
   }
 
   getOutput(): InputNodeWithPortPoints[] {
-    return this.outputNodes
+    return this.outputNodes;
   }
 
   visualize(): GraphicsObject {
@@ -166,7 +166,7 @@ export class RemoveUnnecessaryJumpersSolver extends BaseSolver {
     const graphics: GraphicsObject = {
       rects: [],
       points: [],
-    }
+    };
 
     for (const node of this.inputNodes) {
       if (
@@ -180,10 +180,10 @@ export class RemoveUnnecessaryJumpersSolver extends BaseSolver {
           fill: "rgba(255, 0, 0, 0.2)",
           stroke: "rgba(255, 0, 0, 0.5)",
           label: `Removed: ${node._offBoardConnectionId}`,
-        })
+        });
       }
     }
 
-    return graphics
+    return graphics;
   }
 }

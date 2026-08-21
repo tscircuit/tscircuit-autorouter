@@ -1,17 +1,17 @@
-import { CacheProvider } from "./types"
+import { CacheProvider } from "./types";
 
 /**
  * An in-memory implementation of the CacheProvider interface.
  * Useful for testing or scenarios where persistence is not required.
  */
 export class InMemoryCache implements CacheProvider {
-  cacheHitsByPrefix: Record<string, number> = {}
-  cacheMissesByPrefix: Record<string, number> = {}
-  isSyncCache = true
-  cacheHits = 0
-  cacheMisses = 0
+  cacheHitsByPrefix: Record<string, number> = {};
+  cacheMissesByPrefix: Record<string, number> = {};
+  isSyncCache = true;
+  cacheHits = 0;
+  cacheMisses = 0;
 
-  cache: Map<string, any> = new Map()
+  cache: Map<string, any> = new Map();
 
   /**
    * Retrieves a cached solution synchronously based on the cache key.
@@ -20,19 +20,20 @@ export class InMemoryCache implements CacheProvider {
    * @returns The cached solution if found, otherwise undefined.
    */
   getCachedSolutionSync(cacheKey: string): any {
-    const cachedSolution = this.cache.get(cacheKey)
+    const cachedSolution = this.cache.get(cacheKey);
     if (cachedSolution !== undefined) {
-      this.cacheHits++
-      const prefix = cacheKey.split(":")[0]
-      this.cacheHitsByPrefix[prefix] = (this.cacheHitsByPrefix[prefix] || 0) + 1
+      this.cacheHits++;
+      const prefix = cacheKey.split(":")[0];
+      this.cacheHitsByPrefix[prefix] =
+        (this.cacheHitsByPrefix[prefix] || 0) + 1;
       // Return a structured clone to prevent accidental modification of the cached object
-      return structuredClone(cachedSolution)
+      return structuredClone(cachedSolution);
     } else {
-      this.cacheMisses++
-      const prefix = cacheKey.split(":")[0]
+      this.cacheMisses++;
+      const prefix = cacheKey.split(":")[0];
       this.cacheMissesByPrefix[prefix] =
-        (this.cacheMissesByPrefix[prefix] || 0) + 1
-      return undefined
+        (this.cacheMissesByPrefix[prefix] || 0) + 1;
+      return undefined;
     }
   }
 
@@ -42,7 +43,7 @@ export class InMemoryCache implements CacheProvider {
    * @returns A promise that resolves with the cached solution or undefined.
    */
   async getCachedSolution(cacheKey: string): Promise<any> {
-    return this.getCachedSolutionSync(cacheKey)
+    return this.getCachedSolutionSync(cacheKey);
   }
 
   /**
@@ -53,7 +54,7 @@ export class InMemoryCache implements CacheProvider {
    */
   setCachedSolutionSync(cacheKey: string, cachedSolution: any): void {
     // Store a structured clone to prevent external modification of the cached object
-    this.cache.set(cacheKey, structuredClone(cachedSolution))
+    this.cache.set(cacheKey, structuredClone(cachedSolution));
   }
 
   /**
@@ -66,21 +67,21 @@ export class InMemoryCache implements CacheProvider {
     cacheKey: string,
     cachedSolution: any,
   ): Promise<void> {
-    this.setCachedSolutionSync(cacheKey, cachedSolution)
+    this.setCachedSolutionSync(cacheKey, cachedSolution);
   }
 
   /**
    * Clears the entire cache and resets hit/miss counters.
    */
   clearCache(): void {
-    this.cache.clear()
-    this.cacheHits = 0
-    this.cacheMisses = 0
-    this.cacheHitsByPrefix = {}
-    this.cacheMissesByPrefix = {}
+    this.cache.clear();
+    this.cacheHits = 0;
+    this.cacheMisses = 0;
+    this.cacheHitsByPrefix = {};
+    this.cacheMissesByPrefix = {};
   }
 
   getAllCacheKeys(): string[] {
-    return Array.from(this.cache.keys())
+    return Array.from(this.cache.keys());
   }
 }

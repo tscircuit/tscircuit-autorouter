@@ -1,11 +1,11 @@
-import { PortPoint } from "lib/types/high-density-types"
-import { InputNodeWithPortPoints } from "../PortPointPathingSolver/PortPointPathingSolver"
-import { OwnerPair } from "./types"
+import { PortPoint } from "lib/types/high-density-types";
+import { InputNodeWithPortPoints } from "../PortPointPathingSolver/PortPointPathingSolver";
+import { OwnerPair } from "./types";
 
 interface ShouldIgnorePortPointParams {
-  portPoint: PortPoint
-  ownerNodeIds: OwnerPair
-  inputNodes: InputNodeWithPortPoints[]
+  portPoint: PortPoint;
+  ownerNodeIds: OwnerPair;
+  inputNodes: InputNodeWithPortPoints[];
 }
 
 /**
@@ -20,19 +20,19 @@ export const shouldIgnorePortPoint = ({
   for (const ownerNodeId of ownerNodeIds) {
     const inputNode = inputNodes.find(
       (n) => n.capacityMeshNodeId === ownerNodeId,
-    )
-    if (inputNode?._containsTarget) return true
+    );
+    if (inputNode?._containsTarget) return true;
     const inputPortPoint = inputNode?.portPoints.find(
       (p) => p.portPointId === portPoint.portPointId,
-    )
+    );
     if (
       inputPortPoint?.connectionNodeIds?.some(
         (id) =>
           inputNodes.find((n) => n.capacityMeshNodeId === id)?._containsTarget,
       )
     ) {
-      return true
+      return true;
     }
   }
-  return false
-}
+  return false;
+};

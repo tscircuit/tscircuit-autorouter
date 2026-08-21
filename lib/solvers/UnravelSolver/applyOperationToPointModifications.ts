@@ -1,4 +1,4 @@
-import { SegmentPointId, UnravelOperation } from "./types"
+import { SegmentPointId, UnravelOperation } from "./types";
 
 /**
  * Applies an operation to the point modifications map
@@ -14,39 +14,39 @@ export const applyOperationToPointModifications = (
   >,
   operation: UnravelOperation,
   getPointInCandidate: (segmentPointId: SegmentPointId) => {
-    x: number
-    y: number
-    z: number
-    segmentId: string
+    x: number;
+    y: number;
+    z: number;
+    segmentId: string;
   },
 ) => {
   if (operation.type === "change_layer") {
     for (const segmentPointId of operation.segmentPointIds) {
-      const existingMods = pointModifications.get(segmentPointId) || {}
+      const existingMods = pointModifications.get(segmentPointId) || {};
       pointModifications.set(segmentPointId, {
         ...existingMods,
         z: operation.newZ,
-      })
+      });
     }
   } else if (operation.type === "swap_position_on_segment") {
-    const [ASpId, BSpId] = operation.segmentPointIds
-    const A = getPointInCandidate(ASpId)
-    const B = getPointInCandidate(BSpId)
+    const [ASpId, BSpId] = operation.segmentPointIds;
+    const A = getPointInCandidate(ASpId);
+    const B = getPointInCandidate(BSpId);
 
-    const existingModsA = pointModifications.get(ASpId) || {}
-    const existingModsB = pointModifications.get(BSpId) || {}
+    const existingModsA = pointModifications.get(ASpId) || {};
+    const existingModsB = pointModifications.get(BSpId) || {};
 
     pointModifications.set(ASpId, {
       ...existingModsA,
       x: B.x,
       y: B.y,
-    })
+    });
 
     pointModifications.set(BSpId, {
       ...existingModsB,
       x: A.x,
       y: A.y,
-    })
+    });
   } else if (operation.type === "combined") {
     // For combined operations, recursively apply each operation
     for (const subOperation of operation.operations) {
@@ -55,7 +55,7 @@ export const applyOperationToPointModifications = (
         pointModifications,
         subOperation,
         getPointInCandidate,
-      )
+      );
     }
   }
-}
+};

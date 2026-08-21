@@ -1,6 +1,6 @@
-import { expect, test } from "bun:test"
-import type { AnyCircuitElement } from "circuit-json"
-import { getDrcErrors } from "lib/testing/getDrcErrors"
+import { expect, test } from "bun:test";
+import type { AnyCircuitElement } from "circuit-json";
+import { getDrcErrors } from "lib/testing/getDrcErrors";
 
 test("checks classifies pad/via pairs once through getDrcErrors", () => {
   const circuitJson: AnyCircuitElement[] = [
@@ -31,27 +31,27 @@ test("checks classifies pad/via pairs once through getDrcErrors", () => {
         { route_type: "wire", x: 1, y: 0, width: 0.1, layer: "top" },
       ],
     },
-  ]
+  ];
 
   const { errors } = getDrcErrors(circuitJson, {
     traceClearance: 0.1,
     includeTraceContinuity: false,
-  })
+  });
 
-  expect(errors).toHaveLength(2)
+  expect(errors).toHaveLength(2);
   const padClearanceErrors = errors.filter(
     (error) => error.type === "pcb_pad_trace_clearance_error",
-  )
-  expect(padClearanceErrors).toHaveLength(1)
-  expect(padClearanceErrors[0]).toMatchObject({ center: { x: 0, y: 0 } })
+  );
+  expect(padClearanceErrors).toHaveLength(1);
+  expect(padClearanceErrors[0]).toMatchObject({ center: { x: 0, y: 0 } });
   expect(
     errors.filter((error) => error.type === "pcb_via_trace_clearance_error"),
-  ).toHaveLength(0)
+  ).toHaveLength(0);
   expect(
     errors.filter(
       (error) =>
         error.type === "pcb_trace_error" &&
         error.pcb_trace_error_id === "overlap_trace1_via1",
     ),
-  ).toHaveLength(1)
-})
+  ).toHaveLength(1);
+});

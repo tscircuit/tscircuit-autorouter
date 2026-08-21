@@ -1,7 +1,7 @@
-import { expect, test } from "bun:test"
-import { spliceFixedRouteSection } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/pipeline9-regional-fallback"
-import type { PreloadedHighDensityRoute } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/convert-preloaded-traces-to-hd-routes"
-import type { HighDensityRoute } from "lib/types/high-density-types"
+import { expect, test } from "bun:test";
+import { spliceFixedRouteSection } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/pipeline9-regional-fallback";
+import type { PreloadedHighDensityRoute } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/convert-preloaded-traces-to-hd-routes";
+import type { HighDensityRoute } from "lib/types/high-density-types";
 
 test("Pipeline9 materializes implied fallback layer transitions as vias", () => {
   const sourceRoute: PreloadedHighDensityRoute = {
@@ -16,7 +16,7 @@ test("Pipeline9 materializes implied fallback layer transitions as vias", () => 
       { x: 10, y: 0, z: 0 },
     ],
     vias: [],
-  }
+  };
   const replacement: HighDensityRoute = {
     connectionName: sourceRoute.connectionName,
     rootConnectionName: sourceRoute.rootConnectionName,
@@ -28,7 +28,7 @@ test("Pipeline9 materializes implied fallback layer transitions as vias", () => 
       { x: 10, y: 0, z: 0 },
     ],
     vias: [],
-  }
+  };
 
   const splicedRoute = spliceFixedRouteSection(
     {
@@ -37,7 +37,7 @@ test("Pipeline9 materializes implied fallback layer transitions as vias", () => 
       end: { segmentIndex: 0, point: sourceRoute.route[1]! },
     },
     replacement,
-  )
+  );
 
   expect(splicedRoute.route).toEqual([
     { x: 0, y: 0, z: 0 },
@@ -45,9 +45,9 @@ test("Pipeline9 materializes implied fallback layer transitions as vias", () => 
     { x: 5, y: 1, z: 1 },
     { x: 10, y: 0, z: 1 },
     { x: 10, y: 0, z: 0 },
-  ])
+  ]);
   expect(splicedRoute.vias).toEqual([
     { x: 5, y: 1 },
     { x: 10, y: 0 },
-  ])
-})
+  ]);
+});

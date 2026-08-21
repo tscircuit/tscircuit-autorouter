@@ -1,19 +1,17 @@
-import { expect, test } from "bun:test"
-import { AutoroutingPipelineSolver7_MultiGraph } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/AutoroutingPipelineSolver7_MultiGraph"
-import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/autorouting-pipeline-solver9-preloaded-trace-graph"
-import { Pipeline9HighDensitySolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/pipeline9-high-density-solver"
-import type { SimpleRouteJson } from "lib/types"
-import scenario from "./preexisting-connected-traces/srj/preexisting-connected-traces06.srj.json" with {
-  type: "json",
-}
+import { expect, test } from "bun:test";
+import { AutoroutingPipelineSolver7_MultiGraph } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/AutoroutingPipelineSolver7_MultiGraph";
+import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/autorouting-pipeline-solver9-preloaded-trace-graph";
+import { Pipeline9HighDensitySolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/pipeline9-high-density-solver";
+import type { SimpleRouteJson } from "lib/types";
+import scenario from "./preexisting-connected-traces/srj/preexisting-connected-traces06.srj.json" with { type: "json" };
 
 test("Pipeline9 owns copied stages with minimal preloaded-trace changes", () => {
-  const srj = structuredClone(scenario) as SimpleRouteJson
+  const srj = structuredClone(scenario) as SimpleRouteJson;
   const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(srj, {
     targetMinCapacity: 0.75,
     maxNodeDimension: 3,
     effort: 0.1,
-  })
+  });
   const traceFreeSolver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(
     { ...structuredClone(srj), traces: undefined },
     {
@@ -21,14 +19,14 @@ test("Pipeline9 owns copied stages with minimal preloaded-trace changes", () => 
       maxNodeDimension: 3,
       effort: 0.1,
     },
-  )
+  );
   const pipeline7 = new AutoroutingPipelineSolver7_MultiGraph(srj, {
     effort: 0.1,
-  })
+  });
 
-  expect(solver).not.toBeInstanceOf(AutoroutingPipelineSolver7_MultiGraph)
-  solver.solveUntilPhase("portPointPathingSolver")
-  traceFreeSolver.solveUntilPhase("portPointPathingSolver")
+  expect(solver).not.toBeInstanceOf(AutoroutingPipelineSolver7_MultiGraph);
+  solver.solveUntilPhase("portPointPathingSolver");
+  traceFreeSolver.solveUntilPhase("portPointPathingSolver");
 
   expect(
     solver.preprocessSimpleRouteJsonSolver
@@ -36,28 +34,28 @@ test("Pipeline9 owns copied stages with minimal preloaded-trace changes", () => 
       .obstacles.some((obstacle) =>
         obstacle.obstacleId?.startsWith("trace_obstacle_"),
       ),
-  ).toBe(false)
+  ).toBe(false);
   expect(
     solver.preprocessSimpleRouteJsonSolver?.getOutputSimpleRouteJson().traces,
-  ).toEqual(srj.traces)
+  ).toEqual(srj.traces);
   const portPointPathingStep = solver.pipelineDef.find(
     (step) => step.solverName === "portPointPathingSolver",
-  )
+  );
   const [portPointPathingParams] =
-    portPointPathingStep!.getConstructorParams(solver)
+    portPointPathingStep!.getConstructorParams(solver);
   expect(
     (
       portPointPathingParams as {
         flags: {
-          USE_PARTIAL_RIP_ROUTING_WITH_PRELOADED_TRACES?: boolean
-        }
+          USE_PARTIAL_RIP_ROUTING_WITH_PRELOADED_TRACES?: boolean;
+        };
       }
     ).flags.USE_PARTIAL_RIP_ROUTING_WITH_PRELOADED_TRACES,
-  ).toBeTrue()
+  ).toBeTrue();
   expect(solver.preloadedTraceGraphSolver?.stats).toMatchObject({
     preloadedTraceCount: 1,
     topologyChanged: false,
-  })
+  });
   expect(
     solver.capacityNodes?.map(
       ({ capacityMeshNodeId, center, width, height, layer, availableZ }) => ({
@@ -80,17 +78,17 @@ test("Pipeline9 owns copied stages with minimal preloaded-trace changes", () => 
         availableZ,
       }),
     ),
-  )
+  );
 
   const pipeline7Stages = new Map<string, unknown>(
     pipeline7.pipelineDef.map((step) => [step.solverName, step.solverClass]),
-  )
+  );
   const pipeline7SharedStageCount = pipeline7.pipelineDef.filter(
     (step) =>
       step.solverName !== "powerTraceExpansionSolver" &&
       step.solverName !== "exactGeometryDrcForceImproveSolver",
-  ).length
-  expect(solver.pipelineDef).toHaveLength(pipeline7SharedStageCount + 2)
+  ).length;
+  expect(solver.pipelineDef).toHaveLength(pipeline7SharedStageCount + 2);
   for (const stageName of [
     "highDensityForceImproveSolver",
     "highDensityRepairSolver",
@@ -100,37 +98,37 @@ test("Pipeline9 owns copied stages with minimal preloaded-trace changes", () => 
     expect(
       solver.pipelineDef.find((step) => step.solverName === stageName)
         ?.solverClass as unknown,
-    ).toBe(pipeline7Stages.get(stageName))
+    ).toBe(pipeline7Stages.get(stageName));
   }
   expect(
     solver.pipelineDef.find(
       (step) => step.solverName === "highDensityRouteSolver",
     )?.solverClass,
-  ).toBe(Pipeline9HighDensitySolver)
+  ).toBe(Pipeline9HighDensitySolver);
   expect(
     solver.pipelineDef.some(
       (step) => step.solverName === "exactGeometryDrcForceImproveSolver",
     ),
-  ).toBeFalse()
+  ).toBeFalse();
 
-  solver.solve()
+  solver.solve();
 
-  expect(solver.solved).toBe(true)
-  expect(solver.failed).toBe(false)
+  expect(solver.solved).toBe(true);
+  expect(solver.failed).toBe(false);
   expect(
     Number(solver.portPointPathingSolver?.stats.preloadedFixedSegmentCount),
-  ).toBeGreaterThan(0)
+  ).toBeGreaterThan(0);
   const traceSimplificationStep = solver.pipelineDef.find(
     (step) => step.solverName === "traceSimplificationSolver",
-  )
+  );
   const [traceSimplificationParams] =
-    traceSimplificationStep!.getConstructorParams(solver)
+    traceSimplificationStep!.getConstructorParams(solver);
   const immutableRoutes = (
     traceSimplificationParams as {
-      otherHdRoutes?: Array<{ connectionName: string }>
+      otherHdRoutes?: Array<{ connectionName: string }>;
     }
-  ).otherHdRoutes
-  expect(immutableRoutes?.length).toBeGreaterThan(0)
+  ).otherHdRoutes;
+  expect(immutableRoutes?.length).toBeGreaterThan(0);
   expect(
     solver.traceSimplificationSolver?.simplifiedHdRoutes.some((route) =>
       immutableRoutes?.some(
@@ -138,9 +136,9 @@ test("Pipeline9 owns copied stages with minimal preloaded-trace changes", () => 
           immutableRoute.connectionName === route.connectionName,
       ),
     ),
-  ).toBe(false)
+  ).toBe(false);
   const outputTraceIds = solver
     .getOutputSimplifiedPcbTraces()
-    .map((trace) => trace.pcb_trace_id)
-  expect(new Set(outputTraceIds).size).toBe(outputTraceIds.length)
-})
+    .map((trace) => trace.pcb_trace_id);
+  expect(new Set(outputTraceIds).size).toBe(outputTraceIds.length);
+});

@@ -1,6 +1,6 @@
-import { expect, test } from "bun:test"
-import { SingleHighDensityRouteStitchSolver3 } from "lib/solvers/RouteStitchingSolver/SingleHighDensityRouteStitchSolver3"
-import type { HighDensityIntraNodeRoute } from "lib/types/high-density-types"
+import { expect, test } from "bun:test";
+import { SingleHighDensityRouteStitchSolver3 } from "lib/solvers/RouteStitchingSolver/SingleHighDensityRouteStitchSolver3";
+import type { HighDensityIntraNodeRoute } from "lib/types/high-density-types";
 
 const makeRoute = (
   connectionName: string,
@@ -12,7 +12,7 @@ const makeRoute = (
   route: points,
   vias: [],
   jumpers: [],
-})
+});
 
 test("single stitch bridges small same-layer gaps", () => {
   const solver = new SingleHighDensityRouteStitchSolver3({
@@ -31,19 +31,19 @@ test("single stitch bridges small same-layer gaps", () => {
     ],
     isStitchSegmentClear: () => true,
     stitchClearanceMode: "require_clear",
-  })
+  });
 
-  solver.solve()
+  solver.solve();
 
-  expect(solver.solved).toBe(true)
-  expect(solver.failed).toBe(false)
+  expect(solver.solved).toBe(true);
+  expect(solver.failed).toBe(false);
   expect(solver.mergedHdRoute.route).toEqual([
     { x: 0, y: 0, z: 0 },
     { x: 1, y: 0, z: 0 },
     { x: 1.5, y: 0, z: 0 },
     { x: 2, y: 0, z: 0 },
-  ])
-})
+  ]);
+});
 
 test("single stitch does not bridge large same-layer gaps", () => {
   const solver = new SingleHighDensityRouteStitchSolver3({
@@ -62,17 +62,17 @@ test("single stitch does not bridge large same-layer gaps", () => {
     ],
     isStitchSegmentClear: () => true,
     stitchClearanceMode: "require_clear",
-  })
+  });
 
-  solver.solve()
+  solver.solve();
 
-  expect(solver.solved).toBe(true)
-  expect(solver.failed).toBe(false)
+  expect(solver.solved).toBe(true);
+  expect(solver.failed).toBe(false);
   expect(solver.mergedHdRoute.route).toEqual([
     { x: 0, y: 0, z: 0 },
     { x: 1, y: 0, z: 0 },
-  ])
-})
+  ]);
+});
 
 test("single stitch can cap a modest terminal endpoint gap", () => {
   const solver = new SingleHighDensityRouteStitchSolver3({
@@ -87,19 +87,19 @@ test("single stitch can cap a modest terminal endpoint gap", () => {
     ],
     isStitchSegmentClear: () => true,
     stitchClearanceMode: "require_clear",
-  })
+  });
 
-  solver.solve()
+  solver.solve();
 
-  expect(solver.solved).toBe(true)
-  expect(solver.failed).toBe(false)
+  expect(solver.solved).toBe(true);
+  expect(solver.failed).toBe(false);
   expect(solver.mergedHdRoute.route).toEqual([
     { x: 0, y: 2, z: 0 },
     { x: 0.2, y: 1.3, z: 0 },
     { x: 0.3, y: 1.1, z: 0 },
     { x: 0, y: 0, z: 0 },
-  ])
-})
+  ]);
+});
 
 test("single stitch accepts fan-out terminal tags", () => {
   const terminalFanoutRoutes = [
@@ -117,7 +117,7 @@ test("single stitch accepts fan-out terminal tags", () => {
       ]),
       startPcbPortId: "pcb_port_start",
     },
-  ]
+  ];
   const solver = new SingleHighDensityRouteStitchSolver3({
     connectionName: "conn",
     start: { x: 0, y: 0, z: 0, pcb_port_id: "pcb_port_start" },
@@ -126,8 +126,8 @@ test("single stitch accepts fan-out terminal tags", () => {
     preserveTerminalPcbPortIds: true,
     isStitchSegmentClear: () => true,
     stitchClearanceMode: "require_clear",
-  })
+  });
 
-  expect(solver.mergedHdRoute.startPcbPortId).toBe("pcb_port_start")
-  expect(solver.mergedHdRoute.endPcbPortId).toBe("pcb_port_end")
-})
+  expect(solver.mergedHdRoute.startPcbPortId).toBe("pcb_port_start");
+  expect(solver.mergedHdRoute.endPcbPortId).toBe("pcb_port_end");
+});

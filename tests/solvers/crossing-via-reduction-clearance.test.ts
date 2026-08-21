@@ -1,8 +1,8 @@
-import { expect, test } from "bun:test"
-import { ConnectivityMap } from "circuit-json-to-connectivity-map"
-import { CrossingViaReductionSolver } from "lib/solvers/CrossingViaReductionSolver/crossing-via-reduction-solver"
-import type { Obstacle } from "lib/types"
-import { createCrossingViaReductionRoutes } from "tests/fixtures/crossing-via-reduction-routes"
+import { expect, test } from "bun:test";
+import { ConnectivityMap } from "circuit-json-to-connectivity-map";
+import { CrossingViaReductionSolver } from "lib/solvers/CrossingViaReductionSolver/crossing-via-reduction-solver";
+import type { Obstacle } from "lib/types";
+import { createCrossingViaReductionRoutes } from "tests/fixtures/crossing-via-reduction-routes";
 
 test("keeps the three-via crossing when the relocated via is blocked", () => {
   const obstacle: Obstacle = {
@@ -13,7 +13,7 @@ test("keeps the three-via crossing when the relocated via is blocked", () => {
     width: 0.2,
     height: 0.2,
     connectedTo: ["blocked_net"],
-  }
+  };
   const solver = new CrossingViaReductionSolver({
     inputHdRoutes: createCrossingViaReductionRoutes(),
     obstacles: [obstacle],
@@ -23,18 +23,18 @@ test("keeps the three-via crossing when the relocated via is blocked", () => {
       blocked_net: ["blocked_net"],
     }),
     layerCount: 2,
-  })
+  });
 
-  solver.solve()
+  solver.solve();
 
-  expect(solver.failed).toBe(false)
-  expect(solver.stats.crossingViaReductions).toBeUndefined()
+  expect(solver.failed).toBe(false);
+  expect(solver.stats.crossingViaReductions).toBeUndefined();
   expect(solver.getReducedHdRoutes().flatMap((route) => route.vias)).toEqual([
     { x: -2, y: 3 },
     { x: -1, y: -3 },
     { x: 0, y: 0 },
-  ])
-})
+  ]);
+});
 
 test("ignores pre-existing obstacle clearance outside changed sections", () => {
   const obstacle: Obstacle = {
@@ -45,16 +45,16 @@ test("ignores pre-existing obstacle clearance outside changed sections", () => {
     width: 0.2,
     height: 0.2,
     connectedTo: ["blocked_net"],
-  }
-  const routes = createCrossingViaReductionRoutes()
+  };
+  const routes = createCrossingViaReductionRoutes();
   routes[0].route.unshift(
     { x: -6, y: 4, z: 0, pcb_port_id: "detour-prefix" },
     { x: -5, y: 4, z: 0 },
     { x: -5, y: 4, z: 1, insideJumperPad: true },
     { x: -4, y: 4, z: 1, insideJumperPad: true },
     { x: -4, y: 4, z: 0 },
-  )
-  routes[0].vias.unshift({ x: -5, y: 4 }, { x: -4, y: 4 })
+  );
+  routes[0].vias.unshift({ x: -5, y: 4 }, { x: -4, y: 4 });
   const solver = new CrossingViaReductionSolver({
     inputHdRoutes: routes,
     obstacles: [obstacle],
@@ -64,14 +64,14 @@ test("ignores pre-existing obstacle clearance outside changed sections", () => {
       blocked_net: ["blocked_net"],
     }),
     layerCount: 2,
-  })
+  });
 
-  solver.solve()
+  solver.solve();
 
-  expect(solver.failed).toBe(false)
-  expect(solver.stats.crossingViaReductions).toBe(1)
-  expect(solver.stats.viasRemovedByCrossingReductions).toBe(2)
-})
+  expect(solver.failed).toBe(false);
+  expect(solver.stats.crossingViaReductions).toBe(1);
+  expect(solver.stats.viasRemovedByCrossingReductions).toBe(2);
+});
 
 test("keeps vias that isolate unchanged obstacle conflicts from a changed section", () => {
   const obstacle: Obstacle = {
@@ -82,7 +82,7 @@ test("keeps vias that isolate unchanged obstacle conflicts from a changed sectio
     width: 0.2,
     height: 0.2,
     connectedTo: ["blocked_net"],
-  }
+  };
   const solver = new CrossingViaReductionSolver({
     inputHdRoutes: createCrossingViaReductionRoutes(),
     obstacles: [obstacle],
@@ -92,13 +92,13 @@ test("keeps vias that isolate unchanged obstacle conflicts from a changed sectio
       blocked_net: ["blocked_net"],
     }),
     layerCount: 2,
-  })
+  });
 
-  solver.solve()
+  solver.solve();
 
-  expect(solver.failed).toBe(false)
-  expect(solver.stats.crossingViaReductions).toBeUndefined()
-})
+  expect(solver.failed).toBe(false);
+  expect(solver.stats.crossingViaReductions).toBeUndefined();
+});
 
 test("checks changed geometry against static obstacles", () => {
   const obstacle: Obstacle = {
@@ -109,7 +109,7 @@ test("checks changed geometry against static obstacles", () => {
     width: 0.2,
     height: 0.2,
     connectedTo: ["blocked_net"],
-  }
+  };
   const solver = new CrossingViaReductionSolver({
     inputHdRoutes: createCrossingViaReductionRoutes(),
     obstacles: [obstacle],
@@ -119,23 +119,23 @@ test("checks changed geometry against static obstacles", () => {
       blocked_net: ["blocked_net"],
     }),
     layerCount: 2,
-  })
+  });
 
-  solver.solve()
+  solver.solve();
 
-  expect(solver.failed).toBe(false)
-  expect(solver.stats.crossingViaReductions).toBeUndefined()
-})
+  expect(solver.failed).toBe(false);
+  expect(solver.stats.crossingViaReductions).toBeUndefined();
+});
 
 test("checks unchanged geometry against the modified partner route", () => {
-  const routes = createCrossingViaReductionRoutes()
-  const detour = routes[0]
+  const routes = createCrossingViaReductionRoutes();
+  const detour = routes[0];
   detour.route.unshift(
     { x: -1, y: 0, z: 1, pcb_port_id: "detour-prefix" },
     { x: -1.5, y: 0, z: 1 },
     { x: -1.5, y: 0, z: 0, insideJumperPad: true },
-  )
-  detour.vias.unshift({ x: -1.5, y: 0 })
+  );
+  detour.vias.unshift({ x: -1.5, y: 0 });
 
   const solver = new CrossingViaReductionSolver({
     inputHdRoutes: routes,
@@ -145,16 +145,16 @@ test("checks unchanged geometry against the modified partner route", () => {
       transition_net: ["transition"],
     }),
     layerCount: 2,
-  })
+  });
 
-  solver.solve()
+  solver.solve();
 
-  expect(solver.failed).toBe(false)
-  expect(solver.stats.crossingViaReductions).toBeUndefined()
+  expect(solver.failed).toBe(false);
+  expect(solver.stats.crossingViaReductions).toBeUndefined();
   expect(solver.getReducedHdRoutes().flatMap((route) => route.vias)).toEqual([
     { x: -1.5, y: 0 },
     { x: -2, y: 3 },
     { x: -1, y: -3 },
     { x: 0, y: 0 },
-  ])
-})
+  ]);
+});

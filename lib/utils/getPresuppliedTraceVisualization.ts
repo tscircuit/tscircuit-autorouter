@@ -1,28 +1,28 @@
-import type { GraphicsObject } from "graphics-debug"
-import { parseToRgb } from "polished"
-import { safeTransparentize } from "lib/solvers/colors"
-import type { SimpleRouteJson } from "lib/types"
+import type { GraphicsObject } from "graphics-debug";
+import { parseToRgb } from "polished";
+import { safeTransparentize } from "lib/solvers/colors";
+import type { SimpleRouteJson } from "lib/types";
 import {
   convertSrjToGraphicsObject,
   type ConvertSrjToGraphicsObjectOptions,
-} from "lib/utils/convertSrjToGraphicsObject"
+} from "lib/utils/convertSrjToGraphicsObject";
 
 type PresuppliedTraceVisualizationParams = {
-  srj: SimpleRouteJson
-  opacity?: number
-  visualizationOptions?: ConvertSrjToGraphicsObjectOptions
-}
+  srj: SimpleRouteJson;
+  opacity?: number;
+  visualizationOptions?: ConvertSrjToGraphicsObjectOptions;
+};
 
 const setColorOpacity = (color: string | undefined, opacity: number) => {
-  if (!color || color === "none") return color
+  if (!color || color === "none") return color;
 
   try {
-    const parsedColor = parseToRgb(color)
-    return `rgba(${parsedColor.red},${parsedColor.green},${parsedColor.blue},${opacity})`
+    const parsedColor = parseToRgb(color);
+    return `rgba(${parsedColor.red},${parsedColor.green},${parsedColor.blue},${opacity})`;
   } catch {
-    return safeTransparentize(color, 1 - opacity)
+    return safeTransparentize(color, 1 - opacity);
   }
-}
+};
 
 export const getPresuppliedTraceVisualization = ({
   srj,
@@ -35,7 +35,7 @@ export const getPresuppliedTraceVisualization = ({
       obstacles: [],
     },
     visualizationOptions,
-  )
+  );
 
   return {
     ...traceVisualization,
@@ -54,5 +54,5 @@ export const getPresuppliedTraceVisualization = ({
       fill: setColorOpacity(circle.fill, opacity),
       stroke: setColorOpacity(circle.stroke, opacity),
     })),
-  }
-}
+  };
+};

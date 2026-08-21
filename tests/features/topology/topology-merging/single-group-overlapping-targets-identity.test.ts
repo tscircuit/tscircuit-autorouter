@@ -1,8 +1,8 @@
-import { expect, test } from "bun:test"
+import { expect, test } from "bun:test";
 import {
   createTopologyMergingTestNode,
   solveTopologyMergingTestGroups,
-} from "../../../fixtures/topology-merging-test-utils"
+} from "../../../fixtures/topology-merging-test-utils";
 
 test("topology merging preserves one group with overlapping targets exactly", (): void => {
   const nodes = [
@@ -32,16 +32,16 @@ test("topology merging preserves one group with overlapping targets exactly", ()
       _targetConnectionName: "connection-b",
       _adjacentNodeIds: ["free-b"],
     },
-  ]
-  const expectedNodes = structuredClone(nodes)
+  ];
+  const expectedNodes = structuredClone(nodes);
 
   const output = solveTopologyMergingTestGroups([
     { groupId: "global", nodes, isComponent: false },
-  ])
+  ]);
 
-  expect(output).toEqual(expectedNodes)
+  expect(output).toEqual(expectedNodes);
   expect(output.map((node) => node.capacityMeshNodeId)).toEqual([
     "target-a",
     "target-b",
-  ])
-})
+  ]);
+});

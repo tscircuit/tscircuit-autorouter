@@ -1,8 +1,8 @@
-import { expect, test } from "bun:test"
-import { AutoroutingPipelineSolver } from "lib"
-import type { SimpleRouteJson } from "lib/types"
-import { getLastStepSvg } from "../fixtures/getLastStepSvg"
-import transitivitySrjData from "./srj/transitivity.srj.json"
+import { expect, test } from "bun:test";
+import { AutoroutingPipelineSolver } from "lib";
+import type { SimpleRouteJson } from "lib/types";
+import { getLastStepSvg } from "../fixtures/getLastStepSvg";
+import transitivitySrjData from "./srj/transitivity.srj.json";
 
 /**
  * Tests the solver's ability to handle a transitive chain of off-board
@@ -21,18 +21,18 @@ import transitivitySrjData from "./srj/transitivity.srj.json"
  * original A(10,10) and B(20,20) targets.
  */
 test("connection.isOffBoard transitivity", () => {
-  const srj: SimpleRouteJson = transitivitySrjData as any
-  const solver = new AutoroutingPipelineSolver(srj)
-  solver.solve()
+  const srj: SimpleRouteJson = transitivitySrjData as any;
+  const solver = new AutoroutingPipelineSolver(srj);
+  solver.solve();
 
-  const newConnections = solver.srjWithPointPairs!.connections
-  expect(newConnections).toHaveLength(1)
+  const newConnections = solver.srjWithPointPairs!.connections;
+  expect(newConnections).toHaveLength(1);
   const pointIds = newConnections[0].pointsToConnect
     .map((p) => p.pointId)
-    .sort()
-  expect(pointIds).toEqual(["C", "X"])
+    .sort();
+  expect(pointIds).toEqual(["C", "X"]);
 
   expect(getLastStepSvg(solver.visualize())).toMatchSvgSnapshot(
     import.meta.path,
-  )
-})
+  );
+});

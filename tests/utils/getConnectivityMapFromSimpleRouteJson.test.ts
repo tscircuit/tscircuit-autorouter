@@ -1,6 +1,6 @@
-import { describe, expect, test } from "bun:test"
-import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
-import type { SimpleRouteJson } from "lib/types"
+import { describe, expect, test } from "bun:test";
+import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson";
+import type { SimpleRouteJson } from "lib/types";
 
 describe("getConnectivityMapFromSimpleRouteJson", () => {
   test("includes off-board obstacle connections", () => {
@@ -28,10 +28,10 @@ describe("getConnectivityMapFromSimpleRouteJson", () => {
           connectedTo: ["obstacle_b"],
         },
       ],
-    }
+    };
 
-    const connMap = getConnectivityMapFromSimpleRouteJson(srj)
+    const connMap = getConnectivityMapFromSimpleRouteJson(srj);
 
-    expect(connMap.areIdsConnected("obstacle_a", "obstacle_b")).toBe(true)
-  })
-})
+    expect(connMap.areIdsConnected("obstacle_a", "obstacle_b")).toBe(true);
+  });
+});

@@ -1,7 +1,7 @@
-import { expect, test } from "bun:test"
-import { getColorMap, safeTransparentize } from "lib/solvers/colors"
-import { convertSrjToGraphicsObject } from "lib/utils/convertSrjToGraphicsObject"
-import type { SimpleRouteJson } from "lib/types"
+import { expect, test } from "bun:test";
+import { getColorMap, safeTransparentize } from "lib/solvers/colors";
+import { convertSrjToGraphicsObject } from "lib/utils/convertSrjToGraphicsObject";
+import type { SimpleRouteJson } from "lib/types";
 
 test("colors traces and obstacles by layer and traces by connection in net mode", () => {
   const srj: SimpleRouteJson = {
@@ -156,55 +156,55 @@ test("colors traces and obstacles by layer and traces by connection in net mode"
         ],
       },
     ],
-  }
+  };
 
-  const graphics = convertSrjToGraphicsObject(srj)
-  const lineByLayer = new Map(graphics.lines.map((line) => [line.layer, line]))
+  const graphics = convertSrjToGraphicsObject(srj);
+  const lineByLayer = new Map(graphics.lines.map((line) => [line.layer, line]));
 
-  expect(lineByLayer.get("z0")?.strokeColor).toBe("red")
-  expect(lineByLayer.get("z1")?.strokeColor).toBe("rgba(0,128,0,0.5)")
-  expect(lineByLayer.get("z2")?.strokeColor).toBe("rgba(255,255,0,0.5)")
-  expect(lineByLayer.get("z3")?.strokeColor).toBe("rgba(0,0,255,0.5)")
+  expect(lineByLayer.get("z0")?.strokeColor).toBe("red");
+  expect(lineByLayer.get("z1")?.strokeColor).toBe("rgba(0,128,0,0.5)");
+  expect(lineByLayer.get("z2")?.strokeColor).toBe("rgba(255,255,0,0.5)");
+  expect(lineByLayer.get("z3")?.strokeColor).toBe("rgba(0,0,255,0.5)");
   expect(graphics.rects.filter((rect) => rect.center.y === 0)).toMatchObject([
     { layer: "z0", fill: "rgba(255,0,0,0.5)" },
-  ])
+  ]);
   expect(graphics.rects.filter((rect) => rect.center.y === 1)).toMatchObject([
     { layer: "z3", fill: "rgba(0,0,255,0.5)" },
-  ])
+  ]);
   expect(graphics.rects.filter((rect) => rect.center.y === 2)).toMatchObject([
     { layer: "z1", fill: "rgba(255,0,0,0.5)" },
-  ])
+  ]);
   expect(graphics.rects.filter((rect) => rect.center.y === 3)).toMatchObject([
     { layer: "z1,2", fill: "rgba(255,0,0,0.75)" },
-  ])
+  ]);
   expect(graphics.rects.filter((rect) => rect.center.y === 4)).toMatchObject([
     { layer: "z0,1,2", fill: "rgba(255,0,0,0.875)" },
-  ])
-  expect(graphics.rects).toHaveLength(5)
+  ]);
+  expect(graphics.rects).toHaveLength(5);
 
   const netGraphics = convertSrjToGraphicsObject(srj, {
     traceColorMode: "net",
-  })
+  });
   const netLineByLayer = new Map(
     netGraphics.lines.map((line) => [line.layer, line]),
-  )
-  const colorMap = getColorMap(srj)
+  );
+  const colorMap = getColorMap(srj);
 
-  expect(netGraphics.rects).toEqual(graphics.rects)
-  expect(netLineByLayer.get("z0")?.strokeColor).toBe(colorMap["top-net"])
+  expect(netGraphics.rects).toEqual(graphics.rects);
+  expect(netLineByLayer.get("z0")?.strokeColor).toBe(colorMap["top-net"]);
   expect(netLineByLayer.get("z1")?.strokeColor).toBe(
     safeTransparentize(colorMap["inner1-net"]!, 0.5),
-  )
+  );
   expect(netLineByLayer.get("z2")?.strokeColor).toBe(
     safeTransparentize(colorMap["inner2-net"]!, 0.5),
-  )
+  );
   expect(netLineByLayer.get("z3")?.strokeColor).toBe(
     safeTransparentize(colorMap["bottom-net"]!, 0.5),
-  )
+  );
   expect(netGraphics.lines.every((line) => line.label?.endsWith("-net"))).toBe(
     true,
-  )
-})
+  );
+});
 
 test("colors traces on inner layers beyond the fixed palette", () => {
   const srj: SimpleRouteJson = {
@@ -244,13 +244,13 @@ test("colors traces on inner layers beyond the fixed palette", () => {
         ],
       },
     ],
-  }
+  };
 
-  const graphics = convertSrjToGraphicsObject(srj)
+  const graphics = convertSrjToGraphicsObject(srj);
 
-  expect(graphics.lines).toHaveLength(1)
+  expect(graphics.lines).toHaveLength(1);
   expect(graphics.lines[0]).toMatchObject({
     layer: "z10",
     strokeColor: safeTransparentize("hsl(290, 70%, 45%)", 0.5),
-  })
-})
+  });
+});

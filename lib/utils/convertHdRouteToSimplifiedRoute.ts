@@ -1,43 +1,46 @@
-import { distance, pointToBoxDistance } from "@tscircuit/math-utils"
-import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
-import { isObstacleConnectedToRoute } from "lib/solvers/TraceWidthSolver/isObstacleConnectedToRoute"
+import { distance, pointToBoxDistance } from "@tscircuit/math-utils";
+import type { ConnectivityMap } from "circuit-json-to-connectivity-map";
+import { isObstacleConnectedToRoute } from "lib/solvers/TraceWidthSolver/isObstacleConnectedToRoute";
 import {
   type ConnectionPoint,
   type Obstacle,
   type SimplifiedPcbTraces,
   type SingleLayerConnectionPoint,
   isSingleLayerConnectionPoint,
-} from "lib/types"
-import { HighDensityIntraNodeRoute, Jumper } from "lib/types/high-density-types"
-import { mapZToLayerName } from "./mapZToLayerName"
+} from "lib/types";
+import {
+  HighDensityIntraNodeRoute,
+  Jumper,
+} from "lib/types/high-density-types";
+import { mapZToLayerName } from "./mapZToLayerName";
 
 type Point = {
-  x: number
-  y: number
-  z: number
-  traceThickness?: number
-  toNextSegmentType?: "through_obstacle"
-  toNextSegmentCircuitJsonMetadata?: HighDensityIntraNodeRoute["route"][number]["toNextSegmentCircuitJsonMetadata"]
-}
-const DEFAULT_TERMINAL_VIA_ATTACH_TOLERANCE = 0.25
-const SAME_POINT_TOLERANCE = 1e-12
-const SAME_NET_OBSTACLE_TOLERANCE = 1e-6
+  x: number;
+  y: number;
+  z: number;
+  traceThickness?: number;
+  toNextSegmentType?: "through_obstacle";
+  toNextSegmentCircuitJsonMetadata?: HighDensityIntraNodeRoute["route"][number]["toNextSegmentCircuitJsonMetadata"];
+};
+const DEFAULT_TERMINAL_VIA_ATTACH_TOLERANCE = 0.25;
+const SAME_POINT_TOLERANCE = 1e-12;
+const SAME_NET_OBSTACLE_TOLERANCE = 1e-6;
 
 export interface ConvertHdRouteToSimplifiedRouteOptions {
-  connectionPoints?: ReadonlyArray<ConnectionPoint>
-  terminalViaAttachTolerance?: number
-  defaultViaHoleDiameter?: number
-  obstacles?: ReadonlyArray<Obstacle>
-  connectedMultilayerObstacles?: ReadonlyArray<Obstacle>
-  connMap?: ConnectivityMap
+  connectionPoints?: ReadonlyArray<ConnectionPoint>;
+  terminalViaAttachTolerance?: number;
+  defaultViaHoleDiameter?: number;
+  obstacles?: ReadonlyArray<Obstacle>;
+  connectedMultilayerObstacles?: ReadonlyArray<Obstacle>;
+  connMap?: ConnectivityMap;
 }
 
 /**
  * Extended HD route type that may contain jumpers (from HighDensitySolver)
  */
 type HdRouteWithOptionalJumpers = HighDensityIntraNodeRoute & {
-  jumpers?: Jumper[]
-}
+  jumpers?: Jumper[];
+};
 
 const areSameXyPoint = (
   a: Pick<Point, "x" | "y"> | undefined,
@@ -46,15 +49,15 @@ const areSameXyPoint = (
   !!a &&
   !!b &&
   Math.abs(a.x - b.x) <= SAME_POINT_TOLERANCE &&
-  Math.abs(a.y - b.y) <= SAME_POINT_TOLERANCE
+  Math.abs(a.y - b.y) <= SAME_POINT_TOLERANCE;
 
 const pointInsideObstacle = (
   point: Pick<Point, "x" | "y">,
   obstacle: Obstacle,
-) => pointToBoxDistance(point, obstacle) <= SAME_NET_OBSTACLE_TOLERANCE
+) => pointToBoxDistance(point, obstacle) <= SAME_NET_OBSTACLE_TOLERANCE;
 
 const isMultilayerObstacle = (obstacle: Obstacle) =>
-  (obstacle.__zLayers?.length ?? obstacle.layers?.length ?? 0) > 1
+  (obstacle.__zLayers?.length ?? obstacle.layers?.length ?? 0) > 1;
 
 const isThroughObstacleSegment = (
   hdRoute: HdRouteWithOptionalJumpers,
@@ -62,14 +65,14 @@ const isThroughObstacleSegment = (
   end: Point,
   opts: ConvertHdRouteToSimplifiedRouteOptions,
 ) => {
-  if (start.toNextSegmentType === "through_obstacle") return true
+  if (start.toNextSegmentType === "through_obstacle") return true;
 
   if (opts.connectedMultilayerObstacles) {
     return opts.connectedMultilayerObstacles.some(
       (obstacle) =>
         pointInsideObstacle(start, obstacle) &&
         pointInsideObstacle(end, obstacle),
-    )
+    );
   }
 
   return (
@@ -80,8 +83,8 @@ const isThroughObstacleSegment = (
         pointInsideObstacle(end, obstacle) &&
         isObstacleConnectedToRoute(obstacle, hdRoute, opts.connMap),
     ) ?? false
-  )
-}
+  );
+};
 
 const findNearestTerminalViaPoint = ({
   endpoint,
@@ -89,32 +92,31 @@ const findNearestTerminalViaPoint = ({
   connectionPoints,
   tolerance,
 }: {
-  endpoint: Point
-  endpointLayer: string
-  connectionPoints: ReadonlyArray<ConnectionPoint>
-  tolerance: number
+  endpoint: Point;
+  endpointLayer: string;
+  connectionPoints: ReadonlyArray<ConnectionPoint>;
+  tolerance: number;
 }): SingleLayerConnectionPoint | undefined => {
   let nearestTerminalViaPoint:
-    | { point: SingleLayerConnectionPoint; distance: number }
-    | undefined
+    { point: SingleLayerConnectionPoint; distance: number } | undefined;
 
   for (const point of connectionPoints) {
-    if (!isSingleLayerConnectionPoint(point) || !point.terminalVia) continue
-    if (point.layer !== endpointLayer) continue
+    if (!isSingleLayerConnectionPoint(point) || !point.terminalVia) continue;
+    if (point.layer !== endpointLayer) continue;
 
-    const endpointDistance = distance(point, endpoint)
-    if (endpointDistance > tolerance) continue
+    const endpointDistance = distance(point, endpoint);
+    if (endpointDistance > tolerance) continue;
 
     if (
       !nearestTerminalViaPoint ||
       endpointDistance < nearestTerminalViaPoint.distance
     ) {
-      nearestTerminalViaPoint = { point, distance: endpointDistance }
+      nearestTerminalViaPoint = { point, distance: endpointDistance };
     }
   }
 
-  return nearestTerminalViaPoint?.point
-}
+  return nearestTerminalViaPoint?.point;
+};
 
 const attachTerminalViasToSimplifiedRoute = ({
   route,
@@ -124,63 +126,63 @@ const attachTerminalViasToSimplifiedRoute = ({
   tolerance = DEFAULT_TERMINAL_VIA_ATTACH_TOLERANCE,
   defaultViaHoleDiameter,
 }: {
-  route: SimplifiedPcbTraces[number]["route"]
-  hdRoute: HdRouteWithOptionalJumpers
-  layerCount: number
-  connectionPoints?: ReadonlyArray<ConnectionPoint>
-  tolerance?: number
-  defaultViaHoleDiameter?: number
+  route: SimplifiedPcbTraces[number]["route"];
+  hdRoute: HdRouteWithOptionalJumpers;
+  layerCount: number;
+  connectionPoints?: ReadonlyArray<ConnectionPoint>;
+  tolerance?: number;
+  defaultViaHoleDiameter?: number;
 }): SimplifiedPcbTraces[number]["route"] => {
   if (
     route.length === 0 ||
     hdRoute.route.length === 0 ||
     !connectionPoints.length
   ) {
-    return route
+    return route;
   }
   if (
     !connectionPoints.some(
       (point) => isSingleLayerConnectionPoint(point) && point.terminalVia,
     )
   ) {
-    return route
+    return route;
   }
 
   const linearRoute = route.filter(
     (segment) => segment.route_type !== "jumper",
-  ) as SimplifiedPcbTraces[number]["route"]
+  ) as SimplifiedPcbTraces[number]["route"];
   const jumpers = route.filter(
     (segment) => segment.route_type === "jumper",
-  ) as SimplifiedPcbTraces[number]["route"]
+  ) as SimplifiedPcbTraces[number]["route"];
 
   if (linearRoute.length === 0) {
-    return route
+    return route;
   }
 
-  const startPoint = hdRoute.route[0]!
-  const endPoint = hdRoute.route[hdRoute.route.length - 1]!
-  const startLayer = mapZToLayerName(startPoint.z, layerCount)
-  const endLayer = mapZToLayerName(endPoint.z, layerCount)
+  const startPoint = hdRoute.route[0]!;
+  const endPoint = hdRoute.route[hdRoute.route.length - 1]!;
+  const startLayer = mapZToLayerName(startPoint.z, layerCount);
+  const endLayer = mapZToLayerName(endPoint.z, layerCount);
   const startTerminalViaPoint = findNearestTerminalViaPoint({
     endpoint: startPoint,
     endpointLayer: startLayer,
     connectionPoints,
     tolerance,
-  })
+  });
   const endTerminalViaPoint = findNearestTerminalViaPoint({
     endpoint: endPoint,
     endpointLayer: endLayer,
     connectionPoints,
     tolerance,
-  })
+  });
 
-  const prependSegments: SimplifiedPcbTraces[number]["route"] = []
-  const appendSegments: SimplifiedPcbTraces[number]["route"] = []
-  const firstLinearRouteSegment = linearRoute[0]
-  const lastLinearRouteSegment = linearRoute[linearRoute.length - 1]
+  const prependSegments: SimplifiedPcbTraces[number]["route"] = [];
+  const appendSegments: SimplifiedPcbTraces[number]["route"] = [];
+  const firstLinearRouteSegment = linearRoute[0];
+  const lastLinearRouteSegment = linearRoute[linearRoute.length - 1];
   const startTraceThickness =
-    startPoint.traceThickness ?? hdRoute.traceThickness
-  const endTraceThickness = endPoint.traceThickness ?? hdRoute.traceThickness
+    startPoint.traceThickness ?? hdRoute.traceThickness;
+  const endTraceThickness = endPoint.traceThickness ?? hdRoute.traceThickness;
 
   if (startTerminalViaPoint?.terminalVia) {
     prependSegments.push({
@@ -194,40 +196,36 @@ const attachTerminalViasToSimplifiedRoute = ({
       ...(defaultViaHoleDiameter !== undefined
         ? { via_hole_diameter: defaultViaHoleDiameter }
         : {}),
-    })
+    });
 
-    if (
-      !(
-        firstLinearRouteSegment?.route_type === "wire" &&
-        firstLinearRouteSegment.layer === startTerminalViaPoint.layer &&
-        distance(firstLinearRouteSegment, startTerminalViaPoint) <= 1e-3
-      )
-    ) {
+    if (!(
+      firstLinearRouteSegment?.route_type === "wire" &&
+      firstLinearRouteSegment.layer === startTerminalViaPoint.layer &&
+      distance(firstLinearRouteSegment, startTerminalViaPoint) <= 1e-3
+    )) {
       prependSegments.push({
         route_type: "wire",
         x: startTerminalViaPoint.x,
         y: startTerminalViaPoint.y,
         width: startTraceThickness,
         layer: startTerminalViaPoint.layer,
-      })
+      });
     }
   }
 
   if (endTerminalViaPoint?.terminalVia) {
-    if (
-      !(
-        lastLinearRouteSegment?.route_type === "wire" &&
-        lastLinearRouteSegment.layer === endTerminalViaPoint.layer &&
-        distance(lastLinearRouteSegment, endTerminalViaPoint) <= 1e-3
-      )
-    ) {
+    if (!(
+      lastLinearRouteSegment?.route_type === "wire" &&
+      lastLinearRouteSegment.layer === endTerminalViaPoint.layer &&
+      distance(lastLinearRouteSegment, endTerminalViaPoint) <= 1e-3
+    )) {
       appendSegments.push({
         route_type: "wire",
         x: endTerminalViaPoint.x,
         y: endTerminalViaPoint.y,
         width: endTraceThickness,
         layer: endTerminalViaPoint.layer,
-      })
+      });
     }
 
     appendSegments.push({
@@ -241,33 +239,33 @@ const attachTerminalViasToSimplifiedRoute = ({
       ...(defaultViaHoleDiameter !== undefined
         ? { via_hole_diameter: defaultViaHoleDiameter }
         : {}),
-    })
+    });
   }
 
-  return [...prependSegments, ...linearRoute, ...appendSegments, ...jumpers]
-}
+  return [...prependSegments, ...linearRoute, ...appendSegments, ...jumpers];
+};
 
 export const convertHdRouteToSimplifiedRoute = (
   hdRoute: HdRouteWithOptionalJumpers,
   layerCount: number,
   opts: ConvertHdRouteToSimplifiedRouteOptions = {},
 ): SimplifiedPcbTraces[number]["route"] => {
-  const result: SimplifiedPcbTraces[number]["route"] = []
-  if (hdRoute.route.length === 0) return result
+  const result: SimplifiedPcbTraces[number]["route"] = [];
+  if (hdRoute.route.length === 0) return result;
 
-  let currentLayerPoints: Point[] = []
-  let currentZ = hdRoute.route[0].z
+  let currentLayerPoints: Point[] = [];
+  let currentZ = hdRoute.route[0].z;
 
   // Add all points to their respective layer segments
   for (let i = 0; i < hdRoute.route.length; i++) {
-    const point = hdRoute.route[i]
+    const point = hdRoute.route[i];
 
     // If we're changing layers, process the current layer's points
     // and add a via if one exists at this position
     if (point.z !== currentZ) {
-      const previousPoint = currentLayerPoints[currentLayerPoints.length - 1]
+      const previousPoint = currentLayerPoints[currentLayerPoints.length - 1];
       // Add all wire segments for the current layer
-      const layerName = mapZToLayerName(currentZ, layerCount)
+      const layerName = mapZToLayerName(currentZ, layerCount);
       for (const layerPoint of currentLayerPoints) {
         result.push({
           route_type: "wire",
@@ -275,10 +273,10 @@ export const convertHdRouteToSimplifiedRoute = (
           y: layerPoint.y,
           width: layerPoint.traceThickness ?? hdRoute.traceThickness,
           layer: layerName,
-        })
+        });
       }
 
-      const nextLayerName = mapZToLayerName(point.z, layerCount)
+      const nextLayerName = mapZToLayerName(point.z, layerCount);
       if (
         previousPoint &&
         isThroughObstacleSegment(hdRoute, previousPoint, point, opts)
@@ -296,14 +294,14 @@ export const convertHdRouteToSimplifiedRoute = (
                   previousPoint.toNextSegmentCircuitJsonMetadata,
               }
             : {}),
-        })
+        });
       } else {
         // Check if a via exists at this position
         const viaExists = hdRoute.vias.some(
           (via) =>
             Math.abs(via.x - point.x) < 0.001 &&
             Math.abs(via.y - point.y) < 0.001,
-        )
+        );
 
         // Add a via if one exists
         if (viaExists) {
@@ -317,13 +315,13 @@ export const convertHdRouteToSimplifiedRoute = (
             ...(opts.defaultViaHoleDiameter !== undefined
               ? { via_hole_diameter: opts.defaultViaHoleDiameter }
               : {}),
-          })
+          });
         }
       }
 
       // Start a new layer
-      currentLayerPoints = [point]
-      currentZ = point.z
+      currentLayerPoints = [point];
+      currentZ = point.z;
     } else {
       // Continue on the same layer
       if (
@@ -332,13 +330,13 @@ export const convertHdRouteToSimplifiedRoute = (
           point,
         )
       ) {
-        currentLayerPoints.push(point)
+        currentLayerPoints.push(point);
       }
     }
   }
 
   // Add the final layer's wire segments
-  const layerName = mapZToLayerName(currentZ, layerCount)
+  const layerName = mapZToLayerName(currentZ, layerCount);
   for (const layerPoint of currentLayerPoints) {
     result.push({
       route_type: "wire",
@@ -346,7 +344,7 @@ export const convertHdRouteToSimplifiedRoute = (
       y: layerPoint.y,
       width: layerPoint.traceThickness ?? hdRoute.traceThickness,
       layer: layerName,
-    })
+    });
   }
 
   // Add jumpers if present
@@ -354,7 +352,7 @@ export const convertHdRouteToSimplifiedRoute = (
     const jumperLayerName = mapZToLayerName(
       hdRoute.route[0]?.z ?? 0,
       layerCount,
-    )
+    );
     for (const jumper of hdRoute.jumpers) {
       result.push({
         route_type: "jumper",
@@ -362,7 +360,7 @@ export const convertHdRouteToSimplifiedRoute = (
         end: jumper.end,
         footprint: jumper.footprint,
         layer: jumperLayerName,
-      })
+      });
     }
   }
 
@@ -373,5 +371,5 @@ export const convertHdRouteToSimplifiedRoute = (
     connectionPoints: opts.connectionPoints,
     tolerance: opts.terminalViaAttachTolerance,
     defaultViaHoleDiameter: opts.defaultViaHoleDiameter,
-  })
-}
+  });
+};

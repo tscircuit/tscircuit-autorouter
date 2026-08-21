@@ -1,7 +1,7 @@
-import { describe, expect, test } from "bun:test"
-import { CapacityMeshSolver } from "lib"
-import type { SimpleRouteJson } from "lib/types"
-import { doesSegmentCrossPolygonBoundary } from "lib/utils/polygonContainment"
+import { describe, expect, test } from "bun:test";
+import { CapacityMeshSolver } from "lib";
+import type { SimpleRouteJson } from "lib/types";
+import { doesSegmentCrossPolygonBoundary } from "lib/utils/polygonContainment";
 
 const simpleRouteJson: SimpleRouteJson = {
   bounds: {
@@ -149,37 +149,37 @@ const simpleRouteJson: SimpleRouteJson = {
       y: 6,
     },
   ],
-}
+};
 
 describe.skip("polygon outline path simplification", () => {
   test("simplified traces stay within the outline", () => {
-    const solver = new CapacityMeshSolver(simpleRouteJson)
-    solver.solve()
+    const solver = new CapacityMeshSolver(simpleRouteJson);
+    solver.solve();
 
-    expect(solver.failed).toBeFalse()
-    expect(solver.solved).toBeTrue()
+    expect(solver.failed).toBeFalse();
+    expect(solver.solved).toBeTrue();
 
-    const simplifiedTraces = solver.getOutputSimplifiedPcbTraces()
+    const simplifiedTraces = solver.getOutputSimplifiedPcbTraces();
 
     for (const trace of simplifiedTraces) {
       // Filter to only wire and via segments that have direct x/y coordinates
       const pointSegments = trace.route.filter(
         (s): s is Extract<typeof s, { x: number; y: number }> =>
           s.route_type === "wire" || s.route_type === "via",
-      )
+      );
 
       for (let i = 0; i < pointSegments.length - 1; i++) {
-        const start = pointSegments[i]
-        const end = pointSegments[i + 1]
+        const start = pointSegments[i];
+        const end = pointSegments[i + 1];
 
         const crossesOutline = doesSegmentCrossPolygonBoundary({
           start: { x: start.x, y: start.y },
           end: { x: end.x, y: end.y },
           polygon: simpleRouteJson.outline!,
-        })
+        });
 
-        expect(crossesOutline).toBeFalse()
+        expect(crossesOutline).toBeFalse();
       }
     }
-  })
-})
+  });
+});

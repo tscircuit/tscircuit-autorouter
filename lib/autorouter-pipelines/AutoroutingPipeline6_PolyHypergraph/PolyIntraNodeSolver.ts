@@ -1,1 +1,1 @@
-export { PolySingleIntraNodeSolver as PolyIntraNodeSolver } from "./PolySingleIntraNodeSolver"
+export { PolySingleIntraNodeSolver as PolyIntraNodeSolver } from "./PolySingleIntraNodeSolver";

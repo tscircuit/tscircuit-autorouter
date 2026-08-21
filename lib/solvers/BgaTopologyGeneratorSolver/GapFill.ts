@@ -1,16 +1,19 @@
-import { getBoundFromCenteredRect } from "@tscircuit/math-utils"
-import type { Bounds } from "@tscircuit/math-utils"
-import { BasePipelineSolver, definePipelineStep } from "@tscircuit/solver-utils"
-import type { BaseSolver } from "@tscircuit/solver-utils"
-import type { PipelineStep } from "@tscircuit/solver-utils"
-import type { GraphicsObject, Line, Point, Rect } from "graphics-debug"
-import type { CapacityMeshNode } from "lib/types"
-import { createRectFromCapacityNode } from "lib/utils/createRectFromCapacityNode"
-import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
-import type { GapFillInput } from "./BgaGapFillTypes"
-import type { EdgeSegmentWithObstacle } from "./BgaGapFillTypes"
-import { DetectEdgesNotConnectedToMesh } from "./DetectEdgesNotConnectedToMesh"
-import { ExpandUnconnectedEdgesToMesh } from "./ExpandUnconnectedEdgesToMesh"
+import { getBoundFromCenteredRect } from "@tscircuit/math-utils";
+import type { Bounds } from "@tscircuit/math-utils";
+import {
+  BasePipelineSolver,
+  definePipelineStep,
+} from "@tscircuit/solver-utils";
+import type { BaseSolver } from "@tscircuit/solver-utils";
+import type { PipelineStep } from "@tscircuit/solver-utils";
+import type { GraphicsObject, Line, Point, Rect } from "graphics-debug";
+import type { CapacityMeshNode } from "lib/types";
+import { createRectFromCapacityNode } from "lib/utils/createRectFromCapacityNode";
+import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ";
+import type { GapFillInput } from "./BgaGapFillTypes";
+import type { EdgeSegmentWithObstacle } from "./BgaGapFillTypes";
+import { DetectEdgesNotConnectedToMesh } from "./DetectEdgesNotConnectedToMesh";
+import { ExpandUnconnectedEdgesToMesh } from "./ExpandUnconnectedEdgesToMesh";
 import {
   getGapFillEdgeColor,
   getGapFillEdgeDirectionLabel,
@@ -19,66 +22,66 @@ import {
   getGapFillExpandedNodeEdgeIndex,
   getGapFillObstacleEdges,
   sortGapFillEdgesByLocation,
-} from "./gapFillVisualization"
+} from "./gapFillVisualization";
 
-const EDGE_EPSILON: number = 1e-3
+const EDGE_EPSILON: number = 1e-3;
 
-type GraphicsRectList = Rect[]
-type GraphicsLineList = Line[]
-type GraphicsPointList = Point[]
+type GraphicsRectList = Rect[];
+type GraphicsLineList = Line[];
+type GraphicsPointList = Point[];
 
 const getAdjacentTargetNodeIds = ({
   expandedNode,
   edge,
   meshNodes,
 }: {
-  expandedNode: CapacityMeshNode
-  edge: EdgeSegmentWithObstacle
-  meshNodes: CapacityMeshNode[]
+  expandedNode: CapacityMeshNode;
+  edge: EdgeSegmentWithObstacle;
+  meshNodes: CapacityMeshNode[];
 }): string[] => {
-  const expandedBounds: Bounds = getBoundFromCenteredRect(expandedNode)
+  const expandedBounds: Bounds = getBoundFromCenteredRect(expandedNode);
   const edgeIsVertical: boolean =
-    Math.abs(edge.start.x - edge.end.x) <= EDGE_EPSILON
+    Math.abs(edge.start.x - edge.end.x) <= EDGE_EPSILON;
 
   return meshNodes
     .filter((meshNode) => {
-      if (meshNode._containsObstacle) return false
+      if (meshNode._containsObstacle) return false;
       if (
         !expandedNode.availableZ.some((z: number) =>
           meshNode.availableZ.includes(z),
         )
       ) {
-        return false
+        return false;
       }
 
-      const meshBounds: Bounds = getBoundFromCenteredRect(meshNode)
+      const meshBounds: Bounds = getBoundFromCenteredRect(meshNode);
 
       if (edgeIsVertical) {
         const yOverlap =
           Math.min(expandedBounds.maxY, meshBounds.maxY) -
-          Math.max(expandedBounds.minY, meshBounds.minY)
-        if (yOverlap <= EDGE_EPSILON) return false
+          Math.max(expandedBounds.minY, meshBounds.minY);
+        if (yOverlap <= EDGE_EPSILON) return false;
 
         return edge.expansionDirection.x < 0
           ? Math.abs(meshBounds.maxX - expandedBounds.minX) <= EDGE_EPSILON
-          : Math.abs(meshBounds.minX - expandedBounds.maxX) <= EDGE_EPSILON
+          : Math.abs(meshBounds.minX - expandedBounds.maxX) <= EDGE_EPSILON;
       }
 
       const xOverlap =
         Math.min(expandedBounds.maxX, meshBounds.maxX) -
-        Math.max(expandedBounds.minX, meshBounds.minX)
-      if (xOverlap <= EDGE_EPSILON) return false
+        Math.max(expandedBounds.minX, meshBounds.minX);
+      if (xOverlap <= EDGE_EPSILON) return false;
 
       return edge.expansionDirection.y < 0
         ? Math.abs(meshBounds.maxY - expandedBounds.minY) <= EDGE_EPSILON
-        : Math.abs(meshBounds.minY - expandedBounds.maxY) <= EDGE_EPSILON
+        : Math.abs(meshBounds.minY - expandedBounds.maxY) <= EDGE_EPSILON;
     })
-    .map((meshNode) => meshNode.capacityMeshNodeId)
-}
+    .map((meshNode) => meshNode.capacityMeshNodeId);
+};
 
 export class GapFill extends BasePipelineSolver<GapFillInput> {
-  detectEdgesNotConnectedToMesh!: DetectEdgesNotConnectedToMesh
-  expandUnconnectedEdgesToMesh!: ExpandUnconnectedEdgesToMesh
+  detectEdgesNotConnectedToMesh!: DetectEdgesNotConnectedToMesh;
+  expandUnconnectedEdgesToMesh!: ExpandUnconnectedEdgesToMesh;
 
   pipelineDef: PipelineStep<BaseSolver>[] = [
     definePipelineStep(
@@ -97,21 +100,21 @@ export class GapFill extends BasePipelineSolver<GapFillInput> {
         },
       ],
     ),
-  ]
+  ];
 
   constructor(public readonly inputProblem: GapFillInput) {
-    super(inputProblem)
+    super(inputProblem);
   }
 
   override getOutput(): CapacityMeshNode[] {
     return [
       ...this.inputProblem.meshNodes,
       ...this.expandUnconnectedEdgesToMesh.getOutput(),
-    ]
+    ];
   }
 
   getExpandedNodes(): CapacityMeshNode[] {
-    return this.expandUnconnectedEdgesToMesh.getOutput()
+    return this.expandUnconnectedEdgesToMesh.getOutput();
   }
 
   private getObstacleLayer(edgeWithObstacle: EdgeSegmentWithObstacle): string {
@@ -119,9 +122,9 @@ export class GapFill extends BasePipelineSolver<GapFillInput> {
       edgeWithObstacle.obstacle.__zLayers ??
       edgeWithObstacle.obstacle.layers.map((layerName) =>
         mapLayerNameToZ(layerName, this.inputProblem.layerCount),
-      )
+      );
 
-    return `z${availableZ.join(",")}`
+    return `z${availableZ.join(",")}`;
   }
 
   private getObstacleRects(): GraphicsRectList {
@@ -131,7 +134,7 @@ export class GapFill extends BasePipelineSolver<GapFillInput> {
           obstacle.__zLayers ??
           obstacle.layers.map((layerName) =>
             mapLayerNameToZ(layerName, this.inputProblem.layerCount),
-          )
+          );
 
         return {
           center: obstacle.center,
@@ -141,9 +144,9 @@ export class GapFill extends BasePipelineSolver<GapFillInput> {
           stroke: "rgba(90,90,90,0.42)",
           label: obstacle.obstacleId ?? obstacle.componentId ?? "bga obstacle",
           layer: `z${availableZ.join(",")}`,
-        }
+        };
       },
-    )
+    );
   }
 
   private getBaseMeshRects(): GraphicsRectList {
@@ -159,31 +162,29 @@ export class GapFill extends BasePipelineSolver<GapFillInput> {
         ? "rgba(190,40,40,0.42)"
         : "rgba(80,120,160,0.28)",
       label: `mesh ${node.capacityMeshNodeId}\nz:${node.availableZ.join(",")}`,
-    }))
+    }));
   }
 
   override initialVisualize(): GraphicsObject | null {
     const obstacleEdges: EdgeSegmentWithObstacle[] = getGapFillObstacleEdges(
       this.inputProblem.unmarkedComponentObstacles,
-    )
+    );
     const visualEdges: EdgeSegmentWithObstacle[] =
-      sortGapFillEdgesByLocation(obstacleEdges)
+      sortGapFillEdgesByLocation(obstacleEdges);
     const initialLines: GraphicsLineList = [
-      ...obstacleEdges.map(
-        (edgeWithObstacle): Line => ({
-          points: [edgeWithObstacle.start, edgeWithObstacle.end],
-          strokeColor: getGapFillEdgeColor(edgeWithObstacle, 0.72),
-          strokeWidth: 0.018,
-          strokeDash: "0.05 0.035",
-          layer: this.getObstacleLayer(edgeWithObstacle),
-          label: [
-            getGapFillEdgeVisualId(edgeWithObstacle, visualEdges),
-            getGapFillEdgeDirectionLabel(edgeWithObstacle),
-          ].join(" "),
-        }),
-      ),
+      ...obstacleEdges.map((edgeWithObstacle): Line => ({
+        points: [edgeWithObstacle.start, edgeWithObstacle.end],
+        strokeColor: getGapFillEdgeColor(edgeWithObstacle, 0.72),
+        strokeWidth: 0.018,
+        strokeDash: "0.05 0.035",
+        layer: this.getObstacleLayer(edgeWithObstacle),
+        label: [
+          getGapFillEdgeVisualId(edgeWithObstacle, visualEdges),
+          getGapFillEdgeDirectionLabel(edgeWithObstacle),
+        ].join(" "),
+      })),
       ...obstacleEdges.map((edgeWithObstacle): Line => {
-        const midpoint = getGapFillEdgeMidpoint(edgeWithObstacle)
+        const midpoint = getGapFillEdgeMidpoint(edgeWithObstacle);
         return {
           points: [
             midpoint,
@@ -196,54 +197,56 @@ export class GapFill extends BasePipelineSolver<GapFillInput> {
           strokeWidth: 0.012,
           strokeDash: "0.035 0.025",
           layer: this.getObstacleLayer(edgeWithObstacle),
-        }
+        };
       }),
-    ]
+    ];
 
     return {
       title: "BGA GapFill: candidate obstacle edges",
       rects: [...this.getBaseMeshRects(), ...this.getObstacleRects()],
       lines: initialLines,
-    }
+    };
   }
 
   override finalVisualize(): GraphicsObject | null {
     const edgesWithObstacle: EdgeSegmentWithObstacle[] =
       this.getStageOutput<EdgeSegmentWithObstacle[]>(
         "detectEdgesNotConnectedToMesh",
-      ) ?? []
+      ) ?? [];
     const expandedNodes: CapacityMeshNode[] =
       this.getStageOutput<CapacityMeshNode[]>("expandUnconnectedEdgesToMesh") ??
-      []
+      [];
     const allObstacleEdges: EdgeSegmentWithObstacle[] =
       sortGapFillEdgesByLocation(
         getGapFillObstacleEdges(this.inputProblem.unmarkedComponentObstacles),
-      )
+      );
 
-    const expandedNodeByEdgeIndex = new Map<number, CapacityMeshNode>()
+    const expandedNodeByEdgeIndex = new Map<number, CapacityMeshNode>();
     for (const expandedNode of expandedNodes) {
-      const edgeIndex = getGapFillExpandedNodeEdgeIndex(expandedNode)
-      if (edgeIndex === null) continue
+      const edgeIndex = getGapFillExpandedNodeEdgeIndex(expandedNode);
+      if (edgeIndex === null) continue;
 
-      expandedNodeByEdgeIndex.set(edgeIndex, expandedNode)
+      expandedNodeByEdgeIndex.set(edgeIndex, expandedNode);
     }
 
     const expandedRects: GraphicsRectList = expandedNodes.map((node): Rect => {
-      const edgeIndex = getGapFillExpandedNodeEdgeIndex(node)
+      const edgeIndex = getGapFillExpandedNodeEdgeIndex(node);
       const edge =
-        edgeIndex === null ? null : (edgesWithObstacle[edgeIndex] ?? null)
+        edgeIndex === null ? null : (edgesWithObstacle[edgeIndex] ?? null);
       const targetNodeIds = edge
         ? getAdjacentTargetNodeIds({
             expandedNode: node,
             edge,
             meshNodes: this.inputProblem.meshNodes,
           })
-        : []
+        : [];
       const edgeLabel = edge
         ? getGapFillEdgeVisualId(edge, allObstacleEdges)
-        : "E?"
+        : "E?";
       const color =
-        edge === null ? "rgba(0,160,100,0.72)" : getGapFillEdgeColor(edge, 0.72)
+        edge === null
+          ? "rgba(0,160,100,0.72)"
+          : getGapFillEdgeColor(edge, 0.72);
 
       return {
         ...createRectFromCapacityNode(node, {
@@ -262,11 +265,11 @@ export class GapFill extends BasePipelineSolver<GapFillInput> {
             : "target mesh not adjacent",
           `z:${node.availableZ.join(",")}`,
         ].join("\n"),
-      }
-    })
+      };
+    });
     const edgeStateLines: GraphicsLineList = edgesWithObstacle.map(
       (edgeWithObstacle, edgeIndex): Line => {
-        const expandedNode = expandedNodeByEdgeIndex.get(edgeIndex)
+        const expandedNode = expandedNodeByEdgeIndex.get(edgeIndex);
 
         return {
           points: [edgeWithObstacle.start, edgeWithObstacle.end],
@@ -283,14 +286,14 @@ export class GapFill extends BasePipelineSolver<GapFillInput> {
             ].join(" "),
             expandedNode ? "filled" : "no fill created",
           ].join("\n"),
-        }
+        };
       },
-    )
+    );
     const fillConnectionLines: GraphicsLineList = edgesWithObstacle.flatMap(
       (edgeWithObstacle, edgeIndex): Line[] => {
-        const midpoint = getGapFillEdgeMidpoint(edgeWithObstacle)
-        const expandedNode = expandedNodeByEdgeIndex.get(edgeIndex)
-        if (!expandedNode) return []
+        const midpoint = getGapFillEdgeMidpoint(edgeWithObstacle);
+        const expandedNode = expandedNodeByEdgeIndex.get(edgeIndex);
+        if (!expandedNode) return [];
 
         return [
           {
@@ -300,12 +303,12 @@ export class GapFill extends BasePipelineSolver<GapFillInput> {
             strokeDash: "0.035 0.025",
             layer: this.getObstacleLayer(edgeWithObstacle),
           },
-        ]
+        ];
       },
-    )
+    );
     const expandedEdgePoints: GraphicsPointList = edgesWithObstacle.flatMap(
       (edgeWithObstacle, edgeIndex): Point[] => {
-        if (!expandedNodeByEdgeIndex.has(edgeIndex)) return []
+        if (!expandedNodeByEdgeIndex.has(edgeIndex)) return [];
 
         return [
           {
@@ -314,9 +317,9 @@ export class GapFill extends BasePipelineSolver<GapFillInput> {
             label: getGapFillEdgeVisualId(edgeWithObstacle, allObstacleEdges),
             layer: this.getObstacleLayer(edgeWithObstacle),
           },
-        ]
+        ];
       },
-    )
+    );
 
     return {
       title: "BGA GapFill: disconnected edges and created mesh",
@@ -327,6 +330,6 @@ export class GapFill extends BasePipelineSolver<GapFillInput> {
       ],
       lines: [...edgeStateLines, ...fillConnectionLines],
       points: expandedEdgePoints,
-    }
+    };
   }
 }

@@ -1,5 +1,5 @@
-import { expect, test, describe } from "bun:test"
-import { getIntraNodeCrossings } from "../../lib/utils/getIntraNodeCrossings"
+import { expect, test, describe } from "bun:test";
+import { getIntraNodeCrossings } from "../../lib/utils/getIntraNodeCrossings";
 
 describe("getIntraNodeCrossings", () => {
   test("detects crossing with floating point coordinates", () => {
@@ -42,15 +42,15 @@ describe("getIntraNodeCrossings", () => {
         },
       ],
       availableZ: [0],
-    }
+    };
 
     // source_net_3: segment from (-29.39, 13.72) to (-23.2, 16.86)
     // source_net_2: vertical segment from (-29.39, 13.25) to (-29.39, 19.13)
     // These segments should cross because source_net_3 starts on source_net_2
-    const result = getIntraNodeCrossings(nodeWithPortPoints)
+    const result = getIntraNodeCrossings(nodeWithPortPoints);
 
-    expect(result.numSameLayerCrossings).toBe(1)
-  })
+    expect(result.numSameLayerCrossings).toBe(1);
+  });
 
   test("detects overlapping horizontal segments with floating point drift", () => {
     const nodeWithPortPoints = {
@@ -106,10 +106,10 @@ describe("getIntraNodeCrossings", () => {
         },
       ],
       availableZ: [0],
-    }
+    };
 
-    const result = getIntraNodeCrossings(nodeWithPortPoints)
+    const result = getIntraNodeCrossings(nodeWithPortPoints);
 
-    expect(result.numSameLayerCrossings).toBe(1)
-  })
-})
+    expect(result.numSameLayerCrossings).toBe(1);
+  });
+});

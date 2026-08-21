@@ -1,6 +1,6 @@
-import { expect, test } from "bun:test"
-import { convertSrjToGraphicsObject } from "../../lib"
-import type { SimpleRouteJson } from "../../lib/types"
+import { expect, test } from "bun:test";
+import { convertSrjToGraphicsObject } from "../../lib";
+import type { SimpleRouteJson } from "../../lib/types";
 
 test("convertSrjToGraphicsObject renders vias even when the via is the last route point", () => {
   const srj: SimpleRouteJson = {
@@ -46,15 +46,15 @@ test("convertSrjToGraphicsObject renders vias even when the via is the last rout
         ],
       },
     ],
-  }
+  };
 
-  const graphics = convertSrjToGraphicsObject(srj)
+  const graphics = convertSrjToGraphicsObject(srj);
 
-  expect(graphics.circles).toBeDefined()
-  expect(graphics.circles).toHaveLength(1)
-  expect(graphics.circles?.[0]?.center).toEqual({ x: 0, y: 1 })
-  expect(graphics.circles?.[0]?.radius).toBe(0.15)
-})
+  expect(graphics.circles).toBeDefined();
+  expect(graphics.circles).toHaveLength(1);
+  expect(graphics.circles?.[0]?.center).toEqual({ x: 0, y: 1 });
+  expect(graphics.circles?.[0]?.radius).toBe(0.15);
+});
 
 test("convertSrjToGraphicsObject uses per-via diameter before legacy srj minViaDiameter", () => {
   const graphics = convertSrjToGraphicsObject({
@@ -101,12 +101,12 @@ test("convertSrjToGraphicsObject uses per-via diameter before legacy srj minViaD
         ],
       },
     ],
-  })
+  });
 
-  expect(graphics.circles).toHaveLength(2)
-  expect(graphics.circles?.[0]?.radius).toBe(0.26)
-  expect(graphics.circles?.[1]?.radius).toBe(0.75)
-})
+  expect(graphics.circles).toHaveLength(2);
+  expect(graphics.circles?.[0]?.radius).toBe(0.26);
+  expect(graphics.circles?.[1]?.radius).toBe(0.75);
+});
 
 test("convertSrjToGraphicsObject preserves obstacle rotation", () => {
   const graphics = convertSrjToGraphicsObject({
@@ -132,8 +132,8 @@ test("convertSrjToGraphicsObject preserves obstacle rotation", () => {
       maxY: 5,
     },
     traces: [],
-  })
+  });
 
-  expect(graphics.rects).toHaveLength(1)
-  expect(graphics.rects?.[0]?.ccwRotationDegrees).toBe(45)
-})
+  expect(graphics.rects).toHaveLength(1);
+  expect(graphics.rects?.[0]?.ccwRotationDegrees).toBe(45);
+});

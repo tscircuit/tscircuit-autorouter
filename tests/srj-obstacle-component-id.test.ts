@@ -1,7 +1,7 @@
-import { expect, test } from "bun:test"
-import type { SimpleRouteJson } from "lib/types"
-import { addApproximatingRectsToSrj } from "lib/utils/addApproximatingRectsToSrj"
-import { createObjectsWithZLayers } from "lib/utils/createObjectsWithZLayers"
+import { expect, test } from "bun:test";
+import type { SimpleRouteJson } from "lib/types";
+import { addApproximatingRectsToSrj } from "lib/utils/addApproximatingRectsToSrj";
+import { createObjectsWithZLayers } from "lib/utils/createObjectsWithZLayers";
 
 const createSrjWithComponentObstacle = (): SimpleRouteJson => ({
   layerCount: 2,
@@ -20,19 +20,19 @@ const createSrjWithComponentObstacle = (): SimpleRouteJson => ({
   ],
   connections: [],
   bounds: { minX: -1, maxX: 1, minY: -1, maxY: 1 },
-})
+});
 
 test("SRJ obstacles can include an optional componentId", () => {
-  const srj = createSrjWithComponentObstacle()
+  const srj = createSrjWithComponentObstacle();
 
-  expect(srj.obstacles[0]?.componentId).toBe("U1")
-})
+  expect(srj.obstacles[0]?.componentId).toBe("U1");
+});
 
 test("obstacle componentId is preserved by obstacle normalization helpers", () => {
-  const srj = createSrjWithComponentObstacle()
-  const withZLayers = createObjectsWithZLayers(srj.obstacles, srj.layerCount)
-  const approximated = addApproximatingRectsToSrj(srj)
+  const srj = createSrjWithComponentObstacle();
+  const withZLayers = createObjectsWithZLayers(srj.obstacles, srj.layerCount);
+  const approximated = addApproximatingRectsToSrj(srj);
 
-  expect(withZLayers[0]?.componentId).toBe("U1")
-  expect(approximated.obstacles[0]?.componentId).toBe("U1")
-})
+  expect(withZLayers[0]?.componentId).toBe("U1");
+  expect(approximated.obstacles[0]?.componentId).toBe("U1");
+});

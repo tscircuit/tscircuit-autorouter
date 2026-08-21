@@ -1,63 +1,63 @@
-import { pointToSegmentDistance } from "@tscircuit/math-utils"
-import { BaseSolver } from "lib/solvers/BaseSolver"
+import { pointToSegmentDistance } from "@tscircuit/math-utils";
+import { BaseSolver } from "lib/solvers/BaseSolver";
 import type {
   PreloadedTracePortAssignment,
   SharedEdgeSegment,
   SegmentPortPoint,
-} from "lib/solvers/AvailableSegmentPointSolver/AvailableSegmentPointSolver"
-import type { SimpleRouteJson, SimplifiedPcbTrace } from "lib/types"
-import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
-import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
-import { minimumDistanceBetweenSegments } from "lib/utils/minimumDistanceBetweenSegments"
+} from "lib/solvers/AvailableSegmentPointSolver/AvailableSegmentPointSolver";
+import type { SimpleRouteJson, SimplifiedPcbTrace } from "lib/types";
+import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson";
+import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ";
+import { minimumDistanceBetweenSegments } from "lib/utils/minimumDistanceBetweenSegments";
 
-type Point = { x: number; y: number }
-type RoutePoint = SimplifiedPcbTrace["route"][number]
-type WireRoutePoint = Extract<RoutePoint, { route_type: "wire" }>
+type Point = { x: number; y: number };
+type RoutePoint = SimplifiedPcbTrace["route"][number];
+type WireRoutePoint = Extract<RoutePoint, { route_type: "wire" }>;
 
 type PreloadedTracePrimitive = {
-  traceId: string
-  fixedNetId: string
-  connectionName: string
-  routePositionStart: number
-  routePositionEnd: number
-  zLayers: number[]
-  start: Point
-  end: Point
-}
+  traceId: string;
+  fixedNetId: string;
+  connectionName: string;
+  routePositionStart: number;
+  routePositionEnd: number;
+  zLayers: number[];
+  start: Point;
+  end: Point;
+};
 
-const GEOMETRIC_TOLERANCE = 1e-6
+const GEOMETRIC_TOLERANCE = 1e-6;
 
 const getLayersBetween = (
   fromLayer: string,
   toLayer: string,
   layerCount: number,
 ): number[] => {
-  const fromZ = mapLayerNameToZ(fromLayer, layerCount)
-  const toZ = mapLayerNameToZ(toLayer, layerCount)
+  const fromZ = mapLayerNameToZ(fromLayer, layerCount);
+  const toZ = mapLayerNameToZ(toLayer, layerCount);
   return Array.from(
     { length: Math.abs(toZ - fromZ) + 1 },
     (_, index) => Math.min(fromZ, toZ) + index,
-  )
-}
+  );
+};
 
 const isWireRoutePoint = (point: RoutePoint): point is WireRoutePoint =>
-  point.route_type === "wire"
+  point.route_type === "wire";
 
 const getPreloadedTracePrimitives = (
   srj: SimpleRouteJson,
 ): PreloadedTracePrimitive[] => {
-  const primitives: PreloadedTracePrimitive[] = []
-  const connMap = getConnectivityMapFromSimpleRouteJson(srj)
+  const primitives: PreloadedTracePrimitive[] = [];
+  const connMap = getConnectivityMapFromSimpleRouteJson(srj);
 
   for (const trace of srj.traces ?? []) {
     if (!trace.connection_name) {
       throw new Error(
         `Preloaded trace "${trace.pcb_trace_id}" is missing a connection name`,
-      )
+      );
     }
     const fixedNetId =
       connMap.getNetConnectedToId(trace.connection_name) ??
-      trace.connection_name
+      trace.connection_name;
 
     for (const [routePosition, routePoint] of trace.route.entries()) {
       if (routePoint.route_type === "via") {
@@ -74,7 +74,7 @@ const getPreloadedTracePrimitives = (
           ),
           start: routePoint,
           end: routePoint,
-        })
+        });
       } else if (routePoint.route_type === "through_obstacle") {
         primitives.push({
           traceId: trace.pcb_trace_id,
@@ -89,9 +89,9 @@ const getPreloadedTracePrimitives = (
           ),
           start: routePoint.start,
           end: routePoint.end,
-        })
+        });
       } else if (routePoint.route_type === "jumper") {
-        const z = mapLayerNameToZ(routePoint.layer, srj.layerCount)
+        const z = mapLayerNameToZ(routePoint.layer, srj.layerCount);
         for (const [padIndex, padCenter] of [
           routePoint.start,
           routePoint.end,
@@ -105,7 +105,7 @@ const getPreloadedTracePrimitives = (
             zLayers: [z],
             start: padCenter,
             end: padCenter,
-          })
+          });
         }
       }
     }
@@ -115,14 +115,14 @@ const getPreloadedTracePrimitives = (
       pointIndex < trace.route.length - 1;
       pointIndex++
     ) {
-      const start = trace.route[pointIndex]!
-      const end = trace.route[pointIndex + 1]!
+      const start = trace.route[pointIndex]!;
+      const end = trace.route[pointIndex + 1]!;
       if (
         !isWireRoutePoint(start) ||
         !isWireRoutePoint(end) ||
         start.layer !== end.layer
       ) {
-        continue
+        continue;
       }
       primitives.push({
         traceId: trace.pcb_trace_id,
@@ -133,12 +133,12 @@ const getPreloadedTracePrimitives = (
         zLayers: [mapLayerNameToZ(start.layer, srj.layerCount)],
         start,
         end,
-      })
+      });
     }
   }
 
-  return primitives
-}
+  return primitives;
+};
 
 const getClosestPortPoint = (
   segment: SharedEdgeSegment,
@@ -171,7 +171,7 @@ const getClosestPortPoint = (
         left.portPoint.segmentPortPointId.localeCompare(
           right.portPoint.segmentPortPointId,
         ),
-    )[0]?.portPoint
+    )[0]?.portPoint;
 
 const preloadPort = (
   portPoint: SegmentPortPoint,
@@ -183,11 +183,11 @@ const preloadPort = (
       ...(portPoint._preloadedFixedNetIds ?? []),
       primitive.fixedNetId,
     ]),
-  ].sort()
+  ].sort();
 
-  const dx = primitive.end.x - primitive.start.x
-  const dy = primitive.end.y - primitive.start.y
-  const lengthSquared = dx * dx + dy * dy
+  const dx = primitive.end.x - primitive.start.x;
+  const dy = primitive.end.y - primitive.start.y;
+  const lengthSquared = dx * dx + dy * dy;
   const projection =
     lengthSquared === 0
       ? 0
@@ -199,7 +199,7 @@ const preloadPort = (
               (portPoint.y - primitive.start.y) * dy) /
               lengthSquared,
           ),
-        )
+        );
   const assignment: PreloadedTracePortAssignment = {
     traceId: primitive.traceId,
     fixedNetId: primitive.fixedNetId,
@@ -211,8 +211,8 @@ const preloadPort = (
       y: primitive.start.y + projection * dy,
     },
     z,
-  }
-  const existingAssignments = portPoint._preloadedTracePortAssignments ?? []
+  };
+  const existingAssignments = portPoint._preloadedTracePortAssignments ?? [];
   if (
     !existingAssignments.some(
       (existing) =>
@@ -231,28 +231,28 @@ const preloadPort = (
         left.traceId.localeCompare(right.traceId) ||
         left.routePosition - right.routePosition ||
         left.z - right.z,
-    )
+    );
   }
-}
+};
 
 /**
  * Loads fixed copper onto existing capacity-graph boundary ports. Capacity
  * regions, edges, and ports are never added or removed.
  */
 export class PreloadedTraceGraphSolver extends BaseSolver {
-  private readonly primitives: PreloadedTracePrimitive[]
+  private readonly primitives: PreloadedTracePrimitive[];
 
   constructor(
     private readonly sharedEdgeSegments: SharedEdgeSegment[],
     private readonly srj: SimpleRouteJson,
   ) {
-    super()
-    this.MAX_ITERATIONS = 1
-    this.primitives = getPreloadedTracePrimitives(srj)
+    super();
+    this.MAX_ITERATIONS = 1;
+    this.primitives = getPreloadedTracePrimitives(srj);
   }
 
   override getSolverName(): string {
-    return "PreloadedTraceGraphSolver"
+    return "PreloadedTraceGraphSolver";
   }
 
   override _step(): void {
@@ -266,23 +266,23 @@ export class PreloadedTraceGraphSolver extends BaseSolver {
             segment.end,
           ) > GEOMETRIC_TOLERANCE
         ) {
-          continue
+          continue;
         }
 
         for (const z of primitive.zLayers) {
-          if (!segment.availableZ.includes(z)) continue
-          const portPoint = getClosestPortPoint(segment, primitive, z)
-          if (portPoint) preloadPort(portPoint, primitive, z)
+          if (!segment.availableZ.includes(z)) continue;
+          const portPoint = getClosestPortPoint(segment, primitive, z);
+          if (portPoint) preloadPort(portPoint, primitive, z);
         }
       }
     }
 
     const portPoints = this.sharedEdgeSegments.flatMap(
       (segment) => segment.portPoints,
-    )
+    );
     const preloadedPortPoints = portPoints.filter(
       (portPoint) => (portPoint._preloadedFixedNetIds?.length ?? 0) > 0,
-    )
+    );
     this.stats = {
       preloadedTraceCount: this.srj.traces?.length ?? 0,
       preloadedTraceShapeCount: this.primitives.length,
@@ -297,14 +297,14 @@ export class PreloadedTraceGraphSolver extends BaseSolver {
         0,
       ),
       topologyChanged: false,
-    }
-    this.solved = true
+    };
+    this.solved = true;
   }
 
   getOutput(): SharedEdgeSegment[] {
     if (!this.solved) {
-      throw new Error("PreloadedTraceGraphSolver has not solved yet")
+      throw new Error("PreloadedTraceGraphSolver has not solved yet");
     }
-    return this.sharedEdgeSegments
+    return this.sharedEdgeSegments;
   }
 }

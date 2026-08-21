@@ -1,64 +1,64 @@
-import { BaseSolver } from "../BaseSolver"
+import { BaseSolver } from "../BaseSolver";
 import {
   HyperParameterDef,
   HyperParameterSupervisorSolver,
   SupervisedSolver,
-} from "../HyperParameterSupervisorSolver"
+} from "../HyperParameterSupervisorSolver";
 import {
   CapacityPathingSingleSectionPathingSolver,
   CapacityPathingSingleSectionPathingSolverParams,
-} from "./CapacityPathingSingleSectionSolver"
+} from "./CapacityPathingSingleSectionSolver";
 
-const range = (n: number) => Array.from({ length: n }, (_, i) => i)
+const range = (n: number) => Array.from({ length: n }, (_, i) => i);
 
 export class HyperCapacityPathingSingleSectionSolver extends HyperParameterSupervisorSolver<CapacityPathingSingleSectionPathingSolver> {
   override getSolverName(): string {
-    return "HyperCapacityPathingSingleSectionSolver"
+    return "HyperCapacityPathingSingleSectionSolver";
   }
 
-  constructorParams: CapacityPathingSingleSectionPathingSolverParams
+  constructorParams: CapacityPathingSingleSectionPathingSolverParams;
 
-  declare winningSolver?: CapacityPathingSingleSectionPathingSolver
+  declare winningSolver?: CapacityPathingSingleSectionPathingSolver;
 
   constructor(
     params: ConstructorParameters<
       typeof CapacityPathingSingleSectionPathingSolver
     >[0],
   ) {
-    super()
-    this.MAX_ITERATIONS = 100e3
-    this.constructorParams = params
+    super();
+    this.MAX_ITERATIONS = 100e3;
+    this.constructorParams = params;
   }
 
   // TODO this needs to use the section score, ideally incorporating the current best candidate
   // of the paths being explored inside the single section
   computeG(solver: CapacityPathingSingleSectionPathingSolver): number {
     // return solver.iterations / 100
-    return -solver.getSolvedSectionScore()
+    return -solver.getSolvedSectionScore();
   }
 
   computeH(solver: CapacityPathingSingleSectionPathingSolver): number {
-    return 0
+    return 0;
     // return solver.computeProgress()
   }
 
   getCombinationDefs(): Array<Array<string>> | null {
     // TODO change combination defs based on hyperParameters.EXPANSION_DEGREES
     const numConnections =
-      this.constructorParams.sectionConnectionTerminals.length
+      this.constructorParams.sectionConnectionTerminals.length;
 
     if (numConnections === 2) {
-      return [["orderings2_for2"]]
+      return [["orderings2_for2"]];
     } else if (numConnections === 3) {
-      return [["orderings6_for3"]]
+      return [["orderings6_for3"]];
     } else if (numConnections === 4) {
-      return [["orderings24_for4"]]
+      return [["orderings24_for4"]];
     }
-    return [["orderings30"]]
+    return [["orderings30"]];
   }
 
   getFailureMessage() {
-    return `All CapacityPathingSingleSection solvers failed for "${this.centerNodeId}"`
+    return `All CapacityPathingSingleSection solvers failed for "${this.centerNodeId}"`;
   }
 
   getHyperParameterDefs(): Array<HyperParameterDef> {
@@ -87,7 +87,7 @@ export class HyperCapacityPathingSingleSectionSolver extends HyperParameterSuper
           SHUFFLE_SEED: i,
         })),
       },
-    ]
+    ];
   }
 
   generateSolver(
@@ -99,24 +99,24 @@ export class HyperCapacityPathingSingleSectionSolver extends HyperParameterSuper
         ...this.constructorParams.hyperParameters,
         ...hyperParameters,
       },
-    })
+    });
   }
 
   onSolve({
     solver,
   }: SupervisedSolver<CapacityPathingSingleSectionPathingSolver>) {
-    this.winningSolver = solver
+    this.winningSolver = solver;
   }
 
   get centerNodeId() {
-    return this.constructorParams.centerNodeId
+    return this.constructorParams.centerNodeId;
   }
 
   get sectionNodes() {
-    return this.constructorParams.sectionNodes
+    return this.constructorParams.sectionNodes;
   }
 
   get sectionConnectionTerminals() {
-    return this.winningSolver?.sectionConnectionTerminals
+    return this.winningSolver?.sectionConnectionTerminals;
   }
 }

@@ -1,6 +1,6 @@
-import { MHPoint2 } from "./types2"
-import { getEveryCombinationFromChoiceArray } from "./getEveryCombinationFromChoiceArray"
-import { doSegmentsIntersect } from "@tscircuit/math-utils"
+import { MHPoint2 } from "./types2";
+import { getEveryCombinationFromChoiceArray } from "./getEveryCombinationFromChoiceArray";
+import { doSegmentsIntersect } from "@tscircuit/math-utils";
 
 /**
  * Each item in viaCountVariants is an array specifying the number of vias
@@ -46,60 +46,60 @@ export const computeViaCountVariants = (
   maxViaCount: number,
   minViaCount: number,
 ): Array<number[]> => {
-  const possibleViaCountsPerPolyline: number[][] = []
+  const possibleViaCountsPerPolyline: number[][] = [];
 
   for (const [, portPair] of portPairsEntries) {
-    const needsLayerChange = portPair.start.z1 !== portPair.end.z1
-    const possibleCounts: number[] = []
+    const needsLayerChange = portPair.start.z1 !== portPair.end.z1;
+    const possibleCounts: number[] = [];
 
     for (let i = 0; i <= segmentsPerPolyline; i++) {
-      const isOdd = i % 2 !== 0
+      const isOdd = i % 2 !== 0;
       if (needsLayerChange && isOdd) {
-        possibleCounts.push(i)
+        possibleCounts.push(i);
       } else if (!needsLayerChange && !isOdd) {
-        possibleCounts.push(i)
+        possibleCounts.push(i);
       }
     }
-    possibleViaCountsPerPolyline.push(possibleCounts)
+    possibleViaCountsPerPolyline.push(possibleCounts);
   }
 
   // Generate Cartesian product of possible counts
   if (possibleViaCountsPerPolyline.length === 0) {
-    return [[]] // No polylines, return one variant with empty counts
+    return [[]]; // No polylines, return one variant with empty counts
   }
 
   let variants: number[][] = getEveryCombinationFromChoiceArray(
     possibleViaCountsPerPolyline,
   ).filter((variant) => {
     for (let i = 0; i < variant.length; i++) {
-      const viaCount = variant.reduce((acc, count) => acc + count, 0)
-      if (viaCount < minViaCount) return false
+      const viaCount = variant.reduce((acc, count) => acc + count, 0);
+      if (viaCount < minViaCount) return false;
     }
-    return true
-  })
+    return true;
+  });
 
   // If a port pair has a z change, it must always have at least 1 via
   variants = variants.filter((variant) => {
     for (let i = 0; i < portPairsEntries.length; i++) {
-      const [, portPair1] = portPairsEntries[i]
+      const [, portPair1] = portPairsEntries[i];
       if (portPair1.start.z1 !== portPair1.start.z2) {
-        if (variant[i] === 0) return false
+        if (variant[i] === 0) return false;
       }
     }
-    return true
-  })
+    return true;
+  });
 
   // If two port pairs intersect, the sum of their via counts must be >= 2
   variants = variants.filter((variant) => {
     for (let i = 0; i < portPairsEntries.length; i++) {
-      const [, portPair1] = portPairsEntries[i]
+      const [, portPair1] = portPairsEntries[i];
       if (portPairsEntries[i][1].start.z1 !== portPairsEntries[i][1].start.z2)
-        continue
+        continue;
       for (let j = i + 1; j < portPairsEntries.length; j++) {
         if (portPairsEntries[j][1].start.z1 !== portPairsEntries[j][1].start.z2)
-          continue
+          continue;
 
-        const [, portPair2] = portPairsEntries[j]
+        const [, portPair2] = portPairsEntries[j];
         if (
           portPair1.start.z1 === portPair1.end.z1 &&
           portPair2.start.z1 === portPair2.end.z1 &&
@@ -111,18 +111,18 @@ export const computeViaCountVariants = (
             portPair2.end,
           )
         ) {
-          if (variant[i] + variant[j] < 2) return false
+          if (variant[i] + variant[j] < 2) return false;
         }
       }
     }
-    return true
-  })
+    return true;
+  });
 
   variants = variants.filter((variant) => {
-    const viaCount = variant.reduce((acc, count) => acc + count, 0)
-    if (viaCount > maxViaCount) return false
-    return true
-  })
+    const viaCount = variant.reduce((acc, count) => acc + count, 0);
+    if (viaCount > maxViaCount) return false;
+    return true;
+  });
 
-  return variants
-}
+  return variants;
+};

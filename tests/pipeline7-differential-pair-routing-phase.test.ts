@@ -1,5 +1,5 @@
-import { expect, test } from "bun:test"
-import { AutoroutingPipelineSolver7_MultiGraph } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/AutoroutingPipelineSolver7_MultiGraph"
+import { expect, test } from "bun:test";
+import { AutoroutingPipelineSolver7_MultiGraph } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/AutoroutingPipelineSolver7_MultiGraph";
 
 test("Pipeline7 completes post-processing for a routed differential pair", () => {
   const solver = new AutoroutingPipelineSolver7_MultiGraph({
@@ -162,12 +162,12 @@ test("Pipeline7 completes post-processing for a routed differential pair", () =>
     minViaDiameter: 0.3,
     minViaHoleDiameter: 0.2,
     minViaPadDiameter: 0.3,
-  })
+  });
 
-  solver.solve()
+  solver.solve();
 
-  expect(solver.failed).toBe(false)
-  expect(solver.solved).toBe(true)
-  expect(solver.lengthMatchingPostProcessingSolver).toBeDefined()
-  expect(solver.getOutputSimpleRouteJson().traces).toHaveLength(2)
-})
+  expect(solver.failed).toBe(false);
+  expect(solver.solved).toBe(true);
+  expect(solver.lengthMatchingPostProcessingSolver).toBeDefined();
+  expect(solver.getOutputSimpleRouteJson().traces).toHaveLength(2);
+});

@@ -1,12 +1,12 @@
-import { expect, test } from "bun:test"
+import { expect, test } from "bun:test";
 import type {
   BenchmarkReport,
   WorkerResult,
-} from "../scripts/benchmark/benchmark-types"
-import { renderSameMachineBenchmarkResults } from "../scripts/benchmark/same-machine-results"
+} from "../scripts/benchmark/benchmark-types";
+import { renderSameMachineBenchmarkResults } from "../scripts/benchmark/same-machine-results";
 
 test("same-machine benchmark comments compare matching reports", () => {
-  const solverName = "AutoroutingPipelineSolver7_MultiGraph"
+  const solverName = "AutoroutingPipelineSolver7_MultiGraph";
   const makeTest = (
     sampleNumber: number,
     overrides: Partial<WorkerResult>,
@@ -19,7 +19,7 @@ test("same-machine benchmark comments compare matching reports", () => {
     didTimeout: false,
     relaxedDrcPassed: true,
     ...overrides,
-  })
+  });
   const makeReport = (
     overrides: Partial<BenchmarkReport>,
   ): BenchmarkReport => ({
@@ -34,7 +34,7 @@ test("same-machine benchmark comments compare matching reports", () => {
     snapshots: [],
     tests: [],
     ...overrides,
-  })
+  });
   const mainReport = makeReport({
     summary: [
       {
@@ -59,7 +59,7 @@ test("same-machine benchmark comments compare matching reports", () => {
         drcErrorCount: 3,
       }),
     ],
-  })
+  });
   const prReport = makeReport({
     summary: [
       {
@@ -79,7 +79,7 @@ test("same-machine benchmark comments compare matching reports", () => {
         drcErrorCount: 1,
       }),
     ],
-  })
+  });
 
   const markdown = renderSameMachineBenchmarkResults({
     mainReport,
@@ -88,28 +88,30 @@ test("same-machine benchmark comments compare matching reports", () => {
     prSha: "b".repeat(40),
     repository: "tscircuit/tscircuit-autorouter",
     runnerName: "blacksmith-test-runner",
-  })
+  });
 
-  expect(markdown).toStartWith("## Same Machine Benchmark Results\n")
+  expect(markdown).toStartWith("## Same Machine Benchmark Results\n");
   expect(markdown).toContain(
     "Both revisions ran sequentially in one Blacksmith job",
-  )
+  );
   expect(markdown).toContain(
     "| Pipeline7 | Completion | 50.0% (🕒50.0%) | 100.0% (🕒0.0%) | +50.0 pp |",
-  )
-  expect(markdown).toContain("| Pipeline7 | DRC issues | 3 | 1 | -2 |")
-  expect(markdown).toContain("| Pipeline7 | Timeouts | 1 | 0 | -1 |")
-  expect(markdown).toContain("| Pipeline7 | P50 time | 1.5s | 1.4s | -6.7% |")
-  expect(markdown).toContain("| Pipeline7 | P60 time |")
-  expect(markdown).toContain("| Pipeline7 | P70 time |")
-  expect(markdown).toContain("| Pipeline7 | P80 time |")
-  expect(markdown).toContain("| Pipeline7 | P90 time |")
-  expect(markdown).toContain("| Pipeline7 | P95 time |")
-  expect(markdown).toContain("Outcome changes: **1 improved**, **0 regressed**")
+  );
+  expect(markdown).toContain("| Pipeline7 | DRC issues | 3 | 1 | -2 |");
+  expect(markdown).toContain("| Pipeline7 | Timeouts | 1 | 0 | -1 |");
+  expect(markdown).toContain("| Pipeline7 | P50 time | 1.5s | 1.4s | -6.7% |");
+  expect(markdown).toContain("| Pipeline7 | P60 time |");
+  expect(markdown).toContain("| Pipeline7 | P70 time |");
+  expect(markdown).toContain("| Pipeline7 | P80 time |");
+  expect(markdown).toContain("| Pipeline7 | P90 time |");
+  expect(markdown).toContain("| Pipeline7 | P95 time |");
+  expect(markdown).toContain(
+    "Outcome changes: **1 improved**, **0 regressed**",
+  );
   expect(markdown).toContain(
     "Timing percentiles include solved and timed-out samples",
-  )
-  expect(markdown).toContain("| Pipeline7 | 1 | Timeout | DRC passed |")
+  );
+  expect(markdown).toContain("| Pipeline7 | 1 | Timeout | DRC passed |");
   expect(() =>
     renderSameMachineBenchmarkResults({
       mainReport,
@@ -119,5 +121,5 @@ test("same-machine benchmark comments compare matching reports", () => {
       repository: "tscircuit/tscircuit-autorouter",
       runnerName: "blacksmith-test-runner",
     }),
-  ).toThrow("Dataset mismatch")
-})
+  ).toThrow("Dataset mismatch");
+});

@@ -1,9 +1,9 @@
-import { expect, test } from "bun:test"
-import { ConnectivityMap } from "circuit-json-to-connectivity-map"
-import { buildHyperGraph } from "lib/solvers/PortPointPathingSolver/hgportpointpathingsolver"
-import { TinyHypergraphPortPointPathingSolver } from "lib/solvers/PortPointPathingSolver/tinyhypergraph/TinyHypergraphPortPointPathingSolver"
-import type { CapacityMeshNode, SimpleRouteConnection } from "lib/types"
-import type { TinyHyperGraphSolver } from "tiny-hypergraph/lib/index"
+import { expect, test } from "bun:test";
+import { ConnectivityMap } from "circuit-json-to-connectivity-map";
+import { buildHyperGraph } from "lib/solvers/PortPointPathingSolver/hgportpointpathingsolver";
+import { TinyHypergraphPortPointPathingSolver } from "lib/solvers/PortPointPathingSolver/tinyhypergraph/TinyHypergraphPortPointPathingSolver";
+import type { CapacityMeshNode, SimpleRouteConnection } from "lib/types";
+import type { TinyHyperGraphSolver } from "tiny-hypergraph/lib/index";
 
 test("serialized preloaded assignments occupy existing hypergraph regions", () => {
   const capacityMeshNodes: CapacityMeshNode[] = [
@@ -19,7 +19,7 @@ test("serialized preloaded assignments occupy existing hypergraph regions", () =
     height: 2,
     layer: "top",
     availableZ: [0],
-  }))
+  }));
   const simpleRouteJsonConnections: SimpleRouteConnection[] = [
     {
       name: "foreign-route",
@@ -29,9 +29,9 @@ test("serialized preloaded assignments occupy existing hypergraph regions", () =
         { x: 0, y: -2, layer: "top" },
       ],
     },
-  ]
-  const connectivityMap = new ConnectivityMap({})
-  connectivityMap.addConnections([["foreign-route", "foreign-root"]])
+  ];
+  const connectivityMap = new ConnectivityMap({});
+  connectivityMap.addConnections([["foreign-route", "foreign-root"]]);
   const createPort = (
     segmentPortPointId: string,
     x: number,
@@ -62,7 +62,7 @@ test("serialized preloaded assignments occupy existing hypergraph regions", () =
             },
           ],
         }),
-  })
+  });
   const { graph, connections } = buildHyperGraph({
     capacityMeshNodes,
     segmentPortPoints: [
@@ -74,7 +74,7 @@ test("serialized preloaded assignments occupy existing hypergraph regions", () =
     layerCount: 1,
     connectivityMap,
     simpleRouteJsonConnections,
-  })
+  });
   const solver = new TinyHypergraphPortPointPathingSolver({
     graph,
     connections,
@@ -105,46 +105,46 @@ test("serialized preloaded assignments occupy existing hypergraph regions", () =
       GREEDY_MULTIPLIER: 0.7,
       MIN_ALLOWED_BOARD_SCORE: -10000,
     },
-  })
+  });
   const tinyPipeline = (
     solver as unknown as {
       tinyPipelineSolver: {
-        getInitialVisualizationSolver: () => TinyHyperGraphSolver
-      }
+        getInitialVisualizationSolver: () => TinyHyperGraphSolver;
+      };
     }
-  ).tinyPipelineSolver
-  const tinySolver = tinyPipeline.getInitialVisualizationSolver()
+  ).tinyPipelineSolver;
+  const tinySolver = tinyPipeline.getInitialVisualizationSolver();
   const centerRegionId = tinySolver.topology.regionMetadata?.findIndex(
     (metadata) => metadata.capacityMeshNodeId === "center",
-  )
+  );
   const getPortId = (serializedPortId: string) =>
     tinySolver.topology.portMetadata?.findIndex(
       (metadata) => metadata.serializedPortId === serializedPortId,
-    ) ?? -1
-  const westPortId = getPortId("west-center::0")
-  const eastPortId = getPortId("center-east::0")
+    ) ?? -1;
+  const westPortId = getPortId("west-center::0");
+  const eastPortId = getPortId("center-east::0");
 
-  expect(tinySolver.topology.regionCount).toBe(capacityMeshNodes.length + 2)
-  expect(centerRegionId).toBeGreaterThanOrEqual(0)
+  expect(tinySolver.topology.regionCount).toBe(capacityMeshNodes.length + 2);
+  expect(centerRegionId).toBeGreaterThanOrEqual(0);
   expect(
     tinySolver.state.regionIntersectionCaches[centerRegionId!]
       .existingSegmentCount,
-  ).toBe(1)
+  ).toBe(1);
   const [[preloadedRouteId, preloadedFromPortId, preloadedToPortId]] =
-    tinySolver.state.regionSegments[centerRegionId!]
+    tinySolver.state.regionSegments[centerRegionId!];
   expect(
     tinySolver.problem.routeMetadata?.[
       preloadedRouteId
     ]?.connectionId?.startsWith("__tscircuit_preloaded_trace__:"),
-  ).toBe(true)
+  ).toBe(true);
   expect(
     [preloadedFromPortId, preloadedToPortId].sort((a, b) => a - b),
-  ).toEqual([westPortId, eastPortId].sort((a, b) => a - b))
+  ).toEqual([westPortId, eastPortId].sort((a, b) => a - b));
 
-  tinySolver.resetRoutingStateForRerip()
+  tinySolver.resetRoutingStateForRerip();
 
   expect(tinySolver.state.regionSegments[centerRegionId!]).toEqual([
     [preloadedRouteId, preloadedFromPortId, preloadedToPortId],
-  ])
-  expect(tinySolver.state.unroutedRoutes).not.toContain(preloadedRouteId)
-})
+  ]);
+  expect(tinySolver.state.unroutedRoutes).not.toContain(preloadedRouteId);
+});

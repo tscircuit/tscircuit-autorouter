@@ -2,17 +2,17 @@ import type {
   CapacityMeshEdge,
   CapacityMeshNode,
   CapacityMeshNodeId,
-} from "../../types"
+} from "../../types";
 import type {
   InputNodeWithPortPoints,
   InputPortPoint,
   ConnectionPathResult,
   PortPointCandidate,
-} from "../PortPointPathingSolver/PortPointPathingSolver"
+} from "../PortPointPathingSolver/PortPointPathingSolver";
 
 export interface PortPointSectionParams {
-  centerOfSectionCapacityNodeId: CapacityMeshNodeId
-  expansionDegrees: number
+  centerOfSectionCapacityNodeId: CapacityMeshNodeId;
+  expansionDegrees: number;
 }
 
 /**
@@ -22,57 +22,57 @@ export interface PortPointSectionParams {
  */
 export interface SectionPath {
   /** The connection name this path belongs to */
-  connectionName: string
+  connectionName: string;
   /** Root connection name if applicable */
-  rootConnectionName?: string
+  rootConnectionName?: string;
   /** The cut path points (only the portion within the section) */
   points: Array<{
-    x: number
-    y: number
-    z: number
-    nodeId: CapacityMeshNodeId
-    portPointId?: string
-  }>
+    x: number;
+    y: number;
+    z: number;
+    nodeId: CapacityMeshNodeId;
+    portPointId?: string;
+  }>;
   /** Index in original path where this segment starts */
-  originalStartIndex: number
+  originalStartIndex: number;
   /** Index in original path where this segment ends */
-  originalEndIndex: number
+  originalEndIndex: number;
   /** True if path enters from outside the section */
-  hasEntryFromOutside: boolean
+  hasEntryFromOutside: boolean;
   /** True if path exits to outside the section */
-  hasExitToOutside: boolean
+  hasExitToOutside: boolean;
 }
 
 export interface PortPointSection {
   /** The center node ID for this section */
-  centerNodeId: CapacityMeshNodeId
+  centerNodeId: CapacityMeshNodeId;
   /** How many hops from center this section covers */
-  expansionDegrees: number
+  expansionDegrees: number;
   /** All node IDs included in this section */
-  nodeIds: Set<CapacityMeshNodeId>
+  nodeIds: Set<CapacityMeshNodeId>;
   /** Input nodes filtered to just those in this section */
-  inputNodes: InputNodeWithPortPoints[]
+  inputNodes: InputNodeWithPortPoints[];
   /** Capacity mesh nodes filtered to just those in this section */
-  capacityMeshNodes: CapacityMeshNode[]
+  capacityMeshNodes: CapacityMeshNode[];
   /** Edges that connect nodes within this section */
-  internalEdges: CapacityMeshEdge[]
+  internalEdges: CapacityMeshEdge[];
   /** Edges that connect section nodes to external nodes (boundary edges) */
-  boundaryEdges: CapacityMeshEdge[]
+  boundaryEdges: CapacityMeshEdge[];
   /** Paths that pass through this section, cut to fit within section bounds */
-  sectionPaths: SectionPath[]
+  sectionPaths: SectionPath[];
 }
 
 export interface CreatePortPointSectionInput {
   /** All input nodes with port points from PortPointPathingSolver */
-  inputNodes: InputNodeWithPortPoints[]
+  inputNodes: InputNodeWithPortPoints[];
   /** All capacity mesh nodes */
-  capacityMeshNodes: CapacityMeshNode[]
+  capacityMeshNodes: CapacityMeshNode[];
   /** All capacity mesh edges */
-  capacityMeshEdges: CapacityMeshEdge[]
+  capacityMeshEdges: CapacityMeshEdge[];
   /** Map from node ID to input node for quick lookup */
-  nodeMap: Map<CapacityMeshNodeId, InputNodeWithPortPoints>
+  nodeMap: Map<CapacityMeshNodeId, InputNodeWithPortPoints>;
   /** Connection path results from PortPointPathingSolver */
-  connectionResults?: ConnectionPathResult[]
+  connectionResults?: ConnectionPathResult[];
 }
 
 /**
@@ -95,43 +95,43 @@ export function createPortPointSection(
     capacityMeshNodes,
     capacityMeshEdges,
     connectionResults,
-  } = input
-  const { centerOfSectionCapacityNodeId, expansionDegrees } = params
+  } = input;
+  const { centerOfSectionCapacityNodeId, expansionDegrees } = params;
 
   // Build adjacency map from edges
-  const adjacencyMap = new Map<CapacityMeshNodeId, Set<CapacityMeshNodeId>>()
+  const adjacencyMap = new Map<CapacityMeshNodeId, Set<CapacityMeshNodeId>>();
   for (const edge of capacityMeshEdges) {
-    const [nodeId1, nodeId2] = edge.nodeIds
+    const [nodeId1, nodeId2] = edge.nodeIds;
     if (!adjacencyMap.has(nodeId1)) {
-      adjacencyMap.set(nodeId1, new Set())
+      adjacencyMap.set(nodeId1, new Set());
     }
     if (!adjacencyMap.has(nodeId2)) {
-      adjacencyMap.set(nodeId2, new Set())
+      adjacencyMap.set(nodeId2, new Set());
     }
-    adjacencyMap.get(nodeId1)!.add(nodeId2)
-    adjacencyMap.get(nodeId2)!.add(nodeId1)
+    adjacencyMap.get(nodeId1)!.add(nodeId2);
+    adjacencyMap.get(nodeId2)!.add(nodeId1);
   }
 
   // BFS to find all nodes within expansionDegrees hops
-  const sectionNodeIds = new Set<CapacityMeshNodeId>()
-  const visited = new Set<CapacityMeshNodeId>()
-  const queue: Array<{ nodeId: CapacityMeshNodeId; depth: number }> = []
+  const sectionNodeIds = new Set<CapacityMeshNodeId>();
+  const visited = new Set<CapacityMeshNodeId>();
+  const queue: Array<{ nodeId: CapacityMeshNodeId; depth: number }> = [];
 
   // Start from center node
-  queue.push({ nodeId: centerOfSectionCapacityNodeId, depth: 0 })
-  visited.add(centerOfSectionCapacityNodeId)
+  queue.push({ nodeId: centerOfSectionCapacityNodeId, depth: 0 });
+  visited.add(centerOfSectionCapacityNodeId);
 
   while (queue.length > 0) {
-    const { nodeId, depth } = queue.shift()!
-    sectionNodeIds.add(nodeId)
+    const { nodeId, depth } = queue.shift()!;
+    sectionNodeIds.add(nodeId);
 
     // If we haven't reached max depth, explore neighbors
     if (depth < expansionDegrees) {
-      const neighbors = adjacencyMap.get(nodeId) ?? new Set()
+      const neighbors = adjacencyMap.get(nodeId) ?? new Set();
       for (const neighborId of neighbors) {
         if (!visited.has(neighborId)) {
-          visited.add(neighborId)
-          queue.push({ nodeId: neighborId, depth: depth + 1 })
+          visited.add(neighborId);
+          queue.push({ nodeId: neighborId, depth: depth + 1 });
         }
       }
     }
@@ -140,25 +140,25 @@ export function createPortPointSection(
   // Filter input nodes to those in section
   const sectionInputNodes = inputNodes.filter((node) =>
     sectionNodeIds.has(node.capacityMeshNodeId),
-  )
+  );
 
   const sectionCapacityMeshNodes = capacityMeshNodes.filter((node) =>
     sectionNodeIds.has(node.capacityMeshNodeId),
-  )
+  );
 
   // Categorize edges as internal or boundary
-  const internalEdges: CapacityMeshEdge[] = []
-  const boundaryEdges: CapacityMeshEdge[] = []
+  const internalEdges: CapacityMeshEdge[] = [];
+  const boundaryEdges: CapacityMeshEdge[] = [];
 
   for (const edge of capacityMeshEdges) {
-    const [nodeId1, nodeId2] = edge.nodeIds
-    const node1InSection = sectionNodeIds.has(nodeId1)
-    const node2InSection = sectionNodeIds.has(nodeId2)
+    const [nodeId1, nodeId2] = edge.nodeIds;
+    const node1InSection = sectionNodeIds.has(nodeId1);
+    const node2InSection = sectionNodeIds.has(nodeId2);
 
     if (node1InSection && node2InSection) {
-      internalEdges.push(edge)
+      internalEdges.push(edge);
     } else if (node1InSection || node2InSection) {
-      boundaryEdges.push(edge)
+      boundaryEdges.push(edge);
     }
     // Edges where neither node is in section are ignored
   }
@@ -168,26 +168,26 @@ export function createPortPointSection(
   const filteredInputNodes: InputNodeWithPortPoints[] = sectionInputNodes.map(
     (node) => {
       const filteredPortPoints = node.portPoints.filter((pp) => {
-        const [connNodeId1, connNodeId2] = pp.connectionNodeIds
+        const [connNodeId1, connNodeId2] = pp.connectionNodeIds;
         // Keep port point if it connects two nodes in the section
         // OR if it connects a section node to an external node (boundary)
-        const node1InSection = sectionNodeIds.has(connNodeId1)
-        const node2InSection = sectionNodeIds.has(connNodeId2)
-        return node1InSection || node2InSection
-      })
+        const node1InSection = sectionNodeIds.has(connNodeId1);
+        const node2InSection = sectionNodeIds.has(connNodeId2);
+        return node1InSection || node2InSection;
+      });
 
       return {
         ...node,
         portPoints: filteredPortPoints,
-      }
+      };
     },
-  )
+  );
 
   // Cut paths to fit within the section
   const sectionPaths = cutPathsToSection(
     connectionResults ?? [],
     sectionNodeIds,
-  )
+  );
 
   return {
     centerNodeId: centerOfSectionCapacityNodeId,
@@ -198,7 +198,7 @@ export function createPortPointSection(
     internalEdges,
     boundaryEdges,
     sectionPaths,
-  }
+  };
 }
 
 /**
@@ -211,34 +211,34 @@ function cutPathsToSection(
   connectionResults: ConnectionPathResult[],
   sectionNodeIds: Set<CapacityMeshNodeId>,
 ): SectionPath[] {
-  const sectionPaths: SectionPath[] = []
+  const sectionPaths: SectionPath[] = [];
 
   for (const result of connectionResults) {
-    if (!result.path || result.path.length === 0) continue
+    if (!result.path || result.path.length === 0) continue;
 
-    const connectionName = result.connection.name
-    const rootConnectionName = result.connection.__rootConnectionNames?.[0]
+    const connectionName = result.connection.name;
+    const rootConnectionName = result.connection.__rootConnectionNames?.[0];
 
     // Find all indices that are within the section
-    const indicesInSection: number[] = []
+    const indicesInSection: number[] = [];
     for (let i = 0; i < result.path.length; i++) {
-      const candidate = result.path[i]
-      const isInSection = sectionNodeIds.has(candidate.currentNodeId)
+      const candidate = result.path[i];
+      const isInSection = sectionNodeIds.has(candidate.currentNodeId);
       if (isInSection) {
-        indicesInSection.push(i)
+        indicesInSection.push(i);
       }
     }
 
     // If no points in section, skip this connection
-    if (indicesInSection.length === 0) continue
+    if (indicesInSection.length === 0) continue;
 
     // Find the first and last indices that touch the section
-    const firstIndexInSection = indicesInSection[0]
-    const lastIndexInSection = indicesInSection[indicesInSection.length - 1]
+    const firstIndexInSection = indicesInSection[0];
+    const lastIndexInSection = indicesInSection[indicesInSection.length - 1];
 
     // Determine the actual range to include in the merged segment
-    let segmentStartIndex = firstIndexInSection
-    let segmentEndIndex = lastIndexInSection
+    let segmentStartIndex = firstIndexInSection;
+    let segmentEndIndex = lastIndexInSection;
 
     // IMPORTANT: If the connection starts/ends OUTSIDE the section, but the adjacent
     // point is inside, we need to include the endpoint to preserve the connection
@@ -246,11 +246,11 @@ function cutPathsToSection(
     if (firstIndexInSection > 0) {
       // There are points before the first section point
       // If index 0 is a connection endpoint, include it
-      const firstNodeId = result.path[0].currentNodeId
+      const firstNodeId = result.path[0].currentNodeId;
       const isStartEndpoint =
-        result.nodeIds[0] === firstNodeId || result.nodeIds[1] === firstNodeId
+        result.nodeIds[0] === firstNodeId || result.nodeIds[1] === firstNodeId;
       if (isStartEndpoint) {
-        segmentStartIndex = 0
+        segmentStartIndex = 0;
       }
     }
 
@@ -258,12 +258,12 @@ function cutPathsToSection(
     if (lastIndexInSection < result.path.length - 1) {
       // There are points after the last section point
       // If the last index is a connection endpoint, include it
-      const lastPathIdx = result.path.length - 1
-      const lastNodeId = result.path[lastPathIdx].currentNodeId
+      const lastPathIdx = result.path.length - 1;
+      const lastNodeId = result.path[lastPathIdx].currentNodeId;
       const isEndEndpoint =
-        result.nodeIds[0] === lastNodeId || result.nodeIds[1] === lastNodeId
+        result.nodeIds[0] === lastNodeId || result.nodeIds[1] === lastNodeId;
       if (isEndEndpoint) {
-        segmentEndIndex = lastPathIdx
+        segmentEndIndex = lastPathIdx;
       }
     }
 
@@ -272,10 +272,10 @@ function cutPathsToSection(
     const mergedSegment = result.path.slice(
       segmentStartIndex,
       segmentEndIndex + 1,
-    )
+    );
 
-    const actualHasEntryFromOutside = segmentStartIndex > 0
-    const actualHasExitToOutside = segmentEndIndex < result.path.length - 1
+    const actualHasEntryFromOutside = segmentStartIndex > 0;
+    const actualHasExitToOutside = segmentEndIndex < result.path.length - 1;
 
     sectionPaths.push({
       connectionName,
@@ -291,8 +291,8 @@ function cutPathsToSection(
       originalEndIndex: segmentEndIndex,
       hasEntryFromOutside: actualHasEntryFromOutside,
       hasExitToOutside: actualHasExitToOutside,
-    })
+    });
   }
 
-  return sectionPaths
+  return sectionPaths;
 }

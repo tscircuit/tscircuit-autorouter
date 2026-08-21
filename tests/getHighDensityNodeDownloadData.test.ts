@@ -1,5 +1,5 @@
-import { expect, test } from "bun:test"
-import { getHighDensityNodeDownloadData } from "lib/testing/utils/getHighDensityNodeDownloadData"
+import { expect, test } from "bun:test";
+import { getHighDensityNodeDownloadData } from "lib/testing/utils/getHighDensityNodeDownloadData";
 
 test("getHighDensityNodeDownloadData finds pipeline 4 node data from solver outputs", () => {
   const solver = {
@@ -37,7 +37,7 @@ test("getHighDensityNodeDownloadData finds pipeline 4 node data from solver outp
         },
       ],
     },
-  } as any
+  } as any;
 
   expect(getHighDensityNodeDownloadData(solver, "cn_1") as any).toEqual({
     nodeId: "cn_1",
@@ -53,8 +53,8 @@ test("getHighDensityNodeDownloadData finds pipeline 4 node data from solver outp
       capacityMeshNodeId: "cn_1",
       portPoints: [{ portPointId: "pp1", connectionNodeIds: [] }],
     },
-  })
-})
+  });
+});
 
 test("getHighDensityNodeDownloadData falls back to legacy solver collections", () => {
   const solver = {
@@ -66,7 +66,7 @@ test("getHighDensityNodeDownloadData falls back to legacy solver collections", (
         { capacityMeshNodeId: "cn_2", source: "port-point-pathing" },
       ],
     },
-  } as any
+  } as any;
 
   expect(getHighDensityNodeDownloadData(solver, "cn_2") as any).toEqual({
     nodeId: "cn_2",
@@ -79,8 +79,8 @@ test("getHighDensityNodeDownloadData falls back to legacy solver collections", (
       source: "port-point-pathing",
     },
     inputNodeWithPortPoints: null,
-  })
-})
+  });
+});
 
 test("getHighDensityNodeDownloadData prefers preserved high-density node input over intermediate collections", () => {
   const solver = {
@@ -108,7 +108,7 @@ test("getHighDensityNodeDownloadData prefers preserved high-density node input o
         },
       ],
     },
-  } as any
+  } as any;
 
   expect(
     (getHighDensityNodeDownloadData(solver, "cn_3") as any).nodeWithPortPoints,
@@ -122,8 +122,8 @@ test("getHighDensityNodeDownloadData prefers preserved high-density node input o
       { portPointId: "pp2", x: 6, y: 5, z: 0 },
       { portPointId: "pp3", x: 5, y: 7, z: 1 },
     ],
-  })
-})
+  });
+});
 
 test("getHighDensityNodeDownloadData can read node data from high-density solver metadata", () => {
   const solver = {
@@ -146,7 +146,7 @@ test("getHighDensityNodeDownloadData can read node data from high-density solver
         ],
       ]),
     },
-  } as any
+  } as any;
 
   expect(
     (getHighDensityNodeDownloadData(solver, "cn_4") as any).nodeWithPortPoints,
@@ -159,8 +159,8 @@ test("getHighDensityNodeDownloadData can read node data from high-density solver
       { portPointId: "pp1", x: 9, y: 11, z: 0 },
       { portPointId: "pp2", x: 11, y: 11, z: 1 },
     ],
-  })
-})
+  });
+});
 
 test("getHighDensityNodeDownloadData can fall back to constructor params in the active solver tree", () => {
   const solver = {
@@ -182,7 +182,7 @@ test("getHighDensityNodeDownloadData can fall back to constructor params in the 
         },
       ],
     },
-  } as any
+  } as any;
 
   expect(
     (getHighDensityNodeDownloadData(solver, "new-cmn_0-0") as any)
@@ -196,8 +196,8 @@ test("getHighDensityNodeDownloadData can fall back to constructor params in the 
       { portPointId: "pp1", x: 1.5, y: 3, z: 0 },
       { portPointId: "pp2", x: 2.5, y: 3, z: 1 },
     ],
-  })
-})
+  });
+});
 
 test("getHighDensityNodeDownloadData prefers solver metadata before touching throwing fallback getters", () => {
   const solver = {
@@ -222,10 +222,10 @@ test("getHighDensityNodeDownloadData prefers solver metadata before touching thr
     },
     someThrowingSolver: {
       getOutput: () => {
-        throw new Error("should not be called")
+        throw new Error("should not be called");
       },
     },
-  } as any
+  } as any;
 
   expect(
     (getHighDensityNodeDownloadData(solver, "cmn_47__sub_2_1") as any)
@@ -239,14 +239,14 @@ test("getHighDensityNodeDownloadData prefers solver metadata before touching thr
       { portPointId: "pp1", x: 1, y: 1, z: 0 },
       { portPointId: "pp2", x: 2, y: 2, z: 1 },
     ],
-  })
-})
+  });
+});
 
 test("getHighDensityNodeDownloadData swallows throwing fallback getters during deep scan", () => {
   const solver = {
     activeSubSolver: {
       getOutput: () => {
-        throw new Error("broken serializer")
+        throw new Error("broken serializer");
       },
       nested: {
         getConstructorParams: () => [
@@ -264,7 +264,7 @@ test("getHighDensityNodeDownloadData swallows throwing fallback getters during d
         ],
       },
     },
-  } as any
+  } as any;
 
   expect(
     (getHighDensityNodeDownloadData(solver, "cmn_safe") as any)
@@ -275,5 +275,5 @@ test("getHighDensityNodeDownloadData swallows throwing fallback getters during d
     width: 1,
     height: 1,
     portPoints: [{ portPointId: "pp1", x: 9, y: 9, z: 0 }],
-  })
-})
+  });
+});

@@ -1,12 +1,10 @@
-import { expect, test } from "bun:test"
-import { AutoroutingPipelineSolver } from "lib"
-import simpleRouteJson from "../../fixtures/features/off-board-connections/offboardconnects01.srj.json" with {
-  type: "json",
-}
-import type { SimpleRouteJson } from "lib/types"
-import { getLastStepSvg } from "../fixtures/getLastStepSvg"
+import { expect, test } from "bun:test";
+import { AutoroutingPipelineSolver } from "lib";
+import simpleRouteJson from "../../fixtures/features/off-board-connections/offboardconnects01.srj.json" with { type: "json" };
+import type { SimpleRouteJson } from "lib/types";
+import { getLastStepSvg } from "../fixtures/getLastStepSvg";
 
-const srj = simpleRouteJson as SimpleRouteJson
+const srj = simpleRouteJson as SimpleRouteJson;
 
 /**
  * Tests the basic functionality of the `isOffBoard` substitution.
@@ -25,9 +23,9 @@ const srj = simpleRouteJson as SimpleRouteJson
  * to pointB. The final trace should connect pointA and pointC.
  */
 test("basic connection.isOffBoard support", () => {
-  const solver = new AutoroutingPipelineSolver(srj)
-  solver.solve()
+  const solver = new AutoroutingPipelineSolver(srj);
+  solver.solve();
   expect(getLastStepSvg(solver.visualize())).toMatchSvgSnapshot(
     import.meta.path,
-  )
-})
+  );
+});

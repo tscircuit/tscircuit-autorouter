@@ -1,80 +1,78 @@
-import type { GraphicsObject, Line } from "graphics-debug"
-import { combineVisualizations } from "lib/utils/combineVisualizations"
+import type { GraphicsObject, Line } from "graphics-debug";
+import { combineVisualizations } from "lib/utils/combineVisualizations";
 import type {
   CapacityMeshEdge,
   CapacityMeshNode,
   SimpleRouteJson,
   SimplifiedPcbTrace,
   SimplifiedPcbTraces,
-} from "lib/types"
-import { BaseSolver } from "lib/solvers/BaseSolver"
-import { CapacityMeshEdgeSolver } from "lib/solvers/CapacityMeshSolver/CapacityMeshEdgeSolver"
-import { CapacityMeshNodeSolver } from "lib/solvers/CapacityMeshSolver/CapacityMeshNodeSolver1"
-import { CapacityMeshNodeSolver_OnlyTraverseLayersInAssignableObstacles } from "./CapacityMeshNodeSolver_OnlyTraverseLayersInAssignableObstacles"
-import { CapacityEdgeToPortSegmentSolver } from "lib/solvers/CapacityMeshSolver/CapacityEdgeToPortSegmentSolver"
-import { getColorMap } from "lib/solvers/colors"
-import { CapacitySegmentToPointSolver } from "lib/solvers/CapacityMeshSolver/CapacitySegmentToPointSolver"
-import { HighDensitySolver } from "lib/solvers/HighDensitySolver/HighDensitySolver"
-import type { NodePortSegment } from "lib/types/capacity-edges-to-port-segments-types"
-import { ConnectivityMap } from "circuit-json-to-connectivity-map"
-import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
-import { getInitiallyConnectedMapFromSimpleRouteJson } from "lib/utils/get-initially-connected-map-from-simple-route-json"
-import { CapacityNodeTargetMerger } from "lib/solvers/CapacityNodeTargetMerger/CapacityNodeTargetMerger"
-import { CapacitySegmentPointOptimizer } from "lib/solvers/CapacitySegmentPointOptimizer/CapacitySegmentPointOptimizer"
-import { calculateOptimalCapacityDepth } from "lib/utils/getTunedTotalCapacity1"
-import { NetToPointPairsSolver } from "lib/solvers/NetToPointPairsSolver/NetToPointPairsSolver"
-import { convertHdRouteToSimplifiedRoute } from "lib/utils/convertHdRouteToSimplifiedRoute"
-import { MultipleHighDensityRouteStitchSolver } from "lib/solvers/RouteStitchingSolver/MultipleHighDensityRouteStitchSolver"
-import { convertSrjToGraphicsObject } from "lib/utils/convertSrjToGraphicsObject"
-import { createObstacleLabelFormatter } from "lib/utils/formatObstacleLabel"
+} from "lib/types";
+import { BaseSolver } from "lib/solvers/BaseSolver";
+import { CapacityMeshEdgeSolver } from "lib/solvers/CapacityMeshSolver/CapacityMeshEdgeSolver";
+import { CapacityMeshNodeSolver } from "lib/solvers/CapacityMeshSolver/CapacityMeshNodeSolver1";
+import { CapacityMeshNodeSolver_OnlyTraverseLayersInAssignableObstacles } from "./CapacityMeshNodeSolver_OnlyTraverseLayersInAssignableObstacles";
+import { CapacityEdgeToPortSegmentSolver } from "lib/solvers/CapacityMeshSolver/CapacityEdgeToPortSegmentSolver";
+import { getColorMap } from "lib/solvers/colors";
+import { CapacitySegmentToPointSolver } from "lib/solvers/CapacityMeshSolver/CapacitySegmentToPointSolver";
+import { HighDensitySolver } from "lib/solvers/HighDensitySolver/HighDensitySolver";
+import type { NodePortSegment } from "lib/types/capacity-edges-to-port-segments-types";
+import { ConnectivityMap } from "circuit-json-to-connectivity-map";
+import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson";
+import { getInitiallyConnectedMapFromSimpleRouteJson } from "lib/utils/get-initially-connected-map-from-simple-route-json";
+import { CapacityNodeTargetMerger } from "lib/solvers/CapacityNodeTargetMerger/CapacityNodeTargetMerger";
+import { CapacitySegmentPointOptimizer } from "lib/solvers/CapacitySegmentPointOptimizer/CapacitySegmentPointOptimizer";
+import { calculateOptimalCapacityDepth } from "lib/utils/getTunedTotalCapacity1";
+import { NetToPointPairsSolver } from "lib/solvers/NetToPointPairsSolver/NetToPointPairsSolver";
+import { convertHdRouteToSimplifiedRoute } from "lib/utils/convertHdRouteToSimplifiedRoute";
+import { MultipleHighDensityRouteStitchSolver } from "lib/solvers/RouteStitchingSolver/MultipleHighDensityRouteStitchSolver";
+import { convertSrjToGraphicsObject } from "lib/utils/convertSrjToGraphicsObject";
+import { createObstacleLabelFormatter } from "lib/utils/formatObstacleLabel";
 import {
   getGraphicsLayerForConnectionPoint,
   getGraphicsLayerForObstacle,
-} from "lib/utils/getGraphicsObjectLayer"
-import { UnravelMultiSectionSolver } from "lib/solvers/UnravelSolver/UnravelMultiSectionSolver"
-import { CapacityPathingMultiSectionSolver } from "lib/solvers/CapacityPathingSectionSolver/CapacityPathingMultiSectionSolver" // Added import
-import { StrawSolver } from "lib/solvers/StrawSolver/StrawSolver"
-import { SingleLayerNodeMergerSolver_OnlyMergeTargets } from "./SingleLayerNodeMergerSolver_OnlyMergeTargets"
-import { AssignableViaNodeMergerSolver } from "./AssignableViaNodeMergerSolver"
-import { MultiSimplifiedPathSolver } from "lib/solvers/SimplifiedPathSolver/MultiSimplifiedPathSolver"
-import { HighDensityRoute } from "lib/types/high-density-types"
-import { CapacityMeshEdgeSolver2_NodeTreeOptimization } from "lib/solvers/CapacityMeshSolver/CapacityMeshEdgeSolver2_NodeTreeOptimization"
-import { DeadEndSolver } from "lib/solvers/DeadEndSolver/DeadEndSolver"
-import { UselessViaRemovalSolver } from "lib/solvers/UselessViaRemovalSolver/UselessViaRemovalSolver"
-import { CacheProvider } from "lib/cache/types"
-import { getGlobalInMemoryCache } from "lib/cache/setupGlobalCaches"
-import { HyperAssignableViaCapacityPathingSolver } from "./HyperAssignableViaCapacityPathingSolver"
-import { AssignableViaCapacityPathingSolver_DirectiveSubOptimal } from "./AssignableViaCapacityPathing/AssignableViaCapacityPathingSolver_DirectiveSubOptimal"
-import { OffboardCapacityNodeSolver } from "./OffboardCapacityNodeSolver"
-import { OffboardPathFragmentSolver } from "./OffboardPathFragmentSolver"
+} from "lib/utils/getGraphicsObjectLayer";
+import { UnravelMultiSectionSolver } from "lib/solvers/UnravelSolver/UnravelMultiSectionSolver";
+import { CapacityPathingMultiSectionSolver } from "lib/solvers/CapacityPathingSectionSolver/CapacityPathingMultiSectionSolver"; // Added import
+import { StrawSolver } from "lib/solvers/StrawSolver/StrawSolver";
+import { SingleLayerNodeMergerSolver_OnlyMergeTargets } from "./SingleLayerNodeMergerSolver_OnlyMergeTargets";
+import { AssignableViaNodeMergerSolver } from "./AssignableViaNodeMergerSolver";
+import { MultiSimplifiedPathSolver } from "lib/solvers/SimplifiedPathSolver/MultiSimplifiedPathSolver";
+import { HighDensityRoute } from "lib/types/high-density-types";
+import { CapacityMeshEdgeSolver2_NodeTreeOptimization } from "lib/solvers/CapacityMeshSolver/CapacityMeshEdgeSolver2_NodeTreeOptimization";
+import { DeadEndSolver } from "lib/solvers/DeadEndSolver/DeadEndSolver";
+import { UselessViaRemovalSolver } from "lib/solvers/UselessViaRemovalSolver/UselessViaRemovalSolver";
+import { CacheProvider } from "lib/cache/types";
+import { getGlobalInMemoryCache } from "lib/cache/setupGlobalCaches";
+import { HyperAssignableViaCapacityPathingSolver } from "./HyperAssignableViaCapacityPathingSolver";
+import { AssignableViaCapacityPathingSolver_DirectiveSubOptimal } from "./AssignableViaCapacityPathing/AssignableViaCapacityPathingSolver_DirectiveSubOptimal";
+import { OffboardCapacityNodeSolver } from "./OffboardCapacityNodeSolver";
+import { OffboardPathFragmentSolver } from "./OffboardPathFragmentSolver";
 
 interface CapacityMeshSolverOptions {
-  capacityDepth?: number
-  targetMinCapacity?: number
-  cacheProvider?: CacheProvider | null
+  capacityDepth?: number;
+  targetMinCapacity?: number;
+  cacheProvider?: CacheProvider | null;
 }
-export type AutoroutingPipelineSolverOptions = CapacityMeshSolverOptions
+export type AutoroutingPipelineSolverOptions = CapacityMeshSolverOptions;
 
 type PipelineStep<T extends new (...args: any[]) => BaseSolver> = {
-  solverName: string
-  solverClass: T
+  solverName: string;
+  solverClass: T;
   getConstructorParams: (
     instance: AssignableAutoroutingPipeline1Solver,
-  ) => ConstructorParameters<T>
-  onSolved?: (instance: AssignableAutoroutingPipeline1Solver) => void
-}
+  ) => ConstructorParameters<T>;
+  onSolved?: (instance: AssignableAutoroutingPipeline1Solver) => void;
+};
 
 function definePipelineStep<
-  T extends new (
-    ...args: any[]
-  ) => BaseSolver,
+  T extends new (...args: any[]) => BaseSolver,
   const P extends ConstructorParameters<T>,
 >(
   solverName: keyof AssignableAutoroutingPipeline1Solver,
   solverClass: T,
   getConstructorParams: (instance: AssignableAutoroutingPipeline1Solver) => P,
   opts: {
-    onSolved?: (instance: AssignableAutoroutingPipeline1Solver) => void
+    onSolved?: (instance: AssignableAutoroutingPipeline1Solver) => void;
   } = {},
 ): PipelineStep<T> {
   return {
@@ -82,50 +80,50 @@ function definePipelineStep<
     solverClass,
     getConstructorParams,
     onSolved: opts.onSolved,
-  }
+  };
 }
 
 export class AssignableAutoroutingPipeline1Solver extends BaseSolver {
   override getSolverName(): string {
-    return "AssignableAutoroutingPipeline1Solver"
+    return "AssignableAutoroutingPipeline1Solver";
   }
 
-  netToPointPairsSolver?: NetToPointPairsSolver
-  nodeSolver?: CapacityMeshNodeSolver
-  nodeTargetMerger?: CapacityNodeTargetMerger
-  edgeSolver?: CapacityMeshEdgeSolver
-  initialPathingSolver?: AssignableViaCapacityPathingSolver_DirectiveSubOptimal
-  initialPathingHyperSolver?: HyperAssignableViaCapacityPathingSolver
-  pathingOptimizer?: CapacityPathingMultiSectionSolver
-  edgeToPortSegmentSolver?: CapacityEdgeToPortSegmentSolver
-  colorMap: Record<string, string>
-  segmentToPointSolver?: CapacitySegmentToPointSolver
-  unravelMultiSectionSolver?: UnravelMultiSectionSolver
-  segmentToPointOptimizer?: CapacitySegmentPointOptimizer
-  highDensityRouteSolver?: HighDensitySolver
-  highDensityStitchSolver?: MultipleHighDensityRouteStitchSolver
-  singleLayerNodeMerger?: SingleLayerNodeMergerSolver_OnlyMergeTargets
-  mergeAssignableViaNodes?: AssignableViaNodeMergerSolver
-  offboardCapacityNodeSolver?: OffboardCapacityNodeSolver
-  offboardPathFragmentSolver?: OffboardPathFragmentSolver
-  strawSolver?: StrawSolver
-  deadEndSolver?: DeadEndSolver
-  uselessViaRemovalSolver1?: UselessViaRemovalSolver
-  uselessViaRemovalSolver2?: UselessViaRemovalSolver
-  multiSimplifiedPathSolver1?: MultiSimplifiedPathSolver
-  multiSimplifiedPathSolver2?: MultiSimplifiedPathSolver
+  netToPointPairsSolver?: NetToPointPairsSolver;
+  nodeSolver?: CapacityMeshNodeSolver;
+  nodeTargetMerger?: CapacityNodeTargetMerger;
+  edgeSolver?: CapacityMeshEdgeSolver;
+  initialPathingSolver?: AssignableViaCapacityPathingSolver_DirectiveSubOptimal;
+  initialPathingHyperSolver?: HyperAssignableViaCapacityPathingSolver;
+  pathingOptimizer?: CapacityPathingMultiSectionSolver;
+  edgeToPortSegmentSolver?: CapacityEdgeToPortSegmentSolver;
+  colorMap: Record<string, string>;
+  segmentToPointSolver?: CapacitySegmentToPointSolver;
+  unravelMultiSectionSolver?: UnravelMultiSectionSolver;
+  segmentToPointOptimizer?: CapacitySegmentPointOptimizer;
+  highDensityRouteSolver?: HighDensitySolver;
+  highDensityStitchSolver?: MultipleHighDensityRouteStitchSolver;
+  singleLayerNodeMerger?: SingleLayerNodeMergerSolver_OnlyMergeTargets;
+  mergeAssignableViaNodes?: AssignableViaNodeMergerSolver;
+  offboardCapacityNodeSolver?: OffboardCapacityNodeSolver;
+  offboardPathFragmentSolver?: OffboardPathFragmentSolver;
+  strawSolver?: StrawSolver;
+  deadEndSolver?: DeadEndSolver;
+  uselessViaRemovalSolver1?: UselessViaRemovalSolver;
+  uselessViaRemovalSolver2?: UselessViaRemovalSolver;
+  multiSimplifiedPathSolver1?: MultiSimplifiedPathSolver;
+  multiSimplifiedPathSolver2?: MultiSimplifiedPathSolver;
 
-  startTimeOfPhase: Record<string, number>
-  endTimeOfPhase: Record<string, number>
-  timeSpentOnPhase: Record<string, number>
+  startTimeOfPhase: Record<string, number>;
+  endTimeOfPhase: Record<string, number>;
+  timeSpentOnPhase: Record<string, number>;
 
-  activeSubSolver?: BaseSolver | null = null
-  connMap: ConnectivityMap
-  srjWithPointPairs?: SimpleRouteJson
-  capacityNodes: CapacityMeshNode[] | null = null
-  capacityEdges: CapacityMeshEdge[] | null = null
+  activeSubSolver?: BaseSolver | null = null;
+  connMap: ConnectivityMap;
+  srjWithPointPairs?: SimpleRouteJson;
+  capacityNodes: CapacityMeshNode[] | null = null;
+  capacityEdges: CapacityMeshEdge[] | null = null;
 
-  cacheProvider: CacheProvider | null = null
+  cacheProvider: CacheProvider | null = null;
 
   pipelineDef = [
     definePipelineStep(
@@ -139,11 +137,11 @@ export class AssignableAutoroutingPipeline1Solver extends BaseSolver {
       {
         onSolved: (cms) => {
           cms.srjWithPointPairs =
-            cms.netToPointPairsSolver?.getNewSimpleRouteJson()
-          cms.colorMap = getColorMap(cms.srjWithPointPairs!, this.connMap)
+            cms.netToPointPairsSolver?.getNewSimpleRouteJson();
+          cms.colorMap = getColorMap(cms.srjWithPointPairs!, this.connMap);
           cms.connMap = getConnectivityMapFromSimpleRouteJson(
             cms.srjWithPointPairs!,
-          )
+          );
         },
       },
     ),
@@ -156,7 +154,7 @@ export class AssignableAutoroutingPipeline1Solver extends BaseSolver {
       ],
       {
         onSolved: (cms) => {
-          cms.capacityNodes = cms.nodeSolver?.finishedNodes!
+          cms.capacityNodes = cms.nodeSolver?.finishedNodes!;
         },
       },
     ),
@@ -166,7 +164,7 @@ export class AssignableAutoroutingPipeline1Solver extends BaseSolver {
       (cms) => [cms.nodeSolver?.finishedNodes!],
       {
         onSolved: (cms) => {
-          cms.capacityNodes = cms.mergeAssignableViaNodes?.newNodes!
+          cms.capacityNodes = cms.mergeAssignableViaNodes?.newNodes!;
         },
       },
     ),
@@ -176,7 +174,7 @@ export class AssignableAutoroutingPipeline1Solver extends BaseSolver {
       (cms) => [cms.capacityNodes!],
       {
         onSolved: (cms) => {
-          cms.capacityNodes = cms.singleLayerNodeMerger?.newNodes!
+          cms.capacityNodes = cms.singleLayerNodeMerger?.newNodes!;
         },
       },
     ),
@@ -186,7 +184,7 @@ export class AssignableAutoroutingPipeline1Solver extends BaseSolver {
       (cms) => [cms.capacityNodes!],
       {
         onSolved: (cms) => {
-          cms.capacityEdges = cms.edgeSolver?.edges!
+          cms.capacityEdges = cms.edgeSolver?.edges!;
         },
       },
     ),
@@ -203,7 +201,7 @@ export class AssignableAutoroutingPipeline1Solver extends BaseSolver {
         onSolved: (cms) => {
           // Only update edges - nodes pass through unchanged
           cms.capacityEdges =
-            cms.offboardCapacityNodeSolver?.enhancedEdges || cms.capacityEdges
+            cms.offboardCapacityNodeSolver?.enhancedEdges || cms.capacityEdges;
         },
       },
     ),
@@ -213,14 +211,14 @@ export class AssignableAutoroutingPipeline1Solver extends BaseSolver {
       (cms) => [{ nodes: cms.capacityNodes!, edges: cms.capacityEdges! }],
       {
         onSolved: (cms) => {
-          const removedNodeIds = cms.deadEndSolver?.removedNodeIds!
+          const removedNodeIds = cms.deadEndSolver?.removedNodeIds!;
 
           cms.capacityNodes = cms.capacityNodes!.filter(
             (n) => !removedNodeIds.has(n.capacityMeshNodeId),
-          )
+          );
           cms.capacityEdges = cms.capacityEdges!.filter((e) =>
             e.nodeIds.every((nodeId) => !removedNodeIds.has(nodeId)),
-          )
+          );
         },
       },
     ),
@@ -241,9 +239,9 @@ export class AssignableAutoroutingPipeline1Solver extends BaseSolver {
       ],
       {
         onSolved: (cms) => {
-          const winningSolver = cms.initialPathingHyperSolver?.winningSolver
+          const winningSolver = cms.initialPathingHyperSolver?.winningSolver;
           if (winningSolver) {
-            cms.initialPathingSolver = winningSolver
+            cms.initialPathingSolver = winningSolver;
           }
         },
       },
@@ -261,25 +259,25 @@ export class AssignableAutoroutingPipeline1Solver extends BaseSolver {
       ],
       {
         onSolved: (cms) => {
-          const solver = cms.offboardPathFragmentSolver
-          if (!solver) return
+          const solver = cms.offboardPathFragmentSolver;
+          if (!solver) return;
 
           // Add colors for fragmented connection names based on original connection
-          const fragmentedPaths = solver.getFragmentedPaths()
+          const fragmentedPaths = solver.getFragmentedPaths();
 
           for (const path of fragmentedPaths) {
             if (path.isFragmentedPath && path.mstPairConnectionName) {
-              const originalColor = cms.colorMap[path.mstPairConnectionName]
+              const originalColor = cms.colorMap[path.mstPairConnectionName];
               if (originalColor && !cms.colorMap[path.connectionName]) {
-                cms.colorMap[path.connectionName] = originalColor
+                cms.colorMap[path.connectionName] = originalColor;
               }
             }
           }
 
           // Update srjWithPointPairs: remove original connections, add fragment connections
           const fragmentedOriginalNames =
-            solver.getFragmentedOriginalConnectionNames()
-          const fragmentedConnections = solver.getFragmentedConnections()
+            solver.getFragmentedOriginalConnectionNames();
+          const fragmentedConnections = solver.getFragmentedConnections();
 
           if (fragmentedOriginalNames.size > 0 && cms.srjWithPointPairs) {
             // Remove original connections that were fragmented
@@ -291,12 +289,12 @@ export class AssignableAutoroutingPipeline1Solver extends BaseSolver {
                 ),
                 ...fragmentedConnections,
               ],
-            }
+            };
 
             // Update connMap with new connections
             cms.connMap = getConnectivityMapFromSimpleRouteJson(
               cms.srjWithPointPairs,
-            )
+            );
           }
         },
       },
@@ -320,11 +318,11 @@ export class AssignableAutoroutingPipeline1Solver extends BaseSolver {
       "segmentToPointSolver",
       CapacitySegmentToPointSolver,
       (cms) => {
-        const allSegments: NodePortSegment[] = []
+        const allSegments: NodePortSegment[] = [];
         if (cms.edgeToPortSegmentSolver?.nodePortSegments) {
           cms.edgeToPortSegmentSolver.nodePortSegments.forEach((segs) => {
-            allSegments.push(...segs)
-          })
+            allSegments.push(...segs);
+          });
         }
         return [
           {
@@ -332,7 +330,7 @@ export class AssignableAutoroutingPipeline1Solver extends BaseSolver {
             colorMap: cms.colorMap,
             nodes: cms.capacityNodes!,
           },
-        ]
+        ];
       },
     ),
     // definePipelineStep(
@@ -436,124 +434,129 @@ export class AssignableAutoroutingPipeline1Solver extends BaseSolver {
         },
       ],
     ),
-  ]
+  ];
 
   constructor(
     public readonly srj: SimpleRouteJson,
     public readonly opts: CapacityMeshSolverOptions = {},
   ) {
-    super()
-    this.srj = srj
-    this.opts = { ...opts }
-    this.MAX_ITERATIONS = 100e6
-    const mutableOpts = this.opts
+    super();
+    this.srj = srj;
+    this.opts = { ...opts };
+    this.MAX_ITERATIONS = 100e6;
+    const mutableOpts = this.opts;
 
     // If capacityDepth is not provided, calculate it automatically
     if (mutableOpts.capacityDepth === undefined) {
       // Calculate max width/height from bounds for initial node size
-      const boundsWidth = srj.bounds.maxX - srj.bounds.minX
-      const boundsHeight = srj.bounds.maxY - srj.bounds.minY
-      const maxWidthHeight = Math.max(boundsWidth, boundsHeight)
+      const boundsWidth = srj.bounds.maxX - srj.bounds.minX;
+      const boundsHeight = srj.bounds.maxY - srj.bounds.minY;
+      const maxWidthHeight = Math.max(boundsWidth, boundsHeight);
 
       // Use the calculateOptimalCapacityDepth function to determine the right depth
-      const targetMinCapacity = mutableOpts.targetMinCapacity ?? 0.5
+      const targetMinCapacity = mutableOpts.targetMinCapacity ?? 0.5;
       mutableOpts.capacityDepth = calculateOptimalCapacityDepth(
         maxWidthHeight,
         targetMinCapacity,
-      )
+      );
     }
 
-    this.connMap = getConnectivityMapFromSimpleRouteJson(srj)
-    this.colorMap = getColorMap(srj, this.connMap)
+    this.connMap = getConnectivityMapFromSimpleRouteJson(srj);
+    this.colorMap = getColorMap(srj, this.connMap);
     this.cacheProvider =
       mutableOpts.cacheProvider === undefined
         ? getGlobalInMemoryCache()
         : mutableOpts.cacheProvider === null
           ? null
-          : mutableOpts.cacheProvider
-    this.startTimeOfPhase = {}
-    this.endTimeOfPhase = {}
-    this.timeSpentOnPhase = {}
+          : mutableOpts.cacheProvider;
+    this.startTimeOfPhase = {};
+    this.endTimeOfPhase = {};
+    this.timeSpentOnPhase = {};
   }
 
   getConstructorParams() {
-    return [this.srj, this.opts] as const
+    return [this.srj, this.opts] as const;
   }
 
-  currentPipelineStepIndex = 0
+  currentPipelineStepIndex = 0;
   _step() {
-    const pipelineStepDef = this.pipelineDef[this.currentPipelineStepIndex]
+    const pipelineStepDef = this.pipelineDef[this.currentPipelineStepIndex];
     if (!pipelineStepDef) {
-      this.solved = true
-      return
+      this.solved = true;
+      return;
     }
 
     if (this.activeSubSolver) {
-      this.activeSubSolver.step()
+      this.activeSubSolver.step();
       if (this.activeSubSolver.solved) {
-        this.endTimeOfPhase[pipelineStepDef.solverName] = performance.now()
+        this.endTimeOfPhase[pipelineStepDef.solverName] = performance.now();
         this.timeSpentOnPhase[pipelineStepDef.solverName] =
           this.endTimeOfPhase[pipelineStepDef.solverName] -
-          this.startTimeOfPhase[pipelineStepDef.solverName]
-        pipelineStepDef.onSolved?.(this)
-        this.activeSubSolver = null
-        this.currentPipelineStepIndex++
+          this.startTimeOfPhase[pipelineStepDef.solverName];
+        pipelineStepDef.onSolved?.(this);
+        this.activeSubSolver = null;
+        this.currentPipelineStepIndex++;
       } else if (this.activeSubSolver.failed) {
-        this.error = this.activeSubSolver?.error
-        this.failed = true
-        this.activeSubSolver = null
+        this.error = this.activeSubSolver?.error;
+        this.failed = true;
+        this.activeSubSolver = null;
       }
-      return
+      return;
     }
 
-    const constructorParams = pipelineStepDef.getConstructorParams(this)
+    const constructorParams = pipelineStepDef.getConstructorParams(this);
     // @ts-ignore
-    this.activeSubSolver = new pipelineStepDef.solverClass(...constructorParams)
-    ;(this as any)[pipelineStepDef.solverName] = this.activeSubSolver
-    this.timeSpentOnPhase[pipelineStepDef.solverName] = 0
-    this.startTimeOfPhase[pipelineStepDef.solverName] = performance.now()
+    this.activeSubSolver = new pipelineStepDef.solverClass(
+      ...constructorParams,
+    );
+    (this as any)[pipelineStepDef.solverName] = this.activeSubSolver;
+    this.timeSpentOnPhase[pipelineStepDef.solverName] = 0;
+    this.startTimeOfPhase[pipelineStepDef.solverName] = performance.now();
   }
 
   solveUntilPhase(phase: string) {
     while (this.getCurrentPhase() !== phase) {
-      this.step()
+      this.step();
     }
   }
 
   getCurrentPhase(): string {
-    return this.pipelineDef[this.currentPipelineStepIndex]?.solverName ?? "none"
+    return (
+      this.pipelineDef[this.currentPipelineStepIndex]?.solverName ?? "none"
+    );
   }
 
   visualize(): GraphicsObject {
     if (!this.solved && this.activeSubSolver)
-      return this.activeSubSolver.visualize()
-    const netToPPSolver = this.netToPointPairsSolver?.visualize()
-    const nodeViz = this.nodeSolver?.visualize()
-    const nodeTargetMergerViz = this.nodeTargetMerger?.visualize()
-    const mergeAssignableViaNodesViz = this.mergeAssignableViaNodes?.visualize()
-    const singleLayerNodeMergerViz = this.singleLayerNodeMerger?.visualize()
-    const strawSolverViz = this.strawSolver?.visualize()
-    const edgeViz = this.edgeSolver?.visualize()
-    const offboardCapacityViz = this.offboardCapacityNodeSolver?.visualize()
-    const deadEndViz = this.deadEndSolver?.visualize()
-    const initialPathingViz = this.initialPathingSolver?.visualize()
-    const offboardFragmentViz = this.offboardPathFragmentSolver?.visualize()
-    const pathingOptimizerViz = this.pathingOptimizer?.visualize()
-    const edgeToPortSegmentViz = this.edgeToPortSegmentSolver?.visualize()
-    const segmentToPointViz = this.segmentToPointSolver?.visualize()
+      return this.activeSubSolver.visualize();
+    const netToPPSolver = this.netToPointPairsSolver?.visualize();
+    const nodeViz = this.nodeSolver?.visualize();
+    const nodeTargetMergerViz = this.nodeTargetMerger?.visualize();
+    const mergeAssignableViaNodesViz =
+      this.mergeAssignableViaNodes?.visualize();
+    const singleLayerNodeMergerViz = this.singleLayerNodeMerger?.visualize();
+    const strawSolverViz = this.strawSolver?.visualize();
+    const edgeViz = this.edgeSolver?.visualize();
+    const offboardCapacityViz = this.offboardCapacityNodeSolver?.visualize();
+    const deadEndViz = this.deadEndSolver?.visualize();
+    const initialPathingViz = this.initialPathingSolver?.visualize();
+    const offboardFragmentViz = this.offboardPathFragmentSolver?.visualize();
+    const pathingOptimizerViz = this.pathingOptimizer?.visualize();
+    const edgeToPortSegmentViz = this.edgeToPortSegmentSolver?.visualize();
+    const segmentToPointViz = this.segmentToPointSolver?.visualize();
     const segmentOptimizationViz =
       this.unravelMultiSectionSolver?.visualize() ??
-      this.segmentToPointOptimizer?.visualize()
-    const highDensityViz = this.highDensityRouteSolver?.visualize()
-    const highDensityStitchViz = this.highDensityStitchSolver?.visualize()
-    const uselessViaRemovalViz1 = this.uselessViaRemovalSolver1?.visualize()
-    const uselessViaRemovalViz2 = this.uselessViaRemovalSolver2?.visualize()
+      this.segmentToPointOptimizer?.visualize();
+    const highDensityViz = this.highDensityRouteSolver?.visualize();
+    const highDensityStitchViz = this.highDensityStitchSolver?.visualize();
+    const uselessViaRemovalViz1 = this.uselessViaRemovalSolver1?.visualize();
+    const uselessViaRemovalViz2 = this.uselessViaRemovalSolver2?.visualize();
     const simplifiedPathSolverViz1 =
-      this.multiSimplifiedPathSolver1?.visualize()
+      this.multiSimplifiedPathSolver1?.visualize();
     const simplifiedPathSolverViz2 =
-      this.multiSimplifiedPathSolver2?.visualize()
-    const problemOutline = this.srj.outline
-    const problemLines: Line[] = []
+      this.multiSimplifiedPathSolver2?.visualize();
+    const problemOutline = this.srj.outline;
+    const problemLines: Line[] = [];
 
     problemLines.push({
       points: [
@@ -571,7 +574,7 @@ export class AssignableAutoroutingPipeline1Solver extends BaseSolver {
         }, // Close the rectangle
       ],
       strokeColor: "rgba(255,0,0,0.25)",
-    })
+    });
 
     if (problemOutline && problemOutline.length >= 2) {
       const outlinePoints = problemOutline.map(
@@ -579,17 +582,17 @@ export class AssignableAutoroutingPipeline1Solver extends BaseSolver {
           x: point.x,
           y: point.y,
         }),
-      )
+      );
 
-      outlinePoints.push({ ...outlinePoints[0]! })
+      outlinePoints.push({ ...outlinePoints[0]! });
 
       problemLines.push({
         points: outlinePoints,
         strokeColor: "rgba(0, 136, 255, 0.95)",
-      })
+      });
     }
 
-    const formatObstacleLabel = createObstacleLabelFormatter(this.srj)
+    const formatObstacleLabel = createObstacleLabelFormatter(this.srj);
 
     const problemViz = {
       points: [
@@ -616,7 +619,7 @@ export class AssignableAutoroutingPipeline1Solver extends BaseSolver {
           })),
       ],
       lines: problemLines,
-    } as GraphicsObject
+    } as GraphicsObject;
     const visualizations = [
       problemViz,
       netToPPSolver,
@@ -645,9 +648,9 @@ export class AssignableAutoroutingPipeline1Solver extends BaseSolver {
             convertSrjToGraphicsObject(this.getOutputSimpleRouteJson()),
           )
         : null,
-    ].filter(Boolean) as GraphicsObject[]
+    ].filter(Boolean) as GraphicsObject[];
     // return visualizations[visualizations.length - 1]
-    return combineVisualizations(...visualizations)
+    return combineVisualizations(...visualizations);
   }
 
   /**
@@ -661,42 +664,42 @@ export class AssignableAutoroutingPipeline1Solver extends BaseSolver {
    */
   preview(): GraphicsObject {
     if (this.highDensityRouteSolver) {
-      const lines: Line[] = []
+      const lines: Line[] = [];
       for (let i = this.highDensityRouteSolver.routes.length - 1; i >= 0; i--) {
-        const route = this.highDensityRouteSolver.routes[i]
+        const route = this.highDensityRouteSolver.routes[i];
         lines.push({
           points: route.route.map((n) => ({
             x: n.x,
             y: n.y,
           })),
           strokeColor: this.colorMap[route.connectionName],
-        })
-        if (lines.length > 200) break
+        });
+        if (lines.length > 200) break;
       }
-      return { lines }
+      return { lines };
     }
 
     if (this.pathingOptimizer) {
-      const lines: Line[] = []
+      const lines: Line[] = [];
       for (const connection of this.pathingOptimizer.connectionsWithNodes) {
-        if (!connection.path) continue
+        if (!connection.path) continue;
         lines.push({
           points: connection.path.map((n) => ({
             x: n.center.x,
             y: n.center.y,
           })),
           strokeColor: this.colorMap[connection.connection.name],
-        })
+        });
       }
-      return { lines }
+      return { lines };
     }
 
     // This output is good as-is
     if (this.netToPointPairsSolver) {
-      return this.netToPointPairsSolver?.visualize()
+      return this.netToPointPairsSolver?.visualize();
     }
 
-    return {}
+    return {};
   }
 
   _getOutputHdRoutes(): HighDensityRoute[] {
@@ -706,7 +709,7 @@ export class AssignableAutoroutingPipeline1Solver extends BaseSolver {
       this.multiSimplifiedPathSolver1?.simplifiedHdRoutes ??
       this.uselessViaRemovalSolver1?.getOptimizedHdRoutes() ??
       this.highDensityStitchSolver!.mergedHdRoutes
-    )
+    );
   }
 
   /**
@@ -714,45 +717,45 @@ export class AssignableAutoroutingPipeline1Solver extends BaseSolver {
    */
   getOutputSimplifiedPcbTraces(): SimplifiedPcbTraces {
     if (!this.solved || !this.highDensityRouteSolver) {
-      throw new Error("Cannot get output before solving is complete")
+      throw new Error("Cannot get output before solving is complete");
     }
 
-    const traces: SimplifiedPcbTraces = []
-    const allHdRoutes = this._getOutputHdRoutes()
+    const traces: SimplifiedPcbTraces = [];
+    const allHdRoutes = this._getOutputHdRoutes();
 
     // Use srjWithPointPairs connections which includes fragmented connections
-    const connections = this.srjWithPointPairs?.connections ?? []
+    const connections = this.srjWithPointPairs?.connections ?? [];
 
     for (const connection of connections) {
-      const netConnectionName = connection.__netConnectionName
-      const rootConnectionName = connection.__rootConnectionNames?.[0]
+      const netConnectionName = connection.__netConnectionName;
+      const rootConnectionName = connection.__rootConnectionNames?.[0];
 
       // Find all the hdRoutes that correspond to this connection
       const hdRoutes = allHdRoutes.filter(
         (r) => r.connectionName === connection.name,
-      )
+      );
 
       for (let i = 0; i < hdRoutes.length; i++) {
-        const hdRoute = hdRoutes[i]
+        const hdRoute = hdRoutes[i];
         const simplifiedPcbTrace: SimplifiedPcbTrace = {
           type: "pcb_trace",
           pcb_trace_id: `${connection.name}_${i}`,
           connection_name:
             netConnectionName ?? rootConnectionName ?? connection.name,
           route: convertHdRouteToSimplifiedRoute(hdRoute, this.srj.layerCount),
-        }
+        };
 
-        traces.push(simplifiedPcbTrace)
+        traces.push(simplifiedPcbTrace);
       }
     }
 
-    return traces
+    return traces;
   }
 
   getOutputSimpleRouteJson(): SimpleRouteJson {
     return {
       ...this.srj,
       traces: this.getOutputSimplifiedPcbTraces(),
-    }
+    };
   }
 }

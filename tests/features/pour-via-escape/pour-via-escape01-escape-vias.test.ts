@@ -1,44 +1,42 @@
-import { expect, test } from "bun:test"
-import { distance, pointToBoxDistance } from "@tscircuit/math-utils"
-import bugReport from "../../../fixtures/features/pour-via-escape/pour-via-escape01.json" with {
-  type: "json",
-}
-import { AutoroutingPipelineSolver } from "../../../lib"
-import { EscapeViaLocationSolver } from "../../../lib/solvers/EscapeViaLocationSolver/EscapeViaLocationSolver"
-import type { SimpleRouteJson } from "../../../lib/types"
-import { isPointInRect } from "../../../lib/utils/isPointInRect"
-import { mapLayerNameToZ } from "../../../lib/utils/mapLayerNameToZ"
+import { expect, test } from "bun:test";
+import { distance, pointToBoxDistance } from "@tscircuit/math-utils";
+import bugReport from "../../../fixtures/features/pour-via-escape/pour-via-escape01.json" with { type: "json" };
+import { AutoroutingPipelineSolver } from "../../../lib";
+import { EscapeViaLocationSolver } from "../../../lib/solvers/EscapeViaLocationSolver/EscapeViaLocationSolver";
+import type { SimpleRouteJson } from "../../../lib/types";
+import { isPointInRect } from "../../../lib/utils/isPointInRect";
+import { mapLayerNameToZ } from "../../../lib/utils/mapLayerNameToZ";
 
-const srj = bugReport.simple_route_json as SimpleRouteJson
+const srj = bugReport.simple_route_json as SimpleRouteJson;
 
 test("pour-via-escape01 adds escape via points for copper pour nets", () => {
-  const solver = new EscapeViaLocationSolver(srj)
-  solver.solve()
+  const solver = new EscapeViaLocationSolver(srj);
+  solver.solve();
 
-  const output = solver.getOutputSimpleRouteJson()
-  const metadataByPointId = solver.getEscapeViaMetadataByPointId()
+  const output = solver.getOutputSimpleRouteJson();
+  const metadataByPointId = solver.getEscapeViaMetadataByPointId();
 
   const vcc = output.connections.find(
     (connection) => connection.name === "source_net_0",
-  )
+  );
   const gnd = output.connections.find(
     (connection) => connection.name === "source_net_1",
-  )
+  );
 
-  expect(vcc).toBeDefined()
-  expect(gnd).toBeDefined()
+  expect(vcc).toBeDefined();
+  expect(gnd).toBeDefined();
 
   const vccEscapePoints =
     vcc?.pointsToConnect.filter((point) =>
       point.pointId?.startsWith("escape-via:"),
-    ) ?? []
+    ) ?? [];
   const gndEscapePoints =
     gnd?.pointsToConnect.filter((point) =>
       point.pointId?.startsWith("escape-via:"),
-    ) ?? []
+    ) ?? [];
 
-  expect(vccEscapePoints).toHaveLength(4)
-  expect(gndEscapePoints).toHaveLength(1)
+  expect(vccEscapePoints).toHaveLength(4);
+  expect(gndEscapePoints).toHaveLength(1);
 
   expect(
     vcc?.externallyConnectedPointIds?.some(
@@ -46,81 +44,81 @@ test("pour-via-escape01 adds escape via points for copper pour nets", () => {
         group.length === 4 &&
         group.every((pointId) => pointId.startsWith("escape-via:")),
     ),
-  ).toBe(true)
+  ).toBe(true);
 
   for (const point of [...vccEscapePoints, ...gndEscapePoints]) {
-    expect("layer" in point ? point.layer : null).toBe("top")
+    expect("layer" in point ? point.layer : null).toBe("top");
     expect("terminalVia" in point ? point.terminalVia?.toLayer : null).toBe(
       point.pointId ? metadataByPointId.get(point.pointId)?.targetLayer : null,
-    )
+    );
 
     const metadata = point.pointId
       ? metadataByPointId.get(point.pointId)
-      : undefined
-    expect(metadata).toBeDefined()
+      : undefined;
+    expect(metadata).toBeDefined();
 
     const matchingPour = srj.obstacles.find(
       (obstacle) =>
         obstacle.isCopperPour &&
         obstacle.layers.includes(metadata!.targetLayer) &&
         isPointInRect(point, obstacle),
-    )
-    expect(matchingPour).toBeDefined()
+    );
+    expect(matchingPour).toBeDefined();
 
     const topObstacleAtPoint = srj.obstacles.find(
       (obstacle) =>
         !obstacle.isCopperPour &&
         obstacle.layers.includes("top") &&
         isPointInRect(point, obstacle),
-    )
-    expect(topObstacleAtPoint).toBeUndefined()
+    );
+    expect(topObstacleAtPoint).toBeUndefined();
   }
 
   const requiredViaSpacing =
-    (srj.minViaDiameter ?? 0.3) + (srj.defaultObstacleMargin ?? 0.15)
-  const allEscapePoints = [...vccEscapePoints, ...gndEscapePoints]
+    (srj.minViaDiameter ?? 0.3) + (srj.defaultObstacleMargin ?? 0.15);
+  const allEscapePoints = [...vccEscapePoints, ...gndEscapePoints];
   const escapeViaObstacles = output.obstacles.filter((obstacle) =>
     obstacle.obstacleId?.startsWith("escape-via-obstacle:"),
-  )
+  );
 
-  expect(escapeViaObstacles).toHaveLength(allEscapePoints.length)
+  expect(escapeViaObstacles).toHaveLength(allEscapePoints.length);
 
   for (let i = 0; i < allEscapePoints.length; i++) {
     for (let j = i + 1; j < allEscapePoints.length; j++) {
       expect(
         distance(allEscapePoints[i]!, allEscapePoints[j]!),
-      ).toBeGreaterThan(requiredViaSpacing - 1e-3)
+      ).toBeGreaterThan(requiredViaSpacing - 1e-3);
     }
   }
 
   for (const point of allEscapePoints) {
-    const metadata = metadataByPointId.get(point.pointId!)
-    expect(metadata).toBeDefined()
+    const metadata = metadataByPointId.get(point.pointId!);
+    expect(metadata).toBeDefined();
 
     const escapeViaObstacle = output.obstacles.find(
       (obstacle) =>
         obstacle.obstacleId === `escape-via-obstacle:${point.pointId}`,
-    )
-    expect(escapeViaObstacle).toBeDefined()
-    expect(escapeViaObstacle?.center.x).toBeCloseTo(point.x, 6)
-    expect(escapeViaObstacle?.center.y).toBeCloseTo(point.y, 6)
-    expect(escapeViaObstacle?.width).toBeCloseTo(srj.minViaDiameter ?? 0.3, 6)
-    expect(escapeViaObstacle?.height).toBeCloseTo(srj.minViaDiameter ?? 0.3, 6)
-    expect(escapeViaObstacle?.connectedTo).toContain(metadata!.connectionName)
-    expect(escapeViaObstacle?.layers).toContain(metadata!.sourceLayer)
-    expect(escapeViaObstacle?.layers).toContain(metadata!.targetLayer)
+    );
+    expect(escapeViaObstacle).toBeDefined();
+    expect(escapeViaObstacle?.center.x).toBeCloseTo(point.x, 6);
+    expect(escapeViaObstacle?.center.y).toBeCloseTo(point.y, 6);
+    expect(escapeViaObstacle?.width).toBeCloseTo(srj.minViaDiameter ?? 0.3, 6);
+    expect(escapeViaObstacle?.height).toBeCloseTo(srj.minViaDiameter ?? 0.3, 6);
+    expect(escapeViaObstacle?.connectedTo).toContain(metadata!.connectionName);
+    expect(escapeViaObstacle?.layers).toContain(metadata!.sourceLayer);
+    expect(escapeViaObstacle?.layers).toContain(metadata!.targetLayer);
 
-    const sourceZ = mapLayerNameToZ(metadata!.sourceLayer, srj.layerCount)
-    const targetZ = mapLayerNameToZ(metadata!.targetLayer, srj.layerCount)
+    const sourceZ = mapLayerNameToZ(metadata!.sourceLayer, srj.layerCount);
+    const targetZ = mapLayerNameToZ(metadata!.targetLayer, srj.layerCount);
     const expectedZLayers = Array.from(
       {
         length: Math.abs(targetZ - sourceZ) + 1,
       },
       (_, index) => Math.min(sourceZ, targetZ) + index,
-    )
-    expect(escapeViaObstacle?.__zLayers).toEqual(expectedZLayers)
+    );
+    expect(escapeViaObstacle?.__zLayers).toEqual(expectedZLayers);
   }
-})
+});
 
 test("escape via placement keeps same-obstacle vias separated using obstacle size", () => {
   const syntheticSrj: SimpleRouteJson = {
@@ -176,26 +174,26 @@ test("escape via placement keeps same-obstacle vias separated using obstacle siz
         ],
       },
     ],
-  }
+  };
 
-  const solver = new EscapeViaLocationSolver(syntheticSrj)
-  solver.solve()
+  const solver = new EscapeViaLocationSolver(syntheticSrj);
+  solver.solve();
 
-  const output = solver.getOutputSimpleRouteJson()
+  const output = solver.getOutputSimpleRouteJson();
   const connection = output.connections.find(
     (candidateConnection) => candidateConnection.name === "source_net_0",
-  )
+  );
   const escapePoints =
     connection?.pointsToConnect.filter((point) =>
       point.pointId?.startsWith("escape-via:"),
-    ) ?? []
+    ) ?? [];
 
-  expect(escapePoints).toHaveLength(2)
+  expect(escapePoints).toHaveLength(2);
 
   const sourceObstacle = syntheticSrj.obstacles.find(
     (obstacle) => obstacle.obstacleId === "shared-pad",
-  )!
-  const viaRadius = (syntheticSrj.minViaDiameter ?? 0.3) / 2
+  )!;
+  const viaRadius = (syntheticSrj.minViaDiameter ?? 0.3) / 2;
   const expectedLeftX =
     sourceObstacle.center.x -
     sourceObstacle.width / 2 -
@@ -203,37 +201,37 @@ test("escape via placement keeps same-obstacle vias separated using obstacle siz
       Math.max(
         syntheticSrj.minTraceWidth / 2,
         syntheticSrj.defaultObstacleMargin ?? 0.15,
-      ))
+      ));
   const requiredViaSpacing =
     (syntheticSrj.minViaDiameter ?? 0.3) +
-    (syntheticSrj.defaultObstacleMargin ?? 0.15)
+    (syntheticSrj.defaultObstacleMargin ?? 0.15);
 
   expect(
     escapePoints.every((point) => Math.abs(point.x - expectedLeftX) < 1e-3),
-  ).toBe(true)
+  ).toBe(true);
   expect(distance(escapePoints[0]!, escapePoints[1]!)).toBeGreaterThan(
     requiredViaSpacing - 1e-3,
-  )
+  );
 
   for (const point of escapePoints) {
-    expect(isPointInRect(point, sourceObstacle)).toBe(false)
+    expect(isPointInRect(point, sourceObstacle)).toBe(false);
     expect(
       pointToBoxDistance(point, sourceObstacle) - viaRadius,
-    ).toBeGreaterThan((syntheticSrj.defaultObstacleMargin ?? 0.15) - 1e-3)
+    ).toBeGreaterThan((syntheticSrj.defaultObstacleMargin ?? 0.15) - 1e-3);
   }
-})
+});
 
 test("pour-via-escape01 serializes VCC escape vias into the pour", () => {
-  const solver = new AutoroutingPipelineSolver(srj)
-  solver.solve()
+  const solver = new AutoroutingPipelineSolver(srj);
+  solver.solve();
 
-  const traces = solver.getOutputSimplifiedPcbTraces()
+  const traces = solver.getOutputSimplifiedPcbTraces();
   const vccTraces = traces.filter(
     (trace) => trace.connection_name === "net.VCC",
-  )
+  );
   const gndTraces = traces.filter(
     (trace) => trace.connection_name === "net.GND",
-  )
+  );
 
   expect(
     vccTraces.some((trace) =>
@@ -242,7 +240,7 @@ test("pour-via-escape01 serializes VCC escape vias into the pour", () => {
           segment.route_type === "via" && segment.to_layer === "inner1",
       ),
     ),
-  ).toBe(true)
+  ).toBe(true);
   expect(
     gndTraces.some((trace) =>
       trace.route.some(
@@ -250,5 +248,5 @@ test("pour-via-escape01 serializes VCC escape vias into the pour", () => {
           segment.route_type === "via" && segment.to_layer === "inner2",
       ),
     ),
-  ).toBe(true)
-})
+  ).toBe(true);
+});

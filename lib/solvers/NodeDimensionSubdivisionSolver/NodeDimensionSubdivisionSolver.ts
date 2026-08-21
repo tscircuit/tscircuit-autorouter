@@ -1,14 +1,14 @@
-import type { GraphicsObject } from "graphics-debug"
-import type { CapacityMeshNode } from "lib/types"
-import { BaseSolver } from "lib/solvers/BaseSolver"
-import { areNodesBordering } from "lib/utils/areNodesBordering"
+import type { GraphicsObject } from "graphics-debug";
+import type { CapacityMeshNode } from "lib/types";
+import { BaseSolver } from "lib/solvers/BaseSolver";
+import { areNodesBordering } from "lib/utils/areNodesBordering";
 
-const DEFAULT_MIN_NODE_AREA = 0.1 ** 2
+const DEFAULT_MIN_NODE_AREA = 0.1 ** 2;
 // Twice areNodesBordering's epsilon; thinner slices are coordinate artifacts.
-const MIN_CONNECTIVITY_BRIDGE_DIMENSION = 0.002
+const MIN_CONNECTIVITY_BRIDGE_DIMENSION = 0.002;
 
 export class NodeDimensionSubdivisionSolver extends BaseSolver {
-  public readonly outputNodes: CapacityMeshNode[]
+  public readonly outputNodes: CapacityMeshNode[];
 
   constructor(
     private readonly nodes: CapacityMeshNode[],
@@ -16,107 +16,107 @@ export class NodeDimensionSubdivisionSolver extends BaseSolver {
     private readonly maxNodeRatio: number = Number.POSITIVE_INFINITY,
     private readonly minNodeArea: number = DEFAULT_MIN_NODE_AREA,
   ) {
-    super()
-    this.outputNodes = []
+    super();
+    this.outputNodes = [];
   }
 
   override getSolverName(): string {
-    return "NodeDimensionSubdivisionSolver"
+    return "NodeDimensionSubdivisionSolver";
   }
 
   private getSubdivisionGrid(node: CapacityMeshNode): {
-    cols: number
-    rows: number
+    cols: number;
+    rows: number;
   } {
     const hasDimensionLimit =
-      Number.isFinite(this.maxNodeDimension) && this.maxNodeDimension > 0
+      Number.isFinite(this.maxNodeDimension) && this.maxNodeDimension > 0;
     const hasRatioLimit =
-      Number.isFinite(this.maxNodeRatio) && this.maxNodeRatio > 0
+      Number.isFinite(this.maxNodeRatio) && this.maxNodeRatio > 0;
 
     let cols = hasDimensionLimit
       ? Math.max(1, Math.ceil(node.width / this.maxNodeDimension))
-      : 1
+      : 1;
     let rows = hasDimensionLimit
       ? Math.max(1, Math.ceil(node.height / this.maxNodeDimension))
-      : 1
+      : 1;
 
     if (hasRatioLimit && node.width > 0 && node.height > 0) {
       while (true) {
-        const childWidth = node.width / cols
-        const childHeight = node.height / rows
+        const childWidth = node.width / cols;
+        const childHeight = node.height / rows;
         const childRatio =
           childWidth >= childHeight
             ? childWidth / childHeight
-            : childHeight / childWidth
+            : childHeight / childWidth;
 
         if (childRatio <= this.maxNodeRatio) {
-          break
+          break;
         }
 
         if (childWidth >= childHeight) {
-          cols++
+          cols++;
         } else {
-          rows++
+          rows++;
         }
       }
     }
 
-    return { cols, rows }
+    return { cols, rows };
   }
 
   private shouldRemoveNode(node: CapacityMeshNode): boolean {
     const hasMinAreaLimit =
-      Number.isFinite(this.minNodeArea) && this.minNodeArea > 0
+      Number.isFinite(this.minNodeArea) && this.minNodeArea > 0;
 
     if (!Number.isFinite(node.width) || !Number.isFinite(node.height)) {
-      return true
+      return true;
     }
 
     if (!hasMinAreaLimit || node.width * node.height >= this.minNodeArea) {
-      return false
+      return false;
     }
 
     if (Math.min(node.width, node.height) < MIN_CONNECTIVITY_BRIDGE_DIMENSION) {
-      return true
+      return true;
     }
 
-    if (node._containsTarget) return false
+    if (node._containsTarget) return false;
 
     // Rect decomposition can produce low-area slices that still connect larger
     // regions. Removing such a slice changes reachability, so retain bridges.
-    let borderingNodeCount = 0
+    let borderingNodeCount = 0;
     for (const candidate of this.nodes) {
-      if (candidate.capacityMeshNodeId === node.capacityMeshNodeId) continue
+      if (candidate.capacityMeshNodeId === node.capacityMeshNodeId) continue;
       if (!node.availableZ.some((z) => candidate.availableZ.includes(z))) {
-        continue
+        continue;
       }
-      if (!areNodesBordering(node, candidate)) continue
+      if (!areNodesBordering(node, candidate)) continue;
 
-      if (candidate._containsTarget) return false
-      borderingNodeCount++
-      if (borderingNodeCount >= 2) return false
+      if (candidate._containsTarget) return false;
+      borderingNodeCount++;
+      if (borderingNodeCount >= 2) return false;
     }
 
-    return true
+    return true;
   }
 
   private subdivideNode(node: CapacityMeshNode): CapacityMeshNode[] {
     if (this.shouldRemoveNode(node)) {
-      return []
+      return [];
     }
 
-    const { cols, rows } = this.getSubdivisionGrid(node)
+    const { cols, rows } = this.getSubdivisionGrid(node);
 
     if (cols === 1 && rows === 1) {
-      return [node]
+      return [node];
     }
 
-    const childWidth = node.width / cols
-    const childHeight = node.height / rows
-    const minX = node.center.x - node.width / 2
-    const minY = node.center.y - node.height / 2
+    const childWidth = node.width / cols;
+    const childHeight = node.height / rows;
+    const minX = node.center.x - node.width / 2;
+    const minY = node.center.y - node.height / 2;
 
-    const childNodes: CapacityMeshNode[] = []
+    const childNodes: CapacityMeshNode[] = [];
 
     for (let row = 0; row < rows; row++) {
       for (let col = 0; col < cols; col++) {
@@ -130,36 +130,36 @@ export class NodeDimensionSubdivisionSolver extends BaseSolver {
           width: childWidth,
           height: childHeight,
           availableZ: [...node.availableZ],
-        })
+        });
       }
     }
 
-    return childNodes
+    return childNodes;
   }
 
   override _step() {
-    const inputCount = this.nodes.length
-    let subdividedNodeCount = 0
-    let removedSmallNodeCount = 0
-    let removedInvalidNodeCount = 0
+    const inputCount = this.nodes.length;
+    let subdividedNodeCount = 0;
+    let removedSmallNodeCount = 0;
+    let removedInvalidNodeCount = 0;
 
     for (const node of this.nodes) {
       const hasInvalidDimensions =
-        !Number.isFinite(node.width) || !Number.isFinite(node.height)
-      const subdividedNodes = this.subdivideNode(node)
+        !Number.isFinite(node.width) || !Number.isFinite(node.height);
+      const subdividedNodes = this.subdivideNode(node);
       if (subdividedNodes.length === 0) {
         if (hasInvalidDimensions) {
-          removedInvalidNodeCount++
+          removedInvalidNodeCount++;
         } else {
-          removedSmallNodeCount++
+          removedSmallNodeCount++;
         }
-        continue
+        continue;
       }
 
       if (subdividedNodes.length > 1) {
-        subdividedNodeCount++
+        subdividedNodeCount++;
       }
-      this.outputNodes.push(...subdividedNodes)
+      this.outputNodes.push(...subdividedNodes);
     }
 
     this.stats = {
@@ -171,8 +171,8 @@ export class NodeDimensionSubdivisionSolver extends BaseSolver {
       maxNodeDimension: this.maxNodeDimension,
       maxNodeRatio: this.maxNodeRatio,
       minNodeArea: this.minNodeArea,
-    }
-    this.solved = true
+    };
+    this.solved = true;
   }
 
   override visualize(): GraphicsObject {
@@ -186,6 +186,6 @@ export class NodeDimensionSubdivisionSolver extends BaseSolver {
         fill: "rgba(0, 200, 255, 0.08)",
         stroke: "rgba(0, 120, 180, 0.5)",
       })),
-    }
+    };
   }
 }

@@ -1,38 +1,38 @@
 export interface Rect {
-  x: number
-  y: number
-  width: number
-  height: number
+  x: number;
+  y: number;
+  width: number;
+  height: number;
 }
 
-export type Edge = "top" | "bottom" | "left" | "right"
+export type Edge = "top" | "bottom" | "left" | "right";
 
 export interface PointDef {
-  edge: Edge
-  t: number
-  layers: number[]
-  portPointId?: string
+  edge: Edge;
+  t: number;
+  layers: number[];
+  portPointId?: string;
 }
 
 export interface PairDef {
-  entry: PointDef
-  exit: PointDef
+  entry: PointDef;
+  exit: PointDef;
 }
 
 export type DraggingState =
   | { type: "resize"; data: { handle: string } }
   | { type: "point"; data: { pairIndex: number; pointType: "entry" | "exit" } }
-  | { type: "pan"; data: {} }
+  | { type: "pan"; data: {} };
 
 export interface DragStartState {
-  mx: number
-  my: number
-  rect: Rect
-  x?: number
-  y?: number
+  mx: number;
+  my: number;
+  rect: Rect;
+  x?: number;
+  y?: number;
 }
 
 export interface SelectionState {
-  pairIndex: number
-  pointType: "entry" | "exit"
+  pairIndex: number;
+  pointType: "entry" | "exit";
 }

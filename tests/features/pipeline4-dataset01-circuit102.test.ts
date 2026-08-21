@@ -1,12 +1,12 @@
-import { expect, test } from "bun:test"
-import * as dataset01 from "@tscircuit/autorouting-dataset-01"
-import { getGlobalInMemoryCache } from "lib/cache/setupGlobalCaches"
-import { AutoroutingPipelineSolver4 } from "lib/autorouter-pipelines/AutoroutingPipeline4_TinyHypergraph/AutoroutingPipelineSolver4_TinyHypergraph"
-import type { NodeWithPortPoints } from "lib/types/high-density-types"
-import type { SimpleRouteJson } from "lib/types"
+import { expect, test } from "bun:test";
+import * as dataset01 from "@tscircuit/autorouting-dataset-01";
+import { getGlobalInMemoryCache } from "lib/cache/setupGlobalCaches";
+import { AutoroutingPipelineSolver4 } from "lib/autorouter-pipelines/AutoroutingPipeline4_TinyHypergraph/AutoroutingPipelineSolver4_TinyHypergraph";
+import type { NodeWithPortPoints } from "lib/types/high-density-types";
+import type { SimpleRouteJson } from "lib/types";
 
 const getCircuit102 = () =>
-  (dataset01 as Record<string, unknown>).circuit102 as SimpleRouteJson
+  (dataset01 as Record<string, unknown>).circuit102 as SimpleRouteJson;
 
 const getNodeOrThrow = (
   nodes: NodeWithPortPoints[] | undefined,
@@ -14,85 +14,87 @@ const getNodeOrThrow = (
 ) => {
   const node = nodes?.find(
     (candidate) => candidate.capacityMeshNodeId === nodeId,
-  )
-  expect(node).toBeDefined()
-  return node!
-}
+  );
+  expect(node).toBeDefined();
+  return node!;
+};
 
 test(
   "pipeline4 dataset01 circuit102 tracks cmn_159 reduction shape across node-cap and effort settings",
   () => {
-    getGlobalInMemoryCache().clearCache()
+    getGlobalInMemoryCache().clearCache();
 
     const defaultSolver = new AutoroutingPipelineSolver4(
       structuredClone(getCircuit102()),
-    )
-    defaultSolver.solve()
+    );
+    defaultSolver.solve();
 
-    expect(defaultSolver.solved).toBe(true)
-    expect(defaultSolver.failed).toBe(false)
-    expect(defaultSolver.error).toBeNull()
+    expect(defaultSolver.solved).toBe(true);
+    expect(defaultSolver.failed).toBe(false);
+    expect(defaultSolver.error).toBeNull();
 
     const defaultMetadata =
-      defaultSolver.highDensityRouteSolver?.nodeSolveMetadataById.get("cmn_159")
+      defaultSolver.highDensityRouteSolver?.nodeSolveMetadataById.get(
+        "cmn_159",
+      );
     const defaultNode = getNodeOrThrow(
       defaultSolver.highDensityNodePortPoints,
       "cmn_159",
-    )
+    );
 
-    expect(defaultMetadata?.status).toBe("solved")
-    expect(defaultNode.portPoints.length).toBe(2)
+    expect(defaultMetadata?.status).toBe("solved");
+    expect(defaultNode.portPoints.length).toBe(2);
     expect(
       new Set(defaultNode.portPoints.map((point) => point.connectionName)).size,
-    ).toBe(1)
+    ).toBe(1);
 
-    getGlobalInMemoryCache().clearCache()
+    getGlobalInMemoryCache().clearCache();
 
     const explicit8mmSolver = new AutoroutingPipelineSolver4(
       structuredClone(getCircuit102()),
       { maxNodeDimension: 8 },
-    )
-    explicit8mmSolver.solve()
+    );
+    explicit8mmSolver.solve();
 
-    expect(explicit8mmSolver.solved).toBe(true)
-    expect(explicit8mmSolver.failed).toBe(false)
+    expect(explicit8mmSolver.solved).toBe(true);
+    expect(explicit8mmSolver.failed).toBe(false);
 
     const explicit8mmMetadata =
       explicit8mmSolver.highDensityRouteSolver?.nodeSolveMetadataById.get(
         "cmn_159",
-      )
+      );
     const explicit8mmNode = getNodeOrThrow(
       explicit8mmSolver.highDensityNodePortPoints,
       "cmn_159",
-    )
+    );
 
-    expect(explicit8mmMetadata?.status).toBe("solved")
-    expect(explicit8mmMetadata?.solverType).toBe("HighDensitySolverA03")
-    expect(explicit8mmMetadata?.routeCount).toBe(2)
+    expect(explicit8mmMetadata?.status).toBe("solved");
+    expect(explicit8mmMetadata?.solverType).toBe("HighDensitySolverA03");
+    expect(explicit8mmMetadata?.routeCount).toBe(2);
     expect(explicit8mmNode.portPoints.length).toBeGreaterThan(
       defaultNode.portPoints.length,
-    )
+    );
     expect(
       new Set(explicit8mmNode.portPoints.map((point) => point.connectionName))
         .size,
-    ).toBe(2)
+    ).toBe(2);
     expect(
       explicit8mmNode.portPoints.map((point) => point.connectionName),
-    ).not.toEqual(defaultNode.portPoints.map((point) => point.connectionName))
+    ).not.toEqual(defaultNode.portPoints.map((point) => point.connectionName));
     expect(
       explicit8mmNode.portPoints.map((point) => point.portPointId),
-    ).not.toEqual(defaultNode.portPoints.map((point) => point.portPointId))
+    ).not.toEqual(defaultNode.portPoints.map((point) => point.portPointId));
 
-    getGlobalInMemoryCache().clearCache()
+    getGlobalInMemoryCache().clearCache();
 
     const effort2Solver = new AutoroutingPipelineSolver4(
       structuredClone(getCircuit102()),
       { effort: 2 },
-    )
-    effort2Solver.solve()
+    );
+    effort2Solver.solve();
 
-    expect(effort2Solver.solved).toBe(true)
-    expect(effort2Solver.failed).toBe(false)
+    expect(effort2Solver.solved).toBe(true);
+    expect(effort2Solver.failed).toBe(false);
   },
   { timeout: 120_000 },
-)
+);

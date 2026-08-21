@@ -1,10 +1,10 @@
-import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
-import type { Obstacle } from "lib/types"
+import type { ConnectivityMap } from "circuit-json-to-connectivity-map";
+import type { Obstacle } from "lib/types";
 
 type RouteConnectionIds = {
-  connectionName: string
-  rootConnectionName?: string
-}
+  connectionName: string;
+  rootConnectionName?: string;
+};
 
 export const isObstacleConnectedToRoute = (
   obstacle: Obstacle,
@@ -19,4 +19,4 @@ export const isObstacleConnectedToRoute = (
       (route.rootConnectionName !== undefined &&
         (connMap?.areIdsConnected(route.rootConnectionName, connectedId) ??
           false)),
-  )
+  );

@@ -1,11 +1,11 @@
-import type { GraphicsObject, Line, Rect } from "graphics-debug"
-import type { Jumper } from "../types/high-density-types"
-import { safeTransparentize } from "../solvers/colors"
-import { JUMPER_DIMENSIONS } from "./jumperSizes"
+import type { GraphicsObject, Line, Rect } from "graphics-debug";
+import type { Jumper } from "../types/high-density-types";
+import { safeTransparentize } from "../solvers/colors";
+import { JUMPER_DIMENSIONS } from "./jumperSizes";
 
 export interface JumperGraphicsOptions {
-  color?: string
-  label?: string
+  color?: string;
+  label?: string;
 }
 
 /**
@@ -16,19 +16,19 @@ export function getJumperGraphics(
   jumper: Jumper,
   options: JumperGraphicsOptions = {},
 ): { rects: Rect[]; lines: Line[] } {
-  const rects: Rect[] = []
-  const lines: Line[] = []
-  const color = options.color ?? "gray"
-  const label = options.label
+  const rects: Rect[] = [];
+  const lines: Line[] = [];
+  const color = options.color ?? "gray";
+  const label = options.label;
 
-  const dims = JUMPER_DIMENSIONS[jumper.footprint] ?? JUMPER_DIMENSIONS["0603"]
+  const dims = JUMPER_DIMENSIONS[jumper.footprint] ?? JUMPER_DIMENSIONS["0603"];
 
   // Determine jumper orientation to rotate pad dimensions
-  const dx = jumper.end.x - jumper.start.x
-  const dy = jumper.end.y - jumper.start.y
-  const isHorizontal = Math.abs(dx) > Math.abs(dy)
-  const rectWidth = isHorizontal ? dims.padLength : dims.padWidth
-  const rectHeight = isHorizontal ? dims.padWidth : dims.padLength
+  const dx = jumper.end.x - jumper.start.x;
+  const dy = jumper.end.y - jumper.start.y;
+  const isHorizontal = Math.abs(dx) > Math.abs(dy);
+  const rectWidth = isHorizontal ? dims.padLength : dims.padWidth;
+  const rectHeight = isHorizontal ? dims.padWidth : dims.padLength;
 
   // Draw start pad
   rects.push({
@@ -39,7 +39,7 @@ export function getJumperGraphics(
     stroke: "rgba(0, 0, 0, 0.5)",
     layer: "jumper",
     label: label ? `${label} (start)` : undefined,
-  })
+  });
 
   // Draw end pad
   rects.push({
@@ -50,7 +50,7 @@ export function getJumperGraphics(
     stroke: "rgba(0, 0, 0, 0.5)",
     layer: "jumper",
     label: label ? `${label} (end)` : undefined,
-  })
+  });
 
   // Draw connecting line (jumper body)
   lines.push({
@@ -58,9 +58,9 @@ export function getJumperGraphics(
     strokeColor: "rgba(100, 100, 100, 0.8)",
     strokeWidth: dims.padWidth * 0.3,
     layer: "jumper-body",
-  })
+  });
 
-  return { rects, lines }
+  return { rects, lines };
 }
 
 /**
@@ -74,13 +74,13 @@ export function getJumpersGraphics(
   const graphics: GraphicsObject = {
     rects: [],
     lines: [],
-  }
+  };
 
   for (const jumper of jumpers) {
-    const { rects, lines } = getJumperGraphics(jumper, options)
-    graphics.rects!.push(...rects)
-    graphics.lines!.push(...lines)
+    const { rects, lines } = getJumperGraphics(jumper, options);
+    graphics.rects!.push(...rects);
+    graphics.lines!.push(...lines);
   }
 
-  return graphics
+  return graphics;
 }

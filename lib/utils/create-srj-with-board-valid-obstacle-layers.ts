@@ -1,9 +1,9 @@
-import type { Obstacle, SimpleRouteJson } from "lib/types"
+import type { Obstacle, SimpleRouteJson } from "lib/types";
 import {
   getUniqueValidZLayers,
   getUniqueValidZLayersFromLayerNames,
-} from "lib/utils/mapLayerNameToZ"
-import { mapZToLayerName } from "lib/utils/mapZToLayerName"
+} from "lib/utils/mapLayerNameToZ";
+import { mapZToLayerName } from "lib/utils/mapZToLayerName";
 
 function getObstacleZLayersOnBoard(
   obstacle: Obstacle,
@@ -12,32 +12,32 @@ function getObstacleZLayersOnBoard(
   const explicitZLayers = getUniqueValidZLayers(
     obstacle.__zLayers ?? obstacle.zLayers ?? [],
     layerCount,
-  )
-  if (explicitZLayers.length > 0) return explicitZLayers
+  );
+  if (explicitZLayers.length > 0) return explicitZLayers;
 
   const namedZLayers = getUniqueValidZLayersFromLayerNames(
     obstacle.layers,
     layerCount,
-  )
-  if (namedZLayers.length > 0) return namedZLayers
+  );
+  if (namedZLayers.length > 0) return namedZLayers;
 
   throw new Error(
     `Obstacle "${obstacle.obstacleId ?? "unknown"}" has no layers on this ${layerCount}-layer board`,
-  )
+  );
 }
 
 function createObstacleWithBoardValidLayers(
   obstacle: Obstacle,
   layerCount: number,
 ): Obstacle {
-  const zLayers = getObstacleZLayersOnBoard(obstacle, layerCount)
+  const zLayers = getObstacleZLayersOnBoard(obstacle, layerCount);
 
   return {
     ...obstacle,
     layers: zLayers.map((z) => mapZToLayerName(z, layerCount)),
     zLayers,
     __zLayers: zLayers,
-  }
+  };
 }
 
 export function createSrjWithBoardValidObstacleLayers(
@@ -54,5 +54,5 @@ export function createSrjWithBoardValidObstacleLayers(
         createObstacleWithBoardValidLayers(pad, srj.layerCount),
       ),
     })),
-  }
+  };
 }

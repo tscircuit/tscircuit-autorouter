@@ -6,13 +6,13 @@ import {
   readFile,
   readdir,
   writeFile,
-} from "node:fs/promises"
-import path from "node:path"
+} from "node:fs/promises";
+import path from "node:path";
 import {
   getPngBufferFromGraphicsObject,
   getSvgFromGraphicsObject,
   type GraphicsObject,
-} from "graphics-debug"
+} from "graphics-debug";
 import {
   AutoroutingPipeline1_OriginalUnravel,
   AutoroutingPipelineSolver2_PortPointPathing,
@@ -20,60 +20,60 @@ import {
   AutoroutingPipelineSolver4,
   AutoroutingPipelineSolver7_MultiGraph,
   AutoroutingPipelineSolver9_PreloadedTraceGraph,
-} from "../lib"
+} from "../lib";
 import {
   PipelineStageDebugRunner,
   type StageDebuggablePipelineSolver,
-} from "../lib/testing/PipelineStageDebugRunner"
-import { evaluateRelaxedDrc } from "../lib/testing/evaluate-relaxed-drc"
+} from "../lib/testing/PipelineStageDebugRunner";
+import { evaluateRelaxedDrc } from "../lib/testing/evaluate-relaxed-drc";
 import type {
   SimpleRouteJson,
   SimplifiedPcbTrace,
-} from "../lib/types/srj-types"
+} from "../lib/types/srj-types";
 import {
   DATASET_OPTIONS_LABEL,
   type DatasetName,
   loadScenarioBySampleNumber,
   parseDatasetName,
   toSimpleRouteJson,
-} from "./benchmark/scenarios"
+} from "./benchmark/scenarios";
 
-type PipelineId = 1 | 2 | 3 | 4 | 7 | 9
+type PipelineId = 1 | 2 | 3 | 4 | 7 | 9;
 
 type SolverOptions = {
-  effort?: number
-}
+  effort?: number;
+};
 
 type PipelineRunSolver = StageDebuggablePipelineSolver & {
-  srjWithPointPairs?: SimpleRouteJson
-  getOutputSimplifiedPcbTraces?: () => SimplifiedPcbTrace[]
-  getOutputSimpleRouteJson: () => SimpleRouteJson
-  visualizeFinalOutput?: () => GraphicsObject
-}
+  srjWithPointPairs?: SimpleRouteJson;
+  getOutputSimplifiedPcbTraces?: () => SimplifiedPcbTrace[];
+  getOutputSimpleRouteJson: () => SimpleRouteJson;
+  visualizeFinalOutput?: () => GraphicsObject;
+};
 
 type PipelineSolverConstructor = new (
   srj: SimpleRouteJson,
   opts?: any,
-) => PipelineRunSolver
+) => PipelineRunSolver;
 
 type RunSampleOptions = {
-  pipeline: PipelineId
-  srjPath?: string
-  sample?: number
-  dataset: DatasetName
-  outDir?: string
-  pngSize: number
-  effort?: number
-  stopAfterStage?: string
-  writeAiVisuals: boolean
-  netColors: boolean
-}
+  pipeline: PipelineId;
+  srjPath?: string;
+  sample?: number;
+  dataset: DatasetName;
+  outDir?: string;
+  pngSize: number;
+  effort?: number;
+  stopAfterStage?: string;
+  writeAiVisuals: boolean;
+  netColors: boolean;
+};
 
 const PIPELINE_SOLVERS: Record<
   PipelineId,
   {
-    solverName: string
-    SolverConstructor: PipelineSolverConstructor
+    solverName: string;
+    SolverConstructor: PipelineSolverConstructor;
   }
 > = {
   1: {
@@ -100,7 +100,7 @@ const PIPELINE_SOLVERS: Record<
     solverName: "AutoroutingPipelineSolver9_PreloadedTraceGraph",
     SolverConstructor: AutoroutingPipelineSolver9_PreloadedTraceGraph,
   },
-}
+};
 
 const printHelp = () => {
   console.log(
@@ -127,41 +127,41 @@ const printHelp = () => {
       "  ./run-sample.sh --pipeline 7 --sample 3 --dataset dataset01",
       "  ./run-sample.sh --srj-path fixtures/legacy/assets/e2e3.json",
     ].join("\n"),
-  )
-}
+  );
+};
 
 const parsePositiveInt = (rawValue: string, flagName: string) => {
-  const value = Number.parseInt(rawValue, 10)
+  const value = Number.parseInt(rawValue, 10);
   if (!Number.isFinite(value) || value < 1) {
-    throw new Error(`${flagName} must be a positive integer`)
+    throw new Error(`${flagName} must be a positive integer`);
   }
-  return value
-}
+  return value;
+};
 
 const parsePositiveNumber = (rawValue: string, flagName: string) => {
-  const value = Number.parseFloat(rawValue)
+  const value = Number.parseFloat(rawValue);
 
   if (!Number.isFinite(value) || value <= 0) {
-    throw new Error(`${flagName} must be a positive number`)
+    throw new Error(`${flagName} must be a positive number`);
   }
 
-  return value
-}
+  return value;
+};
 
 const toRelativePath = (targetPath: string) => {
-  const relativePath = path.relative(process.cwd(), targetPath)
+  const relativePath = path.relative(process.cwd(), targetPath);
   if (relativePath === "") {
-    return "."
+    return ".";
   }
-  return relativePath.startsWith(".") ? relativePath : `./${relativePath}`
-}
+  return relativePath.startsWith(".") ? relativePath : `./${relativePath}`;
+};
 
 const formatPoint = (point: { x: number; y: number } | null) => {
   if (!point) {
-    return "n/a"
+    return "n/a";
   }
-  return `(${point.x.toFixed(3)}, ${point.y.toFixed(3)})`
-}
+  return `(${point.x.toFixed(3)}, ${point.y.toFixed(3)})`;
+};
 
 const getApproximateErrorLocation = (
   error: Record<string, unknown>,
@@ -174,8 +174,8 @@ const getApproximateErrorLocation = (
     "x" in error.center &&
     "y" in error.center
   ) {
-    const center = error.center as { x: number; y: number }
-    return { x: center.x, y: center.y }
+    const center = error.center as { x: number; y: number };
+    return { x: center.x, y: center.y };
   }
 
   if (typeof error.pcb_trace_id === "string") {
@@ -183,8 +183,8 @@ const getApproximateErrorLocation = (
       (element) =>
         element.type === "pcb_trace" &&
         element.pcb_trace_id === error.pcb_trace_id,
-    )
-    const route = Array.isArray(trace?.route) ? trace.route : []
+    );
+    const route = Array.isArray(trace?.route) ? trace.route : [];
     const points = route.flatMap((segment) => {
       if (
         segment &&
@@ -192,10 +192,10 @@ const getApproximateErrorLocation = (
         typeof segment.x === "number" &&
         typeof segment.y === "number"
       ) {
-        return [{ x: segment.x, y: segment.y }]
+        return [{ x: segment.x, y: segment.y }];
       }
-      return []
-    })
+      return [];
+    });
 
     if (points.length > 0) {
       const sum = points.reduce(
@@ -204,11 +204,11 @@ const getApproximateErrorLocation = (
           y: acc.y + point.y,
         }),
         { x: 0, y: 0 },
-      )
+      );
       return {
         x: sum.x / points.length,
         y: sum.y / points.length,
-      }
+      };
     }
   }
 
@@ -216,7 +216,7 @@ const getApproximateErrorLocation = (
     ? error.pcb_port_ids.filter(
         (value): value is string => typeof value === "string",
       )
-    : []
+    : [];
   if (pcbPortIds.length > 0) {
     const ports = circuitJson.filter(
       (element) =>
@@ -225,7 +225,7 @@ const getApproximateErrorLocation = (
         pcbPortIds.includes(element.pcb_port_id) &&
         typeof element.x === "number" &&
         typeof element.y === "number",
-    ) as Array<Record<string, number>>
+    ) as Array<Record<string, number>>;
 
     if (ports.length > 0) {
       const sum = ports.reduce(
@@ -234,16 +234,16 @@ const getApproximateErrorLocation = (
           y: acc.y + port.y,
         }),
         { x: 0, y: 0 },
-      )
+      );
       return {
         x: sum.x / ports.length,
         y: sum.y / ports.length,
-      }
+      };
     }
   }
 
-  return null
-}
+  return null;
+};
 
 const formatDrcIdentifiers = (error: Record<string, unknown>) => {
   const idFields = [
@@ -252,29 +252,29 @@ const formatDrcIdentifiers = (error: Record<string, unknown>) => {
     "source_trace_id",
     "pcb_trace_id",
     "source_port_id",
-  ] as const
+  ] as const;
 
   const parts = idFields.flatMap((fieldName) => {
-    const value = error[fieldName]
+    const value = error[fieldName];
     return typeof value === "string" && value.length > 0
       ? [`${fieldName}=${value}`]
-      : []
-  })
+      : [];
+  });
 
   const pcbPortIds = Array.isArray(error.pcb_port_ids)
     ? error.pcb_port_ids.filter(
         (value): value is string => typeof value === "string",
       )
-    : []
+    : [];
   if (pcbPortIds.length > 0) {
-    parts.push(`pcb_port_ids=${pcbPortIds.join(",")}`)
+    parts.push(`pcb_port_ids=${pcbPortIds.join(",")}`);
   }
 
-  return parts.join(" ")
-}
+  return parts.join(" ");
+};
 
 const toUnknownRecord = (value: object): Record<string, unknown> =>
-  value as unknown as Record<string, unknown>
+  value as unknown as Record<string, unknown>;
 
 const emitLogLines = async (
   logsPath: string,
@@ -282,176 +282,176 @@ const emitLogLines = async (
   onLog?: (line: string) => void,
 ) => {
   for (const line of lines) {
-    onLog?.(line)
+    onLog?.(line);
   }
-  await appendFile(logsPath, `${lines.join("\n")}\n`)
-}
+  await appendFile(logsPath, `${lines.join("\n")}\n`);
+};
 
 const parseArgs = (): RunSampleOptions => {
-  const args = process.argv.slice(2)
+  const args = process.argv.slice(2);
   const options: RunSampleOptions = {
     pipeline: 7,
     dataset: "dataset01",
     pngSize: 1536,
     writeAiVisuals: false,
     netColors: false,
-  }
+  };
 
   for (let i = 0; i < args.length; i += 1) {
-    const arg = args[i]
+    const arg = args[i];
 
     if (arg === "-h" || arg === "--help") {
-      printHelp()
-      process.exit(0)
+      printHelp();
+      process.exit(0);
     }
 
     if (arg === "--pipeline") {
-      const pipelineId = parsePositiveInt(args[i + 1] ?? "", "--pipeline")
+      const pipelineId = parsePositiveInt(args[i + 1] ?? "", "--pipeline");
       if (!(pipelineId in PIPELINE_SOLVERS)) {
-        throw new Error("--pipeline must be one of 1, 2, 3, 4, 7, or 9")
+        throw new Error("--pipeline must be one of 1, 2, 3, 4, 7, or 9");
       }
-      options.pipeline = pipelineId as PipelineId
-      i += 1
-      continue
+      options.pipeline = pipelineId as PipelineId;
+      i += 1;
+      continue;
     }
 
     if (arg === "--srj-path") {
-      const srjPath = args[i + 1]
+      const srjPath = args[i + 1];
       if (!srjPath || srjPath.startsWith("-")) {
-        throw new Error("--srj-path requires a value")
+        throw new Error("--srj-path requires a value");
       }
-      options.srjPath = srjPath
-      i += 1
-      continue
+      options.srjPath = srjPath;
+      i += 1;
+      continue;
     }
 
     if (arg === "--sample") {
-      options.sample = parsePositiveInt(args[i + 1] ?? "", "--sample")
-      i += 1
-      continue
+      options.sample = parsePositiveInt(args[i + 1] ?? "", "--sample");
+      i += 1;
+      continue;
     }
 
     if (arg === "--dataset") {
-      const rawDatasetName = args[i + 1]
+      const rawDatasetName = args[i + 1];
       if (!rawDatasetName || rawDatasetName.startsWith("-")) {
-        throw new Error("--dataset requires a value")
+        throw new Error("--dataset requires a value");
       }
-      const datasetName = parseDatasetName(rawDatasetName)
+      const datasetName = parseDatasetName(rawDatasetName);
       if (!datasetName) {
         throw new Error(
           `Unknown dataset "${rawDatasetName}". Available: ${DATASET_OPTIONS_LABEL}`,
-        )
+        );
       }
-      options.dataset = datasetName
-      i += 1
-      continue
+      options.dataset = datasetName;
+      i += 1;
+      continue;
     }
 
     if (arg === "--out-dir") {
-      const outDir = args[i + 1]
+      const outDir = args[i + 1];
       if (!outDir || outDir.startsWith("-")) {
-        throw new Error("--out-dir requires a value")
+        throw new Error("--out-dir requires a value");
       }
-      options.outDir = outDir
-      i += 1
-      continue
+      options.outDir = outDir;
+      i += 1;
+      continue;
     }
 
     if (arg === "--png-size") {
-      options.pngSize = parsePositiveInt(args[i + 1] ?? "", "--png-size")
-      i += 1
-      continue
+      options.pngSize = parsePositiveInt(args[i + 1] ?? "", "--png-size");
+      i += 1;
+      continue;
     }
 
     if (arg === "--stop-after-stage") {
-      const stopAfterStage = args[i + 1]
+      const stopAfterStage = args[i + 1];
       if (!stopAfterStage || stopAfterStage.startsWith("-")) {
-        throw new Error("--stop-after-stage requires a value")
+        throw new Error("--stop-after-stage requires a value");
       }
-      options.stopAfterStage = stopAfterStage
-      i += 1
-      continue
+      options.stopAfterStage = stopAfterStage;
+      i += 1;
+      continue;
     }
 
     if (arg === "--ai-visuals") {
-      options.writeAiVisuals = true
-      continue
+      options.writeAiVisuals = true;
+      continue;
     }
 
     if (arg === "--net-colors") {
-      options.netColors = true
-      options.writeAiVisuals = true
-      continue
+      options.netColors = true;
+      options.writeAiVisuals = true;
+      continue;
     }
 
     if (arg === "--effort") {
-      options.effort = parsePositiveNumber(args[i + 1] ?? "", "--effort")
-      i += 1
-      continue
+      options.effort = parsePositiveNumber(args[i + 1] ?? "", "--effort");
+      i += 1;
+      continue;
     }
 
-    throw new Error(`Unknown argument: ${arg}`)
+    throw new Error(`Unknown argument: ${arg}`);
   }
 
   if (Boolean(options.srjPath) === Boolean(options.sample)) {
-    throw new Error("Provide exactly one of --srj-path or --sample")
+    throw new Error("Provide exactly one of --srj-path or --sample");
   }
 
   if (options.pngSize < 1024) {
-    throw new Error("--png-size must be at least 1024")
+    throw new Error("--png-size must be at least 1024");
   }
 
   if (options.netColors && options.pipeline !== 7 && options.pipeline !== 9) {
     throw new Error(
       "--net-colors is currently supported by pipelines 7 and 9 only",
-    )
+    );
   }
 
-  return options
-}
+  return options;
+};
 
 const loadSrjFromPath = async (srjPath: string) => {
-  const absolutePath = path.resolve(process.cwd(), srjPath)
-  const rawFile = await readFile(absolutePath, "utf8")
-  const parsedFile = JSON.parse(rawFile)
-  const srj = toSimpleRouteJson(parsedFile)
+  const absolutePath = path.resolve(process.cwd(), srjPath);
+  const rawFile = await readFile(absolutePath, "utf8");
+  const parsedFile = JSON.parse(rawFile);
+  const srj = toSimpleRouteJson(parsedFile);
 
   if (!srj) {
     throw new Error(
       `File ${absolutePath} does not contain a SimpleRouteJson-compatible payload`,
-    )
+    );
   }
 
   return {
     scenario: srj,
     scenarioName: path.basename(absolutePath, path.extname(absolutePath)),
     sourceLabel: toRelativePath(absolutePath),
-  }
-}
+  };
+};
 
 const getNextRunDirectory = async () => {
-  const tmpDir = path.join(process.cwd(), "tmp")
-  await mkdir(tmpDir, { recursive: true })
+  const tmpDir = path.join(process.cwd(), "tmp");
+  await mkdir(tmpDir, { recursive: true });
 
-  const entries = await readdir(tmpDir, { withFileTypes: true })
+  const entries = await readdir(tmpDir, { withFileTypes: true });
   const existingRunNumbers = entries
     .filter((entry) => entry.isDirectory())
     .map((entry) => /^run-(\d+)$/.exec(entry.name)?.[1])
     .filter((match): match is string => Boolean(match))
-    .map((match) => Number.parseInt(match, 10))
+    .map((match) => Number.parseInt(match, 10));
 
   const nextRunNumber =
-    existingRunNumbers.length === 0 ? 1 : Math.max(...existingRunNumbers) + 1
+    existingRunNumbers.length === 0 ? 1 : Math.max(...existingRunNumbers) + 1;
 
   return {
     runNumber: nextRunNumber,
     outputDir: path.join(tmpDir, `run-${nextRunNumber}`),
-  }
-}
+  };
+};
 
 const main = async () => {
-  const options = parseArgs()
-  const pipelineConfig = PIPELINE_SOLVERS[options.pipeline]
+  const options = parseArgs();
+  const pipelineConfig = PIPELINE_SOLVERS[options.pipeline];
 
   const input =
     options.srjPath !== undefined
@@ -460,19 +460,19 @@ const main = async () => {
           options.dataset,
           options.sample!,
           options.effort,
-        )
+        );
 
   const resolvedOutputDir = options.outDir
     ? path.resolve(process.cwd(), options.outDir)
-    : (await getNextRunDirectory()).outputDir
+    : (await getNextRunDirectory()).outputDir;
 
   const pipelineSolver = new pipelineConfig.SolverConstructor(input.scenario, {
     effort: options.effort,
     visualizationTraceColorMode: options.netColors ? "net" : "layer",
-  })
+  });
   const onLog = (line: string) => {
-    console.log(line)
-  }
+    console.log(line);
+  };
 
   const runner = new PipelineStageDebugRunner({
     pipelineSolver,
@@ -494,19 +494,19 @@ const main = async () => {
       aiVisuals: options.writeAiVisuals,
     },
     onLog,
-  })
+  });
 
-  const result = await runner.run()
-  let netColorArtifactPath: string | null = null
+  const result = await runner.run();
+  let netColorArtifactPath: string | null = null;
   if (options.netColors && result.solved && !result.failed) {
-    const graphics = pipelineSolver.visualizeFinalOutput?.()
+    const graphics = pipelineSolver.visualizeFinalOutput?.();
     if (!graphics) {
       throw new Error(
         "Pipeline 7 does not provide a final-output visualization",
-      )
+      );
     }
-    const basePath = path.join(resolvedOutputDir, "final-net-colors")
-    netColorArtifactPath = `${basePath}.png`
+    const basePath = path.join(resolvedOutputDir, "final-net-colors");
+    netColorArtifactPath = `${basePath}.png`;
     await writeFile(
       netColorArtifactPath,
       await getPngBufferFromGraphicsObject(graphics, {
@@ -514,35 +514,35 @@ const main = async () => {
         pngWidth: options.pngSize,
         pngHeight: options.pngSize,
       }),
-    )
+    );
     await writeFile(
       `${basePath}.svg`,
       getSvgFromGraphicsObject(graphics, { backgroundColor: "white" }),
-    )
+    );
     await writeFile(
       `${basePath}.graphics.json`,
       JSON.stringify(graphics, null, 2),
-    )
+    );
   }
-  let relaxedDrcPassed: boolean | null = null
-  let drcErrors: Array<Record<string, unknown>> = []
+  let relaxedDrcPassed: boolean | null = null;
+  let drcErrors: Array<Record<string, unknown>> = [];
 
   if (result.solved && !result.failed) {
-    const traces = pipelineSolver.getOutputSimplifiedPcbTraces?.() ?? []
+    const traces = pipelineSolver.getOutputSimplifiedPcbTraces?.() ?? [];
     const drcResult = evaluateRelaxedDrc({
       inputSrj: input.scenario,
       srjWithPointPairs: pipelineSolver.srjWithPointPairs ?? input.scenario,
       routedTraces: traces,
-    })
-    const circuitJson = drcResult.circuitJson.map(toUnknownRecord)
-    relaxedDrcPassed = drcResult.errors.length === 0
+    });
+    const circuitJson = drcResult.circuitJson.map(toUnknownRecord);
+    relaxedDrcPassed = drcResult.errors.length === 0;
     drcErrors = drcResult.errorsWithCenters.map((error) => {
-      const errorRecord = toUnknownRecord(error)
+      const errorRecord = toUnknownRecord(error);
       return {
         ...errorRecord,
         resolvedLocation: getApproximateErrorLocation(errorRecord, circuitJson),
-      }
-    })
+      };
+    });
 
     await emitLogLines(
       result.logsPath,
@@ -554,54 +554,54 @@ const main = async () => {
           const message =
             typeof error.message === "string"
               ? error.message.replace(/\s+/g, " ").trim()
-              : ""
+              : "";
           const location = formatPoint(
             (error.resolvedLocation as { x: number; y: number } | null) ?? null,
-          )
-          const identifiers = formatDrcIdentifiers(error)
-          return `drc[${index + 1}] type=${error.error_type ?? error.type ?? "unknown"} location=${location} ${identifiers} message=${JSON.stringify(message)}`
+          );
+          const identifiers = formatDrcIdentifiers(error);
+          return `drc[${index + 1}] type=${error.error_type ?? error.type ?? "unknown"} location=${location} ${identifiers} message=${JSON.stringify(message)}`;
         }),
       ],
       onLog,
-    )
+    );
   } else {
     await emitLogLines(
       result.logsPath,
       ["postrun", "drc.relaxedPassed=n/a", "drc.errorCount=n/a"],
       onLog,
-    )
+    );
   }
 
   const success =
-    (result.solved && !result.failed) || Boolean(result.stoppedAfterStage)
+    (result.solved && !result.failed) || Boolean(result.stoppedAfterStage);
   const drcSummary =
-    relaxedDrcPassed === null ? "not-run" : relaxedDrcPassed ? "pass" : "fail"
+    relaxedDrcPassed === null ? "not-run" : relaxedDrcPassed ? "pass" : "fail";
 
-  console.log(`Success: ${success ? "yes" : "no"}`)
-  console.log(`Relaxed DRC: ${drcSummary}`)
+  console.log(`Success: ${success ? "yes" : "no"}`);
+  console.log(`Relaxed DRC: ${drcSummary}`);
   console.log(
     `DRC errors: ${relaxedDrcPassed === null ? "n/a" : String(drcErrors.length)}`,
-  )
-  console.log(`Output dir: ${toRelativePath(result.outputDir)}`)
-  console.log(`Logs: ${toRelativePath(result.logsPath)}`)
-  console.log(`Stage PNGs: ${result.stageArtifacts.length}`)
+  );
+  console.log(`Output dir: ${toRelativePath(result.outputDir)}`);
+  console.log(`Logs: ${toRelativePath(result.logsPath)}`);
+  console.log(`Stage PNGs: ${result.stageArtifacts.length}`);
   if (netColorArtifactPath) {
     console.log(
       `Net-colored final PNG: ${toRelativePath(netColorArtifactPath)}`,
-    )
+    );
   }
   if (result.stoppedAfterStage) {
-    console.log(`Stopped after stage: ${result.stoppedAfterStage}`)
+    console.log(`Stopped after stage: ${result.stoppedAfterStage}`);
   }
 
   if (drcErrors.length > 0) {
-    console.log(`DRC details written to: ${toRelativePath(result.logsPath)}`)
+    console.log(`DRC details written to: ${toRelativePath(result.logsPath)}`);
   }
 
   if (!success) {
-    console.error(result.error ?? "Pipeline run failed")
-    process.exit(1)
+    console.error(result.error ?? "Pipeline run failed");
+    process.exit(1);
   }
-}
+};
 
-await main()
+await main();

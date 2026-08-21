@@ -1,41 +1,41 @@
-import { readFile, writeFile } from "node:fs/promises"
-import type { BenchmarkReport, WorkerResult } from "./benchmark-types"
+import { readFile, writeFile } from "node:fs/promises";
+import type { BenchmarkReport, WorkerResult } from "./benchmark-types";
 
 type SameMachineBenchmarkInput = {
-  mainReport: BenchmarkReport
-  prReport: BenchmarkReport
-  mainSha: string
-  prSha: string
-  repository: string
-  runnerName: string
-}
+  mainReport: BenchmarkReport;
+  prReport: BenchmarkReport;
+  mainSha: string;
+  prSha: string;
+  repository: string;
+  runnerName: string;
+};
 
 const formatTime = (timeMs: number | null): string => {
-  if (timeMs === null || !Number.isFinite(timeMs)) return "n/a"
+  if (timeMs === null || !Number.isFinite(timeMs)) return "n/a";
   return timeMs < 1_000
     ? `${Math.round(timeMs)}ms`
-    : `${(timeMs / 1_000).toFixed(1)}s`
-}
+    : `${(timeMs / 1_000).toFixed(1)}s`;
+};
 
 const formatAverage = (value: number | null): string =>
-  value === null || !Number.isFinite(value) ? "n/a" : value.toFixed(2)
+  value === null || !Number.isFinite(value) ? "n/a" : value.toFixed(2);
 
 const parsePercentLabel = (label: string): number | null => {
-  const match = label.trim().match(/^(-?\d+(?:\.\d+)?)%/)
-  if (!match) return null
-  const value = Number(match[1])
-  return Number.isFinite(value) ? value : null
-}
+  const match = label.trim().match(/^(-?\d+(?:\.\d+)?)%/);
+  if (!match) return null;
+  const value = Number(match[1]);
+  return Number.isFinite(value) ? value : null;
+};
 
 const formatSigned = (value: number, suffix = ""): string =>
-  `${value > 0 ? "+" : ""}${value.toFixed(1)}${suffix}`
+  `${value > 0 ? "+" : ""}${value.toFixed(1)}${suffix}`;
 
 const formatPercentPointDelta = (main: string, pr: string): string => {
-  const mainValue = parsePercentLabel(main)
-  const prValue = parsePercentLabel(pr)
-  if (mainValue === null || prValue === null) return "n/a"
-  return formatSigned(prValue - mainValue, " pp")
-}
+  const mainValue = parsePercentLabel(main);
+  const prValue = parsePercentLabel(pr);
+  if (mainValue === null || prValue === null) return "n/a";
+  return formatSigned(prValue - mainValue, " pp");
+};
 
 const formatRelativeDelta = (
   mainValue: number | null,
@@ -48,19 +48,19 @@ const formatRelativeDelta = (
     !Number.isFinite(prValue) ||
     mainValue === 0
   ) {
-    return "n/a"
+    return "n/a";
   }
-  return formatSigned(((prValue - mainValue) / mainValue) * 100, "%")
-}
+  return formatSigned(((prValue - mainValue) / mainValue) * 100, "%");
+};
 
 const formatCountDelta = (
   mainValue: number | null,
   prValue: number | null,
 ): string => {
-  if (mainValue === null || prValue === null) return "n/a"
-  const delta = prValue - mainValue
-  return `${delta > 0 ? "+" : ""}${delta}`
-}
+  if (mainValue === null || prValue === null) return "n/a";
+  const delta = prValue - mainValue;
+  return `${delta > 0 ? "+" : ""}${delta}`;
+};
 
 const getDrcIssueCount = (
   report: BenchmarkReport,
@@ -68,21 +68,21 @@ const getDrcIssueCount = (
 ): number | null => {
   const solvedTests = report.tests.filter(
     (test) => test.solverName === solverName && test.didSolve,
-  )
-  if (solvedTests.length === 0) return null
-  let drcIssueCount = 0
+  );
+  if (solvedTests.length === 0) return null;
+  let drcIssueCount = 0;
   for (const test of solvedTests) {
     if (
       typeof test.drcErrorCount !== "number" ||
       !Number.isInteger(test.drcErrorCount) ||
       test.drcErrorCount < 0
     ) {
-      return null
+      return null;
     }
-    drcIssueCount += test.drcErrorCount
+    drcIssueCount += test.drcErrorCount;
   }
-  return drcIssueCount
-}
+  return drcIssueCount;
+};
 
 const getTimePercentile = (
   report: BenchmarkReport,
@@ -95,39 +95,39 @@ const getTimePercentile = (
         test.solverName === solverName && (test.didSolve || test.didTimeout),
     )
     .map((test) => test.elapsedTimeMs)
-    .sort((a, b) => a - b)
-  if (elapsedTimes.length === 0) return null
+    .sort((a, b) => a - b);
+  if (elapsedTimes.length === 0) return null;
 
-  const index = (elapsedTimes.length - 1) * percentile
-  const lowerIndex = Math.floor(index)
-  const upperIndex = Math.ceil(index)
-  const lowerValue = elapsedTimes[lowerIndex]
-  const upperValue = elapsedTimes[upperIndex]
-  if (lowerValue === undefined || upperValue === undefined) return null
-  return lowerValue + (upperValue - lowerValue) * (index - lowerIndex)
-}
+  const index = (elapsedTimes.length - 1) * percentile;
+  const lowerIndex = Math.floor(index);
+  const upperIndex = Math.ceil(index);
+  const lowerValue = elapsedTimes[lowerIndex];
+  const upperValue = elapsedTimes[upperIndex];
+  if (lowerValue === undefined || upperValue === undefined) return null;
+  return lowerValue + (upperValue - lowerValue) * (index - lowerIndex);
+};
 
 const outcomeScore = (test: WorkerResult): number => {
-  if (!test.didSolve) return 0
-  return test.relaxedDrcPassed ? 2 : 1
-}
+  if (!test.didSolve) return 0;
+  return test.relaxedDrcPassed ? 2 : 1;
+};
 
 const outcomeLabel = (test: WorkerResult): string => {
-  if (test.didTimeout) return "Timeout"
-  if (!test.didSolve) return "Failed"
-  return test.relaxedDrcPassed ? "DRC passed" : "Solved (DRC failed)"
-}
+  if (test.didTimeout) return "Timeout";
+  if (!test.didSolve) return "Failed";
+  return test.relaxedDrcPassed ? "DRC passed" : "Solved (DRC failed)";
+};
 
 const testKey = (test: WorkerResult): string =>
-  `${test.solverName}::${test.scenarioName}::${test.sampleNumber}`
+  `${test.solverName}::${test.scenarioName}::${test.sampleNumber}`;
 
 const formatSolverName = (solverName: string): string =>
-  solverName.replace(/^AutoroutingPipelineSolver(\d+).*$/, "Pipeline$1")
+  solverName.replace(/^AutoroutingPipelineSolver(\d+).*$/, "Pipeline$1");
 
 const escapeTableCell = (value: unknown): string =>
   String(value ?? "")
     .replace(/\|/g, "\\|")
-    .replace(/\r?\n/g, " ")
+    .replace(/\r?\n/g, " ");
 
 const getChangedOutcomes = (
   mainReport: BenchmarkReport,
@@ -135,10 +135,10 @@ const getChangedOutcomes = (
 ) => {
   const mainTests = new Map(
     mainReport.tests.map((test) => [testKey(test), test]),
-  )
+  );
   return prReport.tests.flatMap((prTest) => {
-    const mainTest = mainTests.get(testKey(prTest))
-    if (!mainTest || outcomeScore(mainTest) === outcomeScore(prTest)) return []
+    const mainTest = mainTests.get(testKey(prTest));
+    if (!mainTest || outcomeScore(mainTest) === outcomeScore(prTest)) return [];
     return [
       {
         solverName: prTest.solverName,
@@ -150,9 +150,9 @@ const getChangedOutcomes = (
             ? "Improved"
             : "Regressed",
       },
-    ]
-  })
-}
+    ];
+  });
+};
 
 export const renderSameMachineBenchmarkResults = ({
   mainReport,
@@ -165,13 +165,13 @@ export const renderSameMachineBenchmarkResults = ({
   if (mainReport.datasetName !== prReport.datasetName) {
     throw new Error(
       `Dataset mismatch: main=${mainReport.datasetName}, PR=${prReport.datasetName}`,
-    )
+    );
   }
 
   const mainSummaries = new Map(
     mainReport.summary.map((summary) => [summary.solverName, summary]),
-  )
-  const changedOutcomes = getChangedOutcomes(mainReport, prReport)
+  );
+  const changedOutcomes = getChangedOutcomes(mainReport, prReport);
   const lines = [
     "## Same Machine Benchmark Results",
     "",
@@ -182,35 +182,35 @@ export const renderSameMachineBenchmarkResults = ({
     "",
     "| Solver | Metric | Main | PR | Delta |",
     "| --- | --- | ---: | ---: | ---: |",
-  ]
+  ];
 
   for (const prSummary of prReport.summary) {
-    const mainSummary = mainSummaries.get(prSummary.solverName)
+    const mainSummary = mainSummaries.get(prSummary.solverName);
     if (!mainSummary) {
-      throw new Error(`Main report is missing solver ${prSummary.solverName}`)
+      throw new Error(`Main report is missing solver ${prSummary.solverName}`);
     }
-    const solver = formatSolverName(prSummary.solverName)
+    const solver = formatSolverName(prSummary.solverName);
     const mainTimeouts = mainReport.tests.filter(
       (test) => test.solverName === prSummary.solverName && test.didTimeout,
-    ).length
+    ).length;
     const prTimeouts = prReport.tests.filter(
       (test) => test.solverName === prSummary.solverName && test.didTimeout,
-    ).length
-    const mainDrcIssues = getDrcIssueCount(mainReport, prSummary.solverName)
-    const prDrcIssues = getDrcIssueCount(prReport, prSummary.solverName)
+    ).length;
+    const mainDrcIssues = getDrcIssueCount(mainReport, prSummary.solverName);
+    const prDrcIssues = getDrcIssueCount(prReport, prSummary.solverName);
     const timePercentiles = [50, 60, 70, 80, 90, 95].map((percentile) => {
       const mainTime = getTimePercentile(
         mainReport,
         prSummary.solverName,
         percentile / 100,
-      )
+      );
       const prTime = getTimePercentile(
         prReport,
         prSummary.solverName,
         percentile / 100,
-      )
-      return `| ${solver} | P${percentile} time | ${formatTime(mainTime)} | ${formatTime(prTime)} | ${formatRelativeDelta(mainTime, prTime)} |`
-    })
+      );
+      return `| ${solver} | P${percentile} time | ${formatTime(mainTime)} | ${formatTime(prTime)} | ${formatRelativeDelta(mainTime, prTime)} |`;
+    });
 
     lines.push(
       `| ${solver} | Completion | ${mainSummary.completedRateLabel} | ${prSummary.completedRateLabel} | ${formatPercentPointDelta(mainSummary.completedRateLabel, prSummary.completedRateLabel)} |`,
@@ -219,17 +219,17 @@ export const renderSameMachineBenchmarkResults = ({
       `| ${solver} | Timeouts | ${mainTimeouts} | ${prTimeouts} | ${prTimeouts - mainTimeouts > 0 ? "+" : ""}${prTimeouts - mainTimeouts} |`,
       ...timePercentiles,
       `| ${solver} | Average vias | ${formatAverage(mainSummary.avgVia)} | ${formatAverage(prSummary.avgVia)} | ${formatRelativeDelta(mainSummary.avgVia, prSummary.avgVia)} |`,
-    )
+    );
   }
 
   const improvementCount = changedOutcomes.filter(
     (outcome) => outcome.delta === "Improved",
-  ).length
-  const regressionCount = changedOutcomes.length - improvementCount
+  ).length;
+  const regressionCount = changedOutcomes.length - improvementCount;
   lines.push(
     "",
     `Outcome changes: **${improvementCount} improved**, **${regressionCount} regressed**. DRC issues are totaled across solved samples. Timing percentiles include solved and timed-out samples; negative timing deltas are faster.`,
-  )
+  );
 
   if (changedOutcomes.length > 0) {
     lines.push(
@@ -245,29 +245,29 @@ export const renderSameMachineBenchmarkResults = ({
       ),
       "",
       "</details>",
-    )
+    );
   }
 
-  return `${lines.join("\n")}\n`
-}
+  return `${lines.join("\n")}\n`;
+};
 
 const getRequiredArg = (name: string): string => {
-  const index = process.argv.indexOf(name)
-  const value = index >= 0 ? process.argv[index + 1] : undefined
-  if (!value) throw new Error(`Missing required argument ${name}`)
-  return value
-}
+  const index = process.argv.indexOf(name);
+  const value = index >= 0 ? process.argv[index + 1] : undefined;
+  if (!value) throw new Error(`Missing required argument ${name}`);
+  return value;
+};
 
 if (import.meta.main) {
-  const mainReportPath = getRequiredArg("--main-report")
-  const prReportPath = getRequiredArg("--pr-report")
-  const outputPath = getRequiredArg("--output")
+  const mainReportPath = getRequiredArg("--main-report");
+  const prReportPath = getRequiredArg("--pr-report");
+  const outputPath = getRequiredArg("--output");
   const mainReport = JSON.parse(
     await readFile(mainReportPath, "utf8"),
-  ) as BenchmarkReport
+  ) as BenchmarkReport;
   const prReport = JSON.parse(
     await readFile(prReportPath, "utf8"),
-  ) as BenchmarkReport
+  ) as BenchmarkReport;
 
   await writeFile(
     outputPath,
@@ -279,5 +279,5 @@ if (import.meta.main) {
       repository: getRequiredArg("--repository"),
       runnerName: getRequiredArg("--runner-name"),
     }),
-  )
+  );
 }

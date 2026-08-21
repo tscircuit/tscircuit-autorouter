@@ -1,6 +1,6 @@
-import { expect, test } from "bun:test"
-import { PowerTraceExpansionSolver } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/PowerTraceExpansionSolver"
-import type { SimpleRouteJson } from "lib/types"
+import { expect, test } from "bun:test";
+import { PowerTraceExpansionSolver } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/PowerTraceExpansionSolver";
+import type { SimpleRouteJson } from "lib/types";
 
 test("PowerTraceExpansionSolver immediately bypasses an empty selection", () => {
   const traces = [
@@ -13,7 +13,7 @@ test("PowerTraceExpansionSolver immediately bypasses an empty selection", () => 
         { route_type: "wire" as const, x: 1, y: 0, layer: "top", width: 0.1 },
       ],
     },
-  ]
+  ];
   const inputSrj: SimpleRouteJson = {
     layerCount: 2,
     minTraceWidth: 0.1,
@@ -29,15 +29,15 @@ test("PowerTraceExpansionSolver immediately bypasses an empty selection", () => 
       },
     ],
     traces,
-  }
+  };
 
   const solver = new PowerTraceExpansionSolver(inputSrj, {
     onlyConnectionNames: [],
-  })
+  });
 
-  expect(solver.solved).toBe(true)
-  expect(solver.iterations).toBe(0)
-  expect(solver.stats).toEqual({ selectedTraceCount: 0, bypassed: true })
-  expect(solver.getOutput()).toEqual(traces)
-  expect(solver.getOutput()).not.toBe(traces)
-})
+  expect(solver.solved).toBe(true);
+  expect(solver.iterations).toBe(0);
+  expect(solver.stats).toEqual({ selectedTraceCount: 0, bypassed: true });
+  expect(solver.getOutput()).toEqual(traces);
+  expect(solver.getOutput()).not.toBe(traces);
+});

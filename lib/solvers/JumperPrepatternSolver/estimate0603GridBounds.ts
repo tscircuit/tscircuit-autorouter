@@ -10,9 +10,9 @@
  */
 
 // Grid size constants (empirically measured with margin=0.5)
-const BASE_WIDTH = 2.45
-const ADDITIONAL_WIDTH_PER_COL = 2.95
-const HEIGHT_PER_ROW = 1.42
+const BASE_WIDTH = 2.45;
+const ADDITIONAL_WIDTH_PER_COL = 2.95;
+const HEIGHT_PER_ROW = 1.42;
 
 /**
  * Estimates the pad bounds dimensions for a 0603 grid configuration.
@@ -25,10 +25,10 @@ export function estimate0603GridDimensions(
   rows: number,
 ): { width: number; height: number } {
   // width = baseWidth + (cols-1) * additionalWidthPerCol
-  const width = BASE_WIDTH + (cols - 1) * ADDITIONAL_WIDTH_PER_COL
+  const width = BASE_WIDTH + (cols - 1) * ADDITIONAL_WIDTH_PER_COL;
   // height = rows * heightPerRow
-  const height = rows * HEIGHT_PER_ROW
-  return { width, height }
+  const height = rows * HEIGHT_PER_ROW;
+  return { width, height };
 }
 
 /**
@@ -47,28 +47,28 @@ export function calculateMax0603Config(
   paddingRequirement: number = 0.5,
 ): { cols: number; rows: number } {
   // Available space after padding requirement on each side
-  const availableWidth = nodeWidth - 2 * paddingRequirement
-  const availableHeight = nodeHeight - 2 * paddingRequirement
+  const availableWidth = nodeWidth - 2 * paddingRequirement;
+  const availableHeight = nodeHeight - 2 * paddingRequirement;
 
   // Calculate max cols that fit in width: availableWidth >= 2.45 + (cols-1)*2.95
   // cols <= 1 + (availableWidth - 2.45) / 2.95
   const maxColsFromWidth = Math.max(
     1,
     Math.floor(1 + (availableWidth - BASE_WIDTH) / ADDITIONAL_WIDTH_PER_COL),
-  )
+  );
 
   // Calculate max rows that fit in height: availableHeight >= rows * 1.42
   const maxRowsFromHeight = Math.max(
     1,
     Math.floor(availableHeight / HEIGHT_PER_ROW),
-  )
+  );
 
   if (orientation === "vertical") {
     // Vertical: COLS controls width, ROWS controls height
-    return { cols: maxColsFromWidth, rows: maxRowsFromHeight }
+    return { cols: maxColsFromWidth, rows: maxRowsFromHeight };
   } else {
     // Horizontal: effectiveCols = ROWS (controls width), effectiveRows = COLS (controls height)
     // So ROWS parameter controls width (use maxColsFromWidth), COLS controls height (use maxRowsFromHeight)
-    return { cols: maxRowsFromHeight, rows: maxColsFromWidth }
+    return { cols: maxRowsFromHeight, rows: maxColsFromWidth };
   }
 }

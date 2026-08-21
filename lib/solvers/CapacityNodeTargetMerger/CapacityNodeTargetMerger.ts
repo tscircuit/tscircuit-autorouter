@@ -1,50 +1,50 @@
-import { CapacityMeshNode, SimpleRouteConnection } from "lib/types"
-import { Obstacle } from "lib/types"
-import { BaseSolver } from "../BaseSolver"
-import { GraphicsObject } from "graphics-debug"
-import { ConnectivityMap } from "circuit-json-to-connectivity-map"
-import { doRectsOverlap } from "lib/utils/doRectsOverlap"
-import { isPointInRect } from "lib/utils/isPointInRect"
+import { CapacityMeshNode, SimpleRouteConnection } from "lib/types";
+import { Obstacle } from "lib/types";
+import { BaseSolver } from "../BaseSolver";
+import { GraphicsObject } from "graphics-debug";
+import { ConnectivityMap } from "circuit-json-to-connectivity-map";
+import { doRectsOverlap } from "lib/utils/doRectsOverlap";
+import { isPointInRect } from "lib/utils/isPointInRect";
 
 /**
  * Merge targets that are close to each other into a single target
  */
 export class CapacityNodeTargetMerger extends BaseSolver {
   override getSolverName(): string {
-    return "CapacityNodeTargetMerger"
+    return "CapacityNodeTargetMerger";
   }
 
-  unprocessedObstacles: Obstacle[]
-  newNodes: CapacityMeshNode[]
-  removedNodeIds: Set<string>
+  unprocessedObstacles: Obstacle[];
+  newNodes: CapacityMeshNode[];
+  removedNodeIds: Set<string>;
 
   constructor(
     public nodes: CapacityMeshNode[],
     obstacles: Obstacle[],
     public connMap: ConnectivityMap,
   ) {
-    super()
-    this.MAX_ITERATIONS = 100_000
-    this.unprocessedObstacles = [...obstacles]
-    this.newNodes = []
-    this.removedNodeIds = new Set()
+    super();
+    this.MAX_ITERATIONS = 100_000;
+    this.unprocessedObstacles = [...obstacles];
+    this.newNodes = [];
+    this.removedNodeIds = new Set();
   }
 
   _step() {
-    const obstacle = this.unprocessedObstacles.pop()
+    const obstacle = this.unprocessedObstacles.pop();
 
     if (!obstacle) {
       for (const node of this.nodes) {
-        if (this.removedNodeIds.has(node.capacityMeshNodeId)) continue
-        this.newNodes.push(node)
+        if (this.removedNodeIds.has(node.capacityMeshNodeId)) continue;
+        this.newNodes.push(node);
       }
 
-      this.solved = true
-      return
+      this.solved = true;
+      return;
     }
 
     const connectedNodes = this.nodes.filter((n) => {
-      if (!n._targetConnectionName) return false
+      if (!n._targetConnectionName) return false;
 
       // Disabled because we don't have a good way of separating disconnected
       // "chunks" of obstacles at the moment. Say there are many obstacles all
@@ -56,25 +56,25 @@ export class CapacityNodeTargetMerger extends BaseSolver {
 
       const implicitlyConnected =
         doRectsOverlap(n, obstacle) &&
-        obstacle.__zLayers?.includes(n.availableZ?.[0])
+        obstacle.__zLayers?.includes(n.availableZ?.[0]);
 
-      return implicitlyConnected
-    })
-    if (connectedNodes.length === 0) return
+      return implicitlyConnected;
+    });
+    if (connectedNodes.length === 0) return;
 
-    const connectionName = connectedNodes[0]._targetConnectionName
+    const connectionName = connectedNodes[0]._targetConnectionName;
 
     const bounds = {
       minX: Infinity,
       minY: Infinity,
       maxX: -Infinity,
       maxY: -Infinity,
-    }
+    };
     for (const node of connectedNodes) {
-      bounds.minX = Math.min(bounds.minX, node.center.x - node.width / 2)
-      bounds.minY = Math.min(bounds.minY, node.center.y - node.height / 2)
-      bounds.maxX = Math.max(bounds.maxX, node.center.x + node.width / 2)
-      bounds.maxY = Math.max(bounds.maxY, node.center.y + node.height / 2)
+      bounds.minX = Math.min(bounds.minX, node.center.x - node.width / 2);
+      bounds.minY = Math.min(bounds.minY, node.center.y - node.height / 2);
+      bounds.maxX = Math.max(bounds.maxX, node.center.x + node.width / 2);
+      bounds.maxY = Math.max(bounds.maxY, node.center.y + node.height / 2);
     }
 
     const newNode: CapacityMeshNode = {
@@ -96,21 +96,21 @@ export class CapacityNodeTargetMerger extends BaseSolver {
 
       // @ts-ignore
       _createdByMerger: true,
-    }
+    };
 
-    this.newNodes.push(newNode)
+    this.newNodes.push(newNode);
     for (const node of connectedNodes) {
-      this.removedNodeIds.add(node.capacityMeshNodeId)
+      this.removedNodeIds.add(node.capacityMeshNodeId);
     }
   }
 
   visualize(): GraphicsObject {
     const graphics: GraphicsObject = {
       rects: [],
-    }
+    };
 
     for (const node of this.newNodes) {
-      const lowestZ = Math.min(...node.availableZ)
+      const lowestZ = Math.min(...node.availableZ);
       graphics.rects!.push({
         center: {
           x: node.center.x + lowestZ * node.width * 0.05,
@@ -134,9 +134,9 @@ export class CapacityNodeTargetMerger extends BaseSolver {
         ]
           .filter(Boolean)
           .join("\n"),
-      })
+      });
     }
 
-    return graphics
+    return graphics;
   }
 }

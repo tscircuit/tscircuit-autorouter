@@ -1,10 +1,10 @@
-import { expect, test } from "bun:test"
-import { ConnectivityMap } from "circuit-json-to-connectivity-map"
-import { HighDensityRouteSpatialIndex } from "lib/data-structures/HighDensityRouteSpatialIndex"
-import { ObstacleSpatialHashIndex } from "lib/data-structures/ObstacleTree"
-import { SingleRouteUselessViaRemovalSolver } from "lib/solvers/UselessViaRemovalSolver/SingleRouteUselessViaRemovalSolver"
-import type { Obstacle } from "lib/types"
-import type { HighDensityRoute } from "lib/types/high-density-types"
+import { expect, test } from "bun:test";
+import { ConnectivityMap } from "circuit-json-to-connectivity-map";
+import { HighDensityRouteSpatialIndex } from "lib/data-structures/HighDensityRouteSpatialIndex";
+import { ObstacleSpatialHashIndex } from "lib/data-structures/ObstacleTree";
+import { SingleRouteUselessViaRemovalSolver } from "lib/solvers/UselessViaRemovalSolver/SingleRouteUselessViaRemovalSolver";
+import type { Obstacle } from "lib/types";
+import type { HighDensityRoute } from "lib/types/high-density-types";
 
 test("keeps a multilayer section when both adjacent layers are blocked", () => {
   const route: HighDensityRoute = {
@@ -23,7 +23,7 @@ test("keeps a multilayer section when both adjacent layers are blocked", () => {
       { x: 1, y: 0 },
       { x: 2, y: 0 },
     ],
-  }
+  };
   const obstacle: Obstacle = {
     type: "rect",
     layers: ["top", "bottom"],
@@ -32,18 +32,18 @@ test("keeps a multilayer section when both adjacent layers are blocked", () => {
     width: 0.5,
     height: 0.5,
     connectedTo: ["other_net"],
-  }
+  };
   const solver = new SingleRouteUselessViaRemovalSolver({
     obstacleSHI: new ObstacleSpatialHashIndex("flatbush", [obstacle]),
     hdRouteSHI: new HighDensityRouteSpatialIndex([route]),
     unsimplifiedRoute: structuredClone(route),
     connMap: new ConnectivityMap({ net0: [route.connectionName] }),
-  })
+  });
 
-  solver.solve()
+  solver.solve();
 
-  const optimizedRoute = solver.getOptimizedHdRoute()
-  expect(optimizedRoute.vias).toEqual(route.vias)
-  expect(optimizedRoute.route).toEqual(route.route)
-  expect(solver.stats.viasRemovedByMultilayerSectionCollapses).toBeUndefined()
-})
+  const optimizedRoute = solver.getOptimizedHdRoute();
+  expect(optimizedRoute.vias).toEqual(route.vias);
+  expect(optimizedRoute.route).toEqual(route.route);
+  expect(solver.stats.viasRemovedByMultilayerSectionCollapses).toBeUndefined();
+});

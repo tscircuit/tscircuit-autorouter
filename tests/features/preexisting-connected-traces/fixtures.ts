@@ -1,60 +1,60 @@
-import { expect } from "bun:test"
-import { getSvgFromGraphicsObject } from "graphics-debug"
-import { stackSvgsVertically } from "stack-svgs"
-import { AutoroutingPipelineSolver7_MultiGraph } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/AutoroutingPipelineSolver7_MultiGraph"
-import type { SimpleRouteJson } from "lib/types"
-import { convertSrjToGraphicsObject } from "lib/utils/convertSrjToGraphicsObject"
+import { expect } from "bun:test";
+import { getSvgFromGraphicsObject } from "graphics-debug";
+import { stackSvgsVertically } from "stack-svgs";
+import { AutoroutingPipelineSolver7_MultiGraph } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/AutoroutingPipelineSolver7_MultiGraph";
+import type { SimpleRouteJson } from "lib/types";
+import { convertSrjToGraphicsObject } from "lib/utils/convertSrjToGraphicsObject";
 
 type SnapshotDescription = {
-  problem: string
-  expected: string
-}
+  problem: string;
+  expected: string;
+};
 
 const escapeXmlText = (text: string): string => {
   const escapedText = text
     .replaceAll("&", "&amp;")
     .replaceAll("<", "&lt;")
     .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
+    .replaceAll('"', "&quot;");
 
-  return escapedText
-}
+  return escapedText;
+};
 
 const getSvgDimensions = (svg: string): { width: number; height: number } => {
-  const widthMatch = svg.match(/\bwidth="([^"]+)"/)
-  const heightMatch = svg.match(/\bheight="([^"]+)"/)
-  const width = Number(widthMatch?.[1] ?? 640)
-  const height = Number(heightMatch?.[1] ?? 640)
+  const widthMatch = svg.match(/\bwidth="([^"]+)"/);
+  const heightMatch = svg.match(/\bheight="([^"]+)"/);
+  const width = Number(widthMatch?.[1] ?? 640);
+  const height = Number(heightMatch?.[1] ?? 640);
 
   if (!Number.isFinite(width) || !Number.isFinite(height)) {
-    throw new Error("Expected SVG width and height to be finite numbers")
+    throw new Error("Expected SVG width and height to be finite numbers");
   }
 
-  return { width, height }
-}
+  return { width, height };
+};
 
 const getSvgBody = (svg: string): string => {
-  const openTagEndIndex = svg.indexOf(">")
-  const closeTagStartIndex = svg.lastIndexOf("</svg>")
+  const openTagEndIndex = svg.indexOf(">");
+  const closeTagStartIndex = svg.lastIndexOf("</svg>");
   if (openTagEndIndex === -1 || closeTagStartIndex === -1) {
-    throw new Error("Expected complete SVG markup")
+    throw new Error("Expected complete SVG markup");
   }
 
-  return svg.slice(openTagEndIndex + 1, closeTagStartIndex)
-}
+  return svg.slice(openTagEndIndex + 1, closeTagStartIndex);
+};
 
 const addTitleToSvg = ({
   svg,
   title,
   subtitle,
 }: {
-  svg: string
-  title: string
-  subtitle: string
+  svg: string;
+  title: string;
+  subtitle: string;
 }): string => {
-  const { width, height } = getSvgDimensions(svg)
-  const titleHeight = 52
-  const body = getSvgBody(svg)
+  const { width, height } = getSvgDimensions(svg);
+  const titleHeight = 52;
+  const body = getSvgBody(svg);
 
   return `<svg width="${width}" height="${
     height + titleHeight
@@ -64,48 +64,48 @@ const addTitleToSvg = ({
     title,
   )}</text><text x="12" y="41" font-family="monospace" font-size="12" fill="#333">${escapeXmlText(
     subtitle,
-  )}</text><g transform="translate(0 ${titleHeight})">${body}</g></svg>`
-}
+  )}</text><g transform="translate(0 ${titleHeight})">${body}</g></svg>`;
+};
 
 const getCombinedOutputSrj = (
   inputSrj: SimpleRouteJson,
   outputSrj: SimpleRouteJson,
 ): SimpleRouteJson => {
-  const preexistingTraces = inputSrj.traces ?? []
-  const solverTraces = outputSrj.traces ?? []
+  const preexistingTraces = inputSrj.traces ?? [];
+  const solverTraces = outputSrj.traces ?? [];
   const combinedSrj: SimpleRouteJson = {
     ...outputSrj,
     traces: [...preexistingTraces, ...solverTraces],
-  }
+  };
 
-  return combinedSrj
-}
+  return combinedSrj;
+};
 
 export const solveAndSnapshot = (
   srj: SimpleRouteJson,
   testPath: string,
   description: SnapshotDescription,
 ): {
-  solver: AutoroutingPipelineSolver7_MultiGraph
-  outputSrj: SimpleRouteJson
+  solver: AutoroutingPipelineSolver7_MultiGraph;
+  outputSrj: SimpleRouteJson;
 } => {
   const solver = new AutoroutingPipelineSolver7_MultiGraph(
     structuredClone(srj),
     { targetMinCapacity: 0.75, maxNodeDimension: 3, effort: 0.5 },
-  )
-  solver.solve()
-  const outputSrj = solver.getOutputSimpleRouteJson()
+  );
+  solver.solve();
+  const outputSrj = solver.getOutputSimpleRouteJson();
   const inputSvg = getSvgFromGraphicsObject(convertSrjToGraphicsObject(srj), {
     backgroundColor: "white",
-  })
+  });
   const outputSvg = getSvgFromGraphicsObject(
     convertSrjToGraphicsObject(outputSrj),
     { backgroundColor: "white" },
-  )
+  );
   const combinedOutputSvg = getSvgFromGraphicsObject(
     convertSrjToGraphicsObject(getCombinedOutputSrj(srj, outputSrj)),
     { backgroundColor: "white" },
-  )
+  );
   expect(
     stackSvgsVertically(
       [
@@ -127,7 +127,7 @@ export const solveAndSnapshot = (
       ],
       { normalizeSize: false },
     ),
-  ).toMatchSvgSnapshot(testPath)
+  ).toMatchSvgSnapshot(testPath);
 
-  return { solver, outputSrj }
-}
+  return { solver, outputSrj };
+};

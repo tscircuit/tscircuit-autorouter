@@ -1,7 +1,7 @@
-import { SimpleRouteConnection } from "lib/types"
-import { getConnectionPointLayer } from "lib/types/srj-types"
-import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
-import { MultipleHighDensityRouteStitchSolver } from "./MultipleHighDensityRouteStitchSolver"
+import { SimpleRouteConnection } from "lib/types";
+import { getConnectionPointLayer } from "lib/types/srj-types";
+import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ";
+import { MultipleHighDensityRouteStitchSolver } from "./MultipleHighDensityRouteStitchSolver";
 
 /**
  * A simplified version of MultipleHighDensityRouteStitchSolver that doesn't handle
@@ -10,35 +10,35 @@ import { MultipleHighDensityRouteStitchSolver } from "./MultipleHighDensityRoute
  */
 export class NoOffBoardMultipleHighDensityRouteStitchSolver extends MultipleHighDensityRouteStitchSolver {
   override getSolverName(): string {
-    return "NoOffBoardMultipleHighDensityRouteStitchSolver"
+    return "NoOffBoardMultipleHighDensityRouteStitchSolver";
   }
 
   constructor(params: {
-    connections: SimpleRouteConnection[]
-    hdRoutes: any[]
-    colorMap?: Record<string, string>
-    layerCount: number
-    defaultViaDiameter?: number
+    connections: SimpleRouteConnection[];
+    hdRoutes: any[];
+    colorMap?: Record<string, string>;
+    layerCount: number;
+    defaultViaDiameter?: number;
   }) {
-    super(params)
+    super(params);
 
     // Override the unsolvedRoutes to use connection points directly
     // instead of analyzing possible endpoints
-    this.unsolvedRoutes = []
+    this.unsolvedRoutes = [];
 
-    const routesByConnection = new Map<string, any[]>()
+    const routesByConnection = new Map<string, any[]>();
     for (const hdRoute of params.hdRoutes) {
-      const routes = routesByConnection.get(hdRoute.connectionName) || []
-      routes.push(hdRoute)
-      routesByConnection.set(hdRoute.connectionName, routes)
+      const routes = routesByConnection.get(hdRoute.connectionName) || [];
+      routes.push(hdRoute);
+      routesByConnection.set(hdRoute.connectionName, routes);
     }
 
     // Process connections with hdRoutes
     for (const [connectionName, hdRoutes] of routesByConnection.entries()) {
       const connection = params.connections.find(
         (c) => c.name === connectionName,
-      )
-      if (!connection) continue
+      );
+      if (!connection) continue;
 
       const start = {
         ...connection.pointsToConnect[0],
@@ -46,21 +46,21 @@ export class NoOffBoardMultipleHighDensityRouteStitchSolver extends MultipleHigh
           getConnectionPointLayer(connection.pointsToConnect[0]),
           params.layerCount,
         ),
-      }
+      };
       const end = {
         ...connection.pointsToConnect[1],
         z: mapLayerNameToZ(
           getConnectionPointLayer(connection.pointsToConnect[1]),
           params.layerCount,
         ),
-      }
+      };
 
       this.unsolvedRoutes.push({
         connectionName,
         hdRoutes,
         start,
         end,
-      })
+      });
     }
 
     // Add connections that don't have any hdRoutes
@@ -83,7 +83,7 @@ export class NoOffBoardMultipleHighDensityRouteStitchSolver extends MultipleHigh
               params.layerCount,
             ),
           },
-        })
+        });
       }
     }
   }

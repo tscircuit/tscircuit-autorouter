@@ -1,5 +1,5 @@
-import type { GraphicsObject } from "graphics-debug"
-import type { PortPointSection } from "./createPortPointSection"
+import type { GraphicsObject } from "graphics-debug";
+import type { PortPointSection } from "./createPortPointSection";
 
 /**
  * Creates a GraphicsObject visualization of a PortPointSection.
@@ -14,13 +14,15 @@ export function visualizeSection(
     points: [],
     rects: [],
     circles: [],
-  }
+  };
 
   // Draw nodes (same style as visualizePointPathSolver)
   for (const node of section.inputNodes) {
-    const isCenter = node.capacityMeshNodeId === section.centerNodeId
+    const isCenter = node.capacityMeshNodeId === section.centerNodeId;
     // Use green for center node, gray for others (no pf calculation in section view)
-    const color = isCenter ? "rgba(0, 200, 0, 0.3)" : "rgba(200, 200, 200, 0.3)"
+    const color = isCenter
+      ? "rgba(0, 200, 0, 0.3)"
+      : "rgba(200, 200, 200, 0.3)";
 
     graphics.rects!.push({
       center: node.center,
@@ -29,14 +31,14 @@ export function visualizeSection(
       layer: `z${node.availableZ.join(",")}`,
       fill: color,
       label: `${node.capacityMeshNodeId}${isCenter ? " (CENTER)" : ""}`,
-    })
+    });
   }
 
   // Draw all input port points (same style as visualizePointPathSolver)
   for (const node of section.inputNodes) {
     for (const portPoint of node.portPoints) {
       // In section view, port points are unassigned so use gray
-      const color = "rgba(150, 150, 150, 0.5)"
+      const color = "rgba(150, 150, 150, 0.5)";
 
       graphics.circles!.push({
         center: { x: portPoint.x, y: portPoint.y },
@@ -50,7 +52,7 @@ export function visualizeSection(
         ]
           .filter(Boolean)
           .join("\n"),
-      })
+      });
     }
   }
 
@@ -60,20 +62,20 @@ export function visualizeSection(
   // - bottom layer (z=1): "10 5"
   // - transition between layers: "3 3 10"
   for (const sectionPath of section.sectionPaths) {
-    const color = colorMap?.[sectionPath.connectionName] ?? "blue"
+    const color = colorMap?.[sectionPath.connectionName] ?? "blue";
 
     for (let i = 0; i < sectionPath.points.length - 1; i++) {
-      const pointA = sectionPath.points[i]
-      const pointB = sectionPath.points[i + 1]
+      const pointA = sectionPath.points[i];
+      const pointB = sectionPath.points[i + 1];
 
-      const sameLayer = pointA.z === pointB.z
-      const commonLayer = pointA.z
+      const sameLayer = pointA.z === pointB.z;
+      const commonLayer = pointA.z;
 
-      let strokeDash: string
+      let strokeDash: string;
       if (sameLayer) {
-        strokeDash = commonLayer === 0 ? "5 5" : "10 5"
+        strokeDash = commonLayer === 0 ? "5 5" : "10 5";
       } else {
-        strokeDash = "3 3 10"
+        strokeDash = "3 3 10";
       }
 
       graphics.lines!.push({
@@ -83,9 +85,9 @@ export function visualizeSection(
         ],
         strokeColor: color,
         strokeDash,
-      })
+      });
     }
   }
 
-  return graphics
+  return graphics;
 }

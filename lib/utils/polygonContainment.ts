@@ -2,56 +2,56 @@ import {
   doSegmentsIntersect,
   getSegmentIntersection,
   pointToSegmentDistance,
-} from "@tscircuit/math-utils"
-import { minimumDistanceBetweenSegments } from "lib/utils/minimumDistanceBetweenSegments"
+} from "@tscircuit/math-utils";
+import { minimumDistanceBetweenSegments } from "lib/utils/minimumDistanceBetweenSegments";
 
-export type PolygonPoint = { x: number; y: number }
+export type PolygonPoint = { x: number; y: number };
 
-const EPSILON = 1e-6
+const EPSILON = 1e-6;
 
 const isPointOnSegment = (
   point: PolygonPoint,
   start: PolygonPoint,
   end: PolygonPoint,
-) => pointToSegmentDistance(point, start, end) <= EPSILON
+) => pointToSegmentDistance(point, start, end) <= EPSILON;
 
 const arePointsClose = (a: PolygonPoint, b: PolygonPoint) =>
-  Math.abs(a.x - b.x) <= EPSILON && Math.abs(a.y - b.y) <= EPSILON
+  Math.abs(a.x - b.x) <= EPSILON && Math.abs(a.y - b.y) <= EPSILON;
 
 export const isPointInOrOnPolygon = (
   point: PolygonPoint,
   polygon: PolygonPoint[],
 ) => {
   if (!polygon || polygon.length < 3) {
-    return false
+    return false;
   }
 
   // Treat points on the boundary as inside the polygon
   for (let i = 0; i < polygon.length; i++) {
-    const start = polygon[i]
-    const end = polygon[(i + 1) % polygon.length]
+    const start = polygon[i];
+    const end = polygon[(i + 1) % polygon.length];
     if (isPointOnSegment(point, start, end)) {
-      return true
+      return true;
     }
   }
 
-  let inside = false
+  let inside = false;
 
   for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
-    const pi = polygon[i]
-    const pj = polygon[j]
+    const pi = polygon[i];
+    const pj = polygon[j];
 
     const intersect =
       pi.y > point.y !== pj.y > point.y &&
-      point.x < ((pj.x - pi.x) * (point.y - pi.y)) / (pj.y - pi.y) + pi.x
+      point.x < ((pj.x - pi.x) * (point.y - pi.y)) / (pj.y - pi.y) + pi.x;
 
     if (intersect) {
-      inside = !inside
+      inside = !inside;
     }
   }
 
-  return inside
-}
+  return inside;
+};
 
 export const doesSegmentCrossPolygonBoundary = ({
   start,
@@ -59,32 +59,32 @@ export const doesSegmentCrossPolygonBoundary = ({
   polygon,
   margin = 0.2,
 }: {
-  start: PolygonPoint
-  end: PolygonPoint
-  polygon: PolygonPoint[]
-  margin?: number
+  start: PolygonPoint;
+  end: PolygonPoint;
+  polygon: PolygonPoint[];
+  margin?: number;
 }) => {
   if (!polygon || polygon.length < 3) {
-    return false
+    return false;
   }
 
-  const startInside = isPointInOrOnPolygon(start, polygon)
-  const endInside = isPointInOrOnPolygon(end, polygon)
+  const startInside = isPointInOrOnPolygon(start, polygon);
+  const endInside = isPointInOrOnPolygon(end, polygon);
 
   if (!startInside || !endInside) {
-    return true
+    return true;
   }
 
   for (let i = 0; i < polygon.length; i++) {
-    const edgeStart = polygon[i]
-    const edgeEnd = polygon[(i + 1) % polygon.length]
+    const edgeStart = polygon[i];
+    const edgeEnd = polygon[(i + 1) % polygon.length];
 
-    const startOnEdge = isPointOnSegment(start, edgeStart, edgeEnd)
-    const endOnEdge = isPointOnSegment(end, edgeStart, edgeEnd)
+    const startOnEdge = isPointOnSegment(start, edgeStart, edgeEnd);
+    const endOnEdge = isPointOnSegment(end, edgeStart, edgeEnd);
 
     if (startOnEdge && endOnEdge) {
       // Moving along the outline edge is permitted
-      continue
+      continue;
     }
 
     if (!doSegmentsIntersect(start, end, edgeStart, edgeEnd)) {
@@ -94,17 +94,17 @@ export const doesSegmentCrossPolygonBoundary = ({
           end,
           edgeStart,
           edgeEnd,
-        )
+        );
 
         if (distanceToEdge < margin - EPSILON) {
-          return true
+          return true;
         }
       }
 
-      continue
+      continue;
     }
 
-    const intersection = getSegmentIntersection(start, end, edgeStart, edgeEnd)
+    const intersection = getSegmentIntersection(start, end, edgeStart, edgeEnd);
 
     if (
       intersection &&
@@ -112,18 +112,18 @@ export const doesSegmentCrossPolygonBoundary = ({
         (endOnEdge && arePointsClose(intersection, end)))
     ) {
       // The path only touches the boundary at its start or end point
-      continue
+      continue;
     }
 
     if (
       intersection &&
       (arePointsClose(intersection, start) || arePointsClose(intersection, end))
     ) {
-      continue
+      continue;
     }
 
-    return true
+    return true;
   }
 
-  return false
-}
+  return false;
+};

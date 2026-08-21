@@ -2,24 +2,24 @@ import {
   distance,
   doSegmentsIntersect,
   pointToSegmentDistance,
-} from "@tscircuit/math-utils"
-import { ConnectivityMap } from "circuit-json-to-connectivity-map"
-import Flatbush from "flatbush"
-import type { GraphicsObject } from "graphics-debug"
+} from "@tscircuit/math-utils";
+import { ConnectivityMap } from "circuit-json-to-connectivity-map";
+import Flatbush from "flatbush";
+import type { GraphicsObject } from "graphics-debug";
 import {
   Node,
   SingleRouteCandidatePriorityQueue,
-} from "lib/data-structures/SingleRouteCandidatePriorityQueue"
-import type { HighDensityIntraNodeRoute } from "lib/types/high-density-types"
-import { BaseSolver } from "../BaseSolver"
-import { HighDensityHyperParameters } from "./HighDensityHyperParameters"
+} from "lib/data-structures/SingleRouteCandidatePriorityQueue";
+import type { HighDensityIntraNodeRoute } from "lib/types/high-density-types";
+import { BaseSolver } from "../BaseSolver";
+import { HighDensityHyperParameters } from "./HighDensityHyperParameters";
 
 export type FutureConnection = {
-  connectionName: string
-  rootConnectionName?: string
-  regionId?: string
-  points: { x: number; y: number; z: number }[]
-}
+  connectionName: string;
+  rootConnectionName?: string;
+  regionId?: string;
+  points: { x: number; y: number; z: number }[];
+};
 
 const connectionLabel = (
   connectionName: string,
@@ -34,156 +34,156 @@ const connectionLabel = (
     ...extraLines,
   ]
     .filter(Boolean)
-    .join("\n")
+    .join("\n");
 
 export class SingleHighDensityRouteSolver extends BaseSolver {
   override getSolverName(): string {
-    return "SingleHighDensityRouteSolver"
+    return "SingleHighDensityRouteSolver";
   }
 
-  obstacleRoutes: HighDensityIntraNodeRoute[]
-  bounds: { minX: number; maxX: number; minY: number; maxY: number }
-  boundsSize: { width: number; height: number }
-  boundsCenter: { x: number; y: number }
-  A: { x: number; y: number; z: number }
-  B: { x: number; y: number; z: number }
-  straightLineDistance: number
+  obstacleRoutes: HighDensityIntraNodeRoute[];
+  bounds: { minX: number; maxX: number; minY: number; maxY: number };
+  boundsSize: { width: number; height: number };
+  boundsCenter: { x: number; y: number };
+  A: { x: number; y: number; z: number };
+  B: { x: number; y: number; z: number };
+  straightLineDistance: number;
 
-  viaDiameter: number
-  traceThickness: number
-  obstacleMargin: number
-  layerCount: number
-  availableZ: number[]
-  minCellSize = 0.05
-  cellStep = 0.05
-  GREEDY_MULTIPLER = 1.1
-  numRoutes: number
+  viaDiameter: number;
+  traceThickness: number;
+  obstacleMargin: number;
+  layerCount: number;
+  availableZ: number[];
+  minCellSize = 0.05;
+  cellStep = 0.05;
+  GREEDY_MULTIPLER = 1.1;
+  numRoutes: number;
 
-  VIA_PENALTY_FACTOR = 0.3
-  CELL_SIZE_FACTOR: number
-  NEARBY_SEGMENT_CLEARANCE: number
+  VIA_PENALTY_FACTOR = 0.3;
+  CELL_SIZE_FACTOR: number;
+  NEARBY_SEGMENT_CLEARANCE: number;
 
-  exploredNodes: Set<number>
-  viasInPathByNode = new WeakMap<Node, { x: number; y: number }[]>()
+  exploredNodes: Set<number>;
+  viasInPathByNode = new WeakMap<Node, { x: number; y: number }[]>();
 
-  gridMinXIndex: number
-  gridMinYIndex: number
-  gridWidth: number
-  gridHeight: number
+  gridMinXIndex: number;
+  gridMinYIndex: number;
+  gridWidth: number;
+  gridHeight: number;
 
-  candidates: SingleRouteCandidatePriorityQueue
+  candidates: SingleRouteCandidatePriorityQueue;
 
-  connectionName: string
-  rootConnectionName?: string
-  regionId?: string
-  solvedPath: HighDensityIntraNodeRoute | null = null
+  connectionName: string;
+  rootConnectionName?: string;
+  regionId?: string;
+  solvedPath: HighDensityIntraNodeRoute | null = null;
 
-  futureConnections: FutureConnection[]
-  hyperParameters: Partial<HighDensityHyperParameters>
+  futureConnections: FutureConnection[];
+  hyperParameters: Partial<HighDensityHyperParameters>;
 
-  connMap?: ConnectivityMap
+  connMap?: ConnectivityMap;
 
-  obstacleSegments: IndexedObstacleSegment[] = []
-  obstacleSegmentIndex: Flatbush | null = null
-  obstacleSegmentsByLayer = new Map<number, IndexedObstacleSegment[]>()
-  obstacleSegmentIndexByLayer = new Map<number, Flatbush>()
-  obstacleVias: IndexedObstacleVia[] = []
-  obstacleViaIndex: Flatbush | null = null
+  obstacleSegments: IndexedObstacleSegment[] = [];
+  obstacleSegmentIndex: Flatbush | null = null;
+  obstacleSegmentsByLayer = new Map<number, IndexedObstacleSegment[]>();
+  obstacleSegmentIndexByLayer = new Map<number, Flatbush>();
+  obstacleVias: IndexedObstacleVia[] = [];
+  obstacleViaIndex: Flatbush | null = null;
 
   /** For debugging/animating the exploration */
   debug_exploredNodesOrdered: Array<{
-    key: number
-    x: number
-    y: number
-    z: number
-  }>
-  debug_nodesTooCloseToObstacle: Set<number>
-  debug_nodePathToParentIntersectsObstacle: Set<number>
+    key: number;
+    x: number;
+    y: number;
+    z: number;
+  }>;
+  debug_nodesTooCloseToObstacle: Set<number>;
+  debug_nodePathToParentIntersectsObstacle: Set<number>;
 
-  debugEnabled: boolean
+  debugEnabled: boolean;
 
-  initialNodeGridOffset: { x: number; y: number }
+  initialNodeGridOffset: { x: number; y: number };
 
   constructor(opts: {
-    connectionName: string
-    rootConnectionName?: string
-    regionId?: string
-    obstacleRoutes: HighDensityIntraNodeRoute[]
-    minDistBetweenEnteringPoints: number
-    bounds: { minX: number; maxX: number; minY: number; maxY: number }
-    A: { x: number; y: number; z: number }
-    B: { x: number; y: number; z: number }
-    viaDiameter?: number
-    traceThickness?: number
-    obstacleMargin?: number
-    layerCount?: number
-    availableZ?: number[]
-    futureConnections?: FutureConnection[]
-    hyperParameters?: Partial<HighDensityHyperParameters>
-    connMap?: ConnectivityMap
-    nearbySegmentClearance?: number
-    captureSearchDebug?: boolean
+    connectionName: string;
+    rootConnectionName?: string;
+    regionId?: string;
+    obstacleRoutes: HighDensityIntraNodeRoute[];
+    minDistBetweenEnteringPoints: number;
+    bounds: { minX: number; maxX: number; minY: number; maxY: number };
+    A: { x: number; y: number; z: number };
+    B: { x: number; y: number; z: number };
+    viaDiameter?: number;
+    traceThickness?: number;
+    obstacleMargin?: number;
+    layerCount?: number;
+    availableZ?: number[];
+    futureConnections?: FutureConnection[];
+    hyperParameters?: Partial<HighDensityHyperParameters>;
+    connMap?: ConnectivityMap;
+    nearbySegmentClearance?: number;
+    captureSearchDebug?: boolean;
   }) {
-    super()
-    this.bounds = opts.bounds
-    this.connMap = opts.connMap
-    this.hyperParameters = opts.hyperParameters ?? {}
-    this.CELL_SIZE_FACTOR = this.hyperParameters.CELL_SIZE_FACTOR ?? 1
+    super();
+    this.bounds = opts.bounds;
+    this.connMap = opts.connMap;
+    this.hyperParameters = opts.hyperParameters ?? {};
+    this.CELL_SIZE_FACTOR = this.hyperParameters.CELL_SIZE_FACTOR ?? 1;
     this.boundsSize = {
       width: this.bounds.maxX - this.bounds.minX,
       height: this.bounds.maxY - this.bounds.minY,
-    }
+    };
     this.boundsCenter = {
       x: (this.bounds.minX + this.bounds.maxX) / 2,
       y: (this.bounds.minY + this.bounds.maxY) / 2,
-    }
-    this.connectionName = opts.connectionName
-    this.rootConnectionName = opts.rootConnectionName
-    this.regionId = opts.regionId
-    this.obstacleRoutes = opts.obstacleRoutes
-    this.A = opts.A
-    this.B = opts.B
-    this.viaDiameter = opts.viaDiameter ?? 0.3
-    this.traceThickness = opts.traceThickness ?? 0.15
-    this.obstacleMargin = opts.obstacleMargin ?? 0.15
-    this.layerCount = opts.layerCount ?? 2
+    };
+    this.connectionName = opts.connectionName;
+    this.rootConnectionName = opts.rootConnectionName;
+    this.regionId = opts.regionId;
+    this.obstacleRoutes = opts.obstacleRoutes;
+    this.A = opts.A;
+    this.B = opts.B;
+    this.viaDiameter = opts.viaDiameter ?? 0.3;
+    this.traceThickness = opts.traceThickness ?? 0.15;
+    this.obstacleMargin = opts.obstacleMargin ?? 0.15;
+    this.layerCount = opts.layerCount ?? 2;
     this.availableZ =
       opts.availableZ && opts.availableZ.length > 0
         ? [...new Set(opts.availableZ)].sort((a, b) => a - b)
-        : Array.from({ length: this.layerCount }, (_, index) => index)
-    this.exploredNodes = new Set()
-    this.straightLineDistance = distance(this.A, this.B)
-    this.futureConnections = opts.futureConnections ?? []
-    this.NEARBY_SEGMENT_CLEARANCE = opts.nearbySegmentClearance ?? 0.15
-    this.debugEnabled = opts.captureSearchDebug ?? true
-    this.MAX_ITERATIONS = 10e3 // 5000
+        : Array.from({ length: this.layerCount }, (_, index) => index);
+    this.exploredNodes = new Set();
+    this.straightLineDistance = distance(this.A, this.B);
+    this.futureConnections = opts.futureConnections ?? [];
+    this.NEARBY_SEGMENT_CLEARANCE = opts.nearbySegmentClearance ?? 0.15;
+    this.debugEnabled = opts.captureSearchDebug ?? true;
+    this.MAX_ITERATIONS = 10e3; // 5000
 
-    this.debug_exploredNodesOrdered = []
-    this.debug_nodesTooCloseToObstacle = new Set()
-    this.debug_nodePathToParentIntersectsObstacle = new Set()
-    this.numRoutes = this.obstacleRoutes.length + this.futureConnections.length
-    this.buildObstacleIndexes()
-    const bestRowOrColumnCount = Math.ceil(5 * (this.numRoutes + 1))
-    let numXCells = this.boundsSize.width / this.cellStep
-    let numYCells = this.boundsSize.height / this.cellStep
+    this.debug_exploredNodesOrdered = [];
+    this.debug_nodesTooCloseToObstacle = new Set();
+    this.debug_nodePathToParentIntersectsObstacle = new Set();
+    this.numRoutes = this.obstacleRoutes.length + this.futureConnections.length;
+    this.buildObstacleIndexes();
+    const bestRowOrColumnCount = Math.ceil(5 * (this.numRoutes + 1));
+    let numXCells = this.boundsSize.width / this.cellStep;
+    let numYCells = this.boundsSize.height / this.cellStep;
 
     while (numXCells * numYCells > bestRowOrColumnCount ** 2) {
       if (this.cellStep * 2 > opts.minDistBetweenEnteringPoints) {
-        break
+        break;
       }
-      this.cellStep *= 2
-      numXCells = this.boundsSize.width / this.cellStep
-      numYCells = this.boundsSize.height / this.cellStep
+      this.cellStep *= 2;
+      numXCells = this.boundsSize.width / this.cellStep;
+      numYCells = this.boundsSize.height / this.cellStep;
     }
 
-    this.cellStep *= this.CELL_SIZE_FACTOR
+    this.cellStep *= this.CELL_SIZE_FACTOR;
 
-    this.gridMinXIndex = Math.round(this.bounds.minX / this.cellStep) - 1
-    this.gridMinYIndex = Math.round(this.bounds.minY / this.cellStep) - 1
-    const gridMaxXIndex = Math.round(this.bounds.maxX / this.cellStep) + 1
-    const gridMaxYIndex = Math.round(this.bounds.maxY / this.cellStep) + 1
-    this.gridWidth = gridMaxXIndex - this.gridMinXIndex + 1
-    this.gridHeight = gridMaxYIndex - this.gridMinYIndex + 1
+    this.gridMinXIndex = Math.round(this.bounds.minX / this.cellStep) - 1;
+    this.gridMinYIndex = Math.round(this.bounds.minY / this.cellStep) - 1;
+    const gridMaxXIndex = Math.round(this.bounds.maxX / this.cellStep) + 1;
+    const gridMaxYIndex = Math.round(this.bounds.maxY / this.cellStep) + 1;
+    this.gridWidth = gridMaxXIndex - this.gridMinXIndex + 1;
+    this.gridHeight = gridMaxYIndex - this.gridMinYIndex + 1;
 
     const isOnSameEdge =
       (Math.abs(this.A.x - this.bounds.minX) < 0.001 &&
@@ -193,7 +193,7 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
       (Math.abs(this.A.y - this.bounds.minY) < 0.001 &&
         Math.abs(this.B.y - this.bounds.minY) < 0.001) || // both on bottom
       (Math.abs(this.A.y - this.bounds.maxY) < 0.001 &&
-        Math.abs(this.B.y - this.bounds.maxY) < 0.001) // both on top
+        Math.abs(this.B.y - this.bounds.maxY) < 0.001); // both on top
 
     if (
       this.futureConnections &&
@@ -201,13 +201,13 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
       this.obstacleRoutes.length === 0 &&
       !isOnSameEdge
     ) {
-      this.handleSimpleCases()
+      this.handleSimpleCases();
     }
 
     const initialNodePosition = {
       x: Math.round(opts.A.x / (this.cellStep / 2)) * (this.cellStep / 2),
       y: Math.round(opts.A.y / (this.cellStep / 2)) * (this.cellStep / 2),
-    }
+    };
     this.initialNodeGridOffset = {
       x:
         initialNodePosition.x -
@@ -215,7 +215,7 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
       y:
         initialNodePosition.y -
         Math.round(opts.A.y / this.cellStep) * this.cellStep,
-    }
+    };
     const initialParent = {
       ...opts.A,
       z: opts.A.z ?? 0,
@@ -223,7 +223,7 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
       h: 0,
       f: 0,
       parent: null,
-    }
+    };
     const roundedInitialNode = {
       ...opts.A,
       ...initialNodePosition,
@@ -232,24 +232,24 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
       h: 0,
       f: 0,
       parent: initialParent,
-    }
+    };
     const roundedInitialNodeDiffersFromA =
       Math.abs(roundedInitialNode.x - opts.A.x) > 1e-9 ||
-      Math.abs(roundedInitialNode.y - opts.A.y) > 1e-9
+      Math.abs(roundedInitialNode.y - opts.A.y) > 1e-9;
     const shouldFallbackToExactStart =
       roundedInitialNodeDiffersFromA &&
       (this.isNodeTooCloseToObstacle(roundedInitialNode) ||
         this.isNodeTooCloseToEdge(roundedInitialNode, false) ||
-        this.doesPathToParentIntersectObstacle(roundedInitialNode))
+        this.doesPathToParentIntersectObstacle(roundedInitialNode));
 
     this.candidates = new SingleRouteCandidatePriorityQueue([
       shouldFallbackToExactStart ? initialParent : roundedInitialNode,
-    ])
+    ]);
   }
 
   handleSimpleCases() {
-    this.solved = true
-    const { A, B } = this
+    this.solved = true;
+    const { A, B } = this;
     const route =
       A.z === B.z
         ? [A, B]
@@ -261,7 +261,7 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
               z: B.z,
             },
             B,
-          ]
+          ];
     this.solvedPath = {
       connectionName: this.connectionName,
       rootConnectionName: this.rootConnectionName,
@@ -270,11 +270,11 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
       traceThickness: this.traceThickness,
       viaDiameter: this.viaDiameter,
       vias: this.A.z === this.B.z ? [] : [this.boundsCenter],
-    }
+    };
   }
 
   get viaPenaltyDistance() {
-    return this.cellStep + this.straightLineDistance * this.VIA_PENALTY_FACTOR
+    return this.cellStep + this.straightLineDistance * this.VIA_PENALTY_FACTOR;
   }
 
   isNodeTooCloseToObstacle(
@@ -283,23 +283,23 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     isVia?: boolean,
     planarObstacleQuery?: PlanarObstacleQuery,
   ) {
-    margin ??= this.obstacleMargin
+    margin ??= this.obstacleMargin;
 
     if (isVia && node.parent) {
-      const viasInMyRoute = this.getViasInNodePath(node.parent)
+      const viasInMyRoute = this.getViasInNodePath(node.parent);
       for (const via of viasInMyRoute) {
         if (distance(node, via) < this.viaDiameter / 2 + margin) {
-          return true
+          return true;
         }
       }
     }
 
-    const traceProximity = this.traceThickness + margin
+    const traceProximity = this.traceThickness + margin;
     const indexedSegments =
       planarObstacleQuery?.segments ??
       (!isVia
         ? this.obstacleSegmentsByLayer.get(node.z)
-        : this.obstacleSegments)
+        : this.obstacleSegments);
     const nearbySegmentIds =
       planarObstacleQuery?.segmentIds ??
       (!isVia
@@ -311,12 +311,12 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
         node.x + traceProximity,
         node.y + traceProximity,
       ) ??
-      []
+      [];
     if (indexedSegments) {
       for (const segmentId of nearbySegmentIds) {
-        const segment = indexedSegments[segmentId]
-        if (!segment || segment.connectedToCurrentConnection) continue
-        if (!isVia && segment.z !== node.z) continue
+        const segment = indexedSegments[segmentId];
+        if (!segment || segment.connectedToCurrentConnection) continue;
+        if (!isVia && segment.z !== node.z) continue;
         if (
           planarObstacleQuery &&
           (node.x + traceProximity < segment.minX ||
@@ -324,75 +324,76 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
             node.x - traceProximity > segment.maxX ||
             node.y - traceProximity > segment.maxY)
         ) {
-          continue
+          continue;
         }
         if (
           pointToSegmentDistance(node, segment.A, segment.B) < traceProximity
         ) {
-          return true
+          return true;
         }
       }
     }
 
-    const viaProximity = this.viaDiameter / 2 + this.traceThickness / 2 + margin
+    const viaProximity =
+      this.viaDiameter / 2 + this.traceThickness / 2 + margin;
     if (this.obstacleViaIndex) {
       const nearbyViaIds = this.obstacleViaIndex.search(
         node.x - viaProximity,
         node.y - viaProximity,
         node.x + viaProximity,
         node.y + viaProximity,
-      )
+      );
       for (const viaId of nearbyViaIds) {
-        const via = this.obstacleVias[viaId]
+        const via = this.obstacleVias[viaId];
         if (via && distance(node, via) < viaProximity) {
-          return true
+          return true;
         }
       }
     }
 
-    return false
+    return false;
   }
 
   isNodeTooCloseToEdge(node: Node, isVia?: boolean) {
     const margin = isVia
       ? this.viaDiameter / 2 + this.obstacleMargin / 2
-      : this.obstacleMargin / 2
+      : this.obstacleMargin / 2;
     const tooClose =
       node.x < this.bounds.minX + margin ||
       node.x > this.bounds.maxX - margin ||
       node.y < this.bounds.minY + margin ||
-      node.y > this.bounds.maxY - margin
+      node.y > this.bounds.maxY - margin;
     if (tooClose && !isVia) {
       // If it's close to B or A it's an exception
       if (
         distance(node, this.B) < margin * 2 ||
         distance(node, this.A) < margin * 2
       ) {
-        return false
+        return false;
       }
     }
-    return tooClose
+    return tooClose;
   }
 
   doesPathToParentIntersectObstacle(
     node: Node,
     planarObstacleQuery?: PlanarObstacleQuery,
   ) {
-    const parent = node.parent
-    if (!parent) return false
+    const parent = node.parent;
+    if (!parent) return false;
     const indexedSegments =
-      planarObstacleQuery?.segments ?? this.obstacleSegmentsByLayer.get(node.z)
-    if (!indexedSegments) return false
+      planarObstacleQuery?.segments ?? this.obstacleSegmentsByLayer.get(node.z);
+    if (!indexedSegments) return false;
 
     const clearance =
       node.z === parent.z && this.obstacleSegments.length > 0
         ? this.NEARBY_SEGMENT_CLEARANCE
-        : 0
+        : 0;
 
-    const minX = Math.min(node.x, parent.x)
-    const maxX = Math.max(node.x, parent.x)
-    const minY = Math.min(node.y, parent.y)
-    const maxY = Math.max(node.y, parent.y)
+    const minX = Math.min(node.x, parent.x);
+    const maxX = Math.max(node.x, parent.x);
+    const minY = Math.min(node.y, parent.y);
+    const maxY = Math.max(node.y, parent.y);
 
     const nearbySegmentIds =
       planarObstacleQuery?.segmentIds ??
@@ -404,12 +405,12 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
           maxX + clearance,
           maxY + clearance,
         ) ??
-      []
+      [];
 
     for (const segmentId of nearbySegmentIds) {
-      const segment = indexedSegments[segmentId]
-      if (!segment || segment.connectedToCurrentConnection) continue
-      if (segment.z !== node.z) continue
+      const segment = indexedSegments[segmentId];
+      if (!segment || segment.connectedToCurrentConnection) continue;
+      if (segment.z !== node.z) continue;
       if (
         planarObstacleQuery &&
         (maxX + clearance < segment.minX ||
@@ -417,11 +418,11 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
           minX - clearance > segment.maxX ||
           minY - clearance > segment.maxY)
       ) {
-        continue
+        continue;
       }
       // TODO: find out why removing doSegmentsIntersect is causing more intersections
       if (doSegmentsIntersect(node, parent, segment.A, segment.B)) {
-        return true
+        return true;
       }
       if (
         clearance > 0 &&
@@ -432,24 +433,24 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
           segment.B,
         ) < clearance
       ) {
-        return true
+        return true;
       }
     }
-    return false
+    return false;
   }
 
   getPlanarObstacleQuery(node: Node): PlanarObstacleQuery | undefined {
-    const parent = node.parent
-    if (!parent) return undefined
-    const segmentIndex = this.obstacleSegmentIndexByLayer.get(node.z)
-    const segments = this.obstacleSegmentsByLayer.get(node.z)
-    if (!segmentIndex || !segments) return undefined
+    const parent = node.parent;
+    if (!parent) return undefined;
+    const segmentIndex = this.obstacleSegmentIndexByLayer.get(node.z);
+    const segments = this.obstacleSegmentsByLayer.get(node.z);
+    if (!segmentIndex || !segments) return undefined;
 
-    const traceProximity = this.traceThickness + this.obstacleMargin
+    const traceProximity = this.traceThickness + this.obstacleMargin;
     const clearance =
       node.z === parent.z && this.obstacleSegments.length > 0
         ? this.NEARBY_SEGMENT_CLEARANCE
-        : 0
+        : 0;
 
     return {
       segments,
@@ -459,27 +460,27 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
         Math.max(node.x + traceProximity, parent.x + clearance),
         Math.max(node.y + traceProximity, parent.y + clearance),
       ),
-    }
+    };
   }
 
   buildObstacleIndexes() {
     if (this.obstacleRoutes.length === 0) {
-      this.obstacleSegmentIndex = null
-      this.obstacleSegmentsByLayer.clear()
-      this.obstacleSegmentIndexByLayer.clear()
-      this.obstacleViaIndex = null
-      return
+      this.obstacleSegmentIndex = null;
+      this.obstacleSegmentsByLayer.clear();
+      this.obstacleSegmentIndexByLayer.clear();
+      this.obstacleViaIndex = null;
+      return;
     }
 
-    const obstacleSegments: IndexedObstacleSegment[] = []
-    const obstacleVias: IndexedObstacleVia[] = []
+    const obstacleSegments: IndexedObstacleSegment[] = [];
+    const obstacleVias: IndexedObstacleVia[] = [];
 
     for (const route of this.obstacleRoutes) {
       const connectedToCurrentConnection =
         this.connMap?.areIdsConnected?.(
           this.connectionName,
           route.connectionName,
-        ) ?? false
+        ) ?? false;
 
       for (const pointPair of getSameLayerPointPairs(route)) {
         obstacleSegments.push({
@@ -489,57 +490,67 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
           maxX: Math.max(pointPair.A.x, pointPair.B.x),
           maxY: Math.max(pointPair.A.y, pointPair.B.y),
           connectedToCurrentConnection,
-        })
+        });
       }
 
       for (const via of route.vias) {
-        obstacleVias.push(via)
+        obstacleVias.push(via);
       }
     }
 
-    this.obstacleSegments = obstacleSegments
-    this.obstacleVias = obstacleVias
-    this.obstacleSegmentsByLayer.clear()
-    this.obstacleSegmentIndexByLayer.clear()
+    this.obstacleSegments = obstacleSegments;
+    this.obstacleVias = obstacleVias;
+    this.obstacleSegmentsByLayer.clear();
+    this.obstacleSegmentIndexByLayer.clear();
 
     if (obstacleSegments.length > 0) {
-      const segmentIndex = new Flatbush(obstacleSegments.length)
+      const segmentIndex = new Flatbush(obstacleSegments.length);
       for (const segment of obstacleSegments) {
-        segmentIndex.add(segment.minX, segment.minY, segment.maxX, segment.maxY)
+        segmentIndex.add(
+          segment.minX,
+          segment.minY,
+          segment.maxX,
+          segment.maxY,
+        );
       }
-      segmentIndex.finish()
-      this.obstacleSegmentIndex = segmentIndex
+      segmentIndex.finish();
+      this.obstacleSegmentIndex = segmentIndex;
 
       for (const segment of obstacleSegments) {
-        if (segment.connectedToCurrentConnection) continue
-        const segmentsForLayer = this.obstacleSegmentsByLayer.get(segment.z)
+        if (segment.connectedToCurrentConnection) continue;
+        const segmentsForLayer = this.obstacleSegmentsByLayer.get(segment.z);
         if (segmentsForLayer) {
-          segmentsForLayer.push(segment)
+          segmentsForLayer.push(segment);
         } else {
-          this.obstacleSegmentsByLayer.set(segment.z, [segment])
+          this.obstacleSegmentsByLayer.set(segment.z, [segment]);
         }
       }
       for (const [z, segmentsForLayer] of this.obstacleSegmentsByLayer) {
-        const layerIndex = new Flatbush(segmentsForLayer.length)
+        const layerIndex = new Flatbush(segmentsForLayer.length);
         for (const segment of segmentsForLayer) {
-          layerIndex.add(segment.minX, segment.minY, segment.maxX, segment.maxY)
+          layerIndex.add(
+            segment.minX,
+            segment.minY,
+            segment.maxX,
+            segment.maxY,
+          );
         }
-        layerIndex.finish()
-        this.obstacleSegmentIndexByLayer.set(z, layerIndex)
+        layerIndex.finish();
+        this.obstacleSegmentIndexByLayer.set(z, layerIndex);
       }
     } else {
-      this.obstacleSegmentIndex = null
+      this.obstacleSegmentIndex = null;
     }
 
     if (obstacleVias.length > 0) {
-      const viaIndex = new Flatbush(obstacleVias.length)
+      const viaIndex = new Flatbush(obstacleVias.length);
       for (const via of obstacleVias) {
-        viaIndex.add(via.x, via.y, via.x, via.y)
+        viaIndex.add(via.x, via.y, via.x, via.y);
       }
-      viaIndex.finish()
-      this.obstacleViaIndex = viaIndex
+      viaIndex.finish();
+      this.obstacleViaIndex = viaIndex;
     } else {
-      this.obstacleViaIndex = null
+      this.obstacleViaIndex = null;
     }
   }
 
@@ -548,7 +559,7 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
       distance(node, this.B) +
       // via penalty (one via can reach any layer, so just check if layers differ)
       (node.z !== this.B.z ? this.viaPenaltyDistance : 0)
-    )
+    );
   }
 
   computeG(node: Node) {
@@ -556,33 +567,33 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
       (node.parent?.g ?? 0) +
       (node.z === node.parent?.z ? 0 : this.viaPenaltyDistance) +
       distance(node, node.parent!)
-    )
+    );
   }
 
   computeF(g: number, h: number) {
-    return g + h * this.GREEDY_MULTIPLER
+    return g + h * this.GREEDY_MULTIPLER;
   }
 
   setNodeCosts(node: Node) {
-    node.g = this.computeG(node)
-    node.h = this.computeH(node)
-    node.f = this.computeF(node.g, node.h)
+    node.g = this.computeG(node);
+    node.h = this.computeH(node);
+    node.f = this.computeF(node.g, node.h);
   }
 
   getNodeKey(node: Node) {
-    const xIndex = Math.round(node.x / this.cellStep) - this.gridMinXIndex
-    const yIndex = Math.round(node.y / this.cellStep) - this.gridMinYIndex
-    return (node.z * this.gridHeight + yIndex) * this.gridWidth + xIndex
+    const xIndex = Math.round(node.x / this.cellStep) - this.gridMinXIndex;
+    const yIndex = Math.round(node.y / this.cellStep) - this.gridMinYIndex;
+    return (node.z * this.gridHeight + yIndex) * this.gridWidth + xIndex;
   }
 
   getNeighbors(node: Node) {
-    const neighbors: Node[] = []
+    const neighbors: Node[] = [];
 
-    const { maxX, minX, maxY, minY } = this.bounds
+    const { maxX, minX, maxY, minY } = this.bounds;
 
     for (let x = -1; x <= 1; x++) {
       for (let y = -1; y <= 1; y++) {
-        if (x === 0 && y === 0) continue
+        if (x === 0 && y === 0) continue;
 
         const neighbor: Node = {
           x: clamp(node.x + x * this.cellStep, minX, maxX),
@@ -592,15 +603,15 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
           h: node.h,
           f: node.f,
           parent: node,
-        }
+        };
 
-        const neighborKey = this.getNodeKey(neighbor)
+        const neighborKey = this.getNodeKey(neighbor);
 
         if (this.exploredNodes.has(neighborKey)) {
-          continue
+          continue;
         }
 
-        const planarObstacleQuery = this.getPlanarObstacleQuery(neighbor)
+        const planarObstacleQuery = this.getPlanarObstacleQuery(neighbor);
         if (
           this.isNodeTooCloseToObstacle(
             neighbor,
@@ -610,36 +621,36 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
           )
         ) {
           if (this.debugEnabled) {
-            this.debug_nodesTooCloseToObstacle.add(neighborKey)
+            this.debug_nodesTooCloseToObstacle.add(neighborKey);
           }
-          this.exploredNodes.add(neighborKey)
-          continue
+          this.exploredNodes.add(neighborKey);
+          continue;
         }
 
         if (this.isNodeTooCloseToEdge(neighbor, false)) {
-          this.exploredNodes.add(neighborKey)
-          continue
+          this.exploredNodes.add(neighborKey);
+          continue;
         }
 
         if (
           this.doesPathToParentIntersectObstacle(neighbor, planarObstacleQuery)
         ) {
           if (this.debugEnabled) {
-            this.debug_nodePathToParentIntersectsObstacle.add(neighborKey)
+            this.debug_nodePathToParentIntersectsObstacle.add(neighborKey);
           }
-          this.exploredNodes.add(neighborKey)
-          continue
+          this.exploredNodes.add(neighborKey);
+          continue;
         }
 
-        this.setNodeCosts(neighbor)
+        this.setNodeCosts(neighbor);
 
-        neighbors.push(neighbor)
+        neighbors.push(neighbor);
       }
     }
 
     // Add via neighbors for all other layers (a via can connect any layer to any other layer)
     for (const newZ of this.availableZ) {
-      if (newZ === node.z) continue
+      if (newZ === node.z) continue;
 
       const viaNeighbor: Node = {
         x: node.x,
@@ -649,7 +660,7 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
         h: node.h,
         f: node.f,
         parent: node,
-      }
+      };
 
       if (
         !this.exploredNodes.has(this.getNodeKey(viaNeighbor)) &&
@@ -660,48 +671,48 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
         ) &&
         !this.isNodeTooCloseToEdge(viaNeighbor, true)
       ) {
-        this.setNodeCosts(viaNeighbor)
+        this.setNodeCosts(viaNeighbor);
 
-        neighbors.push(viaNeighbor)
+        neighbors.push(viaNeighbor);
       }
     }
 
-    return neighbors
+    return neighbors;
   }
 
   getNodePath(node: Node) {
-    const path: Node[] = []
+    const path: Node[] = [];
     while (node) {
-      path.push(node)
-      node = node.parent!
+      path.push(node);
+      node = node.parent!;
     }
-    return path
+    return path;
   }
 
   getViasInNodePath(node: Node): { x: number; y: number }[] {
-    const cachedVias = this.viasInPathByNode.get(node)
-    if (cachedVias) return cachedVias
+    const cachedVias = this.viasInPathByNode.get(node);
+    if (cachedVias) return cachedVias;
 
-    const parent = node.parent
+    const parent = node.parent;
     const parentVias: { x: number; y: number }[] = parent
       ? this.getViasInNodePath(parent)
-      : []
+      : [];
     const vias: { x: number; y: number }[] =
       parent && node.z !== parent.z
         ? [{ x: node.x, y: node.y }, ...parentVias]
-        : parentVias
-    this.viasInPathByNode.set(node, vias)
-    return vias
+        : parentVias;
+    this.viasInPathByNode.set(node, vias);
+    return vias;
   }
 
   setSolvedPath(node: Node) {
-    const path = this.getNodePath(node)
-    path.reverse()
+    const path = this.getNodePath(node);
+    path.reverse();
 
-    const vias: { x: number; y: number }[] = []
+    const vias: { x: number; y: number }[] = [];
     for (let i = 0; i < path.length - 1; i++) {
       if (path[i].z !== path[i + 1].z) {
-        vias.push({ x: path[i].x, y: path[i].y })
+        vias.push({ x: path[i].x, y: path[i].y });
       }
     }
 
@@ -715,15 +726,15 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
         .map((node) => ({ x: node.x, y: node.y, z: node.z }))
         .concat([this.B]),
       vias,
-    }
+    };
   }
 
   computeProgress(currentNode?: Node, goalDist?: number, isOnLayer?: boolean) {
     // BaseSolver probes computeProgress() without arguments after every step.
     // Preserve the legacy NaN result without repeating the trigonometry.
-    if (goalDist === undefined || isOnLayer === undefined) return Number.NaN
-    if (!isOnLayer) goalDist += this.viaPenaltyDistance
-    const goalDistPercent = 1 - goalDist / this.straightLineDistance
+    if (goalDist === undefined || isOnLayer === undefined) return Number.NaN;
+    if (!isOnLayer) goalDist += this.viaPenaltyDistance;
+    const goalDistPercent = 1 - goalDist / this.straightLineDistance;
 
     // This is a perfectly acceptable progress metric
     // return Math.max(this.progress || 0, goalDistPercent)
@@ -737,28 +748,28 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
       //         ~95% -> 72%
       (2 / Math.PI) *
         Math.atan((0.112 * goalDistPercent) / (1 - goalDistPercent)),
-    )
+    );
   }
 
   _step() {
-    let currentNode = this.candidates.dequeue()
-    let currentNodeKey = currentNode ? this.getNodeKey(currentNode) : undefined
+    let currentNode = this.candidates.dequeue();
+    let currentNodeKey = currentNode ? this.getNodeKey(currentNode) : undefined;
 
     while (
       currentNode &&
       currentNodeKey &&
       this.exploredNodes.has(currentNodeKey)
     ) {
-      currentNode = this.candidates.dequeue()
-      currentNodeKey = currentNode ? this.getNodeKey(currentNode) : undefined
+      currentNode = this.candidates.dequeue();
+      currentNodeKey = currentNode ? this.getNodeKey(currentNode) : undefined;
     }
 
     if (!currentNode || !currentNodeKey) {
-      this.failed = true
-      this.error = "Ran out of candidate nodes to explore"
-      return
+      this.failed = true;
+      this.error = "Ran out of candidate nodes to explore";
+      return;
     }
-    this.exploredNodes.add(currentNodeKey)
+    this.exploredNodes.add(currentNodeKey);
     if (this.debugEnabled) {
       this.debug_exploredNodesOrdered.push({
         key: currentNodeKey,
@@ -769,16 +780,16 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
           Math.round(currentNode.y / this.cellStep) * this.cellStep +
           this.initialNodeGridOffset.y,
         z: currentNode.z,
-      })
+      });
     }
 
-    const goalDist = distance(currentNode, this.B)
+    const goalDist = distance(currentNode, this.B);
 
     this.progress = this.computeProgress(
       currentNode,
       goalDist,
       currentNode.z === this.B.z,
-    )
+    );
 
     if (
       goalDist <= this.cellStep * Math.SQRT2 &&
@@ -791,13 +802,13 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
         y: this.B.y,
       })
     ) {
-      this.solved = true
-      this.setSolvedPath(currentNode)
+      this.solved = true;
+      this.setSolvedPath(currentNode);
     }
 
-    const neighbors = this.getNeighbors(currentNode)
+    const neighbors = this.getNeighbors(currentNode);
     for (const neighbor of neighbors) {
-      this.candidates.enqueue(neighbor)
+      this.candidates.enqueue(neighbor);
     }
   }
 
@@ -807,7 +818,7 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
       points: [],
       rects: [],
       circles: [],
-    }
+    };
 
     // Display the input port points (from nodeWithPortPoints via A and B)
     graphics.points!.push({
@@ -818,7 +829,7 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
         `z: ${this.A.z}`,
       ]),
       color: "orange",
-    })
+    });
     graphics.points!.push({
       x: this.B.x,
       y: this.B.y,
@@ -827,7 +838,7 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
         `z: ${this.B.z}`,
       ]),
       color: "orange",
-    })
+    });
 
     // Draw circles at future connection points
     // if ("FUTURE_CONNECTION_PROXIMITY_VD" in this) {
@@ -871,7 +882,7 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
       label: connectionLabel(this.connectionName, this.rootConnectionName, [
         "Direct Input Connection",
       ]),
-    })
+    });
 
     // Show any obstacle routes as background references
     for (
@@ -879,9 +890,9 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
       routeIndex < this.obstacleRoutes.length;
       routeIndex++
     ) {
-      const route = this.obstacleRoutes[routeIndex]
+      const route = this.obstacleRoutes[routeIndex];
       for (let i = 0; i < route.route.length - 1; i++) {
-        const z = route.route[i].z
+        const z = route.route[i].z;
         graphics.lines!.push({
           points: [route.route[i], route.route[i + 1]],
           strokeColor:
@@ -893,15 +904,15 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
             ["Obstacle Route"],
           ),
           layer: `obstacle${routeIndex.toString()}`,
-        })
+        });
       }
     }
 
     // Optionally, visualize explored nodes for debugging purposes
     for (let i = 0; i < this.debug_exploredNodesOrdered.length; i++) {
-      const { key: nodeKey, x, y, z } = this.debug_exploredNodesOrdered[i]
-      if (this.debug_nodesTooCloseToObstacle.has(nodeKey)) continue
-      if (this.debug_nodePathToParentIntersectsObstacle.has(nodeKey)) continue
+      const { key: nodeKey, x, y, z } = this.debug_exploredNodesOrdered[i];
+      if (this.debug_nodesTooCloseToObstacle.has(nodeKey)) continue;
+      if (this.debug_nodePathToParentIntersectsObstacle.has(nodeKey)) continue;
       graphics.rects!.push({
         center: {
           x: x + (z * this.cellStep) / 20,
@@ -914,12 +925,12 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
         width: this.cellStep * 0.9,
         height: this.cellStep * 0.9,
         label: `Explored (z=${z})`,
-      })
+      });
     }
 
     // Visualize the next node to be explored
     if (this.candidates.peek()) {
-      const nextNode = this.candidates.peek()!
+      const nextNode = this.candidates.peek()!;
       graphics.rects!.push({
         center: {
           x: nextNode.x + (nextNode.z * this.cellStep) / 20,
@@ -929,7 +940,7 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
         width: this.cellStep * 0.9,
         height: this.cellStep * 0.9,
         label: `Next (z=${nextNode.z})`,
-      })
+      });
     }
 
     // Visualize vias from obstacle routes
@@ -943,7 +954,7 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
           radius: this.viaDiameter / 2,
           fill: "rgba(255, 0, 0, 0.5)",
           label: "Via",
-        })
+        });
       }
     }
     // If a solved route exists, display it along with via markers
@@ -956,7 +967,7 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
           this.solvedPath.rootConnectionName,
           ["Solved Route"],
         ),
-      })
+      });
       for (const via of this.solvedPath.vias) {
         graphics.circles!.push({
           center: via,
@@ -967,38 +978,38 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
             this.solvedPath.rootConnectionName,
             ["Via"],
           ),
-        })
+        });
       }
     }
 
-    return graphics
+    return graphics;
   }
 }
 
 type IndexedObstacleSegment = {
-  z: number
-  A: { x: number; y: number; z: number }
-  B: { x: number; y: number; z: number }
-  minX: number
-  minY: number
-  maxX: number
-  maxY: number
-  connectedToCurrentConnection: boolean
-}
+  z: number;
+  A: { x: number; y: number; z: number };
+  B: { x: number; y: number; z: number };
+  minX: number;
+  minY: number;
+  maxX: number;
+  maxY: number;
+  connectedToCurrentConnection: boolean;
+};
 
-type IndexedObstacleVia = { x: number; y: number }
+type IndexedObstacleVia = { x: number; y: number };
 
 type PlanarObstacleQuery = {
-  segments: IndexedObstacleSegment[]
-  segmentIds: number[]
-}
+  segments: IndexedObstacleSegment[];
+  segmentIds: number[];
+};
 
 function getSameLayerPointPairs(route: HighDensityIntraNodeRoute) {
   const pointPairs: {
-    z: number
-    A: { x: number; y: number; z: number }
-    B: { x: number; y: number; z: number }
-  }[] = []
+    z: number;
+    A: { x: number; y: number; z: number };
+    B: { x: number; y: number; z: number };
+  }[] = [];
 
   for (let i = 0; i < route.route.length - 1; i++) {
     if (route.route[i].z === route.route[i + 1].z) {
@@ -1006,15 +1017,15 @@ function getSameLayerPointPairs(route: HighDensityIntraNodeRoute) {
         z: route.route[i].z,
         A: route.route[i],
         B: route.route[i + 1],
-      })
+      });
     }
   }
 
-  return pointPairs
+  return pointPairs;
 }
 
 function clamp(value: number, min: number, max: number) {
-  return Math.max(min, Math.min(value, max))
+  return Math.max(min, Math.min(value, max));
 }
 
 function getSegmentToSegmentCenterlineDistance(
@@ -1028,5 +1039,5 @@ function getSegmentToSegmentCenterlineDistance(
     pointToSegmentDistance(leftB, rightA, rightB),
     pointToSegmentDistance(rightA, leftA, leftB),
     pointToSegmentDistance(rightB, leftA, leftB),
-  )
+  );
 }

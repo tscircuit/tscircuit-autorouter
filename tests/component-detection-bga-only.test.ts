@@ -1,21 +1,15 @@
-import { expect, test } from "bun:test"
-import { ComponentDetectionSolver } from "lib/solvers/ComponentDetectionSolver/ComponentDetectionSolver"
-import { createComponentObstacleSrj } from "lib/solvers/ComponentTopologyGeneratorSolver/ComponentTopologyGeneratorSolver"
-import { AvailableSegmentPointSolver } from "lib/solvers/AvailableSegmentPointSolver/AvailableSegmentPointSolver"
-import { CapacityMeshEdgeSolver2_NodeTreeOptimization } from "lib/solvers/CapacityMeshSolver/CapacityMeshEdgeSolver2_NodeTreeOptimization"
-import { buildHyperGraph } from "lib/solvers/PortPointPathingSolver/hgportpointpathingsolver"
-import { MultiGraphTopologyPlannerSolver } from "lib/solvers/TopologyPlanningSolver/MultiGraphTopologyPlannerSolver"
-import type { Obstacle, SimpleRouteJson } from "lib/types"
-import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
-import bugReport61 from "../fixtures/bug-reports/bugreport61-2936e1/bugreport61-2936e1.json" with {
-  type: "json",
-}
-import bugReport62 from "../fixtures/bug-reports/bugreport62-0f6ca4/bugreport62-0f6ca4.json" with {
-  type: "json",
-}
-import bugReport63 from "../fixtures/bug-reports/bugreport63-274be2/bugreport63-274be2.json" with {
-  type: "json",
-}
+import { expect, test } from "bun:test";
+import { ComponentDetectionSolver } from "lib/solvers/ComponentDetectionSolver/ComponentDetectionSolver";
+import { createComponentObstacleSrj } from "lib/solvers/ComponentTopologyGeneratorSolver/ComponentTopologyGeneratorSolver";
+import { AvailableSegmentPointSolver } from "lib/solvers/AvailableSegmentPointSolver/AvailableSegmentPointSolver";
+import { CapacityMeshEdgeSolver2_NodeTreeOptimization } from "lib/solvers/CapacityMeshSolver/CapacityMeshEdgeSolver2_NodeTreeOptimization";
+import { buildHyperGraph } from "lib/solvers/PortPointPathingSolver/hgportpointpathingsolver";
+import { MultiGraphTopologyPlannerSolver } from "lib/solvers/TopologyPlanningSolver/MultiGraphTopologyPlannerSolver";
+import type { Obstacle, SimpleRouteJson } from "lib/types";
+import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson";
+import bugReport61 from "../fixtures/bug-reports/bugreport61-2936e1/bugreport61-2936e1.json" with { type: "json" };
+import bugReport62 from "../fixtures/bug-reports/bugreport62-0f6ca4/bugreport62-0f6ca4.json" with { type: "json" };
+import bugReport63 from "../fixtures/bug-reports/bugreport63-274be2/bugreport63-274be2.json" with { type: "json" };
 
 const createPad = ({
   componentId,
@@ -25,12 +19,12 @@ const createPad = ({
   width = 0.2,
   height = 0.2,
 }: {
-  componentId: string
-  obstacleId: string
-  x: number
-  y: number
-  width?: number
-  height?: number
+  componentId: string;
+  obstacleId: string;
+  x: number;
+  y: number;
+  width?: number;
+  height?: number;
 }): Obstacle => ({
   obstacleId,
   componentId,
@@ -40,7 +34,7 @@ const createPad = ({
   width,
   height,
   connectedTo: [],
-})
+});
 
 const createSrj = (obstacles: Obstacle[]): SimpleRouteJson => ({
   layerCount: 2,
@@ -48,14 +42,14 @@ const createSrj = (obstacles: Obstacle[]): SimpleRouteJson => ({
   obstacles,
   connections: [],
   bounds: { minX: -2, maxX: 4.5, minY: -2, maxY: 4.5 },
-})
+});
 
 const countComponentObstacles = (
   inputSrj: SimpleRouteJson,
   componentId: string,
 ) =>
   inputSrj.obstacles.filter((obstacle) => obstacle.componentId === componentId)
-    .length
+    .length;
 
 const createGridPads = ({
   componentId,
@@ -65,12 +59,12 @@ const createGridPads = ({
   yStep = 1,
   includedIndexes,
 }: {
-  componentId: string
-  rows: number
-  columns: number
-  xStep?: number
-  yStep?: number
-  includedIndexes?: number[]
+  componentId: string;
+  rows: number;
+  columns: number;
+  xStep?: number;
+  yStep?: number;
+  includedIndexes?: number[];
 }) =>
   Array.from(
     includedIndexes ??
@@ -82,14 +76,14 @@ const createGridPads = ({
         x: (index % columns) * xStep,
         y: Math.floor(index / columns) * yStep,
       }),
-  )
+  );
 
 const createQfpPads = ({
   componentId,
   padsPerSide = 4,
 }: {
-  componentId: string
-  padsPerSide?: number
+  componentId: string;
+  padsPerSide?: number;
 }) => {
   const topPads = Array.from({ length: padsPerSide }, (_, index) =>
     createPad({
@@ -100,7 +94,7 @@ const createQfpPads = ({
       width: 0.2,
       height: 0.4,
     }),
-  )
+  );
   const rightPads = Array.from({ length: padsPerSide }, (_, index) =>
     createPad({
       componentId,
@@ -110,7 +104,7 @@ const createQfpPads = ({
       width: 0.4,
       height: 0.2,
     }),
-  )
+  );
   const bottomPads = Array.from({ length: padsPerSide }, (_, index) =>
     createPad({
       componentId,
@@ -120,7 +114,7 @@ const createQfpPads = ({
       width: 0.2,
       height: 0.4,
     }),
-  )
+  );
   const leftPads = Array.from({ length: padsPerSide }, (_, index) =>
     createPad({
       componentId,
@@ -130,17 +124,17 @@ const createQfpPads = ({
       width: 0.4,
       height: 0.2,
     }),
-  )
+  );
 
-  return [...topPads, ...rightPads, ...bottomPads, ...leftPads]
-}
+  return [...topPads, ...rightPads, ...bottomPads, ...leftPads];
+};
 
 const createPerfectlyBorderedQfpPads = ({
   componentId,
 }: {
-  componentId: string
+  componentId: string;
 }) => {
-  const axisValues = [-0.7, 0.5, 1.7]
+  const axisValues = [-0.7, 0.5, 1.7];
   const topPads = axisValues.map((x, index) =>
     createPad({
       componentId,
@@ -150,7 +144,7 @@ const createPerfectlyBorderedQfpPads = ({
       width: 0.2,
       height: 0.4,
     }),
-  )
+  );
   const rightPads = axisValues.map((y, index) =>
     createPad({
       componentId,
@@ -160,7 +154,7 @@ const createPerfectlyBorderedQfpPads = ({
       width: 0.4,
       height: 0.2,
     }),
-  )
+  );
   const bottomPads = axisValues.map((x, index) =>
     createPad({
       componentId,
@@ -170,7 +164,7 @@ const createPerfectlyBorderedQfpPads = ({
       width: 0.2,
       height: 0.4,
     }),
-  )
+  );
   const leftPads = axisValues.map((y, index) =>
     createPad({
       componentId,
@@ -180,10 +174,10 @@ const createPerfectlyBorderedQfpPads = ({
       width: 0.4,
       height: 0.2,
     }),
-  )
+  );
 
-  return [...topPads, ...rightPads, ...bottomPads, ...leftPads]
-}
+  return [...topPads, ...rightPads, ...bottomPads, ...leftPads];
+};
 
 test("component detection only creates regions for BGA-like components", () => {
   const inputSrj = {
@@ -200,52 +194,52 @@ test("component detection only creates regions for BGA-like components", () => {
       ),
     ]),
     layerCount: 4,
-  }
+  };
   const passivePads = [
     createPad({ componentId: "R1", obstacleId: "R1.1", x: -1, y: 0 }),
     createPad({ componentId: "R1", obstacleId: "R1.2", x: 0, y: 0 }),
-  ]
+  ];
   const solver = new ComponentDetectionSolver({
     inputSrj,
-  })
+  });
 
-  solver.solve()
+  solver.solve();
 
-  const detectedComponents = solver.getOutput()
+  const detectedComponents = solver.getOutput();
   const componentObstacleSrj = createComponentObstacleSrj({
     detectedComponents,
     inputSrj,
-  })
+  });
   const replacementObstacle = componentObstacleSrj.obstacles.find(
     (obstacle) => obstacle.obstacleId === "U_BGA_component_bounds",
-  )
+  );
 
   expect(detectedComponents.map((component) => component.componentId)).toEqual([
     "U_BGA",
-  ])
+  ]);
   expect(
     componentObstacleSrj.obstacles.some(
       (obstacle) => obstacle.obstacleId === "R1.1",
     ),
-  ).toBe(true)
+  ).toBe(true);
   expect(
     componentObstacleSrj.obstacles.some(
       (obstacle) => obstacle.obstacleId === "R1.2_component_bounds",
     ),
-  ).toBe(false)
+  ).toBe(false);
   expect(
     componentObstacleSrj.obstacles.some(
       (obstacle) => obstacle.obstacleId === "U_BGA_component_bounds",
     ),
-  ).toBe(true)
+  ).toBe(true);
   expect(replacementObstacle?.layers).toEqual([
     "top",
     "inner1",
     "inner2",
     "bottom",
-  ])
-  expect(replacementObstacle?.__zLayers).toEqual([0, 1, 2, 3])
-})
+  ]);
+  expect(replacementObstacle?.__zLayers).toEqual([0, 1, 2, 3]);
+});
 
 test("component detection accepts larger BGA-like components", () => {
   const solver = new ComponentDetectionSolver({
@@ -260,16 +254,16 @@ test("component detection accepts larger BGA-like components", () => {
         includedIndexes: [0, 1, 2, 3],
       }),
     ]),
-  })
+  });
 
-  solver.solve()
+  solver.solve();
 
   expect(solver.getOutput().map((component) => component.componentId)).toEqual([
     "U_3X3",
     "U_3X4",
     "U_4X3",
-  ])
-})
+  ]);
+});
 
 test("component detection marks large-gap two-row and two-column grids as SOIC", () => {
   const solver = new ComponentDetectionSolver({
@@ -292,9 +286,9 @@ test("component detection marks large-gap two-row and two-column grids as SOIC",
       minViaPadDiameter: 0.3,
       defaultObstacleMargin: 0.15,
     },
-  })
+  });
 
-  solver.solve()
+  solver.solve();
 
   expect(
     solver
@@ -304,13 +298,13 @@ test("component detection marks large-gap two-row and two-column grids as SOIC",
     ["U_SOIC_COLUMNS", "soic"],
     ["U_SOIC_ROWS", "soic"],
     ["U_TIGHT_3X3", "bga"],
-  ])
+  ]);
   expect(
     solver
       .visualize()
       .rects?.some((rect) => rect.label === "U_SOIC_ROWS SOIC region"),
-  ).toBe(true)
-})
+  ).toBe(true);
+});
 
 test("component detection clearly labels QFP-like components", () => {
   const solver = new ComponentDetectionSolver({
@@ -319,9 +313,9 @@ test("component detection clearly labels QFP-like components", () => {
       ...createQfpPads({ componentId: "U_QFP12", padsPerSide: 3 }),
       ...createGridPads({ componentId: "U_BGA", rows: 3, columns: 3 }),
     ]),
-  })
+  });
 
-  solver.solve()
+  solver.solve();
 
   expect(
     solver
@@ -331,35 +325,35 @@ test("component detection clearly labels QFP-like components", () => {
     ["U_BGA", "bga"],
     ["U_QFP", "qfp"],
     ["U_QFP12", "qfp"],
-  ])
+  ]);
   expect(
     solver.visualize().rects?.some((rect) => rect.label === "U_QFP QFP region"),
-  ).toBe(true)
-})
+  ).toBe(true);
+});
 
 test("component detection rejects grids with pad dimensions outside one percent", () => {
   const mismatchedPads = createGridPads({
     componentId: "U_MISMATCHED_PADS",
     rows: 3,
     columns: 3,
-  })
+  });
   mismatchedPads[0] = {
     ...mismatchedPads[0]!,
     width: mismatchedPads[0]!.width * 1.011,
-  }
+  };
   const solver = new ComponentDetectionSolver({
     inputSrj: createSrj([
       ...createGridPads({ componentId: "U_BGA", rows: 3, columns: 3 }),
       ...mismatchedPads,
     ]),
-  })
+  });
 
-  solver.solve()
+  solver.solve();
 
   expect(solver.getOutput().map((component) => component.componentId)).toEqual([
     "U_BGA",
-  ])
-})
+  ]);
+});
 
 test("component detection does not require a fully populated large grid", () => {
   const solver = new ComponentDetectionSolver({
@@ -371,67 +365,67 @@ test("component detection does not require a fully populated large grid", () => 
         includedIndexes: [0, 1, 2, 4, 8],
       }),
     ]),
-  })
+  });
 
-  solver.solve()
+  solver.solve();
 
   expect(solver.getOutput().map((component) => component.componentId)).toEqual([
     "U_SPARSE_3X3",
-  ])
-})
+  ]);
+});
 
 test("topology planning creates BGA component mesh nodes for larger components", () => {
   const inputSrj: SimpleRouteJson = createSrj(
     createGridPads({ componentId: "U_3X4", rows: 3, columns: 4 }),
-  )
-  const componentDetectionSolver = new ComponentDetectionSolver({ inputSrj })
-  componentDetectionSolver.solve()
+  );
+  const componentDetectionSolver = new ComponentDetectionSolver({ inputSrj });
+  componentDetectionSolver.solve();
 
   const topologyPlanningSolver = new MultiGraphTopologyPlannerSolver({
     inputSrj,
     componentDetectionOutput: componentDetectionSolver.getOutput(),
-  })
-  topologyPlanningSolver.solve()
+  });
+  topologyPlanningSolver.solve();
 
-  const output = topologyPlanningSolver.getOutput()
+  const output = topologyPlanningSolver.getOutput();
   const largeViaInputSrj: SimpleRouteJson = {
     ...inputSrj,
     layerCount: 4,
     minViaPadDiameter: 0.8,
-  }
+  };
   const largeViaComponentDetectionSolver = new ComponentDetectionSolver({
     inputSrj: largeViaInputSrj,
-  })
-  largeViaComponentDetectionSolver.solve()
+  });
+  largeViaComponentDetectionSolver.solve();
   const largeViaTopologyPlanningSolver = new MultiGraphTopologyPlannerSolver({
     inputSrj: largeViaInputSrj,
     componentDetectionOutput: largeViaComponentDetectionSolver.getOutput(),
     viaDiameter: 0.8,
-  })
-  largeViaTopologyPlanningSolver.solve()
-  const largeViaOutput = largeViaTopologyPlanningSolver.getOutput()
+  });
+  largeViaTopologyPlanningSolver.solve();
+  const largeViaOutput = largeViaTopologyPlanningSolver.getOutput();
   const largeViaGapNodes = largeViaOutput.componentMeshNodes[0]!.filter(
     (node) => !node._containsObstacle,
-  )
+  );
 
-  expect(output.componentMeshNodes).toHaveLength(1)
-  expect(output.componentMeshNodes[0]!.length).toBeGreaterThan(0)
+  expect(output.componentMeshNodes).toHaveLength(1);
+  expect(output.componentMeshNodes[0]!.length).toBeGreaterThan(0);
   expect(
     output.componentMeshNodes[0]!.some(
       (node) => !node._containsObstacle && node.availableZ.length > 1,
     ),
-  ).toBe(true)
-  expect(largeViaOutput.componentMeshNodes).toHaveLength(1)
-  expect(largeViaGapNodes.length).toBeGreaterThan(0)
+  ).toBe(true);
+  expect(largeViaOutput.componentMeshNodes).toHaveLength(1);
+  expect(largeViaGapNodes.length).toBeGreaterThan(0);
   expect(largeViaGapNodes.every((node) => node.availableZ.length === 1)).toBe(
     true,
-  )
+  );
   expect(
     output.componentMeshNodes[0]!.every((node) =>
       node.capacityMeshNodeId.includes("U_3X4"),
     ),
-  ).toBe(true)
-})
+  ).toBe(true);
+});
 
 test("topology planning creates QFP central, gap, and corner mesh nodes", () => {
   const inputSrj = {
@@ -439,43 +433,43 @@ test("topology planning creates QFP central, gap, and corner mesh nodes", () => 
     layerCount: 4,
     minViaPadDiameter: 0.8,
     defaultObstacleMargin: 0.4,
-  }
-  const componentDetectionSolver = new ComponentDetectionSolver({ inputSrj })
-  componentDetectionSolver.solve()
+  };
+  const componentDetectionSolver = new ComponentDetectionSolver({ inputSrj });
+  componentDetectionSolver.solve();
 
   const topologyPlanningSolver = new MultiGraphTopologyPlannerSolver({
     inputSrj,
     componentDetectionOutput: componentDetectionSolver.getOutput(),
     viaDiameter: 0.8,
     obstacleMargin: 0.4,
-  })
-  topologyPlanningSolver.solve()
+  });
+  topologyPlanningSolver.solve();
 
-  const output = topologyPlanningSolver.getOutput()
-  const qfpNodes = output.componentMeshNodes[0]!
+  const output = topologyPlanningSolver.getOutput();
+  const qfpNodes = output.componentMeshNodes[0]!;
   const centerNode = qfpNodes.find(
     (node) => node.capacityMeshNodeId === "qfp:U_QFP:center",
-  )
+  );
   const sideGapNodes = qfpNodes.filter((node) =>
     node.capacityMeshNodeId.includes("-gap-"),
-  )
+  );
   const cornerNodes = qfpNodes.filter((node) =>
     node.capacityMeshNodeId.includes(":corner-"),
-  )
+  );
   const cornerRectIds = new Set(
     cornerNodes.map((node) => node.capacityMeshNodeId.replace(/:z\d+$/, "")),
-  )
+  );
 
-  expect(output.componentMeshNodes).toHaveLength(1)
-  expect(centerNode?.availableZ).toEqual([0, 1, 2, 3])
-  expect(sideGapNodes.length).toBeGreaterThan(0)
-  expect(sideGapNodes.every((node) => node.availableZ.length === 1)).toBe(true)
-  expect(cornerRectIds.size).toBe(12)
-  expect(cornerNodes.every((node) => node.availableZ.length === 1)).toBe(true)
+  expect(output.componentMeshNodes).toHaveLength(1);
+  expect(centerNode?.availableZ).toEqual([0, 1, 2, 3]);
+  expect(sideGapNodes.length).toBeGreaterThan(0);
+  expect(sideGapNodes.every((node) => node.availableZ.length === 1)).toBe(true);
+  expect(cornerRectIds.size).toBe(12);
+  expect(cornerNodes.every((node) => node.availableZ.length === 1)).toBe(true);
   expect(
     qfpNodes.every((node) => node.capacityMeshNodeId.includes("U_QFP")),
-  ).toBe(true)
-})
+  ).toBe(true);
+});
 
 test("narrow QFP pad gap port points are marked cramped", () => {
   const inputSrj = {
@@ -483,49 +477,49 @@ test("narrow QFP pad gap port points are marked cramped", () => {
     layerCount: 4,
     minViaPadDiameter: 0.8,
     defaultObstacleMargin: 0.4,
-  }
-  const componentDetectionSolver = new ComponentDetectionSolver({ inputSrj })
-  componentDetectionSolver.solve()
+  };
+  const componentDetectionSolver = new ComponentDetectionSolver({ inputSrj });
+  componentDetectionSolver.solve();
 
   const topologyPlanningSolver = new MultiGraphTopologyPlannerSolver({
     inputSrj,
     componentDetectionOutput: componentDetectionSolver.getOutput(),
     viaDiameter: 0.8,
     obstacleMargin: 0.4,
-  })
-  topologyPlanningSolver.solve()
+  });
+  topologyPlanningSolver.solve();
 
-  const qfpNodes = topologyPlanningSolver.getOutput().componentMeshNodes[0]!
+  const qfpNodes = topologyPlanningSolver.getOutput().componentMeshNodes[0]!;
   const narrowGapNodeIds = new Set(
     qfpNodes
       .filter((node) => node._qfpRegionType === "pad-gap")
       .filter((node) => node._isNarrowQfpPadGap)
       .map((node) => node.capacityMeshNodeId),
-  )
-  expect(narrowGapNodeIds.size).toBeGreaterThan(0)
+  );
+  expect(narrowGapNodeIds.size).toBeGreaterThan(0);
 
-  const edgeSolver = new CapacityMeshEdgeSolver2_NodeTreeOptimization(qfpNodes)
-  edgeSolver.solve()
+  const edgeSolver = new CapacityMeshEdgeSolver2_NodeTreeOptimization(qfpNodes);
+  edgeSolver.solve();
   const availableSegmentPointSolver = new AvailableSegmentPointSolver({
     nodes: qfpNodes,
     edges: edgeSolver.edges,
     traceWidth: inputSrj.minTraceWidth,
     obstacleMargin: inputSrj.defaultObstacleMargin,
     shouldReturnCrampedPortPoints: true,
-  })
-  availableSegmentPointSolver.solve()
+  });
+  availableSegmentPointSolver.solve();
 
   const narrowGapSegments = availableSegmentPointSolver
     .getOutput()
     .filter((segment) =>
       segment.nodeIds.some((nodeId) => narrowGapNodeIds.has(nodeId)),
-    )
-  expect(narrowGapSegments.length).toBeGreaterThan(0)
+    );
+  expect(narrowGapSegments.length).toBeGreaterThan(0);
   expect(
     narrowGapSegments.every((segment) =>
       segment.portPoints.every((portPoint) => portPoint.cramped),
     ),
-  ).toBe(true)
+  ).toBe(true);
 
   const { graph } = buildHyperGraph({
     capacityMeshNodes: qfpNodes,
@@ -535,10 +529,10 @@ test("narrow QFP pad gap port points are marked cramped", () => {
       (segment) => segment.portPoints,
     ),
     simpleRouteJsonConnections: [],
-  })
-  expect(graph.ports.length).toBeGreaterThan(0)
-  expect(graph.ports.every((port) => port.d.cramped)).toBe(true)
-})
+  });
+  expect(graph.ports.length).toBeGreaterThan(0);
+  expect(graph.ports.every((port) => port.d.cramped)).toBe(true);
+});
 
 test("topology planning collapses perfectly bordered QFP corners", () => {
   const inputSrj = {
@@ -547,35 +541,35 @@ test("topology planning collapses perfectly bordered QFP corners", () => {
     layerCount: 4,
     minViaPadDiameter: 0.8,
     defaultObstacleMargin: 0.4,
-  }
-  const componentDetectionSolver = new ComponentDetectionSolver({ inputSrj })
-  componentDetectionSolver.solve()
+  };
+  const componentDetectionSolver = new ComponentDetectionSolver({ inputSrj });
+  componentDetectionSolver.solve();
 
   const topologyPlanningSolver = new MultiGraphTopologyPlannerSolver({
     inputSrj,
     componentDetectionOutput: componentDetectionSolver.getOutput(),
     viaDiameter: 0.8,
     obstacleMargin: 0.4,
-  })
-  topologyPlanningSolver.solve()
+  });
+  topologyPlanningSolver.solve();
 
   const cornerNodes = topologyPlanningSolver
     .getOutput()
     .componentMeshNodes[0]!.filter((node) =>
       node.capacityMeshNodeId.includes(":corner-"),
-    )
+    );
   const cornerRectIds = new Set(
     cornerNodes.map((node) => node.capacityMeshNodeId.replace(/:z\d+$/, "")),
-  )
+  );
 
-  expect(cornerRectIds.size).toBe(4)
+  expect(cornerRectIds.size).toBe(4);
   expect([...cornerRectIds].sort()).toEqual([
     "qfp:U_BORDERED:corner-ne-outer",
     "qfp:U_BORDERED:corner-nw-outer",
     "qfp:U_BORDERED:corner-se-outer",
     "qfp:U_BORDERED:corner-sw-outer",
-  ])
-})
+  ]);
+});
 
 test("topology planning creates SOIC central and pad-gap mesh nodes", () => {
   const inputSrj = {
@@ -590,38 +584,38 @@ test("topology planning creates SOIC central and pad-gap mesh nodes", () => {
     layerCount: 4,
     minViaPadDiameter: 0.3,
     defaultObstacleMargin: 0.15,
-  }
-  const componentDetectionSolver = new ComponentDetectionSolver({ inputSrj })
-  componentDetectionSolver.solve()
+  };
+  const componentDetectionSolver = new ComponentDetectionSolver({ inputSrj });
+  componentDetectionSolver.solve();
 
   const topologyPlanningSolver = new MultiGraphTopologyPlannerSolver({
     inputSrj,
     componentDetectionOutput: componentDetectionSolver.getOutput(),
     viaDiameter: 0.3,
     obstacleMargin: 0.15,
-  })
-  topologyPlanningSolver.solve()
+  });
+  topologyPlanningSolver.solve();
 
-  const soicNodes = topologyPlanningSolver.getOutput().componentMeshNodes[0]!
+  const soicNodes = topologyPlanningSolver.getOutput().componentMeshNodes[0]!;
   const centerNode = soicNodes.find(
     (node) => node.capacityMeshNodeId === "soic:U_SOIC_ROWS:center",
-  )
+  );
   const sideGapNodes = soicNodes.filter((node) =>
     node.capacityMeshNodeId.includes("-gap-"),
-  )
+  );
 
-  expect(componentDetectionSolver.getOutput()[0]?.componentKind).toBe("soic")
-  expect(centerNode?.availableZ).toEqual([0, 1, 2, 3])
-  expect(sideGapNodes.length).toBeGreaterThan(0)
+  expect(componentDetectionSolver.getOutput()[0]?.componentKind).toBe("soic");
+  expect(centerNode?.availableZ).toEqual([0, 1, 2, 3]);
+  expect(sideGapNodes.length).toBeGreaterThan(0);
   expect(
     soicNodes.every((node) => node.capacityMeshNodeId.includes("U_SOIC_ROWS")),
-  ).toBe(true)
-})
+  ).toBe(true);
+});
 
 test("bugreport61 SOIC8 footprints use SOIC topology planning", () => {
-  const inputSrj = bugReport61.simple_route_json as SimpleRouteJson
-  const componentDetectionSolver = new ComponentDetectionSolver({ inputSrj })
-  componentDetectionSolver.solve()
+  const inputSrj = bugReport61.simple_route_json as SimpleRouteJson;
+  const componentDetectionSolver = new ComponentDetectionSolver({ inputSrj });
+  componentDetectionSolver.solve();
 
   expect(
     componentDetectionSolver
@@ -630,35 +624,35 @@ test("bugreport61 SOIC8 footprints use SOIC topology planning", () => {
   ).toEqual([
     ["pcb_component_0", "soic"],
     ["pcb_component_1", "soic"],
-  ])
+  ]);
   expect(
     componentDetectionSolver
       .visualize()
       .rects?.some((rect) => rect.label === "pcb_component_0 SOIC region"),
-  ).toBe(true)
+  ).toBe(true);
 
   const topologyPlanningSolver = new MultiGraphTopologyPlannerSolver({
     inputSrj,
     componentDetectionOutput: componentDetectionSolver.getOutput(),
-  })
-  topologyPlanningSolver.solve()
+  });
+  topologyPlanningSolver.solve();
 
-  const output = topologyPlanningSolver.getOutput()
-  expect(output.componentMeshNodes).toHaveLength(2)
+  const output = topologyPlanningSolver.getOutput();
+  expect(output.componentMeshNodes).toHaveLength(2);
   expect(output.componentMeshNodes.every((nodes) => nodes.length > 0)).toBe(
     true,
-  )
+  );
   expect(
     output.componentMeshNodes.every((nodes) =>
       nodes.every((node) => node.capacityMeshNodeId.startsWith("soic:")),
     ),
-  ).toBe(true)
-})
+  ).toBe(true);
+});
 
 test("bugreport62 QFP footprints are clearly detected", () => {
-  const inputSrj = bugReport62.simple_route_json as SimpleRouteJson
-  const componentDetectionSolver = new ComponentDetectionSolver({ inputSrj })
-  componentDetectionSolver.solve()
+  const inputSrj = bugReport62.simple_route_json as SimpleRouteJson;
+  const componentDetectionSolver = new ComponentDetectionSolver({ inputSrj });
+  componentDetectionSolver.solve();
 
   expect(
     componentDetectionSolver
@@ -671,13 +665,13 @@ test("bugreport62 QFP footprints are clearly detected", () => {
   ).toEqual([
     ["pcb_component_0", "qfp", 12],
     ["pcb_component_1", "qfp", 32],
-  ])
-})
+  ]);
+});
 
 test("bugreport63 QFP thermal-pad footprints are detected as qfp_thermalpad", () => {
-  const inputSrj = bugReport63.simple_route_json as SimpleRouteJson
-  const componentDetectionSolver = new ComponentDetectionSolver({ inputSrj })
-  componentDetectionSolver.solve()
+  const inputSrj = bugReport63.simple_route_json as SimpleRouteJson;
+  const componentDetectionSolver = new ComponentDetectionSolver({ inputSrj });
+  componentDetectionSolver.solve();
 
   expect(
     componentDetectionSolver
@@ -690,65 +684,67 @@ test("bugreport63 QFP thermal-pad footprints are detected as qfp_thermalpad", ()
   ).toEqual([
     ["pcb_component_0", "qfp_thermalpad", 13],
     ["pcb_component_1", "qfp_thermalpad", 33],
-  ])
-})
+  ]);
+});
 
 test("topology planning creates QFP thermal-pad inner and outer regions", () => {
-  const inputSrj = bugReport63.simple_route_json as SimpleRouteJson
-  const componentDetectionSolver = new ComponentDetectionSolver({ inputSrj })
-  componentDetectionSolver.solve()
+  const inputSrj = bugReport63.simple_route_json as SimpleRouteJson;
+  const componentDetectionSolver = new ComponentDetectionSolver({ inputSrj });
+  componentDetectionSolver.solve();
 
   const topologyPlanningSolver = new MultiGraphTopologyPlannerSolver({
     inputSrj,
     componentDetectionOutput: componentDetectionSolver.getOutput(),
-  })
-  topologyPlanningSolver.solve()
+  });
+  topologyPlanningSolver.solve();
 
-  const output = topologyPlanningSolver.getOutput()
-  const firstQfpNodes = output.componentMeshNodes[0]!
-  const secondQfpNodes = output.componentMeshNodes[1]!
+  const output = topologyPlanningSolver.getOutput();
+  const firstQfpNodes = output.componentMeshNodes[0]!;
+  const secondQfpNodes = output.componentMeshNodes[1]!;
   const allQfpNodeIds = output.componentMeshNodes.flatMap((nodes) =>
     nodes.map((node) => node.capacityMeshNodeId),
-  )
+  );
 
-  expect(output.componentMeshNodes).toHaveLength(2)
+  expect(output.componentMeshNodes).toHaveLength(2);
   expect(
     allQfpNodeIds.some((nodeId) =>
       nodeId.startsWith("qfp_thermalpad:pcb_component_0:thermal-pad:"),
     ),
-  ).toBe(true)
+  ).toBe(true);
   expect(
     allQfpNodeIds.some((nodeId) =>
       nodeId.startsWith("qfp_thermalpad:pcb_component_1:thermal-pad:"),
     ),
-  ).toBe(true)
+  ).toBe(true);
   expect(
     allQfpNodeIds.some((nodeId) => nodeId.includes(":inner-corner-nw")),
-  ).toBe(true)
+  ).toBe(true);
   expect(
     allQfpNodeIds.some((nodeId) => nodeId.includes(":corner-nw-outer")),
-  ).toBe(true)
+  ).toBe(true);
   expect(
     allQfpNodeIds.some((nodeId) => nodeId.includes(":inner-left-pad-")),
-  ).toBe(true)
-  expect(allQfpNodeIds.some((nodeId) => nodeId.endsWith(":center"))).toBe(false)
+  ).toBe(true);
+  expect(allQfpNodeIds.some((nodeId) => nodeId.endsWith(":center"))).toBe(
+    false,
+  );
   expect(
     new Set(
       firstQfpNodes
         .filter((node) => node.capacityMeshNodeId.includes(":inner-corner-"))
         .map((node) => node.capacityMeshNodeId.replace(/:z\d+$/, "")),
     ).size,
-  ).toBe(12)
+  ).toBe(12);
   expect(
     firstQfpNodes
       .filter((node) => node.capacityMeshNodeId.includes(":inner-"))
       .every((node) => node.availableZ.length === 1),
-  ).toBe(true)
+  ).toBe(true);
   expect(
     secondQfpNodes.some(
       (node) =>
         node.capacityMeshNodeId.includes(":inner-corner-") &&
         node.availableZ.length > 1,
     ),
-  ).toBe(true)
-})
+  ).toBe(true);
+});

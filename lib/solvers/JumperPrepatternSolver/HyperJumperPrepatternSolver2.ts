@@ -1,39 +1,39 @@
-import { ConnectivityMap } from "circuit-json-to-connectivity-map"
-import type { GraphicsObject } from "graphics-debug"
+import { ConnectivityMap } from "circuit-json-to-connectivity-map";
+import type { GraphicsObject } from "graphics-debug";
 import type {
   HighDensityIntraNodeRouteWithJumpers,
   NodeWithPortPoints,
-} from "../../types/high-density-types"
-import type { JumperType, Jumper as SrjJumper } from "../../types/srj-types"
+} from "../../types/high-density-types";
+import type { JumperType, Jumper as SrjJumper } from "../../types/srj-types";
 import {
   HyperParameterSupervisorSolver,
   SupervisedSolver,
-} from "../HyperParameterSupervisorSolver"
+} from "../HyperParameterSupervisorSolver";
 import {
   JumperPrepatternSolver2HyperParameters,
   type JumperPrepatternSolver2Params,
   JumperPrepatternSolver2_HyperGraph,
-} from "./JumperPrepatternSolver2_HyperGraph"
+} from "./JumperPrepatternSolver2_HyperGraph";
 
 export interface HyperJumperPrepatternSolver2Params {
-  nodeWithPortPoints: NodeWithPortPoints
-  colorMap?: Record<string, string>
-  traceWidth?: number
-  obstacleMargin?: number
-  connMap?: ConnectivityMap
-  hyperParameters?: JumperPrepatternSolver2HyperParameters
+  nodeWithPortPoints: NodeWithPortPoints;
+  colorMap?: Record<string, string>;
+  traceWidth?: number;
+  obstacleMargin?: number;
+  connMap?: ConnectivityMap;
+  hyperParameters?: JumperPrepatternSolver2HyperParameters;
   /** Available jumper types. Defaults to ["0603"] */
-  availableJumperTypes?: JumperType[]
+  availableJumperTypes?: JumperType[];
 }
 
 type VariantHyperParameters = {
-  COLS: number
-  ROWS: number
-  ORIENTATION: "horizontal" | "vertical"
-  JUMPER_TYPE: JumperType
-  PATTERN?: "grid" | "staggered"
-  TRACE_CHANNELS_BETWEEN_JUMPERS?: number
-}
+  COLS: number;
+  ROWS: number;
+  ORIENTATION: "horizontal" | "vertical";
+  JUMPER_TYPE: JumperType;
+  PATTERN?: "grid" | "staggered";
+  TRACE_CHANNELS_BETWEEN_JUMPERS?: number;
+};
 
 /**
  * HyperJumperPrepatternSolver2 runs multiple variants of JumperPrepatternSolver2_HyperGraph
@@ -46,53 +46,53 @@ type VariantHyperParameters = {
  * - 2x2_1206x4_horizontal (only if node is large enough, ~14x14mm)
  */
 export class HyperJumperPrepatternSolver2 extends HyperParameterSupervisorSolver<JumperPrepatternSolver2_HyperGraph> {
-  constructorParams: HyperJumperPrepatternSolver2Params
-  nodeWithPortPoints: NodeWithPortPoints
-  colorMap: Record<string, string>
-  traceWidth: number
-  obstacleMargin: number
-  connMap?: ConnectivityMap
-  baseHyperParameters?: JumperPrepatternSolver2HyperParameters
-  availableJumperTypes: JumperType[]
+  constructorParams: HyperJumperPrepatternSolver2Params;
+  nodeWithPortPoints: NodeWithPortPoints;
+  colorMap: Record<string, string>;
+  traceWidth: number;
+  obstacleMargin: number;
+  connMap?: ConnectivityMap;
+  baseHyperParameters?: JumperPrepatternSolver2HyperParameters;
+  availableJumperTypes: JumperType[];
 
   // Output
-  solvedRoutes: HighDensityIntraNodeRouteWithJumpers[] = []
+  solvedRoutes: HighDensityIntraNodeRouteWithJumpers[] = [];
   // All jumpers from the winning solver (SRJ format with connectedTo populated)
-  jumpers: SrjJumper[] = []
+  jumpers: SrjJumper[] = [];
 
   constructor(params: HyperJumperPrepatternSolver2Params) {
-    super()
-    this.constructorParams = params
-    this.nodeWithPortPoints = params.nodeWithPortPoints
-    this.colorMap = params.colorMap ?? {}
-    this.traceWidth = params.traceWidth ?? 0.15
-    this.obstacleMargin = params.obstacleMargin ?? 0.15
-    this.connMap = params.connMap
-    this.baseHyperParameters = params.hyperParameters ?? {}
-    this.availableJumperTypes = params.availableJumperTypes ?? ["0603"]
-    this.MAX_ITERATIONS = 1e6
-    this.GREEDY_MULTIPLIER = 1
-    this.MIN_SUBSTEPS = 1000
+    super();
+    this.constructorParams = params;
+    this.nodeWithPortPoints = params.nodeWithPortPoints;
+    this.colorMap = params.colorMap ?? {};
+    this.traceWidth = params.traceWidth ?? 0.15;
+    this.obstacleMargin = params.obstacleMargin ?? 0.15;
+    this.connMap = params.connMap;
+    this.baseHyperParameters = params.hyperParameters ?? {};
+    this.availableJumperTypes = params.availableJumperTypes ?? ["0603"];
+    this.MAX_ITERATIONS = 1e6;
+    this.GREEDY_MULTIPLIER = 1;
+    this.MIN_SUBSTEPS = 1000;
   }
 
   getConstructorParams(): HyperJumperPrepatternSolver2Params {
-    return this.constructorParams
+    return this.constructorParams;
   }
 
   getHyperParameterDefs() {
     const defs: Array<{
-      name: string
-      possibleValues: Array<Record<string, any>>
-    }> = []
+      name: string;
+      possibleValues: Array<Record<string, any>>;
+    }> = [];
 
-    const node = this.nodeWithPortPoints
+    const node = this.nodeWithPortPoints;
 
     const max0603VertOneTrace = this.calculateMax0603ConfigWithTraceChannels(
       node.width,
       node.height,
       "vertical",
       1,
-    )
+    );
     defs.push({
       name: "0603_max_rows_and_cols_vert_1trace_grid",
       possibleValues: [
@@ -105,7 +105,7 @@ export class HyperJumperPrepatternSolver2 extends HyperParameterSupervisorSolver
           TRACE_CHANNELS_BETWEEN_JUMPERS: 1,
         },
       ],
-    })
+    });
 
     const max0603VertOneTraceStaggered =
       this.calculateMax0603ConfigWithTraceChannels(
@@ -114,7 +114,7 @@ export class HyperJumperPrepatternSolver2 extends HyperParameterSupervisorSolver
         "vertical",
         1,
         "staggered",
-      )
+      );
     defs.push({
       name: "0603_max_rows_and_cols_vert_1trace_staggered",
       possibleValues: [
@@ -127,14 +127,14 @@ export class HyperJumperPrepatternSolver2 extends HyperParameterSupervisorSolver
           TRACE_CHANNELS_BETWEEN_JUMPERS: 1,
         },
       ],
-    })
+    });
 
     const max0603VertTwoTrace = this.calculateMax0603ConfigWithTraceChannels(
       node.width,
       node.height,
       "vertical",
       2,
-    )
+    );
     defs.push({
       name: "0603_max_rows_and_cols_vert_2trace_grid",
       possibleValues: [
@@ -147,7 +147,7 @@ export class HyperJumperPrepatternSolver2 extends HyperParameterSupervisorSolver
           TRACE_CHANNELS_BETWEEN_JUMPERS: 2,
         },
       ],
-    })
+    });
 
     const max0603VertTwoTraceStaggered =
       this.calculateMax0603ConfigWithTraceChannels(
@@ -156,7 +156,7 @@ export class HyperJumperPrepatternSolver2 extends HyperParameterSupervisorSolver
         "vertical",
         2,
         "staggered",
-      )
+      );
     defs.push({
       name: "0603_max_rows_and_cols_vert_2trace_staggered",
       possibleValues: [
@@ -169,14 +169,14 @@ export class HyperJumperPrepatternSolver2 extends HyperParameterSupervisorSolver
           TRACE_CHANNELS_BETWEEN_JUMPERS: 2,
         },
       ],
-    })
+    });
 
     const max0603HorzOneTrace = this.calculateMax0603ConfigWithTraceChannels(
       node.width,
       node.height,
       "horizontal",
       1,
-    )
+    );
     defs.push({
       name: "0603_max_rows_and_cols_horz_1trace_grid",
       possibleValues: [
@@ -189,7 +189,7 @@ export class HyperJumperPrepatternSolver2 extends HyperParameterSupervisorSolver
           TRACE_CHANNELS_BETWEEN_JUMPERS: 1,
         },
       ],
-    })
+    });
 
     const max0603HorzOneTraceStaggered =
       this.calculateMax0603ConfigWithTraceChannels(
@@ -198,7 +198,7 @@ export class HyperJumperPrepatternSolver2 extends HyperParameterSupervisorSolver
         "horizontal",
         1,
         "staggered",
-      )
+      );
     defs.push({
       name: "0603_max_rows_and_cols_horz_1trace_staggered",
       possibleValues: [
@@ -211,14 +211,14 @@ export class HyperJumperPrepatternSolver2 extends HyperParameterSupervisorSolver
           TRACE_CHANNELS_BETWEEN_JUMPERS: 1,
         },
       ],
-    })
+    });
 
     const max0603HorzTwoTrace = this.calculateMax0603ConfigWithTraceChannels(
       node.width,
       node.height,
       "horizontal",
       2,
-    )
+    );
     defs.push({
       name: "0603_max_rows_and_cols_horz_2trace_grid",
       possibleValues: [
@@ -231,7 +231,7 @@ export class HyperJumperPrepatternSolver2 extends HyperParameterSupervisorSolver
           TRACE_CHANNELS_BETWEEN_JUMPERS: 2,
         },
       ],
-    })
+    });
 
     const max0603HorzTwoTraceStaggered =
       this.calculateMax0603ConfigWithTraceChannels(
@@ -240,7 +240,7 @@ export class HyperJumperPrepatternSolver2 extends HyperParameterSupervisorSolver
         "horizontal",
         2,
         "staggered",
-      )
+      );
     defs.push({
       name: "0603_max_rows_and_cols_horz_2trace_staggered",
       possibleValues: [
@@ -253,27 +253,27 @@ export class HyperJumperPrepatternSolver2 extends HyperParameterSupervisorSolver
           TRACE_CHANNELS_BETWEEN_JUMPERS: 2,
         },
       ],
-    })
+    });
 
     // 1206x4 jumper type
     defs.push({
       name: "1206x4",
       possibleValues: [{ JUMPER_TYPE: "1206x4" as JumperType }],
-    })
+    });
 
     // 1206x4 cols and rows
-    const colValues1206x4 = [1, 2, 3, 4, 6, 8, 10]
-    const rowValues1206x4 = [1, 2, 3, 4, 8]
+    const colValues1206x4 = [1, 2, 3, 4, 6, 8, 10];
+    const rowValues1206x4 = [1, 2, 3, 4, 8];
 
     defs.push({
       name: "1206x4_cols",
       possibleValues: colValues1206x4.map((c) => ({ COLS: c })),
-    })
+    });
 
     defs.push({
       name: "1206x4_rows",
       possibleValues: rowValues1206x4.map((r) => ({ ROWS: r })),
-    })
+    });
 
     defs.push({
       name: "orientation",
@@ -281,9 +281,9 @@ export class HyperJumperPrepatternSolver2 extends HyperParameterSupervisorSolver
         { ORIENTATION: "vertical" as const },
         { ORIENTATION: "horizontal" as const },
       ],
-    })
+    });
 
-    return defs
+    return defs;
   }
 
   /**
@@ -292,17 +292,17 @@ export class HyperJumperPrepatternSolver2 extends HyperParameterSupervisorSolver
    * For 1206x4: allow existing values (1, 2, 3, 4, 6, 8, 10 for cols; 1, 2, 3, 4, 8 for rows)
    */
   isValidCombination(hyperParameters: VariantHyperParameters): boolean {
-    const { JUMPER_TYPE, COLS, ROWS } = hyperParameters
-    const valid0603Values = [1, 2, 4, 6, 8]
-    const validCols1206x4 = [1, 2, 3, 4, 6, 8, 10]
-    const validRows1206x4 = [1, 2, 3, 4, 8]
+    const { JUMPER_TYPE, COLS, ROWS } = hyperParameters;
+    const valid0603Values = [1, 2, 4, 6, 8];
+    const validCols1206x4 = [1, 2, 3, 4, 6, 8, 10];
+    const validRows1206x4 = [1, 2, 3, 4, 8];
 
     if (JUMPER_TYPE === "0603") {
-      return valid0603Values.includes(COLS) && valid0603Values.includes(ROWS)
+      return valid0603Values.includes(COLS) && valid0603Values.includes(ROWS);
     } else if (JUMPER_TYPE === "1206x4") {
-      return validCols1206x4.includes(COLS) && validRows1206x4.includes(ROWS)
+      return validCols1206x4.includes(COLS) && validRows1206x4.includes(ROWS);
     }
-    return false
+    return false;
   }
 
   getCombinationDefs() {
@@ -317,7 +317,7 @@ export class HyperJumperPrepatternSolver2 extends HyperParameterSupervisorSolver
       ["0603_max_rows_and_cols_horz_2trace_grid"],
       ["0603_max_rows_and_cols_horz_2trace_staggered"],
       ["1206x4", "1206x4_cols", "1206x4_rows", "orientation"],
-    ]
+    ];
   }
 
   private calculateMax0603ConfigWithTraceChannels(
@@ -327,55 +327,55 @@ export class HyperJumperPrepatternSolver2 extends HyperParameterSupervisorSolver
     traceChannelsBetweenJumpers: number,
     pattern: "grid" | "staggered" = "grid",
   ): { cols: number; rows: number } {
-    const padWidth = 0.9
-    const padHeight = 1.0
-    const padGap = 0.35
-    const paddingAroundPads = 0.5
+    const padWidth = 0.9;
+    const padHeight = 1.0;
+    const padGap = 0.35;
+    const paddingAroundPads = 0.5;
     const clearance =
-      this.traceWidth * traceChannelsBetweenJumpers + this.obstacleMargin * 2
+      this.traceWidth * traceChannelsBetweenJumpers + this.obstacleMargin * 2;
 
     const bodyWidth =
-      orientation === "horizontal" ? padWidth * 2 + padGap : padHeight
+      orientation === "horizontal" ? padWidth * 2 + padGap : padHeight;
     const bodyHeight =
-      orientation === "horizontal" ? padHeight : padWidth * 2 + padGap
-    const staggerAxis: "x" | "y" = orientation === "horizontal" ? "x" : "y"
+      orientation === "horizontal" ? padHeight : padWidth * 2 + padGap;
+    const staggerAxis: "x" | "y" = orientation === "horizontal" ? "x" : "y";
     const staggerOffset =
       pattern === "staggered" && staggerAxis === "x"
         ? bodyWidth / 2
         : pattern === "staggered"
           ? bodyHeight / 2
-          : 0
+          : 0;
 
-    const availableWidth = Math.max(0, nodeWidth - paddingAroundPads * 2)
-    const availableHeight = Math.max(0, nodeHeight - paddingAroundPads * 2)
+    const availableWidth = Math.max(0, nodeWidth - paddingAroundPads * 2);
+    const availableHeight = Math.max(0, nodeHeight - paddingAroundPads * 2);
     const effectiveAvailableWidth = Math.max(
       0,
       availableWidth -
         (pattern === "staggered" && staggerAxis === "x" ? staggerOffset : 0),
-    )
+    );
     const effectiveAvailableHeight = Math.max(
       0,
       availableHeight -
         (pattern === "staggered" && staggerAxis === "y" ? staggerOffset : 0),
-    )
+    );
 
-    const pitchX = bodyWidth + clearance
-    const pitchY = bodyHeight + clearance
+    const pitchX = bodyWidth + clearance;
+    const pitchY = bodyHeight + clearance;
 
     const effectiveCols = Math.max(
       1,
       Math.floor(1 + (effectiveAvailableWidth - bodyWidth) / pitchX),
-    )
+    );
     const effectiveRows = Math.max(
       1,
       Math.floor(1 + (effectiveAvailableHeight - bodyHeight) / pitchY),
-    )
+    );
 
     if (orientation === "vertical") {
-      return { cols: effectiveCols, rows: effectiveRows }
+      return { cols: effectiveCols, rows: effectiveRows };
     }
 
-    return { cols: effectiveRows, rows: effectiveCols }
+    return { cols: effectiveRows, rows: effectiveCols };
   }
 
   /**
@@ -385,38 +385,38 @@ export class HyperJumperPrepatternSolver2 extends HyperParameterSupervisorSolver
    * For 1206x4: uses full combination of cols, rows, and orientation.
    */
   initializeSolvers() {
-    const hyperParameterDefs = this.getHyperParameterDefs()
-    const combinationDefs = this.getCombinationDefs()
+    const hyperParameterDefs = this.getHyperParameterDefs();
+    const combinationDefs = this.getCombinationDefs();
 
-    this.supervisedSolvers = []
+    this.supervisedSolvers = [];
 
     for (const combinationDef of combinationDefs) {
       // Check if this combination applies to our available jumper types
       const is0603Combo = combinationDef.some((name) =>
         name.startsWith("0603_max_rows_and_cols_"),
-      )
-      const is1206x4Combo = combinationDef.includes("1206x4")
+      );
+      const is1206x4Combo = combinationDef.includes("1206x4");
 
-      if (is0603Combo && !this.availableJumperTypes.includes("0603")) continue
+      if (is0603Combo && !this.availableJumperTypes.includes("0603")) continue;
       if (is1206x4Combo && !this.availableJumperTypes.includes("1206x4"))
-        continue
+        continue;
 
       const hyperParameterCombinations = this.getHyperParameterCombinations(
         hyperParameterDefs.filter((hpd) => combinationDef.includes(hpd.name)),
-      )
+      );
 
       for (const hyperParameters of hyperParameterCombinations) {
         const solver = this.generateSolver(
           hyperParameters as VariantHyperParameters,
-        )
-        const g = this.computeG(solver)
+        );
+        const g = this.computeG(solver);
         this.supervisedSolvers.push({
           hyperParameters,
           solver,
           h: 0,
           g,
           f: g,
-        })
+        });
       }
     }
   }
@@ -438,38 +438,38 @@ export class HyperJumperPrepatternSolver2 extends HyperParameterSupervisorSolver
           hyperParameters.TRACE_CHANNELS_BETWEEN_JUMPERS,
       },
       obstacleMargin: this.obstacleMargin,
-    })
+    });
   }
 
   computeG(solver: JumperPrepatternSolver2_HyperGraph): number {
     const jumperCount =
-      solver.hyperParameters.COLS! * solver.hyperParameters.ROWS!
+      solver.hyperParameters.COLS! * solver.hyperParameters.ROWS!;
     // Prefer solutions with fewer iterations, or fewer jumpers
-    return solver.iterations / 10000 + jumperCount * 0.25
+    return solver.iterations / 10000 + jumperCount * 0.25;
   }
 
   computeH(solver: JumperPrepatternSolver2_HyperGraph): number {
     // Estimate remaining work based on progress
-    return 1 - (solver.progress || 0)
+    return 1 - (solver.progress || 0);
   }
 
   onSolve(solver: SupervisedSolver<JumperPrepatternSolver2_HyperGraph>) {
-    this.solvedRoutes = solver.solver.solvedRoutes
-    this.jumpers = solver.solver.getOutputJumpers()
+    this.solvedRoutes = solver.solver.solvedRoutes;
+    this.jumpers = solver.solver.getOutputJumpers();
   }
 
   getOutput(): HighDensityIntraNodeRouteWithJumpers[] {
-    return this.solvedRoutes
+    return this.solvedRoutes;
   }
 
   getOutputJumpers(): SrjJumper[] {
-    return this.jumpers
+    return this.jumpers;
   }
 
   visualize(): GraphicsObject {
     if (this.winningSolver) {
-      return this.winningSolver.visualize()
+      return this.winningSolver.visualize();
     }
-    return super.visualize()
+    return super.visualize();
   }
 }

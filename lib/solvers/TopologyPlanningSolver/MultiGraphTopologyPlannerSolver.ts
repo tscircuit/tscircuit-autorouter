@@ -1,13 +1,16 @@
-import { RectDiffPipeline } from "@tscircuit/rectdiff"
-import { BasePipelineSolver, definePipelineStep } from "@tscircuit/solver-utils"
-import type { BaseSolver, PipelineStep } from "@tscircuit/solver-utils"
-import type { GraphicsObject } from "graphics-debug"
-import type { DetectedComponent } from "lib/solvers/ComponentDetectionSolver/ComponentDetectionSolver"
-import type { ComponentKind } from "lib/solvers/ComponentDetectionSolver/detectors/types"
-import { safeTransparentize } from "lib/solvers/colors"
-import type { CapacityMeshNode, Obstacle, SimpleRouteJson } from "lib/types"
-import { createRectFromCapacityNode } from "lib/utils/createRectFromCapacityNode"
-import { getGlobalMeshNodesForTopologyMerging } from "./get-global-mesh-nodes-for-topology-merging"
+import { RectDiffPipeline } from "@tscircuit/rectdiff";
+import {
+  BasePipelineSolver,
+  definePipelineStep,
+} from "@tscircuit/solver-utils";
+import type { BaseSolver, PipelineStep } from "@tscircuit/solver-utils";
+import type { GraphicsObject } from "graphics-debug";
+import type { DetectedComponent } from "lib/solvers/ComponentDetectionSolver/ComponentDetectionSolver";
+import type { ComponentKind } from "lib/solvers/ComponentDetectionSolver/detectors/types";
+import { safeTransparentize } from "lib/solvers/colors";
+import type { CapacityMeshNode, Obstacle, SimpleRouteJson } from "lib/types";
+import { createRectFromCapacityNode } from "lib/utils/createRectFromCapacityNode";
+import { getGlobalMeshNodesForTopologyMerging } from "./get-global-mesh-nodes-for-topology-merging";
 import {
   ComponentTopologyBatchSolver,
   type ComponentTopologyBatchSolverOutput,
@@ -15,34 +18,34 @@ import {
   createComponentSrj,
   filterRectDiffNodeRectsInsideComponentAreas,
   normalizeInput,
-} from "./topologyPlanningShared"
+} from "./topologyPlanningShared";
 
 export interface SerializedTopologyComponentInput {
-  componentId: string
-  componentKind: ComponentKind
-  memberObstacleIds: string[]
-  memberObstacles: Obstacle[]
-  replacementObstacle: Obstacle & { obstacleId: string }
+  componentId: string;
+  componentKind: ComponentKind;
+  memberObstacleIds: string[];
+  memberObstacles: Obstacle[];
+  replacementObstacle: Obstacle & { obstacleId: string };
 }
 
 export interface MultiGraphTopologyPlannerSolverParams {
-  inputSrj: SimpleRouteJson
-  globalNoConnectionSrj?: SimpleRouteJson
-  components?: SerializedTopologyComponentInput[]
-  componentDetectionOutput?: DetectedComponent[]
-  viaDiameter?: number
-  obstacleMargin?: number
+  inputSrj: SimpleRouteJson;
+  globalNoConnectionSrj?: SimpleRouteJson;
+  components?: SerializedTopologyComponentInput[];
+  componentDetectionOutput?: DetectedComponent[];
+  viaDiameter?: number;
+  obstacleMargin?: number;
   brokenSrj?: {
-    componentsAsObstaclesSrj: SimpleRouteJson
-    components: SerializedTopologyComponentInput[]
-  }
+    componentsAsObstaclesSrj: SimpleRouteJson;
+    components: SerializedTopologyComponentInput[];
+  };
 }
 
 export interface MultiGraphTopologyPlannerSolverOutput {
-  globalNoConnectionSrj: SimpleRouteJson
-  componentNoConnectionSrjs: SimpleRouteJson[]
-  globalMeshNodes: CapacityMeshNode[]
-  componentMeshNodes: CapacityMeshNode[][]
+  globalNoConnectionSrj: SimpleRouteJson;
+  componentNoConnectionSrjs: SimpleRouteJson[];
+  globalMeshNodes: CapacityMeshNode[];
+  componentMeshNodes: CapacityMeshNode[][];
 }
 
 /**
@@ -50,10 +53,10 @@ export interface MultiGraphTopologyPlannerSolverOutput {
  * Pipeline 7 topology merging stage.
  */
 export class MultiGraphTopologyPlannerSolver extends BasePipelineSolver<MultiGraphTopologyPlannerSolverParams> {
-  globalTopologySolver?: RectDiffPipeline
-  componentTopologyBatchSolver?: ComponentTopologyBatchSolver
+  globalTopologySolver?: RectDiffPipeline;
+  componentTopologyBatchSolver?: ComponentTopologyBatchSolver;
 
-  private normalizedInput: NormalizedTopologyPlannerInput
+  private normalizedInput: NormalizedTopologyPlannerInput;
 
   pipelineDef: PipelineStep<BaseSolver>[] = [
     definePipelineStep(
@@ -80,15 +83,15 @@ export class MultiGraphTopologyPlannerSolver extends BasePipelineSolver<MultiGra
         },
       ],
     ),
-  ]
+  ];
 
   constructor(params: MultiGraphTopologyPlannerSolverParams) {
-    super(params)
-    this.normalizedInput = normalizeInput(params)
+    super(params);
+    this.normalizedInput = normalizeInput(params);
   }
 
   override getConstructorParams() {
-    return [this.inputProblem] as const
+    return [this.inputProblem] as const;
   }
 
   /**
@@ -99,31 +102,31 @@ export class MultiGraphTopologyPlannerSolver extends BasePipelineSolver<MultiGra
     const rawGlobalMeshNodes =
       this.getStageOutput<{ meshNodes: CapacityMeshNode[] }>(
         "globalTopologySolver",
-      )?.meshNodes ?? []
+      )?.meshNodes ?? [];
     const globalMeshNodes = getGlobalMeshNodesForTopologyMerging({
       meshNodes: rawGlobalMeshNodes,
       components: this.normalizedInput.components,
-    })
+    });
     const componentMeshNodes =
       this.getStageOutput<ComponentTopologyBatchSolverOutput>(
         "componentTopologyBatchSolver",
-      )?.componentMeshNodes ?? []
-    const componentNoConnectionSrjs = this.getComponentNoConnectionSrjs()
+      )?.componentMeshNodes ?? [];
+    const componentNoConnectionSrjs = this.getComponentNoConnectionSrjs();
 
     return {
       globalNoConnectionSrj: this.normalizedInput.globalNoConnectionSrj,
       componentNoConnectionSrjs,
       globalMeshNodes,
       componentMeshNodes,
-    }
+    };
   }
 
   override finalVisualize(): GraphicsObject | null {
-    const output = this.getOutput()
+    const output = this.getOutput();
     const componentObstacleRects = output.componentNoConnectionSrjs.flatMap(
       (componentSrj, componentIndex) => {
         const component =
-          this.normalizedInput.components[componentIndex] ?? null
+          this.normalizedInput.components[componentIndex] ?? null;
 
         return componentSrj.obstacles.map((obstacle) => ({
           center: obstacle.center,
@@ -134,9 +137,9 @@ export class MultiGraphTopologyPlannerSolver extends BasePipelineSolver<MultiGra
           label:
             obstacle.obstacleId ?? component?.componentId ?? "component-pad",
           layer: obstacle.layers.join(","),
-        }))
+        }));
       },
-    )
+    );
 
     return {
       title: "Topology Planning: generated topology groups",
@@ -147,8 +150,8 @@ export class MultiGraphTopologyPlannerSolver extends BasePipelineSolver<MultiGra
             const component = this.normalizedInput.components.find(
               (candidate) =>
                 node.capacityMeshNodeId.includes(candidate.componentId),
-            )
-            const rect = createRectFromCapacityNode(node, { rectMargin: 0.01 })
+            );
+            const rect = createRectFromCapacityNode(node, { rectMargin: 0.01 });
             return {
               ...rect,
               fill: node._containsObstacle
@@ -160,7 +163,7 @@ export class MultiGraphTopologyPlannerSolver extends BasePipelineSolver<MultiGra
               label: component
                 ? `${component.componentKind.toUpperCase()} ${node.capacityMeshNodeId}`
                 : node.capacityMeshNodeId,
-            }
+            };
           },
         ),
       ],
@@ -168,19 +171,19 @@ export class MultiGraphTopologyPlannerSolver extends BasePipelineSolver<MultiGra
       points: [],
       circles: [],
       texts: [],
-    }
+    };
   }
 
   override visualize(): GraphicsObject {
     return this.filterGlobalRectDiffNodesFromVisualization({
       visualization: super.visualize(),
-    })
+    });
   }
 
   override preview(): GraphicsObject {
     return this.filterGlobalRectDiffNodesFromVisualization({
       visualization: super.preview(),
-    })
+    });
   }
 
   /** Rebuilds each component-local SRJ from its original member obstacles. */
@@ -190,7 +193,7 @@ export class MultiGraphTopologyPlannerSolver extends BasePipelineSolver<MultiGra
         inputSrj: this.inputProblem.inputSrj,
         component,
       }),
-    )
+    );
   }
 
   /** Adapts the global no-connection SRJ into the RectDiffPipeline input shape. */
@@ -198,7 +201,7 @@ export class MultiGraphTopologyPlannerSolver extends BasePipelineSolver<MultiGra
     return {
       simpleRouteJson: this.normalizedInput.globalNoConnectionSrj as any,
       maxGapFillPasses: 4,
-    }
+    };
   }
 
   /**
@@ -217,7 +220,7 @@ export class MultiGraphTopologyPlannerSolver extends BasePipelineSolver<MultiGra
   private filterGlobalRectDiffNodesFromVisualization({
     visualization,
   }: {
-    visualization: GraphicsObject
+    visualization: GraphicsObject;
   }): GraphicsObject {
     return {
       ...visualization,
@@ -225,6 +228,6 @@ export class MultiGraphTopologyPlannerSolver extends BasePipelineSolver<MultiGra
         rects: visualization.rects,
         components: this.normalizedInput.components,
       }),
-    }
+    };
   }
 }

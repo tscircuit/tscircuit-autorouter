@@ -1,12 +1,12 @@
-import { expect, test } from "bun:test"
-import { getSvgFromGraphicsObject } from "graphics-debug"
-import input from "../../fixtures/features/portpointpathing/tinyhypergraph-port-bridge-repro-input.json"
-import { TinyHypergraphPortPointPathingSolver } from "lib/solvers/PortPointPathingSolver/tinyhypergraph/TinyHypergraphPortPointPathingSolver"
+import { expect, test } from "bun:test";
+import { getSvgFromGraphicsObject } from "graphics-debug";
+import input from "../../fixtures/features/portpointpathing/tinyhypergraph-port-bridge-repro-input.json";
+import { TinyHypergraphPortPointPathingSolver } from "lib/solvers/PortPointPathingSolver/tinyhypergraph/TinyHypergraphPortPointPathingSolver";
 
 test("TinyHypergraphPortPointPathingSolver does not respect inputSolvedRoutes", () => {
-  const solver = new TinyHypergraphPortPointPathingSolver(input as any)
+  const solver = new TinyHypergraphPortPointPathingSolver(input as any);
   const serializedSolvedRoutes = (solver as any).tinyPipelineSolver.inputProblem
-    .serializedHyperGraph.solvedRoutes
+    .serializedHyperGraph.solvedRoutes;
 
   // expect(serializedSolvedRoutes).toEqual([
   //   {
@@ -24,9 +24,9 @@ test("TinyHypergraphPortPointPathingSolver does not respect inputSolvedRoutes", 
   //   },
   // ])
 
-  solver.solve()
+  solver.solve();
 
   expect(getSvgFromGraphicsObject(solver.visualize())).toMatchSvgSnapshot(
     import.meta.path,
-  )
-})
+  );
+});

@@ -1,12 +1,12 @@
-import { expect, test } from "bun:test"
-import { PortfolioSingleIntraNodeSolver } from "lib/solvers/HyperHighDensitySolver/PortfolioSingleIntraNodeSolver"
-import type { SimpleRouteJson } from "lib/types"
+import { expect, test } from "bun:test";
+import { PortfolioSingleIntraNodeSolver } from "lib/solvers/HyperHighDensitySolver/PortfolioSingleIntraNodeSolver";
+import type { SimpleRouteJson } from "lib/types";
 import type {
   HighDensityIntraNodeRoute,
   NodeWithPortPoints,
-} from "lib/types/high-density-types"
-import { convertHdRouteToSimplifiedRoute } from "lib/utils/convertHdRouteToSimplifiedRoute"
-import { convertSrjToGraphicsObject } from "lib/utils/convertSrjToGraphicsObject"
+} from "lib/types/high-density-types";
+import { convertHdRouteToSimplifiedRoute } from "lib/utils/convertHdRouteToSimplifiedRoute";
+import { convertSrjToGraphicsObject } from "lib/utils/convertSrjToGraphicsObject";
 
 const createCrossingNode = (): NodeWithPortPoints => ({
   capacityMeshNodeId: "x-crossing-available-z",
@@ -20,7 +20,7 @@ const createCrossingNode = (): NodeWithPortPoints => ({
     { connectionName: "connB", x: -2.5, y: 2.5, z: 0 },
     { connectionName: "connB", x: 2.5, y: -2.5, z: 0 },
   ],
-})
+});
 
 const createPortfolioSolver = () =>
   new PortfolioSingleIntraNodeSolver({
@@ -28,20 +28,20 @@ const createPortfolioSolver = () =>
     traceWidth: 0.15,
     viaDiameter: 0.3,
     effort: 1,
-  })
+  });
 
 const getSolvedRoutes = (solver: {
-  getOutput?: () => HighDensityIntraNodeRoute[]
-  solvedRoutes?: HighDensityIntraNodeRoute[]
+  getOutput?: () => HighDensityIntraNodeRoute[];
+  solvedRoutes?: HighDensityIntraNodeRoute[];
 }) =>
   typeof solver.getOutput === "function"
     ? solver.getOutput()
-    : (solver.solvedRoutes ?? [])
+    : (solver.solvedRoutes ?? []);
 
 const getUsedZ = (routes: HighDensityIntraNodeRoute[]) =>
   [
     ...new Set(routes.flatMap((route) => route.route.map((point) => point.z))),
-  ].sort((a, b) => a - b)
+  ].sort((a, b) => a - b);
 
 const toRenderedArtifacts = (routes: HighDensityIntraNodeRoute[]) => {
   const srj: SimpleRouteJson = {
@@ -77,13 +77,13 @@ const toRenderedArtifacts = (routes: HighDensityIntraNodeRoute[]) => {
       connection_name: route.connectionName,
       route: convertHdRouteToSimplifiedRoute(route, 4),
     })),
-  }
+  };
 
   return {
     srj,
     graphics: convertSrjToGraphicsObject(srj),
-  }
-}
+  };
+};
 
 const hasSegmentOnLayer = (
   routes: HighDensityIntraNodeRoute[],
@@ -91,37 +91,37 @@ const hasSegmentOnLayer = (
 ) =>
   routes.some((route) =>
     route.route.some((point, index) => {
-      const nextPoint = route.route[index + 1]
+      const nextPoint = route.route[index + 1];
       return (
         nextPoint !== undefined &&
         point.z === targetZ &&
         nextPoint.z === targetZ &&
         (Math.abs(point.x - nextPoint.x) > 1e-6 ||
           Math.abs(point.y - nextPoint.y) > 1e-6)
-      )
+      );
     }),
-  )
+  );
 
 const expectMultilayerCrossingSolution = (
   routes: HighDensityIntraNodeRoute[],
 ) => {
-  expect(routes).toHaveLength(2)
+  expect(routes).toHaveLength(2);
   expect(routes.map((route) => route.connectionName).sort()).toEqual([
     "connA",
     "connB",
-  ])
-  expect(getUsedZ(routes)).toEqual([0, 3])
-  expect(routes.flatMap((route) => route.vias)).not.toHaveLength(0)
-  expect(hasSegmentOnLayer(routes, 0)).toBe(true)
-  expect(hasSegmentOnLayer(routes, 3)).toBe(true)
+  ]);
+  expect(getUsedZ(routes)).toEqual([0, 3]);
+  expect(routes.flatMap((route) => route.vias)).not.toHaveLength(0);
+  expect(hasSegmentOnLayer(routes, 0)).toBe(true);
+  expect(hasSegmentOnLayer(routes, 3)).toBe(true);
 
   for (const route of routes) {
     for (const point of route.route) {
-      expect([0, 3]).toContain(point.z)
+      expect([0, 3]).toContain(point.z);
     }
   }
 
-  const { srj, graphics } = toRenderedArtifacts(routes)
+  const { srj, graphics } = toRenderedArtifacts(routes);
   const wireLayers = [
     ...new Set(
       srj.traces!.flatMap((trace) =>
@@ -130,17 +130,17 @@ const expectMultilayerCrossingSolution = (
         ),
       ),
     ),
-  ].sort()
+  ].sort();
   const renderedLineLayers = [
     ...new Set(
       (graphics.lines ?? [])
         .map((line) => line.layer)
         .filter((layer): layer is string => typeof layer === "string"),
     ),
-  ].sort()
+  ].sort();
 
-  expect(wireLayers).toContain("bottom")
-  expect(wireLayers).not.toContain("inner1")
+  expect(wireLayers).toContain("bottom");
+  expect(wireLayers).not.toContain("inner1");
   expect(
     srj.traces!.flatMap((trace) =>
       trace.route.filter(
@@ -148,10 +148,10 @@ const expectMultilayerCrossingSolution = (
           segment.route_type === "wire" && segment.layer === "bottom",
       ),
     ),
-  ).not.toHaveLength(0)
-  expect(renderedLineLayers).toContain("z3")
-  expect(renderedLineLayers).not.toContain("z1")
-}
+  ).not.toHaveLength(0);
+  expect(renderedLineLayers).toContain("z3");
+  expect(renderedLineLayers).not.toContain("z1");
+};
 
 const solvingCases = [
   {
@@ -178,51 +178,51 @@ const solvingCases = [
       HIGH_DENSITY_A03: true,
     },
   },
-] as const
+] as const;
 
 for (const { name, hyperParameters } of solvingCases) {
   test(`${name} solves X-crossing node using only z=0 and z=3`, () => {
-    const portfolioSolver = createPortfolioSolver()
-    const solver = portfolioSolver.generateSolver(hyperParameters as any)
+    const portfolioSolver = createPortfolioSolver();
+    const solver = portfolioSolver.generateSolver(hyperParameters as any);
 
-    solver.solve()
+    solver.solve();
 
-    expect(solver.solved).toBe(true)
-    expect(solver.failed).toBe(false)
-    expectMultilayerCrossingSolution(getSolvedRoutes(solver as any))
-  })
+    expect(solver.solved).toBe(true);
+    expect(solver.failed).toBe(false);
+    expectMultilayerCrossingSolution(getSolvedRoutes(solver as any));
+  });
 }
 
 test("PortfolioSingleIntraNodeSolver solves the X-crossing node without z=1 segments", () => {
-  const solver = createPortfolioSolver()
+  const solver = createPortfolioSolver();
 
-  solver.solve()
+  solver.solve();
 
-  expect(solver.solved).toBe(true)
-  expect(solver.failed).toBe(false)
-  expectMultilayerCrossingSolution(solver.solvedRoutes)
-})
+  expect(solver.solved).toBe(true);
+  expect(solver.failed).toBe(false);
+  expectMultilayerCrossingSolution(solver.solvedRoutes);
+});
 
 test("SingleTransitionIntraNodeSolver candidate rejects the X-crossing node", () => {
-  const portfolioSolver = createPortfolioSolver()
+  const portfolioSolver = createPortfolioSolver();
   const solver = portfolioSolver.generateSolver({
     CLOSED_FORM_SINGLE_TRANSITION: true,
-  } as any)
+  } as any);
 
-  solver.solve()
+  solver.solve();
 
-  expect(solver.solved).toBe(false)
-  expect(solver.failed).toBe(true)
-  expect(String(solver.error)).toContain("Expected 1 route")
-})
+  expect(solver.solved).toBe(false);
+  expect(solver.failed).toBe(true);
+  expect(String(solver.error)).toContain("Expected 1 route");
+});
 
 test("PortfolioSingleIntraNodeSolver does not apply the single-layer candidate to a multilayer node", () => {
-  const portfolioSolver = createPortfolioSolver()
+  const portfolioSolver = createPortfolioSolver();
   const solver = portfolioSolver.generateSolver({
     SINGLE_LAYER_NO_DIFFERENT_ROOT_INTERSECTIONS: true,
-  } as any)
+  } as any);
 
-  expect(solver.solved).toBe(false)
-  expect(solver.failed).toBe(true)
-  expect(String(solver.error)).toContain("not applicable")
-})
+  expect(solver.solved).toBe(false);
+  expect(solver.failed).toBe(true);
+  expect(String(solver.error)).toContain("not applicable");
+});

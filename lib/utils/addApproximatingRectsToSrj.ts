@@ -1,52 +1,52 @@
-import { CONNECTION_REGION_SIZE } from "@tscircuit/fixed-via-hypergraph-solver/lib/FixedViaHypergraphSolver/via-graph-generator/createConnectionRegion"
+import { CONNECTION_REGION_SIZE } from "@tscircuit/fixed-via-hypergraph-solver/lib/FixedViaHypergraphSolver/via-graph-generator/createConnectionRegion";
 import {
   distance as calculateDistance,
   getBoundFromCenteredRect,
   isPointInsideBounds,
-} from "@tscircuit/math-utils"
-import type { ConnectionPoint, Obstacle, SimpleRouteJson } from "lib/types"
-import { calculateMse } from "scripts/highdensity-benchmark/metrics/calculateMse"
+} from "@tscircuit/math-utils";
+import type { ConnectionPoint, Obstacle, SimpleRouteJson } from "lib/types";
+import { calculateMse } from "scripts/highdensity-benchmark/metrics/calculateMse";
 
 const normalizeRotation = (rotationDegrees: number) =>
-  ((rotationDegrees % 360) + 360) % 360
+  ((rotationDegrees % 360) + 360) % 360;
 
-const QUARTER_TURN_TOLERANCE_DEGREES = 0.01
-const TRACE_OBSTACLE_MAX_APPROX_RECT_LENGTH = 0.75
-const ROTATED_OBSTACLE_MAX_APPROX_RECT_LENGTH = 0.4
-const SLENDER_OBSTACLE_MAX_APPROX_RECT_LENGTH = 0.75
-const SLENDER_OBSTACLE_ASPECT_RATIO = 2
-const WIDE_SLENDER_OBSTACLE_MIN_SHORT_SIDE = 0.9
-const CENTERLINE_APPROX_RECT_SIZE_FACTOR = 0.75
+const QUARTER_TURN_TOLERANCE_DEGREES = 0.01;
+const TRACE_OBSTACLE_MAX_APPROX_RECT_LENGTH = 0.75;
+const ROTATED_OBSTACLE_MAX_APPROX_RECT_LENGTH = 0.4;
+const SLENDER_OBSTACLE_MAX_APPROX_RECT_LENGTH = 0.75;
+const SLENDER_OBSTACLE_ASPECT_RATIO = 2;
+const WIDE_SLENDER_OBSTACLE_MIN_SHORT_SIDE = 0.9;
+const CENTERLINE_APPROX_RECT_SIZE_FACTOR = 0.75;
 
 const isAxisAlignedRotation = (rotationDegrees: number) => {
-  const normalizedRotation = normalizeRotation(rotationDegrees)
-  const axisAlignedAngles = [0, 90, 180, 270] as const
+  const normalizedRotation = normalizeRotation(rotationDegrees);
+  const axisAlignedAngles = [0, 90, 180, 270] as const;
 
   return axisAlignedAngles.some((angle) => {
     const angularDistance = Math.min(
       Math.abs(normalizedRotation - angle),
       360 - Math.abs(normalizedRotation - angle),
-    )
+    );
 
-    return angularDistance <= QUARTER_TURN_TOLERANCE_DEGREES
-  })
-}
+    return angularDistance <= QUARTER_TURN_TOLERANCE_DEGREES;
+  });
+};
 
 const getNearestAxisAlignedRotation = (rotationDegrees: number) => {
-  const normalizedRotation = normalizeRotation(rotationDegrees)
-  const axisAlignedAngles = [0, 90, 180, 270] as const
+  const normalizedRotation = normalizeRotation(rotationDegrees);
+  const axisAlignedAngles = [0, 90, 180, 270] as const;
 
   for (const angle of axisAlignedAngles) {
     const angularDistance = Math.min(
       Math.abs(normalizedRotation - angle),
       360 - Math.abs(normalizedRotation - angle),
-    )
+    );
 
-    if (angularDistance <= QUARTER_TURN_TOLERANCE_DEGREES) return angle
+    if (angularDistance <= QUARTER_TURN_TOLERANCE_DEGREES) return angle;
   }
 
-  return null
-}
+  return null;
+};
 
 const removeAxisAlignedRotation = (
   obstacle: Obstacle,
@@ -55,40 +55,40 @@ const removeAxisAlignedRotation = (
   const {
     ccwRotationDegrees: _ccwRotationDegrees,
     ...obstacleWithoutRotation
-  } = obstacle
-  const axisAlignedRotation = getNearestAxisAlignedRotation(rotationDegrees)
+  } = obstacle;
+  const axisAlignedRotation = getNearestAxisAlignedRotation(rotationDegrees);
 
   if (axisAlignedRotation === 90 || axisAlignedRotation === 270) {
     return {
       ...obstacleWithoutRotation,
       width: obstacle.height,
       height: obstacle.width,
-    }
+    };
   }
 
-  return obstacleWithoutRotation
-}
+  return obstacleWithoutRotation;
+};
 
 interface Point {
-  x: number
-  y: number
+  x: number;
+  y: number;
 }
 
 export interface RotatedRect {
-  center: Point
-  width: number
-  height: number
-  rotation: number
+  center: Point;
+  width: number;
+  height: number;
+  rotation: number;
 }
 
 interface Rect {
-  center: Point
-  width: number
-  height: number
+  center: Point;
+  width: number;
+  height: number;
 }
 
 const getConnectionPointLayers = (point: ConnectionPoint): string[] =>
-  "layers" in point ? point.layers : [point.layer]
+  "layers" in point ? point.layers : [point.layer];
 
 const isPointInsideObstacle = (point: ConnectionPoint, obstacle: Obstacle) => {
   if (
@@ -97,51 +97,51 @@ const isPointInsideObstacle = (point: ConnectionPoint, obstacle: Obstacle) => {
       obstacle.layers.includes(layer),
     )
   ) {
-    return false
+    return false;
   }
 
-  return isPointInsideBounds(point, getBoundFromCenteredRect(obstacle))
-}
+  return isPointInsideBounds(point, getBoundFromCenteredRect(obstacle));
+};
 
 const clampPointToObstacle = (point: ConnectionPoint, obstacle: Obstacle) => {
-  const { minX, maxX, minY, maxY } = getBoundFromCenteredRect(obstacle)
+  const { minX, maxX, minY, maxY } = getBoundFromCenteredRect(obstacle);
 
   return {
     x: Math.max(minX, Math.min(maxX, point.x)),
     y: Math.max(minY, Math.min(maxY, point.y)),
-  }
-}
+  };
+};
 
 const getObstacleKey = (obstacle: Obstacle, index: number) =>
-  obstacle.obstacleId ?? `${obstacle.componentId ?? "obstacle"}_${index}`
+  obstacle.obstacleId ?? `${obstacle.componentId ?? "obstacle"}_${index}`;
 
 const getPointConnectionIds = (point: ConnectionPoint) =>
-  [point.pointId, point.pcb_port_id].filter((id): id is string => Boolean(id))
+  [point.pointId, point.pcb_port_id].filter((id): id is string => Boolean(id));
 
 export function generateApproximatingRects(
   rotatedRect: RotatedRect,
   numRects = 2,
 ): Rect[] {
-  const { center, width, height, rotation } = rotatedRect
-  const rects: Rect[] = []
-  const rectCount = Math.max(1, Math.ceil(numRects))
+  const { center, width, height, rotation } = rotatedRect;
+  const rects: Rect[] = [];
+  const rectCount = Math.max(1, Math.ceil(numRects));
 
-  const angleRad = (rotation * Math.PI) / 180
-  const cosAngle = Math.cos(angleRad)
-  const sinAngle = Math.sin(angleRad)
+  const angleRad = (rotation * Math.PI) / 180;
+  const cosAngle = Math.cos(angleRad);
+  const sinAngle = Math.sin(angleRad);
 
   if (width >= height) {
-    const sliceWidth = width / rectCount
+    const sliceWidth = width / rectCount;
 
     for (let i = 0; i < rectCount; i++) {
-      const x = (i - rectCount / 2 + 0.5) * sliceWidth
-      const rotatedX = x * cosAngle
-      const rotatedY = x * sinAngle
+      const x = (i - rectCount / 2 + 0.5) * sliceWidth;
+      const rotatedX = x * cosAngle;
+      const rotatedY = x * sinAngle;
 
       const coverageWidth =
-        Math.abs(sliceWidth * cosAngle) + Math.abs(height * sinAngle)
+        Math.abs(sliceWidth * cosAngle) + Math.abs(height * sinAngle);
       const coverageHeight =
-        Math.abs(sliceWidth * sinAngle) + Math.abs(height * cosAngle)
+        Math.abs(sliceWidth * sinAngle) + Math.abs(height * cosAngle);
 
       rects.push({
         center: {
@@ -150,20 +150,20 @@ export function generateApproximatingRects(
         },
         width: coverageWidth,
         height: coverageHeight,
-      })
+      });
     }
   } else {
-    const sliceHeight = height / rectCount
+    const sliceHeight = height / rectCount;
 
     for (let i = 0; i < rectCount; i++) {
-      const y = (i - rectCount / 2 + 0.5) * sliceHeight
-      const rotatedX = -y * sinAngle
-      const rotatedY = y * cosAngle
+      const y = (i - rectCount / 2 + 0.5) * sliceHeight;
+      const rotatedX = -y * sinAngle;
+      const rotatedY = y * cosAngle;
 
       const coverageWidth =
-        Math.abs(width * cosAngle) + Math.abs(sliceHeight * sinAngle)
+        Math.abs(width * cosAngle) + Math.abs(sliceHeight * sinAngle);
       const coverageHeight =
-        Math.abs(width * sinAngle) + Math.abs(sliceHeight * cosAngle)
+        Math.abs(width * sinAngle) + Math.abs(sliceHeight * cosAngle);
 
       rects.push({
         center: {
@@ -172,32 +172,32 @@ export function generateApproximatingRects(
         },
         width: coverageWidth,
         height: coverageHeight,
-      })
+      });
     }
   }
 
-  return rects
+  return rects;
 }
 
 const generateGridApproximatingRects = (
   rotatedRect: RotatedRect,
   maxLocalRectLength: number,
 ): Rect[] => {
-  const { center, width, height, rotation } = rotatedRect
-  const xCount = Math.max(1, Math.ceil(width / maxLocalRectLength))
-  const yCount = Math.max(1, Math.ceil(height / maxLocalRectLength))
-  const cellWidth = width / xCount
-  const cellHeight = height / yCount
-  const angleRad = (rotation * Math.PI) / 180
-  const cosAngle = Math.cos(angleRad)
-  const sinAngle = Math.sin(angleRad)
-  const rects: Rect[] = []
+  const { center, width, height, rotation } = rotatedRect;
+  const xCount = Math.max(1, Math.ceil(width / maxLocalRectLength));
+  const yCount = Math.max(1, Math.ceil(height / maxLocalRectLength));
+  const cellWidth = width / xCount;
+  const cellHeight = height / yCount;
+  const angleRad = (rotation * Math.PI) / 180;
+  const cosAngle = Math.cos(angleRad);
+  const sinAngle = Math.sin(angleRad);
+  const rects: Rect[] = [];
 
   for (let ix = 0; ix < xCount; ix++) {
-    const localX = (ix - xCount / 2 + 0.5) * cellWidth
+    const localX = (ix - xCount / 2 + 0.5) * cellWidth;
 
     for (let iy = 0; iy < yCount; iy++) {
-      const localY = (iy - yCount / 2 + 0.5) * cellHeight
+      const localY = (iy - yCount / 2 + 0.5) * cellHeight;
 
       rects.push({
         center: {
@@ -207,12 +207,12 @@ const generateGridApproximatingRects = (
         width: Math.abs(cellWidth * cosAngle) + Math.abs(cellHeight * sinAngle),
         height:
           Math.abs(cellWidth * sinAngle) + Math.abs(cellHeight * cosAngle),
-      })
+      });
     }
   }
 
-  return rects
-}
+  return rects;
+};
 
 const generateConservativeApproximatingRects = (
   rotatedRect: RotatedRect,
@@ -220,82 +220,82 @@ const generateConservativeApproximatingRects = (
   // Slice along the shorter world-space axis, clip the rotated polygon into
   // each band, and bound the clipped polygon. Unlike centerline squares, these
   // rects cover the complete pad without using a costly two-dimensional grid.
-  const angleRad = (rotatedRect.rotation * Math.PI) / 180
-  const cosAngle = Math.cos(angleRad)
-  const sinAngle = Math.sin(angleRad)
+  const angleRad = (rotatedRect.rotation * Math.PI) / 180;
+  const cosAngle = Math.cos(angleRad);
+  const sinAngle = Math.sin(angleRad);
   const corners: Point[] = [-1, 1].flatMap((xSign) =>
     [-1, 1].map((ySign) => {
-      const localX = xSign * (rotatedRect.width / 2)
-      const localY = ySign * (rotatedRect.height / 2)
+      const localX = xSign * (rotatedRect.width / 2);
+      const localY = ySign * (rotatedRect.height / 2);
       return {
         x: rotatedRect.center.x + localX * cosAngle - localY * sinAngle,
         y: rotatedRect.center.y + localX * sinAngle + localY * cosAngle,
-      }
+      };
     }),
-  )
-  const orderedCorners = [corners[0]!, corners[2]!, corners[3]!, corners[1]!]
-  const minX = Math.min(...orderedCorners.map((point) => point.x))
-  const maxX = Math.max(...orderedCorners.map((point) => point.x))
-  const minY = Math.min(...orderedCorners.map((point) => point.y))
-  const maxY = Math.max(...orderedCorners.map((point) => point.y))
-  const sliceAxis = maxX - minX <= maxY - minY ? "x" : "y"
-  const min = sliceAxis === "x" ? minX : minY
-  const max = sliceAxis === "x" ? maxX : maxY
+  );
+  const orderedCorners = [corners[0]!, corners[2]!, corners[3]!, corners[1]!];
+  const minX = Math.min(...orderedCorners.map((point) => point.x));
+  const maxX = Math.max(...orderedCorners.map((point) => point.x));
+  const minY = Math.min(...orderedCorners.map((point) => point.y));
+  const maxY = Math.max(...orderedCorners.map((point) => point.y));
+  const sliceAxis = maxX - minX <= maxY - minY ? "x" : "y";
+  const min = sliceAxis === "x" ? minX : minY;
+  const max = sliceAxis === "x" ? maxX : maxY;
   const sliceCount = Math.max(
     1,
     Math.ceil((max - min) / ROTATED_OBSTACLE_MAX_APPROX_RECT_LENGTH),
-  )
-  const sliceSize = (max - min) / sliceCount
+  );
+  const sliceSize = (max - min) / sliceCount;
 
   const clipAt = (
     polygon: Point[],
     boundary: number,
     keepGreater: boolean,
   ): Point[] => {
-    const clipped: Point[] = []
-    const getCoordinate = (point: Point) => point[sliceAxis]
+    const clipped: Point[] = [];
+    const getCoordinate = (point: Point) => point[sliceAxis];
 
     for (let index = 0; index < polygon.length; index++) {
-      const start = polygon[index]!
-      const end = polygon[(index + 1) % polygon.length]!
-      const startCoordinate = getCoordinate(start)
-      const endCoordinate = getCoordinate(end)
+      const start = polygon[index]!;
+      const end = polygon[(index + 1) % polygon.length]!;
+      const startCoordinate = getCoordinate(start);
+      const endCoordinate = getCoordinate(end);
       const startInside = keepGreater
         ? startCoordinate >= boundary
-        : startCoordinate <= boundary
+        : startCoordinate <= boundary;
       const endInside = keepGreater
         ? endCoordinate >= boundary
-        : endCoordinate <= boundary
+        : endCoordinate <= boundary;
 
-      if (startInside) clipped.push(start)
-      if (startInside === endInside) continue
+      if (startInside) clipped.push(start);
+      if (startInside === endInside) continue;
 
       const fraction =
-        (boundary - startCoordinate) / (endCoordinate - startCoordinate)
+        (boundary - startCoordinate) / (endCoordinate - startCoordinate);
       clipped.push({
         x: start.x + (end.x - start.x) * fraction,
         y: start.y + (end.y - start.y) * fraction,
-      })
+      });
     }
 
-    return clipped
-  }
+    return clipped;
+  };
 
-  const rects: Rect[] = []
+  const rects: Rect[] = [];
   for (let index = 0; index < sliceCount; index++) {
-    const sliceMin = min + index * sliceSize
-    const sliceMax = index === sliceCount - 1 ? max : sliceMin + sliceSize
+    const sliceMin = min + index * sliceSize;
+    const sliceMax = index === sliceCount - 1 ? max : sliceMin + sliceSize;
     const clipped = clipAt(
       clipAt(orderedCorners, sliceMin, true),
       sliceMax,
       false,
-    )
-    if (clipped.length === 0) continue
+    );
+    if (clipped.length === 0) continue;
 
-    const clippedMinX = Math.min(...clipped.map((point) => point.x))
-    const clippedMaxX = Math.max(...clipped.map((point) => point.x))
-    const clippedMinY = Math.min(...clipped.map((point) => point.y))
-    const clippedMaxY = Math.max(...clipped.map((point) => point.y))
+    const clippedMinX = Math.min(...clipped.map((point) => point.x));
+    const clippedMaxX = Math.max(...clipped.map((point) => point.x));
+    const clippedMinY = Math.min(...clipped.map((point) => point.y));
+    const clippedMaxY = Math.max(...clipped.map((point) => point.y));
     rects.push({
       center: {
         x: (clippedMinX + clippedMaxX) / 2,
@@ -303,36 +303,36 @@ const generateConservativeApproximatingRects = (
       },
       width: clippedMaxX - clippedMinX,
       height: clippedMaxY - clippedMinY,
-    })
+    });
   }
 
-  return rects
-}
+  return rects;
+};
 
 const generateCenterlineApproximatingRects = (
   rotatedRect: RotatedRect,
   rectCount: number,
 ): Rect[] => {
-  const { center, width, height, rotation } = rotatedRect
-  const longSide = Math.max(width, height)
-  const shortSide = Math.min(width, height)
-  const clampedRectCount = Math.max(1, Math.ceil(rectCount))
-  const stepLength = longSide / clampedRectCount
-  const angleRad = (rotation * Math.PI) / 180
-  const cosAngle = Math.cos(angleRad)
-  const sinAngle = Math.sin(angleRad)
+  const { center, width, height, rotation } = rotatedRect;
+  const longSide = Math.max(width, height);
+  const shortSide = Math.min(width, height);
+  const clampedRectCount = Math.max(1, Math.ceil(rectCount));
+  const stepLength = longSide / clampedRectCount;
+  const angleRad = (rotation * Math.PI) / 180;
+  const cosAngle = Math.cos(angleRad);
+  const sinAngle = Math.sin(angleRad);
   const rectSize = Math.max(
     stepLength,
     shortSide * CENTERLINE_APPROX_RECT_SIZE_FACTOR,
-  )
-  const rects: Rect[] = []
+  );
+  const rects: Rect[] = [];
 
   for (let i = 0; i < clampedRectCount; i++) {
-    const localOffset = (i - clampedRectCount / 2 + 0.5) * stepLength
+    const localOffset = (i - clampedRectCount / 2 + 0.5) * stepLength;
     const rotatedX =
-      width >= height ? localOffset * cosAngle : -localOffset * sinAngle
+      width >= height ? localOffset * cosAngle : -localOffset * sinAngle;
     const rotatedY =
-      width >= height ? localOffset * sinAngle : localOffset * cosAngle
+      width >= height ? localOffset * sinAngle : localOffset * cosAngle;
 
     rects.push({
       center: {
@@ -341,84 +341,84 @@ const generateCenterlineApproximatingRects = (
       },
       width: rectSize,
       height: rectSize,
-    })
+    });
   }
 
-  return rects
-}
+  return rects;
+};
 
 const getMaxLocalApproximationRectLength = (obstacle: Obstacle): number => {
   if (obstacle.obstacleId?.startsWith("trace_obstacle_")) {
-    return TRACE_OBSTACLE_MAX_APPROX_RECT_LENGTH
+    return TRACE_OBSTACLE_MAX_APPROX_RECT_LENGTH;
   }
 
-  return ROTATED_OBSTACLE_MAX_APPROX_RECT_LENGTH
-}
+  return ROTATED_OBSTACLE_MAX_APPROX_RECT_LENGTH;
+};
 
 const getRotatedObstacleApproximationRectCount = (
   obstacle: Obstacle,
 ): number | null => {
-  const longSide = Math.max(obstacle.width, obstacle.height)
-  const shortSide = Math.min(obstacle.width, obstacle.height)
+  const longSide = Math.max(obstacle.width, obstacle.height);
+  const shortSide = Math.min(obstacle.width, obstacle.height);
 
   if (obstacle.obstacleId?.startsWith("trace_obstacle_")) {
     return Math.max(
       2,
       Math.ceil(longSide / TRACE_OBSTACLE_MAX_APPROX_RECT_LENGTH),
-    )
+    );
   }
 
-  if (shortSide <= 0) return 2
+  if (shortSide <= 0) return 2;
 
   if (
     longSide / shortSide < SLENDER_OBSTACLE_ASPECT_RATIO ||
     shortSide >= WIDE_SLENDER_OBSTACLE_MIN_SHORT_SIDE
   ) {
-    return null
+    return null;
   }
 
   return Math.max(
     2,
     Math.ceil(longSide / SLENDER_OBSTACLE_MAX_APPROX_RECT_LENGTH),
-  )
-}
+  );
+};
 
 const convertObstacleToOldFormat = (obstacle: Obstacle): Obstacle[] => {
   if ((obstacle as { type?: string }).type === "oval") {
     return convertObstacleToOldFormat({
       ...obstacle,
       type: "rect",
-    } as Obstacle)
+    } as Obstacle);
   }
 
-  const rotationDegrees = obstacle.ccwRotationDegrees
+  const rotationDegrees = obstacle.ccwRotationDegrees;
 
   if (
     typeof rotationDegrees !== "number" ||
     !Number.isFinite(rotationDegrees)
   ) {
-    return [obstacle]
+    return [obstacle];
   }
 
   if (isAxisAlignedRotation(rotationDegrees)) {
-    return [removeAxisAlignedRotation(obstacle, rotationDegrees)]
+    return [removeAxisAlignedRotation(obstacle, rotationDegrees)];
   }
 
   const {
     ccwRotationDegrees: _ccwRotationDegrees,
     ...obstacleWithoutRotation
-  } = obstacle
+  } = obstacle;
 
   const rotatedRect = {
     center: obstacle.center,
     width: obstacle.width,
     height: obstacle.height,
     rotation: rotationDegrees,
-  }
-  const rectCount = getRotatedObstacleApproximationRectCount(obstacle)
+  };
+  const rectCount = getRotatedObstacleApproximationRectCount(obstacle);
   const useConservativeApproximation =
     obstacle.connectedTo.length > 0 &&
-    !obstacle.obstacleId?.startsWith("trace_obstacle_")
+    !obstacle.obstacleId?.startsWith("trace_obstacle_");
   const rects = useConservativeApproximation
     ? generateConservativeApproximatingRects(rotatedRect)
     : rectCount === null
@@ -428,21 +428,21 @@ const convertObstacleToOldFormat = (obstacle: Obstacle): Obstacle[] => {
         )
       : obstacle.obstacleId?.startsWith("trace_obstacle_")
         ? generateApproximatingRects(rotatedRect, rectCount)
-        : generateCenterlineApproximatingRects(rotatedRect, rectCount)
+        : generateCenterlineApproximatingRects(rotatedRect, rectCount);
   const connectedRectIndex =
     obstacle.connectedTo.length > 0
       ? rects.reduce((closestIndex, rect, index) => {
-          const closestRect = rects[closestIndex]!
+          const closestRect = rects[closestIndex]!;
           const closestDistance =
             (closestRect.center.x - obstacle.center.x) ** 2 +
-            (closestRect.center.y - obstacle.center.y) ** 2
+            (closestRect.center.y - obstacle.center.y) ** 2;
           const distance =
             (rect.center.x - obstacle.center.x) ** 2 +
-            (rect.center.y - obstacle.center.y) ** 2
+            (rect.center.y - obstacle.center.y) ** 2;
 
-          return distance < closestDistance ? index : closestIndex
+          return distance < closestDistance ? index : closestIndex;
         }, 0)
-      : -1
+      : -1;
 
   return rects.map((rect, index) => ({
     ...obstacleWithoutRotation,
@@ -456,21 +456,21 @@ const convertObstacleToOldFormat = (obstacle: Obstacle): Obstacle[] => {
     center: rect.center,
     width: rect.width,
     height: rect.height,
-  }))
-}
+  }));
+};
 
 export const addApproximatingRectsToSrj = (
   srj: SimpleRouteJson,
 ): SimpleRouteJson => {
-  const obstaclesByRect = new Map<string, Obstacle>()
-  const approximatedObstaclesBySource = new Map<string, Obstacle[]>()
-  const originalObstaclesBySource = new Map<string, Obstacle>()
+  const obstaclesByRect = new Map<string, Obstacle>();
+  const approximatedObstaclesBySource = new Map<string, Obstacle[]>();
+  const originalObstaclesBySource = new Map<string, Obstacle>();
 
   for (const [obstacleIndex, obstacle] of srj.obstacles.entries()) {
-    const convertedObstacle = convertObstacleToOldFormat(obstacle)
-    const sourceKey = getObstacleKey(obstacle, obstacleIndex)
-    approximatedObstaclesBySource.set(sourceKey, convertedObstacle)
-    originalObstaclesBySource.set(sourceKey, obstacle)
+    const convertedObstacle = convertObstacleToOldFormat(obstacle);
+    const sourceKey = getObstacleKey(obstacle, obstacleIndex);
+    approximatedObstaclesBySource.set(sourceKey, convertedObstacle);
+    originalObstaclesBySource.set(sourceKey, obstacle);
 
     for (const converted of convertedObstacle) {
       const key = [
@@ -479,25 +479,25 @@ export const addApproximatingRectsToSrj = (
         converted.width.toFixed(6),
         converted.height.toFixed(6),
         converted.layers.join(","),
-      ].join(":")
-      const existingObstacle = obstaclesByRect.get(key)
+      ].join(":");
+      const existingObstacle = obstaclesByRect.get(key);
 
       if (!existingObstacle) {
-        obstaclesByRect.set(key, converted)
-        continue
+        obstaclesByRect.set(key, converted);
+        continue;
       }
 
       existingObstacle.connectedTo = [
         ...new Set([...existingObstacle.connectedTo, ...converted.connectedTo]),
-      ]
+      ];
     }
   }
 
   const repairedConnections = srj.connections.map((connection) => ({
     ...connection,
     pointsToConnect: connection.pointsToConnect.map((point) => {
-      const pointIds = getPointConnectionIds(point)
-      if (pointIds.length === 0) return point
+      const pointIds = getPointConnectionIds(point);
+      if (pointIds.length === 0) return point;
 
       for (const [sourceKey, originalObstacle] of originalObstaclesBySource) {
         if (
@@ -505,49 +505,49 @@ export const addApproximatingRectsToSrj = (
             originalObstacle.connectedTo.includes(pointId),
           )
         ) {
-          continue
+          continue;
         }
 
-        if (!isPointInsideObstacle(point, originalObstacle)) continue
+        if (!isPointInsideObstacle(point, originalObstacle)) continue;
 
         const approximatedObstacles =
-          approximatedObstaclesBySource.get(sourceKey) ?? []
-        if (approximatedObstacles.length === 0) continue
+          approximatedObstaclesBySource.get(sourceKey) ?? [];
+        if (approximatedObstacles.length === 0) continue;
 
         if (
           approximatedObstacles.some((obstacle) =>
             isPointInsideObstacle(point, obstacle),
           )
         ) {
-          return point
+          return point;
         }
 
-        let nearestObstacle = approximatedObstacles[0]!
-        let nearestDistance = Number.POSITIVE_INFINITY
+        let nearestObstacle = approximatedObstacles[0]!;
+        let nearestDistance = Number.POSITIVE_INFINITY;
 
         for (const obstacle of approximatedObstacles) {
-          const clampedPoint = clampPointToObstacle(point, obstacle)
-          const distance = calculateDistance(clampedPoint, point)
+          const clampedPoint = clampPointToObstacle(point, obstacle);
+          const distance = calculateDistance(clampedPoint, point);
 
           if (distance < nearestDistance) {
-            nearestDistance = distance
-            nearestObstacle = obstacle
+            nearestDistance = distance;
+            nearestObstacle = obstacle;
           }
         }
 
         return {
           ...point,
           ...clampPointToObstacle(point, nearestObstacle),
-        }
+        };
       }
 
-      return point
+      return point;
     }),
-  }))
+  }));
 
   return {
     ...srj,
     connections: repairedConnections,
     obstacles: [...obstaclesByRect.values()],
-  }
-}
+  };
+};

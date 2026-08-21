@@ -1,7 +1,7 @@
-import { test, expect } from "bun:test"
-import { IntraNodeRouteSolver } from "lib/solvers/HighDensitySolver/IntraNodeSolver"
-import { generateColorMapFromNodeWithPortPoints } from "lib/utils/generateColorMapFromNodeWithPortPoints"
-import type { NodeWithPortPoints } from "lib/types/high-density-types"
+import { test, expect } from "bun:test";
+import { IntraNodeRouteSolver } from "lib/solvers/HighDensitySolver/IntraNodeSolver";
+import { generateColorMapFromNodeWithPortPoints } from "lib/utils/generateColorMapFromNodeWithPortPoints";
+import type { NodeWithPortPoints } from "lib/types/high-density-types";
 
 const nodeWithPortPoints: NodeWithPortPoints = {
   capacityMeshNodeId: "cmn_2",
@@ -217,15 +217,15 @@ const nodeWithPortPoints: NodeWithPortPoints = {
   },
   width: 18.1,
   height: 40,
-}
+};
 
 test("highdensity89 - high density solver with offset port points", () => {
   const solver = new IntraNodeRouteSolver({
     nodeWithPortPoints,
     colorMap: generateColorMapFromNodeWithPortPoints(nodeWithPortPoints),
-  })
+  });
 
-  solver.solve()
+  solver.solve();
 
-  expect(solver.visualize()).toMatchGraphicsSvg(import.meta.path)
-})
+  expect(solver.visualize()).toMatchGraphicsSvg(import.meta.path);
+});

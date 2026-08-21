@@ -1,19 +1,19 @@
-import { expect, test } from "bun:test"
-import { IntraNodeSolverWithJumpers } from "lib/solvers/HighDensitySolver/IntraNodeSolverWithJumpers"
-import { SingleLayerNoDifferentRootIntersectionsIntraNodeSolver } from "lib/solvers/HighDensitySolver/SingleLayerNoDifferentRootIntersectionsIntraNodeSolver"
-import { SingleTransitionIntraNodeSolver } from "lib/solvers/HighDensitySolver/SingleTransitionIntraNodeSolver"
-import { SingleTransitionThroughObstacleIntraNodeSolver } from "lib/solvers/HighDensitySolver/SingleTransitionThroughObstacleIntraNodeSolver"
-import type { Obstacle } from "lib/types"
+import { expect, test } from "bun:test";
+import { IntraNodeSolverWithJumpers } from "lib/solvers/HighDensitySolver/IntraNodeSolverWithJumpers";
+import { SingleLayerNoDifferentRootIntersectionsIntraNodeSolver } from "lib/solvers/HighDensitySolver/SingleLayerNoDifferentRootIntersectionsIntraNodeSolver";
+import { SingleTransitionIntraNodeSolver } from "lib/solvers/HighDensitySolver/SingleTransitionIntraNodeSolver";
+import { SingleTransitionThroughObstacleIntraNodeSolver } from "lib/solvers/HighDensitySolver/SingleTransitionThroughObstacleIntraNodeSolver";
+import type { Obstacle } from "lib/types";
 import type {
   HighDensityIntraNodeRoute,
   HighDensityIntraNodeRouteWithJumpers,
   NodeWithPortPoints,
   PortPoint,
-} from "lib/types/high-density-types"
-import { getConnectionPortPointPairs } from "lib/utils/getConnectionPortPointPairs"
+} from "lib/types/high-density-types";
+import { getConnectionPortPointPairs } from "lib/utils/getConnectionPortPointPairs";
 
 const getPortPointIds = (pairs: Array<[PortPoint, PortPoint]>) =>
-  pairs.map(([A, B]) => [A.portPointId, B.portPointId])
+  pairs.map(([A, B]) => [A.portPointId, B.portPointId]);
 
 const getSolvedRouteEndpoints = (
   routes: Array<
@@ -22,13 +22,13 @@ const getSolvedRouteEndpoints = (
 ) =>
   routes
     .map((route) => {
-      const start = route.route[0]!
-      const end = route.route[route.route.length - 1]!
+      const start = route.route[0]!;
+      const end = route.route[route.route.length - 1]!;
       return [`${start.x},${start.y},${start.z}`, `${end.x},${end.y},${end.z}`]
         .sort()
-        .join("|")
+        .join("|");
     })
-    .sort()
+    .sort();
 
 const transitionPortPoints: PortPoint[] = [
   {
@@ -63,7 +63,7 @@ const transitionPortPoints: PortPoint[] = [
     z: 1,
     prevPortPointId: "p3",
   },
-]
+];
 
 const transitionNode: NodeWithPortPoints = {
   capacityMeshNodeId: "transition-node",
@@ -71,7 +71,7 @@ const transitionNode: NodeWithPortPoints = {
   width: 5,
   height: 5,
   portPoints: transitionPortPoints,
-}
+};
 
 const throughObstacle: Obstacle = {
   type: "rect",
@@ -80,7 +80,7 @@ const throughObstacle: Obstacle = {
   height: 5,
   layers: ["top", "bottom"],
   connectedTo: ["chain"],
-}
+};
 
 const singleLayerNode: NodeWithPortPoints = {
   capacityMeshNodeId: "single-layer-node",
@@ -122,7 +122,7 @@ const singleLayerNode: NodeWithPortPoints = {
       prevPortPointId: "c",
     },
   ],
-}
+};
 
 const jumperNode: NodeWithPortPoints = {
   capacityMeshNodeId: "jumper-node",
@@ -163,7 +163,7 @@ const jumperNode: NodeWithPortPoints = {
       prevPortPointId: "j3",
     },
   ],
-}
+};
 
 test("getConnectionPortPointPairs uses prev/next links before connectionName grouping", () => {
   expect(
@@ -171,60 +171,60 @@ test("getConnectionPortPointPairs uses prev/next links before connectionName gro
   ).toEqual([
     ["p1", "p2"],
     ["p3", "p4"],
-  ])
-})
+  ]);
+});
 
 test("SingleTransitionIntraNodeSolver extracts one route per linked pair", () => {
   const solver = new SingleTransitionIntraNodeSolver({
     nodeWithPortPoints: transitionNode,
-  })
+  });
 
   expect(getPortPointIds(solver.routes.map(({ A, B }) => [A, B]))).toEqual([
     ["p1", "p2"],
     ["p3", "p4"],
-  ])
-  expect(solver.failed).toBe(true)
-  expect(String(solver.error)).toContain("Expected 1 route, but got 2")
-})
+  ]);
+  expect(solver.failed).toBe(true);
+  expect(String(solver.error)).toContain("Expected 1 route, but got 2");
+});
 
 test("SingleTransitionThroughObstacleIntraNodeSolver solves one route per linked pair", () => {
   const solver = new SingleTransitionThroughObstacleIntraNodeSolver({
     nodeWithPortPoints: transitionNode,
     obstacles: [throughObstacle],
     layerCount: 2,
-  })
+  });
 
-  expect(solver.solved).toBe(true)
+  expect(solver.solved).toBe(true);
   expect(getSolvedRouteEndpoints(solver.solvedRoutes)).toEqual([
     "1,1,0|1.5,1,1",
     "3.5,4,0|4,4,1",
-  ])
-})
+  ]);
+});
 
 test("SingleLayerNoDifferentRootIntersectionsIntraNodeSolver routes the explicit linked pairs", () => {
   const solver = new SingleLayerNoDifferentRootIntersectionsIntraNodeSolver({
     nodeWithPortPoints: singleLayerNode,
-  })
+  });
 
-  solver.solve()
+  solver.solve();
 
-  expect(solver.solved).toBe(true)
+  expect(solver.solved).toBe(true);
   expect(getSolvedRouteEndpoints(solver.solvedRoutes)).toEqual([
     "0,1,0|5,1,0",
     "0,4,0|5,4,0",
-  ])
-})
+  ]);
+});
 
 test("IntraNodeSolverWithJumpers builds separate route tasks for linked pairs", () => {
   const solver = new IntraNodeSolverWithJumpers({
     nodeWithPortPoints: jumperNode,
-  })
+  });
 
-  solver.solve()
+  solver.solve();
 
-  expect(solver.solved).toBe(true)
+  expect(solver.solved).toBe(true);
   expect(getSolvedRouteEndpoints(solver.solvedRoutes)).toEqual([
     "0.5,1,0|4.5,1,0",
     "0.5,4,0|4.5,4,0",
-  ])
-})
+  ]);
+});

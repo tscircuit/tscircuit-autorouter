@@ -1,5 +1,5 @@
-import { expect, test } from "bun:test"
-import { AutoroutingPipelineSolver7_MultiGraph } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/AutoroutingPipelineSolver7_MultiGraph"
+import { expect, test } from "bun:test";
+import { AutoroutingPipelineSolver7_MultiGraph } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/AutoroutingPipelineSolver7_MultiGraph";
 
 test("Pipeline7 runs post-processing before default power expansion", () => {
   const solver = new AutoroutingPipelineSolver7_MultiGraph({
@@ -30,24 +30,24 @@ test("Pipeline7 runs post-processing before default power expansion", () => {
         ],
       },
     ],
-  })
-  const powerTraceExpansionStep = solver.pipelineDef.at(-1)
-  const lengthMatchingPostProcessingStep = solver.pipelineDef.at(-2)
-  expect(powerTraceExpansionStep?.solverName).toBe("powerTraceExpansionSolver")
+  });
+  const powerTraceExpansionStep = solver.pipelineDef.at(-1);
+  const lengthMatchingPostProcessingStep = solver.pipelineDef.at(-2);
+  expect(powerTraceExpansionStep?.solverName).toBe("powerTraceExpansionSolver");
   expect(lengthMatchingPostProcessingStep?.solverName).toBe(
     "lengthMatchingPostProcessingSolver",
-  )
+  );
 
   const powerTraceParams = powerTraceExpansionStep!.getConstructorParams({
     ...solver,
     getPrePowerTraceOutputSimplifiedPcbTraces: () => [],
-  } as any)
-  expect(powerTraceParams).toHaveLength(2)
-  expect((powerTraceParams[0] as any).fixedTraces).toEqual([])
+  } as any);
+  expect(powerTraceParams).toHaveLength(2);
+  expect((powerTraceParams[0] as any).fixedTraces).toEqual([]);
   expect(powerTraceParams[1]).toEqual({
     allowNewVias: false,
     onlyConnectionNames: [],
-  })
+  });
 
   const [params] = lengthMatchingPostProcessingStep!.getConstructorParams({
     ...solver,
@@ -82,9 +82,9 @@ test("Pipeline7 runs post-processing before default power expansion", () => {
         },
       ],
     },
-  } as any)
+  } as any);
 
-  const lengthMatchingPostProcessingParams = params as any
+  const lengthMatchingPostProcessingParams = params as any;
   expect(Object.keys(lengthMatchingPostProcessingParams).sort()).toEqual(
     [
       "bounds",
@@ -93,26 +93,26 @@ test("Pipeline7 runs post-processing before default power expansion", () => {
       "layerCount",
       "obstacles",
     ].sort(),
-  )
+  );
   expect(lengthMatchingPostProcessingParams.differentialPairs).toEqual([
     {
       connectionNames: ["PAIR_P_mst0", "PAIR_N_mst0"],
       lengthTolerance: 0.01,
     },
-  ])
+  ]);
   expect(
     lengthMatchingPostProcessingParams.hdRoutes.map(
       (route: any) => route.connectionName,
     ),
-  ).toEqual(["PAIR_P_mst0", "PAIR_N_mst0"])
+  ).toEqual(["PAIR_P_mst0", "PAIR_N_mst0"]);
 
   const lengthMatchingPostProcessingSolver = new (
     lengthMatchingPostProcessingStep!.solverClass as any
-  )(lengthMatchingPostProcessingParams)
-  lengthMatchingPostProcessingSolver.solve()
+  )(lengthMatchingPostProcessingParams);
+  lengthMatchingPostProcessingSolver.solve();
   expect(
     lengthMatchingPostProcessingSolver
       .getOutput()
       .hdRoutes.map((route: any) => route.connectionName),
-  ).toEqual(["PAIR_P_mst0", "PAIR_N_mst0"])
-})
+  ).toEqual(["PAIR_P_mst0", "PAIR_N_mst0"]);
+});

@@ -1,8 +1,8 @@
-import { expect, test } from "bun:test"
-import { ConnectivityMap } from "circuit-json-to-connectivity-map"
-import { UselessViaRemovalSolver } from "lib/solvers/UselessViaRemovalSolver/UselessViaRemovalSolver"
-import type { Obstacle } from "lib/types"
-import type { HighDensityRoute } from "lib/types/high-density-types"
+import { expect, test } from "bun:test";
+import { ConnectivityMap } from "circuit-json-to-connectivity-map";
+import { UselessViaRemovalSolver } from "lib/solvers/UselessViaRemovalSolver/UselessViaRemovalSolver";
+import type { Obstacle } from "lib/types";
+import type { HighDensityRoute } from "lib/types/high-density-types";
 
 test("later shortcuts are checked against earlier optimized routes", () => {
   const firstRoute: HighDensityRoute = {
@@ -23,7 +23,7 @@ test("later shortcuts are checked against earlier optimized routes", () => {
       { x: 1, y: 0 },
       { x: 3, y: 0 },
     ],
-  }
+  };
   const secondRoute: HighDensityRoute = {
     connectionName: "second_net",
     traceThickness: 0.15,
@@ -42,7 +42,7 @@ test("later shortcuts are checked against earlier optimized routes", () => {
       { x: 2, y: -1 },
       { x: 2, y: 1 },
     ],
-  }
+  };
   const obstacles: Obstacle[] = [
     {
       type: "rect",
@@ -60,7 +60,7 @@ test("later shortcuts are checked against earlier optimized routes", () => {
       height: 1,
       connectedTo: ["other_net"],
     },
-  ]
+  ];
   const solver = new UselessViaRemovalSolver({
     unsimplifiedHdRoutes: [firstRoute, secondRoute],
     obstacles,
@@ -70,11 +70,11 @@ test("later shortcuts are checked against earlier optimized routes", () => {
       net0: [firstRoute.connectionName],
       net1: [secondRoute.connectionName],
     }),
-  })
+  });
 
-  solver.solve()
+  solver.solve();
 
-  const routes = solver.getOptimizedHdRoutes()
-  expect(routes?.[0].vias).toHaveLength(0)
-  expect(routes?.[1].vias).toHaveLength(2)
-})
+  const routes = solver.getOptimizedHdRoutes();
+  expect(routes?.[0].vias).toHaveLength(0);
+  expect(routes?.[1].vias).toHaveLength(2);
+});

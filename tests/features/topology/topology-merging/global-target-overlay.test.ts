@@ -1,12 +1,12 @@
-import { expect, test } from "bun:test"
+import { expect, test } from "bun:test";
 import {
   createTopologyMergingTestNode,
   getAvailableZAtPoint,
   solveTopologyMergingTestGroups,
-} from "../../../fixtures/topology-merging-test-utils"
+} from "../../../fixtures/topology-merging-test-utils";
 
 test("topology merging keeps component under-layers below a global target", (): void => {
-  const bounds = { minX: 0, maxX: 2, minY: 0, maxY: 2 }
+  const bounds = { minX: 0, maxX: 2, minY: 0, maxY: 2 };
   const globalTarget = {
     ...createTopologyMergingTestNode({
       id: "global-target",
@@ -16,7 +16,7 @@ test("topology merging keeps component under-layers below a global target", (): 
     _containsObstacle: true,
     _containsTarget: true,
     _targetConnectionName: "target-connection",
-  }
+  };
   const nodes = solveTopologyMergingTestGroups([
     {
       groupId: "global",
@@ -33,15 +33,15 @@ test("topology merging keeps component under-layers below a global target", (): 
         }),
       ],
     },
-  ])
+  ]);
 
-  expect(getAvailableZAtPoint(nodes, { x: 1, y: 1 })).toEqual([[0], [1]])
+  expect(getAvailableZAtPoint(nodes, { x: 1, y: 1 })).toEqual([[0], [1]]);
   expect(nodes.find((node) => node.availableZ[0] === 0)).toMatchObject({
     _containsObstacle: true,
     _containsTarget: true,
     _targetConnectionName: "target-connection",
-  })
-  const componentUnderLayer = nodes.find((node) => node.availableZ[0] === 1)
-  expect(componentUnderLayer?._containsObstacle).toBeUndefined()
-  expect(componentUnderLayer?._containsTarget).toBeUndefined()
-})
+  });
+  const componentUnderLayer = nodes.find((node) => node.availableZ[0] === 1);
+  expect(componentUnderLayer?._containsObstacle).toBeUndefined();
+  expect(componentUnderLayer?._containsTarget).toBeUndefined();
+});

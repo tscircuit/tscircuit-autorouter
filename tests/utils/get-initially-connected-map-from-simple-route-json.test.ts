@@ -1,9 +1,9 @@
-import { expect, test } from "bun:test"
-import type { SimpleRouteJson } from "lib/types"
+import { expect, test } from "bun:test";
+import type { SimpleRouteJson } from "lib/types";
 import {
   areIdsInitiallyConnected,
   getInitiallyConnectedMapFromSimpleRouteJson,
-} from "lib/utils/get-initially-connected-map-from-simple-route-json"
+} from "lib/utils/get-initially-connected-map-from-simple-route-json";
 
 test("initially connected map joins overlapping trace metadata without joining the entire net", () => {
   const srj = {
@@ -38,19 +38,20 @@ test("initially connected map joins overlapping trace metadata without joining t
         route: [],
       },
     ],
-  } satisfies SimpleRouteJson
+  } satisfies SimpleRouteJson;
 
-  const initiallyConnectedMap = getInitiallyConnectedMapFromSimpleRouteJson(srj)
+  const initiallyConnectedMap =
+    getInitiallyConnectedMapFromSimpleRouteJson(srj);
 
-  expect(initiallyConnectedMap.areIdsConnected("port1", "port3")).toBeTrue()
+  expect(initiallyConnectedMap.areIdsConnected("port1", "port3")).toBeTrue();
   expect(
     initiallyConnectedMap.areIdsConnected("port1", "unrouted_port"),
-  ).toBeFalse()
+  ).toBeFalse();
   expect(
     areIdsInitiallyConnected(
       initiallyConnectedMap,
       "unrouted_port",
       "unrouted_port",
     ),
-  ).toBeFalse()
-})
+  ).toBeFalse();
+});

@@ -1,15 +1,15 @@
-import type { Bounds } from "@tscircuit/math-utils"
-import { getBoundFromCenteredRect } from "@tscircuit/math-utils"
-import { BaseSolver } from "@tscircuit/solver-utils"
-import Flatbush from "flatbush"
-import type { GraphicsObject, Line, Point, Rect } from "graphics-debug"
-import type { CapacityMeshNode, Obstacle } from "lib/types"
-import { createRectFromCapacityNode } from "lib/utils/createRectFromCapacityNode"
-import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
+import type { Bounds } from "@tscircuit/math-utils";
+import { getBoundFromCenteredRect } from "@tscircuit/math-utils";
+import { BaseSolver } from "@tscircuit/solver-utils";
+import Flatbush from "flatbush";
+import type { GraphicsObject, Line, Point, Rect } from "graphics-debug";
+import type { CapacityMeshNode, Obstacle } from "lib/types";
+import { createRectFromCapacityNode } from "lib/utils/createRectFromCapacityNode";
+import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ";
 import type {
   EdgeSegmentWithObstacle,
   ExpandUnconnectedEdgesToMeshInput,
-} from "./BgaGapFillTypes"
+} from "./BgaGapFillTypes";
 import {
   getGapFillEdgeColor,
   getGapFillEdgeDirectionLabel,
@@ -17,51 +17,51 @@ import {
   getGapFillEdgeMidpoint,
   getGapFillEdgeVisualId,
   sortGapFillEdgesByLocation,
-} from "./gapFillVisualization"
+} from "./gapFillVisualization";
 
-const EDGE_EPSILON: number = 1e-3
-const EDGE_SEARCH_MARGIN: number = 1e-3
-const OVERLAP_EPSILON: number = 1e-6
+const EDGE_EPSILON: number = 1e-3;
+const EDGE_SEARCH_MARGIN: number = 1e-3;
+const OVERLAP_EPSILON: number = 1e-6;
 
 export class ExpandUnconnectedEdgesToMesh extends BaseSolver {
-  private meshIndex!: Flatbush
-  private meshBounds!: Bounds
-  private expandedNodes: CapacityMeshNode[] = []
+  private meshIndex!: Flatbush;
+  private meshBounds!: Bounds;
+  private expandedNodes: CapacityMeshNode[] = [];
 
   constructor(public readonly inputProblem: ExpandUnconnectedEdgesToMeshInput) {
-    super()
+    super();
   }
 
   override _setup(): void {
     const meshNodeCount: number = Math.max(
       this.inputProblem.meshNodes.length,
       1,
-    )
-    this.meshIndex = new Flatbush(meshNodeCount)
+    );
+    this.meshIndex = new Flatbush(meshNodeCount);
 
-    let minX: number = Number.POSITIVE_INFINITY
-    let maxX: number = Number.NEGATIVE_INFINITY
-    let minY: number = Number.POSITIVE_INFINITY
-    let maxY: number = Number.NEGATIVE_INFINITY
+    let minX: number = Number.POSITIVE_INFINITY;
+    let maxX: number = Number.NEGATIVE_INFINITY;
+    let minY: number = Number.POSITIVE_INFINITY;
+    let maxY: number = Number.NEGATIVE_INFINITY;
 
     for (const meshNode of this.inputProblem.meshNodes) {
-      const meshNodeBounds: Bounds = getBoundFromCenteredRect(meshNode)
+      const meshNodeBounds: Bounds = getBoundFromCenteredRect(meshNode);
       this.meshIndex.add(
         meshNodeBounds.minX,
         meshNodeBounds.minY,
         meshNodeBounds.maxX,
         meshNodeBounds.maxY,
-      )
-      minX = Math.min(minX, meshNodeBounds.minX)
-      maxX = Math.max(maxX, meshNodeBounds.maxX)
-      minY = Math.min(minY, meshNodeBounds.minY)
-      maxY = Math.max(maxY, meshNodeBounds.maxY)
+      );
+      minX = Math.min(minX, meshNodeBounds.minX);
+      maxX = Math.max(maxX, meshNodeBounds.maxX);
+      minY = Math.min(minY, meshNodeBounds.minY);
+      maxY = Math.max(maxY, meshNodeBounds.maxY);
     }
 
-    this.meshIndex.finish()
+    this.meshIndex.finish();
     this.meshBounds = this.inputProblem.meshNodes.length
       ? { minX, maxX, minY, maxY }
-      : { minX: 0, maxX: 0, minY: 0, maxY: 0 }
+      : { minX: 0, maxX: 0, minY: 0, maxY: 0 };
   }
 
   private getObstacleAvailableZ(obstacle: Obstacle): number[] {
@@ -70,7 +70,7 @@ export class ExpandUnconnectedEdgesToMesh extends BaseSolver {
       obstacle.layers.map((layerName) =>
         mapLayerNameToZ(layerName, this.inputProblem.layerCount),
       )
-    )
+    );
   }
 
   private getSharedOverlapArea(
@@ -82,53 +82,53 @@ export class ExpandUnconnectedEdgesToMesh extends BaseSolver {
         meshNode.availableZ.includes(z),
       )
     ) {
-      return 0
+      return 0;
     }
 
-    const candidateNodeBounds: Bounds = getBoundFromCenteredRect(candidateNode)
-    const meshNodeBounds: Bounds = getBoundFromCenteredRect(meshNode)
+    const candidateNodeBounds: Bounds = getBoundFromCenteredRect(candidateNode);
+    const meshNodeBounds: Bounds = getBoundFromCenteredRect(meshNode);
     const overlapWidth: number =
       Math.min(candidateNodeBounds.maxX, meshNodeBounds.maxX) -
-      Math.max(candidateNodeBounds.minX, meshNodeBounds.minX)
+      Math.max(candidateNodeBounds.minX, meshNodeBounds.minX);
     const overlapHeight: number =
       Math.min(candidateNodeBounds.maxY, meshNodeBounds.maxY) -
-      Math.max(candidateNodeBounds.minY, meshNodeBounds.minY)
+      Math.max(candidateNodeBounds.minY, meshNodeBounds.minY);
 
     if (overlapWidth <= OVERLAP_EPSILON || overlapHeight <= OVERLAP_EPSILON) {
-      return 0
+      return 0;
     }
 
-    return overlapWidth * overlapHeight
+    return overlapWidth * overlapHeight;
   }
 
   private getNodeObstacleOverlapArea(
     candidateNode: CapacityMeshNode,
     obstacle: Obstacle,
   ): number {
-    const obstacleAvailableZ: number[] = this.getObstacleAvailableZ(obstacle)
+    const obstacleAvailableZ: number[] = this.getObstacleAvailableZ(obstacle);
 
     if (
       !candidateNode.availableZ.some((z: number) =>
         obstacleAvailableZ.includes(z),
       )
     ) {
-      return 0
+      return 0;
     }
 
-    const candidateNodeBounds: Bounds = getBoundFromCenteredRect(candidateNode)
-    const obstacleBounds: Bounds = getBoundFromCenteredRect(obstacle)
+    const candidateNodeBounds: Bounds = getBoundFromCenteredRect(candidateNode);
+    const obstacleBounds: Bounds = getBoundFromCenteredRect(obstacle);
     const overlapWidth: number =
       Math.min(candidateNodeBounds.maxX, obstacleBounds.maxX) -
-      Math.max(candidateNodeBounds.minX, obstacleBounds.minX)
+      Math.max(candidateNodeBounds.minX, obstacleBounds.minX);
     const overlapHeight: number =
       Math.min(candidateNodeBounds.maxY, obstacleBounds.maxY) -
-      Math.max(candidateNodeBounds.minY, obstacleBounds.minY)
+      Math.max(candidateNodeBounds.minY, obstacleBounds.minY);
 
     if (overlapWidth <= OVERLAP_EPSILON || overlapHeight <= OVERLAP_EPSILON) {
-      return 0
+      return 0;
     }
 
-    return overlapWidth * overlapHeight
+    return overlapWidth * overlapHeight;
   }
 
   private getClosestMeshNode(
@@ -137,10 +137,10 @@ export class ExpandUnconnectedEdgesToMesh extends BaseSolver {
   ): CapacityMeshNode | null {
     const edgeIsVertical: boolean =
       Math.abs(edgeWithObstacle.start.x - edgeWithObstacle.end.x) <=
-      EDGE_EPSILON
+      EDGE_EPSILON;
     const obstacleAvailableZ: number[] = this.getObstacleAvailableZ(
       edgeWithObstacle.obstacle,
-    )
+    );
     const searchBounds: Bounds = edgeIsVertical
       ? edgeWithObstacle.expansionDirection.x < 0
         ? {
@@ -183,17 +183,17 @@ export class ExpandUnconnectedEdgesToMesh extends BaseSolver {
               EDGE_SEARCH_MARGIN,
             minY: edgeWithObstacle.start.y,
             maxY: this.meshBounds.maxY,
-          }
+          };
 
     const candidateNodeIds: number[] = this.meshIndex.search(
       searchBounds.minX,
       searchBounds.minY,
       searchBounds.maxX,
       searchBounds.maxY,
-    )
+    );
 
-    let bestMeshNode: CapacityMeshNode | null = null
-    let bestDistance: number = Number.POSITIVE_INFINITY
+    let bestMeshNode: CapacityMeshNode | null = null;
+    let bestDistance: number = Number.POSITIVE_INFINITY;
 
     const allCandidateNodes: CapacityMeshNode[] = [
       ...candidateNodeIds.map(
@@ -201,21 +201,21 @@ export class ExpandUnconnectedEdgesToMesh extends BaseSolver {
           this.inputProblem.meshNodes[candidateNodeId]!,
       ),
       ...expandedNodes,
-    ]
+    ];
 
     for (const candidateNode of allCandidateNodes) {
-      if (candidateNode._containsObstacle) continue
+      if (candidateNode._containsObstacle) continue;
 
       if (
         !candidateNode.availableZ.some((z: number) =>
           obstacleAvailableZ.includes(z),
         )
       ) {
-        continue
+        continue;
       }
 
       const candidateNodeBounds: Bounds =
-        getBoundFromCenteredRect(candidateNode)
+        getBoundFromCenteredRect(candidateNode);
       const edgeSpanOverlapAmount: number = edgeIsVertical
         ? Math.min(
             Math.max(edgeWithObstacle.start.y, edgeWithObstacle.end.y),
@@ -232,9 +232,9 @@ export class ExpandUnconnectedEdgesToMesh extends BaseSolver {
           Math.max(
             Math.min(edgeWithObstacle.start.x, edgeWithObstacle.end.x),
             candidateNodeBounds.minX,
-          )
+          );
 
-      if (edgeSpanOverlapAmount <= EDGE_EPSILON) continue
+      if (edgeSpanOverlapAmount <= EDGE_EPSILON) continue;
 
       const distanceToEdge: number = edgeIsVertical
         ? edgeWithObstacle.expansionDirection.x < 0
@@ -242,16 +242,16 @@ export class ExpandUnconnectedEdgesToMesh extends BaseSolver {
           : candidateNodeBounds.minX - edgeWithObstacle.start.x
         : edgeWithObstacle.expansionDirection.y < 0
           ? edgeWithObstacle.start.y - candidateNodeBounds.maxY
-          : candidateNodeBounds.minY - edgeWithObstacle.start.y
+          : candidateNodeBounds.minY - edgeWithObstacle.start.y;
 
-      if (distanceToEdge < EDGE_EPSILON) continue
-      if (distanceToEdge >= bestDistance) continue
+      if (distanceToEdge < EDGE_EPSILON) continue;
+      if (distanceToEdge >= bestDistance) continue;
 
-      bestDistance = distanceToEdge
-      bestMeshNode = candidateNode
+      bestDistance = distanceToEdge;
+      bestMeshNode = candidateNode;
     }
 
-    return bestMeshNode
+    return bestMeshNode;
   }
 
   private createExpandedNode(
@@ -259,34 +259,34 @@ export class ExpandUnconnectedEdgesToMesh extends BaseSolver {
     targetNode: CapacityMeshNode,
     edgeIndex: number,
   ): CapacityMeshNode | null {
-    const targetNodeBounds: Bounds = getBoundFromCenteredRect(targetNode)
+    const targetNodeBounds: Bounds = getBoundFromCenteredRect(targetNode);
     const availableZ: number[] = this.getObstacleAvailableZ(
       edgeWithObstacle.obstacle,
-    )
+    );
     const edgeIsVertical: boolean =
       Math.abs(edgeWithObstacle.start.x - edgeWithObstacle.end.x) <=
-      EDGE_EPSILON
+      EDGE_EPSILON;
 
     if (edgeIsVertical) {
       const minY: number = Math.max(
         Math.min(edgeWithObstacle.start.y, edgeWithObstacle.end.y),
         targetNodeBounds.minY,
-      )
+      );
       const maxY: number = Math.min(
         Math.max(edgeWithObstacle.start.y, edgeWithObstacle.end.y),
         targetNodeBounds.maxY,
-      )
+      );
       const minX: number =
         edgeWithObstacle.expansionDirection.x < 0
           ? targetNodeBounds.maxX
-          : edgeWithObstacle.start.x
+          : edgeWithObstacle.start.x;
       const maxX: number =
         edgeWithObstacle.expansionDirection.x < 0
           ? edgeWithObstacle.start.x
-          : targetNodeBounds.minX
+          : targetNodeBounds.minX;
 
       if (maxX - minX <= EDGE_EPSILON || maxY - minY <= EDGE_EPSILON) {
-        return null
+        return null;
       }
 
       return {
@@ -299,28 +299,28 @@ export class ExpandUnconnectedEdgesToMesh extends BaseSolver {
         height: maxY - minY,
         layer: `z${availableZ.join(",")}`,
         availableZ,
-      }
+      };
     }
 
     const minX: number = Math.max(
       Math.min(edgeWithObstacle.start.x, edgeWithObstacle.end.x),
       targetNodeBounds.minX,
-    )
+    );
     const maxX: number = Math.min(
       Math.max(edgeWithObstacle.start.x, edgeWithObstacle.end.x),
       targetNodeBounds.maxX,
-    )
+    );
     const minY: number =
       edgeWithObstacle.expansionDirection.y < 0
         ? targetNodeBounds.maxY
-        : edgeWithObstacle.start.y
+        : edgeWithObstacle.start.y;
     const maxY: number =
       edgeWithObstacle.expansionDirection.y < 0
         ? edgeWithObstacle.start.y
-        : targetNodeBounds.minY
+        : targetNodeBounds.minY;
 
     if (maxX - minX <= EDGE_EPSILON || maxY - minY <= EDGE_EPSILON) {
-      return null
+      return null;
     }
 
     return {
@@ -333,7 +333,7 @@ export class ExpandUnconnectedEdgesToMesh extends BaseSolver {
       height: maxY - minY,
       layer: `z${availableZ.join(",")}`,
       availableZ,
-    }
+    };
   }
 
   private overlapsExistingGeometry(
@@ -342,13 +342,13 @@ export class ExpandUnconnectedEdgesToMesh extends BaseSolver {
   ): boolean {
     for (const meshNode of this.inputProblem.meshNodes) {
       if (this.getSharedOverlapArea(candidateNode, meshNode) > 0) {
-        return true
+        return true;
       }
     }
 
     for (const expandedNode of expandedNodes) {
       if (this.getSharedOverlapArea(candidateNode, expandedNode) > 0) {
-        return true
+        return true;
       }
     }
 
@@ -359,15 +359,15 @@ export class ExpandUnconnectedEdgesToMesh extends BaseSolver {
           edgeWithObstacle.obstacle,
         ) > 0
       ) {
-        return true
+        return true;
       }
     }
 
-    return false
+    return false;
   }
 
   override _step(): void {
-    const expandedNodes: CapacityMeshNode[] = []
+    const expandedNodes: CapacityMeshNode[] = [];
 
     for (const [
       edgeIndex,
@@ -376,52 +376,50 @@ export class ExpandUnconnectedEdgesToMesh extends BaseSolver {
       const targetNode: CapacityMeshNode | null = this.getClosestMeshNode(
         edgeWithObstacle,
         expandedNodes,
-      )
+      );
 
-      if (!targetNode) continue
+      if (!targetNode) continue;
 
       const expandedNode: CapacityMeshNode | null = this.createExpandedNode(
         edgeWithObstacle,
         targetNode,
         edgeIndex,
-      )
+      );
 
-      if (!expandedNode) continue
-      if (this.overlapsExistingGeometry(expandedNode, expandedNodes)) continue
+      if (!expandedNode) continue;
+      if (this.overlapsExistingGeometry(expandedNode, expandedNodes)) continue;
 
-      expandedNodes.push(expandedNode)
+      expandedNodes.push(expandedNode);
     }
 
-    this.expandedNodes = expandedNodes
-    this.solved = true
+    this.expandedNodes = expandedNodes;
+    this.solved = true;
   }
 
   override getOutput(): CapacityMeshNode[] {
-    return this.expandedNodes
+    return this.expandedNodes;
   }
 
   override visualize(): GraphicsObject {
-    const edgeByIndex = this.inputProblem.edgesWithObstacle
+    const edgeByIndex = this.inputProblem.edgesWithObstacle;
     const visualEdges: EdgeSegmentWithObstacle[] =
-      sortGapFillEdgesByLocation(edgeByIndex)
+      sortGapFillEdgesByLocation(edgeByIndex);
 
     return {
       rects: [
-        ...this.inputProblem.meshNodes.map(
-          (node): Rect => ({
-            ...createRectFromCapacityNode(node, { rectMargin: 0.01 }),
-            fill: node._containsObstacle
-              ? "rgba(255,0,0,0.16)"
-              : "rgba(0,120,255,0.08)",
-            stroke: node._containsObstacle
-              ? "rgba(255,0,0,0.35)"
-              : "rgba(0,120,255,0.28)",
-          }),
-        ),
+        ...this.inputProblem.meshNodes.map((node): Rect => ({
+          ...createRectFromCapacityNode(node, { rectMargin: 0.01 }),
+          fill: node._containsObstacle
+            ? "rgba(255,0,0,0.16)"
+            : "rgba(0,120,255,0.08)",
+          stroke: node._containsObstacle
+            ? "rgba(255,0,0,0.35)"
+            : "rgba(0,120,255,0.28)",
+        })),
         ...this.expandedNodes.map((node): Rect => {
-          const edgeIndex = getGapFillExpandedNodeEdgeIndex(node)
+          const edgeIndex = getGapFillExpandedNodeEdgeIndex(node);
           const edge =
-            edgeIndex === null ? null : (edgeByIndex[edgeIndex] ?? null)
+            edgeIndex === null ? null : (edgeByIndex[edgeIndex] ?? null);
 
           return {
             ...createRectFromCapacityNode(node, {
@@ -440,7 +438,7 @@ export class ExpandUnconnectedEdgesToMesh extends BaseSolver {
               node.capacityMeshNodeId,
               `z:${node.availableZ.join(",")}`,
             ].join("\n"),
-          }
+          };
         }),
       ],
       lines: [
@@ -456,7 +454,7 @@ export class ExpandUnconnectedEdgesToMesh extends BaseSolver {
           }),
         ),
         ...this.inputProblem.edgesWithObstacle.map((edgeWithObstacle): Line => {
-          const midpoint = getGapFillEdgeMidpoint(edgeWithObstacle)
+          const midpoint = getGapFillEdgeMidpoint(edgeWithObstacle);
           return {
             points: [
               midpoint,
@@ -468,7 +466,7 @@ export class ExpandUnconnectedEdgesToMesh extends BaseSolver {
             strokeColor: getGapFillEdgeColor(edgeWithObstacle, 0.7),
             strokeWidth: 0.016,
             strokeDash: "3 3",
-          }
+          };
         }),
       ],
       points: this.inputProblem.edgesWithObstacle.map(
@@ -478,6 +476,6 @@ export class ExpandUnconnectedEdgesToMesh extends BaseSolver {
           label: getGapFillEdgeVisualId(edgeWithObstacle, visualEdges),
         }),
       ),
-    }
+    };
   }
 }

@@ -1,5 +1,5 @@
-import { expect, test } from "bun:test"
-import { renderProfileComparison } from "../scripts/profile/profile-comparison"
+import { expect, test } from "bun:test";
+import { renderProfileComparison } from "../scripts/profile/profile-comparison";
 
 test("profile comparison renders paired percentiles and hides small stages", () => {
   const createReport = (route: number, repair: number, small: number) => ({
@@ -16,7 +16,7 @@ test("profile comparison renders paired percentiles and hides small stages", () 
         { solverName: "smallSolver", timeMs: small },
       ],
     })),
-  })
+  });
 
   const output = renderProfileComparison({
     mainReport: createReport(79, 20, 1),
@@ -25,13 +25,13 @@ test("profile comparison renders paired percentiles and hides small stages", () 
     prSha: "abcdef1234",
     repository: "tscircuit/tscircuit-autorouter",
     runnerName: "blacksmith-test-runner",
-  })
+  });
 
   expect(output).toContain(
     "| routeSolver | 79.0% | 69.0% | 79.0% | 69.0% | 79.0% | 69.0% |",
-  )
+  );
   expect(output).toContain(
     "| repairSolver | 20.0% | 30.0% | 20.0% | 30.0% | 20.0% | 30.0% |",
-  )
-  expect(output).not.toContain("| smallSolver |")
-})
+  );
+  expect(output).not.toContain("| smallSolver |");
+});

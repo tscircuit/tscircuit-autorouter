@@ -1,56 +1,56 @@
-import type { GraphicsObject } from "graphics-debug"
-import { BaseSolver } from "lib/solvers/BaseSolver"
-import { computeProjectedRect } from "./geometry"
+import type { GraphicsObject } from "graphics-debug";
+import { BaseSolver } from "lib/solvers/BaseSolver";
+import { computeProjectedRect } from "./geometry";
 import {
   getRequiredRoutingCorridorWidth,
   shouldClampProjectionExpansion,
-} from "./shouldClampProjectionExpansion"
-import type { PolyNodeWithPortPoints } from "./types"
+} from "./shouldClampProjectionExpansion";
+import type { PolyNodeWithPortPoints } from "./types";
 
 export class AttachProjectedRectsSolver extends BaseSolver {
   override getSolverName(): string {
-    return "AttachProjectedRectsSolver"
+    return "AttachProjectedRectsSolver";
   }
 
-  outputNodes: PolyNodeWithPortPoints[] = []
-  projectionAdjustmentByNodeId = new Map<string, string>()
+  outputNodes: PolyNodeWithPortPoints[] = [];
+  projectionAdjustmentByNodeId = new Map<string, string>();
 
   constructor(
     public params: {
-      nodesWithPortPoints: PolyNodeWithPortPoints[]
-      equivalentAreaExpansionFactor?: number
-      minProjectedRectDimension?: number
-      traceWidth?: number
-      viaDiameter?: number
-      obstacleMargin?: number
+      nodesWithPortPoints: PolyNodeWithPortPoints[];
+      equivalentAreaExpansionFactor?: number;
+      minProjectedRectDimension?: number;
+      traceWidth?: number;
+      viaDiameter?: number;
+      obstacleMargin?: number;
     },
   ) {
-    super()
-    this.MAX_ITERATIONS = 1
+    super();
+    this.MAX_ITERATIONS = 1;
   }
 
   _step() {
-    this.projectionAdjustmentByNodeId.clear()
+    this.projectionAdjustmentByNodeId.clear();
     this.outputNodes = this.params.nodesWithPortPoints.map((node) => {
       const requestedExpansionFactor =
-        this.params.equivalentAreaExpansionFactor ?? 0
+        this.params.equivalentAreaExpansionFactor ?? 0;
       const minProjectedRectDimension =
-        this.params.minProjectedRectDimension ?? 0
+        this.params.minProjectedRectDimension ?? 0;
       const requiredRoutingCorridorWidth = getRequiredRoutingCorridorWidth({
         traceWidth: this.params.traceWidth,
         viaDiameter: this.params.viaDiameter,
         obstacleMargin: this.params.obstacleMargin,
         minProjectedRectDimension,
-      })
+      });
       let projectedRect = computeProjectedRect(
         node.polygon,
         requestedExpansionFactor,
         minProjectedRectDimension,
-      )
+      );
 
-      const minDimension = Math.min(projectedRect.width, projectedRect.height)
+      const minDimension = Math.min(projectedRect.width, projectedRect.height);
       const nextTraceLaneWidth =
-        requiredRoutingCorridorWidth + (this.params.traceWidth ?? 0)
+        requiredRoutingCorridorWidth + (this.params.traceWidth ?? 0);
       if (minDimension > nextTraceLaneWidth) {
         return {
           ...node,
@@ -58,14 +58,14 @@ export class AttachProjectedRectsSolver extends BaseSolver {
           width: projectedRect.width,
           height: projectedRect.height,
           projectedRect,
-        }
+        };
       }
 
       const conservativeProjectedRect = computeProjectedRect(
         node.polygon,
         1,
         minProjectedRectDimension,
-      )
+      );
 
       if (
         shouldClampProjectionExpansion({
@@ -76,11 +76,11 @@ export class AttachProjectedRectsSolver extends BaseSolver {
           traceWidth: this.params.traceWidth,
         })
       ) {
-        projectedRect = conservativeProjectedRect
+        projectedRect = conservativeProjectedRect;
         this.projectionAdjustmentByNodeId.set(
           node.capacityMeshNodeId,
           "corridor-expansion-factor-1",
-        )
+        );
       }
 
       return {
@@ -89,24 +89,24 @@ export class AttachProjectedRectsSolver extends BaseSolver {
         width: projectedRect.width,
         height: projectedRect.height,
         projectedRect,
-      }
-    })
-    this.solved = true
+      };
+    });
+    this.solved = true;
   }
 
   getOutput() {
-    return this.outputNodes
+    return this.outputNodes;
   }
 
   getConstructorParams() {
-    return [this.params] as const
+    return [this.params] as const;
   }
 
   visualize(): GraphicsObject {
     const nodes =
       this.outputNodes.length > 0
         ? this.outputNodes
-        : this.params.nodesWithPortPoints
+        : this.params.nodesWithPortPoints;
 
     return {
       polygons: nodes.map((node) => ({
@@ -145,6 +145,6 @@ export class AttachProjectedRectsSolver extends BaseSolver {
           label: point.connectionName,
         })),
       ),
-    }
+    };
   }
 }

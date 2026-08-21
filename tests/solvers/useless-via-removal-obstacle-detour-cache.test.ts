@@ -1,9 +1,9 @@
-import { expect, test } from "bun:test"
-import { ConnectivityMap } from "circuit-json-to-connectivity-map"
-import { HighDensityRouteSpatialIndex } from "lib/data-structures/HighDensityRouteSpatialIndex"
-import { ObstacleSpatialHashIndex } from "lib/data-structures/ObstacleTree"
-import { SingleRouteUselessViaRemovalSolver } from "lib/solvers/UselessViaRemovalSolver/SingleRouteUselessViaRemovalSolver"
-import type { HighDensityRoute } from "lib/types/high-density-types"
+import { expect, test } from "bun:test";
+import { ConnectivityMap } from "circuit-json-to-connectivity-map";
+import { HighDensityRouteSpatialIndex } from "lib/data-structures/HighDensityRouteSpatialIndex";
+import { ObstacleSpatialHashIndex } from "lib/data-structures/ObstacleTree";
+import { SingleRouteUselessViaRemovalSolver } from "lib/solvers/UselessViaRemovalSolver/SingleRouteUselessViaRemovalSolver";
+import type { HighDensityRoute } from "lib/types/high-density-types";
 
 test("reuses segment clearance while still finding late detours", () => {
   const route: HighDensityRoute = {
@@ -22,7 +22,7 @@ test("reuses segment clearance while still finding late detours", () => {
       { x: -1, y: 0 },
       { x: 1, y: 0 },
     ],
-  }
+  };
   const blockingRoute: HighDensityRoute = {
     connectionName: "blocking_net",
     traceThickness: 0.15,
@@ -32,16 +32,16 @@ test("reuses segment clearance while still finding late detours", () => {
       { x: 0, y: 0.2, z: 0 },
     ],
     vias: [],
-  }
-  const hdRouteSHI = new HighDensityRouteSpatialIndex([route, blockingRoute])
+  };
+  const hdRouteSHI = new HighDensityRouteSpatialIndex([route, blockingRoute]);
   const originalGetConflicts =
-    hdRouteSHI.getConflictingRoutesForSegment.bind(hdRouteSHI)
-  let detourGenerationStarted = false
-  let segmentClearanceQueries = 0
+    hdRouteSHI.getConflictingRoutesForSegment.bind(hdRouteSHI);
+  let detourGenerationStarted = false;
+  let segmentClearanceQueries = 0;
   hdRouteSHI.getConflictingRoutesForSegment = (...args) => {
-    if (detourGenerationStarted) segmentClearanceQueries++
-    return originalGetConflicts(...args)
-  }
+    if (detourGenerationStarted) segmentClearanceQueries++;
+    return originalGetConflicts(...args);
+  };
   const solver = new SingleRouteUselessViaRemovalSolver({
     obstacleSHI: new ObstacleSpatialHashIndex("flatbush", []),
     hdRouteSHI,
@@ -52,15 +52,15 @@ test("reuses segment clearance while still finding late detours", () => {
     }),
     enableGeometryShortcuts: false,
     enableObstacleDetourShortcuts: true,
-  })
+  });
   const instrumentedSolver = solver as unknown as {
     getObstacleDetourPaths: () => Array<{
-      path: HighDensityRoute["route"]
-      length: number
-    }>
-  }
+      path: HighDensityRoute["route"];
+      length: number;
+    }>;
+  };
   instrumentedSolver.getObstacleDetourPaths = () => {
-    detourGenerationStarted = true
+    detourGenerationStarted = true;
     return [
       ...Array.from({ length: 1_000 }, () => ({
         path: [
@@ -78,12 +78,12 @@ test("reuses segment clearance while still finding late detours", () => {
         ],
         length: 3,
       },
-    ]
-  }
+    ];
+  };
 
-  solver.solve()
+  solver.solve();
 
-  expect(solver.getOptimizedHdRoute().vias).toEqual([])
-  expect(solver.stats.obstacleDetourCandidatesValidated).toBeGreaterThan(256)
-  expect(segmentClearanceQueries).toBe(4)
-})
+  expect(solver.getOptimizedHdRoute().vias).toEqual([]);
+  expect(solver.stats.obstacleDetourCandidatesValidated).toBeGreaterThan(256);
+  expect(segmentClearanceQueries).toBe(4);
+});

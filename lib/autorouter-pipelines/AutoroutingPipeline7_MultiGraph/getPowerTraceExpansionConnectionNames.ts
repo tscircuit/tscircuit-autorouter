@@ -1,7 +1,7 @@
-import type { SimpleRouteJson } from "lib/types"
+import type { SimpleRouteJson } from "lib/types";
 
-const MINIMUM_POWER_WIDTH_INCREASE_MM = 0.1
-const MINIMUM_POWER_WIDTH_RATIO = 2
+const MINIMUM_POWER_WIDTH_INCREASE_MM = 0.1;
+const MINIMUM_POWER_WIDTH_RATIO = 2;
 
 /**
  * Select connections whose requested width is materially larger than the
@@ -14,10 +14,12 @@ export const getPowerTraceExpansionConnectionNames = (
   const minimumPowerWidth = Math.max(
     srj.minTraceWidth + MINIMUM_POWER_WIDTH_INCREASE_MM,
     srj.minTraceWidth * MINIMUM_POWER_WIDTH_RATIO,
-  )
+  );
   return srj.connections.flatMap((connection) => {
     const nominalWidth =
-      connection.nominalTraceWidth ?? srj.nominalTraceWidth ?? srj.minTraceWidth
-    return nominalWidth + 1e-6 >= minimumPowerWidth ? [connection.name] : []
-  })
-}
+      connection.nominalTraceWidth ??
+      srj.nominalTraceWidth ??
+      srj.minTraceWidth;
+    return nominalWidth + 1e-6 >= minimumPowerWidth ? [connection.name] : [];
+  });
+};

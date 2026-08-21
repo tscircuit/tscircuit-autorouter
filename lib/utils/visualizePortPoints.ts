@@ -1,24 +1,24 @@
-import type { GraphicsObject } from "graphics-debug"
+import type { GraphicsObject } from "graphics-debug";
 
 export interface VisualizablePortPoint {
-  id: string
-  x: number
-  y: number
+  id: string;
+  x: number;
+  y: number;
   /** Single z value or array of z values */
-  z: number | number[]
+  z: number | number[];
   /** Connection name if assigned, null/undefined if unassigned */
-  connectionName?: string | null
+  connectionName?: string | null;
 }
 
 export interface VisualizePortPointsOptions {
   /** Radius for port point circles */
-  radius: number
+  radius: number;
   /** Color map for assigned connections */
-  colorMap: Record<string, string>
+  colorMap: Record<string, string>;
   /** Color for unassigned port points */
-  unassignedColor?: string
+  unassignedColor?: string;
   /** Whether to include z values in the label */
-  includeZInLabel?: boolean
+  includeZInLabel?: boolean;
 }
 
 /**
@@ -38,31 +38,31 @@ export function visualizePortPoints(
     colorMap,
     unassignedColor = "rgba(150, 150, 150, 0.5)",
     includeZInLabel = false,
-  } = options
+  } = options;
 
   if (!graphics.circles) {
-    graphics.circles = []
+    graphics.circles = [];
   }
 
   for (const portPoint of portPoints) {
     const isAssigned =
       portPoint.connectionName !== null &&
-      portPoint.connectionName !== undefined
+      portPoint.connectionName !== undefined;
     const color = isAssigned
       ? (colorMap[portPoint.connectionName!] ?? "blue")
-      : unassignedColor
+      : unassignedColor;
 
     const zValue = Array.isArray(portPoint.z)
       ? portPoint.z.join(",")
-      : String(portPoint.z)
+      : String(portPoint.z);
 
-    let label: string
+    let label: string;
     if (isAssigned) {
       label = includeZInLabel
         ? `${portPoint.id}\n${portPoint.connectionName}\n${zValue}`
-        : `${portPoint.id}\n${portPoint.connectionName}`
+        : `${portPoint.id}\n${portPoint.connectionName}`;
     } else {
-      label = includeZInLabel ? `${portPoint.id}\n${zValue}` : portPoint.id
+      label = includeZInLabel ? `${portPoint.id}\n${zValue}` : portPoint.id;
     }
 
     graphics.circles.push({
@@ -71,6 +71,6 @@ export function visualizePortPoints(
       fill: color,
       layer: `z${zValue}`,
       label,
-    })
+    });
   }
 }

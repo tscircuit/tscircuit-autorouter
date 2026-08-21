@@ -1,86 +1,84 @@
 #!/usr/bin/env bun
 
-import { existsSync } from "node:fs"
+import { existsSync } from "node:fs";
 import type {
   BenchmarkBestViaCellsReport,
   BenchmarkBestViasReport,
   BestViaCountCell,
   BestViaCountRecord,
   WorkerResult,
-} from "./benchmark-types"
+} from "./benchmark-types";
 
 export type ParsedBenchmarkReport = {
-  version: 1
-  datasetName: string
-  tests: WorkerResult[]
-}
+  version: 1;
+  datasetName: string;
+  tests: WorkerResult[];
+};
 
 export type BenchmarkReportCollection = {
-  version: number
-  kind: "benchmark-report-collection"
-  reports: ParsedBenchmarkReport[]
-}
+  version: number;
+  kind: "benchmark-report-collection";
+  reports: ParsedBenchmarkReport[];
+};
 
 type WriteBestViasCommand = {
-  command: "write-from-report"
-  reportPath: string
-  outputPath: string
-}
+  command: "write-from-report";
+  reportPath: string;
+  outputPath: string;
+};
 
 type MergeBestViasCommand = {
-  command: "merge"
-  previousPath: string
-  currentPath: string
-  outputPath: string
-}
+  command: "merge";
+  previousPath: string;
+  currentPath: string;
+  outputPath: string;
+};
 
 type WriteBestViaCellsCommand = {
-  command: "write-cells"
-  bestViasPath: string
-  reportPath: string
-  outputPath: string
-}
+  command: "write-cells";
+  bestViasPath: string;
+  reportPath: string;
+  outputPath: string;
+};
 
 type BestViasCommand =
-  | WriteBestViasCommand
-  | MergeBestViasCommand
-  | WriteBestViaCellsCommand
+  WriteBestViasCommand | MergeBestViasCommand | WriteBestViaCellsCommand;
 
 export type BestViaCountComparison =
   | {
-      kind: "missing_via_count"
+      kind: "missing_via_count";
     }
   | {
-      kind: "no_known_best"
-      viaCount: number
+      kind: "no_known_best";
+      viaCount: number;
     }
   | {
-      kind: "better_than_best"
-      viaCount: number
-      deltaViaCount: number
+      kind: "better_than_best";
+      viaCount: number;
+      deltaViaCount: number;
     }
   | {
-      kind: "worse_than_best"
-      viaCount: number
-      deltaViaCount: number
+      kind: "worse_than_best";
+      viaCount: number;
+      deltaViaCount: number;
     }
   | {
-      kind: "matches_best"
-      viaCount: number
-    }
+      kind: "matches_best";
+      viaCount: number;
+    };
 
 const emptyBestViasReport = (): BenchmarkBestViasReport => ({
   version: 1,
   kind: "benchmark-best-vias",
   records: [],
-})
+});
 
 const isObjectRecord = (input: unknown): input is Record<string, unknown> =>
-  typeof input === "object" && input !== null
+  typeof input === "object" && input !== null;
 
 const isBestViaCountRecord = (input: unknown): input is BestViaCountRecord => {
   if (!isObjectRecord(input)) {
-    return false
+    return false;
   }
 
   return (
@@ -90,12 +88,12 @@ const isBestViaCountRecord = (input: unknown): input is BestViaCountRecord => {
     typeof input.sampleNumber === "number" &&
     typeof input.viaCount === "number" &&
     typeof input.elapsedTimeMs === "number"
-  )
-}
+  );
+};
 
 const isWorkerResult = (input: unknown): input is WorkerResult => {
   if (!isObjectRecord(input)) {
-    return false
+    return false;
   }
 
   return (
@@ -106,14 +104,14 @@ const isWorkerResult = (input: unknown): input is WorkerResult => {
     typeof input.didSolve === "boolean" &&
     typeof input.didTimeout === "boolean" &&
     typeof input.relaxedDrcPassed === "boolean"
-  )
-}
+  );
+};
 
 const isBenchmarkBestViasReport = (
   input: unknown,
 ): input is BenchmarkBestViasReport => {
   if (!isObjectRecord(input)) {
-    return false
+    return false;
   }
 
   return (
@@ -121,14 +119,14 @@ const isBenchmarkBestViasReport = (
     input.kind === "benchmark-best-vias" &&
     Array.isArray(input.records) &&
     input.records.every(isBestViaCountRecord)
-  )
-}
+  );
+};
 
 const isParsedBenchmarkReport = (
   input: unknown,
 ): input is ParsedBenchmarkReport => {
   if (!isObjectRecord(input)) {
-    return false
+    return false;
   }
 
   return (
@@ -136,49 +134,49 @@ const isParsedBenchmarkReport = (
     typeof input.datasetName === "string" &&
     Array.isArray(input.tests) &&
     input.tests.every(isWorkerResult)
-  )
-}
+  );
+};
 
 const isBenchmarkReportCollection = (
   input: unknown,
 ): input is BenchmarkReportCollection => {
   if (!isObjectRecord(input)) {
-    return false
+    return false;
   }
 
   return (
     input.kind === "benchmark-report-collection" &&
     Array.isArray(input.reports) &&
     input.reports.every(isParsedBenchmarkReport)
-  )
-}
+  );
+};
 
 const hasBetterViaCount = ({
   candidateRecord,
   currentRecord,
 }: {
-  candidateRecord: BestViaCountRecord
-  currentRecord: BestViaCountRecord | undefined
+  candidateRecord: BestViaCountRecord;
+  currentRecord: BestViaCountRecord | undefined;
 }) => {
   if (!currentRecord) {
-    return true
+    return true;
   }
 
   if (candidateRecord.viaCount !== currentRecord.viaCount) {
-    return candidateRecord.viaCount < currentRecord.viaCount
+    return candidateRecord.viaCount < currentRecord.viaCount;
   }
 
-  return candidateRecord.elapsedTimeMs < currentRecord.elapsedTimeMs
-}
+  return candidateRecord.elapsedTimeMs < currentRecord.elapsedTimeMs;
+};
 
 export const makeBestViaCountsFromResults = ({
   results,
   datasetName,
 }: {
-  results: WorkerResult[]
-  datasetName: string
+  results: WorkerResult[];
+  datasetName: string;
 }): BestViaCountRecord[] => {
-  const bestRecordByScenarioName = new Map<string, BestViaCountRecord>()
+  const bestRecordByScenarioName = new Map<string, BestViaCountRecord>();
 
   for (const result of results) {
     if (
@@ -186,7 +184,7 @@ export const makeBestViaCountsFromResults = ({
       !result.relaxedDrcPassed ||
       typeof result.viaCount !== "number"
     ) {
-      continue
+      continue;
     }
 
     const candidateRecord: BestViaCountRecord = {
@@ -196,19 +194,19 @@ export const makeBestViaCountsFromResults = ({
       sampleNumber: result.sampleNumber,
       viaCount: result.viaCount,
       elapsedTimeMs: result.elapsedTimeMs,
-    }
-    const currentRecord = bestRecordByScenarioName.get(result.scenarioName)
+    };
+    const currentRecord = bestRecordByScenarioName.get(result.scenarioName);
 
     if (hasBetterViaCount({ candidateRecord, currentRecord })) {
-      bestRecordByScenarioName.set(result.scenarioName, candidateRecord)
+      bestRecordByScenarioName.set(result.scenarioName, candidateRecord);
     }
   }
 
   return [...bestRecordByScenarioName.values()].sort(
     (firstRecord, secondRecord) =>
       firstRecord.sampleNumber - secondRecord.sampleNumber,
-  )
-}
+  );
+};
 
 const getBestViaRecordsFromReport = (
   benchmarkReport: ParsedBenchmarkReport,
@@ -216,8 +214,8 @@ const getBestViaRecordsFromReport = (
   return makeBestViaCountsFromResults({
     results: benchmarkReport.tests,
     datasetName: benchmarkReport.datasetName,
-  })
-}
+  });
+};
 
 export const getBestViaRecordsFromBenchmarkOutput = (
   benchmarkOutput: ParsedBenchmarkReport | BenchmarkReportCollection,
@@ -225,31 +223,31 @@ export const getBestViaRecordsFromBenchmarkOutput = (
   if (isBenchmarkReportCollection(benchmarkOutput)) {
     return benchmarkOutput.reports.flatMap((benchmarkReport) =>
       getBestViaRecordsFromReport(benchmarkReport),
-    )
+    );
   }
 
-  return getBestViaRecordsFromReport(benchmarkOutput)
-}
+  return getBestViaRecordsFromReport(benchmarkOutput);
+};
 
 export const mergeBestViasReports = ({
   previousBestViasReport,
   benchmarkOutput,
 }: {
-  previousBestViasReport: BenchmarkBestViasReport
-  benchmarkOutput: ParsedBenchmarkReport | BenchmarkReportCollection
+  previousBestViasReport: BenchmarkBestViasReport;
+  benchmarkOutput: ParsedBenchmarkReport | BenchmarkReportCollection;
 }): BenchmarkBestViasReport => {
-  const bestRecordByCircuitKey = new Map<string, BestViaCountRecord>()
+  const bestRecordByCircuitKey = new Map<string, BestViaCountRecord>();
   const recordsToMerge = [
     ...previousBestViasReport.records,
     ...getBestViaRecordsFromBenchmarkOutput(benchmarkOutput),
-  ]
+  ];
 
   for (const candidateRecord of recordsToMerge) {
-    const circuitKey = `${candidateRecord.datasetName}::${candidateRecord.scenarioName}`
-    const currentRecord = bestRecordByCircuitKey.get(circuitKey)
+    const circuitKey = `${candidateRecord.datasetName}::${candidateRecord.scenarioName}`;
+    const currentRecord = bestRecordByCircuitKey.get(circuitKey);
 
     if (hasBetterViaCount({ candidateRecord, currentRecord })) {
-      bestRecordByCircuitKey.set(circuitKey, candidateRecord)
+      bestRecordByCircuitKey.set(circuitKey, candidateRecord);
     }
   }
 
@@ -259,14 +257,16 @@ export const mergeBestViasReports = ({
     records: [...bestRecordByCircuitKey.values()].sort(
       (firstRecord, secondRecord) => {
         if (firstRecord.datasetName !== secondRecord.datasetName) {
-          return firstRecord.datasetName.localeCompare(secondRecord.datasetName)
+          return firstRecord.datasetName.localeCompare(
+            secondRecord.datasetName,
+          );
         }
 
-        return firstRecord.sampleNumber - secondRecord.sampleNumber
+        return firstRecord.sampleNumber - secondRecord.sampleNumber;
       },
     ),
-  }
-}
+  };
+};
 
 export const makeBestViasReportFromBenchmarkOutput = (
   benchmarkOutput: ParsedBenchmarkReport | BenchmarkReportCollection,
@@ -274,65 +274,65 @@ export const makeBestViasReportFromBenchmarkOutput = (
   version: 1,
   kind: "benchmark-best-vias",
   records: getBestViaRecordsFromBenchmarkOutput(benchmarkOutput),
-})
+});
 
 export const buildBestViaCountIndex = ({
   bestViasReport,
   datasetName,
 }: {
-  bestViasReport: BenchmarkBestViasReport
-  datasetName: string
+  bestViasReport: BenchmarkBestViasReport;
+  datasetName: string;
 }): Map<string, BestViaCountRecord> => {
-  const bestRecordByScenarioName = new Map<string, BestViaCountRecord>()
+  const bestRecordByScenarioName = new Map<string, BestViaCountRecord>();
 
   for (const candidateRecord of bestViasReport.records) {
     if (candidateRecord.datasetName !== datasetName) {
-      continue
+      continue;
     }
 
     const currentRecord = bestRecordByScenarioName.get(
       candidateRecord.scenarioName,
-    )
+    );
 
     if (hasBetterViaCount({ candidateRecord, currentRecord })) {
       bestRecordByScenarioName.set(
         candidateRecord.scenarioName,
         candidateRecord,
-      )
+      );
     }
   }
 
-  return bestRecordByScenarioName
-}
+  return bestRecordByScenarioName;
+};
 
 const compareViaCountToBest = ({
   workerResult,
   bestViaCountIndex,
 }: {
-  workerResult: WorkerResult
-  bestViaCountIndex: Map<string, BestViaCountRecord>
+  workerResult: WorkerResult;
+  bestViaCountIndex: Map<string, BestViaCountRecord>;
 }): BestViaCountComparison => {
   if (typeof workerResult.viaCount !== "number") {
     return {
       kind: "missing_via_count",
-    }
+    };
   }
 
-  const bestRecord = bestViaCountIndex.get(workerResult.scenarioName)
+  const bestRecord = bestViaCountIndex.get(workerResult.scenarioName);
   if (!bestRecord) {
     return {
       kind: "no_known_best",
       viaCount: workerResult.viaCount,
-    }
+    };
   }
 
-  const deltaViaCount = workerResult.viaCount - bestRecord.viaCount
+  const deltaViaCount = workerResult.viaCount - bestRecord.viaCount;
   if (deltaViaCount < 0) {
     return {
       kind: "better_than_best",
       viaCount: workerResult.viaCount,
       deltaViaCount,
-    }
+    };
   }
 
   if (deltaViaCount > 0) {
@@ -340,45 +340,45 @@ const compareViaCountToBest = ({
       kind: "worse_than_best",
       viaCount: workerResult.viaCount,
       deltaViaCount,
-    }
+    };
   }
 
   return {
     kind: "matches_best",
     viaCount: workerResult.viaCount,
-  }
-}
+  };
+};
 
 export const formatBestViaCountCell = ({
   comparison,
 }: {
-  comparison: BestViaCountComparison
+  comparison: BestViaCountComparison;
 }): string => {
   switch (comparison.kind) {
     case "missing_via_count":
-      return ""
+      return "";
     case "no_known_best":
-      return String(comparison.viaCount)
+      return String(comparison.viaCount);
     case "better_than_best":
-      return `${comparison.viaCount} (${comparison.deltaViaCount}, better)`
+      return `${comparison.viaCount} (${comparison.deltaViaCount}, better)`;
     case "worse_than_best":
-      return `${comparison.viaCount} (+${comparison.deltaViaCount}, worse)`
+      return `${comparison.viaCount} (+${comparison.deltaViaCount}, worse)`;
     case "matches_best":
-      return `${comparison.viaCount} (=best)`
+      return `${comparison.viaCount} (=best)`;
   }
-}
+};
 
 const makeBestViaCellsForReport = ({
   benchmarkReport,
   bestViasReport,
 }: {
-  benchmarkReport: ParsedBenchmarkReport
-  bestViasReport: BenchmarkBestViasReport
+  benchmarkReport: ParsedBenchmarkReport;
+  bestViasReport: BenchmarkBestViasReport;
 }): BestViaCountCell[] => {
   const bestViaCountIndex = buildBestViaCountIndex({
     bestViasReport,
     datasetName: benchmarkReport.datasetName,
-  })
+  });
 
   return benchmarkReport.tests.map((workerResult) => ({
     datasetName: benchmarkReport.datasetName,
@@ -390,15 +390,15 @@ const makeBestViaCellsForReport = ({
         bestViaCountIndex,
       }),
     }),
-  }))
-}
+  }));
+};
 
 export const makeBestViaCellsReport = ({
   benchmarkOutput,
   bestViasReport,
 }: {
-  benchmarkOutput: ParsedBenchmarkReport | BenchmarkReportCollection
-  bestViasReport: BenchmarkBestViasReport
+  benchmarkOutput: ParsedBenchmarkReport | BenchmarkReportCollection;
+  bestViasReport: BenchmarkBestViasReport;
 }): BenchmarkBestViaCellsReport => ({
   version: 1,
   kind: "benchmark-best-via-cells",
@@ -410,84 +410,84 @@ export const makeBestViaCellsReport = ({
         benchmarkReport: benchmarkOutput,
         bestViasReport,
       }),
-})
+});
 
 const readJsonFile = async (filePath: string): Promise<unknown> => {
   if (!existsSync(filePath)) {
-    return null
+    return null;
   }
 
-  const rawJson = await Bun.file(filePath).text()
+  const rawJson = await Bun.file(filePath).text();
   if (!rawJson.trim()) {
-    return null
+    return null;
   }
 
-  return JSON.parse(rawJson)
-}
+  return JSON.parse(rawJson);
+};
 
 const readBestViasReport = async (
   filePath: string,
 ): Promise<BenchmarkBestViasReport> => {
-  const parsedJson = await readJsonFile(filePath)
+  const parsedJson = await readJsonFile(filePath);
 
   if (!isBenchmarkBestViasReport(parsedJson)) {
-    return emptyBestViasReport()
+    return emptyBestViasReport();
   }
 
-  return parsedJson
-}
+  return parsedJson;
+};
 
 const readBenchmarkOutput = async (
   filePath: string,
 ): Promise<ParsedBenchmarkReport | BenchmarkReportCollection> => {
-  const parsedJson = await readJsonFile(filePath)
+  const parsedJson = await readJsonFile(filePath);
 
   if (
     isParsedBenchmarkReport(parsedJson) ||
     isBenchmarkReportCollection(parsedJson)
   ) {
-    return parsedJson
+    return parsedJson;
   }
 
-  throw new Error(`Invalid benchmark report: ${filePath}`)
-}
+  throw new Error(`Invalid benchmark report: ${filePath}`);
+};
 
 const getFlagValue = ({
   args,
   flagName,
 }: {
-  args: string[]
-  flagName: string
+  args: string[];
+  flagName: string;
 }) => {
-  const flagIndex = args.indexOf(flagName)
-  return flagIndex === -1 ? undefined : args[flagIndex + 1]
-}
+  const flagIndex = args.indexOf(flagName);
+  return flagIndex === -1 ? undefined : args[flagIndex + 1];
+};
 
 const parseBestViasCommand = (args: string[]): BestViasCommand => {
-  const command = args[0]
+  const command = args[0];
 
   if (command === "write-from-report") {
-    const reportPath = getFlagValue({ args, flagName: "--report" })
-    const outputPath = getFlagValue({ args, flagName: "--out" })
+    const reportPath = getFlagValue({ args, flagName: "--report" });
+    const outputPath = getFlagValue({ args, flagName: "--out" });
 
     if (!reportPath || !outputPath) {
-      throw new Error("write-from-report requires --report and --out")
+      throw new Error("write-from-report requires --report and --out");
     }
 
     return {
       command,
       reportPath,
       outputPath,
-    }
+    };
   }
 
   if (command === "merge") {
-    const previousPath = getFlagValue({ args, flagName: "--previous" })
-    const currentPath = getFlagValue({ args, flagName: "--current" })
-    const outputPath = getFlagValue({ args, flagName: "--out" })
+    const previousPath = getFlagValue({ args, flagName: "--previous" });
+    const currentPath = getFlagValue({ args, flagName: "--current" });
+    const outputPath = getFlagValue({ args, flagName: "--out" });
 
     if (!previousPath || !currentPath || !outputPath) {
-      throw new Error("merge requires --previous, --current, and --out")
+      throw new Error("merge requires --previous, --current, and --out");
     }
 
     return {
@@ -495,16 +495,16 @@ const parseBestViasCommand = (args: string[]): BestViasCommand => {
       previousPath,
       currentPath,
       outputPath,
-    }
+    };
   }
 
   if (command === "write-cells") {
-    const bestViasPath = getFlagValue({ args, flagName: "--best-vias" })
-    const reportPath = getFlagValue({ args, flagName: "--report" })
-    const outputPath = getFlagValue({ args, flagName: "--out" })
+    const bestViasPath = getFlagValue({ args, flagName: "--best-vias" });
+    const reportPath = getFlagValue({ args, flagName: "--report" });
+    const outputPath = getFlagValue({ args, flagName: "--out" });
 
     if (!bestViasPath || !reportPath || !outputPath) {
-      throw new Error("write-cells requires --best-vias, --report, and --out")
+      throw new Error("write-cells requires --best-vias, --report, and --out");
     }
 
     return {
@@ -512,66 +512,68 @@ const parseBestViasCommand = (args: string[]): BestViasCommand => {
       bestViasPath,
       reportPath,
       outputPath,
-    }
+    };
   }
 
   throw new Error(
     "Usage: bun scripts/benchmark/best-via-counts.ts write-from-report --report benchmark-result.json --out benchmark-best-vias.json",
-  )
-}
+  );
+};
 
 const runBestViasCommand = async (bestViasCommand: BestViasCommand) => {
   if (bestViasCommand.command === "write-from-report") {
     const benchmarkOutput = await readBenchmarkOutput(
       bestViasCommand.reportPath,
-    )
+    );
     const bestViasReport =
-      makeBestViasReportFromBenchmarkOutput(benchmarkOutput)
+      makeBestViasReportFromBenchmarkOutput(benchmarkOutput);
     await Bun.write(
       bestViasCommand.outputPath,
       JSON.stringify(bestViasReport, null, 2),
-    )
-    return
+    );
+    return;
   }
 
   if (bestViasCommand.command === "write-cells") {
     const bestViasReport = await readBestViasReport(
       bestViasCommand.bestViasPath,
-    )
+    );
     const benchmarkOutput = await readBenchmarkOutput(
       bestViasCommand.reportPath,
-    )
+    );
     const bestViaCellsReport = makeBestViaCellsReport({
       benchmarkOutput,
       bestViasReport,
-    })
+    });
 
     await Bun.write(
       bestViasCommand.outputPath,
       JSON.stringify(bestViaCellsReport, null, 2),
-    )
-    return
+    );
+    return;
   }
 
   const previousBestViasReport = await readBestViasReport(
     bestViasCommand.previousPath,
-  )
-  const benchmarkOutput = await readBenchmarkOutput(bestViasCommand.currentPath)
+  );
+  const benchmarkOutput = await readBenchmarkOutput(
+    bestViasCommand.currentPath,
+  );
   const mergedBestViasReport = mergeBestViasReports({
     previousBestViasReport,
     benchmarkOutput,
-  })
+  });
 
   await Bun.write(
     bestViasCommand.outputPath,
     JSON.stringify(mergedBestViasReport, null, 2),
-  )
-}
+  );
+};
 
 if (import.meta.main) {
   runBestViasCommand(parseBestViasCommand(Bun.argv.slice(2))).catch((error) => {
-    const message = error instanceof Error ? error.message : String(error)
-    console.error(message)
-    process.exit(1)
-  })
+    const message = error instanceof Error ? error.message : String(error);
+    console.error(message);
+    process.exit(1);
+  });
 }

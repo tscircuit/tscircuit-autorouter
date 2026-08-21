@@ -1,12 +1,12 @@
-import { expect, test } from "bun:test"
+import { expect, test } from "bun:test";
 import type {
   BenchmarkReport,
   WorkerResult,
-} from "../scripts/benchmark/benchmark-types"
-import { renderBenchmarkComparison } from "../scripts/benchmark/benchmark-comment-comparison.js"
+} from "../scripts/benchmark/benchmark-types";
+import { renderBenchmarkComparison } from "../scripts/benchmark/benchmark-comment-comparison.js";
 
 test("PR benchmark comments render one main-versus-PR comparison table", () => {
-  const solverName = "AutoroutingPipelineSolver7_MultiGraph"
+  const solverName = "AutoroutingPipelineSolver7_MultiGraph";
   const makeTest = (
     sampleNumber: number,
     elapsedTimeMs: number,
@@ -20,7 +20,7 @@ test("PR benchmark comments render one main-versus-PR comparison table", () => {
     didTimeout: false,
     relaxedDrcPassed: true,
     ...overrides,
-  })
+  });
   const makeReport = (
     summary: BenchmarkReport["summary"],
     tests: WorkerResult[],
@@ -35,7 +35,7 @@ test("PR benchmark comments render one main-versus-PR comparison table", () => {
     failureSummary: [],
     snapshots: [],
     tests,
-  })
+  });
   const mainReport = makeReport(
     [
       {
@@ -59,7 +59,7 @@ test("PR benchmark comments render one main-versus-PR comparison table", () => {
         relaxedDrcPassed: false,
       }),
     ],
-  )
+  );
   const prReport = makeReport(
     [
       {
@@ -79,11 +79,10 @@ test("PR benchmark comments render one main-versus-PR comparison table", () => {
         drcErrorCount: 1,
       }),
     ],
-  )
+  );
 
-  expect(
-    renderBenchmarkComparison({ mainReport, prReport }).join("\n"),
-  ).toBe(`Dataset: srj18 · Scenarios: 2 · Effort: 1x effort
+  expect(renderBenchmarkComparison({ mainReport, prReport }).join("\n"))
+    .toBe(`Dataset: srj18 · Scenarios: 2 · Effort: 1x effort
 
 | Solver | Metric | Main | PR | Change |
 | --- | --- | ---: | ---: | ---: |
@@ -99,5 +98,5 @@ test("PR benchmark comments render one main-versus-PR comparison table", () => {
 | Pipeline7 | P95 time | 1.9s | 1.8s | -10.0% |
 | Pipeline7 | Average vias | 2.00 | 2.20 | +10.0% |
 
-_DRC issues are totaled across solved samples. Timing percentiles include solved and timed-out samples; negative timing changes are faster._`)
-})
+_DRC issues are totaled across solved samples. Timing percentiles include solved and timed-out samples; negative timing changes are faster._`);
+});

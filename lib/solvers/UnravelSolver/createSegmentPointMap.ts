@@ -1,29 +1,29 @@
-import { CapacityMeshNodeId } from "lib/types"
-import { SegmentWithAssignedPoints } from "../CapacityMeshSolver/CapacitySegmentToPointSolver"
+import { CapacityMeshNodeId } from "lib/types";
+import { SegmentWithAssignedPoints } from "../CapacityMeshSolver/CapacitySegmentToPointSolver";
 import {
   SegmentId,
   SegmentPoint,
   SegmentPointId,
   SegmentPointMap,
-} from "./types"
+} from "./types";
 
 export type SegmentPointMapAndReverseMaps = {
-  segmentPointMap: SegmentPointMap
-  nodeToSegmentPointMap: Map<CapacityMeshNodeId, SegmentPointId[]>
-  segmentToSegmentPointMap: Map<SegmentId, SegmentPointId[]>
-}
+  segmentPointMap: SegmentPointMap;
+  nodeToSegmentPointMap: Map<CapacityMeshNodeId, SegmentPointId[]>;
+  segmentToSegmentPointMap: Map<SegmentId, SegmentPointId[]>;
+};
 
 export const createSegmentPointMap = (
   dedupedSegments: SegmentWithAssignedPoints[],
   segmentIdToNodeIds: Map<SegmentId, CapacityMeshNodeId[]>,
 ): SegmentPointMapAndReverseMaps => {
-  const segmentPointMap: SegmentPointMap = new Map()
+  const segmentPointMap: SegmentPointMap = new Map();
   const nodeToSegmentPointMap: Map<CapacityMeshNodeId, SegmentPointId[]> =
-    new Map()
-  const segmentToSegmentPointMap: Map<SegmentId, SegmentPointId[]> = new Map()
+    new Map();
+  const segmentToSegmentPointMap: Map<SegmentId, SegmentPointId[]> = new Map();
 
-  const segmentPoints: SegmentPoint[] = []
-  let highestSegmentPointId = 0
+  const segmentPoints: SegmentPoint[] = [];
+  let highestSegmentPointId = 0;
   for (const segment of dedupedSegments) {
     for (const point of segment.assignedPoints!) {
       const sp = {
@@ -38,22 +38,22 @@ export const createSegmentPointMap = (
         y: point.point.y,
         z: point.point.z,
         directlyConnectedSegmentPointIds: [],
-      }
+      };
 
-      segmentPointMap.set(sp.segmentPointId, sp)
+      segmentPointMap.set(sp.segmentPointId, sp);
       for (const nodeId of sp.capacityMeshNodeIds) {
         nodeToSegmentPointMap.set(nodeId, [
           ...(nodeToSegmentPointMap.get(nodeId) ?? []),
           sp.segmentPointId,
-        ])
+        ]);
       }
 
       segmentToSegmentPointMap.set(segment.nodePortSegmentId!, [
         ...(segmentToSegmentPointMap.get(segment.nodePortSegmentId!) ?? []),
         sp.segmentPointId,
-      ])
+      ]);
 
-      segmentPoints.push(sp)
+      segmentPoints.push(sp);
     }
   }
 
@@ -61,5 +61,5 @@ export const createSegmentPointMap = (
     segmentPointMap,
     nodeToSegmentPointMap,
     segmentToSegmentPointMap,
-  }
-}
+  };
+};

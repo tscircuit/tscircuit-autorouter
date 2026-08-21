@@ -3,71 +3,71 @@ import {
   doSegmentsIntersect,
   getSegmentIntersection,
   pointToBoxDistance,
-} from "@tscircuit/math-utils"
-import type { GraphicsObject } from "graphics-debug"
+} from "@tscircuit/math-utils";
+import type { GraphicsObject } from "graphics-debug";
 import {
   type ConnectionPoint,
   type Obstacle,
   type SimpleRouteConnection,
   type SimpleRouteJson,
   isSingleLayerConnectionPoint,
-} from "lib/types"
-import { minimumDistanceBetweenSegments } from "lib/utils/minimumDistanceBetweenSegments"
-import { isPointInRect } from "lib/utils/isPointInRect"
-import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
-import { mapZToLayerName } from "lib/utils/mapZToLayerName"
-import { getPointKey } from "lib/utils/getPointKey"
-import { getViaDimensions } from "lib/utils/getViaDimensions"
+} from "lib/types";
+import { minimumDistanceBetweenSegments } from "lib/utils/minimumDistanceBetweenSegments";
+import { isPointInRect } from "lib/utils/isPointInRect";
+import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ";
+import { mapZToLayerName } from "lib/utils/mapZToLayerName";
+import { getPointKey } from "lib/utils/getPointKey";
+import { getViaDimensions } from "lib/utils/getViaDimensions";
 import {
   doesSegmentCrossPolygonBoundary,
   isPointInOrOnPolygon,
-} from "lib/utils/polygonContainment"
-import { BaseSolver } from "../BaseSolver"
-import { mergeConnections } from "../NetToPointPairsSolver/mergeConnections"
-import { obstacleToSegments } from "../TraceKeepoutSolver/obstacleToSegments"
+} from "lib/utils/polygonContainment";
+import { BaseSolver } from "../BaseSolver";
+import { mergeConnections } from "../NetToPointPairsSolver/mergeConnections";
+import { obstacleToSegments } from "../TraceKeepoutSolver/obstacleToSegments";
 
-const ESCAPE_POINT_ID_PREFIX = "escape-via:"
-const GEOMETRIC_TOLERANCE = 1e-4
-const MAX_PROJECTED_FREE_SPACE_BONUS = 3
+const ESCAPE_POINT_ID_PREFIX = "escape-via:";
+const GEOMETRIC_TOLERANCE = 1e-4;
+const MAX_PROJECTED_FREE_SPACE_BONUS = 3;
 
 type Point2D = {
-  x: number
-  y: number
-}
+  x: number;
+  y: number;
+};
 
 export interface EscapeViaMetadata {
-  pointId: string
-  x: number
-  y: number
-  connectionName: string
-  rootConnectionName: string
-  sourcePointIndex: number
-  sourcePointId?: string
-  sourceLayer: string
-  targetLayer: string
-  targetPourKey: string
+  pointId: string;
+  x: number;
+  y: number;
+  connectionName: string;
+  rootConnectionName: string;
+  sourcePointIndex: number;
+  sourcePointId?: string;
+  sourceLayer: string;
+  targetLayer: string;
+  targetPourKey: string;
 }
 
 interface EscapeViaCandidate extends EscapeViaMetadata {
-  score: number
+  score: number;
 }
 
 interface PointOwner {
-  connection: SimpleRouteConnection
-  pointIndex: number
+  connection: SimpleRouteConnection;
+  pointIndex: number;
 }
 
 export interface EscapeViaLocationSolverOptions {
-  viaDiameter?: number
-  minTraceWidth?: number
-  obstacleMargin?: number
+  viaDiameter?: number;
+  minTraceWidth?: number;
+  obstacleMargin?: number;
 }
 
 interface PointPlacementPlan {
-  point: ConnectionPoint
-  pointOwner: PointOwner
-  sourceObstacle: Obstacle | undefined
-  candidateCount: number
+  point: ConnectionPoint;
+  pointOwner: PointOwner;
+  sourceObstacle: Obstacle | undefined;
+  candidateCount: number;
 }
 
 const getObstacleKey = (obstacle: Obstacle) =>
@@ -78,55 +78,55 @@ const getObstacleKey = (obstacle: Obstacle) =>
     obstacle.center.y.toFixed(4),
     obstacle.width.toFixed(4),
     obstacle.height.toFixed(4),
-  ].join(":")
+  ].join(":");
 
 const pointMatches = (
   a: Point2D,
   b: Point2D,
   tolerance = GEOMETRIC_TOLERANCE,
-) => distance(a, b) <= tolerance
+) => distance(a, b) <= tolerance;
 
 export class EscapeViaLocationSolver extends BaseSolver {
   override getSolverName(): string {
-    return "EscapeViaLocationSolver"
+    return "EscapeViaLocationSolver";
   }
 
-  viaDiameter: number
-  viaRadius: number
-  minTraceWidth: number
-  obstacleMargin: number
-  escapeOffset: number
-  requiredTraceClearance: number
-  requiredViaToPadClearance: number
-  requiredViaToViaClearance: number
-  outputSrj: SimpleRouteJson
-  escapeViaMetadataByPointId: Map<string, EscapeViaMetadata>
-  createdEscapeVias: EscapeViaMetadata[]
-  nextEscapeViaIndex = 0
+  viaDiameter: number;
+  viaRadius: number;
+  minTraceWidth: number;
+  obstacleMargin: number;
+  escapeOffset: number;
+  requiredTraceClearance: number;
+  requiredViaToPadClearance: number;
+  requiredViaToViaClearance: number;
+  outputSrj: SimpleRouteJson;
+  escapeViaMetadataByPointId: Map<string, EscapeViaMetadata>;
+  createdEscapeVias: EscapeViaMetadata[];
+  nextEscapeViaIndex = 0;
 
   constructor(
     public readonly ogSrj: SimpleRouteJson,
     opts: EscapeViaLocationSolverOptions = {},
   ) {
-    super()
-    this.viaDiameter = opts.viaDiameter ?? getViaDimensions(ogSrj).padDiameter
-    this.viaRadius = this.viaDiameter / 2
-    this.minTraceWidth = opts.minTraceWidth ?? ogSrj.minTraceWidth
+    super();
+    this.viaDiameter = opts.viaDiameter ?? getViaDimensions(ogSrj).padDiameter;
+    this.viaRadius = this.viaDiameter / 2;
+    this.minTraceWidth = opts.minTraceWidth ?? ogSrj.minTraceWidth;
     this.obstacleMargin =
-      opts.obstacleMargin ?? ogSrj.defaultObstacleMargin ?? 0.15
+      opts.obstacleMargin ?? ogSrj.defaultObstacleMargin ?? 0.15;
     this.requiredViaToPadClearance = Math.max(
       this.obstacleMargin,
       ogSrj.minViaEdgeToPadEdgeClearance ?? 0,
-    )
+    );
     this.escapeOffset =
       this.viaRadius +
-      Math.max(this.minTraceWidth / 2, this.requiredViaToPadClearance)
+      Math.max(this.minTraceWidth / 2, this.requiredViaToPadClearance);
     this.requiredTraceClearance =
-      this.minTraceWidth / 2 + this.obstacleMargin / 2
-    this.requiredViaToViaClearance = this.viaDiameter + this.obstacleMargin
-    this.outputSrj = ogSrj
-    this.escapeViaMetadataByPointId = new Map()
-    this.createdEscapeVias = []
+      this.minTraceWidth / 2 + this.obstacleMargin / 2;
+    this.requiredViaToViaClearance = this.viaDiameter + this.obstacleMargin;
+    this.outputSrj = ogSrj;
+    this.escapeViaMetadataByPointId = new Map();
+    this.createdEscapeVias = [];
   }
 
   private getConnectionNetIds(connection: SimpleRouteConnection): Set<string> {
@@ -136,56 +136,56 @@ export class EscapeViaLocationSolver extends BaseSolver {
         ...(connection.__rootConnectionNames ?? []),
         connection.__netConnectionName,
       ].filter((id): id is string => Boolean(id)),
-    )
+    );
   }
 
   private obstacleMatchesConnectionNet(
     obstacle: Obstacle,
     connectionNetIds: Set<string>,
   ): boolean {
-    return obstacle.connectedTo.some((id) => connectionNetIds.has(id))
+    return obstacle.connectedTo.some((id) => connectionNetIds.has(id));
   }
 
   private getObstacleZs(obstacle: Obstacle): number[] {
     if (obstacle.__zLayers && obstacle.__zLayers.length > 0) {
-      return obstacle.__zLayers
+      return obstacle.__zLayers;
     }
     return obstacle.layers.map((layer) =>
       mapLayerNameToZ(layer, this.ogSrj.layerCount),
-    )
+    );
   }
 
   private getViaSpanLayers(
     sourceLayer: string,
     targetLayer: string,
   ): {
-    layers: string[]
-    __zLayers: number[]
+    layers: string[];
+    __zLayers: number[];
   } {
-    const sourceZ = mapLayerNameToZ(sourceLayer, this.ogSrj.layerCount)
-    const targetZ = mapLayerNameToZ(targetLayer, this.ogSrj.layerCount)
-    const minZ = Math.min(sourceZ, targetZ)
-    const maxZ = Math.max(sourceZ, targetZ)
+    const sourceZ = mapLayerNameToZ(sourceLayer, this.ogSrj.layerCount);
+    const targetZ = mapLayerNameToZ(targetLayer, this.ogSrj.layerCount);
+    const minZ = Math.min(sourceZ, targetZ);
+    const maxZ = Math.max(sourceZ, targetZ);
     const zLayers = Array.from(
       { length: maxZ - minZ + 1 },
       (_, index) => minZ + index,
-    )
+    );
 
     return {
       __zLayers: zLayers,
       layers: zLayers.map((z) => mapZToLayerName(z, this.ogSrj.layerCount)),
-    }
+    };
   }
 
   private createEscapeViaObstacle(params: {
-    escapeVia: EscapeViaMetadata
-    connectionNetIds: Set<string>
+    escapeVia: EscapeViaMetadata;
+    connectionNetIds: Set<string>;
   }): Obstacle {
-    const { escapeVia, connectionNetIds } = params
+    const { escapeVia, connectionNetIds } = params;
     const { layers, __zLayers } = this.getViaSpanLayers(
       escapeVia.sourceLayer,
       escapeVia.targetLayer,
-    )
+    );
 
     return {
       obstacleId: `escape-via-obstacle:${escapeVia.pointId}`,
@@ -199,15 +199,15 @@ export class EscapeViaLocationSolver extends BaseSolver {
       width: this.viaDiameter,
       height: this.viaDiameter,
       connectedTo: Array.from(connectionNetIds),
-    }
+    };
   }
 
   private selectSourceObstacle(params: {
-    point: ConnectionPoint
-    sourceLayer: string
-    connectionNetIds: Set<string>
+    point: ConnectionPoint;
+    sourceLayer: string;
+    connectionNetIds: Set<string>;
   }): Obstacle | undefined {
-    const { point, sourceLayer, connectionNetIds } = params
+    const { point, sourceLayer, connectionNetIds } = params;
     return this.ogSrj.obstacles
       .filter(
         (obstacle) =>
@@ -219,16 +219,16 @@ export class EscapeViaLocationSolver extends BaseSolver {
         const aDirectHit =
           a.connectedTo.includes(point.pointId ?? "") ||
           a.connectedTo.includes(point.pcb_port_id ?? "") ||
-          this.obstacleMatchesConnectionNet(a, connectionNetIds)
+          this.obstacleMatchesConnectionNet(a, connectionNetIds);
         const bDirectHit =
           b.connectedTo.includes(point.pointId ?? "") ||
           b.connectedTo.includes(point.pcb_port_id ?? "") ||
-          this.obstacleMatchesConnectionNet(b, connectionNetIds)
+          this.obstacleMatchesConnectionNet(b, connectionNetIds);
         if (aDirectHit !== bDirectHit) {
-          return aDirectHit ? -1 : 1
+          return aDirectHit ? -1 : 1;
         }
-        return a.width * a.height - b.width * b.height
-      })[0]
+        return a.width * a.height - b.width * b.height;
+      })[0];
   }
 
   private getCandidatePositions(
@@ -257,40 +257,40 @@ export class EscapeViaLocationSolver extends BaseSolver {
           x: point.x - this.escapeOffset,
           y: point.y - this.escapeOffset,
         },
-      ])
+      ]);
     }
 
-    const minX = sourceObstacle.center.x - sourceObstacle.width / 2
-    const maxX = sourceObstacle.center.x + sourceObstacle.width / 2
-    const minY = sourceObstacle.center.y - sourceObstacle.height / 2
-    const maxY = sourceObstacle.center.y + sourceObstacle.height / 2
-    const leftX = minX - this.escapeOffset
-    const rightX = maxX + this.escapeOffset
-    const bottomY = minY - this.escapeOffset
-    const topY = maxY + this.escapeOffset
-    const ySamples = this.getEdgeSamples(minY, maxY, point.y)
-    const xSamples = this.getEdgeSamples(minX, maxX, point.x)
-    const candidates: Point2D[] = []
+    const minX = sourceObstacle.center.x - sourceObstacle.width / 2;
+    const maxX = sourceObstacle.center.x + sourceObstacle.width / 2;
+    const minY = sourceObstacle.center.y - sourceObstacle.height / 2;
+    const maxY = sourceObstacle.center.y + sourceObstacle.height / 2;
+    const leftX = minX - this.escapeOffset;
+    const rightX = maxX + this.escapeOffset;
+    const bottomY = minY - this.escapeOffset;
+    const topY = maxY + this.escapeOffset;
+    const ySamples = this.getEdgeSamples(minY, maxY, point.y);
+    const xSamples = this.getEdgeSamples(minX, maxX, point.x);
+    const candidates: Point2D[] = [];
 
     for (const y of ySamples) {
-      candidates.push({ x: leftX, y }, { x: rightX, y })
+      candidates.push({ x: leftX, y }, { x: rightX, y });
     }
     for (const x of xSamples) {
-      candidates.push({ x, y: bottomY }, { x, y: topY })
+      candidates.push({ x, y: bottomY }, { x, y: topY });
     }
 
-    return this.dedupeCandidatePositions(candidates)
+    return this.dedupeCandidatePositions(candidates);
   }
 
   private dedupeCandidatePositions(candidates: Point2D[]): Point2D[] {
-    const deduped: Point2D[] = []
+    const deduped: Point2D[] = [];
     for (const candidate of candidates) {
       if (deduped.some((existing) => pointMatches(existing, candidate))) {
-        continue
+        continue;
       }
-      deduped.push(candidate)
+      deduped.push(candidate);
     }
-    return deduped
+    return deduped;
   }
 
   private pushEdgeSample(
@@ -299,16 +299,16 @@ export class EscapeViaLocationSolver extends BaseSolver {
     min: number,
     max: number,
   ) {
-    const clampedValue = Math.max(min, Math.min(max, value))
+    const clampedValue = Math.max(min, Math.min(max, value));
     if (
       samples.some(
         (existingValue) =>
           Math.abs(existingValue - clampedValue) <= GEOMETRIC_TOLERANCE,
       )
     ) {
-      return
+      return;
     }
-    samples.push(clampedValue)
+    samples.push(clampedValue);
   }
 
   private getEdgeSamples(
@@ -316,29 +316,29 @@ export class EscapeViaLocationSolver extends BaseSolver {
     max: number,
     preferred: number,
   ): number[] {
-    const samples: number[] = []
-    const span = max - min
-    this.pushEdgeSample(samples, preferred, min, max)
+    const samples: number[] = [];
+    const span = max - min;
+    this.pushEdgeSample(samples, preferred, min, max);
 
     if (span <= GEOMETRIC_TOLERANCE) {
-      return samples
+      return samples;
     }
 
-    this.pushEdgeSample(samples, min, min, max)
-    this.pushEdgeSample(samples, max, min, max)
-    this.pushEdgeSample(samples, (min + max) / 2, min, max)
+    this.pushEdgeSample(samples, min, min, max);
+    this.pushEdgeSample(samples, max, min, max);
+    this.pushEdgeSample(samples, (min + max) / 2, min, max);
 
-    const clampedPreferred = Math.max(min, Math.min(max, preferred))
-    const step = Math.max(this.requiredViaToViaClearance, GEOMETRIC_TOLERANCE)
-    const stepCount = Math.ceil(span / step)
+    const clampedPreferred = Math.max(min, Math.min(max, preferred));
+    const step = Math.max(this.requiredViaToViaClearance, GEOMETRIC_TOLERANCE);
+    const stepCount = Math.ceil(span / step);
 
     for (let i = 1; i <= stepCount; i++) {
-      const offset = i * step
-      this.pushEdgeSample(samples, clampedPreferred + offset, min, max)
-      this.pushEdgeSample(samples, clampedPreferred - offset, min, max)
+      const offset = i * step;
+      this.pushEdgeSample(samples, clampedPreferred + offset, min, max);
+      this.pushEdgeSample(samples, clampedPreferred - offset, min, max);
     }
 
-    return samples
+    return samples;
   }
 
   private isInsideBoard(candidate: Point2D): boolean {
@@ -346,47 +346,47 @@ export class EscapeViaLocationSolver extends BaseSolver {
       candidate.x >= this.ogSrj.bounds.minX + this.viaRadius &&
       candidate.x <= this.ogSrj.bounds.maxX - this.viaRadius &&
       candidate.y >= this.ogSrj.bounds.minY + this.viaRadius &&
-      candidate.y <= this.ogSrj.bounds.maxY - this.viaRadius
+      candidate.y <= this.ogSrj.bounds.maxY - this.viaRadius;
     if (!withinBounds) {
-      return false
+      return false;
     }
 
     if (this.ogSrj.outline && this.ogSrj.outline.length >= 3) {
-      return isPointInOrOnPolygon(candidate, this.ogSrj.outline)
+      return isPointInOrOnPolygon(candidate, this.ogSrj.outline);
     }
 
-    return true
+    return true;
   }
 
   private hasClearEscapePath(params: {
-    sourcePoint: ConnectionPoint
-    candidate: Point2D
-    sourceLayer: string
-    sourceObstacle?: Obstacle
+    sourcePoint: ConnectionPoint;
+    candidate: Point2D;
+    sourceLayer: string;
+    sourceObstacle?: Obstacle;
   }): boolean {
-    const { sourcePoint, candidate, sourceLayer, sourceObstacle } = params
+    const { sourcePoint, candidate, sourceLayer, sourceObstacle } = params;
     if (this.ogSrj.outline && this.ogSrj.outline.length >= 3) {
       const crossesOutline = doesSegmentCrossPolygonBoundary({
         start: sourcePoint,
         end: candidate,
         polygon: this.ogSrj.outline,
         margin: this.requiredTraceClearance,
-      })
+      });
 
       if (crossesOutline) {
-        return false
+        return false;
       }
     }
 
     for (const obstacle of this.ogSrj.obstacles) {
-      if (obstacle === sourceObstacle) continue
-      if (!obstacle.layers.includes(sourceLayer)) continue
+      if (obstacle === sourceObstacle) continue;
+      if (!obstacle.layers.includes(sourceLayer)) continue;
 
       if (isPointInRect(candidate, obstacle)) {
-        return false
+        return false;
       }
 
-      const obstacleSegments = obstacleToSegments(obstacle)
+      const obstacleSegments = obstacleToSegments(obstacle);
       const minDistance = Math.min(
         ...obstacleSegments.map((segment) =>
           minimumDistanceBetweenSegments(
@@ -396,14 +396,14 @@ export class EscapeViaLocationSolver extends BaseSolver {
             segment.end,
           ),
         ),
-      )
+      );
 
       if (minDistance + GEOMETRIC_TOLERANCE < this.requiredTraceClearance) {
-        return false
+        return false;
       }
     }
 
-    return true
+    return true;
   }
 
   private getBoardBoundarySegments(): Array<{ start: Point2D; end: Point2D }> {
@@ -411,10 +411,10 @@ export class EscapeViaLocationSolver extends BaseSolver {
       return this.ogSrj.outline.map((start, index) => ({
         start,
         end: this.ogSrj.outline![(index + 1) % this.ogSrj.outline!.length]!,
-      }))
+      }));
     }
 
-    const { minX, maxX, minY, maxY } = this.ogSrj.bounds
+    const { minX, maxX, minY, maxY } = this.ogSrj.bounds;
     return [
       {
         start: { x: minX, y: minY },
@@ -432,23 +432,23 @@ export class EscapeViaLocationSolver extends BaseSolver {
         start: { x: minX, y: maxY },
         end: { x: minX, y: minY },
       },
-    ]
+    ];
   }
 
   private getRayProbeDistance(): number {
-    const { minX, maxX, minY, maxY } = this.ogSrj.bounds
-    return Math.hypot(maxX - minX, maxY - minY) * 2 + this.viaDiameter
+    const { minX, maxX, minY, maxY } = this.ogSrj.bounds;
+    return Math.hypot(maxX - minX, maxY - minY) * 2 + this.viaDiameter;
   }
 
   private getRayIntersectionDistance(params: {
-    rayStart: Point2D
-    rayEnd: Point2D
-    segmentStart: Point2D
-    segmentEnd: Point2D
+    rayStart: Point2D;
+    rayEnd: Point2D;
+    segmentStart: Point2D;
+    segmentEnd: Point2D;
   }): number | null {
-    const { rayStart, rayEnd, segmentStart, segmentEnd } = params
+    const { rayStart, rayEnd, segmentStart, segmentEnd } = params;
     if (!doSegmentsIntersect(rayStart, rayEnd, segmentStart, segmentEnd)) {
-      return null
+      return null;
     }
 
     const intersection = getSegmentIntersection(
@@ -456,29 +456,29 @@ export class EscapeViaLocationSolver extends BaseSolver {
       rayEnd,
       segmentStart,
       segmentEnd,
-    )
+    );
 
     if (!intersection) {
-      return null
+      return null;
     }
 
-    const hitDistance = distance(rayStart, intersection)
+    const hitDistance = distance(rayStart, intersection);
     if (hitDistance <= GEOMETRIC_TOLERANCE) {
-      return null
+      return null;
     }
 
-    return hitDistance
+    return hitDistance;
   }
 
   private getProjectedFreeSpace(params: {
-    sourcePoint: ConnectionPoint
-    candidate: Point2D
-    sourceLayer: string
-    sourceObstacle?: Obstacle
+    sourcePoint: ConnectionPoint;
+    candidate: Point2D;
+    sourceLayer: string;
+    sourceObstacle?: Obstacle;
   }): number {
-    const { sourcePoint, candidate } = params
-    const dx = candidate.x - sourcePoint.x
-    const dy = candidate.y - sourcePoint.y
+    const { sourcePoint, candidate } = params;
+    const dx = candidate.x - sourcePoint.x;
+    const dy = candidate.y - sourcePoint.y;
 
     if (
       Math.abs(dx) <= GEOMETRIC_TOLERANCE ||
@@ -491,7 +491,7 @@ export class EscapeViaLocationSolver extends BaseSolver {
           y: dy,
         },
         travelDistance: distance(sourcePoint, candidate),
-      })
+      });
     }
 
     return Math.min(
@@ -519,16 +519,16 @@ export class EscapeViaLocationSolver extends BaseSolver {
         },
         travelDistance: Math.abs(dx),
       }),
-    )
+    );
   }
 
   private getProjectedFreeSpaceAlongDirection(params: {
-    sourcePoint: ConnectionPoint
-    candidate: Point2D
-    sourceLayer: string
-    sourceObstacle?: Obstacle
-    direction: Point2D
-    travelDistance: number
+    sourcePoint: ConnectionPoint;
+    candidate: Point2D;
+    sourceLayer: string;
+    sourceObstacle?: Obstacle;
+    direction: Point2D;
+    travelDistance: number;
   }): number {
     const {
       sourcePoint,
@@ -536,28 +536,28 @@ export class EscapeViaLocationSolver extends BaseSolver {
       sourceObstacle,
       direction,
       travelDistance,
-    } = params
-    const directionLength = Math.hypot(direction.x, direction.y)
+    } = params;
+    const directionLength = Math.hypot(direction.x, direction.y);
     if (
       directionLength <= GEOMETRIC_TOLERANCE ||
       travelDistance <= GEOMETRIC_TOLERANCE
     ) {
-      return 0
+      return 0;
     }
 
-    const probeDistance = this.getRayProbeDistance()
-    const directionX = direction.x / directionLength
-    const directionY = direction.y / directionLength
+    const probeDistance = this.getRayProbeDistance();
+    const directionX = direction.x / directionLength;
+    const directionY = direction.y / directionLength;
     const rayEnd = {
       x: sourcePoint.x + directionX * probeDistance,
       y: sourcePoint.y + directionY * probeDistance,
-    }
+    };
 
-    let firstHitDistance = Number.POSITIVE_INFINITY
+    let firstHitDistance = Number.POSITIVE_INFINITY;
 
     for (const obstacle of this.ogSrj.obstacles) {
-      if (obstacle === sourceObstacle) continue
-      if (!obstacle.layers.includes(sourceLayer)) continue
+      if (obstacle === sourceObstacle) continue;
+      if (!obstacle.layers.includes(sourceLayer)) continue;
 
       for (const segment of obstacleToSegments(obstacle)) {
         const hitDistance = this.getRayIntersectionDistance({
@@ -565,9 +565,9 @@ export class EscapeViaLocationSolver extends BaseSolver {
           rayEnd,
           segmentStart: segment.start,
           segmentEnd: segment.end,
-        })
+        });
         if (hitDistance !== null) {
-          firstHitDistance = Math.min(firstHitDistance, hitDistance)
+          firstHitDistance = Math.min(firstHitDistance, hitDistance);
         }
       }
     }
@@ -578,71 +578,72 @@ export class EscapeViaLocationSolver extends BaseSolver {
         rayEnd,
         segmentStart: segment.start,
         segmentEnd: segment.end,
-      })
+      });
       if (hitDistance !== null) {
-        firstHitDistance = Math.min(firstHitDistance, hitDistance)
+        firstHitDistance = Math.min(firstHitDistance, hitDistance);
       }
     }
 
     if (!Number.isFinite(firstHitDistance)) {
-      return 0
+      return 0;
     }
 
-    return Math.max(0, firstHitDistance - travelDistance)
+    return Math.max(0, firstHitDistance - travelDistance);
   }
 
   private getMinBlockingClearance(params: {
-    candidate: Point2D
-    connectionNetIds: Set<string>
-    sourceZ: number
-    targetZ: number
+    candidate: Point2D;
+    connectionNetIds: Set<string>;
+    sourceZ: number;
+    targetZ: number;
   }): number {
-    const { candidate, connectionNetIds, sourceZ, targetZ } = params
-    const spanMinZ = Math.min(sourceZ, targetZ)
-    const spanMaxZ = Math.max(sourceZ, targetZ)
-    let minClearance = Number.POSITIVE_INFINITY
+    const { candidate, connectionNetIds, sourceZ, targetZ } = params;
+    const spanMinZ = Math.min(sourceZ, targetZ);
+    const spanMaxZ = Math.max(sourceZ, targetZ);
+    let minClearance = Number.POSITIVE_INFINITY;
 
     for (const obstacle of this.ogSrj.obstacles) {
-      const obstacleZs = this.getObstacleZs(obstacle)
+      const obstacleZs = this.getObstacleZs(obstacle);
       if (!obstacleZs.some((z) => z >= spanMinZ && z <= spanMaxZ)) {
-        continue
+        continue;
       }
 
       if (obstacle.isCopperPour && !obstacleZs.includes(sourceZ)) {
-        continue
+        continue;
       }
 
-      const clearance = pointToBoxDistance(candidate, obstacle) - this.viaRadius
-      minClearance = Math.min(minClearance, clearance)
+      const clearance =
+        pointToBoxDistance(candidate, obstacle) - this.viaRadius;
+      minClearance = Math.min(minClearance, clearance);
 
       if (minClearance + GEOMETRIC_TOLERANCE < this.requiredViaToPadClearance) {
-        return minClearance
+        return minClearance;
       }
     }
 
-    return minClearance
+    return minClearance;
   }
 
   private getMinPlacedEscapeViaClearance(candidate: Point2D): number {
-    let minClearance = Number.POSITIVE_INFINITY
+    let minClearance = Number.POSITIVE_INFINITY;
     for (const existingEscapeVia of this.createdEscapeVias) {
       const clearance =
-        distance(candidate, existingEscapeVia) - this.viaDiameter
-      minClearance = Math.min(minClearance, clearance)
+        distance(candidate, existingEscapeVia) - this.viaDiameter;
+      minClearance = Math.min(minClearance, clearance);
       if (minClearance + GEOMETRIC_TOLERANCE < this.obstacleMargin) {
-        return minClearance
+        return minClearance;
       }
     }
-    return minClearance
+    return minClearance;
   }
 
   private selectPointOwner(params: {
-    point: ConnectionPoint
-    groupConnections: SimpleRouteConnection[]
-    matchingCopperPours: Obstacle[]
+    point: ConnectionPoint;
+    groupConnections: SimpleRouteConnection[];
+    matchingCopperPours: Obstacle[];
   }): PointOwner | null {
-    const { point, groupConnections, matchingCopperPours } = params
-    const pointKey = getPointKey(point)
+    const { point, groupConnections, matchingCopperPours } = params;
+    const pointKey = getPointKey(point);
 
     const owners = groupConnections
       .map((connection) => ({
@@ -653,10 +654,10 @@ export class EscapeViaLocationSolver extends BaseSolver {
       }))
       .filter(
         (candidate): candidate is PointOwner => candidate.pointIndex !== -1,
-      )
+      );
 
     if (owners.length === 0) {
-      return null
+      return null;
     }
 
     owners.sort((a, b) => {
@@ -665,31 +666,31 @@ export class EscapeViaLocationSolver extends BaseSolver {
           obstacle,
           this.getConnectionNetIds(a.connection),
         ),
-      )
+      );
       const bDirectMatch = matchingCopperPours.some((obstacle) =>
         this.obstacleMatchesConnectionNet(
           obstacle,
           this.getConnectionNetIds(b.connection),
         ),
-      )
+      );
 
       if (aDirectMatch !== bDirectMatch) {
-        return aDirectMatch ? -1 : 1
+        return aDirectMatch ? -1 : 1;
       }
 
-      return a.pointIndex - b.pointIndex
-    })
+      return a.pointIndex - b.pointIndex;
+    });
 
-    return owners[0]!
+    return owners[0]!;
   }
 
   private findBestEscapeViaCandidate(params: {
-    connection: SimpleRouteConnection
-    point: ConnectionPoint
-    pointIndex: number
-    matchingCopperPours: Obstacle[]
-    connectionNetIds: Set<string>
-    sourceObstacle?: Obstacle
+    connection: SimpleRouteConnection;
+    point: ConnectionPoint;
+    pointIndex: number;
+    matchingCopperPours: Obstacle[];
+    connectionNetIds: Set<string>;
+    sourceObstacle?: Obstacle;
   }): EscapeViaCandidate | null {
     const {
       connection,
@@ -698,35 +699,35 @@ export class EscapeViaLocationSolver extends BaseSolver {
       matchingCopperPours,
       connectionNetIds,
       sourceObstacle: sourceObstacleOverride,
-    } = params
+    } = params;
 
     if (!isSingleLayerConnectionPoint(point)) {
-      return null
+      return null;
     }
 
-    const sourceLayer = point.layer
-    const sourceZ = mapLayerNameToZ(sourceLayer, this.ogSrj.layerCount)
+    const sourceLayer = point.layer;
+    const sourceZ = mapLayerNameToZ(sourceLayer, this.ogSrj.layerCount);
     const sourceObstacle =
       sourceObstacleOverride ??
       this.selectSourceObstacle({
         point,
         sourceLayer,
         connectionNetIds,
-      })
-    const candidates = this.getCandidatePositions(point, sourceObstacle)
+      });
+    const candidates = this.getCandidatePositions(point, sourceObstacle);
 
-    let bestCandidate: EscapeViaCandidate | null = null
+    let bestCandidate: EscapeViaCandidate | null = null;
 
     for (const copperPour of matchingCopperPours) {
-      const targetLayer = copperPour.layers[0]
-      if (!targetLayer || targetLayer === sourceLayer) continue
+      const targetLayer = copperPour.layers[0];
+      if (!targetLayer || targetLayer === sourceLayer) continue;
 
-      const targetZ = mapLayerNameToZ(targetLayer, this.ogSrj.layerCount)
-      const targetPourKey = getObstacleKey(copperPour)
+      const targetZ = mapLayerNameToZ(targetLayer, this.ogSrj.layerCount);
+      const targetPourKey = getObstacleKey(copperPour);
 
       for (const candidate of candidates) {
-        if (!this.isInsideBoard(candidate)) continue
-        if (!isPointInRect(candidate, copperPour)) continue
+        if (!this.isInsideBoard(candidate)) continue;
+        if (!isPointInRect(candidate, copperPour)) continue;
         if (
           !this.hasClearEscapePath({
             sourcePoint: point,
@@ -735,7 +736,7 @@ export class EscapeViaLocationSolver extends BaseSolver {
             sourceObstacle,
           })
         ) {
-          continue
+          continue;
         }
 
         const minClearance = this.getMinBlockingClearance({
@@ -743,32 +744,32 @@ export class EscapeViaLocationSolver extends BaseSolver {
           connectionNetIds,
           sourceZ,
           targetZ,
-        })
+        });
         if (
           minClearance + GEOMETRIC_TOLERANCE <
           this.requiredViaToPadClearance
         ) {
-          continue
+          continue;
         }
         const minPlacedEscapeViaClearance =
-          this.getMinPlacedEscapeViaClearance(candidate)
+          this.getMinPlacedEscapeViaClearance(candidate);
         if (
           minPlacedEscapeViaClearance + GEOMETRIC_TOLERANCE <
           this.obstacleMargin
         ) {
-          continue
+          continue;
         }
         const projectedFreeSpace = this.getProjectedFreeSpace({
           sourcePoint: point,
           candidate,
           sourceLayer,
           sourceObstacle,
-        })
+        });
         const cappedProjectedFreeSpace = Math.min(
           projectedFreeSpace,
           MAX_PROJECTED_FREE_SPACE_BONUS,
-        )
-        const distanceToCandidate = distance(point, candidate)
+        );
+        const distanceToCandidate = distance(point, candidate);
 
         const score =
           minClearance * 100 -
@@ -780,7 +781,7 @@ export class EscapeViaLocationSolver extends BaseSolver {
                 minPlacedEscapeViaClearance,
                 this.requiredViaToViaClearance,
               ) * 10
-            : 0)
+            : 0);
 
         if (!bestCandidate || score > bestCandidate.score) {
           bestCandidate = {
@@ -796,36 +797,36 @@ export class EscapeViaLocationSolver extends BaseSolver {
             targetLayer,
             targetPourKey,
             score,
-          }
+          };
         }
       }
     }
 
-    return bestCandidate
+    return bestCandidate;
   }
 
   private buildPointPlacementPlans(params: {
-    mergedConnection: SimpleRouteConnection
-    groupConnections: SimpleRouteConnection[]
-    matchingCopperPours: Obstacle[]
-    connectionNetIds: Set<string>
+    mergedConnection: SimpleRouteConnection;
+    groupConnections: SimpleRouteConnection[];
+    matchingCopperPours: Obstacle[];
+    connectionNetIds: Set<string>;
   }): PointPlacementPlan[] {
     const {
       mergedConnection,
       groupConnections,
       matchingCopperPours,
       connectionNetIds,
-    } = params
+    } = params;
 
-    const pointPlacementPlans: PointPlacementPlan[] = []
+    const pointPlacementPlans: PointPlacementPlan[] = [];
 
     for (const point of mergedConnection.pointsToConnect) {
       const pointOwner = this.selectPointOwner({
         point,
         groupConnections,
         matchingCopperPours,
-      })
-      if (!pointOwner) continue
+      });
+      if (!pointOwner) continue;
 
       const sourceObstacle = isSingleLayerConnectionPoint(point)
         ? this.selectSourceObstacle({
@@ -833,89 +834,89 @@ export class EscapeViaLocationSolver extends BaseSolver {
             sourceLayer: point.layer,
             connectionNetIds,
           })
-        : undefined
+        : undefined;
       const candidateCount = isSingleLayerConnectionPoint(point)
         ? this.getCandidatePositions(point, sourceObstacle).length
-        : 0
+        : 0;
 
       pointPlacementPlans.push({
         point,
         pointOwner,
         sourceObstacle,
         candidateCount,
-      })
+      });
     }
 
     return pointPlacementPlans.sort((a, b) => {
       if (a.candidateCount !== b.candidateCount) {
-        return a.candidateCount - b.candidateCount
+        return a.candidateCount - b.candidateCount;
       }
 
       const aArea =
-        (a.sourceObstacle?.width ?? 0) * (a.sourceObstacle?.height ?? 0)
+        (a.sourceObstacle?.width ?? 0) * (a.sourceObstacle?.height ?? 0);
       const bArea =
-        (b.sourceObstacle?.width ?? 0) * (b.sourceObstacle?.height ?? 0)
+        (b.sourceObstacle?.width ?? 0) * (b.sourceObstacle?.height ?? 0);
       if (aArea !== bArea) {
-        return aArea - bArea
+        return aArea - bArea;
       }
 
-      return a.pointOwner.pointIndex - b.pointOwner.pointIndex
-    })
+      return a.pointOwner.pointIndex - b.pointOwner.pointIndex;
+    });
   }
 
   _step() {
     const copperPours = this.ogSrj.obstacles.filter(
       (obstacle) => obstacle.isCopperPour,
-    )
-    const originalConnections = this.ogSrj.connections
+    );
+    const originalConnections = this.ogSrj.connections;
     const newConnections = originalConnections.map((connection) =>
       structuredClone(connection),
-    )
+    );
     const clonedConnectionByName = new Map(
       newConnections.map((connection) => [connection.name, connection]),
-    )
-    const newObstacles = structuredClone(this.ogSrj.obstacles)
-    const mergedConnections = mergeConnections([...originalConnections])
+    );
+    const newObstacles = structuredClone(this.ogSrj.obstacles);
+    const mergedConnections = mergeConnections([...originalConnections]);
 
     for (const mergedConnection of mergedConnections) {
       const mergedRootConnectionNames = new Set(
         mergedConnection.__rootConnectionNames ?? [mergedConnection.name],
-      )
+      );
       const groupConnections = originalConnections.filter((connection) => {
         const rootConnectionNames = connection.__rootConnectionNames ?? [
           connection.name,
-        ]
+        ];
         return rootConnectionNames.some((name) =>
           mergedRootConnectionNames.has(name),
-        )
-      })
+        );
+      });
 
       if (groupConnections.length === 0) {
-        continue
+        continue;
       }
 
-      const connectionNetIds = new Set<string>()
+      const connectionNetIds = new Set<string>();
       for (const groupConnection of groupConnections) {
         for (const netId of this.getConnectionNetIds(groupConnection)) {
-          connectionNetIds.add(netId)
+          connectionNetIds.add(netId);
         }
       }
 
       const matchingCopperPours = copperPours.filter((obstacle) =>
         this.obstacleMatchesConnectionNet(obstacle, connectionNetIds),
-      )
+      );
       if (matchingCopperPours.length === 0) {
-        continue
+        continue;
       }
 
-      const groupedEscapePointIds = new Map<string, string[]>()
-      const representativeConnectionNameByPourKey = new Map<string, string>()
+      const groupedEscapePointIds = new Map<string, string[]>();
+      const representativeConnectionNameByPourKey = new Map<string, string>();
       const pointPlacementPlans = this.buildPointPlacementPlans({
         mergedConnection,
         groupConnections,
         matchingCopperPours,
         connectionNetIds,
-      })
+      });
 
       for (const { point, pointOwner, sourceObstacle } of pointPlacementPlans) {
         const escapeViaCandidate = this.findBestEscapeViaCandidate({
@@ -925,22 +926,22 @@ export class EscapeViaLocationSolver extends BaseSolver {
           matchingCopperPours,
           connectionNetIds,
           sourceObstacle,
-        })
+        });
 
-        if (!escapeViaCandidate) continue
+        if (!escapeViaCandidate) continue;
 
         const clonedConnection = clonedConnectionByName.get(
           pointOwner.connection.name,
-        )
-        if (!clonedConnection) continue
+        );
+        if (!clonedConnection) continue;
 
         const alreadyExists = clonedConnection.pointsToConnect.some(
           (existing) =>
             isSingleLayerConnectionPoint(existing) &&
             existing.layer === escapeViaCandidate.sourceLayer &&
             pointMatches(existing, escapeViaCandidate),
-        )
-        if (alreadyExists) continue
+        );
+        if (alreadyExists) continue;
 
         clonedConnection.pointsToConnect.push({
           x: escapeViaCandidate.x,
@@ -951,28 +952,28 @@ export class EscapeViaLocationSolver extends BaseSolver {
             toLayer: escapeViaCandidate.targetLayer,
             viaDiameter: this.viaDiameter,
           },
-        } satisfies ConnectionPoint)
+        } satisfies ConnectionPoint);
         this.escapeViaMetadataByPointId.set(
           escapeViaCandidate.pointId,
           escapeViaCandidate,
-        )
-        this.createdEscapeVias.push(escapeViaCandidate)
+        );
+        this.createdEscapeVias.push(escapeViaCandidate);
         newObstacles.push(
           this.createEscapeViaObstacle({
             escapeVia: escapeViaCandidate,
             connectionNetIds: this.getConnectionNetIds(pointOwner.connection),
           }),
-        )
+        );
 
         const pointIds = groupedEscapePointIds.get(
           escapeViaCandidate.targetPourKey,
-        )
+        );
         if (pointIds) {
-          pointIds.push(escapeViaCandidate.pointId)
+          pointIds.push(escapeViaCandidate.pointId);
         } else {
           groupedEscapePointIds.set(escapeViaCandidate.targetPourKey, [
             escapeViaCandidate.pointId,
-          ])
+          ]);
         }
 
         if (
@@ -983,26 +984,26 @@ export class EscapeViaLocationSolver extends BaseSolver {
           representativeConnectionNameByPourKey.set(
             escapeViaCandidate.targetPourKey,
             pointOwner.connection.name,
-          )
+          );
         }
       }
 
       for (const [targetPourKey, pointIds] of groupedEscapePointIds.entries()) {
-        if (pointIds.length <= 1) continue
+        if (pointIds.length <= 1) continue;
 
         const representativeConnectionName =
-          representativeConnectionNameByPourKey.get(targetPourKey)
-        if (!representativeConnectionName) continue
+          representativeConnectionNameByPourKey.get(targetPourKey);
+        if (!representativeConnectionName) continue;
 
         const representativeConnection = clonedConnectionByName.get(
           representativeConnectionName,
-        )
-        if (!representativeConnection) continue
+        );
+        if (!representativeConnection) continue;
 
         representativeConnection.externallyConnectedPointIds = [
           ...(representativeConnection.externallyConnectedPointIds ?? []),
           pointIds,
-        ]
+        ];
       }
     }
 
@@ -1010,16 +1011,16 @@ export class EscapeViaLocationSolver extends BaseSolver {
       ...structuredClone(this.ogSrj),
       connections: newConnections,
       obstacles: newObstacles,
-    }
-    this.solved = true
+    };
+    this.solved = true;
   }
 
   getOutputSimpleRouteJson(): SimpleRouteJson {
-    return structuredClone(this.outputSrj)
+    return structuredClone(this.outputSrj);
   }
 
   getEscapeViaMetadataByPointId(): Map<string, EscapeViaMetadata> {
-    return new Map(this.escapeViaMetadataByPointId)
+    return new Map(this.escapeViaMetadataByPointId);
   }
 
   override visualize(): GraphicsObject {
@@ -1043,7 +1044,7 @@ export class EscapeViaLocationSolver extends BaseSolver {
         const sourcePoint =
           this.outputSrj.connections.find(
             (connection) => connection.name === escapeVia.connectionName,
-          )?.pointsToConnect[escapeVia.sourcePointIndex] ?? null
+          )?.pointsToConnect[escapeVia.sourcePointIndex] ?? null;
 
         return {
           points: sourcePoint
@@ -1053,7 +1054,7 @@ export class EscapeViaLocationSolver extends BaseSolver {
               ]
             : [{ x: escapeVia.x, y: escapeVia.y }],
           strokeColor: "#0f766e",
-        }
+        };
       }),
       circles: this.createdEscapeVias.map((escapeVia) => ({
         center: { x: escapeVia.x, y: escapeVia.y },
@@ -1067,6 +1068,6 @@ export class EscapeViaLocationSolver extends BaseSolver {
           ...obstacle,
           fill: "rgba(220,38,38,0.12)",
         })),
-    }
+    };
   }
 }

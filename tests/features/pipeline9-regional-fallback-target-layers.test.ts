@@ -1,7 +1,7 @@
-import { expect, test } from "bun:test"
-import type { PreloadedHighDensityRoute } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/convert-preloaded-traces-to-hd-routes"
-import { createRegionalFallbackProblem } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/pipeline9-regional-fallback"
-import type { NodeWithPortPoints } from "lib/types/high-density-types"
+import { expect, test } from "bun:test";
+import type { PreloadedHighDensityRoute } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/convert-preloaded-traces-to-hd-routes";
+import { createRegionalFallbackProblem } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/pipeline9-regional-fallback";
+import type { NodeWithPortPoints } from "lib/types/high-density-types";
 
 test("Pipeline9 only makes preloaded sections on target layers movable", (): void => {
   const node: NodeWithPortPoints = {
@@ -14,7 +14,7 @@ test("Pipeline9 only makes preloaded sections on target layers movable", (): voi
       { x: 0, y: 4, z: 1, connectionName: "target" },
       { x: 10, y: 6, z: 1, connectionName: "target" },
     ],
-  }
+  };
   const fixedRoutes: PreloadedHighDensityRoute[] = [
     {
       connectionName: "top_only",
@@ -58,13 +58,13 @@ test("Pipeline9 only makes preloaded sections on target layers movable", (): voi
       preloadedTraceIndex: 2,
       preloadedRouteIndex: 0,
     },
-  ]
+  ];
 
-  const problem = createRegionalFallbackProblem(node, fixedRoutes)
+  const problem = createRegionalFallbackProblem(node, fixedRoutes);
 
   expect([...problem.fixedRouteSectionsByConnectionName.keys()]).toEqual([
     "touches_target_layer",
-  ])
-  expect(problem.nodeWithPortPoints.portPoints).toHaveLength(4)
-  expect(problem.nodeWithPortPoints.portPointsInPairs).toHaveLength(1)
-})
+  ]);
+  expect(problem.nodeWithPortPoints.portPoints).toHaveLength(4);
+  expect(problem.nodeWithPortPoints.portPointsInPairs).toHaveLength(1);
+});

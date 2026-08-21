@@ -1,22 +1,20 @@
-import { test, expect } from "bun:test"
-import { SingleTransitionCrossingRouteSolver } from "lib/solvers/HighDensitySolver/TwoRouteHighDensitySolver/SingleTransitionCrossingRouteSolver"
-import { convertToCircuitJson } from "lib/testing/utils/convertToCircuitJson"
-import node from "../../fixtures/legacy/assets/cn11081-nodeWithPortPoints.json" with {
-  type: "json",
-}
-import { createSrjFromNodeWithPortPoints } from "lib/utils/createSrjFromNodeWithPortPoints"
-import { PortfolioSingleIntraNodeSolver } from "lib/solvers/HyperHighDensitySolver/PortfolioSingleIntraNodeSolver"
-import { getDrcErrors } from "lib/testing/getDrcErrors"
-import { RELAXED_DRC_OPTIONS } from "lib/testing/drcPresets"
+import { test, expect } from "bun:test";
+import { SingleTransitionCrossingRouteSolver } from "lib/solvers/HighDensitySolver/TwoRouteHighDensitySolver/SingleTransitionCrossingRouteSolver";
+import { convertToCircuitJson } from "lib/testing/utils/convertToCircuitJson";
+import node from "../../fixtures/legacy/assets/cn11081-nodeWithPortPoints.json" with { type: "json" };
+import { createSrjFromNodeWithPortPoints } from "lib/utils/createSrjFromNodeWithPortPoints";
+import { PortfolioSingleIntraNodeSolver } from "lib/solvers/HyperHighDensitySolver/PortfolioSingleIntraNodeSolver";
+import { getDrcErrors } from "lib/testing/getDrcErrors";
+import { RELAXED_DRC_OPTIONS } from "lib/testing/drcPresets";
 
-const nodeWithPortPoints = (node as any).nodeWithPortPoints
+const nodeWithPortPoints = (node as any).nodeWithPortPoints;
 
 test("cn11081 single transition solver records current DRC errors", () => {
-  const srj = createSrjFromNodeWithPortPoints(nodeWithPortPoints)
+  const srj = createSrjFromNodeWithPortPoints(nodeWithPortPoints);
   const solver = new PortfolioSingleIntraNodeSolver({
     nodeWithPortPoints,
     viaDiameter: 0.6,
-  })
+  });
 
   expect(srj).toMatchInlineSnapshot(`
     {
@@ -62,44 +60,44 @@ test("cn11081 single transition solver records current DRC errors", () => {
       "minTraceWidth": 0.1,
       "obstacles": [],
     }
-  `)
+  `);
 
-  solver.solve()
+  solver.solve();
 
-  expect(solver.solved).toBe(true)
+  expect(solver.solved).toBe(true);
 
-  const solverName = solver.winningSolver?.constructor.name
+  const solverName = solver.winningSolver?.constructor.name;
 
   // Convert routes to circuit json and run DRC
   const circuitJson = convertToCircuitJson(srj, solver.solvedRoutes, {
     minTraceWidth: srj.minTraceWidth,
-  })
+  });
   const pcbTraces = circuitJson.filter(
     (
       element,
     ): element is (typeof circuitJson)[number] & {
-      type: "pcb_trace"
-      source_trace_id: string
+      type: "pcb_trace";
+      source_trace_id: string;
     } => element.type === "pcb_trace",
-  )
+  );
   const pcbVias = circuitJson.filter(
     (
       element,
     ): element is (typeof circuitJson)[number] & {
-      type: "pcb_via"
+      type: "pcb_via";
     } => element.type === "pcb_via",
-  )
+  );
 
-  expect(pcbTraces).toHaveLength(2)
-  expect(pcbVias.length).toBeGreaterThanOrEqual(1)
+  expect(pcbTraces).toHaveLength(2);
+  expect(pcbVias.length).toBeGreaterThanOrEqual(1);
   expect(
     [...new Set(pcbTraces.map((trace) => trace.source_trace_id))].sort(),
-  ).toEqual(["source_net_0_mst22", "source_trace_76"])
-  const { errors } = getDrcErrors(circuitJson, RELAXED_DRC_OPTIONS)
+  ).toEqual(["source_net_0_mst22", "source_trace_76"]);
+  const { errors } = getDrcErrors(circuitJson, RELAXED_DRC_OPTIONS);
 
-  expect(errors).toHaveLength(4)
+  expect(errors).toHaveLength(4);
   expect(errors.every((error) => error.error_type === "pcb_trace_error")).toBe(
     true,
-  )
-  expect(solverName).toMatchInlineSnapshot(`"CachedIntraNodeRouteSolver"`)
-})
+  );
+  expect(solverName).toMatchInlineSnapshot(`"CachedIntraNodeRouteSolver"`);
+});

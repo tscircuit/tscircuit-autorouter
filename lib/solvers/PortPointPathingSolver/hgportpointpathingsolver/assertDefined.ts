@@ -8,6 +8,6 @@ export function assertDefined<T>(
   message: string,
 ): asserts value is T {
   if (value === undefined || value === null) {
-    throw new Error(message)
+    throw new Error(message);
   }
 }

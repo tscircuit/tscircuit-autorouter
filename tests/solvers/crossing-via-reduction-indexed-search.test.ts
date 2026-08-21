@@ -1,12 +1,12 @@
-import { expect, test } from "bun:test"
-import { ConnectivityMap } from "circuit-json-to-connectivity-map"
-import { CrossingViaReductionSolver } from "lib/solvers/CrossingViaReductionSolver/crossing-via-reduction-solver"
-import type { Obstacle } from "lib/types"
-import type { HighDensityRoute } from "lib/types/high-density-types"
+import { expect, test } from "bun:test";
+import { ConnectivityMap } from "circuit-json-to-connectivity-map";
+import { CrossingViaReductionSolver } from "lib/solvers/CrossingViaReductionSolver/crossing-via-reduction-solver";
+import type { Obstacle } from "lib/types";
+import type { HighDensityRoute } from "lib/types/high-density-types";
 
 const createSeparatedDetours = (count: number): HighDensityRoute[] => {
   return Array.from({ length: count }, (_, index) => {
-    const x = index * 5
+    const x = index * 5;
     return {
       connectionName: `detour_${index}`,
       traceThickness: 0.15,
@@ -23,17 +23,17 @@ const createSeparatedDetours = (count: number): HighDensityRoute[] => {
         { x: x + 1, y: 0 },
         { x: x + 1, y: 1 },
       ],
-    }
-  })
-}
+    };
+  });
+};
 
 const createBlockedCrossings = (
   count: number,
 ): { routes: HighDensityRoute[]; obstacles: Obstacle[] } => {
-  const routes: HighDensityRoute[] = []
-  const obstacles: Obstacle[] = []
+  const routes: HighDensityRoute[] = [];
+  const obstacles: Obstacle[] = [];
   for (let index = 0; index < count; index++) {
-    const offset = index * 10
+    const offset = index * 10;
     routes.push(
       {
         connectionName: `detour_${index}`,
@@ -65,7 +65,7 @@ const createBlockedCrossings = (
         ],
         vias: [{ x: offset, y: 0 }],
       },
-    )
+    );
     obstacles.push({
       type: "rect",
       layers: ["bottom"],
@@ -74,55 +74,55 @@ const createBlockedCrossings = (
       width: 0.2,
       height: 0.2,
       connectedTo: [`blocked_${index}`],
-    })
+    });
   }
-  return { routes, obstacles }
-}
+  return { routes, obstacles };
+};
 
 test("indexes crossing discovery and repeated candidate clearance checks", () => {
-  const routeCount = 1000
+  const routeCount = 1000;
   const solver = new CrossingViaReductionSolver({
     inputHdRoutes: createSeparatedDetours(routeCount),
     obstacles: [],
     connMap: new ConnectivityMap({}),
     layerCount: 2,
-  })
+  });
 
-  solver.solve()
+  solver.solve();
 
-  expect(solver.failed).toBe(false)
-  expect(solver.iterations).toBe(1)
-  expect(solver.stats.transitionSegmentsIndexed).toBe(routeCount * 2)
-  expect(solver.stats.indexedDetourSegmentQueries).toBe(routeCount)
-  expect(solver.stats.exactSegmentIntersectionChecks ?? 0).toBe(0)
-  expect(solver.timeToSolve).toBeLessThan(1000)
+  expect(solver.failed).toBe(false);
+  expect(solver.iterations).toBe(1);
+  expect(solver.stats.transitionSegmentsIndexed).toBe(routeCount * 2);
+  expect(solver.stats.indexedDetourSegmentQueries).toBe(routeCount);
+  expect(solver.stats.exactSegmentIntersectionChecks ?? 0).toBe(0);
+  expect(solver.timeToSolve).toBeLessThan(1000);
   expect(
     solver.getReducedHdRoutes().every((route) => route.vias.length === 2),
-  ).toBe(true)
+  ).toBe(true);
 
-  const blockedCrossingCount = 500
-  const { routes, obstacles } = createBlockedCrossings(blockedCrossingCount)
+  const blockedCrossingCount = 500;
+  const { routes, obstacles } = createBlockedCrossings(blockedCrossingCount);
   const clearanceSolver = new CrossingViaReductionSolver({
     inputHdRoutes: routes,
     obstacles,
     connMap: new ConnectivityMap({}),
     layerCount: 2,
-  })
+  });
 
-  clearanceSolver.solve()
+  clearanceSolver.solve();
 
-  expect(clearanceSolver.failed).toBe(false)
-  expect(clearanceSolver.iterations).toBe(1)
+  expect(clearanceSolver.failed).toBe(false);
+  expect(clearanceSolver.iterations).toBe(1);
   expect(clearanceSolver.stats.exactSegmentIntersectionChecks).toBe(
     blockedCrossingCount,
-  )
+  );
   expect(clearanceSolver.stats.candidateClearanceChecks).toBe(
     blockedCrossingCount,
-  )
-  expect(clearanceSolver.timeToSolve).toBeLessThan(1000)
+  );
+  expect(clearanceSolver.timeToSolve).toBeLessThan(1000);
   expect(
     clearanceSolver
       .getReducedHdRoutes()
       .every((route) => route.vias.length > 0),
-  ).toBe(true)
-})
+  ).toBe(true);
+});

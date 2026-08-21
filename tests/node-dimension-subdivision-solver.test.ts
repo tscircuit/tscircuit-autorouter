@@ -1,6 +1,6 @@
-import { expect, test } from "bun:test"
-import { NodeDimensionSubdivisionSolver } from "lib/solvers/NodeDimensionSubdivisionSolver/NodeDimensionSubdivisionSolver"
-import type { CapacityMeshNode } from "lib/types"
+import { expect, test } from "bun:test";
+import { NodeDimensionSubdivisionSolver } from "lib/solvers/NodeDimensionSubdivisionSolver/NodeDimensionSubdivisionSolver";
+import type { CapacityMeshNode } from "lib/types";
 
 const createNode = (
   overrides: Partial<CapacityMeshNode> = {},
@@ -12,57 +12,59 @@ const createNode = (
   layer: "top",
   availableZ: [0],
   ...overrides,
-})
+});
 
 const getNodeRatio = (node: Pick<CapacityMeshNode, "width" | "height">) =>
-  Math.max(node.width, node.height) / Math.min(node.width, node.height)
+  Math.max(node.width, node.height) / Math.min(node.width, node.height);
 
 test("NodeDimensionSubdivisionSolver leaves long thin nodes alone when maxNodeRatio is unset", () => {
-  const solver = new NodeDimensionSubdivisionSolver([createNode()], 100)
+  const solver = new NodeDimensionSubdivisionSolver([createNode()], 100);
 
-  solver.solve()
+  solver.solve();
 
-  expect(solver.outputNodes).toHaveLength(1)
-  expect(solver.outputNodes[0]?.capacityMeshNodeId).toBe("cmn_0")
-})
+  expect(solver.outputNodes).toHaveLength(1);
+  expect(solver.outputNodes[0]?.capacityMeshNodeId).toBe("cmn_0");
+});
 
 test("NodeDimensionSubdivisionSolver subdivides long thin nodes to satisfy maxNodeRatio", () => {
-  const solver = new NodeDimensionSubdivisionSolver([createNode()], 100, 4)
+  const solver = new NodeDimensionSubdivisionSolver([createNode()], 100, 4);
 
-  solver.solve()
+  solver.solve();
 
-  expect(solver.outputNodes).toHaveLength(2)
-  expect(solver.outputNodes.every((node) => getNodeRatio(node) <= 4)).toBe(true)
-  expect(solver.stats.maxNodeDimension).toBe(100)
-  expect(solver.stats.maxNodeRatio).toBe(4)
-  expect(solver.stats.minNodeArea).toBe(0.1 ** 2)
-})
+  expect(solver.outputNodes).toHaveLength(2);
+  expect(solver.outputNodes.every((node) => getNodeRatio(node) <= 4)).toBe(
+    true,
+  );
+  expect(solver.stats.maxNodeDimension).toBe(100);
+  expect(solver.stats.maxNodeRatio).toBe(4);
+  expect(solver.stats.minNodeArea).toBe(0.1 ** 2);
+});
 
 test("NodeDimensionSubdivisionSolver removes nodes below the default minNodeArea before subdivision", () => {
   const solver = new NodeDimensionSubdivisionSolver(
     [createNode({ width: 0.2, height: 0.04 })],
     100,
     2,
-  )
+  );
 
-  solver.solve()
+  solver.solve();
 
-  expect(solver.outputNodes).toHaveLength(0)
-  expect(solver.stats.removedSmallNodeCount).toBe(1)
-  expect(solver.stats.minNodeArea).toBe(0.1 ** 2)
-})
+  expect(solver.outputNodes).toHaveLength(0);
+  expect(solver.stats.removedSmallNodeCount).toBe(1);
+  expect(solver.stats.minNodeArea).toBe(0.1 ** 2);
+});
 
 test("NodeDimensionSubdivisionSolver keeps nodes exactly at the minNodeArea threshold", () => {
   const solver = new NodeDimensionSubdivisionSolver(
     [createNode({ width: 0.1, height: 0.1 })],
     100,
-  )
+  );
 
-  solver.solve()
+  solver.solve();
 
-  expect(solver.outputNodes).toHaveLength(1)
-  expect(solver.outputNodes[0]?.capacityMeshNodeId).toBe("cmn_0")
-})
+  expect(solver.outputNodes).toHaveLength(1);
+  expect(solver.outputNodes[0]?.capacityMeshNodeId).toBe("cmn_0");
+});
 
 test("NodeDimensionSubdivisionSolver allows overriding minNodeArea for tiny nodes", () => {
   const solver = new NodeDimensionSubdivisionSolver(
@@ -70,37 +72,39 @@ test("NodeDimensionSubdivisionSolver allows overriding minNodeArea for tiny node
     100,
     2,
     0.001,
-  )
+  );
 
-  solver.solve()
+  solver.solve();
 
-  expect(solver.outputNodes).toHaveLength(3)
-  expect(solver.outputNodes.every((node) => getNodeRatio(node) <= 2)).toBe(true)
-  expect(solver.stats.minNodeArea).toBe(0.001)
-})
+  expect(solver.outputNodes).toHaveLength(3);
+  expect(solver.outputNodes.every((node) => getNodeRatio(node) <= 2)).toBe(
+    true,
+  );
+  expect(solver.stats.minNodeArea).toBe(0.001);
+});
 
 test("NodeDimensionSubdivisionSolver removes nodes with infinite dimensions", () => {
   const solver = new NodeDimensionSubdivisionSolver(
     [createNode({ height: Number.POSITIVE_INFINITY })],
     16,
     6,
-  )
+  );
 
-  solver.solve()
+  solver.solve();
 
-  expect(solver.outputNodes).toHaveLength(0)
-  expect(solver.stats.removedInvalidNodeCount).toBe(1)
-})
+  expect(solver.outputNodes).toHaveLength(0);
+  expect(solver.stats.removedInvalidNodeCount).toBe(1);
+});
 
 test("NodeDimensionSubdivisionSolver removes nodes with NaN dimensions", () => {
   const solver = new NodeDimensionSubdivisionSolver(
     [createNode({ width: Number.NaN })],
     16,
     6,
-  )
+  );
 
-  solver.solve()
+  solver.solve();
 
-  expect(solver.outputNodes).toHaveLength(0)
-  expect(solver.stats.removedInvalidNodeCount).toBe(1)
-})
+  expect(solver.outputNodes).toHaveLength(0);
+  expect(solver.stats.removedInvalidNodeCount).toBe(1);
+});

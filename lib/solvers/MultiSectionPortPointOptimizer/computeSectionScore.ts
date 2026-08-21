@@ -1,8 +1,8 @@
-import type { CapacityMeshNode, CapacityMeshNodeId } from "../../types"
-import type { NodeWithPortPoints } from "../../types/high-density-types"
-import { getIntraNodeCrossings } from "../../utils/getIntraNodeCrossings"
-import { getIntraNodeCrossingsUsingCircle } from "../../utils/getIntraNodeCrossingsUsingCircle"
-import { calculateNodeProbabilityOfFailure } from "../UnravelSolver/calculateCrossingProbabilityOfFailure"
+import type { CapacityMeshNode, CapacityMeshNodeId } from "../../types";
+import type { NodeWithPortPoints } from "../../types/high-density-types";
+import { getIntraNodeCrossings } from "../../utils/getIntraNodeCrossings";
+import { getIntraNodeCrossingsUsingCircle } from "../../utils/getIntraNodeCrossingsUsingCircle";
+import { calculateNodeProbabilityOfFailure } from "../UnravelSolver/calculateCrossingProbabilityOfFailure";
 
 /**
  * Computes a log-based score for a section of nodes with port points.
@@ -22,21 +22,21 @@ export function computeSectionScore(
   nodesWithPortPoints: NodeWithPortPoints[],
   capacityMeshNodeMap: Map<CapacityMeshNodeId, CapacityMeshNode>,
   opts?: {
-    NODE_MAX_PF?: number
+    NODE_MAX_PF?: number;
   },
 ): number {
-  let logSuccess = 0 // log(probability all nodes succeed)
-  const NODE_MAX_PF = opts?.NODE_MAX_PF ?? 0.99999
+  let logSuccess = 0; // log(probability all nodes succeed)
+  const NODE_MAX_PF = opts?.NODE_MAX_PF ?? 0.99999;
 
   for (const nodeWithPortPoints of nodesWithPortPoints) {
-    const node = capacityMeshNodeMap.get(nodeWithPortPoints.capacityMeshNodeId)
-    if (!node) continue
+    const node = capacityMeshNodeMap.get(nodeWithPortPoints.capacityMeshNodeId);
+    if (!node) continue;
 
     // Skip target nodes (they don't contribute to failure)
-    if (node._containsTarget) continue
+    if (node._containsTarget) continue;
 
     // Compute crossings for this node
-    const crossings = getIntraNodeCrossingsUsingCircle(nodeWithPortPoints)
+    const crossings = getIntraNodeCrossingsUsingCircle(nodeWithPortPoints);
 
     // Compute probability of failure
     const estPf = Math.min(
@@ -47,18 +47,18 @@ export function computeSectionScore(
         crossings.numTransitionPairCrossings,
       ),
       NODE_MAX_PF,
-    )
+    );
 
     // Add log(1 - Pf) to logSuccess
     // In log space, multiplying probabilities = adding logs
-    const log1mPf = Math.log(1 - estPf)
-    logSuccess += log1mPf
+    const log1mPf = Math.log(1 - estPf);
+    logSuccess += log1mPf;
   }
 
   // Return logSuccess directly (higher is better)
   // When logSuccess is 0 (all Pf=0 or no contributing nodes), score is 0 (perfect)
   // When logSuccess is negative (some failures possible), score is worse
-  return logSuccess
+  return logSuccess;
 }
 
 /**
@@ -73,14 +73,14 @@ export function computeNodePf(
   nodeWithPortPoints: NodeWithPortPoints,
   capacityMeshNode: CapacityMeshNode,
 ): number {
-  if (capacityMeshNode._containsTarget) return 0
+  if (capacityMeshNode._containsTarget) return 0;
 
-  const crossings = getIntraNodeCrossingsUsingCircle(nodeWithPortPoints)
+  const crossings = getIntraNodeCrossingsUsingCircle(nodeWithPortPoints);
 
   return calculateNodeProbabilityOfFailure(
     capacityMeshNode,
     crossings.numSameLayerCrossings,
     crossings.numEntryExitLayerChanges,
     crossings.numTransitionPairCrossings,
-  )
+  );
 }

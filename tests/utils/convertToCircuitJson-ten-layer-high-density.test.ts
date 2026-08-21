@@ -1,8 +1,8 @@
-import { expect, test } from "bun:test"
-import { convertToCircuitJson } from "lib/testing/utils/convertToCircuitJson"
-import type { SimpleRouteJson } from "lib/types"
-import type { HighDensityRoute } from "lib/types/high-density-types"
-import type { LayerName } from "lib/utils/mapZToLayerName"
+import { expect, test } from "bun:test";
+import { convertToCircuitJson } from "lib/testing/utils/convertToCircuitJson";
+import type { SimpleRouteJson } from "lib/types";
+import type { HighDensityRoute } from "lib/types/high-density-types";
+import type { LayerName } from "lib/utils/mapZToLayerName";
 
 test("converts ten-layer high-density routes and vias to circuit json", () => {
   const srj: SimpleRouteJson = {
@@ -20,7 +20,7 @@ test("converts ten-layer high-density routes and vias to circuit json", () => {
         ],
       },
     ],
-  }
+  };
   const routes: HighDensityRoute[] = [
     {
       connectionName: "ten-layer-net",
@@ -34,13 +34,13 @@ test("converts ten-layer high-density routes and vias to circuit json", () => {
       ],
       vias: [{ x: 1, y: 0 }],
     },
-  ]
+  ];
 
-  const circuitJson = convertToCircuitJson(srj, routes)
-  const trace = circuitJson.find((element) => element.type === "pcb_trace")
-  const via = circuitJson.find((element) => element.type === "pcb_via")
+  const circuitJson = convertToCircuitJson(srj, routes);
+  const trace = circuitJson.find((element) => element.type === "pcb_trace");
+  const via = circuitJson.find((element) => element.type === "pcb_via");
 
-  expect(trace?.type).toBe("pcb_trace")
+  expect(trace?.type).toBe("pcb_trace");
   expect(
     trace?.type === "pcb_trace" &&
       trace.route.some(
@@ -48,10 +48,10 @@ test("converts ten-layer high-density routes and vias to circuit json", () => {
           routePoint.route_type === "wire" &&
           (routePoint.layer as LayerName) === "inner8",
       ),
-  ).toBe(true)
-  expect(via?.type).toBe("pcb_via")
+  ).toBe(true);
+  expect(via?.type).toBe("pcb_via");
   expect(via?.type === "pcb_via" && (via.layers as LayerName[])).toEqual([
     "inner8",
     "bottom",
-  ])
-})
+  ]);
+});

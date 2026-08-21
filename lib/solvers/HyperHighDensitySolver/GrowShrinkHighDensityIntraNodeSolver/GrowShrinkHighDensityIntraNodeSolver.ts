@@ -1,29 +1,29 @@
-import type { GraphicsObject } from "graphics-debug"
+import type { GraphicsObject } from "graphics-debug";
 import type {
   HighDensityIntraNodeRoute,
   NodeWithPortPoints,
   PortPoint,
-} from "lib/types/high-density-types"
-import { BaseSolver } from "../../BaseSolver"
-import { PortfolioSingleIntraNodeSolver } from "../PortfolioSingleIntraNodeSolver"
+} from "lib/types/high-density-types";
+import { BaseSolver } from "../../BaseSolver";
+import { PortfolioSingleIntraNodeSolver } from "../PortfolioSingleIntraNodeSolver";
 import {
   createInvalidDirectConnectionRoutes,
   createInvalidSameLayerCrossingRoutes,
   hasImpossibleSameLayerCrossingGeometry,
-} from "./invalidSameLayerCrossingGeometry"
+} from "./invalidSameLayerCrossingGeometry";
 
 type PortfolioSingleIntraNodeSolverParams = ConstructorParameters<
   typeof PortfolioSingleIntraNodeSolver
->[0]
+>[0];
 
-export const DEFAULT_MAX_GROWTH_ATTEMPTS = 3
+export const DEFAULT_MAX_GROWTH_ATTEMPTS = 3;
 
 export type GrowShrinkHighDensityIntraNodeSolverParams =
   PortfolioSingleIntraNodeSolverParams & {
-    maxGrowthAttempts?: number
-    maxInnerIterationsPerGrowthAttempt?: number
-    fallbackToInvalidGeometryOnFailure?: boolean
-  }
+    maxGrowthAttempts?: number;
+    maxInnerIterationsPerGrowthAttempt?: number;
+    fallbackToInvalidGeometryOnFailure?: boolean;
+  };
 
 const scalePoint = <T extends { x: number; y: number }>(
   point: T,
@@ -33,13 +33,13 @@ const scalePoint = <T extends { x: number; y: number }>(
   ...point,
   x: center.x + (point.x - center.x) * scaleFactor,
   y: center.y + (point.y - center.y) * scaleFactor,
-})
+});
 
 const scalePortPoint = (
   portPoint: PortPoint,
   center: { x: number; y: number },
   scaleFactor: number,
-): PortPoint => scalePoint(portPoint, center, scaleFactor)
+): PortPoint => scalePoint(portPoint, center, scaleFactor);
 
 const scaleNodeWithPortPoints = (
   node: NodeWithPortPoints,
@@ -55,7 +55,7 @@ const scaleNodeWithPortPoints = (
     scalePortPoint(start, node.center, scaleFactor),
     scalePortPoint(end, node.center, scaleFactor),
   ]),
-})
+});
 
 const scaleRoute = (
   route: HighDensityIntraNodeRoute,
@@ -70,7 +70,7 @@ const scaleRoute = (
     start: scalePoint(jumper.start, center, scaleFactor),
     end: scalePoint(jumper.end, center, scaleFactor),
   })),
-})
+});
 
 const routeColors = [
   "#dc2626",
@@ -79,7 +79,7 @@ const routeColors = [
   "#ca8a04",
   "#9333ea",
   "#0891b2",
-]
+];
 
 const connectionLabel = (
   connectionName: string,
@@ -94,49 +94,49 @@ const connectionLabel = (
     ...extraLines,
   ]
     .filter(Boolean)
-    .join("\n")
+    .join("\n");
 
 export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
   override getSolverName(): string {
-    return "GrowShrinkHighDensityIntraNodeSolver"
+    return "GrowShrinkHighDensityIntraNodeSolver";
   }
 
-  constructorParams: GrowShrinkHighDensityIntraNodeSolverParams
-  nodeWithPortPoints: NodeWithPortPoints
-  solvedRoutes: HighDensityIntraNodeRoute[] = []
-  failedSolvers: PortfolioSingleIntraNodeSolver[] = []
-  activeSubSolver: PortfolioSingleIntraNodeSolver | null = null
-  winningSolver?: PortfolioSingleIntraNodeSolver
-  scaleFactor = 1
-  growthAttempts = 0
-  maxGrowthAttempts: number
+  constructorParams: GrowShrinkHighDensityIntraNodeSolverParams;
+  nodeWithPortPoints: NodeWithPortPoints;
+  solvedRoutes: HighDensityIntraNodeRoute[] = [];
+  failedSolvers: PortfolioSingleIntraNodeSolver[] = [];
+  activeSubSolver: PortfolioSingleIntraNodeSolver | null = null;
+  winningSolver?: PortfolioSingleIntraNodeSolver;
+  scaleFactor = 1;
+  growthAttempts = 0;
+  maxGrowthAttempts: number;
 
   constructor(params: GrowShrinkHighDensityIntraNodeSolverParams) {
-    super()
-    this.constructorParams = params
-    this.nodeWithPortPoints = params.nodeWithPortPoints
+    super();
+    this.constructorParams = params;
+    this.nodeWithPortPoints = params.nodeWithPortPoints;
     this.maxGrowthAttempts =
-      params.maxGrowthAttempts ?? DEFAULT_MAX_GROWTH_ATTEMPTS
+      params.maxGrowthAttempts ?? DEFAULT_MAX_GROWTH_ATTEMPTS;
     this.MAX_ITERATIONS =
-      20_000_000 * (params.effort ?? 1) * (this.maxGrowthAttempts + 1)
+      20_000_000 * (params.effort ?? 1) * (this.maxGrowthAttempts + 1);
 
     if (hasImpossibleSameLayerCrossingGeometry(this.nodeWithPortPoints)) {
       this.solvedRoutes = createInvalidSameLayerCrossingRoutes(
         this.nodeWithPortPoints,
         params.traceWidth ?? 0.15,
         params.viaDiameter ?? 0.3,
-      )
-      this.solved = true
-      this.progress = 1
+      );
+      this.solved = true;
+      this.progress = 1;
       this.stats = {
         invalidGeometryFallback: true,
         reason: "single-layer node has same-layer crossings",
-      }
+      };
     }
   }
 
   getConstructorParams() {
-    return this.constructorParams
+    return this.constructorParams;
   }
 
   private createActiveSubSolver() {
@@ -146,15 +146,15 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
         this.nodeWithPortPoints,
         this.scaleFactor,
       ),
-    })
+    });
     if (this.constructorParams.maxInnerIterationsPerGrowthAttempt) {
       this.activeSubSolver.MAX_ITERATIONS =
-        this.constructorParams.maxInnerIterationsPerGrowthAttempt
+        this.constructorParams.maxInnerIterationsPerGrowthAttempt;
     }
   }
 
   private acceptSolution(solver: PortfolioSingleIntraNodeSolver) {
-    this.winningSolver = solver
+    this.winningSolver = solver;
     this.solvedRoutes =
       this.scaleFactor === 1
         ? solver.solvedRoutes
@@ -164,9 +164,9 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
               this.nodeWithPortPoints.center,
               1 / this.scaleFactor,
             ),
-          )
-    this.solved = true
-    this.failed = false
+          );
+    this.solved = true;
+    this.failed = false;
   }
 
   computeProgress() {
@@ -174,29 +174,29 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
       0.99,
       (this.growthAttempts + (this.activeSubSolver?.progress ?? 0)) /
         (this.maxGrowthAttempts + 1),
-    )
+    );
   }
 
   _step() {
     if (!this.activeSubSolver) {
-      this.createActiveSubSolver()
+      this.createActiveSubSolver();
     }
 
-    this.activeSubSolver!.step()
+    this.activeSubSolver!.step();
 
     if (this.activeSubSolver!.solved) {
-      this.acceptSolution(this.activeSubSolver!)
-      this.activeSubSolver = null
-      return
+      this.acceptSolution(this.activeSubSolver!);
+      this.activeSubSolver = null;
+      return;
     }
 
     if (!this.activeSubSolver!.failed) {
-      return
+      return;
     }
 
-    this.failedSolvers.push(this.activeSubSolver!)
-    this.error = this.activeSubSolver!.error
-    this.activeSubSolver = null
+    this.failedSolvers.push(this.activeSubSolver!);
+    this.error = this.activeSubSolver!.error;
+    this.activeSubSolver = null;
 
     if (this.growthAttempts >= this.maxGrowthAttempts) {
       if (this.constructorParams.fallbackToInvalidGeometryOnFailure) {
@@ -204,33 +204,33 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
           this.nodeWithPortPoints,
           this.constructorParams.traceWidth ?? 0.15,
           this.constructorParams.viaDiameter ?? 0.3,
-        )
-        this.solved = true
-        this.failed = false
-        this.progress = 1
+        );
+        this.solved = true;
+        this.failed = false;
+        this.progress = 1;
         this.stats = {
           ...this.stats,
           invalidGeometryFallback: true,
           reason: "growth attempts exhausted",
           lastError: this.error,
-        }
-        this.error = null
-        return
+        };
+        this.error = null;
+        return;
       }
 
-      this.failed = true
-      this.error = `GrowShrinkHighDensityIntraNodeSolver failed after resizing to ${this.scaleFactor}x. Last error: ${this.error}`
-      return
+      this.failed = true;
+      this.error = `GrowShrinkHighDensityIntraNodeSolver failed after resizing to ${this.scaleFactor}x. Last error: ${this.error}`;
+      return;
     }
 
-    this.growthAttempts++
-    this.scaleFactor *= 2
+    this.growthAttempts++;
+    this.scaleFactor *= 2;
   }
 
   visualize(): GraphicsObject {
     const delegatedVisualization =
-      this.activeSubSolver?.visualize() ?? this.winningSolver?.visualize()
-    if (delegatedVisualization) return delegatedVisualization
+      this.activeSubSolver?.visualize() ?? this.winningSolver?.visualize();
+    if (delegatedVisualization) return delegatedVisualization;
 
     if (this.solvedRoutes.length > 0) {
       return {
@@ -239,7 +239,7 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
           : "Grow/shrink high density routes",
         lines: this.solvedRoutes.flatMap((route, routeIndex) =>
           route.route.slice(0, -1).map((point, pointIndex) => {
-            const nextPoint = route.route[pointIndex + 1]
+            const nextPoint = route.route[pointIndex + 1];
             return {
               points: [point, nextPoint],
               strokeColor: routeColors[routeIndex % routeColors.length],
@@ -255,7 +255,7 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
                     : undefined,
                 ].filter(Boolean) as string[],
               ),
-            }
+            };
           }),
         ),
         points: this.nodeWithPortPoints.portPoints.map((point) => ({
@@ -296,7 +296,7 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
           },
         ],
         circles: [],
-      }
+      };
     }
 
     return (
@@ -306,6 +306,6 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
         rects: [],
         circles: [],
       }
-    )
+    );
   }
 }

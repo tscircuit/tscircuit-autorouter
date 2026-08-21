@@ -1,53 +1,53 @@
-import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
-import type { GraphicsObject } from "graphics-debug"
-import { BaseSolver } from "lib/solvers/BaseSolver"
-import { PortfolioSingleIntraNodeSolver } from "lib/solvers/HyperHighDensitySolver/PortfolioSingleIntraNodeSolver"
+import type { ConnectivityMap } from "circuit-json-to-connectivity-map";
+import type { GraphicsObject } from "graphics-debug";
+import { BaseSolver } from "lib/solvers/BaseSolver";
+import { PortfolioSingleIntraNodeSolver } from "lib/solvers/HyperHighDensitySolver/PortfolioSingleIntraNodeSolver";
 import type {
   HighDensityIntraNodeRoute,
   NodeWithPortPoints,
   PortPoint,
-} from "lib/types/high-density-types"
-import { combineVisualizations } from "lib/utils/combineVisualizations"
-import { projectPointToRectBoundary } from "./geometry"
-import type { PolyNodeWithPortPoints } from "./types"
+} from "lib/types/high-density-types";
+import { combineVisualizations } from "lib/utils/combineVisualizations";
+import { projectPointToRectBoundary } from "./geometry";
+import type { PolyNodeWithPortPoints } from "./types";
 
 type ProjectedPortRecord = {
-  projected: PortPoint
-  original: PortPoint
-}
+  projected: PortPoint;
+  original: PortPoint;
+};
 
 export class PolySingleIntraNodeSolver extends BaseSolver {
   override getSolverName(): string {
-    return "PolySingleIntraNodeSolver"
+    return "PolySingleIntraNodeSolver";
   }
 
-  highDensitySolver: PortfolioSingleIntraNodeSolver
-  projectedNode: NodeWithPortPoints
-  solvedRoutes: HighDensityIntraNodeRoute[] = []
-  projectedPorts: ProjectedPortRecord[]
+  highDensitySolver: PortfolioSingleIntraNodeSolver;
+  projectedNode: NodeWithPortPoints;
+  solvedRoutes: HighDensityIntraNodeRoute[] = [];
+  projectedPorts: ProjectedPortRecord[];
 
   constructor(
     public params: {
-      nodeWithPortPoints: PolyNodeWithPortPoints
-      colorMap?: Record<string, string>
-      connMap?: ConnectivityMap
-      viaDiameter?: number
-      traceWidth?: number
-      obstacleMargin?: number
-      effort?: number
+      nodeWithPortPoints: PolyNodeWithPortPoints;
+      colorMap?: Record<string, string>;
+      connMap?: ConnectivityMap;
+      viaDiameter?: number;
+      traceWidth?: number;
+      obstacleMargin?: number;
+      effort?: number;
     },
   ) {
-    super()
-    const { nodeWithPortPoints } = params
+    super();
+    const { nodeWithPortPoints } = params;
     if (!nodeWithPortPoints.projectedRect) {
-      throw new Error("Poly node is missing projectedRect")
+      throw new Error("Poly node is missing projectedRect");
     }
 
     this.projectedPorts = nodeWithPortPoints.portPoints.map((portPoint) => {
       const projectedPoint = projectPointToRectBoundary(
         portPoint,
         nodeWithPortPoints.projectedRect!,
-      )
+      );
       return {
         original: portPoint,
         projected: {
@@ -55,8 +55,8 @@ export class PolySingleIntraNodeSolver extends BaseSolver {
           x: projectedPoint.x,
           y: projectedPoint.y,
         },
-      }
-    })
+      };
+    });
     this.projectedNode = {
       capacityMeshNodeId: nodeWithPortPoints.capacityMeshNodeId,
       center: nodeWithPortPoints.projectedRect.center,
@@ -64,7 +64,7 @@ export class PolySingleIntraNodeSolver extends BaseSolver {
       height: nodeWithPortPoints.projectedRect.height,
       availableZ: nodeWithPortPoints.availableZ,
       portPoints: this.projectedPorts.map(({ projected }) => projected),
-    }
+    };
     this.highDensitySolver = new PortfolioSingleIntraNodeSolver({
       nodeWithPortPoints: this.projectedNode,
       colorMap: params.colorMap,
@@ -73,34 +73,34 @@ export class PolySingleIntraNodeSolver extends BaseSolver {
       traceWidth: params.traceWidth,
       obstacleMargin: params.obstacleMargin,
       effort: params.effort,
-    })
-    this.activeSubSolver = this.highDensitySolver
-    this.MAX_ITERATIONS = this.highDensitySolver.MAX_ITERATIONS + 1_000
+    });
+    this.activeSubSolver = this.highDensitySolver;
+    this.MAX_ITERATIONS = this.highDensitySolver.MAX_ITERATIONS + 1_000;
   }
 
   _step() {
-    this.highDensitySolver.step()
-    this.progress = this.highDensitySolver.progress
-    this.stats = this.highDensitySolver.stats
+    this.highDensitySolver.step();
+    this.progress = this.highDensitySolver.progress;
+    this.stats = this.highDensitySolver.stats;
 
     if (this.highDensitySolver.solved) {
-      this.solvedRoutes = this.highDensitySolver.solvedRoutes
-      this.solved = true
-      this.activeSubSolver = null
+      this.solvedRoutes = this.highDensitySolver.solvedRoutes;
+      this.solved = true;
+      this.activeSubSolver = null;
     } else if (this.highDensitySolver.failed) {
-      this.error = this.highDensitySolver.error
-      this.failed = true
-      this.activeSubSolver = null
+      this.error = this.highDensitySolver.error;
+      this.failed = true;
+      this.activeSubSolver = null;
     }
   }
 
   getConstructorParams() {
-    return [this.params] as const
+    return [this.params] as const;
   }
 
   visualize(): GraphicsObject {
-    const node = this.params.nodeWithPortPoints
-    const projectedRect = node.projectedRect
+    const node = this.params.nodeWithPortPoints;
+    const projectedRect = node.projectedRect;
     const polygonViz: GraphicsObject = {
       polygons: [
         {
@@ -147,8 +147,11 @@ export class PolySingleIntraNodeSolver extends BaseSolver {
           label: `${projected.connectionName} projected`,
         })),
       ],
-    }
+    };
 
-    return combineVisualizations(polygonViz, this.highDensitySolver.visualize())
+    return combineVisualizations(
+      polygonViz,
+      this.highDensitySolver.visualize(),
+    );
   }
 }

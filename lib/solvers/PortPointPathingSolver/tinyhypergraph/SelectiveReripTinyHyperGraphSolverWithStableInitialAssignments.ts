@@ -1,5 +1,5 @@
-import { SelectiveReripTinyHyperGraphSolver } from "tiny-hypergraph/lib/index"
-import { applyInitialAssignments } from "tiny-hypergraph/lib/initialAssignments"
+import { SelectiveReripTinyHyperGraphSolver } from "tiny-hypergraph/lib/index";
+import { applyInitialAssignments } from "tiny-hypergraph/lib/initialAssignments";
 
 /**
  * Selective rerips may move a preloaded assignment when it is the blocker.
@@ -8,8 +8,8 @@ import { applyInitialAssignments } from "tiny-hypergraph/lib/initialAssignments"
  */
 export class SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments extends SelectiveReripTinyHyperGraphSolver {
   override resetRoutingStateForRerip() {
-    super.resetRoutingStateForRerip()
-    if (!this.problem.initialAssignments?.length) return
+    super.resetRoutingStateForRerip();
+    if (!this.problem.initialAssignments?.length) return;
 
     applyInitialAssignments({
       topology: this.topology,
@@ -18,6 +18,6 @@ export class SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments exte
       routeSuccessCountByRouteId: this.routeSuccessCountByRouteId,
       appendSegmentToRegionCache: (regionId, fromPortId, toPortId) =>
         this.appendSegmentToRegionCache(regionId, fromPortId, toPortId),
-    })
+    });
   }
 }

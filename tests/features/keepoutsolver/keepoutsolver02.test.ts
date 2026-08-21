@@ -1,14 +1,12 @@
-import { test, expect } from "bun:test"
-import { TraceKeepoutSolver } from "lib/solvers/TraceKeepoutSolver/TraceKeepoutSolver"
-import { ConnectivityMap } from "connectivity-map"
-import input from "../../../fixtures/features/keepoutsolver/keepoutsolver02-input.json" with {
-  type: "json",
-}
+import { test, expect } from "bun:test";
+import { TraceKeepoutSolver } from "lib/solvers/TraceKeepoutSolver/TraceKeepoutSolver";
+import { ConnectivityMap } from "connectivity-map";
+import input from "../../../fixtures/features/keepoutsolver/keepoutsolver02-input.json" with { type: "json" };
 
 test("TraceKeepoutSolver - keepoutsolver02", () => {
-  const data = (input as any)[0]
+  const data = (input as any)[0];
 
-  const connMap = new ConnectivityMap(data.connMap.netMap)
+  const connMap = new ConnectivityMap(data.connMap.netMap);
 
   const solver = new TraceKeepoutSolver({
     hdRoutes: data.hdRoutes,
@@ -17,11 +15,11 @@ test("TraceKeepoutSolver - keepoutsolver02", () => {
     colorMap: data.colorMap,
     keepoutRadiusSchedule: data.keepoutRadiusSchedule,
     srj: data.srj,
-  })
+  });
 
-  solver.solve()
+  solver.solve();
 
-  expect(solver.solved).toBe(true)
-  expect(solver.getRedrawnHdRoutes().length).toBeGreaterThan(0)
-  expect(solver.visualize()).toMatchGraphicsSvg(import.meta.path)
-})
+  expect(solver.solved).toBe(true);
+  expect(solver.getRedrawnHdRoutes().length).toBeGreaterThan(0);
+  expect(solver.visualize()).toMatchGraphicsSvg(import.meta.path);
+});

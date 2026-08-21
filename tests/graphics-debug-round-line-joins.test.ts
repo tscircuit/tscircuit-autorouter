@@ -1,6 +1,6 @@
-import { expect, test } from "bun:test"
-import type { SimpleRouteJson } from "lib/types"
-import { convertSrjToGraphicsObject } from "lib/utils/convertSrjToGraphicsObject"
+import { expect, test } from "bun:test";
+import type { SimpleRouteJson } from "lib/types";
+import { convertSrjToGraphicsObject } from "lib/utils/convertSrjToGraphicsObject";
 
 test("keeps consecutive routed segments in one rounded polyline", async () => {
   const srj: SimpleRouteJson = {
@@ -47,9 +47,9 @@ test("keeps consecutive routed segments in one rounded polyline", async () => {
         ],
       },
     ],
-  }
+  };
 
   await expect(convertSrjToGraphicsObject(srj)).toMatchGraphicsSvg(
     import.meta.path,
-  )
-})
+  );
+});

@@ -1,9 +1,9 @@
-import type { CapacityMeshNode } from "lib/types"
-import { CapacityPathingSolver, type Candidate } from "./CapacityPathingSolver"
+import type { CapacityMeshNode } from "lib/types";
+import { CapacityPathingSolver, type Candidate } from "./CapacityPathingSolver";
 
 export class CapacityPathingSolver2_AvoidLowCapacity extends CapacityPathingSolver {
   override getSolverName(): string {
-    return "CapacityPathingSolver2_AvoidLowCapacity"
+    return "CapacityPathingSolver2_AvoidLowCapacity";
   }
 
   computeG(
@@ -18,6 +18,6 @@ export class CapacityPathingSolver2_AvoidLowCapacity extends CapacityPathingSolv
           (node.center.y - prevCandidate.node.center.y) ** 2,
       ) /
         this.getTotalCapacity(node)
-    )
+    );
   }
 }

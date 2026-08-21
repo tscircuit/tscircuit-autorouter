@@ -1,4 +1,4 @@
-export type JumperFootprint = "0603" | "1206" | "1206x4_pair"
+export type JumperFootprint = "0603" | "1206" | "1206x4_pair";
 
 // NOTE: 0805 should be avoided as a jumper because it has a bad ratio of pad
 // size to under-body clearance
@@ -12,7 +12,7 @@ export const JUMPER_0603 = {
   width: 0.95,
   padLength: 0.8,
   padWidth: 0.95,
-}
+};
 
 /**
  * 1206 footprint dimensions in mm
@@ -23,7 +23,7 @@ export const JUMPER_1206 = {
   width: 1.6,
   padLength: 0.6,
   padWidth: 1.6,
-}
+};
 
 /**
  * 1206x4 resistor array - dimensions for a single internal jumper pair
@@ -35,10 +35,10 @@ export const JUMPER_1206X4_PAIR = {
   width: 0.5, // pad height (Y direction)
   padLength: 0.8, // pad width (X direction, along jumper axis)
   padWidth: 0.5, // pad height (Y direction, perpendicular to jumper)
-}
+};
 
 export const JUMPER_DIMENSIONS: Record<JumperFootprint, typeof JUMPER_0603> = {
   "0603": JUMPER_0603,
   "1206": JUMPER_1206,
   "1206x4_pair": JUMPER_1206X4_PAIR,
-}
+};

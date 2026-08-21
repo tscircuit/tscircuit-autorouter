@@ -7,5 +7,5 @@ export function isPointInRect(
     point.x <= rect.center.x + rect.width / 2 &&
     point.y >= rect.center.y - rect.height / 2 &&
     point.y <= rect.center.y + rect.height / 2
-  )
+  );
 }

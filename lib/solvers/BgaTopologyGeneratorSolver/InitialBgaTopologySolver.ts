@@ -1,28 +1,28 @@
 import {
   doBoundsOverlap,
   getBoundFromCenteredRect,
-} from "@tscircuit/math-utils"
-import { BaseSolver } from "@tscircuit/solver-utils"
-import type { GraphicsObject } from "graphics-debug"
-import type { TopologyGeneratorSolverOutput } from "lib/solvers/TopologyPlanningSolver/TopologyGenerator"
-import type { CapacityMeshNode, Obstacle, SimpleRouteJson } from "lib/types"
-import { createRectFromCapacityNode } from "lib/utils/createRectFromCapacityNode"
-import { getViaDimensions } from "lib/utils/getViaDimensions"
-import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
-import { BgaGrid } from "./bga-grid"
-import type { BgaGap, MissingBgaSlot } from "./bga-grid"
-import { getObstacleTargetConnectionName } from "./getObstacleTargetConnectionName"
+} from "@tscircuit/math-utils";
+import { BaseSolver } from "@tscircuit/solver-utils";
+import type { GraphicsObject } from "graphics-debug";
+import type { TopologyGeneratorSolverOutput } from "lib/solvers/TopologyPlanningSolver/TopologyGenerator";
+import type { CapacityMeshNode, Obstacle, SimpleRouteJson } from "lib/types";
+import { createRectFromCapacityNode } from "lib/utils/createRectFromCapacityNode";
+import { getViaDimensions } from "lib/utils/getViaDimensions";
+import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ";
+import { BgaGrid } from "./bga-grid";
+import type { BgaGap, MissingBgaSlot } from "./bga-grid";
+import { getObstacleTargetConnectionName } from "./getObstacleTargetConnectionName";
 
-const BGA_MULTILAYER_REGION_VIA_DIAMETER_FACTOR = 1.2
+const BGA_MULTILAYER_REGION_VIA_DIAMETER_FACTOR = 1.2;
 
 export type InitialBgaTopologySolverInput = {
-  srj: SimpleRouteJson
-  componentBounds: SimpleRouteJson["bounds"]
-  componentId: string
-  markedComponentObstacles: Obstacle[]
-  unmarkedComponentObstacles: Obstacle[]
-  viaDiameter?: number
-}
+  srj: SimpleRouteJson;
+  componentBounds: SimpleRouteJson["bounds"];
+  componentId: string;
+  markedComponentObstacles: Obstacle[];
+  unmarkedComponentObstacles: Obstacle[];
+  viaDiameter?: number;
+};
 
 function getStableObstacleNodeToken(obstacle: Obstacle): string {
   return (
@@ -35,25 +35,25 @@ function getStableObstacleNodeToken(obstacle: Obstacle): string {
       obstacle.height,
       obstacle.layers.join(","),
     ].join(":")
-  )
+  );
 }
 
 function ensureUniqueMeshNodeIds(
   meshNodes: CapacityMeshNode[],
 ): CapacityMeshNode[] {
-  const seenNodeIds = new Map<string, number>()
+  const seenNodeIds = new Map<string, number>();
 
   return meshNodes.map((meshNode) => {
-    const seenCount = seenNodeIds.get(meshNode.capacityMeshNodeId) ?? 0
-    seenNodeIds.set(meshNode.capacityMeshNodeId, seenCount + 1)
+    const seenCount = seenNodeIds.get(meshNode.capacityMeshNodeId) ?? 0;
+    seenNodeIds.set(meshNode.capacityMeshNodeId, seenCount + 1);
 
-    if (seenCount === 0) return meshNode
+    if (seenCount === 0) return meshNode;
 
     return {
       ...meshNode,
       capacityMeshNodeId: `${meshNode.capacityMeshNodeId}__dup${seenCount}`,
-    }
-  })
+    };
+  });
 }
 
 function getStableGapNodeToken({
@@ -65,13 +65,13 @@ function getStableGapNodeToken({
   width,
   height,
 }: {
-  componentId: string
-  orientationKey: string
-  row: number
-  col: number
-  center: { x: number; y: number }
-  width: number
-  height: number
+  componentId: string;
+  orientationKey: string;
+  row: number;
+  col: number;
+  center: { x: number; y: number };
+  width: number;
+  height: number;
 }) {
   return [
     "cmn",
@@ -83,21 +83,21 @@ function getStableGapNodeToken({
     center.y,
     width,
     height,
-  ].join("_")
+  ].join("_");
 }
 
 function createMeshNodesFromBgaGap(input: {
-  componentId: string
-  bgaGap: BgaGap
-  freeLayers: number[]
-  multiLayerThreshold: number
+  componentId: string;
+  bgaGap: BgaGap;
+  freeLayers: number[];
+  multiLayerThreshold: number;
 }): CapacityMeshNode[] {
-  const { componentId, bgaGap, freeLayers, multiLayerThreshold } = input
+  const { componentId, bgaGap, freeLayers, multiLayerThreshold } = input;
   const isLargeEnoughForMultiLayer =
-    bgaGap.width > multiLayerThreshold && bgaGap.height > multiLayerThreshold
-  let orientationKey: string = "d"
-  if (bgaGap.orientation === "horizontal") orientationKey = "h"
-  if (bgaGap.orientation === "vertical") orientationKey = "v"
+    bgaGap.width > multiLayerThreshold && bgaGap.height > multiLayerThreshold;
+  let orientationKey: string = "d";
+  if (bgaGap.orientation === "horizontal") orientationKey = "h";
+  if (bgaGap.orientation === "vertical") orientationKey = "v";
   const baseNodeId: string = getStableGapNodeToken({
     componentId,
     orientationKey,
@@ -106,7 +106,7 @@ function createMeshNodesFromBgaGap(input: {
     center: bgaGap.center,
     width: bgaGap.width,
     height: bgaGap.height,
-  })
+  });
 
   if (bgaGap.orientation === "diagonal" && isLargeEnoughForMultiLayer) {
     return [
@@ -118,7 +118,7 @@ function createMeshNodesFromBgaGap(input: {
         capacityMeshNodeId: `${baseNodeId}_all`,
         layer: "",
       },
-    ]
+    ];
   }
 
   if (!bgaGap.isBetweenTwoPads && isLargeEnoughForMultiLayer) {
@@ -131,7 +131,7 @@ function createMeshNodesFromBgaGap(input: {
         capacityMeshNodeId: `${baseNodeId}_all`,
         layer: "",
       },
-    ]
+    ];
   }
 
   return freeLayers.map((z) => ({
@@ -141,16 +141,17 @@ function createMeshNodesFromBgaGap(input: {
     availableZ: [z],
     capacityMeshNodeId: `${baseNodeId}_${z}`,
     layer: "",
-  }))
+  }));
 }
 
 function createMeshNodeFromMissingBgaSlot(input: {
-  componentId: string
-  missingBgaSlot: MissingBgaSlot
-  freeLayers: number[]
-  multiLayerThreshold: number
+  componentId: string;
+  missingBgaSlot: MissingBgaSlot;
+  freeLayers: number[];
+  multiLayerThreshold: number;
 }): CapacityMeshNode[] {
-  const { componentId, missingBgaSlot, freeLayers, multiLayerThreshold } = input
+  const { componentId, missingBgaSlot, freeLayers, multiLayerThreshold } =
+    input;
   const baseNodeId = getStableGapNodeToken({
     componentId,
     orientationKey: "missing",
@@ -159,10 +160,10 @@ function createMeshNodeFromMissingBgaSlot(input: {
     center: missingBgaSlot.center,
     width: missingBgaSlot.width,
     height: missingBgaSlot.height,
-  })
+  });
   const isLargeEnoughForMultiLayer =
     missingBgaSlot.width > multiLayerThreshold &&
-    missingBgaSlot.height > multiLayerThreshold
+    missingBgaSlot.height > multiLayerThreshold;
 
   if (!isLargeEnoughForMultiLayer) {
     return freeLayers.map((z) => ({
@@ -172,7 +173,7 @@ function createMeshNodeFromMissingBgaSlot(input: {
       availableZ: [z],
       capacityMeshNodeId: `${baseNodeId}_${z}`,
       layer: "",
-    }))
+    }));
   }
 
   return [
@@ -184,23 +185,23 @@ function createMeshNodeFromMissingBgaSlot(input: {
       capacityMeshNodeId: `${baseNodeId}_all`,
       layer: "",
     },
-  ]
+  ];
 }
 
 function createFreeObstacleMeshNodes(input: {
-  componentId: string
-  obstacle: Obstacle
-  freeLayers: number[]
-  layerCount: number
+  componentId: string;
+  obstacle: Obstacle;
+  freeLayers: number[];
+  layerCount: number;
 }): CapacityMeshNode[] {
-  const { componentId, obstacle, freeLayers, layerCount } = input
+  const { componentId, obstacle, freeLayers, layerCount } = input;
   const obstacleLayers: number[] = obstacle.layers.map((layerName) =>
     mapLayerNameToZ(layerName, layerCount),
-  )
+  );
   const obstacleFreeLayers: number[] = freeLayers.filter(
     (layer) => !obstacleLayers.includes(layer),
-  )
-  const obstacleNodeToken = getStableObstacleNodeToken(obstacle)
+  );
+  const obstacleNodeToken = getStableObstacleNodeToken(obstacle);
 
   return obstacleFreeLayers.map((layer) => ({
     capacityMeshNodeId: `free-${componentId}-${obstacleNodeToken}-${layer}`,
@@ -209,7 +210,7 @@ function createFreeObstacleMeshNodes(input: {
     height: obstacle.height,
     layer: `z${layer}`,
     availableZ: [layer],
-  }))
+  }));
 }
 
 function createObstacleMeshNode(
@@ -219,12 +220,12 @@ function createObstacleMeshNode(
 ): CapacityMeshNode {
   const obstacleLayers: number[] = obstacle.layers.map((layerName) =>
     mapLayerNameToZ(layerName, srj.layerCount),
-  )
-  const obstacleNodeToken = getStableObstacleNodeToken(obstacle)
+  );
+  const obstacleNodeToken = getStableObstacleNodeToken(obstacle);
   const targetConnectionName = getObstacleTargetConnectionName({
     obstacle,
     srj,
-  })
+  });
 
   return {
     capacityMeshNodeId: `obstacle-${componentId}-${obstacleNodeToken}-${obstacleLayers.join(",")}-${obstacle.center.x}-${obstacle.center.y}`,
@@ -240,19 +241,19 @@ function createObstacleMeshNode(
     height: obstacle.height,
     layer: `z${obstacleLayers.join(",")}`,
     availableZ: obstacleLayers,
-  }
+  };
 }
 
 export class InitialBgaTopologySolver extends BaseSolver {
-  componentObstacles: Obstacle[] = []
-  meshNodes: CapacityMeshNode[] = []
+  componentObstacles: Obstacle[] = [];
+  meshNodes: CapacityMeshNode[] = [];
 
   constructor(public readonly inputProblem: InitialBgaTopologySolverInput) {
-    super()
+    super();
   }
 
   getConstructorParams(): readonly [InitialBgaTopologySolverInput] {
-    return [this.inputProblem] as const
+    return [this.inputProblem] as const;
   }
 
   override _step(): void {
@@ -262,48 +263,48 @@ export class InitialBgaTopologySolver extends BaseSolver {
       componentId,
       markedComponentObstacles,
       unmarkedComponentObstacles,
-    } = this.inputProblem
+    } = this.inputProblem;
 
     const copperPoursInBounds: Obstacle[] = srj.obstacles
       .filter((obstacle) => obstacle.isCopperPour === true)
       .filter((obstacle) =>
         doBoundsOverlap(getBoundFromCenteredRect(obstacle), componentBounds),
-      )
+      );
 
     const blockedLayers: number[] = copperPoursInBounds.flatMap((obstacle) =>
       obstacle.layers.map((layerName) =>
         mapLayerNameToZ(layerName, srj.layerCount),
       ),
-    )
+    );
 
     const freeLayers: number[] = Array.from(
       { length: srj.layerCount },
       (_, layerIndex) => layerIndex,
-    ).filter((layer) => !blockedLayers.includes(layer))
+    ).filter((layer) => !blockedLayers.includes(layer));
 
-    this.componentObstacles = markedComponentObstacles
+    this.componentObstacles = markedComponentObstacles;
 
     if (markedComponentObstacles.length === 0 || freeLayers.length === 0) {
-      this.solved = true
-      return
+      this.solved = true;
+      return;
     }
 
     const bgaGrid: BgaGrid | null = BgaGrid.fromObstacles(
       markedComponentObstacles,
-    )
+    );
 
     if (!bgaGrid) {
-      this.solved = true
-      return
+      this.solved = true;
+      return;
     }
 
-    const axisGaps: BgaGap[] = bgaGrid.getAxisGaps()
-    const diagonalGaps: BgaGap[] = bgaGrid.getDiagonalGaps()
-    const missingBgaSlots: MissingBgaSlot[] = bgaGrid.getMissingSlots()
+    const axisGaps: BgaGap[] = bgaGrid.getAxisGaps();
+    const diagonalGaps: BgaGap[] = bgaGrid.getDiagonalGaps();
+    const missingBgaSlots: MissingBgaSlot[] = bgaGrid.getMissingSlots();
     const viaDiameter =
-      this.inputProblem.viaDiameter ?? getViaDimensions(srj).padDiameter
+      this.inputProblem.viaDiameter ?? getViaDimensions(srj).padDiameter;
     const multiLayerThreshold =
-      viaDiameter * BGA_MULTILAYER_REGION_VIA_DIAMETER_FACTOR
+      viaDiameter * BGA_MULTILAYER_REGION_VIA_DIAMETER_FACTOR;
     this.meshNodes = [
       ...axisGaps.flatMap((bgaGap) =>
         createMeshNodesFromBgaGap({
@@ -349,14 +350,14 @@ export class InitialBgaTopologySolver extends BaseSolver {
         // }),
         createObstacleMeshNode(componentId, obstacle, srj),
       ]),
-    ]
-    this.meshNodes = ensureUniqueMeshNodeIds(this.meshNodes)
+    ];
+    this.meshNodes = ensureUniqueMeshNodeIds(this.meshNodes);
 
-    this.solved = true
+    this.solved = true;
   }
 
   getOutput(): CapacityMeshNode[] {
-    return this.meshNodes
+    return this.meshNodes;
   }
 
   override visualize(): GraphicsObject {
@@ -413,6 +414,6 @@ export class InitialBgaTopologySolver extends BaseSolver {
               : "rgba(0,120,255,0.38)",
         })),
       ],
-    }
+    };
   }
 }

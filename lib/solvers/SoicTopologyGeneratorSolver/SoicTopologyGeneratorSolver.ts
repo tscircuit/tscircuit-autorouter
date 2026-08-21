@@ -1,46 +1,44 @@
-import { getBoundingBox } from "@tscircuit/math-utils"
-import type { Bounds } from "@tscircuit/math-utils"
-import { BaseSolver } from "@tscircuit/solver-utils"
+import { getBoundingBox } from "@tscircuit/math-utils";
+import type { Bounds } from "@tscircuit/math-utils";
+import { BaseSolver } from "@tscircuit/solver-utils";
 import {
   clusterAxisValues,
   getLayerRange,
   getObstacleAvailableZ,
-} from "lib/solvers/BgaTopologyGeneratorSolver/bgpTopologyGeneratorShared"
+} from "lib/solvers/BgaTopologyGeneratorSolver/bgpTopologyGeneratorShared";
 import {
   TopologyGenerator,
   type TopologyGeneratorSolverOutput,
   type TopologyGeneratorSolverParams,
-} from "lib/solvers/TopologyPlanningSolver/TopologyGenerator"
-import type { CapacityMeshNode, Obstacle } from "lib/types"
-import { getViaDimensions } from "lib/utils/getViaDimensions"
+} from "lib/solvers/TopologyPlanningSolver/TopologyGenerator";
+import type { CapacityMeshNode, Obstacle } from "lib/types";
+import { getViaDimensions } from "lib/utils/getViaDimensions";
 
-const MIN_REGION_SIDE = 1e-6
+const MIN_REGION_SIDE = 1e-6;
 
-type SoicOrientation = "vertical-columns" | "horizontal-rows"
+type SoicOrientation = "vertical-columns" | "horizontal-rows";
 
-type SoicSide = "left" | "right" | "top" | "bottom"
+type SoicSide = "left" | "right" | "top" | "bottom";
 
 type RectRegion = {
-  center: { x: number; y: number }
-  width: number
-  height: number
-}
+  center: { x: number; y: number };
+  width: number;
+  height: number;
+};
 
 type SoicRoutingRegion = {
-  key: string
-  bounds: Bounds
-  regionType: "center" | "pad" | "pad-gap"
-  obstacleZ?: number[]
-  connectedTo?: string[]
-}
+  key: string;
+  bounds: Bounds;
+  regionType: "center" | "pad" | "pad-gap";
+  obstacleZ?: number[];
+  connectedTo?: string[];
+};
 
-export interface SoicTopologyGeneratorSolverParams
-  extends TopologyGeneratorSolverParams {}
+export interface SoicTopologyGeneratorSolverParams extends TopologyGeneratorSolverParams {}
 
-export interface SoicTopologyGeneratorSolverOutput
-  extends TopologyGeneratorSolverOutput {
+export interface SoicTopologyGeneratorSolverOutput extends TopologyGeneratorSolverOutput {
   /** Routing regions derived from the SOIC pad rows/columns. These are not obstacle rectangles. */
-  routingRegions: CapacityMeshNode[]
+  routingRegions: CapacityMeshNode[];
 }
 
 function createRectRegion(bounds: Bounds): RectRegion {
@@ -51,14 +49,14 @@ function createRectRegion(bounds: Bounds): RectRegion {
     },
     width: bounds.maxX - bounds.minX,
     height: bounds.maxY - bounds.minY,
-  }
+  };
 }
 
 function isValidBounds(bounds: Bounds) {
   return (
     bounds.maxX - bounds.minX > MIN_REGION_SIDE &&
     bounds.maxY - bounds.minY > MIN_REGION_SIDE
-  )
+  );
 }
 
 function createMeshNodesForRegion({
@@ -70,19 +68,19 @@ function createMeshNodesForRegion({
   obstacleZ = [],
   connectedTo,
 }: {
-  nodeId: string
-  bounds: Bounds
-  availableZ: number[]
-  multiLayerThreshold: number
-  regionType: SoicRoutingRegion["regionType"]
-  obstacleZ?: number[]
-  connectedTo?: string[]
+  nodeId: string;
+  bounds: Bounds;
+  availableZ: number[];
+  multiLayerThreshold: number;
+  regionType: SoicRoutingRegion["regionType"];
+  obstacleZ?: number[];
+  connectedTo?: string[];
 }): CapacityMeshNode[] {
-  if (!isValidBounds(bounds)) return []
+  if (!isValidBounds(bounds)) return [];
 
-  const region = createRectRegion(bounds)
+  const region = createRectRegion(bounds);
   const isLargeEnoughForMultiZ =
-    Math.min(region.width, region.height) > multiLayerThreshold
+    Math.min(region.width, region.height) > multiLayerThreshold;
 
   const layerGroups = isLargeEnoughForMultiZ
     ? [
@@ -98,7 +96,7 @@ function createMeshNodesForRegion({
     : availableZ.map((z) => ({
         availableZ: [z],
         containsObstacle: obstacleZ.includes(z),
-      }))
+      }));
 
   return layerGroups.map((group) => ({
     capacityMeshNodeId:
@@ -115,78 +113,78 @@ function createMeshNodesForRegion({
     _soicRegionType: regionType,
     _containsObstacle: group.containsObstacle,
     _connectedTo: group.containsObstacle ? connectedTo : undefined,
-  }))
+  }));
 }
 
 function getNearestClusterIndex(value: number, clusters: number[]) {
-  let nearestIndex = 0
-  let nearestDistance = Number.POSITIVE_INFINITY
+  let nearestIndex = 0;
+  let nearestDistance = Number.POSITIVE_INFINITY;
 
   for (let index = 0; index < clusters.length; index++) {
-    const distance = Math.abs(value - clusters[index]!)
+    const distance = Math.abs(value - clusters[index]!);
     if (distance < nearestDistance) {
-      nearestIndex = index
-      nearestDistance = distance
+      nearestIndex = index;
+      nearestDistance = distance;
     }
   }
 
-  return nearestIndex
+  return nearestIndex;
 }
 
 function getSoicOrientation(obstacles: Obstacle[]): SoicOrientation {
   const rowCount = clusterAxisValues(
     obstacles.map((obstacle) => obstacle.center.y),
-  ).length
+  ).length;
   const columnCount = clusterAxisValues(
     obstacles.map((obstacle) => obstacle.center.x),
-  ).length
+  ).length;
 
   return columnCount === 2 && rowCount !== 2
     ? "vertical-columns"
-    : "horizontal-rows"
+    : "horizontal-rows";
 }
 
 function groupSoicPads({
   obstacles,
   orientation,
 }: {
-  obstacles: Obstacle[]
-  orientation: SoicOrientation
+  obstacles: Obstacle[];
+  orientation: SoicOrientation;
 }) {
   const sideGroups: Record<SoicSide, Obstacle[]> = {
     left: [],
     right: [],
     top: [],
     bottom: [],
-  }
+  };
 
   if (orientation === "vertical-columns") {
     const xClusters = clusterAxisValues(
       obstacles.map((obstacle) => obstacle.center.x),
-    )
+    );
 
     for (const obstacle of obstacles) {
-      const clusterIndex = getNearestClusterIndex(obstacle.center.x, xClusters)
-      sideGroups[clusterIndex === 0 ? "left" : "right"].push(obstacle)
+      const clusterIndex = getNearestClusterIndex(obstacle.center.x, xClusters);
+      sideGroups[clusterIndex === 0 ? "left" : "right"].push(obstacle);
     }
 
-    sideGroups.left.sort((a, b) => a.center.y - b.center.y)
-    sideGroups.right.sort((a, b) => a.center.y - b.center.y)
-    return sideGroups
+    sideGroups.left.sort((a, b) => a.center.y - b.center.y);
+    sideGroups.right.sort((a, b) => a.center.y - b.center.y);
+    return sideGroups;
   }
 
   const yClusters = clusterAxisValues(
     obstacles.map((obstacle) => obstacle.center.y),
-  )
+  );
 
   for (const obstacle of obstacles) {
-    const clusterIndex = getNearestClusterIndex(obstacle.center.y, yClusters)
-    sideGroups[clusterIndex === 0 ? "top" : "bottom"].push(obstacle)
+    const clusterIndex = getNearestClusterIndex(obstacle.center.y, yClusters);
+    sideGroups[clusterIndex === 0 ? "top" : "bottom"].push(obstacle);
   }
 
-  sideGroups.top.sort((a, b) => a.center.x - b.center.x)
-  sideGroups.bottom.sort((a, b) => a.center.x - b.center.x)
-  return sideGroups
+  sideGroups.top.sort((a, b) => a.center.x - b.center.x);
+  sideGroups.bottom.sort((a, b) => a.center.x - b.center.x);
+  return sideGroups;
 }
 
 function getInnerSoicBounds({
@@ -194,9 +192,9 @@ function getInnerSoicBounds({
   orientation,
   sideGroups,
 }: {
-  bounds: Bounds
-  orientation: SoicOrientation
-  sideGroups: Record<SoicSide, Obstacle[]>
+  bounds: Bounds;
+  orientation: SoicOrientation;
+  sideGroups: Record<SoicSide, Obstacle[]>;
 }): Bounds {
   if (orientation === "vertical-columns") {
     return {
@@ -208,7 +206,7 @@ function getInnerSoicBounds({
       ),
       minY: bounds.minY,
       maxY: bounds.maxY,
-    }
+    };
   }
 
   return {
@@ -220,7 +218,7 @@ function getInnerSoicBounds({
     maxY: Math.min(
       ...sideGroups.bottom.map((obstacle) => getBoundingBox(obstacle).minY),
     ),
-  }
+  };
 }
 
 function getPadRegions(obstacles: Obstacle[], layerCount: number) {
@@ -230,7 +228,7 @@ function getPadRegions(obstacles: Obstacle[], layerCount: number) {
     regionType: "pad" as const,
     obstacleZ: getObstacleAvailableZ(obstacle, layerCount),
     connectedTo: [...obstacle.connectedTo],
-  }))
+  }));
 }
 
 function createGapRegionsForSide({
@@ -239,17 +237,17 @@ function createGapRegionsForSide({
   bounds,
   centralBounds,
 }: {
-  side: SoicSide
-  sideObstacles: Obstacle[]
-  bounds: Bounds
-  centralBounds: Bounds
+  side: SoicSide;
+  sideObstacles: Obstacle[];
+  bounds: Bounds;
+  centralBounds: Bounds;
 }) {
-  const regions: SoicRoutingRegion[] = []
+  const regions: SoicRoutingRegion[] = [];
 
   for (let index = 0; index < sideObstacles.length - 1; index++) {
-    const currentBounds = getBoundingBox(sideObstacles[index]!)
-    const nextBounds = getBoundingBox(sideObstacles[index + 1]!)
-    let gapBounds: Bounds
+    const currentBounds = getBoundingBox(sideObstacles[index]!);
+    const nextBounds = getBoundingBox(sideObstacles[index + 1]!);
+    let gapBounds: Bounds;
 
     if (side === "left") {
       gapBounds = {
@@ -257,38 +255,38 @@ function createGapRegionsForSide({
         maxX: centralBounds.minX,
         minY: currentBounds.maxY,
         maxY: nextBounds.minY,
-      }
+      };
     } else if (side === "right") {
       gapBounds = {
         minX: centralBounds.maxX,
         maxX: bounds.maxX,
         minY: currentBounds.maxY,
         maxY: nextBounds.minY,
-      }
+      };
     } else if (side === "top") {
       gapBounds = {
         minX: currentBounds.maxX,
         maxX: nextBounds.minX,
         minY: bounds.minY,
         maxY: centralBounds.minY,
-      }
+      };
     } else {
       gapBounds = {
         minX: currentBounds.maxX,
         maxX: nextBounds.minX,
         minY: centralBounds.maxY,
         maxY: bounds.maxY,
-      }
+      };
     }
 
     regions.push({
       key: `${side}-gap-${index}`,
       bounds: gapBounds,
       regionType: "pad-gap",
-    })
+    });
   }
 
-  return regions
+  return regions;
 }
 
 /**
@@ -296,53 +294,55 @@ function createGapRegionsForSide({
  * regions between adjacent pads on the two populated sides.
  */
 export class SoicTopologyGeneratorSolver extends BaseSolver {
-  static readonly componentKind = "soic"
+  static readonly componentKind = "soic";
 
-  private output: SoicTopologyGeneratorSolverOutput | null = null
+  private output: SoicTopologyGeneratorSolverOutput | null = null;
 
   constructor(public readonly inputProblem: SoicTopologyGeneratorSolverParams) {
-    super()
+    super();
   }
 
   override getConstructorParams() {
-    return [this.inputProblem] as const
+    return [this.inputProblem] as const;
   }
 
   override _step() {
     if (this.output) {
-      this.solved = true
-      return
+      this.solved = true;
+      return;
     }
 
-    const { layerCount, obstacles } = this.inputProblem.inputSrj
-    const { bounds, componentId } = this.inputProblem.detectedComponent
-    const availableZ = getLayerRange(layerCount)
+    const { layerCount, obstacles } = this.inputProblem.inputSrj;
+    const { bounds, componentId } = this.inputProblem.detectedComponent;
+    const availableZ = getLayerRange(layerCount);
     const topologyObstacles = obstacles.filter(
       (obstacle) => obstacle.componentId === componentId,
-    )
+    );
     const soicObstacles =
-      topologyObstacles.length > 0 ? topologyObstacles : obstacles
-    const orientation = getSoicOrientation(soicObstacles)
+      topologyObstacles.length > 0 ? topologyObstacles : obstacles;
+    const orientation = getSoicOrientation(soicObstacles);
     const sideGroups = groupSoicPads({
       obstacles: soicObstacles,
       orientation,
-    })
+    });
     const centralBounds = getInnerSoicBounds({
       bounds,
       orientation,
       sideGroups,
-    })
-    const nodeScopeId = componentId
+    });
+    const nodeScopeId = componentId;
     const viaDiameter =
       this.inputProblem.viaDiameter ??
-      getViaDimensions(this.inputProblem.inputSrj).padDiameter
+      getViaDimensions(this.inputProblem.inputSrj).padDiameter;
     const obstacleMargin =
       this.inputProblem.obstacleMargin ??
       this.inputProblem.inputSrj.defaultObstacleMargin ??
-      0.15
-    const multiLayerThreshold = (viaDiameter + obstacleMargin) * 2
+      0.15;
+    const multiLayerThreshold = (viaDiameter + obstacleMargin) * 2;
     const activeSides: SoicSide[] =
-      orientation === "vertical-columns" ? ["left", "right"] : ["top", "bottom"]
+      orientation === "vertical-columns"
+        ? ["left", "right"]
+        : ["top", "bottom"];
     const regions: SoicRoutingRegion[] = [
       { key: "center", bounds: centralBounds, regionType: "center" },
       ...getPadRegions(soicObstacles, layerCount),
@@ -354,7 +354,7 @@ export class SoicTopologyGeneratorSolver extends BaseSolver {
           centralBounds,
         }),
       ),
-    ]
+    ];
     const routingRegions = regions.flatMap((region) =>
       createMeshNodesForRegion({
         nodeId: `soic:${nodeScopeId}:${region.key}`,
@@ -365,9 +365,9 @@ export class SoicTopologyGeneratorSolver extends BaseSolver {
         obstacleZ: region.obstacleZ,
         connectedTo: region.connectedTo,
       }),
-    )
+    );
 
-    this.output = { routingRegions }
+    this.output = { routingRegions };
     this.stats = {
       componentId,
       layerCount,
@@ -381,17 +381,17 @@ export class SoicTopologyGeneratorSolver extends BaseSolver {
         (node) => node.availableZ.length > 1,
       ).length,
       totalMeshNodeCount: routingRegions.length,
-    }
-    this.solved = true
+    };
+    this.solved = true;
   }
 
   getOutput(): SoicTopologyGeneratorSolverOutput {
     if (!this.output) {
-      throw new Error("SoicTopologyGeneratorSolver has not solved yet")
+      throw new Error("SoicTopologyGeneratorSolver has not solved yet");
     }
 
-    return this.output
+    return this.output;
   }
 }
 
-TopologyGenerator.register(SoicTopologyGeneratorSolver)
+TopologyGenerator.register(SoicTopologyGeneratorSolver);

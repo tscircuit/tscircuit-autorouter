@@ -1,44 +1,46 @@
-import { pointToBoxDistance } from "@tscircuit/math-utils"
-import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
-import type { SegmentPortPoint } from "lib/solvers/AvailableSegmentPointSolver/AvailableSegmentPointSolver"
+import { pointToBoxDistance } from "@tscircuit/math-utils";
+import type { ConnectivityMap } from "circuit-json-to-connectivity-map";
+import type { SegmentPortPoint } from "lib/solvers/AvailableSegmentPointSolver/AvailableSegmentPointSolver";
 import type {
   CapacityMeshNode,
   Obstacle,
   SimpleRouteConnection,
-} from "lib/types"
+} from "lib/types";
 import {
   getAssignableViaAvailableZ,
   getAssignableViaId,
   isAssignableViaObstacle,
-} from "lib/autorouter-pipelines/AutoroutingPipeline8/assignableViaUtils"
-import { assertDefined } from "./assertDefined"
-import { selectConnectionPointRegion } from "./select-connection-point-region"
+} from "lib/autorouter-pipelines/AutoroutingPipeline8/assignableViaUtils";
+import { assertDefined } from "./assertDefined";
+import { selectConnectionPointRegion } from "./select-connection-point-region";
 import type {
   RawPort,
   ConnectionHgWithSimpleRouteConnection,
   HyperGraphHg,
   RegionHg,
   RegionPortHg,
-} from "./types"
+} from "./types";
 
-const GEOMETRIC_TOLERANCE = 1e-6
+const GEOMETRIC_TOLERANCE = 1e-6;
 
 const getNetIdFromConnMapOrThrow = (
   connectivityMap: ConnectivityMap,
   connectionId: string,
 ): string => {
-  const netId = connectivityMap.getNetConnectedToId(connectionId)
+  const netId = connectivityMap.getNetConnectedToId(connectionId);
   if (!netId) {
-    throw new Error(`Could not resolve net ID for connection "${connectionId}"`)
+    throw new Error(
+      `Could not resolve net ID for connection "${connectionId}"`,
+    );
   }
-  return netId
-}
+  return netId;
+};
 
 const getCandidateRegionsForAssignableVia = (params: {
-  graph: HyperGraphHg
-  point: { x: number; y: number }
-  z: number
-  viaRadius: number
+  graph: HyperGraphHg;
+  point: { x: number; y: number };
+  z: number;
+  viaRadius: number;
 }) => {
   const candidates = params.graph.regions
     .filter(
@@ -55,41 +57,41 @@ const getCandidateRegionsForAssignableVia = (params: {
         a.distance - b.distance ||
         a.region.d.width * a.region.d.height -
           b.region.d.width * b.region.d.height,
-    )
+    );
 
-  const nearestDistance = candidates[0]?.distance
+  const nearestDistance = candidates[0]?.distance;
   if (nearestDistance === undefined) {
-    return []
+    return [];
   }
 
   const maxConnectionDistance = Math.max(
     nearestDistance + GEOMETRIC_TOLERANCE,
     params.viaRadius + 0.15,
-  )
+  );
 
   return candidates
     .filter((candidate) => candidate.distance <= maxConnectionDistance)
     .slice(0, 4)
-    .map((candidate) => candidate.region)
-}
+    .map((candidate) => candidate.region);
+};
 
 const addAssignableViaRegions = (params: {
-  graph: HyperGraphHg
-  assignableViaObstacles: Obstacle[]
-  layerCount: number
+  graph: HyperGraphHg;
+  assignableViaObstacles: Obstacle[];
+  layerCount: number;
 }) => {
   for (const [index, obstacle] of params.assignableViaObstacles.entries()) {
-    if (!isAssignableViaObstacle(obstacle)) continue
+    if (!isAssignableViaObstacle(obstacle)) continue;
 
     const availableZ = getAssignableViaAvailableZ({
       obstacle,
       layerCount: params.layerCount,
-    })
-    if (availableZ.length < 2) continue
+    });
+    if (availableZ.length < 2) continue;
 
-    const assignableViaId = getAssignableViaId(obstacle, index)
-    const viaRegionId = `assignable-via:${assignableViaId}`
-    const viaRadius = Math.min(obstacle.width, obstacle.height) / 2
+    const assignableViaId = getAssignableViaId(obstacle, index);
+    const viaRegionId = `assignable-via:${assignableViaId}`;
+    const viaRadius = Math.min(obstacle.width, obstacle.height) / 2;
     const viaRegion: RegionHg = {
       regionId: viaRegionId,
       d: {
@@ -106,9 +108,9 @@ const addAssignableViaRegions = (params: {
         _assignedViaObstacle: obstacle,
       } as CapacityMeshNode,
       ports: [],
-    }
+    };
 
-    const viaPorts: RegionPortHg[] = []
+    const viaPorts: RegionPortHg[] = [];
     for (const z of availableZ) {
       for (const region of getCandidateRegionsForAssignableVia({
         graph: params.graph,
@@ -124,15 +126,15 @@ const addAssignableViaRegions = (params: {
           distToCentermostPortOnZ: 0,
           cramped: false,
           regions: [region, viaRegion],
-        }
+        };
         const hgPort: RegionPortHg = {
           portId: rawPort.portId,
           d: rawPort,
           region1: region,
           region2: viaRegion,
-        }
-        viaPorts.push(hgPort)
-        region.ports.push(hgPort)
+        };
+        viaPorts.push(hgPort);
+        region.ports.push(hgPort);
       }
     }
 
@@ -140,41 +142,41 @@ const addAssignableViaRegions = (params: {
       for (const port of viaPorts) {
         port.region1.ports = port.region1.ports.filter(
           (existingPort) => existingPort !== port,
-        )
+        );
       }
-      continue
+      continue;
     }
 
-    viaRegion.ports.push(...viaPorts)
-    params.graph.regions.push(viaRegion)
-    params.graph.ports.push(...viaPorts)
+    viaRegion.ports.push(...viaPorts);
+    params.graph.regions.push(viaRegion);
+    params.graph.ports.push(...viaPorts);
   }
-}
+};
 
 /**
  * Builds the hypergraph and connection list consumed by the HG pathing solver.
  */
 export function buildHyperGraph(params: {
-  simpleRouteJsonConnections: SimpleRouteConnection[]
-  capacityMeshNodes: CapacityMeshNode[]
-  segmentPortPoints: SegmentPortPoint[]
-  layerCount: number
-  connectivityMap: ConnectivityMap
-  assignableViaObstacles?: Obstacle[]
+  simpleRouteJsonConnections: SimpleRouteConnection[];
+  capacityMeshNodes: CapacityMeshNode[];
+  segmentPortPoints: SegmentPortPoint[];
+  layerCount: number;
+  connectivityMap: ConnectivityMap;
+  assignableViaObstacles?: Obstacle[];
 }): {
-  graph: HyperGraphHg
-  connections: ConnectionHgWithSimpleRouteConnection[]
+  graph: HyperGraphHg;
+  connections: ConnectionHgWithSimpleRouteConnection[];
 } {
   const graph: HyperGraphHg = {
     ports: [],
     regions: [],
-  }
-  const connections: ConnectionHgWithSimpleRouteConnection[] = []
+  };
+  const connections: ConnectionHgWithSimpleRouteConnection[] = [];
 
   for (const cmnNode of params.capacityMeshNodes) {
     const connectedNetIds = cmnNode._connectedTo?.map((connectionId) =>
       getNetIdFromConnMapOrThrow(params.connectivityMap, connectionId),
-    )
+    );
     graph.regions.push({
       regionId: cmnNode.capacityMeshNodeId,
       d: connectedNetIds
@@ -184,32 +186,32 @@ export function buildHyperGraph(params: {
           }
         : cmnNode,
       ports: [],
-    })
+    });
   }
 
   for (const spp of params.segmentPortPoints) {
-    const [region1Id, region2Id] = spp.nodeIds
+    const [region1Id, region2Id] = spp.nodeIds;
     const region1 = graph.regions.find(
       (region) => region.regionId === region1Id,
-    )
+    );
     const region2 = graph.regions.find(
       (region) => region.regionId === region2Id,
-    )
+    );
 
     assertDefined(
       region1,
       `Could not find region with id ${region1Id} for segment port point ${spp.segmentPortPointId}`,
-    )
+    );
     assertDefined(
       region2,
       `Could not find region with id ${region2Id} for segment port point ${spp.segmentPortPointId}`,
-    )
+    );
 
     for (const z of spp.availableZ) {
       const preloadedTracePortAssignments =
         spp._preloadedTracePortAssignments?.filter(
           (assignment) => assignment.z === z,
-        )
+        );
       const port: RawPort = {
         portId: `${spp.segmentPortPointId}::${z}`,
         x: spp.x,
@@ -231,16 +233,16 @@ export function buildHyperGraph(params: {
               ].sort()
             : undefined,
         _preloadedTracePortAssignments: preloadedTracePortAssignments,
-      }
+      };
       const hgPort: RegionPortHg = {
         portId: spp.segmentPortPointId,
         d: port,
         region1,
         region2,
-      }
-      graph.ports.push(hgPort)
-      region1.ports.push(hgPort)
-      region2.ports.push(hgPort)
+      };
+      graph.ports.push(hgPort);
+      region1.ports.push(hgPort);
+      region2.ports.push(hgPort);
     }
   }
 
@@ -248,30 +250,30 @@ export function buildHyperGraph(params: {
     graph,
     assignableViaObstacles: params.assignableViaObstacles ?? [],
     layerCount: params.layerCount,
-  })
+  });
 
   for (const connection of params.simpleRouteJsonConnections) {
-    const [startPoint, endPoint] = connection.pointsToConnect
+    const [startPoint, endPoint] = connection.pointsToConnect;
 
     const startRegion = selectConnectionPointRegion({
       graph,
       point: startPoint,
       layerCount: params.layerCount,
-    })
+    });
     const endRegion = selectConnectionPointRegion({
       graph,
       point: endPoint,
       layerCount: params.layerCount,
-    })
+    });
 
     assertDefined(
       startRegion,
       `Could not find start region for connection "${connection.name}"`,
-    )
+    );
     assertDefined(
       endRegion,
       `Could not find end region for connection "${connection.name}"`,
-    )
+    );
 
     connections.push({
       connectionId: connection.name,
@@ -282,8 +284,8 @@ export function buildHyperGraph(params: {
       startRegion,
       endRegion,
       simpleRouteConnection: connection,
-    })
+    });
   }
 
-  return { graph, connections }
+  return { graph, connections };
 }

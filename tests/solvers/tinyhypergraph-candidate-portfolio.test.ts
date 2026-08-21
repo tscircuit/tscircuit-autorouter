@@ -1,17 +1,17 @@
-import { expect, test } from "bun:test"
+import { expect, test } from "bun:test";
 import {
   shouldEvaluateTraceDensityAlternative,
   shouldSelectTraceDensityAlternative,
-} from "lib/solvers/PortPointPathingSolver/tinyhypergraph/TinyHypergraphPortPointPathingSolver"
+} from "lib/solvers/PortPointPathingSolver/tinyhypergraph/TinyHypergraphPortPointPathingSolver";
 
 const candidate = (
   overrides: Partial<{
-    nodePfSum: number
-    nodePfSquaredSum: number
-    nodePfMax: number
-    squaredNodePortPointCount: number
-    segmentCount: number
-    layerChangeCount: number
+    nodePfSum: number;
+    nodePfSquaredSum: number;
+    nodePfMax: number;
+    squaredNodePortPointCount: number;
+    segmentCount: number;
+    layerChangeCount: number;
   }> = {},
 ) => ({
   nodePfSum: 5,
@@ -21,13 +21,13 @@ const candidate = (
   segmentCount: 400,
   layerChangeCount: 20,
   ...overrides,
-})
+});
 
 test("trace-density portfolio requires downstream pressure and scale-aware concentration improvement", () => {
-  expect(shouldEvaluateTraceDensityAlternative(candidate(), 40)).toBe(true)
+  expect(shouldEvaluateTraceDensityAlternative(candidate(), 40)).toBe(true);
   expect(
     shouldEvaluateTraceDensityAlternative(candidate({ nodePfMax: 1 }), 40),
-  ).toBe(false)
+  ).toBe(false);
 
   expect(
     shouldSelectTraceDensityAlternative(
@@ -39,7 +39,7 @@ test("trace-density portfolio requires downstream pressure and scale-aware conce
       }),
       40,
     ),
-  ).toBe(true)
+  ).toBe(true);
   expect(
     shouldSelectTraceDensityAlternative(
       candidate(),
@@ -50,21 +50,21 @@ test("trace-density portfolio requires downstream pressure and scale-aware conce
       }),
       41,
     ),
-  ).toBe(false)
+  ).toBe(false);
   expect(
     shouldSelectTraceDensityAlternative(
       candidate(),
       candidate({ squaredNodePortPointCount: 4_550 }),
       60,
     ),
-  ).toBe(true)
+  ).toBe(true);
   expect(
     shouldSelectTraceDensityAlternative(
       candidate(),
       candidate({ squaredNodePortPointCount: 4_650 }),
       60,
     ),
-  ).toBe(false)
+  ).toBe(false);
   expect(
     shouldSelectTraceDensityAlternative(
       candidate(),
@@ -77,7 +77,7 @@ test("trace-density portfolio requires downstream pressure and scale-aware conce
       }),
       60,
     ),
-  ).toBe(true)
+  ).toBe(true);
   expect(
     shouldSelectTraceDensityAlternative(
       candidate(),
@@ -90,7 +90,7 @@ test("trace-density portfolio requires downstream pressure and scale-aware conce
       }),
       60,
     ),
-  ).toBe(false)
+  ).toBe(false);
   expect(
     shouldSelectTraceDensityAlternative(
       candidate(),
@@ -101,7 +101,7 @@ test("trace-density portfolio requires downstream pressure and scale-aware conce
       }),
       40,
     ),
-  ).toBe(false)
+  ).toBe(false);
   expect(
     shouldSelectTraceDensityAlternative(
       candidate(),
@@ -112,5 +112,5 @@ test("trace-density portfolio requires downstream pressure and scale-aware conce
       }),
       40,
     ),
-  ).toBe(false)
-})
+  ).toBe(false);
+});

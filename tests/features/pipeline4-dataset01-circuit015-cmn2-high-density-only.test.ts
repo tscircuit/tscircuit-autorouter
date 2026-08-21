@@ -1,13 +1,13 @@
-import { expect, test } from "bun:test"
-import * as dataset01 from "@tscircuit/autorouting-dataset-01"
-import { getGlobalInMemoryCache } from "lib/cache/setupGlobalCaches"
-import { AutoroutingPipelineSolver4 } from "lib/autorouter-pipelines/AutoroutingPipeline4_TinyHypergraph/AutoroutingPipelineSolver4_TinyHypergraph"
-import { HighDensitySolver } from "lib/solvers/HighDensitySolver/HighDensitySolver"
-import { getDrcErrors } from "lib/testing/getDrcErrors"
-import { convertToCircuitJson } from "lib/testing/utils/convertToCircuitJson"
-import type { NodeWithPortPoints } from "lib/types/high-density-types"
-import type { SimpleRouteJson } from "lib/types"
-import { createSrjFromNodeWithPortPoints } from "lib/utils/createSrjFromNodeWithPortPoints"
+import { expect, test } from "bun:test";
+import * as dataset01 from "@tscircuit/autorouting-dataset-01";
+import { getGlobalInMemoryCache } from "lib/cache/setupGlobalCaches";
+import { AutoroutingPipelineSolver4 } from "lib/autorouter-pipelines/AutoroutingPipeline4_TinyHypergraph/AutoroutingPipelineSolver4_TinyHypergraph";
+import { HighDensitySolver } from "lib/solvers/HighDensitySolver/HighDensitySolver";
+import { getDrcErrors } from "lib/testing/getDrcErrors";
+import { convertToCircuitJson } from "lib/testing/utils/convertToCircuitJson";
+import type { NodeWithPortPoints } from "lib/types/high-density-types";
+import type { SimpleRouteJson } from "lib/types";
+import { createSrjFromNodeWithPortPoints } from "lib/utils/createSrjFromNodeWithPortPoints";
 
 const getNodeOrThrow = (
   nodes: NodeWithPortPoints[] | undefined,
@@ -15,26 +15,26 @@ const getNodeOrThrow = (
 ) => {
   const node = nodes?.find(
     (candidate) => candidate.capacityMeshNodeId === nodeId,
-  )
-  expect(node).toBeDefined()
-  return node!
-}
+  );
+  expect(node).toBeDefined();
+  return node!;
+};
 
 test("pipeline4 dataset01 circuit015 cmn_2 high-density-only routes expected port pairs", () => {
-  getGlobalInMemoryCache().clearCache()
+  getGlobalInMemoryCache().clearCache();
 
   const circuit015 = (dataset01 as Record<string, unknown>)
-    .circuit015 as SimpleRouteJson
-  const pipeline = new AutoroutingPipelineSolver4(structuredClone(circuit015))
+    .circuit015 as SimpleRouteJson;
+  const pipeline = new AutoroutingPipelineSolver4(structuredClone(circuit015));
 
-  pipeline.solveUntilPhase("highDensityRepairSolver")
+  pipeline.solveUntilPhase("highDensityRepairSolver");
 
-  expect(pipeline.highDensityRouteSolver?.solved).toBe(true)
-  expect(pipeline.highDensityRouteSolver?.failed).toBe(false)
+  expect(pipeline.highDensityRouteSolver?.solved).toBe(true);
+  expect(pipeline.highDensityRouteSolver?.failed).toBe(false);
 
-  const cmn2Input = getNodeOrThrow(pipeline.highDensityNodePortPoints, "cmn_2")
+  const cmn2Input = getNodeOrThrow(pipeline.highDensityNodePortPoints, "cmn_2");
 
-  getGlobalInMemoryCache().clearCache()
+  getGlobalInMemoryCache().clearCache();
 
   const solver = new HighDensitySolver({
     nodePortPoints: [structuredClone(cmn2Input)],
@@ -45,55 +45,55 @@ test("pipeline4 dataset01 circuit015 cmn_2 high-density-only routes expected por
     obstacleMargin: circuit015.defaultObstacleMargin ?? 0.15,
     effort: pipeline.effort,
     nodePfById: pipeline.highDensityRouteSolver?.nodePfById,
-  })
+  });
 
-  solver.solve()
+  solver.solve();
 
-  expect(solver.solved).toBe(true)
-  expect(solver.failed).toBe(false)
+  expect(solver.solved).toBe(true);
+  expect(solver.failed).toBe(false);
 
-  const nodeSrj = createSrjFromNodeWithPortPoints(cmn2Input)
+  const nodeSrj = createSrjFromNodeWithPortPoints(cmn2Input);
   const circuitJson = convertToCircuitJson(nodeSrj, solver.routes, {
     minTraceWidth: circuit015.minTraceWidth,
-  })
-  const { locationAwareErrors } = getDrcErrors(circuitJson)
+  });
+  const { locationAwareErrors } = getDrcErrors(circuitJson);
   const accidentalContacts = locationAwareErrors.filter((error) =>
     error.message.includes("accidental contact"),
-  )
-  const expectedEndpointKeysByConnectionName = new Map<string, string[]>()
+  );
+  const expectedEndpointKeysByConnectionName = new Map<string, string[]>();
   for (const portPoint of cmn2Input.portPoints) {
-    const endpointKey = `${portPoint.x}:${portPoint.y}:${portPoint.z}`
+    const endpointKey = `${portPoint.x}:${portPoint.y}:${portPoint.z}`;
     const endpointKeys =
-      expectedEndpointKeysByConnectionName.get(portPoint.connectionName) ?? []
+      expectedEndpointKeysByConnectionName.get(portPoint.connectionName) ?? [];
     expectedEndpointKeysByConnectionName.set(portPoint.connectionName, [
       ...endpointKeys,
       endpointKey,
-    ])
+    ]);
   }
   for (const endpointKeys of expectedEndpointKeysByConnectionName.values()) {
-    endpointKeys.sort()
+    endpointKeys.sort();
   }
 
-  expect(accidentalContacts).toHaveLength(0)
-  expect(solver.routes).toHaveLength(expectedEndpointKeysByConnectionName.size)
+  expect(accidentalContacts).toHaveLength(0);
+  expect(solver.routes).toHaveLength(expectedEndpointKeysByConnectionName.size);
 
   for (const route of solver.routes) {
-    const firstPoint = route.route[0]
-    const lastPoint = route.route.at(-1)
+    const firstPoint = route.route[0];
+    const lastPoint = route.route.at(-1);
     const expectedEndpointKeys = expectedEndpointKeysByConnectionName.get(
       route.connectionName,
-    )
+    );
 
-    expect(firstPoint).toBeDefined()
-    expect(lastPoint).toBeDefined()
-    expect(expectedEndpointKeys).toBeDefined()
-    expect(expectedEndpointKeys).toHaveLength(2)
+    expect(firstPoint).toBeDefined();
+    expect(lastPoint).toBeDefined();
+    expect(expectedEndpointKeys).toBeDefined();
+    expect(expectedEndpointKeys).toHaveLength(2);
     const actualEndpointKeys = [
       `${firstPoint!.x}:${firstPoint!.y}:${firstPoint!.z}`,
       `${lastPoint!.x}:${lastPoint!.y}:${lastPoint!.z}`,
-    ].sort()
+    ].sort();
 
-    expect(actualEndpointKeys[0]).not.toBe(actualEndpointKeys[1])
-    expect(actualEndpointKeys).toEqual(expectedEndpointKeys!)
+    expect(actualEndpointKeys[0]).not.toBe(actualEndpointKeys[1]);
+    expect(actualEndpointKeys).toEqual(expectedEndpointKeys!);
   }
-})
+});

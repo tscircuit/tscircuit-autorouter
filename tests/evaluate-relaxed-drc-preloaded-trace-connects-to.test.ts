@@ -1,6 +1,6 @@
-import { expect, test } from "bun:test"
-import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
-import type { SimpleRouteJson, SimplifiedPcbTrace } from "lib/types"
+import { expect, test } from "bun:test";
+import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc";
+import type { SimpleRouteJson, SimplifiedPcbTrace } from "lib/types";
 
 test("relaxed DRC connects a preloaded fanout trace to its own pad", () => {
   const fanoutTrace: SimplifiedPcbTrace = {
@@ -19,7 +19,7 @@ test("relaxed DRC connects a preloaded fanout trace to its own pad", () => {
       },
       { route_type: "wire", x: 1, y: 0, width: 0.1, layer: "top" },
     ],
-  }
+  };
   const inputSrj: SimpleRouteJson = {
     layerCount: 2,
     minTraceWidth: 0.1,
@@ -49,7 +49,7 @@ test("relaxed DRC connects a preloaded fanout trace to its own pad", () => {
       },
     ],
     traces: [fanoutTrace],
-  }
+  };
   const routedTrace: SimplifiedPcbTrace = {
     type: "pcb_trace",
     pcb_trace_id: "routed_trace",
@@ -65,12 +65,12 @@ test("relaxed DRC connects a preloaded fanout trace to its own pad", () => {
         end_pcb_port_id: "pcb_port_1",
       },
     ],
-  }
+  };
 
   const { errors } = evaluateRelaxedDrc({
     inputSrj,
     srjWithPointPairs: inputSrj,
     routedTraces: [routedTrace],
-  })
-  expect(errors).toHaveLength(0)
-})
+  });
+  expect(errors).toHaveLength(0);
+});

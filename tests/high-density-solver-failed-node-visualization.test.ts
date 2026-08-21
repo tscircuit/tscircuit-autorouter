@@ -1,5 +1,5 @@
-import { expect, test } from "bun:test"
-import { HighDensitySolver } from "lib/solvers/HighDensitySolver/HighDensitySolver"
+import { expect, test } from "bun:test";
+import { HighDensitySolver } from "lib/solvers/HighDensitySolver/HighDensitySolver";
 
 test("HighDensitySolver draws an origin guide to failed nodes", () => {
   const solver = new HighDensitySolver({
@@ -16,9 +16,9 @@ test("HighDensitySolver draws an origin guide to failed nodes", () => {
         ],
       },
     ],
-  })
+  });
 
-  solver.failed = true
+  solver.failed = true;
   solver.nodeSolveMetadataById.set("cn_fail", {
     node: {
       capacityMeshNodeId: "cn_fail",
@@ -37,25 +37,25 @@ test("HighDensitySolver draws an origin guide to failed nodes", () => {
     routeCount: 0,
     nodePf: 0.2,
     error: "ran out of candidates",
-  })
+  });
 
-  const visualization = solver.visualize()
+  const visualization = solver.visualize();
   const guideLines =
     visualization.lines?.filter(
       (line) =>
         line.layer === "hd_failed_node_guides" &&
         line.label?.includes("node: cn_fail"),
-    ) ?? []
+    ) ?? [];
 
-  expect(guideLines).toHaveLength(1)
-  expect(guideLines[0]?.strokeColor).toBe("red")
-  expect(guideLines[0]?.strokeDash).toBe("8, 6")
-  expect(guideLines[0]?.strokeWidth).toBe(0.05)
-  const failedNodeLabel = guideLines[0]?.label ?? ""
-  expect(failedNodeLabel).toContain("portPoints: 2")
-  expect(failedNodeLabel).not.toContain("connections:")
+  expect(guideLines).toHaveLength(1);
+  expect(guideLines[0]?.strokeColor).toBe("red");
+  expect(guideLines[0]?.strokeDash).toBe("8, 6");
+  expect(guideLines[0]?.strokeWidth).toBe(0.05);
+  const failedNodeLabel = guideLines[0]?.label ?? "";
+  expect(failedNodeLabel).toContain("portPoints: 2");
+  expect(failedNodeLabel).not.toContain("connections:");
   expect(guideLines[0]?.points).toEqual([
     { x: 0, y: 0 },
     { x: 12, y: -7 },
-  ])
-})
+  ]);
+});

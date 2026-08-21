@@ -1,47 +1,44 @@
-import type { Bounds } from "@tscircuit/math-utils"
-import type { CapacityMeshNode } from "lib/types"
+import type { Bounds } from "@tscircuit/math-utils";
+import type { CapacityMeshNode } from "lib/types";
 
-export const TOPOLOGY_MERGING_EPSILON = 1e-5
-export const TOPOLOGY_PROVENANCE_EPSILON = TOPOLOGY_MERGING_EPSILON * 4
+export const TOPOLOGY_MERGING_EPSILON = 1e-5;
+export const TOPOLOGY_PROVENANCE_EPSILON = TOPOLOGY_MERGING_EPSILON * 4;
 
 export interface TopologyMergingNodeGroup {
-  groupId: string
-  nodes: CapacityMeshNode[]
-  isComponent: boolean
+  groupId: string;
+  nodes: CapacityMeshNode[];
+  isComponent: boolean;
 }
 
 export interface TopologyMergingSolverParams {
-  nodeGroups: readonly TopologyMergingNodeGroup[]
-  layerCount: number
+  nodeGroups: readonly TopologyMergingNodeGroup[];
+  layerCount: number;
 }
 
 export type PreparedTopologyMergingNode = {
-  sourceKey: string
-  groupIndex: number
-  node: CapacityMeshNode
-  bounds: Bounds
-}
+  sourceKey: string;
+  groupIndex: number;
+  node: CapacityMeshNode;
+  bounds: Bounds;
+};
 
 export type TopologyMergingMode =
-  | "passthrough"
-  | "merged"
-  | "target-passthrough"
-  | "target-merged"
+  "passthrough" | "merged" | "target-passthrough" | "target-merged";
 
 export type TopologyMergingRegion = {
-  bounds: Bounds
-  availableZ: number[]
-  sourceKeys: string[]
-  topologyMode: TopologyMergingMode
-  topologySignature: string
-}
+  bounds: Bounds;
+  availableZ: number[];
+  sourceKeys: string[];
+  topologyMode: TopologyMergingMode;
+  topologySignature: string;
+};
 
 export type TopologyMergingLayerTopology = {
-  availableZ: number[]
-  sourceKeys: string[]
-  topologyMode: TopologyMergingMode
-  topologySignature: string
-}
+  availableZ: number[];
+  sourceKeys: string[];
+  topologyMode: TopologyMergingMode;
+  topologySignature: string;
+};
 
 export type TopologyMergingRegionMetadata = Pick<
   CapacityMeshNode,
@@ -58,4 +55,4 @@ export type TopologyMergingRegionMetadata = Pick<
   | "_soicRegionType"
   | "_isComponentTopologyNode"
   | "_connectedTo"
->
+>;

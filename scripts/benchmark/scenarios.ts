@@ -1,5 +1,5 @@
-import { migrateLegacyObstacleCircuitJsonMetadata } from "../../lib/testing/utils/migrate-legacy-obstacle-circuit-json-metadata"
-import type { SimpleRouteJson } from "../../lib/types/srj-types"
+import { migrateLegacyObstacleCircuitJsonMetadata } from "../../lib/testing/utils/migrate-legacy-obstacle-circuit-json-metadata";
+import type { SimpleRouteJson } from "../../lib/types/srj-types";
 
 export const DATASET_NAMES = [
   "dataset01",
@@ -20,14 +20,14 @@ export const DATASET_NAMES = [
   "srj27",
   "srj28",
   "srj29",
-] as const
+] as const;
 
-export type DatasetName = (typeof DATASET_NAMES)[number]
+export type DatasetName = (typeof DATASET_NAMES)[number];
 
-type DatasetModule = Record<string, unknown>
+type DatasetModule = Record<string, unknown>;
 
 export const DATASET_OPTIONS_LABEL =
-  "1/dataset01, zdwiel, 5/srj05, 11/srj11, 12/srj12, 13/srj13, 14/srj14, 15/srj15, 16/srj16, 18/srj18, 19/srj19, 20/srj20, 21/srj21, 23/srj23, 24/srj24, 27/srj27, 28/srj28, 29/srj29"
+  "1/dataset01, zdwiel, 5/srj05, 11/srj11, 12/srj12, 13/srj13, 14/srj14, 15/srj15, 16/srj16, 18/srj18, 19/srj19, 20/srj20, 21/srj21, 23/srj23, 24/srj24, 27/srj27, 28/srj28, 29/srj29";
 
 const datasetAliases: Record<string, DatasetName> = {
   "1": "dataset01",
@@ -116,34 +116,34 @@ const datasetAliases: Record<string, DatasetName> = {
   "dataset-srj29-ddr3-bga-pairs": "srj29",
   "@tscircuit/dataset-srj29-ddr3-bga-pairs": "srj29",
   zdwiel: "zdwiel",
-}
+};
 
 export const parseDatasetName = (value: string): DatasetName | null => {
-  const normalized = value.trim().toLowerCase()
-  return datasetAliases[normalized] ?? null
-}
+  const normalized = value.trim().toLowerCase();
+  return datasetAliases[normalized] ?? null;
+};
 
 export const isDatasetName = (value: string): value is DatasetName =>
-  DATASET_NAMES.includes(value as DatasetName)
+  DATASET_NAMES.includes(value as DatasetName);
 
 const loadNumberedJsonDatasetModule = async ({
   sampleCount,
   getSpecifier,
 }: {
-  sampleCount: number
-  getSpecifier: (sampleId: string) => string
+  sampleCount: number;
+  getSpecifier: (sampleId: string) => string;
 }): Promise<DatasetModule> => {
   const entries = await Promise.all(
     Array.from({ length: sampleCount }, async (_, index) => {
-      const sampleId = String(index + 1).padStart(3, "0")
+      const sampleId = String(index + 1).padStart(3, "0");
       return [
         `sample${sampleId}Circuit`,
         await import(getSpecifier(sampleId), { with: { type: "json" } }),
-      ] as const
+      ] as const;
     }),
-  )
-  return Object.fromEntries(entries)
-}
+  );
+  return Object.fromEntries(entries);
+};
 
 const datasetLoaders: Record<DatasetName, () => Promise<DatasetModule>> = {
   dataset01: async () =>
@@ -190,8 +190,8 @@ const datasetLoaders: Record<DatasetName, () => Promise<DatasetModule>> = {
           "sample18-source_net_26_0.srj.json",
           "sample19-source_net_12_mst0_0.srj.json",
           "sample20-source_net_2_mst1_0.srj.json",
-        ]
-        return `../../fixtures/datasets/dataset-srj14/${sampleFileNames[Number(sampleId) - 1]}`
+        ];
+        return `../../fixtures/datasets/dataset-srj14/${sampleFileNames[Number(sampleId) - 1]}`;
       },
     }),
   srj15: async () =>
@@ -207,11 +207,11 @@ const datasetLoaders: Record<DatasetName, () => Promise<DatasetModule>> = {
         `@tsci/tscircuit.dataset-srj16-bga-breakouts/circuits/sample${sampleId}/sample${sampleId}.circuit.simple-route.json`,
     }),
   srj18: async () => {
-    const module = (await import("dataset-srj18")) as DatasetModule
-    const dataset = module.dataset
+    const module = (await import("dataset-srj18")) as DatasetModule;
+    const dataset = module.dataset;
     return dataset && typeof dataset === "object"
       ? (dataset as DatasetModule)
-      : module
+      : module;
   },
   srj19: async () =>
     loadNumberedJsonDatasetModule({
@@ -228,39 +228,33 @@ const datasetLoaders: Record<DatasetName, () => Promise<DatasetModule>> = {
   srj21: async () =>
     (await import("@tsci/0hmX.multi-component-dataset-srj01")) as DatasetModule,
   srj23: async () =>
-    (await import(
-      "@tsci/dataset-srj23-partially-routed-subcircuits"
-    )) as DatasetModule,
+    (await import("@tsci/dataset-srj23-partially-routed-subcircuits")) as DatasetModule,
   srj24: async () => {
-    const module = (await import("@tscircuit/dataset-srj24")) as DatasetModule
-    const dataset = module.dataset
+    const module = (await import("@tscircuit/dataset-srj24")) as DatasetModule;
+    const dataset = module.dataset;
     return dataset && typeof dataset === "object"
       ? (dataset as DatasetModule)
-      : module
+      : module;
   },
   srj27: async () => {
-    const module = (await import(
-      "@tscircuit/dataset-srj27-power-traces"
-    )) as DatasetModule
-    const dataset = module.dataset
+    const module =
+      (await import("@tscircuit/dataset-srj27-power-traces")) as DatasetModule;
+    const dataset = module.dataset;
     return dataset && typeof dataset === "object"
       ? (dataset as DatasetModule)
-      : module
+      : module;
   },
   srj28: async () =>
-    (await import(
-      "@tscircuit/dataset-srj28-partially-prerouted"
-    )) as DatasetModule,
+    (await import("@tscircuit/dataset-srj28-partially-prerouted")) as DatasetModule,
   srj29: async () => {
-    const module = (await import(
-      "@tscircuit/dataset-srj29-ddr3-bga-pairs"
-    )) as DatasetModule
-    const dataset = module.dataset
+    const module =
+      (await import("@tscircuit/dataset-srj29-ddr3-bga-pairs")) as DatasetModule;
+    const dataset = module.dataset;
     return dataset && typeof dataset === "object"
       ? (dataset as DatasetModule)
-      : module
+      : module;
   },
-}
+};
 
 const datasetScenarioKeyPatterns: Record<DatasetName, RegExp> = {
   dataset01: /^circuit\d+$/,
@@ -281,19 +275,19 @@ const datasetScenarioKeyPatterns: Record<DatasetName, RegExp> = {
   srj27: /^sample\d{3}$/,
   srj28: /^circuit\d{3}$/,
   srj29: /^sample\d{3}$/,
-}
+};
 
 export const toSimpleRouteJson = (value: unknown): SimpleRouteJson | null => {
   if (!value || typeof value !== "object") {
-    return null
+    return null;
   }
 
-  const asRecord = value as Record<string, unknown>
+  const asRecord = value as Record<string, unknown>;
   const unwrappedValue =
     asRecord.default && typeof asRecord.default === "object"
       ? asRecord.default
-      : value
-  const unwrappedRecord = unwrappedValue as Record<string, unknown>
+      : value;
+  const unwrappedRecord = unwrappedValue as Record<string, unknown>;
   const candidate =
     (unwrappedRecord.simpleRouteJson &&
       typeof unwrappedRecord.simpleRouteJson === "object" &&
@@ -301,20 +295,20 @@ export const toSimpleRouteJson = (value: unknown): SimpleRouteJson | null => {
     (unwrappedRecord.simple_route_json &&
       typeof unwrappedRecord.simple_route_json === "object" &&
       unwrappedRecord.simple_route_json) ||
-    unwrappedValue
+    unwrappedValue;
 
   if (!candidate || typeof candidate !== "object") {
-    return null
+    return null;
   }
 
-  return "bounds" in candidate ? (candidate as SimpleRouteJson) : null
-}
+  return "bounds" in candidate ? (candidate as SimpleRouteJson) : null;
+};
 
 export const loadScenarios = async (
   datasetName: DatasetName,
   opts: {
-    scenarioLimit?: number
-    effort?: number
+    scenarioLimit?: number;
+    effort?: number;
   } = {},
 ) => {
   const applyEffortOverride = <T extends SimpleRouteJson>(
@@ -324,10 +318,10 @@ export const loadScenarios = async (
     ({
       ...scenario,
       effort: effortOverride,
-    }) as T & { effort: number }
+    }) as T & { effort: number };
 
-  const datasetModule = await datasetLoaders[datasetName]()
-  const scenarioKeyPattern = datasetScenarioKeyPatterns[datasetName]
+  const datasetModule = await datasetLoaders[datasetName]();
+  const scenarioKeyPattern = datasetScenarioKeyPatterns[datasetName];
   const allScenarios = Object.entries(datasetModule)
     .map(([name, value]) => [name, toSimpleRouteJson(value)] as const)
     .filter((entry): entry is [string, SimpleRouteJson] => Boolean(entry[1]))
@@ -335,20 +329,20 @@ export const loadScenarios = async (
     .sort(([a], [b]) => a.localeCompare(b))
     .map(([name, scenario]) => {
       const scenarioWithCircuitJsonMetadata =
-        migrateLegacyObstacleCircuitJsonMetadata(scenario)
+        migrateLegacyObstacleCircuitJsonMetadata(scenario);
 
       return [
         name,
         opts.effort === undefined
           ? scenarioWithCircuitJsonMetadata
           : applyEffortOverride(scenarioWithCircuitJsonMetadata, opts.effort),
-      ] as const
-    })
+      ] as const;
+    });
 
   return opts.scenarioLimit
     ? allScenarios.slice(0, opts.scenarioLimit)
-    : allScenarios
-}
+    : allScenarios;
+};
 
 export const loadScenarioBySampleNumber = async (
   datasetName: DatasetName,
@@ -356,24 +350,24 @@ export const loadScenarioBySampleNumber = async (
   effort?: number,
 ) => {
   if (!Number.isFinite(sampleNumber) || sampleNumber < 1) {
-    throw new Error("--sample must be a positive integer")
+    throw new Error("--sample must be a positive integer");
   }
 
-  const scenarios = await loadScenarios(datasetName, { effort })
-  const scenario = scenarios[sampleNumber - 1]
+  const scenarios = await loadScenarios(datasetName, { effort });
+  const scenario = scenarios[sampleNumber - 1];
 
   if (!scenario) {
     throw new Error(
       `Sample ${sampleNumber} is out of range for dataset ${datasetName} (${scenarios.length} samples)`,
-    )
+    );
   }
 
-  const [scenarioName, simpleRouteJson] = scenario
+  const [scenarioName, simpleRouteJson] = scenario;
   return {
     scenarioName,
     scenario: simpleRouteJson,
     sampleNumber,
     totalSamples: scenarios.length,
     sourceLabel: `${datasetName}#${sampleNumber}:${scenarioName}`,
-  }
-}
+  };
+};

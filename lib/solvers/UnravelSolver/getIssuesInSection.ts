@@ -1,4 +1,4 @@
-import { CapacityMeshNode, CapacityMeshNodeId } from "lib/types"
+import { CapacityMeshNode, CapacityMeshNodeId } from "lib/types";
 import {
   UnravelSection,
   UnravelIssue,
@@ -8,12 +8,12 @@ import {
   UnravelSameLayerCrossingIssue,
   UnravelSingleTransitionCrossingIssue,
   UnravelDoubleTransitionCrossingIssue,
-} from "./types"
-import { getIntraNodeCrossingsFromSegments } from "lib/utils/getIntraNodeCrossingsFromSegments"
-import { getTunedTotalCapacity1 } from "lib/utils/getTunedTotalCapacity1"
-import { doSegmentsIntersect } from "@tscircuit/math-utils"
-import { ConnectivityMap } from "circuit-json-to-connectivity-map"
-import { hasZRangeOverlap } from "./hasZRangeOverlap"
+} from "./types";
+import { getIntraNodeCrossingsFromSegments } from "lib/utils/getIntraNodeCrossingsFromSegments";
+import { getTunedTotalCapacity1 } from "lib/utils/getTunedTotalCapacity1";
+import { doSegmentsIntersect } from "@tscircuit/math-utils";
+import { ConnectivityMap } from "circuit-json-to-connectivity-map";
+import { hasZRangeOverlap } from "./hasZRangeOverlap";
 
 export const getIssuesInSection = (
   section: UnravelSection,
@@ -24,36 +24,36 @@ export const getIssuesInSection = (
   >,
   connMap?: ConnectivityMap,
 ): UnravelIssue[] => {
-  const issues: UnravelIssue[] = []
+  const issues: UnravelIssue[] = [];
 
   const points: Map<SegmentPointId, { x: number; y: number; z: number }> =
-    new Map(section.originalPointMap)
+    new Map(section.originalPointMap);
   for (const [segmentPointId, modPoint] of pointModifications.entries()) {
-    const ogPoint = points.get(segmentPointId)!
+    const ogPoint = points.get(segmentPointId)!;
     points.set(segmentPointId, {
       x: modPoint.x ?? ogPoint.x,
       y: modPoint.y ?? ogPoint.y,
       z: modPoint.z ?? ogPoint.z,
-    })
+    });
   }
 
   for (const nodeId of section.allNodeIds) {
-    const node = nodeMap.get(nodeId)
-    if (!node) continue
+    const node = nodeMap.get(nodeId);
+    if (!node) continue;
 
-    const nodeSegmentPairs = section.segmentPairsInNode.get(nodeId)!
+    const nodeSegmentPairs = section.segmentPairsInNode.get(nodeId)!;
 
     // If there's a Z transition within the pair, there's a transition_via issue
     for (const pair of nodeSegmentPairs) {
-      const A = points.get(pair[0])!
-      const B = points.get(pair[1])!
+      const A = points.get(pair[0])!;
+      const B = points.get(pair[1])!;
       if (A.z !== B.z) {
         issues.push({
           type: "transition_via",
           segmentPoints: pair,
           capacityMeshNodeId: nodeId,
           probabilityOfFailure: 0,
-        })
+        });
       }
     }
 
@@ -66,22 +66,22 @@ export const getIssuesInSection = (
             nodeSegmentPairs[i][1],
           )
         ) {
-          continue
+          continue;
         }
 
-        const pair1 = nodeSegmentPairs[i]
-        const pair2 = nodeSegmentPairs[j]
+        const pair1 = nodeSegmentPairs[i];
+        const pair2 = nodeSegmentPairs[j];
 
-        const A = points.get(pair1[0])!
-        const B = points.get(pair1[1])!
-        const C = points.get(pair2[0])!
-        const D = points.get(pair2[1])!
+        const A = points.get(pair1[0])!;
+        const B = points.get(pair1[1])!;
+        const C = points.get(pair2[0])!;
+        const D = points.get(pair2[1])!;
 
         // Are the lines ever on the same layer? Is there any risk of overlap?
-        if (!hasZRangeOverlap(A.z, B.z, C.z, D.z)) continue
+        if (!hasZRangeOverlap(A.z, B.z, C.z, D.z)) continue;
 
-        const areCrossing = doSegmentsIntersect(A, B, C, D)
-        const isSameLayer = A.z === B.z && C.z === D.z && A.z === C.z
+        const areCrossing = doSegmentsIntersect(A, B, C, D);
+        const isSameLayer = A.z === B.z && C.z === D.z && A.z === C.z;
         if (areCrossing) {
           if (isSameLayer) {
             issues.push({
@@ -91,7 +91,7 @@ export const getIssuesInSection = (
               crossingLine1: pair1,
               crossingLine2: pair2,
               probabilityOfFailure: 0,
-            } as UnravelSameLayerCrossingIssue)
+            } as UnravelSameLayerCrossingIssue);
           } else if (A.z === B.z && C.z !== D.z) {
             issues.push({
               type: "single_transition_crossing",
@@ -100,7 +100,7 @@ export const getIssuesInSection = (
               sameLayerCrossingLine: pair1,
               transitionCrossingLine: pair2,
               probabilityOfFailure: 0,
-            } as UnravelSingleTransitionCrossingIssue)
+            } as UnravelSingleTransitionCrossingIssue);
           } else if (A.z !== B.z && C.z === D.z) {
             issues.push({
               type: "single_transition_crossing",
@@ -109,7 +109,7 @@ export const getIssuesInSection = (
               sameLayerCrossingLine: pair2,
               transitionCrossingLine: pair1,
               probabilityOfFailure: 0,
-            } as UnravelSingleTransitionCrossingIssue)
+            } as UnravelSingleTransitionCrossingIssue);
           } else if (A.z !== B.z && C.z !== D.z) {
             issues.push({
               type: "double_transition_crossing",
@@ -118,12 +118,12 @@ export const getIssuesInSection = (
               crossingLine1: pair1,
               crossingLine2: pair2,
               probabilityOfFailure: 0,
-            } as UnravelDoubleTransitionCrossingIssue)
+            } as UnravelDoubleTransitionCrossingIssue);
           }
         }
       }
     }
   }
 
-  return issues
-}
+  return issues;
+};

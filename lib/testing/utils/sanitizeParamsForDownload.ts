@@ -1,19 +1,19 @@
 const getObjectPath = (parentPath: string, key: string | number) => {
   if (typeof key === "number") {
-    return `${parentPath}[${key}]`
+    return `${parentPath}[${key}]`;
   }
 
   return /^[A-Za-z_$][A-Za-z0-9_$]*$/.test(key)
     ? `${parentPath}.${key}`
-    : `${parentPath}[${JSON.stringify(key)}]`
-}
+    : `${parentPath}[${JSON.stringify(key)}]`;
+};
 
 const getReferenceSummary = (value: unknown) => {
   if (!value || typeof value !== "object") {
-    return {}
+    return {};
   }
 
-  const summary: Record<string, string | number | boolean> = {}
+  const summary: Record<string, string | number | boolean> = {};
   for (const key of [
     "capacityMeshNodeId",
     "regionId",
@@ -24,34 +24,34 @@ const getReferenceSummary = (value: unknown) => {
     "id",
     "name",
   ] as const) {
-    const fieldValue = (value as Record<string, unknown>)[key]
+    const fieldValue = (value as Record<string, unknown>)[key];
     if (
       typeof fieldValue === "string" ||
       typeof fieldValue === "number" ||
       typeof fieldValue === "boolean"
     ) {
-      summary[key] = fieldValue
+      summary[key] = fieldValue;
     }
   }
 
-  return summary
-}
+  return summary;
+};
 
 const createReferenceMarker = (value: unknown, refPath: string) => ({
   $ref: refPath,
   ...getReferenceSummary(value),
-})
+});
 
 export const sanitizeParamsForDownload = (
   value: unknown,
   seen = new WeakMap<object, string>(),
   path = "$",
 ): unknown => {
-  const omitValue = Symbol("omitValue")
+  const omitValue = Symbol("omitValue");
 
   const sanitizeLeafValue = (input: unknown) => {
     if (typeof input === "bigint") {
-      return input.toString()
+      return input.toString();
     }
 
     if (
@@ -59,15 +59,15 @@ export const sanitizeParamsForDownload = (
       typeof input === "function" ||
       typeof input === "symbol"
     ) {
-      return omitValue
+      return omitValue;
     }
 
     if (input === null || typeof input !== "object") {
-      return input
+      return input;
     }
 
     if (input instanceof Date) {
-      return input.toISOString()
+      return input.toISOString();
     }
 
     if (input instanceof Error) {
@@ -75,191 +75,191 @@ export const sanitizeParamsForDownload = (
         name: input.name,
         message: input.message,
         stack: input.stack,
-      }
+      };
     }
 
-    return undefined
-  }
+    return undefined;
+  };
 
-  const rootLeafValue = sanitizeLeafValue(value)
+  const rootLeafValue = sanitizeLeafValue(value);
   if (rootLeafValue !== undefined) {
     if (rootLeafValue === omitValue) {
-      return null
+      return null;
     }
-    return rootLeafValue
+    return rootLeafValue;
   }
 
-  const rootValue = value as object
-  const seenPath = seen.get(rootValue)
+  const rootValue = value as object;
+  const seenPath = seen.get(rootValue);
   if (seenPath) {
-    return createReferenceMarker(rootValue, seenPath)
+    return createReferenceMarker(rootValue, seenPath);
   }
 
   const createContainer = (input: object) => {
     if (Array.isArray(input) || input instanceof Set) {
-      return [] as unknown[]
+      return [] as unknown[];
     }
-    return {} as Record<string, unknown>
-  }
+    return {} as Record<string, unknown>;
+  };
 
-  const rootContainer = createContainer(rootValue)
-  seen.set(rootValue, path)
+  const rootContainer = createContainer(rootValue);
+  seen.set(rootValue, path);
 
   const stack: Array<{
-    source: object
-    target: unknown[] | Record<string, unknown>
-    path: string
+    source: object;
+    target: unknown[] | Record<string, unknown>;
+    path: string;
   }> = [
     {
       source: rootValue,
       target: rootContainer,
       path,
     },
-  ]
+  ];
 
   while (stack.length > 0) {
-    const frame = stack.pop()!
+    const frame = stack.pop()!;
 
     if (Array.isArray(frame.source)) {
       frame.source.forEach((item, index) => {
-        const childPath = getObjectPath(frame.path, index)
-        const leafValue = sanitizeLeafValue(item)
+        const childPath = getObjectPath(frame.path, index);
+        const leafValue = sanitizeLeafValue(item);
         if (leafValue !== undefined) {
-          ;(frame.target as unknown[])[index] =
-            leafValue === omitValue ? null : leafValue
-          return
+          (frame.target as unknown[])[index] =
+            leafValue === omitValue ? null : leafValue;
+          return;
         }
 
-        const childValue = item as object
-        const existingPath = seen.get(childValue)
+        const childValue = item as object;
+        const existingPath = seen.get(childValue);
         if (existingPath) {
-          ;(frame.target as unknown[])[index] = createReferenceMarker(
+          (frame.target as unknown[])[index] = createReferenceMarker(
             childValue,
             existingPath,
-          )
-          return
+          );
+          return;
         }
 
-        const childContainer = createContainer(childValue)
-        seen.set(childValue, childPath)
-        ;(frame.target as unknown[])[index] = childContainer
+        const childContainer = createContainer(childValue);
+        seen.set(childValue, childPath);
+        (frame.target as unknown[])[index] = childContainer;
         stack.push({
           source: childValue,
           target: childContainer,
           path: childPath,
-        })
-      })
-      continue
+        });
+      });
+      continue;
     }
 
     if (frame.source instanceof Set) {
       Array.from(frame.source.values()).forEach((item, index) => {
-        const childPath = getObjectPath(frame.path, index)
-        const leafValue = sanitizeLeafValue(item)
+        const childPath = getObjectPath(frame.path, index);
+        const leafValue = sanitizeLeafValue(item);
         if (leafValue !== undefined) {
-          ;(frame.target as unknown[])[index] =
-            leafValue === omitValue ? null : leafValue
-          return
+          (frame.target as unknown[])[index] =
+            leafValue === omitValue ? null : leafValue;
+          return;
         }
 
-        const childValue = item as object
-        const existingPath = seen.get(childValue)
+        const childValue = item as object;
+        const existingPath = seen.get(childValue);
         if (existingPath) {
-          ;(frame.target as unknown[])[index] = createReferenceMarker(
+          (frame.target as unknown[])[index] = createReferenceMarker(
             childValue,
             existingPath,
-          )
-          return
+          );
+          return;
         }
 
-        const childContainer = createContainer(childValue)
-        seen.set(childValue, childPath)
-        ;(frame.target as unknown[])[index] = childContainer
+        const childContainer = createContainer(childValue);
+        seen.set(childValue, childPath);
+        (frame.target as unknown[])[index] = childContainer;
         stack.push({
           source: childValue,
           target: childContainer,
           path: childPath,
-        })
-      })
-      continue
+        });
+      });
+      continue;
     }
 
     if (frame.source instanceof Map) {
       for (const [key, item] of frame.source.entries()) {
-        const stringKey = String(key)
-        const childPath = `${frame.path}.<map:${stringKey}>`
-        const leafValue = sanitizeLeafValue(item)
+        const stringKey = String(key);
+        const childPath = `${frame.path}.<map:${stringKey}>`;
+        const leafValue = sanitizeLeafValue(item);
         if (leafValue !== undefined) {
           if (leafValue !== omitValue) {
-            ;(frame.target as Record<string, unknown>)[stringKey] = leafValue
+            (frame.target as Record<string, unknown>)[stringKey] = leafValue;
           }
-          continue
+          continue;
         }
 
-        const childValue = item as object
-        const existingPath = seen.get(childValue)
+        const childValue = item as object;
+        const existingPath = seen.get(childValue);
         if (existingPath) {
-          ;(frame.target as Record<string, unknown>)[stringKey] =
-            createReferenceMarker(childValue, existingPath)
-          continue
+          (frame.target as Record<string, unknown>)[stringKey] =
+            createReferenceMarker(childValue, existingPath);
+          continue;
         }
 
-        const childContainer = createContainer(childValue)
-        seen.set(childValue, childPath)
-        ;(frame.target as Record<string, unknown>)[stringKey] = childContainer
+        const childContainer = createContainer(childValue);
+        seen.set(childValue, childPath);
+        (frame.target as Record<string, unknown>)[stringKey] = childContainer;
         stack.push({
           source: childValue,
           target: childContainer,
           path: childPath,
-        })
+        });
       }
-      continue
+      continue;
     }
 
     for (const key of Object.keys(frame.source)) {
-      const propertyValue = (frame.source as Record<string, unknown>)[key]
-      const childPath = getObjectPath(frame.path, key)
+      const propertyValue = (frame.source as Record<string, unknown>)[key];
+      const childPath = getObjectPath(frame.path, key);
 
       if (key === "_parent" && propertyValue) {
         const parentPath =
           typeof propertyValue === "object" && propertyValue !== null
             ? (seen.get(propertyValue) ?? childPath)
-            : childPath
-        ;(frame.target as Record<string, unknown>)[key] = createReferenceMarker(
+            : childPath;
+        (frame.target as Record<string, unknown>)[key] = createReferenceMarker(
           propertyValue,
           parentPath,
-        )
-        continue
+        );
+        continue;
       }
 
-      const leafValue = sanitizeLeafValue(propertyValue)
+      const leafValue = sanitizeLeafValue(propertyValue);
       if (leafValue !== undefined) {
         if (leafValue !== omitValue) {
-          ;(frame.target as Record<string, unknown>)[key] = leafValue
+          (frame.target as Record<string, unknown>)[key] = leafValue;
         }
-        continue
+        continue;
       }
 
-      const childValue = propertyValue as object
-      const existingPath = seen.get(childValue)
+      const childValue = propertyValue as object;
+      const existingPath = seen.get(childValue);
       if (existingPath) {
-        ;(frame.target as Record<string, unknown>)[key] = createReferenceMarker(
+        (frame.target as Record<string, unknown>)[key] = createReferenceMarker(
           childValue,
           existingPath,
-        )
-        continue
+        );
+        continue;
       }
 
-      const childContainer = createContainer(childValue)
-      seen.set(childValue, childPath)
-      ;(frame.target as Record<string, unknown>)[key] = childContainer
+      const childContainer = createContainer(childValue);
+      seen.set(childValue, childPath);
+      (frame.target as Record<string, unknown>)[key] = childContainer;
       stack.push({
         source: childValue,
         target: childContainer,
         path: childPath,
-      })
+      });
     }
   }
 
-  return rootContainer
-}
+  return rootContainer;
+};

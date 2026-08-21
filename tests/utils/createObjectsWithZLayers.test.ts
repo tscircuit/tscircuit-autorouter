@@ -1,6 +1,6 @@
-import { expect, test } from "bun:test"
-import type { SimpleRouteJson } from "lib/types"
-import { createObjectsWithZLayers } from "lib/utils/createObjectsWithZLayers"
+import { expect, test } from "bun:test";
+import type { SimpleRouteJson } from "lib/types";
+import { createObjectsWithZLayers } from "lib/utils/createObjectsWithZLayers";
 
 test("preserves obstacle ccwRotationDegrees while normalizing zLayers", () => {
   const srj: SimpleRouteJson = {
@@ -19,13 +19,13 @@ test("preserves obstacle ccwRotationDegrees while normalizing zLayers", () => {
         connectedTo: [],
       },
     ],
-  }
+  };
 
   const [normalizedObstacle] = createObjectsWithZLayers(
     srj.obstacles,
     srj.layerCount,
-  )
+  );
 
-  expect(normalizedObstacle.ccwRotationDegrees).toBe(45)
-  expect(normalizedObstacle.__zLayers).toEqual([0])
-})
+  expect(normalizedObstacle.ccwRotationDegrees).toBe(45);
+  expect(normalizedObstacle.__zLayers).toEqual([0]);
+});

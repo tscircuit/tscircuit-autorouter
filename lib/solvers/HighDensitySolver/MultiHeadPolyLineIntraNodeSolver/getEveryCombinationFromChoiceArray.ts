@@ -19,20 +19,20 @@ export const getEveryCombinationFromChoiceArray = <T>(
   choiceArray: T[][],
 ): T[][] => {
   if (!choiceArray || choiceArray.length === 0) {
-    return [[]] // Return an array with one empty combination if input is empty
+    return [[]]; // Return an array with one empty combination if input is empty
   }
 
-  let results: T[][] = [[]]
+  let results: T[][] = [[]];
 
   for (const choiceSet of choiceArray) {
-    const newResults: T[][] = []
+    const newResults: T[][] = [];
     for (const combination of results) {
       for (const choice of choiceSet) {
-        newResults.push([...combination, choice])
+        newResults.push([...combination, choice]);
       }
     }
-    results = newResults
+    results = newResults;
   }
 
-  return results
-}
+  return results;
+};

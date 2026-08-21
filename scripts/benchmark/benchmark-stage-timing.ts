@@ -1,20 +1,20 @@
-import type { BenchmarkStageTimingBreakdown } from "./benchmark-types"
+import type { BenchmarkStageTimingBreakdown } from "./benchmark-types";
 
 export type PipelineStageTimingSource = {
-  currentPipelineStepIndex: number
+  currentPipelineStepIndex: number;
   pipelineDef: ReadonlyArray<{
-    solverName: string
-  }>
-  startTimeOfPhase: Readonly<Partial<Record<string, number>>>
-  timeSpentOnPhase: Readonly<Partial<Record<string, number>>>
-}
+    solverName: string;
+  }>;
+  startTimeOfPhase: Readonly<Partial<Record<string, number>>>;
+  timeSpentOnPhase: Readonly<Partial<Record<string, number>>>;
+};
 
 type ExtendPartialStageTimingOptions = {
-  stageTiming?: BenchmarkStageTimingBreakdown
-  activeStageName?: string
-  progressElapsedTimeMs?: number
-  finalElapsedTimeMs: number
-}
+  stageTiming?: BenchmarkStageTimingBreakdown;
+  activeStageName?: string;
+  progressElapsedTimeMs?: number;
+  finalElapsedTimeMs: number;
+};
 
 export const extractBenchmarkStageTiming = (
   solver: PipelineStageTimingSource,
@@ -24,28 +24,28 @@ export const extractBenchmarkStageTiming = (
   const stages = solver.pipelineDef
     .slice(0, solver.currentPipelineStepIndex)
     .map(({ solverName }) => {
-      const elapsedTimeMs = solver.timeSpentOnPhase[solverName]
+      const elapsedTimeMs = solver.timeSpentOnPhase[solverName];
       if (elapsedTimeMs === undefined) {
         throw new Error(
           `Completed benchmark stage ${solverName} is missing elapsed time`,
-        )
+        );
       }
-      return { stageName: solverName, elapsedTimeMs }
-    })
+      return { stageName: solverName, elapsedTimeMs };
+    });
 
-  const activeStage = solver.pipelineDef[solver.currentPipelineStepIndex]
+  const activeStage = solver.pipelineDef[solver.currentPipelineStepIndex];
   if (activeStage) {
-    const startTimeMs = solver.startTimeOfPhase[activeStage.solverName]
+    const startTimeMs = solver.startTimeOfPhase[activeStage.solverName];
     if (startTimeMs !== undefined) {
       stages.push({
         stageName: activeStage.solverName,
         elapsedTimeMs: nowMs - startTimeMs,
-      })
+      });
     }
   }
 
-  return { status, stages }
-}
+  return { status, stages };
+};
 
 export const extendPartialBenchmarkStageTiming = ({
   stageTiming,
@@ -53,27 +53,26 @@ export const extendPartialBenchmarkStageTiming = ({
   progressElapsedTimeMs,
   finalElapsedTimeMs,
 }: ExtendPartialStageTimingOptions):
-  | BenchmarkStageTimingBreakdown
-  | undefined => {
-  if (!stageTiming) return undefined
+  BenchmarkStageTimingBreakdown | undefined => {
+  if (!stageTiming) return undefined;
   const partialTiming: BenchmarkStageTimingBreakdown = {
     status: "partial",
     stages: stageTiming.stages.map((stage) => ({ ...stage })),
-  }
+  };
   if (
     !activeStageName ||
     progressElapsedTimeMs === undefined ||
     finalElapsedTimeMs <= progressElapsedTimeMs
   ) {
-    return partialTiming
+    return partialTiming;
   }
 
-  const activeStage = partialTiming.stages.at(-1)
+  const activeStage = partialTiming.stages.at(-1);
   if (!activeStage || activeStage.stageName !== activeStageName) {
-    return partialTiming
+    return partialTiming;
   }
   const extendedElapsedTimeMs =
-    activeStage.elapsedTimeMs + finalElapsedTimeMs - progressElapsedTimeMs
-  activeStage.elapsedTimeMs = extendedElapsedTimeMs
-  return partialTiming
-}
+    activeStage.elapsedTimeMs + finalElapsedTimeMs - progressElapsedTimeMs;
+  activeStage.elapsedTimeMs = extendedElapsedTimeMs;
+  return partialTiming;
+};

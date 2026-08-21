@@ -1,44 +1,46 @@
 import type {
   HighDensityIntraNodeRouteWithJumpers,
   NodeWithPortPoints,
-} from "lib/types/high-density-types"
-import { IntraNodeSolverWithJumpers } from "./IntraNodeSolverWithJumpers"
+} from "lib/types/high-density-types";
+import { IntraNodeSolverWithJumpers } from "./IntraNodeSolverWithJumpers";
 import {
   HyperParameterSupervisorSolver,
   SupervisedSolver,
-} from "../HyperParameterSupervisorSolver"
-import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
-import type { HighDensityHyperParameters } from "./HighDensityHyperParameters"
-import type { GraphicsObject } from "graphics-debug"
+} from "../HyperParameterSupervisorSolver";
+import type { ConnectivityMap } from "circuit-json-to-connectivity-map";
+import type { HighDensityHyperParameters } from "./HighDensityHyperParameters";
+import type { GraphicsObject } from "graphics-debug";
 import {
   JumperPrepatternSolver,
   type JumperPrepatternSolverHyperParameters,
-} from "../JumperPrepatternSolver/JumperPrepatternSolver"
-import { BaseSolver } from "../BaseSolver"
+} from "../JumperPrepatternSolver/JumperPrepatternSolver";
+import { BaseSolver } from "../BaseSolver";
 
-type JumperSolver = IntraNodeSolverWithJumpers | JumperPrepatternSolver
+type JumperSolver = IntraNodeSolverWithJumpers | JumperPrepatternSolver;
 
 export class HyperIntraNodeSolverWithJumpers extends HyperParameterSupervisorSolver<JumperSolver> {
-  constructorParams: ConstructorParameters<typeof IntraNodeSolverWithJumpers>[0]
-  solvedRoutes: HighDensityIntraNodeRouteWithJumpers[] = []
-  nodeWithPortPoints: NodeWithPortPoints
-  connMap?: ConnectivityMap
+  constructorParams: ConstructorParameters<
+    typeof IntraNodeSolverWithJumpers
+  >[0];
+  solvedRoutes: HighDensityIntraNodeRouteWithJumpers[] = [];
+  nodeWithPortPoints: NodeWithPortPoints;
+  connMap?: ConnectivityMap;
 
   constructor(
     opts: ConstructorParameters<typeof IntraNodeSolverWithJumpers>[0],
   ) {
-    super()
-    this.constructorParams = opts
-    this.nodeWithPortPoints = opts.nodeWithPortPoints
-    this.connMap = opts.connMap
-    this.constructorParams = opts
-    this.MAX_ITERATIONS = 250_000
-    this.GREEDY_MULTIPLIER = 5
-    this.MIN_SUBSTEPS = 100
+    super();
+    this.constructorParams = opts;
+    this.nodeWithPortPoints = opts.nodeWithPortPoints;
+    this.connMap = opts.connMap;
+    this.constructorParams = opts;
+    this.MAX_ITERATIONS = 250_000;
+    this.GREEDY_MULTIPLIER = 5;
+    this.MIN_SUBSTEPS = 100;
   }
 
   getConstructorParams() {
-    return this.constructorParams
+    return this.constructorParams;
   }
 
   getHyperParameterDefs() {
@@ -74,7 +76,7 @@ export class HyperIntraNodeSolverWithJumpers extends HyperParameterSupervisorSol
           },
         ] as Array<
           {
-            USE_JUMPER_PREPATTERN: true
+            USE_JUMPER_PREPATTERN: true;
           } & JumperPrepatternSolverHyperParameters
         >,
       },
@@ -88,7 +90,7 @@ export class HyperIntraNodeSolverWithJumpers extends HyperParameterSupervisorSol
           },
         ],
       },
-    ]
+    ];
   }
 
   getCombinationDefs() {
@@ -98,32 +100,32 @@ export class HyperIntraNodeSolverWithJumpers extends HyperParameterSupervisorSol
       ["jumperPrepattern"],
       // // Fall back to IntraNodeSolverWithJumpers with various orderings
       ["orderings20"],
-    ]
+    ];
   }
 
   _step() {
-    super._step()
+    super._step();
     this.stats.bestFitnessHyperParameters =
-      this.getSupervisedSolverWithBestFitness()?.hyperParameters
+      this.getSupervisedSolverWithBestFitness()?.hyperParameters;
   }
 
   computeG(solver: JumperSolver) {
     if ((solver as any).hyperParameters?.USE_JUMPER_PREPATTERN) {
-      return solver.iterations / 10_000
+      return solver.iterations / 10_000;
     }
     // Give IntraNodeSolverWithJumpers a higher base G so prepattern is tried first
-    return solver.iterations / 10_000
+    return solver.iterations / 10_000;
   }
 
   computeH(solver: JumperSolver) {
-    return 1 - (solver.progress || 0)
+    return 1 - (solver.progress || 0);
   }
 
   generateSolver(
     hyperParameters: Partial<HighDensityHyperParameters> & {
-      USE_JUMPER_PREPATTERN?: boolean
-      FIRST_ORIENTATION?: "horizontal" | "vertical"
-      PATTERN_TYPE?: "alternating_grid" | "staggered_grid"
+      USE_JUMPER_PREPATTERN?: boolean;
+      FIRST_ORIENTATION?: "horizontal" | "vertical";
+      PATTERN_TYPE?: "alternating_grid" | "staggered_grid";
     },
   ): JumperSolver {
     if (hyperParameters.USE_JUMPER_PREPATTERN) {
@@ -136,10 +138,10 @@ export class HyperIntraNodeSolverWithJumpers extends HyperParameterSupervisorSol
           FIRST_ORIENTATION: hyperParameters.FIRST_ORIENTATION,
           PATTERN_TYPE: hyperParameters.PATTERN_TYPE,
         },
-      })
+      });
       // Store hyperParameters on the solver for computeG reference
-      ;(prepatternSolver as any).hyperParameters = hyperParameters
-      return prepatternSolver as JumperSolver
+      (prepatternSolver as any).hyperParameters = hyperParameters;
+      return prepatternSolver as JumperSolver;
     }
 
     return new IntraNodeSolverWithJumpers({
@@ -148,27 +150,27 @@ export class HyperIntraNodeSolverWithJumpers extends HyperParameterSupervisorSol
         ...this.constructorParams.hyperParameters,
         ...hyperParameters,
       },
-    })
+    });
   }
 
   onSolve(solver: SupervisedSolver<JumperSolver>) {
     if (solver.solver instanceof JumperPrepatternSolver) {
-      this.solvedRoutes = solver.solver.getOutput()
+      this.solvedRoutes = solver.solver.getOutput();
     } else {
       this.solvedRoutes = (
         solver.solver as IntraNodeSolverWithJumpers
-      ).solvedRoutes
+      ).solvedRoutes;
     }
   }
 
   visualize(): GraphicsObject {
     // Use winning solver if available, otherwise fall back to best fitness solver
     if (this.winningSolver) {
-      return this.winningSolver.visualize()
+      return this.winningSolver.visualize();
     }
     if (this.activeSubSolver) {
-      return this.activeSubSolver.visualize()
+      return this.activeSubSolver.visualize();
     }
-    return super.visualize()
+    return super.visualize();
   }
 }

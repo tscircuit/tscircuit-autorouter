@@ -1,9 +1,9 @@
-import { expect, test } from "bun:test"
-import type { SimpleRouteJson } from "lib/types"
+import { expect, test } from "bun:test";
+import type { SimpleRouteJson } from "lib/types";
 import {
   convertSrjTracesToObstacles,
   getObstaclesFromSrjTraces,
-} from "lib/utils/convertSrjTracesToObstacles"
+} from "lib/utils/convertSrjTracesToObstacles";
 
 const baseSrj: SimpleRouteJson = {
   layerCount: 4,
@@ -57,12 +57,12 @@ const baseSrj: SimpleRouteJson = {
       ],
     },
   ],
-}
+};
 
 test("getObstaclesFromSrjTraces converts wire segments and vias to obstacles", () => {
-  const traceObstacles = getObstaclesFromSrjTraces(baseSrj)
+  const traceObstacles = getObstaclesFromSrjTraces(baseSrj);
 
-  expect(traceObstacles).toHaveLength(2)
+  expect(traceObstacles).toHaveLength(2);
   expect(traceObstacles[0]).toMatchObject({
     type: "rect",
     layers: ["top", "inner1", "inner2"],
@@ -70,7 +70,7 @@ test("getObstaclesFromSrjTraces converts wire segments and vias to obstacles", (
     width: 0.4,
     height: 0.4,
     connectedTo: [],
-  })
+  });
   expect(traceObstacles[1]).toMatchObject({
     type: "rect",
     layers: ["top"],
@@ -79,5 +79,5 @@ test("getObstaclesFromSrjTraces converts wire segments and vias to obstacles", (
     height: 0.15,
     ccwRotationDegrees: 0,
     connectedTo: [],
-  })
-})
+  });
+});

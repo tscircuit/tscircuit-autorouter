@@ -1,8 +1,6 @@
-import { test, expect } from "bun:test"
-import { JumperPrepatternSolver } from "lib/solvers/JumperPrepatternSolver"
-import input from "../../../fixtures/features/jumper-high-density/jumper-high-density03-input.json" with {
-  type: "json",
-}
+import { test, expect } from "bun:test";
+import { JumperPrepatternSolver } from "lib/solvers/JumperPrepatternSolver";
+import input from "../../../fixtures/features/jumper-high-density/jumper-high-density03-input.json" with { type: "json" };
 
 test(
   "JumperPrepatternSolver02 - solves prepattern routes",
@@ -12,12 +10,12 @@ test(
       colorMap: input.colorMap,
       hyperParameters: input.hyperParameters as any,
       traceWidth: input.traceWidth,
-    })
+    });
 
-    solver.solve()
+    solver.solve();
 
-    expect(solver.solved).toBe(true)
-    expect(solver.visualize()).toMatchGraphicsSvg(import.meta.path)
+    expect(solver.solved).toBe(true);
+    expect(solver.visualize()).toMatchGraphicsSvg(import.meta.path);
   },
   { timeout: 30_000 },
-)
+);

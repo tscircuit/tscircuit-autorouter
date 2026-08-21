@@ -1,8 +1,8 @@
-import { expect, test } from "bun:test"
+import { expect, test } from "bun:test";
 import {
   findStringIdPrefixHacks,
   getAddedProductionLines,
-} from "../../scripts/check-no-string-id-hacks"
+} from "../../scripts/check-no-string-id-hacks";
 
 test("finds hard-coded ID prefixes without flagging ordinary string checks", () => {
   const source = `
@@ -16,12 +16,12 @@ const prose = message.startsWith("Route failed")
 /*
  * example.startsWith("block_comment_prefix_")
  */
-`
+`;
 
   expect(findStringIdPrefixHacks(source)).toEqual([
     { prefix: "source_trace_", startLine: 2, endLine: 2 },
     { prefix: "pcb_trace_", startLine: 3, endLine: 4 },
-  ])
+  ]);
 
   const diff = `diff --git a/lib/example.ts b/lib/example.ts
 +++ b/lib/example.ts
@@ -32,10 +32,10 @@ diff --git a/tests/example.test.ts b/tests/example.test.ts
 +++ b/tests/example.test.ts
 @@ -0,0 +1 @@
 +expect(connectionId.startsWith("source_trace_")).toBe(true)
-`
+`;
 
   expect(getAddedProductionLines(diff)).toEqual([
     { file: "lib/example.ts", line: 11 },
     { file: "lib/example.ts", line: 12 },
-  ])
-})
+  ]);
+});

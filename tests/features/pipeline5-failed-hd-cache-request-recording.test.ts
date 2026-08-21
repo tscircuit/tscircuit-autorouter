@@ -1,6 +1,6 @@
-import { expect, test } from "bun:test"
-import { Pipeline5HdCacheHighDensitySolver } from "lib/autorouter-pipelines/AutoroutingPipeline5_HdCache/Pipeline5HdCacheHighDensitySolver"
-import type { NodeWithPortPoints } from "lib/types/high-density-types"
+import { expect, test } from "bun:test";
+import { Pipeline5HdCacheHighDensitySolver } from "lib/autorouter-pipelines/AutoroutingPipeline5_HdCache/Pipeline5HdCacheHighDensitySolver";
+import type { NodeWithPortPoints } from "lib/types/high-density-types";
 
 const remoteEligibleNode: NodeWithPortPoints = {
   capacityMeshNodeId: "cmn_remote_fail",
@@ -16,7 +16,7 @@ const remoteEligibleNode: NodeWithPortPoints = {
     { x: -2, y: 1.5, z: 0, connectionName: "C" },
     { x: 2, y: 1.5, z: 0, connectionName: "C" },
   ],
-}
+};
 
 test.skip("pipeline5 records failed hd-cache requests on window for replay", async () => {
   const fetchImpl = Object.assign(
@@ -42,55 +42,59 @@ test.skip("pipeline5 records failed hd-cache requests on window for replay", asy
     {
       preconnect: () => {},
     },
-  ) as typeof fetch
+  ) as typeof fetch;
 
   const solver = new Pipeline5HdCacheHighDensitySolver({
     nodePortPoints: [remoteEligibleNode],
     fetchImpl,
-  })
+  });
 
   const localFallbackCalls: Array<{
-    node: NodeWithPortPoints
-    nodeIndex: number
-    opts: Record<string, unknown>
-  }> = []
-  ;(solver as any).solveNodeLocally = (
+    node: NodeWithPortPoints;
+    nodeIndex: number;
+    opts: Record<string, unknown>;
+  }> = [];
+  (solver as any).solveNodeLocally = (
     node: NodeWithPortPoints,
     nodeIndex: number,
     opts: Record<string, unknown>,
   ) => {
-    localFallbackCalls.push({ node, nodeIndex, opts })
-  }
+    localFallbackCalls.push({ node, nodeIndex, opts });
+  };
 
-  const originalWindow = (globalThis as { window?: unknown }).window
+  const originalWindow = (globalThis as { window?: unknown }).window;
   const failedRequestWindow: {
-    __FAILED_HD_CACHE_REQUESTS?: unknown[]
-  } = {}
-  ;(globalThis as { window?: unknown }).window = failedRequestWindow
+    __FAILED_HD_CACHE_REQUESTS?: unknown[];
+  } = {};
+  (globalThis as { window?: unknown }).window = failedRequestWindow;
 
   try {
-    await (solver as any).solveNodeViaHdCache(remoteEligibleNode, 0)
+    await (solver as any).solveNodeViaHdCache(remoteEligibleNode, 0);
   } finally {
-    ;(globalThis as { window?: unknown }).window = originalWindow
+    (globalThis as { window?: unknown }).window = originalWindow;
   }
 
-  expect(localFallbackCalls).toHaveLength(1)
-  expect(localFallbackCalls[0]?.node.capacityMeshNodeId).toBe("cmn_remote_fail")
+  expect(localFallbackCalls).toHaveLength(1);
+  expect(localFallbackCalls[0]?.node.capacityMeshNodeId).toBe(
+    "cmn_remote_fail",
+  );
   expect(localFallbackCalls[0]?.opts.remoteFailure).toBe(
     "Solver did not find a solution.",
-  )
+  );
 
   const failedRequests =
-    failedRequestWindow.__FAILED_HD_CACHE_REQUESTS as Array<Record<string, any>>
-  expect(Array.isArray(failedRequests)).toBe(true)
-  expect(failedRequests).toHaveLength(1)
+    failedRequestWindow.__FAILED_HD_CACHE_REQUESTS as Array<
+      Record<string, any>
+    >;
+  expect(Array.isArray(failedRequests)).toBe(true);
+  expect(failedRequests).toHaveLength(1);
 
-  const failedRequest = failedRequests[0]
-  expect(failedRequest.nodeId).toBe("cmn_remote_fail")
-  expect(failedRequest.pairCount).toBe(3)
-  expect(failedRequest.url).toBe("https://hd-cache.tscircuit.com/solve")
-  expect(failedRequest.durationMs).toBeGreaterThanOrEqual(0)
-  expect(failedRequest.error).toBe("Solver did not find a solution.")
+  const failedRequest = failedRequests[0];
+  expect(failedRequest.nodeId).toBe("cmn_remote_fail");
+  expect(failedRequest.pairCount).toBe(3);
+  expect(failedRequest.url).toBe("https://hd-cache.tscircuit.com/solve");
+  expect(failedRequest.durationMs).toBeGreaterThanOrEqual(0);
+  expect(failedRequest.error).toBe("Solver did not find a solution.");
   expect(failedRequest.request).toEqual({
     method: "POST",
     headers: {
@@ -102,7 +106,7 @@ test.skip("pipeline5 records failed hd-cache requests on window for replay", asy
     bodyJson: {
       nodeWithPortPoints: remoteEligibleNode,
     },
-  })
+  });
   expect(failedRequest.response).toEqual({
     status: 200,
     ok: true,
@@ -126,6 +130,6 @@ test.skip("pipeline5 records failed hd-cache requests on window for replay", asy
       drc: null,
       message: "Solver did not find a solution.",
     },
-  })
-  expect(new Date(failedRequest.failedAt).toString()).not.toBe("Invalid Date")
-})
+  });
+  expect(new Date(failedRequest.failedAt).toString()).not.toBe("Invalid Date");
+});

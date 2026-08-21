@@ -1,65 +1,66 @@
-import { getBoundingBox } from "@tscircuit/math-utils"
+import { getBoundingBox } from "@tscircuit/math-utils";
 import type {
   ConnectionPoint,
   Obstacle,
   SimpleRouteConnection,
   SimpleRouteJson,
   SimplifiedPcbTrace,
-} from "lib/types"
+} from "lib/types";
 
 export type RerouteRectRegion = {
-  shape: "rect"
-  minX: number
-  maxX: number
-  minY: number
-  maxY: number
-}
+  shape: "rect";
+  minX: number;
+  maxX: number;
+  minY: number;
+  maxY: number;
+};
 
-type RoutePoint = SimplifiedPcbTrace["route"][number]
-type WireRoutePoint = Extract<RoutePoint, { route_type: "wire" }>
-type ViaRoutePoint = Extract<RoutePoint, { route_type: "via" }>
+type RoutePoint = SimplifiedPcbTrace["route"][number];
+type WireRoutePoint = Extract<RoutePoint, { route_type: "wire" }>;
+type ViaRoutePoint = Extract<RoutePoint, { route_type: "via" }>;
 type ThroughObstacleRoutePoint = Extract<
   RoutePoint,
   { route_type: "through_obstacle" }
->
+>;
 type LocatableRoutePoint = {
-  route_type: RoutePoint["route_type"]
-  x: number
-  y: number
-  layer?: string
-  from_layer?: string
-  to_layer?: string
-  width?: number
-}
+  route_type: RoutePoint["route_type"];
+  x: number;
+  y: number;
+  layer?: string;
+  from_layer?: string;
+  to_layer?: string;
+  width?: number;
+};
 
 type LocatedPoint = {
-  x: number
-  y: number
-  layer: string
-  width: number
-}
+  x: number;
+  y: number;
+  layer: string;
+  width: number;
+};
 
 type RerouteConnectionResult = {
-  connection: SimpleRouteConnection
-  endpointObstacles: Obstacle[]
-}
+  connection: SimpleRouteConnection;
+  endpointObstacles: Obstacle[];
+};
 
-const EPSILON = 1e-9
+const EPSILON = 1e-9;
 
 const isWireRoutePoint = (point: RoutePoint): point is WireRoutePoint =>
-  point.route_type === "wire"
+  point.route_type === "wire";
 
 const isViaRoutePoint = (point: RoutePoint): point is ViaRoutePoint =>
-  point.route_type === "via"
+  point.route_type === "via";
 
 const isThroughObstacleRoutePoint = (
   point: RoutePoint,
-): point is ThroughObstacleRoutePoint => point.route_type === "through_obstacle"
+): point is ThroughObstacleRoutePoint =>
+  point.route_type === "through_obstacle";
 
 const getRoutePointLocation = (
   point: RoutePoint,
 ): LocatableRoutePoint | null => {
-  if (isWireRoutePoint(point) || isViaRoutePoint(point)) return point
+  if (isWireRoutePoint(point) || isViaRoutePoint(point)) return point;
   if (
     isThroughObstacleRoutePoint(point) &&
     Math.hypot(point.end.x - point.start.x, point.end.y - point.start.y) <=
@@ -72,10 +73,10 @@ const getRoutePointLocation = (
       from_layer: point.from_layer,
       to_layer: point.to_layer,
       width: point.width,
-    }
+    };
   }
-  return null
-}
+  return null;
+};
 
 const getSegmentLayer = (
   start: LocatableRoutePoint,
@@ -87,15 +88,15 @@ const getSegmentLayer = (
   end.from_layer ??
   start.from_layer ??
   end.to_layer ??
-  "top"
+  "top";
 
 const getSegmentWidth = (
   start: LocatableRoutePoint,
   end: LocatableRoutePoint,
   fallbackWidth: number,
 ) => {
-  return start.width ?? end.width ?? fallbackWidth
-}
+  return start.width ?? end.width ?? fallbackWidth;
+};
 
 const getInterpolatedPoint = (
   start: LocatableRoutePoint,
@@ -108,7 +109,7 @@ const getInterpolatedPoint = (
   y: start.y + (end.y - start.y) * t,
   layer,
   width,
-})
+});
 
 const snapPointToRegionBounds = (
   point: LocatedPoint,
@@ -127,7 +128,7 @@ const snapPointToRegionBounds = (
       : Math.abs(point.y - region.maxY) < 1e-6
         ? region.maxY
         : point.y,
-})
+});
 
 const locatedPointToConnectionPoint = ({
   x,
@@ -137,7 +138,7 @@ const locatedPointToConnectionPoint = ({
   x,
   y,
   layer,
-})
+});
 
 const locatedPointToWireRoutePoint = ({
   x,
@@ -150,41 +151,41 @@ const locatedPointToWireRoutePoint = ({
   y,
   layer,
   width,
-})
+});
 
 const getRectInsideInterval = (
   start: LocatableRoutePoint,
   end: LocatableRoutePoint,
   region: RerouteRectRegion,
 ) => {
-  const dx = end.x - start.x
-  const dy = end.y - start.y
-  let t0 = 0
-  let t1 = 1
+  const dx = end.x - start.x;
+  const dy = end.y - start.y;
+  let t0 = 0;
+  let t1 = 1;
 
   const clip = (p: number, q: number) => {
-    if (Math.abs(p) < EPSILON) return q >= 0
-    const r = q / p
+    if (Math.abs(p) < EPSILON) return q >= 0;
+    const r = q / p;
     if (p < 0) {
-      if (r > t1) return false
-      if (r > t0) t0 = r
+      if (r > t1) return false;
+      if (r > t0) t0 = r;
     } else {
-      if (r < t0) return false
-      if (r < t1) t1 = r
+      if (r < t0) return false;
+      if (r < t1) t1 = r;
     }
-    return true
-  }
+    return true;
+  };
 
-  if (!clip(-dx, start.x - region.minX)) return null
-  if (!clip(dx, region.maxX - start.x)) return null
-  if (!clip(-dy, start.y - region.minY)) return null
-  if (!clip(dy, region.maxY - start.y)) return null
+  if (!clip(-dx, start.x - region.minX)) return null;
+  if (!clip(dx, region.maxX - start.x)) return null;
+  if (!clip(-dy, start.y - region.minY)) return null;
+  if (!clip(dy, region.maxY - start.y)) return null;
 
-  return { startT: t0, endT: t1 }
-}
+  return { startT: t0, endT: t1 };
+};
 
 const distance = (a: LocatedPoint, b: LocatedPoint) =>
-  Math.hypot(a.x - b.x, a.y - b.y)
+  Math.hypot(a.x - b.x, a.y - b.y);
 
 const isPointOnRegionBoundary = (
   point: LocatedPoint | ConnectionPoint,
@@ -197,7 +198,7 @@ const isPointOnRegionBoundary = (
   (Math.abs(point.x - region.minX) <= 1e-6 ||
     Math.abs(point.x - region.maxX) <= 1e-6 ||
     Math.abs(point.y - region.minY) <= 1e-6 ||
-    Math.abs(point.y - region.maxY) <= 1e-6)
+    Math.abs(point.y - region.maxY) <= 1e-6);
 
 const appendClippedTraceSegment = (
   traces: SimplifiedPcbTrace[],
@@ -206,7 +207,7 @@ const appendClippedTraceSegment = (
   start: LocatedPoint,
   end: LocatedPoint,
 ) => {
-  if (distance(start, end) <= EPSILON) return
+  if (distance(start, end) <= EPSILON) return;
 
   traces.push({
     type: "pcb_trace",
@@ -216,8 +217,8 @@ const appendClippedTraceSegment = (
       locatedPointToWireRoutePoint(start),
       locatedPointToWireRoutePoint(end),
     ],
-  })
-}
+  });
+};
 
 const createClippedTraceSegmentObstacle = ({
   obstacleId,
@@ -226,17 +227,17 @@ const createClippedTraceSegmentObstacle = ({
   layer,
   width,
 }: {
-  obstacleId: string
-  start: LocatedPoint
-  end: LocatedPoint
-  layer: string
-  width: number
+  obstacleId: string;
+  start: LocatedPoint;
+  end: LocatedPoint;
+  layer: string;
+  width: number;
 }): Obstacle | null => {
-  const dx = end.x - start.x
-  const dy = end.y - start.y
-  const length = Math.hypot(dx, dy)
+  const dx = end.x - start.x;
+  const dy = end.y - start.y;
+  const length = Math.hypot(dx, dy);
 
-  if (length > width + EPSILON) return null
+  if (length > width + EPSILON) return null;
 
   return {
     obstacleId,
@@ -250,8 +251,8 @@ const createClippedTraceSegmentObstacle = ({
     height: width,
     ccwRotationDegrees: (Math.atan2(dy, dx) * 180) / Math.PI,
     connectedTo: [],
-  }
-}
+  };
+};
 
 const createRerouteConnection = ({
   trace,
@@ -259,10 +260,10 @@ const createRerouteConnection = ({
   start,
   end,
 }: {
-  trace: SimplifiedPcbTrace
-  ripIndex: number
-  start: LocatedPoint
-  end: LocatedPoint
+  trace: SimplifiedPcbTrace;
+  ripIndex: number;
+  start: LocatedPoint;
+  end: LocatedPoint;
 }): SimpleRouteConnection => ({
   name: `${trace.connection_name}_reroute_${trace.pcb_trace_id}_${ripIndex}`,
   __rootConnectionNames: [trace.connection_name],
@@ -270,16 +271,16 @@ const createRerouteConnection = ({
     locatedPointToConnectionPoint(start),
     locatedPointToConnectionPoint(end),
   ],
-})
+});
 
 const createRerouteEndpointObstacle = ({
   connection,
   point,
   endpointIndex,
 }: {
-  connection: SimpleRouteConnection
-  point: LocatedPoint
-  endpointIndex: number
+  connection: SimpleRouteConnection;
+  point: LocatedPoint;
+  endpointIndex: number;
 }): Obstacle => ({
   obstacleId: `${connection.name}_route_endpoint_${endpointIndex}`,
   type: "rect",
@@ -291,7 +292,7 @@ const createRerouteEndpointObstacle = ({
     connection.name,
     connection.__rootConnectionNames?.[0] ?? connection.name,
   ],
-})
+});
 
 const expandRegionToContainObstacles = (
   region: RerouteRectRegion,
@@ -302,18 +303,18 @@ const expandRegionToContainObstacles = (
     maxX: region.maxX,
     minY: region.minY,
     maxY: region.maxY,
-  }
+  };
 
   for (const obstacle of obstacles) {
-    const obstacleBounds = getBoundingBox(obstacle)
-    bounds.minX = Math.min(bounds.minX, obstacleBounds.minX)
-    bounds.maxX = Math.max(bounds.maxX, obstacleBounds.maxX)
-    bounds.minY = Math.min(bounds.minY, obstacleBounds.minY)
-    bounds.maxY = Math.max(bounds.maxY, obstacleBounds.maxY)
+    const obstacleBounds = getBoundingBox(obstacle);
+    bounds.minX = Math.min(bounds.minX, obstacleBounds.minX);
+    bounds.maxX = Math.max(bounds.maxX, obstacleBounds.maxX);
+    bounds.minY = Math.min(bounds.minY, obstacleBounds.minY);
+    bounds.maxY = Math.max(bounds.maxY, obstacleBounds.maxY);
   }
 
-  return bounds
-}
+  return bounds;
+};
 
 const maybeCreateRerouteConnection = ({
   trace,
@@ -324,22 +325,22 @@ const maybeCreateRerouteConnection = ({
   allowInteriorStart,
   allowInteriorEnd,
 }: {
-  trace: SimplifiedPcbTrace
-  ripIndex: number
-  start: LocatedPoint
-  end: LocatedPoint
-  region: RerouteRectRegion
-  allowInteriorStart?: boolean
-  allowInteriorEnd?: boolean
+  trace: SimplifiedPcbTrace;
+  ripIndex: number;
+  start: LocatedPoint;
+  end: LocatedPoint;
+  region: RerouteRectRegion;
+  allowInteriorStart?: boolean;
+  allowInteriorEnd?: boolean;
 }): RerouteConnectionResult | null => {
   if (
     !(allowInteriorStart || isPointOnRegionBoundary(start, region)) ||
     !(allowInteriorEnd || isPointOnRegionBoundary(end, region))
   ) {
-    return null
+    return null;
   }
 
-  const connection = createRerouteConnection({ trace, ripIndex, start, end })
+  const connection = createRerouteConnection({ trace, ripIndex, start, end });
   const endpointObstacles: Obstacle[] = [
     createRerouteEndpointObstacle({
       connection,
@@ -351,39 +352,39 @@ const maybeCreateRerouteConnection = ({
       point: end,
       endpointIndex: 1,
     }),
-  ]
+  ];
 
-  return { connection, endpointObstacles }
-}
+  return { connection, endpointObstacles };
+};
 
 const getClippedTracePieces = (
   trace: SimplifiedPcbTrace,
   region: RerouteRectRegion,
   fallbackWidth: number,
 ) => {
-  const keptTraces: SimplifiedPcbTrace[] = []
-  const rerouteConnections: SimpleRouteConnection[] = []
-  const rerouteEndpointObstacles: Obstacle[] = []
-  const clippedTraceSegmentObstacles: Obstacle[] = []
-  let activeRipStart: LocatedPoint | null = null
-  let activeRipStartAllowsInterior = false
-  let keptSegmentIndex = 0
-  let hadIntersection = false
+  const keptTraces: SimplifiedPcbTrace[] = [];
+  const rerouteConnections: SimpleRouteConnection[] = [];
+  const rerouteEndpointObstacles: Obstacle[] = [];
+  const clippedTraceSegmentObstacles: Obstacle[] = [];
+  let activeRipStart: LocatedPoint | null = null;
+  let activeRipStartAllowsInterior = false;
+  let keptSegmentIndex = 0;
+  let hadIntersection = false;
 
   for (let i = 0; i < trace.route.length - 1; i++) {
-    const start = getRoutePointLocation(trace.route[i]!)
-    const end = getRoutePointLocation(trace.route[i + 1]!)
+    const start = getRoutePointLocation(trace.route[i]!);
+    const end = getRoutePointLocation(trace.route[i + 1]!);
 
     if (!start || !end) {
-      return null
+      return null;
     }
 
-    const layer = getSegmentLayer(start, end)
-    const width = getSegmentWidth(start, end, fallbackWidth)
-    const interval = getRectInsideInterval(start, end, region)
-    const segmentStart = getInterpolatedPoint(start, end, 0, layer, width)
-    const segmentEnd = getInterpolatedPoint(start, end, 1, layer, width)
-    const isFirstTraceSegment = i === 0
+    const layer = getSegmentLayer(start, end);
+    const width = getSegmentWidth(start, end, fallbackWidth);
+    const interval = getRectInsideInterval(start, end, region);
+    const segmentStart = getInterpolatedPoint(start, end, 0, layer, width);
+    const segmentEnd = getInterpolatedPoint(start, end, 1, layer, width);
+    const isFirstTraceSegment = i === 0;
 
     if (!interval) {
       appendClippedTraceSegment(
@@ -392,10 +393,10 @@ const getClippedTracePieces = (
         keptSegmentIndex++,
         segmentStart,
         segmentEnd,
-      )
-      continue
+      );
+      continue;
     }
-    hadIntersection = true
+    hadIntersection = true;
 
     if (interval.startT > EPSILON) {
       const keptEnd = getInterpolatedPoint(
@@ -404,16 +405,16 @@ const getClippedTracePieces = (
         interval.startT,
         layer,
         width,
-      )
+      );
       const clippedTraceSegmentObstacle = createClippedTraceSegmentObstacle({
         obstacleId: `${trace.pcb_trace_id}_keep_${keptSegmentIndex}_bounds`,
         start: segmentStart,
         end: keptEnd,
         layer,
         width,
-      })
+      });
       if (clippedTraceSegmentObstacle) {
-        clippedTraceSegmentObstacles.push(clippedTraceSegmentObstacle)
+        clippedTraceSegmentObstacles.push(clippedTraceSegmentObstacle);
       }
       appendClippedTraceSegment(
         keptTraces,
@@ -421,7 +422,7 @@ const getClippedTracePieces = (
         keptSegmentIndex++,
         segmentStart,
         keptEnd,
-      )
+      );
     }
 
     const rippedEnd = getInterpolatedPoint(
@@ -430,20 +431,20 @@ const getClippedTracePieces = (
       interval.endT,
       layer,
       width,
-    )
+    );
     const rerouteStart = snapPointToRegionBounds(
       getInterpolatedPoint(start, end, interval.startT, layer, width),
       region,
-    )
+    );
     const rerouteEnd = snapPointToRegionBounds(
       getInterpolatedPoint(start, end, interval.endT, layer, width),
       region,
-    )
+    );
 
     if (!activeRipStart) {
-      activeRipStart = rerouteStart
+      activeRipStart = rerouteStart;
       activeRipStartAllowsInterior =
-        isFirstTraceSegment && interval.startT <= EPSILON
+        isFirstTraceSegment && interval.startT <= EPSILON;
     }
 
     if (interval.endT < 1 - EPSILON) {
@@ -454,22 +455,22 @@ const getClippedTracePieces = (
         end: rerouteEnd,
         region,
         allowInteriorStart: activeRipStartAllowsInterior,
-      })
+      });
       if (rerouteConnection) {
-        rerouteConnections.push(rerouteConnection.connection)
-        rerouteEndpointObstacles.push(...rerouteConnection.endpointObstacles)
+        rerouteConnections.push(rerouteConnection.connection);
+        rerouteEndpointObstacles.push(...rerouteConnection.endpointObstacles);
       }
-      activeRipStart = null
-      activeRipStartAllowsInterior = false
+      activeRipStart = null;
+      activeRipStartAllowsInterior = false;
       const clippedTraceSegmentObstacle = createClippedTraceSegmentObstacle({
         obstacleId: `${trace.pcb_trace_id}_keep_${keptSegmentIndex}_bounds`,
         start: rippedEnd,
         end: segmentEnd,
         layer,
         width,
-      })
+      });
       if (clippedTraceSegmentObstacle) {
-        clippedTraceSegmentObstacles.push(clippedTraceSegmentObstacle)
+        clippedTraceSegmentObstacles.push(clippedTraceSegmentObstacle);
       }
       appendClippedTraceSegment(
         keptTraces,
@@ -477,7 +478,7 @@ const getClippedTracePieces = (
         keptSegmentIndex++,
         rippedEnd,
         segmentEnd,
-      )
+      );
     }
   }
 
@@ -486,7 +487,7 @@ const getClippedTracePieces = (
       .slice()
       .reverse()
       .map(getRoutePointLocation)
-      .find((point): point is LocatableRoutePoint => Boolean(point))
+      .find((point): point is LocatableRoutePoint => Boolean(point));
 
     if (finalPoint) {
       const rerouteConnection = maybeCreateRerouteConnection({
@@ -503,10 +504,10 @@ const getClippedTracePieces = (
         region,
         allowInteriorStart: activeRipStartAllowsInterior,
         allowInteriorEnd: true,
-      })
+      });
       if (rerouteConnection) {
-        rerouteConnections.push(rerouteConnection.connection)
-        rerouteEndpointObstacles.push(...rerouteConnection.endpointObstacles)
+        rerouteConnections.push(rerouteConnection.connection);
+        rerouteEndpointObstacles.push(...rerouteConnection.endpointObstacles);
       }
     }
   }
@@ -517,48 +518,48 @@ const getClippedTracePieces = (
     rerouteEndpointObstacles,
     clippedTraceSegmentObstacles,
     hadIntersection,
-  }
-}
+  };
+};
 
 export const getRerouteSimpleRouteJson = (
   simpleRouteJson: SimpleRouteJson,
   region: RerouteRectRegion,
 ): SimpleRouteJson => {
-  const nextSrj = structuredClone(simpleRouteJson)
-  const nextTraces: SimplifiedPcbTrace[] = []
-  const rerouteConnections: SimpleRouteConnection[] = []
-  const rerouteEndpointObstacles: Obstacle[] = []
-  const clippedTraceSegmentObstacles: Obstacle[] = []
+  const nextSrj = structuredClone(simpleRouteJson);
+  const nextTraces: SimplifiedPcbTrace[] = [];
+  const rerouteConnections: SimpleRouteConnection[] = [];
+  const rerouteEndpointObstacles: Obstacle[] = [];
+  const clippedTraceSegmentObstacles: Obstacle[] = [];
 
   for (const trace of simpleRouteJson.traces ?? []) {
     const clippedPieces = getClippedTracePieces(
       trace,
       region,
       simpleRouteJson.minTraceWidth,
-    )
+    );
 
     if (!clippedPieces) {
-      nextTraces.push(structuredClone(trace))
-      continue
+      nextTraces.push(structuredClone(trace));
+      continue;
     }
 
     if (!clippedPieces.hadIntersection) {
-      nextTraces.push(structuredClone(trace))
-      continue
+      nextTraces.push(structuredClone(trace));
+      continue;
     }
 
-    nextTraces.push(...clippedPieces.keptTraces)
-    rerouteConnections.push(...clippedPieces.rerouteConnections)
-    rerouteEndpointObstacles.push(...clippedPieces.rerouteEndpointObstacles)
+    nextTraces.push(...clippedPieces.keptTraces);
+    rerouteConnections.push(...clippedPieces.rerouteConnections);
+    rerouteEndpointObstacles.push(...clippedPieces.rerouteEndpointObstacles);
     clippedTraceSegmentObstacles.push(
       ...clippedPieces.clippedTraceSegmentObstacles,
-    )
+    );
   }
 
   const bounds = expandRegionToContainObstacles(region, [
     ...rerouteEndpointObstacles,
     ...clippedTraceSegmentObstacles,
-  ])
+  ]);
 
   return {
     ...nextSrj,
@@ -566,8 +567,8 @@ export const getRerouteSimpleRouteJson = (
     obstacles: [...nextSrj.obstacles, ...rerouteEndpointObstacles],
     traces: nextTraces,
     connections: rerouteConnections,
-  }
-}
+  };
+};
 
 export const reconnectReroutedSimpleRouteJsonRegion = (
   originalSrj: SimpleRouteJson,
@@ -578,19 +579,19 @@ export const reconnectReroutedSimpleRouteJsonRegion = (
       connection.name,
       connection.__rootConnectionNames?.[0] ?? connection.name,
     ]),
-  )
+  );
 
   const traces = (reroutedSrj.traces ?? []).map((trace) => {
     const rootConnectionName = rerouteConnectionToRoot.get(
       trace.connection_name,
-    )
-    if (!rootConnectionName) return structuredClone(trace)
+    );
+    if (!rootConnectionName) return structuredClone(trace);
 
     return {
       ...structuredClone(trace),
       connection_name: rootConnectionName,
-    }
-  })
+    };
+  });
 
   return {
     ...structuredClone(originalSrj),
@@ -598,5 +599,5 @@ export const reconnectReroutedSimpleRouteJsonRegion = (
     jumpers: reroutedSrj.jumpers
       ? structuredClone(reroutedSrj.jumpers)
       : structuredClone(originalSrj.jumpers),
-  }
-}
+  };
+};

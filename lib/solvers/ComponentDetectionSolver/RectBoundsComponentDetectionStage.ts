@@ -1,77 +1,77 @@
-import { getBoundingBox } from "@tscircuit/math-utils"
-import { BaseSolver } from "@tscircuit/solver-utils"
-import type { GraphicsObject } from "graphics-debug"
-import { getStringColor, safeTransparentize } from "lib/solvers/colors"
-import { areBoundsInsideBounds } from "lib/solvers/TopologyPlanningSolver/topologyPlanningShared"
-import type { Obstacle, SimpleRouteJson } from "lib/types"
-import { getBoundsForObstacles } from "lib/utils/getBoundsForObstacles"
+import { getBoundingBox } from "@tscircuit/math-utils";
+import { BaseSolver } from "@tscircuit/solver-utils";
+import type { GraphicsObject } from "graphics-debug";
+import { getStringColor, safeTransparentize } from "lib/solvers/colors";
+import { areBoundsInsideBounds } from "lib/solvers/TopologyPlanningSolver/topologyPlanningShared";
+import type { Obstacle, SimpleRouteJson } from "lib/types";
+import { getBoundsForObstacles } from "lib/utils/getBoundsForObstacles";
 import type {
   ComponentDetectionSolverOutput,
   ComponentDetectionSolverParams,
   DetectedComponent,
-} from "./ComponentDetectionSolver"
-import { getBgaLikeObstacleSubset } from "./detectors/bga/BgaComponentDetector"
-import { detectComponentKind, type ComponentKind } from "./detectors"
+} from "./ComponentDetectionSolver";
+import { getBgaLikeObstacleSubset } from "./detectors/bga/BgaComponentDetector";
+import { detectComponentKind, type ComponentKind } from "./detectors";
 
 /**
  * Current detection stage: groups SRJ obstacles by component and replaces each
  * component's member pads with one rectangular bounds obstacle.
  */
 export class RectBoundsComponentDetectionStage extends BaseSolver {
-  public readonly inputSrj: SimpleRouteJson
+  public readonly inputSrj: SimpleRouteJson;
 
-  private initialized = false
-  private groupedComponentObstacles: Record<string, Obstacle[]> = {}
-  private groupedComponentKinds: Record<string, ComponentKind> = {}
-  private unprocessedComponentIds: string[] = []
-  private detectedComponents: DetectedComponent[] = []
-  private currentComponentId: string | null = null
-  private currentMemberObstacles: Obstacle[] = []
+  private initialized = false;
+  private groupedComponentObstacles: Record<string, Obstacle[]> = {};
+  private groupedComponentKinds: Record<string, ComponentKind> = {};
+  private unprocessedComponentIds: string[] = [];
+  private detectedComponents: DetectedComponent[] = [];
+  private currentComponentId: string | null = null;
+  private currentMemberObstacles: Obstacle[] = [];
 
-  private output: ComponentDetectionSolverOutput | null = null
+  private output: ComponentDetectionSolverOutput | null = null;
 
   constructor({ inputSrj }: ComponentDetectionSolverParams) {
-    super()
-    this.inputSrj = inputSrj
+    super();
+    this.inputSrj = inputSrj;
   }
 
   override getConstructorParams() {
-    return [{ inputSrj: this.inputSrj }] as const
+    return [{ inputSrj: this.inputSrj }] as const;
   }
 
   override _step() {
     if (!this.initialized) {
-      this.initializeDetectionState()
-      return
+      this.initializeDetectionState();
+      return;
     }
 
     if (this.output) {
-      this.solved = true
-      return
+      this.solved = true;
+      return;
     }
 
     if (
       this.currentComponentId !== null ||
       this.unprocessedComponentIds.length > 0
     ) {
-      this.processNextComponent()
-      return
+      this.processNextComponent();
+      return;
     }
 
-    this.finalizeOutput()
-    this.solved = true
+    this.finalizeOutput();
+    this.solved = true;
   }
 
   getOutput(): ComponentDetectionSolverOutput {
     if (!this.output) {
-      throw new Error("ComponentDetectionSolver has not solved yet")
+      throw new Error("ComponentDetectionSolver has not solved yet");
     }
 
-    return this.output
+    return this.output;
   }
 
   override visualize(): GraphicsObject {
-    const rects: NonNullable<GraphicsObject["rects"]> = []
+    const rects: NonNullable<GraphicsObject["rects"]> = [];
 
     rects.push(
       ...this.inputSrj.obstacles
@@ -86,19 +86,19 @@ export class RectBoundsComponentDetectionStage extends BaseSolver {
           layer: obstacle.layers.join(","),
           step: 0,
         })),
-    )
+    );
 
     const finalizedComponentIds = new Set(
       this.detectedComponents.map((component) => component.componentId),
-    )
+    );
 
     for (const obstacle of this.inputSrj.obstacles) {
-      if (!obstacle.componentId) continue
-      if (finalizedComponentIds.has(obstacle.componentId)) continue
+      if (!obstacle.componentId) continue;
+      if (finalizedComponentIds.has(obstacle.componentId)) continue;
 
-      const isActive = obstacle.componentId === this.currentComponentId
-      const color = getStringColor(obstacle.componentId)
-      const componentKind = this.groupedComponentKinds[obstacle.componentId]
+      const isActive = obstacle.componentId === this.currentComponentId;
+      const color = getStringColor(obstacle.componentId);
+      const componentKind = this.groupedComponentKinds[obstacle.componentId];
       rects.push({
         center: obstacle.center,
         width: obstacle.width,
@@ -114,11 +114,11 @@ export class RectBoundsComponentDetectionStage extends BaseSolver {
           : obstacle.componentId,
         layer: obstacle.layers.join(","),
         step: isActive ? 1 : 0,
-      })
+      });
     }
 
     for (const component of this.detectedComponents) {
-      const color = getStringColor(component.componentId)
+      const color = getStringColor(component.componentId);
       rects.push({
         center: {
           x: (component.bounds.minX + component.bounds.maxX) / 2,
@@ -130,7 +130,7 @@ export class RectBoundsComponentDetectionStage extends BaseSolver {
         stroke: safeTransparentize(color, 0.1),
         label: `${component.componentId} ${component.componentKind.toUpperCase()} region`,
         step: 2,
-      })
+      });
     }
 
     return {
@@ -139,47 +139,47 @@ export class RectBoundsComponentDetectionStage extends BaseSolver {
       lines: [],
       points: [],
       circles: [],
-    }
+    };
   }
 
   override preview(): GraphicsObject {
-    return this.visualize()
+    return this.visualize();
   }
 
   private initializeDetectionState() {
-    this.initialized = true
-    this.groupedComponentKinds = {}
+    this.initialized = true;
+    this.groupedComponentKinds = {};
     this.groupedComponentObstacles = this.groupObstaclesByComponentId({
       obstacles: this.inputSrj.obstacles,
-    })
+    });
     this.unprocessedComponentIds = Object.keys(
       this.groupedComponentObstacles,
-    ).sort()
-    this.detectedComponents = []
-    this.currentComponentId = null
-    this.currentMemberObstacles = []
-    this.output = null
+    ).sort();
+    this.detectedComponents = [];
+    this.currentComponentId = null;
+    this.currentMemberObstacles = [];
+    this.output = null;
   }
 
   private processNextComponent() {
     if (!this.currentComponentId) {
-      const nextComponentId = this.unprocessedComponentIds.shift()
+      const nextComponentId = this.unprocessedComponentIds.shift();
       if (!nextComponentId) {
-        this.currentComponentId = null
-        this.currentMemberObstacles = []
-        return
+        this.currentComponentId = null;
+        this.currentMemberObstacles = [];
+        return;
       }
 
-      this.currentComponentId = nextComponentId
+      this.currentComponentId = nextComponentId;
       this.currentMemberObstacles =
-        this.groupedComponentObstacles[nextComponentId] ?? []
-      return
+        this.groupedComponentObstacles[nextComponentId] ?? [];
+      return;
     }
 
     if (this.currentMemberObstacles.length === 0) {
-      this.currentComponentId = null
-      this.currentMemberObstacles = []
-      return
+      this.currentComponentId = null;
+      this.currentMemberObstacles = [];
+      return;
     }
 
     this.detectedComponents.push(
@@ -188,17 +188,17 @@ export class RectBoundsComponentDetectionStage extends BaseSolver {
         componentKind: this.groupedComponentKinds[this.currentComponentId]!,
         memberObstacles: this.currentMemberObstacles,
       }),
-    )
+    );
 
-    this.currentComponentId = null
-    this.currentMemberObstacles = []
+    this.currentComponentId = null;
+    this.currentMemberObstacles = [];
   }
 
   private finalizeOutput() {
     this.output = this.detectedComponents.map((component) => ({
       ...component,
       bounds: { ...component.bounds },
-    }))
+    }));
 
     this.stats = {
       initialized: this.initialized,
@@ -227,59 +227,59 @@ export class RectBoundsComponentDetectionStage extends BaseSolver {
         .map((component) => component.componentId),
       remainingComponentCount: this.unprocessedComponentIds.length,
       hasActiveComponent: this.currentComponentId !== null,
-    }
+    };
   }
 
   private groupObstaclesByComponentId({
     obstacles,
   }: {
-    obstacles: Obstacle[]
+    obstacles: Obstacle[];
   }): Record<string, Obstacle[]> {
-    const grouped: Record<string, Obstacle[]> = {}
-    const componentKinds: Record<string, ComponentKind> = {}
+    const grouped: Record<string, Obstacle[]> = {};
+    const componentKinds: Record<string, ComponentKind> = {};
 
     for (const obstacle of obstacles) {
-      if (!obstacle.componentId) continue
-      grouped[obstacle.componentId] ??= []
-      grouped[obstacle.componentId].push(obstacle)
+      if (!obstacle.componentId) continue;
+      grouped[obstacle.componentId] ??= [];
+      grouped[obstacle.componentId].push(obstacle);
     }
 
     const detectedEntries = Object.entries(grouped).flatMap(
       ([componentId, memberObstacles]) => {
-        const boardBounds = this.inputSrj.bounds
+        const boardBounds = this.inputSrj.bounds;
         const hasOutOfBoundsObstacle = memberObstacles.some((obstacle) => {
-          const obstacleBounds = getBoundingBox(obstacle)
+          const obstacleBounds = getBoundingBox(obstacle);
 
           return !areBoundsInsideBounds({
             bounds: obstacleBounds,
             outerBounds: boardBounds,
             epsilon: 0,
-          })
-        })
+          });
+        });
 
         if (hasOutOfBoundsObstacle) {
-          return []
+          return [];
         }
 
         const componentKind = detectComponentKind({
           memberObstacles,
           inputSrj: this.inputSrj,
-        })
-        if (!componentKind) return []
+        });
+        if (!componentKind) return [];
 
-        componentKinds[componentId] = componentKind
+        componentKinds[componentId] = componentKind;
         const detectedObstacles =
           componentKind === "bga"
             ? getBgaLikeObstacleSubset(memberObstacles)!
-            : memberObstacles
+            : memberObstacles;
 
-        return [[componentId, detectedObstacles] as const]
+        return [[componentId, detectedObstacles] as const];
       },
-    )
+    );
 
-    this.groupedComponentKinds = componentKinds
+    this.groupedComponentKinds = componentKinds;
 
-    return Object.fromEntries(detectedEntries)
+    return Object.fromEntries(detectedEntries);
   }
 
   private createDetectedComponent({
@@ -287,11 +287,11 @@ export class RectBoundsComponentDetectionStage extends BaseSolver {
     componentKind,
     memberObstacles,
   }: {
-    componentId: string
-    componentKind: ComponentKind
-    memberObstacles: Obstacle[]
+    componentId: string;
+    componentKind: ComponentKind;
+    memberObstacles: Obstacle[];
   }): DetectedComponent {
-    const bounds = getBoundsForObstacles(memberObstacles)
+    const bounds = getBoundsForObstacles(memberObstacles);
 
     return {
       componentId,
@@ -300,7 +300,7 @@ export class RectBoundsComponentDetectionStage extends BaseSolver {
         __type: "rect",
         ...bounds,
       },
-    }
+    };
   }
 
   private getVisualizationTitle() {
@@ -310,24 +310,24 @@ export class RectBoundsComponentDetectionStage extends BaseSolver {
         this.inputSrj.obstacles
           .map((obstacle) => obstacle.componentId)
           .filter((componentId): componentId is string => Boolean(componentId)),
-      ).size
-    const completedCount = this.detectedComponents.length
+      ).size;
+    const completedCount = this.detectedComponents.length;
 
     if (!this.initialized) {
-      return "Component Detection: setup"
+      return "Component Detection: setup";
     }
 
     if (this.output || this.solved) {
-      return `Component Detection: done ${completedCount}/${totalCount}`
+      return `Component Detection: done ${completedCount}/${totalCount}`;
     }
 
     if (
       this.currentComponentId !== null ||
       this.unprocessedComponentIds.length > 0
     ) {
-      return `Component Detection: ${completedCount}/${totalCount} processed`
+      return `Component Detection: ${completedCount}/${totalCount} processed`;
     }
 
-    return `Component Detection: finalizing ${completedCount}/${totalCount}`
+    return `Component Detection: finalizing ${completedCount}/${totalCount}`;
   }
 }

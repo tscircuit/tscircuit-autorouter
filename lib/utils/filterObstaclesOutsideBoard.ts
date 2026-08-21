@@ -1,24 +1,24 @@
 import {
   doBoundsOverlap,
   isRectOverlappingPolygon,
-} from "@tscircuit/math-utils"
-import { getBoardBounds } from "@tscircuit/circuit-json-util"
-import type { PcbBoard } from "circuit-json"
-import type { Obstacle, SimpleRouteJson } from "lib/types"
+} from "@tscircuit/math-utils";
+import { getBoardBounds } from "@tscircuit/circuit-json-util";
+import type { PcbBoard } from "circuit-json";
+import type { Obstacle, SimpleRouteJson } from "lib/types";
 
 const hasObstacleConnectivity = (obstacle: Obstacle) =>
   (obstacle.connectedTo?.length ?? 0) > 0 ||
   (obstacle.offBoardConnectsTo?.length ?? 0) > 0 ||
-  obstacle.netIsAssignable === true
+  obstacle.netIsAssignable === true;
 
 export const shouldIgnoreObstacleForBoardAutorouting = (
   obstacle: Obstacle,
   srj: Pick<SimpleRouteJson, "bounds" | "outline">,
 ) => {
-  if (hasObstacleConnectivity(obstacle)) return false
+  if (hasObstacleConnectivity(obstacle)) return false;
 
   if (srj.outline && srj.outline.length >= 3) {
-    return !isRectOverlappingPolygon(obstacle, srj.outline)
+    return !isRectOverlappingPolygon(obstacle, srj.outline);
   }
 
   return !doBoundsOverlap(
@@ -29,16 +29,16 @@ export const shouldIgnoreObstacleForBoardAutorouting = (
       maxY: obstacle.center.y + obstacle.height / 2,
     },
     srj.bounds,
-  )
-}
+  );
+};
 
 export const filterObstaclesOutsideBoard = (
   srj: SimpleRouteJson,
 ): SimpleRouteJson => {
   const obstacles = srj.obstacles.filter(
     (obstacle) => !shouldIgnoreObstacleForBoardAutorouting(obstacle, srj),
-  )
-  const obstaclesWereFiltered = obstacles.length !== srj.obstacles.length
+  );
+  const obstaclesWereFiltered = obstacles.length !== srj.obstacles.length;
   const bounds =
     obstaclesWereFiltered && srj.outline && srj.outline.length >= 3
       ? getBoardBounds({
@@ -50,15 +50,15 @@ export const filterObstaclesOutsideBoard = (
           material: "fr4",
           outline: srj.outline,
         } satisfies PcbBoard)
-      : srj.bounds
+      : srj.bounds;
 
   if (!obstaclesWereFiltered) {
-    return srj
+    return srj;
   }
 
   return {
     ...srj,
     obstacles,
     bounds,
-  }
-}
+  };
+};

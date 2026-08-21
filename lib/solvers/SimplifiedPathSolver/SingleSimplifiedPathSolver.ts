@@ -1,56 +1,56 @@
-import { HighDensityIntraNodeRoute } from "lib/types/high-density-types"
-import { BaseSolver } from "../BaseSolver"
-import { Obstacle } from "lib/types"
-import { calculate45DegreePaths } from "lib/utils/calculate45DegreePaths"
-import { GraphicsObject } from "graphics-debug"
-import { ConnectivityMap } from "circuit-json-to-connectivity-map"
+import { HighDensityIntraNodeRoute } from "lib/types/high-density-types";
+import { BaseSolver } from "../BaseSolver";
+import { Obstacle } from "lib/types";
+import { calculate45DegreePaths } from "lib/utils/calculate45DegreePaths";
+import { GraphicsObject } from "graphics-debug";
+import { ConnectivityMap } from "circuit-json-to-connectivity-map";
 
 interface Point {
-  x: number
-  y: number
-  z: number
+  x: number;
+  y: number;
+  z: number;
 }
 
 export class SingleSimplifiedPathSolver extends BaseSolver {
   override getSolverName(): string {
-    return "SingleSimplifiedPathSolver"
+    return "SingleSimplifiedPathSolver";
   }
 
-  newRoute: HighDensityIntraNodeRoute["route"]
-  newVias: HighDensityIntraNodeRoute["vias"]
+  newRoute: HighDensityIntraNodeRoute["route"];
+  newVias: HighDensityIntraNodeRoute["vias"];
 
-  headIndex = 0
-  tailIndex = 0
+  headIndex = 0;
+  tailIndex = 0;
 
-  inputRoute: HighDensityIntraNodeRoute
-  otherHdRoutes: HighDensityIntraNodeRoute[]
-  obstacles: Obstacle[]
-  connMap: ConnectivityMap
-  colorMap: Record<string, string>
-  outline?: Array<{ x: number; y: number }>
-  minBoardEdgeClearance: number
+  inputRoute: HighDensityIntraNodeRoute;
+  otherHdRoutes: HighDensityIntraNodeRoute[];
+  obstacles: Obstacle[];
+  connMap: ConnectivityMap;
+  colorMap: Record<string, string>;
+  outline?: Array<{ x: number; y: number }>;
+  minBoardEdgeClearance: number;
 
   constructor(params: {
-    inputRoute: HighDensityIntraNodeRoute
-    otherHdRoutes: HighDensityIntraNodeRoute[]
-    obstacles: Obstacle[]
-    connMap: ConnectivityMap
-    colorMap: Record<string, string>
-    outline?: Array<{ x: number; y: number }>
-    minBoardEdgeClearance?: number
+    inputRoute: HighDensityIntraNodeRoute;
+    otherHdRoutes: HighDensityIntraNodeRoute[];
+    obstacles: Obstacle[];
+    connMap: ConnectivityMap;
+    colorMap: Record<string, string>;
+    outline?: Array<{ x: number; y: number }>;
+    minBoardEdgeClearance?: number;
   }) {
-    super()
+    super();
 
-    this.inputRoute = params.inputRoute
-    this.otherHdRoutes = params.otherHdRoutes
-    this.obstacles = params.obstacles
-    this.connMap = params.connMap
-    this.colorMap = params.colorMap
-    this.outline = params.outline
-    this.minBoardEdgeClearance = params.minBoardEdgeClearance ?? 0.2
+    this.inputRoute = params.inputRoute;
+    this.otherHdRoutes = params.otherHdRoutes;
+    this.obstacles = params.obstacles;
+    this.connMap = params.connMap;
+    this.colorMap = params.colorMap;
+    this.outline = params.outline;
+    this.minBoardEdgeClearance = params.minBoardEdgeClearance ?? 0.2;
 
-    this.newRoute = [this.inputRoute.route[0]]
-    this.newVias = []
+    this.newRoute = [this.inputRoute.route[0]];
+    this.newVias = [];
   }
 
   getConstructorParams() {
@@ -62,7 +62,7 @@ export class SingleSimplifiedPathSolver extends BaseSolver {
       colorMap: this.colorMap,
       outline: this.outline,
       minBoardEdgeClearance: this.minBoardEdgeClearance,
-    }
+    };
   }
 
   get simplifiedRoute(): HighDensityIntraNodeRoute {
@@ -75,13 +75,13 @@ export class SingleSimplifiedPathSolver extends BaseSolver {
       vias: this.newVias,
       // Preserve jumpers from original route
       jumpers: this.inputRoute.jumpers,
-    }
+    };
   }
 
   isValidPath(pointsInRoute: Point[]): boolean {
     // check that the segments don't intersect with any obstacles or other
     // routes or vias
-    throw new Error("Not implemented")
+    throw new Error("Not implemented");
   }
 
   _step() {
@@ -93,7 +93,7 @@ export class SingleSimplifiedPathSolver extends BaseSolver {
     // If there is a Z change between the tail and the head, we stop the
     // simplification for that segment (add to newRoute and newVias, set tail to
     // head)
-    throw new Error("Not implemented")
+    throw new Error("Not implemented");
   }
 
   getVisualsForNewRouteAndObstacles() {
@@ -106,7 +106,7 @@ export class SingleSimplifiedPathSolver extends BaseSolver {
         rects: [],
         coordinateSystem: "cartesian",
         title: "Simplified Path Solver",
-      }
+      };
 
     // Visualize the original route in red
     for (let i = 0; i < this.inputRoute.route.length - 1; i++) {
@@ -121,7 +121,7 @@ export class SingleSimplifiedPathSolver extends BaseSolver {
         strokeColor: "rgba(255, 0, 0, 0.8)",
         strokeDash: this.inputRoute.route[i].z === 1 ? "5, 5" : undefined,
         layer: `z${this.inputRoute.route[i].z.toString()}`,
-      })
+      });
     }
 
     // Visualize the simplified route in green
@@ -136,7 +136,7 @@ export class SingleSimplifiedPathSolver extends BaseSolver {
           strokeColor: "rgba(0, 255, 0, 0.8)",
           strokeDash: this.newRoute[i].z === 1 ? [0.4, 0.4] : undefined,
           layer: `z${this.newRoute[i].z.toString()}`,
-        })
+        });
       }
       graphics.points.push({
         x: this.newRoute[i].x,
@@ -144,7 +144,7 @@ export class SingleSimplifiedPathSolver extends BaseSolver {
         color: "rgba(0, 255, 0, 0.8)",
         label: `z: ${this.newRoute[i].z}`,
         layer: `z${this.newRoute[i].z.toString()}`,
-      })
+      });
     }
 
     // // Visualize vias
@@ -153,7 +153,7 @@ export class SingleSimplifiedPathSolver extends BaseSolver {
         center: via,
         radius: this.inputRoute.viaDiameter / 2,
         fill: "rgba(0, 0, 255, 0.5)",
-      })
+      });
     }
 
     // Visualize obstacles
@@ -167,7 +167,7 @@ export class SingleSimplifiedPathSolver extends BaseSolver {
           : obstacle.layers?.includes("bottom")
             ? "rgba(0, 0, 255, 0.3)"
             : "rgba(128, 128, 128, 0.3)",
-      })
+      });
     }
 
     // Visualize other routes as obstacles (in purple)
@@ -186,20 +186,20 @@ export class SingleSimplifiedPathSolver extends BaseSolver {
                 ? "rgba(128, 0, 128, 0.5)" // inner layer (darker purple)
                 : "rgba(0, 0, 255, 0.5)", // bottom layer (blue)
           layer: `z${route.route[i].z.toString()}`,
-        })
+        });
       }
     }
 
     if ("filteredObstaclePathSegments" in this) {
       const filteredObstaclePathSegments = this
-        .filteredObstaclePathSegments as Array<[Point, Point]>
+        .filteredObstaclePathSegments as Array<[Point, Point]>;
       for (const [start, end] of filteredObstaclePathSegments) {
         graphics.lines.push({
           points: [start, end],
-        })
+        });
       }
     }
 
-    return graphics
+    return graphics;
   }
 }

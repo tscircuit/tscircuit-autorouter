@@ -7,8 +7,8 @@
  * @returns Object containing coordinates of points C and D
  */
 interface Point {
-  x: number
-  y: number
+  x: number;
+  y: number;
 }
 
 export function calculatePerpendicularPointsAtDistance(
@@ -20,26 +20,26 @@ export function calculatePerpendicularPointsAtDistance(
   const abMagnitude = Math.sqrt(
     (centerPoint.x - externalPoint.x) ** 2 +
       (centerPoint.y - externalPoint.y) ** 2,
-  )
+  );
 
   // Calculate the unit vector components in the perpendicular direction
-  const perpUnitX = -(centerPoint.y - externalPoint.y) / abMagnitude
-  const perpUnitY = (centerPoint.x - externalPoint.x) / abMagnitude
+  const perpUnitX = -(centerPoint.y - externalPoint.y) / abMagnitude;
+  const perpUnitY = (centerPoint.x - externalPoint.x) / abMagnitude;
 
   // Calculate the half-distance to use for point calculations
-  const halfK = k / 2
+  const halfK = k / 2;
 
   // Calculate point C coordinates
   const pointC: Point = {
     x: centerPoint.x + perpUnitX * halfK,
     y: centerPoint.y + perpUnitY * halfK,
-  }
+  };
 
   // Calculate point D coordinates
   const pointD: Point = {
     x: centerPoint.x - perpUnitX * halfK,
     y: centerPoint.y - perpUnitY * halfK,
-  }
+  };
 
-  return { A: pointC, B: pointD }
+  return { A: pointC, B: pointD };
 }

@@ -1,11 +1,11 @@
-import { expect, test } from "bun:test"
-import { ConnectivityMap } from "circuit-json-to-connectivity-map"
-import { buildHyperGraph } from "lib/solvers/PortPointPathingSolver/hgportpointpathingsolver"
-import { TinyHypergraphPortPointPathingSolver } from "lib/solvers/PortPointPathingSolver/tinyhypergraph/TinyHypergraphPortPointPathingSolver"
-import type { CapacityMeshNode } from "lib/types"
-import type { TinyHyperGraphSolver } from "tiny-hypergraph/lib/index"
+import { expect, test } from "bun:test";
+import { ConnectivityMap } from "circuit-json-to-connectivity-map";
+import { buildHyperGraph } from "lib/solvers/PortPointPathingSolver/hgportpointpathingsolver";
+import { TinyHypergraphPortPointPathingSolver } from "lib/solvers/PortPointPathingSolver/tinyhypergraph/TinyHypergraphPortPointPathingSolver";
+import type { CapacityMeshNode } from "lib/types";
+import type { TinyHyperGraphSolver } from "tiny-hypergraph/lib/index";
 
-const PRELOADED_PORT_COUNT = 102
+const PRELOADED_PORT_COUNT = 102;
 
 const createSolver = (enablePartialRipWithPreloadedTraces: boolean) => {
   const capacityMeshNodes: CapacityMeshNode[] = Array.from(
@@ -18,7 +18,7 @@ const createSolver = (enablePartialRipWithPreloadedTraces: boolean) => {
       layer: "top",
       availableZ: [0],
     }),
-  )
+  );
   const segmentPortPoints = Array.from(
     { length: PRELOADED_PORT_COUNT },
     (_, index) => ({
@@ -42,14 +42,14 @@ const createSolver = (enablePartialRipWithPreloadedTraces: boolean) => {
         },
       ],
     }),
-  )
+  );
   const { graph, connections } = buildHyperGraph({
     capacityMeshNodes,
     segmentPortPoints,
     layerCount: 1,
     connectivityMap: new ConnectivityMap({}),
     simpleRouteJsonConnections: [],
-  })
+  });
 
   return new TinyHypergraphPortPointPathingSolver({
     graph,
@@ -83,8 +83,8 @@ const createSolver = (enablePartialRipWithPreloadedTraces: boolean) => {
       GREEDY_MULTIPLIER: 0.7,
       MIN_ALLOWED_BOARD_SCORE: -10000,
     },
-  })
-}
+  });
+};
 
 test("Pipeline9 can use partial ripping with preloaded trace occupancy", () => {
   const getTinySolver = (
@@ -93,20 +93,20 @@ test("Pipeline9 can use partial ripping with preloaded trace occupancy", () => {
     (
       solver as unknown as {
         tinyPipelineSolver: {
-          getInitialVisualizationSolver: () => TinyHyperGraphSolver
-        }
+          getInitialVisualizationSolver: () => TinyHyperGraphSolver;
+        };
       }
-    ).tinyPipelineSolver.getInitialVisualizationSolver()
+    ).tinyPipelineSolver.getInitialVisualizationSolver();
 
-  const defaultTinySolver = getTinySolver(createSolver(false))
-  const pipeline9TinySolver = getTinySolver(createSolver(true))
+  const defaultTinySolver = getTinySolver(createSolver(false));
+  const pipeline9TinySolver = getTinySolver(createSolver(true));
 
-  expect(pipeline9TinySolver.problem.routeCount).toBe(1)
+  expect(pipeline9TinySolver.problem.routeCount).toBe(1);
   expect(
     pipeline9TinySolver.problem.initialAssignments?.length,
-  ).toBeGreaterThanOrEqual(100)
-  expect(defaultTinySolver.PARTIAL_RIP_ENABLED).toBeFalse()
-  expect(defaultTinySolver.OUTSIDE_IN_ROUTING).toBeFalse()
-  expect(pipeline9TinySolver.PARTIAL_RIP_ENABLED).toBeTrue()
-  expect(pipeline9TinySolver.OUTSIDE_IN_ROUTING).toBeTrue()
-})
+  ).toBeGreaterThanOrEqual(100);
+  expect(defaultTinySolver.PARTIAL_RIP_ENABLED).toBeFalse();
+  expect(defaultTinySolver.OUTSIDE_IN_ROUTING).toBeFalse();
+  expect(pipeline9TinySolver.PARTIAL_RIP_ENABLED).toBeTrue();
+  expect(pipeline9TinySolver.OUTSIDE_IN_ROUTING).toBeTrue();
+});

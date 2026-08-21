@@ -1,5 +1,5 @@
-import { expect, test } from "bun:test"
-import { mergeConnections } from "lib/solvers/NetToPointPairsSolver/mergeConnections"
+import { expect, test } from "bun:test";
+import { mergeConnections } from "lib/solvers/NetToPointPairsSolver/mergeConnections";
 
 test("merged connections use their names when root connections are missing", () => {
   const connections = mergeConnections([
@@ -17,11 +17,11 @@ test("merged connections use their names when root connections are missing", () 
         { x: 2, y: 0, layer: "top" },
       ],
     },
-  ])
+  ]);
 
-  expect(connections).toHaveLength(1)
+  expect(connections).toHaveLength(1);
   expect(connections[0]?.__rootConnectionNames).toEqual([
     "connection_a",
     "connection_b",
-  ])
-})
+  ]);
+});

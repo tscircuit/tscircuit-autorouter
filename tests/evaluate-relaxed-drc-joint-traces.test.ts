@@ -1,6 +1,6 @@
-import { expect, test } from "bun:test"
-import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
-import type { SimpleRouteJson, SimplifiedPcbTrace } from "lib/types"
+import { expect, test } from "bun:test";
+import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc";
+import type { SimpleRouteJson, SimplifiedPcbTrace } from "lib/types";
 
 test("relaxed DRC always evaluates preloaded and routed traces together", () => {
   const preloadedTrace: SimplifiedPcbTrace = {
@@ -11,7 +11,7 @@ test("relaxed DRC always evaluates preloaded and routed traces together", () => 
       { route_type: "wire", x: -1, y: 0, width: 0.1, layer: "top" },
       { route_type: "wire", x: 1, y: 0, width: 0.1, layer: "top" },
     ],
-  }
+  };
   const routedTrace: SimplifiedPcbTrace = {
     type: "pcb_trace",
     pcb_trace_id: "routed_trace",
@@ -20,7 +20,7 @@ test("relaxed DRC always evaluates preloaded and routed traces together", () => 
       { route_type: "wire", x: 0, y: -1, width: 0.1, layer: "top" },
       { route_type: "wire", x: 0, y: 1, width: 0.1, layer: "top" },
     ],
-  }
+  };
   const inputSrj: SimpleRouteJson = {
     layerCount: 2,
     minTraceWidth: 0.1,
@@ -112,29 +112,29 @@ test("relaxed DRC always evaluates preloaded and routed traces together", () => 
       },
     ],
     traces: [preloadedTrace],
-  }
+  };
   const srjWithPointPairs: SimpleRouteJson = {
     ...inputSrj,
     connections: [inputSrj.connections[1]!],
-  }
+  };
 
   const { circuitJson, errors } = evaluateRelaxedDrc({
     inputSrj,
     srjWithPointPairs,
     routedTraces: [routedTrace],
-  })
+  });
   const evaluatedTraceIds = circuitJson
     .filter((element) => element.type === "pcb_trace")
     .map((trace) => trace.pcb_trace_id)
-    .sort()
+    .sort();
   const traceOverlapErrors = errors.filter(
     (error) =>
       error.type === "pcb_trace_error" &&
       "pcb_trace_error_id" in error &&
       error.pcb_trace_error_id.startsWith("overlap_"),
-  )
+  );
 
-  expect(evaluatedTraceIds).toEqual(["preloaded_trace", "routed_trace"])
-  expect(traceOverlapErrors).toHaveLength(1)
-  expect(errors).toHaveLength(1)
-})
+  expect(evaluatedTraceIds).toEqual(["preloaded_trace", "routed_trace"]);
+  expect(traceOverlapErrors).toHaveLength(1);
+  expect(errors).toHaveLength(1);
+});

@@ -1,9 +1,9 @@
-import { expect, test } from "bun:test"
+import { expect, test } from "bun:test";
 import {
   createTopologyMergingTestNode,
   getAvailableZAtPoint,
   solveTopologyMergingTestGroups,
-} from "../../../fixtures/topology-merging-test-utils"
+} from "../../../fixtures/topology-merging-test-utils";
 
 test("topology merging refines two different all-but-one-layer regions", (): void => {
   const nodes = solveTopologyMergingTestGroups([
@@ -27,13 +27,13 @@ test("topology merging refines two different all-but-one-layer regions", (): voi
         }),
       ],
     },
-  ])
+  ]);
 
   expect(getAvailableZAtPoint(nodes, { x: 1.5, y: 2 })).toEqual([
     [0],
     [1, 2],
     [3],
-  ])
-  expect(getAvailableZAtPoint(nodes, { x: 0.5, y: 2 })).toEqual([[1, 2, 3]])
-  expect(getAvailableZAtPoint(nodes, { x: 3, y: 2 })).toEqual([[0, 1, 2]])
-})
+  ]);
+  expect(getAvailableZAtPoint(nodes, { x: 0.5, y: 2 })).toEqual([[1, 2, 3]]);
+  expect(getAvailableZAtPoint(nodes, { x: 3, y: 2 })).toEqual([[0, 1, 2]]);
+});

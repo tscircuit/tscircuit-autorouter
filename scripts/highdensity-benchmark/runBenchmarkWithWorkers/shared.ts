@@ -1,59 +1,59 @@
-import { NodeWithPortPoints } from "lib/types/high-density-types"
+import { NodeWithPortPoints } from "lib/types/high-density-types";
 
 export type BenchmarkTask = {
-  problem: NodeWithPortPoints
-  problemId: string
-}
+  problem: NodeWithPortPoints;
+  problemId: string;
+};
 
 export type WorkerRequest = {
-  taskId: number
-  problemId: string
-  problem: NodeWithPortPoints
-}
+  taskId: number;
+  problemId: string;
+  problem: NodeWithPortPoints;
+};
 
 export type WorkerResponse =
   | {
-      type: "result"
-      taskId: number
-      value: number
-      solved: boolean
-      solveDurationMs: number
+      type: "result";
+      taskId: number;
+      value: number;
+      solved: boolean;
+      solveDurationMs: number;
     }
   | {
-      type: "error"
-      taskId: number
-      error: string
-    }
+      type: "error";
+      taskId: number;
+      error: string;
+    };
 
 export type TaskResult = {
-  value: number
-  solved: boolean
-  solveDurationMs: number
-}
+  value: number;
+  solved: boolean;
+  solveDurationMs: number;
+};
 
 export type RunBenchmarkOptions = {
-  problems: NodeWithPortPoints[]
-  concurrency: number
-  timeoutMs: number
-}
+  problems: NodeWithPortPoints[];
+  concurrency: number;
+  timeoutMs: number;
+};
 
 export type RunBenchmarkResult = {
-  results: number[]
-  timedOutProblemIds: string[]
-  totalDurationMs: number
-  passCount: number
-}
+  results: number[];
+  timedOutProblemIds: string[];
+  totalDurationMs: number;
+  passCount: number;
+};
 
 export const getProblemId = (problem: NodeWithPortPoints, index: number) => {
   if (typeof problem === "object" && problem !== null && "id" in problem) {
-    const id = problem.id
+    const id = problem.id;
     if (typeof id === "string" || typeof id === "number") {
-      return String(id)
+      return String(id);
     }
   }
 
-  return `problem-${index}`
-}
+  return `problem-${index}`;
+};
 
 export const formatSeconds = (milliseconds: number) =>
-  (milliseconds / 1000).toFixed(3)
+  (milliseconds / 1000).toFixed(3);

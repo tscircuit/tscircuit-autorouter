@@ -1,7 +1,7 @@
-import { expect, test } from "bun:test"
-import { getDrcErrors } from "lib/testing/getDrcErrors"
-import { convertToCircuitJson } from "lib/testing/utils/convertToCircuitJson"
-import type { SimpleRouteJson, SimplifiedPcbTrace } from "lib/types"
+import { expect, test } from "bun:test";
+import { getDrcErrors } from "lib/testing/getDrcErrors";
+import { convertToCircuitJson } from "lib/testing/utils/convertToCircuitJson";
+import type { SimpleRouteJson, SimplifiedPcbTrace } from "lib/types";
 
 test("keeps obstacle connectivity out of source trace endpoint expectations", () => {
   const srj: SimpleRouteJson = {
@@ -64,7 +64,7 @@ test("keeps obstacle connectivity out of source trace endpoint expectations", ()
         ],
       },
     ],
-  }
+  };
   const traces: SimplifiedPcbTrace[] = [
     {
       type: "pcb_trace",
@@ -75,11 +75,11 @@ test("keeps obstacle connectivity out of source trace endpoint expectations", ()
         { route_type: "wire", x: 1, y: 0, width: 0.1, layer: "top" },
       ],
     },
-  ]
+  ];
 
   const circuitJson = convertToCircuitJson(srj, traces, {
     minTraceWidth: srj.minTraceWidth,
-  })
+  });
   const sourceTrace = circuitJson.find(
     (
       element,
@@ -89,26 +89,26 @@ test("keeps obstacle connectivity out of source trace endpoint expectations", ()
     > =>
       element.type === "source_trace" &&
       element.source_trace_id === "source_trace_main",
-  )
+  );
 
   expect(sourceTrace?.connected_source_port_ids).toEqual([
     "pcb_port_0",
     "pcb_port_1",
-  ])
-  expect(sourceTrace?.connected_source_net_ids).toContain("pcb_port_2")
-  expect(sourceTrace?.connected_source_net_ids).toContain("pcb_smtpad_2")
+  ]);
+  expect(sourceTrace?.connected_source_net_ids).toContain("pcb_port_2");
+  expect(sourceTrace?.connected_source_net_ids).toContain("pcb_smtpad_2");
   expect(
     sourceTrace?.connected_source_net_ids.some((id) =>
       id.startsWith("obstacle_"),
     ),
-  ).toBe(false)
+  ).toBe(false);
 
-  const { errors } = getDrcErrors(circuitJson)
+  const { errors } = getDrcErrors(circuitJson);
 
   expect(
     errors.filter((error) => error.error_type === "pcb_trace_error"),
-  ).toHaveLength(0)
+  ).toHaveLength(0);
   expect(
     errors.filter((error) => error.type === "pcb_pad_trace_clearance_error"),
-  ).toHaveLength(0)
-})
+  ).toHaveLength(0);
+});

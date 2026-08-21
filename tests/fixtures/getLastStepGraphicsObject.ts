@@ -1,4 +1,4 @@
-import type { GraphicsObject } from "graphics-debug"
+import type { GraphicsObject } from "graphics-debug";
 
 export function getLastStepGraphicsObject(graphicsObject: GraphicsObject) {
   // Find the maximum step value across all elements
@@ -7,9 +7,9 @@ export function getLastStepGraphicsObject(graphicsObject: GraphicsObject) {
     ...(graphicsObject.points?.map((p: any) => p.step) ?? []),
     ...(graphicsObject.circles?.map((c: any) => c.step) ?? []),
     ...(graphicsObject.rects?.map((r: any) => r.step) ?? []),
-  ].filter((step) => step !== undefined)
+  ].filter((step) => step !== undefined);
 
-  const maxStep = Math.max(...allSteps, -1)
+  const maxStep = Math.max(...allSteps, -1);
 
   // Filter to only include elements from the last step
   const lastStepGraphics: GraphicsObject = {
@@ -18,7 +18,7 @@ export function getLastStepGraphicsObject(graphicsObject: GraphicsObject) {
     circles:
       graphicsObject.circles?.filter((c: any) => c.step === maxStep) ?? [],
     rects: graphicsObject.rects?.filter((r: any) => r.step === maxStep) ?? [],
-  }
+  };
 
-  return lastStepGraphics
+  return lastStepGraphics;
 }

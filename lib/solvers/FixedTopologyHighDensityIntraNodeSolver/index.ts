@@ -1,1 +1,1 @@
-export * from "./FixedTopologyHighDensityIntraNodeSolver"
+export * from "./FixedTopologyHighDensityIntraNodeSolver";

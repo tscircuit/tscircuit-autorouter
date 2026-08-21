@@ -1,7 +1,7 @@
-import { expect, test } from "bun:test"
-import { ConnectivityMap } from "circuit-json-to-connectivity-map"
-import { TraceSimplificationSolver } from "lib/solvers/TraceSimplificationSolver/TraceSimplificationSolver"
-import { convertHdRouteToSimplifiedRoute } from "lib/utils/convertHdRouteToSimplifiedRoute"
+import { expect, test } from "bun:test";
+import { ConnectivityMap } from "circuit-json-to-connectivity-map";
+import { TraceSimplificationSolver } from "lib/solvers/TraceSimplificationSolver/TraceSimplificationSolver";
+import { convertHdRouteToSimplifiedRoute } from "lib/utils/convertHdRouteToSimplifiedRoute";
 
 test("preserves Circuit JSON metadata on through-obstacle route points", () => {
   const solver = new TraceSimplificationSolver({
@@ -32,18 +32,18 @@ test("preserves Circuit JSON metadata on through-obstacle route points", () => {
     colorMap: {},
     defaultViaDiameter: 0.6,
     layerCount: 2,
-  })
+  });
 
   const route = convertHdRouteToSimplifiedRoute(
     solver.simplifiedHdRoutes[0]!,
     2,
-  )
+  );
   const throughObstacle = route.find(
     (routePoint) => routePoint.route_type === "through_obstacle",
-  )
+  );
 
   expect(throughObstacle).toMatchObject({
     route_type: "through_obstacle",
     circuitJsonMetadata: { pcb_via_id: "opaque-via-id" },
-  })
-})
+  });
+});

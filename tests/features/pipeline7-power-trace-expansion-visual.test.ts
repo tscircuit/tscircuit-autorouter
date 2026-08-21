@@ -1,24 +1,24 @@
-import { expect, test } from "bun:test"
-import { getSvgFromGraphicsObject } from "graphics-debug"
-import { stackSvgsHorizontally } from "stack-svgs"
-import { AutoroutingPipelineSolver7_MultiGraph } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/AutoroutingPipelineSolver7_MultiGraph"
+import { expect, test } from "bun:test";
+import { getSvgFromGraphicsObject } from "graphics-debug";
+import { stackSvgsHorizontally } from "stack-svgs";
+import { AutoroutingPipelineSolver7_MultiGraph } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/AutoroutingPipelineSolver7_MultiGraph";
 import {
   combinePreloadedAndRoutedTraces,
   evaluateRelaxedDrc,
-} from "lib/testing/evaluate-relaxed-drc"
-import { convertSrjToGraphicsObject } from "lib/utils/convertSrjToGraphicsObject"
-import { loadScenarios } from "../../scripts/benchmark/scenarios"
+} from "lib/testing/evaluate-relaxed-drc";
+import { convertSrjToGraphicsObject } from "lib/utils/convertSrjToGraphicsObject";
+import { loadScenarios } from "../../scripts/benchmark/scenarios";
 
 const addPanelTitle = (svg: string, title: string): string => {
-  const bodyStart = svg.indexOf(">") + 1
-  const bodyEnd = svg.lastIndexOf("</svg>")
-  const width = Number(svg.match(/\bwidth="([^"]+)"/)?.[1])
-  const height = Number(svg.match(/\bheight="([^"]+)"/)?.[1])
+  const bodyStart = svg.indexOf(">") + 1;
+  const bodyEnd = svg.lastIndexOf("</svg>");
+  const width = Number(svg.match(/\bwidth="([^"]+)"/)?.[1]);
+  const height = Number(svg.match(/\bheight="([^"]+)"/)?.[1]);
   if (bodyStart === 0 || bodyEnd === -1 || !width || !height) {
-    throw new Error("Expected complete SVG dimensions and markup")
+    throw new Error("Expected complete SVG dimensions and markup");
   }
 
-  const headerHeight = 42
+  const headerHeight = 42;
   return `<svg width="${width}" height="${
     height + headerHeight
   }" viewBox="0 0 ${width} ${
@@ -26,100 +26,100 @@ const addPanelTitle = (svg: string, title: string): string => {
   }" xmlns="http://www.w3.org/2000/svg"><rect width="100%" height="100%" fill="white"/><text x="12" y="25" font-family="monospace" font-size="15" font-weight="700" fill="#111">${title}</text><g transform="translate(0 ${headerHeight})">${svg.slice(
     bodyStart,
     bodyEnd,
-  )}</g></svg>`
-}
+  )}</g></svg>`;
+};
 
 test("Pipeline7 solves and power-expands the SRJ27 dataset without DRC regressions", async (): Promise<void> => {
-  const scenarios = await loadScenarios("srj27")
+  const scenarios = await loadScenarios("srj27");
   const snapshotPath =
     process.platform === "linux"
       ? import.meta.path.replace(/\.test\.ts$/, "-linux.test.ts")
-      : import.meta.path
-  const failedScenarios: string[] = []
-  const preExpansionDrcPasses: string[] = []
-  const postExpansionDrcPasses: string[] = []
+      : import.meta.path;
+  const failedScenarios: string[] = [];
+  const preExpansionDrcPasses: string[] = [];
+  const postExpansionDrcPasses: string[] = [];
 
   for (const [scenarioName, scenario] of scenarios) {
-    const input = structuredClone(scenario)
-    const solver = new AutoroutingPipelineSolver7_MultiGraph(input)
+    const input = structuredClone(scenario);
+    const solver = new AutoroutingPipelineSolver7_MultiGraph(input);
     try {
-      solver.solve()
+      solver.solve();
     } catch {
-      failedScenarios.push(scenarioName)
-      continue
+      failedScenarios.push(scenarioName);
+      continue;
     }
 
     if (!solver.solved || solver.failed) {
-      failedScenarios.push(scenarioName)
-      continue
+      failedScenarios.push(scenarioName);
+      continue;
     }
-    expect(solver.solved).toBe(true)
-    expect(solver.failed).toBe(false)
+    expect(solver.solved).toBe(true);
+    expect(solver.failed).toBe(false);
 
     const preExpansionOutput =
-      solver.getPrePowerTraceOutputSimplifiedPcbTraces()
-    const output = solver.getOutputSimplifiedPcbTraces()
+      solver.getPrePowerTraceOutputSimplifiedPcbTraces();
+    const output = solver.getOutputSimplifiedPcbTraces();
     const preExpansionTraces = combinePreloadedAndRoutedTraces(
       input.traces ?? [],
       preExpansionOutput,
-    )
+    );
     const postExpansionTraces = combinePreloadedAndRoutedTraces(
       input.traces ?? [],
       output,
-    )
-    expect(preExpansionTraces.length).toBeGreaterThan(0)
-    expect(postExpansionTraces.length).toBeGreaterThan(0)
+    );
+    expect(preExpansionTraces.length).toBeGreaterThan(0);
+    expect(postExpansionTraces.length).toBeGreaterThan(0);
     expect(
       solver.powerTraceExpansionSolver?.stats.selectedTraceCount,
-    ).toBeGreaterThan(0)
+    ).toBeGreaterThan(0);
     const preExpansionViaCount = preExpansionTraces
       .flatMap((trace) => trace.route)
-      .filter((point) => point.route_type === "via").length
+      .filter((point) => point.route_type === "via").length;
     const postExpansionViaCount = postExpansionTraces
       .flatMap((trace) => trace.route)
-      .filter((point) => point.route_type === "via").length
-    expect(postExpansionViaCount).toBeLessThanOrEqual(preExpansionViaCount)
-    const srjWithPointPairs = solver.srjWithPointPairs ?? input
+      .filter((point) => point.route_type === "via").length;
+    expect(postExpansionViaCount).toBeLessThanOrEqual(preExpansionViaCount);
+    const srjWithPointPairs = solver.srjWithPointPairs ?? input;
     const preExpansionDrc = evaluateRelaxedDrc({
       inputSrj: input,
       srjWithPointPairs,
       routedTraces: preExpansionOutput,
-    })
+    });
     const postExpansionDrc = evaluateRelaxedDrc({
       inputSrj: input,
       srjWithPointPairs,
       routedTraces: output,
-    })
+    });
     if (preExpansionDrc.errors.length === 0) {
-      preExpansionDrcPasses.push(scenarioName)
-      expect(postExpansionDrc.errors).toEqual([])
+      preExpansionDrcPasses.push(scenarioName);
+      expect(postExpansionDrc.errors).toEqual([]);
     }
     if (postExpansionDrc.errors.length === 0) {
-      postExpansionDrcPasses.push(scenarioName)
+      postExpansionDrcPasses.push(scenarioName);
     }
 
     const renderOptions = {
       backgroundColor: "white",
       hideInlineLabels: true,
-    } as const
+    } as const;
     const inputSvg = getSvgFromGraphicsObject(
       convertSrjToGraphicsObject(input, { traceColorMode: "layer" }),
       renderOptions,
-    )
+    );
     const preExpansionSvg = getSvgFromGraphicsObject(
       convertSrjToGraphicsObject(
         { ...input, traces: preExpansionTraces },
         { traceColorMode: "layer" },
       ),
       renderOptions,
-    )
+    );
     const outputSvg = getSvgFromGraphicsObject(
       convertSrjToGraphicsObject(
         { ...input, traces: postExpansionTraces },
         { traceColorMode: "layer" },
       ),
       renderOptions,
-    )
+    );
 
     await expect(
       stackSvgsHorizontally(
@@ -139,10 +139,10 @@ test("Pipeline7 solves and power-expands the SRJ27 dataset without DRC regressio
           normalizeSize: false,
         },
       ),
-    ).toMatchSvgSnapshot(snapshotPath, { svgName: scenarioName })
+    ).toMatchSvgSnapshot(snapshotPath, { svgName: scenarioName });
   }
 
-  expect(failedScenarios).toEqual([])
+  expect(failedScenarios).toEqual([]);
   expect(preExpansionDrcPasses).toEqual([
     "sample001",
     "sample002",
@@ -150,7 +150,7 @@ test("Pipeline7 solves and power-expands the SRJ27 dataset without DRC regressio
     "sample004",
     "sample005",
     "sample006",
-  ])
+  ]);
   expect(postExpansionDrcPasses).toEqual([
     "sample001",
     "sample002",
@@ -158,10 +158,10 @@ test("Pipeline7 solves and power-expands the SRJ27 dataset without DRC regressio
     "sample004",
     "sample005",
     "sample006",
-  ])
+  ]);
   expect(
     preExpansionDrcPasses.every((scenarioName) =>
       postExpansionDrcPasses.includes(scenarioName),
     ),
-  ).toBe(true)
-})
+  ).toBe(true);
+});

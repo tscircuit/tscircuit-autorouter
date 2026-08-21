@@ -1,60 +1,60 @@
-import type { GraphicsObject } from "graphics-debug"
-import { BaseSolver } from "../BaseSolver"
+import type { GraphicsObject } from "graphics-debug";
+import { BaseSolver } from "../BaseSolver";
 import type {
   CapacityMeshEdge,
   CapacityMeshNode,
   CapacityMeshNodeId,
   Obstacle,
   SimpleRouteJson,
-} from "../../types"
+} from "../../types";
 import {
   isRectCompletelyInsidePolygon,
   isRectOverlappingPolygon,
-} from "@tscircuit/math-utils"
-import { COLORS } from "../colors"
-import { isPointInRect } from "lib/utils/isPointInRect"
-import { doRectsOverlap } from "lib/utils/doRectsOverlap"
-import { getViaDimensions } from "lib/utils/getViaDimensions"
-import { CapacityMeshNodeSolver } from "./CapacityMeshNodeSolver1"
-import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
+} from "@tscircuit/math-utils";
+import { COLORS } from "../colors";
+import { isPointInRect } from "lib/utils/isPointInRect";
+import { doRectsOverlap } from "lib/utils/doRectsOverlap";
+import { getViaDimensions } from "lib/utils/getViaDimensions";
+import { CapacityMeshNodeSolver } from "./CapacityMeshNodeSolver1";
+import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ";
 
 interface CapacityMeshNodeSolverOptions {
-  capacityDepth?: number
+  capacityDepth?: number;
 }
 
 interface Target {
-  x: number
-  y: number
-  connectionName: string
-  availableZ: number[]
+  x: number;
+  y: number;
+  connectionName: string;
+  availableZ: number[];
 }
 
 export class CapacityMeshNodeSolver2_NodeUnderObstacle extends CapacityMeshNodeSolver {
   override getSolverName(): string {
-    return "CapacityMeshNodeSolver2_NodeUnderObstacle"
+    return "CapacityMeshNodeSolver2_NodeUnderObstacle";
   }
 
-  VIA_DIAMETER = 0.6
-  OBSTACLE_MARGIN = 0.1
+  VIA_DIAMETER = 0.6;
+  OBSTACLE_MARGIN = 0.1;
   /**
    * The threshold for the percentage of a single-layer node that must be
    * covered by obstacles to be considered "under an obstacle"
    */
-  OVERLAP_THRESHOLD_FOR_SINGLE_LAYER_NODES = 0.2 // 20% coverage threshold
+  OVERLAP_THRESHOLD_FOR_SINGLE_LAYER_NODES = 0.2; // 20% coverage threshold
 
   constructor(
     public srj: SimpleRouteJson,
     public opts: CapacityMeshNodeSolverOptions = {},
   ) {
-    super(srj, opts)
-    this.VIA_DIAMETER = getViaDimensions(srj).padDiameter
+    super(srj, opts);
+    this.VIA_DIAMETER = getViaDimensions(srj).padDiameter;
   }
 
   isNodeCompletelyOutsideBounds(node: CapacityMeshNode): boolean {
     if (this.outlinePolygon) {
-      const nodeRect = this.getNodeRect(node)
+      const nodeRect = this.getNodeRect(node);
       if (!isRectOverlappingPolygon(nodeRect, this.outlinePolygon)) {
-        return true
+        return true;
       }
     }
     return (
@@ -62,82 +62,82 @@ export class CapacityMeshNodeSolver2_NodeUnderObstacle extends CapacityMeshNodeS
       node.center.x - node.width / 2 > this.srj.bounds.maxX ||
       node.center.y + node.height / 2 < this.srj.bounds.minY ||
       node.center.y - node.height / 2 > this.srj.bounds.maxY
-    )
+    );
   }
 
   isNodePartiallyOutsideBounds(node: CapacityMeshNode): boolean {
     if (this.outlinePolygon) {
-      const nodeRect = this.getNodeRect(node)
+      const nodeRect = this.getNodeRect(node);
       const overlapsOutline = isRectOverlappingPolygon(
         nodeRect,
         this.outlinePolygon,
-      )
+      );
       if (!overlapsOutline) {
-        return false
+        return false;
       }
-      return !isRectCompletelyInsidePolygon(nodeRect, this.outlinePolygon)
+      return !isRectCompletelyInsidePolygon(nodeRect, this.outlinePolygon);
     }
     return (
       node.center.x - node.width / 2 < this.srj.bounds.minX ||
       node.center.x + node.width / 2 > this.srj.bounds.maxX ||
       node.center.y - node.height / 2 < this.srj.bounds.minY ||
       node.center.y + node.height / 2 > this.srj.bounds.maxY
-    )
+    );
   }
 
   /**
    * Calculate the percentage of node area covered by obstacles
    */
   getObstacleCoveragePercentage(node: CapacityMeshNode): number {
-    const overlappingObstacles = this.getXYZOverlappingObstacles(node)
-    if (overlappingObstacles.length === 0) return 0
+    const overlappingObstacles = this.getXYZOverlappingObstacles(node);
+    if (overlappingObstacles.length === 0) return 0;
 
-    const nodeLeft = node.center.x - node.width / 2
-    const nodeRight = node.center.x + node.width / 2
-    const nodeTop = node.center.y - node.height / 2
-    const nodeBottom = node.center.y + node.height / 2
-    const nodeArea = node.width * node.height
+    const nodeLeft = node.center.x - node.width / 2;
+    const nodeRight = node.center.x + node.width / 2;
+    const nodeTop = node.center.y - node.height / 2;
+    const nodeBottom = node.center.y + node.height / 2;
+    const nodeArea = node.width * node.height;
 
-    let totalOverlapArea = 0
+    let totalOverlapArea = 0;
 
     for (const obstacle of overlappingObstacles) {
       // Calculate overlap rectangle
       const overlapLeft = Math.max(
         nodeLeft,
         obstacle.center.x - obstacle.width / 2,
-      )
+      );
       const overlapRight = Math.min(
         nodeRight,
         obstacle.center.x + obstacle.width / 2,
-      )
+      );
       const overlapTop = Math.max(
         nodeTop,
         obstacle.center.y - obstacle.height / 2,
-      )
+      );
       const overlapBottom = Math.min(
         nodeBottom,
         obstacle.center.y + obstacle.height / 2,
-      )
+      );
 
       if (overlapLeft < overlapRight && overlapTop < overlapBottom) {
         const overlapArea =
-          (overlapRight - overlapLeft) * (overlapBottom - overlapTop)
-        totalOverlapArea += overlapArea
+          (overlapRight - overlapLeft) * (overlapBottom - overlapTop);
+        totalOverlapArea += overlapArea;
       }
     }
 
-    return totalOverlapArea / nodeArea
+    return totalOverlapArea / nodeArea;
   }
 
   /**
    * Check if a single-layer node should be filtered due to obstacle coverage
    */
   shouldFilterSingleLayerNodeForObstacle(node: CapacityMeshNode): boolean {
-    if (node.availableZ.length !== 1) return false
-    if (!node._containsObstacle) return false
+    if (node.availableZ.length !== 1) return false;
+    if (!node._containsObstacle) return false;
 
-    const coveragePercent = this.getObstacleCoveragePercentage(node)
-    return coveragePercent > this.OVERLAP_THRESHOLD_FOR_SINGLE_LAYER_NODES
+    const coveragePercent = this.getObstacleCoveragePercentage(node);
+    return coveragePercent > this.OVERLAP_THRESHOLD_FOR_SINGLE_LAYER_NODES;
   }
 
   /**
@@ -146,24 +146,24 @@ export class CapacityMeshNodeSolver2_NodeUnderObstacle extends CapacityMeshNodeS
    * Multi-layer nodes: filtered if any overlap
    */
   shouldFilterNodeForObstacle(node: CapacityMeshNode): boolean {
-    if (!node._containsObstacle) return false
+    if (!node._containsObstacle) return false;
 
     if (node.availableZ.length === 1) {
-      return this.shouldFilterSingleLayerNodeForObstacle(node)
+      return this.shouldFilterSingleLayerNodeForObstacle(node);
     }
 
     // Multi-layer nodes: use original behavior (filter if any obstacle)
-    return true
+    return true;
   }
 
   createChildNodeAtPosition(
     parent: CapacityMeshNode,
     opts: {
-      center: { x: number; y: number }
-      width: number
-      height: number
-      availableZ: number[]
-      _depth?: number
+      center: { x: number; y: number };
+      width: number;
+      height: number;
+      availableZ: number[];
+      _depth?: number;
     },
   ): CapacityMeshNode {
     const childNode: CapacityMeshNode = {
@@ -175,38 +175,38 @@ export class CapacityMeshNodeSolver2_NodeUnderObstacle extends CapacityMeshNodeS
       availableZ: opts.availableZ,
       _depth: opts._depth ?? (parent._depth ?? 0) + 1,
       _parent: parent,
-    }
+    };
 
-    const overlappingObstacles = this.getXYZOverlappingObstacles(childNode)
+    const overlappingObstacles = this.getXYZOverlappingObstacles(childNode);
 
     childNode._containsObstacle =
       overlappingObstacles.length > 0 ||
-      this.isNodePartiallyOutsideBounds(childNode)
+      this.isNodePartiallyOutsideBounds(childNode);
 
-    const target = this.getTargetIfNodeContainsTarget(childNode)
+    const target = this.getTargetIfNodeContainsTarget(childNode);
 
     if (target) {
-      childNode._targetConnectionName = target.connectionName
-      childNode._containsTarget = true
+      childNode._targetConnectionName = target.connectionName;
+      childNode._containsTarget = true;
     }
 
     if (childNode._containsObstacle) {
       childNode._completelyInsideObstacle =
-        this.isNodeCompletelyInsideObstacle(childNode)
+        this.isNodeCompletelyInsideObstacle(childNode);
     }
     // childNode._shouldBeInGraph =
     //   (!isOutsideBounds && !childNode._completelyInsideObstacle) || childNode._
 
-    return childNode
+    return childNode;
   }
 
   getZSubdivisionChildNodes(node: CapacityMeshNode): CapacityMeshNode[] {
-    if (node.availableZ.length === 1) return []
+    if (node.availableZ.length === 1) return [];
 
-    const childNodes: CapacityMeshNode[] = []
+    const childNodes: CapacityMeshNode[] = [];
 
     // Split availableZ into individual layers
-    const otherZBlocks = node.availableZ.map((z) => [z])
+    const otherZBlocks = node.availableZ.map((z) => [z]);
 
     for (const zBlock of otherZBlocks) {
       const childNode = this.createChildNodeAtPosition(node, {
@@ -216,23 +216,26 @@ export class CapacityMeshNodeSolver2_NodeUnderObstacle extends CapacityMeshNodeS
         availableZ: zBlock,
         // z-subdivision doesn't count towards depth, should be same as parent
         _depth: node._depth!,
-      })
+      });
 
       if (this.isNodeCompletelyOutsideBounds(childNode)) {
-        continue
+        continue;
       }
 
-      childNodes.push(childNode)
+      childNodes.push(childNode);
     }
 
-    return childNodes
+    return childNodes;
   }
 
   getChildNodes(parent: CapacityMeshNode): CapacityMeshNode[] {
-    if (parent._depth! >= this.MAX_DEPTH) return []
-    const childNodes: CapacityMeshNode[] = []
+    if (parent._depth! >= this.MAX_DEPTH) return [];
+    const childNodes: CapacityMeshNode[] = [];
 
-    const childNodeSize = { width: parent.width / 2, height: parent.height / 2 }
+    const childNodeSize = {
+      width: parent.width / 2,
+      height: parent.height / 2,
+    };
 
     const childNodePositions = [
       {
@@ -251,7 +254,7 @@ export class CapacityMeshNodeSolver2_NodeUnderObstacle extends CapacityMeshNodeS
         x: parent.center.x + childNodeSize.width / 2,
         y: parent.center.y + childNodeSize.height / 2,
       },
-    ]
+    ];
 
     for (const position of childNodePositions) {
       const childNode = this.createChildNodeAtPosition(parent, {
@@ -259,73 +262,73 @@ export class CapacityMeshNodeSolver2_NodeUnderObstacle extends CapacityMeshNodeS
         width: childNodeSize.width,
         height: childNodeSize.height,
         availableZ: parent.availableZ,
-      })
+      });
       if (this.isNodeCompletelyOutsideBounds(childNode)) {
-        continue
+        continue;
       }
-      childNodes.push(childNode)
+      childNodes.push(childNode);
     }
 
-    return childNodes
+    return childNodes;
   }
 
   shouldNodeBeXYSubdivided(node: CapacityMeshNode) {
-    if (node._depth! >= this.MAX_DEPTH) return false
-    if (node._containsTarget) return true
+    if (node._depth! >= this.MAX_DEPTH) return false;
+    if (node._containsTarget) return true;
     if (node.availableZ.length === 1 && node._depth! <= this.MAX_DEPTH)
-      return true
-    if (node._containsObstacle && !node._completelyInsideObstacle) return true
-    return false
+      return true;
+    if (node._containsObstacle && !node._completelyInsideObstacle) return true;
+    return false;
   }
 
   _step() {
-    const nextNode = this.unfinishedNodes.pop()
+    const nextNode = this.unfinishedNodes.pop();
     if (!nextNode) {
-      this.solved = true
-      return
+      this.solved = true;
+      return;
     }
 
-    const childNodes = this.getChildNodes(nextNode)
+    const childNodes = this.getChildNodes(nextNode);
 
-    const finishedNewNodes: CapacityMeshNode[] = []
-    const unfinishedNewNodes: CapacityMeshNode[] = []
+    const finishedNewNodes: CapacityMeshNode[] = [];
+    const unfinishedNewNodes: CapacityMeshNode[] = [];
 
     for (const childNode of childNodes) {
-      const shouldBeXYSubdivided = this.shouldNodeBeXYSubdivided(childNode)
+      const shouldBeXYSubdivided = this.shouldNodeBeXYSubdivided(childNode);
       const shouldBeZSubdivided =
         childNode.availableZ.length > 1 &&
         !shouldBeXYSubdivided &&
         (childNode._containsObstacle ||
-          childNode.width < this.VIA_DIAMETER + this.OBSTACLE_MARGIN)
+          childNode.width < this.VIA_DIAMETER + this.OBSTACLE_MARGIN);
       if (shouldBeXYSubdivided) {
-        unfinishedNewNodes.push(childNode)
+        unfinishedNewNodes.push(childNode);
       } else if (
         !shouldBeXYSubdivided &&
         !this.shouldFilterNodeForObstacle(childNode) &&
         !shouldBeZSubdivided
       ) {
-        finishedNewNodes.push(childNode)
+        finishedNewNodes.push(childNode);
       } else if (!shouldBeXYSubdivided && childNode._containsTarget) {
         if (shouldBeZSubdivided) {
-          const zSubNodes = this.getZSubdivisionChildNodes(childNode)
+          const zSubNodes = this.getZSubdivisionChildNodes(childNode);
           finishedNewNodes.push(
             ...zSubNodes.filter(
               (n) => n._containsTarget || !this.shouldFilterNodeForObstacle(n),
             ),
-          )
+          );
         } else {
-          finishedNewNodes.push(childNode)
+          finishedNewNodes.push(childNode);
         }
       } else if (shouldBeZSubdivided) {
         finishedNewNodes.push(
           ...this.getZSubdivisionChildNodes(childNode).filter(
             (zSubNode) => !this.shouldFilterNodeForObstacle(zSubNode),
           ),
-        )
+        );
       }
     }
 
-    this.unfinishedNodes.push(...unfinishedNewNodes)
-    this.finishedNodes.push(...finishedNewNodes)
+    this.unfinishedNodes.push(...unfinishedNewNodes);
+    this.finishedNodes.push(...finishedNewNodes);
   }
 }

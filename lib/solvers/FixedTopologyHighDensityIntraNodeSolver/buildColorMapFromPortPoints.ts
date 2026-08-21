@@ -1,4 +1,4 @@
-import type { NodeWithPortPoints } from "lib/types/high-density-types"
+import type { NodeWithPortPoints } from "lib/types/high-density-types";
 
 export const buildColorMapFromPortPoints = (
   nodeWithPortPoints: NodeWithPortPoints,
@@ -14,18 +14,18 @@ export const buildColorMapFromPortPoints = (
     "#f032e6",
     "#bcf60c",
     "#fabebe",
-  ]
+  ];
 
-  const colorMap: Record<string, string> = {}
-  const connectionNames = new Set<string>()
+  const colorMap: Record<string, string> = {};
+  const connectionNames = new Set<string>();
   for (const pp of nodeWithPortPoints.portPoints) {
-    connectionNames.add(pp.connectionName)
+    connectionNames.add(pp.connectionName);
   }
 
-  let i = 0
+  let i = 0;
   for (const name of Array.from(connectionNames)) {
-    colorMap[name] = colors[i % colors.length]
-    i++
+    colorMap[name] = colors[i % colors.length];
+    i++;
   }
-  return colorMap
-}
+  return colorMap;
+};

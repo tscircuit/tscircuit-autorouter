@@ -1,5 +1,5 @@
-import { test, expect } from "bun:test"
-import { computeDrawPositionFromCollisions } from "../../../lib/solvers/TraceKeepoutSolver/computeDrawPositionFromCollisions"
+import { test, expect } from "bun:test";
+import { computeDrawPositionFromCollisions } from "../../../lib/solvers/TraceKeepoutSolver/computeDrawPositionFromCollisions";
 
 test("computeDrawPositionFromCollisions should position between colliding segments", () => {
   const input = {
@@ -85,12 +85,12 @@ test("computeDrawPositionFromCollisions should position between colliding segmen
       { start: { x: 38, y: 20.005 }, end: { x: -38, y: 20.005 } },
     ],
     keepoutRadius: 0.5,
-  }
+  };
 
-  const result = computeDrawPositionFromCollisions(input)
+  const result = computeDrawPositionFromCollisions(input);
 
   // The draw position should be found
-  expect(result).not.toBeNull()
+  expect(result).not.toBeNull();
 
   if (result) {
     // At the cursor x position (~-32.04), the trace corridor top edge is around y ≈ 19.5
@@ -98,14 +98,14 @@ test("computeDrawPositionFromCollisions should position between colliding segmen
     // The draw position should be roughly in the middle: y ≈ 19.75
 
     // The result should be between the trace corridor (y ~ 19.5) and board edge (y ~ 19.995)
-    expect(result.y).toBeGreaterThan(19.5)
-    expect(result.y).toBeLessThan(19.995)
+    expect(result.y).toBeGreaterThan(19.5);
+    expect(result.y).toBeLessThan(19.995);
 
     // It should be roughly centered (allowing some tolerance)
-    const expectedCenter = (19.5 + 19.995) / 2 // ~19.7475
-    expect(Math.abs(result.y - expectedCenter)).toBeLessThan(0.15)
+    const expectedCenter = (19.5 + 19.995) / 2; // ~19.7475
+    expect(Math.abs(result.y - expectedCenter)).toBeLessThan(0.15);
   }
-})
+});
 
 test("computeDrawPositionFromCollisions should not cross colliding segments", () => {
   const input = {
@@ -132,9 +132,9 @@ test("computeDrawPositionFromCollisions should not cross colliding segments", ()
       { start: { x: 31.73, y: 1.54 }, end: { x: 31.73, y: 3.54 } },
     ],
     keepoutRadius: 0.5,
-  }
+  };
 
-  const result = computeDrawPositionFromCollisions(input)
+  const result = computeDrawPositionFromCollisions(input);
 
   // The cursor is at x=31.46, in the gap between rectangles at x=31.19 and x=31.73
   // Gap width: 31.73 - 31.19 = 0.54
@@ -145,17 +145,22 @@ test("computeDrawPositionFromCollisions should not cross colliding segments", ()
 
   if (result) {
     // Draw position must stay within the gap
-    expect(result.x).toBeGreaterThan(31.19)
-    expect(result.x).toBeLessThan(31.73)
+    expect(result.x).toBeGreaterThan(31.19);
+    expect(result.x).toBeLessThan(31.73);
 
     // Check that no segment is crossed between cursor and draw position
     const segmentsCrossed = input.collidingSegments.filter((seg) => {
       // Simple line intersection check
-      return segmentsIntersect(input.cursorPosition, result, seg.start, seg.end)
-    })
-    expect(segmentsCrossed.length).toBe(0)
+      return segmentsIntersect(
+        input.cursorPosition,
+        result,
+        seg.start,
+        seg.end,
+      );
+    });
+    expect(segmentsCrossed.length).toBe(0);
   }
-})
+});
 
 // Helper function for segment intersection
 function segmentsIntersect(
@@ -164,18 +169,18 @@ function segmentsIntersect(
   b1: { x: number; y: number },
   b2: { x: number; y: number },
 ): boolean {
-  const d1 = direction(b1, b2, a1)
-  const d2 = direction(b1, b2, a2)
-  const d3 = direction(a1, a2, b1)
-  const d4 = direction(a1, a2, b2)
+  const d1 = direction(b1, b2, a1);
+  const d2 = direction(b1, b2, a2);
+  const d3 = direction(a1, a2, b1);
+  const d4 = direction(a1, a2, b2);
 
   if (
     ((d1 > 0 && d2 < 0) || (d1 < 0 && d2 > 0)) &&
     ((d3 > 0 && d4 < 0) || (d3 < 0 && d4 > 0))
   ) {
-    return true
+    return true;
   }
-  return false
+  return false;
 }
 
 function direction(
@@ -183,5 +188,5 @@ function direction(
   b: { x: number; y: number },
   c: { x: number; y: number },
 ): number {
-  return (c.x - a.x) * (b.y - a.y) - (b.x - a.x) * (c.y - a.y)
+  return (c.x - a.x) * (b.y - a.y) - (b.x - a.x) * (c.y - a.y);
 }

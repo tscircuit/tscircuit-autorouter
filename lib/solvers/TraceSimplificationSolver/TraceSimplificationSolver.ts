@@ -1,22 +1,22 @@
-import { BaseSolver } from "../BaseSolver"
-import { HighDensityRoute } from "lib/types/high-density-types"
-import { Obstacle } from "lib/types"
-import { ConnectivityMap } from "circuit-json-to-connectivity-map"
-import { UselessViaRemovalSolver } from "lib/solvers/UselessViaRemovalSolver/UselessViaRemovalSolver"
-import { MultiSimplifiedPathSolver } from "lib/solvers/SimplifiedPathSolver/MultiSimplifiedPathSolver"
-import { SameNetViaMergerSolver } from "lib/solvers/SameNetViaMergerSolver/SameNetViaMergerSolver"
-import { GraphicsObject } from "graphics-debug"
-import { getJumpersGraphics } from "lib/utils/getJumperGraphics"
-import { createObjectsWithZLayers } from "lib/utils/createObjectsWithZLayers"
-import { CrossingViaReductionSolver } from "lib/solvers/CrossingViaReductionSolver/crossing-via-reduction-solver"
+import { BaseSolver } from "../BaseSolver";
+import { HighDensityRoute } from "lib/types/high-density-types";
+import { Obstacle } from "lib/types";
+import { ConnectivityMap } from "circuit-json-to-connectivity-map";
+import { UselessViaRemovalSolver } from "lib/solvers/UselessViaRemovalSolver/UselessViaRemovalSolver";
+import { MultiSimplifiedPathSolver } from "lib/solvers/SimplifiedPathSolver/MultiSimplifiedPathSolver";
+import { SameNetViaMergerSolver } from "lib/solvers/SameNetViaMergerSolver/SameNetViaMergerSolver";
+import { GraphicsObject } from "graphics-debug";
+import { getJumpersGraphics } from "lib/utils/getJumperGraphics";
+import { createObjectsWithZLayers } from "lib/utils/createObjectsWithZLayers";
+import { CrossingViaReductionSolver } from "lib/solvers/CrossingViaReductionSolver/crossing-via-reduction-solver";
 
 type Phase =
   | "via_removal"
   | "crossing_via_reduction"
   | "via_merging"
-  | "path_simplification"
+  | "path_simplification";
 
-const VIA_INSIDE_OBSTACLE_TOLERANCE = 1e-6
+const VIA_INSIDE_OBSTACLE_TOLERANCE = 1e-6;
 
 const pointInsideObstacle = (
   point: { x: number; y: number },
@@ -25,10 +25,10 @@ const pointInsideObstacle = (
   Math.abs(point.x - obstacle.center.x) <=
     obstacle.width / 2 + VIA_INSIDE_OBSTACLE_TOLERANCE &&
   Math.abs(point.y - obstacle.center.y) <=
-    obstacle.height / 2 + VIA_INSIDE_OBSTACLE_TOLERANCE
+    obstacle.height / 2 + VIA_INSIDE_OBSTACLE_TOLERANCE;
 
 const isMultilayerObstacle = (obstacle: Obstacle) =>
-  (obstacle.__zLayers?.length ?? obstacle.layers?.length ?? 0) > 1
+  (obstacle.__zLayers?.length ?? obstacle.layers?.length ?? 0) > 1;
 
 /**
  * TraceSimplificationSolver consolidates trace optimization by iteratively applying
@@ -46,30 +46,30 @@ const isMultilayerObstacle = (obstacle: Obstacle) =>
  */
 export class TraceSimplificationSolver extends BaseSolver {
   override getSolverName(): string {
-    return "TraceSimplificationSolver"
+    return "TraceSimplificationSolver";
   }
 
-  hdRoutes: HighDensityRoute[] = []
+  hdRoutes: HighDensityRoute[] = [];
 
-  simplificationPipelineLoops = 0
+  simplificationPipelineLoops = 0;
 
-  MAX_SIMPLIFICATION_PIPELINE_LOOPS: number = 2
+  MAX_SIMPLIFICATION_PIPELINE_LOOPS: number = 2;
 
   PHASE_ORDER: Phase[] = [
     "via_removal",
     "crossing_via_reduction",
     "via_merging",
     "path_simplification",
-  ]
+  ];
 
-  currentPhase: Phase = "via_removal"
+  currentPhase: Phase = "via_removal";
 
   /** Callback to extract results from the active sub-solver */
-  extractResult: ((solver: BaseSolver) => HighDensityRoute[]) | null = null
+  extractResult: ((solver: BaseSolver) => HighDensityRoute[]) | null = null;
 
   /** Returns the simplified routes. This is the primary output of the solver. */
   get simplifiedHdRoutes(): HighDensityRoute[] {
-    return this.hdRoutes
+    return this.hdRoutes;
   }
 
   /**
@@ -91,32 +91,32 @@ export class TraceSimplificationSolver extends BaseSolver {
    */
   constructor(
     private readonly simplificationConfig: {
-      readonly hdRoutes: ReadonlyArray<HighDensityRoute>
-      readonly obstacles: ReadonlyArray<Obstacle>
-      readonly connMap: ConnectivityMap
-      readonly colorMap: Readonly<Record<string, string>>
-      readonly outline?: ReadonlyArray<{ x: number; y: number }>
-      readonly defaultViaDiameter: number
-      readonly layerCount: number
-      readonly minTraceToPadEdgeClearance?: number
-      readonly minBoardEdgeClearance?: number
-      readonly otherHdRoutes?: ReadonlyArray<HighDensityRoute>
-      readonly netByConnectionName?: ReadonlyMap<string, string>
-      readonly enableCrossingViaReduction?: boolean
+      readonly hdRoutes: ReadonlyArray<HighDensityRoute>;
+      readonly obstacles: ReadonlyArray<Obstacle>;
+      readonly connMap: ConnectivityMap;
+      readonly colorMap: Readonly<Record<string, string>>;
+      readonly outline?: ReadonlyArray<{ x: number; y: number }>;
+      readonly defaultViaDiameter: number;
+      readonly layerCount: number;
+      readonly minTraceToPadEdgeClearance?: number;
+      readonly minBoardEdgeClearance?: number;
+      readonly otherHdRoutes?: ReadonlyArray<HighDensityRoute>;
+      readonly netByConnectionName?: ReadonlyMap<string, string>;
+      readonly enableCrossingViaReduction?: boolean;
     },
   ) {
-    super()
+    super();
     this.simplificationConfig = {
       ...simplificationConfig,
       obstacles: createObjectsWithZLayers(
         simplificationConfig.obstacles,
         simplificationConfig.layerCount,
       ),
-    }
+    };
     this.hdRoutes = this.markThroughObstacleSegments(
       simplificationConfig.hdRoutes,
-    )
-    this.MAX_ITERATIONS = 100e6
+    );
+    this.MAX_ITERATIONS = 100e6;
   }
 
   private isSameNetObstacle(route: HighDensityRoute, obstacle: Obstacle) {
@@ -133,7 +133,7 @@ export class TraceSimplificationSolver extends BaseSolver {
             route.rootConnectionName,
             connectedId,
           )),
-    )
+    );
   }
 
   private getSameNetObstacleForSegment(
@@ -147,7 +147,7 @@ export class TraceSimplificationSolver extends BaseSolver {
         this.isSameNetObstacle(route, obstacle) &&
         pointInsideObstacle(start, obstacle) &&
         pointInsideObstacle(end, obstacle),
-    )
+    );
   }
 
   private isViaInsideSameNetObstacle(
@@ -159,7 +159,7 @@ export class TraceSimplificationSolver extends BaseSolver {
         isMultilayerObstacle(obstacle) &&
         this.isSameNetObstacle(route, obstacle) &&
         pointInsideObstacle(via, obstacle),
-    )
+    );
   }
 
   markThroughObstacleSegments(
@@ -168,11 +168,11 @@ export class TraceSimplificationSolver extends BaseSolver {
     return routes.map((route) => ({
       ...route,
       route: route.route.map((point, index, points) => {
-        const nextPoint = points[index + 1]
+        const nextPoint = points[index + 1];
         const sameNetObstacle =
           nextPoint &&
           point.z !== nextPoint.z &&
-          this.getSameNetObstacleForSegment(route, point, nextPoint)
+          this.getSameNetObstacleForSegment(route, point, nextPoint);
 
         if (sameNetObstacle) {
           return {
@@ -184,34 +184,34 @@ export class TraceSimplificationSolver extends BaseSolver {
                     sameNetObstacle.circuitJsonMetadata,
                 }
               : {}),
-          }
+          };
         }
 
-        const finalizedPoint = { ...point }
-        delete finalizedPoint.toNextSegmentType
-        delete finalizedPoint.toNextSegmentCircuitJsonMetadata
-        return finalizedPoint
+        const finalizedPoint = { ...point };
+        delete finalizedPoint.toNextSegmentType;
+        delete finalizedPoint.toNextSegmentCircuitJsonMetadata;
+        return finalizedPoint;
       }),
       vias: route.vias.filter(
         (via) => !this.isViaInsideSameNetObstacle(route, via),
       ),
-    }))
+    }));
   }
 
   _step() {
     if (
       this.simplificationPipelineLoops >= this.MAX_SIMPLIFICATION_PIPELINE_LOOPS
     ) {
-      this.solved = true
-      return
+      this.solved = true;
+      return;
     }
 
     // If we have an active sub-solver, let it run
     if (this.activeSubSolver) {
-      this.activeSubSolver.step()
+      this.activeSubSolver.step();
 
       if (!this.activeSubSolver.failed && !this.activeSubSolver.solved) {
-        return
+        return;
       }
 
       if (this.activeSubSolver.solved) {
@@ -219,26 +219,26 @@ export class TraceSimplificationSolver extends BaseSolver {
         if (this.extractResult) {
           this.hdRoutes = this.markThroughObstacleSegments(
             this.extractResult(this.activeSubSolver),
-          )
+          );
         }
 
         // Clear activeSubSolver
-        this.activeSubSolver = null
-        this.extractResult = null
+        this.activeSubSolver = null;
+        this.extractResult = null;
 
         // Advance phase
         if (this.currentPhase === "via_removal") {
           this.currentPhase = this.simplificationConfig
             .enableCrossingViaReduction
             ? "crossing_via_reduction"
-            : "via_merging"
+            : "via_merging";
         } else if (this.currentPhase === "crossing_via_reduction") {
-          this.currentPhase = "via_merging"
+          this.currentPhase = "via_merging";
         } else if (this.currentPhase === "via_merging") {
-          this.currentPhase = "path_simplification"
+          this.currentPhase = "path_simplification";
         } else {
-          this.currentPhase = "via_removal"
-          this.simplificationPipelineLoops++
+          this.currentPhase = "via_removal";
+          this.simplificationPipelineLoops++;
         }
 
         // Check if all iterations are complete
@@ -246,15 +246,15 @@ export class TraceSimplificationSolver extends BaseSolver {
           this.simplificationPipelineLoops >=
           this.MAX_SIMPLIFICATION_PIPELINE_LOOPS
         ) {
-          this.solved = true
-          return
+          this.solved = true;
+          return;
         }
       } else if (this.activeSubSolver.failed) {
-        this.failed = true
+        this.failed = true;
         this.error =
           this.activeSubSolver.error ??
-          "Sub-solver failed without error message"
-        return
+          "Sub-solver failed without error message";
+        return;
       }
     }
 
@@ -281,10 +281,10 @@ export class TraceSimplificationSolver extends BaseSolver {
             enableObstacleDetourShortcuts:
               this.simplificationConfig.enableCrossingViaReduction === true &&
               this.simplificationPipelineLoops > 0,
-          })
+          });
           this.extractResult = (s) =>
-            (s as UselessViaRemovalSolver).getOptimizedHdRoutes() ?? []
-          break
+            (s as UselessViaRemovalSolver).getOptimizedHdRoutes() ?? [];
+          break;
 
         case "crossing_via_reduction":
           this.activeSubSolver = new CrossingViaReductionSolver({
@@ -299,10 +299,10 @@ export class TraceSimplificationSolver extends BaseSolver {
             traceMargin: 0.1,
             obstacleMargin:
               this.simplificationConfig.minTraceToPadEdgeClearance ?? 0.15,
-          })
+          });
           this.extractResult = (s) =>
-            (s as CrossingViaReductionSolver).getReducedHdRoutes()
-          break
+            (s as CrossingViaReductionSolver).getReducedHdRoutes();
+          break;
 
         case "via_merging":
           this.activeSubSolver = new SameNetViaMergerSolver({
@@ -316,10 +316,10 @@ export class TraceSimplificationSolver extends BaseSolver {
             outline: this.simplificationConfig.outline
               ? [...this.simplificationConfig.outline]
               : undefined,
-          })
+          });
           this.extractResult = (s) =>
-            (s as SameNetViaMergerSolver).getMergedViaHdRoutes() ?? []
-          break
+            (s as SameNetViaMergerSolver).getMergedViaHdRoutes() ?? [];
+          break;
 
         case "path_simplification":
           this.activeSubSolver = new MultiSimplifiedPathSolver({
@@ -334,29 +334,29 @@ export class TraceSimplificationSolver extends BaseSolver {
             minBoardEdgeClearance:
               this.simplificationConfig.minBoardEdgeClearance,
             defaultViaDiameter: this.simplificationConfig.defaultViaDiameter,
-          })
+          });
           this.extractResult = (s) =>
-            (s as MultiSimplifiedPathSolver).simplifiedHdRoutes
-          break
+            (s as MultiSimplifiedPathSolver).simplifiedHdRoutes;
+          break;
 
         default:
-          this.failed = true
-          this.error = `Unknown phase: ${this.currentPhase}`
-          break
+          this.failed = true;
+          this.error = `Unknown phase: ${this.currentPhase}`;
+          break;
       }
     }
   }
 
   visualize(): GraphicsObject {
     if (this.activeSubSolver) {
-      return this.activeSubSolver.visualize()
+      return this.activeSubSolver.visualize();
     }
 
     const visualization: GraphicsObject & {
-      lines: NonNullable<GraphicsObject["lines"]>
-      points: NonNullable<GraphicsObject["points"]>
-      rects: NonNullable<GraphicsObject["rects"]>
-      circles: NonNullable<GraphicsObject["circles"]>
+      lines: NonNullable<GraphicsObject["lines"]>;
+      points: NonNullable<GraphicsObject["points"]>;
+      rects: NonNullable<GraphicsObject["rects"]>;
+      circles: NonNullable<GraphicsObject["circles"]>;
     } = {
       lines: [],
       points: [],
@@ -364,20 +364,20 @@ export class TraceSimplificationSolver extends BaseSolver {
       circles: [],
       coordinateSystem: "cartesian",
       title: "Trace Simplification Solver",
-    }
+    };
 
     // Visualize obstacles
     for (const obstacle of this.simplificationConfig.obstacles) {
-      let fillColor = "rgba(128, 128, 128, 0.2)"
-      const isOnLayer0 = obstacle.__zLayers?.includes(0)
-      const isOnLayer1 = obstacle.__zLayers?.includes(1)
+      let fillColor = "rgba(128, 128, 128, 0.2)";
+      const isOnLayer0 = obstacle.__zLayers?.includes(0);
+      const isOnLayer1 = obstacle.__zLayers?.includes(1);
 
       if (isOnLayer0 && isOnLayer1) {
-        fillColor = "rgba(128, 0, 128, 0.2)"
+        fillColor = "rgba(128, 0, 128, 0.2)";
       } else if (isOnLayer0) {
-        fillColor = "rgba(255, 0, 0, 0.2)"
+        fillColor = "rgba(255, 0, 0, 0.2)";
       } else if (isOnLayer1) {
-        fillColor = "rgba(0, 0, 255, 0.2)"
+        fillColor = "rgba(0, 0, 255, 0.2)";
       }
 
       visualization.rects.push({
@@ -386,15 +386,15 @@ export class TraceSimplificationSolver extends BaseSolver {
         height: obstacle.height,
         fill: fillColor,
         label: `Obstacle (Z: ${obstacle.__zLayers?.join(", ")})`,
-      })
+      });
     }
 
     // Draw immutable routed copper as subdued, dashed layer-colored peers.
     for (const route of this.simplificationConfig.otherHdRoutes ?? []) {
       for (let i = 0; i < route.route.length - 1; i++) {
-        const current = route.route[i]
-        const next = route.route[i + 1]
-        if (current.z !== next.z) continue
+        const current = route.route[i];
+        const next = route.route[i + 1];
+        if (current.z !== next.z) continue;
 
         visualization.lines.push({
           points: [
@@ -408,7 +408,7 @@ export class TraceSimplificationSolver extends BaseSolver {
           strokeWidth: route.traceThickness,
           strokeDash: [0.08, 0.08],
           label: `${route.connectionName} immutable (z=${current.z})`,
-        })
+        });
       }
 
       for (const via of route.vias) {
@@ -417,18 +417,18 @@ export class TraceSimplificationSolver extends BaseSolver {
           radius: route.viaDiameter / 2,
           fill: "rgba(96, 96, 96, 0.45)",
           label: `${route.connectionName} immutable via`,
-        })
+        });
       }
     }
 
     // Draw output routes and vias
     for (const route of this.hdRoutes) {
-      if (route.route.length === 0) continue
+      if (route.route.length === 0) continue;
 
       // Draw lines connecting route points on the same layer
       for (let i = 0; i < route.route.length - 1; i++) {
-        const current = route.route[i]
-        const next = route.route[i + 1]
+        const current = route.route[i];
+        const next = route.route[i + 1];
 
         if (current.z === next.z) {
           visualization.lines.push({
@@ -439,7 +439,7 @@ export class TraceSimplificationSolver extends BaseSolver {
             strokeColor: current.z === 0 ? "red" : "blue",
             strokeWidth: route.traceThickness,
             label: `${route.connectionName} (z=${current.z})`,
-          })
+          });
         }
       }
 
@@ -450,7 +450,7 @@ export class TraceSimplificationSolver extends BaseSolver {
           radius: route.viaDiameter / 2,
           fill: "rgba(255, 0, 255, 0.5)",
           label: `${route.connectionName} via`,
-        })
+        });
       }
 
       // Draw jumpers
@@ -458,12 +458,12 @@ export class TraceSimplificationSolver extends BaseSolver {
         const jumperGraphics = getJumpersGraphics(route.jumpers, {
           color: "orange",
           label: route.connectionName,
-        })
-        visualization.rects.push(...(jumperGraphics.rects ?? []))
-        visualization.lines.push(...(jumperGraphics.lines ?? []))
+        });
+        visualization.rects.push(...(jumperGraphics.rects ?? []));
+        visualization.lines.push(...(jumperGraphics.lines ?? []));
       }
     }
 
-    return visualization
+    return visualization;
   }
 }

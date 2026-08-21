@@ -1,42 +1,43 @@
-import type { Obstacle, SimpleRouteJson, SimplifiedPcbTrace } from "lib/types"
-import { getViaDimensions } from "lib/utils/getViaDimensions"
-import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
-import { mapZToLayerName } from "lib/utils/mapZToLayerName"
+import type { Obstacle, SimpleRouteJson, SimplifiedPcbTrace } from "lib/types";
+import { getViaDimensions } from "lib/utils/getViaDimensions";
+import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ";
+import { mapZToLayerName } from "lib/utils/mapZToLayerName";
 
-type RoutePoint = SimplifiedPcbTrace["route"][number]
-type WireRoutePoint = Extract<RoutePoint, { route_type: "wire" }>
-type ViaRoutePoint = Extract<RoutePoint, { route_type: "via" }>
+type RoutePoint = SimplifiedPcbTrace["route"][number];
+type WireRoutePoint = Extract<RoutePoint, { route_type: "wire" }>;
+type ViaRoutePoint = Extract<RoutePoint, { route_type: "via" }>;
 type ThroughObstacleRoutePoint = Extract<
   RoutePoint,
   { route_type: "through_obstacle" }
->
+>;
 
-const MIN_OBSTACLE_DIMENSION = 0.001
+const MIN_OBSTACLE_DIMENSION = 0.001;
 
 const isWireRoutePoint = (point: RoutePoint): point is WireRoutePoint =>
-  point.route_type === "wire"
+  point.route_type === "wire";
 
 const isViaRoutePoint = (point: RoutePoint): point is ViaRoutePoint =>
-  point.route_type === "via"
+  point.route_type === "via";
 
 const isThroughObstacleRoutePoint = (
   point: RoutePoint,
-): point is ThroughObstacleRoutePoint => point.route_type === "through_obstacle"
+): point is ThroughObstacleRoutePoint =>
+  point.route_type === "through_obstacle";
 
 const getLayersBetween = (
   fromLayer: string,
   toLayer: string,
   layerCount: number,
 ) => {
-  const fromZ = mapLayerNameToZ(fromLayer, layerCount)
-  const toZ = mapLayerNameToZ(toLayer, layerCount)
-  const minZ = Math.min(fromZ, toZ)
-  const maxZ = Math.max(fromZ, toZ)
+  const fromZ = mapLayerNameToZ(fromLayer, layerCount);
+  const toZ = mapLayerNameToZ(toLayer, layerCount);
+  const minZ = Math.min(fromZ, toZ);
+  const maxZ = Math.max(fromZ, toZ);
 
   return Array.from({ length: maxZ - minZ + 1 }, (_, index) =>
     mapZToLayerName(minZ + index, layerCount),
-  )
-}
+  );
+};
 
 const createSegmentObstacle = ({
   obstacleId,
@@ -46,18 +47,18 @@ const createSegmentObstacle = ({
   layer,
   connectedTo,
 }: {
-  obstacleId: string
-  start: { x: number; y: number }
-  end: { x: number; y: number }
-  width: number
-  layer: string
-  connectedTo: string[]
+  obstacleId: string;
+  start: { x: number; y: number };
+  end: { x: number; y: number };
+  width: number;
+  layer: string;
+  connectedTo: string[];
 }): Obstacle | null => {
-  const dx = end.x - start.x
-  const dy = end.y - start.y
-  const length = Math.hypot(dx, dy)
+  const dx = end.x - start.x;
+  const dy = end.y - start.y;
+  const length = Math.hypot(dx, dy);
 
-  if (length <= MIN_OBSTACLE_DIMENSION) return null
+  if (length <= MIN_OBSTACLE_DIMENSION) return null;
 
   return {
     obstacleId,
@@ -71,25 +72,26 @@ const createSegmentObstacle = ({
     height: Math.max(width, MIN_OBSTACLE_DIMENSION),
     ccwRotationDegrees: (Math.atan2(dy, dx) * 180) / Math.PI,
     connectedTo,
-  }
-}
+  };
+};
 
 export const getObstaclesFromSrjTraces = (
   srj: SimpleRouteJson | null | undefined,
 ): Obstacle[] => {
-  if (!srj) return []
+  if (!srj) return [];
 
-  const traceObstacles: Obstacle[] = []
-  const viaDimensions = getViaDimensions(srj)
+  const traceObstacles: Obstacle[] = [];
+  const viaDimensions = getViaDimensions(srj);
 
   for (const [traceIndex, trace] of (srj.traces ?? []).entries()) {
-    const connectedTo = trace.connectsTo ?? []
+    const connectedTo = trace.connectsTo ?? [];
 
     for (let pointIndex = 0; pointIndex < trace.route.length; pointIndex++) {
-      const routePoint = trace.route[pointIndex]!
+      const routePoint = trace.route[pointIndex]!;
 
       if (isViaRoutePoint(routePoint)) {
-        const viaDiameter = routePoint.via_diameter ?? viaDimensions.padDiameter
+        const viaDiameter =
+          routePoint.via_diameter ?? viaDimensions.padDiameter;
         traceObstacles.push({
           obstacleId: `trace_obstacle_${trace.pcb_trace_id}_${traceIndex}_${pointIndex}_via`,
           type: "rect",
@@ -102,8 +104,8 @@ export const getObstaclesFromSrjTraces = (
           width: Math.max(viaDiameter, MIN_OBSTACLE_DIMENSION),
           height: Math.max(viaDiameter, MIN_OBSTACLE_DIMENSION),
           connectedTo,
-        })
-        continue
+        });
+        continue;
       }
 
       if (isThroughObstacleRoutePoint(routePoint)) {
@@ -114,15 +116,15 @@ export const getObstaclesFromSrjTraces = (
           width: routePoint.width,
           layer: routePoint.from_layer,
           connectedTo,
-        })
+        });
 
         if (obstacle) {
           obstacle.layers = getLayersBetween(
             routePoint.from_layer,
             routePoint.to_layer,
             srj.layerCount,
-          )
-          traceObstacles.push(obstacle)
+          );
+          traceObstacles.push(obstacle);
         }
       }
     }
@@ -132,15 +134,15 @@ export const getObstaclesFromSrjTraces = (
       pointIndex < trace.route.length - 1;
       pointIndex++
     ) {
-      const routePoint = trace.route[pointIndex]!
-      const nextRoutePoint = trace.route[pointIndex + 1]!
+      const routePoint = trace.route[pointIndex]!;
+      const nextRoutePoint = trace.route[pointIndex + 1]!;
 
       if (
         !isWireRoutePoint(routePoint) ||
         !isWireRoutePoint(nextRoutePoint) ||
         routePoint.layer !== nextRoutePoint.layer
       ) {
-        continue
+        continue;
       }
 
       const obstacle = createSegmentObstacle({
@@ -150,26 +152,26 @@ export const getObstaclesFromSrjTraces = (
         width: routePoint.width,
         layer: routePoint.layer,
         connectedTo,
-      })
+      });
 
-      if (obstacle) traceObstacles.push(obstacle)
+      if (obstacle) traceObstacles.push(obstacle);
     }
   }
 
-  return traceObstacles
-}
+  return traceObstacles;
+};
 
 export function convertSrjTracesToObstacles(
   srj: SimpleRouteJson | null | undefined,
 ): SimpleRouteJson | null | undefined {
-  if (!srj) return srj
+  if (!srj) return srj;
 
-  const traceObstacles = getObstaclesFromSrjTraces(srj)
+  const traceObstacles = getObstaclesFromSrjTraces(srj);
 
-  if (traceObstacles.length === 0) return srj
+  if (traceObstacles.length === 0) return srj;
 
   return {
     ...srj,
     obstacles: [...(srj.obstacles ?? []), ...traceObstacles],
-  }
+  };
 }

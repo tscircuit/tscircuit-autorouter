@@ -1,11 +1,11 @@
-import { expect, test } from "bun:test"
-import { pointToBoxDistance } from "@tscircuit/math-utils"
-import { EscapeViaLocationSolver } from "../../../lib/solvers/EscapeViaLocationSolver/EscapeViaLocationSolver"
-import type { Obstacle, SimpleRouteJson } from "../../../lib/types"
+import { expect, test } from "bun:test";
+import { pointToBoxDistance } from "@tscircuit/math-utils";
+import { EscapeViaLocationSolver } from "../../../lib/solvers/EscapeViaLocationSolver/EscapeViaLocationSolver";
+import type { Obstacle, SimpleRouteJson } from "../../../lib/types";
 
 test("escape vias honor the explicit via-to-pad clearance", () => {
-  const requiredClearance = 0.1
-  const viaDiameter = 0.6
+  const requiredClearance = 0.1;
+  const viaDiameter = 0.6;
   const neighboringPads: Obstacle[] = [-0.2, 0.2].map((y) => ({
     obstacleId: `neighbor-${y}`,
     type: "rect",
@@ -14,7 +14,7 @@ test("escape vias honor the explicit via-to-pad clearance", () => {
     width: 0.65,
     height: 0.15,
     connectedTo: [`other-${y}`],
-  }))
+  }));
   const srj: SimpleRouteJson = {
     layerCount: 4,
     minTraceWidth: 0.15,
@@ -51,20 +51,20 @@ test("escape vias honor the explicit via-to-pad clearance", () => {
         pointsToConnect: [{ x: 0, y: 0, layer: "top", pointId: "source-pad" }],
       },
     ],
-  }
+  };
 
-  const solver = new EscapeViaLocationSolver(srj)
-  solver.solve()
+  const solver = new EscapeViaLocationSolver(srj);
+  solver.solve();
 
   const escapePoint = solver
     .getOutputSimpleRouteJson()
     .connections[0]?.pointsToConnect.find((point) =>
       point.pointId?.startsWith("escape-via:"),
-    )
+    );
 
-  expect(escapePoint).toBeDefined()
+  expect(escapePoint).toBeDefined();
   for (const pad of neighboringPads) {
-    const clearance = pointToBoxDistance(escapePoint!, pad) - viaDiameter / 2
-    expect(clearance).toBeGreaterThanOrEqual(requiredClearance - 1e-4)
+    const clearance = pointToBoxDistance(escapePoint!, pad) - viaDiameter / 2;
+    expect(clearance).toBeGreaterThanOrEqual(requiredClearance - 1e-4);
   }
-})
+});

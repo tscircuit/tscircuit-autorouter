@@ -3,47 +3,47 @@ import {
   doBoundsOverlap,
   getBoundFromCenteredRect,
   getBoundingBox,
-} from "@tscircuit/math-utils"
-import { BaseSolver } from "@tscircuit/solver-utils"
-import type { GraphicsObject } from "graphics-debug"
-import type { ComponentKind } from "lib/solvers/ComponentDetectionSolver/detectors/types"
+} from "@tscircuit/math-utils";
+import { BaseSolver } from "@tscircuit/solver-utils";
+import type { GraphicsObject } from "graphics-debug";
+import type { ComponentKind } from "lib/solvers/ComponentDetectionSolver/detectors/types";
 import {
   createComponentObstacleSrj,
   createReplacementObstacleForComponent,
   isObstacleInDetectedComponent,
-} from "lib/solvers/ComponentTopologyGeneratorSolver/ComponentTopologyGeneratorSolver"
-import type { DetectedComponent } from "lib/solvers/ComponentDetectionSolver/ComponentDetectionSolver"
+} from "lib/solvers/ComponentTopologyGeneratorSolver/ComponentTopologyGeneratorSolver";
+import type { DetectedComponent } from "lib/solvers/ComponentDetectionSolver/ComponentDetectionSolver";
 import {
   TopologyGenerator,
   type TopologyGeneratorSolver,
-} from "lib/solvers/TopologyPlanningSolver/TopologyGenerator"
-import type { CapacityMeshNode, Obstacle, SimpleRouteJson } from "lib/types"
-import { createRectFromCapacityNode } from "lib/utils/createRectFromCapacityNode"
-import { getBoundsForObstacles } from "lib/utils/getBoundsForObstacles"
-import "lib/solvers/BgaTopologyGeneratorSolver/BgaTopologyGeneratorSolver"
-import "lib/solvers/QfpThermalPadTopologyGeneratorSolver/QfpThermalPadTopologyGeneratorSolver"
-import "lib/solvers/QfpTopologyGeneratorSolver/QfpTopologyGeneratorSolver"
-import "lib/solvers/SoicTopologyGeneratorSolver/SoicTopologyGeneratorSolver"
+} from "lib/solvers/TopologyPlanningSolver/TopologyGenerator";
+import type { CapacityMeshNode, Obstacle, SimpleRouteJson } from "lib/types";
+import { createRectFromCapacityNode } from "lib/utils/createRectFromCapacityNode";
+import { getBoundsForObstacles } from "lib/utils/getBoundsForObstacles";
+import "lib/solvers/BgaTopologyGeneratorSolver/BgaTopologyGeneratorSolver";
+import "lib/solvers/QfpThermalPadTopologyGeneratorSolver/QfpThermalPadTopologyGeneratorSolver";
+import "lib/solvers/QfpTopologyGeneratorSolver/QfpTopologyGeneratorSolver";
+import "lib/solvers/SoicTopologyGeneratorSolver/SoicTopologyGeneratorSolver";
 import type {
   MultiGraphTopologyPlannerSolverParams,
   SerializedTopologyComponentInput,
-} from "./MultiGraphTopologyPlannerSolver"
+} from "./MultiGraphTopologyPlannerSolver";
 
 export interface NormalizedTopologyPlannerInput {
-  globalNoConnectionSrj: SimpleRouteJson
-  components: SerializedTopologyComponentInput[]
+  globalNoConnectionSrj: SimpleRouteJson;
+  components: SerializedTopologyComponentInput[];
 }
 
 export interface ComponentTopologyBatchSolverParams {
-  componentSrjs: SimpleRouteJson[]
-  componentIds: string[]
-  componentKinds: ComponentKind[]
-  viaDiameter?: number
-  obstacleMargin?: number
+  componentSrjs: SimpleRouteJson[];
+  componentIds: string[];
+  componentKinds: ComponentKind[];
+  viaDiameter?: number;
+  obstacleMargin?: number;
 }
 
 export interface ComponentTopologyBatchSolverOutput {
-  componentMeshNodes: CapacityMeshNode[][]
+  componentMeshNodes: CapacityMeshNode[][];
 }
 
 /**
@@ -61,10 +61,10 @@ export function createComponentSrj({
   inputSrj,
   component,
 }: {
-  inputSrj: SimpleRouteJson
-  component: SerializedTopologyComponentInput
+  inputSrj: SimpleRouteJson;
+  component: SerializedTopologyComponentInput;
 }): SimpleRouteJson {
-  const obstacleBounds = getBoundsForObstacles(component.memberObstacles)
+  const obstacleBounds = getBoundsForObstacles(component.memberObstacles);
   const localPointMargin = Math.max(
     inputSrj.minViaPadDiameter ??
       inputSrj.min_via_pad_diameter ??
@@ -72,27 +72,27 @@ export function createComponentSrj({
       0.3,
     inputSrj.defaultObstacleMargin ?? 0.15,
     inputSrj.minTraceWidth * 2,
-  )
+  );
   const memberConnectionIds = new Set(
     component.memberObstacles.flatMap((obstacle) => obstacle.connectedTo),
-  )
+  );
   const connectedPoints = inputSrj.connections.flatMap((connection) =>
     connection.pointsToConnect.filter((point) => {
       const pointIds = [point.pointId, point.pcb_port_id].filter(
         (pointId): pointId is string => typeof pointId === "string",
-      )
+      );
       const isConnectedToComponent = pointIds.some((pointId) =>
         memberConnectionIds.has(pointId),
-      )
+      );
       const isNearComponentBounds =
         point.x >= obstacleBounds.minX - localPointMargin &&
         point.x <= obstacleBounds.maxX + localPointMargin &&
         point.y >= obstacleBounds.minY - localPointMargin &&
-        point.y <= obstacleBounds.maxY + localPointMargin
+        point.y <= obstacleBounds.maxY + localPointMargin;
 
-      return isConnectedToComponent && isNearComponentBounds
+      return isConnectedToComponent && isNearComponentBounds;
     }),
-  )
+  );
   const componentBounds = connectedPoints.reduce(
     (bounds, point) => ({
       minX: Math.min(bounds.minX, point.x),
@@ -101,29 +101,29 @@ export function createComponentSrj({
       maxY: Math.max(bounds.maxY, point.y),
     }),
     obstacleBounds,
-  )
+  );
   const componentObstacles = inputSrj.obstacles
     .filter((obstacle) =>
       doBoundsOverlap(getBoundingBox(obstacle), componentBounds),
     )
-    .map((obstacle) => ({ ...obstacle }))
+    .map((obstacle) => ({ ...obstacle }));
 
   return {
     ...structuredClone(inputSrj),
     bounds: componentBounds,
     obstacles: componentObstacles,
-  }
+  };
 }
 
 /** Normalizes the supported input forms into the planner's internal representation. */
 export function normalizeInput(
   input: MultiGraphTopologyPlannerSolverParams,
 ): NormalizedTopologyPlannerInput {
-  const detectedComponents = input.componentDetectionOutput ?? []
+  const detectedComponents = input.componentDetectionOutput ?? [];
   const serializedDetectedComponents = serializeDetectedComponents({
     detectedComponents,
     inputSrj: input.inputSrj,
-  })
+  });
   const globalNoConnectionSrj =
     input.globalNoConnectionSrj ??
     (detectedComponents.length > 0
@@ -132,36 +132,36 @@ export function normalizeInput(
           inputSrj: input.inputSrj,
         })
       : input.inputSrj) ??
-    input.brokenSrj?.componentsAsObstaclesSrj
+    input.brokenSrj?.componentsAsObstaclesSrj;
   const components =
     input.components ??
     serializedDetectedComponents ??
     input.brokenSrj?.components ??
-    []
+    [];
 
   if (!globalNoConnectionSrj) {
     throw new Error(
       "MultiGraphTopologyPlannerSolver requires globalNoConnectionSrj or detected components",
-    )
+    );
   }
 
   return {
     globalNoConnectionSrj,
     components,
-  }
+  };
 }
 
 function serializeDetectedComponents({
   detectedComponents,
   inputSrj,
 }: {
-  detectedComponents: DetectedComponent[]
-  inputSrj: SimpleRouteJson
+  detectedComponents: DetectedComponent[];
+  inputSrj: SimpleRouteJson;
 }): SerializedTopologyComponentInput[] {
   return detectedComponents.map((detectedComponent) => {
     const memberObstacles = inputSrj.obstacles.filter((obstacle) =>
       isObstacleInDetectedComponent(obstacle, detectedComponent),
-    )
+    );
 
     return {
       componentId: detectedComponent.componentId,
@@ -176,8 +176,8 @@ function serializeDetectedComponents({
         detectedComponent,
         inputSrj,
       }),
-    }
-  })
+    };
+  });
 }
 
 /**
@@ -200,10 +200,10 @@ export function filterMeshNodesInsideComponentAreas({
   meshNodes,
   components,
 }: {
-  meshNodes: CapacityMeshNode[]
-  components: SerializedTopologyComponentInput[]
+  meshNodes: CapacityMeshNode[];
+  components: SerializedTopologyComponentInput[];
 }): CapacityMeshNode[] {
-  if (components.length === 0) return meshNodes
+  if (components.length === 0) return meshNodes;
 
   return meshNodes.filter(
     (meshNode) =>
@@ -213,10 +213,10 @@ export function filterMeshNodesInsideComponentAreas({
           obstacle: component.replacementObstacle,
         }),
       ),
-  )
+  );
 }
 
-type GraphicsRect = NonNullable<GraphicsObject["rects"]>[number]
+type GraphicsRect = NonNullable<GraphicsObject["rects"]>[number];
 
 /**
  * Removes RectDiff node rectangles from a graphics-debug visualization when
@@ -239,10 +239,10 @@ export function filterRectDiffNodeRectsInsideComponentAreas({
   rects,
   components,
 }: {
-  rects: GraphicsRect[] | undefined
-  components: SerializedTopologyComponentInput[]
+  rects: GraphicsRect[] | undefined;
+  components: SerializedTopologyComponentInput[];
 }): GraphicsRect[] | undefined {
-  if (!rects || components.length === 0) return rects
+  if (!rects || components.length === 0) return rects;
 
   return rects.filter(
     (rect) =>
@@ -253,7 +253,7 @@ export function filterRectDiffNodeRectsInsideComponentAreas({
           obstacle: component.replacementObstacle,
         }),
       ),
-  )
+  );
 }
 
 /**
@@ -267,7 +267,7 @@ export function filterRectDiffNodeRectsInsideComponentAreas({
  * component pads, obstacle overlays, or merged topology rectangles.
  */
 function isRectDiffNodeRect(rect: GraphicsRect) {
-  return typeof rect.label === "string" && rect.label.startsWith("node ")
+  return typeof rect.label === "string" && rect.label.startsWith("node ");
 }
 
 /**
@@ -285,8 +285,8 @@ function isMeshNodeFullyInsideObstacle({
   meshNode,
   obstacle,
 }: {
-  meshNode: CapacityMeshNode
-  obstacle: Obstacle
+  meshNode: CapacityMeshNode;
+  obstacle: Obstacle;
 }) {
   return isRectFullyInsideObstacle({
     rect: {
@@ -295,7 +295,7 @@ function isMeshNodeFullyInsideObstacle({
       height: meshNode.height,
     },
     obstacle,
-  })
+  });
 }
 
 /**
@@ -316,33 +316,33 @@ function isRectFullyInsideObstacle({
   obstacle,
 }: {
   rect: {
-    center?: { x: number; y: number }
-    width?: number
-    height?: number
-  }
-  obstacle: Obstacle
+    center?: { x: number; y: number };
+    width?: number;
+    height?: number;
+  };
+  obstacle: Obstacle;
 }) {
   if (!rect.center || rect.width === undefined || rect.height === undefined) {
-    return false
+    return false;
   }
 
-  const epsilon = 1e-9
+  const epsilon = 1e-9;
   const rectBounds = getBoundFromCenteredRect({
     center: rect.center,
     width: rect.width,
     height: rect.height,
-  })
+  });
   const obstacleBounds = getBoundFromCenteredRect({
     center: obstacle.center,
     width: obstacle.width,
     height: obstacle.height,
-  })
+  });
 
   return areBoundsInsideBounds({
     bounds: rectBounds,
     outerBounds: obstacleBounds,
     epsilon,
-  })
+  });
 }
 
 /**
@@ -363,64 +363,64 @@ export function areBoundsInsideBounds({
   outerBounds,
   epsilon,
 }: {
-  bounds: Bounds
-  outerBounds: Bounds
-  epsilon: number
+  bounds: Bounds;
+  outerBounds: Bounds;
+  epsilon: number;
 }): boolean {
   return (
     bounds.minX >= outerBounds.minX - epsilon &&
     bounds.maxX <= outerBounds.maxX + epsilon &&
     bounds.minY >= outerBounds.minY - epsilon &&
     bounds.maxY <= outerBounds.maxY + epsilon
-  )
+  );
 }
 
 /** Runs one component-local topology solve per component SRJ and collects the routing regions. */
 export class ComponentTopologyBatchSolver extends BaseSolver {
-  activeSubSolver: TopologyGeneratorSolver | null = null
-  currentIndex = 0
-  componentMeshNodes: CapacityMeshNode[][] = []
+  activeSubSolver: TopologyGeneratorSolver | null = null;
+  currentIndex = 0;
+  componentMeshNodes: CapacityMeshNode[][] = [];
 
   constructor(
     public readonly inputProblem: ComponentTopologyBatchSolverParams,
   ) {
-    super()
+    super();
   }
 
   override getConstructorParams() {
-    return [this.inputProblem] as const
+    return [this.inputProblem] as const;
   }
 
   /** Steps through component solves sequentially to keep solver state simple and explicit. */
   override _step() {
     if (this.activeSubSolver) {
-      this.activeSubSolver.step()
+      this.activeSubSolver.step();
 
       if (this.activeSubSolver.failed) {
-        this.error = this.activeSubSolver.error
-        this.failed = true
-        this.activeSubSolver = null
-        return
+        this.error = this.activeSubSolver.error;
+        this.failed = true;
+        this.activeSubSolver = null;
+        return;
       }
 
-      if (!this.activeSubSolver.solved) return
+      if (!this.activeSubSolver.solved) return;
 
       this.componentMeshNodes.push(
         this.activeSubSolver.getOutput().routingRegions,
-      )
-      this.currentIndex += 1
-      this.activeSubSolver = null
-      return
+      );
+      this.currentIndex += 1;
+      this.activeSubSolver = null;
+      return;
     }
 
     if (this.currentIndex >= this.inputProblem.componentSrjs.length) {
-      this.solved = true
-      return
+      this.solved = true;
+      return;
     }
 
-    const componentKind = this.inputProblem.componentKinds[this.currentIndex]!
-    const componentSrj = this.inputProblem.componentSrjs[this.currentIndex]!
-    const componentId = this.inputProblem.componentIds[this.currentIndex]!
+    const componentKind = this.inputProblem.componentKinds[this.currentIndex]!;
+    const componentSrj = this.inputProblem.componentSrjs[this.currentIndex]!;
+    const componentId = this.inputProblem.componentIds[this.currentIndex]!;
     const solverInput = {
       inputSrj: componentSrj,
       detectedComponent: {
@@ -433,28 +433,28 @@ export class ComponentTopologyBatchSolver extends BaseSolver {
       },
       viaDiameter: this.inputProblem.viaDiameter,
       obstacleMargin: this.inputProblem.obstacleMargin,
-    }
-    this.activeSubSolver = TopologyGenerator.create(solverInput)
+    };
+    this.activeSubSolver = TopologyGenerator.create(solverInput);
   }
 
   getOutput(): ComponentTopologyBatchSolverOutput {
     return {
       componentMeshNodes: this.componentMeshNodes,
-    }
+    };
   }
 
   override visualize(): GraphicsObject {
     if (this.activeSubSolver) {
-      return this.activeSubSolver.visualize()
+      return this.activeSubSolver.visualize();
     }
 
     const activeComponentSrj: SimpleRouteJson | null =
-      this.inputProblem.componentSrjs[this.currentIndex] ?? null
+      this.inputProblem.componentSrjs[this.currentIndex] ?? null;
     const completedMeshNodes: CapacityMeshNode[] =
       this.componentMeshNodes.flatMap(
         (componentMeshNodes: CapacityMeshNode[]): CapacityMeshNode[] =>
           componentMeshNodes,
-      )
+      );
 
     return {
       rects: [
@@ -502,6 +502,6 @@ export class ComponentTopologyBatchSolver extends BaseSolver {
             : "rgba(0,120,255,0.38)",
         })),
       ],
-    }
+    };
   }
 }

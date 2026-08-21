@@ -1,6 +1,6 @@
-import { expect, test } from "bun:test"
-import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
-import type { SimpleRouteJson, SimplifiedPcbTrace } from "lib/types"
+import { expect, test } from "bun:test";
+import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc";
+import type { SimpleRouteJson, SimplifiedPcbTrace } from "lib/types";
 
 test("relaxed DRC preserves original same-net connectivity for sibling pads", () => {
   const inputSrj: SimpleRouteJson = {
@@ -43,7 +43,7 @@ test("relaxed DRC preserves original same-net connectivity for sibling pads", ()
         ],
       },
     ],
-  }
+  };
   const srjWithPointPairs: SimpleRouteJson = {
     ...inputSrj,
     connections: [
@@ -56,7 +56,7 @@ test("relaxed DRC preserves original same-net connectivity for sibling pads", ()
         ],
       },
     ],
-  }
+  };
   const routedTrace: SimplifiedPcbTrace = {
     type: "pcb_trace",
     pcb_trace_id: "pcb_trace_net_mst1",
@@ -79,17 +79,17 @@ test("relaxed DRC preserves original same-net connectivity for sibling pads", ()
         end_pcb_port_id: "pcb_port_end",
       },
     ],
-  }
+  };
 
   const { errors } = evaluateRelaxedDrc({
     inputSrj,
     srjWithPointPairs,
     routedTraces: [routedTrace],
-  })
+  });
   const siblingPadContactErrors = errors.filter(
     (error) => "message" in error && error.message.includes("pcb_port_sibling"),
-  )
+  );
 
-  expect(siblingPadContactErrors).toHaveLength(0)
-  expect(errors).toHaveLength(0)
-})
+  expect(siblingPadContactErrors).toHaveLength(0);
+  expect(errors).toHaveLength(0);
+});

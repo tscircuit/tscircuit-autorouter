@@ -1,6 +1,6 @@
-import { expect, test } from "bun:test"
-import type { SimpleRouteJson } from "lib/types"
-import { addApproximatingRectsToSrj } from "lib/utils/addApproximatingRectsToSrj"
+import { expect, test } from "bun:test";
+import type { SimpleRouteJson } from "lib/types";
+import { addApproximatingRectsToSrj } from "lib/utils/addApproximatingRectsToSrj";
 
 test("rotated obstacle approximation does not change at high obstacle counts", () => {
   const createSrj = (obstacleCount: number): SimpleRouteJson => ({
@@ -19,17 +19,17 @@ test("rotated obstacle approximation does not change at high obstacle counts", (
       connectedTo: [`net_${index}`],
     })),
     connections: [],
-  })
+  });
 
-  const twentyObstacleResult = addApproximatingRectsToSrj(createSrj(20))
-  const twentyOneObstacleResult = addApproximatingRectsToSrj(createSrj(21))
+  const twentyObstacleResult = addApproximatingRectsToSrj(createSrj(20));
+  const twentyOneObstacleResult = addApproximatingRectsToSrj(createSrj(21));
   const twentyObstaclePad = twentyObstacleResult.obstacles.filter((obstacle) =>
     obstacle.obstacleId?.startsWith("rotated_pad_0"),
-  )
+  );
   const twentyOneObstaclePad = twentyOneObstacleResult.obstacles.filter(
     (obstacle) => obstacle.obstacleId?.startsWith("rotated_pad_0"),
-  )
+  );
 
-  expect(twentyObstaclePad.length).toBeGreaterThan(1)
-  expect(twentyOneObstaclePad).toEqual(twentyObstaclePad)
-})
+  expect(twentyObstaclePad.length).toBeGreaterThan(1);
+  expect(twentyOneObstaclePad).toEqual(twentyObstaclePad);
+});

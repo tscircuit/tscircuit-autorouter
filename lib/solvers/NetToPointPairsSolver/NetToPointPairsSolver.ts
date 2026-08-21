@@ -1,11 +1,11 @@
-import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
-import { GraphicsObject } from "graphics-debug"
-import { SimpleRouteConnection, SimpleRouteJson } from "lib/types"
-import { seededRandom } from "lib/utils/cloneAndShuffleArray"
-import { BaseSolver } from "../BaseSolver"
-import { buildMinimumSpanningTree } from "./buildMinimumSpanningTree"
-import { getInitiallyConnectedStateForConnection } from "./get-initially-connected-state-for-connection"
-import { mergeConnections } from "./mergeConnections"
+import type { ConnectivityMap } from "circuit-json-to-connectivity-map";
+import { GraphicsObject } from "graphics-debug";
+import { SimpleRouteConnection, SimpleRouteJson } from "lib/types";
+import { seededRandom } from "lib/utils/cloneAndShuffleArray";
+import { BaseSolver } from "../BaseSolver";
+import { buildMinimumSpanningTree } from "./buildMinimumSpanningTree";
+import { getInitiallyConnectedStateForConnection } from "./get-initially-connected-state-for-connection";
+import { mergeConnections } from "./mergeConnections";
 
 /**
  * Converts a net containing many points to connect into an array of point pair
@@ -22,59 +22,59 @@ import { mergeConnections } from "./mergeConnections"
  */
 export class NetToPointPairsSolver extends BaseSolver {
   override getSolverName(): string {
-    return "NetToPointPairsSolver"
+    return "NetToPointPairsSolver";
   }
 
-  unprocessedConnections: Array<SimpleRouteConnection>
-  newConnections: Array<SimpleRouteConnection>
-  readonly initiallyConnectedMap: ConnectivityMap
+  unprocessedConnections: Array<SimpleRouteConnection>;
+  newConnections: Array<SimpleRouteConnection>;
+  readonly initiallyConnectedMap: ConnectivityMap;
 
   constructor(
     public ogSrj: SimpleRouteJson,
     public colorMap: Record<string, string> = {},
     initiallyConnectedMap: ConnectivityMap,
   ) {
-    super()
-    this.unprocessedConnections = mergeConnections([...ogSrj.connections])
-    this.newConnections = []
-    this.initiallyConnectedMap = initiallyConnectedMap
+    super();
+    this.unprocessedConnections = mergeConnections([...ogSrj.connections]);
+    this.newConnections = [];
+    this.initiallyConnectedMap = initiallyConnectedMap;
   }
 
   _step() {
     if (this.unprocessedConnections.length === 0) {
-      this.solved = true
-      return
+      this.solved = true;
+      return;
     }
-    const connection = this.unprocessedConnections.pop()!
+    const connection = this.unprocessedConnections.pop()!;
 
     const { zeroWeightEdges, arePointsConnected } =
       getInitiallyConnectedStateForConnection(
         connection,
         this.initiallyConnectedMap,
-      )
+      );
 
     if (connection.pointsToConnect.length === 2) {
-      const [startPoint, endPoint] = connection.pointsToConnect
+      const [startPoint, endPoint] = connection.pointsToConnect;
       if (startPoint && endPoint && arePointsConnected(startPoint, endPoint)) {
-        return
+        return;
       }
       this.newConnections.push({
         ...connection,
         __rootConnectionNames: connection.__rootConnectionNames ?? [
           connection.name,
         ],
-      })
-      return
+      });
+      return;
     }
 
     const edges = buildMinimumSpanningTree(connection.pointsToConnect, {
       extraEdges: zeroWeightEdges,
-    })
+    });
 
-    let mstIdx = 0
+    let mstIdx = 0;
     for (const edge of edges) {
       if (arePointsConnected(edge.from, edge.to)) {
-        continue
+        continue;
       }
       this.newConnections.push({
         pointsToConnect: [edge.from, edge.to],
@@ -83,16 +83,16 @@ export class NetToPointPairsSolver extends BaseSolver {
           connection.name,
         ],
         __netConnectionName: connection.__netConnectionName,
-      })
+      });
     }
   }
 
   getNewSimpleRouteJson(): SimpleRouteJson {
-    const detachedSrj = structuredClone(this.ogSrj)
+    const detachedSrj = structuredClone(this.ogSrj);
     return {
       ...detachedSrj,
       connections: structuredClone(this.newConnections),
-    }
+    };
   }
 
   visualize(): GraphicsObject {
@@ -103,7 +103,7 @@ export class NetToPointPairsSolver extends BaseSolver {
       circles: [],
       coordinateSystem: "cartesian",
       title: "Net To Point Pairs Visualization",
-    }
+    };
 
     // Draw unprocessed connections in red
     this.unprocessedConnections.forEach((connection) => {
@@ -114,13 +114,13 @@ export class NetToPointPairsSolver extends BaseSolver {
           y: point.y,
           color: "red",
           label: point.pcb_port_id ?? point.pointId,
-        })
-      })
+        });
+      });
 
       // Draw lines connecting all points in the connection
-      const fullyConnectedEdgeCount = connection.pointsToConnect.length ** 2
-      const random = seededRandom(0)
-      const alreadyPlacedEdges = new Set<string>()
+      const fullyConnectedEdgeCount = connection.pointsToConnect.length ** 2;
+      const random = seededRandom(0);
+      const alreadyPlacedEdges = new Set<string>();
       for (
         let i = 0;
         i <
@@ -130,10 +130,10 @@ export class NetToPointPairsSolver extends BaseSolver {
         );
         i++
       ) {
-        const a = Math.floor(random() * connection.pointsToConnect.length)
-        const b = Math.floor(random() * connection.pointsToConnect.length)
-        if (alreadyPlacedEdges.has(`${a}-${b}`)) continue
-        alreadyPlacedEdges.add(`${a}-${b}`)
+        const a = Math.floor(random() * connection.pointsToConnect.length);
+        const b = Math.floor(random() * connection.pointsToConnect.length);
+        if (alreadyPlacedEdges.has(`${a}-${b}`)) continue;
+        alreadyPlacedEdges.add(`${a}-${b}`);
         graphics.lines!.push({
           points: [
             connection.pointsToConnect[a],
@@ -141,13 +141,13 @@ export class NetToPointPairsSolver extends BaseSolver {
           ],
           strokeColor: "rgba(255,0,0,0.25)",
           label: connection.name,
-        })
+        });
       }
-    })
+    });
 
     // Draw processed connections with appropriate colors
     this.newConnections.forEach((connection) => {
-      const color = this.colorMap?.[connection.name] || "blue"
+      const color = this.colorMap?.[connection.name] || "blue";
 
       // Draw points
       connection.pointsToConnect.forEach((point) => {
@@ -156,8 +156,8 @@ export class NetToPointPairsSolver extends BaseSolver {
           y: point.y,
           color: color,
           label: point.pcb_port_id ?? point.pointId,
-        })
-      })
+        });
+      });
 
       // Draw lines connecting all points in the connection
       for (let i = 0; i < connection.pointsToConnect.length - 1; i++) {
@@ -169,11 +169,11 @@ export class NetToPointPairsSolver extends BaseSolver {
             ],
             strokeColor: color,
             label: connection.name,
-          })
+          });
         }
       }
-    })
+    });
 
-    return graphics
+    return graphics;
   }
 }

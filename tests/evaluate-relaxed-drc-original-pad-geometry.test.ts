@@ -1,7 +1,7 @@
-import { expect, test } from "bun:test"
-import { convertCircuitJsonToPcbSvg } from "circuit-to-svg"
-import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
-import type { SimpleRouteJson, SimplifiedPcbTrace } from "lib/types"
+import { expect, test } from "bun:test";
+import { convertCircuitJsonToPcbSvg } from "circuit-to-svg";
+import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc";
+import type { SimpleRouteJson, SimplifiedPcbTrace } from "lib/types";
 
 test("relaxed DRC evaluates routed terminals against original pad geometry", () => {
   const inputSrj: SimpleRouteJson = {
@@ -45,7 +45,7 @@ test("relaxed DRC evaluates routed terminals against original pad geometry", () 
         ],
       },
     ],
-  }
+  };
   const srjWithPointPairs: SimpleRouteJson = {
     ...inputSrj,
     obstacles: inputSrj.obstacles.map((obstacle) => ({
@@ -58,7 +58,7 @@ test("relaxed DRC evaluates routed terminals against original pad geometry", () 
       height: 0.25,
       ccwRotationDegrees: undefined,
     })),
-  }
+  };
   const routedTrace: SimplifiedPcbTrace = {
     type: "pcb_trace",
     pcb_trace_id: "pcb_trace_trace",
@@ -81,22 +81,22 @@ test("relaxed DRC evaluates routed terminals against original pad geometry", () 
         end_pcb_port_id: "pcb_port_end",
       },
     ],
-  }
+  };
 
   const { circuitJson, errors } = evaluateRelaxedDrc({
     inputSrj,
     srjWithPointPairs,
     routedTraces: [routedTrace],
-  })
+  });
   const startPad = circuitJson.find(
     (element) =>
       element.type === "pcb_smtpad" &&
       element.pcb_smtpad_id === "pcb_smtpad_start",
-  )
+  );
   const missingConnectionErrors = errors.filter(
     (error) =>
       "message" in error && error.message.includes("missing a connection"),
-  )
+  );
 
   expect(startPad).toMatchObject({
     shape: "rotated_rect",
@@ -105,12 +105,12 @@ test("relaxed DRC evaluates routed terminals against original pad geometry", () 
     width: 0.25,
     height: 1.025,
     ccw_rotation: 45,
-  })
-  expect(missingConnectionErrors).toHaveLength(0)
+  });
+  expect(missingConnectionErrors).toHaveLength(0);
   expect(
     convertCircuitJsonToPcbSvg([...circuitJson, ...errors], {
       backgroundColor: "white",
       shouldDrawErrors: true,
     }),
-  ).toMatchSvgSnapshot(import.meta.path, { tolerance: 0 })
-})
+  ).toMatchSvgSnapshot(import.meta.path, { tolerance: 0 });
+});

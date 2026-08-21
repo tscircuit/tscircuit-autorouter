@@ -1,11 +1,11 @@
 #!/usr/bin/env bun
 
-import { type ChildProcessWithoutNullStreams, spawn } from "node:child_process"
-import { appendFile, readFile, writeFile } from "node:fs/promises"
-import * as os from "node:os"
-import * as path from "node:path"
-import * as readline from "node:readline"
-import type { SimpleRouteJson } from "../../lib/types/srj-types"
+import { type ChildProcessWithoutNullStreams, spawn } from "node:child_process";
+import { appendFile, readFile, writeFile } from "node:fs/promises";
+import * as os from "node:os";
+import * as path from "node:path";
+import * as readline from "node:readline";
+import type { SimpleRouteJson } from "../../lib/types/srj-types";
 import type {
   BenchmarkReport,
   BenchmarkSnapshot,
@@ -18,100 +18,100 @@ import type {
   WorkerResult,
   WorkerResultWithImage,
   WorkerTaskMessage,
-} from "./benchmark-types"
-import { extendPartialBenchmarkStageTiming } from "./benchmark-stage-timing"
+} from "./benchmark-types";
+import { extendPartialBenchmarkStageTiming } from "./benchmark-stage-timing";
 import {
   DATASET_OPTIONS_LABEL,
   type DatasetName,
   loadScenarios,
   parseDatasetName,
-} from "./scenarios"
+} from "./scenarios";
 
 type BenchmarkOptions = {
-  solverName?: string
-  scenarioLimit?: number
-  sampleNumbers?: number[]
-  concurrency: number
-  effort?: number
-  sampleTimeoutMs?: number
-  excludeAssignable: boolean
-  datasetName: DatasetName
-}
+  solverName?: string;
+  scenarioLimit?: number;
+  sampleNumbers?: number[];
+  concurrency: number;
+  effort?: number;
+  sampleTimeoutMs?: number;
+  excludeAssignable: boolean;
+  datasetName: DatasetName;
+};
 
 type WorkerTaskAssignment = {
-  request: WorkerTaskMessage
-  startedAtMs: number
-  timeout: ReturnType<typeof setTimeout>
-  latestProgress?: WorkerProgress
-}
+  request: WorkerTaskMessage;
+  startedAtMs: number;
+  timeout: ReturnType<typeof setTimeout>;
+  latestProgress?: WorkerProgress;
+};
 
 type WorkerSlot = {
-  id: number
-  child: ChildProcessWithoutNullStreams
-  stdoutReader: readline.Interface
-  stderrReader: readline.Interface
-  currentTask: WorkerTaskAssignment | null
-}
+  id: number;
+  child: ChildProcessWithoutNullStreams;
+  stdoutReader: readline.Interface;
+  stderrReader: readline.Interface;
+  currentTask: WorkerTaskAssignment | null;
+};
 
 type WorkerExecutionResult = {
-  result: WorkerResultWithImage
-  restartWorker: boolean
-}
+  result: WorkerResultWithImage;
+  restartWorker: boolean;
+};
 
 type BenchmarkSnapshotWriter = {
-  writeSnapshot: (snapshot: BenchmarkSnapshotWithImage) => Promise<void>
-  finish: () => Promise<void>
-}
+  writeSnapshot: (snapshot: BenchmarkSnapshotWithImage) => Promise<void>;
+  finish: () => Promise<void>;
+};
 
 type RunBenchmarkTasksOptions = {
-  onBenchmarkSnapshot?: (snapshot: BenchmarkSnapshotWithImage) => Promise<void>
-}
+  onBenchmarkSnapshot?: (snapshot: BenchmarkSnapshotWithImage) => Promise<void>;
+};
 
-const DEFAULT_TASK_TIMEOUT_BASE_MS = 300 * 1000
-const DEFAULT_TASK_TIMEOUT_PER_EFFORT_MS = 60 * 1000
-const DEFAULT_HEARTBEAT_INTERVAL_MS = 30 * 1000
-const DEFAULT_TERMINATE_TIMEOUT_MS = 5 * 1000
-const DEFAULT_BENCHMARK_SOLVER_NAME = "AutoroutingPipelineSolver7_MultiGraph"
-const BENCHMARK_SNAPSHOTS_HTML_PATH = "benchmark-snapshots.html"
+const DEFAULT_TASK_TIMEOUT_BASE_MS = 300 * 1000;
+const DEFAULT_TASK_TIMEOUT_PER_EFFORT_MS = 60 * 1000;
+const DEFAULT_HEARTBEAT_INTERVAL_MS = 30 * 1000;
+const DEFAULT_TERMINATE_TIMEOUT_MS = 5 * 1000;
+const DEFAULT_BENCHMARK_SOLVER_NAME = "AutoroutingPipelineSolver7_MultiGraph";
+const BENCHMARK_SNAPSHOTS_HTML_PATH = "benchmark-snapshots.html";
 
 const formatTime = (timeMs: number | null) => {
   if (timeMs === null) {
-    return "n/a"
+    return "n/a";
   }
-  return `${(timeMs / 1000).toFixed(1)}s`
-}
+  return `${(timeMs / 1000).toFixed(1)}s`;
+};
 
 const formatAverage = (value: number | null) => {
   if (value === null) {
-    return "n/a"
+    return "n/a";
   }
-  return value.toFixed(2)
-}
+  return value.toFixed(2);
+};
 
 const escapeHtml = (value: unknown): string =>
   String(value ?? "")
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
+    .replace(/"/g, "&quot;");
 
 export const sanitizeBenchmarkSnapshotSvg = (imageSvg: string): string => {
-  let sanitizedSvg = imageSvg.replace(/<script\b[\s\S]*?<\/script>/gi, "")
+  let sanitizedSvg = imageSvg.replace(/<script\b[\s\S]*?<\/script>/gi, "");
   // Keep the generated root background in the same user-space coordinates as
   // the circuit so changing the root viewBox pans and zooms them together.
-  const openingSvgTag = sanitizedSvg.match(/<svg\b[^>]*>/i)?.[0]
+  const openingSvgTag = sanitizedSvg.match(/<svg\b[^>]*>/i)?.[0];
   const viewBoxValues = openingSvgTag
     ?.match(/\bviewBox=["']([^"']+)["']/i)?.[1]
     ?.trim()
     .split(/[\s,]+/)
-    .map(Number)
+    .map(Number);
   const svgContentsStart = openingSvgTag
     ? sanitizedSvg.indexOf(openingSvgTag) + openingSvgTag.length
-    : -1
+    : -1;
   const rootBackgroundMatch =
     svgContentsStart >= 0
       ? sanitizedSvg.slice(svgContentsStart).match(/^(\s*)(<rect\b[^>]*\/?>)/i)
-      : null
+      : null;
 
   if (
     viewBoxValues?.length === 4 &&
@@ -120,39 +120,39 @@ export const sanitizeBenchmarkSnapshotSvg = (imageSvg: string): string => {
     /\bwidth=["']100%["']/i.test(rootBackgroundMatch[2]) &&
     /\bheight=["']100%["']/i.test(rootBackgroundMatch[2])
   ) {
-    const [x, y, width, height] = viewBoxValues
+    const [x, y, width, height] = viewBoxValues;
     const backgroundRectWithViewBoxBounds = rootBackgroundMatch[2]
       .replace(/\s+(?:x|y)=["'][^"']*["']/gi, "")
       .replace(/\bwidth=["']100%["']/i, `x="${x}" y="${y}" width="${width}"`)
-      .replace(/\bheight=["']100%["']/i, `height="${height}"`)
-    const backgroundStart = svgContentsStart + rootBackgroundMatch[1].length
+      .replace(/\bheight=["']100%["']/i, `height="${height}"`);
+    const backgroundStart = svgContentsStart + rootBackgroundMatch[1].length;
     sanitizedSvg =
       sanitizedSvg.slice(0, backgroundStart) +
       backgroundRectWithViewBoxBounds +
-      sanitizedSvg.slice(backgroundStart + rootBackgroundMatch[2].length)
+      sanitizedSvg.slice(backgroundStart + rootBackgroundMatch[2].length);
   }
   sanitizedSvg = sanitizedSvg.replace(
     /<g\b[^>]*\bid=["']crosshair["'][\s\S]*?<\/g>/gi,
     "",
-  )
+  );
   sanitizedSvg = sanitizedSvg.replace(
     /<g\b[^>]*>\s*<circle\b(?=[^>]*\bdata-type=["']point["'])[^>]*(?:\/>|>\s*<\/circle>)\s*<\/g>/gi,
     "",
-  )
+  );
   sanitizedSvg = sanitizedSvg.replace(
     /<text\b(?=[^>]*\bdata-label=["']Cursor["'])[\s\S]*?<\/text>/gi,
     "",
-  )
-  return sanitizedSvg
-}
+  );
+  return sanitizedSvg;
+};
 
 export const createSnapshotCardHtml = (
   snapshot: BenchmarkSnapshotWithImage,
   snapshotIndex: number,
 ): string => {
-  const snapshotLabel = escapeHtml(snapshot.label)
-  const snapshotDescriptionId = `snapshot-${snapshotIndex}-description`
-  const sanitizedImageSvg = sanitizeBenchmarkSnapshotSvg(snapshot.imageSvg)
+  const snapshotLabel = escapeHtml(snapshot.label);
+  const snapshotDescriptionId = `snapshot-${snapshotIndex}-description`;
+  const sanitizedImageSvg = sanitizeBenchmarkSnapshotSvg(snapshot.imageSvg);
 
   return `<section class="snapshot">
   <h2>${snapshotLabel}</h2>
@@ -176,8 +176,8 @@ export const createSnapshotCardHtml = (
     <div id="${snapshotDescriptionId}" class="sr-only">Scroll or use the plus and minus keys to zoom. After zooming, drag or use arrow keys to pan ${snapshotLabel}.</div>
     <div class="snapshot-image" data-viewer-viewport tabindex="0" role="img" aria-label="${snapshotLabel}" aria-describedby="${snapshotDescriptionId}">${sanitizedImageSvg}</div>
   </div>
-</section>`
-}
+</section>`;
+};
 
 const BENCHMARK_SNAPSHOTS_HTML_START = `<!doctype html>
 <html lang="en">
@@ -233,7 +233,7 @@ const BENCHMARK_SNAPSHOTS_HTML_START = `<!doctype html>
   <main id="benchmark-snapshots-main">
     <h1>Benchmark Snapshots</h1>
     <p>Final routed-output graphics from every solved benchmark sample. Images are embedded as inline SVG for crisp offline viewing at any zoom.</p>
-`
+`;
 
 const BENCHMARK_SNAPSHOTS_HTML_END = `  </main>
   <script>
@@ -535,140 +535,142 @@ const BENCHMARK_SNAPSHOTS_HTML_END = `  </main>
   </script>
 </body>
 </html>
-`
+`;
 
 export const createBenchmarkSnapshotWriter = async (
   htmlPath: string,
 ): Promise<BenchmarkSnapshotWriter> => {
-  let snapshotCount = 0
-  let pendingWrite = Promise.resolve()
+  let snapshotCount = 0;
+  let pendingWrite = Promise.resolve();
 
-  await writeFile(htmlPath, BENCHMARK_SNAPSHOTS_HTML_START)
+  await writeFile(htmlPath, BENCHMARK_SNAPSHOTS_HTML_START);
 
   return {
     writeSnapshot: async (snapshot) => {
-      snapshotCount += 1
-      const snapshotIndex = snapshotCount
+      snapshotCount += 1;
+      const snapshotIndex = snapshotCount;
       pendingWrite = pendingWrite.then(() =>
         appendFile(
           htmlPath,
           `${createSnapshotCardHtml(snapshot, snapshotIndex)}\n`,
         ),
-      )
-      await pendingWrite
+      );
+      await pendingWrite;
     },
     finish: async () => {
-      const htmlParts: string[] = []
+      const htmlParts: string[] = [];
       if (snapshotCount === 0) {
         htmlParts.push(
           `    <section class="empty"><p>No solved benchmark snapshots were produced for this run.</p></section>`,
-        )
+        );
       }
-      htmlParts.push(BENCHMARK_SNAPSHOTS_HTML_END)
+      htmlParts.push(BENCHMARK_SNAPSHOTS_HTML_END);
       pendingWrite = pendingWrite.then(() =>
         appendFile(htmlPath, `${htmlParts.join("\n")}\n`),
-      )
-      await pendingWrite
+      );
+      await pendingWrite;
     },
-  }
-}
+  };
+};
 
 const formatDurationLabel = (timeMs: number) => {
   if (timeMs < 1000) {
-    return `${timeMs}ms`
+    return `${timeMs}ms`;
   }
-  return formatTime(timeMs)
-}
+  return formatTime(timeMs);
+};
 
 const getTaskTimeoutPerEffortMs = () => {
   const rawTimeout =
     Bun.env.BENCHMARK_TASK_TIMEOUT_PER_EFFORT_MS?.trim() ??
-    Bun.env.BENCHMARK_TASK_TIMEOUT_MS?.trim()
+    Bun.env.BENCHMARK_TASK_TIMEOUT_MS?.trim();
   if (!rawTimeout) {
-    return DEFAULT_TASK_TIMEOUT_PER_EFFORT_MS
+    return DEFAULT_TASK_TIMEOUT_PER_EFFORT_MS;
   }
 
-  const parsedTimeout = Number.parseInt(rawTimeout, 10)
+  const parsedTimeout = Number.parseInt(rawTimeout, 10);
   if (!Number.isFinite(parsedTimeout) || parsedTimeout < 1) {
     throw new Error(
       "BENCHMARK_TASK_TIMEOUT_PER_EFFORT_MS must be a positive integer",
-    )
+    );
   }
 
-  return parsedTimeout
-}
+  return parsedTimeout;
+};
 
 const getHeartbeatIntervalMs = () => {
-  const rawInterval = Bun.env.BENCHMARK_HEARTBEAT_INTERVAL_MS?.trim()
+  const rawInterval = Bun.env.BENCHMARK_HEARTBEAT_INTERVAL_MS?.trim();
   if (!rawInterval) {
-    return DEFAULT_HEARTBEAT_INTERVAL_MS
+    return DEFAULT_HEARTBEAT_INTERVAL_MS;
   }
 
-  const parsedInterval = Number.parseInt(rawInterval, 10)
+  const parsedInterval = Number.parseInt(rawInterval, 10);
   if (!Number.isFinite(parsedInterval) || parsedInterval < 0) {
     throw new Error(
       "BENCHMARK_HEARTBEAT_INTERVAL_MS must be a non-negative integer",
-    )
+    );
   }
 
-  return parsedInterval
-}
+  return parsedInterval;
+};
 
 const getTerminateTimeoutMs = () => {
-  const rawTimeout = Bun.env.BENCHMARK_TERMINATE_TIMEOUT_MS?.trim()
+  const rawTimeout = Bun.env.BENCHMARK_TERMINATE_TIMEOUT_MS?.trim();
   if (!rawTimeout) {
-    return DEFAULT_TERMINATE_TIMEOUT_MS
+    return DEFAULT_TERMINATE_TIMEOUT_MS;
   }
 
-  const parsedTimeout = Number.parseInt(rawTimeout, 10)
+  const parsedTimeout = Number.parseInt(rawTimeout, 10);
   if (!Number.isFinite(parsedTimeout) || parsedTimeout < 1) {
-    throw new Error("BENCHMARK_TERMINATE_TIMEOUT_MS must be a positive integer")
+    throw new Error(
+      "BENCHMARK_TERMINATE_TIMEOUT_MS must be a positive integer",
+    );
   }
 
-  return parsedTimeout
-}
+  return parsedTimeout;
+};
 
 const getPercentileMs = (
   values: number[],
   percentile: number,
 ): number | null => {
   if (values.length === 0) {
-    return null
+    return null;
   }
 
-  const sorted = [...values].sort((a, b) => a - b)
-  const index = (sorted.length - 1) * percentile
-  const lower = Math.floor(index)
-  const upper = Math.ceil(index)
+  const sorted = [...values].sort((a, b) => a - b);
+  const index = (sorted.length - 1) * percentile;
+  const lower = Math.floor(index);
+  const upper = Math.ceil(index);
 
   if (lower === upper) {
-    return sorted[lower]
+    return sorted[lower];
   }
 
-  const weight = index - lower
-  return sorted[lower] + (sorted[upper] - sorted[lower]) * weight
-}
+  const weight = index - lower;
+  return sorted[lower] + (sorted[upper] - sorted[lower]) * weight;
+};
 
 const parseDurationArg = (rawValue: string, flagName: string) => {
-  const value = rawValue.trim()
-  const match = value.match(/^(\d+)(ms|s|m)?$/)
+  const value = rawValue.trim();
+  const match = value.match(/^(\d+)(ms|s|m)?$/);
   if (!match) {
     throw new Error(
       `${flagName} must be an integer with optional ms, s, or m suffix`,
-    )
+    );
   }
 
-  const amount = Number.parseInt(match[1], 10)
-  const unit = match[2] ?? "ms"
-  const multiplier = unit === "m" ? 60_000 : unit === "s" ? 1_000 : 1
+  const amount = Number.parseInt(match[1], 10);
+  const unit = match[2] ?? "ms";
+  const multiplier = unit === "m" ? 60_000 : unit === "s" ? 1_000 : 1;
 
-  return amount * multiplier
-}
+  return amount * multiplier;
+};
 
 const parseSampleNumbersArg = (rawValue: string) => {
   const sampleNumbers = rawValue
     .split(",")
-    .map((part) => Number.parseInt(part.trim(), 10))
+    .map((part) => Number.parseInt(part.trim(), 10));
 
   if (
     sampleNumbers.length === 0 ||
@@ -678,105 +680,107 @@ const parseSampleNumbersArg = (rawValue: string) => {
   ) {
     throw new Error(
       "--sample-numbers must be comma-separated positive integers",
-    )
+    );
   }
 
-  return sampleNumbers
-}
+  return sampleNumbers;
+};
 
 const parseArgs = (): BenchmarkOptions => {
-  const args = process.argv.slice(2)
+  const args = process.argv.slice(2);
   const defaultConcurrency =
     typeof os.availableParallelism === "function"
       ? os.availableParallelism()
-      : os.cpus().length
+      : os.cpus().length;
   const options: BenchmarkOptions = {
     concurrency: defaultConcurrency,
     excludeAssignable: false,
     datasetName: "dataset01",
-  }
+  };
 
   for (let i = 0; i < args.length; i += 1) {
-    const arg = args[i]
+    const arg = args[i];
     if (arg === "--solver") {
-      options.solverName = args[i + 1]
-      i += 1
-      continue
+      options.solverName = args[i + 1];
+      i += 1;
+      continue;
     }
     if (arg === "--scenario-limit") {
-      options.scenarioLimit = Number.parseInt(args[i + 1], 10)
-      i += 1
-      continue
+      options.scenarioLimit = Number.parseInt(args[i + 1], 10);
+      i += 1;
+      continue;
     }
     if (arg === "--concurrency") {
-      const rawConcurrency = args[i + 1]
+      const rawConcurrency = args[i + 1];
       options.concurrency =
         rawConcurrency === "auto"
           ? defaultConcurrency
-          : Number.parseInt(rawConcurrency, 10)
-      i += 1
-      continue
+          : Number.parseInt(rawConcurrency, 10);
+      i += 1;
+      continue;
     }
     if (arg === "--effort") {
-      options.effort = Number.parseInt(args[i + 1] ?? "", 10)
-      i += 1
-      continue
+      options.effort = Number.parseInt(args[i + 1] ?? "", 10);
+      i += 1;
+      continue;
     }
     if (arg === "--sample-timeout") {
       options.sampleTimeoutMs = parseDurationArg(
         args[i + 1] ?? "",
         "--sample-timeout",
-      )
-      i += 1
-      continue
+      );
+      i += 1;
+      continue;
     }
     if (arg === "--sample-numbers") {
-      options.sampleNumbers = parseSampleNumbersArg(args[i + 1] ?? "")
-      i += 1
-      continue
+      options.sampleNumbers = parseSampleNumbersArg(args[i + 1] ?? "");
+      i += 1;
+      continue;
     }
     if (arg === "--exclude-assignable") {
-      options.excludeAssignable = true
-      continue
+      options.excludeAssignable = true;
+      continue;
     }
     if (arg === "--dataset") {
-      const rawDatasetName = args[i + 1]
+      const rawDatasetName = args[i + 1];
       if (!rawDatasetName || rawDatasetName.startsWith("-")) {
-        throw new Error(`--dataset requires a value (${DATASET_OPTIONS_LABEL})`)
+        throw new Error(
+          `--dataset requires a value (${DATASET_OPTIONS_LABEL})`,
+        );
       }
-      const datasetName = parseDatasetName(rawDatasetName)
+      const datasetName = parseDatasetName(rawDatasetName);
       if (!datasetName) {
         throw new Error(
           `Unknown dataset "${rawDatasetName}". Available: ${DATASET_OPTIONS_LABEL}`,
-        )
+        );
       }
-      options.datasetName = datasetName
-      i += 1
-      continue
+      options.datasetName = datasetName;
+      i += 1;
+      continue;
     }
-    throw new Error(`Unknown argument: ${arg}`)
+    throw new Error(`Unknown argument: ${arg}`);
   }
 
   if (!Number.isFinite(options.concurrency) || options.concurrency < 1) {
-    throw new Error("--concurrency must be a positive integer")
+    throw new Error("--concurrency must be a positive integer");
   }
 
   if (
     options.scenarioLimit !== undefined &&
     (!Number.isFinite(options.scenarioLimit) || options.scenarioLimit < 1)
   ) {
-    throw new Error("--scenario-limit must be a positive integer")
+    throw new Error("--scenario-limit must be a positive integer");
   }
 
   if (
     options.effort !== undefined &&
     (!Number.isFinite(options.effort) || options.effort < 1)
   ) {
-    throw new Error("--effort must be a positive integer")
+    throw new Error("--effort must be a positive integer");
   }
 
-  return options
-}
+  return options;
+};
 
 const loadSolverNames = async (
   excludeAssignable: boolean,
@@ -787,48 +791,48 @@ const loadSolverNames = async (
     "lib",
     "autorouter-pipelines",
     "index.ts",
-  )
-  const pipelinesIndex = await readFile(pipelinesIndexPath, "utf8")
+  );
+  const pipelinesIndex = await readFile(pipelinesIndexPath, "utf8");
 
-  const pipelineNames = new Set<string>()
+  const pipelineNames = new Set<string>();
   for (const match of pipelinesIndex.matchAll(
     /export\s*\{([\s\S]*?)\}\s*from/g,
   )) {
     const exportEntries = match[1]
       .split(",")
       .map((entry) => entry.trim())
-      .filter(Boolean)
+      .filter(Boolean);
 
     for (const entry of exportEntries) {
-      const localName = entry.split(/\s+as\s+/)[0]?.trim()
+      const localName = entry.split(/\s+as\s+/)[0]?.trim();
       if (localName) {
-        pipelineNames.add(localName)
+        pipelineNames.add(localName);
       }
     }
   }
 
   // Resolve aliases from lib/index.ts (e.g. "X as Y")
-  const libIndexPath = path.join(process.cwd(), "lib", "index.ts")
-  const libIndex = await readFile(libIndexPath, "utf8")
+  const libIndexPath = path.join(process.cwd(), "lib", "index.ts");
+  const libIndex = await readFile(libIndexPath, "utf8");
 
   const solverNames = [...pipelineNames].flatMap((name) => {
     const aliasMatches = [
       ...libIndex.matchAll(new RegExp(`${name}\\s+as\\s+(\\w+)`, "g")),
-    ].map((match) => match[1])
+    ].map((match) => match[1]);
 
-    return [name, ...aliasMatches]
-  })
-  const uniqueSolverNames = [...new Set(solverNames)]
+    return [name, ...aliasMatches];
+  });
+  const uniqueSolverNames = [...new Set(solverNames)];
   if (!uniqueSolverNames.includes("KrtAutoroutingPipelineSolver")) {
-    uniqueSolverNames.push("KrtAutoroutingPipelineSolver")
+    uniqueSolverNames.push("KrtAutoroutingPipelineSolver");
   }
 
   if (!excludeAssignable) {
-    return uniqueSolverNames
+    return uniqueSolverNames;
   }
 
-  return uniqueSolverNames.filter((name) => !name.includes("Assignable"))
-}
+  return uniqueSolverNames.filter((name) => !name.includes("Assignable"));
+};
 
 const formatTable = (rows: SolverRunSummary[]) => {
   const headers = [
@@ -843,7 +847,7 @@ const formatTable = (rows: SolverRunSummary[]) => {
     "P90 Time",
     "P95 Time",
     "Avg Via",
-  ]
+  ];
 
   const body = rows.map((row) => [
     row.solverName,
@@ -857,30 +861,30 @@ const formatTable = (rows: SolverRunSummary[]) => {
     formatTime(row.p90TimeMs ?? null),
     formatTime(row.p95TimeMs),
     formatAverage(row.avgVia),
-  ])
+  ]);
 
   const widths = headers.map((header, columnIndex) => {
     const maxBodyWidth = Math.max(
       ...body.map((cells) => cells[columnIndex].length),
       0,
-    )
-    return Math.max(header.length, maxBodyWidth)
-  })
+    );
+    return Math.max(header.length, maxBodyWidth);
+  });
 
-  const separator = `+${widths.map((width) => "-".repeat(width + 2)).join("+")}+`
-  const headerLine = `| ${headers.map((header, i) => header.padEnd(widths[i])).join(" | ")} |`
+  const separator = `+${widths.map((width) => "-".repeat(width + 2)).join("+")}+`;
+  const headerLine = `| ${headers.map((header, i) => header.padEnd(widths[i])).join(" | ")} |`;
   const bodyLines = body.map(
     (cells) =>
       `| ${cells.map((cell, i) => cell.padEnd(widths[i])).join(" | ")} |`,
-  )
+  );
 
-  return [separator, headerLine, separator, ...bodyLines, separator].join("\n")
-}
+  return [separator, headerLine, separator, ...bodyLines, separator].join("\n");
+};
 
 const formatSampleNumbers = (sampleNumbers: number[]) => {
-  const shown = sampleNumbers.slice(0, 8).join(", ")
-  return sampleNumbers.length > 8 ? `${shown}, ...` : shown
-}
+  const shown = sampleNumbers.slice(0, 8).join(", ");
+  return sampleNumbers.length > 8 ? `${shown}, ...` : shown;
+};
 
 const getFailureKeyForResult = (result: WorkerResult) => {
   if (result.didTimeout) {
@@ -892,7 +896,7 @@ const getFailureKeyForResult = (result: WorkerResult) => {
           result.errorSolverName ?? "unknown solver",
         ].join(" / "),
       ],
-    }
+    };
   }
 
   if (!result.didSolve) {
@@ -905,52 +909,52 @@ const getFailureKeyForResult = (result: WorkerResult) => {
           result.error ?? "unknown error",
         ].join(" / "),
       ],
-    }
+    };
   }
 
   if (!result.relaxedDrcPassed) {
-    const drcErrorTypes = result.drcErrorTypes ?? {}
-    const failureKeys = Object.keys(drcErrorTypes)
+    const drcErrorTypes = result.drcErrorTypes ?? {};
+    const failureKeys = Object.keys(drcErrorTypes);
     return {
       failureKind: "relaxed DRC",
       failureKeys: failureKeys.length > 0 ? failureKeys : ["unknown DRC error"],
-    }
+    };
   }
 
-  return null
-}
+  return null;
+};
 
 const summarizeFailures = (results: WorkerResult[]): FailureSummary[] => {
   const buckets = new Map<
     string,
     {
-      failureKind: string
-      failureKey: string
-      occurrences: number
-      sampleNumbers: Set<number>
+      failureKind: string;
+      failureKey: string;
+      occurrences: number;
+      sampleNumbers: Set<number>;
     }
-  >()
+  >();
 
   for (const result of results) {
-    const failure = getFailureKeyForResult(result)
+    const failure = getFailureKeyForResult(result);
     if (!failure) {
-      continue
+      continue;
     }
 
     for (const failureKey of failure.failureKeys) {
-      const bucketKey = `${failure.failureKind}\0${failureKey}`
+      const bucketKey = `${failure.failureKind}\0${failureKey}`;
       const bucket = buckets.get(bucketKey) ?? {
         failureKind: failure.failureKind,
         failureKey,
         occurrences: 0,
         sampleNumbers: new Set<number>(),
-      }
-      bucket.sampleNumbers.add(result.sampleNumber)
+      };
+      bucket.sampleNumbers.add(result.sampleNumber);
       bucket.occurrences +=
         failure.failureKind === "relaxed DRC"
           ? (result.drcErrorTypes?.[failureKey] ?? 1)
-          : 1
-      buckets.set(bucketKey, bucket)
+          : 1;
+      buckets.set(bucketKey, bucket);
     }
   }
 
@@ -964,23 +968,23 @@ const summarizeFailures = (results: WorkerResult[]): FailureSummary[] => {
     }))
     .sort((a, b) => {
       if (b.affectedSamples !== a.affectedSamples) {
-        return b.affectedSamples - a.affectedSamples
+        return b.affectedSamples - a.affectedSamples;
       }
-      return b.occurrences - a.occurrences
-    })
-}
+      return b.occurrences - a.occurrences;
+    });
+};
 
 const summarizeSolverFailures = (results: WorkerResult[]): FailureSummary[] =>
   summarizeFailures(
     results.filter((result) => !result.didSolve && !result.didTimeout),
-  )
+  );
 
 const summarizeTimeouts = (results: WorkerResult[]): FailureSummary[] =>
-  summarizeFailures(results.filter((result) => result.didTimeout))
+  summarizeFailures(results.filter((result) => result.didTimeout));
 
 const formatFailureSummary = (failureSummary: FailureSummary[]) => {
   if (failureSummary.length === 0) {
-    return "No failures recorded."
+    return "No failures recorded.";
   }
 
   return failureSummary
@@ -989,20 +993,20 @@ const formatFailureSummary = (failureSummary: FailureSummary[]) => {
       (failure, index) =>
         `${index + 1}. ${failure.failureKind}: ${failure.failureKey} - ${failure.affectedSamples} sample${failure.affectedSamples === 1 ? "" : "s"}, ${failure.occurrences} occurrence${failure.occurrences === 1 ? "" : "s"} (samples: ${formatSampleNumbers(failure.sampleNumbers)})`,
     )
-    .join("\n")
-}
+    .join("\n");
+};
 
 const createChildProcess = () =>
   spawn(process.execPath, ["scripts/benchmark/benchmark.child.ts"], {
     cwd: process.cwd(),
     stdio: ["pipe", "pipe", "pipe"],
     env: process.env,
-  })
+  });
 
 const createWorkerSlot = (id: number): WorkerSlot => {
-  const child = createChildProcess()
-  child.stdout.setEncoding("utf8")
-  child.stderr.setEncoding("utf8")
+  const child = createChildProcess();
+  child.stdout.setEncoding("utf8");
+  child.stderr.setEncoding("utf8");
 
   return {
     id,
@@ -1016,57 +1020,57 @@ const createWorkerSlot = (id: number): WorkerSlot => {
       crlfDelay: Infinity,
     }),
     currentTask: null,
-  }
-}
+  };
+};
 
 const terminateWorker = async (slot: WorkerSlot, context: string) => {
-  const terminateTimeoutMs = getTerminateTimeoutMs()
+  const terminateTimeoutMs = getTerminateTimeoutMs();
   const closeInterfaces = () => {
-    slot.stdoutReader.close()
-    slot.stderrReader.close()
-  }
+    slot.stdoutReader.close();
+    slot.stderrReader.close();
+  };
 
   if (slot.child.killed || slot.child.exitCode !== null) {
-    closeInterfaces()
-    return
+    closeInterfaces();
+    return;
   }
 
   await new Promise<void>((resolve) => {
-    let settled = false
-    let timeoutHandle: ReturnType<typeof setTimeout> | null = null
+    let settled = false;
+    let timeoutHandle: ReturnType<typeof setTimeout> | null = null;
 
     const finish = () => {
       if (settled) {
-        return
+        return;
       }
-      settled = true
+      settled = true;
       if (timeoutHandle) {
-        clearTimeout(timeoutHandle)
+        clearTimeout(timeoutHandle);
       }
-      slot.child.removeListener("close", onClose)
-      closeInterfaces()
-      resolve()
-    }
+      slot.child.removeListener("close", onClose);
+      closeInterfaces();
+      resolve();
+    };
 
     const onClose = () => {
-      finish()
-    }
+      finish();
+    };
 
     timeoutHandle = setTimeout(() => {
       console.warn(
         `[benchmark] Child termination exceeded ${formatDurationLabel(terminateTimeoutMs)} while ${context}; continuing`,
-      )
-      finish()
-    }, terminateTimeoutMs)
+      );
+      finish();
+    }, terminateTimeoutMs);
 
-    slot.child.once("close", onClose)
+    slot.child.once("close", onClose);
     try {
-      slot.child.kill("SIGKILL")
+      slot.child.kill("SIGKILL");
     } catch {
-      finish()
+      finish();
     }
-  })
-}
+  });
+};
 
 const replaceWorker = async (slot: WorkerSlot) => {
   const previousWorker: WorkerSlot = {
@@ -1075,14 +1079,14 @@ const replaceWorker = async (slot: WorkerSlot) => {
     stdoutReader: slot.stdoutReader,
     stderrReader: slot.stderrReader,
     currentTask: slot.currentTask,
-  }
-  slot.currentTask = null
-  const nextWorker = createWorkerSlot(slot.id)
-  slot.child = nextWorker.child
-  slot.stdoutReader = nextWorker.stdoutReader
-  slot.stderrReader = nextWorker.stderrReader
-  await terminateWorker(previousWorker, `replacing worker ${slot.id}`)
-}
+  };
+  slot.currentTask = null;
+  const nextWorker = createWorkerSlot(slot.id);
+  slot.child = nextWorker.child;
+  slot.stdoutReader = nextWorker.stdoutReader;
+  slot.stderrReader = nextWorker.stderrReader;
+  await terminateWorker(previousWorker, `replacing worker ${slot.id}`);
+};
 
 export const createFailedResult = (
   task: BenchmarkTask,
@@ -1107,37 +1111,37 @@ export const createFailedResult = (
     progressElapsedTimeMs: latestProgress?.elapsedTimeMs,
     finalElapsedTimeMs: elapsedTimeMs,
   }),
-})
+});
 
 const getTaskEffort = (task: BenchmarkTask) => {
   const rawEffort = (task.scenario as SimpleRouteJson & { effort?: number })
-    .effort
+    .effort;
   if (!Number.isFinite(rawEffort) || rawEffort === undefined || rawEffort < 1) {
-    return 1
+    return 1;
   }
-  return rawEffort
-}
+  return rawEffort;
+};
 
 const getTaskTimeoutMs = (task: BenchmarkTask, sampleTimeoutMs?: number) => {
   if (sampleTimeoutMs !== undefined) {
-    return sampleTimeoutMs
+    return sampleTimeoutMs;
   }
 
-  const baseTimeoutMs = DEFAULT_TASK_TIMEOUT_BASE_MS
-  const effortTimeoutMs = getTaskTimeoutPerEffortMs()
-  return baseTimeoutMs + effortTimeoutMs * getTaskEffort(task)
-}
+  const baseTimeoutMs = DEFAULT_TASK_TIMEOUT_BASE_MS;
+  const effortTimeoutMs = getTaskTimeoutPerEffortMs();
+  return baseTimeoutMs + effortTimeoutMs * getTaskEffort(task);
+};
 
 const formatEffortLabel = (efforts: number[]) => {
-  const uniqueEfforts = [...new Set(efforts)].sort((a, b) => a - b)
+  const uniqueEfforts = [...new Set(efforts)].sort((a, b) => a - b);
   if (uniqueEfforts.length === 0) {
-    return "unknown effort"
+    return "unknown effort";
   }
   if (uniqueEfforts.length === 1) {
-    return `${uniqueEfforts[0]}x effort`
+    return `${uniqueEfforts[0]}x effort`;
   }
-  return "mixed effort"
-}
+  return "mixed effort";
+};
 
 const formatPercentWithTimeoutRate = (
   totalCount: number,
@@ -1145,21 +1149,21 @@ const formatPercentWithTimeoutRate = (
   timeoutCount: number,
 ) => {
   if (totalCount === 0) {
-    return "n/a"
+    return "n/a";
   }
 
-  const ratePercent = (matchedCount / totalCount) * 100
+  const ratePercent = (matchedCount / totalCount) * 100;
   if (timeoutCount === 0) {
-    return `${ratePercent.toFixed(1)}%`
+    return `${ratePercent.toFixed(1)}%`;
   }
 
-  const timeoutPercent = (timeoutCount / totalCount) * 100
-  return `${ratePercent.toFixed(1)}% (🕒${timeoutPercent.toFixed(1)}%)`
-}
+  const timeoutPercent = (timeoutCount / totalCount) * 100;
+  return `${ratePercent.toFixed(1)}% (🕒${timeoutPercent.toFixed(1)}%)`;
+};
 
 const formatProgressDetails = (progress?: WorkerProgress) => {
   if (!progress) {
-    return ""
+    return "";
   }
 
   const details = [
@@ -1177,10 +1181,10 @@ const formatProgressDetails = (progress?: WorkerProgress) => {
     Number.isFinite(progress.activeSubSolverProgress)
       ? `phaseProgress=${Math.round((progress.activeSubSolverProgress ?? 0) * 100)}%`
       : null,
-  ].filter(Boolean)
+  ].filter(Boolean);
 
-  return details.length > 0 ? `\nLast progress: ${details.join(", ")}` : ""
-}
+  return details.length > 0 ? `\nLast progress: ${details.join(", ")}` : "";
+};
 
 const executeTaskOnWorker = (
   slot: WorkerSlot,
@@ -1188,54 +1192,54 @@ const executeTaskOnWorker = (
   sampleTimeoutMs?: number,
 ): Promise<WorkerExecutionResult> => {
   return new Promise((resolve) => {
-    const taskTimeoutMs = getTaskTimeoutMs(request.task, sampleTimeoutMs)
-    const startedAtMs = performance.now()
-    let settled = false
+    const taskTimeoutMs = getTaskTimeoutMs(request.task, sampleTimeoutMs);
+    const startedAtMs = performance.now();
+    let settled = false;
 
     const finish = (result: WorkerResultWithImage, restartWorker: boolean) => {
       if (settled) {
-        return
+        return;
       }
-      settled = true
+      settled = true;
       if (slot.currentTask) {
-        clearTimeout(slot.currentTask.timeout)
-        slot.currentTask = null
+        clearTimeout(slot.currentTask.timeout);
+        slot.currentTask = null;
       }
-      slot.stdoutReader.removeListener("line", onLine)
-      slot.stderrReader.removeListener("line", onStderrLine)
-      slot.child.removeListener("error", onError)
-      slot.child.removeListener("exit", onExit)
-      resolve({ result, restartWorker })
-    }
+      slot.stdoutReader.removeListener("line", onLine);
+      slot.stderrReader.removeListener("line", onStderrLine);
+      slot.child.removeListener("error", onError);
+      slot.child.removeListener("exit", onExit);
+      resolve({ result, restartWorker });
+    };
 
     const getElapsedTimeMs = () =>
-      Math.max(0, Math.round(performance.now() - startedAtMs))
+      Math.max(0, Math.round(performance.now() - startedAtMs));
 
     const onLine = (line: string) => {
-      let message: WorkerChildMessage
+      let message: WorkerChildMessage;
       try {
-        message = JSON.parse(line) as WorkerChildMessage
+        message = JSON.parse(line) as WorkerChildMessage;
       } catch {
-        return
+        return;
       }
 
       if (message.taskId !== request.taskId) {
-        return
+        return;
       }
 
       if ("progress" in message) {
         if (slot.currentTask) {
-          slot.currentTask.latestProgress = message.progress
+          slot.currentTask.latestProgress = message.progress;
         }
-        return
+        return;
       }
 
-      finish(message.result, false)
-    }
+      finish(message.result, false);
+    };
 
     const onStderrLine = (line: string) => {
-      console.error(`[benchmark-child ${slot.id}] ${line}`)
-    }
+      console.error(`[benchmark-child ${slot.id}] ${line}`);
+    };
 
     const onError = (error: Error) => {
       finish(
@@ -1247,8 +1251,8 @@ const executeTaskOnWorker = (
           slot.currentTask?.latestProgress,
         ),
         true,
-      )
-    }
+      );
+    };
 
     const onExit = (code: number | null, signal: NodeJS.Signals | null) => {
       finish(
@@ -1260,11 +1264,11 @@ const executeTaskOnWorker = (
           slot.currentTask?.latestProgress,
         ),
         true,
-      )
-    }
+      );
+    };
 
     const timeout = setTimeout(() => {
-      const latestProgress = slot.currentTask?.latestProgress
+      const latestProgress = slot.currentTask?.latestProgress;
       finish(
         createFailedResult(
           request.task,
@@ -1274,22 +1278,22 @@ const executeTaskOnWorker = (
           latestProgress,
         ),
         true,
-      )
-    }, taskTimeoutMs)
+      );
+    }, taskTimeoutMs);
 
     slot.currentTask = {
       request,
       startedAtMs,
       timeout,
-    }
+    };
 
-    slot.stdoutReader.on("line", onLine)
-    slot.stderrReader.on("line", onStderrLine)
-    slot.child.once("error", onError)
-    slot.child.once("exit", onExit)
+    slot.stdoutReader.on("line", onLine);
+    slot.stderrReader.on("line", onStderrLine);
+    slot.child.once("error", onError);
+    slot.child.once("exit", onExit);
 
     try {
-      slot.child.stdin.write(`${JSON.stringify(request)}\n`)
+      slot.child.stdin.write(`${JSON.stringify(request)}\n`);
     } catch (error) {
       finish(
         createFailedResult(
@@ -1298,10 +1302,10 @@ const executeTaskOnWorker = (
           `Worker dispatch failed: ${error instanceof Error ? error.message : String(error)}`,
         ),
         true,
-      )
+      );
     }
-  })
-}
+  });
+};
 
 const runBenchmarkTasks = async (
   tasks: BenchmarkTask[],
@@ -1309,165 +1313,165 @@ const runBenchmarkTasks = async (
   sampleTimeoutMs?: number,
   options: RunBenchmarkTasksOptions = {},
 ) => {
-  const workerCount = Math.min(concurrency, tasks.length)
-  const heartbeatIntervalMs = getHeartbeatIntervalMs()
+  const workerCount = Math.min(concurrency, tasks.length);
+  const heartbeatIntervalMs = getHeartbeatIntervalMs();
   const queue = tasks.map((task, index) => ({
     taskId: index + 1,
     task,
-  }))
-  const results = new Array<WorkerResult>(queue.length)
-  let completedTaskCount = 0
+  }));
+  const results = new Array<WorkerResult>(queue.length);
+  let completedTaskCount = 0;
   const progress = new Map<
     string,
     {
-      completed: number
-      solved: number
-      total: number
+      completed: number;
+      solved: number;
+      total: number;
     }
-  >()
+  >();
 
   for (const task of tasks) {
-    const existing = progress.get(task.solverName)
+    const existing = progress.get(task.solverName);
     if (existing) {
-      existing.total += 1
-      continue
+      existing.total += 1;
+      continue;
     }
     progress.set(task.solverName, {
       completed: 0,
       solved: 0,
       total: 1,
-    })
+    });
   }
 
   const workers = Array.from({ length: workerCount }, (_, index) =>
     createWorkerSlot(index + 1),
-  )
+  );
 
   const logHeartbeat = () => {
     const activeWorkers = workers
       .filter((worker) => worker.currentTask)
       .map((worker) => {
-        const currentTask = worker.currentTask
+        const currentTask = worker.currentTask;
         if (!currentTask) {
-          return null
+          return null;
         }
 
         const elapsedTimeMs = Math.max(
           0,
           Math.round(performance.now() - currentTask.startedAtMs),
-        )
-        return `worker ${worker.id}: ${currentTask.request.task.scenarioName} ${formatDurationLabel(elapsedTimeMs)}`
+        );
+        return `worker ${worker.id}: ${currentTask.request.task.scenarioName} ${formatDurationLabel(elapsedTimeMs)}`;
       })
-      .filter(Boolean)
+      .filter(Boolean);
 
     console.log(
       `[benchmark] heartbeat ${completedTaskCount}/${tasks.length} complete, ${queue.length} queued, ${activeWorkers.length} running`,
-    )
+    );
 
     if (activeWorkers.length > 0) {
-      console.log(`[benchmark] active ${activeWorkers.join(" | ")}`)
+      console.log(`[benchmark] active ${activeWorkers.join(" | ")}`);
     }
-  }
+  };
 
   const heartbeat =
     heartbeatIntervalMs > 0
       ? setInterval(logHeartbeat, heartbeatIntervalMs)
-      : null
+      : null;
 
   const runWorkerLoop = async (slot: WorkerSlot) => {
     while (queue.length > 0) {
-      const request = queue.shift()
+      const request = queue.shift();
       if (!request) {
-        return
+        return;
       }
 
       const { result: workerResult, restartWorker } = await executeTaskOnWorker(
         slot,
         request,
         sampleTimeoutMs,
-      )
+      );
       if (workerResult.benchmarkSnapshot) {
-        await options.onBenchmarkSnapshot?.(workerResult.benchmarkSnapshot)
+        await options.onBenchmarkSnapshot?.(workerResult.benchmarkSnapshot);
       }
-      let result: WorkerResult = workerResult
+      let result: WorkerResult = workerResult;
       if (workerResult.benchmarkSnapshot) {
         const { imageSvg, ...benchmarkSnapshot } =
-          workerResult.benchmarkSnapshot
+          workerResult.benchmarkSnapshot;
         result = {
           ...workerResult,
           benchmarkSnapshot,
-        }
+        };
       }
-      results[request.taskId - 1] = result
-      completedTaskCount += 1
+      results[request.taskId - 1] = result;
+      completedTaskCount += 1;
 
-      const solverProgress = progress.get(result.solverName)
+      const solverProgress = progress.get(result.solverName);
       if (!solverProgress) {
-        throw new Error(`Missing progress tracker for ${result.solverName}`)
+        throw new Error(`Missing progress tracker for ${result.solverName}`);
       }
 
-      solverProgress.completed += 1
+      solverProgress.completed += 1;
       if (result.didSolve) {
-        solverProgress.solved += 1
+        solverProgress.solved += 1;
       }
 
       const status = result.didTimeout
         ? "timed out"
         : result.didSolve
           ? "solved"
-          : "failed"
+          : "failed";
       const successRate =
         solverProgress.completed === 0
           ? 0
-          : (solverProgress.solved / solverProgress.completed) * 100
-      const suffix = result.error ? ` (${result.error})` : ""
+          : (solverProgress.solved / solverProgress.completed) * 100;
+      const suffix = result.error ? ` (${result.error})` : "";
       console.log(
         `[${result.solverName}] ${successRate.toFixed(1)}% success (${solverProgress.solved}/${solverProgress.completed}) ${status} ${result.scenarioName} ${formatTime(result.elapsedTimeMs)}${suffix}`,
-      )
+      );
 
       if (restartWorker) {
         console.warn(
           `[benchmark] Restarting worker ${slot.id} after ${result.scenarioName}`,
-        )
-        await replaceWorker(slot)
+        );
+        await replaceWorker(slot);
       }
     }
-  }
+  };
 
   try {
-    await Promise.all(workers.map((worker) => runWorkerLoop(worker)))
+    await Promise.all(workers.map((worker) => runWorkerLoop(worker)));
   } finally {
     if (heartbeat) {
-      clearInterval(heartbeat)
+      clearInterval(heartbeat);
     }
     for (const worker of workers) {
-      await terminateWorker(worker, `shutting down worker ${worker.id}`)
+      await terminateWorker(worker, `shutting down worker ${worker.id}`);
     }
   }
 
-  return results
-}
+  return results;
+};
 
 export const summarizeSolverResults = (
   solverName: string,
   results: WorkerResult[],
 ): SolverRunSummary => {
-  const timedOut = results.filter((result) => result.didTimeout)
-  const succeeded = results.filter((result) => result.didSolve)
+  const timedOut = results.filter((result) => result.didTimeout);
+  const succeeded = results.filter((result) => result.didSolve);
   const elapsedForSolvedAndTimedOut = results
     .filter((result) => result.didSolve || result.didTimeout)
-    .map((result) => result.elapsedTimeMs)
+    .map((result) => result.elapsedTimeMs);
   const viaCounts = succeeded
     .map((result) => result.viaCount)
-    .filter((viaCount): viaCount is number => typeof viaCount === "number")
+    .filter((viaCount): viaCount is number => typeof viaCount === "number");
   const relaxedDrcPassed = succeeded.filter(
     (result) => result.relaxedDrcPassed,
-  ).length
+  ).length;
   const avgVia =
     viaCounts.length === 0
       ? null
       : viaCounts.reduce((sum, viaCount) => sum + viaCount, 0) /
-        viaCounts.length
+        viaCounts.length;
 
   return {
     solverName,
@@ -1489,8 +1493,8 @@ export const summarizeSolverResults = (
     p90TimeMs: getPercentileMs(elapsedForSolvedAndTimedOut, 0.9),
     p95TimeMs: getPercentileMs(elapsedForSolvedAndTimedOut, 0.95),
     avgVia,
-  } satisfies SolverRunSummary
-}
+  } satisfies SolverRunSummary;
+};
 
 const main = async () => {
   const {
@@ -1502,14 +1506,14 @@ const main = async () => {
     sampleTimeoutMs,
     excludeAssignable,
     datasetName,
-  } = parseArgs()
-  const availableSolvers = await loadSolverNames(excludeAssignable)
-  const solvers = solverName ? [solverName] : [DEFAULT_BENCHMARK_SOLVER_NAME]
+  } = parseArgs();
+  const availableSolvers = await loadSolverNames(excludeAssignable);
+  const solvers = solverName ? [solverName] : [DEFAULT_BENCHMARK_SOLVER_NAME];
 
   if (solverName && !availableSolvers.includes(solverName)) {
     throw new Error(
       `Unknown solver \"${solverName}\". Available: ${availableSolvers.join(", ")}`,
-    )
+    );
   }
   if (
     !solverName &&
@@ -1517,13 +1521,13 @@ const main = async () => {
   ) {
     throw new Error(
       `Default benchmark solver "${DEFAULT_BENCHMARK_SOLVER_NAME}" was not found. Available: ${availableSolvers.join(", ")}`,
-    )
+    );
   }
 
   const loadedScenarios = await loadScenarios(datasetName, {
     scenarioLimit,
     effort,
-  })
+  });
   const scenarios =
     sampleNumbers === undefined
       ? loadedScenarios.map(([scenarioName, scenario], scenarioIndex) => ({
@@ -1532,20 +1536,22 @@ const main = async () => {
           sampleNumber: scenarioIndex + 1,
         }))
       : sampleNumbers.map((sampleNumber) => {
-          const scenario = loadedScenarios[sampleNumber - 1]
+          const scenario = loadedScenarios[sampleNumber - 1];
           if (!scenario) {
             throw new Error(
               `Sample ${sampleNumber} is out of range for dataset ${datasetName} (${loadedScenarios.length} samples)`,
-            )
+            );
           }
           return {
             scenarioName: scenario[0],
             scenario: scenario[1],
             sampleNumber,
-          }
-        })
+          };
+        });
   if (scenarios.length === 0) {
-    throw new Error(`No benchmark scenarios found for dataset "${datasetName}"`)
+    throw new Error(
+      `No benchmark scenarios found for dataset "${datasetName}"`,
+    );
   }
 
   const tasks: BenchmarkTask[] = solvers.flatMap((solver) =>
@@ -1559,29 +1565,29 @@ const main = async () => {
           scenario,
         }) satisfies BenchmarkTask,
     ),
-  )
+  );
 
   console.log(
     `Running ${tasks.length} benchmark tasks across ${concurrency} workers (${solvers.length} solver${solvers.length === 1 ? "" : "s"}, ${scenarios.length} scenario${scenarios.length === 1 ? "" : "s"}, dataset: ${datasetName})`,
-  )
+  );
 
   const snapshotWriter = await createBenchmarkSnapshotWriter(
     BENCHMARK_SNAPSHOTS_HTML_PATH,
-  )
-  let results: WorkerResult[]
+  );
+  let results: WorkerResult[];
   try {
     results = await runBenchmarkTasks(tasks, concurrency, sampleTimeoutMs, {
       onBenchmarkSnapshot: snapshotWriter.writeSnapshot,
-    })
+    });
   } finally {
-    await snapshotWriter.finish()
+    await snapshotWriter.finish();
   }
   const rows = solvers.map((solver) =>
     summarizeSolverResults(
       solver,
       results.filter((result) => result.solverName === solver),
     ),
-  )
+  );
 
   const effortLabel = formatEffortLabel(
     scenarios.map(({ scenario }) =>
@@ -1593,18 +1599,18 @@ const main = async () => {
         scenario,
       }),
     ),
-  )
-  const table = formatTable(rows)
-  const solverFailureSummary = summarizeSolverFailures(results)
-  const solverFailureSummaryText = formatFailureSummary(solverFailureSummary)
-  const timeoutSummary = summarizeTimeouts(results)
-  const timeoutSummaryText = formatFailureSummary(timeoutSummary)
-  const failureSummary = summarizeFailures(results)
-  const failureSummaryText = formatFailureSummary(failureSummary)
+  );
+  const table = formatTable(rows);
+  const solverFailureSummary = summarizeSolverFailures(results);
+  const solverFailureSummaryText = formatFailureSummary(solverFailureSummary);
+  const timeoutSummary = summarizeTimeouts(results);
+  const timeoutSummaryText = formatFailureSummary(timeoutSummary);
+  const failureSummary = summarizeFailures(results);
+  const failureSummaryText = formatFailureSummary(failureSummary);
   const snapshots = results.flatMap((result): BenchmarkSnapshot[] =>
     result.benchmarkSnapshot ? [result.benchmarkSnapshot] : [],
-  )
-  const output: string = `Benchmark Results (${effortLabel})\n\n${table}\n\nDataset: ${datasetName}\nScenarios: ${scenarios.length}\n\nTop solver failure buckets:\n${solverFailureSummaryText}\n\nTop timeout buckets:\n${timeoutSummaryText}\n\nTop failure buckets:\n${failureSummaryText}\n`
+  );
+  const output: string = `Benchmark Results (${effortLabel})\n\n${table}\n\nDataset: ${datasetName}\nScenarios: ${scenarios.length}\n\nTop solver failure buckets:\n${solverFailureSummaryText}\n\nTop timeout buckets:\n${timeoutSummaryText}\n\nTop failure buckets:\n${failureSummaryText}\n`;
   const report: BenchmarkReport = {
     version: 1,
     datasetName,
@@ -1616,29 +1622,29 @@ const main = async () => {
     failureSummary,
     snapshots,
     tests: results,
-  }
-  await Bun.write("benchmark-result.txt", output)
-  await Bun.write("benchmark-result.json", JSON.stringify(report, null, 2))
+  };
+  await Bun.write("benchmark-result.txt", output);
+  await Bun.write("benchmark-result.json", JSON.stringify(report, null, 2));
 
-  console.log(`\nBenchmark Results (${effortLabel})\n`)
-  console.log(table)
-  console.log(`\nDataset: ${datasetName}`)
-  console.log(`\nScenarios: ${scenarios.length}`)
-  console.log("\nTop solver failure buckets:")
-  console.log(solverFailureSummaryText)
-  console.log("\nTop timeout buckets:")
-  console.log(timeoutSummaryText)
-  console.log("\nTop failure buckets:")
-  console.log(failureSummaryText)
+  console.log(`\nBenchmark Results (${effortLabel})\n`);
+  console.log(table);
+  console.log(`\nDataset: ${datasetName}`);
+  console.log(`\nScenarios: ${scenarios.length}`);
+  console.log("\nTop solver failure buckets:");
+  console.log(solverFailureSummaryText);
+  console.log("\nTop timeout buckets:");
+  console.log(timeoutSummaryText);
+  console.log("\nTop failure buckets:");
+  console.log(failureSummaryText);
   console.log(
     `Results written to benchmark-result.txt, benchmark-result.json, and ${BENCHMARK_SNAPSHOTS_HTML_PATH}`,
-  )
-}
+  );
+};
 
 if (import.meta.main) {
   main().catch((error) => {
-    const message = error instanceof Error ? error.message : String(error)
-    console.error(`Benchmark failed: ${message}`)
-    process.exit(1)
-  })
+    const message = error instanceof Error ? error.message : String(error);
+    console.error(`Benchmark failed: ${message}`);
+    process.exit(1);
+  });
 }

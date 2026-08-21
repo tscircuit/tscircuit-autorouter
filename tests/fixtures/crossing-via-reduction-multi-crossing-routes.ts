@@ -1,4 +1,4 @@
-import type { HighDensityRoute } from "lib/types/high-density-types"
+import type { HighDensityRoute } from "lib/types/high-density-types";
 
 export const createMultiRouteCrossing = (): HighDensityRoute[] => [
   {
@@ -42,7 +42,7 @@ export const createMultiRouteCrossing = (): HighDensityRoute[] => [
     ],
     vias: [{ x: 0, y: -1 }],
   },
-]
+];
 
 export const createSameRouteMultiSectionCrossing = (): HighDensityRoute[] => [
   createMultiRouteCrossing()[0],
@@ -69,4 +69,4 @@ export const createSameRouteMultiSectionCrossing = (): HighDensityRoute[] => [
       { x: 0, y: -1 },
     ],
   },
-]
+];

@@ -1,19 +1,19 @@
-import { ConnectivityMap } from "circuit-json-to-connectivity-map"
-import type { GraphicsObject } from "graphics-debug"
-import { cloneAndShuffleArray } from "lib/utils/cloneAndShuffleArray"
-import { getBoundsFromNodeWithPortPoints } from "lib/utils/getBoundsFromNodeWithPortPoints"
-import { getConnectionPortPointPairs } from "lib/utils/getConnectionPortPointPairs"
-import { getMinDistBetweenEnteringPoints } from "lib/utils/getMinDistBetweenEnteringPoints"
+import { ConnectivityMap } from "circuit-json-to-connectivity-map";
+import type { GraphicsObject } from "graphics-debug";
+import { cloneAndShuffleArray } from "lib/utils/cloneAndShuffleArray";
+import { getBoundsFromNodeWithPortPoints } from "lib/utils/getBoundsFromNodeWithPortPoints";
+import { getConnectionPortPointPairs } from "lib/utils/getConnectionPortPointPairs";
+import { getMinDistBetweenEnteringPoints } from "lib/utils/getMinDistBetweenEnteringPoints";
 import type {
   HighDensityIntraNodeRouteWithJumpers,
   Jumper,
   NodeWithPortPoints,
   PortPoint,
-} from "../../types/high-density-types"
-import { BaseSolver } from "../BaseSolver"
-import { safeTransparentize } from "../colors"
-import { HighDensityHyperParameters } from "./HighDensityHyperParameters"
-import { SingleHighDensityRouteWithJumpersSolver } from "./SingleHighDensityRouteWithJumpersSolver"
+} from "../../types/high-density-types";
+import { BaseSolver } from "../BaseSolver";
+import { safeTransparentize } from "../colors";
+import { HighDensityHyperParameters } from "./HighDensityHyperParameters";
+import { SingleHighDensityRouteWithJumpersSolver } from "./SingleHighDensityRouteWithJumpersSolver";
 
 /**
  * 0603 footprint dimensions in mm for visualization
@@ -23,7 +23,7 @@ const JUMPER_0603 = {
   width: 0.95,
   padLength: 0.8,
   padWidth: 0.95,
-}
+};
 
 const connectionLabel = (
   connectionName: string,
@@ -38,7 +38,7 @@ const connectionLabel = (
     ...extraLines,
   ]
     .filter(Boolean)
-    .join("\n")
+    .join("\n");
 
 /**
  * IntraNodeSolverWithJumpers is designed for single-layer nodes that use
@@ -50,67 +50,67 @@ const connectionLabel = (
  */
 export class IntraNodeSolverWithJumpers extends BaseSolver {
   override getSolverName(): string {
-    return "IntraNodeSolverWithJumpers"
+    return "IntraNodeSolverWithJumpers";
   }
 
-  nodeWithPortPoints: NodeWithPortPoints
-  colorMap: Record<string, string>
+  nodeWithPortPoints: NodeWithPortPoints;
+  colorMap: Record<string, string>;
   unsolvedConnections: {
-    connectionName: string
-    rootConnectionName?: string
-    points: { x: number; y: number; z: number }[]
-  }[]
+    connectionName: string;
+    rootConnectionName?: string;
+    points: { x: number; y: number; z: number }[];
+  }[];
 
-  totalConnections: number
-  solvedRoutes: HighDensityIntraNodeRouteWithJumpers[]
-  failedSubSolvers: SingleHighDensityRouteWithJumpersSolver[]
-  hyperParameters: Partial<HighDensityHyperParameters>
-  minDistBetweenEnteringPoints: number
-  traceWidth: number
+  totalConnections: number;
+  solvedRoutes: HighDensityIntraNodeRouteWithJumpers[];
+  failedSubSolvers: SingleHighDensityRouteWithJumpersSolver[];
+  hyperParameters: Partial<HighDensityHyperParameters>;
+  minDistBetweenEnteringPoints: number;
+  traceWidth: number;
 
-  activeSubSolver: SingleHighDensityRouteWithJumpersSolver | null = null
-  lastActiveSubSolver: SingleHighDensityRouteWithJumpersSolver | null = null
-  connMap?: ConnectivityMap
+  activeSubSolver: SingleHighDensityRouteWithJumpersSolver | null = null;
+  lastActiveSubSolver: SingleHighDensityRouteWithJumpersSolver | null = null;
+  connMap?: ConnectivityMap;
 
   // Legacy compat
   get failedSolvers() {
-    return this.failedSubSolvers
+    return this.failedSubSolvers;
   }
 
   // Legacy compat
   get activeSolver() {
-    return this.activeSubSolver
+    return this.activeSubSolver;
   }
 
   constructor(params: {
-    nodeWithPortPoints: NodeWithPortPoints
-    colorMap?: Record<string, string>
-    hyperParameters?: Partial<HighDensityHyperParameters>
-    connMap?: ConnectivityMap
-    traceWidth?: number
+    nodeWithPortPoints: NodeWithPortPoints;
+    colorMap?: Record<string, string>;
+    hyperParameters?: Partial<HighDensityHyperParameters>;
+    connMap?: ConnectivityMap;
+    traceWidth?: number;
   }) {
-    const { nodeWithPortPoints, colorMap } = params
-    super()
-    this.nodeWithPortPoints = nodeWithPortPoints
-    this.colorMap = colorMap ?? {}
-    this.solvedRoutes = []
-    this.hyperParameters = params.hyperParameters ?? {}
-    this.failedSubSolvers = []
-    this.connMap = params.connMap
-    this.traceWidth = params.traceWidth ?? 0.15
+    const { nodeWithPortPoints, colorMap } = params;
+    super();
+    this.nodeWithPortPoints = nodeWithPortPoints;
+    this.colorMap = colorMap ?? {};
+    this.solvedRoutes = [];
+    this.hyperParameters = params.hyperParameters ?? {};
+    this.failedSubSolvers = [];
+    this.connMap = params.connMap;
+    this.traceWidth = params.traceWidth ?? 0.15;
 
-    const portPointsByConnection = new Map<string, PortPoint[]>()
+    const portPointsByConnection = new Map<string, PortPoint[]>();
     for (const portPoint of nodeWithPortPoints.portPoints) {
       const existing =
-        portPointsByConnection.get(portPoint.connectionName) ?? []
-      existing.push(portPoint)
-      portPointsByConnection.set(portPoint.connectionName, existing)
+        portPointsByConnection.get(portPoint.connectionName) ?? [];
+      existing.push(portPoint);
+      portPointsByConnection.set(portPoint.connectionName, existing);
     }
 
-    this.unsolvedConnections = []
+    this.unsolvedConnections = [];
 
     for (const [connectionName, portPoints] of portPointsByConnection) {
-      const pointPairs = getConnectionPortPointPairs(portPoints)
+      const pointPairs = getConnectionPortPointPairs(portPoints);
       for (const [A, B] of pointPairs) {
         this.unsolvedConnections.push({
           connectionName,
@@ -119,16 +119,16 @@ export class IntraNodeSolverWithJumpers extends BaseSolver {
             { x: A.x, y: A.y, z: 0 },
             { x: B.x, y: B.y, z: 0 },
           ],
-        })
+        });
       }
 
       if (pointPairs.length === 0 && portPoints.length === 1) {
-        const [portPoint] = portPoints
+        const [portPoint] = portPoints;
         this.unsolvedConnections.push({
           connectionName,
           rootConnectionName: portPoint?.rootConnectionName,
           points: portPoint ? [{ x: portPoint.x, y: portPoint.y, z: 0 }] : [],
-        })
+        });
       }
     }
 
@@ -136,7 +136,7 @@ export class IntraNodeSolverWithJumpers extends BaseSolver {
       this.unsolvedConnections = cloneAndShuffleArray(
         this.unsolvedConnections,
         this.hyperParameters.SHUFFLE_SEED ?? 0,
-      )
+      );
 
       this.unsolvedConnections = this.unsolvedConnections.map(
         ({ points, ...rest }, i) => ({
@@ -146,15 +146,15 @@ export class IntraNodeSolverWithJumpers extends BaseSolver {
             i * 7117 + (this.hyperParameters.SHUFFLE_SEED ?? 0),
           ),
         }),
-      )
+      );
     }
 
-    this.totalConnections = this.unsolvedConnections.length
-    this.MAX_ITERATIONS = 1_000 * this.totalConnections ** 1.5
+    this.totalConnections = this.unsolvedConnections.length;
+    this.MAX_ITERATIONS = 1_000 * this.totalConnections ** 1.5;
 
     this.minDistBetweenEnteringPoints = getMinDistBetweenEnteringPoints(
       this.nodeWithPortPoints,
-    )
+    );
   }
 
   getConstructorParams() {
@@ -164,55 +164,55 @@ export class IntraNodeSolverWithJumpers extends BaseSolver {
       hyperParameters: this.hyperParameters,
       connMap: this.connMap,
       traceWidth: this.traceWidth,
-    }
+    };
   }
 
   computeProgress() {
     return (
       (this.solvedRoutes.length + (this.activeSubSolver?.progress || 0)) /
       this.totalConnections
-    )
+    );
   }
 
   _step() {
     if (this.activeSubSolver) {
-      this.activeSubSolver.step()
-      this.progress = this.computeProgress()
+      this.activeSubSolver.step();
+      this.progress = this.computeProgress();
       if (this.activeSubSolver.solved) {
-        this.solvedRoutes.push(this.activeSubSolver.solvedPath!)
-        this.lastActiveSubSolver = this.activeSubSolver
-        this.activeSubSolver = null
+        this.solvedRoutes.push(this.activeSubSolver.solvedPath!);
+        this.lastActiveSubSolver = this.activeSubSolver;
+        this.activeSubSolver = null;
       } else if (this.activeSubSolver.failed) {
-        this.failedSubSolvers.push(this.activeSubSolver)
-        this.lastActiveSubSolver = this.activeSubSolver
-        this.activeSubSolver = null
-        this.error = this.failedSubSolvers.map((s) => s.error).join("\n")
-        this.failed = true
+        this.failedSubSolvers.push(this.activeSubSolver);
+        this.lastActiveSubSolver = this.activeSubSolver;
+        this.activeSubSolver = null;
+        this.error = this.failedSubSolvers.map((s) => s.error).join("\n");
+        this.failed = true;
       }
-      return
+      return;
     }
 
-    const unsolvedConnection = this.unsolvedConnections.pop()
-    this.progress = this.computeProgress()
+    const unsolvedConnection = this.unsolvedConnections.pop();
+    this.progress = this.computeProgress();
     if (!unsolvedConnection) {
-      this.solved = this.failedSubSolvers.length === 0
-      return
+      this.solved = this.failedSubSolvers.length === 0;
+      return;
     }
     if (unsolvedConnection.points.length === 1) {
-      return
+      return;
     }
     if (unsolvedConnection.points.length === 2) {
-      const [A, B] = unsolvedConnection.points
-      const sameX = Math.abs(A.x - B.x) < 1e-6
-      const sameY = Math.abs(A.y - B.y) < 1e-6
+      const [A, B] = unsolvedConnection.points;
+      const sameX = Math.abs(A.x - B.x) < 1e-6;
+      const sameY = Math.abs(A.y - B.y) < 1e-6;
 
       if (sameX && sameY) {
         // Same point, nothing to route
-        return
+        return;
       }
     }
 
-    const { connectionName, rootConnectionName, points } = unsolvedConnection
+    const { connectionName, rootConnectionName, points } = unsolvedConnection;
     this.activeSubSolver = new SingleHighDensityRouteWithJumpersSolver({
       connectionName,
       rootConnectionName,
@@ -231,19 +231,19 @@ export class IntraNodeSolverWithJumpers extends BaseSolver {
           rootConnectionName &&
           sr.rootConnectionName === rootConnectionName
         ) {
-          return false
+          return false;
         }
         // Skip routes that are connected via connMap
         if (this.connMap?.areIdsConnected(sr.connectionName, connectionName)) {
-          return false
+          return false;
         }
-        return true
+        return true;
       }),
       futureConnections: this.unsolvedConnections,
       hyperParameters: this.hyperParameters,
       connMap: this.connMap,
       traceThickness: this.traceWidth,
-    })
+    });
   }
 
   /**
@@ -257,18 +257,18 @@ export class IntraNodeSolverWithJumpers extends BaseSolver {
     step?: number,
     label?: string,
   ) {
-    const dx = jumper.end.x - jumper.start.x
-    const dy = jumper.end.y - jumper.start.y
+    const dx = jumper.end.x - jumper.start.x;
+    const dy = jumper.end.y - jumper.start.y;
 
-    const padLength = JUMPER_0603.padLength
-    const padWidth = JUMPER_0603.padWidth
+    const padLength = JUMPER_0603.padLength;
+    const padWidth = JUMPER_0603.padWidth;
 
     // Determine if jumper is horizontal or vertical
     // Horizontal: dx != 0, dy ~= 0 -> pads are taller than wide (width=padLength, height=padWidth)
     // Vertical: dx ~= 0, dy != 0 -> pads are wider than tall (width=padWidth, height=padLength)
-    const isHorizontal = Math.abs(dx) > Math.abs(dy)
-    const rectWidth = isHorizontal ? padLength : padWidth
-    const rectHeight = isHorizontal ? padWidth : padLength
+    const isHorizontal = Math.abs(dx) > Math.abs(dy);
+    const rectWidth = isHorizontal ? padLength : padWidth;
+    const rectHeight = isHorizontal ? padWidth : padLength;
 
     // Start pad
     graphics.rects!.push({
@@ -282,7 +282,7 @@ export class IntraNodeSolverWithJumpers extends BaseSolver {
       stroke: "rgba(0, 0, 0, 0.5)",
       layer: "jumper",
       label,
-    })
+    });
 
     // End pad
     graphics.rects!.push({
@@ -296,7 +296,7 @@ export class IntraNodeSolverWithJumpers extends BaseSolver {
       stroke: "rgba(0, 0, 0, 0.5)",
       layer: "jumper",
       label,
-    })
+    });
 
     // Draw a line connecting the pads (representing the jumper body)
     graphics.lines!.push({
@@ -305,22 +305,22 @@ export class IntraNodeSolverWithJumpers extends BaseSolver {
       strokeWidth: padWidth * 0.3,
       layer: "jumper-body",
       label,
-    })
+    });
   }
 
   visualize(): GraphicsObject {
     if (this.activeSubSolver && !this.solved) {
-      return this.activeSubSolver.visualize()
+      return this.activeSubSolver.visualize();
     }
     if (this.failed && this.lastActiveSubSolver) {
-      return this.lastActiveSubSolver.visualize()
+      return this.lastActiveSubSolver.visualize();
     }
     const graphics: GraphicsObject = {
       lines: [],
       points: [],
       rects: [],
       circles: [],
-    }
+    };
 
     // Visualize input nodeWithPortPoints
     for (const pt of this.nodeWithPortPoints.portPoints) {
@@ -331,7 +331,7 @@ export class IntraNodeSolverWithJumpers extends BaseSolver {
           "layer: 0 (single-layer)",
         ]),
         color: this.colorMap[pt.connectionName] ?? "blue",
-      })
+      });
     }
 
     // Visualize solvedRoutes
@@ -340,14 +340,14 @@ export class IntraNodeSolverWithJumpers extends BaseSolver {
       routeIndex < this.solvedRoutes.length;
       routeIndex++
     ) {
-      const route = this.solvedRoutes[routeIndex]
+      const route = this.solvedRoutes[routeIndex];
       if (route.route.length > 0) {
-        const routeColor = this.colorMap[route.connectionName] ?? "blue"
+        const routeColor = this.colorMap[route.connectionName] ?? "blue";
 
         // Draw route segments between points
         for (let i = 0; i < route.route.length - 1; i++) {
-          const p1 = route.route[i]
-          const p2 = route.route[i + 1]
+          const p1 = route.route[i];
+          const p2 = route.route[i + 1];
 
           graphics.lines!.push({
             points: [p1, p2],
@@ -359,7 +359,7 @@ export class IntraNodeSolverWithJumpers extends BaseSolver {
               route.rootConnectionName,
               ["layer: 0"],
             ),
-          })
+          });
         }
 
         // Draw jumpers
@@ -372,14 +372,14 @@ export class IntraNodeSolverWithJumpers extends BaseSolver {
             connectionLabel(route.connectionName, route.rootConnectionName, [
               "jumper",
             ]),
-          )
+          );
         }
       }
     }
 
     // Draw border around the node
-    const bounds = getBoundsFromNodeWithPortPoints(this.nodeWithPortPoints)
-    const { minX, minY, maxX, maxY } = bounds
+    const bounds = getBoundsFromNodeWithPortPoints(this.nodeWithPortPoints);
+    const { minX, minY, maxX, maxY } = bounds;
 
     graphics.lines!.push({
       points: [
@@ -392,8 +392,8 @@ export class IntraNodeSolverWithJumpers extends BaseSolver {
       strokeColor: "rgba(255, 0, 0, 0.25)",
       strokeDash: "4 4",
       layer: "border",
-    })
+    });
 
-    return graphics
+    return graphics;
   }
 }

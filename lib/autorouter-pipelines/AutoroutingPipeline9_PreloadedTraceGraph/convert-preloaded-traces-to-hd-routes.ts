@@ -1,16 +1,16 @@
-import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
-import type { SimplifiedPcbTrace } from "lib/types"
-import type { HighDensityRoute } from "lib/types/high-density-types"
-import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
+import type { ConnectivityMap } from "circuit-json-to-connectivity-map";
+import type { SimplifiedPcbTrace } from "lib/types";
+import type { HighDensityRoute } from "lib/types/high-density-types";
+import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ";
 
-const MIN_ROUTE_DIMENSION = 1e-9
+const MIN_ROUTE_DIMENSION = 1e-9;
 
 export type PreloadedHighDensityRoute = HighDensityRoute & {
-  preloadedTraceIndex: number
-  preloadedRouteIndex: number
-  preloadedRoutePositionStart?: number
-  preloadedRoutePositionEnd?: number
-}
+  preloadedTraceIndex: number;
+  preloadedRouteIndex: number;
+  preloadedRoutePositionStart?: number;
+  preloadedRoutePositionEnd?: number;
+};
 
 export const convertPreloadedTraceToHdRoutes = (
   trace: SimplifiedPcbTrace,
@@ -20,8 +20,8 @@ export const convertPreloadedTraceToHdRoutes = (
   connMap: ConnectivityMap,
 ): PreloadedHighDensityRoute[] => {
   const rootConnectionName =
-    connMap.getNetConnectedToId(trace.connection_name) ?? trace.connection_name
-  const routes: PreloadedHighDensityRoute[] = []
+    connMap.getNetConnectedToId(trace.connection_name) ?? trace.connection_name;
+  const routes: PreloadedHighDensityRoute[] = [];
   const addRoute = (
     route: HighDensityRoute["route"],
     traceThickness: number,
@@ -30,7 +30,7 @@ export const convertPreloadedTraceToHdRoutes = (
     routePositionStart?: number,
     routePositionEnd?: number,
   ) => {
-    if (route.length < 2) return
+    if (route.length < 2) return;
     routes.push({
       connectionName: `${trace.connection_name}_fixed_${traceIndex}_${routes.length}`,
       rootConnectionName,
@@ -42,11 +42,11 @@ export const convertPreloadedTraceToHdRoutes = (
       viaDiameter: Math.max(MIN_ROUTE_DIMENSION, viaDiameter),
       route,
       vias,
-    })
-  }
+    });
+  };
 
   for (let pointIndex = 0; pointIndex < trace.route.length; pointIndex++) {
-    const point = trace.route[pointIndex]!
+    const point = trace.route[pointIndex]!;
     if (point.route_type === "via") {
       addRoute(
         [
@@ -66,13 +66,13 @@ export const convertPreloadedTraceToHdRoutes = (
         [{ x: point.x, y: point.y }],
         pointIndex,
         pointIndex,
-      )
-      continue
+      );
+      continue;
     }
 
     if (point.route_type === "through_obstacle") {
-      const fromZ = mapLayerNameToZ(point.from_layer, layerCount)
-      const toZ = mapLayerNameToZ(point.to_layer, layerCount)
+      const fromZ = mapLayerNameToZ(point.from_layer, layerCount);
+      const toZ = mapLayerNameToZ(point.to_layer, layerCount);
       for (let z = Math.min(fromZ, toZ); z <= Math.max(fromZ, toZ); z++) {
         addRoute(
           [
@@ -84,18 +84,18 @@ export const convertPreloadedTraceToHdRoutes = (
           [],
           pointIndex,
           pointIndex + 1,
-        )
+        );
       }
-      continue
+      continue;
     }
 
-    const nextPoint = trace.route[pointIndex + 1]
+    const nextPoint = trace.route[pointIndex + 1];
     if (
       point.route_type !== "wire" ||
       nextPoint?.route_type !== "wire" ||
       point.layer !== nextPoint.layer
     ) {
-      continue
+      continue;
     }
 
     addRoute(
@@ -116,8 +116,8 @@ export const convertPreloadedTraceToHdRoutes = (
       [],
       pointIndex,
       pointIndex + 1,
-    )
+    );
   }
 
-  return routes
-}
+  return routes;
+};

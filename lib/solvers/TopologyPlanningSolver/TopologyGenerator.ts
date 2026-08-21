@@ -1,28 +1,28 @@
-import type { BaseSolver } from "@tscircuit/solver-utils"
-import type { DetectedComponent } from "lib/solvers/ComponentDetectionSolver/ComponentDetectionSolver"
-import type { ComponentKind } from "lib/solvers/ComponentDetectionSolver/detectors/types"
-import type { CapacityMeshNode, Obstacle, SimpleRouteJson } from "lib/types"
+import type { BaseSolver } from "@tscircuit/solver-utils";
+import type { DetectedComponent } from "lib/solvers/ComponentDetectionSolver/ComponentDetectionSolver";
+import type { ComponentKind } from "lib/solvers/ComponentDetectionSolver/detectors/types";
+import type { CapacityMeshNode, Obstacle, SimpleRouteJson } from "lib/types";
 
 /** Shared input passed into each component-specific topology generator. */
 export interface TopologyGeneratorSolverParams {
-  inputSrj: SimpleRouteJson
-  detectedComponent: DetectedComponent
-  viaDiameter?: number
-  obstacleMargin?: number
+  inputSrj: SimpleRouteJson;
+  detectedComponent: DetectedComponent;
+  viaDiameter?: number;
+  obstacleMargin?: number;
 }
 
 /** Shared output collected from each component-specific topology generator. */
 export interface TopologyGeneratorSolverOutput {
-  routingRegions: CapacityMeshNode[]
+  routingRegions: CapacityMeshNode[];
 }
 
 export type TopologyGeneratorSolver = BaseSolver & {
-  getOutput(): TopologyGeneratorSolverOutput
-}
+  getOutput(): TopologyGeneratorSolverOutput;
+};
 
 export interface TopologyGeneratorClass {
-  readonly componentKind: ComponentKind
-  new (params: TopologyGeneratorSolverParams): TopologyGeneratorSolver
+  readonly componentKind: ComponentKind;
+  new (params: TopologyGeneratorSolverParams): TopologyGeneratorSolver;
 }
 
 // biome-ignore lint/complexity/noStaticOnlyClass: Registry API used by topology generator classes.
@@ -30,7 +30,7 @@ export class TopologyGenerator {
   private static readonly generators = new Map<
     ComponentKind,
     TopologyGeneratorClass
-  >()
+  >();
 
   /**
    * Registers the solver class that owns a specific component kind.
@@ -43,7 +43,7 @@ export class TopologyGenerator {
     TopologyGenerator.generators.set(
       generatorClass.componentKind,
       generatorClass,
-    )
+    );
   }
 
   /**
@@ -56,15 +56,15 @@ export class TopologyGenerator {
   static create(
     params: TopologyGeneratorSolverParams,
   ): TopologyGeneratorSolver {
-    const componentKind = params.detectedComponent.componentKind
-    const generatorClass = TopologyGenerator.generators.get(componentKind)
+    const componentKind = params.detectedComponent.componentKind;
+    const generatorClass = TopologyGenerator.generators.get(componentKind);
 
     if (!generatorClass) {
       throw new Error(
         `No topology generator registered for component kind "${componentKind}"`,
-      )
+      );
     }
 
-    return new generatorClass(params)
+    return new generatorClass(params);
   }
 }

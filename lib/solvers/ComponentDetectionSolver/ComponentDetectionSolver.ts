@@ -1,32 +1,35 @@
-import { BasePipelineSolver, definePipelineStep } from "@tscircuit/solver-utils"
-import type { BaseSolver, PipelineStep } from "@tscircuit/solver-utils"
-import type { GraphicsObject } from "graphics-debug"
-import { getStringColor, safeTransparentize } from "lib/solvers/colors"
-import type { Obstacle, SimpleRouteJson } from "lib/types"
-import type { ComponentKind } from "./detectors"
-import { RectBoundsComponentDetectionStage } from "./RectBoundsComponentDetectionStage"
+import {
+  BasePipelineSolver,
+  definePipelineStep,
+} from "@tscircuit/solver-utils";
+import type { BaseSolver, PipelineStep } from "@tscircuit/solver-utils";
+import type { GraphicsObject } from "graphics-debug";
+import { getStringColor, safeTransparentize } from "lib/solvers/colors";
+import type { Obstacle, SimpleRouteJson } from "lib/types";
+import type { ComponentKind } from "./detectors";
+import { RectBoundsComponentDetectionStage } from "./RectBoundsComponentDetectionStage";
 
 export interface ComponentDetectionSolverParams {
-  inputSrj: SimpleRouteJson
+  inputSrj: SimpleRouteJson;
 }
 
 export interface DetectedComponent {
-  componentId: string
-  componentKind: ComponentKind
+  componentId: string;
+  componentKind: ComponentKind;
   bounds: {
-    __type: "rect"
-  } & SimpleRouteJson["bounds"]
+    __type: "rect";
+  } & SimpleRouteJson["bounds"];
 }
 
-export type ComponentDetectionSolverOutput = DetectedComponent[]
+export type ComponentDetectionSolverOutput = DetectedComponent[];
 
 const formatObstacleLabel = (obstacle: Obstacle) => {
   if (obstacle.componentId && obstacle.obstacleId) {
-    return `${obstacle.componentId}\n${obstacle.obstacleId}`
+    return `${obstacle.componentId}\n${obstacle.obstacleId}`;
   }
 
-  return obstacle.componentId ?? obstacle.obstacleId ?? "obstacle"
-}
+  return obstacle.componentId ?? obstacle.obstacleId ?? "obstacle";
+};
 
 /**
  * Pipeline wrapper for component detection stages. The current pipeline only
@@ -34,7 +37,7 @@ const formatObstacleLabel = (obstacle: Obstacle) => {
  * inserted here without changing the external solver API.
  */
 export class ComponentDetectionSolver extends BasePipelineSolver<ComponentDetectionSolverParams> {
-  rectBoundsComponentDetection?: RectBoundsComponentDetectionStage
+  rectBoundsComponentDetection?: RectBoundsComponentDetectionStage;
   pipelineDef: PipelineStep<BaseSolver>[] = [
     definePipelineStep(
       "rectBoundsComponentDetection",
@@ -43,26 +46,26 @@ export class ComponentDetectionSolver extends BasePipelineSolver<ComponentDetect
         { inputSrj: instance.inputProblem.inputSrj },
       ],
     ),
-  ]
+  ];
 
   override getConstructorParams() {
-    return [this.inputProblem] as const
+    return [this.inputProblem] as const;
   }
 
   override getOutput(): ComponentDetectionSolverOutput {
     const output = this.getStageOutput<ComponentDetectionSolverOutput>(
       "rectBoundsComponentDetection",
-    )
+    );
 
     if (!output) {
-      throw new Error("ComponentDetectionSolver has not solved yet")
+      throw new Error("ComponentDetectionSolver has not solved yet");
     }
 
-    return output
+    return output;
   }
 
   override initialVisualize(): GraphicsObject | null {
-    const { bounds } = this.inputProblem.inputSrj
+    const { bounds } = this.inputProblem.inputSrj;
 
     return {
       title: "Component Detection: board and grouped component pads",
@@ -82,7 +85,7 @@ export class ComponentDetectionSolver extends BasePipelineSolver<ComponentDetect
         ...this.inputProblem.inputSrj.obstacles.map((obstacle) => {
           const componentColor = obstacle.componentId
             ? getStringColor(obstacle.componentId)
-            : null
+            : null;
 
           return {
             center: obstacle.center,
@@ -97,12 +100,12 @@ export class ComponentDetectionSolver extends BasePipelineSolver<ComponentDetect
             label: formatObstacleLabel(obstacle),
             layer: obstacle.layers.join(","),
             step: obstacle.componentId ? 1 : 0,
-          }
+          };
         }),
       ],
       lines: [],
       points: [],
       circles: [],
-    }
+    };
   }
 }

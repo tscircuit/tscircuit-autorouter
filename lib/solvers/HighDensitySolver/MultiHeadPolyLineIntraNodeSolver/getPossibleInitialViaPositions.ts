@@ -1,12 +1,12 @@
-import type { Bounds, Point } from "@tscircuit/math-utils"
-import { getCentroidsFromInnerBoxIntersections } from "./getCentroidsFromInnerBoxIntersections"
-import { generateBinaryCombinations } from "./generateBinaryCombinations"
-import { MHPoint } from "./types1"
+import type { Bounds, Point } from "@tscircuit/math-utils";
+import { getCentroidsFromInnerBoxIntersections } from "./getCentroidsFromInnerBoxIntersections";
+import { generateBinaryCombinations } from "./generateBinaryCombinations";
+import { MHPoint } from "./types1";
 
 type ViaPositionVariantForLinesViaCountVariant = {
-  viaPositions: Point[]
-  viaCountVariant: number[]
-}
+  viaPositions: Point[];
+  viaCountVariant: number[];
+};
 
 /**
  * Get the all possible via positions if you consider the centroids of shapes
@@ -22,34 +22,34 @@ export const getPossibleInitialViaPositions = (params: {
     [
       connectionName: string,
       {
-        start: Omit<MHPoint, "xMoves" | "yMoves">
-        end: Omit<MHPoint, "xMoves" | "yMoves">
+        start: Omit<MHPoint, "xMoves" | "yMoves">;
+        end: Omit<MHPoint, "xMoves" | "yMoves">;
       },
     ]
-  >
-  bounds: Bounds
-  viaCountVariants: Array<number[]>
+  >;
+  bounds: Bounds;
+  viaCountVariants: Array<number[]>;
 }): Array<ViaPositionVariantForLinesViaCountVariant> => {
-  const { bounds, portPairsEntries, viaCountVariants } = params
+  const { bounds, portPairsEntries, viaCountVariants } = params;
 
   const { centroids } = getCentroidsFromInnerBoxIntersections(
     bounds,
     portPairsEntries.map(([_, portPair]) => portPair),
-  )
+  );
 
-  const result: ViaPositionVariantForLinesViaCountVariant[] = []
+  const result: ViaPositionVariantForLinesViaCountVariant[] = [];
 
   for (const viaCountVariant of viaCountVariants) {
-    const viaCount = viaCountVariant.reduce((acc, count) => acc + count, 0)
+    const viaCount = viaCountVariant.reduce((acc, count) => acc + count, 0);
 
-    let viaPositionSource: Array<{ x: number; y: number }> = centroids
+    let viaPositionSource: Array<{ x: number; y: number }> = centroids;
 
     if (centroids.length < viaCount) {
       // There aren't enough centroids (might not be a very hard problem)
       // we can just space the vias evenly within the node
-      viaPositionSource = []
-      const rows = Math.ceil(Math.sqrt(viaCount))
-      const cols = rows
+      viaPositionSource = [];
+      const rows = Math.ceil(Math.sqrt(viaCount));
+      const cols = rows;
       for (let r = 0; r < rows; r++) {
         for (let c = 0; c < cols; c++) {
           viaPositionSource.push({
@@ -59,7 +59,7 @@ export const getPossibleInitialViaPositions = (params: {
             y:
               bounds.minY +
               ((r + 1) / (rows + 1)) * (bounds.maxY - bounds.minY),
-          })
+          });
         }
       }
     }
@@ -67,21 +67,21 @@ export const getPossibleInitialViaPositions = (params: {
     const viaPositionVariants = generateBinaryCombinations(
       viaCount,
       viaPositionSource.length,
-    )
+    );
 
     for (const viaPositionVariant of viaPositionVariants) {
-      const viaPositions: Point[] = []
+      const viaPositions: Point[] = [];
       for (let i = 0; i < viaPositionVariant.length; i++) {
         if (viaPositionVariant[i] === 1) {
-          viaPositions.push(viaPositionSource[i])
+          viaPositions.push(viaPositionSource[i]);
         }
       }
       result.push({
         viaPositions,
         viaCountVariant,
-      })
+      });
     }
   }
 
-  return result
-}
+  return result;
+};

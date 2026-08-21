@@ -1,5 +1,5 @@
-import { test, expect } from "bun:test"
-import { getPossibleInitialViaPositions } from "lib/solvers/HighDensitySolver/MultiHeadPolyLineIntraNodeSolver/getPossibleInitialViaPositions"
+import { test, expect } from "bun:test";
+import { getPossibleInitialViaPositions } from "lib/solvers/HighDensitySolver/MultiHeadPolyLineIntraNodeSolver/getPossibleInitialViaPositions";
 
 test("getPossibleInitialViaPositions1", () => {
   const possiblePositions = getPossibleInitialViaPositions({
@@ -29,7 +29,7 @@ test("getPossibleInitialViaPositions1", () => {
       [2, 0],
       [0, 2],
     ],
-  })
+  });
 
   expect(possiblePositions).toMatchInlineSnapshot(`
     [
@@ -226,5 +226,5 @@ test("getPossibleInitialViaPositions1", () => {
         ],
       },
     ]
-  `)
-})
+  `);
+});

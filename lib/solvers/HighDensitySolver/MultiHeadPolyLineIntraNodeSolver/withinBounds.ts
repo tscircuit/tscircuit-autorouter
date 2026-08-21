@@ -1,4 +1,4 @@
-import { MHPoint2 } from "./types2"
+import { MHPoint2 } from "./types2";
 
 export const withinBounds = (
   point: MHPoint2,
@@ -10,5 +10,5 @@ export const withinBounds = (
     point.x <= bounds.maxX - padding &&
     point.y >= bounds.minY + padding &&
     point.y <= bounds.maxY - padding
-  )
-}
+  );
+};

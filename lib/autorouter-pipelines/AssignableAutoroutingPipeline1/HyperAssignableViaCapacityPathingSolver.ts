@@ -1,29 +1,29 @@
-import { HyperParameterSupervisorSolver } from "lib/solvers/HyperParameterSupervisorSolver"
-import type { CapacityHyperParameters } from "lib/solvers/CapacityHyperParameters"
-import { AssignableViaCapacityPathingSolver_DirectiveSubOptimal } from "./AssignableViaCapacityPathing/AssignableViaCapacityPathingSolver_DirectiveSubOptimal"
+import { HyperParameterSupervisorSolver } from "lib/solvers/HyperParameterSupervisorSolver";
+import type { CapacityHyperParameters } from "lib/solvers/CapacityHyperParameters";
+import { AssignableViaCapacityPathingSolver_DirectiveSubOptimal } from "./AssignableViaCapacityPathing/AssignableViaCapacityPathingSolver_DirectiveSubOptimal";
 
 export type AssignableViaCapacityPathingParams = ConstructorParameters<
   typeof AssignableViaCapacityPathingSolver_DirectiveSubOptimal
->[0]
+>[0];
 
 type HyperParameterOverrides = Partial<CapacityHyperParameters> & {
-  TRACE_ORDERING_SEED?: number
-  LAYER_TRAVERSAL_REWARD?: number
-}
+  TRACE_ORDERING_SEED?: number;
+  LAYER_TRAVERSAL_REWARD?: number;
+};
 
 export class HyperAssignableViaCapacityPathingSolver extends HyperParameterSupervisorSolver<AssignableViaCapacityPathingSolver_DirectiveSubOptimal> {
   override getSolverName(): string {
-    return "HyperAssignableViaCapacityPathingSolver"
+    return "HyperAssignableViaCapacityPathingSolver";
   }
 
-  constructorParams: AssignableViaCapacityPathingParams
+  constructorParams: AssignableViaCapacityPathingParams;
 
   constructor(opts: AssignableViaCapacityPathingParams) {
-    super()
-    this.constructorParams = opts
-    this.MAX_ITERATIONS = opts.MAX_ITERATIONS ?? 120_000
-    this.MIN_SUBSTEPS = 5
-    this.GREEDY_MULTIPLIER = 1.35
+    super();
+    this.constructorParams = opts;
+    this.MAX_ITERATIONS = opts.MAX_ITERATIONS ?? 120_000;
+    this.MIN_SUBSTEPS = 5;
+    this.GREEDY_MULTIPLIER = 1.35;
   }
 
   getHyperParameterDefs() {
@@ -51,31 +51,31 @@ export class HyperAssignableViaCapacityPathingSolver extends HyperParameterSuper
           { FORCE_VIA_TRAVEL_CHANCE: 0.9 },
         ],
       },
-    ]
+    ];
   }
 
   computeG(solver: AssignableViaCapacityPathingSolver_DirectiveSubOptimal) {
     const totalConnections =
       solver.unprocessedConnectionPairs.length +
       solver.solvedRoutes.length +
-      (solver.activeConnectionPair ? 1 : 0)
-    const solvedConnections = solver.solvedRoutes.length
+      (solver.activeConnectionPair ? 1 : 0);
+    const solvedConnections = solver.solvedRoutes.length;
     const solvedRatio =
-      totalConnections > 0 ? solvedConnections / totalConnections : 0
+      totalConnections > 0 ? solvedConnections / totalConnections : 0;
 
-    return solver.iterations / solver.MAX_ITERATIONS + (1 - solvedRatio)
+    return solver.iterations / solver.MAX_ITERATIONS + (1 - solvedRatio);
   }
 
   computeH(solver: AssignableViaCapacityPathingSolver_DirectiveSubOptimal) {
     const totalConnections =
       solver.unprocessedConnectionPairs.length +
       solver.solvedRoutes.length +
-      (solver.activeConnectionPair ? 1 : 0)
-    const solvedConnections = solver.solvedRoutes.length
+      (solver.activeConnectionPair ? 1 : 0);
+    const solvedConnections = solver.solvedRoutes.length;
     const remainingRatio =
-      totalConnections > 0 ? 1 - solvedConnections / totalConnections : 0
+      totalConnections > 0 ? 1 - solvedConnections / totalConnections : 0;
 
-    return remainingRatio
+    return remainingRatio;
   }
 
   generateSolver(hyperParameters: HyperParameterOverrides) {
@@ -85,6 +85,6 @@ export class HyperAssignableViaCapacityPathingSolver extends HyperParameterSuper
         ...this.constructorParams.hyperParameters,
         ...hyperParameters,
       },
-    })
+    });
   }
 }

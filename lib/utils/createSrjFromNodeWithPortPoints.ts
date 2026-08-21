@@ -1,19 +1,19 @@
-import { SimpleRouteJson } from "lib/types"
-import { NodeWithPortPoints } from "lib/types/high-density-types"
-import { mapZToLayerName } from "./mapZToLayerName"
+import { SimpleRouteJson } from "lib/types";
+import { NodeWithPortPoints } from "lib/types/high-density-types";
+import { mapZToLayerName } from "./mapZToLayerName";
 
 export function createSrjFromNodeWithPortPoints(
   node: NodeWithPortPoints,
 ): SimpleRouteJson {
-  const { center, width, height, portPoints } = node
+  const { center, width, height, portPoints } = node;
 
   // Group port points by connection name
-  const connectionGroups = new Map<string, typeof portPoints>()
+  const connectionGroups = new Map<string, typeof portPoints>();
   for (const portPoint of portPoints) {
     if (!connectionGroups.has(portPoint.connectionName)) {
-      connectionGroups.set(portPoint.connectionName, [])
+      connectionGroups.set(portPoint.connectionName, []);
     }
-    connectionGroups.get(portPoint.connectionName)!.push(portPoint)
+    connectionGroups.get(portPoint.connectionName)!.push(portPoint);
   }
 
   // Create connections from grouped port points
@@ -26,7 +26,7 @@ export function createSrjFromNodeWithPortPoints(
         layer: mapZToLayerName(point.z, node.availableZ?.length ?? 2),
       })),
     }),
-  )
+  );
 
   return {
     layerCount: 2,
@@ -39,5 +39,5 @@ export function createSrjFromNodeWithPortPoints(
       minY: center.y - height / 2,
       maxY: center.y + height / 2,
     },
-  }
+  };
 }

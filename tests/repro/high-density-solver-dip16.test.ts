@@ -1,8 +1,8 @@
-import { expect, test } from "bun:test"
-import { getSvgFromGraphicsObject } from "graphics-debug"
-import { JumperHighDensitySolver } from "lib/autorouter-pipelines/AssignableAutoroutingPipeline2/JumperHighDensitySolver"
-import type { NodeWithPortPoints } from "lib/types/high-density-types"
-import { getLastStepSvg } from "../fixtures/getLastStepSvg"
+import { expect, test } from "bun:test";
+import { getSvgFromGraphicsObject } from "graphics-debug";
+import { JumperHighDensitySolver } from "lib/autorouter-pipelines/AssignableAutoroutingPipeline2/JumperHighDensitySolver";
+import type { NodeWithPortPoints } from "lib/types/high-density-types";
+import { getLastStepSvg } from "../fixtures/getLastStepSvg";
 
 const nodePortPoints: NodeWithPortPoints[] = [
   {
@@ -1637,7 +1637,7 @@ const nodePortPoints: NodeWithPortPoints[] = [
     ],
     availableZ: [0],
   },
-]
+];
 
 const colorMap = {
   connectivity_net7: "hsl(0, 100%, 50%)",
@@ -1656,7 +1656,7 @@ const colorMap = {
   source_trace_1: "hsl(225, 100%, 50%)",
   connectivity_net0: "hsl(262.5, 100%, 50%)",
   source_trace_0: "hsl(262.5, 100%, 50%)",
-}
+};
 
 test(
   "high density solver with dip16-crossing data",
@@ -1666,32 +1666,34 @@ test(
       colorMap,
       traceWidth: 0.15,
       viaDiameter: 0.6,
-    })
+    });
 
-    solver.solve()
+    solver.solve();
 
-    expect(solver.solved).toBe(true)
-    expect(solver.routes.length).toBe(70)
+    expect(solver.solved).toBe(true);
+    expect(solver.routes.length).toBe(70);
     // expect(solver.jumpers.length).toBeLessThanOrEqual(19)
 
     // Use getSvgFromGraphicsObject directly since the solver doesn't use step-based visualization
-    const visualization = solver.visualize()
+    const visualization = solver.visualize();
     const svgResult = getSvgFromGraphicsObject(visualization, {
       backgroundColor: "white",
-    })
+    });
 
-    expect(svgResult).toMatchSvgSnapshot(import.meta.path)
+    expect(svgResult).toMatchSvgSnapshot(import.meta.path);
 
     const hypergraphVisualization =
-      solver.jumperSolvers[0]?.winningSolver?.jumperGraphSolver?.visualize()
+      solver.jumperSolvers[0]?.winningSolver?.jumperGraphSolver?.visualize();
     if (hypergraphVisualization) {
       const hypergraphSvg = getSvgFromGraphicsObject(hypergraphVisualization, {
         backgroundColor: "white",
-      })
-      expect(hypergraphSvg).toMatchSvgSnapshot(`${import.meta.path}-hypergraph`)
+      });
+      expect(hypergraphSvg).toMatchSvgSnapshot(
+        `${import.meta.path}-hypergraph`,
+      );
     }
   },
   {
     timeout: 60_000,
   },
-)
+);

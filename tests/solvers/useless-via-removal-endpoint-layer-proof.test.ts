@@ -1,10 +1,10 @@
-import { expect, test } from "bun:test"
-import { HighDensityRouteSpatialIndex } from "lib/data-structures/HighDensityRouteSpatialIndex"
-import { ObstacleSpatialHashIndex } from "lib/data-structures/ObstacleTree"
-import { SingleRouteUselessViaRemovalSolver } from "lib/solvers/UselessViaRemovalSolver/SingleRouteUselessViaRemovalSolver"
-import type { HighDensityRoute } from "lib/types/high-density-types"
-import type { Obstacle } from "lib/types"
-import { ConnectivityMap } from "circuit-json-to-connectivity-map"
+import { expect, test } from "bun:test";
+import { HighDensityRouteSpatialIndex } from "lib/data-structures/HighDensityRouteSpatialIndex";
+import { ObstacleSpatialHashIndex } from "lib/data-structures/ObstacleTree";
+import { SingleRouteUselessViaRemovalSolver } from "lib/solvers/UselessViaRemovalSolver/SingleRouteUselessViaRemovalSolver";
+import type { HighDensityRoute } from "lib/types/high-density-types";
+import type { Obstacle } from "lib/types";
+import { ConnectivityMap } from "circuit-json-to-connectivity-map";
 
 const baseRoute: HighDensityRoute = {
   connectionName: "source_net_test",
@@ -18,7 +18,7 @@ const baseRoute: HighDensityRoute = {
     { x: 2, y: 0, z: 1 },
   ],
   vias: [{ x: 1, y: 0 }],
-}
+};
 
 const solveRoute = (route: HighDensityRoute, obstacles: Obstacle[] = []) => {
   const solver = new SingleRouteUselessViaRemovalSolver({
@@ -26,15 +26,15 @@ const solveRoute = (route: HighDensityRoute, obstacles: Obstacle[] = []) => {
     hdRouteSHI: new HighDensityRouteSpatialIndex([route]),
     unsimplifiedRoute: structuredClone(route),
     connMap: new ConnectivityMap({ net0: [route.connectionName] }),
-  })
+  });
 
-  solver.solve()
+  solver.solve();
 
-  expect(solver.failed).toBe(false)
-  expect(solver.solved).toBe(true)
+  expect(solver.failed).toBe(false);
+  expect(solver.solved).toBe(true);
 
-  return solver.getOptimizedHdRoute()
-}
+  return solver.getOptimizedHdRoute();
+};
 
 test("removes the first-section via when a connected endpoint obstacle supports both layers", () => {
   const multilayerEndpointObstacle: Obstacle = {
@@ -45,10 +45,10 @@ test("removes the first-section via when a connected endpoint obstacle supports 
     width: 0.4,
     height: 0.4,
     connectedTo: [baseRoute.connectionName],
-  }
+  };
 
-  const optimizedRoute = solveRoute(baseRoute, [multilayerEndpointObstacle])
+  const optimizedRoute = solveRoute(baseRoute, [multilayerEndpointObstacle]);
 
-  expect(optimizedRoute.vias).toHaveLength(0)
-  expect(optimizedRoute.route.every((point) => point.z === 1)).toBe(true)
-})
+  expect(optimizedRoute.vias).toHaveLength(0);
+  expect(optimizedRoute.route.every((point) => point.z === 1)).toBe(true);
+});

@@ -1,6 +1,6 @@
-import { expect, test } from "bun:test"
-import { convertToCircuitJson } from "lib/testing/utils/convertToCircuitJson"
-import type { SimpleRouteJson, SimplifiedPcbTrace } from "lib/types"
+import { expect, test } from "bun:test";
+import { convertToCircuitJson } from "lib/testing/utils/convertToCircuitJson";
+import type { SimpleRouteJson, SimplifiedPcbTrace } from "lib/types";
 
 test("obstacles use the nearest pcb_port_id instead of the first connected port", () => {
   const srj: SimpleRouteJson = {
@@ -69,7 +69,7 @@ test("obstacles use the nearest pcb_port_id instead of the first connected port"
         ],
       },
     ],
-  }
+  };
 
   const traces: SimplifiedPcbTrace[] = [
     {
@@ -90,11 +90,11 @@ test("obstacles use the nearest pcb_port_id instead of the first connected port"
         { route_type: "wire", x: 2, y: 2, width: 0.15, layer: "top" },
       ],
     },
-  ]
+  ];
 
   const circuitJson = convertToCircuitJson(srj, traces, {
     minTraceWidth: srj.minTraceWidth,
-  })
+  });
   const smtPads = circuitJson.filter(
     (
       element,
@@ -102,15 +102,15 @@ test("obstacles use the nearest pcb_port_id instead of the first connected port"
       (typeof circuitJson)[number],
       { type: "pcb_smtpad" }
     > => element.type === "pcb_smtpad",
-  )
+  );
 
-  expect(smtPads).toHaveLength(3)
+  expect(smtPads).toHaveLength(3);
   expect(smtPads.map((pad) => pad.pcb_port_id)).toEqual([
     "pcb_port_0",
     "pcb_port_1",
     "pcb_port_2",
-  ])
-})
+  ]);
+});
 
 test("uses original SRJ obstacle rotation when creating circuit-json pads", () => {
   const originalSrj: SimpleRouteJson = {
@@ -141,7 +141,7 @@ test("uses original SRJ obstacle rotation when creating circuit-json pads", () =
         ],
       },
     ],
-  }
+  };
   const srjWithApproximatedObstacle: SimpleRouteJson = {
     ...originalSrj,
     obstacles: [
@@ -154,7 +154,7 @@ test("uses original SRJ obstacle rotation when creating circuit-json pads", () =
         connectedTo: ["pcb_smtpad_0", "pcb_port_0"],
       },
     ],
-  }
+  };
   const traces: SimplifiedPcbTrace[] = [
     {
       type: "pcb_trace",
@@ -165,7 +165,7 @@ test("uses original SRJ obstacle rotation when creating circuit-json pads", () =
         { route_type: "wire", x: 1, y: 1, width: 0.1, layer: "top" },
       ],
     },
-  ]
+  ];
 
   const circuitJson = convertToCircuitJson(
     srjWithApproximatedObstacle,
@@ -174,7 +174,7 @@ test("uses original SRJ obstacle rotation when creating circuit-json pads", () =
       minTraceWidth: originalSrj.minTraceWidth,
       originalSrj,
     },
-  )
+  );
   const pad = circuitJson.find(
     (
       element,
@@ -182,12 +182,12 @@ test("uses original SRJ obstacle rotation when creating circuit-json pads", () =
       (typeof circuitJson)[number],
       { type: "pcb_smtpad" }
     > => element.type === "pcb_smtpad",
-  )
+  );
 
   expect(pad).toMatchObject({
     type: "pcb_smtpad",
     pcb_smtpad_id: "pcb_smtpad_0",
     shape: "rotated_rect",
     ccw_rotation: 45,
-  })
-})
+  });
+});

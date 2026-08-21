@@ -7,14 +7,14 @@
 export function generateBinaryCombinations(oneCount: number, length: number) {
   // Validate inputs
   if (oneCount > length) {
-    throw new Error("oneCount cannot be greater than length")
+    throw new Error("oneCount cannot be greater than length");
   }
 
   if (oneCount < 0 || length < 0) {
-    throw new Error("oneCount and length must be non-negative")
+    throw new Error("oneCount and length must be non-negative");
   }
 
-  const result: number[][] = []
+  const result: number[][] = [];
 
   // Helper function to generate combinations recursively
   function generateCombinations(
@@ -26,24 +26,24 @@ export function generateBinaryCombinations(oneCount: number, length: number) {
     if (position === length) {
       // If we've used exactly the required number of 1s, add this combination to the result
       if (onesLeft === 0) {
-        result.push([...current])
+        result.push([...current]);
       }
-      return
+      return;
     }
 
     // Option 1: Place a 0 at the current position
-    current[position] = 0
-    generateCombinations(current, onesLeft, position + 1)
+    current[position] = 0;
+    generateCombinations(current, onesLeft, position + 1);
 
     // Option 2: Place a 1 at the current position (if we still have 1s to place)
     if (onesLeft > 0) {
-      current[position] = 1
-      generateCombinations(current, onesLeft - 1, position + 1)
+      current[position] = 1;
+      generateCombinations(current, onesLeft - 1, position + 1);
     }
   }
 
   // Start recursive generation with an empty array
-  generateCombinations(Array(length).fill(0), oneCount, 0)
+  generateCombinations(Array(length).fill(0), oneCount, 0);
 
-  return result
+  return result;
 }

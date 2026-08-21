@@ -1,6 +1,6 @@
-import { expect, test } from "bun:test"
-import { PreprocessSimpleRouteJsonSolver } from "lib/autorouter-pipelines/AutoroutingPipeline4_TinyHypergraph/PreprocessSimpleRouteJsonSolver"
-import type { SimpleRouteJson } from "lib"
+import { expect, test } from "bun:test";
+import { PreprocessSimpleRouteJsonSolver } from "lib/autorouter-pipelines/AutoroutingPipeline4_TinyHypergraph/PreprocessSimpleRouteJsonSolver";
+import type { SimpleRouteJson } from "lib";
 
 test("preserves SimpleRouteJson bus metadata during preprocessing", () => {
   const srj: SimpleRouteJson = {
@@ -41,13 +41,13 @@ test("preserves SimpleRouteJson bus metadata during preprocessing", () => {
       },
     ],
     bounds: { minX: -2, minY: -2, maxX: 2, maxY: 2 },
-  }
-  const solver = new PreprocessSimpleRouteJsonSolver(srj)
+  };
+  const solver = new PreprocessSimpleRouteJsonSolver(srj);
 
-  solver.solve()
+  solver.solve();
 
-  expect(solver.getOutputSimpleRouteJson().buses).toEqual(srj.buses)
+  expect(solver.getOutputSimpleRouteJson().buses).toEqual(srj.buses);
   expect(solver.getOutputSimpleRouteJson().differentialPairs).toEqual(
     srj.differentialPairs,
-  )
-})
+  );
+});

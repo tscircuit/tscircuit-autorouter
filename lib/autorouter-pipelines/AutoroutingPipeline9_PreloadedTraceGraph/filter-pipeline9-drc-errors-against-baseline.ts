@@ -1,39 +1,39 @@
-type DrcError = Record<string, unknown>
+type DrcError = Record<string, unknown>;
 
 const DRC_ERROR_ID_KEYS = [
   "pcb_trace_error_id",
   "pcb_error_id",
   "pcb_via_trace_clearance_error_id",
   "pcb_pad_trace_clearance_error_id",
-] as const
+] as const;
 
 const isMissingConnectionError = (error: DrcError): boolean =>
   typeof error.pcb_trace_error_id === "string" &&
-  error.pcb_trace_error_id.startsWith("missing_connection_")
+  error.pcb_trace_error_id.startsWith("missing_connection_");
 
 const normalizePreparedTraceIds = (
   value: string,
   originalTraceIdByPreparedTraceId: ReadonlyMap<string, string>,
 ): string => {
-  let normalized = value
+  let normalized = value;
   const aliases = [...originalTraceIdByPreparedTraceId].sort(
     ([left], [right]) => right.length - left.length,
-  )
+  );
   for (const [preparedTraceId, originalTraceId] of aliases) {
-    normalized = normalized.replaceAll(preparedTraceId, originalTraceId)
+    normalized = normalized.replaceAll(preparedTraceId, originalTraceId);
   }
-  return normalized
-}
+  return normalized;
+};
 
 const getDrcErrorIdentity = (
   error: DrcError,
   originalTraceIdByPreparedTraceId: ReadonlyMap<string, string>,
 ): string => {
-  const errorType = String(error.type ?? error.error_type ?? "unknown")
+  const errorType = String(error.type ?? error.error_type ?? "unknown");
   for (const idKey of DRC_ERROR_ID_KEYS) {
-    const errorId = error[idKey]
+    const errorId = error[idKey];
     if (typeof errorId === "string") {
-      return `${errorType}:${normalizePreparedTraceIds(errorId, originalTraceIdByPreparedTraceId)}`
+      return `${errorType}:${normalizePreparedTraceIds(errorId, originalTraceIdByPreparedTraceId)}`;
     }
   }
 
@@ -51,9 +51,9 @@ const getDrcErrorIdentity = (
           ? normalizePreparedTraceIds(value, originalTraceIdByPreparedTraceId)
           : value,
       ]),
-  )
-  return `${errorType}:${JSON.stringify(identityFields)}`
-}
+  );
+  return `${errorType}:${JSON.stringify(identityFields)}`;
+};
 
 /** Removes DRC violations already present in the supplied prerouted board. */
 export const filterPipeline9DrcErrorsAgainstBaseline = <
@@ -63,9 +63,9 @@ export const filterPipeline9DrcErrorsAgainstBaseline = <
   baselineErrors,
   originalTraceIdByPreparedTraceId = new Map(),
 }: {
-  errors: TError[]
-  baselineErrors: DrcError[]
-  originalTraceIdByPreparedTraceId?: ReadonlyMap<string, string>
+  errors: TError[];
+  baselineErrors: DrcError[];
+  originalTraceIdByPreparedTraceId?: ReadonlyMap<string, string>;
 }): TError[] => {
   const baselineErrorIdentities = new Set(
     baselineErrors
@@ -74,11 +74,11 @@ export const filterPipeline9DrcErrorsAgainstBaseline = <
       // the same finding exists before the candidate routes are added.
       .filter((error) => !isMissingConnectionError(error))
       .map((error) => getDrcErrorIdentity(error, new Map())),
-  )
+  );
   return errors.filter(
     (error) =>
       !baselineErrorIdentities.has(
         getDrcErrorIdentity(error, originalTraceIdByPreparedTraceId),
       ),
-  )
-}
+  );
+};

@@ -1,6 +1,6 @@
-import type { AnyCircuitElement } from "circuit-json"
+import type { AnyCircuitElement } from "circuit-json";
 
-type DrcError = Record<string, unknown>
+type DrcError = Record<string, unknown>;
 
 /** Makes the movable new route the primary identity in joint DRC errors. */
 export const normalizePipeline9DrcErrorsForRepair = ({
@@ -8,9 +8,9 @@ export const normalizePipeline9DrcErrorsForRepair = ({
   circuitJson,
   newTraceIds,
 }: {
-  errors: DrcError[]
-  circuitJson: AnyCircuitElement[]
-  newTraceIds: ReadonlySet<string>
+  errors: DrcError[];
+  circuitJson: AnyCircuitElement[];
+  newTraceIds: ReadonlySet<string>;
 }): DrcError[] => {
   const traceIdByViaId = new Map(
     circuitJson.flatMap((element) =>
@@ -20,18 +20,18 @@ export const normalizePipeline9DrcErrorsForRepair = ({
         ? [[element.pcb_via_id, element.pcb_trace_id] as const]
         : [],
     ),
-  )
+  );
 
   return errors.map((error) => {
-    const primaryTraceId = error.pcb_trace_id
+    const primaryTraceId = error.pcb_trace_id;
     if (
       typeof primaryTraceId === "string" &&
       typeof error.pcb_trace_error_id === "string"
     ) {
-      const pairPrefix = `overlap_${primaryTraceId}_`
+      const pairPrefix = `overlap_${primaryTraceId}_`;
       const otherTraceId = error.pcb_trace_error_id.startsWith(pairPrefix)
         ? error.pcb_trace_error_id.slice(pairPrefix.length)
-        : undefined
+        : undefined;
       if (
         !newTraceIds.has(primaryTraceId) &&
         otherTraceId &&
@@ -42,7 +42,7 @@ export const normalizePipeline9DrcErrorsForRepair = ({
           pcb_trace_id: otherTraceId,
           pcb_trace_ids: [otherTraceId, primaryTraceId],
           pcb_trace_error_id: `overlap_${otherTraceId}_${primaryTraceId}`,
-        }
+        };
       }
     }
 
@@ -55,19 +55,19 @@ export const normalizePipeline9DrcErrorsForRepair = ({
         : []),
     ].filter(
       (viaId, viaIndex, allViaIds) => allViaIds.indexOf(viaId) === viaIndex,
-    )
+    );
     const viaTraceIds = viaIds
       .flatMap((viaId) => {
-        const traceId = traceIdByViaId.get(viaId)
-        return traceId ? [traceId] : []
+        const traceId = traceIdByViaId.get(viaId);
+        return traceId ? [traceId] : [];
       })
       .filter(
         (traceId, traceIndex, allTraceIds) =>
           allTraceIds.indexOf(traceId) === traceIndex,
-      )
+      );
     const primaryMovableViaTraceId = viaTraceIds.find((traceId) =>
       newTraceIds.has(traceId),
-    )
+    );
     if (primaryMovableViaTraceId) {
       const traceIds = [
         primaryMovableViaTraceId,
@@ -76,15 +76,15 @@ export const normalizePipeline9DrcErrorsForRepair = ({
       ].filter(
         (traceId, traceIndex, allTraceIds) =>
           allTraceIds.indexOf(traceId) === traceIndex,
-      )
+      );
       return {
         ...error,
         pcb_trace_id: primaryMovableViaTraceId,
         pcb_trace_ids: traceIds,
         pcb_via_ids: viaIds,
-      }
+      };
     }
 
-    return error
-  })
-}
+    return error;
+  });
+};

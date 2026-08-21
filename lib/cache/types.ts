@@ -1,33 +1,33 @@
 export interface CacheProvider {
   // IndexedDb, localstorage, in-memory, or any non-network cache that you can call synchronously
-  isSyncCache: boolean
+  isSyncCache: boolean;
 
-  cacheHits: number
-  cacheMisses: number
-  cacheHitsByPrefix: Record<string, number>
-  cacheMissesByPrefix: Record<string, number>
+  cacheHits: number;
+  cacheMisses: number;
+  cacheHitsByPrefix: Record<string, number>;
+  cacheMissesByPrefix: Record<string, number>;
 
-  getCachedSolutionSync(cacheKey: string): any
-  getCachedSolution(cacheKey: string): Promise<any>
+  getCachedSolutionSync(cacheKey: string): any;
+  getCachedSolution(cacheKey: string): Promise<any>;
 
-  setCachedSolutionSync(cacheKey: string, cachedSolution: any): void
-  setCachedSolution(cacheKey: string, cachedSolution: any): Promise<void>
+  setCachedSolutionSync(cacheKey: string, cachedSolution: any): void;
+  setCachedSolution(cacheKey: string, cachedSolution: any): Promise<void>;
 
-  getAllCacheKeys(): string[]
+  getAllCacheKeys(): string[];
 
-  clearCache(): void
+  clearCache(): void;
 }
 
 export interface CachableSolver<
   CacheToSolveSpaceTransform = any,
   CachedSolution = any,
 > {
-  cacheHit: boolean
-  hasAttemptedToUseCache: boolean
-  cacheProvider: CacheProvider | null
+  cacheHit: boolean;
+  hasAttemptedToUseCache: boolean;
+  cacheProvider: CacheProvider | null;
 
-  cacheKey?: string
-  cacheToSolveSpaceTransform?: CacheToSolveSpaceTransform
+  cacheKey?: string;
+  cacheToSolveSpaceTransform?: CacheToSolveSpaceTransform;
 
   /**
    * Processes solver inputs and constructs a cacheKey and a cacheToSolveSpaceTransform
@@ -39,13 +39,13 @@ export interface CachableSolver<
    * ids for the solver
    **/
   computeCacheKeyAndTransform(): {
-    cacheKey: string
-    cacheToSolveSpaceTransform: CacheToSolveSpaceTransform
-  }
+    cacheKey: string;
+    cacheToSolveSpaceTransform: CacheToSolveSpaceTransform;
+  };
 
-  applyCachedSolution(cachedSolution: CachedSolution): void
+  applyCachedSolution(cachedSolution: CachedSolution): void;
 
-  attemptToUseCacheSync(): boolean
+  attemptToUseCacheSync(): boolean;
 
-  saveToCacheSync(): void
+  saveToCacheSync(): void;
 }

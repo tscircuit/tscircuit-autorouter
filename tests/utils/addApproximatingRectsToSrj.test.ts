@@ -1,9 +1,9 @@
-import { expect, test } from "bun:test"
-import type { SimpleRouteJson } from "lib/types"
+import { expect, test } from "bun:test";
+import type { SimpleRouteJson } from "lib/types";
 import {
   addApproximatingRectsToSrj,
   generateApproximatingRects,
-} from "lib/utils/addApproximatingRectsToSrj"
+} from "lib/utils/addApproximatingRectsToSrj";
 
 test("generateApproximatingRects slices long rotated rects along their local long axis", () => {
   const rects = generateApproximatingRects(
@@ -14,16 +14,16 @@ test("generateApproximatingRects slices long rotated rects along their local lon
       rotation: 135,
     },
     14,
-  )
+  );
 
-  expect(rects).toHaveLength(14)
+  expect(rects).toHaveLength(14);
   for (const rect of rects) {
-    expect(Math.max(rect.width, rect.height)).toBeLessThan(1)
-    expect(rect.width).toBeCloseTo(rect.height)
-    expect(Number.isFinite(rect.center.x)).toBe(true)
-    expect(Number.isFinite(rect.center.y)).toBe(true)
+    expect(Math.max(rect.width, rect.height)).toBeLessThan(1);
+    expect(rect.width).toBeCloseTo(rect.height);
+    expect(Number.isFinite(rect.center.x)).toBe(true);
+    expect(Number.isFinite(rect.center.y)).toBe(true);
   }
-})
+});
 
 test("addApproximatingRectsToSrj converts diagonal trace obstacles into small non-rotated rects", () => {
   const srj: SimpleRouteJson = {
@@ -44,19 +44,19 @@ test("addApproximatingRectsToSrj converts diagonal trace obstacles into small no
       },
     ],
     connections: [],
-  }
+  };
 
-  const converted = addApproximatingRectsToSrj(srj)
+  const converted = addApproximatingRectsToSrj(srj);
 
-  expect(converted.obstacles.length).toBeGreaterThan(2)
+  expect(converted.obstacles.length).toBeGreaterThan(2);
   expect(
     converted.obstacles.every(
       (obstacle) =>
         obstacle.ccwRotationDegrees === undefined &&
         Math.max(obstacle.width, obstacle.height) < 1,
     ),
-  ).toBe(true)
-})
+  ).toBe(true);
+});
 
 test("addApproximatingRectsToSrj slices slender rotated obstacles into compact rects", () => {
   const srj: SimpleRouteJson = {
@@ -77,25 +77,25 @@ test("addApproximatingRectsToSrj slices slender rotated obstacles into compact r
       },
     ],
     connections: [],
-  }
+  };
 
-  const converted = addApproximatingRectsToSrj(srj)
+  const converted = addApproximatingRectsToSrj(srj);
 
-  expect(converted.obstacles.length).toBe(14)
+  expect(converted.obstacles.length).toBe(14);
   expect(
     converted.obstacles.every(
       (obstacle) =>
         obstacle.ccwRotationDegrees === undefined &&
         Math.max(obstacle.width, obstacle.height) < 0.9,
     ),
-  ).toBe(true)
-})
+  ).toBe(true);
+});
 
 test("rotated-pad approximations conservatively cover the original pad", () => {
-  const padWidth = 1.125
-  const padHeight = 1.75
-  const padRotation = 233
-  const padCenter = { x: 0, y: 0 }
+  const padWidth = 1.125;
+  const padHeight = 1.75;
+  const padRotation = 233;
+  const padCenter = { x: 0, y: 0 };
   const srj: SimpleRouteJson = {
     layerCount: 2,
     minTraceWidth: 0.15,
@@ -112,30 +112,30 @@ test("rotated-pad approximations conservatively cover the original pad", () => {
       connectedTo: [`net_${index}`],
     })),
     connections: [],
-  }
+  };
 
-  const converted = addApproximatingRectsToSrj(srj)
+  const converted = addApproximatingRectsToSrj(srj);
   const firstPadApproximations = converted.obstacles.filter(
     (obstacle) =>
       obstacle.obstacleId === "rotated_pad_0" ||
       obstacle.obstacleId?.startsWith("rotated_pad_0_approx_"),
-  )
-  const angleRadians = (padRotation * Math.PI) / 180
-  const cosAngle = Math.cos(angleRadians)
-  const sinAngle = Math.sin(angleRadians)
+  );
+  const angleRadians = (padRotation * Math.PI) / 180;
+  const cosAngle = Math.cos(angleRadians);
+  const sinAngle = Math.sin(angleRadians);
   const corners = [-1, 1].flatMap((xSign) =>
     [-1, 1].map((ySign) => {
-      const localX = xSign * (padWidth / 2)
-      const localY = ySign * (padHeight / 2)
+      const localX = xSign * (padWidth / 2);
+      const localY = ySign * (padHeight / 2);
       return {
         x: padCenter.x + localX * cosAngle - localY * sinAngle,
         y: padCenter.y + localX * sinAngle + localY * cosAngle,
-      }
+      };
     }),
-  )
+  );
 
-  expect(firstPadApproximations.length).toBeGreaterThan(0)
-  expect(firstPadApproximations.length).toBeLessThanOrEqual(6)
+  expect(firstPadApproximations.length).toBeGreaterThan(0);
+  expect(firstPadApproximations.length).toBeLessThanOrEqual(6);
   for (const corner of corners) {
     expect(
       firstPadApproximations.some(
@@ -143,17 +143,17 @@ test("rotated-pad approximations conservatively cover the original pad", () => {
           Math.abs(corner.x - obstacle.center.x) <= obstacle.width / 2 + 1e-9 &&
           Math.abs(corner.y - obstacle.center.y) <= obstacle.height / 2 + 1e-9,
       ),
-    ).toBe(true)
+    ).toBe(true);
   }
 
   for (let xStep = 0; xStep <= 10; xStep++) {
     for (let yStep = 0; yStep <= 10; yStep++) {
-      const localX = (xStep / 10 - 0.5) * padWidth
-      const localY = (yStep / 10 - 0.5) * padHeight
+      const localX = (xStep / 10 - 0.5) * padWidth;
+      const localY = (yStep / 10 - 0.5) * padHeight;
       const point = {
         x: padCenter.x + localX * cosAngle - localY * sinAngle,
         y: padCenter.y + localX * sinAngle + localY * cosAngle,
-      }
+      };
 
       expect(
         firstPadApproximations.some(
@@ -162,10 +162,10 @@ test("rotated-pad approximations conservatively cover the original pad", () => {
               obstacle.width / 2 + 1e-9 &&
             Math.abs(point.y - obstacle.center.y) <= obstacle.height / 2 + 1e-9,
         ),
-      ).toBe(true)
+      ).toBe(true);
     }
   }
-})
+});
 
 /**
  * All the approximating rects should
@@ -190,14 +190,14 @@ test.skip("addApproximatingRectsToSrj only keeps connectivity on one approximati
       },
     ],
     connections: [],
-  }
+  };
 
-  const converted = addApproximatingRectsToSrj(srj)
+  const converted = addApproximatingRectsToSrj(srj);
 
   expect(
     converted.obstacles.filter((o) => o.connectedTo.length > 0),
-  ).toHaveLength(1)
+  ).toHaveLength(1);
   expect(
     converted.obstacles.filter((o) => o.obstacleId === "connected_rotated_pad"),
-  ).toHaveLength(1)
-})
+  ).toHaveLength(1);
+});

@@ -1,21 +1,21 @@
-import { ConnectivityMap } from "circuit-json-to-connectivity-map"
-import type { CapacityMeshNodeId } from "lib/types/capacity-mesh-types"
-import { getPendingEffectsFromSolverTree } from "lib/solvers/getPendingEffectsFromSolverTree"
+import { ConnectivityMap } from "circuit-json-to-connectivity-map";
+import type { CapacityMeshNodeId } from "lib/types/capacity-mesh-types";
+import { getPendingEffectsFromSolverTree } from "lib/solvers/getPendingEffectsFromSolverTree";
 import {
   AutoroutingPipelineSolver4_TinyHypergraph,
   type AutoroutingPipelineSolverOptions,
-} from "../AutoroutingPipeline4_TinyHypergraph/AutoroutingPipelineSolver4_TinyHypergraph"
-import { Pipeline5HdCacheHighDensitySolver } from "./Pipeline5HdCacheHighDensitySolver"
+} from "../AutoroutingPipeline4_TinyHypergraph/AutoroutingPipelineSolver4_TinyHypergraph";
+import { Pipeline5HdCacheHighDensitySolver } from "./Pipeline5HdCacheHighDensitySolver";
 
 export type AutoroutingPipelineSolver5Options =
   AutoroutingPipelineSolverOptions & {
-    hdCacheBaseUrl?: string
-    hdCacheFetch?: typeof fetch
-  }
+    hdCacheBaseUrl?: string;
+    hdCacheFetch?: typeof fetch;
+  };
 
 export class AutoroutingPipelineSolver5_HdCache extends AutoroutingPipelineSolver4_TinyHypergraph {
-  readonly hdCacheBaseUrl: string
-  readonly hdCacheFetch?: typeof fetch
+  readonly hdCacheBaseUrl: string;
+  readonly hdCacheFetch?: typeof fetch;
 
   constructor(
     srj: ConstructorParameters<
@@ -27,20 +27,20 @@ export class AutoroutingPipelineSolver5_HdCache extends AutoroutingPipelineSolve
       ...opts,
       maxNodeDimension: opts.maxNodeDimension ?? 7,
       maxNodeRatio: opts.maxNodeRatio ?? 4,
-    })
+    });
     this.hdCacheBaseUrl =
-      opts.hdCacheBaseUrl ?? "https://hd-cache.tscircuit.com"
-    this.hdCacheFetch = opts.hdCacheFetch
-    this.replaceHighDensityPipelineStep()
+      opts.hdCacheBaseUrl ?? "https://hd-cache.tscircuit.com";
+    this.hdCacheFetch = opts.hdCacheFetch;
+    this.replaceHighDensityPipelineStep();
   }
 
   private replaceHighDensityPipelineStep() {
     const highDensityStepIndex = this.pipelineDef.findIndex(
       (step) => step.solverName === "highDensityRouteSolver",
-    )
+    );
 
     if (highDensityStepIndex === -1) {
-      throw new Error("Pipeline4 highDensityRouteSolver step is missing")
+      throw new Error("Pipeline4 highDensityRouteSolver step is missing");
     }
 
     this.pipelineDef[highDensityStepIndex] = {
@@ -48,13 +48,13 @@ export class AutoroutingPipelineSolver5_HdCache extends AutoroutingPipelineSolve
       solverClass: Pipeline5HdCacheHighDensitySolver as any,
       getConstructorParams: (cms: AutoroutingPipelineSolver5_HdCache) => {
         const uniformNodes =
-          cms.uniformPortDistributionSolver?.getOutput() ?? []
+          cms.uniformPortDistributionSolver?.getOutput() ?? [];
         const fallbackNodes =
-          cms.portPointPathingSolver?.getOutput().nodesWithPortPoints ?? []
+          cms.portPointPathingSolver?.getOutput().nodesWithPortPoints ?? [];
         const nodePortPointsSource =
-          uniformNodes.length > 0 ? uniformNodes : fallbackNodes
+          uniformNodes.length > 0 ? uniformNodes : fallbackNodes;
 
-        cms.highDensityNodePortPoints = structuredClone(nodePortPointsSource)
+        cms.highDensityNodePortPoints = structuredClone(nodePortPointsSource);
 
         return [
           {
@@ -78,19 +78,19 @@ export class AutoroutingPipelineSolver5_HdCache extends AutoroutingPipelineSolve
             hdCacheBaseUrl: cms.hdCacheBaseUrl,
             fetchImpl: cms.hdCacheFetch,
           },
-        ]
+        ];
       },
-    } as any
+    } as any;
   }
 
   async stepAsync() {
-    if (this.solved || this.failed) return
+    if (this.solved || this.failed) return;
 
-    this.step()
+    this.step();
 
-    const pendingEffects = getPendingEffectsFromSolverTree(this)
+    const pendingEffects = getPendingEffectsFromSolverTree(this);
     if (pendingEffects.length === 0) {
-      return
+      return;
     }
 
     await Promise.race(
@@ -100,28 +100,28 @@ export class AutoroutingPipelineSolver5_HdCache extends AutoroutingPipelineSolve
           () => effect.name,
         ),
       ),
-    )
+    );
 
     if (!this.solved && !this.failed) {
-      this.step()
+      this.step();
     }
   }
 
   async solveAsync() {
-    const startTime = Date.now()
+    const startTime = Date.now();
 
     while (!this.solved && !this.failed) {
-      await this.stepAsync()
+      await this.stepAsync();
     }
 
-    this.timeToSolve = Date.now() - startTime
+    this.timeToSolve = Date.now() - startTime;
   }
 
   override solve() {
     throw new Error(
       "AutoroutingPipelineSolver5_HdCache requires async execution. Use solveAsync() or stepAsync().",
-    )
+    );
   }
 }
 
-export { AutoroutingPipelineSolver5_HdCache as AutoroutingPipelineSolver5 }
+export { AutoroutingPipelineSolver5_HdCache as AutoroutingPipelineSolver5 };

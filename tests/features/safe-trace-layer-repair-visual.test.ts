@@ -1,27 +1,27 @@
-import { expect, test } from "bun:test"
-import { getSvgFromGraphicsObject, type GraphicsObject } from "graphics-debug"
-import { stackSvgsHorizontally } from "stack-svgs"
-import { VisualizedGlobalDrcForceImproveSolver } from "high-density-repair03/fixture-support/VisualizedGlobalDrcForceImproveSolver"
+import { expect, test } from "bun:test";
+import { getSvgFromGraphicsObject, type GraphicsObject } from "graphics-debug";
+import { stackSvgsHorizontally } from "stack-svgs";
+import { VisualizedGlobalDrcForceImproveSolver } from "high-density-repair03/fixture-support/VisualizedGlobalDrcForceImproveSolver";
 import type {
   DrcEvaluator,
   HighDensityRoute,
   SimpleRouteJson,
-} from "high-density-repair03/lib"
+} from "high-density-repair03/lib";
 
 const addPanelHeader = ({
   svg,
   title,
   details,
 }: {
-  svg: string
-  title: string
-  details: [string, string]
+  svg: string;
+  title: string;
+  details: [string, string];
 }) => {
-  const headerHeight = 76
-  const bodyStart = svg.indexOf(">") + 1
-  const bodyEnd = svg.lastIndexOf("</svg>")
-  const width = Number(svg.match(/\bwidth="([^"]+)"/)?.[1] ?? 560)
-  const height = Number(svg.match(/\bheight="([^"]+)"/)?.[1] ?? 360)
+  const headerHeight = 76;
+  const bodyStart = svg.indexOf(">") + 1;
+  const bodyEnd = svg.lastIndexOf("</svg>");
+  const width = Number(svg.match(/\bwidth="([^"]+)"/)?.[1] ?? 560);
+  const height = Number(svg.match(/\bheight="([^"]+)"/)?.[1] ?? 360);
 
   return `<svg width="${width}" height="${
     height + headerHeight
@@ -30,8 +30,8 @@ const addPanelHeader = ({
   }" xmlns="http://www.w3.org/2000/svg"><rect width="100%" height="100%" fill="white"/><text x="16" y="22" font-family="monospace" font-size="15" font-weight="700" fill="#111">${title}</text><text x="16" y="43" font-family="monospace" font-size="12" fill="#444">${details[0]}</text><text x="16" y="61" font-family="monospace" font-size="12" fill="#444">${details[1]}</text><g transform="translate(0 ${headerHeight})">${svg.slice(
     bodyStart,
     bodyEnd,
-  )}</g></svg>`
-}
+  )}</g></svg>`;
+};
 
 test("visualizes safe layer moves at internal and terminal boundaries", () => {
   const srj: SimpleRouteJson = {
@@ -87,7 +87,7 @@ test("visualizes safe layer moves at internal and terminal boundaries", () => {
     layerCount: 3,
     minTraceWidth: 0.1,
     minViaDiameter: 0.3,
-  }
+  };
   const hdRoutes: HighDensityRoute[] = [
     {
       connectionName: "terminal",
@@ -149,23 +149,23 @@ test("visualizes safe layer moves at internal and terminal boundaries", () => {
       traceThickness: 0.1,
       viaDiameter: 0.3,
     },
-  ]
+  ];
   const drcEvaluator: DrcEvaluator = ({ hdRoutes, routes }) => {
-    const candidateRoutes = hdRoutes ?? routes ?? []
+    const candidateRoutes = hdRoutes ?? routes ?? [];
     const terminal = candidateRoutes.find(
       (route) => route.connectionName === "terminal",
-    )
+    );
     const internal = candidateRoutes.find(
       (route) => route.connectionName === "internal",
-    )
+    );
     const terminalRepaired =
       terminal?.route.some((point) => point.z === 2) &&
       terminal.vias.length === 2 &&
-      terminal.vias.every((via) => Math.abs(via.x) > 1.5)
+      terminal.vias.every((via) => Math.abs(via.x) > 1.5);
     const internalRepaired =
       internal?.route
         .filter((point) => Math.abs(point.x) <= 0.5)
-        .every((point) => point.z === 2) && internal.vias.length === 2
+        .every((point) => point.z === 2) && internal.vias.length === 2;
     const errors = [
       ...(!terminalRepaired
         ? [
@@ -189,9 +189,9 @@ test("visualizes safe layer moves at internal and terminal boundaries", () => {
             },
           ]
         : []),
-    ]
-    return { errors, errorsWithCenters: errors }
-  }
+    ];
+    return { errors, errorsWithCenters: errors };
+  };
   const solverParams = {
     srj,
     hdRoutes,
@@ -201,32 +201,32 @@ test("visualizes safe layer moves at internal and terminal boundaries", () => {
     enablePostSolveClearanceRelaxation: false,
     enableSafeTraceLayerMoves: true,
     enableViaInPadLayerMoves: false,
-  }
-  const solver = new VisualizedGlobalDrcForceImproveSolver(solverParams)
-  const beforeGraphics = solver.visualize()
+  };
+  const solver = new VisualizedGlobalDrcForceImproveSolver(solverParams);
+  const beforeGraphics = solver.visualize();
 
-  solver.solve()
+  solver.solve();
 
   const terminal = solver
     .getOutput()
-    .find((route) => route.connectionName === "terminal")!
+    .find((route) => route.connectionName === "terminal")!;
   const internal = solver
     .getOutput()
-    .find((route) => route.connectionName === "internal")!
-  expect(solver.failed).toBe(false)
-  expect(solver.stats.initialDrcIssueCount).toBe(2)
-  expect(solver.stats.finalDrcIssueCount).toBe(0)
-  expect(solver.stats.globalDrcForceImproveViaInPadCandidatesAccepted).toBe(0)
-  expect(terminal.vias).toHaveLength(2)
-  expect(terminal.vias.every((via) => Math.abs(via.x) > 1.5)).toBe(true)
+    .find((route) => route.connectionName === "internal")!;
+  expect(solver.failed).toBe(false);
+  expect(solver.stats.initialDrcIssueCount).toBe(2);
+  expect(solver.stats.finalDrcIssueCount).toBe(0);
+  expect(solver.stats.globalDrcForceImproveViaInPadCandidatesAccepted).toBe(0);
+  expect(terminal.vias).toHaveLength(2);
+  expect(terminal.vias.every((via) => Math.abs(via.x) > 1.5)).toBe(true);
   expect(internal.vias).toEqual([
     { x: -1, y: 0.8 },
     { x: 1, y: 0.8 },
-  ])
-  expect(terminal.route[0]?.pcb_port_id).toBe("terminal-start")
-  expect(terminal.route.at(-1)?.pcb_port_id).toBe("terminal-end")
-  expect(internal.route[0]?.pcb_port_id).toBe("internal-start")
-  expect(internal.route.at(-1)?.pcb_port_id).toBe("internal-end")
+  ]);
+  expect(terminal.route[0]?.pcb_port_id).toBe("terminal-start");
+  expect(terminal.route.at(-1)?.pcb_port_id).toBe("terminal-end");
+  expect(internal.route[0]?.pcb_port_id).toBe("internal-start");
+  expect(internal.route.at(-1)?.pcb_port_id).toBe("internal-end");
 
   const renderFrame = (graphics: GraphicsObject): string =>
     getSvgFromGraphicsObject(graphics, {
@@ -234,7 +234,7 @@ test("visualizes safe layer moves at internal and terminal boundaries", () => {
       svgWidth: 560,
       svgHeight: 360,
       hideInlineLabels: true,
-    })
+    });
 
   expect(
     stackSvgsHorizontally(
@@ -261,5 +261,5 @@ test("visualizes safe layer moves at internal and terminal boundaries", () => {
         normalizeSize: false,
       },
     ),
-  ).toMatchSvgSnapshot(import.meta.path)
-})
+  ).toMatchSvgSnapshot(import.meta.path);
+});
