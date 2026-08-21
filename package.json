@@ -3,6 +3,10 @@
   "main": "./dist/index.js",
   "version": "0.0.822",
   "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/tscircuit/tscircuit-autorouter"
+  },
   "files": [
     "dist"
   ],
