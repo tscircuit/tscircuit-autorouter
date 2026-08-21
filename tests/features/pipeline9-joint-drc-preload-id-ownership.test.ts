@@ -1,5 +1,11 @@
 import { expect, test } from "bun:test"
-import { Pipeline9JointDrcRepairSolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/pipeline9-joint-drc-repair-solver"
+import {
+  getPipeline9PreloadRepairTraceIds,
+  Pipeline9JointDrcRepairSolver,
+  remapDrcTraceIds,
+} from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/pipeline9-joint-drc-repair-solver"
+import { isPipeline9DrcErrorOwnedByPreloadRepair } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/pipeline9-joint-drc-repair-utils"
+import { normalizePipeline9DrcErrorsForRepair } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/normalize-pipeline9-drc-errors-for-repair"
 import type {
   Obstacle,
   SimpleRouteConnection,
@@ -148,9 +154,8 @@ const createJointRepairSolver = ({
     updatedPreloadedTraces: includePreload
       ? [createPreloadedTrace(updatedPreloadY)]
       : [],
-    mutatedPreloadedTraceIds: includePreload && preloadWasMutated
-      ? new Set(["route_0"])
-      : new Set(),
+    mutatedPreloadedTraceIds:
+      includePreload && preloadWasMutated ? new Set(["route_0"]) : new Set(),
     connMap: getConnectivityMapFromSimpleRouteJson(originalSrj),
     obstacles,
     layerCount: 2,
@@ -176,6 +181,87 @@ test("Pipeline9 joint DRC distinguishes a new trace id from its preloaded alias"
   expect(Number(newRouteErrorSolver.stats.initialJointDrcIssueCount)).toBe(1)
   expect(newRouteErrorSolver.movablePreloadedSections).toHaveLength(0)
   expect(newRouteErrorSolver.getMutatedPreloadedTraces()).toEqual([])
+  const collisionAwarePreloadTraceIds = getPipeline9PreloadRepairTraceIds({
+    routes: newRouteErrorSolver.inputNewHdRoutes,
+    newConnections: newRouteErrorSolver.params.newConnections,
+    syntheticConnectionNames: newRouteErrorSolver.syntheticConnectionNames,
+    fixedPreloadedObstacleRoutes:
+      newRouteErrorSolver.fixedPreloadedObstacleRoutes,
+    updatedPreloadedTraces:
+      newRouteErrorSolver.params.updatedPreloadedTraces,
+  })
+  expect(collisionAwarePreloadTraceIds.has("route_0")).toBeFalse()
+  expect(collisionAwarePreloadTraceIds.collidingFixedTraceIds).toEqual(
+    new Set(["route_0"]),
+  )
+  expect(
+    isPipeline9DrcErrorOwnedByPreloadRepair({
+      error: {
+        type: "pcb_pad_trace_clearance_error",
+        pcb_trace_id: "route_0",
+      },
+      preloadRepairTraceIds: collisionAwarePreloadTraceIds,
+    }),
+  ).toBeFalse()
+  expect(
+    isPipeline9DrcErrorOwnedByPreloadRepair({
+      error: remapDrcTraceIds(
+        [
+          {
+            type: "pcb_trace_error",
+            pcb_trace_id: "route_0",
+            pcb_trace_error_id: "overlap_route_0_route_0_routed",
+          },
+        ],
+        new Map([["route_0_routed", "route_0"]]),
+      )[0]!,
+      preloadRepairTraceIds: collisionAwarePreloadTraceIds,
+    }),
+  ).toBeTrue()
+  const [normalizedTraceViaCollision] =
+    normalizePipeline9DrcErrorsForRepair({
+      errors: remapDrcTraceIds(
+        [
+          {
+            type: "pcb_trace_error",
+            pcb_trace_id: "route_0_routed",
+            pcb_trace_ids: ["route_0_routed", "route_0"],
+            pcb_via_id: "via_0",
+            pcb_via_ids: ["via_0"],
+            pcb_trace_error_id: "overlap_route_0_routed_via_0",
+          },
+        ],
+        new Map([["route_0_routed", "route_0"]]),
+      ),
+      circuitJson: [
+        {
+          type: "pcb_via",
+          pcb_via_id: "via_0",
+          pcb_trace_id: "route_0",
+          x: 0,
+          y: 0,
+          outer_diameter: 0.3,
+          hole_diameter: 0.15,
+          layers: ["top", "bottom"],
+        },
+      ],
+      newTraceIds: new Set(["route_0"]),
+    })
+  expect(normalizedTraceViaCollision?.pcb_trace_ids).toEqual(["route_0"])
+  expect(
+    normalizedTraceViaCollision?.__collapsed_trace_participants,
+  ).toEqual([
+    {
+      solverTraceId: "route_0",
+      evaluationTraceIds: ["route_0_routed", "route_0"],
+    },
+  ])
+  expect(
+    isPipeline9DrcErrorOwnedByPreloadRepair({
+      error: normalizedTraceViaCollision!,
+      preloadRepairTraceIds: collisionAwarePreloadTraceIds,
+    }),
+  ).toBeTrue()
   noPreloadSolver.solve()
   newRouteErrorSolver.solve()
   const getExactPathStats = (

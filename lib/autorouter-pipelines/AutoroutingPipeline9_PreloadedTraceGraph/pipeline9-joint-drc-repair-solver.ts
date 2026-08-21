@@ -36,7 +36,11 @@ import { getPipeline9PreloadedTraceIdsInInitialDrcRegions } from "./get-pipeline
 import { getPipeline9PreloadedViaPairTraceGroups } from "./get-pipeline9-preloaded-via-pair-trace-groups"
 import { mergePipeline9MovablePreloadedVias } from "./merge-pipeline9-movable-preloaded-vias"
 import { normalizePipeline9DrcErrorsForRepair } from "./normalize-pipeline9-drc-errors-for-repair"
-import { getPipeline9RouteIndexByTraceId } from "./pipeline9-joint-drc-repair-utils"
+import {
+  getPipeline9RouteIndexByTraceId,
+  type Pipeline9CollapsedTraceParticipant,
+  type Pipeline9PreloadRepairTraceIds,
+} from "./pipeline9-joint-drc-repair-utils"
 import { preparePipeline9DrcRoutedTracesWithMetadata } from "./prepare-pipeline9-drc-routed-traces"
 
 const EXACT_REPAIR_MAX_ITERATIONS = 32
@@ -438,6 +442,38 @@ export const remapDrcTraceIds = (
     const encodedIdentityIsVia =
       encodedOtherEvaluationTraceId !== undefined &&
       explicitViaIds.includes(encodedOtherEvaluationTraceId)
+    const evaluationTraceIds = [
+      primaryEvaluationTraceId,
+      ...explicitEvaluationTraceIds,
+      encodedIdentityIsVia ? undefined : encodedOtherEvaluationTraceId,
+    ].filter(
+      (traceId): traceId is string => typeof traceId === "string",
+    )
+    const evaluationTraceIdsBySolverTraceId = new Map<string, Set<string>>()
+    for (const evaluationTraceId of evaluationTraceIds) {
+      const solverTraceId =
+        solverTraceIdByEvaluationTraceId.get(evaluationTraceId) ??
+        evaluationTraceId
+      const collapsedEvaluationTraceIds =
+        evaluationTraceIdsBySolverTraceId.get(solverTraceId) ?? new Set<string>()
+      collapsedEvaluationTraceIds.add(evaluationTraceId)
+      evaluationTraceIdsBySolverTraceId.set(
+        solverTraceId,
+        collapsedEvaluationTraceIds,
+      )
+    }
+    const collapsedTraceParticipants: Pipeline9CollapsedTraceParticipant[] = [
+      ...evaluationTraceIdsBySolverTraceId,
+    ].flatMap(([solverTraceId, collapsedEvaluationTraceIds]) =>
+      collapsedEvaluationTraceIds.size > 1
+        ? [
+            {
+              solverTraceId,
+              evaluationTraceIds: [...collapsedEvaluationTraceIds],
+            },
+          ]
+        : [],
+    )
     const primarySolverTraceId = primaryEvaluationTraceId
       ? (solverTraceIdByEvaluationTraceId.get(primaryEvaluationTraceId) ??
         primaryEvaluationTraceId)
@@ -473,6 +509,9 @@ export const remapDrcTraceIds = (
         ? {
             pcb_trace_error_id: `overlap_${primarySolverTraceId}_${encodedOtherSolverTraceId}`,
           }
+        : {}),
+      ...(collapsedTraceParticipants.length > 0
+        ? { __collapsed_trace_participants: collapsedTraceParticipants }
         : {}),
     }
   })
@@ -556,16 +595,22 @@ export const getPipeline9PreloadRepairTraceIds = ({
   syntheticConnectionNames: ReadonlySet<string>
   fixedPreloadedObstacleRoutes: PreloadedHighDensityRoute[]
   updatedPreloadedTraces: SimplifiedPcbTrace[]
-}): Set<string> => {
-  const preloadRepairTraceIds = new Set<string>()
+}): Pipeline9PreloadRepairTraceIds => {
+  const collidingFixedTraceIds = new Set<string>()
+  const preloadRepairTraceIds = Object.assign(new Set<string>(), {
+    collidingFixedTraceIds,
+  })
   const routeIndexByTraceId = getPipeline9RouteIndexByTraceId({
     routes,
     newConnections,
     syntheticConnectionNames,
   })
+  const newRouteTraceIds = new Set<string>()
   for (const [traceId, routeIndex] of routeIndexByTraceId) {
     if (syntheticConnectionNames.has(routes[routeIndex]!.connectionName)) {
       preloadRepairTraceIds.add(traceId)
+    } else {
+      newRouteTraceIds.add(traceId)
     }
   }
   for (const fixedRoute of fixedPreloadedObstacleRoutes) {
@@ -575,7 +620,11 @@ export const getPipeline9PreloadRepairTraceIds = ({
         `Pipeline9 fixed preload route has invalid trace index ${fixedRoute.preloadedTraceIndex}`,
       )
     }
-    preloadRepairTraceIds.add(originalTrace.pcb_trace_id)
+    if (newRouteTraceIds.has(originalTrace.pcb_trace_id)) {
+      collidingFixedTraceIds.add(originalTrace.pcb_trace_id)
+    } else {
+      preloadRepairTraceIds.add(originalTrace.pcb_trace_id)
+    }
   }
   return preloadRepairTraceIds
 }
@@ -593,6 +642,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
   readonly syntheticConnectionNames: ReadonlySet<string>
   readonly exactRepairSolver?: Pipeline7AdaptiveDrcBranchPortfolioSolver
   private drcEvaluator?: DrcEvaluator
+  private cachedReferenceDrcEvaluator?: DrcEvaluator
   private referenceDrcValidationCount = 0
   private referenceDrcFalseNegativeCount = 0
   private combinedOutput?: HighDensityRoute[]
@@ -1136,6 +1186,25 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
           candidateDrcInput.solverTraceIdByEvaluationTraceId,
       })
     }
+    const cachedReferenceDrcEvaluator: DrcEvaluator = ({ routes, hdRoutes }) => {
+      const evaluatedRoutes = routes ?? hdRoutes
+      if (!evaluatedRoutes) {
+        throw new Error("Pipeline9 cached reference DRC requires HD routes")
+      }
+      const candidateKey = JSON.stringify(evaluatedRoutes)
+      if (referenceDrcCandidateCache?.candidateKey === candidateKey) {
+        return referenceDrcCandidateCache.result
+      }
+      this.referenceDrcValidationCount += 1
+      const result = referenceDrcEvaluator({
+        traces: [],
+        routes: evaluatedRoutes,
+        hdRoutes: evaluatedRoutes,
+      })
+      referenceDrcCandidateCache = { candidateKey, result }
+      return result
+    }
+    this.cachedReferenceDrcEvaluator = cachedReferenceDrcEvaluator
 
     const drcEvaluator: DrcEvaluator = ({ routes, hdRoutes }) => {
       const evaluatedRoutes = routes ?? hdRoutes
@@ -1185,28 +1254,20 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
             candidateDrcInput.originalTraceIdByEvaluationTraceId,
         })
       if (evaluatedNewErrors.length === 0) {
-        const candidateKey = JSON.stringify(evaluatedRoutes)
-        let referenceResult =
-          referenceDrcCandidateCache?.candidateKey === candidateKey
-            ? referenceDrcCandidateCache.result
-            : undefined
-        if (!referenceResult) {
-          this.referenceDrcValidationCount += 1
-          referenceResult = referenceDrcEvaluator({
-            traces: [],
-            routes: evaluatedRoutes,
-            hdRoutes: evaluatedRoutes,
-          })
-          referenceDrcCandidateCache = {
-            candidateKey,
-            result: referenceResult,
-          }
-          const referenceErrors = Array.isArray(referenceResult)
-            ? referenceResult
-            : referenceResult.errors
-          if (referenceErrors.length > 0) {
-            this.referenceDrcFalseNegativeCount += 1
-          }
+        const validationCountBefore = this.referenceDrcValidationCount
+        const referenceResult = cachedReferenceDrcEvaluator({
+          traces: [],
+          routes: evaluatedRoutes,
+          hdRoutes: evaluatedRoutes,
+        })
+        const referenceErrors = Array.isArray(referenceResult)
+          ? referenceResult
+          : referenceResult.errors
+        if (
+          this.referenceDrcValidationCount > validationCountBefore &&
+          referenceErrors.length > 0
+        ) {
+          this.referenceDrcFalseNegativeCount += 1
         }
         return referenceResult
       }
@@ -1267,9 +1328,47 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       return
     }
     if (!this.exactRepairSolver.solved) return
+    const exactOutput = this.exactRepairSolver.getOutput()
+    // The indexed evaluator can retain conservative false positives after the
+    // exact portfolio has produced a reference-clean result. Do not let later
+    // heuristic repairs degrade an output already accepted by benchmark DRC.
+    const exactReferenceDrcResult = this.cachedReferenceDrcEvaluator!({
+      traces: [],
+      routes: exactOutput,
+      hdRoutes: exactOutput,
+    })
+    const exactReferenceDrcErrors = Array.isArray(exactReferenceDrcResult)
+      ? exactReferenceDrcResult
+      : exactReferenceDrcResult.errors
+    if (exactReferenceDrcErrors.length === 0) {
+      this.combinedOutput = exactOutput
+      this.stats = {
+        ...this.stats,
+        ...this.exactRepairSolver.stats,
+        postExactReferenceDrcIssueCount: 0,
+        postExactReferenceAccepted: true,
+        regionalB01RepairCandidateCount: 0,
+        regionalB01RepairAcceptedCount: 0,
+        regionalB01RepairFallbackCandidateCount: 0,
+        regionalB01RepairCandidateSearchCount: 0,
+        regionalB01RepairCandidateSearchBudget: 0,
+        regionalB01RepairCandidateSearchBudgetExhausted: false,
+        regionalB01RepairSafeTraceLayerSkippedForBudget: false,
+        regionalB01RepairRemainingDrcIssueCount: 0,
+        regionalB01RepairPreloadEligibleDrcIssueCount: 0,
+        regionalB01RepairAttempted: false,
+        regionalB01RepairTraceIdCount: 0,
+        terminalEscapeCandidateCount: 0,
+        terminalEscapeAcceptedCount: 0,
+        referenceDrcValidationCount: this.referenceDrcValidationCount,
+        referenceDrcFalseNegativeCount: this.referenceDrcFalseNegativeCount,
+      }
+      this.solved = true
+      return
+    }
     const terminalEscapeResult = applyPipeline9TerminalEscapeRelocations({
       srj: this.params.srj,
-      routes: this.exactRepairSolver.getOutput(),
+      routes: exactOutput,
       newConnections: this.params.newConnections,
       syntheticConnectionNames: this.syntheticConnectionNames,
       drcEvaluator: this.drcEvaluator!,
@@ -1304,6 +1403,8 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     this.stats = {
       ...this.stats,
       ...this.exactRepairSolver.stats,
+      postExactReferenceDrcIssueCount: exactReferenceDrcErrors.length,
+      postExactReferenceAccepted: false,
       regionalB01RepairCandidateCount:
         regionalB01RepairResult.attemptedCandidateCount,
       regionalB01RepairAcceptedCount:
@@ -1324,7 +1425,9 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         regionalB01RepairResult.preloadEligibleDrcIssueCount,
       regionalB01RepairAttempted:
         regionalB01RepairResult.preloadRepairAttempted,
-      regionalB01RepairTraceIdCount: preloadRepairTraceIds.size,
+      regionalB01RepairTraceIdCount:
+        preloadRepairTraceIds.size +
+        (preloadRepairTraceIds.collidingFixedTraceIds?.size ?? 0),
       terminalEscapeCandidateCount:
         terminalEscapeResult.attemptedCandidateCount,
       terminalEscapeAcceptedCount: terminalEscapeResult.acceptedCandidateCount,

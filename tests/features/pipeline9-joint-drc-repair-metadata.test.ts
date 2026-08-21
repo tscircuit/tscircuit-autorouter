@@ -247,6 +247,24 @@ test("Pipeline9 joint DRC metadata keeps new route identities repairable", () =>
   expect(
     isPipeline9DrcErrorOwnedByPreloadRepair({
       error: {
+        type: "pcb_pad_trace_clearance_error",
+        pcb_trace_id: "fixed_trace",
+      },
+      preloadRepairTraceIds,
+    }),
+  ).toBeTrue()
+  expect(
+    isPipeline9DrcErrorOwnedByPreloadRepair({
+      error: {
+        type: "pcb_pad_trace_clearance_error",
+        pcb_trace_id: "pipeline9_preloaded_drc_0_0",
+      },
+      preloadRepairTraceIds,
+    }),
+  ).toBeTrue()
+  expect(
+    isPipeline9DrcErrorOwnedByPreloadRepair({
+      error: {
         pcb_trace_id: "ordinary_a",
         pcb_trace_ids: ["ordinary_a", "ordinary_b"],
         pcb_trace_error_id: "overlap_ordinary_a_ordinary_b",

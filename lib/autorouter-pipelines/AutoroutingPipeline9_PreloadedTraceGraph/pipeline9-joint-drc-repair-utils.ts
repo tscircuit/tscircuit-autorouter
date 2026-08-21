@@ -2,7 +2,18 @@ import type { DrcEvaluator } from "high-density-repair03/lib"
 import type { SimpleRouteConnection } from "lib/types"
 import type { HighDensityRoute } from "lib/types/high-density-types"
 
-export type Pipeline9DrcError = Record<string, unknown>
+export type Pipeline9CollapsedTraceParticipant = {
+  solverTraceId: string
+  evaluationTraceIds: string[]
+}
+
+export type Pipeline9DrcError = Record<string, unknown> & {
+  __collapsed_trace_participants?: Pipeline9CollapsedTraceParticipant[]
+}
+
+export type Pipeline9PreloadRepairTraceIds = ReadonlySet<string> & {
+  readonly collidingFixedTraceIds?: ReadonlySet<string>
+}
 
 const SCORE_EPSILON = 1e-9
 
@@ -25,11 +36,16 @@ export const getPipeline9DrcErrors = (
   ) as Pipeline9DrcError[]
 }
 
-export const getPipeline9DrcErrorTraceIds = (
+const getPipeline9DrcErrorParticipantTraceIds = (
   error: Pipeline9DrcError,
 ): string[] => {
   const primaryTraceId =
     typeof error.pcb_trace_id === "string" ? error.pcb_trace_id : undefined
+  const explicitTraceIds = Array.isArray(error.pcb_trace_ids)
+    ? error.pcb_trace_ids.filter(
+        (traceId): traceId is string => typeof traceId === "string",
+      )
+    : []
   const viaIds = [
     ...(typeof error.pcb_via_id === "string" ? [error.pcb_via_id] : []),
     ...(Array.isArray(error.pcb_via_ids) ? error.pcb_via_ids : []),
@@ -41,14 +57,31 @@ export const getPipeline9DrcErrorTraceIds = (
     error.pcb_trace_error_id.startsWith(pairPrefix)
       ? error.pcb_trace_error_id.slice(pairPrefix.length)
       : undefined
-  return [
-    primaryTraceId,
-    ...(Array.isArray(error.pcb_trace_ids) ? error.pcb_trace_ids : []),
-    encodedOtherTraceId && !viaIds.includes(encodedOtherTraceId)
-      ? encodedOtherTraceId
-      : undefined,
-  ]
-    .filter((traceId): traceId is string => typeof traceId === "string")
+  if (explicitTraceIds.length > 0) {
+    const participantTraceIds =
+      primaryTraceId && !explicitTraceIds.includes(primaryTraceId)
+        ? [primaryTraceId, ...explicitTraceIds]
+        : [...explicitTraceIds]
+    if (
+      participantTraceIds.length < 2 &&
+      encodedOtherTraceId &&
+      !viaIds.includes(encodedOtherTraceId)
+    ) {
+      participantTraceIds.push(encodedOtherTraceId)
+    }
+    return participantTraceIds
+  }
+  return [primaryTraceId, encodedOtherTraceId]
+    .filter(
+      (traceId): traceId is string =>
+        typeof traceId === "string" && !viaIds.includes(traceId),
+    )
+}
+
+export const getPipeline9DrcErrorTraceIds = (
+  error: Pipeline9DrcError,
+): string[] => {
+  return getPipeline9DrcErrorParticipantTraceIds(error)
     .filter(
       (traceId, traceIndex, allTraceIds) =>
         allTraceIds.indexOf(traceId) === traceIndex,
@@ -60,11 +93,23 @@ export const isPipeline9DrcErrorOwnedByPreloadRepair = ({
   preloadRepairTraceIds,
 }: {
   error: Pipeline9DrcError
-  preloadRepairTraceIds: ReadonlySet<string>
+  preloadRepairTraceIds: Pipeline9PreloadRepairTraceIds
 }): boolean => {
-  const participantTraceIds = getPipeline9DrcErrorTraceIds(error)
-  return participantTraceIds.some((traceId) =>
-    preloadRepairTraceIds.has(traceId),
+  const participantTraceIds = getPipeline9DrcErrorParticipantTraceIds(error)
+  if (
+    participantTraceIds.some((traceId) => preloadRepairTraceIds.has(traceId))
+  ) {
+    return true
+  }
+  const collapsedTraceIds = (
+    error.__collapsed_trace_participants ?? []
+  ).flatMap((participant) =>
+    new Set(participant.evaluationTraceIds).size > 1
+      ? [participant.solverTraceId]
+      : [],
+  )
+  return collapsedTraceIds.some((traceId) =>
+    preloadRepairTraceIds.collidingFixedTraceIds?.has(traceId),
   )
 }
 

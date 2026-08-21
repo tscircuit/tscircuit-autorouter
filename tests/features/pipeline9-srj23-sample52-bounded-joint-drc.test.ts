@@ -32,6 +32,24 @@ test("Pipeline9 uses Pipeline7 exact DRC budgets for SRJ23 sample 52", async () 
         .exactRepairConfiguredBroadMaxIterations,
     ),
   ).toBe(12)
+  expect(
+    solver.pipeline9JointDrcRepairSolver?.stats.postExactReferenceAccepted,
+  ).toBeFalse()
+  expect(
+    Number(
+      solver.pipeline9JointDrcRepairSolver?.stats
+        .postExactReferenceDrcIssueCount,
+    ),
+  ).toBeGreaterThan(0)
+  expect(
+    solver.pipeline9JointDrcRepairSolver?.stats.regionalB01RepairAttempted,
+  ).toBeTrue()
+  expect(
+    Number(
+      solver.pipeline9JointDrcRepairSolver?.stats
+        .regionalB01RepairCandidateSearchCount,
+    ),
+  ).toBeGreaterThan(0)
   const { errors } = evaluateRelaxedDrc({
     inputSrj: scenario,
     srjWithPointPairs: solver.srjWithPointPairs!,
