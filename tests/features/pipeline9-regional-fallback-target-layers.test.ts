@@ -65,6 +65,9 @@ test("Pipeline9 only makes preloaded sections on target layers movable", (): voi
   expect([...problem.fixedRouteSectionsByConnectionName.keys()]).toEqual([
     "touches_target_layer",
   ])
+  expect(
+    problem.fixedObstacleRoutes.map((route) => route.connectionName),
+  ).toEqual(["top_only", "touches_target_layer_outside_node"])
   expect(problem.nodeWithPortPoints.portPoints).toHaveLength(4)
   expect(problem.nodeWithPortPoints.portPointsInPairs).toHaveLength(1)
 })

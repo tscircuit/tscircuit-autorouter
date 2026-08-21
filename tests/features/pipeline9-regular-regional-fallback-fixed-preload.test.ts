@@ -126,7 +126,7 @@ test("Pipeline9 regular regional fallback keeps immutable preloads as obstacles"
 
   const fixedRouteObstacles = getPipeline9FixedRouteObstacles({
     fixedObstacleRoutes: [fixedRoute],
-    srj,
+    layerCount: srj.layerCount,
   })
   expect(fixedRouteObstacles).toHaveLength(4)
   expect(fixedRouteObstacles).toEqual(

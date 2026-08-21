@@ -20,6 +20,11 @@ import { BaseSolver } from "../../solvers/BaseSolver"
 import { HighDensitySolver } from "../../solvers/HighDensitySolver/HighDensitySolver"
 import type { PreloadedHighDensityRoute } from "./convert-preloaded-traces-to-hd-routes"
 import {
+  arePipeline9RoutesOnSameNet,
+  doPipeline9RoutesHaveCopperConflict,
+  getPipeline9FixedRouteObstacles,
+} from "./pipeline9-fixed-route-copper"
+import {
   createRegionalFallbackProblem,
   type FixedRouteSection,
   spliceFixedRouteSection,
@@ -339,6 +344,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
   activeB01Solver: HighDensitySolverB01 | null = null
   activeFallbackSolver: Pipeline9RegionalFallbackSolver | null = null
   activeFallbackFixedRouteSections = new Map<string, FixedRouteSection>()
+  activeFallbackFixedObstacleRoutes: PreloadedHighDensityRoute[] = []
   activeFallbackReason: string | null = null
   activeNode: NodeWithPortPoints | null = null
 
@@ -404,6 +410,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     this.activeRegularSolver = null
     this.activeFallbackSolver = null
     this.activeFallbackFixedRouteSections.clear()
+    this.activeFallbackFixedObstacleRoutes = []
     this.activeFallbackReason = null
     this.activeNode = null
   }
@@ -454,6 +461,12 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     )
     this.activeFallbackFixedRouteSections =
       fallbackProblem.fixedRouteSectionsByConnectionName
+    this.activeFallbackFixedObstacleRoutes =
+      fallbackProblem.fixedObstacleRoutes
+    const fixedRouteObstacles = getPipeline9FixedRouteObstacles({
+      fixedObstacleRoutes: this.activeFallbackFixedObstacleRoutes,
+      layerCount: this.layerCount,
+    })
     this.activeFallbackSolver = new Pipeline9RegionalFallbackSolver({
       nodeWithPortPoints: fallbackProblem.nodeWithPortPoints,
       colorMap: this.colorMap,
@@ -463,7 +476,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       obstacleMargin: this.obstacleMargin,
       effort: this.effort,
       nodePfById: this.nodePfById,
-      obstacles: this.obstacles,
+      obstacles: [...this.obstacles, ...fixedRouteObstacles],
       layerCount: this.layerCount,
     })
     this.stats.fallbackNodeCount = Number(this.stats.fallbackNodeCount ?? 0) + 1
@@ -471,6 +484,11 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
 
   private finishRegionalFallback(): void {
     if (!this.activeFallbackSolver) return
+    if (!this.activeNode) {
+      throw new Error(
+        "Pipeline9 cannot finish a regional fallback without an active node",
+      )
+    }
 
     const newRoutes: HighDensityIntraNodeRoute[] = []
     const replacementRoutesByConnectionName = new Map<
@@ -492,6 +510,11 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       )
     }
 
+    const pendingFixedRouteReplacements: Array<{
+      connectionName: string
+      section: FixedRouteSection
+      replacement: PreloadedHighDensityRoute
+    }> = []
     for (const [connectionName, section] of this
       .activeFallbackFixedRouteSections) {
       const replacementRoutes =
@@ -501,10 +524,53 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
         this.failed = true
         return
       }
-      this.fixedRouteReplacements.set(
+      pendingFixedRouteReplacements.push({
         connectionName,
-        spliceFixedRouteSection(section, replacementRoutes[0]!),
-      )
+        section,
+        replacement: spliceFixedRouteSection(section, replacementRoutes[0]!),
+      })
+    }
+
+    const candidateRoutes: HighDensityRoute[] = [
+      ...newRoutes,
+      ...pendingFixedRouteReplacements.map(({ replacement }) => replacement),
+    ]
+    const candidateBounds = getNodeBounds(
+      this.activeNode,
+      this.obstacleMargin + Math.max(this.traceWidth, this.viaDiameter) / 2,
+    )
+    for (const candidateRoute of candidateRoutes) {
+      for (const fixedRoute of this.activeFallbackFixedObstacleRoutes) {
+        if (
+          arePipeline9RoutesOnSameNet(
+            candidateRoute,
+            fixedRoute,
+            this.connMap,
+          )
+        ) {
+          continue
+        }
+        if (
+          doPipeline9RoutesHaveCopperConflict({
+            left: candidateRoute,
+            right: fixedRoute,
+            clearance: this.obstacleMargin,
+            leftBounds: candidateBounds,
+          })
+        ) {
+          this.error = `Pipeline9 regional fallback route "${candidateRoute.connectionName}" conflicts with immutable fixed route "${fixedRoute.connectionName}"`
+          this.failed = true
+          return
+        }
+      }
+    }
+
+    for (const {
+      connectionName,
+      section,
+      replacement,
+    } of pendingFixedRouteReplacements) {
+      this.fixedRouteReplacements.set(connectionName, replacement)
       for (const sourceRoute of section.sourceRoutes.slice(1)) {
         this.removedFixedRouteConnectionNames.add(sourceRoute.connectionName)
       }
@@ -532,6 +598,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
         this.failed = true
         this.activeFallbackSolver = null
         this.activeFallbackFixedRouteSections.clear()
+        this.activeFallbackFixedObstacleRoutes = []
         this.activeNode = null
         return
       }
