@@ -189,106 +189,6 @@ const addTerminalPcbPortIds = (
   })
 }
 
-const getPortPointCoordinateKey = (point: {
-  x: number
-  y: number
-  z: number
-}): string => `${point.x}:${point.y}:${point.z}`
-
-const getRouteEndpointKey = (
-  start: { x: number; y: number; z: number },
-  end: { x: number; y: number; z: number },
-): string => {
-  const startKey = getPortPointCoordinateKey(start)
-  const endKey = getPortPointCoordinateKey(end)
-  return startKey < endKey ? `${startKey}|${endKey}` : `${endKey}|${startKey}`
-}
-
-const reverseRoute = (
-  route: HighDensityIntraNodeRoute["route"],
-): HighDensityIntraNodeRoute["route"] => {
-  const reversed = [...route].reverse().map((point) => {
-    const { toNextSegmentType, toNextSegmentCircuitJsonMetadata, ...rest } =
-      point
-    return rest
-  }) as HighDensityIntraNodeRoute["route"]
-
-  for (let index = 0; index < route.length - 1; index++) {
-    const segmentType = route[index]?.toNextSegmentType
-    if (!segmentType) continue
-    const reversedIndex = route.length - index - 2
-    reversed[reversedIndex] = {
-      ...reversed[reversedIndex]!,
-      toNextSegmentType: segmentType,
-      toNextSegmentCircuitJsonMetadata:
-        route[index]?.toNextSegmentCircuitJsonMetadata,
-    }
-  }
-
-  return reversed
-}
-
-/** Restores logical same-net pairs that B01 merged onto one physical segment. */
-const restoreB01DuplicateRouteAliases = (
-  routes: HighDensityIntraNodeRoute[],
-  node: NodeWithPortPoints,
-): HighDensityIntraNodeRoute[] => {
-  const routesByEndpointKey = new Map<string, HighDensityIntraNodeRoute>()
-  for (const route of routes) {
-    const start = route.route[0]
-    const end = route.route.at(-1)
-    if (!start || !end) continue
-    routesByEndpointKey.set(getRouteEndpointKey(start, end), route)
-  }
-
-  const routeNames = new Set(routes.map((route) => route.connectionName))
-  const aliases: HighDensityIntraNodeRoute[] = []
-  for (const pair of node.portPointsInPairs ?? []) {
-    const [startPortPoint, endPortPoint] = pair
-    if (
-      startPortPoint.connectionName !== endPortPoint.connectionName ||
-      routeNames.has(startPortPoint.connectionName)
-    ) {
-      continue
-    }
-
-    const sourceRoute = routesByEndpointKey.get(
-      getRouteEndpointKey(startPortPoint, endPortPoint),
-    )
-    if (!sourceRoute) continue
-    const sourceRootConnectionName =
-      sourceRoute.rootConnectionName ?? sourceRoute.connectionName
-    const portPairRootConnectionName =
-      startPortPoint.rootConnectionName ?? startPortPoint.connectionName
-    if (sourceRootConnectionName !== portPairRootConnectionName) continue
-    const sourceStart = sourceRoute.route[0]
-    const sourceEnd = sourceRoute.route.at(-1)
-    if (!sourceStart || !sourceEnd) continue
-
-    const isForward =
-      getPortPointCoordinateKey(sourceStart) ===
-        getPortPointCoordinateKey(startPortPoint) &&
-      getPortPointCoordinateKey(sourceEnd) ===
-        getPortPointCoordinateKey(endPortPoint)
-    const route = isForward
-      ? sourceRoute.route.map((point) => ({ ...point }))
-      : reverseRoute(sourceRoute.route)
-
-    aliases.push({
-      ...sourceRoute,
-      connectionName: startPortPoint.connectionName,
-      rootConnectionName:
-        startPortPoint.rootConnectionName ?? sourceRoute.rootConnectionName,
-      route,
-      startPcbPortId: undefined,
-      endPcbPortId: undefined,
-    })
-    routeNames.add(startPortPoint.connectionName)
-  }
-
-  return [...routes, ...aliases]
-}
-
 const normalizeNodeRootConnectionNames = (
   node: NodeWithPortPoints,
   connMap: ConnectivityMap,
@@ -402,13 +302,10 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     const solvedRoutes = this.activeNode
       ? restoreRootConnectionNames(routes, this.activeNode)
       : routes
-    const routesWithAliases = this.activeNode
-      ? restoreB01DuplicateRouteAliases(solvedRoutes, this.activeNode)
-      : solvedRoutes
     this.routes.push(
       ...(this.preserveTerminalPcbPortIds && this.activeNode
-        ? addTerminalPcbPortIds(routesWithAliases, this.activeNode)
-        : routesWithAliases),
+        ? addTerminalPcbPortIds(solvedRoutes, this.activeNode)
+        : solvedRoutes),
     )
     this.stats.solvedNodeCount = Number(this.stats.solvedNodeCount ?? 0) + 1
     this.activeB01Solver = null
