@@ -18,7 +18,7 @@ test("repro: a real QFP16 route ignores maxViaCount", (): void => {
   if (!constrainedConnection) {
     throw new Error("QFP16 fixture is missing source_trace_2")
   }
-  constrainedConnection.maxViaCount = 1
+  constrainedConnection.maxViaCount = 0
 
   const solver = new AutoroutingPipelineSolver7_MultiGraph(simpleRouteJson, {
     cacheProvider: null,
@@ -26,14 +26,34 @@ test("repro: a real QFP16 route ignores maxViaCount", (): void => {
   solver.solve()
 
   const traces = solver.getPrePowerTraceOutputSimplifiedPcbTraces()
-  const routedViaCount = traces
-    .filter((trace) => trace.connection_name === "source_trace_2")
+  const constrainedTraces = traces.filter(
+    (trace) => trace.connection_name === "source_trace_2",
+  )
+  const routedViaCount = constrainedTraces
     .flatMap((trace) => trace.route)
     .filter((routePoint) => routePoint.route_type === "via").length
   expect(routedViaCount).toBe(2)
   expect(solver.solved).toBe(true)
   expect(solver.failed).toBe(false)
+  const focusedBounds = {
+    minX: -6.5,
+    minY: -4.8,
+    maxX: 3.2,
+    maxY: 0.2,
+  }
   expect(
-    convertSrjToGraphicsObject({ ...simpleRouteJson, traces }),
+    convertSrjToGraphicsObject({
+      ...simpleRouteJson,
+      bounds: focusedBounds,
+      connections: [constrainedConnection],
+      obstacles: simpleRouteJson.obstacles.filter(
+        (obstacle) =>
+          obstacle.center.x + obstacle.width / 2 >= focusedBounds.minX &&
+          obstacle.center.x - obstacle.width / 2 <= focusedBounds.maxX &&
+          obstacle.center.y + obstacle.height / 2 >= focusedBounds.minY &&
+          obstacle.center.y - obstacle.height / 2 <= focusedBounds.maxY,
+      ),
+      traces: constrainedTraces,
+    }),
   ).toMatchGraphicsSvg(import.meta.path)
 })
