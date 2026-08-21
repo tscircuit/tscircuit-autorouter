@@ -878,6 +878,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         connMap: params.connMap,
         traceClearance,
         viaClearance,
+        includeTraceViaOwnerMetadata: true,
         spatialCellSize:
           Math.max(
             params.defaultViaDiameter,
