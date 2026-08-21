@@ -18,9 +18,9 @@ test("Pipeline9 repairs an inherited DRC participant in SRJ23 sample 18", async 
     solver.pipeline9JointDrcRepairSolver?.stats.movablePreloadedTraceCount,
   ).toBe(11)
   expect(
-    solver.getOutputSimplifiedPcbTraces().some(
-      (trace) => trace.__replaces_pcb_trace_id === "source_net_3_mst4_0",
-    ),
+    solver
+      .getOutputSimplifiedPcbTraces()
+      .some((trace) => trace.__replaces_pcb_trace_id === "source_net_3_mst4_0"),
   ).toBeTrue()
   const { errors } = evaluateRelaxedDrc({
     inputSrj: scenario,
