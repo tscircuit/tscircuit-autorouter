@@ -25,6 +25,49 @@ export const getPipeline9DrcErrors = (
   ) as Pipeline9DrcError[]
 }
 
+export const getPipeline9DrcErrorTraceIds = (
+  error: Pipeline9DrcError,
+): string[] => {
+  const primaryTraceId =
+    typeof error.pcb_trace_id === "string" ? error.pcb_trace_id : undefined
+  const viaIds = [
+    ...(typeof error.pcb_via_id === "string" ? [error.pcb_via_id] : []),
+    ...(Array.isArray(error.pcb_via_ids) ? error.pcb_via_ids : []),
+  ].filter((viaId): viaId is string => typeof viaId === "string")
+  const pairPrefix = primaryTraceId ? `overlap_${primaryTraceId}_` : undefined
+  const encodedOtherTraceId =
+    pairPrefix &&
+    typeof error.pcb_trace_error_id === "string" &&
+    error.pcb_trace_error_id.startsWith(pairPrefix)
+      ? error.pcb_trace_error_id.slice(pairPrefix.length)
+      : undefined
+  return [
+    primaryTraceId,
+    ...(Array.isArray(error.pcb_trace_ids) ? error.pcb_trace_ids : []),
+    encodedOtherTraceId && !viaIds.includes(encodedOtherTraceId)
+      ? encodedOtherTraceId
+      : undefined,
+  ]
+    .filter((traceId): traceId is string => typeof traceId === "string")
+    .filter(
+      (traceId, traceIndex, allTraceIds) =>
+        allTraceIds.indexOf(traceId) === traceIndex,
+    )
+}
+
+export const isPipeline9DrcErrorOwnedByPreloadRepair = ({
+  error,
+  preloadRepairTraceIds,
+}: {
+  error: Pipeline9DrcError
+  preloadRepairTraceIds: ReadonlySet<string>
+}): boolean => {
+  const participantTraceIds = getPipeline9DrcErrorTraceIds(error)
+  return participantTraceIds.some((traceId) =>
+    preloadRepairTraceIds.has(traceId),
+  )
+}
+
 const getDrcIssueScore = (errors: Pipeline9DrcError[]) =>
   errors.reduce((score, error) => {
     if (

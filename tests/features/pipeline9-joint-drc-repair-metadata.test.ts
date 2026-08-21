@@ -6,6 +6,7 @@ import {
 } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/pipeline9-joint-drc-repair-solver"
 import { getPipeline9RegionalRepairTraceIds } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/apply-pipeline9-regional-b01-repairs"
 import { normalizePipeline9DrcErrorsForRepair } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/normalize-pipeline9-drc-errors-for-repair"
+import { isPipeline9DrcErrorOwnedByPreloadRepair } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/pipeline9-joint-drc-repair-utils"
 import { preparePipeline9DrcRoutedTraces } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/prepare-pipeline9-drc-routed-traces"
 import type { SimplifiedPcbTrace } from "lib/types"
 
@@ -233,6 +234,38 @@ test("Pipeline9 joint DRC metadata keeps new route identities repairable", () =>
     pcb_trace_ids: ["pipeline9_preloaded_drc_0_0", "fixed_trace"],
     pcb_trace_error_id: "overlap_pipeline9_preloaded_drc_0_0_fixed_trace",
   })
+  const preloadRepairTraceIds = new Set([
+    "pipeline9_preloaded_drc_0_0",
+    "fixed_trace",
+  ])
+  expect(
+    isPipeline9DrcErrorOwnedByPreloadRepair({
+      error: normalizedFixedPair!,
+      preloadRepairTraceIds,
+    }),
+  ).toBeTrue()
+  expect(
+    isPipeline9DrcErrorOwnedByPreloadRepair({
+      error: {
+        pcb_trace_id: "ordinary_a",
+        pcb_trace_ids: ["ordinary_a", "ordinary_b"],
+        pcb_trace_error_id: "overlap_ordinary_a_ordinary_b",
+      },
+      preloadRepairTraceIds,
+    }),
+  ).toBeFalse()
+  expect(
+    isPipeline9DrcErrorOwnedByPreloadRepair({
+      error: {
+        pcb_trace_id: "ordinary_a",
+        pcb_trace_ids: ["ordinary_a", "fixed_trace"],
+        pcb_via_id: "via_7",
+        pcb_via_ids: ["via_7"],
+        pcb_trace_error_id: "overlap_ordinary_a_via_7",
+      },
+      preloadRepairTraceIds,
+    }),
+  ).toBeTrue()
 
   const [tracePairWithViaSuffix, encodedPhysicalVia, exactViaSuffixTrace] =
     addAutoroutingViaTraceIds({

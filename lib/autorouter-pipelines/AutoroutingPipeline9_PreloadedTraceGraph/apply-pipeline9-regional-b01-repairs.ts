@@ -25,6 +25,7 @@ import { Pipeline9RegionalFallbackSolver } from "./pipeline9-regional-fallback-s
 import {
   getPipeline9DrcErrors,
   getPipeline9RouteIndexByTraceId,
+  isPipeline9DrcErrorOwnedByPreloadRepair,
   isPipeline9DrcCandidateBetter,
   type Pipeline9DrcError,
 } from "./pipeline9-joint-drc-repair-utils"
@@ -39,6 +40,8 @@ type RegionalB01RepairResult = {
   candidateSearchBudgetExhausted: boolean
   safeTraceLayerRepairSkippedForBudget: boolean
   remainingDrcIssueCount: number
+  preloadEligibleDrcIssueCount: number
+  preloadRepairAttempted: boolean
 }
 
 type Bounds = {
@@ -496,11 +499,11 @@ const getRegularRegionalCandidate = ({
 }
 
 /**
- * Reroutes one exact DRC participant with B01 in a sub-15mm window. B01 sees
- * every other route plus board copper as obstacles. Candidate searches use a
- * route-scaled budget because each search rebuilds and evaluates board copper.
- * If no B01 candidate helps, one regular high-density candidate jointly
- * reroutes all traces in the region.
+ * Reroutes one preload-owned exact DRC participant with B01 in a sub-15mm
+ * window. B01 sees every other route plus board copper as obstacles. Candidate
+ * searches use a route-scaled budget because each search rebuilds and
+ * evaluates board copper. If no B01 candidate helps, one regular high-density
+ * candidate jointly reroutes all traces in the region.
  */
 export const applyPipeline9RegionalB01Repairs = ({
   srj,
@@ -509,6 +512,8 @@ export const applyPipeline9RegionalB01Repairs = ({
   newConnections,
   syntheticConnectionNames,
   drcEvaluator,
+  initialErrors,
+  preloadRepairTraceIds,
   connMap,
   colorMap,
   viaDiameter,
@@ -522,6 +527,8 @@ export const applyPipeline9RegionalB01Repairs = ({
   newConnections: SimpleRouteConnection[]
   syntheticConnectionNames: ReadonlySet<string>
   drcEvaluator: DrcEvaluator
+  initialErrors?: Pipeline9DrcError[]
+  preloadRepairTraceIds: ReadonlySet<string>
   connMap: ConnectivityMap
   colorMap: Record<string, string>
   viaDiameter: number
@@ -530,7 +537,8 @@ export const applyPipeline9RegionalB01Repairs = ({
   effort: number
 }): RegionalB01RepairResult => {
   let currentRoutes = routes
-  let currentErrors = getPipeline9DrcErrors(drcEvaluator, currentRoutes)
+  let currentErrors =
+    initialErrors ?? getPipeline9DrcErrors(drcEvaluator, currentRoutes)
   let attemptedCandidateCount = 0
   let acceptedCandidateCount = 0
   let fallbackCandidateCount = 0
@@ -539,6 +547,30 @@ export const applyPipeline9RegionalB01Repairs = ({
   const candidateSearchBudget = getPipeline9RegionalRepairSearchBudget(
     routes.length,
   )
+  const isPreloadRepairError = (error: Pipeline9DrcError): boolean => {
+    return isPipeline9DrcErrorOwnedByPreloadRepair({
+      error,
+      preloadRepairTraceIds,
+    })
+  }
+  const preloadEligibleDrcIssueCount = currentErrors.filter(
+    isPreloadRepairError,
+  ).length
+  if (preloadEligibleDrcIssueCount === 0) {
+    return {
+      routes: currentRoutes,
+      attemptedCandidateCount,
+      acceptedCandidateCount,
+      fallbackCandidateCount,
+      candidateSearchCount,
+      candidateSearchBudget,
+      candidateSearchBudgetExhausted,
+      safeTraceLayerRepairSkippedForBudget: false,
+      remainingDrcIssueCount: currentErrors.length,
+      preloadEligibleDrcIssueCount,
+      preloadRepairAttempted: false,
+    }
+  }
   const fixedRouteCopperSpatialIndex =
     createFixedRouteCopperSpatialIndex(fixedObstacleRoutes)
 
@@ -552,6 +584,7 @@ export const applyPipeline9RegionalB01Repairs = ({
     })
     const repairableErrors = currentErrors.filter(
       (error) =>
+        isPreloadRepairError(error) &&
         (error.type === "pcb_trace_error" ||
           error.type === "pcb_pad_trace_clearance_error" ||
           error.type === "pcb_via_trace_clearance_error" ||
@@ -654,8 +687,9 @@ export const applyPipeline9RegionalB01Repairs = ({
 
   const hasSafeLayerRepairableError = currentErrors.some(
     (error) =>
-      error.type === "pcb_trace_error" ||
-      error.type === "pcb_pad_trace_clearance_error",
+      isPreloadRepairError(error) &&
+      (error.type === "pcb_trace_error" ||
+        error.type === "pcb_pad_trace_clearance_error"),
   )
   const safeTraceLayerRepairSkippedForBudget =
     hasSafeLayerRepairableError && candidateSearchBudgetExhausted
@@ -697,5 +731,7 @@ export const applyPipeline9RegionalB01Repairs = ({
     candidateSearchBudgetExhausted,
     safeTraceLayerRepairSkippedForBudget,
     remainingDrcIssueCount: currentErrors.length,
+    preloadEligibleDrcIssueCount,
+    preloadRepairAttempted: preloadEligibleDrcIssueCount > 0,
   }
 }

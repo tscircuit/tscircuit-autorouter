@@ -171,6 +171,11 @@ test("Pipeline9 regular regional fallback keeps immutable preloads as obstacles"
     newConnections: srj.connections,
     syntheticConnectionNames: new Set(),
     drcEvaluator,
+    preloadRepairTraceIds: new Set([
+      "immutable_preload_collision",
+      "force_regular_fallback_a",
+      "force_regular_fallback_b",
+    ]),
     connMap,
     colorMap: {},
     viaDiameter: 0.3,
@@ -268,6 +273,11 @@ test("Pipeline9 regular regional fallback keeps immutable preloads as obstacles"
     newConnections: wideSrj.connections,
     syntheticConnectionNames: new Set(),
     drcEvaluator: wideDrcEvaluator,
+    preloadRepairTraceIds: new Set([
+      "immutable_wide_preload_collision",
+      "force_wide_regular_fallback_a",
+      "force_wide_regular_fallback_b",
+    ]),
     connMap: wideConnMap,
     colorMap: {},
     viaDiameter: 0.3,

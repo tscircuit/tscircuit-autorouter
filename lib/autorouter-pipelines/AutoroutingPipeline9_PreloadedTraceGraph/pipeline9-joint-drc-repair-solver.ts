@@ -36,13 +36,11 @@ import { getPipeline9PreloadedTraceIdsInInitialDrcRegions } from "./get-pipeline
 import { getPipeline9PreloadedViaPairTraceGroups } from "./get-pipeline9-preloaded-via-pair-trace-groups"
 import { mergePipeline9MovablePreloadedVias } from "./merge-pipeline9-movable-preloaded-vias"
 import { normalizePipeline9DrcErrorsForRepair } from "./normalize-pipeline9-drc-errors-for-repair"
+import { getPipeline9RouteIndexByTraceId } from "./pipeline9-joint-drc-repair-utils"
 import { preparePipeline9DrcRoutedTracesWithMetadata } from "./prepare-pipeline9-drc-routed-traces"
 
-// This generic portfolio is only the preliminary repair. Each candidate runs
-// joint DRC over all copper; unresolved errors continue into Pipeline9's
-// regional B01 pass, where the search is local and obstacle-aware.
-const PRELIMINARY_EXACT_REPAIR_MAX_ITERATIONS = 8
-const PRELIMINARY_EXACT_REPAIR_BROAD_MAX_ITERATIONS = 4
+const EXACT_REPAIR_MAX_ITERATIONS = 32
+const EXACT_REPAIR_BROAD_MAX_ITERATIONS = 12
 
 type Pipeline9JointDrcRepairSolverParams = {
   srj: SimpleRouteJson
@@ -546,6 +544,42 @@ const rebuildPreloadedTraceFromSections = ({
   }
 }
 
+export const getPipeline9PreloadRepairTraceIds = ({
+  routes,
+  newConnections,
+  syntheticConnectionNames,
+  fixedPreloadedObstacleRoutes,
+  updatedPreloadedTraces,
+}: {
+  routes: HighDensityRoute[]
+  newConnections: SimpleRouteConnection[]
+  syntheticConnectionNames: ReadonlySet<string>
+  fixedPreloadedObstacleRoutes: PreloadedHighDensityRoute[]
+  updatedPreloadedTraces: SimplifiedPcbTrace[]
+}): Set<string> => {
+  const preloadRepairTraceIds = new Set<string>()
+  const routeIndexByTraceId = getPipeline9RouteIndexByTraceId({
+    routes,
+    newConnections,
+    syntheticConnectionNames,
+  })
+  for (const [traceId, routeIndex] of routeIndexByTraceId) {
+    if (syntheticConnectionNames.has(routes[routeIndex]!.connectionName)) {
+      preloadRepairTraceIds.add(traceId)
+    }
+  }
+  for (const fixedRoute of fixedPreloadedObstacleRoutes) {
+    const originalTrace = updatedPreloadedTraces[fixedRoute.preloadedTraceIndex]
+    if (!originalTrace) {
+      throw new Error(
+        `Pipeline9 fixed preload route has invalid trace index ${fixedRoute.preloadedTraceIndex}`,
+      )
+    }
+    preloadRepairTraceIds.add(originalTrace.pcb_trace_id)
+  }
+  return preloadRepairTraceIds
+}
+
 /**
  * Gives the existing exact DRC portfolio ownership of only the preloaded
  * traces that participate in a remaining joint-output DRC error.
@@ -831,6 +865,10 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       }, {}),
       movablePreloadedTraceCount: movablePreloadedTraceIds.size,
       movablePreloadedSectionCount: this.movablePreloadedSections.length,
+      exactRepairConfiguredMaxIterations: EXACT_REPAIR_MAX_ITERATIONS,
+      exactRepairConfiguredViaInPadMaxIterations: EXACT_REPAIR_MAX_ITERATIONS,
+      exactRepairConfiguredBroadMaxIterations:
+        EXACT_REPAIR_BROAD_MAX_ITERATIONS,
     }
 
     if (currentDrc.errors.length === 0) {
@@ -1196,7 +1234,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       viaHoleDiameter: params.defaultViaHoleDiameter,
       drcEvaluator,
       viaInPadDrcEvaluator: drcEvaluator,
-      maxIterations: PRELIMINARY_EXACT_REPAIR_MAX_ITERATIONS,
+      maxIterations: EXACT_REPAIR_MAX_ITERATIONS,
       enableBroadFallback: false,
       enableLargeBoardBroadFallback: false,
       enableTargetedErrorSweep: true,
@@ -1204,8 +1242,8 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       enablePostSolveClearanceRelaxation: false,
       enableSafeTraceLayerMoves: true,
       enableViaInPadLayerMoves: params.originalSrj.allowViaInPad ?? false,
-      viaInPadMaxIterations: PRELIMINARY_EXACT_REPAIR_MAX_ITERATIONS,
-      broadMaxIterations: PRELIMINARY_EXACT_REPAIR_BROAD_MAX_ITERATIONS,
+      viaInPadMaxIterations: EXACT_REPAIR_MAX_ITERATIONS,
+      broadMaxIterations: EXACT_REPAIR_BROAD_MAX_ITERATIONS,
       broadPassMultiplier: 3,
     })
     this.activeSubSolver = this.exactRepairSolver
@@ -1236,6 +1274,13 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       syntheticConnectionNames: this.syntheticConnectionNames,
       drcEvaluator: this.drcEvaluator!,
     })
+    const preloadRepairTraceIds = getPipeline9PreloadRepairTraceIds({
+      routes: terminalEscapeResult.routes,
+      newConnections: this.params.newConnections,
+      syntheticConnectionNames: this.syntheticConnectionNames,
+      fixedPreloadedObstacleRoutes: this.fixedPreloadedObstacleRoutes,
+      updatedPreloadedTraces: this.params.updatedPreloadedTraces,
+    })
     const regionalB01RepairResult = applyPipeline9RegionalB01Repairs({
       srj: this.params.srj,
       routes: terminalEscapeResult.routes,
@@ -1243,6 +1288,8 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       newConnections: this.params.newConnections,
       syntheticConnectionNames: this.syntheticConnectionNames,
       drcEvaluator: this.drcEvaluator!,
+      initialErrors: terminalEscapeResult.remainingErrors,
+      preloadRepairTraceIds,
       connMap: this.params.connMap,
       colorMap: this.params.colorMap,
       viaDiameter: this.params.defaultViaDiameter,
@@ -1273,6 +1320,11 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         regionalB01RepairResult.safeTraceLayerRepairSkippedForBudget,
       regionalB01RepairRemainingDrcIssueCount:
         regionalB01RepairResult.remainingDrcIssueCount,
+      regionalB01RepairPreloadEligibleDrcIssueCount:
+        regionalB01RepairResult.preloadEligibleDrcIssueCount,
+      regionalB01RepairAttempted:
+        regionalB01RepairResult.preloadRepairAttempted,
+      regionalB01RepairTraceIdCount: preloadRepairTraceIds.size,
       terminalEscapeCandidateCount:
         terminalEscapeResult.attemptedCandidateCount,
       terminalEscapeAcceptedCount: terminalEscapeResult.acceptedCandidateCount,

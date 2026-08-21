@@ -9,6 +9,15 @@ import type {
 import type { HighDensityRoute } from "lib/types/high-density-types"
 import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
 
+type ExactPathStats = {
+  maxIterations: number
+  viaInPadMaxIterations: number
+  broadMaxIterations: number
+  fastProbeAttempted: boolean
+  terminalEscapeCandidateCount: number
+  regionalB01RepairAttempted: boolean
+}
+
 const createEndpointPad = (
   x: number,
   y: number,
@@ -41,10 +50,12 @@ const createJointRepairSolver = ({
   newRouteY,
   updatedPreloadY,
   preloadWasMutated,
+  includePreload = true,
 }: {
   newRouteY: number
   updatedPreloadY: number
   preloadWasMutated: boolean
+  includePreload?: boolean
 }): Pipeline9JointDrcRepairSolver => {
   const newConnection: SimpleRouteConnection = {
     name: "route",
@@ -87,8 +98,12 @@ const createJointRepairSolver = ({
   const obstacles: Obstacle[] = [
     createEndpointPad(-2, newRouteY, "route_start"),
     createEndpointPad(2, newRouteY, "route_end"),
-    createEndpointPad(-2, 3, "preloaded_start"),
-    createEndpointPad(2, 3, "preloaded_end"),
+    ...(includePreload
+      ? [
+          createEndpointPad(-2, 3, "preloaded_start"),
+          createEndpointPad(2, 3, "preloaded_end"),
+        ]
+      : []),
     {
       type: "rect",
       center: { x: 0, y: 0 },
@@ -106,8 +121,11 @@ const createJointRepairSolver = ({
     minViaHoleDiameter: 0.15,
     bounds: { minX: -3, minY: -4, maxX: 3, maxY: 4 },
     obstacles,
-    connections: [newConnection, preloadedConnection],
-    traces: [createPreloadedTrace(3)],
+    connections: [
+      newConnection,
+      ...(includePreload ? [preloadedConnection] : []),
+    ],
+    traces: includePreload ? [createPreloadedTrace(3)] : [],
   }
   const newHdRoute: HighDensityRoute = {
     connectionName: "route",
@@ -127,8 +145,10 @@ const createJointRepairSolver = ({
     originalSrj,
     newConnections: [newConnection],
     newHdRoutes: [newHdRoute],
-    updatedPreloadedTraces: [createPreloadedTrace(updatedPreloadY)],
-    mutatedPreloadedTraceIds: preloadWasMutated
+    updatedPreloadedTraces: includePreload
+      ? [createPreloadedTrace(updatedPreloadY)]
+      : [],
+    mutatedPreloadedTraceIds: includePreload && preloadWasMutated
       ? new Set(["route_0"])
       : new Set(),
     connMap: getConnectivityMapFromSimpleRouteJson(originalSrj),
@@ -142,6 +162,12 @@ const createJointRepairSolver = ({
 }
 
 test("Pipeline9 joint DRC distinguishes a new trace id from its preloaded alias", () => {
+  const noPreloadSolver = createJointRepairSolver({
+    newRouteY: 0,
+    updatedPreloadY: 3,
+    preloadWasMutated: false,
+    includePreload: false,
+  })
   const newRouteErrorSolver = createJointRepairSolver({
     newRouteY: 0,
     updatedPreloadY: 3,
@@ -150,6 +176,39 @@ test("Pipeline9 joint DRC distinguishes a new trace id from its preloaded alias"
   expect(Number(newRouteErrorSolver.stats.initialJointDrcIssueCount)).toBe(1)
   expect(newRouteErrorSolver.movablePreloadedSections).toHaveLength(0)
   expect(newRouteErrorSolver.getMutatedPreloadedTraces()).toEqual([])
+  noPreloadSolver.solve()
+  newRouteErrorSolver.solve()
+  const getExactPathStats = (
+    solver: Pipeline9JointDrcRepairSolver,
+  ): ExactPathStats => ({
+    maxIterations: Number(solver.stats.exactRepairConfiguredMaxIterations),
+    viaInPadMaxIterations: Number(
+      solver.stats.exactRepairConfiguredViaInPadMaxIterations,
+    ),
+    broadMaxIterations: Number(
+      solver.stats.exactRepairConfiguredBroadMaxIterations,
+    ),
+    fastProbeAttempted: Boolean(
+      solver.stats.pipeline7AdaptiveExactDrcFastProbeAttempted,
+    ),
+    terminalEscapeCandidateCount: Number(
+      solver.stats.terminalEscapeCandidateCount,
+    ),
+    regionalB01RepairAttempted: Boolean(
+      solver.stats.regionalB01RepairAttempted,
+    ),
+  })
+  expect(getExactPathStats(noPreloadSolver)).toEqual({
+    maxIterations: 32,
+    viaInPadMaxIterations: 32,
+    broadMaxIterations: 12,
+    fastProbeAttempted: true,
+    terminalEscapeCandidateCount: 0,
+    regionalB01RepairAttempted: false,
+  })
+  expect(getExactPathStats(newRouteErrorSolver)).toEqual(
+    getExactPathStats(noPreloadSolver),
+  )
 
   const preparedPreloadAliasErrorSolver = createJointRepairSolver({
     newRouteY: -2,
@@ -169,4 +228,14 @@ test("Pipeline9 joint DRC distinguishes a new trace id from its preloaded alias"
       .getMutatedPreloadedTraces()
       .map((trace) => trace.pcb_trace_id),
   ).toEqual(["route_0"])
+  preparedPreloadAliasErrorSolver.solve()
+  expect(
+    Number(
+      preparedPreloadAliasErrorSolver.stats
+        .regionalB01RepairPreloadEligibleDrcIssueCount,
+    ),
+  ).toBeGreaterThan(0)
+  expect(
+    preparedPreloadAliasErrorSolver.stats.regionalB01RepairAttempted,
+  ).toBeTrue()
 })
