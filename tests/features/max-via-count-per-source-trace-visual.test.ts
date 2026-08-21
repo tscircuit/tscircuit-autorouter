@@ -48,12 +48,12 @@ test("repro: maxViaCount is ignored on a source trace in a net", (): void => {
   const mergedNetTraceNames = new Set(
     routedConnectionsForMergedNet.map((connection) => connection.name),
   )
-  const mergedNetViaCount = traces
-    .filter((trace) =>
-      Array.from(mergedNetTraceNames).some((connectionName) =>
-        trace.pcb_trace_id.startsWith(`${connectionName}_`),
-      ),
-    )
+  const mergedNetTraces = traces.filter((trace) =>
+    Array.from(mergedNetTraceNames).some((connectionName) =>
+      trace.pcb_trace_id.startsWith(`${connectionName}_`),
+    ),
+  )
+  const mergedNetViaCount = mergedNetTraces
     .flatMap((trace) => trace.route)
     .filter((routePoint) => routePoint.route_type === "via").length
   const constrainedTraceViaCount = traces
@@ -67,7 +67,31 @@ test("repro: maxViaCount is ignored on a source trace in a net", (): void => {
   expect(constrainedTraceViaCount).toBe(0)
   expect(solver.solved).toBe(true)
   expect(solver.failed).toBe(false)
+
+  const focusedBounds = {
+    minX: -10.25,
+    minY: -9,
+    maxX: -3.25,
+    maxY: -4.25,
+  }
+  const focusedSimpleRouteJson: SimpleRouteJson = {
+    ...simpleRouteJson,
+    bounds: focusedBounds,
+    connections: simpleRouteJson.connections.filter((connection) =>
+      ["source_trace_45", "source_trace_46", "source_net_11"].includes(
+        connection.name,
+      ),
+    ),
+    obstacles: simpleRouteJson.obstacles.filter(
+      (obstacle) =>
+        obstacle.center.x + obstacle.width / 2 >= focusedBounds.minX &&
+        obstacle.center.x - obstacle.width / 2 <= focusedBounds.maxX &&
+        obstacle.center.y + obstacle.height / 2 >= focusedBounds.minY &&
+        obstacle.center.y - obstacle.height / 2 <= focusedBounds.maxY,
+    ),
+    traces: mergedNetTraces,
+  }
   expect(
-    convertSrjToGraphicsObject({ ...simpleRouteJson, traces }),
+    convertSrjToGraphicsObject(focusedSimpleRouteJson),
   ).toMatchGraphicsSvg(import.meta.path)
 })
