@@ -78,28 +78,34 @@ export class EndpointClusterIndex {
     routes: HighDensityIntraNodeRoute[],
     point: Point3,
   ) {
+    const routeEndpoints = routes.flatMap((route) => [
+      route.route[0]!,
+      route.route[route.route.length - 1]!,
+    ])
+    const sameLayerEndpoints = routeEndpoints.filter(
+      (endpoint) => endpoint.z === point.z,
+    )
+    const candidateEndpoints =
+      sameLayerEndpoints.length > 0 ? sameLayerEndpoints : routeEndpoints
     let bestHash: string | null = null
     let bestEndpoint: Point3 | null = null
     let bestDist = Infinity
 
-    for (const route of routes) {
-      const endpoints = [route.route[0]!, route.route[route.route.length - 1]!]
-      for (const endpoint of endpoints) {
-        const dist = distance(point, endpoint)
-        const endpointHash = this.getEndpointKey(connectionName, endpoint)
-        if (
-          dist < bestDist - DISTANCE_TIE_TOLERANCE ||
-          (Math.abs(dist - bestDist) <= DISTANCE_TIE_TOLERANCE &&
-            (bestHash === null ||
-              endpointHash.localeCompare(bestHash) < 0 ||
-              (endpointHash === bestHash &&
-                bestEndpoint !== null &&
-                comparePoints(endpoint, bestEndpoint) < 0)))
-        ) {
-          bestDist = dist
-          bestHash = endpointHash
-          bestEndpoint = endpoint
-        }
+    for (const endpoint of candidateEndpoints) {
+      const dist = distance(point, endpoint)
+      const endpointHash = this.getEndpointKey(connectionName, endpoint)
+      if (
+        dist < bestDist - DISTANCE_TIE_TOLERANCE ||
+        (Math.abs(dist - bestDist) <= DISTANCE_TIE_TOLERANCE &&
+          (bestHash === null ||
+            endpointHash.localeCompare(bestHash) < 0 ||
+            (endpointHash === bestHash &&
+              bestEndpoint !== null &&
+              comparePoints(endpoint, bestEndpoint) < 0)))
+      ) {
+        bestDist = dist
+        bestHash = endpointHash
+        bestEndpoint = endpoint
       }
     }
 

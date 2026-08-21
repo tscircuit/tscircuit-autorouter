@@ -1,5 +1,6 @@
 import { RectDiffPipeline } from "@tscircuit/rectdiff"
 import { PostProcessingSolver as DifferentialPairPostProcessingSolver } from "@tscircuit/length-matching-solver"
+import type { PowerTraceExpanderOptions } from "@tscircuit/power-trace-expander"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { GraphicsObject, Line } from "graphics-debug"
 import { HighDensityForceImproveSolver } from "high-density-repair01/lib/HighDensityForceImproveSolver"
@@ -81,8 +82,14 @@ import { Pipeline9JointDrcRepairSolver } from "./pipeline9-joint-drc-repair-solv
 import { PreloadedTraceGraphSolver } from "./preloaded-trace-graph-solver"
 import { PreprocessSimpleRouteJsonWithoutTraceObstaclesSolver } from "./preprocess-simple-route-json-without-trace-obstacles-solver"
 import { MergedComponentTopologyView } from "../AutoroutingPipeline7_MultiGraph/MergedComponentTopologyView"
+import { PowerTraceExpansionSolver } from "../AutoroutingPipeline7_MultiGraph/PowerTraceExpansionSolver"
 import { convertPipeline7HdRoutesToSimplifiedPcbTraces } from "../AutoroutingPipeline7_MultiGraph/convertPipeline7HdRoutesToSimplifiedPcbTraces"
+import { getPowerTraceExpansionConnectionNames } from "../AutoroutingPipeline7_MultiGraph/getPowerTraceExpansionConnectionNames"
 import { lockHdRouteTerminals } from "../AutoroutingPipeline7_MultiGraph/lock-hd-route-terminals"
+import {
+  preparePipeline7PowerTraceExpansionInput,
+  type Pipeline7PowerTraceExpansionInput,
+} from "../AutoroutingPipeline7_MultiGraph/prepare-pipeline7-power-trace-expansion-input"
 
 interface CapacityMeshSolverOptions {
   capacityDepth?: number
@@ -93,6 +100,7 @@ interface CapacityMeshSolverOptions {
   maxNodeRatio?: number
   minNodeArea?: number
   visualizationTraceColorMode?: TraceColorMode
+  powerTraceExpansion?: PowerTraceExpanderOptions
 }
 export type AutoroutingPipelineSolverOptions = CapacityMeshSolverOptions
 
@@ -244,6 +252,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
   deadEndSolver?: DeadEndSolver
   traceSimplificationSolver?: TraceSimplificationSolver
   lengthMatchingPostProcessingSolver?: DifferentialPairPostProcessingSolver
+  powerTraceExpansionSolver?: PowerTraceExpansionSolver
   availableSegmentPointSolver?: AvailableSegmentPointSolver
   portPointPathingSolver?: TinyHypergraphPortPointPathingSolver
   multiSectionPortPointOptimizer?: MultiSectionPortPointOptimizer
@@ -554,10 +563,16 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       "highDensityRouteSolver",
       Pipeline9HighDensitySolver,
       (cms) => {
+        const portPointPathingSolver = cms.portPointPathingSolver
+        if (!portPointPathingSolver) {
+          throw new Error(
+            "Pipeline9 invariant violated: high-density routing requires the completed port-point pathing solver",
+          )
+        }
+        const portPointPathingOutput = portPointPathingSolver.getOutput()
         const uniformNodes =
           cms.uniformPortDistributionSolver?.getOutput() ?? []
-        const fallbackNodes =
-          cms.portPointPathingSolver?.getOutput().nodesWithPortPoints ?? []
+        const fallbackNodes = portPointPathingOutput.nodesWithPortPoints
         const nodePortPointsSource =
           uniformNodes.length > 0 ? uniformNodes : fallbackNodes
 
@@ -590,6 +605,13 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             traceWidth: cms.minTraceWidth,
             obstacleMargin: cms.srj.defaultObstacleMargin ?? 0.15,
             effort: cms.effort,
+            includeBoardObstacles: true,
+            nodePfById: new Map(
+              portPointPathingOutput.inputNodeWithPortPoints.map((node) => [
+                node.capacityMeshNodeId,
+                portPointPathingSolver.computeNodePf(node),
+              ]),
+            ),
             preserveTerminalPcbPortIds: true,
           },
         ]
@@ -684,8 +706,10 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             defaultViaDiameter: cms.viaDiameter,
             layerCount: cms.srj.layerCount,
             minTraceToPadEdgeClearance: cms.srj.minTraceToPadEdgeClearance,
+            minBoardEdgeClearance: cms.srj.minBoardEdgeClearance,
             otherHdRoutes: preloadedHdRoutes,
             netByConnectionName,
+            enableCrossingViaReduction: true,
             iterations: 2,
           },
         ]
@@ -792,6 +816,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             )
           }
         }
+        const hdRoutes = cms.pipeline9JointDrcRepairSolver!.getOutput()
         const differentialPairs = (cms.srj.differentialPairs ?? []).map(
           (pair) => {
             const connectionNames = pair.connectionNames.map(
@@ -809,16 +834,64 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
               throw new Error(
                 `Pipeline9: differential pair ${pair.connectionNames.join("/")} resolves both members to "${connectionNames[0]}"`,
               )
-            return { ...pair, connectionNames }
+            if (pair.traceGap === undefined)
+              return { connectionNames, lengthTolerance: pair.lengthTolerance }
+            const pairRoutes = connectionNames.map((connectionName) => {
+              const matchingRoutes = hdRoutes.filter(
+                (route) => route.connectionName === connectionName,
+              )
+              if (matchingRoutes.length !== 1)
+                throw new Error(
+                  `Pipeline9: differential pair connection "${connectionName}" must resolve to exactly one final HD route, got ${matchingRoutes.length}`,
+                )
+              return matchingRoutes[0]!
+            })
+            const centerlineDistance =
+              pair.traceGap +
+              pairRoutes.reduce(
+                (halfWidthTotal, route) =>
+                  halfWidthTotal + route.traceThickness / 2,
+                0,
+              )
+            return {
+              connectionNames,
+              lengthTolerance: pair.lengthTolerance,
+              minimumCenterlineDistance: centerlineDistance,
+              maximumCenterlineDistance: centerlineDistance,
+            }
           },
         )
         return [
           {
-            hdRoutes: cms.pipeline9JointDrcRepairSolver!.getOutput(),
+            hdRoutes,
             differentialPairs,
             obstacles: cms.srj.obstacles,
             bounds: cms.srj.bounds,
             layerCount: cms.srj.layerCount,
+          },
+        ]
+      },
+    ),
+    definePipelineStep(
+      "powerTraceExpansionSolver",
+      PowerTraceExpansionSolver,
+      (cms) => {
+        const configuredOptions = cms.opts.powerTraceExpansion ?? {}
+        const onlyConnectionNames =
+          configuredOptions.onlyConnectionNames ??
+          getPowerTraceExpansionConnectionNames(cms.originalSrj)
+        return [
+          preparePipeline7PowerTraceExpansionInput({
+            originalSrj: cms.originalSrj,
+            newlyRoutedTraces: cms.getNewTracesBeforePowerExpansion(),
+            currentPreloadedTraces: cms.getUpdatedPreloadedTraces(),
+            expandedConnectionNames: onlyConnectionNames,
+            resolveConnectedTraceAliases: true,
+          }),
+          {
+            allowNewVias: false,
+            ...configuredOptions,
+            onlyConnectionNames,
           },
         ]
       },
@@ -910,7 +983,10 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     const constructorParams = pipelineStepDef.getConstructorParams(this)
     // @ts-ignore
     this.activeSubSolver = new pipelineStepDef.solverClass(...constructorParams)
-    if (pipelineStepDef.solverName === "lengthMatchingPostProcessingSolver")
+    if (
+      pipelineStepDef.solverName === "lengthMatchingPostProcessingSolver" ||
+      pipelineStepDef.solverName === "powerTraceExpansionSolver"
+    )
       this.MAX_ITERATIONS = Math.max(
         this.MAX_ITERATIONS,
         this.iterations + this.activeSubSolver.MAX_ITERATIONS + 1,
@@ -962,6 +1038,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     const traceSimplificationViz = this.traceSimplificationSolver?.visualize()
     const lengthMatchingPostProcessingViz =
       this.lengthMatchingPostProcessingSolver?.visualize()
+    const powerTraceExpansionViz = this.powerTraceExpansionSolver?.visualize()
     const traceWidthViz = this.traceWidthSolver?.visualize()
     const necessaryCrampedPortPointSolverViz =
       this.necessaryCrampedPortPointSolver?.visualize()
@@ -1088,6 +1165,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       globalDrcForceImproveViz,
       pipeline9JointDrcRepairViz,
       lengthMatchingPostProcessingViz,
+      powerTraceExpansionViz,
       this.solved
         ? combineVisualizations(
             { lines: problemLines },
@@ -1275,9 +1353,9 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     )
   }
 
-  private getNewOutputSimplifiedPcbTraces(): SimplifiedPcbTraces {
-    if (!this.solved || !this.highDensityRouteSolver) {
-      throw new Error("Cannot get output before solving is complete")
+  getNewTracesBeforePowerExpansion(): SimplifiedPcbTraces {
+    if (!this.highDensityRouteSolver) {
+      throw new Error("Cannot get new traces before high-density routing")
     }
 
     const routedTraces = convertPipeline7HdRoutesToSimplifiedPcbTraces({
@@ -1295,20 +1373,51 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     )
   }
 
+  private getPowerTraceExpansionFixedTraces(): SimplifiedPcbTraces {
+    if (!this.powerTraceExpansionSolver) {
+      throw new Error(
+        "Pipeline9 invariant violated: solved pipeline is missing the unconditional power-trace expansion solver",
+      )
+    }
+    return (
+      this.powerTraceExpansionSolver
+        .inputSrj as Pipeline7PowerTraceExpansionInput
+    ).fixedTraces
+  }
+
   getOutputSimplifiedPcbTraces(): SimplifiedPcbTraces {
+    if (!this.solved) {
+      throw new Error("Cannot get output before solving is complete")
+    }
+    if (!this.powerTraceExpansionSolver) {
+      throw new Error(
+        "Pipeline9 invariant violated: solved pipeline is missing the unconditional power-trace expansion solver",
+      )
+    }
     return [
-      ...this.getMutatedPreloadedTraces(),
-      ...this.getNewOutputSimplifiedPcbTraces(),
+      ...this.getPowerTraceExpansionFixedTraces().filter(
+        (trace) => trace.__replaces_pcb_trace_id !== undefined,
+      ),
+      ...this.powerTraceExpansionSolver.getOutput(),
     ]
   }
 
   getOutputSimpleRouteJson(): SimpleRouteJson {
+    if (!this.solved) {
+      throw new Error("Cannot get output before solving is complete")
+    }
+    if (!this.powerTraceExpansionSolver) {
+      throw new Error(
+        "Pipeline9 invariant violated: solved pipeline is missing the unconditional power-trace expansion solver",
+      )
+    }
+    const traces = [
+      ...this.getPowerTraceExpansionFixedTraces(),
+      ...this.powerTraceExpansionSolver.getOutput(),
+    ]
     return {
       ...this.originalSrj,
-      traces: [
-        ...this.getUpdatedPreloadedTraces(),
-        ...this.getNewOutputSimplifiedPcbTraces(),
-      ],
+      traces,
     }
   }
 }
