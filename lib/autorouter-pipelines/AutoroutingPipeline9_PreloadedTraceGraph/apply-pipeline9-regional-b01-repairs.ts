@@ -500,11 +500,12 @@ const getRegularRegionalCandidate = ({
 }
 
 /**
- * Reroutes one preload-owned exact DRC participant with B01 in a sub-15mm
- * window. B01 sees every other route plus board copper as obstacles. Candidate
- * searches use a route-scaled budget because each search rebuilds and
- * evaluates board copper. If no B01 candidate helps, one regular high-density
- * candidate jointly reroutes all traces in the region.
+ * Activates for a remaining preload-owned DRC error, then reroutes supported
+ * joint-output participants with B01 in a sub-15mm window. B01 sees every
+ * other route plus board copper as obstacles. Candidate searches use a
+ * route-scaled budget because each search rebuilds and evaluates board copper.
+ * If no B01 candidate helps, one regular high-density candidate jointly
+ * reroutes all traces in the region.
  */
 export const applyPipeline9RegionalB01Repairs = ({
   srj,
@@ -584,7 +585,6 @@ export const applyPipeline9RegionalB01Repairs = ({
     })
     const repairableErrors = currentErrors.filter(
       (error) =>
-        isPreloadRepairError(error) &&
         (error.type === "pcb_trace_error" ||
           error.type === "pcb_pad_trace_clearance_error" ||
           error.type === "pcb_via_trace_clearance_error" ||
@@ -687,9 +687,8 @@ export const applyPipeline9RegionalB01Repairs = ({
 
   const hasSafeLayerRepairableError = currentErrors.some(
     (error) =>
-      isPreloadRepairError(error) &&
-      (error.type === "pcb_trace_error" ||
-        error.type === "pcb_pad_trace_clearance_error"),
+      error.type === "pcb_trace_error" ||
+      error.type === "pcb_pad_trace_clearance_error",
   )
   const safeTraceLayerRepairSkippedForBudget =
     hasSafeLayerRepairableError && candidateSearchBudgetExhausted

@@ -15,6 +15,10 @@ test("Pipeline9 uses regional B01 to clear an SRJ23 trace-pair conflict", async 
   expect(solver.solved).toBeTrue()
   expect(solver.failed).toBeFalse()
   expect(
+    solver.pipeline9JointDrcRepairSolver?.stats
+      .regionalB01RepairPreloadEligibleDrcIssueCount,
+  ).toBe(1)
+  expect(
     solver.pipeline9JointDrcRepairSolver?.stats.regionalB01RepairAcceptedCount,
   ).toBeGreaterThan(0)
   const { errors } = evaluateRelaxedDrc({
