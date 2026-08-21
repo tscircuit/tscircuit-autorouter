@@ -160,6 +160,7 @@ const asRegionalRoutes = (
     preloadedTraceId: `pipeline9_joint_candidate_${routeIndex}`,
     preloadedTraceIndex: routeIndex,
     preloadedRouteIndex: 0,
+    isThroughObstacle: false,
   }))
 
 const boundsOverlap = (left: Bounds, right: Bounds): boolean => {
@@ -553,9 +554,8 @@ export const applyPipeline9RegionalB01Repairs = ({
       preloadRepairTraceIds,
     })
   }
-  const preloadEligibleDrcIssueCount = currentErrors.filter(
-    isPreloadRepairError,
-  ).length
+  const preloadEligibleDrcIssueCount =
+    currentErrors.filter(isPreloadRepairError).length
   if (preloadEligibleDrcIssueCount === 0) {
     return {
       routes: currentRoutes,

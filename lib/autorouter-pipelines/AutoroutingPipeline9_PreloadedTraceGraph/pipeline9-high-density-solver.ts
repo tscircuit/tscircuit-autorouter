@@ -468,8 +468,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     )
     const movableFixedRouteConnectionNames = new Set(
       [...fallbackProblem.fixedRouteSectionsByConnectionName.values()].flatMap(
-        (section) =>
-          section.sourceRoutes.map((route) => route.connectionName),
+        (section) => section.sourceRoutes.map((route) => route.connectionName),
       ),
     )
     for (const connectionName of promotedFixedRouteConnectionNames) {
@@ -608,20 +607,34 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       const conflictingConnectionNames = [
         ...conflictingFixedRoutesByConnectionName.keys(),
       ]
+      const reconstructableConnectionNames = [
+        ...conflictingFixedRoutesByConnectionName,
+      ].flatMap(([connectionName, fixedRoute]) =>
+        fixedRoute.isThroughObstacle === true ? [] : [connectionName],
+      )
       // Moving one proven blocker can expose another. Grow only by exact
       // conflicts from the latest candidate, so the retry stays finite and
-      // every other preload remains immutable.
+      // every other preload remains immutable. Component-owned through-
+      // obstacle primitives are never movable.
       const promotedConnectionNames = new Set(
         this.activeFallbackPromotedFixedRouteConnectionNames,
       )
-      for (const connectionName of conflictingConnectionNames) {
+      for (const connectionName of reconstructableConnectionNames) {
         promotedConnectionNames.add(connectionName)
       }
       if (
         promotedConnectionNames.size ===
         this.activeFallbackPromotedFixedRouteConnectionNames.size
       ) {
-        this.error = `Pipeline9 promoted regional fallback could not resolve immutable fixed route conflict(s): ${conflictingConnectionNames.join(", ")}`
+        const immutableThroughObstacleConnectionNames = [
+          ...conflictingFixedRoutesByConnectionName,
+        ].flatMap(([connectionName, fixedRoute]) =>
+          fixedRoute.isThroughObstacle === true ? [connectionName] : [],
+        )
+        this.error =
+          immutableThroughObstacleConnectionNames.length > 0
+            ? `Pipeline9 regional fallback conflicts with immutable through-obstacle route(s): ${immutableThroughObstacleConnectionNames.join(", ")}`
+            : `Pipeline9 promoted regional fallback could not resolve immutable fixed route conflict(s): ${conflictingConnectionNames.join(", ")}`
         this.failed = true
         return
       }

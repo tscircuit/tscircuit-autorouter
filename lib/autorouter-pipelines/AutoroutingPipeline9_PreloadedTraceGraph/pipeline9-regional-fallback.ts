@@ -241,8 +241,11 @@ export const createRegionalFallbackProblem = (
   const slices = localSlices
     .filter(
       (slice) =>
-        fixedRouteSliceTouchesTargetLayer(slice, targetLayers) ||
-        promotedFixedRouteConnectionNames.has(slice.sourceRoute.connectionName),
+        slice.sourceRoute.isThroughObstacle !== true &&
+        (fixedRouteSliceTouchesTargetLayer(slice, targetLayers) ||
+          promotedFixedRouteConnectionNames.has(
+            slice.sourceRoute.connectionName,
+          )),
     )
     .sort(
       (a, b) =>
