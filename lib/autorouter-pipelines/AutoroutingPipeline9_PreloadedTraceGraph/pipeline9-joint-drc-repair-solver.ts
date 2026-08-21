@@ -1199,6 +1199,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       enableBroadFallback: false,
       enableLargeBoardBroadFallback: false,
       enableTargetedErrorSweep: true,
+      enableTraceViaOwnerTargeting: true,
       enablePostSolveClearanceRelaxation: false,
       enableSafeTraceLayerMoves: true,
       enableViaInPadLayerMoves: params.originalSrj.allowViaInPad ?? false,
