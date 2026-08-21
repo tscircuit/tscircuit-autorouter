@@ -738,7 +738,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       }),
     }
     const preparedTraceIdsInErrors = getTraceIdsFromDrcErrors({
-      errors: currentErrors as unknown as Array<Record<string, unknown>>,
+      errors: currentDrc.errors as unknown as Array<Record<string, unknown>>,
       circuitJson: currentDrc.circuitJson,
     })
     const updatedPreloadedTraceById = new Map(
