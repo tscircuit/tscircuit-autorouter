@@ -45,14 +45,15 @@ test("Pipeline4 high-density stage opts into GrowShrinkHighDensityIntraNodeSolve
   ).toEqual([0, 1])
   expect(
     routableNodes.find(
-      (node: any) => node.capacityMeshNodeId === ordinaryNode.capacityMeshNodeId,
+      (node: any) =>
+        node.capacityMeshNodeId === ordinaryNode.capacityMeshNodeId,
     )?.availableZ,
   ).toEqual([0])
   expect(pipelineState.highDensityNodePortPoints).toEqual(routableNodes)
   expect(pipelineState.highDensityNodePortPoints).not.toBe(routableNodes)
 
   const highDensitySolver = new HighDensitySolver(highDensityParams as any)
-  expect(
-    highDensitySolver.growShrinkFallbackToInvalidGeometryOnFailure,
-  ).toBe(false)
+  expect(highDensitySolver.growShrinkFallbackToInvalidGeometryOnFailure).toBe(
+    false,
+  )
 })
