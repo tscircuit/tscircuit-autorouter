@@ -9,6 +9,7 @@ import type {
 } from "lib/types/high-density-types"
 import type { Obstacle } from "lib/types/srj-types"
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
+import type { CapacityMeshNodeId } from "lib/types/capacity-mesh-types"
 
 type Pipeline9RegionalFallbackSolverParams = {
   nodeWithPortPoints: NodeWithPortPoints
@@ -18,6 +19,9 @@ type Pipeline9RegionalFallbackSolverParams = {
   traceWidth: number
   obstacleMargin: number
   effort: number
+  nodePfById?:
+    | Map<CapacityMeshNodeId, number | null>
+    | Record<string, number | null>
   obstacles: Obstacle[]
   layerCount: number
 }
@@ -43,6 +47,7 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
       traceWidth: params.traceWidth,
       obstacleMargin: params.obstacleMargin,
       effort: params.effort,
+      nodePfById: params.nodePfById,
       obstacles: params.obstacles,
       layerCount: params.layerCount,
       useGrowShrinkHighDensityIntraNodeSolver: true,

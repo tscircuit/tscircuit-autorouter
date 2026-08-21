@@ -4,7 +4,7 @@ import { AutoroutingPipelineSolver7_MultiGraph } from "lib/autorouter-pipelines/
 import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import type { SimpleRouteJson } from "lib/types"
 
-test("pipeline7 dataset01 circuit144 repairs pad clearance on the matching layer", () => {
+test("pipeline7 keeps dataset01 circuit144 pad clearance clean without broad fallback", () => {
   const circuit144 = (dataset01 as Record<string, unknown>)
     .circuit144 as SimpleRouteJson
   const solver = new AutoroutingPipelineSolver7_MultiGraph(
@@ -20,18 +20,14 @@ test("pipeline7 dataset01 circuit144 repairs pad clearance on the matching layer
   expect(
     solver.exactGeometryDrcForceImproveSolver?.stats
       .drcBranchPortfolioInitialDrcIssueCount,
-  ).toBe(1)
+  ).toBe(0)
   expect(
     solver.exactGeometryDrcForceImproveSolver?.stats.finalDrcIssueCount,
   ).toBe(0)
   expect(
     solver.exactGeometryDrcForceImproveSolver?.stats
-      .globalDrcForceImproveTargetedForceAccepted,
-  ).toBe(true)
-  expect(
-    solver.exactGeometryDrcForceImproveSolver?.stats
-      .globalDrcForceImproveCandidateAttempts,
-  ).toBeGreaterThan(0)
+      .drcBranchPortfolioSafeTraceLayerPhaseAttempted,
+  ).toBe(false)
   expect(
     solver.exactGeometryDrcForceImproveSolver?.stats
       .drcBranchPortfolioBroadInitialDrcIssueCount,

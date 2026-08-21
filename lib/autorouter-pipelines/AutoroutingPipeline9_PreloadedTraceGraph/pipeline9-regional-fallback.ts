@@ -34,6 +34,7 @@ export type FixedRouteSection = {
 export type RegionalFallbackProblem = {
   nodeWithPortPoints: NodeWithPortPoints
   fixedRouteSectionsByConnectionName: Map<string, FixedRouteSection>
+  fixedObstacleRoutes: PreloadedHighDensityRoute[]
 }
 
 const POINT_EPSILON = 1e-9
@@ -216,12 +217,16 @@ const fixedRouteSliceTouchesTargetLayer = (
  * Builds the regular high-density input used only after B01 fails. Fixed
  * each contiguous section of pre-routed copper crossing the node on a target
  * connection layer becomes one ordinary port pair, which lets the portfolio
- * reroute it together with the new traces in that region. Repair-only callers
- * with no target port points continue to make every crossing section movable.
+ * reroute it together with the new traces in that region. Local fixed routes
+ * on other layers remain immutable obstacles unless an immutable-first solve
+ * proves that an exact route is the blocker and explicitly promotes it.
+ * Repair-only callers with no target port points continue to make every
+ * crossing section movable.
  */
 export const createRegionalFallbackProblem = (
   node: NodeWithPortPoints,
   fixedRoutes: PreloadedHighDensityRoute[],
+  promotedFixedRouteConnectionNames: ReadonlySet<string> = new Set(),
 ): RegionalFallbackProblem => {
   const fixedRouteSectionsByConnectionName = new Map<
     string,
@@ -230,15 +235,27 @@ export const createRegionalFallbackProblem = (
   const fallbackPortPairs: Array<[PortPoint, PortPoint]> = []
   const targetLayers = new Set(node.portPoints.map((portPoint) => portPoint.z))
 
-  const slices = fixedRoutes
+  const localSlices = fixedRoutes
     .map((fixedRoute) => getFixedRouteSlice(fixedRoute, node))
     .filter((slice): slice is FixedRouteSlice => slice !== null)
-    .filter((slice) => fixedRouteSliceTouchesTargetLayer(slice, targetLayers))
+  const slices = localSlices
+    .filter(
+      (slice) =>
+        slice.sourceRoute.isThroughObstacle !== true &&
+        (fixedRouteSliceTouchesTargetLayer(slice, targetLayers) ||
+          promotedFixedRouteConnectionNames.has(
+            slice.sourceRoute.connectionName,
+          )),
+    )
     .sort(
       (a, b) =>
         a.sourceRoute.preloadedTraceIndex - b.sourceRoute.preloadedTraceIndex ||
         a.sourceRoute.preloadedRouteIndex - b.sourceRoute.preloadedRouteIndex,
     )
+  const movableFixedRoutes = new Set(slices.map((slice) => slice.sourceRoute))
+  const fixedObstacleRoutes = localSlices
+    .map((slice) => slice.sourceRoute)
+    .filter((route) => !movableFixedRoutes.has(route))
   const sections: FixedRouteSection[] = []
 
   for (let sliceIndex = 0; sliceIndex < slices.length; sliceIndex++) {
@@ -285,6 +302,7 @@ export const createRegionalFallbackProblem = (
       ],
     },
     fixedRouteSectionsByConnectionName,
+    fixedObstacleRoutes,
   }
 }
 
