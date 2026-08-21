@@ -31,6 +31,11 @@ type RegionalB01RepairResult = {
   attemptedCandidateCount: number
   acceptedCandidateCount: number
   fallbackCandidateCount: number
+  candidateSearchCount: number
+  candidateSearchBudget: number
+  candidateSearchBudgetExhausted: boolean
+  safeTraceLayerRepairSkippedForBudget: boolean
+  remainingDrcIssueCount: number
 }
 
 type RouteWireSegment = {
@@ -72,10 +77,28 @@ type FixedRouteCopperSpatialIndex = {
 const REGION_SIZES = [3, 4, 5, 6, 8]
 const FIXED_ROUTE_INDEX_CELL_SIZE = 4
 const FIXED_WIRE_MAX_APPROXIMATION_LENGTH = 0.75
+const REGIONAL_REPAIR_SEARCH_VOLUME = 7_000
+const MIN_REGIONAL_REPAIR_SEARCH_BUDGET = 16
+const MAX_REGIONAL_REPAIR_SEARCH_BUDGET = 192
 const routeCopperGeometryCache = new WeakMap<
   HighDensityRoute,
   RouteCopperGeometry
 >()
+
+export const getPipeline9RegionalRepairSearchBudget = (
+  routeCount: number,
+): number => {
+  if (!Number.isInteger(routeCount) || routeCount < 0) {
+    throw new Error("Pipeline9 regional repair route count must be nonnegative")
+  }
+  const scaledBudget = Math.floor(
+    REGIONAL_REPAIR_SEARCH_VOLUME / Math.max(1, routeCount),
+  )
+  return Math.max(
+    MIN_REGIONAL_REPAIR_SEARCH_BUDGET,
+    Math.min(MAX_REGIONAL_REPAIR_SEARCH_BUDGET, scaledBudget),
+  )
+}
 
 const getErrorCenter = (error: Pipeline9DrcError) => {
   const center = error.center
@@ -752,8 +775,10 @@ const getRegularRegionalCandidate = ({
 
 /**
  * Reroutes one exact DRC participant with B01 in a sub-15mm window. B01 sees
- * every other route plus board copper as obstacles. If no B01 candidate helps,
- * one regular high-density candidate jointly reroutes all traces in the region.
+ * every other route plus board copper as obstacles. Candidate searches use a
+ * route-scaled budget because each search rebuilds and evaluates board copper.
+ * If no B01 candidate helps, one regular high-density candidate jointly
+ * reroutes all traces in the region.
  */
 export const applyPipeline9RegionalB01Repairs = ({
   srj,
@@ -787,10 +812,16 @@ export const applyPipeline9RegionalB01Repairs = ({
   let attemptedCandidateCount = 0
   let acceptedCandidateCount = 0
   let fallbackCandidateCount = 0
+  let candidateSearchCount = 0
+  let candidateSearchBudgetExhausted = false
+  const candidateSearchBudget = getPipeline9RegionalRepairSearchBudget(
+    routes.length,
+  )
   const fixedRouteCopperSpatialIndex =
     createFixedRouteCopperSpatialIndex(fixedObstacleRoutes)
 
   for (let pass = 0; pass < 2; pass++) {
+    if (candidateSearchBudgetExhausted) break
     let acceptedOnPass = false
     const routeIndexByTraceId = getPipeline9RouteIndexByTraceId({
       routes: currentRoutes,
@@ -806,6 +837,7 @@ export const applyPipeline9RegionalB01Repairs = ({
         typeof error.pcb_trace_id === "string",
     )
     for (const error of repairableErrors) {
+      if (candidateSearchBudgetExhausted) break
       const center = getRepairCenter(error, srj)
       const traceIds = getPipeline9RegionalRepairTraceIds({
         error,
@@ -815,9 +847,15 @@ export const applyPipeline9RegionalB01Repairs = ({
       let bestRoutes = currentRoutes
       let bestErrors = currentErrors
       for (const traceId of traceIds.slice(0, 2)) {
+        if (candidateSearchBudgetExhausted) break
         const routeIndex = routeIndexByTraceId.get(traceId)
         if (routeIndex === undefined) continue
         for (const regionSize of REGION_SIZES) {
+          if (candidateSearchCount >= candidateSearchBudget) {
+            candidateSearchBudgetExhausted = true
+            break
+          }
+          candidateSearchCount++
           const candidate = getRegionalCandidate({
             routes: currentRoutes,
             fixedObstacleRoutes,
@@ -847,7 +885,14 @@ export const applyPipeline9RegionalB01Repairs = ({
         }
         if (bestErrors.length === 0) break
       }
-      if (bestRoutes === currentRoutes) {
+      if (bestRoutes === currentRoutes && !candidateSearchBudgetExhausted) {
+        if (candidateSearchCount >= candidateSearchBudget) {
+          candidateSearchBudgetExhausted = true
+        } else {
+          candidateSearchCount++
+        }
+      }
+      if (bestRoutes === currentRoutes && !candidateSearchBudgetExhausted) {
         const fallbackRoutes = getRegularRegionalCandidate({
           routes: currentRoutes,
           fixedRouteCopperSpatialIndex,
@@ -880,6 +925,7 @@ export const applyPipeline9RegionalB01Repairs = ({
         acceptedCandidateCount++
         acceptedOnPass = true
       }
+      if (candidateSearchBudgetExhausted) break
     }
     if (!acceptedOnPass || currentErrors.length === 0) break
   }
@@ -889,7 +935,9 @@ export const applyPipeline9RegionalB01Repairs = ({
       error.type === "pcb_trace_error" ||
       error.type === "pcb_pad_trace_clearance_error",
   )
-  if (hasSafeLayerRepairableError) {
+  const safeTraceLayerRepairSkippedForBudget =
+    hasSafeLayerRepairableError && candidateSearchBudgetExhausted
+  if (hasSafeLayerRepairableError && !candidateSearchBudgetExhausted) {
     const safeTraceLayerSolver = new GlobalDrcForceImproveSolver({
       srj: { ...srj, traces: undefined },
       hdRoutes: currentRoutes,
@@ -922,5 +970,10 @@ export const applyPipeline9RegionalB01Repairs = ({
     attemptedCandidateCount,
     acceptedCandidateCount,
     fallbackCandidateCount,
+    candidateSearchCount,
+    candidateSearchBudget,
+    candidateSearchBudgetExhausted,
+    safeTraceLayerRepairSkippedForBudget,
+    remainingDrcIssueCount: currentErrors.length,
   }
 }
