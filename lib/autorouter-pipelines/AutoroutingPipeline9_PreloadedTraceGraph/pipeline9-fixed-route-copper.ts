@@ -158,12 +158,11 @@ export const getPipeline9FixedRouteObstacles = ({
     const geometry = getPipeline9RouteCopperGeometry(route)
     return [
       ...geometry.wireSegments.flatMap((segment, segmentIndex): Obstacle[] => {
-        const approximatingRects =
-          getPipeline9AxisAlignedWireApproximations(
-            segment,
-            FIXED_WIRE_MAX_APPROXIMATION_LENGTH,
-            2,
-          )
+        const approximatingRects = getPipeline9AxisAlignedWireApproximations(
+          segment,
+          FIXED_WIRE_MAX_APPROXIMATION_LENGTH,
+          2,
+        )
         return approximatingRects.map((rect, approximationIndex) => ({
           obstacleId: `pipeline9_fixed_obstacle_${routeIndex}_wire_${segmentIndex}_${approximationIndex}`,
           type: "rect",

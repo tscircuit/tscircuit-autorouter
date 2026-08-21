@@ -1,10 +1,11 @@
 import { expect, test } from "bun:test"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { PreloadedHighDensityRoute } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/convert-preloaded-traces-to-hd-routes"
+import { doPipeline9RoutesHaveCopperConflict } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/pipeline9-fixed-route-copper"
 import { Pipeline9HighDensitySolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/pipeline9-high-density-solver"
 import type { NodeWithPortPoints } from "lib/types/high-density-types"
 
-test("Pipeline9 keeps fixed copper immutable when regional fallback opens its layer", (): void => {
+test("Pipeline9 promotes only fixed copper that blocks an all-layer fallback", (): void => {
   const portPoints = [
     { x: -1, y: 0, z: 0, connectionName: "horizontal" },
     { x: 1, y: 0, z: 0, connectionName: "horizontal" },
@@ -50,7 +51,7 @@ test("Pipeline9 keeps fixed copper immutable when regional fallback opens its la
     effort: 0.1,
   })
 
-  solver.solve()
+  while (!solver.activeFallbackSolver && !solver.failed) solver.step()
 
   expect(solver.stats.fallbackNodeCount).toBe(1)
   expect(solver.activeFallbackFixedRouteSections.size).toBe(0)
@@ -64,16 +65,30 @@ test("Pipeline9 keeps fixed copper immutable when regional fallback opens its la
       connectedTo: ["fixed-bottom", "fixed-bottom-root"],
     }),
   ])
-  expect(solver.solved).toBeFalse()
-  expect(solver.failed).toBeTrue()
-  expect(solver.error).toBe(
-    'Pipeline9 regional fallback route "horizontal" conflicts with immutable fixed route "fixed-bottom"',
-  )
-  expect(solver.routes).toEqual([])
-  expect(solver.fixedRouteReplacements.size).toBe(0)
-  expect(solver.getUpdatedFixedHdRoutes()).toEqual([
-    fixedBottomRouteBeforeSolve,
-  ])
+
+  solver.solve()
+
+  expect(solver.solved).toBeTrue()
+  expect(solver.failed).toBeFalse()
+  expect(solver.stats).toMatchObject({
+    fallbackNodeCount: 1,
+    promotedFallbackAttemptCount: 1,
+    promotedFixedRouteCount: 1,
+    reroutedFixedRouteCount: 1,
+  })
+  expect([...solver.fixedRouteReplacements.keys()]).toEqual(["fixed-bottom"])
+  const updatedFixedRoute = solver.getUpdatedFixedHdRoutes()[0]!
+  expect(updatedFixedRoute.route[0]).toEqual(fixedBottomRoute.route[0])
+  expect(updatedFixedRoute.route.at(-1)).toEqual(fixedBottomRoute.route.at(-1))
+  expect(
+    solver.routes.some((route) =>
+      doPipeline9RoutesHaveCopperConflict({
+        left: route,
+        right: updatedFixedRoute,
+        clearance: 0.15,
+      }),
+    ),
+  ).toBeFalse()
   expect(fixedBottomRoute).toEqual(fixedBottomRouteBeforeSolve)
 
   const sameNetSolver = new Pipeline9HighDensitySolver({
@@ -96,6 +111,8 @@ test("Pipeline9 keeps fixed copper immutable when regional fallback opens its la
   expect(sameNetSolver.solved).toBeTrue()
   expect(sameNetSolver.failed).toBeFalse()
   expect(sameNetSolver.routes).toHaveLength(2)
+  expect(sameNetSolver.stats.promotedFallbackAttemptCount).toBe(0)
+  expect(sameNetSolver.fixedRouteReplacements.size).toBe(0)
   expect(sameNetSolver.getUpdatedFixedHdRoutes()).toEqual([
     fixedBottomRouteBeforeSolve,
   ])

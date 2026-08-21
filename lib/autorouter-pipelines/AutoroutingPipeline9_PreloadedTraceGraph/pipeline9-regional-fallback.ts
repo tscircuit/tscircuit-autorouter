@@ -218,12 +218,15 @@ const fixedRouteSliceTouchesTargetLayer = (
  * each contiguous section of pre-routed copper crossing the node on a target
  * connection layer becomes one ordinary port pair, which lets the portfolio
  * reroute it together with the new traces in that region. Local fixed routes
- * on other layers remain immutable obstacles. Repair-only callers with no
- * target port points continue to make every crossing section movable.
+ * on other layers remain immutable obstacles unless an immutable-first solve
+ * proves that an exact route is the blocker and explicitly promotes it.
+ * Repair-only callers with no target port points continue to make every
+ * crossing section movable.
  */
 export const createRegionalFallbackProblem = (
   node: NodeWithPortPoints,
   fixedRoutes: PreloadedHighDensityRoute[],
+  promotedFixedRouteConnectionNames: ReadonlySet<string> = new Set(),
 ): RegionalFallbackProblem => {
   const fixedRouteSectionsByConnectionName = new Map<
     string,
@@ -236,7 +239,11 @@ export const createRegionalFallbackProblem = (
     .map((fixedRoute) => getFixedRouteSlice(fixedRoute, node))
     .filter((slice): slice is FixedRouteSlice => slice !== null)
   const slices = localSlices
-    .filter((slice) => fixedRouteSliceTouchesTargetLayer(slice, targetLayers))
+    .filter(
+      (slice) =>
+        fixedRouteSliceTouchesTargetLayer(slice, targetLayers) ||
+        promotedFixedRouteConnectionNames.has(slice.sourceRoute.connectionName),
+    )
     .sort(
       (a, b) =>
         a.sourceRoute.preloadedTraceIndex - b.sourceRoute.preloadedTraceIndex ||
