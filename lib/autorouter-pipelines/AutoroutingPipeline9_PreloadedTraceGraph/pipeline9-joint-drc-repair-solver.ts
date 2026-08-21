@@ -738,7 +738,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       }),
     }
     const preparedTraceIdsInErrors = getTraceIdsFromDrcErrors({
-      errors: currentDrc.errors as unknown as Array<Record<string, unknown>>,
+      errors: currentErrors as unknown as Array<Record<string, unknown>>,
       circuitJson: currentDrc.circuitJson,
     })
     const updatedPreloadedTraceById = new Map(
@@ -1447,8 +1447,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       postExactPrecisionPassMaxIndexedIssueCount:
         MAX_POST_EXACT_PRECISION_PASS_INDEXED_ISSUE_COUNT,
       postExactPrecisionPassAttempted: shouldRunPostExactPrecisionPass,
-      postExactReferenceValidationAttempted:
-        shouldRunPostExactPrecisionPass,
+      postExactReferenceValidationAttempted: shouldRunPostExactPrecisionPass,
       postExactReferenceValidationSkippedForIndexedIssueCount:
         !shouldRunPostExactPrecisionPass,
       postExactReferenceDrcIssueCount,

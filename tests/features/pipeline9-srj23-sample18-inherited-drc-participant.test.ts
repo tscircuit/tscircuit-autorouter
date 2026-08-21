@@ -3,8 +3,8 @@ import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-p
 import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import { loadScenarioBySampleNumber } from "../../scripts/benchmark/scenarios"
 
-test("Pipeline9 relocates an SRJ23 terminal escape within its own pad", async () => {
-  const { scenario } = await loadScenarioBySampleNumber("srj23", 50)
+test("Pipeline9 repairs an inherited DRC participant in SRJ23 sample 18", async () => {
+  const { scenario } = await loadScenarioBySampleNumber("srj23", 18)
   const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(
     structuredClone(scenario),
     { cacheProvider: null, effort: 1 },
@@ -15,18 +15,13 @@ test("Pipeline9 relocates an SRJ23 terminal escape within its own pad", async ()
   expect(solver.solved).toBeTrue()
   expect(solver.failed).toBeFalse()
   expect(
-    solver.pipeline9JointDrcRepairSolver?.stats.postExactPrecisionPassAttempted,
+    solver.pipeline9JointDrcRepairSolver?.stats.movablePreloadedTraceCount,
+  ).toBe(11)
+  expect(
+    solver.getOutputSimplifiedPcbTraces().some(
+      (trace) => trace.__replaces_pcb_trace_id === "source_net_3_mst4_0",
+    ),
   ).toBeTrue()
-  expect(
-    solver.pipeline9JointDrcRepairSolver?.stats.postExactReferenceAccepted,
-  ).toBeFalse()
-  expect(
-    solver.pipeline9JointDrcRepairSolver?.stats
-      .terminalEscapeSkippedForIndexedIssueCount,
-  ).toBeFalse()
-  expect(
-    solver.pipeline9JointDrcRepairSolver?.stats.terminalEscapeAcceptedCount,
-  ).toBeGreaterThan(0)
   const { errors } = evaluateRelaxedDrc({
     inputSrj: scenario,
     srjWithPointPairs: solver.srjWithPointPairs!,

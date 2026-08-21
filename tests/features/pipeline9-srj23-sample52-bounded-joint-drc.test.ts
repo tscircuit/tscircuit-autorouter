@@ -36,8 +36,7 @@ test("Pipeline9 uses Pipeline7 exact DRC budgets for SRJ23 sample 52", async () 
     solver.pipeline9JointDrcRepairSolver?.stats.postExactReferenceAccepted,
   ).toBeFalse()
   expect(
-    solver.pipeline9JointDrcRepairSolver?.stats
-      .postExactPrecisionPassAttempted,
+    solver.pipeline9JointDrcRepairSolver?.stats.postExactPrecisionPassAttempted,
   ).toBeTrue()
   expect(
     solver.pipeline9JointDrcRepairSolver?.stats
