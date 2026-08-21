@@ -7,7 +7,20 @@ import { applyInitialAssignments } from "tiny-hypergraph/lib/initialAssignments"
  * discarding every preloaded route.
  */
 export class SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments extends SelectiveReripTinyHyperGraphSolver {
-  override resetRoutingStateForRerip() {
+  private initialAssignmentRouteIds?: ReadonlySet<number>
+
+  protected override getRouteIdsPreferredForPreservation(): ReadonlySet<number> {
+    if (!this.initialAssignmentRouteIds) {
+      this.initialAssignmentRouteIds = new Set(
+        (this.problem.initialAssignments ?? []).map(
+          (assignment) => assignment.routeId,
+        ),
+      )
+    }
+    return this.initialAssignmentRouteIds
+  }
+
+  override resetRoutingStateForRerip(): void {
     super.resetRoutingStateForRerip()
     if (!this.problem.initialAssignments?.length) return
 

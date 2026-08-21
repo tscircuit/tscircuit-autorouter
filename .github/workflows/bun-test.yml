@@ -16,7 +16,9 @@ jobs:
   test:
     if: github.event_name != 'pull_request' || !startsWith(github.head_ref, 'version-bumps/')
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    # Balanced plans target roughly ten minutes of test work; leave room for
+    # checkout, dependency installation, and runner variance.
+    timeout-minutes: 15
     strategy:
       fail-fast: false
       matrix:

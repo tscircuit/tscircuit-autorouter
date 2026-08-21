@@ -42,7 +42,7 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
   defaultViaDiameter: number
   allowedLayerTransitionPointKeys?: Set<string>
   preserveTerminalPcbPortIds: boolean
-  private endpointIndex = new EndpointClusterIndex()
+  private endpointIndex: EndpointClusterIndex
   private clearanceValidator: RouteStitchClearanceValidator
 
   private canStitchBetweenTerminals(params: {
@@ -144,8 +144,12 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
     defaultViaDiameter?: number
     allowedLayerTransitionPointKeys?: Set<string>
     preserveTerminalPcbPortIds?: boolean
+    preferSameLayerTerminalEndpoints?: boolean
   }) {
     super()
+    this.endpointIndex = new EndpointClusterIndex(
+      params.preferSameLayerTerminalEndpoints,
+    )
     this.colorMap = params.colorMap ?? {}
     this.allowedLayerTransitionPointKeys =
       params.allowedLayerTransitionPointKeys

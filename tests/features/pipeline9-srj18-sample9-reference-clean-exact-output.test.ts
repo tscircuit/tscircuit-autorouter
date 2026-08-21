@@ -3,8 +3,8 @@ import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-p
 import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import { loadScenarioBySampleNumber } from "../../scripts/benchmark/scenarios"
 
-test("Pipeline9 uses Pipeline7 exact DRC budgets for SRJ23 sample 53", async () => {
-  const { scenario } = await loadScenarioBySampleNumber("srj23", 53)
+test("Pipeline9 preserves SRJ18 sample 9's reference-clean exact output", async () => {
+  const { scenario } = await loadScenarioBySampleNumber("srj18", 9)
   const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(
     structuredClone(scenario),
     { cacheProvider: null, effort: 1 },
@@ -14,24 +14,20 @@ test("Pipeline9 uses Pipeline7 exact DRC budgets for SRJ23 sample 53", async () 
 
   expect(solver.solved).toBeTrue()
   expect(solver.failed).toBeFalse()
-  expect(
-    Number(
-      solver.pipeline9JointDrcRepairSolver?.stats
-        .exactRepairConfiguredMaxIterations,
-    ),
-  ).toBe(32)
-  expect(
-    Number(
-      solver.pipeline9JointDrcRepairSolver?.stats
-        .exactRepairConfiguredViaInPadMaxIterations,
-    ),
-  ).toBe(32)
-  expect(
-    Number(
-      solver.pipeline9JointDrcRepairSolver?.stats
-        .exactRepairConfiguredBroadMaxIterations,
-    ),
-  ).toBe(12)
+  const repairStats = solver.pipeline9JointDrcRepairSolver?.stats
+  expect(Number(repairStats?.finalDrcIssueCount)).toBeGreaterThan(0)
+  expect(repairStats).toMatchObject({
+    postExactPrecisionPassAttempted: true,
+    postExactReferenceValidationAttempted: true,
+    postExactReferenceValidationSkippedForIndexedIssueCount: false,
+    postExactReferenceDrcIssueCount: 0,
+    postExactReferenceAccepted: true,
+    terminalEscapeSkippedForIndexedIssueCount: false,
+    terminalEscapeCandidateCount: 0,
+    terminalEscapeAcceptedCount: 0,
+    regionalB01RepairAttempted: false,
+    regionalB01RepairCandidateSearchCount: 0,
+  })
   const { errors } = evaluateRelaxedDrc({
     inputSrj: scenario,
     srjWithPointPairs: solver.srjWithPointPairs!,
