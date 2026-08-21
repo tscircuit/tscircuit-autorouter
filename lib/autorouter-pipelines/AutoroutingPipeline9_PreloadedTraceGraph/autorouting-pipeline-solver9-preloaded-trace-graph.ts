@@ -665,6 +665,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           layerCount: cms.srj.layerCount,
           defaultViaDiameter: cms.viaDiameter,
           preserveTerminalPcbPortIds: true,
+          preferSameLayerTerminalEndpoints: true,
         },
       ],
     ),

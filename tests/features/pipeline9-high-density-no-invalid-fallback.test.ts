@@ -25,7 +25,7 @@ const createImpossibleSingleLayerNode = (): NodeWithPortPoints => {
   }
 }
 
-test("Pipeline9 propagates high-density failure instead of emitting invalid routes", () => {
+test("Pipeline9 rejects invalid geometry and retries across legal layers", () => {
   const nodeWithPortPoints = createImpossibleSingleLayerNode()
   const connMap = new ConnectivityMap({})
   const sharedParams = {
@@ -65,4 +65,20 @@ test("Pipeline9 propagates high-density failure instead of emitting invalid rout
   expect(regionalSolver.solved).toBeFalse()
   expect(regionalSolver.failed).toBeTrue()
   expect(regionalSolver.getOutput()).toEqual([])
+
+  const twoLayerSolver = new Pipeline9HighDensitySolver({
+    ...sharedParams,
+    nodePortPoints: [nodeWithPortPoints],
+    fixedHdRoutes: [],
+    layerCount: 2,
+  })
+  twoLayerSolver.solve()
+  expect(twoLayerSolver.solved).toBeTrue()
+  expect(twoLayerSolver.failed).toBeFalse()
+  expect(twoLayerSolver.stats.fallbackNodeCount).toBe(1)
+  expect(
+    twoLayerSolver.routes.some((route) =>
+      route.route.some((point) => point.z === 1),
+    ),
+  ).toBeTrue()
 })

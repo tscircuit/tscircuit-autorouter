@@ -35,6 +35,8 @@ export class EndpointClusterIndex {
     Array<{ key: string; point: Point3 }>
   >()
 
+  constructor(private readonly preferSameLayerTerminalEndpoints = false) {}
+
   getEndpointKey(connectionName: string, point: Point3) {
     const clusters = this.endpointClusters.get(connectionName) ?? []
 
@@ -86,7 +88,9 @@ export class EndpointClusterIndex {
       (endpoint) => endpoint.z === point.z,
     )
     const candidateEndpoints =
-      sameLayerEndpoints.length > 0 ? sameLayerEndpoints : routeEndpoints
+      this.preferSameLayerTerminalEndpoints && sameLayerEndpoints.length > 0
+        ? sameLayerEndpoints
+        : routeEndpoints
     let bestHash: string | null = null
     let bestEndpoint: Point3 | null = null
     let bestDist = Infinity

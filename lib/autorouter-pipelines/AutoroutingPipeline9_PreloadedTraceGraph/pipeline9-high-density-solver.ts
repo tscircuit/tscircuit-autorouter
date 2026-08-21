@@ -339,7 +339,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
   activeB01Solver: HighDensitySolverB01 | null = null
   activeFallbackSolver: Pipeline9RegionalFallbackSolver | null = null
   activeFallbackFixedRouteSections = new Map<string, FixedRouteSection>()
-  activeB01Error: string | null = null
+  activeFallbackReason: string | null = null
   activeNode: NodeWithPortPoints | null = null
 
   constructor(params: Pipeline9HighDensitySolverParams) {
@@ -404,7 +404,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     this.activeRegularSolver = null
     this.activeFallbackSolver = null
     this.activeFallbackFixedRouteSections.clear()
-    this.activeB01Error = null
+    this.activeFallbackReason = null
     this.activeNode = null
   }
 
@@ -429,7 +429,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     this.stats.regularNodeCount = Number(this.stats.regularNodeCount ?? 0) + 1
   }
 
-  private startRegionalFallback() {
+  private startRegionalFallback(): void {
     if (!this.activeNode) {
       throw new Error(
         "Pipeline9 cannot start a regional fallback without an active node",
@@ -469,7 +469,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     this.stats.fallbackNodeCount = Number(this.stats.fallbackNodeCount ?? 0) + 1
   }
 
-  private finishRegionalFallback() {
+  private finishRegionalFallback(): void {
     if (!this.activeFallbackSolver) return
 
     const newRoutes: HighDensityIntraNodeRoute[] = []
@@ -526,7 +526,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       this.activeFallbackSolver.step()
       if (this.activeFallbackSolver.failed) {
         this.error = [
-          `Pipeline9 B01 failed: ${this.activeB01Error ?? "unknown error"}`,
+          `Pipeline9 primary high-density routing failed: ${this.activeFallbackReason ?? "unknown error"}`,
           `regional fallback failed: ${this.activeFallbackSolver.error ?? "unknown error"}`,
         ].join("; ")
         this.failed = true
@@ -544,10 +544,15 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     if (this.activeRegularSolver) {
       this.activeRegularSolver.step()
       if (this.activeRegularSolver.failed) {
-        this.error = `Pipeline9 regular high-density routing failed: ${this.activeRegularSolver.error ?? "unknown error"}`
-        this.failed = true
+        this.activeFallbackReason = `regular high-density routing failed: ${this.activeRegularSolver.error ?? "unknown error"}`
         this.activeRegularSolver = null
-        this.activeNode = null
+        if (!this.enableRegionalFallback) {
+          this.error = `Pipeline9 ${this.activeFallbackReason}`
+          this.failed = true
+          this.activeNode = null
+          return
+        }
+        this.startRegionalFallback()
         return
       }
       if (!this.activeRegularSolver.solved) return
@@ -560,10 +565,10 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       this.activeB01Solver.step()
       if (this.activeB01Solver.failed) {
         this.failedSolvers.push(this.activeB01Solver)
-        this.activeB01Error = this.activeB01Solver.error
+        this.activeFallbackReason = `B01 failed: ${this.activeB01Solver.error ?? "unknown error"}`
         this.activeB01Solver = null
         if (!this.enableRegionalFallback) {
-          this.error = `Pipeline9 B01 failed: ${this.activeB01Error ?? "unknown error"}`
+          this.error = `Pipeline9 ${this.activeFallbackReason}`
           this.failed = true
           this.activeNode = null
           return
@@ -616,7 +621,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
 
     this.activeNode = node
     if (node.width > 15 || node.height > 15) {
-      this.activeB01Error = `node "${node.capacityMeshNodeId}" exceeds the 15x15mm B01 routing limit (${node.width}x${node.height}mm)`
+      this.activeFallbackReason = `B01 node "${node.capacityMeshNodeId}" exceeds the 15x15mm routing limit (${node.width}x${node.height}mm)`
       this.startRegionalFallback()
       return
     }
