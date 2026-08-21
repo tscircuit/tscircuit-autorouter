@@ -553,11 +553,19 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       section: FixedRouteSection
       replacement: PreloadedHighDensityRoute
     }> = []
+    const unchangedFixedRouteSections: FixedRouteSection[] = []
     for (const [connectionName, section] of this
       .activeFallbackFixedRouteSections) {
       const replacementRoutes =
         replacementRoutesByConnectionName.get(connectionName) ?? []
-      if (replacementRoutes.length !== 1) {
+      if (replacementRoutes.length === 0) {
+        // Grid-based regional solvers can merge same-net sections that occupy
+        // the same cells. Keep omitted fixed copper unchanged, then include it
+        // in the conflict check below before accepting the candidate routes.
+        unchangedFixedRouteSections.push(section)
+        continue
+      }
+      if (replacementRoutes.length > 1) {
         this.error = `Pipeline9 regional fallback expected one replacement for fixed route "${connectionName}", got ${replacementRoutes.length}`
         this.failed = true
         return
@@ -573,6 +581,10 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       ...newRoutes,
       ...pendingFixedRouteReplacements.map(({ replacement }) => replacement),
     ]
+    const fixedObstacleRoutes = [
+      ...this.activeFallbackFixedObstacleRoutes,
+      ...unchangedFixedRouteSections.flatMap((section) => section.sourceRoutes),
+    ]
     const candidateBounds = getNodeBounds(
       this.activeNode,
       this.obstacleMargin + Math.max(this.traceWidth, this.viaDiameter) / 2,
@@ -582,7 +594,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       PreloadedHighDensityRoute
     >()
     for (const candidateRoute of candidateRoutes) {
-      for (const fixedRoute of this.activeFallbackFixedObstacleRoutes) {
+      for (const fixedRoute of fixedObstacleRoutes) {
         if (
           arePipeline9RoutesOnSameNet(candidateRoute, fixedRoute, this.connMap)
         ) {
@@ -653,14 +665,15 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       }
     }
 
-    const reroutedFixedRouteCount = [
-      ...this.activeFallbackFixedRouteSections.values(),
-    ].reduce((count, section) => count + section.sourceRoutes.length, 0)
+    const reroutedFixedRouteCount = pendingFixedRouteReplacements.reduce(
+      (count, { section }) => count + section.sourceRoutes.length,
+      0,
+    )
     this.stats.reroutedFixedRouteCount =
       Number(this.stats.reroutedFixedRouteCount ?? 0) + reroutedFixedRouteCount
     this.stats.reroutedFixedRouteSectionCount =
       Number(this.stats.reroutedFixedRouteSectionCount ?? 0) +
-      this.activeFallbackFixedRouteSections.size
+      pendingFixedRouteReplacements.length
     this.finishActiveNode(newRoutes)
   }
 
