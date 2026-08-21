@@ -6,15 +6,11 @@ import bugreport73Qfp16 from "../../fixtures/bug-reports/bugreport73-qfp16/bugre
   type: "json",
 }
 
-type MaxViaCountReproConnection = SimpleRouteJson["connections"][number] & {
-  maxViaCount?: number
-}
-
-test("repro: a real QFP16 route ignores maxViaCount", (): void => {
+test("a real QFP16 trace honors maxViaCount while routing", (): void => {
   const simpleRouteJson = structuredClone(bugreport73Qfp16) as SimpleRouteJson
   const constrainedConnection = simpleRouteJson.connections.find(
     (connection) => connection.name === "source_trace_2",
-  ) as MaxViaCountReproConnection | undefined
+  )
   if (!constrainedConnection) {
     throw new Error("QFP16 fixture is missing source_trace_2")
   }
@@ -32,9 +28,10 @@ test("repro: a real QFP16 route ignores maxViaCount", (): void => {
   const routedViaCount = constrainedTraces
     .flatMap((trace) => trace.route)
     .filter((routePoint) => routePoint.route_type === "via").length
-  expect(routedViaCount).toBe(2)
+  expect(routedViaCount).toBe(0)
   expect(solver.solved).toBe(true)
   expect(solver.failed).toBe(false)
+
   const focusedBounds = {
     minX: -6.5,
     minY: -4.8,

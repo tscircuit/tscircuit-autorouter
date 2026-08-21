@@ -6,17 +6,13 @@ import connectedNetFixture from "../../fixtures/bug-reports/bugreport75-d7c4d8/b
   type: "json",
 }
 
-type MaxViaCountReproConnection = SimpleRouteJson["connections"][number] & {
-  maxViaCount?: number
-}
-
-test("repro: maxViaCount is ignored on a source trace in a net", (): void => {
+test("maxViaCount applies to a source trace after its net is merged", (): void => {
   const simpleRouteJson = structuredClone(
     connectedNetFixture,
   ) as SimpleRouteJson
   const constrainedConnection = simpleRouteJson.connections.find(
     (connection) => connection.name === "source_trace_16",
-  ) as MaxViaCountReproConnection | undefined
+  )
   if (!constrainedConnection) {
     throw new Error("Connected-net fixture is missing source_trace_16")
   }
@@ -56,7 +52,7 @@ test("repro: maxViaCount is ignored on a source trace in a net", (): void => {
     .flatMap((trace) => trace.route)
     .filter((routePoint) => routePoint.route_type === "via").length
 
-  expect(constrainedTraceViaCount).toBe(2)
+  expect(constrainedTraceViaCount).toBe(0)
   expect(solver.solved).toBe(true)
   expect(solver.failed).toBe(false)
 
@@ -81,7 +77,7 @@ test("repro: maxViaCount is ignored on a source trace in a net", (): void => {
     ),
     traces: connectedNetTraces,
   }
-  expect(convertSrjToGraphicsObject(focusedSimpleRouteJson)).toMatchGraphicsSvg(
-    import.meta.path,
-  )
+  expect(
+    convertSrjToGraphicsObject(focusedSimpleRouteJson),
+  ).toMatchGraphicsSvg(import.meta.path)
 })

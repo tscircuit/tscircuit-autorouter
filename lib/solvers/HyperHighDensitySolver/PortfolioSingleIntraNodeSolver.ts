@@ -28,8 +28,14 @@ import { repairDisconnectedSameRootPortPoints } from "./repairDisconnectedSameRo
 // derived exploration budget or exhausts all of its candidates.
 const ORDERING_SHUFFLE_SEEDS = Array.from({ length: 6 }, (_, seed) => seed)
 
-/** Coordinates a fitness-scheduled portfolio of intra-node routing solvers. */
-export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolver<
+type PortfolioSingleIntraNodeSolverParams = ConstructorParameters<
+  typeof CachedIntraNodeRouteSolver
+>[0] & {
+  effort?: number
+  maxViaCountByConnectionName?: Record<string, number>
+}
+
+type PortfolioIntraNodeSolver =
   | IntraNodeRouteSolver
   | TwoCrossingRoutesHighDensitySolver
   | SingleTransitionCrossingRouteSolver
@@ -37,12 +43,16 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
   | SingleTransitionThroughObstacleIntraNodeSolver
   | SingleLayerNoDifferentRootIntersectionsIntraNodeSolver
   | HighDensityA03Solver
+
+/** Coordinates a fitness-scheduled portfolio of intra-node routing solvers. */
+export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolver<
+  PortfolioIntraNodeSolver
 > {
   override getSolverName(): string {
     return "PortfolioSingleIntraNodeSolver"
   }
 
-  constructorParams: ConstructorParameters<typeof CachedIntraNodeRouteSolver>[0]
+  constructorParams: PortfolioSingleIntraNodeSolverParams
   solvedRoutes: HighDensityIntraNodeRoute[] = []
   nodeWithPortPoints: NodeWithPortPoints
   connMap?: ConnectivityMap
@@ -100,11 +110,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     )
   }
 
-  constructor(
-    opts: ConstructorParameters<typeof CachedIntraNodeRouteSolver>[0] & {
-      effort?: number
-    },
-  ) {
+  constructor(opts: PortfolioSingleIntraNodeSolverParams) {
     super()
     this.nodeWithPortPoints = opts.nodeWithPortPoints
     this.connMap = opts.connMap
@@ -113,6 +119,73 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     this.MAX_ITERATIONS = 20_000_000 * this.effort
     this.GREEDY_MULTIPLIER = 5
     this.MIN_SUBSTEPS = 100
+  }
+
+  private getCandidateRoutes(
+    solver: PortfolioIntraNodeSolver,
+  ): HighDensityIntraNodeRoute[] {
+    if (solver instanceof HighDensityA03Solver) {
+      return solver.getOutput()
+    }
+    if ((solver as any) instanceof HighDensitySolverA01) {
+      return (solver as any).getOutput()
+    }
+    return solver.solvedRoutes
+  }
+
+  private getMaxViaCountViolation(solver: PortfolioIntraNodeSolver):
+    | {
+        connectionName: string
+        actualViaCount: number
+        maxViaCount: number
+      }
+    | undefined {
+    const maxViaCountByConnectionName =
+      this.constructorParams.maxViaCountByConnectionName
+    if (!maxViaCountByConnectionName) return undefined
+
+    const viaCountByConnectionName = new Map<string, number>()
+    for (const route of this.getCandidateRoutes(solver)) {
+      viaCountByConnectionName.set(
+        route.connectionName,
+        (viaCountByConnectionName.get(route.connectionName) ?? 0) +
+          route.vias.length,
+      )
+    }
+
+    for (const [connectionName, maxViaCount] of Object.entries(
+      maxViaCountByConnectionName,
+    )) {
+      const actualViaCount = viaCountByConnectionName.get(connectionName) ?? 0
+      if (actualViaCount > maxViaCount) {
+        return { connectionName, actualViaCount, maxViaCount }
+      }
+    }
+
+    return undefined
+  }
+
+  private rejectCandidateForMaxViaCount(
+    solver: PortfolioIntraNodeSolver,
+  ): boolean {
+    const violation = this.getMaxViaCountViolation(solver)
+    if (!violation) return false
+
+    solver.solved = false
+    solver.failed = true
+    solver.error = `Connection "${violation.connectionName}" uses ${violation.actualViaCount} vias in this node, exceeding the remaining maxViaCount=${violation.maxViaCount}`
+    return true
+  }
+
+  override getSupervisedSolverWithBestFitness():
+    | SupervisedSolver<PortfolioIntraNodeSolver>
+    | null {
+    for (const supervisedSolver of this.supervisedSolvers ?? []) {
+      if (!supervisedSolver.solver.solved) continue
+      this.rejectCandidateForMaxViaCount(supervisedSolver.solver)
+    }
+
+    return super.getSupervisedSolverWithBestFitness()
   }
 
   getCombinationDefs() {
@@ -502,16 +575,14 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     })
   }
 
-  onSolve(solver: SupervisedSolver<IntraNodeRouteSolver>) {
-    let routes: HighDensityIntraNodeRoute[]
-    if (
-      (solver.solver as any) instanceof HighDensitySolverA01 ||
-      (solver.solver as any) instanceof HighDensityA03Solver
-    ) {
-      routes = (solver.solver as any).getOutput()
-    } else {
-      routes = solver.solver.solvedRoutes
+  onSolve(solver: SupervisedSolver<PortfolioIntraNodeSolver>) {
+    if (this.rejectCandidateForMaxViaCount(solver.solver)) {
+      this.solved = false
+      this.winningSolver = undefined
+      return
     }
+
+    const routes = this.getCandidateRoutes(solver.solver)
     const routesWithRootConnectionNames = routes.map((route) => {
       const matchingPortPoint = this.nodeWithPortPoints.portPoints.find(
         (p) => p.connectionName === route.connectionName,

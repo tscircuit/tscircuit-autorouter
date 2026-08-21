@@ -6,6 +6,7 @@ import {
   ConnectionTempId,
 } from "lib/types"
 import { DSU } from "lib/utils/dsu"
+import { getConnectionPointPairKey } from "lib/utils/getConnectionPointPairKey"
 import { getPointKey } from "lib/utils/getPointKey"
 
 /**
@@ -90,6 +91,7 @@ export function mergeConnections(
     const mergedNetConnectionNames: Set<string> = new Set()
     let nominalTraceWidth: number | undefined = undefined
     const maxViaCountByRootConnectionName: Record<string, number> = {}
+    const maxViaCountByPointPair: Record<string, number> = {}
 
     simpleRouteConnectionGroup.forEach((simpleRouteConnection) => {
       // Collect unique points
@@ -152,6 +154,26 @@ export function mergeConnections(
             simpleRouteConnection.maxViaCount,
           )
         }
+
+        if (simpleRouteConnection.pointsToConnect.length === 2) {
+          const pointPairKey = getConnectionPointPairKey(
+            simpleRouteConnection.pointsToConnect[0],
+            simpleRouteConnection.pointsToConnect[1],
+          )
+          maxViaCountByPointPair[pointPairKey] = Math.min(
+            maxViaCountByPointPair[pointPairKey] ?? Number.POSITIVE_INFINITY,
+            simpleRouteConnection.maxViaCount,
+          )
+        }
+      }
+
+      for (const [pointPairKey, maxViaCount] of Object.entries(
+        simpleRouteConnection.maxViaCountByPointPair ?? {},
+      )) {
+        maxViaCountByPointPair[pointPairKey] = Math.min(
+          maxViaCountByPointPair[pointPairKey] ?? Number.POSITIVE_INFINITY,
+          maxViaCount,
+        )
       }
     })
 
@@ -182,6 +204,10 @@ export function mergeConnections(
       maxViaCountByRootConnectionName:
         Object.keys(maxViaCountByRootConnectionName).length > 0
           ? maxViaCountByRootConnectionName
+          : undefined,
+      maxViaCountByPointPair:
+        Object.keys(maxViaCountByPointPair).length > 0
+          ? maxViaCountByPointPair
           : undefined,
     }
 
