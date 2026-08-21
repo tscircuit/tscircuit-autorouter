@@ -91,7 +91,7 @@ test("repro: maxViaCount is ignored on a source trace in a net", (): void => {
     ),
     traces: mergedNetTraces,
   }
-  expect(
-    convertSrjToGraphicsObject(focusedSimpleRouteJson),
-  ).toMatchGraphicsSvg(import.meta.path)
+  expect(convertSrjToGraphicsObject(focusedSimpleRouteJson)).toMatchGraphicsSvg(
+    import.meta.path,
+  )
 })
