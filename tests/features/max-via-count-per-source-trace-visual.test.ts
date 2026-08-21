@@ -2,7 +2,7 @@ import { expect, test } from "bun:test"
 import { AutoroutingPipelineSolver7_MultiGraph } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/AutoroutingPipelineSolver7_MultiGraph"
 import type { SimpleRouteJson } from "lib/types"
 import { convertSrjToGraphicsObject } from "lib/utils/convertSrjToGraphicsObject"
-import solarBatteryCharger from "../../fixtures/bug-reports/bugreport68-solar-battery-charger/bugreport68-solar-battery-charger.srj.json" with {
+import connectedNetFixture from "../../fixtures/bug-reports/bugreport75-d7c4d8/bugreport75-d7c4d8.srj.json" with {
   type: "json",
 }
 
@@ -12,13 +12,13 @@ type MaxViaCountReproConnection = SimpleRouteJson["connections"][number] & {
 
 test("repro: maxViaCount is ignored on a source trace in a net", (): void => {
   const simpleRouteJson = structuredClone(
-    solarBatteryCharger,
+    connectedNetFixture,
   ) as SimpleRouteJson
   const constrainedConnection = simpleRouteJson.connections.find(
-    (connection) => connection.name === "source_trace_46",
+    (connection) => connection.name === "source_trace_16",
   ) as MaxViaCountReproConnection | undefined
   if (!constrainedConnection) {
-    throw new Error("Solar-charger fixture is missing source_trace_46")
+    throw new Error("Connected-net fixture is missing source_trace_16")
   }
   constrainedConnection.maxViaCount = 0
 
@@ -42,45 +42,35 @@ test("repro: maxViaCount is ignored on a source trace in a net", (): void => {
       ),
   )
   if (!constrainedRoutedConnection) {
-    throw new Error("Routed output is missing the source_trace_46 branch")
+    throw new Error("Routed output is missing the source_trace_16 branch")
   }
 
-  const mergedNetTraceNames = new Set(
-    routedConnectionsForMergedNet.map((connection) => connection.name),
-  )
-  const mergedNetTraces = traces.filter((trace) =>
-    Array.from(mergedNetTraceNames).some((connectionName) =>
-      trace.pcb_trace_id.startsWith(`${connectionName}_`),
-    ),
-  )
-  const mergedNetViaCount = mergedNetTraces
-    .flatMap((trace) => trace.route)
-    .filter((routePoint) => routePoint.route_type === "via").length
-  const constrainedTraceViaCount = traces
-    .filter((trace) =>
+  expect(constrainedRoutedConnection.__rootConnectionNames).toEqual([
+    "source_trace_15",
+    "source_trace_16",
+  ])
+  const connectedNetTraces = traces.filter((trace) =>
       trace.pcb_trace_id.startsWith(`${constrainedRoutedConnection.name}_`),
-    )
+  )
+  const constrainedTraceViaCount = connectedNetTraces
     .flatMap((trace) => trace.route)
     .filter((routePoint) => routePoint.route_type === "via").length
 
-  expect(mergedNetViaCount).toBe(2)
-  expect(constrainedTraceViaCount).toBe(0)
+  expect(constrainedTraceViaCount).toBe(2)
   expect(solver.solved).toBe(true)
   expect(solver.failed).toBe(false)
 
   const focusedBounds = {
-    minX: -10.25,
-    minY: -9,
-    maxX: -3.25,
-    maxY: -4.25,
+    minX: -2,
+    minY: 14,
+    maxX: 4,
+    maxY: 21,
   }
   const focusedSimpleRouteJson: SimpleRouteJson = {
     ...simpleRouteJson,
     bounds: focusedBounds,
     connections: simpleRouteJson.connections.filter((connection) =>
-      ["source_trace_45", "source_trace_46", "source_net_11"].includes(
-        connection.name,
-      ),
+      ["source_trace_15", "source_trace_16"].includes(connection.name),
     ),
     obstacles: simpleRouteJson.obstacles.filter(
       (obstacle) =>
@@ -89,7 +79,7 @@ test("repro: maxViaCount is ignored on a source trace in a net", (): void => {
         obstacle.center.y + obstacle.height / 2 >= focusedBounds.minY &&
         obstacle.center.y - obstacle.height / 2 <= focusedBounds.maxY,
     ),
-    traces: mergedNetTraces,
+    traces: connectedNetTraces,
   }
   expect(convertSrjToGraphicsObject(focusedSimpleRouteJson)).toMatchGraphicsSvg(
     import.meta.path,
