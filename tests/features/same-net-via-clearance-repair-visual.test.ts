@@ -117,16 +117,11 @@ test("shows dataset 18 sample 11's production exact DRC repair", async () => {
   expect(pipeline.failed).toBe(false)
   expect(exactSolver.solved).toBe(true)
 
-  const snapshotPath =
-    process.platform === "linux"
-      ? import.meta.path.replace(/\.test\.ts$/, "-linux.test.ts")
-      : import.meta.path
-
   await expect(
     getGraphicsSvgFrames({
       frames,
       columns: 2,
       backgroundColor: "white",
     }),
-  ).toMatchSvgSnapshot(snapshotPath, { tolerance: 0 })
+  ).toMatchSvgSnapshot(import.meta.path, { tolerance: 0 })
 }, 360_000)

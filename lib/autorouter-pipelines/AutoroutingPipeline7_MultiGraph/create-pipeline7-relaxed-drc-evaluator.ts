@@ -6,11 +6,6 @@ import {
   type ConvertPipeline7HdRoutesOptions,
 } from "./convertPipeline7HdRoutesToSimplifiedPcbTraces"
 
-type RelaxedDrcCacheEntry = {
-  routeFingerprint: string
-  result: ReturnType<DrcEvaluator>
-}
-
 /** Scores Pipeline7 repair candidates with the benchmark relaxed DRC. */
 export const createPipeline7RelaxedDrcEvaluator = (
   conversionOptions: Omit<ConvertPipeline7HdRoutesOptions, "hdRoutes"> & {
@@ -18,16 +13,10 @@ export const createPipeline7RelaxedDrcEvaluator = (
     originalSrj: SimpleRouteJson
   },
 ): DrcEvaluator => {
-  const relaxedDrcResultCache = new WeakMap<object, RelaxedDrcCacheEntry>()
-  const evaluator = (({ routes, hdRoutes }) => {
+  return ({ routes, hdRoutes }) => {
     const evaluatedRoutes = routes ?? hdRoutes
     if (!evaluatedRoutes) {
       throw new Error("Pipeline7 relaxed DRC evaluation requires HD routes")
-    }
-    const routeFingerprint = JSON.stringify(evaluatedRoutes)
-    const cachedEntry = relaxedDrcResultCache.get(evaluatedRoutes)
-    if (cachedEntry?.routeFingerprint === routeFingerprint) {
-      return cachedEntry.result
     }
 
     const traces = convertPipeline7HdRoutesToSimplifiedPcbTraces({
@@ -40,27 +29,12 @@ export const createPipeline7RelaxedDrcEvaluator = (
       routedTraces: traces,
     })
 
-    const result = {
+    return {
       errors: errors as unknown as Record<string, unknown>[],
       errorsWithCenters: errorsWithCenters as unknown as Record<
         string,
         unknown
       >[],
     }
-    relaxedDrcResultCache.set(evaluatedRoutes, { routeFingerprint, result })
-    return result
-  }) as DrcEvaluator
-  evaluator.getCachedResult = ({ routes, hdRoutes }) => {
-    const evaluatedRoutes = routes ?? hdRoutes
-    if (!evaluatedRoutes) return undefined
-    const cachedEntry = relaxedDrcResultCache.get(evaluatedRoutes)
-    if (
-      !cachedEntry ||
-      cachedEntry.routeFingerprint !== JSON.stringify(evaluatedRoutes)
-    ) {
-      return undefined
-    }
-    return cachedEntry.result
   }
-  return evaluator
 }

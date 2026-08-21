@@ -73,7 +73,6 @@ test("Pipeline7 uses a DRC-validated fast probe for two-layer exact repair", () 
   } as any)
   expect((exactGeometryDrcParams as any).maxIterations).toBe(32)
   expect((exactGeometryDrcParams as any).drcEvaluator).toBeFunction()
-  expect((exactGeometryDrcParams as any).referenceDrcEvaluator).toBeFunction()
   expect((exactGeometryDrcParams as any).viaInPadDrcEvaluator).toBe(
     (exactGeometryDrcParams as any).drcEvaluator,
   )
@@ -122,38 +121,4 @@ test("Pipeline7 uses a DRC-validated fast probe for two-layer exact repair", () 
   expect(fourLayerSolver.stats.pipeline7AdaptiveExactDrcFastProbeAccepted).toBe(
     false,
   )
-})
-
-test("Pipeline7 rejects a fast probe with a via-to-pad DRC", () => {
-  const solver = new Pipeline7AdaptiveDrcBranchPortfolioSolver({
-    srj: {
-      layerCount: 2,
-      minTraceWidth: 0.15,
-      minViaDiameter: 0.3,
-      bounds: { minX: 0, minY: 0, maxX: 2, maxY: 2 },
-      obstacles: [],
-      connections: [],
-    },
-    hdRoutes: [],
-    effort: 1,
-    maxIterations: 1,
-    broadMaxIterations: 1,
-    broadPassMultiplier: 1,
-    viaInPadMaxIterations: 1,
-    enableSafeTraceLayerMoves: true,
-    drcEvaluator: () => ({
-      errors: [
-        {
-          type: "pcb_pad_pad_clearance_error",
-          pcb_via_ids: ["via_0"],
-          center: { x: 1, y: 1 },
-        },
-      ],
-    }),
-  } as any)
-
-  solver.solve()
-
-  expect(solver.stats.pipeline7AdaptiveExactDrcFastProbeAccepted).toBe(false)
-  expect(solver.stats.pipeline7AdaptiveExactDrcFastProbeDrcIssueCount).toBe(1)
 })
