@@ -3,7 +3,7 @@ import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-p
 import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import { loadScenarioBySampleNumber } from "../../scripts/benchmark/scenarios"
 
-test("Pipeline9 keeps an SRJ23 trace-pair conflict DRC-clean with regional B01 eligible", async () => {
+test("Pipeline9 uses regional B01 to clear an SRJ23 trace-pair conflict", async () => {
   const { scenario } = await loadScenarioBySampleNumber("srj23", 21)
   const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(
     structuredClone(scenario),
@@ -18,6 +18,9 @@ test("Pipeline9 keeps an SRJ23 trace-pair conflict DRC-clean with regional B01 e
     solver.pipeline9JointDrcRepairSolver?.stats
       .regionalB01RepairPreloadEligibleDrcIssueCount,
   ).toBe(1)
+  expect(
+    solver.pipeline9JointDrcRepairSolver?.stats.regionalB01RepairAcceptedCount,
+  ).toBeGreaterThan(0)
   const { errors } = evaluateRelaxedDrc({
     inputSrj: scenario,
     srjWithPointPairs: solver.srjWithPointPairs!,

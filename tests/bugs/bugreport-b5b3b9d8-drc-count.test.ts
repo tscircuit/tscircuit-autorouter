@@ -24,13 +24,21 @@ test("bugreport-b5b3b9d8 pipeline7 records current total DRC errors", () => {
   expect(solver.solved).toBe(true)
   expect(solver.failed).toBe(false)
   const exactDrcStats = solver.exactGeometryDrcForceImproveSolver?.stats
-  expect(
-    exactDrcStats?.drcBranchPortfolioInitialDrcIssueCount,
-  ).toBeGreaterThanOrEqual(5)
-  expect(
-    exactDrcStats?.drcBranchPortfolioBaselineDrcIssueCount,
-  ).toBeGreaterThanOrEqual(1)
-  expect(exactDrcStats?.finalDrcIssueCount).toBeLessThanOrEqual(1)
+  const initialDrcIssueCount =
+    exactDrcStats?.drcBranchPortfolioInitialDrcIssueCount
+  const baselineDrcIssueCount =
+    exactDrcStats?.drcBranchPortfolioBaselineDrcIssueCount
+  const finalDrcIssueCount = exactDrcStats?.finalDrcIssueCount
+  if (
+    typeof initialDrcIssueCount !== "number" ||
+    typeof baselineDrcIssueCount !== "number" ||
+    typeof finalDrcIssueCount !== "number"
+  ) {
+    throw new Error("Pipeline7 exact repair did not report DRC counts")
+  }
+  expect(initialDrcIssueCount).toBeGreaterThanOrEqual(5)
+  expect(baselineDrcIssueCount).toBeLessThan(initialDrcIssueCount)
+  expect(finalDrcIssueCount).toBeLessThanOrEqual(baselineDrcIssueCount)
   expect(exactDrcStats?.drcBranchPortfolioBroadBranchAttempted).toBe(false)
 
   const srjWithPointPairs = solver.srjWithPointPairs
