@@ -38,6 +38,8 @@ type Pipeline9HighDensitySolverParams = {
   colorMap?: Record<string, string>
   obstacles: Obstacle[]
   layerCount: number
+  /** Logical copper layers that newly generated routes may use. */
+  allowedZ?: number[]
   viaDiameter: number
   traceWidth: number
   obstacleMargin: number
@@ -325,6 +327,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
   readonly colorMap: Record<string, string>
   readonly obstacles: Obstacle[]
   readonly layerCount: number
+  readonly allowedZ: number[]
   readonly viaDiameter: number
   readonly traceWidth: number
   readonly obstacleMargin: number
@@ -357,6 +360,22 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     this.colorMap = params.colorMap ?? {}
     this.obstacles = params.obstacles
     this.layerCount = params.layerCount
+    this.allowedZ = [
+      ...new Set(
+        params.allowedZ ??
+          Array.from({ length: params.layerCount }, (_, z) => z),
+      ),
+    ].sort((a, b) => a - b)
+    if (
+      this.allowedZ.length === 0 ||
+      this.allowedZ.some(
+        (z) => !Number.isInteger(z) || z < 0 || z >= params.layerCount,
+      )
+    ) {
+      throw new Error(
+        `Pipeline9 allowedZ must contain valid layers for a ${params.layerCount}-layer board`,
+      )
+    }
     this.viaDiameter = params.viaDiameter
     this.traceWidth = params.traceWidth
     this.obstacleMargin = params.obstacleMargin
@@ -460,7 +479,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       // Once B01 has proved that assignment unroutable, the regional repair
       // must be able to add a legal layer transition; board obstacles still
       // constrain which of these layers it can actually use.
-      availableZ: Array.from({ length: this.layerCount }, (_, z) => z),
+      availableZ: this.allowedZ,
     }
     const fallbackProblem = createRegionalFallbackProblem(
       regionalNode,
@@ -730,7 +749,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
         ...normalizeNodeRootConnectionNames(this.activeNode, this.connMap),
         portPoints: [],
         portPointsInPairs: [],
-        availableZ: Array.from({ length: this.layerCount }, (_, z) => z),
+        availableZ: this.allowedZ,
       },
       this.getUpdatedFixedHdRoutes(),
     )

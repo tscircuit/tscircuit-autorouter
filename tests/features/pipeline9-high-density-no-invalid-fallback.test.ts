@@ -71,6 +71,7 @@ test("Pipeline9 rejects invalid geometry and retries across legal layers", () =>
     nodePortPoints: [nodeWithPortPoints],
     fixedHdRoutes: [],
     layerCount: 2,
+    allowedZ: [0, 1],
   })
   twoLayerSolver.solve()
   expect(twoLayerSolver.solved).toBeTrue()
@@ -81,4 +82,16 @@ test("Pipeline9 rejects invalid geometry and retries across legal layers", () =>
       route.route.some((point) => point.z === 1),
     ),
   ).toBeTrue()
+
+  const topOnlySolver = new Pipeline9HighDensitySolver({
+    ...sharedParams,
+    nodePortPoints: [nodeWithPortPoints],
+    fixedHdRoutes: [],
+    layerCount: 2,
+    allowedZ: [0],
+  })
+  topOnlySolver.solve()
+  expect(topOnlySolver.solved).toBeFalse()
+  expect(topOnlySolver.failed).toBeTrue()
+  expect(topOnlySolver.routes).toEqual([])
 })

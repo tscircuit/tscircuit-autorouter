@@ -3,7 +3,7 @@ import { isMultiLayerConnectionPoint } from "lib/types/srj-types"
 
 function resolveRoutingLayer(layer: string, layerCount: number): number {
   if (layer === "top") return 0
-  if (layer === "bottom") return layerCount - 1
+  if (layer === "bottom" && layerCount > 1) return layerCount - 1
 
   const innerLayerMatch = /^inner([1-9][0-9]*)$/.exec(layer)
   const z = innerLayerMatch ? Number(innerLayerMatch[1]) : Number.NaN

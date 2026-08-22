@@ -5,7 +5,10 @@ import {
 } from "high-density-repair03/lib"
 import type { SimpleRouteConnection, SimpleRouteJson } from "lib/types"
 import type { HighDensityRoute } from "lib/types/high-density-types"
-import { canUseUnrestrictedLayerMoves } from "lib/utils/routing-layer-constraints"
+import {
+  canUseUnrestrictedLayerMoves,
+  getRoutingZLayers,
+} from "lib/utils/routing-layer-constraints"
 import type { PreloadedHighDensityRoute } from "./convert-preloaded-traces-to-hd-routes"
 import {
   arePipeline9RoutesOnSameNet,
@@ -339,7 +342,7 @@ const getRegionalCandidate = ({
     center,
     width: regionSize,
     height: regionSize,
-    availableZ: Array.from({ length: srj.layerCount }, (_, z) => z),
+    availableZ: getRoutingZLayers(srj),
     portPoints: [],
     portPointsInPairs: [],
   }
@@ -359,6 +362,7 @@ const getRegionalCandidate = ({
     colorMap,
     obstacles: srj.obstacles,
     layerCount: srj.layerCount,
+    allowedZ: getRoutingZLayers(srj),
     viaDiameter,
     traceWidth,
     obstacleMargin,
@@ -416,7 +420,7 @@ const getRegularRegionalCandidate = ({
     center,
     width: regionSize,
     height: regionSize,
-    availableZ: Array.from({ length: srj.layerCount }, (_, z) => z),
+    availableZ: getRoutingZLayers(srj),
     portPoints: [],
     portPointsInPairs: [],
   }

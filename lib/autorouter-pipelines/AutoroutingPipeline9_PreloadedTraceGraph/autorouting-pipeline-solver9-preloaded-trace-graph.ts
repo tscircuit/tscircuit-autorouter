@@ -48,6 +48,8 @@ import { getPresuppliedTraceVisualization } from "lib/utils/getPresuppliedTraceV
 import { calculateOptimalCapacityDepth } from "lib/utils/getTunedTotalCapacity1"
 import { getViaDimensions } from "lib/utils/getViaDimensions"
 import {
+  canUseUnrestrictedLayerMoves,
+  getRoutingZLayers,
   normalizeSrjRoutingLayers,
   restrictCapacityNodesToRoutingLayers,
 } from "lib/utils/routing-layer-constraints"
@@ -621,6 +623,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             colorMap: cms.colorMap,
             obstacles: cms.srj.obstacles,
             layerCount: cms.srj.layerCount,
+            allowedZ: getRoutingZLayers(cms.srj),
             viaDiameter: cms.viaDiameter,
             traceWidth: cms.minTraceWidth,
             obstacleMargin: cms.srj.defaultObstacleMargin ?? 0.15,
@@ -847,6 +850,11 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       "lengthMatchingPostProcessingSolver",
       DifferentialPairPostProcessingSolver,
       (cms) => {
+        if (!canUseUnrestrictedLayerMoves(cms.originalSrj)) {
+          throw new Error(
+            "Differential-pair post-processing cannot run when routingLayers excludes board layers",
+          )
+        }
         const netToPointPairsSolver = cms.netToPointPairsSolver
         if (!netToPointPairsSolver)
           throw new Error(
@@ -1033,6 +1041,18 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
         this.failed = true
         this.activeSubSolver = null
       }
+      return
+    }
+
+    if (
+      pipelineStepDef.solverName === "lengthMatchingPostProcessingSolver" &&
+      !canUseUnrestrictedLayerMoves(this.originalSrj)
+    ) {
+      this.stats = {
+        ...this.stats,
+        lengthMatchingPostProcessingSkippedForRoutingLayers: true,
+      }
+      this.currentPipelineStepIndex++
       return
     }
 

@@ -20,4 +20,18 @@ test("invalid routing layer allow-lists fail clearly", () => {
   expect(() =>
     getRoutingZLayers({ ...baseSrj, routingLayers: ["top", "top"] }),
   ).toThrow("routingLayers must not contain duplicate board layers")
+  expect(() =>
+    getRoutingZLayers({
+      ...baseSrj,
+      layerCount: 1,
+      routingLayers: ["bottom"],
+    }),
+  ).toThrow('Invalid routing layer "bottom" for a 1-layer board')
+  expect(() =>
+    getRoutingZLayers({
+      ...baseSrj,
+      layerCount: 1,
+      routingLayers: ["top", "bottom"],
+    }),
+  ).toThrow('Invalid routing layer "bottom" for a 1-layer board')
 })

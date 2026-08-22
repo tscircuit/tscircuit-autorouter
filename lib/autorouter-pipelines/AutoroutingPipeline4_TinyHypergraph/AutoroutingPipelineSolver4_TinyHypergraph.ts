@@ -37,6 +37,7 @@ import { getPresuppliedTraceVisualization } from "lib/utils/getPresuppliedTraceV
 import { calculateOptimalCapacityDepth } from "lib/utils/getTunedTotalCapacity1"
 import { getViaDimensions } from "lib/utils/getViaDimensions"
 import {
+  getRoutingZLayers,
   normalizeSrjRoutingLayers,
   restrictCapacityNodesToRoutingLayers,
 } from "lib/utils/routing-layer-constraints"
@@ -345,10 +346,7 @@ export class AutoroutingPipelineSolver4_TinyHypergraph extends BaseSolver {
         hasImpossibleSameLayerCrossingGeometry(node)
           ? {
               ...node,
-              availableZ: Array.from(
-                { length: cms.srj.layerCount },
-                (_, z) => z,
-              ),
+              availableZ: getRoutingZLayers(cms.srj),
             }
           : node,
       )

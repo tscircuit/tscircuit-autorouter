@@ -718,6 +718,11 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
       "lengthMatchingPostProcessingSolver",
       DifferentialPairPostProcessingSolver,
       (cms) => {
+        if (!canUseUnrestrictedLayerMoves(cms.originalSrj)) {
+          throw new Error(
+            "Differential-pair post-processing cannot run when routingLayers excludes board layers",
+          )
+        }
         const netToPointPairsSolver = cms.netToPointPairsSolver
         if (!netToPointPairsSolver)
           throw new Error(
@@ -902,6 +907,18 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
         this.failed = true
         this.activeSubSolver = null
       }
+      return
+    }
+
+    if (
+      pipelineStepDef.solverName === "lengthMatchingPostProcessingSolver" &&
+      !canUseUnrestrictedLayerMoves(this.originalSrj)
+    ) {
+      this.stats = {
+        ...this.stats,
+        lengthMatchingPostProcessingSkippedForRoutingLayers: true,
+      }
+      this.currentPipelineStepIndex++
       return
     }
 

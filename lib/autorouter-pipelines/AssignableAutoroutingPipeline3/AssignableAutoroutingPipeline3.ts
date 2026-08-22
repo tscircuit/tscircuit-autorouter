@@ -21,6 +21,7 @@ import {
 } from "lib/utils/getGraphicsObjectLayer"
 import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
 import { getInitiallyConnectedMapFromSimpleRouteJson } from "lib/utils/get-initially-connected-map-from-simple-route-json"
+import { getIntraNodeCrossingsUsingCircle } from "lib/utils/getIntraNodeCrossingsUsingCircle"
 import { getViaDimensions } from "lib/utils/getViaDimensions"
 import { AvailableSegmentPointSolver } from "../../solvers/AvailableSegmentPointSolver/AvailableSegmentPointSolver"
 import { BaseSolver } from "../../solvers/BaseSolver"
@@ -65,6 +66,7 @@ import { combineVisualizations } from "../../utils/combineVisualizations"
 import { calculateOptimalCapacityDepth } from "../../utils/getTunedTotalCapacity1"
 import { JUMPER_DIMENSIONS } from "../../utils/jumperSizes"
 import {
+  getRoutingZLayers,
   normalizeSrjRoutingLayers,
   restrictCapacityNodesToRoutingLayers,
 } from "lib/utils/routing-layer-constraints"
@@ -376,22 +378,36 @@ export class AssignableAutoroutingPipeline3 extends BaseSolver {
     //     connMap: cms.connMap,
     //   },
     // ]),
-    definePipelineStep("highDensitySolver", JumperHighDensitySolver, (cms) => [
-      {
-        nodePortPoints:
-          cms.multiSectionPortPointOptimizer?.getNodesWithPortPoints() ??
-          cms.portPointPathingSolver?.getNodesWithPortPoints() ??
-          [],
-        colorMap: cms.colorMap,
-        viaDiameter: cms.viaDiameter,
-        traceWidth: cms.minTraceWidth,
-        obstacleMargin: cms.srj.defaultObstacleMargin ?? 0.15,
-        connMap: cms.connMap,
-        capacityMeshNodes: cms.capacityNodes ?? [],
-        capacityMeshEdges: cms.capacityEdges ?? [],
-        availableJumperTypes: cms.srj.availableJumperTypes,
-      },
-    ]),
+    definePipelineStep("highDensitySolver", JumperHighDensitySolver, (cms) => {
+      const nodePortPoints =
+        cms.multiSectionPortPointOptimizer?.getNodesWithPortPoints() ??
+        cms.portPointPathingSolver?.getNodesWithPortPoints() ??
+        []
+      if (
+        !getRoutingZLayers(cms.srj).includes(0) &&
+        nodePortPoints.some(
+          (node) =>
+            getIntraNodeCrossingsUsingCircle(node).numSameLayerCrossings > 0,
+        )
+      ) {
+        throw new Error(
+          'AssignablePipeline3 cannot place top-layer jumpers because routingLayers excludes "top"',
+        )
+      }
+      return [
+        {
+          nodePortPoints,
+          colorMap: cms.colorMap,
+          viaDiameter: cms.viaDiameter,
+          traceWidth: cms.minTraceWidth,
+          obstacleMargin: cms.srj.defaultObstacleMargin ?? 0.15,
+          connMap: cms.connMap,
+          capacityMeshNodes: cms.capacityNodes ?? [],
+          capacityMeshEdges: cms.capacityEdges ?? [],
+          availableJumperTypes: cms.srj.availableJumperTypes,
+        },
+      ]
+    }),
     definePipelineStep(
       "highDensityStitchSolver",
       MultipleHighDensityRouteStitchSolver2,

@@ -6,6 +6,7 @@ import {
 import type { GraphicsObject } from "graphics-debug"
 import type { SimpleRouteJson, SimplifiedPcbTraces } from "lib/types"
 import { convertSrjToGraphicsObject } from "lib/utils/convertSrjToGraphicsObject"
+import { canUseUnrestrictedLayerMoves } from "lib/utils/routing-layer-constraints"
 import { BaseSolver } from "../../solvers/BaseSolver"
 
 export class PowerTraceExpansionSolver extends BaseSolver {
@@ -16,6 +17,14 @@ export class PowerTraceExpansionSolver extends BaseSolver {
     public readonly options: PowerTraceExpanderOptions = {},
   ) {
     super()
+    if (
+      options.allowNewVias !== false &&
+      !canUseUnrestrictedLayerMoves(inputSrj)
+    ) {
+      throw new Error(
+        "Power trace expansion cannot add vias when routingLayers excludes board layers",
+      )
+    }
     this.powerTraceExpanderSolver = new PowerTraceExpanderSolver(
       inputSrj as unknown as PowerTraceExpanderInput,
       options,
