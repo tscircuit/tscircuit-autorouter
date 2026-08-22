@@ -13,7 +13,9 @@ test("route spatial index includes neighboring-bucket copper within clearance", 
     ],
     vias: [],
   }
-  const spatialIndex = new HighDensityRouteSpatialIndex([neighboringRoute])
+  const spatialIndex = new HighDensityRouteSpatialIndex([neighboringRoute], 1, {
+    includeCopperRadiusInBroadPhase: true,
+  })
 
   const conflicts = spatialIndex.getConflictingRoutesForSegment(
     { x: 0.8, y: 0, z: 0 },

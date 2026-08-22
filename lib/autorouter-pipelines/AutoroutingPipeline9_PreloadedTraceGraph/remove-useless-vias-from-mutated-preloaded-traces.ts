@@ -238,6 +238,8 @@ export const removeUselessViasFromMutatedPreloadedTraces = ({
     outline: outline ? [...outline] : undefined,
     layerMoveTraceMargin: traceClearance,
     layerMoveObstacleMargin: obstacleClearance,
+    includeCopperRadiusInBroadPhase: true,
+    protectMarkedTransitions: true,
     enableGeometryShortcuts: false,
     enableObstacleDetourShortcuts: false,
   })

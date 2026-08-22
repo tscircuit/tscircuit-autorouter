@@ -22,6 +22,8 @@ export interface UselessViaRemovalSolverInput {
   outline?: Array<{ x: number; y: number }>
   layerMoveTraceMargin?: number
   layerMoveObstacleMargin?: number
+  includeCopperRadiusInBroadPhase?: boolean
+  protectMarkedTransitions?: boolean
   geometryShortcutTraceMargin?: number
   geometryShortcutObstacleMargin?: number
   enableGeometryShortcuts?: boolean
@@ -57,10 +59,13 @@ export class UselessViaRemovalSolver extends BaseSolver {
       "flatbush",
       this.input.obstacles,
     )
-    this.hdRouteSHI = new HighDensityRouteSpatialIndex([
-      ...this.unsimplifiedHdRoutes,
-      ...(input.otherHdRoutes ?? []),
-    ])
+    this.hdRouteSHI = new HighDensityRouteSpatialIndex(
+      [...this.unsimplifiedHdRoutes, ...(input.otherHdRoutes ?? [])],
+      1,
+      {
+        includeCopperRadiusInBroadPhase: input.includeCopperRadiusInBroadPhase,
+      },
+    )
   }
 
   _step() {
@@ -93,6 +98,7 @@ export class UselessViaRemovalSolver extends BaseSolver {
       outline: this.input.outline,
       layerMoveTraceMargin: this.input.layerMoveTraceMargin,
       layerMoveObstacleMargin: this.input.layerMoveObstacleMargin,
+      protectMarkedTransitions: this.input.protectMarkedTransitions,
       geometryShortcutTraceMargin: this.input.geometryShortcutTraceMargin,
       geometryShortcutObstacleMargin: this.input.geometryShortcutObstacleMargin,
       enableGeometryShortcuts: this.input.enableGeometryShortcuts,

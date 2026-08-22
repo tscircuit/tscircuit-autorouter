@@ -53,6 +53,7 @@ export class SingleRouteUselessViaRemovalSolver extends BaseSolver {
   TRACE_THICKNESS = 0.15
   OBSTACLE_MARGIN = 0.1
   LAYER_MOVE_TRACE_MARGIN = 0
+  PROTECT_MARKED_TRANSITIONS = false
   GEOMETRY_SHORTCUT_TRACE_MARGIN = 0.1
   GEOMETRY_SHORTCUT_OBSTACLE_MARGIN = 0.15
   MAX_GEOMETRY_SHORTCUT_ADDED_LENGTH = 4
@@ -71,6 +72,7 @@ export class SingleRouteUselessViaRemovalSolver extends BaseSolver {
     outline?: Array<{ x: number; y: number }>
     layerMoveTraceMargin?: number
     layerMoveObstacleMargin?: number
+    protectMarkedTransitions?: boolean
     geometryShortcutTraceMargin?: number
     geometryShortcutObstacleMargin?: number
     enableGeometryShortcuts?: boolean
@@ -87,6 +89,8 @@ export class SingleRouteUselessViaRemovalSolver extends BaseSolver {
       params.layerMoveTraceMargin ?? this.LAYER_MOVE_TRACE_MARGIN
     this.OBSTACLE_MARGIN =
       params.layerMoveObstacleMargin ?? this.OBSTACLE_MARGIN
+    this.PROTECT_MARKED_TRANSITIONS =
+      params.protectMarkedTransitions ?? this.PROTECT_MARKED_TRANSITIONS
     this.GEOMETRY_SHORTCUT_TRACE_MARGIN =
       params.geometryShortcutTraceMargin ?? this.GEOMETRY_SHORTCUT_TRACE_MARGIN
     this.GEOMETRY_SHORTCUT_OBSTACLE_MARGIN =
@@ -569,6 +573,7 @@ export class SingleRouteUselessViaRemovalSolver extends BaseSolver {
       const firstSection = this.routeSections[0]
       const secondSection = this.routeSections[1]
       const firstTransitionIsProtected =
+        this.PROTECT_MARKED_TRANSITIONS &&
         firstSection.points.at(-1)?.toNextSegmentType !== undefined
 
       if (firstSection.z !== secondSection.z && !firstTransitionIsProtected) {
@@ -619,6 +624,7 @@ export class SingleRouteUselessViaRemovalSolver extends BaseSolver {
         const secondLastSection =
           this.routeSections[this.routeSections.length - 2]
         const lastTransitionIsProtected =
+          this.PROTECT_MARKED_TRANSITIONS &&
           secondLastSection.points.at(-1)?.toNextSegmentType !== undefined
 
         if (
@@ -668,8 +674,9 @@ export class SingleRouteUselessViaRemovalSolver extends BaseSolver {
     const currentSection = this.routeSections[this.currentSectionIndex]
     const nextSection = this.routeSections[this.currentSectionIndex + 1]
     const adjacentTransitionIsProtected =
-      prevSection.points.at(-1)?.toNextSegmentType !== undefined ||
-      currentSection.points.at(-1)?.toNextSegmentType !== undefined
+      this.PROTECT_MARKED_TRANSITIONS &&
+      (prevSection.points.at(-1)?.toNextSegmentType !== undefined ||
+        currentSection.points.at(-1)?.toNextSegmentType !== undefined)
     if (adjacentTransitionIsProtected) {
       this.currentSectionIndex++
       return
@@ -737,6 +744,7 @@ export class SingleRouteUselessViaRemovalSolver extends BaseSolver {
       outline: this.outline,
       layerMoveTraceMargin: this.LAYER_MOVE_TRACE_MARGIN,
       layerMoveObstacleMargin: this.OBSTACLE_MARGIN,
+      protectMarkedTransitions: this.PROTECT_MARKED_TRANSITIONS,
       geometryShortcutTraceMargin: this.GEOMETRY_SHORTCUT_TRACE_MARGIN,
       geometryShortcutObstacleMargin: this.GEOMETRY_SHORTCUT_OBSTACLE_MARGIN,
       enableGeometryShortcuts: this.ENABLE_GEOMETRY_SHORTCUTS,

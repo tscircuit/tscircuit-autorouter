@@ -102,12 +102,19 @@ export class HighDensityRouteSpatialIndex {
   private viaBuckets: Map<BucketCoordinate, StoredVia[]> // New: Store vias
   private CELL_SIZE: number
   private maximumCopperRadius = 0
+  private includeCopperRadiusInBroadPhase: boolean
 
-  constructor(routes: HighDensityRoute[], cellSize: number = 1.0) {
+  constructor(
+    routes: HighDensityRoute[],
+    cellSize: number = 1.0,
+    options: { includeCopperRadiusInBroadPhase?: boolean } = {},
+  ) {
     // console.time("HighDensityRouteSpatialIndex Constructor");
     this.segmentBuckets = new Map()
     this.viaBuckets = new Map() // Initialize via buckets
     this.CELL_SIZE = cellSize
+    this.includeCopperRadiusInBroadPhase =
+      options.includeCopperRadiusInBroadPhase ?? false
     const epsilon = 1e-9 // For segment boundary checks
 
     for (const route of routes) {
@@ -207,10 +214,13 @@ export class HighDensityRouteSpatialIndex {
 
     // --- Define search area including margin for both segments and vias ---
     // Need to consider the maximum possible radius (trace/2 or via/2) + margin
-    // Stored centerlines can sit in a neighboring bucket while their copper
-    // still reaches the query margin. Expand by the largest indexed radius;
-    // item-specific checks below retain the exact separation test.
-    const broadPhaseMargin = margin + this.maximumCopperRadius
+    // In clearance-sensitive callers, stored centerlines can sit in a
+    // neighboring bucket while their copper still reaches the query margin.
+    // The optional expansion finds those candidates; item-specific checks
+    // below retain the exact separation test.
+    const broadPhaseMargin =
+      margin +
+      (this.includeCopperRadiusInBroadPhase ? this.maximumCopperRadius : 0)
     const searchMinX = bounds.minX - broadPhaseMargin
     const searchMinY = bounds.minY - broadPhaseMargin
     const searchMaxX = bounds.maxX + broadPhaseMargin
@@ -456,7 +466,9 @@ export class HighDensityRouteSpatialIndex {
     margin: number, // Minimum required clearance
   ): Array<{ conflictingRoute: HighDensityRoute; distance: number }> {
     // --- Define search area ---
-    const broadPhaseMargin = margin + this.maximumCopperRadius
+    const broadPhaseMargin =
+      margin +
+      (this.includeCopperRadiusInBroadPhase ? this.maximumCopperRadius : 0)
     const searchMinX = point.x - broadPhaseMargin
     const searchMinY = point.y - broadPhaseMargin
     const searchMaxX = point.x + broadPhaseMargin
