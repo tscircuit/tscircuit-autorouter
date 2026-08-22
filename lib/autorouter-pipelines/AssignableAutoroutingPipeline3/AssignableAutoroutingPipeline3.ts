@@ -64,6 +64,10 @@ import { Jumper as HdJumper } from "../../types/high-density-types"
 import { combineVisualizations } from "../../utils/combineVisualizations"
 import { calculateOptimalCapacityDepth } from "../../utils/getTunedTotalCapacity1"
 import { JUMPER_DIMENSIONS } from "../../utils/jumperSizes"
+import {
+  normalizeSrjRoutingLayers,
+  restrictCapacityNodesToRoutingLayers,
+} from "lib/utils/routing-layer-constraints"
 import { JumperHighDensitySolver } from "../AssignableAutoroutingPipeline2/JumperHighDensitySolver"
 import { PortPointOffboardPathFragmentSolver } from "../AssignableAutoroutingPipeline2/PortPointOffboardPathFragmentSolver"
 import { RelateNodesToOffBoardConnectionsSolver } from "../AssignableAutoroutingPipeline2/RelateNodesToOffBoardConnectionsSolver"
@@ -181,7 +185,10 @@ export class AssignableAutoroutingPipeline3 extends BaseSolver {
       ],
       {
         onSolved: (cms) => {
-          cms.capacityNodes = cms.nodeSolver?.getOutput().meshNodes ?? []
+          cms.capacityNodes = restrictCapacityNodesToRoutingLayers(
+            cms.nodeSolver?.getOutput().meshNodes ?? [],
+            cms.srj,
+          )
         },
       },
     ),
@@ -460,7 +467,7 @@ export class AssignableAutoroutingPipeline3 extends BaseSolver {
     public readonly opts: CapacityMeshSolverOptions = {},
   ) {
     super()
-    this.srj = srj
+    this.srj = normalizeSrjRoutingLayers(srj)
     this.opts = { ...opts }
     this.viaDiameter = getViaDimensions(srj).padDiameter
     this.minTraceWidth = srj.minTraceWidth

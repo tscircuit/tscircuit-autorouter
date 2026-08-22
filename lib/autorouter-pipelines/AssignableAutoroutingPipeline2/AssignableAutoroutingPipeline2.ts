@@ -61,6 +61,10 @@ import { PortPointOffboardPathFragmentSolver } from "./PortPointOffboardPathFrag
 import { RelateNodesToOffBoardConnectionsSolver } from "./RelateNodesToOffBoardConnectionsSolver"
 import { SimpleHighDensitySolver } from "./SimpleHighDensitySolver"
 import { updateConnMapWithOffboardObstacleConnections } from "./updateConnMapWithOffboardObstacleConnections"
+import {
+  normalizeSrjRoutingLayers,
+  restrictCapacityNodesToRoutingLayers,
+} from "lib/utils/routing-layer-constraints"
 
 interface CapacityMeshSolverOptions {
   capacityDepth?: number
@@ -173,7 +177,10 @@ export class AssignableAutoroutingPipeline2 extends BaseSolver {
       ],
       {
         onSolved: (cms) => {
-          cms.capacityNodes = cms.nodeSolver?.getOutput().meshNodes ?? []
+          cms.capacityNodes = restrictCapacityNodesToRoutingLayers(
+            cms.nodeSolver?.getOutput().meshNodes ?? [],
+            cms.srj,
+          )
         },
       },
     ),
@@ -411,7 +418,7 @@ export class AssignableAutoroutingPipeline2 extends BaseSolver {
     public readonly opts: CapacityMeshSolverOptions = {},
   ) {
     super()
-    this.srj = srj
+    this.srj = normalizeSrjRoutingLayers(srj)
     this.opts = { ...opts }
     this.viaDiameter = getViaDimensions(srj).padDiameter
     this.minTraceWidth = srj.minTraceWidth

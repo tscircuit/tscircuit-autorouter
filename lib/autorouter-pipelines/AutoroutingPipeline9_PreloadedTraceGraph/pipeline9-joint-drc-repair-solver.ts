@@ -20,6 +20,7 @@ import type {
   SimplifiedPcbTrace,
 } from "lib/types"
 import type { HighDensityRoute } from "lib/types/high-density-types"
+import { canUseUnrestrictedLayerMoves } from "lib/utils/routing-layer-constraints"
 import { convertHdRouteToSimplifiedRoute } from "lib/utils/convertHdRouteToSimplifiedRoute"
 import { mapZToLayerName } from "lib/utils/mapZToLayerName"
 import { Pipeline7AdaptiveDrcBranchPortfolioSolver } from "../AutoroutingPipeline7_MultiGraph/Pipeline7AdaptiveDrcBranchPortfolioSolver"
@@ -1308,8 +1309,12 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       enableTargetedErrorSweep: true,
       enableTraceViaOwnerTargeting: true,
       enablePostSolveClearanceRelaxation: false,
-      enableSafeTraceLayerMoves: true,
-      enableViaInPadLayerMoves: params.originalSrj.allowViaInPad ?? false,
+      enableSafeTraceLayerMoves: canUseUnrestrictedLayerMoves(
+        params.originalSrj,
+      ),
+      enableViaInPadLayerMoves:
+        canUseUnrestrictedLayerMoves(params.originalSrj) &&
+        (params.originalSrj.allowViaInPad ?? false),
       viaInPadMaxIterations: EXACT_REPAIR_MAX_ITERATIONS,
       broadMaxIterations: EXACT_REPAIR_BROAD_MAX_ITERATIONS,
       broadPassMultiplier: 3,

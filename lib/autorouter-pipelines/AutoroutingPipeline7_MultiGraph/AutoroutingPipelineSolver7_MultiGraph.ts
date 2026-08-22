@@ -45,6 +45,11 @@ import { getPresuppliedTraceVisualization } from "lib/utils/getPresuppliedTraceV
 import { calculateOptimalCapacityDepth } from "lib/utils/getTunedTotalCapacity1"
 import { getViaDimensions } from "lib/utils/getViaDimensions"
 import {
+  canUseUnrestrictedLayerMoves,
+  normalizeSrjRoutingLayers,
+  restrictCapacityNodesToRoutingLayers,
+} from "lib/utils/routing-layer-constraints"
+import {
   AvailableSegmentPointSolver,
   type SharedEdgeSegment,
 } from "../../solvers/AvailableSegmentPointSolver/AvailableSegmentPointSolver"
@@ -373,7 +378,10 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
       },
       {
         onSolved: (cms) => {
-          cms.capacityNodes = cms.topologyMergingSolver!.getOutput()
+          cms.capacityNodes = restrictCapacityNodesToRoutingLayers(
+            cms.topologyMergingSolver!.getOutput(),
+            cms.srj,
+          )
         },
       },
     ),
@@ -693,8 +701,12 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
             enableBroadFallback: false,
             enableTargetedErrorSweep: true,
             enablePostSolveClearanceRelaxation: false,
-            enableSafeTraceLayerMoves: true,
-            enableViaInPadLayerMoves: cms.originalSrj.allowViaInPad ?? false,
+            enableSafeTraceLayerMoves: canUseUnrestrictedLayerMoves(
+              cms.originalSrj,
+            ),
+            enableViaInPadLayerMoves:
+              canUseUnrestrictedLayerMoves(cms.originalSrj) &&
+              (cms.originalSrj.allowViaInPad ?? false),
             viaInPadMaxIterations: 32,
             broadMaxIterations: 12,
             broadPassMultiplier: 3,
@@ -817,7 +829,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
   ) {
     super()
     const srjWithBoardValidObstacleLayers =
-      createSrjWithBoardValidObstacleLayers(srj)
+      createSrjWithBoardValidObstacleLayers(normalizeSrjRoutingLayers(srj))
     this.originalSrj = srjWithBoardValidObstacleLayers
     this.opts = { ...opts }
     const mutableOpts = this.opts

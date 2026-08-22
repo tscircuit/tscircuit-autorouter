@@ -24,6 +24,7 @@ import { getTunedTotalCapacity1 } from "lib/utils/getTunedTotalCapacity1"
 import { ObstacleSpatialHashIndex } from "lib/data-structures/ObstacleTree"
 import { TargetTree } from "lib/data-structures/TargetTree"
 import { createObjectsWithZLayers } from "lib/utils/createObjectsWithZLayers"
+import { getRoutingZLayers } from "lib/utils/routing-layer-constraints"
 
 interface CapacityMeshNodeSolverOptions {
   capacityDepth?: number
@@ -90,7 +91,7 @@ export class CapacityMeshNodeSolver extends BaseSolver {
         width: maxWidthHeight,
         height: maxWidthHeight,
         layer: "top",
-        availableZ: Array.from({ length: this.layerCount }, (_, i) => i),
+        availableZ: getRoutingZLayers(srj),
         _depth: 0,
         _containsTarget: true,
         _containsObstacle: true,

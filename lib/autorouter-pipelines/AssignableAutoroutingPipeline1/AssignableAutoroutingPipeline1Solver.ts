@@ -47,6 +47,10 @@ import { HyperAssignableViaCapacityPathingSolver } from "./HyperAssignableViaCap
 import { AssignableViaCapacityPathingSolver_DirectiveSubOptimal } from "./AssignableViaCapacityPathing/AssignableViaCapacityPathingSolver_DirectiveSubOptimal"
 import { OffboardCapacityNodeSolver } from "./OffboardCapacityNodeSolver"
 import { OffboardPathFragmentSolver } from "./OffboardPathFragmentSolver"
+import {
+  normalizeSrjRoutingLayers,
+  restrictCapacityNodesToRoutingLayers,
+} from "lib/utils/routing-layer-constraints"
 
 interface CapacityMeshSolverOptions {
   capacityDepth?: number
@@ -156,17 +160,23 @@ export class AssignableAutoroutingPipeline1Solver extends BaseSolver {
       ],
       {
         onSolved: (cms) => {
-          cms.capacityNodes = cms.nodeSolver?.finishedNodes!
+          cms.capacityNodes = restrictCapacityNodesToRoutingLayers(
+            cms.nodeSolver?.finishedNodes ?? [],
+            cms.srj,
+          )
         },
       },
     ),
     definePipelineStep(
       "mergeAssignableViaNodes",
       AssignableViaNodeMergerSolver,
-      (cms) => [cms.nodeSolver?.finishedNodes!],
+      (cms) => [cms.capacityNodes!],
       {
         onSolved: (cms) => {
-          cms.capacityNodes = cms.mergeAssignableViaNodes?.newNodes!
+          cms.capacityNodes = restrictCapacityNodesToRoutingLayers(
+            cms.mergeAssignableViaNodes?.newNodes ?? [],
+            cms.srj,
+          )
         },
       },
     ),
@@ -443,7 +453,7 @@ export class AssignableAutoroutingPipeline1Solver extends BaseSolver {
     public readonly opts: CapacityMeshSolverOptions = {},
   ) {
     super()
-    this.srj = srj
+    this.srj = normalizeSrjRoutingLayers(srj)
     this.opts = { ...opts }
     this.MAX_ITERATIONS = 100e6
     const mutableOpts = this.opts

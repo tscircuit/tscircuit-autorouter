@@ -30,6 +30,7 @@ import {
 import { getPresuppliedTraceVisualization } from "lib/utils/getPresuppliedTraceVisualization"
 import { calculateOptimalCapacityDepth } from "lib/utils/getTunedTotalCapacity1"
 import { getViaDimensions } from "lib/utils/getViaDimensions"
+import { normalizeSrjRoutingLayers } from "lib/utils/routing-layer-constraints"
 import { AttachProjectedRectsSolver } from "./AttachProjectedRectsSolver"
 import { PolyHighDensitySolver } from "./PolyHighDensitySolver"
 import { PolyHypergraphPortPointPathingSolver } from "./PolyHypergraphPortPointPathingSolver"
@@ -309,7 +310,8 @@ export class AutoroutingPipelineSolver6_PolyHypergraph extends BaseSolver {
     public readonly opts: CapacityMeshSolverOptions = {},
   ) {
     super()
-    this.originalSrj = srj
+    const normalizedSrj = normalizeSrjRoutingLayers(srj)
+    this.originalSrj = normalizedSrj
     this.opts = { ...opts }
     const mutableOpts = this.opts
     this.effort = mutableOpts.effort ?? 1
@@ -318,7 +320,7 @@ export class AutoroutingPipelineSolver6_PolyHypergraph extends BaseSolver {
     this.maxNodeDimension = mutableOpts.maxNodeDimension ?? 16
     this.maxNodeRatio = mutableOpts.maxNodeRatio ?? 6
     this.minNodeArea = mutableOpts.minNodeArea ?? 0.1 ** 2
-    this.setSimpleRouteJson(srj)
+    this.setSimpleRouteJson(normalizedSrj)
     this.equivalentAreaExpansionFactor =
       mutableOpts.equivalentAreaExpansionFactor ?? 2
     this.minProjectedRectDimension =

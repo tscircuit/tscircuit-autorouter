@@ -56,6 +56,7 @@ The input to the autorouter is a `SimpleRouteJson` object with the following str
 ```typescript
 interface SimpleRouteJson {
   layerCount: number
+  routingLayers?: string[]
   minTraceWidth: number
   obstacles: Obstacle[]
   connections: Array<SimpleRouteConnection>
@@ -104,6 +105,20 @@ apply the constraint without losing the original membership or ordering.
 `traceWidth`, `traceGap`, and `allowedLayers` are resolved routing geometry;
 stackup-aware impedance targets should be converted to these dimensions before
 creating SimpleRouteJson.
+
+`routingLayers` limits newly generated wire segments and logical routing
+transitions to the listed board layers, for example `["top", "bottom"]` on a
+four-layer board whose inner layers are reserved for planes. Physical plated
+via spans are controlled independently and may cross reserved layers. Omit
+`routingLayers` to make every board layer available. A single-layer terminal
+or terminal-via destination on an excluded layer is rejected; a multi-layer
+terminal or bus allowlist is intersected with `routingLayers` and is rejected
+if that intersection is empty. Existing `traces` are preserved, including
+preloaded copper on excluded layers.
+
+Layer-changing DRC repairs currently run only when all board layers are
+routable because their upstream API does not yet accept an allowed-layer set.
+All other repair phases remain enabled.
 
 Via-in-pad repair is disabled by default because it generally requires filled
 and capped vias. Set `allowViaInPad: true` only when the fabrication process

@@ -32,6 +32,10 @@ import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivity
 import { getInitiallyConnectedMapFromSimpleRouteJson } from "lib/utils/get-initially-connected-map-from-simple-route-json"
 import { getViaDimensions } from "lib/utils/getViaDimensions"
 import { calculateOptimalCapacityDepth } from "lib/utils/getTunedTotalCapacity1"
+import {
+  normalizeSrjRoutingLayers,
+  restrictCapacityNodesToRoutingLayers,
+} from "lib/utils/routing-layer-constraints"
 import { AvailableSegmentPointSolver } from "../../solvers/AvailableSegmentPointSolver/AvailableSegmentPointSolver"
 import { BaseSolver } from "../../solvers/BaseSolver"
 import { CapacityMeshEdgeSolver } from "../../solvers/CapacityMeshSolver/CapacityMeshEdgeSolver"
@@ -150,7 +154,10 @@ export class AutoroutingPipelineSolver3_HgPortPointPathing extends BaseSolver {
       ],
       {
         onSolved: (cms) => {
-          cms.capacityNodes = cms.nodeSolver?.getOutput().meshNodes ?? []
+          cms.capacityNodes = restrictCapacityNodesToRoutingLayers(
+            cms.nodeSolver?.getOutput().meshNodes ?? [],
+            cms.srj,
+          )
         },
       },
     ),
@@ -375,7 +382,7 @@ export class AutoroutingPipelineSolver3_HgPortPointPathing extends BaseSolver {
     public readonly opts: CapacityMeshSolverOptions = {},
   ) {
     super()
-    this.srj = srj
+    this.srj = normalizeSrjRoutingLayers(srj)
     this.opts = { ...opts }
     this.viaDiameter = getViaDimensions(srj).padDiameter
     this.minTraceWidth = srj.minTraceWidth

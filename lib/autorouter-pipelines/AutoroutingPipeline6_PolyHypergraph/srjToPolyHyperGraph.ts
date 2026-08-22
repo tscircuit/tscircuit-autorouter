@@ -13,6 +13,7 @@ import type {
   SimpleRouteConnection,
   SimpleRouteJson,
 } from "lib/types"
+import { restrictZLayersToRoutingLayers } from "lib/utils/routing-layer-constraints"
 
 type AnyObstacle = Omit<Obstacle, "type"> & {
   type: string
@@ -110,9 +111,12 @@ export const getConnectedObstacleRegionsFromSrj = (
       return []
     }
 
-    const availableZ = getAvailableZFromMask(
-      getObstacleLayerMask(obstacle as any, srj.layerCount),
-      srj.layerCount,
+    const availableZ = restrictZLayersToRoutingLayers(
+      getAvailableZFromMask(
+        getObstacleLayerMask(obstacle as any, srj.layerCount),
+        srj.layerCount,
+      ),
+      srj,
     )
     if (availableZ.length === 0) return []
 

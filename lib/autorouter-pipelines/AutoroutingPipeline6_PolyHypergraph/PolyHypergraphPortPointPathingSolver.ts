@@ -8,6 +8,7 @@ import { calculateNodeProbabilityOfFailure } from "lib/solvers/UnravelSolver/cal
 import type { CapacityMeshNodeId, SimpleRouteJson } from "lib/types"
 import type { PortPoint } from "lib/types/high-density-types"
 import { getIntraNodeCrossingsUsingCircle } from "lib/utils/getIntraNodeCrossingsUsingCircle"
+import { restrictZLayersToRoutingLayers } from "lib/utils/routing-layer-constraints"
 import {
   type ConvexRegionsComputeResult,
   type LayerMergeMode,
@@ -177,7 +178,9 @@ export class PolyHypergraphPortPointPathingSolver extends BaseSolver {
     }
     this.serializedGraph = buildPolyHyperGraphFromRegions({
       regions: this.convexRegions.regions,
-      availableZ: this.convexRegions.availableZ,
+      availableZ: this.convexRegions.availableZ?.map((zLayers) =>
+        restrictZLayersToRoutingLayers(zLayers, params.srj),
+      ),
       layerCount: params.srj.layerCount,
       connections: getPolyGraphConnectionsFromSrj(params.srj),
       obstacleRegions: getConnectedObstacleRegionsFromSrj(

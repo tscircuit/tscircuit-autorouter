@@ -61,6 +61,10 @@ import { getViaDimensions } from "lib/utils/getViaDimensions"
 import { calculateOptimalCapacityDepth } from "lib/utils/getTunedTotalCapacity1"
 import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
 import { mergeRouteSegments } from "lib/utils/mergeRouteSegments"
+import {
+  normalizeSrjRoutingLayers,
+  restrictCapacityNodesToRoutingLayers,
+} from "lib/utils/routing-layer-constraints"
 
 interface CapacityMeshSolverOptions {
   capacityDepth?: number
@@ -165,7 +169,10 @@ export class AutoroutingPipeline1_OriginalUnravel extends BaseSolver {
       ],
       {
         onSolved: (cms) => {
-          cms.capacityNodes = cms.nodeSolver?.finishedNodes!
+          cms.capacityNodes = restrictCapacityNodesToRoutingLayers(
+            cms.nodeSolver?.finishedNodes ?? [],
+            cms.srj,
+          )
         },
       },
     ),
@@ -364,7 +371,7 @@ export class AutoroutingPipeline1_OriginalUnravel extends BaseSolver {
     public readonly opts: CapacityMeshSolverOptions = {},
   ) {
     super()
-    this.srj = srj
+    this.srj = normalizeSrjRoutingLayers(srj)
     this.opts = { ...opts }
     this.MAX_ITERATIONS = 100e6
     this.viaDiameter = getViaDimensions(srj).padDiameter

@@ -18,6 +18,7 @@ import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
 import { mapZToLayerName } from "lib/utils/mapZToLayerName"
 import { getPointKey } from "lib/utils/getPointKey"
 import { getViaDimensions } from "lib/utils/getViaDimensions"
+import { getRoutingZLayers } from "lib/utils/routing-layer-constraints"
 import {
   doesSegmentCrossPolygonBoundary,
   isPointInOrOnPolygon,
@@ -102,6 +103,7 @@ export class EscapeViaLocationSolver extends BaseSolver {
   outputSrj: SimpleRouteJson
   escapeViaMetadataByPointId: Map<string, EscapeViaMetadata>
   createdEscapeVias: EscapeViaMetadata[]
+  routingZLayers: ReadonlySet<number>
   nextEscapeViaIndex = 0
 
   constructor(
@@ -127,6 +129,7 @@ export class EscapeViaLocationSolver extends BaseSolver {
     this.outputSrj = ogSrj
     this.escapeViaMetadataByPointId = new Map()
     this.createdEscapeVias = []
+    this.routingZLayers = new Set(getRoutingZLayers(ogSrj))
   }
 
   private getConnectionNetIds(connection: SimpleRouteConnection): Set<string> {
@@ -722,6 +725,7 @@ export class EscapeViaLocationSolver extends BaseSolver {
       if (!targetLayer || targetLayer === sourceLayer) continue
 
       const targetZ = mapLayerNameToZ(targetLayer, this.ogSrj.layerCount)
+      if (!this.routingZLayers.has(targetZ)) continue
       const targetPourKey = getObstacleKey(copperPour)
 
       for (const candidate of candidates) {

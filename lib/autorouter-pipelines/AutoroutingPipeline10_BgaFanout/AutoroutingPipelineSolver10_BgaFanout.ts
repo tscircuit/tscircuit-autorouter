@@ -26,6 +26,7 @@ import {
 } from "lib/solvers/ComponentDetectionSolver/ComponentDetectionSolver"
 import type { SimpleRouteJson, SimplifiedPcbTraces } from "lib/types"
 import { convertSrjToGraphicsObject } from "lib/utils/convertSrjToGraphicsObject"
+import { normalizeSrjRoutingLayers } from "lib/utils/routing-layer-constraints"
 
 const MAX_FANOUT_BOUNDARY_MARGIN_MM = 4.5
 const MIN_FANOUT_BOUNDARY_MARGIN_MM = 2
@@ -306,6 +307,7 @@ function getFanoutOptions({
   return {
     buses: getPhysicalFanoutBuses({ inputSrj, source, target }),
     sourceComponentId: source.componentId,
+    escapeLayers: inputSrj.routingLayers,
     availableCornersAndSides,
     componentBounds: { [source.componentId]: getPlainBounds(source) },
     sharedBoundary: getExpandedBounds(source, fanoutBoundaryMargin),
@@ -501,7 +503,7 @@ export class AutoroutingPipelineSolver10_BgaFanout extends BasePipelineSolver<Au
     inputSrj: SimpleRouteJson,
     options: AutoroutingPipelineSolverOptions = {},
   ) {
-    super({ inputSrj, options })
+    super({ inputSrj: normalizeSrjRoutingLayers(inputSrj), options })
     this.MAX_ITERATIONS = 100e6 * (options.effort ?? 1) + 1_024
   }
 

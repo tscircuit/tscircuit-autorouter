@@ -53,6 +53,11 @@ export type JumperType = "1206x4" | "0603"
 
 export interface SimpleRouteJson {
   layerCount: number
+  /**
+   * Copper layers available for newly generated wire segments and logical
+   * routing transitions. Physical via spans are controlled independently.
+   */
+  routingLayers?: string[]
   minTraceWidth: number
   nominalTraceWidth?: number
   /** @deprecated Use `min_via_pad_diameter` / `minViaPadDiameter` instead. */
