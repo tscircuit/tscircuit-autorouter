@@ -30,17 +30,15 @@ test("a top-to-bottom four-layer route uses only allowed routing layers", () => 
 
   expect(solver.failed).toBe(false)
   expect(route.length).toBeGreaterThan(0)
-  expect(
-    routeUsesOnlyRoutingLayers(output.traces![0]!, allowedLayers),
-  ).toBe(true)
+  expect(routeUsesOnlyRoutingLayers(output.traces![0]!, allowedLayers)).toBe(
+    true,
+  )
   expect(route.some((segment) => segment.route_type === "via")).toBe(true)
   expect(
-    solver.exactGeometryDrcForceImproveSolver?.params
-      .enableSafeTraceLayerMoves,
+    solver.exactGeometryDrcForceImproveSolver?.params.enableSafeTraceLayerMoves,
   ).toBe(false)
   expect(
-    solver.exactGeometryDrcForceImproveSolver?.params
-      .enableViaInPadLayerMoves,
+    solver.exactGeometryDrcForceImproveSolver?.params.enableViaInPadLayerMoves,
   ).toBe(false)
   const traceSimplificationStep = solver.pipelineDef.find(
     (step) => step.solverName === "traceSimplificationSolver",

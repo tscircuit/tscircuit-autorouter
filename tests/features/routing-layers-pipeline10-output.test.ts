@@ -21,8 +21,6 @@ test("Pipeline 10 constrains both BGA fanout and autorouted copper", () => {
   expect(solver.failed).toBe(false)
   expect(traces.length).toBeGreaterThan(1)
   expect(
-    traces.every((trace) =>
-      routeUsesOnlyRoutingLayers(trace, allowedLayers),
-    ),
+    traces.every((trace) => routeUsesOnlyRoutingLayers(trace, allowedLayers)),
   ).toBe(true)
 })

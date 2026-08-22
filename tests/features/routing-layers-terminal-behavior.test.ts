@@ -51,9 +51,7 @@ test("connection points must expose at least one allowed routing layer", () => {
     connections: [
       {
         name: "multilayer-terminal",
-        pointsToConnect: [
-          { x: 0, y: 0, layers: ["inner1", "bottom"] },
-        ],
+        pointsToConnect: [{ x: 0, y: 0, layers: ["inner1", "bottom"] }],
       },
     ],
   })

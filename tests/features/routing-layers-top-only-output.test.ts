@@ -28,6 +28,10 @@ test("a top-only four-layer route generates copper only on top", () => {
 
   expect(solver.failed).toBe(false)
   expect(route.length).toBeGreaterThan(0)
-  expect(route.every((segment) => segment.route_type !== "wire" || segment.layer === "top")).toBe(true)
+  expect(
+    route.every(
+      (segment) => segment.route_type !== "wire" || segment.layer === "top",
+    ),
+  ).toBe(true)
   expect(route.some((segment) => segment.route_type === "via")).toBe(false)
 })

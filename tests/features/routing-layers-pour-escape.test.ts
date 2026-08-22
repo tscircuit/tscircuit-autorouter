@@ -34,9 +34,7 @@ test("pour escape does not generate a routing transition to an excluded layer", 
     connections: [
       {
         name: "net.GND",
-        pointsToConnect: [
-          { x: 0, y: 0, layer: "top", pointId: "source-pad" },
-        ],
+        pointsToConnect: [{ x: 0, y: 0, layer: "top", pointId: "source-pad" }],
       },
     ],
   } satisfies SimpleRouteJson

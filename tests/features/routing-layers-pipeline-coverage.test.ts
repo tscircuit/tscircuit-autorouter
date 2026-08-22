@@ -47,9 +47,7 @@ test("routing pipelines constrain generated candidates to the allowed z layers",
     expect(solver.failed).toBe(false)
     expect(traces.length).toBeGreaterThan(0)
     expect(
-      traces.every((trace) =>
-        routeUsesOnlyRoutingLayers(trace, allowedLayers),
-      ),
+      traces.every((trace) => routeUsesOnlyRoutingLayers(trace, allowedLayers)),
     ).toBe(true)
   }
 
