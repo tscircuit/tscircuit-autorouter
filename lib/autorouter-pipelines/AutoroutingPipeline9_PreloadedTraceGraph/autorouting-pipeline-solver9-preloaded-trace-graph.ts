@@ -74,6 +74,11 @@ import {
   removeChangedSectionsFromFixedHdRoutes,
 } from "./materialize-hypergraph-preloaded-trace-sections"
 import {
+  type PreparedPipeline9MutationSections,
+  applyPipeline9MutatedPreloadedSections,
+  preparePipeline9MutatedPreloadedSections,
+} from "./pipeline9-mutated-preloaded-trace-simplification"
+import {
   convertPreloadedTraceToHdRoutes,
   type PreloadedHighDensityRoute,
 } from "./convert-preloaded-traces-to-hd-routes"
@@ -103,6 +108,13 @@ interface CapacityMeshSolverOptions {
   powerTraceExpansion?: PowerTraceExpanderOptions
 }
 export type AutoroutingPipelineSolverOptions = CapacityMeshSolverOptions
+
+type Pipeline9PreloadedFixedRouteState = {
+  originalFixedRoutes: PreloadedHighDensityRoute[]
+  updatedFixedRoutes: PreloadedHighDensityRoute[]
+  replacedConnectionNames: Set<string>
+  mutationMasks: Map<string, boolean[]>
+}
 
 type PipelineStep<T extends new (...args: any[]) => BaseSolver> = {
   solverName: string
@@ -251,6 +263,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
   strawSolver?: StrawSolver
   deadEndSolver?: DeadEndSolver
   traceSimplificationSolver?: TraceSimplificationSolver
+  mutatedPreloadedTraceSimplificationSolver?: TraceSimplificationSolver
   lengthMatchingPostProcessingSolver?: DifferentialPairPostProcessingSolver
   powerTraceExpansionSolver?: PowerTraceExpansionSolver
   availableSegmentPointSolver?: AvailableSegmentPointSolver
@@ -716,6 +729,41 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
         ]
       },
     ),
+    definePipelineStep(
+      "mutatedPreloadedTraceSimplificationSolver",
+      TraceSimplificationSolver,
+      (cms) => {
+        const preparedSections = cms.getPreparedMutatedPreloadedTraceSections()
+        const editableHdRoutes = preparedSections.sections.map(
+          (section) => section.hdRoute,
+        )
+        const otherHdRoutes = [
+          ...preparedSections.immutableHdRoutes,
+          ...cms.traceSimplificationSolver!.simplifiedHdRoutes,
+        ]
+        return [
+          {
+            hdRoutes: editableHdRoutes,
+            obstacles: cms.srj.obstacles,
+            connMap: cms.connMap,
+            colorMap: cms.colorMap,
+            outline: cms.srj.outline,
+            defaultViaDiameter: cms.viaDiameter,
+            layerCount: cms.srj.layerCount,
+            minTraceToPadEdgeClearance: cms.srj.minTraceToPadEdgeClearance,
+            minBoardEdgeClearance: cms.srj.minBoardEdgeClearance,
+            otherHdRoutes,
+            netByConnectionName: getPipeline9NetByConnectionName(
+              [...editableHdRoutes, ...otherHdRoutes],
+              cms.connMap,
+            ),
+            enableCrossingViaReduction: true,
+            preserveRouteEndpoints: true,
+            iterations: 2,
+          },
+        ]
+      },
+    ),
     definePipelineStep("traceWidthSolver", TraceWidthSolver, (cms) => [
       {
         hdRoutes: cms.traceSimplificationSolver!.simplifiedHdRoutes,
@@ -1037,6 +1085,8 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     const highDensityRepairViz = this.highDensityRepairSolver?.visualize()
     const highDensityStitchViz = this.highDensityStitchSolver?.visualize()
     const traceSimplificationViz = this.traceSimplificationSolver?.visualize()
+    const mutatedPreloadedTraceSimplificationViz =
+      this.mutatedPreloadedTraceSimplificationSolver?.visualize()
     const lengthMatchingPostProcessingViz =
       this.lengthMatchingPostProcessingSolver?.visualize()
     const powerTraceExpansionViz = this.powerTraceExpansionSolver?.visualize()
@@ -1162,6 +1212,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       highDensityRepairViz,
       highDensityStitchViz,
       traceSimplificationViz,
+      mutatedPreloadedTraceSimplificationViz,
       traceWidthViz,
       globalDrcForceImproveViz,
       pipeline9JointDrcRepairViz,
@@ -1278,9 +1329,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     )
   }
 
-  private getPreloadedTraceUpdatesAfterHighDensity(): ReturnType<
-    typeof applyFixedRouteReplacementsToPreloadedTraces
-  > {
+  private getPreloadedFixedRouteStateAfterHighDensity(): Pipeline9PreloadedFixedRouteState {
     const originalFixedRoutes = this.getOriginalFixedHdRoutes()
     const changedSections = this.getChangedPreloadedTraceSections()
     const fixedRoutesWithoutChangedSections =
@@ -1310,21 +1359,58 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
         ),
       )
       .map((route) => route.connectionName)
-    const updatedFixedRoutes = [
-      ...(this.highDensityRouteSolver?.getUpdatedFixedHdRoutes() ??
-        fixedRoutesWithoutChangedSections),
-      ...materializedSectionRoutes,
-    ]
-    const replacedConnectionNames = new Set([
-      ...(this.highDensityRouteSolver?.fixedRouteReplacements.keys() ?? []),
-      ...materializedOriginalRouteNames,
-    ])
+    return {
+      originalFixedRoutes,
+      updatedFixedRoutes: [
+        ...(this.highDensityRouteSolver?.getUpdatedFixedHdRoutes() ??
+          fixedRoutesWithoutChangedSections),
+        ...materializedSectionRoutes,
+      ],
+      replacedConnectionNames: new Set([
+        ...(this.highDensityRouteSolver?.fixedRouteReplacements.keys() ?? []),
+        ...materializedOriginalRouteNames,
+      ]),
+      mutationMasks: new Map([
+        ...(this.highDensityRouteSolver?.preloadedTraceMutationMasks ?? []),
+        ...materializedSectionRoutes.map(
+          (route) =>
+            [
+              route.connectionName,
+              Array(route.route.length - 1).fill(true),
+            ] as const,
+        ),
+      ]),
+    }
+  }
+
+  private getPreparedMutatedPreloadedTraceSections(): PreparedPipeline9MutationSections {
+    const fixedRouteState = this.getPreloadedFixedRouteStateAfterHighDensity()
+    return preparePipeline9MutatedPreloadedSections({
+      updatedFixedRoutes: fixedRouteState.updatedFixedRoutes,
+      regionalMutationMasks: fixedRouteState.mutationMasks,
+    })
+  }
+
+  private getPreloadedTraceUpdatesAfterHighDensity(): ReturnType<
+    typeof applyFixedRouteReplacementsToPreloadedTraces
+  > {
+    const fixedRouteState = this.getPreloadedFixedRouteStateAfterHighDensity()
+    const preparedSections = this.getPreparedMutatedPreloadedTraceSections()
+    const updatedFixedRoutes =
+      this.mutatedPreloadedTraceSimplificationSolver?.solved === true
+        ? applyPipeline9MutatedPreloadedSections({
+            updatedFixedRoutes: preparedSections.normalizedFixedRoutes,
+            sections: preparedSections.sections,
+            simplifiedHdRoutes:
+              this.mutatedPreloadedTraceSimplificationSolver.simplifiedHdRoutes,
+          })
+        : fixedRouteState.updatedFixedRoutes
 
     return applyFixedRouteReplacementsToPreloadedTraces({
       originalTraces: this.originalSrj.traces ?? [],
-      originalFixedRoutes,
+      originalFixedRoutes: fixedRouteState.originalFixedRoutes,
       updatedFixedRoutes,
-      replacedConnectionNames,
+      replacedConnectionNames: fixedRouteState.replacedConnectionNames,
       layerCount: this.originalSrj.layerCount,
       defaultViaHoleDiameter: this.viaHoleDiameter,
       obstacles: this.originalSrj.obstacles,
