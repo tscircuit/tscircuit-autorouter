@@ -796,7 +796,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             ),
             connMap: cms.connMap,
             effort: cms.effort,
-            maxIterations: 4,
+            maxIterations: 16,
             enableLargeBoardBroadFallback: false,
             enablePostSolveClearanceRelaxation: false,
           },
