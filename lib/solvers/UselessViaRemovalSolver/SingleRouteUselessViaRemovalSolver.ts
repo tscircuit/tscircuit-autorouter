@@ -52,6 +52,7 @@ export class SingleRouteUselessViaRemovalSolver extends BaseSolver {
 
   TRACE_THICKNESS = 0.15
   OBSTACLE_MARGIN = 0.1
+  LAYER_MOVE_TRACE_MARGIN = 0
   GEOMETRY_SHORTCUT_TRACE_MARGIN = 0.1
   GEOMETRY_SHORTCUT_OBSTACLE_MARGIN = 0.15
   MAX_GEOMETRY_SHORTCUT_ADDED_LENGTH = 4
@@ -68,6 +69,8 @@ export class SingleRouteUselessViaRemovalSolver extends BaseSolver {
     unsimplifiedRoute: HighDensityRoute
     connMap: ConnectivityMap
     outline?: Array<{ x: number; y: number }>
+    layerMoveTraceMargin?: number
+    layerMoveObstacleMargin?: number
     geometryShortcutTraceMargin?: number
     geometryShortcutObstacleMargin?: number
     enableGeometryShortcuts?: boolean
@@ -80,6 +83,10 @@ export class SingleRouteUselessViaRemovalSolver extends BaseSolver {
     this.unsimplifiedRoute = params.unsimplifiedRoute
     this.connMap = params.connMap
     this.outline = params.outline
+    this.LAYER_MOVE_TRACE_MARGIN =
+      params.layerMoveTraceMargin ?? this.LAYER_MOVE_TRACE_MARGIN
+    this.OBSTACLE_MARGIN =
+      params.layerMoveObstacleMargin ?? this.OBSTACLE_MARGIN
     this.GEOMETRY_SHORTCUT_TRACE_MARGIN =
       params.geometryShortcutTraceMargin ?? this.GEOMETRY_SHORTCUT_TRACE_MARGIN
     this.GEOMETRY_SHORTCUT_OBSTACLE_MARGIN =
@@ -561,8 +568,10 @@ export class SingleRouteUselessViaRemovalSolver extends BaseSolver {
     if (this.currentSectionIndex === 0 && this.routeSections.length > 1) {
       const firstSection = this.routeSections[0]
       const secondSection = this.routeSections[1]
+      const firstTransitionIsProtected =
+        firstSection.points.at(-1)?.toNextSegmentType !== undefined
 
-      if (firstSection.z !== secondSection.z) {
+      if (firstSection.z !== secondSection.z && !firstTransitionIsProtected) {
         // Try moving first section to match second section (for MLCP endpoints)
         const targetZ = secondSection.z
         // Check that the endpoint obstacle supports the target layer
@@ -586,6 +595,7 @@ export class SingleRouteUselessViaRemovalSolver extends BaseSolver {
             connMap: this.connMap,
             defaultTraceThickness: this.TRACE_THICKNESS,
             obstacleMargin: this.OBSTACLE_MARGIN,
+            traceMargin: this.LAYER_MOVE_TRACE_MARGIN,
           })
         ) {
           firstSection.z = targetZ
@@ -608,8 +618,13 @@ export class SingleRouteUselessViaRemovalSolver extends BaseSolver {
         const lastSection = this.routeSections[this.routeSections.length - 1]
         const secondLastSection =
           this.routeSections[this.routeSections.length - 2]
+        const lastTransitionIsProtected =
+          secondLastSection.points.at(-1)?.toNextSegmentType !== undefined
 
-        if (lastSection.z !== secondLastSection.z) {
+        if (
+          lastSection.z !== secondLastSection.z &&
+          !lastTransitionIsProtected
+        ) {
           // Try moving last section to match second-last section (for MLCP endpoints)
           const targetZ = secondLastSection.z
           // Check that the endpoint obstacle supports the target layer
@@ -633,6 +648,7 @@ export class SingleRouteUselessViaRemovalSolver extends BaseSolver {
               connMap: this.connMap,
               defaultTraceThickness: this.TRACE_THICKNESS,
               obstacleMargin: this.OBSTACLE_MARGIN,
+              traceMargin: this.LAYER_MOVE_TRACE_MARGIN,
             })
           ) {
             lastSection.z = targetZ
@@ -651,6 +667,13 @@ export class SingleRouteUselessViaRemovalSolver extends BaseSolver {
     const prevSection = this.routeSections[this.currentSectionIndex - 1]
     const currentSection = this.routeSections[this.currentSectionIndex]
     const nextSection = this.routeSections[this.currentSectionIndex + 1]
+    const adjacentTransitionIsProtected =
+      prevSection.points.at(-1)?.toNextSegmentType !== undefined ||
+      currentSection.points.at(-1)?.toNextSegmentType !== undefined
+    if (adjacentTransitionIsProtected) {
+      this.currentSectionIndex++
+      return
+    }
 
     if (prevSection.z !== nextSection.z) {
       const multilayerCollapse = this.findMultilayerSectionCollapse(
@@ -679,6 +702,7 @@ export class SingleRouteUselessViaRemovalSolver extends BaseSolver {
         connMap: this.connMap,
         defaultTraceThickness: this.TRACE_THICKNESS,
         obstacleMargin: this.OBSTACLE_MARGIN,
+        traceMargin: this.LAYER_MOVE_TRACE_MARGIN,
       })
     ) {
       currentSection.z = targetZ
@@ -711,6 +735,8 @@ export class SingleRouteUselessViaRemovalSolver extends BaseSolver {
       unsimplifiedRoute: this.unsimplifiedRoute,
       connMap: this.connMap,
       outline: this.outline,
+      layerMoveTraceMargin: this.LAYER_MOVE_TRACE_MARGIN,
+      layerMoveObstacleMargin: this.OBSTACLE_MARGIN,
       geometryShortcutTraceMargin: this.GEOMETRY_SHORTCUT_TRACE_MARGIN,
       geometryShortcutObstacleMargin: this.GEOMETRY_SHORTCUT_OBSTACLE_MARGIN,
       enableGeometryShortcuts: this.ENABLE_GEOMETRY_SHORTCUTS,

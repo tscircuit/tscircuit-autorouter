@@ -81,6 +81,7 @@ import { Pipeline9HighDensitySolver } from "./pipeline9-high-density-solver"
 import { Pipeline9JointDrcRepairSolver } from "./pipeline9-joint-drc-repair-solver"
 import { PreloadedTraceGraphSolver } from "./preloaded-trace-graph-solver"
 import { PreprocessSimpleRouteJsonWithoutTraceObstaclesSolver } from "./preprocess-simple-route-json-without-trace-obstacles-solver"
+import { removeUselessViasFromMutatedPreloadedTraces } from "./remove-useless-vias-from-mutated-preloaded-traces"
 import { MergedComponentTopologyView } from "../AutoroutingPipeline7_MultiGraph/MergedComponentTopologyView"
 import { PowerTraceExpansionSolver } from "../AutoroutingPipeline7_MultiGraph/PowerTraceExpansionSolver"
 import { convertPipeline7HdRoutesToSimplifiedPcbTraces } from "../AutoroutingPipeline7_MultiGraph/convertPipeline7HdRoutesToSimplifiedPcbTraces"
@@ -284,6 +285,9 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
   /** Available segment points after non-component cramped points are filtered. */
   sharedEdgeSegmentsWithNecessaryCrampedPortPoints?: SharedEdgeSegment[]
   highDensityNodePortPoints?: NodeWithPortPoints[]
+  private preloadedTraceUpdatesAfterHighDensity?: ReturnType<
+    typeof applyFixedRouteReplacementsToPreloadedTraces
+  >
 
   cacheProvider: CacheProvider | null = null
   pipelineDef = [
@@ -1281,6 +1285,10 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
   private getPreloadedTraceUpdatesAfterHighDensity(): ReturnType<
     typeof applyFixedRouteReplacementsToPreloadedTraces
   > {
+    const canCacheUpdates = this.highDensityStitchSolver?.solved === true
+    if (canCacheUpdates && this.preloadedTraceUpdatesAfterHighDensity) {
+      return this.preloadedTraceUpdatesAfterHighDensity
+    }
     const originalFixedRoutes = this.getOriginalFixedHdRoutes()
     const changedSections = this.getChangedPreloadedTraceSections()
     const fixedRoutesWithoutChangedSections =
@@ -1320,7 +1328,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       ...materializedOriginalRouteNames,
     ])
 
-    return applyFixedRouteReplacementsToPreloadedTraces({
+    const rawUpdates = applyFixedRouteReplacementsToPreloadedTraces({
       originalTraces: this.originalSrj.traces ?? [],
       originalFixedRoutes,
       updatedFixedRoutes,
@@ -1330,6 +1338,28 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       obstacles: this.originalSrj.obstacles,
       connMap: this.connMap,
     })
+    const cleanedUpdates = removeUselessViasFromMutatedPreloadedTraces({
+      updates: rawUpdates,
+      originalTraces: this.originalSrj.traces ?? [],
+      otherHdRoutes: this.highDensityStitchSolver?.mergedHdRoutes ?? [],
+      collisionObstacles: this.srj.obstacles,
+      routeConversionObstacles: this.originalSrj.obstacles,
+      colorMap: this.colorMap,
+      connMap: this.connMap,
+      outline: this.originalSrj.outline,
+      layerCount: this.originalSrj.layerCount,
+      defaultViaDiameter: this.viaDiameter,
+      defaultViaHoleDiameter: this.viaHoleDiameter,
+      traceClearance: 0.1,
+      obstacleClearance:
+        this.originalSrj.minTraceToPadEdgeClearance ??
+        this.originalSrj.defaultObstacleMargin ??
+        0.15,
+    })
+    if (canCacheUpdates) {
+      this.preloadedTraceUpdatesAfterHighDensity = cleanedUpdates
+    }
+    return cleanedUpdates
   }
 
   private getSrjWithMaterializedPreloadedTraces(): SimpleRouteJson {

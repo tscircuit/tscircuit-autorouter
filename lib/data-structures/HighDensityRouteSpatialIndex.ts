@@ -101,6 +101,7 @@ export class HighDensityRouteSpatialIndex {
   private segmentBuckets: Map<BucketCoordinate, StoredSegment[]>
   private viaBuckets: Map<BucketCoordinate, StoredVia[]> // New: Store vias
   private CELL_SIZE: number
+  private maximumCopperRadius = 0
 
   constructor(routes: HighDensityRoute[], cellSize: number = 1.0) {
     // console.time("HighDensityRouteSpatialIndex Constructor");
@@ -114,6 +115,11 @@ export class HighDensityRouteSpatialIndex {
         console.warn("Skipping route with missing data:", route)
         continue
       }
+      this.maximumCopperRadius = Math.max(
+        this.maximumCopperRadius,
+        route.traceThickness / 2,
+        route.viaDiameter / 2,
+      )
 
       // --- Index Segments ---
       if (route.route && route.route.length >= 2) {
@@ -201,12 +207,14 @@ export class HighDensityRouteSpatialIndex {
 
     // --- Define search area including margin for both segments and vias ---
     // Need to consider the maximum possible radius (trace/2 or via/2) + margin
-    // For simplicity, just use the provided margin for bucket search.
-    // Precise checks will use item-specific sizes.
-    const searchMinX = bounds.minX - margin
-    const searchMinY = bounds.minY - margin
-    const searchMaxX = bounds.maxX + margin
-    const searchMaxY = bounds.maxY + margin
+    // Stored centerlines can sit in a neighboring bucket while their copper
+    // still reaches the query margin. Expand by the largest indexed radius;
+    // item-specific checks below retain the exact separation test.
+    const broadPhaseMargin = margin + this.maximumCopperRadius
+    const searchMinX = bounds.minX - broadPhaseMargin
+    const searchMinY = bounds.minY - broadPhaseMargin
+    const searchMaxX = bounds.maxX + broadPhaseMargin
+    const searchMaxY = bounds.maxY + broadPhaseMargin
     const epsilon = 1e-9
 
     const minIndexX = Math.floor(searchMinX / this.CELL_SIZE)
@@ -363,6 +371,11 @@ export class HighDensityRouteSpatialIndex {
       console.warn("Skipping route with missing data:", route)
       return
     }
+    this.maximumCopperRadius = Math.max(
+      this.maximumCopperRadius,
+      route.traceThickness / 2,
+      route.viaDiameter / 2,
+    )
 
     const epsilon = 1e-9
 
@@ -443,10 +456,11 @@ export class HighDensityRouteSpatialIndex {
     margin: number, // Minimum required clearance
   ): Array<{ conflictingRoute: HighDensityRoute; distance: number }> {
     // --- Define search area ---
-    const searchMinX = point.x - margin
-    const searchMinY = point.y - margin
-    const searchMaxX = point.x + margin
-    const searchMaxY = point.y + margin
+    const broadPhaseMargin = margin + this.maximumCopperRadius
+    const searchMinX = point.x - broadPhaseMargin
+    const searchMinY = point.y - broadPhaseMargin
+    const searchMaxX = point.x + broadPhaseMargin
+    const searchMaxY = point.y + broadPhaseMargin
     const epsilon = 1e-9
 
     const minIndexX = Math.floor(searchMinX / this.CELL_SIZE)
