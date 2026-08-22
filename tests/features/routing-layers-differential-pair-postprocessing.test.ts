@@ -3,7 +3,7 @@ import { AutoroutingPipelineSolver7_MultiGraph } from "lib/autorouter-pipelines/
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/autorouting-pipeline-solver9-preloaded-trace-graph"
 import type { SimpleRouteJson } from "lib/types"
 
-test("Pipelines 7 and 9 preserve routed pairs when layer-changing postprocessing cannot honor routingLayers", () => {
+test("Pipelines 7 and 9 only skip layer-changing postprocessing when no differential pairs were requested", () => {
   const input = {
     layerCount: 2,
     routingLayers: ["top"],
@@ -25,11 +25,6 @@ test("Pipelines 7 and 9 preserve routed pairs when layer-changing postprocessing
     const stepIndex = solver.pipelineDef.findIndex(
       (step) => step.solverName === "lengthMatchingPostProcessingSolver",
     )
-    const step = solver.pipelineDef[stepIndex]!
-    expect(() => step.getConstructorParams(solver as never)).toThrow(
-      "Differential-pair post-processing cannot run when routingLayers excludes board layers",
-    )
-
     solver.currentPipelineStepIndex = stepIndex
     solver.step()
     expect(solver.currentPipelineStepIndex).toBe(stepIndex + 1)
@@ -37,5 +32,47 @@ test("Pipelines 7 and 9 preserve routed pairs when layer-changing postprocessing
     expect(
       solver.stats.lengthMatchingPostProcessingSkippedForRoutingLayers,
     ).toBe(true)
+  }
+
+  const requestedPairInput = {
+    ...input,
+    differentialPairs: [
+      {
+        connectionNames: ["positive", "negative"],
+        lengthTolerance: 0.1,
+      },
+    ],
+  } satisfies SimpleRouteJson
+  const solversWithRequestedPairs = [
+    new AutoroutingPipelineSolver7_MultiGraph(
+      structuredClone(requestedPairInput),
+      { cacheProvider: null },
+    ),
+    new AutoroutingPipelineSolver9_PreloadedTraceGraph(
+      structuredClone(requestedPairInput),
+      { cacheProvider: null },
+    ),
+  ]
+
+  for (const solver of solversWithRequestedPairs) {
+    const stepIndex = solver.pipelineDef.findIndex(
+      (step) => step.solverName === "lengthMatchingPostProcessingSolver",
+    )
+    const step = solver.pipelineDef[stepIndex]!
+    expect(() => step.getConstructorParams(solver as never)).toThrow(
+      "Differential-pair post-processing cannot run when routingLayers excludes board layers",
+    )
+
+    solver.currentPipelineStepIndex = stepIndex
+    expect(() => solver.step()).toThrow(
+      "Differential-pair post-processing cannot run when routingLayers excludes board layers",
+    )
+    expect(solver.solved).toBeFalse()
+    expect(solver.failed).toBeTrue()
+    expect(solver.currentPipelineStepIndex).toBe(stepIndex)
+    expect(solver.lengthMatchingPostProcessingSolver).toBeUndefined()
+    expect(
+      solver.stats.lengthMatchingPostProcessingSkippedForRoutingLayers,
+    ).toBeUndefined()
   }
 })

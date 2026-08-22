@@ -850,7 +850,10 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       "lengthMatchingPostProcessingSolver",
       DifferentialPairPostProcessingSolver,
       (cms) => {
-        if (!canUseUnrestrictedLayerMoves(cms.originalSrj)) {
+        if (
+          !canUseUnrestrictedLayerMoves(cms.originalSrj) &&
+          (cms.originalSrj.differentialPairs?.length ?? 0) > 0
+        ) {
           throw new Error(
             "Differential-pair post-processing cannot run when routingLayers excludes board layers",
           )
@@ -1046,7 +1049,8 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
 
     if (
       pipelineStepDef.solverName === "lengthMatchingPostProcessingSolver" &&
-      !canUseUnrestrictedLayerMoves(this.originalSrj)
+      !canUseUnrestrictedLayerMoves(this.originalSrj) &&
+      (this.originalSrj.differentialPairs?.length ?? 0) === 0
     ) {
       this.stats = {
         ...this.stats,
