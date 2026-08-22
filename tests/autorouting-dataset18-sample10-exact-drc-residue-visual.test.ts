@@ -15,7 +15,7 @@ import {
   type GraphicsSvgFrame,
 } from "./fixtures/solver-svg-frames"
 
-test("visualizes dataset 18 sample 10's remaining exact DRC errors", async () => {
+test("repairs dataset 18 sample 10's exact DRC errors", async () => {
   const { scenario } = await loadScenarioBySampleNumber("srj18", 10)
   const pipeline = new AutoroutingPipelineSolver7_MultiGraph(scenario, {
     cacheProvider: null,
@@ -89,8 +89,10 @@ test("visualizes dataset 18 sample 10's remaining exact DRC errors", async () =>
   })
 
   expect(inputDrc.errors.length).toBeGreaterThan(0)
+  expect(outputDrc.errors).toHaveLength(0)
   expect(pipeline.failed).toBe(false)
   expect(exactSolver.solved).toBe(true)
+  expect(exactSolver.failed).toBe(false)
 
   const snapshotPath =
     process.platform === "linux"
