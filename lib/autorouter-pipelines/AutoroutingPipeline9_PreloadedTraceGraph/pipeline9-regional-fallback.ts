@@ -306,34 +306,6 @@ export const createRegionalFallbackProblem = (
   }
 }
 
-const dedupeAdjacentPoints = (points: RoutePoint[]): RoutePoint[] => {
-  const deduped: RoutePoint[] = []
-  for (const point of points) {
-    if (deduped.at(-1) && pointsAreEqual(deduped.at(-1)!, point)) continue
-    deduped.push(point)
-  }
-  return deduped
-}
-
-const materializeImpliedLayerTransitions = (
-  points: RoutePoint[],
-): RoutePoint[] => {
-  const materialized: RoutePoint[] = []
-  for (const point of points) {
-    const previousPoint = materialized.at(-1)
-    if (
-      previousPoint &&
-      previousPoint.z !== point.z &&
-      (Math.abs(previousPoint.x - point.x) > POINT_EPSILON ||
-        Math.abs(previousPoint.y - point.y) > POINT_EPSILON)
-    ) {
-      materialized.push({ ...point, z: previousPoint.z })
-    }
-    materialized.push(point)
-  }
-  return materialized
-}
-
 const orientReplacementPoints = (
   replacement: HighDensityRoute,
   section: FixedRouteSection,
@@ -381,31 +353,134 @@ const getViasFromRoutePoints = (
 export const spliceFixedRouteSection = (
   section: FixedRouteSection,
   replacement: HighDensityRoute,
-): PreloadedHighDensityRoute => {
+): PreloadedHighDensityRoute =>
+  spliceFixedRouteSectionWithMutationMask({
+    section,
+    replacement,
+    sourceMutationMasks: new Map(),
+    replacementIsMutated: false,
+  }).route
+
+export type SplicedFixedRouteWithMutationMask = {
+  route: PreloadedHighDensityRoute
+  mutatedSegments: boolean[]
+  replacementProducedSegment: boolean
+}
+
+/**
+ * Splices a replacement while carrying exact segment-level mutation
+ * provenance through the untouched prefix and suffix.
+ */
+export const spliceFixedRouteSectionWithMutationMask = ({
+  section,
+  replacement,
+  sourceMutationMasks,
+  replacementIsMutated,
+}: {
+  section: FixedRouteSection
+  replacement: HighDensityRoute
+  sourceMutationMasks: ReadonlyMap<string, readonly boolean[]>
+  replacementIsMutated: boolean
+}): SplicedFixedRouteWithMutationMask => {
   const firstSourceRoute = section.sourceRoutes[0]!
   const lastSourceRoute = section.sourceRoutes.at(-1)!
   const replacementPoints = orientReplacementPoints(replacement, section)
-  const route = materializeImpliedLayerTransitions(
-    dedupeAdjacentPoints([
-      ...firstSourceRoute.route.slice(0, section.start.segmentIndex + 1),
-      section.start.point,
-      ...replacementPoints.slice(1, -1),
-      section.end.point,
-      ...lastSourceRoute.route.slice(section.end.segmentIndex + 1),
-    ]),
+  const route: RoutePoint[] = []
+  const mutatedSegments: boolean[] = []
+
+  const getSourceSegmentMutation = (
+    sourceRoute: PreloadedHighDensityRoute,
+    segmentIndex: number,
+  ): boolean => {
+    const mask = sourceMutationMasks.get(sourceRoute.connectionName)
+    if (mask && mask.length !== sourceRoute.route.length - 1) {
+      throw new Error(
+        `Pipeline9 fixed route mutation mask for "${sourceRoute.connectionName}" has ${mask.length} segments, expected ${sourceRoute.route.length - 1}`,
+      )
+    }
+    return mask?.[segmentIndex] ?? false
+  }
+
+  const appendPoint = (point: RoutePoint, mutated: boolean): void => {
+    const previousPoint = route.at(-1)
+    if (!previousPoint) {
+      route.push(point)
+      return
+    }
+    if (pointsAreEqual(previousPoint, point)) return
+    if (
+      previousPoint.z !== point.z &&
+      (Math.abs(previousPoint.x - point.x) > POINT_EPSILON ||
+        Math.abs(previousPoint.y - point.y) > POINT_EPSILON)
+    ) {
+      const impliedTransitionPoint = { ...point, z: previousPoint.z }
+      if (!pointsAreEqual(previousPoint, impliedTransitionPoint)) {
+        route.push(impliedTransitionPoint)
+        mutatedSegments.push(mutated)
+      }
+    }
+    if (!pointsAreEqual(route.at(-1)!, point)) {
+      route.push(point)
+      mutatedSegments.push(mutated)
+    }
+  }
+
+  appendPoint(firstSourceRoute.route[0]!, false)
+  for (
+    let pointIndex = 1;
+    pointIndex <= section.start.segmentIndex;
+    pointIndex++
+  ) {
+    appendPoint(
+      firstSourceRoute.route[pointIndex]!,
+      getSourceSegmentMutation(firstSourceRoute, pointIndex - 1),
+    )
+  }
+  appendPoint(
+    section.start.point,
+    getSourceSegmentMutation(firstSourceRoute, section.start.segmentIndex),
   )
+  const segmentCountBeforeReplacement = mutatedSegments.length
+  for (const replacementPoint of replacementPoints.slice(1, -1)) {
+    appendPoint(replacementPoint, replacementIsMutated)
+  }
+  appendPoint(section.end.point, replacementIsMutated)
+  const replacementProducedSegment =
+    mutatedSegments.length > segmentCountBeforeReplacement
+  for (
+    let pointIndex = section.end.segmentIndex + 1;
+    pointIndex < lastSourceRoute.route.length;
+    pointIndex++
+  ) {
+    appendPoint(
+      lastSourceRoute.route[pointIndex]!,
+      getSourceSegmentMutation(lastSourceRoute, pointIndex - 1),
+    )
+  }
+
+  if (mutatedSegments.length !== route.length - 1) {
+    throw new Error(
+      `Pipeline9 produced an invalid mutation mask while splicing "${firstSourceRoute.connectionName}"`,
+    )
+  }
 
   return {
-    ...firstSourceRoute,
-    preloadedRoutePositionStart: firstSourceRoute.preloadedRoutePositionStart,
-    preloadedRoutePositionEnd: lastSourceRoute.preloadedRoutePositionEnd,
-    traceThickness: Math.max(
-      ...section.sourceRoutes.map((sourceRoute) => sourceRoute.traceThickness),
-    ),
-    viaDiameter: Math.max(
-      ...section.sourceRoutes.map((sourceRoute) => sourceRoute.viaDiameter),
-    ),
-    route,
-    vias: getViasFromRoutePoints(route),
+    route: {
+      ...firstSourceRoute,
+      preloadedRoutePositionStart: firstSourceRoute.preloadedRoutePositionStart,
+      preloadedRoutePositionEnd: lastSourceRoute.preloadedRoutePositionEnd,
+      traceThickness: Math.max(
+        ...section.sourceRoutes.map(
+          (sourceRoute) => sourceRoute.traceThickness,
+        ),
+      ),
+      viaDiameter: Math.max(
+        ...section.sourceRoutes.map((sourceRoute) => sourceRoute.viaDiameter),
+      ),
+      route,
+      vias: getViasFromRoutePoints(route),
+    },
+    mutatedSegments,
+    replacementProducedSegment,
   }
 }
