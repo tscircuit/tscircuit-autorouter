@@ -24,6 +24,7 @@ import { CapacitySegmentPointOptimizer } from "lib/solvers/CapacitySegmentPointO
 import { calculateOptimalCapacityDepth } from "lib/utils/getTunedTotalCapacity1"
 import { NetToPointPairsSolver } from "lib/solvers/NetToPointPairsSolver/NetToPointPairsSolver"
 import { convertHdRouteToSimplifiedRoute } from "lib/utils/convertHdRouteToSimplifiedRoute"
+import { materializeAndValidateGeneratedThroughVias } from "lib/utils/materializeAndValidateGeneratedThroughVias"
 import { MultipleHighDensityRouteStitchSolver } from "lib/solvers/RouteStitchingSolver/MultipleHighDensityRouteStitchSolver"
 import { convertSrjToGraphicsObject } from "lib/utils/convertSrjToGraphicsObject"
 import { createObstacleLabelFormatter } from "lib/utils/formatObstacleLabel"
@@ -739,14 +740,19 @@ export class AssignableAutoroutingPipeline1Solver extends BaseSolver {
           pcb_trace_id: `${connection.name}_${i}`,
           connection_name:
             netConnectionName ?? rootConnectionName ?? connection.name,
-          route: convertHdRouteToSimplifiedRoute(hdRoute, this.srj.layerCount),
+          route: convertHdRouteToSimplifiedRoute(hdRoute, this.srj.layerCount, {
+            allowBlindAndBuriedVias: this.srj.allowBlindAndBuriedVias,
+          }),
         }
 
         traces.push(simplifiedPcbTrace)
       }
     }
 
-    return traces
+    return materializeAndValidateGeneratedThroughVias({
+      srj: this.srj,
+      outputTraces: traces,
+    })
   }
 
   getOutputSimpleRouteJson(): SimpleRouteJson {

@@ -12,6 +12,7 @@ import {
   HighDensityRoute,
 } from "lib/types/high-density-types"
 import { convertHdRouteToSimplifiedRoute } from "lib/utils/convertHdRouteToSimplifiedRoute"
+import { materializeAndValidateGeneratedThroughVias } from "lib/utils/materializeAndValidateGeneratedThroughVias"
 import { convertSrjToGraphicsObject } from "lib/utils/convertSrjToGraphicsObject"
 import { createObstacleLabelFormatter } from "lib/utils/formatObstacleLabel"
 import {
@@ -748,14 +749,19 @@ export class AssignableAutoroutingPipeline2 extends BaseSolver {
             netConnectionName ??
             connection.__rootConnectionNames?.[0] ??
             connection.name,
-          route: convertHdRouteToSimplifiedRoute(hdRoute, this.srj.layerCount),
+          route: convertHdRouteToSimplifiedRoute(hdRoute, this.srj.layerCount, {
+            allowBlindAndBuriedVias: this.srj.allowBlindAndBuriedVias,
+          }),
         }
 
         traces.push(simplifiedPcbTrace)
       }
     }
 
-    return traces
+    return materializeAndValidateGeneratedThroughVias({
+      srj: this.srj,
+      outputTraces: traces,
+    })
   }
 
   getOutputSimpleRouteJson(): SimpleRouteJson {

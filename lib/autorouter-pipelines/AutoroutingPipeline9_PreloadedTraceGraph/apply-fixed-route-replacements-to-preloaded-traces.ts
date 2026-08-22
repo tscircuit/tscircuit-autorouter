@@ -3,6 +3,11 @@ import type { SimplifiedPcbTrace } from "lib/types"
 import type { HighDensityRoute } from "lib/types/high-density-types"
 import type { Obstacle } from "lib/types/srj-types"
 import { convertHdRouteToSimplifiedRoute } from "lib/utils/convertHdRouteToSimplifiedRoute"
+import {
+  materializeGeneratedThroughVias,
+  shouldUseThroughVias,
+  type ViaRoutePoint,
+} from "lib/utils/materializeGeneratedThroughVias"
 import type { PreloadedHighDensityRoute } from "./convert-preloaded-traces-to-hd-routes"
 
 type ApplyFixedRouteReplacementsParams = {
@@ -14,6 +19,7 @@ type ApplyFixedRouteReplacementsParams = {
   defaultViaHoleDiameter: number
   obstacles: Obstacle[]
   connMap: ConnectivityMap
+  allowBlindAndBuriedVias?: boolean
 }
 
 type ApplyFixedRouteReplacementsResult = {
@@ -28,11 +34,14 @@ type OrdinaryTraceSection = {
 
 type ConvertUpdatedTraceRoutesParams = {
   trace: SimplifiedPcbTrace
+  originalTraceRoutes: PreloadedHighDensityRoute[]
   updatedTraceRoutes: PreloadedHighDensityRoute[]
+  replacedConnectionNames: ReadonlySet<string>
   layerCount: number
   defaultViaHoleDiameter: number
   obstacles: Obstacle[]
   connMap: ConnectivityMap
+  allowBlindAndBuriedVias?: boolean
 }
 
 type RebuildThroughObstacleTraceParams = ConvertUpdatedTraceRoutesParams & {
@@ -102,13 +111,66 @@ const getMaximumOriginalTraceThickness = (
   return traceWidths.length > 0 ? Math.max(...traceWidths) : undefined
 }
 
+const routesHaveSameViaGeometry = (
+  originalRoute: PreloadedHighDensityRoute,
+  updatedRoute: PreloadedHighDensityRoute,
+): boolean =>
+  originalRoute.viaDiameter === updatedRoute.viaDiameter &&
+  originalRoute.route.length === updatedRoute.route.length &&
+  originalRoute.route.every((point, pointIndex) =>
+    pointsAreEqual(point, updatedRoute.route[pointIndex]!),
+  )
+
+const getPreservedAuthoredVias = ({
+  trace,
+  originalTraceRoutes,
+  updatedTraceRoutes,
+  replacedConnectionNames,
+}: Pick<
+  ConvertUpdatedTraceRoutesParams,
+  | "trace"
+  | "originalTraceRoutes"
+  | "updatedTraceRoutes"
+  | "replacedConnectionNames"
+>): ViaRoutePoint[] =>
+  originalTraceRoutes.flatMap((originalRoute) => {
+    if (replacedConnectionNames.has(originalRoute.connectionName)) return []
+    const updatedRoute = updatedTraceRoutes.find(
+      (candidate) =>
+        candidate.connectionName === originalRoute.connectionName &&
+        routesHaveSameViaGeometry(originalRoute, candidate),
+    )
+    if (!updatedRoute) return []
+    const routePosition = originalRoute.preloadedRoutePositionStart
+    if (
+      routePosition === undefined ||
+      routePosition !== originalRoute.preloadedRoutePositionEnd ||
+      !Number.isInteger(routePosition)
+    ) {
+      return []
+    }
+    const routePoint = trace.route[routePosition]
+    return routePoint?.route_type === "via" ? [routePoint] : []
+  })
+
+const viaSpansAreEqual = (
+  first: ViaRoutePoint,
+  second: ViaRoutePoint,
+): boolean =>
+  (first.from_layer === second.from_layer &&
+    first.to_layer === second.to_layer) ||
+  (first.from_layer === second.to_layer && first.to_layer === second.from_layer)
+
 const convertUpdatedTraceRoutes = ({
   trace,
+  originalTraceRoutes,
   updatedTraceRoutes,
+  replacedConnectionNames,
   layerCount,
   defaultViaHoleDiameter,
   obstacles,
   connMap,
+  allowBlindAndBuriedVias,
 }: ConvertUpdatedTraceRoutesParams): SimplifiedPcbTrace["route"] => {
   if (updatedTraceRoutes.length === 0) {
     throw new Error(
@@ -142,11 +204,40 @@ const convertUpdatedTraceRoutes = ({
         : []
     }),
   }
-  return convertHdRouteToSimplifiedRoute(combinedRoute, layerCount, {
-    defaultViaHoleDiameter,
-    obstacles,
-    connMap,
+  const convertedRoute = convertHdRouteToSimplifiedRoute(
+    combinedRoute,
+    layerCount,
+    {
+      defaultViaHoleDiameter,
+      obstacles,
+      connMap,
+    },
+  )
+  if (!shouldUseThroughVias(allowBlindAndBuriedVias)) return convertedRoute
+  const preservedAuthoredVias = getPreservedAuthoredVias({
+    trace,
+    originalTraceRoutes,
+    updatedTraceRoutes,
+    replacedConnectionNames,
   })
+  const remainingPreservedVias = [...preservedAuthoredVias]
+  const routeWithAuthoredVias = convertedRoute.map((routePoint) => {
+    if (routePoint.route_type !== "via") return routePoint
+    const preservedViaIndex = remainingPreservedVias.findIndex(
+      (preservedVia) =>
+        Math.abs(routePoint.x - preservedVia.x) <= POINT_EPSILON &&
+        Math.abs(routePoint.y - preservedVia.y) <= POINT_EPSILON &&
+        viaSpansAreEqual(routePoint, preservedVia),
+    )
+    if (preservedViaIndex === -1) return routePoint
+    return remainingPreservedVias.splice(preservedViaIndex, 1)[0]!
+  })
+  return materializeGeneratedThroughVias({
+    inputTraces: [{ ...trace, route: preservedAuthoredVias }],
+    outputTraces: [{ ...trace, route: routeWithAuthoredVias }],
+    layerCount,
+    allowBlindAndBuriedVias,
+  })[0]!.route
 }
 
 const getOrdinaryTraceSections = (
@@ -203,10 +294,12 @@ const rebuildThroughObstacleTrace = ({
   trace,
   originalTraceRoutes,
   updatedTraceRoutes,
+  replacedConnectionNames,
   layerCount,
   defaultViaHoleDiameter,
   obstacles,
   connMap,
+  allowBlindAndBuriedVias,
 }: RebuildThroughObstacleTraceParams): SimplifiedPcbTrace["route"] => {
   if (updatedTraceRoutes.length === 0) {
     throw new Error(
@@ -253,11 +346,14 @@ const rebuildThroughObstacleTrace = ({
       ...(sectionRoutes.length > 0
         ? convertUpdatedTraceRoutes({
             trace,
+            originalTraceRoutes: originalSectionRoutes,
             updatedTraceRoutes: sectionRoutes,
+            replacedConnectionNames,
             layerCount,
             defaultViaHoleDiameter,
             obstacles,
             connMap,
+            allowBlindAndBuriedVias,
           })
         : trace.route.slice(
             section.routePositionStart,
@@ -283,6 +379,7 @@ export const applyFixedRouteReplacementsToPreloadedTraces = ({
   defaultViaHoleDiameter,
   obstacles,
   connMap,
+  allowBlindAndBuriedVias,
 }: ApplyFixedRouteReplacementsParams): ApplyFixedRouteReplacementsResult => {
   const originalFixedRoutesByTraceIndex = new Map<
     number,
@@ -339,18 +436,23 @@ export const applyFixedRouteReplacementsToPreloadedTraces = ({
             trace,
             originalTraceRoutes,
             updatedTraceRoutes,
+            replacedConnectionNames,
             layerCount,
             defaultViaHoleDiameter,
             obstacles,
             connMap,
+            allowBlindAndBuriedVias,
           })
         : convertUpdatedTraceRoutes({
             trace,
+            originalTraceRoutes,
             updatedTraceRoutes,
+            replacedConnectionNames,
             layerCount,
             defaultViaHoleDiameter,
             obstacles,
             connMap,
+            allowBlindAndBuriedVias,
           }),
     }
     mutatedPreloadedTraces.push(mutatedTrace)

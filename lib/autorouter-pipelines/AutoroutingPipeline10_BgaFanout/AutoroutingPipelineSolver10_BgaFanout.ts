@@ -26,6 +26,9 @@ import {
 } from "lib/solvers/ComponentDetectionSolver/ComponentDetectionSolver"
 import type { SimpleRouteJson, SimplifiedPcbTraces } from "lib/types"
 import { convertSrjToGraphicsObject } from "lib/utils/convertSrjToGraphicsObject"
+import { getGeneratedThroughViaCollision } from "lib/utils/getGeneratedThroughViaCollision"
+import { materializeGeneratedThroughVias } from "lib/utils/materializeGeneratedThroughVias"
+import { mapZToLayerName } from "lib/utils/mapZToLayerName"
 
 const MAX_FANOUT_BOUNDARY_MARGIN_MM = 4.5
 const MIN_FANOUT_BOUNDARY_MARGIN_MM = 2
@@ -318,6 +321,7 @@ function getFanoutOptions({
 
 class FanoutStage extends BaseSolver {
   readonly fanoutSolver: FanoutSolver
+  private outputSrj?: SimpleRouteJson
 
   constructor(public readonly inputProblem: FanoutStageInput) {
     super()
@@ -341,6 +345,33 @@ class FanoutStage extends BaseSolver {
       return
     }
     if (this.fanoutSolver.solved) {
+      const rawOutput =
+        this.fanoutSolver.getOutputSimpleRouteJson() as SimpleRouteJson
+      const traces = materializeGeneratedThroughVias({
+        inputTraces: this.inputProblem.inputSrj.traces ?? [],
+        outputTraces: rawOutput.traces ?? [],
+        layerCount: rawOutput.layerCount,
+        allowBlindAndBuriedVias:
+          this.inputProblem.inputSrj.allowBlindAndBuriedVias,
+      })
+      const outputSrj = {
+        ...rawOutput,
+        allowBlindAndBuriedVias:
+          this.inputProblem.inputSrj.allowBlindAndBuriedVias,
+        traces,
+      }
+      const collision = getGeneratedThroughViaCollision({
+        srj: outputSrj,
+        preservedInputTraces: this.inputProblem.inputSrj.traces ?? [],
+        outputTraces: traces,
+      })
+      if (collision) {
+        this.error = collision
+        this.failed = true
+        this.activeSubSolver = null
+        return
+      }
+      this.outputSrj = outputSrj
       this.solved = true
       this.activeSubSolver = null
     }
@@ -351,11 +382,52 @@ class FanoutStage extends BaseSolver {
   }
 
   override getOutput(): FanoutSolverOutput {
-    return this.fanoutSolver.getOutput()
+    if (!this.solved || !this.outputSrj) {
+      throw new Error("Cannot get fanout output before solving")
+    }
+    const rawOutput = this.fanoutSolver.getOutput()
+    const materializedTraceById = new Map(
+      (this.outputSrj.traces ?? []).map((trace) => [trace.pcb_trace_id, trace]),
+    )
+    const getMaterializedTrace = (trace: SimplifiedPcbTraces[number]) => {
+      const materializedTrace = materializedTraceById.get(trace.pcb_trace_id)
+      if (!materializedTrace) {
+        throw new Error(
+          `Validated fanout output is missing trace ${trace.pcb_trace_id}`,
+        )
+      }
+      return materializedTrace
+    }
+    const throughLayers = Array.from(
+      { length: this.outputSrj.layerCount },
+      (_, layerIndex) =>
+        mapZToLayerName(layerIndex, this.outputSrj!.layerCount),
+    )
+    return {
+      ...rawOutput,
+      simpleRouteJson: this.outputSrj,
+      fanoutTraces: rawOutput.fanoutTraces.map(getMaterializedTrace),
+      completionTraces: rawOutput.completionTraces.map(getMaterializedTrace),
+      planeTerminations: rawOutput.planeTerminations.map((termination) => ({
+        ...termination,
+        via:
+          this.outputSrj!.allowBlindAndBuriedVias === false
+            ? {
+                ...termination.via,
+                fromLayer: throughLayers[0]!,
+                toLayer: throughLayers.at(-1)!,
+                spanLayers: throughLayers,
+              }
+            : termination.via,
+      })),
+    }
   }
 
   getOutputSimpleRouteJson(): SimpleRouteJson {
-    return this.fanoutSolver.getOutputSimpleRouteJson() as SimpleRouteJson
+    if (!this.solved || !this.outputSrj) {
+      throw new Error("Cannot get fanout output before solving")
+    }
+    return this.outputSrj
   }
 
   override visualize(): GraphicsObject {

@@ -10,6 +10,7 @@ import {
 } from "lib/types"
 import { HighDensityIntraNodeRoute, Jumper } from "lib/types/high-density-types"
 import { mapZToLayerName } from "./mapZToLayerName"
+import { shouldUseThroughVias } from "./materializeGeneratedThroughVias"
 
 type Point = {
   x: number
@@ -30,6 +31,27 @@ export interface ConvertHdRouteToSimplifiedRouteOptions {
   obstacles?: ReadonlyArray<Obstacle>
   connectedMultilayerObstacles?: ReadonlyArray<Obstacle>
   connMap?: ConnectivityMap
+  allowBlindAndBuriedVias?: boolean
+}
+
+const getOutputViaSpan = ({
+  fromLayer,
+  toLayer,
+  layerCount,
+  allowBlindAndBuriedVias,
+}: {
+  fromLayer: string
+  toLayer: string
+  layerCount: number
+  allowBlindAndBuriedVias: boolean | undefined
+}): { from_layer: string; to_layer: string } => {
+  if (!shouldUseThroughVias(allowBlindAndBuriedVias)) {
+    return { from_layer: fromLayer, to_layer: toLayer }
+  }
+  return {
+    from_layer: mapZToLayerName(0, layerCount),
+    to_layer: mapZToLayerName(layerCount - 1, layerCount),
+  }
 }
 
 /**
@@ -123,6 +145,7 @@ const attachTerminalViasToSimplifiedRoute = ({
   connectionPoints = [],
   tolerance = DEFAULT_TERMINAL_VIA_ATTACH_TOLERANCE,
   defaultViaHoleDiameter,
+  allowBlindAndBuriedVias,
 }: {
   route: SimplifiedPcbTraces[number]["route"]
   hdRoute: HdRouteWithOptionalJumpers
@@ -130,6 +153,7 @@ const attachTerminalViasToSimplifiedRoute = ({
   connectionPoints?: ReadonlyArray<ConnectionPoint>
   tolerance?: number
   defaultViaHoleDiameter?: number
+  allowBlindAndBuriedVias?: boolean
 }): SimplifiedPcbTraces[number]["route"] => {
   if (
     route.length === 0 ||
@@ -187,8 +211,12 @@ const attachTerminalViasToSimplifiedRoute = ({
       route_type: "via",
       x: startTerminalViaPoint.x,
       y: startTerminalViaPoint.y,
-      from_layer: startTerminalViaPoint.layer,
-      to_layer: startTerminalViaPoint.terminalVia.toLayer,
+      ...getOutputViaSpan({
+        fromLayer: startTerminalViaPoint.layer,
+        toLayer: startTerminalViaPoint.terminalVia.toLayer,
+        layerCount,
+        allowBlindAndBuriedVias,
+      }),
       via_diameter:
         startTerminalViaPoint.terminalVia.viaDiameter ?? hdRoute.viaDiameter,
       ...(defaultViaHoleDiameter !== undefined
@@ -234,8 +262,12 @@ const attachTerminalViasToSimplifiedRoute = ({
       route_type: "via",
       x: endTerminalViaPoint.x,
       y: endTerminalViaPoint.y,
-      from_layer: endTerminalViaPoint.layer,
-      to_layer: endTerminalViaPoint.terminalVia.toLayer,
+      ...getOutputViaSpan({
+        fromLayer: endTerminalViaPoint.layer,
+        toLayer: endTerminalViaPoint.terminalVia.toLayer,
+        layerCount,
+        allowBlindAndBuriedVias,
+      }),
       via_diameter:
         endTerminalViaPoint.terminalVia.viaDiameter ?? hdRoute.viaDiameter,
       ...(defaultViaHoleDiameter !== undefined
@@ -311,8 +343,12 @@ export const convertHdRouteToSimplifiedRoute = (
             route_type: "via",
             x: point.x,
             y: point.y,
-            from_layer: layerName,
-            to_layer: nextLayerName,
+            ...getOutputViaSpan({
+              fromLayer: layerName,
+              toLayer: nextLayerName,
+              layerCount,
+              allowBlindAndBuriedVias: opts.allowBlindAndBuriedVias,
+            }),
             via_diameter: hdRoute.viaDiameter,
             ...(opts.defaultViaHoleDiameter !== undefined
               ? { via_hole_diameter: opts.defaultViaHoleDiameter }
@@ -373,5 +409,6 @@ export const convertHdRouteToSimplifiedRoute = (
     connectionPoints: opts.connectionPoints,
     tolerance: opts.terminalViaAttachTolerance,
     defaultViaHoleDiameter: opts.defaultViaHoleDiameter,
+    allowBlindAndBuriedVias: opts.allowBlindAndBuriedVias,
   })
 }

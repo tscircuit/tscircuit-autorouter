@@ -1415,6 +1415,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       defaultViaHoleDiameter: this.viaHoleDiameter,
       obstacles: this.originalSrj.obstacles,
       connMap: this.connMap,
+      allowBlindAndBuriedVias: this.originalSrj.allowBlindAndBuriedVias,
     })
   }
 
@@ -1453,6 +1454,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       obstacles: this.srj.obstacles,
       defaultViaHoleDiameter: this.viaHoleDiameter,
       connMap: this.connMap,
+      allowBlindAndBuriedVias: this.srj.allowBlindAndBuriedVias,
     })
     return assignUniquePcbTraceIdsToNewTraces(
       routedTraces,

@@ -19,6 +19,7 @@ import type {
 import type { HighDensityRoute } from "lib/types/high-density-types"
 import { combineVisualizations } from "lib/utils/combineVisualizations"
 import { convertHdRouteToSimplifiedRoute } from "lib/utils/convertHdRouteToSimplifiedRoute"
+import { materializeAndValidateGeneratedThroughVias } from "lib/utils/materializeAndValidateGeneratedThroughVias"
 import { convertSrjToGraphicsObject } from "lib/utils/convertSrjToGraphicsObject"
 import { createObstacleLabelFormatter } from "lib/utils/formatObstacleLabel"
 import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
@@ -629,6 +630,7 @@ export class AutoroutingPipelineSolver6_PolyHypergraph extends BaseSolver {
           route: convertHdRouteToSimplifiedRoute(hdRoute, this.srj.layerCount, {
             connectionPoints: connection.pointsToConnect,
             defaultViaHoleDiameter: this.viaHoleDiameter,
+            allowBlindAndBuriedVias: this.srj.allowBlindAndBuriedVias,
           }),
         }
 
@@ -636,7 +638,10 @@ export class AutoroutingPipelineSolver6_PolyHypergraph extends BaseSolver {
       }
     }
 
-    return traces
+    return materializeAndValidateGeneratedThroughVias({
+      srj: this.originalSrj,
+      outputTraces: traces,
+    })
   }
 
   getOutputSimpleRouteJson(): SimpleRouteJson {

@@ -10,6 +10,7 @@ import type {
 
 export type Pipeline7PowerTraceExpansionInput = SimpleRouteJson & {
   fixedTraces: SimplifiedPcbTraces
+  authoredInputTraces: SimplifiedPcbTraces
 }
 
 export const preparePipeline7PowerTraceExpansionInput = ({
@@ -67,6 +68,7 @@ export const preparePipeline7PowerTraceExpansionInput = ({
     ...originalSrj,
     traces: [...newlyRoutedTraces, ...mutablePreloadedTraces],
     fixedTraces,
+    authoredInputTraces: originalSrj.traces ?? [],
   }
 }
 
