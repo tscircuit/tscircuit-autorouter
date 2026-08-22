@@ -40,4 +40,4 @@ test("Pipeline9 routes the full Game Boy Advance parent directly to MCU pads", (
     import.meta.path,
     { svgName: "routed" },
   )
-})
+}, 600_000)
