@@ -34,8 +34,8 @@ test("Pipelines 7 and 9 preserve routed pairs when layer-changing postprocessing
     solver.step()
     expect(solver.currentPipelineStepIndex).toBe(stepIndex + 1)
     expect(solver.lengthMatchingPostProcessingSolver).toBeUndefined()
-    expect(solver.stats.lengthMatchingPostProcessingSkippedForRoutingLayers).toBe(
-      true,
-    )
+    expect(
+      solver.stats.lengthMatchingPostProcessingSkippedForRoutingLayers,
+    ).toBe(true)
   }
 })
