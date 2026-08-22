@@ -45,6 +45,7 @@ import { DeadEndSolver } from "../../solvers/DeadEndSolver/DeadEndSolver"
 import { EscapeViaLocationSolver } from "../../solvers/EscapeViaLocationSolver/EscapeViaLocationSolver"
 import { Pipeline4HighDensityRepairSolver } from "../../solvers/HighDensityRepairSolver/Pipeline4HighDensityRepairSolver"
 import { HighDensitySolver } from "../../solvers/HighDensitySolver/HighDensitySolver"
+import { hasImpossibleSameLayerCrossingGeometry } from "../../solvers/HyperHighDensitySolver/GrowShrinkHighDensityIntraNodeSolver/invalidSameLayerCrossingGeometry"
 import { MultiSectionPortPointOptimizer } from "../../solvers/MultiSectionPortPointOptimizer"
 import { NetToPointPairsSolver } from "../../solvers/NetToPointPairsSolver/NetToPointPairsSolver"
 import { NetToPointPairsSolver2_OffBoardConnection } from "../../solvers/NetToPointPairsSolver2_OffBoardConnection/NetToPointPairsSolver2_OffBoardConnection"
@@ -333,12 +334,23 @@ export class AutoroutingPipelineSolver4_TinyHypergraph extends BaseSolver {
         cms.portPointPathingSolver?.getOutput().nodesWithPortPoints ?? []
       const nodePortPointsSource =
         uniformNodes.length > 0 ? uniformNodes : fallbackNodes
+      const routableNodePortPoints = nodePortPointsSource.map((node) =>
+        hasImpossibleSameLayerCrossingGeometry(node)
+          ? {
+              ...node,
+              availableZ: Array.from(
+                { length: cms.srj.layerCount },
+                (_, z) => z,
+              ),
+            }
+          : node,
+      )
 
-      cms.highDensityNodePortPoints = structuredClone(nodePortPointsSource)
+      cms.highDensityNodePortPoints = structuredClone(routableNodePortPoints)
 
       return [
         {
-          nodePortPoints: nodePortPointsSource,
+          nodePortPoints: routableNodePortPoints,
           nodePfById: new Map(
             (
               cms.portPointPathingSolver?.getOutput().inputNodeWithPortPoints ??

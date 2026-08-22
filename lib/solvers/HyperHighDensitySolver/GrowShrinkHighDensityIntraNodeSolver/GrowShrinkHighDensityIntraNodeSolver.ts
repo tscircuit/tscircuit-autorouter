@@ -121,6 +121,13 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
       20_000_000 * (params.effort ?? 1) * (this.maxGrowthAttempts + 1)
 
     if (hasImpossibleSameLayerCrossingGeometry(this.nodeWithPortPoints)) {
+      if (!params.fallbackToInvalidGeometryOnFailure) {
+        this.failed = true
+        this.progress = 1
+        this.error =
+          "GrowShrinkHighDensityIntraNodeSolver cannot route an impossible single-layer crossing"
+        return
+      }
       this.solvedRoutes = createInvalidSameLayerCrossingRoutes(
         this.nodeWithPortPoints,
         params.traceWidth ?? 0.15,

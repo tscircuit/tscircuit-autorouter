@@ -10,6 +10,7 @@ export type PreloadedHighDensityRoute = HighDensityRoute & {
   preloadedRouteIndex: number
   preloadedRoutePositionStart?: number
   preloadedRoutePositionEnd?: number
+  isThroughObstacle?: boolean
 }
 
 export const convertPreloadedTraceToHdRoutes = (
@@ -29,6 +30,7 @@ export const convertPreloadedTraceToHdRoutes = (
     vias: Array<{ x: number; y: number }> = [],
     routePositionStart?: number,
     routePositionEnd?: number,
+    isThroughObstacle = false,
   ) => {
     if (route.length < 2) return
     routes.push({
@@ -38,6 +40,7 @@ export const convertPreloadedTraceToHdRoutes = (
       preloadedRouteIndex: routes.length,
       preloadedRoutePositionStart: routePositionStart,
       preloadedRoutePositionEnd: routePositionEnd,
+      isThroughObstacle,
       traceThickness: Math.max(MIN_ROUTE_DIMENSION, traceThickness),
       viaDiameter: Math.max(MIN_ROUTE_DIMENSION, viaDiameter),
       route,
@@ -84,6 +87,7 @@ export const convertPreloadedTraceToHdRoutes = (
           [],
           pointIndex,
           pointIndex + 1,
+          true,
         )
       }
       continue
