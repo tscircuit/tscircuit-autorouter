@@ -23,6 +23,8 @@ export interface SameNetViaMergerSolverInput {
   layerCount: number
   connMap: ConnectivityMap
   outline?: Array<{ x: number; y: number }>
+  /** Prevent transition clusters that touch a route endpoint from moving. */
+  preserveRouteEndpoints?: boolean
 }
 
 type Via = {
@@ -37,6 +39,46 @@ type Via = {
 
 const NEAR_VIA_MERGE_DISTANCE_MULTIPLIER = 2.5
 const OBSTACLE_MARGIN = 0.1
+
+const viaTransitionClusterTouchesRouteEndpoint = (
+  route: HighDensityRoute,
+  viaPoint: { x: number; y: number },
+): boolean => {
+  for (let pointIndex = 0; pointIndex < route.route.length - 1; pointIndex++) {
+    const point = route.route[pointIndex]!
+    const nextPoint = route.route[pointIndex + 1]!
+    if (
+      point.z === nextPoint.z ||
+      point.x !== viaPoint.x ||
+      point.y !== viaPoint.y ||
+      nextPoint.x !== viaPoint.x ||
+      nextPoint.y !== viaPoint.y
+    ) {
+      continue
+    }
+
+    let clusterStartIndex = pointIndex
+    while (
+      clusterStartIndex > 0 &&
+      route.route[clusterStartIndex - 1]!.x === viaPoint.x &&
+      route.route[clusterStartIndex - 1]!.y === viaPoint.y
+    ) {
+      clusterStartIndex--
+    }
+    let clusterEndIndex = pointIndex + 1
+    while (
+      clusterEndIndex < route.route.length - 1 &&
+      route.route[clusterEndIndex + 1]!.x === viaPoint.x &&
+      route.route[clusterEndIndex + 1]!.y === viaPoint.y
+    ) {
+      clusterEndIndex++
+    }
+    if (clusterStartIndex === 0 || clusterEndIndex === route.route.length - 1) {
+      return true
+    }
+  }
+  return false
+}
 
 const tryGetNetForRoute = (
   connMap: ConnectivityMap,
@@ -266,7 +308,12 @@ export class SameNetViaMergerSolver extends BaseSolver {
           net,
           layers,
           routeIndex,
-          mutable,
+          mutable:
+            mutable &&
+            !(
+              this.input.preserveRouteEndpoints &&
+              viaTransitionClusterTouchesRouteEndpoint(route, viaPoint)
+            ),
         }
         this.vias.push(via)
         const list = this.viasByNet.get(via.net)

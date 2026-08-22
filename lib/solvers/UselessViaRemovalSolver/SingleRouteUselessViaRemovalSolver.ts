@@ -57,6 +57,7 @@ export class SingleRouteUselessViaRemovalSolver extends BaseSolver {
   MAX_GEOMETRY_SHORTCUT_ADDED_LENGTH = 4
   ENABLE_GEOMETRY_SHORTCUTS = true
   ENABLE_OBSTACLE_DETOUR_SHORTCUTS = false
+  PRESERVE_ROUTE_ENDPOINTS = false
 
   geometryShortcutsApplied = 0
   multilayerSectionsCollapsed = 0
@@ -72,6 +73,7 @@ export class SingleRouteUselessViaRemovalSolver extends BaseSolver {
     geometryShortcutObstacleMargin?: number
     enableGeometryShortcuts?: boolean
     enableObstacleDetourShortcuts?: boolean
+    preserveRouteEndpoints?: boolean
   }) {
     super()
     this.currentSectionIndex = 0 // Start at 0 to check first section for MLCP via removal
@@ -88,6 +90,7 @@ export class SingleRouteUselessViaRemovalSolver extends BaseSolver {
     this.ENABLE_GEOMETRY_SHORTCUTS = params.enableGeometryShortcuts ?? true
     this.ENABLE_OBSTACLE_DETOUR_SHORTCUTS =
       params.enableObstacleDetourShortcuts ?? false
+    this.PRESERVE_ROUTE_ENDPOINTS = params.preserveRouteEndpoints ?? false
 
     this.routeSections = breakRouteIntoSections(this.unsimplifiedRoute)
   }
@@ -562,7 +565,10 @@ export class SingleRouteUselessViaRemovalSolver extends BaseSolver {
       const firstSection = this.routeSections[0]
       const secondSection = this.routeSections[1]
 
-      if (firstSection.z !== secondSection.z) {
+      if (
+        !this.PRESERVE_ROUTE_ENDPOINTS &&
+        firstSection.z !== secondSection.z
+      ) {
         // Try moving first section to match second section (for MLCP endpoints)
         const targetZ = secondSection.z
         // Check that the endpoint obstacle supports the target layer
@@ -604,7 +610,7 @@ export class SingleRouteUselessViaRemovalSolver extends BaseSolver {
     // Handle last section (endpoint 2) - can be moved if it's a multi-layer connection point
     if (this.currentSectionIndex === this.routeSections.length - 1) {
       // Only attempt via removal if there are at least 2 sections
-      if (this.routeSections.length >= 2) {
+      if (!this.PRESERVE_ROUTE_ENDPOINTS && this.routeSections.length >= 2) {
         const lastSection = this.routeSections[this.routeSections.length - 1]
         const secondLastSection =
           this.routeSections[this.routeSections.length - 2]
@@ -715,6 +721,7 @@ export class SingleRouteUselessViaRemovalSolver extends BaseSolver {
       geometryShortcutObstacleMargin: this.GEOMETRY_SHORTCUT_OBSTACLE_MARGIN,
       enableGeometryShortcuts: this.ENABLE_GEOMETRY_SHORTCUTS,
       enableObstacleDetourShortcuts: this.ENABLE_OBSTACLE_DETOUR_SHORTCUTS,
+      preserveRouteEndpoints: this.PRESERVE_ROUTE_ENDPOINTS,
     }
   }
 

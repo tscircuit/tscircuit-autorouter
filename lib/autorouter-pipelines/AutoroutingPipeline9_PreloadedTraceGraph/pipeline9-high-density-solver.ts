@@ -27,7 +27,7 @@ import {
 import {
   createRegionalFallbackProblem,
   type FixedRouteSection,
-  spliceFixedRouteSection,
+  spliceFixedRouteSectionWithMutationMask,
 } from "./pipeline9-regional-fallback"
 import { Pipeline9RegionalFallbackSolver } from "./pipeline9-regional-fallback-solver"
 
@@ -339,6 +339,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
   readonly unsolvedNodePortPoints: NodeWithPortPoints[]
   readonly fixedRouteReplacements = new Map<string, PreloadedHighDensityRoute>()
   readonly removedFixedRouteConnectionNames = new Set<string>()
+  readonly preloadedTraceMutationMasks = new Map<string, boolean[]>()
 
   activeRegularSolver: HighDensitySolver | null = null
   activeB01Solver: HighDensitySolverB01 | null = null
@@ -552,26 +553,48 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       connectionName: string
       section: FixedRouteSection
       replacement: PreloadedHighDensityRoute
+      mutatedSegments: boolean[]
+      replacementProducedSegment: boolean
     }> = []
+    const unchangedFixedRouteSections: FixedRouteSection[] = []
     for (const [connectionName, section] of this
       .activeFallbackFixedRouteSections) {
       const replacementRoutes =
         replacementRoutesByConnectionName.get(connectionName) ?? []
-      if (replacementRoutes.length !== 1) {
+      if (replacementRoutes.length === 0) {
+        // Grid-based regional solvers can merge same-net sections that occupy
+        // the same cells. Keep omitted fixed copper unchanged, then include it
+        // in the conflict check below before accepting the candidate routes.
+        unchangedFixedRouteSections.push(section)
+        continue
+      }
+      if (replacementRoutes.length > 1) {
         this.error = `Pipeline9 regional fallback expected one replacement for fixed route "${connectionName}", got ${replacementRoutes.length}`
         this.failed = true
         return
       }
+      const splicedRoute = spliceFixedRouteSectionWithMutationMask({
+        section,
+        replacement: replacementRoutes[0]!,
+        sourceMutationMasks: this.preloadedTraceMutationMasks,
+        replacementIsMutated: true,
+      })
       pendingFixedRouteReplacements.push({
         connectionName,
         section,
-        replacement: spliceFixedRouteSection(section, replacementRoutes[0]!),
+        replacement: splicedRoute.route,
+        mutatedSegments: splicedRoute.mutatedSegments,
+        replacementProducedSegment: splicedRoute.replacementProducedSegment,
       })
     }
 
     const candidateRoutes: HighDensityRoute[] = [
       ...newRoutes,
       ...pendingFixedRouteReplacements.map(({ replacement }) => replacement),
+    ]
+    const fixedObstacleRoutes = [
+      ...this.activeFallbackFixedObstacleRoutes,
+      ...unchangedFixedRouteSections.flatMap((section) => section.sourceRoutes),
     ]
     const candidateBounds = getNodeBounds(
       this.activeNode,
@@ -582,7 +605,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       PreloadedHighDensityRoute
     >()
     for (const candidateRoute of candidateRoutes) {
-      for (const fixedRoute of this.activeFallbackFixedObstacleRoutes) {
+      for (const fixedRoute of fixedObstacleRoutes) {
         if (
           arePipeline9RoutesOnSameNet(candidateRoute, fixedRoute, this.connMap)
         ) {
@@ -642,25 +665,150 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       return
     }
 
+    const mutationRangeByTraceIndex = new Map<
+      number,
+      { start: number; end: number }
+    >()
+    for (const {
+      section,
+      replacementProducedSegment,
+    } of pendingFixedRouteReplacements) {
+      // A replacement whose two anchors are the same point can exactly delete
+      // a hairpin without leaving any replacement copper. There is no local
+      // segment or unchanged bridge to include in the simplification window.
+      if (!replacementProducedSegment) continue
+      for (const sourceRoute of section.sourceRoutes) {
+        const routePositionStart = sourceRoute.preloadedRoutePositionStart
+        const routePositionEnd = sourceRoute.preloadedRoutePositionEnd
+        if (
+          (routePositionStart === undefined) !==
+          (routePositionEnd === undefined)
+        ) {
+          throw new Error(
+            `Pipeline9 fixed route "${sourceRoute.connectionName}" has incomplete route-position metadata`,
+          )
+        }
+        // Direct high-density callers may supply legacy fixed routes without
+        // serialized positions. Their stable route index is the supported
+        // ordering coordinate; full Pipeline9 inputs always carry positions.
+        const rangeStart = Math.min(
+          routePositionStart ?? sourceRoute.preloadedRouteIndex,
+          routePositionEnd ?? sourceRoute.preloadedRouteIndex,
+        )
+        const rangeEnd = Math.max(
+          routePositionStart ?? sourceRoute.preloadedRouteIndex,
+          routePositionEnd ?? sourceRoute.preloadedRouteIndex,
+        )
+        const existingRange = mutationRangeByTraceIndex.get(
+          sourceRoute.preloadedTraceIndex,
+        )
+        mutationRangeByTraceIndex.set(sourceRoute.preloadedTraceIndex, {
+          start: Math.min(existingRange?.start ?? rangeStart, rangeStart),
+          end: Math.max(existingRange?.end ?? rangeEnd, rangeEnd),
+        })
+      }
+    }
     for (const {
       connectionName,
       section,
       replacement,
+      mutatedSegments,
     } of pendingFixedRouteReplacements) {
       this.fixedRouteReplacements.set(connectionName, replacement)
+      this.preloadedTraceMutationMasks.set(connectionName, mutatedSegments)
       for (const sourceRoute of section.sourceRoutes.slice(1)) {
         this.removedFixedRouteConnectionNames.add(sourceRoute.connectionName)
+        this.preloadedTraceMutationMasks.delete(sourceRoute.connectionName)
       }
     }
 
-    const reroutedFixedRouteCount = [
-      ...this.activeFallbackFixedRouteSections.values(),
-    ].reduce((count, section) => count + section.sourceRoutes.length, 0)
+    // Capture the accepted regional envelope immediately against the
+    // post-splice geometry. Segment masks are carried by later splices, so a
+    // future fallback never has to replay this node's now-stale bounds.
+    const postSpliceProblem = createRegionalFallbackProblem(
+      {
+        ...normalizeNodeRootConnectionNames(this.activeNode, this.connMap),
+        portPoints: [],
+        portPointsInPairs: [],
+        availableZ: Array.from({ length: this.layerCount }, (_, z) => z),
+      },
+      this.getUpdatedFixedHdRoutes(),
+    )
+    const markedTraceIndexes = new Set<number>()
+    for (const section of postSpliceProblem.fixedRouteSectionsByConnectionName.values()) {
+      const firstSourceRoute = section.sourceRoutes[0]
+      if (!firstSourceRoute) continue
+      const mutationRange = mutationRangeByTraceIndex.get(
+        firstSourceRoute.preloadedTraceIndex,
+      )
+      if (!mutationRange) continue
+      for (const [
+        sourceRouteIndex,
+        sourceRoute,
+      ] of section.sourceRoutes.entries()) {
+        const start =
+          sourceRoute.preloadedRoutePositionStart ??
+          sourceRoute.preloadedRouteIndex
+        const end =
+          sourceRoute.preloadedRoutePositionEnd ??
+          sourceRoute.preloadedRouteIndex
+        const sourceRange = {
+          start: Math.min(start, end),
+          end: Math.max(start, end),
+        }
+        const sourceIsPoint = sourceRange.start === sourceRange.end
+        const mutationIsPoint = mutationRange.start === mutationRange.end
+        const overlapsMutation =
+          sourceIsPoint || mutationIsPoint
+            ? sourceRange.start <= mutationRange.end &&
+              mutationRange.start <= sourceRange.end
+            : sourceRange.start < mutationRange.end &&
+              mutationRange.start < sourceRange.end
+        if (!overlapsMutation) continue
+        markedTraceIndexes.add(firstSourceRoute.preloadedTraceIndex)
+        const mask = [
+          ...(this.preloadedTraceMutationMasks.get(
+            sourceRoute.connectionName,
+          ) ?? Array(sourceRoute.route.length - 1).fill(false)),
+        ]
+        if (mask.length !== sourceRoute.route.length - 1) {
+          throw new Error(
+            `Pipeline9 fixed route mutation mask for "${sourceRoute.connectionName}" has ${mask.length} segments, expected ${sourceRoute.route.length - 1}`,
+          )
+        }
+        const firstSegmentIndex =
+          sourceRouteIndex === 0 ? section.start.segmentIndex : 0
+        const lastSegmentIndex =
+          sourceRouteIndex === section.sourceRoutes.length - 1
+            ? section.end.segmentIndex
+            : sourceRoute.route.length - 2
+        for (
+          let segmentIndex = firstSegmentIndex;
+          segmentIndex <= lastSegmentIndex;
+          segmentIndex++
+        ) {
+          mask[segmentIndex] = true
+        }
+        this.preloadedTraceMutationMasks.set(sourceRoute.connectionName, mask)
+      }
+    }
+    for (const preloadedTraceIndex of mutationRangeByTraceIndex.keys()) {
+      if (!markedTraceIndexes.has(preloadedTraceIndex)) {
+        throw new Error(
+          `Pipeline9 could not capture accepted mutation provenance for trace ${preloadedTraceIndex}`,
+        )
+      }
+    }
+
+    const reroutedFixedRouteCount = pendingFixedRouteReplacements.reduce(
+      (count, { section }) => count + section.sourceRoutes.length,
+      0,
+    )
     this.stats.reroutedFixedRouteCount =
       Number(this.stats.reroutedFixedRouteCount ?? 0) + reroutedFixedRouteCount
     this.stats.reroutedFixedRouteSectionCount =
       Number(this.stats.reroutedFixedRouteSectionCount ?? 0) +
-      this.activeFallbackFixedRouteSections.size
+      pendingFixedRouteReplacements.length
     this.finishActiveNode(newRoutes)
   }
 
