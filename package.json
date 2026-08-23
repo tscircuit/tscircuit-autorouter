@@ -52,7 +52,7 @@
     "@tscircuit/krt-wasm": "^0.1.0",
     "@tscircuit/length-matching-solver": "git+https://github.com/tscircuit/length-matching-solver.git#c4098fb4526609ffbb5dd4d68efdf768e104aadc",
     "@tscircuit/math-utils": "^0.0.36",
-    "@tscircuit/power-trace-expander": "git+https://github.com/tscircuit/power-trace-expander.git#1dbee80833324a6056f19746f8a910512eb02a76",
+    "@tscircuit/power-trace-expander": "git+https://github.com/tscircuit/power-trace-expander.git#8dd76ba8421e92c2286e8196bcc57e3d3b5871f1",
     "@tscircuit/rectdiff": "git+https://github.com/tscircuit/rectdiff.git#262f1b7e2c70021785f0ccdbe8e2562f827c7dbf",
     "@tscircuit/solver-utils": "^0.0.16",
     "@types/bun": "^1.2.23",
