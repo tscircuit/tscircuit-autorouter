@@ -155,6 +155,7 @@ test("Pipeline7 completes post-processing for a routed differential pair", () =>
         connectionNames: ["source_trace_0", "source_trace_1"],
         lengthTolerance: 0.05,
         traceGap: 0.75,
+        maxUncoupledLength: 3,
       },
     ],
     layerCount: 2,
@@ -169,5 +170,9 @@ test("Pipeline7 completes post-processing for a routed differential pair", () =>
   expect(solver.failed).toBe(false)
   expect(solver.solved).toBe(true)
   expect(solver.lengthMatchingPostProcessingSolver).toBeDefined()
+  expect(
+    solver.lengthMatchingPostProcessingSolver?.getConstructorParams()[0]
+      .differentialPairs[0]?.maxUncoupledLength,
+  ).toBe(3)
   expect(solver.getOutputSimpleRouteJson().traces).toHaveLength(2)
 })

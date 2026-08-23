@@ -752,7 +752,11 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
                 `Pipeline7: differential pair ${pair.connectionNames.join("/")} resolves both members to "${connectionNames[0]}"`,
               )
             if (pair.traceGap === undefined)
-              return { connectionNames, lengthTolerance: pair.lengthTolerance }
+              return {
+                connectionNames,
+                lengthTolerance: pair.lengthTolerance,
+                maxUncoupledLength: pair.maxUncoupledLength,
+              }
             const pairRoutes = connectionNames.map((connectionName) => {
               const matchingRoutes = hdRoutes.filter(
                 (route) => route.connectionName === connectionName,
@@ -773,6 +777,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
             return {
               connectionNames,
               lengthTolerance: pair.lengthTolerance,
+              maxUncoupledLength: pair.maxUncoupledLength,
               minimumCenterlineDistance: centerlineDistance,
               maximumCenterlineDistance: centerlineDistance,
             }
