@@ -73,6 +73,7 @@ import {
   getMaterializedPreloadedSectionHdRoutes,
   removeChangedSectionsFromFixedHdRoutes,
 } from "./materialize-hypergraph-preloaded-trace-sections"
+import { materializePipeline9HdRouteVias } from "./materialize-pipeline9-hd-route-vias"
 import {
   type PreparedPipeline9MutationSections,
   applyPipeline9MutatedPreloadedSections,
@@ -636,7 +637,9 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       (cms) => [
         {
           nodeWithPortPoints: cms.highDensityNodePortPoints ?? [],
-          hdRoutes: cms.highDensityRouteSolver!.routes,
+          hdRoutes: materializePipeline9HdRouteVias(
+            cms.highDensityRouteSolver!.routes,
+          ),
           colorMap: cms.colorMap,
           totalStepsPerNode: Math.max(12, Math.round(20 * cms.effort)),
           nodeAssignmentMargin: cms.srj.defaultObstacleMargin ?? 0.2,
