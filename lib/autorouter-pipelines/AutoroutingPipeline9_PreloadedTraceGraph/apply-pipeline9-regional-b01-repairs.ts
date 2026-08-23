@@ -17,6 +17,7 @@ import {
   type Pipeline9RouteWireSegment,
 } from "./pipeline9-fixed-route-copper"
 import {
+  areAllPortPointsOnNodeBoundary,
   createRegionalFallbackProblem,
   spliceFixedRouteSection,
 } from "./pipeline9-regional-fallback"
@@ -421,6 +422,12 @@ const getRegularRegionalCandidate = ({
   }
   const problem = createRegionalFallbackProblem(node, regionalRoutes)
   if (problem.fixedRouteSectionsByConnectionName.size === 0) return undefined
+  // A-series solvers require perimeter terminals. A fixed route contained by
+  // this DRC window creates interior splice anchors, so leave that candidate
+  // to the later repair stages instead of passing an invalid node to A01/A03.
+  if (!areAllPortPointsOnNodeBoundary(problem.nodeWithPortPoints)) {
+    return undefined
+  }
   const regionalSourceRoutes = [
     ...problem.fixedRouteSectionsByConnectionName.values(),
   ].flatMap((section) => section.sourceRoutes)

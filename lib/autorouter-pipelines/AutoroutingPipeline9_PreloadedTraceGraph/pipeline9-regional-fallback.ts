@@ -3,6 +3,7 @@ import type {
   NodeWithPortPoints,
   PortPoint,
 } from "lib/types/high-density-types"
+import { classifyPointInBounds } from "lib/utils/classifyPointInBounds"
 import type { PreloadedHighDensityRoute } from "./convert-preloaded-traces-to-hd-routes"
 
 type RoutePoint = HighDensityRoute["route"][number]
@@ -45,6 +46,16 @@ const getNodeBounds = (node: NodeWithPortPoints): NodeBounds => ({
   minY: node.center.y - node.height / 2,
   maxY: node.center.y + node.height / 2,
 })
+
+export const areAllPortPointsOnNodeBoundary = (
+  node: NodeWithPortPoints,
+): boolean => {
+  const bounds = getNodeBounds(node)
+  return node.portPoints.every(
+    (portPoint) =>
+      classifyPointInBounds({ point: portPoint, bounds }) === "on-boundary",
+  )
+}
 
 const isPointInsideBounds = (point: RoutePoint, bounds: NodeBounds) =>
   point.x >= bounds.minX - POINT_EPSILON &&
