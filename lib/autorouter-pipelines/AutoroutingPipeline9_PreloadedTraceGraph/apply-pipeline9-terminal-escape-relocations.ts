@@ -18,6 +18,7 @@ type TerminalEscapeRelocationResult = {
   routes: HighDensityRoute[]
   attemptedCandidateCount: number
   acceptedCandidateCount: number
+  remainingErrors: Pipeline9DrcError[]
 }
 
 type Point = { x: number; y: number }
@@ -326,5 +327,6 @@ export const applyPipeline9TerminalEscapeRelocations = ({
     routes: currentRoutes,
     attemptedCandidateCount,
     acceptedCandidateCount,
+    remainingErrors: currentErrors,
   }
 }

@@ -6,6 +6,7 @@ import { makeCrossingSingleLayerNode } from "./test-helpers"
 test("GrowShrinkHighDensityIntraNodeSolver immediately returns invalid geometry for impossible single-layer crossings", () => {
   const solver = new GrowShrinkHighDensityIntraNodeSolver({
     nodeWithPortPoints: makeCrossingSingleLayerNode(),
+    fallbackToInvalidGeometryOnFailure: true,
   })
 
   expect(solver.solved).toBe(true)

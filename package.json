@@ -1,8 +1,12 @@
 {
   "name": "@tscircuit/capacity-autorouter",
   "main": "./dist/index.js",
-  "version": "0.0.822",
+  "version": "0.0.835",
   "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/tscircuit/tscircuit-autorouter"
+  },
   "files": [
     "dist"
   ],
@@ -46,7 +50,7 @@
     "@tscircuit/hypergraph": "^0.0.71",
     "@tscircuit/jumper-topology-generator": "^0.0.4",
     "@tscircuit/krt-wasm": "^0.1.0",
-    "@tscircuit/length-matching-solver": "git+https://github.com/tscircuit/length-matching-solver.git#a429b4db4e46896a03259949d7975da2514b6c14",
+    "@tscircuit/length-matching-solver": "git+https://github.com/tscircuit/length-matching-solver.git#c4098fb4526609ffbb5dd4d68efdf768e104aadc",
     "@tscircuit/math-utils": "^0.0.36",
     "@tscircuit/power-trace-expander": "git+https://github.com/tscircuit/power-trace-expander.git#6fa2ac79cf13129c47432db3a23e61c17067e912",
     "@tscircuit/rectdiff": "git+https://github.com/tscircuit/rectdiff.git#262f1b7e2c70021785f0ccdbe8e2562f827c7dbf",
@@ -83,7 +87,7 @@
     "recharts": "^2.15.1",
     "tailwind-merge": "^3.2.0",
     "terser": "^5.43.1",
-    "tiny-hypergraph": "git+https://github.com/tscircuit/tiny-hypergraph.git#b3dac2244e5c660f21566d9e79dc3b9f68d1c251",
+    "tiny-hypergraph": "git+https://github.com/tscircuit/tiny-hypergraph.git#c1043b3043ddf0c4d841fe5a6d9a515165960911",
     "tiny-hypergraph-poly": "git+https://github.com/tscircuit/tiny-hypergraph.git#7b93b4c",
     "tsup": "^8.3.6",
     "typescript": "^5.9.3",
@@ -93,9 +97,9 @@
     "zdwiel-dataset": "git+https://github.com/dwiel/tscircuit-benchmark.git#be36518b5bf51755dae92c230061ab3cf4e3e063",
     "high-density-repair01": "git+https://github.com/tscircuit/high-density-repair01.git#8eaa775e7c7a2c32c12a82da4edef22477549027",
     "high-density-repair02": "https://codeload.github.com/tscircuit/high-density-repair02/tar.gz/2afc0cbba3bf2f7eb6b9cd33615d21e9ad9352d4",
-    "high-density-repair03": "git+https://github.com/tscircuit/high-density-repair03.git#9ebef6e33a301d23cf688aa69903b6a4a9f570c7",
+    "high-density-repair03": "git+https://github.com/tscircuit/high-density-repair03.git#6ef1a32e5646a8c15dcf956b87dbd90b5ecabbd1",
     "@tscircuit/high-density-a01": "git+https://github.com/tscircuit/high-density-a01.git#9a3a3d",
-    "@tscircuit/high-density-b01": "git+https://github.com/tscircuit/high-density-b01.git#1309684"
+    "@tscircuit/high-density-b01": "git+https://github.com/tscircuit/high-density-b01.git#e651cab6c314e7aab6df31fd6067277436f67148"
   },
   "dependencies": {
     "fast-json-stable-stringify": "^2.1.0",
