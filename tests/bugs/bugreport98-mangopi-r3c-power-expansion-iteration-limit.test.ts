@@ -12,6 +12,8 @@ const [inputSrj, options] = constructorArgsJson as [
 ]
 
 test("bugreport98 completes MangoPi power-trace expansion", () => {
+  // This regression verifies budget-aware stage completion, not PCB DRC or
+  // fabrication readiness of the returned best-effort approximation.
   const solver = new PowerTraceExpansionSolver(
     structuredClone(inputSrj),
     structuredClone(options),
