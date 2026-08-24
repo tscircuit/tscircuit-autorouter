@@ -115,4 +115,41 @@ test("Pipeline9 never silently reduces a connection below its required width", (
     )
     expect(outputWidths).not.toContain(0.1)
   }
+
+  const legacySrj: SimpleRouteJson = {
+    layerCount: 1,
+    minTraceWidth: 0.1,
+    minTraceToPadEdgeClearance: 0.1,
+    bounds: { minX: -1, minY: -2, maxX: 11, maxY: 2 },
+    obstacles: [],
+    connections: [
+      {
+        name: "POWER",
+        nominalTraceWidth: 0.05,
+        pointsToConnect: [
+          { x: 0, y: 0, layer: "top" },
+          { x: 10, y: 0, layer: "top" },
+        ],
+      },
+    ],
+  }
+  const legacyPipeline = new AutoroutingPipelineSolver9_PreloadedTraceGraph(
+    legacySrj,
+  )
+  legacyPipeline.traceSimplificationSolver = {
+    simplifiedHdRoutes: [createRoute()],
+  } as TraceSimplificationSolver
+  const legacyTraceWidthStep = legacyPipeline.pipelineDef.find(
+    (step) => step.solverName === "traceWidthSolver",
+  )!
+  const [legacyInput] = legacyTraceWidthStep.getConstructorParams(
+    legacyPipeline,
+  ) as [TraceWidthSolverInput]
+  const legacySolver = new TraceWidthSolver(legacyInput)
+
+  legacySolver.solve()
+
+  expect(legacySolver.solved).toBeTrue()
+  expect(legacySolver.failed).toBeFalse()
+  expect(legacySolver.getHdRoutesWithWidths()[0]?.traceThickness).toBe(0.05)
 })
