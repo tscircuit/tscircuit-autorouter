@@ -79,6 +79,8 @@ interface Obstacle {
 
 interface SimpleRouteConnection {
   name: string
+  minTraceWidth?: number // Hard per-connection lower bound in millimeters
+  nominalTraceWidth?: number // Preferred width; may narrow to minTraceWidth
   pointsToConnect: Array<{ x: number; y: number; layer: string }>
 }
 

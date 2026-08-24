@@ -139,6 +139,12 @@ export interface SimpleRouteConnection {
   isOffBoard?: boolean
   netConnectionName?: string
   __netConnectionName?: string
+  /**
+   * Hard lower bound for routed copper width in millimeters. The board-level
+   * minTraceWidth still applies when it is larger.
+   */
+  minTraceWidth?: number
+  /** Preferred width that may be reduced when minTraceWidth is omitted. */
   nominalTraceWidth?: number
   pointsToConnect: Array<ConnectionPoint>
 
