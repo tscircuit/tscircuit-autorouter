@@ -5,10 +5,7 @@ import simpleRouteJson from "../../fixtures/bug-reports/bugreport99-mangopi-r3c-
   type: "json",
 }
 
-const runWholePipeline = process.env.RUN_BUGREPORT99_MANGOPI_PIPELINE9 === "1"
-const wholePipelineTest = runWholePipeline ? test : test.skip
-
-wholePipelineTest(
+test.skip(
   "manual: Pipeline 9 reaches MangoPi power expansion and later reports solved",
   () => {
     const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(

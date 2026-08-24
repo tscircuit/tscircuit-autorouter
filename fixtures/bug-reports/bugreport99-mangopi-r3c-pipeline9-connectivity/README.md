@@ -40,10 +40,10 @@ Run the captured-output test:
 bun test tests/bugs/bugreport99-mangopi-r3c-pipeline9-connectivity.test.ts --timeout 9999999
 ```
 
-The end-to-end solve is opt-in because the observed run took 1,122 seconds:
+The end-to-end solve is skipped in CI because the observed run took 1,122
+seconds. Temporarily remove `.skip` from the manual test before running it
+locally:
 
 ```sh
-RUN_BUGREPORT99_MANGOPI_PIPELINE9=1 \
-  bun test tests/bugs/bugreport99-mangopi-r3c-pipeline9-connectivity.manual.test.ts \
-  --timeout 9999999
+bun test tests/bugs/bugreport99-mangopi-r3c-pipeline9-connectivity.manual.test.ts --timeout 9999999
 ```
