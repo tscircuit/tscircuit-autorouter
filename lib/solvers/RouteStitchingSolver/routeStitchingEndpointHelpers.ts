@@ -13,6 +13,33 @@ import {
  */
 export const ENDPOINT_MATCH_TOLERANCE = 0.1
 
+const isBetterEndpointForTerminal = ({
+  candidate,
+  current,
+  terminal,
+}: {
+  candidate: Point3
+  current: Point3
+  terminal: Point3
+}): boolean => {
+  const candidateDistance = distance(candidate, terminal)
+  const currentDistance = distance(current, terminal)
+  if (candidateDistance < currentDistance - DISTANCE_TIE_TOLERANCE) {
+    return true
+  }
+  if (Math.abs(candidateDistance - currentDistance) > DISTANCE_TIE_TOLERANCE) {
+    return false
+  }
+
+  const candidateMatchesLayer = candidate.z === terminal.z
+  const currentMatchesLayer = current.z === terminal.z
+  if (candidateMatchesLayer !== currentMatchesLayer) {
+    return candidateMatchesLayer
+  }
+
+  return comparePoints(candidate, current) < 0
+}
+
 type EndpointEdge = {
   nextHash: string
   routeIndex: number | null
@@ -98,14 +125,18 @@ export class EndpointClusterIndex {
     for (const endpoint of candidateEndpoints) {
       const dist = distance(point, endpoint)
       const endpointHash = this.getEndpointKey(connectionName, endpoint)
+      const endpointMatchesLayer = endpoint.z === point.z
+      const bestEndpointMatchesLayer = bestEndpoint?.z === point.z
       if (
         dist < bestDist - DISTANCE_TIE_TOLERANCE ||
         (Math.abs(dist - bestDist) <= DISTANCE_TIE_TOLERANCE &&
-          (bestHash === null ||
-            endpointHash.localeCompare(bestHash) < 0 ||
-            (endpointHash === bestHash &&
-              bestEndpoint !== null &&
-              comparePoints(endpoint, bestEndpoint) < 0)))
+          ((endpointMatchesLayer && !bestEndpointMatchesLayer) ||
+            (endpointMatchesLayer === bestEndpointMatchesLayer &&
+              (bestHash === null ||
+                endpointHash.localeCompare(bestHash) < 0 ||
+                (endpointHash === bestHash &&
+                  bestEndpoint !== null &&
+                  comparePoints(endpoint, bestEndpoint) < 0)))))
       ) {
         bestDist = dist
         bestHash = endpointHash
@@ -146,15 +177,15 @@ export const selectIslandEndpoints = (params: {
   globalEnd: Point3
 }) => {
   const sortedEndpoints = [...params.possibleEndpoints].sort(comparePoints)
-  const start = sortedEndpoints.reduce((bestPoint, point) => {
-    const pointDistance = distance(point, params.globalStart)
-    const bestDistance = distance(bestPoint, params.globalStart)
-    return pointDistance < bestDistance - DISTANCE_TIE_TOLERANCE ||
-      (Math.abs(pointDistance - bestDistance) <= DISTANCE_TIE_TOLERANCE &&
-        comparePoints(point, bestPoint) < 0)
+  const start = sortedEndpoints.reduce((bestPoint, point) =>
+    isBetterEndpointForTerminal({
+      candidate: point,
+      current: bestPoint,
+      terminal: params.globalStart,
+    })
       ? point
-      : bestPoint
-  })
+      : bestPoint,
+  )
 
   const remainingEndpoints = sortedEndpoints.filter((point) => point !== start)
 
@@ -163,15 +194,15 @@ export const selectIslandEndpoints = (params: {
       ? remainingEndpoints
       : params.possibleEndpoints
 
-  const end = endCandidates.reduce((bestPoint, point) => {
-    const pointDistance = distance(point, params.globalEnd)
-    const bestDistance = distance(bestPoint, params.globalEnd)
-    return pointDistance < bestDistance - DISTANCE_TIE_TOLERANCE ||
-      (Math.abs(pointDistance - bestDistance) <= DISTANCE_TIE_TOLERANCE &&
-        comparePoints(point, bestPoint) < 0)
+  const end = endCandidates.reduce((bestPoint, point) =>
+    isBetterEndpointForTerminal({
+      candidate: point,
+      current: bestPoint,
+      terminal: params.globalEnd,
+    })
       ? point
-      : bestPoint
-  })
+      : bestPoint,
+  )
 
   return { start, end }
 }
@@ -185,22 +216,24 @@ export const snapIslandEndpointToNearestTerminal = (params: {
   terminals: Point3[]
 }) => {
   const sortedTerminals = [...params.terminals].sort(comparePoints)
+  if (sortedTerminals.length === 0) return params.islandEndpoint
   let closestTerminal = sortedTerminals[0]
-  let closestDistance = distance(params.islandEndpoint, closestTerminal)
 
   for (const terminal of sortedTerminals.slice(1)) {
-    const terminalDistance = distance(params.islandEndpoint, terminal)
     if (
-      terminalDistance < closestDistance - DISTANCE_TIE_TOLERANCE ||
-      (Math.abs(terminalDistance - closestDistance) <= DISTANCE_TIE_TOLERANCE &&
-        comparePoints(terminal, closestTerminal) < 0)
+      isBetterEndpointForTerminal({
+        candidate: terminal,
+        current: closestTerminal,
+        terminal: params.islandEndpoint,
+      })
     ) {
       closestTerminal = terminal
-      closestDistance = terminalDistance
     }
   }
 
-  return closestDistance <= MAX_TERMINAL_STITCH_GAP_DISTANCE_3
+  return closestTerminal.z === params.islandEndpoint.z &&
+    distance(params.islandEndpoint, closestTerminal) <=
+      MAX_TERMINAL_STITCH_GAP_DISTANCE_3
     ? closestTerminal
     : params.islandEndpoint
 }

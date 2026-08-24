@@ -19,6 +19,7 @@ import {
 } from "./routeStitchingEndpointHelpers"
 import {
   compareRoutes,
+  DISTANCE_TIE_TOLERANCE,
   MAX_TERMINAL_STITCH_GAP_DISTANCE_3,
 } from "./routeStitchingShared"
 
@@ -264,9 +265,20 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
           globalEnd,
         }))
 
+        const directTerminalDistance =
+          distance(start, globalStart) + distance(end, globalEnd)
+        const swappedTerminalDistance =
+          distance(start, globalEnd) + distance(end, globalStart)
+        const directLayerMatchCount =
+          Number(start.z === globalStart.z) + Number(end.z === globalEnd.z)
+        const swappedLayerMatchCount =
+          Number(start.z === globalEnd.z) + Number(end.z === globalStart.z)
         if (
-          distance(start, connection.pointsToConnect[1]) <
-          distance(end, connection.pointsToConnect[0])
+          swappedTerminalDistance <
+            directTerminalDistance - DISTANCE_TIE_TOLERANCE ||
+          (Math.abs(swappedTerminalDistance - directTerminalDistance) <=
+            DISTANCE_TIE_TOLERANCE &&
+            swappedLayerMatchCount > directLayerMatchCount)
         ) {
           ;[start, end] = [end, start]
         }

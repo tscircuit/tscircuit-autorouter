@@ -181,6 +181,7 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
     }
 
     let bestDist = Infinity
+    let bestHasLayerMatch = false
     let firstRoute = canonicalHdRoutes[0]
     let orientation: "start-to-end" | "end-to-start" = "start-to-end"
 
@@ -199,23 +200,48 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
         distEndToFirst,
         distEndToLast,
       )
+      const hasLayerMatch =
+        (opts.start.z === firstPoint.z &&
+          Math.abs(distStartToFirst - minDist) <= DISTANCE_TIE_TOLERANCE) ||
+        (opts.start.z === lastPoint.z &&
+          Math.abs(distStartToLast - minDist) <= DISTANCE_TIE_TOLERANCE) ||
+        (opts.end.z === firstPoint.z &&
+          Math.abs(distEndToFirst - minDist) <= DISTANCE_TIE_TOLERANCE) ||
+        (opts.end.z === lastPoint.z &&
+          Math.abs(distEndToLast - minDist) <= DISTANCE_TIE_TOLERANCE)
 
       if (
         minDist < bestDist - DISTANCE_TIE_TOLERANCE ||
         (Math.abs(minDist - bestDist) <= DISTANCE_TIE_TOLERANCE &&
-          compareRoutes(route, firstRoute!) < 0)
+          ((hasLayerMatch && !bestHasLayerMatch) ||
+            (hasLayerMatch === bestHasLayerMatch &&
+              compareRoutes(route, firstRoute!) < 0)))
       ) {
         bestDist = minDist
+        bestHasLayerMatch = hasLayerMatch
         firstRoute = route
+        const minStartDistance = Math.min(distStartToFirst, distStartToLast)
+        const minEndDistance = Math.min(distEndToFirst, distEndToLast)
+        const startHasLayerMatch =
+          (opts.start.z === firstPoint.z &&
+            Math.abs(distStartToFirst - minStartDistance) <=
+              DISTANCE_TIE_TOLERANCE) ||
+          (opts.start.z === lastPoint.z &&
+            Math.abs(distStartToLast - minStartDistance) <=
+              DISTANCE_TIE_TOLERANCE)
+        const endHasLayerMatch =
+          (opts.end.z === firstPoint.z &&
+            Math.abs(distEndToFirst - minEndDistance) <=
+              DISTANCE_TIE_TOLERANCE) ||
+          (opts.end.z === lastPoint.z &&
+            Math.abs(distEndToLast - minEndDistance) <= DISTANCE_TIE_TOLERANCE)
         if (
-          Math.min(distEndToFirst, distEndToLast) <
-            Math.min(distStartToFirst, distStartToLast) -
-              DISTANCE_TIE_TOLERANCE ||
-          (Math.abs(
-            Math.min(distEndToFirst, distEndToLast) -
-              Math.min(distStartToFirst, distStartToLast),
-          ) <= DISTANCE_TIE_TOLERANCE &&
-            comparePoints(opts.end, opts.start) < 0)
+          minEndDistance < minStartDistance - DISTANCE_TIE_TOLERANCE ||
+          (Math.abs(minEndDistance - minStartDistance) <=
+            DISTANCE_TIE_TOLERANCE &&
+            ((endHasLayerMatch && !startHasLayerMatch) ||
+              (endHasLayerMatch === startHasLayerMatch &&
+                comparePoints(opts.end, opts.start) < 0)))
         ) {
           orientation = "end-to-start"
         } else {
@@ -236,10 +262,14 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
     const firstRouteLastPoint = firstRoute.route[firstRoute.route.length - 1]
     const distToFirst = distance(this.start, firstRouteFirstPoint)
     const distToLast = distance(this.start, firstRouteLastPoint)
+    const firstPointMatchesLayer = this.start.z === firstRouteFirstPoint.z
+    const lastPointMatchesLayer = this.start.z === firstRouteLastPoint.z
     const closestFirstRoutePoint =
       distToFirst < distToLast - DISTANCE_TIE_TOLERANCE ||
       (Math.abs(distToFirst - distToLast) <= DISTANCE_TIE_TOLERANCE &&
-        comparePoints(firstRouteFirstPoint, firstRouteLastPoint) <= 0)
+        ((firstPointMatchesLayer && !lastPointMatchesLayer) ||
+          (firstPointMatchesLayer === lastPointMatchesLayer &&
+            comparePoints(firstRouteFirstPoint, firstRouteLastPoint) <= 0)))
         ? firstRouteFirstPoint
         : firstRouteLastPoint
     const closestFirstRoutePcbPortId =
