@@ -1,14 +1,18 @@
 import { expect, test } from "bun:test"
 import { Pipeline9JointDrcRepairSolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/pipeline9-joint-drc-repair-solver"
+import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import type {
   Obstacle,
   SimpleRouteConnection,
   SimpleRouteJson,
+  SimplifiedPcbTrace,
 } from "lib/types"
 import type { HighDensityRoute } from "lib/types/high-density-types"
+import { convertSrjToGraphicsObject } from "lib/utils/convertSrjToGraphicsObject"
 import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
+import { getGraphicsSvgFrames } from "../fixtures/solver-svg-frames"
 
-test("Pipeline9 joint DRC uses the SRJ trace-to-pad clearance", () => {
+test("Pipeline9 joint DRC uses the SRJ trace-to-pad clearance", async () => {
   const routeY = -0.36
   const connection: SimpleRouteConnection = {
     name: "route",
@@ -106,4 +110,92 @@ test("Pipeline9 joint DRC uses the SRJ trace-to-pad clearance", () => {
   expect(solver.stats.initialJointDrcIssueCount).toBe(0)
   expect(solver.solved).toBeTrue()
   expect(solver.getOutput()).toEqual([route])
+
+  const routedTrace: SimplifiedPcbTrace = {
+    type: "pcb_trace",
+    pcb_trace_id: "pcb_trace_route",
+    connection_name: "route",
+    connectsTo: ["route_start", "route_end"],
+    route: [
+      {
+        route_type: "wire",
+        x: -2,
+        y: routeY,
+        width: 0.1,
+        layer: "top",
+        start_pcb_port_id: "route_start",
+      },
+      {
+        route_type: "wire",
+        x: 2,
+        y: routeY,
+        width: 0.1,
+        layer: "top",
+        end_pcb_port_id: "route_end",
+      },
+    ],
+  }
+  const benchmarkClearanceDrc = evaluateRelaxedDrc({
+    inputSrj: srj,
+    srjWithPointPairs: srj,
+    routedTraces: [routedTrace],
+  })
+  const declaredClearanceDrc = evaluateRelaxedDrc({
+    inputSrj: srj,
+    srjWithPointPairs: srj,
+    routedTraces: [routedTrace],
+    drcOptions: { traceClearance: srj.minTraceToPadEdgeClearance },
+  })
+
+  expect(benchmarkClearanceDrc.errors.length).toBeGreaterThan(0)
+  expect(declaredClearanceDrc.errors).toHaveLength(0)
+  const routeGraphics = convertSrjToGraphicsObject(
+    { ...srj, traces: [routedTrace] },
+    { traceColorMode: "net" },
+  )
+  await expect(
+    getGraphicsSvgFrames({
+      columns: 2,
+      backgroundColor: "white",
+      frames: [
+        {
+          name: `Old hard-coded 0.10mm: ${benchmarkClearanceDrc.errors.length} DRC error`,
+          graphics: {
+            ...routeGraphics,
+            rects: [
+              ...(routeGraphics.rects ?? []),
+              {
+                center: { x: 0, y: 0 },
+                width: 0.7,
+                height: 0.7,
+                fill: "rgba(255, 0, 0, 0.08)",
+                stroke: "red",
+                label: "0.10mm pad clearance boundary",
+              },
+            ],
+          },
+        },
+        {
+          name: `SRJ 0.05mm: ${declaredClearanceDrc.errors.length} DRC errors`,
+          graphics: {
+            ...routeGraphics,
+            rects: [
+              ...(routeGraphics.rects ?? []),
+              {
+                center: { x: 0, y: 0 },
+                width: 0.6,
+                height: 0.6,
+                fill: "rgba(0, 128, 0, 0.08)",
+                stroke: "green",
+                label: "0.05mm pad clearance boundary",
+              },
+            ],
+          },
+        },
+      ],
+    }),
+  ).toMatchSvgSnapshot(import.meta.path, {
+    svgName: "clearance-comparison",
+    tolerance: 0,
+  })
 })
