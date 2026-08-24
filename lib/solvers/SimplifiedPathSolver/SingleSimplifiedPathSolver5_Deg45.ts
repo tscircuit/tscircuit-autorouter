@@ -32,6 +32,8 @@ interface PathSegment {
   endDistance: number
 }
 
+const DISTANCE_EPSILON = 1e-9
+
 export class SingleSimplifiedPathSolver5 extends SingleSimplifiedPathSolver {
   private pathSegments: PathSegment[] = []
   private totalPathLength: number = 0
@@ -68,6 +70,7 @@ export class SingleSimplifiedPathSolver5 extends SingleSimplifiedPathSolver {
   TRACE_THICKNESS = 0.15
 
   TAIL_JUMP_RATIO: number = 0.8
+  continueAfterBlockedEnd: boolean
 
   private isSameNetRoute(otherRoute: HighDensityIntraNodeRoute): boolean {
     const inputRouteIds = [
@@ -89,9 +92,12 @@ export class SingleSimplifiedPathSolver5 extends SingleSimplifiedPathSolver {
   }
 
   constructor(
-    params: ConstructorParameters<typeof SingleSimplifiedPathSolver>[0],
+    params: ConstructorParameters<typeof SingleSimplifiedPathSolver>[0] & {
+      continueAfterBlockedEnd?: boolean
+    },
   ) {
     super(params)
+    this.continueAfterBlockedEnd = params.continueAfterBlockedEnd ?? false
 
     this.cachedValidPathSegments = new Set()
 
@@ -607,26 +613,56 @@ export class SingleSimplifiedPathSolver5 extends SingleSimplifiedPathSolver {
         return
       }
 
-      // No valid 45-degree path to the end. Keep any valid simplified prefix
-      // and preserve only the remaining original tail to guarantee connectivity.
-      const connectorStartDistance = this.lastValidPath
-        ? this.lastValidPathHeadDistance
-        : this.tailDistanceAlongPath
+      if (!this.continueAfterBlockedEnd) {
+        const connectorStartDistance = this.lastValidPath
+          ? this.lastValidPathHeadDistance
+          : this.tailDistanceAlongPath
+
+        if (this.lastValidPath) {
+          this.addPathToResult(this.lastValidPath)
+          this.lastValidPath = null
+        }
+
+        this.appendOriginalRouteSlice(
+          connectorStartDistance,
+          this.inputRoute.route.length - 1,
+        )
+        this.tailDistanceAlongPath = this.totalPathLength
+        this.headDistanceAlongPath = this.totalPathLength
+        this.solved = true
+        return
+      }
 
       if (this.lastValidPath) {
         this.addPathToResult(this.lastValidPath)
+        this.tailDistanceAlongPath = this.lastValidPathHeadDistance
+        this.headDistanceAlongPath = this.tailDistanceAlongPath
         this.lastValidPath = null
+        return
       }
 
-      const startIndex = this.getNearestIndexForDistance(connectorStartDistance)
-      this.appendOriginalRouteSlice(
-        connectorStartDistance,
-        this.inputRoute.route.length - 1,
-      )
+      if (this.currentStepSize > this.minStepSize) {
+        this.currentStepSize = Math.max(
+          this.minStepSize,
+          this.currentStepSize * this.STEP_SIZE_REDUCTION_FACTOR,
+        )
+        this.headDistanceAlongPath = this.tailDistanceAlongPath
+        return
+      }
 
-      this.tailDistanceAlongPath = this.totalPathLength
-      this.headDistanceAlongPath = this.totalPathLength
-      this.solved = true
+      const nextOriginalSegment = this.pathSegments.find(
+        (segment) =>
+          segment.endDistance > this.tailDistanceAlongPath + DISTANCE_EPSILON,
+      )
+      if (!nextOriginalSegment) {
+        this.tailDistanceAlongPath = this.totalPathLength
+        this.headDistanceAlongPath = this.totalPathLength
+        return
+      }
+
+      this.addPathToResult([nextOriginalSegment.end])
+      this.tailDistanceAlongPath = nextOriginalSegment.endDistance
+      this.headDistanceAlongPath = this.tailDistanceAlongPath
       return
     }
 

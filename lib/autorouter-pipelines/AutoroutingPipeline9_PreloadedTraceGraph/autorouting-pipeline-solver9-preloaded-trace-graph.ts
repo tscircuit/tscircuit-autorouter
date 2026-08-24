@@ -762,6 +762,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             ),
             enableCrossingViaReduction: true,
             preserveRouteEndpoints: true,
+            continueAfterBlockedEnd: true,
             iterations: 2,
           },
         ]

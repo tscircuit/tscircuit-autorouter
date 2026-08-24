@@ -97,6 +97,7 @@ export class TraceSimplificationSolver extends BaseSolver {
    *   - enableCrossingViaReduction: Enables coordinated crossing layer swaps
    *   - preserveRouteEndpoints: Prevents simplification from moving endpoint
    *     coordinates or layers when routes represent spliceable local sections
+   *   - continueAfterBlockedEnd: Continues simplifying after a blocked final shortcut
    *   - iterations: Number of complete simplification iterations (default: 2)
    */
   constructor(
@@ -114,6 +115,7 @@ export class TraceSimplificationSolver extends BaseSolver {
       readonly netByConnectionName?: ReadonlyMap<string, string>
       readonly enableCrossingViaReduction?: boolean
       readonly preserveRouteEndpoints?: boolean
+      readonly continueAfterBlockedEnd?: boolean
     },
   ) {
     super()
@@ -418,6 +420,8 @@ export class TraceSimplificationSolver extends BaseSolver {
             minBoardEdgeClearance:
               this.simplificationConfig.minBoardEdgeClearance,
             defaultViaDiameter: this.simplificationConfig.defaultViaDiameter,
+            continueAfterBlockedEnd:
+              this.simplificationConfig.continueAfterBlockedEnd,
           })
           this.extractResult = (s) =>
             (s as MultiSimplifiedPathSolver).simplifiedHdRoutes
