@@ -143,10 +143,7 @@ export class TraceWidthSolver extends BaseSolver {
         this.minTraceWidth,
         connection.minTraceWidth ?? this.minTraceWidth,
       )
-      const nominal = Math.max(
-        minimum,
-        connection.nominalTraceWidth ?? minimum,
-      )
+      const nominal = Math.max(minimum, connection.nominalTraceWidth ?? minimum)
       this.connectionTraceWidthConstraintsMap.set(connection.name, {
         isMinimumRequired: connection.minTraceWidth !== undefined,
         minimum,
@@ -208,8 +205,7 @@ export class TraceWidthSolver extends BaseSolver {
       this.nominalTraceWidth = widthConstraints.nominal
       this.currentMinTraceWidth = widthConstraints.minimum
       this.currentMinimumIsRequired = widthConstraints.isMinimumRequired
-      const midWidth =
-        (this.nominalTraceWidth + this.currentMinTraceWidth) / 2
+      const midWidth = (this.nominalTraceWidth + this.currentMinTraceWidth) / 2
       this.TRACE_WIDTH_SCHEDULE = this.currentMinimumIsRequired
         ? Array.from(
             new Set([

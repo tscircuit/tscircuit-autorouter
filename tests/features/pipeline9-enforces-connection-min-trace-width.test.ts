@@ -89,9 +89,7 @@ test("Pipeline9 never silently reduces a connection below its required width", (
     ]
     const solver = new TraceWidthSolver(input)
 
-    expect(input.connection[0]?.minTraceWidth).toBe(
-      testCase.expectedMinimum,
-    )
+    expect(input.connection[0]?.minTraceWidth).toBe(testCase.expectedMinimum)
     solver.solve()
 
     if (testCase.shouldFail) {
