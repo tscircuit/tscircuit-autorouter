@@ -667,11 +667,13 @@ function createPcbPadElements(srj: SimpleRouteJson): AnyCircuitElement[] {
         ...connectedTo.filter((id) => declaredPcbPortIds.has(id)),
       ]),
     ]
-    const pcbPortId = getBestObstaclePcbPortId(
-      obstacle.center,
-      candidatePortIds,
-      portPositionMap,
-    )
+    const pcbPortId =
+      circuitJsonMetadata.pcb_port_id ??
+      getBestObstaclePcbPortId(
+        obstacle.center,
+        candidatePortIds,
+        portPositionMap,
+      )
 
     if (!smtPadId && !platedHoleId && !pcbPortId) continue
 
@@ -981,13 +983,42 @@ export function convertToCircuitJson(
       srjWithPointPairs.connections,
       getConnectivityMapFromSimpleRouteJson(srjWithPointPairs),
     )
+  const originalTraceIds = new Set(
+    (originalSrj?.traces ?? []).map((trace) => trace.pcb_trace_id),
+  )
+  const originalRouteCircuitJsonSourceTraceIdResolver =
+    includeOriginalConnections && originalSrj
+      ? createCircuitJsonSourceTraceIdResolver(
+          [...srjWithPointPairs.connections, ...originalSrj.connections],
+          getConnectivityMapFromSimpleRouteJson(originalSrj),
+        )
+      : undefined
 
   // Process routes based on their type
   if (routes.length > 0) {
     if ("type" in routes[0] && routes[0].type === "pcb_trace") {
       // Handle SimplifiedPcbTraces
       ;(routes as SimplifiedPcbTrace[]).forEach((trace) => {
+        const originalTraceId =
+          trace.__replaces_pcb_trace_id ?? trace.pcb_trace_id
+        const originalConnectionName =
+          originalRouteCircuitJsonSourceTraceIdResolver &&
+          originalTraceIds.has(originalTraceId)
+            ? (resolveCircuitJsonSourceTraceId(
+                originalRouteCircuitJsonSourceTraceIdResolver,
+                trace.connection_name,
+              ) ??
+              trace.connectsTo
+                ?.map((connectionId) =>
+                  resolveCircuitJsonSourceTraceId(
+                    originalRouteCircuitJsonSourceTraceIdResolver,
+                    connectionId,
+                  ),
+                )
+                .find((mappedConnectionName) => Boolean(mappedConnectionName)))
+            : undefined
         const connectionName =
+          originalConnectionName ??
           resolveCircuitJsonSourceTraceId(
             routeCircuitJsonSourceTraceIdResolver,
             trace.connection_name,
