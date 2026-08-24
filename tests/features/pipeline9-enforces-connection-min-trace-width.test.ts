@@ -7,6 +7,10 @@ import {
 } from "lib/solvers/TraceWidthSolver/TraceWidthSolver"
 import type { HighDensityRoute } from "lib/types/high-density-types"
 import type { Obstacle, SimpleRouteJson } from "lib/types"
+import {
+  getGraphicsSvgFrames,
+  type GraphicsSvgFrame,
+} from "../fixtures/solver-svg-frames"
 
 const createRoute = (): HighDensityRoute => ({
   connectionName: "POWER",
@@ -39,7 +43,7 @@ const createCorridorObstacles = (edgeClearance: number): Obstacle[] => [
   },
 ]
 
-test("Pipeline9 never silently reduces a connection below its required width", () => {
+test("Pipeline9 never silently reduces a connection below its required width", async () => {
   const cases = [
     {
       nominalTraceWidth: 0.18,
@@ -47,6 +51,7 @@ test("Pipeline9 never silently reduces a connection below its required width", (
       edgeClearance: 0.17,
       expectedMinimum: 0.18,
       shouldFail: true,
+      snapshotName: "Required 0.18mm cannot fit the 0.34mm corridor",
     },
     {
       nominalTraceWidth: 0.5,
@@ -54,8 +59,10 @@ test("Pipeline9 never silently reduces a connection below its required width", (
       edgeClearance: 0.2,
       expectedMinimum: 0.18,
       shouldFail: false,
+      snapshotName: "Nominal 0.50mm narrows to required 0.18mm",
     },
   ]
+  const frames: GraphicsSvgFrame[] = []
 
   for (const testCase of cases) {
     const route = createRoute()
@@ -91,6 +98,7 @@ test("Pipeline9 never silently reduces a connection below its required width", (
 
     expect(input.connection[0]?.minTraceWidth).toBe(testCase.expectedMinimum)
     solver.solve()
+    frames.push({ name: testCase.snapshotName, graphics: solver.visualize() })
 
     if (testCase.shouldFail) {
       expect(solver.failed).toBeTrue()
@@ -152,4 +160,15 @@ test("Pipeline9 never silently reduces a connection below its required width", (
   expect(legacySolver.solved).toBeTrue()
   expect(legacySolver.failed).toBeFalse()
   expect(legacySolver.getHdRoutesWithWidths()[0]?.traceThickness).toBe(0.05)
+  frames.push({
+    name: "Legacy nominal 0.05mm remains preferred",
+    graphics: legacySolver.visualize(),
+  })
+
+  await expect(
+    getGraphicsSvgFrames({ frames, columns: 3, backgroundColor: "white" }),
+  ).toMatchSvgSnapshot(import.meta.path, {
+    svgName: "width-policy-comparison",
+    tolerance: 0,
+  })
 })
