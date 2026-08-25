@@ -677,10 +677,16 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       mutatedPreloadedTraces: currentMutatedPreloadedTraces,
       newTraces: currentNewTraces,
     })
+    const traceClearance =
+      params.originalSrj.minTraceToPadEdgeClearance ??
+      RELAXED_DRC_OPTIONS.traceClearance ??
+      0.1
+    const viaClearance = RELAXED_DRC_OPTIONS.viaClearance ?? 0.1
     const baselineDrc = evaluateRelaxedDrc({
       inputSrj: params.originalSrj,
       srjWithPointPairs: params.srjWithPointPairs,
       routedTraces: [],
+      drcOptions: { traceClearance },
     })
     const baselineEvaluatedTraceIds = new Set(
       (params.originalSrj.traces ?? []).map((trace) => trace.pcb_trace_id),
@@ -701,6 +707,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       inputSrj: params.originalSrj,
       srjWithPointPairs: params.srjWithPointPairs,
       routedTraces: preparedCurrentOutput.routedTraces,
+      drcOptions: { traceClearance },
     })
     const currentEvaluatedTraceIds = new Set(
       combinePreloadedAndRoutedTraces(
@@ -957,8 +964,6 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         ...syntheticConnectionByName.values(),
       ],
     }
-    const traceClearance = RELAXED_DRC_OPTIONS.traceClearance ?? 0.1
-    const viaClearance = RELAXED_DRC_OPTIONS.viaClearance ?? 0.1
     const autoroutingDrcEngine = new AutoroutingDrcEngine(
       {
         ...extendedSrjWithPointPairs,
@@ -1150,6 +1155,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         inputSrj: params.originalSrj,
         srjWithPointPairs: params.srjWithPointPairs,
         routedTraces: candidateDrcInput.routedTraces,
+        drcOptions: { traceClearance },
       })
       const evaluatedTraceIds = new Set(
         candidateDrcInput.evaluatedTraces.map((trace) => trace.pcb_trace_id),
