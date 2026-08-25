@@ -12,8 +12,9 @@ const [inputSrj, options] = constructorArgsJson as [
 ]
 
 test("bugreport98 completes MangoPi power-trace expansion", () => {
-  // This regression verifies budget-aware stage completion, not PCB DRC or
-  // fabrication readiness of the returned best-effort approximation.
+  // This historical input contains a through-obstacle marker that falls inside
+  // an oval pad's rectangular approximation but outside its actual copper. The
+  // expander must fail closed and preserve that unsupported baseline exactly.
   const solver = new PowerTraceExpansionSolver(
     structuredClone(inputSrj),
     structuredClone(options),
@@ -33,11 +34,17 @@ test("bugreport98 completes MangoPi power-trace expansion", () => {
     finalAcceptanceUsed: false,
     cleanupCompleted: true,
     clearanceRepairCompleted: true,
-    cleanupStatus: "completed",
-    clearanceRepairStatus: "completed",
-    completionReason: "expansion_budget",
+    cleanupStatus: "connectivity_rollback",
+    clearanceRepairStatus: "connectivity_rollback",
+    connectivityRollbackCount: 2,
+    connectivityRollbackPhases: ["cleanup", "clearance-repair"],
+    completionReason: "connectivity_rollback",
     resultStatus: "best_effort",
   })
+  expect(childSolver.stats.connectivityValidationError).toContain(
+    "through_obstacle has no same-net multilayer obstacle witness",
+  )
+  expect(output).toEqual(inputSrj.traces ?? [])
   expect(output).toHaveLength(405)
   expect(new Set(output.map((trace) => trace.pcb_trace_id)).size).toBe(405)
 })
