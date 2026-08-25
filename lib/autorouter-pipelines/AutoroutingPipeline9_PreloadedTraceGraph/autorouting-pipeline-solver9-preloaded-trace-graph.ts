@@ -84,6 +84,7 @@ import {
   type PreloadedHighDensityRoute,
 } from "./convert-preloaded-traces-to-hd-routes"
 import { Pipeline9HighDensitySolver } from "./pipeline9-high-density-solver"
+import { Pipeline9BranchRipDrcFallbackSolver } from "./pipeline9-branch-rip-drc-fallback-solver"
 import { Pipeline9JointDrcRepairSolver } from "./pipeline9-joint-drc-repair-solver"
 import { PreloadedTraceGraphSolver } from "./preloaded-trace-graph-solver"
 import { PreprocessSimpleRouteJsonWithoutTraceObstaclesSolver } from "./preprocess-simple-route-json-without-trace-obstacles-solver"
@@ -107,6 +108,8 @@ interface CapacityMeshSolverOptions {
   minNodeArea?: number
   visualizationTraceColorMode?: TraceColorMode
   powerTraceExpansion?: PowerTraceExpanderOptions
+  /** Internal recursion guard for the post-route branch-rip DRC fallback. */
+  disableBranchRipDrcFallback?: boolean
 }
 export type AutoroutingPipelineSolverOptions = CapacityMeshSolverOptions
 
@@ -260,6 +263,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
   highDensityStitchSolver?: MultipleHighDensityRouteStitchSolver3
   globalDrcForceImproveSolver?: GlobalDrcForceImproveSolver
   pipeline9JointDrcRepairSolver?: Pipeline9JointDrcRepairSolver
+  pipeline9BranchRipDrcFallbackSolver?: Pipeline9BranchRipDrcFallbackSolver
   singleLayerNodeMerger?: SingleLayerNodeMergerSolver
   strawSolver?: StrawSolver
   deadEndSolver?: DeadEndSolver
@@ -948,6 +952,38 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
         ]
       },
     ),
+    definePipelineStep(
+      "pipeline9BranchRipDrcFallbackSolver",
+      Pipeline9BranchRipDrcFallbackSolver,
+      (cms) => {
+        const newlyRoutedTraces = cms.powerTraceExpansionSolver!.getOutput()
+        return [
+          {
+            originalSrj: cms.originalSrj,
+            currentTraces: [
+              ...cms.getPowerTraceExpansionFixedTraces(),
+              ...newlyRoutedTraces,
+            ] as SimplifiedPcbTraces,
+            eligibleTraceIds: new Set(
+              cms.opts.disableBranchRipDrcFallback
+                ? []
+                : newlyRoutedTraces.map((trace) => trace.pcb_trace_id),
+            ),
+            createNestedSolver: (input: SimpleRouteJson) =>
+              new AutoroutingPipelineSolver9_PreloadedTraceGraph(input, {
+                cacheProvider: null,
+                effort: cms.effort,
+                maxNodeDimension: cms.opts.maxNodeDimension,
+                maxNodeRatio: cms.opts.maxNodeRatio,
+                minNodeArea: cms.opts.minNodeArea,
+                visualizationTraceColorMode: cms.visualizationTraceColorMode,
+                powerTraceExpansion: cms.opts.powerTraceExpansion,
+                disableBranchRipDrcFallback: true,
+              }),
+          },
+        ]
+      },
+    ),
   ]
 
   constructor(
@@ -1484,6 +1520,17 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
         "Pipeline9 invariant violated: solved pipeline is missing the unconditional power-trace expansion solver",
       )
     }
+    const finalTraces = this.pipeline9BranchRipDrcFallbackSolver?.getOutput()
+    if (finalTraces) {
+      const originalPreloadedTraceIds = new Set(
+        (this.originalSrj.traces ?? []).map((trace) => trace.pcb_trace_id),
+      )
+      return finalTraces.filter(
+        (trace) =>
+          trace.__replaces_pcb_trace_id !== undefined ||
+          !originalPreloadedTraceIds.has(trace.pcb_trace_id),
+      )
+    }
     return [
       ...this.getPowerTraceExpansionFixedTraces().filter(
         (trace) => trace.__replaces_pcb_trace_id !== undefined,
@@ -1501,7 +1548,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
         "Pipeline9 invariant violated: solved pipeline is missing the unconditional power-trace expansion solver",
       )
     }
-    const traces = [
+    const traces = this.pipeline9BranchRipDrcFallbackSolver?.getOutput() ?? [
       ...this.getPowerTraceExpansionFixedTraces(),
       ...this.powerTraceExpansionSolver.getOutput(),
     ]

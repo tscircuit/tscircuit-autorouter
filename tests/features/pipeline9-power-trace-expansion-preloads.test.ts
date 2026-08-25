@@ -62,7 +62,9 @@ test("Pipeline9 power expansion uses current preloads without disabling its stag
   const newlyRoutedTraces: SimplifiedPcbTraces = [
     createTrace("new-route", "NEW", 3),
   ]
-  const powerStep = solver.pipelineDef.at(-1)!
+  const powerStep = solver.pipelineDef.find(
+    (step) => step.solverName === "powerTraceExpansionSolver",
+  )!
 
   expect(() => solver.getOutputSimplifiedPcbTraces()).toThrow(
     "Cannot get output before solving is complete",
@@ -71,7 +73,13 @@ test("Pipeline9 power expansion uses current preloads without disabling its stag
     "Cannot get output before solving is complete",
   )
   expect(powerStep.solverName).toBe("powerTraceExpansionSolver")
+  expect(solver.pipelineDef.at(-1)?.solverName).toBe(
+    "pipeline9BranchRipDrcFallbackSolver",
+  )
   expect(solver.pipelineDef.at(-2)?.solverName).toBe(
+    "powerTraceExpansionSolver",
+  )
+  expect(solver.pipelineDef.at(-3)?.solverName).toBe(
     "lengthMatchingPostProcessingSolver",
   )
   solver.getNewTracesBeforePowerExpansion = () => newlyRoutedTraces
