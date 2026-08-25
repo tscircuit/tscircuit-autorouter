@@ -222,4 +222,4 @@ test("bugreport99 keeps nRF exact DRC net aliases electrically equivalent", asyn
       backgroundColor: "white",
     }),
   ).toMatchSvgSnapshot(import.meta.path, { tolerance: 0 })
-}, 360_000)
+})
