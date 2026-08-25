@@ -182,12 +182,14 @@ const waitForNextPaint = () =>
       typeof window !== "undefined" &&
       typeof window.requestAnimationFrame === "function"
     ) {
-      window.requestAnimationFrame(() => resolve())
+      window.requestAnimationFrame(() => setTimeout(resolve, 0))
       return
     }
 
     setTimeout(resolve, 0)
   })
+
+const SOLVER_UI_YIELD_INTERVAL_MS = 250
 
 const downloadJsonFile = (filename: string, data: unknown) => {
   const blob = new Blob([JSON.stringify(data)], {
@@ -494,6 +496,23 @@ export const AutoroutingPipelineDebugger = ({
     solverToStep.step()
   }
 
+  const stepSolverWhile = async (
+    shouldContinue: () => boolean,
+    onProgress?: () => Promise<void> | void,
+  ) => {
+    let lastYieldTime = performance.now()
+    while (shouldContinue()) {
+      await stepSolver(solver as AsyncPipelineDebuggerSolver)
+      if (
+        performance.now() - lastYieldTime >=
+        SOLVER_UI_YIELD_INTERVAL_MS
+      ) {
+        await (onProgress?.() ?? waitForNextPaint())
+        lastYieldTime = performance.now()
+      }
+    }
+  }
+
   const solveSolver = async (
     solverToSolve: AsyncPipelineDebuggerSolver,
     opts: {
@@ -528,6 +547,22 @@ export const AutoroutingPipelineDebugger = ({
 
         await opts.onProgress()
       }
+      return
+    }
+
+    if (opts.onProgress) {
+      let lastProgressTime = performance.now()
+      while (!solverToSolve.solved && !solverToSolve.failed) {
+        solverToSolve.step()
+        if (
+          performance.now() - lastProgressTime >=
+          SOLVER_UI_YIELD_INTERVAL_MS
+        ) {
+          await opts.onProgress()
+          lastProgressTime = performance.now()
+        }
+      }
+      await opts.onProgress()
       return
     }
 
@@ -671,24 +706,22 @@ export const AutoroutingPipelineDebugger = ({
 
       // Step until we get a new subsolver (null -> something)
       if (initialSubSolver === null) {
-        while (
-          !solver.solved &&
-          !solver.failed &&
-          solver.activeSubSolver === null
-        ) {
-          await stepSolver(solver as AsyncPipelineDebuggerSolver)
-        }
+        await stepSolverWhile(
+          () =>
+            !solver.solved &&
+            !solver.failed &&
+            solver.activeSubSolver === null,
+        )
       }
 
       // Now step until the subsolver completes (something -> null)
       if (solver.activeSubSolver !== null) {
-        while (
-          !solver.solved &&
-          !solver.failed &&
-          solver.activeSubSolver !== null
-        ) {
-          await stepSolver(solver as AsyncPipelineDebuggerSolver)
-        }
+        await stepSolverWhile(
+          () =>
+            !solver.solved &&
+            !solver.failed &&
+            solver.activeSubSolver !== null,
+        )
       }
 
       setForceUpdate((prev) => prev + 1)
@@ -710,26 +743,16 @@ export const AutoroutingPipelineDebugger = ({
       const initialSubSolver = currentPhase.activeSubSolver
 
       // Step until the sub-solver changes or becomes solved
-      while (!solver.solved && !solver.failed) {
+      await stepSolverWhile(() => {
         const currentSubSolver = solver.activeSubSolver?.activeSubSolver
-
-        // Stop if sub-solver changed
-        if (currentSubSolver !== initialSubSolver) {
-          break
-        }
-
-        // Stop if sub-solver is now solved
-        if (currentSubSolver?.solved) {
-          break
-        }
-
-        // Stop if the phase itself changed
-        if (solver.activeSubSolver !== currentPhase) {
-          break
-        }
-
-        await stepSolver(solver as AsyncPipelineDebuggerSolver)
-      }
+        return (
+          !solver.solved &&
+          !solver.failed &&
+          currentSubSolver === initialSubSolver &&
+          !currentSubSolver?.solved &&
+          solver.activeSubSolver === currentPhase
+        )
+      })
 
       setForceUpdate((prev) => prev + 1)
     }

@@ -334,7 +334,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
   readonly includeBoardObstacles: boolean
   readonly enableRegionalFallback: boolean
   readonly maxB01Rips?: number
-  readonly routes: HighDensityIntraNodeRoute[] = []
+  readonly routes: HighDensityIntraNodeRoute[]
   readonly failedSolvers: HighDensitySolverB01[] = []
   readonly unsolvedNodePortPoints: NodeWithPortPoints[]
   readonly fixedRouteReplacements = new Map<string, PreloadedHighDensityRoute>()
@@ -349,6 +349,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
   activeFallbackPromotedFixedRouteConnectionNames = new Set<string>()
   activeFallbackReason: string | null = null
   activeNode: NodeWithPortPoints | null = null
+  readonly standardSolver: HighDensitySolver | null
 
   constructor(params: Pipeline9HighDensitySolverParams) {
     super()
@@ -370,8 +371,29 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     this.enableRegionalFallback = params.enableRegionalFallback ?? true
     this.maxB01Rips = params.maxB01Rips
     this.unsolvedNodePortPoints = [...params.nodePortPoints]
+    this.standardSolver =
+      params.fixedHdRoutes.length === 0
+        ? new HighDensitySolver({
+            nodePortPoints: this.unsolvedNodePortPoints,
+            nodePfById: params.nodePfById,
+            colorMap: this.colorMap,
+            connMap: this.connMap,
+            viaDiameter: this.viaDiameter,
+            traceWidth: this.traceWidth,
+            obstacleMargin: this.obstacleMargin,
+            effort: this.effort,
+            obstacles: this.obstacles,
+            layerCount: this.layerCount,
+            useGrowShrinkHighDensityIntraNodeSolver: true,
+            preserveTerminalPcbPortIds: this.preserveTerminalPcbPortIds,
+            growShrinkFallbackToInvalidGeometryOnFailure: true,
+            captureSearchDebug: false,
+          })
+        : null
+    this.routes = this.standardSolver?.routes ?? []
     this.MAX_ITERATIONS = 100e6 * this.effort
     this.stats = {
+      routingMode: this.standardSolver ? "standard" : "preloaded-b01",
       nodeCount: params.nodePortPoints.length,
       solvedNodeCount: 0,
       fixedObstacleCount: params.fixedHdRoutes.length,
@@ -813,6 +835,19 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
   }
 
   override _step(): void {
+    if (this.standardSolver) {
+      this.standardSolver.step()
+      if (this.standardSolver.failed) {
+        this.error = this.standardSolver.error
+        this.failed = true
+        return
+      }
+      if (this.standardSolver.solved) {
+        this.solved = true
+      }
+      return
+    }
+
     if (this.activeFallbackSolver) {
       this.activeFallbackSolver.step()
       if (this.activeFallbackSolver.failed) {
@@ -941,6 +976,10 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
   }
 
   override visualize(): GraphicsObject {
+    if (this.standardSolver) {
+      return this.standardSolver.visualize()
+    }
+
     return (
       this.activeFallbackSolver?.visualize() ??
       this.activeRegularSolver?.visualize() ??
