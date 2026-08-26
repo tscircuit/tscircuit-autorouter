@@ -27,9 +27,7 @@ test("Pipeline9 records repeated reference DRC work for an Arduino region rerout
   const outputTraces = solver.getOutputSimpleRouteJson().traces ?? []
   expect(outputTraces).toHaveLength(214)
   expect(
-    createHash("sha256")
-      .update(JSON.stringify(outputTraces))
-      .digest("hex"),
+    createHash("sha256").update(JSON.stringify(outputTraces)).digest("hex"),
   ).toBe(EXPECTED_OUTPUT_TRACES_SHA256)
 
   // Captured from core's repro116 region (8..18 mm). On the original board,
