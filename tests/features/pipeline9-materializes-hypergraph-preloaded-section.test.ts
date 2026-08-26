@@ -86,12 +86,22 @@ test("Pipeline9 exposes an accepted preloaded hypergraph route change", () => {
     },
   })
 
-  solver.solve()
-  const tinySolver = (
+  const tinyPipeline = (
     solver as unknown as {
-      tinyPipelineSolver: { getSolvedTinySolver: () => TinyHyperGraphSolver }
+      tinyPipelineSolver: {
+        pipelineDef: Array<{ solverName: string }>
+        getSolvedTinySolver: () => TinyHyperGraphSolver
+      }
     }
-  ).tinyPipelineSolver.getSolvedTinySolver()
+  ).tinyPipelineSolver
+  expect(tinyPipeline.pipelineDef.map((step) => step.solverName)).toEqual([
+    "solveGraph",
+    "optimizeRegionCosts",
+    "optimizeRegionCostsBroad",
+  ])
+
+  solver.solve()
+  const tinySolver = tinyPipeline.getSolvedTinySolver()
   const preloadedRouteId = tinySolver.problem.routeMetadata?.findIndex(
     (metadata) => metadata.preloadedTraceSection !== undefined,
   )
@@ -124,6 +134,14 @@ test("Pipeline9 exposes an accepted preloaded hypergraph route change", () => {
     westPortOnBottom,
     eastPortOnBottom,
   ])
+  tinySolver.problem.initialAssignments = [
+    {
+      routeId: preloadedRouteId,
+      regionId: centerRegionId,
+      fromPortId: westPortOnBottom,
+      toPortId: eastPortOnBottom,
+    },
+  ]
 
   const output = solver.getOutput()
   expect(output.changedPreloadedTraceSections).toEqual([

@@ -12,6 +12,7 @@ const candidate = (
     squaredNodePortPointCount: number
     segmentCount: number
     layerChangeCount: number
+    changedPreloadedTraceSectionCount: number
   }> = {},
 ) => ({
   nodePfSum: 5,
@@ -20,6 +21,7 @@ const candidate = (
   squaredNodePortPointCount: 5_000,
   segmentCount: 400,
   layerChangeCount: 20,
+  changedPreloadedTraceSectionCount: 0,
   ...overrides,
 })
 
@@ -109,6 +111,20 @@ test("trace-density portfolio requires downstream pressure and scale-aware conce
         nodePfSum: 5,
         nodePfSquaredSum: 3.2,
         squaredNodePortPointCount: 4_000,
+      }),
+      40,
+    ),
+  ).toBe(false)
+  expect(
+    shouldSelectTraceDensityAlternative(
+      candidate(),
+      candidate({
+        nodePfSum: 4,
+        nodePfSquaredSum: 2,
+        nodePfMax: 0.8,
+        squaredNodePortPointCount: 4_000,
+        segmentCount: 350,
+        changedPreloadedTraceSectionCount: 1,
       }),
       40,
     ),

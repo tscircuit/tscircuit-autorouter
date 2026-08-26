@@ -40,7 +40,7 @@ test("same-machine benchmark comments compare matching reports", () => {
       {
         solverName,
         completedRateLabel: "50.0% (🕒50.0%)",
-        relaxedDrcRateLabel: "50.0% (🕒50.0%)",
+        relaxedDrcRateLabel: "0.0% (🕒50.0%)",
         timedOutLabel: "1/2",
         p50TimeMs: 1_000,
         p95TimeMs: 2_000,
@@ -54,7 +54,10 @@ test("same-machine benchmark comments compare matching reports", () => {
         relaxedDrcPassed: false,
         elapsedTimeMs: 2_000,
       }),
-      makeTest(2, {}),
+      makeTest(2, {
+        relaxedDrcPassed: false,
+        drcErrorCount: 3,
+      }),
     ],
   })
   const prReport = makeReport({
@@ -62,14 +65,20 @@ test("same-machine benchmark comments compare matching reports", () => {
       {
         solverName,
         completedRateLabel: "100.0% (🕒0.0%)",
-        relaxedDrcRateLabel: "100.0% (🕒0.0%)",
+        relaxedDrcRateLabel: "50.0% (🕒0.0%)",
         timedOutLabel: "0/2",
         p50TimeMs: 900,
         p95TimeMs: 1_800,
         avgVia: 2.2,
       },
     ],
-    tests: [makeTest(1, { elapsedTimeMs: 1_800 }), makeTest(2, {})],
+    tests: [
+      makeTest(1, { elapsedTimeMs: 1_800, drcErrorCount: 0 }),
+      makeTest(2, {
+        relaxedDrcPassed: false,
+        drcErrorCount: 1,
+      }),
+    ],
   })
 
   const markdown = renderSameMachineBenchmarkResults({
@@ -88,6 +97,7 @@ test("same-machine benchmark comments compare matching reports", () => {
   expect(markdown).toContain(
     "| Pipeline7 | Completion | 50.0% (🕒50.0%) | 100.0% (🕒0.0%) | +50.0 pp |",
   )
+  expect(markdown).toContain("| Pipeline7 | DRC issues | 3 | 1 | -2 |")
   expect(markdown).toContain("| Pipeline7 | Timeouts | 1 | 0 | -1 |")
   expect(markdown).toContain("| Pipeline7 | P50 time | 1.5s | 1.4s | -6.7% |")
   expect(markdown).toContain("| Pipeline7 | P60 time |")

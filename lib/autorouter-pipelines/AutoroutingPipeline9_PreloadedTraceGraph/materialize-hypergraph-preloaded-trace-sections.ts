@@ -325,6 +325,7 @@ export const getMaterializedPreloadedSectionHdRoutes = ({
         Number.MAX_SAFE_INTEGER - sections.length + sectionIndex,
       preloadedRoutePositionStart: section.startRoutePosition,
       preloadedRoutePositionEnd: section.endRoutePosition,
+      isThroughObstacle: false,
     }
   })
 }

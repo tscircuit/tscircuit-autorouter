@@ -1,8 +1,8 @@
+import { checkIfConnectionPointIsInRegion } from "../hgportpointpathingsolver/checkIfConnectionPointIsInRegion"
 import type {
   ConnectionHgWithSimpleRouteConnection,
   HgPortPointPathingSolverParams,
 } from "../hgportpointpathingsolver/types"
-import { checkIfConnectionPointIsInRegion } from "../hgportpointpathingsolver/checkIfConnectionPointIsInRegion"
 import type { TinyRouteNetIndexer } from "./createTinyRouteNetIndexer"
 
 export function getRegionNetIdByRegionId(input: {
@@ -12,6 +12,7 @@ export function getRegionNetIdByRegionId(input: {
   getNetIndex: TinyRouteNetIndexer
 }): Map<string, number> {
   const regionNetCandidates = new Map<string, Set<number>>()
+  const alreadyConnectedEndpointRegionIds = new Set<string>()
   const netIndexByConnectionAlias = new Map<string, number>()
   for (const connection of input.params.connections) {
     const netId = connection.mutuallyConnectedNetworkId
@@ -31,6 +32,13 @@ export function getRegionNetIdByRegionId(input: {
             layerCount: input.params.layerCount,
           })
         ) {
+          continue
+        }
+
+        const isDesiredConnectionEndpoint =
+          point.pcb_port_id !== undefined || region.d._containsTarget === true
+        if (!isDesiredConnectionEndpoint) {
+          alreadyConnectedEndpointRegionIds.add(region.regionId)
           continue
         }
 
@@ -59,6 +67,14 @@ export function getRegionNetIdByRegionId(input: {
   }
 
   const regionNetIdByRegionId = new Map<string, number>()
+  for (const regionId of alreadyConnectedEndpointRegionIds) {
+    // An endpoint that is already connected to copper only marks where desired
+    // routing resumes; it does not make the surrounding region exclusive.
+    // Store -1 so the loader does not infer ownership from connection start/end
+    // regions. Desired connection endpoints and connected-copper regions are
+    // assigned below.
+    regionNetIdByRegionId.set(regionId, -1)
+  }
   for (const [regionId, netCandidates] of regionNetCandidates) {
     if (netCandidates.size !== 1) continue
     regionNetIdByRegionId.set(regionId, [...netCandidates][0]!)

@@ -1,7 +1,11 @@
 import type { AnyCircuitElement } from "circuit-json"
 import type { SimpleRouteJson, SimplifiedPcbTrace } from "lib/types"
 import { RELAXED_DRC_OPTIONS } from "./drcPresets"
-import { getDrcErrors, type GetDrcErrorsResult } from "./getDrcErrors"
+import {
+  getDrcErrors,
+  type GetDrcErrorsOptions,
+  type GetDrcErrorsResult,
+} from "./getDrcErrors"
 import { convertToCircuitJson } from "./utils/convertToCircuitJson"
 
 /** Inputs used by the benchmark's relaxed DRC evaluation. */
@@ -10,6 +14,8 @@ export interface EvaluateRelaxedDrcInput {
   srjWithPointPairs: SimpleRouteJson
   /** Newly routed traces. Input traces are always included automatically. */
   routedTraces: SimplifiedPcbTrace[]
+  /** Override benchmark defaults when validating a board's declared rules. */
+  drcOptions?: GetDrcErrorsOptions
 }
 
 /** Benchmark relaxed DRC errors and the Circuit JSON evaluated to produce them. */
@@ -43,6 +49,7 @@ export const evaluateRelaxedDrc = ({
   inputSrj,
   srjWithPointPairs,
   routedTraces,
+  drcOptions,
 }: EvaluateRelaxedDrcInput): EvaluateRelaxedDrcResult => {
   const preloadedTraces = inputSrj.traces ?? []
   const jointTraces = combinePreloadedAndRoutedTraces(
@@ -58,6 +65,9 @@ export const evaluateRelaxedDrc = ({
 
   return {
     circuitJson,
-    ...getDrcErrors(circuitJson, RELAXED_DRC_OPTIONS),
+    ...getDrcErrors(circuitJson, {
+      ...RELAXED_DRC_OPTIONS,
+      ...drcOptions,
+    }),
   }
 }

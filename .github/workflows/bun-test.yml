@@ -16,11 +16,13 @@ jobs:
   test:
     if: github.event_name != 'pull_request' || !startsWith(github.head_ref, 'version-bumps/')
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    # Balanced plans target roughly ten minutes of test work; leave room for
+    # checkout, dependency installation, and runner variance.
+    timeout-minutes: 15
     strategy:
       fail-fast: false
       matrix:
-        node: [1, 2, 3, 4, 5, 6, 7, 8]
+        node: [1, 2, 3, 4, 5, 6, 7, 8, 9]
 
     steps:
       - name: Checkout code
@@ -40,7 +42,7 @@ jobs:
       - name: Generate balanced test plans
         run: bun scripts/generate-balanced-test-plan.ts
         env:
-          NODE_COUNT: 8
+          NODE_COUNT: 9
 
       - name: Run tests for node ${{ matrix.node }}
         run: |

@@ -4,7 +4,10 @@ import { RectDiffPipeline } from "@tscircuit/rectdiff"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { GraphicsObject, Line } from "graphics-debug"
 import { HighDensityForceImproveSolver } from "high-density-repair01/lib/HighDensityForceImproveSolver"
-import { GlobalDrcForceImproveSolver } from "high-density-repair03/lib"
+import {
+  GlobalDrcBranchPortfolioSolver,
+  GlobalDrcForceImproveSolver,
+} from "high-density-repair03/lib"
 import { getGlobalInMemoryCache } from "lib/cache/setupGlobalCaches"
 import { CacheProvider } from "lib/cache/types"
 import { ComponentDetectionSolver } from "lib/solvers/ComponentDetectionSolver/ComponentDetectionSolver"
@@ -66,7 +69,6 @@ import { TraceSimplificationSolver } from "../../solvers/TraceSimplificationSolv
 import { TraceWidthSolver } from "../../solvers/TraceWidthSolver/TraceWidthSolver"
 import { PreprocessSimpleRouteJsonSolver } from "../AutoroutingPipeline4_TinyHypergraph/PreprocessSimpleRouteJsonSolver"
 import { MergedComponentTopologyView } from "./MergedComponentTopologyView"
-import { Pipeline7AdaptiveDrcBranchPortfolioSolver } from "./Pipeline7AdaptiveDrcBranchPortfolioSolver"
 import { PowerTraceExpansionSolver } from "./PowerTraceExpansionSolver"
 import { convertPipeline7HdRoutesToSimplifiedPcbTraces } from "./convertPipeline7HdRoutesToSimplifiedPcbTraces"
 import { createPipeline7AutoroutingDrcEvaluator } from "./create-pipeline7-autorouting-drc-evaluator"
@@ -225,7 +227,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
   highDensityRepairSolver?: Pipeline4HighDensityRepairSolver
   highDensityStitchSolver?: MultipleHighDensityRouteStitchSolver3
   globalDrcForceImproveSolver?: GlobalDrcForceImproveSolver
-  exactGeometryDrcForceImproveSolver?: Pipeline7AdaptiveDrcBranchPortfolioSolver
+  exactGeometryDrcForceImproveSolver?: GlobalDrcBranchPortfolioSolver
   singleLayerNodeMerger?: SingleLayerNodeMergerSolver
   strawSolver?: StrawSolver
   deadEndSolver?: DeadEndSolver
@@ -665,7 +667,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
     ),
     definePipelineStep(
       "exactGeometryDrcForceImproveSolver",
-      Pipeline7AdaptiveDrcBranchPortfolioSolver,
+      GlobalDrcBranchPortfolioSolver,
       (cms) => {
         const hdRoutes = cms.globalDrcForceImproveSolver!.getOutput()
         const autoroutingDrcEvaluator = createPipeline7AutoroutingDrcEvaluator({
@@ -750,7 +752,11 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
                 `Pipeline7: differential pair ${pair.connectionNames.join("/")} resolves both members to "${connectionNames[0]}"`,
               )
             if (pair.traceGap === undefined)
-              return { connectionNames, lengthTolerance: pair.lengthTolerance }
+              return {
+                connectionNames,
+                lengthTolerance: pair.lengthTolerance,
+                maxUncoupledLength: pair.maxUncoupledLength,
+              }
             const pairRoutes = connectionNames.map((connectionName) => {
               const matchingRoutes = hdRoutes.filter(
                 (route) => route.connectionName === connectionName,
@@ -771,6 +777,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
             return {
               connectionNames,
               lengthTolerance: pair.lengthTolerance,
+              maxUncoupledLength: pair.maxUncoupledLength,
               minimumCenterlineDistance: centerlineDistance,
               maximumCenterlineDistance: centerlineDistance,
             }

@@ -13,6 +13,7 @@ const input: DownstreamCandidateSummary = {
   squaredNodePortPointCount: 1000,
   segmentCount: 100,
   layerChangeCount: 20,
+  changedPreloadedTraceSectionCount: 0,
 }
 
 test("estimates hard-search probability from compounded node failure burden", () => {
@@ -54,6 +55,13 @@ test("region optimizer output must meaningfully reduce estimated failure burden"
       ...input,
       squaredNodePortPointCount: 900,
       nodePfSquaredSum: 6,
+    }),
+  ).toBeFalse()
+  expect(
+    shouldSelectRegionCostOptimizedCandidate(input, {
+      ...input,
+      nodePfSum: 8,
+      changedPreloadedTraceSectionCount: 1,
     }),
   ).toBeFalse()
   expect(shouldSelectRegionCostOptimizedCandidate(input, input)).toBeFalse()
