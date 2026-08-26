@@ -35,6 +35,7 @@ import {
 
 type RegionalB01RepairResult = {
   routes: HighDensityRoute[]
+  errors: Pipeline9DrcError[]
   attemptedCandidateCount: number
   acceptedCandidateCount: number
   fallbackCandidateCount: number
@@ -578,6 +579,7 @@ export const applyPipeline9RegionalB01Repairs = ({
   if (preloadEligibleDrcIssueCount === 0) {
     return {
       routes: currentRoutes,
+      errors: currentErrors,
       attemptedCandidateCount,
       acceptedCandidateCount,
       fallbackCandidateCount,
@@ -740,6 +742,7 @@ export const applyPipeline9RegionalB01Repairs = ({
 
   return {
     routes: currentRoutes,
+    errors: currentErrors,
     attemptedCandidateCount,
     acceptedCandidateCount,
     fallbackCandidateCount,

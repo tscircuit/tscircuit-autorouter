@@ -1227,6 +1227,8 @@ export const applyPipeline9ViaPadClearanceRepairs = ({
   syntheticConnectionNames,
   drcEvaluator,
   referenceDrcEvaluator,
+  initialErrors,
+  initialReferenceErrors,
   connMap,
   colorMap,
   viaDiameter,
@@ -1241,6 +1243,8 @@ export const applyPipeline9ViaPadClearanceRepairs = ({
   syntheticConnectionNames: ReadonlySet<string>
   drcEvaluator: DrcEvaluator
   referenceDrcEvaluator: DrcEvaluator
+  initialErrors?: Pipeline9DrcError[]
+  initialReferenceErrors?: Pipeline9DrcError[]
   connMap: ConnectivityMap
   colorMap: Record<string, string>
   viaDiameter: number
@@ -1253,7 +1257,8 @@ export const applyPipeline9ViaPadClearanceRepairs = ({
     getPipeline9RegionalRepairSearchBudget(routes.length),
   )
   let currentRoutes = routes
-  let currentErrors = getPipeline9DrcErrors(drcEvaluator, currentRoutes)
+  let currentErrors =
+    initialErrors ?? getPipeline9DrcErrors(drcEvaluator, currentRoutes)
   if (countPipeline9ViaPadClearanceErrors(currentErrors) === 0) {
     return {
       routes: currentRoutes,
@@ -1272,10 +1277,9 @@ export const applyPipeline9ViaPadClearanceRepairs = ({
       remainingViaPadIssueCount: 0,
     }
   }
-  let currentReferenceErrors = getReferenceDrcSnapshot(
-    referenceDrcEvaluator,
-    currentRoutes,
-  ).errors
+  let currentReferenceErrors =
+    initialReferenceErrors ??
+    getReferenceDrcSnapshot(referenceDrcEvaluator, currentRoutes).errors
   let attemptedCandidateCount = 0
   let acceptedCandidateCount = 0
   let relaxationCandidateCount = 0

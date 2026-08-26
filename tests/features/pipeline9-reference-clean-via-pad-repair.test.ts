@@ -94,12 +94,16 @@ test("Pipeline9 repairs indexed via-pad residue when reference DRC is clean", ()
     effort: 1,
     colorMap: { route: "red" },
   })
+  let originalRouteIndexedEvaluationCount = 0
   const indexedDrcEvaluator = ((input: {
     hdRoutes?: HighDensityRoute[]
     routes?: HighDensityRoute[]
   }) => {
     const evaluatedRoute = (input.hdRoutes ?? input.routes ?? [])[0]
     const via = evaluatedRoute?.vias[0]
+    if (via?.x === 0 && via.y === 0) {
+      originalRouteIndexedEvaluationCount++
+    }
     const distanceX = via ? Math.max(Math.abs(via.x) - 0.1, 0) : 0
     const distanceY = via ? Math.max(Math.abs(via.y - 0.3) - 0.1, 0) : 0
     const actualClearance = Math.hypot(distanceX, distanceY) - 0.15
@@ -119,10 +123,17 @@ test("Pipeline9 repairs indexed via-pad residue when reference DRC is clean", ()
         : []
     return { errors, errorsWithCenters: errors }
   }) as unknown as DrcEvaluator
-  const referenceDrcEvaluator = (() => ({
-    errors: [],
-    errorsWithCenters: [],
-  })) as DrcEvaluator
+  let originalRouteReferenceEvaluationCount = 0
+  const referenceDrcEvaluator = ((input: {
+    hdRoutes?: HighDensityRoute[]
+    routes?: HighDensityRoute[]
+  }) => {
+    const via = (input.hdRoutes ?? input.routes ?? [])[0]?.vias[0]
+    if (via?.x === 0 && via.y === 0) {
+      originalRouteReferenceEvaluationCount++
+    }
+    return { errors: [], errorsWithCenters: [] }
+  }) as unknown as DrcEvaluator
   const mutableSolver = solver as unknown as {
     solved: boolean
     drcEvaluator: DrcEvaluator
@@ -159,6 +170,8 @@ test("Pipeline9 repairs indexed via-pad residue when reference DRC is clean", ()
   expect(solver.stats.terminalEscapeCandidateCount).toBe(0)
   expect(solver.stats.viaPadClearanceRepairAcceptedCount).toBe(1)
   expect(solver.stats.viaPadClearanceRemainingIssueCount).toBe(0)
+  expect(originalRouteIndexedEvaluationCount).toBe(1)
+  expect(originalRouteReferenceEvaluationCount).toBe(1)
   const repairedVia = solver.getOutput()[0]!.vias[0]!
   const repairedDistanceX = Math.max(Math.abs(repairedVia.x) - 0.1, 0)
   const repairedDistanceY = Math.max(Math.abs(repairedVia.y - 0.3) - 0.1, 0)
