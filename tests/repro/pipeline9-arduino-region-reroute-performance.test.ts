@@ -18,7 +18,7 @@ const VISUAL_BOUNDS = {
   maxY: 18.5,
 }
 
-test("Pipeline9 records repeated reference DRC work for an Arduino region reroute", async () => {
+test("Pipeline9 recognizes same-net Arduino region boundary contacts", async () => {
   const input = structuredClone(
     capturedArduinoRegionReroute,
   ) as unknown as SimpleRouteJson
@@ -40,20 +40,18 @@ test("Pipeline9 records repeated reference DRC work for an Arduino region rerout
     createHash("sha256").update(JSON.stringify(outputTraces)).digest("hex"),
   ).toBe(EXPECTED_OUTPUT_TRACES_SHA256)
 
-  // Captured from core's repro116 region (8..18 mm). On the original board,
-  // Pipeline9 took about 15 s versus Pipeline7's 4.2 s. The indexed DRC sees
-  // no issue, but reference DRC repeatedly reports the eight intentional
-  // boundary joins as disconnected while the exact-repair portfolio explores
-  // candidates. This deterministic count exposes the cost without a flaky
-  // wall-clock assertion.
+  // The reproduction branch recorded 61 full reference validations because
+  // the eight intentional same-net boundary joins were reported as
+  // disconnected. Proving their physical contact avoids entering exact repair.
   const jointDrcStats = solver.pipeline9JointDrcRepairSolver?.stats
   expect(jointDrcStats).toMatchObject({
-    initialJointDrcIssueCount: 8,
-    globalDrcForceImproveCandidateAttempts: 12,
-    regionalB01RepairCandidateCount: 0,
-    referenceDrcValidationCount: 61,
-    referenceDrcFalseNegativeCount: 61,
+    initialJointDrcIssueCount: 0,
+    referenceDrcValidationCount: 0,
+    referenceDrcFalseNegativeCount: 0,
   })
+  expect(
+    solver.pipeline9JointDrcRepairSolver?.exactRepairSolver,
+  ).toBeUndefined()
 
   const inputTraceIds = new Set(
     (input.traces ?? []).map((trace) => trace.pcb_trace_id),

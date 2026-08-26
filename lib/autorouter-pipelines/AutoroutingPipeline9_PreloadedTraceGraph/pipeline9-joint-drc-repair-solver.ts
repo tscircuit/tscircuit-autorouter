@@ -32,6 +32,7 @@ import {
   convertPreloadedTraceToHdRoutes,
 } from "./convert-preloaded-traces-to-hd-routes"
 import { filterPipeline9DrcErrorsAgainstBaseline } from "./filter-pipeline9-drc-errors-against-baseline"
+import { filterPipeline9PhysicallyConnectedEndpointErrors } from "./filter-pipeline9-physically-connected-endpoint-errors"
 import { getPipeline9PreloadedTraceIdsInInitialDrcRegions } from "./get-pipeline9-preloaded-trace-ids-in-initial-drc-regions"
 import { getPipeline9PreloadedViaPairTraceGroups } from "./get-pipeline9-preloaded-via-pair-trace-groups"
 import { mergePipeline9MovablePreloadedVias } from "./merge-pipeline9-movable-preloaded-vias"
@@ -709,26 +710,36 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       routedTraces: preparedCurrentOutput.routedTraces,
       drcOptions: { traceClearance },
     })
-    const currentEvaluatedTraceIds = new Set(
-      combinePreloadedAndRoutedTraces(
-        params.originalSrj.traces ?? [],
-        preparedCurrentOutput.routedTraces,
-      ).map((trace) => trace.pcb_trace_id),
+    const currentEvaluatedTraces = combinePreloadedAndRoutedTraces(
+      params.originalSrj.traces ?? [],
+      preparedCurrentOutput.routedTraces,
     )
-    const currentErrors = addAutoroutingViaTraceIds({
-      errors: currentDrcResult.errors as unknown as Array<
-        Record<string, unknown>
-      >,
-      circuitJson: currentDrcResult.circuitJson,
-      evaluatedTraceIds: currentEvaluatedTraceIds,
+    const currentEvaluatedTraceIds = new Set(
+      currentEvaluatedTraces.map((trace) => trace.pcb_trace_id),
+    )
+    const currentErrors = filterPipeline9PhysicallyConnectedEndpointErrors({
+      errors: addAutoroutingViaTraceIds({
+        errors: currentDrcResult.errors as unknown as Array<
+          Record<string, unknown>
+        >,
+        circuitJson: currentDrcResult.circuitJson,
+        evaluatedTraceIds: currentEvaluatedTraceIds,
+      }),
+      evaluatedTraces: currentEvaluatedTraces,
+      connMap: params.connMap,
     })
-    const currentErrorsWithCenters = addAutoroutingViaTraceIds({
-      errors: currentDrcResult.errorsWithCenters as unknown as Array<
-        Record<string, unknown>
-      >,
-      circuitJson: currentDrcResult.circuitJson,
-      evaluatedTraceIds: currentEvaluatedTraceIds,
-    })
+    const currentErrorsWithCenters =
+      filterPipeline9PhysicallyConnectedEndpointErrors({
+        errors: addAutoroutingViaTraceIds({
+          errors: currentDrcResult.errorsWithCenters as unknown as Array<
+            Record<string, unknown>
+          >,
+          circuitJson: currentDrcResult.circuitJson,
+          evaluatedTraceIds: currentEvaluatedTraceIds,
+        }),
+        evaluatedTraces: currentEvaluatedTraces,
+        connMap: params.connMap,
+      })
     const currentDrc = {
       ...currentDrcResult,
       errors: filterPipeline9DrcErrorsAgainstBaseline({
@@ -933,6 +944,8 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     }
 
     if (currentDrc.errors.length === 0) {
+      this.stats.referenceDrcValidationCount = 0
+      this.stats.referenceDrcFalseNegativeCount = 0
       this.solved = true
       return
     }
@@ -1160,20 +1173,30 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       const evaluatedTraceIds = new Set(
         candidateDrcInput.evaluatedTraces.map((trace) => trace.pcb_trace_id),
       )
-      const evaluatedErrors = addAutoroutingViaTraceIds({
-        errors: evaluatedDrc.errors as unknown as Array<
-          Record<string, unknown>
-        >,
-        circuitJson: evaluatedDrc.circuitJson,
-        evaluatedTraceIds,
-      })
-      const evaluatedErrorsWithCenters = addAutoroutingViaTraceIds({
-        errors: evaluatedDrc.errorsWithCenters as unknown as Array<
-          Record<string, unknown>
-        >,
-        circuitJson: evaluatedDrc.circuitJson,
-        evaluatedTraceIds,
-      })
+      const evaluatedErrors =
+        filterPipeline9PhysicallyConnectedEndpointErrors({
+          errors: addAutoroutingViaTraceIds({
+            errors: evaluatedDrc.errors as unknown as Array<
+              Record<string, unknown>
+            >,
+            circuitJson: evaluatedDrc.circuitJson,
+            evaluatedTraceIds,
+          }),
+          evaluatedTraces: candidateDrcInput.evaluatedTraces,
+          connMap: params.connMap,
+        })
+      const evaluatedErrorsWithCenters =
+        filterPipeline9PhysicallyConnectedEndpointErrors({
+          errors: addAutoroutingViaTraceIds({
+            errors: evaluatedDrc.errorsWithCenters as unknown as Array<
+              Record<string, unknown>
+            >,
+            circuitJson: evaluatedDrc.circuitJson,
+            evaluatedTraceIds,
+          }),
+          evaluatedTraces: candidateDrcInput.evaluatedTraces,
+          connMap: params.connMap,
+        })
       const evaluatedNewErrors = filterPipeline9DrcErrorsAgainstBaseline({
         errors: evaluatedErrors,
         baselineErrors,
