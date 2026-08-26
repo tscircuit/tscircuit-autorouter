@@ -69,6 +69,23 @@ const HOTSPOTS = [
   },
 ] as const
 
+const ANNOTATION_PANEL_WIDTH = Math.max(
+  ...HOTSPOTS.map((hotspot) => hotspot.bounds.maxX - hotspot.bounds.minX),
+)
+const ANNOTATION_PANEL_HEIGHT = 1.42
+const ANNOTATION_PANEL_GAP = 0.14
+const ANNOTATION_FONT_SIZE = 0.115
+const STATUS_FONT_SIZE = 0.092
+const STATUS_DETAIL_FONT_SIZE = 0.08
+const PAD_FILL = "rgba(245, 158, 11, 0.2)"
+const PAD_EDGE_COLOR = "#b45309"
+const VIA_CENTER_KEEPOUT_COLOR = "#f59e0b"
+const VIOLATION_COLOR = "#dc2626"
+const CLEAR_COLOR = "#16a34a"
+const TOP_COPPER_COLOR = "#0284c7"
+const BOTTOM_COPPER_COLOR = "#7c3aed"
+const VIA_COLOR = "#1e3a8a"
+
 const clipSegmentToBounds = (
   start: { x: number; y: number },
   end: { x: number; y: number },
@@ -162,12 +179,16 @@ const getClippedRectOutline = ({
   height,
   bounds,
   strokeColor,
+  strokeDash,
+  strokeWidth = 0.025,
 }: {
   center: { x: number; y: number }
   width: number
   height: number
   bounds: FocusBounds
   strokeColor: string
+  strokeDash?: string | number[]
+  strokeWidth?: number
 }): NonNullable<GraphicsObject["lines"]> => {
   const minX = center.x - width / 2
   const maxX = center.x + width / 2
@@ -186,8 +207,229 @@ const getClippedRectOutline = ({
       corners[(cornerIndex + 1) % corners.length]!,
       bounds,
     )
-    return points ? [{ points, strokeColor, strokeWidth: 0.025 }] : []
+    return points ? [{ points, strokeColor, strokeWidth, strokeDash }] : []
   })
+}
+
+const getAnnotationPanelGraphics = ({
+  bounds,
+  logicalViolationCount,
+  physicalViolationCount,
+}: {
+  bounds: FocusBounds
+  logicalViolationCount: number
+  physicalViolationCount: number
+}): GraphicsObject => {
+  const centerX = (bounds.minX + bounds.maxX) / 2
+  const panelTop = bounds.minY - ANNOTATION_PANEL_GAP
+  const panelBottom = panelTop - ANNOTATION_PANEL_HEIGHT
+  const panelLeft = centerX - ANNOTATION_PANEL_WIDTH / 2
+  const row1Y = panelTop - 0.23
+  const row2Y = panelTop - 0.57
+  const row3Y = panelTop - 0.91
+  const row4Y = panelTop - 1.18
+  const hasViolations = physicalViolationCount > 0
+  const ownershipText =
+    logicalViolationCount > physicalViolationCount
+      ? `${logicalViolationCount} traces coincide at this via location`
+      : `${logicalViolationCount} trace at this via location`
+  const statusText = hasViolations
+    ? `FAIL: ${ownershipText}`
+    : "CLEAR: repaired route keeps all vias outside keep-out"
+
+  return {
+    rects: [
+      {
+        center: {
+          x: centerX,
+          y: (panelTop + panelBottom) / 2,
+        },
+        width: ANNOTATION_PANEL_WIDTH,
+        height: ANNOTATION_PANEL_HEIGHT,
+        fill: "rgba(248, 250, 252, 0.98)",
+        stroke: "#cbd5e1",
+        label: "visual key",
+      },
+      {
+        center: { x: panelLeft + 0.18, y: row1Y },
+        width: 0.2,
+        height: 0.16,
+        fill: PAD_FILL,
+        stroke: PAD_EDGE_COLOR,
+      },
+      {
+        center: { x: panelLeft + 0.245, y: row2Y },
+        width: 0.31,
+        height: 0.07,
+        fill: TOP_COPPER_COLOR,
+        stroke: "none",
+      },
+      ...[1.55, 1.68, 1.81].map((xOffset) => ({
+        center: { x: panelLeft + xOffset, y: row1Y },
+        width: 0.08,
+        height: 0.045,
+        fill: VIA_CENTER_KEEPOUT_COLOR,
+        stroke: "none",
+      })),
+      ...[1.43, 1.535, 1.64].map((xOffset) => ({
+        center: { x: panelLeft + xOffset, y: row2Y },
+        width: 0.07,
+        height: 0.07,
+        fill: BOTTOM_COPPER_COLOR,
+        stroke: "none",
+      })),
+    ],
+    lines: [],
+    circles: [
+      {
+        center: { x: panelLeft + 3.17, y: row2Y },
+        radius: 0.08,
+        fill: VIA_COLOR,
+        stroke: "none",
+      },
+      {
+        center: { x: panelLeft + 0.18, y: row3Y },
+        radius: 0.11,
+        fill: hasViolations
+          ? "rgba(220, 38, 38, 0.08)"
+          : "rgba(22, 163, 74, 0.08)",
+        stroke: hasViolations ? VIOLATION_COLOR : CLEAR_COLOR,
+      },
+      {
+        center: { x: panelLeft + 0.18, y: row3Y },
+        radius: 0.045,
+        fill: hasViolations ? VIA_COLOR : CLEAR_COLOR,
+        stroke: "none",
+      },
+    ],
+    texts: [
+      {
+        x: panelLeft + 0.34,
+        y: row1Y,
+        text: "foreign pad",
+        anchorSide: "center_left",
+        fontSize: ANNOTATION_FONT_SIZE,
+        color: "#7c2d12",
+      },
+      {
+        x: panelLeft + 1.96,
+        y: row1Y,
+        text: "via-center keep-out",
+        anchorSide: "center_left",
+        fontSize: ANNOTATION_FONT_SIZE,
+        color: "#92400e",
+      },
+      {
+        x: panelLeft + 0.49,
+        y: row2Y,
+        text: "top copper",
+        anchorSide: "center_left",
+        fontSize: ANNOTATION_FONT_SIZE,
+        color: TOP_COPPER_COLOR,
+      },
+      {
+        x: panelLeft + 1.78,
+        y: row2Y,
+        text: "bottom copper",
+        anchorSide: "center_left",
+        fontSize: ANNOTATION_FONT_SIZE,
+        color: BOTTOM_COPPER_COLOR,
+      },
+      {
+        x: panelLeft + 3.32,
+        y: row2Y,
+        text: "via",
+        anchorSide: "center_left",
+        fontSize: ANNOTATION_FONT_SIZE,
+        color: VIA_COLOR,
+      },
+      {
+        x: panelLeft + 0.38,
+        y: row3Y,
+        text: statusText,
+        anchorSide: "center_left",
+        fontSize: STATUS_FONT_SIZE,
+        color: hasViolations ? "#991b1b" : "#166534",
+      },
+      ...(hasViolations
+        ? [
+            {
+              x: panelLeft + 0.38,
+              y: row4Y,
+              text: `red halo = via body + ${requiredViaPadClearance.toFixed(3)} mm clearance; halo overlaps pad`,
+              anchorSide: "center_left" as const,
+              fontSize: STATUS_DETAIL_FONT_SIZE,
+              color: "#991b1b",
+            },
+          ]
+        : []),
+    ],
+  }
+}
+
+const getCalloutGraphics = ({
+  bounds,
+  callouts,
+}: {
+  bounds: FocusBounds
+  callouts: Array<{
+    color: string
+    label: string
+    side: "left" | "right"
+    target: { x: number; y: number }
+  }>
+}): GraphicsObject => {
+  const viewportWidth = bounds.maxX - bounds.minX
+  const viewportHeight = bounds.maxY - bounds.minY
+  const fontSize = 0.12
+  const labelHeight = 0.24
+  const labelY = bounds.maxY - Math.min(viewportHeight * 0.09, 0.24)
+  const labelCenters = {
+    left: bounds.minX + Math.min(viewportWidth * 0.24, 0.72),
+    right: bounds.maxX - Math.min(viewportWidth * 0.24, 0.72),
+  }
+  const rects: NonNullable<GraphicsObject["rects"]> = []
+  const lines: NonNullable<GraphicsObject["lines"]> = []
+  const circles: NonNullable<GraphicsObject["circles"]> = []
+  const texts: NonNullable<GraphicsObject["texts"]> = []
+
+  for (const callout of callouts) {
+    const labelWidth = callout.label.length * fontSize * 0.62 + 0.18
+    const labelCenter = { x: labelCenters[callout.side], y: labelY }
+    rects.push({
+      center: labelCenter,
+      width: labelWidth,
+      height: labelHeight,
+      fill: "rgba(255, 255, 255, 0.94)",
+      stroke: callout.color,
+      label: callout.label,
+    })
+    lines.push({
+      points: [
+        { x: labelCenter.x, y: labelCenter.y - labelHeight / 2 },
+        callout.target,
+      ],
+      strokeColor: callout.color,
+      strokeWidth: 0.025,
+    })
+    circles.push({
+      center: callout.target,
+      radius: 0.055,
+      fill: "rgba(255, 255, 255, 0.7)",
+      stroke: callout.color,
+      label: callout.label,
+    })
+    texts.push({
+      x: labelCenter.x,
+      y: labelCenter.y,
+      text: callout.label,
+      anchorSide: "center",
+      fontSize,
+      color: callout.color,
+    })
+  }
+
+  return { rects, lines, circles, texts }
 }
 
 const getHotspotFrames = ({
@@ -247,10 +489,6 @@ const getHotspotFrames = ({
     const hotspotMarkers = markers.filter(
       (marker) => marker.padId === hotspot.padId,
     )
-    const violationLabel =
-      hotspotViolations.length === 0
-        ? "CLEAR"
-        : `${hotspotViolations.length} LOGICAL / ${hotspotMarkers.length} PHYSICAL`
     const viaCenterClearance =
       (outputSrj.minViaDiameter ?? 0.3) / 2 + requiredViaPadClearance
     const outOfBoundsMarkers = hotspotMarkers.filter(
@@ -263,43 +501,141 @@ const getHotspotFrames = ({
     if (outOfBoundsMarkers.length > 0) {
       throw new Error(`${hotspot.name} has a marker outside its fixed viewport`)
     }
+    const clippedRouteLines = clipGraphicsLines(
+      routeGraphics.lines ?? [],
+      hotspot.bounds,
+    ).map((line) => ({
+      ...line,
+      strokeColor: line.strokeDash ? BOTTOM_COPPER_COLOR : TOP_COPPER_COLOR,
+    }))
+    const visibleRouteVias = (routeGraphics.circles ?? [])
+      .filter((circle) => pointIsInBounds(circle.center, hotspot.bounds))
+      .map((circle) => ({ ...circle, fill: VIA_COLOR }))
+    const closestVisibleRouteVia = visibleRouteVias.toSorted(
+      (left, right) =>
+        Math.hypot(
+          left.center.x - obstacle.center.x,
+          left.center.y - obstacle.center.y,
+        ) -
+        Math.hypot(
+          right.center.x - obstacle.center.x,
+          right.center.y - obstacle.center.y,
+        ),
+    )[0]
+    const closestRouteMidpoint = clippedRouteLines
+      .flatMap((line) =>
+        line.points.slice(0, -1).map((point, pointIndex) => ({
+          x: (point.x + line.points[pointIndex + 1]!.x) / 2,
+          y: (point.y + line.points[pointIndex + 1]!.y) / 2,
+        })),
+      )
+      .sort(
+        (left, right) =>
+          Math.hypot(left.x - obstacle.center.x, left.y - obstacle.center.y) -
+          Math.hypot(right.x - obstacle.center.x, right.y - obstacle.center.y),
+      )[0]
+    if (!closestRouteMidpoint) {
+      throw new Error(`${hotspot.name} has no routed trace in its viewport`)
+    }
+    const clearanceReferencePoint =
+      hotspotMarkers[0]?.center ?? closestRouteMidpoint
+    const padCalloutTarget = [
+      { x: -0.25, y: -0.25 },
+      { x: -0.25, y: 0.25 },
+      { x: 0.25, y: -0.25 },
+      { x: 0.25, y: 0.25 },
+    ]
+      .map((offset) => ({
+        x: clippedPad.center.x + clippedPad.width * offset.x,
+        y: clippedPad.center.y + clippedPad.height * offset.y,
+      }))
+      .sort(
+        (left, right) =>
+          Math.hypot(
+            right.x - clearanceReferencePoint.x,
+            right.y - clearanceReferencePoint.y,
+          ) -
+          Math.hypot(
+            left.x - clearanceReferencePoint.x,
+            left.y - clearanceReferencePoint.y,
+          ),
+      )[0]!
+    const annotationPanel = getAnnotationPanelGraphics({
+      bounds: hotspot.bounds,
+      logicalViolationCount: hotspotViolations.length,
+      physicalViolationCount: hotspotMarkers.length,
+    })
+    const callouts = getCalloutGraphics({
+      bounds: hotspot.bounds,
+      callouts: [
+        {
+          color: hotspotMarkers.length > 0 ? VIOLATION_COLOR : CLEAR_COLOR,
+          label:
+            hotspotMarkers.length > 0
+              ? "OFFENDING VIA"
+              : closestVisibleRouteVia
+                ? "REPAIRED VIA"
+                : "REROUTED COPPER",
+          side: "left",
+          target:
+            hotspotMarkers[0]?.center ??
+            closestVisibleRouteVia?.center ??
+            closestRouteMidpoint,
+        },
+        {
+          color: PAD_EDGE_COLOR,
+          label: "FOREIGN PAD",
+          side: "right",
+          target: padCalloutTarget,
+        },
+      ],
+    })
+    const clearanceStatus =
+      hotspotViolations.length === 0
+        ? `CLEAR — via-pad clearance ≥ ${requiredViaPadClearance.toFixed(3)} mm`
+        : `FAIL — ${Math.min(...hotspotViolations.map((violation) => violation.actualClearance)).toFixed(3)} mm < ${requiredViaPadClearance.toFixed(3)} mm`
 
     return {
-      name: `${hotspot.name} · ${violationLabel}`,
+      name: `${hotspot.name} · ${clearanceStatus}`,
+      showMetadata: false,
       graphics: {
         lines: [
-          ...clipGraphicsLines(routeGraphics.lines ?? [], hotspot.bounds),
+          ...clippedRouteLines,
           ...getClippedRectOutline({
             center: obstacle.center,
             width: obstacle.width,
             height: obstacle.height,
             bounds: hotspot.bounds,
-            strokeColor: "#b45309",
+            strokeColor: PAD_EDGE_COLOR,
           }),
           ...getClippedRectOutline({
             center: obstacle.center,
             width: obstacle.width + viaCenterClearance * 2,
             height: obstacle.height + viaCenterClearance * 2,
             bounds: hotspot.bounds,
-            strokeColor: "#f59e0b",
+            strokeColor: VIA_CENTER_KEEPOUT_COLOR,
+            strokeDash: "4 3",
+            strokeWidth: 0.04,
           }),
+          ...(callouts.lines ?? []),
+          ...(annotationPanel.lines ?? []),
         ],
         circles: [
-          ...(routeGraphics.circles ?? []).filter((circle) =>
-            pointIsInBounds(circle.center, hotspot.bounds),
-          ),
+          ...visibleRouteVias,
           ...hotspotMarkers.map((marker) => ({
             center: marker.center,
             radius: viaCenterClearance,
             fill: "rgba(220, 38, 38, 0.08)",
-            stroke: "#dc2626",
+            stroke: VIOLATION_COLOR,
             label: `${hotspot.name} via-pad violation`,
           })),
+          ...(callouts.circles ?? []),
+          ...(annotationPanel.circles ?? []),
         ],
         rects: [
           {
             ...clippedPad,
-            fill: "rgba(245, 158, 11, 0.2)",
+            fill: PAD_FILL,
             label: `${hotspot.name} ${hotspot.padId}`,
           },
           {
@@ -313,7 +649,10 @@ const getHotspotFrames = ({
             stroke: "#0f172a",
             label: `${hotspot.name} fixed viewport`,
           },
+          ...(callouts.rects ?? []),
+          ...(annotationPanel.rects ?? []),
         ],
+        texts: [...(callouts.texts ?? []), ...(annotationPanel.texts ?? [])],
       },
     }
   })
@@ -510,7 +849,7 @@ test("bugreport99 records Pipeline9 nRF52810 via-to-pad clearance violations", a
         violations,
         markers: physicalMarkers,
       }),
-      columns: 3,
+      columns: 2,
       backgroundColor: "white",
     }),
   ).toMatchSvgSnapshot(import.meta.path, {
