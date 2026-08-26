@@ -49,12 +49,7 @@ const getOutputConnectivity = (
     circuitJson.flatMap((element) =>
       element.type === "pcb_via" &&
       typeof (element as CircuitVia).pcb_trace_id === "string"
-        ? [
-            [
-              element.pcb_via_id,
-              (element as CircuitVia).pcb_trace_id!,
-            ],
-          ]
+        ? [[element.pcb_via_id, (element as CircuitVia).pcb_trace_id!]]
         : [],
     ),
   )
@@ -172,12 +167,7 @@ test("bugreport99 records Pipeline9 nRF52810 via-to-pad clearance violations", (
     evaluatedDrc.circuitJson.flatMap((element) =>
       element.type === "pcb_via" &&
       typeof (element as CircuitVia).pcb_trace_id === "string"
-        ? [
-            [
-              element.pcb_via_id,
-              (element as CircuitVia).pcb_trace_id!,
-            ],
-          ]
+        ? [[element.pcb_via_id, (element as CircuitVia).pcb_trace_id!]]
         : [],
     ),
   )
