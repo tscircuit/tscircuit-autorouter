@@ -9,6 +9,7 @@ import type { GraphicsObject } from "graphics-debug"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/autorouting-pipeline-solver9-preloaded-trace-graph"
 import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import type { SimpleRouteJson, SimplifiedPcbTrace } from "lib/types"
+import type { HighDensityRoute } from "lib/types/high-density-types"
 import { convertSrjToGraphicsObject } from "lib/utils/convertSrjToGraphicsObject"
 import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
 import srjJson from "../../fixtures/bug-reports/bugreport99-nrf52810-drc-identity-swap/bugreport99-nrf52810-drc-identity-swap.srj.json" with {
@@ -657,6 +658,15 @@ const getHotspotFrames = ({
     }
   })
 
+const getRouteEndpointIdentity = (route: HighDensityRoute): string =>
+  JSON.stringify({
+    connectionName: route.connectionName,
+    startPcbPortId: route.startPcbPortId,
+    endPcbPortId: route.endPcbPortId,
+    start: route.route[0],
+    end: route.route.at(-1),
+  })
+
 const getOutputConnectivity = (
   solver: AutoroutingPipelineSolver9_PreloadedTraceGraph,
   outputTraces: SimplifiedPcbTrace[],
@@ -683,7 +693,7 @@ const getOutputConnectivity = (
   return connMap
 }
 
-test("bugreport99 records Pipeline9 nRF52810 via-to-pad clearance violations", async () => {
+test("bugreport99 clears Pipeline9 nRF52810 via-to-pad clearance violations", async () => {
   const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(
     structuredClone(srj),
     { cacheProvider: null },
@@ -700,6 +710,33 @@ test("bugreport99 records Pipeline9 nRF52810 via-to-pad clearance violations", a
     srjWithPointPairs: solver.srjWithPointPairs!,
     routedTraces: outputTraces,
   })
+  expect(
+    evaluatedDrc.errors.filter((error) => {
+      const errorId = (error as unknown as Record<string, unknown>)
+        .pcb_trace_error_id
+      return (
+        typeof errorId === "string" && errorId.startsWith("missing_connection_")
+      )
+    }),
+  ).toEqual([])
+  const outputTraceIds = new Set(
+    outputTraces.map((trace) => trace.pcb_trace_id),
+  )
+  expect(
+    evaluatedDrc.circuitJson
+      .filter(
+        (element): element is CircuitVia =>
+          element.type === "pcb_via" &&
+          typeof (element as CircuitVia).pcb_trace_id === "string",
+      )
+      .every((via) => outputTraceIds.has(via.pcb_trace_id!)),
+  ).toBeTrue()
+  const jointDrcRepairSolver = solver.pipeline9JointDrcRepairSolver!
+  expect(
+    jointDrcRepairSolver.getOutput().map(getRouteEndpointIdentity).sort(),
+  ).toEqual(
+    jointDrcRepairSolver.inputNewHdRoutes.map(getRouteEndpointIdentity).sort(),
+  )
   const connMap = getOutputConnectivity(
     solver,
     outputTraces,
@@ -739,40 +776,7 @@ test("bugreport99 records Pipeline9 nRF52810 via-to-pad clearance violations", a
     }
   })
 
-  expect(violations).toEqual([
-    {
-      actualClearance: 0,
-      center: { x: 4.877247105, y: 0.109485708 },
-      componentId: "pcb_component_2",
-      ownerTraceId: "source_net_3_mst1_0",
-      padId: "pcb_smtpad_58",
-      portName: "VBAT_N",
-    },
-    {
-      actualClearance: 0.085,
-      center: { x: 9.433505208, y: 3.5775 },
-      componentId: "pcb_component_29",
-      ownerTraceId: "source_net_1_mst14_0",
-      padId: "pcb_smtpad_105",
-      portName: "pin2",
-    },
-    {
-      actualClearance: 0.083452537,
-      center: { x: 1.238273731, y: 11.124491625 },
-      componentId: "pcb_component_22",
-      ownerTraceId: "source_net_0_mst7_0",
-      padId: "pcb_smtpad_90",
-      portName: "pin1",
-    },
-    {
-      actualClearance: 0.083452537,
-      center: { x: 1.238273731, y: 11.124491625 },
-      componentId: "pcb_component_22",
-      ownerTraceId: "source_net_0_mst8_0",
-      padId: "pcb_smtpad_90",
-      portName: "pin1",
-    },
-  ])
+  expect(violations).toEqual([])
   expect(
     new Set(
       checkViaPadClearance(evaluatedDrc.circuitJson, {
@@ -784,10 +788,10 @@ test("bugreport99 records Pipeline9 nRF52810 via-to-pad clearance violations", a
         return `${padId}:${via.x},${via.y}`
       }),
     ).size,
-  ).toBe(3)
+  ).toBe(0)
 
-  // Circuit JSON aliases suppress the two coincident C1 transitions, while
-  // the SRJ logical ownership above preserves all four foreign-net owners.
+  // Both the circuit-derived and logical route-ownership maps must agree that
+  // the final output has no foreign-pad via clearance violations.
   const circuitConnectivity = getFullConnectivityMapFromCircuitJson(
     evaluatedDrc.circuitJson,
   )
@@ -807,13 +811,7 @@ test("bugreport99 records Pipeline9 nRF52810 via-to-pad clearance violations", a
       actualClearance: roundMetric(Number(error.actual_clearance)),
       padId: error.pcb_pad_ids[1],
     })),
-  ).toEqual([
-    { actualClearance: 0, padId: "pcb_smtpad_58" },
-    {
-      actualClearance: 0.085,
-      padId: "pcb_smtpad_105",
-    },
-  ])
+  ).toEqual([])
   expect(
     solver.pipeline9JointDrcRepairSolver?.stats
       .drcBranchPortfolioViaInPadPhaseAttempted,
@@ -822,6 +820,37 @@ test("bugreport99 records Pipeline9 nRF52810 via-to-pad clearance violations", a
     solver.pipeline9JointDrcRepairSolver?.stats
       .globalDrcForceImproveViaInPadCandidateAttempts,
   ).toBe(0)
+  expect(
+    solver.pipeline9JointDrcRepairSolver?.stats
+      .viaPadClearanceRepairAcceptedCount,
+  ).toBe(3)
+  expect(
+    solver.pipeline9JointDrcRepairSolver?.stats
+      .viaPadClearanceRelaxationAcceptedCount,
+  ).toBe(2)
+  expect(
+    solver.pipeline9JointDrcRepairSolver?.stats
+      .viaPadClearanceRemainingIssueCount,
+  ).toBe(0)
+  expect(
+    solver.pipeline9JointDrcRepairSolver?.stats
+      .viaPadClearanceRegionalCleanupAcceptedCount,
+  ).toBe(1)
+  expect(
+    solver.pipeline9JointDrcRepairSolver?.stats
+      .viaPadClearanceCandidateSearchBudgetExhausted,
+  ).toBe(false)
+  expect(
+    Number(
+      solver.pipeline9JointDrcRepairSolver?.stats
+        .viaPadClearanceCandidateSearchCount,
+    ),
+  ).toBeLessThanOrEqual(
+    Number(
+      solver.pipeline9JointDrcRepairSolver?.stats
+        .viaPadClearanceCandidateSearchBudget,
+    ),
+  )
 
   const physicalMarkers = [
     ...new Map(

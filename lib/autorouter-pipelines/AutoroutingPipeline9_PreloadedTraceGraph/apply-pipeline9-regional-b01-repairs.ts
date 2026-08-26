@@ -19,7 +19,9 @@ import {
 import {
   areAllPortPointsOnNodeBoundary,
   createRegionalFallbackProblem,
+  createRegionalFallbackProblemForRouteSegmentInterval,
   spliceFixedRouteSection,
+  type RouteSegmentInterval,
 } from "./pipeline9-regional-fallback"
 import { Pipeline9HighDensitySolver } from "./pipeline9-high-density-solver"
 import { Pipeline9RegionalFallbackSolver } from "./pipeline9-regional-fallback-solver"
@@ -299,7 +301,7 @@ const candidateConflictsWithFixedRoutes = ({
   return false
 }
 
-const getRegionalCandidate = ({
+export const getRegionalCandidate = ({
   routes,
   fixedObstacleRoutes,
   routeIndex,
@@ -312,6 +314,7 @@ const getRegionalCandidate = ({
   traceWidth,
   obstacleMargin,
   effort,
+  ownedSegmentInterval,
 }: {
   routes: HighDensityRoute[]
   fixedObstacleRoutes: PreloadedHighDensityRoute[]
@@ -325,6 +328,7 @@ const getRegionalCandidate = ({
   traceWidth: number
   obstacleMargin: number
   effort: number
+  ownedSegmentInterval?: RouteSegmentInterval
 }):
   | {
       routes: HighDensityRoute[]
@@ -343,7 +347,14 @@ const getRegionalCandidate = ({
     portPoints: [],
     portPointsInPairs: [],
   }
-  const movableProblem = createRegionalFallbackProblem(node, [movableRoute])
+  const movableProblem = ownedSegmentInterval
+    ? createRegionalFallbackProblemForRouteSegmentInterval({
+        node,
+        sourceRoute: movableRoute,
+        interval: ownedSegmentInterval,
+      })
+    : createRegionalFallbackProblem(node, [movableRoute])
+  if (!movableProblem) return undefined
   const movableSection = movableProblem.fixedRouteSectionsByConnectionName.get(
     movableRoute.connectionName,
   )

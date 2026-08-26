@@ -38,6 +38,11 @@ export type RegionalFallbackProblem = {
   fixedObstacleRoutes: PreloadedHighDensityRoute[]
 }
 
+export type RouteSegmentInterval = {
+  startSegmentIndex: number
+  endSegmentIndex: number
+}
+
 const POINT_EPSILON = 1e-9
 
 const getNodeBounds = (node: NodeWithPortPoints): NodeBounds => ({
@@ -191,6 +196,103 @@ const createFallbackPortPair = (
       rootConnectionName: sourceRoute.rootConnectionName,
     },
   ]
+}
+
+const clippedSegmentEntersNodeInterior = (
+  clippedSegment: { start: RoutePoint; end: RoutePoint } | null,
+  bounds: NodeBounds,
+): boolean => {
+  if (!clippedSegment) return false
+  if (
+    Math.hypot(
+      clippedSegment.end.x - clippedSegment.start.x,
+      clippedSegment.end.y - clippedSegment.start.y,
+    ) > POINT_EPSILON
+  ) {
+    return true
+  }
+  return (
+    classifyPointInBounds({ point: clippedSegment.start, bounds }) === "inside"
+  )
+}
+
+export const createRegionalFallbackProblemForRouteSegmentInterval = ({
+  node,
+  sourceRoute,
+  interval,
+}: {
+  node: NodeWithPortPoints
+  sourceRoute: PreloadedHighDensityRoute
+  interval: RouteSegmentInterval
+}): RegionalFallbackProblem | undefined => {
+  const { startSegmentIndex, endSegmentIndex } = interval
+  if (
+    !Number.isInteger(startSegmentIndex) ||
+    !Number.isInteger(endSegmentIndex) ||
+    startSegmentIndex < 0 ||
+    endSegmentIndex < startSegmentIndex ||
+    endSegmentIndex >= sourceRoute.route.length - 1
+  ) {
+    return undefined
+  }
+  const bounds = getNodeBounds(node)
+  for (
+    let segmentIndex = 0;
+    segmentIndex < sourceRoute.route.length - 1;
+    segmentIndex++
+  ) {
+    if (segmentIndex >= startSegmentIndex && segmentIndex <= endSegmentIndex) {
+      continue
+    }
+    if (
+      clippedSegmentEntersNodeInterior(
+        clipRouteSegmentToBounds(
+          sourceRoute.route[segmentIndex]!,
+          sourceRoute.route[segmentIndex + 1]!,
+          bounds,
+        ),
+        bounds,
+      )
+    ) {
+      return undefined
+    }
+  }
+  const startClip = clipRouteSegmentToBounds(
+    sourceRoute.route[startSegmentIndex]!,
+    sourceRoute.route[startSegmentIndex + 1]!,
+    bounds,
+  )
+  const endClip = clipRouteSegmentToBounds(
+    sourceRoute.route[endSegmentIndex]!,
+    sourceRoute.route[endSegmentIndex + 1]!,
+    bounds,
+  )
+  if (!startClip || !endClip) return undefined
+  if (
+    classifyPointInBounds({ point: startClip.start, bounds }) !==
+      "on-boundary" ||
+    classifyPointInBounds({ point: endClip.end, bounds }) !== "on-boundary"
+  ) {
+    return undefined
+  }
+  const section: FixedRouteSection = {
+    sourceRoutes: [sourceRoute],
+    start: { segmentIndex: startSegmentIndex, point: startClip.start },
+    end: { segmentIndex: endSegmentIndex, point: endClip.end },
+  }
+  if (pointsAreEqual(section.start.point, section.end.point)) return undefined
+  const fallbackPortPair = createFallbackPortPair(section)
+  return {
+    nodeWithPortPoints: {
+      ...node,
+      portPoints: [...node.portPoints, ...fallbackPortPair],
+      portPointsInPairs: [...(node.portPointsInPairs ?? []), fallbackPortPair],
+    },
+    fixedRouteSectionsByConnectionName: new Map([
+      [sourceRoute.connectionName, section],
+    ]),
+    fixedObstacleRoutes: [],
+  }
 }
 
 const pointsAreEqual = (a: RoutePoint, b: RoutePoint) =>

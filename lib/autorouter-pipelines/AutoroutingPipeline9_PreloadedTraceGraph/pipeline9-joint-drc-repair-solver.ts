@@ -26,6 +26,10 @@ import { Pipeline7AdaptiveDrcBranchPortfolioSolver } from "../AutoroutingPipelin
 import { convertPipeline7HdRoutesToSimplifiedPcbTraces } from "../AutoroutingPipeline7_MultiGraph/convertPipeline7HdRoutesToSimplifiedPcbTraces"
 import { applyPipeline9RegionalB01Repairs } from "./apply-pipeline9-regional-b01-repairs"
 import { applyPipeline9TerminalEscapeRelocations } from "./apply-pipeline9-terminal-escape-relocations"
+import {
+  applyPipeline9ViaPadClearanceRepairs,
+  countPipeline9ViaPadClearanceErrors,
+} from "./apply-pipeline9-via-pad-clearance-repairs"
 import { assignUniquePcbTraceIdsToNewTraces } from "./assign-unique-pcb-trace-ids-to-new-traces"
 import {
   type PreloadedHighDensityRoute,
@@ -1369,7 +1373,35 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         : exactReferenceDrcResult.errors
       postExactReferenceDrcIssueCount = exactReferenceDrcErrors.length
       if (exactReferenceDrcErrors.length === 0) {
-        this.combinedOutput = exactOutput
+        const exactIndexedDrcErrors =
+          exactIndexedDrcIssueCount === 0
+            ? []
+            : getPipeline9DrcErrors(this.drcEvaluator!, exactOutput)
+        const exactViaPadClearanceIssueCount =
+          countPipeline9ViaPadClearanceErrors(exactIndexedDrcErrors)
+        const referenceCleanViaPadRepairResult =
+          exactViaPadClearanceIssueCount > 0
+            ? applyPipeline9ViaPadClearanceRepairs({
+                srj: this.params.srj,
+                routes: exactOutput,
+                fixedObstacleRoutes: this.fixedPreloadedObstacleRoutes,
+                newConnections: this.params.newConnections,
+                syntheticConnectionNames: this.syntheticConnectionNames,
+                drcEvaluator: this.drcEvaluator!,
+                referenceDrcEvaluator: this.cachedReferenceDrcEvaluator!,
+                connMap: this.params.connMap,
+                colorMap: this.params.colorMap,
+                viaDiameter: this.params.defaultViaDiameter,
+                traceWidth: this.params.srj.minTraceWidth,
+                obstacleMargin:
+                  this.params.srj.defaultObstacleMargin ??
+                  this.params.srj.minTraceToPadEdgeClearance ??
+                  0.15,
+                effort: this.params.effort,
+              })
+            : undefined
+        this.combinedOutput =
+          referenceCleanViaPadRepairResult?.routes ?? exactOutput
         this.stats = {
           ...this.stats,
           ...this.exactRepairSolver.stats,
@@ -1392,6 +1424,33 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
           regionalB01RepairPreloadEligibleDrcIssueCount: 0,
           regionalB01RepairAttempted: false,
           regionalB01RepairTraceIdCount: 0,
+          viaPadClearanceRepairCandidateCount:
+            referenceCleanViaPadRepairResult?.attemptedCandidateCount ?? 0,
+          viaPadClearanceRepairAcceptedCount:
+            referenceCleanViaPadRepairResult?.acceptedCandidateCount ?? 0,
+          viaPadClearanceRelaxationCandidateCount:
+            referenceCleanViaPadRepairResult?.relaxationCandidateCount ?? 0,
+          viaPadClearanceRelaxationAcceptedCount:
+            referenceCleanViaPadRepairResult?.relaxationAcceptedCount ?? 0,
+          viaPadClearanceTransitionSlideCandidateCount:
+            referenceCleanViaPadRepairResult?.transitionSlideCandidateCount ??
+            0,
+          viaPadClearanceTransitionSlideAcceptedCount:
+            referenceCleanViaPadRepairResult?.transitionSlideAcceptedCount ?? 0,
+          viaPadClearanceRegionalCleanupCandidateCount:
+            referenceCleanViaPadRepairResult?.regionalCleanupCandidateCount ??
+            0,
+          viaPadClearanceRegionalCleanupAcceptedCount:
+            referenceCleanViaPadRepairResult?.regionalCleanupAcceptedCount ?? 0,
+          viaPadClearanceCandidateSearchCount:
+            referenceCleanViaPadRepairResult?.candidateSearchCount ?? 0,
+          viaPadClearanceCandidateSearchBudget:
+            referenceCleanViaPadRepairResult?.candidateSearchBudget ?? 0,
+          viaPadClearanceCandidateSearchBudgetExhausted:
+            referenceCleanViaPadRepairResult?.candidateSearchBudgetExhausted ??
+            false,
+          viaPadClearanceRemainingIssueCount:
+            referenceCleanViaPadRepairResult?.remainingViaPadIssueCount ?? 0,
           terminalEscapeSkippedForIndexedIssueCount: false,
           terminalEscapeCandidateCount: 0,
           terminalEscapeAcceptedCount: 0,
@@ -1445,7 +1504,25 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         0.15,
       effort: this.params.effort,
     })
-    this.combinedOutput = regionalB01RepairResult.routes
+    const viaPadClearanceRepairResult = applyPipeline9ViaPadClearanceRepairs({
+      srj: this.params.srj,
+      routes: regionalB01RepairResult.routes,
+      fixedObstacleRoutes: this.fixedPreloadedObstacleRoutes,
+      newConnections: this.params.newConnections,
+      syntheticConnectionNames: this.syntheticConnectionNames,
+      drcEvaluator: this.drcEvaluator!,
+      referenceDrcEvaluator: this.cachedReferenceDrcEvaluator!,
+      connMap: this.params.connMap,
+      colorMap: this.params.colorMap,
+      viaDiameter: this.params.defaultViaDiameter,
+      traceWidth: this.params.srj.minTraceWidth,
+      obstacleMargin:
+        this.params.srj.defaultObstacleMargin ??
+        this.params.srj.minTraceToPadEdgeClearance ??
+        0.15,
+      effort: this.params.effort,
+    })
+    this.combinedOutput = viaPadClearanceRepairResult.routes
     this.stats = {
       ...this.stats,
       ...this.exactRepairSolver.stats,
@@ -1481,6 +1558,30 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       regionalB01RepairTraceIdCount:
         preloadRepairTraceIds.size +
         (preloadRepairTraceIds.collidingFixedTraceIds?.size ?? 0),
+      viaPadClearanceRepairCandidateCount:
+        viaPadClearanceRepairResult.attemptedCandidateCount,
+      viaPadClearanceRepairAcceptedCount:
+        viaPadClearanceRepairResult.acceptedCandidateCount,
+      viaPadClearanceRelaxationCandidateCount:
+        viaPadClearanceRepairResult.relaxationCandidateCount,
+      viaPadClearanceRelaxationAcceptedCount:
+        viaPadClearanceRepairResult.relaxationAcceptedCount,
+      viaPadClearanceTransitionSlideCandidateCount:
+        viaPadClearanceRepairResult.transitionSlideCandidateCount,
+      viaPadClearanceTransitionSlideAcceptedCount:
+        viaPadClearanceRepairResult.transitionSlideAcceptedCount,
+      viaPadClearanceRegionalCleanupCandidateCount:
+        viaPadClearanceRepairResult.regionalCleanupCandidateCount,
+      viaPadClearanceRegionalCleanupAcceptedCount:
+        viaPadClearanceRepairResult.regionalCleanupAcceptedCount,
+      viaPadClearanceCandidateSearchCount:
+        viaPadClearanceRepairResult.candidateSearchCount,
+      viaPadClearanceCandidateSearchBudget:
+        viaPadClearanceRepairResult.candidateSearchBudget,
+      viaPadClearanceCandidateSearchBudgetExhausted:
+        viaPadClearanceRepairResult.candidateSearchBudgetExhausted,
+      viaPadClearanceRemainingIssueCount:
+        viaPadClearanceRepairResult.remainingViaPadIssueCount,
       terminalEscapeSkippedForIndexedIssueCount:
         !shouldRunPostExactPrecisionPass,
       terminalEscapeCandidateCount:
