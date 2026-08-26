@@ -434,7 +434,7 @@ test("bugreport99 records Pipeline9 nRF52810 via-to-pad clearance violations", a
       portName: "pin1",
     },
   ])
-  await expect(
+  expect(
     new Set(
       checkViaPadClearance(evaluatedDrc.circuitJson, {
         connMap,
@@ -503,7 +503,7 @@ test("bugreport99 records Pipeline9 nRF52810 via-to-pad clearance violations", a
       }),
     ).values(),
   ]
-  expect(
+  await expect(
     getGraphicsSvgFrames({
       frames: getHotspotFrames({
         outputSrj: solver.getOutputSimpleRouteJson(),
