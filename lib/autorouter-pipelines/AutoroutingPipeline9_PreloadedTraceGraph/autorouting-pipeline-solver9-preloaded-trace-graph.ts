@@ -68,6 +68,7 @@ import { TraceSimplificationSolver } from "../../solvers/TraceSimplificationSolv
 import { TraceWidthSolver } from "../../solvers/TraceWidthSolver/TraceWidthSolver"
 import { applyFixedRouteReplacementsToPreloadedTraces } from "./apply-fixed-route-replacements-to-preloaded-traces"
 import { assignUniquePcbTraceIdsToNewTraces } from "./assign-unique-pcb-trace-ids-to-new-traces"
+import { getPcbPortZLayers } from "./get-pcb-port-z-layers"
 import { getPipeline9NetByConnectionName } from "./get-pipeline9-net-by-connection-name"
 import {
   getMaterializedPreloadedSectionHdRoutes,
@@ -727,6 +728,11 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             otherHdRoutes: preloadedHdRoutes,
             netByConnectionName,
             enableCrossingViaReduction: true,
+            pcbPortZLayers: getPcbPortZLayers(
+              cms.srj.connections,
+              cms.srj.obstacles,
+              cms.srj.layerCount,
+            ),
             iterations: 2,
           },
         ]

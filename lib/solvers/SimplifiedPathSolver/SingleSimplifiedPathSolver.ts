@@ -69,6 +69,8 @@ export class SingleSimplifiedPathSolver extends BaseSolver {
     return {
       connectionName: this.inputRoute.connectionName,
       rootConnectionName: this.inputRoute.rootConnectionName,
+      startPcbPortId: this.inputRoute.startPcbPortId,
+      endPcbPortId: this.inputRoute.endPcbPortId,
       traceThickness: this.inputRoute.traceThickness,
       viaDiameter: this.inputRoute.viaDiameter,
       route: this.newRoute,

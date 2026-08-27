@@ -6,6 +6,8 @@ export const canEndpointConnectOnLayer = ({
   endpointX,
   endpointY,
   targetZ,
+  endpointPcbPortId,
+  pcbPortZLayers,
   obstacleSHI,
   route,
   connMap,
@@ -13,10 +15,22 @@ export const canEndpointConnectOnLayer = ({
   endpointX: number
   endpointY: number
   targetZ: number
+  endpointPcbPortId?: string
+  pcbPortZLayers?: ReadonlyMap<string, ReadonlySet<number>>
   obstacleSHI: ObstacleSpatialHashIndex
   route: HighDensityRoute
   connMap: ConnectivityMap
 }): boolean => {
+  const authoritativeEndpointZLayers = endpointPcbPortId
+    ? pcbPortZLayers?.get(endpointPcbPortId)
+    : undefined
+  if (
+    authoritativeEndpointZLayers &&
+    !authoritativeEndpointZLayers.has(targetZ)
+  ) {
+    return false
+  }
+
   const routeIds = [route.connectionName, route.rootConnectionName].filter(
     (id): id is string => id !== undefined,
   )
