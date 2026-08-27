@@ -27,6 +27,7 @@ import {
   SimplifiedPcbTraces,
 } from "lib/types"
 import {
+  AllowedZByConnectionName,
   HighDensityRoute,
   NodeWithPortPoints,
 } from "lib/types/high-density-types"
@@ -66,8 +67,11 @@ import { SingleLayerNodeMergerSolver } from "../../solvers/SingleLayerNodeMerger
 import { StrawSolver } from "../../solvers/StrawSolver/StrawSolver"
 import { TraceSimplificationSolver } from "../../solvers/TraceSimplificationSolver/TraceSimplificationSolver"
 import { TraceWidthSolver } from "../../solvers/TraceWidthSolver/TraceWidthSolver"
+import { addPipeline9ConnectionAllowedZToPortPoints } from "./add-pipeline9-connection-allowed-z-to-port-points"
 import { applyFixedRouteReplacementsToPreloadedTraces } from "./apply-fixed-route-replacements-to-preloaded-traces"
+import { assertPipeline9TracesUseAllowedZ } from "./assert-pipeline9-traces-use-allowed-z"
 import { assignUniquePcbTraceIdsToNewTraces } from "./assign-unique-pcb-trace-ids-to-new-traces"
+import { getPipeline9AllowedZByConnectionName } from "./get-pipeline9-allowed-z-by-connection-name"
 import { getPipeline9NetByConnectionName } from "./get-pipeline9-net-by-connection-name"
 import {
   getMaterializedPreloadedSectionHdRoutes,
@@ -298,6 +302,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
   /** Available segment points after non-component cramped points are filtered. */
   sharedEdgeSegmentsWithNecessaryCrampedPortPoints?: SharedEdgeSegment[]
   highDensityNodePortPoints?: NodeWithPortPoints[]
+  allowedZByConnectionName: AllowedZByConnectionName = {}
 
   cacheProvider: CacheProvider | null = null
   pipelineDef = [
@@ -354,6 +359,13 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
         onSolved: (cms) => {
           cms.srjWithPointPairs =
             cms.netToPointPairsSolver?.getNewSimpleRouteJson()
+          cms.allowedZByConnectionName = getPipeline9AllowedZByConnectionName({
+            srj: cms.originalSrj,
+            connections: [
+              ...cms.originalSrj.connections,
+              ...cms.srjWithPointPairs!.connections,
+            ],
+          })
           cms.colorMap = getColorMap(cms.srjWithPointPairs!, cms.connMap)
           cms.connMap = getConnectivityMapFromSimpleRouteJson(
             cms.srjWithPointPairs!,
@@ -527,6 +539,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             effort: cms.effort,
             preserveTerminalPcbPortIds: true,
             minViaPadDiameter: cms.viaDiameter,
+            allowedZByConnectionName: cms.allowedZByConnectionName,
             flags: {
               FORCE_CENTER_FIRST: true,
               RIPPING_ENABLED: true,
@@ -587,8 +600,14 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
         const uniformNodes =
           cms.uniformPortDistributionSolver?.getOutput() ?? []
         const fallbackNodes = portPointPathingOutput.nodesWithPortPoints
-        const nodePortPointsSource =
+        const unconstrainedNodePortPointsSource =
           uniformNodes.length > 0 ? uniformNodes : fallbackNodes
+        const nodePortPointsSource = addPipeline9ConnectionAllowedZToPortPoints(
+          {
+            nodes: unconstrainedNodePortPointsSource,
+            allowedZByConnectionName: cms.allowedZByConnectionName,
+          },
+        )
 
         cms.highDensityNodePortPoints = structuredClone(nodePortPointsSource)
         const originalFixedHdRoutes = (cms.originalSrj.traces ?? []).flatMap(
@@ -1458,6 +1477,11 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       defaultViaHoleDiameter: this.viaHoleDiameter,
       connMap: this.connMap,
     })
+    assertPipeline9TracesUseAllowedZ({
+      traces: routedTraces,
+      allowedZByConnectionName: this.allowedZByConnectionName,
+      layerCount: this.srj.layerCount,
+    })
     return assignUniquePcbTraceIdsToNewTraces(
       routedTraces,
       this.originalSrj.traces ?? [],
@@ -1485,12 +1509,18 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
         "Pipeline9 invariant violated: solved pipeline is missing the unconditional power-trace expansion solver",
       )
     }
-    return [
+    const traces = [
       ...this.getPowerTraceExpansionFixedTraces().filter(
         (trace) => trace.__replaces_pcb_trace_id !== undefined,
       ),
       ...this.powerTraceExpansionSolver.getOutput(),
     ]
+    assertPipeline9TracesUseAllowedZ({
+      traces,
+      allowedZByConnectionName: this.allowedZByConnectionName,
+      layerCount: this.srj.layerCount,
+    })
+    return traces
   }
 
   getOutputSimpleRouteJson(): SimpleRouteJson {
@@ -1506,6 +1536,11 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       ...this.getPowerTraceExpansionFixedTraces(),
       ...this.powerTraceExpansionSolver.getOutput(),
     ]
+    assertPipeline9TracesUseAllowedZ({
+      traces,
+      allowedZByConnectionName: this.allowedZByConnectionName,
+      layerCount: this.srj.layerCount,
+    })
     return {
       ...this.originalSrj,
       traces,

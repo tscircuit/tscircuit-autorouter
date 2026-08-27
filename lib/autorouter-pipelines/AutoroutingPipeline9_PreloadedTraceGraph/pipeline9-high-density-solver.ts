@@ -61,6 +61,42 @@ type NodeBounds = {
 
 const PRELOADED_TRACE_CLEARANCE = 0.15
 
+type NodeLayerConstraint =
+  | { kind: "none" }
+  | { kind: "shared"; allowedZ: readonly number[] }
+  | { kind: "mixed" }
+
+const getNodeLayerConstraint = (
+  node: NodeWithPortPoints,
+): NodeLayerConstraint => {
+  const connectionNames = [
+    ...new Set(node.portPoints.map((portPoint) => portPoint.connectionName)),
+  ]
+  const allowedZByConnection = connectionNames.map(
+    (connectionName) =>
+      node.portPoints.find(
+        (portPoint) =>
+          portPoint.connectionName === connectionName && portPoint.allowedZ,
+      )?.allowedZ,
+  )
+  if (allowedZByConnection.every((allowedZ) => allowedZ === undefined)) {
+    return { kind: "none" }
+  }
+  const firstAllowedZ = allowedZByConnection[0]
+  if (
+    !firstAllowedZ ||
+    allowedZByConnection.some(
+      (allowedZ) =>
+        !allowedZ ||
+        allowedZ.length !== firstAllowedZ.length ||
+        allowedZ.some((z, index) => z !== firstAllowedZ[index]),
+    )
+  ) {
+    return { kind: "mixed" }
+  }
+  return { kind: "shared", allowedZ: firstAllowedZ }
+}
+
 const getNodeBounds = (
   node: NodeWithPortPoints,
   margin: number,
@@ -460,13 +496,22 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       this.activeNode,
       this.connMap,
     )
+    const layerConstraint = getNodeLayerConstraint(normalizedNode)
+    if (layerConstraint.kind === "mixed") {
+      throw new Error(
+        `Pipeline9 cannot use regional fallback for node "${normalizedNode.capacityMeshNodeId}" with mixed per-connection layer constraints`,
+      )
+    }
     const regionalNode = {
       ...normalizedNode,
       // The capacity path fixes each ordinary node to its assigned layers.
       // Once B01 has proved that assignment unroutable, the regional repair
       // must be able to add a legal layer transition; board obstacles still
       // constrain which of these layers it can actually use.
-      availableZ: Array.from({ length: this.layerCount }, (_, z) => z),
+      availableZ:
+        layerConstraint.kind === "shared"
+          ? [...layerConstraint.allowedZ]
+          : Array.from({ length: this.layerCount }, (_, z) => z),
     }
     const fallbackProblem = createRegionalFallbackProblem(
       regionalNode,
@@ -907,17 +952,27 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       return
     }
 
-    const nodeBounds = getNodeBounds(node, this.obstacleMargin)
+    const layerConstraint = getNodeLayerConstraint(node)
+    const routableNode =
+      layerConstraint.kind === "shared"
+        ? { ...node, availableZ: [...layerConstraint.allowedZ] }
+        : node
+    const nodeBounds = getNodeBounds(routableNode, this.obstacleMargin)
     const routedCopperRadius = Math.max(this.traceWidth, this.viaDiameter) / 2
     const fixedObstacles = this.getUpdatedFixedHdRoutes()
       .filter((route) =>
-        routeOverlapsNode(route, node, nodeBounds, routedCopperRadius),
+        routeOverlapsNode(route, routableNode, nodeBounds, routedCopperRadius),
       )
-      .flatMap((route) => convertFixedRouteToB01Obstacles(route, node))
+      .flatMap((route) => convertFixedRouteToB01Obstacles(route, routableNode))
     this.stats.fixedObstacleUses =
       Number(this.stats.fixedObstacleUses ?? 0) + fixedObstacles.length
     if (fixedObstacles.length === 0) {
-      this.startRegularSolver(node)
+      this.startRegularSolver(routableNode)
+      return
+    }
+    if (layerConstraint.kind === "mixed") {
+      this.error = `Pipeline9 cannot route node "${node.capacityMeshNodeId}" with mixed per-connection layer constraints around fixed copper`
+      this.failed = true
       return
     }
 
@@ -926,7 +981,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       .map((obstacle) =>
         convertObstacleToB01Obstacle({
           obstacle,
-          node,
+          node: routableNode,
           connMap: this.connMap,
           layerCount: this.layerCount,
         }),
@@ -938,14 +993,17 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     this.stats.boardObstacleUses =
       Number(this.stats.boardObstacleUses ?? 0) + boardObstacles.length
 
-    this.activeNode = node
-    if (node.width > 15 || node.height > 15) {
-      this.activeFallbackReason = `B01 node "${node.capacityMeshNodeId}" exceeds the 15x15mm routing limit (${node.width}x${node.height}mm)`
+    this.activeNode = routableNode
+    if (routableNode.width > 15 || routableNode.height > 15) {
+      this.activeFallbackReason = `B01 node "${routableNode.capacityMeshNodeId}" exceeds the 15x15mm routing limit (${routableNode.width}x${routableNode.height}mm)`
       this.startRegionalFallback()
       return
     }
 
-    const normalizedNode = normalizeNodeRootConnectionNames(node, this.connMap)
+    const normalizedNode = normalizeNodeRootConnectionNames(
+      routableNode,
+      this.connMap,
+    )
     this.stats.b01NodeCount = Number(this.stats.b01NodeCount ?? 0) + 1
     this.activeB01Solver = new HighDensitySolverB01({
       ...defaultB01Params,

@@ -13,6 +13,7 @@ import {
   type SimpleRouteConnection,
 } from "lib/types"
 import type {
+  AllowedZByConnectionName,
   NodeWithPortPoints,
   PortPoint,
 } from "lib/types/high-density-types"
@@ -909,20 +910,23 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
   preloadedFixedSegmentCount = 0
   readonly crampedPortTraversalPenalty: number
   readonly useSelectiveReripRouting: boolean
+  readonly allowedZByConnectionName: AllowedZByConnectionName
 
-  constructor(
-    inputProblem: TinyHyperGraphSectionPipelineInput,
-    useSelectiveReripRouting: boolean,
-  ) {
-    super(inputProblem)
-    this.useSelectiveReripRouting = useSelectiveReripRouting
+  constructor(params: {
+    inputProblem: TinyHyperGraphSectionPipelineInput
+    useSelectiveReripRouting: boolean
+    allowedZByConnectionName: AllowedZByConnectionName
+  }) {
+    super(params.inputProblem)
+    this.useSelectiveReripRouting = params.useSelectiveReripRouting
+    this.allowedZByConnectionName = params.allowedZByConnectionName
     this.crampedPortTraversalPenalty = DEFAULT_CRAMPED_PORT_TRAVERSAL_PENALTY
     const preloadedStats = getSerializedPreloadedTraceStats(
-      inputProblem.serializedHyperGraph,
+      params.inputProblem.serializedHyperGraph,
     )
     this.preloadedPortCount = preloadedStats.preloadedPortCount
     this.preloadedFixedSegmentCount = preloadedStats.preloadedAssignmentCount
-    if (useSelectiveReripRouting) {
+    if (params.useSelectiveReripRouting) {
       const solveGraphStep = this.pipelineDef.find(
         (pipelineStep) => pipelineStep.solverName === "solveGraph",
       )
@@ -934,7 +938,9 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
       solveGraphStep.solverClass =
         SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments
     }
-    this.MAX_ITERATIONS = getTinyHyperGraphPipelineMaxIterations(inputProblem)
+    this.MAX_ITERATIONS = getTinyHyperGraphPipelineMaxIterations(
+      params.inputProblem,
+    )
   }
 
   override loadHyperGraph(serializedHyperGraph: SerializedHyperGraph) {
@@ -1016,6 +1022,13 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
       applyMetadataPortPenalties(loadedSolver)
       applyTerminalRegionNetIds(loadedSolver)
       clearPreloadedEndpointRegionNetIds(loadedSolver)
+    }
+
+    if (
+      solver instanceof
+      SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments
+    ) {
+      solver.setAllowedZByConnectionName(this.allowedZByConnectionName)
     }
 
     this.configuredSolvers.add(solver)
@@ -1134,10 +1147,12 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       partialRipEligibilityCount,
     )
     this.tinyPipelineSolver =
-      new TinyHyperGraphSectionPipelineWithTerminalNetIds(
-        tinyPipelineInput,
-        params.flags.USE_SELECTIVE_RERIP_ROUTING === true,
-      )
+      new TinyHyperGraphSectionPipelineWithTerminalNetIds({
+        inputProblem: tinyPipelineInput,
+        useSelectiveReripRouting:
+          params.flags.USE_SELECTIVE_RERIP_ROUTING === true,
+        allowedZByConnectionName: params.allowedZByConnectionName ?? {},
+      })
     this.primaryTinyPipelineSolver = this.tinyPipelineSolver
     if (
       connections.length >= TRACE_DENSITY_PORTFOLIO_MIN_ROUTE_COUNT &&
@@ -1432,10 +1447,13 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       if (this.shouldEvaluateAlternative(this.primaryCandidateSummary)) {
         this.alternativeCandidateEvaluated = true
         this.alternativeTinyPipelineSolver =
-          new TinyHyperGraphSectionPipelineWithTerminalNetIds(
-            this.alternativeTinyPipelineInput!,
-            this.params.flags.USE_SELECTIVE_RERIP_ROUTING === true,
-          )
+          new TinyHyperGraphSectionPipelineWithTerminalNetIds({
+            inputProblem: this.alternativeTinyPipelineInput!,
+            useSelectiveReripRouting:
+              this.params.flags.USE_SELECTIVE_RERIP_ROUTING === true,
+            allowedZByConnectionName:
+              this.params.allowedZByConnectionName ?? {},
+          })
         this.tinyPipelineSolver = this.alternativeTinyPipelineSolver
         this.candidatePortfolioPhase = "alternative"
       } else {

@@ -388,9 +388,18 @@ export class HighDensitySolver extends BaseSolver {
       growShrinkSolutionValidator: this.growShrinkSolutionValidator,
       captureSearchDebug: this.captureSearchDebug,
     }
-    this.activeSubSolver = this.useGrowShrinkHighDensityIntraNodeSolver
-      ? new GrowShrinkHighDensityIntraNodeSolver(intraNodeSolverParams)
-      : new PortfolioSingleIntraNodeSolver(intraNodeSolverParams)
+    const nodeAllowedZ = node.availableZ ?? []
+    const requiresPerConnectionLayerConstraints = node.portPoints.some(
+      (portPoint) =>
+        portPoint.allowedZ !== undefined &&
+        (portPoint.allowedZ.length !== nodeAllowedZ.length ||
+          portPoint.allowedZ.some((z, index) => z !== nodeAllowedZ[index])),
+    )
+    this.activeSubSolver = requiresPerConnectionLayerConstraints
+      ? new IntraNodeRouteSolver(intraNodeSolverParams)
+      : this.useGrowShrinkHighDensityIntraNodeSolver
+        ? new GrowShrinkHighDensityIntraNodeSolver(intraNodeSolverParams)
+        : new PortfolioSingleIntraNodeSolver(intraNodeSolverParams)
     this.updateCacheStats()
   }
 

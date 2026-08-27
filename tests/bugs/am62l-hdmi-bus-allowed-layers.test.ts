@@ -10,7 +10,7 @@ import { getGraphicsSvgFrames } from "../fixtures/solver-svg-frames"
 
 const HDMI_D2_NEGATIVE_TRACE = "source_trace_25"
 
-test("AM62L HDMI D2 pair escapes its top-only bus constraint", async () => {
+test("AM62L HDMI D2 pair stays within its top-only bus constraint", async () => {
   const inputSrj = structuredClone(boardPhase) as SimpleRouteJson
   const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(inputSrj, {
     cacheProvider: null,
@@ -46,7 +46,7 @@ test("AM62L HDMI D2 pair escapes its top-only bus constraint", async () => {
   // U5.TX2_NEG -> U6.D2_NEG -> J2.pin3 on the AM62L carrier.
   expect(
     [...d2NegativeLayers].every((layer) => allowedLayers.includes(layer)),
-  ).toBe(false)
+  ).toBe(true)
 
   const routedGraphics: GraphicsObject = convertSrjToGraphicsObject(
     { ...inputSrj, traces: routedTraces },
@@ -81,9 +81,9 @@ test("AM62L HDMI D2 pair escapes its top-only bus constraint", async () => {
     {
       x: -20,
       y: -8,
-      text: "TMDS_D2_N requests top; Pipeline9 emits top + inner1",
+      text: "TMDS_D2_N remains on its declared top layer",
       fontSize: 0.7,
-      color: "#b91c1c",
+      color: "#166534",
       anchorSide: "center_left",
     },
   ]
@@ -92,7 +92,7 @@ test("AM62L HDMI D2 pair escapes its top-only bus constraint", async () => {
     getGraphicsSvgFrames({
       frames: [
         {
-          name: "AM62L HDMI • forbidden inner1 route",
+          name: "AM62L HDMI • top-only bus constraint honored",
           pipeline: "end",
           graphics: routedGraphics,
         },

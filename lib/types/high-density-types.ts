@@ -1,4 +1,8 @@
-import type { CircuitJsonMetadata } from "./srj-types"
+import type { CircuitJsonMetadata, ConnectionName } from "./srj-types"
+
+export type AllowedZByConnectionName = Readonly<
+  Partial<Record<ConnectionName, readonly number[]>>
+>
 
 export type PortPoint = {
   connectionName: string
@@ -8,6 +12,8 @@ export type PortPoint = {
   x: number
   y: number
   z: number
+  /** Layers this connection may use while crossing the node. */
+  allowedZ?: readonly number[]
   prevPortPointId?: string
   nextPortPointId?: string
 }

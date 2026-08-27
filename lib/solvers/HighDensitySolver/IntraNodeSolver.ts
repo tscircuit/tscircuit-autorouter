@@ -227,6 +227,10 @@ export class IntraNodeRouteSolver extends BaseSolver {
     points: { x: number; y: number; z: number }[]
   }) {
     const { connectionName, rootConnectionName, points } = unsolvedConnection
+    const connectionAllowedZ = this.nodeWithPortPoints.portPoints.find(
+      (portPoint) =>
+        portPoint.connectionName === connectionName && portPoint.allowedZ,
+    )?.allowedZ
     return {
       connectionName,
       rootConnectionName,
@@ -251,14 +255,18 @@ export class IntraNodeRouteSolver extends BaseSolver {
         2,
       ),
       availableZ:
-        this.nodeWithPortPoints.availableZ &&
-        this.nodeWithPortPoints.availableZ.length > 0
-          ? this.nodeWithPortPoints.availableZ
-          : [
-              ...new Set(
-                this.nodeWithPortPoints.portPoints.map((point) => point.z ?? 0),
-              ),
-            ].sort((a, b) => a - b),
+        connectionAllowedZ !== undefined
+          ? [...connectionAllowedZ]
+          : this.nodeWithPortPoints.availableZ &&
+              this.nodeWithPortPoints.availableZ.length > 0
+            ? this.nodeWithPortPoints.availableZ
+            : [
+                ...new Set(
+                  this.nodeWithPortPoints.portPoints.map(
+                    (point) => point.z ?? 0,
+                  ),
+                ),
+              ].sort((a, b) => a - b),
       hyperParameters: this.hyperParameters,
       connMap: this.connMap,
       viaDiameter: this.viaDiameter,
