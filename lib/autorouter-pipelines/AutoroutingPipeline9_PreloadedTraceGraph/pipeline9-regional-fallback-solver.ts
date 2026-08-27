@@ -143,8 +143,11 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
   }
 
   private validateCandidateRoutes(routes: HighDensityRoute[]): boolean {
-    const { boardObstacles, movablePreloadedConnectionNames, viaToPadClearance } =
-      this.params
+    const {
+      boardObstacles,
+      movablePreloadedConnectionNames,
+      viaToPadClearance,
+    } = this.params
     if (
       !boardObstacles ||
       !movablePreloadedConnectionNames ||

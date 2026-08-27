@@ -61,9 +61,7 @@ export class HighDensitySolver extends BaseSolver {
   preserveTerminalPcbPortIds: boolean
   growShrinkMaxInnerIterationsPerGrowthAttempt?: number
   growShrinkFallbackToInvalidGeometryOnFailure: boolean
-  growShrinkSolutionValidator?: (
-    routes: HighDensityIntraNodeRoute[],
-  ) => boolean
+  growShrinkSolutionValidator?: (routes: HighDensityIntraNodeRoute[]) => boolean
   captureSearchDebug: boolean
 
   failedSolvers: HighDensityIntraNodeSolver[]

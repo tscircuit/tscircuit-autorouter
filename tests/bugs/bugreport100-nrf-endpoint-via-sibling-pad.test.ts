@@ -2,7 +2,10 @@ import { checkViaPadClearance } from "@tscircuit/checks"
 import { expect, test } from "bun:test"
 import { Pipeline9RegionalFallbackSolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/pipeline9-regional-fallback-solver"
 import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
-import type { HighDensityRoute, NodeWithPortPoints } from "lib/types/high-density-types"
+import type {
+  HighDensityRoute,
+  NodeWithPortPoints,
+} from "lib/types/high-density-types"
 import type { Obstacle, SimpleRouteJson, SimplifiedPcbTrace } from "lib/types"
 import { convertHdRouteToSimplifiedRoute } from "lib/utils/convertHdRouteToSimplifiedRoute"
 import { convertSrjToGraphicsObject } from "lib/utils/convertSrjToGraphicsObject"
