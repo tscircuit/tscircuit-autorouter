@@ -6,8 +6,7 @@ import simpleRouteJson from "../../fixtures/bug-reports/cm5-spi-routing-timeout/
 }
 import { getLastStepSvg } from "../fixtures/getLastStepSvg"
 
-const RUN_TIMEOUT_REPRO =
-  process.env.RUN_CM5_SPI_ROUTING_TIMEOUT_REPRO === "1"
+const RUN_TIMEOUT_REPRO = process.env.RUN_CM5_SPI_ROUTING_TIMEOUT_REPRO === "1"
 const EXPECTED_MAX_RUNTIME_MS = 120_000
 
 test("CM5 dual-SPI input snapshot and optional Pipeline 7 timeout repro", () => {
