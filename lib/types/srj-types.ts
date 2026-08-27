@@ -107,6 +107,8 @@ export interface SimpleRouteBus {
 
 export interface Obstacle {
   obstacleId?: string
+  /** Authoritative routing-domain role for non-terminal obstacle policy. */
+  obstacleRole?: "pad" | "component_body" | "keepout"
   /** Optional source component identifier associated with this obstacle. */
   componentId?: string
   /**

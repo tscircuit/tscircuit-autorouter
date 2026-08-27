@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test"
 import { AutoroutingPipelineSolver7_MultiGraph } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/AutoroutingPipelineSolver7_MultiGraph"
 
-test("Pipeline7 runs post-processing before default power expansion", () => {
+test("Pipeline7 runs final DRC repair after post-processing and power expansion", () => {
   const solver = new AutoroutingPipelineSolver7_MultiGraph({
     layerCount: 2,
     minTraceWidth: 0.15,
@@ -31,8 +31,10 @@ test("Pipeline7 runs post-processing before default power expansion", () => {
       },
     ],
   })
-  const powerTraceExpansionStep = solver.pipelineDef.at(-1)
-  const lengthMatchingPostProcessingStep = solver.pipelineDef.at(-2)
+  const postPowerDrcRepairStep = solver.pipelineDef.at(-1)
+  const powerTraceExpansionStep = solver.pipelineDef.at(-2)
+  const lengthMatchingPostProcessingStep = solver.pipelineDef.at(-3)
+  expect(postPowerDrcRepairStep?.solverName).toBe("postPowerDrcRepairSolver")
   expect(powerTraceExpansionStep?.solverName).toBe("powerTraceExpansionSolver")
   expect(lengthMatchingPostProcessingStep?.solverName).toBe(
     "lengthMatchingPostProcessingSolver",
@@ -115,4 +117,17 @@ test("Pipeline7 runs post-processing before default power expansion", () => {
       .getOutput()
       .hdRoutes.map((route: any) => route.connectionName),
   ).toEqual(["PAIR_P_mst0", "PAIR_N_mst0"])
+
+  const emptySolver = new AutoroutingPipelineSolver7_MultiGraph({
+    layerCount: 2,
+    minTraceWidth: 0.15,
+    bounds: { minX: 0, minY: 0, maxX: 2, maxY: 2 },
+    obstacles: [],
+    connections: [],
+  })
+  expect(() => emptySolver.solveUntilPhase("unknown-phase")).toThrow(
+    "Pipeline 7 has no phase named unknown-phase",
+  )
+  expect(() => emptySolver.solveUntilPhase("none")).not.toThrow()
+  expect(emptySolver.solved).toBe(true)
 })

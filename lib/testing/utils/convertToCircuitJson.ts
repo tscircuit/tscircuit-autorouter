@@ -11,6 +11,7 @@ import { HighDensityRoute } from "lib/types/high-density-types"
 import { getConnectionPointLayers } from "lib/types/srj-types"
 import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
 import { getViaDimensions } from "lib/utils/getViaDimensions"
+import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
 import type { LayerName } from "lib/utils/mapZToLayerName"
 import { mapZToLayerName } from "lib/utils/mapZToLayerName"
 
@@ -640,6 +641,18 @@ const layerNames = new Set<string>([
 
 const isLayerName = (layer: string): layer is LayerName => layerNames.has(layer)
 
+const getInclusiveViaLayers = (
+  fromLayer: LayerName,
+  toLayer: LayerName,
+  layerCount: number,
+): LayerName[] => {
+  const fromZ = mapLayerNameToZ(fromLayer, layerCount)
+  const toZ = mapLayerNameToZ(toLayer, layerCount)
+  return Array.from({ length: Math.abs(toZ - fromZ) + 1 }, (_, offset) =>
+    mapZToLayerName(Math.min(fromZ, toZ) + offset, layerCount),
+  )
+}
+
 /**
  * Create pad-like circuit-json elements from SRJ obstacles.
  * Multi-layer obstacles represent plated holes and must not be deduped away
@@ -683,6 +696,9 @@ function createPcbPadElements(srj: SimpleRouteJson): AnyCircuitElement[] {
     const x = obstacle.center.x
     const y = obstacle.center.y
     const rotationDegrees = obstacle.ccwRotationDegrees
+    const runtimeObstacleType = (obstacle as unknown as { type: string }).type
+    const isOvalObstacle = runtimeObstacleType === "oval"
+    const isCircularOval = isOvalObstacle && Math.abs(width - height) < 0.001
 
     const isMultiLayerObstacle = Boolean(platedHoleId) || layers.length > 1
 
@@ -692,36 +708,7 @@ function createPcbPadElements(srj: SimpleRouteJson): AnyCircuitElement[] {
       if (addedPlatedHoleIds.has(id)) continue
       addedPlatedHoleIds.add(id)
 
-      if (
-        typeof rotationDegrees === "number" &&
-        Number.isFinite(rotationDegrees)
-      ) {
-        const holeDiameter = Math.max(Math.min(width, height) * 0.5, 0.1)
-        pads.push({
-          type: "pcb_plated_hole",
-          pcb_plated_hole_id: id,
-          shape: "rotated_pill_hole_with_rect_pad",
-          hole_shape: "rotated_pill",
-          pad_shape: "rect",
-          hole_width: holeDiameter,
-          hole_height: holeDiameter,
-          hole_ccw_rotation: rotationDegrees,
-          rect_pad_width: width,
-          rect_pad_height: height,
-          rect_ccw_rotation: rotationDegrees,
-          hole_offset_x: 0,
-          hole_offset_y: 0,
-          x,
-          y,
-          layers,
-          ...(pcbPortId ? { pcb_port_id: pcbPortId } : {}),
-        })
-        continue
-      }
-
-      const isCircularLike = Math.abs(width - height) < 0.001
-
-      if (isCircularLike) {
+      if (isCircularOval) {
         pads.push({
           type: "pcb_plated_hole",
           pcb_plated_hole_id: id,
@@ -736,6 +723,26 @@ function createPcbPadElements(srj: SimpleRouteJson): AnyCircuitElement[] {
         continue
       }
 
+      if (isOvalObstacle) {
+        pads.push({
+          type: "pcb_plated_hole",
+          pcb_plated_hole_id: id,
+          shape: "oval",
+          outer_width: width,
+          outer_height: height,
+          hole_width: Math.max(width * 0.5, 0.1),
+          hole_height: Math.max(height * 0.5, 0.1),
+          ccw_rotation: rotationDegrees ?? 0,
+          x,
+          y,
+          layers,
+          ...(pcbPortId ? { pcb_port_id: pcbPortId } : {}),
+        })
+        continue
+      }
+
+      // SRJ obstacle geometry is authoritative. A square `rect` obstacle is
+      // still rectangular copper; width === height does not prove a circle.
       pads.push({
         type: "pcb_plated_hole",
         pcb_plated_hole_id: id,
@@ -744,6 +751,10 @@ function createPcbPadElements(srj: SimpleRouteJson): AnyCircuitElement[] {
         hole_diameter: Math.max(Math.min(width, height) * 0.5, 0.1),
         rect_pad_width: width,
         rect_pad_height: height,
+        ...(typeof rotationDegrees === "number" &&
+        Number.isFinite(rotationDegrees)
+          ? { rect_ccw_rotation: rotationDegrees }
+          : {}),
         hole_offset_x: 0,
         hole_offset_y: 0,
         x,
@@ -757,6 +768,41 @@ function createPcbPadElements(srj: SimpleRouteJson): AnyCircuitElement[] {
     const id = smtPadId ?? `pcb_smtpad_${x.toFixed(3)}_${y.toFixed(3)}`
     if (addedSmtPadIds.has(id)) continue
     addedSmtPadIds.add(id)
+
+    if (isCircularOval) {
+      pads.push({
+        type: "pcb_smtpad",
+        pcb_smtpad_id: id,
+        layer: layers[0],
+        shape: "circle",
+        radius: Math.max(width, height) / 2,
+        x,
+        y,
+        ...(pcbPortId ? { pcb_port_id: pcbPortId } : {}),
+      })
+      continue
+    }
+
+    if (isOvalObstacle) {
+      const isRotated =
+        typeof rotationDegrees === "number" &&
+        Number.isFinite(rotationDegrees) &&
+        Math.abs(rotationDegrees) > 0.001
+      pads.push({
+        type: "pcb_smtpad",
+        pcb_smtpad_id: id,
+        layer: layers[0],
+        shape: isRotated ? "rotated_pill" : "pill",
+        width,
+        height,
+        radius: Math.min(width, height) / 2,
+        ...(isRotated ? { ccw_rotation: rotationDegrees } : {}),
+        x,
+        y,
+        ...(pcbPortId ? { pcb_port_id: pcbPortId } : {}),
+      } as any)
+      continue
+    }
 
     if (
       typeof rotationDegrees === "number" &&
@@ -833,7 +879,11 @@ function extractViasFromRoutes(
                 y: segment.y,
                 outer_diameter: viaDiameter,
                 hole_diameter: viaHoleDiameter,
-                layers: [segment.from_layer, segment.to_layer],
+                layers: getInclusiveViaLayers(
+                  segment.from_layer,
+                  segment.to_layer,
+                  layerCount,
+                ),
               })
               viaLocations.add(locationKey)
             }
@@ -869,7 +919,7 @@ function extractViasFromRoutes(
                 y: currPoint.y,
                 outer_diameter: viaDiameter,
                 hole_diameter: viaHoleDiameter,
-                layers: [fromLayer, toLayer],
+                layers: getInclusiveViaLayers(fromLayer, toLayer, layerCount),
               })
               viaLocations.add(locationKey)
             }

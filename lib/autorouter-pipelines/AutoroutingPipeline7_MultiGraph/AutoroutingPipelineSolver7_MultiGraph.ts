@@ -74,6 +74,10 @@ import { convertPipeline7HdRoutesToSimplifiedPcbTraces } from "./convertPipeline
 import { createPipeline7AutoroutingDrcEvaluator } from "./create-pipeline7-autorouting-drc-evaluator"
 import { getPowerTraceExpansionConnectionNames } from "./getPowerTraceExpansionConnectionNames"
 import { lockHdRouteTerminals } from "./lock-hd-route-terminals"
+import {
+  PostPowerDrcRepairSolver,
+  type PostPowerDrcRepairSolverOptions,
+} from "./post-power-drc-repair-solver"
 import { preparePipeline7PowerTraceExpansionInput } from "./prepare-pipeline7-power-trace-expansion-input"
 
 interface CapacityMeshSolverOptions {
@@ -86,6 +90,13 @@ interface CapacityMeshSolverOptions {
   minNodeArea?: number
   visualizationTraceColorMode?: TraceColorMode
   powerTraceExpansion?: PowerTraceExpanderOptions
+  postPowerDrcRepair?: Pick<
+    PostPowerDrcRepairSolverOptions,
+    | "maxCandidateEvaluations"
+    | "maxRuntimeMs"
+    | "maxLocalShiftRepairs"
+    | "maxLayerLiftRepairs"
+  >
 }
 export type AutoroutingPipelineSolverOptions = CapacityMeshSolverOptions
 
@@ -234,6 +245,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
   traceSimplificationSolver?: TraceSimplificationSolver
   lengthMatchingPostProcessingSolver?: DifferentialPairPostProcessingSolver
   powerTraceExpansionSolver?: PowerTraceExpansionSolver
+  postPowerDrcRepairSolver?: PostPowerDrcRepairSolver
   availableSegmentPointSolver?: AvailableSegmentPointSolver
   portPointPathingSolver?: TinyHypergraphPortPointPathingSolver
   multiSectionPortPointOptimizer?: MultiSectionPortPointOptimizer
@@ -816,6 +828,19 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
         ]
       },
     ),
+    definePipelineStep(
+      "postPowerDrcRepairSolver",
+      PostPowerDrcRepairSolver,
+      (cms) => [
+        {
+          originalSrj: cms.originalSrj,
+          srjWithPointPairs: cms.srjWithPointPairs!,
+          traces: cms.powerTraceExpansionSolver!.getOutput(),
+          effort: cms.effort,
+          ...cms.opts.postPowerDrcRepair,
+        },
+      ],
+    ),
   ]
 
   constructor(
@@ -905,7 +930,8 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
     this.activeSubSolver = new pipelineStepDef.solverClass(...constructorParams)
     if (
       pipelineStepDef.solverName === "lengthMatchingPostProcessingSolver" ||
-      pipelineStepDef.solverName === "powerTraceExpansionSolver"
+      pipelineStepDef.solverName === "powerTraceExpansionSolver" ||
+      pipelineStepDef.solverName === "postPowerDrcRepairSolver"
     )
       this.MAX_ITERATIONS = Math.max(
         this.MAX_ITERATIONS,
@@ -916,9 +942,38 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
     this.startTimeOfPhase[pipelineStepDef.solverName] = performance.now()
   }
 
-  solveUntilPhase(phase: string) {
+  solveUntilPhase(phase: string): void {
+    if (
+      phase !== "none" &&
+      !this.pipelineDef.some((step) => step.solverName === phase)
+    ) {
+      throw new Error(`Pipeline 7 has no phase named ${phase}`)
+    }
     while (this.getCurrentPhase() !== phase) {
+      if (this.failed) {
+        throw new Error(
+          `Pipeline 7 cannot reach phase ${phase} after failure${this.error ? `: ${this.error}` : ""}`,
+        )
+      }
+      if (this.solved) {
+        throw new Error(
+          `Pipeline 7 completed before reaching requested phase ${phase}`,
+        )
+      }
       this.step()
+    }
+    if (phase === "none" && !this.solved) {
+      if (this.failed) {
+        throw new Error(
+          `Pipeline 7 cannot complete after failure${this.error ? `: ${this.error}` : ""}`,
+        )
+      }
+      this.step()
+      if (this.failed) {
+        throw new Error(
+          `Pipeline 7 cannot complete after failure${this.error ? `: ${this.error}` : ""}`,
+        )
+      }
     }
   }
 
@@ -1179,6 +1234,9 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
     }
 
     if (this.powerTraceExpansionSolver) {
+      if (this.postPowerDrcRepairSolver) {
+        return this.postPowerDrcRepairSolver.getOutput()
+      }
       return this.powerTraceExpansionSolver.getOutput()
     }
 

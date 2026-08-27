@@ -50,12 +50,20 @@ export interface GetDrcErrorsResult {
 export interface GetDrcErrorsOptions {
   viaClearance?: number
   traceClearance?: number
+  includeBoardEdge?: boolean
   includeTraceContinuity?: boolean
   includeTypedTraceClearance?: boolean
+  /**
+   * Optional routing-domain connectivity used to supplement Circuit JSON
+   * aliases that are not represented by source records in the converted
+   * board. Only identifiers present in the Circuit JSON are merged.
+   */
+  supplementalConnMap?: ConnectivityMap
 }
 
-const createDrcConnectivityMap = (
+export const createDrcConnectivityMap = (
   circuitJson: CircuitJson,
+  supplementalConnMap?: ConnectivityMap,
 ): ConnectivityMap => {
   const connMap = getFullConnectivityMapFromCircuitJson(circuitJson)
   const viaTraceConnections = circuitJson
@@ -66,6 +74,33 @@ const createDrcConnectivityMap = (
     .map((via) => [via.pcb_via_id, via.pcb_trace_id])
 
   connMap.addConnections(viaTraceConnections)
+  if (supplementalConnMap) {
+    const identifiers = new Set<string>()
+    for (const element of circuitJson) {
+      for (const [key, value] of Object.entries(element)) {
+        if (key.endsWith("_id") && typeof value === "string") {
+          identifiers.add(value)
+        } else if (key.endsWith("_ids") && Array.isArray(value)) {
+          for (const id of value) {
+            if (typeof id === "string") identifiers.add(id)
+          }
+        }
+      }
+    }
+    const idsBySupplementalNet = new Map<string, string[]>()
+    for (const id of identifiers) {
+      const netId = supplementalConnMap.getNetConnectedToId(id)
+      if (!netId) continue
+      const ids = idsBySupplementalNet.get(netId) ?? []
+      ids.push(id)
+      idsBySupplementalNet.set(netId, ids)
+    }
+    for (const ids of idsBySupplementalNet.values()) {
+      if (ids.length < 2) continue
+      const rootId = ids[0]!
+      connMap.addConnections(ids.slice(1).map((id) => [rootId, id]))
+    }
+  }
   return connMap
 }
 
@@ -73,7 +108,10 @@ export const getDrcErrors = (
   circuitJson: CircuitJson,
   options: GetDrcErrorsOptions = {},
 ): GetDrcErrorsResult => {
-  const connMap = createDrcConnectivityMap(circuitJson)
+  const connMap = createDrcConnectivityMap(
+    circuitJson,
+    options.supplementalConnMap,
+  )
   const viaClearance = Math.max(
     options.viaClearance ?? MIN_VIA_TO_VIA_CLEARANCE,
     MIN_VIA_TO_VIA_CLEARANCE,
@@ -109,7 +147,9 @@ export const getDrcErrors = (
 
   const errors: DrcError[] = [
     ...traceErrors,
-    ...checkPcbTracesOutOfBoard(circuitJson),
+    ...(options.includeBoardEdge === false
+      ? []
+      : checkPcbTracesOutOfBoard(circuitJson)),
     ...(options.includeTraceContinuity === false
       ? []
       : checkTracesAreContiguous(circuitJson)),
