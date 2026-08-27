@@ -1,13 +1,11 @@
-import { ObstacleSpatialHashIndex } from "lib/data-structures/ObstacleTree"
-import { BaseSolver } from "../BaseSolver"
-import {
-  HighDensityRoute,
-  HighDensityRouteSpatialIndex,
-} from "lib/data-structures/HighDensityRouteSpatialIndex"
-import { GraphicsObject } from "graphics-debug"
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
-import { doesSegmentCrossPolygonBoundary } from "lib/utils/polygonContainment"
+import { GraphicsObject } from "graphics-debug"
+import { HighDensityRouteSpatialIndex } from "lib/data-structures/HighDensityRouteSpatialIndex"
+import { ObstacleSpatialHashIndex } from "lib/data-structures/ObstacleTree"
+import type { HighDensityRoute } from "lib/types/high-density-types"
 import { calculate45DegreePaths } from "lib/utils/calculate45DegreePaths"
+import { doesSegmentCrossPolygonBoundary } from "lib/utils/polygonContainment"
+import { BaseSolver } from "../BaseSolver"
 import { breakRouteIntoSections } from "./break-route-into-sections"
 import { canEndpointConnectOnLayer } from "./can-endpoint-connect-on-layer"
 import { canSectionMoveToLayer } from "./can-section-move-to-layer"
@@ -45,6 +43,7 @@ export class SingleRouteUselessViaRemovalSolver extends BaseSolver {
   unsimplifiedRoute: HighDensityRoute
   connMap: ConnectivityMap
   outline?: Array<{ x: number; y: number }>
+  terminalLayerIndicesByPcbPortId?: ReadonlyMap<string, ReadonlySet<number>>
 
   routeSections: Array<RouteSection>
 
@@ -74,6 +73,7 @@ export class SingleRouteUselessViaRemovalSolver extends BaseSolver {
     enableGeometryShortcuts?: boolean
     enableObstacleDetourShortcuts?: boolean
     preserveRouteEndpoints?: boolean
+    terminalLayerIndicesByPcbPortId?: ReadonlyMap<string, ReadonlySet<number>>
   }) {
     super()
     this.currentSectionIndex = 0 // Start at 0 to check first section for MLCP via removal
@@ -82,6 +82,8 @@ export class SingleRouteUselessViaRemovalSolver extends BaseSolver {
     this.unsimplifiedRoute = params.unsimplifiedRoute
     this.connMap = params.connMap
     this.outline = params.outline
+    this.terminalLayerIndicesByPcbPortId =
+      params.terminalLayerIndicesByPcbPortId
     this.GEOMETRY_SHORTCUT_TRACE_MARGIN =
       params.geometryShortcutTraceMargin ?? this.GEOMETRY_SHORTCUT_TRACE_MARGIN
     this.GEOMETRY_SHORTCUT_OBSTACLE_MARGIN =
@@ -577,6 +579,8 @@ export class SingleRouteUselessViaRemovalSolver extends BaseSolver {
           endpointX: firstPoint.x,
           endpointY: firstPoint.y,
           targetZ,
+          endpointPcbPortId: this.unsimplifiedRoute.startPcbPortId,
+          terminalLayerIndicesByPcbPortId: this.terminalLayerIndicesByPcbPortId,
           obstacleSHI: this.obstacleSHI,
           route: this.unsimplifiedRoute,
           connMap: this.connMap,
@@ -624,6 +628,9 @@ export class SingleRouteUselessViaRemovalSolver extends BaseSolver {
             endpointX: lastPoint.x,
             endpointY: lastPoint.y,
             targetZ,
+            endpointPcbPortId: this.unsimplifiedRoute.endPcbPortId,
+            terminalLayerIndicesByPcbPortId:
+              this.terminalLayerIndicesByPcbPortId,
             obstacleSHI: this.obstacleSHI,
             route: this.unsimplifiedRoute,
             connMap: this.connMap,
@@ -722,6 +729,7 @@ export class SingleRouteUselessViaRemovalSolver extends BaseSolver {
       enableGeometryShortcuts: this.ENABLE_GEOMETRY_SHORTCUTS,
       enableObstacleDetourShortcuts: this.ENABLE_OBSTACLE_DETOUR_SHORTCUTS,
       preserveRouteEndpoints: this.PRESERVE_ROUTE_ENDPOINTS,
+      terminalLayerIndicesByPcbPortId: this.terminalLayerIndicesByPcbPortId,
     }
   }
 
@@ -741,6 +749,8 @@ export class SingleRouteUselessViaRemovalSolver extends BaseSolver {
     return {
       connectionName: this.unsimplifiedRoute.connectionName,
       rootConnectionName: this.unsimplifiedRoute.rootConnectionName,
+      startPcbPortId: this.unsimplifiedRoute.startPcbPortId,
+      endPcbPortId: this.unsimplifiedRoute.endPcbPortId,
       route,
       traceThickness: this.unsimplifiedRoute.traceThickness,
       vias,

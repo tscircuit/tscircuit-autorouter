@@ -26,6 +26,11 @@ export interface UselessViaRemovalSolverInput {
   enableObstacleDetourShortcuts?: boolean
   /** Keep the first and last route points on their original layers. */
   preserveRouteEndpoints?: boolean
+  /**
+   * Physical copper-layer indices on which each PCB-port terminal can directly
+   * accept a route endpoint without a via, keyed by PCB port id.
+   */
+  terminalLayerIndicesByPcbPortId?: ReadonlyMap<string, ReadonlySet<number>>
 }
 
 export class UselessViaRemovalSolver extends BaseSolver {
@@ -96,6 +101,8 @@ export class UselessViaRemovalSolver extends BaseSolver {
       enableGeometryShortcuts: this.input.enableGeometryShortcuts,
       enableObstacleDetourShortcuts: this.input.enableObstacleDetourShortcuts,
       preserveRouteEndpoints: this.input.preserveRouteEndpoints,
+      terminalLayerIndicesByPcbPortId:
+        this.input.terminalLayerIndicesByPcbPortId,
     })
   }
 

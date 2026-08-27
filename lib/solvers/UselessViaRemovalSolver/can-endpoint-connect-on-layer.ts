@@ -6,6 +6,8 @@ export const canEndpointConnectOnLayer = ({
   endpointX,
   endpointY,
   targetZ,
+  endpointPcbPortId,
+  terminalLayerIndicesByPcbPortId,
   obstacleSHI,
   route,
   connMap,
@@ -13,10 +15,24 @@ export const canEndpointConnectOnLayer = ({
   endpointX: number
   endpointY: number
   targetZ: number
+  endpointPcbPortId?: string
+  terminalLayerIndicesByPcbPortId?: ReadonlyMap<string, ReadonlySet<number>>
   obstacleSHI: ObstacleSpatialHashIndex
   route: HighDensityRoute
   connMap: ConnectivityMap
 }): boolean => {
+  // Same-net obstacle connectivity may belong to a different coincident PCB
+  // port, so port-specific terminal-layer metadata is the stricter guard.
+  const endpointTerminalLayerIndices = endpointPcbPortId
+    ? terminalLayerIndicesByPcbPortId?.get(endpointPcbPortId)
+    : undefined
+  if (
+    endpointTerminalLayerIndices &&
+    !endpointTerminalLayerIndices.has(targetZ)
+  ) {
+    return false
+  }
+
   const routeIds = [route.connectionName, route.rootConnectionName].filter(
     (id): id is string => id !== undefined,
   )

@@ -1,14 +1,16 @@
 import { expect, test } from "bun:test"
+import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import { HighDensityRouteSpatialIndex } from "lib/data-structures/HighDensityRouteSpatialIndex"
 import { ObstacleSpatialHashIndex } from "lib/data-structures/ObstacleTree"
 import { SingleRouteUselessViaRemovalSolver } from "lib/solvers/UselessViaRemovalSolver/SingleRouteUselessViaRemovalSolver"
-import type { HighDensityRoute } from "lib/types/high-density-types"
 import type { Obstacle } from "lib/types"
-import { ConnectivityMap } from "circuit-json-to-connectivity-map"
+import type { HighDensityRoute } from "lib/types/high-density-types"
 
 const baseRoute: HighDensityRoute = {
   connectionName: "source_net_test",
   rootConnectionName: "source_net_test",
+  startPcbPortId: "pcb_port_multilayer",
+  endPcbPortId: "pcb_port_bottom",
   traceThickness: 0.15,
   viaDiameter: 0.3,
   route: [
@@ -26,6 +28,10 @@ const solveRoute = (route: HighDensityRoute, obstacles: Obstacle[] = []) => {
     hdRouteSHI: new HighDensityRouteSpatialIndex([route]),
     unsimplifiedRoute: structuredClone(route),
     connMap: new ConnectivityMap({ net0: [route.connectionName] }),
+    terminalLayerIndicesByPcbPortId: new Map([
+      ["pcb_port_multilayer", new Set([0, 1])],
+      ["pcb_port_bottom", new Set([1])],
+    ]),
   })
 
   solver.solve()
@@ -36,7 +42,7 @@ const solveRoute = (route: HighDensityRoute, obstacles: Obstacle[] = []) => {
   return solver.getOptimizedHdRoute()
 }
 
-test("removes the first-section via when a connected endpoint obstacle supports both layers", () => {
+test("removes the first-section via when endpoint metadata and its obstacle support both layers", () => {
   const multilayerEndpointObstacle: Obstacle = {
     type: "rect",
     layers: ["top", "bottom"],
@@ -51,4 +57,6 @@ test("removes the first-section via when a connected endpoint obstacle supports 
 
   expect(optimizedRoute.vias).toHaveLength(0)
   expect(optimizedRoute.route.every((point) => point.z === 1)).toBe(true)
+  expect(optimizedRoute.startPcbPortId).toBe(baseRoute.startPcbPortId)
+  expect(optimizedRoute.endPcbPortId).toBe(baseRoute.endPcbPortId)
 })
