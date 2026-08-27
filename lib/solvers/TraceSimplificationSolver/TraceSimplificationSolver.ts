@@ -97,7 +97,9 @@ export class TraceSimplificationSolver extends BaseSolver {
    *   - enableCrossingViaReduction: Enables coordinated crossing layer swaps
    *   - preserveRouteEndpoints: Prevents simplification from moving endpoint
    *     coordinates or layers when routes represent spliceable local sections
-   *   - pcbPortZLayers: Authoritative routing layers for PCB-port terminals
+   *   - terminalLayerIndicesByPcbPortId: Physical copper-layer indices on
+   *     which each PCB-port terminal can directly accept a route endpoint
+   *     without a via
    *   - iterations: Number of complete simplification iterations (default: 2)
    */
   constructor(
@@ -115,7 +117,10 @@ export class TraceSimplificationSolver extends BaseSolver {
       readonly netByConnectionName?: ReadonlyMap<string, string>
       readonly enableCrossingViaReduction?: boolean
       readonly preserveRouteEndpoints?: boolean
-      readonly pcbPortZLayers?: ReadonlyMap<string, ReadonlySet<number>>
+      readonly terminalLayerIndicesByPcbPortId?: ReadonlyMap<
+        string,
+        ReadonlySet<number>
+      >
     },
   ) {
     super()
@@ -365,7 +370,8 @@ export class TraceSimplificationSolver extends BaseSolver {
               this.simplificationPipelineLoops > 0,
             preserveRouteEndpoints:
               this.simplificationConfig.preserveRouteEndpoints,
-            pcbPortZLayers: this.simplificationConfig.pcbPortZLayers,
+            terminalLayerIndicesByPcbPortId:
+              this.simplificationConfig.terminalLayerIndicesByPcbPortId,
           })
           this.extractResult = (s) =>
             (s as UselessViaRemovalSolver).getOptimizedHdRoutes() ?? []

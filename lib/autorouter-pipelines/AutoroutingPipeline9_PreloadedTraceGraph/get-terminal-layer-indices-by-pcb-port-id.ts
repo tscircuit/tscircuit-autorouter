@@ -1,7 +1,13 @@
 import type { Obstacle, SimpleRouteConnection } from "lib/types"
 import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
 
-export const getPcbPortZLayers = (
+/**
+ * Returns the physical copper-layer indices on which each PCB-port terminal
+ * can directly accept a route endpoint without a via. Connection-point layer
+ * metadata is the primary source; an exactly centered multilayer obstacle
+ * connected to that specific PCB port may add layers for a plated hole.
+ */
+export const getTerminalLayerIndicesByPcbPortId = (
   connections: ReadonlyArray<SimpleRouteConnection>,
   obstacles: ReadonlyArray<Obstacle>,
   layerCount: number,
@@ -15,14 +21,15 @@ export const getPcbPortZLayers = (
     centeredObstacles.push(obstacle)
     obstaclesByCenter.set(centerKey, centeredObstacles)
   }
-  const zLayersByPcbPortId = new Map<string, Set<number>>()
+  const terminalLayerIndicesByPcbPortId = new Map<string, Set<number>>()
   for (const connection of connections) {
     for (const point of connection.pointsToConnect) {
       if (!point.pcb_port_id) continue
-      const zLayers = zLayersByPcbPortId.get(point.pcb_port_id) ?? new Set()
+      const terminalLayerIndices =
+        terminalLayerIndicesByPcbPortId.get(point.pcb_port_id) ?? new Set()
       const layerNames = "layers" in point ? point.layers : [point.layer]
       for (const layerName of layerNames) {
-        zLayers.add(mapLayerNameToZ(layerName, layerCount))
+        terminalLayerIndices.add(mapLayerNameToZ(layerName, layerCount))
       }
       // A plated-hole connection point may name only its preferred layer. A
       // single exactly centered multilayer obstacle proves every physical layer
@@ -35,11 +42,14 @@ export const getPcbPortZLayers = (
           continue
         }
         for (const layerName of obstacle.layers) {
-          zLayers.add(mapLayerNameToZ(layerName, layerCount))
+          terminalLayerIndices.add(mapLayerNameToZ(layerName, layerCount))
         }
       }
-      zLayersByPcbPortId.set(point.pcb_port_id, zLayers)
+      terminalLayerIndicesByPcbPortId.set(
+        point.pcb_port_id,
+        terminalLayerIndices,
+      )
     }
   }
-  return zLayersByPcbPortId
+  return terminalLayerIndicesByPcbPortId
 }

@@ -57,7 +57,7 @@ test("preserves authoritative single-layer PCB-port terminals across simplificat
       defaultViaDiameter: 0.3,
       layerCount: 2,
       enableCrossingViaReduction: true,
-      pcbPortZLayers: new Map([
+      terminalLayerIndicesByPcbPortId: new Map([
         ["pcb_port_top", new Set([0])],
         ["pcb_port_bottom", new Set([1])],
       ]),

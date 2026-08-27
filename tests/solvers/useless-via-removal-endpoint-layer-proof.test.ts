@@ -28,7 +28,7 @@ const solveRoute = (route: HighDensityRoute, obstacles: Obstacle[] = []) => {
     hdRouteSHI: new HighDensityRouteSpatialIndex([route]),
     unsimplifiedRoute: structuredClone(route),
     connMap: new ConnectivityMap({ net0: [route.connectionName] }),
-    pcbPortZLayers: new Map([
+    terminalLayerIndicesByPcbPortId: new Map([
       ["pcb_port_multilayer", new Set([0, 1])],
       ["pcb_port_bottom", new Set([1])],
     ]),

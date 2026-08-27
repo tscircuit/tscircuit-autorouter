@@ -43,7 +43,7 @@ export class SingleRouteUselessViaRemovalSolver extends BaseSolver {
   unsimplifiedRoute: HighDensityRoute
   connMap: ConnectivityMap
   outline?: Array<{ x: number; y: number }>
-  pcbPortZLayers?: ReadonlyMap<string, ReadonlySet<number>>
+  terminalLayerIndicesByPcbPortId?: ReadonlyMap<string, ReadonlySet<number>>
 
   routeSections: Array<RouteSection>
 
@@ -73,7 +73,7 @@ export class SingleRouteUselessViaRemovalSolver extends BaseSolver {
     enableGeometryShortcuts?: boolean
     enableObstacleDetourShortcuts?: boolean
     preserveRouteEndpoints?: boolean
-    pcbPortZLayers?: ReadonlyMap<string, ReadonlySet<number>>
+    terminalLayerIndicesByPcbPortId?: ReadonlyMap<string, ReadonlySet<number>>
   }) {
     super()
     this.currentSectionIndex = 0 // Start at 0 to check first section for MLCP via removal
@@ -82,7 +82,8 @@ export class SingleRouteUselessViaRemovalSolver extends BaseSolver {
     this.unsimplifiedRoute = params.unsimplifiedRoute
     this.connMap = params.connMap
     this.outline = params.outline
-    this.pcbPortZLayers = params.pcbPortZLayers
+    this.terminalLayerIndicesByPcbPortId =
+      params.terminalLayerIndicesByPcbPortId
     this.GEOMETRY_SHORTCUT_TRACE_MARGIN =
       params.geometryShortcutTraceMargin ?? this.GEOMETRY_SHORTCUT_TRACE_MARGIN
     this.GEOMETRY_SHORTCUT_OBSTACLE_MARGIN =
@@ -579,7 +580,7 @@ export class SingleRouteUselessViaRemovalSolver extends BaseSolver {
           endpointY: firstPoint.y,
           targetZ,
           endpointPcbPortId: this.unsimplifiedRoute.startPcbPortId,
-          pcbPortZLayers: this.pcbPortZLayers,
+          terminalLayerIndicesByPcbPortId: this.terminalLayerIndicesByPcbPortId,
           obstacleSHI: this.obstacleSHI,
           route: this.unsimplifiedRoute,
           connMap: this.connMap,
@@ -628,7 +629,8 @@ export class SingleRouteUselessViaRemovalSolver extends BaseSolver {
             endpointY: lastPoint.y,
             targetZ,
             endpointPcbPortId: this.unsimplifiedRoute.endPcbPortId,
-            pcbPortZLayers: this.pcbPortZLayers,
+            terminalLayerIndicesByPcbPortId:
+              this.terminalLayerIndicesByPcbPortId,
             obstacleSHI: this.obstacleSHI,
             route: this.unsimplifiedRoute,
             connMap: this.connMap,
@@ -727,7 +729,7 @@ export class SingleRouteUselessViaRemovalSolver extends BaseSolver {
       enableGeometryShortcuts: this.ENABLE_GEOMETRY_SHORTCUTS,
       enableObstacleDetourShortcuts: this.ENABLE_OBSTACLE_DETOUR_SHORTCUTS,
       preserveRouteEndpoints: this.PRESERVE_ROUTE_ENDPOINTS,
-      pcbPortZLayers: this.pcbPortZLayers,
+      terminalLayerIndicesByPcbPortId: this.terminalLayerIndicesByPcbPortId,
     }
   }
 
