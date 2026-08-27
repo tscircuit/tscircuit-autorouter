@@ -49,6 +49,24 @@ test("through-via conversion deduplicates stacked logical transitions", () => {
   const defaultVias = convertToCircuitJson(createSrj(), traces).filter(
     (element) => element.type === "pcb_via",
   )
+  const roleAwareDefaultVias = convertToCircuitJson(
+    {
+      ...createSrj(),
+      obstacles: [
+        {
+          type: "rect",
+          obstacleId: "authoritative_pad",
+          obstacleRole: "pad",
+          center: { x: 0.8, y: 0.8 },
+          width: 0.1,
+          height: 0.1,
+          layers: ["top"],
+          connectedTo: ["authoritative_pad"],
+        },
+      ],
+    },
+    traces,
+  ).filter((element) => element.type === "pcb_via")
   const throughVias = convertToCircuitJson(createSrj(false), traces).filter(
     (element) => element.type === "pcb_via",
   )
@@ -58,9 +76,14 @@ test("through-via conversion deduplicates stacked logical transitions", () => {
 
   expect(defaultVias).toEqual([
     expect.objectContaining({
-      layers: ["top", "inner1", "inner2", "bottom"],
-      outer_diameter: 0.7,
+      layers: ["top", "inner1"],
+      outer_diameter: 0.4,
       hole_diameter: 0.3,
+    }),
+    expect.objectContaining({
+      layers: ["inner1", "inner2"],
+      outer_diameter: 0.7,
+      hole_diameter: 0.2,
     }),
   ])
   expect(throughVias).toEqual([
@@ -69,6 +92,7 @@ test("through-via conversion deduplicates stacked logical transitions", () => {
       hole_diameter: 0.3,
     }),
   ])
+  expect(roleAwareDefaultVias).toEqual(throughVias)
   expect(blindVias).toEqual([
     expect.objectContaining({
       layers: ["top", "inner1"],

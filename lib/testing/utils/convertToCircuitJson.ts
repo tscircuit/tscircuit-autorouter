@@ -1056,6 +1056,15 @@ export function convertToCircuitJson(
     (minViaDiameter !== undefined
       ? resolvedMinViaDiameter * 0.5
       : viaDimensions.holeDiameter)
+  const viaPolicySrj = originalSrj ?? srjWithPointPairs
+  const allowBlindAndBuriedVias =
+    viaPolicySrj.allowBlindAndBuriedVias ??
+    // Current Core SRJs identify routing pads and materialize the board's via
+    // policy. Role-less SRJs predate that contract and historically treated
+    // logical layer spans as physical blind/buried vias in this converter.
+    !viaPolicySrj.obstacles.some(
+      (obstacle) => obstacle.obstacleRole !== undefined,
+    )
 
   // Start with empty circuit JSON
   const circuitJson: AnyCircuitElement[] = []
@@ -1090,7 +1099,7 @@ export function convertToCircuitJson(
       srjWithPointPairs.layerCount,
       resolvedMinViaDiameter,
       resolvedMinViaHoleDiameter,
-      srjWithPointPairs.allowBlindAndBuriedVias === true,
+      allowBlindAndBuriedVias,
     ),
   )
 

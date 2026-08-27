@@ -27,6 +27,11 @@ test("Pipeline9 routes the full Game Boy Advance parent directly to MCU pads", (
   expect(solver.failed).toBeFalse()
   expect(solver.solved).toBeTrue()
   expect(
+    solver.highDensityStitchSolver?.mergedHdRoutes.filter(
+      (route) => route.connectionName === "source_trace_172",
+    ),
+  ).toHaveLength(1)
+  expect(
     solver.highDensityRouteSolver?.fixedRouteReplacements.has(
       "source_trace_0_fixed_70_0",
     ),

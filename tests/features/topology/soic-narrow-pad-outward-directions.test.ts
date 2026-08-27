@@ -12,6 +12,7 @@ function getDenseSoicPadNodes(
     primaryValues.map((primary, primaryIndex) => ({
       type: "rect" as const,
       obstacleId: `pad_${sideIndex}_${primaryIndex}`,
+      obstacleRole: "pad" as const,
       componentId: "dense_soic",
       connectedTo: [`port_${sideIndex}_${primaryIndex}`],
       layers: ["top"],

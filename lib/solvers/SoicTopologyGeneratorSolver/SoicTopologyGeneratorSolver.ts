@@ -388,9 +388,12 @@ export class SoicTopologyGeneratorSolver extends BaseSolver {
         narrowThreshold: narrowPadGapThreshold,
       }),
     )
-    const preferOutwardEscape = gapRegions.some(
-      (region) => region.isNarrowPadGap,
-    )
+    const hasAuthoritativePadRoles =
+      soicObstacles.length > 0 &&
+      soicObstacles.every((obstacle) => obstacle.obstacleRole === "pad")
+    const preferOutwardEscape =
+      hasAuthoritativePadRoles &&
+      gapRegions.some((region) => region.isNarrowPadGap)
     const regions: SoicRoutingRegion[] = [
       { key: "center", bounds: centralBounds, regionType: "center" },
       ...getPadRegions(
@@ -409,7 +412,7 @@ export class SoicTopologyGeneratorSolver extends BaseSolver {
         availableZ,
         multiLayerThreshold,
         regionType: region.regionType,
-        isNarrowPadGap: region.isNarrowPadGap,
+        isNarrowPadGap: preferOutwardEscape && region.isNarrowPadGap,
         padOutwardDirection: region.padOutwardDirection,
         obstacleZ: region.obstacleZ,
         connectedTo: region.connectedTo,

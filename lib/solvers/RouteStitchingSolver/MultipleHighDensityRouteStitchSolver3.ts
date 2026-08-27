@@ -96,6 +96,26 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
     )
   }
 
+  private isDetachedFromTerminals(params: {
+    unsolvedRoute: UnsolvedRoute3
+    start: Point3
+    end: Point3
+  }): boolean {
+    return params.unsolvedRoute.hdRoutes.every((hdRoute) => {
+      const routeStart = hdRoute.route[0]
+      const routeEnd = hdRoute.route.at(-1)
+      if (!routeStart || !routeEnd) return false
+
+      return [routeStart, routeEnd].every(
+        (endpoint) =>
+          Math.min(
+            distance(endpoint, params.start),
+            distance(endpoint, params.end),
+          ) > MAX_TERMINAL_STITCH_GAP_DISTANCE_3,
+      )
+    })
+  }
+
   private getSharedRootPathRoutes(params: {
     connectionName: string
     rootConnectionName?: string
@@ -394,9 +414,21 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
               })
             : []
 
-        // A detached same-name island is not part of a two-terminal route.
-        // Iterate because removing one orphan can unblock another connection.
-        if (independentlyCompleteRoutes.length === 1) {
+        const independentlyCompleteRoute = independentlyCompleteRoutes[0]
+        const siblingRoutes = unsolvedRoutes.filter(
+          (unsolvedRoute) => unsolvedRoute !== independentlyCompleteRoute,
+        )
+
+        // Only discard siblings that are wholly detached from both terminals.
+        // Terminal-adjacent islands can be intentional caps or branches and
+        // must continue through the existing endpoint-path coalescing logic.
+        // Iterate because removing one true orphan can unblock another net.
+        if (
+          independentlyCompleteRoutes.length === 1 &&
+          siblingRoutes.every((unsolvedRoute) =>
+            this.isDetachedFromTerminals({ unsolvedRoute, start, end }),
+          )
+        ) {
           return independentlyCompleteRoutes
         }
 
