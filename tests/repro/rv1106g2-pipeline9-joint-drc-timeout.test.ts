@@ -3,9 +3,7 @@ import { getSvgFromGraphicsObject } from "graphics-debug"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/autorouting-pipeline-solver9-preloaded-trace-graph"
 import type { SimpleRouteJson } from "lib/types"
 import { convertSrjToGraphicsObject } from "lib/utils/convertSrjToGraphicsObject"
-import srj from "./assets/rv1106g2-pipeline9.srj.json" with {
-  type: "json",
-}
+import srj from "./assets/rv1106g2-pipeline9.srj.json" with { type: "json" }
 
 const AUTOROUTER_PHASE_TIMEOUT_MS = 180_000
 
