@@ -5,6 +5,7 @@ import {
   type GlobalDrcBranchPortfolioSolverParams,
   type HighDensityRoute,
 } from "high-density-repair03/lib"
+import { normalizeRepairSrjViaPolicy } from "lib/utils/normalize-repair-srj-via-policy"
 
 type AdaptivePortfolioPhase = "start" | "fastProbe" | "fallback" | "done"
 
@@ -29,7 +30,10 @@ export class Pipeline7AdaptiveDrcBranchPortfolioSolver extends BaseSolver {
 
   constructor(params: GlobalDrcBranchPortfolioSolverParams) {
     super()
-    this.params = params
+    this.params = {
+      ...params,
+      srj: normalizeRepairSrjViaPolicy(params.srj),
+    }
     this.inputHdRoutes = params.hdRoutes
     this.outputHdRoutes = params.hdRoutes
   }

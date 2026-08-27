@@ -32,6 +32,8 @@ export interface CapacityMeshNode {
   _qfpRegionType?: "center" | "pad" | "pad-gap" | "corner"
   _isNarrowQfpPadGap?: boolean
   _soicRegionType?: "center" | "pad" | "pad-gap"
+  _isNarrowSoicPadGap?: boolean
+  _soicPadOutwardDirection?: "left" | "right" | "top" | "bottom"
   _isComponentTopologyNode?: boolean
   _connectedTo?: string[]
 

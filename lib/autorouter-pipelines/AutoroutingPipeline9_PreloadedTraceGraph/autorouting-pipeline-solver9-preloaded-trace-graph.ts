@@ -47,6 +47,7 @@ import {
 import { getPresuppliedTraceVisualization } from "lib/utils/getPresuppliedTraceVisualization"
 import { calculateOptimalCapacityDepth } from "lib/utils/getTunedTotalCapacity1"
 import { getViaDimensions } from "lib/utils/getViaDimensions"
+import { normalizeRepairSrjViaPolicy } from "lib/utils/normalize-repair-srj-via-policy"
 import {
   AvailableSegmentPointSolver,
   type SharedEdgeSegment,
@@ -788,7 +789,9 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           cms.getSrjWithMaterializedPreloadedTraces()
         return [
           {
-            srj: srjWithMaterializedPreloadedTraces as any,
+            srj: normalizeRepairSrjViaPolicy(
+              srjWithMaterializedPreloadedTraces,
+            ) as any,
             hdRoutes: lockHdRouteTerminals(
               cms.traceWidthSolver!.getHdRoutesWithWidths(),
               cms.netToPointPairsSolver?.newConnections ?? [],

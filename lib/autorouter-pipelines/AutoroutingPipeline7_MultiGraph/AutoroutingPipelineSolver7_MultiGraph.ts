@@ -97,6 +97,8 @@ interface CapacityMeshSolverOptions {
     | "maxRuntimeMs"
     | "maxLocalShiftRepairs"
     | "maxLayerLiftRepairs"
+    | "maxContactSpanSearches"
+    | "maxContactSpanIterationsPerSearch"
   >
 }
 export type AutoroutingPipelineSolverOptions = CapacityMeshSolverOptions
@@ -660,7 +662,11 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
       GlobalDrcForceImproveSolver,
       (cms) => [
         {
-          srj: cms.srjWithPointPairs! as any,
+          srj: {
+            ...cms.srjWithPointPairs!,
+            allowBlindAndBuriedVias:
+              cms.originalSrj.allowBlindAndBuriedVias ?? false,
+          } as any,
           hdRoutes: lockHdRouteTerminals(
             cms.traceWidthSolver!.getHdRoutesWithWidths(),
             cms.netToPointPairsSolver?.newConnections ?? [],
@@ -675,6 +681,9 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
           maxIterations: 16,
           enableLargeBoardBroadFallback: false,
           enablePostSolveClearanceRelaxation: false,
+          enableTraceViaOwnerTargeting:
+            cms.srj.layerCount > 2 &&
+            cms.originalSrj.allowBlindAndBuriedVias !== true,
         },
       ],
     ),
@@ -696,7 +705,11 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
 
         return [
           {
-            srj: cms.srjWithPointPairs! as any,
+            srj: {
+              ...cms.srjWithPointPairs!,
+              allowBlindAndBuriedVias:
+                cms.originalSrj.allowBlindAndBuriedVias ?? false,
+            } as any,
             hdRoutes,
             connMap: cms.connMap,
             effort: cms.effort,
@@ -707,6 +720,9 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
             enableLargeBoardBroadFallback: false,
             enableBroadFallback: false,
             enableTargetedErrorSweep: true,
+            enableTraceViaOwnerTargeting:
+              cms.srj.layerCount > 2 &&
+              cms.originalSrj.allowBlindAndBuriedVias !== true,
             enablePostSolveClearanceRelaxation: false,
             enableSafeTraceLayerMoves: true,
             enableViaInPadLayerMoves: cms.originalSrj.allowViaInPad ?? false,

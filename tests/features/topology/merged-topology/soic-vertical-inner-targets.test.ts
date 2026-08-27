@@ -130,7 +130,20 @@ test("merged topology preserves inner targets in vertical SOIC center", async ()
     frames: [{ type: "pipeline", step: "end", layer: "split" }],
   })
 
+  const componentMeshNodes = topologyPlanningSolver
+    .getOutput()
+    .componentMeshNodes.flat()
+  const padNodes = componentMeshNodes.filter(
+    (node) => node._soicRegionType === "pad",
+  )
   expect(topologyPlanningSolver.getOutput().componentMeshNodes).toHaveLength(1)
+  expect(padNodes).toHaveLength(16)
+  expect(
+    padNodes.every((node) => node._soicPadOutwardDirection === undefined),
+  ).toBe(true)
+  expect(componentMeshNodes.some((node) => node._isNarrowSoicPadGap)).toBe(
+    false,
+  )
   expect(topologyMergingSolver.solved).toBe(true)
   expect(topologyMergingSolver.failed).toBe(false)
   expect(topologyMergingSolver.getOutput().length).toBeGreaterThan(0)

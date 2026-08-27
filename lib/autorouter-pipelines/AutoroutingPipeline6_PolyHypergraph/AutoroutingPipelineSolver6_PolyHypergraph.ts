@@ -30,6 +30,7 @@ import {
 import { getPresuppliedTraceVisualization } from "lib/utils/getPresuppliedTraceVisualization"
 import { calculateOptimalCapacityDepth } from "lib/utils/getTunedTotalCapacity1"
 import { getViaDimensions } from "lib/utils/getViaDimensions"
+import { normalizeRepairSrjViaPolicy } from "lib/utils/normalize-repair-srj-via-policy"
 import { AttachProjectedRectsSolver } from "./AttachProjectedRectsSolver"
 import { PolyHighDensitySolver } from "./PolyHighDensitySolver"
 import { PolyHypergraphPortPointPathingSolver } from "./PolyHypergraphPortPointPathingSolver"
@@ -296,7 +297,7 @@ export class AutoroutingPipelineSolver6_PolyHypergraph extends BaseSolver {
       GlobalDrcForceImproveSolver,
       (cms) => [
         {
-          srj: cms.srjWithPointPairs! as any,
+          srj: normalizeRepairSrjViaPolicy(cms.srjWithPointPairs!) as any,
           hdRoutes: cms.traceWidthSolver!.getHdRoutesWithWidths(),
           effort: cms.effort,
         },

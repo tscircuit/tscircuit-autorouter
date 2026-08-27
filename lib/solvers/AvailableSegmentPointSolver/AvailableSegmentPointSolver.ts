@@ -50,6 +50,28 @@ export interface SharedEdgeSegment {
   portPoints: SegmentPortPoint[]
 }
 
+// Bias narrow pad rows toward a clean fanout without removing alternate graph
+// exits that may be needed to resolve congestion elsewhere on the board.
+const SOIC_NON_OUTWARD_ESCAPE_PENALTY = 150
+
+function edgeLeavesSoicPadOutward(
+  padNode: CapacityMeshNode,
+  edgeCenter: { x: number; y: number },
+) {
+  switch (padNode._soicPadOutwardDirection) {
+    case "left":
+      return edgeCenter.x < padNode.center.x
+    case "right":
+      return edgeCenter.x > padNode.center.x
+    case "top":
+      return edgeCenter.y > padNode.center.y
+    case "bottom":
+      return edgeCenter.y < padNode.center.y
+    default:
+      return true
+  }
+}
+
 /**
  * AvailableSegmentPointSolver computes port points on shared edges between
  * capacity mesh nodes. These points can be used for routing traces through
@@ -168,8 +190,23 @@ export class AvailableSegmentPointSolver extends BaseSolver {
       (overlap.end.x - overlap.start.x) ** 2 +
         (overlap.end.y - overlap.start.y) ** 2,
     )
-    const edgeTouchesNarrowQfpPadGap = Boolean(
-      node1._isNarrowQfpPadGap || node2._isNarrowQfpPadGap,
+    const edgeCenter = {
+      x: (overlap.start.x + overlap.end.x) / 2,
+      y: (overlap.start.y + overlap.end.y) / 2,
+    }
+    const nonOutwardSoicPadEscape = [node1, node2].some(
+      (node) =>
+        node._soicPadOutwardDirection !== undefined &&
+        !edgeLeavesSoicPadOutward(node, edgeCenter),
+    )
+    const tinyHypergraphPortPenalty = nonOutwardSoicPadEscape
+      ? SOIC_NON_OUTWARD_ESCAPE_PENALTY
+      : undefined
+    const edgeTouchesNarrowComponentPadGap = Boolean(
+      node1._isNarrowQfpPadGap ||
+        node2._isNarrowQfpPadGap ||
+        node1._isNarrowSoicPadGap ||
+        node2._isNarrowSoicPadGap,
     )
 
     // Apply edge margin to avoid placing points too close to corners
@@ -197,6 +234,7 @@ export class AvailableSegmentPointSolver extends BaseSolver {
           connectionName: null,
           distToCentermostPortOnZ: 0,
           cramped: true,
+          tinyHypergraphPortPenalty,
         })
       }
       return {
@@ -288,7 +326,8 @@ export class AvailableSegmentPointSolver extends BaseSolver {
           edgeId: edge.capacityMeshEdgeId,
           connectionName: null,
           distToCentermostPortOnZ,
-          cramped: edgeTouchesNarrowQfpPadGap,
+          cramped: edgeTouchesNarrowComponentPadGap,
+          tinyHypergraphPortPenalty,
         }
         portPoints.push(portPoint)
       }

@@ -50,7 +50,10 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
     hdRoutes: HighDensityIntraNodeRoute[]
     start: Point3
     end: Point3
-  }) {
+    clearanceValidator?: RouteStitchClearanceValidator
+  }): boolean {
+    const clearanceValidator =
+      params.clearanceValidator ?? this.clearanceValidator
     const stitchSolver = new SingleHighDensityRouteStitchSolver3({
       connectionName: params.connectionName,
       hdRoutes: params.hdRoutes,
@@ -62,7 +65,7 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
       allowedLayerTransitionPointKeys: this.allowedLayerTransitionPointKeys,
       preserveTerminalPcbPortIds: this.preserveTerminalPcbPortIds,
       isStitchSegmentClear: (stitchSegment) =>
-        this.clearanceValidator.isSegmentClear(stitchSegment),
+        clearanceValidator.isSegmentClear(stitchSegment),
       stitchClearanceMode: "require_clear",
     })
 
@@ -314,89 +317,151 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
       })
     }
 
-    const unsolvedRoutesByConnection = new Map<string, UnsolvedRoute3[]>()
-    for (const unsolvedRoute of this.unsolvedRoutes) {
-      const routes = unsolvedRoutesByConnection.get(
-        unsolvedRoute.connectionName,
-      )
-      if (routes) {
-        routes.push(unsolvedRoute)
-      } else {
-        unsolvedRoutesByConnection.set(unsolvedRoute.connectionName, [
-          unsolvedRoute,
-        ])
+    while (true) {
+      const retainedHdRoutes = [
+        ...new Set(
+          this.unsolvedRoutes.flatMap(
+            (unsolvedRoute) => unsolvedRoute.hdRoutes,
+          ),
+        ),
+      ]
+      this.clearanceValidator = new RouteStitchClearanceValidator({
+        hdRoutes: retainedHdRoutes,
+      })
+      const unsolvedRoutesByConnection = new Map<string, UnsolvedRoute3[]>()
+      for (const unsolvedRoute of this.unsolvedRoutes) {
+        const routes = unsolvedRoutesByConnection.get(
+          unsolvedRoute.connectionName,
+        )
+        if (routes) {
+          routes.push(unsolvedRoute)
+        } else {
+          unsolvedRoutesByConnection.set(unsolvedRoute.connectionName, [
+            unsolvedRoute,
+          ])
+        }
       }
+
+      const nextUnsolvedRoutes = Array.from(
+        unsolvedRoutesByConnection.entries(),
+      ).flatMap(([connectionName, unsolvedRoutes]) => {
+        const connection = params.connections.find(
+          (c) => c.name === connectionName,
+        )
+        const hasDegenerateRoute = unsolvedRoutes.some((unsolvedRoute) =>
+          unsolvedRoute.hdRoutes.some((hdRoute) => hdRoute.route.length < 2),
+        )
+        const hasStitchableGap =
+          unsolvedRoutes.length > 1 &&
+          hasStitchableGapBetweenUnsolvedRoutes(unsolvedRoutes)
+
+        if (!connection) return unsolvedRoutes
+
+        const start = {
+          ...connection.pointsToConnect[0],
+          z: mapLayerNameToZ(
+            getConnectionPointLayer(connection.pointsToConnect[0]),
+            params.layerCount,
+          ),
+        }
+        const end = {
+          ...connection.pointsToConnect[1],
+          z: mapLayerNameToZ(
+            getConnectionPointLayer(connection.pointsToConnect[1]),
+            params.layerCount,
+          ),
+        }
+
+        const independentlyCompleteRoutes =
+          unsolvedRoutes.length > 1
+            ? unsolvedRoutes.filter((unsolvedRoute) => {
+                const candidateRouteSet = new Set(unsolvedRoute.hdRoutes)
+                const candidateClearanceValidator =
+                  new RouteStitchClearanceValidator({
+                    hdRoutes: retainedHdRoutes.filter(
+                      (route) =>
+                        route.connectionName !== connectionName ||
+                        candidateRouteSet.has(route),
+                    ),
+                  })
+                return this.canStitchBetweenTerminals({
+                  connectionName,
+                  hdRoutes: unsolvedRoute.hdRoutes,
+                  start,
+                  end,
+                  clearanceValidator: candidateClearanceValidator,
+                })
+              })
+            : []
+
+        // A detached same-name island is not part of a two-terminal route.
+        // Iterate because removing one orphan can unblock another connection.
+        if (independentlyCompleteRoutes.length === 1) {
+          return independentlyCompleteRoutes
+        }
+
+        const hdRoutes = unsolvedRoutes.flatMap(
+          (unsolvedRoute) => unsolvedRoute.hdRoutes,
+        )
+        const sharedRootPathRoutes =
+          unsolvedRoutes.length > 1
+            ? this.getSharedRootPathRoutes({
+                connectionName,
+                rootConnectionName:
+                  connection.__rootConnectionNames?.[0] ??
+                  hdRoutes[0]?.rootConnectionName,
+                hdRoutes,
+                // A route removed as a detached island for its own MST pair
+                // can still be the bridge required by another pair on the
+                // same root net. Search the canonical candidates so a later
+                // fixed-point pass can recover it after blockers are pruned.
+                allHdRoutes: canonicalHdRoutes,
+                start,
+                end,
+              })
+            : null
+
+        if (!hasDegenerateRoute && !hasStitchableGap && !sharedRootPathRoutes) {
+          return unsolvedRoutes
+        }
+
+        return [
+          {
+            connectionName,
+            hdRoutes:
+              sharedRootPathRoutes ??
+              selectRoutesAlongEndpointPath({
+                connectionName,
+                hdRoutes,
+                start,
+                end,
+                endpointIndex: this.endpointIndex,
+                canStitchBetweenTerminals: (selection) =>
+                  this.canStitchBetweenTerminals(selection),
+              }),
+            start,
+            end,
+          },
+        ]
+      })
+      const nextRetainedRouteSet = new Set(
+        nextUnsolvedRoutes.flatMap((unsolvedRoute) => unsolvedRoute.hdRoutes),
+      )
+      const removedRoute = retainedHdRoutes.some(
+        (route) => !nextRetainedRouteSet.has(route),
+      )
+      this.unsolvedRoutes = nextUnsolvedRoutes
+      if (!removedRoute) break
     }
 
-    this.unsolvedRoutes = Array.from(
-      unsolvedRoutesByConnection.entries(),
-    ).flatMap(([connectionName, unsolvedRoutes]) => {
-      const connection = params.connections.find(
-        (c) => c.name === connectionName,
-      )
-      const hasDegenerateRoute = unsolvedRoutes.some((unsolvedRoute) =>
-        unsolvedRoute.hdRoutes.some((hdRoute) => hdRoute.route.length < 2),
-      )
-      const hasStitchableGap =
-        unsolvedRoutes.length > 1 &&
-        hasStitchableGapBetweenUnsolvedRoutes(unsolvedRoutes)
-
-      if (!connection) return unsolvedRoutes
-
-      const start = {
-        ...connection.pointsToConnect[0],
-        z: mapLayerNameToZ(
-          getConnectionPointLayer(connection.pointsToConnect[0]),
-          params.layerCount,
+    this.clearanceValidator = new RouteStitchClearanceValidator({
+      hdRoutes: [
+        ...new Set(
+          this.unsolvedRoutes.flatMap(
+            (unsolvedRoute) => unsolvedRoute.hdRoutes,
+          ),
         ),
-      }
-      const end = {
-        ...connection.pointsToConnect[1],
-        z: mapLayerNameToZ(
-          getConnectionPointLayer(connection.pointsToConnect[1]),
-          params.layerCount,
-        ),
-      }
-
-      const hdRoutes = unsolvedRoutes.flatMap(
-        (unsolvedRoute) => unsolvedRoute.hdRoutes,
-      )
-      const sharedRootPathRoutes =
-        unsolvedRoutes.length > 1
-          ? this.getSharedRootPathRoutes({
-              connectionName,
-              rootConnectionName:
-                connection.__rootConnectionNames?.[0] ??
-                hdRoutes[0]?.rootConnectionName,
-              hdRoutes,
-              allHdRoutes: canonicalHdRoutes,
-              start,
-              end,
-            })
-          : null
-
-      if (!hasDegenerateRoute && !hasStitchableGap && !sharedRootPathRoutes) {
-        return unsolvedRoutes
-      }
-
-      return [
-        {
-          connectionName,
-          hdRoutes:
-            sharedRootPathRoutes ??
-            selectRoutesAlongEndpointPath({
-              connectionName,
-              hdRoutes,
-              start,
-              end,
-              endpointIndex: this.endpointIndex,
-              canStitchBetweenTerminals: (selection) =>
-                this.canStitchBetweenTerminals(selection),
-            }),
-          start,
-          end,
-        },
-      ]
+      ],
     })
 
     this.MAX_ITERATIONS = 100e3

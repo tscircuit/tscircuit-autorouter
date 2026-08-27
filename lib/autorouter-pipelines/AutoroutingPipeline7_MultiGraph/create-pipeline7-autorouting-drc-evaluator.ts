@@ -28,6 +28,8 @@ export const createPipeline7AutoroutingDrcEvaluator = (
 ): DrcEvaluator => {
   const engineSrj = {
     ...conversionOptions.srjWithPointPairs,
+    allowBlindAndBuriedVias:
+      conversionOptions.originalSrj.allowBlindAndBuriedVias ?? false,
     minTraceWidth: conversionOptions.originalSrj.minTraceWidth,
     minViaDiameter:
       conversionOptions.originalSrj.minViaDiameter ??
@@ -46,6 +48,7 @@ export const createPipeline7AutoroutingDrcEvaluator = (
     traceClearance: AUTOROUTING_TRACE_CLEARANCE,
     viaClearance: AUTOROUTING_VIA_CLEARANCE,
     spatialCellSize,
+    includeTraceViaOwnerMetadata: true,
   })
   const convertCandidateRoutes =
     createPipeline7HdRoutesToSimplifiedPcbTracesConverter(conversionOptions)

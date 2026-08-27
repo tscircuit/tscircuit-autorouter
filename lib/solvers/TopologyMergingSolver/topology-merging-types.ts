@@ -56,6 +56,8 @@ export type TopologyMergingRegionMetadata = Pick<
   | "_qfpRegionType"
   | "_isNarrowQfpPadGap"
   | "_soicRegionType"
+  | "_isNarrowSoicPadGap"
+  | "_soicPadOutwardDirection"
   | "_isComponentTopologyNode"
   | "_connectedTo"
 >

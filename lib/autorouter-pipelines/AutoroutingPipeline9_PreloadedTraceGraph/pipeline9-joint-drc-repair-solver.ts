@@ -22,6 +22,7 @@ import type {
 import type { HighDensityRoute } from "lib/types/high-density-types"
 import { convertHdRouteToSimplifiedRoute } from "lib/utils/convertHdRouteToSimplifiedRoute"
 import { mapZToLayerName } from "lib/utils/mapZToLayerName"
+import { normalizeRepairSrjViaPolicy } from "lib/utils/normalize-repair-srj-via-policy"
 import { Pipeline7AdaptiveDrcBranchPortfolioSolver } from "../AutoroutingPipeline7_MultiGraph/Pipeline7AdaptiveDrcBranchPortfolioSolver"
 import { convertPipeline7HdRoutesToSimplifiedPcbTraces } from "../AutoroutingPipeline7_MultiGraph/convertPipeline7HdRoutesToSimplifiedPcbTraces"
 import { applyPipeline9RegionalB01Repairs } from "./apply-pipeline9-regional-b01-repairs"
@@ -964,9 +965,12 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         ...syntheticConnectionByName.values(),
       ],
     }
+    const repairSrjWithPointPairs = normalizeRepairSrjViaPolicy(
+      extendedSrjWithPointPairs,
+    )
     const autoroutingDrcEngine = new AutoroutingDrcEngine(
       {
-        ...extendedSrjWithPointPairs,
+        ...repairSrjWithPointPairs,
         minTraceWidth: params.originalSrj.minTraceWidth,
         minViaDiameter:
           params.originalSrj.minViaDiameter ?? params.defaultViaDiameter,
@@ -1296,7 +1300,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     this.drcEvaluator = drcEvaluator
 
     this.exactRepairSolver = new Pipeline7AdaptiveDrcBranchPortfolioSolver({
-      srj: extendedSrjWithPointPairs as any,
+      srj: repairSrjWithPointPairs as any,
       hdRoutes: [
         ...params.newHdRoutes,
         ...this.movablePreloadedSections.map(

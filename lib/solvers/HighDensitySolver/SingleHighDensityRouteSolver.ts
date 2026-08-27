@@ -53,6 +53,8 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
   traceThickness: number
   obstacleMargin: number
   layerCount: number
+  allowBlindAndBuriedVias: boolean
+  honorObstacleRouteDimensions: boolean
   availableZ: number[]
   minCellSize = 0.05
   cellStep = 0.05
@@ -89,6 +91,8 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
   obstacleSegmentIndexByLayer = new Map<number, Flatbush>()
   obstacleVias: IndexedObstacleVia[] = []
   obstacleViaIndex: Flatbush | null = null
+  maxObstacleTraceThickness = 0
+  maxObstacleViaDiameter = 0
 
   /** For debugging/animating the exploration */
   debug_exploredNodesOrdered: Array<{
@@ -117,6 +121,8 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     traceThickness?: number
     obstacleMargin?: number
     layerCount?: number
+    allowBlindAndBuriedVias?: boolean
+    honorObstacleRouteDimensions?: boolean
     availableZ?: number[]
     futureConnections?: FutureConnection[]
     hyperParameters?: Partial<HighDensityHyperParameters>
@@ -147,6 +153,9 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     this.traceThickness = opts.traceThickness ?? 0.15
     this.obstacleMargin = opts.obstacleMargin ?? 0.15
     this.layerCount = opts.layerCount ?? 2
+    this.allowBlindAndBuriedVias = opts.allowBlindAndBuriedVias ?? false
+    this.honorObstacleRouteDimensions =
+      opts.honorObstacleRouteDimensions ?? false
     this.availableZ =
       opts.availableZ && opts.availableZ.length > 0
         ? [...new Set(opts.availableZ)].sort((a, b) => a - b)
@@ -284,17 +293,32 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     planarObstacleQuery?: PlanarObstacleQuery,
   ) {
     margin ??= this.obstacleMargin
+    const candidateViaMinZ =
+      isVia && this.allowBlindAndBuriedVias
+        ? Math.min(node.z, node.parent?.z ?? node.z)
+        : 0
+    const candidateViaMaxZ =
+      isVia && this.allowBlindAndBuriedVias
+        ? Math.max(node.z, node.parent?.z ?? node.z)
+        : this.layerCount - 1
 
     if (isVia && node.parent) {
       const viasInMyRoute = this.getViasInNodePath(node.parent)
       for (const via of viasInMyRoute) {
-        if (distance(node, via) < this.viaDiameter / 2 + margin) {
+        const requiredViaSpacing = this.honorObstacleRouteDimensions
+          ? this.viaDiameter + margin
+          : this.viaDiameter / 2 + margin
+        if (distance(node, via) < requiredViaSpacing) {
           return true
         }
       }
     }
 
-    const traceProximity = this.traceThickness + margin
+    const traceProximity = this.honorObstacleRouteDimensions
+      ? isVia
+        ? this.viaDiameter / 2 + this.maxObstacleTraceThickness / 2 + margin
+        : this.traceThickness / 2 + this.maxObstacleTraceThickness / 2 + margin
+      : this.traceThickness + margin
     const indexedSegments =
       planarObstacleQuery?.segments ??
       (!isVia
@@ -318,6 +342,12 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
         if (!segment || segment.connectedToCurrentConnection) continue
         if (!isVia && segment.z !== node.z) continue
         if (
+          this.honorObstacleRouteDimensions &&
+          isVia &&
+          (segment.z < candidateViaMinZ || segment.z > candidateViaMaxZ)
+        )
+          continue
+        if (
           planarObstacleQuery &&
           (node.x + traceProximity < segment.minX ||
             node.y + traceProximity < segment.minY ||
@@ -326,15 +356,25 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
         ) {
           continue
         }
+        const requiredCenterlineDistance = this.honorObstacleRouteDimensions
+          ? isVia
+            ? this.viaDiameter / 2 + segment.traceThickness / 2 + margin
+            : this.traceThickness / 2 + segment.traceThickness / 2 + margin
+          : traceProximity
         if (
-          pointToSegmentDistance(node, segment.A, segment.B) < traceProximity
+          pointToSegmentDistance(node, segment.A, segment.B) <
+          requiredCenterlineDistance
         ) {
           return true
         }
       }
     }
 
-    const viaProximity = this.viaDiameter / 2 + this.traceThickness / 2 + margin
+    const viaProximity = this.honorObstacleRouteDimensions
+      ? isVia
+        ? this.viaDiameter / 2 + this.maxObstacleViaDiameter / 2 + margin
+        : this.traceThickness / 2 + this.maxObstacleViaDiameter / 2 + margin
+      : this.viaDiameter / 2 + this.traceThickness / 2 + margin
     if (this.obstacleViaIndex) {
       const nearbyViaIds = this.obstacleViaIndex.search(
         node.x - viaProximity,
@@ -344,7 +384,25 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
       )
       for (const viaId of nearbyViaIds) {
         const via = this.obstacleVias[viaId]
-        if (via && distance(node, via) < viaProximity) {
+        if (
+          !via ||
+          (this.honorObstacleRouteDimensions &&
+            via.connectedToCurrentConnection)
+        )
+          continue
+        const candidateMinZ = isVia ? candidateViaMinZ : node.z
+        const candidateMaxZ = isVia ? candidateViaMaxZ : node.z
+        if (
+          this.honorObstacleRouteDimensions &&
+          (via.maxZ < candidateMinZ || via.minZ > candidateMaxZ)
+        )
+          continue
+        const requiredCenterlineDistance = this.honorObstacleRouteDimensions
+          ? isVia
+            ? this.viaDiameter / 2 + via.diameter / 2 + margin
+            : this.traceThickness / 2 + via.diameter / 2 + margin
+          : viaProximity
+        if (via && distance(node, via) < requiredCenterlineDistance) {
           return true
         }
       }
@@ -384,9 +442,15 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
       planarObstacleQuery?.segments ?? this.obstacleSegmentsByLayer.get(node.z)
     if (!indexedSegments) return false
 
-    const clearance =
+    const maximumClearance =
       node.z === parent.z && this.obstacleSegments.length > 0
-        ? this.NEARBY_SEGMENT_CLEARANCE
+        ? this.honorObstacleRouteDimensions
+          ? Math.max(
+              0,
+              this.NEARBY_SEGMENT_CLEARANCE +
+                (this.maxObstacleTraceThickness - this.traceThickness) / 2,
+            )
+          : this.NEARBY_SEGMENT_CLEARANCE
         : 0
 
     const minX = Math.min(node.x, parent.x)
@@ -399,10 +463,10 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
       this.obstacleSegmentIndexByLayer
         .get(node.z)
         ?.search(
-          minX - clearance,
-          minY - clearance,
-          maxX + clearance,
-          maxY + clearance,
+          minX - maximumClearance,
+          minY - maximumClearance,
+          maxX + maximumClearance,
+          maxY + maximumClearance,
         ) ??
       []
 
@@ -412,10 +476,10 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
       if (segment.z !== node.z) continue
       if (
         planarObstacleQuery &&
-        (maxX + clearance < segment.minX ||
-          maxY + clearance < segment.minY ||
-          minX - clearance > segment.maxX ||
-          minY - clearance > segment.maxY)
+        (maxX + maximumClearance < segment.minX ||
+          maxY + maximumClearance < segment.minY ||
+          minX - maximumClearance > segment.maxX ||
+          minY - maximumClearance > segment.maxY)
       ) {
         continue
       }
@@ -424,13 +488,20 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
         return true
       }
       if (
-        clearance > 0 &&
+        maximumClearance > 0 &&
         getSegmentToSegmentCenterlineDistance(
           node,
           parent,
           segment.A,
           segment.B,
-        ) < clearance
+        ) <
+          (this.honorObstacleRouteDimensions
+            ? Math.max(
+                0,
+                this.NEARBY_SEGMENT_CLEARANCE +
+                  (segment.traceThickness - this.traceThickness) / 2,
+              )
+            : this.NEARBY_SEGMENT_CLEARANCE)
       ) {
         return true
       }
@@ -445,10 +516,20 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     const segments = this.obstacleSegmentsByLayer.get(node.z)
     if (!segmentIndex || !segments) return undefined
 
-    const traceProximity = this.traceThickness + this.obstacleMargin
+    const traceProximity = this.honorObstacleRouteDimensions
+      ? this.traceThickness / 2 +
+        this.maxObstacleTraceThickness / 2 +
+        this.obstacleMargin
+      : this.traceThickness + this.obstacleMargin
     const clearance =
       node.z === parent.z && this.obstacleSegments.length > 0
-        ? this.NEARBY_SEGMENT_CLEARANCE
+        ? this.honorObstacleRouteDimensions
+          ? Math.max(
+              0,
+              this.NEARBY_SEGMENT_CLEARANCE +
+                (this.maxObstacleTraceThickness - this.traceThickness) / 2,
+            )
+          : this.NEARBY_SEGMENT_CLEARANCE
         : 0
 
     return {
@@ -468,6 +549,8 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
       this.obstacleSegmentsByLayer.clear()
       this.obstacleSegmentIndexByLayer.clear()
       this.obstacleViaIndex = null
+      this.maxObstacleTraceThickness = 0
+      this.maxObstacleViaDiameter = 0
       return
     }
 
@@ -475,15 +558,32 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     const obstacleVias: IndexedObstacleVia[] = []
 
     for (const route of this.obstacleRoutes) {
-      const connectedToCurrentConnection =
-        this.connMap?.areIdsConnected?.(
-          this.connectionName,
-          route.connectionName,
-        ) ?? false
+      const routeAliases = [route.connectionName, route.rootConnectionName]
+      const currentAliases = [this.connectionName, this.rootConnectionName]
+      const connectedToCurrentConnection = this.honorObstacleRouteDimensions
+        ? routeAliases.some(
+            (routeAlias) =>
+              routeAlias !== undefined &&
+              currentAliases.some(
+                (currentAlias) =>
+                  currentAlias !== undefined &&
+                  (routeAlias === currentAlias ||
+                    (this.connMap?.areIdsConnected?.(
+                      currentAlias,
+                      routeAlias,
+                    ) ??
+                      false)),
+              ),
+          )
+        : (this.connMap?.areIdsConnected?.(
+            this.connectionName,
+            route.connectionName,
+          ) ?? false)
 
       for (const pointPair of getSameLayerPointPairs(route)) {
         obstacleSegments.push({
           ...pointPair,
+          traceThickness: route.traceThickness,
           minX: Math.min(pointPair.A.x, pointPair.B.x),
           minY: Math.min(pointPair.A.y, pointPair.B.y),
           maxX: Math.max(pointPair.A.x, pointPair.B.x),
@@ -493,12 +593,50 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
       }
 
       for (const via of route.vias) {
-        obstacleVias.push(via)
+        const transition = route.route.find((point, pointIndex) => {
+          const next = route.route[pointIndex + 1]
+          return (
+            next !== undefined &&
+            Math.abs(point.x - via.x) <= 1e-9 &&
+            Math.abs(point.y - via.y) <= 1e-9 &&
+            Math.abs(next.x - via.x) <= 1e-9 &&
+            Math.abs(next.y - via.y) <= 1e-9 &&
+            point.z !== next.z
+          )
+        })
+        const transitionIndex = transition
+          ? route.route.indexOf(transition)
+          : -1
+        const nextTransitionPoint =
+          transitionIndex >= 0 ? route.route[transitionIndex + 1] : undefined
+        const minZ =
+          this.allowBlindAndBuriedVias && transition && nextTransitionPoint
+            ? Math.min(transition.z, nextTransitionPoint.z)
+            : 0
+        const maxZ =
+          this.allowBlindAndBuriedVias && transition && nextTransitionPoint
+            ? Math.max(transition.z, nextTransitionPoint.z)
+            : this.layerCount - 1
+        obstacleVias.push({
+          ...via,
+          diameter: route.viaDiameter,
+          minZ,
+          maxZ,
+          connectedToCurrentConnection,
+        })
       }
     }
 
     this.obstacleSegments = obstacleSegments
     this.obstacleVias = obstacleVias
+    this.maxObstacleTraceThickness = obstacleSegments.reduce(
+      (maximum, segment) => Math.max(maximum, segment.traceThickness),
+      0,
+    )
+    this.maxObstacleViaDiameter = obstacleVias.reduce(
+      (maximum, via) => Math.max(maximum, via.diameter),
+      0,
+    )
     this.obstacleSegmentsByLayer.clear()
     this.obstacleSegmentIndexByLayer.clear()
 
@@ -655,7 +793,9 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
         !this.exploredNodes.has(this.getNodeKey(viaNeighbor)) &&
         !this.isNodeTooCloseToObstacle(
           viaNeighbor,
-          this.viaDiameter / 2 + this.obstacleMargin / 2,
+          this.honorObstacleRouteDimensions
+            ? this.obstacleMargin
+            : this.viaDiameter / 2 + this.obstacleMargin / 2,
           true,
         ) &&
         !this.isNodeTooCloseToEdge(viaNeighbor, true)
@@ -984,9 +1124,17 @@ type IndexedObstacleSegment = {
   maxX: number
   maxY: number
   connectedToCurrentConnection: boolean
+  traceThickness: number
 }
 
-type IndexedObstacleVia = { x: number; y: number }
+type IndexedObstacleVia = {
+  x: number
+  y: number
+  diameter: number
+  minZ: number
+  maxZ: number
+  connectedToCurrentConnection: boolean
+}
 
 type PlanarObstacleQuery = {
   segments: IndexedObstacleSegment[]

@@ -5,6 +5,7 @@ import {
 } from "high-density-repair03/lib"
 import type { SimpleRouteConnection, SimpleRouteJson } from "lib/types"
 import type { HighDensityRoute } from "lib/types/high-density-types"
+import { normalizeRepairSrjViaPolicy } from "lib/utils/normalize-repair-srj-via-policy"
 import type { PreloadedHighDensityRoute } from "./convert-preloaded-traces-to-hd-routes"
 import {
   arePipeline9RoutesOnSameNet,
@@ -701,7 +702,7 @@ export const applyPipeline9RegionalB01Repairs = ({
     hasSafeLayerRepairableError && candidateSearchBudgetExhausted
   if (hasSafeLayerRepairableError && !candidateSearchBudgetExhausted) {
     const safeTraceLayerSolver = new GlobalDrcForceImproveSolver({
-      srj: { ...srj, traces: undefined },
+      srj: normalizeRepairSrjViaPolicy({ ...srj, traces: undefined }),
       hdRoutes: currentRoutes,
       connMap,
       effort,

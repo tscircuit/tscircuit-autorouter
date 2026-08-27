@@ -74,6 +74,12 @@ export interface SimpleRouteJson {
    * Defaults to false because via-in-pad generally requires filled and capped vias.
    */
   allowViaInPad?: boolean
+  /**
+   * Allows vias to terminate on internal layers instead of spanning the board.
+   * Defaults to false. When false, every routed layer transition is
+   * manufactured as a through via.
+   */
+  allowBlindAndBuriedVias?: boolean
   bounds: { minX: number; maxX: number; minY: number; maxY: number }
   outline?: Array<{ x: number; y: number }>
   traces?: SimplifiedPcbTraces

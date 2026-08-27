@@ -446,6 +446,7 @@ function createSourceTraces(
 
       for (const endpoint of endpoints) {
         for (const obstacle of obstacles) {
+          if (obstacle.isCopperPour) continue
           if (pointToBoxDistance(endpoint, obstacle) <= 0) {
             obstaclesContainingEndpoints.push(obstacle)
           }
@@ -666,6 +667,7 @@ function createPcbPadElements(srj: SimpleRouteJson): AnyCircuitElement[] {
   const declaredPcbPortIds = getSrjDeclaredPcbPortIds(srj)
 
   for (const obstacle of srj.obstacles) {
+    if (obstacle.isCopperPour) continue
     const connectedTo = obstacle.connectedTo
     const circuitJsonMetadata = getCircuitJsonMetadata(obstacle)
     if (circuitJsonMetadata.pcb_via_id) continue
@@ -850,9 +852,75 @@ function extractViasFromRoutes(
   layerCount: number,
   minViaDiameter = 0.3,
   minViaHoleDiameter = minViaDiameter * 0.5,
+  allowBlindAndBuriedVias = false,
 ): PcbVia[] {
   const vias: PcbVia[] = []
-  const viaLocations = new Set<string>() // Track unique via locations
+  const viasByPhysicalKey = new Map<string, PcbVia>()
+  const upsertPhysicalVia = ({
+    physicalKey,
+    pcbTraceId,
+    x,
+    y,
+    outerDiameter,
+    holeDiameter,
+    layers,
+  }: {
+    physicalKey: string
+    pcbTraceId: string
+    x: number
+    y: number
+    outerDiameter: number
+    holeDiameter: number
+    layers: LayerName[]
+  }): void => {
+    if (
+      !Number.isFinite(outerDiameter) ||
+      outerDiameter <= 0 ||
+      !Number.isFinite(holeDiameter) ||
+      holeDiameter <= 0
+    ) {
+      throw new Error(
+        `Invalid via dimensions at (${x}, ${y}): outer diameter ${outerDiameter} and hole diameter ${holeDiameter} must be finite positive values`,
+      )
+    }
+
+    const existingVia = viasByPhysicalKey.get(physicalKey)
+    const mergedOuterDiameter = Math.max(
+      existingVia?.outer_diameter ?? 0,
+      outerDiameter,
+    )
+    const mergedHoleDiameter = Math.max(
+      existingVia?.hole_diameter ?? 0,
+      holeDiameter,
+    )
+    if (mergedHoleDiameter > mergedOuterDiameter) {
+      throw new Error(
+        `Invalid via annulus at (${x}, ${y}): hole diameter ${mergedHoleDiameter} exceeds outer diameter ${mergedOuterDiameter}`,
+      )
+    }
+
+    if (existingVia) {
+      // Coincident logical transitions describe one physical barrel. The
+      // largest requested pad and hole dimensions conservatively satisfy all
+      // transitions and make the result independent of traversal order.
+      existingVia.outer_diameter = mergedOuterDiameter
+      existingVia.hole_diameter = mergedHoleDiameter
+      return
+    }
+
+    const via: PcbVia = {
+      type: "pcb_via",
+      pcb_via_id: `via_${vias.length}`,
+      pcb_trace_id: pcbTraceId,
+      x,
+      y,
+      outer_diameter: mergedOuterDiameter,
+      hole_diameter: mergedHoleDiameter,
+      layers,
+    }
+    vias.push(via)
+    viasByPhysicalKey.set(physicalKey, via)
+  }
 
   if (routes.length > 0) {
     if ("type" in routes[0] && routes[0].type === "pcb_trace") {
@@ -869,24 +937,24 @@ function extractViasFromRoutes(
             const viaDiameter = segment.via_diameter ?? minViaDiameter
             const viaHoleDiameter =
               segment.via_hole_diameter ?? minViaHoleDiameter
-            const locationKey = `${segment.x},${segment.y},${segment.from_layer},${segment.to_layer}`
-            if (!viaLocations.has(locationKey)) {
-              vias.push({
-                type: "pcb_via",
-                pcb_via_id: `via_${vias.length}`,
-                pcb_trace_id: trace.pcb_trace_id,
-                x: segment.x,
-                y: segment.y,
-                outer_diameter: viaDiameter,
-                hole_diameter: viaHoleDiameter,
-                layers: getInclusiveViaLayers(
-                  segment.from_layer,
-                  segment.to_layer,
-                  layerCount,
-                ),
-              })
-              viaLocations.add(locationKey)
-            }
+            const locationKey = allowBlindAndBuriedVias
+              ? `${segment.x},${segment.y},${segment.from_layer},${segment.to_layer}`
+              : `${segment.x},${segment.y},through`
+            upsertPhysicalVia({
+              physicalKey: locationKey,
+              pcbTraceId: trace.pcb_trace_id,
+              x: segment.x,
+              y: segment.y,
+              outerDiameter: viaDiameter,
+              holeDiameter: viaHoleDiameter,
+              layers: allowBlindAndBuriedVias
+                ? getInclusiveViaLayers(
+                    segment.from_layer,
+                    segment.to_layer,
+                    layerCount,
+                  )
+                : getInclusiveViaLayers("top", "bottom", layerCount),
+            })
           }
         })
       })
@@ -908,21 +976,20 @@ function extractViasFromRoutes(
           ) {
             const fromLayer = mapZToLayerName(prevPoint.z, layerCount)
             const toLayer = mapZToLayerName(currPoint.z, layerCount)
-            const locationKey = `${currPoint.x},${currPoint.y},${fromLayer},${toLayer}`
-
-            if (!viaLocations.has(locationKey)) {
-              vias.push({
-                type: "pcb_via",
-                pcb_via_id: `via_${vias.length}`,
-                pcb_trace_id: traceId,
-                x: currPoint.x,
-                y: currPoint.y,
-                outer_diameter: viaDiameter,
-                hole_diameter: viaHoleDiameter,
-                layers: getInclusiveViaLayers(fromLayer, toLayer, layerCount),
-              })
-              viaLocations.add(locationKey)
-            }
+            const locationKey = allowBlindAndBuriedVias
+              ? `${currPoint.x},${currPoint.y},${fromLayer},${toLayer}`
+              : `${currPoint.x},${currPoint.y},through`
+            upsertPhysicalVia({
+              physicalKey: locationKey,
+              pcbTraceId: traceId,
+              x: currPoint.x,
+              y: currPoint.y,
+              outerDiameter: viaDiameter,
+              holeDiameter: viaHoleDiameter,
+              layers: allowBlindAndBuriedVias
+                ? getInclusiveViaLayers(fromLayer, toLayer, layerCount)
+                : getInclusiveViaLayers("top", "bottom", layerCount),
+            })
           }
         }
       })
@@ -1023,6 +1090,7 @@ export function convertToCircuitJson(
       srjWithPointPairs.layerCount,
       resolvedMinViaDiameter,
       resolvedMinViaHoleDiameter,
+      srjWithPointPairs.allowBlindAndBuriedVias === true,
     ),
   )
 

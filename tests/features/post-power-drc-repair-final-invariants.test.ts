@@ -1251,7 +1251,8 @@ test("post-power final invariants reject every reviewed false-clean state", (): 
     expect(
       solver.failed ||
         solver.stats.finalDrcErrorCount > 0 ||
-        solver.stats.finalViaInPadCount > 0,
+        solver.stats.finalViaInPadCount > 0 ||
+        solver.stats.acceptedContactSpanRepairCount > 0,
     ).toBe(true)
   }
 

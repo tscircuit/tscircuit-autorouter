@@ -292,6 +292,11 @@ function getOutputNodeMetadata({
     _soicRegionType: getAgreedOptionalValue(
       sourceNodes.map((node) => node._soicRegionType),
     ),
+    _isNarrowSoicPadGap:
+      sourceNodes.some((node) => node._isNarrowSoicPadGap) || undefined,
+    _soicPadOutwardDirection: getAgreedOptionalValue(
+      sourceNodes.map((node) => node._soicPadOutwardDirection),
+    ),
     _isComponentTopologyNode: isComponentTopologyNode || undefined,
     _connectedTo: connectedTo.length > 0 ? connectedTo : undefined,
   }

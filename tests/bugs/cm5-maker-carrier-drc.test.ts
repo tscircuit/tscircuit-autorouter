@@ -7,7 +7,6 @@ import {
   getViaPadClearanceErrors,
 } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/post-power-drc-repair-solver"
 import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
-import { getDrcErrors } from "lib/testing/getDrcErrors"
 import type { SimpleRouteJson, SimplifiedPcbTraces } from "lib/types"
 import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
 import srjJson from "../../fixtures/bug-reports/cm5-maker-carrier-drc/cm5-maker-carrier-drc.srj.json" with {
@@ -20,6 +19,7 @@ import residualJson from "../../fixtures/bug-reports/cm5-maker-carrier-drc/cm5-m
 const routedSrj = srjJson as SimpleRouteJson
 const inputSrj: SimpleRouteJson = {
   ...structuredClone(routedSrj),
+  allowBlindAndBuriedVias: false,
   allowViaInPad: false,
   traces: [],
 }
@@ -42,7 +42,7 @@ const getErrorTypeCounts = (
       ]),
   )
 
-test("Pipeline 7 post-power repair clears the captured CM5 residual", (): void => {
+test("Pipeline 7 post-power repair clears the corrected CM5 residual", (): void => {
   expect(inputSrj.layerCount).toBe(4)
   expect(inputSrj.connections).toHaveLength(30)
   expect(inputSrj.obstacles).toHaveLength(318)
@@ -79,25 +79,7 @@ test("Pipeline 7 post-power repair clears the captured CM5 residual", (): void =
     residualTraces.flatMap((trace) =>
       trace.route.filter((point) => point.route_type === "via"),
     ),
-  ).toHaveLength(134)
-  const liftedSourceTrace22 = residualTraces.find(
-    (trace) => trace.pcb_trace_id === "source_trace_22_0",
-  )!
-  expect(liftedSourceTrace22.route).toHaveLength(80)
-  expect(
-    liftedSourceTrace22.route.filter(
-      (point) => point.route_type === "via" && point.via_diameter === undefined,
-    ),
-  ).toEqual([
-    expect.objectContaining({
-      from_layer: "bottom",
-      to_layer: "inner1",
-    }),
-    expect.objectContaining({
-      from_layer: "inner1",
-      to_layer: "bottom",
-    }),
-  ])
+  ).toHaveLength(132)
 
   const pointPairPipeline = new AutoroutingPipelineSolver7_MultiGraph(
     structuredClone(inputSrj),
@@ -141,8 +123,8 @@ test("Pipeline 7 post-power repair clears the captured CM5 residual", (): void =
   })
   expect(getErrorTypeCounts(baselineDrc.errors)).toEqual({
     pcb_pad_trace_clearance_error: 1,
-    pcb_trace_error: 9,
-    pcb_via_trace_clearance_error: 3,
+    pcb_trace_error: 25,
+    pcb_via_trace_clearance_error: 17,
   })
   const baselineViaPadErrors = getViaPadClearanceErrors({
     circuitJson: baselineDrc.circuitJson,
@@ -154,6 +136,7 @@ test("Pipeline 7 post-power repair clears the captured CM5 residual", (): void =
     "via_pad_clearance_via_16_pcb_smtpad_108",
     "via_pad_clearance_via_16_pcb_smtpad_110",
     "via_pad_clearance_via_17_pcb_smtpad_136",
+    "via_pad_clearance_via_26_pcb_smtpad_106",
     "via_pad_clearance_via_50_pcb_smtpad_112",
   ])
   expect(
@@ -162,7 +145,7 @@ test("Pipeline 7 post-power repair clears the captured CM5 residual", (): void =
       srj: inputSrj,
     }),
   ).toEqual([
-    "source_net_4_0:-1.049990:8.640060:top-inner1:pcb_smtpad_106",
+    "source_net_4_0:-1.049990:8.640060:top-inner1-inner2-bottom:pcb_smtpad_106",
     "source_trace_20_0:1.809530:2.635203:top-inner1-inner2-bottom:pcb_smtpad_137",
     "source_trace_25_0:1.695598:1.433610:top-inner1-inner2-bottom:pcb_smtpad_143",
   ])
@@ -179,51 +162,26 @@ test("Pipeline 7 post-power repair clears the captured CM5 residual", (): void =
   const finalDrc = getReferenceDrc(srjWithPointPairs, finalTraces)
 
   expect(getTraceErrorIds(residualDrc.errors)).toEqual([
-    "overlap_source_net_10_mst1_0_source_net_8_0",
+    "overlap_source_net_1_mst16_0_source_trace_21_0",
   ])
   expect(
     getCheckedViaInPadIdentities({
       circuitJson: residualDrc.circuitJson,
       srj: inputSrj,
     }),
-  ).toHaveLength(0)
-  expect(getTraceErrorIds(finalDrc.errors)).toEqual([
-    "overlap_source_net_10_mst1_0_pcb_smtpad_0.490_0.000",
+  ).toEqual([
+    "source_trace_22_0:1.853261:3.824542:top-inner1-inner2-bottom:pcb_smtpad_131",
   ])
+  expect(finalDrc.errors).toHaveLength(0)
   expect(
-    inputSrj.obstacles.some(
-      (obstacle) =>
-        obstacle.isCopperPour === true &&
-        obstacle.layers.includes("inner1") &&
-        obstacle.center.x === 0.48999999999999844 &&
-        obstacle.center.y === 0,
-    ),
-  ).toBe(true)
-
-  const authoritativePadIds = new Set(
-    inputSrj.obstacles.flatMap((obstacle) => {
-      if (obstacle.obstacleRole !== "pad") return []
-      const padId =
-        obstacle.circuitJsonMetadata?.pcb_smtpad_id ??
-        obstacle.circuitJsonMetadata?.pcb_plated_hole_id
-      return padId ? [padId] : []
-    }),
-  )
-  const authoritativeCircuitJson = finalDrc.circuitJson.filter((element) => {
-    if (element.type === "pcb_smtpad")
-      return authoritativePadIds.has(element.pcb_smtpad_id)
-    if (element.type === "pcb_plated_hole")
-      return authoritativePadIds.has(element.pcb_plated_hole_id)
-    return true
-  })
-  expect(
-    getDrcErrors(authoritativeCircuitJson, {
+    getViaPadClearanceErrors({
+      circuitJson: finalDrc.circuitJson,
+      srj: inputSrj,
       supplementalConnMap: getConnectivityMapFromSimpleRouteJson({
         ...srjWithPointPairs,
         traces: finalTraces,
       }),
-      traceClearance: inputSrj.minTraceToPadEdgeClearance,
-    }).errors,
+    }),
   ).toHaveLength(0)
   expect(
     getCheckedViaInPadIdentities({
@@ -235,14 +193,22 @@ test("Pipeline 7 post-power repair clears the captured CM5 residual", (): void =
     skipped: false,
     initialDrcErrorCount: 1,
     finalDrcErrorCount: 0,
-    initialViaInPadCount: 0,
+    initialViaInPadCount: 1,
     finalViaInPadCount: 0,
     initialGuardErrorCount: 1,
-    finalGuardErrorCount: 1,
-    candidateEvaluationCount: 1,
+    finalGuardErrorCount: 0,
+    acceptedCandidateCount: 2,
     acceptedLayerLiftCount: 1,
+    contactSpanSearchCount: 1,
+    acceptedContactSpanRepairCount: 1,
     candidateBudgetExhausted: false,
     runtimeBudgetExhausted: false,
-    remainingGuardErrorIds: ["via_obstacle:source_net_10_mst1_0:136"],
+    remainingDrcErrorIds: [],
+    remainingViaInPadIds: [],
+    remainingGuardErrorIds: [],
   })
+  expect(solver.stats.contactSpanSearchIterationCount).toBeGreaterThan(0)
+  expect(solver.stats.contactSpanSearchIterationCount).toBeLessThanOrEqual(
+    50_000,
+  )
 })

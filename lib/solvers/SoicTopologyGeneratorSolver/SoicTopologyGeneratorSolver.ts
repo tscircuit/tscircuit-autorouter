@@ -32,6 +32,8 @@ type SoicRoutingRegion = {
   regionType: "center" | "pad" | "pad-gap"
   obstacleZ?: number[]
   connectedTo?: string[]
+  isNarrowPadGap?: boolean
+  padOutwardDirection?: SoicSide
 }
 
 export interface SoicTopologyGeneratorSolverParams
@@ -67,6 +69,8 @@ function createMeshNodesForRegion({
   availableZ,
   multiLayerThreshold,
   regionType,
+  isNarrowPadGap = false,
+  padOutwardDirection,
   obstacleZ = [],
   connectedTo,
 }: {
@@ -75,6 +79,8 @@ function createMeshNodesForRegion({
   availableZ: number[]
   multiLayerThreshold: number
   regionType: SoicRoutingRegion["regionType"]
+  isNarrowPadGap?: boolean
+  padOutwardDirection?: SoicSide
   obstacleZ?: number[]
   connectedTo?: string[]
 }): CapacityMeshNode[] {
@@ -113,6 +119,8 @@ function createMeshNodesForRegion({
     layer: `z${group.availableZ.join(",")}`,
     availableZ: group.availableZ,
     _soicRegionType: regionType,
+    _isNarrowSoicPadGap: isNarrowPadGap,
+    _soicPadOutwardDirection: padOutwardDirection,
     _containsObstacle: group.containsObstacle,
     _connectedTo: group.containsObstacle ? connectedTo : undefined,
   }))
@@ -223,13 +231,28 @@ function getInnerSoicBounds({
   }
 }
 
-function getPadRegions(obstacles: Obstacle[], layerCount: number) {
+function getPadRegions(
+  obstacles: Obstacle[],
+  layerCount: number,
+  orientation: SoicOrientation,
+  componentCenter: { x: number; y: number },
+  preferOutwardEscape: boolean,
+) {
   return obstacles.map((obstacle, index) => ({
     key: `pad:${obstacle.obstacleId ?? index}`,
     bounds: getBoundingBox(obstacle),
     regionType: "pad" as const,
     obstacleZ: getObstacleAvailableZ(obstacle, layerCount),
     connectedTo: [...obstacle.connectedTo],
+    padOutwardDirection: preferOutwardEscape
+      ? ((orientation === "vertical-columns"
+          ? obstacle.center.x < componentCenter.x
+            ? "left"
+            : "right"
+          : obstacle.center.y < componentCenter.y
+            ? "bottom"
+            : "top") as SoicSide)
+      : undefined,
   }))
 }
 
@@ -238,11 +261,13 @@ function createGapRegionsForSide({
   sideObstacles,
   bounds,
   centralBounds,
+  narrowThreshold,
 }: {
   side: SoicSide
   sideObstacles: Obstacle[]
   bounds: Bounds
   centralBounds: Bounds
+  narrowThreshold: number
 }) {
   const regions: SoicRoutingRegion[] = []
 
@@ -285,6 +310,11 @@ function createGapRegionsForSide({
       key: `${side}-gap-${index}`,
       bounds: gapBounds,
       regionType: "pad-gap",
+      isNarrowPadGap:
+        isValidBounds(gapBounds) &&
+        (side === "left" || side === "right"
+          ? gapBounds.maxY - gapBounds.minY
+          : gapBounds.maxX - gapBounds.minX) <= narrowThreshold,
     })
   }
 
@@ -343,17 +373,34 @@ export class SoicTopologyGeneratorSolver extends BaseSolver {
     const multiLayerThreshold = (viaDiameter + obstacleMargin) * 2
     const activeSides: SoicSide[] =
       orientation === "vertical-columns" ? ["left", "right"] : ["top", "bottom"]
+    const narrowPadGapThreshold =
+      this.inputProblem.inputSrj.minTraceWidth + obstacleMargin * 2
+    const componentCenter = {
+      x: (bounds.minX + bounds.maxX) / 2,
+      y: (bounds.minY + bounds.maxY) / 2,
+    }
+    const gapRegions = activeSides.flatMap((side) =>
+      createGapRegionsForSide({
+        side,
+        sideObstacles: sideGroups[side],
+        bounds,
+        centralBounds,
+        narrowThreshold: narrowPadGapThreshold,
+      }),
+    )
+    const preferOutwardEscape = gapRegions.some(
+      (region) => region.isNarrowPadGap,
+    )
     const regions: SoicRoutingRegion[] = [
       { key: "center", bounds: centralBounds, regionType: "center" },
-      ...getPadRegions(soicObstacles, layerCount),
-      ...activeSides.flatMap((side) =>
-        createGapRegionsForSide({
-          side,
-          sideObstacles: sideGroups[side],
-          bounds,
-          centralBounds,
-        }),
+      ...getPadRegions(
+        soicObstacles,
+        layerCount,
+        orientation,
+        componentCenter,
+        preferOutwardEscape,
       ),
+      ...gapRegions,
     ]
     const routingRegions = regions.flatMap((region) =>
       createMeshNodesForRegion({
@@ -362,6 +409,8 @@ export class SoicTopologyGeneratorSolver extends BaseSolver {
         availableZ,
         multiLayerThreshold,
         regionType: region.regionType,
+        isNarrowPadGap: region.isNarrowPadGap,
+        padOutwardDirection: region.padOutwardDirection,
         obstacleZ: region.obstacleZ,
         connectedTo: region.connectedTo,
       }),
@@ -375,6 +424,11 @@ export class SoicTopologyGeneratorSolver extends BaseSolver {
       viaDiameter,
       obstacleMargin,
       multiLayerThreshold,
+      narrowPadGapThreshold,
+      preferOutwardEscape,
+      narrowPadGapNodeCount: routingRegions.filter(
+        (node) => node._isNarrowSoicPadGap,
+      ).length,
       firstSidePadCount: sideGroups[activeSides[0]!].length,
       secondSidePadCount: sideGroups[activeSides[1]!].length,
       multiLayerNodeCount: routingRegions.filter(

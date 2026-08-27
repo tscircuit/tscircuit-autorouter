@@ -38,6 +38,7 @@ import {
 import { getPresuppliedTraceVisualization } from "lib/utils/getPresuppliedTraceVisualization"
 import { calculateOptimalCapacityDepth } from "lib/utils/getTunedTotalCapacity1"
 import { getViaDimensions } from "lib/utils/getViaDimensions"
+import { normalizeRepairSrjViaPolicy } from "lib/utils/normalize-repair-srj-via-policy"
 import { getAssignableViaPointKeys } from "./assignableViaUtils"
 import { getXyPointKey } from "./getXyPointKey"
 import { AvailableSegmentPointSolver } from "../../solvers/AvailableSegmentPointSolver/AvailableSegmentPointSolver"
@@ -493,7 +494,7 @@ export class AutoroutingPipelineSolver8 extends BaseSolver {
       GlobalDrcForceImproveSolver,
       (cms) => [
         {
-          srj: cms.srjWithPointPairs! as any,
+          srj: normalizeRepairSrjViaPolicy(cms.srjWithPointPairs!) as any,
           hdRoutes: cms.traceWidthSolver!.getHdRoutesWithWidths(),
           effort: cms.effort,
         },

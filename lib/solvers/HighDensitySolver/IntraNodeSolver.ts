@@ -620,7 +620,9 @@ const isEndpointViaSafe = (
   if (
     obstacleChecker.isNodeTooCloseToObstacle(
       viaNode,
-      obstacleChecker.viaDiameter / 2 + obstacleChecker.obstacleMargin / 2,
+      obstacleChecker.honorObstacleRouteDimensions
+        ? obstacleChecker.obstacleMargin
+        : obstacleChecker.viaDiameter / 2 + obstacleChecker.obstacleMargin / 2,
       true,
     )
   ) {

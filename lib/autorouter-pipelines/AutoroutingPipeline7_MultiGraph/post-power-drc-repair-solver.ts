@@ -23,6 +23,10 @@ import { getViaDimensions } from "lib/utils/getViaDimensions"
 import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
 import { mapZToLayerName } from "lib/utils/mapZToLayerName"
 import { JUMPER_DIMENSIONS } from "../../utils/jumperSizes"
+import {
+  type ContactSpanDrcConflict,
+  runContactSpanDrcRepairPass,
+} from "./contact-span-drc-repair"
 
 type RoutePoint = SimplifiedPcbTrace["route"][number]
 type WirePoint = Extract<RoutePoint, { route_type: "wire" }>
@@ -66,6 +70,8 @@ export interface PostPowerDrcRepairSolverOptions {
   maxRuntimeMs?: number
   maxLocalShiftRepairs?: number
   maxLayerLiftRepairs?: number
+  maxContactSpanSearches?: number
+  maxContactSpanIterationsPerSearch?: number
 }
 
 export interface PostPowerDrcRepairStats {
@@ -82,6 +88,9 @@ export interface PostPowerDrcRepairStats {
   acceptedViaInPadRelocationCount: number
   acceptedLocalShiftCount: number
   acceptedLayerLiftCount: number
+  contactSpanSearchCount: number
+  contactSpanSearchIterationCount: number
+  acceptedContactSpanRepairCount: number
   candidateBudgetExhausted: boolean
   runtimeBudgetExhausted: boolean
   unsupportedRouteTypes: string[]
@@ -889,7 +898,11 @@ const getSrjViaInPadConflicts = ({
     for (let routeIndex = 0; routeIndex < trace.route.length; routeIndex++) {
       const point = trace.route[routeIndex]!
       if (point.route_type !== "via") continue
-      const layers = getViaLayers(point, srj.layerCount)
+      const layers = getViaLayers(
+        point,
+        srj.layerCount,
+        srj.allowBlindAndBuriedVias === true,
+      )
       const circuitVia = circuitVias.find(
         (via) =>
           via.pcb_trace_id === trace.pcb_trace_id &&
@@ -1479,11 +1492,13 @@ const traceTouchesObstacleCopper = ({
   obstacle,
   layerCount,
   defaultViaDiameter,
+  allowBlindAndBuriedVias = false,
 }: {
   trace: SimplifiedPcbTrace
   obstacle: SimpleRouteJson["obstacles"][number]
   layerCount: number
   defaultViaDiameter: number
+  allowBlindAndBuriedVias?: boolean
 }): boolean => {
   for (const segment of getTraceWireSegments(trace)) {
     if (
@@ -1496,7 +1511,7 @@ const traceTouchesObstacleCopper = ({
   return trace.route.some(
     (point) =>
       point.route_type === "via" &&
-      getViaLayers(point, layerCount).some((layer) =>
+      getViaLayers(point, layerCount, allowBlindAndBuriedVias).some((layer) =>
         obstacle.layers.includes(layer),
       ) &&
       pointToObstacleDistance(point, obstacle) <=
@@ -1542,7 +1557,11 @@ const getSameNetViaObstacleContainmentGuardErrors = ({
     for (let routeIndex = 0; routeIndex < trace.route.length; routeIndex++) {
       const point = trace.route[routeIndex]!
       if (point.route_type !== "via") continue
-      const layers = getViaLayers(point, srj.layerCount)
+      const layers = getViaLayers(
+        point,
+        srj.layerCount,
+        srj.allowBlindAndBuriedVias === true,
+      )
       for (
         let obstacleIndex = 0;
         obstacleIndex < srj.obstacles.length;
@@ -1673,7 +1692,11 @@ const getJumperPadClearanceGuardErrors = ({
             }
             if (
               point.route_type === "via" &&
-              getViaLayers(point, srj.layerCount).includes(jumper.layer)
+              getViaLayers(
+                point,
+                srj.layerCount,
+                srj.allowBlindAndBuriedVias === true,
+              ).includes(jumper.layer)
             ) {
               const clearance =
                 pointToObstacleDistance(point, padObstacle) -
@@ -1826,9 +1849,11 @@ export const getSrjObstacleClearanceErrors = ({
         }
         if (
           point.route_type === "via" &&
-          getViaLayers(point, srj.layerCount).some((layer) =>
-            obstacle.layers.includes(layer),
-          )
+          getViaLayers(
+            point,
+            srj.layerCount,
+            srj.allowBlindAndBuriedVias === true,
+          ).some((layer) => obstacle.layers.includes(layer))
         ) {
           const viaRadius = (point.via_diameter ?? defaultViaDiameter) / 2
           const actualClearance =
@@ -2067,7 +2092,15 @@ export const getPolicyAllowedLiftLayers = ({
   )
 }
 
-const getViaLayers = (via: ViaPoint, layerCount: number): string[] => {
+const getViaLayers = (
+  via: ViaPoint,
+  layerCount: number,
+  allowBlindAndBuriedVias = false,
+): string[] => {
+  if (!allowBlindAndBuriedVias)
+    return Array.from({ length: layerCount }, (_, z) =>
+      mapZToLayerName(z, layerCount),
+    )
   const fromZ = mapLayerNameToZ(via.from_layer, layerCount)
   const toZ = mapLayerNameToZ(via.to_layer, layerCount)
   return Array.from({ length: Math.abs(toZ - fromZ) + 1 }, (_, offset) =>
@@ -2089,6 +2122,7 @@ const getTraceCopperCapsules = (
   trace: SimplifiedPcbTrace,
   layerCount: number,
   defaultViaDiameter: number,
+  allowBlindAndBuriedVias = false,
 ): CopperCapsule[] => [
   ...getTraceWireSegments(trace).map((segment) => ({
     start: segment.start,
@@ -2098,12 +2132,14 @@ const getTraceCopperCapsules = (
   })),
   ...trace.route.flatMap((point) => {
     if (point.route_type === "via")
-      return getViaLayers(point, layerCount).map((layer) => ({
-        start: point,
-        end: point,
-        layer,
-        radius: (point.via_diameter ?? defaultViaDiameter) / 2,
-      }))
+      return getViaLayers(point, layerCount, allowBlindAndBuriedVias).map(
+        (layer) => ({
+          start: point,
+          end: point,
+          layer,
+          radius: (point.via_diameter ?? defaultViaDiameter) / 2,
+        }),
+      )
     return []
   }),
 ]
@@ -2190,8 +2226,14 @@ const traceHasCopperAt = (
   junction: LayerPoint,
   layerCount: number,
   defaultViaDiameter: number,
+  allowBlindAndBuriedVias = false,
 ): boolean => {
-  return getTraceCopperCapsules(trace, layerCount, defaultViaDiameter).some(
+  return getTraceCopperCapsules(
+    trace,
+    layerCount,
+    defaultViaDiameter,
+    allowBlindAndBuriedVias,
+  ).some(
     (capsule) =>
       capsule.layer === junction.layer &&
       distanceToSegment(junction, capsule.start, capsule.end) <=
@@ -2205,12 +2247,14 @@ const getRequiredSameNetJunctions = ({
   connectivityMap,
   layerCount,
   defaultViaDiameter,
+  allowBlindAndBuriedVias = false,
 }: {
   trace: SimplifiedPcbTrace
   otherTraces: SimplifiedPcbTraces
   connectivityMap: ConnectivityMap
   layerCount: number
   defaultViaDiameter: number
+  allowBlindAndBuriedVias?: boolean
 }): LayerPoint[] => {
   const junctionsByKey = new Map<string, LayerPoint>()
   const addJunction = (point: LayerPoint): void => {
@@ -2223,6 +2267,7 @@ const getRequiredSameNetJunctions = ({
     trace,
     layerCount,
     defaultViaDiameter,
+    allowBlindAndBuriedVias,
   )
   for (const other of otherTraces) {
     const sameNet =
@@ -2236,6 +2281,7 @@ const getRequiredSameNetJunctions = ({
       other,
       layerCount,
       defaultViaDiameter,
+      allowBlindAndBuriedVias,
     )
     for (const tracePrimitive of traceCopper) {
       for (const otherPrimitive of otherCopper) {
@@ -2254,6 +2300,7 @@ export const hasPreservedSameNetJunctions = ({
   connectivityMap,
   layerCount,
   defaultViaDiameter = 0.6,
+  allowBlindAndBuriedVias = false,
 }: {
   before: SimplifiedPcbTrace
   candidate: SimplifiedPcbTrace
@@ -2261,6 +2308,7 @@ export const hasPreservedSameNetJunctions = ({
   connectivityMap: ConnectivityMap
   layerCount: number
   defaultViaDiameter?: number
+  allowBlindAndBuriedVias?: boolean
 }): boolean =>
   getRequiredSameNetJunctions({
     trace: before,
@@ -2268,8 +2316,15 @@ export const hasPreservedSameNetJunctions = ({
     connectivityMap,
     layerCount,
     defaultViaDiameter,
+    allowBlindAndBuriedVias,
   }).every((junction) =>
-    traceHasCopperAt(candidate, junction, layerCount, defaultViaDiameter),
+    traceHasCopperAt(
+      candidate,
+      junction,
+      layerCount,
+      defaultViaDiameter,
+      allowBlindAndBuriedVias,
+    ),
   )
 
 export const hasPreservedConnectionPointContacts = ({
@@ -2300,6 +2355,7 @@ export const hasPreservedConnectionPointContacts = ({
             { x: point.x, y: point.y, layer },
             srj.layerCount,
             defaultViaDiameter,
+            srj.allowBlindAndBuriedVias === true,
           ),
         )
         return (
@@ -2310,6 +2366,7 @@ export const hasPreservedConnectionPointContacts = ({
               { x: point.x, y: point.y, layer },
               srj.layerCount,
               defaultViaDiameter,
+              srj.allowBlindAndBuriedVias === true,
             ),
           )
         )
@@ -2513,6 +2570,8 @@ export class PostPowerDrcRepairSolver extends BaseSolver {
   readonly maxRuntimeMs: number
   readonly maxLocalShiftRepairs: number
   readonly maxLayerLiftRepairs: number
+  readonly maxContactSpanSearches: number
+  readonly maxContactSpanIterationsPerSearch: number
   readonly defaultViaDiameter: number
   readonly supplementalConnMap: ConnectivityMap
   readonly inputValidationError?: string
@@ -2580,6 +2639,10 @@ export class PostPowerDrcRepairSolver extends BaseSolver {
       options.maxLocalShiftRepairs ?? Math.max(12, Math.round(12 * effort))
     this.maxLayerLiftRepairs =
       options.maxLayerLiftRepairs ?? Math.max(4, Math.round(4 * effort))
+    this.maxContactSpanSearches =
+      options.maxContactSpanSearches ?? Math.max(4, Math.round(4 * effort))
+    this.maxContactSpanIterationsPerSearch =
+      options.maxContactSpanIterationsPerSearch ?? 50_000
     this.defaultViaDiameter = getViaDimensions(options.originalSrj).padDiameter
     this.supplementalConnMap = getConnectivityMapFromSimpleRouteJson({
       ...this.evaluationSrjWithPointPairs,
@@ -2612,6 +2675,9 @@ export class PostPowerDrcRepairSolver extends BaseSolver {
       acceptedViaInPadRelocationCount: 0,
       acceptedLocalShiftCount: 0,
       acceptedLayerLiftCount: 0,
+      contactSpanSearchCount: 0,
+      contactSpanSearchIterationCount: 0,
+      acceptedContactSpanRepairCount: 0,
       candidateBudgetExhausted: false,
       runtimeBudgetExhausted: false,
       unsupportedRouteTypes: [],
@@ -2828,6 +2894,11 @@ export class PostPowerDrcRepairSolver extends BaseSolver {
     )
     if (
       !previousTrace ||
+      replacement.route.some(
+        (point) =>
+          point.route_type === "jumper" ||
+          point.route_type === "through_obstacle",
+      ) ||
       !hasPreservedTraceStructure(previousTrace, replacement) ||
       !isTraceMutationAllowedByRoutingPolicy({
         trace: previousTrace,
@@ -2849,6 +2920,8 @@ export class PostPowerDrcRepairSolver extends BaseSolver {
         connectivityMap: this.supplementalConnMap,
         layerCount: this.layerCount,
         defaultViaDiameter: this.defaultViaDiameter,
+        allowBlindAndBuriedVias:
+          this.originalSrj.allowBlindAndBuriedVias === true,
       })
       this.junctionCache.set(junctionCacheKey, requiredJunctions)
     }
@@ -2859,6 +2932,7 @@ export class PostPowerDrcRepairSolver extends BaseSolver {
           junction,
           this.layerCount,
           this.defaultViaDiameter,
+          this.originalSrj.allowBlindAndBuriedVias === true,
         ),
       ) &&
       hasPreservedConnectionPointContacts({
@@ -2880,12 +2954,16 @@ export class PostPowerDrcRepairSolver extends BaseSolver {
             obstacle,
             layerCount: this.layerCount,
             defaultViaDiameter: this.defaultViaDiameter,
+            allowBlindAndBuriedVias:
+              this.originalSrj.allowBlindAndBuriedVias === true,
           }) ||
           traceTouchesObstacleCopper({
             trace: replacement,
             obstacle,
             layerCount: this.layerCount,
             defaultViaDiameter: this.defaultViaDiameter,
+            allowBlindAndBuriedVias:
+              this.originalSrj.allowBlindAndBuriedVias === true,
           }),
       )
     )
@@ -2893,7 +2971,7 @@ export class PostPowerDrcRepairSolver extends BaseSolver {
 
   private tryCandidate(
     replacement: SimplifiedPcbTrace,
-    acceptedKind: "via-in-pad" | "via" | "shift" | "lift",
+    acceptedKind: "via-in-pad" | "via" | "shift" | "lift" | "contact-span",
     requiredRemovedErrorIds: ReadonlySet<string> = new Set(),
   ): boolean {
     if (!this.budgetAllowsCandidate()) return false
@@ -2922,16 +3000,15 @@ export class PostPowerDrcRepairSolver extends BaseSolver {
       candidate.guardErrorSeverityVectorsById,
     )
     const accepted =
-      removedRequiredErrors && acceptedKind === "via-in-pad"
-        ? copperStateDidNotWorsen &&
-          viaInPadDidNotWorsen &&
-          viaInPadStrictlyImproved &&
-          guardStateDidNotWorsen
-        : removedRequiredErrors &&
-          copperStateDidNotWorsen &&
-          copperStrictlyImproved &&
-          viaInPadDidNotWorsen &&
-          guardStateDidNotWorsen
+      removedRequiredErrors &&
+      copperStateDidNotWorsen &&
+      viaInPadDidNotWorsen &&
+      guardStateDidNotWorsen &&
+      (acceptedKind === "via-in-pad"
+        ? viaInPadStrictlyImproved
+        : acceptedKind === "contact-span"
+          ? copperStrictlyImproved || viaInPadStrictlyImproved
+          : copperStrictlyImproved)
     if (!accepted) {
       return false
     }
@@ -2944,6 +3021,8 @@ export class PostPowerDrcRepairSolver extends BaseSolver {
       this.stats.acceptedViaInPadRelocationCount++
     if (acceptedKind === "shift") this.stats.acceptedLocalShiftCount++
     if (acceptedKind === "lift") this.stats.acceptedLayerLiftCount++
+    if (acceptedKind === "contact-span")
+      this.stats.acceptedContactSpanRepairCount++
     return true
   }
 
@@ -3436,6 +3515,79 @@ export class PostPowerDrcRepairSolver extends BaseSolver {
     }
   }
 
+  private repairContactSpanErrors(): void {
+    while (
+      this.stats.contactSpanSearchCount < this.maxContactSpanSearches &&
+      this.budgetAllowsCandidate()
+    ) {
+      const evaluation = this.evaluate(this.outputTraces)
+      const combinedTraces = combinePreloadedAndRoutedTraces(
+        this.fixedPreloadedTraces,
+        this.outputTraces,
+      )
+      const conflicts: ContactSpanDrcConflict[] = [
+        ...evaluation.errorsWithCenters.flatMap((error) => {
+          if (!error.center) return []
+          const ownerTraceIds = this.outputTraces.flatMap((trace) =>
+            drcErrorInvolvesAnyTrace({
+              error,
+              traces: combinedTraces,
+              circuitJson: evaluation.circuitJson,
+              traceIds: new Set([trace.pcb_trace_id]),
+            })
+              ? [trace.pcb_trace_id]
+              : [],
+          )
+          return ownerTraceIds.length > 0
+            ? [
+                {
+                  identity: getDrcErrorIdentity(error),
+                  center: error.center,
+                  ownerTraceIds,
+                },
+              ]
+            : []
+        }),
+        ...evaluation.viaInPadConflicts.flatMap((conflict) => {
+          const ownerTraceId = conflict.via.pcb_trace_id
+          return ownerTraceId
+            ? [
+                {
+                  identity: conflict.identity,
+                  center: { x: conflict.via.x, y: conflict.via.y },
+                  ownerTraceIds: [ownerTraceId],
+                },
+              ]
+            : []
+        }),
+      ]
+      if (conflicts.length === 0) return
+      const pass = runContactSpanDrcRepairPass({
+        srj: this.originalSrj,
+        traces: this.outputTraces,
+        fixedTraces: this.fixedPreloadedTraces,
+        connectivityMap: this.supplementalConnMap,
+        conflicts,
+        getAllowedLayers: (trace): string[] => this.getAllowedLiftLayers(trace),
+        acceptCandidate: (candidate): boolean =>
+          this.tryCandidate(candidate, "contact-span"),
+        maxSearches:
+          this.maxContactSpanSearches - this.stats.contactSpanSearchCount,
+        maxIterationsPerSearch: this.maxContactSpanIterationsPerSearch,
+        deadlineMs: Number.isFinite(this.maxRuntimeMs)
+          ? this.startedAt + this.maxRuntimeMs
+          : undefined,
+      })
+      this.stats.contactSpanSearchCount += pass.searchCount
+      this.stats.contactSpanSearchIterationCount += pass.searchIterationCount
+      if (pass.runtimeBudgetExhausted) {
+        this.stats.runtimeBudgetExhausted = true
+        return
+      }
+      if (!pass.accepted) return
+    }
+  }
+
   override _step(): void {
     this.startedAt = performance.now()
     if (!this.enabled) {
@@ -3495,7 +3647,13 @@ export class PostPowerDrcRepairSolver extends BaseSolver {
       this.repairLocalizedErrors({ includeViaPad: true })
       this.repairTraceTraceErrorsByLayerLift()
     }
-
+    const beforeContactSpanRepair = this.evaluate(this.outputTraces)
+    if (
+      beforeContactSpanRepair.errorIds.length > 0 ||
+      beforeContactSpanRepair.viaInPadIds.length > 0
+    ) {
+      this.repairContactSpanErrors()
+    }
     const final = this.evaluate(this.outputTraces)
     this.stats.finalDrcErrorCount = final.errorIds.length
     this.stats.finalViaInPadCount = final.viaInPadIds.length
