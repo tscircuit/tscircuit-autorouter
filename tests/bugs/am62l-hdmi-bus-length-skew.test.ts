@@ -24,7 +24,7 @@ const getTraceLength = (trace: SimplifiedPcbTrace): number => {
   }, 0)
 }
 
-test("AM62L HDMI clock pair exceeds its maximum length skew", async () => {
+test("AM62L HDMI clock pair stays within its maximum length skew", async () => {
   const inputSrj = structuredClone(boardPhase) as SimpleRouteJson
   const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(inputSrj, {
     cacheProvider: null,
@@ -56,7 +56,7 @@ test("AM62L HDMI clock pair exceeds its maximum length skew", async () => {
 
   // source_trace_30 is U5.TXC_POS -> U6.CLK_POS -> J2.pin10.
   // source_trace_31 is U5.TXC_NEG -> U6.CLK_NEG -> J2.pin12.
-  expect(routedSkew).toBeGreaterThan(clockBus.maxLengthSkew)
+  expect(routedSkew).toBeLessThanOrEqual(clockBus.maxLengthSkew)
 
   const routedGraphics: GraphicsObject = convertSrjToGraphicsObject(
     { ...inputSrj, traces: routedTraces },
@@ -93,7 +93,7 @@ test("AM62L HDMI clock pair exceeds its maximum length skew", async () => {
       y: -8,
       text: `TMDS_CLK skew: ${routedSkew.toFixed(2)}mm (maximum: 0.50mm)`,
       fontSize: 0.7,
-      color: "#b91c1c",
+      color: "#166534",
       anchorSide: "center_left",
     },
   ]
@@ -102,7 +102,7 @@ test("AM62L HDMI clock pair exceeds its maximum length skew", async () => {
     getGraphicsSvgFrames({
       frames: [
         {
-          name: "AM62L HDMI • clock pair length-skew violation",
+          name: "AM62L HDMI • clock pair length-skew constraint honored",
           pipeline: "end",
           graphics: routedGraphics,
         },

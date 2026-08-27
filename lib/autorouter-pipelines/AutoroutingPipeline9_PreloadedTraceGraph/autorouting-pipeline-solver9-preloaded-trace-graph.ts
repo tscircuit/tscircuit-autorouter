@@ -1,5 +1,4 @@
 import { RectDiffPipeline } from "@tscircuit/rectdiff"
-import { PostProcessingSolver as DifferentialPairPostProcessingSolver } from "@tscircuit/length-matching-solver"
 import type { PowerTraceExpanderOptions } from "@tscircuit/power-trace-expander"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { GraphicsObject, Line } from "graphics-debug"
@@ -66,6 +65,7 @@ import { SingleLayerNodeMergerSolver } from "../../solvers/SingleLayerNodeMerger
 import { StrawSolver } from "../../solvers/StrawSolver/StrawSolver"
 import { TraceSimplificationSolver } from "../../solvers/TraceSimplificationSolver/TraceSimplificationSolver"
 import { TraceWidthSolver } from "../../solvers/TraceWidthSolver/TraceWidthSolver"
+import { LengthMatchingPostProcessingSolver } from "../../solvers/length-matching-post-processing-solver"
 import { applyFixedRouteReplacementsToPreloadedTraces } from "./apply-fixed-route-replacements-to-preloaded-traces"
 import { assignUniquePcbTraceIdsToNewTraces } from "./assign-unique-pcb-trace-ids-to-new-traces"
 import { getPipeline9NetByConnectionName } from "./get-pipeline9-net-by-connection-name"
@@ -265,7 +265,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
   deadEndSolver?: DeadEndSolver
   traceSimplificationSolver?: TraceSimplificationSolver
   mutatedPreloadedTraceSimplificationSolver?: TraceSimplificationSolver
-  lengthMatchingPostProcessingSolver?: DifferentialPairPostProcessingSolver
+  lengthMatchingPostProcessingSolver?: LengthMatchingPostProcessingSolver
   powerTraceExpansionSolver?: PowerTraceExpansionSolver
   availableSegmentPointSolver?: AvailableSegmentPointSolver
   portPointPathingSolver?: TinyHypergraphPortPointPathingSolver
@@ -842,7 +842,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     ),
     definePipelineStep(
       "lengthMatchingPostProcessingSolver",
-      DifferentialPairPostProcessingSolver,
+      LengthMatchingPostProcessingSolver,
       (cms) => {
         const netToPointPairsSolver = cms.netToPointPairsSolver
         if (!netToPointPairsSolver)
@@ -918,9 +918,12 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           {
             hdRoutes,
             differentialPairs,
+            buses: cms.srj.buses ?? [],
+            connections: cms.srj.connections,
             obstacles: cms.srj.obstacles,
             bounds: cms.srj.bounds,
             layerCount: cms.srj.layerCount,
+            obstacleMargin: cms.srj.minTraceToPadEdgeClearance ?? 0.15,
           },
         ]
       },
@@ -1298,10 +1301,12 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
   }
 
   _getOutputHdRoutes(): HighDensityRoute[] {
-    if (
-      (this.originalSrj.differentialPairs?.length ?? 0) > 0 &&
-      this.lengthMatchingPostProcessingSolver
-    ) {
+    const hasLengthMatchPairs =
+      (this.originalSrj.differentialPairs?.length ?? 0) > 0 ||
+      (this.originalSrj.buses ?? []).some(
+        (bus) => bus.maxLengthSkew !== undefined,
+      )
+    if (hasLengthMatchPairs && this.lengthMatchingPostProcessingSolver) {
       const { hdRoutes } = this.lengthMatchingPostProcessingSolver.getOutput()
       return hdRoutes
     }
