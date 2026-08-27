@@ -2,15 +2,31 @@ import { expect, test } from "bun:test"
 import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import type { SimpleRouteJson, SimplifiedPcbTrace } from "lib/types"
 
-test("relaxed DRC expands vias through every layer unless blind vias are enabled", () => {
-  const createSrj = (allowBlindAndBuriedVias?: boolean): SimpleRouteJson => ({
+test("relaxed DRC preserves legacy via spans and expands role-aware through vias", () => {
+  const createSrj = (
+    allowBlindAndBuriedVias?: boolean,
+    roleAware = false,
+  ): SimpleRouteJson => ({
     layerCount: 4,
     ...(allowBlindAndBuriedVias === undefined
       ? {}
       : { allowBlindAndBuriedVias }),
     minTraceWidth: 0.1,
     bounds: { minX: -2, minY: -2, maxX: 2, maxY: 2 },
-    obstacles: [],
+    obstacles: roleAware
+      ? [
+          {
+            type: "rect",
+            obstacleId: "board_keepout",
+            obstacleRole: "keepout",
+            center: { x: 1.5, y: 1.5 },
+            width: 0.1,
+            height: 0.1,
+            layers: ["top"],
+            connectedTo: [],
+          },
+        ]
+      : [],
     connections: [
       {
         name: "via_signal",
@@ -97,8 +113,8 @@ test("relaxed DRC expands vias through every layer unless blind vias are enabled
       ],
     },
   ]
-  const evaluate = (allowBlindAndBuriedVias?: boolean) => {
-    const inputSrj = createSrj(allowBlindAndBuriedVias)
+  const evaluate = (allowBlindAndBuriedVias?: boolean, roleAware = false) => {
+    const inputSrj = createSrj(allowBlindAndBuriedVias, roleAware)
     return evaluateRelaxedDrc({
       inputSrj,
       srjWithPointPairs: inputSrj,
@@ -107,7 +123,8 @@ test("relaxed DRC expands vias through every layer unless blind vias are enabled
   }
 
   const throughViaResult = evaluate(false)
-  const defaultViaResult = evaluate()
+  const roleAwareDefaultResult = evaluate(undefined, true)
+  const legacyDefaultResult = evaluate()
   const blindViaResult = evaluate(true)
   const throughVia = throughViaResult.circuitJson.find(
     (element) => element.type === "pcb_via",
@@ -115,16 +132,20 @@ test("relaxed DRC expands vias through every layer unless blind vias are enabled
   const blindVia = blindViaResult.circuitJson.find(
     (element) => element.type === "pcb_via",
   )
-  const defaultVia = defaultViaResult.circuitJson.find(
+  const roleAwareDefaultVia = roleAwareDefaultResult.circuitJson.find(
+    (element) => element.type === "pcb_via",
+  )
+  const legacyDefaultVia = legacyDefaultResult.circuitJson.find(
     (element) => element.type === "pcb_via",
   )
 
   expect(throughVia).toMatchObject({
     layers: ["top", "inner1", "inner2", "bottom"],
   })
-  expect(defaultVia).toMatchObject({
+  expect(roleAwareDefaultVia).toMatchObject({
     layers: ["top", "inner1", "inner2", "bottom"],
   })
+  expect(legacyDefaultVia).toMatchObject({ layers: ["top", "inner1"] })
   expect(blindVia).toMatchObject({ layers: ["top", "inner1"] })
   expect(
     throughViaResult.errors.some(
@@ -133,6 +154,7 @@ test("relaxed DRC expands vias through every layer unless blind vias are enabled
         error.pcb_trace_error_id === "overlap_bottom_trace_via_0",
     ),
   ).toBe(true)
-  expect(defaultViaResult.errors).toEqual(throughViaResult.errors)
+  expect(roleAwareDefaultResult.errors).toEqual(throughViaResult.errors)
+  expect(legacyDefaultResult.errors).toHaveLength(0)
   expect(blindViaResult.errors).toHaveLength(0)
 })
