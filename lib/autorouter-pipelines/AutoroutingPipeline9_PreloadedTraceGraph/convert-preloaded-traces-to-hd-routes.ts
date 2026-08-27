@@ -102,6 +102,8 @@ export const convertPreloadedTraceToHdRoutes = (
       continue
     }
 
+    if (point.x === nextPoint.x && point.y === nextPoint.y) continue
+
     addRoute(
       [
         {
