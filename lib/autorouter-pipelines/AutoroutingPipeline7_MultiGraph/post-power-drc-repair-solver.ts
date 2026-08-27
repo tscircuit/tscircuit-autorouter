@@ -60,6 +60,7 @@ export interface PostPowerDrcRepairSolverOptions {
   originalSrj: SimpleRouteJson
   srjWithPointPairs: SimpleRouteJson
   traces: SimplifiedPcbTraces
+  enabled?: boolean
   effort?: number
   maxCandidateEvaluations?: number
   maxRuntimeMs?: number
@@ -68,6 +69,7 @@ export interface PostPowerDrcRepairSolverOptions {
 }
 
 export interface PostPowerDrcRepairStats {
+  skipped: boolean
   initialDrcErrorCount: number
   finalDrcErrorCount: number
   initialViaInPadCount: number
@@ -297,7 +299,7 @@ const getErrorSeverityVectorsById = (
   return state
 }
 
-const isErrorStateSubsetWithoutWorsening = (
+export const isErrorStateSubsetWithoutWorsening = (
   before: ReadonlyMap<string, number[]>,
   candidate: ReadonlyMap<string, number[]>,
 ): boolean =>
@@ -1072,7 +1074,6 @@ export const getTraceBoardEdgeErrors = ({
         pcb_trace_board_edge_clearance_error_id: [
           "trace_board_edge",
           trace.pcb_trace_id,
-          routeIndex,
           point.layer,
         ].join(":"),
         message: `Trace ${trace.pcb_trace_id} is ${actualClearance.toFixed(3)}mm from the board edge; required ${requiredEdgeClearance.toFixed(3)}mm`,
@@ -1122,7 +1123,6 @@ export const getTraceGeometryRuleErrors = ({
       pcb_trace_geometry_rule_error_id: [
         "trace_geometry",
         trace.pcb_trace_id,
-        routeIndex,
         rule,
       ].join(":"),
       pcb_trace_id: trace.pcb_trace_id,
@@ -1285,8 +1285,6 @@ export const getViaBoardEdgeErrors = ({
         pcb_via_board_edge_clearance_error_id: [
           "via_board_edge",
           trace.pcb_trace_id,
-          point.x.toFixed(6),
-          point.y.toFixed(6),
           point.from_layer,
           point.to_layer,
         ].join(":"),
@@ -1564,7 +1562,6 @@ const getSameNetViaObstacleContainmentGuardErrors = ({
           pcb_via_same_net_obstacle_containment_guard_error_id: [
             "same_net_via_obstacle",
             trace.pcb_trace_id,
-            routeIndex,
             obstacleId,
           ].join(":"),
           pcb_trace_id: trace.pcb_trace_id,
@@ -1664,7 +1661,7 @@ const getJumperPadClearanceGuardErrors = ({
                     jumperRouteIndex,
                     padName,
                     trace.pcb_trace_id,
-                    routeIndex,
+                    "wire",
                   ].join(":"),
                   pcb_trace_id: trace.pcb_trace_id,
                   center: pointToSegmentClosestPoint(center, point, next),
@@ -1690,7 +1687,7 @@ const getJumperPadClearanceGuardErrors = ({
                     jumperRouteIndex,
                     padName,
                     trace.pcb_trace_id,
-                    routeIndex,
+                    "via",
                   ].join(":"),
                   pcb_trace_id: trace.pcb_trace_id,
                   center: { x: point.x, y: point.y },
@@ -1816,7 +1813,6 @@ export const getSrjObstacleClearanceErrors = ({
                 "trace_obstacle",
                 trace.pcb_trace_id,
                 obstacle.obstacleId ?? obstacleIndex,
-                routeIndex,
               ].join(":"),
               pcb_trace_id: trace.pcb_trace_id,
               center: { x: repairCenter.x, y: repairCenter.y },
@@ -1844,7 +1840,6 @@ export const getSrjObstacleClearanceErrors = ({
                 "via_obstacle",
                 trace.pcb_trace_id,
                 obstacle.obstacleId ?? obstacleIndex,
-                routeIndex,
               ].join(":"),
               pcb_trace_id: trace.pcb_trace_id,
               center: { x: point.x, y: point.y },
@@ -2507,6 +2502,7 @@ const createEvaluationSrj = ({
 })
 
 export class PostPowerDrcRepairSolver extends BaseSolver {
+  readonly enabled: boolean
   readonly originalSrj: SimpleRouteJson
   readonly srjWithPointPairs: SimpleRouteJson
   readonly evaluationInputSrj: SimpleRouteJson
@@ -2534,6 +2530,7 @@ export class PostPowerDrcRepairSolver extends BaseSolver {
   constructor(options: PostPowerDrcRepairSolverOptions) {
     super()
     const effort = options.effort ?? 1
+    this.enabled = options.enabled ?? true
     this.originalSrj = options.originalSrj
     this.srjWithPointPairs = options.srjWithPointPairs
     this.layerCount = options.originalSrj.layerCount
@@ -2591,7 +2588,7 @@ export class PostPowerDrcRepairSolver extends BaseSolver {
         this.outputTraces,
       ),
     })
-    if (!this.inputValidationError) {
+    if (this.enabled && !this.inputValidationError) {
       const immutableEvaluation = this.evaluate([])
       for (const errorId of immutableEvaluation.errorIds) {
         this.immutableTargetErrorIdCounts.set(
@@ -2602,6 +2599,7 @@ export class PostPowerDrcRepairSolver extends BaseSolver {
     }
     this.evaluationCache = new WeakMap()
     this.stats = {
+      skipped: false,
       initialDrcErrorCount: 0,
       finalDrcErrorCount: 0,
       initialViaInPadCount: 0,
@@ -3440,6 +3438,11 @@ export class PostPowerDrcRepairSolver extends BaseSolver {
 
   override _step(): void {
     this.startedAt = performance.now()
+    if (!this.enabled) {
+      this.stats.skipped = true
+      this.solved = true
+      return
+    }
     if (this.inputValidationError) {
       this.error = this.inputValidationError
       this.failed = true

@@ -92,6 +92,7 @@ interface CapacityMeshSolverOptions {
   powerTraceExpansion?: PowerTraceExpanderOptions
   postPowerDrcRepair?: Pick<
     PostPowerDrcRepairSolverOptions,
+    | "enabled"
     | "maxCandidateEvaluations"
     | "maxRuntimeMs"
     | "maxLocalShiftRepairs"
@@ -831,15 +832,23 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
     definePipelineStep(
       "postPowerDrcRepairSolver",
       PostPowerDrcRepairSolver,
-      (cms) => [
-        {
-          originalSrj: cms.originalSrj,
-          srjWithPointPairs: cms.srjWithPointPairs!,
-          traces: cms.powerTraceExpansionSolver!.getOutput(),
-          effort: cms.effort,
-          ...cms.opts.postPowerDrcRepair,
-        },
-      ],
+      (cms) => {
+        const configuredOptions = cms.opts.postPowerDrcRepair ?? {}
+        return [
+          {
+            originalSrj: cms.originalSrj,
+            srjWithPointPairs: cms.srjWithPointPairs!,
+            traces: cms.powerTraceExpansionSolver!.getOutput(),
+            effort: cms.effort,
+            ...configuredOptions,
+            enabled:
+              configuredOptions.enabled ??
+              cms.originalSrj.obstacles.some(
+                (obstacle) => obstacle.obstacleRole === "pad",
+              ),
+          },
+        ]
+      },
     ),
   ]
 

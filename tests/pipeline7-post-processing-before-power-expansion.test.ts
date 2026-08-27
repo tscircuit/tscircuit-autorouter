@@ -130,4 +130,44 @@ test("Pipeline7 runs final DRC repair after post-processing and power expansion"
   )
   expect(() => emptySolver.solveUntilPhase("none")).not.toThrow()
   expect(emptySolver.solved).toBe(true)
+  expect(emptySolver.postPowerDrcRepairSolver?.stats.skipped).toBe(true)
+  expect(emptySolver.getOutputSimplifiedPcbTraces()).toEqual(
+    emptySolver.powerTraceExpansionSolver!.getOutput(),
+  )
+
+  const optedInSolver = new AutoroutingPipelineSolver7_MultiGraph(
+    {
+      layerCount: 2,
+      minTraceWidth: 0.15,
+      bounds: { minX: 0, minY: 0, maxX: 2, maxY: 2 },
+      obstacles: [],
+      connections: [],
+    },
+    { postPowerDrcRepair: { enabled: true } },
+  )
+  expect(() => optedInSolver.solveUntilPhase("none")).not.toThrow()
+  expect(optedInSolver.postPowerDrcRepairSolver?.stats.skipped).toBe(false)
+
+  const roleAwareSolver = new AutoroutingPipelineSolver7_MultiGraph({
+    layerCount: 2,
+    minTraceWidth: 0.15,
+    bounds: { minX: 0, minY: 0, maxX: 2, maxY: 2 },
+    obstacles: [
+      {
+        type: "rect",
+        obstacleRole: "pad",
+        center: { x: 1, y: 1 },
+        width: 0.4,
+        height: 0.4,
+        layers: ["top"],
+        connectedTo: ["pad"],
+      },
+    ],
+    connections: [],
+  })
+  expect(() => roleAwareSolver.solveUntilPhase("none")).not.toThrow()
+  expect(roleAwareSolver.postPowerDrcRepairSolver?.stats.skipped).toBe(false)
+  expect(roleAwareSolver.getOutputSimplifiedPcbTraces()).toEqual(
+    roleAwareSolver.postPowerDrcRepairSolver!.getOutput(),
+  )
 })

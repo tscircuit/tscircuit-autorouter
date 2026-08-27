@@ -4,12 +4,14 @@ import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import {
   createRadialGridOffsets,
   getCheckedViaInPadIdentities,
+  getDrcErrorIdentity,
   getPolicyAllowedLiftLayers,
   getSrjObstacleClearanceErrors,
   getViaBoardEdgeErrors,
   getViaPadClearanceErrors,
   hasPreservedSameNetJunctions,
   hasPreservedTraceStructure,
+  isErrorStateSubsetWithoutWorsening,
   isStrictErrorIdentitySubset,
   isTraceMutationAllowedByRoutingPolicy,
   liftLocalTraceWindow,
@@ -171,6 +173,106 @@ test("post-power DRC repair primitives preserve identities and topology", (): vo
     )
     if (firstVia?.route_type === "via") firstVia.x += 0.01
     expect(hasPreservedTraceStructure(trace, disconnected)).toBe(false)
+  }
+
+  {
+    const srj: SimpleRouteJson = {
+      layerCount: 4,
+      minTraceWidth: 0.1,
+      minViaPadDiameter: 0.3,
+      minViaHoleDiameter: 0.15,
+      minTraceToPadEdgeClearance: 0.1,
+      minViaEdgeToPadEdgeClearance: 0.1,
+      bounds: { minX: -1, minY: -1, maxX: 6, maxY: 1 },
+      connections: [],
+      obstacles: [
+        {
+          obstacleId: "fixed_obstacle",
+          obstacleRole: "keepout",
+          type: "rect",
+          center: { x: 4, y: 0 },
+          width: 0.2,
+          height: 0.2,
+          layers: ["top", "inner1", "inner2", "bottom"],
+          connectedTo: ["foreign_net"],
+        },
+      ],
+    }
+    const trace = makeTrace([
+      { route_type: "wire", x: 0, y: 0, width: 0.1, layer: "top" },
+      { route_type: "wire", x: 1, y: 0, width: 0.1, layer: "top" },
+      { route_type: "wire", x: 2, y: 0, width: 0.1, layer: "top" },
+      { route_type: "wire", x: 3, y: 0, width: 0.1, layer: "top" },
+      { route_type: "wire", x: 4, y: 0, width: 0.1, layer: "top" },
+      {
+        route_type: "via",
+        x: 4,
+        y: 0,
+        from_layer: "top",
+        to_layer: "bottom",
+        via_diameter: 0.3,
+        via_hole_diameter: 0.15,
+      },
+      { route_type: "wire", x: 4, y: 0, width: 0.1, layer: "bottom" },
+      { route_type: "wire", x: 5, y: 0, width: 0.1, layer: "bottom" },
+    ])
+    const connectivityMap = new ConnectivityMap({
+      connection_a: [trace.pcb_trace_id],
+      foreign_net: ["fixed_obstacle"],
+    })
+    const getGuardErrors = (
+      candidate: SimplifiedPcbTrace,
+    ): ReturnType<typeof getSrjObstacleClearanceErrors> =>
+      getSrjObstacleClearanceErrors({
+        traces: [candidate],
+        srj,
+        connectivityMap,
+      })
+    const baselineGuardErrors = getGuardErrors(trace)
+    const baselineGuardIds = baselineGuardErrors.map(getDrcErrorIdentity)
+    const insertedEarlier = liftLocalTraceWindow({
+      trace,
+      center: { x: 1.5, y: 0 },
+      padding: 0,
+      targetLayer: "inner1",
+    })!
+    expect(getGuardErrors(insertedEarlier).map(getDrcErrorIdentity)).toEqual(
+      baselineGuardIds,
+    )
+
+    const movedGuardedVia = relocateViaVertex(trace, 5, {
+      dx: 0.2,
+      dy: 0,
+    })!
+    const movedGuardErrors = getGuardErrors(movedGuardedVia)
+    expect(movedGuardErrors.map(getDrcErrorIdentity)).toEqual(baselineGuardIds)
+    expect(
+      movedGuardErrors.find(
+        (error) => error.type === "pcb_via_srj_obstacle_clearance_error",
+      )?.actual_clearance,
+    ).toBeGreaterThan(
+      baselineGuardErrors.find(
+        (error) => error.type === "pcb_via_srj_obstacle_clearance_error",
+      )?.actual_clearance as number,
+    )
+    expect(
+      isErrorStateSubsetWithoutWorsening(
+        new Map([["guard", [0.3, 0.2]]]),
+        new Map([["guard", [0.25, 0.1]]]),
+      ),
+    ).toBe(true)
+    expect(
+      isErrorStateSubsetWithoutWorsening(
+        new Map([["guard", [0.3, 0.2]]]),
+        new Map([["guard", [0.31, 0.1]]]),
+      ),
+    ).toBe(false)
+    expect(
+      isErrorStateSubsetWithoutWorsening(
+        new Map([["guard", [0.3, 0.2]]]),
+        new Map([["guard", [0.2, 0.1, 0.05]]]),
+      ),
+    ).toBe(false)
   }
 
   {
