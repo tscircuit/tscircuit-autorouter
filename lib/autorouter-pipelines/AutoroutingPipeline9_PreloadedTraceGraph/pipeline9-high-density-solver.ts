@@ -41,6 +41,7 @@ type Pipeline9HighDensitySolverParams = {
   viaDiameter: number
   traceWidth: number
   obstacleMargin: number
+  viaToPadClearance?: number
   effort: number
   nodePfById?:
     | Map<CapacityMeshNodeId, number | null>
@@ -328,6 +329,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
   readonly viaDiameter: number
   readonly traceWidth: number
   readonly obstacleMargin: number
+  readonly viaToPadClearance?: number
   readonly effort: number
   readonly nodePfById: Map<CapacityMeshNodeId, number | null>
   readonly preserveTerminalPcbPortIds: boolean
@@ -360,6 +362,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     this.viaDiameter = params.viaDiameter
     this.traceWidth = params.traceWidth
     this.obstacleMargin = params.obstacleMargin
+    this.viaToPadClearance = params.viaToPadClearance
     this.effort = params.effort
     this.nodePfById =
       params.nodePfById instanceof Map
@@ -384,6 +387,9 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       reroutedFixedRouteSectionCount: 0,
       promotedFallbackAttemptCount: 0,
       promotedFixedRouteCount: 0,
+      regionalPreloadedViaCandidateRejectionCount: 0,
+      regionalForceImproveCandidateRejectionCount: 0,
+      regionalRepairCandidateRejectionCount: 0,
     }
   }
 
@@ -507,6 +513,9 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       effort: this.effort,
       nodePfById: this.nodePfById,
       obstacles: [...this.obstacles, ...fixedRouteObstacles],
+      boardObstacles: this.obstacles,
+      movablePreloadedConnectionNames: movableFixedRouteConnectionNames,
+      viaToPadClearance: this.viaToPadClearance,
       layerCount: this.layerCount,
     })
     if (promotedFixedRouteConnectionNames.size === 0) {
@@ -528,6 +537,8 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
         "Pipeline9 cannot finish a regional fallback without an active node",
       )
     }
+
+    this.recordRegionalCandidateRejections()
 
     const newRoutes: HighDensityIntraNodeRoute[] = []
     const replacementRoutesByConnectionName = new Map<
@@ -812,10 +823,25 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     this.finishActiveNode(newRoutes)
   }
 
+  private recordRegionalCandidateRejections(): void {
+    if (!this.activeFallbackSolver) return
+    const regionalStats = this.activeFallbackSolver.stats
+    this.stats.regionalPreloadedViaCandidateRejectionCount =
+      Number(this.stats.regionalPreloadedViaCandidateRejectionCount ?? 0) +
+      Number(regionalStats.preloadedViaCandidateRejectionCount ?? 0)
+    this.stats.regionalForceImproveCandidateRejectionCount =
+      Number(this.stats.regionalForceImproveCandidateRejectionCount ?? 0) +
+      Number(regionalStats.forceImproveCandidateRejectionCount ?? 0)
+    this.stats.regionalRepairCandidateRejectionCount =
+      Number(this.stats.regionalRepairCandidateRejectionCount ?? 0) +
+      Number(regionalStats.repairCandidateRejectionCount ?? 0)
+  }
+
   override _step(): void {
     if (this.activeFallbackSolver) {
       this.activeFallbackSolver.step()
       if (this.activeFallbackSolver.failed) {
+        this.recordRegionalCandidateRejections()
         this.error = [
           `Pipeline9 primary high-density routing failed: ${this.activeFallbackReason ?? "unknown error"}`,
           `regional fallback failed: ${this.activeFallbackSolver.error ?? "unknown error"}`,

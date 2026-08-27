@@ -23,6 +23,9 @@ export type GrowShrinkHighDensityIntraNodeSolverParams =
     maxGrowthAttempts?: number
     maxInnerIterationsPerGrowthAttempt?: number
     fallbackToInvalidGeometryOnFailure?: boolean
+    growShrinkSolutionValidator?: (
+      routes: HighDensityIntraNodeRoute[],
+    ) => boolean
   }
 
 const scalePoint = <T extends { x: number; y: number }>(
@@ -147,8 +150,10 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
   }
 
   private createActiveSubSolver() {
+    const { growShrinkSolutionValidator: _, ...portfolioParams } =
+      this.constructorParams
     this.activeSubSolver = new PortfolioSingleIntraNodeSolver({
-      ...this.constructorParams,
+      ...portfolioParams,
       nodeWithPortPoints: scaleNodeWithPortPoints(
         this.nodeWithPortPoints,
         this.scaleFactor,
@@ -160,9 +165,8 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
     }
   }
 
-  private acceptSolution(solver: PortfolioSingleIntraNodeSolver) {
-    this.winningSolver = solver
-    this.solvedRoutes =
+  private acceptSolution(solver: PortfolioSingleIntraNodeSolver): boolean {
+    const solvedRoutes =
       this.scaleFactor === 1
         ? solver.solvedRoutes
         : solver.solvedRoutes.map((route) =>
@@ -172,8 +176,20 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
               1 / this.scaleFactor,
             ),
           )
+    if (
+      this.constructorParams.growShrinkSolutionValidator &&
+      !this.constructorParams.growShrinkSolutionValidator(solvedRoutes)
+    ) {
+      solver.solved = false
+      solver.failed = true
+      solver.error = "High-density scale solution rejected by validator"
+      return false
+    }
+    this.winningSolver = solver
+    this.solvedRoutes = solvedRoutes
     this.solved = true
     this.failed = false
+    return true
   }
 
   computeProgress() {
@@ -192,9 +208,10 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
     this.activeSubSolver!.step()
 
     if (this.activeSubSolver!.solved) {
-      this.acceptSolution(this.activeSubSolver!)
-      this.activeSubSolver = null
-      return
+      if (this.acceptSolution(this.activeSubSolver!)) {
+        this.activeSubSolver = null
+        return
+      }
     }
 
     if (!this.activeSubSolver!.failed) {
