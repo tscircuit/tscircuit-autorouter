@@ -5,7 +5,7 @@ import type { SimpleRouteJson } from "lib/types"
 import { convertSrjToGraphicsObject } from "lib/utils/convertSrjToGraphicsObject"
 import { getGraphicsSvgFrames } from "../fixtures/solver-svg-frames"
 
-test("Pipeline9 ignores a multipoint bus trace width", async (): Promise<void> => {
+test("Pipeline9 honors a multipoint bus trace width", async (): Promise<void> => {
   const inputSrj: SimpleRouteJson = {
     bounds: { minX: -7, maxX: 7, minY: -3, maxY: 3 },
     layerCount: 2,
@@ -47,7 +47,7 @@ test("Pipeline9 ignores a multipoint bus trace width", async (): Promise<void> =
       ),
     ),
   )
-  expect(routedWireWidths).toEqual(new Set([0.1]))
+  expect(routedWireWidths).toEqual(new Set([0.4]))
 
   const routedGraphics: GraphicsObject = convertSrjToGraphicsObject(
     { ...inputSrj, traces: routedTraces },
@@ -66,7 +66,7 @@ test("Pipeline9 ignores a multipoint bus trace width", async (): Promise<void> =
     {
       x: -5,
       y: 1.65,
-      text: "PIPELINE9 OUTPUT: 0.10mm",
+      text: "PIPELINE9 OUTPUT: 0.40mm",
       fontSize: 0.38,
       color: "#b91c1c",
       anchorSide: "center_left",
@@ -77,7 +77,7 @@ test("Pipeline9 ignores a multipoint bus trace width", async (): Promise<void> =
     getGraphicsSvgFrames({
       frames: [
         {
-          name: "BUG • bus requests 0.40mm; Pipeline9 routes 0.10mm",
+          name: "FIXED • bus requests 0.40mm; Pipeline9 routes 0.40mm",
           pipeline: "end",
           graphics: routedGraphics,
         },
