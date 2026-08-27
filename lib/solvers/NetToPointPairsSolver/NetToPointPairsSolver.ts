@@ -7,6 +7,8 @@ import { buildMinimumSpanningTree } from "./buildMinimumSpanningTree"
 import { getInitiallyConnectedStateForConnection } from "./get-initially-connected-state-for-connection"
 import { mergeConnections } from "./mergeConnections"
 
+type ConnectionName = SimpleRouteConnection["name"]
+
 /**
  * Converts a net containing many points to connect into an array of point pair
  * connections.
@@ -35,7 +37,37 @@ export class NetToPointPairsSolver extends BaseSolver {
     initiallyConnectedMap: ConnectivityMap,
   ) {
     super()
-    this.unprocessedConnections = mergeConnections([...ogSrj.connections])
+    const busTraceWidthsByConnectionName = new Map<ConnectionName, number>()
+    for (const bus of ogSrj.buses ?? []) {
+      if (bus.traceWidth === undefined) continue
+      for (const connectionName of bus.connectionNames) {
+        busTraceWidthsByConnectionName.set(
+          connectionName,
+          Math.max(
+            busTraceWidthsByConnectionName.get(connectionName) ?? 0,
+            bus.traceWidth,
+          ),
+        )
+      }
+    }
+    const connectionsWithBusTraceWidths = ogSrj.connections.map(
+      (connection) => {
+        const busTraceWidth = busTraceWidthsByConnectionName.get(
+          connection.name,
+        )
+        if (busTraceWidth === undefined) return connection
+        return {
+          ...connection,
+          nominalTraceWidth: Math.max(
+            connection.nominalTraceWidth ?? 0,
+            busTraceWidth,
+          ),
+        }
+      },
+    )
+    this.unprocessedConnections = mergeConnections(
+      connectionsWithBusTraceWidths,
+    )
     this.newConnections = []
     this.initiallyConnectedMap = initiallyConnectedMap
   }
@@ -77,6 +109,7 @@ export class NetToPointPairsSolver extends BaseSolver {
         continue
       }
       this.newConnections.push({
+        ...connection,
         pointsToConnect: [edge.from, edge.to],
         name: `${connection.name}_mst${mstIdx++}`,
         __rootConnectionNames: connection.__rootConnectionNames ?? [

@@ -170,6 +170,7 @@ export class NetToPointPairsSolver2_OffBoardConnection extends NetToPointPairsSo
       )
 
       this.newConnections.push({
+        ...currentConnection,
         pointsToConnect: optimizedMstEdge.pointsToConnect,
         name: `${currentConnection.name}_mst${mstEdgeIndex++}`,
         __rootConnectionNames: currentConnection.__rootConnectionNames ?? [
