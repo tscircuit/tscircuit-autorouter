@@ -329,7 +329,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
   readonly viaDiameter: number
   readonly traceWidth: number
   readonly obstacleMargin: number
-  readonly viaToPadClearance: number
+  readonly viaToPadClearance?: number
   readonly effort: number
   readonly nodePfById: Map<CapacityMeshNodeId, number | null>
   readonly preserveTerminalPcbPortIds: boolean
@@ -362,7 +362,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     this.viaDiameter = params.viaDiameter
     this.traceWidth = params.traceWidth
     this.obstacleMargin = params.obstacleMargin
-    this.viaToPadClearance = params.viaToPadClearance ?? params.obstacleMargin
+    this.viaToPadClearance = params.viaToPadClearance
     this.effort = params.effort
     this.nodePfById =
       params.nodePfById instanceof Map
