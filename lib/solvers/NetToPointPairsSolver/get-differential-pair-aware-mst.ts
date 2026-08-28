@@ -1,10 +1,13 @@
 import type {
   ConnectionPoint,
   DifferentialPair,
+  PointKey,
   SimpleRouteConnection,
 } from "lib/types"
 import { getPointKey } from "lib/utils/getPointKey"
 import { buildMinimumSpanningTree } from "./buildMinimumSpanningTree"
+
+const REQUIRED_CONNECTION_EDGE_WEIGHT = 0
 
 type WeightedEdge = {
   from: ConnectionPoint
@@ -40,16 +43,45 @@ export const getDifferentialPairAwareMst = (
       originalConnection.pointsToConnect.length === 2,
   )
   const requiredConnectionByPointPair = new Map<
-    string,
-    SimpleRouteConnection
+    PointKey,
+    Map<PointKey, SimpleRouteConnection>
   >()
   const requiredEdges = requiredConnections.map((requiredConnection) => {
     const [from, to] = requiredConnection.pointsToConnect
-    const pointPairKey = [getPointKey(from!), getPointKey(to!)]
-      .sort()
-      .join("|")
-    requiredConnectionByPointPair.set(pointPairKey, requiredConnection)
-    return { from: from!, to: to!, weight: 0 }
+    const fromPointKey = getPointKey(from!)
+    const toPointKey = getPointKey(to!)
+    let requiredConnectionsFromPoint =
+      requiredConnectionByPointPair.get(fromPointKey)
+    if (!requiredConnectionsFromPoint) {
+      requiredConnectionsFromPoint = new Map<
+        PointKey,
+        SimpleRouteConnection
+      >()
+      requiredConnectionByPointPair.set(
+        fromPointKey,
+        requiredConnectionsFromPoint,
+      )
+    }
+    requiredConnectionsFromPoint.set(toPointKey, requiredConnection)
+
+    let requiredConnectionsToPoint =
+      requiredConnectionByPointPair.get(toPointKey)
+    if (!requiredConnectionsToPoint) {
+      requiredConnectionsToPoint = new Map<
+        PointKey,
+        SimpleRouteConnection
+      >()
+      requiredConnectionByPointPair.set(
+        toPointKey,
+        requiredConnectionsToPoint,
+      )
+    }
+    requiredConnectionsToPoint.set(fromPointKey, requiredConnection)
+    return {
+      from: from!,
+      to: to!,
+      weight: REQUIRED_CONNECTION_EDGE_WEIGHT,
+    }
   })
   const minimumSpanningTreeEdges = buildMinimumSpanningTree(
     connection.pointsToConnect,
@@ -63,13 +95,11 @@ export const getDifferentialPairAwareMst = (
 
   return {
     edges: minimumSpanningTreeEdges.map((edge) => {
-      const pointPairKey = [getPointKey(edge.from), getPointKey(edge.to)]
-        .sort()
-        .join("|")
       return {
         ...edge,
-        requiredConnection:
-          requiredConnectionByPointPair.get(pointPairKey),
+        requiredConnection: requiredConnectionByPointPair
+          .get(getPointKey(edge.from))
+          ?.get(getPointKey(edge.to)),
       }
     }),
     remainingRootConnectionNames: mergedRootConnectionNames.filter(
