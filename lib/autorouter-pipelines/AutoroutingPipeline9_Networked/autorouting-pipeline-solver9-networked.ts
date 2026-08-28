@@ -7,6 +7,8 @@ import {
 import { AUTOROUTER_VERSION } from "./autorouter-version"
 import {
   DEFAULT_PIPELINE9_NETWORKED_CACHE_URL,
+  DEFAULT_PIPELINE9_NETWORKED_MAX_BATCH_BODY_BYTES,
+  DEFAULT_PIPELINE9_NETWORKED_MAX_BATCH_ITEMS,
   DEFAULT_PIPELINE9_NETWORKED_TIMEOUT_MS,
   DEFAULT_PIPELINE9_NETWORKED_TRANSPORT_TIMEOUT_MS,
   Pipeline9NetworkedHighDensitySolver,
@@ -21,6 +23,8 @@ export type AutoroutingPipelineSolver9NetworkedOptions = Omit<
   hdCacheFetch?: typeof fetch
   hdCacheTimeoutMs?: number
   hdCacheTransportTimeoutMs?: number
+  hdCacheMaxBatchItems?: number
+  hdCacheMaxBatchBodyBytes?: number
 }
 
 /** Pipeline9 with exact, version-scoped remote ordinary-node solving. */
@@ -29,6 +33,8 @@ export class AutoroutingPipelineSolver9_Networked extends AutoroutingPipelineSol
   readonly hdCacheFetch?: typeof fetch
   readonly hdCacheTimeoutMs: number
   readonly hdCacheTransportTimeoutMs: number
+  readonly hdCacheMaxBatchItems: number
+  readonly hdCacheMaxBatchBodyBytes: number
 
   override getSolverName(): string {
     return "AutoroutingPipelineSolver9_Networked"
@@ -53,6 +59,11 @@ export class AutoroutingPipelineSolver9_Networked extends AutoroutingPipelineSol
     this.hdCacheTransportTimeoutMs =
       opts.hdCacheTransportTimeoutMs ??
       DEFAULT_PIPELINE9_NETWORKED_TRANSPORT_TIMEOUT_MS
+    this.hdCacheMaxBatchItems =
+      opts.hdCacheMaxBatchItems ?? DEFAULT_PIPELINE9_NETWORKED_MAX_BATCH_ITEMS
+    this.hdCacheMaxBatchBodyBytes =
+      opts.hdCacheMaxBatchBodyBytes ??
+      DEFAULT_PIPELINE9_NETWORKED_MAX_BATCH_BODY_BYTES
     if (!Number.isFinite(this.hdCacheTimeoutMs) || this.hdCacheTimeoutMs <= 0) {
       throw new Error(
         `Pipeline9 network request timeout must be a positive number, received ${this.hdCacheTimeoutMs}`,
@@ -64,6 +75,25 @@ export class AutoroutingPipelineSolver9_Networked extends AutoroutingPipelineSol
     ) {
       throw new Error(
         `Pipeline9 network transport timeout must be at least the logical request timeout (${this.hdCacheTimeoutMs}ms), received ${this.hdCacheTransportTimeoutMs}`,
+      )
+    }
+    if (
+      !Number.isInteger(this.hdCacheMaxBatchItems) ||
+      this.hdCacheMaxBatchItems <= 0 ||
+      this.hdCacheMaxBatchItems > DEFAULT_PIPELINE9_NETWORKED_MAX_BATCH_ITEMS
+    ) {
+      throw new Error(
+        `Pipeline9 network max batch items must be a positive integer no greater than ${DEFAULT_PIPELINE9_NETWORKED_MAX_BATCH_ITEMS}, received ${this.hdCacheMaxBatchItems}`,
+      )
+    }
+    if (
+      !Number.isInteger(this.hdCacheMaxBatchBodyBytes) ||
+      this.hdCacheMaxBatchBodyBytes <= 0 ||
+      this.hdCacheMaxBatchBodyBytes >
+        DEFAULT_PIPELINE9_NETWORKED_MAX_BATCH_BODY_BYTES
+    ) {
+      throw new Error(
+        `Pipeline9 network max batch body bytes must be a positive integer no greater than ${DEFAULT_PIPELINE9_NETWORKED_MAX_BATCH_BODY_BYTES}, received ${this.hdCacheMaxBatchBodyBytes}`,
       )
     }
     this.replaceHighDensityPipelineStep()
@@ -92,6 +122,8 @@ export class AutoroutingPipelineSolver9_Networked extends AutoroutingPipelineSol
             fetchImpl: solver.hdCacheFetch,
             requestTimeoutMs: solver.hdCacheTimeoutMs,
             transportTimeoutMs: solver.hdCacheTransportTimeoutMs,
+            maxBatchItems: solver.hdCacheMaxBatchItems,
+            maxBatchBodyBytes: solver.hdCacheMaxBatchBodyBytes,
           },
         ]
       },
