@@ -10,14 +10,14 @@ import { getLastStepSvg } from "../fixtures/getLastStepSvg"
 const RUN_TIMEOUT_REPRO =
   process.env.RUN_BUGREPORT101_CM5_SPI_ROUTING_TIMEOUT === "1"
 const EXPECTED_MAX_RUNTIME_MS = 120_000
-const EXPECTED_MAX_RELAXED_DRC_ERRORS = 47
+const EXPECTED_MAX_RELAXED_DRC_ERRORS = 22
 
-test("bugreport101 captures the CM5 dual-SPI Pipeline 7 timeout", () => {
+test("bugreport101 routes CM5 SPI with physical shared-edge capacity", () => {
   const srj = structuredClone(simpleRouteJson) as SimpleRouteJson
   const solver = new AutoroutingPipelineSolver7_MultiGraph(srj, {
     cacheProvider: null,
     effort: 1,
-    experimentalHighDensitySearchOptimization: true,
+    highDensityRoutingMode: "physical-capacity",
   })
 
   expect(srj.layerCount).toBe(4)
@@ -43,8 +43,8 @@ test("bugreport101 captures the CM5 dual-SPI Pipeline 7 timeout", () => {
     { svgName: "unrouted", tolerance: 0 },
   )
 
-  // The input snapshot remains cheap and CI-reviewed. The full solve is opt-in
-  // because the regression currently takes many minutes on this modest board.
+  // The input snapshot remains cheap and CI-reviewed. The full runtime and
+  // routed-output regression stays opt-in because it is intentionally costly.
   if (!RUN_TIMEOUT_REPRO) return
 
   const startedAt = performance.now()
@@ -76,6 +76,16 @@ test("bugreport101 captures the CM5 dual-SPI Pipeline 7 timeout", () => {
   expect(solver.error).toBeNull()
   expect(solver.failed).toBeFalse()
   expect(solver.solved).toBeTrue()
+  expect(
+    solver.portPointPathingSolver?.stats.physicalPortCapacityEnforced,
+  ).toBeTrue()
+  expect(
+    solver.portPointPathingSolver?.stats.duplicateCongestedPortCount,
+  ).toBe(0)
+  expect(
+    solver.portPointPathingSolver?.stats
+      .duplicateCongestedPortFallbackToOriginal,
+  ).toBeFalse()
   expect(finalDrc.errors.length).toBeLessThanOrEqual(
     EXPECTED_MAX_RELAXED_DRC_ERRORS,
   )

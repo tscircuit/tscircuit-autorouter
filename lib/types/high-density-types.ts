@@ -4,6 +4,10 @@ export type PortPoint = {
   connectionName: string
   rootConnectionName?: string
   portPointId?: string
+  /** Capacity-mesh edge that owns this authoritative physical portal. */
+  physicalPortalGroupId?: string
+  /** Stable identity for one legal XY/Z portal slot. */
+  physicalPortalSlotId?: string
   /** Explicit origin for a congestion-routing duplicate port. */
   duplicatedFromPortId?: string
   pcb_port_id?: string

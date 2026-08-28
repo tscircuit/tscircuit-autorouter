@@ -198,5 +198,14 @@ test("congestion duplicates preserve canonical preloaded assignments", () => {
       ),
     ),
   ).toBeTrue()
+  expect(
+    output.nodesWithPortPoints.every((outputNode) =>
+      outputNode.portPoints.every(
+        (portPoint) =>
+          portPoint.physicalPortalGroupId === undefined &&
+          portPoint.physicalPortalSlotId === undefined,
+      ),
+    ),
+  ).toBeTrue()
   expect(output.changedPreloadedTraceSections).toEqual([])
 })

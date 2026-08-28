@@ -58,13 +58,10 @@ export class HighDensitySolver extends BaseSolver {
   obstacles: Obstacle[]
   layerCount: number
   useGrowShrinkHighDensityIntraNodeSolver: boolean
+  enableTwoChordLaneSolver: boolean
+  enableConflictDirectedB01Solver: boolean
   preserveTerminalPcbPortIds: boolean
   growShrinkMaxInnerIterationsPerGrowthAttempt?: number
-  growShrinkMaxInitialScaleSupervisorIterations?: number
-  growShrinkMaxTotalGrownScaleSupervisorIterations?: number
-  growShrinkTryLargestScaleAsRepairSeedAfterInitialFailure: boolean
-  prioritizeSolvedSegmentProgressBeforeAdaptiveExpansion: boolean
-  includeSyntheticPortBoundsForExternalSolvers: boolean
   growShrinkFallbackToInvalidGeometryOnFailure: boolean
   growShrinkSolutionValidator?: (routes: HighDensityIntraNodeRoute[]) => boolean
   captureSearchDebug: boolean
@@ -98,13 +95,10 @@ export class HighDensitySolver extends BaseSolver {
     obstacles,
     layerCount,
     useGrowShrinkHighDensityIntraNodeSolver,
+    enableTwoChordLaneSolver,
+    enableConflictDirectedB01Solver,
     preserveTerminalPcbPortIds,
     growShrinkMaxInnerIterationsPerGrowthAttempt,
-    growShrinkMaxInitialScaleSupervisorIterations,
-    growShrinkMaxTotalGrownScaleSupervisorIterations,
-    growShrinkTryLargestScaleAsRepairSeedAfterInitialFailure,
-    prioritizeSolvedSegmentProgressBeforeAdaptiveExpansion,
-    includeSyntheticPortBoundsForExternalSolvers,
     growShrinkFallbackToInvalidGeometryOnFailure,
     growShrinkSolutionValidator,
     captureSearchDebug,
@@ -119,13 +113,10 @@ export class HighDensitySolver extends BaseSolver {
     obstacles?: Obstacle[]
     layerCount?: number
     useGrowShrinkHighDensityIntraNodeSolver?: boolean
+    enableTwoChordLaneSolver?: boolean
+    enableConflictDirectedB01Solver?: boolean
     preserveTerminalPcbPortIds?: boolean
     growShrinkMaxInnerIterationsPerGrowthAttempt?: number
-    growShrinkMaxInitialScaleSupervisorIterations?: number
-    growShrinkMaxTotalGrownScaleSupervisorIterations?: number
-    growShrinkTryLargestScaleAsRepairSeedAfterInitialFailure?: boolean
-    prioritizeSolvedSegmentProgressBeforeAdaptiveExpansion?: boolean
-    includeSyntheticPortBoundsForExternalSolvers?: boolean
     growShrinkFallbackToInvalidGeometryOnFailure?: boolean
     growShrinkSolutionValidator?: (
       routes: HighDensityIntraNodeRoute[],
@@ -149,19 +140,12 @@ export class HighDensitySolver extends BaseSolver {
     this.layerCount = layerCount ?? 2
     this.useGrowShrinkHighDensityIntraNodeSolver =
       useGrowShrinkHighDensityIntraNodeSolver ?? false
+    this.enableTwoChordLaneSolver = enableTwoChordLaneSolver ?? false
+    this.enableConflictDirectedB01Solver =
+      enableConflictDirectedB01Solver ?? false
     this.preserveTerminalPcbPortIds = preserveTerminalPcbPortIds ?? false
     this.growShrinkMaxInnerIterationsPerGrowthAttempt =
       growShrinkMaxInnerIterationsPerGrowthAttempt
-    this.growShrinkMaxInitialScaleSupervisorIterations =
-      growShrinkMaxInitialScaleSupervisorIterations
-    this.growShrinkMaxTotalGrownScaleSupervisorIterations =
-      growShrinkMaxTotalGrownScaleSupervisorIterations
-    this.growShrinkTryLargestScaleAsRepairSeedAfterInitialFailure =
-      growShrinkTryLargestScaleAsRepairSeedAfterInitialFailure ?? false
-    this.prioritizeSolvedSegmentProgressBeforeAdaptiveExpansion =
-      prioritizeSolvedSegmentProgressBeforeAdaptiveExpansion ?? false
-    this.includeSyntheticPortBoundsForExternalSolvers =
-      includeSyntheticPortBoundsForExternalSolvers ?? false
     this.growShrinkFallbackToInvalidGeometryOnFailure =
       growShrinkFallbackToInvalidGeometryOnFailure ?? false
     this.growShrinkSolutionValidator = growShrinkSolutionValidator
@@ -181,7 +165,6 @@ export class HighDensitySolver extends BaseSolver {
       solverNodeCount: {} as Record<string, number>,
       difficultNodePfs: {} as Record<string, number[]>,
       highDensityResizeCount: 0,
-      highDensityUnvalidatedRepairSeedCount: 0,
     }
   }
 
@@ -309,10 +292,6 @@ export class HighDensitySolver extends BaseSolver {
     if (!(solver instanceof GrowShrinkHighDensityIntraNodeSolver)) return
     this.stats.highDensityResizeCount =
       (this.stats.highDensityResizeCount ?? 0) + solver.growthAttempts
-    if (solver.stats.unvalidatedPostShrinkRepairSeed) {
-      this.stats.highDensityUnvalidatedRepairSeedCount =
-        (this.stats.highDensityUnvalidatedRepairSeedCount ?? 0) + 1
-    }
   }
 
   private getSolvedRoutesWithTerminalPcbPortIds(
@@ -411,18 +390,10 @@ export class HighDensitySolver extends BaseSolver {
       effort: this.effort,
       obstacles: this.obstacles,
       layerCount: this.layerCount,
+      enableTwoChordLaneSolver: this.enableTwoChordLaneSolver,
+      enableConflictDirectedB01Solver: this.enableConflictDirectedB01Solver,
       maxInnerIterationsPerGrowthAttempt:
         this.growShrinkMaxInnerIterationsPerGrowthAttempt,
-      maxInitialScaleSupervisorIterations:
-        this.growShrinkMaxInitialScaleSupervisorIterations,
-      maxTotalGrownScaleSupervisorIterations:
-        this.growShrinkMaxTotalGrownScaleSupervisorIterations,
-      tryLargestScaleAsRepairSeedAfterInitialFailure:
-        this.growShrinkTryLargestScaleAsRepairSeedAfterInitialFailure,
-      prioritizeSolvedSegmentProgressBeforeAdaptiveExpansion:
-        this.prioritizeSolvedSegmentProgressBeforeAdaptiveExpansion,
-      includeSyntheticPortBoundsForExternalSolvers:
-        this.includeSyntheticPortBoundsForExternalSolvers,
       fallbackToInvalidGeometryOnFailure:
         this.growShrinkFallbackToInvalidGeometryOnFailure,
       growShrinkSolutionValidator: this.growShrinkSolutionValidator,

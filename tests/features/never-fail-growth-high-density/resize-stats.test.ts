@@ -10,7 +10,6 @@ test("HighDensitySolver stats exposes highDensityResizeCount", () => {
   growShrinkSolver.solved = true
   growShrinkSolver.solvedRoutes = [makeStraightRoute()]
   growShrinkSolver.growthAttempts = 2
-  growShrinkSolver.stats.unvalidatedPostShrinkRepairSeed = true
 
   const highDensitySolver = new HighDensitySolver({
     nodePortPoints: [],
@@ -21,5 +20,4 @@ test("HighDensitySolver stats exposes highDensityResizeCount", () => {
   highDensitySolver.step()
 
   expect(highDensitySolver.stats.highDensityResizeCount).toBe(2)
-  expect(highDensitySolver.stats.highDensityUnvalidatedRepairSeedCount).toBe(1)
 })

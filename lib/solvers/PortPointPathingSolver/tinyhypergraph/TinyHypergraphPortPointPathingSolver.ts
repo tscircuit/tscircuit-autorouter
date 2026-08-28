@@ -183,6 +183,8 @@ type TinyRegionMetadata = {
 
 type TinyPortMetadata = {
   serializedPortId?: string
+  physicalPortalGroupId?: string
+  physicalPortalSlotId?: string
   x?: number
   y?: number
   z?: number
@@ -414,6 +416,9 @@ const toSerializedPortData = (
   const portMetadata = port.d as typeof port.d & TinyPortMetadata
   return {
     portId: port.d.portId,
+    physicalPortalGroupId: port.d.physicalPortalGroupId,
+    physicalPortalSlotId: port.d.physicalPortalSlotId,
+    duplicatedFromPortId: port.d.duplicatedFromPortId,
     x: port.d.x,
     y: port.d.y,
     z: port.d.z,
@@ -1036,6 +1041,8 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
   private duplicateCongestedPortReport?: DuplicateCongestedPortSolverReport
   private duplicateCongestedPortError?: string
   private duplicatedPortCount = 0
+  private physicalPortalGroupCount = 0
+  private physicalPortalSlotCount = 0
   private inputNodeWithPortPoints: InputNodeWithPortPoints[]
   private originalRegionById: Map<
     CapacityMeshNodeId,
@@ -1074,6 +1081,31 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       ]),
     )
     const serializedGraph = buildSerializedTinyGraph({ ...params, connections })
+    const physicalPortalGroups = new Set<string>()
+    const physicalPortalSlots = new Set<string>()
+    const inputSyntheticPorts: string[] = []
+    for (const port of serializedGraph.ports) {
+      const metadata = asTinyPortMetadata(port.d)
+      if (typeof metadata.physicalPortalGroupId === "string") {
+        physicalPortalGroups.add(metadata.physicalPortalGroupId)
+      }
+      if (typeof metadata.physicalPortalSlotId === "string") {
+        physicalPortalSlots.add(metadata.physicalPortalSlotId)
+      }
+      if (typeof metadata.duplicatedFromPortId === "string") {
+        inputSyntheticPorts.push(port.portId)
+      }
+    }
+    this.physicalPortalGroupCount = physicalPortalGroups.size
+    this.physicalPortalSlotCount = physicalPortalSlots.size
+    if (
+      params.enforcePhysicalPortCapacity === true &&
+      inputSyntheticPorts.length > 0
+    ) {
+      throw new Error(
+        `Physical port capacity mode received ${inputSyntheticPorts.length} fabricated portal(s)`,
+      )
+    }
     this.originalPreloadedSegmentKeysByConnectionId =
       capturePreloadedTraceSegmentBaseline(serializedGraph)
     const preloadedTraceStats =
@@ -1092,6 +1124,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
         )
       : undefined
     const shouldRunDuplicateCongestedPortPrepass =
+      params.enforcePhysicalPortCapacity !== true &&
       connections.length <= MAX_CONNECTIONS_FOR_DUPLICATE_CONGESTED_PORT_PREPASS
     let graphForTiny = serializedGraph
     if (shouldRunDuplicateCongestedPortPrepass) {
@@ -1127,7 +1160,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
           delete metadata._preloadedTracePortAssignments
         }
       }
-    } else {
+    } else if (params.enforcePhysicalPortCapacity !== true) {
       this.duplicateCongestedPortError = `Skipped for ${connections.length} connections`
     }
     this.duplicatedPortCount =
@@ -1513,6 +1546,10 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
             ? this.tinyPipelineSolver.progress * 0.5
             : this.tinyPipelineSolver.progress
     this.stats = {
+      physicalPortCapacityEnforced:
+        this.params.enforcePhysicalPortCapacity === true,
+      physicalPortalGroupCount: this.physicalPortalGroupCount,
+      physicalPortalSlotCount: this.physicalPortalSlotCount,
       duplicateCongestedPortSourceCount:
         this.duplicateCongestedPortReport?.duplicatedPorts.length ?? 0,
       duplicateCongestedPortCount:
@@ -1607,6 +1644,14 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
           portMetadata?.portId ??
           `tiny-port-${portId}`,
       ),
+      physicalPortalGroupId:
+        typeof portMetadata?.physicalPortalGroupId === "string"
+          ? portMetadata.physicalPortalGroupId
+          : undefined,
+      physicalPortalSlotId:
+        typeof portMetadata?.physicalPortalSlotId === "string"
+          ? portMetadata.physicalPortalSlotId
+          : undefined,
       x: solvedTinySolver.topology.portX[portId],
       y: solvedTinySolver.topology.portY[portId],
       z: solvedTinySolver.topology.portZ[portId],

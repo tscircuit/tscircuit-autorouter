@@ -23,6 +23,7 @@ export interface UniformPortDistributionSolverInput {
   nodeWithPortPoints: NodeWithPortPoints[]
   inputNodesWithPortPoints: InputNodeWithPortPoints[]
   obstacles: Obstacle[]
+  preservePhysicalPortalSlots?: boolean
 }
 
 /**
@@ -119,6 +120,10 @@ export class UniformPortDistributionSolver extends BaseSolver {
     const family: PortPointWithOwnerPair[] = []
     for (const portPoint of familyRaw) {
       if (
+        !(
+          this.input.preservePhysicalPortalSlots &&
+          portPoint.physicalPortalSlotId !== undefined
+        ) &&
         !shouldIgnorePortPoint({
           portPoint,
           ownerNodeIds: portPoint.ownerNodeIds,

@@ -161,6 +161,7 @@ export function buildHyperGraph(params: {
   layerCount: number
   connectivityMap: ConnectivityMap
   assignableViaObstacles?: Obstacle[]
+  includePhysicalPortalMetadata?: boolean
 }): {
   graph: HyperGraphHg
   connections: ConnectionHgWithSimpleRouteConnection[]
@@ -212,6 +213,12 @@ export function buildHyperGraph(params: {
         )
       const port: RawPort = {
         portId: `${spp.segmentPortPointId}::${z}`,
+        ...(params.includePhysicalPortalMetadata
+          ? {
+              physicalPortalGroupId: spp.edgeId,
+              physicalPortalSlotId: `${spp.segmentPortPointId}::${z}`,
+            }
+          : {}),
         x: spp.x,
         y: spp.y,
         z,

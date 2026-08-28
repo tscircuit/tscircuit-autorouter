@@ -8,12 +8,14 @@ import {
   NodeWithPortPoints,
 } from "lib/types/high-density-types"
 import { CachedIntraNodeRouteSolver } from "../HighDensitySolver/CachedIntraNodeRouteSolver"
+import { ConflictDirectedB01IntraNodeSolver } from "../HighDensitySolver/ConflictDirectedB01IntraNodeSolver"
 import { IntraNodeRouteSolver } from "../HighDensitySolver/IntraNodeSolver"
 import { MultiHeadPolyLineIntraNodeSolver2 } from "../HighDensitySolver/MultiHeadPolyLineIntraNodeSolver/MultiHeadPolyLineIntraNodeSolver2_Optimized"
 import { MultiHeadPolyLineIntraNodeSolver3 } from "../HighDensitySolver/MultiHeadPolyLineIntraNodeSolver/MultiHeadPolyLineIntraNodeSolver3_ViaPossibilitiesSolverIntegration"
 import { SingleLayerNoDifferentRootIntersectionsIntraNodeSolver } from "../HighDensitySolver/SingleLayerNoDifferentRootIntersectionsIntraNodeSolver"
 import { SingleTransitionIntraNodeSolver } from "../HighDensitySolver/SingleTransitionIntraNodeSolver"
 import { SingleTransitionThroughObstacleIntraNodeSolver } from "../HighDensitySolver/SingleTransitionThroughObstacleIntraNodeSolver"
+import { TwoChordLaneIntraNodeSolver } from "../HighDensitySolver/two-chord-lane-intra-node-solver"
 import { SingleTransitionCrossingRouteSolver } from "../HighDensitySolver/TwoRouteHighDensitySolver/SingleTransitionCrossingRouteSolver"
 import { TwoCrossingRoutesHighDensitySolver } from "../HighDensitySolver/TwoRouteHighDensitySolver/TwoCrossingRoutesHighDensitySolver"
 import {
@@ -21,14 +23,18 @@ import {
   SupervisedSolver,
 } from "../HyperParameterSupervisorSolver"
 import { repairDisconnectedSameRootPortPoints } from "./repairDisconnectedSameRootPortPoints"
-import { getConnectionPortPointPairs } from "lib/utils/getConnectionPortPointPairs"
 
 // Match the existing six-ordering portfolio used by the other intra-node
 // solver. The first ordering remains in the normal portfolio; the remaining
 // orderings are introduced only after that portfolio spends its dynamically
 // derived exploration budget or exhausts all of its candidates.
 const ORDERING_SHUFFLE_SEEDS = Array.from({ length: 6 }, (_, seed) => seed)
-const SYNTHETIC_PORT_BOUNDS_TOLERANCE = 1e-6
+
+// Intra-node routes are validated against the same trace/via clearance used by
+// relaxed post-route DRC. This is intentionally independent of obstacleMargin,
+// which describes copper-to-board-obstacle spacing and defaults to 0.15 mm in
+// Pipeline 7.
+const INTRA_NODE_COPPER_CLEARANCE = 0.1
 
 /** Coordinates a fitness-scheduled portfolio of intra-node routing solvers. */
 export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolver<
@@ -39,6 +45,8 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
   | SingleTransitionThroughObstacleIntraNodeSolver
   | SingleLayerNoDifferentRootIntersectionsIntraNodeSolver
   | HighDensityA03Solver
+  | TwoChordLaneIntraNodeSolver
+  | ConflictDirectedB01IntraNodeSolver
 > {
   override getSolverName(): string {
     return "PortfolioSingleIntraNodeSolver"
@@ -49,11 +57,9 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
   nodeWithPortPoints: NodeWithPortPoints
   connMap?: ConnectivityMap
   effort: number
+  enableTwoChordLaneSolver: boolean
+  enableConflictDirectedB01Solver: boolean
   adaptiveSearchExpanded = false
-  readonly maxSupervisorIterations?: number
-  readonly prioritizeSolvedSegmentProgressBeforeAdaptiveExpansion: boolean
-  readonly includeSyntheticPortBoundsForExternalSolvers: boolean
-  private nodeSegmentCount?: number
 
   private getSolvedSegmentCount(solver: unknown): number | null {
     const solvedConnectionsMap = (solver as any).solvedConnectionsMap
@@ -67,40 +73,15 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
   }
 
   private getNodeSegmentCount(): number {
-    if (this.nodeSegmentCount !== undefined) return this.nodeSegmentCount
-
-    if (!this.prioritizeSolvedSegmentProgressBeforeAdaptiveExpansion) {
-      this.nodeSegmentCount = Math.max(
-        1,
-        this.nodeWithPortPoints.portPointsInPairs?.length ??
-          new Set(
-            this.nodeWithPortPoints.portPoints.map(
-              (portPoint) => portPoint.connectionName,
-            ),
-          ).size,
-      )
-      return this.nodeSegmentCount
-    }
-
-    const portPointsByConnectionName = new Map<
-      string,
-      NodeWithPortPoints["portPoints"]
-    >()
-    for (const portPoint of this.nodeWithPortPoints.portPoints) {
-      const points = portPointsByConnectionName.get(portPoint.connectionName)
-      if (points) {
-        points.push(portPoint)
-      } else {
-        portPointsByConnectionName.set(portPoint.connectionName, [portPoint])
-      }
-    }
-
-    let segmentCount = 0
-    for (const portPoints of portPointsByConnectionName.values()) {
-      segmentCount += getConnectionPortPointPairs(portPoints).length
-    }
-    this.nodeSegmentCount = Math.max(1, segmentCount)
-    return this.nodeSegmentCount
+    return Math.max(
+      1,
+      this.nodeWithPortPoints.portPointsInPairs?.length ??
+        new Set(
+          this.nodeWithPortPoints.portPoints.map(
+            (portPoint) => portPoint.connectionName,
+          ),
+        ).size,
+    )
   }
 
   private getCandidateProgress(solver: { progress: number }): number {
@@ -134,9 +115,8 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
   constructor(
     opts: ConstructorParameters<typeof CachedIntraNodeRouteSolver>[0] & {
       effort?: number
-      maxSupervisorIterations?: number
-      prioritizeSolvedSegmentProgressBeforeAdaptiveExpansion?: boolean
-      includeSyntheticPortBoundsForExternalSolvers?: boolean
+      enableTwoChordLaneSolver?: boolean
+      enableConflictDirectedB01Solver?: boolean
     },
   ) {
     super()
@@ -144,11 +124,9 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     this.connMap = opts.connMap
     this.constructorParams = opts
     this.effort = opts.effort ?? 1
-    this.maxSupervisorIterations = opts.maxSupervisorIterations
-    this.prioritizeSolvedSegmentProgressBeforeAdaptiveExpansion =
-      opts.prioritizeSolvedSegmentProgressBeforeAdaptiveExpansion ?? false
-    this.includeSyntheticPortBoundsForExternalSolvers =
-      opts.includeSyntheticPortBoundsForExternalSolvers ?? false
+    this.enableTwoChordLaneSolver = opts.enableTwoChordLaneSolver ?? false
+    this.enableConflictDirectedB01Solver =
+      opts.enableConflictDirectedB01Solver ?? false
     this.MAX_ITERATIONS = 20_000_000 * this.effort
     this.GREEDY_MULTIPLIER = 5
     this.MIN_SUBSTEPS = 100
@@ -156,6 +134,10 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
 
   getCombinationDefs() {
     return [
+      ...(this.enableTwoChordLaneSolver ? [["twoChordLane"]] : []),
+      ...(this.enableConflictDirectedB01Solver
+        ? [["conflictDirectedB01"]]
+        : []),
       ["throughObstacle"],
       ["singleLayerNoDifferentRootIntersections"],
       ["multiHeadPolyLine"],
@@ -172,6 +154,22 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
 
   getHyperParameterDefs() {
     return [
+      {
+        name: "twoChordLane",
+        possibleValues: [
+          {
+            TWO_CHORD_LANE: true,
+          },
+        ],
+      },
+      {
+        name: "conflictDirectedB01",
+        possibleValues: [
+          {
+            CONFLICT_DIRECTED_B01: true,
+          },
+        ],
+      },
       {
         name: "singleLayerNoDifferentRootIntersections",
         possibleValues: [
@@ -335,17 +333,10 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
 
     // Keep one supervisor step available to observe that the current
     // portfolio is exhausted and expand it before BaseSolver can fail.
-    const dynamicIterationLimit = Math.max(
+    this.MAX_ITERATIONS = Math.max(
       this.iterations + 1,
       this.iterations + remainingSupervisorIterations,
     )
-    this.MAX_ITERATIONS =
-      this.maxSupervisorIterations === undefined
-        ? dynamicIterationLimit
-        : Math.min(
-            dynamicIterationLimit,
-            Math.max(0, this.maxSupervisorIterations - 1),
-          )
     this.stats.dynamicSupervisorIterationLimit = this.MAX_ITERATIONS
   }
 
@@ -406,7 +397,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
 
     if (
       !this.adaptiveSearchExpanded &&
-      !this.supervisedSolvers!.some(({ solver }) => !solver.failed)
+      !this.getSupervisedSolverWithBestFitness()
     ) {
       this.expandAdaptiveSearch()
     }
@@ -439,63 +430,34 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
   }
 
   computeH(solver: IntraNodeRouteSolver) {
-    if (
-      this.adaptiveSearchExpanded ||
-      this.prioritizeSolvedSegmentProgressBeforeAdaptiveExpansion
-    ) {
+    if (this.adaptiveSearchExpanded) {
       return 1 - this.getCandidateProgress(solver)
     }
     return 1 - (solver.progress || 0)
   }
 
-  private getNodeWithSyntheticPortInclusiveBounds(): NodeWithPortPoints {
-    const node = this.nodeWithPortPoints
-    const bounds = {
-      minX: node.center.x - node.width / 2,
-      maxX: node.center.x + node.width / 2,
-      minY: node.center.y - node.height / 2,
-      maxY: node.center.y + node.height / 2,
-    }
-    let boundsChanged = false
-
-    for (const portPoint of node.portPoints) {
-      // Duplicate-congestion routing may deliberately offset synthetic ports
-      // just outside the source node. Ordinary boundary noise must not change
-      // the A01/A03 grid origin for otherwise unrelated nodes.
-      if (portPoint.duplicatedFromPortId === undefined) continue
-
-      if (portPoint.x < bounds.minX - SYNTHETIC_PORT_BOUNDS_TOLERANCE) {
-        bounds.minX = portPoint.x
-        boundsChanged = true
-      }
-      if (portPoint.x > bounds.maxX + SYNTHETIC_PORT_BOUNDS_TOLERANCE) {
-        bounds.maxX = portPoint.x
-        boundsChanged = true
-      }
-      if (portPoint.y < bounds.minY - SYNTHETIC_PORT_BOUNDS_TOLERANCE) {
-        bounds.minY = portPoint.y
-        boundsChanged = true
-      }
-      if (portPoint.y > bounds.maxY + SYNTHETIC_PORT_BOUNDS_TOLERANCE) {
-        bounds.maxY = portPoint.y
-        boundsChanged = true
-      }
-    }
-
-    if (!boundsChanged) return node
-
-    return {
-      ...node,
-      center: {
-        x: (bounds.minX + bounds.maxX) / 2,
-        y: (bounds.minY + bounds.maxY) / 2,
-      },
-      width: bounds.maxX - bounds.minX,
-      height: bounds.maxY - bounds.minY,
-    }
-  }
-
   generateSolver(hyperParameters: any): IntraNodeRouteSolver {
+    if (hyperParameters.TWO_CHORD_LANE) {
+      return new TwoChordLaneIntraNodeSolver({
+        nodeWithPortPoints: this.nodeWithPortPoints,
+        traceWidth: this.constructorParams.traceWidth,
+        viaDiameter: this.constructorParams.viaDiameter,
+        clearance: INTRA_NODE_COPPER_CLEARANCE,
+        obstacles: this.constructorParams.obstacles,
+      }) as any
+    }
+
+    if (hyperParameters.CONFLICT_DIRECTED_B01) {
+      return new ConflictDirectedB01IntraNodeSolver({
+        nodeWithPortPoints: this.nodeWithPortPoints,
+        traceWidth: this.constructorParams.traceWidth,
+        viaDiameter: this.constructorParams.viaDiameter,
+        clearance: INTRA_NODE_COPPER_CLEARANCE,
+        obstacles: this.constructorParams.obstacles,
+        effort: this.effort,
+      }) as any
+    }
+
     if (hyperParameters.SINGLE_LAYER_NO_DIFFERENT_ROOT_INTERSECTIONS) {
       if (
         !SingleLayerNoDifferentRootIntersectionsIntraNodeSolver.isApplicable(
@@ -524,9 +486,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
 
     if (hyperParameters.HIGH_DENSITY_A01) {
       const solver = new HighDensitySolverA01({
-        nodeWithPortPoints: this.includeSyntheticPortBoundsForExternalSolvers
-          ? this.getNodeWithSyntheticPortInclusiveBounds()
-          : this.nodeWithPortPoints,
+        nodeWithPortPoints: this.nodeWithPortPoints,
         cellSizeMm: 0.1,
         viaDiameter: this.constructorParams.viaDiameter ?? 0.3,
         viaMinDistFromBorder: (this.constructorParams.viaDiameter ?? 0.3) / 2,
@@ -541,9 +501,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     }
     if (hyperParameters.HIGH_DENSITY_A03) {
       const solver = new HighDensityA03Solver({
-        nodeWithPortPoints: this.includeSyntheticPortBoundsForExternalSolvers
-          ? this.getNodeWithSyntheticPortInclusiveBounds()
-          : this.nodeWithPortPoints,
+        nodeWithPortPoints: this.nodeWithPortPoints,
         highResolutionCellSize: 0.1,
         highResolutionCellThickness: 8,
         lowResolutionCellSize: 0.4,
