@@ -1,9 +1,29 @@
-import { SimpleRouteJson } from "lib/types"
+import type { SimpleRouteJson } from "lib/types"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import { mapLayerNameToZ } from "./mapLayerNameToZ"
 
 const pointHash = (point: { x: number; y: number }) =>
   `${Math.round(point.x * 100)},${Math.round(point.y * 100)}`
+
+/**
+ * Returns the physical endpoint identities of preloaded wire copper.
+ * Fanout phases may retain a phase-local connection name, but touching copper
+ * on the same PCB layer still belongs to the global connection at that point.
+ */
+const getTraceEndpointHashes = (
+  trace: NonNullable<SimpleRouteJson["traces"]>[number],
+  layerCount: number,
+): string[] =>
+  [trace.route[0], trace.route.at(-1)].flatMap((routePoint) =>
+    routePoint?.route_type === "wire"
+      ? [
+          `${pointHash(routePoint)}:${mapLayerNameToZ(
+            routePoint.layer,
+            layerCount,
+          )}`,
+        ]
+      : [],
+  )
 
 export const getConnectivityMapFromSimpleRouteJson = (srj: SimpleRouteJson) => {
   const connMap = new ConnectivityMap({})
@@ -67,6 +87,7 @@ export const getConnectivityMapFromSimpleRouteJson = (srj: SimpleRouteJson) => {
           trace.pcb_trace_id,
           trace.connection_name,
           ...(trace.connectsTo ?? []),
+          ...getTraceEndpointHashes(trace, srj.layerCount),
         ].filter(Boolean),
       ),
     )
