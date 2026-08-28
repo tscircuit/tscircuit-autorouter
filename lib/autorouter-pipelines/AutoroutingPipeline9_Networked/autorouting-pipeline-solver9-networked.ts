@@ -53,10 +53,7 @@ export class AutoroutingPipelineSolver9_Networked extends AutoroutingPipelineSol
     this.hdCacheTransportTimeoutMs =
       opts.hdCacheTransportTimeoutMs ??
       DEFAULT_PIPELINE9_NETWORKED_TRANSPORT_TIMEOUT_MS
-    if (
-      !Number.isFinite(this.hdCacheTimeoutMs) ||
-      this.hdCacheTimeoutMs <= 0
-    ) {
+    if (!Number.isFinite(this.hdCacheTimeoutMs) || this.hdCacheTimeoutMs <= 0) {
       throw new Error(
         `Pipeline9 network request timeout must be a positive number, received ${this.hdCacheTimeoutMs}`,
       )
@@ -85,9 +82,7 @@ export class AutoroutingPipelineSolver9_Networked extends AutoroutingPipelineSol
     this.pipelineDef[highDensityStepIndex] = {
       ...originalStep,
       solverClass: Pipeline9NetworkedHighDensitySolver as any,
-      getConstructorParams: (
-        solver: AutoroutingPipelineSolver9_Networked,
-      ) => {
+      getConstructorParams: (solver: AutoroutingPipelineSolver9_Networked) => {
         const [params] = getOriginalConstructorParams(solver)
         return [
           {

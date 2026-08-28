@@ -44,9 +44,9 @@ test("Pipeline9 networked is effort-1-only, async-only, and replaces only the hi
     (step) => step.solverName === "highDensityRouteSolver",
   )
 
-  expect(
-    networkedSolver.pipelineDef[highDensityStepIndex]!.solverClass,
-  ).toBe(Pipeline9NetworkedHighDensitySolver)
+  expect(networkedSolver.pipelineDef[highDensityStepIndex]!.solverClass).toBe(
+    Pipeline9NetworkedHighDensitySolver,
+  )
   expect(NetworkedPipelineFromPipelineIndex).toBe(
     AutoroutingPipelineSolver9_Networked,
   )
@@ -56,7 +56,9 @@ test("Pipeline9 networked is effort-1-only, async-only, and replaces only the hi
   )
   for (const [stepIndex, step] of networkedSolver.pipelineDef.entries()) {
     if (stepIndex === highDensityStepIndex) continue
-    expect(step.solverClass).toBe(localSolver.pipelineDef[stepIndex]!.solverClass)
+    expect(step.solverClass).toBe(
+      localSolver.pipelineDef[stepIndex]!.solverClass,
+    )
   }
   expect(() => networkedSolver.solve()).toThrow("requires async execution")
   expect(() => networkedSolver.solveUntilPhase("none")).toThrow(

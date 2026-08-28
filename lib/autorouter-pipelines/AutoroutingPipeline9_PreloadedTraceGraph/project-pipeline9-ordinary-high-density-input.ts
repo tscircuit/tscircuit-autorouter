@@ -7,8 +7,7 @@ import type {
 import type { Obstacle } from "lib/types/srj-types"
 import { getBoundsFromNodeWithPortPoints } from "lib/utils/getBoundsFromNodeWithPortPoints"
 
-const MAX_PIPELINE9_ORDINARY_NODE_SCALE =
-  2 ** DEFAULT_MAX_GROWTH_ATTEMPTS
+const MAX_PIPELINE9_ORDINARY_NODE_SCALE = 2 ** DEFAULT_MAX_GROWTH_ATTEMPTS
 const OBSTACLE_OVERLAP_TOLERANCE = 1e-6
 
 export type Pipeline9OrdinaryHighDensityProjection = {
@@ -76,8 +75,7 @@ export function projectPipeline9OrdinaryHighDensityInput({
   ]
 
   const projectedObstacles = obstacles.flatMap((obstacle) => {
-    const rotationRadians =
-      ((obstacle.ccwRotationDegrees ?? 0) * Math.PI) / 180
+    const rotationRadians = ((obstacle.ccwRotationDegrees ?? 0) * Math.PI) / 180
     const cos = Math.abs(Math.cos(rotationRadians))
     const sin = Math.abs(Math.sin(rotationRadians))
     const rawHalfWidth = obstacle.width / 2

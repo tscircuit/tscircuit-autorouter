@@ -58,8 +58,7 @@ const isValidCircuitJsonMetadata = (value: unknown): boolean => {
   if (!value || typeof value !== "object" || Array.isArray(value)) return false
   return Object.entries(value).every(
     ([key, metadataValue]) =>
-      CIRCUIT_JSON_METADATA_KEYS.has(key) &&
-      typeof metadataValue === "string",
+      CIRCUIT_JSON_METADATA_KEYS.has(key) && typeof metadataValue === "string",
   )
 }
 
@@ -170,9 +169,7 @@ const isValidRemoteRoutes = (
       }
       if (
         point.toNextSegmentCircuitJsonMetadata !== undefined &&
-        !isValidCircuitJsonMetadata(
-          point.toNextSegmentCircuitJsonMetadata,
-        )
+        !isValidCircuitJsonMetadata(point.toNextSegmentCircuitJsonMetadata)
       ) {
         return false
       }
@@ -275,10 +272,7 @@ export class Pipeline9NetworkedHighDensitySolver extends Pipeline9HighDensitySol
       requestTimeoutMs ?? DEFAULT_PIPELINE9_NETWORKED_TIMEOUT_MS
     this.transportTimeoutMs =
       transportTimeoutMs ?? DEFAULT_PIPELINE9_NETWORKED_TRANSPORT_TIMEOUT_MS
-    if (
-      !Number.isFinite(this.requestTimeoutMs) ||
-      this.requestTimeoutMs <= 0
-    ) {
+    if (!Number.isFinite(this.requestTimeoutMs) || this.requestTimeoutMs <= 0) {
       throw new Error(
         `Pipeline9 network request timeout must be a positive number, received ${this.requestTimeoutMs}`,
       )
@@ -505,10 +499,7 @@ export class Pipeline9NetworkedHighDensitySolver extends Pipeline9HighDensitySol
       const request = this.remoteRequestByNode.get(node)
       if (request) {
         this.waitingForRemoteNode = node
-        const waitPromise = this.waitForCurrentRemoteNode(
-          node,
-          request.promise,
-        )
+        const waitPromise = this.waitForCurrentRemoteNode(node, request.promise)
         waitPromise.then(() => {
           if (this.waitingForRemoteNode !== node) return
           this.pendingEffects = []

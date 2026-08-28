@@ -100,15 +100,14 @@ test("Pipeline9 projects ordinary node obstacles and connectivity without changi
     viaDiameter: 0.3,
   })
 
-  expect(
-    projection.obstacles.map((obstacle) => obstacle.center),
-  ).toEqual([
+  expect(projection.obstacles.map((obstacle) => obstacle.center)).toEqual([
     { x: 0, y: 0 },
     { x: 3.9, y: 0 },
   ])
-  expect(
-    projection.obstacles.map((obstacle) => obstacle.connectedTo),
-  ).toEqual([["route_A"], ["route_A"]])
+  expect(projection.obstacles.map((obstacle) => obstacle.connectedTo)).toEqual([
+    ["route_A"],
+    ["route_A"],
+  ])
   expect(projection.obstacles[0]!.ccwRotationDegrees).toBeUndefined()
   expect(projection.obstacles[0]!.circuitJsonMetadata).toEqual({
     pcb_plated_hole_id: "plated_hole_A",

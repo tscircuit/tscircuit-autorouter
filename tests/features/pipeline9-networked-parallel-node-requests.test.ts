@@ -24,7 +24,9 @@ test("Pipeline9 networked launches every node request in parallel and preserves 
   const releaseRequests = createDeferred<void>()
   const requestBodies: Pipeline9NetworkedSolveRequest[] = []
   const fetchImpl = asNetworkedFetch(async (_input, init) => {
-    const request = JSON.parse(String(init?.body)) as Pipeline9NetworkedSolveRequest
+    const request = JSON.parse(
+      String(init?.body),
+    ) as Pipeline9NetworkedSolveRequest
     requestBodies.push(request)
     await releaseRequests.promise
     return createNetworkedResponse({

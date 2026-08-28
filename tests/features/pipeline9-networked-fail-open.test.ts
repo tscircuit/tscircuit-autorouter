@@ -39,10 +39,11 @@ test("Pipeline9 networked falls back locally for transport and invalid protocol 
     },
     {
       name: "HTTP error",
-      fetchImpl: asNetworkedFetch(async () =>
-        new Response(JSON.stringify({ ok: false, message: "unavailable" }), {
-          status: 503,
-        }),
+      fetchImpl: asNetworkedFetch(
+        async () =>
+          new Response(JSON.stringify({ ok: false, message: "unavailable" }), {
+            status: 503,
+          }),
       ),
     },
     {
@@ -57,17 +58,18 @@ test("Pipeline9 networked falls back locally for transport and invalid protocol 
     },
     {
       name: "malformed solved routes",
-      fetchImpl: asNetworkedFetch(async () =>
-        new Response(
-          JSON.stringify({
-            ok: true,
-            autorouterVersion: AUTOROUTER_VERSION,
-            source: "cache",
-            status: "solved",
-            routes: [{}],
-          }),
-          { status: 200 },
-        ),
+      fetchImpl: asNetworkedFetch(
+        async () =>
+          new Response(
+            JSON.stringify({
+              ok: true,
+              autorouterVersion: AUTOROUTER_VERSION,
+              source: "cache",
+              status: "solved",
+              routes: [{}],
+            }),
+            { status: 200 },
+          ),
       ),
     },
     {
@@ -125,9 +127,7 @@ test("Pipeline9 networked falls back locally for transport and invalid protocol 
     {
       name: "timeout",
       requestTimeoutMs: 5,
-      fetchImpl: asNetworkedFetch(
-        async () => new Promise<Response>(() => {}),
-      ),
+      fetchImpl: asNetworkedFetch(async () => new Promise<Response>(() => {})),
     },
   ]
 
