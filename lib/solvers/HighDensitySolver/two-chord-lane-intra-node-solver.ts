@@ -60,8 +60,7 @@ const endpointKey = (point: {
   y: number
   z: number
   portPointId?: string
-}): string =>
-  `${point.portPointId ?? ""}|${point.x},${point.y},${point.z}`
+}): string => `${point.portPointId ?? ""}|${point.x},${point.y},${point.z}`
 
 const getBoundarySide = (
   node: NodeWithPortPoints,
@@ -106,12 +105,10 @@ const getChordPairIndices = (
   }
 
   const vertical = sides.findIndex(
-    (pairSides) =>
-      pairSides.includes("top") && pairSides.includes("bottom"),
+    (pairSides) => pairSides.includes("top") && pairSides.includes("bottom"),
   )
   const lateral = sides.findIndex(
-    (pairSides) =>
-      pairSides.includes("left") && pairSides.includes("right"),
+    (pairSides) => pairSides.includes("left") && pairSides.includes("right"),
   )
   if (vertical < 0 || lateral < 0 || vertical === lateral) return null
   return { vertical, lateral }
@@ -255,7 +252,11 @@ export class TwoChordLaneIntraNodeSolver extends BaseSolver {
 
   override _step(): void {
     if (!TwoChordLaneIntraNodeSolver.isApplicable(this.constructorParams)) {
-      this.fail("Two-chord lane solver is not structurally applicable", false, 0)
+      this.fail(
+        "Two-chord lane solver is not structurally applicable",
+        false,
+        0,
+      )
       return
     }
 
@@ -377,9 +378,8 @@ export class TwoChordLaneIntraNodeSolver extends BaseSolver {
       }
     }
     if (
-      findRouteGeometryViolations(
-        routes as B01HighDensityIntraNodeRoute[],
-      ).length > 0 ||
+      findRouteGeometryViolations(routes as B01HighDensityIntraNodeRoute[])
+        .length > 0 ||
       findIntraNodePhysicalConflicts(routes, this.clearance).length > 0
     ) {
       return false
@@ -391,9 +391,7 @@ export class TwoChordLaneIntraNodeSolver extends BaseSolver {
     return true
   }
 
-  private isRouteStructurallyValid(
-    route: HighDensityIntraNodeRoute,
-  ): boolean {
+  private isRouteStructurallyValid(route: HighDensityIntraNodeRoute): boolean {
     const bounds = getBounds(this.nodeWithPortPoints)
     const availableZ = new Set(this.nodeWithPortPoints.availableZ ?? [])
     if (

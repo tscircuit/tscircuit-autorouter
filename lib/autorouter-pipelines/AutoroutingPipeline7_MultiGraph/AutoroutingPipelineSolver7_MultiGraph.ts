@@ -491,7 +491,10 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
             connections,
             layerCount: cms.srj.layerCount,
             effort: cms.effort,
-            tinyPipelineStepsPerIteration: 1_000,
+            tinyPipelineStepsPerIteration:
+              cms.opts.highDensityRoutingMode === "physical-capacity"
+                ? 1_000
+                : undefined,
             enforcePhysicalPortCapacity:
               cms.opts.highDensityRoutingMode === "physical-capacity",
             preserveTerminalPcbPortIds: true,

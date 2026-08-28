@@ -69,8 +69,7 @@ const endpointKey = (point: {
   y: number
   z: number
   portPointId?: string
-}): string =>
-  `${point.portPointId ?? ""}|${point.x},${point.y},${point.z}`
+}): string => `${point.portPointId ?? ""}|${point.x},${point.y},${point.z}`
 
 const pairKey = (
   connectionName: string,
@@ -113,10 +112,7 @@ const getConflictRouteKeys = (
       const routeA = routes[indexA]!
       const routeB = routes[indexB]!
       if (
-        findIntraNodePhysicalConflicts(
-          [routeA, routeB],
-          clearance,
-        ).length === 0
+        findIntraNodePhysicalConflicts([routeA, routeB], clearance).length === 0
       ) {
         continue
       }
@@ -193,7 +189,8 @@ export class ConflictDirectedB01IntraNodeSolver extends BaseSolver {
     const node = params.nodeWithPortPoints
     const pairs = node.portPointsInPairs
     const availableZ = new Set(node.availableZ ?? [])
-    if (!pairs || pairs.length < 2 || pairs.length > MAX_PAIR_COUNT) return false
+    if (!pairs || pairs.length < 2 || pairs.length > MAX_PAIR_COUNT)
+      return false
     if (availableZ.size < 2 || availableZ.size > 4) return false
     if (
       node.width <= 0 ||
@@ -230,7 +227,11 @@ export class ConflictDirectedB01IntraNodeSolver extends BaseSolver {
     for (let indexA = 0; indexA < terminalPoints.length; indexA += 1) {
       const pointA = terminalPoints[indexA]!
       const rootA = pointA.rootConnectionName ?? pointA.connectionName
-      for (let indexB = indexA + 1; indexB < terminalPoints.length; indexB += 1) {
+      for (
+        let indexB = indexA + 1;
+        indexB < terminalPoints.length;
+        indexB += 1
+      ) {
         const pointB = terminalPoints[indexB]!
         const rootB = pointB.rootConnectionName ?? pointB.connectionName
         if (rootA === rootB || pointA.z !== pointB.z) continue
@@ -262,7 +263,9 @@ export class ConflictDirectedB01IntraNodeSolver extends BaseSolver {
 
   override _step(): void {
     const startedAt = performance.now()
-    if (!ConflictDirectedB01IntraNodeSolver.isApplicable(this.constructorParams)) {
+    if (
+      !ConflictDirectedB01IntraNodeSolver.isApplicable(this.constructorParams)
+    ) {
       this.fail("Conflict-directed B01 solver is not structurally applicable")
       this.updateStats(false, startedAt, [], [], [])
       return
@@ -307,8 +310,7 @@ export class ConflictDirectedB01IntraNodeSolver extends BaseSolver {
       )
       initialRoutes = selectedInitialCandidate.routes
       missingPairs = selectedInitialCandidate.missingPairs
-      this.selectedInitialShuffleSeed =
-        selectedInitialCandidate.shuffleSeed
+      this.selectedInitialShuffleSeed = selectedInitialCandidate.shuffleSeed
       repairShuffleSeed = selectedInitialCandidate.shuffleSeed
       repairPairLimit = MAX_CROSS_LAYER_REPAIR_PAIR_COUNT
 
@@ -370,7 +372,13 @@ export class ConflictDirectedB01IntraNodeSolver extends BaseSolver {
       this.fail(
         `Conflict-directed repair requires ${repairPairs.length} pairs; maximum is ${repairPairLimit}`,
       )
-      this.updateStats(true, startedAt, initialRoutes, missingPairs, blockerKeys)
+      this.updateStats(
+        true,
+        startedAt,
+        initialRoutes,
+        missingPairs,
+        blockerKeys,
+      )
       return
     }
 
@@ -393,7 +401,13 @@ export class ConflictDirectedB01IntraNodeSolver extends BaseSolver {
       this.fail(
         `Conflict-directed B01 repair failed: ${this.repairSolver.error ?? "unknown error"}`,
       )
-      this.updateStats(true, startedAt, initialRoutes, missingPairs, blockerKeys)
+      this.updateStats(
+        true,
+        startedAt,
+        initialRoutes,
+        missingPairs,
+        blockerKeys,
+      )
       return
     }
 
@@ -426,8 +440,7 @@ export class ConflictDirectedB01IntraNodeSolver extends BaseSolver {
         routes: seedZeroRoutes,
         missingPairs: seedZeroMissingPairs,
         conflictRouteKeys: seedZeroConflictRouteKeys,
-        fixedRouteCount:
-          seedZeroRoutes.length - seedZeroConflictRouteKeys.size,
+        fixedRouteCount: seedZeroRoutes.length - seedZeroConflictRouteKeys.size,
         shuffleSeed: 0,
       },
     ]
@@ -447,10 +460,7 @@ export class ConflictDirectedB01IntraNodeSolver extends BaseSolver {
       const missingPairs = pairs.filter(
         (pair) => !routeKeys.has(getPairKey(pair)),
       )
-      const conflictRouteKeys = getConflictRouteKeys(
-        routes,
-        this.clearance,
-      )
+      const conflictRouteKeys = getConflictRouteKeys(routes, this.clearance)
       candidates.push({
         solver,
         routes,
@@ -469,10 +479,7 @@ export class ConflictDirectedB01IntraNodeSolver extends BaseSolver {
         candidate.fixedRouteCount === selected.fixedRouteCount
       const hasFewerMissingPairs =
         candidate.missingPairs.length < selected.missingPairs.length
-      if (
-        hasMoreFixedRoutes ||
-        (hasEqualFixedRoutes && hasFewerMissingPairs)
-      ) {
+      if (hasMoreFixedRoutes || (hasEqualFixedRoutes && hasFewerMissingPairs)) {
         selected = candidate
       }
     }
@@ -516,9 +523,10 @@ export class ConflictDirectedB01IntraNodeSolver extends BaseSolver {
     return selected.blockerKeys
   }
 
-  private createCrossLayerProbeRoutes(
-    [start, end]: PortPair,
-  ): HighDensityIntraNodeRoute[] {
+  private createCrossLayerProbeRoutes([
+    start,
+    end,
+  ]: PortPair): HighDensityIntraNodeRoute[] {
     if (start.z === end.z) return [this.createDirectRoute(start, end)]
 
     const viaRadius = this.viaDiameter / 2 + EPSILON
@@ -707,7 +715,9 @@ export class ConflictDirectedB01IntraNodeSolver extends BaseSolver {
     pairs: PortPair[],
   ): boolean {
     if (routes.length !== pairs.length) return false
-    const routesByKey = new Map(routes.map((route) => [getRouteKey(route), route]))
+    const routesByKey = new Map(
+      routes.map((route) => [getRouteKey(route), route]),
+    )
     if (routesByKey.size !== pairs.length) return false
     const orderedRoutes: HighDensityIntraNodeRoute[] = []
     for (const pair of pairs) {
@@ -745,8 +755,7 @@ export class ConflictDirectedB01IntraNodeSolver extends BaseSolver {
       return false
     }
     if (
-      findIntraNodePhysicalConflicts(orderedRoutes, this.clearance)
-        .length > 0
+      findIntraNodePhysicalConflicts(orderedRoutes, this.clearance).length > 0
     ) {
       return false
     }
@@ -756,12 +765,12 @@ export class ConflictDirectedB01IntraNodeSolver extends BaseSolver {
     return true
   }
 
-  private isRouteStructurallyValid(
-    route: HighDensityIntraNodeRoute,
-  ): boolean {
+  private isRouteStructurallyValid(route: HighDensityIntraNodeRoute): boolean {
     const bounds = {
-      minX: this.nodeWithPortPoints.center.x - this.nodeWithPortPoints.width / 2,
-      maxX: this.nodeWithPortPoints.center.x + this.nodeWithPortPoints.width / 2,
+      minX:
+        this.nodeWithPortPoints.center.x - this.nodeWithPortPoints.width / 2,
+      maxX:
+        this.nodeWithPortPoints.center.x + this.nodeWithPortPoints.width / 2,
       minY:
         this.nodeWithPortPoints.center.y - this.nodeWithPortPoints.height / 2,
       maxY:

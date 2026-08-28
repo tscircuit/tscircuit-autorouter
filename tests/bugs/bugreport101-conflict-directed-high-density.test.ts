@@ -67,9 +67,7 @@ test("bugreport101 conflict-directed solver repairs the dominant high-density no
     expect(route.endPcbPortId).toBe(expectedEnd.pcb_port_id)
   }
 
-  expect(findIntraNodePhysicalConflicts(first.routes, 0.1)).toHaveLength(
-    0,
-  )
+  expect(findIntraNodePhysicalConflicts(first.routes, 0.1)).toHaveLength(0)
   const clearanceInflatedRoutes = first.routes.map((route) => ({
     ...route,
     traceThickness: route.traceThickness + 0.1,

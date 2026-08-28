@@ -96,25 +96,15 @@ test("bugreport101 exact two-chord lane solver routes the narrow physical-capaci
     expect(transitionKeys.sort()).toEqual(viaKeys.sort())
     const viaRadius = route.viaDiameter / 2
     for (const via of route.vias) {
-      expect(via.x).toBeGreaterThanOrEqual(
-        bounds.minX + viaRadius - EPSILON,
-      )
-      expect(via.x).toBeLessThanOrEqual(
-        bounds.maxX - viaRadius + EPSILON,
-      )
-      expect(via.y).toBeGreaterThanOrEqual(
-        bounds.minY + viaRadius - EPSILON,
-      )
-      expect(via.y).toBeLessThanOrEqual(
-        bounds.maxY - viaRadius + EPSILON,
-      )
+      expect(via.x).toBeGreaterThanOrEqual(bounds.minX + viaRadius - EPSILON)
+      expect(via.x).toBeLessThanOrEqual(bounds.maxX - viaRadius + EPSILON)
+      expect(via.y).toBeGreaterThanOrEqual(bounds.minY + viaRadius - EPSILON)
+      expect(via.y).toBeLessThanOrEqual(bounds.maxY - viaRadius + EPSILON)
     }
   }
 
   expect(findRouteGeometryViolations(first.routes as any)).toHaveLength(0)
-  expect(findIntraNodePhysicalConflicts(first.routes, 0.1)).toHaveLength(
-    0,
-  )
+  expect(findIntraNodePhysicalConflicts(first.routes, 0.1)).toHaveLength(0)
   expect(first.portfolio.iterations).toBe(1)
   expect(first.winner.iterations).toBe(1)
   expect(first.winner.stats).toEqual({

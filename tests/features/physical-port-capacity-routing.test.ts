@@ -7,9 +7,24 @@ import type { CapacityMeshNode, SimpleRouteConnection } from "lib/types"
 
 test("physical port capacity reroutes overflow through authoritative slots", () => {
   const capacityMeshNodes: CapacityMeshNode[] = [
-    { capacityMeshNodeId: "west", center: { x: -2, y: 0 }, width: 2, height: 4 },
-    { capacityMeshNodeId: "upper", center: { x: 0, y: 1 }, width: 2, height: 2 },
-    { capacityMeshNodeId: "lower", center: { x: 0, y: -1 }, width: 2, height: 2 },
+    {
+      capacityMeshNodeId: "west",
+      center: { x: -2, y: 0 },
+      width: 2,
+      height: 4,
+    },
+    {
+      capacityMeshNodeId: "upper",
+      center: { x: 0, y: 1 },
+      width: 2,
+      height: 2,
+    },
+    {
+      capacityMeshNodeId: "lower",
+      center: { x: 0, y: -1 },
+      width: 2,
+      height: 2,
+    },
     { capacityMeshNodeId: "east", center: { x: 2, y: 0 }, width: 2, height: 4 },
   ].map((node) => ({ ...node, layer: "top", availableZ: [0] }))
   const createPortal = (
@@ -106,9 +121,7 @@ test("physical port capacity reroutes overflow through authoritative slots", () 
   expect(solver.stats.physicalPortalSlotCount).toBe(4)
   expect(solver.stats.duplicateCongestedPortCount).toBe(0)
   expect(
-    new Set(
-      assignedPhysicalPorts.map((point) => point.physicalPortalGroupId),
-    ),
+    new Set(assignedPhysicalPorts.map((point) => point.physicalPortalGroupId)),
   ).toEqual(
     new Set([
       "edge-west-upper",
@@ -124,7 +137,9 @@ test("physical port capacity reroutes overflow through authoritative slots", () 
       ),
     ),
   ).toEqual(new Set(["root-0", "root-1"]))
-  expect([...rootsBySlot.values()].every((roots) => roots.size === 1)).toBeTrue()
+  expect(
+    [...rootsBySlot.values()].every((roots) => roots.size === 1),
+  ).toBeTrue()
   expect(
     assignedPhysicalPorts.every(
       (portPoint) => portPoint.duplicatedFromPortId === undefined,

@@ -79,9 +79,9 @@ test("bugreport101 routes CM5 SPI with physical shared-edge capacity", () => {
   expect(
     solver.portPointPathingSolver?.stats.physicalPortCapacityEnforced,
   ).toBeTrue()
-  expect(
-    solver.portPointPathingSolver?.stats.duplicateCongestedPortCount,
-  ).toBe(0)
+  expect(solver.portPointPathingSolver?.stats.duplicateCongestedPortCount).toBe(
+    0,
+  )
   expect(
     solver.portPointPathingSolver?.stats
       .duplicateCongestedPortFallbackToOriginal,

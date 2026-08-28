@@ -10,12 +10,8 @@ export type IntraNodePhysicalConflict = {
 
 const EPSILON = 1e-8
 
-const dot = (
-  ax: number,
-  ay: number,
-  bx: number,
-  by: number,
-): number => ax * bx + ay * by
+const dot = (ax: number, ay: number, bx: number, by: number): number =>
+  ax * bx + ay * by
 
 const pointDistance = (a: Point2, b: Point2): number =>
   Math.hypot(a.x - b.x, a.y - b.y)
@@ -31,10 +27,7 @@ const pointToSegmentDistance = (
   if (lengthSquared < EPSILON) return pointDistance(point, a)
   const t = Math.max(
     0,
-    Math.min(
-      1,
-      dot(point.x - a.x, point.y - a.y, dx, dy) / lengthSquared,
-    ),
+    Math.min(1, dot(point.x - a.x, point.y - a.y, dx, dy) / lengthSquared),
   )
   return pointDistance(point, { x: a.x + dx * t, y: a.y + dy * t })
 }
@@ -53,10 +46,8 @@ const segmentsProperlyIntersect = (
   const cdA = orientation(c, d, a)
   const cdB = orientation(c, d, b)
   return (
-    ((abC > EPSILON && abD < -EPSILON) ||
-      (abC < -EPSILON && abD > EPSILON)) &&
-    ((cdA > EPSILON && cdB < -EPSILON) ||
-      (cdA < -EPSILON && cdB > EPSILON))
+    ((abC > EPSILON && abD < -EPSILON) || (abC < -EPSILON && abD > EPSILON)) &&
+    ((cdA > EPSILON && cdB < -EPSILON) || (cdA < -EPSILON && cdB > EPSILON))
   )
 }
 
@@ -112,7 +103,8 @@ const routesHavePhysicalConflict = (
     }
   }
 
-  const viaRequired = routeA.viaDiameter / 2 + routeB.viaDiameter / 2 + clearance
+  const viaRequired =
+    routeA.viaDiameter / 2 + routeB.viaDiameter / 2 + clearance
   for (const viaA of routeA.vias) {
     for (const viaB of routeB.vias) {
       if (pointDistance(viaA, viaB) + EPSILON < viaRequired) return true

@@ -87,25 +87,15 @@ test("bugreport101 conflict-directed solver repairs the exact physical cmn133 no
     expect(transitionKeys.sort()).toEqual(viaKeys.sort())
     const viaRadius = route.viaDiameter / 2
     for (const via of route.vias) {
-      expect(via.x).toBeGreaterThanOrEqual(
-        bounds.minX + viaRadius - EPSILON,
-      )
-      expect(via.x).toBeLessThanOrEqual(
-        bounds.maxX - viaRadius + EPSILON,
-      )
-      expect(via.y).toBeGreaterThanOrEqual(
-        bounds.minY + viaRadius - EPSILON,
-      )
-      expect(via.y).toBeLessThanOrEqual(
-        bounds.maxY - viaRadius + EPSILON,
-      )
+      expect(via.x).toBeGreaterThanOrEqual(bounds.minX + viaRadius - EPSILON)
+      expect(via.x).toBeLessThanOrEqual(bounds.maxX - viaRadius + EPSILON)
+      expect(via.y).toBeGreaterThanOrEqual(bounds.minY + viaRadius - EPSILON)
+      expect(via.y).toBeLessThanOrEqual(bounds.maxY - viaRadius + EPSILON)
     }
   }
 
   expect(findRouteGeometryViolations(firstRoutes as any)).toHaveLength(0)
-  expect(findIntraNodePhysicalConflicts(firstRoutes, 0.1)).toHaveLength(
-    0,
-  )
+  expect(findIntraNodePhysicalConflicts(firstRoutes, 0.1)).toHaveLength(0)
   expect(first.stats).toMatchObject({
     applicable: true,
     initialRouteCount: 7,
