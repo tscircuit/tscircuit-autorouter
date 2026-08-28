@@ -6,7 +6,7 @@ import {
   type HighDensityRouteObstacle,
   type NodeWithPortPoints as B01NodeWithPortPoints,
 } from "@tscircuit/high-density-b01"
-import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
+import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { GraphicsObject } from "graphics-debug"
 import type { CapacityMeshNodeId } from "lib/types/capacity-mesh-types"
 import type {
@@ -30,8 +30,9 @@ import {
   spliceFixedRouteSectionWithMutationMask,
 } from "./pipeline9-regional-fallback"
 import { Pipeline9RegionalFallbackSolver } from "./pipeline9-regional-fallback-solver"
+import { projectPipeline9OrdinaryHighDensityInput } from "./project-pipeline9-ordinary-high-density-input"
 
-type Pipeline9HighDensitySolverParams = {
+export type Pipeline9HighDensitySolverParams = {
   nodePortPoints: NodeWithPortPoints[]
   fixedHdRoutes: PreloadedHighDensityRoute[]
   connMap: ConnectivityMap
@@ -278,7 +279,7 @@ const addTerminalPcbPortIds = (
   })
 }
 
-const normalizeNodeRootConnectionNames = (
+export const normalizePipeline9NodeRootConnectionNames = (
   node: NodeWithPortPoints,
   connMap: ConnectivityMap,
 ): NodeWithPortPoints => {
@@ -406,7 +407,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     })
   }
 
-  private finishActiveNode(routes: HighDensityIntraNodeRoute[]) {
+  protected finishActiveNode(routes: HighDensityIntraNodeRoute[]): void {
     const solvedRoutes = this.activeNode
       ? restoreRootConnectionNames(routes, this.activeNode)
       : routes
@@ -426,18 +427,32 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     this.activeNode = null
   }
 
-  private startRegularSolver(node: NodeWithPortPoints): void {
+  protected startRegularSolver(node: NodeWithPortPoints): void {
+    const projectedInput = projectPipeline9OrdinaryHighDensityInput({
+      nodeWithPortPoints: node,
+      connMap: this.connMap,
+      colorMap: this.colorMap,
+      obstacles: this.obstacles,
+      obstacleMargin: this.obstacleMargin,
+      traceWidth: this.traceWidth,
+      viaDiameter: this.viaDiameter,
+    })
+    const projectedConnMap = new ConnectivityMap(
+      projectedInput.connectivityNetMap,
+    )
     this.activeNode = node
     this.activeRegularSolver = new HighDensitySolver({
-      nodePortPoints: [normalizeNodeRootConnectionNames(node, this.connMap)],
-      colorMap: this.colorMap,
-      connMap: this.connMap,
+      nodePortPoints: [
+        normalizePipeline9NodeRootConnectionNames(node, projectedConnMap),
+      ],
+      colorMap: projectedInput.colorMap,
+      connMap: projectedConnMap,
       viaDiameter: this.viaDiameter,
       traceWidth: this.traceWidth,
       obstacleMargin: this.obstacleMargin,
       effort: this.effort,
       nodePfById: this.nodePfById,
-      obstacles: this.obstacles,
+      obstacles: projectedInput.obstacles,
       layerCount: this.layerCount,
       useGrowShrinkHighDensityIntraNodeSolver: true,
       preserveTerminalPcbPortIds: false,
@@ -447,7 +462,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     this.stats.regularNodeCount = Number(this.stats.regularNodeCount ?? 0) + 1
   }
 
-  private startRegionalFallback(
+  protected startRegionalFallback(
     promotedFixedRouteConnectionNames: ReadonlySet<string> = new Set(),
   ): void {
     if (!this.activeNode) {
@@ -456,7 +471,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       )
     }
 
-    const normalizedNode = normalizeNodeRootConnectionNames(
+    const normalizedNode = normalizePipeline9NodeRootConnectionNames(
       this.activeNode,
       this.connMap,
     )
@@ -738,7 +753,10 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     // future fallback never has to replay this node's now-stale bounds.
     const postSpliceProblem = createRegionalFallbackProblem(
       {
-        ...normalizeNodeRootConnectionNames(this.activeNode, this.connMap),
+        ...normalizePipeline9NodeRootConnectionNames(
+          this.activeNode,
+          this.connMap,
+        ),
         portPoints: [],
         portPointsInPairs: [],
         availableZ: Array.from({ length: this.layerCount }, (_, z) => z),
@@ -837,6 +855,18 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       Number(regionalStats.repairCandidateRejectionCount ?? 0)
   }
 
+  protected finishRegularSolverFailure(error: string): void {
+    this.activeFallbackReason = `regular high-density routing failed: ${error}`
+    this.activeRegularSolver = null
+    if (!this.enableRegionalFallback) {
+      this.error = `Pipeline9 ${this.activeFallbackReason}`
+      this.failed = true
+      this.activeNode = null
+      return
+    }
+    this.startRegionalFallback()
+  }
+
   override _step(): void {
     if (this.activeFallbackSolver) {
       this.activeFallbackSolver.step()
@@ -863,15 +893,9 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     if (this.activeRegularSolver) {
       this.activeRegularSolver.step()
       if (this.activeRegularSolver.failed) {
-        this.activeFallbackReason = `regular high-density routing failed: ${this.activeRegularSolver.error ?? "unknown error"}`
-        this.activeRegularSolver = null
-        if (!this.enableRegionalFallback) {
-          this.error = `Pipeline9 ${this.activeFallbackReason}`
-          this.failed = true
-          this.activeNode = null
-          return
-        }
-        this.startRegionalFallback()
+        this.finishRegularSolverFailure(
+          this.activeRegularSolver.error ?? "unknown error",
+        )
         return
       }
       if (!this.activeRegularSolver.solved) return
@@ -945,7 +969,10 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       return
     }
 
-    const normalizedNode = normalizeNodeRootConnectionNames(node, this.connMap)
+    const normalizedNode = normalizePipeline9NodeRootConnectionNames(
+      node,
+      this.connMap,
+    )
     this.stats.b01NodeCount = Number(this.stats.b01NodeCount ?? 0) + 1
     this.activeB01Solver = new HighDensitySolverB01({
       ...defaultB01Params,
