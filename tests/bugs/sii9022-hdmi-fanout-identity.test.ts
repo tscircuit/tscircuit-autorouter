@@ -19,7 +19,7 @@ type FanoutInput = Omit<SimpleRouteJson, "buses" | "connections"> & {
   connections: Array<SimpleRouteConnection & { source_trace_id: string }>
 }
 
-test("SII9022 HDMI path does not route with pre-fix fanout output", async () => {
+test("SII9022 HDMI path routes with the pinned fanout identity fix", async () => {
   const fanoutInput = structuredClone(u5FanoutPhase) as FanoutInput
   const fanoutSolver = new FanoutSolver(fanoutInput, {
     busDirections: Object.fromEntries(
@@ -87,18 +87,40 @@ test("SII9022 HDMI path does not route with pre-fix fanout output", async () => 
         typeof trace.source_trace_id === "string" &&
         trace.connectsTo?.includes(trace.source_trace_id),
     ),
-  ).toHaveLength(0)
-  expect(solver.solved).toBe(false)
-  expect(solver.failed).toBe(true)
-  expect(solver.error).toContain(
-    "Pipeline9 primary high-density routing failed",
+  ).toHaveLength(8)
+  for (const trace of inputSrj.traces ?? []) {
+    const sourceTraceId =
+      "source_trace_id" in trace && typeof trace.source_trace_id === "string"
+        ? trace.source_trace_id
+        : undefined
+    expect(typeof sourceTraceId).toBe("string")
+    expect(trace.connectsTo).toContain(sourceTraceId)
+  }
+  expect(solver.solved).toBe(true)
+  expect(solver.failed).toBe(false)
+
+  const routedTraces = solver.getOutputSimpleRouteJson().traces ?? []
+  const preloadedTraceIds = new Set(
+    inputSrj.traces?.map((trace) => trace.pcb_trace_id),
   )
+  const newHdmiTraces = routedTraces.filter(
+    (trace) => !preloadedTraceIds.has(trace.pcb_trace_id),
+  )
+  expect(routedTraces).toHaveLength(64)
+  expect(newHdmiTraces).toHaveLength(16)
+  for (const connection of inputSrj.connections) {
+    expect(
+      newHdmiTraces.filter(
+        (trace) => trace.connection_name === connection.name,
+      ),
+    ).toHaveLength(2)
+  }
 
   await expect(
     getSii9022HdmiRouteVisualization({
       inputSrj,
-      traces: inputSrj.traces ?? [],
-      status: "unrouted",
+      traces: routedTraces,
+      status: "routed",
     }),
   ).toMatchSvgSnapshot(import.meta.path)
 }, 20_000)
