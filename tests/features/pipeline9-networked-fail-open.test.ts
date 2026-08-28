@@ -87,7 +87,7 @@ test("Pipeline9 networked falls back locally for transport and invalid protocol 
     {
       name: "mismatched route trace width",
       fetchImpl: createMalformedRouteFetch((route, request) => {
-        route.traceThickness = request.input.traceWidth + 0.05
+        route.traceThickness = request.input.traceWidth + 0.07
       }),
     },
     {
@@ -182,4 +182,26 @@ test("Pipeline9 networked falls back locally for transport and invalid protocol 
 
   expect(validMetadataSolver.routes).toHaveLength(1)
   expect(validMetadataSolver.stats.remoteTransportFallbacks).toBe(0)
+})
+
+test("Pipeline9 networked accepts the portfolio's fixed multi-head trace width", async () => {
+  const node = createNetworkedNode({
+    nodeId: "cmn_fixed_multi_head_width",
+    connectionName: "fixed_multi_head_width",
+  })
+  const solver = createNetworkedHighDensitySolver({
+    nodes: [node],
+    fetchImpl: asNetworkedFetch(async () => {
+      const route = createNetworkedRoute(node)
+      route.traceThickness = 0.15
+      return createNetworkedResponse({ status: "solved", routes: [route] })
+    }),
+  })
+
+  solver.step()
+  await solver.pendingEffects![0]!.promise
+  solver.step()
+
+  expect(solver.routes).toHaveLength(1)
+  expect(solver.stats.remoteTransportFallbacks).toBe(0)
 })
