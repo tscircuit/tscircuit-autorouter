@@ -161,8 +161,8 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
       enableTwoChordLaneSolver:
         portfolioParams.enableTwoChordLaneSolver === true &&
         this.scaleFactor === 1,
-      enableConflictDirectedB01Solver:
-        portfolioParams.enableConflictDirectedB01Solver === true &&
+      enableHighDensityB02Solver:
+        portfolioParams.enableHighDensityB02Solver === true &&
         this.scaleFactor === 1,
       nodeWithPortPoints: scaleNodeWithPortPoints(
         this.nodeWithPortPoints,

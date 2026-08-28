@@ -576,7 +576,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
           useGrowShrinkHighDensityIntraNodeSolver: true,
           enableTwoChordLaneSolver:
             cms.opts.highDensityRoutingMode === "physical-capacity",
-          enableConflictDirectedB01Solver:
+          enableHighDensityB02Solver:
             cms.opts.highDensityRoutingMode === "physical-capacity",
           preserveTerminalPcbPortIds: true,
           growShrinkFallbackToInvalidGeometryOnFailure: true,

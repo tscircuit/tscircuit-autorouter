@@ -1,17 +1,31 @@
-import { findRouteGeometryViolations } from "@tscircuit/high-density-b01"
+import {
+  findRouteGeometryViolations,
+  HighDensitySolverB02,
+} from "@tscircuit/high-density-b01"
 import { expect, test } from "bun:test"
 import nodeJson from "../../fixtures/bug-reports/bugreport101-cm5-spi-routing-timeout/bugreport101-cm5-spi-dominant-high-density-node.json" with {
   type: "json",
 }
-import { ConflictDirectedB01IntraNodeSolver } from "lib/solvers/HighDensitySolver/ConflictDirectedB01IntraNodeSolver"
 import { findIntraNodePhysicalConflicts } from "lib/solvers/HighDensitySolver/find-intra-node-physical-conflicts"
+import { HighDensitySolverB02IntraNodeAdapter } from "lib/solvers/HighDensitySolver/high-density-solver-b02-adapter"
 import { PortfolioSingleIntraNodeSolver } from "lib/solvers/HyperHighDensitySolver/PortfolioSingleIntraNodeSolver"
 import type {
   HighDensityIntraNodeRoute,
   NodeWithPortPoints,
 } from "lib/types/high-density-types"
 
-const node = nodeJson as NodeWithPortPoints
+const node = structuredClone(nodeJson) as NodeWithPortPoints
+const [metadataStart, metadataEnd] = node.portPointsInPairs![0]!
+metadataStart.pcb_port_id = "terminal-a"
+metadataEnd.pcb_port_id = "terminal-b"
+for (const portPoint of node.portPoints) {
+  if (portPoint.portPointId === metadataStart.portPointId) {
+    portPoint.pcb_port_id = metadataStart.pcb_port_id
+  }
+  if (portPoint.portPointId === metadataEnd.portPointId) {
+    portPoint.pcb_port_id = metadataEnd.pcb_port_id
+  }
+}
 
 const endpointIdentity = (
   point: HighDensityIntraNodeRoute["route"][number],
@@ -22,7 +36,7 @@ const endpointIdentity = (
 
 const solveNode = (): {
   routes: HighDensityIntraNodeRoute[]
-  winner: ConflictDirectedB01IntraNodeSolver
+  winner: HighDensitySolverB02IntraNodeAdapter
 } => {
   const solver = new PortfolioSingleIntraNodeSolver({
     nodeWithPortPoints: structuredClone(node),
@@ -32,26 +46,33 @@ const solveNode = (): {
     obstacles: [],
     layerCount: 4,
     effort: 1,
-    enableConflictDirectedB01Solver: true,
+    enableHighDensityB02Solver: true,
   })
   solver.solve()
   expect(solver.solved).toBeTrue()
   expect(solver.failed).toBeFalse()
   expect(solver.winningSolver).toBeInstanceOf(
-    ConflictDirectedB01IntraNodeSolver,
+    HighDensitySolverB02IntraNodeAdapter,
   )
   return {
     routes: solver.solvedRoutes,
-    winner: solver.winningSolver as ConflictDirectedB01IntraNodeSolver,
+    winner: solver.winningSolver as HighDensitySolverB02IntraNodeAdapter,
   }
 }
 
-test("bugreport101 conflict-directed solver repairs the dominant high-density node", () => {
+test("bugreport101 HighDensitySolverB02 repairs the dominant high-density node", () => {
   const first = solveNode()
   const second = solveNode()
   const pairs = node.portPointsInPairs!
+  const originalPortPointIds = new Set(
+    pairs
+      .flat()
+      .map((portPoint) => portPoint.portPointId)
+      .filter((portPointId): portPointId is string => portPointId !== undefined),
+  )
 
   expect(first.routes).toHaveLength(11)
+  expect(first.winner.upstreamSolver).toBeInstanceOf(HighDensitySolverB02)
   expect(second.routes).toEqual(first.routes)
   for (let index = 0; index < pairs.length; index += 1) {
     const [expectedStart, expectedEnd] = pairs[index]!
@@ -65,6 +86,14 @@ test("bugreport101 conflict-directed solver repairs the dominant high-density no
     expect(route.regionId).toBe(node.capacityMeshNodeId)
     expect(route.startPcbPortId).toBe(expectedStart.pcb_port_id)
     expect(route.endPcbPortId).toBe(expectedEnd.pcb_port_id)
+    expect(route.route[0]!.pcb_port_id).toBe(expectedStart.pcb_port_id)
+    expect(route.route.at(-1)!.pcb_port_id).toBe(expectedEnd.pcb_port_id)
+    for (const point of route.route) {
+      const portPointId = (point as { portPointId?: string }).portPointId
+      if (portPointId !== undefined) {
+        expect(originalPortPointIds.has(portPointId)).toBeTrue()
+      }
+    }
   }
 
   expect(findIntraNodePhysicalConflicts(first.routes, 0.1)).toHaveLength(0)

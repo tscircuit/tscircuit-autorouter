@@ -3,12 +3,13 @@ import { expect, test } from "bun:test"
 import nodeJson from "../../fixtures/bug-reports/bugreport101-cm5-spi-routing-timeout/bugreport101-cm5-spi-cmn133-physical-capacity-high-density-node.json" with {
   type: "json",
 }
-import { ConflictDirectedB01IntraNodeSolver } from "lib/solvers/HighDensitySolver/ConflictDirectedB01IntraNodeSolver"
 import { findIntraNodePhysicalConflicts } from "lib/solvers/HighDensitySolver/find-intra-node-physical-conflicts"
+import { HighDensitySolverB02IntraNodeAdapter } from "lib/solvers/HighDensitySolver/high-density-solver-b02-adapter"
 import type {
   HighDensityIntraNodeRoute,
   NodeWithPortPoints,
 } from "lib/types/high-density-types"
+import type { Obstacle } from "lib/types/srj-types"
 
 const node = {
   ...nodeJson,
@@ -23,8 +24,8 @@ const endpointIdentity = (
   return `${point.x},${point.y},${point.z},${portPointId}`
 }
 
-const solveNode = (): ConflictDirectedB01IntraNodeSolver => {
-  const solver = new ConflictDirectedB01IntraNodeSolver({
+const solveNode = (): HighDensitySolverB02IntraNodeAdapter => {
+  const solver = new HighDensitySolverB02IntraNodeAdapter({
     nodeWithPortPoints: structuredClone(node),
     traceWidth: 0.15,
     viaDiameter: 0.3,
@@ -38,7 +39,7 @@ const solveNode = (): ConflictDirectedB01IntraNodeSolver => {
   return solver
 }
 
-test("bugreport101 conflict-directed solver repairs the exact physical cmn133 node", () => {
+test("bugreport101 HighDensitySolverB02 repairs the exact physical cmn133 node", () => {
   const first = solveNode()
   const second = solveNode()
   const firstRoutes = first.getOutput()
@@ -114,6 +115,39 @@ test("bugreport101 conflict-directed solver repairs the exact physical cmn133 no
   )
   expect(second.stats.repairIterations).toBe(first.stats.repairIterations)
 
+  const farAwayObstacle: Obstacle = {
+    type: "rect",
+    layers: ["top"],
+    center: { x: bounds.maxX + 100, y: bounds.maxY + 100 },
+    width: 1,
+    height: 1,
+    connectedTo: [],
+  }
+  expect(
+    HighDensitySolverB02IntraNodeAdapter.isApplicable({
+      nodeWithPortPoints: node,
+      traceWidth: 0.15,
+      viaDiameter: 0.3,
+      clearance: 0.1,
+      obstacles: [farAwayObstacle],
+    }),
+  ).toBeTrue()
+  expect(
+    HighDensitySolverB02IntraNodeAdapter.isApplicable({
+      nodeWithPortPoints: node,
+      traceWidth: 0.15,
+      viaDiameter: 0.3,
+      clearance: 0.1,
+      obstacles: [
+        {
+          ...farAwayObstacle,
+          center: { ...node.center },
+          ccwRotationDegrees: 45,
+        },
+      ],
+    }),
+  ).toBeFalse()
+
   const infeasiblePortalSpacingNode = structuredClone(node)
   const pointA = infeasiblePortalSpacingNode.portPointsInPairs![3]![0]
   const pointB = infeasiblePortalSpacingNode.portPointsInPairs![4]![0]
@@ -121,7 +155,7 @@ test("bugreport101 conflict-directed solver repairs the exact physical cmn133 no
   pointB.y = pointA.y + 0.225
   pointB.z = pointA.z
   expect(
-    ConflictDirectedB01IntraNodeSolver.isApplicable({
+    HighDensitySolverB02IntraNodeAdapter.isApplicable({
       nodeWithPortPoints: infeasiblePortalSpacingNode,
       traceWidth: 0.15,
       viaDiameter: 0.3,
@@ -129,4 +163,18 @@ test("bugreport101 conflict-directed solver repairs the exact physical cmn133 no
       obstacles: [],
     }),
   ).toBeFalse()
+  const inapplicableSolver = new HighDensitySolverB02IntraNodeAdapter({
+    nodeWithPortPoints: infeasiblePortalSpacingNode,
+    traceWidth: 0.15,
+    viaDiameter: 0.3,
+    clearance: 0.1,
+    obstacles: [],
+  })
+  inapplicableSolver.solve()
+  expect(inapplicableSolver.solved).toBeFalse()
+  expect(inapplicableSolver.failed).toBeTrue()
+  expect(inapplicableSolver.upstreamSolver).toBeUndefined()
+  expect(inapplicableSolver.error).toBe(
+    "HighDensitySolverB02 is not structurally applicable",
+  )
 })
