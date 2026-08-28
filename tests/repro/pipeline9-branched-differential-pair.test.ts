@@ -23,9 +23,9 @@ test("Pipeline9 repro from the RV1106G2 branched Ethernet differential pairs", a
     source_trace_232: "#2563eb",
     source_trace_233: "#7c3aed",
   } as const
-  const ethernetLineIds = Object.keys(
-    ethernetLineNames,
-  ) as Array<keyof typeof ethernetLineNames>
+  const ethernetLineIds = Object.keys(ethernetLineNames) as Array<
+    keyof typeof ethernetLineNames
+  >
   const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(inputSrj, {
     cacheProvider: null,
     visualizationTraceColorMode: "net",
@@ -95,10 +95,34 @@ test("Pipeline9 repro from the RV1106G2 branched Ethernet differential pairs", a
       { x: 2.5, y: 15.5, text: "D3 ESD", color: "black", fontSize: 0.28 },
       { x: 2.5, y: 17.5, text: "D4 ESD", color: "black", fontSize: 0.28 },
       { x: 3.9, y: 22.8, text: "J_ETH", color: "black", fontSize: 0.28 },
-      { x: -1.6, y: 24.2, text: "ETH_TXP_LINE", color: "#dc2626", fontSize: 0.24 },
-      { x: -1.6, y: 23.75, text: "ETH_TXN_LINE", color: "#ea580c", fontSize: 0.24 },
-      { x: 2.1, y: 24.2, text: "ETH_RXP_LINE", color: "#2563eb", fontSize: 0.24 },
-      { x: 2.1, y: 23.75, text: "ETH_RXN_LINE", color: "#7c3aed", fontSize: 0.24 },
+      {
+        x: -1.6,
+        y: 24.2,
+        text: "ETH_TXP_LINE",
+        color: "#dc2626",
+        fontSize: 0.24,
+      },
+      {
+        x: -1.6,
+        y: 23.75,
+        text: "ETH_TXN_LINE",
+        color: "#ea580c",
+        fontSize: 0.24,
+      },
+      {
+        x: 2.1,
+        y: 24.2,
+        text: "ETH_RXP_LINE",
+        color: "#2563eb",
+        fontSize: 0.24,
+      },
+      {
+        x: 2.1,
+        y: 23.75,
+        text: "ETH_RXN_LINE",
+        color: "#7c3aed",
+        fontSize: 0.24,
+      },
     ],
   }
   const fullBoardGraphics = combineVisualizations(
