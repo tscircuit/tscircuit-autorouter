@@ -39,6 +39,16 @@ export type Pipeline9NetworkedSolveRequest = {
   input: Pipeline9NetworkedHighDensityNodeInput
 }
 
+export type Pipeline9NetworkedSolveBatchItem = {
+  requestId: string
+  input: Pipeline9NetworkedHighDensityNodeInput
+}
+
+export type Pipeline9NetworkedSolveBatchRequest = {
+  autorouterVersion: string
+  items: Pipeline9NetworkedSolveBatchItem[]
+}
+
 export type Pipeline9NetworkedSolveResponse =
   | ({
       ok: true
@@ -50,3 +60,8 @@ export type Pipeline9NetworkedSolveResponse =
       autorouterVersion?: string
       message: string
     }
+
+/** One independently consumable NDJSON line returned by POST /solve-batch. */
+export type Pipeline9NetworkedSolveBatchResult = {
+  requestId: string
+} & Pipeline9NetworkedSolveResponse

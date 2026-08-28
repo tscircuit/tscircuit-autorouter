@@ -4,7 +4,12 @@ import {
   Pipeline9NetworkedHighDensitySolver,
   type Pipeline9NetworkedHighDensitySolverParams,
 } from "lib/autorouter-pipelines/AutoroutingPipeline9_Networked/pipeline9-networked-high-density-solver"
-import type { Pipeline9NetworkedHighDensityNodeOutput } from "lib/autorouter-pipelines/AutoroutingPipeline9_Networked/pipeline9-networked-types"
+import type {
+  Pipeline9NetworkedHighDensityNodeOutput,
+  Pipeline9NetworkedSolveBatchRequest,
+  Pipeline9NetworkedSolveBatchResult,
+  Pipeline9NetworkedSolveResponse,
+} from "lib/autorouter-pipelines/AutoroutingPipeline9_Networked/pipeline9-networked-types"
 import type { PreloadedHighDensityRoute } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/convert-preloaded-traces-to-hd-routes"
 import type {
   HighDensityIntraNodeRoute,
@@ -95,7 +100,84 @@ export const asNetworkedFetch = (
     input: string | URL | Request,
     init?: RequestInit,
   ) => Promise<Response>,
+): typeof fetch =>
+  (async (input: string | URL | Request, init?: RequestInit) => {
+    if (!String(input).replace(/\/+$/, "").endsWith("/solve-batch")) {
+      return implementation(input, init)
+    }
+
+    const batchRequest = JSON.parse(
+      String(init?.body),
+    ) as Pipeline9NetworkedSolveBatchRequest
+    const resultLines = await Promise.all(
+      batchRequest.items.map(async (item) => {
+        const response = await implementation(
+          String(input).replace(/\/solve-batch\/?$/, "/solve"),
+          {
+            ...init,
+            headers: {
+              accept: "application/json",
+              "content-type": "application/json",
+            },
+            body: JSON.stringify({
+              autorouterVersion: batchRequest.autorouterVersion,
+              input: item.input,
+            }),
+          },
+        )
+        const responseText = await response.text()
+        let responseBody: Pipeline9NetworkedSolveResponse
+        try {
+          responseBody = JSON.parse(responseText)
+        } catch {
+          responseBody = {
+            ok: false,
+            message: `Invalid fixture response with status ${response.status}`,
+          }
+        }
+        if (!response.ok && responseBody.ok !== false) {
+          responseBody = {
+            ok: false,
+            message: `Fixture request failed with status ${response.status}`,
+          }
+        }
+        return JSON.stringify({ requestId: item.requestId, ...responseBody })
+      }),
+    )
+    return new Response(`${resultLines.join("\n")}\n`, {
+      status: 200,
+      headers: { "content-type": "application/x-ndjson" },
+    })
+  }) as unknown as typeof fetch
+
+export const asNetworkedBatchFetch = (
+  implementation: (
+    input: string | URL | Request,
+    init?: RequestInit,
+  ) => Promise<Response>,
 ): typeof fetch => implementation as unknown as typeof fetch
+
+export const createNetworkedBatchStream = (): {
+  response: Response
+  write: (result: Pipeline9NetworkedSolveBatchResult) => void
+  close: () => void
+} => {
+  const encoder = new TextEncoder()
+  let controller!: ReadableStreamDefaultController<Uint8Array>
+  const body = new ReadableStream<Uint8Array>({
+    start(streamController) {
+      controller = streamController
+    },
+  })
+  return {
+    response: new Response(body, {
+      status: 200,
+      headers: { "content-type": "application/x-ndjson" },
+    }),
+    write: (result) => controller.enqueue(encoder.encode(`${JSON.stringify(result)}\n`)),
+    close: () => controller.close(),
+  }
+}
 
 export const createDeferred = <T>(): {
   promise: Promise<T>
@@ -117,6 +199,8 @@ export const createNetworkedHighDensitySolver = ({
   fixedHdRoutes = [],
   requestTimeoutMs = 1_000,
   transportTimeoutMs,
+  maxBatchItems,
+  maxBatchBodyBytes,
   enableRegionalFallback = false,
   preserveTerminalPcbPortIds = true,
 }: {
@@ -125,6 +209,8 @@ export const createNetworkedHighDensitySolver = ({
   fixedHdRoutes?: PreloadedHighDensityRoute[]
   requestTimeoutMs?: number
   transportTimeoutMs?: number
+  maxBatchItems?: number
+  maxBatchBodyBytes?: number
   enableRegionalFallback?: boolean
   preserveTerminalPcbPortIds?: boolean
 }): Pipeline9NetworkedHighDensitySolver => {
@@ -163,6 +249,8 @@ export const createNetworkedHighDensitySolver = ({
     fetchImpl,
     requestTimeoutMs,
     transportTimeoutMs,
+    maxBatchItems,
+    maxBatchBodyBytes,
   }
   return new Pipeline9NetworkedHighDensitySolver(params)
 }
