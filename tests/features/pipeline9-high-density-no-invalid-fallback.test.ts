@@ -48,6 +48,9 @@ test("Pipeline9 rejects invalid geometry and retries across legal layers", () =>
     regularSolver.activeRegularSolver
       ?.growShrinkFallbackToInvalidGeometryOnFailure,
   ).toBeFalse()
+  expect(
+    regularSolver.activeRegularSolver?.enableHighDensityB02Solver,
+  ).toBeTrue()
   regularSolver.solve()
   expect(regularSolver.solved).toBeFalse()
   expect(regularSolver.failed).toBeTrue()

@@ -455,6 +455,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       obstacles: projectedInput.obstacles,
       layerCount: this.layerCount,
       useGrowShrinkHighDensityIntraNodeSolver: true,
+      enableHighDensityB02Solver: true,
       preserveTerminalPcbPortIds: false,
       growShrinkFallbackToInvalidGeometryOnFailure: false,
       captureSearchDebug: false,
