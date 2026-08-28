@@ -22,11 +22,15 @@ test("Pipeline9 launches no more than 100 items in each batch", async () => {
       ) as Pipeline9NetworkedSolveBatchRequest
       requests.push(request)
       return new Response(
-        `${request.items.map((item) => JSON.stringify({
-          requestId: item.requestId,
-          ok: false,
-          message: "fixture miss",
-        })).join("\n")}\n`,
+        `${request.items
+          .map((item) =>
+            JSON.stringify({
+              requestId: item.requestId,
+              ok: false,
+              message: "fixture miss",
+            }),
+          )
+          .join("\n")}\n`,
         {
           status: 200,
           headers: { "content-type": "application/x-ndjson" },

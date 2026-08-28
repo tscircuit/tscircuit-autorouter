@@ -46,11 +46,7 @@ test("Pipeline9 batches cold solves in node consumption order", async () => {
     request.items.map(
       (item) => item.input.nodeWithPortPoints.capacityMeshNodeId,
     ),
-  ).toEqual([
-    "cmn_consumed_first",
-    "cmn_consumed_second",
-    "cmn_consumed_third",
-  ])
+  ).toEqual(["cmn_consumed_first", "cmn_consumed_second", "cmn_consumed_third"])
 
   const firstItem = request.items[0]!
   batchStream.write({

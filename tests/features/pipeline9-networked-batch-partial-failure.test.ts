@@ -44,9 +44,7 @@ test("Pipeline9 batch results fail open per node without discarding valid siblin
             autorouterVersion: request.autorouterVersion,
             source: "cache",
             status: "solved",
-            routes: [
-              createNetworkedRoute(validItem.input.nodeWithPortPoints),
-            ],
+            routes: [createNetworkedRoute(validItem.input.nodeWithPortPoints)],
           }),
           JSON.stringify({
             requestId: invalidItem.requestId,

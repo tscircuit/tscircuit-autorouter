@@ -23,11 +23,15 @@ test("Pipeline9 greedily keeps every batch within its configured byte limit", as
       requestBodies.push(body)
       const request = JSON.parse(body) as Pipeline9NetworkedSolveBatchRequest
       return new Response(
-        `${request.items.map((item) => JSON.stringify({
-          requestId: item.requestId,
-          ok: false,
-          message: "fixture miss",
-        })).join("\n")}\n`,
+        `${request.items
+          .map((item) =>
+            JSON.stringify({
+              requestId: item.requestId,
+              ok: false,
+              message: "fixture miss",
+            }),
+          )
+          .join("\n")}\n`,
         {
           status: 200,
           headers: { "content-type": "application/x-ndjson" },
@@ -47,8 +51,7 @@ test("Pipeline9 greedily keeps every batch within its configured byte limit", as
   ).toBeTrue()
   expect(
     requestBodies.flatMap(
-      (body) =>
-        (JSON.parse(body) as Pipeline9NetworkedSolveBatchRequest).items,
+      (body) => (JSON.parse(body) as Pipeline9NetworkedSolveBatchRequest).items,
     ),
   ).toHaveLength(20)
   expect(solver.stats.remoteSingleRequestsStarted).toBe(0)

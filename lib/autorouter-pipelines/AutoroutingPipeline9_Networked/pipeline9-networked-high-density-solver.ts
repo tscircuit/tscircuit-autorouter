@@ -274,9 +274,7 @@ export const getPipeline9NetworkedSolveUrl = (baseUrl: string): string =>
     ? baseUrl.replace(/\/+$/, "")
     : `${baseUrl.replace(/\/+$/, "")}/solve`
 
-export const getPipeline9NetworkedSolveBatchUrl = (
-  baseUrl: string,
-): string => {
+export const getPipeline9NetworkedSolveBatchUrl = (baseUrl: string): string => {
   const normalizedBaseUrl = baseUrl.replace(/\/+$/, "")
   if (/\/solve-batch$/.test(normalizedBaseUrl)) return normalizedBaseUrl
   if (/\/solve$/.test(normalizedBaseUrl)) {
@@ -361,8 +359,7 @@ export class Pipeline9NetworkedHighDensitySolver extends Pipeline9HighDensitySol
     if (
       !Number.isInteger(this.maxBatchBodyBytes) ||
       this.maxBatchBodyBytes <= 0 ||
-      this.maxBatchBodyBytes >
-        DEFAULT_PIPELINE9_NETWORKED_MAX_BATCH_BODY_BYTES
+      this.maxBatchBodyBytes > DEFAULT_PIPELINE9_NETWORKED_MAX_BATCH_BODY_BYTES
     ) {
       throw new Error(
         `Pipeline9 network max batch body bytes must be a positive integer no greater than ${DEFAULT_PIPELINE9_NETWORKED_MAX_BATCH_BODY_BYTES}, received ${this.maxBatchBodyBytes}`,
@@ -529,7 +526,7 @@ export class Pipeline9NetworkedHighDensitySolver extends Pipeline9HighDensitySol
           responseBody &&
           typeof responseBody === "object" &&
           "message" in responseBody &&
-            typeof responseBody.message === "string"
+          typeof responseBody.message === "string"
             ? responseBody.message
             : `hd-cache2 request failed with status ${response.status}`
         throw new Pipeline9NetworkedRequestError("http_error", message)
@@ -546,9 +543,7 @@ export class Pipeline9NetworkedHighDensitySolver extends Pipeline9HighDensitySol
     }
   }
 
-  private recordFallbackReason(
-    reason: Pipeline9NetworkedFallbackReason,
-  ): void {
+  private recordFallbackReason(reason: Pipeline9NetworkedFallbackReason): void {
     const counts = this.stats.remoteFallbackReasonCounts as Record<
       Pipeline9NetworkedFallbackReason,
       number
@@ -843,8 +838,7 @@ export class Pipeline9NetworkedHighDensitySolver extends Pipeline9HighDensitySol
       }
       if (
         currentItems.length >= this.maxBatchItems ||
-        currentBytes + separatorBytes + itemBytes >
-          this.maxBatchBodyBytes
+        currentBytes + separatorBytes + itemBytes > this.maxBatchBodyBytes
       ) {
         flushCurrentBatch()
       }

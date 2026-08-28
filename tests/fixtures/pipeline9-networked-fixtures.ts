@@ -174,7 +174,8 @@ export const createNetworkedBatchStream = (): {
       status: 200,
       headers: { "content-type": "application/x-ndjson" },
     }),
-    write: (result) => controller.enqueue(encoder.encode(`${JSON.stringify(result)}\n`)),
+    write: (result) =>
+      controller.enqueue(encoder.encode(`${JSON.stringify(result)}\n`)),
     close: () => controller.close(),
   }
 }

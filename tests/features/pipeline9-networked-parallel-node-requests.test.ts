@@ -30,17 +30,24 @@ test("Pipeline9 networked launches every node request in parallel and preserves 
     ) as Pipeline9NetworkedSolveBatchRequest
     requestBodies.push(request)
     await releaseRequests.promise
-    return new Response(`${request.items.map((item) => JSON.stringify({
-      requestId: item.requestId,
-      ok: true,
-      autorouterVersion: request.autorouterVersion,
-      source: "cache",
-      status: "solved",
-      routes: [createNetworkedRoute(item.input.nodeWithPortPoints)],
-    })).join("\n")}\n`, {
-      status: 200,
-      headers: { "content-type": "application/x-ndjson" },
-    })
+    return new Response(
+      `${request.items
+        .map((item) =>
+          JSON.stringify({
+            requestId: item.requestId,
+            ok: true,
+            autorouterVersion: request.autorouterVersion,
+            source: "cache",
+            status: "solved",
+            routes: [createNetworkedRoute(item.input.nodeWithPortPoints)],
+          }),
+        )
+        .join("\n")}\n`,
+      {
+        status: 200,
+        headers: { "content-type": "application/x-ndjson" },
+      },
+    )
   })
   const solver = createNetworkedHighDensitySolver({
     nodes: [firstNode, secondNode],
@@ -53,7 +60,9 @@ test("Pipeline9 networked launches every node request in parallel and preserves 
   expect(requestUrls[0]).toEndWith("/solve-batch")
   expect(requestBodies[0]!.autorouterVersion).toBe(AUTOROUTER_VERSION)
   expect(requestBodies[0]!.items).toHaveLength(2)
-  expect(requestBodies[0]!.items.map((item) => item.input.effort)).toEqual([1, 1])
+  expect(requestBodies[0]!.items.map((item) => item.input.effort)).toEqual([
+    1, 1,
+  ])
   expect(solver.pendingEffects).toHaveLength(1)
 
   releaseRequests.resolve()

@@ -347,9 +347,7 @@ const getRoutingBenchmarkMetrics = (
     remoteBatchMaxBodyBytes: getCounter("remoteBatchMaxBodyBytes"),
     remoteSingleRequestsStarted: getCounter("remoteSingleRequestsStarted"),
     remoteBatchInvalidLines: getCounter("remoteBatchInvalidLines"),
-    remoteBatchUnknownRequestIds: getCounter(
-      "remoteBatchUnknownRequestIds",
-    ),
+    remoteBatchUnknownRequestIds: getCounter("remoteBatchUnknownRequestIds"),
     remoteBatchDuplicateRequestIds: getCounter(
       "remoteBatchDuplicateRequestIds",
     ),
@@ -358,9 +356,7 @@ const getRoutingBenchmarkMetrics = (
     remoteSolvedResults: getCounter("remoteSolvedResults"),
     remoteFailedResults: getCounter("remoteFailedResults"),
     remoteTransportFallbacks: getCounter("remoteTransportFallbacks"),
-    remoteLogicalTimeoutFallbacks: getCounter(
-      "remoteLogicalTimeoutFallbacks",
-    ),
+    remoteLogicalTimeoutFallbacks: getCounter("remoteLogicalTimeoutFallbacks"),
     remoteFallbackReasonCounts:
       fallbackReasonCounts &&
       typeof fallbackReasonCounts === "object" &&
