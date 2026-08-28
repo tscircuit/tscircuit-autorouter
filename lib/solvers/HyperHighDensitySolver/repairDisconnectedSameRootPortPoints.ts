@@ -106,8 +106,9 @@ export const repairDisconnectedSameRootPortPoints = (
 
       if (!bridgeRoute) continue
 
+      const { jumpers, ...bridgeRouteWithoutJumpers } = bridgeRoute
       repairedRoutes.push({
-        ...bridgeRoute,
+        ...bridgeRouteWithoutJumpers,
         connectionName,
         rootConnectionName,
         route: bridgeRoute.route.map((point) => ({
@@ -116,11 +117,15 @@ export const repairDisconnectedSameRootPortPoints = (
           rootConnectionName,
         })),
         vias: bridgeRoute.vias.map((via) => ({ ...via })),
-        jumpers: bridgeRoute.jumpers?.map((jumper) => ({
-          ...jumper,
-          start: { ...jumper.start },
-          end: { ...jumper.end },
-        })),
+        ...(jumpers
+          ? {
+              jumpers: jumpers.map((jumper) => ({
+                ...jumper,
+                start: { ...jumper.start },
+                end: { ...jumper.end },
+              })),
+            }
+          : {}),
       })
 
       connectedKeys = getConnectedPointKeysForConnection(
