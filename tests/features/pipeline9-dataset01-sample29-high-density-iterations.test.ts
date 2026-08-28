@@ -19,7 +19,7 @@ test("Pipeline9 routes dataset01 sample29 with bounded high-density work", async
 
   expect(solver.solved).toBeTrue()
   expect(solver.failed).toBeFalse()
-  expect(solver.highDensityRouteSolver?.iterations).toBe(1_667)
+  expect(solver.highDensityRouteSolver?.iterations).toBe(1_276)
 
   const { errors } = evaluateRelaxedDrc({
     inputSrj: scenario,

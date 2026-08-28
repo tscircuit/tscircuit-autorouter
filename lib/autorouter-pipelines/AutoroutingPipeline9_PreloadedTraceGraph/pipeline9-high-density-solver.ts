@@ -123,6 +123,7 @@ const routeOverlapsNode = (
     }
     const minZ = Math.min(start.z, end.z)
     const maxZ = Math.max(start.z, end.z)
+    // Without preloaded copper, nodes can safely share one coordinator.
     if (
       [...availableZ].some((z) => z >= minZ && z <= maxZ) &&
       pointRadiusOverlapsNode(
@@ -344,6 +345,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
   readonly preloadedTraceMutationMasks = new Map<string, boolean[]>()
 
   activeRegularSolver: HighDensitySolver | null = null
+  activeRegularNodes: NodeWithPortPoints[] = []
   activeB01Solver: HighDensitySolverB01 | null = null
   activeFallbackSolver: Pipeline9RegionalFallbackSolver | null = null
   activeFallbackFixedRouteSections = new Map<string, FixedRouteSection>()
@@ -391,6 +393,13 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       regionalForceImproveCandidateRejectionCount: 0,
       regionalRepairCandidateRejectionCount: 0,
     }
+
+    if (
+      this.fixedHdRoutes.length === 0 &&
+      this.unsolvedNodePortPoints.length > 1
+    ) {
+      this.startRegularSolver(this.unsolvedNodePortPoints.splice(0))
+    }
   }
 
   override getSolverName(): string {
@@ -418,6 +427,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     this.stats.solvedNodeCount = Number(this.stats.solvedNodeCount ?? 0) + 1
     this.activeB01Solver = null
     this.activeRegularSolver = null
+    this.activeRegularNodes = []
     this.activeFallbackSolver = null
     this.activeFallbackFixedRouteSections.clear()
     this.activeFallbackFixedObstacleRoutes = []
@@ -426,10 +436,13 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     this.activeNode = null
   }
 
-  private startRegularSolver(node: NodeWithPortPoints): void {
-    this.activeNode = node
+  private startRegularSolver(nodes: NodeWithPortPoints[]): void {
+    if (nodes.length === 1) this.activeNode = nodes[0]!
+    this.activeRegularNodes = nodes
     this.activeRegularSolver = new HighDensitySolver({
-      nodePortPoints: [normalizeNodeRootConnectionNames(node, this.connMap)],
+      nodePortPoints: nodes.map((node) =>
+        normalizeNodeRootConnectionNames(node, this.connMap),
+      ),
       colorMap: this.colorMap,
       connMap: this.connMap,
       viaDiameter: this.viaDiameter,
@@ -440,11 +453,53 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       obstacles: this.obstacles,
       layerCount: this.layerCount,
       useGrowShrinkHighDensityIntraNodeSolver: true,
-      preserveTerminalPcbPortIds: false,
+      preserveTerminalPcbPortIds:
+        nodes.length > 1 && this.preserveTerminalPcbPortIds,
       growShrinkFallbackToInvalidGeometryOnFailure: false,
       captureSearchDebug: false,
     })
-    this.stats.regularNodeCount = Number(this.stats.regularNodeCount ?? 0) + 1
+    this.stats.regularNodeCount =
+      Number(this.stats.regularNodeCount ?? 0) + nodes.length
+  }
+
+  private finishBatchRegularSolver(): void {
+    if (!this.activeRegularSolver) return
+
+    const activeRegularPortPoints = this.activeRegularNodes.flatMap(
+      (node) => node.portPoints,
+    )
+    for (const route of this.activeRegularSolver.routes) {
+      const sourcePortPoint = activeRegularPortPoints.find(
+        (portPoint) => portPoint.connectionName === route.connectionName,
+      )
+      if (!sourcePortPoint) {
+        throw new Error(
+          `Pipeline9 lost connection "${route.connectionName}" while collecting batched routes`,
+        )
+      }
+      let rootConnectionName = route.rootConnectionName
+      if (sourcePortPoint.rootConnectionName !== undefined) {
+        rootConnectionName = sourcePortPoint.rootConnectionName
+      }
+      this.routes.push({ ...route, rootConnectionName })
+    }
+    const failedNodeIds = new Set(
+      this.activeRegularSolver.failedSolvers.map(
+        (solver) => solver.nodeWithPortPoints.capacityMeshNodeId,
+      ),
+    )
+    this.stats.solvedNodeCount =
+      Number(this.stats.solvedNodeCount ?? 0) +
+      this.activeRegularNodes.length -
+      failedNodeIds.size
+    // Preserve successful routes and retry only failed nodes individually.
+    this.unsolvedNodePortPoints.push(
+      ...this.activeRegularNodes.filter((node) =>
+        failedNodeIds.has(node.capacityMeshNodeId),
+      ),
+    )
+    this.activeRegularSolver = null
+    this.activeRegularNodes = []
   }
 
   private startRegionalFallback(
@@ -863,6 +918,10 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     if (this.activeRegularSolver) {
       this.activeRegularSolver.step()
       if (this.activeRegularSolver.failed) {
+        if (this.activeRegularNodes.length > 1) {
+          this.finishBatchRegularSolver()
+          return
+        }
         this.activeFallbackReason = `regular high-density routing failed: ${this.activeRegularSolver.error ?? "unknown error"}`
         this.activeRegularSolver = null
         if (!this.enableRegionalFallback) {
@@ -875,6 +934,11 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
         return
       }
       if (!this.activeRegularSolver.solved) return
+
+      if (this.activeRegularNodes.length > 1) {
+        this.finishBatchRegularSolver()
+        return
+      }
 
       this.finishActiveNode(this.activeRegularSolver.routes)
       return
@@ -917,7 +981,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     this.stats.fixedObstacleUses =
       Number(this.stats.fixedObstacleUses ?? 0) + fixedObstacles.length
     if (fixedObstacles.length === 0) {
-      this.startRegularSolver(node)
+      this.startRegularSolver([node])
       return
     }
 
