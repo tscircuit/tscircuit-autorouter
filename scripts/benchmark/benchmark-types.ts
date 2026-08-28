@@ -106,6 +106,7 @@ export type RoutingBenchmarkMetrics = {
   remoteBatchItemsStarted?: number
   remoteBatchBodyBytesStarted?: number
   remoteBatchMaxBodyBytes?: number
+  remoteBatchCacheMisses?: number
   remoteSingleRequestsStarted?: number
   remoteBatchInvalidLines?: number
   remoteBatchUnknownRequestIds?: number

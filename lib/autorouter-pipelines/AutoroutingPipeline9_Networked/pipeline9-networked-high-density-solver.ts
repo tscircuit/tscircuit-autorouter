@@ -11,6 +11,7 @@ import { projectPipeline9OrdinaryHighDensityInput } from "../AutoroutingPipeline
 import type {
   Pipeline9NetworkedHighDensityNodeInput,
   Pipeline9NetworkedSolveBatchItem,
+  Pipeline9NetworkedSolveBatchCacheMiss,
   Pipeline9NetworkedSolveBatchRequest,
   Pipeline9NetworkedSolveBatchResult,
   Pipeline9NetworkedSolveRequest,
@@ -308,6 +309,7 @@ export class Pipeline9NetworkedHighDensitySolver extends Pipeline9HighDensitySol
     RemoteNodeResult
   >()
   private readonly logicallyTimedOutNodes = new Set<NodeWithPortPoints>()
+  private readonly remoteSingleSolveNodes = new Set<NodeWithPortPoints>()
 
   constructor({
     autorouterVersion,
@@ -382,6 +384,7 @@ export class Pipeline9NetworkedHighDensitySolver extends Pipeline9HighDensitySol
       remoteBatchItemsStarted: 0,
       remoteBatchBodyBytesStarted: 0,
       remoteBatchMaxBodyBytes: 0,
+      remoteBatchCacheMisses: 0,
       remoteSingleRequestsStarted: 0,
       remoteBatchInvalidLines: 0,
       remoteBatchUnknownRequestIds: 0,
@@ -616,6 +619,32 @@ export class Pipeline9NetworkedHighDensitySolver extends Pipeline9HighDensitySol
     }
   }
 
+  private parseBatchCacheMiss(
+    value: Record<string, unknown>,
+  ): Pipeline9NetworkedSolveBatchCacheMiss | null {
+    if (value.ok !== false || value.code !== "CACHE_MISS") return null
+    if (value.autorouterVersion !== this.autorouterVersion) {
+      throw new Pipeline9NetworkedRequestError(
+        "version_mismatch",
+        `hd-cache2 returned autorouter version ${String(value.autorouterVersion)}, expected ${this.autorouterVersion}`,
+      )
+    }
+    if (typeof value.message !== "string") {
+      throw new Pipeline9NetworkedRequestError(
+        "invalid_response",
+        "hd-cache2 returned an invalid cache miss response",
+      )
+    }
+    return value as Pipeline9NetworkedSolveBatchCacheMiss
+  }
+
+  private launchSingleSolve(item: PreparedBatchItem): void {
+    if (this.remoteSingleSolveNodes.has(item.node)) return
+    this.remoteSingleSolveNodes.add(item.node)
+    this.stats.remoteSingleRequestsStarted += 1
+    void this.solveNodeRemotely(item.node, item.input)
+  }
+
   private handleBatchResponseLine(
     line: string,
     itemsByRequestId: ReadonlyMap<string, PreparedBatchItem>,
@@ -636,12 +665,13 @@ export class Pipeline9NetworkedHighDensitySolver extends Pipeline9HighDensitySol
       this.stats.remoteBatchInvalidLines += 1
       return
     }
-    if (!value || typeof value !== "object") {
+    if (!value || typeof value !== "object" || Array.isArray(value)) {
       this.stats.remoteBatchInvalidLines += 1
       return
     }
 
-    const requestId = (value as Record<string, unknown>).requestId
+    const responseValue = value as Record<string, unknown>
+    const requestId = responseValue.requestId
     if (typeof requestId !== "string") {
       this.stats.remoteBatchInvalidLines += 1
       return
@@ -658,7 +688,13 @@ export class Pipeline9NetworkedHighDensitySolver extends Pipeline9HighDensitySol
     responseRequestIds.add(requestId)
 
     try {
-      const response = this.parseSuccessfulResponse(value, item.input)
+      const cacheMiss = this.parseBatchCacheMiss(responseValue)
+      if (cacheMiss) {
+        this.stats.remoteBatchCacheMisses += 1
+        this.launchSingleSolve(item)
+        return
+      }
+      const response = this.parseSuccessfulResponse(responseValue, item.input)
       this.completeNodeWithRemoteResult(item.node, response)
     } catch (error) {
       const reason =
@@ -792,6 +828,7 @@ export class Pipeline9NetworkedHighDensitySolver extends Pipeline9HighDensitySol
             ? "transport_timeout"
             : "transport_error"
       for (const item of batch.items) {
+        if (this.remoteSingleSolveNodes.has(item.node)) continue
         this.completeNodeWithLocalFallback(
           item.node,
           getErrorMessage(error),
@@ -880,8 +917,7 @@ export class Pipeline9NetworkedHighDensitySolver extends Pipeline9HighDensitySol
       void this.solveBatchRemotely(batch)
     }
     for (const item of singleItems) {
-      this.stats.remoteSingleRequestsStarted += 1
-      void this.solveNodeRemotely(item.node, item.input)
+      this.launchSingleSolve(item)
     }
   }
 

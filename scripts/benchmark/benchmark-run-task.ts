@@ -345,6 +345,7 @@ const getRoutingBenchmarkMetrics = (
     remoteBatchItemsStarted: getCounter("remoteBatchItemsStarted"),
     remoteBatchBodyBytesStarted: getCounter("remoteBatchBodyBytesStarted"),
     remoteBatchMaxBodyBytes: getCounter("remoteBatchMaxBodyBytes"),
+    remoteBatchCacheMisses: getCounter("remoteBatchCacheMisses"),
     remoteSingleRequestsStarted: getCounter("remoteSingleRequestsStarted"),
     remoteBatchInvalidLines: getCounter("remoteBatchInvalidLines"),
     remoteBatchUnknownRequestIds: getCounter("remoteBatchUnknownRequestIds"),

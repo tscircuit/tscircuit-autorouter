@@ -61,7 +61,15 @@ export type Pipeline9NetworkedSolveResponse =
       message: string
     }
 
-/** One independently consumable NDJSON line returned by POST /solve-batch. */
-export type Pipeline9NetworkedSolveBatchResult = {
+export type Pipeline9NetworkedSolveBatchCacheMiss = {
   requestId: string
-} & Pipeline9NetworkedSolveResponse
+  ok: false
+  autorouterVersion: string
+  code: "CACHE_MISS"
+  message: string
+}
+
+/** One independently consumable NDJSON line returned by POST /solve-batch. */
+export type Pipeline9NetworkedSolveBatchResult =
+  | ({ requestId: string } & Pipeline9NetworkedSolveResponse)
+  | Pipeline9NetworkedSolveBatchCacheMiss

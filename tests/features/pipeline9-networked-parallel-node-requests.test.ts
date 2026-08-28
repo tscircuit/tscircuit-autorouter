@@ -88,5 +88,6 @@ test("Pipeline9 networked launches every node request in parallel and preserves 
   expect(solver.stats.remoteCacheHits).toBe(2)
   expect(solver.stats.remoteBatchRequestsStarted).toBe(1)
   expect(solver.stats.remoteBatchItemsStarted).toBe(2)
+  expect(solver.stats.remoteBatchCacheMisses).toBe(0)
   expect(solver.stats.remoteSingleRequestsStarted).toBe(0)
 })

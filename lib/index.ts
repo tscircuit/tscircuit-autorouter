@@ -41,6 +41,7 @@ export type {
   Pipeline9NetworkedCacheSource,
   Pipeline9NetworkedHighDensityNodeInput,
   Pipeline9NetworkedHighDensityNodeOutput,
+  Pipeline9NetworkedSolveBatchCacheMiss,
   Pipeline9NetworkedSolveBatchItem,
   Pipeline9NetworkedSolveBatchRequest,
   Pipeline9NetworkedSolveBatchResult,
