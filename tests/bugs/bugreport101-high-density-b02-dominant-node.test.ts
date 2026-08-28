@@ -68,7 +68,9 @@ test("bugreport101 HighDensitySolverB02 repairs the dominant high-density node",
     pairs
       .flat()
       .map((portPoint) => portPoint.portPointId)
-      .filter((portPointId): portPointId is string => portPointId !== undefined),
+      .filter(
+        (portPointId): portPointId is string => portPointId !== undefined,
+      ),
   )
 
   expect(first.routes).toHaveLength(11)

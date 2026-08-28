@@ -39,9 +39,7 @@ export type HighDensitySolverB02IntraNodeAdapterParams = {
 
 const EPSILON = 1e-8
 
-const createPreparedB02Input = (
-  node: NodeWithPortPoints,
-): PreparedB02Input => {
+const createPreparedB02Input = (node: NodeWithPortPoints): PreparedB02Input => {
   const originalPairs = node.portPointsInPairs ?? []
   const preparedPairs: PreparedPair[] = []
   const preparedPortPoints: B02PortPoint[] = []
@@ -200,9 +198,7 @@ export class HighDensitySolverB02IntraNodeAdapter extends BaseSolver {
 
   override _step(): void {
     if (
-      !HighDensitySolverB02IntraNodeAdapter.isApplicable(
-        this.constructorParams,
-      )
+      !HighDensitySolverB02IntraNodeAdapter.isApplicable(this.constructorParams)
     ) {
       this.fail("HighDensitySolverB02 is not structurally applicable")
       return
@@ -283,9 +279,8 @@ export class HighDensitySolverB02IntraNodeAdapter extends BaseSolver {
       }
       const isReversed =
         route.route[0]?.portPointId === preparedPair.endPortPointId
-      const routePoints = (isReversed
-        ? [...route.route].reverse()
-        : [...route.route]
+      const routePoints = (
+        isReversed ? [...route.route].reverse() : [...route.route]
       ).map((point) => ({ ...point }))
       const firstPoint = routePoints[0]
       const lastPoint = routePoints.at(-1)
