@@ -1,8 +1,7 @@
 import { expect, test } from "bun:test"
 import type { AnyCircuitElement } from "circuit-json"
-import completedBoard from "../../fixtures/repro/rp2350-complete-board-drc/rp2350-completed-board.circuit.json" with {
-  type: "json",
-}
+import { readFileSync } from "node:fs"
+import { gunzipSync } from "node:zlib"
 
 type CapturedDrcError = AnyCircuitElement & {
   type: string
@@ -16,8 +15,21 @@ const drcErrorTypes = new Set([
   "pcb_pad_pad_clearance_error",
 ])
 
+const compressedBoard = readFileSync(
+  new URL("./assets/rp2350-completed-board.circuit.json.gz", import.meta.url),
+)
+const completedBoard = JSON.parse(
+  gunzipSync(
+    new Uint8Array(
+      compressedBoard.buffer as ArrayBuffer,
+      compressedBoard.byteOffset,
+      compressedBoard.byteLength,
+    ),
+  ).toString("utf8"),
+) as AnyCircuitElement[]
+
 test("completed RP2350 board records the 13 routed DRC errors", (): void => {
-  const drcErrors = (completedBoard as AnyCircuitElement[]).filter(
+  const drcErrors = completedBoard.filter(
     (element): element is CapturedDrcError =>
       drcErrorTypes.has(element.type) &&
       "message" in element &&

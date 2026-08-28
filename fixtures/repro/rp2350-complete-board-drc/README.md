@@ -26,8 +26,8 @@ contact between the V3V3 C15/C18 route and a GPIO10 breakout via.
 22 connections, 123 obstacles, 61 preloaded fanout traces, and four layers.
 The adjacent Cosmos fixture opens it in the interactive Pipeline9 debugger.
 
-`rp2350-completed-board.circuit.json` preserves the complete routed board and
-its 13 generated DRC diagnostics. The active test verifies that exact error
-breakdown. The skipped routing test records the desired solver outcome for the
-normal core phase; enable it while improving this case because the captured
-route takes about ten minutes.
+`tests/repro/assets/rp2350-completed-board.circuit.json.gz` losslessly preserves
+the complete routed board and its 13 generated DRC diagnostics. The active test
+verifies that exact error breakdown. The skipped routing test records the
+desired solver outcome for the normal core phase; enable it while improving
+this case because the captured route takes about ten minutes.
