@@ -153,14 +153,12 @@ export class NetToPointPairsSolver2_OffBoardConnection extends NetToPointPairsSo
       return
     }
 
-    const {
-      edges: minimumSpanningTreeEdges,
-      remainingRootConnectionNames,
-    } = getDifferentialPairAwareMst(currentConnection, {
-      originalConnections: this.connectionsBeforeMerging,
-      differentialPairs: this.ogSrj.differentialPairs ?? [],
-      extraEdges: zeroWeightEdges,
-    })
+    const { edges: minimumSpanningTreeEdges, remainingRootConnectionNames } =
+      getDifferentialPairAwareMst(currentConnection, {
+        originalConnections: this.connectionsBeforeMerging,
+        differentialPairs: this.ogSrj.differentialPairs ?? [],
+        extraEdges: zeroWeightEdges,
+      })
 
     let mstEdgeIndex = 0
     for (const mstEdge of minimumSpanningTreeEdges) {

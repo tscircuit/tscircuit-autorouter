@@ -53,10 +53,7 @@ export const getDifferentialPairAwareMst = (
     let requiredConnectionsFromPoint =
       requiredConnectionByPointPair.get(fromPointKey)
     if (!requiredConnectionsFromPoint) {
-      requiredConnectionsFromPoint = new Map<
-        PointKey,
-        SimpleRouteConnection
-      >()
+      requiredConnectionsFromPoint = new Map<PointKey, SimpleRouteConnection>()
       requiredConnectionByPointPair.set(
         fromPointKey,
         requiredConnectionsFromPoint,
@@ -67,14 +64,8 @@ export const getDifferentialPairAwareMst = (
     let requiredConnectionsToPoint =
       requiredConnectionByPointPair.get(toPointKey)
     if (!requiredConnectionsToPoint) {
-      requiredConnectionsToPoint = new Map<
-        PointKey,
-        SimpleRouteConnection
-      >()
-      requiredConnectionByPointPair.set(
-        toPointKey,
-        requiredConnectionsToPoint,
-      )
+      requiredConnectionsToPoint = new Map<PointKey, SimpleRouteConnection>()
+      requiredConnectionByPointPair.set(toPointKey, requiredConnectionsToPoint)
     }
     requiredConnectionsToPoint.set(fromPointKey, requiredConnection)
     return {
@@ -88,9 +79,7 @@ export const getDifferentialPairAwareMst = (
     { extraEdges: [...options.extraEdges, ...requiredEdges] },
   )
   const requiredConnectionNames = new Set(
-    requiredConnections.map(
-      (requiredConnection) => requiredConnection.name,
-    ),
+    requiredConnections.map((requiredConnection) => requiredConnection.name),
   )
 
   return {
@@ -103,8 +92,7 @@ export const getDifferentialPairAwareMst = (
       }
     }),
     remainingRootConnectionNames: mergedRootConnectionNames.filter(
-      (rootConnectionName) =>
-        !requiredConnectionNames.has(rootConnectionName),
+      (rootConnectionName) => !requiredConnectionNames.has(rootConnectionName),
     ),
   }
 }

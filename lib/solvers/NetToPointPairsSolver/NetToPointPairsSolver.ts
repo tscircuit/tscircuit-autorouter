@@ -101,12 +101,14 @@ export class NetToPointPairsSolver extends BaseSolver {
       return
     }
 
-    const { edges, remainingRootConnectionNames } =
-      getDifferentialPairAwareMst(connection, {
+    const { edges, remainingRootConnectionNames } = getDifferentialPairAwareMst(
+      connection,
+      {
         originalConnections: this.connectionsBeforeMerging,
         differentialPairs: this.ogSrj.differentialPairs ?? [],
         extraEdges: zeroWeightEdges,
-      })
+      },
+    )
 
     let mstIdx = 0
     for (const edge of edges) {
