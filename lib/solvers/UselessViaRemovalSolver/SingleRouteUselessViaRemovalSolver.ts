@@ -62,6 +62,34 @@ export class SingleRouteUselessViaRemovalSolver extends BaseSolver {
   multilayerSectionsCollapsed = 0
   obstacleDetourCandidatesValidated = 0
 
+  private readonly conflictingRoutesByQuery = new Map<
+    string,
+    ReturnType<HighDensityRouteSpatialIndex["getConflictingRoutesForSegment"]>
+  >()
+
+  /**
+   * The parent updates its route index only after this single-route solve ends,
+   * so identical geometry queries can safely share their conflict result.
+   */
+  private readonly memoizedHdRouteSHI: Pick<
+    HighDensityRouteSpatialIndex,
+    "getConflictingRoutesForSegment"
+  > = {
+    getConflictingRoutesForSegment: (segmentStart, segmentEnd, margin) => {
+      const queryKey = `${segmentStart.x}:${segmentStart.y}:${segmentStart.z}|${segmentEnd.x}:${segmentEnd.y}:${segmentEnd.z}|${margin}`
+      const cachedConflicts = this.conflictingRoutesByQuery.get(queryKey)
+      if (cachedConflicts !== undefined) return cachedConflicts
+
+      const conflicts = this.hdRouteSHI.getConflictingRoutesForSegment(
+        segmentStart,
+        segmentEnd,
+        margin,
+      )
+      this.conflictingRoutesByQuery.set(queryKey, conflicts)
+      return conflicts
+    },
+  }
+
   constructor(params: {
     obstacleSHI: ObstacleSpatialHashIndex
     hdRouteSHI: HighDensityRouteSpatialIndex
@@ -271,7 +299,7 @@ export class SingleRouteUselessViaRemovalSolver extends BaseSolver {
             currentSection: candidateSection,
             targetZ: previousSection.z,
             route: this.unsimplifiedRoute,
-            hdRouteSHI: this.hdRouteSHI,
+            hdRouteSHI: this.memoizedHdRouteSHI,
             obstacleSHI: this.obstacleSHI,
             connMap: this.connMap,
             defaultTraceThickness: this.TRACE_THICKNESS,
@@ -372,7 +400,7 @@ export class SingleRouteUselessViaRemovalSolver extends BaseSolver {
     const validateObstacleDetourPath = createObstacleDetourPathValidator({
       targetZ: previousSection.z,
       route: this.unsimplifiedRoute,
-      hdRouteSHI: this.hdRouteSHI,
+      hdRouteSHI: this.memoizedHdRouteSHI,
       obstacleSHI: this.obstacleSHI,
       connMap: this.connMap,
       defaultTraceThickness: this.TRACE_THICKNESS,
@@ -491,7 +519,7 @@ export class SingleRouteUselessViaRemovalSolver extends BaseSolver {
           currentSection,
           targetZ: candidate.targetZ,
           route: this.unsimplifiedRoute,
-          hdRouteSHI: this.hdRouteSHI,
+          hdRouteSHI: this.memoizedHdRouteSHI,
           obstacleSHI: this.obstacleSHI,
           connMap: this.connMap,
           defaultTraceThickness: this.TRACE_THICKNESS,
@@ -591,7 +619,7 @@ export class SingleRouteUselessViaRemovalSolver extends BaseSolver {
             currentSection: firstSection,
             targetZ,
             route: this.unsimplifiedRoute,
-            hdRouteSHI: this.hdRouteSHI,
+            hdRouteSHI: this.memoizedHdRouteSHI,
             obstacleSHI: this.obstacleSHI,
             connMap: this.connMap,
             defaultTraceThickness: this.TRACE_THICKNESS,
@@ -641,7 +669,7 @@ export class SingleRouteUselessViaRemovalSolver extends BaseSolver {
               currentSection: lastSection,
               targetZ,
               route: this.unsimplifiedRoute,
-              hdRouteSHI: this.hdRouteSHI,
+              hdRouteSHI: this.memoizedHdRouteSHI,
               obstacleSHI: this.obstacleSHI,
               connMap: this.connMap,
               defaultTraceThickness: this.TRACE_THICKNESS,
@@ -687,7 +715,7 @@ export class SingleRouteUselessViaRemovalSolver extends BaseSolver {
         currentSection,
         targetZ,
         route: this.unsimplifiedRoute,
-        hdRouteSHI: this.hdRouteSHI,
+        hdRouteSHI: this.memoizedHdRouteSHI,
         obstacleSHI: this.obstacleSHI,
         connMap: this.connMap,
         defaultTraceThickness: this.TRACE_THICKNESS,

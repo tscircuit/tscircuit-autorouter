@@ -30,6 +30,7 @@ export default () => {
           ...opts,
           cacheProvider: null,
           effort: 1,
+          experimentalHighDensitySearchOptimization: true,
         })
       }
     />

@@ -96,6 +96,8 @@ export interface HgPortPointPathingSolverParams {
   inputSolvedRoutes?: SolvedRoutesHg[]
   layerCount: number
   effort: number
+  /** Number of tiny-hypergraph pipeline steps performed per outer solver step. */
+  tinyPipelineStepsPerIteration?: number
   preserveTerminalPcbPortIds?: boolean
   minViaPadDiameter?: number
   flags: {

@@ -21,12 +21,14 @@ import {
   SupervisedSolver,
 } from "../HyperParameterSupervisorSolver"
 import { repairDisconnectedSameRootPortPoints } from "./repairDisconnectedSameRootPortPoints"
+import { getConnectionPortPointPairs } from "lib/utils/getConnectionPortPointPairs"
 
 // Match the existing six-ordering portfolio used by the other intra-node
 // solver. The first ordering remains in the normal portfolio; the remaining
 // orderings are introduced only after that portfolio spends its dynamically
 // derived exploration budget or exhausts all of its candidates.
 const ORDERING_SHUFFLE_SEEDS = Array.from({ length: 6 }, (_, seed) => seed)
+const SYNTHETIC_PORT_BOUNDS_TOLERANCE = 1e-6
 
 /** Coordinates a fitness-scheduled portfolio of intra-node routing solvers. */
 export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolver<
@@ -48,6 +50,10 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
   connMap?: ConnectivityMap
   effort: number
   adaptiveSearchExpanded = false
+  readonly maxSupervisorIterations?: number
+  readonly prioritizeSolvedSegmentProgressBeforeAdaptiveExpansion: boolean
+  readonly includeSyntheticPortBoundsForExternalSolvers: boolean
+  private nodeSegmentCount?: number
 
   private getSolvedSegmentCount(solver: unknown): number | null {
     const solvedConnectionsMap = (solver as any).solvedConnectionsMap
@@ -61,15 +67,40 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
   }
 
   private getNodeSegmentCount(): number {
-    return Math.max(
-      1,
-      this.nodeWithPortPoints.portPointsInPairs?.length ??
-        new Set(
-          this.nodeWithPortPoints.portPoints.map(
-            (portPoint) => portPoint.connectionName,
-          ),
-        ).size,
-    )
+    if (this.nodeSegmentCount !== undefined) return this.nodeSegmentCount
+
+    if (!this.prioritizeSolvedSegmentProgressBeforeAdaptiveExpansion) {
+      this.nodeSegmentCount = Math.max(
+        1,
+        this.nodeWithPortPoints.portPointsInPairs?.length ??
+          new Set(
+            this.nodeWithPortPoints.portPoints.map(
+              (portPoint) => portPoint.connectionName,
+            ),
+          ).size,
+      )
+      return this.nodeSegmentCount
+    }
+
+    const portPointsByConnectionName = new Map<
+      string,
+      NodeWithPortPoints["portPoints"]
+    >()
+    for (const portPoint of this.nodeWithPortPoints.portPoints) {
+      const points = portPointsByConnectionName.get(portPoint.connectionName)
+      if (points) {
+        points.push(portPoint)
+      } else {
+        portPointsByConnectionName.set(portPoint.connectionName, [portPoint])
+      }
+    }
+
+    let segmentCount = 0
+    for (const portPoints of portPointsByConnectionName.values()) {
+      segmentCount += getConnectionPortPointPairs(portPoints).length
+    }
+    this.nodeSegmentCount = Math.max(1, segmentCount)
+    return this.nodeSegmentCount
   }
 
   private getCandidateProgress(solver: { progress: number }): number {
@@ -103,6 +134,9 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
   constructor(
     opts: ConstructorParameters<typeof CachedIntraNodeRouteSolver>[0] & {
       effort?: number
+      maxSupervisorIterations?: number
+      prioritizeSolvedSegmentProgressBeforeAdaptiveExpansion?: boolean
+      includeSyntheticPortBoundsForExternalSolvers?: boolean
     },
   ) {
     super()
@@ -110,6 +144,11 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     this.connMap = opts.connMap
     this.constructorParams = opts
     this.effort = opts.effort ?? 1
+    this.maxSupervisorIterations = opts.maxSupervisorIterations
+    this.prioritizeSolvedSegmentProgressBeforeAdaptiveExpansion =
+      opts.prioritizeSolvedSegmentProgressBeforeAdaptiveExpansion ?? false
+    this.includeSyntheticPortBoundsForExternalSolvers =
+      opts.includeSyntheticPortBoundsForExternalSolvers ?? false
     this.MAX_ITERATIONS = 20_000_000 * this.effort
     this.GREEDY_MULTIPLIER = 5
     this.MIN_SUBSTEPS = 100
@@ -296,10 +335,17 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
 
     // Keep one supervisor step available to observe that the current
     // portfolio is exhausted and expand it before BaseSolver can fail.
-    this.MAX_ITERATIONS = Math.max(
+    const dynamicIterationLimit = Math.max(
       this.iterations + 1,
       this.iterations + remainingSupervisorIterations,
     )
+    this.MAX_ITERATIONS =
+      this.maxSupervisorIterations === undefined
+        ? dynamicIterationLimit
+        : Math.min(
+            dynamicIterationLimit,
+            Math.max(0, this.maxSupervisorIterations - 1),
+          )
     this.stats.dynamicSupervisorIterationLimit = this.MAX_ITERATIONS
   }
 
@@ -360,7 +406,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
 
     if (
       !this.adaptiveSearchExpanded &&
-      !this.getSupervisedSolverWithBestFitness()
+      !this.supervisedSolvers!.some(({ solver }) => !solver.failed)
     ) {
       this.expandAdaptiveSearch()
     }
@@ -393,10 +439,60 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
   }
 
   computeH(solver: IntraNodeRouteSolver) {
-    if (this.adaptiveSearchExpanded) {
+    if (
+      this.adaptiveSearchExpanded ||
+      this.prioritizeSolvedSegmentProgressBeforeAdaptiveExpansion
+    ) {
       return 1 - this.getCandidateProgress(solver)
     }
     return 1 - (solver.progress || 0)
+  }
+
+  private getNodeWithSyntheticPortInclusiveBounds(): NodeWithPortPoints {
+    const node = this.nodeWithPortPoints
+    const bounds = {
+      minX: node.center.x - node.width / 2,
+      maxX: node.center.x + node.width / 2,
+      minY: node.center.y - node.height / 2,
+      maxY: node.center.y + node.height / 2,
+    }
+    let boundsChanged = false
+
+    for (const portPoint of node.portPoints) {
+      // Duplicate-congestion routing may deliberately offset synthetic ports
+      // just outside the source node. Ordinary boundary noise must not change
+      // the A01/A03 grid origin for otherwise unrelated nodes.
+      if (portPoint.duplicatedFromPortId === undefined) continue
+
+      if (portPoint.x < bounds.minX - SYNTHETIC_PORT_BOUNDS_TOLERANCE) {
+        bounds.minX = portPoint.x
+        boundsChanged = true
+      }
+      if (portPoint.x > bounds.maxX + SYNTHETIC_PORT_BOUNDS_TOLERANCE) {
+        bounds.maxX = portPoint.x
+        boundsChanged = true
+      }
+      if (portPoint.y < bounds.minY - SYNTHETIC_PORT_BOUNDS_TOLERANCE) {
+        bounds.minY = portPoint.y
+        boundsChanged = true
+      }
+      if (portPoint.y > bounds.maxY + SYNTHETIC_PORT_BOUNDS_TOLERANCE) {
+        bounds.maxY = portPoint.y
+        boundsChanged = true
+      }
+    }
+
+    if (!boundsChanged) return node
+
+    return {
+      ...node,
+      center: {
+        x: (bounds.minX + bounds.maxX) / 2,
+        y: (bounds.minY + bounds.maxY) / 2,
+      },
+      width: bounds.maxX - bounds.minX,
+      height: bounds.maxY - bounds.minY,
+    }
   }
 
   generateSolver(hyperParameters: any): IntraNodeRouteSolver {
@@ -428,7 +524,9 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
 
     if (hyperParameters.HIGH_DENSITY_A01) {
       const solver = new HighDensitySolverA01({
-        nodeWithPortPoints: this.nodeWithPortPoints,
+        nodeWithPortPoints: this.includeSyntheticPortBoundsForExternalSolvers
+          ? this.getNodeWithSyntheticPortInclusiveBounds()
+          : this.nodeWithPortPoints,
         cellSizeMm: 0.1,
         viaDiameter: this.constructorParams.viaDiameter ?? 0.3,
         viaMinDistFromBorder: (this.constructorParams.viaDiameter ?? 0.3) / 2,
@@ -443,7 +541,9 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     }
     if (hyperParameters.HIGH_DENSITY_A03) {
       const solver = new HighDensityA03Solver({
-        nodeWithPortPoints: this.nodeWithPortPoints,
+        nodeWithPortPoints: this.includeSyntheticPortBoundsForExternalSolvers
+          ? this.getNodeWithSyntheticPortInclusiveBounds()
+          : this.nodeWithPortPoints,
         highResolutionCellSize: 0.1,
         highResolutionCellThickness: 8,
         lowResolutionCellSize: 0.4,

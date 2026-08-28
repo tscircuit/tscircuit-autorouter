@@ -4,6 +4,8 @@ export type PortPoint = {
   connectionName: string
   rootConnectionName?: string
   portPointId?: string
+  /** Explicit origin for a congestion-routing duplicate port. */
+  duplicatedFromPortId?: string
   pcb_port_id?: string
   x: number
   y: number

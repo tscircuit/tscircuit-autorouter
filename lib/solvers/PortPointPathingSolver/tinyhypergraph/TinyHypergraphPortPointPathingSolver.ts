@@ -1024,6 +1024,7 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
 
 export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
   private tinyPipelineSolver: TinyHyperGraphSectionPipelineWithTerminalNetIds
+  private readonly tinyPipelineStepsPerIteration: number
   private primaryTinyPipelineSolver?: TinyHyperGraphSectionPipelineWithTerminalNetIds
   private alternativeTinyPipelineSolver?: TinyHyperGraphSectionPipelineWithTerminalNetIds
   private alternativeTinyPipelineInput?: TinyHyperGraphSectionPipelineInput
@@ -1046,6 +1047,17 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
 
   constructor(private params: HgPortPointPathingSolverParams) {
     super()
+    const requestedPipelineSteps = params.tinyPipelineStepsPerIteration ?? 1
+    if (
+      !Number.isFinite(requestedPipelineSteps) ||
+      !Number.isInteger(requestedPipelineSteps) ||
+      requestedPipelineSteps <= 0
+    ) {
+      throw new Error(
+        "tinyPipelineStepsPerIteration must be a finite positive integer",
+      )
+    }
+    this.tinyPipelineStepsPerIteration = requestedPipelineSteps
     const tinyRouteConnections = getTinyRouteConnectionsOrThrow(
       params.connections,
     )
@@ -1414,7 +1426,16 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
   }
 
   _step() {
-    this.tinyPipelineSolver.step()
+    for (
+      let stepIndex = 0;
+      stepIndex < this.tinyPipelineStepsPerIteration;
+      stepIndex++
+    ) {
+      this.tinyPipelineSolver.step()
+      if (this.tinyPipelineSolver.solved || this.tinyPipelineSolver.failed) {
+        break
+      }
+    }
 
     if (
       this.candidatePortfolioPhase === "primary" &&
@@ -1591,6 +1612,10 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       z: solvedTinySolver.topology.portZ[portId],
       connectionName,
       rootConnectionName,
+      duplicatedFromPortId:
+        typeof portMetadata?.duplicatedFromPortId === "string"
+          ? portMetadata.duplicatedFromPortId
+          : undefined,
       ...(this.params.preserveTerminalPcbPortIds &&
       typeof portMetadata?.pcb_port_id === "string"
         ? { pcb_port_id: portMetadata.pcb_port_id }

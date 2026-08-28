@@ -86,6 +86,11 @@ interface CapacityMeshSolverOptions {
   minNodeArea?: number
   visualizationTraceColorMode?: TraceColorMode
   powerTraceExpansion?: PowerTraceExpanderOptions
+  /**
+   * Enables bounded, output-changing high-density repair search. Enlarged
+   * solutions may be retained as unvalidated seeds for later DRC repair.
+   */
+  experimentalHighDensitySearchOptimization?: boolean
 }
 export type AutoroutingPipelineSolverOptions = CapacityMeshSolverOptions
 
@@ -483,6 +488,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
             connections,
             layerCount: cms.srj.layerCount,
             effort: cms.effort,
+            tinyPipelineStepsPerIteration: 1_000,
             preserveTerminalPcbPortIds: true,
             minViaPadDiameter: cms.viaDiameter,
             flags: {
@@ -536,6 +542,8 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
         cms.portPointPathingSolver?.getOutput().nodesWithPortPoints ?? []
       const nodePortPointsSource =
         uniformNodes.length > 0 ? uniformNodes : fallbackNodes
+      const useExperimentalHighDensitySearchOptimization =
+        cms.opts.experimentalHighDensitySearchOptimization === true
 
       cms.highDensityNodePortPoints = structuredClone(nodePortPointsSource)
 
@@ -559,6 +567,18 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
           obstacles: cms.srj.obstacles,
           layerCount: cms.srj.layerCount,
           useGrowShrinkHighDensityIntraNodeSolver: true,
+          growShrinkMaxInitialScaleSupervisorIterations:
+            useExperimentalHighDensitySearchOptimization ? 50_000 : undefined,
+          growShrinkMaxTotalGrownScaleSupervisorIterations:
+            useExperimentalHighDensitySearchOptimization ? 25_000 : undefined,
+          // The enlarged solve is a fast seed; later DRC stages evaluate and
+          // attempt to repair its coordinate-only post-shrink geometry.
+          growShrinkTryLargestScaleAsRepairSeedAfterInitialFailure:
+            useExperimentalHighDensitySearchOptimization,
+          prioritizeSolvedSegmentProgressBeforeAdaptiveExpansion:
+            useExperimentalHighDensitySearchOptimization,
+          includeSyntheticPortBoundsForExternalSolvers:
+            useExperimentalHighDensitySearchOptimization,
           preserveTerminalPcbPortIds: true,
           growShrinkFallbackToInvalidGeometryOnFailure: true,
           captureSearchDebug: false,

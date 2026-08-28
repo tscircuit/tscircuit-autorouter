@@ -191,5 +191,12 @@ test("congestion duplicates preserve canonical preloaded assignments", () => {
       ),
     ),
   ).toEqual(new Set(["route-a", "route-b"]))
+  expect(
+    output.nodesWithPortPoints.some((outputNode) =>
+      outputNode.portPoints.some(
+        (portPoint) => typeof portPoint.duplicatedFromPortId === "string",
+      ),
+    ),
+  ).toBeTrue()
   expect(output.changedPreloadedTraceSections).toEqual([])
 })

@@ -12,9 +12,10 @@ import {
   hasImpossibleSameLayerCrossingGeometry,
 } from "./invalidSameLayerCrossingGeometry"
 
-type PortfolioSingleIntraNodeSolverParams = ConstructorParameters<
-  typeof PortfolioSingleIntraNodeSolver
->[0]
+type PortfolioSingleIntraNodeSolverParams = Omit<
+  ConstructorParameters<typeof PortfolioSingleIntraNodeSolver>[0],
+  "maxSupervisorIterations"
+>
 
 export const DEFAULT_MAX_GROWTH_ATTEMPTS = 3
 
@@ -22,7 +23,16 @@ export type GrowShrinkHighDensityIntraNodeSolverParams =
   PortfolioSingleIntraNodeSolverParams & {
     maxGrowthAttempts?: number
     maxInnerIterationsPerGrowthAttempt?: number
+    maxInitialScaleSupervisorIterations?: number
+    maxTotalGrownScaleSupervisorIterations?: number
+    /**
+     * Repair-pipeline optimization. Enlarged solutions shrink coordinates back
+     * to the physical node, but their post-shrink geometry is unvalidated
+     * unless a growShrinkSolutionValidator is supplied.
+     */
+    tryLargestScaleAsRepairSeedAfterInitialFailure?: boolean
     fallbackToInvalidGeometryOnFailure?: boolean
+    /** Runs after an enlarged solution is shrunk to physical coordinates. */
     growShrinkSolutionValidator?: (
       routes: HighDensityIntraNodeRoute[],
     ) => boolean
@@ -117,6 +127,9 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
   scaleFactor = 1
   growthAttempts = 0
   maxGrowthAttempts: number
+  scaleFactorSequence: number[]
+  readonly maxTotalGrownScaleSupervisorIterations?: number
+  grownScaleSupervisorIterationsUsed = 0
 
   constructor(params: GrowShrinkHighDensityIntraNodeSolverParams) {
     super()
@@ -124,6 +137,21 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
     this.nodeWithPortPoints = params.nodeWithPortPoints
     this.maxGrowthAttempts =
       params.maxGrowthAttempts ?? DEFAULT_MAX_GROWTH_ATTEMPTS
+    this.maxTotalGrownScaleSupervisorIterations =
+      params.maxTotalGrownScaleSupervisorIterations
+    const ascendingScaleFactors = Array.from(
+      { length: this.maxGrowthAttempts + 1 },
+      (_, attempt) => 2 ** attempt,
+    )
+    this.scaleFactorSequence =
+      params.tryLargestScaleAsRepairSeedAfterInitialFailure &&
+      ascendingScaleFactors.length > 1
+        ? [
+            ascendingScaleFactors[0]!,
+            ascendingScaleFactors[this.maxGrowthAttempts]!,
+            ...ascendingScaleFactors.slice(1, -1),
+          ]
+        : ascendingScaleFactors
     this.MAX_ITERATIONS =
       20_000_000 * (params.effort ?? 1) * (this.maxGrowthAttempts + 1)
 
@@ -154,19 +182,46 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
   }
 
   private createActiveSubSolver() {
-    const { growShrinkSolutionValidator: _, ...portfolioParams } =
-      this.constructorParams
+    const {
+      growShrinkSolutionValidator: _,
+      maxGrowthAttempts: _maxGrowthAttempts,
+      maxInnerIterationsPerGrowthAttempt,
+      maxInitialScaleSupervisorIterations,
+      maxTotalGrownScaleSupervisorIterations:
+        _maxTotalGrownScaleSupervisorIterations,
+      tryLargestScaleAsRepairSeedAfterInitialFailure:
+        _tryLargestScaleAsRepairSeedAfterInitialFailure,
+      fallbackToInvalidGeometryOnFailure: _fallbackToInvalidGeometryOnFailure,
+      ...portfolioParams
+    } = this.constructorParams
+    const initialScaleSupervisorLimit =
+      this.scaleFactor === 1 ? maxInitialScaleSupervisorIterations : undefined
+    const remainingGrownScaleSupervisorIterations =
+      this.scaleFactor > 1 &&
+      this.maxTotalGrownScaleSupervisorIterations !== undefined
+        ? Math.max(
+            0,
+            this.maxTotalGrownScaleSupervisorIterations -
+              this.grownScaleSupervisorIterationsUsed,
+          )
+        : undefined
+    const supervisorIterationLimits = [
+      maxInnerIterationsPerGrowthAttempt,
+      initialScaleSupervisorLimit,
+      remainingGrownScaleSupervisorIterations,
+    ].filter((limit): limit is number => limit !== undefined)
+    const maxSupervisorIterations =
+      supervisorIterationLimits.length > 0
+        ? Math.min(...supervisorIterationLimits)
+        : undefined
     this.activeSubSolver = new PortfolioSingleIntraNodeSolver({
       ...portfolioParams,
       nodeWithPortPoints: scaleNodeWithPortPoints(
         this.nodeWithPortPoints,
         this.scaleFactor,
       ),
+      maxSupervisorIterations,
     })
-    if (this.constructorParams.maxInnerIterationsPerGrowthAttempt) {
-      this.activeSubSolver.MAX_ITERATIONS =
-        this.constructorParams.maxInnerIterationsPerGrowthAttempt
-    }
   }
 
   private acceptSolution(solver: PortfolioSingleIntraNodeSolver): boolean {
@@ -180,15 +235,21 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
               1 / this.scaleFactor,
             ),
           )
-    if (
-      this.constructorParams.growShrinkSolutionValidator &&
-      !this.constructorParams.growShrinkSolutionValidator(solvedRoutes)
-    ) {
+    const solutionValidator = this.constructorParams.growShrinkSolutionValidator
+    const validatorAccepted = solutionValidator
+      ? solutionValidator(solvedRoutes)
+      : undefined
+    if (validatorAccepted === false) {
       solver.solved = false
       solver.failed = true
       solver.error = "High-density scale solution rejected by validator"
       return false
     }
+    this.stats.acceptedScaleFactor = this.scaleFactor
+    this.stats.postShrinkValidatorRan =
+      this.scaleFactor > 1 && solutionValidator !== undefined
+    this.stats.unvalidatedPostShrinkRepairSeed =
+      this.scaleFactor > 1 && solutionValidator === undefined
     this.winningSolver = solver
     this.solvedRoutes = solvedRoutes
     this.solved = true
@@ -222,11 +283,24 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
       return
     }
 
+    if (this.scaleFactor > 1) {
+      this.grownScaleSupervisorIterationsUsed +=
+        this.activeSubSolver!.iterations
+      this.stats.grownScaleSupervisorIterationsUsed =
+        this.grownScaleSupervisorIterationsUsed
+    }
     this.failedSolvers.push(this.activeSubSolver!)
     this.error = this.activeSubSolver!.error
     this.activeSubSolver = null
 
-    if (this.growthAttempts >= this.maxGrowthAttempts) {
+    const grownScaleSupervisorBudgetExhausted =
+      this.maxTotalGrownScaleSupervisorIterations !== undefined &&
+      this.grownScaleSupervisorIterationsUsed >=
+        this.maxTotalGrownScaleSupervisorIterations
+    if (
+      this.growthAttempts >= this.maxGrowthAttempts ||
+      grownScaleSupervisorBudgetExhausted
+    ) {
       if (this.constructorParams.fallbackToInvalidGeometryOnFailure) {
         this.solvedRoutes = createInvalidDirectConnectionRoutes(
           this.nodeWithPortPoints,
@@ -239,7 +313,9 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
         this.stats = {
           ...this.stats,
           invalidGeometryFallback: true,
-          reason: "growth attempts exhausted",
+          reason: grownScaleSupervisorBudgetExhausted
+            ? "grown-scale supervisor budget exhausted"
+            : "growth attempts exhausted",
           lastError: this.error,
         }
         this.error = null
@@ -247,12 +323,16 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
       }
 
       this.failed = true
-      this.error = `GrowShrinkHighDensityIntraNodeSolver failed after resizing to ${this.scaleFactor}x. Last error: ${this.error}`
+      const attemptedScaleFactors = this.scaleFactorSequence.slice(
+        0,
+        this.growthAttempts + 1,
+      )
+      this.error = `GrowShrinkHighDensityIntraNodeSolver failed after trying scales ${attemptedScaleFactors.map((scaleFactor) => `${scaleFactor}x`).join(", ")}. Last error: ${this.error}`
       return
     }
 
     this.growthAttempts++
-    this.scaleFactor *= 2
+    this.scaleFactor = this.scaleFactorSequence[this.growthAttempts]!
   }
 
   visualize(): GraphicsObject {

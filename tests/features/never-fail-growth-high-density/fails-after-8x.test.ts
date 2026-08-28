@@ -38,7 +38,7 @@ test("GrowShrinkHighDensityIntraNodeSolver fails after an 8x resize fails", () =
   expect(solver.failed).toBe(true)
   expect(solver.growthAttempts).toBe(3)
   expect(solver.failedSolvers.length).toBe(4)
-  expect(solver.error).toContain("resizing to 8x")
+  expect(solver.error).toContain("trying scales 1x, 2x, 4x, 8x")
 })
 
 test("GrowShrinkHighDensityIntraNodeSolver can fall back to invalid geometry after resize failures", () => {

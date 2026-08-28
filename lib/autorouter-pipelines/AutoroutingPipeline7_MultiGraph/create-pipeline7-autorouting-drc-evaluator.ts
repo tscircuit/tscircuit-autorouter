@@ -4,7 +4,9 @@ import {
   type SimpleRouteJson as RepairSimpleRouteJson,
   type SimplifiedPcbTraces as RepairSimplifiedPcbTraces,
 } from "high-density-repair03/lib"
+import stableStringify from "fast-json-stable-stringify"
 import type { SimpleRouteJson } from "lib/types"
+import type { HighDensityRoute } from "lib/types/high-density-types"
 import { getViaDimensions } from "lib/utils/getViaDimensions"
 import {
   type ConvertPipeline7HdRoutesOptions,
@@ -50,12 +52,36 @@ export const createPipeline7AutoroutingDrcEvaluator = (
   const convertCandidateRoutes =
     createPipeline7HdRoutesToSimplifiedPcbTracesConverter(conversionOptions)
   const originalTraces = conversionOptions.originalSrj.traces ?? []
+  const routeGeometryIdByKey = new Map<string, number>()
+  const resultByBoardGeometryKey = new Map<string, ReturnType<DrcEvaluator>>()
+  let nextRouteGeometryId = 0
 
-  return ({ routes, hdRoutes }) => {
+  const getRouteGeometryId = (route: HighDensityRoute): number => {
+    const routeGeometryKey = stableStringify(route)
+    const existingId = routeGeometryIdByKey.get(routeGeometryKey)
+    if (existingId !== undefined) return existingId
+    const routeGeometryId = nextRouteGeometryId
+    nextRouteGeometryId += 1
+    routeGeometryIdByKey.set(routeGeometryKey, routeGeometryId)
+    return routeGeometryId
+  }
+
+  const getBoardGeometryKey = (routes: HighDensityRoute[]): string => {
+    const routeGeometryIds: number[] = []
+    for (const route of routes) {
+      routeGeometryIds.push(getRouteGeometryId(route))
+    }
+    return routeGeometryIds.join(",")
+  }
+
+  const evaluator: DrcEvaluator = ({ routes, hdRoutes }) => {
     const evaluatedRoutes = routes ?? hdRoutes
     if (!evaluatedRoutes) {
       throw new Error("Pipeline7 autorouting DRC evaluation requires HD routes")
     }
+    const boardGeometryKey = getBoardGeometryKey(evaluatedRoutes)
+    const cachedResult = resultByBoardGeometryKey.get(boardGeometryKey)
+    if (cachedResult !== undefined) return cachedResult
 
     const candidateTraces = convertCandidateRoutes(evaluatedRoutes)
     const tracesToEvaluate = (
@@ -64,6 +90,10 @@ export const createPipeline7AutoroutingDrcEvaluator = (
         : candidateTraces
     ) as RepairSimplifiedPcbTraces
 
-    return engine.evaluate(tracesToEvaluate)
+    const result = engine.evaluate(tracesToEvaluate)
+    resultByBoardGeometryKey.set(boardGeometryKey, result)
+    return result
   }
+  evaluator.consumesHdRoutesDirectly = true
+  return evaluator
 }
