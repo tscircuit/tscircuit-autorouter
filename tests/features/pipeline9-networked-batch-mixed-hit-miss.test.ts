@@ -60,7 +60,9 @@ test("Pipeline9 fans a batch cache miss out to legacy solve without losing hit c
               code: "CACHE_MISS",
               message: "exact key not found",
             },
-          ].map((line) => JSON.stringify(line)).join("\n")}\n`,
+          ]
+            .map((line) => JSON.stringify(line))
+            .join("\n")}\n`,
           {
             status: 200,
             headers: { "content-type": "application/x-ndjson" },
@@ -85,14 +87,14 @@ test("Pipeline9 fans a batch cache miss out to legacy solve without losing hit c
   while (!solver.solved && !solver.failed) solver.step()
 
   expect(solver.solved).toBeTrue()
-  expect(requestUrls.filter((url) => url.endsWith("/solve-batch"))).toHaveLength(
-    1,
-  )
+  expect(
+    requestUrls.filter((url) => url.endsWith("/solve-batch")),
+  ).toHaveLength(1)
   expect(requestUrls.filter((url) => url.endsWith("/solve"))).toHaveLength(1)
   expect(singleRequests).toHaveLength(1)
-  expect(
-    singleRequests[0]!.input.nodeWithPortPoints.capacityMeshNodeId,
-  ).toBe(missNode.capacityMeshNodeId)
+  expect(singleRequests[0]!.input.nodeWithPortPoints.capacityMeshNodeId).toBe(
+    missNode.capacityMeshNodeId,
+  )
   expect(solver.routes.map((route) => route.connectionName)).toEqual([
     "miss",
     "hit",
