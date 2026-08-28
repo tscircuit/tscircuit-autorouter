@@ -3,7 +3,7 @@ import { GraphicsObject } from "graphics-debug"
 import { SimpleRouteConnection, SimpleRouteJson } from "lib/types"
 import { seededRandom } from "lib/utils/cloneAndShuffleArray"
 import { BaseSolver } from "../BaseSolver"
-import { buildMinimumSpanningTree } from "./buildMinimumSpanningTree"
+import { getDifferentialPairAwareMst } from "./get-differential-pair-aware-mst"
 import { getInitiallyConnectedStateForConnection } from "./get-initially-connected-state-for-connection"
 import { mergeConnections } from "./mergeConnections"
 
@@ -30,6 +30,7 @@ export class NetToPointPairsSolver extends BaseSolver {
   unprocessedConnections: Array<SimpleRouteConnection>
   newConnections: Array<SimpleRouteConnection>
   readonly initiallyConnectedMap: ConnectivityMap
+  readonly connectionsBeforeMerging: SimpleRouteConnection[]
 
   constructor(
     public ogSrj: SimpleRouteJson,
@@ -68,6 +69,7 @@ export class NetToPointPairsSolver extends BaseSolver {
     this.unprocessedConnections = mergeConnections(
       connectionsWithBusTraceWidths,
     )
+    this.connectionsBeforeMerging = connectionsWithBusTraceWidths
     this.newConnections = []
     this.initiallyConnectedMap = initiallyConnectedMap
   }
@@ -99,22 +101,33 @@ export class NetToPointPairsSolver extends BaseSolver {
       return
     }
 
-    const edges = buildMinimumSpanningTree(connection.pointsToConnect, {
-      extraEdges: zeroWeightEdges,
-    })
+    const { edges, remainingRootConnectionNames } =
+      getDifferentialPairAwareMst(connection, {
+        originalConnections: this.connectionsBeforeMerging,
+        differentialPairs: this.ogSrj.differentialPairs ?? [],
+        extraEdges: zeroWeightEdges,
+      })
 
     let mstIdx = 0
     for (const edge of edges) {
       if (arePointsConnected(edge.from, edge.to)) {
         continue
       }
+      const requiredConnection = edge.requiredConnection
+      if (requiredConnection) {
+        this.newConnections.push({
+          ...requiredConnection,
+          __rootConnectionNames: requiredConnection.__rootConnectionNames ?? [
+            requiredConnection.name,
+          ],
+        })
+        continue
+      }
       this.newConnections.push({
         ...connection,
         pointsToConnect: [edge.from, edge.to],
         name: `${connection.name}_mst${mstIdx++}`,
-        __rootConnectionNames: connection.__rootConnectionNames ?? [
-          connection.name,
-        ],
+        __rootConnectionNames: remainingRootConnectionNames,
         __netConnectionName: connection.__netConnectionName,
       })
     }

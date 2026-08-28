@@ -35,26 +35,23 @@ test("Pipeline9 repro from the RV1106G2 branched Ethernet differential pairs", a
 
   const pointPairConnections = solver.netToPointPairsSolver!.newConnections
   for (const connectionName of ethernetLineIds) {
-    expect(
-      pointPairConnections.filter((connection) =>
-        connection.__rootConnectionNames?.includes(connectionName),
-      ),
-    ).toHaveLength(2)
+    const matchingConnections = pointPairConnections.filter((connection) =>
+      connection.__rootConnectionNames?.includes(connectionName),
+    )
+    expect(matchingConnections).toHaveLength(1)
+    expect(matchingConnections[0]!.pointsToConnect).toEqual(
+      inputSrj.connections.find(
+        (connection) => connection.name === connectionName,
+      )!.pointsToConnect,
+    )
   }
 
-  const lengthMatchingStep = solver.pipelineDef.find(
-    (step) => step.solverName === "lengthMatchingPostProcessingSolver",
-  )!
-  expect(() => lengthMatchingStep.getConstructorParams(solver)).toThrow(
-    'Pipeline9: differential pair connection "source_trace_230" must resolve to exactly one final point-pair connection, got 2',
-  )
-
-  const duplicatedPointPairs = pointPairConnections.filter((connection) =>
+  const preservedPointPairs = pointPairConnections.filter((connection) =>
     ethernetLineIds.some((connectionName) =>
       connection.__rootConnectionNames?.includes(connectionName),
     ),
   )
-  const highlightedLines = duplicatedPointPairs.map((connection) => {
+  const highlightedLines = preservedPointPairs.map((connection) => {
     const rootConnectionName = ethernetLineIds.find((connectionName) =>
       connection.__rootConnectionNames?.includes(connectionName),
     )!
@@ -62,7 +59,7 @@ test("Pipeline9 repro from the RV1106G2 branched Ethernet differential pairs", a
       points: connection.pointsToConnect.map(({ x, y }) => ({ x, y })),
       strokeColor: ethernetLineColors[rootConnectionName],
       strokeWidth: 0.18,
-      label: `${ethernetLineNames[rootConnectionName]} child route`,
+      label: `${ethernetLineNames[rootConnectionName]} preserved route`,
     }
   })
   const requestedLines = inputSrj.connections
@@ -80,7 +77,7 @@ test("Pipeline9 repro from the RV1106G2 branched Ethernet differential pairs", a
     }))
   const issueGraphics: GraphicsObject = {
     lines: [...requestedLines, ...highlightedLines],
-    points: duplicatedPointPairs.flatMap((connection) =>
+    points: preservedPointPairs.flatMap((connection) =>
       connection.pointsToConnect.map(({ x, y }) => ({
         x,
         y,
@@ -148,7 +145,7 @@ test("Pipeline9 repro from the RV1106G2 branched Ethernet differential pairs", a
     getGraphicsSvgFrames({
       frames: [
         {
-          name: "FAILURE • 4 Ethernet members become 8 child routes",
+          name: "FIX • 4 Ethernet members remain 4 point-pair routes",
           step: "end",
           iteration: 2,
           graphics: issueGraphics,

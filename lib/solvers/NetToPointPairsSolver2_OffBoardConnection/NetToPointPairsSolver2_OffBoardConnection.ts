@@ -6,7 +6,7 @@ import {
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import { DSU } from "lib/utils/dsu"
 import { NetToPointPairsSolver } from "../NetToPointPairsSolver/NetToPointPairsSolver"
-import { buildMinimumSpanningTree } from "../NetToPointPairsSolver/buildMinimumSpanningTree"
+import { getDifferentialPairAwareMst } from "../NetToPointPairsSolver/get-differential-pair-aware-mst"
 import { getInitiallyConnectedStateForConnection } from "../NetToPointPairsSolver/get-initially-connected-state-for-connection"
 
 /**
@@ -153,14 +153,29 @@ export class NetToPointPairsSolver2_OffBoardConnection extends NetToPointPairsSo
       return
     }
 
-    const minimumSpanningTreeEdges = buildMinimumSpanningTree(
-      currentConnection.pointsToConnect,
-      { extraEdges: zeroWeightEdges },
-    )
+    const {
+      edges: minimumSpanningTreeEdges,
+      remainingRootConnectionNames,
+    } = getDifferentialPairAwareMst(currentConnection, {
+      originalConnections: this.connectionsBeforeMerging,
+      differentialPairs: this.ogSrj.differentialPairs ?? [],
+      extraEdges: zeroWeightEdges,
+    })
 
     let mstEdgeIndex = 0
     for (const mstEdge of minimumSpanningTreeEdges) {
       if (arePointsConnected(mstEdge.from, mstEdge.to)) {
+        continue
+      }
+
+      const requiredConnection = mstEdge.requiredConnection
+      if (requiredConnection) {
+        this.newConnections.push({
+          ...requiredConnection,
+          __rootConnectionNames: requiredConnection.__rootConnectionNames ?? [
+            requiredConnection.name,
+          ],
+        })
         continue
       }
 
@@ -173,9 +188,7 @@ export class NetToPointPairsSolver2_OffBoardConnection extends NetToPointPairsSo
         ...currentConnection,
         pointsToConnect: optimizedMstEdge.pointsToConnect,
         name: `${currentConnection.name}_mst${mstEdgeIndex++}`,
-        __rootConnectionNames: currentConnection.__rootConnectionNames ?? [
-          currentConnection.name,
-        ],
+        __rootConnectionNames: remainingRootConnectionNames,
         __netConnectionName: currentConnection.__netConnectionName,
       })
     }
