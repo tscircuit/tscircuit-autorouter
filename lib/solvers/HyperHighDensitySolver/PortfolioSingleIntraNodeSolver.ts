@@ -28,8 +28,7 @@ import { repairDisconnectedSameRootPortPoints } from "./repairDisconnectedSameRo
 // derived exploration budget or exhausts all of its candidates.
 const ORDERING_SHUFFLE_SEEDS = Array.from({ length: 6 }, (_, seed) => seed)
 
-/** Coordinates a fitness-scheduled portfolio of intra-node routing solvers. */
-export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolver<
+type PortfolioSolver =
   | IntraNodeRouteSolver
   | TwoCrossingRoutesHighDensitySolver
   | SingleTransitionCrossingRouteSolver
@@ -37,7 +36,88 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
   | SingleTransitionThroughObstacleIntraNodeSolver
   | SingleLayerNoDifferentRootIntersectionsIntraNodeSolver
   | HighDensityA03Solver
-> {
+
+type PortfolioCandidate = SupervisedSolver<PortfolioSolver>
+
+type RankedPortfolioCandidate = {
+  candidate: PortfolioCandidate
+  order: number
+}
+
+class PortfolioCandidatePriorityQueue {
+  private entries: RankedPortfolioCandidate[] = []
+  comparisonCount = 0
+
+  private comesBefore(
+    left: RankedPortfolioCandidate,
+    right: RankedPortfolioCandidate,
+  ): boolean {
+    this.comparisonCount++
+    if (left.candidate.solver.solved !== right.candidate.solver.solved) {
+      return left.candidate.solver.solved
+    }
+    if (left.candidate.f !== right.candidate.f) {
+      return left.candidate.f < right.candidate.f
+    }
+    return left.order < right.order
+  }
+
+  push(entry: RankedPortfolioCandidate): void {
+    this.entries.push(entry)
+    let index = this.entries.length - 1
+    while (index > 0) {
+      const parentIndex = Math.floor((index - 1) / 2)
+      if (!this.comesBefore(this.entries[index]!, this.entries[parentIndex]!)) {
+        break
+      }
+      ;[this.entries[index], this.entries[parentIndex]] = [
+        this.entries[parentIndex]!,
+        this.entries[index]!,
+      ]
+      index = parentIndex
+    }
+  }
+
+  peek(): RankedPortfolioCandidate | undefined {
+    return this.entries[0]
+  }
+
+  pop(): RankedPortfolioCandidate | undefined {
+    const first = this.entries[0]
+    const last = this.entries.pop()
+    if (!first || !last || this.entries.length === 0) return first
+
+    this.entries[0] = last
+    let index = 0
+    while (true) {
+      const leftIndex = index * 2 + 1
+      const rightIndex = leftIndex + 1
+      let bestIndex = index
+      if (
+        leftIndex < this.entries.length &&
+        this.comesBefore(this.entries[leftIndex]!, this.entries[bestIndex]!)
+      ) {
+        bestIndex = leftIndex
+      }
+      if (
+        rightIndex < this.entries.length &&
+        this.comesBefore(this.entries[rightIndex]!, this.entries[bestIndex]!)
+      ) {
+        bestIndex = rightIndex
+      }
+      if (bestIndex === index) break
+      ;[this.entries[index], this.entries[bestIndex]] = [
+        this.entries[bestIndex]!,
+        this.entries[index]!,
+      ]
+      index = bestIndex
+    }
+    return first
+  }
+}
+
+/** Coordinates a fitness-scheduled portfolio of intra-node routing solvers. */
+export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolver<PortfolioSolver> {
   override getSolverName(): string {
     return "PortfolioSingleIntraNodeSolver"
   }
@@ -48,6 +128,9 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
   connMap?: ConnectivityMap
   effort: number
   adaptiveSearchExpanded = false
+  private candidateQueue?: PortfolioCandidatePriorityQueue
+  private candidateOrder = new Map<PortfolioCandidate, number>()
+  private nextCandidateOrder = 0
 
   private getSolvedSegmentCount(solver: unknown): number | null {
     const solvedConnectionsMap = (solver as any).solvedConnectionsMap
@@ -310,19 +393,65 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     }
     this.stats.dynamicExpansionWorkBudget = this.getDynamicExpansionWorkBudget()
     this.refreshDynamicIterationLimit()
+    this.candidateQueue = undefined
+    this.candidateOrder.clear()
+    this.nextCandidateOrder = 0
+  }
+
+  private initializeCandidateQueue(): void {
+    if (this.candidateQueue) return
+    this.candidateQueue = new PortfolioCandidatePriorityQueue()
+    for (const candidate of this.supervisedSolvers ?? []) {
+      const order = this.nextCandidateOrder++
+      this.candidateOrder.set(candidate, order)
+      if (!candidate.solver.failed) {
+        this.candidateQueue.push({ candidate, order })
+      }
+    }
+  }
+
+  override getSupervisedSolverWithBestFitness(): PortfolioCandidate | null {
+    this.initializeCandidateQueue()
+    while (this.candidateQueue!.peek()?.candidate.solver.failed) {
+      this.candidateQueue!.pop()
+    }
+    return this.candidateQueue!.peek()?.candidate ?? null
+  }
+
+  private popBestCandidate(): PortfolioCandidate | null {
+    this.initializeCandidateQueue()
+    while (this.candidateQueue!.peek()?.candidate.solver.failed) {
+      this.candidateQueue!.pop()
+    }
+    return this.candidateQueue!.pop()?.candidate ?? null
+  }
+
+  private requeueCandidate(candidate: PortfolioCandidate): void {
+    if (candidate.solver.failed || candidate.solver.solved) return
+    const order = this.candidateOrder.get(candidate)
+    if (order === undefined) {
+      throw new Error("Portfolio candidate is missing its stable queue order")
+    }
+    this.candidateQueue!.push({ candidate, order })
   }
 
   private addSupervisedCandidate(hyperParameters: Record<string, any>) {
     const solver = this.generateSolver(hyperParameters)
     this.initializeCandidateBudget(solver)
     const g = this.computeG(solver)
-    this.supervisedSolvers!.push({
+    const candidate: PortfolioCandidate = {
       hyperParameters,
       solver,
       h: 0,
       g,
       f: g,
-    })
+    }
+    this.supervisedSolvers!.push(candidate)
+    if (this.candidateQueue) {
+      const order = this.nextCandidateOrder++
+      this.candidateOrder.set(candidate, order)
+      if (!solver.failed) this.candidateQueue.push({ candidate, order })
+    }
   }
 
   private expandAdaptiveSearch() {
@@ -365,26 +494,56 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       this.expandAdaptiveSearch()
     }
 
-    super._step()
+    const candidate = this.popBestCandidate()
+    if (!candidate) {
+      this.failed = true
+      this.error = this.getFailureMessage()
+      return
+    }
+
+    for (let substep = 0; substep < this.MIN_SUBSTEPS; substep++) {
+      candidate.solver.step()
+    }
+    this.activeSubSolver = candidate.solver
+    candidate.g = this.computeG(candidate.solver)
+    candidate.h = this.computeH(candidate.solver)
+    candidate.f = this.computeF(candidate.g, candidate.h)
+
+    if (candidate.solver.solved) {
+      this.solved = true
+      this.winningSolver = candidate.solver
+      this.onSolve(candidate)
+    } else {
+      this.requeueCandidate(candidate)
+    }
+
+    this.stats.priorityQueueComparisonCount =
+      this.candidateQueue?.comparisonCount ?? 0
 
     if (!this.solved && !this.failed && this.shouldExpandPortfolio()) {
       this.expandAdaptiveSearch()
     }
   }
 
-  computeG(solver: IntraNodeRouteSolver) {
+  computeG(solver: PortfolioSolver) {
+    const hyperParameters =
+      "hyperParameters" in solver &&
+      solver.hyperParameters &&
+      typeof solver.hyperParameters === "object"
+        ? (solver.hyperParameters as Record<string, number | boolean>)
+        : {}
     if (
-      (solver as any) instanceof HighDensitySolverA01 ||
-      (solver as any) instanceof HighDensityA03Solver
+      solver instanceof HighDensitySolverA01 ||
+      solver instanceof HighDensityA03Solver
     ) {
-      return (solver as any).iterations / 1_000_000
+      return solver.iterations / 1_000_000
     }
-    if (solver?.hyperParameters?.MULTI_HEAD_POLYLINE_SOLVER) {
+    if (hyperParameters.MULTI_HEAD_POLYLINE_SOLVER) {
       return (
         1000 +
-        ((solver.hyperParameters?.ITERATION_PENALTY ?? 0) + solver.iterations) /
+        (Number(hyperParameters.ITERATION_PENALTY ?? 0) + solver.iterations) /
           10_000 +
-        10_000 * (solver.hyperParameters.SEGMENTS_PER_POLYLINE! - 3)
+        10_000 * (Number(hyperParameters.SEGMENTS_PER_POLYLINE) - 3)
       )
     }
     return (
@@ -392,7 +551,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     )
   }
 
-  computeH(solver: IntraNodeRouteSolver) {
+  computeH(solver: PortfolioSolver) {
     if (this.adaptiveSearchExpanded) {
       return 1 - this.getCandidateProgress(solver)
     }
@@ -502,13 +661,13 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     })
   }
 
-  onSolve(solver: SupervisedSolver<IntraNodeRouteSolver>) {
+  onSolve(solver: PortfolioCandidate) {
     let routes: HighDensityIntraNodeRoute[]
     if (
-      (solver.solver as any) instanceof HighDensitySolverA01 ||
-      (solver.solver as any) instanceof HighDensityA03Solver
+      solver.solver instanceof HighDensitySolverA01 ||
+      solver.solver instanceof HighDensityA03Solver
     ) {
-      routes = (solver.solver as any).getOutput()
+      routes = solver.solver.getOutput()
     } else {
       routes = solver.solver.solvedRoutes
     }
