@@ -39,9 +39,6 @@ test("the portfolio priority queue preserves legacy fitness ordering", () => {
   }
 
   expect(solver.iterations).toBeGreaterThan(10)
-  expect(
-    Number(solver.stats.priorityQueueComparisonCount ?? 0),
-  ).toBeGreaterThan(0)
 
   const solvableSolver = new PortfolioSingleIntraNodeSolver({
     nodeWithPortPoints: {

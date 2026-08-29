@@ -46,13 +46,11 @@ type RankedPortfolioCandidate = {
 
 class PortfolioCandidatePriorityQueue {
   private entries: RankedPortfolioCandidate[] = []
-  comparisonCount = 0
 
   private comesBefore(
     left: RankedPortfolioCandidate,
     right: RankedPortfolioCandidate,
   ): boolean {
-    this.comparisonCount++
     if (left.candidate.solver.solved !== right.candidate.solver.solved) {
       return left.candidate.solver.solved
     }
@@ -66,7 +64,7 @@ class PortfolioCandidatePriorityQueue {
     this.entries.push(entry)
     let index = this.entries.length - 1
     while (index > 0) {
-      const parentIndex = Math.floor((index - 1) / 2)
+      const parentIndex = (index - 1) >> 1
       if (!this.comesBefore(this.entries[index]!, this.entries[parentIndex]!)) {
         break
       }
@@ -82,12 +80,7 @@ class PortfolioCandidatePriorityQueue {
     return this.entries[0]
   }
 
-  pop(): RankedPortfolioCandidate | undefined {
-    const first = this.entries[0]
-    const last = this.entries.pop()
-    if (!first || !last || this.entries.length === 0) return first
-
-    this.entries[0] = last
+  refreshRoot(): void {
     let index = 0
     while (true) {
       const leftIndex = index * 2 + 1
@@ -112,6 +105,15 @@ class PortfolioCandidatePriorityQueue {
       ]
       index = bestIndex
     }
+  }
+
+  pop(): RankedPortfolioCandidate | undefined {
+    const first = this.entries[0]
+    const last = this.entries.pop()
+    if (!first || !last || this.entries.length === 0) return first
+
+    this.entries[0] = last
+    this.refreshRoot()
     return first
   }
 }
@@ -129,7 +131,6 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
   effort: number
   adaptiveSearchExpanded = false
   private candidateQueue?: PortfolioCandidatePriorityQueue
-  private candidateOrder = new Map<PortfolioCandidate, number>()
   private nextCandidateOrder = 0
 
   private getSolvedSegmentCount(solver: unknown): number | null {
@@ -394,7 +395,6 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     this.stats.dynamicExpansionWorkBudget = this.getDynamicExpansionWorkBudget()
     this.refreshDynamicIterationLimit()
     this.candidateQueue = undefined
-    this.candidateOrder.clear()
     this.nextCandidateOrder = 0
   }
 
@@ -403,7 +403,6 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     this.candidateQueue = new PortfolioCandidatePriorityQueue()
     for (const candidate of this.supervisedSolvers ?? []) {
       const order = this.nextCandidateOrder++
-      this.candidateOrder.set(candidate, order)
       if (!candidate.solver.failed) {
         this.candidateQueue.push({ candidate, order })
       }
@@ -418,21 +417,12 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     return this.candidateQueue!.peek()?.candidate ?? null
   }
 
-  private popBestCandidate(): PortfolioCandidate | null {
+  private getBestCandidate(): PortfolioCandidate | null {
     this.initializeCandidateQueue()
     while (this.candidateQueue!.peek()?.candidate.solver.failed) {
       this.candidateQueue!.pop()
     }
-    return this.candidateQueue!.pop()?.candidate ?? null
-  }
-
-  private requeueCandidate(candidate: PortfolioCandidate): void {
-    if (candidate.solver.failed || candidate.solver.solved) return
-    const order = this.candidateOrder.get(candidate)
-    if (order === undefined) {
-      throw new Error("Portfolio candidate is missing its stable queue order")
-    }
-    this.candidateQueue!.push({ candidate, order })
+    return this.candidateQueue!.peek()?.candidate ?? null
   }
 
   private addSupervisedCandidate(hyperParameters: Record<string, any>) {
@@ -449,7 +439,6 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     this.supervisedSolvers!.push(candidate)
     if (this.candidateQueue) {
       const order = this.nextCandidateOrder++
-      this.candidateOrder.set(candidate, order)
       if (!solver.failed) this.candidateQueue.push({ candidate, order })
     }
   }
@@ -494,7 +483,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       this.expandAdaptiveSearch()
     }
 
-    const candidate = this.popBestCandidate()
+    const candidate = this.getBestCandidate()
     if (!candidate) {
       this.failed = true
       this.error = this.getFailureMessage()
@@ -510,20 +499,14 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     candidate.f = this.computeF(candidate.g, candidate.h)
 
     if (candidate.solver.solved) {
-      const order = this.candidateOrder.get(candidate)
-      if (order === undefined) {
-        throw new Error("Portfolio candidate is missing its stable queue order")
-      }
-      this.candidateQueue!.push({ candidate, order })
       this.solved = true
       this.winningSolver = candidate.solver
       this.onSolve(candidate)
+    } else if (candidate.solver.failed) {
+      this.candidateQueue!.pop()
     } else {
-      this.requeueCandidate(candidate)
+      this.candidateQueue!.refreshRoot()
     }
-
-    this.stats.priorityQueueComparisonCount =
-      this.candidateQueue?.comparisonCount ?? 0
 
     if (!this.solved && !this.failed && this.shouldExpandPortfolio()) {
       this.expandAdaptiveSearch()
