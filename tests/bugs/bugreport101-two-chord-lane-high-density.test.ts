@@ -1,5 +1,6 @@
 import { findRouteGeometryViolations } from "@tscircuit/high-density-b01"
 import { expect, test } from "bun:test"
+import { getSvgFromGraphicsObject } from "graphics-debug"
 import nodeJson from "../../fixtures/bug-reports/bugreport101-cm5-spi-routing-timeout/bugreport101-two-chord-lane-high-density-node.json" with {
   type: "json",
 }
@@ -118,6 +119,9 @@ test("bugreport101 exact two-chord lane solver routes the narrow node", () => {
   expect(second.portfolio.iterations).toBe(first.portfolio.iterations)
   expect(second.winner.iterations).toBe(first.winner.iterations)
   expect(second.winner.stats).toEqual(first.winner.stats)
+  expect(
+    getSvgFromGraphicsObject(first.winner.visualize()),
+  ).toMatchSvgSnapshot(import.meta.path)
 
   const legacyPortfolio = new PortfolioSingleIntraNodeSolver({
     nodeWithPortPoints: structuredClone(node),

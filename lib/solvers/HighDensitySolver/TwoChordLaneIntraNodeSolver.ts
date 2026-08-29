@@ -2,6 +2,7 @@ import {
   findRouteGeometryViolations,
   type HighDensityIntraNodeRoute as B01HighDensityIntraNodeRoute,
 } from "@tscircuit/high-density-b01"
+import type { GraphicsObject } from "graphics-debug"
 import type {
   HighDensityIntraNodeRoute,
   NodeWithPortPoints,
@@ -245,6 +246,64 @@ export class TwoChordLaneIntraNodeSolver extends BaseSolver {
 
   computeProgress(): number {
     return this.solved ? 1 : 0
+  }
+
+  override visualize(): GraphicsObject {
+    const routeColors = ["#dc2626", "#2563eb"]
+
+    return {
+      title: "Two-chord lane routing",
+      lines: this.solvedRoutes.flatMap((route, routeIndex) =>
+        route.route.slice(0, -1).flatMap((point, pointIndex) => {
+          const nextPoint = route.route[pointIndex + 1]!
+          if (point.x === nextPoint.x && point.y === nextPoint.y) return []
+          return [
+            {
+              points: [point, nextPoint],
+              strokeColor: routeColors[routeIndex % routeColors.length],
+              strokeWidth: route.traceThickness,
+              strokeDash: point.z === 0 ? undefined : "4, 3",
+              layer: `z${point.z}`,
+              label: `${route.connectionName}\nz${point.z}`,
+            },
+          ]
+        }),
+      ),
+      points: this.nodeWithPortPoints.portPoints.map((point) => ({
+        x: point.x,
+        y: point.y,
+        color:
+          routeColors[
+            Math.max(
+              0,
+              this.solvedRoutes.findIndex(
+                (route) => route.connectionName === point.connectionName,
+              ),
+            ) % routeColors.length
+          ],
+        label: `${point.connectionName}\nz${point.z}`,
+      })),
+      rects: [
+        {
+          center: this.nodeWithPortPoints.center,
+          width: this.nodeWithPortPoints.width,
+          height: this.nodeWithPortPoints.height,
+          fill: "rgba(14, 165, 233, 0.08)",
+          stroke: "rgba(14, 165, 233, 0.55)",
+          label: this.nodeWithPortPoints.capacityMeshNodeId,
+        },
+      ],
+      circles: this.solvedRoutes.flatMap((route, routeIndex) =>
+        route.vias.map((via) => ({
+          center: via,
+          radius: route.viaDiameter / 2,
+          fill: routeColors[routeIndex % routeColors.length],
+          stroke: "black",
+          layer: "via",
+          label: `${route.connectionName}\nvia`,
+        })),
+      ),
+    }
   }
 
   override _step(): void {
