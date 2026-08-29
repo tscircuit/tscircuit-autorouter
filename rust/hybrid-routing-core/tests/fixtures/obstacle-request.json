@@ -1,0 +1,39 @@
+{
+  "protocolVersion": 1,
+  "regionId": "obstacle-region",
+  "bounds": { "minX": 0, "maxX": 6, "minY": 0, "maxY": 4 },
+  "activeBounds": { "minX": 0, "maxX": 6, "minY": 0, "maxY": 4 },
+  "layerNames": ["top", "bottom"],
+  "start": { "x": 0.5, "y": 2, "layer": "top" },
+  "goal": { "x": 5.5, "y": 2, "layer": "top" },
+  "legalViaSpans": [{ "fromLayer": "top", "toLayer": "bottom" }],
+  "obstacles": [
+    {
+      "kind": "rotated_rect",
+      "geometryId": "center-blocker",
+      "layer": "top",
+      "centerX": 3,
+      "centerY": 2,
+      "widthMm": 1,
+      "heightMm": 2,
+      "rotationDegrees": 15
+    },
+    {
+      "kind": "rotated_rect",
+      "geometryId": "bottom-blocker",
+      "layer": "bottom",
+      "centerX": 3,
+      "centerY": 2,
+      "widthMm": 1,
+      "heightMm": 2,
+      "rotationDegrees": 15
+    }
+  ],
+  "resolutionMm": 0.25,
+  "traceWidthMm": 0.2,
+  "clearanceMm": 0.1,
+  "viaPadDiameterMm": 0.4,
+  "maximumVias": 2,
+  "maximumExpansions": 10000,
+  "deterministicSeed": 17
+}

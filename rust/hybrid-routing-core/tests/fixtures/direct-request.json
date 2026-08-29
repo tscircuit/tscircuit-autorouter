@@ -1,0 +1,18 @@
+{
+  "protocolVersion": 1,
+  "regionId": "direct-region",
+  "bounds": { "minX": 0, "maxX": 4, "minY": 0, "maxY": 4 },
+  "activeBounds": { "minX": 0, "maxX": 4, "minY": 0, "maxY": 4 },
+  "layerNames": ["top", "bottom"],
+  "start": { "x": 0.5, "y": 0.5, "layer": "top" },
+  "goal": { "x": 3.5, "y": 0.5, "layer": "top" },
+  "legalViaSpans": [{ "fromLayer": "top", "toLayer": "bottom" }],
+  "obstacles": [],
+  "resolutionMm": 0.5,
+  "traceWidthMm": 0.2,
+  "clearanceMm": 0.1,
+  "viaPadDiameterMm": 0.4,
+  "maximumVias": 2,
+  "maximumExpansions": 2000,
+  "deterministicSeed": 17
+}
