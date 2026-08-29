@@ -510,6 +510,11 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     candidate.f = this.computeF(candidate.g, candidate.h)
 
     if (candidate.solver.solved) {
+      const order = this.candidateOrder.get(candidate)
+      if (order === undefined) {
+        throw new Error("Portfolio candidate is missing its stable queue order")
+      }
+      this.candidateQueue!.push({ candidate, order })
       this.solved = true
       this.winningSolver = candidate.solver
       this.onSolve(candidate)

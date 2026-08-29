@@ -42,4 +42,30 @@ test("the portfolio priority queue preserves legacy fitness ordering", () => {
   expect(
     Number(solver.stats.priorityQueueComparisonCount ?? 0),
   ).toBeGreaterThan(0)
+
+  const solvableSolver = new PortfolioSingleIntraNodeSolver({
+    nodeWithPortPoints: {
+      capacityMeshNodeId: "solvable-node",
+      center: { x: 0, y: 0 },
+      width: 4,
+      height: 4,
+      availableZ: [0, 1],
+      portPoints: [
+        { connectionName: "a", x: -2, y: 0, z: 0 },
+        { connectionName: "a", x: 2, y: 0, z: 0 },
+      ],
+    },
+    viaDiameter: 0.3,
+    traceWidth: 0.1,
+    obstacleMargin: 0.15,
+    obstacles: [],
+    layerCount: 2,
+    effort: 1,
+  })
+  solvableSolver.solve()
+
+  expect(solvableSolver.solved).toBe(true)
+  expect(solvableSolver.getSupervisedSolverWithBestFitness()?.solver).toBe(
+    solvableSolver.winningSolver,
+  )
 })
