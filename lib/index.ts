@@ -86,6 +86,7 @@ export type {
   HighDensityIntraNodeRouteWithJumpers,
 } from "./types/high-density-types"
 export { PortfolioSingleIntraNodeSolver } from "./solvers/HyperHighDensitySolver/PortfolioSingleIntraNodeSolver"
+export { CapacityMeshRoutingAnalysisSolver } from "./solvers/CapacityMeshRoutingAnalysisSolver/CapacityMeshRoutingAnalysisSolver"
 /** @deprecated Use `PortfolioSingleIntraNodeSolver` instead. */
 export { HyperSingleIntraNodeSolver } from "./solvers/HyperHighDensitySolver/HyperSingleIntraNodeSolver"
 export { GrowShrinkHighDensityIntraNodeSolver } from "./solvers/HyperHighDensitySolver/GrowShrinkHighDensityIntraNodeSolver"

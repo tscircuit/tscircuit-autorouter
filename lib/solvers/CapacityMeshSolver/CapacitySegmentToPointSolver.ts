@@ -175,12 +175,14 @@ export class CapacitySegmentToPointSolver extends BaseSolver {
           center: node.center,
           width: node.width,
           height: node.height,
+          availableZ: node.availableZ,
         })
       }
       map.get(nodeId)!.portPoints.push(
         ...seg.assignedPoints.map((ap) => ({
           ...ap.point,
           connectionName: ap.connectionName,
+          rootConnectionName: ap.rootConnectionName,
         })),
       )
     }

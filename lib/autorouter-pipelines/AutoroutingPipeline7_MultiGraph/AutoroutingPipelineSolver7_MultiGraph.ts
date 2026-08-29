@@ -76,7 +76,7 @@ import { getPowerTraceExpansionConnectionNames } from "./getPowerTraceExpansionC
 import { lockHdRouteTerminals } from "./lock-hd-route-terminals"
 import { preparePipeline7PowerTraceExpansionInput } from "./prepare-pipeline7-power-trace-expansion-input"
 
-interface CapacityMeshSolverOptions {
+export interface CapacityMeshSolverOptions {
   capacityDepth?: number
   targetMinCapacity?: number
   cacheProvider?: CacheProvider | null
