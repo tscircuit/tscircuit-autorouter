@@ -2,7 +2,7 @@ import { expect, test } from "bun:test"
 import type {
   Pipeline9NetworkedSolveBatchRequest,
   Pipeline9NetworkedSolveRequest,
-} from "lib/autorouter-pipelines/AutoroutingPipeline9_Networked/pipeline9-networked-types"
+} from "lib/autorouter-pipelines/AutoroutingPipeline9_Networked/pipeline9NetworkedTypes"
 import { ExampleHdCache2Server } from "tests/fixtures/example-hd-cache2-server"
 import {
   createNetworkedHighDensitySolver,

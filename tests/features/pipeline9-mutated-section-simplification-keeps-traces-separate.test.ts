@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test"
-import { preparePipeline9MutatedPreloadedSections } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/pipeline9-mutated-preloaded-trace-simplification"
+import { preparePipeline9MutatedPreloadedSections } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/pipeline9MutatedPreloadedTraceSimplification"
 import { createHighlightedMutationFixture } from "../fixtures/pipeline9-mutated-section-simplification"
 
 test("Pipeline9 never merges touching mutation regions from different traces", () => {

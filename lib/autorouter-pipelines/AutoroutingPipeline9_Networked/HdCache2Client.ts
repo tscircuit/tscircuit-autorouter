@@ -4,14 +4,14 @@ import type {
   NodeWithPortPoints,
 } from "../../types/high-density-types"
 import { getConnectionPortPointPairs } from "../../utils/getConnectionPortPointPairs"
-import { getMaximumPipeline9NodeBounds } from "./pipeline9-networked-input-projection"
+import { getMaximumPipeline9NodeBounds } from "./pipeline9NetworkedInputProjection"
 import type {
   Pipeline9NetworkedHighDensityNodeInput,
   Pipeline9NetworkedSolveBatchCacheMiss,
   Pipeline9NetworkedSolveBatchItem,
   Pipeline9NetworkedSolveRequest,
   Pipeline9NetworkedSolveResponse,
-} from "./pipeline9-networked-types"
+} from "./pipeline9NetworkedTypes"
 
 export const DEFAULT_HD_CACHE2_SERVER_URL = "https://hd-cache2.tscircuit.com"
 export const HD_CACHE2_TRANSPORT_TIMEOUT_MS = 310_000

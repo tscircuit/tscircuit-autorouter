@@ -4,7 +4,7 @@ import type {
   PortPoint,
 } from "lib/types/high-density-types"
 import { classifyPointInBounds } from "lib/utils/classifyPointInBounds"
-import type { PreloadedHighDensityRoute } from "./convert-preloaded-traces-to-hd-routes"
+import type { PreloadedHighDensityRoute } from "./convertPreloadedTraceToHdRoutes"
 
 type RoutePoint = HighDensityRoute["route"][number]
 

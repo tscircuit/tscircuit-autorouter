@@ -55,7 +55,10 @@ Fallback logic is an anti-pattern here and a common mistake when extending the s
 ## Code Style Guidelines
 
 - Use **TypeScript** with strict typing enabled
-- **Naming**: Use kebab-case for filenames, camelCase for variables/functions, PascalCase for classes/interfaces
+- **Naming**: Use camelCase for variables/functions and PascalCase for
+  classes/interfaces. A focused source file should match its primary export
+  exactly (for example, `getNodeEdgeMap.ts` or `CapacityMeshEdgeSolver.ts`).
+  Multi-export utility and type modules may use a descriptive camelCase name.
 - **Imports**: Organize imports according to Biome rules (auto-organized when formatting)
 - **Components**: Create React components with proper type definitions
 - **Error handling**: Use try/catch for recoverable I/O at the edges; do not swallow solver-internal errors. See **Fallback Logic** above — throw on unexpected/invalid solver state rather than adding a fallback.

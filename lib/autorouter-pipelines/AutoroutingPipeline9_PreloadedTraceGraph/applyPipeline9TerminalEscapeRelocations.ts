@@ -12,7 +12,7 @@ import {
   getPipeline9RouteIndexByTraceId,
   isPipeline9DrcCandidateBetter,
   type Pipeline9DrcError,
-} from "./pipeline9-joint-drc-repair-utils"
+} from "./pipeline9JointDrcRepairUtils"
 
 type TerminalEscapeRelocationResult = {
   routes: HighDensityRoute[]

@@ -1,9 +1,9 @@
 import type { HighDensityRoute } from "lib/types/high-density-types"
-import type { PreloadedHighDensityRoute } from "./convert-preloaded-traces-to-hd-routes"
+import type { PreloadedHighDensityRoute } from "./convertPreloadedTraceToHdRoutes"
 import {
   type FixedRouteSection,
   spliceFixedRouteSection,
-} from "./pipeline9-regional-fallback"
+} from "./pipeline9RegionalFallback"
 
 type RoutePoint = HighDensityRoute["route"][number]
 
