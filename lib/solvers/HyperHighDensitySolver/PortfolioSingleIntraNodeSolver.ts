@@ -27,6 +27,7 @@ import { repairDisconnectedSameRootPortPoints } from "./repairDisconnectedSameRo
 // orderings are introduced only after that portfolio spends its dynamically
 // derived exploration budget or exhausts all of its candidates.
 const ORDERING_SHUFFLE_SEEDS = Array.from({ length: 6 }, (_, seed) => seed)
+const LATE_ADAPTIVE_ORDERING_SHUFFLE_SEEDS = ORDERING_SHUFFLE_SEEDS.slice(4)
 
 /** Coordinates a fitness-scheduled portfolio of intra-node routing solvers. */
 export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolver<
@@ -47,6 +48,8 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
   nodeWithPortPoints: NodeWithPortPoints
   connMap?: ConnectivityMap
   effort: number
+  /** Optional per-candidate cap for the exhaustive seed 4/5 retries. */
+  lateAdaptiveOrderingIterationLimit?: number
   adaptiveSearchExpanded = false
 
   private getSolvedSegmentCount(solver: unknown): number | null {
@@ -103,6 +106,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
   constructor(
     opts: ConstructorParameters<typeof CachedIntraNodeRouteSolver>[0] & {
       effort?: number
+      lateAdaptiveOrderingIterationLimit?: number
     },
   ) {
     super()
@@ -110,6 +114,8 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     this.connMap = opts.connMap
     this.constructorParams = opts
     this.effort = opts.effort ?? 1
+    this.lateAdaptiveOrderingIterationLimit =
+      opts.lateAdaptiveOrderingIterationLimit
     this.MAX_ITERATIONS = 20_000_000 * this.effort
     this.GREEDY_MULTIPLIER = 5
     this.MIN_SUBSTEPS = 100
@@ -323,6 +329,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       g,
       f: g,
     })
+    return solver
   }
 
   private expandAdaptiveSearch() {
@@ -330,10 +337,21 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
 
     this.adaptiveSearchExpanded = true
     for (const shuffleSeed of ORDERING_SHUFFLE_SEEDS.slice(1)) {
-      this.addSupervisedCandidate({
+      const solver = this.addSupervisedCandidate({
         HIGH_DENSITY_A01: true,
         SHUFFLE_SEED: shuffleSeed,
       })
+      if (
+        LATE_ADAPTIVE_ORDERING_SHUFFLE_SEEDS.includes(shuffleSeed) &&
+        this.lateAdaptiveOrderingIterationLimit !== undefined
+      ) {
+        solver.MAX_ITERATIONS = Math.min(
+          solver.MAX_ITERATIONS,
+          this.lateAdaptiveOrderingIterationLimit,
+        )
+        this.stats.lateAdaptiveOrderingIterationLimit =
+          this.lateAdaptiveOrderingIterationLimit
+      }
     }
     this.refreshDynamicIterationLimit()
     this.stats.adaptiveSearchExpanded = true

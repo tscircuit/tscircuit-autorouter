@@ -60,6 +60,7 @@ export class HighDensitySolver extends BaseSolver {
   useGrowShrinkHighDensityIntraNodeSolver: boolean
   preserveTerminalPcbPortIds: boolean
   growShrinkMaxInnerIterationsPerGrowthAttempt?: number
+  growShrinkBaseScaleLateAdaptiveOrderingIterationLimit?: number
   growShrinkFallbackToInvalidGeometryOnFailure: boolean
   growShrinkSolutionValidator?: (routes: HighDensityIntraNodeRoute[]) => boolean
   captureSearchDebug: boolean
@@ -95,6 +96,7 @@ export class HighDensitySolver extends BaseSolver {
     useGrowShrinkHighDensityIntraNodeSolver,
     preserveTerminalPcbPortIds,
     growShrinkMaxInnerIterationsPerGrowthAttempt,
+    growShrinkBaseScaleLateAdaptiveOrderingIterationLimit,
     growShrinkFallbackToInvalidGeometryOnFailure,
     growShrinkSolutionValidator,
     captureSearchDebug,
@@ -111,6 +113,7 @@ export class HighDensitySolver extends BaseSolver {
     useGrowShrinkHighDensityIntraNodeSolver?: boolean
     preserveTerminalPcbPortIds?: boolean
     growShrinkMaxInnerIterationsPerGrowthAttempt?: number
+    growShrinkBaseScaleLateAdaptiveOrderingIterationLimit?: number
     growShrinkFallbackToInvalidGeometryOnFailure?: boolean
     growShrinkSolutionValidator?: (
       routes: HighDensityIntraNodeRoute[],
@@ -137,6 +140,8 @@ export class HighDensitySolver extends BaseSolver {
     this.preserveTerminalPcbPortIds = preserveTerminalPcbPortIds ?? false
     this.growShrinkMaxInnerIterationsPerGrowthAttempt =
       growShrinkMaxInnerIterationsPerGrowthAttempt
+    this.growShrinkBaseScaleLateAdaptiveOrderingIterationLimit =
+      growShrinkBaseScaleLateAdaptiveOrderingIterationLimit
     this.growShrinkFallbackToInvalidGeometryOnFailure =
       growShrinkFallbackToInvalidGeometryOnFailure ?? false
     this.growShrinkSolutionValidator = growShrinkSolutionValidator
@@ -383,6 +388,8 @@ export class HighDensitySolver extends BaseSolver {
       layerCount: this.layerCount,
       maxInnerIterationsPerGrowthAttempt:
         this.growShrinkMaxInnerIterationsPerGrowthAttempt,
+      lateAdaptiveOrderingIterationLimit:
+        this.growShrinkBaseScaleLateAdaptiveOrderingIterationLimit,
       fallbackToInvalidGeometryOnFailure:
         this.growShrinkFallbackToInvalidGeometryOnFailure,
       growShrinkSolutionValidator: this.growShrinkSolutionValidator,

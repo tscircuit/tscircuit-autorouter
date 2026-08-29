@@ -154,6 +154,10 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
       this.constructorParams
     this.activeSubSolver = new PortfolioSingleIntraNodeSolver({
       ...portfolioParams,
+      lateAdaptiveOrderingIterationLimit:
+        this.scaleFactor === 1
+          ? portfolioParams.lateAdaptiveOrderingIterationLimit
+          : undefined,
       nodeWithPortPoints: scaleNodeWithPortPoints(
         this.nodeWithPortPoints,
         this.scaleFactor,
