@@ -10,6 +10,7 @@ INCLUDE_ASSIGNABLE=false
 DATASET="dataset01"
 DEFAULT_SOLVER_NAME="AutoroutingPipelineSolver7_MultiGraph"
 PIPELINE_ID=""
+NETWORKED_COLD_HOT=false
 
 resolve_pipeline_solver_name() {
   case "$1" in
@@ -21,6 +22,7 @@ resolve_pipeline_solver_name() {
     6) echo "AutoroutingPipelineSolver6" ;;
     7) echo "AutoroutingPipelineSolver7_MultiGraph" ;;
     9) echo "AutoroutingPipelineSolver9_PreloadedTraceGraph" ;;
+    9net|9NET) echo "AutoroutingPipelineSolver9_Networked" ;;
     10) echo "AutoroutingPipelineSolver10_BgaFanout" ;;
     krt|KRT) echo "KrtAutoroutingPipelineSolver" ;;
     *)
@@ -82,7 +84,7 @@ Usage:
 
 Options:
   --solver NAME        Run only one solver (same as first positional arg)
-  --pipeline ID        Run a pipeline alias (1-7, 9, 10, or krt)
+  --pipeline ID        Run a pipeline alias (1-7, 9, 9net, 10, or krt). 9net runs cold then hot against hd-cache2.
   --limit N            Run only first N scenarios (same as second positional arg)
   --scenario-limit N   Backward-compatible alias for --limit
   --concurrency N      Number of Bun workers used per solver, or "auto"
@@ -114,6 +116,7 @@ Examples:
   ./benchmark.sh --pipeline 6
   ./benchmark.sh --pipeline 7
   ./benchmark.sh --pipeline 9
+  ./benchmark.sh --pipeline 9net --dataset 18
   ./benchmark.sh --pipeline 10 --dataset 29
   ./benchmark.sh --pipeline krt
   ./benchmark.sh --solver AutoroutingPipelineSolver7_MultiGraph --dataset srj05 --scenario-limit 20
@@ -213,6 +216,20 @@ done
 
 if [ -n "$PIPELINE_ID" ]; then
   SOLVER_NAME="$(resolve_pipeline_solver_name "$PIPELINE_ID")"
+  case "$PIPELINE_ID" in
+    9net|9NET) NETWORKED_COLD_HOT=true ;;
+  esac
+fi
+
+if [ "$NETWORKED_COLD_HOT" = true ]; then
+  if [ -n "$EFFORT" ] && [ "$EFFORT" != "1" ]; then
+    echo "Pipeline 9net only supports --effort 1" >&2
+    exit 1
+  fi
+  if [ -z "${HD_CACHE2_CACHE_VERSION:-}" ]; then
+    echo "Pipeline 9net requires HD_CACHE2_CACHE_VERSION" >&2
+    exit 1
+  fi
 fi
 
 if [ "$CONCURRENCY_WAS_SET" = false ] && [ "$SOLVER_NAME" = "AutoroutingPipelineSolver7_MultiGraph" ]; then
@@ -226,6 +243,10 @@ if [ "$CONCURRENCY_WAS_SET" = false ] && [ "$SOLVER_NAME" = "AutoroutingPipeline
 fi
 
 CMD=(bun "scripts/benchmark/index.ts" "--concurrency" "$CONCURRENCY")
+
+if [ "$NETWORKED_COLD_HOT" = true ]; then
+  CMD+=("--networked-cold-hot")
+fi
 
 if [ -z "$SOLVER_NAME" ]; then
   SOLVER_NAME="$DEFAULT_SOLVER_NAME"

@@ -31,7 +31,7 @@ import {
 } from "./pipeline9-regional-fallback"
 import { Pipeline9RegionalFallbackSolver } from "./pipeline9-regional-fallback-solver"
 
-type Pipeline9HighDensitySolverParams = {
+export type Pipeline9HighDensitySolverParams = {
   nodePortPoints: NodeWithPortPoints[]
   fixedHdRoutes: PreloadedHighDensityRoute[]
   connMap: ConnectivityMap
@@ -278,7 +278,7 @@ const addTerminalPcbPortIds = (
   })
 }
 
-const normalizeNodeRootConnectionNames = (
+export const normalizePipeline9NodeRootConnectionNames = (
   node: NodeWithPortPoints,
   connMap: ConnectivityMap,
 ): NodeWithPortPoints => {
@@ -314,6 +314,57 @@ const restoreRootConnectionNames = (
         (portPoint) => portPoint.connectionName === route.connectionName,
       )?.rootConnectionName ?? route.rootConnectionName,
   }))
+
+export type Pipeline9RegularNodeSolverParams = {
+  nodeWithPortPoints: NodeWithPortPoints
+  connMap: ConnectivityMap
+  colorMap: Record<string, string>
+  viaDiameter: number
+  traceWidth: number
+  obstacleMargin: number
+  effort: number
+  nodePfById:
+    | Map<CapacityMeshNodeId, number | null>
+    | Record<string, number | null>
+  obstacles: Obstacle[]
+  layerCount: number
+}
+
+/**
+ * Creates the ordinary high-density solver used by Pipeline9. The networked
+ * helper calls the same factory with its projected JSON input so the local and
+ * remote algorithm configuration cannot drift.
+ */
+export const createPipeline9RegularNodeSolver = ({
+  nodeWithPortPoints,
+  connMap,
+  colorMap,
+  viaDiameter,
+  traceWidth,
+  obstacleMargin,
+  effort,
+  nodePfById,
+  obstacles,
+  layerCount,
+}: Pipeline9RegularNodeSolverParams): HighDensitySolver =>
+  new HighDensitySolver({
+    nodePortPoints: [
+      normalizePipeline9NodeRootConnectionNames(nodeWithPortPoints, connMap),
+    ],
+    colorMap,
+    connMap,
+    viaDiameter,
+    traceWidth,
+    obstacleMargin,
+    effort,
+    nodePfById,
+    obstacles,
+    layerCount,
+    useGrowShrinkHighDensityIntraNodeSolver: true,
+    preserveTerminalPcbPortIds: false,
+    growShrinkFallbackToInvalidGeometryOnFailure: false,
+    captureSearchDebug: false,
+  })
 
 /**
  * Uses Pipeline7's detailed solver for ordinary nodes and B01 where local
@@ -406,7 +457,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     })
   }
 
-  private finishActiveNode(routes: HighDensityIntraNodeRoute[]) {
+  protected finishActiveNode(routes: HighDensityIntraNodeRoute[]): void {
     const solvedRoutes = this.activeNode
       ? restoreRootConnectionNames(routes, this.activeNode)
       : routes
@@ -426,10 +477,10 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     this.activeNode = null
   }
 
-  private startRegularSolver(node: NodeWithPortPoints): void {
+  protected startRegularSolver(node: NodeWithPortPoints): void {
     this.activeNode = node
-    this.activeRegularSolver = new HighDensitySolver({
-      nodePortPoints: [normalizeNodeRootConnectionNames(node, this.connMap)],
+    this.activeRegularSolver = createPipeline9RegularNodeSolver({
+      nodeWithPortPoints: node,
       colorMap: this.colorMap,
       connMap: this.connMap,
       viaDiameter: this.viaDiameter,
@@ -439,10 +490,6 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       nodePfById: this.nodePfById,
       obstacles: this.obstacles,
       layerCount: this.layerCount,
-      useGrowShrinkHighDensityIntraNodeSolver: true,
-      preserveTerminalPcbPortIds: false,
-      growShrinkFallbackToInvalidGeometryOnFailure: false,
-      captureSearchDebug: false,
     })
     this.stats.regularNodeCount = Number(this.stats.regularNodeCount ?? 0) + 1
   }
@@ -456,7 +503,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       )
     }
 
-    const normalizedNode = normalizeNodeRootConnectionNames(
+    const normalizedNode = normalizePipeline9NodeRootConnectionNames(
       this.activeNode,
       this.connMap,
     )
@@ -738,7 +785,10 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     // future fallback never has to replay this node's now-stale bounds.
     const postSpliceProblem = createRegionalFallbackProblem(
       {
-        ...normalizeNodeRootConnectionNames(this.activeNode, this.connMap),
+        ...normalizePipeline9NodeRootConnectionNames(
+          this.activeNode,
+          this.connMap,
+        ),
         portPoints: [],
         portPointsInPairs: [],
         availableZ: Array.from({ length: this.layerCount }, (_, z) => z),
@@ -837,6 +887,18 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       Number(regionalStats.repairCandidateRejectionCount ?? 0)
   }
 
+  protected finishRegularSolverFailure(error: string): void {
+    this.activeFallbackReason = `regular high-density routing failed: ${error}`
+    this.activeRegularSolver = null
+    if (!this.enableRegionalFallback) {
+      this.error = `Pipeline9 ${this.activeFallbackReason}`
+      this.failed = true
+      this.activeNode = null
+      return
+    }
+    this.startRegionalFallback()
+  }
+
   override _step(): void {
     if (this.activeFallbackSolver) {
       this.activeFallbackSolver.step()
@@ -863,15 +925,9 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     if (this.activeRegularSolver) {
       this.activeRegularSolver.step()
       if (this.activeRegularSolver.failed) {
-        this.activeFallbackReason = `regular high-density routing failed: ${this.activeRegularSolver.error ?? "unknown error"}`
-        this.activeRegularSolver = null
-        if (!this.enableRegionalFallback) {
-          this.error = `Pipeline9 ${this.activeFallbackReason}`
-          this.failed = true
-          this.activeNode = null
-          return
-        }
-        this.startRegionalFallback()
+        this.finishRegularSolverFailure(
+          this.activeRegularSolver.error ?? "unknown error",
+        )
         return
       }
       if (!this.activeRegularSolver.solved) return
@@ -945,7 +1001,10 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       return
     }
 
-    const normalizedNode = normalizeNodeRootConnectionNames(node, this.connMap)
+    const normalizedNode = normalizePipeline9NodeRootConnectionNames(
+      node,
+      this.connMap,
+    )
     this.stats.b01NodeCount = Number(this.stats.b01NodeCount ?? 0) + 1
     this.activeB01Solver = new HighDensitySolverB01({
       ...defaultB01Params,
