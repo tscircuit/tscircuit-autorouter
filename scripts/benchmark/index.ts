@@ -843,6 +843,7 @@ const formatTable = (rows: SolverRunSummary[]) => {
     "P90 Time",
     "P95 Time",
     "Avg Via",
+    "HD Growths",
   ]
 
   const body = rows.map((row) => [
@@ -857,6 +858,7 @@ const formatTable = (rows: SolverRunSummary[]) => {
     formatTime(row.p90TimeMs ?? null),
     formatTime(row.p95TimeMs),
     formatAverage(row.avgVia),
+    row.highDensityGrowthCount?.toString() ?? "n/a",
   ])
 
   const widths = headers.map((header, columnIndex) => {
@@ -1107,6 +1109,7 @@ export const createFailedResult = (
     progressElapsedTimeMs: latestProgress?.elapsedTimeMs,
     finalElapsedTimeMs: elapsedTimeMs,
   }),
+  routingMetrics: latestProgress?.routingMetrics,
 })
 
 const getTaskEffort = (task: BenchmarkTask) => {
@@ -1468,6 +1471,18 @@ export const summarizeSolverResults = (
       ? null
       : viaCounts.reduce((sum, viaCount) => sum + viaCount, 0) /
         viaCounts.length
+  const highDensityGrowthCounts = results
+    .map((result) => result.routingMetrics?.highDensityGrowthCount)
+    .filter(
+      (growthCount): growthCount is number => typeof growthCount === "number",
+    )
+  const highDensityGrowthCount =
+    highDensityGrowthCounts.length === 0
+      ? null
+      : highDensityGrowthCounts.reduce(
+          (total, growthCount) => total + growthCount,
+          0,
+        )
 
   return {
     solverName,
@@ -1489,6 +1504,7 @@ export const summarizeSolverResults = (
     p90TimeMs: getPercentileMs(elapsedForSolvedAndTimedOut, 0.9),
     p95TimeMs: getPercentileMs(elapsedForSolvedAndTimedOut, 0.95),
     avgVia,
+    highDensityGrowthCount,
   } satisfies SolverRunSummary
 }
 

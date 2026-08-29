@@ -19,8 +19,12 @@ test("benchmark timing percentiles include solved and timed-out samples", () => 
     ...overrides,
   })
   const results = [
-    makeResult(1, 100),
-    makeResult(2, 200),
+    makeResult(1, 100, {
+      routingMetrics: { highDensityGrowthCount: 2 },
+    }),
+    makeResult(2, 200, {
+      routingMetrics: { highDensityGrowthCount: 3 },
+    }),
     makeResult(3, 300),
     makeResult(4, 400),
     makeResult(5, 1_000, {
@@ -42,4 +46,5 @@ test("benchmark timing percentiles include solved and timed-out samples", () => 
   expect(summary.p80TimeMs).toBeCloseTo(520)
   expect(summary.p90TimeMs).toBeCloseTo(760)
   expect(summary.p95TimeMs).toBeCloseTo(880)
+  expect(summary.highDensityGrowthCount).toBe(5)
 })
