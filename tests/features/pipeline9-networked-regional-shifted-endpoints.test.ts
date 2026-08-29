@@ -4,36 +4,38 @@ import {
   createNetworkedHighDensitySolver,
   createNetworkedNode,
   createNetworkedResponse,
+  createNetworkedRoute,
 } from "tests/fixtures/pipeline9-networked-fixtures"
 
-test("Pipeline9 networked consumes a cached terminal failure without launching local regional work", async () => {
+test("Pipeline9 networked accepts regional cleanup routes with shifted endpoints", async () => {
   const node = createNetworkedNode({
-    nodeId: "cmn_cached_failure",
+    nodeId: "cmn_regional_shifted_endpoints",
     connectionName: "A",
   })
+  const shiftedRoute = createNetworkedRoute(node)
+  shiftedRoute.route[0]!.x += 0.01
+  shiftedRoute.route.at(-1)!.x -= 0.01
   const solver = createNetworkedHighDensitySolver({
     nodes: [node],
     fetchImpl: asNetworkedFetch(async () =>
       createNetworkedResponse({
-        status: "failed",
-        error:
-          "Pipeline9 regular high-density routing failed: deterministically unsolved",
+        status: "solved",
+        solutionStage: "regional-fallback",
+        ordinaryFailure: "ordinary solver exhausted its candidates",
+        routes: [shiftedRoute],
       }),
     ),
-    enableRegionalFallback: false,
+    enableRegionalFallback: true,
   })
 
   solver.step()
   await solver.pendingEffects![0]!.promise
   solver.step()
 
-  expect(solver.failed).toBeTrue()
+  expect(solver.routes).toHaveLength(1)
+  expect(solver.routes[0]).toMatchObject(shiftedRoute)
   expect(solver.activeRegularSolver).toBeNull()
   expect(solver.activeFallbackSolver).toBeNull()
-  expect(solver.error).toBe(
-    "Pipeline9 regular high-density routing failed: deterministically unsolved",
-  )
-  expect(solver.stats.remoteOrdinaryResults).toBe(1)
-  expect(solver.stats.remoteFailedResults).toBe(1)
+  expect(solver.stats.remoteRegionalFallbackResultsApplied).toBe(1)
   expect(solver.stats.remoteTransportFallbacks).toBe(0)
 })

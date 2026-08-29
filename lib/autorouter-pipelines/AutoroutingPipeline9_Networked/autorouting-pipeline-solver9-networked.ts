@@ -27,7 +27,7 @@ export type AutoroutingPipelineSolver9NetworkedOptions = Omit<
   hdCacheMaxBatchBodyBytes?: number
 }
 
-/** Pipeline9 with exact, version-scoped remote ordinary-node solving. */
+/** Pipeline9 with exact, version-scoped remote terminal node solving. */
 export class AutoroutingPipelineSolver9_Networked extends AutoroutingPipelineSolver9_PreloadedTraceGraph {
   readonly hdCacheBaseUrl: string
   readonly hdCacheFetch?: typeof fetch
