@@ -67,6 +67,20 @@ function planRouteObject({
       coupledEnvelopeReserveMm,
     }),
   )
+  if (
+    routeObject.kind === "power" &&
+    routeObject.connection.topology === "mesh"
+  ) {
+    corridors.push(
+      ...planPowerMeshClosure({
+        connection: routeObject.connection,
+        routeObject,
+        compiledRules,
+        coupledEnvelopeReserveMm,
+        existingCorridors: corridors,
+      }),
+    )
+  }
   const preferredLayers = freezeList(
     compiledRules.layerStack
       .map((layer) => layer.name)
@@ -99,6 +113,65 @@ function planRouteObject({
     estimatedMemoryBytes,
     criticality: getCriticality(routeObject),
   })
+}
+
+function planPowerMeshClosure({
+  connection,
+  routeObject,
+  compiledRules,
+  coupledEnvelopeReserveMm,
+  existingCorridors,
+}: {
+  connection: Extract<CompiledConnectionRules, { kind: "power" }>
+  routeObject: TypedRouteObject
+  compiledRules: CompiledRoutingRules
+  coupledEnvelopeReserveMm: number
+  existingCorridors: readonly PlannedRoutingCorridor[]
+}): readonly PlannedRoutingCorridor[] {
+  const terminalPairs = connection.terminals.flatMap((first, firstIndex) =>
+    connection.terminals.slice(firstIndex + 1).map((second) => ({
+      first,
+      second,
+      distance: Math.hypot(second.x - first.x, second.y - first.y),
+    })),
+  )
+  const closure = terminalPairs
+    .filter(
+      ({ first, second }) =>
+        !existingCorridors.some(
+          (corridor) =>
+            (samePoint(corridor.start, first) &&
+              samePoint(corridor.end, second)) ||
+            (samePoint(corridor.start, second) &&
+              samePoint(corridor.end, first)),
+        ),
+    )
+    .sort(
+      (first, second) =>
+        first.distance - second.distance ||
+        first.first.terminalId.localeCompare(second.first.terminalId) ||
+        first.second.terminalId.localeCompare(second.second.terminalId),
+    )[0]
+  if (!closure) {
+    throw new Error(
+      `power mesh ${connection.connectionName} has no independent closure edge`,
+    )
+  }
+  const closureConnection: typeof connection = Object.freeze({
+    ...connection,
+    terminals: Object.freeze([closure.first, closure.second]),
+  })
+  return planConnectionCorridors({
+    connection: closureConnection,
+    routeObject,
+    compiledRules,
+    coupledEnvelopeReserveMm,
+  }).map((corridor) =>
+    Object.freeze({
+      ...corridor,
+      corridorId: `${routeObject.routeObjectId}:${connection.connectionName}:${existingCorridors.length}`,
+    }),
+  )
 }
 
 function getRouteObjectConnections(
@@ -319,6 +392,13 @@ function boundsOverlap({
     first.maxY < second.minY ||
     first.minY > second.maxY
   )
+}
+
+function samePoint(
+  first: { readonly x: number; readonly y: number },
+  second: { readonly x: number; readonly y: number },
+): boolean {
+  return first.x === second.x && first.y === second.y
 }
 
 function freezeList<Item>(items: readonly Item[]): readonly Item[] {

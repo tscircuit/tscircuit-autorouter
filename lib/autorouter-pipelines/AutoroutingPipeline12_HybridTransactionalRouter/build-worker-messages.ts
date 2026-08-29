@@ -18,6 +18,7 @@ import type {
   HybridWorkerCopperUpdate,
   HybridWorkerGeometry,
   RegionJob,
+  RegionJobCoupling,
   RegionSearchSpec,
 } from "./worker-protocol"
 import { HYBRID_WORKER_PROTOCOL_VERSION } from "./worker-protocol"
@@ -194,6 +195,7 @@ export function buildRegionJob({
     ),
     ownedPreloadedCopperReferences: region.ownedPreloadedCopperIds,
     searches: Object.freeze(searches),
+    coupling: buildJobCoupling({ problem, routePlan }),
     solverBudget: Object.freeze({
       maximumExpansions,
       maximumActivationRings,
@@ -212,6 +214,62 @@ export function buildRegionJob({
       connectionNames: routePlan.connectionNames,
     }),
   })
+}
+
+function buildJobCoupling({
+  problem,
+  routePlan,
+}: {
+  problem: TypedRoutingProblem
+  routePlan: GlobalRouteObjectPlan
+}): RegionJobCoupling {
+  const routeObject = problem.routeObjects.find(
+    (candidate) => candidate.routeObjectId === routePlan.routeObjectId,
+  )
+  if (!routeObject) {
+    throw new Error(`unknown route object ${routePlan.routeObjectId}`)
+  }
+  if (routeObject.kind === "differential_pair") {
+    return Object.freeze({
+      kind: "differential_pair" as const,
+      orderedConnectionNames: routeObject.rules.connectionNames,
+      adjacentEdgeGapsMm: Object.freeze([
+        routeObject.rules.spacingMm,
+      ]) as readonly [number],
+      maximumSkewMm: routeObject.rules.maximumSkewMm,
+      maximumUncoupledLengthMm:
+        routeObject.rules.maximumUncoupledLengthMm,
+    })
+  }
+  if (routeObject.kind === "bus") {
+    return Object.freeze({
+      kind: "bus" as const,
+      busId: routeObject.rules.busId,
+      orderedConnectionNames: routeObject.rules.orderedConnectionNames,
+      adjacentEdgeGapsMm: Object.freeze(
+        routeObject.rules.orderedConnectionNames.slice(0, -1).map(
+          (connectionName, connectionIndex) =>
+            problem.compiledRules.differentialPairs.find(
+              (pair) =>
+                pair.connectionNames.includes(connectionName) &&
+                pair.connectionNames.includes(
+                  routeObject.rules.orderedConnectionNames[connectionIndex + 1]!,
+                ),
+            )?.spacingMm ??
+            problem.compiledRules.clearances.traceToTraceMm,
+        ),
+      ),
+      maximumSkewMm: routeObject.rules.maximumSkewMm,
+    })
+  }
+  if (routeObject.kind === "power") {
+    return Object.freeze({
+      kind: "power" as const,
+      connectionName: routeObject.connection.connectionName,
+      topology: routeObject.connection.topology,
+    })
+  }
+  return Object.freeze({ kind: "independent" as const })
 }
 
 export function buildWorkerCopperUpdate({

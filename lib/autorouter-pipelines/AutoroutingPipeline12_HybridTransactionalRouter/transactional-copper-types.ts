@@ -112,6 +112,9 @@ export type TransactionRejectionCode =
   | "unintended_connectivity"
   | "terminal_connectivity_violation"
   | "boundary_contract_mismatch"
+  | "differential_pair_constraint_violation"
+  | "bus_constraint_violation"
+  | "power_constraint_violation"
 
 export type TransactionRejection = {
   readonly code: TransactionRejectionCode

@@ -646,6 +646,17 @@ function buildMembership({
         "pair members must either share one bus or both be outside a bus",
       )
     }
+    if (firstBus) {
+      const firstBusIndex = firstBus.connectionNames.indexOf(firstConnectionName)
+      const secondBusIndex = firstBus.connectionNames.indexOf(secondConnectionName)
+      if (Math.abs(firstBusIndex - secondBusIndex) !== 1) {
+        failCompilation(
+          "contradictory_rule",
+          `simpleRouteJson.differentialPairs[${pairIndex}]`,
+          "differential-pair members inside a bus must be adjacent in bus order",
+        )
+      }
+    }
     differentialPairByConnectionName.set(firstConnectionName, pair)
     differentialPairByConnectionName.set(secondConnectionName, pair)
   }
@@ -732,6 +743,27 @@ function buildPowerRuleByConnectionName({
         "contradictory_rule",
         `routingRules.powerRules[${powerRuleIndex}]`,
         "power connections cannot also be bus or differential-pair members",
+      )
+    }
+    const powerConnection = connectionByName.get(powerRule.connectionName)!
+    if (
+      powerRule.topology === "point_to_point" &&
+      powerConnection.pointsToConnect.length !== 2
+    ) {
+      failCompilation(
+        "impossible_geometry",
+        `routingRules.powerRules[${powerRuleIndex}].topology`,
+        "point_to_point power routing requires exactly two terminals",
+      )
+    }
+    if (
+      powerRule.topology === "mesh" &&
+      powerConnection.pointsToConnect.length < 3
+    ) {
+      failCompilation(
+        "impossible_geometry",
+        `routingRules.powerRules[${powerRuleIndex}].topology`,
+        "mesh power routing requires at least three terminals",
       )
     }
     powerRuleByConnectionName.set(powerRule.connectionName, powerRule)

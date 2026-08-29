@@ -1,4 +1,5 @@
 import assert from "node:assert/strict"
+import { createRequire } from "node:module"
 import { resolve } from "node:path"
 import { negotiateBoundaryContracts } from "lib/autorouter-pipelines/AutoroutingPipeline12_HybridTransactionalRouter/boundary-contract-negotiator"
 import { buildHybridWorkerBoardContext, buildRegionJob } from "lib/autorouter-pipelines/AutoroutingPipeline12_HybridTransactionalRouter/build-worker-messages"
@@ -7,6 +8,8 @@ import { planGlobalTopology } from "lib/autorouter-pipelines/AutoroutingPipeline
 import { runParallelHybridTransactionalEngine } from "lib/autorouter-pipelines/AutoroutingPipeline12_HybridTransactionalRouter/parallel-hybrid-transactional-engine"
 import type { ParallelHybridEngineConfiguration } from "lib/autorouter-pipelines/AutoroutingPipeline12_HybridTransactionalRouter/parallel-hybrid-transactional-engine"
 import { TransactionalCopperStore } from "lib/autorouter-pipelines/AutoroutingPipeline12_HybridTransactionalRouter/transactional-copper-store"
+import { createHybridRoutingCoreRuntime } from "lib/autorouter-pipelines/AutoroutingPipeline12_HybridTransactionalRouter/rust-core-runtime"
+import { runSerialHybridTransactionalEngine } from "lib/autorouter-pipelines/AutoroutingPipeline12_HybridTransactionalRouter/serial-hybrid-transactional-engine"
 import { HybridRoutingWorkerPool } from "lib/autorouter-pipelines/AutoroutingPipeline12_HybridTransactionalRouter/worker-pool"
 import type { RegionJob } from "lib/autorouter-pipelines/AutoroutingPipeline12_HybridTransactionalRouter/worker-protocol"
 import { createHybridRoutingTestProblem } from "tests/hybrid-transactional-router/fixtures"
@@ -75,6 +78,9 @@ await pool.initialize(
   }),
 )
 const parallelResults = await Promise.all(jobs.map((job) => pool.submit(job)))
+if (process.env.HYBRID_WORKER_DEBUG === "1") {
+  console.log(JSON.stringify(parallelResults))
+}
 assert(
   parallelResults.every((result) => result.status === "completed"),
   "real Rust jobs must complete in both isolated workers",
@@ -114,12 +120,72 @@ const fourWorkerResult = await runParallelHybridTransactionalEngine({
   problem,
   configuration: createEngineConfiguration(4),
 })
-assert.equal(singleWorkerResult.status, "routed")
-assert.equal(fourWorkerResult.status, "routed")
+const runtimeModule: unknown = createRequire(import.meta.url)(runtimeModulePath)
+assert(
+  isRecord(runtimeModule) &&
+    typeof runtimeModule.executeHybridRoutingCore === "function",
+  "native runtime module must export executeHybridRoutingCore",
+)
+const nativeExecutor = runtimeModule.executeHybridRoutingCore
+const serialResult = await runSerialHybridTransactionalEngine({
+  problem,
+  configuration: {
+    runtime: createHybridRoutingCoreRuntime({
+      target: "native",
+      executeJson(inputJson) {
+        const output: unknown = nativeExecutor(inputJson)
+        if (typeof output !== "string") {
+          throw new Error("native core must return JSON text")
+        }
+        return output
+      },
+    }),
+    deterministicSeed: 17,
+    maximumSearchExpansions: 250_000,
+    maximumActivationRings: 4,
+    maximumTransactionHistory: 64,
+    maximumDemandCellCount: 100_000,
+    maximumRegionCount: 128,
+    maximumRegionMutationCount: 128,
+    maximumMergeRegionCount: 8,
+    maximumEstimatedMemoryBytesPerObject: 32 * 1024 * 1024,
+    maximumWaveMemoryBytes: 128 * 1024 * 1024,
+  },
+})
+assert.equal(
+  singleWorkerResult.status,
+  "routed",
+  singleWorkerResult.status === "routed"
+    ? undefined
+    : JSON.stringify({
+        message: singleWorkerResult.message,
+        attempts: singleWorkerResult.artifacts.attempts,
+      }),
+)
+assert.equal(
+  fourWorkerResult.status,
+  "routed",
+  fourWorkerResult.status === "routed"
+    ? undefined
+    : JSON.stringify({
+        message: fourWorkerResult.message,
+        attempts: fourWorkerResult.artifacts.attempts,
+      }),
+)
 assert.deepEqual(
   fourWorkerResult.artifacts.copperSnapshot,
   singleWorkerResult.artifacts.copperSnapshot,
   "authoritative copper must be byte-stable across concurrency settings",
+)
+assert.equal(
+  serialResult.status,
+  "routed",
+  serialResult.status === "routed" ? undefined : serialResult.message,
+)
+assert.deepEqual(
+  serialResult.artifacts.copperSnapshot,
+  singleWorkerResult.artifacts.copperSnapshot,
+  "the serial fast path must preserve authoritative route selection",
 )
 
 console.log(
@@ -132,6 +198,7 @@ console.log(
     replacementWorker: replacementResult.status,
     deterministicCopperVersion:
       singleWorkerResult.artifacts.copperSnapshot.version,
+    serialFastPath: serialResult.status,
   }),
 )
 
@@ -150,6 +217,10 @@ function cloneJob({
     transactionId: `${job.transactionId}:${suffix}`,
     copperVersion,
   })
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value)
 }
 
 function createEngineConfiguration(

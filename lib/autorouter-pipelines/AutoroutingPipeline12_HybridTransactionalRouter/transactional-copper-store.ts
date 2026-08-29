@@ -79,6 +79,10 @@ export class TransactionalCopperStore {
     return Object.freeze([...this.committedTransactions])
   }
 
+  getBoundaryContractVersion(): number {
+    return this.boundaryContractVersion
+  }
+
   setBoundaryContractVersion(nextVersion: number): void {
     if (!Number.isSafeInteger(nextVersion) || nextVersion < this.boundaryContractVersion) {
       throw new Error(

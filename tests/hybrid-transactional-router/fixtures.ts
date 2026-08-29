@@ -170,6 +170,20 @@ export function createHybridRoutingTestProblem(): TypedRoutingProblem {
   )
 }
 
+export function createHybridUncoupledRoutingTestProblem(): TypedRoutingProblem {
+  const { simpleRouteJson, routingRules } = createHybridRoutingTestFixture()
+  return buildTypedRoutingProblem(
+    compileRoutingRules({
+      simpleRouteJson: {
+        ...simpleRouteJson,
+        differentialPairs: [],
+        buses: [],
+      },
+      routingRules: { ...routingRules, powerRules: [] },
+    }),
+  )
+}
+
 export function createHybridSegmentTransaction({
   problem,
   transactionId,

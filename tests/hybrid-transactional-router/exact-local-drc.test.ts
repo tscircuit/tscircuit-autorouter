@@ -1,12 +1,12 @@
 import { expect, test } from "bun:test"
 import { TransactionalCopperStore } from "lib/autorouter-pipelines/AutoroutingPipeline12_HybridTransactionalRouter/transactional-copper-store"
 import {
-  createHybridRoutingTestProblem,
   createHybridSegmentTransaction,
+  createHybridUncoupledRoutingTestProblem,
 } from "./fixtures"
 
 test("rejects foreign copper whose exact edge clearance is too small", () => {
-  const problem = createHybridRoutingTestProblem()
+  const problem = createHybridUncoupledRoutingTestProblem()
   const store = new TransactionalCopperStore({
     problem,
     maximumTransactionHistory: 4,

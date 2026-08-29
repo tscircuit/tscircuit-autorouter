@@ -1,12 +1,12 @@
 import { expect, test } from "bun:test"
 import { TransactionalCopperStore } from "lib/autorouter-pipelines/AutoroutingPipeline12_HybridTransactionalRouter/transactional-copper-store"
 import {
-  createHybridRoutingTestProblem,
   createHybridSegmentTransaction,
+  createHybridUncoupledRoutingTestProblem,
 } from "./fixtures"
 
 test("revalidates a stale delta and rejects its newly introduced conflict", () => {
-  const problem = createHybridRoutingTestProblem()
+  const problem = createHybridUncoupledRoutingTestProblem()
   const store = new TransactionalCopperStore({
     problem,
     maximumTransactionHistory: 4,

@@ -1,4 +1,5 @@
 import { negotiateBoundaryContracts } from "./boundary-contract-negotiator"
+import { finalizeCoupledRoutes } from "./coupled-route-finalizer"
 import {
   buildHybridWorkerBoardContext,
   buildRegionJob,
@@ -19,6 +20,7 @@ import type {
 } from "./serial-engine-types"
 import { TransactionalCopperStore } from "./transactional-copper-store"
 import type { TypedRoutingProblem } from "./types"
+import type { HybridTransactionDelta } from "./transactional-copper-types"
 import { HybridRoutingWorkerPool } from "./worker-pool"
 import type { HybridWorkerPoolJobResult } from "./worker-pool"
 
@@ -208,6 +210,26 @@ export async function runParallelHybridTransactionalEngine({
         attempts.push(createAttempt(completed))
       }
     }
+    const finalization = finalizeCoupledRoutes({ problem, copperStore })
+    for (const record of finalization.records) {
+      demandField.applyCommittedTransaction({
+        delta: record.delta,
+        committedSnapshot: record.committedSnapshot,
+      })
+      attempts.push(createFinalizationAttempt(record.delta))
+    }
+    if (finalization.status === "failed") {
+      return createIncompleteResult({
+        topologyPlan,
+        demandField,
+        regionGraph,
+        boundaryContracts,
+        copperStore,
+        attempts,
+        unresolvedRegionIds: Object.freeze([]),
+        message: finalization.message,
+      })
+    }
     return Object.freeze({
       status: "routed",
       artifacts: createArtifacts({
@@ -222,6 +244,24 @@ export async function runParallelHybridTransactionalEngine({
   } finally {
     await workerPool.close()
   }
+}
+
+function createFinalizationAttempt(
+  delta: HybridTransactionDelta,
+): RegionAttemptRecord {
+  return Object.freeze({
+    attemptId: `finalization-attempt:${delta.transactionId}`,
+    regionId: delta.regionId,
+    workerId: "control-plane",
+    strategy: "transactional-coupled-finalization",
+    queueWaitMs: 0,
+    solveTimeMs: 0,
+    workerCpuMs: 0,
+    transferredBytes: 0,
+    returnedBytes: 0,
+    outcome: "committed",
+    transactionId: delta.transactionId,
+  })
 }
 
 function compareCommitOrder(

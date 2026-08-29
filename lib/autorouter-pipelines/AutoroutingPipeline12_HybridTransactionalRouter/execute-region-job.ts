@@ -1,7 +1,7 @@
 import { runMultiResolutionSearch } from "./multi-resolution-router"
-import { HYBRID_ROUTING_CORE_PROTOCOL_VERSION } from "./rust-core-protocol"
+import { buildWorkerCoreSearchRequest } from "./build-worker-core-request"
+import { executeCoupledParallelJob } from "./execute-coupled-parallel-job"
 import type {
-  HybridCoreSearchRequest,
   HybridRoutingCoreRuntime,
 } from "./rust-core-protocol"
 import type {
@@ -37,6 +37,16 @@ export async function executeRegionJob({
   job: RegionJob
   runtime: HybridRoutingCoreRuntime
 }): Promise<RegionJobExecutionResult> {
+  if (
+    job.coupling.kind === "differential_pair" ||
+    job.coupling.kind === "bus"
+  ) {
+    return executeCoupledParallelJob({
+      context,
+      job: { ...job, coupling: job.coupling },
+      runtime,
+    })
+  }
   const addedTraces: HybridCopperSegment[] = []
   const addedVias: HybridCopperVia[] = []
   let bendCount = 0
@@ -61,12 +71,16 @@ export async function executeRegionJob({
     }
     const result = await runMultiResolutionSearch({
       runtime,
-      baseRequest: createCoreRequest({
+      baseRequest: buildWorkerCoreSearchRequest({
         context,
         job,
-        search,
-        rule,
-        searchIndex,
+        searchIdentity: `search:${searchIndex}:${search.searchId}`,
+        start: search.start,
+        goal: search.goal,
+        allowedLayers: rule.allowedLayers,
+        traceWidthMm: rule.traceWidthMm,
+        maximumVias: search.remainingViaBudget,
+        connectedConnectionNames: [rule.connectionName],
       }),
       maximumActivationRings: job.solverBudget.maximumActivationRings,
     })
@@ -186,67 +200,9 @@ export async function executeRegionJob({
   }
 }
 
-function createCoreRequest({
-  context,
-  job,
-  search,
-  rule,
-  searchIndex,
-}: {
-  context: HybridWorkerBoardContext
-  job: RegionJob
-  search: RegionSearchSpec
-  rule: HybridWorkerConnectionRule
-  searchIndex: number
-}): HybridCoreSearchRequest {
-  return Object.freeze({
-    protocolVersion: HYBRID_ROUTING_CORE_PROTOCOL_VERSION,
-    regionId: `${job.jobId}:search:${searchIndex}`,
-    bounds: job.envelope,
-    activeBounds: job.bounds,
-    activationBounds: Object.freeze([]),
-    layerNames: rule.allowedLayers,
-    start: search.start,
-    goal: search.goal,
-    legalViaSpans: Object.freeze(
-      context.legalViaSpans.filter(
-        (span) =>
-          rule.allowedLayers.includes(span.fromLayer) &&
-          rule.allowedLayers.includes(span.toLayer),
-      ),
-    ),
-    obstacles: Object.freeze(
-      context.geometry
-        .filter(
-          (item) =>
-            !item.connectedConnectionNames.includes(rule.connectionName) &&
-            rule.allowedLayers.includes(item.geometry.layer),
-        )
-        .map((item) => item.geometry),
-    ),
-    resolutionMm: job.routingResolutionMm,
-    traceWidthMm: rule.traceWidthMm,
-    clearanceMm: context.clearanceMm,
-    viaPadDiameterMm: context.viaPadDiameterMm,
-    maximumVias: search.remainingViaBudget,
-    maximumExpansions: job.solverBudget.maximumExpansions,
-    deterministicSeed:
-      (job.deterministicSeed + stableStringHash(search.searchId)) >>> 0,
-  })
-}
-
 function createOwnership(ownerRouteObjectId: string): HybridCopperOwnership {
   return Object.freeze({
     mutability: "mutable",
     ownerRouteObjectIds: Object.freeze([ownerRouteObjectId]),
   })
-}
-
-function stableStringHash(value: string): number {
-  let hash = 2166136261
-  for (let index = 0; index < value.length; index++) {
-    hash ^= value.charCodeAt(index)
-    hash = Math.imul(hash, 16777619)
-  }
-  return hash >>> 0
 }

@@ -6,6 +6,7 @@ import {
   segmentToRotatedRectEdgeDistance,
   viaToRotatedRectEdgeDistance,
 } from "./exact-geometry"
+import { findCoupledRouteConstraintViolation } from "./coupled-route-constraints"
 import type {
   CompiledConnectionRules,
   CompiledRoutingRules,
@@ -21,6 +22,8 @@ import type {
   TransactionValidationResult,
 } from "./transactional-copper-types"
 import type { VersionedHybridSpatialIndex } from "./versioned-spatial-index"
+
+const GEOMETRY_EPSILON = 1e-9
 
 type ValidationWork = {
   spatialIndexQueries: number
@@ -82,7 +85,8 @@ export function validateHybridTransaction({
     validateViaBudgets(context) ??
     validateObstacles(context) ??
     validateCopperClearances(context) ??
-    validateTerminalEffects(context)
+    validateTerminalEffects(context) ??
+    validateCoupledConstraints(context)
   if (rejection) {
     const reportedRejection =
       wasStaleRevalidation &&
@@ -110,6 +114,43 @@ export function validateHybridTransaction({
     wasStaleRevalidation,
     ...work,
   }
+}
+
+function validateCoupledConstraints(
+  context: ValidationContext,
+): TransactionRejection | undefined {
+  const resultingSnapshot: HybridCopperSnapshot = Object.freeze({
+    version: context.snapshot.version,
+    segments: Object.freeze([
+      ...context.snapshot.segments.filter(
+        (segment) => !context.removedCopperIds.has(segment.copperId),
+      ),
+      ...context.delta.addedTraces,
+    ]),
+    vias: Object.freeze([
+      ...context.snapshot.vias.filter(
+        (via) => !context.removedCopperIds.has(via.copperId),
+      ),
+      ...context.delta.addedVias,
+    ]),
+  })
+  const affectedConnectionNames = new Set([
+    ...context.delta.connectivityEffects.connectionNames,
+    ...context.addedPrimitives.map((primitive) => primitive.connectionName),
+  ])
+  const coupledViolation = findCoupledRouteConstraintViolation({
+    compiledRules: context.compiledRules,
+    copperSnapshot: resultingSnapshot,
+    affectedConnectionNames,
+  })
+  return coupledViolation
+    ? reject(context, {
+        code: coupledViolation.code,
+        message: coupledViolation.message,
+        conflictingCopperIds: coupledViolation.conflictingCopperIds,
+        connectionNames: coupledViolation.connectionNames,
+      })
+    : undefined
 }
 
 function validateDeltaShape(
@@ -531,7 +572,7 @@ function validateObstacles(
         primitive.kind === "segment"
           ? context.compiledRules.clearances.traceToPadEdgeMm
           : context.compiledRules.clearances.viaToPadEdgeMm
-      if (distance < requiredClearance) {
+      if (distance + GEOMETRY_EPSILON < requiredClearance) {
         return reject(context, {
           code: "obstacle_clearance_violation",
           message: `${primitive.copperId} is ${distance}mm from obstacle ${obstacle.obstacleId ?? "unnamed"}; ${requiredClearance}mm is required`,
@@ -578,7 +619,7 @@ function validateCopperClearances(
         primitive.kind === "via" || other.kind === "via"
           ? context.compiledRules.clearances.viaToTraceEdgeMm
           : context.compiledRules.clearances.traceToTraceMm
-      if (distance < requiredClearance) {
+      if (distance + GEOMETRY_EPSILON < requiredClearance) {
         return reject(context, {
           code: "copper_clearance_violation",
           message: `${primitive.copperId} is ${distance}mm from foreign copper ${other.copperId}; ${requiredClearance}mm is required`,

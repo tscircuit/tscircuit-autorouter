@@ -57,6 +57,28 @@ export type RegionSearchSpec = {
   readonly remainingViaBudget: number
 }
 
+export type RegionJobCoupling =
+  | { readonly kind: "independent" }
+  | {
+      readonly kind: "differential_pair"
+      readonly orderedConnectionNames: readonly [string, string]
+      readonly adjacentEdgeGapsMm: readonly [number]
+      readonly maximumSkewMm: number
+      readonly maximumUncoupledLengthMm: number
+    }
+  | {
+      readonly kind: "bus"
+      readonly busId: string
+      readonly orderedConnectionNames: readonly string[]
+      readonly adjacentEdgeGapsMm: readonly number[]
+      readonly maximumSkewMm: number
+    }
+  | {
+      readonly kind: "power"
+      readonly connectionName: string
+      readonly topology: "point_to_point" | "tree" | "mesh"
+    }
+
 export type RegionJob = {
   readonly protocolVersion: typeof HYBRID_WORKER_PROTOCOL_VERSION
   readonly jobId: string
@@ -72,6 +94,7 @@ export type RegionJob = {
   readonly boundaryContractReferences: readonly string[]
   readonly ownedPreloadedCopperReferences: readonly HybridCopperId[]
   readonly searches: readonly RegionSearchSpec[]
+  readonly coupling: RegionJobCoupling
   readonly solverBudget: {
     readonly maximumExpansions: number
     readonly maximumActivationRings: number
