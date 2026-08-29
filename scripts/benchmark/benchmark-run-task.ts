@@ -52,17 +52,12 @@ type SolverInstance = PipelineStageTimingSource & {
   }
   highDensityRouteSolver?: {
     iterations?: number
-    stats?: Record<string, unknown>
   }
   timeSpentOnPhase: Record<string, number>
 }
 
 type SolverOptions = {
   effort?: number
-  cacheProvider?: null
-  hdCacheBaseUrl?: string
-  hdCacheMaxBatchItems?: number
-  hdCacheMaxBatchBodyBytes?: number
 }
 
 type SolverConstructor = new (
@@ -102,7 +97,6 @@ const countTraceVias = (traces: SimplifiedPcbTrace[]) =>
 
 export const getBenchmarkSolverOptions = (
   scenario: SimpleRouteJson,
-  solverName?: string,
 ): SolverOptions | undefined => {
   const rawEffort = (scenario as SimpleRouteJson & { effort?: number }).effort
   const effort =
@@ -110,42 +104,13 @@ export const getBenchmarkSolverOptions = (
       ? rawEffort
       : undefined
 
-  const options: SolverOptions = {}
-  if (effort !== undefined) {
-    options.effort = effort
+  if (effort === undefined) {
+    return undefined
   }
 
-  if (
-    solverName === "AutoroutingPipelineSolver9_PreloadedTraceGraph" ||
-    solverName === "AutoroutingPipelineSolver9_Networked"
-  ) {
-    options.cacheProvider = null
+  return {
+    effort,
   }
-
-  if (solverName === "AutoroutingPipelineSolver9_Networked") {
-    const cacheUrl = process.env.PIPELINE9_NETWORKED_BENCHMARK_CACHE_URL?.trim()
-    if (cacheUrl) options.hdCacheBaseUrl = cacheUrl
-    options.hdCacheMaxBatchItems = getPositiveIntegerEnvironmentOverride(
-      "PIPELINE9_NETWORKED_BENCHMARK_MAX_BATCH_ITEMS",
-    )
-    options.hdCacheMaxBatchBodyBytes = getPositiveIntegerEnvironmentOverride(
-      "PIPELINE9_NETWORKED_BENCHMARK_MAX_BATCH_BODY_BYTES",
-    )
-  }
-
-  return Object.keys(options).length === 0 ? undefined : options
-}
-
-const getPositiveIntegerEnvironmentOverride = (
-  name: string,
-): number | undefined => {
-  const rawValue = process.env[name]?.trim()
-  if (!rawValue) return undefined
-  const value = Number(rawValue)
-  if (!Number.isInteger(value) || value <= 0) {
-    throw new Error(`${name} must be a positive integer, received ${rawValue}`)
-  }
-  return value
 }
 
 const getSolverConstructor = (solverName: string): SolverConstructor => {
@@ -164,7 +129,7 @@ export const createSolverForTask = (task: BenchmarkTask): SolverInstance => {
   const SolverConstructor = getSolverConstructor(task.solverName)
   return new SolverConstructor(
     task.scenario,
-    getBenchmarkSolverOptions(task.scenario, task.solverName),
+    getBenchmarkSolverOptions(task.scenario),
   )
 }
 
@@ -320,50 +285,10 @@ const getProgressKey = (progress: WorkerProgress) =>
 const getRoutingBenchmarkMetrics = (
   solver: SolverInstance,
 ): RoutingBenchmarkMetrics => {
-  const highDensityStats = solver.highDensityRouteSolver?.stats
-  const getCounter = (name: string): number | undefined => {
-    const value = highDensityStats?.[name]
-    return typeof value === "number" && Number.isFinite(value)
-      ? value
-      : undefined
-  }
-  const fallbackReasonCounts = highDensityStats?.remoteFallbackReasonCounts
   return {
     tinyHypergraph:
       solver.portPointPathingSolver?.getSolveGraphBenchmarkMetrics?.(),
     highDensityIterations: solver.highDensityRouteSolver?.iterations,
-    nodeCount: getCounter("nodeCount"),
-    solvedNodeCount: getCounter("solvedNodeCount"),
-    regularNodeCount: getCounter("regularNodeCount"),
-    b01NodeCount: getCounter("b01NodeCount"),
-    fallbackNodeCount: getCounter("fallbackNodeCount"),
-    promotedFallbackAttemptCount: getCounter("promotedFallbackAttemptCount"),
-    remoteRequestsStarted: getCounter("remoteRequestsStarted"),
-    remoteRequestsCompleted: getCounter("remoteRequestsCompleted"),
-    remoteBatchRequestsStarted: getCounter("remoteBatchRequestsStarted"),
-    remoteBatchRequestsCompleted: getCounter("remoteBatchRequestsCompleted"),
-    remoteBatchItemsStarted: getCounter("remoteBatchItemsStarted"),
-    remoteBatchBodyBytesStarted: getCounter("remoteBatchBodyBytesStarted"),
-    remoteBatchMaxBodyBytes: getCounter("remoteBatchMaxBodyBytes"),
-    remoteBatchCacheMisses: getCounter("remoteBatchCacheMisses"),
-    remoteSingleRequestsStarted: getCounter("remoteSingleRequestsStarted"),
-    remoteBatchInvalidLines: getCounter("remoteBatchInvalidLines"),
-    remoteBatchUnknownRequestIds: getCounter("remoteBatchUnknownRequestIds"),
-    remoteBatchDuplicateRequestIds: getCounter(
-      "remoteBatchDuplicateRequestIds",
-    ),
-    remoteCacheHits: getCounter("remoteCacheHits"),
-    remoteSolverResults: getCounter("remoteSolverResults"),
-    remoteSolvedResults: getCounter("remoteSolvedResults"),
-    remoteFailedResults: getCounter("remoteFailedResults"),
-    remoteTransportFallbacks: getCounter("remoteTransportFallbacks"),
-    remoteLogicalTimeoutFallbacks: getCounter("remoteLogicalTimeoutFallbacks"),
-    remoteFallbackReasonCounts:
-      fallbackReasonCounts &&
-      typeof fallbackReasonCounts === "object" &&
-      !Array.isArray(fallbackReasonCounts)
-        ? (fallbackReasonCounts as Record<string, number>)
-        : undefined,
     phaseTimeMs: solver.timeSpentOnPhase,
   }
 }

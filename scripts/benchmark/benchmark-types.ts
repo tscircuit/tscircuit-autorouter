@@ -93,31 +93,6 @@ export type TinyHypergraphBenchmarkMetrics = {
 export type RoutingBenchmarkMetrics = {
   tinyHypergraph?: TinyHypergraphBenchmarkMetrics
   highDensityIterations?: number
-  nodeCount?: number
-  solvedNodeCount?: number
-  regularNodeCount?: number
-  b01NodeCount?: number
-  fallbackNodeCount?: number
-  promotedFallbackAttemptCount?: number
-  remoteRequestsStarted?: number
-  remoteRequestsCompleted?: number
-  remoteBatchRequestsStarted?: number
-  remoteBatchRequestsCompleted?: number
-  remoteBatchItemsStarted?: number
-  remoteBatchBodyBytesStarted?: number
-  remoteBatchMaxBodyBytes?: number
-  remoteBatchCacheMisses?: number
-  remoteSingleRequestsStarted?: number
-  remoteBatchInvalidLines?: number
-  remoteBatchUnknownRequestIds?: number
-  remoteBatchDuplicateRequestIds?: number
-  remoteCacheHits?: number
-  remoteSolverResults?: number
-  remoteSolvedResults?: number
-  remoteFailedResults?: number
-  remoteTransportFallbacks?: number
-  remoteLogicalTimeoutFallbacks?: number
-  remoteFallbackReasonCounts?: Record<string, number>
   phaseTimeMs?: Record<string, number>
 }
 
