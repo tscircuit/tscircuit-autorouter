@@ -151,9 +151,7 @@ const isValidRemoteRoutes = (
       route.traceThickness <= 0 ||
       (!nearlyEqual(route.traceThickness, input.traceWidth) &&
         // The A03 portfolio candidate currently emits its fixed 0.1 mm width.
-        !nearlyEqual(route.traceThickness, 0.1) &&
-        // The multi-head portfolio candidate currently emits its fixed 0.15 mm width.
-        !nearlyEqual(route.traceThickness, 0.15)) ||
+        !nearlyEqual(route.traceThickness, 0.1)) ||
       typeof route.viaDiameter !== "number" ||
       !Number.isFinite(route.viaDiameter) ||
       route.viaDiameter <= 0 ||

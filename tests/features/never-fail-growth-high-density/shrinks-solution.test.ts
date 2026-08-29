@@ -12,7 +12,7 @@ test("GrowShrinkHighDensityIntraNodeSolver shrinks solved routes back to the ori
     failed: false,
     solved: false,
     error: null,
-    solvedRoutes: [{ ...makeScaledRoute(), jumpers: undefined }],
+    solvedRoutes: [makeScaledRoute()],
     step() {
       this.solved = true
     },
