@@ -311,6 +311,7 @@ const getProgressInfo = (
     activeSubSolverProgress: activeSubSolver?.progress,
     activeSubSolverIterations: activeSubSolver?.iterations,
     stageTiming: extractBenchmarkStageTiming(solver, "partial"),
+    routingMetrics: getRoutingBenchmarkMetrics(solver),
   }
 }
 
@@ -332,6 +333,7 @@ const getRoutingBenchmarkMetrics = (
     tinyHypergraph:
       solver.portPointPathingSolver?.getSolveGraphBenchmarkMetrics?.(),
     highDensityIterations: solver.highDensityRouteSolver?.iterations,
+    highDensityGrowthCount: getCounter("highDensityResizeCount"),
     nodeCount: getCounter("nodeCount"),
     solvedNodeCount: getCounter("solvedNodeCount"),
     regularNodeCount: getCounter("regularNodeCount"),
