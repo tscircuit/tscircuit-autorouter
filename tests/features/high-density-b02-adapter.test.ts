@@ -84,4 +84,15 @@ test("HighDensitySolverB02 adapter preserves explicit pair metadata", () => {
     (solver.solvedRoutes[0]!.route.at(-1) as { portPointId?: string })
       .portPointId,
   ).toBe("a-end")
+
+  const nodeWithDuplicatedTerminal = structuredClone(node)
+  Object.assign(nodeWithDuplicatedTerminal.portPointsInPairs![0]![0], {
+    duplicatedFromPortId: "original-port",
+  })
+  expect(
+    HighDensitySolverB02IntraNodeAdapter.isApplicable({
+      nodeWithPortPoints: nodeWithDuplicatedTerminal,
+      obstacles: [],
+    }),
+  ).toBeFalse()
 })

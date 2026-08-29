@@ -418,6 +418,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
         clearance: 0.1,
         obstacles: this.constructorParams.obstacles,
         effort: this.effort,
+        minimumPairCount: 8,
       }) as any
     }
 

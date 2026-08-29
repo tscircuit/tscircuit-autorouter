@@ -17,6 +17,10 @@ import { BaseSolver } from "../BaseSolver"
 
 type PortPair = [PortPoint, PortPoint]
 
+type PortPointWithDuplicateMetadata = PortPoint & {
+  duplicatedFromPortId?: string
+}
+
 type PreparedPair = {
   originalPair: PortPair
   startPortPointId: string
@@ -35,6 +39,7 @@ export type HighDensitySolverB02IntraNodeAdapterParams = {
   clearance?: number
   obstacles?: Obstacle[]
   effort?: number
+  minimumPairCount?: number
 }
 
 const EPSILON = 1e-8
@@ -148,7 +153,17 @@ export class HighDensitySolverB02IntraNodeAdapter extends BaseSolver {
     params: HighDensitySolverB02IntraNodeAdapterParams,
   ): boolean {
     const pairs = params.nodeWithPortPoints.portPointsInPairs
-    if (!pairs || pairs.length === 0) return false
+    if (!pairs || pairs.length < (params.minimumPairCount ?? 2)) return false
+    if (
+      pairs.some(([start, end]) =>
+        Boolean(
+          (start as PortPointWithDuplicateMetadata).duplicatedFromPortId ||
+            (end as PortPointWithDuplicateMetadata).duplicatedFromPortId,
+        ),
+      )
+    ) {
+      return false
+    }
     if (
       (params.obstacles ?? []).some((obstacle) =>
         obstacleIntersectsNodeInterior(params.nodeWithPortPoints, obstacle),
