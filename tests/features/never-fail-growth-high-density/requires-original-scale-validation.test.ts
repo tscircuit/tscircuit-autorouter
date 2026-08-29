@@ -1,13 +1,14 @@
 import { expect, test } from "bun:test"
+import { getSvgFromGraphicsObject } from "graphics-debug"
 import { GrowShrinkHighDensityIntraNodeSolver } from "lib/solvers/HyperHighDensitySolver/GrowShrinkHighDensityIntraNodeSolver"
 import {
-  emptyVisualization,
   makeCrossingSingleLayerNode,
   makeNode,
   makeScaledRoute,
 } from "./test-helpers"
 
-test("GrowShrinkHighDensityIntraNodeSolver opts into original-scale validation and fail-loud behavior", () => {
+test("GrowShrinkHighDensityIntraNodeSolver opts into original-scale validation and fail-loud behavior", async () => {
+  const attemptedScaledRoute = makeScaledRoute()
   const solver = new GrowShrinkHighDensityIntraNodeSolver({
     nodeWithPortPoints: makeNode(),
     maxGrowthAttempts: 1,
@@ -19,11 +20,38 @@ test("GrowShrinkHighDensityIntraNodeSolver opts into original-scale validation a
     failed: false,
     solved: false,
     error: null,
-    solvedRoutes: [makeScaledRoute()],
+    solvedRoutes: [attemptedScaledRoute],
     step() {
       this.solved = true
     },
-    visualize: emptyVisualization,
+    visualize() {
+      return {
+        title: "Scaled candidate rejected at original size",
+        lines: attemptedScaledRoute.route.slice(0, -1).map((point, index) => ({
+          points: [point, attemptedScaledRoute.route[index + 1]!],
+          strokeColor: "#dc2626",
+          strokeWidth: attemptedScaledRoute.traceThickness,
+          label: `${attemptedScaledRoute.connectionName} candidate`,
+        })),
+        points: makeNode().portPoints.map((point) => ({
+          x: point.x,
+          y: point.y,
+          color: "#2563eb",
+          label: `${point.connectionName} z${point.z}`,
+        })),
+        rects: [
+          {
+            center: makeNode().center,
+            width: makeNode().width,
+            height: makeNode().height,
+            fill: "rgba(239, 68, 68, 0.10)",
+            stroke: "#dc2626",
+            label: "original physical size",
+          },
+        ],
+        circles: [],
+      }
+    },
   } as any
 
   solver.step()
@@ -34,6 +62,9 @@ test("GrowShrinkHighDensityIntraNodeSolver opts into original-scale validation a
   expect(solver.error).toContain(
     "scaled solutions require validation at the original scale",
   )
+  await expect(
+    getSvgFromGraphicsObject(solver.visualize()),
+  ).toMatchSvgSnapshot(import.meta.path, { svgName: "rejected-scaled-route" })
 
   const impossibleSolver = new GrowShrinkHighDensityIntraNodeSolver({
     nodeWithPortPoints: makeCrossingSingleLayerNode(),
@@ -46,4 +77,9 @@ test("GrowShrinkHighDensityIntraNodeSolver opts into original-scale validation a
   expect(impossibleSolver.error).toContain(
     "cannot route an impossible single-layer crossing",
   )
+  await expect(
+    getSvgFromGraphicsObject(impossibleSolver.visualize()),
+  ).toMatchSvgSnapshot(import.meta.path, {
+    svgName: "impossible-single-layer-crossing",
+  })
 })

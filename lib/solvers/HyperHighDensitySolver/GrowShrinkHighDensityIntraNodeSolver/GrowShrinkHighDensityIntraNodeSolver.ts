@@ -272,7 +272,9 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
 
   visualize(): GraphicsObject {
     const delegatedVisualization =
-      this.activeSubSolver?.visualize() ?? this.winningSolver?.visualize()
+      this.activeSubSolver?.visualize() ??
+      this.winningSolver?.visualize() ??
+      this.failedSolvers.at(-1)?.visualize()
     if (delegatedVisualization) return delegatedVisualization
 
     if (this.solvedRoutes.length > 0) {
@@ -342,13 +344,55 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
       }
     }
 
-    return (
-      delegatedVisualization ?? {
-        lines: [],
-        points: [],
-        rects: [],
-        circles: [],
-      }
-    )
+    const portPointsByConnection = new Map<string, PortPoint[]>()
+    for (const portPoint of this.nodeWithPortPoints.portPoints) {
+      const connectionPoints =
+        portPointsByConnection.get(portPoint.connectionName) ?? []
+      connectionPoints.push(portPoint)
+      portPointsByConnection.set(portPoint.connectionName, connectionPoints)
+    }
+
+    return {
+      title: this.error ?? "Grow/shrink high density input",
+      lines: Array.from(portPointsByConnection.entries()).flatMap(
+        ([connectionName, points], connectionIndex) => {
+          if (points.length < 2) return []
+          return [
+            {
+              points: [points[0]!, points[points.length - 1]!],
+              strokeColor:
+                routeColors[connectionIndex % routeColors.length],
+              strokeWidth: this.constructorParams.traceWidth ?? 0.15,
+              label: `${connectionName} required connection`,
+            },
+          ]
+        },
+      ),
+      points: this.nodeWithPortPoints.portPoints.map((point, pointIndex) => ({
+        x: point.x,
+        y: point.y,
+        color: routeColors[pointIndex % routeColors.length],
+        label: connectionLabel(point.connectionName, point.rootConnectionName, [
+          `z${point.z}`,
+        ]),
+      })),
+      rects: [
+        {
+          center: this.nodeWithPortPoints.center,
+          width: this.nodeWithPortPoints.width,
+          height: this.nodeWithPortPoints.height,
+          fill: this.failed
+            ? "rgba(239, 68, 68, 0.10)"
+            : "rgba(14, 165, 233, 0.08)",
+          stroke: this.failed
+            ? "rgba(220, 38, 38, 0.85)"
+            : "rgba(14, 165, 233, 0.55)",
+          label: [this.nodeWithPortPoints.capacityMeshNodeId, this.error]
+            .filter(Boolean)
+            .join("\n"),
+        },
+      ],
+      circles: [],
+    }
   }
 }
