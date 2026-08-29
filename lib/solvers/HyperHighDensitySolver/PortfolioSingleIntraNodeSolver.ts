@@ -49,7 +49,6 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
   nodeWithPortPoints: NodeWithPortPoints
   connMap?: ConnectivityMap
   effort: number
-  enableHighDensityB02Solver: boolean
   adaptiveSearchExpanded = false
 
   private getSolvedSegmentCount(solver: unknown): number | null {
@@ -106,7 +105,6 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
   constructor(
     opts: ConstructorParameters<typeof CachedIntraNodeRouteSolver>[0] & {
       effort?: number
-      enableHighDensityB02Solver?: boolean
     },
   ) {
     super()
@@ -114,7 +112,6 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     this.connMap = opts.connMap
     this.constructorParams = opts
     this.effort = opts.effort ?? 1
-    this.enableHighDensityB02Solver = opts.enableHighDensityB02Solver ?? false
     this.MAX_ITERATIONS = 20_000_000 * this.effort
     this.GREEDY_MULTIPLIER = 5
     this.MIN_SUBSTEPS = 100
@@ -122,7 +119,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
 
   getCombinationDefs() {
     return [
-      ...(this.enableHighDensityB02Solver ? [["highDensityB02"]] : []),
+      ["highDensityB02"],
       ["throughObstacle"],
       ["singleLayerNoDifferentRootIntersections"],
       ["multiHeadPolyLine"],

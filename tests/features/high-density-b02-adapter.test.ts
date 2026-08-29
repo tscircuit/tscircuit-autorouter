@@ -1,5 +1,6 @@
 import { expect, test } from "bun:test"
 import { HighDensitySolverB02IntraNodeAdapter } from "lib/solvers/HighDensitySolver/high-density-solver-b02-adapter"
+import { PortfolioSingleIntraNodeSolver } from "lib/solvers/HyperHighDensitySolver/PortfolioSingleIntraNodeSolver"
 import type { NodeWithPortPoints } from "lib/types/high-density-types"
 
 test("HighDensitySolverB02 adapter preserves explicit pair metadata", () => {
@@ -59,6 +60,17 @@ test("HighDensitySolverB02 adapter preserves explicit pair metadata", () => {
     obstacles: [],
     effort: 1,
   })
+
+  const portfolioSolver = new PortfolioSingleIntraNodeSolver({
+    nodeWithPortPoints: node,
+    traceWidth: 0.15,
+    viaDiameter: 0.3,
+    obstacleMargin: 0.1,
+    obstacles: [],
+  })
+  expect(portfolioSolver.getCombinationDefs()).toContainEqual([
+    "highDensityB02",
+  ])
 
   solver.solve()
 
