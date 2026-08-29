@@ -6,6 +6,7 @@ import { createDeterministicRegionSchedule } from "./deterministic-region-schedu
 import { DynamicRegionGraph } from "./dynamic-region-graph"
 import { planGlobalTopology } from "./global-topology-planner"
 import { executeRegionJob } from "./execute-region-job"
+import { verifyFinalBoard } from "./final-board-verifier"
 import type { HybridRoutingCoreRuntime } from "./rust-core-protocol"
 import type {
   SerialHybridEngineArtifacts,
@@ -36,6 +37,7 @@ export type SerialHybridEngineConfiguration = {
   readonly maximumMergeRegionCount: number
   readonly maximumEstimatedMemoryBytesPerObject: number
   readonly maximumWaveMemoryBytes: number
+  readonly maximumFinalViolationCount: number
 }
 
 export async function runSerialHybridTransactionalEngine({
@@ -235,8 +237,29 @@ export async function runSerialHybridTransactionalEngine({
       message: finalization.message,
     })
   }
+  const verification = verifyFinalBoard({
+    problem,
+    copperSnapshot: copperStore.getSnapshot(),
+    maximumViolationCount: configuration.maximumFinalViolationCount,
+  })
+  if (verification.status === "failed") {
+    return createIncompleteResult({
+      topologyPlan,
+      demandField,
+      regionGraph,
+      boundaryContracts,
+      copperStore,
+      attempts,
+      failedRegionId: "final-board-verification",
+      unresolvedRegionIds: Object.freeze([]),
+      message:
+        verification.violations[0]?.message ??
+        "independent final-board verification failed",
+    })
+  }
   return Object.freeze({
     status: "routed",
+    verification,
     artifacts: createArtifacts({
       topologyPlan,
       demandField,
@@ -458,6 +481,7 @@ function validateConfiguration(
     configuration.maximumMergeRegionCount,
     configuration.maximumEstimatedMemoryBytesPerObject,
     configuration.maximumWaveMemoryBytes,
+    configuration.maximumFinalViolationCount,
   ]
   if (
     positiveIntegerValues.some(

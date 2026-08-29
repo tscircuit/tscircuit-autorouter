@@ -8,6 +8,7 @@ import {
 import { DemandCapacityField } from "./demand-capacity-field"
 import { createDeterministicRegionSchedule } from "./deterministic-region-scheduler"
 import { DynamicRegionGraph } from "./dynamic-region-graph"
+import { verifyFinalBoard } from "./final-board-verifier"
 import { planGlobalTopology } from "./global-topology-planner"
 import type {
   DynamicRoutingRegion,
@@ -40,6 +41,7 @@ export type ParallelHybridEngineConfiguration = {
   readonly maximumMergeRegionCount: number
   readonly maximumEstimatedMemoryBytesPerObject: number
   readonly maximumWaveMemoryBytes: number
+  readonly maximumFinalViolationCount: number
 }
 
 type ScheduledJobResult = {
@@ -230,8 +232,28 @@ export async function runParallelHybridTransactionalEngine({
         message: finalization.message,
       })
     }
+    const verification = verifyFinalBoard({
+      problem,
+      copperSnapshot: copperStore.getSnapshot(),
+      maximumViolationCount: configuration.maximumFinalViolationCount,
+    })
+    if (verification.status === "failed") {
+      return createIncompleteResult({
+        topologyPlan,
+        demandField,
+        regionGraph,
+        boundaryContracts,
+        copperStore,
+        attempts,
+        unresolvedRegionIds: Object.freeze([]),
+        message:
+          verification.violations[0]?.message ??
+          "independent final-board verification failed",
+      })
+    }
     return Object.freeze({
       status: "routed",
+      verification,
       artifacts: createArtifacts({
         topologyPlan,
         demandField,
@@ -418,6 +440,7 @@ function validateConfiguration(
     configuration.maximumMergeRegionCount,
     configuration.maximumEstimatedMemoryBytesPerObject,
     configuration.maximumWaveMemoryBytes,
+    configuration.maximumFinalViolationCount,
   ]
   if (
     !configuration.workerEntryPath ||

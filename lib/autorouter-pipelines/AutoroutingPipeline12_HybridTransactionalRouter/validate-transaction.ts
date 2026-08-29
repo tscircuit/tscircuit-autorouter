@@ -559,7 +559,6 @@ function validateObstacles(
 ): TransactionRejection | undefined {
   for (const primitive of context.addedPrimitives) {
     for (const obstacle of context.compiledRules.obstacles) {
-      if (obstacle.connectedTo.includes(primitive.connectionName)) continue
       if (!primitiveTouchesAnyLayer({ primitive, layers: obstacle.layers, context })) {
         continue
       }
@@ -572,6 +571,21 @@ function validateObstacles(
         primitive.kind === "segment"
           ? context.compiledRules.clearances.traceToPadEdgeMm
           : context.compiledRules.clearances.viaToPadEdgeMm
+      if (obstacle.connectedTo.includes(primitive.connectionName)) {
+        if (
+          primitive.kind === "via" &&
+          !context.compiledRules.allowViaInPad &&
+          distance <= GEOMETRY_EPSILON
+        ) {
+          return reject(context, {
+            code: "obstacle_clearance_violation",
+            message: `${primitive.copperId} overlaps a connected pad while via-in-pad is disabled`,
+            conflictingCopperIds: [primitive.copperId],
+            connectionNames: [primitive.connectionName],
+          })
+        }
+        continue
+      }
       if (distance + GEOMETRY_EPSILON < requiredClearance) {
         return reject(context, {
           code: "obstacle_clearance_violation",

@@ -58,6 +58,9 @@ export function finalizeCoupledRoutes({
     })
   }
   const records: CoupledRouteFinalizationRecord[] = []
+  const preloadedCopperIdPrefixes = problem.compiledRules.preloadedCopper.map(
+    (copper) => `${copper.trace.pcb_trace_id}:`,
+  )
   for (const routeObject of problem.routeObjects) {
     if (routeObject.kind === "preloaded_copper") continue
     const snapshot = copperStore.getSnapshot()
@@ -65,7 +68,10 @@ export function finalizeCoupledRoutes({
       (segment) =>
         segment.ownership.mutability === "mutable" &&
         segment.ownership.ownerRouteObjectIds.length === 1 &&
-        segment.ownership.ownerRouteObjectIds[0] === routeObject.routeObjectId,
+        segment.ownership.ownerRouteObjectIds[0] === routeObject.routeObjectId &&
+        !preloadedCopperIdPrefixes.some((prefix) =>
+          segment.copperId.startsWith(prefix),
+        ),
     )
     const finalizedSegments = simplifyAndResolveWidths({
       segments: ownedSegments,

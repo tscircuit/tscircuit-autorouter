@@ -1,5 +1,6 @@
 import type { DemandCapacityFieldSnapshot, DynamicRegionGraphSnapshot, GlobalTopologyPlan, HybridBoundaryContract, RegionAttemptRecord } from "./planning-types"
 import type { HybridCopperSnapshot, TransactionRejection } from "./transactional-copper-types"
+import type { VerifiedFinalBoard } from "./final-board-verifier"
 
 export type SerialHybridEngineArtifacts = {
   readonly topologyPlan: GlobalTopologyPlan
@@ -14,6 +15,7 @@ export type SerialHybridEngineResult =
   | {
       readonly status: "routed"
       readonly artifacts: SerialHybridEngineArtifacts
+      readonly verification: VerifiedFinalBoard
     }
   | {
       readonly status: "partial"

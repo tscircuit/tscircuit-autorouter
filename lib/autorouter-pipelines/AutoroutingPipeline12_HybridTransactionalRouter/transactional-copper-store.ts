@@ -224,6 +224,25 @@ function convertPreloadedCopper({
           ownership,
         }),
       )
+      const nextRouteEntry = copper.trace.route[routeIndex + 1]
+      if (
+        nextRouteEntry?.route_type === "wire" &&
+        (routeEntry.from_layer === nextRouteEntry.layer ||
+          routeEntry.to_layer === nextRouteEntry.layer)
+      ) {
+        primitives.push(
+          freezeSegment({
+            kind: "segment",
+            copperId: `${copper.trace.pcb_trace_id}:segment:${routeIndex}`,
+            connectionName: copper.trace.connection_name,
+            layer: nextRouteEntry.layer,
+            start: { x: routeEntry.x, y: routeEntry.y },
+            end: { x: nextRouteEntry.x, y: nextRouteEntry.y },
+            widthMm: nextRouteEntry.width,
+            ownership,
+          }),
+        )
+      }
       continue
     }
     if (routeEntry.route_type === "through_obstacle") {
@@ -256,6 +275,25 @@ function convertPreloadedCopper({
     if (
       nextRouteEntry?.route_type === "wire" &&
       nextRouteEntry.layer === routeEntry.layer
+    ) {
+      primitives.push(
+        freezeSegment({
+          kind: "segment",
+          copperId: `${copper.trace.pcb_trace_id}:segment:${routeIndex}`,
+          connectionName: copper.trace.connection_name,
+          layer: routeEntry.layer,
+          start: { x: routeEntry.x, y: routeEntry.y },
+          end: { x: nextRouteEntry.x, y: nextRouteEntry.y },
+          widthMm: routeEntry.width,
+          ownership,
+        }),
+      )
+      continue
+    }
+    if (
+      nextRouteEntry?.route_type === "via" &&
+      (nextRouteEntry.from_layer === routeEntry.layer ||
+        nextRouteEntry.to_layer === routeEntry.layer)
     ) {
       primitives.push(
         freezeSegment({

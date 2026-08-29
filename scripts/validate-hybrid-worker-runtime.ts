@@ -120,6 +120,10 @@ const fourWorkerResult = await runParallelHybridTransactionalEngine({
   problem,
   configuration: createEngineConfiguration(4),
 })
+const repeatedFourWorkerResult = await runParallelHybridTransactionalEngine({
+  problem,
+  configuration: createEngineConfiguration(4),
+})
 const runtimeModule: unknown = createRequire(import.meta.url)(runtimeModulePath)
 assert(
   isRecord(runtimeModule) &&
@@ -150,6 +154,7 @@ const serialResult = await runSerialHybridTransactionalEngine({
     maximumMergeRegionCount: 8,
     maximumEstimatedMemoryBytesPerObject: 32 * 1024 * 1024,
     maximumWaveMemoryBytes: 128 * 1024 * 1024,
+    maximumFinalViolationCount: 64,
   },
 })
 assert.equal(
@@ -172,10 +177,37 @@ assert.equal(
         attempts: fourWorkerResult.artifacts.attempts,
       }),
 )
+assert.equal(
+  repeatedFourWorkerResult.status,
+  "routed",
+  repeatedFourWorkerResult.status === "routed"
+    ? undefined
+    : JSON.stringify({
+        message: repeatedFourWorkerResult.message,
+        attempts: repeatedFourWorkerResult.artifacts.attempts,
+      }),
+)
 assert.deepEqual(
   fourWorkerResult.artifacts.copperSnapshot,
   singleWorkerResult.artifacts.copperSnapshot,
   "authoritative copper must be byte-stable across concurrency settings",
+)
+if (
+  singleWorkerResult.status !== "routed" ||
+  fourWorkerResult.status !== "routed" ||
+  repeatedFourWorkerResult.status !== "routed"
+) {
+  throw new Error("verified routed results are required for hash comparison")
+}
+assert.equal(
+  fourWorkerResult.verification.routeHash,
+  singleWorkerResult.verification.routeHash,
+  "route hash must be stable across concurrency settings",
+)
+assert.equal(
+  repeatedFourWorkerResult.verification.routeHash,
+  fourWorkerResult.verification.routeHash,
+  "route hash must be stable across repeated runs",
 )
 assert.equal(
   serialResult.status,
@@ -198,6 +230,7 @@ console.log(
     replacementWorker: replacementResult.status,
     deterministicCopperVersion:
       singleWorkerResult.artifacts.copperSnapshot.version,
+    deterministicRouteHash: singleWorkerResult.verification.routeHash,
     serialFastPath: serialResult.status,
   }),
 )
@@ -242,5 +275,6 @@ function createEngineConfiguration(
     maximumMergeRegionCount: 8,
     maximumEstimatedMemoryBytesPerObject: 32 * 1024 * 1024,
     maximumWaveMemoryBytes: 128 * 1024 * 1024,
+    maximumFinalViolationCount: 64,
   })
 }
