@@ -1191,24 +1191,11 @@ function normalizePreloadedRouteEntry({
     })
   }
   if (routeEntry.route_type === "jumper") {
-    if (!layerByName.has(routeEntry.layer)) {
-      failCompilation(
-        "unknown_layer",
-        `${routeEntryPath}.layer`,
-        `references ${routeEntry.layer}`,
-      )
-    }
-    return Object.freeze({
-      ...routeEntry,
-      start: Object.freeze({
-        x: requireFiniteNumber(routeEntry.start.x, `${routeEntryPath}.start.x`),
-        y: requireFiniteNumber(routeEntry.start.y, `${routeEntryPath}.start.y`),
-      }),
-      end: Object.freeze({
-        x: requireFiniteNumber(routeEntry.end.x, `${routeEntryPath}.end.x`),
-        y: requireFiniteNumber(routeEntry.end.y, `${routeEntryPath}.end.y`),
-      }),
-    })
+    failCompilation(
+      "impossible_geometry",
+      routeEntryPath,
+      "preloaded jumpers do not encode exact copper pad dimensions required by the hybrid validator",
+    )
   }
   if (
     !layerByName.has(routeEntry.from_layer) ||

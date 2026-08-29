@@ -1,5 +1,14 @@
 import type { SimpleRouteJson } from "lib/types"
 import type { HybridRoutingRulesInput } from "lib/autorouter-pipelines/AutoroutingPipeline12_HybridTransactionalRouter/types"
+import { compileRoutingRules } from "lib/autorouter-pipelines/AutoroutingPipeline12_HybridTransactionalRouter/compile-routing-rules"
+import { buildTypedRoutingProblem } from "lib/autorouter-pipelines/AutoroutingPipeline12_HybridTransactionalRouter/build-typed-routing-problem"
+import type {
+  TypedRoutingProblem,
+} from "lib/autorouter-pipelines/AutoroutingPipeline12_HybridTransactionalRouter/types"
+import type {
+  HybridCopperPoint,
+  HybridTransactionDelta,
+} from "lib/autorouter-pipelines/AutoroutingPipeline12_HybridTransactionalRouter/transactional-copper-types"
 
 export function createHybridRoutingTestFixture(): {
   simpleRouteJson: SimpleRouteJson
@@ -152,4 +161,170 @@ export function createHybridRoutingTestFixture(): {
     ],
   }
   return { simpleRouteJson, routingRules }
+}
+
+export function createHybridRoutingTestProblem(): TypedRoutingProblem {
+  const { simpleRouteJson, routingRules } = createHybridRoutingTestFixture()
+  return buildTypedRoutingProblem(
+    compileRoutingRules({ simpleRouteJson, routingRules }),
+  )
+}
+
+export function createHybridSegmentTransaction({
+  problem,
+  transactionId,
+  connectionName,
+  start,
+  end,
+  baseCopperVersion = 0,
+  connectedTerminalIds = [],
+}: {
+  problem: TypedRoutingProblem
+  transactionId: string
+  connectionName: string
+  start: HybridCopperPoint
+  end: HybridCopperPoint
+  baseCopperVersion?: number
+  connectedTerminalIds?: readonly string[]
+}): HybridTransactionDelta {
+  const connection = problem.compiledRules.connections.find(
+    (candidate) => candidate.connectionName === connectionName,
+  )
+  const ownership = problem.ownershipByConnection.find(
+    (candidate) => candidate.connectionName === connectionName,
+  )
+  if (!connection || !ownership) {
+    throw new Error(`test fixture has no connection ${connectionName}`)
+  }
+  const copperId = `${transactionId}:segment`
+  return {
+    transactionId,
+    regionId: `region:${transactionId}`,
+    ownerRouteObjectId: ownership.ownerRouteObjectId,
+    baseCopperVersion,
+    boundaryContractVersion: 0,
+    addedTraces: [
+      {
+        kind: "segment",
+        copperId,
+        connectionName,
+        layer: connection.allowedLayers[0]!,
+        start,
+        end,
+        widthMm: connection.traceWidthMm,
+        ownership: {
+          mutability: "mutable",
+          ownerRouteObjectIds: [ownership.ownerRouteObjectId],
+        },
+      },
+    ],
+    removedOwnedTraceIds: [],
+    addedVias: [],
+    removedOwnedViaIds: [],
+    connectivityEffects: {
+      connectionNames: [connectionName],
+      connectedTerminalIds,
+    },
+    affectedBounds: problem.compiledRules.boardBounds,
+    candidateCost: {
+      viaCount: 0,
+      totalLengthMm: Math.hypot(end.x - start.x, end.y - start.y),
+      bendCount: 0,
+      congestionCost: 0,
+      softViaBudgetExceeded: false,
+    },
+    work: {
+      searchExpansions: 1,
+      spatialIndexQueries: 0,
+      drcPredicateCalls: 0,
+      geometryAllocations: 1,
+    },
+    diagnostic: {
+      code: "candidate_complete",
+      message: "test candidate",
+      regionIds: [`region:${transactionId}`],
+      connectionNames: [connectionName],
+    },
+  }
+}
+
+export function createHybridViaTransaction({
+  problem,
+  transactionId,
+  connectionName,
+  points,
+  fromLayer = "top",
+  toLayer = "bottom",
+  baseCopperVersion = 0,
+}: {
+  problem: TypedRoutingProblem
+  transactionId: string
+  connectionName: string
+  points: readonly HybridCopperPoint[]
+  fromLayer?: string
+  toLayer?: string
+  baseCopperVersion?: number
+}): HybridTransactionDelta {
+  const connection = problem.compiledRules.connections.find(
+    (candidate) => candidate.connectionName === connectionName,
+  )
+  const ownership = problem.ownershipByConnection.find(
+    (candidate) => candidate.connectionName === connectionName,
+  )
+  if (!connection || !ownership) {
+    throw new Error(`test fixture has no connection ${connectionName}`)
+  }
+  return {
+    transactionId,
+    regionId: `region:${transactionId}`,
+    ownerRouteObjectId: ownership.ownerRouteObjectId,
+    baseCopperVersion,
+    boundaryContractVersion: 0,
+    addedTraces: [],
+    removedOwnedTraceIds: [],
+    addedVias: points.map((point, pointIndex) => ({
+      kind: "via",
+      copperId: `${transactionId}:via:${pointIndex}`,
+      connectionName,
+      x: point.x,
+      y: point.y,
+      fromLayer,
+      toLayer,
+      padDiameterMm: problem.compiledRules.viaPadDiameterMm,
+      holeDiameterMm: problem.compiledRules.viaHoleDiameterMm,
+      ownership: {
+        mutability: "mutable",
+        ownerRouteObjectIds: [ownership.ownerRouteObjectId],
+      },
+    })),
+    removedOwnedViaIds: [],
+    connectivityEffects: {
+      connectionNames: [connectionName],
+      connectedTerminalIds: [],
+    },
+    affectedBounds: problem.compiledRules.boardBounds,
+    candidateCost: {
+      viaCount: points.length,
+      totalLengthMm: 0,
+      bendCount: 0,
+      congestionCost: 0,
+      softViaBudgetExceeded: points.length > connection.viaBudget.softMaximum,
+      softViaBudgetJustification:
+        points.length > connection.viaBudget.softMaximum
+          ? "test exercises compiled via-budget validation"
+          : undefined,
+    },
+    work: {
+      searchExpansions: 1,
+      spatialIndexQueries: 0,
+      drcPredicateCalls: 0,
+      geometryAllocations: points.length,
+    },
+    diagnostic: {
+      code: "candidate_complete",
+      message: "test candidate",
+      regionIds: [`region:${transactionId}`],
+      connectionNames: [connectionName],
+    },
+  }
 }
