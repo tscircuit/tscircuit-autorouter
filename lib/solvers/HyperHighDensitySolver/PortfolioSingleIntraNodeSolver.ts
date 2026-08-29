@@ -8,6 +8,7 @@ import {
   NodeWithPortPoints,
 } from "lib/types/high-density-types"
 import { CachedIntraNodeRouteSolver } from "../HighDensitySolver/CachedIntraNodeRouteSolver"
+import { HighDensitySolverB02IntraNodeAdapter } from "../HighDensitySolver/HighDensitySolverB02IntraNodeAdapter"
 import { IntraNodeRouteSolver } from "../HighDensitySolver/IntraNodeSolver"
 import { MultiHeadPolyLineIntraNodeSolver2 } from "../HighDensitySolver/MultiHeadPolyLineIntraNodeSolver/MultiHeadPolyLineIntraNodeSolver2_Optimized"
 import { MultiHeadPolyLineIntraNodeSolver3 } from "../HighDensitySolver/MultiHeadPolyLineIntraNodeSolver/MultiHeadPolyLineIntraNodeSolver3_ViaPossibilitiesSolverIntegration"
@@ -41,6 +42,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
   | SingleLayerNoDifferentRootIntersectionsIntraNodeSolver
   | HighDensityA03Solver
   | TwoChordLaneIntraNodeSolver
+  | HighDensitySolverB02IntraNodeAdapter
 > {
   override getSolverName(): string {
     return "PortfolioSingleIntraNodeSolver"
@@ -52,6 +54,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
   connMap?: ConnectivityMap
   effort: number
   enableTwoChordLaneSolver: boolean
+  enableHighDensityB02Solver: boolean
   adaptiveSearchExpanded = false
 
   private getSolvedSegmentCount(solver: unknown): number | null {
@@ -109,6 +112,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     opts: ConstructorParameters<typeof CachedIntraNodeRouteSolver>[0] & {
       effort?: number
       enableTwoChordLaneSolver?: boolean
+      enableHighDensityB02Solver?: boolean
     },
   ) {
     super()
@@ -117,6 +121,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     this.constructorParams = opts
     this.effort = opts.effort ?? 1
     this.enableTwoChordLaneSolver = opts.enableTwoChordLaneSolver ?? false
+    this.enableHighDensityB02Solver = opts.enableHighDensityB02Solver ?? false
     this.MAX_ITERATIONS = 20_000_000 * this.effort
     this.GREEDY_MULTIPLIER = 5
     this.MIN_SUBSTEPS = 100
@@ -125,6 +130,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
   getCombinationDefs() {
     return [
       ...(this.enableTwoChordLaneSolver ? [["twoChordLane"]] : []),
+      ...(this.enableHighDensityB02Solver ? [["highDensityB02"]] : []),
       ["throughObstacle"],
       ["singleLayerNoDifferentRootIntersections"],
       ["multiHeadPolyLine"],
@@ -146,6 +152,14 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
         possibleValues: [
           {
             TWO_CHORD_LANE: true,
+          },
+        ],
+      },
+      {
+        name: "highDensityB02",
+        possibleValues: [
+          {
+            HIGH_DENSITY_B02: true,
           },
         ],
       },
@@ -423,6 +437,17 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
         viaDiameter: this.constructorParams.viaDiameter,
         clearance: INTRA_NODE_COPPER_CLEARANCE,
         obstacles: this.constructorParams.obstacles,
+      }) as any
+    }
+
+    if (hyperParameters.HIGH_DENSITY_B02) {
+      return new HighDensitySolverB02IntraNodeAdapter({
+        nodeWithPortPoints: this.nodeWithPortPoints,
+        traceWidth: this.constructorParams.traceWidth,
+        viaDiameter: this.constructorParams.viaDiameter,
+        clearance: 0.1,
+        obstacles: this.constructorParams.obstacles,
+        effort: this.effort,
       }) as any
     }
 

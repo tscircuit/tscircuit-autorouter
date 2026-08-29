@@ -59,6 +59,7 @@ export class HighDensitySolver extends BaseSolver {
   layerCount: number
   useGrowShrinkHighDensityIntraNodeSolver: boolean
   enableTwoChordLaneSolver: boolean
+  enableHighDensityB02Solver: boolean
   preserveTerminalPcbPortIds: boolean
   growShrinkMaxInnerIterationsPerGrowthAttempt?: number
   growShrinkFallbackToInvalidGeometryOnFailure: boolean
@@ -95,6 +96,7 @@ export class HighDensitySolver extends BaseSolver {
     layerCount,
     useGrowShrinkHighDensityIntraNodeSolver,
     enableTwoChordLaneSolver,
+    enableHighDensityB02Solver,
     preserveTerminalPcbPortIds,
     growShrinkMaxInnerIterationsPerGrowthAttempt,
     growShrinkFallbackToInvalidGeometryOnFailure,
@@ -112,6 +114,7 @@ export class HighDensitySolver extends BaseSolver {
     layerCount?: number
     useGrowShrinkHighDensityIntraNodeSolver?: boolean
     enableTwoChordLaneSolver?: boolean
+    enableHighDensityB02Solver?: boolean
     preserveTerminalPcbPortIds?: boolean
     growShrinkMaxInnerIterationsPerGrowthAttempt?: number
     growShrinkFallbackToInvalidGeometryOnFailure?: boolean
@@ -138,6 +141,7 @@ export class HighDensitySolver extends BaseSolver {
     this.useGrowShrinkHighDensityIntraNodeSolver =
       useGrowShrinkHighDensityIntraNodeSolver ?? false
     this.enableTwoChordLaneSolver = enableTwoChordLaneSolver ?? false
+    this.enableHighDensityB02Solver = enableHighDensityB02Solver ?? false
     this.preserveTerminalPcbPortIds = preserveTerminalPcbPortIds ?? false
     this.growShrinkMaxInnerIterationsPerGrowthAttempt =
       growShrinkMaxInnerIterationsPerGrowthAttempt
@@ -386,6 +390,7 @@ export class HighDensitySolver extends BaseSolver {
       obstacles: this.obstacles,
       layerCount: this.layerCount,
       enableTwoChordLaneSolver: this.enableTwoChordLaneSolver,
+      enableHighDensityB02Solver: this.enableHighDensityB02Solver,
       maxInnerIterationsPerGrowthAttempt:
         this.growShrinkMaxInnerIterationsPerGrowthAttempt,
       fallbackToInvalidGeometryOnFailure:
