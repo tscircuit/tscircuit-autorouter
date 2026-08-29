@@ -1,6 +1,7 @@
 import type { DemandCapacityFieldSnapshot, DynamicRegionGraphSnapshot, GlobalTopologyPlan, HybridBoundaryContract, RegionAttemptRecord } from "./planning-types"
 import type { HybridCopperSnapshot, TransactionRejection } from "./transactional-copper-types"
 import type { VerifiedFinalBoard } from "./final-board-verifier"
+import type { RegionCacheSnapshot } from "./content-addressed-region-cache"
 
 export type SerialHybridEngineArtifacts = {
   readonly topologyPlan: GlobalTopologyPlan
@@ -9,6 +10,7 @@ export type SerialHybridEngineArtifacts = {
   readonly boundaryContracts: readonly HybridBoundaryContract[]
   readonly copperSnapshot: HybridCopperSnapshot
   readonly attempts: readonly RegionAttemptRecord[]
+  readonly cache: RegionCacheSnapshot
 }
 
 export type SerialHybridEngineResult =

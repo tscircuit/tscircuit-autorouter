@@ -9,6 +9,16 @@ import { DemandCapacityField } from "./demand-capacity-field"
 import { createDeterministicRegionSchedule } from "./deterministic-region-scheduler"
 import { DynamicRegionGraph } from "./dynamic-region-graph"
 import { verifyFinalBoard } from "./final-board-verifier"
+import {
+  createRegionCacheKey,
+  EMPTY_REGION_CACHE_SNAPSHOT,
+  getRegionCacheRunSnapshot,
+} from "./content-addressed-region-cache"
+import type {
+  ContentAddressedRegionCache,
+  RegionCacheKey,
+  RegionCacheSnapshot,
+} from "./content-addressed-region-cache"
 import { planGlobalTopology } from "./global-topology-planner"
 import type {
   DynamicRoutingRegion,
@@ -42,12 +52,15 @@ export type ParallelHybridEngineConfiguration = {
   readonly maximumEstimatedMemoryBytesPerObject: number
   readonly maximumWaveMemoryBytes: number
   readonly maximumFinalViolationCount: number
+  readonly regionCache?: ContentAddressedRegionCache
 }
 
 type ScheduledJobResult = {
   readonly region: DynamicRoutingRegion
   readonly routePlan: GlobalRouteObjectPlan
   readonly result: HybridWorkerPoolJobResult
+  readonly source: "worker" | "cache"
+  readonly cacheKey?: RegionCacheKey
 }
 
 export async function runParallelHybridTransactionalEngine({
@@ -58,6 +71,15 @@ export async function runParallelHybridTransactionalEngine({
   configuration: ParallelHybridEngineConfiguration
 }): Promise<SerialHybridEngineResult> {
   validateConfiguration(configuration)
+  const initialCacheSnapshot =
+    configuration.regionCache?.getSnapshot() ?? EMPTY_REGION_CACHE_SNAPSHOT
+  const getCacheMetrics = (): RegionCacheSnapshot =>
+    configuration.regionCache
+      ? getRegionCacheRunSnapshot({
+          initial: initialCacheSnapshot,
+          current: configuration.regionCache.getSnapshot(),
+        })
+      : EMPTY_REGION_CACHE_SNAPSHOT
   const topologyPlan = planGlobalTopology({
     problem,
     maximumEstimatedMemoryBytesPerObject:
@@ -136,8 +158,47 @@ export async function runParallelHybridTransactionalEngine({
             maximumActivationRings: configuration.maximumActivationRings,
             deterministicSeed: configuration.deterministicSeed,
           })
+          const cacheKey = configuration.regionCache
+            ? createRegionCacheKey({
+                problem,
+                region,
+                routePlan,
+                boundaryContracts,
+                job,
+                runtimeTarget: configuration.runtimeTarget,
+              })
+            : undefined
+          if (cacheKey && configuration.regionCache) {
+            const cached = configuration.regionCache.get(cacheKey)
+            if (cached) {
+              const validationStart = performance.now()
+              const validation = copperStore.validate(cached.transactionDelta)
+              configuration.regionCache.recordValidationMs(
+                performance.now() - validationStart,
+              )
+              if (validation.status === "accepted") {
+                return Promise.resolve({
+                  region,
+                  routePlan,
+                  source: "cache" as const,
+                  cacheKey,
+                  result: createCachedJobResult({
+                    jobId: job.jobId,
+                    delta: cached.transactionDelta,
+                  }),
+                })
+              }
+              configuration.regionCache.invalidate(cacheKey)
+            }
+          }
           return workerPool.submit(job).then(
-            (result): ScheduledJobResult => ({ region, routePlan, result }),
+            (result): ScheduledJobResult => ({
+              region,
+              routePlan,
+              result,
+              source: "worker",
+              cacheKey,
+            }),
           )
         })
       })
@@ -153,6 +214,7 @@ export async function runParallelHybridTransactionalEngine({
             boundaryContracts,
             copperStore,
             attempts,
+            cache: getCacheMetrics(),
             unresolvedRegionIds: getUnresolvedRegionIds({
               schedule,
               fromWaveIndex: wave.waveIndex,
@@ -166,6 +228,9 @@ export async function runParallelHybridTransactionalEngine({
         const delta = completed.result.response.transactionDelta
         const commit = copperStore.commit(delta)
         if (commit.status !== "committed") {
+          if (completed.source === "cache" && completed.cacheKey) {
+            configuration.regionCache?.invalidate(completed.cacheKey)
+          }
           attempts.push(
             createAttempt({
               ...completed,
@@ -191,6 +256,7 @@ export async function runParallelHybridTransactionalEngine({
             boundaryContracts,
             copperStore,
             attempts,
+            cache: getCacheMetrics(),
             unresolvedRegionIds: getUnresolvedRegionIds({
               schedule,
               fromWaveIndex: wave.waveIndex,
@@ -202,6 +268,17 @@ export async function runParallelHybridTransactionalEngine({
           delta,
           committedSnapshot: commit.snapshot,
         })
+        if (
+          completed.source === "worker" &&
+          completed.cacheKey &&
+          configuration.regionCache
+        ) {
+          configuration.regionCache.put({
+            key: completed.cacheKey,
+            transactionDelta: delta,
+            diagnostic: delta.diagnostic,
+          })
+        }
         await workerPool.applyCopperUpdate(
           buildWorkerCopperUpdate({
             problem,
@@ -228,6 +305,7 @@ export async function runParallelHybridTransactionalEngine({
         boundaryContracts,
         copperStore,
         attempts,
+        cache: getCacheMetrics(),
         unresolvedRegionIds: Object.freeze([]),
         message: finalization.message,
       })
@@ -245,6 +323,7 @@ export async function runParallelHybridTransactionalEngine({
         boundaryContracts,
         copperStore,
         attempts,
+        cache: getCacheMetrics(),
         unresolvedRegionIds: Object.freeze([]),
         message:
           verification.violations[0]?.message ??
@@ -261,11 +340,35 @@ export async function runParallelHybridTransactionalEngine({
         boundaryContracts,
         copperStore,
         attempts,
+        cache: getCacheMetrics(),
       }),
     })
   } finally {
     await workerPool.close()
   }
+}
+
+function createCachedJobResult({
+  jobId,
+  delta,
+}: {
+  jobId: string
+  delta: HybridTransactionDelta
+}): HybridWorkerPoolJobResult {
+  return Object.freeze({
+    status: "completed" as const,
+    queueWaitMs: 0,
+    response: Object.freeze({
+      type: "result" as const,
+      workerId: "region-cache",
+      jobId,
+      transactionDelta: delta,
+      solveTimeMs: 0,
+      cpuTimeMs: 0,
+      receivedBytes: 0,
+      returnedBytes: 0,
+    }),
+  })
 }
 
 function createFinalizationAttempt(
@@ -306,7 +409,10 @@ function createAttempt(
       attemptId: `worker-attempt:${completed.result.response.jobId}`,
       regionId: completed.region.regionId,
       workerId: completed.result.response.workerId,
-      strategy: "rust-multi-resolution-worker",
+      strategy:
+        completed.source === "cache"
+          ? "validated-content-addressed-cache"
+          : "rust-multi-resolution-worker",
       queueWaitMs: completed.result.queueWaitMs,
       solveTimeMs: completed.result.response.solveTimeMs,
       workerCpuMs: completed.result.response.cpuTimeMs,
@@ -370,6 +476,7 @@ function createIncompleteResult({
   boundaryContracts,
   copperStore,
   attempts,
+  cache,
   unresolvedRegionIds,
   message,
 }: {
@@ -379,6 +486,7 @@ function createIncompleteResult({
   boundaryContracts: SerialHybridEngineArtifacts["boundaryContracts"]
   copperStore: TransactionalCopperStore
   attempts: readonly RegionAttemptRecord[]
+  cache: RegionCacheSnapshot
   unresolvedRegionIds: readonly string[]
   message: string
 }): SerialHybridEngineResult {
@@ -389,6 +497,7 @@ function createIncompleteResult({
     boundaryContracts,
     copperStore,
     attempts,
+    cache,
   })
   return artifacts.copperSnapshot.version === 0
     ? Object.freeze({ status: "failed", artifacts, message })
@@ -407,6 +516,7 @@ function createArtifacts({
   boundaryContracts,
   copperStore,
   attempts,
+  cache,
 }: {
   topologyPlan: SerialHybridEngineArtifacts["topologyPlan"]
   demandField: DemandCapacityField
@@ -414,6 +524,7 @@ function createArtifacts({
   boundaryContracts: SerialHybridEngineArtifacts["boundaryContracts"]
   copperStore: TransactionalCopperStore
   attempts: readonly RegionAttemptRecord[]
+  cache: RegionCacheSnapshot
 }): SerialHybridEngineArtifacts {
   return Object.freeze({
     topologyPlan,
@@ -422,6 +533,7 @@ function createArtifacts({
     boundaryContracts,
     copperSnapshot: copperStore.getSnapshot(),
     attempts: Object.freeze([...attempts]),
+    cache,
   })
 }
 

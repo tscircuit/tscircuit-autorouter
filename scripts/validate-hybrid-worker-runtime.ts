@@ -1,6 +1,7 @@
 import assert from "node:assert/strict"
 import { createRequire } from "node:module"
 import { resolve } from "node:path"
+import { ContentAddressedRegionCache } from "lib/autorouter-pipelines/AutoroutingPipeline12_HybridTransactionalRouter/content-addressed-region-cache"
 import { negotiateBoundaryContracts } from "lib/autorouter-pipelines/AutoroutingPipeline12_HybridTransactionalRouter/boundary-contract-negotiator"
 import { buildHybridWorkerBoardContext, buildRegionJob } from "lib/autorouter-pipelines/AutoroutingPipeline12_HybridTransactionalRouter/build-worker-messages"
 import { DynamicRegionGraph } from "lib/autorouter-pipelines/AutoroutingPipeline12_HybridTransactionalRouter/dynamic-region-graph"
@@ -116,13 +117,17 @@ const singleWorkerResult = await runParallelHybridTransactionalEngine({
   problem,
   configuration: createEngineConfiguration(1),
 })
+const regionCache = new ContentAddressedRegionCache({
+  maximumEntryCount: 128,
+  maximumStoredBytes: 32 * 1024 * 1024,
+})
 const fourWorkerResult = await runParallelHybridTransactionalEngine({
   problem,
-  configuration: createEngineConfiguration(4),
+  configuration: createEngineConfiguration(4, regionCache),
 })
 const repeatedFourWorkerResult = await runParallelHybridTransactionalEngine({
   problem,
-  configuration: createEngineConfiguration(4),
+  configuration: createEngineConfiguration(4, regionCache),
 })
 const runtimeModule: unknown = createRequire(import.meta.url)(runtimeModulePath)
 assert(
@@ -209,6 +214,9 @@ assert.equal(
   fourWorkerResult.verification.routeHash,
   "route hash must be stable across repeated runs",
 )
+assert(fourWorkerResult.artifacts.cache.misses > 0)
+assert(repeatedFourWorkerResult.artifacts.cache.hits > 0)
+assert.equal(repeatedFourWorkerResult.artifacts.cache.misses, 0)
 assert.equal(
   serialResult.status,
   "routed",
@@ -231,6 +239,9 @@ console.log(
     deterministicCopperVersion:
       singleWorkerResult.artifacts.copperSnapshot.version,
     deterministicRouteHash: singleWorkerResult.verification.routeHash,
+    coldCacheMisses: fourWorkerResult.artifacts.cache.misses,
+    warmCacheHits: repeatedFourWorkerResult.artifacts.cache.hits,
+    warmCacheStoredBytes: repeatedFourWorkerResult.artifacts.cache.storedBytes,
     serialFastPath: serialResult.status,
   }),
 )
@@ -258,6 +269,7 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 
 function createEngineConfiguration(
   maximumConcurrency: number,
+  regionCache?: ContentAddressedRegionCache,
 ): ParallelHybridEngineConfiguration {
   return Object.freeze({
     workerEntryPath,
@@ -276,5 +288,6 @@ function createEngineConfiguration(
     maximumEstimatedMemoryBytesPerObject: 32 * 1024 * 1024,
     maximumWaveMemoryBytes: 128 * 1024 * 1024,
     maximumFinalViolationCount: 64,
+    regionCache,
   })
 }

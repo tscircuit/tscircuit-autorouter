@@ -7,16 +7,23 @@ import { DynamicRegionGraph } from "./dynamic-region-graph"
 import { planGlobalTopology } from "./global-topology-planner"
 import { executeRegionJob } from "./execute-region-job"
 import { verifyFinalBoard } from "./final-board-verifier"
+import {
+  createRegionCacheKey,
+  EMPTY_REGION_CACHE_SNAPSHOT,
+  getRegionCacheRunSnapshot,
+} from "./content-addressed-region-cache"
+import type {
+  ContentAddressedRegionCache,
+  RegionCacheKey,
+  RegionCacheSnapshot,
+} from "./content-addressed-region-cache"
 import type { HybridRoutingCoreRuntime } from "./rust-core-protocol"
 import type {
   SerialHybridEngineArtifacts,
   SerialHybridEngineResult,
 } from "./serial-engine-types"
 import { TransactionalCopperStore } from "./transactional-copper-store"
-import type {
-  HybridCopperSnapshot,
-  HybridTransactionDelta,
-} from "./transactional-copper-types"
+import type { HybridTransactionDelta } from "./transactional-copper-types"
 import type { TypedRoutingProblem } from "./types"
 import type {
   DynamicRoutingRegion,
@@ -38,6 +45,7 @@ export type SerialHybridEngineConfiguration = {
   readonly maximumEstimatedMemoryBytesPerObject: number
   readonly maximumWaveMemoryBytes: number
   readonly maximumFinalViolationCount: number
+  readonly regionCache?: ContentAddressedRegionCache
 }
 
 export async function runSerialHybridTransactionalEngine({
@@ -48,6 +56,15 @@ export async function runSerialHybridTransactionalEngine({
   configuration: SerialHybridEngineConfiguration
 }): Promise<SerialHybridEngineResult> {
   validateConfiguration(configuration)
+  const initialCacheSnapshot =
+    configuration.regionCache?.getSnapshot() ?? EMPTY_REGION_CACHE_SNAPSHOT
+  const getCacheMetrics = (): RegionCacheSnapshot =>
+    configuration.regionCache
+      ? getRegionCacheRunSnapshot({
+          initial: initialCacheSnapshot,
+          current: configuration.regionCache.getSnapshot(),
+        })
+      : EMPTY_REGION_CACHE_SNAPSHOT
   const topologyPlan = planGlobalTopology({
     problem,
     maximumEstimatedMemoryBytesPerObject:
@@ -98,6 +115,7 @@ export async function runSerialHybridTransactionalEngine({
         boundaryContracts,
         copperStore,
         attempts,
+        cache: getCacheMetrics(),
         message: `schedule references missing region ${regionId}`,
       })
     }
@@ -113,6 +131,7 @@ export async function runSerialHybridTransactionalEngine({
           boundaryContracts,
           copperStore,
           attempts,
+          cache: getCacheMetrics(),
           failedRegionId: regionId,
           message: `region references missing route plan ${routeObjectId}`,
         })
@@ -125,7 +144,7 @@ export async function runSerialHybridTransactionalEngine({
           routePlan,
           region,
           boundaryContracts,
-          copperSnapshot: copperStore.getSnapshot(),
+          copperStore,
           configuration,
         })
       } catch (error) {
@@ -146,6 +165,7 @@ export async function runSerialHybridTransactionalEngine({
           boundaryContracts,
           copperStore,
           attempts,
+          cache: getCacheMetrics(),
           failedRegionId: regionId,
           message: getErrorMessage(error),
         })
@@ -168,6 +188,7 @@ export async function runSerialHybridTransactionalEngine({
           boundaryContracts,
           copperStore,
           attempts,
+          cache: getCacheMetrics(),
           failedRegionId: regionId,
           unresolvedRegionIds: scheduledRegionIds.slice(scheduledIndex),
           message: candidate.message,
@@ -184,6 +205,7 @@ export async function runSerialHybridTransactionalEngine({
             outcome: "rejected",
             rejectionReason: commit.rejection.message,
             transactionId: candidate.delta.transactionId,
+            source: candidate.source,
           }),
         )
         return createIncompleteResult({
@@ -193,6 +215,7 @@ export async function runSerialHybridTransactionalEngine({
           boundaryContracts,
           copperStore,
           attempts,
+          cache: getCacheMetrics(),
           failedRegionId: regionId,
           unresolvedRegionIds: scheduledRegionIds.slice(scheduledIndex),
           rejection: commit.rejection,
@@ -203,6 +226,17 @@ export async function runSerialHybridTransactionalEngine({
         delta: candidate.delta,
         committedSnapshot: commit.snapshot,
       })
+      if (
+        candidate.source === "worker" &&
+        candidate.cacheKey &&
+        configuration.regionCache
+      ) {
+        configuration.regionCache.put({
+          key: candidate.cacheKey,
+          transactionDelta: candidate.delta,
+          diagnostic: candidate.delta.diagnostic,
+        })
+      }
       attempts.push(
         createAttempt({
           region,
@@ -211,6 +245,7 @@ export async function runSerialHybridTransactionalEngine({
           solveTimeMs: performance.now() - attemptStart,
           outcome: "committed",
           transactionId: candidate.delta.transactionId,
+          source: candidate.source,
         }),
       )
     }
@@ -231,6 +266,7 @@ export async function runSerialHybridTransactionalEngine({
       boundaryContracts,
       copperStore,
       attempts,
+      cache: getCacheMetrics(),
       failedRegionId: "coupled-route-finalization",
       unresolvedRegionIds: Object.freeze([]),
       rejection: finalization.rejection,
@@ -250,6 +286,7 @@ export async function runSerialHybridTransactionalEngine({
       boundaryContracts,
       copperStore,
       attempts,
+      cache: getCacheMetrics(),
       failedRegionId: "final-board-verification",
       unresolvedRegionIds: Object.freeze([]),
       message:
@@ -267,6 +304,7 @@ export async function runSerialHybridTransactionalEngine({
       boundaryContracts,
       copperStore,
       attempts,
+      cache: getCacheMetrics(),
     }),
   })
 }
@@ -290,7 +328,12 @@ function createFinalizationAttempt(
 }
 
 type RegionCandidateResult =
-  | { readonly status: "candidate"; readonly delta: HybridTransactionDelta }
+  | {
+      readonly status: "candidate"
+      readonly delta: HybridTransactionDelta
+      readonly source: "worker" | "cache"
+      readonly cacheKey?: RegionCacheKey
+    }
   | { readonly status: "failed"; readonly message: string }
 
 async function routeRegionPlan({
@@ -298,16 +341,56 @@ async function routeRegionPlan({
   routePlan,
   region,
   boundaryContracts,
-  copperSnapshot,
+  copperStore,
   configuration,
 }: {
   problem: TypedRoutingProblem
   routePlan: GlobalRouteObjectPlan
   region: DynamicRoutingRegion
   boundaryContracts: readonly HybridBoundaryContract[]
-  copperSnapshot: HybridCopperSnapshot
+  copperStore: TransactionalCopperStore
   configuration: SerialHybridEngineConfiguration
 }): Promise<RegionCandidateResult> {
+  const copperSnapshot = copperStore.getSnapshot()
+  const job = buildRegionJob({
+    problem,
+    routePlan,
+    region,
+    boundaryContracts,
+    copperSnapshot,
+    maximumExpansions: configuration.maximumSearchExpansions,
+    maximumActivationRings: configuration.maximumActivationRings,
+    deterministicSeed: configuration.deterministicSeed,
+  })
+  const cacheKey = configuration.regionCache
+    ? createRegionCacheKey({
+        problem,
+        region,
+        routePlan,
+        boundaryContracts,
+        job,
+        runtimeTarget: configuration.runtime.target,
+      })
+    : undefined
+  if (cacheKey && configuration.regionCache) {
+    const cached = configuration.regionCache.get(cacheKey)
+    if (cached) {
+      const validationStart = performance.now()
+      const validation = copperStore.validate(cached.transactionDelta)
+      configuration.regionCache.recordValidationMs(
+        performance.now() - validationStart,
+      )
+      if (validation.status === "accepted") {
+        return {
+          status: "candidate",
+          delta: cached.transactionDelta,
+          source: "cache",
+          cacheKey,
+        }
+      }
+      configuration.regionCache.invalidate(cacheKey)
+    }
+  }
   const execution = await executeRegionJob({
     context: buildHybridWorkerBoardContext({
       problem,
@@ -315,20 +398,16 @@ async function routeRegionPlan({
       contextId: `serial-context:${copperSnapshot.version}`,
       boardContextVersion: 0,
     }),
-    job: buildRegionJob({
-      problem,
-      routePlan,
-      region,
-      boundaryContracts,
-      copperSnapshot,
-      maximumExpansions: configuration.maximumSearchExpansions,
-      maximumActivationRings: configuration.maximumActivationRings,
-      deterministicSeed: configuration.deterministicSeed,
-    }),
+    job,
     runtime: configuration.runtime,
   })
   return execution.status === "candidate"
-    ? { status: "candidate", delta: execution.transactionDelta }
+    ? {
+        status: "candidate",
+        delta: execution.transactionDelta,
+        source: "worker",
+        cacheKey,
+      }
     : { status: "failed", message: execution.message }
 }
 
@@ -340,6 +419,7 @@ function createAttempt({
   outcome,
   rejectionReason,
   transactionId,
+  source = "worker",
 }: {
   region: DynamicRoutingRegion
   routePlan: GlobalRouteObjectPlan
@@ -348,12 +428,16 @@ function createAttempt({
   outcome: RegionAttemptRecord["outcome"]
   rejectionReason?: string
   transactionId?: string
+  source?: "worker" | "cache"
 }): RegionAttemptRecord {
   return Object.freeze({
     attemptId: `serial-attempt:${attemptIndex}:${region.regionId}:${routePlan.routeObjectId}`,
     regionId: region.regionId,
-    workerId: "serial-control-plane",
-    strategy: "rust-deterministic-grid-search",
+    workerId: source === "cache" ? "region-cache" : "serial-control-plane",
+    strategy:
+      source === "cache"
+        ? "validated-content-addressed-cache"
+        : "rust-deterministic-grid-search",
     queueWaitMs: 0,
     solveTimeMs,
     workerCpuMs: solveTimeMs,
@@ -372,6 +456,7 @@ function createArtifacts({
   boundaryContracts,
   copperStore,
   attempts,
+  cache,
 }: {
   topologyPlan: SerialHybridEngineArtifacts["topologyPlan"]
   demandField: DemandCapacityField
@@ -379,6 +464,7 @@ function createArtifacts({
   boundaryContracts: SerialHybridEngineArtifacts["boundaryContracts"]
   copperStore: TransactionalCopperStore
   attempts: readonly RegionAttemptRecord[]
+  cache: RegionCacheSnapshot
 }): SerialHybridEngineArtifacts {
   return Object.freeze({
     topologyPlan,
@@ -387,6 +473,7 @@ function createArtifacts({
     boundaryContracts,
     copperSnapshot: copperStore.getSnapshot(),
     attempts: Object.freeze([...attempts]),
+    cache,
   })
 }
 
@@ -397,6 +484,7 @@ function createIncompleteResult({
   boundaryContracts,
   copperStore,
   attempts,
+  cache,
   unresolvedRegionIds,
   rejection,
   message,
@@ -408,6 +496,7 @@ function createIncompleteResult({
     boundaryContracts,
     copperStore,
     attempts,
+    cache,
   })
   if (artifacts.copperSnapshot.version === 0) {
     return Object.freeze({ status: "failed", artifacts, message })
@@ -428,6 +517,7 @@ type ParametersForIncompleteResult = {
   boundaryContracts: SerialHybridEngineArtifacts["boundaryContracts"]
   copperStore: TransactionalCopperStore
   attempts: readonly RegionAttemptRecord[]
+  cache: RegionCacheSnapshot
   failedRegionId: string
   unresolvedRegionIds: readonly string[]
   rejection?: Extract<SerialHybridEngineResult, { status: "partial" }>["rejection"]
@@ -441,6 +531,7 @@ function createFailedResult({
   boundaryContracts,
   copperStore,
   attempts,
+  cache,
   failedRegionId,
   message,
 }: {
@@ -450,6 +541,7 @@ function createFailedResult({
   boundaryContracts: SerialHybridEngineArtifacts["boundaryContracts"]
   copperStore: TransactionalCopperStore
   attempts: readonly RegionAttemptRecord[]
+  cache: RegionCacheSnapshot
   failedRegionId?: string
   message: string
 }): SerialHybridEngineResult {
@@ -462,6 +554,7 @@ function createFailedResult({
       boundaryContracts,
       copperStore,
       attempts,
+      cache,
     }),
     failedRegionId,
     message,
