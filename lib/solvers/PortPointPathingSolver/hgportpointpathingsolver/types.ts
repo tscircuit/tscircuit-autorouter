@@ -17,6 +17,8 @@ import type { PreloadedTracePortAssignment } from "lib/solvers/AvailableSegmentP
 
 export type RawPort = {
   portId: string
+  /** Source available segment point from which this port was duplicated. */
+  duplicatedFromPortId?: string
   x: number
   y: number
   z: number
@@ -96,6 +98,11 @@ export interface HgPortPointPathingSolverParams {
   inputSolvedRoutes?: SolvedRoutesHg[]
   layerCount: number
   effort: number
+  /**
+   * Prevent congestion routing from duplicating the available segment points
+   * produced for shared edges.
+   */
+  enforceAvailableSegmentPointCapacity?: boolean
   preserveTerminalPcbPortIds?: boolean
   minViaPadDiameter?: number
   flags: {

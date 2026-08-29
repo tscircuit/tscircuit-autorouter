@@ -414,6 +414,7 @@ const toSerializedPortData = (
   const portMetadata = port.d as typeof port.d & TinyPortMetadata
   return {
     portId: port.d.portId,
+    duplicatedFromPortId: port.d.duplicatedFromPortId,
     x: port.d.x,
     y: port.d.y,
     z: port.d.z,
@@ -1062,6 +1063,17 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       ]),
     )
     const serializedGraph = buildSerializedTinyGraph({ ...params, connections })
+    if (params.enforceAvailableSegmentPointCapacity) {
+      const duplicatedInputPortCount = serializedGraph.ports.filter(
+        (port) =>
+          typeof asTinyPortMetadata(port.d).duplicatedFromPortId === "string",
+      ).length
+      if (duplicatedInputPortCount > 0) {
+        throw new Error(
+          `Available segment point capacity received ${duplicatedInputPortCount} duplicated port(s)`,
+        )
+      }
+    }
     this.originalPreloadedSegmentKeysByConnectionId =
       capturePreloadedTraceSegmentBaseline(serializedGraph)
     const preloadedTraceStats =
@@ -1080,6 +1092,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
         )
       : undefined
     const shouldRunDuplicateCongestedPortPrepass =
+      !params.enforceAvailableSegmentPointCapacity &&
       connections.length <= MAX_CONNECTIONS_FOR_DUPLICATE_CONGESTED_PORT_PREPASS
     let graphForTiny = serializedGraph
     if (shouldRunDuplicateCongestedPortPrepass) {
@@ -1115,7 +1128,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
           delete metadata._preloadedTracePortAssignments
         }
       }
-    } else {
+    } else if (!params.enforceAvailableSegmentPointCapacity) {
       this.duplicateCongestedPortError = `Skipped for ${connections.length} connections`
     }
     this.duplicatedPortCount =

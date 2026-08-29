@@ -23,6 +23,7 @@ export interface UniformPortDistributionSolverInput {
   nodeWithPortPoints: NodeWithPortPoints[]
   inputNodesWithPortPoints: InputNodeWithPortPoints[]
   obstacles: Obstacle[]
+  preserveAvailableSegmentPointPositions?: boolean
 }
 
 /**
@@ -45,9 +46,17 @@ export class UniformPortDistributionSolver extends BaseSolver {
   ownerPairsToProcess: OwnerPairKey[] = []
   currentOwnerPairBeingProcessed: OwnerPairKey | null = null
   redistributedNodes: NodeWithPortPoints[] = []
+  private readonly availableSegmentPointIds = new Set<string>()
 
   constructor(private input: UniformPortDistributionSolverInput) {
     super()
+    if (input.preserveAvailableSegmentPointPositions) {
+      for (const node of input.inputNodesWithPortPoints) {
+        for (const portPoint of node.portPoints) {
+          this.availableSegmentPointIds.add(portPoint.portPointId)
+        }
+      }
+    }
     for (const node of input.nodeWithPortPoints) {
       this.mapOfNodeIdToBounds.set(
         node.capacityMeshNodeId,
@@ -118,7 +127,14 @@ export class UniformPortDistributionSolver extends BaseSolver {
     const familyRaw = this.mapOfOwnerPairToPortPoints.get(ownerPairKey) ?? []
     const family: PortPointWithOwnerPair[] = []
     for (const portPoint of familyRaw) {
+      const isAvailableSegmentPoint =
+        portPoint.portPointId !== undefined &&
+        this.availableSegmentPointIds.has(portPoint.portPointId)
       if (
+        !(
+          this.input.preserveAvailableSegmentPointPositions &&
+          isAvailableSegmentPoint
+        ) &&
         !shouldIgnorePortPoint({
           portPoint,
           ownerNodeIds: portPoint.ownerNodeIds,

@@ -86,6 +86,11 @@ interface CapacityMeshSolverOptions {
   minNodeArea?: number
   visualizationTraceColorMode?: TraceColorMode
   powerTraceExpansion?: PowerTraceExpanderOptions
+  /**
+   * Prevent topology routing from duplicating available segment points when a
+   * shared edge is congested.
+   */
+  enforceAvailableSegmentPointCapacity?: boolean
 }
 export type AutoroutingPipelineSolverOptions = CapacityMeshSolverOptions
 
@@ -483,6 +488,8 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
             connections,
             layerCount: cms.srj.layerCount,
             effort: cms.effort,
+            enforceAvailableSegmentPointCapacity:
+              cms.opts.enforceAvailableSegmentPointCapacity,
             preserveTerminalPcbPortIds: true,
             minViaPadDiameter: cms.viaDiameter,
             flags: {
@@ -527,6 +534,8 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
           minTraceWidth: cms.minTraceWidth,
           obstacles: cms.srj.obstacles,
           layerCount: cms.srj.layerCount,
+          preserveAvailableSegmentPointPositions:
+            cms.opts.enforceAvailableSegmentPointCapacity,
         },
       ],
     ),
