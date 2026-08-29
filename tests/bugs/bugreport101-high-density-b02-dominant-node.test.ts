@@ -7,7 +7,7 @@ import nodeJson from "../../fixtures/bug-reports/bugreport101-cm5-spi-routing-ti
   type: "json",
 }
 import { findIntraNodePhysicalConflicts } from "lib/solvers/HighDensitySolver/find-intra-node-physical-conflicts"
-import { HighDensitySolverB02IntraNodeAdapter } from "lib/solvers/HighDensitySolver/high-density-solver-b02-adapter"
+import { HighDensitySolverB02IntraNodeAdapter } from "lib/solvers/HighDensitySolver/HighDensitySolverB02IntraNodeAdapter"
 import { PortfolioSingleIntraNodeSolver } from "lib/solvers/HyperHighDensitySolver/PortfolioSingleIntraNodeSolver"
 import type {
   HighDensityIntraNodeRoute,
