@@ -2,6 +2,8 @@ import { distance, pointToSegmentDistance } from "@tscircuit/math-utils"
 import { SingleHighDensityRouteSolver } from "./SingleHighDensityRouteSolver"
 import { Node } from "lib/data-structures/SingleRouteCandidatePriorityQueue"
 
+const FUTURE_CONNECTION_POINT_CACHE_SIZE = 1024
+
 export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends SingleHighDensityRouteSolver {
   FUTURE_CONNECTION_PROX_TRACE_PENALTY_FACTOR = 2
   FUTURE_CONNECTION_PROX_VIA_PENALTY_FACTOR = 1
@@ -10,8 +12,11 @@ export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends Sing
   VIA_PENALTY_FACTOR_2 = 1
   FLIP_TRACE_ALIGNMENT_DIRECTION = false
   FUTURE_CONNECTION_VIA_TRACE_CLEARANCE = 0.1
-  futureConnectionPoints: Array<{ x: number; y: number; z: number }>
+  futureConnectionPoints: FutureConnectionPoint[]
   futureConnectionSegmentsCache: FutureConnectionSegment[] | null = null
+  private closestFuturePointCache: Array<
+    ClosestFuturePointCacheEntry | undefined
+  > = []
 
   constructor(
     opts: ConstructorParameters<typeof SingleHighDensityRouteSolver>[0],
@@ -38,21 +43,60 @@ export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends Sing
     )
   }
 
-  getClosestFutureConnectionPoint(node: Node) {
+  private getClosestFutureConnection(node: Node): ClosestFuturePointCacheEntry {
+    const nodeKey = this.getNodeKey(node)
+    const cacheIndex = nodeKey & (FUTURE_CONNECTION_POINT_CACHE_SIZE - 1)
+    const cached = this.closestFuturePointCache[cacheIndex]
+    if (
+      cached?.nodeKey === nodeKey &&
+      cached.nodeX === node.x &&
+      cached.nodeY === node.y &&
+      cached.nodeZ === node.z
+    ) {
+      return cached
+    }
+
     let minDist = Infinity
-    let closestPoint = null
+    let closestPoint: FutureConnectionPoint | null = null
+    let closestPointDistance = Infinity
+    const viaPenaltyDistance = this.viaPenaltyDistance
 
     for (const point of this.futureConnectionPoints) {
-      const dist =
-        distance(node, point) +
-        (node.z !== point.z ? this.viaPenaltyDistance : 0)
+      const dx = node.x - point.x
+      const dy = node.y - point.y
+      const pointDistance = Math.sqrt(dx * dx + dy * dy)
+      const dist = pointDistance + (node.z !== point.z ? viaPenaltyDistance : 0)
       if (dist < minDist) {
         minDist = dist
         closestPoint = point
+        closestPointDistance = pointDistance
       }
     }
 
-    return closestPoint
+    if (cached) {
+      cached.nodeKey = nodeKey
+      cached.nodeX = node.x
+      cached.nodeY = node.y
+      cached.nodeZ = node.z
+      cached.point = closestPoint
+      cached.distance = closestPointDistance
+      return cached
+    }
+
+    const entry = {
+      nodeKey,
+      nodeX: node.x,
+      nodeY: node.y,
+      nodeZ: node.z,
+      point: closestPoint,
+      distance: closestPointDistance,
+    }
+    this.closestFuturePointCache[cacheIndex] = entry
+    return entry
+  }
+
+  getClosestFutureConnectionPoint(node: Node) {
+    return this.getClosestFutureConnection(node).point
   }
 
   getFutureConnectionSegments() {
@@ -142,10 +186,11 @@ export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends Sing
 
   getFutureConnectionPenalty(node: Node, isVia: boolean) {
     let futureConnectionPenalty = 0
-    const closestFuturePoint = this.getClosestFutureConnectionPoint(node)
+    const closestFutureConnection = this.getClosestFutureConnection(node)
+    const closestFuturePoint = closestFutureConnection.point
     const goalDist = distance(node, this.B)
     if (closestFuturePoint) {
-      const distToFuturePoint = distance(node, closestFuturePoint)
+      const distToFuturePoint = closestFutureConnection.distance
       if (goalDist <= distToFuturePoint) return 0
       const maxDist = this.viaDiameter * this.FUTURE_CONNECTION_PROXIMITY_VD
       const distRatio = distToFuturePoint / maxDist
@@ -236,4 +281,15 @@ type FutureConnectionSegment = {
   connectionName: string
   start: { x: number; y: number; z: number }
   end: { x: number; y: number; z: number }
+}
+
+type FutureConnectionPoint = { x: number; y: number; z: number }
+
+type ClosestFuturePointCacheEntry = {
+  nodeKey: number
+  nodeX: number
+  nodeY: number
+  nodeZ: number
+  point: FutureConnectionPoint | null
+  distance: number
 }
