@@ -4,7 +4,7 @@ import type { HighDensityRoute } from "lib/types/high-density-types"
 import { generateApproximatingRects } from "lib/utils/addApproximatingRectsToSrj"
 import { mapZToLayerName } from "lib/utils/mapZToLayerName"
 import { minimumDistanceBetweenSegments } from "lib/utils/minimumDistanceBetweenSegments"
-import type { PreloadedHighDensityRoute } from "./convert-preloaded-traces-to-hd-routes"
+import type { PreloadedHighDensityRoute } from "./convertPreloadedTraceToHdRoutes"
 
 export type Pipeline9RouteWireSegment = {
   start: HighDensityRoute["route"][number]

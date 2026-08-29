@@ -3,7 +3,7 @@ import type { DrcEvaluator } from "high-density-repair03/lib"
 import {
   applyPipeline9RegionalB01Repairs,
   getPipeline9RegionalRepairSearchBudget,
-} from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/apply-pipeline9-regional-b01-repairs"
+} from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/applyPipeline9RegionalB01Repairs"
 import type { SimpleRouteJson } from "lib/types"
 import type { HighDensityRoute } from "lib/types/high-density-types"
 import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"

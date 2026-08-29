@@ -2,7 +2,10 @@ import type { SimpleRouteJson } from "../../lib/types/srj-types"
 
 export type BenchmarkTask = {
   datasetName: string
+  /** Display/report name; may differ for two passes of the same constructor. */
   solverName: string
+  solverConstructorName?: string
+  networkedCachePass?: "cold" | "hot"
   scenarioName: string
   sampleNumber: number
   scenario: SimpleRouteJson
@@ -94,6 +97,15 @@ export type RoutingBenchmarkMetrics = {
   tinyHypergraph?: TinyHypergraphBenchmarkMetrics
   highDensityIterations?: number
   phaseTimeMs?: Record<string, number>
+  networkedHighDensity?: {
+    remoteRequestsStarted: number
+    remoteRequestsCompleted: number
+    remoteBatchCacheMisses: number
+    remoteSingleRequestsStarted: number
+    remoteCacheHits: number
+    remoteSolverResults: number
+    remoteTransportFallbacks: number
+  }
 }
 
 export type WorkerResult<
@@ -156,6 +168,13 @@ export type SolverRunSummary = {
   p90TimeMs?: number | null
   p95TimeMs: number | null
   avgVia: number | null
+  networkCache?: {
+    remoteRequests: number
+    cacheHits: number
+    solverResults: number
+    batchCacheMisses: number
+    localFallbacks: number
+  }
 }
 
 export type BestViaCountRecord = {

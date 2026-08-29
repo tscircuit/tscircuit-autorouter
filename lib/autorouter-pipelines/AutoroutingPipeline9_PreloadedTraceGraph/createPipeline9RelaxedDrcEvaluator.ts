@@ -3,8 +3,8 @@ import { convertPipeline7HdRoutesToSimplifiedPcbTraces } from "lib/autorouter-pi
 import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import type { SimpleRouteJson, SimplifiedPcbTrace } from "lib/types"
 import type { ConvertPipeline7HdRoutesOptions } from "../AutoroutingPipeline7_MultiGraph/convertPipeline7HdRoutesToSimplifiedPcbTraces"
-import { normalizePipeline9DrcErrorsForRepair } from "./normalize-pipeline9-drc-errors-for-repair"
-import { preparePipeline9DrcRoutedTraces } from "./prepare-pipeline9-drc-routed-traces"
+import { normalizePipeline9DrcErrorsForRepair } from "./normalizePipeline9DrcErrorsForRepair"
+import { preparePipeline9DrcRoutedTraces } from "./preparePipeline9DrcRoutedTraces"
 
 type CreatePipeline9RelaxedDrcEvaluatorOptions = Omit<
   ConvertPipeline7HdRoutesOptions,

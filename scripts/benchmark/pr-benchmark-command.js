@@ -82,6 +82,13 @@ export const parsePrBenchmarkCommand = (body) => {
   const isProfile = /^\/profile(?:\s|$)/.test(command)
   if (isProfile) {
     const parsedArgs = splitShellArgs(command.slice("/profile".length).trim())
+    const usesNetworkedPipeline9 = parsedArgs.some(
+      (arg, index) =>
+        arg === "--pipeline" && parsedArgs[index + 1]?.toLowerCase() === "9net",
+    )
+    if (usesNetworkedPipeline9) {
+      throw new Error("Pipeline 9net is only supported by /benchmark")
+    }
     let datasetName = "dataset01"
 
     for (let index = 0; index < parsedArgs.length; index += 1) {
@@ -121,9 +128,16 @@ export const parsePrBenchmarkCommand = (body) => {
   let datasetName = "dataset01"
   let profileSolvers = false
   let sameMachineCompare = false
+  let usesNetworkedPipeline9 = false
 
   for (let index = 0; index < parsedArgs.length; index += 1) {
     const arg = parsedArgs[index]
+    if (
+      arg === "--pipeline" &&
+      parsedArgs[index + 1]?.toLowerCase() === "9net"
+    ) {
+      usesNetworkedPipeline9 = true
+    }
     if (arg === "--same-machine") {
       sameMachineCompare = true
       continue
@@ -141,6 +155,13 @@ export const parsePrBenchmarkCommand = (body) => {
       if (parsedArgs[index + 1]) datasetName = parsedArgs[index + 1]
     }
     benchmarkArgs.push(arg)
+  }
+
+  if (usesNetworkedPipeline9 && sameMachineCompare) {
+    throw new Error("Pipeline 9net does not support --same-machine")
+  }
+  if (usesNetworkedPipeline9 && profileSolvers) {
+    throw new Error("Pipeline 9net does not support --profile-solvers")
   }
 
   return {

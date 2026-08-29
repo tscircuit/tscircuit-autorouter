@@ -5,7 +5,7 @@ import {
 } from "high-density-repair03/lib"
 import type { SimpleRouteConnection, SimpleRouteJson } from "lib/types"
 import type { HighDensityRoute } from "lib/types/high-density-types"
-import type { PreloadedHighDensityRoute } from "./convert-preloaded-traces-to-hd-routes"
+import type { PreloadedHighDensityRoute } from "./convertPreloadedTraceToHdRoutes"
 import {
   arePipeline9RoutesOnSameNet,
   doPipeline9RoutesHaveCopperConflict,
@@ -15,21 +15,21 @@ import {
   type Pipeline9AxisAlignedRect,
   type Pipeline9RouteViaSpan,
   type Pipeline9RouteWireSegment,
-} from "./pipeline9-fixed-route-copper"
+} from "./pipeline9FixedRouteCopper"
 import {
   areAllPortPointsOnNodeBoundary,
   createRegionalFallbackProblem,
   spliceFixedRouteSection,
-} from "./pipeline9-regional-fallback"
-import { Pipeline9HighDensitySolver } from "./pipeline9-high-density-solver"
-import { Pipeline9RegionalFallbackSolver } from "./pipeline9-regional-fallback-solver"
+} from "./pipeline9RegionalFallback"
+import { Pipeline9HighDensitySolver } from "./Pipeline9HighDensitySolver"
+import { Pipeline9RegionalFallbackSolver } from "./Pipeline9RegionalFallbackSolver"
 import {
   getPipeline9DrcErrors,
   getPipeline9RouteIndexByTraceId,
   isPipeline9DrcErrorOwnedByPreloadRepair,
   isPipeline9DrcCandidateBetter,
   type Pipeline9DrcError,
-} from "./pipeline9-joint-drc-repair-utils"
+} from "./pipeline9JointDrcRepairUtils"
 
 type RegionalB01RepairResult = {
   routes: HighDensityRoute[]

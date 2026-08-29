@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test"
-import { PreloadedTraceGraphSolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/preloaded-trace-graph-solver"
+import { PreloadedTraceGraphSolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/PreloadedTraceGraphSolver"
 import type {
   SegmentPortPoint,
   SharedEdgeSegment,

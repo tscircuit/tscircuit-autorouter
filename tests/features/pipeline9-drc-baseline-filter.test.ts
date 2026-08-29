@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test"
-import { filterPipeline9DrcErrorsAgainstBaseline } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/filter-pipeline9-drc-errors-against-baseline"
+import { filterPipeline9DrcErrorsAgainstBaseline } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/filterPipeline9DrcErrorsAgainstBaseline"
 
 test("Pipeline9 only repairs DRC errors introduced after the prerouted baseline", () => {
   const baselineError = {

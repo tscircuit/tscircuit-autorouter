@@ -1,9 +1,9 @@
 import { expect, test } from "bun:test"
-import type { PreloadedHighDensityRoute } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/convert-preloaded-traces-to-hd-routes"
+import type { PreloadedHighDensityRoute } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/convertPreloadedTraceToHdRoutes"
 import {
   type FixedRouteSection,
   spliceFixedRouteSectionWithMutationMask,
-} from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/pipeline9-regional-fallback"
+} from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/pipeline9RegionalFallback"
 import type { HighDensityRoute } from "lib/types/high-density-types"
 
 test("Pipeline9 records a collapsed same-boundary replacement as having no surviving mutation segment", () => {
