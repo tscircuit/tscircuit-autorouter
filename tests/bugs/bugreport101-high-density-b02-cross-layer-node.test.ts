@@ -159,15 +159,15 @@ test("bugreport101 HighDensitySolverB02 repairs the exact physical cmn133 node",
     }),
   ).toBeFalse()
 
-  const infeasiblePortalSpacingNode = structuredClone(node)
-  const pointA = infeasiblePortalSpacingNode.portPointsInPairs![3]![0]
-  const pointB = infeasiblePortalSpacingNode.portPointsInPairs![4]![0]
+  const infeasibleTerminalSpacingNode = structuredClone(node)
+  const pointA = infeasibleTerminalSpacingNode.portPointsInPairs![3]![0]
+  const pointB = infeasibleTerminalSpacingNode.portPointsInPairs![4]![0]
   pointB.x = pointA.x
   pointB.y = pointA.y + 0.225
   pointB.z = pointA.z
   expect(
     HighDensitySolverB02IntraNodeAdapter.isApplicable({
-      nodeWithPortPoints: infeasiblePortalSpacingNode,
+      nodeWithPortPoints: infeasibleTerminalSpacingNode,
       traceWidth: 0.15,
       viaDiameter: 0.3,
       clearance: 0.1,
@@ -175,7 +175,7 @@ test("bugreport101 HighDensitySolverB02 repairs the exact physical cmn133 node",
     }),
   ).toBeFalse()
   const inapplicableSolver = new HighDensitySolverB02IntraNodeAdapter({
-    nodeWithPortPoints: infeasiblePortalSpacingNode,
+    nodeWithPortPoints: infeasibleTerminalSpacingNode,
     traceWidth: 0.15,
     viaDiameter: 0.3,
     clearance: 0.1,

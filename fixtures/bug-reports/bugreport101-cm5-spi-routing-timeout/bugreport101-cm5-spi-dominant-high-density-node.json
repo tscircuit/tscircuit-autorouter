@@ -9,8 +9,6 @@
   "portPoints": [
     {
       "portPointId": "ce183_pp0_z0::0",
-      "physicalPortalGroupId": "ce183",
-      "physicalPortalSlotId": "ce183_pp0_z0::0",
       "x": -14.283334200000052,
       "y": -24.058999999999997,
       "z": 0,
@@ -20,8 +18,6 @@
     },
     {
       "portPointId": "ce204_pp0_z0::0",
-      "physicalPortalGroupId": "ce204",
-      "physicalPortalSlotId": "ce204_pp0_z0::0",
       "x": -12.849994885,
       "y": -24.284,
       "z": 0,
@@ -31,8 +27,6 @@
     },
     {
       "portPointId": "ce275_pp0_z0::0",
-      "physicalPortalGroupId": "ce275",
-      "physicalPortalSlotId": "ce275_pp0_z0::0",
       "x": -4.589900000000002,
       "y": -24.284,
       "z": 0,
@@ -42,8 +36,6 @@
     },
     {
       "portPointId": "ce306_pp2_z0::0",
-      "physicalPortalGroupId": "ce306",
-      "physicalPortalSlotId": "ce306_pp2_z0::0",
       "x": -1.8500013000000752,
       "y": -10.845832812500063,
       "z": 0,
@@ -53,8 +45,6 @@
     },
     {
       "portPointId": "ce256_pp2_z0::0",
-      "physicalPortalGroupId": "ce256",
-      "physicalPortalSlotId": "ce256_pp2_z0::0",
       "x": -6.1119,
       "y": -24.284,
       "z": 0,
@@ -64,8 +54,6 @@
     },
     {
       "portPointId": "ce256_pp2_z2::2",
-      "physicalPortalGroupId": "ce256",
-      "physicalPortalSlotId": "ce256_pp2_z2::2",
       "x": -6.1119,
       "y": -24.284,
       "z": 2,
@@ -75,8 +63,6 @@
     },
     {
       "portPointId": "ce194_pp0_z0::0",
-      "physicalPortalGroupId": "ce194",
-      "physicalPortalSlotId": "ce194_pp0_z0::0",
       "x": -13.549996055,
       "y": -24.284,
       "z": 0,
@@ -86,8 +72,6 @@
     },
     {
       "portPointId": "ce215_pp0_z0::0",
-      "physicalPortalGroupId": "ce215",
-      "physicalPortalSlotId": "ce215_pp0_z0::0",
       "x": -12.049887,
       "y": -24.284,
       "z": 0,
@@ -97,8 +81,6 @@
     },
     {
       "portPointId": "ce256_pp2_z0::0",
-      "physicalPortalGroupId": "ce256",
-      "physicalPortalSlotId": "ce256_pp2_z0::0",
       "x": -6.1119,
       "y": -24.284,
       "z": 0,
@@ -108,8 +90,6 @@
     },
     {
       "portPointId": "ce301_pp3_z0::0",
-      "physicalPortalGroupId": "ce301",
-      "physicalPortalSlotId": "ce301_pp3_z0::0",
       "x": -1.8500013000000752,
       "y": -19.469172031250025,
       "z": 0,
@@ -119,8 +99,6 @@
     },
     {
       "portPointId": "ce215_pp2_z1::1",
-      "physicalPortalGroupId": "ce215",
-      "physicalPortalSlotId": "ce215_pp2_z1::1",
       "x": -11.2998892,
       "y": -24.284,
       "z": 1,
@@ -130,8 +108,6 @@
     },
     {
       "portPointId": "ce183_pp2_z1::1",
-      "physicalPortalGroupId": "ce183",
-      "physicalPortalSlotId": "ce183_pp2_z1::1",
       "x": -14.283334200000052,
       "y": -22.207794,
       "z": 1,
@@ -141,8 +117,6 @@
     },
     {
       "portPointId": "ce247_pp0_z0::0",
-      "physicalPortalGroupId": "ce247",
-      "physicalPortalSlotId": "ce247_pp0_z0::0",
       "x": -7.960100000000001,
       "y": -24.284000000000002,
       "z": 0,
@@ -152,8 +126,6 @@
     },
     {
       "portPointId": "ce183_pp4_z0::0",
-      "physicalPortalGroupId": "ce183",
-      "physicalPortalSlotId": "ce183_pp4_z0::0",
       "x": -14.283334200000052,
       "y": -20.356588,
       "z": 0,
@@ -163,8 +135,6 @@
     },
     {
       "portPointId": "ce186_pp0_z3::3",
-      "physicalPortalGroupId": "ce186",
-      "physicalPortalSlotId": "ce186_pp0_z3::3",
       "x": -14.058334200000052,
       "y": -24.284,
       "z": 3,
@@ -174,8 +144,6 @@
     },
     {
       "portPointId": "ce215_pp1_z3::3",
-      "physicalPortalGroupId": "ce215",
-      "physicalPortalSlotId": "ce215_pp1_z3::3",
       "x": -11.6748881,
       "y": -24.284,
       "z": 3,
@@ -185,8 +153,6 @@
     },
     {
       "portPointId": "ce215_pp2_z3::3",
-      "physicalPortalGroupId": "ce215",
-      "physicalPortalSlotId": "ce215_pp2_z3::3",
       "x": -11.2998892,
       "y": -24.284,
       "z": 3,
@@ -196,8 +162,6 @@
     },
     {
       "portPointId": "ce256_pp1_z3::3",
-      "physicalPortalGroupId": "ce256",
-      "physicalPortalSlotId": "ce256_pp1_z3::3",
       "x": -6.500000000000001,
       "y": -24.284,
       "z": 3,
@@ -207,8 +171,6 @@
     },
     {
       "portPointId": "ce256_pp2_z3::3",
-      "physicalPortalGroupId": "ce256",
-      "physicalPortalSlotId": "ce256_pp2_z3::3",
       "x": -6.1119,
       "y": -24.284,
       "z": 3,
@@ -218,8 +180,6 @@
     },
     {
       "portPointId": "ce268_pp0_z0::0",
-      "physicalPortalGroupId": "ce268",
-      "physicalPortalSlotId": "ce268_pp0_z0::0",
       "x": -5.661900000000001,
       "y": -24.284000000000002,
       "z": 0,
@@ -229,8 +189,6 @@
     },
     {
       "portPointId": "ce233_pp0_z0::0",
-      "physicalPortalGroupId": "ce233",
-      "physicalPortalSlotId": "ce233_pp0_z0::0",
       "x": -9.895001650000035,
       "y": -9.949955,
       "z": 0,
@@ -240,8 +198,6 @@
     },
     {
       "portPointId": "ce189_pp0_z0_cramped::0",
-      "physicalPortalGroupId": "ce189",
-      "physicalPortalSlotId": "ce189_pp0_z0_cramped::0",
       "x": -14.091665420000027,
       "y": -24.284,
       "z": 0,
@@ -254,8 +210,6 @@
     [
       {
         "portPointId": "ce183_pp0_z0::0",
-        "physicalPortalGroupId": "ce183",
-        "physicalPortalSlotId": "ce183_pp0_z0::0",
         "x": -14.283334200000052,
         "y": -24.058999999999997,
         "z": 0,
@@ -265,8 +219,6 @@
       },
       {
         "portPointId": "ce204_pp0_z0::0",
-        "physicalPortalGroupId": "ce204",
-        "physicalPortalSlotId": "ce204_pp0_z0::0",
         "x": -12.849994885,
         "y": -24.284,
         "z": 0,
@@ -278,8 +230,6 @@
     [
       {
         "portPointId": "ce275_pp0_z0::0",
-        "physicalPortalGroupId": "ce275",
-        "physicalPortalSlotId": "ce275_pp0_z0::0",
         "x": -4.589900000000002,
         "y": -24.284,
         "z": 0,
@@ -289,8 +239,6 @@
       },
       {
         "portPointId": "ce306_pp2_z0::0",
-        "physicalPortalGroupId": "ce306",
-        "physicalPortalSlotId": "ce306_pp2_z0::0",
         "x": -1.8500013000000752,
         "y": -10.845832812500063,
         "z": 0,
@@ -302,8 +250,6 @@
     [
       {
         "portPointId": "ce256_pp2_z0::0",
-        "physicalPortalGroupId": "ce256",
-        "physicalPortalSlotId": "ce256_pp2_z0::0",
         "x": -6.1119,
         "y": -24.284,
         "z": 0,
@@ -313,8 +259,6 @@
       },
       {
         "portPointId": "ce256_pp2_z2::2",
-        "physicalPortalGroupId": "ce256",
-        "physicalPortalSlotId": "ce256_pp2_z2::2",
         "x": -6.1119,
         "y": -24.284,
         "z": 2,
@@ -326,8 +270,6 @@
     [
       {
         "portPointId": "ce194_pp0_z0::0",
-        "physicalPortalGroupId": "ce194",
-        "physicalPortalSlotId": "ce194_pp0_z0::0",
         "x": -13.549996055,
         "y": -24.284,
         "z": 0,
@@ -337,8 +279,6 @@
       },
       {
         "portPointId": "ce215_pp0_z0::0",
-        "physicalPortalGroupId": "ce215",
-        "physicalPortalSlotId": "ce215_pp0_z0::0",
         "x": -12.049887,
         "y": -24.284,
         "z": 0,
@@ -350,8 +290,6 @@
     [
       {
         "portPointId": "ce256_pp2_z0::0",
-        "physicalPortalGroupId": "ce256",
-        "physicalPortalSlotId": "ce256_pp2_z0::0",
         "x": -6.1119,
         "y": -24.284,
         "z": 0,
@@ -361,8 +299,6 @@
       },
       {
         "portPointId": "ce301_pp3_z0::0",
-        "physicalPortalGroupId": "ce301",
-        "physicalPortalSlotId": "ce301_pp3_z0::0",
         "x": -1.8500013000000752,
         "y": -19.469172031250025,
         "z": 0,
@@ -374,8 +310,6 @@
     [
       {
         "portPointId": "ce215_pp2_z1::1",
-        "physicalPortalGroupId": "ce215",
-        "physicalPortalSlotId": "ce215_pp2_z1::1",
         "x": -11.2998892,
         "y": -24.284,
         "z": 1,
@@ -385,8 +319,6 @@
       },
       {
         "portPointId": "ce183_pp2_z1::1",
-        "physicalPortalGroupId": "ce183",
-        "physicalPortalSlotId": "ce183_pp2_z1::1",
         "x": -14.283334200000052,
         "y": -22.207794,
         "z": 1,
@@ -398,8 +330,6 @@
     [
       {
         "portPointId": "ce247_pp0_z0::0",
-        "physicalPortalGroupId": "ce247",
-        "physicalPortalSlotId": "ce247_pp0_z0::0",
         "x": -7.960100000000001,
         "y": -24.284000000000002,
         "z": 0,
@@ -409,8 +339,6 @@
       },
       {
         "portPointId": "ce183_pp4_z0::0",
-        "physicalPortalGroupId": "ce183",
-        "physicalPortalSlotId": "ce183_pp4_z0::0",
         "x": -14.283334200000052,
         "y": -20.356588,
         "z": 0,
@@ -422,8 +350,6 @@
     [
       {
         "portPointId": "ce186_pp0_z3::3",
-        "physicalPortalGroupId": "ce186",
-        "physicalPortalSlotId": "ce186_pp0_z3::3",
         "x": -14.058334200000052,
         "y": -24.284,
         "z": 3,
@@ -433,8 +359,6 @@
       },
       {
         "portPointId": "ce215_pp1_z3::3",
-        "physicalPortalGroupId": "ce215",
-        "physicalPortalSlotId": "ce215_pp1_z3::3",
         "x": -11.6748881,
         "y": -24.284,
         "z": 3,
@@ -446,8 +370,6 @@
     [
       {
         "portPointId": "ce215_pp2_z3::3",
-        "physicalPortalGroupId": "ce215",
-        "physicalPortalSlotId": "ce215_pp2_z3::3",
         "x": -11.2998892,
         "y": -24.284,
         "z": 3,
@@ -457,8 +379,6 @@
       },
       {
         "portPointId": "ce256_pp1_z3::3",
-        "physicalPortalGroupId": "ce256",
-        "physicalPortalSlotId": "ce256_pp1_z3::3",
         "x": -6.500000000000001,
         "y": -24.284,
         "z": 3,
@@ -470,8 +390,6 @@
     [
       {
         "portPointId": "ce256_pp2_z3::3",
-        "physicalPortalGroupId": "ce256",
-        "physicalPortalSlotId": "ce256_pp2_z3::3",
         "x": -6.1119,
         "y": -24.284,
         "z": 3,
@@ -481,8 +399,6 @@
       },
       {
         "portPointId": "ce268_pp0_z0::0",
-        "physicalPortalGroupId": "ce268",
-        "physicalPortalSlotId": "ce268_pp0_z0::0",
         "x": -5.661900000000001,
         "y": -24.284000000000002,
         "z": 0,
@@ -494,8 +410,6 @@
     [
       {
         "portPointId": "ce233_pp0_z0::0",
-        "physicalPortalGroupId": "ce233",
-        "physicalPortalSlotId": "ce233_pp0_z0::0",
         "x": -9.895001650000035,
         "y": -9.949955,
         "z": 0,
@@ -505,8 +419,6 @@
       },
       {
         "portPointId": "ce189_pp0_z0_cramped::0",
-        "physicalPortalGroupId": "ce189",
-        "physicalPortalSlotId": "ce189_pp0_z0_cramped::0",
         "x": -14.091665420000027,
         "y": -24.284,
         "z": 0,
