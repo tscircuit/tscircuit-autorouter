@@ -2,7 +2,6 @@ import { expect, test } from "bun:test"
 import {
   AutoroutingPipelineSolver9_Networked,
   AutoroutingPipelineSolver9_PreloadedTraceGraph,
-  DEFAULT_PIPELINE9_NETWORKED_MAX_BATCH_BODY_BYTES,
 } from "lib"
 import {
   AutoroutingPipelineSolver9_Networked as NetworkedPipelineFromPipelineIndex,
@@ -33,30 +32,11 @@ test("Pipeline9 networked is effort-1-only, async-only, and replaces only the hi
         hdCacheTransportTimeoutMs: 10,
       }),
   ).toThrow("transport timeout must be at least the logical request timeout")
-  expect(
-    () =>
-      new AutoroutingPipelineSolver9_Networked(emptySrj, {
-        hdCacheMaxBatchItems: 101,
-      }),
-  ).toThrow("max batch items must be a positive integer no greater than 100")
-  expect(
-    () =>
-      new AutoroutingPipelineSolver9_Networked(emptySrj, {
-        hdCacheMaxBatchBodyBytes:
-          DEFAULT_PIPELINE9_NETWORKED_MAX_BATCH_BODY_BYTES + 1,
-      }),
-  ).toThrow("max batch body bytes must be a positive integer no greater than")
 
   const networkedSolver = new AutoroutingPipelineSolver9_Networked(emptySrj)
   const pipelineIndexOptions: AutoroutingPipelineSolver9NetworkedOptions = {
     effort: 1,
-    hdCacheMaxBatchItems: 25,
-    hdCacheMaxBatchBodyBytes: 500_000,
   }
-  const customBatchSolver = new AutoroutingPipelineSolver9_Networked(
-    emptySrj,
-    pipelineIndexOptions,
-  )
   const localSolver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(
     emptySrj,
   )
@@ -71,8 +51,6 @@ test("Pipeline9 networked is effort-1-only, async-only, and replaces only the hi
     AutoroutingPipelineSolver9_Networked,
   )
   expect(pipelineIndexOptions.effort).toBe(1)
-  expect(customBatchSolver.hdCacheMaxBatchItems).toBe(25)
-  expect(customBatchSolver.hdCacheMaxBatchBodyBytes).toBe(500_000)
   expect(networkedSolver.getSolverName()).toBe(
     "AutoroutingPipelineSolver9_Networked",
   )

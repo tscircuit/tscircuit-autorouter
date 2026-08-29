@@ -31,20 +31,13 @@ export {
 export { AUTOROUTER_VERSION } from "./autorouter-pipelines/AutoroutingPipeline9_Networked/autorouter-version"
 export {
   DEFAULT_PIPELINE9_NETWORKED_CACHE_URL,
-  DEFAULT_PIPELINE9_NETWORKED_MAX_BATCH_BODY_BYTES,
-  DEFAULT_PIPELINE9_NETWORKED_MAX_BATCH_ITEMS,
   DEFAULT_PIPELINE9_NETWORKED_TIMEOUT_MS,
   DEFAULT_PIPELINE9_NETWORKED_TRANSPORT_TIMEOUT_MS,
-  type Pipeline9NetworkedFallbackReason,
 } from "./autorouter-pipelines/AutoroutingPipeline9_Networked/pipeline9-networked-high-density-solver"
 export type {
   Pipeline9NetworkedCacheSource,
   Pipeline9NetworkedHighDensityNodeInput,
   Pipeline9NetworkedHighDensityNodeOutput,
-  Pipeline9NetworkedSolveBatchCacheMiss,
-  Pipeline9NetworkedSolveBatchItem,
-  Pipeline9NetworkedSolveBatchRequest,
-  Pipeline9NetworkedSolveBatchResult,
   Pipeline9NetworkedSolveRequest,
   Pipeline9NetworkedSolveResponse,
 } from "./autorouter-pipelines/AutoroutingPipeline9_Networked/pipeline9-networked-types"

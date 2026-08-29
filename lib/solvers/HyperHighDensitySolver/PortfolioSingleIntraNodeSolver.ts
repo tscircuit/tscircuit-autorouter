@@ -476,7 +476,6 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       return new SingleTransitionIntraNodeSolver({
         nodeWithPortPoints: this.nodeWithPortPoints,
         viaDiameter: this.constructorParams.viaDiameter,
-        traceThickness: this.constructorParams.traceWidth,
       }) as any
     }
     if (hyperParameters.THROUGH_OBSTACLE) {

@@ -1,11 +1,11 @@
 import { expect, test } from "bun:test"
-import type { Pipeline9NetworkedSolveBatchRequest } from "lib"
+import type { Pipeline9NetworkedSolveRequest } from "lib"
 import {
-  asNetworkedBatchFetch,
-  createNetworkedBatchStream,
+  asNetworkedFetch,
   createDeferred,
   createNetworkedHighDensitySolver,
   createNetworkedNode,
+  createNetworkedResponse,
   createNetworkedRoute,
 } from "tests/fixtures/pipeline9-networked-fixtures"
 
@@ -20,52 +20,35 @@ test("Pipeline9 uses a speculative result that finishes before its node is consu
     connectionName: "current",
     xOffset: 5,
   })
-  const requestStarted = createDeferred<Pipeline9NetworkedSolveBatchRequest>()
-  const batchStream = createNetworkedBatchStream()
+  const releaseDelayedResponse = createDeferred<void>()
+  const delayedResponseFinished = createDeferred<void>()
   const solver = createNetworkedHighDensitySolver({
     nodes: [delayedNode, currentNode],
     requestTimeoutMs: 5,
     transportTimeoutMs: 1_000,
-    fetchImpl: asNetworkedBatchFetch(async (_url, init) => {
+    fetchImpl: asNetworkedFetch(async (_url, init) => {
       const request = JSON.parse(
         String(init?.body),
-      ) as Pipeline9NetworkedSolveBatchRequest
-      requestStarted.resolve(request)
-      return batchStream.response
+      ) as Pipeline9NetworkedSolveRequest
+      if (
+        request.input.nodeWithPortPoints.capacityMeshNodeId ===
+        delayedNode.capacityMeshNodeId
+      ) {
+        await releaseDelayedResponse.promise
+        delayedResponseFinished.resolve()
+      }
+      return createNetworkedResponse({
+        status: "solved",
+        routes: [createNetworkedRoute(request.input.nodeWithPortPoints)],
+      })
     }),
   })
 
   solver.step()
-  const request = await requestStarted.promise
-  const currentItem = request.items.find(
-    (item) =>
-      item.input.nodeWithPortPoints.capacityMeshNodeId ===
-      currentNode.capacityMeshNodeId,
-  )!
-  const delayedItem = request.items.find(
-    (item) =>
-      item.input.nodeWithPortPoints.capacityMeshNodeId ===
-      delayedNode.capacityMeshNodeId,
-  )!
-  batchStream.write({
-    requestId: currentItem.requestId,
-    ok: true,
-    autorouterVersion: request.autorouterVersion,
-    source: "cache",
-    status: "solved",
-    routes: [createNetworkedRoute(currentNode)],
-  })
   await solver.pendingEffects![0]!.promise
   await new Promise((resolve) => setTimeout(resolve, 15))
-  batchStream.write({
-    requestId: delayedItem.requestId,
-    ok: true,
-    autorouterVersion: request.autorouterVersion,
-    source: "cache",
-    status: "solved",
-    routes: [createNetworkedRoute(delayedNode)],
-  })
-  batchStream.close()
+  releaseDelayedResponse.resolve()
+  await delayedResponseFinished.promise
   while (solver.stats.remoteRequestsCompleted < 2) {
     await new Promise((resolve) => setTimeout(resolve, 0))
   }

@@ -68,15 +68,11 @@ const scaleRoute = (
   ...route,
   route: route.route.map((point) => scalePoint(point, center, scaleFactor)),
   vias: route.vias.map((via) => scalePoint(via, center, scaleFactor)),
-  ...(route.jumpers
-    ? {
-        jumpers: route.jumpers.map((jumper) => ({
-          ...jumper,
-          start: scalePoint(jumper.start, center, scaleFactor),
-          end: scalePoint(jumper.end, center, scaleFactor),
-        })),
-      }
-    : {}),
+  jumpers: route.jumpers?.map((jumper) => ({
+    ...jumper,
+    start: scalePoint(jumper.start, center, scaleFactor),
+    end: scalePoint(jumper.end, center, scaleFactor),
+  })),
 })
 
 const routeColors = [
