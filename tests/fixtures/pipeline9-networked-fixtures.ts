@@ -76,28 +76,8 @@ export const createNetworkedFixedRoute = (): PreloadedHighDensityRoute => ({
   preloadedRouteIndex: 0,
 })
 
-type NetworkedFixtureNodeOutput =
-  | (Omit<
-      Extract<
-        Pipeline9NetworkedHighDensityNodeOutput,
-        { status: "solved"; solutionStage: "ordinary" }
-      >,
-      "solutionStage"
-    > & { solutionStage?: "ordinary" })
-  | (Omit<
-      Extract<
-        Pipeline9NetworkedHighDensityNodeOutput,
-        { status: "failed"; solutionStage: "ordinary" }
-      >,
-      "solutionStage"
-    > & { solutionStage?: "ordinary" })
-  | Extract<
-      Pipeline9NetworkedHighDensityNodeOutput,
-      { solutionStage: "regional-fallback" }
-    >
-
 export const createNetworkedResponse = (
-  response: NetworkedFixtureNodeOutput & {
+  response: Pipeline9NetworkedHighDensityNodeOutput & {
     autorouterVersion?: string
     source?: "cache" | "solver"
   },
@@ -107,7 +87,6 @@ export const createNetworkedResponse = (
       ok: true,
       autorouterVersion: response.autorouterVersion ?? AUTOROUTER_VERSION,
       source: response.source ?? "cache",
-      solutionStage: response.solutionStage ?? "ordinary",
       ...response,
     }),
     {
@@ -180,7 +159,7 @@ export const asNetworkedBatchFetch = (
 
 export const createNetworkedBatchStream = (): {
   response: Response
-  write: (result: Pipeline9NetworkedSolveBatchResult | object) => void
+  write: (result: Pipeline9NetworkedSolveBatchResult) => void
   close: () => void
 } => {
   const encoder = new TextEncoder()
@@ -195,16 +174,8 @@ export const createNetworkedBatchStream = (): {
       status: 200,
       headers: { "content-type": "application/x-ndjson" },
     }),
-    write: (result) => {
-      const responseResult = result as Record<string, unknown>
-      const serializedResult =
-        responseResult.ok === true && responseResult.solutionStage === undefined
-          ? { solutionStage: "ordinary", ...responseResult }
-          : responseResult
-      controller.enqueue(
-        encoder.encode(`${JSON.stringify(serializedResult)}\n`),
-      )
-    },
+    write: (result) =>
+      controller.enqueue(encoder.encode(`${JSON.stringify(result)}\n`)),
     close: () => controller.close(),
   }
 }

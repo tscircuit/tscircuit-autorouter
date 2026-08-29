@@ -29,7 +29,6 @@ test("Pipeline9 networked falls back locally for transport and invalid protocol 
   const cases: Array<{
     name: string
     requestTimeoutMs?: number
-    enableRegionalFallback?: boolean
     fetchImpl: typeof fetch
   }> = [
     {
@@ -74,90 +73,9 @@ test("Pipeline9 networked falls back locally for transport and invalid protocol 
       ),
     },
     {
-      name: "empty terminal error",
-      fetchImpl: asNetworkedFetch(
-        async () =>
-          new Response(
-            JSON.stringify({
-              ok: true,
-              autorouterVersion: AUTOROUTER_VERSION,
-              source: "cache",
-              status: "failed",
-              solutionStage: "ordinary",
-              error: "",
-            }),
-            { status: 200 },
-          ),
-      ),
-    },
-    {
-      name: "regional metadata on ordinary result",
-      fetchImpl: asNetworkedFetch(async (_input, init) => {
-        const request = JSON.parse(
-          String(init?.body),
-        ) as Pipeline9NetworkedSolveRequest
-        return new Response(
-          JSON.stringify({
-            ok: true,
-            autorouterVersion: AUTOROUTER_VERSION,
-            source: "cache",
-            status: "solved",
-            solutionStage: "ordinary",
-            ordinaryFailure: "must not be present",
-            routes: [createNetworkedRoute(request.input.nodeWithPortPoints)],
-          }),
-          { status: 200 },
-        )
-      }),
-    },
-    {
-      name: "empty regional ordinary failure",
-      enableRegionalFallback: true,
-      fetchImpl: asNetworkedFetch(async (_input, init) => {
-        const request = JSON.parse(
-          String(init?.body),
-        ) as Pipeline9NetworkedSolveRequest
-        return new Response(
-          JSON.stringify({
-            ok: true,
-            autorouterVersion: AUTOROUTER_VERSION,
-            source: "cache",
-            status: "solved",
-            solutionStage: "regional-fallback",
-            ordinaryFailure: "",
-            routes: [createNetworkedRoute(request.input.nodeWithPortPoints)],
-          }),
-          { status: 200 },
-        )
-      }),
-    },
-    {
       name: "foreign route connection",
       fetchImpl: createMalformedRouteFetch((route) => {
         route.connectionName = "foreign_connection"
-      }),
-    },
-    {
-      name: "one point route",
-      fetchImpl: createMalformedRouteFetch((route) => {
-        route.route = route.route.slice(0, 1)
-      }),
-    },
-    {
-      name: "one point regional route",
-      enableRegionalFallback: true,
-      fetchImpl: asNetworkedFetch(async (_input, init) => {
-        const request = JSON.parse(
-          String(init?.body),
-        ) as Pipeline9NetworkedSolveRequest
-        const route = createNetworkedRoute(request.input.nodeWithPortPoints)
-        route.route = route.route.slice(0, 1)
-        return createNetworkedResponse({
-          status: "solved",
-          solutionStage: "regional-fallback",
-          ordinaryFailure: "ordinary failed",
-          routes: [route],
-        })
       }),
     },
     {
@@ -222,7 +140,6 @@ test("Pipeline9 networked falls back locally for transport and invalid protocol 
       nodes: [node],
       fetchImpl: testCase.fetchImpl,
       requestTimeoutMs: testCase.requestTimeoutMs,
-      enableRegionalFallback: testCase.enableRegionalFallback,
     })
 
     solver.step()

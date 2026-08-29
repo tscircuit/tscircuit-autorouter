@@ -39,7 +39,6 @@ test("Pipeline9 networked launches every node request in parallel and preserves 
             autorouterVersion: request.autorouterVersion,
             source: "cache",
             status: "solved",
-            solutionStage: "ordinary",
             routes: [createNetworkedRoute(item.input.nodeWithPortPoints)],
           }),
         )

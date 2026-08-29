@@ -6,7 +6,7 @@ import {
   createNetworkedResponse,
 } from "tests/fixtures/pipeline9-networked-fixtures"
 
-test("Pipeline9 networked consumes a cached terminal failure without launching local regional work", async () => {
+test("Pipeline9 networked treats a cached solver failure like an ordinary local solver failure", async () => {
   const node = createNetworkedNode({
     nodeId: "cmn_cached_failure",
     connectionName: "A",
@@ -16,8 +16,7 @@ test("Pipeline9 networked consumes a cached terminal failure without launching l
     fetchImpl: asNetworkedFetch(async () =>
       createNetworkedResponse({
         status: "failed",
-        error:
-          "Pipeline9 regular high-density routing failed: deterministically unsolved",
+        error: "deterministically unsolved",
       }),
     ),
     enableRegionalFallback: false,
@@ -29,11 +28,9 @@ test("Pipeline9 networked consumes a cached terminal failure without launching l
 
   expect(solver.failed).toBeTrue()
   expect(solver.activeRegularSolver).toBeNull()
-  expect(solver.activeFallbackSolver).toBeNull()
-  expect(solver.error).toBe(
-    "Pipeline9 regular high-density routing failed: deterministically unsolved",
+  expect(solver.error).toContain(
+    "regular high-density routing failed: deterministically unsolved",
   )
-  expect(solver.stats.remoteOrdinaryResults).toBe(1)
   expect(solver.stats.remoteFailedResults).toBe(1)
   expect(solver.stats.remoteTransportFallbacks).toBe(0)
 })

@@ -51,7 +51,6 @@ test("Pipeline9 fans a batch cache miss out to legacy solve without losing hit c
               autorouterVersion: request.autorouterVersion,
               source: "cache",
               status: "solved",
-              solutionStage: "ordinary",
               routes: [createNetworkedRoute(hitItem.input.nodeWithPortPoints)],
             },
             {
