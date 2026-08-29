@@ -6,6 +6,7 @@ import {
 } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/pipeline9-high-density-solver"
 import { projectPipeline9OrdinaryHighDensityInput } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/project-pipeline9-ordinary-high-density-input"
 import { solvePipeline9NetworkedHighDensityNode } from "lib/autorouter-pipelines/AutoroutingPipeline9_Networked/solve-pipeline9-networked-high-density-node"
+import { PIPELINE9_NETWORKED_SOLVE_POLICY } from "lib/autorouter-pipelines/AutoroutingPipeline9_Networked/pipeline9-networked-types"
 import { HighDensitySolver } from "lib/solvers/HighDensitySolver/HighDensitySolver"
 import type { NodeWithPortPoints } from "lib/types/high-density-types"
 import type { Obstacle } from "lib/types/srj-types"
@@ -149,6 +150,8 @@ test("Pipeline9 projects ordinary node obstacles and connectivity without changi
   })
   fullInputSolver.solve()
   const projectedResult = solvePipeline9NetworkedHighDensityNode({
+    solvePolicy: PIPELINE9_NETWORKED_SOLVE_POLICY,
+    enableRegionalFallback: false,
     nodeWithPortPoints: node,
     connectivityNetMap: projection.connectivityNetMap,
     colorMap: projection.colorMap,
@@ -157,6 +160,7 @@ test("Pipeline9 projects ordinary node obstacles and connectivity without changi
     obstacleMargin: 0.15,
     effort: 1,
     obstacles: projection.obstacles,
+    regionalObstacles: [],
     layerCount: 2,
     nodePf: 0.1,
   })
@@ -164,6 +168,7 @@ test("Pipeline9 projects ordinary node obstacles and connectivity without changi
   expect(fullInputSolver.solved).toBeTrue()
   expect(projectedResult).toEqual({
     status: "solved",
+    solutionStage: "ordinary",
     routes: fullInputSolver.routes,
   })
 

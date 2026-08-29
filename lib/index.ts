@@ -48,6 +48,7 @@ export type {
   Pipeline9NetworkedSolveRequest,
   Pipeline9NetworkedSolveResponse,
 } from "./autorouter-pipelines/AutoroutingPipeline9_Networked/pipeline9-networked-types"
+export { PIPELINE9_NETWORKED_SOLVE_POLICY } from "./autorouter-pipelines/AutoroutingPipeline9_Networked/pipeline9-networked-types"
 export { solvePipeline9NetworkedHighDensityNode } from "./autorouter-pipelines/AutoroutingPipeline9_Networked/solve-pipeline9-networked-high-density-node"
 export { AutoroutingPipelineSolver10_BgaFanout } from "./autorouter-pipelines/AutoroutingPipeline10_BgaFanout/AutoroutingPipelineSolver10_BgaFanout"
 export { PolyHighDensitySolver } from "./autorouter-pipelines/AutoroutingPipeline6_PolyHypergraph/PolyHighDensitySolver"

@@ -4,10 +4,16 @@ import type {
 } from "../../types/high-density-types"
 import type { PendingEffect } from "../../solvers/BaseSolver"
 import {
+  normalizePipeline9NodeRootConnectionNames,
   Pipeline9HighDensitySolver,
   type Pipeline9HighDensitySolverParams,
 } from "../AutoroutingPipeline9_PreloadedTraceGraph/pipeline9-high-density-solver"
-import { projectPipeline9OrdinaryHighDensityInput } from "../AutoroutingPipeline9_PreloadedTraceGraph/project-pipeline9-ordinary-high-density-input"
+import { createRegionalFallbackProblem } from "../AutoroutingPipeline9_PreloadedTraceGraph/pipeline9-regional-fallback"
+import {
+  mergePipeline9ProjectedConnectivityNetMaps,
+  projectPipeline9OrdinaryHighDensityInput,
+  projectPipeline9RegionalHighDensityInput,
+} from "../AutoroutingPipeline9_PreloadedTraceGraph/project-pipeline9-ordinary-high-density-input"
 import type {
   Pipeline9NetworkedHighDensityNodeInput,
   Pipeline9NetworkedSolveBatchItem,
@@ -17,6 +23,7 @@ import type {
   Pipeline9NetworkedSolveRequest,
   Pipeline9NetworkedSolveResponse,
 } from "./pipeline9-networked-types"
+import { PIPELINE9_NETWORKED_SOLVE_POLICY } from "./pipeline9-networked-types"
 
 export const DEFAULT_PIPELINE9_NETWORKED_CACHE_URL =
   "https://hd-cache2.tscircuit.com"
@@ -114,6 +121,7 @@ const nearlyEqual = (left: number, right: number): boolean =>
 const isValidRemoteRoutes = (
   value: unknown,
   input: Pipeline9NetworkedHighDensityNodeInput,
+  solutionStage: "ordinary" | "regional-fallback",
 ): value is HighDensityIntraNodeRoute[] => {
   if (!Array.isArray(value)) return false
   const portPointsByConnectionName = new Map<
@@ -224,8 +232,9 @@ const isValidRemoteRoutes = (
     }
     const routePoints = route.route as Record<string, unknown>[]
     if (
-      !isPortPointForConnection(routePoints[0]!, route.connectionName) ||
-      !isPortPointForConnection(routePoints.at(-1)!, route.connectionName)
+      solutionStage === "ordinary" &&
+      (!isPortPointForConnection(routePoints[0]!, route.connectionName) ||
+        !isPortPointForConnection(routePoints.at(-1)!, route.connectionName))
     ) {
       return false
     }
@@ -395,6 +404,10 @@ export class Pipeline9NetworkedHighDensitySolver extends Pipeline9HighDensitySol
       remoteSolverResults: 0,
       remoteSolvedResults: 0,
       remoteFailedResults: 0,
+      remoteOrdinaryResults: 0,
+      remoteRegionalFallbackResults: 0,
+      remoteRegionalFallbackResultsApplied: 0,
+      remoteRegionalFallbackResultsDeferredToLocal: 0,
       remoteTransportFallbacks: 0,
       remoteLogicalTimeoutFallbacks: 0,
       remoteFallbackReasonCounts: {},
@@ -408,24 +421,44 @@ export class Pipeline9NetworkedHighDensitySolver extends Pipeline9HighDensitySol
   private createNodeInput(
     node: NodeWithPortPoints,
   ): Pipeline9NetworkedHighDensityNodeInput {
+    const regionalInput = this.enableRegionalFallback
+      ? projectPipeline9RegionalHighDensityInput({
+          nodeWithPortPoints: node,
+          connMap: this.connMap,
+          obstacles: this.obstacles,
+          obstacleMargin: this.obstacleMargin,
+          traceWidth: this.traceWidth,
+          viaDiameter: this.viaDiameter,
+        })
+      : { connectivityNetMap: {}, obstacles: [] }
     const projectedInput = projectPipeline9OrdinaryHighDensityInput({
       nodeWithPortPoints: node,
       connMap: this.connMap,
       colorMap: this.colorMap,
-      obstacles: this.obstacles,
+      // The regional projection already conservatively retains every obstacle
+      // in the ordinary 8x envelope, so avoid scanning the full board twice.
+      obstacles: this.enableRegionalFallback
+        ? regionalInput.obstacles
+        : this.obstacles,
       obstacleMargin: this.obstacleMargin,
       traceWidth: this.traceWidth,
       viaDiameter: this.viaDiameter,
     })
     return {
+      solvePolicy: PIPELINE9_NETWORKED_SOLVE_POLICY,
+      enableRegionalFallback: this.enableRegionalFallback,
       nodeWithPortPoints: node,
-      connectivityNetMap: projectedInput.connectivityNetMap,
+      connectivityNetMap: mergePipeline9ProjectedConnectivityNetMaps(
+        projectedInput.connectivityNetMap,
+        regionalInput.connectivityNetMap,
+      ),
       colorMap: projectedInput.colorMap,
       viaDiameter: this.viaDiameter,
       traceWidth: this.traceWidth,
       obstacleMargin: this.obstacleMargin,
       effort: 1,
       obstacles: projectedInput.obstacles,
+      regionalObstacles: regionalInput.obstacles,
       layerCount: this.layerCount,
       nodePf: this.nodePfById.get(node.capacityMeshNodeId) ?? null,
     }
@@ -464,12 +497,55 @@ export class Pipeline9NetworkedHighDensitySolver extends Pipeline9HighDensitySol
       )
     }
     if (
+      response.solutionStage !== "ordinary" &&
+      response.solutionStage !== "regional-fallback"
+    ) {
+      throw new Pipeline9NetworkedRequestError(
+        "invalid_response",
+        "hd-cache2 returned an invalid solution stage",
+      )
+    }
+    if (
+      response.solutionStage === "regional-fallback" &&
+      (!input.enableRegionalFallback ||
+        typeof response.ordinaryFailure !== "string" ||
+        response.ordinaryFailure.length === 0)
+    ) {
+      throw new Pipeline9NetworkedRequestError(
+        "invalid_response",
+        "hd-cache2 returned invalid regional fallback metadata",
+      )
+    }
+    if (
+      response.solutionStage === "ordinary" &&
+      Object.prototype.hasOwnProperty.call(response, "ordinaryFailure")
+    ) {
+      throw new Pipeline9NetworkedRequestError(
+        "invalid_response",
+        "hd-cache2 returned regional metadata on an ordinary result",
+      )
+    }
+    if (
+      response.solutionStage === "ordinary" &&
+      response.status === "failed" &&
+      input.enableRegionalFallback
+    ) {
+      throw new Pipeline9NetworkedRequestError(
+        "invalid_response",
+        "hd-cache2 returned an intermediate ordinary failure",
+      )
+    }
+    if (
       response.status === "solved" &&
-      isValidRemoteRoutes(response.routes, input)
+      isValidRemoteRoutes(response.routes, input, response.solutionStage)
     ) {
       return response as Extract<Pipeline9NetworkedSolveResponse, { ok: true }>
     }
-    if (response.status === "failed" && typeof response.error === "string") {
+    if (
+      response.status === "failed" &&
+      typeof response.error === "string" &&
+      response.error.length > 0
+    ) {
       return response as Extract<Pipeline9NetworkedSolveResponse, { ok: true }>
     }
 
@@ -983,12 +1059,56 @@ export class Pipeline9NetworkedHighDensitySolver extends Pipeline9HighDensitySol
 
     this.stats.regularNodeCount = Number(this.stats.regularNodeCount ?? 0) + 1
     this.activeNode = node
+    if (result.response.solutionStage === "regional-fallback") {
+      this.stats.remoteRegionalFallbackResults =
+        Number(this.stats.remoteRegionalFallbackResults ?? 0) + 1
+      if (!this.canUseNoFixedCopperRegionalResult(node)) {
+        this.stats.remoteRegionalFallbackResultsDeferredToLocal =
+          Number(
+            this.stats.remoteRegionalFallbackResultsDeferredToLocal ?? 0,
+          ) + 1
+        this.finishRegularSolverFailure(result.response.ordinaryFailure)
+        return
+      }
+      this.stats.remoteRegionalFallbackResultsApplied =
+        Number(this.stats.remoteRegionalFallbackResultsApplied ?? 0) + 1
+      this.stats.fallbackNodeCount =
+        Number(this.stats.fallbackNodeCount ?? 0) + 1
+    } else {
+      this.stats.remoteOrdinaryResults =
+        Number(this.stats.remoteOrdinaryResults ?? 0) + 1
+    }
     if (result.response.status === "failed") {
-      this.finishRegularSolverFailure(result.response.error)
+      this.error = result.response.error
+      this.failed = true
+      this.activeNode = null
       return
     }
 
     this.finishActiveNode(result.response.routes)
+  }
+
+  /**
+   * A node may have no fixed copper on its assigned layers while the regional
+   * fallback, which opens every board layer, would still observe a preloaded
+   * route. Re-prove independence against the current mutation state before
+   * consuming a no-fixed-copper regional result.
+   */
+  private canUseNoFixedCopperRegionalResult(
+    node: NodeWithPortPoints,
+  ): boolean {
+    const regionalNode = {
+      ...normalizePipeline9NodeRootConnectionNames(node, this.connMap),
+      availableZ: Array.from({ length: this.layerCount }, (_, z) => z),
+    }
+    const problem = createRegionalFallbackProblem(
+      regionalNode,
+      this.getUpdatedFixedHdRoutes(),
+    )
+    return (
+      problem.fixedRouteSectionsByConnectionName.size === 0 &&
+      problem.fixedObstacleRoutes.length === 0
+    )
   }
 
   override _step(): void {
