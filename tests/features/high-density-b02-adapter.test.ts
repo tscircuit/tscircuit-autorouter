@@ -1,7 +1,13 @@
 import { expect, test } from "bun:test"
 import { HighDensitySolverB02IntraNodeAdapter } from "lib/solvers/HighDensitySolver/high-density-solver-b02-adapter"
 import { PortfolioSingleIntraNodeSolver } from "lib/solvers/HyperHighDensitySolver/PortfolioSingleIntraNodeSolver"
-import type { NodeWithPortPoints } from "lib/types/high-density-types"
+import type {
+  NodeWithPortPoints,
+  PortPoint,
+} from "lib/types/high-density-types"
+import bugreport101DominantNode from "../fixtures/bugreport101-dominant-node.json" with {
+  type: "json",
+}
 
 test("HighDensitySolverB02 adapter preserves explicit pair metadata", () => {
   const portPoints = [
@@ -107,4 +113,38 @@ test("HighDensitySolverB02 adapter preserves explicit pair metadata", () => {
       obstacles: [],
     }),
   ).toBeFalse()
+})
+
+test("portfolio routes Bug101's dominant node with B02", () => {
+  const { portPointsInPairs, ...nodeFields } = bugreport101DominantNode
+  const pairs = portPointsInPairs as unknown as Array<[PortPoint, PortPoint]>
+  const node = {
+    ...nodeFields,
+    portPoints: pairs.flat(),
+    portPointsInPairs: pairs,
+  } as NodeWithPortPoints
+  const solver = new PortfolioSingleIntraNodeSolver({
+    nodeWithPortPoints: node,
+    traceWidth: 0.15,
+    viaDiameter: 0.3,
+    obstacleMargin: 0.1,
+    obstacles: [],
+    layerCount: 4,
+    effort: 1,
+  })
+
+  const startedAt = performance.now()
+  solver.solve()
+  const elapsedMs = performance.now() - startedAt
+
+  console.info(
+    `Bug101 dominant node solved by B02 in ${elapsedMs.toFixed(1)}ms`,
+  )
+  expect(solver.solved).toBeTrue()
+  expect(solver.failed).toBeFalse()
+  expect(solver.winningSolver).toBeInstanceOf(
+    HighDensitySolverB02IntraNodeAdapter,
+  )
+  expect(solver.solvedRoutes).toHaveLength(11)
+  expect(elapsedMs).toBeLessThan(10_000)
 })
