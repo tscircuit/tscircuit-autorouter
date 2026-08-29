@@ -66,28 +66,28 @@ import { StrawSolver } from "../../solvers/StrawSolver/StrawSolver"
 import { TraceSimplificationSolver } from "../../solvers/TraceSimplificationSolver/TraceSimplificationSolver"
 import { TraceWidthSolver } from "../../solvers/TraceWidthSolver/TraceWidthSolver"
 import { LengthMatchingPostProcessingSolver } from "../../solvers/length-matching-post-processing-solver"
-import { applyFixedRouteReplacementsToPreloadedTraces } from "./apply-fixed-route-replacements-to-preloaded-traces"
-import { assignUniquePcbTraceIdsToNewTraces } from "./assign-unique-pcb-trace-ids-to-new-traces"
-import { getTerminalLayerIndicesByPcbPortId } from "./get-terminal-layer-indices-by-pcb-port-id"
-import { getPipeline9NetByConnectionName } from "./get-pipeline9-net-by-connection-name"
+import { applyFixedRouteReplacementsToPreloadedTraces } from "./applyFixedRouteReplacementsToPreloadedTraces"
+import { assignUniquePcbTraceIdsToNewTraces } from "./assignUniquePcbTraceIdsToNewTraces"
+import { getTerminalLayerIndicesByPcbPortId } from "./getTerminalLayerIndicesByPcbPortId"
+import { getPipeline9NetByConnectionName } from "./getPipeline9NetByConnectionName"
 import {
   getMaterializedPreloadedSectionHdRoutes,
   removeChangedSectionsFromFixedHdRoutes,
-} from "./materialize-hypergraph-preloaded-trace-sections"
-import { materializePipeline9HdRouteVias } from "./materialize-pipeline9-hd-route-vias"
+} from "./materializeHypergraphPreloadedTraceSections"
+import { materializePipeline9HdRouteVias } from "./materializePipeline9HdRouteVias"
 import {
   type PreparedPipeline9MutationSections,
   applyPipeline9MutatedPreloadedSections,
   preparePipeline9MutatedPreloadedSections,
-} from "./pipeline9-mutated-preloaded-trace-simplification"
+} from "./pipeline9MutatedPreloadedTraceSimplification"
 import {
   convertPreloadedTraceToHdRoutes,
   type PreloadedHighDensityRoute,
-} from "./convert-preloaded-traces-to-hd-routes"
-import { Pipeline9HighDensitySolver } from "./pipeline9-high-density-solver"
-import { Pipeline9JointDrcRepairSolver } from "./pipeline9-joint-drc-repair-solver"
-import { PreloadedTraceGraphSolver } from "./preloaded-trace-graph-solver"
-import { PreprocessSimpleRouteJsonWithoutTraceObstaclesSolver } from "./preprocess-simple-route-json-without-trace-obstacles-solver"
+} from "./convertPreloadedTraceToHdRoutes"
+import { Pipeline9HighDensitySolver } from "./Pipeline9HighDensitySolver"
+import { Pipeline9JointDrcRepairSolver } from "./Pipeline9JointDrcRepairSolver"
+import { PreloadedTraceGraphSolver } from "./PreloadedTraceGraphSolver"
+import { PreprocessSimpleRouteJsonWithoutTraceObstaclesSolver } from "./PreprocessSimpleRouteJsonWithoutTraceObstaclesSolver"
 import { MergedComponentTopologyView } from "../AutoroutingPipeline7_MultiGraph/MergedComponentTopologyView"
 import { PowerTraceExpansionSolver } from "../AutoroutingPipeline7_MultiGraph/PowerTraceExpansionSolver"
 import { convertPipeline7HdRoutesToSimplifiedPcbTraces } from "../AutoroutingPipeline7_MultiGraph/convertPipeline7HdRoutesToSimplifiedPcbTraces"

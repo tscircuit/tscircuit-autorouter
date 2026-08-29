@@ -3,12 +3,12 @@ import { getPendingEffectsFromSolverTree } from "../../solvers/getPendingEffects
 import {
   AutoroutingPipelineSolver9_PreloadedTraceGraph,
   type AutoroutingPipelineSolverOptions,
-} from "../AutoroutingPipeline9_PreloadedTraceGraph/autorouting-pipeline-solver9-preloaded-trace-graph"
-import { AUTOROUTER_VERSION } from "./autorouter-version"
+} from "../AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
+import { AUTOROUTER_VERSION } from "./autorouterVersion"
 import {
   DEFAULT_HD_CACHE2_SERVER_URL,
   Pipeline9NetworkedHighDensitySolver,
-} from "./pipeline9-networked-high-density-solver"
+} from "./Pipeline9NetworkedHighDensitySolver"
 
 export type AutoroutingPipelineSolver9NetworkedOptions = Omit<
   AutoroutingPipelineSolverOptions,

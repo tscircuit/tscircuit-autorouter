@@ -2,14 +2,14 @@ import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import {
   createPipeline9RegularNodeSolver,
   normalizePipeline9NodeRootConnectionNames,
-} from "../AutoroutingPipeline9_PreloadedTraceGraph/pipeline9-high-density-solver"
-import { createRegionalFallbackProblem } from "../AutoroutingPipeline9_PreloadedTraceGraph/pipeline9-regional-fallback"
-import { Pipeline9RegionalFallbackSolver } from "../AutoroutingPipeline9_PreloadedTraceGraph/pipeline9-regional-fallback-solver"
+} from "../AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9HighDensitySolver"
+import { createRegionalFallbackProblem } from "../AutoroutingPipeline9_PreloadedTraceGraph/pipeline9RegionalFallback"
+import { Pipeline9RegionalFallbackSolver } from "../AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9RegionalFallbackSolver"
 import type {
   Pipeline9NetworkedHighDensityNodeInput,
   Pipeline9NetworkedHighDensityNodeOutput,
-} from "./pipeline9-networked-types"
-import { PIPELINE9_NETWORKED_SOLVE_POLICY } from "./pipeline9-networked-types"
+} from "./pipeline9NetworkedTypes"
+import { PIPELINE9_NETWORKED_SOLVE_POLICY } from "./pipeline9NetworkedTypes"
 
 type Pipeline9OrdinaryNodeResult =
   | {

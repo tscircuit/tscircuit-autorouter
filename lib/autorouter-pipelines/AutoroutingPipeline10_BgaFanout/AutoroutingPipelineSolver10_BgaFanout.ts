@@ -18,7 +18,7 @@ import type { GraphicsObject } from "graphics-debug"
 import {
   AutoroutingPipelineSolver9_PreloadedTraceGraph,
   type AutoroutingPipelineSolverOptions,
-} from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/autorouting-pipeline-solver9-preloaded-trace-graph"
+} from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
 import {
   ComponentDetectionSolver,
   type ComponentDetectionSolverOutput,

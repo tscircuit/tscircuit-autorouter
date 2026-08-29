@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test"
-import { HD_CACHE2_MAX_BATCH_BODY_BYTES } from "lib/autorouter-pipelines/AutoroutingPipeline9_Networked/hd-cache2-client"
-import type { Pipeline9NetworkedSolveBatchRequest } from "lib/autorouter-pipelines/AutoroutingPipeline9_Networked/pipeline9-networked-types"
+import { HD_CACHE2_MAX_BATCH_BODY_BYTES } from "lib/autorouter-pipelines/AutoroutingPipeline9_Networked/HdCache2Client"
+import type { Pipeline9NetworkedSolveBatchRequest } from "lib/autorouter-pipelines/AutoroutingPipeline9_Networked/pipeline9NetworkedTypes"
 import { ExampleHdCache2Server } from "tests/fixtures/example-hd-cache2-server"
 import {
   createNetworkedHighDensitySolver,

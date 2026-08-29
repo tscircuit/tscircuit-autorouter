@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test"
-import type { PreloadedHighDensityRoute } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/convert-preloaded-traces-to-hd-routes"
+import type { PreloadedHighDensityRoute } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/convertPreloadedTraceToHdRoutes"
 import { ExampleHdCache2Server } from "tests/fixtures/example-hd-cache2-server"
 import {
   createNetworkedCrossingNode,

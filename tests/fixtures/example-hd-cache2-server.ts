@@ -1,10 +1,10 @@
-import { AUTOROUTER_VERSION } from "lib/autorouter-pipelines/AutoroutingPipeline9_Networked/autorouter-version"
-import { solvePipeline9NetworkedHighDensityNode } from "lib/autorouter-pipelines/AutoroutingPipeline9_Networked/solve-pipeline9-networked-high-density-node"
+import { AUTOROUTER_VERSION } from "lib/autorouter-pipelines/AutoroutingPipeline9_Networked/autorouterVersion"
+import { solvePipeline9NetworkedHighDensityNode } from "lib/autorouter-pipelines/AutoroutingPipeline9_Networked/solvePipeline9NetworkedHighDensityNode"
 import type {
   Pipeline9NetworkedSolveBatchItem,
   Pipeline9NetworkedSolveBatchRequest,
   Pipeline9NetworkedSolveRequest,
-} from "lib/autorouter-pipelines/AutoroutingPipeline9_Networked/pipeline9-networked-types"
+} from "lib/autorouter-pipelines/AutoroutingPipeline9_Networked/pipeline9NetworkedTypes"
 
 export type ExampleHdCache2RequestRecord = {
   pathname: string

@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
-import { projectPipeline9RegionalHighDensityInput } from "lib/autorouter-pipelines/AutoroutingPipeline9_Networked/pipeline9-networked-input-projection"
+import { projectPipeline9RegionalHighDensityInput } from "lib/autorouter-pipelines/AutoroutingPipeline9_Networked/pipeline9NetworkedInputProjection"
 import type { Obstacle } from "lib/types/srj-types"
 import { createNetworkedNode } from "tests/fixtures/pipeline9-networked-fixtures"
 

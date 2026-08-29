@@ -4,7 +4,7 @@ import type { SimplifiedPcbTrace } from "lib/types"
 import type { HighDensityRoute } from "lib/types/high-density-types"
 import { getConnectionPointLayer } from "lib/types/srj-types"
 import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
-import type { PreloadedHighDensityRoute } from "./convert-preloaded-traces-to-hd-routes"
+import type { PreloadedHighDensityRoute } from "./convertPreloadedTraceToHdRoutes"
 
 type RoutePositionRange = {
   start: number
