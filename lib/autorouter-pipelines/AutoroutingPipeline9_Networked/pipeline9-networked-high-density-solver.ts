@@ -1064,9 +1064,8 @@ export class Pipeline9NetworkedHighDensitySolver extends Pipeline9HighDensitySol
         Number(this.stats.remoteRegionalFallbackResults ?? 0) + 1
       if (!this.canUseNoFixedCopperRegionalResult(node)) {
         this.stats.remoteRegionalFallbackResultsDeferredToLocal =
-          Number(
-            this.stats.remoteRegionalFallbackResultsDeferredToLocal ?? 0,
-          ) + 1
+          Number(this.stats.remoteRegionalFallbackResultsDeferredToLocal ?? 0) +
+          1
         this.finishRegularSolverFailure(result.response.ordinaryFailure)
         return
       }
@@ -1094,9 +1093,7 @@ export class Pipeline9NetworkedHighDensitySolver extends Pipeline9HighDensitySol
    * route. Re-prove independence against the current mutation state before
    * consuming a no-fixed-copper regional result.
    */
-  private canUseNoFixedCopperRegionalResult(
-    node: NodeWithPortPoints,
-  ): boolean {
+  private canUseNoFixedCopperRegionalResult(node: NodeWithPortPoints): boolean {
     const regionalNode = {
       ...normalizePipeline9NodeRootConnectionNames(node, this.connMap),
       availableZ: Array.from({ length: this.layerCount }, (_, z) => z),

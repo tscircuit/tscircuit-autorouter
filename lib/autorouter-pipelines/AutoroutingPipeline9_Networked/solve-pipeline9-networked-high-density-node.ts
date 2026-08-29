@@ -1,8 +1,6 @@
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import { HighDensitySolver } from "../../solvers/HighDensitySolver/HighDensitySolver"
-import {
-  normalizePipeline9NodeRootConnectionNames,
-} from "../AutoroutingPipeline9_PreloadedTraceGraph/pipeline9-high-density-solver"
+import { normalizePipeline9NodeRootConnectionNames } from "../AutoroutingPipeline9_PreloadedTraceGraph/pipeline9-high-density-solver"
 import { createRegionalFallbackProblem } from "../AutoroutingPipeline9_PreloadedTraceGraph/pipeline9-regional-fallback"
 import { Pipeline9RegionalFallbackSolver } from "../AutoroutingPipeline9_PreloadedTraceGraph/pipeline9-regional-fallback-solver"
 import type {

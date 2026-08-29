@@ -54,10 +54,6 @@ test("Pipeline9 regional projection preserves direct identities and one original
     [],
   ])
   expect(projection.connectivityNetMap).toEqual({
-    canonical_net_A: [
-      "route_A",
-      "root_alias_A",
-      "pad_alias_A",
-    ],
+    canonical_net_A: ["route_A", "root_alias_A", "pad_alias_A"],
   })
 })

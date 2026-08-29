@@ -68,7 +68,10 @@ const getMaximumPipeline9NodeBounds = ({
   }
 }
 
-const obstacleOverlapsBounds = (obstacle: Obstacle, bounds: Bounds): boolean => {
+const obstacleOverlapsBounds = (
+  obstacle: Obstacle,
+  bounds: Bounds,
+): boolean => {
   const rotationRadians = ((obstacle.ccwRotationDegrees ?? 0) * Math.PI) / 180
   const cos = Math.abs(Math.cos(rotationRadians))
   const sin = Math.abs(Math.sin(rotationRadians))
@@ -96,13 +99,14 @@ const getNodeConnectionNames = (
   nodeWithPortPoints: NodeWithPortPoints,
 ): string[] => [
   ...new Set(
-    nodeWithPortPoints.portPoints.map(
-      (portPoint) => portPoint.connectionName,
-    ),
+    nodeWithPortPoints.portPoints.map((portPoint) => portPoint.connectionName),
   ),
 ]
 
-const addPortPointIds = (relevantIds: Set<string>, portPoint: PortPoint): void => {
+const addPortPointIds = (
+  relevantIds: Set<string>,
+  portPoint: PortPoint,
+): void => {
   for (const id of [
     portPoint.connectionName,
     portPoint.rootConnectionName,
