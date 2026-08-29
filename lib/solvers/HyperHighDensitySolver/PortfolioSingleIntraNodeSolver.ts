@@ -8,6 +8,7 @@ import {
   NodeWithPortPoints,
 } from "lib/types/high-density-types"
 import { CachedIntraNodeRouteSolver } from "../HighDensitySolver/CachedIntraNodeRouteSolver"
+import { HighDensitySolverA01FineGrid } from "../HighDensitySolver/high-density-solver-a01-fine-grid"
 import { HighDensitySolverB02IntraNodeAdapter } from "../HighDensitySolver/high-density-solver-b02-adapter"
 import { IntraNodeRouteSolver } from "../HighDensitySolver/IntraNodeSolver"
 import { MultiHeadPolyLineIntraNodeSolver2 } from "../HighDensitySolver/MultiHeadPolyLineIntraNodeSolver/MultiHeadPolyLineIntraNodeSolver2_Optimized"
@@ -129,6 +130,9 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       ["flipTraceAlignmentDirection", "orderings6"],
       ["closedFormSingleTrace"],
       // ["closedFormTwoTrace"],
+      ...(HighDensitySolverA01FineGrid.isApplicable(this.nodeWithPortPoints)
+        ? [["highDensityA01FineGrid"]]
+        : []),
       ["highDensityA01"],
       ["highDensityA03"],
     ]
@@ -253,6 +257,14 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
             BOUNDARY_PADDING: -0.05, // Allow vias/traces outside the boundary
             ITERATION_PENALTY: 10000,
             MINIMUM_FINAL_ACCEPTANCE_GAP: 0.001,
+          },
+        ],
+      },
+      {
+        name: "highDensityA01FineGrid",
+        possibleValues: [
+          {
+            HIGH_DENSITY_A01_FINE_GRID: true,
           },
         ],
       },
@@ -442,6 +454,27 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
         nodeWithPortPoints: this.nodeWithPortPoints,
         traceWidth: this.constructorParams.traceWidth,
         viaDiameter: this.constructorParams.viaDiameter,
+      }) as any
+    }
+
+    if (hyperParameters.HIGH_DENSITY_A01_FINE_GRID) {
+      if (
+        !HighDensitySolverA01FineGrid.isApplicable(this.nodeWithPortPoints)
+      ) {
+        throw new Error(
+          "HighDensitySolverA01FineGrid was created for an inapplicable node",
+        )
+      }
+
+      return new HighDensitySolverA01FineGrid({
+        nodeWithPortPoints: this.nodeWithPortPoints,
+        viaDiameter: this.constructorParams.viaDiameter ?? 0.3,
+        viaMinDistFromBorder: (this.constructorParams.viaDiameter ?? 0.3) / 2,
+        traceThickness: this.constructorParams.traceWidth ?? 0.15,
+        effort: this.effort,
+        hyperParameters: {
+          shuffleSeed: ORDERING_SHUFFLE_SEEDS[0],
+        },
       }) as any
     }
 
