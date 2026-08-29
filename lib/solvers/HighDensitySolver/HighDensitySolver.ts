@@ -61,6 +61,7 @@ export class HighDensitySolver extends BaseSolver {
   preserveTerminalPcbPortIds: boolean
   growShrinkMaxInnerIterationsPerGrowthAttempt?: number
   growShrinkFallbackToInvalidGeometryOnFailure: boolean
+  growShrinkRequireOriginalScaleValidation: boolean
   growShrinkSolutionValidator?: (routes: HighDensityIntraNodeRoute[]) => boolean
   captureSearchDebug: boolean
 
@@ -96,6 +97,7 @@ export class HighDensitySolver extends BaseSolver {
     preserveTerminalPcbPortIds,
     growShrinkMaxInnerIterationsPerGrowthAttempt,
     growShrinkFallbackToInvalidGeometryOnFailure,
+    growShrinkRequireOriginalScaleValidation,
     growShrinkSolutionValidator,
     captureSearchDebug,
   }: {
@@ -112,6 +114,7 @@ export class HighDensitySolver extends BaseSolver {
     preserveTerminalPcbPortIds?: boolean
     growShrinkMaxInnerIterationsPerGrowthAttempt?: number
     growShrinkFallbackToInvalidGeometryOnFailure?: boolean
+    growShrinkRequireOriginalScaleValidation?: boolean
     growShrinkSolutionValidator?: (
       routes: HighDensityIntraNodeRoute[],
     ) => boolean
@@ -139,6 +142,8 @@ export class HighDensitySolver extends BaseSolver {
       growShrinkMaxInnerIterationsPerGrowthAttempt
     this.growShrinkFallbackToInvalidGeometryOnFailure =
       growShrinkFallbackToInvalidGeometryOnFailure ?? false
+    this.growShrinkRequireOriginalScaleValidation =
+      growShrinkRequireOriginalScaleValidation ?? false
     this.growShrinkSolutionValidator = growShrinkSolutionValidator
     this.captureSearchDebug = captureSearchDebug ?? true
     this.MAX_ITERATIONS =
@@ -385,6 +390,8 @@ export class HighDensitySolver extends BaseSolver {
         this.growShrinkMaxInnerIterationsPerGrowthAttempt,
       fallbackToInvalidGeometryOnFailure:
         this.growShrinkFallbackToInvalidGeometryOnFailure,
+      growShrinkRequireOriginalScaleValidation:
+        this.growShrinkRequireOriginalScaleValidation,
       growShrinkSolutionValidator: this.growShrinkSolutionValidator,
       captureSearchDebug: this.captureSearchDebug,
     }

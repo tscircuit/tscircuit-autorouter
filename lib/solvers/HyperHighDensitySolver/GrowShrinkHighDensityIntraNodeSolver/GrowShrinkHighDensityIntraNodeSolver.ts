@@ -23,6 +23,8 @@ export type GrowShrinkHighDensityIntraNodeSolverParams =
     maxGrowthAttempts?: number
     maxInnerIterationsPerGrowthAttempt?: number
     fallbackToInvalidGeometryOnFailure?: boolean
+    /** Requires a validator for scaled routes and disables invalid fallbacks. */
+    growShrinkRequireOriginalScaleValidation?: boolean
     growShrinkSolutionValidator?: (
       routes: HighDensityIntraNodeRoute[],
     ) => boolean
@@ -124,7 +126,10 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
       20_000_000 * (params.effort ?? 1) * (this.maxGrowthAttempts + 1)
 
     if (hasImpossibleSameLayerCrossingGeometry(this.nodeWithPortPoints)) {
-      if (!params.fallbackToInvalidGeometryOnFailure) {
+      if (
+        !params.fallbackToInvalidGeometryOnFailure ||
+        params.growShrinkRequireOriginalScaleValidation
+      ) {
         this.failed = true
         this.progress = 1
         this.error =
@@ -177,6 +182,17 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
             ),
           )
     if (
+      this.scaleFactor > 1 &&
+      this.constructorParams.growShrinkRequireOriginalScaleValidation &&
+      !this.constructorParams.growShrinkSolutionValidator
+    ) {
+      solver.solved = false
+      solver.failed = true
+      solver.error =
+        "Grow/shrink scaled solutions require validation at the original scale"
+      return false
+    }
+    if (
       this.constructorParams.growShrinkSolutionValidator &&
       !this.constructorParams.growShrinkSolutionValidator(solvedRoutes)
     ) {
@@ -223,7 +239,10 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
     this.activeSubSolver = null
 
     if (this.growthAttempts >= this.maxGrowthAttempts) {
-      if (this.constructorParams.fallbackToInvalidGeometryOnFailure) {
+      if (
+        this.constructorParams.fallbackToInvalidGeometryOnFailure &&
+        !this.constructorParams.growShrinkRequireOriginalScaleValidation
+      ) {
         this.solvedRoutes = createInvalidDirectConnectionRoutes(
           this.nodeWithPortPoints,
           this.constructorParams.traceWidth ?? 0.15,
