@@ -86,6 +86,12 @@ interface CapacityMeshSolverOptions {
   minNodeArea?: number
   visualizationTraceColorMode?: TraceColorMode
   powerTraceExpansion?: PowerTraceExpanderOptions
+  /**
+   * Selects how topology routes consume shared-edge ports before detailed
+   * high-density routing. Physical-capacity mode preserves the authoritative
+   * legal ports instead of fabricating sub-pitch congestion duplicates.
+   */
+  highDensityRoutingMode?: "legacy" | "physical-capacity"
 }
 export type AutoroutingPipelineSolverOptions = CapacityMeshSolverOptions
 
@@ -474,6 +480,8 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
           segmentPortPoints: sharedEdgeSegments.flatMap(
             (seg) => seg.portPoints,
           ),
+          includePhysicalPortalMetadata:
+            cms.opts.highDensityRoutingMode === "physical-capacity",
           simpleRouteJsonConnections: cms.srjWithPointPairs!.connections,
         })
 
@@ -483,6 +491,8 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
             connections,
             layerCount: cms.srj.layerCount,
             effort: cms.effort,
+            enforcePhysicalPortCapacity:
+              cms.opts.highDensityRoutingMode === "physical-capacity",
             preserveTerminalPcbPortIds: true,
             minViaPadDiameter: cms.viaDiameter,
             flags: {
@@ -527,6 +537,8 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
           minTraceWidth: cms.minTraceWidth,
           obstacles: cms.srj.obstacles,
           layerCount: cms.srj.layerCount,
+          preservePhysicalPortalSlots:
+            cms.opts.highDensityRoutingMode === "physical-capacity",
         },
       ],
     ),

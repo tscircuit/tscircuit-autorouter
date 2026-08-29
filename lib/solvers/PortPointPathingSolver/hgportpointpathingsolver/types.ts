@@ -17,6 +17,12 @@ import type { PreloadedTracePortAssignment } from "lib/solvers/AvailableSegmentP
 
 export type RawPort = {
   portId: string
+  /** Authoritative capacity-mesh edge that generated this physical portal. */
+  physicalPortalGroupId?: string
+  /** Stable identity for one legal XY/Z slot on the physical portal group. */
+  physicalPortalSlotId?: string
+  /** Source slot from which a legacy congestion duplicate was fabricated. */
+  duplicatedFromPortId?: string
   x: number
   y: number
   z: number
@@ -96,6 +102,11 @@ export interface HgPortPointPathingSolverParams {
   inputSolvedRoutes?: SolvedRoutesHg[]
   layerCount: number
   effort: number
+  /**
+   * Preserve the physical shared-edge ports produced by capacity planning.
+   * When enabled, congestion must reroute instead of creating synthetic ports.
+   */
+  enforcePhysicalPortCapacity?: boolean
   preserveTerminalPcbPortIds?: boolean
   minViaPadDiameter?: number
   flags: {
