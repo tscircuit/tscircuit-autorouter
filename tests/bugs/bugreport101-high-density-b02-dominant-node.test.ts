@@ -3,6 +3,7 @@ import {
   HighDensitySolverB02,
 } from "@tscircuit/high-density-b01"
 import { expect, test } from "bun:test"
+import { getSvgFromGraphicsObject } from "graphics-debug"
 import nodeJson from "../../fixtures/bug-reports/bugreport101-cm5-spi-routing-timeout/bugreport101-cm5-spi-dominant-high-density-node.json" with {
   type: "json",
 }
@@ -75,6 +76,11 @@ test("bugreport101 HighDensitySolverB02 repairs the dominant high-density node",
   expect(first.routes).toHaveLength(11)
   expect(first.winner.upstreamSolver).toBeInstanceOf(HighDensitySolverB02)
   expect(second.routes).toEqual(first.routes)
+  expect(
+    getSvgFromGraphicsObject(first.winner.visualize(), {
+      backgroundColor: "white",
+    }),
+  ).toMatchSvgSnapshot(import.meta.path)
   for (let index = 0; index < pairs.length; index += 1) {
     const [expectedStart, expectedEnd] = pairs[index]!
     const route = first.routes[index]!

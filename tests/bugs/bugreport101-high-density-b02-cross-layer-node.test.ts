@@ -1,5 +1,6 @@
 import { findRouteGeometryViolations } from "@tscircuit/high-density-b01"
 import { expect, test } from "bun:test"
+import { getSvgFromGraphicsObject } from "graphics-debug"
 import nodeJson from "../../fixtures/bug-reports/bugreport101-cm5-spi-routing-timeout/bugreport101-cm5-spi-cmn133-physical-capacity-high-density-node.json" with {
   type: "json",
 }
@@ -54,6 +55,11 @@ test("bugreport101 HighDensitySolverB02 repairs the exact physical cmn133 node",
 
   expect(firstRoutes).toHaveLength(9)
   expect(secondRoutes).toEqual(firstRoutes)
+  expect(
+    getSvgFromGraphicsObject(first.visualize(), {
+      backgroundColor: "white",
+    }),
+  ).toMatchSvgSnapshot(import.meta.path)
   for (let pairIndex = 0; pairIndex < pairs.length; pairIndex += 1) {
     const [expectedStart, expectedEnd] = pairs[pairIndex]!
     const route = firstRoutes[pairIndex]!
