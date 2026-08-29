@@ -75,6 +75,7 @@ import { createPipeline7AutoroutingDrcEvaluator } from "./create-pipeline7-autor
 import { getPowerTraceExpansionConnectionNames } from "./getPowerTraceExpansionConnectionNames"
 import { lockHdRouteTerminals } from "./lock-hd-route-terminals"
 import { preparePipeline7PowerTraceExpansionInput } from "./prepare-pipeline7-power-trace-expansion-input"
+import { RegionalDrcRerouteSolver } from "./RegionalDrcRerouteSolver"
 
 interface CapacityMeshSolverOptions {
   capacityDepth?: number
@@ -86,6 +87,7 @@ interface CapacityMeshSolverOptions {
   minNodeArea?: number
   visualizationTraceColorMode?: TraceColorMode
   powerTraceExpansion?: PowerTraceExpanderOptions
+  enableRegionalDrcReroute?: boolean
 }
 export type AutoroutingPipelineSolverOptions = CapacityMeshSolverOptions
 
@@ -228,6 +230,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
   highDensityStitchSolver?: MultipleHighDensityRouteStitchSolver3
   globalDrcForceImproveSolver?: GlobalDrcForceImproveSolver
   exactGeometryDrcForceImproveSolver?: GlobalDrcBranchPortfolioSolver
+  regionalDrcRerouteSolver?: RegionalDrcRerouteSolver
   singleLayerNodeMerger?: SingleLayerNodeMergerSolver
   strawSolver?: StrawSolver
   deadEndSolver?: DeadEndSolver
@@ -816,6 +819,38 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
         ]
       },
     ),
+    definePipelineStep(
+      "regionalDrcRerouteSolver",
+      RegionalDrcRerouteSolver,
+      (cms) => {
+        const traces =
+          cms.powerTraceExpansionSolver?.getOutput() ??
+          cms.getPrePowerTraceOutputSimplifiedPcbTraces()
+        const expandedPowerTraceNames =
+          cms.opts.powerTraceExpansion?.onlyConnectionNames ??
+          getPowerTraceExpansionConnectionNames(cms.originalSrj)
+        return [
+          {
+            inputSrj: {
+              ...cms.originalSrj,
+              traces,
+            },
+            originalSrj: cms.originalSrj,
+            srjWithPointPairs: cms.srjWithPointPairs!,
+            enabled:
+              (cms.originalSrj.traces?.length ?? 0) === 0 &&
+              expandedPowerTraceNames.length === 0 &&
+              cms.opts.enableRegionalDrcReroute !== false,
+            createPipelineSolver: (srj: SimpleRouteJson) =>
+              new AutoroutingPipelineSolver7_MultiGraph(srj, {
+                ...cms.opts,
+                effort: Math.max(2, cms.effort),
+                enableRegionalDrcReroute: false,
+              }),
+          },
+        ]
+      },
+    ),
   ]
 
   constructor(
@@ -1053,6 +1088,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
       this.globalDrcForceImproveSolver?.visualize()
     const exactGeometryDrcForceImproveViz =
       this.exactGeometryDrcForceImproveSolver?.visualize()
+    const regionalDrcRerouteViz = this.regionalDrcRerouteSolver?.visualize()
     const visualizations = [
       problemViz,
       processedProblemViz,
@@ -1084,6 +1120,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
       globalDrcForceImproveViz,
       exactGeometryDrcForceImproveViz,
       lengthMatchingPostProcessingViz,
+      regionalDrcRerouteViz,
       this.solved
         ? combineVisualizations(
             { lines: problemLines },
@@ -1176,6 +1213,10 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
   getOutputSimplifiedPcbTraces(): SimplifiedPcbTraces {
     if (!this.solved || !this.highDensityRouteSolver) {
       throw new Error("Cannot get output before solving is complete")
+    }
+
+    if (this.regionalDrcRerouteSolver) {
+      return this.regionalDrcRerouteSolver.getOutputSimplifiedPcbTraces()
     }
 
     if (this.powerTraceExpansionSolver) {

@@ -17,7 +17,7 @@ test("bugreport94-56fa2e.json", () => {
   const circuitJson = getCurrentCircuitJson(solver)
   expect(circuitJson).not.toBeNull()
   const { errors } = getDrcErrors(circuitJson!)
-  expect(errors.length).toBeLessThanOrEqual(6)
+  expect(errors.length).toBeLessThanOrEqual(1)
 
   expect(getLastStepSvg(solver.visualize())).toMatchSvgSnapshot(
     import.meta.path,
@@ -26,4 +26,4 @@ test("bugreport94-56fa2e.json", () => {
       tolerance: 0.17,
     },
   )
-}, 180_000)
+}, 300_000)
