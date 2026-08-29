@@ -43,6 +43,7 @@ export type HybridCoreSearchRequest = {
   readonly regionId: string
   readonly bounds: HybridBoardBounds
   readonly activeBounds: HybridBoardBounds
+  readonly activationBounds: readonly HybridBoardBounds[]
   readonly layerNames: readonly LayerName[]
   readonly start: HybridCoreRoutePoint
   readonly goal: HybridCoreRoutePoint
@@ -66,6 +67,7 @@ export type HybridCoreWorkCounters = {
   readonly geometryPredicateCalls: number
   readonly generatedNeighbors: number
   readonly peakOpenSetSize: number
+  readonly activatedRings: number
 }
 
 export type HybridCoreSearchResponse =

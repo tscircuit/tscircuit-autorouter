@@ -16,7 +16,11 @@ const nativeModule: CoreModule = require(resolve(nativeModulePath))
 const wasmModule: CoreModule = require(resolve(wasmModulePath))
 const fixtureDirectory = resolve(import.meta.dir, "../tests/fixtures")
 
-for (const fixtureName of ["direct-request.json", "obstacle-request.json"]) {
+for (const fixtureName of [
+  "direct-request.json",
+  "obstacle-request.json",
+  "ring-activation-request.json",
+]) {
   const requestJson = readFileSync(
     resolve(fixtureDirectory, fixtureName),
     "utf8",

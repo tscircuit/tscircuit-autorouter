@@ -103,13 +103,40 @@ pub fn search_region(request: &SearchRequest) -> CoreResponse {
     });
     let mut best_cost = BTreeMap::from([(start_node, initial_cost)]);
     let mut parent = BTreeMap::new();
-    let mut exhausted_budget = false;
+    let mut activation_index = 0_usize;
+    let mut active_bounds = &request.active_bounds;
+    let mut ring_expansions = 0_u32;
 
-    while let Some(entry) = open.pop() {
-        if work.search_expansions >= request.maximum_expansions {
-            exhausted_budget = true;
-            break;
+    let exhausted_budget = loop {
+        if open.is_empty() || ring_expansions >= request.maximum_expansions {
+            let ring_exhausted_budget = ring_expansions >= request.maximum_expansions;
+            if let Some(next_bounds) = request.activation_bounds.get(activation_index) {
+                active_bounds = next_bounds;
+                activation_index += 1;
+                ring_expansions = 0;
+                work.activated_rings += 1;
+                for (node, cost) in &best_cost {
+                    open.push(QueueEntry {
+                        estimated_cost: with_heuristic(
+                            *cost,
+                            (node.x_index, node.y_index),
+                            goal_grid,
+                        ),
+                        deterministic_tie: deterministic_tie(
+                            *node,
+                            request.deterministic_seed,
+                        ),
+                        node: *node,
+                    });
+                }
+                work.peak_open_set_size = work.peak_open_set_size.max(open.len() as u32);
+                continue;
+            }
+            break ring_exhausted_budget;
         }
+        let Some(entry) = open.pop() else {
+            continue;
+        };
         let Some(current_cost) = best_cost.get(&entry.node).copied() else {
             continue;
         };
@@ -121,6 +148,7 @@ pub fn search_region(request: &SearchRequest) -> CoreResponse {
         if entry.estimated_cost != expected_estimate {
             continue;
         }
+        ring_expansions += 1;
         work.search_expansions += 1;
 
         if entry.node.layer_index == goal_layer
@@ -140,7 +168,12 @@ pub fn search_region(request: &SearchRequest) -> CoreResponse {
             }
         }
 
-        let neighbors = generate_neighbors(request, entry.node, request.deterministic_seed);
+        let neighbors = generate_neighbors(
+            request,
+            entry.node,
+            request.deterministic_seed,
+            active_bounds,
+        );
         work.generated_neighbors += neighbors.len() as u32;
         for neighbor in neighbors {
             let candidate_cost = advance_cost(current_cost, entry.node, neighbor);
@@ -176,7 +209,7 @@ pub fn search_region(request: &SearchRequest) -> CoreResponse {
             });
             work.peak_open_set_size = work.peak_open_set_size.max(open.len() as u32);
         }
-    }
+    };
 
     if exhausted_budget {
         failed_response(
@@ -217,7 +250,12 @@ fn grid_to_point(request: &SearchRequest, node: NodeKey) -> (f64, f64) {
     )
 }
 
-fn generate_neighbors(request: &SearchRequest, node: NodeKey, seed: u32) -> Vec<NodeKey> {
+fn generate_neighbors(
+    request: &SearchRequest,
+    node: NodeKey,
+    seed: u32,
+    active_bounds: &crate::protocol::Bounds,
+) -> Vec<NodeKey> {
     let directions = [
         (1, 0, 1_u8),
         (0, 1, 3_u8),
@@ -235,7 +273,7 @@ fn generate_neighbors(request: &SearchRequest, node: NodeKey, seed: u32) -> Vec<
             direction,
         };
         let point = grid_to_point(request, candidate);
-        if point_within_bounds(point, &request.active_bounds) {
+        if point_within_bounds(point, active_bounds) {
             neighbors.push(candidate);
         }
     }

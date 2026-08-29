@@ -151,7 +151,8 @@ function parseWorkCounters(value: unknown): HybridCoreWorkCounters {
     !isNonnegativeInteger(value.spatialIndexQueries) ||
     !isNonnegativeInteger(value.geometryPredicateCalls) ||
     !isNonnegativeInteger(value.generatedNeighbors) ||
-    !isNonnegativeInteger(value.peakOpenSetSize)
+    !isNonnegativeInteger(value.peakOpenSetSize) ||
+    !isNonnegativeInteger(value.activatedRings)
   ) {
     throw new Error("hybrid routing core returned malformed work counters")
   }
@@ -161,6 +162,7 @@ function parseWorkCounters(value: unknown): HybridCoreWorkCounters {
     geometryPredicateCalls: value.geometryPredicateCalls,
     generatedNeighbors: value.generatedNeighbors,
     peakOpenSetSize: value.peakOpenSetSize,
+    activatedRings: value.activatedRings,
   })
 }
 

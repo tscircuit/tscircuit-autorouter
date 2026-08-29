@@ -1,0 +1,42 @@
+{
+  "protocolVersion": 1,
+  "regionId": "ring-activation-region",
+  "bounds": { "minX": 0, "maxX": 6, "minY": 0, "maxY": 4 },
+  "activeBounds": { "minX": 0, "maxX": 6, "minY": 1.5, "maxY": 2.5 },
+  "activationBounds": [
+    { "minX": 0, "maxX": 6, "minY": 0, "maxY": 4 }
+  ],
+  "layerNames": ["top", "bottom"],
+  "start": { "x": 0.5, "y": 2, "layer": "top" },
+  "goal": { "x": 5.5, "y": 2, "layer": "top" },
+  "legalViaSpans": [{ "fromLayer": "top", "toLayer": "bottom" }],
+  "obstacles": [
+    {
+      "kind": "rotated_rect",
+      "geometryId": "top-blocker",
+      "layer": "top",
+      "centerX": 3,
+      "centerY": 2,
+      "widthMm": 1,
+      "heightMm": 1,
+      "rotationDegrees": 0
+    },
+    {
+      "kind": "rotated_rect",
+      "geometryId": "bottom-blocker",
+      "layer": "bottom",
+      "centerX": 3,
+      "centerY": 2,
+      "widthMm": 1,
+      "heightMm": 1,
+      "rotationDegrees": 0
+    }
+  ],
+  "resolutionMm": 0.25,
+  "traceWidthMm": 0.2,
+  "clearanceMm": 0.1,
+  "viaPadDiameterMm": 0.4,
+  "maximumVias": 2,
+  "maximumExpansions": 10000,
+  "deterministicSeed": 17
+}

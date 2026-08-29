@@ -3,6 +3,7 @@ import { DemandCapacityField } from "./demand-capacity-field"
 import { createDeterministicRegionSchedule } from "./deterministic-region-scheduler"
 import { DynamicRegionGraph } from "./dynamic-region-graph"
 import { planGlobalTopology } from "./global-topology-planner"
+import { runMultiResolutionSearch } from "./multi-resolution-router"
 import { HYBRID_ROUTING_CORE_PROTOCOL_VERSION } from "./rust-core-protocol"
 import type {
   HybridCoreGeometry,
@@ -39,6 +40,7 @@ export type SerialHybridEngineConfiguration = {
   readonly runtime: HybridRoutingCoreRuntime
   readonly deterministicSeed: number
   readonly maximumSearchExpansions: number
+  readonly maximumActivationRings: number
   readonly maximumTransactionHistory: number
   readonly maximumDemandCellCount: number
   readonly maximumRegionCount: number
@@ -258,13 +260,18 @@ async function routeRegionPlan({
   let spatialIndexQueries = 0
   let drcPredicateCalls = 0
   let bendCount = 0
+  let candidatesConstructed = 0
+  let candidatesStepped = 0
+  let activeRings = 0
+  let solverStateRebuilds = 0
   for (const [corridorIndex, corridor] of routePlan.corridors.entries()) {
     const connection = getConnection({
       problem,
       connectionName: corridor.connectionName,
     })
-    const response = await configuration.runtime.execute(
-      createCoreRequest({
+    const search = await runMultiResolutionSearch({
+      runtime: configuration.runtime,
+      baseRequest: createCoreRequest({
         problem,
         connection,
         routePlan,
@@ -273,16 +280,22 @@ async function routeRegionPlan({
         copperSnapshot,
         configuration,
       }),
-    )
-    searchExpansions += response.work.searchExpansions
-    spatialIndexQueries += response.work.spatialIndexQueries
-    drcPredicateCalls += response.work.geometryPredicateCalls
-    if (response.status === "failed") {
+      maximumActivationRings: configuration.maximumActivationRings,
+    })
+    searchExpansions += search.metrics.work.searchExpansions
+    spatialIndexQueries += search.metrics.work.spatialIndexQueries
+    drcPredicateCalls += search.metrics.work.geometryPredicateCalls
+    candidatesConstructed += search.metrics.candidatesConstructed
+    candidatesStepped += search.metrics.candidatesStepped
+    activeRings += search.metrics.activeRings
+    solverStateRebuilds += search.metrics.solverStateRebuilds
+    if (search.status === "failed") {
       return {
         status: "failed",
-        message: `${response.code}: ${response.message}`,
+        message: `${search.response.code}: ${search.response.message}`,
       }
     }
+    const response = search.response
     const ownership = createCandidateOwnership(routePlan.routeObjectId)
     addedTraces.push(
       ...convertCoreRouteToSegments({
@@ -362,6 +375,10 @@ async function routeRegionPlan({
       spatialIndexQueries,
       drcPredicateCalls,
       geometryAllocations: addedTraces.length + addedVias.length,
+      candidatesConstructed,
+      candidatesStepped,
+      activeRings,
+      solverStateRebuilds,
     }),
     diagnostic: Object.freeze({
       code: "region_candidate_complete",
@@ -413,6 +430,7 @@ function createCoreRequest({
     regionId: `${region.regionId}:${routePlan.routeObjectId}:${corridorIndex}`,
     bounds: region.maximumEnvelope,
     activeBounds: region.maximumEnvelope,
+    activationBounds: Object.freeze([]),
     layerNames: connection.allowedLayers,
     start: Object.freeze({
       x: startTerminal.x,
@@ -805,6 +823,7 @@ function validateConfiguration(
 ): void {
   const positiveIntegerValues = [
     configuration.maximumSearchExpansions,
+    configuration.maximumActivationRings,
     configuration.maximumTransactionHistory,
     configuration.maximumDemandCellCount,
     configuration.maximumRegionCount,

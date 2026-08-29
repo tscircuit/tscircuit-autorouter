@@ -238,6 +238,10 @@ export function createHybridSegmentTransaction({
       spatialIndexQueries: 0,
       drcPredicateCalls: 0,
       geometryAllocations: 1,
+      candidatesConstructed: 1,
+      candidatesStepped: 1,
+      activeRings: 1,
+      solverStateRebuilds: 0,
     },
     diagnostic: {
       code: "candidate_complete",
@@ -319,6 +323,10 @@ export function createHybridViaTransaction({
       spatialIndexQueries: 0,
       drcPredicateCalls: 0,
       geometryAllocations: points.length,
+      candidatesConstructed: 1,
+      candidatesStepped: 1,
+      activeRings: 1,
+      solverStateRebuilds: 0,
     },
     diagnostic: {
       code: "candidate_complete",

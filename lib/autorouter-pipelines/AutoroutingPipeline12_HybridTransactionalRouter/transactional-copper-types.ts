@@ -72,6 +72,10 @@ export type HybridTransactionWorkCounters = {
   readonly spatialIndexQueries: number
   readonly drcPredicateCalls: number
   readonly geometryAllocations: number
+  readonly candidatesConstructed: number
+  readonly candidatesStepped: number
+  readonly activeRings: number
+  readonly solverStateRebuilds: number
 }
 
 export type HybridTransactionDelta = {

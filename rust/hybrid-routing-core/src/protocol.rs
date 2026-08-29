@@ -10,6 +10,8 @@ pub struct SearchRequest {
     pub region_id: String,
     pub bounds: Bounds,
     pub active_bounds: Bounds,
+    #[serde(default)]
+    pub activation_bounds: Vec<Bounds>,
     pub layer_names: Vec<String>,
     pub start: RoutePoint,
     pub goal: RoutePoint,
@@ -41,6 +43,25 @@ impl SearchRequest {
             return Err(CoreError::InvalidRules(
                 "activeBounds must be contained by bounds".into(),
             ));
+        }
+        let mut previous_bounds = self.active_bounds;
+        for (activation_index, activation_bounds) in
+            self.activation_bounds.iter().enumerate()
+        {
+            activation_bounds.validate(&format!(
+                "activationBounds[{activation_index}]"
+            ))?;
+            if !self.bounds.contains_bounds(activation_bounds) {
+                return Err(CoreError::InvalidRules(format!(
+                    "activationBounds[{activation_index}] must be contained by bounds"
+                )));
+            }
+            if !activation_bounds.contains_bounds(&previous_bounds) {
+                return Err(CoreError::InvalidRules(format!(
+                    "activationBounds[{activation_index}] must contain the previous active bounds"
+                )));
+            }
+            previous_bounds = *activation_bounds;
         }
         if self.layer_names.is_empty() {
             return Err(CoreError::InvalidRules("layerNames must not be empty".into()));
@@ -346,6 +367,7 @@ pub struct WorkCounters {
     pub geometry_predicate_calls: u32,
     pub generated_neighbors: u32,
     pub peak_open_set_size: u32,
+    pub activated_rings: u32,
 }
 
 #[derive(Clone, Copy, Debug, Serialize)]
