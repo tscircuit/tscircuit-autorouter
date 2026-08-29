@@ -20,67 +20,91 @@ export function createDeterministicRegionSchedule({
     name: "maximumWaveMemoryBytes",
   })
   const pending = [...regionGraph.regions]
-  const scheduledRegionIds = new Set<string>()
-  const waves: DeterministicScheduleWave[] = []
+  const colored: { readonly region: DynamicRoutingRegion; readonly color: number }[] = []
   while (pending.length > 0) {
     const ready = pending
       .filter((region) =>
         region.dependencyRegionIds.every((dependencyRegionId) =>
-          scheduledRegionIds.has(dependencyRegionId),
+          colored.some(
+            (entry) => entry.region.regionId === dependencyRegionId,
+          ),
         ),
       )
       .sort(compareRegionPriority)
     if (ready.length === 0) {
       throw new Error("dynamic region dependency graph contains a cycle")
     }
-    const selected: DynamicRoutingRegion[] = []
-    let selectedMemoryBytes = 0
     for (const candidate of ready) {
-      if (selected.length >= maximumConcurrency) break
-      if (
-        selected.some(
-          (region) =>
-            region.conflictRegionIds.includes(candidate.regionId) ||
-            candidate.conflictRegionIds.includes(region.regionId),
-        )
-      ) {
-        continue
-      }
-      if (
-        selected.length > 0 &&
-        selectedMemoryBytes + candidate.estimatedMemoryBytes >
-          maximumWaveMemoryBytes
-      ) {
-        continue
-      }
-      selected.push(candidate)
-      selectedMemoryBytes += candidate.estimatedMemoryBytes
-    }
-    if (selected.length === 0) selected.push(ready[0]!)
-    const waveIndex = waves.length
-    const scheduledRegions = selected.map(
-      (region, priorityIndex): ScheduledRegion =>
-        Object.freeze({
-          regionId: region.regionId,
-          priority: priorityIndex,
-          color: waveIndex,
-          estimatedSolverWork: region.estimatedSolverWork,
-          estimatedMemoryBytes: region.estimatedMemoryBytes,
-        }),
-    )
-    waves.push(
-      Object.freeze({
-        waveIndex,
-        regions: Object.freeze(scheduledRegions),
-      }),
-    )
-    for (const region of selected) {
-      scheduledRegionIds.add(region.regionId)
+      const dependencyColors = candidate.dependencyRegionIds.map(
+        (dependencyRegionId) =>
+          colored.find(
+            (entry) => entry.region.regionId === dependencyRegionId,
+          )!.color,
+      )
+      const minimumColor =
+        dependencyColors.length === 0 ? 0 : Math.max(...dependencyColors) + 1
+      const forbiddenColors = new Set(
+        colored
+          .filter(
+            (entry) =>
+              candidate.conflictRegionIds.includes(entry.region.regionId) ||
+              entry.region.conflictRegionIds.includes(candidate.regionId),
+          )
+          .map((entry) => entry.color),
+      )
+      let color = minimumColor
+      while (forbiddenColors.has(color)) color += 1
+      colored.push(Object.freeze({ region: candidate, color }))
       pending.splice(
-        pending.findIndex((candidate) => candidate.regionId === region.regionId),
+        pending.findIndex((region) => region.regionId === candidate.regionId),
         1,
       )
     }
+  }
+  const waves: DeterministicScheduleWave[] = []
+  const colors = [...new Set(colored.map((entry) => entry.color))].sort(
+    (first, second) => first - second,
+  )
+  for (const color of colors) {
+    const colorEntries = colored
+      .filter((entry) => entry.color === color)
+      .sort((first, second) =>
+        compareRegionPriority(first.region, second.region),
+      )
+    let batch: typeof colorEntries = []
+    let batchMemoryBytes = 0
+    const flushBatch = (): void => {
+      if (batch.length === 0) return
+      const waveIndex = waves.length
+      const regions = batch.map(
+        (entry, priority): ScheduledRegion =>
+          Object.freeze({
+            regionId: entry.region.regionId,
+            priority,
+            color,
+            estimatedSolverWork: entry.region.estimatedSolverWork,
+            estimatedMemoryBytes: entry.region.estimatedMemoryBytes,
+          }),
+      )
+      waves.push(
+        Object.freeze({ waveIndex, regions: Object.freeze(regions) }),
+      )
+      batch = []
+      batchMemoryBytes = 0
+    }
+    for (const entry of colorEntries) {
+      if (
+        batch.length >= maximumConcurrency ||
+        (batch.length > 0 &&
+          batchMemoryBytes + entry.region.estimatedMemoryBytes >
+            maximumWaveMemoryBytes)
+      ) {
+        flushBatch()
+      }
+      batch.push(entry)
+      batchMemoryBytes += entry.region.estimatedMemoryBytes
+    }
+    flushBatch()
   }
   return Object.freeze(waves)
 }

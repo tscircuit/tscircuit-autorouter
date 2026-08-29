@@ -131,6 +131,9 @@ export type RegionAttemptRecord = {
   readonly strategy: string
   readonly queueWaitMs: number
   readonly solveTimeMs: number
+  readonly workerCpuMs: number
+  readonly transferredBytes: number
+  readonly returnedBytes: number
   readonly outcome: "candidate" | "committed" | "rejected" | "failed" | "cancelled"
   readonly rejectionReason?: string
   readonly transactionId?: HybridTransactionId
