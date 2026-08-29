@@ -1,4 +1,5 @@
 import { expect, test } from "bun:test"
+import { HighDensitySolverA08IntraNodeAdapter } from "lib/solvers/HighDensitySolver/high-density-solver-a08-adapter"
 import { GrowShrinkHighDensityIntraNodeSolver } from "lib/solvers/HyperHighDensitySolver/GrowShrinkHighDensityIntraNodeSolver"
 import { PortfolioSingleIntraNodeSolver } from "lib/solvers/HyperHighDensitySolver/PortfolioSingleIntraNodeSolver"
 import type { NodeWithPortPoints } from "lib/types/high-density-types"
@@ -12,6 +13,8 @@ const solverParams = {
   obstacles: [],
   layerCount: 2,
   effort: 1,
+  enableHighDensityA08: true,
+  enableHighDensityA01FineGrid: true,
 }
 
 test("the supervisor derives its limit without advancing candidates", () => {
@@ -111,7 +114,17 @@ test("the srj18 sample002 large node is solved at its physical size", () => {
   expect(solver.failed).toBe(false)
   expect(solver.growthAttempts).toBe(0)
   expect(solver.scaleFactor).toBe(1)
-  expect(solver.winningSolver!.adaptiveSearchExpanded).toBe(true)
+  expect(solver.winningSolver!.winningSolver).toBeInstanceOf(
+    HighDensitySolverA08IntraNodeAdapter,
+  )
+  expect(solver.winningSolver!.adaptiveSearchExpanded).toBe(false)
+  const nonA08CandidateIterations = solver.winningSolver!.supervisedSolvers!
+    .filter(
+      ({ solver: candidate }) =>
+        !(candidate instanceof HighDensitySolverA08IntraNodeAdapter),
+    )
+    .reduce((total, { solver: candidate }) => total + candidate.iterations, 0)
+  expect(nonA08CandidateIterations).toBeLessThan(20_000)
   expect(solver.stats.invalidGeometryFallback).not.toBe(true)
   expect(solver.winningSolver!.iterations).toBeLessThanOrEqual(
     solver.winningSolver!.MAX_ITERATIONS,

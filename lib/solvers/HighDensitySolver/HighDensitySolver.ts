@@ -63,6 +63,8 @@ export class HighDensitySolver extends BaseSolver {
   growShrinkFallbackToInvalidGeometryOnFailure: boolean
   growShrinkSolutionValidator?: (routes: HighDensityIntraNodeRoute[]) => boolean
   captureSearchDebug: boolean
+  enableHighDensityA08: boolean
+  enableHighDensityA01FineGrid: boolean
 
   failedSolvers: HighDensityIntraNodeSolver[]
   activeSubSolver: HighDensityIntraNodeSolver | null = null
@@ -98,6 +100,8 @@ export class HighDensitySolver extends BaseSolver {
     growShrinkFallbackToInvalidGeometryOnFailure,
     growShrinkSolutionValidator,
     captureSearchDebug,
+    enableHighDensityA08,
+    enableHighDensityA01FineGrid,
   }: {
     nodePortPoints: NodeWithPortPoints[]
     colorMap?: Record<string, string>
@@ -116,6 +120,8 @@ export class HighDensitySolver extends BaseSolver {
       routes: HighDensityIntraNodeRoute[],
     ) => boolean
     captureSearchDebug?: boolean
+    enableHighDensityA08?: boolean
+    enableHighDensityA01FineGrid?: boolean
     nodePfById?:
       | Map<CapacityMeshNodeId, number | null>
       | Record<string, number | null>
@@ -141,6 +147,9 @@ export class HighDensitySolver extends BaseSolver {
       growShrinkFallbackToInvalidGeometryOnFailure ?? false
     this.growShrinkSolutionValidator = growShrinkSolutionValidator
     this.captureSearchDebug = captureSearchDebug ?? true
+    this.enableHighDensityA08 = enableHighDensityA08 ?? false
+    this.enableHighDensityA01FineGrid =
+      enableHighDensityA01FineGrid ?? false
     this.MAX_ITERATIONS =
       10e6 *
       this.effort *
@@ -387,6 +396,8 @@ export class HighDensitySolver extends BaseSolver {
         this.growShrinkFallbackToInvalidGeometryOnFailure,
       growShrinkSolutionValidator: this.growShrinkSolutionValidator,
       captureSearchDebug: this.captureSearchDebug,
+      enableHighDensityA08: this.enableHighDensityA08,
+      enableHighDensityA01FineGrid: this.enableHighDensityA01FineGrid,
     }
     this.activeSubSolver = this.useGrowShrinkHighDensityIntraNodeSolver
       ? new GrowShrinkHighDensityIntraNodeSolver(intraNodeSolverParams)

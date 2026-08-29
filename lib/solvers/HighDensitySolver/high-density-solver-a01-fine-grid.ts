@@ -8,35 +8,39 @@ type HighDensitySolverA01FineGridParams = Omit<
 
 const FINE_GRID_CELL_SIZE_MM = 0.05
 const FINE_GRID_TRACE_MARGIN_MM = 0.15
-// This is the verified grid topology where the coarse A01 search aliases two
-// routes into a rip loop. Keep the candidate exact so unrelated portfolios do
-// not change solver selection merely because a denser search is available.
-const TARGET_FINE_GRID_SHORT_AXIS_CELL_COUNT = 15
-const TARGET_FINE_GRID_LONG_AXIS_CELL_COUNT = 29
+const MINIMUM_PAIR_COUNT = 4
+const MAXIMUM_GRID_STATE_COUNT = 2_000
 
 export class HighDensitySolverA01FineGrid extends HighDensitySolverA01 {
   override getSolverName(): string {
     return "HighDensitySolverA01FineGrid"
   }
 
-  static isApplicable(node: NodeWithPortPoints): boolean {
-    const pairCount = node.portPointsInPairs?.length ?? 0
-    const terminalLayerCount = new Set(node.portPoints.map((point) => point.z))
-      .size
-    const terminalLayer = node.portPoints[0]?.z
-    const layerCount = node.availableZ?.length ?? terminalLayerCount
-    const rowCount = Math.floor(node.height / FINE_GRID_CELL_SIZE_MM)
-    const columnCount = Math.floor(node.width / FINE_GRID_CELL_SIZE_MM)
-    const shortAxisCellCount = Math.min(rowCount, columnCount)
-    const longAxisCellCount = Math.max(rowCount, columnCount)
+  static isApplicable(nodeWithPortPoints: NodeWithPortPoints): boolean {
+    const pairCount = nodeWithPortPoints.portPointsInPairs?.length ?? 0
+    const terminalLayerCount = new Set(
+      nodeWithPortPoints.portPoints.map((portPoint) => portPoint.z),
+    ).size
+    const layerCount =
+      nodeWithPortPoints.availableZ?.length ?? terminalLayerCount
+    const rows = Math.floor(
+      nodeWithPortPoints.height / FINE_GRID_CELL_SIZE_MM,
+    )
+    const cols = Math.floor(
+      nodeWithPortPoints.width / FINE_GRID_CELL_SIZE_MM,
+    )
+    const stateCount = rows * cols * layerCount
 
     return (
-      pairCount === 4 &&
+      pairCount >= MINIMUM_PAIR_COUNT &&
       terminalLayerCount === 1 &&
-      terminalLayer === 1 &&
-      layerCount === 2 &&
-      shortAxisCellCount === TARGET_FINE_GRID_SHORT_AXIS_CELL_COUNT &&
-      longAxisCellCount === TARGET_FINE_GRID_LONG_AXIS_CELL_COUNT
+      layerCount > 0 &&
+      nodeWithPortPoints.portPoints.every((portPoint) =>
+        nodeWithPortPoints.availableZ?.includes(portPoint.z) ?? true,
+      ) &&
+      rows > 0 &&
+      cols > 0 &&
+      stateCount <= MAXIMUM_GRID_STATE_COUNT
     )
   }
 

@@ -43,6 +43,8 @@ export function solvePipeline9NetworkedHighDensityNode(
     preserveTerminalPcbPortIds: false,
     growShrinkFallbackToInvalidGeometryOnFailure: false,
     captureSearchDebug: false,
+    enableHighDensityA08: true,
+    enableHighDensityA01FineGrid: true,
   })
 
   solver.solve()

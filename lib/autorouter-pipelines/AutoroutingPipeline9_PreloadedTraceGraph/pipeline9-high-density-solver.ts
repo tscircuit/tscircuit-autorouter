@@ -488,6 +488,8 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       preserveTerminalPcbPortIds: false,
       growShrinkFallbackToInvalidGeometryOnFailure: false,
       captureSearchDebug: false,
+      enableHighDensityA08: true,
+      enableHighDensityA01FineGrid: true,
     })
     this.stats.regularNodeCount = Number(this.stats.regularNodeCount ?? 0) + 1
   }

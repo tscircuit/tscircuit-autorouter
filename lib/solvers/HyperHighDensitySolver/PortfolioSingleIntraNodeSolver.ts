@@ -9,6 +9,7 @@ import {
 } from "lib/types/high-density-types"
 import { CachedIntraNodeRouteSolver } from "../HighDensitySolver/CachedIntraNodeRouteSolver"
 import { HighDensitySolverA01FineGrid } from "../HighDensitySolver/high-density-solver-a01-fine-grid"
+import { HighDensitySolverA08IntraNodeAdapter } from "../HighDensitySolver/high-density-solver-a08-adapter"
 import { HighDensitySolverB02IntraNodeAdapter } from "../HighDensitySolver/high-density-solver-b02-adapter"
 import { IntraNodeRouteSolver } from "../HighDensitySolver/IntraNodeSolver"
 import { MultiHeadPolyLineIntraNodeSolver2 } from "../HighDensitySolver/MultiHeadPolyLineIntraNodeSolver/MultiHeadPolyLineIntraNodeSolver2_Optimized"
@@ -39,6 +40,8 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
   | SingleTransitionThroughObstacleIntraNodeSolver
   | SingleLayerNoDifferentRootIntersectionsIntraNodeSolver
   | HighDensityA03Solver
+  | HighDensitySolverA01FineGrid
+  | HighDensitySolverA08IntraNodeAdapter
   | HighDensitySolverB02IntraNodeAdapter
 > {
   override getSolverName(): string {
@@ -50,6 +53,8 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
   nodeWithPortPoints: NodeWithPortPoints
   connMap?: ConnectivityMap
   effort: number
+  enableHighDensityA08: boolean
+  enableHighDensityA01FineGrid: boolean
   adaptiveSearchExpanded = false
 
   private getSolvedSegmentCount(solver: unknown): number | null {
@@ -106,6 +111,8 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
   constructor(
     opts: ConstructorParameters<typeof CachedIntraNodeRouteSolver>[0] & {
       effort?: number
+      enableHighDensityA08?: boolean
+      enableHighDensityA01FineGrid?: boolean
     },
   ) {
     super()
@@ -113,6 +120,9 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     this.connMap = opts.connMap
     this.constructorParams = opts
     this.effort = opts.effort ?? 1
+    this.enableHighDensityA08 = opts.enableHighDensityA08 ?? false
+    this.enableHighDensityA01FineGrid =
+      opts.enableHighDensityA01FineGrid ?? false
     this.MAX_ITERATIONS = 20_000_000 * this.effort
     this.GREEDY_MULTIPLIER = 5
     this.MIN_SUBSTEPS = 100
@@ -121,6 +131,18 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
   getCombinationDefs() {
     return [
       ["highDensityB02"],
+      ...(this.enableHighDensityA08 &&
+      HighDensitySolverA08IntraNodeAdapter.isApplicable({
+        nodeWithPortPoints: this.nodeWithPortPoints,
+        traceWidth: this.constructorParams.traceWidth,
+        viaDiameter: this.constructorParams.viaDiameter,
+        clearance: 0.1,
+        obstacles: this.constructorParams.obstacles,
+        effort: this.effort,
+        minimumPairCount: 8,
+      })
+        ? [["highDensityA08"]]
+        : []),
       ["throughObstacle"],
       ["singleLayerNoDifferentRootIntersections"],
       ["multiHeadPolyLine"],
@@ -130,7 +152,8 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       ["flipTraceAlignmentDirection", "orderings6"],
       ["closedFormSingleTrace"],
       // ["closedFormTwoTrace"],
-      ...(HighDensitySolverA01FineGrid.isApplicable(this.nodeWithPortPoints)
+      ...(this.enableHighDensityA01FineGrid &&
+      HighDensitySolverA01FineGrid.isApplicable(this.nodeWithPortPoints)
         ? [["highDensityA01FineGrid"]]
         : []),
       ["highDensityA01"],
@@ -143,6 +166,10 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       {
         name: "highDensityB02",
         possibleValues: [{ HIGH_DENSITY_B02: true }],
+      },
+      {
+        name: "highDensityA08",
+        possibleValues: [{ HIGH_DENSITY_A08: true }],
       },
       {
         name: "singleLayerNoDifferentRootIntersections",
@@ -394,7 +421,8 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
   computeG(solver: IntraNodeRouteSolver) {
     if (
       (solver as any) instanceof HighDensitySolverA01 ||
-      (solver as any) instanceof HighDensityA03Solver
+      (solver as any) instanceof HighDensityA03Solver ||
+      (solver as any) instanceof HighDensitySolverA08IntraNodeAdapter
     ) {
       return (solver as any).iterations / 1_000_000
     }
@@ -429,6 +457,24 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
         effort: this.effort,
         minimumPairCount: 8,
       }) as any
+    }
+
+    if (hyperParameters.HIGH_DENSITY_A08) {
+      const params = {
+        nodeWithPortPoints: this.nodeWithPortPoints,
+        traceWidth: this.constructorParams.traceWidth,
+        viaDiameter: this.constructorParams.viaDiameter,
+        clearance: 0.1,
+        obstacles: this.constructorParams.obstacles,
+        effort: this.effort,
+        minimumPairCount: 8,
+      }
+      if (!HighDensitySolverA08IntraNodeAdapter.isApplicable(params)) {
+        throw new Error(
+          "HighDensitySolverA08IntraNodeAdapter was created for an inapplicable node",
+        )
+      }
+      return new HighDensitySolverA08IntraNodeAdapter(params) as any
     }
 
     if (hyperParameters.SINGLE_LAYER_NO_DIFFERENT_ROOT_INTERSECTIONS) {
@@ -560,6 +606,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     if (
       (solver.solver as any) instanceof HighDensitySolverA01 ||
       (solver.solver as any) instanceof HighDensityA03Solver ||
+      (solver.solver as any) instanceof HighDensitySolverA08IntraNodeAdapter ||
       (solver.solver as any) instanceof HighDensitySolverB02IntraNodeAdapter
     ) {
       routes = (solver.solver as any).getOutput()
