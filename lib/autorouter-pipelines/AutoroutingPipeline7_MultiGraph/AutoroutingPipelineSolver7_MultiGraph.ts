@@ -917,7 +917,11 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
   }
 
   solveUntilPhase(phase: string) {
-    while (this.getCurrentPhase() !== phase) {
+    while (
+      this.getCurrentPhase() !== phase &&
+      !this.solved &&
+      !this.failed
+    ) {
       this.step()
     }
   }
