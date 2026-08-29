@@ -26,11 +26,16 @@ test("Pipeline9 visually solves representative SRJ23 samples", async () => {
     expect(solver.solved).toBe(true)
     expect(solver.failed).toBe(false)
 
+    // Circuit 10 selects a different equal-cost route on Linux.
+    const snapshotPath =
+      process.platform === "linux" && sampleNumber === 10
+        ? import.meta.path.replace(/\.test\.ts$/, "-linux.test.ts")
+        : import.meta.path
+
     await expect(getLastStepSvg(solver.visualize())).toMatchSvgSnapshot(
-      import.meta.path,
+      snapshotPath,
       {
         svgName: scenarioName,
-        // Circuit 10 selects a different equal-cost route on Linux.
         tolerance: sampleNumber === 10 ? 0.035 : 0.01,
       },
     )
