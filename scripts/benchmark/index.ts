@@ -29,6 +29,7 @@ import {
 
 type BenchmarkOptions = {
   solverName?: string
+  networkedColdHot: boolean
   scenarioLimit?: number
   sampleNumbers?: number[]
   concurrency: number
@@ -72,7 +73,27 @@ const DEFAULT_TASK_TIMEOUT_PER_EFFORT_MS = 60 * 1000
 const DEFAULT_HEARTBEAT_INTERVAL_MS = 30 * 1000
 const DEFAULT_TERMINATE_TIMEOUT_MS = 5 * 1000
 const DEFAULT_BENCHMARK_SOLVER_NAME = "AutoroutingPipelineSolver7_MultiGraph"
+const NETWORKED_PIPELINE9_SOLVER_NAME = "AutoroutingPipelineSolver9_Networked"
+const NETWORKED_PIPELINE9_COLD_NAME = "Pipeline9_Networked Cold"
+const NETWORKED_PIPELINE9_HOT_NAME = "Pipeline9_Networked Hot"
+export const DEFAULT_NETWORKED_CACHE_PROPAGATION_DELAY_MS = 65_000
 const BENCHMARK_SNAPSHOTS_HTML_PATH = "benchmark-snapshots.html"
+
+export const parseNetworkedCachePropagationDelayMs = (
+  rawValue: string | undefined = process.env
+    .BENCHMARK_NETWORKED_CACHE_PROPAGATION_DELAY_MS,
+): number => {
+  if (rawValue === undefined || rawValue.trim() === "") {
+    return DEFAULT_NETWORKED_CACHE_PROPAGATION_DELAY_MS
+  }
+  const delayMs = Number(rawValue)
+  if (!Number.isSafeInteger(delayMs) || delayMs < 0) {
+    throw new Error(
+      "BENCHMARK_NETWORKED_CACHE_PROPAGATION_DELAY_MS must be a non-negative integer",
+    )
+  }
+  return delayMs
+}
 
 const formatTime = (timeMs: number | null) => {
   if (timeMs === null) {
@@ -694,6 +715,7 @@ const parseArgs = (): BenchmarkOptions => {
     concurrency: defaultConcurrency,
     excludeAssignable: false,
     datasetName: "dataset01",
+    networkedColdHot: false,
   }
 
   for (let i = 0; i < args.length; i += 1) {
@@ -701,6 +723,10 @@ const parseArgs = (): BenchmarkOptions => {
     if (arg === "--solver") {
       options.solverName = args[i + 1]
       i += 1
+      continue
+    }
+    if (arg === "--networked-cold-hot") {
+      options.networkedColdHot = true
       continue
     }
     if (arg === "--scenario-limit") {
@@ -831,6 +857,7 @@ const loadSolverNames = async (
 }
 
 const formatTable = (rows: SolverRunSummary[]) => {
+  const includeNetworkCache = rows.some((row) => row.networkCache)
   const headers = [
     "Solver",
     "Completed %",
@@ -843,6 +870,9 @@ const formatTable = (rows: SolverRunSummary[]) => {
     "P90 Time",
     "P95 Time",
     "Avg Via",
+    ...(includeNetworkCache
+      ? ["HD Cache Hits", "HD Solver Results", "HD Local Fallbacks"]
+      : []),
   ]
 
   const body = rows.map((row) => [
@@ -857,6 +887,13 @@ const formatTable = (rows: SolverRunSummary[]) => {
     formatTime(row.p90TimeMs ?? null),
     formatTime(row.p95TimeMs),
     formatAverage(row.avgVia),
+    ...(includeNetworkCache
+      ? [
+          `${row.networkCache?.cacheHits ?? 0}/${row.networkCache?.remoteRequests ?? 0}`,
+          String(row.networkCache?.solverResults ?? 0),
+          String(row.networkCache?.localFallbacks ?? 0),
+        ]
+      : []),
   ])
 
   const widths = headers.map((header, columnIndex) => {
@@ -1468,6 +1505,36 @@ export const summarizeSolverResults = (
       ? null
       : viaCounts.reduce((sum, viaCount) => sum + viaCount, 0) /
         viaCounts.length
+  const networkMetrics = results.flatMap((result) =>
+    result.routingMetrics?.networkedHighDensity
+      ? [result.routingMetrics.networkedHighDensity]
+      : [],
+  )
+  const networkCache =
+    networkMetrics.length === 0
+      ? undefined
+      : {
+          remoteRequests: networkMetrics.reduce(
+            (sum, metrics) => sum + metrics.remoteRequestsStarted,
+            0,
+          ),
+          cacheHits: networkMetrics.reduce(
+            (sum, metrics) => sum + metrics.remoteCacheHits,
+            0,
+          ),
+          solverResults: networkMetrics.reduce(
+            (sum, metrics) => sum + metrics.remoteSolverResults,
+            0,
+          ),
+          batchCacheMisses: networkMetrics.reduce(
+            (sum, metrics) => sum + metrics.remoteBatchCacheMisses,
+            0,
+          ),
+          localFallbacks: networkMetrics.reduce(
+            (sum, metrics) => sum + metrics.remoteTransportFallbacks,
+            0,
+          ),
+        }
 
   return {
     solverName,
@@ -1489,12 +1556,110 @@ export const summarizeSolverResults = (
     p90TimeMs: getPercentileMs(elapsedForSolvedAndTimedOut, 0.9),
     p95TimeMs: getPercentileMs(elapsedForSolvedAndTimedOut, 0.95),
     avgVia,
+    networkCache,
   } satisfies SolverRunSummary
+}
+
+export const validateNetworkedColdPassReadyForHot = (
+  results: WorkerResult[],
+): void => {
+  const coldResults = results.filter(
+    (result) => result.solverName === NETWORKED_PIPELINE9_COLD_NAME,
+  )
+  if (coldResults.length === 0) {
+    throw new Error("Pipeline9_Networked cold pass produced no results")
+  }
+  const incompleteColdResults = coldResults.filter(
+    (result) =>
+      result.didTimeout || !result.routingMetrics?.networkedHighDensity,
+  )
+  if (incompleteColdResults.length > 0) {
+    throw new Error(
+      `Pipeline9_Networked cannot start hot pass because ${incompleteColdResults.length} cold task(s) timed out, crashed, or did not drain remote requests`,
+    )
+  }
+  const coldMetrics = coldResults.map(
+    (result) => result.routingMetrics!.networkedHighDensity!,
+  )
+  const localFallbacks = coldMetrics.reduce(
+    (sum, metrics) => sum + metrics.remoteTransportFallbacks,
+    0,
+  )
+  if (localFallbacks > 0) {
+    throw new Error(
+      `Pipeline9_Networked cold pass used ${localFallbacks} local transport fallback(s)`,
+    )
+  }
+
+  const coldRequests = coldMetrics.reduce(
+    (sum, metrics) => sum + metrics.remoteRequestsStarted,
+    0,
+  )
+  const coldSolverResults = coldMetrics.reduce(
+    (sum, metrics) => sum + metrics.remoteSolverResults,
+    0,
+  )
+  if (coldRequests > 0 && coldSolverResults === 0) {
+    throw new Error(
+      "Pipeline9_Networked cold pass did not produce any remote solver results",
+    )
+  }
+}
+
+export const validateNetworkedColdHotResults = (
+  results: WorkerResult[],
+): void => {
+  validateNetworkedColdPassReadyForHot(results)
+  const coldResultCount = results.filter(
+    (result) => result.solverName === NETWORKED_PIPELINE9_COLD_NAME,
+  ).length
+  const hotResults = results.filter(
+    (result) => result.solverName === NETWORKED_PIPELINE9_HOT_NAME,
+  )
+  const incompleteHotResults = hotResults.filter(
+    (result) =>
+      result.didTimeout || !result.routingMetrics?.networkedHighDensity,
+  )
+  if (
+    hotResults.length !== coldResultCount ||
+    incompleteHotResults.length > 0
+  ) {
+    throw new Error(
+      `Pipeline9_Networked hot pass completed ${hotResults.length - incompleteHotResults.length}/${coldResultCount} drained task(s)`,
+    )
+  }
+  const hotMetrics = hotResults.map(
+    (result) => result.routingMetrics!.networkedHighDensity!,
+  )
+  const localFallbacks = hotMetrics.reduce(
+    (sum, metrics) => sum + metrics.remoteTransportFallbacks,
+    0,
+  )
+  if (localFallbacks > 0) {
+    throw new Error(
+      `Pipeline9_Networked hot pass used ${localFallbacks} local transport fallback(s)`,
+    )
+  }
+
+  const hotRequests = hotMetrics.reduce(
+    (sum, metrics) => sum + metrics.remoteRequestsStarted,
+    0,
+  )
+  const hotCacheHits = hotMetrics.reduce(
+    (sum, metrics) => sum + metrics.remoteCacheHits,
+    0,
+  )
+  if (hotRequests !== hotCacheHits) {
+    throw new Error(
+      `Pipeline9_Networked hot pass returned ${hotCacheHits}/${hotRequests} remote cache hits`,
+    )
+  }
 }
 
 const main = async () => {
   const {
     solverName,
+    networkedColdHot,
     scenarioLimit,
     sampleNumbers,
     concurrency,
@@ -1505,6 +1670,16 @@ const main = async () => {
   } = parseArgs()
   const availableSolvers = await loadSolverNames(excludeAssignable)
   const solvers = solverName ? [solverName] : [DEFAULT_BENCHMARK_SOLVER_NAME]
+
+  if (
+    networkedColdHot &&
+    (solverName !== NETWORKED_PIPELINE9_SOLVER_NAME ||
+      (effort !== undefined && effort !== 1))
+  ) {
+    throw new Error(
+      "--networked-cold-hot requires AutoroutingPipelineSolver9_Networked at effort=1",
+    )
+  }
 
   if (solverName && !availableSolvers.includes(solverName)) {
     throw new Error(
@@ -1548,38 +1723,102 @@ const main = async () => {
     throw new Error(`No benchmark scenarios found for dataset "${datasetName}"`)
   }
 
-  const tasks: BenchmarkTask[] = solvers.flatMap((solver) =>
-    scenarios.map(
-      ({ scenarioName, sampleNumber, scenario }) =>
-        ({
-          datasetName,
-          solverName: solver,
-          scenarioName,
-          sampleNumber,
-          scenario,
-        }) satisfies BenchmarkTask,
-    ),
-  )
+  const solverRuns: Array<{
+    displayName: string
+    constructorName: string
+    networkedCachePass?: "cold" | "hot"
+  }> = networkedColdHot
+    ? [
+        {
+          displayName: NETWORKED_PIPELINE9_COLD_NAME,
+          constructorName: NETWORKED_PIPELINE9_SOLVER_NAME,
+          networkedCachePass: "cold",
+        },
+        {
+          displayName: NETWORKED_PIPELINE9_HOT_NAME,
+          constructorName: NETWORKED_PIPELINE9_SOLVER_NAME,
+          networkedCachePass: "hot",
+        },
+      ]
+    : solvers.map((solver) => ({
+        displayName: solver,
+        constructorName: solver,
+      }))
+  const taskGroups: BenchmarkTask[][] = networkedColdHot
+    ? solverRuns.map((solverRun) =>
+        scenarios.map(
+          ({ scenarioName, sampleNumber, scenario }) =>
+            ({
+              datasetName,
+              solverName: solverRun.displayName,
+              solverConstructorName: solverRun.constructorName,
+              networkedCachePass: solverRun.networkedCachePass,
+              scenarioName,
+              sampleNumber,
+              scenario,
+            }) satisfies BenchmarkTask,
+        ),
+      )
+    : [
+        solverRuns.flatMap((solverRun) =>
+          scenarios.map(
+            ({ scenarioName, sampleNumber, scenario }) =>
+              ({
+                datasetName,
+                solverName: solverRun.displayName,
+                solverConstructorName: solverRun.constructorName,
+                scenarioName,
+                sampleNumber,
+                scenario,
+              }) satisfies BenchmarkTask,
+          ),
+        ),
+      ]
+  const tasks = taskGroups.flat()
 
   console.log(
-    `Running ${tasks.length} benchmark tasks across ${concurrency} workers (${solvers.length} solver${solvers.length === 1 ? "" : "s"}, ${scenarios.length} scenario${scenarios.length === 1 ? "" : "s"}, dataset: ${datasetName})`,
+    `Running ${tasks.length} benchmark tasks across ${concurrency} workers (${solverRuns.length} solver run${solverRuns.length === 1 ? "" : "s"}, ${scenarios.length} scenario${scenarios.length === 1 ? "" : "s"}, dataset: ${datasetName})`,
   )
 
   const snapshotWriter = await createBenchmarkSnapshotWriter(
     BENCHMARK_SNAPSHOTS_HTML_PATH,
   )
-  let results: WorkerResult[]
+  const networkedCachePropagationDelayMs = networkedColdHot
+    ? parseNetworkedCachePropagationDelayMs()
+    : 0
+  const results: WorkerResult[] = []
   try {
-    results = await runBenchmarkTasks(tasks, concurrency, sampleTimeoutMs, {
-      onBenchmarkSnapshot: snapshotWriter.writeSnapshot,
-    })
+    for (const [groupIndex, taskGroup] of taskGroups.entries()) {
+      if (networkedColdHot) {
+        console.log(
+          `[benchmark] Starting Pipeline9_Networked ${groupIndex === 0 ? "cold" : "hot"} pass`,
+        )
+      }
+      results.push(
+        ...(await runBenchmarkTasks(taskGroup, concurrency, sampleTimeoutMs, {
+          onBenchmarkSnapshot: snapshotWriter.writeSnapshot,
+        })),
+      )
+      if (networkedColdHot && groupIndex === 0) {
+        validateNetworkedColdPassReadyForHot(results)
+        if (networkedCachePropagationDelayMs > 0) {
+          console.log(
+            `[benchmark] Waiting ${networkedCachePropagationDelayMs}ms for Workers KV propagation before the hot pass`,
+          )
+          await new Promise((resolve) =>
+            setTimeout(resolve, networkedCachePropagationDelayMs),
+          )
+        }
+      }
+    }
   } finally {
     await snapshotWriter.finish()
   }
-  const rows = solvers.map((solver) =>
+  if (networkedColdHot) validateNetworkedColdHotResults(results)
+  const rows = solverRuns.map((solverRun) =>
     summarizeSolverResults(
-      solver,
-      results.filter((result) => result.solverName === solver),
+      solverRun.displayName,
+      results.filter((result) => result.solverName === solverRun.displayName),
     ),
   )
 
@@ -1587,7 +1826,8 @@ const main = async () => {
     scenarios.map(({ scenario }) =>
       getTaskEffort({
         datasetName,
-        solverName: solvers[0] ?? "",
+        solverName: solverRuns[0]?.displayName ?? "",
+        solverConstructorName: solverRuns[0]?.constructorName,
         scenarioName: "",
         sampleNumber: 0,
         scenario,

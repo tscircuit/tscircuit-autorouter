@@ -52,6 +52,25 @@ test("PR benchmark commands preserve arguments and fan-out behavior", () => {
     sameMachineCompare: false,
   })
   expect(
+    parsePrBenchmarkCommand("/benchmark --pipeline 9net --dataset 18"),
+  ).toEqual({
+    kind: "benchmark",
+    benchmarkArgs: ["--pipeline", "9net", "--dataset", "18"],
+    datasetName: "18",
+    profileSolvers: false,
+    sameMachineCompare: false,
+  })
+  expect(() =>
+    parsePrBenchmarkCommand(
+      "/benchmark --pipeline 9net --dataset 18 --same-machine",
+    ),
+  ).toThrow("does not support --same-machine")
+  expect(() =>
+    parsePrBenchmarkCommand(
+      "/benchmark --pipeline 9net --dataset 18 --profile-solvers",
+    ),
+  ).toThrow("does not support --profile-solvers")
+  expect(
     parsePrBenchmarkCommand(
       "/benchmark --pipeline 10 --dataset 29 --limit 5 --sample 2",
     ),
@@ -181,6 +200,35 @@ test("PR benchmark commands preserve arguments and fan-out behavior", () => {
     "same_machine_compare: String(command.sameMachineCompare)",
   )
   expect(benchmarkWorkflow).toContain("benchmark_args_json:")
+  expect(benchmarkWorkflow).not.toContain("HD_CACHE2_BENCHMARK_CAPABILITY")
+  expect(benchmarkWorkflow).not.toContain("createHmac")
+  expect(
+    benchmarkWorkflow.indexOf(
+      "Create Pipeline9 network cache benchmark namespace",
+    ),
+  ).toBeLessThan(benchmarkWorkflow.indexOf("Checkout code"))
+  expect(benchmarkWorkflow).toContain(
+    "Verify production Pipeline9 network cache support",
+  )
+  expect(benchmarkWorkflow).toContain("benchmarkCacheVersionSupported")
+  expect(benchmarkWorkflow).toContain(
+    "body.benchmarkCacheVersionAccess !== 'open'",
+  )
+  expect(benchmarkWorkflow).toContain("/health")
+  expect(benchmarkWorkflow).toContain("HD_CACHE2_CACHE_VERSION")
+  expect(benchmarkWorkflow).toContain(
+    "BENCHMARK_NETWORKED_CACHE_PROPAGATION_DELAY_MS: '65000'",
+  )
+  expect(benchmarkWorkflow).toContain(
+    "benchmark-${repositoryId}-${runId}-${runAttempt}-${randomUUID()}",
+  )
+  expect(benchmarkWorkflow).toContain("Pipeline9_Networked Cold vs Hot")
+  expect(benchmarkWorkflow).toContain(
+    "typeof comparisonModule.isNetworkedColdHotReport === 'function'",
+  )
+  expect(benchmarkWorkflow).toContain(
+    "names.has('Pipeline9_Networked Cold') && names.has('Pipeline9_Networked Hot')",
+  )
   expect(benchmarkWorkflow).toContain("blacksmith-8vcpu-ubuntu-2404-arm")
   expect(benchmarkWorkflow).toContain("inputs.long_benchmark && 480 || 120")
   expect(benchmarkWorkflow).toContain("same_machine_compare:")

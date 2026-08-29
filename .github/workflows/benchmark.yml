@@ -91,6 +91,11 @@ jobs:
           github-token: ${{ secrets.TSCIRCUIT_BOT_GITHUB_TOKEN }}
           script: |
             const allSolversAliases = new Set(['all', '_'])
+            const usesNetworkedPipeline9 = (args) => args.some(
+              (arg, index) =>
+                arg === '--pipeline' &&
+                String(args[index + 1] || '').toLowerCase() === '9net',
+            )
 
             let benchmarkArgs = []
             let benchmarkConcurrency = ''
@@ -224,8 +229,25 @@ jobs:
             core.setOutput('benchmark_concurrency', benchmarkConcurrency)
             core.setOutput('profile_solvers', profileSolvers ? 'true' : 'false')
             core.setOutput('profile_solvers_args_json', JSON.stringify(buildProfileSolversArgs(benchmarkArgs)))
+            core.setOutput('pipeline9_networked', usesNetworkedPipeline9(benchmarkArgs) ? 'true' : 'false')
             core.setOutput('ref', ref)
             core.setOutput('status_comment_id', statusCommentId)
+
+      - name: Create Pipeline9 network cache benchmark namespace
+        id: networked-cache
+        if: steps.parse.outputs.pipeline9_networked == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { randomUUID } = require('node:crypto')
+            const repositoryId = String(context.payload.repository.id)
+            const runId = String(process.env.GITHUB_RUN_ID)
+            const runAttempt = String(process.env.GITHUB_RUN_ATTEMPT)
+            if (![repositoryId, runId, runAttempt].every((value) => /^\d+$/.test(value))) {
+              throw new Error('GitHub repository/run identifiers are unavailable')
+            }
+            const cacheVersion = `benchmark-${repositoryId}-${runId}-${runAttempt}-${randomUUID()}`
+            core.setOutput('cache_version', cacheVersion)
 
       - name: Checkout code
         uses: actions/checkout@v4
@@ -240,6 +262,46 @@ jobs:
 
       - name: Install dependencies
         run: bun install
+
+      - name: Verify production Pipeline9 network cache support
+        if: steps.parse.outputs.pipeline9_networked == 'true'
+        env:
+          HD_CACHE2_SERVER_URL: https://hd-cache2.tscircuit.com
+          HD_CACHE2_CACHE_VERSION: ${{ steps.networked-cache.outputs.cache_version }}
+        run: |
+          node <<'NODE'
+          const { readFileSync } = require('node:fs')
+
+          const run = async () => {
+            const autorouterVersion = JSON.parse(readFileSync('package.json', 'utf8')).version
+            const cacheVersion = process.env.HD_CACHE2_CACHE_VERSION
+            const response = await fetch(`${process.env.HD_CACHE2_SERVER_URL}/health`, {
+              headers: { accept: 'application/json' },
+            })
+            const responseText = await response.text()
+            let body
+            try {
+              body = responseText ? JSON.parse(responseText) : null
+            } catch {
+              throw new Error(`hd-cache2 preflight returned invalid JSON (${response.status})`)
+            }
+            if (
+              !response.ok ||
+              body?.ok !== true ||
+              body.autorouterVersion !== autorouterVersion ||
+              body.benchmarkCacheVersionSupported !== true ||
+              body.benchmarkCacheVersionAccess !== 'open'
+            ) {
+              throw new Error(`hd-cache2 preflight failed (${response.status}): ${body?.message || 'invalid response'}`)
+            }
+            console.log(`hd-cache2 supports autorouter ${autorouterVersion}; using fresh benchmark namespace ${cacheVersion}`)
+          }
+
+          run().catch((error) => {
+            console.error(error.message)
+            process.exit(1)
+          })
+          NODE
 
       - name: Load main branch benchmark datasets
         id: main-datasets
@@ -276,6 +338,9 @@ jobs:
           BENCHMARK_TASK_TIMEOUT_PER_EFFORT_MS: ${{ vars.BENCHMARK_TASK_TIMEOUT_PER_EFFORT_MS || vars.BENCHMARK_TASK_TIMEOUT_MS || '60000' }}
           BENCHMARK_HEARTBEAT_INTERVAL_MS: ${{ vars.BENCHMARK_HEARTBEAT_INTERVAL_MS || '30000' }}
           BENCHMARK_TERMINATE_TIMEOUT_MS: ${{ vars.BENCHMARK_TERMINATE_TIMEOUT_MS || '1000' }}
+          BENCHMARK_NETWORKED_CACHE_PROPAGATION_DELAY_MS: '65000'
+          HD_CACHE2_SERVER_URL: https://hd-cache2.tscircuit.com
+          HD_CACHE2_CACHE_VERSION: ${{ steps.networked-cache.outputs.cache_version }}
         run: |
           chmod +x ./benchmark.sh
           node <<'NODE'
@@ -495,7 +560,16 @@ jobs:
             const comparisonUrl = pathToFileURL(
               `${process.env.GITHUB_WORKSPACE}/scripts/benchmark/benchmark-comment-comparison.js`,
             ).href
-            const { renderBenchmarkComparison } = await import(comparisonUrl)
+            const comparisonModule = await import(comparisonUrl)
+            const { renderBenchmarkComparison } = comparisonModule
+            const isNetworkedColdHotReport =
+              typeof comparisonModule.isNetworkedColdHotReport === 'function'
+                ? comparisonModule.isNetworkedColdHotReport
+                : (report) => {
+                    if (!Array.isArray(report?.summary)) return false
+                    const names = new Set(report.summary.map((row) => row.solverName))
+                    return names.has('Pipeline9_Networked Cold') && names.has('Pipeline9_Networked Hot')
+                  }
             const maxLength = 60000
             const truncate = (s, max) => s.length > max ? `${s.slice(0, max)}\n\n...truncated...` : s
             const formatTime = (timeMs) => {
@@ -723,6 +797,7 @@ jobs:
             const runUrl = `${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}`
             const profileEnabled = '${{ steps.parse.outputs.profile_solvers }}' === 'true'
             const benchmarkLabel = process.env.BENCHMARK_DATASET === 'dataset01' ? 'Default Benchmark' : (process.env.BENCHMARK_DATASET || 'Benchmark')
+            const networkedColdHot = isNetworkedColdHotReport(prReport)
 
             const renderBody = (options = {}) => [
               `## ${benchmarkLabel} Results`,
@@ -733,7 +808,9 @@ jobs:
                     '',
                   ]
                 : []),
-              '### Main vs PR',
+              networkedColdHot
+                ? '### Pipeline9_Networked Cold vs Hot'
+                : '### Main vs PR',
               '',
               ...renderBenchmarkComparison({
                 mainReport: mainDatasetReport,
@@ -742,15 +819,17 @@ jobs:
                 maxLength,
               }),
               '',
-              ...renderReport(mainDatasetReport, '', {
-                detailsLabel: 'Previous main run details',
-                omitSummary: true,
-              }),
+              ...(networkedColdHot
+                ? []
+                : renderReport(mainDatasetReport, '', {
+                    detailsLabel: 'Previous main run details',
+                    omitSummary: true,
+                  })),
               '',
               ...renderReport(prReport, prText ?? '(benchmark results were not produced)', {
-                detailsLabel: 'PR run details',
+                detailsLabel: networkedColdHot ? 'Cold/hot run details' : 'PR run details',
                 omitSummary: true,
-                includeDelta: true,
+                includeDelta: !networkedColdHot,
                 mainIndex,
                 viaCellIndex,
                 omitUnchangedPassingSamples: Boolean(options.omitUnchangedPassingSamples),
@@ -989,7 +1068,16 @@ jobs:
             const comparisonUrl = pathToFileURL(
               `${process.env.GITHUB_WORKSPACE}/scripts/benchmark/benchmark-comment-comparison.js`,
             ).href
-            const { renderBenchmarkComparison } = await import(comparisonUrl)
+            const comparisonModule = await import(comparisonUrl)
+            const { renderBenchmarkComparison } = comparisonModule
+            const isNetworkedColdHotReport =
+              typeof comparisonModule.isNetworkedColdHotReport === 'function'
+                ? comparisonModule.isNetworkedColdHotReport
+                : (report) => {
+                    if (!Array.isArray(report?.summary)) return false
+                    const names = new Set(report.summary.map((row) => row.solverName))
+                    return names.has('Pipeline9_Networked Cold') && names.has('Pipeline9_Networked Hot')
+                  }
             const maxLength = 60000
             const truncate = (s, max) => s.length > max ? `${s.slice(0, max)}\n\n...truncated...` : s
             const formatTime = (timeMs) => {
@@ -1328,6 +1416,7 @@ jobs:
                 prProfileSolversReport,
             )
             const benchmarkLabel = process.env.BENCHMARK_DATASET === 'dataset01' ? 'Default Benchmark' : (process.env.BENCHMARK_DATASET || 'Benchmark')
+            const networkedColdHot = isNetworkedColdHotReport(prReport)
 
             const renderBody = (options = {}) => [
               benchmarkFailed ? `## ${benchmarkLabel} Failed` : `## ${benchmarkLabel} Results`,
@@ -1348,7 +1437,9 @@ jobs:
                     '',
                   ]
                 : []),
-              '### Main vs PR',
+              networkedColdHot
+                ? '### Pipeline9_Networked Cold vs Hot'
+                : '### Main vs PR',
               '',
               ...renderBenchmarkComparison({
                 mainReport: mainDatasetReport,
@@ -1357,10 +1448,12 @@ jobs:
                 maxLength,
               }),
               '',
-              ...renderReport(mainDatasetReport, '', {
-                detailsLabel: 'Previous main run details',
-                omitSummary: true,
-              }),
+              ...(networkedColdHot
+                ? []
+                : renderReport(mainDatasetReport, '', {
+                    detailsLabel: 'Previous main run details',
+                    omitSummary: true,
+                  })),
               ...(hasProfileSolvers
                 ? renderProfileSolversDetails(
                     'Previous main profile details',
@@ -1369,9 +1462,9 @@ jobs:
                 : []),
               '',
               ...renderReport(prReport, prText ?? '(benchmark results were not produced)', {
-                detailsLabel: 'PR run details',
+                detailsLabel: networkedColdHot ? 'Cold/hot run details' : 'PR run details',
                 omitSummary: true,
-                includeDelta: true,
+                includeDelta: !networkedColdHot,
                 mainIndex,
                 viaCellIndex,
                 omitUnchangedPassingSamples: Boolean(options.omitUnchangedPassingSamples),
