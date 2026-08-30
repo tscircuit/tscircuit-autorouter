@@ -9,10 +9,8 @@ import {
 
 test("single-transition boundary stages share one tolerance on sides and corners", () => {
   const bounds = { minX: 0, maxX: 10, minY: 0, maxY: 10 }
-  const acceptedBoundaryOffsetMm =
-    BOUNDARY_COORDINATE_TOLERANCE_MM * 0.5
-  const rejectedBoundaryOffsetMm =
-    BOUNDARY_COORDINATE_TOLERANCE_MM * 1.1
+  const acceptedBoundaryOffsetMm = BOUNDARY_COORDINATE_TOLERANCE_MM * 0.5
+  const rejectedBoundaryOffsetMm = BOUNDARY_COORDINATE_TOLERANCE_MM * 1.1
   const acceptedBoundaryPoints = [
     { x: 5, y: 10 + acceptedBoundaryOffsetMm },
     { x: 10 + acceptedBoundaryOffsetMm, y: 5 },

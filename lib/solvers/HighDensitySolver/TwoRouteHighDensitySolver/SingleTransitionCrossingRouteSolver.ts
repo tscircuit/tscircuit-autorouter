@@ -187,9 +187,7 @@ export class SingleTransitionCrossingRouteSolver extends BaseSolver {
    * Classifies a point relative to this node's bounds.
    * Uses epsilon to tolerate floating-point noise on boundary coordinates.
    */
-  private getPortPointBoundsPosition(
-    point: Point,
-  ): PortPointBoundsPosition {
+  private getPortPointBoundsPosition(point: Point): PortPointBoundsPosition {
     return classifyPointInBounds({
       point,
       bounds: this.bounds,
