@@ -25,8 +25,10 @@ export interface RegionalDrcRerouteSolverParams {
   clusterDistance?: number
   regionPadding?: number
   minimumRegionSpan?: number
+  maximumRegionAreaRatio?: number
   maximumRerouteConnections?: number
   maximumBaselineErrorCount?: number
+  maximumReroutePasses?: number
 }
 
 const getErrorCenter = (error: unknown): Point | null => {
@@ -68,6 +70,15 @@ const getErrorClusters = (centers: Point[], clusterDistance: number) => {
   }
 
   return clusters.sort((a, b) => b.length - a.length)
+}
+
+export const getRegionAreaRatio = (
+  region: RerouteRectRegion,
+  bounds: SimpleRouteJson["bounds"],
+): number => {
+  const regionArea = (region.maxX - region.minX) * (region.maxY - region.minY)
+  const boardArea = (bounds.maxX - bounds.minX) * (bounds.maxY - bounds.minY)
+  return boardArea > 0 ? regionArea / boardArea : Number.POSITIVE_INFINITY
 }
 
 const getClusterRegion = ({
@@ -124,12 +135,17 @@ export class RegionalDrcRerouteSolver extends BaseSolver {
   private readonly clusterDistance: number
   private readonly regionPadding: number
   private readonly minimumRegionSpan: number
+  private readonly maximumRegionAreaRatio: number
   private readonly maximumRerouteConnections: number
   private readonly maximumBaselineErrorCount: number
+  private readonly maximumReroutePasses: number
   private outputTraces: SimplifiedPcbTraces
   private rerouteInput?: SimpleRouteJson
   private rerouteRegion?: RerouteRectRegion
   private baselineErrorCount = 0
+  private currentPassBaselineErrorCount = 0
+  private completedRerouteRegions: RerouteRectRegion[] = []
+  private reroutePassCount = 0
 
   constructor({
     inputSrj,
@@ -140,9 +156,11 @@ export class RegionalDrcRerouteSolver extends BaseSolver {
     minimumClusterSize = 4,
     clusterDistance = 3,
     regionPadding = 1,
-    minimumRegionSpan = 4,
+    minimumRegionSpan = 6,
+    maximumRegionAreaRatio = 0.05,
     maximumRerouteConnections = 24,
     maximumBaselineErrorCount = 6,
+    maximumReroutePasses = 1,
   }: RegionalDrcRerouteSolverParams) {
     super()
     this.inputSrj = structuredClone(inputSrj)
@@ -154,8 +172,10 @@ export class RegionalDrcRerouteSolver extends BaseSolver {
     this.clusterDistance = clusterDistance
     this.regionPadding = regionPadding
     this.minimumRegionSpan = minimumRegionSpan
+    this.maximumRegionAreaRatio = maximumRegionAreaRatio
     this.maximumRerouteConnections = maximumRerouteConnections
     this.maximumBaselineErrorCount = maximumBaselineErrorCount
+    this.maximumReroutePasses = maximumReroutePasses
     this.outputTraces = structuredClone(inputSrj.traces ?? [])
     this.MAX_ITERATIONS = 100e6
   }
@@ -175,8 +195,14 @@ export class RegionalDrcRerouteSolver extends BaseSolver {
     }
 
     const baselineErrors = this.evaluate(this.outputTraces)
-    this.baselineErrorCount = baselineErrors.length
-    if (this.baselineErrorCount > this.maximumBaselineErrorCount) {
+    if (this.reroutePassCount === 0) {
+      this.baselineErrorCount = baselineErrors.length
+    }
+    this.currentPassBaselineErrorCount = baselineErrors.length
+    if (
+      this.reroutePassCount === 0 &&
+      this.baselineErrorCount > this.maximumBaselineErrorCount
+    ) {
       this.stats = {
         baselineErrorCount: this.baselineErrorCount,
         accepted: false,
@@ -188,9 +214,20 @@ export class RegionalDrcRerouteSolver extends BaseSolver {
     const centers = baselineErrors
       .map(getErrorCenter)
       .filter((center): center is Point => center !== null)
+      .filter((center) =>
+        this.completedRerouteRegions.every(
+          (region) =>
+            center.x < region.minX ||
+            center.x > region.maxX ||
+            center.y < region.minY ||
+            center.y > region.maxY,
+        ),
+      )
     const cluster = getErrorClusters(centers, this.clusterDistance)[0]
+    const minimumClusterSize =
+      this.reroutePassCount === 0 ? this.minimumClusterSize : 1
 
-    if (!cluster || cluster.length < this.minimumClusterSize) {
+    if (!cluster || cluster.length < minimumClusterSize) {
       this.stats = {
         baselineErrorCount: this.baselineErrorCount,
         accepted: false,
@@ -209,8 +246,25 @@ export class RegionalDrcRerouteSolver extends BaseSolver {
         y: (this.inputSrj.bounds.minY + this.inputSrj.bounds.maxY) / 2,
       },
     })
+    const regionAreaRatio = getRegionAreaRatio(
+      this.rerouteRegion,
+      this.inputSrj.bounds,
+    )
+    // A repair box that covers a large share of the board is another global
+    // autoroute and can turn an otherwise completed route into a timeout.
+    if (regionAreaRatio > this.maximumRegionAreaRatio) {
+      this.stats = {
+        baselineErrorCount: this.baselineErrorCount,
+        clusterSize: cluster.length,
+        regionAreaRatio,
+        accepted: false,
+        reason: "reroute_region_too_large",
+      }
+      this.solved = true
+      return
+    }
     this.rerouteInput = getRerouteSimpleRouteJson(
-      this.inputSrj,
+      { ...this.inputSrj, traces: this.outputTraces },
       this.rerouteRegion,
     )
 
@@ -258,18 +312,32 @@ export class RegionalDrcRerouteSolver extends BaseSolver {
       solvedRegion,
     )
     const candidateErrorCount = this.evaluate(candidate.traces ?? []).length
-    const accepted = candidateErrorCount < this.baselineErrorCount
+    const accepted = candidateErrorCount < this.currentPassBaselineErrorCount
 
-    if (accepted) this.outputTraces = candidate.traces ?? []
+    if (accepted) {
+      this.outputTraces = candidate.traces ?? []
+      this.completedRerouteRegions.push(this.rerouteRegion!)
+    }
+    this.reroutePassCount++
     this.stats = {
       baselineErrorCount: this.baselineErrorCount,
       candidateErrorCount,
       rerouteConnectionCount: this.rerouteInput!.connections.length,
       rerouteRegion: this.rerouteRegion,
+      reroutePassCount: this.reroutePassCount,
       accepted,
       reason: accepted ? "improved_relaxed_drc" : "no_relaxed_drc_improvement",
     }
     this.activeSubSolver = null
+    if (
+      accepted &&
+      candidateErrorCount > 0 &&
+      this.reroutePassCount < this.maximumReroutePasses
+    ) {
+      this.rerouteInput = undefined
+      this.rerouteRegion = undefined
+      return
+    }
     this.solved = true
   }
 

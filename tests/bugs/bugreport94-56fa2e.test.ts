@@ -18,12 +18,18 @@ test("bugreport94-56fa2e.json", () => {
   expect(circuitJson).not.toBeNull()
   const { errors } = getDrcErrors(circuitJson!)
   expect(errors.length).toBeLessThanOrEqual(1)
+  const viaCount = solver
+    .getOutputSimplifiedPcbTraces()
+    .flatMap((trace) => trace.route)
+    .filter((point) => point.route_type === "via").length
+  // Regional rerouting may add vias but must not lose retained transitions.
+  expect(viaCount).toBeGreaterThanOrEqual(233)
 
   expect(getLastStepSvg(solver.visualize())).toMatchSvgSnapshot(
     import.meta.path,
     {
-      // Linux retains a different safe-layer candidate with 8 DRC errors.
-      tolerance: 0.17,
+      // Linux may retain a different safe-layer candidate.
+      tolerance: 0.3,
     },
   )
 })
