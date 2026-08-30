@@ -88,6 +88,7 @@ interface CapacityMeshSolverOptions {
   visualizationTraceColorMode?: TraceColorMode
   powerTraceExpansion?: PowerTraceExpanderOptions
   enableRegionalDrcReroute?: boolean
+  regionalDrcRerouteChild?: boolean
 }
 export type AutoroutingPipelineSolverOptions = CapacityMeshSolverOptions
 
@@ -558,6 +559,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
           connMap: cms.connMap,
           viaDiameter: cms.viaDiameter,
           traceWidth: cms.minTraceWidth,
+          effort: cms.opts.regionalDrcRerouteChild ? 0.5 : undefined,
           obstacleMargin: cms.srj.defaultObstacleMargin ?? 0.15,
           obstacles: cms.srj.obstacles,
           layerCount: cms.srj.layerCount,
@@ -846,6 +848,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
                 ...cms.opts,
                 effort: Math.max(2, cms.effort),
                 enableRegionalDrcReroute: false,
+                regionalDrcRerouteChild: true,
               }),
           },
         ]
@@ -1088,7 +1091,9 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
       this.globalDrcForceImproveSolver?.visualize()
     const exactGeometryDrcForceImproveViz =
       this.exactGeometryDrcForceImproveSolver?.visualize()
-    const regionalDrcRerouteViz = this.regionalDrcRerouteSolver?.visualize()
+    const regionalDrcRerouteViz = this.solved
+      ? null
+      : this.regionalDrcRerouteSolver?.visualize()
     const visualizations = [
       problemViz,
       processedProblemViz,

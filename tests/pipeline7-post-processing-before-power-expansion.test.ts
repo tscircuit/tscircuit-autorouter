@@ -31,8 +31,12 @@ test("Pipeline7 runs post-processing before default power expansion", () => {
       },
     ],
   })
-  const powerTraceExpansionStep = solver.pipelineDef.at(-1)
-  const lengthMatchingPostProcessingStep = solver.pipelineDef.at(-2)
+  const powerTraceExpansionStep = solver.pipelineDef.find(
+    (step) => step.solverName === "powerTraceExpansionSolver",
+  )
+  const lengthMatchingPostProcessingStep = solver.pipelineDef.find(
+    (step) => step.solverName === "lengthMatchingPostProcessingSolver",
+  )
   expect(powerTraceExpansionStep?.solverName).toBe("powerTraceExpansionSolver")
   expect(lengthMatchingPostProcessingStep?.solverName).toBe(
     "lengthMatchingPostProcessingSolver",

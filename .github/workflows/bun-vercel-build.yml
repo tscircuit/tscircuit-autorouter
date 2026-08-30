@@ -25,3 +25,5 @@ jobs:
 
       - name: Run vercel build
         run: bun run vercel-build
+        env:
+          NODE_OPTIONS: --max-old-space-size=8192

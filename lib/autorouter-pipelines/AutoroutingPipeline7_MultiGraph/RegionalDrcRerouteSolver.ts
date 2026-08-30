@@ -88,10 +88,7 @@ const getClusterRegion = ({
   const centerX = (minCenterX + maxCenterX) / 2
   const centerY = (minCenterY + maxCenterY) / 2
   const width = Math.max(minimumSpan, maxCenterX - minCenterX + 2 * padding)
-  const height = Math.max(
-    minimumSpan,
-    maxCenterY - minCenterY + 2 * padding,
-  )
+  const height = Math.max(minimumSpan, maxCenterY - minCenterY + 2 * padding)
 
   const region = {
     shape: "rect",
@@ -172,10 +169,7 @@ export class RegionalDrcRerouteSolver extends BaseSolver {
   }
 
   private initializeReroute() {
-    if (
-      !this.enabled ||
-      (this.inputSrj.differentialPairs?.length ?? 0) > 0
-    ) {
+    if (!this.enabled || (this.inputSrj.differentialPairs?.length ?? 0) > 0) {
       this.solved = true
       return
     }
@@ -273,9 +267,7 @@ export class RegionalDrcRerouteSolver extends BaseSolver {
       rerouteConnectionCount: this.rerouteInput!.connections.length,
       rerouteRegion: this.rerouteRegion,
       accepted,
-      reason: accepted
-        ? "improved_relaxed_drc"
-        : "no_relaxed_drc_improvement",
+      reason: accepted ? "improved_relaxed_drc" : "no_relaxed_drc_improvement",
     }
     this.activeSubSolver = null
     this.solved = true
