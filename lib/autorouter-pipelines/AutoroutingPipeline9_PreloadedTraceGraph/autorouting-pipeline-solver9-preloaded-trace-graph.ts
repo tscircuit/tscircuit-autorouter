@@ -916,7 +916,8 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
                 candidateErrors,
               )
             },
-            iterations: 2,
+            iterations: 1,
+            runFinalViaRemovalPass: true,
           },
         ]
       },

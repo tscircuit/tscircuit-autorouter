@@ -57,13 +57,19 @@ export class TraceSimplificationSolver extends BaseSolver {
 
   private readonly preservedRouteEndpoints?: ReadonlyMap<
     string,
-    {
+    ReadonlyArray<{
       start: HighDensityRoute["route"][number]
       end: HighDensityRoute["route"][number]
-    }
+    }>
   >
 
+  private readonly preservedRouteCount?: number
+
   simplificationPipelineLoops = 0
+
+  finalViaRemovalPassStarted = false
+
+  finalViaRemovalPassCompleted = false
 
   MAX_SIMPLIFICATION_PIPELINE_LOOPS: number = 2
 
@@ -107,6 +113,8 @@ export class TraceSimplificationSolver extends BaseSolver {
    *   - acceptFinalHdRoutes: Optional acceptance gate invoked once after all
    *     simplification phases. A rejected candidate is retained for debugging,
    *     while the solver output is restored to the initial routes.
+   *   - runFinalViaRemovalPass: Runs one geometry-aware via-removal pass after
+   *     the configured full iterations without repeating every other phase.
    *   - iterations: Number of complete simplification iterations (default: 2)
    */
   constructor(
@@ -132,6 +140,8 @@ export class TraceSimplificationSolver extends BaseSolver {
         candidateHdRoutes: ReadonlyArray<HighDensityRoute>,
         initialHdRoutes: ReadonlyArray<HighDensityRoute>,
       ) => boolean
+      readonly runFinalViaRemovalPass?: boolean
+      readonly iterations?: number
     },
   ) {
     super()
@@ -149,10 +159,10 @@ export class TraceSimplificationSolver extends BaseSolver {
     if (simplificationConfig.preserveRouteEndpoints) {
       const endpointByConnectionName = new Map<
         string,
-        {
+        Array<{
           start: HighDensityRoute["route"][number]
           end: HighDensityRoute["route"][number]
-        }
+        }>
       >()
       for (const route of simplificationConfig.hdRoutes) {
         const start = route.route[0]
@@ -162,18 +172,19 @@ export class TraceSimplificationSolver extends BaseSolver {
             `TraceSimplificationSolver cannot preserve endpoints for empty route "${route.connectionName}"`,
           )
         }
-        if (endpointByConnectionName.has(route.connectionName)) {
-          throw new Error(
-            `TraceSimplificationSolver cannot preserve endpoints for duplicate route "${route.connectionName}"`,
-          )
-        }
-        endpointByConnectionName.set(route.connectionName, {
+        const connectionEndpoints =
+          endpointByConnectionName.get(route.connectionName) ?? []
+        connectionEndpoints.push({
           start: { ...start },
           end: { ...end },
         })
+        endpointByConnectionName.set(route.connectionName, connectionEndpoints)
       }
       this.preservedRouteEndpoints = endpointByConnectionName
+      this.preservedRouteCount = simplificationConfig.hdRoutes.length
     }
+    this.MAX_SIMPLIFICATION_PIPELINE_LOOPS =
+      simplificationConfig.iterations ?? 2
     this.MAX_ITERATIONS = 100e6
   }
 
@@ -199,13 +210,12 @@ export class TraceSimplificationSolver extends BaseSolver {
 
   private validatePreservedRouteEndpoints(routes: HighDensityRoute[]): void {
     if (!this.preservedRouteEndpoints) return
-    if (routes.length !== this.preservedRouteEndpoints.size) {
+    if (routes.length !== this.preservedRouteCount) {
       throw new Error(
-        `TraceSimplificationSolver changed the preserved route set (expected ${this.preservedRouteEndpoints.size}, got ${routes.length})`,
+        `TraceSimplificationSolver changed the preserved route set (expected ${this.preservedRouteCount}, got ${routes.length})`,
       )
     }
 
-    const outputConnectionNames = new Set<string>()
     const pointsMatch = (
       left: HighDensityRoute["route"][number],
       right: HighDensityRoute["route"][number],
@@ -214,27 +224,33 @@ export class TraceSimplificationSolver extends BaseSolver {
       Math.abs(left.y - right.y) <= VIA_INSIDE_OBSTACLE_TOLERANCE &&
       left.z === right.z
 
+    const unmatchedEndpointsByConnectionName = new Map(
+      [...this.preservedRouteEndpoints].map(([connectionName, endpoints]) => [
+        connectionName,
+        [...endpoints],
+      ]),
+    )
+
     for (const route of routes) {
-      if (outputConnectionNames.has(route.connectionName)) {
-        throw new Error(
-          `TraceSimplificationSolver produced duplicate preserved route "${route.connectionName}"`,
-        )
-      }
-      outputConnectionNames.add(route.connectionName)
-      const expected = this.preservedRouteEndpoints.get(route.connectionName)
       const start = route.route[0]
       const end = route.route.at(-1)
-      if (
-        !expected ||
-        !start ||
-        !end ||
-        !pointsMatch(start, expected.start) ||
-        !pointsMatch(end, expected.end)
-      ) {
+      const unmatchedEndpoints = unmatchedEndpointsByConnectionName.get(
+        route.connectionName,
+      )
+      const matchingEndpointIndex =
+        start && end && unmatchedEndpoints
+          ? unmatchedEndpoints.findIndex(
+              (expected) =>
+                pointsMatch(start, expected.start) &&
+                pointsMatch(end, expected.end),
+            )
+          : -1
+      if (matchingEndpointIndex < 0 || !unmatchedEndpoints) {
         throw new Error(
           `TraceSimplificationSolver changed a preserved endpoint for route "${route.connectionName}"`,
         )
       }
+      unmatchedEndpoints.splice(matchingEndpointIndex, 1)
     }
   }
 
@@ -321,8 +337,16 @@ export class TraceSimplificationSolver extends BaseSolver {
     if (
       this.simplificationPipelineLoops >= this.MAX_SIMPLIFICATION_PIPELINE_LOOPS
     ) {
-      this.finalizeSimplification()
-      return
+      if (
+        this.simplificationConfig.runFinalViaRemovalPass &&
+        !this.finalViaRemovalPassStarted
+      ) {
+        this.finalViaRemovalPassStarted = true
+        this.currentPhase = "via_removal"
+      } else if (!this.activeSubSolver) {
+        this.finalizeSimplification()
+        return
+      }
     }
 
     // If we have an active sub-solver, let it run
@@ -345,6 +369,12 @@ export class TraceSimplificationSolver extends BaseSolver {
         this.activeSubSolver = null
         this.extractResult = null
 
+        if (this.finalViaRemovalPassStarted) {
+          this.finalViaRemovalPassCompleted = true
+          this.finalizeSimplification()
+          return
+        }
+
         // Advance phase
         if (this.currentPhase === "via_removal") {
           this.currentPhase = this.simplificationConfig
@@ -365,8 +395,15 @@ export class TraceSimplificationSolver extends BaseSolver {
           this.simplificationPipelineLoops >=
           this.MAX_SIMPLIFICATION_PIPELINE_LOOPS
         ) {
-          this.finalizeSimplification()
-          return
+          if (
+            this.simplificationConfig.runFinalViaRemovalPass &&
+            !this.finalViaRemovalPassStarted
+          ) {
+            this.finalViaRemovalPassStarted = true
+          } else {
+            this.finalizeSimplification()
+            return
+          }
         }
       } else if (this.activeSubSolver.failed) {
         this.failed = true
