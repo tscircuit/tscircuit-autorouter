@@ -117,6 +117,7 @@ export async function runMultiResolutionSearch({
   let previousResolution: number | undefined
   let lastFailure: Extract<HybridCoreSearchResponse, { status: "failed" }> | undefined
   let lastSolved: Extract<HybridCoreSearchResponse, { status: "solved" }> | undefined
+  let fineResolutionSolved = false
   for (const resolutionLevel of resolutionLevels) {
     const levelEntries = plan.filter(
       (entry) => entry.resolutionLevel === resolutionLevel,
@@ -157,6 +158,7 @@ export async function runMultiResolutionSearch({
       if (response.status === "solved") {
         solvedAtLevel = response
         lastSolved = response
+        fineResolutionSolved = resolutionLevel === "fine"
         break
       }
       lastFailure = response
@@ -165,6 +167,11 @@ export async function runMultiResolutionSearch({
       if (!lastFailure) {
         throw new Error("multi-resolution search ended without a core result")
       }
+      continue
+    }
+  }
+  if (!lastSolved || !fineResolutionSolved) {
+    if (lastFailure) {
       return Object.freeze({
         status: "failed",
         response: lastFailure,
@@ -178,8 +185,6 @@ export async function runMultiResolutionSearch({
         }),
       })
     }
-  }
-  if (!lastSolved) {
     throw new Error("multi-resolution search produced no fine candidate")
   }
   return Object.freeze({
