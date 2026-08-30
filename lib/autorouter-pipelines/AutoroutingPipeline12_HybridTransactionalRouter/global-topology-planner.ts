@@ -1,3 +1,8 @@
+import {
+  findCoupledRouteConstraintViolation,
+  isConnectionFullyConnected,
+} from "./coupled-route-constraints"
+import { buildInitialCopperSnapshot } from "./transactional-copper-store"
 import type {
   CompiledConnectionRules,
   CompiledRoutingRules,
@@ -27,8 +32,17 @@ export function planGlobalTopology({
       "maximumEstimatedMemoryBytesPerObject must be a positive safe integer",
     )
   }
+  const initialCopperSnapshot = buildInitialCopperSnapshot({ problem })
   const routeObjectPlans = problem.routeObjects
     .filter((routeObject) => routeObject.kind !== "preloaded_copper")
+    .filter(
+      (routeObject) =>
+        !isRouteObjectSatisfiedByPreloadedCopper({
+          routeObject,
+          compiledRules: problem.compiledRules,
+          initialCopperSnapshot,
+        }),
+    )
     .map((routeObject) =>
       planRouteObject({
         routeObject,
@@ -42,6 +56,38 @@ export function planGlobalTopology({
   return Object.freeze({
     planVersion: 0,
     routeObjectPlans: freezeList(routeObjectPlans),
+  })
+}
+
+function isRouteObjectSatisfiedByPreloadedCopper({
+  routeObject,
+  compiledRules,
+  initialCopperSnapshot,
+}: {
+  routeObject: TypedRouteObject
+  compiledRules: CompiledRoutingRules
+  initialCopperSnapshot: ReturnType<typeof buildInitialCopperSnapshot>
+}): boolean {
+  const connections = getRouteObjectConnections(routeObject)
+  if (
+    connections.length === 0 ||
+    connections.some(
+      (connection) =>
+        !isConnectionFullyConnected({
+          compiledRules,
+          copperSnapshot: initialCopperSnapshot,
+          connection,
+        }),
+    )
+  ) {
+    return false
+  }
+  return !findCoupledRouteConstraintViolation({
+    compiledRules,
+    copperSnapshot: initialCopperSnapshot,
+    affectedConnectionNames: new Set(
+      connections.map((connection) => connection.connectionName),
+    ),
   })
 }
 

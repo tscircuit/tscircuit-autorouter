@@ -48,21 +48,12 @@ export class TransactionalCopperStore {
     }
     this.compiledRules = problem.compiledRules
     this.maximumTransactionHistory = maximumTransactionHistory
-    const initialPrimitives = buildInitialCopperPrimitives({ problem })
-    this.segments = Object.freeze(
-      initialPrimitives.filter(
-        (primitive): primitive is HybridCopperSegment =>
-          primitive.kind === "segment",
-      ),
-    )
-    this.vias = Object.freeze(
-      initialPrimitives.filter(
-        (primitive): primitive is HybridCopperVia => primitive.kind === "via",
-      ),
-    )
+    const initialSnapshot = buildInitialCopperSnapshot({ problem })
+    this.segments = initialSnapshot.segments
+    this.vias = initialSnapshot.vias
     this.spatialIndex = new VersionedHybridSpatialIndex({
       layerStack: this.compiledRules.layerStack,
-      primitives: initialPrimitives,
+      primitives: [...initialSnapshot.segments, ...initialSnapshot.vias],
       version: this.copperVersion,
     })
   }
@@ -155,18 +146,32 @@ export class TransactionalCopperStore {
   }
 }
 
-function buildInitialCopperPrimitives({
+export function buildInitialCopperSnapshot({
   problem,
 }: {
   problem: TypedRoutingProblem
-}): readonly HybridCopperPrimitive[] {
-  return problem.compiledRules.preloadedCopper.flatMap((copper) =>
+}): HybridCopperSnapshot {
+  const primitives = problem.compiledRules.preloadedCopper.flatMap((copper) =>
     convertPreloadedCopper({
       copper,
       compiledRules: problem.compiledRules,
       ownerRouteObjectIds: resolvePreloadedOwners({ problem, copper }),
     }),
   )
+  return Object.freeze({
+    version: 0,
+    segments: Object.freeze(
+      primitives.filter(
+        (primitive): primitive is HybridCopperSegment =>
+          primitive.kind === "segment",
+      ),
+    ),
+    vias: Object.freeze(
+      primitives.filter(
+        (primitive): primitive is HybridCopperVia => primitive.kind === "via",
+      ),
+    ),
+  })
 }
 
 function resolvePreloadedOwners({
@@ -228,7 +233,8 @@ function convertPreloadedCopper({
       if (
         nextRouteEntry?.route_type === "wire" &&
         (routeEntry.from_layer === nextRouteEntry.layer ||
-          routeEntry.to_layer === nextRouteEntry.layer)
+          routeEntry.to_layer === nextRouteEntry.layer) &&
+        (routeEntry.x !== nextRouteEntry.x || routeEntry.y !== nextRouteEntry.y)
       ) {
         primitives.push(
           freezeSegment({
@@ -274,7 +280,8 @@ function convertPreloadedCopper({
     const nextRouteEntry = copper.trace.route[routeIndex + 1]
     if (
       nextRouteEntry?.route_type === "wire" &&
-      nextRouteEntry.layer === routeEntry.layer
+      nextRouteEntry.layer === routeEntry.layer &&
+      (routeEntry.x !== nextRouteEntry.x || routeEntry.y !== nextRouteEntry.y)
     ) {
       primitives.push(
         freezeSegment({
@@ -293,7 +300,8 @@ function convertPreloadedCopper({
     if (
       nextRouteEntry?.route_type === "via" &&
       (nextRouteEntry.from_layer === routeEntry.layer ||
-        nextRouteEntry.to_layer === routeEntry.layer)
+        nextRouteEntry.to_layer === routeEntry.layer) &&
+      (routeEntry.x !== nextRouteEntry.x || routeEntry.y !== nextRouteEntry.y)
     ) {
       primitives.push(
         freezeSegment({
