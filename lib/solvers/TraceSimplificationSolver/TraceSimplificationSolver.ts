@@ -51,6 +51,10 @@ export class TraceSimplificationSolver extends BaseSolver {
 
   hdRoutes: HighDensityRoute[] = []
 
+  readonly initialHdRoutes: HighDensityRoute[]
+  finalCandidateAccepted?: boolean
+  rejectedFinalHdRoutes?: HighDensityRoute[]
+
   private readonly preservedRouteEndpoints?: ReadonlyMap<
     string,
     {
@@ -100,6 +104,9 @@ export class TraceSimplificationSolver extends BaseSolver {
    *   - terminalLayerIndicesByPcbPortId: Physical copper-layer indices on
    *     which each PCB-port terminal can directly accept a route endpoint
    *     without a via
+   *   - acceptFinalHdRoutes: Optional acceptance gate invoked once after all
+   *     simplification phases. A rejected candidate is retained for debugging,
+   *     while the solver output is restored to the initial routes.
    *   - iterations: Number of complete simplification iterations (default: 2)
    */
   constructor(
@@ -121,6 +128,10 @@ export class TraceSimplificationSolver extends BaseSolver {
         string,
         ReadonlySet<number>
       >
+      readonly acceptFinalHdRoutes?: (
+        candidateHdRoutes: ReadonlyArray<HighDensityRoute>,
+        initialHdRoutes: ReadonlyArray<HighDensityRoute>,
+      ) => boolean
     },
   ) {
     super()
@@ -131,9 +142,10 @@ export class TraceSimplificationSolver extends BaseSolver {
         simplificationConfig.layerCount,
       ),
     }
-    this.hdRoutes = this.markThroughObstacleSegments(
+    this.initialHdRoutes = this.markThroughObstacleSegments(
       simplificationConfig.hdRoutes,
     )
+    this.hdRoutes = this.initialHdRoutes
     if (simplificationConfig.preserveRouteEndpoints) {
       const endpointByConnectionName = new Map<
         string,
@@ -163,6 +175,26 @@ export class TraceSimplificationSolver extends BaseSolver {
       this.preservedRouteEndpoints = endpointByConnectionName
     }
     this.MAX_ITERATIONS = 100e6
+  }
+
+  private finalizeSimplification(): void {
+    this.validatePreservedRouteEndpoints(this.hdRoutes)
+    const acceptFinalHdRoutes = this.simplificationConfig.acceptFinalHdRoutes
+    if (!acceptFinalHdRoutes) {
+      this.finalCandidateAccepted = true
+      this.solved = true
+      return
+    }
+
+    this.finalCandidateAccepted = acceptFinalHdRoutes(
+      this.hdRoutes,
+      this.initialHdRoutes,
+    )
+    if (!this.finalCandidateAccepted) {
+      this.rejectedFinalHdRoutes = this.hdRoutes
+      this.hdRoutes = this.initialHdRoutes
+    }
+    this.solved = true
   }
 
   private validatePreservedRouteEndpoints(routes: HighDensityRoute[]): void {
@@ -289,7 +321,7 @@ export class TraceSimplificationSolver extends BaseSolver {
     if (
       this.simplificationPipelineLoops >= this.MAX_SIMPLIFICATION_PIPELINE_LOOPS
     ) {
-      this.solved = true
+      this.finalizeSimplification()
       return
     }
 
@@ -333,7 +365,7 @@ export class TraceSimplificationSolver extends BaseSolver {
           this.simplificationPipelineLoops >=
           this.MAX_SIMPLIFICATION_PIPELINE_LOOPS
         ) {
-          this.solved = true
+          this.finalizeSimplification()
           return
         }
       } else if (this.activeSubSolver.failed) {

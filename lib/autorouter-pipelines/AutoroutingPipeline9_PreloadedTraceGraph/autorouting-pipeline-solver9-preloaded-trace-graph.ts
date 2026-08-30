@@ -68,6 +68,7 @@ import { TraceWidthSolver } from "../../solvers/TraceWidthSolver/TraceWidthSolve
 import { LengthMatchingPostProcessingSolver } from "../../solvers/length-matching-post-processing-solver"
 import { applyFixedRouteReplacementsToPreloadedTraces } from "./apply-fixed-route-replacements-to-preloaded-traces"
 import { assignUniquePcbTraceIdsToNewTraces } from "./assign-unique-pcb-trace-ids-to-new-traces"
+import { createPipeline9RelaxedDrcEvaluator } from "./create-pipeline9-relaxed-drc-evaluator"
 import { getTerminalLayerIndicesByPcbPortId } from "./get-terminal-layer-indices-by-pcb-port-id"
 import { getPipeline9NetByConnectionName } from "./get-pipeline9-net-by-connection-name"
 import {
@@ -86,6 +87,10 @@ import {
 } from "./convert-preloaded-traces-to-hd-routes"
 import { Pipeline9HighDensitySolver } from "./pipeline9-high-density-solver"
 import { Pipeline9JointDrcRepairSolver } from "./pipeline9-joint-drc-repair-solver"
+import {
+  getPipeline9DrcErrors,
+  isPipeline9DrcCandidateBetter,
+} from "./pipeline9-joint-drc-repair-utils"
 import { PreloadedTraceGraphSolver } from "./preloaded-trace-graph-solver"
 import { PreprocessSimpleRouteJsonWithoutTraceObstaclesSolver } from "./preprocess-simple-route-json-without-trace-obstacles-solver"
 import { MergedComponentTopologyView } from "../AutoroutingPipeline7_MultiGraph/MergedComponentTopologyView"
@@ -863,6 +868,17 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
               cms.connMap,
             ),
           )
+        const postRepairDrcEvaluator = createPipeline9RelaxedDrcEvaluator({
+          srjWithPointPairs: cms.srjWithPointPairs!,
+          originalSrj: cms.originalSrj,
+          mutatedPreloadedTraces: cms.getMutatedPreloadedTraces(),
+          connections: cms.netToPointPairsSolver?.newConnections ?? [],
+          originalConnections: cms.originalSrj.connections,
+          layerCount: cms.originalSrj.layerCount,
+          obstacles: cms.originalSrj.obstacles,
+          defaultViaHoleDiameter: cms.viaHoleDiameter,
+          connMap: cms.connMap,
+        })
         return [
           {
             hdRoutes,
@@ -886,6 +902,20 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
               cms.srj.obstacles,
               cms.srj.layerCount,
             ),
+            acceptFinalHdRoutes: (candidateHdRoutes, initialHdRoutes) => {
+              const candidateErrors = getPipeline9DrcErrors(
+                postRepairDrcEvaluator,
+                [...candidateHdRoutes],
+              )
+              const initialErrors = getPipeline9DrcErrors(
+                postRepairDrcEvaluator,
+                [...initialHdRoutes],
+              )
+              return !isPipeline9DrcCandidateBetter(
+                initialErrors,
+                candidateErrors,
+              )
+            },
             iterations: 2,
           },
         ]
