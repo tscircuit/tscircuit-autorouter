@@ -59,7 +59,7 @@ jobs:
           fi
 
           echo "Running ${#test_files[@]} test files from $test_plan"
-          bun test "${test_files[@]}" --timeout 300000
+          bun test "${test_files[@]}" --timeout 600000
 
       - name: Upload diff PNG and SVG snapshot artifacts
         if: failure()

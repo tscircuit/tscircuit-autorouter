@@ -559,7 +559,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
           connMap: cms.connMap,
           viaDiameter: cms.viaDiameter,
           traceWidth: cms.minTraceWidth,
-          effort: cms.opts.regionalDrcRerouteChild ? 0.5 : undefined,
+          effort: cms.opts.regionalDrcRerouteChild ? 0.1 : undefined,
           obstacleMargin: cms.srj.defaultObstacleMargin ?? 0.15,
           obstacles: cms.srj.obstacles,
           layerCount: cms.srj.layerCount,

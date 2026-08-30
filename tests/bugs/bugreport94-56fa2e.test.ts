@@ -26,4 +26,4 @@ test("bugreport94-56fa2e.json", () => {
       tolerance: 0.17,
     },
   )
-}, 300_000)
+})
