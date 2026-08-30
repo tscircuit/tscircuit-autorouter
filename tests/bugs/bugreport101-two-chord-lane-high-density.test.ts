@@ -35,7 +35,6 @@ const solveNode = (): {
     obstacles: [],
     layerCount: 4,
     effort: 1,
-    enableTwoChordLaneSolver: true,
   })
   portfolio.solve()
   expect(portfolio.solved).toBeTrue()
@@ -48,7 +47,7 @@ const solveNode = (): {
   }
 }
 
-test("bugreport101 exact two-chord lane solver routes the narrow node", () => {
+test("bugreport101 default two-chord lane solver routes the narrow node", () => {
   const first = solveNode()
   const second = solveNode()
   const pairs = node.portPointsInPairs!
@@ -123,7 +122,7 @@ test("bugreport101 exact two-chord lane solver routes the narrow node", () => {
     getSvgFromGraphicsObject(first.winner.visualize()),
   ).toMatchSvgSnapshot(import.meta.path)
 
-  const legacyPortfolio = new PortfolioSingleIntraNodeSolver({
+  const scaledPortfolio = new PortfolioSingleIntraNodeSolver({
     nodeWithPortPoints: structuredClone(node),
     traceWidth: 0.15,
     viaDiameter: 0.3,
@@ -131,10 +130,11 @@ test("bugreport101 exact two-chord lane solver routes the narrow node", () => {
     obstacles: [],
     layerCount: 4,
     effort: 1,
+    nodeScaleFactor: 2,
   })
-  legacyPortfolio.initializeSolvers()
+  scaledPortfolio.initializeSolvers()
   expect(
-    legacyPortfolio.supervisedSolvers?.some(
+    scaledPortfolio.supervisedSolvers?.some(
       ({ solver }) => solver instanceof TwoChordLaneIntraNodeSolver,
     ),
   ).toBeFalse()

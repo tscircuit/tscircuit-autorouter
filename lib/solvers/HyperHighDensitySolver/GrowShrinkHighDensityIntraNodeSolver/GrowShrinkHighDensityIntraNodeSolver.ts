@@ -12,9 +12,10 @@ import {
   hasImpossibleSameLayerCrossingGeometry,
 } from "./invalidSameLayerCrossingGeometry"
 
-type PortfolioSingleIntraNodeSolverParams = ConstructorParameters<
-  typeof PortfolioSingleIntraNodeSolver
->[0]
+type PortfolioSingleIntraNodeSolverParams = Omit<
+  ConstructorParameters<typeof PortfolioSingleIntraNodeSolver>[0],
+  "nodeScaleFactor"
+>
 
 export const DEFAULT_MAX_GROWTH_ATTEMPTS = 3
 
@@ -154,9 +155,7 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
       this.constructorParams
     this.activeSubSolver = new PortfolioSingleIntraNodeSolver({
       ...portfolioParams,
-      enableTwoChordLaneSolver:
-        portfolioParams.enableTwoChordLaneSolver === true &&
-        this.scaleFactor === 1,
+      nodeScaleFactor: this.scaleFactor,
       nodeWithPortPoints: scaleNodeWithPortPoints(
         this.nodeWithPortPoints,
         this.scaleFactor,

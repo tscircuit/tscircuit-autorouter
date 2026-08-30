@@ -51,7 +51,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
   nodeWithPortPoints: NodeWithPortPoints
   connMap?: ConnectivityMap
   effort: number
-  enableTwoChordLaneSolver: boolean
+  nodeScaleFactor: number
   adaptiveSearchExpanded = false
 
   private getSolvedSegmentCount(solver: unknown): number | null {
@@ -108,7 +108,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
   constructor(
     opts: ConstructorParameters<typeof CachedIntraNodeRouteSolver>[0] & {
       effort?: number
-      enableTwoChordLaneSolver?: boolean
+      nodeScaleFactor?: number
     },
   ) {
     super()
@@ -116,15 +116,25 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     this.connMap = opts.connMap
     this.constructorParams = opts
     this.effort = opts.effort ?? 1
-    this.enableTwoChordLaneSolver = opts.enableTwoChordLaneSolver ?? false
+    this.nodeScaleFactor = opts.nodeScaleFactor ?? 1
     this.MAX_ITERATIONS = 20_000_000 * this.effort
     this.GREEDY_MULTIPLIER = 5
     this.MIN_SUBSTEPS = 100
   }
 
   getCombinationDefs() {
+    const isTwoChordLaneSolverApplicable =
+      this.nodeScaleFactor === 1 &&
+      TwoChordLaneIntraNodeSolver.isApplicable({
+        nodeWithPortPoints: this.nodeWithPortPoints,
+        traceWidth: this.constructorParams.traceWidth,
+        viaDiameter: this.constructorParams.viaDiameter,
+        clearance: INTRA_NODE_COPPER_CLEARANCE,
+        obstacles: this.constructorParams.obstacles,
+      })
+
     return [
-      ...(this.enableTwoChordLaneSolver ? [["twoChordLane"]] : []),
+      ...(isTwoChordLaneSolverApplicable ? [["twoChordLane"]] : []),
       ["throughObstacle"],
       ["singleLayerNoDifferentRootIntersections"],
       ["multiHeadPolyLine"],
