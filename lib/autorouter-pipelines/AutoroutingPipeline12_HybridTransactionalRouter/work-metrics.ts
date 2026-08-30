@@ -77,7 +77,7 @@ export function createHybridRouterMetrics({
     ).length,
     regionSplits: artifacts?.regionGraph.splitCount ?? 0,
     regionMerges: artifacts?.regionGraph.mergeCount ?? 0,
-    regionRequeues: 0,
+    regionRequeues: attempts.filter((attempt) => attempt.requeueIndex > 0).length,
     solverStateRebuilds: sumWork(attempts, "solverStateRebuilds"),
     geometryAllocations: sumWork(attempts, "geometryAllocations"),
     peakHeapBytes,

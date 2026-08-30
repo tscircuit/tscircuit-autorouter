@@ -1,4 +1,6 @@
-use crate::geometry::{point_within_bounds, route_point_distance, GeometryIndex};
+use crate::geometry::{
+    point_within_bounds, route_point_distance, GeometryIndex, GEOMETRY_EPSILON_MM,
+};
 use crate::protocol::{
     CandidateCost, CoreFailureCode, CoreResponse, RoutePoint, SearchRequest, Via, WorkCounters,
     CORE_PROTOCOL_VERSION,
@@ -376,7 +378,7 @@ fn transition_is_clear(
         min_layer..=max_layer,
         from_point,
         request.via_pad_diameter_mm / 2.0,
-        0.0,
+        GEOMETRY_EPSILON_MM,
         work,
     )
 }

@@ -2,9 +2,14 @@ import { expect, test } from "bun:test"
 import { buildTypedRoutingProblem } from "lib/autorouter-pipelines/AutoroutingPipeline12_HybridTransactionalRouter/build-typed-routing-problem"
 import { compileRoutingRules } from "lib/autorouter-pipelines/AutoroutingPipeline12_HybridTransactionalRouter/compile-routing-rules"
 import { verifyFinalBoard } from "lib/autorouter-pipelines/AutoroutingPipeline12_HybridTransactionalRouter/final-board-verifier"
+import { areConnectionTerminalsConnectedByCopper } from "lib/autorouter-pipelines/AutoroutingPipeline12_HybridTransactionalRouter/coupled-route-constraints"
 import { planGlobalTopology } from "lib/autorouter-pipelines/AutoroutingPipeline12_HybridTransactionalRouter/global-topology-planner"
-import { buildInitialCopperSnapshot } from "lib/autorouter-pipelines/AutoroutingPipeline12_HybridTransactionalRouter/transactional-copper-store"
+import {
+  buildInitialCopperSnapshot,
+  TransactionalCopperStore,
+} from "lib/autorouter-pipelines/AutoroutingPipeline12_HybridTransactionalRouter/transactional-copper-store"
 import type { SimpleRouteJson } from "lib/types"
+import { createHybridSegmentTransaction } from "./fixtures"
 
 test("preserves electrical-net identity across sibling routed connections", () => {
   const simpleRouteJson: SimpleRouteJson = {
@@ -125,11 +130,39 @@ test("preserves electrical-net identity across sibling routed connections", () =
     copperSnapshot,
     maximumViolationCount: 16,
   })
+  const store = new TransactionalCopperStore({
+    problem,
+    maximumTransactionHistory: 4,
+  })
+  const sharedTerminalCandidate = createHybridSegmentTransaction({
+    problem,
+    transactionId: "shared-terminal-candidate",
+    connectionName: "connection_b",
+    start: { x: 0, y: 0 },
+    end: { x: 4, y: 0 },
+    connectedTerminalIds: ["shared_port", "port_b"],
+  })
+  const sharedTerminalCommit = store.commit(sharedTerminalCandidate)
+  if (sharedTerminalCommit.status !== "committed") {
+    throw new Error(sharedTerminalCommit.rejection.message)
+  }
 
   expect(compiledRules.connections[0]?.electricallyConnectedConnectionNames)
     .toEqual(["connection_a", "connection_b"])
   expect(compiledRules.connections[1]?.electricallyConnectedConnectionNames)
     .toEqual(["connection_a", "connection_b"])
+  const secondConnection = compiledRules.connections[1]
+  if (!secondConnection) throw new Error("missing second compiled connection")
+  expect(
+    areConnectionTerminalsConnectedByCopper({
+      compiledRules,
+      copperSnapshot,
+      connection: secondConnection,
+      firstTerminalId: "shared_port",
+      secondTerminalId: "port_b",
+    }),
+  ).toBe(true)
   expect(topologyPlan.routeObjectPlans).toHaveLength(0)
   expect(finalVerification.status).toBe("verified")
+  expect(sharedTerminalCommit.status).toBe("committed")
 })

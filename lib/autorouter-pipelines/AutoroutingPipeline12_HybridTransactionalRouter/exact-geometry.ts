@@ -352,7 +352,7 @@ function pointIsInsidePolygon({
   return inside
 }
 
-function segmentToSegmentDistance({
+export function segmentToSegmentDistance({
   firstStart,
   firstEnd,
   secondStart,
@@ -457,7 +457,7 @@ function pointIsOnSegment({
   )
 }
 
-function pointToSegmentDistance({
+export function pointToSegmentDistance({
   point,
   start,
   end,

@@ -1,4 +1,9 @@
 import { negotiateBoundaryContracts } from "./boundary-contract-negotiator"
+import {
+  createExpandedRegionRequeue,
+  isEnvelopeRecoveryEligible,
+} from "./bounded-region-recovery"
+import { tryBoundedBlockerReroute } from "./bounded-blocker-reroute"
 import { finalizeCoupledRoutes } from "./coupled-route-finalizer"
 import {
   buildHybridWorkerBoardContext,
@@ -31,7 +36,10 @@ import type {
 } from "./serial-engine-types"
 import { TransactionalCopperStore } from "./transactional-copper-store"
 import type { TypedRoutingProblem } from "./types"
-import type { HybridTransactionDelta } from "./transactional-copper-types"
+import type {
+  HybridCopperSnapshot,
+  HybridTransactionDelta,
+} from "./transactional-copper-types"
 import { HybridRoutingWorkerPool } from "./worker-pool"
 import type { HybridWorkerPoolJobResult } from "./worker-pool"
 import { EMPTY_HYBRID_WORK_COUNTERS } from "./work-metrics"
@@ -45,6 +53,7 @@ export type ParallelHybridEngineConfiguration = {
   readonly deterministicSeed: number
   readonly maximumSearchExpansions: number
   readonly maximumActivationRings: number
+  readonly maximumRegionRequeues: number
   readonly maximumTransactionHistory: number
   readonly maximumDemandCellCount: number
   readonly maximumRegionCount: number
@@ -61,6 +70,7 @@ type ScheduledJobResult = {
   readonly routePlan: GlobalRouteObjectPlan
   readonly result: HybridWorkerPoolJobResult
   readonly source: "worker" | "cache"
+  readonly requeueIndex: number
   readonly cacheKey?: RegionCacheKey
 }
 
@@ -149,65 +159,116 @@ export async function runParallelHybridTransactionalEngine({
           if (!routePlan) {
             throw new Error(`region references missing route plan ${routeObjectId}`)
           }
-          const job = buildRegionJob({
+          return scheduleRegionJob({
             problem,
             routePlan,
             region,
             boundaryContracts,
             copperSnapshot,
-            maximumExpansions: configuration.maximumSearchExpansions,
-            maximumActivationRings: configuration.maximumActivationRings,
-            deterministicSeed: configuration.deterministicSeed,
+            configuration,
+            copperStore,
+            workerPool,
+            requeueIndex: 0,
           })
-          const cacheKey = configuration.regionCache
-            ? createRegionCacheKey({
-                problem,
-                region,
-                routePlan,
-                boundaryContracts,
-                job,
-                runtimeTarget: configuration.runtimeTarget,
-              })
-            : undefined
-          if (cacheKey && configuration.regionCache) {
-            const cached = configuration.regionCache.get(cacheKey)
-            if (cached) {
-              const validationStart = performance.now()
-              const validation = copperStore.validate(cached.transactionDelta)
-              configuration.regionCache.recordValidationMs(
-                performance.now() - validationStart,
-              )
-              if (validation.status === "accepted") {
-                return Promise.resolve({
-                  region,
-                  routePlan,
-                  source: "cache" as const,
-                  cacheKey,
-                  result: createCachedJobResult({
-                    jobId: job.jobId,
-                    delta: cached.transactionDelta,
-                  }),
-                })
-              }
-              configuration.regionCache.invalidate(cacheKey)
-            }
-          }
-          return workerPool.submit(job).then(
-            (result): ScheduledJobResult => ({
-              region,
-              routePlan,
-              result,
-              source: "worker",
-              cacheKey,
-            }),
-          )
         })
       })
       const completedJobs = await Promise.all(pendingJobs)
       completedJobs.sort(compareCommitOrder)
-      for (const completed of completedJobs) {
-        if (completed.result.status !== "completed") {
+      for (const initiallyCompleted of completedJobs) {
+        let completed = initiallyCompleted
+        let blockerRecoveryAttempted = false
+        while (completed.result.status !== "completed") {
+          const response =
+            completed.result.status === "failed"
+              ? completed.result.response
+              : undefined
+          const nextRegion =
+            response &&
+            completed.requeueIndex < configuration.maximumRegionRequeues &&
+            isEnvelopeRecoveryEligible({
+              failureCode: response.code,
+              coreFailureCode: response.coreFailureCode,
+            })
+              ? createExpandedRegionRequeue({
+                  region: completed.region,
+                  boardBounds: problem.compiledRules.boardBounds,
+                  requeueIndex: completed.requeueIndex + 1,
+                })
+              : undefined
           attempts.push(createAttempt(completed))
+          if (!nextRegion) {
+            const recoveryEligible =
+              response &&
+              !blockerRecoveryAttempted &&
+              configuration.maximumRegionRequeues > 0 &&
+              isEnvelopeRecoveryEligible({
+                failureCode: response.code,
+                coreFailureCode: response.coreFailureCode,
+              })
+            if (!recoveryEligible) break
+            blockerRecoveryAttempted = true
+            const recovery = await tryBoundedBlockerReroute({
+              problem,
+              topologyPlan,
+              regionGraph,
+              boundaryContracts,
+              failedRegion: completed.region,
+              failedRoutePlan: completed.routePlan,
+              copperStore,
+              committedAttempts: attempts,
+              excludedBlockerRouteObjectIds: new Set(),
+              configuration: {
+                workerEntryPath: configuration.workerEntryPath,
+                runtimeTarget: configuration.runtimeTarget,
+                runtimeModulePath: configuration.runtimeModulePath,
+                deterministicSeed: configuration.deterministicSeed,
+                maximumSearchExpansions:
+                  configuration.maximumSearchExpansions,
+                maximumActivationRings:
+                  configuration.maximumActivationRings,
+                maximumBlockerCandidates:
+                  configuration.maximumRegionRequeues,
+              },
+            })
+            attempts.push(...recovery.attempts)
+            if (recovery.status !== "recovered") break
+            demandField.applyCommittedTransaction({
+              delta: recovery.replacementDelta,
+              committedSnapshot: recovery.committedSnapshot,
+            })
+            await workerPool.applyCopperUpdate(
+              buildWorkerCopperUpdate({
+                problem,
+                delta: recovery.replacementDelta,
+                nextCopperVersion: recovery.committedSnapshot.version,
+              }),
+            )
+            completed = await scheduleRegionJob({
+              problem,
+              routePlan: completed.routePlan,
+              region: completed.region,
+              boundaryContracts,
+              copperSnapshot: copperStore.getSnapshot(),
+              configuration,
+              copperStore,
+              workerPool,
+              requeueIndex: completed.requeueIndex + 1,
+            })
+            continue
+          }
+          completed = await scheduleRegionJob({
+            problem,
+            routePlan: completed.routePlan,
+            region: nextRegion,
+            boundaryContracts,
+            copperSnapshot: copperStore.getSnapshot(),
+            configuration,
+            copperStore,
+            workerPool,
+            requeueIndex: completed.requeueIndex + 1,
+          })
+        }
+        if (completed.result.status !== "completed") {
           return createIncompleteResult({
             topologyPlan,
             demandField,
@@ -369,6 +430,83 @@ export async function runParallelHybridTransactionalEngine({
   }
 }
 
+function scheduleRegionJob({
+  problem,
+  routePlan,
+  region,
+  boundaryContracts,
+  copperSnapshot,
+  configuration,
+  copperStore,
+  workerPool,
+  requeueIndex,
+}: {
+  problem: TypedRoutingProblem
+  routePlan: GlobalRouteObjectPlan
+  region: DynamicRoutingRegion
+  boundaryContracts: SerialHybridEngineArtifacts["boundaryContracts"]
+  copperSnapshot: HybridCopperSnapshot
+  configuration: ParallelHybridEngineConfiguration
+  copperStore: TransactionalCopperStore
+  workerPool: HybridRoutingWorkerPool
+  requeueIndex: number
+}): Promise<ScheduledJobResult> {
+  const job = buildRegionJob({
+    problem,
+    routePlan,
+    region,
+    boundaryContracts,
+    copperSnapshot,
+    maximumExpansions: configuration.maximumSearchExpansions,
+    maximumActivationRings: configuration.maximumActivationRings,
+    deterministicSeed: configuration.deterministicSeed,
+  })
+  const cacheKey = configuration.regionCache
+    ? createRegionCacheKey({
+        problem,
+        region,
+        routePlan,
+        boundaryContracts,
+        job,
+        runtimeTarget: configuration.runtimeTarget,
+      })
+    : undefined
+  if (cacheKey && configuration.regionCache) {
+    const cached = configuration.regionCache.get(cacheKey)
+    if (cached) {
+      const validationStart = performance.now()
+      const validation = copperStore.validate(cached.transactionDelta)
+      configuration.regionCache.recordValidationMs(
+        performance.now() - validationStart,
+      )
+      if (validation.status === "accepted") {
+        return Promise.resolve({
+          region,
+          routePlan,
+          source: "cache",
+          requeueIndex,
+          cacheKey,
+          result: createCachedJobResult({
+            jobId: job.jobId,
+            delta: cached.transactionDelta,
+          }),
+        })
+      }
+      configuration.regionCache.invalidate(cacheKey)
+    }
+  }
+  return workerPool.submit(job).then(
+    (result): ScheduledJobResult => ({
+      region,
+      routePlan,
+      result,
+      source: "worker",
+      requeueIndex,
+      cacheKey,
+    }),
+  )
+}
+
 function createCachedJobResult({
   jobId,
   delta,
@@ -407,6 +545,7 @@ function createFinalizationAttempt(
     transferredBytes: 0,
     returnedBytes: 0,
     work: delta.work,
+    requeueIndex: 0,
     wasStaleRevalidation: false,
     outcome: "committed",
     transactionId: delta.transactionId,
@@ -433,7 +572,7 @@ function createAttempt(
 ): RegionAttemptRecord {
   if (completed.result.status === "completed") {
     return Object.freeze({
-      attemptId: `worker-attempt:${completed.result.response.jobId}`,
+      attemptId: `worker-attempt:${completed.result.response.jobId}:requeue:${completed.requeueIndex}`,
       regionId: completed.region.regionId,
       workerId: completed.result.response.workerId,
       strategy:
@@ -450,6 +589,7 @@ function createAttempt(
         (completed.source === "cache"
           ? EMPTY_HYBRID_WORK_COUNTERS
           : completed.result.response.transactionDelta.work),
+      requeueIndex: completed.requeueIndex,
       wasStaleRevalidation,
       outcome: "committed",
       transactionId:
@@ -458,7 +598,7 @@ function createAttempt(
   }
   if (completed.result.status === "failed") {
     return Object.freeze({
-      attemptId: `worker-attempt:${completed.result.response.jobId}`,
+      attemptId: `worker-attempt:${completed.result.response.jobId}:requeue:${completed.requeueIndex}`,
       regionId: completed.region.regionId,
       workerId: completed.result.response.workerId,
       strategy: "rust-multi-resolution-worker",
@@ -468,13 +608,14 @@ function createAttempt(
       transferredBytes: 0,
       returnedBytes: 0,
       work: workOverride ?? EMPTY_HYBRID_WORK_COUNTERS,
+      requeueIndex: completed.requeueIndex,
       wasStaleRevalidation,
       outcome: outcomeOverride ?? "failed",
       rejectionReason: completed.result.response.message,
     })
   }
   return Object.freeze({
-    attemptId: `worker-attempt:${completed.result.jobId}`,
+    attemptId: `worker-attempt:${completed.result.jobId}:requeue:${completed.requeueIndex}`,
     regionId: completed.region.regionId,
     workerId: completed.result.workerId ?? "unassigned",
     strategy: "rust-multi-resolution-worker",
@@ -484,6 +625,7 @@ function createAttempt(
     transferredBytes: 0,
     returnedBytes: 0,
     work: workOverride ?? EMPTY_HYBRID_WORK_COUNTERS,
+    requeueIndex: completed.requeueIndex,
     wasStaleRevalidation,
     outcome: "cancelled",
   })
@@ -595,6 +737,8 @@ function validateConfiguration(
     !configuration.workerEntryPath ||
     !configuration.runtimeModulePath ||
     bounds.some((value) => !Number.isSafeInteger(value) || value <= 0) ||
+    !Number.isSafeInteger(configuration.maximumRegionRequeues) ||
+    configuration.maximumRegionRequeues < 0 ||
     !Number.isSafeInteger(configuration.deterministicSeed) ||
     configuration.deterministicSeed < 0
   ) {

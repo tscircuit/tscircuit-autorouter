@@ -139,6 +139,7 @@ export type RegionAttemptRecord = {
   readonly transferredBytes: number
   readonly returnedBytes: number
   readonly work: HybridTransactionWorkCounters
+  readonly requeueIndex: number
   readonly wasStaleRevalidation: boolean
   readonly outcome: "candidate" | "committed" | "rejected" | "failed" | "cancelled"
   readonly rejectionReason?: string

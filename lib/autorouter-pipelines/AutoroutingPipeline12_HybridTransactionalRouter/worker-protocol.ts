@@ -1,4 +1,5 @@
 import type {
+  HybridCoreFailureCode,
   HybridCoreGeometry,
   HybridCoreRoutePoint,
 } from "./rust-core-protocol"
@@ -154,6 +155,7 @@ export type HybridWorkerResponse =
         | "unknown_rule_reference"
         | "core_search_failed"
         | "runtime_failure"
+      readonly coreFailureCode?: HybridCoreFailureCode
       readonly message: string
       readonly solveTimeMs: number
       readonly cpuTimeMs: number

@@ -82,6 +82,8 @@ export type HybridTransactionDelta = {
   readonly transactionId: HybridTransactionId
   readonly regionId: string
   readonly ownerRouteObjectId: RouteObjectId
+  /** Additional explicit owners participating in one exact atomic replacement. */
+  readonly additionalOwnerRouteObjectIds?: readonly RouteObjectId[]
   readonly baseCopperVersion: CopperVersion
   readonly boundaryContractVersion: BoundaryContractVersion
   readonly addedTraces: readonly HybridCopperSegment[]

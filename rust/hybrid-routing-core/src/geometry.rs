@@ -1,6 +1,8 @@
 use crate::protocol::{Bounds, Geometry, RoutePoint, WorkCounters};
 use rstar::{AABB, RTree, RTreeObject};
 
+pub const GEOMETRY_EPSILON_MM: f64 = 1e-9;
+
 #[derive(Clone)]
 struct IndexedGeometry {
     geometry: Geometry,
@@ -389,5 +391,28 @@ mod tests {
         };
         assert!(point_intersects_geometry((0.0, 0.0), 0.0, &geometry));
         assert!(!point_intersects_geometry((3.0, 3.0), 0.2, &geometry));
+    }
+
+    #[test]
+    fn via_clearance_respects_exact_validator_epsilon() {
+        let geometry = Geometry::RotatedRect {
+            geometry_id: "pad".into(),
+            layer: "top".into(),
+            center_x: 0.0,
+            center_y: 0.0,
+            width_mm: 0.3,
+            height_mm: 0.3,
+            rotation_degrees: 0.0,
+        };
+        let index = GeometryIndex::new(&["top".into()], &[geometry]);
+        let mut work = WorkCounters::default();
+
+        assert!(!index.via_is_clear(
+            0..=0,
+            (0.350000000000001, 0.0),
+            0.2,
+            GEOMETRY_EPSILON_MM,
+            &mut work,
+        ));
     }
 }

@@ -787,11 +787,11 @@ function compileTerminals({
   layerByName: ReadonlyMap<LayerName, CompiledLayerRule>
   viaPadDiameterMm: number
 }): readonly CompiledTerminal[] {
-  if (connection.pointsToConnect.length < 2) {
+  if (connection.pointsToConnect.length < 1) {
     failCompilation(
       "impossible_geometry",
       `simpleRouteJson.connections[${connectionIndex}].pointsToConnect`,
-      "must contain at least two terminals",
+      "must contain at least one terminal",
     )
   }
   const terminalIds = new Set<CompiledTerminal["terminalId"]>()

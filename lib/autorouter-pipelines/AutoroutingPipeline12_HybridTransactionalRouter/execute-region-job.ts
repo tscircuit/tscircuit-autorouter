@@ -1,7 +1,17 @@
-import { runMultiResolutionSearch } from "./multi-resolution-router"
+import {
+  runMultiResolutionSearch,
+  type MultiResolutionSearchResult,
+} from "./multi-resolution-router"
 import { buildWorkerCoreSearchRequest } from "./build-worker-core-request"
 import { executeCoupledParallelJob } from "./execute-coupled-parallel-job"
+import { copperPrimitivesContainGraphCycle } from "./coupled-route-constraints"
+import { createPowerTreeBranchSearches } from "./power-tree-branch-portfolio"
+import {
+  buildSequentialSearchContext,
+  candidateTouchesSequentialObstacles,
+} from "./sequential-search-context"
 import type {
+  HybridCoreFailureCode,
   HybridRoutingCoreRuntime,
 } from "./rust-core-protocol"
 import type {
@@ -14,7 +24,6 @@ import type {
   HybridWorkerBoardContext,
   HybridWorkerConnectionRule,
   RegionJob,
-  RegionSearchSpec,
 } from "./worker-protocol"
 
 export type RegionJobExecutionResult =
@@ -25,6 +34,7 @@ export type RegionJobExecutionResult =
   | {
       readonly status: "failed"
       readonly code: "unknown_rule_reference" | "core_search_failed"
+      readonly coreFailureCode?: HybridCoreFailureCode
       readonly message: string
     }
 
@@ -57,6 +67,17 @@ export async function executeRegionJob({
   let candidatesStepped = 0
   let activeRings = 0
   let solverStateRebuilds = 0
+  const accumulateSearchMetrics = (
+    searchResult: MultiResolutionSearchResult,
+  ): void => {
+    searchExpansions += searchResult.metrics.work.searchExpansions
+    spatialIndexQueries += searchResult.metrics.work.spatialIndexQueries
+    drcPredicateCalls += searchResult.metrics.work.geometryPredicateCalls
+    candidatesConstructed += searchResult.metrics.candidatesConstructed
+    candidatesStepped += searchResult.metrics.candidatesStepped
+    activeRings += searchResult.metrics.activeRings
+    solverStateRebuilds += searchResult.metrics.solverStateRebuilds
+  }
   for (const [searchIndex, search] of job.searches.entries()) {
     const rule = context.connectionRules.find(
       (candidate) =>
@@ -69,78 +90,135 @@ export async function executeRegionJob({
         message: `job ${job.jobId} references unknown rule ${search.connectionRuleReference}`,
       }
     }
-    const result = await runMultiResolutionSearch({
-      runtime,
-      baseRequest: buildWorkerCoreSearchRequest({
-        context,
-        job,
-        searchIdentity: `search:${searchIndex}:${search.searchId}`,
-        start: search.start,
-        goal: search.goal,
-        allowedLayers: rule.allowedLayers,
-        traceWidthMm: rule.traceWidthMm,
-        maximumVias: search.remainingViaBudget,
-        connectedConnectionNames:
-          rule.electricallyConnectedConnectionNames,
-      }),
-      maximumActivationRings: job.solverBudget.maximumActivationRings,
+    const ownership = createOwnership(job.ownerRouteObjectId)
+    let selectedResult:
+      | Extract<MultiResolutionSearchResult, { status: "solved" }>
+      | undefined
+    let selectedCopper: MaterializedSearchCopper | undefined
+    let lastFailure:
+      | Extract<MultiResolutionSearchResult, { status: "failed" }>
+      | undefined
+    let rejectedCyclicCandidate = false
+    const branchSearches = createPowerTreeBranchSearches({
+      job,
+      search,
+      searchIndex,
+      addedTraces,
     })
-    searchExpansions += result.metrics.work.searchExpansions
-    spatialIndexQueries += result.metrics.work.spatialIndexQueries
-    drcPredicateCalls += result.metrics.work.geometryPredicateCalls
-    candidatesConstructed += result.metrics.candidatesConstructed
-    candidatesStepped += result.metrics.candidatesStepped
-    activeRings += result.metrics.activeRings
-    solverStateRebuilds += result.metrics.solverStateRebuilds
-    if (result.status === "failed") {
+    for (const [branchIndex, branchSearch] of branchSearches.entries()) {
+      let result = await runMultiResolutionSearch({
+        runtime,
+        baseRequest: buildWorkerCoreSearchRequest({
+          context,
+          job,
+          searchIdentity: `search:${searchIndex}:${branchSearch.searchId}:branch:${branchIndex}`,
+          start: branchSearch.start,
+          goal: branchSearch.goal,
+          allowedLayers: rule.allowedLayers,
+          traceWidthMm: rule.traceWidthMm,
+          maximumVias: branchSearch.remainingViaBudget,
+          connectedConnectionNames:
+            rule.electricallyConnectedConnectionNames,
+        }),
+        maximumActivationRings: job.solverBudget.maximumActivationRings,
+      })
+      accumulateSearchMetrics(result)
+      if (result.status === "failed") {
+        lastFailure = result
+        continue
+      }
+      let searchCopper = materializeSearchCopper({
+        result,
+        rule,
+        job,
+        searchIndex,
+        ownership,
+        context,
+      })
+      const sequentialContext = buildSequentialSearchContext({
+        context,
+        addedTraces,
+        addedVias,
+        search: branchSearch,
+        traceWidthMm: rule.traceWidthMm,
+        routingResolutionMm: job.routingResolutionMm,
+      })
+      if (
+        candidateTouchesSequentialObstacles({
+          baseGeometryCount: context.geometry.length,
+          sequentialContext,
+          candidateTraces: searchCopper.traces,
+          candidateVias: searchCopper.vias,
+        })
+      ) {
+        result = await runMultiResolutionSearch({
+          runtime,
+          baseRequest: buildWorkerCoreSearchRequest({
+            context: sequentialContext,
+            job,
+            searchIdentity: `search:${searchIndex}:${branchSearch.searchId}:branch:${branchIndex}:cycle-safe`,
+            start: branchSearch.start,
+            goal: branchSearch.goal,
+            allowedLayers: rule.allowedLayers,
+            traceWidthMm: rule.traceWidthMm,
+            maximumVias: branchSearch.remainingViaBudget,
+            connectedConnectionNames:
+              rule.electricallyConnectedConnectionNames,
+          }),
+          maximumActivationRings: job.solverBudget.maximumActivationRings,
+        })
+        accumulateSearchMetrics(result)
+        if (result.status === "failed") {
+          lastFailure = result
+          continue
+        }
+        searchCopper = materializeSearchCopper({
+          result,
+          rule,
+          job,
+          searchIndex,
+          ownership,
+          context,
+        })
+      }
+      if (
+        job.coupling.kind === "power" &&
+        job.coupling.topology === "tree" &&
+        copperPrimitivesContainGraphCycle({
+          segments: [...addedTraces, ...searchCopper.traces],
+          vias: [...addedVias, ...searchCopper.vias],
+          layerNames: context.layerNames,
+        })
+      ) {
+        rejectedCyclicCandidate = true
+        continue
+      }
+      selectedResult = result
+      selectedCopper = searchCopper
+      break
+    }
+    if (!selectedResult || !selectedCopper) {
+      if (rejectedCyclicCandidate) {
+        return {
+          status: "failed",
+          code: "core_search_failed",
+          coreFailureCode: "no_legal_path",
+          message: `${search.searchId}: no_legal_path: every bounded parent candidate created a power-tree cycle`,
+        }
+      }
+      if (!lastFailure) {
+        throw new Error(`search portfolio ${search.searchId} produced no result`)
+      }
       return {
         status: "failed",
         code: "core_search_failed",
-        message: `${search.searchId}: ${result.response.code}: ${result.response.message}`,
+        coreFailureCode: lastFailure.response.code,
+        message: `${search.searchId}: ${lastFailure.response.code}: ${lastFailure.response.message}`,
       }
     }
-    const ownership = createOwnership(job.ownerRouteObjectId)
-    addedTraces.push(
-      ...result.response.route.flatMap((point, pointIndex) => {
-        const nextPoint = result.response.route[pointIndex + 1]
-        if (
-          !nextPoint ||
-          point.layer !== nextPoint.layer ||
-          (point.x === nextPoint.x && point.y === nextPoint.y)
-        ) {
-          return []
-        }
-        return [
-          Object.freeze({
-            kind: "segment" as const,
-            copperId: `${job.transactionId}:search:${searchIndex}:segment:${pointIndex}`,
-            connectionName: rule.connectionName,
-            layer: point.layer,
-            start: Object.freeze({ x: point.x, y: point.y }),
-            end: Object.freeze({ x: nextPoint.x, y: nextPoint.y }),
-            widthMm: rule.traceWidthMm,
-            ownership,
-          }),
-        ]
-      }),
-    )
-    addedVias.push(
-      ...result.response.vias.map((via, viaIndex) =>
-        Object.freeze({
-          kind: "via" as const,
-          copperId: `${job.transactionId}:search:${searchIndex}:via:${viaIndex}`,
-          connectionName: rule.connectionName,
-          x: via.x,
-          y: via.y,
-          fromLayer: via.fromLayer,
-          toLayer: via.toLayer,
-          padDiameterMm: context.viaPadDiameterMm,
-          holeDiameterMm: context.viaHoleDiameterMm,
-          ownership,
-        }),
-      ),
-    )
-    bendCount += result.response.cost.bendCount
+    addedTraces.push(...selectedCopper.traces)
+    addedVias.push(...selectedCopper.vias)
+    bendCount += selectedResult.response.cost.bendCount
   }
   const totalLengthMm = addedTraces.reduce(
     (total, segment) =>
@@ -205,5 +283,69 @@ function createOwnership(ownerRouteObjectId: string): HybridCopperOwnership {
   return Object.freeze({
     mutability: "mutable",
     ownerRouteObjectIds: Object.freeze([ownerRouteObjectId]),
+  })
+}
+
+type MaterializedSearchCopper = {
+  readonly traces: readonly HybridCopperSegment[]
+  readonly vias: readonly HybridCopperVia[]
+}
+
+function materializeSearchCopper({
+  result,
+  rule,
+  job,
+  searchIndex,
+  ownership,
+  context,
+}: {
+  result: Extract<MultiResolutionSearchResult, { status: "solved" }>
+  rule: HybridWorkerConnectionRule
+  job: RegionJob
+  searchIndex: number
+  ownership: HybridCopperOwnership
+  context: HybridWorkerBoardContext
+}): MaterializedSearchCopper {
+  return Object.freeze({
+    traces: Object.freeze(
+      result.response.route.flatMap((point, pointIndex) => {
+        const nextPoint = result.response.route[pointIndex + 1]
+        if (
+          !nextPoint ||
+          point.layer !== nextPoint.layer ||
+          (point.x === nextPoint.x && point.y === nextPoint.y)
+        ) {
+          return []
+        }
+        return [
+          Object.freeze({
+            kind: "segment" as const,
+            copperId: `${job.transactionId}:search:${searchIndex}:segment:${pointIndex}`,
+            connectionName: rule.connectionName,
+            layer: point.layer,
+            start: Object.freeze({ x: point.x, y: point.y }),
+            end: Object.freeze({ x: nextPoint.x, y: nextPoint.y }),
+            widthMm: rule.traceWidthMm,
+            ownership,
+          }),
+        ]
+      }),
+    ),
+    vias: Object.freeze(
+      result.response.vias.map((via, viaIndex) =>
+        Object.freeze({
+          kind: "via" as const,
+          copperId: `${job.transactionId}:search:${searchIndex}:via:${viaIndex}`,
+          connectionName: rule.connectionName,
+          x: via.x,
+          y: via.y,
+          fromLayer: via.fromLayer,
+          toLayer: via.toLayer,
+          padDiameterMm: context.viaPadDiameterMm,
+          holeDiameterMm: context.viaHoleDiameterMm,
+          ownership,
+        }),
+      ),
+    ),
   })
 }

@@ -190,10 +190,18 @@ export function findCoupledRouteConstraintViolation({
         }),
       })
     }
-    const hasCycle = powerConnectionHasCycle({
-      compiledRules,
-      copperSnapshot,
-      connectionNames: connection.electricallyConnectedConnectionNames,
+    const hasCycle = copperPrimitivesContainGraphCycle({
+      segments: copperSnapshot.segments.filter((candidate) =>
+        connection.electricallyConnectedConnectionNames.includes(
+          candidate.connectionName,
+        ),
+      ),
+      vias: copperSnapshot.vias.filter((candidate) =>
+        connection.electricallyConnectedConnectionNames.includes(
+          candidate.connectionName,
+        ),
+      ),
+      layerNames: compiledRules.layerStack.map((layer) => layer.name),
     })
     if (connection.topology === "mesh" ? !hasCycle : hasCycle) {
       return violation({
@@ -255,11 +263,92 @@ export function isConnectionFullyConnected({
   copperSnapshot: HybridCopperSnapshot
   connection: CompiledConnectionRules
 }): boolean {
-  const primitives = getPrimitivesForConnections({
+  if (connection.terminals.length === 1) return true
+  const connectivity = buildConnectionCopperConnectivity({
+    compiledRules,
     copperSnapshot,
     connectionNames: connection.electricallyConnectedConnectionNames,
   })
+  const { primitives, parent } = connectivity
   if (primitives.length === 0) return false
+  let terminalRoot: number | undefined
+  for (const terminal of connection.terminals) {
+    const touchingPrimitiveIndex = findTouchingPrimitiveIndex({
+      compiledRules,
+      primitives,
+      terminal,
+    })
+    if (touchingPrimitiveIndex < 0) return false
+    const root = find(parent, touchingPrimitiveIndex)
+    if (terminalRoot === undefined) terminalRoot = root
+    else if (terminalRoot !== root) return false
+  }
+  return true
+}
+
+export function areConnectionTerminalsConnectedByCopper({
+  compiledRules,
+  copperSnapshot,
+  connection,
+  firstTerminalId,
+  secondTerminalId,
+}: {
+  compiledRules: CompiledRoutingRules
+  copperSnapshot: HybridCopperSnapshot
+  connection: CompiledConnectionRules
+  firstTerminalId: string
+  secondTerminalId: string
+}): boolean {
+  if (firstTerminalId === secondTerminalId) return true
+  const firstTerminal = connection.terminals.find(
+    (terminal) => terminal.terminalId === firstTerminalId,
+  )
+  const secondTerminal = connection.terminals.find(
+    (terminal) => terminal.terminalId === secondTerminalId,
+  )
+  if (!firstTerminal || !secondTerminal) {
+    throw new Error(
+      `connection ${connection.connectionName} does not contain terminals ${firstTerminalId}/${secondTerminalId}`,
+    )
+  }
+  const { primitives, parent } = buildConnectionCopperConnectivity({
+    compiledRules,
+    copperSnapshot,
+    connectionNames: connection.electricallyConnectedConnectionNames,
+  })
+  const firstPrimitiveIndex = findTouchingPrimitiveIndex({
+    compiledRules,
+    primitives,
+    terminal: firstTerminal,
+  })
+  const secondPrimitiveIndex = findTouchingPrimitiveIndex({
+    compiledRules,
+    primitives,
+    terminal: secondTerminal,
+  })
+  return (
+    firstPrimitiveIndex >= 0 &&
+    secondPrimitiveIndex >= 0 &&
+    find(parent, firstPrimitiveIndex) === find(parent, secondPrimitiveIndex)
+  )
+}
+
+function buildConnectionCopperConnectivity({
+  compiledRules,
+  copperSnapshot,
+  connectionNames,
+}: {
+  compiledRules: CompiledRoutingRules
+  copperSnapshot: HybridCopperSnapshot
+  connectionNames: readonly string[]
+}): {
+  readonly primitives: readonly HybridCopperPrimitive[]
+  readonly parent: number[]
+} {
+  const primitives = getPrimitivesForConnections({
+    copperSnapshot,
+    connectionNames,
+  })
   const parent = primitives.map((_, primitiveIndex) => primitiveIndex)
   for (let firstIndex = 0; firstIndex < primitives.length; firstIndex++) {
     for (
@@ -277,25 +366,29 @@ export function isConnectionFullyConnected({
       }
     }
   }
-  let terminalRoot: number | undefined
-  for (const terminal of connection.terminals) {
-    const touchingPrimitiveIndex = primitives.findIndex((primitive) =>
-      terminal.layers.some(
-        (layer) =>
-          pointToPrimitiveEdgeDistance({
-            point: terminal,
-            layer,
-            primitive,
-            viaLayers: getPrimitiveLayers({ primitive, compiledRules }),
-          }) <= GEOMETRY_EPSILON,
-      ),
-    )
-    if (touchingPrimitiveIndex < 0) return false
-    const root = find(parent, touchingPrimitiveIndex)
-    if (terminalRoot === undefined) terminalRoot = root
-    else if (terminalRoot !== root) return false
-  }
-  return true
+  return { primitives, parent }
+}
+
+function findTouchingPrimitiveIndex({
+  compiledRules,
+  primitives,
+  terminal,
+}: {
+  compiledRules: CompiledRoutingRules
+  primitives: readonly HybridCopperPrimitive[]
+  terminal: CompiledConnectionRules["terminals"][number]
+}): number {
+  return primitives.findIndex((primitive) =>
+    terminal.layers.some(
+      (layer) =>
+        pointToPrimitiveEdgeDistance({
+          point: terminal,
+          layer,
+          primitive,
+          viaLayers: getPrimitiveLayers({ primitive, compiledRules }),
+        }) <= GEOMETRY_EPSILON,
+    ),
+  )
 }
 
 function getUncoupledLength({
@@ -468,14 +561,14 @@ function hasStableBusOrdering({
   )
 }
 
-function powerConnectionHasCycle({
-  compiledRules,
-  copperSnapshot,
-  connectionNames,
+export function copperPrimitivesContainGraphCycle({
+  segments,
+  vias,
+  layerNames,
 }: {
-  compiledRules: CompiledRoutingRules
-  copperSnapshot: HybridCopperSnapshot
-  connectionNames: readonly string[]
+  segments: readonly HybridCopperSegment[]
+  vias: readonly Extract<HybridCopperPrimitive, { kind: "via" }>[]
+  layerNames: readonly LayerName[]
 }): boolean {
   const parent = new Map<string, string>()
   const connect = (first: string, second: string): boolean => {
@@ -485,9 +578,7 @@ function powerConnectionHasCycle({
     parent.set(secondRoot, firstRoot)
     return false
   }
-  for (const segment of copperSnapshot.segments.filter(
-    (candidate) => connectionNames.includes(candidate.connectionName),
-  )) {
+  for (const segment of segments) {
     if (
       connect(
         pointLayerKey(segment.start, segment.layer),
@@ -497,10 +588,16 @@ function powerConnectionHasCycle({
       return true
     }
   }
-  for (const via of copperSnapshot.vias.filter(
-    (candidate) => connectionNames.includes(candidate.connectionName),
-  )) {
-    const layers = getPrimitiveLayers({ primitive: via, compiledRules })
+  for (const via of vias) {
+    const startIndex = layerNames.indexOf(via.fromLayer)
+    const endIndex = layerNames.indexOf(via.toLayer)
+    if (startIndex < 0 || endIndex < 0) {
+      throw new Error(`via ${via.copperId} references an unknown layer`)
+    }
+    const layers = layerNames.slice(
+      Math.min(startIndex, endIndex),
+      Math.max(startIndex, endIndex) + 1,
+    )
     for (let layerIndex = 0; layerIndex < layers.length - 1; layerIndex++) {
       if (
         connect(

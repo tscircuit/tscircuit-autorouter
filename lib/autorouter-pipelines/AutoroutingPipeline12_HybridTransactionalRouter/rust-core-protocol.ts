@@ -100,6 +100,11 @@ export type HybridCoreSearchResponse =
       readonly work: HybridCoreWorkCounters
     }
 
+export type HybridCoreFailureCode = Extract<
+  HybridCoreSearchResponse,
+  { readonly status: "failed" }
+>["code"]
+
 export type HybridRoutingCoreRuntime = {
   readonly target: "native" | "wasm"
   execute(request: HybridCoreSearchRequest): Promise<HybridCoreSearchResponse>

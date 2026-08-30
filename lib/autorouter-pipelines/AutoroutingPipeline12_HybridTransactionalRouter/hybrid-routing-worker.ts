@@ -136,6 +136,7 @@ async function handleRequest(request: HybridWorkerRequest): Promise<void> {
     postJobFailure({
       jobId: request.job.jobId,
       code: result.code,
+      coreFailureCode: result.coreFailureCode,
       message: result.message,
       solveStart,
       cpuStart,
@@ -160,6 +161,7 @@ async function handleRequest(request: HybridWorkerRequest): Promise<void> {
 function postJobFailure({
   jobId,
   code,
+  coreFailureCode,
   message,
   solveStart,
   cpuStart,
@@ -168,6 +170,10 @@ function postJobFailure({
 }: {
   jobId: string
   code: Extract<HybridWorkerResponse, { type: "job_failed" }>["code"]
+  coreFailureCode?: Extract<
+    HybridWorkerResponse,
+    { type: "job_failed" }
+  >["coreFailureCode"]
   message: string
   solveStart: number
   cpuStart: NodeJS.CpuUsage
@@ -179,6 +185,7 @@ function postJobFailure({
     workerId: runtimeConfiguration.workerId,
     jobId,
     code,
+    coreFailureCode,
     message,
     solveTimeMs: measuredSolveTimeMs ?? performance.now() - solveStart,
     cpuTimeMs: measuredCpuTimeMs ?? getCpuElapsedMs(cpuStart),

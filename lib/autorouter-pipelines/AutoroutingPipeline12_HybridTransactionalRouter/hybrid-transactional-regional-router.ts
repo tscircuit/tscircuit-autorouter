@@ -21,6 +21,7 @@ import {
 
 const DEFAULT_MAXIMUM_SEARCH_EXPANSIONS = 250_000
 const DEFAULT_MAXIMUM_ACTIVATION_RINGS = 4
+const DEFAULT_MAXIMUM_REGION_REQUEUES = 2
 const DEFAULT_MAXIMUM_TRANSACTION_HISTORY = 1_024
 const DEFAULT_MAXIMUM_DEMAND_CELL_COUNT = 1_000_000
 const DEFAULT_MAXIMUM_REGION_COUNT = 4_096
@@ -52,6 +53,7 @@ export type HybridTransactionalRegionalRouterOptions = {
   readonly deterministicSeed?: number
   readonly maximumSearchExpansions?: number
   readonly maximumActivationRings?: number
+  readonly maximumRegionRequeues?: number
   readonly maximumTransactionHistory?: number
   readonly maximumDemandCellCount?: number
   readonly maximumRegionCount?: number
@@ -246,6 +248,8 @@ export class HybridTransactionalRegionalRouter {
       maximumActivationRings:
         this.options.maximumActivationRings ??
         DEFAULT_MAXIMUM_ACTIVATION_RINGS,
+      maximumRegionRequeues:
+        this.options.maximumRegionRequeues ?? DEFAULT_MAXIMUM_REGION_REQUEUES,
       maximumTransactionHistory:
         this.options.maximumTransactionHistory ??
         DEFAULT_MAXIMUM_TRANSACTION_HISTORY,

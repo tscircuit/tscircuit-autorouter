@@ -22,6 +22,7 @@ import type {
   RegionSearchSpec,
 } from "./worker-protocol"
 import { HYBRID_WORKER_PROTOCOL_VERSION } from "./worker-protocol"
+import { areConnectionTerminalsConnectedByCopper } from "./coupled-route-constraints"
 
 export function buildHybridWorkerBoardContext({
   problem,
@@ -124,8 +125,8 @@ export function buildRegionJob({
   maximumActivationRings: number
   deterministicSeed: number
 }): RegionJob {
-  const searches = routePlan.corridors.map(
-    (corridor, corridorIndex): RegionSearchSpec => {
+  const searches = routePlan.corridors.flatMap(
+    (corridor, corridorIndex): RegionSearchSpec[] => {
       const connection = getConnection({
         problem,
         connectionName: corridor.connectionName,
@@ -151,7 +152,20 @@ export function buildRegionJob({
       const existingViaCount = copperSnapshot.vias.filter(
         (via) => via.connectionName === connection.connectionName,
       ).length
-      return Object.freeze({
+      if (
+        (routePlan.routeObjectKind === "signal" ||
+          routePlan.routeObjectKind === "power") &&
+        areConnectionTerminalsConnectedByCopper({
+          compiledRules: problem.compiledRules,
+          copperSnapshot,
+          connection,
+          firstTerminalId: startTerminal.terminalId,
+          secondTerminalId: endTerminal.terminalId,
+        })
+      ) {
+        return []
+      }
+      return [Object.freeze({
         searchId: `${routePlan.routeObjectId}:search:${corridorIndex}`,
         connectionRuleReference: connection.connectionName,
         start: Object.freeze({
@@ -172,7 +186,7 @@ export function buildRegionJob({
           0,
           connection.viaBudget.hardMaximum - existingViaCount,
         ),
-      })
+      })]
     },
   )
   const matchingContracts = boundaryContracts.filter(

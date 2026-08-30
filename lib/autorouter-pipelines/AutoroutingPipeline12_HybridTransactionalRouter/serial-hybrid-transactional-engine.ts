@@ -1,4 +1,8 @@
 import { negotiateBoundaryContracts } from "./boundary-contract-negotiator"
+import {
+  createExpandedRegionRequeue,
+  isEnvelopeRecoveryEligible,
+} from "./bounded-region-recovery"
 import { buildHybridWorkerBoardContext, buildRegionJob } from "./build-worker-messages"
 import { finalizeCoupledRoutes } from "./coupled-route-finalizer"
 import { DemandCapacityField } from "./demand-capacity-field"
@@ -17,7 +21,10 @@ import type {
   RegionCacheKey,
   RegionCacheSnapshot,
 } from "./content-addressed-region-cache"
-import type { HybridRoutingCoreRuntime } from "./rust-core-protocol"
+import type {
+  HybridCoreFailureCode,
+  HybridRoutingCoreRuntime,
+} from "./rust-core-protocol"
 import type {
   SerialHybridEngineArtifacts,
   SerialHybridEngineResult,
@@ -38,6 +45,7 @@ export type SerialHybridEngineConfiguration = {
   readonly deterministicSeed: number
   readonly maximumSearchExpansions: number
   readonly maximumActivationRings: number
+  readonly maximumRegionRequeues: number
   readonly maximumTransactionHistory: number
   readonly maximumDemandCellCount: number
   readonly maximumRegionCount: number
@@ -137,72 +145,96 @@ export async function runSerialHybridTransactionalEngine({
           message: `region references missing route plan ${routeObjectId}`,
         })
       }
-      const attemptStart = performance.now()
+      let activeRegion = region
+      let requeueIndex = 0
+      let attemptElapsedMs = 0
       let candidate: RegionCandidateResult
-      try {
-        candidate = await routeRegionPlan({
-          problem,
-          routePlan,
-          region,
-          boundaryContracts,
-          copperStore,
-          configuration,
-        })
-      } catch (error) {
+      while (true) {
+        const attemptStart = performance.now()
+        try {
+          candidate = await routeRegionPlan({
+            problem,
+            routePlan,
+            region: activeRegion,
+            boundaryContracts,
+            copperStore,
+            configuration,
+          })
+        } catch (error) {
+          attempts.push(
+            createAttempt({
+              region: activeRegion,
+              routePlan,
+              attemptIndex: attempts.length,
+              requeueIndex,
+              solveTimeMs: performance.now() - attemptStart,
+              outcome: "failed",
+              rejectionReason: getErrorMessage(error),
+            }),
+          )
+          return createFailedResult({
+            topologyPlan,
+            demandField,
+            regionGraph,
+            boundaryContracts,
+            copperStore,
+            attempts,
+            cache: getCacheMetrics(),
+            failedRegionId: regionId,
+            message: getErrorMessage(error),
+          })
+        }
+        attemptElapsedMs = performance.now() - attemptStart
+        if (candidate.status !== "failed") break
+        const nextRegion =
+          requeueIndex < configuration.maximumRegionRequeues &&
+          isEnvelopeRecoveryEligible({
+            failureCode: candidate.failureCode,
+            coreFailureCode: candidate.coreFailureCode,
+          })
+            ? createExpandedRegionRequeue({
+                region: activeRegion,
+                boardBounds: problem.compiledRules.boardBounds,
+                requeueIndex: requeueIndex + 1,
+              })
+            : undefined
         attempts.push(
           createAttempt({
-            region,
+            region: activeRegion,
             routePlan,
             attemptIndex: attempts.length,
-            solveTimeMs: performance.now() - attemptStart,
-            outcome: "failed",
-            rejectionReason: getErrorMessage(error),
-          }),
-        )
-        return createFailedResult({
-          topologyPlan,
-          demandField,
-          regionGraph,
-          boundaryContracts,
-          copperStore,
-          attempts,
-          cache: getCacheMetrics(),
-          failedRegionId: regionId,
-          message: getErrorMessage(error),
-        })
-      }
-      if (candidate.status === "failed") {
-        attempts.push(
-          createAttempt({
-            region,
-            routePlan,
-            attemptIndex: attempts.length,
-            solveTimeMs: performance.now() - attemptStart,
+            requeueIndex,
+            solveTimeMs: attemptElapsedMs,
             outcome: "failed",
             rejectionReason: candidate.message,
           }),
         )
-        return createIncompleteResult({
-          topologyPlan,
-          demandField,
-          regionGraph,
-          boundaryContracts,
-          copperStore,
-          attempts,
-          cache: getCacheMetrics(),
-          failedRegionId: regionId,
-          unresolvedRegionIds: scheduledRegionIds.slice(scheduledIndex),
-          message: candidate.message,
-        })
+        if (!nextRegion) {
+          return createIncompleteResult({
+            topologyPlan,
+            demandField,
+            regionGraph,
+            boundaryContracts,
+            copperStore,
+            attempts,
+            cache: getCacheMetrics(),
+            failedRegionId: regionId,
+            unresolvedRegionIds: scheduledRegionIds.slice(scheduledIndex),
+            message: candidate.message,
+          })
+        }
+        activeRegion = nextRegion
+        requeueIndex += 1
       }
       const commit = copperStore.commit(candidate.delta)
       if (commit.status !== "committed") {
         attempts.push(
           createAttempt({
-            region,
+            region: activeRegion,
             routePlan,
             attemptIndex: attempts.length,
-            solveTimeMs: performance.now() - attemptStart,
+            requeueIndex,
+            solveTimeMs: attemptElapsedMs,
             outcome: "rejected",
             rejectionReason: commit.rejection.message,
             transactionId: candidate.delta.transactionId,
@@ -244,10 +276,11 @@ export async function runSerialHybridTransactionalEngine({
       }
       attempts.push(
         createAttempt({
-          region,
+          region: activeRegion,
           routePlan,
           attemptIndex: attempts.length,
-          solveTimeMs: performance.now() - attemptStart,
+          requeueIndex,
+          solveTimeMs: attemptElapsedMs,
           outcome: "committed",
           transactionId: candidate.delta.transactionId,
           source: candidate.source,
@@ -341,6 +374,7 @@ function createFinalizationAttempt(
     transferredBytes: 0,
     returnedBytes: 0,
     work: delta.work,
+    requeueIndex: 0,
     wasStaleRevalidation: false,
     outcome: "committed",
     transactionId: delta.transactionId,
@@ -354,7 +388,12 @@ type RegionCandidateResult =
       readonly source: "worker" | "cache"
       readonly cacheKey?: RegionCacheKey
     }
-  | { readonly status: "failed"; readonly message: string }
+  | {
+      readonly status: "failed"
+      readonly failureCode: "unknown_rule_reference" | "core_search_failed"
+      readonly coreFailureCode?: HybridCoreFailureCode
+      readonly message: string
+    }
 
 async function routeRegionPlan({
   problem,
@@ -428,13 +467,19 @@ async function routeRegionPlan({
         source: "worker",
         cacheKey,
       }
-    : { status: "failed", message: execution.message }
+    : {
+        status: "failed",
+        failureCode: execution.code,
+        coreFailureCode: execution.coreFailureCode,
+        message: execution.message,
+      }
 }
 
 function createAttempt({
   region,
   routePlan,
   attemptIndex,
+  requeueIndex,
   solveTimeMs,
   outcome,
   rejectionReason,
@@ -446,6 +491,7 @@ function createAttempt({
   region: DynamicRoutingRegion
   routePlan: GlobalRouteObjectPlan
   attemptIndex: number
+  requeueIndex: number
   solveTimeMs: number
   outcome: RegionAttemptRecord["outcome"]
   rejectionReason?: string
@@ -468,6 +514,7 @@ function createAttempt({
     transferredBytes: 0,
     returnedBytes: 0,
     work,
+    requeueIndex,
     wasStaleRevalidation,
     outcome,
     rejectionReason,
@@ -606,6 +653,8 @@ function validateConfiguration(
     positiveIntegerValues.some(
       (value) => !Number.isSafeInteger(value) || value <= 0,
     ) ||
+    !Number.isSafeInteger(configuration.maximumRegionRequeues) ||
+    configuration.maximumRegionRequeues < 0 ||
     !Number.isSafeInteger(configuration.deterministicSeed) ||
     configuration.deterministicSeed < 0
   ) {

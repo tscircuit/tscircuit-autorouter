@@ -115,8 +115,8 @@ function compareRegionPriority(
 ): number {
   return (
     second.criticality - first.criticality ||
+    first.estimatedSolverWork - second.estimatedSolverWork ||
     second.congestionPressure - first.congestionPressure ||
-    second.estimatedSolverWork - first.estimatedSolverWork ||
     first.estimatedMemoryBytes - second.estimatedMemoryBytes ||
     first.regionId.localeCompare(second.regionId)
   )

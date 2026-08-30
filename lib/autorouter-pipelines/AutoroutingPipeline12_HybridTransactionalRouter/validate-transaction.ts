@@ -164,6 +164,19 @@ function validateDeltaShape(
       message: "transaction identity fields must not be empty",
     })
   }
+  const authorizedOwnerRouteObjectIds = getAuthorizedOwnerRouteObjectIds(delta)
+  if (
+    authorizedOwnerRouteObjectIds.some((ownerRouteObjectId) =>
+      !ownerRouteObjectId.trim(),
+    ) ||
+    new Set(authorizedOwnerRouteObjectIds).size !==
+      authorizedOwnerRouteObjectIds.length
+  ) {
+    return reject(context, {
+      code: "invalid_delta",
+      message: "transaction owner route object identifiers must be nonempty and unique",
+    })
+  }
   if (
     !Number.isSafeInteger(delta.baseCopperVersion) ||
     delta.baseCopperVersion < 0 ||
@@ -257,6 +270,27 @@ function validateOwnership(
     const ownershipRejection = validateRemovalOwnership({ context, primitive })
     if (ownershipRejection) return ownershipRejection
   }
+  for (const additionalOwnerRouteObjectId of
+    delta.additionalOwnerRouteObjectIds ?? []) {
+    const participates = [
+      ...context.addedPrimitives,
+      ...existingPrimitives.filter((primitive) =>
+        context.removedCopperIds.has(primitive.copperId),
+      ),
+    ].some(
+      (primitive) =>
+        primitive.ownership.mutability === "mutable" &&
+        primitive.ownership.ownerRouteObjectIds.includes(
+          additionalOwnerRouteObjectId,
+        ),
+    )
+    if (!participates) {
+      return reject(context, {
+        code: "ownership_violation",
+        message: `additional transaction owner ${additionalOwnerRouteObjectId} does not own any affected copper`,
+      })
+    }
+  }
   return undefined
 }
 
@@ -269,13 +303,15 @@ function validateRemovalOwnership({
 }): TransactionRejection | undefined {
   if (
     primitive.ownership.mutability === "immutable" ||
-    !primitive.ownership.ownerRouteObjectIds.includes(
-      context.delta.ownerRouteObjectId,
+    !primitive.ownership.ownerRouteObjectIds.some((ownerRouteObjectId) =>
+      getAuthorizedOwnerRouteObjectIds(context.delta).includes(
+        ownerRouteObjectId,
+      ),
     )
   ) {
     return reject(context, {
       code: "ownership_violation",
-      message: `${primitive.copperId} is not removable by ${context.delta.ownerRouteObjectId}`,
+      message: `${primitive.copperId} is not removable by an authorized transaction owner`,
       conflictingCopperIds: [primitive.copperId],
       connectionNames: [primitive.connectionName],
     })
@@ -338,11 +374,13 @@ function validatePrimitiveCommon({
   if (
     primitive.ownership.mutability !== "mutable" ||
     primitive.ownership.ownerRouteObjectIds.length !== 1 ||
-    primitive.ownership.ownerRouteObjectIds[0] !== context.delta.ownerRouteObjectId
+    !getAuthorizedOwnerRouteObjectIds(context.delta).includes(
+      primitive.ownership.ownerRouteObjectIds[0]!,
+    )
   ) {
     return reject(context, {
       code: "ownership_violation",
-      message: `new copper ${primitive.copperId} must be owned only by the proposing route object`,
+      message: `new copper ${primitive.copperId} must be owned only by an authorized proposing route object`,
       conflictingCopperIds: [primitive.copperId],
       connectionNames: [connection.connectionName],
     })
@@ -378,6 +416,15 @@ function validatePrimitiveCommon({
     })
   }
   return undefined
+}
+
+function getAuthorizedOwnerRouteObjectIds(
+  delta: HybridTransactionDelta,
+): readonly string[] {
+  return [
+    delta.ownerRouteObjectId,
+    ...(delta.additionalOwnerRouteObjectIds ?? []),
+  ]
 }
 
 function validateSegmentRules({
@@ -588,7 +635,7 @@ function validateObstacles(
         ) {
           return reject(context, {
             code: "obstacle_clearance_violation",
-            message: `${primitive.copperId} overlaps a connected pad while via-in-pad is disabled`,
+            message: `${primitive.copperId} at (${primitive.x}, ${primitive.y}) is ${distance}mm from connected pad ${obstacle.obstacleId ?? "unnamed"}; via-in-pad is disabled`,
             conflictingCopperIds: [primitive.copperId],
             connectionNames: [primitive.connectionName],
           })
@@ -677,13 +724,28 @@ function validateTerminalEffects(
     ...context.addedPrimitives,
   ]
   for (const terminalId of context.delta.connectivityEffects.connectedTerminalIds) {
-    const connection = context.compiledRules.connections.find((candidate) =>
-      candidate.terminals.some((terminal) => terminal.terminalId === terminalId),
-    )
+    const terminalConnections = context.compiledRules.connections
+      .filter(
+        (candidate) =>
+        candidate.terminals.some(
+          (terminal) => terminal.terminalId === terminalId,
+        ) &&
+        [...effectConnections].some((effectConnectionName) =>
+          candidate.electricallyConnectedConnectionNames.includes(
+            effectConnectionName,
+          ),
+        ),
+      )
+      .sort(
+        (first, second) =>
+          Number(effectConnections.has(second.connectionName)) -
+          Number(effectConnections.has(first.connectionName)),
+      )
+    const connection = terminalConnections[0]
     const terminal = connection?.terminals.find(
       (candidate) => candidate.terminalId === terminalId,
     )
-    if (!connection || !terminal || !effectConnections.has(connection.connectionName)) {
+    if (!connection || !terminal) {
       return reject(context, {
         code: "terminal_connectivity_violation",
         message: `terminal effect ${terminalId} does not belong to a declared affected connection`,
