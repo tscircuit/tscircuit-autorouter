@@ -18,7 +18,6 @@ import {
 import { findClosestPointToABCWithinBounds } from "lib/utils/findClosestPointToABCWithinBounds"
 import { findPointToGetAroundCircle } from "lib/utils/findPointToGetAroundCircle"
 import { getIntraNodeCrossings } from "lib/utils/getIntraNodeCrossings"
-import { snapToNearestBound } from "lib/utils/snapToNearestBound"
 import {
   calculateTraversalPercentages,
   pointToAngle,
@@ -113,6 +112,12 @@ export class SingleTransitionCrossingRouteSolver extends BaseSolver {
       return
     }
 
+    this.routes = this.routes.map((route) => ({
+      ...route,
+      A: this.snapPortPointToBounds(route.A),
+      B: this.snapPortPointToBounds(route.B),
+    }))
+
     const [routeA, routeB] = this.routes
 
     // Check if one route has a layer transition and the other doesn't
@@ -184,13 +189,38 @@ export class SingleTransitionCrossingRouteSolver extends BaseSolver {
    */
   private getPortPointBoundsPosition(
     point: Point,
-    epsilon = 1e-6,
   ): PortPointBoundsPosition {
     return classifyPointInBounds({
       point,
       bounds: this.bounds,
-      epsilon,
     })
+  }
+
+  private snapPortPointToBounds(point: Point): Point {
+    const clampedX = clamp(point.x, this.bounds.minX, this.bounds.maxX)
+    const clampedY = clamp(point.y, this.bounds.minY, this.bounds.maxY)
+    const candidates = [
+      {
+        distance: Math.abs(point.y - this.bounds.maxY),
+        point: { ...point, x: clampedX, y: this.bounds.maxY },
+      },
+      {
+        distance: Math.abs(point.x - this.bounds.maxX),
+        point: { ...point, x: this.bounds.maxX, y: clampedY },
+      },
+      {
+        distance: Math.abs(point.y - this.bounds.minY),
+        point: { ...point, x: clampedX, y: this.bounds.minY },
+      },
+      {
+        distance: Math.abs(point.x - this.bounds.minX),
+        point: { ...point, x: this.bounds.minX, y: clampedY },
+      },
+    ]
+
+    return candidates.reduce((closest, candidate) =>
+      candidate.distance < closest.distance ? candidate : closest,
+    ).point
   }
 
   /**
