@@ -1,12 +1,8 @@
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { GraphicsObject } from "graphics-debug"
 import { getGlobalInMemoryCache } from "lib/cache/setupGlobalCaches"
-import type {
-  CapacityMeshNode,
-  CapacityMeshNodeId,
-} from "lib/types/capacity-mesh-types"
+import type { CapacityMeshNodeId } from "lib/types/capacity-mesh-types"
 import { combineVisualizations } from "lib/utils/combineVisualizations"
-import { getIntraNodeCrossingsUsingCircle } from "lib/utils/getIntraNodeCrossingsUsingCircle"
 import { mergeRouteSegments } from "lib/utils/mergeRouteSegments"
 import type {
   HighDensityIntraNodeRoute,
@@ -14,7 +10,6 @@ import type {
 } from "../../types/high-density-types"
 import type { Obstacle } from "../../types/srj-types"
 import { BaseSolver } from "../BaseSolver"
-import { calculateNodeProbabilityOfFailure } from "../UnravelSolver/calculateCrossingProbabilityOfFailure"
 import {
   DEFAULT_MAX_GROWTH_ATTEMPTS,
   GrowShrinkHighDensityIntraNodeSolver,
@@ -44,44 +39,6 @@ const connectionLabel = (
     .filter(Boolean)
     .join("\n")
 
-export const getInitialScaleFactorForHighPressureNode = (
-  node: NodeWithPortPoints,
-  nodePf: number,
-  crossings?: ReturnType<typeof getIntraNodeCrossingsUsingCircle>,
-  layerCount = node.availableZ?.length ?? 2,
-): number => {
-  const pairCount =
-    node.portPointsInPairs?.length ??
-    new Set(node.portPoints.map((portPoint) => portPoint.connectionName)).size
-  const chordCrossings = crossings
-    ? crossings.numSameLayerCrossings + crossings.numTransitionPairCrossings
-    : 0
-  const totalCrossings = crossings
-    ? chordCrossings + crossings.numEntryExitLayerChanges
-    : 0
-  const area = node.width * node.height
-  const pairDensity = area > 0 ? pairCount / area : 0
-
-  const availableLayerCount = node.availableZ?.length ?? layerCount
-  const hasExtremeCrossingPressure =
-    availableLayerCount === 2 &&
-    totalCrossings >= 30 &&
-    chordCrossings >= 16 &&
-    nodePf >= 0.2 &&
-    pairDensity >= 0.1
-  const hasHighEstimatedFailurePressure = nodePf >= 1 && pairCount >= 9
-  const hasDenseFailurePressure =
-    nodePf >= 0.7 && pairCount >= 14 && pairDensity >= 0.8
-
-  // False positives change the first physical scale attempted, so these
-  // deliberately high-precision signals only skip the known-dead 1x search.
-  return hasExtremeCrossingPressure ||
-    hasHighEstimatedFailurePressure ||
-    hasDenseFailurePressure
-    ? 2
-    : 1
-}
-
 export class HighDensitySolver extends BaseSolver {
   override getSolverName(): string {
     return "HighDensitySolver"
@@ -105,10 +62,9 @@ export class HighDensitySolver extends BaseSolver {
   growShrinkMaxInnerIterationsPerGrowthAttempt?: number
   growShrinkFallbackToInvalidGeometryOnFailure: boolean
   growShrinkSolutionValidator?: (routes: HighDensityIntraNodeRoute[]) => boolean
+  validateDuplicateConnectionPairs: boolean
+  prioritizeNextGenerationSolvers: boolean
   captureSearchDebug: boolean
-  enableHighDensityA08: boolean
-  enableHighDensityA01FineGrid: boolean
-  preGrowHighPressureNodes: boolean
 
   failedSolvers: HighDensityIntraNodeSolver[]
   activeSubSolver: HighDensityIntraNodeSolver | null = null
@@ -143,10 +99,9 @@ export class HighDensitySolver extends BaseSolver {
     growShrinkMaxInnerIterationsPerGrowthAttempt,
     growShrinkFallbackToInvalidGeometryOnFailure,
     growShrinkSolutionValidator,
+    validateDuplicateConnectionPairs,
+    prioritizeNextGenerationSolvers,
     captureSearchDebug,
-    enableHighDensityA08,
-    enableHighDensityA01FineGrid,
-    preGrowHighPressureNodes,
   }: {
     nodePortPoints: NodeWithPortPoints[]
     colorMap?: Record<string, string>
@@ -164,10 +119,9 @@ export class HighDensitySolver extends BaseSolver {
     growShrinkSolutionValidator?: (
       routes: HighDensityIntraNodeRoute[],
     ) => boolean
+    validateDuplicateConnectionPairs?: boolean
+    prioritizeNextGenerationSolvers?: boolean
     captureSearchDebug?: boolean
-    enableHighDensityA08?: boolean
-    enableHighDensityA01FineGrid?: boolean
-    preGrowHighPressureNodes?: boolean
     nodePfById?:
       | Map<CapacityMeshNodeId, number | null>
       | Record<string, number | null>
@@ -192,11 +146,11 @@ export class HighDensitySolver extends BaseSolver {
     this.growShrinkFallbackToInvalidGeometryOnFailure =
       growShrinkFallbackToInvalidGeometryOnFailure ?? false
     this.growShrinkSolutionValidator = growShrinkSolutionValidator
+    this.validateDuplicateConnectionPairs =
+      validateDuplicateConnectionPairs ?? false
+    this.prioritizeNextGenerationSolvers =
+      prioritizeNextGenerationSolvers ?? false
     this.captureSearchDebug = captureSearchDebug ?? true
-    this.enableHighDensityA08 = enableHighDensityA08 ?? false
-    this.enableHighDensityA01FineGrid =
-      enableHighDensityA01FineGrid ?? false
-    this.preGrowHighPressureNodes = preGrowHighPressureNodes ?? false
     this.MAX_ITERATIONS =
       10e6 *
       this.effort *
@@ -341,58 +295,6 @@ export class HighDensitySolver extends BaseSolver {
       (this.stats.highDensityResizeCount ?? 0) + solver.growthAttempts
   }
 
-  private getInitialScaleFactor(node: NodeWithPortPoints): number {
-    if (!this.preGrowHighPressureNodes) return 1
-
-    let crossings:
-      | ReturnType<typeof getIntraNodeCrossingsUsingCircle>
-      | undefined
-    let nodePf = this.nodePfById.get(node.capacityMeshNodeId)
-    if (nodePf === undefined || nodePf === null) {
-      crossings = getIntraNodeCrossingsUsingCircle(node)
-      const capacityNode: CapacityMeshNode = {
-        capacityMeshNodeId: node.capacityMeshNodeId,
-        center: node.center,
-        width: node.width,
-        height: node.height,
-        layer: "",
-        availableZ:
-          node.availableZ ??
-          Array.from({ length: this.layerCount }, (_, z) => z),
-      }
-      nodePf = calculateNodeProbabilityOfFailure(
-        capacityNode,
-        crossings.numSameLayerCrossings,
-        crossings.numEntryExitLayerChanges,
-        crossings.numTransitionPairCrossings,
-      )
-      this.nodePfById.set(node.capacityMeshNodeId, nodePf)
-    }
-
-    const scaleFactorWithoutCrossings =
-      getInitialScaleFactorForHighPressureNode(
-        node,
-        nodePf,
-        crossings,
-        this.layerCount,
-      )
-    if (
-      scaleFactorWithoutCrossings > 1 ||
-      (node.availableZ?.length ?? this.layerCount) !== 2 ||
-      crossings
-    ) {
-      return scaleFactorWithoutCrossings
-    }
-
-    crossings = getIntraNodeCrossingsUsingCircle(node)
-    return getInitialScaleFactorForHighPressureNode(
-      node,
-      nodePf,
-      crossings,
-      this.layerCount,
-    )
-  }
-
   private getSolvedRoutesWithTerminalPcbPortIds(
     solver: HighDensityIntraNodeSolver,
   ): HighDensityIntraNodeRoute[] {
@@ -494,10 +396,9 @@ export class HighDensitySolver extends BaseSolver {
       fallbackToInvalidGeometryOnFailure:
         this.growShrinkFallbackToInvalidGeometryOnFailure,
       growShrinkSolutionValidator: this.growShrinkSolutionValidator,
+      validateDuplicateConnectionPairs: this.validateDuplicateConnectionPairs,
+      prioritizeNextGenerationSolvers: this.prioritizeNextGenerationSolvers,
       captureSearchDebug: this.captureSearchDebug,
-      enableHighDensityA08: this.enableHighDensityA08,
-      enableHighDensityA01FineGrid: this.enableHighDensityA01FineGrid,
-      initialScaleFactor: this.getInitialScaleFactor(node),
     }
     this.activeSubSolver = this.useGrowShrinkHighDensityIntraNodeSolver
       ? new GrowShrinkHighDensityIntraNodeSolver(intraNodeSolverParams)

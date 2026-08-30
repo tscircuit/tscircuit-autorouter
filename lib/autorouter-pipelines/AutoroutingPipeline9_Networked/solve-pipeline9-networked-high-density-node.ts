@@ -42,10 +42,9 @@ export function solvePipeline9NetworkedHighDensityNode(
     useGrowShrinkHighDensityIntraNodeSolver: true,
     preserveTerminalPcbPortIds: false,
     growShrinkFallbackToInvalidGeometryOnFailure: false,
+    validateDuplicateConnectionPairs: true,
+    prioritizeNextGenerationSolvers: true,
     captureSearchDebug: false,
-    enableHighDensityA08: true,
-    enableHighDensityA01FineGrid: true,
-    preGrowHighPressureNodes: true,
   })
 
   solver.solve()

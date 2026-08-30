@@ -1,6 +1,10 @@
 import { expect, test } from "bun:test"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/autorouting-pipeline-solver9-preloaded-trace-graph"
 import type { SimpleRouteJson } from "lib/types"
+import { RELAXED_DRC_OPTIONS } from "lib/testing/drcPresets"
+import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
+import { getDrcErrors } from "lib/testing/getDrcErrors"
+import { createPcbBoardElement } from "lib/testing/utils/convertToCircuitJson"
 import simpleRouteJson from "../../fixtures/bug-reports/bugreport96-full-gameboy-no-breakout/bugreport96-full-gameboy-no-breakout.srj.json" with {
   type: "json",
 }
@@ -36,6 +40,17 @@ test("Pipeline9 routes the full Game Boy Advance parent directly to MCU pads", (
       ?.getUpdatedFixedHdRoutes()
       .some((route) => route.connectionName === "source_trace_0_fixed_70_0"),
   ).toBeTrue()
+  const { circuitJson } = evaluateRelaxedDrc({
+    inputSrj: srj,
+    srjWithPointPairs: solver.srjWithPointPairs!,
+    routedTraces: solver.getOutputSimplifiedPcbTraces(),
+  })
+  const { errors } = getDrcErrors(
+    [createPcbBoardElement(srj), ...circuitJson],
+    RELAXED_DRC_OPTIONS,
+  )
+  // The stacked base produces 34 relaxed-DRC errors on this legacy fixture.
+  expect(errors.length).toBeLessThanOrEqual(34)
   expect(getLastStepSvg(solver.visualize())).toMatchSvgSnapshot(
     import.meta.path,
     { svgName: "routed" },

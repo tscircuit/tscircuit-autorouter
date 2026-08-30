@@ -21,7 +21,6 @@ test("the fine-grid A01 candidate solves SRJ18 sample002 cmn_279 without growth"
     obstacles: [],
     layerCount: 2,
     effort: 1,
-    enableHighDensityA01FineGrid: true,
     maxGrowthAttempts: 3,
     fallbackToInvalidGeometryOnFailure: false,
   })

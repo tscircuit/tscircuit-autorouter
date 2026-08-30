@@ -145,9 +145,9 @@ test("Pipeline9 projects ordinary node obstacles and connectivity without changi
     useGrowShrinkHighDensityIntraNodeSolver: true,
     preserveTerminalPcbPortIds: false,
     growShrinkFallbackToInvalidGeometryOnFailure: false,
+    validateDuplicateConnectionPairs: true,
+    prioritizeNextGenerationSolvers: true,
     captureSearchDebug: false,
-    enableHighDensityA08: true,
-    enableHighDensityA01FineGrid: true,
   })
   fullInputSolver.solve()
   const projectedResult = solvePipeline9NetworkedHighDensityNode({

@@ -4,6 +4,12 @@ import type {
   PortPoint,
 } from "lib/types/high-density-types"
 
+const getRootConnectionName = (value: {
+  connectionName: string
+  rootConnectionName?: string
+}): string =>
+  value.rootConnectionName ?? value.connectionName.replace(/_mst\d+$/, "")
+
 const pointKey = (point: { x: number; y: number; z: number }) =>
   `${point.x.toFixed(6)},${point.y.toFixed(6)},${point.z}`
 
@@ -70,8 +76,7 @@ export const repairDisconnectedSameRootPortPoints = (
   for (const [connectionName, portPoints] of portPointsByConnection) {
     if (portPoints.length <= 1) continue
 
-    const rootConnectionName =
-      portPoints[0]?.rootConnectionName ?? connectionName
+    const rootConnectionName = getRootConnectionName(portPoints[0]!)
     const targetPortKeys = new Set(portPoints.map(pointKey))
     let connectedKeys = getConnectedPointKeysForConnection(
       repairedRoutes,
@@ -85,8 +90,7 @@ export const repairDisconnectedSameRootPortPoints = (
 
       const bridgeRoute = repairedRoutes.find((route) => {
         if (
-          (route.rootConnectionName ?? route.connectionName) !==
-          rootConnectionName
+          getRootConnectionName(route) !== rootConnectionName
         ) {
           return false
         }
