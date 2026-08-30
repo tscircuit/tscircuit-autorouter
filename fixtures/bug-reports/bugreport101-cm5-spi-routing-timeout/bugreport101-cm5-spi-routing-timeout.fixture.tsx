@@ -30,6 +30,8 @@ export default () => {
           ...opts,
           cacheProvider: null,
           effort: 1,
+          enforceAvailableSegmentPointCapacity: true,
+          tinyPipelineStepsPerIteration: 1_000,
         })
       }
     />

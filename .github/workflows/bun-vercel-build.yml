@@ -24,4 +24,6 @@ jobs:
         run: bun install
 
       - name: Run vercel build
+        env:
+          NODE_OPTIONS: --max-old-space-size=6144
         run: bun run vercel-build

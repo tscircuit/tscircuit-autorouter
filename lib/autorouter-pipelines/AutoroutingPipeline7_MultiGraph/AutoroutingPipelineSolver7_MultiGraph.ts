@@ -91,6 +91,8 @@ interface CapacityMeshSolverOptions {
    * shared edge is congested.
    */
   enforceAvailableSegmentPointCapacity?: boolean
+  /** Number of tiny-hypergraph steps advanced per Pipeline 7 iteration. */
+  tinyPipelineStepsPerIteration?: number
 }
 export type AutoroutingPipelineSolverOptions = CapacityMeshSolverOptions
 
@@ -488,6 +490,8 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
             connections,
             layerCount: cms.srj.layerCount,
             effort: cms.effort,
+            tinyPipelineStepsPerIteration:
+              cms.opts.tinyPipelineStepsPerIteration,
             enforceAvailableSegmentPointCapacity:
               cms.opts.enforceAvailableSegmentPointCapacity,
             preserveTerminalPcbPortIds: true,
