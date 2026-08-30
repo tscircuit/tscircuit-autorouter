@@ -52,7 +52,7 @@
     "@tscircuit/krt-wasm": "^0.1.0",
     "@tscircuit/length-matching-solver": "git+https://github.com/tscircuit/length-matching-solver.git#0c7f84810aceb70f9517c274116071f2af1ace6b",
     "@tscircuit/math-utils": "^0.0.36",
-    "@tscircuit/power-trace-expander": "git+https://github.com/tscircuit/power-trace-expander.git#69e92efc8c3dec35f9c71ba58b3cdaefffd1c257",
+    "@tscircuit/power-trace-expander": "git+https://github.com/tscircuit/power-trace-expander.git#4ac455fa25f1146e428cbe4d1786e77e3c1a85a6",
     "@tscircuit/rectdiff": "git+https://github.com/tscircuit/rectdiff.git#262f1b7e2c70021785f0ccdbe8e2562f827c7dbf",
     "@tscircuit/solver-utils": "^0.0.16",
     "@types/bun": "^1.2.23",
@@ -97,7 +97,7 @@
     "zdwiel-dataset": "git+https://github.com/dwiel/tscircuit-benchmark.git#be36518b5bf51755dae92c230061ab3cf4e3e063",
     "high-density-repair01": "git+https://github.com/tscircuit/high-density-repair01.git#8eaa775e7c7a2c32c12a82da4edef22477549027",
     "high-density-repair02": "https://codeload.github.com/tscircuit/high-density-repair02/tar.gz/2afc0cbba3bf2f7eb6b9cd33615d21e9ad9352d4",
-    "high-density-repair03": "git+https://github.com/tscircuit/high-density-repair03.git#a9654302bdfdbc93222f1f66ce5d67ccd6ecd891",
+    "high-density-repair03": "git+https://github.com/tscircuit/high-density-repair03.git#049c546fe456d813fb901df63906db079f5a4e3f",
     "@tscircuit/high-density-a01": "git+https://github.com/tscircuit/high-density-a01.git#9a3a3d",
     "@tscircuit/high-density-b01": "git+https://github.com/tscircuit/high-density-b01.git#f974f97a77f27bc32b1fe5a8b3bccb7ba023e0b7"
   },

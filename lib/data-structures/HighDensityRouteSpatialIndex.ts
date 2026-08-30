@@ -24,6 +24,22 @@ export type HighDensityIntraNodeRoute = {
 }
 export type HighDensityRoute = HighDensityIntraNodeRoute
 
+type SegmentConflictQueryKey = string
+type RouteConnectionName = string
+
+type SegmentConflict = {
+  readonly conflictingRoute: HighDensityRoute
+  readonly distance: number
+}
+
+type SegmentConflictResult = readonly SegmentConflict[]
+
+export interface HighDensityRouteSpatialIndexOptions {
+  cellSize?: number
+  /** Reuse exact segment-conflict queries until addRoute or removeRoute. */
+  memoizeSegmentConflictQueries?: boolean
+}
+
 // --- Utility Functions (Unchanged) ---
 
 const getSegmentBounds = (segment: Segment) => {
@@ -102,12 +118,26 @@ export class HighDensityRouteSpatialIndex {
   private viaBuckets: Map<BucketCoordinate, StoredVia[]> // New: Store vias
   private CELL_SIZE: number
   private maximumCopperRadius = 0
+  private readonly segmentConflictsByQueryKey?: Map<
+    SegmentConflictQueryKey,
+    SegmentConflictResult
+  >
 
-  constructor(routes: HighDensityRoute[], cellSize: number = 1.0) {
+  constructor(
+    routes: HighDensityRoute[],
+    cellSizeOrOptions: number | HighDensityRouteSpatialIndexOptions = {},
+  ) {
     // console.time("HighDensityRouteSpatialIndex Constructor");
+    const options: HighDensityRouteSpatialIndexOptions =
+      typeof cellSizeOrOptions === "number"
+        ? { cellSize: cellSizeOrOptions }
+        : cellSizeOrOptions
     this.segmentBuckets = new Map()
     this.viaBuckets = new Map() // Initialize via buckets
-    this.CELL_SIZE = cellSize
+    this.CELL_SIZE = options.cellSize ?? 1.0
+    this.segmentConflictsByQueryKey = options.memoizeSegmentConflictQueries
+      ? new Map()
+      : undefined
     const epsilon = 1e-9 // For segment boundary checks
 
     for (const route of routes) {
@@ -201,7 +231,14 @@ export class HighDensityRouteSpatialIndex {
     segmentStart: Point, // Keep Point for original Z data if needed elsewhere
     segmentEnd: Point,
     margin: number, // Minimum required clearance
-  ): Array<{ conflictingRoute: HighDensityRoute; distance: number }> {
+  ): SegmentConflictResult {
+    let queryKey: SegmentConflictQueryKey | undefined
+    if (this.segmentConflictsByQueryKey) {
+      queryKey = `${segmentStart.x}:${segmentStart.y}:${segmentStart.z}|${segmentEnd.x}:${segmentEnd.y}:${segmentEnd.z}|${margin}`
+      const cachedConflicts = this.segmentConflictsByQueryKey.get(queryKey)
+      if (cachedConflicts !== undefined) return cachedConflicts
+    }
+
     const querySegment: Segment = [segmentStart, segmentEnd]
     const bounds = getSegmentBounds(querySegment)
 
@@ -223,7 +260,7 @@ export class HighDensityRouteSpatialIndex {
 
     // Use a map to store the minimum squared distance found *per route*
     const conflictingRouteData = new Map<
-      string,
+      RouteConnectionName,
       { route: HighDensityRoute; minDistSq: number }
     >()
     const checkedSegments = new Set<string>() // Store segmentId
@@ -316,10 +353,7 @@ export class HighDensityRouteSpatialIndex {
     }
 
     // --- Convert map to results ---
-    const results: Array<{
-      conflictingRoute: HighDensityRoute
-      distance: number
-    }> = []
+    const results: SegmentConflict[] = []
     for (const data of conflictingRouteData.values()) {
       // Distance reported is centerline-to-centerline (or point)
       results.push({
@@ -328,6 +362,13 @@ export class HighDensityRouteSpatialIndex {
       })
     }
 
+    if (queryKey !== undefined) {
+      const immutableResults: SegmentConflictResult = Object.freeze(
+        results.map((result) => Object.freeze(result)),
+      )
+      this.segmentConflictsByQueryKey?.set(queryKey, immutableResults)
+      return immutableResults
+    }
     return results
   }
 
@@ -336,6 +377,8 @@ export class HighDensityRouteSpatialIndex {
    * @param connectionName The connection name of the route to remove.
    */
   removeRoute(connectionName: string): void {
+    this.segmentConflictsByQueryKey?.clear()
+
     // Remove segments belonging to this route
     for (const [bucketKey, segments] of this.segmentBuckets) {
       const filtered = segments.filter(
@@ -366,6 +409,8 @@ export class HighDensityRouteSpatialIndex {
    * @param route The route to add.
    */
   addRoute(route: HighDensityRoute): void {
+    this.segmentConflictsByQueryKey?.clear()
+
     if (!route || !route.connectionName) {
       console.warn("Skipping route with missing data:", route)
       return
@@ -468,7 +513,7 @@ export class HighDensityRouteSpatialIndex {
     const maxIndexY = Math.floor((searchMaxY + epsilon) / this.CELL_SIZE)
 
     const conflictingRouteData = new Map<
-      string,
+      RouteConnectionName,
       { route: HighDensityRoute; minDistSq: number }
     >()
     const checkedSegments = new Set<string>()

@@ -11,6 +11,8 @@ import { getJumpersGraphics } from "lib/utils/getJumperGraphics"
 import { createObjectsWithZLayers } from "lib/utils/createObjectsWithZLayers"
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 
+type PcbPortId = string
+
 export interface UselessViaRemovalSolverInput {
   unsimplifiedHdRoutes: HighDensityRoute[]
   /** Routed copper that participates in collision checks but is never changed. */
@@ -30,7 +32,10 @@ export interface UselessViaRemovalSolverInput {
    * Physical copper-layer indices on which each PCB-port terminal can directly
    * accept a route endpoint without a via, keyed by PCB port id.
    */
-  terminalLayerIndicesByPcbPortId?: ReadonlyMap<string, ReadonlySet<number>>
+  terminalLayerIndicesByPcbPortId?: ReadonlyMap<
+    PcbPortId,
+    ReadonlySet<number>
+  >
 }
 
 export class UselessViaRemovalSolver extends BaseSolver {
@@ -62,10 +67,13 @@ export class UselessViaRemovalSolver extends BaseSolver {
       "flatbush",
       this.input.obstacles,
     )
-    this.hdRouteSHI = new HighDensityRouteSpatialIndex([
-      ...this.unsimplifiedHdRoutes,
-      ...(input.otherHdRoutes ?? []),
-    ])
+    this.hdRouteSHI = new HighDensityRouteSpatialIndex(
+      [
+        ...this.unsimplifiedHdRoutes,
+        ...(input.otherHdRoutes ?? []),
+      ],
+      { memoizeSegmentConflictQueries: true },
+    )
   }
 
   _step() {
