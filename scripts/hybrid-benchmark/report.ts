@@ -280,7 +280,7 @@ function evaluateGates(
     gate(
       "No via-count regression on shared solved samples",
       sharedSolved.length > 0 && !viaRegression,
-      `${sharedSolved.length} shared solved sample(s) compared`,
+      `${sharedSolved.length} shared solved complete-board total(s) compared`,
     ),
     gate(
       "Real parallel work evidence",
