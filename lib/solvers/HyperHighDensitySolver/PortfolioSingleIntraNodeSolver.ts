@@ -8,6 +8,7 @@ import {
   NodeWithPortPoints,
 } from "lib/types/high-density-types"
 import { CachedIntraNodeRouteSolver } from "../HighDensitySolver/CachedIntraNodeRouteSolver"
+import { HighDensitySolverB02IntraNodeAdapter } from "../HighDensitySolver/HighDensitySolverB02IntraNodeAdapter"
 import { IntraNodeRouteSolver } from "../HighDensitySolver/IntraNodeSolver"
 import { MultiHeadPolyLineIntraNodeSolver2 } from "../HighDensitySolver/MultiHeadPolyLineIntraNodeSolver/MultiHeadPolyLineIntraNodeSolver2_Optimized"
 import { MultiHeadPolyLineIntraNodeSolver3 } from "../HighDensitySolver/MultiHeadPolyLineIntraNodeSolver/MultiHeadPolyLineIntraNodeSolver3_ViaPossibilitiesSolverIntegration"
@@ -41,6 +42,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
   | SingleLayerNoDifferentRootIntersectionsIntraNodeSolver
   | HighDensityA03Solver
   | TwoChordLaneIntraNodeSolver
+  | HighDensitySolverB02IntraNodeAdapter
 > {
   override getSolverName(): string {
     return "PortfolioSingleIntraNodeSolver"
@@ -122,6 +124,17 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     this.MIN_SUBSTEPS = 100
   }
 
+  private getHighDensityB02Params() {
+    return {
+      nodeWithPortPoints: this.nodeWithPortPoints,
+      traceWidth: this.constructorParams.traceWidth,
+      viaDiameter: this.constructorParams.viaDiameter,
+      clearance: INTRA_NODE_COPPER_CLEARANCE,
+      obstacles: this.constructorParams.obstacles,
+      effort: this.effort,
+    }
+  }
+
   getCombinationDefs() {
     const isTwoChordLaneSolverApplicable =
       this.nodeScaleFactor === 1 &&
@@ -132,9 +145,19 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
         clearance: INTRA_NODE_COPPER_CLEARANCE,
         obstacles: this.constructorParams.obstacles,
       })
+    const isHighDensityB02Applicable =
+      this.nodeScaleFactor === 1 &&
+      // Keep automatic selection in the four-layer domain validated by the
+      // Bug 101 fixtures. The adapter remains directly usable across B02's
+      // broader structural input range.
+      new Set(this.nodeWithPortPoints.availableZ ?? []).size === 4 &&
+      HighDensitySolverB02IntraNodeAdapter.isApplicable(
+        this.getHighDensityB02Params(),
+      )
 
     return [
       ...(isTwoChordLaneSolverApplicable ? [["twoChordLane"]] : []),
+      ...(isHighDensityB02Applicable ? [["highDensityB02"]] : []),
       ["throughObstacle"],
       ["singleLayerNoDifferentRootIntersections"],
       ["multiHeadPolyLine"],
@@ -156,6 +179,14 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
         possibleValues: [
           {
             TWO_CHORD_LANE: true,
+          },
+        ],
+      },
+      {
+        name: "highDensityB02",
+        possibleValues: [
+          {
+            HIGH_DENSITY_B02: true,
           },
         ],
       },
@@ -434,6 +465,12 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
         clearance: INTRA_NODE_COPPER_CLEARANCE,
         obstacles: this.constructorParams.obstacles,
       }) as any
+    }
+
+    if (hyperParameters.HIGH_DENSITY_B02) {
+      return new HighDensitySolverB02IntraNodeAdapter(
+        this.getHighDensityB02Params(),
+      ) as any
     }
 
     if (hyperParameters.SINGLE_LAYER_NO_DIFFERENT_ROOT_INTERSECTIONS) {
