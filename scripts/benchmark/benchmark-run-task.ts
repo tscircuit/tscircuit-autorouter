@@ -53,16 +53,15 @@ type SolverInstance = PipelineStageTimingSource & {
   highDensityRouteSolver?: {
     iterations?: number
     stats?: Record<string, unknown>
+    waitForAllRemoteRequests?: () => Promise<void>
   }
   timeSpentOnPhase: Record<string, number>
 }
 
 type SolverOptions = {
   effort?: number
-  cacheProvider?: null
-  hdCacheBaseUrl?: string
-  hdCacheMaxBatchItems?: number
-  hdCacheMaxBatchBodyBytes?: number
+  hdCache2ServerUrl?: string
+  hdCache2CacheVersion?: string
 }
 
 type SolverConstructor = new (
@@ -102,7 +101,6 @@ const countTraceVias = (traces: SimplifiedPcbTrace[]) =>
 
 export const getBenchmarkSolverOptions = (
   scenario: SimpleRouteJson,
-  solverName?: string,
 ): SolverOptions | undefined => {
   const rawEffort = (scenario as SimpleRouteJson & { effort?: number }).effort
   const effort =
@@ -110,42 +108,13 @@ export const getBenchmarkSolverOptions = (
       ? rawEffort
       : undefined
 
-  const options: SolverOptions = {}
-  if (effort !== undefined) {
-    options.effort = effort
+  if (effort === undefined) {
+    return undefined
   }
 
-  if (
-    solverName === "AutoroutingPipelineSolver9_PreloadedTraceGraph" ||
-    solverName === "AutoroutingPipelineSolver9_Networked"
-  ) {
-    options.cacheProvider = null
+  return {
+    effort,
   }
-
-  if (solverName === "AutoroutingPipelineSolver9_Networked") {
-    const cacheUrl = process.env.PIPELINE9_NETWORKED_BENCHMARK_CACHE_URL?.trim()
-    if (cacheUrl) options.hdCacheBaseUrl = cacheUrl
-    options.hdCacheMaxBatchItems = getPositiveIntegerEnvironmentOverride(
-      "PIPELINE9_NETWORKED_BENCHMARK_MAX_BATCH_ITEMS",
-    )
-    options.hdCacheMaxBatchBodyBytes = getPositiveIntegerEnvironmentOverride(
-      "PIPELINE9_NETWORKED_BENCHMARK_MAX_BATCH_BODY_BYTES",
-    )
-  }
-
-  return Object.keys(options).length === 0 ? undefined : options
-}
-
-const getPositiveIntegerEnvironmentOverride = (
-  name: string,
-): number | undefined => {
-  const rawValue = process.env[name]?.trim()
-  if (!rawValue) return undefined
-  const value = Number(rawValue)
-  if (!Number.isInteger(value) || value <= 0) {
-    throw new Error(`${name} must be a positive integer, received ${rawValue}`)
-  }
-  return value
 }
 
 const getSolverConstructor = (solverName: string): SolverConstructor => {
@@ -161,11 +130,24 @@ const getSolverConstructor = (solverName: string): SolverConstructor => {
 }
 
 export const createSolverForTask = (task: BenchmarkTask): SolverInstance => {
-  const SolverConstructor = getSolverConstructor(task.solverName)
-  return new SolverConstructor(
-    task.scenario,
-    getBenchmarkSolverOptions(task.scenario, task.solverName),
-  )
+  const constructorName = task.solverConstructorName ?? task.solverName
+  const SolverConstructor = getSolverConstructor(constructorName)
+  const scenarioOptions = getBenchmarkSolverOptions(task.scenario)
+  if (!task.networkedCachePass) {
+    return new SolverConstructor(task.scenario, scenarioOptions)
+  }
+
+  const cacheVersion = process.env.HD_CACHE2_CACHE_VERSION
+  if (!cacheVersion) {
+    throw new Error(
+      "Pipeline9_Networked benchmark requires HD_CACHE2_CACHE_VERSION",
+    )
+  }
+  return new SolverConstructor(task.scenario, {
+    ...scenarioOptions,
+    hdCache2ServerUrl: process.env.HD_CACHE2_SERVER_URL,
+    hdCache2CacheVersion: cacheVersion,
+  })
 }
 
 const getErrorMessage = (error: unknown): string | undefined => {
@@ -321,51 +303,58 @@ const getRoutingBenchmarkMetrics = (
   solver: SolverInstance,
 ): RoutingBenchmarkMetrics => {
   const highDensityStats = solver.highDensityRouteSolver?.stats
-  const getCounter = (name: string): number | undefined => {
-    const value = highDensityStats?.[name]
-    return typeof value === "number" && Number.isFinite(value)
-      ? value
+  const networkedHighDensity =
+    highDensityStats &&
+    typeof highDensityStats.remoteRequestsStarted === "number"
+      ? {
+          remoteRequestsStarted: highDensityStats.remoteRequestsStarted,
+          remoteRequestsCompleted: Number(
+            highDensityStats.remoteRequestsCompleted ?? 0,
+          ),
+          remoteBatchCacheMisses: Number(
+            highDensityStats.remoteBatchCacheMisses ?? 0,
+          ),
+          remoteSingleRequestsStarted: Number(
+            highDensityStats.remoteSingleRequestsStarted ?? 0,
+          ),
+          remoteCacheHits: Number(highDensityStats.remoteCacheHits ?? 0),
+          remoteSolverResults: Number(
+            highDensityStats.remoteSolverResults ?? 0,
+          ),
+          remoteTransportFallbacks: Number(
+            highDensityStats.remoteTransportFallbacks ?? 0,
+          ),
+        }
       : undefined
-  }
-  const fallbackReasonCounts = highDensityStats?.remoteFallbackReasonCounts
   return {
     tinyHypergraph:
       solver.portPointPathingSolver?.getSolveGraphBenchmarkMetrics?.(),
     highDensityIterations: solver.highDensityRouteSolver?.iterations,
-    nodeCount: getCounter("nodeCount"),
-    solvedNodeCount: getCounter("solvedNodeCount"),
-    regularNodeCount: getCounter("regularNodeCount"),
-    b01NodeCount: getCounter("b01NodeCount"),
-    fallbackNodeCount: getCounter("fallbackNodeCount"),
-    promotedFallbackAttemptCount: getCounter("promotedFallbackAttemptCount"),
-    remoteRequestsStarted: getCounter("remoteRequestsStarted"),
-    remoteRequestsCompleted: getCounter("remoteRequestsCompleted"),
-    remoteBatchRequestsStarted: getCounter("remoteBatchRequestsStarted"),
-    remoteBatchRequestsCompleted: getCounter("remoteBatchRequestsCompleted"),
-    remoteBatchItemsStarted: getCounter("remoteBatchItemsStarted"),
-    remoteBatchBodyBytesStarted: getCounter("remoteBatchBodyBytesStarted"),
-    remoteBatchMaxBodyBytes: getCounter("remoteBatchMaxBodyBytes"),
-    remoteBatchCacheMisses: getCounter("remoteBatchCacheMisses"),
-    remoteSingleRequestsStarted: getCounter("remoteSingleRequestsStarted"),
-    remoteBatchInvalidLines: getCounter("remoteBatchInvalidLines"),
-    remoteBatchUnknownRequestIds: getCounter("remoteBatchUnknownRequestIds"),
-    remoteBatchDuplicateRequestIds: getCounter(
-      "remoteBatchDuplicateRequestIds",
-    ),
-    remoteCacheHits: getCounter("remoteCacheHits"),
-    remoteSolverResults: getCounter("remoteSolverResults"),
-    remoteSolvedResults: getCounter("remoteSolvedResults"),
-    remoteFailedResults: getCounter("remoteFailedResults"),
-    remoteTransportFallbacks: getCounter("remoteTransportFallbacks"),
-    remoteLogicalTimeoutFallbacks: getCounter("remoteLogicalTimeoutFallbacks"),
-    remoteFallbackReasonCounts:
-      fallbackReasonCounts &&
-      typeof fallbackReasonCounts === "object" &&
-      !Array.isArray(fallbackReasonCounts)
-        ? (fallbackReasonCounts as Record<string, number>)
-        : undefined,
     phaseTimeMs: solver.timeSpentOnPhase,
+    networkedHighDensity,
   }
+}
+
+const getNetworkedBenchmarkValidationError = (
+  task: BenchmarkTask,
+  solver: SolverInstance,
+): string | undefined => {
+  if (!task.networkedCachePass) return undefined
+  const stats = getRoutingBenchmarkMetrics(solver).networkedHighDensity
+  if (!stats) return "Pipeline9_Networked did not expose remote cache metrics"
+  if (stats.remoteTransportFallbacks > 0) {
+    return `Pipeline9_Networked used ${stats.remoteTransportFallbacks} local transport fallback(s)`
+  }
+  if (
+    task.networkedCachePass === "hot" &&
+    (stats.remoteBatchCacheMisses > 0 ||
+      stats.remoteSingleRequestsStarted > 0 ||
+      stats.remoteSolverResults > 0 ||
+      stats.remoteCacheHits !== stats.remoteRequestsStarted)
+  ) {
+    return `Pipeline9_Networked hot pass was not fully cached (${stats.remoteCacheHits}/${stats.remoteRequestsStarted} cache hit(s), ${stats.remoteBatchCacheMisses} batch miss(es), ${stats.remoteSingleRequestsStarted} single solve(s), ${stats.remoteSolverResults} solver result(s))`
+  }
+  return undefined
 }
 
 const solveWithProgress = async (
@@ -494,6 +483,20 @@ export const runTask = async (
   }
 
   const elapsedTimeMs = performance.now() - start
+  if (task.networkedCachePass) {
+    try {
+      await solver.highDensityRouteSolver?.waitForAllRemoteRequests?.()
+      const networkedBenchmarkValidationError =
+        getNetworkedBenchmarkValidationError(task, solver)
+      if (networkedBenchmarkValidationError) {
+        throw new Error(networkedBenchmarkValidationError)
+      }
+    } catch (error) {
+      solver.solved = false
+      solveError = getErrorMessage(error)
+    }
+  }
+
   const didSolve = Boolean(solver.solved)
   const routingMetrics = getRoutingBenchmarkMetrics(solver)
   let stageTimingStatus: "complete" | "partial" = "partial"

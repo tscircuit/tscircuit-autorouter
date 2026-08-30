@@ -23,20 +23,13 @@ export {
   AutoroutingPipelineSolver7_MultiGraph as AutoroutingPipelineSolver,
 } from "./autorouter-pipelines/AutoroutingPipeline7_MultiGraph/AutoroutingPipelineSolver7_MultiGraph"
 export { AutoroutingPipelineSolver8 } from "./autorouter-pipelines/AutoroutingPipeline8/AutoroutingPipelineSolver8"
-export { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "./autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/autorouting-pipeline-solver9-preloaded-trace-graph"
+export { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "./autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
 export {
   AutoroutingPipelineSolver9_Networked,
   type AutoroutingPipelineSolver9NetworkedOptions,
-} from "./autorouter-pipelines/AutoroutingPipeline9_Networked/autorouting-pipeline-solver9-networked"
-export { AUTOROUTER_VERSION } from "./autorouter-pipelines/AutoroutingPipeline9_Networked/autorouter-version"
-export {
-  DEFAULT_PIPELINE9_NETWORKED_CACHE_URL,
-  DEFAULT_PIPELINE9_NETWORKED_MAX_BATCH_BODY_BYTES,
-  DEFAULT_PIPELINE9_NETWORKED_MAX_BATCH_ITEMS,
-  DEFAULT_PIPELINE9_NETWORKED_TIMEOUT_MS,
-  DEFAULT_PIPELINE9_NETWORKED_TRANSPORT_TIMEOUT_MS,
-  type Pipeline9NetworkedFallbackReason,
-} from "./autorouter-pipelines/AutoroutingPipeline9_Networked/pipeline9-networked-high-density-solver"
+} from "./autorouter-pipelines/AutoroutingPipeline9_Networked/AutoroutingPipelineSolver9_Networked"
+export { AUTOROUTER_VERSION } from "./autorouter-pipelines/AutoroutingPipeline9_Networked/autorouterVersion"
+export { DEFAULT_HD_CACHE2_SERVER_URL } from "./autorouter-pipelines/AutoroutingPipeline9_Networked/Pipeline9NetworkedHighDensitySolver"
 export type {
   Pipeline9NetworkedCacheSource,
   Pipeline9NetworkedHighDensityNodeInput,
@@ -47,8 +40,9 @@ export type {
   Pipeline9NetworkedSolveBatchResult,
   Pipeline9NetworkedSolveRequest,
   Pipeline9NetworkedSolveResponse,
-} from "./autorouter-pipelines/AutoroutingPipeline9_Networked/pipeline9-networked-types"
-export { solvePipeline9NetworkedHighDensityNode } from "./autorouter-pipelines/AutoroutingPipeline9_Networked/solve-pipeline9-networked-high-density-node"
+} from "./autorouter-pipelines/AutoroutingPipeline9_Networked/pipeline9NetworkedTypes"
+export { PIPELINE9_NETWORKED_SOLVE_POLICY } from "./autorouter-pipelines/AutoroutingPipeline9_Networked/pipeline9NetworkedTypes"
+export { solvePipeline9NetworkedHighDensityNode } from "./autorouter-pipelines/AutoroutingPipeline9_Networked/solvePipeline9NetworkedHighDensityNode"
 export { AutoroutingPipelineSolver10_BgaFanout } from "./autorouter-pipelines/AutoroutingPipeline10_BgaFanout/AutoroutingPipelineSolver10_BgaFanout"
 export { PolyHighDensitySolver } from "./autorouter-pipelines/AutoroutingPipeline6_PolyHypergraph/PolyHighDensitySolver"
 export { PolySingleIntraNodeSolver } from "./autorouter-pipelines/AutoroutingPipeline6_PolyHypergraph/PolySingleIntraNodeSolver"

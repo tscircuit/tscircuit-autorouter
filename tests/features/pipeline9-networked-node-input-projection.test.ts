@@ -1,16 +1,17 @@
 import { expect, test } from "bun:test"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import {
-  normalizePipeline9NodeRootConnectionNames,
+  createPipeline9RegularNodeSolver,
   Pipeline9HighDensitySolver,
-} from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/pipeline9-high-density-solver"
-import { projectPipeline9OrdinaryHighDensityInput } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/project-pipeline9-ordinary-high-density-input"
-import { solvePipeline9NetworkedHighDensityNode } from "lib/autorouter-pipelines/AutoroutingPipeline9_Networked/solve-pipeline9-networked-high-density-node"
-import { HighDensitySolver } from "lib/solvers/HighDensitySolver/HighDensitySolver"
+} from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9HighDensitySolver"
+import { AUTOROUTER_VERSION } from "lib/autorouter-pipelines/AutoroutingPipeline9_Networked/autorouterVersion"
+import { projectPipeline9OrdinaryHighDensityInput } from "lib/autorouter-pipelines/AutoroutingPipeline9_Networked/pipeline9NetworkedInputProjection"
+import { PIPELINE9_NETWORKED_SOLVE_POLICY } from "lib/autorouter-pipelines/AutoroutingPipeline9_Networked/pipeline9NetworkedTypes"
 import type { NodeWithPortPoints } from "lib/types/high-density-types"
 import type { Obstacle } from "lib/types/srj-types"
+import { ExampleHdCache2Server } from "tests/fixtures/example-hd-cache2-server"
 
-test("Pipeline9 projects ordinary node obstacles and connectivity without changing the solve", () => {
+test("Pipeline9 projects ordinary node inputs without changing the HTTP solve", async () => {
   const noiseIds = Array.from({ length: 2_310 }, (_, index) => `noise_${index}`)
   const node: NodeWithPortPoints = {
     capacityMeshNodeId: "cmn_projected",
@@ -131,8 +132,8 @@ test("Pipeline9 projects ordinary node obstacles and connectivity without changi
   const projectedJsonSize = JSON.stringify({ node, ...projection }).length
   expect(projectedJsonSize).toBeLessThan(unprojectedJsonSize / 20)
 
-  const fullInputSolver = new HighDensitySolver({
-    nodePortPoints: [normalizePipeline9NodeRootConnectionNames(node, connMap)],
+  const fullInputSolver = createPipeline9RegularNodeSolver({
+    nodeWithPortPoints: node,
     connMap,
     colorMap: { route_A: "blue", foreign_route: "red" },
     obstacles,
@@ -142,13 +143,11 @@ test("Pipeline9 projects ordinary node obstacles and connectivity without changi
     obstacleMargin: 0.15,
     effort: 1,
     nodePfById: { cmn_projected: 0.1 },
-    useGrowShrinkHighDensityIntraNodeSolver: true,
-    preserveTerminalPcbPortIds: false,
-    growShrinkFallbackToInvalidGeometryOnFailure: false,
-    captureSearchDebug: false,
   })
   fullInputSolver.solve()
-  const projectedResult = solvePipeline9NetworkedHighDensityNode({
+  const projectedInput = {
+    solvePolicy: PIPELINE9_NETWORKED_SOLVE_POLICY,
+    enableRegionalFallback: false,
     nodeWithPortPoints: node,
     connectivityNetMap: projection.connectivityNetMap,
     colorMap: projection.colorMap,
@@ -157,13 +156,34 @@ test("Pipeline9 projects ordinary node obstacles and connectivity without changi
     obstacleMargin: 0.15,
     effort: 1,
     obstacles: projection.obstacles,
+    regionalObstacles: [],
     layerCount: 2,
     nodePf: 0.1,
-  })
+  } as const
+  const server = new ExampleHdCache2Server()
+  let projectedResult: Record<string, unknown>
+  try {
+    const response = await fetch(`${server.url}/solve`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        autorouterVersion: AUTOROUTER_VERSION,
+        input: projectedInput,
+      }),
+    })
+    expect(response.status).toBe(200)
+    projectedResult = (await response.json()) as Record<string, unknown>
+  } finally {
+    await server.close()
+  }
 
   expect(fullInputSolver.solved).toBeTrue()
   expect(projectedResult).toEqual({
+    ok: true,
+    autorouterVersion: AUTOROUTER_VERSION,
+    source: "solver",
     status: "solved",
+    solutionStage: "ordinary",
     routes: fullInputSolver.routes,
   })
 
@@ -182,10 +202,9 @@ test("Pipeline9 projects ordinary node obstacles and connectivity without changi
     enableRegionalFallback: false,
   })
   localPipeline9Solver.step()
-  expect(localPipeline9Solver.activeRegularSolver?.obstacles).toEqual(
-    projection.obstacles,
-  )
+  // Projection is network-only; baseline Pipeline9 keeps its full local input.
+  expect(localPipeline9Solver.activeRegularSolver?.obstacles).toEqual(obstacles)
   expect(localPipeline9Solver.activeRegularSolver?.connMap?.netMap).toEqual(
-    projection.connectivityNetMap,
+    connMap.netMap,
   )
 })

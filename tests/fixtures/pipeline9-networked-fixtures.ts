@@ -1,20 +1,12 @@
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
-import { AUTOROUTER_VERSION } from "lib/autorouter-pipelines/AutoroutingPipeline9_Networked/autorouter-version"
+import { AUTOROUTER_VERSION } from "lib/autorouter-pipelines/AutoroutingPipeline9_Networked/autorouterVersion"
 import {
   Pipeline9NetworkedHighDensitySolver,
   type Pipeline9NetworkedHighDensitySolverParams,
-} from "lib/autorouter-pipelines/AutoroutingPipeline9_Networked/pipeline9-networked-high-density-solver"
-import type {
-  Pipeline9NetworkedHighDensityNodeOutput,
-  Pipeline9NetworkedSolveBatchRequest,
-  Pipeline9NetworkedSolveBatchResult,
-  Pipeline9NetworkedSolveResponse,
-} from "lib/autorouter-pipelines/AutoroutingPipeline9_Networked/pipeline9-networked-types"
-import type { PreloadedHighDensityRoute } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/convert-preloaded-traces-to-hd-routes"
-import type {
-  HighDensityIntraNodeRoute,
-  NodeWithPortPoints,
-} from "lib/types/high-density-types"
+} from "lib/autorouter-pipelines/AutoroutingPipeline9_Networked/Pipeline9NetworkedHighDensitySolver"
+import type { PreloadedHighDensityRoute } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/convertPreloadedTraceToHdRoutes"
+import type { NodeWithPortPoints } from "lib/types/high-density-types"
+import type { Obstacle } from "lib/types/srj-types"
 
 export const createNetworkedNode = ({
   nodeId,
@@ -52,15 +44,30 @@ export const createNetworkedNode = ({
   ],
 })
 
-export const createNetworkedRoute = (
-  node: NodeWithPortPoints,
-): HighDensityIntraNodeRoute => ({
-  connectionName: node.portPoints[0]!.connectionName,
-  traceThickness: 0.15,
-  viaDiameter: 0.3,
-  route: node.portPoints.map(({ x, y, z }) => ({ x, y, z })),
-  vias: [],
-})
+export const createNetworkedCrossingNode = ({
+  nodeId,
+}: {
+  nodeId: string
+}): NodeWithPortPoints => {
+  const portPoints: NodeWithPortPoints["portPoints"] = [
+    { x: -1, y: 0, z: 0, connectionName: "horizontal" },
+    { x: 1, y: 0, z: 0, connectionName: "horizontal" },
+    { x: 0, y: -1, z: 0, connectionName: "vertical" },
+    { x: 0, y: 1, z: 0, connectionName: "vertical" },
+  ]
+  return {
+    capacityMeshNodeId: nodeId,
+    center: { x: 0, y: 0 },
+    width: 2,
+    height: 2,
+    availableZ: [0],
+    portPoints,
+    portPointsInPairs: [
+      [portPoints[0]!, portPoints[1]!],
+      [portPoints[2]!, portPoints[3]!],
+    ],
+  }
+}
 
 export const createNetworkedFixedRoute = (): PreloadedHighDensityRoute => ({
   connectionName: "fixed_foreign",
@@ -75,110 +82,6 @@ export const createNetworkedFixedRoute = (): PreloadedHighDensityRoute => ({
   preloadedTraceIndex: 0,
   preloadedRouteIndex: 0,
 })
-
-export const createNetworkedResponse = (
-  response: Pipeline9NetworkedHighDensityNodeOutput & {
-    autorouterVersion?: string
-    source?: "cache" | "solver"
-  },
-): Response =>
-  new Response(
-    JSON.stringify({
-      ok: true,
-      autorouterVersion: response.autorouterVersion ?? AUTOROUTER_VERSION,
-      source: response.source ?? "cache",
-      ...response,
-    }),
-    {
-      status: 200,
-      headers: { "content-type": "application/json" },
-    },
-  )
-
-export const asNetworkedFetch = (
-  implementation: (
-    input: string | URL | Request,
-    init?: RequestInit,
-  ) => Promise<Response>,
-): typeof fetch =>
-  (async (input: string | URL | Request, init?: RequestInit) => {
-    if (!String(input).replace(/\/+$/, "").endsWith("/solve-batch")) {
-      return implementation(input, init)
-    }
-
-    const batchRequest = JSON.parse(
-      String(init?.body),
-    ) as Pipeline9NetworkedSolveBatchRequest
-    const resultLines = await Promise.all(
-      batchRequest.items.map(async (item) => {
-        const response = await implementation(
-          String(input).replace(/\/solve-batch\/?$/, "/solve"),
-          {
-            ...init,
-            headers: {
-              accept: "application/json",
-              "content-type": "application/json",
-            },
-            body: JSON.stringify({
-              autorouterVersion: batchRequest.autorouterVersion,
-              input: item.input,
-            }),
-          },
-        )
-        const responseText = await response.text()
-        let responseBody: Pipeline9NetworkedSolveResponse
-        try {
-          responseBody = JSON.parse(responseText)
-        } catch {
-          responseBody = {
-            ok: false,
-            message: `Invalid fixture response with status ${response.status}`,
-          }
-        }
-        if (!response.ok && responseBody.ok !== false) {
-          responseBody = {
-            ok: false,
-            message: `Fixture request failed with status ${response.status}`,
-          }
-        }
-        return JSON.stringify({ requestId: item.requestId, ...responseBody })
-      }),
-    )
-    return new Response(`${resultLines.join("\n")}\n`, {
-      status: 200,
-      headers: { "content-type": "application/x-ndjson" },
-    })
-  }) as unknown as typeof fetch
-
-export const asNetworkedBatchFetch = (
-  implementation: (
-    input: string | URL | Request,
-    init?: RequestInit,
-  ) => Promise<Response>,
-): typeof fetch => implementation as unknown as typeof fetch
-
-export const createNetworkedBatchStream = (): {
-  response: Response
-  write: (result: Pipeline9NetworkedSolveBatchResult) => void
-  close: () => void
-} => {
-  const encoder = new TextEncoder()
-  let controller!: ReadableStreamDefaultController<Uint8Array>
-  const body = new ReadableStream<Uint8Array>({
-    start(streamController) {
-      controller = streamController
-    },
-  })
-  return {
-    response: new Response(body, {
-      status: 200,
-      headers: { "content-type": "application/x-ndjson" },
-    }),
-    write: (result) =>
-      controller.enqueue(encoder.encode(`${JSON.stringify(result)}\n`)),
-    close: () => controller.close(),
-  }
-}
 
 export const createDeferred = <T>(): {
   promise: Promise<T>
@@ -196,24 +99,26 @@ export const createDeferred = <T>(): {
 
 export const createNetworkedHighDensitySolver = ({
   nodes,
-  fetchImpl,
+  hdCache2ServerUrl,
+  hdCache2CacheVersion,
   fixedHdRoutes = [],
+  obstacles = [],
   requestTimeoutMs = 1_000,
-  transportTimeoutMs,
-  maxBatchItems,
-  maxBatchBodyBytes,
   enableRegionalFallback = false,
   preserveTerminalPcbPortIds = true,
+  layerCount = 2,
+  traceWidth = 0.15,
 }: {
   nodes: NodeWithPortPoints[]
-  fetchImpl: typeof fetch
+  hdCache2ServerUrl: string
+  hdCache2CacheVersion?: string
   fixedHdRoutes?: PreloadedHighDensityRoute[]
+  obstacles?: Obstacle[]
   requestTimeoutMs?: number
-  transportTimeoutMs?: number
-  maxBatchItems?: number
-  maxBatchBodyBytes?: number
   enableRegionalFallback?: boolean
   preserveTerminalPcbPortIds?: boolean
+  layerCount?: number
+  traceWidth?: number
 }): Pipeline9NetworkedHighDensitySolver => {
   const connectivityNetMap: Record<string, string[]> = {
     root_fixed_foreign: ["root_fixed_foreign", "fixed_foreign"],
@@ -237,21 +142,33 @@ export const createNetworkedHighDensitySolver = ({
         node.portPoints.map((point) => [point.connectionName, "blue"]),
       ),
     ),
-    obstacles: [],
-    layerCount: 2,
+    obstacles,
+    layerCount,
     viaDiameter: 0.3,
-    traceWidth: 0.15,
+    traceWidth,
     obstacleMargin: 0.15,
     effort: 1,
     nodePfById: new Map(nodes.map((node) => [node.capacityMeshNodeId, 0.1])),
     preserveTerminalPcbPortIds,
     enableRegionalFallback,
     autorouterVersion: AUTOROUTER_VERSION,
-    fetchImpl,
+    hdCache2ServerUrl,
+    hdCache2CacheVersion,
     requestTimeoutMs,
-    transportTimeoutMs,
-    maxBatchItems,
-    maxBatchBodyBytes,
   }
   return new Pipeline9NetworkedHighDensitySolver(params)
+}
+
+export const solveNetworkedHighDensitySolver = async (
+  solver: Pipeline9NetworkedHighDensitySolver,
+): Promise<void> => {
+  while (!solver.solved && !solver.failed) {
+    solver.step()
+    const pendingEffects = solver.pendingEffects ?? []
+    if (pendingEffects.length > 0) {
+      await Promise.race(
+        pendingEffects.map((effect) => effect.promise.catch(() => undefined)),
+      )
+    }
+  }
 }

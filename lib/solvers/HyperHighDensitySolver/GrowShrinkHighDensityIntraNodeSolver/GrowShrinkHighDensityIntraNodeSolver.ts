@@ -64,24 +64,16 @@ const scaleRoute = (
   route: HighDensityIntraNodeRoute,
   center: { x: number; y: number },
   scaleFactor: number,
-): HighDensityIntraNodeRoute => {
-  const { jumpers, ...routeWithoutJumpers } = route
-
-  return {
-    ...routeWithoutJumpers,
-    route: route.route.map((point) => scalePoint(point, center, scaleFactor)),
-    vias: route.vias.map((via) => scalePoint(via, center, scaleFactor)),
-    ...(jumpers
-      ? {
-          jumpers: jumpers.map((jumper) => ({
-            ...jumper,
-            start: scalePoint(jumper.start, center, scaleFactor),
-            end: scalePoint(jumper.end, center, scaleFactor),
-          })),
-        }
-      : {}),
-  }
-}
+): HighDensityIntraNodeRoute => ({
+  ...route,
+  route: route.route.map((point) => scalePoint(point, center, scaleFactor)),
+  vias: route.vias.map((via) => scalePoint(via, center, scaleFactor)),
+  jumpers: route.jumpers?.map((jumper) => ({
+    ...jumper,
+    start: scalePoint(jumper.start, center, scaleFactor),
+    end: scalePoint(jumper.end, center, scaleFactor),
+  })),
+})
 
 const routeColors = [
   "#dc2626",

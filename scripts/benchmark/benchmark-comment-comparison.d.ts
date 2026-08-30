@@ -1,5 +1,9 @@
 import type { BenchmarkReport } from "./benchmark-types"
 
+export declare const isNetworkedColdHotReport: (
+  report: BenchmarkReport | null | undefined,
+) => boolean
+
 export type BenchmarkComparisonInput = {
   mainReport: BenchmarkReport | null
   prReport: BenchmarkReport | null

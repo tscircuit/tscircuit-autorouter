@@ -12,7 +12,7 @@ test("GrowShrinkHighDensityIntraNodeSolver shrinks solved routes back to the ori
     failed: false,
     solved: false,
     error: null,
-    solvedRoutes: [{ ...makeScaledRoute(), jumpers: undefined }],
+    solvedRoutes: [makeScaledRoute()],
     step() {
       this.solved = true
     },
@@ -28,5 +28,4 @@ test("GrowShrinkHighDensityIntraNodeSolver shrinks solved routes back to the ori
     { x: 10.5, y: 20, z: 0 },
   ])
   expect(solver.solvedRoutes[0].vias).toEqual([{ x: 10, y: 21 }])
-  expect(Object.hasOwn(solver.solvedRoutes[0], "jumpers")).toBe(false)
 })

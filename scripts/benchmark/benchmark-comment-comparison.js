@@ -110,6 +110,71 @@ const formatCountDelta = (mainValue, prValue) => {
   return `${delta > 0 ? "+" : ""}${delta}`
 }
 
+const NETWORKED_COLD_NAME = "Pipeline9_Networked Cold"
+const NETWORKED_HOT_NAME = "Pipeline9_Networked Hot"
+
+export const isNetworkedColdHotReport = (report) => {
+  if (!Array.isArray(report?.summary)) return false
+  const solverNames = new Set(report.summary.map((row) => row.solverName))
+  return (
+    solverNames.has(NETWORKED_COLD_NAME) && solverNames.has(NETWORKED_HOT_NAME)
+  )
+}
+
+const renderNetworkedColdHotComparison = (report) => {
+  const coldSummary = report.summary.find(
+    (row) => row.solverName === NETWORKED_COLD_NAME,
+  )
+  const hotSummary = report.summary.find(
+    (row) => row.solverName === NETWORKED_HOT_NAME,
+  )
+  const coldTimeouts = getTimeoutCount(report, NETWORKED_COLD_NAME)
+  const hotTimeouts = getTimeoutCount(report, NETWORKED_HOT_NAME)
+  const coldDrcIssues = getDrcIssueCount(report, NETWORKED_COLD_NAME)
+  const hotDrcIssues = getDrcIssueCount(report, NETWORKED_HOT_NAME)
+  const rows = [
+    `| Completion | ${coldSummary.completedRateLabel} | ${hotSummary.completedRateLabel} | ${formatPercentPointDelta(coldSummary.completedRateLabel, hotSummary.completedRateLabel)} |`,
+    `| Relaxed DRC pass | ${coldSummary.relaxedDrcRateLabel} | ${hotSummary.relaxedDrcRateLabel} | ${formatPercentPointDelta(coldSummary.relaxedDrcRateLabel, hotSummary.relaxedDrcRateLabel)} |`,
+    `| DRC issues | ${coldDrcIssues ?? "n/a"} | ${hotDrcIssues ?? "n/a"} | ${formatCountDelta(coldDrcIssues, hotDrcIssues)} |`,
+    `| Timeouts | ${coldTimeouts ?? "n/a"} | ${hotTimeouts ?? "n/a"} | ${formatCountDelta(coldTimeouts, hotTimeouts)} |`,
+  ]
+  for (const percentile of [50, 60, 70, 80, 90, 95]) {
+    const coldTime = getTimePercentile(
+      report,
+      NETWORKED_COLD_NAME,
+      percentile / 100,
+    )
+    const hotTime = getTimePercentile(
+      report,
+      NETWORKED_HOT_NAME,
+      percentile / 100,
+    )
+    rows.push(
+      `| P${percentile} time | ${formatTime(coldTime)} | ${formatTime(hotTime)} | ${formatRelativeDelta(coldTime, hotTime)} |`,
+    )
+  }
+  rows.push(
+    `| Average vias | ${formatAverage(coldSummary.avgVia)} | ${formatAverage(hotSummary.avgVia)} | ${formatRelativeDelta(coldSummary.avgVia, hotSummary.avgVia)} |`,
+  )
+  if (coldSummary.networkCache && hotSummary.networkCache) {
+    rows.push(
+      `| HD cache hits | ${coldSummary.networkCache.cacheHits}/${coldSummary.networkCache.remoteRequests} | ${hotSummary.networkCache.cacheHits}/${hotSummary.networkCache.remoteRequests} | ${formatCountDelta(coldSummary.networkCache.cacheHits, hotSummary.networkCache.cacheHits)} |`,
+      `| HD solver results | ${coldSummary.networkCache.solverResults} | ${hotSummary.networkCache.solverResults} | ${formatCountDelta(coldSummary.networkCache.solverResults, hotSummary.networkCache.solverResults)} |`,
+      `| HD local fallbacks | ${coldSummary.networkCache.localFallbacks} | ${hotSummary.networkCache.localFallbacks} | ${formatCountDelta(coldSummary.networkCache.localFallbacks, hotSummary.networkCache.localFallbacks)} |`,
+    )
+  }
+
+  return [
+    `Dataset: ${report.datasetName} · Scenarios: ${report.scenarioCount} · Effort: ${report.effortLabel}`,
+    "",
+    "| Metric | Cold | Hot | Change |",
+    "| --- | ---: | ---: | ---: |",
+    ...rows,
+    "",
+    "_The cold pass starts with a workflow-unique cache namespace; the hot pass reuses it after the full cold pass and an unmeasured Workers KV propagation interval complete. Negative timing changes are faster._",
+  ]
+}
+
 export const renderBenchmarkComparison = ({
   mainReport,
   prReport,
@@ -122,6 +187,9 @@ export const renderBenchmarkComparison = ({
         ? `${fallbackText.slice(0, maxLength)}\n\n...truncated...`
         : fallbackText
     return ["```", truncated, "```"]
+  }
+  if (isNetworkedColdHotReport(prReport)) {
+    return renderNetworkedColdHotComparison(prReport)
   }
 
   const mainSummaries = new Map(
