@@ -18,7 +18,7 @@ export type PreparedHybridBenchmarkInput = {
 
 const BENCHMARK_VIA_HOLE_DIAMETER_MM = 0.3
 const BENCHMARK_MINIMUM_VIA_PAD_DIAMETER_MM = 0.6
-const BENCHMARK_DEFAULT_CLEARANCE_MM = 0.15
+const BENCHMARK_DEFAULT_CLEARANCE_MM = 0.1
 
 export function prepareHybridBenchmarkInput(
   source: SimpleRouteJson,
@@ -134,7 +134,8 @@ export function createHybridBenchmarkRoutingRules(
     ),
     clearances: Object.freeze({
       traceToTraceMm: clearanceMm,
-      traceToPadEdgeMm: clearanceMm,
+      traceToPadEdgeMm:
+        input.minTraceToPadEdgeClearance ?? clearanceMm,
       viaToTraceEdgeMm:
         input.minViaEdgeToPadEdgeClearance ?? clearanceMm,
       viaToPadEdgeMm:

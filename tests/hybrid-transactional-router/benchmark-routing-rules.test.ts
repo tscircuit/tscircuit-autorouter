@@ -14,6 +14,11 @@ test("creates explicit compilable benchmark rules without downstream defaults", 
   }
   const prepared = prepareHybridBenchmarkInput(sourceWithoutBenchmarkDefaults)
   const routingRules = createHybridBenchmarkRoutingRules(prepared.input)
+  const preparedTraceToPadClearance =
+    prepared.input.minTraceToPadEdgeClearance
+  if (preparedTraceToPadClearance === undefined) {
+    throw new Error("prepared benchmark input is missing trace-to-pad clearance")
+  }
 
   const compiled = compileRoutingRules({
     simpleRouteJson: prepared.input,
@@ -41,5 +46,9 @@ test("creates explicit compilable benchmark rules without downstream defaults", 
     "minViaEdgeToPadEdgeClearance",
     "minBoardEdgeClearance",
   ])
+  expect(prepared.policy.defaultClearanceMm).toBe(0.1)
+  expect(compiled.clearances.traceToPadEdgeMm).toBe(
+    preparedTraceToPadClearance,
+  )
   expect(sourceWithoutBenchmarkDefaults.minViaHoleDiameter).toBeUndefined()
 })

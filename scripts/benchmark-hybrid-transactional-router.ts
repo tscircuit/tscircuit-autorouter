@@ -118,7 +118,7 @@ const report = createHybridBenchmarkReport({
     productionCache: "disabled",
     experimentalCache: "bounded 2048 entries / 128MiB",
     benchmarkInputPolicy:
-      "missing hole=0.3mm, pad=max(0.6mm,hole+2*trace width), clearance=0.15mm",
+      "missing hole=0.3mm, pad=max(0.6mm,hole+2*trace width), clearance=0.10mm",
   }),
 })
 const jsonPath = resolve(outputDirectory, "benchmark-results.json")
