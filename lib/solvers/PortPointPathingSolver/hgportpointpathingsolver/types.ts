@@ -98,6 +98,8 @@ export interface HgPortPointPathingSolverParams {
   inputSolvedRoutes?: SolvedRoutesHg[]
   layerCount: number
   effort: number
+  /** Number of tiny-hypergraph pipeline steps performed per outer solver step. */
+  tinyPipelineStepsPerIteration?: number
   /**
    * Prevent congestion routing from duplicating the available segment points
    * produced for shared edges.

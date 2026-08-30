@@ -1025,6 +1025,7 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
 
 export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
   private tinyPipelineSolver: TinyHyperGraphSectionPipelineWithTerminalNetIds
+  private readonly tinyPipelineStepsPerIteration: number
   private primaryTinyPipelineSolver?: TinyHyperGraphSectionPipelineWithTerminalNetIds
   private alternativeTinyPipelineSolver?: TinyHyperGraphSectionPipelineWithTerminalNetIds
   private alternativeTinyPipelineInput?: TinyHyperGraphSectionPipelineInput
@@ -1047,6 +1048,17 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
 
   constructor(private params: HgPortPointPathingSolverParams) {
     super()
+    const requestedPipelineSteps = params.tinyPipelineStepsPerIteration ?? 1
+    if (
+      !Number.isFinite(requestedPipelineSteps) ||
+      !Number.isInteger(requestedPipelineSteps) ||
+      requestedPipelineSteps <= 0
+    ) {
+      throw new Error(
+        "tinyPipelineStepsPerIteration must be a finite positive integer",
+      )
+    }
+    this.tinyPipelineStepsPerIteration = requestedPipelineSteps
     const tinyRouteConnections = getTinyRouteConnectionsOrThrow(
       params.connections,
     )
@@ -1427,7 +1439,16 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
   }
 
   _step() {
-    this.tinyPipelineSolver.step()
+    for (
+      let stepIndex = 0;
+      stepIndex < this.tinyPipelineStepsPerIteration;
+      stepIndex++
+    ) {
+      this.tinyPipelineSolver.step()
+      if (this.tinyPipelineSolver.solved || this.tinyPipelineSolver.failed) {
+        break
+      }
+    }
 
     if (
       this.candidatePortfolioPhase === "primary" &&
