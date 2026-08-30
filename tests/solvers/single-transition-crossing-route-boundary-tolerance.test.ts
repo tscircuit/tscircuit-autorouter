@@ -1,4 +1,5 @@
 import { expect, test } from "bun:test"
+import { getSvgFromGraphicsObject } from "graphics-debug"
 import { SingleTransitionCrossingRouteSolver } from "lib/solvers/HighDensitySolver/TwoRouteHighDensitySolver/SingleTransitionCrossingRouteSolver"
 import { pointToAngle } from "lib/solvers/HighDensitySolver/TwoRouteHighDensitySolver/calculateSideTraversal"
 import type { NodeWithPortPoints } from "lib/types/high-density-types"
@@ -7,7 +8,7 @@ import {
   classifyPointInBounds,
 } from "lib/utils/classifyPointInBounds"
 
-test("single-transition boundary stages share one tolerance on sides and corners", () => {
+test("single-transition boundary stages share one tolerance on sides and corners", async () => {
   const bounds = { minX: 0, maxX: 10, minY: 0, maxY: 10 }
   const acceptedBoundaryOffsetMm = BOUNDARY_COORDINATE_TOLERANCE_MM * 0.5
   const rejectedBoundaryOffsetMm = BOUNDARY_COORDINATE_TOLERANCE_MM * 1.1
@@ -157,6 +158,20 @@ test("single-transition boundary stages share one tolerance on sides and corners
       ),
     ).toBe(true)
   }
+
+  const visualSolver = new SingleTransitionCrossingRouteSolver({
+    nodeWithPortPoints: sideNodeWithPortPoints,
+  })
+  visualSolver.solve()
+
+  await expect(
+    getSvgFromGraphicsObject(visualSolver.visualize(), {
+      backgroundColor: "#0d1b2a",
+      svgWidth: 640,
+      svgHeight: 480,
+      hideInlineLabels: false,
+    }),
+  ).toMatchSvgSnapshot(import.meta.path, { tolerance: 0 })
 
   const outsideToleranceSolver = new SingleTransitionCrossingRouteSolver({
     nodeWithPortPoints: {
