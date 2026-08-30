@@ -10,6 +10,8 @@ import {
   type HybridTransactionalRegionalRouterOptions,
 } from "./hybrid-transactional-regional-router"
 import type { HybridRouterResult } from "./types"
+import type { HybridRoutingVisualization } from "./visualization"
+import type { SerialHybridEngineResult } from "./serial-engine-types"
 
 export type AutoroutingPipelineSolver12HybridTransactionalRouterOptions =
   HybridTransactionalRegionalRouterOptions
@@ -81,6 +83,14 @@ export class AutoroutingPipelineSolver12_HybridTransactionalRouter extends BaseS
 
   getResult(): HybridRouterResult | undefined {
     return this.result
+  }
+
+  getVisualizations(): readonly HybridRoutingVisualization[] {
+    return this.router.getVisualizations()
+  }
+
+  getLastEngineResult(): SerialHybridEngineResult | undefined {
+    return this.router.getLastEngineResult()
   }
 
   override getOutput(): SimpleRouteJson {

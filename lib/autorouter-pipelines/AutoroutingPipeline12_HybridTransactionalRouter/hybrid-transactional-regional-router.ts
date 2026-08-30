@@ -14,6 +14,10 @@ import type {
   HybridRoutingRulesInput,
 } from "./types"
 import { createHybridRouterMetrics } from "./work-metrics"
+import {
+  createHybridRoutingVisualizations,
+  type HybridRoutingVisualization,
+} from "./visualization"
 
 const DEFAULT_MAXIMUM_SEARCH_EXPANSIONS = 250_000
 const DEFAULT_MAXIMUM_ACTIVATION_RINGS = 4
@@ -221,6 +225,14 @@ export class HybridTransactionalRegionalRouter {
 
   getLastEngineResult(): SerialHybridEngineResult | undefined {
     return this.lastEngineResult
+  }
+
+  getVisualizations(): readonly HybridRoutingVisualization[] {
+    if (!this.lastEngineResult) return Object.freeze([])
+    return createHybridRoutingVisualizations({
+      input: this.input,
+      engineResult: this.lastEngineResult,
+    })
   }
 
   private runEngine(

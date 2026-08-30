@@ -60,6 +60,10 @@ export type {
   HybridRouterResult,
   HybridRoutingRulesInput,
 } from "./autorouter-pipelines/AutoroutingPipeline12_HybridTransactionalRouter/types"
+export {
+  createHybridRoutingVisualizations,
+  type HybridRoutingVisualization,
+} from "./autorouter-pipelines/AutoroutingPipeline12_HybridTransactionalRouter/visualization"
 export { PolyHighDensitySolver } from "./autorouter-pipelines/AutoroutingPipeline6_PolyHypergraph/PolyHighDensitySolver"
 export { PolySingleIntraNodeSolver } from "./autorouter-pipelines/AutoroutingPipeline6_PolyHypergraph/PolySingleIntraNodeSolver"
 export { PolyIntraNodeSolver } from "./autorouter-pipelines/AutoroutingPipeline6_PolyHypergraph/PolyIntraNodeSolver"
