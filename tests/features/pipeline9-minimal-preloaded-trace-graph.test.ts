@@ -199,9 +199,15 @@ test("Pipeline9 owns copied stages with minimal preloaded-trace changes", () => 
       }
     ).otherHdRoutes?.length,
   ).toBeGreaterThan(0)
-  expect(solver.postRepairTraceSimplificationSolver?.solved).toBeTrue()
+  const postRepairTraceSimplificationSolver =
+    solver.postRepairTraceSimplificationSolver
+  expect(postRepairTraceSimplificationSolver).toBeDefined()
+  if (!postRepairTraceSimplificationSolver) {
+    throw new Error("Pipeline9 did not run post-repair trace simplification")
+  }
+  expect(postRepairTraceSimplificationSolver.solved).toBeTrue()
   expect(solver._getOutputHdRoutes()).toBe(
-    solver.postRepairTraceSimplificationSolver?.simplifiedHdRoutes,
+    postRepairTraceSimplificationSolver.simplifiedHdRoutes,
   )
   const outputTraceIds = solver
     .getOutputSimplifiedPcbTraces()

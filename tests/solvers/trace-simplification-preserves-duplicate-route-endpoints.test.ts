@@ -49,7 +49,5 @@ test("trace simplification preserves endpoints for duplicate connection names", 
       route.route[0],
       route.route.at(-1),
     ]),
-  ).toEqual(
-    routes.map((route) => [route.route[0], route.route.at(-1)]),
-  )
+  ).toEqual(routes.map((route) => [route.route[0], route.route.at(-1)]))
 })
