@@ -14,6 +14,7 @@ import { MultiHeadPolyLineIntraNodeSolver3 } from "../HighDensitySolver/MultiHea
 import { SingleLayerNoDifferentRootIntersectionsIntraNodeSolver } from "../HighDensitySolver/SingleLayerNoDifferentRootIntersectionsIntraNodeSolver"
 import { SingleTransitionIntraNodeSolver } from "../HighDensitySolver/SingleTransitionIntraNodeSolver"
 import { SingleTransitionThroughObstacleIntraNodeSolver } from "../HighDensitySolver/SingleTransitionThroughObstacleIntraNodeSolver"
+import { TwoChordLaneIntraNodeSolver } from "../HighDensitySolver/TwoChordLaneIntraNodeSolver"
 import { SingleTransitionCrossingRouteSolver } from "../HighDensitySolver/TwoRouteHighDensitySolver/SingleTransitionCrossingRouteSolver"
 import { TwoCrossingRoutesHighDensitySolver } from "../HighDensitySolver/TwoRouteHighDensitySolver/TwoCrossingRoutesHighDensitySolver"
 import {
@@ -28,6 +29,8 @@ import { repairDisconnectedSameRootPortPoints } from "./repairDisconnectedSameRo
 // derived exploration budget or exhausts all of its candidates.
 const ORDERING_SHUFFLE_SEEDS = Array.from({ length: 6 }, (_, seed) => seed)
 
+const INTRA_NODE_COPPER_CLEARANCE = 0.1
+
 /** Coordinates a fitness-scheduled portfolio of intra-node routing solvers. */
 export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolver<
   | IntraNodeRouteSolver
@@ -37,6 +40,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
   | SingleTransitionThroughObstacleIntraNodeSolver
   | SingleLayerNoDifferentRootIntersectionsIntraNodeSolver
   | HighDensityA03Solver
+  | TwoChordLaneIntraNodeSolver
 > {
   override getSolverName(): string {
     return "PortfolioSingleIntraNodeSolver"
@@ -47,6 +51,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
   nodeWithPortPoints: NodeWithPortPoints
   connMap?: ConnectivityMap
   effort: number
+  nodeScaleFactor: number
   adaptiveSearchExpanded = false
 
   private getSolvedSegmentCount(solver: unknown): number | null {
@@ -103,6 +108,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
   constructor(
     opts: ConstructorParameters<typeof CachedIntraNodeRouteSolver>[0] & {
       effort?: number
+      nodeScaleFactor?: number
     },
   ) {
     super()
@@ -110,13 +116,25 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     this.connMap = opts.connMap
     this.constructorParams = opts
     this.effort = opts.effort ?? 1
+    this.nodeScaleFactor = opts.nodeScaleFactor ?? 1
     this.MAX_ITERATIONS = 20_000_000 * this.effort
     this.GREEDY_MULTIPLIER = 5
     this.MIN_SUBSTEPS = 100
   }
 
   getCombinationDefs() {
+    const isTwoChordLaneSolverApplicable =
+      this.nodeScaleFactor === 1 &&
+      TwoChordLaneIntraNodeSolver.isApplicable({
+        nodeWithPortPoints: this.nodeWithPortPoints,
+        traceWidth: this.constructorParams.traceWidth,
+        viaDiameter: this.constructorParams.viaDiameter,
+        clearance: INTRA_NODE_COPPER_CLEARANCE,
+        obstacles: this.constructorParams.obstacles,
+      })
+
     return [
+      ...(isTwoChordLaneSolverApplicable ? [["twoChordLane"]] : []),
       ["throughObstacle"],
       ["singleLayerNoDifferentRootIntersections"],
       ["multiHeadPolyLine"],
@@ -133,6 +151,14 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
 
   getHyperParameterDefs() {
     return [
+      {
+        name: "twoChordLane",
+        possibleValues: [
+          {
+            TWO_CHORD_LANE: true,
+          },
+        ],
+      },
       {
         name: "singleLayerNoDifferentRootIntersections",
         possibleValues: [
@@ -400,6 +426,16 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
   }
 
   generateSolver(hyperParameters: any): IntraNodeRouteSolver {
+    if (hyperParameters.TWO_CHORD_LANE) {
+      return new TwoChordLaneIntraNodeSolver({
+        nodeWithPortPoints: this.nodeWithPortPoints,
+        traceWidth: this.constructorParams.traceWidth,
+        viaDiameter: this.constructorParams.viaDiameter,
+        clearance: INTRA_NODE_COPPER_CLEARANCE,
+        obstacles: this.constructorParams.obstacles,
+      }) as any
+    }
+
     if (hyperParameters.SINGLE_LAYER_NO_DIFFERENT_ROOT_INTERSECTIONS) {
       if (
         !SingleLayerNoDifferentRootIntersectionsIntraNodeSolver.isApplicable(
