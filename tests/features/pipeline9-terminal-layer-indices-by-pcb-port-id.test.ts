@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test"
-import { getTerminalLayerIndicesByPcbPortId } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/get-terminal-layer-indices-by-pcb-port-id"
+import { getTerminalLayerIndicesByPcbPortId } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/getTerminalLayerIndicesByPcbPortId"
 import type { Obstacle, SimpleRouteConnection } from "lib/types"
 
 test("coincident single-layer pads do not impersonate a multilayer PCB terminal", () => {

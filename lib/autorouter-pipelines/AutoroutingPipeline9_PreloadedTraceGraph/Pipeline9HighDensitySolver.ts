@@ -18,18 +18,18 @@ import type { Obstacle } from "lib/types/srj-types"
 import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
 import { BaseSolver } from "../../solvers/BaseSolver"
 import { HighDensitySolver } from "../../solvers/HighDensitySolver/HighDensitySolver"
-import type { PreloadedHighDensityRoute } from "./convert-preloaded-traces-to-hd-routes"
+import type { PreloadedHighDensityRoute } from "./convertPreloadedTraceToHdRoutes"
 import {
   arePipeline9RoutesOnSameNet,
   doPipeline9RoutesHaveCopperConflict,
   getPipeline9FixedRouteObstacles,
-} from "./pipeline9-fixed-route-copper"
+} from "./pipeline9FixedRouteCopper"
 import {
   createRegionalFallbackProblem,
   type FixedRouteSection,
   spliceFixedRouteSectionWithMutationMask,
-} from "./pipeline9-regional-fallback"
-import { Pipeline9RegionalFallbackSolver } from "./pipeline9-regional-fallback-solver"
+} from "./pipeline9RegionalFallback"
+import { Pipeline9RegionalFallbackSolver } from "./Pipeline9RegionalFallbackSolver"
 
 export type Pipeline9HighDensitySolverParams = {
   nodePortPoints: NodeWithPortPoints[]

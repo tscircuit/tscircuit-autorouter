@@ -1,11 +1,11 @@
 import { expect, test } from "bun:test"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
-import { normalizePipeline9NodeRootConnectionNames } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/pipeline9-high-density-solver"
-import { Pipeline9RegionalFallbackSolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/pipeline9-regional-fallback-solver"
+import { normalizePipeline9NodeRootConnectionNames } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9HighDensitySolver"
+import { Pipeline9RegionalFallbackSolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9RegionalFallbackSolver"
 import {
   projectPipeline9OrdinaryHighDensityInput,
   projectPipeline9RegionalHighDensityInput,
-} from "lib/autorouter-pipelines/AutoroutingPipeline9_Networked/pipeline9-networked-input-projection"
+} from "lib/autorouter-pipelines/AutoroutingPipeline9_Networked/pipeline9NetworkedInputProjection"
 import type { Obstacle } from "lib/types/srj-types"
 import { createNetworkedNode } from "tests/fixtures/pipeline9-networked-fixtures"
 

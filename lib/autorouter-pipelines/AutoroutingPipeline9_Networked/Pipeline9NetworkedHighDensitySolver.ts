@@ -4,23 +4,23 @@ import {
   normalizePipeline9NodeRootConnectionNames,
   Pipeline9HighDensitySolver,
   type Pipeline9HighDensitySolverParams,
-} from "../AutoroutingPipeline9_PreloadedTraceGraph/pipeline9-high-density-solver"
-import { createRegionalFallbackProblem } from "../AutoroutingPipeline9_PreloadedTraceGraph/pipeline9-regional-fallback"
+} from "../AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9HighDensitySolver"
+import { createRegionalFallbackProblem } from "../AutoroutingPipeline9_PreloadedTraceGraph/pipeline9RegionalFallback"
 import {
   DEFAULT_HD_CACHE2_SERVER_URL,
   HdCache2Client,
   type HdCache2FallbackReason,
   type HdCache2SolveResult,
-} from "./hd-cache2-client"
+} from "./HdCache2Client"
 import {
   mergePipeline9ProjectedConnectivityNetMaps,
   projectPipeline9OrdinaryHighDensityInput,
   projectPipeline9RegionalHighDensityInput,
-} from "./pipeline9-networked-input-projection"
-import type { Pipeline9NetworkedHighDensityNodeInput } from "./pipeline9-networked-types"
-import { PIPELINE9_NETWORKED_SOLVE_POLICY } from "./pipeline9-networked-types"
+} from "./pipeline9NetworkedInputProjection"
+import type { Pipeline9NetworkedHighDensityNodeInput } from "./pipeline9NetworkedTypes"
+import { PIPELINE9_NETWORKED_SOLVE_POLICY } from "./pipeline9NetworkedTypes"
 
-export { DEFAULT_HD_CACHE2_SERVER_URL } from "./hd-cache2-client"
+export { DEFAULT_HD_CACHE2_SERVER_URL } from "./HdCache2Client"
 
 export const DEFAULT_PIPELINE9_NETWORKED_TIMEOUT_MS = 30_000
 

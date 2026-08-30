@@ -1,6 +1,6 @@
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { SimplifiedPcbTrace } from "lib/types"
-import { convertPreloadedTraceToHdRoutes } from "./convert-preloaded-traces-to-hd-routes"
+import { convertPreloadedTraceToHdRoutes } from "./convertPreloadedTraceToHdRoutes"
 
 const REGIONAL_PROMOTION_HALF_SIZE = 1.5
 

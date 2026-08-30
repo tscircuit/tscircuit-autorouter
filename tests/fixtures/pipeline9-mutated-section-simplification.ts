@@ -1,4 +1,4 @@
-import type { PreloadedHighDensityRoute } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/convert-preloaded-traces-to-hd-routes"
+import type { PreloadedHighDensityRoute } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/convertPreloadedTraceToHdRoutes"
 
 export const highlightedFirstVia = { x: 8.443, y: -4.145 }
 export const highlightedSecondVia = { x: 8.847, y: -4.447 }

@@ -7,7 +7,7 @@ import {
   AutoroutingPipelineSolver9_Networked as NetworkedPipelineFromPipelineIndex,
   type AutoroutingPipelineSolver9NetworkedOptions,
 } from "lib/autorouter-pipelines"
-import { Pipeline9NetworkedHighDensitySolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_Networked/pipeline9-networked-high-density-solver"
+import { Pipeline9NetworkedHighDensitySolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_Networked/Pipeline9NetworkedHighDensitySolver"
 import type { SimpleRouteJson } from "lib/types"
 import { ExampleHdCache2Server } from "tests/fixtures/example-hd-cache2-server"
 

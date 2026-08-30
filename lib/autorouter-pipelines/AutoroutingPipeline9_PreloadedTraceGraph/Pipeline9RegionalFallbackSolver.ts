@@ -12,8 +12,8 @@ import type {
 } from "lib/types/high-density-types"
 import type { Obstacle } from "lib/types/srj-types"
 import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
-import { materializePipeline9HdRouteVias } from "./materialize-pipeline9-hd-route-vias"
-import { getPipeline9RouteCopperGeometry } from "./pipeline9-fixed-route-copper"
+import { materializePipeline9HdRouteVias } from "./materializePipeline9HdRouteVias"
+import { getPipeline9RouteCopperGeometry } from "./pipeline9FixedRouteCopper"
 
 type Pipeline9RegionalFallbackSolverParams = {
   nodeWithPortPoints: NodeWithPortPoints

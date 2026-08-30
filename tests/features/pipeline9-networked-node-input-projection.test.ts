@@ -3,10 +3,10 @@ import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import {
   createPipeline9RegularNodeSolver,
   Pipeline9HighDensitySolver,
-} from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/pipeline9-high-density-solver"
-import { AUTOROUTER_VERSION } from "lib/autorouter-pipelines/AutoroutingPipeline9_Networked/autorouter-version"
-import { projectPipeline9OrdinaryHighDensityInput } from "lib/autorouter-pipelines/AutoroutingPipeline9_Networked/pipeline9-networked-input-projection"
-import { PIPELINE9_NETWORKED_SOLVE_POLICY } from "lib/autorouter-pipelines/AutoroutingPipeline9_Networked/pipeline9-networked-types"
+} from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9HighDensitySolver"
+import { AUTOROUTER_VERSION } from "lib/autorouter-pipelines/AutoroutingPipeline9_Networked/autorouterVersion"
+import { projectPipeline9OrdinaryHighDensityInput } from "lib/autorouter-pipelines/AutoroutingPipeline9_Networked/pipeline9NetworkedInputProjection"
+import { PIPELINE9_NETWORKED_SOLVE_POLICY } from "lib/autorouter-pipelines/AutoroutingPipeline9_Networked/pipeline9NetworkedTypes"
 import type { NodeWithPortPoints } from "lib/types/high-density-types"
 import type { Obstacle } from "lib/types/srj-types"
 import { ExampleHdCache2Server } from "tests/fixtures/example-hd-cache2-server"
