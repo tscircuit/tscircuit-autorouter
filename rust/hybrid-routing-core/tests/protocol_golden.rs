@@ -10,7 +10,7 @@ fn direct_search_protocol_is_deterministic() {
 
     let output: Value = serde_json::from_str(&first).expect("response should be JSON");
     assert_eq!(output["status"], "solved");
-    assert_eq!(output["protocolVersion"], 1);
+    assert_eq!(output["protocolVersion"], 2);
     assert_eq!(output["regionId"], "direct-region");
     assert_eq!(output["cost"]["viaCount"], 0);
     assert_eq!(output["cost"]["totalLengthMm"], 3.0);

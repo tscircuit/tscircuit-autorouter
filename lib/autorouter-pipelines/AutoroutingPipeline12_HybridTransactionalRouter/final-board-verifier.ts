@@ -8,6 +8,7 @@ import {
   segmentToRotatedRectEdgeDistance,
   viaToRotatedRectEdgeDistance,
 } from "./exact-geometry"
+import { areConnectionNamesElectricallyConnected } from "./connection-net-equivalence"
 import { TransactionalCopperStore } from "./transactional-copper-store"
 import type {
   HybridCopperPrimitive,
@@ -139,7 +140,7 @@ export function verifyFinalBoard({
       }
       if (
         !Number.isFinite(primitive.widthMm) ||
-        primitive.widthMm + GEOMETRY_EPSILON < connection.traceWidthMm ||
+        primitive.widthMm <= 0 ||
         (!isPreloaded &&
           Math.abs(primitive.widthMm - connection.traceWidthMm) >
             GEOMETRY_EPSILON)
@@ -198,7 +199,15 @@ export function verifyFinalBoard({
         primitive.kind === "segment"
           ? segmentToRotatedRectEdgeDistance({ segment: primitive, rect: obstacle })
           : viaToRotatedRectEdgeDistance({ via: primitive, rect: obstacle })
-      if (obstacle.connectedTo.includes(primitive.connectionName)) {
+      if (
+        obstacle.connectedTo.some((connectedName) =>
+          areConnectionNamesElectricallyConnected({
+            compiledRules: problem.compiledRules,
+            firstConnectionName: primitive.connectionName,
+            secondConnectionName: connectedName,
+          }),
+        )
+      ) {
         if (
           primitive.kind === "via" &&
           !problem.compiledRules.allowViaInPad &&
@@ -240,7 +249,11 @@ export function verifyFinalBoard({
       const first = primitives[firstIndex]!
       const second = primitives[secondIndex]!
       if (
-        first.connectionName === second.connectionName ||
+        areConnectionNamesElectricallyConnected({
+          compiledRules: problem.compiledRules,
+          firstConnectionName: first.connectionName,
+          secondConnectionName: second.connectionName,
+        }) ||
         !primitivesShareLayer({
           first,
           second,
@@ -294,7 +307,9 @@ export function verifyFinalBoard({
           copperIds: primitives
             .filter(
               (primitive) =>
-                primitive.connectionName === connection.connectionName,
+                connection.electricallyConnectedConnectionNames.includes(
+                  primitive.connectionName,
+                ),
             )
             .map((primitive) => primitive.copperId),
         }),

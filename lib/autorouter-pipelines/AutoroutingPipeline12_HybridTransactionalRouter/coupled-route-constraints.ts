@@ -193,7 +193,7 @@ export function findCoupledRouteConstraintViolation({
     const hasCycle = powerConnectionHasCycle({
       compiledRules,
       copperSnapshot,
-      connectionName: connection.connectionName,
+      connectionNames: connection.electricallyConnectedConnectionNames,
     })
     if (connection.topology === "mesh" ? !hasCycle : hasCycle) {
       return violation({
@@ -257,7 +257,7 @@ export function isConnectionFullyConnected({
 }): boolean {
   const primitives = getPrimitivesForConnections({
     copperSnapshot,
-    connectionNames: [connection.connectionName],
+    connectionNames: connection.electricallyConnectedConnectionNames,
   })
   if (primitives.length === 0) return false
   const parent = primitives.map((_, primitiveIndex) => primitiveIndex)
@@ -471,11 +471,11 @@ function hasStableBusOrdering({
 function powerConnectionHasCycle({
   compiledRules,
   copperSnapshot,
-  connectionName,
+  connectionNames,
 }: {
   compiledRules: CompiledRoutingRules
   copperSnapshot: HybridCopperSnapshot
-  connectionName: string
+  connectionNames: readonly string[]
 }): boolean {
   const parent = new Map<string, string>()
   const connect = (first: string, second: string): boolean => {
@@ -486,7 +486,7 @@ function powerConnectionHasCycle({
     return false
   }
   for (const segment of copperSnapshot.segments.filter(
-    (candidate) => candidate.connectionName === connectionName,
+    (candidate) => connectionNames.includes(candidate.connectionName),
   )) {
     if (
       connect(
@@ -498,7 +498,7 @@ function powerConnectionHasCycle({
     }
   }
   for (const via of copperSnapshot.vias.filter(
-    (candidate) => candidate.connectionName === connectionName,
+    (candidate) => connectionNames.includes(candidate.connectionName),
   )) {
     const layers = getPrimitiveLayers({ primitive: via, compiledRules })
     for (let layerIndex = 0; layerIndex < layers.length - 1; layerIndex++) {

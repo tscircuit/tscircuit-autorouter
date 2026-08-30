@@ -176,6 +176,8 @@ export type CompiledTerminal = {
 
 export type CompiledConnectionRuleBase = {
   readonly connectionName: ConnectionName
+  /** Every routed connection identifier that belongs to the same electrical net. */
+  readonly electricallyConnectedConnectionNames: readonly ConnectionName[]
   readonly className: RouteClassName
   readonly traceWidthMm: number
   readonly allowedLayers: readonly LayerName[]

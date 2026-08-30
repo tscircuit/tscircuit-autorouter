@@ -1,5 +1,5 @@
 {
-  "protocolVersion": 1,
+  "protocolVersion": 2,
   "regionId": "obstacle-region",
   "bounds": { "minX": 0, "maxX": 6, "minY": 0, "maxY": 4 },
   "activeBounds": { "minX": 0, "maxX": 6, "minY": 0, "maxY": 4 },
@@ -29,6 +29,7 @@
       "rotationDegrees": 15
     }
   ],
+  "viaForbiddenObstacles": [],
   "resolutionMm": 0.25,
   "traceWidthMm": 0.2,
   "clearanceMm": 0.1,

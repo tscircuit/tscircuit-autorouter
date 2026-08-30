@@ -80,7 +80,8 @@ export async function executeRegionJob({
         allowedLayers: rule.allowedLayers,
         traceWidthMm: rule.traceWidthMm,
         maximumVias: search.remainingViaBudget,
-        connectedConnectionNames: [rule.connectionName],
+        connectedConnectionNames:
+          rule.electricallyConnectedConnectionNames,
       }),
       maximumActivationRings: job.solverBudget.maximumActivationRings,
     })

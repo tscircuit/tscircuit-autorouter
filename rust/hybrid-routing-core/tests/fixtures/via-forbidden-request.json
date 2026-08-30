@@ -1,0 +1,51 @@
+{
+  "protocolVersion": 2,
+  "regionId": "via-forbidden-region",
+  "bounds": { "minX": 0, "maxX": 6, "minY": 0, "maxY": 6 },
+  "activeBounds": { "minX": 0, "maxX": 6, "minY": 0, "maxY": 6 },
+  "layerNames": ["top", "bottom"],
+  "start": { "x": 0.5, "y": 3, "layer": "top" },
+  "goal": { "x": 5.5, "y": 3, "layer": "top" },
+  "legalViaSpans": [{ "fromLayer": "top", "toLayer": "bottom" }],
+  "obstacles": [
+    {
+      "kind": "rotated_rect",
+      "geometryId": "top-barrier",
+      "layer": "top",
+      "centerX": 3,
+      "centerY": 3,
+      "widthMm": 0.4,
+      "heightMm": 6,
+      "rotationDegrees": 0
+    }
+  ],
+  "viaForbiddenObstacles": [
+    {
+      "kind": "rotated_rect",
+      "geometryId": "connected-start-pad",
+      "layer": "top",
+      "centerX": 0.5,
+      "centerY": 3,
+      "widthMm": 0.8,
+      "heightMm": 0.8,
+      "rotationDegrees": 0
+    },
+    {
+      "kind": "rotated_rect",
+      "geometryId": "connected-goal-pad",
+      "layer": "top",
+      "centerX": 5.5,
+      "centerY": 3,
+      "widthMm": 0.8,
+      "heightMm": 0.8,
+      "rotationDegrees": 0
+    }
+  ],
+  "resolutionMm": 0.25,
+  "traceWidthMm": 0.2,
+  "clearanceMm": 0.1,
+  "viaPadDiameterMm": 0.4,
+  "maximumVias": 2,
+  "maximumExpansions": 10000,
+  "deterministicSeed": 17
+}

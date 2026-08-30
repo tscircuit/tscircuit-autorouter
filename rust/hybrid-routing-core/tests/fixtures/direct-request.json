@@ -1,5 +1,5 @@
 {
-  "protocolVersion": 1,
+  "protocolVersion": 2,
   "regionId": "direct-region",
   "bounds": { "minX": 0, "maxX": 4, "minY": 0, "maxY": 4 },
   "activeBounds": { "minX": 0, "maxX": 4, "minY": 0, "maxY": 4 },
@@ -8,6 +8,7 @@
   "goal": { "x": 3.5, "y": 0.5, "layer": "top" },
   "legalViaSpans": [{ "fromLayer": "top", "toLayer": "bottom" }],
   "obstacles": [],
+  "viaForbiddenObstacles": [],
   "resolutionMm": 0.5,
   "traceWidthMm": 0.2,
   "clearanceMm": 0.1,

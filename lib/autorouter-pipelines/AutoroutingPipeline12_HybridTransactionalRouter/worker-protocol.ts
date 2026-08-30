@@ -18,12 +18,14 @@ import type {
 export const HYBRID_WORKER_PROTOCOL_VERSION = 1 as const
 
 export type HybridWorkerGeometry = {
+  readonly sourceKind: "obstacle" | "copper"
   readonly geometry: HybridCoreGeometry
   readonly connectedConnectionNames: readonly string[]
 }
 
 export type HybridWorkerConnectionRule = {
   readonly connectionName: string
+  readonly electricallyConnectedConnectionNames: readonly string[]
   readonly traceWidthMm: number
   readonly allowedLayers: readonly LayerName[]
   readonly viaSoftMaximum: number
@@ -43,6 +45,7 @@ export type HybridWorkerBoardContext = {
   }[]
   readonly viaPadDiameterMm: number
   readonly viaHoleDiameterMm: number
+  readonly allowViaInPad: boolean
   readonly clearanceMm: number
   readonly geometry: readonly HybridWorkerGeometry[]
   readonly connectionRules: readonly HybridWorkerConnectionRule[]

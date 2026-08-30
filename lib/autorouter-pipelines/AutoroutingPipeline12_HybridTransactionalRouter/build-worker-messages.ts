@@ -38,6 +38,7 @@ export function buildHybridWorkerBoardContext({
     problem.compiledRules.obstacles.flatMap((obstacle, obstacleIndex) =>
       obstacle.layers.map((layer) =>
         Object.freeze({
+          sourceKind: "obstacle" as const,
           geometry: Object.freeze({
             kind: "rotated_rect" as const,
             geometryId: `obstacle:${obstacle.obstacleId ?? obstacleIndex}:${layer}`,
@@ -80,6 +81,7 @@ export function buildHybridWorkerBoardContext({
     ),
     viaPadDiameterMm: problem.compiledRules.viaPadDiameterMm,
     viaHoleDiameterMm: problem.compiledRules.viaHoleDiameterMm,
+    allowViaInPad: problem.compiledRules.allowViaInPad,
     clearanceMm: Math.max(
       problem.compiledRules.clearances.traceToTraceMm,
       problem.compiledRules.clearances.traceToPadEdgeMm,
@@ -91,6 +93,8 @@ export function buildHybridWorkerBoardContext({
       problem.compiledRules.connections.map((connection) =>
         Object.freeze({
           connectionName: connection.connectionName,
+          electricallyConnectedConnectionNames:
+            connection.electricallyConnectedConnectionNames,
           traceWidthMm: connection.traceWidthMm,
           allowedLayers: connection.allowedLayers,
           viaSoftMaximum: connection.viaBudget.softMaximum,
@@ -311,6 +315,7 @@ function convertPrimitiveToWorkerGeometry({
   if (primitive.kind === "segment") {
     return [
       Object.freeze({
+        sourceKind: "copper" as const,
         geometry: Object.freeze({
           kind: "segment" as const,
           geometryId: primitive.copperId,
@@ -321,7 +326,12 @@ function convertPrimitiveToWorkerGeometry({
           endY: primitive.end.y,
           widthMm: primitive.widthMm,
         }),
-        connectedConnectionNames: Object.freeze([primitive.connectionName]),
+        connectedConnectionNames: Object.freeze(
+          getCompiledConnection({
+            compiledRules,
+            connectionName: primitive.connectionName,
+          }).electricallyConnectedConnectionNames,
+        ),
       }),
     ]
   }
@@ -335,6 +345,7 @@ function convertPrimitiveToWorkerGeometry({
     .slice(Math.min(startIndex, endIndex), Math.max(startIndex, endIndex) + 1)
     .map((layer) =>
       Object.freeze({
+        sourceKind: "copper" as const,
         geometry: Object.freeze({
           kind: "circle" as const,
           geometryId: `${primitive.copperId}:${layer.name}`,
@@ -343,9 +354,28 @@ function convertPrimitiveToWorkerGeometry({
           centerY: primitive.y,
           radiusMm: primitive.padDiameterMm / 2,
         }),
-        connectedConnectionNames: Object.freeze([primitive.connectionName]),
+        connectedConnectionNames: Object.freeze(
+          getCompiledConnection({
+            compiledRules,
+            connectionName: primitive.connectionName,
+          }).electricallyConnectedConnectionNames,
+        ),
       }),
     )
+}
+
+function getCompiledConnection({
+  compiledRules,
+  connectionName,
+}: {
+  compiledRules: CompiledRoutingRules
+  connectionName: string
+}): CompiledConnectionRules {
+  const connection = compiledRules.connections.find(
+    (candidate) => candidate.connectionName === connectionName,
+  )
+  if (!connection) throw new Error(`unknown connection ${connectionName}`)
+  return connection
 }
 
 function getConnection({

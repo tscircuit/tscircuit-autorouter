@@ -20,6 +20,7 @@ for (const fixtureName of [
   "direct-request.json",
   "obstacle-request.json",
   "ring-activation-request.json",
+  "via-forbidden-request.json",
 ]) {
   const requestJson = readFileSync(
     resolve(fixtureDirectory, fixtureName),

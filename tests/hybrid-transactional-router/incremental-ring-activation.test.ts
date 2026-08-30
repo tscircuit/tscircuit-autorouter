@@ -4,7 +4,7 @@ import type { HybridCoreSearchRequest } from "lib/autorouter-pipelines/Autorouti
 
 test("attempts every same-envelope strategy before activating a larger ring", () => {
   const request: HybridCoreSearchRequest = {
-    protocolVersion: 1,
+    protocolVersion: 2,
     regionId: "ring-test",
     bounds: { minX: -10, maxX: 10, minY: -8, maxY: 8 },
     activeBounds: { minX: -10, maxX: 10, minY: -8, maxY: 8 },
@@ -14,6 +14,7 @@ test("attempts every same-envelope strategy before activating a larger ring", ()
     goal: { x: 8, y: 0, layer: "top" },
     legalViaSpans: [{ fromLayer: "top", toLayer: "bottom" }],
     obstacles: [],
+    viaForbiddenObstacles: [],
     resolutionMm: 0.05,
     traceWidthMm: 0.15,
     clearanceMm: 0.15,

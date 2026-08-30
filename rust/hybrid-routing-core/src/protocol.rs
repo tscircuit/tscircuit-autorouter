@@ -1,7 +1,7 @@
 use crate::CoreError;
 use serde::{Deserialize, Serialize};
 
-pub const CORE_PROTOCOL_VERSION: u32 = 1;
+pub const CORE_PROTOCOL_VERSION: u32 = 2;
 
 #[derive(Clone, Debug, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
@@ -17,6 +17,7 @@ pub struct SearchRequest {
     pub goal: RoutePoint,
     pub legal_via_spans: Vec<LayerSpan>,
     pub obstacles: Vec<Geometry>,
+    pub via_forbidden_obstacles: Vec<Geometry>,
     pub resolution_mm: f64,
     pub trace_width_mm: f64,
     pub clearance_mm: f64,
@@ -115,6 +116,15 @@ impl SearchRequest {
             if !self.layer_names.contains(&obstacle.layer().to_string()) {
                 return Err(CoreError::InvalidRules(format!(
                     "obstacle references unknown layer {}",
+                    obstacle.layer()
+                )));
+            }
+        }
+        for obstacle in &self.via_forbidden_obstacles {
+            obstacle.validate()?;
+            if !self.layer_names.contains(&obstacle.layer().to_string()) {
+                return Err(CoreError::InvalidRules(format!(
+                    "via-forbidden obstacle references unknown layer {}",
                     obstacle.layer()
                 )));
             }

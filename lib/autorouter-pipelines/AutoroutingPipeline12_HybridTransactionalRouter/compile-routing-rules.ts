@@ -6,6 +6,7 @@ import type {
   SimpleRouteJson,
   SimplifiedPcbTrace,
 } from "../../types"
+import { getConnectivityMapFromSimpleRouteJson } from "../../utils/getConnectivityMapFromSimpleRouteJson"
 import type {
   CompiledBusRules,
   CompiledClearanceRules,
@@ -880,6 +881,10 @@ function compileConnections({
   layerByName: ReadonlyMap<LayerName, CompiledLayerRule>
   viaPadDiameterMm: number
 }): readonly CompiledConnectionRules[] {
+  const connectivityMap = getConnectivityMapFromSimpleRouteJson(simpleRouteJson)
+  const orderedConnectionNames = simpleRouteJson.connections
+    .map((connection) => connection.name)
+    .sort((first, second) => first.localeCompare(second))
   const routeClassByName = new Map<RouteClassName, CompiledRouteClass>(
     routeClasses.map((routeClass) => [routeClass.className, routeClass]),
   )
@@ -961,6 +966,12 @@ function compileConnections({
         : routeClass.viaBudget
       const commonRules = {
         connectionName: connection.name,
+        electricallyConnectedConnectionNames: freezeList(
+          orderedConnectionNames.filter((candidateName) =>
+            candidateName === connection.name ||
+            connectivityMap.areIdsConnected(connection.name, candidateName),
+          ),
+        ),
         className: routeClass.className,
         traceWidthMm,
         allowedLayers,

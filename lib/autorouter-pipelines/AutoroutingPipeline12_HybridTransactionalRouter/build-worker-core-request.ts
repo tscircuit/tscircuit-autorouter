@@ -55,6 +55,20 @@ export function buildWorkerCoreSearchRequest({
         )
         .map((item) => item.geometry),
     ),
+    viaForbiddenObstacles: Object.freeze(
+      context.allowViaInPad
+        ? []
+        : context.geometry
+            .filter(
+              (item) =>
+                item.sourceKind === "obstacle" &&
+                item.connectedConnectionNames.some((connectionName) =>
+                  connectedConnectionNames.includes(connectionName),
+                ) &&
+                allowedLayers.includes(item.geometry.layer),
+            )
+            .map((item) => item.geometry),
+    ),
     resolutionMm: job.routingResolutionMm,
     traceWidthMm,
     clearanceMm: context.clearanceMm,

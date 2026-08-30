@@ -62,6 +62,8 @@ impl PartialOrd for QueueEntry {
 
 pub fn search_region(request: &SearchRequest) -> CoreResponse {
     let geometry_index = GeometryIndex::new(&request.layer_names, &request.obstacles);
+    let via_forbidden_index =
+        GeometryIndex::new(&request.layer_names, &request.via_forbidden_obstacles);
     let start_layer = layer_index(request, &request.start.layer);
     let goal_layer = layer_index(request, &request.goal.layer);
     let start_grid = point_to_grid(request, request.start.x, request.start.y);
@@ -183,6 +185,7 @@ pub fn search_region(request: &SearchRequest) -> CoreResponse {
             if !transition_is_clear(
                 request,
                 &geometry_index,
+                &via_forbidden_index,
                 entry.node,
                 neighbor,
                 &mut work,
@@ -344,6 +347,7 @@ fn deterministic_tie(node: NodeKey, seed: u32) -> u64 {
 fn transition_is_clear(
     request: &SearchRequest,
     geometry_index: &GeometryIndex,
+    via_forbidden_index: &GeometryIndex,
     from: NodeKey,
     to: NodeKey,
     work: &mut WorkCounters,
@@ -367,6 +371,12 @@ fn transition_is_clear(
         from_point,
         request.via_pad_diameter_mm / 2.0,
         request.clearance_mm,
+        work,
+    ) && via_forbidden_index.via_is_clear(
+        min_layer..=max_layer,
+        from_point,
+        request.via_pad_diameter_mm / 2.0,
+        0.0,
         work,
     )
 }

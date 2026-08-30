@@ -6,6 +6,7 @@ import {
   segmentToRotatedRectEdgeDistance,
   viaToRotatedRectEdgeDistance,
 } from "./exact-geometry"
+import { areConnectionNamesElectricallyConnected } from "./connection-net-equivalence"
 import { findCoupledRouteConstraintViolation } from "./coupled-route-constraints"
 import type {
   CompiledConnectionRules,
@@ -571,7 +572,15 @@ function validateObstacles(
         primitive.kind === "segment"
           ? context.compiledRules.clearances.traceToPadEdgeMm
           : context.compiledRules.clearances.viaToPadEdgeMm
-      if (obstacle.connectedTo.includes(primitive.connectionName)) {
+      if (
+        obstacle.connectedTo.some((connectedName) =>
+          areConnectionNamesElectricallyConnected({
+            compiledRules: context.compiledRules,
+            firstConnectionName: primitive.connectionName,
+            secondConnectionName: connectedName,
+          }),
+        )
+      ) {
         if (
           primitive.kind === "via" &&
           !context.compiledRules.allowViaInPad &&
@@ -618,7 +627,15 @@ function validateCopperClearances(
       ...context.addedPrimitives.slice(0, primitiveIndex),
     ]
     for (const other of candidatePrimitives) {
-      if (other.connectionName === primitive.connectionName) continue
+      if (
+        areConnectionNamesElectricallyConnected({
+          compiledRules: context.compiledRules,
+          firstConnectionName: primitive.connectionName,
+          secondConnectionName: other.connectionName,
+        })
+      ) {
+        continue
+      }
       context.work.drcPredicateCalls += 1
       const distance = primitiveEdgeDistance({ first: primitive, second: other })
       if (distance <= 0) {
@@ -674,7 +691,9 @@ function validateTerminalEffects(
     }
     const touchesCopper = resultingPrimitives.some(
       (primitive) =>
-        primitive.connectionName === connection.connectionName &&
+        connection.electricallyConnectedConnectionNames.includes(
+          primitive.connectionName,
+        ) &&
         terminal.layers.some(
           (layer) =>
             pointToPrimitiveEdgeDistance({

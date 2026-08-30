@@ -103,7 +103,13 @@ export async function executeCoupledParallelJob({
       allowedLayers: Object.freeze([routingLayer]),
       traceWidthMm: envelopeWidthMm,
       maximumVias: 0,
-      connectedConnectionNames: job.coupling.orderedConnectionNames,
+      connectedConnectionNames: Object.freeze([
+        ...new Set(
+          members.flatMap(
+            (member) => member.rule.electricallyConnectedConnectionNames,
+          ),
+        ),
+      ]),
     }),
     maximumActivationRings: job.solverBudget.maximumActivationRings,
   })

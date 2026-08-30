@@ -1,6 +1,6 @@
 import type { HybridBoardBounds, LayerName } from "./types"
 
-export const HYBRID_ROUTING_CORE_PROTOCOL_VERSION = 1 as const
+export const HYBRID_ROUTING_CORE_PROTOCOL_VERSION = 2 as const
 
 export type HybridCoreRoutePoint = {
   readonly x: number
@@ -52,6 +52,8 @@ export type HybridCoreSearchRequest = {
     readonly toLayer: LayerName
   }[]
   readonly obstacles: readonly HybridCoreGeometry[]
+  /** Connected pad geometry that wires may touch but vias must not overlap. */
+  readonly viaForbiddenObstacles: readonly HybridCoreGeometry[]
   readonly resolutionMm: number
   readonly traceWidthMm: number
   readonly clearanceMm: number
