@@ -139,7 +139,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
         clearance: 0.1,
         obstacles: this.constructorParams.obstacles,
         effort: this.effort,
-        minimumPairCount: 8,
+        minimumPairCount: 19,
       })
         ? [["highDensityA08"]]
         : []),
@@ -467,7 +467,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
         clearance: 0.1,
         obstacles: this.constructorParams.obstacles,
         effort: this.effort,
-        minimumPairCount: 8,
+        minimumPairCount: 19,
       }
       if (!HighDensitySolverA08IntraNodeAdapter.isApplicable(params)) {
         throw new Error(
