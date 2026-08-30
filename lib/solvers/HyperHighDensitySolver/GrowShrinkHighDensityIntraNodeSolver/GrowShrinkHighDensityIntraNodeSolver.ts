@@ -20,6 +20,7 @@ export const DEFAULT_MAX_GROWTH_ATTEMPTS = 3
 
 export type GrowShrinkHighDensityIntraNodeSolverParams =
   PortfolioSingleIntraNodeSolverParams & {
+    initialScaleFactor?: number
     maxGrowthAttempts?: number
     maxInnerIterationsPerGrowthAttempt?: number
     fallbackToInvalidGeometryOnFailure?: boolean
@@ -126,8 +127,22 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
     super()
     this.constructorParams = params
     this.nodeWithPortPoints = params.nodeWithPortPoints
-    this.maxGrowthAttempts =
+    const requestedMaxGrowthAttempts =
       params.maxGrowthAttempts ?? DEFAULT_MAX_GROWTH_ATTEMPTS
+    this.maxGrowthAttempts = Number.isFinite(requestedMaxGrowthAttempts)
+      ? Math.max(0, Math.floor(requestedMaxGrowthAttempts))
+      : DEFAULT_MAX_GROWTH_ATTEMPTS
+    const initialScaleFactor = params.initialScaleFactor
+    const requestedInitialScaleFactor =
+      typeof initialScaleFactor === "number" &&
+      Number.isFinite(initialScaleFactor)
+        ? Math.max(1, initialScaleFactor)
+        : 1
+    this.growthAttempts = Math.min(
+      this.maxGrowthAttempts,
+      Math.ceil(Math.log2(requestedInitialScaleFactor)),
+    )
+    this.scaleFactor = 2 ** this.growthAttempts
     this.MAX_ITERATIONS =
       20_000_000 * (params.effort ?? 1) * (this.maxGrowthAttempts + 1)
 

@@ -490,6 +490,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       captureSearchDebug: false,
       enableHighDensityA08: true,
       enableHighDensityA01FineGrid: true,
+      preGrowHighPressureNodes: true,
     })
     this.stats.regularNodeCount = Number(this.stats.regularNodeCount ?? 0) + 1
   }

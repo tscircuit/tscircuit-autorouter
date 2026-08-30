@@ -45,6 +45,7 @@ export function solvePipeline9NetworkedHighDensityNode(
     captureSearchDebug: false,
     enableHighDensityA08: true,
     enableHighDensityA01FineGrid: true,
+    preGrowHighPressureNodes: true,
   })
 
   solver.solve()
