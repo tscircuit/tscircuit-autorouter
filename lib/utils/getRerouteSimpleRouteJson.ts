@@ -39,6 +39,11 @@ type LocatedPoint = {
   width: number
 }
 
+type IndexedRoutePoint = {
+  point: RoutePoint
+  index: number
+}
+
 type RerouteConnectionResult = {
   connection: SimpleRouteConnection
   endpointObstacles: Obstacle[]
@@ -205,17 +210,39 @@ const appendClippedTraceSegment = (
   segmentIndex: number,
   start: LocatedPoint,
   end: LocatedPoint,
+  originalStart: IndexedRoutePoint | null,
+  originalEnd: IndexedRoutePoint | null,
+  preservedViaIndexes: Set<number>,
 ) => {
-  if (distance(start, end) <= EPSILON) return
+  const takeUnpreservedVia = (indexedPoint: IndexedRoutePoint | null) => {
+    if (
+      !indexedPoint ||
+      !isViaRoutePoint(indexedPoint.point) ||
+      preservedViaIndexes.has(indexedPoint.index)
+    ) {
+      return null
+    }
+
+    preservedViaIndexes.add(indexedPoint.index)
+    return structuredClone(indexedPoint.point)
+  }
+
+  const startVia = takeUnpreservedVia(originalStart)
+  const endVia = takeUnpreservedVia(originalEnd)
+  const hasWireSegment = distance(start, end) > EPSILON
+  if (!hasWireSegment && !startVia && !endVia) return
+
+  const route: SimplifiedPcbTrace["route"] = []
+  if (startVia) route.push(startVia)
+  route.push(locatedPointToWireRoutePoint(start))
+  if (hasWireSegment) route.push(locatedPointToWireRoutePoint(end))
+  if (endVia) route.push(endVia)
 
   traces.push({
     type: "pcb_trace",
     pcb_trace_id: `${trace.pcb_trace_id}_keep_${segmentIndex}`,
     connection_name: trace.connection_name,
-    route: [
-      locatedPointToWireRoutePoint(start),
-      locatedPointToWireRoutePoint(end),
-    ],
+    route,
   })
 }
 
@@ -369,6 +396,7 @@ const getClippedTracePieces = (
   let activeRipStartAllowsInterior = false
   let keptSegmentIndex = 0
   let hadIntersection = false
+  const preservedViaIndexes = new Set<number>()
 
   for (let i = 0; i < trace.route.length - 1; i++) {
     const start = getRoutePointLocation(trace.route[i]!)
@@ -392,6 +420,9 @@ const getClippedTracePieces = (
         keptSegmentIndex++,
         segmentStart,
         segmentEnd,
+        { point: trace.route[i]!, index: i },
+        { point: trace.route[i + 1]!, index: i + 1 },
+        preservedViaIndexes,
       )
       continue
     }
@@ -421,6 +452,9 @@ const getClippedTracePieces = (
         keptSegmentIndex++,
         segmentStart,
         keptEnd,
+        { point: trace.route[i]!, index: i },
+        null,
+        preservedViaIndexes,
       )
     }
 
@@ -477,6 +511,9 @@ const getClippedTracePieces = (
         keptSegmentIndex++,
         rippedEnd,
         segmentEnd,
+        null,
+        { point: trace.route[i + 1]!, index: i + 1 },
+        preservedViaIndexes,
       )
     }
   }

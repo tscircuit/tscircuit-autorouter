@@ -214,6 +214,65 @@ test("getRerouteSimpleRouteJson expands bounds for clipped trace segment obstacl
   ).toBe(true)
 })
 
+test("getRerouteSimpleRouteJson preserves vias outside the reroute region", () => {
+  const rerouted = getRerouteSimpleRouteJson(
+    {
+      ...srj,
+      traces: [
+        {
+          type: "pcb_trace",
+          pcb_trace_id: "source_net_0_with_via",
+          connection_name: "source_net_0",
+          route: [
+            { route_type: "wire", x: -5, y: 0, width: 0.15, layer: "top" },
+            { route_type: "wire", x: -2, y: 0, width: 0.15, layer: "top" },
+            {
+              route_type: "via",
+              x: -2,
+              y: 0,
+              from_layer: "top",
+              to_layer: "bottom",
+              via_diameter: 0.4,
+              via_hole_diameter: 0.2,
+            },
+            {
+              route_type: "wire",
+              x: -2,
+              y: 0,
+              width: 0.15,
+              layer: "bottom",
+            },
+            { route_type: "wire", x: 5, y: 0, width: 0.15, layer: "bottom" },
+          ],
+        },
+      ],
+    },
+    {
+      shape: "rect",
+      minX: -1,
+      maxX: 1,
+      minY: -1,
+      maxY: 1,
+    },
+  )
+
+  const keptVias = (rerouted.traces ?? []).flatMap((trace) =>
+    trace.route.filter((point) => point.route_type === "via"),
+  )
+
+  expect(keptVias).toEqual([
+    {
+      route_type: "via",
+      x: -2,
+      y: 0,
+      from_layer: "top",
+      to_layer: "bottom",
+      via_diameter: 0.4,
+      via_hole_diameter: 0.2,
+    },
+  ])
+})
+
 test("reconnectReroutedSimpleRouteJsonRegion restores original connections", () => {
   const rerouted = getRerouteSimpleRouteJson(srj, {
     shape: "rect",
