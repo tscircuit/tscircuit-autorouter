@@ -303,13 +303,20 @@ export async function runParallelHybridTransactionalEngine({
         )
       }
     }
+    const finalizationStartedAt = performance.now()
     const finalization = finalizeCoupledRoutes({ problem, copperStore })
-    for (const record of finalization.records) {
+    const finalizationElapsedMs = performance.now() - finalizationStartedAt
+    for (const [recordIndex, record] of finalization.records.entries()) {
       demandField.applyCommittedTransaction({
         delta: record.delta,
         committedSnapshot: record.committedSnapshot,
       })
-      attempts.push(createFinalizationAttempt(record.delta))
+      attempts.push(
+        createFinalizationAttempt(
+          record.delta,
+          recordIndex === 0 ? finalizationElapsedMs : 0,
+        ),
+      )
     }
     if (finalization.status === "failed") {
       return createIncompleteResult({
@@ -387,6 +394,7 @@ function createCachedJobResult({
 
 function createFinalizationAttempt(
   delta: HybridTransactionDelta,
+  solveTimeMs: number,
 ): RegionAttemptRecord {
   return Object.freeze({
     attemptId: `finalization-attempt:${delta.transactionId}`,
@@ -394,8 +402,8 @@ function createFinalizationAttempt(
     workerId: "control-plane",
     strategy: "transactional-coupled-finalization",
     queueWaitMs: 0,
-    solveTimeMs: 0,
-    workerCpuMs: 0,
+    solveTimeMs,
+    workerCpuMs: solveTimeMs,
     transferredBytes: 0,
     returnedBytes: 0,
     work: delta.work,
