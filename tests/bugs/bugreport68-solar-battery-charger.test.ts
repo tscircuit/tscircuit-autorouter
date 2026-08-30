@@ -59,8 +59,12 @@ test(
       )
 
     expect(routedViasInsideBga).toHaveLength(0)
+    const snapshotPath =
+      process.platform === "linux"
+        ? import.meta.path.replace(/\.test\.ts$/, "-linux.test.ts")
+        : import.meta.path
     expect(getLastStepSvg(solver.visualize())).toMatchSvgSnapshot(
-      import.meta.path,
+      snapshotPath,
     )
   },
   { timeout: 200000 },
