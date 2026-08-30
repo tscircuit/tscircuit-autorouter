@@ -6,7 +6,7 @@ import fixture from "../fixtures/srj18-cmn70-single-transition-boundary-toleranc
 
 const nodeWithPortPoints: NodeWithPortPoints = fixture.nodeWithPortPoints
 
-test("SRJ18 cmn_70 exposes inconsistent single-transition boundary tolerance", async () => {
+test("SRJ18 cmn_70 uses consistent single-transition boundary tolerance", async () => {
   const solver = new SingleTransitionCrossingRouteSolver({
     nodeWithPortPoints,
     viaDiameter: fixture.routingRules.viaDiameter,
@@ -16,10 +16,19 @@ test("SRJ18 cmn_70 exposes inconsistent single-transition boundary tolerance", a
   })
 
   expect(solver.failed).toBe(false)
-  expect(() => solver.solve()).toThrow(
-    "does not lie on the boundary defined by",
-  )
-  expect(solver.solved).toBe(false)
+  expect(() => solver.solve()).not.toThrow()
+  expect(solver.solved).toBe(true)
+
+  const repeatedSolver = new SingleTransitionCrossingRouteSolver({
+    nodeWithPortPoints,
+    viaDiameter: fixture.routingRules.viaDiameter,
+    traceThickness: fixture.routingRules.traceWidth,
+    obstacleMargin: fixture.routingRules.obstacleMargin,
+    layerCount: fixture.routingRules.layerCount,
+  })
+  repeatedSolver.solve()
+
+  expect(repeatedSolver.solvedRoutes).toEqual(solver.solvedRoutes)
 
   await expect(
     getSvgFromGraphicsObject(solver.visualize(), {
