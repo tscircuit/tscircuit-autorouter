@@ -31,6 +31,7 @@ import type {
   HybridBoundaryContract,
   RegionAttemptRecord,
 } from "./planning-types"
+import { EMPTY_HYBRID_WORK_COUNTERS } from "./work-metrics"
 
 export type SerialHybridEngineConfiguration = {
   readonly runtime: HybridRoutingCoreRuntime
@@ -206,6 +207,10 @@ export async function runSerialHybridTransactionalEngine({
             rejectionReason: commit.rejection.message,
             transactionId: candidate.delta.transactionId,
             source: candidate.source,
+            work:
+              candidate.source === "cache"
+                ? EMPTY_HYBRID_WORK_COUNTERS
+                : candidate.delta.work,
           }),
         )
         return createIncompleteResult({
@@ -246,6 +251,11 @@ export async function runSerialHybridTransactionalEngine({
           outcome: "committed",
           transactionId: candidate.delta.transactionId,
           source: candidate.source,
+          work:
+            candidate.source === "cache"
+              ? EMPTY_HYBRID_WORK_COUNTERS
+              : candidate.delta.work,
+          wasStaleRevalidation: commit.transaction.wasStaleRevalidation,
         }),
       )
     }
@@ -322,6 +332,8 @@ function createFinalizationAttempt(
     workerCpuMs: 0,
     transferredBytes: 0,
     returnedBytes: 0,
+    work: delta.work,
+    wasStaleRevalidation: false,
     outcome: "committed",
     transactionId: delta.transactionId,
   })
@@ -420,6 +432,8 @@ function createAttempt({
   rejectionReason,
   transactionId,
   source = "worker",
+  work = EMPTY_HYBRID_WORK_COUNTERS,
+  wasStaleRevalidation = false,
 }: {
   region: DynamicRoutingRegion
   routePlan: GlobalRouteObjectPlan
@@ -429,6 +443,8 @@ function createAttempt({
   rejectionReason?: string
   transactionId?: string
   source?: "worker" | "cache"
+  work?: HybridTransactionDelta["work"]
+  wasStaleRevalidation?: boolean
 }): RegionAttemptRecord {
   return Object.freeze({
     attemptId: `serial-attempt:${attemptIndex}:${region.regionId}:${routePlan.routeObjectId}`,
@@ -443,6 +459,8 @@ function createAttempt({
     workerCpuMs: solveTimeMs,
     transferredBytes: 0,
     returnedBytes: 0,
+    work,
+    wasStaleRevalidation,
     outcome,
     rejectionReason,
     transactionId,

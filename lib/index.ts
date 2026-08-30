@@ -44,6 +44,22 @@ export type {
 export { PIPELINE9_NETWORKED_SOLVE_POLICY } from "./autorouter-pipelines/AutoroutingPipeline9_Networked/pipeline9-networked-types"
 export { solvePipeline9NetworkedHighDensityNode } from "./autorouter-pipelines/AutoroutingPipeline9_Networked/solve-pipeline9-networked-high-density-node"
 export { AutoroutingPipelineSolver10_BgaFanout } from "./autorouter-pipelines/AutoroutingPipeline10_BgaFanout/AutoroutingPipelineSolver10_BgaFanout"
+export {
+  AutoroutingPipelineSolver12_HybridTransactionalRouter,
+  type AutoroutingPipelineSolver12HybridTransactionalRouterOptions,
+} from "./autorouter-pipelines/AutoroutingPipeline12_HybridTransactionalRouter/AutoroutingPipelineSolver12_HybridTransactionalRouter"
+export {
+  HybridTransactionalRegionalRouter,
+  type HybridRouterExecution,
+  type HybridTransactionalRegionalRouterOptions,
+} from "./autorouter-pipelines/AutoroutingPipeline12_HybridTransactionalRouter/hybrid-transactional-regional-router"
+export { ContentAddressedRegionCache } from "./autorouter-pipelines/AutoroutingPipeline12_HybridTransactionalRouter/content-addressed-region-cache"
+export type {
+  HybridRouterDiagnostic,
+  HybridRouterMetrics,
+  HybridRouterResult,
+  HybridRoutingRulesInput,
+} from "./autorouter-pipelines/AutoroutingPipeline12_HybridTransactionalRouter/types"
 export { PolyHighDensitySolver } from "./autorouter-pipelines/AutoroutingPipeline6_PolyHypergraph/PolyHighDensitySolver"
 export { PolySingleIntraNodeSolver } from "./autorouter-pipelines/AutoroutingPipeline6_PolyHypergraph/PolySingleIntraNodeSolver"
 export { PolyIntraNodeSolver } from "./autorouter-pipelines/AutoroutingPipeline6_PolyHypergraph/PolyIntraNodeSolver"

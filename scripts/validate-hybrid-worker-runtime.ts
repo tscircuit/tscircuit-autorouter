@@ -1,6 +1,7 @@
 import assert from "node:assert/strict"
 import { createRequire } from "node:module"
 import { resolve } from "node:path"
+import { AutoroutingPipelineSolver12_HybridTransactionalRouter } from "lib/autorouter-pipelines/AutoroutingPipeline12_HybridTransactionalRouter/AutoroutingPipelineSolver12_HybridTransactionalRouter"
 import { ContentAddressedRegionCache } from "lib/autorouter-pipelines/AutoroutingPipeline12_HybridTransactionalRouter/content-addressed-region-cache"
 import { negotiateBoundaryContracts } from "lib/autorouter-pipelines/AutoroutingPipeline12_HybridTransactionalRouter/boundary-contract-negotiator"
 import { buildHybridWorkerBoardContext, buildRegionJob } from "lib/autorouter-pipelines/AutoroutingPipeline12_HybridTransactionalRouter/build-worker-messages"
@@ -13,7 +14,10 @@ import { createHybridRoutingCoreRuntime } from "lib/autorouter-pipelines/Autorou
 import { runSerialHybridTransactionalEngine } from "lib/autorouter-pipelines/AutoroutingPipeline12_HybridTransactionalRouter/serial-hybrid-transactional-engine"
 import { HybridRoutingWorkerPool } from "lib/autorouter-pipelines/AutoroutingPipeline12_HybridTransactionalRouter/worker-pool"
 import type { RegionJob } from "lib/autorouter-pipelines/AutoroutingPipeline12_HybridTransactionalRouter/worker-protocol"
-import { createHybridRoutingTestProblem } from "tests/hybrid-transactional-router/fixtures"
+import {
+  createHybridRoutingTestFixture,
+  createHybridRoutingTestProblem,
+} from "tests/hybrid-transactional-router/fixtures"
 
 const runtimeModulePath = process.argv[2]
 if (!runtimeModulePath) {
@@ -227,6 +231,41 @@ assert.deepEqual(
   singleWorkerResult.artifacts.copperSnapshot,
   "the serial fast path must preserve authoritative route selection",
 )
+const publicFixture = createHybridRoutingTestFixture()
+const publicAdapter = new AutoroutingPipelineSolver12_HybridTransactionalRouter(
+  publicFixture.simpleRouteJson,
+  {
+    routingRules: publicFixture.routingRules,
+    execution: {
+      kind: "parallel",
+      workerEntryPath,
+      runtimeTarget: "native",
+      runtimeModulePath,
+      maximumConcurrency: 2,
+      maximumWorkerQueueLength: 32,
+    },
+    deterministicSeed: 17,
+    maximumSearchExpansions: 250_000,
+    maximumActivationRings: 4,
+    maximumTransactionHistory: 64,
+    maximumDemandCellCount: 100_000,
+    maximumRegionCount: 128,
+    maximumRegionMutationCount: 128,
+    maximumMergeRegionCount: 8,
+    maximumEstimatedMemoryBytesPerObject: 32 * 1024 * 1024,
+    maximumWaveMemoryBytes: 128 * 1024 * 1024,
+    maximumFinalViolationCount: 64,
+  },
+)
+await publicAdapter.solveAsync()
+assert.equal(publicAdapter.solved, true)
+const publicResult = publicAdapter.getResult()
+assert.equal(publicResult?.status, "solved")
+if (publicResult?.status !== "solved") {
+  throw new Error("public adapter did not expose a verified solved result")
+}
+assert.equal(publicResult.metrics.solveOutcome, "solved")
+assert((publicResult.routedSimpleRouteJson.traces?.length ?? 0) > 1)
 
 console.log(
   JSON.stringify({
@@ -243,6 +282,8 @@ console.log(
     warmCacheHits: repeatedFourWorkerResult.artifacts.cache.hits,
     warmCacheStoredBytes: repeatedFourWorkerResult.artifacts.cache.storedBytes,
     serialFastPath: serialResult.status,
+    publicAdapter: publicResult.status,
+    publicTraceCount: publicResult.routedSimpleRouteJson.traces?.length ?? 0,
   }),
 )
 

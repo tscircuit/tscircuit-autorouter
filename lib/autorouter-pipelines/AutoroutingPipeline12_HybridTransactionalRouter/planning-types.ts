@@ -6,7 +6,11 @@ import type {
   RouteObjectId,
   TypedRouteObject,
 } from "./types"
-import type { CopperVersion, HybridTransactionId } from "./transactional-copper-types"
+import type {
+  CopperVersion,
+  HybridTransactionId,
+  HybridTransactionWorkCounters,
+} from "./transactional-copper-types"
 
 export type HybridTopologyKind =
   | "direct"
@@ -134,6 +138,8 @@ export type RegionAttemptRecord = {
   readonly workerCpuMs: number
   readonly transferredBytes: number
   readonly returnedBytes: number
+  readonly work: HybridTransactionWorkCounters
+  readonly wasStaleRevalidation: boolean
   readonly outcome: "candidate" | "committed" | "rejected" | "failed" | "cancelled"
   readonly rejectionReason?: string
   readonly transactionId?: HybridTransactionId

@@ -34,6 +34,7 @@ import type { TypedRoutingProblem } from "./types"
 import type { HybridTransactionDelta } from "./transactional-copper-types"
 import { HybridRoutingWorkerPool } from "./worker-pool"
 import type { HybridWorkerPoolJobResult } from "./worker-pool"
+import { EMPTY_HYBRID_WORK_COUNTERS } from "./work-metrics"
 
 export type ParallelHybridEngineConfiguration = {
   readonly workerEntryPath: string
@@ -232,22 +233,29 @@ export async function runParallelHybridTransactionalEngine({
             configuration.regionCache?.invalidate(completed.cacheKey)
           }
           attempts.push(
-            createAttempt({
-              ...completed,
-              result: {
-                status: "failed",
-                response: {
-                  type: "job_failed",
-                  workerId: completed.result.response.workerId,
-                  jobId: completed.result.response.jobId,
-                  code: "runtime_failure",
-                  message: commit.rejection.message,
-                  solveTimeMs: completed.result.response.solveTimeMs,
-                  cpuTimeMs: completed.result.response.cpuTimeMs,
+            createAttempt(
+              {
+                ...completed,
+                result: {
+                  status: "failed",
+                  response: {
+                    type: "job_failed",
+                    workerId: completed.result.response.workerId,
+                    jobId: completed.result.response.jobId,
+                    code: "runtime_failure",
+                    message: commit.rejection.message,
+                    solveTimeMs: completed.result.response.solveTimeMs,
+                    cpuTimeMs: completed.result.response.cpuTimeMs,
+                  },
+                  queueWaitMs: completed.result.queueWaitMs,
                 },
-                queueWaitMs: completed.result.queueWaitMs,
               },
-            }),
+              completed.source === "cache"
+                ? EMPTY_HYBRID_WORK_COUNTERS
+                : delta.work,
+              false,
+              "rejected",
+            ),
           )
           return createIncompleteResult({
             topologyPlan,
@@ -286,7 +294,13 @@ export async function runParallelHybridTransactionalEngine({
             nextCopperVersion: commit.snapshot.version,
           }),
         )
-        attempts.push(createAttempt(completed))
+        attempts.push(
+          createAttempt(
+            completed,
+            undefined,
+            commit.transaction.wasStaleRevalidation,
+          ),
+        )
       }
     }
     const finalization = finalizeCoupledRoutes({ problem, copperStore })
@@ -384,6 +398,8 @@ function createFinalizationAttempt(
     workerCpuMs: 0,
     transferredBytes: 0,
     returnedBytes: 0,
+    work: delta.work,
+    wasStaleRevalidation: false,
     outcome: "committed",
     transactionId: delta.transactionId,
   })
@@ -403,6 +419,9 @@ function compareCommitOrder(
 
 function createAttempt(
   completed: ScheduledJobResult,
+  workOverride?: HybridTransactionDelta["work"],
+  wasStaleRevalidation = false,
+  outcomeOverride?: RegionAttemptRecord["outcome"],
 ): RegionAttemptRecord {
   if (completed.result.status === "completed") {
     return Object.freeze({
@@ -418,6 +437,12 @@ function createAttempt(
       workerCpuMs: completed.result.response.cpuTimeMs,
       transferredBytes: completed.result.response.receivedBytes,
       returnedBytes: completed.result.response.returnedBytes,
+      work:
+        workOverride ??
+        (completed.source === "cache"
+          ? EMPTY_HYBRID_WORK_COUNTERS
+          : completed.result.response.transactionDelta.work),
+      wasStaleRevalidation,
       outcome: "committed",
       transactionId:
         completed.result.response.transactionDelta.transactionId,
@@ -434,7 +459,9 @@ function createAttempt(
       workerCpuMs: completed.result.response.cpuTimeMs,
       transferredBytes: 0,
       returnedBytes: 0,
-      outcome: "failed",
+      work: workOverride ?? EMPTY_HYBRID_WORK_COUNTERS,
+      wasStaleRevalidation,
+      outcome: outcomeOverride ?? "failed",
       rejectionReason: completed.result.response.message,
     })
   }
@@ -448,6 +475,8 @@ function createAttempt(
     workerCpuMs: 0,
     transferredBytes: 0,
     returnedBytes: 0,
+    work: workOverride ?? EMPTY_HYBRID_WORK_COUNTERS,
+    wasStaleRevalidation,
     outcome: "cancelled",
   })
 }
