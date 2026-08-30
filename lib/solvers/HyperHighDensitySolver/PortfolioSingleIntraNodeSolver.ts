@@ -27,7 +27,6 @@ import { repairDisconnectedSameRootPortPoints } from "./repairDisconnectedSameRo
 // orderings are introduced only after that portfolio spends its dynamically
 // derived exploration budget or exhausts all of its candidates.
 const ORDERING_SHUFFLE_SEEDS = Array.from({ length: 6 }, (_, seed) => seed)
-const LATE_ADAPTIVE_ORDERING_SHUFFLE_SEEDS = ORDERING_SHUFFLE_SEEDS.slice(4)
 
 /** Coordinates a fitness-scheduled portfolio of intra-node routing solvers. */
 export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolver<
@@ -48,8 +47,10 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
   nodeWithPortPoints: NodeWithPortPoints
   connMap?: ConnectivityMap
   effort: number
-  /** Optional per-candidate cap for the exhaustive seed 4/5 retries. */
-  lateAdaptiveOrderingIterationLimit?: number
+  preferPrimaryAdaptiveSolver: boolean
+  failAfterPrimaryAdaptiveSolver: boolean
+  primaryAdaptiveSolver?: IntraNodeRouteSolver
+  primaryAdaptiveSolverFinished = false
   adaptiveSearchExpanded = false
 
   private getSolvedSegmentCount(solver: unknown): number | null {
@@ -106,7 +107,8 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
   constructor(
     opts: ConstructorParameters<typeof CachedIntraNodeRouteSolver>[0] & {
       effort?: number
-      lateAdaptiveOrderingIterationLimit?: number
+      preferPrimaryAdaptiveSolver?: boolean
+      failAfterPrimaryAdaptiveSolver?: boolean
     },
   ) {
     super()
@@ -114,8 +116,9 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     this.connMap = opts.connMap
     this.constructorParams = opts
     this.effort = opts.effort ?? 1
-    this.lateAdaptiveOrderingIterationLimit =
-      opts.lateAdaptiveOrderingIterationLimit
+    this.preferPrimaryAdaptiveSolver = opts.preferPrimaryAdaptiveSolver ?? false
+    this.failAfterPrimaryAdaptiveSolver =
+      opts.failAfterPrimaryAdaptiveSolver ?? false
     this.MAX_ITERATIONS = 20_000_000 * this.effort
     this.GREEDY_MULTIPLIER = 5
     this.MIN_SUBSTEPS = 100
@@ -311,6 +314,14 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
 
   override initializeSolvers() {
     super.initializeSolvers()
+    if (this.primaryAdaptiveSolver) {
+      const primaryCandidate = this.supervisedSolvers?.find(
+        ({ hyperParameters }) =>
+          hyperParameters.HIGH_DENSITY_A01 &&
+          hyperParameters.SHUFFLE_SEED === ORDERING_SHUFFLE_SEEDS[0],
+      )
+      if (primaryCandidate) primaryCandidate.solver = this.primaryAdaptiveSolver
+    }
     for (const { solver } of this.supervisedSolvers ?? []) {
       this.initializeCandidateBudget(solver)
     }
@@ -329,7 +340,6 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       g,
       f: g,
     })
-    return solver
   }
 
   private expandAdaptiveSearch() {
@@ -337,21 +347,10 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
 
     this.adaptiveSearchExpanded = true
     for (const shuffleSeed of ORDERING_SHUFFLE_SEEDS.slice(1)) {
-      const solver = this.addSupervisedCandidate({
+      this.addSupervisedCandidate({
         HIGH_DENSITY_A01: true,
         SHUFFLE_SEED: shuffleSeed,
       })
-      if (
-        LATE_ADAPTIVE_ORDERING_SHUFFLE_SEEDS.includes(shuffleSeed) &&
-        this.lateAdaptiveOrderingIterationLimit !== undefined
-      ) {
-        solver.MAX_ITERATIONS = Math.min(
-          solver.MAX_ITERATIONS,
-          this.lateAdaptiveOrderingIterationLimit,
-        )
-        this.stats.lateAdaptiveOrderingIterationLimit =
-          this.lateAdaptiveOrderingIterationLimit
-      }
     }
     this.refreshDynamicIterationLimit()
     this.stats.adaptiveSearchExpanded = true
@@ -374,6 +373,58 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
   }
 
   override _step() {
+    if (
+      this.preferPrimaryAdaptiveSolver &&
+      !this.primaryAdaptiveSolverFinished
+    ) {
+      if (!this.primaryAdaptiveSolver) {
+        this.primaryAdaptiveSolver = this.generateSolver({
+          HIGH_DENSITY_A01: true,
+          SHUFFLE_SEED: ORDERING_SHUFFLE_SEEDS[0],
+        })
+        this.initializeCandidateBudget(this.primaryAdaptiveSolver)
+        const primaryAdaptiveSolver = this
+          .primaryAdaptiveSolver as IntraNodeRouteSolver & { MAX_RIPS: number }
+        primaryAdaptiveSolver.MAX_RIPS = this.getNodeSegmentCount()
+        this.stats.primaryAdaptiveSolverMaxRips = primaryAdaptiveSolver.MAX_RIPS
+        this.stats.primaryAdaptiveSolverStarted = true
+      }
+
+      for (let substep = 0; substep < this.MIN_SUBSTEPS; substep++) {
+        this.primaryAdaptiveSolver.step()
+      }
+      this.activeSubSolver = this.primaryAdaptiveSolver
+
+      if (this.primaryAdaptiveSolver.solved) {
+        const winner = {
+          hyperParameters: {
+            HIGH_DENSITY_A01: true,
+            SHUFFLE_SEED: ORDERING_SHUFFLE_SEEDS[0],
+          },
+          solver: this.primaryAdaptiveSolver,
+          h: 0,
+          g: this.computeG(this.primaryAdaptiveSolver),
+          f: 0,
+        }
+        this.winningSolver = this.primaryAdaptiveSolver
+        this.onSolve(winner)
+        this.solved = true
+        this.stats.primaryAdaptiveSolverWon = true
+        return
+      }
+
+      if (!this.primaryAdaptiveSolver.failed) return
+      this.primaryAdaptiveSolverFinished = true
+      this.activeSubSolver = null
+      this.stats.primaryAdaptiveSolverFailed = true
+      if (this.failAfterPrimaryAdaptiveSolver) {
+        this.failed = true
+        this.error =
+          "Primary adaptive solver failed at an intermediate grown scale"
+        return
+      }
+    }
+
     if (!this.supervisedSolvers) this.initializeSolvers()
 
     if (

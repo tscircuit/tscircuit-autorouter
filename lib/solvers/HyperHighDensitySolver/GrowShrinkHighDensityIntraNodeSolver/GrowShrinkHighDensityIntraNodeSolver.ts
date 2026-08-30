@@ -22,6 +22,7 @@ export type GrowShrinkHighDensityIntraNodeSolverParams =
   PortfolioSingleIntraNodeSolverParams & {
     maxGrowthAttempts?: number
     maxInnerIterationsPerGrowthAttempt?: number
+    usePrimaryAdaptiveOnlyAtIntermediateScales?: boolean
     fallbackToInvalidGeometryOnFailure?: boolean
     growShrinkSolutionValidator?: (
       routes: HighDensityIntraNodeRoute[],
@@ -152,12 +153,17 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
   private createActiveSubSolver() {
     const { growShrinkSolutionValidator: _, ...portfolioParams } =
       this.constructorParams
+    // The original scale and the final fallback scale retain the complete
+    // portfolio. Intermediate scales use the bounded adaptive attempt so a
+    // failed approximation grows instead of rebuilding every candidate.
+    const usePrimaryAdaptiveOnly =
+      this.scaleFactor > 1 &&
+      this.growthAttempts < this.maxGrowthAttempts &&
+      portfolioParams.usePrimaryAdaptiveOnlyAtIntermediateScales
     this.activeSubSolver = new PortfolioSingleIntraNodeSolver({
       ...portfolioParams,
-      lateAdaptiveOrderingIterationLimit:
-        this.scaleFactor === 1
-          ? portfolioParams.lateAdaptiveOrderingIterationLimit
-          : undefined,
+      preferPrimaryAdaptiveSolver: usePrimaryAdaptiveOnly,
+      failAfterPrimaryAdaptiveSolver: usePrimaryAdaptiveOnly,
       nodeWithPortPoints: scaleNodeWithPortPoints(
         this.nodeWithPortPoints,
         this.scaleFactor,

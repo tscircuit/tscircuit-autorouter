@@ -60,9 +60,6 @@ type NodeBounds = {
 }
 
 const PRELOADED_TRACE_CLEARANCE = 0.15
-// Preserve the full base-scale portfolio, but do not let either exhaustive
-// late ordering retry consume the complete two-million-iteration A01 budget.
-const BASE_SCALE_LATE_ADAPTIVE_ORDERING_ITERATION_LIMIT = 500_000
 
 const getNodeBounds = (
   node: NodeWithPortPoints,
@@ -365,8 +362,7 @@ export const createPipeline9RegularNodeSolver = ({
     layerCount,
     useGrowShrinkHighDensityIntraNodeSolver: true,
     preserveTerminalPcbPortIds: false,
-    growShrinkBaseScaleLateAdaptiveOrderingIterationLimit:
-      BASE_SCALE_LATE_ADAPTIVE_ORDERING_ITERATION_LIMIT,
+    growShrinkUsePrimaryAdaptiveOnlyAtIntermediateScales: true,
     growShrinkFallbackToInvalidGeometryOnFailure: false,
     captureSearchDebug: false,
   })
