@@ -1,5 +1,6 @@
 import { expect, test } from "bun:test"
-import type { AnyCircuitElement } from "circuit-json"
+import type { AnyCircuitElement, PcbTraceRoutePoint } from "circuit-json"
+import { convertCircuitJsonToPcbSvg } from "circuit-to-svg"
 import { readFileSync } from "node:fs"
 import { gunzipSync } from "node:zlib"
 
@@ -28,6 +29,36 @@ const completedBoard = JSON.parse(
   ).toString("utf8"),
 ) as AnyCircuitElement[]
 
+// circuit-to-svg does not yet render the current through_pad route point
+// shape. Expand it into its two layer endpoints only for this visual snapshot;
+// the preserved Circuit JSON remains byte-for-byte unchanged.
+const completedBoardForSnapshot = completedBoard.map(
+  (element): AnyCircuitElement => {
+    if (element.type !== "pcb_trace") return element
+    const route = element.route.flatMap((point): PcbTraceRoutePoint[] =>
+      point.route_type === "through_pad"
+        ? [
+            {
+              route_type: "wire",
+              x: point.start.x,
+              y: point.start.y,
+              width: point.width,
+              layer: point.start_layer,
+            },
+            {
+              route_type: "wire",
+              x: point.end.x,
+              y: point.end.y,
+              width: point.width,
+              layer: point.end_layer,
+            },
+          ]
+        : [point],
+    )
+    return { ...element, route }
+  },
+)
+
 test("completed RP2350 board records the 13 routed DRC errors", (): void => {
   const drcErrors = completedBoard.filter(
     (element): element is CapturedDrcError =>
@@ -52,4 +83,12 @@ test("completed RP2350 board records the 13 routed DRC errors", (): void => {
   expect(
     drcErrors.some((error) => error.message.includes("accidental contact")),
   ).toBeTrue()
+  expect(
+    convertCircuitJsonToPcbSvg(completedBoardForSnapshot, {
+      backgroundColor: "#0f172a",
+      height: 1200,
+      matchBoardAspectRatio: true,
+      shouldDrawErrors: false,
+    }),
+  ).toMatchSvgSnapshot(import.meta.path)
 })
