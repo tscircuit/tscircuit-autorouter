@@ -19,11 +19,9 @@ test("bugreport94-56fa2e.json", () => {
   const { errors } = getDrcErrors(circuitJson!)
   expect(errors.length).toBeLessThanOrEqual(6)
 
-  expect(getLastStepSvg(solver.visualize())).toMatchSvgSnapshot(
-    import.meta.path,
-    {
-      // Linux retains a different safe-layer candidate with 8 DRC errors.
-      tolerance: 0.17,
-    },
-  )
+  const snapshotPath =
+    process.platform === "linux"
+      ? import.meta.path.replace(/\.test\.ts$/, "-linux.test.ts")
+      : import.meta.path
+  expect(getLastStepSvg(solver.visualize())).toMatchSvgSnapshot(snapshotPath)
 }, 180_000)

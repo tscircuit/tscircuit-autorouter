@@ -51,8 +51,12 @@ test("Pipeline9 routes the full Game Boy Advance parent directly to MCU pads", (
   )
   // The stacked base produces 34 relaxed-DRC errors on this legacy fixture.
   expect(errors.length).toBeLessThanOrEqual(34)
+  const routedSnapshotPath =
+    process.platform === "linux"
+      ? import.meta.path.replace(/\.test\.ts$/, "-linux.test.ts")
+      : import.meta.path
   expect(getLastStepSvg(solver.visualize())).toMatchSvgSnapshot(
-    import.meta.path,
+    routedSnapshotPath,
     { svgName: "routed" },
   )
 }, 600_000)
