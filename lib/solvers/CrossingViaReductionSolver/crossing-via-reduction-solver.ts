@@ -147,25 +147,32 @@ const recomputeVias = (
   return vias
 }
 
+type CrossingViaReductionIneligibility =
+  | "has-jumpers"
+  | "has-non-vertical-layer-transition"
+
 /**
- * Crossing-via reduction can only safely rebuild vias for routes whose layer
- * transitions are either ordinary vertical vias or explicit through-obstacle
- * connections. Some valid upstream outputs contain a non-vertical layer
- * transition whose connectivity is owned by another routing primitive. Keep
- * those routes immutable instead of letting optional simplification turn the
- * entire pipeline into a hard failure.
+ * Classifies routes outside this optional optimizer's mutation contract. This
+ * is an applicability check, not error recovery: jumper geometry and
+ * non-vertical layer transitions are owned by other routing primitives, while
+ * this solver only rebuilds ordinary vertical vias and explicit
+ * through-obstacle transitions. recomputeVias still throws if an eligible
+ * route violates that contract during mutation.
  */
-const canSafelyRecomputeRouteVias = (route: HighDensityRoute): boolean => {
+const getCrossingViaReductionIneligibility = (
+  route: HighDensityRoute,
+): CrossingViaReductionIneligibility | null => {
+  if (route.jumpers?.length) return "has-jumpers"
   for (let index = 1; index < route.route.length; index++) {
     const previousPoint = route.route[index - 1]
     const point = route.route[index]
     if (previousPoint.z === point.z) continue
     if (previousPoint.toNextSegmentType === "through_obstacle") continue
     if (previousPoint.x !== point.x || previousPoint.y !== point.y) {
-      return false
+      return "has-non-vertical-layer-transition"
     }
   }
-  return true
+  return null
 }
 
 const getRouteIds = (route: HighDensityRoute): string[] => {
@@ -908,8 +915,9 @@ export class CrossingViaReductionSolver extends BaseSolver {
       routeIndex++
     ) {
       if (
-        this.reducedHdRoutes[routeIndex].jumpers?.length ||
-        !canSafelyRecomputeRouteVias(this.reducedHdRoutes[routeIndex])
+        getCrossingViaReductionIneligibility(
+          this.reducedHdRoutes[routeIndex],
+        ) !== null
       ) {
         continue
       }
@@ -1243,12 +1251,13 @@ export class CrossingViaReductionSolver extends BaseSolver {
       detourRouteIndex < this.reducedHdRoutes.length;
       detourRouteIndex++
     ) {
-      if (this.reducedHdRoutes[detourRouteIndex].jumpers?.length) continue
-      if (
-        !canSafelyRecomputeRouteVias(this.reducedHdRoutes[detourRouteIndex])
-      ) {
-        this.stats.routesSkippedForUnsupportedLayerTransitions =
-          (this.stats.routesSkippedForUnsupportedLayerTransitions ?? 0) + 1
+      const ineligibility = getCrossingViaReductionIneligibility(
+        this.reducedHdRoutes[detourRouteIndex],
+      )
+      if (ineligibility === "has-jumpers") continue
+      if (ineligibility === "has-non-vertical-layer-transition") {
+        this.stats.routesSkippedForNonVerticalLayerTransitions =
+          (this.stats.routesSkippedForNonVerticalLayerTransitions ?? 0) + 1
         continue
       }
       const detourSections = sectionsByRoute[detourRouteIndex]

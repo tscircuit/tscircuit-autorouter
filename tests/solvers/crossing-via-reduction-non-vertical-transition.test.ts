@@ -3,7 +3,7 @@ import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import { CrossingViaReductionSolver } from "lib/solvers/CrossingViaReductionSolver/crossing-via-reduction-solver"
 import { createCrossingViaReductionRoutes } from "tests/fixtures/crossing-via-reduction-routes"
 
-test("keeps a route with an unsupported layer transition immutable", () => {
+test("keeps a non-vertical transition outside the optimizer contract", () => {
   const routes = createCrossingViaReductionRoutes()
   routes[0]!.route.push({ x: 2, y: -6, z: 1 })
   const initialRoutes = structuredClone(routes)
@@ -22,5 +22,5 @@ test("keeps a route with an unsupported layer transition immutable", () => {
   expect(solver.failed).toBe(false)
   expect(solver.solved).toBe(true)
   expect(solver.getReducedHdRoutes()).toEqual(initialRoutes)
-  expect(solver.stats.routesSkippedForUnsupportedLayerTransitions).toBe(1)
+  expect(solver.stats.routesSkippedForNonVerticalLayerTransitions).toBe(1)
 })
