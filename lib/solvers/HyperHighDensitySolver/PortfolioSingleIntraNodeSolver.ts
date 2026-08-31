@@ -9,6 +9,10 @@ import {
 } from "lib/types/high-density-types"
 import { CachedIntraNodeRouteSolver } from "../HighDensitySolver/CachedIntraNodeRouteSolver"
 import { IntraNodeRouteSolver } from "../HighDensitySolver/IntraNodeSolver"
+import {
+  HighDensitySolverA11,
+  HighDensitySolverA12,
+} from "../HighDensitySolver/official-high-density-a11-a12"
 import { MultiHeadPolyLineIntraNodeSolver2 } from "../HighDensitySolver/MultiHeadPolyLineIntraNodeSolver/MultiHeadPolyLineIntraNodeSolver2_Optimized"
 import { MultiHeadPolyLineIntraNodeSolver3 } from "../HighDensitySolver/MultiHeadPolyLineIntraNodeSolver/MultiHeadPolyLineIntraNodeSolver3_ViaPossibilitiesSolverIntegration"
 import { SingleLayerNoDifferentRootIntersectionsIntraNodeSolver } from "../HighDensitySolver/SingleLayerNoDifferentRootIntersectionsIntraNodeSolver"
@@ -126,6 +130,8 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       ["flipTraceAlignmentDirection", "orderings6"],
       ["closedFormSingleTrace"],
       // ["closedFormTwoTrace"],
+      ["highDensityA12"],
+      ["highDensityA11"],
       ["highDensityA01"],
       ["highDensityA03"],
     ]
@@ -266,6 +272,24 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
           },
         ],
       },
+      {
+        name: "highDensityA12",
+        possibleValues: [
+          {
+            HIGH_DENSITY_A12: true,
+            SHUFFLE_SEED: ORDERING_SHUFFLE_SEEDS[0],
+          },
+        ],
+      },
+      {
+        name: "highDensityA11",
+        possibleValues: [
+          {
+            HIGH_DENSITY_A11: true,
+            SHUFFLE_SEED: ORDERING_SHUFFLE_SEEDS[0],
+          },
+        ],
+      },
     ]
   }
 
@@ -375,6 +399,8 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
   computeG(solver: IntraNodeRouteSolver) {
     if (
       (solver as any) instanceof HighDensitySolverA01 ||
+      (solver as any) instanceof HighDensitySolverA12 ||
+      (solver as any) instanceof HighDensitySolverA11 ||
       (solver as any) instanceof HighDensityA03Solver
     ) {
       return (solver as any).iterations / 1_000_000
@@ -441,6 +467,32 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       })
       return solver as any
     }
+    if (hyperParameters.HIGH_DENSITY_A12) {
+      return new HighDensitySolverA12({
+        nodeWithPortPoints: this.nodeWithPortPoints,
+        viaDiameter: this.constructorParams.viaDiameter ?? 0.3,
+        viaMinDistFromBorder: (this.constructorParams.viaDiameter ?? 0.3) / 2,
+        traceMargin: 0.1,
+        traceThickness: this.constructorParams.traceWidth ?? 0.15,
+        effort: this.effort,
+        hyperParameters: {
+          shuffleSeed: hyperParameters.SHUFFLE_SEED ?? 0,
+        },
+      }) as any
+    }
+    if (hyperParameters.HIGH_DENSITY_A11) {
+      return new HighDensitySolverA11({
+        nodeWithPortPoints: this.nodeWithPortPoints,
+        viaDiameter: this.constructorParams.viaDiameter ?? 0.3,
+        viaMinDistFromBorder: (this.constructorParams.viaDiameter ?? 0.3) / 2,
+        traceMargin: 0.1,
+        traceThickness: this.constructorParams.traceWidth ?? 0.15,
+        effort: this.effort,
+        hyperParameters: {
+          shuffleSeed: hyperParameters.SHUFFLE_SEED ?? 0,
+        },
+      }) as any
+    }
     if (hyperParameters.HIGH_DENSITY_A03) {
       const solver = new HighDensityA03Solver({
         nodeWithPortPoints: this.nodeWithPortPoints,
@@ -506,6 +558,8 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     let routes: HighDensityIntraNodeRoute[]
     if (
       (solver.solver as any) instanceof HighDensitySolverA01 ||
+      (solver.solver as any) instanceof HighDensitySolverA12 ||
+      (solver.solver as any) instanceof HighDensitySolverA11 ||
       (solver.solver as any) instanceof HighDensityA03Solver
     ) {
       routes = (solver.solver as any).getOutput()

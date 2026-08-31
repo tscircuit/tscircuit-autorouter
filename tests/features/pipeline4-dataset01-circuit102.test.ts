@@ -67,7 +67,7 @@ test(
     )
 
     expect(explicit8mmMetadata?.status).toBe("solved")
-    expect(explicit8mmMetadata?.solverType).toBe("HighDensitySolverA03")
+    expect(explicit8mmMetadata?.solverType).toBe("HighDensitySolverA12")
     expect(explicit8mmMetadata?.routeCount).toBe(2)
     expect(explicit8mmNode.portPoints.length).toBeGreaterThan(
       defaultNode.portPoints.length,
