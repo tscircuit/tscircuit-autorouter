@@ -397,11 +397,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
   computeG(solver: IntraNodeRouteSolver) {
     if ((solver as any) instanceof HighDensitySolverA11) {
       // Preserve established solutions before A11 explores the native grid.
-      return (
-        this.GREEDY_MULTIPLIER +
-        1 +
-        (solver as any).iterations / 1_000_000
-      )
+      return this.GREEDY_MULTIPLIER + 1 + (solver as any).iterations / 1_000_000
     }
     if (
       (solver as any) instanceof HighDensitySolverA01 ||

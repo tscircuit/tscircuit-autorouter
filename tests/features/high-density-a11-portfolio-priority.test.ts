@@ -20,8 +20,6 @@ test("native portfolio preserves a legacy solution before starting A11", () => {
       candidate.getSolverName() === "HighDensitySolverA11",
   )?.solver
   expect(solver.solved).toBe(true)
-  expect(solver.winningSolver?.getSolverName()).not.toBe(
-    "HighDensitySolverA11",
-  )
+  expect(solver.winningSolver?.getSolverName()).not.toBe("HighDensitySolverA11")
   expect(a11Candidate?.iterations).toBe(0)
 })
