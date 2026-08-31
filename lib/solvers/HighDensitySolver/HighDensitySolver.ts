@@ -58,7 +58,6 @@ export class HighDensitySolver extends BaseSolver {
   obstacles: Obstacle[]
   layerCount: number
   useGrowShrinkHighDensityIntraNodeSolver: boolean
-  enableHighDensityA11: boolean
   preserveTerminalPcbPortIds: boolean
   growShrinkMaxInnerIterationsPerGrowthAttempt?: number
   growShrinkFallbackToInvalidGeometryOnFailure: boolean
@@ -94,7 +93,6 @@ export class HighDensitySolver extends BaseSolver {
     obstacles,
     layerCount,
     useGrowShrinkHighDensityIntraNodeSolver,
-    enableHighDensityA11,
     preserveTerminalPcbPortIds,
     growShrinkMaxInnerIterationsPerGrowthAttempt,
     growShrinkFallbackToInvalidGeometryOnFailure,
@@ -111,7 +109,6 @@ export class HighDensitySolver extends BaseSolver {
     obstacles?: Obstacle[]
     layerCount?: number
     useGrowShrinkHighDensityIntraNodeSolver?: boolean
-    enableHighDensityA11?: boolean
     preserveTerminalPcbPortIds?: boolean
     growShrinkMaxInnerIterationsPerGrowthAttempt?: number
     growShrinkFallbackToInvalidGeometryOnFailure?: boolean
@@ -137,7 +134,6 @@ export class HighDensitySolver extends BaseSolver {
     this.layerCount = layerCount ?? 2
     this.useGrowShrinkHighDensityIntraNodeSolver =
       useGrowShrinkHighDensityIntraNodeSolver ?? false
-    this.enableHighDensityA11 = enableHighDensityA11 ?? false
     this.preserveTerminalPcbPortIds = preserveTerminalPcbPortIds ?? false
     this.growShrinkMaxInnerIterationsPerGrowthAttempt =
       growShrinkMaxInnerIterationsPerGrowthAttempt
@@ -385,7 +381,6 @@ export class HighDensitySolver extends BaseSolver {
       effort: this.effort,
       obstacles: this.obstacles,
       layerCount: this.layerCount,
-      enableHighDensityA11: this.enableHighDensityA11,
       maxInnerIterationsPerGrowthAttempt:
         this.growShrinkMaxInnerIterationsPerGrowthAttempt,
       fallbackToInvalidGeometryOnFailure:

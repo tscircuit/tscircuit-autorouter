@@ -40,7 +40,6 @@ export type PortfolioSingleIntraNodeSolverParams = ConstructorParameters<
   typeof CachedIntraNodeRouteSolver
 >[0] & {
   effort?: number
-  enableHighDensityA11?: boolean
 }
 
 /** Coordinates a fitness-scheduled portfolio of intra-node routing solvers. */
@@ -139,9 +138,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       // ["closedFormTwoTrace"],
       ["highDensityA01"],
       ["highDensityA03"],
-      ...(this.constructorParams.enableHighDensityA11
-        ? [["highDensityA11"]]
-        : []),
+      ["highDensityA11"],
     ]
   }
 
