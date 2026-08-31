@@ -95,8 +95,7 @@ test("Pipeline7 and Pipeline9 always run A11 and A12 alongside existing high-den
       } as any,
     } as any)
   expect(
-    (pipeline7HighDensityParams as any)
-      .useGrowShrinkHighDensityIntraNodeSolver,
+    (pipeline7HighDensityParams as any).useGrowShrinkHighDensityIntraNodeSolver,
   ).toBe(true)
   getExternalCandidates(
     getPipelinePortfolio(
