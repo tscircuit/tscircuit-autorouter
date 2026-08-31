@@ -202,7 +202,9 @@ test("bugreport100 rejects a movable preloaded via beside a foreign QFN pad", as
       pcb_pad_ids: expect.arrayContaining(["pcb_smtpad_30"]),
     }),
   )
-  expect(fixedSolver.stats.preloadedViaCandidateRejectionCount).toBe(1)
+  // A11 and the existing multi-head candidate both produce and reject an
+  // unsafe via before grow/shrink uses the valid resized route.
+  expect(fixedSolver.stats.preloadedViaCandidateRejectionCount).toBe(2)
   expect(fixedSolver.highDensitySolver.stats.highDensityResizeCount).toBe(1)
   expect(
     fixedRfTrace.route.filter((point) => point.route_type === "via"),
