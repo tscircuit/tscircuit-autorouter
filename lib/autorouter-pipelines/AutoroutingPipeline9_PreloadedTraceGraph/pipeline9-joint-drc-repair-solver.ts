@@ -4,6 +4,7 @@ import type { GraphicsObject } from "graphics-debug"
 import {
   AutoroutingDrcEngine,
   type DrcEvaluator,
+  GlobalDrcForceImproveSolver,
   type SimpleRouteJson as RepairSimpleRouteJson,
   type SimplifiedPcbTraces as RepairSimplifiedPcbTraces,
 } from "high-density-repair03/lib"
@@ -647,6 +648,10 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
   readonly exactRepairSolver?: Pipeline7AdaptiveDrcBranchPortfolioSolver
   private drcEvaluator?: DrcEvaluator
   private cachedReferenceDrcEvaluator?: DrcEvaluator
+  private postExactReferenceRepairSolver?: GlobalDrcForceImproveSolver
+  private postExactReferenceRepairInputDrcIssueCount?: number
+  private postExactReferenceRepairCandidateDrcIssueCount?: number
+  private postExactReferenceRepairAccepted = false
   private referenceDrcValidationCount = 0
   private referenceDrcFalseNegativeCount = 0
   private combinedOutput?: HighDensityRoute[]
@@ -1354,22 +1359,100 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       exactIndexedDrcIssueCount === undefined ||
       exactIndexedDrcIssueCount <=
         MAX_POST_EXACT_PRECISION_PASS_INDEXED_ISSUE_COUNT
-    let postExactReferenceDrcIssueCount: number | undefined
+    let postExactPrecisionOutput = exactOutput
+    let postExactReferenceDrcIssueCount =
+      this.postExactReferenceRepairInputDrcIssueCount
     if (shouldRunPostExactPrecisionPass) {
       // The indexed evaluator can retain conservative false positives after the
       // exact portfolio has produced a reference-clean result. Do not let later
       // heuristic repairs degrade an output already accepted by benchmark DRC.
-      const exactReferenceDrcResult = this.cachedReferenceDrcEvaluator!({
-        traces: [],
-        routes: exactOutput,
-        hdRoutes: exactOutput,
-      })
-      const exactReferenceDrcErrors = Array.isArray(exactReferenceDrcResult)
-        ? exactReferenceDrcResult
-        : exactReferenceDrcResult.errors
-      postExactReferenceDrcIssueCount = exactReferenceDrcErrors.length
-      if (exactReferenceDrcErrors.length === 0) {
-        this.combinedOutput = exactOutput
+      if (postExactReferenceDrcIssueCount === undefined) {
+        const exactReferenceDrcResult = this.cachedReferenceDrcEvaluator!({
+          traces: [],
+          routes: exactOutput,
+          hdRoutes: exactOutput,
+        })
+        const exactReferenceDrcErrors = Array.isArray(exactReferenceDrcResult)
+          ? exactReferenceDrcResult
+          : exactReferenceDrcResult.errors
+        postExactReferenceDrcIssueCount = exactReferenceDrcErrors.length
+        this.postExactReferenceRepairInputDrcIssueCount =
+          postExactReferenceDrcIssueCount
+      }
+
+      if (postExactReferenceDrcIssueCount > 0) {
+        if (!this.postExactReferenceRepairSolver) {
+          this.postExactReferenceRepairSolver =
+            new GlobalDrcForceImproveSolver({
+              srj: this.exactRepairSolver.params.srj,
+              hdRoutes: exactOutput,
+              connMap: this.params.connMap,
+              effort: this.params.effort,
+              drcEvaluator: this.drcEvaluator!,
+              referenceDrcEvaluator: this.cachedReferenceDrcEvaluator!,
+              viaHoleDiameter: this.params.defaultViaHoleDiameter,
+              maxIterations: EXACT_REPAIR_MAX_ITERATIONS,
+              enableBroadFallback: false,
+              enableLargeBoardBroadFallback: false,
+              enableTargetedErrorSweep: false,
+              enablePostSolveClearanceRelaxation: false,
+              enableSafeTraceLayerMoves: true,
+              enableViaInPadLayerMoves: false,
+              enableTraceViaOwnerTargeting: true,
+            })
+          this.activeSubSolver = this.postExactReferenceRepairSolver
+          this.MAX_ITERATIONS = Math.max(
+            this.MAX_ITERATIONS,
+            this.iterations +
+              this.postExactReferenceRepairSolver.MAX_ITERATIONS +
+              1,
+          )
+          return
+        }
+
+        if (!this.postExactReferenceRepairSolver.solved) {
+          this.postExactReferenceRepairSolver.step()
+          this.progress = this.postExactReferenceRepairSolver.progress
+          if (this.postExactReferenceRepairSolver.failed) {
+            this.failed = true
+            this.error = this.postExactReferenceRepairSolver.error
+            return
+          }
+          if (!this.postExactReferenceRepairSolver.solved) return
+        }
+
+        const repairCandidate = this.postExactReferenceRepairSolver.getOutput()
+        if (
+          this.postExactReferenceRepairCandidateDrcIssueCount === undefined
+        ) {
+          const repairReferenceDrcResult =
+            this.cachedReferenceDrcEvaluator!({
+              traces: [],
+              routes: repairCandidate,
+              hdRoutes: repairCandidate,
+            })
+          const repairReferenceDrcErrors = Array.isArray(
+            repairReferenceDrcResult,
+          )
+            ? repairReferenceDrcResult
+            : repairReferenceDrcResult.errors
+          this.postExactReferenceRepairCandidateDrcIssueCount =
+            repairReferenceDrcErrors.length
+          this.postExactReferenceRepairAccepted =
+            repairReferenceDrcErrors.length < postExactReferenceDrcIssueCount
+          this.activeSubSolver = null
+        }
+        if (this.postExactReferenceRepairAccepted) {
+          postExactPrecisionOutput = repairCandidate
+        }
+      }
+
+      const acceptedPostExactReferenceDrcIssueCount =
+        this.postExactReferenceRepairAccepted
+          ? this.postExactReferenceRepairCandidateDrcIssueCount
+          : postExactReferenceDrcIssueCount
+      if (acceptedPostExactReferenceDrcIssueCount === 0) {
+        this.combinedOutput = postExactPrecisionOutput
         this.stats = {
           ...this.stats,
           ...this.exactRepairSolver.stats,
@@ -1379,8 +1462,20 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
           postExactPrecisionPassAttempted: true,
           postExactReferenceValidationAttempted: true,
           postExactReferenceValidationSkippedForIndexedIssueCount: false,
-          postExactReferenceDrcIssueCount: 0,
-          postExactReferenceAccepted: true,
+          postExactReferenceDrcIssueCount,
+          postExactReferenceAccepted: postExactReferenceDrcIssueCount === 0,
+          postExactReferenceRepairAttempted: Boolean(
+            this.postExactReferenceRepairSolver,
+          ),
+          postExactReferenceRepairInputDrcIssueCount:
+            this.postExactReferenceRepairInputDrcIssueCount,
+          postExactReferenceRepairCandidateDrcIssueCount:
+            this.postExactReferenceRepairCandidateDrcIssueCount,
+          postExactReferenceRepairAccepted:
+            this.postExactReferenceRepairAccepted,
+          postExactReferenceRepairCandidateAttempts:
+            this.postExactReferenceRepairSolver?.stats
+              .globalDrcForceImproveCandidateAttempts ?? 0,
           regionalB01RepairCandidateCount: 0,
           regionalB01RepairAcceptedCount: 0,
           regionalB01RepairFallbackCandidateCount: 0,
@@ -1405,18 +1500,18 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     const terminalEscapeResult = shouldRunPostExactPrecisionPass
       ? applyPipeline9TerminalEscapeRelocations({
           srj: this.params.srj,
-          routes: exactOutput,
+          routes: postExactPrecisionOutput,
           newConnections: this.params.newConnections,
           syntheticConnectionNames: this.syntheticConnectionNames,
           drcEvaluator: this.drcEvaluator!,
         })
       : {
-          routes: exactOutput,
+          routes: postExactPrecisionOutput,
           attemptedCandidateCount: 0,
           acceptedCandidateCount: 0,
           remainingErrors: getPipeline9DrcErrors(
             this.drcEvaluator!,
-            exactOutput,
+            postExactPrecisionOutput,
           ),
         }
     const preloadRepairTraceIds = getPipeline9PreloadRepairTraceIds({
@@ -1458,6 +1553,18 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         !shouldRunPostExactPrecisionPass,
       postExactReferenceDrcIssueCount,
       postExactReferenceAccepted: false,
+      postExactReferenceRepairAttempted: Boolean(
+        this.postExactReferenceRepairSolver,
+      ),
+      postExactReferenceRepairInputDrcIssueCount:
+        this.postExactReferenceRepairInputDrcIssueCount,
+      postExactReferenceRepairCandidateDrcIssueCount:
+        this.postExactReferenceRepairCandidateDrcIssueCount,
+      postExactReferenceRepairAccepted:
+        this.postExactReferenceRepairAccepted,
+      postExactReferenceRepairCandidateAttempts:
+        this.postExactReferenceRepairSolver?.stats
+          .globalDrcForceImproveCandidateAttempts ?? 0,
       regionalB01RepairCandidateCount:
         regionalB01RepairResult.attemptedCandidateCount,
       regionalB01RepairAcceptedCount:
