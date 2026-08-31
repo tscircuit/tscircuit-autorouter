@@ -46,6 +46,16 @@ import { preparePipeline9DrcRoutedTracesWithMetadata } from "./preparePipeline9D
 
 const EXACT_REPAIR_MAX_ITERATIONS = 32
 const EXACT_REPAIR_BROAD_MAX_ITERATIONS = 12
+const EXACT_REPAIR_FAST_PROBE_COMPLEXITY_LIMIT = 512
+
+export const shouldRunPipeline9ExactRepairFastProbe = ({
+  routeCount,
+  drcIssueCount,
+}: {
+  routeCount: number
+  drcIssueCount: number
+}): boolean =>
+  routeCount * drcIssueCount <= EXACT_REPAIR_FAST_PROBE_COMPLEXITY_LIMIT
 // Reference validation and terminal relocation are precision passes for small
 // residual sets. Keep that exhaustive search for compact residues while
 // bounding terminal relocation's repeated whole-board indexed DRC scans.
@@ -914,6 +924,15 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         ]!.hdRoute = mergedRoutes[groupIndex]!
       }
     }
+    const exactRepairRouteCount =
+      params.newHdRoutes.length + this.movablePreloadedSections.length
+    const exactRepairFastProbeComplexity =
+      exactRepairRouteCount * currentDrc.errors.length
+    const enableExactRepairFastProbe = shouldRunPipeline9ExactRepairFastProbe({
+      routeCount: exactRepairRouteCount,
+      drcIssueCount: currentDrc.errors.length,
+    })
+
     this.stats = {
       initialJointDrcIssueCount: currentDrc.errors.length,
       baselineJointDrcIssueCount: baselineDrc.errors.length,
@@ -926,6 +945,11 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       }, {}),
       movablePreloadedTraceCount: movablePreloadedTraceIds.size,
       movablePreloadedSectionCount: this.movablePreloadedSections.length,
+      exactRepairRouteCount,
+      exactRepairFastProbeComplexity,
+      exactRepairFastProbeComplexityLimit:
+        EXACT_REPAIR_FAST_PROBE_COMPLEXITY_LIMIT,
+      exactRepairFastProbeEnabled: enableExactRepairFastProbe,
       exactRepairConfiguredMaxIterations: EXACT_REPAIR_MAX_ITERATIONS,
       exactRepairConfiguredViaInPadMaxIterations: EXACT_REPAIR_MAX_ITERATIONS,
       exactRepairConfiguredBroadMaxIterations:
@@ -1309,6 +1333,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       drcEvaluator,
       viaInPadDrcEvaluator: drcEvaluator,
       maxIterations: EXACT_REPAIR_MAX_ITERATIONS,
+      enableFastProbe: enableExactRepairFastProbe,
       enableBroadFallback: false,
       enableLargeBoardBroadFallback: false,
       enableTargetedErrorSweep: true,

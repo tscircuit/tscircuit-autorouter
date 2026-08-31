@@ -147,6 +147,27 @@ const recomputeVias = (
   return vias
 }
 
+/**
+ * Crossing-via reduction can only safely rebuild vias for routes whose layer
+ * transitions are either ordinary vertical vias or explicit through-obstacle
+ * connections. Some valid upstream outputs contain a non-vertical layer
+ * transition whose connectivity is owned by another routing primitive. Keep
+ * those routes immutable instead of letting optional simplification turn the
+ * entire pipeline into a hard failure.
+ */
+const canSafelyRecomputeRouteVias = (route: HighDensityRoute): boolean => {
+  for (let index = 1; index < route.route.length; index++) {
+    const previousPoint = route.route[index - 1]
+    const point = route.route[index]
+    if (previousPoint.z === point.z) continue
+    if (previousPoint.toNextSegmentType === "through_obstacle") continue
+    if (previousPoint.x !== point.x || previousPoint.y !== point.y) {
+      return false
+    }
+  }
+  return true
+}
+
 const getRouteIds = (route: HighDensityRoute): string[] => {
   const routeIds = [route.connectionName]
   if (route.rootConnectionName) {
@@ -886,7 +907,12 @@ export class CrossingViaReductionSolver extends BaseSolver {
       routeIndex < this.reducedHdRoutes.length;
       routeIndex++
     ) {
-      if (this.reducedHdRoutes[routeIndex].jumpers?.length) continue
+      if (
+        this.reducedHdRoutes[routeIndex].jumpers?.length ||
+        !canSafelyRecomputeRouteVias(this.reducedHdRoutes[routeIndex])
+      ) {
+        continue
+      }
       const sections = sectionsByRoute[routeIndex]
       for (
         let sectionIndex = 0;
@@ -1218,6 +1244,13 @@ export class CrossingViaReductionSolver extends BaseSolver {
       detourRouteIndex++
     ) {
       if (this.reducedHdRoutes[detourRouteIndex].jumpers?.length) continue
+      if (
+        !canSafelyRecomputeRouteVias(this.reducedHdRoutes[detourRouteIndex])
+      ) {
+        this.stats.routesSkippedForUnsupportedLayerTransitions =
+          (this.stats.routesSkippedForUnsupportedLayerTransitions ?? 0) + 1
+        continue
+      }
       const detourSections = sectionsByRoute[detourRouteIndex]
       for (
         let detourSectionIndex = 1;
