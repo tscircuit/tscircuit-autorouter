@@ -9,7 +9,10 @@ export default defineConfig({
   resolve: {
     alias: {
       "@tscircuit/high-density-a01-a11-a12": fileURLToPath(
-        new URL("./vendor/high-density-a11-a12-runtime.mjs", import.meta.url),
+        new URL(
+          "./vendor/high-density-a11-a12-runtime.bundle.mjs",
+          import.meta.url,
+        ),
       ),
     },
   },

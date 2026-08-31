@@ -8,7 +8,12 @@
     "indentStyle": "space"
   },
   "files": {
-    "ignore": ["cosmos-export", "dist", "**/*.json"]
+    "ignore": [
+      "cosmos-export",
+      "dist",
+      "**/*.json",
+      "vendor/high-density-a11-a12-runtime.bundle.mjs"
+    ]
   },
   "javascript": {
     "formatter": {
