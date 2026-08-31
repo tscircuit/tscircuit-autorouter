@@ -16,7 +16,7 @@
     "bench": "bun test tests/spatial-index-bench.test.ts",
     "format": "biome format --write .",
     "format:check": "biome format .",
-    "vercel-build": "cosmos-export",
+    "vercel-build": "NODE_OPTIONS=--max-old-space-size=6144 cosmos-export",
     "run-sample": "bun scripts/run-sample.ts",
     "repomix:lib": "repomix --ignore 'testing/**,**/TwoRouteHighDensitySolver/**,**/RouteStitchingSolver/**,solvers/CapacitySegmentPointOptimizer/CapacitySegmentPointOptimizer.ts' lib",
     "bug-report": "bun run scripts/download-bug-report.ts",
