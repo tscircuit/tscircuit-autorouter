@@ -293,7 +293,6 @@ const getProgressInfo = (
     activeSubSolverProgress: activeSubSolver?.progress,
     activeSubSolverIterations: activeSubSolver?.iterations,
     stageTiming: extractBenchmarkStageTiming(solver, "partial"),
-    routingMetrics: getRoutingBenchmarkMetrics(solver),
   }
 }
 
@@ -304,12 +303,6 @@ const getRoutingBenchmarkMetrics = (
   solver: SolverInstance,
 ): RoutingBenchmarkMetrics => {
   const highDensityStats = solver.highDensityRouteSolver?.stats
-  const getCounter = (name: string): number | undefined => {
-    const value = highDensityStats?.[name]
-    return typeof value === "number" && Number.isFinite(value)
-      ? value
-      : undefined
-  }
   const networkedHighDensity =
     highDensityStats &&
     typeof highDensityStats.remoteRequestsStarted === "number"
@@ -341,10 +334,24 @@ const getRoutingBenchmarkMetrics = (
     // the client-local counter would be an incomplete and misleading total.
     highDensityGrowthCount: networkedHighDensity
       ? undefined
-      : getCounter("highDensityResizeCount"),
+      : getHighDensityGrowthCount(solver),
     phaseTimeMs: solver.timeSpentOnPhase,
     networkedHighDensity,
   }
+}
+
+const getHighDensityGrowthCount = (
+  solver: SolverInstance,
+): number | undefined => {
+  const highDensityStats = solver.highDensityRouteSolver?.stats
+  if (
+    highDensityStats &&
+    typeof highDensityStats.remoteRequestsStarted === "number"
+  ) {
+    return undefined
+  }
+  const value = highDensityStats?.highDensityResizeCount
+  return typeof value === "number" && Number.isFinite(value) ? value : undefined
 }
 
 const getNetworkedBenchmarkValidationError = (
@@ -369,7 +376,7 @@ const getNetworkedBenchmarkValidationError = (
   return undefined
 }
 
-const solveWithProgress = async (
+export const solveWithProgress = async (
   task: BenchmarkTask,
   solver: SolverInstance,
   start: number,
@@ -398,6 +405,10 @@ const solveWithProgress = async (
 
     lastProgressAt = elapsedTimeMs
     lastProgressKey = progressKey
+    const highDensityGrowthCount = getHighDensityGrowthCount(solver)
+    if (highDensityGrowthCount !== undefined) {
+      progress.routingMetrics = { highDensityGrowthCount }
+    }
     options.onProgress(progress)
   }
 
