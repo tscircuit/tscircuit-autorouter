@@ -17,6 +17,22 @@ test("Pipeline9 makes every preloaded trace in an SRJ23 sample 46 DRC region rer
   expect(
     solver.pipeline9JointDrcRepairSolver?.stats.regionalB01RepairAcceptedCount,
   ).toBeGreaterThan(0)
+  const repairedRoutes = solver.pipeline9JointDrcRepairSolver?.getOutput()
+  const simplifiedRoutes =
+    solver.postRepairTraceSimplificationSolver?.simplifiedHdRoutes
+  if (!repairedRoutes || !simplifiedRoutes) {
+    throw new Error("Pipeline9 did not run post-repair trace simplification")
+  }
+  expect(
+    simplifiedRoutes.reduce((count, route) => count + route.vias.length, 0),
+  ).toBeLessThan(
+    repairedRoutes.reduce((count, route) => count + route.vias.length, 0),
+  )
+  expect(
+    simplifiedRoutes.reduce((count, route) => count + route.route.length, 0),
+  ).toBeLessThan(
+    repairedRoutes.reduce((count, route) => count + route.route.length, 0),
+  )
   const { errors } = evaluateRelaxedDrc({
     inputSrj: scenario,
     srjWithPointPairs: solver.srjWithPointPairs!,

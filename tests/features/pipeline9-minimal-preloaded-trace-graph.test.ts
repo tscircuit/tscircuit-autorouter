@@ -105,7 +105,7 @@ test("Pipeline9 owns copied stages with minimal preloaded-trace changes", () => 
   const pipeline7SharedStageCount = pipeline7.pipelineDef.filter(
     (step) => step.solverName !== "exactGeometryDrcForceImproveSolver",
   ).length
-  expect(solver.pipelineDef).toHaveLength(pipeline7SharedStageCount + 3)
+  expect(solver.pipelineDef).toHaveLength(pipeline7SharedStageCount + 4)
   for (const stageName of [
     "highDensityForceImproveSolver",
     "highDensityRepairSolver",
@@ -127,6 +127,9 @@ test("Pipeline9 owns copied stages with minimal preloaded-trace changes", () => 
   const mutatedPreloadSimplificationStep = solver.pipelineDef.find(
     (step) => step.solverName === "mutatedPreloadedTraceSimplificationSolver",
   )
+  const postRepairSimplificationStep = solver.pipelineDef.find(
+    (step) => step.solverName === "postRepairTraceSimplificationSolver",
+  )
   expect(mutatedPreloadSimplificationStep?.solverClass).toBe(
     TraceSimplificationSolver,
   )
@@ -136,6 +139,15 @@ test("Pipeline9 owns copied stages with minimal preloaded-trace changes", () => 
   expect(
     pipeline9StageNames.indexOf("mutatedPreloadedTraceSimplificationSolver"),
   ).toBe(pipeline9StageNames.indexOf("traceWidthSolver") - 1)
+  expect(postRepairSimplificationStep?.solverClass).toBe(
+    TraceSimplificationSolver,
+  )
+  expect(
+    pipeline9StageNames.indexOf("postRepairTraceSimplificationSolver"),
+  ).toBe(pipeline9StageNames.indexOf("pipeline9JointDrcRepairSolver") + 1)
+  expect(
+    pipeline9StageNames.indexOf("postRepairTraceSimplificationSolver"),
+  ).toBe(pipeline9StageNames.indexOf("lengthMatchingPostProcessingSolver") - 1)
   expect(
     solver.pipelineDef.some(
       (step) => step.solverName === "exactGeometryDrcForceImproveSolver",
@@ -173,6 +185,30 @@ test("Pipeline9 owns copied stages with minimal preloaded-trace changes", () => 
       ),
     ),
   ).toBe(false)
+  const [postRepairSimplificationParams] =
+    postRepairSimplificationStep!.getConstructorParams(solver)
+  expect(postRepairSimplificationParams).toMatchObject({
+    minBoardEdgeClearance: 0.23,
+    enableCrossingViaReduction: true,
+    preserveRouteEndpoints: true,
+  })
+  expect(
+    (
+      postRepairSimplificationParams as {
+        otherHdRoutes?: Array<{ connectionName: string }>
+      }
+    ).otherHdRoutes?.length,
+  ).toBeGreaterThan(0)
+  const postRepairTraceSimplificationSolver =
+    solver.postRepairTraceSimplificationSolver
+  expect(postRepairTraceSimplificationSolver).toBeDefined()
+  if (!postRepairTraceSimplificationSolver) {
+    throw new Error("Pipeline9 did not run post-repair trace simplification")
+  }
+  expect(postRepairTraceSimplificationSolver.solved).toBeTrue()
+  expect(solver._getOutputHdRoutes()).toBe(
+    postRepairTraceSimplificationSolver.simplifiedHdRoutes,
+  )
   const outputTraceIds = solver
     .getOutputSimplifiedPcbTraces()
     .map((trace) => trace.pcb_trace_id)
