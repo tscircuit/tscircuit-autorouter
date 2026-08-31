@@ -294,9 +294,9 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
 
   /**
    * Some external solvers expose an idempotent setup phase that calculates
-  * their natural iteration budget from the problem. Running setup here does
-  * not advance the solver or give it preference in the portfolio.
-  */
+   * their natural iteration budget from the problem. Running setup here does
+   * not advance the solver or give it preference in the portfolio.
+   */
   private initializeCandidateBudget(solver: unknown) {
     // Keep A11's fine grid lazy so easy nodes do not pay its setup cost.
     if ((solver as any) instanceof HighDensitySolverA11) return
@@ -573,11 +573,10 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     )
     if (solver.hyperParameters.HIGH_DENSITY_A11) {
       const geometryError = getRouteGeometryViolationError(repairedRoutes)
-      const pairConnectivityIsValid =
-        areNodePortPointPairsConnectedByRoutes(
-          repairedRoutes,
-          this.nodeWithPortPoints,
-        )
+      const pairConnectivityIsValid = areNodePortPointPairsConnectedByRoutes(
+        repairedRoutes,
+        this.nodeWithPortPoints,
+      )
       if (geometryError || !pairConnectivityIsValid) {
         solver.solver.solved = false
         solver.solver.failed = true
