@@ -1556,13 +1556,6 @@ jobs:
             core.setOutput('pr_sha', prSha)
             core.setOutput('status_comment_id', String(statusComment.data.id))
 
-      - name: Checkout benchmark controller
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ github.sha }}
-          path: same-machine-controller
-          persist-credentials: false
-
       - name: Checkout current main
         uses: actions/checkout@v4
         with:
@@ -1642,7 +1635,7 @@ jobs:
           cp benchmark-snapshots.html ../same-machine-results/pr/benchmark-snapshots.html
 
       - name: Render same-machine comparison
-        working-directory: same-machine-controller
+        working-directory: same-machine-pr
         env:
           MAIN_SHA: ${{ steps.refs.outputs.main_sha }}
           PR_SHA: ${{ steps.refs.outputs.pr_sha }}
