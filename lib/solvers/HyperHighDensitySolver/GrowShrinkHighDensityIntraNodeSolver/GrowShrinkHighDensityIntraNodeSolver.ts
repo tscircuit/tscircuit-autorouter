@@ -22,6 +22,7 @@ export type GrowShrinkHighDensityIntraNodeSolverParams =
   Omit<
     PortfolioSingleIntraNodeSolverParams,
     | "deferNextGenerationSolversToParentRetry"
+    | "includeNativeSizeA11A12"
     | "supervisorIterationLimit"
   > & {
     maxGrowthAttempts?: number
@@ -180,6 +181,7 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
         this.growthAttempts < this.maxGrowthAttempts
           ? maxInnerIterationsPerGrowthAttempt
           : undefined,
+      includeNativeSizeA11A12: this.scaleFactor === 1,
       nodeWithPortPoints: scaleNodeWithPortPoints(
         this.nodeWithPortPoints,
         this.scaleFactor,

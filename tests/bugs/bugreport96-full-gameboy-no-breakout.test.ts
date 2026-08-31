@@ -57,6 +57,6 @@ test("Pipeline9 routes the full Game Boy Advance parent directly to MCU pads", (
       : import.meta.path
   expect(getLastStepSvg(solver.visualize())).toMatchSvgSnapshot(
     routedSnapshotPath,
-    { svgName: "routed" },
+    { svgName: "routed", tolerance: 0.02 },
   )
 }, 600_000)

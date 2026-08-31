@@ -1,5 +1,9 @@
 import { expect, test } from "bun:test"
 import { HighDensitySolverA01 } from "@tscircuit/high-density-a01"
+import {
+  HighDensitySolverA11,
+  HighDensitySolverA12,
+} from "lib/solvers/HighDensitySolver/official-high-density-a11-a12"
 import { HighDensitySolverA01 as HighDensitySolverA01Next } from "@tscircuit/high-density-a01-next"
 import { GrowShrinkHighDensityIntraNodeSolver } from "lib/solvers/HyperHighDensitySolver/GrowShrinkHighDensityIntraNodeSolver"
 import { PortfolioSingleIntraNodeSolver } from "lib/solvers/HyperHighDensitySolver/PortfolioSingleIntraNodeSolver"
@@ -18,6 +22,16 @@ const getA01SeedSolver = (
           ? hyperParameters.HIGH_DENSITY_A01_NEXT
           : hyperParameters.HIGH_DENSITY_A01,
       ) && hyperParameters.SHUFFLE_SEED === seed,
+  )!.solver
+
+const getA11Solver = (portfolio: PortfolioSingleIntraNodeSolver) =>
+  portfolio.supervisedSolvers!.find(
+    ({ hyperParameters }) => hyperParameters.HIGH_DENSITY_A11,
+  )!.solver
+
+const getA12Solver = (portfolio: PortfolioSingleIntraNodeSolver) =>
+  portfolio.supervisedSolvers!.find(
+    ({ hyperParameters }) => hyperParameters.HIGH_DENSITY_A12,
   )!.solver
 
 test("Pipeline9 prioritizes always-enabled next-generation candidates", () => {
@@ -49,15 +63,43 @@ test("Pipeline9 prioritizes always-enabled next-generation candidates", () => {
   const densePortfolio = createPortfolio(denseNode, true)
   const legacySeed0 = getA01SeedSolver(sparsePortfolio, 0, false)
   const nextSeed5 = getA01SeedSolver(sparsePortfolio, 5, true)
+  const a12Solver = getA12Solver(sparsePortfolio)
+  const a11Solver = getA11Solver(sparsePortfolio)
 
   expect(legacySeed0).toBeInstanceOf(HighDensitySolverA01)
   expect(legacySeed0).not.toBeInstanceOf(HighDensitySolverA01Next)
+  expect(legacySeed0).not.toBeInstanceOf(HighDensitySolverA11)
   expect(nextSeed5).toBeInstanceOf(HighDensitySolverA01Next)
   expect(nextSeed5).not.toBeInstanceOf(HighDensitySolverA01)
+  expect(a12Solver).toBeInstanceOf(HighDensitySolverA12)
+  expect(a11Solver).toBeInstanceOf(HighDensitySolverA11)
+  expect(
+    sparsePortfolio.supervisedSolvers!.indexOf(
+      sparsePortfolio.supervisedSolvers!.find(
+        ({ solver }) => solver === a12Solver,
+      )!,
+    ),
+  ).toBeLessThan(
+    sparsePortfolio.supervisedSolvers!.indexOf(
+      sparsePortfolio.supervisedSolvers!.find(
+        ({ solver }) => solver === a11Solver,
+      )!,
+    ),
+  )
 
   expect(
     compatibilityPortfolio.computeG(
       getA01SeedSolver(compatibilityPortfolio, 5, true) as any,
+    ),
+  ).toBe(Number.POSITIVE_INFINITY)
+  expect(
+    compatibilityPortfolio.computeG(
+      getA12Solver(compatibilityPortfolio) as any,
+    ),
+  ).toBe(Number.POSITIVE_INFINITY)
+  expect(
+    compatibilityPortfolio.computeG(
+      getA11Solver(compatibilityPortfolio) as any,
     ),
   ).toBe(Number.POSITIVE_INFINITY)
   expect(
@@ -68,6 +110,8 @@ test("Pipeline9 prioritizes always-enabled next-generation candidates", () => {
   expect(
     sparsePortfolio.computeG(nextSeed5 as any),
   ).toBe(0.25)
+  expect(sparsePortfolio.computeG(a12Solver as any)).toBe(0.25)
+  expect(sparsePortfolio.computeG(a11Solver as any)).toBe(0.25)
   const getA08Solver = (portfolio: PortfolioSingleIntraNodeSolver) =>
     portfolio.supervisedSolvers!.find(
       ({ hyperParameters }) => hyperParameters.HIGH_DENSITY_A08,
@@ -93,6 +137,8 @@ test("Pipeline9 prioritizes always-enabled next-generation candidates", () => {
     const hyperParameters = supervisedSolver.hyperParameters
     if (
       !hyperParameters.HIGH_DENSITY_A01_NEXT &&
+      !hyperParameters.HIGH_DENSITY_A12 &&
+      !hyperParameters.HIGH_DENSITY_A11 &&
       !hyperParameters.HIGH_DENSITY_A08
     ) {
       supervisedSolver.solver.failed = true
@@ -114,6 +160,8 @@ test("Pipeline9 prioritizes always-enabled next-generation candidates", () => {
     const hyperParameters = supervisedSolver.hyperParameters
     if (
       !hyperParameters.HIGH_DENSITY_A01_NEXT &&
+      !hyperParameters.HIGH_DENSITY_A12 &&
+      !hyperParameters.HIGH_DENSITY_A11 &&
       !hyperParameters.HIGH_DENSITY_A08
     ) {
       supervisedSolver.solver.failed = true
@@ -136,7 +184,7 @@ test("Pipeline9 prioritizes always-enabled next-generation candidates", () => {
     ),
   ).toBeGreaterThanOrEqual(13)
   expect(compatibilityPortfolio.activeSubSolver).toBeInstanceOf(
-    HighDensitySolverA01Next,
+    HighDensitySolverA12,
   )
 
   const rejectionPortfolio = createPortfolio(sparseNode, true)
@@ -189,6 +237,16 @@ test("Pipeline9 prioritizes always-enabled next-generation candidates", () => {
       ({ hyperParameters }) => hyperParameters.HIGH_DENSITY_A01_NEXT,
     ),
   ).toBe(true)
+  expect(
+    compatibilityGrowShrinkSolver.activeSubSolver!.supervisedSolvers!.some(
+      ({ hyperParameters }) => hyperParameters.HIGH_DENSITY_A12,
+    ),
+  ).toBe(true)
+  expect(
+    compatibilityGrowShrinkSolver.activeSubSolver!.supervisedSolvers!.some(
+      ({ hyperParameters }) => hyperParameters.HIGH_DENSITY_A11,
+    ),
+  ).toBe(true)
   compatibilityGrowShrinkSolver.activeSubSolver!.failed = true
   compatibilityGrowShrinkSolver.step()
   compatibilityGrowShrinkSolver.step()
@@ -201,4 +259,11 @@ test("Pipeline9 prioritizes always-enabled next-generation candidates", () => {
     compatibilityGrowShrinkSolver.activeSubSolver!.constructorParams
       .supervisorIterationLimit,
   ).toBeUndefined()
+  expect(
+    compatibilityGrowShrinkSolver.activeSubSolver!.supervisedSolvers!.some(
+      ({ hyperParameters }) =>
+        hyperParameters.HIGH_DENSITY_A12 ||
+        hyperParameters.HIGH_DENSITY_A11,
+    ),
+  ).toBe(false)
 })

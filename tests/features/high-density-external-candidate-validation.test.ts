@@ -16,9 +16,7 @@ test("the portfolio rejects incomplete and physically invalid external routes", 
   })
   solver.initializeSolvers()
   const invalidCandidate = solver.supervisedSolvers!.find(
-    ({ hyperParameters }) =>
-      hyperParameters.HIGH_DENSITY_A01_NEXT &&
-      hyperParameters.SHUFFLE_SEED === 2,
+    ({ hyperParameters }) => hyperParameters.HIGH_DENSITY_A12,
   )!.solver
   invalidCandidate.solved = true
   ;(invalidCandidate as any).getOutput = () => []
@@ -67,9 +65,7 @@ test("the portfolio rejects incomplete and physically invalid external routes", 
   })
   crossLayerSolver.initializeSolvers()
   const missingViaCandidate = crossLayerSolver.supervisedSolvers!.find(
-    ({ hyperParameters }) =>
-      hyperParameters.HIGH_DENSITY_A01_NEXT &&
-      hyperParameters.SHUFFLE_SEED === 2,
+    ({ hyperParameters }) => hyperParameters.HIGH_DENSITY_A12,
   )!.solver
   missingViaCandidate.solved = true
   ;(missingViaCandidate as any).getOutput = () => [

@@ -23,6 +23,14 @@ test("high-density candidates are enabled by default and expand adaptively", () 
     solver.supervisedSolvers!.filter(
       ({ hyperParameters }) => hyperParameters.HIGH_DENSITY_A01_NEXT,
     )
+  const getA11AndA12Solvers = (): NonNullable<
+    typeof solver.supervisedSolvers
+  > =>
+    solver.supervisedSolvers!.filter(
+      ({ hyperParameters }) =>
+        hyperParameters.HIGH_DENSITY_A12 ||
+        hyperParameters.HIGH_DENSITY_A11,
+    )
 
   expect(
     getNextA01Solvers().map(
@@ -40,7 +48,12 @@ test("high-density candidates are enabled by default and expand adaptively", () 
     ),
   ).toBe(true)
   expect(
-    getNextA01Solvers().every(({ solver }) => solver.iterations === 0),
+    getA11AndA12Solvers().map(({ solver }) => solver.getSolverName()),
+  ).toEqual(["HighDensitySolverA12", "HighDensitySolverA11"])
+  expect(
+    [...getNextA01Solvers(), ...getA11AndA12Solvers()].every(
+      ({ solver }) => solver.iterations === 0,
+    ),
   ).toBe(true)
   expect(solver.adaptiveSearchExpanded).toBe(false)
   expect(solver.MAX_ITERATIONS).toBe(
@@ -66,6 +79,9 @@ test("high-density candidates are enabled by default and expand adaptively", () 
       ({ hyperParameters }) => hyperParameters.HIGH_DENSITY_A01,
     ),
   ).toHaveLength(6)
+  expect(
+    getA11AndA12Solvers().map(({ solver }) => solver.getSolverName()),
+  ).toEqual(["HighDensitySolverA12", "HighDensitySolverA11"])
   expect(solver.MAX_ITERATIONS).toBe(
     solver.stats.dynamicSupervisorIterationLimit,
   )
