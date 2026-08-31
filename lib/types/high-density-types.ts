@@ -22,6 +22,10 @@ export type NodeWithPortPoints = {
   portPointsInPairs?: [PortPoint, PortPoint][]
 }
 
+export type HighDensityGrowthAttemptCounter = {
+  count: number
+}
+
 /**
  * A path for a wire in high-density intra-node routing.
  *

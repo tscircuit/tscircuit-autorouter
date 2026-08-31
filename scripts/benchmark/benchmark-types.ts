@@ -43,6 +43,11 @@ export type BenchmarkStageTimingBreakdown = {
   stages: BenchmarkStageTiming[]
 }
 
+export type BenchmarkCountMetric = {
+  value: number
+  status: "complete" | "partial"
+}
+
 export type WorkerProgress = {
   solverName: string
   scenarioName: string
@@ -97,7 +102,7 @@ export type TinyHypergraphBenchmarkMetrics = {
 export type RoutingBenchmarkMetrics = {
   tinyHypergraph?: TinyHypergraphBenchmarkMetrics
   highDensityIterations?: number
-  highDensityGrowthCount?: number
+  highDensityGrowthAttemptCount?: BenchmarkCountMetric
   phaseTimeMs?: Record<string, number>
   networkedHighDensity?: {
     remoteRequestsStarted: number
@@ -170,7 +175,7 @@ export type SolverRunSummary = {
   p90TimeMs?: number | null
   p95TimeMs: number | null
   avgVia: number | null
-  highDensityGrowthCount?: number | null
+  highDensityGrowthAttemptCount?: BenchmarkCountMetric | null
   networkCache?: {
     remoteRequests: number
     cacheHits: number

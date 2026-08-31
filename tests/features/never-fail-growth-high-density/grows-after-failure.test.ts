@@ -3,9 +3,11 @@ import { GrowShrinkHighDensityIntraNodeSolver } from "lib/solvers/HyperHighDensi
 import { emptyVisualization, makeNode } from "./test-helpers"
 
 test("GrowShrinkHighDensityIntraNodeSolver grows after an inner solver failure", () => {
+  const highDensityGrowthAttemptCounter = { count: 0 }
   const solver = new GrowShrinkHighDensityIntraNodeSolver({
     nodeWithPortPoints: makeNode(),
     maxGrowthAttempts: 1,
+    highDensityGrowthAttemptCounter,
   })
 
   solver.activeSubSolver = {
@@ -24,6 +26,7 @@ test("GrowShrinkHighDensityIntraNodeSolver grows after an inner solver failure",
 
   expect(solver.failed).toBe(false)
   expect(solver.growthAttempts).toBe(1)
+  expect(highDensityGrowthAttemptCounter.count).toBe(1)
   expect(solver.scaleFactor).toBe(2)
   expect(solver.failedSolvers.length).toBe(1)
 })

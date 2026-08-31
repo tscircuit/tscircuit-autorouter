@@ -7,6 +7,7 @@ import * as path from "node:path"
 import * as readline from "node:readline"
 import type { SimpleRouteJson } from "../../lib/types/srj-types"
 import type {
+  BenchmarkCountMetric,
   BenchmarkReport,
   BenchmarkSnapshot,
   BenchmarkSnapshotWithImage,
@@ -858,6 +859,9 @@ const loadSolverNames = async (
 
 const formatTable = (rows: SolverRunSummary[]) => {
   const includeNetworkCache = rows.some((row) => row.networkCache)
+  const includeHighDensityGrowthAttempts = rows.some(
+    (row) => row.highDensityGrowthAttemptCount,
+  )
   const headers = [
     "Solver",
     "Completed %",
@@ -870,7 +874,7 @@ const formatTable = (rows: SolverRunSummary[]) => {
     "P90 Time",
     "P95 Time",
     "Avg Via",
-    "HD Growth Attempts",
+    ...(includeHighDensityGrowthAttempts ? ["HD Growth Attempts"] : []),
     ...(includeNetworkCache
       ? ["HD Cache Hits", "HD Solver Results", "HD Local Fallbacks"]
       : []),
@@ -888,7 +892,13 @@ const formatTable = (rows: SolverRunSummary[]) => {
     formatTime(row.p90TimeMs ?? null),
     formatTime(row.p95TimeMs),
     formatAverage(row.avgVia),
-    row.highDensityGrowthCount?.toString() ?? "n/a",
+    ...(includeHighDensityGrowthAttempts
+      ? [
+          row.highDensityGrowthAttemptCount
+            ? `${row.highDensityGrowthAttemptCount.status === "partial" ? "≥" : ""}${row.highDensityGrowthAttemptCount.value}`
+            : "n/a",
+        ]
+      : []),
     ...(includeNetworkCache
       ? [
           `${row.networkCache?.cacheHits ?? 0}/${row.networkCache?.remoteRequests ?? 0}`,
@@ -1508,18 +1518,25 @@ export const summarizeSolverResults = (
       ? null
       : viaCounts.reduce((sum, viaCount) => sum + viaCount, 0) /
         viaCounts.length
-  const highDensityGrowthCounts = results
-    .map((result) => result.routingMetrics?.highDensityGrowthCount)
-    .filter(
-      (growthCount): growthCount is number => typeof growthCount === "number",
-    )
-  const highDensityGrowthCount =
-    highDensityGrowthCounts.length === 0
+  const highDensityGrowthAttemptMetrics = results.flatMap((result) =>
+    result.routingMetrics?.highDensityGrowthAttemptCount
+      ? [result.routingMetrics.highDensityGrowthAttemptCount]
+      : [],
+  )
+  const highDensityGrowthAttemptCount: BenchmarkCountMetric | null =
+    highDensityGrowthAttemptMetrics.length === 0
       ? null
-      : highDensityGrowthCounts.reduce(
-          (total, growthCount) => total + growthCount,
-          0,
-        )
+      : {
+          value: highDensityGrowthAttemptMetrics.reduce(
+            (total, metric) => total + metric.value,
+            0,
+          ),
+          status: highDensityGrowthAttemptMetrics.some(
+            (metric) => metric.status === "partial",
+          )
+            ? "partial"
+            : "complete",
+        }
   const networkMetrics = results.flatMap((result) =>
     result.routingMetrics?.networkedHighDensity
       ? [result.routingMetrics.networkedHighDensity]
@@ -1571,7 +1588,7 @@ export const summarizeSolverResults = (
     p90TimeMs: getPercentileMs(elapsedForSolvedAndTimedOut, 0.9),
     p95TimeMs: getPercentileMs(elapsedForSolvedAndTimedOut, 0.95),
     avgVia,
-    highDensityGrowthCount,
+    highDensityGrowthAttemptCount,
     networkCache,
   } satisfies SolverRunSummary
 }

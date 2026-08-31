@@ -27,7 +27,7 @@ test("timeout and crash results retain the latest partial stage timing", () => {
       ],
     },
     routingMetrics: {
-      highDensityGrowthCount: 4,
+      highDensityGrowthAttemptCount: { value: 4, status: "partial" },
     },
   }
 
@@ -46,7 +46,10 @@ test("timeout and crash results retain the latest partial stage timing", () => {
       { stageName: "routeSolver", elapsedTimeMs: 110 },
     ],
   })
-  expect(timedOut.routingMetrics?.highDensityGrowthCount).toBe(4)
+  expect(timedOut.routingMetrics?.highDensityGrowthAttemptCount).toEqual({
+    value: 4,
+    status: "partial",
+  })
 
   const crashed = createFailedResult(task, 140, "Child crashed", false, {
     ...latestProgress,
@@ -60,5 +63,8 @@ test("timeout and crash results retain the latest partial stage timing", () => {
       { stageName: "routeSolver", elapsedTimeMs: 60 },
     ],
   })
-  expect(crashed.routingMetrics?.highDensityGrowthCount).toBe(4)
+  expect(crashed.routingMetrics?.highDensityGrowthAttemptCount).toEqual({
+    value: 4,
+    status: "partial",
+  })
 })

@@ -12,6 +12,7 @@ test("routing metrics are collected only for emitted progress updates", async ()
   }
   let stepCount = 0
   let routingMetricCollectionCount = 0
+  let highDensityGrowthMetricCollectionCount = 0
   const phaseStartedAt = performance.now()
   const solver = {
     solved: false,
@@ -29,7 +30,10 @@ test("routing metrics are collected only for emitted progress updates", async ()
       },
     },
     highDensityRouteSolver: {
-      stats: { highDensityResizeCount: 3 },
+      getHighDensityGrowthAttemptCount: () => {
+        highDensityGrowthMetricCollectionCount++
+        return 3
+      },
     },
     step() {
       stepCount++
@@ -49,11 +53,16 @@ test("routing metrics are collected only for emitted progress updates", async ()
   expect(emittedProgress).toHaveLength(2)
   expect(emittedProgress).toEqual([
     expect.objectContaining({
-      routingMetrics: { highDensityGrowthCount: 3 },
+      routingMetrics: {
+        highDensityGrowthAttemptCount: { value: 3, status: "partial" },
+      },
     }),
     expect.objectContaining({
-      routingMetrics: { highDensityGrowthCount: 3 },
+      routingMetrics: {
+        highDensityGrowthAttemptCount: { value: 3, status: "partial" },
+      },
     }),
   ])
   expect(routingMetricCollectionCount).toBe(0)
+  expect(highDensityGrowthMetricCollectionCount).toBe(2)
 })

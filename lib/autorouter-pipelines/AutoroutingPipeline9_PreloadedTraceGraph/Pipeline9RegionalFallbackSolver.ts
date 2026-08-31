@@ -7,6 +7,7 @@ import { HighDensitySolver } from "lib/solvers/HighDensitySolver/HighDensitySolv
 import { isObstacleConnectedToRoute } from "lib/solvers/TraceWidthSolver/isObstacleConnectedToRoute"
 import type { CapacityMeshNodeId } from "lib/types/capacity-mesh-types"
 import type {
+  HighDensityGrowthAttemptCounter,
   HighDensityRoute,
   NodeWithPortPoints,
 } from "lib/types/high-density-types"
@@ -31,6 +32,7 @@ type Pipeline9RegionalFallbackSolverParams = {
   movablePreloadedConnectionNames?: ReadonlySet<string>
   viaToPadClearance?: number
   layerCount: number
+  highDensityGrowthAttemptCounter?: HighDensityGrowthAttemptCounter
 }
 
 type RegionalFallbackPhase = "route" | "improve" | "repair" | "done"
@@ -127,6 +129,7 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
       useGrowShrinkHighDensityIntraNodeSolver: true,
       preserveTerminalPcbPortIds: false,
       growShrinkFallbackToInvalidGeometryOnFailure: false,
+      highDensityGrowthAttemptCounter: params.highDensityGrowthAttemptCounter,
       growShrinkSolutionValidator:
         params.boardObstacles &&
         params.movablePreloadedConnectionNames &&

@@ -10,6 +10,7 @@ import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { GraphicsObject } from "graphics-debug"
 import type { CapacityMeshNodeId } from "lib/types/capacity-mesh-types"
 import type {
+  HighDensityGrowthAttemptCounter,
   HighDensityIntraNodeRoute,
   HighDensityRoute,
   NodeWithPortPoints,
@@ -18,7 +19,6 @@ import type { Obstacle } from "lib/types/srj-types"
 import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
 import { BaseSolver } from "../../solvers/BaseSolver"
 import { HighDensitySolver } from "../../solvers/HighDensitySolver/HighDensitySolver"
-import { GrowShrinkHighDensityIntraNodeSolver } from "../../solvers/HyperHighDensitySolver/GrowShrinkHighDensityIntraNodeSolver"
 import type { PreloadedHighDensityRoute } from "./convertPreloadedTraceToHdRoutes"
 import {
   arePipeline9RoutesOnSameNet,
@@ -329,6 +329,7 @@ export type Pipeline9RegularNodeSolverParams = {
     | Record<string, number | null>
   obstacles: Obstacle[]
   layerCount: number
+  highDensityGrowthAttemptCounter?: HighDensityGrowthAttemptCounter
 }
 
 /**
@@ -347,6 +348,7 @@ export const createPipeline9RegularNodeSolver = ({
   nodePfById,
   obstacles,
   layerCount,
+  highDensityGrowthAttemptCounter,
 }: Pipeline9RegularNodeSolverParams): HighDensitySolver =>
   new HighDensitySolver({
     nodePortPoints: [
@@ -365,6 +367,7 @@ export const createPipeline9RegularNodeSolver = ({
     preserveTerminalPcbPortIds: false,
     growShrinkFallbackToInvalidGeometryOnFailure: false,
     captureSearchDebug: false,
+    highDensityGrowthAttemptCounter,
   })
 
 /**
@@ -394,9 +397,10 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
   readonly fixedRouteReplacements = new Map<string, PreloadedHighDensityRoute>()
   readonly removedFixedRouteConnectionNames = new Set<string>()
   readonly preloadedTraceMutationMasks = new Map<string, boolean[]>()
+  private readonly highDensityGrowthAttemptCounter: HighDensityGrowthAttemptCounter =
+    { count: 0 }
 
   activeRegularSolver: HighDensitySolver | null = null
-  private completedHighDensityGrowthCount = 0
   activeB01Solver: HighDensitySolverB01 | null = null
   activeFallbackSolver: Pipeline9RegionalFallbackSolver | null = null
   activeFallbackFixedRouteSections = new Map<string, FixedRouteSection>()
@@ -443,34 +447,15 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       regionalPreloadedViaCandidateRejectionCount: 0,
       regionalForceImproveCandidateRejectionCount: 0,
       regionalRepairCandidateRejectionCount: 0,
-      highDensityResizeCount: 0,
     }
   }
 
-  private getGrowthCount(solver: HighDensitySolver): number {
-    const completedCount = Number(solver.stats.highDensityResizeCount ?? 0)
-    const activeCount =
-      solver.activeSubSolver instanceof GrowShrinkHighDensityIntraNodeSolver
-        ? solver.activeSubSolver.growthAttempts
-        : 0
-    return completedCount + activeCount
-  }
-
-  private updateHighDensityGrowthCount(): void {
-    const activeGrowthCount = this.activeRegularSolver
-      ? this.getGrowthCount(this.activeRegularSolver)
-      : this.activeFallbackSolver
-        ? this.getGrowthCount(this.activeFallbackSolver.highDensitySolver)
-        : 0
-    this.stats.highDensityResizeCount =
-      this.completedHighDensityGrowthCount + activeGrowthCount
-  }
-
-  private commitActiveHighDensityGrowthCount(): void {
-    this.updateHighDensityGrowthCount()
-    this.completedHighDensityGrowthCount = Number(
-      this.stats.highDensityResizeCount ?? 0,
-    )
+  getHighDensityGrowthAttemptCount(): number | undefined {
+    const count = this.highDensityGrowthAttemptCounter.count
+    if (!Number.isInteger(count) || count < 0) {
+      throw new Error(`Invalid high-density growth attempt count: ${count}`)
+    }
+    return count
   }
 
   override getSolverName(): string {
@@ -487,7 +472,6 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
   }
 
   protected finishActiveNode(routes: HighDensityIntraNodeRoute[]): void {
-    this.commitActiveHighDensityGrowthCount()
     const solvedRoutes = this.activeNode
       ? restoreRootConnectionNames(routes, this.activeNode)
       : routes
@@ -520,6 +504,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       nodePfById: this.nodePfById,
       obstacles: this.obstacles,
       layerCount: this.layerCount,
+      highDensityGrowthAttemptCounter: this.highDensityGrowthAttemptCounter,
     })
     this.stats.regularNodeCount = Number(this.stats.regularNodeCount ?? 0) + 1
   }
@@ -531,10 +516,6 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       throw new Error(
         "Pipeline9 cannot start a regional fallback without an active node",
       )
-    }
-
-    if (this.activeFallbackSolver) {
-      this.commitActiveHighDensityGrowthCount()
     }
 
     const normalizedNode = normalizePipeline9NodeRootConnectionNames(
@@ -598,6 +579,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       movablePreloadedConnectionNames: movableFixedRouteConnectionNames,
       viaToPadClearance: this.viaToPadClearance,
       layerCount: this.layerCount,
+      highDensityGrowthAttemptCounter: this.highDensityGrowthAttemptCounter,
     })
     if (promotedFixedRouteConnectionNames.size === 0) {
       this.stats.fallbackNodeCount =
@@ -923,7 +905,6 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
 
   protected finishRegularSolverFailure(error: string): void {
     this.activeFallbackReason = `regular high-density routing failed: ${error}`
-    this.commitActiveHighDensityGrowthCount()
     this.activeRegularSolver = null
     if (!this.enableRegionalFallback) {
       this.error = `Pipeline9 ${this.activeFallbackReason}`
@@ -937,10 +918,8 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
   override _step(): void {
     if (this.activeFallbackSolver) {
       this.activeFallbackSolver.step()
-      this.updateHighDensityGrowthCount()
       if (this.activeFallbackSolver.failed) {
         this.recordRegionalCandidateRejections()
-        this.commitActiveHighDensityGrowthCount()
         this.error = [
           `Pipeline9 primary high-density routing failed: ${this.activeFallbackReason ?? "unknown error"}`,
           `regional fallback failed: ${this.activeFallbackSolver.error ?? "unknown error"}`,
@@ -961,7 +940,6 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
 
     if (this.activeRegularSolver) {
       this.activeRegularSolver.step()
-      this.updateHighDensityGrowthCount()
       if (this.activeRegularSolver.failed) {
         this.finishRegularSolverFailure(
           this.activeRegularSolver.error ?? "unknown error",

@@ -1,5 +1,6 @@
 import type { GraphicsObject } from "graphics-debug"
 import type {
+  HighDensityGrowthAttemptCounter,
   HighDensityIntraNodeRoute,
   NodeWithPortPoints,
   PortPoint,
@@ -20,6 +21,7 @@ export const DEFAULT_MAX_GROWTH_ATTEMPTS = 3
 
 export type GrowShrinkHighDensityIntraNodeSolverParams =
   PortfolioSingleIntraNodeSolverParams & {
+    highDensityGrowthAttemptCounter?: HighDensityGrowthAttemptCounter
     maxGrowthAttempts?: number
     maxInnerIterationsPerGrowthAttempt?: number
     fallbackToInvalidGeometryOnFailure?: boolean
@@ -248,6 +250,9 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
     }
 
     this.growthAttempts++
+    if (this.constructorParams.highDensityGrowthAttemptCounter) {
+      this.constructorParams.highDensityGrowthAttemptCounter.count++
+    }
     this.scaleFactor *= 2
   }
 

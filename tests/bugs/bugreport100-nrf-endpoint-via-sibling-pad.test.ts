@@ -203,7 +203,9 @@ test("bugreport100 rejects a movable preloaded via beside a foreign QFN pad", as
     }),
   )
   expect(fixedSolver.stats.preloadedViaCandidateRejectionCount).toBe(1)
-  expect(fixedSolver.highDensitySolver.stats.highDensityResizeCount).toBe(1)
+  expect(fixedSolver.highDensitySolver.getHighDensityGrowthAttemptCount()).toBe(
+    1,
+  )
   expect(
     fixedRfTrace.route.filter((point) => point.route_type === "via"),
   ).toEqual([])

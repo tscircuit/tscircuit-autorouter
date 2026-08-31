@@ -5,6 +5,7 @@ import type { CapacityMeshNodeId } from "lib/types/capacity-mesh-types"
 import { combineVisualizations } from "lib/utils/combineVisualizations"
 import { mergeRouteSegments } from "lib/utils/mergeRouteSegments"
 import type {
+  HighDensityGrowthAttemptCounter,
   HighDensityIntraNodeRoute,
   NodeWithPortPoints,
 } from "../../types/high-density-types"
@@ -63,6 +64,7 @@ export class HighDensitySolver extends BaseSolver {
   growShrinkFallbackToInvalidGeometryOnFailure: boolean
   growShrinkSolutionValidator?: (routes: HighDensityIntraNodeRoute[]) => boolean
   captureSearchDebug: boolean
+  private readonly highDensityGrowthAttemptCounter: HighDensityGrowthAttemptCounter
 
   failedSolvers: HighDensityIntraNodeSolver[]
   activeSubSolver: HighDensityIntraNodeSolver | null = null
@@ -98,6 +100,7 @@ export class HighDensitySolver extends BaseSolver {
     growShrinkFallbackToInvalidGeometryOnFailure,
     growShrinkSolutionValidator,
     captureSearchDebug,
+    highDensityGrowthAttemptCounter,
   }: {
     nodePortPoints: NodeWithPortPoints[]
     colorMap?: Record<string, string>
@@ -116,6 +119,7 @@ export class HighDensitySolver extends BaseSolver {
       routes: HighDensityIntraNodeRoute[],
     ) => boolean
     captureSearchDebug?: boolean
+    highDensityGrowthAttemptCounter?: HighDensityGrowthAttemptCounter
     nodePfById?:
       | Map<CapacityMeshNodeId, number | null>
       | Record<string, number | null>
@@ -141,6 +145,9 @@ export class HighDensitySolver extends BaseSolver {
       growShrinkFallbackToInvalidGeometryOnFailure ?? false
     this.growShrinkSolutionValidator = growShrinkSolutionValidator
     this.captureSearchDebug = captureSearchDebug ?? true
+    this.highDensityGrowthAttemptCounter = highDensityGrowthAttemptCounter ?? {
+      count: 0,
+    }
     this.MAX_ITERATIONS =
       10e6 *
       this.effort *
@@ -155,8 +162,15 @@ export class HighDensitySolver extends BaseSolver {
     this.stats = {
       solverNodeCount: {} as Record<string, number>,
       difficultNodePfs: {} as Record<string, number[]>,
-      highDensityResizeCount: 0,
     }
+  }
+
+  getHighDensityGrowthAttemptCount(): number {
+    const count = this.highDensityGrowthAttemptCounter.count
+    if (!Number.isInteger(count) || count < 0) {
+      throw new Error(`Invalid high-density growth attempt count: ${count}`)
+    }
+    return count
   }
 
   private getSolvedNodeSolverType(solver: HighDensityIntraNodeSolver): string {
@@ -279,12 +293,6 @@ export class HighDensitySolver extends BaseSolver {
     }
   }
 
-  private recordResizeStats(solver: HighDensityIntraNodeSolver) {
-    if (!(solver instanceof GrowShrinkHighDensityIntraNodeSolver)) return
-    this.stats.highDensityResizeCount =
-      (this.stats.highDensityResizeCount ?? 0) + solver.growthAttempts
-  }
-
   private getSolvedRoutesWithTerminalPcbPortIds(
     solver: HighDensityIntraNodeSolver,
   ): HighDensityIntraNodeRoute[] {
@@ -344,11 +352,9 @@ export class HighDensitySolver extends BaseSolver {
           this.activeSubSolver,
           this.activeSubSolver.nodeWithPortPoints,
         )
-        this.recordResizeStats(this.activeSubSolver)
         this.activeSubSolver = null
       } else if (this.activeSubSolver.failed) {
         this.recordNodeSolveMetadata(this.activeSubSolver, "failed")
-        this.recordResizeStats(this.activeSubSolver)
         this.failedSolvers.push(this.activeSubSolver)
         this.activeSubSolver = null
       }
@@ -387,6 +393,7 @@ export class HighDensitySolver extends BaseSolver {
         this.growShrinkFallbackToInvalidGeometryOnFailure,
       growShrinkSolutionValidator: this.growShrinkSolutionValidator,
       captureSearchDebug: this.captureSearchDebug,
+      highDensityGrowthAttemptCounter: this.highDensityGrowthAttemptCounter,
     }
     this.activeSubSolver = this.useGrowShrinkHighDensityIntraNodeSolver
       ? new GrowShrinkHighDensityIntraNodeSolver(intraNodeSolverParams)

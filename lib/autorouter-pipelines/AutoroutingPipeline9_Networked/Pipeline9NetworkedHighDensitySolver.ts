@@ -130,6 +130,11 @@ export class Pipeline9NetworkedHighDensitySolver extends Pipeline9HighDensitySol
     return "Pipeline9NetworkedHighDensitySolver"
   }
 
+  override getHighDensityGrowthAttemptCount(): undefined {
+    // Remote responses do not include their grow-and-retry transitions.
+    return undefined
+  }
+
   async waitForAllRemoteRequests(): Promise<void> {
     const remoteRequests = [...this.remoteRequestByNode.values()]
     if (remoteRequests.length === 0) {

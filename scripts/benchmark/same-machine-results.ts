@@ -1,5 +1,9 @@
 import { readFile, writeFile } from "node:fs/promises"
-import type { BenchmarkReport, WorkerResult } from "./benchmark-types"
+import type {
+  BenchmarkCountMetric,
+  BenchmarkReport,
+  WorkerResult,
+} from "./benchmark-types"
 
 type SameMachineBenchmarkInput = {
   mainReport: BenchmarkReport
@@ -60,6 +64,24 @@ const formatCountDelta = (
   if (mainValue === null || prValue === null) return "n/a"
   const delta = prValue - mainValue
   return `${delta > 0 ? "+" : ""}${delta}`
+}
+
+const formatCountMetric = (metric: BenchmarkCountMetric | null): string => {
+  if (metric === null) return "n/a"
+  if (!Number.isFinite(metric.value)) return "n/a"
+  const lowerBoundPrefix = metric.status === "partial" ? "≥" : ""
+  return `${lowerBoundPrefix}${metric.value}`
+}
+
+const formatCountMetricDelta = (
+  mainMetric: BenchmarkCountMetric | null,
+  prMetric: BenchmarkCountMetric | null,
+): string => {
+  if (mainMetric === null || prMetric === null) return "n/a"
+  if (mainMetric.status === "partial" || prMetric.status === "partial") {
+    return "n/a"
+  }
+  return formatCountDelta(mainMetric.value, prMetric.value)
 }
 
 const getDrcIssueCount = (
@@ -198,8 +220,17 @@ export const renderSameMachineBenchmarkResults = ({
     ).length
     const mainDrcIssues = getDrcIssueCount(mainReport, prSummary.solverName)
     const prDrcIssues = getDrcIssueCount(prReport, prSummary.solverName)
-    const mainHighDensityGrowths = mainSummary.highDensityGrowthCount ?? null
-    const prHighDensityGrowths = prSummary.highDensityGrowthCount ?? null
+    const mainHighDensityGrowthAttemptCount =
+      mainSummary.highDensityGrowthAttemptCount ?? null
+    const prHighDensityGrowthAttemptCount =
+      prSummary.highDensityGrowthAttemptCount ?? null
+    const highDensityGrowthAttemptRows =
+      mainHighDensityGrowthAttemptCount === null &&
+      prHighDensityGrowthAttemptCount === null
+        ? []
+        : [
+            `| ${solver} | HD growth attempts | ${formatCountMetric(mainHighDensityGrowthAttemptCount)} | ${formatCountMetric(prHighDensityGrowthAttemptCount)} | ${formatCountMetricDelta(mainHighDensityGrowthAttemptCount, prHighDensityGrowthAttemptCount)} |`,
+          ]
     const timePercentiles = [50, 60, 70, 80, 90, 95].map((percentile) => {
       const mainTime = getTimePercentile(
         mainReport,
@@ -219,7 +250,7 @@ export const renderSameMachineBenchmarkResults = ({
       `| ${solver} | Relaxed DRC pass | ${mainSummary.relaxedDrcRateLabel} | ${prSummary.relaxedDrcRateLabel} | ${formatPercentPointDelta(mainSummary.relaxedDrcRateLabel, prSummary.relaxedDrcRateLabel)} |`,
       `| ${solver} | DRC issues | ${mainDrcIssues ?? "n/a"} | ${prDrcIssues ?? "n/a"} | ${formatCountDelta(mainDrcIssues, prDrcIssues)} |`,
       `| ${solver} | Timeouts | ${mainTimeouts} | ${prTimeouts} | ${prTimeouts - mainTimeouts > 0 ? "+" : ""}${prTimeouts - mainTimeouts} |`,
-      `| ${solver} | HD growth attempts | ${mainHighDensityGrowths ?? "n/a"} | ${prHighDensityGrowths ?? "n/a"} | ${formatCountDelta(mainHighDensityGrowths, prHighDensityGrowths)} |`,
+      ...highDensityGrowthAttemptRows,
       ...timePercentiles,
       `| ${solver} | Average vias | ${formatAverage(mainSummary.avgVia)} | ${formatAverage(prSummary.avgVia)} | ${formatRelativeDelta(mainSummary.avgVia, prSummary.avgVia)} |`,
     )
@@ -231,7 +262,7 @@ export const renderSameMachineBenchmarkResults = ({
   const regressionCount = changedOutcomes.length - improvementCount
   lines.push(
     "",
-    `Outcome changes: **${improvementCount} improved**, **${regressionCount} regressed**. DRC issues are totaled across solved samples. HD growth attempts count grow-and-retry scale transitions observed across all samples, including the latest partial counts reported before timeouts; negative growth deltas mean fewer attempts. Timing percentiles include solved and timed-out samples; negative timing deltas are faster.`,
+    `Outcome changes: **${improvementCount} improved**, **${regressionCount} regressed**. DRC issues are totaled across solved samples. HD growth attempts count grow-and-retry scale transitions; values prefixed with ≥ include a latest-observed partial count from an interrupted sample, so their delta is not reported. Timing percentiles include solved and timed-out samples; negative timing deltas are faster.`,
   )
 
   if (changedOutcomes.length > 0) {

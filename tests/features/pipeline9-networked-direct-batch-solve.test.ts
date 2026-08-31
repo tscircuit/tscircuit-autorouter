@@ -35,6 +35,7 @@ test("Pipeline9 accepts direct solver results from the batch endpoint", async ()
       "B",
       "A",
     ])
+    expect(solver.getHighDensityGrowthAttemptCount()).toBeUndefined()
     expect(solver.stats).toMatchObject({
       remoteRequestsStarted: 2,
       remoteRequestsCompleted: 2,

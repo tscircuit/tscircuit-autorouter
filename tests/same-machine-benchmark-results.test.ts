@@ -45,7 +45,7 @@ test("same-machine benchmark comments compare matching reports", () => {
         p50TimeMs: 1_000,
         p95TimeMs: 2_000,
         avgVia: 2,
-        highDensityGrowthCount: 28,
+        highDensityGrowthAttemptCount: { value: 28, status: "complete" },
       },
     ],
     tests: [
@@ -71,7 +71,7 @@ test("same-machine benchmark comments compare matching reports", () => {
         p50TimeMs: 900,
         p95TimeMs: 1_800,
         avgVia: 2.2,
-        highDensityGrowthCount: 22,
+        highDensityGrowthAttemptCount: { value: 22, status: "complete" },
       },
     ],
     tests: [
@@ -114,8 +114,57 @@ test("same-machine benchmark comments compare matching reports", () => {
   expect(markdown).toContain(
     "Timing percentiles include solved and timed-out samples",
   )
-  expect(markdown).toContain("negative growth deltas mean fewer attempts")
+  expect(markdown).toContain("values prefixed with ≥")
   expect(markdown).toContain("| Pipeline7 | 1 | Timeout | DRC passed |")
+
+  const partialMarkdown = renderSameMachineBenchmarkResults({
+    mainReport: {
+      ...mainReport,
+      summary: [
+        {
+          ...mainReport.summary[0]!,
+          highDensityGrowthAttemptCount: {
+            value: 28,
+            status: "partial",
+          },
+        },
+      ],
+    },
+    prReport,
+    mainSha: "a".repeat(40),
+    prSha: "b".repeat(40),
+    repository: "tscircuit/tscircuit-autorouter",
+    runnerName: "blacksmith-test-runner",
+  })
+  expect(partialMarkdown).toContain(
+    "| Pipeline7 | HD growth attempts | ≥28 | 22 | n/a |",
+  )
+
+  const unsupportedMarkdown = renderSameMachineBenchmarkResults({
+    mainReport: {
+      ...mainReport,
+      summary: [
+        {
+          ...mainReport.summary[0]!,
+          highDensityGrowthAttemptCount: null,
+        },
+      ],
+    },
+    prReport: {
+      ...prReport,
+      summary: [
+        {
+          ...prReport.summary[0]!,
+          highDensityGrowthAttemptCount: null,
+        },
+      ],
+    },
+    mainSha: "a".repeat(40),
+    prSha: "b".repeat(40),
+    repository: "tscircuit/tscircuit-autorouter",
+    runnerName: "blacksmith-test-runner",
+  })
+  expect(unsupportedMarkdown).not.toContain("| Pipeline7 | HD growth attempts")
   expect(() =>
     renderSameMachineBenchmarkResults({
       mainReport,

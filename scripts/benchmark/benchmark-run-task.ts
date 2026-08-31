@@ -53,6 +53,7 @@ type SolverInstance = PipelineStageTimingSource & {
   highDensityRouteSolver?: {
     iterations?: number
     stats?: Record<string, unknown>
+    getHighDensityGrowthAttemptCount?: () => number | undefined
     waitForAllRemoteRequests?: () => Promise<void>
   }
   timeSpentOnPhase: Record<string, number>
@@ -301,6 +302,7 @@ const getProgressKey = (progress: WorkerProgress) =>
 
 const getRoutingBenchmarkMetrics = (
   solver: SolverInstance,
+  countStatus: "complete" | "partial",
 ): RoutingBenchmarkMetrics => {
   const highDensityStats = solver.highDensityRouteSolver?.stats
   const networkedHighDensity =
@@ -326,31 +328,28 @@ const getRoutingBenchmarkMetrics = (
           ),
         }
       : undefined
+  const highDensityGrowthAttemptCount = getHighDensityGrowthAttemptCount(solver)
   return {
     tinyHypergraph:
       solver.portPointPathingSolver?.getSolveGraphBenchmarkMetrics?.(),
     highDensityIterations: solver.highDensityRouteSolver?.iterations,
-    // Networked responses do not currently include remote growth attempts, so
-    // the client-local counter would be an incomplete and misleading total.
-    highDensityGrowthCount: networkedHighDensity
-      ? undefined
-      : getHighDensityGrowthCount(solver),
+    highDensityGrowthAttemptCount:
+      highDensityGrowthAttemptCount === undefined
+        ? undefined
+        : {
+            value: highDensityGrowthAttemptCount,
+            status: countStatus,
+          },
     phaseTimeMs: solver.timeSpentOnPhase,
     networkedHighDensity,
   }
 }
 
-const getHighDensityGrowthCount = (
+const getHighDensityGrowthAttemptCount = (
   solver: SolverInstance,
 ): number | undefined => {
-  const highDensityStats = solver.highDensityRouteSolver?.stats
-  if (
-    highDensityStats &&
-    typeof highDensityStats.remoteRequestsStarted === "number"
-  ) {
-    return undefined
-  }
-  const value = highDensityStats?.highDensityResizeCount
+  const value =
+    solver.highDensityRouteSolver?.getHighDensityGrowthAttemptCount?.()
   return typeof value === "number" && Number.isFinite(value) ? value : undefined
 }
 
@@ -359,7 +358,10 @@ const getNetworkedBenchmarkValidationError = (
   solver: SolverInstance,
 ): string | undefined => {
   if (!task.networkedCachePass) return undefined
-  const stats = getRoutingBenchmarkMetrics(solver).networkedHighDensity
+  const stats = getRoutingBenchmarkMetrics(
+    solver,
+    "complete",
+  ).networkedHighDensity
   if (!stats) return "Pipeline9_Networked did not expose remote cache metrics"
   if (stats.remoteTransportFallbacks > 0) {
     return `Pipeline9_Networked used ${stats.remoteTransportFallbacks} local transport fallback(s)`
@@ -405,9 +407,15 @@ export const solveWithProgress = async (
 
     lastProgressAt = elapsedTimeMs
     lastProgressKey = progressKey
-    const highDensityGrowthCount = getHighDensityGrowthCount(solver)
-    if (highDensityGrowthCount !== undefined) {
-      progress.routingMetrics = { highDensityGrowthCount }
+    const highDensityGrowthAttemptCount =
+      getHighDensityGrowthAttemptCount(solver)
+    if (highDensityGrowthAttemptCount !== undefined) {
+      progress.routingMetrics = {
+        highDensityGrowthAttemptCount: {
+          value: highDensityGrowthAttemptCount,
+          status: "partial",
+        },
+      }
     }
     options.onProgress(progress)
   }
@@ -521,7 +529,10 @@ export const runTask = async (
   }
 
   const didSolve = Boolean(solver.solved)
-  const routingMetrics = getRoutingBenchmarkMetrics(solver)
+  const routingMetrics = getRoutingBenchmarkMetrics(
+    solver,
+    solveError ? "partial" : "complete",
+  )
   let stageTimingStatus: "complete" | "partial" = "partial"
   if (didSolve) {
     stageTimingStatus = "complete"
