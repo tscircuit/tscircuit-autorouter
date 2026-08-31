@@ -1,7 +1,7 @@
 {
   "name": "@tscircuit/capacity-autorouter",
   "main": "./dist/index.js",
-  "version": "0.0.859",
+  "version": "0.0.861",
   "type": "module",
   "repository": {
     "type": "git",
@@ -99,7 +99,7 @@
     "high-density-repair02": "https://codeload.github.com/tscircuit/high-density-repair02/tar.gz/2afc0cbba3bf2f7eb6b9cd33615d21e9ad9352d4",
     "high-density-repair03": "git+https://github.com/tscircuit/high-density-repair03.git#a9654302bdfdbc93222f1f66ce5d67ccd6ecd891",
     "@tscircuit/high-density-a01": "git+https://github.com/tscircuit/high-density-a01.git#9a3a3d",
-    "@tscircuit/high-density-a01-a11-a12": "git+https://github.com/tscircuit/high-density-a01.git#2b06bf926e235c829279ebadf140078d55c5d272",
+    "@tscircuit/high-density-a01-a11": "git+https://github.com/tscircuit/high-density-a01.git#ac13ef80da71c3998acb5302329b6b704d0470d1",
     "@tscircuit/high-density-b01": "git+https://github.com/tscircuit/high-density-b01.git#e651cab6c314e7aab6df31fd6067277436f67148"
   },
   "dependencies": {

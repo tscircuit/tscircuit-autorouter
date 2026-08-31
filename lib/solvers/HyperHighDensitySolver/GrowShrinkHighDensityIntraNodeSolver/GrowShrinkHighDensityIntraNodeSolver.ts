@@ -5,6 +5,7 @@ import type {
   PortPoint,
 } from "lib/types/high-density-types"
 import { BaseSolver } from "../../BaseSolver"
+import { CoarseGridPortfolioSingleIntraNodeSolver } from "../CoarseGridPortfolioSingleIntraNodeSolver"
 import { PortfolioSingleIntraNodeSolver } from "../PortfolioSingleIntraNodeSolver"
 import {
   createInvalidDirectConnectionRoutes,
@@ -152,7 +153,11 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
   private createActiveSubSolver() {
     const { growShrinkSolutionValidator: _, ...portfolioParams } =
       this.constructorParams
-    this.activeSubSolver = new PortfolioSingleIntraNodeSolver({
+    const PortfolioSolver =
+      this.scaleFactor === 1
+        ? PortfolioSingleIntraNodeSolver
+        : CoarseGridPortfolioSingleIntraNodeSolver
+    this.activeSubSolver = new PortfolioSolver({
       ...portfolioParams,
       nodeWithPortPoints: scaleNodeWithPortPoints(
         this.nodeWithPortPoints,

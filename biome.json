@@ -12,7 +12,7 @@
       "cosmos-export",
       "dist",
       "**/*.json",
-      "vendor/high-density-a11-a12-runtime.bundle.mjs"
+      "vendor/high-density-a11-runtime.bundle.mjs"
     ]
   },
   "javascript": {
