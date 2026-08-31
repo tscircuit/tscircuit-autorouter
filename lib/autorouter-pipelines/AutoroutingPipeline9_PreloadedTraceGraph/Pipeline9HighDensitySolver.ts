@@ -361,6 +361,7 @@ export const createPipeline9RegularNodeSolver = ({
     obstacles,
     layerCount,
     useGrowShrinkHighDensityIntraNodeSolver: true,
+    enableHighDensityA11: true,
     preserveTerminalPcbPortIds: false,
     growShrinkFallbackToInvalidGeometryOnFailure: false,
     captureSearchDebug: false,

@@ -9,6 +9,10 @@ import {
 } from "lib/types/high-density-types"
 import { CachedIntraNodeRouteSolver } from "../HighDensitySolver/CachedIntraNodeRouteSolver"
 import { IntraNodeRouteSolver } from "../HighDensitySolver/IntraNodeSolver"
+import {
+  getRouteGeometryViolationError,
+  HighDensitySolverA11,
+} from "../HighDensitySolver/official-high-density-a11"
 import { MultiHeadPolyLineIntraNodeSolver2 } from "../HighDensitySolver/MultiHeadPolyLineIntraNodeSolver/MultiHeadPolyLineIntraNodeSolver2_Optimized"
 import { MultiHeadPolyLineIntraNodeSolver3 } from "../HighDensitySolver/MultiHeadPolyLineIntraNodeSolver/MultiHeadPolyLineIntraNodeSolver3_ViaPossibilitiesSolverIntegration"
 import { SingleLayerNoDifferentRootIntersectionsIntraNodeSolver } from "../HighDensitySolver/SingleLayerNoDifferentRootIntersectionsIntraNodeSolver"
@@ -20,13 +24,24 @@ import {
   HyperParameterSupervisorSolver,
   SupervisedSolver,
 } from "../HyperParameterSupervisorSolver"
-import { repairDisconnectedSameRootPortPoints } from "./repairDisconnectedSameRootPortPoints"
+import {
+  areNodePortPointPairsConnectedByRoutes,
+  repairDisconnectedSameRootPortPoints,
+} from "./repairDisconnectedSameRootPortPoints"
 
 // Match the existing six-ordering portfolio used by the other intra-node
 // solver. The first ordering remains in the normal portfolio; the remaining
 // orderings are introduced only after that portfolio spends its dynamically
 // derived exploration budget or exhausts all of its candidates.
 const ORDERING_SHUFFLE_SEEDS = Array.from({ length: 6 }, (_, seed) => seed)
+const HIGH_DENSITY_A11_MAX_ITERATIONS = 5_000
+
+export type PortfolioSingleIntraNodeSolverParams = ConstructorParameters<
+  typeof CachedIntraNodeRouteSolver
+>[0] & {
+  effort?: number
+  enableHighDensityA11?: boolean
+}
 
 /** Coordinates a fitness-scheduled portfolio of intra-node routing solvers. */
 export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolver<
@@ -42,7 +57,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     return "PortfolioSingleIntraNodeSolver"
   }
 
-  constructorParams: ConstructorParameters<typeof CachedIntraNodeRouteSolver>[0]
+  constructorParams: PortfolioSingleIntraNodeSolverParams
   solvedRoutes: HighDensityIntraNodeRoute[] = []
   nodeWithPortPoints: NodeWithPortPoints
   connMap?: ConnectivityMap
@@ -100,11 +115,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     )
   }
 
-  constructor(
-    opts: ConstructorParameters<typeof CachedIntraNodeRouteSolver>[0] & {
-      effort?: number
-    },
-  ) {
+  constructor(opts: PortfolioSingleIntraNodeSolverParams) {
     super()
     this.nodeWithPortPoints = opts.nodeWithPortPoints
     this.connMap = opts.connMap
@@ -128,6 +139,9 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       // ["closedFormTwoTrace"],
       ["highDensityA01"],
       ["highDensityA03"],
+      ...(this.constructorParams.enableHighDensityA11
+        ? [["highDensityA11"]]
+        : []),
     ]
   }
 
@@ -266,15 +280,26 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
           },
         ],
       },
+      {
+        name: "highDensityA11",
+        possibleValues: [
+          {
+            HIGH_DENSITY_A11: true,
+            SHUFFLE_SEED: ORDERING_SHUFFLE_SEEDS[0],
+          },
+        ],
+      },
     ]
   }
 
   /**
    * Some external solvers expose an idempotent setup phase that calculates
-   * their natural iteration budget from the problem. Running setup here does
-   * not advance the solver or give it preference in the portfolio.
-   */
+  * their natural iteration budget from the problem. Running setup here does
+  * not advance the solver or give it preference in the portfolio.
+  */
   private initializeCandidateBudget(solver: unknown) {
+    // Keep A11's fine grid lazy so easy nodes do not pay its setup cost.
+    if ((solver as any) instanceof HighDensitySolverA11) return
     const setup = (solver as any).setup
     if (typeof setup === "function") setup.call(solver)
   }
@@ -375,7 +400,8 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
   computeG(solver: IntraNodeRouteSolver) {
     if (
       (solver as any) instanceof HighDensitySolverA01 ||
-      (solver as any) instanceof HighDensityA03Solver
+      (solver as any) instanceof HighDensityA03Solver ||
+      (solver as any) instanceof HighDensitySolverA11
     ) {
       return (solver as any).iterations / 1_000_000
     }
@@ -460,6 +486,21 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       })
       return solver as any
     }
+    if (hyperParameters.HIGH_DENSITY_A11) {
+      const solver = new HighDensitySolverA11({
+        nodeWithPortPoints: this.nodeWithPortPoints,
+        viaDiameter: this.constructorParams.viaDiameter ?? 0.3,
+        viaMinDistFromBorder: (this.constructorParams.viaDiameter ?? 0.3) / 2,
+        traceMargin: 0.1,
+        traceThickness: this.constructorParams.traceWidth ?? 0.15,
+        effort: this.effort,
+        hyperParameters: {
+          shuffleSeed: hyperParameters.SHUFFLE_SEED ?? 0,
+        },
+      })
+      solver.MAX_ITERATIONS = HIGH_DENSITY_A11_MAX_ITERATIONS
+      return solver as any
+    }
     if (hyperParameters.CLOSED_FORM_TWO_TRACE_SAME_LAYER) {
       return new TwoCrossingRoutesHighDensitySolver({
         nodeWithPortPoints: this.nodeWithPortPoints,
@@ -506,7 +547,8 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     let routes: HighDensityIntraNodeRoute[]
     if (
       (solver.solver as any) instanceof HighDensitySolverA01 ||
-      (solver.solver as any) instanceof HighDensityA03Solver
+      (solver.solver as any) instanceof HighDensityA03Solver ||
+      (solver.solver as any) instanceof HighDensitySolverA11
     ) {
       routes = (solver.solver as any).getOutput()
     } else {
@@ -525,9 +567,33 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       return route
     })
 
-    this.solvedRoutes = repairDisconnectedSameRootPortPoints(
+    const repairedRoutes = repairDisconnectedSameRootPortPoints(
       routesWithRootConnectionNames,
       this.nodeWithPortPoints,
     )
+    if (solver.hyperParameters.HIGH_DENSITY_A11) {
+      const geometryError = getRouteGeometryViolationError(repairedRoutes)
+      const pairConnectivityIsValid =
+        areNodePortPointPairsConnectedByRoutes(
+          repairedRoutes,
+          this.nodeWithPortPoints,
+        )
+      if (geometryError || !pairConnectivityIsValid) {
+        solver.solver.solved = false
+        solver.solver.failed = true
+        solver.solver.error = `HighDensitySolverA11 output rejected: ${geometryError ?? "not all port-point pairs are connected"}`
+        this.solved = false
+        this.failed = false
+        this.error = null
+        this.winningSolver = undefined
+        this.activeSubSolver = null
+        this.solvedRoutes = []
+        this.stats.rejectedHighDensityA11CandidateCount =
+          Number(this.stats.rejectedHighDensityA11CandidateCount ?? 0) + 1
+        this.refreshDynamicIterationLimit()
+        return
+      }
+    }
+    this.solvedRoutes = repairedRoutes
   }
 }
