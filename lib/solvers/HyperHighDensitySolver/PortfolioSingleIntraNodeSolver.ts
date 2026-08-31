@@ -38,7 +38,7 @@ const ORDERING_SHUFFLE_SEEDS = Array.from({ length: 6 }, (_, seed) => seed)
 // node-derived budget after setup. Their per-connection search budgets remain
 // unchanged.
 const HIGH_DENSITY_A11_PORTFOLIO_BUDGET_FACTOR = 0.4
-const HIGH_DENSITY_A12_PORTFOLIO_BUDGET_FACTOR = 0.2
+const HIGH_DENSITY_A12_PORTFOLIO_BUDGET_FACTOR = 0.25
 
 /** Coordinates a fitness-scheduled portfolio of intra-node routing solvers. */
 export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolver<

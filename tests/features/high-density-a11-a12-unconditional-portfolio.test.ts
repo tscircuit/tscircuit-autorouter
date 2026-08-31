@@ -133,10 +133,10 @@ test("Pipeline7 and Pipeline9 always run A11 and A12 alongside existing high-den
   expect((a11Candidate.solver as any).cellSizeMm).toBe(0.05)
   expect(
     (a12Candidate.solver as any).stats.portfolioIterationBudgetFactor,
-  ).toBe(0.2)
+  ).toBe(0.25)
   expect((a12Candidate.solver as any).MAX_ITERATIONS).toBe(
     Math.floor(
-      (a12Candidate.solver as any).stats.portfolioNaturalMaxIterations * 0.2,
+      (a12Candidate.solver as any).stats.portfolioNaturalMaxIterations * 0.25,
     ),
   )
   expect(
@@ -186,7 +186,7 @@ test("Pipeline7 and Pipeline9 always run A11 and A12 alongside existing high-den
   expect(
     (grownCandidates.a12Candidate.solver as any).stats
       .portfolioIterationBudgetFactor,
-  ).toBe(0.2)
+  ).toBe(0.25)
   expect(
     (grownCandidates.a11Candidate.solver as any).stats
       .portfolioIterationBudgetFactor,
