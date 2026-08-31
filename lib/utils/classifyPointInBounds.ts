@@ -1,6 +1,6 @@
-import { pointToBoundsDistance } from "@tscircuit/math-utils"
-
 export type PointBoundsPosition = "on-boundary" | "inside" | "outside"
+
+export const BOUNDARY_COORDINATE_TOLERANCE_MM = 1e-6
 
 const isFiniteNumber = ({ value }: { value: number }): boolean =>
   Number.isFinite(value)
@@ -28,7 +28,7 @@ const isWithinEpsilon = ({
 export const classifyPointInBounds = ({
   point,
   bounds,
-  epsilon = 1e-6,
+  epsilon = BOUNDARY_COORDINATE_TOLERANCE_MM,
 }: {
   point: { x: number; y: number }
   bounds: { minX: number; maxX: number; minY: number; maxY: number }
@@ -47,8 +47,13 @@ export const classifyPointInBounds = ({
     return "outside"
   }
 
-  const distanceToBounds = pointToBoundsDistance(point, bounds)
-  if (distanceToBounds > epsilon) {
+  const isOutsideTolerance =
+    point.x < bounds.minX - epsilon ||
+    point.x > bounds.maxX + epsilon ||
+    point.y < bounds.minY - epsilon ||
+    point.y > bounds.maxY + epsilon
+
+  if (isOutsideTolerance) {
     return "outside"
   }
 
