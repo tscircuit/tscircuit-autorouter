@@ -80,6 +80,12 @@ Fallback logic is an anti-pattern here and a common mistake when extending the s
 - Keep diffs to the requested fix. Do not add precautionary or adjacent
   refactors without asking first.
 - ONE TEST PER FILE
+- Don't create feature flags e.g. `enable*` to enable specific features or algorithms when they
+  should always be on. We want to create very few variants of the autorouter
+- Avoid fallbacks or threshold values that change the autorouters behavior dramatically, especially
+  when trying to get a specific sample to solve. This is overfitting.
+- Don't introduce adaptive solvers to aid in solving specific problems, that is, solvers that change
+  the weighting or other calibrations. You should general prefer to find very specific bugs. 
 
 ## Architecture
 
