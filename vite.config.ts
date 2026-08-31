@@ -16,13 +16,4 @@ export default defineConfig({
       "@tscircuit/high-density-a01-a11-a12": highDensityA11A12RuntimePath,
     },
   },
-  build: {
-    rollupOptions: {
-      output: {
-        manualChunks: {
-          "high-density-a11-a12-runtime": [highDensityA11A12RuntimePath],
-        },
-      },
-    },
-  },
 })
