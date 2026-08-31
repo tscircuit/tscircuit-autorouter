@@ -55,6 +55,7 @@ export type WorkerProgress = {
   activeSubSolverProgress?: number
   activeSubSolverIterations?: number
   stageTiming?: BenchmarkStageTimingBreakdown
+  routingMetrics?: RoutingBenchmarkMetrics
 }
 
 export type TinyHypergraphBenchmarkMetrics = {
@@ -96,6 +97,7 @@ export type TinyHypergraphBenchmarkMetrics = {
 export type RoutingBenchmarkMetrics = {
   tinyHypergraph?: TinyHypergraphBenchmarkMetrics
   highDensityIterations?: number
+  highDensityGrowthCount?: number
   phaseTimeMs?: Record<string, number>
   networkedHighDensity?: {
     remoteRequestsStarted: number
@@ -168,6 +170,7 @@ export type SolverRunSummary = {
   p90TimeMs?: number | null
   p95TimeMs: number | null
   avgVia: number | null
+  highDensityGrowthCount?: number | null
   networkCache?: {
     remoteRequests: number
     cacheHits: number

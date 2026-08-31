@@ -45,6 +45,7 @@ test("same-machine benchmark comments compare matching reports", () => {
         p50TimeMs: 1_000,
         p95TimeMs: 2_000,
         avgVia: 2,
+        highDensityGrowthCount: 28,
       },
     ],
     tests: [
@@ -70,6 +71,7 @@ test("same-machine benchmark comments compare matching reports", () => {
         p50TimeMs: 900,
         p95TimeMs: 1_800,
         avgVia: 2.2,
+        highDensityGrowthCount: 22,
       },
     ],
     tests: [
@@ -99,6 +101,9 @@ test("same-machine benchmark comments compare matching reports", () => {
   )
   expect(markdown).toContain("| Pipeline7 | DRC issues | 3 | 1 | -2 |")
   expect(markdown).toContain("| Pipeline7 | Timeouts | 1 | 0 | -1 |")
+  expect(markdown).toContain(
+    "| Pipeline7 | HD growth attempts | 28 | 22 | -6 |",
+  )
   expect(markdown).toContain("| Pipeline7 | P50 time | 1.5s | 1.4s | -6.7% |")
   expect(markdown).toContain("| Pipeline7 | P60 time |")
   expect(markdown).toContain("| Pipeline7 | P70 time |")
@@ -109,6 +114,7 @@ test("same-machine benchmark comments compare matching reports", () => {
   expect(markdown).toContain(
     "Timing percentiles include solved and timed-out samples",
   )
+  expect(markdown).toContain("negative growth deltas mean fewer attempts")
   expect(markdown).toContain("| Pipeline7 | 1 | Timeout | DRC passed |")
   expect(() =>
     renderSameMachineBenchmarkResults({

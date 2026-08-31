@@ -18,6 +18,7 @@ import type { Obstacle } from "lib/types/srj-types"
 import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
 import { BaseSolver } from "../../solvers/BaseSolver"
 import { HighDensitySolver } from "../../solvers/HighDensitySolver/HighDensitySolver"
+import { GrowShrinkHighDensityIntraNodeSolver } from "../../solvers/HyperHighDensitySolver/GrowShrinkHighDensityIntraNodeSolver"
 import type { PreloadedHighDensityRoute } from "./convertPreloadedTraceToHdRoutes"
 import {
   arePipeline9RoutesOnSameNet,
@@ -395,6 +396,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
   readonly preloadedTraceMutationMasks = new Map<string, boolean[]>()
 
   activeRegularSolver: HighDensitySolver | null = null
+  private completedHighDensityGrowthCount = 0
   activeB01Solver: HighDensitySolverB01 | null = null
   activeFallbackSolver: Pipeline9RegionalFallbackSolver | null = null
   activeFallbackFixedRouteSections = new Map<string, FixedRouteSection>()
@@ -441,7 +443,34 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       regionalPreloadedViaCandidateRejectionCount: 0,
       regionalForceImproveCandidateRejectionCount: 0,
       regionalRepairCandidateRejectionCount: 0,
+      highDensityResizeCount: 0,
     }
+  }
+
+  private getGrowthCount(solver: HighDensitySolver): number {
+    const completedCount = Number(solver.stats.highDensityResizeCount ?? 0)
+    const activeCount =
+      solver.activeSubSolver instanceof GrowShrinkHighDensityIntraNodeSolver
+        ? solver.activeSubSolver.growthAttempts
+        : 0
+    return completedCount + activeCount
+  }
+
+  private updateHighDensityGrowthCount(): void {
+    const activeGrowthCount = this.activeRegularSolver
+      ? this.getGrowthCount(this.activeRegularSolver)
+      : this.activeFallbackSolver
+        ? this.getGrowthCount(this.activeFallbackSolver.highDensitySolver)
+        : 0
+    this.stats.highDensityResizeCount =
+      this.completedHighDensityGrowthCount + activeGrowthCount
+  }
+
+  private commitActiveHighDensityGrowthCount(): void {
+    this.updateHighDensityGrowthCount()
+    this.completedHighDensityGrowthCount = Number(
+      this.stats.highDensityResizeCount ?? 0,
+    )
   }
 
   override getSolverName(): string {
@@ -458,6 +487,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
   }
 
   protected finishActiveNode(routes: HighDensityIntraNodeRoute[]): void {
+    this.commitActiveHighDensityGrowthCount()
     const solvedRoutes = this.activeNode
       ? restoreRootConnectionNames(routes, this.activeNode)
       : routes
@@ -501,6 +531,10 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       throw new Error(
         "Pipeline9 cannot start a regional fallback without an active node",
       )
+    }
+
+    if (this.activeFallbackSolver) {
+      this.commitActiveHighDensityGrowthCount()
     }
 
     const normalizedNode = normalizePipeline9NodeRootConnectionNames(
@@ -889,6 +923,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
 
   protected finishRegularSolverFailure(error: string): void {
     this.activeFallbackReason = `regular high-density routing failed: ${error}`
+    this.commitActiveHighDensityGrowthCount()
     this.activeRegularSolver = null
     if (!this.enableRegionalFallback) {
       this.error = `Pipeline9 ${this.activeFallbackReason}`
@@ -902,8 +937,10 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
   override _step(): void {
     if (this.activeFallbackSolver) {
       this.activeFallbackSolver.step()
+      this.updateHighDensityGrowthCount()
       if (this.activeFallbackSolver.failed) {
         this.recordRegionalCandidateRejections()
+        this.commitActiveHighDensityGrowthCount()
         this.error = [
           `Pipeline9 primary high-density routing failed: ${this.activeFallbackReason ?? "unknown error"}`,
           `regional fallback failed: ${this.activeFallbackSolver.error ?? "unknown error"}`,
@@ -924,6 +961,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
 
     if (this.activeRegularSolver) {
       this.activeRegularSolver.step()
+      this.updateHighDensityGrowthCount()
       if (this.activeRegularSolver.failed) {
         this.finishRegularSolverFailure(
           this.activeRegularSolver.error ?? "unknown error",

@@ -293,6 +293,7 @@ const getProgressInfo = (
     activeSubSolverProgress: activeSubSolver?.progress,
     activeSubSolverIterations: activeSubSolver?.iterations,
     stageTiming: extractBenchmarkStageTiming(solver, "partial"),
+    routingMetrics: getRoutingBenchmarkMetrics(solver),
   }
 }
 
@@ -303,6 +304,12 @@ const getRoutingBenchmarkMetrics = (
   solver: SolverInstance,
 ): RoutingBenchmarkMetrics => {
   const highDensityStats = solver.highDensityRouteSolver?.stats
+  const getCounter = (name: string): number | undefined => {
+    const value = highDensityStats?.[name]
+    return typeof value === "number" && Number.isFinite(value)
+      ? value
+      : undefined
+  }
   const networkedHighDensity =
     highDensityStats &&
     typeof highDensityStats.remoteRequestsStarted === "number"
@@ -330,6 +337,11 @@ const getRoutingBenchmarkMetrics = (
     tinyHypergraph:
       solver.portPointPathingSolver?.getSolveGraphBenchmarkMetrics?.(),
     highDensityIterations: solver.highDensityRouteSolver?.iterations,
+    // Networked responses do not currently include remote growth attempts, so
+    // the client-local counter would be an incomplete and misleading total.
+    highDensityGrowthCount: networkedHighDensity
+      ? undefined
+      : getCounter("highDensityResizeCount"),
     phaseTimeMs: solver.timeSpentOnPhase,
     networkedHighDensity,
   }
