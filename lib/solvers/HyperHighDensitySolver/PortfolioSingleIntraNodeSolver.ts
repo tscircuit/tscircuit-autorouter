@@ -32,6 +32,14 @@ import { repairDisconnectedSameRootPortPoints } from "./repairDisconnectedSameRo
 // derived exploration budget or exhausts all of its candidates.
 const ORDERING_SHUFFLE_SEEDS = Array.from({ length: 6 }, (_, seed) => seed)
 
+// A11 and A12 use finer grids than the legacy external candidates, so their
+// unsuccessful tails cost substantially more per iteration. Keep both
+// candidates unconditional, but give them deterministic shares of the natural
+// node-derived budget after setup. Their per-connection search budgets remain
+// unchanged.
+const HIGH_DENSITY_A11_PORTFOLIO_BUDGET_FACTOR = 0.4
+const HIGH_DENSITY_A12_PORTFOLIO_BUDGET_FACTOR = 0.2
+
 /** Coordinates a fitness-scheduled portfolio of intra-node routing solvers. */
 export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolver<
   | IntraNodeRouteSolver
@@ -299,8 +307,27 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
    * not advance the solver or give it preference in the portfolio.
    */
   private initializeCandidateBudget(solver: unknown) {
-    const setup = (solver as any).setup
-    if (typeof setup === "function") setup.call(solver)
+    const candidate = solver as any
+    const setup = candidate.setup
+    if (typeof setup === "function") setup.call(candidate)
+
+    const budgetFactor =
+      solver instanceof HighDensitySolverA12
+        ? HIGH_DENSITY_A12_PORTFOLIO_BUDGET_FACTOR
+        : solver instanceof HighDensitySolverA11
+          ? HIGH_DENSITY_A11_PORTFOLIO_BUDGET_FACTOR
+          : null
+    if (budgetFactor === null) return
+
+    const naturalMaxIterations = candidate.MAX_ITERATIONS
+    const portfolioMaxIterations = Math.max(
+      1,
+      Math.floor(naturalMaxIterations * budgetFactor),
+    )
+    candidate.MAX_ITERATIONS = portfolioMaxIterations
+    candidate.stats.portfolioNaturalMaxIterations = naturalMaxIterations
+    candidate.stats.portfolioIterationBudgetFactor = budgetFactor
+    candidate.stats.portfolioMaxIterations = portfolioMaxIterations
   }
 
   private refreshDynamicIterationLimit() {

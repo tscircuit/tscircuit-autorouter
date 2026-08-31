@@ -131,6 +131,22 @@ test("Pipeline7 and Pipeline9 always run A11 and A12 alongside existing high-den
   expect((a12Candidate.solver as any).lowResolutionCellSize).toBe(0.2)
   expect((a12Candidate.solver as any).highResolutionCellThickness).toBe(16)
   expect((a11Candidate.solver as any).cellSizeMm).toBe(0.05)
+  expect(
+    (a12Candidate.solver as any).stats.portfolioIterationBudgetFactor,
+  ).toBe(0.2)
+  expect((a12Candidate.solver as any).MAX_ITERATIONS).toBe(
+    Math.floor(
+      (a12Candidate.solver as any).stats.portfolioNaturalMaxIterations * 0.2,
+    ),
+  )
+  expect(
+    (a11Candidate.solver as any).stats.portfolioIterationBudgetFactor,
+  ).toBe(0.4)
+  expect((a11Candidate.solver as any).MAX_ITERATIONS).toBe(
+    Math.floor(
+      (a11Candidate.solver as any).stats.portfolioNaturalMaxIterations * 0.4,
+    ),
+  )
   for (const { solver } of a12Portfolio.supervisedSolvers!) {
     if (solver !== a12Candidate.solver) solver.failed = true
   }
@@ -166,5 +182,13 @@ test("Pipeline7 and Pipeline9 always run A11 and A12 alongside existing high-den
   expect(grownRetry.activeSubSolver!.nodeWithPortPoints.width).toBe(
     sample002LargeNode.width * 2,
   )
-  getExternalCandidates(grownRetry.activeSubSolver!)
+  const grownCandidates = getExternalCandidates(grownRetry.activeSubSolver!)
+  expect(
+    (grownCandidates.a12Candidate.solver as any).stats
+      .portfolioIterationBudgetFactor,
+  ).toBe(0.2)
+  expect(
+    (grownCandidates.a11Candidate.solver as any).stats
+      .portfolioIterationBudgetFactor,
+  ).toBe(0.4)
 })
