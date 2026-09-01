@@ -25,6 +25,20 @@ test("native portfolios include A11 and A12 while grown portfolios stay coarse",
   }
   const nativePortfolio = new PortfolioSingleIntraNodeSolver(solverParams)
   nativePortfolio.initializeSolvers()
+  for (const { solver: candidate } of
+    nativePortfolio.supervisedSolvers ?? []) {
+    candidate.failed = true
+  }
+  nativePortfolio.step()
+  nativePortfolio.solved = false
+  nativePortfolio.failed = false
+  nativePortfolio.winningSolver = undefined
+  for (const { solver: candidate } of
+    nativePortfolio.supervisedSolvers ?? []) {
+    candidate.solved = false
+    candidate.failed = true
+  }
+  nativePortfolio.step()
   const a11Candidate = nativePortfolio.supervisedSolvers?.find(
     ({ solver: candidateSolver }) =>
       candidateSolver instanceof HighDensitySolverA11,
@@ -76,6 +90,12 @@ test("native portfolios include A11 and A12 while grown portfolios stay coarse",
   expect(grownSolver.activeSubSolver).toBeInstanceOf(
     PortfolioSingleIntraNodeSolver,
   )
+  expect(
+    grownSolver.activeSubSolver?.constructorParams.useHighDensitySolverA11,
+  ).toBe(false)
+  expect(
+    grownSolver.activeSubSolver?.constructorParams.useHighDensitySolverA12,
+  ).toBe(false)
   expect(
     grownSolver.activeSubSolver?.supervisedSolvers?.some(
       ({ solver: candidateSolver }) =>

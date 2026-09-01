@@ -2,7 +2,7 @@ import { expect, test } from "bun:test"
 import { PortfolioSingleIntraNodeSolver } from "lib/solvers/HyperHighDensitySolver/PortfolioSingleIntraNodeSolver"
 import { makeNode } from "./never-fail-growth-high-density/test-helpers"
 
-test("native portfolio orders A11 and A12 after established candidates", () => {
+test("native portfolio adds A11 and A12 after established candidates exhaust", () => {
   const solver = new PortfolioSingleIntraNodeSolver({
     nodeWithPortPoints: makeNode(),
     viaDiameter: 0.3,
@@ -16,6 +16,30 @@ test("native portfolio orders A11 and A12 after established candidates", () => {
   })
 
   solver.initializeSolvers()
+
+  expect(
+    solver.supervisedSolvers?.some(
+      ({ solver: candidate }) =>
+        candidate.getSolverName() === "HighDensitySolverA11" ||
+        candidate.getSolverName() === "HighDensitySolverA12",
+    ),
+  ).toBe(false)
+
+  for (const { solver: candidate } of solver.supervisedSolvers ?? []) {
+    candidate.failed = true
+  }
+  solver.step()
+  expect(solver.adaptiveSearchExpanded).toBe(true)
+  expect(solver.nativeExactGridCandidatesAdded).toBe(false)
+
+  solver.solved = false
+  solver.failed = false
+  solver.winningSolver = undefined
+  for (const { solver: candidate } of solver.supervisedSolvers ?? []) {
+    candidate.solved = false
+    candidate.failed = true
+  }
+  solver.step()
 
   const a11Candidate = solver.supervisedSolvers?.find(
     ({ solver: candidate }) =>
@@ -34,11 +58,11 @@ test("native portfolio orders A11 and A12 after established candidates", () => {
   expect(a12Candidate?.f).toBe(solver.GREEDY_MULTIPLIER + 2)
   expect(a01Candidate?.g).toBe(0)
   expect(a01Candidate?.f).toBe(0)
-
-  solver.solve()
-
-  expect(solver.solved).toBe(true)
-  expect(solver.winningSolver?.getSolverName()).not.toBe("HighDensitySolverA11")
+  expect(solver.nativeExactGridCandidatesAdded).toBe(true)
   expect(a11Candidate?.solver.iterations).toBe(0)
+  expect(a12Candidate?.solver.iterations).toBe(0)
+
+  solver.step()
+  expect(a11Candidate?.solver.iterations).toBeGreaterThan(0)
   expect(a12Candidate?.solver.iterations).toBe(0)
 })

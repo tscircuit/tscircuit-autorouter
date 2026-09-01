@@ -79,6 +79,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
   connMap?: ConnectivityMap
   effort: number
   adaptiveSearchExpanded = false
+  nativeExactGridCandidatesAdded = false
 
   private getSolvedSegmentCount(
     solver: PortfolioCandidateSolver,
@@ -158,12 +159,6 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       ["highDensityA01"],
       ["highDensityA03"],
     ]
-    if (this.constructorParams.useHighDensitySolverA11) {
-      combinations.push(["highDensityA11"])
-    }
-    if (this.constructorParams.useHighDensitySolverA12) {
-      combinations.push(["highDensityA12"])
-    }
     return combinations
   }
 
@@ -407,6 +402,27 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     )
   }
 
+  private addNativeExactGridCandidates() {
+    if (this.nativeExactGridCandidatesAdded) return
+
+    this.nativeExactGridCandidatesAdded = true
+    if (this.constructorParams.useHighDensitySolverA11) {
+      this.addSupervisedCandidate({
+        HIGH_DENSITY_A11: true,
+        SHUFFLE_SEED: ORDERING_SHUFFLE_SEEDS[0],
+      })
+    }
+    if (this.constructorParams.useHighDensitySolverA12) {
+      this.addSupervisedCandidate({
+        HIGH_DENSITY_A12: true,
+        SHUFFLE_SEED: ORDERING_SHUFFLE_SEEDS[0],
+      })
+    }
+    this.refreshDynamicIterationLimit()
+    this.stats.nativeExactGridCandidatesAdded = true
+    this.stats.nativeExactGridCandidatesAddedAtIteration = this.iterations
+  }
+
   private shouldExpandPortfolio(): boolean {
     if (this.adaptiveSearchExpanded) return false
 
@@ -423,6 +439,15 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       !this.getSupervisedSolverWithBestFitness()
     ) {
       this.expandAdaptiveSearch()
+    }
+
+    if (
+      this.adaptiveSearchExpanded &&
+      !this.nativeExactGridCandidatesAdded &&
+      !this.getSupervisedSolverWithBestFitness()
+    ) {
+      this.addNativeExactGridCandidates()
+      return
     }
 
     super._step()
