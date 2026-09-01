@@ -57,9 +57,6 @@ test("repairs a same-root route whose endpoints are nearly coincident", (): void
     route: [fixedStart, sharedNetRoute.route[1], fixedEnd],
   })
   expect(
-    areNodePortPointPairsConnectedByRoutes(
-      repairedRoutes,
-      nodeWithPortPoints,
-    ),
+    areNodePortPointPairsConnectedByRoutes(repairedRoutes, nodeWithPortPoints),
   ).toBeTrue()
 })
