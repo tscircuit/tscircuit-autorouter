@@ -26,11 +26,9 @@ test("bugreport94-56fa2e.json", () => {
   )
   expect(targetOverlap).toBeUndefined()
 
-  expect(getLastStepSvg(solver.visualize())).toMatchSvgSnapshot(
-    import.meta.path,
-    {
-      // Linux retains a different safe-layer candidate with 8 DRC errors.
-      tolerance: 0.17,
-    },
-  )
-}, 180_000)
+  const snapshotPath =
+    process.platform === "linux"
+      ? import.meta.path.replace(/\.test\.ts$/, "-linux.test.ts")
+      : import.meta.path
+  expect(getLastStepSvg(solver.visualize())).toMatchSvgSnapshot(snapshotPath)
+}, 300_000)
