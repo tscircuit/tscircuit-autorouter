@@ -596,6 +596,7 @@ export class SingleRouteUselessViaRemovalSolver extends BaseSolver {
             connMap: this.connMap,
             defaultTraceThickness: this.TRACE_THICKNESS,
             obstacleMargin: this.OBSTACLE_MARGIN,
+            traceMargin: this.GEOMETRY_SHORTCUT_TRACE_MARGIN,
           })
         ) {
           firstSection.z = targetZ
@@ -646,6 +647,7 @@ export class SingleRouteUselessViaRemovalSolver extends BaseSolver {
               connMap: this.connMap,
               defaultTraceThickness: this.TRACE_THICKNESS,
               obstacleMargin: this.OBSTACLE_MARGIN,
+              traceMargin: this.GEOMETRY_SHORTCUT_TRACE_MARGIN,
             })
           ) {
             lastSection.z = targetZ
@@ -692,6 +694,7 @@ export class SingleRouteUselessViaRemovalSolver extends BaseSolver {
         connMap: this.connMap,
         defaultTraceThickness: this.TRACE_THICKNESS,
         obstacleMargin: this.OBSTACLE_MARGIN,
+        traceMargin: this.GEOMETRY_SHORTCUT_TRACE_MARGIN,
       })
     ) {
       currentSection.z = targetZ

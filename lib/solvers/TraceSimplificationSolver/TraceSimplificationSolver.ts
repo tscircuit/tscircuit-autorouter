@@ -174,13 +174,20 @@ export class TraceSimplificationSolver extends BaseSolver {
             `TraceSimplificationSolver cannot preserve endpoints for empty route "${route.connectionName}"`,
           )
         }
-        const connectionEndpoints =
-          endpointByConnectionName.get(route.connectionName) ?? []
-        connectionEndpoints.push({
+        const preservedEndpoint = {
           start: { ...start },
           end: { ...end },
-        })
-        endpointByConnectionName.set(route.connectionName, connectionEndpoints)
+        }
+        const connectionEndpoints = endpointByConnectionName.get(
+          route.connectionName,
+        )
+        if (connectionEndpoints) {
+          connectionEndpoints.push(preservedEndpoint)
+        } else {
+          endpointByConnectionName.set(route.connectionName, [
+            preservedEndpoint,
+          ])
+        }
       }
       this.preservedRouteSet = {
         endpointsByConnectionName: endpointByConnectionName,
