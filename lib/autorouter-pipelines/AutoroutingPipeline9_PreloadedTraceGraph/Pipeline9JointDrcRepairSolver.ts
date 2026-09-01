@@ -4,6 +4,8 @@ import type { GraphicsObject } from "graphics-debug"
 import {
   AutoroutingDrcEngine,
   type DrcEvaluator,
+  GlobalDrcBranchPortfolioSolver,
+  type GlobalDrcBranchPortfolioSolverParams,
   type SimpleRouteJson as RepairSimpleRouteJson,
   type SimplifiedPcbTraces as RepairSimplifiedPcbTraces,
 } from "high-density-repair03/lib"
@@ -90,6 +92,10 @@ type Pipeline9JointDrcRepairSolverParams = {
   effort: number
   colorMap: Record<string, string>
 }
+
+type Pipeline9ExactRepairSolver =
+  | Pipeline7AdaptiveDrcBranchPortfolioSolver
+  | GlobalDrcBranchPortfolioSolver
 
 type MovablePreloadedSection = {
   originalTrace: SimplifiedPcbTrace
@@ -667,7 +673,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
   readonly movablePreloadedSections: MovablePreloadedSection[]
   readonly fixedPreloadedObstacleRoutes: PreloadedHighDensityRoute[]
   readonly syntheticConnectionNames: ReadonlySet<string>
-  readonly exactRepairSolver?: Pipeline7AdaptiveDrcBranchPortfolioSolver
+  readonly exactRepairSolver?: Pipeline9ExactRepairSolver
   private drcEvaluator?: DrcEvaluator
   private cachedReferenceDrcEvaluator?: DrcEvaluator
   private referenceDrcValidationCount = 0
@@ -1332,7 +1338,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     }
     this.drcEvaluator = drcEvaluator
 
-    this.exactRepairSolver = new Pipeline7AdaptiveDrcBranchPortfolioSolver({
+    const exactRepairParams: GlobalDrcBranchPortfolioSolverParams = {
       srj: extendedSrjWithPointPairs as any,
       hdRoutes: [
         ...params.newHdRoutes,
@@ -1346,7 +1352,6 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       drcEvaluator,
       viaInPadDrcEvaluator: drcEvaluator,
       maxIterations: EXACT_REPAIR_MAX_ITERATIONS,
-      enableFastProbe: enableExactRepairFastProbe,
       enableBroadFallback: false,
       enableLargeBoardBroadFallback: false,
       enableTargetedErrorSweep: true,
@@ -1357,7 +1362,10 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       viaInPadMaxIterations: EXACT_REPAIR_MAX_ITERATIONS,
       broadMaxIterations: EXACT_REPAIR_BROAD_MAX_ITERATIONS,
       broadPassMultiplier: 3,
-    })
+    }
+    this.exactRepairSolver = enableExactRepairFastProbe
+      ? new Pipeline7AdaptiveDrcBranchPortfolioSolver(exactRepairParams)
+      : new GlobalDrcBranchPortfolioSolver(exactRepairParams)
     this.activeSubSolver = this.exactRepairSolver
     this.MAX_ITERATIONS = this.exactRepairSolver.MAX_ITERATIONS + 1
   }

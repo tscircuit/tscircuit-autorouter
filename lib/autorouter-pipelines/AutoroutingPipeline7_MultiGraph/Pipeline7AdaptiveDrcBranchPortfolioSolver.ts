@@ -8,11 +8,6 @@ import {
 
 type AdaptivePortfolioPhase = "start" | "fastProbe" | "fallback" | "done"
 
-type AdaptiveDrcBranchPortfolioSolverParams =
-  GlobalDrcBranchPortfolioSolverParams & {
-    enableFastProbe?: boolean
-  }
-
 /**
  * Tries Pipeline7's inexpensive two-layer repair portfolio first, then accepts
  * it only when the same DRC evaluator used for candidate scoring reports a
@@ -21,7 +16,7 @@ type AdaptiveDrcBranchPortfolioSolverParams =
  * board-size thresholds.
  */
 export class Pipeline7AdaptiveDrcBranchPortfolioSolver extends BaseSolver {
-  readonly params: AdaptiveDrcBranchPortfolioSolverParams
+  readonly params: GlobalDrcBranchPortfolioSolverParams
   readonly inputHdRoutes: HighDensityRoute[]
   outputHdRoutes: HighDensityRoute[]
 
@@ -32,7 +27,7 @@ export class Pipeline7AdaptiveDrcBranchPortfolioSolver extends BaseSolver {
   private fastProbeDrcIssueCount?: number
   private fastProbeAttempted = false
 
-  constructor(params: AdaptiveDrcBranchPortfolioSolverParams) {
+  constructor(params: GlobalDrcBranchPortfolioSolverParams) {
     super()
     this.params = params
     this.inputHdRoutes = params.hdRoutes
@@ -113,7 +108,6 @@ export class Pipeline7AdaptiveDrcBranchPortfolioSolver extends BaseSolver {
   override _step() {
     if (this.phase === "start") {
       if (
-        this.params.enableFastProbe !== false &&
         this.params.srj.layerCount === 2 &&
         this.params.enableSafeTraceLayerMoves
       ) {
