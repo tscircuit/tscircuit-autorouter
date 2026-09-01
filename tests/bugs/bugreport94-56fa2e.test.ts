@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test"
-import { AutoroutingPipelineSolver } from "lib"
+import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib"
 import { getCurrentCircuitJson } from "lib/testing/autorouting-pipeline-debugger/getCurrentCircuitJson"
 import { getDrcErrors } from "lib/testing/getDrcErrors"
 import bugReport from "../../fixtures/bug-reports/bugreport94-56fa2e/bugreport94-56fa2e.json" with {
@@ -10,8 +10,10 @@ import { getLastStepSvg } from "../fixtures/getLastStepSvg"
 
 const srj = bugReport.simple_route_json as SimpleRouteJson
 
-test("bugreport94-56fa2e.json", () => {
-  const solver = new AutoroutingPipelineSolver(structuredClone(srj))
+test("bugreport94-56fa2e.json with Pipeline 9", () => {
+  const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(
+    structuredClone(srj),
+  )
   solver.solve()
 
   const circuitJson = getCurrentCircuitJson(solver)
