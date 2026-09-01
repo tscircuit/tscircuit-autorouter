@@ -27,9 +27,9 @@ test("Pipeline9 routes HD30 topology_merge_298 at native size with A11", () => {
   expect(solver.failed).toBe(false)
   expect(solver.stats.highDensityResizeCount).toBe(0)
   expect(solver.stats.solverNodeCount.HighDensitySolverA11).toBe(1)
-  expect(solver.nodeSolveMetadataById.get("topology_merge_298")?.solverType).toBe(
-    "HighDensitySolverA11",
-  )
+  expect(
+    solver.nodeSolveMetadataById.get("topology_merge_298")?.solverType,
+  ).toBe("HighDensitySolverA11")
   expect(solver.routes).toHaveLength(7)
   expect(getRouteGeometryViolationError(solver.routes)).toBeNull()
   expect(

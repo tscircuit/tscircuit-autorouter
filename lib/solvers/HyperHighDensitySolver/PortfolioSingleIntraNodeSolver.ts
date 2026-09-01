@@ -66,9 +66,7 @@ export type PortfolioSingleIntraNodeSolverParams = ConstructorParameters<
 }
 
 /** Coordinates a fitness-scheduled portfolio of intra-node routing solvers. */
-export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolver<
-  PortfolioCandidateSolver
-> {
+export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolver<PortfolioCandidateSolver> {
   override getSolverName(): string {
     return "PortfolioSingleIntraNodeSolver"
   }
