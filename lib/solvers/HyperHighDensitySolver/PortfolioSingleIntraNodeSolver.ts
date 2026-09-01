@@ -3,6 +3,7 @@ import {
   HighDensitySolverA03 as HighDensityA03Solver,
   HighDensitySolverA01,
   HighDensitySolverA11,
+  HighDensitySolverA12,
 } from "@tscircuit/high-density-a01"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import {
@@ -33,11 +34,13 @@ import {
 // derived exploration budget or exhausts all of its candidates.
 const ORDERING_SHUFFLE_SEEDS = Array.from({ length: 6 }, (_, seed) => seed)
 const HIGH_DENSITY_A11_MAX_ITERATIONS = 5_000
+const HIGH_DENSITY_A12_MAX_ITERATIONS = 15_000
 
 type ExternalGridSolver =
   | HighDensitySolverA01
   | HighDensityA03Solver
   | HighDensitySolverA11
+  | HighDensitySolverA12
 
 type PortfolioCandidateSolver =
   | IntraNodeRouteSolver
@@ -63,6 +66,7 @@ export type PortfolioSingleIntraNodeSolverParams = ConstructorParameters<
 >[0] & {
   effort?: number
   useHighDensitySolverA11?: boolean
+  useHighDensitySolverA12?: boolean
 }
 
 /** Coordinates a fitness-scheduled portfolio of intra-node routing solvers. */
@@ -158,6 +162,9 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     ]
     if (this.constructorParams.useHighDensitySolverA11) {
       combinations.push(["highDensityA11"])
+    }
+    if (this.constructorParams.useHighDensitySolverA12) {
+      combinations.push(["highDensityA12"])
     }
     return combinations
   }
@@ -306,6 +313,15 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
           },
         ],
       },
+      {
+        name: "highDensityA12",
+        possibleValues: [
+          {
+            HIGH_DENSITY_A12: true,
+            SHUFFLE_SEED: ORDERING_SHUFFLE_SEEDS[0],
+          },
+        ],
+      },
     ]
   }
 
@@ -315,8 +331,13 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
    * not advance the solver or give it preference in the portfolio.
    */
   private initializeCandidateBudget(solver: PortfolioCandidateSolver) {
-    // Keep A11's fine grid lazy so easy nodes do not pay its setup cost.
-    if (solver instanceof HighDensitySolverA11) return
+    // Keep the fine-grid solvers lazy so easy nodes do not pay their setup cost.
+    if (
+      solver instanceof HighDensitySolverA11 ||
+      solver instanceof HighDensitySolverA12
+    ) {
+      return
+    }
     if (isExternalGridSolver(solver)) solver.setup()
   }
 
@@ -417,6 +438,10 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     if (solver instanceof HighDensitySolverA11) {
       // Preserve established solutions before A11 explores the native grid.
       return this.GREEDY_MULTIPLIER + 1 + solver.iterations / 1_000_000
+    }
+    if (solver instanceof HighDensitySolverA12) {
+      // A12 is complementary but more expensive, so run it after A11.
+      return this.GREEDY_MULTIPLIER + 2 + solver.iterations / 1_000_000
     }
     if (
       solver instanceof HighDensitySolverA01 ||
@@ -520,6 +545,21 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       solver.MAX_ITERATIONS = HIGH_DENSITY_A11_MAX_ITERATIONS
       return solver
     }
+    if (hyperParameters.HIGH_DENSITY_A12) {
+      const solver = new HighDensitySolverA12({
+        nodeWithPortPoints: this.nodeWithPortPoints,
+        viaDiameter: this.constructorParams.viaDiameter ?? 0.3,
+        viaMinDistFromBorder: (this.constructorParams.viaDiameter ?? 0.3) / 2,
+        traceMargin: 0.1,
+        traceThickness: this.constructorParams.traceWidth ?? 0.15,
+        effort: this.effort,
+        hyperParameters: {
+          shuffleSeed: hyperParameters.SHUFFLE_SEED ?? 0,
+        },
+      })
+      solver.MAX_ITERATIONS = HIGH_DENSITY_A12_MAX_ITERATIONS
+      return solver
+    }
     if (hyperParameters.CLOSED_FORM_TWO_TRACE_SAME_LAYER) {
       return new TwoCrossingRoutesHighDensitySolver({
         nodeWithPortPoints: this.nodeWithPortPoints,
@@ -586,7 +626,12 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       routesWithRootConnectionNames,
       this.nodeWithPortPoints,
     )
-    if (solver.hyperParameters.HIGH_DENSITY_A11) {
+    const exactGridSolverName =
+      solver.solver instanceof HighDensitySolverA11 ||
+      solver.solver instanceof HighDensitySolverA12
+        ? solver.solver.getSolverName()
+        : null
+    if (exactGridSolverName) {
       const geometryError = getRouteGeometryViolationError(repairedRoutes)
       const pairConnectivityIsValid = areNodePortPointPairsConnectedByRoutes(
         repairedRoutes,
@@ -595,15 +640,15 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       if (geometryError || !pairConnectivityIsValid) {
         solver.solver.solved = false
         solver.solver.failed = true
-        solver.solver.error = `HighDensitySolverA11 output rejected: ${geometryError ?? "not all port-point pairs are connected"}`
+        solver.solver.error = `${exactGridSolverName} output rejected: ${geometryError ?? "not all port-point pairs are connected"}`
         this.solved = false
         this.failed = false
         this.error = null
         this.winningSolver = undefined
         this.activeSubSolver = null
         this.solvedRoutes = []
-        this.stats.rejectedHighDensityA11CandidateCount =
-          Number(this.stats.rejectedHighDensityA11CandidateCount ?? 0) + 1
+        this.stats.rejectedExactGridCandidateCount =
+          Number(this.stats.rejectedExactGridCandidateCount ?? 0) + 1
         this.refreshDynamicIterationLimit()
         return
       }
