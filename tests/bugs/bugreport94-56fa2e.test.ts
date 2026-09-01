@@ -17,7 +17,7 @@ test("bugreport94-56fa2e.json", () => {
   const circuitJson = getCurrentCircuitJson(solver)
   expect(circuitJson).not.toBeNull()
   const { errors } = getDrcErrors(circuitJson!)
-  expect(errors.length).toBeLessThanOrEqual(6)
+  expect(errors.length).toBeLessThanOrEqual(5)
   const targetOverlap = errors.find(
     (error) =>
       error.type === "pcb_trace_error" &&
@@ -25,6 +25,12 @@ test("bugreport94-56fa2e.json", () => {
       error.pcb_trace_error_id.includes("source_trace_138"),
   )
   expect(targetOverlap).toBeUndefined()
+  const transferredOverlap = errors.find(
+    (error) =>
+      error.type === "pcb_trace_error" &&
+      error.pcb_trace_error_id.includes("source_trace_108"),
+  )
+  expect(transferredOverlap).toBeUndefined()
 
   const snapshotPath =
     process.platform === "linux"
