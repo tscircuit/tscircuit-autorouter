@@ -49,6 +49,25 @@ if (solver.failed) {
 }
 ```
 
+### Simplifying Existing Traces
+
+Use `SimplificationPipelineSolver` when the input already contains routed
+traces and only needs post-route cleanup. This pipeline does not route missing
+SRJ connections.
+
+```typescript
+import { SimplificationPipelineSolver } from "@tscircuit/capacity-autorouter"
+
+const solver = new SimplificationPipelineSolver(simpleRouteJson)
+solver.solve()
+
+if (solver.failed) {
+  throw new Error(solver.error ?? "Trace simplification failed")
+}
+
+const simplified = solver.getOutputSimpleRouteJson()
+```
+
 ### Input Format: SimpleRouteJson
 
 The input to the autorouter is a `SimpleRouteJson` object with the following structure:
