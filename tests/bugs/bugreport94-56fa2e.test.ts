@@ -18,6 +18,13 @@ test("bugreport94-56fa2e.json", () => {
   expect(circuitJson).not.toBeNull()
   const { errors } = getDrcErrors(circuitJson!)
   expect(errors.length).toBeLessThanOrEqual(6)
+  const targetOverlap = errors.find(
+    (error) =>
+      error.type === "pcb_trace_error" &&
+      error.pcb_trace_error_id.includes("source_trace_108") &&
+      error.pcb_trace_error_id.includes("source_trace_138"),
+  )
+  expect(targetOverlap).toBeUndefined()
 
   expect(getLastStepSvg(solver.visualize())).toMatchSvgSnapshot(
     import.meta.path,
