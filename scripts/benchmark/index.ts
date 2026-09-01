@@ -72,7 +72,8 @@ const DEFAULT_TASK_TIMEOUT_BASE_MS = 300 * 1000
 const DEFAULT_TASK_TIMEOUT_PER_EFFORT_MS = 60 * 1000
 const DEFAULT_HEARTBEAT_INTERVAL_MS = 30 * 1000
 const DEFAULT_TERMINATE_TIMEOUT_MS = 5 * 1000
-const DEFAULT_BENCHMARK_SOLVER_NAME = "AutoroutingPipelineSolver7_MultiGraph"
+const DEFAULT_BENCHMARK_SOLVER_NAME =
+  "AutoroutingPipelineSolver9_PreloadedTraceGraph"
 const NETWORKED_PIPELINE9_SOLVER_NAME = "AutoroutingPipelineSolver9_Networked"
 const NETWORKED_PIPELINE9_COLD_NAME = "Pipeline9_Networked Cold"
 const NETWORKED_PIPELINE9_HOT_NAME = "Pipeline9_Networked Hot"
