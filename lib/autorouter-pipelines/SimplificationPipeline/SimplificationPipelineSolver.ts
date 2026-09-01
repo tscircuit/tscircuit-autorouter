@@ -260,10 +260,10 @@ export class SimplificationPipelineSolver extends BaseSolver {
       const jumpers = simplifiedPcbRoute.filter(
         (point) => point.route_type === "jumper",
       )
-        const route = [
-          ...structuredClone(preparedTrace.leadingTerminalVias),
-          ...simplifiedPcbRoute.filter((point) => point.route_type !== "jumper"),
-          ...structuredClone(preparedTrace.trailingTerminalVias),
+      const route = [
+        ...structuredClone(preparedTrace.leadingTerminalVias),
+        ...simplifiedPcbRoute.filter((point) => point.route_type !== "jumper"),
+        ...structuredClone(preparedTrace.trailingTerminalVias),
         ...jumpers,
       ]
       restoreTerminalMetadata(route, simplifiedRoute)
