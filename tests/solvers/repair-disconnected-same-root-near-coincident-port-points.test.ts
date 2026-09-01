@@ -48,6 +48,7 @@ test("repairs a same-root route whose endpoints are nearly coincident", (): void
   const repairedRoutes = repairDisconnectedSameRootPortPoints(
     [sharedNetRoute],
     nodeWithPortPoints,
+    true,
   )
 
   expect(repairedRoutes).toHaveLength(2)

@@ -26,6 +26,7 @@ export interface CrossingViaReductionSolverInput {
   outline?: ReadonlyArray<{ x: number; y: number }>
   traceMargin?: number
   obstacleMargin?: number
+  skipNonVerticalLayerTransitions?: boolean
 }
 
 type RoutePoint = HighDensityRoute["route"][number]
@@ -440,6 +441,7 @@ export class CrossingViaReductionSolver extends BaseSolver {
   private readonly obstacleSHI: ObstacleSpatialHashIndex
   private readonly traceMargin: number
   private readonly obstacleMargin: number
+  private readonly skipNonVerticalLayerTransitions: boolean
 
   reducedHdRoutes: HighDensityRoute[]
 
@@ -455,6 +457,8 @@ export class CrossingViaReductionSolver extends BaseSolver {
     }
     this.traceMargin = input.traceMargin ?? DEFAULT_TRACE_MARGIN
     this.obstacleMargin = input.obstacleMargin ?? DEFAULT_OBSTACLE_MARGIN
+    this.skipNonVerticalLayerTransitions =
+      input.skipNonVerticalLayerTransitions ?? false
     this.reducedHdRoutes = structuredClone([...input.inputHdRoutes])
     this.obstacleSHI = new ObstacleSpatialHashIndex("flatbush", [
       ...this.input.obstacles,
@@ -914,10 +918,13 @@ export class CrossingViaReductionSolver extends BaseSolver {
       routeIndex < this.reducedHdRoutes.length;
       routeIndex++
     ) {
+      const ineligibility = getCrossingViaReductionIneligibility(
+        this.reducedHdRoutes[routeIndex],
+      )
+      if (ineligibility === "has-jumpers") continue
       if (
-        getCrossingViaReductionIneligibility(
-          this.reducedHdRoutes[routeIndex],
-        ) !== null
+        this.skipNonVerticalLayerTransitions &&
+        ineligibility === "has-non-vertical-layer-transition"
       ) {
         continue
       }
@@ -1255,7 +1262,10 @@ export class CrossingViaReductionSolver extends BaseSolver {
         this.reducedHdRoutes[detourRouteIndex],
       )
       if (ineligibility === "has-jumpers") continue
-      if (ineligibility === "has-non-vertical-layer-transition") {
+      if (
+        this.skipNonVerticalLayerTransitions &&
+        ineligibility === "has-non-vertical-layer-transition"
+      ) {
         this.stats.routesSkippedForNonVerticalLayerTransitions =
           (this.stats.routesSkippedForNonVerticalLayerTransitions ?? 0) + 1
         continue

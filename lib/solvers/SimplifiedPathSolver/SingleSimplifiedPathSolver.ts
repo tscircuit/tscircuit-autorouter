@@ -29,6 +29,7 @@ export class SingleSimplifiedPathSolver extends BaseSolver {
   colorMap: Record<string, string>
   outline?: Array<{ x: number; y: number }>
   minBoardEdgeClearance: number
+  preserveOriginalRouteSegmentsOnMinimumStepFailure: boolean
 
   constructor(params: {
     inputRoute: HighDensityIntraNodeRoute
@@ -38,6 +39,7 @@ export class SingleSimplifiedPathSolver extends BaseSolver {
     colorMap: Record<string, string>
     outline?: Array<{ x: number; y: number }>
     minBoardEdgeClearance?: number
+    preserveOriginalRouteSegmentsOnMinimumStepFailure?: boolean
   }) {
     super()
 
@@ -48,6 +50,8 @@ export class SingleSimplifiedPathSolver extends BaseSolver {
     this.colorMap = params.colorMap
     this.outline = params.outline
     this.minBoardEdgeClearance = params.minBoardEdgeClearance ?? 0.2
+    this.preserveOriginalRouteSegmentsOnMinimumStepFailure =
+      params.preserveOriginalRouteSegmentsOnMinimumStepFailure ?? false
 
     this.newRoute = [this.inputRoute.route[0]]
     this.newVias = []
@@ -62,6 +66,8 @@ export class SingleSimplifiedPathSolver extends BaseSolver {
       colorMap: this.colorMap,
       outline: this.outline,
       minBoardEdgeClearance: this.minBoardEdgeClearance,
+      preserveOriginalRouteSegmentsOnMinimumStepFailure:
+        this.preserveOriginalRouteSegmentsOnMinimumStepFailure,
     }
   }
 

@@ -52,6 +52,7 @@ export class SingleRouteUselessViaRemovalSolver extends BaseSolver {
   TRACE_THICKNESS = 0.15
   OBSTACLE_MARGIN = 0.1
   GEOMETRY_SHORTCUT_TRACE_MARGIN = 0.1
+  TRACE_MARGIN = 0
   GEOMETRY_SHORTCUT_OBSTACLE_MARGIN = 0.15
   MAX_GEOMETRY_SHORTCUT_ADDED_LENGTH = 4
   ENABLE_GEOMETRY_SHORTCUTS = true
@@ -69,6 +70,7 @@ export class SingleRouteUselessViaRemovalSolver extends BaseSolver {
     connMap: ConnectivityMap
     outline?: Array<{ x: number; y: number }>
     geometryShortcutTraceMargin?: number
+    traceMargin?: number
     geometryShortcutObstacleMargin?: number
     enableGeometryShortcuts?: boolean
     enableObstacleDetourShortcuts?: boolean
@@ -86,6 +88,7 @@ export class SingleRouteUselessViaRemovalSolver extends BaseSolver {
       params.terminalLayerIndicesByPcbPortId
     this.GEOMETRY_SHORTCUT_TRACE_MARGIN =
       params.geometryShortcutTraceMargin ?? this.GEOMETRY_SHORTCUT_TRACE_MARGIN
+    this.TRACE_MARGIN = params.traceMargin ?? this.TRACE_MARGIN
     this.GEOMETRY_SHORTCUT_OBSTACLE_MARGIN =
       params.geometryShortcutObstacleMargin ??
       this.GEOMETRY_SHORTCUT_OBSTACLE_MARGIN
@@ -276,7 +279,7 @@ export class SingleRouteUselessViaRemovalSolver extends BaseSolver {
             connMap: this.connMap,
             defaultTraceThickness: this.TRACE_THICKNESS,
             obstacleMargin: this.GEOMETRY_SHORTCUT_OBSTACLE_MARGIN,
-            traceMargin: this.GEOMETRY_SHORTCUT_TRACE_MARGIN,
+            traceMargin: this.TRACE_MARGIN,
           })
           if (!pathIsClear) continue
 
@@ -647,7 +650,7 @@ export class SingleRouteUselessViaRemovalSolver extends BaseSolver {
               connMap: this.connMap,
               defaultTraceThickness: this.TRACE_THICKNESS,
               obstacleMargin: this.OBSTACLE_MARGIN,
-              traceMargin: this.GEOMETRY_SHORTCUT_TRACE_MARGIN,
+              traceMargin: this.TRACE_MARGIN,
             })
           ) {
             lastSection.z = targetZ
@@ -694,7 +697,7 @@ export class SingleRouteUselessViaRemovalSolver extends BaseSolver {
         connMap: this.connMap,
         defaultTraceThickness: this.TRACE_THICKNESS,
         obstacleMargin: this.OBSTACLE_MARGIN,
-        traceMargin: this.GEOMETRY_SHORTCUT_TRACE_MARGIN,
+        traceMargin: this.TRACE_MARGIN,
       })
     ) {
       currentSection.z = targetZ
@@ -728,6 +731,7 @@ export class SingleRouteUselessViaRemovalSolver extends BaseSolver {
       connMap: this.connMap,
       outline: this.outline,
       geometryShortcutTraceMargin: this.GEOMETRY_SHORTCUT_TRACE_MARGIN,
+      traceMargin: this.TRACE_MARGIN,
       geometryShortcutObstacleMargin: this.GEOMETRY_SHORTCUT_OBSTACLE_MARGIN,
       enableGeometryShortcuts: this.ENABLE_GEOMETRY_SHORTCUTS,
       enableObstacleDetourShortcuts: this.ENABLE_OBSTACLE_DETOUR_SHORTCUTS,

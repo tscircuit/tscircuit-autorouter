@@ -59,6 +59,7 @@ export class HighDensitySolver extends BaseSolver {
   layerCount: number
   useGrowShrinkHighDensityIntraNodeSolver: boolean
   preserveTerminalPcbPortIds: boolean
+  repairNearCoincidentSameRootPortPoints: boolean
   growShrinkMaxInnerIterationsPerGrowthAttempt?: number
   growShrinkFallbackToInvalidGeometryOnFailure: boolean
   growShrinkSolutionValidator?: (routes: HighDensityIntraNodeRoute[]) => boolean
@@ -94,6 +95,7 @@ export class HighDensitySolver extends BaseSolver {
     layerCount,
     useGrowShrinkHighDensityIntraNodeSolver,
     preserveTerminalPcbPortIds,
+    repairNearCoincidentSameRootPortPoints,
     growShrinkMaxInnerIterationsPerGrowthAttempt,
     growShrinkFallbackToInvalidGeometryOnFailure,
     growShrinkSolutionValidator,
@@ -110,6 +112,7 @@ export class HighDensitySolver extends BaseSolver {
     layerCount?: number
     useGrowShrinkHighDensityIntraNodeSolver?: boolean
     preserveTerminalPcbPortIds?: boolean
+    repairNearCoincidentSameRootPortPoints?: boolean
     growShrinkMaxInnerIterationsPerGrowthAttempt?: number
     growShrinkFallbackToInvalidGeometryOnFailure?: boolean
     growShrinkSolutionValidator?: (
@@ -135,6 +138,8 @@ export class HighDensitySolver extends BaseSolver {
     this.useGrowShrinkHighDensityIntraNodeSolver =
       useGrowShrinkHighDensityIntraNodeSolver ?? false
     this.preserveTerminalPcbPortIds = preserveTerminalPcbPortIds ?? false
+    this.repairNearCoincidentSameRootPortPoints =
+      repairNearCoincidentSameRootPortPoints ?? false
     this.growShrinkMaxInnerIterationsPerGrowthAttempt =
       growShrinkMaxInnerIterationsPerGrowthAttempt
     this.growShrinkFallbackToInvalidGeometryOnFailure =
@@ -387,6 +392,8 @@ export class HighDensitySolver extends BaseSolver {
         this.growShrinkFallbackToInvalidGeometryOnFailure,
       growShrinkSolutionValidator: this.growShrinkSolutionValidator,
       captureSearchDebug: this.captureSearchDebug,
+      repairNearCoincidentSameRootPortPoints:
+        this.repairNearCoincidentSameRootPortPoints,
     }
     this.activeSubSolver = this.useGrowShrinkHighDensityIntraNodeSolver
       ? new GrowShrinkHighDensityIntraNodeSolver(intraNodeSolverParams)

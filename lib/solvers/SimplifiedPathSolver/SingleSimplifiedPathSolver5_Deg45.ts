@@ -852,6 +852,7 @@ export class SingleSimplifiedPathSolver5 extends SingleSimplifiedPathSolver {
 
     if (!path45 && !this.lastValidPath) {
       const oldTailDistance = this.tailDistanceAlongPath
+      const oldTailPoint = this.getPointAtDistance(oldTailDistance)
 
       // Move tail and head forward by stepSize
       this.tailDistanceAlongPath += this.minStepSize
@@ -860,7 +861,19 @@ export class SingleSimplifiedPathSolver5 extends SingleSimplifiedPathSolver {
       const newTailIndex = this.getNearestIndexForDistance(
         this.tailDistanceAlongPath,
       )
-      this.appendOriginalRouteSlice(oldTailDistance, newTailIndex)
+      if (this.preserveOriginalRouteSegmentsOnMinimumStepFailure) {
+        this.appendOriginalRouteSlice(oldTailDistance, newTailIndex)
+      } else {
+        const newTailPoint = this.inputRoute.route[newTailIndex]
+        const lastRoutePoint =
+          this.inputRoute.route[this.inputRoute.route.length - 1]
+        if (
+          !this.arePointsEqual(oldTailPoint, newTailPoint) &&
+          !this.arePointsEqual(newTailPoint, lastRoutePoint)
+        ) {
+          this.newRoute.push(newTailPoint)
+        }
+      }
 
       return
     }

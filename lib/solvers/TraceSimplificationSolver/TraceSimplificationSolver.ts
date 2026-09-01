@@ -145,6 +145,9 @@ export class TraceSimplificationSolver extends BaseSolver {
       >
       readonly runFinalViaRemovalPass?: boolean
       readonly iterations?: number
+      readonly preserveOriginalRouteSegmentsOnMinimumStepFailure?: boolean
+      readonly viaRemovalTraceMargin?: number
+      readonly skipCrossingViaReductionForNonVerticalTransitions?: boolean
     },
   ) {
     super()
@@ -414,6 +417,7 @@ export class TraceSimplificationSolver extends BaseSolver {
               ? [...this.simplificationConfig.outline]
               : undefined,
             geometryShortcutTraceMargin: 0.1,
+            traceMargin: this.simplificationConfig.viaRemovalTraceMargin,
             geometryShortcutObstacleMargin:
               this.simplificationConfig.minTraceToPadEdgeClearance ?? 0.15,
             // Delay the quadratic anchor search until the first path pass has
@@ -444,6 +448,9 @@ export class TraceSimplificationSolver extends BaseSolver {
             traceMargin: 0.1,
             obstacleMargin:
               this.simplificationConfig.minTraceToPadEdgeClearance ?? 0.15,
+            skipNonVerticalLayerTransitions:
+              this.simplificationConfig
+                .skipCrossingViaReductionForNonVerticalTransitions,
           })
           this.extractResult = (s) =>
             (s as CrossingViaReductionSolver).getReducedHdRoutes()
@@ -481,6 +488,9 @@ export class TraceSimplificationSolver extends BaseSolver {
             minBoardEdgeClearance:
               this.simplificationConfig.minBoardEdgeClearance,
             defaultViaDiameter: this.simplificationConfig.defaultViaDiameter,
+            preserveOriginalRouteSegmentsOnMinimumStepFailure:
+              this.simplificationConfig
+                .preserveOriginalRouteSegmentsOnMinimumStepFailure,
           })
           this.extractResult = (s) =>
             (s as MultiSimplifiedPathSolver).simplifiedHdRoutes

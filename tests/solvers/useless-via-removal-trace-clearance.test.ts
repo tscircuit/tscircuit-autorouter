@@ -41,6 +41,7 @@ test("keeps vias when moving a section would violate trace clearance", (): void 
       net0: [route.connectionName],
       net1: [nearbyRoute.connectionName],
     }),
+    traceMargin: 0.1,
   })
 
   solver.solve()

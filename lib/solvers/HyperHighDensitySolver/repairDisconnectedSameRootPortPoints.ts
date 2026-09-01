@@ -96,6 +96,45 @@ const findSameRootBridgeMatch = ({
   return matches[0] ?? null
 }
 
+const findExactSameRootBridgeRoute = ({
+  routes,
+  connectionName,
+  rootConnectionName,
+  connectedKeys,
+  targetPortKeys,
+  targetPortKey,
+}: {
+  routes: HighDensityIntraNodeRoute[]
+  connectionName: string
+  rootConnectionName: string
+  connectedKeys: ReadonlySet<string>
+  targetPortKeys: ReadonlySet<string>
+  targetPortKey: string
+}): HighDensityIntraNodeRoute | null => {
+  return (
+    routes.find((route) => {
+      if (
+        (route.rootConnectionName ?? route.connectionName) !==
+        rootConnectionName
+      ) {
+        return false
+      }
+      if (route.connectionName === connectionName) return false
+      const [start, end] = routeEndpoints(route)
+      if (!start || !end) return false
+      const startKey = pointKey(start)
+      const endKey = pointKey(end)
+      return (
+        (connectedKeys.has(startKey) && endKey === targetPortKey) ||
+        (connectedKeys.has(endKey) && startKey === targetPortKey) ||
+        (targetPortKeys.has(startKey) &&
+          targetPortKeys.has(endKey) &&
+          (startKey === targetPortKey || endKey === targetPortKey))
+      )
+    }) ?? null
+  )
+}
+
 const getConnectedPointKeysForConnection = (
   routes: HighDensityIntraNodeRoute[],
   connectionName: string,
@@ -181,6 +220,7 @@ export const areNodePortPointPairsConnectedByRoutes = (
 export const repairDisconnectedSameRootPortPoints = (
   routes: HighDensityIntraNodeRoute[],
   nodeWithPortPoints: NodeWithPortPoints,
+  allowNearCoincidentEndpoints = false,
 ): HighDensityIntraNodeRoute[] => {
   const repairedRoutes = [...routes]
   const portPointsByConnection = new Map<string, PortPoint[]>()
@@ -197,6 +237,7 @@ export const repairDisconnectedSameRootPortPoints = (
 
     const rootConnectionName =
       portPoints[0]?.rootConnectionName ?? connectionName
+    const targetPortKeys = new Set(portPoints.map(pointKey))
     let connectedKeys = getConnectedPointKeysForConnection(
       repairedRoutes,
       connectionName,
@@ -206,6 +247,40 @@ export const repairDisconnectedSameRootPortPoints = (
     for (const portPoint of portPoints.slice(1)) {
       const portPointKey = pointKey(portPoint)
       if (connectedKeys.has(portPointKey)) continue
+
+      if (!allowNearCoincidentEndpoints) {
+        const bridgeRoute = findExactSameRootBridgeRoute({
+          routes: repairedRoutes,
+          connectionName,
+          rootConnectionName,
+          connectedKeys,
+          targetPortKeys,
+          targetPortKey: portPointKey,
+        })
+        if (!bridgeRoute) continue
+        repairedRoutes.push({
+          ...bridgeRoute,
+          connectionName,
+          rootConnectionName,
+          route: bridgeRoute.route.map((point) => ({
+            ...point,
+            connectionName,
+            rootConnectionName,
+          })),
+          vias: bridgeRoute.vias.map((via) => ({ ...via })),
+          jumpers: bridgeRoute.jumpers?.map((jumper) => ({
+            ...jumper,
+            start: { ...jumper.start },
+            end: { ...jumper.end },
+          })),
+        })
+        connectedKeys = getConnectedPointKeysForConnection(
+          repairedRoutes,
+          connectionName,
+          pointKey(portPoints[0]!),
+        )
+        continue
+      }
 
       const connectedPortPoints = portPoints.filter((candidatePortPoint) =>
         connectedKeys.has(pointKey(candidatePortPoint)),

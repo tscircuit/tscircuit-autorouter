@@ -888,6 +888,9 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             ),
             iterations: 1,
             runFinalViaRemovalPass: true,
+            preserveOriginalRouteSegmentsOnMinimumStepFailure: true,
+            viaRemovalTraceMargin: 0.1,
+            skipCrossingViaReductionForNonVerticalTransitions: true,
           },
         ]
       },

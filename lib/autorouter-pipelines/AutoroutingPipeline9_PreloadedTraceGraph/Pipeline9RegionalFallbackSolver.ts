@@ -127,6 +127,7 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
       useGrowShrinkHighDensityIntraNodeSolver: true,
       preserveTerminalPcbPortIds: false,
       growShrinkFallbackToInvalidGeometryOnFailure: false,
+      repairNearCoincidentSameRootPortPoints: true,
       growShrinkSolutionValidator:
         params.boardObstacles &&
         params.movablePreloadedConnectionNames &&

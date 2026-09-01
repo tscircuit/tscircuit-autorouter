@@ -15,6 +15,7 @@ test("keeps a non-vertical transition outside the optimizer contract", (): void 
       transition_net: ["transition"],
     }),
     layerCount: 2,
+    skipNonVerticalLayerTransitions: true,
   })
 
   solver.solve()

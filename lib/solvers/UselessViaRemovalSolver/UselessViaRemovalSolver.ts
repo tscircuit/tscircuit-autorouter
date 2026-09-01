@@ -21,6 +21,7 @@ export interface UselessViaRemovalSolverInput {
   connMap: ConnectivityMap
   outline?: Array<{ x: number; y: number }>
   geometryShortcutTraceMargin?: number
+  traceMargin?: number
   geometryShortcutObstacleMargin?: number
   enableGeometryShortcuts?: boolean
   enableObstacleDetourShortcuts?: boolean
@@ -97,6 +98,7 @@ export class UselessViaRemovalSolver extends BaseSolver {
       connMap: this.input.connMap,
       outline: this.input.outline,
       geometryShortcutTraceMargin: this.input.geometryShortcutTraceMargin,
+      traceMargin: this.input.traceMargin,
       geometryShortcutObstacleMargin: this.input.geometryShortcutObstacleMargin,
       enableGeometryShortcuts: this.input.enableGeometryShortcuts,
       enableObstacleDetourShortcuts: this.input.enableObstacleDetourShortcuts,
