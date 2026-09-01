@@ -1,8 +1,5 @@
 import type { SimplifiedPcbTrace } from "lib/types"
-import type {
-  HighDensityRoute,
-  Jumper,
-} from "lib/types/high-density-types"
+import type { HighDensityRoute, Jumper } from "lib/types/high-density-types"
 import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
 
 type RoutePoint = HighDensityRoute["route"][number]
@@ -15,10 +12,7 @@ const pointsMatch = (left: RoutePoint, right: RoutePoint): boolean =>
   Math.abs(left.y - right.y) <= SAME_POINT_TOLERANCE &&
   left.z === right.z
 
-const appendRoutePoint = (
-  route: RoutePoint[],
-  point: RoutePoint,
-): void => {
+const appendRoutePoint = (route: RoutePoint[], point: RoutePoint): void => {
   const previousPoint = route.at(-1)
   if (previousPoint && pointsMatch(previousPoint, point)) {
     if (point.traceThickness !== undefined) {
@@ -72,7 +66,10 @@ const getTraceThickness = (
   defaultTraceThickness: number,
 ): number => {
   for (const point of simplifiedRoute) {
-    if (point.route_type === "wire" || point.route_type === "through_obstacle") {
+    if (
+      point.route_type === "wire" ||
+      point.route_type === "through_obstacle"
+    ) {
       return point.width
     }
   }
@@ -99,9 +96,8 @@ const getTerminalPcbPortId = (
     terminal === "start" ? simplifiedRoute : [...simplifiedRoute].reverse()
   for (const point of route) {
     if (point.route_type !== "wire") continue
-    const pcbPortId = terminal === "start"
-      ? point.start_pcb_port_id
-      : point.end_pcb_port_id
+    const pcbPortId =
+      terminal === "start" ? point.start_pcb_port_id : point.end_pcb_port_id
     if (pcbPortId) return pcbPortId
   }
   return undefined

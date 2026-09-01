@@ -72,9 +72,7 @@ test("simplification pipeline removes an unnecessary via pair", () => {
   expect(solver.failed).toBe(false)
   const outputRoute = solver.getOutputSimplifiedPcbTraces()[0]!.route
   expect(outputRoute.some((point) => point.route_type === "via")).toBe(false)
-  const outputWires = outputRoute.filter(
-    (point) => point.route_type === "wire",
-  )
+  const outputWires = outputRoute.filter((point) => point.route_type === "wire")
   expect(outputWires.every((point) => point.layer === "top")).toBe(true)
   expect(outputWires[0]).toMatchObject({ x: 0, y: 0 })
   expect(outputWires.at(-1)).toMatchObject({ x: 4, y: 0 })

@@ -56,13 +56,11 @@ test("simplification pipeline preserves terminal vias", () => {
 
   expect(solver.failed).toBe(false)
   const outputRoute = solver.getOutputSimplifiedPcbTraces()[0]!.route
-  const outputVias = outputRoute.filter(
+  const outputVias = outputRoute.filter((point) => point.route_type === "via")
+  const inputVias = input.traces![0]!.route.filter(
     (point) => point.route_type === "via",
   )
-  expect(outputVias).toEqual([
-    input.traces![0]!.route[0],
-    input.traces![0]!.route[4],
-  ])
+  expect(outputVias).toEqual(inputVias)
   expect(outputRoute[0]?.route_type).toBe("via")
   expect(outputRoute.at(-1)?.route_type).toBe("via")
 })

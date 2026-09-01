@@ -68,10 +68,7 @@ const splitTerminalVias = (
       ],
     },
     leadingTerminalVias: trace.route.slice(0, leadingViaCount),
-    trailingTerminalVias: trace.route.slice(
-      trailingViaStart,
-      trailingViaEnd,
-    ),
+    trailingTerminalVias: trace.route.slice(trailingViaStart, trailingViaEnd),
   }
 }
 
@@ -92,8 +89,7 @@ const restoreTerminalMetadata = (
   hdRoute: HighDensityRoute,
 ): void => {
   const wirePoints = route.filter(
-    (point): point is SimplifiedWireRoutePoint =>
-      point.route_type === "wire",
+    (point): point is SimplifiedWireRoutePoint => point.route_type === "wire",
   )
   if (hdRoute.startPcbPortId && wirePoints[0]) {
     wirePoints[0].start_pcb_port_id = hdRoute.startPcbPortId
@@ -149,11 +145,8 @@ export class SimplificationPipelineSolver extends BaseSolver {
       const rootConnectionName =
         this.connMap.getNetConnectedToId(trace.connection_name) ??
         trace.connection_name
-      const {
-        traceToSimplify,
-        leadingTerminalVias,
-        trailingTerminalVias,
-      } = splitTerminalVias(trace)
+      const { traceToSimplify, leadingTerminalVias, trailingTerminalVias } =
+        splitTerminalVias(trace)
       const hdRoute = convertSimplifiedPcbTraceToHighDensityRoute(
         traceToSimplify,
         {
@@ -267,12 +260,10 @@ export class SimplificationPipelineSolver extends BaseSolver {
       const jumpers = simplifiedPcbRoute.filter(
         (point) => point.route_type === "jumper",
       )
-      const route = [
-        ...structuredClone(preparedTrace.leadingTerminalVias),
-        ...simplifiedPcbRoute.filter(
-          (point) => point.route_type !== "jumper",
-        ),
-        ...structuredClone(preparedTrace.trailingTerminalVias),
+        const route = [
+          ...structuredClone(preparedTrace.leadingTerminalVias),
+          ...simplifiedPcbRoute.filter((point) => point.route_type !== "jumper"),
+          ...structuredClone(preparedTrace.trailingTerminalVias),
         ...jumpers,
       ]
       restoreTerminalMetadata(route, simplifiedRoute)

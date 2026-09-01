@@ -88,7 +88,7 @@ test("simplification pipeline cleans existing traces without routing SRJ connect
     layer: "top",
     end_pcb_port_id: "pcb_port_2",
   })
-  expect(output.traces?.some((trace) => trace.connection_name === "unrouted")).toBe(
-    false,
-  )
+  expect(
+    output.traces?.some((trace) => trace.connection_name === "unrouted"),
+  ).toBe(false)
 })
