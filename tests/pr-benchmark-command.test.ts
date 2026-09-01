@@ -185,7 +185,7 @@ test("PR benchmark commands preserve arguments and fan-out behavior", () => {
     "parsePrBenchmarkCommand(context.payload.comment.body)",
   )
   expect(dispatchWorkflow).toContain(
-    "['dataset01', 'srj18', 'srj19', 'srj20', 'srj21', 'srj23']",
+    "['dataset01', 'srj18']",
   )
   expect(dispatchWorkflow).toContain(
     "? [...command.benchmarkArgs, '--dataset', dataset]",
