@@ -3,7 +3,7 @@ import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import { CrossingViaReductionSolver } from "lib/solvers/CrossingViaReductionSolver/crossing-via-reduction-solver"
 import { createCrossingViaReductionRoutes } from "tests/fixtures/crossing-via-reduction-routes"
 
-test("keeps a non-vertical transition outside the optimizer contract", () => {
+test("keeps a non-vertical transition outside the optimizer contract", (): void => {
   const routes = createCrossingViaReductionRoutes()
   routes[0]!.route.push({ x: 2, y: -6, z: 1 })
   const initialRoutes = structuredClone(routes)

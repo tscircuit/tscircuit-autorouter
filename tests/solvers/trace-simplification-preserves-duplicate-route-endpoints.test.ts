@@ -3,7 +3,7 @@ import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import { TraceSimplificationSolver } from "lib/solvers/TraceSimplificationSolver/TraceSimplificationSolver"
 import type { HighDensityRoute } from "lib/types/high-density-types"
 
-test("trace simplification preserves endpoints for duplicate connection names", () => {
+test("trace simplification preserves endpoints for duplicate connection names", (): void => {
   const routes: HighDensityRoute[] = [
     {
       connectionName: "shared-connection",

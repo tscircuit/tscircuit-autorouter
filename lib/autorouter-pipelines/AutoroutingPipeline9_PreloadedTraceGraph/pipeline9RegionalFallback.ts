@@ -1,4 +1,3 @@
-import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type {
   HighDensityRoute,
   NodeWithPortPoints,
@@ -6,7 +5,6 @@ import type {
 } from "lib/types/high-density-types"
 import { classifyPointInBounds } from "lib/utils/classifyPointInBounds"
 import type { PreloadedHighDensityRoute } from "./convertPreloadedTraceToHdRoutes"
-import { arePipeline9RoutesOnSameNet } from "./pipeline9FixedRouteCopper"
 
 type RoutePoint = HighDensityRoute["route"][number]
 
@@ -41,7 +39,6 @@ export type RegionalFallbackProblem = {
 }
 
 const POINT_EPSILON = 1e-9
-const ROUTED_ENDPOINT_EPSILON = 1e-3
 
 const getNodeBounds = (node: NodeWithPortPoints): NodeBounds => ({
   minX: node.center.x - node.width / 2,
@@ -200,84 +197,6 @@ const pointsAreEqual = (a: RoutePoint, b: RoutePoint) =>
   Math.abs(a.x - b.x) <= POINT_EPSILON &&
   Math.abs(a.y - b.y) <= POINT_EPSILON &&
   a.z === b.z
-
-const getEndpointMatchDistance = (
-  route: HighDensityRoute,
-  section: FixedRouteSection,
-): number | null => {
-  const first = route.route[0]
-  const last = route.route.at(-1)
-  if (!first || !last) return null
-
-  const getPointDistance = (left: RoutePoint, right: RoutePoint) =>
-    left.z === right.z
-      ? Math.hypot(left.x - right.x, left.y - right.y)
-      : Infinity
-  const forwardStartDistance = getPointDistance(first, section.start.point)
-  const forwardEndDistance = getPointDistance(last, section.end.point)
-  const reverseStartDistance = getPointDistance(last, section.start.point)
-  const reverseEndDistance = getPointDistance(first, section.end.point)
-  const forwardDistance = forwardStartDistance + forwardEndDistance
-  const reverseDistance = reverseStartDistance + reverseEndDistance
-  const bestDistance = Math.min(forwardDistance, reverseDistance)
-  const bestMaximumEndpointDistance = Math.min(
-    Math.max(forwardStartDistance, forwardEndDistance),
-    Math.max(reverseStartDistance, reverseEndDistance),
-  )
-
-  return bestMaximumEndpointDistance <= ROUTED_ENDPOINT_EPSILON
-    ? bestDistance
-    : null
-}
-
-/**
- * Finds a routed same-net path that absorbed an omitted fixed-section port
- * pair. The grid solver deliberately permits same-net routes to share cells,
- * and can therefore return one physical path under only one of two coincident
- * connection identities. Reusing that path lets the fixed trace follow the
- * accepted copper instead of restoring its stale, conflicting geometry.
- */
-export const findAbsorbedFixedSectionReplacement = ({
-  section,
-  candidateRoutes,
-  connMap,
-}: {
-  section: FixedRouteSection
-  candidateRoutes: readonly HighDensityRoute[]
-  connMap: ConnectivityMap
-}): HighDensityRoute | null => {
-  const sourceRoute = section.sourceRoutes[0]!
-  const matches = candidateRoutes
-    .flatMap((candidateRoute) => {
-      if (!arePipeline9RoutesOnSameNet(candidateRoute, sourceRoute, connMap)) {
-        return []
-      }
-      const endpointMatchDistance = getEndpointMatchDistance(
-        candidateRoute,
-        section,
-      )
-      return endpointMatchDistance === null
-        ? []
-        : [{ candidateRoute, endpointMatchDistance }]
-    })
-    .sort(
-      (left, right) =>
-        left.endpointMatchDistance - right.endpointMatchDistance ||
-        left.candidateRoute.connectionName.localeCompare(
-          right.candidateRoute.connectionName,
-        ),
-    )
-  const absorbedRoute = matches[0]?.candidateRoute
-  if (!absorbedRoute) return null
-
-  return {
-    ...absorbedRoute,
-    connectionName: sourceRoute.connectionName,
-    rootConnectionName: sourceRoute.rootConnectionName,
-    route: absorbedRoute.route.map((point) => ({ ...point })),
-    vias: absorbedRoute.vias.map((via) => ({ ...via })),
-  }
-}
 
 const fixedRouteSlicesAreContiguous = (
   previous: FixedRouteSlice,

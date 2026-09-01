@@ -5,6 +5,17 @@ import type {
 } from "lib/types/high-density-types"
 import { getConnectionPortPointPairs } from "lib/utils/getConnectionPortPointPairs"
 
+type Point3 = { x: number; y: number; z: number }
+
+type SameRootBridgeMatch = {
+  route: HighDensityIntraNodeRoute
+  routeStart: PortPoint
+  routeEnd: PortPoint
+  endpointDistance: number
+}
+
+const SAME_ROOT_ENDPOINT_EPSILON = 1e-3
+
 const pointKey = (point: { x: number; y: number; z: number }) =>
   `${point.x.toFixed(6)},${point.y.toFixed(6)},${point.z}`
 
@@ -12,6 +23,78 @@ const routeEndpoints = (route: HighDensityIntraNodeRoute) => [
   route.route[0],
   route.route[route.route.length - 1],
 ]
+
+const getSameLayerDistance = (left: Point3, right: Point3): number => {
+  if (left.z !== right.z) return Infinity
+  const deltaX = left.x - right.x
+  const deltaY = left.y - right.y
+  return Math.hypot(deltaX, deltaY)
+}
+
+const findSameRootBridgeMatch = ({
+  routes,
+  connectionName,
+  rootConnectionName,
+  connectedPortPoints,
+  targetPortPoint,
+}: {
+  routes: HighDensityIntraNodeRoute[]
+  connectionName: string
+  rootConnectionName: string
+  connectedPortPoints: PortPoint[]
+  targetPortPoint: PortPoint
+}): SameRootBridgeMatch | null => {
+  const matches: SameRootBridgeMatch[] = []
+  for (const route of routes) {
+    if (route.connectionName === connectionName) continue
+    if (
+      (route.rootConnectionName ?? route.connectionName) !== rootConnectionName
+    ) {
+      continue
+    }
+    const [start, end] = routeEndpoints(route)
+    if (!start || !end) continue
+
+    for (const connectedPortPoint of connectedPortPoints) {
+      const forwardStartDistance = getSameLayerDistance(
+        start,
+        connectedPortPoint,
+      )
+      const forwardEndDistance = getSameLayerDistance(end, targetPortPoint)
+      const reverseStartDistance = getSameLayerDistance(start, targetPortPoint)
+      const reverseEndDistance = getSameLayerDistance(end, connectedPortPoint)
+      if (
+        Math.max(forwardStartDistance, forwardEndDistance) <=
+        SAME_ROOT_ENDPOINT_EPSILON
+      ) {
+        matches.push({
+          route,
+          routeStart: connectedPortPoint,
+          routeEnd: targetPortPoint,
+          endpointDistance: forwardStartDistance + forwardEndDistance,
+        })
+      }
+      if (
+        Math.max(reverseStartDistance, reverseEndDistance) <=
+        SAME_ROOT_ENDPOINT_EPSILON
+      ) {
+        matches.push({
+          route,
+          routeStart: targetPortPoint,
+          routeEnd: connectedPortPoint,
+          endpointDistance: reverseStartDistance + reverseEndDistance,
+        })
+      }
+    }
+  }
+
+  matches.sort(
+    (left, right) =>
+      left.endpointDistance - right.endpointDistance ||
+      left.route.connectionName.localeCompare(right.route.connectionName),
+  )
+  return matches[0] ?? null
+}
 
 const getConnectedPointKeysForConnection = (
   routes: HighDensityIntraNodeRoute[],
@@ -98,7 +181,7 @@ export const areNodePortPointPairsConnectedByRoutes = (
 export const repairDisconnectedSameRootPortPoints = (
   routes: HighDensityIntraNodeRoute[],
   nodeWithPortPoints: NodeWithPortPoints,
-) => {
+): HighDensityIntraNodeRoute[] => {
   const repairedRoutes = [...routes]
   const portPointsByConnection = new Map<string, PortPoint[]>()
 
@@ -114,7 +197,6 @@ export const repairDisconnectedSameRootPortPoints = (
 
     const rootConnectionName =
       portPoints[0]?.rootConnectionName ?? connectionName
-    const targetPortKeys = new Set(portPoints.map(pointKey))
     let connectedKeys = getConnectedPointKeysForConnection(
       repairedRoutes,
       connectionName,
@@ -125,40 +207,43 @@ export const repairDisconnectedSameRootPortPoints = (
       const portPointKey = pointKey(portPoint)
       if (connectedKeys.has(portPointKey)) continue
 
-      const bridgeRoute = repairedRoutes.find((route) => {
-        if (
-          (route.rootConnectionName ?? route.connectionName) !==
-          rootConnectionName
-        ) {
-          return false
-        }
-        if (route.connectionName === connectionName) return false
-        const [start, end] = routeEndpoints(route)
-        if (!start || !end) return false
-        const startKey = pointKey(start)
-        const endKey = pointKey(end)
-        return (
-          (connectedKeys.has(startKey) && endKey === portPointKey) ||
-          (connectedKeys.has(endKey) && startKey === portPointKey) ||
-          (targetPortKeys.has(startKey) &&
-            targetPortKeys.has(endKey) &&
-            (startKey === portPointKey || endKey === portPointKey))
-        )
-      })
-
-      if (!bridgeRoute) continue
-
-      repairedRoutes.push({
-        ...bridgeRoute,
+      const connectedPortPoints = portPoints.filter((candidatePortPoint) =>
+        connectedKeys.has(pointKey(candidatePortPoint)),
+      )
+      const bridgeMatch = findSameRootBridgeMatch({
+        routes: repairedRoutes,
         connectionName,
         rootConnectionName,
-        route: bridgeRoute.route.map((point) => ({
-          ...point,
-          connectionName,
-          rootConnectionName,
-        })),
-        vias: bridgeRoute.vias.map((via) => ({ ...via })),
-        jumpers: bridgeRoute.jumpers?.map((jumper) => ({
+        connectedPortPoints,
+        targetPortPoint: portPoint,
+      })
+      if (!bridgeMatch) continue
+
+      const repairedRoutePoints = bridgeMatch.route.route.map((point) => ({
+        ...point,
+        connectionName,
+        rootConnectionName,
+      }))
+      repairedRoutePoints[0] = {
+        ...repairedRoutePoints[0]!,
+        ...bridgeMatch.routeStart,
+        connectionName,
+        rootConnectionName,
+      }
+      repairedRoutePoints[repairedRoutePoints.length - 1] = {
+        ...repairedRoutePoints.at(-1)!,
+        ...bridgeMatch.routeEnd,
+        connectionName,
+        rootConnectionName,
+      }
+
+      repairedRoutes.push({
+        ...bridgeMatch.route,
+        connectionName,
+        rootConnectionName,
+        route: repairedRoutePoints,
+        vias: bridgeMatch.route.vias.map((via) => ({ ...via })),
+        jumpers: bridgeMatch.route.jumpers?.map((jumper) => ({
           ...jumper,
           start: { ...jumper.start },
           end: { ...jumper.end },

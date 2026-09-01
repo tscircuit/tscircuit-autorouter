@@ -26,7 +26,6 @@ import {
 } from "./pipeline9FixedRouteCopper"
 import {
   createRegionalFallbackProblem,
-  findAbsorbedFixedSectionReplacement,
   type FixedRouteSection,
   spliceFixedRouteSectionWithMutationMask,
 } from "./pipeline9RegionalFallback"
@@ -594,8 +593,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       HighDensityRoute[]
     >()
 
-    const fallbackRoutes = this.activeFallbackSolver.getOutput()
-    for (const route of fallbackRoutes) {
+    for (const route of this.activeFallbackSolver.getOutput()) {
       if (!this.activeFallbackFixedRouteSections.has(route.connectionName)) {
         newRoutes.push(route)
         continue
@@ -619,24 +617,8 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     const unchangedFixedRouteSections: FixedRouteSection[] = []
     for (const [connectionName, section] of this
       .activeFallbackFixedRouteSections) {
-      const replacementRoutes = [
-        ...(replacementRoutesByConnectionName.get(connectionName) ?? []),
-      ]
-      if (
-        replacementRoutes.length === 0 &&
-        section.sourceRoutes.some((sourceRoute) =>
-          this.activeFallbackPromotedFixedRouteConnectionNames.has(
-            sourceRoute.connectionName,
-          ),
-        )
-      ) {
-        const absorbedReplacement = findAbsorbedFixedSectionReplacement({
-          section,
-          candidateRoutes: fallbackRoutes,
-          connMap: this.connMap,
-        })
-        if (absorbedReplacement) replacementRoutes.push(absorbedReplacement)
-      }
+      const replacementRoutes =
+        replacementRoutesByConnectionName.get(connectionName) ?? []
       if (replacementRoutes.length === 0) {
         // Grid-based regional solvers can merge same-net sections that occupy
         // the same cells. Keep omitted fixed copper unchanged, then include it

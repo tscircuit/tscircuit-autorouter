@@ -16,7 +16,29 @@ type Phase =
   | "via_merging"
   | "path_simplification"
 
+type PreservedRouteSet = {
+  endpointsByConnectionName: ReadonlyMap<
+    string,
+    ReadonlyArray<{
+      start: HighDensityRoute["route"][number]
+      end: HighDensityRoute["route"][number]
+    }>
+  >
+  routeCount: number
+}
+
 const VIA_INSIDE_OBSTACLE_TOLERANCE = 1e-6
+
+const routePointsMatch = (
+  left: HighDensityRoute["route"][number],
+  right: HighDensityRoute["route"][number],
+): boolean => {
+  return (
+    Math.abs(left.x - right.x) <= VIA_INSIDE_OBSTACLE_TOLERANCE &&
+    Math.abs(left.y - right.y) <= VIA_INSIDE_OBSTACLE_TOLERANCE &&
+    left.z === right.z
+  )
+}
 
 const pointInsideObstacle = (
   point: { x: number; y: number },
@@ -51,19 +73,7 @@ export class TraceSimplificationSolver extends BaseSolver {
 
   hdRoutes: HighDensityRoute[] = []
 
-  readonly initialHdRoutes: HighDensityRoute[]
-  finalCandidateAccepted?: boolean
-  rejectedFinalHdRoutes?: HighDensityRoute[]
-
-  private readonly preservedRouteEndpoints?: ReadonlyMap<
-    string,
-    ReadonlyArray<{
-      start: HighDensityRoute["route"][number]
-      end: HighDensityRoute["route"][number]
-    }>
-  >
-
-  private readonly preservedRouteCount?: number
+  private readonly preservedRouteSet?: PreservedRouteSet
 
   simplificationPipelineLoops = 0
 
@@ -110,9 +120,6 @@ export class TraceSimplificationSolver extends BaseSolver {
    *   - terminalLayerIndicesByPcbPortId: Physical copper-layer indices on
    *     which each PCB-port terminal can directly accept a route endpoint
    *     without a via
-   *   - acceptFinalHdRoutes: Optional acceptance gate invoked once after all
-   *     simplification phases. A rejected candidate is retained for debugging,
-   *     while the solver output is restored to the initial routes.
    *   - runFinalViaRemovalPass: Runs one geometry-aware via-removal pass after
    *     the configured full iterations without repeating every other phase.
    *   - iterations: Number of complete simplification iterations (default: 2)
@@ -136,10 +143,6 @@ export class TraceSimplificationSolver extends BaseSolver {
         string,
         ReadonlySet<number>
       >
-      readonly acceptFinalHdRoutes?: (
-        candidateHdRoutes: ReadonlyArray<HighDensityRoute>,
-        initialHdRoutes: ReadonlyArray<HighDensityRoute>,
-      ) => boolean
       readonly runFinalViaRemovalPass?: boolean
       readonly iterations?: number
     },
@@ -152,10 +155,9 @@ export class TraceSimplificationSolver extends BaseSolver {
         simplificationConfig.layerCount,
       ),
     }
-    this.initialHdRoutes = this.markThroughObstacleSegments(
+    this.hdRoutes = this.markThroughObstacleSegments(
       simplificationConfig.hdRoutes,
     )
-    this.hdRoutes = this.initialHdRoutes
     if (simplificationConfig.preserveRouteEndpoints) {
       const endpointByConnectionName = new Map<
         string,
@@ -180,55 +182,28 @@ export class TraceSimplificationSolver extends BaseSolver {
         })
         endpointByConnectionName.set(route.connectionName, connectionEndpoints)
       }
-      this.preservedRouteEndpoints = endpointByConnectionName
-      this.preservedRouteCount = simplificationConfig.hdRoutes.length
+      this.preservedRouteSet = {
+        endpointsByConnectionName: endpointByConnectionName,
+        routeCount: simplificationConfig.hdRoutes.length,
+      }
     }
     this.MAX_SIMPLIFICATION_PIPELINE_LOOPS =
       simplificationConfig.iterations ?? 2
     this.MAX_ITERATIONS = 100e6
   }
 
-  private finalizeSimplification(): void {
-    this.validatePreservedRouteEndpoints(this.hdRoutes)
-    const acceptFinalHdRoutes = this.simplificationConfig.acceptFinalHdRoutes
-    if (!acceptFinalHdRoutes) {
-      this.finalCandidateAccepted = true
-      this.solved = true
-      return
-    }
-
-    this.finalCandidateAccepted = acceptFinalHdRoutes(
-      this.hdRoutes,
-      this.initialHdRoutes,
-    )
-    if (!this.finalCandidateAccepted) {
-      this.rejectedFinalHdRoutes = this.hdRoutes
-      this.hdRoutes = this.initialHdRoutes
-    }
-    this.solved = true
-  }
-
   private validatePreservedRouteEndpoints(routes: HighDensityRoute[]): void {
-    if (!this.preservedRouteEndpoints) return
-    if (routes.length !== this.preservedRouteCount) {
+    if (!this.preservedRouteSet) return
+    if (routes.length !== this.preservedRouteSet.routeCount) {
       throw new Error(
-        `TraceSimplificationSolver changed the preserved route set (expected ${this.preservedRouteCount}, got ${routes.length})`,
+        `TraceSimplificationSolver changed the preserved route set (expected ${this.preservedRouteSet.routeCount}, got ${routes.length})`,
       )
     }
 
-    const pointsMatch = (
-      left: HighDensityRoute["route"][number],
-      right: HighDensityRoute["route"][number],
-    ) =>
-      Math.abs(left.x - right.x) <= VIA_INSIDE_OBSTACLE_TOLERANCE &&
-      Math.abs(left.y - right.y) <= VIA_INSIDE_OBSTACLE_TOLERANCE &&
-      left.z === right.z
-
     const unmatchedEndpointsByConnectionName = new Map(
-      [...this.preservedRouteEndpoints].map(([connectionName, endpoints]) => [
-        connectionName,
-        [...endpoints],
-      ]),
+      [...this.preservedRouteSet.endpointsByConnectionName].map(
+        ([connectionName, endpoints]) => [connectionName, [...endpoints]],
+      ),
     )
 
     for (const route of routes) {
@@ -241,8 +216,8 @@ export class TraceSimplificationSolver extends BaseSolver {
         start && end && unmatchedEndpoints
           ? unmatchedEndpoints.findIndex(
               (expected) =>
-                pointsMatch(start, expected.start) &&
-                pointsMatch(end, expected.end),
+                routePointsMatch(start, expected.start) &&
+                routePointsMatch(end, expected.end),
             )
           : -1
       if (matchingEndpointIndex < 0 || !unmatchedEndpoints) {
@@ -344,7 +319,8 @@ export class TraceSimplificationSolver extends BaseSolver {
         this.finalViaRemovalPassStarted = true
         this.currentPhase = "via_removal"
       } else if (!this.activeSubSolver) {
-        this.finalizeSimplification()
+        this.validatePreservedRouteEndpoints(this.hdRoutes)
+        this.solved = true
         return
       }
     }
@@ -371,7 +347,8 @@ export class TraceSimplificationSolver extends BaseSolver {
 
         if (this.finalViaRemovalPassStarted) {
           this.finalViaRemovalPassCompleted = true
-          this.finalizeSimplification()
+          this.validatePreservedRouteEndpoints(this.hdRoutes)
+          this.solved = true
           return
         }
 
@@ -401,7 +378,8 @@ export class TraceSimplificationSolver extends BaseSolver {
           ) {
             this.finalViaRemovalPassStarted = true
           } else {
-            this.finalizeSimplification()
+            this.validatePreservedRouteEndpoints(this.hdRoutes)
+            this.solved = true
             return
           }
         }
