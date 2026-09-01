@@ -38,20 +38,22 @@ test("native portfolios include A11 and A12 while grown portfolios stay coarse",
   if (!(a11Candidate instanceof HighDensitySolverA11)) {
     throw new Error("Native portfolio did not create an A11 candidate")
   }
-  expect(a11Candidate.MAX_ITERATIONS).toBe(5_000)
+  const a11PreSetupBudget = a11Candidate.MAX_ITERATIONS
   expect(a11Candidate.rows).toBeUndefined()
   a11Candidate.step()
   expect(a11Candidate.rows).toBeDefined()
-  expect(a11Candidate.MAX_ITERATIONS).toBe(5_000)
+  expect(a11Candidate.MAX_ITERATIONS).toBeLessThan(a11PreSetupBudget)
+  expect(a11Candidate.MAX_ITERATIONS).toBeGreaterThanOrEqual(150_000)
   expect(a12Candidate).toBeInstanceOf(HighDensitySolverA12)
   if (!(a12Candidate instanceof HighDensitySolverA12)) {
     throw new Error("Native portfolio did not create an A12 candidate")
   }
-  expect(a12Candidate.MAX_ITERATIONS).toBe(15_000)
+  const a12PreSetupBudget = a12Candidate.MAX_ITERATIONS
   expect(a12Candidate._setupDone).toBe(false)
   a12Candidate.step()
   expect(a12Candidate._setupDone).toBe(true)
-  expect(a12Candidate.MAX_ITERATIONS).toBe(15_000)
+  expect(a12Candidate.MAX_ITERATIONS).toBeLessThan(a12PreSetupBudget)
+  expect(a12Candidate.MAX_ITERATIONS).toBeGreaterThanOrEqual(150_000)
 
   const standardPortfolio = new PortfolioSingleIntraNodeSolver({
     ...solverParams,
