@@ -535,7 +535,11 @@ export class TraceWidthSolver extends BaseSolver {
       if (!isObstacleConnectedToRoute(obstacle, route, this.connMap)) continue
       if (pointToBoxDistance(endpoint, obstacle) > COORDINATE_EPSILON) continue
 
-      const limit = this.getObstacleWidthAlongVector(obstacle, normal)
+      const limit = Math.min(
+        this.getObstacleWidthAlongVector(obstacle, normal),
+        obstacle.width,
+        obstacle.height,
+      )
       if (limit <= COORDINATE_EPSILON) continue
 
       const neckDistance =
