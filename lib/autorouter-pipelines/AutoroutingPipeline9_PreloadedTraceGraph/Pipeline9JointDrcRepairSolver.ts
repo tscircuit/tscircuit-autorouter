@@ -24,7 +24,7 @@ import type {
 import type { HighDensityRoute } from "lib/types/high-density-types"
 import { convertHdRouteToSimplifiedRoute } from "lib/utils/convertHdRouteToSimplifiedRoute"
 import { mapZToLayerName } from "lib/utils/mapZToLayerName"
-import { convertPipeline7HdRoutesToSimplifiedPcbTraces } from "../AutoroutingPipeline7_MultiGraph/convertPipeline7HdRoutesToSimplifiedPcbTraces"
+import { createPipeline7HdRoutesToSimplifiedPcbTracesConverter } from "../AutoroutingPipeline7_MultiGraph/convertPipeline7HdRoutesToSimplifiedPcbTraces"
 import { applyPipeline9RegionalB01Repairs } from "./applyPipeline9RegionalB01Repairs"
 import { applyPipeline9TerminalEscapeRelocations } from "./applyPipeline9TerminalEscapeRelocations"
 import { assignUniquePcbTraceIdsToNewTraces } from "./assignUniquePcbTraceIdsToNewTraces"
@@ -661,15 +661,18 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     const currentMutatedPreloadedTraces = params.updatedPreloadedTraces.filter(
       (trace) => params.mutatedPreloadedTraceIds.has(trace.pcb_trace_id),
     )
-    const currentNewTraces = convertPipeline7HdRoutesToSimplifiedPcbTraces({
-      connections: params.newConnections,
-      originalConnections: params.originalSrj.connections,
-      hdRoutes: params.newHdRoutes,
-      layerCount: params.layerCount,
-      obstacles: params.obstacles,
-      defaultViaHoleDiameter: params.defaultViaHoleDiameter,
-      connMap: params.connMap,
-    })
+    // Repair candidates change copper geometry, but their connection metadata
+    // and obstacle connectivity remain fixed throughout this solver's lifetime.
+    const convertNewRoutes =
+      createPipeline7HdRoutesToSimplifiedPcbTracesConverter({
+        connections: params.newConnections,
+        originalConnections: params.originalSrj.connections,
+        layerCount: params.layerCount,
+        obstacles: params.obstacles,
+        defaultViaHoleDiameter: params.defaultViaHoleDiameter,
+        connMap: params.connMap,
+      })
+    const currentNewTraces = convertNewRoutes(params.newHdRoutes)
     const currentNewTraceIds = new Set(
       currentNewTraces.map((trace) => trace.pcb_trace_id),
     )
@@ -1016,15 +1019,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       const evaluatedNewRoutes = evaluatedRoutes.filter(
         (route) => !this.syntheticConnectionNames.has(route.connectionName),
       )
-      const evaluatedNewTraces = convertPipeline7HdRoutesToSimplifiedPcbTraces({
-        connections: params.newConnections,
-        originalConnections: params.originalSrj.connections,
-        hdRoutes: evaluatedNewRoutes,
-        layerCount: params.layerCount,
-        obstacles: params.obstacles,
-        defaultViaHoleDiameter: params.defaultViaHoleDiameter,
-        connMap: params.connMap,
-      })
+      const evaluatedNewTraces = convertNewRoutes(evaluatedNewRoutes)
       const uniquelyNamedNewTraces = assignUniquePcbTraceIdsToNewTraces(
         evaluatedNewTraces,
         params.originalSrj.traces ?? [],

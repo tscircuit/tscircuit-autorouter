@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test"
-import { AutoroutingPipelineSolver } from "lib"
+import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib"
 import { getCurrentCircuitJson } from "lib/testing/autorouting-pipeline-debugger/getCurrentCircuitJson"
 import { getDrcErrors } from "lib/testing/getDrcErrors"
 import bugReport from "../../fixtures/bug-reports/bugreport94-56fa2e/bugreport94-56fa2e.json" with {
@@ -10,20 +10,33 @@ import { getLastStepSvg } from "../fixtures/getLastStepSvg"
 
 const srj = bugReport.simple_route_json as SimpleRouteJson
 
-test("bugreport94-56fa2e.json", () => {
-  const solver = new AutoroutingPipelineSolver(structuredClone(srj))
+test("bugreport94-56fa2e.json with Pipeline 9", () => {
+  const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(
+    structuredClone(srj),
+  )
   solver.solve()
 
   const circuitJson = getCurrentCircuitJson(solver)
   expect(circuitJson).not.toBeNull()
   const { errors } = getDrcErrors(circuitJson!)
-  expect(errors.length).toBeLessThanOrEqual(6)
-
-  expect(getLastStepSvg(solver.visualize())).toMatchSvgSnapshot(
-    import.meta.path,
-    {
-      // Linux retains a different safe-layer candidate with 8 DRC errors.
-      tolerance: 0.17,
-    },
+  expect(errors.length).toBeLessThanOrEqual(5)
+  const targetOverlap = errors.find(
+    (error) =>
+      error.type === "pcb_trace_error" &&
+      error.pcb_trace_error_id.includes("source_trace_108") &&
+      error.pcb_trace_error_id.includes("source_trace_138"),
   )
-}, 180_000)
+  expect(targetOverlap).toBeUndefined()
+  const transferredOverlap = errors.find(
+    (error) =>
+      error.type === "pcb_trace_error" &&
+      error.pcb_trace_error_id.includes("source_trace_108"),
+  )
+  expect(transferredOverlap).toBeUndefined()
+
+  const snapshotPath =
+    process.platform === "linux"
+      ? import.meta.path.replace(/\.test\.ts$/, "-linux.test.ts")
+      : import.meta.path
+  expect(getLastStepSvg(solver.visualize())).toMatchSvgSnapshot(snapshotPath)
+}, 300_000)
