@@ -123,12 +123,11 @@ export class SingleSimplifiedPathSolver5 extends SingleSimplifiedPathSolver {
       MINIMUM_CLEARANCE_TRACE_THICKNESS,
       ...this.otherHdRoutes.flatMap((route) => [
         Math.max(route.traceThickness, MINIMUM_CLEARANCE_TRACE_THICKNESS),
-        ...route.route.map(
-          (point) =>
-            Math.max(
-              point.traceThickness ?? route.traceThickness,
-              MINIMUM_CLEARANCE_TRACE_THICKNESS,
-            ),
+        ...route.route.map((point) =>
+          Math.max(
+            point.traceThickness ?? route.traceThickness,
+            MINIMUM_CLEARANCE_TRACE_THICKNESS,
+          ),
         ),
       ]),
     )

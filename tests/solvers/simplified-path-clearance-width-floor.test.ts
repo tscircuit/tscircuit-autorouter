@@ -66,9 +66,9 @@ test("path simplification keeps the legacy narrow-trace envelope and expands it 
   const candidateStart = { x: 0, y: 0, z: 0 }
   const candidateEnd = { x: 2, y: 0, z: 0 }
 
-  expect(
-    narrowCollision.isValidPathSegment(candidateStart, candidateEnd),
-  ).toBe(false)
+  expect(narrowCollision.isValidPathSegment(candidateStart, candidateEnd)).toBe(
+    false,
+  )
   expect(narrowClear.isValidPathSegment(candidateStart, candidateEnd)).toBe(
     true,
   )
