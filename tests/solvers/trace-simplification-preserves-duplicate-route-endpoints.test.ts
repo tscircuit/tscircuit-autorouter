@@ -34,16 +34,13 @@ test("trace simplification preserves endpoints for duplicate connection names", 
     defaultViaDiameter: 0.3,
     layerCount: 2,
     preserveRouteEndpoints: true,
-    iterations: 1,
-    runFinalViaRemovalPass: true,
   })
 
   solver.solve()
 
   expect(solver.failed).toBeFalse()
   expect(solver.solved).toBeTrue()
-  expect(solver.simplificationPipelineLoops).toBe(1)
-  expect(solver.finalViaRemovalPassCompleted).toBeTrue()
+  expect(solver.simplificationPipelineLoops).toBe(2)
   expect(
     solver.simplifiedHdRoutes.map((route) => [
       route.route[0],

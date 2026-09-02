@@ -3,6 +3,7 @@ import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import { HighDensityRouteSpatialIndex } from "lib/data-structures/HighDensityRouteSpatialIndex"
 import { ObstacleSpatialHashIndex } from "lib/data-structures/ObstacleTree"
 import { SingleRouteUselessViaRemovalSolver } from "lib/solvers/UselessViaRemovalSolver/SingleRouteUselessViaRemovalSolver"
+import { RELAXED_DRC_OPTIONS } from "lib/testing/drcPresets"
 import type { HighDensityRoute } from "lib/types/high-density-types"
 
 test("keeps vias when moving a section would violate trace clearance", (): void => {
@@ -41,7 +42,7 @@ test("keeps vias when moving a section would violate trace clearance", (): void 
       net0: [route.connectionName],
       net1: [nearbyRoute.connectionName],
     }),
-    traceMargin: 0.1,
+    traceMargin: RELAXED_DRC_OPTIONS.traceClearance,
   })
 
   solver.solve()

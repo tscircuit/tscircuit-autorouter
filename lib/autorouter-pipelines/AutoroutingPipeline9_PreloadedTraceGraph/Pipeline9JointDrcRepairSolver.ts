@@ -24,7 +24,6 @@ import type {
 import type { HighDensityRoute } from "lib/types/high-density-types"
 import { convertHdRouteToSimplifiedRoute } from "lib/utils/convertHdRouteToSimplifiedRoute"
 import { mapZToLayerName } from "lib/utils/mapZToLayerName"
-import { Pipeline7AdaptiveDrcBranchPortfolioSolver } from "../AutoroutingPipeline7_MultiGraph/Pipeline7AdaptiveDrcBranchPortfolioSolver"
 import { convertPipeline7HdRoutesToSimplifiedPcbTraces } from "../AutoroutingPipeline7_MultiGraph/convertPipeline7HdRoutesToSimplifiedPcbTraces"
 import { applyPipeline9RegionalB01Repairs } from "./applyPipeline9RegionalB01Repairs"
 import { applyPipeline9TerminalEscapeRelocations } from "./applyPipeline9TerminalEscapeRelocations"
@@ -48,29 +47,6 @@ import { preparePipeline9DrcRoutedTracesWithMetadata } from "./preparePipeline9D
 
 const EXACT_REPAIR_MAX_ITERATIONS = 32
 const EXACT_REPAIR_BROAD_MAX_ITERATIONS = 12
-// The disposable fast probe scales with both routed traces and current DRC
-// issues. In the 58-route completion regressions, 8 issues (complexity 464)
-// remained inexpensive while 22 issues (complexity 1,276) repeated enough
-// whole-board DRC work to time out. The full 32-iteration exact repair still
-// runs when this preliminary probe is skipped.
-const EXACT_REPAIR_FAST_PROBE_COMPLEXITY_LIMIT = 512
-
-export const shouldRunPipeline9ExactRepairFastProbe = ({
-  routeCount,
-  drcIssueCount,
-}: {
-  routeCount: number
-  drcIssueCount: number
-}): boolean => {
-  if (!Number.isSafeInteger(routeCount) || routeCount < 0) {
-    throw new Error(`Invalid exact-repair route count: ${routeCount}`)
-  }
-  if (!Number.isSafeInteger(drcIssueCount) || drcIssueCount < 0) {
-    throw new Error(`Invalid exact-repair DRC issue count: ${drcIssueCount}`)
-  }
-  const estimatedDrcWork = routeCount * drcIssueCount
-  return estimatedDrcWork <= EXACT_REPAIR_FAST_PROBE_COMPLEXITY_LIMIT
-}
 // Reference validation and terminal relocation are precision passes for small
 // residual sets. Keep that exhaustive search for compact residues while
 // bounding terminal relocation's repeated whole-board indexed DRC scans.
@@ -92,10 +68,6 @@ type Pipeline9JointDrcRepairSolverParams = {
   effort: number
   colorMap: Record<string, string>
 }
-
-type Pipeline9ExactRepairSolver =
-  | Pipeline7AdaptiveDrcBranchPortfolioSolver
-  | GlobalDrcBranchPortfolioSolver
 
 type MovablePreloadedSection = {
   originalTrace: SimplifiedPcbTrace
@@ -673,7 +645,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
   readonly movablePreloadedSections: MovablePreloadedSection[]
   readonly fixedPreloadedObstacleRoutes: PreloadedHighDensityRoute[]
   readonly syntheticConnectionNames: ReadonlySet<string>
-  readonly exactRepairSolver?: Pipeline9ExactRepairSolver
+  readonly exactRepairSolver?: GlobalDrcBranchPortfolioSolver
   private drcEvaluator?: DrcEvaluator
   private cachedReferenceDrcEvaluator?: DrcEvaluator
   private referenceDrcValidationCount = 0
@@ -943,15 +915,6 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         ]!.hdRoute = mergedRoutes[groupIndex]!
       }
     }
-    const exactRepairRouteCount =
-      params.newHdRoutes.length + this.movablePreloadedSections.length
-    const exactRepairFastProbeComplexity =
-      exactRepairRouteCount * currentDrc.errors.length
-    const enableExactRepairFastProbe = shouldRunPipeline9ExactRepairFastProbe({
-      routeCount: exactRepairRouteCount,
-      drcIssueCount: currentDrc.errors.length,
-    })
-
     this.stats = {
       initialJointDrcIssueCount: currentDrc.errors.length,
       baselineJointDrcIssueCount: baselineDrc.errors.length,
@@ -964,11 +927,6 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       }, {}),
       movablePreloadedTraceCount: movablePreloadedTraceIds.size,
       movablePreloadedSectionCount: this.movablePreloadedSections.length,
-      exactRepairRouteCount,
-      exactRepairFastProbeComplexity,
-      exactRepairFastProbeComplexityLimit:
-        EXACT_REPAIR_FAST_PROBE_COMPLEXITY_LIMIT,
-      exactRepairFastProbeEnabled: enableExactRepairFastProbe,
       exactRepairConfiguredMaxIterations: EXACT_REPAIR_MAX_ITERATIONS,
       exactRepairConfiguredViaInPadMaxIterations: EXACT_REPAIR_MAX_ITERATIONS,
       exactRepairConfiguredBroadMaxIterations:
@@ -1363,9 +1321,9 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       broadMaxIterations: EXACT_REPAIR_BROAD_MAX_ITERATIONS,
       broadPassMultiplier: 3,
     }
-    this.exactRepairSolver = enableExactRepairFastProbe
-      ? new Pipeline7AdaptiveDrcBranchPortfolioSolver(exactRepairParams)
-      : new GlobalDrcBranchPortfolioSolver(exactRepairParams)
+    this.exactRepairSolver = new GlobalDrcBranchPortfolioSolver(
+      exactRepairParams,
+    )
     this.activeSubSolver = this.exactRepairSolver
     this.MAX_ITERATIONS = this.exactRepairSolver.MAX_ITERATIONS + 1
   }

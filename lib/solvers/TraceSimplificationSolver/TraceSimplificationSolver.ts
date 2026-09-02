@@ -77,10 +77,6 @@ export class TraceSimplificationSolver extends BaseSolver {
 
   simplificationPipelineLoops = 0
 
-  finalViaRemovalPassStarted = false
-
-  finalViaRemovalPassCompleted = false
-
   MAX_SIMPLIFICATION_PIPELINE_LOOPS: number = 2
 
   PHASE_ORDER: Phase[] = [
@@ -119,12 +115,11 @@ export class TraceSimplificationSolver extends BaseSolver {
    *     coordinates or layers when routes represent spliceable local sections
    *   - useTraceWidthAwareClearance: Uses each route segment's actual copper
    *     width when checking path-simplification clearance
+   *   - traceClearance: Required edge-to-edge clearance between different-net
+   *     routed copper during simplification
    *   - terminalLayerIndicesByPcbPortId: Physical copper-layer indices on
    *     which each PCB-port terminal can directly accept a route endpoint
    *     without a via
-   *   - runFinalViaRemovalPass: Runs one geometry-aware via-removal pass after
-   *     the configured full iterations without repeating every other phase.
-   *   - iterations: Number of complete simplification iterations (default: 2)
    */
   constructor(
     private readonly simplificationConfig: {
@@ -142,15 +137,11 @@ export class TraceSimplificationSolver extends BaseSolver {
       readonly enableCrossingViaReduction?: boolean
       readonly preserveRouteEndpoints?: boolean
       readonly useTraceWidthAwareClearance?: boolean
+      readonly traceClearance?: number
       readonly terminalLayerIndicesByPcbPortId?: ReadonlyMap<
         string,
         ReadonlySet<number>
       >
-      readonly runFinalViaRemovalPass?: boolean
-      readonly iterations?: number
-      readonly preserveOriginalRouteSegmentsOnMinimumStepFailure?: boolean
-      readonly viaRemovalTraceMargin?: number
-      readonly skipCrossingViaReductionForNonVerticalTransitions?: boolean
     },
   ) {
     super()
@@ -200,8 +191,6 @@ export class TraceSimplificationSolver extends BaseSolver {
         routeCount: simplificationConfig.hdRoutes.length,
       }
     }
-    this.MAX_SIMPLIFICATION_PIPELINE_LOOPS =
-      simplificationConfig.iterations ?? 2
     this.MAX_ITERATIONS = 100e6
   }
 
@@ -325,17 +314,9 @@ export class TraceSimplificationSolver extends BaseSolver {
     if (
       this.simplificationPipelineLoops >= this.MAX_SIMPLIFICATION_PIPELINE_LOOPS
     ) {
-      if (
-        this.simplificationConfig.runFinalViaRemovalPass &&
-        !this.finalViaRemovalPassStarted
-      ) {
-        this.finalViaRemovalPassStarted = true
-        this.currentPhase = "via_removal"
-      } else if (!this.activeSubSolver) {
-        this.validatePreservedRouteEndpoints(this.hdRoutes)
-        this.solved = true
-        return
-      }
+      this.validatePreservedRouteEndpoints(this.hdRoutes)
+      this.solved = true
+      return
     }
 
     // If we have an active sub-solver, let it run
@@ -358,13 +339,6 @@ export class TraceSimplificationSolver extends BaseSolver {
         this.activeSubSolver = null
         this.extractResult = null
 
-        if (this.finalViaRemovalPassStarted) {
-          this.finalViaRemovalPassCompleted = true
-          this.validatePreservedRouteEndpoints(this.hdRoutes)
-          this.solved = true
-          return
-        }
-
         // Advance phase
         if (this.currentPhase === "via_removal") {
           this.currentPhase = this.simplificationConfig
@@ -385,16 +359,9 @@ export class TraceSimplificationSolver extends BaseSolver {
           this.simplificationPipelineLoops >=
           this.MAX_SIMPLIFICATION_PIPELINE_LOOPS
         ) {
-          if (
-            this.simplificationConfig.runFinalViaRemovalPass &&
-            !this.finalViaRemovalPassStarted
-          ) {
-            this.finalViaRemovalPassStarted = true
-          } else {
-            this.validatePreservedRouteEndpoints(this.hdRoutes)
-            this.solved = true
-            return
-          }
+          this.validatePreservedRouteEndpoints(this.hdRoutes)
+          this.solved = true
+          return
         }
       } else if (this.activeSubSolver.failed) {
         this.failed = true
@@ -420,7 +387,7 @@ export class TraceSimplificationSolver extends BaseSolver {
               ? [...this.simplificationConfig.outline]
               : undefined,
             geometryShortcutTraceMargin: 0.1,
-            traceMargin: this.simplificationConfig.viaRemovalTraceMargin,
+            traceMargin: this.simplificationConfig.traceClearance,
             geometryShortcutObstacleMargin:
               this.simplificationConfig.minTraceToPadEdgeClearance ?? 0.15,
             // Delay the quadratic anchor search until the first path pass has
@@ -448,12 +415,9 @@ export class TraceSimplificationSolver extends BaseSolver {
             outline: this.simplificationConfig.outline
               ? [...this.simplificationConfig.outline]
               : undefined,
-            traceMargin: 0.1,
+            traceMargin: this.simplificationConfig.traceClearance,
             obstacleMargin:
               this.simplificationConfig.minTraceToPadEdgeClearance ?? 0.15,
-            skipNonVerticalLayerTransitions:
-              this.simplificationConfig
-                .skipCrossingViaReductionForNonVerticalTransitions,
           })
           this.extractResult = (s) =>
             (s as CrossingViaReductionSolver).getReducedHdRoutes()
@@ -491,9 +455,6 @@ export class TraceSimplificationSolver extends BaseSolver {
             minBoardEdgeClearance:
               this.simplificationConfig.minBoardEdgeClearance,
             defaultViaDiameter: this.simplificationConfig.defaultViaDiameter,
-            preserveOriginalRouteSegmentsOnMinimumStepFailure:
-              this.simplificationConfig
-                .preserveOriginalRouteSegmentsOnMinimumStepFailure,
             useTraceWidthAwareClearance:
               this.simplificationConfig.useTraceWidthAwareClearance,
           })

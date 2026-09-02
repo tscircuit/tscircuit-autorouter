@@ -18,6 +18,7 @@ import { MultiGraphTopologyPlannerSolver } from "lib/solvers/TopologyPlanningSol
 import { TopologyMergingSolver } from "lib/solvers/TopologyMergingSolver/TopologyMergingSolver"
 import { UniformPortDistributionSolver } from "lib/solvers/UniformPortDistributionSolver/UniformPortDistributionSolver"
 import { getColorMap } from "lib/solvers/colors"
+import { RELAXED_DRC_OPTIONS } from "lib/testing/drcPresets"
 import {
   CapacityMeshEdge,
   CapacityMeshNode,
@@ -851,7 +852,9 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       "postRepairTraceSimplificationSolver",
       TraceSimplificationSolver,
       (cms): ConstructorParameters<typeof TraceSimplificationSolver> => {
-        const hdRoutes = cms.pipeline9JointDrcRepairSolver!.getOutput()
+        const hdRoutes = materializePipeline9HdRouteVias(
+          cms.pipeline9JointDrcRepairSolver!.getOutput(),
+        )
         const preloadedHdRoutes = cms
           .getUpdatedPreloadedTraces()
           .flatMap((trace, traceIndex) =>
@@ -881,16 +884,14 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             ),
             enableCrossingViaReduction: true,
             preserveRouteEndpoints: true,
+            traceClearance:
+              cms.srj.minTraceToPadEdgeClearance ??
+              RELAXED_DRC_OPTIONS.traceClearance,
             terminalLayerIndicesByPcbPortId: getTerminalLayerIndicesByPcbPortId(
               cms.srj.connections,
               cms.srj.obstacles,
               cms.srj.layerCount,
             ),
-            iterations: 1,
-            runFinalViaRemovalPass: true,
-            preserveOriginalRouteSegmentsOnMinimumStepFailure: true,
-            viaRemovalTraceMargin: 0.1,
-            skipCrossingViaReductionForNonVerticalTransitions: true,
           },
         ]
       },

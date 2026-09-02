@@ -932,18 +932,17 @@ export class SingleSimplifiedPathSolver5 extends SingleSimplifiedPathSolver {
       const newTailIndex = this.getNearestIndexForDistance(
         this.tailDistanceAlongPath,
       )
-      if (this.preserveOriginalRouteSegmentsOnMinimumStepFailure) {
-        this.appendOriginalRouteSlice(oldTailDistance, newTailIndex)
+      const newTailPoint = this.inputRoute.route[newTailIndex]
+      const lastRoutePoint = this.inputRoute.route.at(-1)!
+      const lastPointInNewRoute = this.newRoute.at(-1)!
+      if (
+        !this.arePointsEqual(oldTailPoint, newTailPoint) &&
+        !this.arePointsEqual(newTailPoint, lastRoutePoint) &&
+        this.isValidPath([lastPointInNewRoute, newTailPoint])
+      ) {
+        this.newRoute.push(newTailPoint)
       } else {
-        const newTailPoint = this.inputRoute.route[newTailIndex]
-        const lastRoutePoint =
-          this.inputRoute.route[this.inputRoute.route.length - 1]
-        if (
-          !this.arePointsEqual(oldTailPoint, newTailPoint) &&
-          !this.arePointsEqual(newTailPoint, lastRoutePoint)
-        ) {
-          this.newRoute.push(newTailPoint)
-        }
+        this.appendOriginalRouteSlice(oldTailDistance, newTailIndex)
       }
 
       return

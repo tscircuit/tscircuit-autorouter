@@ -26,7 +26,6 @@ export interface CrossingViaReductionSolverInput {
   outline?: ReadonlyArray<{ x: number; y: number }>
   traceMargin?: number
   obstacleMargin?: number
-  skipNonVerticalLayerTransitions?: boolean
 }
 
 type RoutePoint = HighDensityRoute["route"][number]
@@ -146,34 +145,6 @@ const recomputeVias = (
     vias.push({ x: point.x, y: point.y })
   }
   return vias
-}
-
-type CrossingViaReductionIneligibility =
-  | "has-jumpers"
-  | "has-non-vertical-layer-transition"
-
-/**
- * Classifies routes outside this optional optimizer's mutation contract. This
- * is an applicability check, not error recovery: jumper geometry and
- * non-vertical layer transitions are owned by other routing primitives, while
- * this solver only rebuilds ordinary vertical vias and explicit
- * through-obstacle transitions. recomputeVias still throws if an eligible
- * route violates that contract during mutation.
- */
-const getCrossingViaReductionIneligibility = (
-  route: HighDensityRoute,
-): CrossingViaReductionIneligibility | null => {
-  if (route.jumpers?.length) return "has-jumpers"
-  for (let index = 1; index < route.route.length; index++) {
-    const previousPoint = route.route[index - 1]
-    const point = route.route[index]
-    if (previousPoint.z === point.z) continue
-    if (previousPoint.toNextSegmentType === "through_obstacle") continue
-    if (previousPoint.x !== point.x || previousPoint.y !== point.y) {
-      return "has-non-vertical-layer-transition"
-    }
-  }
-  return null
 }
 
 const getRouteIds = (route: HighDensityRoute): string[] => {
@@ -441,7 +412,6 @@ export class CrossingViaReductionSolver extends BaseSolver {
   private readonly obstacleSHI: ObstacleSpatialHashIndex
   private readonly traceMargin: number
   private readonly obstacleMargin: number
-  private readonly skipNonVerticalLayerTransitions: boolean
 
   reducedHdRoutes: HighDensityRoute[]
 
@@ -457,8 +427,6 @@ export class CrossingViaReductionSolver extends BaseSolver {
     }
     this.traceMargin = input.traceMargin ?? DEFAULT_TRACE_MARGIN
     this.obstacleMargin = input.obstacleMargin ?? DEFAULT_OBSTACLE_MARGIN
-    this.skipNonVerticalLayerTransitions =
-      input.skipNonVerticalLayerTransitions ?? false
     this.reducedHdRoutes = structuredClone([...input.inputHdRoutes])
     this.obstacleSHI = new ObstacleSpatialHashIndex("flatbush", [
       ...this.input.obstacles,
@@ -918,16 +886,7 @@ export class CrossingViaReductionSolver extends BaseSolver {
       routeIndex < this.reducedHdRoutes.length;
       routeIndex++
     ) {
-      const ineligibility = getCrossingViaReductionIneligibility(
-        this.reducedHdRoutes[routeIndex],
-      )
-      if (ineligibility === "has-jumpers") continue
-      if (
-        this.skipNonVerticalLayerTransitions &&
-        ineligibility === "has-non-vertical-layer-transition"
-      ) {
-        continue
-      }
+      if (this.reducedHdRoutes[routeIndex].jumpers?.length) continue
       const sections = sectionsByRoute[routeIndex]
       for (
         let sectionIndex = 0;
@@ -1258,18 +1217,7 @@ export class CrossingViaReductionSolver extends BaseSolver {
       detourRouteIndex < this.reducedHdRoutes.length;
       detourRouteIndex++
     ) {
-      const ineligibility = getCrossingViaReductionIneligibility(
-        this.reducedHdRoutes[detourRouteIndex],
-      )
-      if (ineligibility === "has-jumpers") continue
-      if (
-        this.skipNonVerticalLayerTransitions &&
-        ineligibility === "has-non-vertical-layer-transition"
-      ) {
-        this.stats.routesSkippedForNonVerticalLayerTransitions =
-          (this.stats.routesSkippedForNonVerticalLayerTransitions ?? 0) + 1
-        continue
-      }
+      if (this.reducedHdRoutes[detourRouteIndex].jumpers?.length) continue
       const detourSections = sectionsByRoute[detourRouteIndex]
       for (
         let detourSectionIndex = 1;

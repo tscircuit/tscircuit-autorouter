@@ -48,7 +48,6 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
   connMap?: ConnectivityMap
   effort: number
   adaptiveSearchExpanded = false
-  repairNearCoincidentSameRootPortPoints: boolean
 
   private getSolvedSegmentCount(solver: unknown): number | null {
     const solvedConnectionsMap = (solver as any).solvedConnectionsMap
@@ -104,7 +103,6 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
   constructor(
     opts: ConstructorParameters<typeof CachedIntraNodeRouteSolver>[0] & {
       effort?: number
-      repairNearCoincidentSameRootPortPoints?: boolean
     },
   ) {
     super()
@@ -112,8 +110,6 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     this.connMap = opts.connMap
     this.constructorParams = opts
     this.effort = opts.effort ?? 1
-    this.repairNearCoincidentSameRootPortPoints =
-      opts.repairNearCoincidentSameRootPortPoints ?? false
     this.MAX_ITERATIONS = 20_000_000 * this.effort
     this.GREEDY_MULTIPLIER = 5
     this.MIN_SUBSTEPS = 100
@@ -532,7 +528,6 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     this.solvedRoutes = repairDisconnectedSameRootPortPoints(
       routesWithRootConnectionNames,
       this.nodeWithPortPoints,
-      this.repairNearCoincidentSameRootPortPoints,
     )
   }
 }
