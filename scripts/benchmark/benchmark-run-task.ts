@@ -330,6 +330,10 @@ const getRoutingBenchmarkMetrics = (
     tinyHypergraph:
       solver.portPointPathingSolver?.getSolveGraphBenchmarkMetrics?.(),
     highDensityIterations: solver.highDensityRouteSolver?.iterations,
+    highDensityResizeCount:
+      typeof highDensityStats?.highDensityResizeCount === "number"
+        ? highDensityStats.highDensityResizeCount
+        : undefined,
     phaseTimeMs: solver.timeSpentOnPhase,
     networkedHighDensity,
   }

@@ -84,6 +84,28 @@ const getDrcIssueCount = (
   return drcIssueCount
 }
 
+const getHighDensityResizeCount = (
+  report: BenchmarkReport,
+  solverName: string,
+): number | null => {
+  const tests = report.tests.filter((test) => test.solverName === solverName)
+  if (tests.length === 0) return null
+
+  let highDensityResizeCount = 0
+  for (const test of tests) {
+    const sampleResizeCount = test.routingMetrics?.highDensityResizeCount
+    if (
+      typeof sampleResizeCount !== "number" ||
+      !Number.isInteger(sampleResizeCount) ||
+      sampleResizeCount < 0
+    ) {
+      return null
+    }
+    highDensityResizeCount += sampleResizeCount
+  }
+  return highDensityResizeCount
+}
+
 const getTimePercentile = (
   report: BenchmarkReport,
   solverName: string,
@@ -198,6 +220,14 @@ export const renderSameMachineBenchmarkResults = ({
     ).length
     const mainDrcIssues = getDrcIssueCount(mainReport, prSummary.solverName)
     const prDrcIssues = getDrcIssueCount(prReport, prSummary.solverName)
+    const mainResizeCount = getHighDensityResizeCount(
+      mainReport,
+      prSummary.solverName,
+    )
+    const prResizeCount = getHighDensityResizeCount(
+      prReport,
+      prSummary.solverName,
+    )
     const timePercentiles = [50, 60, 70, 80, 90, 95].map((percentile) => {
       const mainTime = getTimePercentile(
         mainReport,
@@ -216,6 +246,7 @@ export const renderSameMachineBenchmarkResults = ({
       `| ${solver} | Completion | ${mainSummary.completedRateLabel} | ${prSummary.completedRateLabel} | ${formatPercentPointDelta(mainSummary.completedRateLabel, prSummary.completedRateLabel)} |`,
       `| ${solver} | Relaxed DRC pass | ${mainSummary.relaxedDrcRateLabel} | ${prSummary.relaxedDrcRateLabel} | ${formatPercentPointDelta(mainSummary.relaxedDrcRateLabel, prSummary.relaxedDrcRateLabel)} |`,
       `| ${solver} | DRC issues | ${mainDrcIssues ?? "n/a"} | ${prDrcIssues ?? "n/a"} | ${formatCountDelta(mainDrcIssues, prDrcIssues)} |`,
+      `| ${solver} | Growth attempts | ${mainResizeCount ?? "n/a"} | ${prResizeCount ?? "n/a"} | ${formatCountDelta(mainResizeCount, prResizeCount)} |`,
       `| ${solver} | Timeouts | ${mainTimeouts} | ${prTimeouts} | ${prTimeouts - mainTimeouts > 0 ? "+" : ""}${prTimeouts - mainTimeouts} |`,
       ...timePercentiles,
       `| ${solver} | Average vias | ${formatAverage(mainSummary.avgVia)} | ${formatAverage(prSummary.avgVia)} | ${formatRelativeDelta(mainSummary.avgVia, prSummary.avgVia)} |`,

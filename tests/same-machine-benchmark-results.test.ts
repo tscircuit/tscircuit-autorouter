@@ -53,10 +53,12 @@ test("same-machine benchmark comments compare matching reports", () => {
         didTimeout: true,
         relaxedDrcPassed: false,
         elapsedTimeMs: 2_000,
+        routingMetrics: { highDensityResizeCount: 2 },
       }),
       makeTest(2, {
         relaxedDrcPassed: false,
         drcErrorCount: 3,
+        routingMetrics: { highDensityResizeCount: 1 },
       }),
     ],
   })
@@ -73,10 +75,15 @@ test("same-machine benchmark comments compare matching reports", () => {
       },
     ],
     tests: [
-      makeTest(1, { elapsedTimeMs: 1_800, drcErrorCount: 0 }),
+      makeTest(1, {
+        elapsedTimeMs: 1_800,
+        drcErrorCount: 0,
+        routingMetrics: { highDensityResizeCount: 0 },
+      }),
       makeTest(2, {
         relaxedDrcPassed: false,
         drcErrorCount: 1,
+        routingMetrics: { highDensityResizeCount: 1 },
       }),
     ],
   })
@@ -98,6 +105,7 @@ test("same-machine benchmark comments compare matching reports", () => {
     "| Pipeline7 | Completion | 50.0% (🕒50.0%) | 100.0% (🕒0.0%) | +50.0 pp |",
   )
   expect(markdown).toContain("| Pipeline7 | DRC issues | 3 | 1 | -2 |")
+  expect(markdown).toContain("| Pipeline7 | Growth attempts | 3 | 1 | -2 |")
   expect(markdown).toContain("| Pipeline7 | Timeouts | 1 | 0 | -1 |")
   expect(markdown).toContain("| Pipeline7 | P50 time | 1.5s | 1.4s | -6.7% |")
   expect(markdown).toContain("| Pipeline7 | P60 time |")

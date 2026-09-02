@@ -25,16 +25,14 @@ test("native portfolios include A11 and A12 while grown portfolios stay coarse",
   }
   const nativePortfolio = new PortfolioSingleIntraNodeSolver(solverParams)
   nativePortfolio.initializeSolvers()
-  for (const { solver: candidate } of
-    nativePortfolio.supervisedSolvers ?? []) {
+  for (const { solver: candidate } of nativePortfolio.supervisedSolvers ?? []) {
     candidate.failed = true
   }
   nativePortfolio.step()
   nativePortfolio.solved = false
   nativePortfolio.failed = false
   nativePortfolio.winningSolver = undefined
-  for (const { solver: candidate } of
-    nativePortfolio.supervisedSolvers ?? []) {
+  for (const { solver: candidate } of nativePortfolio.supervisedSolvers ?? []) {
     candidate.solved = false
     candidate.failed = true
   }
