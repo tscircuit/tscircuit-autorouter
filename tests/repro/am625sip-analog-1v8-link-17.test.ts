@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test"
-import realBoardPhase from "../../fixtures/repro/am625sip-analog-1v8-link-17.srj.json"
 import { AutoroutingPipelineSolver7_MultiGraph } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/AutoroutingPipelineSolver7_MultiGraph"
 import type { SimpleRouteJson } from "lib/types"
+import realBoardPhase from "../../fixtures/repro/am625sip-analog-1v8-link-17.srj.json"
 import { getLastStepSvg } from "../fixtures/getLastStepSvg"
 
 // The unchanged production phase takes about one minute because the
