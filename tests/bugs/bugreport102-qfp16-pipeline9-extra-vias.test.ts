@@ -1,6 +1,7 @@
 import { expect, test } from "bun:test"
 import { AutoroutingPipelineSolver7_MultiGraph } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/AutoroutingPipelineSolver7_MultiGraph"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
+import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import type { SimpleRouteJson } from "lib/types"
 import { stackSvgsVertically } from "stack-svgs"
 import srjJson from "../../fixtures/bug-reports/bugreport102-qfp16-pipeline9-extra-vias/bugreport102-qfp16-pipeline9-extra-vias.srj.json" with {
@@ -45,6 +46,24 @@ test(
     pipeline9.solve()
     const pipeline9Metrics =
       pipeline9.portPointPathingSolver?.getSolveGraphBenchmarkMetrics()
+    const pipeline9NewTraces = pipeline9.getNewTracesBeforePowerExpansion()
+    const pipeline9SegmentCount = pipeline9NewTraces.reduce(
+      (count, trace) => count + Math.max(0, trace.route.length - 1),
+      0,
+    )
+    const pipeline9TotalLength = pipeline9NewTraces.reduce(
+      (totalLength, trace) =>
+        totalLength +
+        trace.route.slice(1).reduce((traceLength, point, pointIndex) => {
+          const previousPoint = trace.route[pointIndex]!
+          if (!("x" in point) || !("x" in previousPoint)) return traceLength
+          return (
+            traceLength +
+            Math.hypot(point.x - previousPoint.x, point.y - previousPoint.y)
+          )
+        }, 0),
+      0,
+    )
     const pipeline9ViaCount =
       pipeline9
         .getOutputSimpleRouteJson()
@@ -55,9 +74,17 @@ test(
               .length,
           0,
         ) ?? 0
+    const { errors: pipeline9DrcErrors } = evaluateRelaxedDrc({
+      inputSrj: srj,
+      srjWithPointPairs: pipeline9.srjWithPointPairs!,
+      routedTraces: pipeline9.getOutputSimplifiedPcbTraces(),
+    })
 
     expect(pipeline9Metrics?.finalLayerChangeCount).toBe(0)
-    expect(pipeline9ViaCount).toBe(0)
+    expect(pipeline9ViaCount).toBe(1)
+    expect(pipeline9DrcErrors).toHaveLength(0)
+    expect(pipeline9SegmentCount).toBeLessThanOrEqual(40)
+    expect(pipeline9TotalLength).toBeLessThan(35)
 
     const comparisonSvg = stackSvgsVertically(
       [
@@ -69,9 +96,9 @@ test(
         }),
         addComparisonHeading({
           svg: getLastStepSvg(pipeline9.visualize()),
-          title: "PIPELINE 9 FIXED · SAME PHASE-2 SRJ · 0 VIAS",
+          title: "PIPELINE 9 FIXED · SAME PHASE-2 SRJ · 1 VIA",
           explanation:
-            "A same-layer feasibility pass uses the available top-layer space before allowing vias.",
+            "The selected route stays compact and DRC-clean while avoiding global layer changes.",
         }),
       ],
       { normalizeSize: false },
