@@ -97,8 +97,6 @@ export class TraceSimplificationSolver extends BaseSolver {
    *   - enableCrossingViaReduction: Enables coordinated crossing layer swaps
    *   - preserveRouteEndpoints: Prevents simplification from moving endpoint
    *     coordinates or layers when routes represent spliceable local sections
-   *   - useTraceWidthAwareClearance: Uses each route segment's actual copper
-   *     width when checking path-simplification clearance
    *   - terminalLayerIndicesByPcbPortId: Physical copper-layer indices on
    *     which each PCB-port terminal can directly accept a route endpoint
    *     without a via
@@ -119,7 +117,6 @@ export class TraceSimplificationSolver extends BaseSolver {
       readonly netByConnectionName?: ReadonlyMap<string, string>
       readonly enableCrossingViaReduction?: boolean
       readonly preserveRouteEndpoints?: boolean
-      readonly useTraceWidthAwareClearance?: boolean
       readonly terminalLayerIndicesByPcbPortId?: ReadonlyMap<
         string,
         ReadonlySet<number>
@@ -430,8 +427,6 @@ export class TraceSimplificationSolver extends BaseSolver {
             minBoardEdgeClearance:
               this.simplificationConfig.minBoardEdgeClearance,
             defaultViaDiameter: this.simplificationConfig.defaultViaDiameter,
-            useTraceWidthAwareClearance:
-              this.simplificationConfig.useTraceWidthAwareClearance,
           })
           this.extractResult = (s) =>
             (s as MultiSimplifiedPathSolver).simplifiedHdRoutes
