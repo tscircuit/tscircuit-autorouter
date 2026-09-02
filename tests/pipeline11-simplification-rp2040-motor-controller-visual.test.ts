@@ -78,7 +78,8 @@ test("simplifies traces from the RP2040 motor controller board", async () => {
       ),
     )
     expect(outputWidths).toEqual(inputWidths)
-    if (inputWidths.size > 1) expect(outputTrace.route).toEqual(inputTrace.route)
+    if (inputWidths.size > 1)
+      expect(outputTrace.route).toEqual(inputTrace.route)
   }
   const drcInputSrj = { ...input, traces: [] }
   const inputDrcErrors = evaluateRelaxedDrc({

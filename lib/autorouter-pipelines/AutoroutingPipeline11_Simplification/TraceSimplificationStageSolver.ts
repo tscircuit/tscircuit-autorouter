@@ -28,8 +28,7 @@ export class TraceSimplificationStageSolver extends BaseSolver {
       outline: preparedInput.srj.outline,
       defaultViaDiameter: viaDimensions.padDiameter,
       layerCount: preparedInput.srj.layerCount,
-      minTraceToPadEdgeClearance:
-        preparedInput.srj.minTraceToPadEdgeClearance,
+      minTraceToPadEdgeClearance: preparedInput.srj.minTraceToPadEdgeClearance,
       minBoardEdgeClearance: preparedInput.srj.minBoardEdgeClearance,
       netByConnectionName: preparedInput.netByConnectionName,
       enableCrossingViaReduction:
@@ -38,8 +37,8 @@ export class TraceSimplificationStageSolver extends BaseSolver {
     })
     this.traceSimplificationSolver.MAX_SIMPLIFICATION_PIPELINE_LOOPS =
       preparedInput.options.iterations ?? 2
-    this.activeSubSolver =
-      this.traceSimplificationSolver as unknown as BaseSolver
+    this.activeSubSolver = this
+      .traceSimplificationSolver as unknown as BaseSolver
     this.MAX_ITERATIONS = this.traceSimplificationSolver.MAX_ITERATIONS + 1
   }
 

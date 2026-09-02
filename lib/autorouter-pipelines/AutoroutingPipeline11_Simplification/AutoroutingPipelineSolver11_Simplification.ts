@@ -63,8 +63,7 @@ export class AutoroutingPipelineSolver11_Simplification extends BasePipelineSolv
       TraceSimplificationStageSolver,
       (pipeline: AutoroutingPipelineSolver11_Simplification) => [
         {
-          preparedInput:
-            pipeline.prepareTraceSimplificationSolver!.getOutput(),
+          preparedInput: pipeline.prepareTraceSimplificationSolver!.getOutput(),
         } satisfies TraceSimplificationStageSolverInput,
       ],
     ),
@@ -73,8 +72,7 @@ export class AutoroutingPipelineSolver11_Simplification extends BasePipelineSolv
       ApplyTraceSimplificationSolver,
       (pipeline: AutoroutingPipelineSolver11_Simplification) => [
         {
-          preparedInput:
-            pipeline.prepareTraceSimplificationSolver!.getOutput(),
+          preparedInput: pipeline.prepareTraceSimplificationSolver!.getOutput(),
           simplifiedHdRoutes:
             pipeline.traceSimplificationStageSolver!.getOutput(),
         } satisfies ApplyTraceSimplificationSolverInput,
@@ -85,8 +83,7 @@ export class AutoroutingPipelineSolver11_Simplification extends BasePipelineSolv
       ValidateTraceSimplificationSolver,
       (pipeline: AutoroutingPipelineSolver11_Simplification) => [
         {
-          preparedInput:
-            pipeline.prepareTraceSimplificationSolver!.getOutput(),
+          preparedInput: pipeline.prepareTraceSimplificationSolver!.getOutput(),
           outputSrj: pipeline.applyTraceSimplificationSolver!.getOutput(),
         } satisfies ValidateTraceSimplificationSolverInput,
       ],
