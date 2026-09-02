@@ -89,7 +89,9 @@ test("Pipeline9 reuses obstacle connectivity while evaluating changed repair geo
     throw new Error("Expected DRC errors with centers")
   }
   expect(initial.errorsWithCenters).toMatchObject([{ center: { x: 0, y: 0 } }])
-  expect(changed.errorsWithCenters).toMatchObject([{ center: { x: 0.5, y: 0 } }])
+  expect(changed.errorsWithCenters).toMatchObject([
+    { center: { x: 0.5, y: 0 } },
+  ])
   expect(warmedConnectivityChecks).toBeGreaterThan(0)
   expect(connectivityChecks).toBe(warmedConnectivityChecks)
 })
