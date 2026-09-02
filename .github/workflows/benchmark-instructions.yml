@@ -35,7 +35,7 @@ jobs:
               "",
               "Comment `/benchmark` to run the default dataset, or append any arguments accepted by `./benchmark.sh`.",
               "Comment `/benchmark-long` for an 8-vCPU run that defaults to 8 workers and has an eight-hour timeout.",
-              "Comment `/benchmark-all` to start separate workflow runs and result comments for the default dataset plus srj18, srj19, srj20, srj21, and srj23. You may append benchmark arguments such as `--pipeline 9`; `--dataset` is not accepted because the command selects every configured dataset.",
+              "Comment `/benchmark-all` to start separate workflow runs and result comments for dataset01 and dataset18. You may append benchmark arguments such as `--pipeline 9`; `--dataset` is not accepted because the command selects both datasets.",
               "Append `--same-machine` to `/benchmark` or `/benchmark-all` to compare current main and the PR head sequentially on the same 8-vCPU Blacksmith runner.",
               "Comment `/profile --dataset 18` to compare direct Pipeline 7 stage-time percentages between current main and the PR head sequentially on one Blacksmith runner.",
               "",

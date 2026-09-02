@@ -28,6 +28,7 @@ export class MultiSimplifiedPathSolver extends BaseSolver {
   minBoardEdgeClearance: number
   defaultViaDiameter: number
   preserveOriginalRouteSegmentsOnMinimumStepFailure: boolean
+  useTraceWidthAwareClearance: boolean
 
   constructor(params: {
     unsimplifiedHdRoutes: HighDensityIntraNodeRoute[]
@@ -40,6 +41,7 @@ export class MultiSimplifiedPathSolver extends BaseSolver {
     minBoardEdgeClearance?: number
     defaultViaDiameter?: number
     preserveOriginalRouteSegmentsOnMinimumStepFailure?: boolean
+    useTraceWidthAwareClearance?: boolean
   }) {
     super()
     this.MAX_ITERATIONS = 100e6
@@ -64,6 +66,8 @@ export class MultiSimplifiedPathSolver extends BaseSolver {
     this.defaultViaDiameter = params.defaultViaDiameter ?? 0.3
     this.preserveOriginalRouteSegmentsOnMinimumStepFailure =
       params.preserveOriginalRouteSegmentsOnMinimumStepFailure ?? false
+    this.useTraceWidthAwareClearance =
+      params.useTraceWidthAwareClearance ?? false
 
     this.simplifiedHdRoutes = []
   }
@@ -91,6 +95,7 @@ export class MultiSimplifiedPathSolver extends BaseSolver {
         minBoardEdgeClearance: this.minBoardEdgeClearance,
         preserveOriginalRouteSegmentsOnMinimumStepFailure:
           this.preserveOriginalRouteSegmentsOnMinimumStepFailure,
+        useTraceWidthAwareClearance: this.useTraceWidthAwareClearance,
       })
       this.currentUnsimplifiedHdRouteIndex++
       return
