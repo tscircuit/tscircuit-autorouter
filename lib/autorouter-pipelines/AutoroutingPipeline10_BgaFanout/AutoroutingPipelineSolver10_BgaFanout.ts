@@ -40,6 +40,16 @@ type AutoroutingPipeline10Input = {
 type BgaPair = {
   first: DetectedComponent
   second: DetectedComponent
+  axis: BgaPairAxis
+}
+
+type BgaPairAxis = "x" | "y"
+
+const OPPOSITE_FANOUT_DIRECTION: Record<FanoutDirection, FanoutDirection> = {
+  up: "down",
+  down: "up",
+  left: "right",
+  right: "left",
 }
 
 type FanoutStageInput = {
@@ -56,6 +66,7 @@ type FanoutPairInput = {
   inputSrj: SimpleRouteJson
   source: DetectedComponent
   target: DetectedComponent
+  axis: BgaPairAxis
 }
 
 function getCenterX(component: DetectedComponent): number {
@@ -82,14 +93,28 @@ function getCenterY(component: DetectedComponent): number {
   return centerY
 }
 
-function getHorizontalGap(
+function getPairGap({ first, second, axis }: BgaPair): number {
+  if (axis === "x") {
+    return (
+      Math.max(first.bounds.minX, second.bounds.minX) -
+      Math.min(first.bounds.maxX, second.bounds.maxX)
+    )
+  }
+
+  return (
+    Math.max(first.bounds.minY, second.bounds.minY) -
+    Math.min(first.bounds.maxY, second.bounds.maxY)
+  )
+}
+
+function getBgaPairAxis(
   first: DetectedComponent,
   second: DetectedComponent,
-): number {
-  const [left, right] =
-    getCenterX(first) < getCenterX(second) ? [first, second] : [second, first]
+): BgaPairAxis {
+  const horizontalGap = getPairGap({ first, second, axis: "x" })
+  const verticalGap = getPairGap({ first, second, axis: "y" })
 
-  return right.bounds.minX - left.bounds.maxX
+  return horizontalGap >= verticalGap ? "x" : "y"
 }
 
 function getPhysicalComponent(
@@ -135,12 +160,9 @@ function getPhysicalComponent(
   }
 }
 
-function getFanoutBoundaryMargin(
-  first: DetectedComponent,
-  second: DetectedComponent,
-): number {
+function getFanoutBoundaryMargin(pair: BgaPair): number {
   const maximumMarginForCorridor =
-    (getHorizontalGap(first, second) - MIN_POST_FANOUT_CORRIDOR_MM) / 2
+    (getPairGap(pair) - MIN_POST_FANOUT_CORRIDOR_MM) / 2
 
   return Math.min(MAX_FANOUT_BOUNDARY_MARGIN_MM, maximumMarginForCorridor)
 }
@@ -152,29 +174,35 @@ function getBgaPair(
   const bgaComponents = detectedComponents
     .filter((component) => component.componentKind === "bga")
     .map((component) => getPhysicalComponent(inputSrj, component))
-    .toSorted((first, second) => getCenterX(first) - getCenterX(second))
 
   if (bgaComponents.length !== 2) {
     throw new Error(
       `Pipeline 10 requires exactly two detected BGAs; found ${bgaComponents.map((component) => component.componentId).join(", ") || "none"}`,
     )
   }
-  const [first, second] = bgaComponents as [
+  const [unsortedFirst, unsortedSecond] = bgaComponents as [
     DetectedComponent,
     DetectedComponent,
   ]
-  if (first.componentId === second.componentId) {
+  if (unsortedFirst.componentId === unsortedSecond.componentId) {
     throw new Error("Pipeline 10 requires two distinct BGA component IDs")
   }
+  const axis = getBgaPairAxis(unsortedFirst, unsortedSecond)
+  const [first, second] = bgaComponents.toSorted((first, second) =>
+    axis === "x"
+      ? getCenterX(first) - getCenterX(second)
+      : getCenterY(first) - getCenterY(second),
+  ) as [DetectedComponent, DetectedComponent]
+  const pair = { first, second, axis }
 
-  const fanoutBoundaryMargin = getFanoutBoundaryMargin(first, second)
+  const fanoutBoundaryMargin = getFanoutBoundaryMargin(pair)
   if (fanoutBoundaryMargin < MIN_FANOUT_BOUNDARY_MARGIN_MM) {
     throw new Error(
       `Pipeline 10 cannot provide ${MIN_FANOUT_BOUNDARY_MARGIN_MM}mm fanout margins while retaining a ${MIN_POST_FANOUT_CORRIDOR_MM}mm routing corridor`,
     )
   }
 
-  return { first, second }
+  return pair
 }
 
 function getExpandedBounds(
@@ -202,20 +230,37 @@ function getPlainBounds(component: DetectedComponent): FanoutBounds {
   }
 }
 
+function getDirectionToTarget({
+  axis,
+  source,
+  target,
+}: Pick<FanoutPairInput, "axis" | "source" | "target">): FanoutDirection {
+  if (axis === "x") {
+    return getCenterX(target) > getCenterX(source) ? "right" : "left"
+  }
+
+  return getCenterY(target) > getCenterY(source) ? "up" : "down"
+}
+
 function getPhysicalFanoutBuses({
   inputSrj,
   source,
   target,
+  axis,
 }: FanoutPairInput): FanoutBusSpec[] {
   // The fanout solver assigns one layer to an entire bus. Keep the dataset's
   // logical DDR buses in the SRJ, but use per-signal physical buses here so a
   // 25-signal address group is not incorrectly forced through one BGA layer.
-  const fanoutBoundaryMargin = getFanoutBoundaryMargin(source, target)
+  const fanoutBoundaryMargin = getFanoutBoundaryMargin({
+    first: source,
+    second: target,
+    axis,
+  })
   const boundary = getExpandedBounds(source, fanoutBoundaryMargin)
-  const inwardDirection: FanoutDirection =
-    getCenterX(target) > getCenterX(source) ? "right" : "left"
-  const outwardDirection: FanoutDirection =
-    inwardDirection === "right" ? "left" : "right"
+  const inwardDirection = getDirectionToTarget({ axis, source, target })
+  const outwardDirection = OPPOSITE_FANOUT_DIRECTION[inwardDirection]
+  const perpendicularDirections: [FanoutDirection, FanoutDirection] =
+    axis === "x" ? ["up", "down"] : ["left", "right"]
 
   return inputSrj.connections.map((connection, connectionIndex) => {
     const sourcePoints = connection.pointsToConnect.filter(
@@ -232,24 +277,20 @@ function getPhysicalFanoutBuses({
     }
 
     const sourcePoint = sourcePoints[0]!
-    const inwardDistance =
-      inwardDirection === "right"
-        ? boundary.maxX - sourcePoint.x
-        : sourcePoint.x - boundary.minX
+    const boundaryDistanceByDirection: Record<FanoutDirection, number> = {
+      right: boundary.maxX - sourcePoint.x,
+      left: sourcePoint.x - boundary.minX,
+      up: boundary.maxY - sourcePoint.y,
+      down: sourcePoint.y - boundary.minY,
+    }
+    const inwardDistance = boundaryDistanceByDirection[inwardDirection]
     const nonInwardCandidates: Array<{
       direction: FanoutDirection
       distance: number
-    }> = [
-      { direction: "up", distance: boundary.maxY - sourcePoint.y },
-      { direction: "down", distance: sourcePoint.y - boundary.minY },
-      {
-        direction: outwardDirection,
-        distance:
-          outwardDirection === "right"
-            ? boundary.maxX - sourcePoint.x
-            : sourcePoint.x - boundary.minX,
-      },
-    ]
+    }> = [...perpendicularDirections, outwardDirection].map((direction) => ({
+      direction,
+      distance: boundaryDistanceByDirection[direction],
+    }))
     const nearestNonInwardDirection = nonInwardCandidates.toSorted(
       (first, second) => first.distance - second.distance,
     )[0]!.direction
@@ -286,8 +327,13 @@ function getFanoutOptions({
   inputSrj,
   source,
   target,
+  axis,
 }: FanoutPairInput): FanoutSolverOptions {
-  const fanoutBoundaryMargin = getFanoutBoundaryMargin(source, target)
+  const fanoutBoundaryMargin = getFanoutBoundaryMargin({
+    first: source,
+    second: target,
+    axis,
+  })
   const availableCornersAndSides: FanoutAvailableCornerAndSideInput[] = [
     "top_left",
     "top_middle",
@@ -304,7 +350,7 @@ function getFanoutOptions({
   ]
 
   return {
-    buses: getPhysicalFanoutBuses({ inputSrj, source, target }),
+    buses: getPhysicalFanoutBuses({ inputSrj, source, target, axis }),
     sourceComponentId: source.componentId,
     availableCornersAndSides,
     componentBounds: { [source.componentId]: getPlainBounds(source) },
@@ -458,6 +504,7 @@ export class AutoroutingPipelineSolver10_BgaFanout extends BasePipelineSolver<Au
               inputSrj: pipeline.inputProblem.inputSrj,
               source: pair.first,
               target: pair.second,
+              axis: pair.axis,
             }),
           },
         ]
@@ -480,6 +527,7 @@ export class AutoroutingPipelineSolver10_BgaFanout extends BasePipelineSolver<Au
               inputSrj: firstBgaFanoutSrj,
               source: pair.second,
               target: pair.first,
+              axis: pair.axis,
             }),
           },
         ]
