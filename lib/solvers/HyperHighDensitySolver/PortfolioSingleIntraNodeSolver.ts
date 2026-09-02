@@ -390,7 +390,11 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
         SHUFFLE_SEED: shuffleSeed,
       })
     }
+    // Preserve the established portfolio's total supervisor budget. A11 and
+    // A12 participate in the adaptive phase by sharing this work allowance;
+    // adding them must not delay grow/shrink by extending the native attempt.
     this.refreshDynamicIterationLimit()
+    this.addNativeExactGridCandidates()
     this.stats.adaptiveSearchExpanded = true
     this.stats.adaptiveSearchExpandedAtIteration = this.iterations
     this.stats.candidateWorkAtExpansion = this.getTotalCandidateWork()
@@ -418,9 +422,10 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
         SHUFFLE_SEED: ORDERING_SHUFFLE_SEEDS[0],
       })
     }
-    this.refreshDynamicIterationLimit()
     this.stats.nativeExactGridCandidatesAdded = true
     this.stats.nativeExactGridCandidatesAddedAtIteration = this.iterations
+    this.stats.nativeExactGridSharedSupervisorIterationLimit =
+      this.MAX_ITERATIONS
   }
 
   private shouldExpandPortfolio(): boolean {
@@ -441,15 +446,6 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       this.expandAdaptiveSearch()
     }
 
-    if (
-      this.adaptiveSearchExpanded &&
-      !this.nativeExactGridCandidatesAdded &&
-      !this.getSupervisedSolverWithBestFitness()
-    ) {
-      this.addNativeExactGridCandidates()
-      return
-    }
-
     super._step()
 
     if (!this.solved && !this.failed && this.shouldExpandPortfolio()) {
@@ -458,14 +454,6 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
   }
 
   computeG(solver: PortfolioCandidateSolver) {
-    if (solver instanceof HighDensitySolverA11) {
-      // Preserve established solutions before A11 explores the native grid.
-      return this.GREEDY_MULTIPLIER + 1 + solver.iterations / 1_000_000
-    }
-    if (solver instanceof HighDensitySolverA12) {
-      // A12 is complementary but more expensive, so run it after A11.
-      return this.GREEDY_MULTIPLIER + 2 + solver.iterations / 1_000_000
-    }
     if (
       solver instanceof HighDensitySolverA01 ||
       solver instanceof HighDensityA03Solver
@@ -670,7 +658,6 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
         this.solvedRoutes = []
         this.stats.rejectedExactGridCandidateCount =
           Number(this.stats.rejectedExactGridCandidateCount ?? 0) + 1
-        this.refreshDynamicIterationLimit()
         return
       }
     }
