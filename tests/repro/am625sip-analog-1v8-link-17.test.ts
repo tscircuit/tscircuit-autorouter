@@ -16,6 +16,10 @@ test("routes the faithful AM625SIP analog 1.8 V link 17 phase", () => {
 
   expect(solver.failed).toBe(false)
   expect(solver.solved).toBe(true)
+  expect(solver.highDensityNodePortPoints).toHaveLength(22)
+  expect(solver.highDensityRouteSolver?.nodePfById.size).toBe(
+    solver.highDensityNodePortPoints?.length,
+  )
   expect(getLastStepSvg(solver.visualize())).toMatchSvgSnapshot(
     import.meta.path,
   )
