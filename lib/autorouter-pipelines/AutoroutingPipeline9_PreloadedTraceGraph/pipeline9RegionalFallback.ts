@@ -198,6 +198,48 @@ const pointsAreEqual = (a: RoutePoint, b: RoutePoint) =>
   Math.abs(a.y - b.y) <= POINT_EPSILON &&
   a.z === b.z
 
+export const getFixedRouteMutationCoverageInsideNode = ({
+  route,
+  node,
+  mutationMask,
+}: {
+  route: PreloadedHighDensityRoute
+  node: NodeWithPortPoints
+  mutationMask: readonly boolean[]
+}): { hasMaterialCopper: boolean; isFullyCovered: boolean } => {
+  if (mutationMask.length !== route.route.length - 1) {
+    throw new Error(
+      `Pipeline9 fixed route mutation mask for "${route.connectionName}" has ${mutationMask.length} segments, expected ${route.route.length - 1}`,
+    )
+  }
+
+  const bounds = getNodeBounds(node)
+  let hasMaterialCopper = false
+  for (
+    let segmentIndex = 0;
+    segmentIndex < route.route.length - 1;
+    segmentIndex++
+  ) {
+    const clippedSegment = clipRouteSegmentToBounds(
+      route.route[segmentIndex]!,
+      route.route[segmentIndex + 1]!,
+      bounds,
+    )
+    if (
+      !clippedSegment ||
+      pointsAreEqual(clippedSegment.start, clippedSegment.end)
+    ) {
+      continue
+    }
+    hasMaterialCopper = true
+    if (!mutationMask[segmentIndex]) {
+      return { hasMaterialCopper, isFullyCovered: false }
+    }
+  }
+
+  return { hasMaterialCopper, isFullyCovered: hasMaterialCopper }
+}
+
 const fixedRouteSlicesAreContiguous = (
   previous: FixedRouteSlice,
   next: FixedRouteSlice,
