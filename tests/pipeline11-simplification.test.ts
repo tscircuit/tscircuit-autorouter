@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test"
-import { SimplificationPipelineSolver } from "lib/autorouter-pipelines/SimplificationPipeline/SimplificationPipelineSolver"
+import { AutoroutingPipelineSolver11_Simplification } from "lib/autorouter-pipelines/AutoroutingPipeline11_Simplification/AutoroutingPipelineSolver11_Simplification"
 import type { SimpleRouteJson } from "lib/types"
 
 test("simplification pipeline cleans existing traces without routing SRJ connections", () => {
@@ -57,7 +57,9 @@ test("simplification pipeline cleans existing traces without routing SRJ connect
     ],
   }
   const inputSnapshot = structuredClone(input)
-  const solver = new SimplificationPipelineSolver(input, { iterations: 1 })
+  const solver = new AutoroutingPipelineSolver11_Simplification(input, {
+    iterations: 1,
+  })
 
   solver.solve()
 

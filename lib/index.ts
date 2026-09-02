@@ -45,9 +45,9 @@ export { PIPELINE9_NETWORKED_SOLVE_POLICY } from "./autorouter-pipelines/Autorou
 export { solvePipeline9NetworkedHighDensityNode } from "./autorouter-pipelines/AutoroutingPipeline9_Networked/solvePipeline9NetworkedHighDensityNode"
 export { AutoroutingPipelineSolver10_BgaFanout } from "./autorouter-pipelines/AutoroutingPipeline10_BgaFanout/AutoroutingPipelineSolver10_BgaFanout"
 export {
-  SimplificationPipelineSolver,
-  type SimplificationPipelineSolverOptions,
-} from "./autorouter-pipelines/SimplificationPipeline/SimplificationPipelineSolver"
+  AutoroutingPipelineSolver11_Simplification,
+  type AutoroutingPipelineSolver11SimplificationOptions,
+} from "./autorouter-pipelines/AutoroutingPipeline11_Simplification/AutoroutingPipelineSolver11_Simplification"
 export { PolyHighDensitySolver } from "./autorouter-pipelines/AutoroutingPipeline6_PolyHypergraph/PolyHighDensitySolver"
 export { PolySingleIntraNodeSolver } from "./autorouter-pipelines/AutoroutingPipeline6_PolyHypergraph/PolySingleIntraNodeSolver"
 export { PolyIntraNodeSolver } from "./autorouter-pipelines/AutoroutingPipeline6_PolyHypergraph/PolyIntraNodeSolver"

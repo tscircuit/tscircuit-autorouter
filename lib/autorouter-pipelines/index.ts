@@ -28,6 +28,6 @@ export {
 } from "./AutoroutingPipeline9_Networked/AutoroutingPipelineSolver9_Networked"
 export { AutoroutingPipelineSolver10_BgaFanout } from "./AutoroutingPipeline10_BgaFanout/AutoroutingPipelineSolver10_BgaFanout"
 export {
-  SimplificationPipelineSolver,
-  type SimplificationPipelineSolverOptions,
-} from "./SimplificationPipeline/SimplificationPipelineSolver"
+  AutoroutingPipelineSolver11_Simplification,
+  type AutoroutingPipelineSolver11SimplificationOptions,
+} from "./AutoroutingPipeline11_Simplification/AutoroutingPipelineSolver11_Simplification"

@@ -51,14 +51,15 @@ if (solver.failed) {
 
 ### Simplifying Existing Traces
 
-Use `SimplificationPipelineSolver` when the input already contains routed
-traces and only needs post-route cleanup. This pipeline does not route missing
-SRJ connections.
+Use `AutoroutingPipelineSolver11_Simplification` when the input already
+contains routed traces and only needs post-route cleanup. This pipeline does
+not route missing SRJ connections. Constant-width traces are simplified while
+variable-width traces retain their exact copper widths and geometry.
 
 ```typescript
-import { SimplificationPipelineSolver } from "@tscircuit/capacity-autorouter"
+import { AutoroutingPipelineSolver11_Simplification } from "@tscircuit/capacity-autorouter"
 
-const solver = new SimplificationPipelineSolver(simpleRouteJson)
+const solver = new AutoroutingPipelineSolver11_Simplification(simpleRouteJson)
 solver.solve()
 
 if (solver.failed) {

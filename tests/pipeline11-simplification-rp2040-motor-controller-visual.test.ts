@@ -4,7 +4,8 @@ import { stackSvgsHorizontally } from "stack-svgs"
 import realBoard from "fixtures/real-boards/rp2040-motor-controller-board.srj.json" with {
   type: "json",
 }
-import { SimplificationPipelineSolver } from "lib/autorouter-pipelines/SimplificationPipeline/SimplificationPipelineSolver"
+import { AutoroutingPipelineSolver11_Simplification } from "lib/autorouter-pipelines/AutoroutingPipeline11_Simplification/AutoroutingPipelineSolver11_Simplification"
+import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import type { SimpleRouteJson } from "lib/types"
 import { convertSrjToGraphicsObject } from "lib/utils/convertSrjToGraphicsObject"
 
@@ -33,7 +34,7 @@ test("simplifies traces from the RP2040 motor controller board", async () => {
   // https://tscircuit.com/imrishabh18/rp2040-motor-controller at
   // tscircuit/rp2040-motor-controller commit b4560e5.
   const input = structuredClone(realBoard) as unknown as SimpleRouteJson
-  const solver = new SimplificationPipelineSolver(input)
+  const solver = new AutoroutingPipelineSolver11_Simplification(input)
   solver.solve()
 
   expect(solver.solved).toBe(true)
@@ -57,6 +58,41 @@ test("simplifies traces from the RP2040 motor controller board", async () => {
 
   expect(outputPointCount).toBeLessThan(inputPointCount)
   expect(outputViaCount).toBeLessThan(inputViaCount)
+  const inputByTraceId = new Map(
+    input.traces!.map((trace) => [trace.pcb_trace_id, trace]),
+  )
+  for (const outputTrace of output.traces!) {
+    const inputTrace = inputByTraceId.get(outputTrace.pcb_trace_id)!
+    const inputWidths = new Set(
+      inputTrace.route.flatMap((point) =>
+        point.route_type === "wire" || point.route_type === "through_obstacle"
+          ? [point.width]
+          : [],
+      ),
+    )
+    const outputWidths = new Set(
+      outputTrace.route.flatMap((point) =>
+        point.route_type === "wire" || point.route_type === "through_obstacle"
+          ? [point.width]
+          : [],
+      ),
+    )
+    expect(outputWidths).toEqual(inputWidths)
+    if (inputWidths.size > 1) expect(outputTrace.route).toEqual(inputTrace.route)
+  }
+  const drcInputSrj = { ...input, traces: [] }
+  const inputDrcErrors = evaluateRelaxedDrc({
+    inputSrj: drcInputSrj,
+    srjWithPointPairs: input,
+    routedTraces: input.traces!,
+  }).errors
+  const outputDrcErrors = evaluateRelaxedDrc({
+    inputSrj: drcInputSrj,
+    srjWithPointPairs: input,
+    routedTraces: output.traces!,
+  }).errors
+  expect(inputDrcErrors).toEqual([])
+  expect(outputDrcErrors).toEqual([])
 
   const renderOptions = {
     backgroundColor: "white",
@@ -76,11 +112,11 @@ test("simplifies traces from the RP2040 motor controller board", async () => {
       [
         addPanelTitle(
           inputSvg,
-          `REAL BOARD INPUT · ${inputPointCount} POINTS · ${inputViaCount} VIAS`,
+          `REAL BOARD INPUT · ${inputPointCount} POINTS · ${inputViaCount} VIAS · ${inputDrcErrors.length} DRC`,
         ),
         addPanelTitle(
           outputSvg,
-          `SIMPLIFIED · ${outputPointCount} POINTS · ${outputViaCount} VIAS`,
+          `SIMPLIFIED · ${outputPointCount} POINTS · ${outputViaCount} VIAS · ${outputDrcErrors.length} DRC`,
         ),
       ],
       { gap: 12, normalizeSize: false },
