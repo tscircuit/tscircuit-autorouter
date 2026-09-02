@@ -27,6 +27,7 @@ export class MultiSimplifiedPathSolver extends BaseSolver {
   outline?: Array<{ x: number; y: number }>
   minBoardEdgeClearance: number
   defaultViaDiameter: number
+  useTraceWidthAwareClearance: boolean
 
   constructor(params: {
     unsimplifiedHdRoutes: HighDensityIntraNodeRoute[]
@@ -38,6 +39,7 @@ export class MultiSimplifiedPathSolver extends BaseSolver {
     outline?: Array<{ x: number; y: number }>
     minBoardEdgeClearance?: number
     defaultViaDiameter?: number
+    useTraceWidthAwareClearance?: boolean
   }) {
     super()
     this.MAX_ITERATIONS = 100e6
@@ -60,6 +62,8 @@ export class MultiSimplifiedPathSolver extends BaseSolver {
     this.outline = params.outline
     this.minBoardEdgeClearance = params.minBoardEdgeClearance ?? 0.2
     this.defaultViaDiameter = params.defaultViaDiameter ?? 0.3
+    this.useTraceWidthAwareClearance =
+      params.useTraceWidthAwareClearance ?? false
 
     this.simplifiedHdRoutes = []
   }
@@ -85,6 +89,7 @@ export class MultiSimplifiedPathSolver extends BaseSolver {
         colorMap: this.colorMap,
         outline: this.outline,
         minBoardEdgeClearance: this.minBoardEdgeClearance,
+        useTraceWidthAwareClearance: this.useTraceWidthAwareClearance,
       })
       this.currentUnsimplifiedHdRouteIndex++
       return
