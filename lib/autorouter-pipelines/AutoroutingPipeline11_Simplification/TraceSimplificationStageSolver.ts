@@ -34,6 +34,7 @@ export class TraceSimplificationStageSolver extends BaseSolver {
       enableCrossingViaReduction:
         preparedInput.options.enableCrossingViaReduction ?? true,
       preserveRouteEndpoints: true,
+      useTraceWidthAwareClearance: true,
     })
     this.traceSimplificationSolver.MAX_SIMPLIFICATION_PIPELINE_LOOPS =
       preparedInput.options.iterations ?? 2
