@@ -49,7 +49,7 @@ export const canSectionMoveToLayer = ({
       currentTraceThickness / 2 + minTraceMargin,
     )
 
-    for (const { conflictingRoute, distance } of conflictingRoutes) {
+    for (const { conflictingRoute } of conflictingRoutes) {
       const conflictingRouteIds = [
         conflictingRoute.connectionName,
         conflictingRoute.rootConnectionName,
@@ -63,15 +63,9 @@ export const canSectionMoveToLayer = ({
       )
       if (conflictingRouteIsSameNet) continue
 
-      const otherTraceThickness =
-        conflictingRoute.traceThickness ?? defaultTraceThickness
-      const otherCopperRadius =
-        minTraceMargin > 0
-          ? Math.max(otherTraceThickness / 2, conflictingRoute.viaDiameter / 2)
-          : otherTraceThickness / 2
-      const minDistance =
-        currentTraceThickness / 2 + otherCopperRadius + minTraceMargin
-      if (distance < minDistance) return false
+      // The spatial index already tests each trace or via with its own copper
+      // radius. Rechecking with the route's trace width can discard via hits.
+      return false
     }
 
     if (shouldCheckStaticGeometryForSegment?.(A, B) === false) continue

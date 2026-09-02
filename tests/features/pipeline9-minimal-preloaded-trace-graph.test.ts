@@ -141,12 +141,12 @@ test("Pipeline9 owns copied stages with minimal preloaded-trace changes", () => 
     pipeline9StageNames.indexOf("mutatedPreloadedTraceSimplificationSolver"),
   ).toBe(pipeline9StageNames.indexOf("traceWidthSolver") - 1)
   expect(postRepairViaRemovalStep?.solverClass).toBe(UselessViaRemovalSolver)
-  expect(
-    pipeline9StageNames.indexOf("postRepairViaRemovalSolver"),
-  ).toBe(pipeline9StageNames.indexOf("pipeline9JointDrcRepairSolver") + 1)
-  expect(
-    pipeline9StageNames.indexOf("postRepairViaRemovalSolver"),
-  ).toBe(pipeline9StageNames.indexOf("lengthMatchingPostProcessingSolver") - 1)
+  expect(pipeline9StageNames.indexOf("postRepairViaRemovalSolver")).toBe(
+    pipeline9StageNames.indexOf("pipeline9JointDrcRepairSolver") + 1,
+  )
+  expect(pipeline9StageNames.indexOf("postRepairViaRemovalSolver")).toBe(
+    pipeline9StageNames.indexOf("lengthMatchingPostProcessingSolver") - 1,
+  )
   expect(
     solver.pipelineDef.some(
       (step) => step.solverName === "exactGeometryDrcForceImproveSolver",

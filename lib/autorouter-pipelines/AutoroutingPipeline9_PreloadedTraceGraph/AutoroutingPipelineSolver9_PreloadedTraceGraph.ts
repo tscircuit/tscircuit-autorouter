@@ -798,12 +798,14 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
         return [
           {
             srj: srjWithMaterializedPreloadedTraces as any,
-            hdRoutes: lockHdRouteTerminals(
-              cms.traceWidthSolver!.getHdRoutesWithWidths(),
-              cms.netToPointPairsSolver?.newConnections ?? [],
-              new Map(
-                (cms.highDensityStitchSolver?.mergedHdRoutes ?? []).map(
-                  (route) => [route.connectionName, route],
+            hdRoutes: materializePipeline9HdRouteVias(
+              lockHdRouteTerminals(
+                cms.traceWidthSolver!.getHdRoutesWithWidths(),
+                cms.netToPointPairsSolver?.newConnections ?? [],
+                new Map(
+                  (cms.highDensityStitchSolver?.mergedHdRoutes ?? []).map(
+                    (route) => [route.connectionName, route],
+                  ),
                 ),
               ),
             ),
@@ -885,8 +887,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             obstacleMargin:
               cms.srj.minTraceToPadEdgeClearance ??
               RELAXED_DRC_OPTIONS.traceClearance,
-            geometryShortcutObstacleMargin:
-              cms.srj.minTraceToPadEdgeClearance,
+            geometryShortcutObstacleMargin: cms.srj.minTraceToPadEdgeClearance,
             preserveRouteEndpoints: true,
             terminalLayerIndicesByPcbPortId: getTerminalLayerIndicesByPcbPortId(
               cms.srj.connections,
