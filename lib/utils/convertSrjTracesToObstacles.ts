@@ -1,5 +1,6 @@
 import type { Obstacle, SimpleRouteJson, SimplifiedPcbTrace } from "lib/types"
 import { getViaDimensions } from "lib/utils/getViaDimensions"
+import { getViaLayerNames } from "lib/utils/getViaLayerNames"
 import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
 import { mapZToLayerName } from "lib/utils/mapZToLayerName"
 
@@ -93,11 +94,10 @@ export const getObstaclesFromSrjTraces = (
         traceObstacles.push({
           obstacleId: `trace_obstacle_${trace.pcb_trace_id}_${traceIndex}_${pointIndex}_via`,
           type: "rect",
-          layers: getLayersBetween(
-            routePoint.from_layer,
-            routePoint.to_layer,
-            srj.layerCount,
-          ),
+          layers: getViaLayerNames({
+            via: routePoint,
+            layerCount: srj.layerCount,
+          }),
           center: { x: routePoint.x, y: routePoint.y },
           width: Math.max(viaDiameter, MIN_OBSTACLE_DIMENSION),
           height: Math.max(viaDiameter, MIN_OBSTACLE_DIMENSION),

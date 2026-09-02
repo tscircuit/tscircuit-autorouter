@@ -7,6 +7,7 @@ import type {
 } from "lib/solvers/AvailableSegmentPointSolver/AvailableSegmentPointSolver"
 import type { SimpleRouteJson, SimplifiedPcbTrace } from "lib/types"
 import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
+import { getViaLayerNames } from "lib/utils/getViaLayerNames"
 import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
 import { minimumDistanceBetweenSegments } from "lib/utils/minimumDistanceBetweenSegments"
 
@@ -67,11 +68,10 @@ const getPreloadedTracePrimitives = (
           connectionName: trace.connection_name,
           routePositionStart: routePosition,
           routePositionEnd: routePosition,
-          zLayers: getLayersBetween(
-            routePoint.from_layer,
-            routePoint.to_layer,
-            srj.layerCount,
-          ),
+          zLayers: getViaLayerNames({
+            via: routePoint,
+            layerCount: srj.layerCount,
+          }).map((layerName) => mapLayerNameToZ(layerName, srj.layerCount)),
           start: routePoint,
           end: routePoint,
         })

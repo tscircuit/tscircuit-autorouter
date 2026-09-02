@@ -169,6 +169,8 @@ export interface SimplifiedPcbTrace {
         y: number
         to_layer: string
         from_layer: string
+        /** Physical copper layers occupied by the via. */
+        layers?: string[]
         via_diameter?: number
         via_hole_diameter?: number
       }

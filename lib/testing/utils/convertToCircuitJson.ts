@@ -11,6 +11,7 @@ import { HighDensityRoute } from "lib/types/high-density-types"
 import { getConnectionPointLayers } from "lib/types/srj-types"
 import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
 import { getViaDimensions } from "lib/utils/getViaDimensions"
+import { getViaLayerNames } from "lib/utils/getViaLayerNames"
 import type { LayerName } from "lib/utils/mapZToLayerName"
 import { mapZToLayerName } from "lib/utils/mapZToLayerName"
 
@@ -833,7 +834,7 @@ function extractViasFromRoutes(
                 y: segment.y,
                 outer_diameter: viaDiameter,
                 hole_diameter: viaHoleDiameter,
-                layers: [segment.from_layer, segment.to_layer],
+                layers: getViaLayerNames({ via: segment, layerCount }),
               })
               viaLocations.add(locationKey)
             }
