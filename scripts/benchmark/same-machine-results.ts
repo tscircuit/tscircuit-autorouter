@@ -92,18 +92,22 @@ const getHighDensityResizeCount = (
   if (tests.length === 0) return null
 
   let highDensityResizeCount = 0
+  let hasHighDensityResizeCount = false
   for (const test of tests) {
     const sampleResizeCount = test.routingMetrics?.highDensityResizeCount
-    if (
-      typeof sampleResizeCount !== "number" ||
-      !Number.isInteger(sampleResizeCount) ||
-      sampleResizeCount < 0
-    ) {
+    if (sampleResizeCount === undefined) {
+      if (test.routingMetrics?.highDensityIterations !== undefined) {
+        return null
+      }
+      continue
+    }
+    if (!Number.isInteger(sampleResizeCount) || sampleResizeCount < 0) {
       return null
     }
+    hasHighDensityResizeCount = true
     highDensityResizeCount += sampleResizeCount
   }
-  return highDensityResizeCount
+  return hasHighDensityResizeCount ? highDensityResizeCount : null
 }
 
 const getTimePercentile = (

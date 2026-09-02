@@ -53,12 +53,11 @@ test("same-machine benchmark comments compare matching reports", () => {
         didTimeout: true,
         relaxedDrcPassed: false,
         elapsedTimeMs: 2_000,
-        routingMetrics: { highDensityResizeCount: 2 },
       }),
       makeTest(2, {
         relaxedDrcPassed: false,
         drcErrorCount: 3,
-        routingMetrics: { highDensityResizeCount: 1 },
+        routingMetrics: { highDensityResizeCount: 3 },
       }),
     ],
   })
@@ -118,6 +117,29 @@ test("same-machine benchmark comments compare matching reports", () => {
     "Timing percentiles include solved and timed-out samples",
   )
   expect(markdown).toContain("| Pipeline7 | 1 | Timeout | DRC passed |")
+  const oldReportMarkdown = renderSameMachineBenchmarkResults({
+    mainReport: {
+      ...mainReport,
+      tests: mainReport.tests.map((testResult) => ({
+        ...testResult,
+        routingMetrics: undefined,
+      })),
+    },
+    prReport: {
+      ...prReport,
+      tests: prReport.tests.map((testResult) => ({
+        ...testResult,
+        routingMetrics: undefined,
+      })),
+    },
+    mainSha: "a".repeat(40),
+    prSha: "b".repeat(40),
+    repository: "tscircuit/tscircuit-autorouter",
+    runnerName: "blacksmith-test-runner",
+  })
+  expect(oldReportMarkdown).toContain(
+    "| Pipeline7 | Growth attempts | n/a | n/a | n/a |",
+  )
   expect(() =>
     renderSameMachineBenchmarkResults({
       mainReport,

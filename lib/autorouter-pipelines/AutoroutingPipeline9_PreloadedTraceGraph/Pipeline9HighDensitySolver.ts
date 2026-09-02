@@ -455,6 +455,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       regionalPreloadedViaCandidateRejectionCount: 0,
       regionalForceImproveCandidateRejectionCount: 0,
       regionalRepairCandidateRejectionCount: 0,
+      highDensityResizeCount: 0,
     }
   }
 
@@ -472,6 +473,9 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
   }
 
   protected finishActiveNode(routes: HighDensityIntraNodeRoute[]): void {
+    if (this.activeRegularSolver) {
+      this.recordHighDensityResizeCount(this.activeRegularSolver)
+    }
     const solvedRoutes = this.activeNode
       ? restoreRootConnectionNames(routes, this.activeNode)
       : routes
@@ -913,6 +917,9 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
 
   private recordRegionalCandidateRejections(): void {
     if (!this.activeFallbackSolver) return
+    this.recordHighDensityResizeCount(
+      this.activeFallbackSolver.highDensitySolver,
+    )
     const regionalStats = this.activeFallbackSolver.stats
     this.stats.regionalPreloadedViaCandidateRejectionCount =
       Number(this.stats.regionalPreloadedViaCandidateRejectionCount ?? 0) +
@@ -926,6 +933,9 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
   }
 
   protected finishRegularSolverFailure(error: string): void {
+    if (this.activeRegularSolver) {
+      this.recordHighDensityResizeCount(this.activeRegularSolver)
+    }
     this.activeFallbackReason = `regular high-density routing failed: ${error}`
     this.activeRegularSolver = null
     if (!this.enableRegionalFallback) {
@@ -935,6 +945,12 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       return
     }
     this.startRegionalFallback()
+  }
+
+  private recordHighDensityResizeCount(solver: HighDensitySolver): void {
+    this.stats.highDensityResizeCount =
+      Number(this.stats.highDensityResizeCount ?? 0) +
+      Number(solver.stats.highDensityResizeCount ?? 0)
   }
 
   override _step(): void {
