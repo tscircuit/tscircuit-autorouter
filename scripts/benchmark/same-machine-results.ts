@@ -1,5 +1,9 @@
 import { readFile, writeFile } from "node:fs/promises"
-import type { BenchmarkReport, WorkerResult } from "./benchmark-types"
+import type {
+  BenchmarkReport,
+  SolverRunSummary,
+  WorkerResult,
+} from "./benchmark-types"
 
 type SameMachineBenchmarkInput = {
   mainReport: BenchmarkReport
@@ -8,6 +12,25 @@ type SameMachineBenchmarkInput = {
   prSha: string
   repository: string
   runnerName: string
+}
+
+type SolverComparison = {
+  mainSummary: SolverRunSummary
+  prSummary: SolverRunSummary
+}
+
+type ChangedOutcome = {
+  solverComparison: SolverComparison
+  sampleNumber: number
+  mainTest: WorkerResult
+  prTest: WorkerResult
+  delta: "Improved" | "Regressed"
+}
+
+type ChangedOutcomeInput = {
+  mainReport: BenchmarkReport
+  prReport: BenchmarkReport
+  solverComparisons: SolverComparison[]
 }
 
 const formatTime = (timeMs: number | null): string => {
@@ -118,30 +141,69 @@ const outcomeLabel = (test: WorkerResult): string => {
   return test.relaxedDrcPassed ? "DRC passed" : "Solved (DRC failed)"
 }
 
-const testKey = (test: WorkerResult): string =>
-  `${test.solverName}::${test.scenarioName}::${test.sampleNumber}`
+const testKey = (test: WorkerResult, solverName = test.solverName): string =>
+  `${solverName}::${test.scenarioName}::${test.sampleNumber}`
 
 const formatSolverName = (solverName: string): string =>
   solverName.replace(/^AutoroutingPipelineSolver(\d+).*$/, "Pipeline$1")
+
+const formatSolverComparison = ({
+  mainSummary,
+  prSummary,
+}: SolverComparison): string => {
+  const mainSolver = formatSolverName(mainSummary.solverName)
+  const prSolver = formatSolverName(prSummary.solverName)
+  const solverNamesMatch = mainSolver === prSolver
+  if (solverNamesMatch) return mainSolver
+  return `${mainSolver} → ${prSolver}`
+}
 
 const escapeTableCell = (value: unknown): string =>
   String(value ?? "")
     .replace(/\|/g, "\\|")
     .replace(/\r?\n/g, " ")
 
-const getChangedOutcomes = (
+const getSolverComparisons = (
   mainReport: BenchmarkReport,
   prReport: BenchmarkReport,
-) => {
-  const mainTests = new Map(
+): SolverComparison[] => {
+  const comparesSingleDefaults =
+    mainReport.summary.length === 1 &&
+    prReport.summary.length === 1
+  return prReport.summary.map((prSummary) => {
+    const mainSummary = comparesSingleDefaults
+      ? mainReport.summary[0]
+      : mainReport.summary.find(
+          (summary) => summary.solverName === prSummary.solverName,
+        )
+    if (!mainSummary) {
+      throw new Error(`Main report is missing solver ${prSummary.solverName}`)
+    }
+    return { mainSummary, prSummary }
+  })
+}
+
+const getChangedOutcomes = ({
+  mainReport,
+  prReport,
+  solverComparisons,
+}: ChangedOutcomeInput): ChangedOutcome[] => {
+  const mainTests = Object.fromEntries(
     mainReport.tests.map((test) => [testKey(test), test]),
   )
   return prReport.tests.flatMap((prTest) => {
-    const mainTest = mainTests.get(testKey(prTest))
+    const solverComparison = solverComparisons.find(
+      (comparison) =>
+        comparison.prSummary.solverName === prTest.solverName,
+    )
+    if (!solverComparison) return []
+    const mainTest = mainTests[
+      testKey(prTest, solverComparison.mainSummary.solverName)
+    ]
     if (!mainTest || outcomeScore(mainTest) === outcomeScore(prTest)) return []
     return [
       {
-        solverName: prTest.solverName,
+        solverComparison,
         sampleNumber: prTest.sampleNumber,
         mainTest,
         prTest,
@@ -168,10 +230,12 @@ export const renderSameMachineBenchmarkResults = ({
     )
   }
 
-  const mainSummaries = new Map(
-    mainReport.summary.map((summary) => [summary.solverName, summary]),
-  )
-  const changedOutcomes = getChangedOutcomes(mainReport, prReport)
+  const solverComparisons = getSolverComparisons(mainReport, prReport)
+  const changedOutcomes = getChangedOutcomes({
+    mainReport,
+    prReport,
+    solverComparisons,
+  })
   const lines = [
     "## Same Machine Benchmark Results",
     "",
@@ -184,24 +248,21 @@ export const renderSameMachineBenchmarkResults = ({
     "| --- | --- | ---: | ---: | ---: |",
   ]
 
-  for (const prSummary of prReport.summary) {
-    const mainSummary = mainSummaries.get(prSummary.solverName)
-    if (!mainSummary) {
-      throw new Error(`Main report is missing solver ${prSummary.solverName}`)
-    }
-    const solver = formatSolverName(prSummary.solverName)
+  for (const comparison of solverComparisons) {
+    const { mainSummary, prSummary } = comparison
+    const solver = formatSolverComparison(comparison)
     const mainTimeouts = mainReport.tests.filter(
-      (test) => test.solverName === prSummary.solverName && test.didTimeout,
+      (test) => test.solverName === mainSummary.solverName && test.didTimeout,
     ).length
     const prTimeouts = prReport.tests.filter(
       (test) => test.solverName === prSummary.solverName && test.didTimeout,
     ).length
-    const mainDrcIssues = getDrcIssueCount(mainReport, prSummary.solverName)
+    const mainDrcIssues = getDrcIssueCount(mainReport, mainSummary.solverName)
     const prDrcIssues = getDrcIssueCount(prReport, prSummary.solverName)
     const timePercentiles = [50, 60, 70, 80, 90, 95].map((percentile) => {
       const mainTime = getTimePercentile(
         mainReport,
-        prSummary.solverName,
+        mainSummary.solverName,
         percentile / 100,
       )
       const prTime = getTimePercentile(
@@ -239,10 +300,12 @@ export const renderSameMachineBenchmarkResults = ({
       "",
       "| Solver | Sample | Main | PR | Main time | PR time | Delta |",
       "| --- | ---: | --- | --- | ---: | ---: | --- |",
-      ...changedOutcomes.map(
-        ({ solverName, sampleNumber, mainTest, prTest, delta }) =>
-          `| ${escapeTableCell(formatSolverName(solverName))} | ${sampleNumber} | ${escapeTableCell(outcomeLabel(mainTest))} | ${escapeTableCell(outcomeLabel(prTest))} | ${formatTime(mainTest.elapsedTimeMs)} | ${formatTime(prTest.elapsedTimeMs)} | ${delta} |`,
-      ),
+      ...changedOutcomes.map((outcome) => {
+        const { solverComparison, sampleNumber, mainTest, prTest, delta } =
+          outcome
+        const solver = formatSolverComparison(solverComparison)
+        return `| ${escapeTableCell(solver)} | ${sampleNumber} | ${escapeTableCell(outcomeLabel(mainTest))} | ${escapeTableCell(outcomeLabel(prTest))} | ${formatTime(mainTest.elapsedTimeMs)} | ${formatTime(prTest.elapsedTimeMs)} | ${delta} |`
+      }),
       "",
       "</details>",
     )
