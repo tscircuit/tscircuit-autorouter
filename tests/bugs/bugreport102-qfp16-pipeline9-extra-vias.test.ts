@@ -29,50 +29,54 @@ const addComparisonHeading = ({
   return `<svg width="${width}" height="${height + headingHeight}" viewBox="0 0 ${width} ${height + headingHeight}" xmlns="http://www.w3.org/2000/svg"><rect width="100%" height="100%" fill="white"/><text x="${width / 2}" y="27" font-family="Arial, sans-serif" font-size="20" font-weight="700" text-anchor="middle" fill="#121212">${title}</text><text x="${width / 2}" y="51" font-family="Arial, sans-serif" font-size="14" text-anchor="middle" fill="#333">${explanation}</text><g transform="translate(0 ${headingHeight})">${body}</g></svg>`
 }
 
-test("bugreport102 avoids unnecessary Pipeline 9 QFP16 layer changes", () => {
-  const pipeline7 = new AutoroutingPipelineSolver7_MultiGraph(
-    structuredClone(srj),
-    { cacheProvider: null },
-  )
-  const pipeline9 = new AutoroutingPipelineSolver9_PreloadedTraceGraph(
-    structuredClone(srj),
-    { cacheProvider: null },
-  )
+test(
+  "bugreport102 avoids unnecessary Pipeline 9 QFP16 layer changes",
+  () => {
+    const pipeline7 = new AutoroutingPipelineSolver7_MultiGraph(
+      structuredClone(srj),
+      { cacheProvider: null },
+    )
+    const pipeline9 = new AutoroutingPipelineSolver9_PreloadedTraceGraph(
+      structuredClone(srj),
+      { cacheProvider: null },
+    )
 
-  pipeline7.solve()
-  pipeline9.solve()
-  const pipeline9Metrics =
-    pipeline9.portPointPathingSolver?.getSolveGraphBenchmarkMetrics()
-  const pipeline9ViaCount =
-    pipeline9
-      .getOutputSimpleRouteJson()
-      .traces?.reduce(
-        (count, trace) =>
-          count +
-          trace.route.filter((routePoint) => routePoint.route_type === "via")
-            .length,
-        0,
-      ) ?? 0
+    pipeline7.solve()
+    pipeline9.solve()
+    const pipeline9Metrics =
+      pipeline9.portPointPathingSolver?.getSolveGraphBenchmarkMetrics()
+    const pipeline9ViaCount =
+      pipeline9
+        .getOutputSimpleRouteJson()
+        .traces?.reduce(
+          (count, trace) =>
+            count +
+            trace.route.filter((routePoint) => routePoint.route_type === "via")
+              .length,
+          0,
+        ) ?? 0
 
-  expect(pipeline9Metrics?.finalLayerChangeCount).toBe(0)
-  expect(pipeline9ViaCount).toBe(1)
+    expect(pipeline9Metrics?.finalLayerChangeCount).toBe(0)
+    expect(pipeline9ViaCount).toBe(0)
 
-  const comparisonSvg = stackSvgsVertically(
-    [
-      addComparisonHeading({
-        svg: getLastStepSvg(pipeline7.visualize()),
-        title: "PIPELINE 7 BASELINE · SAME PHASE-2 SRJ · 0 VIAS",
-        explanation:
-          "All 5 remaining connections stay on the top layer alongside 7 preloaded traces.",
-      }),
-      addComparisonHeading({
-        svg: getLastStepSvg(pipeline9.visualize()),
-        title: "PIPELINE 9 FIXED · SAME PHASE-2 SRJ · 1 VIA",
-        explanation:
-          "Preloaded-trace pathing stays on one layer; detailed routing uses one local via.",
-      }),
-    ],
-    { normalizeSize: false },
-  )
-  expect(comparisonSvg).toMatchSvgSnapshot(import.meta.path)
-})
+    const comparisonSvg = stackSvgsVertically(
+      [
+        addComparisonHeading({
+          svg: getLastStepSvg(pipeline7.visualize()),
+          title: "PIPELINE 7 BASELINE · SAME PHASE-2 SRJ · 0 VIAS",
+          explanation:
+            "All 5 remaining connections stay on the top layer alongside 7 preloaded traces.",
+        }),
+        addComparisonHeading({
+          svg: getLastStepSvg(pipeline9.visualize()),
+          title: "PIPELINE 9 FIXED · SAME PHASE-2 SRJ · 0 VIAS",
+          explanation:
+            "A same-layer feasibility pass uses the available top-layer space before allowing vias.",
+        }),
+      ],
+      { normalizeSize: false },
+    )
+    expect(comparisonSvg).toMatchSvgSnapshot(import.meta.path)
+  },
+  { timeout: 30_000 },
+)

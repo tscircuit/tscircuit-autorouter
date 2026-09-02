@@ -1,7 +1,7 @@
 import type { SerializedHyperGraph } from "@tscircuit/hypergraph"
 import type { GraphicsObject } from "graphics-debug"
-import { BaseSolver } from "lib/solvers/BaseSolver"
 import type { PreloadedTracePortAssignment } from "lib/solvers/AvailableSegmentPointSolver/AvailableSegmentPointSolver"
+import { BaseSolver } from "lib/solvers/BaseSolver"
 import type {
   InputNodeWithPortPoints,
   InputPortPoint,
@@ -9,8 +9,8 @@ import type {
 import { calculateNodeProbabilityOfFailure } from "lib/solvers/UnravelSolver/calculateCrossingProbabilityOfFailure"
 import {
   type CapacityMeshNodeId,
-  getConnectionPointLayers,
   type SimpleRouteConnection,
+  getConnectionPointLayers,
 } from "lib/types"
 import type {
   NodeWithPortPoints,
@@ -21,28 +21,31 @@ import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
 import { mapZToLayerName } from "lib/utils/mapZToLayerName"
 import {
   DuplicateCongestedPortSolver,
-  orderConnectionsByNetCardinality,
   type DuplicateCongestedPortSolverReport,
+  type TinyHyperGraphSectionPipelineInput,
   TinyHyperGraphSectionPipelineSolver,
   TinyHyperGraphSectionSolver,
-  TinyHyperGraphSolver,
-  type TinyHyperGraphSectionPipelineInput,
   type TinyHyperGraphSectionSolverOptions,
+  TinyHyperGraphSolver,
   type TinyHyperGraphSolverOptions,
+  orderConnectionsByNetCardinality,
 } from "tiny-hypergraph/lib/index"
 import type {
   ConnectionHg,
   ConnectionHgWithSimpleRouteConnection,
   HgPortPointPathingSolverParams,
 } from "../hgportpointpathingsolver/types"
+import {
+  SameLayerFirstTinyHyperGraphSolver,
+  SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments,
+} from "./SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments"
 import { createTinyRouteNetIndexer } from "./createTinyRouteNetIndexer"
 import { getRegionNetIdByRegionId } from "./getRegionNetIdByRegionId"
-import { SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments } from "./SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments"
 import {
-  getSerializedPreloadedTraceStats,
-  hasPreloadedTraceSectionMetadata,
   type PreloadedTraceConnectionId,
   type PreloadedTraceSectionMetadata,
+  getSerializedPreloadedTraceStats,
+  hasPreloadedTraceSectionMetadata,
   serializePreloadedTraceAssignments,
 } from "./serializePreloadedTraceAssignments"
 
@@ -99,7 +102,11 @@ export type DownstreamCandidateSummary = {
   changedPreloadedTraceSectionCount: number
 }
 
-type CandidatePortfolioPhase = "primary" | "alternative" | "complete"
+type CandidatePortfolioPhase =
+  | "sameLayer"
+  | "primary"
+  | "alternative"
+  | "complete"
 
 // A second global-routing candidate is only worthwhile when the primary
 // candidate predicts downstream congestion. Selection requires meaningful
@@ -255,11 +262,7 @@ const TINY_SECTION_SOLVER_BASE_OPTIONS: TinyHyperGraphSectionSolverOptions = {
 const DUPLICATE_PORT_TRAVERSAL_PENALTY = 150
 const DEFAULT_CRAMPED_PORT_TRAVERSAL_PENALTY = 150
 const MAX_CONNECTIONS_FOR_DUPLICATE_CONGESTED_PORT_PREPASS = 180
-// Fixed copper can dominate a small graph's cost before new paths are selected.
-// When every new route faces fixed occupancy, use a larger via envelope so the
-// router does not trade a clear same-layer path for a physical layer change.
-const PRELOADED_TRACE_ROUTING_VIA_COST_MULTIPLIER = 2
-const PRELOADED_TRACE_VIA_PRESSURE_MAX_ROUTE_COUNT = 5
+const SAME_LAYER_FIRST_MAX_ROUTE_COUNT = 5
 
 const getEffortScale = (effort: number) => Math.max(effort, 1e-2)
 
@@ -912,13 +915,16 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
   preloadedFixedSegmentCount = 0
   readonly crampedPortTraversalPenalty: number
   readonly useSelectiveReripRouting: boolean
+  readonly useSameLayerFirstRouting: boolean
 
   constructor(
     inputProblem: TinyHyperGraphSectionPipelineInput,
     useSelectiveReripRouting: boolean,
+    useSameLayerFirstRouting = false,
   ) {
     super(inputProblem)
     this.useSelectiveReripRouting = useSelectiveReripRouting
+    this.useSameLayerFirstRouting = useSameLayerFirstRouting
     this.crampedPortTraversalPenalty = DEFAULT_CRAMPED_PORT_TRAVERSAL_PENALTY
     const preloadedStats = getSerializedPreloadedTraceStats(
       inputProblem.serializedHyperGraph,
@@ -934,8 +940,9 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
           "Tiny hypergraph pipeline is missing the solveGraph stage",
         )
       }
-      solveGraphStep.solverClass =
-        SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments
+      solveGraphStep.solverClass = useSameLayerFirstRouting
+        ? SameLayerFirstTinyHyperGraphSolver
+        : SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments
     }
     this.MAX_ITERATIONS = getTinyHyperGraphPipelineMaxIterations(inputProblem)
   }
@@ -976,12 +983,14 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
       const { topology, problem } = this.loadHyperGraph(
         this.inputProblem.serializedHyperGraph,
       )
-      this.initialVisualizationSolver =
-        new SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments(
-          topology,
-          problem,
-          this.getSolveGraphOptions(),
-        )
+      const SolverClass = this.useSameLayerFirstRouting
+        ? SameLayerFirstTinyHyperGraphSolver
+        : SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments
+      this.initialVisualizationSolver = new SolverClass(
+        topology,
+        problem,
+        this.getSolveGraphOptions(),
+      )
     }
     const solver = super.getInitialVisualizationSolver()
     this.configureSolver(solver)
@@ -1028,13 +1037,15 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
 export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
   private tinyPipelineSolver: TinyHyperGraphSectionPipelineWithTerminalNetIds
   private primaryTinyPipelineSolver?: TinyHyperGraphSectionPipelineWithTerminalNetIds
+  private sameLayerTinyPipelineSolver?: TinyHyperGraphSectionPipelineWithTerminalNetIds
   private alternativeTinyPipelineSolver?: TinyHyperGraphSectionPipelineWithTerminalNetIds
   private alternativeTinyPipelineInput?: TinyHyperGraphSectionPipelineInput
   private candidatePortfolioPhase: CandidatePortfolioPhase = "primary"
+  private sameLayerCandidateSummary?: DownstreamCandidateSummary
   private primaryCandidateSummary?: DownstreamCandidateSummary
   private alternativeCandidateSummary?: DownstreamCandidateSummary
   private alternativeCandidateEvaluated = false
-  private selectedCandidate: "primary" | "alternative" = "primary"
+  private selectedCandidate: "sameLayer" | "primary" | "alternative" = "primary"
   private duplicateCongestedPortReport?: DuplicateCongestedPortSolverReport
   private duplicateCongestedPortError?: string
   private duplicatedPortCount = 0
@@ -1074,17 +1085,12 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
     const usePartialRipRoutingWithPreloadedTraces =
       hasPreloadedTraceOccupancy &&
       params.flags.USE_PARTIAL_RIP_ROUTING_WITH_PRELOADED_TRACES === true
-    const usePreloadedTraceViaPressure =
+    const useSameLayerFirstRouting =
       hasPreloadedTraceOccupancy &&
+      params.flags.USE_SELECTIVE_RERIP_ROUTING === true &&
       connections.length >= 2 &&
-      connections.length <= PRELOADED_TRACE_VIA_PRESSURE_MAX_ROUTE_COUNT &&
+      connections.length <= SAME_LAYER_FIRST_MAX_ROUTE_COUNT &&
       preloadedTraceStats.preloadedAssignmentCount >= connections.length
-    const routingViaCostDiameter =
-      usePreloadedTraceViaPressure &&
-      typeof params.minViaPadDiameter === "number" &&
-      Number.isFinite(params.minViaPadDiameter)
-        ? params.minViaPadDiameter * PRELOADED_TRACE_ROUTING_VIA_COST_MULTIPLIER
-        : params.minViaPadDiameter
     // A small number of long preloaded routes can occupy as much of the
     // hypergraph as a much larger set of ordinary routes.
     const partialRipEligibilityCount = usePartialRipRoutingWithPreloadedTraces
@@ -1143,16 +1149,27 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
         solvedRoutes: serializedGraph.solvedRoutes,
       },
       params.effort,
-      routingViaCostDiameter,
+      params.minViaPadDiameter,
       !hasPreloadedTraceOccupancy || usePartialRipRoutingWithPreloadedTraces,
       partialRipEligibilityCount,
     )
-    this.tinyPipelineSolver =
+    this.primaryTinyPipelineSolver =
       new TinyHyperGraphSectionPipelineWithTerminalNetIds(
         tinyPipelineInput,
         params.flags.USE_SELECTIVE_RERIP_ROUTING === true,
       )
-    this.primaryTinyPipelineSolver = this.tinyPipelineSolver
+    if (useSameLayerFirstRouting) {
+      this.sameLayerTinyPipelineSolver =
+        new TinyHyperGraphSectionPipelineWithTerminalNetIds(
+          tinyPipelineInput,
+          true,
+          true,
+        )
+      this.tinyPipelineSolver = this.sameLayerTinyPipelineSolver
+      this.candidatePortfolioPhase = "sameLayer"
+    } else {
+      this.tinyPipelineSolver = this.primaryTinyPipelineSolver
+    }
     if (
       connections.length >= TRACE_DENSITY_PORTFOLIO_MIN_ROUTE_COUNT &&
       connections.length <= TRACE_DENSITY_PORTFOLIO_MAX_ROUTE_COUNT
@@ -1167,7 +1184,8 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
     }
     this.MAX_ITERATIONS =
       getTinyHyperGraphPipelineMaxIterations(tinyPipelineInput) *
-      (this.alternativeTinyPipelineInput ? 2 : 1)
+      ((this.alternativeTinyPipelineInput ? 2 : 1) +
+        (useSameLayerFirstRouting ? 1 : 0))
 
     this.originalRegionById = new Map(
       params.graph.regions.map((region) => [region.regionId, region]),
@@ -1370,9 +1388,11 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       (segments) => segments.length,
     )
     const selectedCandidateSummary =
-      this.selectedCandidate === "alternative"
-        ? this.alternativeCandidateSummary
-        : this.primaryCandidateSummary
+      this.selectedCandidate === "sameLayer"
+        ? this.sameLayerCandidateSummary
+        : this.selectedCandidate === "alternative"
+          ? this.alternativeCandidateSummary
+          : this.primaryCandidateSummary
     const solveGraphStats = solveGraphSolver.stats
     const solveGraphStageStats =
       this.tinyPipelineSolver.getStageStats().solveGraph
@@ -1431,6 +1451,24 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
     this.tinyPipelineSolver.step()
 
     if (
+      this.candidatePortfolioPhase === "sameLayer" &&
+      this.sameLayerTinyPipelineSolver!.solved
+    ) {
+      this.sameLayerCandidateSummary = this.summarizePipelineCandidate(
+        this.sameLayerTinyPipelineSolver!,
+      )
+      this.selectedCandidate = "sameLayer"
+      this.primaryTinyPipelineSolver = undefined
+      this.alternativeTinyPipelineInput = undefined
+      this.finishCandidatePortfolio()
+    } else if (
+      this.candidatePortfolioPhase === "sameLayer" &&
+      this.sameLayerTinyPipelineSolver!.failed
+    ) {
+      this.sameLayerTinyPipelineSolver = undefined
+      this.tinyPipelineSolver = this.primaryTinyPipelineSolver!
+      this.candidatePortfolioPhase = "primary"
+    } else if (
       this.candidatePortfolioPhase === "primary" &&
       this.primaryTinyPipelineSolver!.failed
     ) {

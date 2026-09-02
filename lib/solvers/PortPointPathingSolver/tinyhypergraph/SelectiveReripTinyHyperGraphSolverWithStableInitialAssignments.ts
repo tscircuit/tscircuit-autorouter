@@ -1,4 +1,7 @@
-import { SelectiveReripTinyHyperGraphSolver } from "tiny-hypergraph/lib/index"
+import {
+  type Candidate,
+  SelectiveReripTinyHyperGraphSolver,
+} from "tiny-hypergraph/lib/index"
 import { applyInitialAssignments } from "tiny-hypergraph/lib/initialAssignments"
 
 /**
@@ -32,5 +35,48 @@ export class SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments exte
       appendSegmentToRegionCache: (regionId, fromPortId, toPortId) =>
         this.appendSegmentToRegionCache(regionId, fromPortId, toPortId),
     })
+  }
+}
+
+/**
+ * A feasibility pass for routes whose terminals already share a layer.
+ *
+ * Preloaded trace sections are left alone, while new routes are prevented from
+ * changing layers. The caller falls back to the unrestricted solver if this
+ * constrained pass cannot route the complete graph.
+ */
+export class SameLayerFirstTinyHyperGraphSolver extends SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments {
+  override computeG(
+    currentCandidate: Candidate,
+    neighborPortId: number,
+    maximumCost?: number,
+    knownSegmentDistance?: number,
+  ): number {
+    const routeId = this.state.currentRouteId
+    if (routeId !== undefined) {
+      const routeMetadata = this.problem.routeMetadata?.[routeId]
+      const isPreloadedTrace =
+        routeMetadata?.preloadedTraceSection !== undefined
+      const startPortId = this.problem.routeStartPort[routeId]
+      const endPortId = this.problem.routeEndPort[routeId]
+      const startZ = this.topology.portZ[startPortId]
+      const endZ = this.topology.portZ[endPortId]
+
+      if (
+        !isPreloadedTrace &&
+        startZ === endZ &&
+        (this.topology.portZ[currentCandidate.portId] !== startZ ||
+          this.topology.portZ[neighborPortId] !== startZ)
+      ) {
+        return Number.POSITIVE_INFINITY
+      }
+    }
+
+    return super.computeG(
+      currentCandidate,
+      neighborPortId,
+      maximumCost,
+      knownSegmentDistance,
+    )
   }
 }
