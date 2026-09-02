@@ -3,7 +3,7 @@ import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-p
 import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import { loadScenarioBySampleNumber } from "../../scripts/benchmark/scenarios"
 
-test("Pipeline9 makes every preloaded trace in an SRJ23 sample 46 DRC region reroutable", async () => {
+test("Pipeline9 makes every preloaded trace in an SRJ23 sample 46 DRC region reroutable", async (): Promise<void> => {
   const { scenario } = await loadScenarioBySampleNumber("srj23", 46)
   const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(
     structuredClone(scenario),
@@ -19,19 +19,14 @@ test("Pipeline9 makes every preloaded trace in an SRJ23 sample 46 DRC region rer
   ).toBeGreaterThan(0)
   const repairedRoutes = solver.pipeline9JointDrcRepairSolver?.getOutput()
   const simplifiedRoutes =
-    solver.postRepairTraceSimplificationSolver?.simplifiedHdRoutes
+    solver.postRepairViaRemovalSolver?.getOptimizedHdRoutes()
   if (!repairedRoutes || !simplifiedRoutes) {
-    throw new Error("Pipeline9 did not run post-repair trace simplification")
+    throw new Error("Pipeline9 did not run post-repair via removal")
   }
   expect(
     simplifiedRoutes.reduce((count, route) => count + route.vias.length, 0),
   ).toBeLessThan(
     repairedRoutes.reduce((count, route) => count + route.vias.length, 0),
-  )
-  expect(
-    simplifiedRoutes.reduce((count, route) => count + route.route.length, 0),
-  ).toBeLessThan(
-    repairedRoutes.reduce((count, route) => count + route.route.length, 0),
   )
   const { errors } = evaluateRelaxedDrc({
     inputSrj: scenario,

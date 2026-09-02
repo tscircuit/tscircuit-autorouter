@@ -16,29 +16,7 @@ type Phase =
   | "via_merging"
   | "path_simplification"
 
-type PreservedRouteSet = {
-  endpointsByConnectionName: ReadonlyMap<
-    string,
-    ReadonlyArray<{
-      start: HighDensityRoute["route"][number]
-      end: HighDensityRoute["route"][number]
-    }>
-  >
-  routeCount: number
-}
-
 const VIA_INSIDE_OBSTACLE_TOLERANCE = 1e-6
-
-const routePointsMatch = (
-  left: HighDensityRoute["route"][number],
-  right: HighDensityRoute["route"][number],
-): boolean => {
-  return (
-    Math.abs(left.x - right.x) <= VIA_INSIDE_OBSTACLE_TOLERANCE &&
-    Math.abs(left.y - right.y) <= VIA_INSIDE_OBSTACLE_TOLERANCE &&
-    left.z === right.z
-  )
-}
 
 const pointInsideObstacle = (
   point: { x: number; y: number },
@@ -73,7 +51,13 @@ export class TraceSimplificationSolver extends BaseSolver {
 
   hdRoutes: HighDensityRoute[] = []
 
-  private readonly preservedRouteSet?: PreservedRouteSet
+  private readonly preservedRouteEndpoints?: ReadonlyMap<
+    string,
+    {
+      start: HighDensityRoute["route"][number]
+      end: HighDensityRoute["route"][number]
+    }
+  >
 
   simplificationPipelineLoops = 0
 
@@ -115,11 +99,10 @@ export class TraceSimplificationSolver extends BaseSolver {
    *     coordinates or layers when routes represent spliceable local sections
    *   - useTraceWidthAwareClearance: Uses each route segment's actual copper
    *     width when checking path-simplification clearance
-   *   - traceClearance: Required edge-to-edge clearance between different-net
-   *     routed copper during simplification
    *   - terminalLayerIndicesByPcbPortId: Physical copper-layer indices on
    *     which each PCB-port terminal can directly accept a route endpoint
    *     without a via
+   *   - iterations: Number of complete simplification iterations (default: 2)
    */
   constructor(
     private readonly simplificationConfig: {
@@ -137,7 +120,6 @@ export class TraceSimplificationSolver extends BaseSolver {
       readonly enableCrossingViaReduction?: boolean
       readonly preserveRouteEndpoints?: boolean
       readonly useTraceWidthAwareClearance?: boolean
-      readonly traceClearance?: number
       readonly terminalLayerIndicesByPcbPortId?: ReadonlyMap<
         string,
         ReadonlySet<number>
@@ -158,10 +140,10 @@ export class TraceSimplificationSolver extends BaseSolver {
     if (simplificationConfig.preserveRouteEndpoints) {
       const endpointByConnectionName = new Map<
         string,
-        Array<{
+        {
           start: HighDensityRoute["route"][number]
           end: HighDensityRoute["route"][number]
-        }>
+        }
       >()
       for (const route of simplificationConfig.hdRoutes) {
         const start = route.route[0]
@@ -171,63 +153,59 @@ export class TraceSimplificationSolver extends BaseSolver {
             `TraceSimplificationSolver cannot preserve endpoints for empty route "${route.connectionName}"`,
           )
         }
-        const preservedEndpoint = {
+        if (endpointByConnectionName.has(route.connectionName)) {
+          throw new Error(
+            `TraceSimplificationSolver cannot preserve endpoints for duplicate route "${route.connectionName}"`,
+          )
+        }
+        endpointByConnectionName.set(route.connectionName, {
           start: { ...start },
           end: { ...end },
-        }
-        const connectionEndpoints = endpointByConnectionName.get(
-          route.connectionName,
-        )
-        if (connectionEndpoints) {
-          connectionEndpoints.push(preservedEndpoint)
-        } else {
-          endpointByConnectionName.set(route.connectionName, [
-            preservedEndpoint,
-          ])
-        }
+        })
       }
-      this.preservedRouteSet = {
-        endpointsByConnectionName: endpointByConnectionName,
-        routeCount: simplificationConfig.hdRoutes.length,
-      }
+      this.preservedRouteEndpoints = endpointByConnectionName
     }
     this.MAX_ITERATIONS = 100e6
   }
 
   private validatePreservedRouteEndpoints(routes: HighDensityRoute[]): void {
-    if (!this.preservedRouteSet) return
-    if (routes.length !== this.preservedRouteSet.routeCount) {
+    if (!this.preservedRouteEndpoints) return
+    if (routes.length !== this.preservedRouteEndpoints.size) {
       throw new Error(
-        `TraceSimplificationSolver changed the preserved route set (expected ${this.preservedRouteSet.routeCount}, got ${routes.length})`,
+        `TraceSimplificationSolver changed the preserved route set (expected ${this.preservedRouteEndpoints.size}, got ${routes.length})`,
       )
     }
 
-    const unmatchedEndpointsByConnectionName = new Map(
-      [...this.preservedRouteSet.endpointsByConnectionName].map(
-        ([connectionName, endpoints]) => [connectionName, [...endpoints]],
-      ),
-    )
+    const outputConnectionNames = new Set<string>()
+    const pointsMatch = (
+      left: HighDensityRoute["route"][number],
+      right: HighDensityRoute["route"][number],
+    ) =>
+      Math.abs(left.x - right.x) <= VIA_INSIDE_OBSTACLE_TOLERANCE &&
+      Math.abs(left.y - right.y) <= VIA_INSIDE_OBSTACLE_TOLERANCE &&
+      left.z === right.z
 
     for (const route of routes) {
+      if (outputConnectionNames.has(route.connectionName)) {
+        throw new Error(
+          `TraceSimplificationSolver produced duplicate preserved route "${route.connectionName}"`,
+        )
+      }
+      outputConnectionNames.add(route.connectionName)
+      const expected = this.preservedRouteEndpoints.get(route.connectionName)
       const start = route.route[0]
       const end = route.route.at(-1)
-      const unmatchedEndpoints = unmatchedEndpointsByConnectionName.get(
-        route.connectionName,
-      )
-      const matchingEndpointIndex =
-        start && end && unmatchedEndpoints
-          ? unmatchedEndpoints.findIndex(
-              (expected) =>
-                routePointsMatch(start, expected.start) &&
-                routePointsMatch(end, expected.end),
-            )
-          : -1
-      if (matchingEndpointIndex < 0 || !unmatchedEndpoints) {
+      if (
+        !expected ||
+        !start ||
+        !end ||
+        !pointsMatch(start, expected.start) ||
+        !pointsMatch(end, expected.end)
+      ) {
         throw new Error(
           `TraceSimplificationSolver changed a preserved endpoint for route "${route.connectionName}"`,
         )
       }
-      unmatchedEndpoints.splice(matchingEndpointIndex, 1)
     }
   }
 
@@ -314,7 +292,6 @@ export class TraceSimplificationSolver extends BaseSolver {
     if (
       this.simplificationPipelineLoops >= this.MAX_SIMPLIFICATION_PIPELINE_LOOPS
     ) {
-      this.validatePreservedRouteEndpoints(this.hdRoutes)
       this.solved = true
       return
     }
@@ -359,7 +336,6 @@ export class TraceSimplificationSolver extends BaseSolver {
           this.simplificationPipelineLoops >=
           this.MAX_SIMPLIFICATION_PIPELINE_LOOPS
         ) {
-          this.validatePreservedRouteEndpoints(this.hdRoutes)
           this.solved = true
           return
         }
@@ -387,7 +363,6 @@ export class TraceSimplificationSolver extends BaseSolver {
               ? [...this.simplificationConfig.outline]
               : undefined,
             geometryShortcutTraceMargin: 0.1,
-            traceMargin: this.simplificationConfig.traceClearance,
             geometryShortcutObstacleMargin:
               this.simplificationConfig.minTraceToPadEdgeClearance ?? 0.15,
             // Delay the quadratic anchor search until the first path pass has
@@ -415,7 +390,7 @@ export class TraceSimplificationSolver extends BaseSolver {
             outline: this.simplificationConfig.outline
               ? [...this.simplificationConfig.outline]
               : undefined,
-            traceMargin: this.simplificationConfig.traceClearance,
+            traceMargin: 0.1,
             obstacleMargin:
               this.simplificationConfig.minTraceToPadEdgeClearance ?? 0.15,
           })

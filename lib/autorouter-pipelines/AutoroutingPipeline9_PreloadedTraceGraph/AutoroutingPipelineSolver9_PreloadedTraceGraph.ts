@@ -66,6 +66,7 @@ import { SingleLayerNodeMergerSolver } from "../../solvers/SingleLayerNodeMerger
 import { StrawSolver } from "../../solvers/StrawSolver/StrawSolver"
 import { TraceSimplificationSolver } from "../../solvers/TraceSimplificationSolver/TraceSimplificationSolver"
 import { TraceWidthSolver } from "../../solvers/TraceWidthSolver/TraceWidthSolver"
+import { UselessViaRemovalSolver } from "../../solvers/UselessViaRemovalSolver/UselessViaRemovalSolver"
 import { LengthMatchingPostProcessingSolver } from "../../solvers/length-matching-post-processing-solver"
 import { applyFixedRouteReplacementsToPreloadedTraces } from "./applyFixedRouteReplacementsToPreloadedTraces"
 import { assignUniquePcbTraceIdsToNewTraces } from "./assignUniquePcbTraceIdsToNewTraces"
@@ -267,7 +268,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
   deadEndSolver?: DeadEndSolver
   traceSimplificationSolver?: TraceSimplificationSolver
   mutatedPreloadedTraceSimplificationSolver?: TraceSimplificationSolver
-  postRepairTraceSimplificationSolver?: TraceSimplificationSolver
+  postRepairViaRemovalSolver?: UselessViaRemovalSolver
   lengthMatchingPostProcessingSolver?: LengthMatchingPostProcessingSolver
   powerTraceExpansionSolver?: PowerTraceExpansionSolver
   availableSegmentPointSolver?: AvailableSegmentPointSolver
@@ -849,9 +850,9 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       },
     ),
     definePipelineStep(
-      "postRepairTraceSimplificationSolver",
-      TraceSimplificationSolver,
-      (cms): ConstructorParameters<typeof TraceSimplificationSolver> => {
+      "postRepairViaRemovalSolver",
+      UselessViaRemovalSolver,
+      (cms): ConstructorParameters<typeof UselessViaRemovalSolver> => {
         const hdRoutes = materializePipeline9HdRouteVias(
           cms.pipeline9JointDrcRepairSolver!.getOutput(),
         )
@@ -868,25 +869,25 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           )
         return [
           {
-            hdRoutes,
+            unsimplifiedHdRoutes: hdRoutes,
             obstacles: cms.srj.obstacles,
             connMap: cms.connMap,
             colorMap: cms.colorMap,
             outline: cms.srj.outline,
-            defaultViaDiameter: cms.viaDiameter,
             layerCount: cms.srj.layerCount,
-            minTraceToPadEdgeClearance: cms.srj.minTraceToPadEdgeClearance,
-            minBoardEdgeClearance: cms.srj.minBoardEdgeClearance,
             otherHdRoutes: preloadedHdRoutes,
-            netByConnectionName: getPipeline9NetByConnectionName(
-              [...hdRoutes, ...preloadedHdRoutes],
-              cms.connMap,
-            ),
-            enableCrossingViaReduction: true,
-            preserveRouteEndpoints: true,
-            traceClearance:
+            geometryShortcutTraceMargin:
               cms.srj.minTraceToPadEdgeClearance ??
               RELAXED_DRC_OPTIONS.traceClearance,
+            traceMargin:
+              cms.srj.minTraceToPadEdgeClearance ??
+              RELAXED_DRC_OPTIONS.traceClearance,
+            obstacleMargin:
+              cms.srj.minTraceToPadEdgeClearance ??
+              RELAXED_DRC_OPTIONS.traceClearance,
+            geometryShortcutObstacleMargin:
+              cms.srj.minTraceToPadEdgeClearance,
+            preserveRouteEndpoints: true,
             terminalLayerIndicesByPcbPortId: getTerminalLayerIndicesByPcbPortId(
               cms.srj.connections,
               cms.srj.obstacles,
@@ -925,8 +926,10 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             )
           }
         }
-        const hdRoutes =
-          cms.postRepairTraceSimplificationSolver!.simplifiedHdRoutes
+        const hdRoutes = cms.postRepairViaRemovalSolver!.getOptimizedHdRoutes()
+        if (!hdRoutes) {
+          throw new Error("Pipeline9 post-repair via removal has no output")
+        }
         const differentialPairs = (cms.srj.differentialPairs ?? []).map(
           (pair) => {
             const connectionNames = pair.connectionNames.map(
@@ -1151,8 +1154,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     const traceSimplificationViz = this.traceSimplificationSolver?.visualize()
     const mutatedPreloadedTraceSimplificationViz =
       this.mutatedPreloadedTraceSimplificationSolver?.visualize()
-    const postRepairTraceSimplificationViz =
-      this.postRepairTraceSimplificationSolver?.visualize()
+    const postRepairViaRemovalViz = this.postRepairViaRemovalSolver?.visualize()
     const lengthMatchingPostProcessingViz =
       this.lengthMatchingPostProcessingSolver?.visualize()
     const powerTraceExpansionViz = this.powerTraceExpansionSolver?.visualize()
@@ -1282,7 +1284,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       traceWidthViz,
       globalDrcForceImproveViz,
       pipeline9JointDrcRepairViz,
-      postRepairTraceSimplificationViz,
+      postRepairViaRemovalViz,
       lengthMatchingPostProcessingViz,
       powerTraceExpansionViz,
       this.solved
@@ -1371,7 +1373,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       return hdRoutes
     }
     return (
-      this.postRepairTraceSimplificationSolver?.simplifiedHdRoutes ??
+      this.postRepairViaRemovalSolver?.getOptimizedHdRoutes() ??
       this.pipeline9JointDrcRepairSolver?.getOutput() ??
       this.globalDrcForceImproveSolver?.getOutput() ??
       this.traceWidthSolver?.getHdRoutesWithWidths() ??

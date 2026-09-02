@@ -3,7 +3,7 @@ import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-p
 import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import { loadScenarioBySampleNumber } from "../../scripts/benchmark/scenarios"
 
-test("Pipeline9 simplifies duplicate post-repair route names in SRJ18 sample 7", async (): Promise<void> => {
+test("Pipeline9 removes vias from duplicate post-repair route names in SRJ18 sample 7", async (): Promise<void> => {
   const { scenario } = await loadScenarioBySampleNumber("srj18", 7)
   const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(
     structuredClone(scenario),
@@ -22,7 +22,16 @@ test("Pipeline9 simplifies duplicate post-repair route names in SRJ18 sample 7",
   expect(
     new Set(postRepairRoutes.map((route) => route.connectionName)).size,
   ).toBeLessThan(postRepairRoutes.length)
-  expect(solver.postRepairTraceSimplificationSolver?.solved).toBeTrue()
+  const viaRemovalSolver = solver.postRepairViaRemovalSolver
+  const optimizedRoutes = viaRemovalSolver?.getOptimizedHdRoutes()
+  if (!viaRemovalSolver?.solved || !optimizedRoutes) {
+    throw new Error("Pipeline9 did not complete post-repair via removal")
+  }
+  expect(
+    optimizedRoutes.reduce((count, route) => count + route.vias.length, 0),
+  ).toBeLessThan(
+    postRepairRoutes.reduce((count, route) => count + route.vias.length, 0),
+  )
   const { errors } = evaluateRelaxedDrc({
     inputSrj: scenario,
     srjWithPointPairs: solver.srjWithPointPairs!,

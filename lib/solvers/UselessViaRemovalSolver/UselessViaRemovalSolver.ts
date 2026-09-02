@@ -22,6 +22,7 @@ export interface UselessViaRemovalSolverInput {
   outline?: Array<{ x: number; y: number }>
   geometryShortcutTraceMargin?: number
   traceMargin?: number
+  obstacleMargin?: number
   geometryShortcutObstacleMargin?: number
   enableGeometryShortcuts?: boolean
   enableObstacleDetourShortcuts?: boolean
@@ -74,7 +75,7 @@ export class UselessViaRemovalSolver extends BaseSolver {
       this.activeSubSolver.step()
       if (this.activeSubSolver.solved) {
         const optimizedRoute = this.activeSubSolver.getOptimizedHdRoute()
-        this.hdRouteSHI!.removeRoute(optimizedRoute.connectionName)
+        this.hdRouteSHI!.removeRoute(this.activeSubSolver.unsimplifiedRoute)
         this.hdRouteSHI!.addRoute(optimizedRoute)
         this.optimizedHdRoutes.push(optimizedRoute)
         this.activeSubSolver = null
@@ -99,6 +100,7 @@ export class UselessViaRemovalSolver extends BaseSolver {
       outline: this.input.outline,
       geometryShortcutTraceMargin: this.input.geometryShortcutTraceMargin,
       traceMargin: this.input.traceMargin,
+      obstacleMargin: this.input.obstacleMargin,
       geometryShortcutObstacleMargin: this.input.geometryShortcutObstacleMargin,
       enableGeometryShortcuts: this.input.enableGeometryShortcuts,
       enableObstacleDetourShortcuts: this.input.enableObstacleDetourShortcuts,

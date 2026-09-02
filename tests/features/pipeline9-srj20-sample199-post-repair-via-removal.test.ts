@@ -3,8 +3,8 @@ import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-p
 import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import { loadScenarioBySampleNumber } from "../../scripts/benchmark/scenarios"
 
-test("Pipeline9 post-repair via removal does not regress SRJ23 sample 67 DRC", async (): Promise<void> => {
-  const { scenario } = await loadScenarioBySampleNumber("srj23", 67)
+test("Pipeline9 post-repair via removal preserves SRJ20 sample 199 clearance", async (): Promise<void> => {
+  const { scenario } = await loadScenarioBySampleNumber("srj20", 199)
   const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(
     structuredClone(scenario),
     { cacheProvider: null, effort: 1 },

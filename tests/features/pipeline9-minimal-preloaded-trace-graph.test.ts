@@ -3,6 +3,7 @@ import { AutoroutingPipelineSolver7_MultiGraph } from "lib/autorouter-pipelines/
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
 import { Pipeline9HighDensitySolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9HighDensitySolver"
 import { TraceSimplificationSolver } from "lib/solvers/TraceSimplificationSolver/TraceSimplificationSolver"
+import { UselessViaRemovalSolver } from "lib/solvers/UselessViaRemovalSolver/UselessViaRemovalSolver"
 import type { SimpleRouteJson } from "lib/types"
 import scenario from "./preexisting-connected-traces/srj/preexisting-connected-traces06.srj.json" with {
   type: "json",
@@ -127,8 +128,8 @@ test("Pipeline9 owns copied stages with minimal preloaded-trace changes", () => 
   const mutatedPreloadSimplificationStep = solver.pipelineDef.find(
     (step) => step.solverName === "mutatedPreloadedTraceSimplificationSolver",
   )
-  const postRepairSimplificationStep = solver.pipelineDef.find(
-    (step) => step.solverName === "postRepairTraceSimplificationSolver",
+  const postRepairViaRemovalStep = solver.pipelineDef.find(
+    (step) => step.solverName === "postRepairViaRemovalSolver",
   )
   expect(mutatedPreloadSimplificationStep?.solverClass).toBe(
     TraceSimplificationSolver,
@@ -139,14 +140,12 @@ test("Pipeline9 owns copied stages with minimal preloaded-trace changes", () => 
   expect(
     pipeline9StageNames.indexOf("mutatedPreloadedTraceSimplificationSolver"),
   ).toBe(pipeline9StageNames.indexOf("traceWidthSolver") - 1)
-  expect(postRepairSimplificationStep?.solverClass).toBe(
-    TraceSimplificationSolver,
-  )
+  expect(postRepairViaRemovalStep?.solverClass).toBe(UselessViaRemovalSolver)
   expect(
-    pipeline9StageNames.indexOf("postRepairTraceSimplificationSolver"),
+    pipeline9StageNames.indexOf("postRepairViaRemovalSolver"),
   ).toBe(pipeline9StageNames.indexOf("pipeline9JointDrcRepairSolver") + 1)
   expect(
-    pipeline9StageNames.indexOf("postRepairTraceSimplificationSolver"),
+    pipeline9StageNames.indexOf("postRepairViaRemovalSolver"),
   ).toBe(pipeline9StageNames.indexOf("lengthMatchingPostProcessingSolver") - 1)
   expect(
     solver.pipelineDef.some(
@@ -185,30 +184,32 @@ test("Pipeline9 owns copied stages with minimal preloaded-trace changes", () => 
       ),
     ),
   ).toBe(false)
-  const [postRepairSimplificationParams] =
-    postRepairSimplificationStep!.getConstructorParams(solver)
-  expect(postRepairSimplificationParams).toMatchObject({
-    minBoardEdgeClearance: 0.23,
-    enableCrossingViaReduction: true,
+  const [postRepairViaRemovalParams] =
+    postRepairViaRemovalStep!.getConstructorParams(solver)
+  expect(postRepairViaRemovalParams).toMatchObject({
+    geometryShortcutTraceMargin: 0.1,
+    traceMargin: 0.1,
+    obstacleMargin: 0.1,
     preserveRouteEndpoints: true,
   })
   expect(
     (
-      postRepairSimplificationParams as {
+      postRepairViaRemovalParams as {
         otherHdRoutes?: Array<{ connectionName: string }>
       }
     ).otherHdRoutes?.length,
   ).toBeGreaterThan(0)
-  const postRepairTraceSimplificationSolver =
-    solver.postRepairTraceSimplificationSolver
-  expect(postRepairTraceSimplificationSolver).toBeDefined()
-  if (!postRepairTraceSimplificationSolver) {
-    throw new Error("Pipeline9 did not run post-repair trace simplification")
+  const postRepairViaRemovalSolver = solver.postRepairViaRemovalSolver
+  expect(postRepairViaRemovalSolver).toBeDefined()
+  if (!postRepairViaRemovalSolver) {
+    throw new Error("Pipeline9 did not run post-repair via removal")
   }
-  expect(postRepairTraceSimplificationSolver.solved).toBeTrue()
-  expect(solver._getOutputHdRoutes()).toBe(
-    postRepairTraceSimplificationSolver.simplifiedHdRoutes,
-  )
+  const optimizedRoutes = postRepairViaRemovalSolver.getOptimizedHdRoutes()
+  if (!optimizedRoutes) {
+    throw new Error("Pipeline9 post-repair via removal has no output")
+  }
+  expect(postRepairViaRemovalSolver.solved).toBeTrue()
+  expect(solver._getOutputHdRoutes()).toBe(optimizedRoutes)
   const outputTraceIds = solver
     .getOutputSimplifiedPcbTraces()
     .map((trace) => trace.pcb_trace_id)

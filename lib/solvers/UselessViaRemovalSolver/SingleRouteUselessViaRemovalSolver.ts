@@ -71,6 +71,7 @@ export class SingleRouteUselessViaRemovalSolver extends BaseSolver {
     outline?: Array<{ x: number; y: number }>
     geometryShortcutTraceMargin?: number
     traceMargin?: number
+    obstacleMargin?: number
     geometryShortcutObstacleMargin?: number
     enableGeometryShortcuts?: boolean
     enableObstacleDetourShortcuts?: boolean
@@ -89,6 +90,7 @@ export class SingleRouteUselessViaRemovalSolver extends BaseSolver {
     this.GEOMETRY_SHORTCUT_TRACE_MARGIN =
       params.geometryShortcutTraceMargin ?? this.GEOMETRY_SHORTCUT_TRACE_MARGIN
     this.TRACE_MARGIN = params.traceMargin ?? this.TRACE_MARGIN
+    this.OBSTACLE_MARGIN = params.obstacleMargin ?? this.OBSTACLE_MARGIN
     this.GEOMETRY_SHORTCUT_OBSTACLE_MARGIN =
       params.geometryShortcutObstacleMargin ??
       this.GEOMETRY_SHORTCUT_OBSTACLE_MARGIN
@@ -732,6 +734,7 @@ export class SingleRouteUselessViaRemovalSolver extends BaseSolver {
       outline: this.outline,
       geometryShortcutTraceMargin: this.GEOMETRY_SHORTCUT_TRACE_MARGIN,
       traceMargin: this.TRACE_MARGIN,
+      obstacleMargin: this.OBSTACLE_MARGIN,
       geometryShortcutObstacleMargin: this.GEOMETRY_SHORTCUT_OBSTACLE_MARGIN,
       enableGeometryShortcuts: this.ENABLE_GEOMETRY_SHORTCUTS,
       enableObstacleDetourShortcuts: this.ENABLE_OBSTACLE_DETOUR_SHORTCUTS,
@@ -746,7 +749,10 @@ export class SingleRouteUselessViaRemovalSolver extends BaseSolver {
     const route = this.routeSections.flatMap((section) => section.points)
     const vias: HighDensityRoute["vias"] = []
     for (let i = 0; i < route.length - 1; i++) {
-      if (route[i].z !== route[i + 1].z) {
+      if (
+        route[i].z !== route[i + 1].z &&
+        route[i].toNextSegmentType !== "through_obstacle"
+      ) {
         vias.push({
           x: route[i].x,
           y: route[i].y,

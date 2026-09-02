@@ -922,8 +922,7 @@ export class SingleSimplifiedPathSolver5 extends SingleSimplifiedPathSolver {
     }
 
     if (!path45 && !this.lastValidPath) {
-      const oldTailDistance = this.tailDistanceAlongPath
-      const oldTailPoint = this.getPointAtDistance(oldTailDistance)
+      const oldTailPoint = this.getPointAtDistance(this.tailDistanceAlongPath)
 
       // Move tail and head forward by stepSize
       this.tailDistanceAlongPath += this.minStepSize
@@ -933,16 +932,15 @@ export class SingleSimplifiedPathSolver5 extends SingleSimplifiedPathSolver {
         this.tailDistanceAlongPath,
       )
       const newTailPoint = this.inputRoute.route[newTailIndex]
-      const lastRoutePoint = this.inputRoute.route.at(-1)!
-      const lastPointInNewRoute = this.newRoute.at(-1)!
+      const lastRoutePoint =
+        this.inputRoute.route[this.inputRoute.route.length - 1]
+
+      // Add the segment from old tail to new tail
       if (
         !this.arePointsEqual(oldTailPoint, newTailPoint) &&
-        !this.arePointsEqual(newTailPoint, lastRoutePoint) &&
-        this.isValidPath([lastPointInNewRoute, newTailPoint])
+        !this.arePointsEqual(newTailPoint, lastRoutePoint)
       ) {
         this.newRoute.push(newTailPoint)
-      } else {
-        this.appendOriginalRouteSlice(oldTailDistance, newTailIndex)
       }
 
       return
