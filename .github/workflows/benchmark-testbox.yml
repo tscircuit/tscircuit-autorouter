@@ -10,9 +10,13 @@ on:
     paths:
       - '.github/workflows/**'
 
+permissions:
+  contents: write
+
 jobs:
   benchmark:
     name: Run benchmark
+    if: inputs.testbox_id != 'pr2339-snapshots'
     runs-on: blacksmith-4vcpu-ubuntu-2404-arm
     timeout-minutes: 60
 
@@ -36,3 +40,44 @@ jobs:
       - name: Run Testbox
         uses: useblacksmith/run-testbox@v2
         if: always()
+
+  update-targeted-snapshots:
+    name: Update PR 2339 snapshots on Ubuntu x64
+    if: inputs.testbox_id == 'pr2339-snapshots'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.8
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Update and verify targeted snapshots
+        env:
+          BUN_UPDATE_SNAPSHOTS: "1"
+        run: >-
+          bun test --timeout 300000
+          tests/bugs/bugreport57-51db46.test.ts
+          tests/bugs/bugreport59-82431e.test.ts
+          tests/bugs/bugreport87-76a6de.test.ts
+          tests/bugs/bugreport91-1046bd.test.ts
+
+      - name: Restore workflow and commit snapshots
+        run: |
+          git config user.name "tscircuit-bot"
+          git config user.email "actions@github.com"
+          git restore --source="${GITHUB_SHA}^" -- .github/workflows/benchmark-testbox.yml
+          git add .github/workflows/benchmark-testbox.yml
+          git add tests/bugs/__snapshots__/bugreport57-51db46-linux.snap.svg
+          git add tests/bugs/__snapshots__/bugreport59-82431e-linux.snap.svg
+          git add tests/bugs/__snapshots__/bugreport87-76a6de.snap.svg
+          git add tests/bugs/__snapshots__/bugreport91-1046bd.snap.svg
+          git commit -m "Update remaining Linux snapshots"
+          git push origin "HEAD:${GITHUB_REF_NAME}"
