@@ -38,6 +38,7 @@ import {
 import { createSrjWithBoardValidObstacleLayers } from "lib/utils/create-srj-with-board-valid-obstacle-layers"
 import { createObstacleLabelFormatter } from "lib/utils/formatObstacleLabel"
 import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
+import { convertSrjTracesToObstacles } from "lib/utils/convertSrjTracesToObstacles"
 import { getInitiallyConnectedMapFromSimpleRouteJson } from "lib/utils/get-initially-connected-map-from-simple-route-json"
 import {
   getGraphicsLayerForConnectionPoint,
@@ -365,14 +366,27 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     definePipelineStep(
       "topologyPlanningSolver",
       MultiGraphTopologyPlannerSolver,
-      (cms) => [
-        {
-          inputSrj: cms.srjWithPointPairs!,
-          componentDetectionOutput: cms.componentDetectionSolver!.getOutput(),
-          viaDiameter: cms.viaDiameter,
-          obstacleMargin: cms.srj.defaultObstacleMargin ?? 0.15,
-        },
-      ],
+      (cms) => {
+        const hasQfpComponent = cms.componentDetectionSolver
+          ?.getOutput()
+          .some((component) => component.componentKind === "qfp")
+        // QFP fanouts need the fixed copper to shape the fine topology. These
+        // temporary obstacles are used only by the planner; Pipeline 9 still
+        // models their occupancy through preloaded hypergraph assignments.
+        const topologyInputSrj = hasQfpComponent
+          ? (convertSrjTracesToObstacles(cms.srjWithPointPairs!) ??
+            cms.srjWithPointPairs!)
+          : cms.srjWithPointPairs!
+
+        return [
+          {
+            inputSrj: topologyInputSrj,
+            componentDetectionOutput: cms.componentDetectionSolver!.getOutput(),
+            viaDiameter: cms.viaDiameter,
+            obstacleMargin: cms.srj.defaultObstacleMargin ?? 0.15,
+          },
+        ]
+      },
       {
         onSolved: (cms) => {
           const output = cms.topologyPlanningSolver!.getOutput()

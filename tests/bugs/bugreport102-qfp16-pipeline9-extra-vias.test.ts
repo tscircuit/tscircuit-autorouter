@@ -81,7 +81,7 @@ test(
     })
 
     expect(pipeline9Metrics?.finalLayerChangeCount).toBe(0)
-    expect(pipeline9ViaCount).toBe(1)
+    expect(pipeline9ViaCount).toBe(0)
     expect(pipeline9DrcErrors).toHaveLength(0)
     expect(pipeline9SegmentCount).toBeLessThanOrEqual(40)
     expect(pipeline9TotalLength).toBeLessThan(35)
@@ -96,9 +96,9 @@ test(
         }),
         addComparisonHeading({
           svg: getLastStepSvg(pipeline9.visualize()),
-          title: "PIPELINE 9 FIXED · SAME PHASE-2 SRJ · 1 VIA",
+          title: "PIPELINE 9 FIXED · SAME PHASE-2 SRJ · 0 VIAS",
           explanation:
-            "The selected route stays compact and DRC-clean while avoiding global layer changes.",
+            "Preloaded copper refines the routing mesh without becoming a duplicate downstream obstacle.",
         }),
       ],
       { normalizeSize: false },
