@@ -11,6 +11,30 @@ import { getLastStepSvg } from "../fixtures/getLastStepSvg"
 
 const srj = srjJson as SimpleRouteJson
 
+const pointsAreClose = (
+  a: { x: number; y: number },
+  b: { x: number; y: number },
+) => Math.hypot(a.x - b.x, a.y - b.y) < 1e-3
+
+const traceConnectsBothEndpoints = (
+  trace: ReturnType<
+    AutoroutingPipelineSolver9_PreloadedTraceGraph["getNewTracesBeforePowerExpansion"]
+  >[number],
+  connection: SimpleRouteJson["connections"][number],
+) => {
+  const first = trace.route[0]
+  const last = trace.route.at(-1)
+  if (!first || !last || !("x" in first) || !("x" in last)) return false
+
+  const [start, end] = connection.pointsToConnect
+  if (!start || !end) return false
+
+  return (
+    (pointsAreClose(first, start) && pointsAreClose(last, end)) ||
+    (pointsAreClose(first, end) && pointsAreClose(last, start))
+  )
+}
+
 const addComparisonHeading = ({
   svg,
   title,
@@ -83,6 +107,16 @@ test(
     expect(pipeline9Metrics?.finalLayerChangeCount).toBe(0)
     expect(pipeline9ViaCount).toBe(0)
     expect(pipeline9DrcErrors).toHaveLength(0)
+    expect(pipeline9NewTraces).toHaveLength(
+      pipeline9.srjWithPointPairs!.connections.length,
+    )
+    for (const connection of pipeline9.srjWithPointPairs!.connections) {
+      const trace = pipeline9NewTraces.find(
+        (candidate) => candidate.connection_name === connection.name,
+      )
+      expect(trace).toBeDefined()
+      expect(traceConnectsBothEndpoints(trace!, connection)).toBe(true)
+    }
     expect(pipeline9SegmentCount).toBeLessThanOrEqual(40)
     expect(pipeline9TotalLength).toBeLessThan(35)
 
