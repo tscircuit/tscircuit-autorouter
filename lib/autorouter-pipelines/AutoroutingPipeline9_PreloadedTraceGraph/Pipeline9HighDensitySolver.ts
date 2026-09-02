@@ -815,7 +815,10 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       updatedFixedHdRoutes,
     )
     const markedTraceIndexes = new Set<number>()
-    for (const [preloadedTraceIndex, mutationRange] of mutationRangeByTraceIndex) {
+    for (const [
+      preloadedTraceIndex,
+      mutationRange,
+    ] of mutationRangeByTraceIndex) {
       let hasMaterialCopper = false
       let isFullyCovered = true
       for (const route of updatedFixedHdRoutes) {
