@@ -536,6 +536,9 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
         cms.portPointPathingSolver?.getOutput().nodesWithPortPoints ?? []
       const nodePortPointsSource =
         uniformNodes.length > 0 ? uniformNodes : fallbackNodes
+      const highDensityNodeIds = new Set(
+        nodePortPointsSource.map((node) => node.capacityMeshNodeId),
+      )
 
       cms.highDensityNodePortPoints = structuredClone(nodePortPointsSource)
 
@@ -546,10 +549,14 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
             (
               cms.portPointPathingSolver?.getOutput().inputNodeWithPortPoints ??
               []
-            ).map((node) => [
-              node.capacityMeshNodeId,
-              cms.portPointPathingSolver?.computeNodePf(node) ?? null,
-            ]),
+            )
+              .filter((node) =>
+                highDensityNodeIds.has(node.capacityMeshNodeId),
+              )
+              .map((node) => [
+                node.capacityMeshNodeId,
+                cms.portPointPathingSolver?.computeNodePf(node) ?? null,
+              ]),
           ),
           colorMap: cms.colorMap,
           connMap: cms.connMap,
