@@ -23,9 +23,9 @@ type Srj29Metadata = {
   }
 }
 
-type Srj29Sample = SimpleRouteJson & { metadata: Srj29Metadata }
-
-function rotateSampleCounterclockwise(sample: Srj29Sample): Srj29Sample {
+function rotateSampleCounterclockwise(
+  sample: SimpleRouteJson,
+): SimpleRouteJson {
   return {
     ...structuredClone(sample),
     obstacles: sample.obstacles.map((obstacle) => ({
@@ -55,10 +55,10 @@ function rotateSampleCounterclockwise(sample: Srj29Sample): Srj29Sample {
 
 function addRealDdrContext(
   graphics: GraphicsObject,
-  inputSrj: Srj29Sample,
+  srj: SimpleRouteJson,
+  metadata: Srj29Metadata,
 ): GraphicsObject {
-  const { metadata } = inputSrj
-  const ratsnestLines = inputSrj.connections.map((connection) => ({
+  const ratsnestLines = srj.connections.map((connection) => ({
     points: connection.pointsToConnect.map(({ x, y }) => ({ x, y })),
     strokeColor: "rgba(55, 65, 81, 0.52)",
     strokeWidth: 0.08,
@@ -73,7 +73,7 @@ function addRealDdrContext(
       ...(graphics.texts ?? []),
       {
         x: 0,
-        y: inputSrj.bounds.minY + 4,
+        y: srj.bounds.minY + 4,
         text: `U12 • ${metadata.ddr3.partNumber}`,
         fontSize: 0.65,
         color: "#111827",
@@ -81,7 +81,7 @@ function addRealDdrContext(
       },
       {
         x: 0,
-        y: inputSrj.bounds.maxY - 4,
+        y: srj.bounds.maxY - 4,
         text: `U5 • ${metadata.controller.partNumber}`,
         fontSize: 0.65,
         color: "#111827",
@@ -100,8 +100,8 @@ function addRealDdrContext(
 }
 
 test("Pipeline 10 reproduces vertical placement failure on a real DDR3 BGA pair", async () => {
-  const inputSrj = rotateSampleCounterclockwise(sample001 as Srj29Sample)
-  const { metadata } = inputSrj
+  const inputSrj = rotateSampleCounterclockwise(sample001 as SimpleRouteJson)
+  const metadata = sample001.metadata as unknown as Srj29Metadata
 
   expect(inputSrj.connections).toHaveLength(
     metadata.referenceDesign.directConnectionCount,
@@ -134,6 +134,7 @@ test("Pipeline 10 reproduces vertical placement failure on a real DDR3 BGA pair"
   const inputGraphics = addRealDdrContext(
     convertSrjToGraphicsObject(inputSrj, { traceColorMode: "net" }),
     inputSrj,
+    metadata,
   )
   await expect(
     getGraphicsSvgFrames({
