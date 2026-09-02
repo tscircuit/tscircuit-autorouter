@@ -9,6 +9,7 @@ import { GraphicsObject } from "graphics-debug"
 import { getJumpersGraphics } from "lib/utils/getJumperGraphics"
 import { createObjectsWithZLayers } from "lib/utils/createObjectsWithZLayers"
 import { CrossingViaReductionSolver } from "lib/solvers/CrossingViaReductionSolver/crossing-via-reduction-solver"
+import { RELAXED_DRC_OPTIONS } from "lib/testing/drcPresets"
 
 type Phase =
   | "via_removal"
@@ -363,6 +364,9 @@ export class TraceSimplificationSolver extends BaseSolver {
               ? [...this.simplificationConfig.outline]
               : undefined,
             geometryShortcutTraceMargin: 0.1,
+            traceMargin: RELAXED_DRC_OPTIONS.traceClearance,
+            obstacleMargin:
+              this.simplificationConfig.minTraceToPadEdgeClearance,
             geometryShortcutObstacleMargin:
               this.simplificationConfig.minTraceToPadEdgeClearance ?? 0.15,
             // Delay the quadratic anchor search until the first path pass has
