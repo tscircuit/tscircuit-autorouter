@@ -33,6 +33,8 @@ import {
 // orderings are introduced only after that portfolio spends its dynamically
 // derived exploration budget or exhausts all of its candidates.
 const ORDERING_SHUFFLE_SEEDS = Array.from({ length: 6 }, (_, seed) => seed)
+const HIGH_DENSITY_A11_MAX_ITERATIONS = 5_000
+const HIGH_DENSITY_A12_MAX_ITERATIONS = 15_000
 
 type ExternalGridSolver =
   | HighDensitySolverA01
@@ -79,7 +81,6 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
   connMap?: ConnectivityMap
   effort: number
   adaptiveSearchExpanded = false
-  nativeExactGridCandidatesAdded = false
 
   private getSolvedSegmentCount(
     solver: PortfolioCandidateSolver,
@@ -159,6 +160,12 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       ["highDensityA01"],
       ["highDensityA03"],
     ]
+    if (this.constructorParams.useHighDensitySolverA11) {
+      combinations.push(["highDensityA11"])
+    }
+    if (this.constructorParams.useHighDensitySolverA12) {
+      combinations.push(["highDensityA12"])
+    }
     return combinations
   }
 
@@ -390,11 +397,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
         SHUFFLE_SEED: shuffleSeed,
       })
     }
-    // Preserve the established portfolio's total supervisor budget. A11 and
-    // A12 participate in the adaptive phase by sharing this work allowance;
-    // adding them must not delay grow/shrink by extending the native attempt.
     this.refreshDynamicIterationLimit()
-    this.addNativeExactGridCandidates()
     this.stats.adaptiveSearchExpanded = true
     this.stats.adaptiveSearchExpandedAtIteration = this.iterations
     this.stats.candidateWorkAtExpansion = this.getTotalCandidateWork()
@@ -404,28 +407,6 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
         this.getCandidateProgress(solver),
       ),
     )
-  }
-
-  private addNativeExactGridCandidates() {
-    if (this.nativeExactGridCandidatesAdded) return
-
-    this.nativeExactGridCandidatesAdded = true
-    if (this.constructorParams.useHighDensitySolverA11) {
-      this.addSupervisedCandidate({
-        HIGH_DENSITY_A11: true,
-        SHUFFLE_SEED: ORDERING_SHUFFLE_SEEDS[0],
-      })
-    }
-    if (this.constructorParams.useHighDensitySolverA12) {
-      this.addSupervisedCandidate({
-        HIGH_DENSITY_A12: true,
-        SHUFFLE_SEED: ORDERING_SHUFFLE_SEEDS[0],
-      })
-    }
-    this.stats.nativeExactGridCandidatesAdded = true
-    this.stats.nativeExactGridCandidatesAddedAtIteration = this.iterations
-    this.stats.nativeExactGridSharedSupervisorIterationLimit =
-      this.MAX_ITERATIONS
   }
 
   private shouldExpandPortfolio(): boolean {
@@ -454,6 +435,12 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
   }
 
   computeG(solver: PortfolioCandidateSolver) {
+    if (solver instanceof HighDensitySolverA11) {
+      return this.GREEDY_MULTIPLIER + 1 + solver.iterations / 1_000_000
+    }
+    if (solver instanceof HighDensitySolverA12) {
+      return this.GREEDY_MULTIPLIER + 2 + solver.iterations / 1_000_000
+    }
     if (
       solver instanceof HighDensitySolverA01 ||
       solver instanceof HighDensityA03Solver
@@ -553,6 +540,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
           shuffleSeed: hyperParameters.SHUFFLE_SEED ?? 0,
         },
       })
+      solver.MAX_ITERATIONS = HIGH_DENSITY_A11_MAX_ITERATIONS
       return solver
     }
     if (hyperParameters.HIGH_DENSITY_A12) {
@@ -567,6 +555,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
           shuffleSeed: hyperParameters.SHUFFLE_SEED ?? 0,
         },
       })
+      solver.MAX_ITERATIONS = HIGH_DENSITY_A12_MAX_ITERATIONS
       return solver
     }
     if (hyperParameters.CLOSED_FORM_TWO_TRACE_SAME_LAYER) {
