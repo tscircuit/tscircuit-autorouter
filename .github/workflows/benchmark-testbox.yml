@@ -50,6 +50,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 3
 
       - name: Setup bun
         uses: oven-sh/setup-bun@v2
@@ -73,7 +75,7 @@ jobs:
         run: |
           git config user.name "tscircuit-bot"
           git config user.email "actions@github.com"
-          git restore --source="${GITHUB_SHA}^" -- .github/workflows/benchmark-testbox.yml
+          git restore --source="${GITHUB_SHA}~2" -- .github/workflows/benchmark-testbox.yml
           git add .github/workflows/benchmark-testbox.yml
           git add tests/bugs/__snapshots__/bugreport57-51db46-linux.snap.svg
           git add tests/bugs/__snapshots__/bugreport59-82431e-linux.snap.svg
