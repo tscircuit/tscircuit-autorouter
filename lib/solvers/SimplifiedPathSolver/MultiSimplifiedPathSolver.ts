@@ -23,6 +23,7 @@ export class MultiSimplifiedPathSolver extends BaseSolver {
   otherHdRoutes: ReadonlyArray<HighDensityIntraNodeRoute>
   obstacles: Obstacle[]
   connMap: ConnectivityMap
+  layerCount?: number
   colorMap: Record<string, string>
   outline?: Array<{ x: number; y: number }>
   minBoardEdgeClearance: number
@@ -35,6 +36,7 @@ export class MultiSimplifiedPathSolver extends BaseSolver {
     otherHdRoutes?: ReadonlyArray<HighDensityIntraNodeRoute>
     obstacles: Obstacle[]
     connMap?: ConnectivityMap
+    layerCount?: number
     colorMap?: Record<string, string>
     outline?: Array<{ x: number; y: number }>
     minBoardEdgeClearance?: number
@@ -46,6 +48,7 @@ export class MultiSimplifiedPathSolver extends BaseSolver {
 
     this.unsimplifiedHdRoutes = params.unsimplifiedHdRoutes
     this.otherHdRoutes = params.otherHdRoutes ?? []
+    this.layerCount = params.layerCount
     const inferredLayerCount =
       Math.max(
         2,
@@ -55,7 +58,7 @@ export class MultiSimplifiedPathSolver extends BaseSolver {
       ) || 2
     this.obstacles = createObjectsWithZLayers(
       params.obstacles,
-      inferredLayerCount,
+      params.layerCount ?? inferredLayerCount,
     )
     this.connMap = params.connMap || new ConnectivityMap({})
     this.colorMap = params.colorMap || {}
@@ -86,6 +89,7 @@ export class MultiSimplifiedPathSolver extends BaseSolver {
         ),
         obstacles: this.obstacles,
         connMap: this.connMap,
+        layerCount: this.layerCount,
         colorMap: this.colorMap,
         outline: this.outline,
         minBoardEdgeClearance: this.minBoardEdgeClearance,

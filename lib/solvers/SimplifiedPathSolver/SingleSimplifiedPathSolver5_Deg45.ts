@@ -68,9 +68,22 @@ export class SingleSimplifiedPathSolver5 extends SingleSimplifiedPathSolver {
   OBSTACLE_MARGIN = 0.1
   TRACE_THICKNESS = 0.15
   private useTraceWidthAwareClearance = false
+  private layerCount?: number
   private clearanceTraceThickness = this.TRACE_THICKNESS
 
   TAIL_JUMP_RATIO: number = 0.8
+
+  private getNetForRouteId(id: string): string | undefined {
+    const net = this.connMap.getNetConnectedToId(id)
+    if (net !== undefined) return net
+
+    // A route root can be a net key rather than a member ID. Resolve it
+    // through its existing members without adding aliases to connMap.
+    const [memberId] = this.connMap.getIdsConnectedToNet(id)
+    return memberId === undefined
+      ? undefined
+      : this.connMap.getNetConnectedToId(memberId)
+  }
 
   private isSameNetRoute(otherRoute: HighDensityIntraNodeRoute): boolean {
     const inputRouteIds = [
@@ -82,23 +95,33 @@ export class SingleSimplifiedPathSolver5 extends SingleSimplifiedPathSolver {
       otherRoute.rootConnectionName,
     ].filter((id): id is string => id !== undefined)
 
-    return inputRouteIds.some((inputRouteId) =>
-      otherRouteIds.some(
+    return inputRouteIds.some((inputRouteId) => {
+      // Keep multilayer path behavior until DRC checks the full physical via
+      // span. Core emits through-hole vias beyond the route's endpoint layers.
+      const inputNet =
+        this.layerCount === 2
+          ? this.getNetForRouteId(inputRouteId)
+          : undefined
+      return otherRouteIds.some(
         (otherRouteId) =>
           inputRouteId === otherRouteId ||
-          this.connMap.areIdsConnected(inputRouteId, otherRouteId),
-      ),
-    )
+          this.connMap.areIdsConnected(inputRouteId, otherRouteId) ||
+          (inputNet !== undefined &&
+            inputNet === this.getNetForRouteId(otherRouteId)),
+      )
+    })
   }
 
   constructor(
     params: ConstructorParameters<typeof SingleSimplifiedPathSolver>[0] & {
       useTraceWidthAwareClearance?: boolean
+      layerCount?: number
     },
   ) {
     super(params)
 
     this.cachedValidPathSegments = new Set()
+    this.layerCount = params.layerCount
     this.useTraceWidthAwareClearance =
       params.useTraceWidthAwareClearance ?? false
     this.clearanceTraceThickness = this.useTraceWidthAwareClearance

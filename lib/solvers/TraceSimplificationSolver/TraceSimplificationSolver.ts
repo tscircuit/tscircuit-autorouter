@@ -168,27 +168,6 @@ export class TraceSimplificationSolver extends BaseSolver {
     this.MAX_ITERATIONS = 100e6
   }
 
-  private getPathSimplificationConnectivityMap(): ConnectivityMap {
-    const { connMap, layerCount, otherHdRoutes } = this.simplificationConfig
-    // Keep multilayer path behavior until DRC checks the full physical via
-    // span. Core emits through-hole vias beyond the route's endpoint layers.
-    if (layerCount !== 2) return connMap
-
-    // Route roots can be net keys, which are not IDs in ConnectivityMap.
-    // Register those roots for path comparisons while keeping generated route
-    // names and the pipeline's shared connectivity unchanged.
-    const pathConnMap = new ConnectivityMap(structuredClone(connMap.netMap))
-    for (const route of [...this.hdRoutes, ...(otherHdRoutes ?? [])]) {
-      const root = route.rootConnectionName
-      if (!root || connMap.getNetConnectedToId(root) !== undefined) continue
-      const [connectedId] = connMap.getIdsConnectedToNet(root)
-      if (connectedId !== undefined) {
-        pathConnMap.addConnections([[root, connectedId]])
-      }
-    }
-    return pathConnMap
-  }
-
   private validatePreservedRouteEndpoints(routes: HighDensityRoute[]): void {
     if (!this.preservedRouteEndpoints) return
     if (routes.length !== this.preservedRouteEndpoints.size) {
@@ -443,7 +422,8 @@ export class TraceSimplificationSolver extends BaseSolver {
             unsimplifiedHdRoutes: this.hdRoutes,
             otherHdRoutes: [...(this.simplificationConfig.otherHdRoutes ?? [])],
             obstacles: [...this.simplificationConfig.obstacles],
-            connMap: this.getPathSimplificationConnectivityMap(),
+            connMap: this.simplificationConfig.connMap,
+            layerCount: this.simplificationConfig.layerCount,
             colorMap: { ...this.simplificationConfig.colorMap },
             outline: this.simplificationConfig.outline
               ? [...this.simplificationConfig.outline]
