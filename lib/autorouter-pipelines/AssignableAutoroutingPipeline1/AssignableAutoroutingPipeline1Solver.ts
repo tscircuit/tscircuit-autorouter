@@ -7,6 +7,7 @@ import type {
   SimplifiedPcbTrace,
   SimplifiedPcbTraces,
 } from "lib/types"
+import { BasePipelineSolver } from "lib/solvers/BasePipelineSolver"
 import { BaseSolver } from "lib/solvers/BaseSolver"
 import { CapacityMeshEdgeSolver } from "lib/solvers/CapacityMeshSolver/CapacityMeshEdgeSolver"
 import { CapacityMeshNodeSolver } from "lib/solvers/CapacityMeshSolver/CapacityMeshNodeSolver1"
@@ -85,7 +86,7 @@ function definePipelineStep<
   }
 }
 
-export class AssignableAutoroutingPipeline1Solver extends BaseSolver {
+export class AssignableAutoroutingPipeline1Solver extends BasePipelineSolver {
   override getSolverName(): string {
     return "AssignableAutoroutingPipeline1Solver"
   }

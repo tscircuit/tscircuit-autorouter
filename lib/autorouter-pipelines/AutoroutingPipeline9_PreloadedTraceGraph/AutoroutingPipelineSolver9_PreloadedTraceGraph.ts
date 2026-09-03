@@ -50,6 +50,7 @@ import {
   AvailableSegmentPointSolver,
   type SharedEdgeSegment,
 } from "../../solvers/AvailableSegmentPointSolver/AvailableSegmentPointSolver"
+import { BasePipelineSolver } from "../../solvers/BasePipelineSolver"
 import { BaseSolver } from "../../solvers/BaseSolver"
 import { CapacityMeshEdgeSolver } from "../../solvers/CapacityMeshSolver/CapacityMeshEdgeSolver"
 import { CapacityMeshEdgeSolver2_NodeTreeOptimization } from "../../solvers/CapacityMeshSolver/CapacityMeshEdgeSolver2_NodeTreeOptimization"
@@ -239,7 +240,7 @@ function definePipelineStep<
   }
 }
 
-export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
+export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BasePipelineSolver {
   override getSolverName(): string {
     return "AutoroutingPipelineSolver9_PreloadedTraceGraph"
   }
