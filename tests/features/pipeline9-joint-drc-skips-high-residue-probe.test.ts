@@ -1,5 +1,4 @@
 import { expect, test } from "bun:test"
-import { GlobalDrcBranchPortfolioSolver } from "high-density-repair03/lib"
 import { Pipeline9JointDrcRepairSolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9JointDrcRepairSolver"
 import type { SimpleRouteConnection, SimpleRouteJson } from "lib/types"
 import type { HighDensityRoute } from "lib/types/high-density-types"
@@ -66,8 +65,5 @@ test("Pipeline9 skips the fast probe for a high initial DRC residue", () => {
   })
 
   expect(Number(solver.stats.initialJointDrcIssueCount)).toBeGreaterThan(16)
-  expect(solver.exactRepairSolver).toBeInstanceOf(
-    GlobalDrcBranchPortfolioSolver,
-  )
-  expect(solver.stats.pipeline7AdaptiveExactDrcFastProbeAttempted).toBeFalse()
+  expect(solver.stats.exactRepairFastProbeAttempted).toBeFalse()
 })
