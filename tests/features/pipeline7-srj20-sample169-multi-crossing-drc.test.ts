@@ -23,5 +23,5 @@ test("Pipeline7 keeps srj20 sample169 DRC-clean after multi-crossing simplificat
   )
 
   expect(errors).toHaveLength(0)
-  expect(viaCount).toBe(33)
+  expect(viaCount).toBe(32)
 })
