@@ -42,7 +42,7 @@ type RegionalB01RepairResult = {
   safeTraceLayerRepairSkippedForBudget: boolean
   remainingDrcIssueCount: number
   preloadEligibleDrcIssueCount: number
-  preloadRepairAttempted: boolean
+  repairAttempted: boolean
 }
 
 type Bounds = {
@@ -61,6 +61,8 @@ const FIXED_ROUTE_INDEX_CELL_SIZE = 4
 const REGIONAL_REPAIR_SEARCH_VOLUME = 7_000
 const MIN_REGIONAL_REPAIR_SEARCH_BUDGET = 16
 const MAX_REGIONAL_REPAIR_SEARCH_BUDGET = 192
+// Match the post-exact precision cap so dense failures skip this costly search.
+const MAX_MOVABLE_TRACE_PAIR_REGIONAL_DRC_ISSUES = 16
 
 export { getPipeline9FixedRouteObstacles }
 
@@ -507,12 +509,12 @@ const getRegularRegionalCandidate = ({
 }
 
 /**
- * Activates for a remaining preload-owned DRC error, then reroutes supported
- * joint-output participants with B01 in a sub-15mm window. B01 sees every
- * other route plus board copper as obstacles. Candidate searches use a
- * route-scaled budget because each search rebuilds and evaluates board copper.
- * If no B01 candidate helps, one regular high-density candidate jointly
- * reroutes all traces in the region.
+ * Activates for a remaining preload-owned DRC error or a movable trace-pair
+ * DRC, then reroutes supported joint-output participants with B01 in a
+ * sub-15mm window. B01 sees every other route plus board copper as obstacles.
+ * Candidate searches use a route-scaled budget because each search rebuilds
+ * and evaluates board copper. If no B01 candidate helps, one regular
+ * high-density candidate jointly reroutes all traces in the region.
  */
 export const applyPipeline9RegionalB01Repairs = ({
   srj,
@@ -564,7 +566,24 @@ export const applyPipeline9RegionalB01Repairs = ({
   }
   const preloadEligibleDrcIssueCount =
     currentErrors.filter(isPreloadRepairError).length
-  if (preloadEligibleDrcIssueCount === 0) {
+  const initialRouteIndexByTraceId = getPipeline9RouteIndexByTraceId({
+    routes: currentRoutes,
+    newConnections,
+    syntheticConnectionNames,
+  })
+  const hasMovableTracePairError =
+    currentErrors.length <= MAX_MOVABLE_TRACE_PAIR_REGIONAL_DRC_ISSUES &&
+    currentErrors.some(
+      (error) =>
+        error.type === "pcb_trace_error" &&
+        typeof error.pcb_via_id !== "string" &&
+        (!Array.isArray(error.pcb_via_ids) || error.pcb_via_ids.length === 0) &&
+        getPipeline9RegionalRepairTraceIds({
+          error,
+          routeIndexByTraceId: initialRouteIndexByTraceId,
+        }).length >= 2,
+    )
+  if (preloadEligibleDrcIssueCount === 0 && !hasMovableTracePairError) {
     return {
       routes: currentRoutes,
       attemptedCandidateCount,
@@ -576,7 +595,7 @@ export const applyPipeline9RegionalB01Repairs = ({
       safeTraceLayerRepairSkippedForBudget: false,
       remainingDrcIssueCount: currentErrors.length,
       preloadEligibleDrcIssueCount,
-      preloadRepairAttempted: false,
+      repairAttempted: false,
     }
   }
   const fixedRouteCopperSpatialIndex =
@@ -738,6 +757,7 @@ export const applyPipeline9RegionalB01Repairs = ({
     safeTraceLayerRepairSkippedForBudget,
     remainingDrcIssueCount: currentErrors.length,
     preloadEligibleDrcIssueCount,
-    preloadRepairAttempted: preloadEligibleDrcIssueCount > 0,
+    repairAttempted:
+      preloadEligibleDrcIssueCount > 0 || hasMovableTracePairError,
   }
 }
