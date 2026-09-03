@@ -43,7 +43,7 @@ jobs:
             const command = parsePrBenchmarkCommand(context.payload.comment.body)
             const isProfile = command.kind === 'profile'
             const datasets = command.kind === 'benchmark-all'
-              ? ['dataset01', 'srj18', 'srj19', 'srj20', 'srj21', 'srj23']
+              ? ['dataset01', 'srj18']
               : [command.datasetName]
             const pr = await github.rest.pulls.get({
               owner: context.repo.owner,

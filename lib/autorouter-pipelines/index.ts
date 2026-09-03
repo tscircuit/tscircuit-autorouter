@@ -27,3 +27,7 @@ export {
   type AutoroutingPipelineSolver9NetworkedOptions,
 } from "./AutoroutingPipeline9_Networked/AutoroutingPipelineSolver9_Networked"
 export { AutoroutingPipelineSolver10_BgaFanout } from "./AutoroutingPipeline10_BgaFanout/AutoroutingPipelineSolver10_BgaFanout"
+export {
+  AutoroutingPipelineSolver11_Simplification,
+  type AutoroutingPipelineSolver11SimplificationOptions,
+} from "./AutoroutingPipeline11_Simplification/AutoroutingPipelineSolver11_Simplification"

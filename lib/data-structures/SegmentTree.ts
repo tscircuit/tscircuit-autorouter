@@ -21,10 +21,14 @@ export type BucketCoordinate = `${number}x${number}`
 export class SegmentTree {
   buckets: Map<BucketCoordinate, SegmentWithId[]>
   CELL_SIZE = 0.4
-  SEGMENT_MARGIN = 0.4 // traceThickness + obstacleMargin
+  SEGMENT_MARGIN: number
 
-  constructor(public segments: Segment[]) {
+  constructor(
+    public segments: Segment[],
+    segmentMargin = 0.4,
+  ) {
     this.buckets = new Map()
+    this.SEGMENT_MARGIN = segmentMargin
     const segmentsById = new Map<string, Segment>() // Avoid adding duplicates if input has them
 
     for (const segment of segments) {
