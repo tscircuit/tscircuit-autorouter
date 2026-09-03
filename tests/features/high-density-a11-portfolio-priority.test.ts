@@ -2,7 +2,7 @@ import { expect, test } from "bun:test"
 import { PortfolioSingleIntraNodeSolver } from "lib/solvers/HyperHighDensitySolver/PortfolioSingleIntraNodeSolver"
 import { makeNode } from "./never-fail-growth-high-density/test-helpers"
 
-test("native A11 and A12 are bounded behind the established portfolio", () => {
+test("native A11 and A12 share the established grid-solver priority", () => {
   const solver = new PortfolioSingleIntraNodeSolver({
     nodeWithPortPoints: makeNode(),
     viaDiameter: 0.3,
@@ -30,8 +30,8 @@ test("native A11 and A12 are bounded behind the established portfolio", () => {
   )
   expect(a11Candidate?.solver.MAX_ITERATIONS).toBe(5_000)
   expect(a12Candidate?.solver.MAX_ITERATIONS).toBe(15_000)
-  expect(a11Candidate?.f).toBeGreaterThan(a01Candidate?.f ?? Infinity)
-  expect(a12Candidate?.f).toBeGreaterThan(a11Candidate?.f ?? Infinity)
+  expect(a11Candidate?.f).toBe(a01Candidate?.f)
+  expect(a12Candidate?.f).toBe(a01Candidate?.f)
 
   solver.step()
   expect(solver.activeSubSolver).not.toBe(a11Candidate?.solver)
@@ -39,19 +39,10 @@ test("native A11 and A12 are bounded behind the established portfolio", () => {
   expect(a11Candidate?.solver.iterations).toBe(0)
   expect(a12Candidate?.solver.iterations).toBe(0)
 
-  solver.solved = false
-  solver.failed = false
-  solver.winningSolver = undefined
-  for (const { solver: candidate } of solver.supervisedSolvers ?? []) {
-    if (
-      candidate !== a11Candidate?.solver &&
-      candidate !== a12Candidate?.solver
-    ) {
-      candidate.solved = false
-      candidate.failed = true
-    }
-  }
-  solver.step()
-  expect(a11Candidate?.solver.iterations).toBeGreaterThan(0)
-  expect(a12Candidate?.solver.iterations).toBe(0)
+  expect(solver.computeG(a11Candidate!.solver)).toBe(
+    solver.computeG(a01Candidate!.solver),
+  )
+  expect(solver.computeG(a12Candidate!.solver)).toBe(
+    solver.computeG(a01Candidate!.solver),
+  )
 })

@@ -1,9 +1,9 @@
 import {
-  getRouteGeometryViolationError,
   HighDensitySolverA03 as HighDensityA03Solver,
   HighDensitySolverA01,
   HighDensitySolverA11,
   HighDensitySolverA12,
+  getRouteGeometryViolationError,
 } from "@tscircuit/high-density-a01"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import {
@@ -435,15 +435,11 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
   }
 
   computeG(solver: PortfolioCandidateSolver) {
-    if (solver instanceof HighDensitySolverA11) {
-      return this.GREEDY_MULTIPLIER + 1 + solver.iterations / 1_000_000
-    }
-    if (solver instanceof HighDensitySolverA12) {
-      return this.GREEDY_MULTIPLIER + 2 + solver.iterations / 1_000_000
-    }
     if (
       solver instanceof HighDensitySolverA01 ||
-      solver instanceof HighDensityA03Solver
+      solver instanceof HighDensityA03Solver ||
+      solver instanceof HighDensitySolverA11 ||
+      solver instanceof HighDensitySolverA12
     ) {
       return solver.iterations / 1_000_000
     }
