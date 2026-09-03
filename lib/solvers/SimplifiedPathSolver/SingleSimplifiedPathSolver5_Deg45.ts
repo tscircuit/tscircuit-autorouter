@@ -72,17 +72,7 @@ export class SingleSimplifiedPathSolver5 extends SingleSimplifiedPathSolver {
 
   TAIL_JUMP_RATIO: number = 0.8
 
-  private netByConnectionName?: ReadonlyMap<string, string>
-
   private isSameNetRoute(otherRoute: HighDensityIntraNodeRoute): boolean {
-    const inputNet = this.netByConnectionName?.get(
-      this.inputRoute.connectionName,
-    )
-    const otherNet = this.netByConnectionName?.get(otherRoute.connectionName)
-    if (inputNet !== undefined && otherNet !== undefined) {
-      return inputNet === otherNet
-    }
-
     const inputRouteIds = [
       this.inputRoute.connectionName,
       this.inputRoute.rootConnectionName,
@@ -104,12 +94,10 @@ export class SingleSimplifiedPathSolver5 extends SingleSimplifiedPathSolver {
   constructor(
     params: ConstructorParameters<typeof SingleSimplifiedPathSolver>[0] & {
       useTraceWidthAwareClearance?: boolean
-      netByConnectionName?: ReadonlyMap<string, string>
     },
   ) {
     super(params)
 
-    this.netByConnectionName = params.netByConnectionName
     this.cachedValidPathSegments = new Set()
     this.useTraceWidthAwareClearance =
       params.useTraceWidthAwareClearance ?? false

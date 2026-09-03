@@ -168,6 +168,30 @@ export class TraceSimplificationSolver extends BaseSolver {
     this.MAX_ITERATIONS = 100e6
   }
 
+  private getPathSimplificationConnectivityMap(): ConnectivityMap {
+    const { connMap, layerCount, otherHdRoutes } = this.simplificationConfig
+    // Keep multilayer path behavior until DRC checks the full physical via
+    // span. Core emits through-hole vias beyond the route's endpoint layers.
+    if (layerCount !== 2) return connMap
+
+    // Register generated section names without changing the pipeline's shared
+    // connectivity or the via-removal stages' inputs.
+    const pathConnMap = new ConnectivityMap(structuredClone(connMap.netMap))
+    for (const route of [...this.hdRoutes, ...(otherHdRoutes ?? [])]) {
+      if (connMap.getNetConnectedToId(route.connectionName) !== undefined) {
+        continue
+      }
+      if (!route.rootConnectionName) continue
+      const rootNet = connMap.getNetConnectedToId(route.rootConnectionName)
+      const rootMembers = connMap.getIdsConnectedToNet(
+        rootNet ?? route.rootConnectionName,
+      )
+      if (rootMembers.length === 0) continue
+      pathConnMap.addConnections([[route.connectionName, rootMembers[0]!]])
+    }
+    return pathConnMap
+  }
+
   private validatePreservedRouteEndpoints(routes: HighDensityRoute[]): void {
     if (!this.preservedRouteEndpoints) return
     if (routes.length !== this.preservedRouteEndpoints.size) {
@@ -419,18 +443,10 @@ export class TraceSimplificationSolver extends BaseSolver {
 
         case "path_simplification":
           this.activeSubSolver = new MultiSimplifiedPathSolver({
-            // Same-net shortcuts need complete via-layer collision checks.
-            // Multilayer DRC currently checks only via endpoint layers, while
-            // core emits through-hole vias on every layer. Keep the existing
-            // path behavior there until that physical-copper model is fixed.
-            netByConnectionName:
-              this.simplificationConfig.layerCount === 2
-                ? this.simplificationConfig.netByConnectionName
-                : undefined,
             unsimplifiedHdRoutes: this.hdRoutes,
             otherHdRoutes: [...(this.simplificationConfig.otherHdRoutes ?? [])],
             obstacles: [...this.simplificationConfig.obstacles],
-            connMap: this.simplificationConfig.connMap,
+            connMap: this.getPathSimplificationConnectivityMap(),
             colorMap: { ...this.simplificationConfig.colorMap },
             outline: this.simplificationConfig.outline
               ? [...this.simplificationConfig.outline]
