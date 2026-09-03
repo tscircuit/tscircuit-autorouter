@@ -598,8 +598,19 @@ export const applyPipeline9RegionalB01Repairs = ({
           error.type === "pcb_via_clearance_error") &&
         typeof error.pcb_trace_id === "string",
     )
-    for (const error of repairableErrors) {
+    for (const scheduledError of repairableErrors) {
       if (candidateSearchBudgetExhausted) break
+      // An accepted regional repair can clear several queued collisions or
+      // move a remaining collision. Use its current finding before searching.
+      const error: Pipeline9DrcError | undefined =
+        typeof scheduledError.pcb_trace_error_id === "string"
+          ? currentErrors.find(
+              (currentError): boolean =>
+                currentError.pcb_trace_error_id ===
+                scheduledError.pcb_trace_error_id,
+            )
+          : scheduledError
+      if (!error) continue
       const center = getRepairCenter(error, srj)
       const traceIds = getPipeline9RegionalRepairTraceIds({
         error,
