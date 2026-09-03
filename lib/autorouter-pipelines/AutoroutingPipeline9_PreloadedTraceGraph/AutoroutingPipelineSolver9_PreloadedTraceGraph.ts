@@ -1017,6 +1017,15 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
   }
 
   currentPipelineStepIndex = 0
+
+  computeProgress(): number {
+    const activeSubSolverProgress = this.activeSubSolver?.progress ?? 0
+    return (
+      (this.currentPipelineStepIndex + activeSubSolverProgress) /
+      this.pipelineDef.length
+    )
+  }
+
   _step() {
     const pipelineStepDef = this.pipelineDef[this.currentPipelineStepIndex]
     if (!pipelineStepDef) {
