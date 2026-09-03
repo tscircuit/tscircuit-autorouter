@@ -58,7 +58,7 @@ export class MultiSimplifiedPathSolver extends BaseSolver {
       ) || 2
     this.obstacles = createObjectsWithZLayers(
       params.obstacles,
-      params.layerCount ?? inferredLayerCount,
+      inferredLayerCount,
     )
     this.connMap = params.connMap || new ConnectivityMap({})
     this.colorMap = params.colorMap || {}
