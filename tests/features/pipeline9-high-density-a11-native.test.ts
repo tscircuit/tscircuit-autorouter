@@ -2,7 +2,7 @@ import { expect, test } from "bun:test"
 import { getRouteGeometryViolationError } from "@tscircuit/high-density-a01"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import { createPipeline9RegularNodeSolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9HighDensitySolver"
-import { areNodePortPointPairsConnectedByRoutes } from "lib/solvers/HyperHighDensitySolver/repairDisconnectedSameRootPortPoints"
+import { doRoutesCoverNodePortPointPairsExactlyOnce } from "lib/solvers/HyperHighDensitySolver/repairDisconnectedSameRootPortPoints"
 import type { NodeWithPortPoints } from "lib/types/high-density-types"
 import sample002Cmn279 from "../fixtures/srj18-sample002-cmn279.json"
 
@@ -33,6 +33,15 @@ test("Pipeline9 A11 solves a difficult node at native size only", () => {
   expect(solver.routes).toHaveLength(4)
   expect(getRouteGeometryViolationError(solver.routes)).toBeNull()
   expect(
-    areNodePortPointPairsConnectedByRoutes(solver.routes, nodeWithPortPoints),
+    doRoutesCoverNodePortPointPairsExactlyOnce(
+      solver.routes,
+      nodeWithPortPoints,
+    ),
   ).toBe(true)
+  expect(
+    doRoutesCoverNodePortPointPairsExactlyOnce(
+      [...solver.routes, solver.routes[0]!],
+      nodeWithPortPoints,
+    ),
+  ).toBe(false)
 })

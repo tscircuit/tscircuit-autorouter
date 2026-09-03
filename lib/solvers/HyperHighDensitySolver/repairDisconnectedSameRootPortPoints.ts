@@ -5,6 +5,8 @@ import type {
 } from "lib/types/high-density-types"
 import { getConnectionPortPointPairs } from "lib/utils/getConnectionPortPointPairs"
 
+type PhysicalPairKey = string & { readonly __brand: "PhysicalPairKey" }
+
 const pointKey = (point: { x: number; y: number; z: number }) =>
   `${point.x.toFixed(6)},${point.y.toFixed(6)},${point.z}`
 
@@ -12,6 +14,62 @@ const routeEndpoints = (route: HighDensityIntraNodeRoute) => [
   route.route[0],
   route.route[route.route.length - 1],
 ]
+
+const getPhysicalPairKey = (
+  pair: readonly [
+    { x: number; y: number; z: number },
+    { x: number; y: number; z: number },
+  ],
+): PhysicalPairKey => {
+  const [start, end] = pair
+  return [pointKey(start), pointKey(end)].sort().join("|") as PhysicalPairKey
+}
+
+const getExpectedPhysicalPortPointPairs = (
+  nodeWithPortPoints: NodeWithPortPoints,
+): Array<[PortPoint, PortPoint]> => {
+  const explicitPairs = nodeWithPortPoints.portPointsInPairs ?? []
+  if (explicitPairs.length > 0) return explicitPairs
+
+  const connectionNames = new Set(
+    nodeWithPortPoints.portPoints.map((portPoint) => portPoint.connectionName),
+  )
+  return [...connectionNames].flatMap((connectionName) =>
+    getConnectionPortPointPairs(
+      nodeWithPortPoints.portPoints.filter(
+        (portPoint) => portPoint.connectionName === connectionName,
+      ),
+    ),
+  )
+}
+
+export const doRoutesCoverNodePortPointPairsExactlyOnce = (
+  routes: HighDensityIntraNodeRoute[],
+  nodeWithPortPoints: NodeWithPortPoints,
+): boolean => {
+  const expectedPairKeys = new Set(
+    getExpectedPhysicalPortPointPairs(nodeWithPortPoints).map(
+      getPhysicalPairKey,
+    ),
+  )
+  const actualCountByPairKey = new Map<PhysicalPairKey, number>()
+
+  for (const route of routes) {
+    const [start, end] = routeEndpoints(route)
+    if (!start || !end) return false
+    const pairKey = getPhysicalPairKey([start, end])
+    const pairCount = (actualCountByPairKey.get(pairKey) ?? 0) + 1
+    if (pairCount > 1) return false
+    actualCountByPairKey.set(pairKey, pairCount)
+  }
+
+  return (
+    actualCountByPairKey.size === expectedPairKeys.size &&
+    [...expectedPairKeys].every(
+      (pairKey) => actualCountByPairKey.get(pairKey) === 1,
+    )
+  )
+}
 
 const getConnectedPointKeysForConnection = (
   routes: HighDensityIntraNodeRoute[],

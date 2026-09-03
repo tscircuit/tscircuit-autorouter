@@ -2,7 +2,7 @@ import { expect, test } from "bun:test"
 import { getRouteGeometryViolationError } from "@tscircuit/high-density-a01"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import { createPipeline9RegularNodeSolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9HighDensitySolver"
-import { areNodePortPointPairsConnectedByRoutes } from "lib/solvers/HyperHighDensitySolver/repairDisconnectedSameRootPortPoints"
+import { doRoutesCoverNodePortPointPairsExactlyOnce } from "lib/solvers/HyperHighDensitySolver/repairDisconnectedSameRootPortPoints"
 import type { NodeWithPortPoints } from "lib/types/high-density-types"
 import sample003Cmn70 from "../fixtures/hd30-sample003-cmn70.json"
 
@@ -33,6 +33,9 @@ test("Pipeline9 A12 solves its HD30 node without growth", () => {
   expect(solver.routes).toHaveLength(5)
   expect(getRouteGeometryViolationError(solver.routes)).toBeNull()
   expect(
-    areNodePortPointPairsConnectedByRoutes(solver.routes, nodeWithPortPoints),
+    doRoutesCoverNodePortPointPairsExactlyOnce(
+      solver.routes,
+      nodeWithPortPoints,
+    ),
   ).toBe(true)
 })

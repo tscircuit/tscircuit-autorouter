@@ -27,7 +27,6 @@ import {
 import {
   createRegionalFallbackProblem,
   type FixedRouteSection,
-  getFixedRouteMutationCoverageInsideNode,
   spliceFixedRouteSectionWithMutationMask,
 } from "./pipeline9RegionalFallback"
 import { Pipeline9RegionalFallbackSolver } from "./Pipeline9RegionalFallbackSolver"
@@ -58,17 +57,6 @@ type NodeBounds = {
   maxX: number
   minY: number
   maxY: number
-}
-
-const rangesOverlap = (
-  left: { start: number; end: number },
-  right: { start: number; end: number },
-): boolean => {
-  const leftIsPoint = left.start === left.end
-  const rightIsPoint = right.start === right.end
-  return leftIsPoint || rightIsPoint
-    ? left.start <= right.end && right.start <= left.end
-    : left.start < right.end && right.start < left.end
 }
 
 const PRELOADED_TRACE_CLEARANCE = 0.15
@@ -801,7 +789,6 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     // Capture the accepted regional envelope immediately against the
     // post-splice geometry. Segment masks are carried by later splices, so a
     // future fallback never has to replay this node's now-stale bounds.
-    const updatedFixedHdRoutes = this.getUpdatedFixedHdRoutes()
     const postSpliceProblem = createRegionalFallbackProblem(
       {
         ...normalizePipeline9NodeRootConnectionNames(
@@ -812,43 +799,9 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
         portPointsInPairs: [],
         availableZ: Array.from({ length: this.layerCount }, (_, z) => z),
       },
-      updatedFixedHdRoutes,
+      this.getUpdatedFixedHdRoutes(),
     )
     const markedTraceIndexes = new Set<number>()
-    for (const [
-      preloadedTraceIndex,
-      mutationRange,
-    ] of mutationRangeByTraceIndex) {
-      let hasMaterialCopper = false
-      let isFullyCovered = true
-      for (const route of updatedFixedHdRoutes) {
-        if (route.preloadedTraceIndex !== preloadedTraceIndex) continue
-        const routeRange = {
-          start: Math.min(
-            route.preloadedRoutePositionStart ?? route.preloadedRouteIndex,
-            route.preloadedRoutePositionEnd ?? route.preloadedRouteIndex,
-          ),
-          end: Math.max(
-            route.preloadedRoutePositionStart ?? route.preloadedRouteIndex,
-            route.preloadedRoutePositionEnd ?? route.preloadedRouteIndex,
-          ),
-        }
-        if (!rangesOverlap(routeRange, mutationRange)) continue
-        const coverage = getFixedRouteMutationCoverageInsideNode({
-          route,
-          node: this.activeNode,
-          mutationMask:
-            this.preloadedTraceMutationMasks.get(route.connectionName) ??
-            Array(route.route.length - 1).fill(false),
-        })
-        if (!coverage.hasMaterialCopper) continue
-        hasMaterialCopper = true
-        isFullyCovered &&= coverage.isFullyCovered
-      }
-      if (hasMaterialCopper && isFullyCovered) {
-        markedTraceIndexes.add(preloadedTraceIndex)
-      }
-    }
     for (const section of postSpliceProblem.fixedRouteSectionsByConnectionName.values()) {
       const firstSourceRoute = section.sourceRoutes[0]
       if (!firstSourceRoute) continue
@@ -870,7 +823,15 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
           start: Math.min(start, end),
           end: Math.max(start, end),
         }
-        if (!rangesOverlap(sourceRange, mutationRange)) continue
+        const sourceIsPoint = sourceRange.start === sourceRange.end
+        const mutationIsPoint = mutationRange.start === mutationRange.end
+        const overlapsMutation =
+          sourceIsPoint || mutationIsPoint
+            ? sourceRange.start <= mutationRange.end &&
+              mutationRange.start <= sourceRange.end
+            : sourceRange.start < mutationRange.end &&
+              mutationRange.start < sourceRange.end
+        if (!overlapsMutation) continue
         markedTraceIndexes.add(firstSourceRoute.preloadedTraceIndex)
         const mask = [
           ...(this.preloadedTraceMutationMasks.get(

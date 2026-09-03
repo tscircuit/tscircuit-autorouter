@@ -24,7 +24,7 @@ import {
   SupervisedSolver,
 } from "../HyperParameterSupervisorSolver"
 import {
-  areNodePortPointPairsConnectedByRoutes,
+  doRoutesCoverNodePortPointPairsExactlyOnce,
   repairDisconnectedSameRootPortPoints,
 } from "./repairDisconnectedSameRootPortPoints"
 
@@ -656,14 +656,15 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
         : null
     if (exactGridSolverName) {
       const geometryError = getRouteGeometryViolationError(repairedRoutes)
-      const pairConnectivityIsValid = areNodePortPointPairsConnectedByRoutes(
-        repairedRoutes,
-        this.nodeWithPortPoints,
-      )
-      if (geometryError || !pairConnectivityIsValid) {
+      const physicalPairCoverageIsValid =
+        doRoutesCoverNodePortPointPairsExactlyOnce(
+          repairedRoutes,
+          this.nodeWithPortPoints,
+        )
+      if (geometryError || !physicalPairCoverageIsValid) {
         solver.solver.solved = false
         solver.solver.failed = true
-        solver.solver.error = `${exactGridSolverName} output rejected: ${geometryError ?? "not all port-point pairs are connected"}`
+        solver.solver.error = `${exactGridSolverName} output rejected: ${geometryError ?? "physical port-point pairs are not covered exactly once"}`
         this.solved = false
         this.failed = false
         this.error = null

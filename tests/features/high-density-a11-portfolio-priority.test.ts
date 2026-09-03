@@ -33,24 +33,25 @@ const getNativeGridCandidates = (solver: PortfolioSingleIntraNodeSolver) => ({
   ),
 })
 
-test("native A11 and A12 stay bounded and lazy on low-pressure nodes", () => {
-  const solver = makePortfolio()
-  const { a01Candidate, a11Candidate, a12Candidate } =
-    getNativeGridCandidates(solver)
+test("native A11 and A12 stay lazy on sparse nodes and prioritized on congested nodes", () => {
+  const sparsePortfolio = makePortfolio()
+  const {
+    a01Candidate: sparseA01Candidate,
+    a11Candidate: sparseA11Candidate,
+    a12Candidate: sparseA12Candidate,
+  } = getNativeGridCandidates(sparsePortfolio)
 
-  expect(a11Candidate?.solver.MAX_ITERATIONS).toBe(5_000)
-  expect(a12Candidate?.solver.MAX_ITERATIONS).toBe(15_000)
-  expect(a11Candidate!.f).toBeGreaterThan(a01Candidate!.f)
-  expect(a12Candidate!.f).toBeGreaterThan(a01Candidate!.f)
+  expect(sparseA11Candidate?.solver.MAX_ITERATIONS).toBe(5_000)
+  expect(sparseA12Candidate?.solver.MAX_ITERATIONS).toBe(15_000)
+  expect(sparseA11Candidate!.f).toBeGreaterThan(sparseA01Candidate!.f)
+  expect(sparseA12Candidate!.f).toBeGreaterThan(sparseA01Candidate!.f)
 
-  solver.step()
-  expect(solver.activeSubSolver).not.toBe(a11Candidate?.solver)
-  expect(solver.activeSubSolver).not.toBe(a12Candidate?.solver)
-  expect(a11Candidate?.solver.iterations).toBe(0)
-  expect(a12Candidate?.solver.iterations).toBe(0)
-})
+  sparsePortfolio.step()
+  expect(sparsePortfolio.activeSubSolver).not.toBe(sparseA11Candidate?.solver)
+  expect(sparsePortfolio.activeSubSolver).not.toBe(sparseA12Candidate?.solver)
+  expect(sparseA11Candidate?.solver.iterations).toBe(0)
+  expect(sparseA12Candidate?.solver.iterations).toBe(0)
 
-test("native A11 and A12 share grid-solver priority on boundary-congested nodes", () => {
   const sparseNode = makeNode()
   const denseNode = {
     ...sparseNode,
@@ -61,17 +62,20 @@ test("native A11 and A12 share grid-solver priority on boundary-congested nodes"
       z: 0,
     })),
   }
-  const solver = makePortfolio(denseNode)
-  const { a01Candidate, a11Candidate, a12Candidate } =
-    getNativeGridCandidates(solver)
+  const congestedPortfolio = makePortfolio(denseNode)
+  const {
+    a01Candidate: congestedA01Candidate,
+    a11Candidate: congestedA11Candidate,
+    a12Candidate: congestedA12Candidate,
+  } = getNativeGridCandidates(congestedPortfolio)
 
-  expect(a11Candidate?.solver.MAX_ITERATIONS).toBe(100_000)
-  expect(a11Candidate?.f).toBe(a01Candidate?.f)
-  expect(a12Candidate?.f).toBe(a01Candidate?.f)
-  expect(solver.computeG(a11Candidate!.solver)).toBe(
-    solver.computeG(a01Candidate!.solver),
+  expect(congestedA11Candidate?.solver.MAX_ITERATIONS).toBe(100_000)
+  expect(congestedA11Candidate?.f).toBe(congestedA01Candidate?.f)
+  expect(congestedA12Candidate?.f).toBe(congestedA01Candidate?.f)
+  expect(congestedPortfolio.computeG(congestedA11Candidate!.solver)).toBe(
+    congestedPortfolio.computeG(congestedA01Candidate!.solver),
   )
-  expect(solver.computeG(a12Candidate!.solver)).toBe(
-    solver.computeG(a01Candidate!.solver),
+  expect(congestedPortfolio.computeG(congestedA12Candidate!.solver)).toBe(
+    congestedPortfolio.computeG(congestedA01Candidate!.solver),
   )
 })
