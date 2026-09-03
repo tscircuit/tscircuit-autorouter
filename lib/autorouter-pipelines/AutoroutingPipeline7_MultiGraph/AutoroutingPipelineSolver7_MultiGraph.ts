@@ -51,7 +51,6 @@ import {
   AvailableSegmentPointSolver,
   type SharedEdgeSegment,
 } from "../../solvers/AvailableSegmentPointSolver/AvailableSegmentPointSolver"
-import { BasePipelineSolver } from "../../solvers/BasePipelineSolver"
 import { BaseSolver } from "../../solvers/BaseSolver"
 import { CapacityMeshEdgeSolver } from "../../solvers/CapacityMeshSolver/CapacityMeshEdgeSolver"
 import { CapacityMeshEdgeSolver2_NodeTreeOptimization } from "../../solvers/CapacityMeshSolver/CapacityMeshEdgeSolver2_NodeTreeOptimization"
@@ -207,7 +206,7 @@ function definePipelineStep<
   }
 }
 
-export class AutoroutingPipelineSolver7_MultiGraph extends BasePipelineSolver {
+export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
   override getSolverName(): string {
     return "AutoroutingPipelineSolver7_MultiGraph"
   }
@@ -876,6 +875,15 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BasePipelineSolver {
   }
 
   currentPipelineStepIndex = 0
+
+  computeProgress(): number {
+    const activeSubSolverProgress = this.activeSubSolver?.progress ?? 0
+    return (
+      (this.currentPipelineStepIndex + activeSubSolverProgress) /
+      this.pipelineDef.length
+    )
+  }
+
   _step() {
     const pipelineStepDef = this.pipelineDef[this.currentPipelineStepIndex]
     if (!pipelineStepDef) {

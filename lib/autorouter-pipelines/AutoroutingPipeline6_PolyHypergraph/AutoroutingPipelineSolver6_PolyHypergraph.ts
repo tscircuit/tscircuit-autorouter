@@ -3,7 +3,6 @@ import type { GraphicsObject, Line } from "graphics-debug"
 import { GlobalDrcForceImproveSolver } from "high-density-repair03/lib"
 import { getGlobalInMemoryCache } from "lib/cache/setupGlobalCaches"
 import { CacheProvider } from "lib/cache/types"
-import { BasePipelineSolver } from "lib/solvers/BasePipelineSolver"
 import { BaseSolver } from "lib/solvers/BaseSolver"
 import { EscapeViaLocationSolver } from "lib/solvers/EscapeViaLocationSolver/EscapeViaLocationSolver"
 import { NetToPointPairsSolver } from "lib/solvers/NetToPointPairsSolver/NetToPointPairsSolver"
@@ -87,7 +86,7 @@ function definePipelineStep<
   }
 }
 
-export class AutoroutingPipelineSolver6_PolyHypergraph extends BasePipelineSolver {
+export class AutoroutingPipelineSolver6_PolyHypergraph extends BaseSolver {
   preprocessSimpleRouteJsonSolver?: PreprocessSimpleRouteJsonSolver
   escapeViaLocationSolver?: EscapeViaLocationSolver
   netToPointPairsSolver?: NetToPointPairsSolver

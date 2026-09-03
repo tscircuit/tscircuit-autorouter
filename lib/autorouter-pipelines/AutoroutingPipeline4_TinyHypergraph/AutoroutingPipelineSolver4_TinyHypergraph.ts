@@ -37,7 +37,6 @@ import { getPresuppliedTraceVisualization } from "lib/utils/getPresuppliedTraceV
 import { calculateOptimalCapacityDepth } from "lib/utils/getTunedTotalCapacity1"
 import { getViaDimensions } from "lib/utils/getViaDimensions"
 import { AvailableSegmentPointSolver } from "../../solvers/AvailableSegmentPointSolver/AvailableSegmentPointSolver"
-import { BasePipelineSolver } from "../../solvers/BasePipelineSolver"
 import { BaseSolver } from "../../solvers/BaseSolver"
 import { CapacityMeshEdgeSolver } from "../../solvers/CapacityMeshSolver/CapacityMeshEdgeSolver"
 import { CapacityMeshEdgeSolver2_NodeTreeOptimization } from "../../solvers/CapacityMeshSolver/CapacityMeshEdgeSolver2_NodeTreeOptimization"
@@ -100,7 +99,7 @@ function definePipelineStep<
   }
 }
 
-export class AutoroutingPipelineSolver4_TinyHypergraph extends BasePipelineSolver {
+export class AutoroutingPipelineSolver4_TinyHypergraph extends BaseSolver {
   preprocessSimpleRouteJsonSolver?: PreprocessSimpleRouteJsonSolver
   escapeViaLocationSolver?: EscapeViaLocationSolver
   netToPointPairsSolver?: NetToPointPairsSolver

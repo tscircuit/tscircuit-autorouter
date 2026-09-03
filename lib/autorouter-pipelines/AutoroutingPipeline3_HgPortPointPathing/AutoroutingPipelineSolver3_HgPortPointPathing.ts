@@ -33,7 +33,6 @@ import { getInitiallyConnectedMapFromSimpleRouteJson } from "lib/utils/get-initi
 import { getViaDimensions } from "lib/utils/getViaDimensions"
 import { calculateOptimalCapacityDepth } from "lib/utils/getTunedTotalCapacity1"
 import { AvailableSegmentPointSolver } from "../../solvers/AvailableSegmentPointSolver/AvailableSegmentPointSolver"
-import { BasePipelineSolver } from "../../solvers/BasePipelineSolver"
 import { BaseSolver } from "../../solvers/BaseSolver"
 import { CapacityMeshEdgeSolver } from "../../solvers/CapacityMeshSolver/CapacityMeshEdgeSolver"
 import { CapacityMeshEdgeSolver2_NodeTreeOptimization } from "../../solvers/CapacityMeshSolver/CapacityMeshEdgeSolver2_NodeTreeOptimization"
@@ -89,7 +88,7 @@ function definePipelineStep<
   }
 }
 
-export class AutoroutingPipelineSolver3_HgPortPointPathing extends BasePipelineSolver {
+export class AutoroutingPipelineSolver3_HgPortPointPathing extends BaseSolver {
   netToPointPairsSolver?: NetToPointPairsSolver
   nodeSolver?: RectDiffPipeline
   nodeTargetMerger?: CapacityNodeTargetMerger

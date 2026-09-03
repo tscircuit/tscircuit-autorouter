@@ -41,7 +41,6 @@ import { getViaDimensions } from "lib/utils/getViaDimensions"
 import { getAssignableViaPointKeys } from "./assignableViaUtils"
 import { getXyPointKey } from "./getXyPointKey"
 import { AvailableSegmentPointSolver } from "../../solvers/AvailableSegmentPointSolver/AvailableSegmentPointSolver"
-import { BasePipelineSolver } from "../../solvers/BasePipelineSolver"
 import { BaseSolver } from "../../solvers/BaseSolver"
 import { CapacityMeshEdgeSolver } from "../../solvers/CapacityMeshSolver/CapacityMeshEdgeSolver"
 import { CapacityMeshEdgeSolver2_NodeTreeOptimization } from "../../solvers/CapacityMeshSolver/CapacityMeshEdgeSolver2_NodeTreeOptimization"
@@ -103,7 +102,7 @@ function definePipelineStep<
 }
 
 // Pipeline8 is a pipeline4 copy for fab autorouting with preplaced assignable vias
-export class AutoroutingPipelineSolver8 extends BasePipelineSolver {
+export class AutoroutingPipelineSolver8 extends BaseSolver {
   preprocessSimpleRouteJsonSolver?: PreprocessSimpleRouteJsonSolver
   escapeViaLocationSolver?: EscapeViaLocationSolver
   netToPointPairsSolver?: NetToPointPairsSolver

@@ -3,7 +3,6 @@ import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { GraphicsObject, Line } from "graphics-debug"
 import { getGlobalInMemoryCache } from "lib/cache/setupGlobalCaches"
 import { CacheProvider } from "lib/cache/types"
-import { BasePipelineSolver } from "lib/solvers/BasePipelineSolver"
 import { BaseSolver } from "lib/solvers/BaseSolver"
 import { CapacityEdgeToPortSegmentSolver } from "lib/solvers/CapacityMeshSolver/CapacityEdgeToPortSegmentSolver"
 import { CapacityMeshEdgeSolver } from "lib/solvers/CapacityMeshSolver/CapacityMeshEdgeSolver"
@@ -100,7 +99,7 @@ function definePipelineStep<
   }
 }
 
-export class AutoroutingPipeline1_OriginalUnravel extends BasePipelineSolver {
+export class AutoroutingPipeline1_OriginalUnravel extends BaseSolver {
   override getSolverName(): string {
     return "AutoroutingPipeline1_OriginalUnravel"
   }

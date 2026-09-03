@@ -1,22 +1,12 @@
 import { expect, test } from "bun:test"
 import {
-  AssignableAutoroutingPipeline1Solver,
-  AssignableAutoroutingPipeline2,
-  AssignableAutoroutingPipeline3,
-  AutoroutingPipeline1_OriginalUnravel,
-  AutoroutingPipelineSolver2_PortPointPathing,
-  AutoroutingPipelineSolver3_HgPortPointPathing,
-  AutoroutingPipelineSolver4,
-  AutoroutingPipelineSolver5,
-  AutoroutingPipelineSolver6,
   AutoroutingPipelineSolver7_MultiGraph,
-  AutoroutingPipelineSolver8,
-  AutoroutingPipelineSolver9_PreloadedTraceGraph,
   AutoroutingPipelineSolver9_Networked,
+  AutoroutingPipelineSolver9_PreloadedTraceGraph,
   type SimpleRouteJson,
 } from "lib/index"
 
-test("every legacy autorouting pipeline reports completed stages", async () => {
+test("Pipeline7, Pipeline9, and Pipeline9 Networked report progress", async () => {
   const input: SimpleRouteJson = {
     layerCount: 2,
     minTraceWidth: 0.15,
@@ -34,17 +24,7 @@ test("every legacy autorouting pipeline reports completed stages", async () => {
   }
 
   for (const Solver of [
-    AssignableAutoroutingPipeline1Solver,
-    AssignableAutoroutingPipeline2,
-    AssignableAutoroutingPipeline3,
-    AutoroutingPipeline1_OriginalUnravel,
-    AutoroutingPipelineSolver2_PortPointPathing,
-    AutoroutingPipelineSolver3_HgPortPointPathing,
-    AutoroutingPipelineSolver4,
-    AutoroutingPipelineSolver5,
-    AutoroutingPipelineSolver6,
     AutoroutingPipelineSolver7_MultiGraph,
-    AutoroutingPipelineSolver8,
     AutoroutingPipelineSolver9_PreloadedTraceGraph,
     AutoroutingPipelineSolver9_Networked,
   ]) {
@@ -55,10 +35,7 @@ test("every legacy autorouting pipeline reports completed stages", async () => {
       !solver.solved &&
       !solver.failed
     ) {
-      if (
-        solver instanceof AutoroutingPipelineSolver5 ||
-        solver instanceof AutoroutingPipelineSolver9_Networked
-      ) {
+      if (solver instanceof AutoroutingPipelineSolver9_Networked) {
         await solver.stepAsync()
       } else {
         solver.step()
