@@ -970,6 +970,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     const autoroutingDrcEngine = new AutoroutingDrcEngine(
       {
         ...extendedSrjWithPointPairs,
+        obstacles: params.originalSrj.obstacles,
         minTraceWidth: params.originalSrj.minTraceWidth,
         minViaDiameter:
           params.originalSrj.minViaDiameter ?? params.defaultViaDiameter,
