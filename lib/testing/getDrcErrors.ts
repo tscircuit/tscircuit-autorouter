@@ -5,10 +5,12 @@ import {
   checkPcbTracesOutOfBoard,
   checkSameNetViaSpacing,
   checkTracesAreContiguous,
+  checkViaPadClearance,
   checkViaTraceClearance,
 } from "@tscircuit/checks"
 import type {
   AnyCircuitElement,
+  PcbPadPadClearanceError,
   PcbPadTraceClearanceError,
   PcbTraceError,
   PcbViaClearanceError,
@@ -31,6 +33,7 @@ type PcbViaWithTraceId = CircuitJsonElement & {
 type DrcError =
   | PcbTraceError
   | PcbViaTraceClearanceError
+  | PcbPadPadClearanceError
   | PcbPadTraceClearanceError
   | PcbViaClearanceError
 
@@ -90,6 +93,10 @@ export const getDrcErrors = (
         minClearance: options.traceClearance,
       })
     : []
+  const viaPadErrors = checkViaPadClearance(circuitJson, {
+    connMap,
+    minClearance: options.traceClearance,
+  })
   const padTraceErrors = includeTypedTraceClearance
     ? checkPadTraceClearance(circuitJson, {
         connMap,
@@ -114,6 +121,7 @@ export const getDrcErrors = (
       ? []
       : checkTracesAreContiguous(circuitJson)),
     ...viaTraceErrors,
+    ...viaPadErrors,
     ...padTraceErrors,
     ...viaErrors,
   ]
