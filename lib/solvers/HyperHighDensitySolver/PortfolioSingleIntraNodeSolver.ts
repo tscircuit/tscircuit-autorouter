@@ -35,6 +35,7 @@ import {
 const ORDERING_SHUFFLE_SEEDS = Array.from({ length: 6 }, (_, seed) => seed)
 const HIGH_DENSITY_A11_MAX_ITERATIONS = 5_000
 const HIGH_DENSITY_A12_MAX_ITERATIONS = 15_000
+const NATIVE_GRID_BOUNDARY_PRESSURE_THRESHOLD = 0.75
 
 type ExternalGridSolver =
   | HighDensitySolverA01
@@ -105,6 +106,16 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
           ),
         ).size,
     )
+  }
+
+  private getNativeGridBoundaryPressure(): number {
+    const perimeter =
+      2 * (this.nodeWithPortPoints.width + this.nodeWithPortPoints.height)
+    if (perimeter <= 0) return Infinity
+
+    const endpointCount = this.nodeWithPortPoints.portPoints.length
+    const endpointPitch = this.constructorParams.viaDiameter ?? 0.3
+    return (endpointCount * endpointPitch) / perimeter
   }
 
   private getCandidateProgress(solver: PortfolioCandidateSolver): number {
@@ -436,10 +447,23 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
 
   computeG(solver: PortfolioCandidateSolver) {
     if (
-      solver instanceof HighDensitySolverA01 ||
-      solver instanceof HighDensityA03Solver ||
       solver instanceof HighDensitySolverA11 ||
       solver instanceof HighDensitySolverA12
+    ) {
+      // A11/A12 are most valuable when boundary demand makes native routing
+      // difficult. Give them normal grid-solver priority there, while keeping
+      // their setup lazy on lower-pressure nodes whose established routes are
+      // already fast and stable.
+      const startupPenalty =
+        this.getNativeGridBoundaryPressure() >=
+        NATIVE_GRID_BOUNDARY_PRESSURE_THRESHOLD
+          ? 0
+          : 4
+      return startupPenalty + solver.iterations / 1_000_000
+    }
+    if (
+      solver instanceof HighDensitySolverA01 ||
+      solver instanceof HighDensityA03Solver
     ) {
       return solver.iterations / 1_000_000
     }
