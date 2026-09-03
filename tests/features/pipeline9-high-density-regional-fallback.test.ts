@@ -163,26 +163,27 @@ test("Pipeline9 falls back to regional rerouting and splices fixed traces", () =
   expect(solver.failedSolvers).toHaveLength(1)
   expect(solver.stats).toMatchObject({
     fallbackNodeCount: 1,
-    reroutedFixedRouteCount: 2,
+    reroutedFixedRouteCount: 1,
     reroutedFixedRouteSectionCount: 1,
   })
   expect(solver.routes).toHaveLength(4)
   expect([...solver.fixedRouteReplacements.keys()]).toEqual([
-    "source_net_0_fixed_0_0",
+    "source_net_0_fixed_0_1",
   ])
 
   const updatedFixedRoutes = solver.getUpdatedFixedHdRoutes()
-  expect(updatedFixedRoutes).toHaveLength(2)
-  expect(updatedFixedRoutes[0]!.route[0]).toEqual(fixedRoutes[0]!.route[0])
-  expect(updatedFixedRoutes[0]!.route.at(-1)).toEqual(
+  expect(updatedFixedRoutes).toHaveLength(3)
+  expect(updatedFixedRoutes[0]).toBe(fixedRoutes[0])
+  expect(updatedFixedRoutes[1]!.route[0]).toEqual(fixedRoutes[1]!.route[0])
+  expect(updatedFixedRoutes[1]!.route.at(-1)).toEqual(
     fixedRoutes[1]!.route.at(-1),
   )
-  expect(updatedFixedRoutes[1]).toBe(fixedRoutes[2])
+  expect(updatedFixedRoutes[2]).toBe(fixedRoutes[2])
   expect(
     solver.preloadedTraceMutationMasks.get(
-      updatedFixedRoutes[0]!.connectionName,
+      updatedFixedRoutes[1]!.connectionName,
     ),
-  ).toEqual(Array(updatedFixedRoutes[0]!.route.length - 1).fill(true))
+  ).toEqual(Array(updatedFixedRoutes[1]!.route.length - 1).fill(true))
   expect(
     solver.preloadedTraceMutationMasks.has(fixedRoutes[2]!.connectionName),
   ).toBeFalse()
