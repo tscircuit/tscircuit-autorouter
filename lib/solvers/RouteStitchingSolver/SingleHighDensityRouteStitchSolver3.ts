@@ -236,10 +236,16 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
     const firstRouteLastPoint = firstRoute.route[firstRoute.route.length - 1]
     const distToFirst = distance(this.start, firstRouteFirstPoint)
     const distToLast = distance(this.start, firstRouteLastPoint)
+    // A via's endpoints share XY. Resolve that tie using the terminal's layer
+    // before the canonical point order, which otherwise always prefers top.
+    const firstPointMatchesStartLayer = firstRouteFirstPoint.z === this.start.z
+    const lastPointMatchesStartLayer = firstRouteLastPoint.z === this.start.z
     const closestFirstRoutePoint =
       distToFirst < distToLast - DISTANCE_TIE_TOLERANCE ||
       (Math.abs(distToFirst - distToLast) <= DISTANCE_TIE_TOLERANCE &&
-        comparePoints(firstRouteFirstPoint, firstRouteLastPoint) <= 0)
+        (firstPointMatchesStartLayer !== lastPointMatchesStartLayer
+          ? firstPointMatchesStartLayer
+          : comparePoints(firstRouteFirstPoint, firstRouteLastPoint) <= 0))
         ? firstRouteFirstPoint
         : firstRouteLastPoint
     const closestFirstRoutePcbPortId =
