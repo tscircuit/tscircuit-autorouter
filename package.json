@@ -20,7 +20,8 @@
     "run-sample": "bun scripts/run-sample.ts",
     "repomix:lib": "repomix --ignore 'testing/**,**/TwoRouteHighDensitySolver/**,**/RouteStitchingSolver/**,solvers/CapacitySegmentPointOptimizer/CapacitySegmentPointOptimizer.ts' lib",
     "bug-report": "bun run scripts/download-bug-report.ts",
-    "bug-report-with-test": "bun run scripts/create-bug-report-test.ts"
+    "bug-report-with-test": "bun run scripts/create-bug-report-test.ts",
+    "generate:trace-simplification-dataset-01": "bun scripts/generate-trace-simplification-dataset-01.ts"
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
