@@ -33,7 +33,8 @@ import {
 // orderings are introduced only after that portfolio spends its dynamically
 // derived exploration budget or exhausts all of its candidates.
 const ORDERING_SHUFFLE_SEEDS = Array.from({ length: 6 }, (_, seed) => seed)
-const HIGH_DENSITY_A11_MAX_ITERATIONS = 100_000
+const HIGH_DENSITY_A11_MAX_ITERATIONS = 5_000
+const HIGH_DENSITY_A11_CONGESTED_MAX_ITERATIONS = 100_000
 const HIGH_DENSITY_A12_MAX_ITERATIONS = 15_000
 const NATIVE_GRID_BOUNDARY_PRESSURE_THRESHOLD = 0.75
 
@@ -560,7 +561,11 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
           shuffleSeed: hyperParameters.SHUFFLE_SEED ?? 0,
         },
       })
-      solver.MAX_ITERATIONS = HIGH_DENSITY_A11_MAX_ITERATIONS
+      solver.MAX_ITERATIONS =
+        this.getNativeGridBoundaryPressure() >=
+        NATIVE_GRID_BOUNDARY_PRESSURE_THRESHOLD
+          ? HIGH_DENSITY_A11_CONGESTED_MAX_ITERATIONS
+          : HIGH_DENSITY_A11_MAX_ITERATIONS
       return solver
     }
     if (hyperParameters.HIGH_DENSITY_A12) {

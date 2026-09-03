@@ -65,6 +65,7 @@ test("native A11 and A12 share grid-solver priority on boundary-congested nodes"
   const { a01Candidate, a11Candidate, a12Candidate } =
     getNativeGridCandidates(solver)
 
+  expect(a11Candidate?.solver.MAX_ITERATIONS).toBe(100_000)
   expect(a11Candidate?.f).toBe(a01Candidate?.f)
   expect(a12Candidate?.f).toBe(a01Candidate?.f)
   expect(solver.computeG(a11Candidate!.solver)).toBe(
