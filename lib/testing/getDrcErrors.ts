@@ -19,6 +19,7 @@ import {
   getFullConnectivityMapFromCircuitJson,
 } from "circuit-json-to-connectivity-map"
 import { Point } from "graphics-debug"
+import { filterDisconnectedEndpointsOnSameNetCopper } from "./filterDisconnectedEndpointsOnSameNetCopper"
 
 type CircuitJson = AnyCircuitElement[]
 type CircuitJsonElement = CircuitJson[number]
@@ -112,7 +113,11 @@ export const getDrcErrors = (
     ...checkPcbTracesOutOfBoard(circuitJson),
     ...(options.includeTraceContinuity === false
       ? []
-      : checkTracesAreContiguous(circuitJson)),
+      : filterDisconnectedEndpointsOnSameNetCopper({
+          circuitJson,
+          connMap,
+          errors: checkTracesAreContiguous(circuitJson),
+        })),
     ...viaTraceErrors,
     ...padTraceErrors,
     ...viaErrors,
