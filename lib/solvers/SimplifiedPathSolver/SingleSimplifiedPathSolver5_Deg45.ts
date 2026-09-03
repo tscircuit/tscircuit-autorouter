@@ -99,9 +99,7 @@ export class SingleSimplifiedPathSolver5 extends SingleSimplifiedPathSolver {
       // Keep multilayer path behavior until DRC checks the full physical via
       // span. Core emits through-hole vias beyond the route's endpoint layers.
       const inputNet =
-        this.layerCount === 2
-          ? this.getNetForRouteId(inputRouteId)
-          : undefined
+        this.layerCount === 2 ? this.getNetForRouteId(inputRouteId) : undefined
       return otherRouteIds.some(
         (otherRouteId) =>
           inputRouteId === otherRouteId ||
