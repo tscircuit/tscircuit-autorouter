@@ -238,7 +238,6 @@ export const selectRoutesAlongEndpointPath = (params: {
   }
 
   const adjacency = new Map<string, EndpointEdge[]>()
-  const terminalEndpointKeys = new Set<string>()
 
   for (let i = 0; i < canonicalHdRoutes.length; i++) {
     const route = canonicalHdRoutes[i]!
@@ -250,8 +249,6 @@ export const selectRoutesAlongEndpointPath = (params: {
       params.connectionName,
       route.route[route.route.length - 1]!,
     )
-    if (route.startPcbPortId) terminalEndpointKeys.add(routeStartHash)
-    if (route.endPcbPortId) terminalEndpointKeys.add(routeEndHash)
 
     addAdjacencyEdge(adjacency, routeStartHash, {
       nextHash: routeEndHash,
@@ -270,14 +267,6 @@ export const selectRoutesAlongEndpointPath = (params: {
     const endpointA = sortedEndpointClusters[i]!
     for (let j = i + 1; j < sortedEndpointClusters.length; j++) {
       const endpointB = sortedEndpointClusters[j]!
-      // Keep the copper fragment attached to each physical terminal in the
-      // path. A nearby gap edge cannot substitute for that terminal's layer.
-      if (
-        terminalEndpointKeys.has(endpointA.key) ||
-        terminalEndpointKeys.has(endpointB.key)
-      ) {
-        continue
-      }
       if (endpointA.point.z !== endpointB.point.z) continue
       if (
         distance(endpointA.point, endpointB.point) > MAX_STITCH_GAP_DISTANCE_3
