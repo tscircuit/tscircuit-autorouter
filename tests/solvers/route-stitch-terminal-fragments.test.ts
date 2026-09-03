@@ -74,12 +74,14 @@ test("stitch gap edges do not bypass physical terminal fragments", (): void => {
   const variants: HighDensityIntraNodeRoute[][] = [
     routes,
     [...routes].reverse(),
-    routes.map((route): HighDensityIntraNodeRoute => ({
-      ...route,
-      startPcbPortId: route.endPcbPortId,
-      endPcbPortId: route.startPcbPortId,
-      route: [...route.route].reverse(),
-    })),
+    routes.map(
+      (route): HighDensityIntraNodeRoute => ({
+        ...route,
+        startPcbPortId: route.endPcbPortId,
+        endPcbPortId: route.startPcbPortId,
+        route: [...route.route].reverse(),
+      }),
+    ),
   ]
   for (const hdRoutes of variants) {
     const solver = new MultipleHighDensityRouteStitchSolver3({
