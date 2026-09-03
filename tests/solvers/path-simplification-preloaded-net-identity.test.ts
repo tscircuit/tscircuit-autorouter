@@ -56,6 +56,7 @@ test("path simplification recognizes preloaded net roots without joining unrelat
     expect(output.route[0]).toEqual(inputRoute.route[0])
     expect(output.route.at(-1)).toEqual(inputRoute.route.at(-1))
     expect(fixedRoute).toEqual(originalFixedRoute)
+    expect(connMap.getNetConnectedToId("ground")).toBeUndefined()
     expect(
       connMap.getNetConnectedToId("synthetic_fixed_section"),
     ).toBeUndefined()

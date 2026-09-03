@@ -174,20 +174,17 @@ export class TraceSimplificationSolver extends BaseSolver {
     // span. Core emits through-hole vias beyond the route's endpoint layers.
     if (layerCount !== 2) return connMap
 
-    // Register generated section names without changing the pipeline's shared
-    // connectivity or the via-removal stages' inputs.
+    // Route roots can be net keys, which are not IDs in ConnectivityMap.
+    // Register those roots for path comparisons while keeping generated route
+    // names and the pipeline's shared connectivity unchanged.
     const pathConnMap = new ConnectivityMap(structuredClone(connMap.netMap))
     for (const route of [...this.hdRoutes, ...(otherHdRoutes ?? [])]) {
-      if (connMap.getNetConnectedToId(route.connectionName) !== undefined) {
-        continue
+      const root = route.rootConnectionName
+      if (!root || connMap.getNetConnectedToId(root) !== undefined) continue
+      const [connectedId] = connMap.getIdsConnectedToNet(root)
+      if (connectedId !== undefined) {
+        pathConnMap.addConnections([[root, connectedId]])
       }
-      if (!route.rootConnectionName) continue
-      const rootNet = connMap.getNetConnectedToId(route.rootConnectionName)
-      const rootMembers = connMap.getIdsConnectedToNet(
-        rootNet ?? route.rootConnectionName,
-      )
-      if (rootMembers.length === 0) continue
-      pathConnMap.addConnections([[route.connectionName, rootMembers[0]!]])
     }
     return pathConnMap
   }
