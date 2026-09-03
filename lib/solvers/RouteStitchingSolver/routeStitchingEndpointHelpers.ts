@@ -178,7 +178,8 @@ export const selectIslandEndpoints = (params: {
 
 /**
  * Pulls an island endpoint onto an actual terminal only when the endpoint is
- * already close enough to be considered the same stitch target.
+ * already close enough in the board plane to be considered the same stitch
+ * target. The stitcher materializes any required terminal layer transition.
  */
 export const snapIslandEndpointToNearestTerminal = (params: {
   islandEndpoint: Point3
@@ -186,10 +187,16 @@ export const snapIslandEndpointToNearestTerminal = (params: {
 }) => {
   const sortedTerminals = [...params.terminals].sort(comparePoints)
   let closestTerminal = sortedTerminals[0]
-  let closestDistance = distance(params.islandEndpoint, closestTerminal)
+  let closestDistance = Math.hypot(
+    params.islandEndpoint.x - closestTerminal.x,
+    params.islandEndpoint.y - closestTerminal.y,
+  )
 
   for (const terminal of sortedTerminals.slice(1)) {
-    const terminalDistance = distance(params.islandEndpoint, terminal)
+    const terminalDistance = Math.hypot(
+      params.islandEndpoint.x - terminal.x,
+      params.islandEndpoint.y - terminal.y,
+    )
     if (
       terminalDistance < closestDistance - DISTANCE_TIE_TOLERANCE ||
       (Math.abs(terminalDistance - closestDistance) <= DISTANCE_TIE_TOLERANCE &&

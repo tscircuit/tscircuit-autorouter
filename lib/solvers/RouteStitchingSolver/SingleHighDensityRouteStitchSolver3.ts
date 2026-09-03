@@ -57,6 +57,8 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
   allowedLayerTransitionPointKeys?: Set<string>
   isStitchSegmentClear: IsStitchSegmentClear
   stitchClearanceMode: StitchClearanceMode
+  private readonly requestedStartPcbPortId?: string
+  private physicalTerminalRoute?: HighDensityIntraNodeRoute
 
   private isPlanarStitchClear(start: Point3, end: Point3): boolean {
     return this.isStitchSegmentClear({
@@ -87,6 +89,7 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
     this.allowedLayerTransitionPointKeys = opts.allowedLayerTransitionPointKeys
     this.isStitchSegmentClear = opts.isStitchSegmentClear
     this.stitchClearanceMode = opts.stitchClearanceMode
+    this.requestedStartPcbPortId = opts.start.pcb_port_id
 
     if (canonicalHdRoutes.length === 0) {
       this.start = opts.start
@@ -256,6 +259,29 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
       )
     }
 
+    const initialRoutePoints: RoutePoint[] = [
+      { x: this.start.x, y: this.start.y, z: this.start.z },
+    ]
+    const initialVias: Array<{ x: number; y: number }> = []
+    if (this.start.z !== closestFirstRoutePoint.z) {
+      if (
+        this.allowedLayerTransitionPointKeys &&
+        !this.allowedLayerTransitionPointKeys.has(getXyPointKey(this.start))
+      ) {
+        this.failed = true
+        this.error = `Layer transition at ${getXyPointKey(
+          this.start,
+        )} is not allowed`
+        return
+      }
+      initialRoutePoints.push({
+        x: this.start.x,
+        y: this.start.y,
+        z: closestFirstRoutePoint.z,
+      })
+      initialVias.push({ x: this.start.x, y: this.start.y })
+    }
+
     this.mergedHdRoute = {
       connectionName: opts.connectionName,
       ...(opts.preserveTerminalPcbPortIds && this.start.pcb_port_id
@@ -265,14 +291,8 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
         ? { endPcbPortId: this.end.pcb_port_id }
         : {}),
       rootConnectionName: firstRoute.rootConnectionName,
-      route: [
-        {
-          x: this.start.x,
-          y: this.start.y,
-          z: closestFirstRoutePoint.z,
-        },
-      ],
-      vias: [],
+      route: initialRoutePoints,
+      vias: initialVias,
       jumpers: [],
       viaDiameter: firstRoute.viaDiameter,
       traceThickness: firstRoute.traceThickness,
@@ -309,10 +329,53 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
     return { firstRoute: this.remainingHdRoutes[0] }
   }
 
+  private routeEndsAtPhysicalTerminal(
+    route: HighDensityIntraNodeRoute,
+    terminal: StitchTerminal,
+  ): boolean {
+    const endpoint = route.route[route.route.length - 1]
+    return (
+      endpoint.z === terminal.z &&
+      distance(endpoint, terminal) <= MAX_TERMINAL_STITCH_GAP_DISTANCE_3
+    )
+  }
+
+  private selectPhysicalTerminalRoute(): void {
+    if (!this.physicalTerminalRoute) return
+
+    this.mergedHdRoute = this.physicalTerminalRoute
+    if (
+      this.start.pcb_port_id === this.requestedStartPcbPortId ||
+      this.end.pcb_port_id !== this.requestedStartPcbPortId
+    ) {
+      return
+    }
+
+    // Preserve the connection's requested orientation so downstream geometry
+    // repair receives the same stable terminal ordering.
+    this.mergedHdRoute.route = reverseRoutePoints(this.mergedHdRoute.route)
+    const previousStartPcbPortId = this.mergedHdRoute.startPcbPortId
+    this.mergedHdRoute.startPcbPortId = this.mergedHdRoute.endPcbPortId
+    this.mergedHdRoute.endPcbPortId = previousStartPcbPortId
+    const previousStart = this.start
+    this.start = this.end
+    this.end = previousStart
+  }
+
   _step() {
     if (this.remainingHdRoutes.length === 0) {
-      const lastMergedPoint =
+      let lastMergedPoint =
         this.mergedHdRoute.route[this.mergedHdRoute.route.length - 1]
+      if (
+        this.physicalTerminalRoute &&
+        !this.routeEndsAtPhysicalTerminal(this.mergedHdRoute, this.end)
+      ) {
+        // An identity-tagged path is authoritative when the complete island
+        // walk ends on a branch or cycle instead of the physical terminal.
+        this.selectPhysicalTerminalRoute()
+        lastMergedPoint =
+          this.mergedHdRoute.route[this.mergedHdRoute.route.length - 1]
+      }
       const terminalPoint = { ...this.end, z: lastMergedPoint.z }
       const terminalDistance = distance(lastMergedPoint, terminalPoint)
 
@@ -333,6 +396,28 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
           y: this.end.y,
           z: lastMergedPoint.z,
         })
+      }
+
+      if (
+        terminalDistance <= MAX_TERMINAL_STITCH_GAP_DISTANCE_3 &&
+        lastMergedPoint.z !== this.end.z
+      ) {
+        if (
+          this.allowedLayerTransitionPointKeys &&
+          !this.allowedLayerTransitionPointKeys.has(getXyPointKey(this.end))
+        ) {
+          this.failed = true
+          this.error = `Layer transition at ${getXyPointKey(
+            this.end,
+          )} is not allowed`
+          return
+        }
+        this.mergedHdRoute.route.push({
+          x: this.end.x,
+          y: this.end.y,
+          z: this.end.z,
+        })
+        this.mergedHdRoute.vias.push({ x: this.end.x, y: this.end.y })
       }
 
       this.solved = true
@@ -457,6 +542,18 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
 
     if (hdRouteToMerge.jumpers) {
       this.mergedHdRoute.jumpers!.push(...hdRouteToMerge.jumpers)
+    }
+
+    const appendedPcbPortId =
+      matchedOn === "first"
+        ? hdRouteToMerge.endPcbPortId
+        : hdRouteToMerge.startPcbPortId
+    if (
+      this.remainingHdRoutes.length > 0 &&
+      this.end.pcb_port_id &&
+      appendedPcbPortId === this.end.pcb_port_id
+    ) {
+      this.physicalTerminalRoute = structuredClone(this.mergedHdRoute)
     }
   }
 
