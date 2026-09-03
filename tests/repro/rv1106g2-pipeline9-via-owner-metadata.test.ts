@@ -14,7 +14,7 @@ import srjJson from "../../fixtures/repro/rv1106g2-pipeline9-final-drc/phase-2.i
   type: "json",
 }
 
-test("Pipeline9 loses the owner of an RV1106G2 via-pad error", () => {
+test("Pipeline9 preserves the owner of an RV1106G2 via-pad error", () => {
   const input = srjJson as SimpleRouteJson
   const routedTraces = routedTracesJson as SimplifiedPcbTrace[]
   const drc = evaluateRelaxedDrc({
@@ -35,7 +35,7 @@ test("Pipeline9 loses the owner of an RV1106G2 via-pad error", () => {
     ),
   })
 
-  expect(mappedError.pcb_trace_ids).toBeUndefined()
+  expect(mappedError.pcb_trace_ids).toEqual(["source_net_31_mst6_0"])
 
   const fullBoard = {
     ...input,
