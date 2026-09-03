@@ -28,6 +28,7 @@ export class MultiSimplifiedPathSolver extends BaseSolver {
   minBoardEdgeClearance: number
   defaultViaDiameter: number
   useTraceWidthAwareClearance: boolean
+  netByConnectionName?: ReadonlyMap<string, string>
 
   constructor(params: {
     unsimplifiedHdRoutes: HighDensityIntraNodeRoute[]
@@ -40,10 +41,12 @@ export class MultiSimplifiedPathSolver extends BaseSolver {
     minBoardEdgeClearance?: number
     defaultViaDiameter?: number
     useTraceWidthAwareClearance?: boolean
+    netByConnectionName?: ReadonlyMap<string, string>
   }) {
     super()
     this.MAX_ITERATIONS = 100e6
 
+    this.netByConnectionName = params.netByConnectionName
     this.unsimplifiedHdRoutes = params.unsimplifiedHdRoutes
     this.otherHdRoutes = params.otherHdRoutes ?? []
     const inferredLayerCount =
@@ -90,6 +93,7 @@ export class MultiSimplifiedPathSolver extends BaseSolver {
         outline: this.outline,
         minBoardEdgeClearance: this.minBoardEdgeClearance,
         useTraceWidthAwareClearance: this.useTraceWidthAwareClearance,
+        netByConnectionName: this.netByConnectionName,
       })
       this.currentUnsimplifiedHdRouteIndex++
       return

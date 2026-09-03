@@ -419,6 +419,14 @@ export class TraceSimplificationSolver extends BaseSolver {
 
         case "path_simplification":
           this.activeSubSolver = new MultiSimplifiedPathSolver({
+            // Same-net shortcuts need complete via-layer collision checks.
+            // Multilayer DRC currently checks only via endpoint layers, while
+            // core emits through-hole vias on every layer. Keep the existing
+            // path behavior there until that physical-copper model is fixed.
+            netByConnectionName:
+              this.simplificationConfig.layerCount === 2
+                ? this.simplificationConfig.netByConnectionName
+                : undefined,
             unsimplifiedHdRoutes: this.hdRoutes,
             otherHdRoutes: [...(this.simplificationConfig.otherHdRoutes ?? [])],
             obstacles: [...this.simplificationConfig.obstacles],
