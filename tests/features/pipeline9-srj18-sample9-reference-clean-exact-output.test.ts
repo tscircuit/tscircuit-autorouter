@@ -15,7 +15,8 @@ test("Pipeline9 preserves SRJ18 sample 9's reference-clean exact output", async 
   expect(solver.solved).toBeTrue()
   expect(solver.failed).toBeFalse()
   const repairStats = solver.pipeline9JointDrcRepairSolver?.stats
-  expect(Number(repairStats?.finalDrcIssueCount)).toBeGreaterThan(0)
+  // Exact copper geometry now also clears the indexed evaluator's residue.
+  expect(Number(repairStats?.finalDrcIssueCount)).toBe(0)
   expect(repairStats).toMatchObject({
     postExactPrecisionPassAttempted: true,
     postExactReferenceValidationAttempted: true,
