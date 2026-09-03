@@ -4,6 +4,7 @@ import type { GraphicsObject } from "graphics-debug"
 import {
   AutoroutingDrcEngine,
   type DrcEvaluator,
+  GlobalDrcBranchPortfolioSolver,
   type SimpleRouteJson as RepairSimpleRouteJson,
   type SimplifiedPcbTraces as RepairSimplifiedPcbTraces,
 } from "high-density-repair03/lib"
@@ -50,6 +51,9 @@ const EXACT_REPAIR_BROAD_MAX_ITERATIONS = 12
 // residual sets. Keep that exhaustive search for compact residues while
 // bounding terminal relocation's repeated whole-board indexed DRC scans.
 const MAX_POST_EXACT_PRECISION_PASS_INDEXED_ISSUE_COUNT = 16
+const INDEXED_DRC_CANDIDATE_CACHE_SIZE = 64
+
+type DrcCandidateKey = string & { readonly __brand: "DrcCandidateKey" }
 
 type Pipeline9JointDrcRepairSolverParams = {
   srj: SimpleRouteJson
@@ -644,12 +648,38 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
   readonly movablePreloadedSections: MovablePreloadedSection[]
   readonly fixedPreloadedObstacleRoutes: PreloadedHighDensityRoute[]
   readonly syntheticConnectionNames: ReadonlySet<string>
-  readonly exactRepairSolver?: Pipeline7AdaptiveDrcBranchPortfolioSolver
+  readonly exactRepairSolver?:
+    | Pipeline7AdaptiveDrcBranchPortfolioSolver
+    | GlobalDrcBranchPortfolioSolver
   private drcEvaluator?: DrcEvaluator
   private cachedReferenceDrcEvaluator?: DrcEvaluator
   private referenceDrcValidationCount = 0
   private referenceDrcFalseNegativeCount = 0
+  private indexedDrcEvaluationCount = 0
+  private indexedDrcCacheHitCount = 0
+  private indexedDrcEvaluationTimeMs = 0
+  private readonly indexedDrcCandidateCache = new Map<
+    DrcCandidateKey,
+    ReturnType<DrcEvaluator>
+  >()
   private combinedOutput?: HighDensityRoute[]
+
+  private cacheIndexedDrcResult(
+    candidateKey: DrcCandidateKey,
+    result: ReturnType<DrcEvaluator>,
+  ): void {
+    if (
+      this.indexedDrcCandidateCache.size >= INDEXED_DRC_CANDIDATE_CACHE_SIZE
+    ) {
+      const oldestCandidateKey = this.indexedDrcCandidateCache
+        .keys()
+        .next().value
+      if (oldestCandidateKey !== undefined) {
+        this.indexedDrcCandidateCache.delete(oldestCandidateKey)
+      }
+    }
+    this.indexedDrcCandidateCache.set(candidateKey, result)
+  }
 
   constructor(params: Pipeline9JointDrcRepairSolverParams) {
     super()
@@ -983,7 +1013,8 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
           Math.max(
             params.defaultViaDiameter,
             params.originalSrj.minTraceWidth,
-          ) + Math.max(traceClearance, viaClearance),
+          ) +
+          2 * Math.max(traceClearance, viaClearance),
       },
     )
     const autoroutingBaselineDrcResult = autoroutingDrcEngine.evaluate(
@@ -1219,6 +1250,14 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       if (!evaluatedRoutes) {
         throw new Error("Pipeline9 joint DRC repair requires HD routes")
       }
+      const candidateKey = JSON.stringify(evaluatedRoutes) as DrcCandidateKey
+      const cachedResult = this.indexedDrcCandidateCache.get(candidateKey)
+      if (cachedResult !== undefined) {
+        this.indexedDrcCacheHitCount += 1
+        return cachedResult
+      }
+      const evaluationStartedAtMs = performance.now()
+      this.indexedDrcEvaluationCount += 1
       const candidateDrcInput = prepareCandidateDrcInput(evaluatedRoutes)
       const evaluatedDrc = autoroutingDrcEngine.evaluate(
         candidateDrcInput.evaluatedTraces as RepairSimplifiedPcbTraces,
@@ -1277,9 +1316,12 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         ) {
           this.referenceDrcFalseNegativeCount += 1
         }
+        this.indexedDrcEvaluationTimeMs +=
+          performance.now() - evaluationStartedAtMs
+        this.cacheIndexedDrcResult(candidateKey, referenceResult)
         return referenceResult
       }
-      return normalizeCandidateDrcResult({
+      const normalizedResult = normalizeCandidateDrcResult({
         errors: evaluatedNewErrors,
         errorsWithCenters: evaluatedNewErrorsWithCenters,
         circuitJson: viaCircuitJson,
@@ -1287,10 +1329,14 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         solverTraceIdByEvaluationTraceId:
           candidateDrcInput.solverTraceIdByEvaluationTraceId,
       })
+      this.indexedDrcEvaluationTimeMs +=
+        performance.now() - evaluationStartedAtMs
+      this.cacheIndexedDrcResult(candidateKey, normalizedResult)
+      return normalizedResult
     }
     this.drcEvaluator = drcEvaluator
 
-    this.exactRepairSolver = new Pipeline7AdaptiveDrcBranchPortfolioSolver({
+    const exactRepairParams = {
       srj: extendedSrjWithPointPairs as any,
       hdRoutes: [
         ...params.newHdRoutes,
@@ -1314,7 +1360,16 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       viaInPadMaxIterations: EXACT_REPAIR_MAX_ITERATIONS,
       broadMaxIterations: EXACT_REPAIR_BROAD_MAX_ITERATIONS,
       broadPassMultiplier: 3,
-    })
+    }
+    const shouldAttemptFastProbe =
+      currentDrc.errors.length <=
+      MAX_POST_EXACT_PRECISION_PASS_INDEXED_ISSUE_COUNT
+    this.exactRepairSolver = shouldAttemptFastProbe
+      ? new Pipeline7AdaptiveDrcBranchPortfolioSolver(exactRepairParams)
+      : new GlobalDrcBranchPortfolioSolver(exactRepairParams)
+    if (!shouldAttemptFastProbe) {
+      this.stats.pipeline7AdaptiveExactDrcFastProbeAttempted = false
+    }
     this.activeSubSolver = this.exactRepairSolver
     this.MAX_ITERATIONS = this.exactRepairSolver.MAX_ITERATIONS + 1
   }
@@ -1392,6 +1447,11 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
           terminalEscapeAcceptedCount: 0,
           referenceDrcValidationCount: this.referenceDrcValidationCount,
           referenceDrcFalseNegativeCount: this.referenceDrcFalseNegativeCount,
+          indexedDrcEvaluationCount: this.indexedDrcEvaluationCount,
+          indexedDrcCacheHitCount: this.indexedDrcCacheHitCount,
+          indexedDrcEvaluationTimeMs: this.indexedDrcEvaluationTimeMs,
+          indexedDrcCandidateCacheSize: this.indexedDrcCandidateCache.size,
+          indexedDrcCandidateCacheCapacity: INDEXED_DRC_CANDIDATE_CACHE_SIZE,
         }
         this.solved = true
         return
@@ -1483,6 +1543,11 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       terminalEscapeAcceptedCount: terminalEscapeResult.acceptedCandidateCount,
       referenceDrcValidationCount: this.referenceDrcValidationCount,
       referenceDrcFalseNegativeCount: this.referenceDrcFalseNegativeCount,
+      indexedDrcEvaluationCount: this.indexedDrcEvaluationCount,
+      indexedDrcCacheHitCount: this.indexedDrcCacheHitCount,
+      indexedDrcEvaluationTimeMs: this.indexedDrcEvaluationTimeMs,
+      indexedDrcCandidateCacheSize: this.indexedDrcCandidateCache.size,
+      indexedDrcCandidateCacheCapacity: INDEXED_DRC_CANDIDATE_CACHE_SIZE,
     }
     this.solved = true
   }
