@@ -17,9 +17,7 @@ test("Pipeline9 routes SRJ23 sample 4 without rerouting existing copper", async 
   expect(solver.failed).toBeFalse()
   // Correctly compacted free regions no longer require regional rerouting.
   // Contiguous fallback/splicing remains covered by the high-density unit test.
-  expect(
-    Number(solver.highDensityRouteSolver?.stats.fallbackNodeCount),
-  ).toBe(0)
+  expect(Number(solver.highDensityRouteSolver?.stats.fallbackNodeCount)).toBe(0)
   expect(solver.getMutatedPreloadedTraces()).toHaveLength(0)
   expect(solver.getUpdatedPreloadedTraces()).toEqual(scenario.traces!)
   const { errors } = evaluateRelaxedDrc({
