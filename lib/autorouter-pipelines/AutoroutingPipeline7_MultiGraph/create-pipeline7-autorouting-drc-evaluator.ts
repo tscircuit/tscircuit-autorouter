@@ -33,11 +33,25 @@ export const createPipeline7AutoroutingDrcEvaluator = (
       conversionOptions.originalSrj.minViaDiameter ??
       conversionOptions.srjWithPointPairs.minViaDiameter,
   }
-  const traceClearance =
-    conversionOptions.originalSrj.minTraceToPadEdgeClearance ??
-    DEFAULT_AUTOROUTING_TRACE_CLEARANCE
-  const viaToPadClearance =
-    conversionOptions.originalSrj.minViaEdgeToPadEdgeClearance ?? traceClearance
+  // Older Pipeline7 inputs often provide one pad-clearance field incidentally.
+  // Preserve their established 0.10 mm repair output, and opt into the
+  // fine-pitch policy only when both trace and via pad rules are explicit.
+  const hasFinePitchPadClearancePolicy =
+    typeof conversionOptions.originalSrj.minTraceToPadEdgeClearance ===
+      "number" &&
+    typeof conversionOptions.originalSrj.minViaEdgeToPadEdgeClearance ===
+      "number" &&
+    Math.min(
+      conversionOptions.originalSrj.minTraceToPadEdgeClearance,
+      conversionOptions.originalSrj.minViaEdgeToPadEdgeClearance,
+    ) <
+      0.1 - 1e-9
+  const traceClearance = hasFinePitchPadClearancePolicy
+    ? conversionOptions.originalSrj.minTraceToPadEdgeClearance!
+    : DEFAULT_AUTOROUTING_TRACE_CLEARANCE
+  const viaToPadClearance = hasFinePitchPadClearancePolicy
+    ? conversionOptions.originalSrj.minViaEdgeToPadEdgeClearance!
+    : undefined
   // DRC interactions cannot span farther than the widest copper feature plus
   // clearance. Indexing at that physical scale avoids board-size-dependent
   // cells that become increasingly coarse on large layouts.
@@ -45,12 +59,13 @@ export const createPipeline7AutoroutingDrcEvaluator = (
     Math.max(
       getViaDimensions(conversionOptions.originalSrj).padDiameter,
       engineSrj.minTraceWidth,
-    ) + Math.max(traceClearance, AUTOROUTING_VIA_CLEARANCE, viaToPadClearance)
+    ) +
+    Math.max(traceClearance, AUTOROUTING_VIA_CLEARANCE, viaToPadClearance ?? 0)
   const engine = new AutoroutingDrcEngine(engineSrj as RepairSimpleRouteJson, {
     connMap: conversionOptions.connMap,
     traceClearance,
     viaClearance: AUTOROUTING_VIA_CLEARANCE,
-    viaToPadClearance,
+    ...(viaToPadClearance === undefined ? {} : { viaToPadClearance }),
     spatialCellSize,
   })
   const convertCandidateRoutes =

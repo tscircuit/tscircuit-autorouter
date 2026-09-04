@@ -23,6 +23,19 @@ const getDrcErrors = (evaluator: DrcEvaluator, routes: HighDensityRoute[]) => {
     : (result.errorsWithCenters ?? result.errors)
 }
 
+const usesFinePitchPadClearance = (srj: {
+  minTraceToPadEdgeClearance?: number
+  minViaEdgeToPadEdgeClearance?: number
+}) => {
+  const traceClearance = srj.minTraceToPadEdgeClearance
+  const viaClearance = srj.minViaEdgeToPadEdgeClearance
+  return (
+    typeof traceClearance === "number" &&
+    typeof viaClearance === "number" &&
+    Math.min(traceClearance, viaClearance) < 0.1 - 1e-9
+  )
+}
+
 const createLegacyDrcEvaluator =
   (evaluator: DrcEvaluator): DrcEvaluator =>
   (input) => {
@@ -102,7 +115,8 @@ export class Pipeline7CompositeDrcRepairSolver extends GlobalDrcBranchPortfolioS
       )
       if (
         !this.params.enableSafeTraceLayerMoves ||
-        portfolioErrors.length === 0
+        portfolioErrors.length === 0 ||
+        !usesFinePitchPadClearance(this.params.srj)
       ) {
         this.finish(portfolioOutput, portfolioErrors)
         return

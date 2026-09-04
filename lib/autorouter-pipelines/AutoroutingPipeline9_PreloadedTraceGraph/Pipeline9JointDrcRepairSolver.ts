@@ -37,10 +37,10 @@ import { getPipeline9PreloadedViaPairTraceGroups } from "./getPipeline9Preloaded
 import { mergePipeline9MovablePreloadedVias } from "./mergePipeline9MovablePreloadedVias"
 import { normalizePipeline9DrcErrorsForRepair } from "./normalizePipeline9DrcErrorsForRepair"
 import {
-  getPipeline9DrcErrors,
-  getPipeline9RouteIndexByTraceId,
   type Pipeline9CollapsedTraceParticipant,
   type Pipeline9PreloadRepairTraceIds,
+  getPipeline9DrcErrors,
+  getPipeline9RouteIndexByTraceId,
 } from "./pipeline9JointDrcRepairUtils"
 import { preparePipeline9DrcRoutedTracesWithMetadata } from "./preparePipeline9DrcRoutedTraces"
 
@@ -712,6 +712,10 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       RELAXED_DRC_OPTIONS.traceClearance ??
       0.1
     const viaClearance = RELAXED_DRC_OPTIONS.viaClearance ?? 0.1
+    // Via-to-via spacing remains on the benchmark policy; only via-to-pad
+    // scoring follows the board's independently declared pad clearance.
+    const viaToPadClearance =
+      params.originalSrj.minViaEdgeToPadEdgeClearance ?? viaClearance
     const baselineDrc = evaluateRelaxedDrc({
       inputSrj: params.originalSrj,
       srjWithPointPairs: params.srjWithPointPairs,
@@ -1005,12 +1009,13 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         connMap: params.connMap,
         traceClearance,
         viaClearance,
+        viaToPadClearance,
         includeTraceViaOwnerMetadata: true,
         spatialCellSize:
           Math.max(
             params.defaultViaDiameter,
             params.originalSrj.minTraceWidth,
-          ) + Math.max(traceClearance, viaClearance),
+          ) + Math.max(traceClearance, viaClearance, viaToPadClearance),
       },
     )
     const autoroutingBaselineDrcResult = autoroutingDrcEngine.evaluate(
