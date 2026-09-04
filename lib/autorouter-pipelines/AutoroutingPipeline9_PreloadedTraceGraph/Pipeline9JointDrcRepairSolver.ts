@@ -970,6 +970,9 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     const autoroutingDrcEngine = new AutoroutingDrcEngine(
       {
         ...extendedSrjWithPointPairs,
+        // Routing uses axis-aligned approximations; exact DRC needs the
+        // original pad shapes and rotation metadata.
+        obstacles: params.originalSrj.obstacles,
         minTraceWidth: params.originalSrj.minTraceWidth,
         minViaDiameter:
           params.originalSrj.minViaDiameter ?? params.defaultViaDiameter,
