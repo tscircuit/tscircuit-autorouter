@@ -10,33 +10,22 @@ import { getLastStepSvg } from "../fixtures/getLastStepSvg"
 
 const srj = bugReport.simple_route_json as SimpleRouteJson
 
-test("bugreport94-56fa2e.json with Pipeline 9", () => {
+test("bugreport94-56fa2e.json with Pipeline 9", (): void => {
   const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(
     structuredClone(srj),
   )
   solver.solve()
+  expect(solver.solved).toBe(true)
+  expect(solver.failed).toBe(false)
 
   const circuitJson = getCurrentCircuitJson(solver)
   expect(circuitJson).not.toBeNull()
   const { errors } = getDrcErrors(circuitJson!)
-  expect(errors.length).toBeLessThanOrEqual(5)
-  const targetOverlap = errors.find(
-    (error) =>
-      error.type === "pcb_trace_error" &&
-      error.pcb_trace_error_id.includes("source_trace_108") &&
-      error.pcb_trace_error_id.includes("source_trace_138"),
-  )
-  expect(targetOverlap).toBeUndefined()
-  const transferredOverlap = errors.find(
-    (error) =>
-      error.type === "pcb_trace_error" &&
-      error.pcb_trace_error_id.includes("source_trace_108"),
-  )
-  expect(transferredOverlap).toBeUndefined()
+  expect(errors).toEqual([])
 
   const snapshotPath =
     process.platform === "linux"
       ? import.meta.path.replace(/\.test\.ts$/, "-linux.test.ts")
       : import.meta.path
   expect(getLastStepSvg(solver.visualize())).toMatchSvgSnapshot(snapshotPath)
-}, 300_000)
+})

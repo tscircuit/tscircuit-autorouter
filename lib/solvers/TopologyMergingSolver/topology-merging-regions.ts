@@ -190,19 +190,43 @@ function getRegionMergeKey(region: TopologyMergingRegion): string {
   })
 }
 
-function getHorizontalMergeBucketKey(region: TopologyMergingRegion): string {
+function getCoordinateBucketIds(values: number[]): Map<number, number> {
+  const sortedValues = [...values].sort((a, b): number => a - b)
+  const bucketIdByCoordinate = new Map<number, number>()
+  let canonicalCoordinate: number | undefined
+  let bucketId = -1
+  for (const value of sortedValues) {
+    if (
+      canonicalCoordinate === undefined ||
+      value - canonicalCoordinate > TOPOLOGY_MERGING_EPSILON
+    ) {
+      canonicalCoordinate = value
+      bucketId++
+    }
+    bucketIdByCoordinate.set(value, bucketId)
+  }
+  return bucketIdByCoordinate
+}
+
+function getHorizontalMergeBucketKey(
+  region: TopologyMergingRegion,
+  coordinateBucketIds: ReadonlyMap<number, number>,
+): string {
   return JSON.stringify({
     mergeKey: getRegionMergeKey(region),
-    minY: region.bounds.minY.toPrecision(15),
-    maxY: region.bounds.maxY.toPrecision(15),
+    minY: coordinateBucketIds.get(region.bounds.minY)!,
+    maxY: coordinateBucketIds.get(region.bounds.maxY)!,
   })
 }
 
-function getVerticalMergeBucketKey(region: TopologyMergingRegion): string {
+function getVerticalMergeBucketKey(
+  region: TopologyMergingRegion,
+  coordinateBucketIds: ReadonlyMap<number, number>,
+): string {
   return JSON.stringify({
     mergeKey: getRegionMergeKey(region),
-    minX: region.bounds.minX.toPrecision(15),
-    maxX: region.bounds.maxX.toPrecision(15),
+    minX: coordinateBucketIds.get(region.bounds.minX)!,
+    maxX: coordinateBucketIds.get(region.bounds.maxX)!,
   })
 }
 
@@ -210,16 +234,37 @@ function compactRegionsInDirection(
   regions: TopologyMergingRegion[],
   direction: "horizontal" | "vertical",
 ): TopologyMergingRegion[] {
-  const regionsByMergeBucket = new Map<string, TopologyMergingRegion[]>()
-
+  const regionsByMergeKey = new Map<string, TopologyMergingRegion[]>()
   for (const region of regions) {
-    const bucketKey =
-      direction === "horizontal"
-        ? getHorizontalMergeBucketKey(region)
-        : getVerticalMergeBucketKey(region)
-    const bucket = regionsByMergeBucket.get(bucketKey) ?? []
-    bucket.push(region)
-    regionsByMergeBucket.set(bucketKey, bucket)
+    const mergeKey = getRegionMergeKey(region)
+    const group = regionsByMergeKey.get(mergeKey) ?? []
+    group.push(region)
+    regionsByMergeKey.set(mergeKey, group)
+  }
+  const regionsByMergeBucket = new Map<string, TopologyMergingRegion[]>()
+  // X slabs independently canonicalize their Y boundaries. Equal boundaries
+  // can therefore differ by less than the topology tolerance; exact decimal
+  // keys would leave one free-space rectangle fragmented into narrow strips.
+  // Canonicalize within each topology so unrelated sources or layers cannot
+  // change which of its boundaries share a bucket.
+  for (const group of regionsByMergeKey.values()) {
+    const coordinateBucketIds = getCoordinateBucketIds(
+      group.flatMap(({ bounds }): number[] =>
+        direction === "horizontal"
+          ? [bounds.minY, bounds.maxY]
+          : [bounds.minX, bounds.maxX],
+      ),
+    )
+
+    for (const region of group) {
+      const bucketKey =
+        direction === "horizontal"
+          ? getHorizontalMergeBucketKey(region, coordinateBucketIds)
+          : getVerticalMergeBucketKey(region, coordinateBucketIds)
+      const bucket = regionsByMergeBucket.get(bucketKey) ?? []
+      bucket.push(region)
+      regionsByMergeBucket.set(bucketKey, bucket)
+    }
   }
 
   return [...regionsByMergeBucket.values()].flatMap((bucket) =>
