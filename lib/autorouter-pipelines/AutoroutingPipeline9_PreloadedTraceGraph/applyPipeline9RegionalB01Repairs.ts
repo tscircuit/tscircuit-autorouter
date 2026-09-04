@@ -158,6 +158,10 @@ const asRegionalRoutes = (
 ): PreloadedHighDensityRoute[] =>
   routes.map((route, routeIndex) => ({
     ...route,
+    // A connection can have several independently spliced route fragments.
+    // Keep the electrical net separate from the local repair identity.
+    connectionName: `pipeline9_joint_candidate_${routeIndex}`,
+    rootConnectionName: route.rootConnectionName ?? route.connectionName,
     preloadedTraceId: `pipeline9_joint_candidate_${routeIndex}`,
     preloadedTraceIndex: routeIndex,
     preloadedRouteIndex: 0,
@@ -378,7 +382,11 @@ const getRegionalCandidate = ({
   return {
     routes: routes.map((route, candidateRouteIndex) =>
       candidateRouteIndex === routeIndex
-        ? spliceFixedRouteSection(movableSection, replacement)
+        ? {
+            ...spliceFixedRouteSection(movableSection, replacement),
+            connectionName: route.connectionName,
+            rootConnectionName: route.rootConnectionName,
+          }
         : route,
     ),
     usedFallback: Number(solver.stats.fallbackNodeCount ?? 0) > 0,
@@ -488,9 +496,17 @@ const getRegularRegionalCandidate = ({
       removedOriginalIndexes.add(sourceRoute.preloadedTraceIndex)
     }
   }
-  const candidateRoutes = regionalRoutes.flatMap((route, routeIndex) => {
+  const candidateRoutes = routes.flatMap((route, routeIndex) => {
     if (removedOriginalIndexes.has(routeIndex)) return []
-    return [replacedRouteByOriginalIndex.get(routeIndex) ?? route]
+    const replacement = replacedRouteByOriginalIndex.get(routeIndex)
+    if (!replacement) return [route]
+    return [
+      {
+        ...replacement,
+        connectionName: route.connectionName,
+        rootConnectionName: route.rootConnectionName,
+      },
+    ]
   })
   if (
     candidateConflictsWithFixedRoutes({
