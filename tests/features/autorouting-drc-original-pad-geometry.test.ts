@@ -62,8 +62,5 @@ test("exact DRC uses original pads instead of routing approximations", (): void 
   const result = evaluator({ traces: [], routes })
   const errors = Array.isArray(result) ? result : result.errors
   expect(errors).toHaveLength(1)
-  expect(errors[0]?.actual_clearance).toBeCloseTo(
-    0.15 / Math.SQRT2 - 0.05,
-    6,
-  )
+  expect(errors[0]?.actual_clearance).toBeCloseTo(0.15 / Math.SQRT2 - 0.05, 6)
 })
