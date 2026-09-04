@@ -1317,7 +1317,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         this.cacheIndexedDrcResult(candidateKey, referenceResult)
         return referenceResult
       }
-      const normalizedResult = normalizeCandidateDrcResult({
+      const candidateDrcResult = normalizeCandidateDrcResult({
         errors: evaluatedNewErrors,
         errorsWithCenters: evaluatedNewErrorsWithCenters,
         circuitJson: viaCircuitJson,
@@ -1327,8 +1327,8 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       })
       this.indexedDrcEvaluationTimeMs +=
         performance.now() - evaluationStartedAtMs
-      this.cacheIndexedDrcResult(candidateKey, normalizedResult)
-      return normalizedResult
+      this.cacheIndexedDrcResult(candidateKey, candidateDrcResult)
+      return candidateDrcResult
     }
     this.drcEvaluator = drcEvaluator
 
