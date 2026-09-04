@@ -247,7 +247,8 @@ function compactRegionsInDirection(
   // keys would leave one free-space rectangle fragmented into narrow strips.
   // Canonicalize within each topology so unrelated sources or layers cannot
   // change which of its boundaries share a bucket.
-  for (const group of regionsByMergeKey.values()) {
+  const coordinateBucketsByMergeKey = new Map<string, Map<number, number>>()
+  for (const [mergeKey, group] of regionsByMergeKey) {
     const coordinateBucketIds = getCoordinateBucketIds(
       group.flatMap(({ bounds }): number[] =>
         direction === "horizontal"
@@ -256,15 +257,20 @@ function compactRegionsInDirection(
       ),
     )
 
-    for (const region of group) {
-      const bucketKey =
-        direction === "horizontal"
-          ? getHorizontalMergeBucketKey(region, coordinateBucketIds)
-          : getVerticalMergeBucketKey(region, coordinateBucketIds)
-      const bucket = regionsByMergeBucket.get(bucketKey) ?? []
-      bucket.push(region)
-      regionsByMergeBucket.set(bucketKey, bucket)
-    }
+    coordinateBucketsByMergeKey.set(mergeKey, coordinateBucketIds)
+  }
+
+  for (const region of regions) {
+    const coordinateBucketIds = coordinateBucketsByMergeKey.get(
+      getRegionMergeKey(region),
+    )!
+    const bucketKey =
+      direction === "horizontal"
+        ? getHorizontalMergeBucketKey(region, coordinateBucketIds)
+        : getVerticalMergeBucketKey(region, coordinateBucketIds)
+    const bucket = regionsByMergeBucket.get(bucketKey) ?? []
+    bucket.push(region)
+    regionsByMergeBucket.set(bucketKey, bucket)
   }
 
   return [...regionsByMergeBucket.values()].flatMap((bucket) =>

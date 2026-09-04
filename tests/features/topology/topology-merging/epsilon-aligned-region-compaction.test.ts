@@ -82,9 +82,7 @@ test("topology compaction rejoins same-source strips aligned within its geometri
       },
     },
   ]
-  expect(compactTopologyMergingRegions(roundingBoundaryRegions)).toHaveLength(
-    1,
-  )
+  expect(compactTopologyMergingRegions(roundingBoundaryRegions)).toHaveLength(1)
 
   const chainedBoundaries = [0, 0.0000075, 0.000015].map((offset, index) => ({
     ...metadata,

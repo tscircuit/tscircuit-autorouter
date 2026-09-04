@@ -240,7 +240,7 @@
     "tests/features/pipeline9-srj23-sample25-terminal-metadata.test.ts": 1.7,
     "tests/features/pipeline9-srj23-sample3-preloaded-connectivity.test.ts": 5.5,
     "tests/features/pipeline9-srj23-sample37-via-repair.test.ts": 0.3,
-    "tests/features/pipeline9-srj23-sample4-contiguous-fallback.test.ts": 2,
+    "tests/features/pipeline9-srj23-sample4-preserves-preloads.test.ts": 2,
     "tests/features/pipeline9-srj23-sample44-all-preloaded-obstacles.test.ts": 4.2,
     "tests/features/pipeline9-srj23-sample46-regional-trace-set.test.ts": 116.6,
     "tests/features/pipeline9-srj23-sample50-terminal-escape.test.ts": 1.6,
