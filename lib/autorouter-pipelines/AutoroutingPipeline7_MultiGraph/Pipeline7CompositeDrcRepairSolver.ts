@@ -23,27 +23,6 @@ const getDrcErrors = (evaluator: DrcEvaluator, routes: HighDensityRoute[]) => {
     : (result.errorsWithCenters ?? result.errors)
 }
 
-const getDrcIssueScore = (errors: Array<Record<string, unknown>>) =>
-  errors.reduce((score, error) => {
-    if (
-      typeof error.actual_clearance === "number" &&
-      typeof error.minimum_clearance === "number"
-    ) {
-      return (
-        score + Math.max(0, error.minimum_clearance - error.actual_clearance)
-      )
-    }
-    return score + 1
-  }, 0)
-
-const isCandidateBetter = (
-  candidateErrors: Array<Record<string, unknown>>,
-  currentErrors: Array<Record<string, unknown>>,
-) =>
-  candidateErrors.length < currentErrors.length ||
-  (candidateErrors.length === currentErrors.length &&
-    getDrcIssueScore(candidateErrors) < getDrcIssueScore(currentErrors) - 1e-9)
-
 const createLegacyDrcEvaluator =
   (evaluator: DrcEvaluator): DrcEvaluator =>
   (input) => {
@@ -174,10 +153,11 @@ export class Pipeline7CompositeDrcRepairSolver extends GlobalDrcBranchPortfolioS
         newConnections: this.newConnections,
         drcEvaluator: this.params.drcEvaluator!,
       })
-      const accepted = isCandidateBetter(
-        relocationResult.errors,
-        portfolioErrors,
-      )
+      // Keep the established Pipeline7 portfolio output unless this targeted
+      // fallback removes at least one whole-board violation. An equal-count
+      // clearance-score improvement is not enough to justify perturbing routes
+      // that the original portfolio already selected.
+      const accepted = relocationResult.errors.length < portfolioErrors.length
       this.finish(
         accepted ? relocationResult.routes : portfolioOutput,
         accepted ? relocationResult.errors : portfolioErrors,
