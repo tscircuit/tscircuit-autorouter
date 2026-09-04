@@ -11,7 +11,7 @@ import {
   createPipeline7HdRoutesToSimplifiedPcbTracesConverter,
 } from "./convertPipeline7HdRoutesToSimplifiedPcbTraces"
 
-const AUTOROUTING_TRACE_CLEARANCE = 0.1
+const DEFAULT_AUTOROUTING_TRACE_CLEARANCE = 0.1
 const AUTOROUTING_VIA_CLEARANCE = 0.1
 
 /**
@@ -33,6 +33,11 @@ export const createPipeline7AutoroutingDrcEvaluator = (
       conversionOptions.originalSrj.minViaDiameter ??
       conversionOptions.srjWithPointPairs.minViaDiameter,
   }
+  const traceClearance =
+    conversionOptions.originalSrj.minTraceToPadEdgeClearance ??
+    DEFAULT_AUTOROUTING_TRACE_CLEARANCE
+  const viaToPadClearance =
+    conversionOptions.originalSrj.minViaEdgeToPadEdgeClearance ?? traceClearance
   // DRC interactions cannot span farther than the widest copper feature plus
   // clearance. Indexing at that physical scale avoids board-size-dependent
   // cells that become increasingly coarse on large layouts.
@@ -40,11 +45,12 @@ export const createPipeline7AutoroutingDrcEvaluator = (
     Math.max(
       getViaDimensions(conversionOptions.originalSrj).padDiameter,
       engineSrj.minTraceWidth,
-    ) + Math.max(AUTOROUTING_TRACE_CLEARANCE, AUTOROUTING_VIA_CLEARANCE)
+    ) + Math.max(traceClearance, AUTOROUTING_VIA_CLEARANCE, viaToPadClearance)
   const engine = new AutoroutingDrcEngine(engineSrj as RepairSimpleRouteJson, {
     connMap: conversionOptions.connMap,
-    traceClearance: AUTOROUTING_TRACE_CLEARANCE,
+    traceClearance,
     viaClearance: AUTOROUTING_VIA_CLEARANCE,
+    viaToPadClearance,
     spatialCellSize,
   })
   const convertCandidateRoutes =
