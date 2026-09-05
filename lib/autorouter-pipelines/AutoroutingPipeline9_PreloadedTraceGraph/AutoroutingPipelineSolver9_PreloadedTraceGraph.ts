@@ -701,7 +701,11 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
               cms.originalSrj.layerCount,
               cms.viaDiameter,
               cms.connMap,
-            ),
+            ).map((route) => ({
+              ...route,
+              // Simplification resolves IDs through connMap, not net keys.
+              rootConnectionName: trace.connection_name,
+            })),
           )
         const materializedConnectionNames = new Set<string>(
           cms
