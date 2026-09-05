@@ -17,6 +17,16 @@ test("bugreport94-56fa2e.json with Pipeline 9", (): void => {
   solver.solve()
   expect(solver.solved).toBe(true)
   expect(solver.failed).toBe(false)
+  expect(solver.error).toBeNull()
+
+  const routedConnectionNames = new Set(
+    solver._getOutputHdRoutes().map((route) => route.connectionName),
+  )
+  expect(routedConnectionNames).toEqual(
+    new Set(
+      solver.srjWithPointPairs!.connections.map((connection) => connection.name),
+    ),
+  )
 
   const circuitJson = getCurrentCircuitJson(solver)
   expect(circuitJson).not.toBeNull()
