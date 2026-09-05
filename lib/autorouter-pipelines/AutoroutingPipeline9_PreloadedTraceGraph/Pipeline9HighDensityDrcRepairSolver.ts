@@ -189,9 +189,7 @@ const doesRouteConflictWithObstacle = ({
     const localVia = getObstacleLocalPoint(via.center, obstacle)
     const deltaX = Math.max(Math.abs(localVia.x) - obstacle.width / 2, 0)
     const deltaY = Math.max(Math.abs(localVia.y) - obstacle.height / 2, 0)
-    if (
-      Math.hypot(deltaX, deltaY) < via.diameter / 2 + clearance
-    ) {
+    if (Math.hypot(deltaX, deltaY) < via.diameter / 2 + clearance) {
       return true
     }
   }
