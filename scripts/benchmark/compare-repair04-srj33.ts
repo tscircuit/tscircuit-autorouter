@@ -50,11 +50,13 @@ const baseline: BenchmarkSummary = JSON.parse(baselineText)
 const candidate: BenchmarkSummary = JSON.parse(candidateText)
 const hashText = (text: string): string =>
   createHash("sha256").update(text).digest("hex")
-let replayProvenance: {
-  candidateConfigurationSha256: string
-  bundleSha256: string
-  baselineFingerprintSha256: string
-} | undefined
+let replayProvenance:
+  | {
+      candidateConfigurationSha256: string
+      bundleSha256: string
+      baselineFingerprintSha256: string
+    }
+  | undefined
 if (candidate.kind === "checkpoint-replay") {
   const configurationText = await readFile(
     resolve(dirname(resolve(candidatePath)), "configuration.json"),
