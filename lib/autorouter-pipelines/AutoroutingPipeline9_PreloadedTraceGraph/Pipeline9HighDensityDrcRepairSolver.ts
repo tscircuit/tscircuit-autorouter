@@ -295,8 +295,7 @@ export class Pipeline9HighDensityDrcRepairSolver extends BaseSolver {
 
     const nextNode = this.getNextAffectedNode()
     if (nextNode) {
-      const unownedConnectionName =
-        this.getUnownedNodeConnectionName(nextNode)
+      const unownedConnectionName = this.getUnownedNodeConnectionName(nextNode)
       if (unownedConnectionName) {
         this.attemptedNodeIds.add(nextNode.capacityMeshNodeId)
         this.stats.attemptedNodeCount = this.attemptedNodeIds.size
