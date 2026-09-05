@@ -32,6 +32,7 @@
     "tests/bugs/bugreport07-d3f3be.test.ts": 25.3,
     "tests/bugs/bugreport08-e3ec95.test.ts": 0.1,
     "tests/bugs/bugreport09-618e09.test.ts": 2.1,
+    "tests/bugs/bugreport104-pedometer-bga-drc-pipeline7.test.ts": 61.7,
     "tests/bugs/bugreport104-pedometer-bga-drc.test.ts": 238.2,
     "tests/bugs/bugreport10-71239a.test.ts": 0.8,
     "tests/bugs/bugreport11-b2de3c.test.ts": 0,

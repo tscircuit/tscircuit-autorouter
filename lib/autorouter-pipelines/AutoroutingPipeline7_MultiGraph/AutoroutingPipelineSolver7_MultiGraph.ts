@@ -7,6 +7,7 @@ import { HighDensityForceImproveSolver } from "high-density-repair01/lib/HighDen
 import {
   GlobalDrcBranchPortfolioSolver,
   GlobalDrcForceImproveSolver,
+  repairFinePitchPadEscapes,
 } from "high-density-repair03/lib"
 import { getGlobalInMemoryCache } from "lib/cache/setupGlobalCaches"
 import { CacheProvider } from "lib/cache/types"
@@ -681,10 +682,33 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
           originalSrj: cms.originalSrj,
         })
 
+        // Match the IDs emitted by Pipeline7's candidate trace converter.
+        // Only generated routes are movable; the evaluator also checks fixed copper.
+        const routeCountByConnectionName = new Map<string, number>()
+        const routeIndexByTraceId = new Map<string, number>()
+        for (const [routeIndex, route] of hdRoutes.entries()) {
+          const connectionRouteIndex =
+            routeCountByConnectionName.get(route.connectionName) ?? 0
+          routeIndexByTraceId.set(
+            `${route.connectionName}_${connectionRouteIndex}`,
+            routeIndex,
+          )
+          routeCountByConnectionName.set(
+            route.connectionName,
+            connectionRouteIndex + 1,
+          )
+        }
+        const padEscapeResult = repairFinePitchPadEscapes({
+          srj: cms.srjWithPointPairs!,
+          routes: hdRoutes,
+          routeIndexByTraceId,
+          drcEvaluator: autoroutingDrcEvaluator,
+        })
+
         return [
           {
             srj: cms.srjWithPointPairs! as any,
-            hdRoutes,
+            hdRoutes: padEscapeResult.routes,
             connMap: cms.connMap,
             effort: cms.effort,
             viaHoleDiameter: cms.viaHoleDiameter,
