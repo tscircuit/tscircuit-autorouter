@@ -1,0 +1,44 @@
+<svg width="640" height="640" viewBox="0 0 640 640" xmlns="http://www.w3.org/2000/svg"><rect width="100%" height="100%" fill="white"/><g><polyline data-points="-4,0 0,0" data-type="line" data-label="" points="40,320 320,320" fill="none" stroke="red" stroke-linejoin="round" stroke-width="7"/></g><g><polyline data-points="0,0 4,0" data-type="line" data-label="" points="320,320 600,320" fill="none" stroke="rgba(0,0,255,0.5)" stroke-linejoin="round" stroke-width="7" stroke-dasharray="0.2 0.2"/></g><g><polyline data-points="-4,-1 -1.5,-0.375 -1.396551724137931,-0.36206896551724144 -1.293103448275862,-0.36206896551724144 -1.1896551724137931,-0.36206896551724144 -1.0862068965517242,-0.36206896551724144 -0.9827586206896552,-0.36206896551724144 -0.8793103448275862,-0.36206896551724144 -0.7758620689655173,-0.36206896551724144 -0.5172413793103449,-0.5172413793103449 -0.10344827586206903,-0.5172413793103449 0.3103448275862067,-0.5172413793103449 0.6206896551724136,-0.5172413793103449 0.7758620689655171,-0.36206896551724144 0.7758620689655171,-0.2586206896551725 0.8793103448275862,-0.2586206896551725 0.8793103448275862,-0.15517241379310356 0.982758620689655,-0.15517241379310356 0.982758620689655,-0.05172413793103463 1.0862068965517238,-0.05172413793103463 1.0862068965517238,0.0517241379310343 1.189655172413793,0.0517241379310343 1.189655172413793,0.15517241379310334 1.2931034482758619,0.15517241379310334 1.2931034482758619,0.25862068965517226 1.3965517241379308,0.25862068965517226 1.3965517241379308,0.3620689655172412 1.5,0.375 4,1" data-type="line" data-label="" points="40,390 215,346.25 222.24137931034483,345.3448275862069 229.48275862068965,345.3448275862069 236.72413793103448,345.3448275862069 243.9655172413793,345.3448275862069 251.20689655172413,345.3448275862069 258.44827586206895,345.3448275862069 265.6896551724138,345.3448275862069 283.7931034482759,356.2068965517241 312.7586206896552,356.2068965517241 341.7241379310345,356.2068965517241 363.44827586206895,356.2068965517241 374.3103448275862,345.3448275862069 374.3103448275862,338.1034482758621 381.55172413793105,338.1034482758621 381.55172413793105,330.86206896551727 388.7931034482759,330.86206896551727 388.7931034482759,323.62068965517244 396.0344827586207,323.62068965517244 396.0344827586207,316.3793103448276 403.2758620689655,316.3793103448276 403.2758620689655,309.1379310344828 410.51724137931035,309.1379310344828 410.51724137931035,301.89655172413796 417.7586206896552,301.89655172413796 417.7586206896552,294.65517241379314 425,293.75 600,250" fill="none" stroke="rgba(255,255,0,0.5)" stroke-linejoin="round" stroke-width="7" stroke-dasharray="0.2 0.2"/></g><circle data-type="circle" data-label="" data-x="0" data-y="0" cx="320" cy="320" r="10.5" fill="blue" stroke="none" stroke-width="0.014285714285714285"/><g id="crosshair" style="display: none"><line id="crosshair-h" y1="0" y2="640" stroke="#666" stroke-width="0.5"/><line id="crosshair-v" x1="0" x2="640" stroke="#666" stroke-width="0.5"/><text id="coordinates" font-family="monospace" font-size="12" fill="#666"></text></g><script><![CDATA[
+              document.currentScript.parentElement.addEventListener('mousemove', (e) => {
+                const svg = e.currentTarget;
+                const rect = svg.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                const crosshair = svg.getElementById('crosshair');
+                const h = svg.getElementById('crosshair-h');
+                const v = svg.getElementById('crosshair-v');
+                const coords = svg.getElementById('coordinates');
+                
+                crosshair.style.display = 'block';
+                h.setAttribute('x1', '0');
+                h.setAttribute('x2', '640');
+                h.setAttribute('y1', y);
+                h.setAttribute('y2', y);
+                v.setAttribute('x1', x);
+                v.setAttribute('x2', x);
+                v.setAttribute('y1', '0');
+                v.setAttribute('y2', '640');
+
+                // Calculate real coordinates using inverse transformation
+                const matrix = {"a":70,"c":0,"e":320,"b":0,"d":-70,"f":320};
+                // Manually invert and apply the affine transform
+                // Since we only use translate and scale, we can directly compute:
+                // x' = (x - tx) / sx
+                // y' = (y - ty) / sy
+                const sx = matrix.a;
+                const sy = matrix.d;
+                const tx = matrix.e; 
+                const ty = matrix.f;
+                const realPoint = {
+                  x: (x - tx) / sx,
+                  y: (y - ty) / sy // Flip y back since we used negative scale
+                }
+                
+                coords.textContent = `(${realPoint.x.toFixed(2)}, ${realPoint.y.toFixed(2)})`;
+                coords.setAttribute('x', (x + 5).toString());
+                coords.setAttribute('y', (y - 5).toString());
+              });
+              document.currentScript.parentElement.addEventListener('mouseleave', () => {
+                document.currentScript.parentElement.getElementById('crosshair').style.display = 'none';
+              });
+            ]]></script><g data-testid="relaxed-drc-summary"><rect x="12" y="12" width="300" height="44" rx="6" fill="white" stroke="#166534"/><text x="24" y="40" font-family="Arial, sans-serif" font-size="20" font-weight="600" fill="#166534">Relaxed DRC errors: 0</text></g></svg>

@@ -42,7 +42,7 @@ type RegionalB01RepairResult = {
   safeTraceLayerRepairSkippedForBudget: boolean
   remainingDrcIssueCount: number
   preloadEligibleDrcIssueCount: number
-  preloadRepairAttempted: boolean
+  repairAttempted: boolean
 }
 
 type Bounds = {
@@ -541,9 +541,9 @@ const getRegularRegionalCandidate = ({
 }
 
 /**
- * Activates for a remaining preload-owned DRC error, then reroutes supported
- * joint-output participants with B01 in a sub-15mm window. B01 sees every
- * other route plus board copper as obstacles. Candidate searches use a
+ * Reroutes supported participants in remaining DRC errors, including newly
+ * routed copper without any preloaded traces, with B01 in a sub-15mm window.
+ * B01 sees every other route plus board copper as obstacles. Searches use a
  * route-scaled budget because each search rebuilds and evaluates board copper.
  * If no B01 candidate helps, one regular high-density candidate jointly
  * reroutes all traces in the region.
@@ -598,7 +598,7 @@ export const applyPipeline9RegionalB01Repairs = ({
   }
   const preloadEligibleDrcIssueCount =
     currentErrors.filter(isPreloadRepairError).length
-  if (preloadEligibleDrcIssueCount === 0) {
+  if (currentErrors.length === 0) {
     return {
       routes: currentRoutes,
       attemptedCandidateCount,
@@ -610,7 +610,7 @@ export const applyPipeline9RegionalB01Repairs = ({
       safeTraceLayerRepairSkippedForBudget: false,
       remainingDrcIssueCount: currentErrors.length,
       preloadEligibleDrcIssueCount,
-      preloadRepairAttempted: false,
+      repairAttempted: false,
     }
   }
   const fixedRouteCopperSpatialIndex =
@@ -772,6 +772,6 @@ export const applyPipeline9RegionalB01Repairs = ({
     safeTraceLayerRepairSkippedForBudget,
     remainingDrcIssueCount: currentErrors.length,
     preloadEligibleDrcIssueCount,
-    preloadRepairAttempted: preloadEligibleDrcIssueCount > 0,
+    repairAttempted: true,
   }
 }
