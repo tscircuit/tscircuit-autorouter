@@ -1,3 +1,4 @@
+import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { GraphicsObject } from "graphics-debug"
 import { HighDensityRepairSolver } from "high-density-repair02"
 import type {
@@ -12,6 +13,9 @@ import type {
 import type { Obstacle } from "lib/types/srj-types"
 import { BaseSolver } from "../BaseSolver"
 import { safeTransparentize } from "../colors"
+import { isObstacleConnectedToRoute } from "../TraceWidthSolver/isObstacleConnectedToRoute"
+import { createObjectsWithZLayers } from "lib/utils/createObjectsWithZLayers"
+import { getConnectedPadSides } from "./getConnectedPadSides"
 
 type RepairSampleEntry = {
   node: NodeWithPortPoints
@@ -71,23 +75,16 @@ const isPointInsideObstacle = (
 const isMultilayerObstacle = (obstacle: Obstacle) =>
   (obstacle.__zLayers?.length ?? obstacle.layers?.length ?? 0) > 1
 
-const isObstacleConnectedToRoute = (
-  obstacle: Obstacle,
-  route: HighDensityRoute,
-) =>
-  obstacle.connectedTo.includes(route.connectionName) ||
-  (route.rootConnectionName !== undefined &&
-    obstacle.connectedTo.includes(route.rootConnectionName))
-
 const isSameNetMultilayerObstacleRoute = (
   route: HighDensityRoute,
   obstacles: Obstacle[],
+  connMap?: ConnectivityMap,
 ) =>
   route.route.length > 0 &&
   obstacles.some(
     (obstacle) =>
       isMultilayerObstacle(obstacle) &&
-      isObstacleConnectedToRoute(obstacle, route) &&
+      isObstacleConnectedToRoute(obstacle, route, connMap) &&
       route.route.every((point) => isPointInsideObstacle(point, obstacle)),
   )
 
@@ -169,6 +166,8 @@ const getAdjacentObstacles = (
   node: NodeWithPortPoints,
   obstacleSHI: ObstacleSpatialHashIndex,
   margin: number,
+  routes: HighDensityRoute[],
+  connMap?: ConnectivityMap,
 ) => {
   const expandedNodeBounds = getNodeBounds(node, margin)
 
@@ -176,6 +175,13 @@ const getAdjacentObstacles = (
     .search(expandedNodeBounds)
     .filter((obstacle) =>
       doesRectOverlap(expandedNodeBounds, getObstacleBounds(obstacle)),
+    )
+    .filter(
+      (obstacle) =>
+        !connMap ||
+        !routes.some((route) =>
+          isObstacleConnectedToRoute(obstacle, route, connMap),
+        ),
     )
     .map((obstacle) => ({
       type: obstacle.type,
@@ -193,6 +199,7 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
   readonly originalObstacles: Obstacle[]
   readonly obstacleSHI: ObstacleSpatialHashIndex
   readonly colorMap: Record<string, string>
+  readonly connMap?: ConnectivityMap
 
   repairedRoutesByIndex = new Map<number, HighDensityRoute>()
   activeSampleIndex = 0
@@ -206,6 +213,7 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
     repairMargin?: number
     colorMap?: Record<string, string>
     maxSampleEntries?: number
+    connMap?: ConnectivityMap
   }) {
     super()
     this.repairMargin = params.repairMargin ?? DEFAULT_REPAIR_MARGIN
@@ -217,11 +225,16 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
       this.originalObstacles,
     )
     this.colorMap = params.colorMap ?? {}
+    this.connMap = params.connMap
 
     const routeIndexesByNode = new Map<number, number[]>()
     for (let i = 0; i < params.hdRoutes.length; i++) {
       if (
-        isSameNetMultilayerObstacleRoute(params.hdRoutes[i], params.obstacles)
+        isSameNetMultilayerObstacleRoute(
+          params.hdRoutes[i],
+          params.obstacles,
+          params.connMap,
+        )
       ) {
         continue
       }
@@ -236,6 +249,15 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
       routeIndexesByNode.set(nodeIndex, routeIndexes)
     }
 
+    const layeredObstacles = createObjectsWithZLayers(
+      params.obstacles,
+      Math.max(
+        2,
+        ...params.nodeWithPortPoints.flatMap(
+          (node) => node.availableZ?.map((z) => z + 1) ?? [],
+        ),
+      ),
+    )
     const sampleEntries = Array.from(routeIndexesByNode.entries()).map(
       ([nodeIndex, routeIndexes]) => {
         const node = params.nodeWithPortPoints[nodeIndex]
@@ -258,13 +280,25 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
                 nextPortPointId: portPoint.nextPortPointId,
               })),
             },
-            nodeHdRoutes: routeIndexes.map((routeIndex) =>
-              toRepairRoute(params.hdRoutes[routeIndex]),
-            ),
+            nodeHdRoutes: routeIndexes.map((routeIndex) => ({
+              ...toRepairRoute(params.hdRoutes[routeIndex]),
+              ...(params.connMap
+                ? {
+                    connectedPadSides: getConnectedPadSides(
+                      node,
+                      params.hdRoutes[routeIndex],
+                      layeredObstacles,
+                      params.connMap,
+                    ),
+                  }
+                : {}),
+            })),
             adjacentObstacles: getAdjacentObstacles(
               node,
               this.obstacleSHI,
               this.repairMargin,
+              routeIndexes.map((routeIndex) => params.hdRoutes[routeIndex]),
+              params.connMap,
             ),
           },
         }
@@ -300,6 +334,7 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
         obstacles: this.originalObstacles,
         repairMargin: this.repairMargin,
         colorMap: this.colorMap,
+        connMap: this.connMap,
       },
     ] as const
   }
