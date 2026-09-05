@@ -207,13 +207,12 @@ Track routing performance and benchmark results in the [Autorouter Benchmark Das
 ### DRC failure dataset (SRJ33)
 
 [dataset-srj33-drc-failures](https://github.com/tscircuit/dataset-srj33-drc-failures)
-contains 37 distinct inputs with at least one measured Pipeline 9 relaxed DRC
-issue. The [original benchmark](https://github.com/tscircuit/tscircuit-autorouter/actions/runs/33978041068)
-retained 12 samples and excluded 19 DRC passes. An
-[additional audit](https://github.com/tscircuit/tscircuit-autorouter/actions/runs/33980539076)
-added 25 bug-report inputs that completed routing with DRC issues after the
-recent DRC fix. Original IDs remain 001–006, 010–013, 020, and 025; additions use
-032–056.
+contains 15 distinct inputs that complete Pipeline 9 routing with independently
+confirmed relaxed DRC errors. A [fresh Blacksmith audit](https://github.com/tscircuit/tscircuit-autorouter/actions/runs/33986579884)
+rechecked all 37 previous samples after conversion fixes: 16 pass DRC, and six
+more are excluded because their reported errors could not all be authenticated.
+The retained samples have 324 error records supported by independent geometry,
+layer, and net checks. Original IDs remain sparse.
 
 ```sh
 bun scripts/run-sample.ts --pipeline 9 --dataset srj33 --sample 1
@@ -221,8 +220,7 @@ bun scripts/run-sample.ts --pipeline 9 --dataset srj33 --sample 1
 
 Use `srj33` in the benchmark workflow's dataset input, or open
 `benchmarks/dataset-srj33` in Cosmos. CLI `--sample` selects by position:
-`--sample 12` loads `sample025`, and `--sample 37` loads `sample056`.
-Cosmos uses the sample IDs. The dataset records source links, pinned revisions,
-and Pipeline 9 selection evidence. Saved outputs for the original 12 are their
-historical Pipeline 7 baseline; additions include Pipeline 9 outputs and exact
-DRC errors.
+`--sample 1` loads `sample002`, and `--sample 15` loads `sample056`.
+Cosmos uses the sample IDs. The dataset includes original inputs, fresh Pipeline 9
+outputs, exact DRC errors, per-error clearance witnesses, and a complete archive
+of all 37 revalidation results and inclusion/exclusion decisions.

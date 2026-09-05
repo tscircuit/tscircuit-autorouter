@@ -3,7 +3,7 @@ import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-p
 import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import { loadScenarioBySampleNumber } from "../../scripts/benchmark/scenarios"
 
-test("Pipeline9 relocates an SRJ23 terminal escape within its own pad", async () => {
+test("Pipeline9 routes SRJ23 sample50 without terminal connectivity errors", async () => {
   const { scenario } = await loadScenarioBySampleNumber("srj23", 50)
   const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(
     structuredClone(scenario),
@@ -14,19 +14,10 @@ test("Pipeline9 relocates an SRJ23 terminal escape within its own pad", async ()
 
   expect(solver.solved).toBeTrue()
   expect(solver.failed).toBeFalse()
-  expect(
-    solver.pipeline9JointDrcRepairSolver?.stats.postExactPrecisionPassAttempted,
-  ).toBeTrue()
-  expect(
-    solver.pipeline9JointDrcRepairSolver?.stats.postExactReferenceAccepted,
-  ).toBeFalse()
-  expect(
-    solver.pipeline9JointDrcRepairSolver?.stats
-      .terminalEscapeSkippedForIndexedIssueCount,
-  ).toBeFalse()
-  expect(
-    solver.pipeline9JointDrcRepairSolver?.stats.terminalEscapeAcceptedCount,
-  ).toBeGreaterThan(0)
+  // With faithful pad conversion this board can route cleanly without
+  // invoking terminal-escape repair. Check the resulting copper, not whether
+  // a repair path happened to run.
+  expect(solver.getOutputSimplifiedPcbTraces().length).toBeGreaterThan(0)
   const { errors } = evaluateRelaxedDrc({
     inputSrj: scenario,
     srjWithPointPairs: solver.srjWithPointPairs!,
