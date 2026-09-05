@@ -7,7 +7,8 @@ test("Pipeline9 keeps the current SRJ23 regional repair residue bounded", async 
   const { scenario } = await loadScenarioBySampleNumber("srj23", 21)
   const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(
     structuredClone(scenario),
-    { cacheProvider: null, effort: 1 },
+    // Keep the defect present for the joint repair stage under test.
+    { cacheProvider: null, effort: 1, enableRepair04: false },
   )
 
   solver.solve()
