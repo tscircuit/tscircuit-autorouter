@@ -86,8 +86,8 @@ test("simplifies traces from the RP2040 motor controller board", async () => {
   const baselinePointCount = baseline.traces!.flatMap(
     (trace) => trace.route,
   ).length
-  const baselineViaCount = baseline.traces!
-    .flatMap((trace) => trace.route)
+  const baselineViaCount = baseline
+    .traces!.flatMap((trace) => trace.route)
     .filter((point) => point.route_type === "via").length
   expect(outputPointCount).toBeLessThan(baselinePointCount - 150)
   expect(outputViaCount).toBeLessThanOrEqual(baselineViaCount)

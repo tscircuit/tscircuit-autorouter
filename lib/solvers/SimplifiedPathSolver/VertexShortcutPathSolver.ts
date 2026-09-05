@@ -76,7 +76,8 @@ export class VertexShortcutPathSolver extends SingleSimplifiedPathSolver5 {
           (sum, point, index) =>
             index === 0
               ? sum
-              : sum + Math.hypot(
+              : sum +
+                Math.hypot(
                   point.x - candidate[index - 1].x,
                   point.y - candidate[index - 1].y,
                 ),
