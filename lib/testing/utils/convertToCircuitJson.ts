@@ -380,9 +380,7 @@ function getDeclaredNetConnectivityIds(
   declaredIds: ReadonlySet<string>,
 ): string[] {
   if (!netId) return []
-  return connMap
-    .getIdsConnectedToNet(netId)
-    .filter((id) => declaredIds.has(id))
+  return connMap.getIdsConnectedToNet(netId).filter((id) => declaredIds.has(id))
 }
 
 function getObstaclesContainingConnectionPoints(
@@ -459,10 +457,8 @@ function createSourceTraces(
 
     // Look for original connection name (might be MST-suffixed by NetToPointPairsSolver)
     const netConnectionName =
-      resolveCircuitJsonSourceTraceId(
-        sourceTraceResolver,
-        connection.name,
-      ) ?? getCircuitJsonSourceTraceId(connection)
+      resolveCircuitJsonSourceTraceId(sourceTraceResolver, connection.name) ??
+      getCircuitJsonSourceTraceId(connection)
 
     // Use requested terminals: a routed endpoint on the wrong pad must not
     // merge that pad's net into this connection.
@@ -555,10 +551,7 @@ function createSourceTraces(
         ) ??
         trace.connectsTo
           ?.map((connectionId) =>
-            resolveCircuitJsonSourceTraceId(
-              sourceTraceResolver,
-              connectionId,
-            ),
+            resolveCircuitJsonSourceTraceId(sourceTraceResolver, connectionId),
           )
           .find((connectionName) => connectionName !== undefined) ??
         (connection
