@@ -4,6 +4,8 @@ import type { GraphicsObject } from "graphics-debug"
 import {
   AutoroutingDrcEngine,
   type DrcEvaluator,
+  GlobalDrcBranchPortfolioSolver,
+  type GlobalDrcBranchPortfolioSolverParams,
   type SimpleRouteJson as RepairSimpleRouteJson,
   type SimplifiedPcbTraces as RepairSimplifiedPcbTraces,
 } from "high-density-repair03/lib"
@@ -50,9 +52,15 @@ const EXACT_REPAIR_BROAD_MAX_ITERATIONS = 12
 // residual sets. Keep that exhaustive search for compact residues while
 // bounding terminal relocation's repeated whole-board indexed DRC scans.
 const MAX_POST_EXACT_PRECISION_PASS_INDEXED_ISSUE_COUNT = 16
+const MAX_INITIAL_DRC_ISSUE_COUNT_FOR_FAST_PROBE = 16
 const INDEXED_DRC_CANDIDATE_CACHE_SIZE = 64
 
 type DrcCandidateKey = string & { readonly __brand: "DrcCandidateKey" }
+
+type Pipeline9ExactRepairSolver = BaseSolver & {
+  readonly params: GlobalDrcBranchPortfolioSolverParams
+  getOutput(): HighDensityRoute[]
+}
 
 type Pipeline9JointDrcRepairSolverParams = {
   srj: SimpleRouteJson
@@ -647,7 +655,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
   readonly movablePreloadedSections: MovablePreloadedSection[]
   readonly fixedPreloadedObstacleRoutes: PreloadedHighDensityRoute[]
   readonly syntheticConnectionNames: ReadonlySet<string>
-  readonly exactRepairSolver?: Pipeline7AdaptiveDrcBranchPortfolioSolver
+  readonly exactRepairSolver?: Pipeline9ExactRepairSolver
   private drcEvaluator?: DrcEvaluator
   private cachedReferenceDrcEvaluator?: DrcEvaluator
   private referenceDrcValidationCount = 0
@@ -1332,8 +1340,8 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     }
     this.drcEvaluator = drcEvaluator
 
-    this.exactRepairSolver = new Pipeline7AdaptiveDrcBranchPortfolioSolver({
-      srj: extendedSrjWithPointPairs as any,
+    const exactRepairParams: GlobalDrcBranchPortfolioSolverParams = {
+      srj: extendedSrjWithPointPairs as RepairSimpleRouteJson,
       hdRoutes: [
         ...params.newHdRoutes,
         ...this.movablePreloadedSections.map(
@@ -1356,7 +1364,15 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       viaInPadMaxIterations: EXACT_REPAIR_MAX_ITERATIONS,
       broadMaxIterations: EXACT_REPAIR_BROAD_MAX_ITERATIONS,
       broadPassMultiplier: 3,
-    })
+    }
+    const shouldAttemptFastProbe =
+      currentDrc.errors.length <= MAX_INITIAL_DRC_ISSUE_COUNT_FOR_FAST_PROBE
+    this.exactRepairSolver = shouldAttemptFastProbe
+      ? new Pipeline7AdaptiveDrcBranchPortfolioSolver(exactRepairParams)
+      : new GlobalDrcBranchPortfolioSolver(exactRepairParams)
+    this.stats.exactRepairFastProbeAttempted = shouldAttemptFastProbe
+    this.stats.exactRepairFastProbeMaxInitialDrcIssueCount =
+      MAX_INITIAL_DRC_ISSUE_COUNT_FOR_FAST_PROBE
     this.activeSubSolver = this.exactRepairSolver
     this.MAX_ITERATIONS = this.exactRepairSolver.MAX_ITERATIONS + 1
   }
