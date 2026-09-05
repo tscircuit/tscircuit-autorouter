@@ -45,6 +45,7 @@ export const createPipeline7AutoroutingDrcEvaluator = (
     ) + Math.max(AUTOROUTING_TRACE_CLEARANCE, AUTOROUTING_VIA_CLEARANCE)
   const engine = new AutoroutingDrcEngine(engineSrj as RepairSimpleRouteJson, {
     connMap: conversionOptions.connMap,
+    includeTraceViaOwnerMetadata: true,
     traceClearance: AUTOROUTING_TRACE_CLEARANCE,
     viaClearance: AUTOROUTING_VIA_CLEARANCE,
     spatialCellSize,
