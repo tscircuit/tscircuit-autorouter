@@ -12,8 +12,6 @@ const inputSrj = rp2040MotorControllerSrj as SimpleRouteJson
 export default () => (
   <AutoroutingPipelineDebugger
     srj={inputSrj}
-    createSolver={(srj) =>
-      new AutoroutingPipelineSolver11_Simplification(srj)
-    }
+    createSolver={(srj) => new AutoroutingPipelineSolver11_Simplification(srj)}
   />
 )
