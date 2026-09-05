@@ -80,5 +80,5 @@ test("Pipeline9 preserves routes when no single node can clear every DRC", (): v
     attemptedNodeCount: 0,
     acceptedNodeCount: 0,
   })
-  expect(solver.getOutput()).toEqual(inputRoutes)
+  expect(solver.getOutput()).toBe(inputRoutes)
 })

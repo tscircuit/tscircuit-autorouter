@@ -12,7 +12,6 @@ import type { Obstacle, SimpleRouteConnection } from "lib/types/srj-types"
 import { normalizePipeline9NodeRootConnectionNames } from "./Pipeline9HighDensitySolver"
 import { getPipeline9FixedRouteObstacles } from "./pipeline9FixedRouteCopper"
 import {
-  clonePipeline9HdRoutes,
   getPipeline9DrcErrors,
   getPipeline9DrcErrorTraceIds,
   getPipeline9RouteIndexByTraceId,
@@ -115,7 +114,10 @@ export class Pipeline9HighDensityDrcRepairSolver extends BaseSolver {
   constructor(params: Pipeline9HighDensityDrcRepairSolverParams) {
     super()
     this.params = params
-    this.outputHdRoutes = clonePipeline9HdRoutes(params.hdRoutes)
+    // Keep the incumbent by reference until an accepted repair exists. Most
+    // boards have no pre-stitch DRC, so cloning every route here needlessly
+    // retains a second full geometry graph through the expensive later stages.
+    this.outputHdRoutes = params.hdRoutes
     this.currentErrors = this.getRepairableDrcErrors(this.outputHdRoutes)
     this.MAX_ITERATIONS =
       Math.max(1, params.nodePortPoints.length) * 100e6 * params.effort
