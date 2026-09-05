@@ -6,7 +6,8 @@
     "31432202969",
     "31436492559",
     "31646368017",
-    "32252254138"
+    "32252254138",
+    "33946889771"
   ],
   "timings": {
     "tests/auto-capacity-depth.test.ts": 0,
@@ -235,6 +236,7 @@
     "tests/features/pipeline9-regional-fallback-materializes-vias.test.ts": 0,
     "tests/features/pipeline9-regional-fallback-target-layers.test.ts": 0,
     "tests/features/pipeline9-splices-hypergraph-preloaded-section.test.ts": 0,
+    "tests/features/pipeline9-srj18-sample12-via-pad-stage-handoff.test.ts": 209.3,
     "tests/features/pipeline9-srj23-sample10-regional-fallback.test.ts": 0.5,
     "tests/features/pipeline9-srj23-sample21-regional-b01-repair.test.ts": 84.2,
     "tests/features/pipeline9-srj23-sample25-terminal-metadata.test.ts": 1.7,

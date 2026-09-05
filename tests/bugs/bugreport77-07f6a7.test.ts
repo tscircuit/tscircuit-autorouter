@@ -21,7 +21,7 @@ test("bugreport77-07f6a7.json", () => {
     srjWithPointPairs: solver.srjWithPointPairs!,
     routedTraces: solver.getOutputSimplifiedPcbTraces(),
   })
-  // The rejected layer-move candidate previously left 94 reference errors.
+  // Rejecting the layer-move candidate previously left 94 reference errors.
   expect(errors.length).toBeLessThan(94)
   expect(
     errors.filter(
