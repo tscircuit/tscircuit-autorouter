@@ -148,7 +148,7 @@ test("Pipeline9 reroutes DRC-bearing high-density nodes before stitching", (): v
     exhaustedNodeCount: 0,
   })
   expect(solver.getOutput()).not.toEqual(inputRoutes)
-  expect(solver.getOutput().find((route) => route.connectionName === "C")).toEqual(
-    inputRoutes.find((route) => route.connectionName === "C"),
-  )
+  expect(
+    solver.getOutput().find((route) => route.connectionName === "C"),
+  ).toEqual(inputRoutes.find((route) => route.connectionName === "C"))
 })
