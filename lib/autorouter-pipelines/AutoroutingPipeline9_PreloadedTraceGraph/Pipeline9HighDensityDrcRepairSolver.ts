@@ -77,9 +77,15 @@ const replaceNodeRoutes = ({
     })
   }
 
-  // The node input can include preloaded pseudo-connections that are not owned
-  // by this stage. Keep those preloads fixed; the board-level evaluator below
-  // checks the projected candidate against their original copper geometry.
+  // A node can include preloaded pseudo-connections that this stage does not
+  // own. Reject a candidate that rerouted them because projecting only part of
+  // that solution would change the geometry the other routes were solved
+  // against and can regress the later global repair stages.
+  if (
+    [...candidatesByConnectionName.values()].some((routes) => routes.length > 0)
+  ) {
+    return null
+  }
   return replacedRoutes
 }
 
