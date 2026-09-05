@@ -124,8 +124,7 @@ export const createPipeline9HighDensityDrcEvaluator = (
       const originalViaHoleDiameter =
         originalPoint?.route_type === "via" &&
         hdRoute.route.every(
-          (point) =>
-            point.x === originalPoint.x && point.y === originalPoint.y,
+          (point) => point.x === originalPoint.x && point.y === originalPoint.y,
         )
           ? originalPoint.via_hole_diameter
           : undefined
