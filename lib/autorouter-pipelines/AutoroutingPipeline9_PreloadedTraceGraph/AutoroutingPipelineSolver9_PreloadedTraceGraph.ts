@@ -46,6 +46,7 @@ import {
 import { getPresuppliedTraceVisualization } from "lib/utils/getPresuppliedTraceVisualization"
 import { calculateOptimalCapacityDepth } from "lib/utils/getTunedTotalCapacity1"
 import { getViaDimensions } from "lib/utils/getViaDimensions"
+import { removeCollinearTracePoints } from "lib/utils/removeCollinearTracePoints"
 import {
   AvailableSegmentPointSolver,
   type SharedEdgeSegment,
@@ -1510,7 +1511,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       ...this.getPowerTraceExpansionFixedTraces().filter(
         (trace) => trace.__replaces_pcb_trace_id !== undefined,
       ),
-      ...this.powerTraceExpansionSolver.getOutput(),
+      ...this.getCleanedPowerTraceOutput(),
     ]
   }
 
@@ -1525,11 +1526,33 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     }
     const traces = [
       ...this.getPowerTraceExpansionFixedTraces(),
-      ...this.powerTraceExpansionSolver.getOutput(),
+      ...this.getCleanedPowerTraceOutput(),
     ]
     return {
       ...this.originalSrj,
       traces,
     }
+  }
+
+  private getCleanedPowerTraceOutput(): SimplifiedPcbTraces {
+    const lengthMatchedConnections = [
+      ...(this.originalSrj.differentialPairs ?? []).flatMap(
+        (pair) => pair.connectionNames,
+      ),
+      ...(this.originalSrj.buses ?? [])
+        .filter((bus) => bus.maxLengthSkew !== undefined)
+        .flatMap((bus) => bus.connectionNames),
+    ]
+    // Run after widening so removing redundant vertices cannot change a
+    // solver's decisions. Preserve the exact geometry of length-matched nets.
+    return this.powerTraceExpansionSolver!.getOutput().map((trace) =>
+      lengthMatchedConnections.some(
+        (name) =>
+          name === trace.connection_name ||
+          this.connMap.areIdsConnected(name, trace.connection_name),
+      )
+        ? trace
+        : removeCollinearTracePoints(trace),
+    )
   }
 }

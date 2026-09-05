@@ -11,14 +11,20 @@ test("Pipeline9 SRJ23 sample 3 removes the collinear spur above the terminal pad
   )
   solver.solve()
   expect(solver.solved).toBeTrue()
-  const route = solver
-    .pipeline9JointDrcRepairSolver!.getOutput()
-    .find((route) => route.connectionName === "source_net_7_mst0")!
+  const route = solver.getOutputSimplifiedPcbTraces().find((trace) => {
+    const end = trace.route.at(-1)
+    return end?.route_type === "wire" && end.x === -7.175 && end.y === 16.51
+  })!
   expect(route).toBeDefined()
   // This route goes left from its first terminal to its last. Previously it
   // reversed by 0.83 mm above the pads, leaving a visible retraced spur.
   for (let i = 1; i < route.route.length; i++) {
-    expect(route.route[i]!.x).toBeLessThanOrEqual(route.route[i - 1]!.x)
+    const previous = route.route[i - 1]!
+    const point = route.route[i]!
+    expect(point.route_type).toBe("wire")
+    if (point.route_type === "wire" && previous.route_type === "wire") {
+      expect(point.x).toBeLessThanOrEqual(previous.x)
+    }
   }
   expect(
     evaluateRelaxedDrc({
