@@ -9,6 +9,7 @@ import { GraphicsObject } from "graphics-debug"
 import { getJumpersGraphics } from "lib/utils/getJumperGraphics"
 import { createObjectsWithZLayers } from "lib/utils/createObjectsWithZLayers"
 import { CrossingViaReductionSolver } from "lib/solvers/CrossingViaReductionSolver/crossing-via-reduction-solver"
+import { removeCollinearRoutePoints } from "lib/utils/removeCollinearRoutePoints"
 
 type Phase =
   | "via_removal"
@@ -77,7 +78,10 @@ export class TraceSimplificationSolver extends BaseSolver {
 
   /** Returns the simplified routes. This is the primary output of the solver. */
   get simplifiedHdRoutes(): HighDensityRoute[] {
-    return this.hdRoutes
+    return this.hdRoutes.map((hdRoute) => ({
+      ...hdRoute,
+      route: removeCollinearRoutePoints(hdRoute),
+    }))
   }
 
   /**
