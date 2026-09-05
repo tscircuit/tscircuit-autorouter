@@ -1556,13 +1556,6 @@ jobs:
             core.setOutput('pr_sha', prSha)
             core.setOutput('status_comment_id', String(statusComment.data.id))
 
-      - name: Checkout benchmark controller
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ steps.refs.outputs.pr_sha }}
-          path: same-machine-controller
-          persist-credentials: false
-
       - name: Checkout current main
         uses: actions/checkout@v4
         with:
@@ -1590,15 +1583,11 @@ jobs:
         working-directory: same-machine-pr
         run: bun install
 
-      - name: Install common harness dependencies
-        working-directory: same-machine-controller
-        run: bun install
-
       - name: Prepare comparison artifacts
         run: mkdir -p same-machine-results/main same-machine-results/pr
 
       - name: Benchmark current main
-        working-directory: same-machine-controller
+        working-directory: same-machine-pr
         env:
           BENCHMARK_ARGS_JSON: ${{ inputs.benchmark_args_json }}
           BENCHMARK_DATASET: ${{ steps.refs.outputs.dataset }}
@@ -1626,7 +1615,7 @@ jobs:
           cp benchmark-snapshots.html ../same-machine-results/main/benchmark-snapshots.html
 
       - name: Benchmark PR head
-        working-directory: same-machine-controller
+        working-directory: same-machine-pr
         env:
           BENCHMARK_ARGS_JSON: ${{ inputs.benchmark_args_json }}
           BENCHMARK_DATASET: ${{ steps.refs.outputs.dataset }}
@@ -1654,7 +1643,7 @@ jobs:
           cp benchmark-snapshots.html ../same-machine-results/pr/benchmark-snapshots.html
 
       - name: Render same-machine comparison
-        working-directory: same-machine-controller
+        working-directory: same-machine-pr
         env:
           MAIN_SHA: ${{ steps.refs.outputs.main_sha }}
           PR_SHA: ${{ steps.refs.outputs.pr_sha }}

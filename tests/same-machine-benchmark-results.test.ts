@@ -110,7 +110,9 @@ test("same-machine benchmark comments compare matching reports", () => {
   expect(markdown).toContain("| Pipeline7 | P80 time |")
   expect(markdown).toContain("| Pipeline7 | P90 time |")
   expect(markdown).toContain("| Pipeline7 | P95 time |")
-  expect(markdown).toContain("Pass/fail outcome changes: **1 improved**, **0 regressed**")
+  expect(markdown).toContain(
+    "Pass/fail outcome changes: **1 improved**, **0 regressed**",
+  )
   expect(markdown).toContain(
     "Timing percentiles include solved and timed-out samples",
   )
