@@ -1041,6 +1041,9 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
   private duplicateCongestedPortReport?: DuplicateCongestedPortSolverReport
   private duplicateCongestedPortError?: string
   private duplicatedPortCount = 0
+  private approximationInput?: SerializedHyperGraph
+  private approximationAfterIterationLimit = false
+  private refinementIterationsBeforeApproximation = 0
   private inputNodeWithPortPoints: InputNodeWithPortPoints[]
   private originalRegionById: Map<
     CapacityMeshNodeId,
@@ -1085,11 +1088,13 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
           preloadedTraceStats.preloadedAssignmentCount,
         )
       : undefined
-    const createInitialAssignments =
+    if (
       params.flags.USE_SELECTIVE_RERIP_ROUTING === true &&
       !hasPreloadedTraceOccupancy
+    ) {
+      this.approximationInput = serializedGraph
+    }
     const shouldRunDuplicateCongestedPortPrepass =
-      createInitialAssignments ||
       connections.length <= MAX_CONNECTIONS_FOR_DUPLICATE_CONGESTED_PORT_PREPASS
     let graphForTiny = serializedGraph
     if (shouldRunDuplicateCongestedPortPrepass) {
@@ -1098,7 +1103,6 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
         {
           duplicatePortProximity: 0.05,
           useSerializedPortPenalties: false,
-          createInitialAssignments,
           routeSolveOptions: {
             ...getTinyViaSizeOptions(params.minViaPadDiameter),
             USE_SPARSE_CANDIDATE_STORAGE: false,
@@ -1424,8 +1428,74 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
     }
   }
 
+  private startFinalApproximation(): void {
+    const graph = this.approximationInput
+    const solveGraph =
+      this.tinyPipelineSolver.getSolver<TinyHyperGraphSolver>("solveGraph")
+    if (
+      !graph ||
+      this.candidatePortfolioPhase !== "primary" ||
+      !solveGraph?.failed ||
+      solveGraph.iterations < solveGraph.MAX_ITERATIONS ||
+      solveGraph.error !== `${solveGraph.getSolverName()} ran out of iterations`
+    ) {
+      return
+    }
+
+    // The refinement budget expired without a complete candidate. Independent
+    // distance-aware paths provide a compact, complete final approximation.
+    // Structural errors still fail, and caller-owned copper is never replaced.
+    this.approximationInput = undefined
+    this.refinementIterationsBeforeApproximation = solveGraph.iterations
+    const allocator = new DuplicateCongestedPortSolver(graph, {
+      duplicatePortProximity: 0.05,
+      useSerializedPortPenalties: false,
+      createInitialAssignments: true,
+      routeSolveOptions: {
+        ...getTinyViaSizeOptions(this.params.minViaPadDiameter),
+        MAX_ITERATIONS: Math.ceil(
+          2_000_000 * getEffortScale(this.params.effort),
+        ),
+        STATIC_REACHABILITY_PRECHECK: true,
+      },
+    })
+    allocator.solve()
+    if (allocator.failed) {
+      throw new Error(`Cannot create final approximation: ${allocator.error}`)
+    }
+    const approximation = allocator.getOutput()
+    const input = getTinyHyperGraphPipelineInput(
+      { ...approximation, solvedRoutes: graph.solvedRoutes },
+      this.params.effort,
+      this.params.minViaPadDiameter,
+    )
+    // One iteration records the complete seed for normal timeout acceptance.
+    input.solveGraphOptions = {
+      ...input.solveGraphOptions,
+      MAX_ITERATIONS: 1,
+    }
+    this.tinyPipelineSolver =
+      new TinyHyperGraphSectionPipelineWithTerminalNetIds(input, true)
+    this.primaryTinyPipelineSolver = this.tinyPipelineSolver
+    this.alternativeTinyPipelineInput = undefined
+    this.duplicateCongestedPortReport = allocator.report
+    this.duplicateCongestedPortError = undefined
+    this.duplicatedPortCount = allocator.report.duplicatedPorts.reduce(
+      (sum, port) => sum + port.duplicatePortIds.length,
+      0,
+    )
+    this.inputNodeWithPortPoints = buildInputNodesWithPortPoints(
+      this.params,
+      approximation,
+    )
+    this.approximationAfterIterationLimit = true
+  }
+
   _step() {
     this.tinyPipelineSolver.step()
+    if (this.tinyPipelineSolver.failed) {
+      this.startFinalApproximation()
+    }
 
     if (
       this.candidatePortfolioPhase === "primary" &&
@@ -1503,6 +1573,9 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
             ? this.tinyPipelineSolver.progress * 0.5
             : this.tinyPipelineSolver.progress
     this.stats = {
+      approximationAfterIterationLimit: this.approximationAfterIterationLimit,
+      refinementIterationsBeforeApproximation:
+        this.refinementIterationsBeforeApproximation,
       duplicateCongestedPortSourceCount:
         this.duplicateCongestedPortReport?.duplicatedPorts.length ?? 0,
       duplicateCongestedPortCount:

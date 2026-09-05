@@ -12,7 +12,7 @@ import os from "node:os"
 import path from "node:path"
 import {
   AutoroutingPipelineSolver4,
-  AutoroutingPipelineSolver7_MultiGraph,
+  AutoroutingPipelineSolver9_PreloadedTraceGraph,
 } from "lib"
 import { PipelineStageDebugRunner } from "lib/testing/PipelineStageDebugRunner"
 import type { SimpleRouteJson } from "lib/types"
@@ -67,13 +67,13 @@ const getPipeline4StageNumber = (stageName: string) => {
   return stageIndex + 1
 }
 
-const getPipeline7StageNumber = (stageName: string) => {
-  const stageIndex = new AutoroutingPipelineSolver7_MultiGraph(
+const getPipeline9StageNumber = (stageName: string) => {
+  const stageIndex = new AutoroutingPipelineSolver9_PreloadedTraceGraph(
     srj,
   ).pipelineDef.findIndex((stage) => stage.solverName === stageName)
 
   if (stageIndex === -1) {
-    throw new Error(`Missing pipeline7 stage: ${stageName}`)
+    throw new Error(`Missing pipeline9 stage: ${stageName}`)
   }
 
   return stageIndex + 1
@@ -207,18 +207,18 @@ test(
     const stdout = proc.stdout.toString()
     const stderr = proc.stderr.toString()
     const logs = readFileSync(path.join(outputDir, "logs.txt"), "utf8")
-    const netToPointPairsStage = getPipeline7StageNumber(
+    const netToPointPairsStage = getPipeline9StageNumber(
       "netToPointPairsSolver",
     )
-    const topologyPlanningStage = getPipeline7StageNumber(
+    const topologyPlanningStage = getPipeline9StageNumber(
       "topologyPlanningSolver",
     )
-    const traceWidthStage = getPipeline7StageNumber("traceWidthSolver")
+    const traceWidthStage = getPipeline9StageNumber("traceWidthSolver")
 
     expect(proc.exitCode).toBe(0)
     expect(stderr).toBe("")
     expect(stdout).toContain("startedAt=")
-    expect(stdout).toContain("pipeline=7")
+    expect(stdout).toContain("pipeline=9")
     expect(stdout).toContain(
       `enter stage=${netToPointPairsStage} name=netToPointPairsSolver`,
     )

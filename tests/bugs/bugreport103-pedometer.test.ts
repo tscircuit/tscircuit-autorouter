@@ -4,7 +4,7 @@ import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-p
 import type { SimpleRouteJson } from "lib/types"
 import { TinyHyperGraphSolver } from "tiny-hypergraph/lib/index"
 
-test("Pipeline9 retains every pedometer route with one hypergraph refinement iteration", async () => {
+test("Pipeline9 returns every pedometer route after a one-iteration graph budget", async () => {
   const srj: SimpleRouteJson = await Bun.file(
     new URL(
       "../../public/fixtures/bugreport103-pedometer.srj.json",
@@ -28,6 +28,9 @@ test("Pipeline9 retains every pedometer route with one hypergraph refinement ite
     }
   }
   expect(pipeline.failed).toBe(false)
+  expect(
+    pipeline.portPointPathingSolver?.stats.approximationAfterIterationLimit,
+  ).toBe(true)
   expect(tinySolver?.solved).toBe(true)
   expect(tinySolver?.failed).toBe(false)
   expect(tinySolver?.stats.acceptedBestSolutionOnTimeout).toBe(true)
