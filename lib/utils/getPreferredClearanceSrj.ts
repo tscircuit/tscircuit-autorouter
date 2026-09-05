@@ -5,7 +5,9 @@ import type { SimpleRouteJson } from "lib/types"
  * that permit tighter escapes. Keep the original input for topology generation
  * and preserve independently declared via-to-pad manufacturing clearances.
  */
-export const getPreferredClearanceSrj = (srj: SimpleRouteJson): SimpleRouteJson => {
+export const getPreferredClearanceSrj = (
+  srj: SimpleRouteJson,
+): SimpleRouteJson => {
   return {
     ...srj,
     minTraceToPadEdgeClearance:

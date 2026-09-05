@@ -66,9 +66,7 @@ test("Pipeline7 seeks relaxed trace spacing while honoring declared via/pad clea
       originalSrj,
     })({ hdRoutes: routes, traces: [] })
     const errors = Array.isArray(result) ? result : result.errors
-    expect(errors.some((error) => error.type === "pcb_trace_error")).toBe(
-      true,
-    )
+    expect(errors.some((error) => error.type === "pcb_trace_error")).toBe(true)
     expect(
       errors.some((error) => error.type === "pcb_pad_pad_clearance_error"),
     ).toBe(clearance !== 0.05)

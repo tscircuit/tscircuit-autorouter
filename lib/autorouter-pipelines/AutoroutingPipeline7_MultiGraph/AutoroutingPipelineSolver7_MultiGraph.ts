@@ -626,8 +626,8 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
           outline: cms.srj.outline,
           defaultViaDiameter: cms.viaDiameter,
           layerCount: cms.srj.layerCount,
-          minTraceToPadEdgeClearance:
-            getPreferredClearanceSrj(cms.srj).minTraceToPadEdgeClearance,
+          minTraceToPadEdgeClearance: getPreferredClearanceSrj(cms.srj)
+            .minTraceToPadEdgeClearance,
           minBoardEdgeClearance: cms.srj.minBoardEdgeClearance,
           enableCrossingViaReduction: true,
           iterations: 2,
@@ -642,7 +642,10 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
         colorMap: cms.colorMap,
         minTraceWidth: cms.minTraceWidth,
         connection: cms.srj.connections,
-        obstacleMargin: Math.max(cms.srj.minTraceToPadEdgeClearance ?? 0.15, 0.1),
+        obstacleMargin: Math.max(
+          cms.srj.minTraceToPadEdgeClearance ?? 0.15,
+          0.1,
+        ),
         layerCount: cms.srj.layerCount,
       },
     ]),
