@@ -11,7 +11,8 @@ const getCircuitJson = (routes: HighDensityRoute[]): AnyCircuitElement[] => {
   const owner = routes[0]!
   const via = owner.vias[0]!
   const signal = routes[1]!
-  const ownerRoute: Extract<AnyCircuitElement, { type: "pcb_trace" }>["route"] = []
+  const ownerRoute: Extract<AnyCircuitElement, { type: "pcb_trace" }>["route"] =
+    []
   for (const [index, point] of owner.route.entries()) {
     const layer = point.z === 0 ? "top" : "bottom"
     ownerRoute.push({
@@ -134,9 +135,12 @@ test("clearance precision keeps a relaxed-clean candidate private until its phys
     },
     drcEvaluator: ({ routes: candidateRoutes }) => {
       referenceChecks++
-      const measured = checkViaTraceClearance(getCircuitJson(candidateRoutes!), {
-        minClearance: 0.2,
-      })
+      const measured = checkViaTraceClearance(
+        getCircuitJson(candidateRoutes!),
+        {
+          minClearance: 0.2,
+        },
+      )
       expect(measured).toHaveLength(1)
       expect(measured[0]!.actual_clearance).toBeGreaterThanOrEqual(0.11)
       return { errors: [], errorsWithCenters: [] }

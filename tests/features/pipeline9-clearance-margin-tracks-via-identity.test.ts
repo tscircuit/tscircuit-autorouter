@@ -75,7 +75,9 @@ test("clearance margin follows the owner's via transition after shared-site dedu
       pointsToConnect: [],
     })),
   } satisfies SimpleRouteJson
-  const getCircuitJson = (candidate: HighDensityRoute[]): AnyCircuitElement[] => {
+  const getCircuitJson = (
+    candidate: HighDensityRoute[],
+  ): AnyCircuitElement[] => {
     const traces: SimplifiedPcbTrace[] = candidate.map((route) => ({
       type: "pcb_trace",
       pcb_trace_id: `${route.connectionName}_0`,
@@ -102,7 +104,9 @@ test("clearance margin follows the owner's via transition after shared-site dedu
           center: { x: 0, y: 0 },
         },
       ],
-      new Map(routes.map((route, index) => [`${route.connectionName}_0`, index])),
+      new Map(
+        routes.map((route, index) => [`${route.connectionName}_0`, index]),
+      ),
       0.03,
       undefined,
       true,
@@ -183,8 +187,7 @@ test("clearance margin follows the owner's via transition after shared-site dedu
 
   const owner = clearedCircuitJson.find(
     (element) =>
-      element.type === "pcb_trace" &&
-      element.pcb_trace_id === "target_owner_0",
+      element.type === "pcb_trace" && element.pcb_trace_id === "target_owner_0",
   )!
   if (owner.type !== "pcb_trace") throw new Error("Missing test owner")
   owner.route = owner.route.filter((segment) => segment.route_type !== "via")

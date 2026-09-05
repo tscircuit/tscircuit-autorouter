@@ -78,7 +78,9 @@ export const getPipeline9ClearanceMarginErrors = ({
       }
       const originalOwner = originalTraces.get(originalObstacle.pcb_trace_id)
       if (!originalOwner) {
-        throw new Error("Pipeline9 clearance margin lost the original via owner")
+        throw new Error(
+          "Pipeline9 clearance margin lost the original via owner",
+        )
       }
       const originalTransitions = originalOwner.route.filter(
         (segment) => segment.route_type === "via",
@@ -177,7 +179,10 @@ export const getPipeline9ClearanceMarginErrors = ({
       errors.push({
         ...target,
         ...(obstacle.type === "pcb_via"
-          ? { pcb_via_id: obstacle.pcb_via_id, pcb_via_ids: [obstacle.pcb_via_id] }
+          ? {
+              pcb_via_id: obstacle.pcb_via_id,
+              pcb_via_ids: [obstacle.pcb_via_id],
+            }
           : {}),
         actual_clearance: actualClearance,
         minimum_clearance: minimumClearance,
