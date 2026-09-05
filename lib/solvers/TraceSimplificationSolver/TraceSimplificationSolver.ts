@@ -99,6 +99,7 @@ export class TraceSimplificationSolver extends BaseSolver {
    *     coordinates or layers when routes represent spliceable local sections
    *   - useTraceWidthAwareClearance: Uses each route segment's actual copper
    *     width when checking path-simplification clearance
+   *   - enableVertexShortcuts: Adds a vertex cleanup pass after path sampling
    *   - terminalLayerIndicesByPcbPortId: Physical copper-layer indices on
    *     which each PCB-port terminal can directly accept a route endpoint
    *     without a via
@@ -120,6 +121,7 @@ export class TraceSimplificationSolver extends BaseSolver {
       readonly enableCrossingViaReduction?: boolean
       readonly preserveRouteEndpoints?: boolean
       readonly useTraceWidthAwareClearance?: boolean
+      readonly enableVertexShortcuts?: boolean
       readonly terminalLayerIndicesByPcbPortId?: ReadonlyMap<
         string,
         ReadonlySet<number>
@@ -432,6 +434,8 @@ export class TraceSimplificationSolver extends BaseSolver {
             defaultViaDiameter: this.simplificationConfig.defaultViaDiameter,
             useTraceWidthAwareClearance:
               this.simplificationConfig.useTraceWidthAwareClearance,
+            enableVertexShortcuts:
+              this.simplificationConfig.enableVertexShortcuts,
           })
           this.extractResult = (s) =>
             (s as MultiSimplifiedPathSolver).simplifiedHdRoutes

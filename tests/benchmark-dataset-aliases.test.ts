@@ -37,4 +37,13 @@ test("benchmark dataset aliases resolve to canonical dataset names", () => {
   expect(parseDatasetName("29")).toBe("srj29")
   expect(parseDatasetName("dataset29")).toBe("srj29")
   expect(parseDatasetName("dataset-srj29-ddr3-bga-pairs")).toBe("srj29")
+  for (const alias of [
+    "33",
+    "srj33",
+    "dataset33",
+    "dataset-srj33-drc-failures",
+    "@tscircuit/dataset-srj33-drc-failures",
+  ]) {
+    expect(parseDatasetName(alias)).toBe("srj33")
+  }
 })

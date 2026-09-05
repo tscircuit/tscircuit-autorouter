@@ -224,6 +224,7 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
         colorMap: this.params.colorMap,
         repairMargin: this.params.obstacleMargin,
         maxSampleEntries: 80,
+        connMap: this.params.connMap,
       })
       this.activeSubSolver = this.repairSolver
       this.phase = "repair"

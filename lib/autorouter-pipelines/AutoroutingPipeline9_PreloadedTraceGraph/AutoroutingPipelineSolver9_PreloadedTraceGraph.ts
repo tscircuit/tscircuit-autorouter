@@ -661,6 +661,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           colorMap: cms.colorMap,
           repairMargin: cms.srj.defaultObstacleMargin ?? 0.2,
           maxSampleEntries: 80,
+          connMap: cms.connMap,
         },
       ],
     ),
@@ -700,7 +701,11 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
               cms.originalSrj.layerCount,
               cms.viaDiameter,
               cms.connMap,
-            ),
+            ).map((route) => ({
+              ...route,
+              // Simplification resolves IDs through connMap, not net keys.
+              rootConnectionName: trace.connection_name,
+            })),
           )
         const materializedConnectionNames = new Set<string>(
           cms
@@ -1017,6 +1022,15 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
   }
 
   currentPipelineStepIndex = 0
+
+  computeProgress(): number {
+    const activeSubSolverProgress = this.activeSubSolver?.progress ?? 0
+    return (
+      (this.currentPipelineStepIndex + activeSubSolverProgress) /
+      this.pipelineDef.length
+    )
+  }
+
   _step() {
     const pipelineStepDef = this.pipelineDef[this.currentPipelineStepIndex]
     if (!pipelineStepDef) {
