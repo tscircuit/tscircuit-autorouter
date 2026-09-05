@@ -10,6 +10,7 @@ import type {
 } from "lib/types/high-density-types"
 import type { Obstacle, SimpleRouteConnection } from "lib/types/srj-types"
 import { normalizePipeline9NodeRootConnectionNames } from "./Pipeline9HighDensitySolver"
+import { getPipeline9FixedRouteObstacles } from "./pipeline9FixedRouteCopper"
 import {
   clonePipeline9HdRoutes,
   getPipeline9DrcErrors,
@@ -46,10 +47,12 @@ const replaceNodeRoutes = ({
   currentRoutes,
   candidateRoutes,
   nodeId,
+  connectionNames,
 }: {
   currentRoutes: HighDensityRoute[]
   candidateRoutes: HighDensityRoute[]
   nodeId: string
+  connectionNames: ReadonlySet<string>
 }): HighDensityRoute[] | null => {
   const candidatesByConnectionName = new Map<string, HighDensityRoute[]>()
   for (const candidateRoute of candidateRoutes) {
@@ -61,7 +64,10 @@ const replaceNodeRoutes = ({
 
   const replacedRoutes: HighDensityRoute[] = []
   for (const currentRoute of currentRoutes) {
-    if (currentRoute.regionId !== nodeId) {
+    if (
+      currentRoute.regionId !== nodeId ||
+      !connectionNames.has(currentRoute.connectionName)
+    ) {
       replacedRoutes.push(currentRoute)
       continue
     }
@@ -92,8 +98,9 @@ const replaceNodeRoutes = ({
 /**
  * Repairs Pipeline9 DRCs while the route fragments still retain their
  * high-density node boundaries. A node that participates in every repairable
- * DRC is routed again with the ordinary high-density search, and its candidate
- * is published only when it clears the repairable DRC set.
+ * DRC has only its DRC-participating connections routed again with the ordinary
+ * high-density search. Other routes stay fixed as copper obstacles, and the
+ * candidate is published only when it clears the repairable DRC set.
  */
 export class Pipeline9HighDensityDrcRepairSolver extends BaseSolver {
   readonly params: Pipeline9HighDensityDrcRepairSolverParams
@@ -102,6 +109,7 @@ export class Pipeline9HighDensityDrcRepairSolver extends BaseSolver {
   currentErrors: Pipeline9DrcError[]
   activeNode: NodeWithPortPoints | null = null
   override activeSubSolver: HighDensitySolver | null = null
+  private activeConnectionNames = new Set<string>()
   private acceptedCandidate: AcceptedHighDensityCandidate | null = null
 
   constructor(params: Pipeline9HighDensityDrcRepairSolverParams) {
@@ -224,6 +232,7 @@ export class Pipeline9HighDensityDrcRepairSolver extends BaseSolver {
       currentRoutes: this.outputHdRoutes,
       candidateRoutes: candidateNodeRoutes,
       nodeId,
+      connectionNames: this.activeConnectionNames,
     })
     if (!candidateRoutes) return false
     const candidateErrors = this.getRepairableDrcErrors(candidateRoutes)
@@ -240,27 +249,87 @@ export class Pipeline9HighDensityDrcRepairSolver extends BaseSolver {
     return true
   }
 
-  private getUnownedNodeConnectionName(
+  private getDrcConnectionNamesForNode(nodeId: string): Set<string> {
+    const routeIndexByTraceId = this.getRouteIndexByTraceId(this.outputHdRoutes)
+    const connectionNames = new Set<string>()
+    for (const error of this.currentErrors) {
+      for (const traceId of getPipeline9DrcErrorTraceIds(error)) {
+        const routeIndex = routeIndexByTraceId.get(traceId)
+        if (routeIndex === undefined) continue
+        const route = this.outputHdRoutes[routeIndex]!
+        if (route.regionId === nodeId) {
+          connectionNames.add(route.connectionName)
+        }
+      }
+    }
+    return connectionNames
+  }
+
+  private getRepairNode(
     node: NodeWithPortPoints,
-  ): string | undefined {
-    const ownedConnectionNames = new Set(
-      this.outputHdRoutes
-        .filter((route) => route.regionId === node.capacityMeshNodeId)
-        .map((route) => route.connectionName),
+    connectionNames: ReadonlySet<string>,
+  ): NodeWithPortPoints {
+    return {
+      ...node,
+      portPoints: node.portPoints.filter((portPoint) =>
+        connectionNames.has(portPoint.connectionName),
+      ),
+      portPointsInPairs: node.portPointsInPairs?.filter(
+        ([start, end]) =>
+          connectionNames.has(start.connectionName) &&
+          connectionNames.has(end.connectionName),
+      ),
+    }
+  }
+
+  private getCandidateRoutes(
+    candidateNodeRoutes: HighDensityRoute[],
+    nodeId: string,
+  ): HighDensityRoute[] | null {
+    return replaceNodeRoutes({
+      currentRoutes: this.outputHdRoutes,
+      candidateRoutes: candidateNodeRoutes,
+      nodeId,
+      connectionNames: this.activeConnectionNames,
+    })
+  }
+
+  private doesCandidateClearDrc(
+    candidateNodeRoutes: HighDensityRoute[],
+    nodeId: string,
+  ): boolean {
+    const candidateRoutes = this.getCandidateRoutes(candidateNodeRoutes, nodeId)
+    return (
+      candidateRoutes !== null &&
+      this.getRepairableDrcErrors(candidateRoutes).length === 0
     )
-    return node.portPoints.find(
-      (portPoint) => !ownedConnectionNames.has(portPoint.connectionName),
-    )?.connectionName
   }
 
   private startNodeRepair(node: NodeWithPortPoints): void {
     this.activeNode = node
     this.acceptedCandidate = null
+    this.activeConnectionNames = this.getDrcConnectionNamesForNode(
+      node.capacityMeshNodeId,
+    )
+    if (this.activeConnectionNames.size === 0) {
+      throw new Error(
+        `Pipeline9 selected high-density node "${node.capacityMeshNodeId}" without a DRC-bearing connection`,
+      )
+    }
     this.attemptedNodeIds.add(node.capacityMeshNodeId)
     this.stats.attemptedNodeCount = this.attemptedNodeIds.size
+    const repairNode = this.getRepairNode(node, this.activeConnectionNames)
+    const fixedNodeRoutes = this.outputHdRoutes.filter(
+      (route) =>
+        route.regionId === node.capacityMeshNodeId &&
+        !this.activeConnectionNames.has(route.connectionName),
+    )
     this.activeSubSolver = new HighDensitySolver({
       nodePortPoints: [
-        normalizePipeline9NodeRootConnectionNames(node, this.params.connMap),
+        normalizePipeline9NodeRootConnectionNames(
+          repairNode,
+          this.params.connMap,
+        ),
       ],
       colorMap: this.params.colorMap,
       connMap: this.params.connMap,
@@ -269,10 +338,19 @@ export class Pipeline9HighDensityDrcRepairSolver extends BaseSolver {
       obstacleMargin: this.params.obstacleMargin,
       effort: this.params.effort,
       nodePfById: this.params.nodePfById,
-      obstacles: this.params.obstacles,
+      obstacles: [
+        ...this.params.obstacles,
+        ...getPipeline9FixedRouteObstacles({
+          fixedObstacleRoutes: fixedNodeRoutes,
+          layerCount: this.params.layerCount,
+        }),
+      ],
       layerCount: this.params.layerCount,
-      useGrowShrinkHighDensityIntraNodeSolver: false,
+      useGrowShrinkHighDensityIntraNodeSolver: true,
       preserveTerminalPcbPortIds: true,
+      growShrinkFallbackToInvalidGeometryOnFailure: false,
+      growShrinkSolutionValidator: (routes) =>
+        this.doesCandidateClearDrc(routes, node.capacityMeshNodeId),
       captureSearchDebug: false,
     })
   }
@@ -289,6 +367,7 @@ export class Pipeline9HighDensityDrcRepairSolver extends BaseSolver {
     this.stats.finalDrcIssueCount = this.currentErrors.length
     this.acceptedCandidate = null
     this.activeNode = null
+    this.activeConnectionNames.clear()
     this.activeSubSolver = null
   }
 
@@ -298,12 +377,14 @@ export class Pipeline9HighDensityDrcRepairSolver extends BaseSolver {
     this.stats.lastExhaustedNodeError = error
     this.activeSubSolver = null
     this.activeNode = null
+    this.activeConnectionNames.clear()
     this.acceptedCandidate = null
   }
 
   private finishRepairPass(): void {
     this.activeSubSolver = null
     this.activeNode = null
+    this.activeConnectionNames.clear()
     this.acceptedCandidate = null
     this.stats.finalDrcIssueCount = this.currentErrors.length
     this.solved = true
@@ -350,19 +431,6 @@ export class Pipeline9HighDensityDrcRepairSolver extends BaseSolver {
 
     const nextNode = this.getNextAffectedNode()
     if (nextNode) {
-      const unownedConnectionName = this.getUnownedNodeConnectionName(nextNode)
-      if (unownedConnectionName) {
-        this.attemptedNodeIds.add(nextNode.capacityMeshNodeId)
-        this.stats.attemptedNodeCount = this.attemptedNodeIds.size
-        // The ordinary solver routes every connection represented by the
-        // node. A fixed/preloaded pseudo-connection would therefore make the
-        // candidate fail the exact route-ownership check after doing all of
-        // the search work, so reject that impossible candidate up front.
-        this.finishExhaustedNodeRepair(
-          `Node "${nextNode.capacityMeshNodeId}" includes unowned connection "${unownedConnectionName}"`,
-        )
-        return
-      }
       this.startNodeRepair(nextNode)
       return
     }

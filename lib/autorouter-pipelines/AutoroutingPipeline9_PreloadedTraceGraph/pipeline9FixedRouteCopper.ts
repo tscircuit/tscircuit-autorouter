@@ -4,7 +4,6 @@ import type { HighDensityRoute } from "lib/types/high-density-types"
 import { generateApproximatingRects } from "lib/utils/addApproximatingRectsToSrj"
 import { mapZToLayerName } from "lib/utils/mapZToLayerName"
 import { minimumDistanceBetweenSegments } from "lib/utils/minimumDistanceBetweenSegments"
-import type { PreloadedHighDensityRoute } from "./convertPreloadedTraceToHdRoutes"
 
 export type Pipeline9RouteWireSegment = {
   start: HighDensityRoute["route"][number]
@@ -148,7 +147,7 @@ export const getPipeline9FixedRouteObstacles = ({
   fixedObstacleRoutes,
   layerCount,
 }: {
-  fixedObstacleRoutes: PreloadedHighDensityRoute[]
+  fixedObstacleRoutes: HighDensityRoute[]
   layerCount: number
 }): Obstacle[] => {
   return fixedObstacleRoutes.flatMap((route, routeIndex) => {

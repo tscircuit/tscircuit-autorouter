@@ -13,6 +13,8 @@ const portPoints: NodeWithPortPoints["portPoints"] = [
   { x: 4, y: -2, z: 0, connectionName: "A", rootConnectionName: "A" },
   { x: -4, y: 2, z: 0, connectionName: "B", rootConnectionName: "B" },
   { x: 4, y: 2, z: 0, connectionName: "B", rootConnectionName: "B" },
+  { x: -4, y: 0, z: 1, connectionName: "C", rootConnectionName: "C" },
+  { x: 4, y: 0, z: 1, connectionName: "C", rootConnectionName: "C" },
 ]
 
 const node: NodeWithPortPoints = {
@@ -25,6 +27,7 @@ const node: NodeWithPortPoints = {
   portPointsInPairs: [
     [portPoints[0]!, portPoints[1]!],
     [portPoints[2]!, portPoints[3]!],
+    [portPoints[4]!, portPoints[5]!],
   ],
 }
 
@@ -41,6 +44,13 @@ const connections: SimpleRouteConnection[] = [
     pointsToConnect: [
       { x: -4, y: 2, layer: "top" },
       { x: 4, y: 2, layer: "top" },
+    ],
+  },
+  {
+    name: "C",
+    pointsToConnect: [
+      { x: -4, y: 0, layer: "bottom" },
+      { x: 4, y: 0, layer: "bottom" },
     ],
   },
 ]
@@ -69,6 +79,18 @@ const inputRoutes: HighDensityRoute[] = [
       { x: -4, y: 2, z: 0 },
       { x: 0, y: -2, z: 0 },
       { x: 4, y: 2, z: 0 },
+    ],
+    vias: [],
+  },
+  {
+    connectionName: "C",
+    rootConnectionName: "C",
+    regionId: node.capacityMeshNodeId,
+    traceThickness: 0.1,
+    viaDiameter: 0.3,
+    route: [
+      { x: -4, y: 0, z: 1 },
+      { x: 4, y: 0, z: 1 },
     ],
     vias: [],
   },
@@ -104,7 +126,7 @@ test("Pipeline9 reroutes DRC-bearing high-density nodes before stitching", (): v
     hdRoutes: inputRoutes,
     newConnections: connections,
     drcEvaluator,
-    connMap: new ConnectivityMap({ A: ["A"], B: ["B"] }),
+    connMap: new ConnectivityMap({ A: ["A"], B: ["B"], C: ["C"] }),
     colorMap: {},
     obstacles: [],
     layerCount: 2,
@@ -126,4 +148,7 @@ test("Pipeline9 reroutes DRC-bearing high-density nodes before stitching", (): v
     exhaustedNodeCount: 0,
   })
   expect(solver.getOutput()).not.toEqual(inputRoutes)
+  expect(solver.getOutput().find((route) => route.connectionName === "C")).toEqual(
+    inputRoutes.find((route) => route.connectionName === "C"),
+  )
 })
