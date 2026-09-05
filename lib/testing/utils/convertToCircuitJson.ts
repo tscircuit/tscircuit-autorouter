@@ -1,3 +1,4 @@
+import { getPhysicalViaLayers } from "high-density-repair03/lib"
 import { pointToBoxDistance } from "@tscircuit/math-utils"
 import type {
   AnyCircuitElement,
@@ -804,6 +805,7 @@ function extractViasFromRoutes(
   layerCount: number,
   minViaDiameter = 0.3,
   minViaHoleDiameter = minViaDiameter * 0.5,
+  allowBlindAndBuriedVias = false,
 ): PcbVia[] {
   const vias: PcbVia[] = []
   const viaLocations = new Set<string>() // Track unique via locations
@@ -833,7 +835,13 @@ function extractViasFromRoutes(
                 y: segment.y,
                 outer_diameter: viaDiameter,
                 hole_diameter: viaHoleDiameter,
-                layers: [segment.from_layer, segment.to_layer],
+                layers: getPhysicalViaLayers({
+                  layerCount,
+                  fromLayer: segment.from_layer,
+                  toLayer: segment.to_layer,
+                  allowBlindAndBuriedVias,
+                  physicalLayers: segment.layers,
+                }) as LayerName[],
               })
               viaLocations.add(locationKey)
             }
@@ -869,7 +877,9 @@ function extractViasFromRoutes(
                 y: currPoint.y,
                 outer_diameter: viaDiameter,
                 hole_diameter: viaHoleDiameter,
-                layers: [fromLayer, toLayer],
+                layers: getPhysicalViaLayers({
+                  layerCount, fromLayer, toLayer, allowBlindAndBuriedVias,
+                }) as LayerName[],
               })
               viaLocations.add(locationKey)
             }
@@ -973,6 +983,7 @@ export function convertToCircuitJson(
       srjWithPointPairs.layerCount,
       resolvedMinViaDiameter,
       resolvedMinViaHoleDiameter,
+      (originalSrj ?? srjWithPointPairs).allowBlindAndBuriedVias,
     ),
   )
 

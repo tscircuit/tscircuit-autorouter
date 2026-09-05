@@ -29,6 +29,7 @@ export const createPipeline7AutoroutingDrcEvaluator = (
   const engineSrj = {
     ...conversionOptions.srjWithPointPairs,
     minTraceWidth: conversionOptions.originalSrj.minTraceWidth,
+    allowBlindAndBuriedVias: conversionOptions.originalSrj.allowBlindAndBuriedVias,
     minViaDiameter:
       conversionOptions.originalSrj.minViaDiameter ??
       conversionOptions.srjWithPointPairs.minViaDiameter,
