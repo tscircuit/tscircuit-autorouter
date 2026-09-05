@@ -1,8 +1,7 @@
 import { expect, test } from "bun:test"
-import { getSvgFromGraphicsObject } from "graphics-debug"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
+import { getBugReportSnapshotSvg } from "lib/testing/getBugReportSnapshotSvg"
 import type { SimpleRouteJson } from "lib/types"
-import { convertSrjToGraphicsObject } from "lib/utils/convertSrjToGraphicsObject"
 import pedometer from "../../fixtures/bug-reports/bugreport104-pedometer-v1.0.6.unrouted.srj.json" with {
   type: "json",
 }
@@ -22,12 +21,11 @@ test.skip("bugreport104 Pipeline9 solved board without preloaded traces", async 
   expect(solver.solved).toBe(true)
   const output = solver.getOutputSimpleRouteJson()
   expect(output.traces!.length).toBeGreaterThan(0)
-  const graphics = convertSrjToGraphicsObject(output)
-  // Connection debug dots obscure the fine-pitch pads and escape traces.
-  graphics.points = []
   await expect(
-    getSvgFromGraphicsObject(graphics, {
-      backgroundColor: "white",
+    getBugReportSnapshotSvg({
+      inputSrj: input,
+      srjWithPointPairs: solver.srjWithPointPairs!,
+      routedTraces: output.traces!,
     }),
   ).toMatchSvgSnapshot(import.meta.path)
 })
