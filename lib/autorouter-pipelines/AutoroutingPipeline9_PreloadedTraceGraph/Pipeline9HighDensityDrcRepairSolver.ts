@@ -102,7 +102,6 @@ export class Pipeline9HighDensityDrcRepairSolver extends BaseSolver {
   activeNode: NodeWithPortPoints | null = null
   override activeSubSolver: HighDensitySolver | null = null
   private acceptedCandidate: AcceptedHighDensityCandidate | null = null
-  private activeNodeCandidateAttemptCount = 0
 
   constructor(params: Pipeline9HighDensityDrcRepairSolverParams) {
     super()
@@ -205,7 +204,6 @@ export class Pipeline9HighDensityDrcRepairSolver extends BaseSolver {
   private startNodeRepair(node: NodeWithPortPoints): void {
     this.activeNode = node
     this.acceptedCandidate = null
-    this.activeNodeCandidateAttemptCount = 0
     this.attemptedNodeIds.add(node.capacityMeshNodeId)
     this.stats.attemptedNodeCount = this.attemptedNodeIds.size
     this.activeSubSolver = new HighDensitySolver({
@@ -221,11 +219,8 @@ export class Pipeline9HighDensityDrcRepairSolver extends BaseSolver {
       nodePfById: this.params.nodePfById,
       obstacles: this.params.obstacles,
       layerCount: this.params.layerCount,
-      useGrowShrinkHighDensityIntraNodeSolver: true,
+      useGrowShrinkHighDensityIntraNodeSolver: false,
       preserveTerminalPcbPortIds: true,
-      growShrinkFallbackToInvalidGeometryOnFailure: false,
-      growShrinkSolutionValidator: (candidateRoutes): boolean =>
-        this.evaluateCandidateRoutes(candidateRoutes, node.capacityMeshNodeId),
       captureSearchDebug: false,
     })
   }
@@ -245,28 +240,42 @@ export class Pipeline9HighDensityDrcRepairSolver extends BaseSolver {
     this.activeSubSolver = null
   }
 
+  private finishExhaustedNodeRepair(error: string): void {
+    this.stats.exhaustedNodeCount =
+      Number(this.stats.exhaustedNodeCount ?? 0) + 1
+    this.stats.lastExhaustedNodeError = error
+    this.activeSubSolver = null
+    this.activeNode = null
+    this.acceptedCandidate = null
+  }
+
   override _step(): void {
     if (this.activeSubSolver) {
       this.activeSubSolver.step()
       if (this.activeSubSolver.solved) {
-        this.finishAcceptedNodeRepair()
+        if (!this.activeNode) {
+          throw new Error(
+            "Pipeline9 high-density DRC repair solved without an active node",
+          )
+        }
+        const nodeId = this.activeNode.capacityMeshNodeId
+        if (this.evaluateCandidateRoutes(this.activeSubSolver.routes, nodeId)) {
+          this.finishAcceptedNodeRepair()
+          return
+        }
+        this.finishExhaustedNodeRepair(
+          `Ordinary high-density reroute did not improve DRCs for node "${nodeId}"`,
+        )
         return
       }
       if (!this.activeSubSolver.failed) return
-      if (this.activeNodeCandidateAttemptCount === 0) {
-        throw new Error(
-          `Pipeline9 could not reroute DRC node "${this.activeNode?.capacityMeshNodeId}": ${this.activeSubSolver.error}`,
-        )
-      }
-      // Like Repair03, this is best-effort optimization: the child routed
-      // candidates successfully, but the DRC validator rejected every one.
-      // Keep the better incumbent and continue with another affected node.
-      this.stats.exhaustedNodeCount =
-        Number(this.stats.exhaustedNodeCount ?? 0) + 1
-      this.stats.lastExhaustedNodeError = this.activeSubSolver.error
-      this.activeSubSolver = null
-      this.activeNode = null
-      this.acceptedCandidate = null
+      // Like Repair03, this is best-effort optimization: an ordinary
+      // high-density reroute can be unavailable even though the incumbent is
+      // a complete route. Keep that incumbent and try another affected node.
+      this.finishExhaustedNodeRepair(
+        this.activeSubSolver.error ??
+          `Ordinary high-density reroute failed for node "${this.activeNode?.capacityMeshNodeId}"`,
+      )
       return
     }
 
