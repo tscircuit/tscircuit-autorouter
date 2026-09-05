@@ -68,6 +68,7 @@ test("clearance precision preserves original routes until full reference DRC pas
       ]
     },
     candidateDrcEvaluator: () => ({ errors: [], errorsWithCenters: [] }),
+    marginDrcEvaluator: () => [],
     drcEvaluator: () => {
       evaluationCount++
       return {

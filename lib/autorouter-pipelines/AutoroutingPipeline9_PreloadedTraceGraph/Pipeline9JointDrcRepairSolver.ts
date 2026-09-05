@@ -13,6 +13,7 @@ import {
   combinePreloadedAndRoutedTraces,
   evaluateRelaxedDrc,
 } from "lib/testing/evaluate-relaxed-drc"
+import { convertToCircuitJson } from "lib/testing/utils/convertToCircuitJson"
 import type {
   Obstacle,
   SimpleRouteConnection,
@@ -24,7 +25,10 @@ import { convertHdRouteToSimplifiedRoute } from "lib/utils/convertHdRouteToSimpl
 import { mapZToLayerName } from "lib/utils/mapZToLayerName"
 import { Pipeline7AdaptiveDrcBranchPortfolioSolver } from "../AutoroutingPipeline7_MultiGraph/Pipeline7AdaptiveDrcBranchPortfolioSolver"
 import { createPipeline7HdRoutesToSimplifiedPcbTracesConverter } from "../AutoroutingPipeline7_MultiGraph/convertPipeline7HdRoutesToSimplifiedPcbTraces"
-import { applyPipeline9ClearancePrecisionRepairs } from "./applyPipeline9ClearancePrecisionRepairs"
+import {
+  applyPipeline9ClearancePrecisionRepairs,
+  type ClearanceMarginDrcEvaluator,
+} from "./applyPipeline9ClearancePrecisionRepairs"
 import { applyPipeline9RegionalB01Repairs } from "./applyPipeline9RegionalB01Repairs"
 import { applyPipeline9TerminalEscapeRelocations } from "./applyPipeline9TerminalEscapeRelocations"
 import { assignUniquePcbTraceIdsToNewTraces } from "./assignUniquePcbTraceIdsToNewTraces"
@@ -33,6 +37,7 @@ import {
   convertPreloadedTraceToHdRoutes,
 } from "./convertPreloadedTraceToHdRoutes"
 import { filterPipeline9DrcErrorsAgainstBaseline } from "./filterPipeline9DrcErrorsAgainstBaseline"
+import { getPipeline9ClearanceMarginErrors } from "./getPipeline9ClearanceMarginErrors"
 import { getPipeline9PreloadedTraceIdsInInitialDrcRegions } from "./getPipeline9PreloadedTraceIdsInInitialDrcRegions"
 import { getPipeline9PreloadedViaPairTraceGroups } from "./getPipeline9PreloadedViaPairTraceGroups"
 import { mergePipeline9MovablePreloadedVias } from "./mergePipeline9MovablePreloadedVias"
@@ -653,6 +658,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
   private cachedReferenceDrcEvaluator?: DrcEvaluator
   private clearancePrecisionDrcEvaluator?: DrcEvaluator
   private clearancePrecisionIndexedDrcEvaluator?: DrcEvaluator
+  private clearanceMarginDrcEvaluator?: ClearanceMarginDrcEvaluator
   private referenceDrcValidationCount = 0
   private referenceDrcFalseNegativeCount = 0
   private indexedDrcEvaluationCount = 0
@@ -1251,6 +1257,41 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       hdRoutes,
     }): ReturnType<DrcEvaluator> =>
       referenceDrcEvaluator({ traces: [], routes, hdRoutes }, false)
+    const createMarginCircuitJson = (
+      routes: HighDensityRoute[],
+    ): AnyCircuitElement[] => {
+      const candidateDrcInput = prepareCandidateDrcInput(routes)
+      return convertToCircuitJson(
+        params.srjWithPointPairs,
+        candidateDrcInput.routedTraces,
+        {
+          minTraceWidth: params.originalSrj.minTraceWidth,
+          minViaDiameter: params.originalSrj.minViaDiameter,
+          originalSrj: params.originalSrj,
+          includeOriginalConnections: true,
+        },
+      )
+    }
+    let marginOriginalCircuit:
+      | { routes: HighDensityRoute[]; circuitJson: AnyCircuitElement[] }
+      | undefined
+    this.clearanceMarginDrcEvaluator = (
+      routes,
+      targets,
+      originalRoutes,
+    ): ReturnType<ClearanceMarginDrcEvaluator> => {
+      if (marginOriginalCircuit?.routes !== originalRoutes) {
+        marginOriginalCircuit = {
+          routes: originalRoutes,
+          circuitJson: createMarginCircuitJson(originalRoutes),
+        }
+      }
+      return getPipeline9ClearanceMarginErrors({
+        circuitJson: createMarginCircuitJson(routes),
+        originalCircuitJson: marginOriginalCircuit.circuitJson,
+        targets,
+      })
+    }
     this.clearancePrecisionIndexedDrcEvaluator = ({
       routes,
       hdRoutes,
@@ -1444,6 +1485,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
           connMap: this.params.connMap,
           indexedDrcEvaluator: this.clearancePrecisionIndexedDrcEvaluator!,
           candidateDrcEvaluator: this.clearancePrecisionDrcEvaluator!,
+          marginDrcEvaluator: this.clearanceMarginDrcEvaluator!,
           drcEvaluator: this.cachedReferenceDrcEvaluator!,
           initialErrors: exactReferenceDrcErrors,
           initialErrorsWithCenters: Array.isArray(exactReferenceDrcResult)

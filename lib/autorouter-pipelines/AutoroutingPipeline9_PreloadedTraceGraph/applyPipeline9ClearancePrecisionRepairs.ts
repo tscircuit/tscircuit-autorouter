@@ -36,6 +36,14 @@ type IndexedClearanceCandidate = {
 
 type Point = { x: number; y: number }
 
+export type ClearanceMarginDrcEvaluator = (
+  routes: HighDensityRoute[],
+  targets: Pipeline9DrcError[],
+  originalRoutes: HighDensityRoute[],
+) => Pipeline9DrcError[]
+
+export const CLEARANCE_PRECISION_MARGIN = 0.01
+
 const MAX_CLEARANCE_ERROR_COUNT = 8
 const MAX_PASSES = 8
 const FORCE_SCALES = [0.03, 0.1, 0.25]
@@ -134,6 +142,7 @@ export const applyPipeline9ClearancePrecisionRepairs = ({
   connMap,
   indexedDrcEvaluator,
   candidateDrcEvaluator,
+  marginDrcEvaluator,
   drcEvaluator,
   initialErrors,
   initialErrorsWithCenters = initialErrors,
@@ -145,6 +154,7 @@ export const applyPipeline9ClearancePrecisionRepairs = ({
   connMap: ConnectivityMap
   indexedDrcEvaluator: DrcEvaluator
   candidateDrcEvaluator: DrcEvaluator
+  marginDrcEvaluator: ClearanceMarginDrcEvaluator
   drcEvaluator: DrcEvaluator
   initialErrors: Pipeline9DrcError[]
   initialErrorsWithCenters?: Pipeline9DrcError[]
@@ -183,18 +193,43 @@ export const applyPipeline9ClearancePrecisionRepairs = ({
   })
   if (!initial) return unchanged
   let current: PreparedClearanceErrors = initial
+  const marginTargets = initial.errors
+  const initialMarginErrors = initial.errors.map((error) => ({
+    ...error,
+    minimum_clearance:
+      (error.minimum_clearance as number) + CLEARANCE_PRECISION_MARGIN,
+  }))
+  const initialMarginDeficit = getIndexedClearanceDeficit(initialMarginErrors)
+  if (initialMarginDeficit === undefined) return unchanged
+  let currentMargin: PreparedClearanceErrors = {
+    errors: initialMarginErrors,
+    deficit: initialMarginDeficit,
+  }
   let currentRoutes = routes
   let attemptedCandidateCount = 0
   let candidateValidationCount = 0
   let referenceValidationCount = 0
   for (let pass = 0; pass < MAX_PASSES; pass++) {
+    // Keep the original failing pairs active until their physical gaps have
+    // margin, even after the relaxed checker stops reporting those pairs.
+    const forceErrorsByPair = new Map<string, Pipeline9DrcError>()
+    for (const error of [...currentMargin.errors, ...current.errors]) {
+      const pairKey = JSON.stringify([
+        error.type,
+        error.pcb_trace_id,
+        error.pcb_pad_id,
+        error.pcb_via_id,
+      ])
+      forceErrorsByPair.set(pairKey, error)
+    }
+    const forceErrors = [...forceErrorsByPair.values()]
     let bestCandidate: IndexedClearanceCandidate | undefined
     for (const scale of FORCE_SCALES) {
       const candidateRoutes = cloneRoutes(currentRoutes)
       const changed = applyDrcErrorForces(
         srj as RepairSimpleRouteJson,
         candidateRoutes,
-        current.errors,
+        forceErrors,
         routeIndexByTraceId,
         scale,
         connMap,
@@ -233,7 +268,36 @@ export const applyPipeline9ClearancePrecisionRepairs = ({
     const candidateErrors = Array.isArray(candidateResult)
       ? candidateResult
       : candidateResult.errors
-    if (candidateErrors.length === 0) {
+    const prepared =
+      candidateErrors.length === 0
+        ? { errors: [], deficit: 0 }
+        : prepareClearanceErrors({
+            errors: candidateErrors,
+            errorsWithCenters: Array.isArray(candidateResult)
+              ? candidateResult
+              : (candidateResult.errorsWithCenters ?? candidateResult.errors),
+            routeIndexByTraceId,
+            padPositionById,
+          })
+    if (!prepared) break
+    // Measure only the selected candidate. Indexed ranking stays bounded to
+    // the existing three candidates without repeating exact margin checks.
+    const marginErrors = marginDrcEvaluator(
+      bestCandidate.routes,
+      marginTargets,
+      routes,
+    )
+    const preparedMargin =
+      marginErrors.length === 0
+        ? { errors: [], deficit: 0 }
+        : prepareClearanceErrors({
+            errors: marginErrors,
+            errorsWithCenters: marginErrors,
+            routeIndexByTraceId,
+            padPositionById,
+          })
+    if (!preparedMargin) break
+    if (candidateErrors.length === 0 && marginErrors.length === 0) {
       // Private geometry validation omits continuity. Publish only after every
       // full reference check passes, including continuity and errors with no center.
       referenceValidationCount++
@@ -256,19 +320,17 @@ export const applyPipeline9ClearancePrecisionRepairs = ({
       }
       break
     }
-    const prepared = prepareClearanceErrors({
-      errors: candidateErrors,
-      errorsWithCenters: Array.isArray(candidateResult)
-        ? candidateResult
-        : (candidateResult.errorsWithCenters ?? candidateResult.errors),
-      routeIndexByTraceId,
-      padPositionById,
-    })
     // A coupled move can temporarily split one deficit between two objects.
     // Such intermediate routes stay private until every reference error clears.
-    if (!prepared || prepared.deficit >= current.deficit - 1e-9) break
+    if (
+      prepared.deficit + preparedMargin.deficit >=
+      current.deficit + currentMargin.deficit - 1e-9
+    ) {
+      break
+    }
     currentRoutes = bestCandidate.routes
     current = prepared
+    currentMargin = preparedMargin
   }
   return {
     routes,
