@@ -24,7 +24,9 @@ test("bugreport94-56fa2e.json with Pipeline 9", (): void => {
   )
   expect(routedConnectionNames).toEqual(
     new Set(
-      solver.srjWithPointPairs!.connections.map((connection) => connection.name),
+      solver.srjWithPointPairs!.connections.map(
+        (connection) => connection.name,
+      ),
     ),
   )
 
