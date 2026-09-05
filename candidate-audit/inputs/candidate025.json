@@ -1,0 +1,86 @@
+{
+  "bounds": {
+    "maxX": 2.45,
+    "maxY": 2.15,
+    "minX": -2.45,
+    "minY": -3.4499999999999997
+  },
+  "obstacles": [
+    {
+      "type": "rect",
+      "width": 0.3,
+      "center": {
+        "x": -0.3,
+        "y": 0
+      },
+      "height": 0.3,
+      "layers": [
+        "top"
+      ],
+      "connectedTo": [
+        "pcb_smtpad_0"
+      ]
+    },
+    {
+      "type": "rect",
+      "width": 0.3,
+      "center": {
+        "x": 0.3,
+        "y": 0
+      },
+      "height": 0.3,
+      "layers": [
+        "top"
+      ],
+      "connectedTo": [
+        "pcb_smtpad_1"
+      ]
+    },
+    {
+      "type": "rect",
+      "width": 0.3,
+      "center": {
+        "x": -0.3,
+        "y": -1.2999999999999998
+      },
+      "height": 0.3,
+      "layers": [
+        "top"
+      ],
+      "connectedTo": [
+        "pcb_smtpad_2"
+      ]
+    },
+    {
+      "type": "rect",
+      "width": 0.3,
+      "center": {
+        "x": 0.3,
+        "y": -1.2999999999999998
+      },
+      "height": 0.3,
+      "layers": [
+        "top"
+      ],
+      "connectedTo": [
+        "pcb_smtpad_3"
+      ]
+    }
+  ],
+  "layerCount": 2,
+  "connections": [
+    {
+      "name": "source_trace_0",
+      "pointsToConnect": [
+        {
+          "layer": "top"
+        },
+        {
+          "layer": "top"
+        }
+      ],
+      "source_trace_id": "source_trace_0"
+    }
+  ],
+  "minTraceWidth": 0.15
+}
