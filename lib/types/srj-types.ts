@@ -53,7 +53,7 @@ export type JumperType = "1206x4" | "0603"
 
 export interface SimpleRouteJson {
   layerCount: number
-  /** False by default: vias occupy the full physical board stack. */
+  /** Explicit manufacturing policy; omitted retains legacy via behavior. */
   allowBlindAndBuriedVias?: boolean
   minTraceWidth: number
   nominalTraceWidth?: number
@@ -172,7 +172,7 @@ export interface SimplifiedPcbTrace {
         to_layer: string
         from_layer: string
         via_diameter?: number
-        /** Physical span, when blind/buried vias are enabled. */
+        /** Explicit occupied copper layers, separate from the route transition. */
         layers?: string[]
         via_hole_diameter?: number
       }

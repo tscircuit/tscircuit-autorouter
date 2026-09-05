@@ -5,16 +5,10 @@ import { loadScenarioBySampleNumber } from "../../scripts/benchmark/scenarios"
 
 test("Pipeline9 preserves SRJ18 sample 9's reference-clean exact output", async () => {
   const { scenario } = await loadScenarioBySampleNumber("srj18", 9)
-  // This fixture exercises acceptance of an already reference-clean candidate.
-  // Its inner-layer transitions require blind/buried vias to remain clean.
-  const inputSrj = {
-    ...structuredClone(scenario),
-    allowBlindAndBuriedVias: true,
-  }
-  const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(inputSrj, {
-    cacheProvider: null,
-    effort: 1,
-  })
+  const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(
+    structuredClone(scenario),
+    { cacheProvider: null, effort: 1 },
+  )
 
   solver.solve()
 
@@ -35,7 +29,7 @@ test("Pipeline9 preserves SRJ18 sample 9's reference-clean exact output", async 
     regionalB01RepairCandidateSearchCount: 0,
   })
   const { errors } = evaluateRelaxedDrc({
-    inputSrj,
+    inputSrj: scenario,
     srjWithPointPairs: solver.srjWithPointPairs!,
     routedTraces: solver.getOutputSimplifiedPcbTraces(),
   })

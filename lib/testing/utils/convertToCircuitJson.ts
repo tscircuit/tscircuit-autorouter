@@ -1,4 +1,3 @@
-import { getPhysicalViaLayers } from "high-density-repair03/lib"
 import { pointToBoxDistance } from "@tscircuit/math-utils"
 import type {
   AnyCircuitElement,
@@ -6,6 +5,7 @@ import type {
   PcbTrace,
   PcbVia,
 } from "circuit-json"
+import { getDeclaredViaLayers } from "lib/utils/getDeclaredViaLayers"
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import { Obstacle, SimpleRouteJson, SimplifiedPcbTrace } from "lib/types"
 import { HighDensityRoute } from "lib/types/high-density-types"
@@ -805,7 +805,7 @@ function extractViasFromRoutes(
   layerCount: number,
   minViaDiameter = 0.3,
   minViaHoleDiameter = minViaDiameter * 0.5,
-  allowBlindAndBuriedVias = false,
+  allowBlindAndBuriedVias?: boolean,
 ): PcbVia[] {
   const vias: PcbVia[] = []
   const viaLocations = new Set<string>() // Track unique via locations
@@ -835,12 +835,12 @@ function extractViasFromRoutes(
                 y: segment.y,
                 outer_diameter: viaDiameter,
                 hole_diameter: viaHoleDiameter,
-                layers: getPhysicalViaLayers({
+                layers: getDeclaredViaLayers({
                   layerCount,
                   fromLayer: segment.from_layer,
                   toLayer: segment.to_layer,
                   allowBlindAndBuriedVias,
-                  physicalLayers: segment.layers,
+                  layers: segment.layers,
                 }) as LayerName[],
               })
               viaLocations.add(locationKey)
@@ -877,7 +877,7 @@ function extractViasFromRoutes(
                 y: currPoint.y,
                 outer_diameter: viaDiameter,
                 hole_diameter: viaHoleDiameter,
-                layers: getPhysicalViaLayers({
+                layers: getDeclaredViaLayers({
                   layerCount,
                   fromLayer,
                   toLayer,

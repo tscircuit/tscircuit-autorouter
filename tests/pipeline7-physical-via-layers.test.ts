@@ -53,7 +53,7 @@ test("Pipeline7 repair and reference checks preserve the original via policy", (
       },
     ],
   }
-  for (const allowBlindAndBuriedVias of [false, true]) {
+  for (const allowBlindAndBuriedVias of [undefined, false, true]) {
     const originalSrj = { ...srj, allowBlindAndBuriedVias }
     const evaluator = createPipeline7AutoroutingDrcEvaluator({
       connections: srj.connections,
@@ -67,13 +67,13 @@ test("Pipeline7 repair and reference checks preserve the original via policy", (
     })
     const result = evaluator({ traces: [], routes })
     if (Array.isArray(result)) throw new Error("Expected centered DRC result")
-    expect(result.errors.length > 0).toBe(!allowBlindAndBuriedVias)
+    expect(result.errors.length > 0).toBe(allowBlindAndBuriedVias === false)
     const json = convertToCircuitJson(srj, routes, { originalSrj })
     const via = json.find((element) => element.type === "pcb_via")
     expect(via?.layers).toEqual(
-      allowBlindAndBuriedVias
-        ? ["top", "inner1"]
-        : ["top", "inner1", "inner2", "bottom"],
+      allowBlindAndBuriedVias === false
+        ? ["top", "inner1", "inner2", "bottom"]
+        : ["top", "inner1"],
     )
   }
 })
