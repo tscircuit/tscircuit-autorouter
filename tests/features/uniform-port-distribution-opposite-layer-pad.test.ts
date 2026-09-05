@@ -52,8 +52,8 @@ test("a bottom pad boundary only prevents redistribution of bottom-layer ports",
     })
     const layerName = z === 0 ? "Top" : "Bottom"
     const beforeGraphics = solver.visualize()
-    beforeGraphics.points = beforeGraphics.points?.filter(
-      (point) => point.label?.startsWith("z:"),
+    beforeGraphics.points = beforeGraphics.points?.filter((point) =>
+      point.label?.startsWith("z:"),
     )
     frames.push({
       name: `${layerName} ports: 0.025 mm apart`,
@@ -65,8 +65,8 @@ test("a bottom pad boundary only prevents redistribution of bottom-layer ports",
     expect(solver.solved).toBeTrue()
     expect(solver.failed).toBeFalse()
     const afterGraphics = solver.visualize()
-    afterGraphics.points = afterGraphics.points?.filter(
-      (point) => point.label?.startsWith("z:"),
+    afterGraphics.points = afterGraphics.points?.filter((point) =>
+      point.label?.startsWith("z:"),
     )
     frames.push({
       name: z === 0 ? "Top ports: 1 mm apart" : "Bottom ports unchanged",
