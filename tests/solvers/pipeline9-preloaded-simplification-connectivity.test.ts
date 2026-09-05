@@ -53,11 +53,12 @@ test("Pipeline9 simplification recognizes connected preload aliases without igno
       ],
       vias: [],
     }
-    pipeline.highDensityStitchSolver = new MultipleHighDensityRouteStitchSolver3({
-      connections: srj.connections,
-      hdRoutes: [route],
-      layerCount: srj.layerCount,
-    })
+    pipeline.highDensityStitchSolver =
+      new MultipleHighDensityRouteStitchSolver3({
+        connections: srj.connections,
+        hdRoutes: [route],
+        layerCount: srj.layerCount,
+      })
     pipeline.highDensityStitchSolver.solve()
     expect(pipeline.highDensityStitchSolver.failed).toBeFalse()
 
@@ -78,9 +79,9 @@ test("Pipeline9 simplification recognizes connected preload aliases without igno
     const step = pipeline.pipelineDef.find(
       (candidate) => candidate.solverName === "traceSimplificationSolver",
     )!
-    const [params] = step.getConstructorParams(pipeline) as ConstructorParameters<
-      typeof TraceSimplificationSolver
-    >
+    const [params] = step.getConstructorParams(
+      pipeline,
+    ) as ConstructorParameters<typeof TraceSimplificationSolver>
     const [fixedRoute] = params.otherHdRoutes!
     expect(fixedRoute!.rootConnectionName).toBe("fanout_alias")
     expect(params.netByConnectionName!.get(fixedRoute!.connectionName)).toBe(

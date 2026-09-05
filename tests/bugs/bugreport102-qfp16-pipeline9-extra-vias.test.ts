@@ -41,6 +41,12 @@ test("bugreport102 compares Pipeline 7 and Pipeline 9 QFP16 routing", () => {
 
   pipeline7.solve()
   pipeline9.solve()
+  expect(
+    pipeline9
+      .getOutputSimplifiedPcbTraces()
+      .flatMap((trace) => trace.route)
+      .filter((point) => point.route_type === "via"),
+  ).toHaveLength(1)
   const comparisonSvg = stackSvgsVertically(
     [
       addComparisonHeading({
@@ -51,9 +57,9 @@ test("bugreport102 compares Pipeline 7 and Pipeline 9 QFP16 routing", () => {
       }),
       addComparisonHeading({
         svg: getLastStepSvg(pipeline9.visualize()),
-        title: "PIPELINE 9 REGRESSION · SAME PHASE-2 SRJ · 3 VIAS",
+        title: "PIPELINE 9 · SAME PHASE-2 SRJ · 1 VIA",
         explanation:
-          "Preloaded-trace pathing changes layers unnecessarily; blue circles mark the 3 vias.",
+          "Same-net fanout simplification removes two unnecessary vias; one layer transition remains.",
       }),
     ],
     { normalizeSize: false },
