@@ -2,6 +2,7 @@ import { expect, test } from "bun:test"
 import { AutoroutingPipelineSolver7_MultiGraph } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/AutoroutingPipelineSolver7_MultiGraph"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
 import { Pipeline9HighDensitySolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9HighDensitySolver"
+import { Pipeline9Repair04Solver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9Repair04Solver"
 import { TraceSimplificationSolver } from "lib/solvers/TraceSimplificationSolver/TraceSimplificationSolver"
 import type { SimpleRouteJson } from "lib/types"
 import scenario from "./preexisting-connected-traces/srj/preexisting-connected-traces06.srj.json" with {
@@ -105,7 +106,7 @@ test("Pipeline9 owns copied stages with minimal preloaded-trace changes", () => 
   const pipeline7SharedStageCount = pipeline7.pipelineDef.filter(
     (step) => step.solverName !== "exactGeometryDrcForceImproveSolver",
   ).length
-  expect(solver.pipelineDef).toHaveLength(pipeline7SharedStageCount + 3)
+  expect(solver.pipelineDef).toHaveLength(pipeline7SharedStageCount + 4)
   for (const stageName of [
     "highDensityForceImproveSolver",
     "highDensityRepairSolver",
@@ -124,6 +125,16 @@ test("Pipeline9 owns copied stages with minimal preloaded-trace changes", () => 
     )?.solverClass,
   ).toBe(Pipeline9HighDensitySolver)
   const pipeline9StageNames = solver.pipelineDef.map((step) => step.solverName)
+  expect(
+    solver.pipelineDef.find((step) => step.solverName === "repair04Solver")
+      ?.solverClass,
+  ).toBe(Pipeline9Repair04Solver)
+  expect(pipeline9StageNames.indexOf("repair04Solver")).toBe(
+    pipeline9StageNames.indexOf("globalDrcForceImproveSolver") + 1,
+  )
+  expect(pipeline9StageNames.indexOf("repair04Solver")).toBe(
+    pipeline9StageNames.indexOf("pipeline9JointDrcRepairSolver") - 1,
+  )
   const mutatedPreloadSimplificationStep = solver.pipelineDef.find(
     (step) => step.solverName === "mutatedPreloadedTraceSimplificationSolver",
   )
