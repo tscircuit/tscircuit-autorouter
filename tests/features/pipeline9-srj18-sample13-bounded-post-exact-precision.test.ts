@@ -25,9 +25,17 @@ test("Pipeline9 bounds SRJ18 sample 13's high-residual precision pass", async ()
     terminalEscapeSkippedForIndexedIssueCount: true,
     terminalEscapeCandidateCount: 0,
     terminalEscapeAcceptedCount: 0,
-    regionalB01RepairAttempted: false,
-    regionalB01RepairCandidateSearchCount: 0,
+    regionalB01RepairAttempted: true,
+    regionalB01RepairPreloadEligibleDrcIssueCount: 0,
+    regionalB01RepairCandidateSearchBudgetExhausted: true,
+    regionalB01RepairSafeTraceLayerSkippedForBudget: true,
   })
+  expect(Number(repairStats?.regionalB01RepairCandidateSearchCount)).toBe(
+    Number(repairStats?.regionalB01RepairCandidateSearchBudget),
+  )
+  expect(
+    Number(repairStats?.regionalB01RepairCandidateSearchCount),
+  ).toBeGreaterThan(0)
   expect(
     Number(repairStats?.regionalB01RepairRemainingDrcIssueCount),
   ).toBeGreaterThan(16)
