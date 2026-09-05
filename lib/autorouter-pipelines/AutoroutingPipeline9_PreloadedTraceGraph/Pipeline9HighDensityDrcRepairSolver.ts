@@ -91,15 +91,13 @@ const replaceNodeRoutes = ({
 
 /**
  * Repairs Pipeline9 DRCs while the route fragments still retain their
- * high-density node boundaries. Each affected node is routed again with the
- * ordinary high-density search, and a candidate is accepted only when the
- * board-level DRC objective improves.
+ * high-density node boundaries. A node that participates in every repairable
+ * DRC is routed again with the ordinary high-density search, and its candidate
+ * is published only when it clears the repairable DRC set.
  */
 export class Pipeline9HighDensityDrcRepairSolver extends BaseSolver {
   readonly params: Pipeline9HighDensityDrcRepairSolverParams
   readonly attemptedNodeIds = new Set<string>()
-  private readonly inputHdRoutes: HighDensityRoute[]
-  private readonly initialErrors: Pipeline9DrcError[]
   outputHdRoutes: HighDensityRoute[]
   currentErrors: Pipeline9DrcError[]
   activeNode: NodeWithPortPoints | null = null
@@ -109,10 +107,8 @@ export class Pipeline9HighDensityDrcRepairSolver extends BaseSolver {
   constructor(params: Pipeline9HighDensityDrcRepairSolverParams) {
     super()
     this.params = params
-    this.inputHdRoutes = clonePipeline9HdRoutes(params.hdRoutes)
-    this.outputHdRoutes = clonePipeline9HdRoutes(this.inputHdRoutes)
-    this.initialErrors = this.getRepairableDrcErrors(this.outputHdRoutes)
-    this.currentErrors = this.initialErrors
+    this.outputHdRoutes = clonePipeline9HdRoutes(params.hdRoutes)
+    this.currentErrors = this.getRepairableDrcErrors(this.outputHdRoutes)
     this.MAX_ITERATIONS =
       Math.max(1, params.nodePortPoints.length) * 100e6 * params.effort
     this.stats = {
@@ -121,7 +117,6 @@ export class Pipeline9HighDensityDrcRepairSolver extends BaseSolver {
       drcNodeCount: this.getCurrentDrcNodeIds().size,
       attemptedNodeCount: 0,
       acceptedNodeCount: 0,
-      rolledBackNodeCount: 0,
       exhaustedNodeCount: 0,
       candidateAttemptCount: 0,
     }
@@ -176,20 +171,31 @@ export class Pipeline9HighDensityDrcRepairSolver extends BaseSolver {
     return nodeIds
   }
 
-  private canStillCompleteRepair(): boolean {
+  private getAtomicCandidateNodeIds(): Set<string> {
     const routeIndexByTraceId = this.getRouteIndexByTraceId(this.outputHdRoutes)
-    return this.currentErrors.every((error) =>
-      getPipeline9DrcErrorTraceIds(error).some((traceId) => {
+    let candidateNodeIds: Set<string> | null = null
+    for (const error of this.currentErrors) {
+      const errorNodeIds = new Set<string>()
+      for (const traceId of getPipeline9DrcErrorTraceIds(error)) {
         const routeIndex = routeIndexByTraceId.get(traceId)
-        if (routeIndex === undefined) return false
+        if (routeIndex === undefined) continue
         const regionId = this.outputHdRoutes[routeIndex]!.regionId
-        return regionId !== undefined && !this.attemptedNodeIds.has(regionId)
-      }),
-    )
+        if (regionId !== undefined) errorNodeIds.add(regionId)
+      }
+      if (candidateNodeIds === null) {
+        candidateNodeIds = errorNodeIds
+        continue
+      }
+      for (const nodeId of candidateNodeIds) {
+        if (!errorNodeIds.has(nodeId)) candidateNodeIds.delete(nodeId)
+      }
+    }
+    return candidateNodeIds ?? new Set<string>()
   }
 
   private getNextAffectedNode(): NodeWithPortPoints | undefined {
     const currentDrcNodeIds = this.getCurrentDrcNodeIds()
+    const candidateNodeIds = this.getAtomicCandidateNodeIds()
     const knownNodeIds = new Set(
       this.params.nodePortPoints.map((node) => node.capacityMeshNodeId),
     )
@@ -203,7 +209,7 @@ export class Pipeline9HighDensityDrcRepairSolver extends BaseSolver {
     }
     return this.params.nodePortPoints.find(
       (node) =>
-        currentDrcNodeIds.has(node.capacityMeshNodeId) &&
+        candidateNodeIds.has(node.capacityMeshNodeId) &&
         !this.attemptedNodeIds.has(node.capacityMeshNodeId),
     )
   }
@@ -221,7 +227,10 @@ export class Pipeline9HighDensityDrcRepairSolver extends BaseSolver {
     })
     if (!candidateRoutes) return false
     const candidateErrors = this.getRepairableDrcErrors(candidateRoutes)
-    if (!isPipeline9DrcCandidateBetter(candidateErrors, this.currentErrors)) {
+    if (
+      candidateErrors.length > 0 ||
+      !isPipeline9DrcCandidateBetter(candidateErrors, this.currentErrors)
+    ) {
       return false
     }
     this.acceptedCandidate = {
@@ -293,18 +302,9 @@ export class Pipeline9HighDensityDrcRepairSolver extends BaseSolver {
   }
 
   private finishRepairPass(): void {
-    const acceptedNodeCount = Number(this.stats.acceptedNodeCount ?? 0)
-    if (this.currentErrors.length > 0 && acceptedNodeCount > 0) {
-      // A partial high-density rewrite can make the later stitched/global
-      // repair problem worse even when it lowers this pre-stitch DRC score.
-      // Publish the batch only when it completes the high-density repair;
-      // otherwise preserve the exact incumbent for the unchanged downstream
-      // Repair03 stages.
-      this.outputHdRoutes = clonePipeline9HdRoutes(this.inputHdRoutes)
-      this.currentErrors = this.initialErrors
-      this.stats.rolledBackNodeCount = acceptedNodeCount
-      this.stats.acceptedNodeCount = 0
-    }
+    this.activeSubSolver = null
+    this.activeNode = null
+    this.acceptedCandidate = null
     this.stats.finalDrcIssueCount = this.currentErrors.length
     this.solved = true
   }
@@ -339,7 +339,11 @@ export class Pipeline9HighDensityDrcRepairSolver extends BaseSolver {
       return
     }
 
-    if (!this.canStillCompleteRepair()) {
+    if (
+      ![...this.getAtomicCandidateNodeIds()].some(
+        (nodeId) => !this.attemptedNodeIds.has(nodeId),
+      )
+    ) {
       this.finishRepairPass()
       return
     }
