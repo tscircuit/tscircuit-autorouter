@@ -225,10 +225,7 @@ export class Pipeline9HighDensityDrcRepairSolver extends BaseSolver {
       preserveTerminalPcbPortIds: true,
       growShrinkFallbackToInvalidGeometryOnFailure: false,
       growShrinkSolutionValidator: (candidateRoutes): boolean =>
-        this.evaluateCandidateRoutes(
-          candidateRoutes,
-          node.capacityMeshNodeId,
-        ),
+        this.evaluateCandidateRoutes(candidateRoutes, node.capacityMeshNodeId),
       captureSearchDebug: false,
     })
   }
@@ -241,8 +238,7 @@ export class Pipeline9HighDensityDrcRepairSolver extends BaseSolver {
     }
     this.outputHdRoutes = this.acceptedCandidate.routes
     this.currentErrors = this.acceptedCandidate.errors
-    this.stats.acceptedNodeCount =
-      Number(this.stats.acceptedNodeCount ?? 0) + 1
+    this.stats.acceptedNodeCount = Number(this.stats.acceptedNodeCount ?? 0) + 1
     this.stats.finalDrcIssueCount = this.currentErrors.length
     this.acceptedCandidate = null
     this.activeNode = null

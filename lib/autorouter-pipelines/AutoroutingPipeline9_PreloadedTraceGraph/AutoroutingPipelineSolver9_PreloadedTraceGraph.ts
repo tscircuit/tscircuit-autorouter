@@ -682,6 +682,8 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             "Pipeline9 invariant violated: high-density DRC repair requires routed node boundaries",
           )
         }
+        const portPointPathingSolver = cms.portPointPathingSolver
+        const portPointPathingOutput = portPointPathingSolver.getOutput()
         const newConnections = cms.netToPointPairsSolver.newConnections
         return [
           {
@@ -708,12 +710,10 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             obstacleMargin: cms.srj.defaultObstacleMargin ?? 0.15,
             effort: cms.effort,
             nodePfById: new Map(
-              cms.portPointPathingSolver
-                .getOutput()
-                .inputNodeWithPortPoints.map((node) => [
-                  node.capacityMeshNodeId,
-                  cms.portPointPathingSolver.computeNodePf(node),
-                ] as const),
+              portPointPathingOutput.inputNodeWithPortPoints.map((node) => [
+                node.capacityMeshNodeId,
+                portPointPathingSolver.computeNodePf(node),
+              ]),
             ),
           },
         ]
@@ -1157,8 +1157,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     const highDensityForceImproveViz =
       this.highDensityForceImproveSolver?.visualize()
     const highDensityRepairViz = this.highDensityRepairSolver?.visualize()
-    const highDensityDrcRepairViz =
-      this.highDensityDrcRepairSolver?.visualize()
+    const highDensityDrcRepairViz = this.highDensityDrcRepairSolver?.visualize()
     const highDensityStitchViz = this.highDensityStitchSolver?.visualize()
     const traceSimplificationViz = this.traceSimplificationSolver?.visualize()
     const mutatedPreloadedTraceSimplificationViz =
