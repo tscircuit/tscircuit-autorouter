@@ -1545,7 +1545,7 @@ jobs:
                 '',
                 `Queued \`${dataset}\` on current main \`${mainSha.slice(0, 7)}\` and PR head \`${prSha.slice(0, 7)}\`.`,
                 '',
-                'Both revisions will run sequentially in one Blacksmith job.',
+                'Both solvers will run sequentially in one Blacksmith job, using the PR benchmark harness and DRC for both outputs.',
                 '',
                 `Workflow: [View run](${runUrl})`,
               ].join('\n'),
@@ -1555,13 +1555,6 @@ jobs:
             core.setOutput('main_sha', mainSha)
             core.setOutput('pr_sha', prSha)
             core.setOutput('status_comment_id', String(statusComment.data.id))
-
-      - name: Checkout benchmark controller
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ github.sha }}
-          path: same-machine-controller
-          persist-credentials: false
 
       - name: Checkout current main
         uses: actions/checkout@v4
@@ -1594,10 +1587,14 @@ jobs:
         run: mkdir -p same-machine-results/main same-machine-results/pr
 
       - name: Benchmark current main
-        working-directory: same-machine-main
+        working-directory: same-machine-pr
         env:
           BENCHMARK_ARGS_JSON: ${{ inputs.benchmark_args_json }}
           BENCHMARK_DATASET: ${{ steps.refs.outputs.dataset }}
+          BENCHMARK_SOLVER_ROOT: ${{ github.workspace }}/same-machine-main
+          BENCHMARK_SOLVER_REVISION: ${{ steps.refs.outputs.main_sha }}
+          BENCHMARK_DRC_REVISION: ${{ steps.refs.outputs.pr_sha }}
+          BENCHMARK_ROUTED_OUTPUT_DIR: ${{ github.workspace }}/same-machine-results/main/routed-outputs
         run: |
           chmod +x ./benchmark.sh
           node <<'NODE'
@@ -1622,6 +1619,10 @@ jobs:
         env:
           BENCHMARK_ARGS_JSON: ${{ inputs.benchmark_args_json }}
           BENCHMARK_DATASET: ${{ steps.refs.outputs.dataset }}
+          BENCHMARK_SOLVER_ROOT: ${{ github.workspace }}/same-machine-pr
+          BENCHMARK_SOLVER_REVISION: ${{ steps.refs.outputs.pr_sha }}
+          BENCHMARK_DRC_REVISION: ${{ steps.refs.outputs.pr_sha }}
+          BENCHMARK_ROUTED_OUTPUT_DIR: ${{ github.workspace }}/same-machine-results/pr/routed-outputs
         run: |
           chmod +x ./benchmark.sh
           node <<'NODE'
@@ -1642,7 +1643,7 @@ jobs:
           cp benchmark-snapshots.html ../same-machine-results/pr/benchmark-snapshots.html
 
       - name: Render same-machine comparison
-        working-directory: same-machine-controller
+        working-directory: same-machine-pr
         env:
           MAIN_SHA: ${{ steps.refs.outputs.main_sha }}
           PR_SHA: ${{ steps.refs.outputs.pr_sha }}
@@ -1715,7 +1716,7 @@ jobs:
       - name: Checkout benchmarked code
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.sha }}
+          ref: ${{ steps.refs.outputs.pr_sha }}
           persist-credentials: false
 
       - name: Setup bun

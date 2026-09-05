@@ -236,10 +236,12 @@ test("PR benchmark commands preserve arguments and fan-out behavior", () => {
   expect(
     benchmarkWorkflow.match(/benchmark-comment-comparison\.js/g),
   ).toHaveLength(2)
-  expect(benchmarkWorkflow).toContain("Checkout benchmark controller")
-  expect(benchmarkWorkflow).toContain(
-    "working-directory: same-machine-controller",
-  )
+  expect(
+    benchmarkWorkflow.match(
+      /BENCHMARK_DRC_REVISION: \$\{\{ steps.refs.outputs.pr_sha \}\}/g,
+    ),
+  ).toHaveLength(2)
+  expect(benchmarkWorkflow).toContain("working-directory: same-machine-pr")
   expect(benchmarkWorkflow).toContain("same-machine-results/main")
   expect(benchmarkWorkflow).toContain("same-machine-results/pr")
   expect(benchmarkWorkflow).toContain(
