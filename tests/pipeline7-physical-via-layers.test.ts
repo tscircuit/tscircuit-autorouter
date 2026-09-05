@@ -5,7 +5,7 @@ import type { SimpleRouteJson } from "lib/types"
 import type { HighDensityRoute } from "lib/types/high-density-types"
 import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
 
-test("Pipeline7 repair and reference checks preserve the original via policy", () => {
+test("Pipeline7 repair and reference checks include intermediate via layers", () => {
   const routes: HighDensityRoute[] = [
     {
       connectionName: "power",
@@ -15,8 +15,8 @@ test("Pipeline7 repair and reference checks preserve the original via policy", (
       route: [
         { x: -1, y: 0, z: 0 },
         { x: 0, y: 0, z: 0 },
-        { x: 0, y: 0, z: 1 },
-        { x: 1, y: 0, z: 1 },
+        { x: 0, y: 0, z: 2 },
+        { x: 1, y: 0, z: 2 },
       ],
     },
     {
@@ -25,8 +25,8 @@ test("Pipeline7 repair and reference checks preserve the original via policy", (
       viaDiameter: 0.2,
       vias: [],
       route: [
-        { x: 0, y: -1, z: 3 },
-        { x: 0, y: 1, z: 3 },
+        { x: 0, y: -1, z: 1 },
+        { x: 0, y: 1, z: 1 },
       ],
     },
   ]
@@ -41,14 +41,14 @@ test("Pipeline7 repair and reference checks preserve the original via policy", (
         name: "power",
         pointsToConnect: [
           { x: -1, y: 0, layer: "top" },
-          { x: 1, y: 0, layer: "inner1" },
+          { x: 1, y: 0, layer: "inner2" },
         ],
       },
       {
         name: "signal",
         pointsToConnect: [
-          { x: 0, y: -1, layer: "bottom" },
-          { x: 0, y: 1, layer: "bottom" },
+          { x: 0, y: -1, layer: "inner1" },
+          { x: 0, y: 1, layer: "inner1" },
         ],
       },
     ],
@@ -67,13 +67,13 @@ test("Pipeline7 repair and reference checks preserve the original via policy", (
     })
     const result = evaluator({ traces: [], routes })
     if (Array.isArray(result)) throw new Error("Expected centered DRC result")
-    expect(result.errors.length > 0).toBe(allowBlindAndBuriedVias === false)
+    expect(result.errors.length > 0).toBe(true)
     const json = convertToCircuitJson(srj, routes, { originalSrj })
     const via = json.find((element) => element.type === "pcb_via")
     expect(via?.layers).toEqual(
       allowBlindAndBuriedVias === false
         ? ["top", "inner1", "inner2", "bottom"]
-        : ["top", "inner1"],
+        : ["top", "inner1", "inner2"],
     )
   }
 })

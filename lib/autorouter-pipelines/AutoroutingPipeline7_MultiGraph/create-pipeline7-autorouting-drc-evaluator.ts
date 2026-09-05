@@ -4,7 +4,7 @@ import {
   type SimpleRouteJson as RepairSimpleRouteJson,
   type SimplifiedPcbTraces as RepairSimplifiedPcbTraces,
 } from "high-density-repair03/lib"
-import { applyViaLayerPolicyToTraces } from "lib/utils/applyViaLayerPolicyToTraces"
+import { addThroughViaLayersToTraces } from "lib/utils/addThroughViaLayersToTraces"
 import type { SimpleRouteJson } from "lib/types"
 import { getViaDimensions } from "lib/utils/getViaDimensions"
 import {
@@ -66,7 +66,7 @@ export const createPipeline7AutoroutingDrcEvaluator = (
     ) as RepairSimplifiedPcbTraces
 
     return engine.evaluate(
-      applyViaLayerPolicyToTraces(
+      addThroughViaLayersToTraces(
         tracesToEvaluate,
         conversionOptions.originalSrj,
       ) as RepairSimplifiedPcbTraces,

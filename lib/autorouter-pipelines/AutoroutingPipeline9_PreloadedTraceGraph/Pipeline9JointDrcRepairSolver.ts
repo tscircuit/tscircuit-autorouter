@@ -7,7 +7,7 @@ import {
   type SimpleRouteJson as RepairSimpleRouteJson,
   type SimplifiedPcbTraces as RepairSimplifiedPcbTraces,
 } from "high-density-repair03/lib"
-import { applyViaLayerPolicyToTraces } from "lib/utils/applyViaLayerPolicyToTraces"
+import { addThroughViaLayersToTraces } from "lib/utils/addThroughViaLayersToTraces"
 import { BaseSolver } from "lib/solvers/BaseSolver"
 import { RELAXED_DRC_OPTIONS } from "lib/testing/drcPresets"
 import {
@@ -1015,7 +1015,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       },
     )
     const autoroutingBaselineDrcResult = autoroutingDrcEngine.evaluate(
-      applyViaLayerPolicyToTraces(
+      addThroughViaLayersToTraces(
         params.originalSrj.traces ?? [],
         params.originalSrj,
       ) as RepairSimplifiedPcbTraces,
@@ -1260,7 +1260,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       this.indexedDrcEvaluationCount += 1
       const candidateDrcInput = prepareCandidateDrcInput(evaluatedRoutes)
       const evaluatedDrc = autoroutingDrcEngine.evaluate(
-        applyViaLayerPolicyToTraces(
+        addThroughViaLayersToTraces(
           candidateDrcInput.evaluatedTraces,
           params.originalSrj,
         ) as RepairSimplifiedPcbTraces,

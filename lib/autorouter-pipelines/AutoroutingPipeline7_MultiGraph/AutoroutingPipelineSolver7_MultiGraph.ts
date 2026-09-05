@@ -8,7 +8,7 @@ import {
   GlobalDrcBranchPortfolioSolver,
   GlobalDrcForceImproveSolver,
 } from "high-density-repair03/lib"
-import { applyViaLayerPolicyToTraces } from "lib/utils/applyViaLayerPolicyToTraces"
+import { addThroughViaLayersToTraces } from "lib/utils/addThroughViaLayersToTraces"
 import { getGlobalInMemoryCache } from "lib/cache/setupGlobalCaches"
 import { CacheProvider } from "lib/cache/types"
 import { ComponentDetectionSolver } from "lib/solvers/ComponentDetectionSolver/ComponentDetectionSolver"
@@ -1189,13 +1189,13 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
     }
 
     if (this.powerTraceExpansionSolver) {
-      return applyViaLayerPolicyToTraces(
+      return addThroughViaLayersToTraces(
         this.powerTraceExpansionSolver.getOutput(),
         this.originalSrj,
       )
     }
 
-    return applyViaLayerPolicyToTraces(
+    return addThroughViaLayersToTraces(
       this.getPrePowerTraceOutputSimplifiedPcbTraces(),
       this.originalSrj,
     )
