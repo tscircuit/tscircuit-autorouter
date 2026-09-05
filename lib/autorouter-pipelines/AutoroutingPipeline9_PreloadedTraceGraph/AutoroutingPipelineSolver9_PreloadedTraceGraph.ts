@@ -702,6 +702,10 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
               srjWithPointPairs: cms.srjWithPointPairs!,
               originalSrj: cms.originalSrj,
               mutatedPreloadedTraces: [],
+              drcOptions: {
+                includeTraceContinuity: false,
+                includeBoardEdge: false,
+              },
             }),
             connMap: cms.connMap,
             colorMap: cms.colorMap,

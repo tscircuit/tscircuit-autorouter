@@ -174,21 +174,6 @@ const doRouteViasHaveCopperConflict = ({
   return false
 }
 
-const isHighDensityCopperDrcError = (error: Pipeline9DrcError): boolean => {
-  if (
-    error.type === "pcb_pad_trace_clearance_error" ||
-    error.type === "pcb_via_trace_clearance_error" ||
-    error.type === "pcb_via_clearance_error"
-  ) {
-    return true
-  }
-  return (
-    error.type === "pcb_trace_error" &&
-    typeof error.pcb_trace_error_id === "string" &&
-    error.pcb_trace_error_id.startsWith("overlap_")
-  )
-}
-
 const replaceNodeRoutes = ({
   currentRoutes,
   candidateRoutes,
@@ -304,7 +289,6 @@ export class Pipeline9HighDensityDrcRepairSolver extends BaseSolver {
     const routeIndexByTraceId = this.getRouteIndexByTraceId(routes)
     return getPipeline9DrcErrors(this.params.drcEvaluator, routes).filter(
       (error) =>
-        isHighDensityCopperDrcError(error) &&
         getPipeline9DrcErrorTraceIds(error).some((traceId) =>
           routeIndexByTraceId.has(traceId),
         ),

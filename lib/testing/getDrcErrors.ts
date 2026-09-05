@@ -52,6 +52,7 @@ export interface GetDrcErrorsOptions {
   traceClearance?: number
   includeTraceContinuity?: boolean
   includeTypedTraceClearance?: boolean
+  includeBoardEdge?: boolean
 }
 
 const createDrcConnectivityMap = (
@@ -109,7 +110,9 @@ export const getDrcErrors = (
 
   const errors: DrcError[] = [
     ...traceErrors,
-    ...checkPcbTracesOutOfBoard(circuitJson),
+    ...(options.includeBoardEdge === false
+      ? []
+      : checkPcbTracesOutOfBoard(circuitJson)),
     ...(options.includeTraceContinuity === false
       ? []
       : checkTracesAreContiguous(circuitJson)),
