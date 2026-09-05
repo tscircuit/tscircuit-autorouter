@@ -1549,13 +1549,16 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
   }
 
   getOutput(): HighDensityRoute[] {
+    const routes = this.getCombinedOutput().filter(
+      (route) => !this.syntheticConnectionNames.has(route.connectionName),
+    )
     // Clean retraced spurs only after repair so point removal cannot change
     // the repair solver's displacement decisions.
-    return this.getCombinedOutput()
-      .filter(
-        (route) => !this.syntheticConnectionNames.has(route.connectionName),
-      )
-      .map((route) => ({ ...route, route: removeCollinearRoutePoints(route) }))
+    if (!this.solved) return routes
+    return routes.map((route) => ({
+      ...route,
+      route: removeCollinearRoutePoints(route),
+    }))
   }
 
   getUpdatedPreloadedTraces(): SimplifiedPcbTrace[] {
