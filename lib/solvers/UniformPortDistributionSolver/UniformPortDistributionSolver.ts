@@ -2,6 +2,7 @@ import { BaseSolver } from "@tscircuit/solver-utils"
 import { GraphicsObject } from "graphics-debug"
 import { Obstacle } from "lib/types"
 import { NodeWithPortPoints } from "lib/types/high-density-types"
+import { createObjectsWithZLayers } from "lib/utils/createObjectsWithZLayers"
 import { getBoundsFromNodeWithPortPoints } from "lib/utils/getBoundsFromNodeWithPortPoints"
 import { InputNodeWithPortPoints } from "../PortPointPathingSolver/PortPointPathingSolver"
 import {
@@ -23,6 +24,7 @@ export interface UniformPortDistributionSolverInput {
   nodeWithPortPoints: NodeWithPortPoints[]
   inputNodesWithPortPoints: InputNodeWithPortPoints[]
   obstacles: Obstacle[]
+  layerCount?: number
 }
 
 /**
@@ -109,16 +111,25 @@ export class UniformPortDistributionSolver extends BaseSolver {
     const sharedEdge = this.mapOfOwnerPairToSharedEdge.get(ownerPairKey)
     if (!sharedEdge) return
 
-    if (
-      shouldIgnoreSharedEdge({ sharedEdge, obstacles: this.input.obstacles })
-    ) {
-      return
-    }
-
     const familyRaw = this.mapOfOwnerPairToPortPoints.get(ownerPairKey) ?? []
+    const obstacles = createObjectsWithZLayers(
+      this.input.obstacles,
+      this.input.layerCount ?? 2,
+    )
+    const blockedLayers = new Set(
+      [...new Set(familyRaw.map((point) => point.z ?? 0))].filter((z) =>
+        shouldIgnoreSharedEdge({
+          sharedEdge,
+          obstacles: obstacles.filter((obstacle) =>
+            obstacle.__zLayers.includes(z),
+          ),
+        }),
+      ),
+    )
     const family: PortPointWithOwnerPair[] = []
     for (const portPoint of familyRaw) {
       if (
+        !blockedLayers.has(portPoint.z ?? 0) &&
         !shouldIgnorePortPoint({
           portPoint,
           ownerNodeIds: portPoint.ownerNodeIds,
