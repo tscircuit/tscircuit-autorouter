@@ -15,7 +15,8 @@ jobs:
           bun-version: 1.4.1
       - name: Install and capture runtime dependencies
         run: |
-          bun install --frozen-lockfile
+          sed -i 's/save = false/save = true/' bunfig.toml
+          bun install --save-text-lockfile
       - name: Route candidates and capture DRC evidence
         run: python3 candidate-audit/run.py
       - name: Preserve runtime lock
