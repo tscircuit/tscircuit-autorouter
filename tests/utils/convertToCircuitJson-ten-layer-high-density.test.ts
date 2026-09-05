@@ -66,6 +66,8 @@ test("converts ten-layer high-density routes and vias to circuit json", () => {
     { ...srj, allowBlindAndBuriedVias: true },
     routes,
   )
-  const blindVia = blindCircuitJson.find((element) => element.type === "pcb_via")
+  const blindVia = blindCircuitJson.find(
+    (element) => element.type === "pcb_via",
+  )
   expect(blindVia?.layers).toEqual(["inner8", "bottom"])
 })
