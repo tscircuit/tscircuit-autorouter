@@ -14,6 +14,8 @@ import type { Obstacle } from "lib/types/srj-types"
 import { BaseSolver } from "../BaseSolver"
 import { safeTransparentize } from "../colors"
 import { isObstacleConnectedToRoute } from "../TraceWidthSolver/isObstacleConnectedToRoute"
+import { createObjectsWithZLayers } from "lib/utils/createObjectsWithZLayers"
+import { getConnectedPadSides } from "./getConnectedPadSides"
 
 type RepairSampleEntry = {
   node: NodeWithPortPoints
@@ -247,6 +249,15 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
       routeIndexesByNode.set(nodeIndex, routeIndexes)
     }
 
+    const layeredObstacles = createObjectsWithZLayers(
+      params.obstacles,
+      Math.max(
+        2,
+        ...params.nodeWithPortPoints.flatMap(
+          (node) => node.availableZ?.map((z) => z + 1) ?? [],
+        ),
+      ),
+    )
     const sampleEntries = Array.from(routeIndexesByNode.entries()).map(
       ([nodeIndex, routeIndexes]) => {
         const node = params.nodeWithPortPoints[nodeIndex]
@@ -269,9 +280,19 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
                 nextPortPointId: portPoint.nextPortPointId,
               })),
             },
-            nodeHdRoutes: routeIndexes.map((routeIndex) =>
-              toRepairRoute(params.hdRoutes[routeIndex]),
-            ),
+            nodeHdRoutes: routeIndexes.map((routeIndex) => ({
+              ...toRepairRoute(params.hdRoutes[routeIndex]),
+              ...(params.connMap
+                ? {
+                    connectedPadSides: getConnectedPadSides(
+                      node,
+                      params.hdRoutes[routeIndex],
+                      layeredObstacles,
+                      params.connMap,
+                    ),
+                  }
+                : {}),
+            })),
             adjacentObstacles: getAdjacentObstacles(
               node,
               this.obstacleSHI,
