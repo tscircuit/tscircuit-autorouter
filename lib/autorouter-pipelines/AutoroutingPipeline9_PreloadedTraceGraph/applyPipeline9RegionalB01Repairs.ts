@@ -61,6 +61,7 @@ const FIXED_ROUTE_INDEX_CELL_SIZE = 4
 const REGIONAL_REPAIR_SEARCH_VOLUME = 7_000
 const MIN_REGIONAL_REPAIR_SEARCH_BUDGET = 16
 const MAX_REGIONAL_REPAIR_SEARCH_BUDGET = 192
+const MAX_REGULAR_REGIONAL_CANDIDATE_ITERATIONS = 100_000
 
 export { getPipeline9FixedRouteObstacles }
 
@@ -495,6 +496,9 @@ const getRegularRegionalCandidate = ({
     obstacles: [...srj.obstacles, ...fixedRouteObstacles],
     layerCount: srj.layerCount,
   })
+  // Bound the work inside each search as well as the number of candidates.
+  // One congested window must not consume the entire board solve budget.
+  solver.MAX_ITERATIONS = MAX_REGULAR_REGIONAL_CANDIDATE_ITERATIONS * effort
   solver.solve()
   if (!solver.solved || solver.failed) return undefined
   const solverOutput = solver.getOutput()
