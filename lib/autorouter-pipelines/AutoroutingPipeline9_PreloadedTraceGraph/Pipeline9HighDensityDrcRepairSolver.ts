@@ -121,11 +121,7 @@ const doesRouteConflictWithObstacle = ({
     }
   }
   for (const via of geometry.viaSpans) {
-    if (
-      !obstacle.__zLayers.some(
-        (z) => z >= via.minZ && z <= via.maxZ,
-      )
-    ) {
+    if (!obstacle.__zLayers.some((z) => z >= via.minZ && z <= via.maxZ)) {
       continue
     }
     const expansion = via.diameter / 2 + clearance
@@ -178,9 +174,7 @@ const doRouteViasHaveCopperConflict = ({
   return false
 }
 
-const isHighDensityCopperDrcError = (
-  error: Pipeline9DrcError,
-): boolean => {
+const isHighDensityCopperDrcError = (error: Pipeline9DrcError): boolean => {
   if (
     error.type === "pcb_pad_trace_clearance_error" ||
     error.type === "pcb_via_trace_clearance_error" ||
@@ -319,7 +313,11 @@ export class Pipeline9HighDensityDrcRepairSolver extends BaseSolver {
 
   private hasPotentialHighDensityDrc(): boolean {
     const clearance = this.params.obstacleMargin
-    for (let leftIndex = 0; leftIndex < this.outputHdRoutes.length; leftIndex++) {
+    for (
+      let leftIndex = 0;
+      leftIndex < this.outputHdRoutes.length;
+      leftIndex++
+    ) {
       const left = this.outputHdRoutes[leftIndex]!
       if (
         doRouteViasHaveCopperConflict({
@@ -338,9 +336,7 @@ export class Pipeline9HighDensityDrcRepairSolver extends BaseSolver {
       ) {
         const right = this.outputHdRoutes[rightIndex]!
         if (arePipeline9RoutesOnSameNet(left, right, this.params.connMap)) {
-          if (
-            doRouteViasHaveCopperConflict({ left, right, clearance })
-          ) {
+          if (doRouteViasHaveCopperConflict({ left, right, clearance })) {
             return true
           }
           continue
@@ -389,11 +385,7 @@ export class Pipeline9HighDensityDrcRepairSolver extends BaseSolver {
     return this.outputHdRoutes.some((route) =>
       layeredObstacles.some(
         (obstacle) =>
-          !isObstacleConnectedToRoute(
-            obstacle,
-            route,
-            this.params.connMap,
-          ) &&
+          !isObstacleConnectedToRoute(obstacle, route, this.params.connMap) &&
           doesRouteConflictWithObstacle({ route, obstacle, clearance }),
       ),
     )
