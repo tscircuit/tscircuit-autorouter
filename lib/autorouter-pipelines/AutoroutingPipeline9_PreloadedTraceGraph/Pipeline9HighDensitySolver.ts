@@ -139,6 +139,7 @@ const routeOverlapsNode = (
 const convertFixedRouteToB01Obstacles = (
   route: PreloadedHighDensityRoute,
   node: NodeWithPortPoints,
+  connMap: ConnectivityMap,
 ): HighDensityRouteObstacle[] => {
   const availableZ = new Set(
     node.availableZ ?? node.portPoints.map((portPoint) => portPoint.z),
@@ -152,7 +153,12 @@ const convertFixedRouteToB01Obstacles = (
   const baseObstacle = {
     type: "route" as const,
     connectionName: route.connectionName,
-    rootConnectionName: route.rootConnectionName,
+    rootConnectionName:
+      connMap.getNetConnectedToId(
+        route.rootConnectionName ?? route.connectionName,
+      ) ??
+      route.rootConnectionName ??
+      route.connectionName,
     traceThickness: route.traceThickness,
     viaDiameter: route.viaDiameter,
   }
@@ -969,7 +975,9 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       .filter((route) =>
         routeOverlapsNode(route, node, nodeBounds, routedCopperRadius),
       )
-      .flatMap((route) => convertFixedRouteToB01Obstacles(route, node))
+      .flatMap((route) =>
+        convertFixedRouteToB01Obstacles(route, node, this.connMap),
+      )
     this.stats.fixedObstacleUses =
       Number(this.stats.fixedObstacleUses ?? 0) + fixedObstacles.length
     if (fixedObstacles.length === 0) {

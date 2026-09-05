@@ -3,6 +3,7 @@ import {
   GlobalDrcForceImproveSolver,
   type DrcEvaluator,
 } from "high-density-repair03/lib"
+import { applyBroadRepulsionForces } from "high-density-repair03/lib/solvers/GlobalDrcForceImproveSolver/solverHelpers"
 import type { SimpleRouteConnection, SimpleRouteJson } from "lib/types"
 import type { HighDensityRoute } from "lib/types/high-density-types"
 import type { PreloadedHighDensityRoute } from "./convertPreloadedTraceToHdRoutes"
@@ -151,6 +152,31 @@ export const getPipeline9RegionalRepairTraceIds = ({
       (traceId, traceIndex, allTraceIds) =>
         allTraceIds.indexOf(traceId) === traceIndex,
     )
+}
+
+const isMovableTracePairError = (
+  error: Pipeline9DrcError,
+  routeIndexByTraceId: ReadonlyMap<string, number>,
+): boolean => {
+  if (
+    error.type !== "pcb_trace_error" ||
+    typeof error.pcb_via_id === "string" ||
+    (Array.isArray(error.pcb_via_ids) && error.pcb_via_ids.length > 0)
+  ) {
+    return false
+  }
+  return (
+    getPipeline9RegionalRepairTraceIds({ error, routeIndexByTraceId })
+      .length === 2
+  )
+}
+
+const getViaIssueCount = (errors: Pipeline9DrcError[]): number => {
+  return errors.filter(
+    (error) =>
+      error.type === "pcb_via_clearance_error" ||
+      Array.isArray(error.pcb_via_ids),
+  ).length
 }
 
 export const asRegionalRoutes = (
@@ -541,10 +567,11 @@ const getRegularRegionalCandidate = ({
 }
 
 /**
- * Activates for a remaining preload-owned DRC error, then reroutes supported
- * joint-output participants with B01 in a sub-15mm window. B01 sees every
- * other route plus board copper as obstacles. Candidate searches use a
- * route-scaled budget because each search rebuilds and evaluates board copper.
+ * Activates for a remaining preload-owned or movable trace-pair DRC error,
+ * then reroutes supported joint-output participants with B01 in a sub-15mm
+ * window. B01 sees every other route plus board copper as obstacles. Candidate
+ * searches use a route-scaled budget because each search rebuilds and evaluates
+ * board copper.
  * If no B01 candidate helps, one regular high-density candidate jointly
  * reroutes all traces in the region.
  */
@@ -598,7 +625,15 @@ export const applyPipeline9RegionalB01Repairs = ({
   }
   const preloadEligibleDrcIssueCount =
     currentErrors.filter(isPreloadRepairError).length
-  if (preloadEligibleDrcIssueCount === 0) {
+  const initialRouteIndexByTraceId = getPipeline9RouteIndexByTraceId({
+    routes: currentRoutes,
+    newConnections,
+    syntheticConnectionNames,
+  })
+  const hasMovableTracePair = currentErrors.some((error) =>
+    isMovableTracePairError(error, initialRouteIndexByTraceId),
+  )
+  if (preloadEligibleDrcIssueCount === 0 && !hasMovableTracePair) {
     return {
       routes: currentRoutes,
       attemptedCandidateCount,
@@ -724,6 +759,28 @@ export const applyPipeline9RegionalB01Repairs = ({
       if (candidateSearchBudgetExhausted) break
     }
     if (!acceptedOnPass || currentErrors.length === 0) break
+  }
+
+  if (acceptedCandidateCount > 0 && currentErrors.length > 0) {
+    // Rerouting changes the constraints around neighboring copper. Refine that
+    // accepted geometry before finishing the regional repair stage.
+    const refinedRoutes = applyBroadRepulsionForces(
+      { ...srj, traces: undefined },
+      currentRoutes,
+      effort,
+      1,
+      connMap,
+    )
+    if (refinedRoutes !== currentRoutes) {
+      const refinedErrors = getPipeline9DrcErrors(drcEvaluator, refinedRoutes)
+      if (
+        getViaIssueCount(refinedErrors) <= getViaIssueCount(currentErrors) &&
+        isPipeline9DrcCandidateBetter(refinedErrors, currentErrors)
+      ) {
+        currentRoutes = refinedRoutes
+        currentErrors = refinedErrors
+      }
+    }
   }
 
   const hasSafeLayerRepairableError = currentErrors.some(
