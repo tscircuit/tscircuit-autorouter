@@ -12,11 +12,16 @@ test("pedometer through vias clear traces on every physical layer", () => {
   solver.solve()
   expect(solver.failed).toBe(false)
   expect(solver.solved).toBe(true)
-  const json = convertToCircuitJson(srj, solver.getOutputSimplifiedPcbTraces(), { originalSrj: srj })
+  const json = convertToCircuitJson(
+    srj,
+    solver.getOutputSimplifiedPcbTraces(),
+    { originalSrj: srj },
+  )
   const { errors } = getDrcErrors(json, { traceClearance: 0.1 })
-  const viaTraceErrors = errors.filter((error) =>
-    error.type === "pcb_via_trace_clearance_error" ||
-    (error.type === "pcb_trace_error" && error.message.includes("pcb_via")),
+  const viaTraceErrors = errors.filter(
+    (error) =>
+      error.type === "pcb_via_trace_clearance_error" ||
+      (error.type === "pcb_trace_error" && error.message.includes("pcb_via")),
   )
   expect(viaTraceErrors).toEqual([])
 })
