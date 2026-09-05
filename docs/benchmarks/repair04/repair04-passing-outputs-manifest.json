@@ -1,0 +1,136 @@
+{
+  "schemaVersion": 1,
+  "kind": "repair04-passing-final-outputs",
+  "scope": "Passing-output evidence subset only. These eight files do not constitute a dataset denominator or a new benchmark. The complete benchmark report retains all 37 boards and the current 15-board subset, including failures and timeouts.",
+  "benchmark": {
+    "bundleSha256": "19371644175eadbd80bb21fd6b4cdfce0f06f12560d442790ff5b88417985f8d",
+    "baselineFingerprintSha256": "0aa848c4df6139cd46e9780f507f13bea7a96caca415f2f5197569e36860dd89",
+    "datasetCommit": "f566b62be0f83395d9ab63ddc068f9d645b68b16",
+    "solverCommit": "a284c44ff77a6ad30131fb8c78e8663ae54f4bf6",
+    "effort": 1,
+    "denominators": {
+      "allDatasetBoards": 37,
+      "currentDatasetBoards": 15
+    },
+    "originalRuntime": {
+      "bunVersion": "1.4.2",
+      "architecture": "arm64",
+      "platform": "linux"
+    }
+  },
+  "verificationProvenance": {
+    "checksVersion": "0.0.163",
+    "lockfile": "none; the frozen benchmark records its resolved dependency inventory separately",
+    "repositoryFiles": {
+      "lib/testing/getDrcErrors.ts": "d51fe20209be979e98686bcd46a5f9a8877f7e2d4ee4fbb82258f8629507385f",
+      "lib/testing/drcPresets.ts": "28676dfc06a0ce9c31139d7e5745d872c8d27fe0c5f3972360a4fd1ce73518bf",
+      "lib/testing/utils/convertToCircuitJson.ts": "849deba2cc62f7da08371ea4ffdd710a9b74b783ba2f5a9f02f4a9f882a1de82",
+      "node_modules/@tscircuit/checks/dist/index.js": "66821cdd2e685ee348d88623e88036ad0919a3177df35596ce90a547ec228c76"
+    },
+    "conversionContextFields": [
+      "originalSrj",
+      "srjWithPointPairs"
+    ],
+    "strictCheck": "getDrcErrors(circuitJson) with unchanged defaults",
+    "relaxedCheck": "getDrcErrors(circuitJson, RELAXED_DRC_OPTIONS) with unchanged preset",
+    "instructions": "Use the CLI in this PR checkout with the recorded checker version/source hashes. It independently re-converts every saved output, reruns both checks, and exits nonzero for mismatched hashes, changed checker provenance, or any DRC error. Runtime details are recorded, not required to match the original routing machine."
+  },
+  "samples": [
+    {
+      "sample": "sample001",
+      "sourceCohort": "candidate-v8-b",
+      "outputFile": "sample001.candidate.json",
+      "outputSha256": "0a0622f847533d82f13bbadcbea54a33bf98eec1171595d1a3a24cc7115a857b",
+      "outputBytes": 135316,
+      "contextFile": "sample001.context.json",
+      "contextSha256": "2d601463d47e3ce6759c0409ace34c8381bb357b9c161ba5c9c8307a18a63920",
+      "contextBytes": 170770,
+      "baselineCheckpointSha256": "584b9f51b4427dacec4ebd4f511c71ba31b0b156a35c264a7327b8b9a7f24e7c",
+      "originalInputSha256": "89b643d1249b59a4b807f81efa6756d668367f477fd7d2e563465c973d95802a"
+    },
+    {
+      "sample": "sample004",
+      "sourceCohort": "candidate-v8-b",
+      "outputFile": "sample004.candidate.json",
+      "outputSha256": "48dd515fd4bc2f305a4ffdfd104ded25377f56e372870a8382df723b794f6041",
+      "outputBytes": 1105552,
+      "contextFile": "sample004.context.json",
+      "contextSha256": "efd0eb613d6f8d327e0e9756803abd6f56f93b6a159d1fdd2368001ef58a337b",
+      "contextBytes": 1978854,
+      "baselineCheckpointSha256": "dfcc0a53ff173dd82bf0e6b6551ba067faf072a2a76bc5724f9464c23b91283f",
+      "originalInputSha256": "5d4bd98f63905e4cbc79efb758e8ff16d6dff79539b5b11dd4721032c0bfc1d3"
+    },
+    {
+      "sample": "sample006",
+      "sourceCohort": "candidate-v8-a",
+      "outputFile": "sample006.candidate.json",
+      "outputSha256": "550f5734ed97587a90b30410922ae37e6b6861e8d10020f6947c56485a7f4f68",
+      "outputBytes": 55830,
+      "contextFile": "sample006.context.json",
+      "contextSha256": "2f8daaf7f534fdcec3131c50505fe8feb2ca188306bb65871d695e1c2e40e437",
+      "contextBytes": 80752,
+      "baselineCheckpointSha256": "169f369793f2393a25b0aae420bd459073a17bdd12230c877f38d1a448e88c0e",
+      "originalInputSha256": "1bd1e648ee4178a839e68ce56dedb176a5c123e344ba0e79286ad88d203b4d39"
+    },
+    {
+      "sample": "sample032",
+      "sourceCohort": "candidate-v8-b",
+      "outputFile": "sample032.candidate.json",
+      "outputSha256": "cea3c5e7ba1679ccebbac5ba9dbd58a1eb93489756a6bdddb5e9000ca1165db0",
+      "outputBytes": 575479,
+      "contextFile": "sample032.context.json",
+      "contextSha256": "602fd63caa2b1999f8858edc201d1f3a7dad82852b69d8fa906fc82d61623b5f",
+      "contextBytes": 680131,
+      "baselineCheckpointSha256": "291e5d8467341c215e59f5a178068c4c9680a9b0d8711965fda5fe17996b9638",
+      "originalInputSha256": "3579567c632eef20c9738b8b8539c20229dd004da56c99f161a3ea7d3ee13ed0"
+    },
+    {
+      "sample": "sample048",
+      "sourceCohort": "candidate-v8-b",
+      "outputFile": "sample048.candidate.json",
+      "outputSha256": "ca2fd796bd990b14adad83e9d6e6b194299dbc67412716152eb08e451ed743f2",
+      "outputBytes": 44600,
+      "contextFile": "sample048.context.json",
+      "contextSha256": "39aa3468adcd36cb839cc443026aca2b785b8f1c8cfcd0a5a48638d51ecaac8f",
+      "contextBytes": 59706,
+      "baselineCheckpointSha256": "9b7f792b57d32b851b5287124cfde47a72b275813760c30213ebbdaf29c4cf2b",
+      "originalInputSha256": "0b94f877076f8003be45d85db9344ff3badc2a83b113345e7ef32934966bd855"
+    },
+    {
+      "sample": "sample049",
+      "sourceCohort": "candidate-v8-a",
+      "outputFile": "sample049.candidate.json",
+      "outputSha256": "a93eb088a80661a65864c4bf1b96f80bd68ffc1a0d09ba55a3da57848b4e0780",
+      "outputBytes": 1048979,
+      "contextFile": "sample049.context.json",
+      "contextSha256": "24f358c53fed2188da12255d140fba3250016e90d26272700f1d2753da537a87",
+      "contextBytes": 1821347,
+      "baselineCheckpointSha256": "2ef44bca77a45863c263467845a151eb9b170673d53c1f5c523c1e5aa0dd748f",
+      "originalInputSha256": "f6ad460276af8a6053b3ba4384983a0bcf5143f6dee1b7f8be4854de9dd2dac0"
+    },
+    {
+      "sample": "sample054",
+      "sourceCohort": "candidate-v8-b",
+      "outputFile": "sample054.candidate.json",
+      "outputSha256": "c7a706e673e0eafb42a9d3f748409a19c2c6c484dd6615603a64df27e02c6a0f",
+      "outputBytes": 1068225,
+      "contextFile": "sample054.context.json",
+      "contextSha256": "db5911d2bed9d70a780c14c6770f75594cdf1546c2405e4676419721f1f5d69e",
+      "contextBytes": 1810649,
+      "baselineCheckpointSha256": "27fe6670f28743687b4dc94e1b937bbcb3ac741d2d75920125a286706d922a77",
+      "originalInputSha256": "1809ba26b6a7d929361660457d85e9ed951ceaf002753800531bf038c87cbc64"
+    },
+    {
+      "sample": "sample056",
+      "sourceCohort": "candidate-v8-c",
+      "outputFile": "sample056.candidate.json",
+      "outputSha256": "ccd220203f3297c0a2bd070a45565a19c14128861ae9b0470ac41d282bc997c1",
+      "outputBytes": 183070,
+      "contextFile": "sample056.context.json",
+      "contextSha256": "d459a6de1633e2971952d6368f59eef3ceccb7e60098b6229a1d26c89b9bf346",
+      "contextBytes": 234864,
+      "baselineCheckpointSha256": "6d50965b1b21ee962b2eddbd0b024f4327768d9cc8ef4d668aaed830506724d5",
+      "originalInputSha256": "b79a2595d82b5a9350510656622b7f377aaf7f6d90f7c368f5afaefaa489692a"
+    }
+  ]
+}
