@@ -3,6 +3,8 @@ import type { Buffer } from "node:buffer"
 import { mkdir, readFile, readdir, writeFile } from "node:fs/promises"
 import { resolve } from "node:path"
 
+const VALIDATION_SUITE = "repair04-via-pad-v1"
+
 type ReplayResult = {
   sample: string
   inputSha256: string
@@ -42,6 +44,7 @@ const baselineSummaryBytes = await readFile(
   resolve(baselineDir, "summary.json"),
 )
 const baseline = JSON.parse(baselineSummaryBytes.toString("utf8")) as {
+  validationSuite?: string
   results: Array<{
     sample: string
     inputSha256: string
@@ -53,6 +56,11 @@ const baseline = JSON.parse(baselineSummaryBytes.toString("utf8")) as {
     strictErrors?: object[]
   }>
 }
+if (baseline.validationSuite !== VALIDATION_SUITE)
+  throw new Error(
+    "Baseline uses an older DRC suite; re-evaluate unchanged baseline outputs with via-pad checks into a new directory",
+  )
+
 // Bind resumed results to the exact validated baseline, not just the candidate
 // bundle or the original SRJ hash. Include every baseline entry so a selected
 // first batch can safely resume later with the remaining dataset members.
@@ -104,6 +112,10 @@ if (await Bun.file(configurationPath).exists()) {
         `Output directory has a different ${key}; use a new replay output directory`,
       )
   }
+  if (configuration.validationSuite !== VALIDATION_SUITE)
+    throw new Error(
+      "Output directory uses an older DRC suite; use a new directory",
+    )
   if (configuration.bundleSha256 !== bundleSha256)
     throw new Error(
       "Output directory belongs to a different solver bundle; use a new directory",
@@ -131,6 +143,7 @@ if (await Bun.file(configurationPath).exists()) {
     JSON.stringify(
       {
         bundleSha256,
+        validationSuite: VALIDATION_SUITE,
         bundle,
         concurrency,
         baselineFingerprintSha256,
@@ -174,6 +187,7 @@ const saveSummary = (): Promise<void> => {
   const content = JSON.stringify(
     {
       kind: "checkpoint-replay",
+      validationSuite: VALIDATION_SUITE,
       mode: "candidate",
       datasetCommit: "f566b62be0f83395d9ab63ddc068f9d645b68b16",
       denominator: 37,
@@ -242,6 +256,7 @@ await Promise.all(
         const start = performance.now()
         result = {
           sample: before.sample,
+          validationSuite: VALIDATION_SUITE,
           inputSha256: before.inputSha256,
           solved: false,
           timedOut: false,
@@ -260,6 +275,8 @@ await Promise.all(
           const restored = await Bun.file(
             resolve(outDir, `${before.sample}.baseline.json.result.json`),
           ).json()
+          if (restored.validationSuite !== VALIDATION_SUITE)
+            throw new Error("Disabled bundle uses an older DRC suite")
           if (
             restored.relaxedErrors.length !== before.relaxedErrors?.length ||
             restored.strictErrors.length !== before.strictErrors?.length
@@ -276,6 +293,8 @@ await Promise.all(
           const after = await Bun.file(
             resolve(outDir, `${before.sample}.candidate.json.result.json`),
           ).json()
+          if (after.validationSuite !== VALIDATION_SUITE)
+            throw new Error("Candidate bundle uses an older DRC suite")
           if (after.inputSha256 !== before.inputSha256)
             throw new Error("Replay input hash changed")
           Object.assign(result, after, {

@@ -10,6 +10,7 @@ import type { HighDensityRoute } from "../../lib/types/high-density-types"
 import type { SimpleRouteJson, SimplifiedPcbTrace } from "../../lib/types"
 import { loadScenarios } from "./scenarios"
 
+const VALIDATION_SUITE = "repair04-via-pad-v1"
 const DATASET_COMMIT = "f566b62be0f83395d9ab63ddc068f9d645b68b16"
 const EXPECTED_SAMPLE_IDS = [
   1, 2, 3, 4, 5, 6, 10, 11, 12, 13, 20, 25, 32, 33, 34, 35, 36, 37, 38, 39, 40,
@@ -57,6 +58,14 @@ if (
 if (!Number.isInteger(concurrency))
   throw new Error("Concurrency must be an integer")
 await mkdir(outDir, { recursive: true })
+const existingConfiguration = Bun.file(resolve(outDir, "configuration.json"))
+if (await existingConfiguration.exists()) {
+  const prior = await existingConfiguration.json()
+  if (prior.validationSuite !== VALIDATION_SUITE)
+    throw new Error(
+      "Output directory uses an older DRC suite; use a new directory",
+    )
+}
 const scenarios = await loadScenarios("srj33")
 if (
   JSON.stringify(scenarios.map(([name]) => name)) !==
@@ -74,10 +83,13 @@ const evaluate = (
     inputSrj,
     srjWithPointPairs,
     routedTraces,
+    drcOptions: { includeViaPadChecks: true },
   })
   return {
     relaxedErrors: relaxed.errorsWithCenters,
-    strictErrors: getDrcErrors(relaxed.circuitJson).errorsWithCenters,
+    strictErrors: getDrcErrors(relaxed.circuitJson, {
+      includeViaPadChecks: true,
+    }).errorsWithCenters,
   }
 }
 
@@ -197,6 +209,7 @@ const runWorker = async (sample: string): Promise<void> => {
           resolve(outDir, `${sample}.post-repair03.json`),
           JSON.stringify({
             datasetCommit: DATASET_COMMIT,
+            validationSuite: VALIDATION_SUITE,
             inputSha256,
             originalSrj: params.originalSrj,
             srj: params.srj,
@@ -286,6 +299,7 @@ if (workerSample) {
     JSON.stringify(
       {
         datasetCommit: DATASET_COMMIT,
+        validationSuite: VALIDATION_SUITE,
         samples: EXPECTED_SAMPLE_IDS,
         denominator: 37,
         mode,
@@ -294,9 +308,13 @@ if (workerSample) {
         concurrency,
         timeoutMs,
         bunVersion: Bun.version,
-        relaxed: { traceClearance: 0.1, viaClearance: 0.1 },
+        relaxed: {
+          traceClearance: 0.1,
+          viaClearance: 0.1,
+          includeViaPadChecks: true,
+        },
         strict:
-          "getDrcErrors(circuitJson) library defaults; identical conversion to relaxed",
+          "getDrcErrors(circuitJson, { includeViaPadChecks: true }); existing clearance defaults and identical conversion to relaxed",
         createdAt: new Date().toISOString(),
       },
       null,
@@ -370,6 +388,7 @@ if (workerSample) {
         const summary = JSON.stringify(
           {
             datasetCommit: DATASET_COMMIT,
+            validationSuite: VALIDATION_SUITE,
             mode,
             denominator: 37,
             evaluated: ordered.length,

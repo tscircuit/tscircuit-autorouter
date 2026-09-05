@@ -22,6 +22,7 @@ type BoardResult = {
   }
 }
 type BenchmarkSummary = {
+  validationSuite?: string
   datasetCommit: string
   mode: "baseline" | "candidate"
   denominator: number
@@ -63,11 +64,13 @@ if (candidate.kind === "checkpoint-replay") {
     "utf8",
   )
   const configuration = JSON.parse(configurationText) as {
+    validationSuite?: string
     bundleSha256?: string
     baselineFingerprintSha256?: string
     datasetCommit?: string
   }
   if (
+    configuration.validationSuite !== candidate.validationSuite ||
     !configuration.bundleSha256 ||
     !/^[a-f0-9]{64}$/.test(configuration.bundleSha256) ||
     !configuration.baselineFingerprintSha256 ||
@@ -91,6 +94,11 @@ const expectedSampleNames = [
   41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56,
 ].map((id) => `sample${String(id).padStart(3, "0")}`)
 for (const summary of [baseline, candidate]) {
+  if (summary.validationSuite !== "repair04-via-pad-v1") {
+    throw new Error(
+      "Comparison requires repair04-via-pad-v1 on both sides; historical DRC counts cannot be mixed",
+    )
+  }
   if (
     summary.datasetCommit !== expectedCommit ||
     summary.denominator !== 37 ||
@@ -264,6 +272,7 @@ const comparison = {
     candidateSummarySha256: hashText(candidateText),
     ...replayProvenance,
   },
+  validationSuite: "repair04-via-pad-v1",
   datasetCommit: reportedCommit,
   sourceBenchmarkDatasetCommit: expectedCommit,
   denominator,

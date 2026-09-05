@@ -1,5 +1,21 @@
 # Repair04 SRJ33 comparison
 
+The corrected validation suite is `repair04-via-pad-v1`. Both baseline and
+candidate explicitly enable `includeViaPadChecks: true` for default and relaxed
+DRC. This adds the existing `checkViasInPads` and `checkViaPadClearance` checks,
+using the same connectivity map and existing clearance thresholds. Same-net
+via centers inside pads are errors unless the board explicitly permits them.
+
+The historical V8 evidence omitted these checks. Its reported passes are not
+clean results under this corrected suite. Preserve that evidence unchanged;
+never relabel or mix its DRC counts with new results. To reuse its upstream
+checkpoints, re-evaluate the unchanged final baseline outputs using the new
+suite in a new baseline directory, retain the exact original output/checkpoint
+bytes, and record the validation-suite marker in the new summary. Old stage
+error arrays are historical diagnostics unless independently re-evaluated.
+The disabled replay must still reproduce the original geometry exactly and
+match the newly evaluated baseline DRC counts before a candidate can pass.
+
 Run these commands from the repository root in the benchmark environment. Keep
 the dependency lockfile, Bun version, architecture, effort, and evaluator the
 same between the baseline and candidate. Use at most half the available CPU
@@ -25,8 +41,8 @@ Baseline disables only `enableRepair04`. Both runs use the real Pipeline9,
 including its existing downstream joint repair, length matching, and power
 trace expansion. Every board remains in the denominator, including failures
 and timeouts. Both runs independently evaluate final output with the existing
-relaxed DRC evaluator and the existing default DRC evaluator. No threshold or
-conversion change belongs in this benchmark.
+relaxed and default DRC evaluators with via-pad checks explicitly enabled.
+Both sides must use the same validation-suite marker, thresholds, and conversion.
 
 Each full run writes a checkpoint immediately after repair03, stage DRC
 errors, final DRC errors, final routed output, input SHA-256, timing, and run

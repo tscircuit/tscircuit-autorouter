@@ -104,6 +104,8 @@ import {
 interface CapacityMeshSolverOptions {
   /** Disable only for controlled repair04 before/after comparisons. */
   enableRepair04?: boolean
+  /** Opt in to repair04 via movement; its default repair is trace-only. */
+  repair04AllowLayerChanges?: boolean
   capacityDepth?: number
   targetMinCapacity?: number
   cacheProvider?: CacheProvider | null
@@ -829,7 +831,9 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           hdRoutes: cms.globalDrcForceImproveSolver!.getOutput(),
           connMap: cms.connMap,
           enabled: cms.opts.enableRepair04 !== false,
+          allowLayerChanges: cms.opts.repair04AllowLayerChanges === true,
           referenceDrcEvaluator: createPipeline9RelaxedDrcEvaluator({
+            includeViaPadChecks: true,
             connections: cms.netToPointPairsSolver!.newConnections,
             originalConnections: srj.connections,
             layerCount: srj.layerCount,

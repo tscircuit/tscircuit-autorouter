@@ -10,6 +10,7 @@ type Result = {
   strictErrors?: object[]
 }
 type Configuration = {
+  validationSuite: string
   bundleSha256: string
   baselineFingerprintSha256: string
   datasetCommit: string
@@ -20,6 +21,7 @@ type Configuration = {
   concurrency: number
 }
 type Summary = {
+  validationSuite: string
   kind: string
   mode: string
   denominator: number
@@ -36,6 +38,7 @@ if (!outputDirectory || sourceDirectories.length < 2) {
   )
 }
 const requiredKeys = [
+  "validationSuite",
   "bundleSha256",
   "baselineFingerprintSha256",
   "datasetCommit",
@@ -73,6 +76,8 @@ for (const directory of sourceDirectories) {
   }
   firstConfiguration ??= configuration
   if (
+    configuration.validationSuite !== "repair04-via-pad-v1" ||
+    summary.validationSuite !== configuration.validationSuite ||
     summary.kind !== "checkpoint-replay" ||
     summary.mode !== "candidate" ||
     summary.denominator !== 37 ||
@@ -125,6 +130,7 @@ if (results.some((result) => result.solved && !result.baselineReplayMatches)) {
 const configuration = firstConfiguration!
 const summary = {
   kind: "checkpoint-replay",
+  validationSuite: configuration.validationSuite,
   mode: "candidate",
   datasetCommit: configuration.datasetCommit,
   denominator: 37,

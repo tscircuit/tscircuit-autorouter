@@ -1,5 +1,8 @@
 # repair04: bounded SRJ repair and Pipeline9 benchmark
 
+> **Correction in progress:** the original benchmark omitted the dedicated via-in-pad and via-to-pad checks. Several saved outputs, including sample006, therefore contain violations despite passing that narrower checker. The original passing-board totals below are historical and do not establish the requested DRC improvement with these checks included. PR #2420 is back in draft while the repair and benchmark are corrected.
+
+
 The repair04 integration, including its downstream joint-proposal acceptance guard, changes the complete current published SRJ33 dataset from **0/15 to 5/15 boards passing final default DRC (+33.33 percentage points)**. On the older complete 37-board revision, it changes **0/37 to 8/37 (+21.62 percentage points)**. Both default and relaxed checks are evaluated after joint repair, length matching, and power expansion. Newly passing current boards under default DRC: sample006, sample048, sample049, sample054, sample056.
 
 The baseline has zero passing boards, so a relative percentage increase is undefined; a +30% relative improvement cannot be established from that baseline. The result reaches the 30-percentage-point interpretation of the requested target. This is a comparison of the complete integration against the baseline; it does not isolate repair04 from the joint-stage guard in a separate ablation.

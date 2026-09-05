@@ -13,6 +13,7 @@ type CreatePipeline9RelaxedDrcEvaluatorOptions = Omit<
   srjWithPointPairs: SimpleRouteJson
   originalSrj: SimpleRouteJson
   mutatedPreloadedTraces: SimplifiedPcbTrace[]
+  includeViaPadChecks?: boolean
 }
 
 /** Scores candidates using the same preloaded-trace replacement rules as output. */
@@ -32,6 +33,7 @@ export const createPipeline9RelaxedDrcEvaluator = (
     const newTraceIds = new Set(newTraces.map((trace) => trace.pcb_trace_id))
     const { errors, errorsWithCenters, circuitJson } = evaluateRelaxedDrc({
       inputSrj: options.originalSrj,
+      drcOptions: { includeViaPadChecks: options.includeViaPadChecks },
       srjWithPointPairs: options.srjWithPointPairs,
       routedTraces: preparePipeline9DrcRoutedTraces({
         originalPreloadedTraces: options.originalSrj.traces ?? [],

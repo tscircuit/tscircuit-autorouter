@@ -4,6 +4,7 @@ import {
   mergeRepairRegion,
   normalizeRepairTrace,
   getFixedObstacleViolations,
+  getNewViaPadViolations,
   type ExtractedRepairRegion,
 } from "@tscircuit/repair04"
 import {
@@ -26,6 +27,7 @@ type Pipeline9Repair04SolverParams = {
   enabled: boolean
   maxRegions?: number
   maxCandidatesPerRegion?: number
+  allowLayerChanges?: boolean
 }
 
 /** Owns board state; the external solver receives only one cropped region. */
@@ -109,7 +111,14 @@ export class Pipeline9Repair04Solver extends BaseSolver {
           this.fixedViolations!.has(key) &&
           severity <= this.fixedViolations!.get(key)! + 1e-8,
       )
+      const preservesViaPadClearance =
+        getNewViaPadViolations({
+          srj: this.input.srj as any,
+          previousRoutes: this.routes,
+          routes: candidate,
+        }).length === 0
       if (
+        preservesViaPadClearance &&
         preservesFixedObstacles &&
         candidateIssues.length <= this.issues.length
       ) {
@@ -151,41 +160,46 @@ export class Pipeline9Repair04Solver extends BaseSolver {
     // Escalate one issue's context before moving on; a long issue list must
     // not consume the entire region budget before any larger bounds are tried.
     for (const error of [...this.referenceErrors!, ...this.issues]) {
-      for (const size of [10, 16, 24]) {
-        const center = error.center ?? error.pcb_center
-        if (
-          !center ||
-          typeof center !== "object" ||
-          !("x" in center) ||
-          !("y" in center)
-        )
-          continue
-        const { x, y } = center as { x: number; y: number }
-        if (!Number.isFinite(x) || !Number.isFinite(y)) continue
-        const key = `${Math.round(x * 2)},${Math.round(y * 2)},${size}`
-        if (this.attempted.has(key)) continue
-        this.attempted.add(key)
-        const region = extractRepairRegion({
-          srj: this.input.srj as any,
-          routes: this.routes,
-          bounds: {
-            minX: x - size / 2,
-            minY: y - size / 2,
-            maxX: x + size / 2,
-            maxY: y + size / 2,
-          },
-        })
-        this.region = region
-        this.localSolver = new Repair04Solver({
-          srj: region.srj,
-          routes: region.routes,
-          bounds: region.bounds,
-          boundaryMargin: region.boundaryMargin,
-          lockedPointIndices: region.lockedPointIndices,
-          maxCandidates: this.input.maxCandidatesPerRegion ?? 8000,
-        })
-        this.regionCount++
-        return
+      for (const allowLayerChanges of this.input.allowLayerChanges === true
+        ? [false, true]
+        : [false]) {
+        for (const size of [10, 16, 24]) {
+          const center = error.center ?? error.pcb_center
+          if (
+            !center ||
+            typeof center !== "object" ||
+            !("x" in center) ||
+            !("y" in center)
+          )
+            continue
+          const { x, y } = center as { x: number; y: number }
+          if (!Number.isFinite(x) || !Number.isFinite(y)) continue
+          const key = `${Math.round(x * 2)},${Math.round(y * 2)},${size},${allowLayerChanges}`
+          if (this.attempted.has(key)) continue
+          this.attempted.add(key)
+          const region = extractRepairRegion({
+            srj: this.input.srj as any,
+            routes: this.routes,
+            bounds: {
+              minX: x - size / 2,
+              minY: y - size / 2,
+              maxX: x + size / 2,
+              maxY: y + size / 2,
+            },
+          })
+          this.region = region
+          this.localSolver = new Repair04Solver({
+            srj: region.srj,
+            routes: region.routes,
+            bounds: region.bounds,
+            boundaryMargin: region.boundaryMargin,
+            lockedPointIndices: region.lockedPointIndices,
+            maxCandidates: this.input.maxCandidatesPerRegion ?? 8000,
+            allowLayerChanges,
+          })
+          this.regionCount++
+          return
+        }
       }
     }
     this.solved = true

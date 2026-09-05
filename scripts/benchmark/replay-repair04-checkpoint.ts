@@ -170,11 +170,13 @@ const relaxed = evaluateRelaxedDrc({
   inputSrj: checkpoint.originalSrj,
   srjWithPointPairs: checkpoint.srjWithPointPairs,
   routedTraces: pipeline.getOutputSimplifiedPcbTraces(),
+  drcOptions: { includeViaPadChecks: true },
 })
-const strict = getDrcErrors(relaxed.circuitJson)
+const strict = getDrcErrors(relaxed.circuitJson, { includeViaPadChecks: true })
 await writeFile(resolve(outputPath), encodedOutput)
 const result = {
   mode,
+  validationSuite: "repair04-via-pad-v1",
   datasetCommit: checkpoint.datasetCommit,
   inputSha256: checkpoint.inputSha256,
   outputSha256,

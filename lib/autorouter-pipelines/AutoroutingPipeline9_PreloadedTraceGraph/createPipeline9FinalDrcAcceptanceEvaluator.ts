@@ -6,7 +6,7 @@ import { assignUniquePcbTraceIdsToNewTraces } from "./assignUniquePcbTraceIdsToN
 import type { Pipeline9JointDrcOutput } from "./Pipeline9JointDrcRepairSolver"
 import { preparePipeline9DrcRoutedTraces } from "./preparePipeline9DrcRoutedTraces"
 
-/** Uses final-output conversion, preload replacement and unchanged DRC defaults. */
+/** Uses final-output conversion and includes dedicated via-pad validation. */
 export const createPipeline9FinalDrcAcceptanceEvaluator = (
   options: Omit<
     ConvertPipeline7HdRoutesOptions,
@@ -27,6 +27,7 @@ export const createPipeline9FinalDrcAcceptanceEvaluator = (
     )
     return evaluateRelaxedDrc({
       inputSrj: options.originalSrj,
+      drcOptions: { includeViaPadChecks: true },
       srjWithPointPairs: options.srjWithPointPairs,
       routedTraces: preparePipeline9DrcRoutedTraces({
         originalPreloadedTraces: options.originalSrj.traces ?? [],

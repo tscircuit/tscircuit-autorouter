@@ -144,8 +144,13 @@ async function verifySavedOutputs(directory: string): Promise<void> {
         includeOriginalConnections: true,
       },
     )
-    const strictErrors = getDrcErrors(circuitJson).errors
-    const relaxedErrors = getDrcErrors(circuitJson, RELAXED_DRC_OPTIONS).errors
+    const strictErrors = getDrcErrors(circuitJson, {
+      includeViaPadChecks: true,
+    }).errors
+    const relaxedErrors = getDrcErrors(circuitJson, {
+      ...RELAXED_DRC_OPTIONS,
+      includeViaPadChecks: true,
+    }).errors
     results.push({
       sample: entry.sample,
       outputSha256: entry.outputSha256,
@@ -170,7 +175,11 @@ async function verifySavedOutputs(directory: string): Promise<void> {
           architecture: process.arch,
           checksVersion: checksPackage.version,
         },
-        checkerOptions: { strict: "defaults", relaxed: RELAXED_DRC_OPTIONS },
+        validationSuite: "repair04-via-pad-v1",
+        checkerOptions: {
+          strict: { includeViaPadChecks: true },
+          relaxed: { ...RELAXED_DRC_OPTIONS, includeViaPadChecks: true },
+        },
         results,
       },
       null,

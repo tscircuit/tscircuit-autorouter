@@ -5,11 +5,15 @@ import {
   checkPcbTracesOutOfBoard,
   checkSameNetViaSpacing,
   checkTracesAreContiguous,
+  checkViaPadClearance,
   checkViaTraceClearance,
+  checkViasInPads,
 } from "@tscircuit/checks"
 import type {
   AnyCircuitElement,
   PcbPadTraceClearanceError,
+  PcbPadPadClearanceError,
+  PcbPlacementError,
   PcbTraceError,
   PcbViaClearanceError,
   PcbViaTraceClearanceError,
@@ -28,15 +32,17 @@ type PcbViaWithTraceId = CircuitJsonElement & {
   pcb_trace_id: string
 }
 
-type DrcError =
+export type DrcError =
   | PcbTraceError
   | PcbViaTraceClearanceError
   | PcbPadTraceClearanceError
   | PcbViaClearanceError
+  | PcbPadPadClearanceError
+  | PcbPlacementError
 
-type DrcErrorWithCenter = DrcError & { center?: Point }
+export type DrcErrorWithCenter = DrcError & { center?: Point }
 
-type LocationAwareDrcError = DrcError & { center: Point }
+export type LocationAwareDrcError = DrcError & { center: Point }
 
 export const MIN_VIA_TO_VIA_CLEARANCE = 0.1
 export const PREFERRED_VIA_TO_VIA_CLEARANCE = 0.2
@@ -52,6 +58,8 @@ export interface GetDrcErrorsOptions {
   traceClearance?: number
   includeTraceContinuity?: boolean
   includeTypedTraceClearance?: boolean
+  /** Include via-in-pad placement and via-to-pad clearance checks. */
+  includeViaPadChecks?: boolean
 }
 
 const createDrcConnectivityMap = (
@@ -106,6 +114,15 @@ export const getDrcErrors = (
       minClearance: viaClearance,
     }),
   ]
+  const viaPadErrors = options.includeViaPadChecks
+    ? [
+        ...checkViasInPads(circuitJson),
+        ...checkViaPadClearance(circuitJson, {
+          connMap,
+          minClearance: options.traceClearance,
+        }),
+      ]
+    : []
 
   const errors: DrcError[] = [
     ...traceErrors,
@@ -116,6 +133,7 @@ export const getDrcErrors = (
     ...viaTraceErrors,
     ...padTraceErrors,
     ...viaErrors,
+    ...viaPadErrors,
   ]
 
   const vias = circuitJson.filter(
@@ -132,6 +150,19 @@ export const getDrcErrors = (
   const viasById = new Map(vias.map((via) => [via.pcb_via_id, via]))
 
   const errorsWithCenters = errors.map((error) => {
+    if (
+      error.type === "pcb_placement_error" &&
+      error.pcb_placement_error_id.startsWith("via_in_pad_")
+    ) {
+      const via = vias
+        .filter((candidate) =>
+          error.pcb_placement_error_id.startsWith(
+            `via_in_pad_${candidate.pcb_via_id}_`,
+          ),
+        )
+        .sort((a, b) => b.pcb_via_id.length - a.pcb_via_id.length)[0]
+      if (via) return { ...error, center: { x: via.x, y: via.y } }
+    }
     if (
       error.type === "pcb_via_trace_clearance_error" &&
       typeof error.pcb_via_id === "string"
