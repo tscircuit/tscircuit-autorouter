@@ -42,10 +42,7 @@ const routeCopperGeometryCache = new WeakMap<
   HighDensityRoute,
   Pipeline9RouteCopperGeometry
 >()
-const routeCopperBoundsCache = new WeakMap<
-  HighDensityRoute,
-  Pipeline9Bounds
->()
+const routeCopperBoundsCache = new WeakMap<HighDensityRoute, Pipeline9Bounds>()
 
 export const getPipeline9RouteCopperGeometry = (
   route: HighDensityRoute,
