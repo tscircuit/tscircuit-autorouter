@@ -134,6 +134,7 @@ test("Pipeline9 reroutes DRC-bearing high-density nodes before stitching", (): v
     viaDiameter: 0.3,
     traceWidth: 0.1,
     obstacleMargin: 0.15,
+    drcClearance: 0.1,
     effort: 0.1,
   })
 

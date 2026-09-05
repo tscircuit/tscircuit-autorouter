@@ -77,6 +77,7 @@ test("Pipeline9 preserves routes when no single node can clear every DRC", (): v
     viaDiameter: 0.3,
     traceWidth: 0.1,
     obstacleMargin: 0.15,
+    drcClearance: 0.1,
     effort: 0.1,
   })
 

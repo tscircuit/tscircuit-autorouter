@@ -11,6 +11,7 @@ import type {
 } from "lib/types/high-density-types"
 import type { Obstacle, SimpleRouteConnection } from "lib/types/srj-types"
 import { createObjectsWithZLayers } from "lib/utils/createObjectsWithZLayers"
+import { minimumDistanceBetweenSegments } from "lib/utils/minimumDistanceBetweenSegments"
 import { normalizePipeline9NodeRootConnectionNames } from "./Pipeline9HighDensitySolver"
 import {
   arePipeline9RoutesOnSameNet,
@@ -41,6 +42,7 @@ export type Pipeline9HighDensityDrcRepairSolverParams = {
   viaDiameter: number
   traceWidth: number
   obstacleMargin: number
+  drcClearance: number
   effort: number
   nodePfById?:
     | Map<CapacityMeshNodeId, number | null>
@@ -97,6 +99,53 @@ const getObstacleBounds = (obstacle: Obstacle): AxisAlignedBounds => {
   }
 }
 
+const getObstacleLocalPoint = (
+  point: { x: number; y: number },
+  obstacle: Obstacle,
+): { x: number; y: number } => {
+  const radians = (-(obstacle.ccwRotationDegrees ?? 0) * Math.PI) / 180
+  const offsetX = point.x - obstacle.center.x
+  const offsetY = point.y - obstacle.center.y
+  return {
+    x: offsetX * Math.cos(radians) - offsetY * Math.sin(radians),
+    y: offsetX * Math.sin(radians) + offsetY * Math.cos(radians),
+  }
+}
+
+const getMinimumDistanceBetweenSegmentAndObstacle = (
+  start: { x: number; y: number },
+  end: { x: number; y: number },
+  obstacle: Obstacle,
+): number => {
+  const localStart = getObstacleLocalPoint(start, obstacle)
+  const localEnd = getObstacleLocalPoint(end, obstacle)
+  const halfWidth = obstacle.width / 2
+  const halfHeight = obstacle.height / 2
+  const bounds = {
+    minX: -halfWidth,
+    maxX: halfWidth,
+    minY: -halfHeight,
+    maxY: halfHeight,
+  }
+  if (doesSegmentIntersectBounds(localStart, localEnd, bounds)) return 0
+  const corners = [
+    { x: bounds.minX, y: bounds.minY },
+    { x: bounds.maxX, y: bounds.minY },
+    { x: bounds.maxX, y: bounds.maxY },
+    { x: bounds.minX, y: bounds.maxY },
+  ]
+  return Math.min(
+    ...corners.map((corner, cornerIndex) =>
+      minimumDistanceBetweenSegments(
+        localStart,
+        localEnd,
+        corner,
+        corners[(cornerIndex + 1) % corners.length]!,
+      ),
+    ),
+  )
+}
+
 const doesRouteConflictWithObstacle = ({
   route,
   obstacle,
@@ -122,14 +171,13 @@ const doesRouteConflictWithObstacle = ({
   const geometry = getPipeline9RouteCopperGeometry(route)
   for (const wire of geometry.wireSegments) {
     if (!obstacle.__zLayers.includes(wire.z)) continue
-    const expansion = wire.width / 2 + clearance
     if (
-      doesSegmentIntersectBounds(wire.start, wire.end, {
-        minX: obstacleBounds.minX - expansion,
-        maxX: obstacleBounds.maxX + expansion,
-        minY: obstacleBounds.minY - expansion,
-        maxY: obstacleBounds.maxY + expansion,
-      })
+      getMinimumDistanceBetweenSegmentAndObstacle(
+        wire.start,
+        wire.end,
+        obstacle,
+      ) <
+      wire.width / 2 + clearance
     ) {
       return true
     }
@@ -138,12 +186,11 @@ const doesRouteConflictWithObstacle = ({
     if (!obstacle.__zLayers.some((z) => z >= via.minZ && z <= via.maxZ)) {
       continue
     }
-    const expansion = via.diameter / 2 + clearance
+    const localVia = getObstacleLocalPoint(via.center, obstacle)
+    const deltaX = Math.max(Math.abs(localVia.x) - obstacle.width / 2, 0)
+    const deltaY = Math.max(Math.abs(localVia.y) - obstacle.height / 2, 0)
     if (
-      via.center.x >= obstacleBounds.minX - expansion &&
-      via.center.x <= obstacleBounds.maxX + expansion &&
-      via.center.y >= obstacleBounds.minY - expansion &&
-      via.center.y <= obstacleBounds.maxY + expansion
+      Math.hypot(deltaX, deltaY) < via.diameter / 2 + clearance
     ) {
       return true
     }
@@ -310,7 +357,7 @@ export class Pipeline9HighDensityDrcRepairSolver extends BaseSolver {
   }
 
   private hasPotentialHighDensityDrc(): boolean {
-    const clearance = this.params.obstacleMargin
+    const clearance = this.params.drcClearance
     for (
       let leftIndex = 0;
       leftIndex < this.outputHdRoutes.length;
