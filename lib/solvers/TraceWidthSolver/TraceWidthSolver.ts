@@ -490,6 +490,11 @@ export class TraceWidthSolver extends BaseSolver {
     obstacle: Obstacle,
     vector: Point2D,
   ): number {
+    // A circular pad's diameter does not grow when the escape is diagonal.
+    // Projecting its bounding rectangle can incorrectly permit wider copper.
+    if (obstacle.shape === "circle") {
+      return Math.min(obstacle.width, obstacle.height)
+    }
     const rotationRadians = ((obstacle.ccwRotationDegrees ?? 0) * Math.PI) / 180
     const cos = Math.cos(rotationRadians)
     const sin = Math.sin(rotationRadians)
