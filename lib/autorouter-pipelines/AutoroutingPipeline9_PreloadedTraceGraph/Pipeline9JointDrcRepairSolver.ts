@@ -989,9 +989,6 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       params.srjWithPointPairs
     const extendedSrjWithPointPairs: SimpleRouteJson = {
       ...srjWithoutPreloadedTraceObstacles,
-      // Both candidate construction and exact DRC need the original pad
-      // shapes; routing approximations discard rotation and enlarge pads.
-      obstacles: params.originalSrj.obstacles,
       connections: [
         ...params.srjWithPointPairs.connections,
         ...syntheticConnectionByName.values(),
@@ -1000,6 +997,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     const autoroutingDrcEngine = new AutoroutingDrcEngine(
       {
         ...extendedSrjWithPointPairs,
+        obstacles: params.originalSrj.obstacles,
         minTraceWidth: params.originalSrj.minTraceWidth,
         minViaDiameter:
           params.originalSrj.minViaDiameter ?? params.defaultViaDiameter,

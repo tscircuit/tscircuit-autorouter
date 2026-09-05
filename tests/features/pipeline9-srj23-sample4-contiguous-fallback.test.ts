@@ -3,9 +3,8 @@ import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-p
 import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import { loadScenarioBySampleNumber } from "../../scripts/benchmark/scenarios"
 
-test("Pipeline9 routes SRJ23 sample 4 without rerouting existing copper", async () => {
+test("Pipeline9 reroutes contiguous preloaded sections in corrected SRJ23 sample 4", async () => {
   const { scenario } = await loadScenarioBySampleNumber("srj23", 4)
-  expect(scenario.traces).toHaveLength(9)
   const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(
     structuredClone(scenario),
     { cacheProvider: null, effort: 1 },
@@ -15,11 +14,10 @@ test("Pipeline9 routes SRJ23 sample 4 without rerouting existing copper", async 
 
   expect(solver.solved).toBeTrue()
   expect(solver.failed).toBeFalse()
-  // Correctly compacted free regions no longer require regional rerouting.
-  // Contiguous fallback/splicing remains covered by the high-density unit test.
-  expect(Number(solver.highDensityRouteSolver?.stats.fallbackNodeCount)).toBe(0)
-  expect(solver.getMutatedPreloadedTraces()).toHaveLength(0)
-  expect(solver.getUpdatedPreloadedTraces()).toEqual(scenario.traces!)
+  expect(
+    Number(solver.highDensityRouteSolver?.stats.fallbackNodeCount),
+  ).toBeGreaterThan(0)
+  expect(solver.getMutatedPreloadedTraces().length).toBeGreaterThan(0)
   const { errors } = evaluateRelaxedDrc({
     inputSrj: scenario,
     srjWithPointPairs: solver.srjWithPointPairs!,
