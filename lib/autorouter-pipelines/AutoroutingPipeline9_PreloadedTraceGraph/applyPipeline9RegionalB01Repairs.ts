@@ -159,7 +159,10 @@ export const asRegionalRoutes = (
 ): PreloadedHighDensityRoute[] => {
   const counts = new Map<string, number>()
   for (const route of routes) {
-    counts.set(route.connectionName, (counts.get(route.connectionName) ?? 0) + 1)
+    counts.set(
+      route.connectionName,
+      (counts.get(route.connectionName) ?? 0) + 1,
+    )
   }
   return routes.map((route, routeIndex) => {
     // Separate pieces of one connection still need distinct splice identities.

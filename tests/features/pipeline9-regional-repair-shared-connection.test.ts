@@ -33,7 +33,9 @@ test("regional repair gives separate pieces of a shared connection distinct spli
   )
 
   expect(problem.fixedRouteSectionsByConnectionName.size).toBe(3)
-  expect(new Set(regionalRoutes.map((route) => route.connectionName)).size).toBe(3)
+  expect(
+    new Set(regionalRoutes.map((route) => route.connectionName)).size,
+  ).toBe(3)
   expect(regionalRoutes[2]!.connectionName).toBe("foreign")
   for (const route of regionalRoutes.slice(0, 2)) {
     expect(connMap.areIdsConnected(route.connectionName, "pad-a")).toBe(true)
