@@ -4,6 +4,7 @@ import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { GraphicsObject, Line } from "graphics-debug"
 import { HighDensityForceImproveSolver } from "high-density-repair01/lib/HighDensityForceImproveSolver"
 import { GlobalDrcForceImproveSolver } from "high-density-repair03/lib"
+import { addThroughViaLayersToTraces } from "lib/utils/addThroughViaLayersToTraces"
 import { getGlobalInMemoryCache } from "lib/cache/setupGlobalCaches"
 import { CacheProvider } from "lib/cache/types"
 import { ComponentDetectionSolver } from "lib/solvers/ComponentDetectionSolver/ComponentDetectionSolver"
@@ -1506,12 +1507,15 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
         "Pipeline9 invariant violated: solved pipeline is missing the unconditional power-trace expansion solver",
       )
     }
-    return [
-      ...this.getPowerTraceExpansionFixedTraces().filter(
-        (trace) => trace.__replaces_pcb_trace_id !== undefined,
-      ),
-      ...this.powerTraceExpansionSolver.getOutput(),
-    ]
+    return addThroughViaLayersToTraces(
+      [
+        ...this.getPowerTraceExpansionFixedTraces().filter(
+          (trace) => trace.__replaces_pcb_trace_id !== undefined,
+        ),
+        ...this.powerTraceExpansionSolver.getOutput(),
+      ],
+      this.originalSrj,
+    )
   }
 
   getOutputSimpleRouteJson(): SimpleRouteJson {
@@ -1529,7 +1533,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     ]
     return {
       ...this.originalSrj,
-      traces,
+      traces: addThroughViaLayersToTraces(traces, this.originalSrj),
     }
   }
 }

@@ -6,6 +6,7 @@ import type {
   PcbVia,
 } from "circuit-json"
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
+import { getViaLayers } from "high-density-repair03/lib"
 import { Obstacle, SimpleRouteJson, SimplifiedPcbTrace } from "lib/types"
 import { HighDensityRoute } from "lib/types/high-density-types"
 import { getConnectionPointLayers } from "lib/types/srj-types"
@@ -804,7 +805,14 @@ function extractViasFromRoutes(
   layerCount: number,
   minViaDiameter = 0.3,
   minViaHoleDiameter = minViaDiameter * 0.5,
+  allowBlindAndBuriedVias?: boolean,
 ): PcbVia[] {
+  const throughViaLayers =
+    allowBlindAndBuriedVias === false
+      ? Array.from({ length: layerCount }, (_, z) =>
+          mapZToLayerName(z, layerCount),
+        )
+      : undefined
   const vias: PcbVia[] = []
   const viaLocations = new Set<string>() // Track unique via locations
 
@@ -833,7 +841,8 @@ function extractViasFromRoutes(
                 y: segment.y,
                 outer_diameter: viaDiameter,
                 hole_diameter: viaHoleDiameter,
-                layers: [segment.from_layer, segment.to_layer],
+                layers: (throughViaLayers ??
+                  getViaLayers(segment, layerCount)) as LayerName[],
               })
               viaLocations.add(locationKey)
             }
@@ -869,7 +878,11 @@ function extractViasFromRoutes(
                 y: currPoint.y,
                 outer_diameter: viaDiameter,
                 hole_diameter: viaHoleDiameter,
-                layers: [fromLayer, toLayer],
+                layers: (throughViaLayers ??
+                  getViaLayers(
+                    { from_layer: fromLayer, to_layer: toLayer },
+                    layerCount,
+                  )) as LayerName[],
               })
               viaLocations.add(locationKey)
             }
@@ -973,6 +986,7 @@ export function convertToCircuitJson(
       srjWithPointPairs.layerCount,
       resolvedMinViaDiameter,
       resolvedMinViaHoleDiameter,
+      (originalSrj ?? srjWithPointPairs).allowBlindAndBuriedVias,
     ),
   )
 

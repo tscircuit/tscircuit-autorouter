@@ -5,6 +5,7 @@ import {
   type SimpleRouteJson as RepairSimpleRouteJson,
   type SimplifiedPcbTraces as RepairSimplifiedPcbTraces,
 } from "high-density-repair03/lib"
+import { addThroughViaLayersToTraces } from "lib/utils/addThroughViaLayersToTraces"
 import type { SimpleRouteJson } from "lib/types"
 import type { PreparedPipeline11Simplification } from "./PrepareTraceSimplificationSolver"
 
@@ -81,7 +82,10 @@ export class ValidateTraceSimplificationSolver extends BaseSolver {
 
   private evaluateErrorCounts(srj: SimpleRouteJson): Record<string, number> {
     const result = this.drcEngine.evaluate(
-      (srj.traces ?? []) as RepairSimplifiedPcbTraces,
+      addThroughViaLayersToTraces(
+        srj.traces ?? [],
+        this.inputProblem.preparedInput.originalSrj,
+      ) as RepairSimplifiedPcbTraces,
     )
     return countErrorsByType(result)
   }

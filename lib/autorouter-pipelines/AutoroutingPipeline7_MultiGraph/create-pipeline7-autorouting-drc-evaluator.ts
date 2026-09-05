@@ -4,6 +4,7 @@ import {
   type SimpleRouteJson as RepairSimpleRouteJson,
   type SimplifiedPcbTraces as RepairSimplifiedPcbTraces,
 } from "high-density-repair03/lib"
+import { addThroughViaLayersToTraces } from "lib/utils/addThroughViaLayersToTraces"
 import type { SimpleRouteJson } from "lib/types"
 import { getViaDimensions } from "lib/utils/getViaDimensions"
 import {
@@ -43,6 +44,7 @@ export const createPipeline7AutoroutingDrcEvaluator = (
     ) + Math.max(AUTOROUTING_TRACE_CLEARANCE, AUTOROUTING_VIA_CLEARANCE)
   const engine = new AutoroutingDrcEngine(engineSrj as RepairSimpleRouteJson, {
     connMap: conversionOptions.connMap,
+    includeTraceViaOwnerMetadata: true,
     traceClearance: AUTOROUTING_TRACE_CLEARANCE,
     viaClearance: AUTOROUTING_VIA_CLEARANCE,
     spatialCellSize,
@@ -64,6 +66,11 @@ export const createPipeline7AutoroutingDrcEvaluator = (
         : candidateTraces
     ) as RepairSimplifiedPcbTraces
 
-    return engine.evaluate(tracesToEvaluate)
+    return engine.evaluate(
+      addThroughViaLayersToTraces(
+        tracesToEvaluate,
+        conversionOptions.originalSrj,
+      ) as RepairSimplifiedPcbTraces,
+    )
   }
 }

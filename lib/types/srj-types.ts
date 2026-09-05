@@ -53,6 +53,8 @@ export type JumperType = "1206x4" | "0603"
 
 export interface SimpleRouteJson {
   layerCount: number
+  /** Whether the router may generate blind or buried vias. */
+  allowBlindAndBuriedVias?: boolean
   minTraceWidth: number
   nominalTraceWidth?: number
   /** @deprecated Use `min_via_pad_diameter` / `minViaPadDiameter` instead. */
@@ -170,6 +172,8 @@ export interface SimplifiedPcbTrace {
         to_layer: string
         from_layer: string
         via_diameter?: number
+        /** Explicit copper layers; otherwise expand the inclusive from/to span. */
+        layers?: string[]
         via_hole_diameter?: number
       }
     | {
