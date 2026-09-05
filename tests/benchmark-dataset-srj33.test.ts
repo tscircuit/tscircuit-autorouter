@@ -8,7 +8,10 @@ import {
 test("SRJ33 exposes all 31 original routing inputs in report order", async () => {
   const scenarios = await loadScenarios("srj33")
   expect(scenarios.map(([name]) => name)).toEqual(
-    Array.from({ length: 31 }, (_, i) => `sample${String(i + 1).padStart(3, "0")}`),
+    Array.from(
+      { length: 31 },
+      (_, i) => `sample${String(i + 1).padStart(3, "0")}`,
+    ),
   )
   for (const [, srj] of scenarios) {
     expect(srj.connections.length).toBeGreaterThan(0)
