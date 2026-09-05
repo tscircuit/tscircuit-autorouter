@@ -651,6 +651,8 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
   readonly exactRepairSolver?: Pipeline7AdaptiveDrcBranchPortfolioSolver
   private drcEvaluator?: DrcEvaluator
   private cachedReferenceDrcEvaluator?: DrcEvaluator
+  private clearancePrecisionDrcEvaluator?: DrcEvaluator
+  private clearancePrecisionIndexedDrcEvaluator?: DrcEvaluator
   private referenceDrcValidationCount = 0
   private referenceDrcFalseNegativeCount = 0
   private indexedDrcEvaluationCount = 0
@@ -1168,7 +1170,10 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       }
     }
 
-    const referenceDrcEvaluator: DrcEvaluator = ({ routes, hdRoutes }) => {
+    const referenceDrcEvaluator = (
+      { routes, hdRoutes }: Parameters<DrcEvaluator>[0],
+      includeTraceContinuity = true,
+    ): ReturnType<DrcEvaluator> => {
       const evaluatedRoutes = routes ?? hdRoutes
       if (!evaluatedRoutes) {
         throw new Error("Pipeline9 reference DRC repair requires HD routes")
@@ -1178,7 +1183,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         inputSrj: params.originalSrj,
         srjWithPointPairs: params.srjWithPointPairs,
         routedTraces: candidateDrcInput.routedTraces,
-        drcOptions: { traceClearance },
+        drcOptions: { traceClearance, includeTraceContinuity },
       })
       const evaluatedTraceIds = new Set(
         candidateDrcInput.evaluatedTraces.map((trace) => trace.pcb_trace_id),
@@ -1241,6 +1246,26 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       return result
     }
     this.cachedReferenceDrcEvaluator = cachedReferenceDrcEvaluator
+    this.clearancePrecisionDrcEvaluator = ({
+      routes,
+      hdRoutes,
+    }): ReturnType<DrcEvaluator> =>
+      referenceDrcEvaluator({ traces: [], routes, hdRoutes }, false)
+    this.clearancePrecisionIndexedDrcEvaluator = ({
+      routes,
+      hdRoutes,
+    }): ReturnType<DrcEvaluator> => {
+      const evaluatedRoutes = routes ?? hdRoutes
+      if (!evaluatedRoutes) {
+        throw new Error("Pipeline9 clearance ranking requires HD routes")
+      }
+      const candidateDrcInput = prepareCandidateDrcInput(evaluatedRoutes)
+      // Ranking is private and must not populate the exact evaluator's cache
+      // with results that have not undergone its reference-zero validation.
+      return autoroutingDrcEngine.evaluate(
+        candidateDrcInput.evaluatedTraces as RepairSimplifiedPcbTraces,
+      )
+    }
 
     const drcEvaluator: DrcEvaluator = ({ routes, hdRoutes }) => {
       const evaluatedRoutes = routes ?? hdRoutes
@@ -1394,6 +1419,8 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         MAX_POST_EXACT_PRECISION_PASS_INDEXED_ISSUE_COUNT
     let postExactReferenceDrcIssueCount: number | undefined
     let clearancePrecisionCandidateCount = 0
+    let clearancePrecisionCandidateValidationCount = 0
+    let clearancePrecisionReferenceValidationCount = 0
     let clearancePrecisionRepaired = false
     if (shouldRunPostExactPrecisionPass) {
       // The indexed evaluator can retain conservative false positives after the
@@ -1415,6 +1442,8 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
           newConnections: this.params.newConnections,
           syntheticConnectionNames: this.syntheticConnectionNames,
           connMap: this.params.connMap,
+          indexedDrcEvaluator: this.clearancePrecisionIndexedDrcEvaluator!,
+          candidateDrcEvaluator: this.clearancePrecisionDrcEvaluator!,
           drcEvaluator: this.cachedReferenceDrcEvaluator!,
           initialErrors: exactReferenceDrcErrors,
           initialErrorsWithCenters: Array.isArray(exactReferenceDrcResult)
@@ -1424,6 +1453,10 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         })
         clearancePrecisionCandidateCount =
           precisionResult.attemptedCandidateCount
+        clearancePrecisionCandidateValidationCount =
+          precisionResult.candidateValidationCount
+        clearancePrecisionReferenceValidationCount =
+          precisionResult.referenceValidationCount
         clearancePrecisionRepaired = precisionResult.repaired
         if (precisionResult.repaired) {
           exactOutput = precisionResult.routes
@@ -1444,6 +1477,8 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
           postExactReferenceDrcIssueCount: 0,
           postExactReferenceAccepted: true,
           clearancePrecisionCandidateCount,
+          clearancePrecisionCandidateValidationCount,
+          clearancePrecisionReferenceValidationCount,
           clearancePrecisionRepaired,
           regionalB01RepairCandidateCount: 0,
           regionalB01RepairAcceptedCount: 0,
@@ -1528,6 +1563,8 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       postExactReferenceDrcIssueCount,
       postExactReferenceAccepted: false,
       clearancePrecisionCandidateCount,
+      clearancePrecisionCandidateValidationCount,
+      clearancePrecisionReferenceValidationCount,
       clearancePrecisionRepaired,
       regionalB01RepairCandidateCount:
         regionalB01RepairResult.attemptedCandidateCount,

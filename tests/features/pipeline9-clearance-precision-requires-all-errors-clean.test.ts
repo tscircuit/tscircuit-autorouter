@@ -4,7 +4,7 @@ import type { SimpleRouteJson } from "lib/types"
 import type { HighDensityRoute } from "lib/types/high-density-types"
 import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
 
-test("clearance precision preserves original routes when only centered errors are clean", (): void => {
+test("clearance precision preserves original routes until full reference DRC passes", (): void => {
   const srj: SimpleRouteJson = {
     bounds: { minX: -2, minY: -2, maxX: 2, maxY: 2 },
     layerCount: 2,
@@ -38,6 +38,7 @@ test("clearance precision preserves original routes when only centered errors ar
   ]
   const originalRoutes = structuredClone(routes)
   let evaluationCount = 0
+  let indexedEvaluationCount = 0
   const result = applyPipeline9ClearancePrecisionRepairs({
     srj,
     routes,
@@ -56,6 +57,17 @@ test("clearance precision preserves original routes when only centered errors ar
         center: { x: 0, y: 0 },
       },
     ],
+    indexedDrcEvaluator: () => {
+      indexedEvaluationCount++
+      return [
+        {
+          type: "pcb_trace_error",
+          minimum_clearance: 1,
+          actual_clearance: indexedEvaluationCount === 1 ? 0 : 1,
+        },
+      ]
+    },
+    candidateDrcEvaluator: () => ({ errors: [], errorsWithCenters: [] }),
     drcEvaluator: () => {
       evaluationCount++
       return {
@@ -68,6 +80,9 @@ test("clearance precision preserves original routes when only centered errors ar
   expect(result.repaired).toBeFalse()
   expect(result.routes).toBe(routes)
   expect(routes).toEqual(originalRoutes)
-  expect(result.attemptedCandidateCount).toBe(evaluationCount)
+  expect(result.attemptedCandidateCount).toBe(indexedEvaluationCount)
+  expect(result.candidateValidationCount).toBe(1)
+  expect(result.referenceValidationCount).toBe(evaluationCount)
+  expect(result.referenceValidationCount).toBe(1)
   expect(result.attemptedCandidateCount).toBeLessThanOrEqual(24)
 })

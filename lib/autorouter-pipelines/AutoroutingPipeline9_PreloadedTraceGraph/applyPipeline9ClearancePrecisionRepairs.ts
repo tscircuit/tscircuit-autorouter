@@ -19,6 +19,8 @@ import {
 type ClearancePrecisionRepairResult = {
   routes: HighDensityRoute[]
   attemptedCandidateCount: number
+  candidateValidationCount: number
+  referenceValidationCount: number
   repaired: boolean
 }
 
@@ -27,11 +29,35 @@ type PreparedClearanceErrors = {
   deficit: number
 }
 
+type IndexedClearanceCandidate = {
+  routes: HighDensityRoute[]
+  deficit: number
+}
+
 type Point = { x: number; y: number }
 
 const MAX_CLEARANCE_ERROR_COUNT = 8
 const MAX_PASSES = 8
 const FORCE_SCALES = [0.03, 0.1, 0.25]
+
+const getIndexedClearanceDeficit = (
+  errors: Pipeline9DrcError[],
+): number | undefined => {
+  let deficit = 0
+  for (const error of errors) {
+    if (
+      typeof error.actual_clearance !== "number" ||
+      !Number.isFinite(error.actual_clearance) ||
+      typeof error.minimum_clearance !== "number" ||
+      !Number.isFinite(error.minimum_clearance)
+    ) {
+      return undefined
+    }
+    deficit += Math.max(0, error.minimum_clearance - error.actual_clearance)
+    if (!Number.isFinite(deficit)) return undefined
+  }
+  return deficit
+}
 
 const prepareClearanceErrors = ({
   errors,
@@ -106,6 +132,8 @@ export const applyPipeline9ClearancePrecisionRepairs = ({
   newConnections,
   syntheticConnectionNames,
   connMap,
+  indexedDrcEvaluator,
+  candidateDrcEvaluator,
   drcEvaluator,
   initialErrors,
   initialErrorsWithCenters = initialErrors,
@@ -115,11 +143,19 @@ export const applyPipeline9ClearancePrecisionRepairs = ({
   newConnections: SimpleRouteConnection[]
   syntheticConnectionNames: ReadonlySet<string>
   connMap: ConnectivityMap
+  indexedDrcEvaluator: DrcEvaluator
+  candidateDrcEvaluator: DrcEvaluator
   drcEvaluator: DrcEvaluator
   initialErrors: Pipeline9DrcError[]
   initialErrorsWithCenters?: Pipeline9DrcError[]
 }): ClearancePrecisionRepairResult => {
-  const unchanged = { routes, attemptedCandidateCount: 0, repaired: false }
+  const unchanged: ClearancePrecisionRepairResult = {
+    routes,
+    attemptedCandidateCount: 0,
+    candidateValidationCount: 0,
+    referenceValidationCount: 0,
+    repaired: false,
+  }
   if ((srj.traces?.length ?? 0) > 0 || syntheticConnectionNames.size > 0) {
     return unchanged
   }
@@ -149,9 +185,10 @@ export const applyPipeline9ClearancePrecisionRepairs = ({
   let current: PreparedClearanceErrors = initial
   let currentRoutes = routes
   let attemptedCandidateCount = 0
+  let candidateValidationCount = 0
+  let referenceValidationCount = 0
   for (let pass = 0; pass < MAX_PASSES; pass++) {
-    let bestRoutes = currentRoutes
-    let best: PreparedClearanceErrors = current
+    let bestCandidate: IndexedClearanceCandidate | undefined
     for (const scale of FORCE_SCALES) {
       const candidateRoutes = cloneRoutes(currentRoutes)
       const changed = applyDrcErrorForces(
@@ -169,37 +206,75 @@ export const applyPipeline9ClearancePrecisionRepairs = ({
       if (!changed) continue
       const materializedRoutes = materializeRoutes(candidateRoutes)
       attemptedCandidateCount++
-      const result = drcEvaluator({
+      const indexedResult = indexedDrcEvaluator({
         traces: [],
         routes: materializedRoutes,
         hdRoutes: materializedRoutes,
       })
-      const errors = Array.isArray(result) ? result : result.errors
-      if (errors.length === 0) {
+      const deficit = getIndexedClearanceDeficit(
+        Array.isArray(indexedResult) ? indexedResult : indexedResult.errors,
+      )
+      // Conservative indexed errors rank candidates only. Their absence never
+      // establishes that a candidate is reference-clean.
+      if (
+        deficit !== undefined &&
+        (!bestCandidate || deficit < bestCandidate.deficit)
+      ) {
+        bestCandidate = { routes: materializedRoutes, deficit }
+      }
+    }
+    if (!bestCandidate) break
+    candidateValidationCount++
+    const candidateResult = candidateDrcEvaluator({
+      traces: [],
+      routes: bestCandidate.routes,
+      hdRoutes: bestCandidate.routes,
+    })
+    const candidateErrors = Array.isArray(candidateResult)
+      ? candidateResult
+      : candidateResult.errors
+    if (candidateErrors.length === 0) {
+      // Private geometry validation omits continuity. Publish only after every
+      // full reference check passes, including continuity and errors with no center.
+      referenceValidationCount++
+      const referenceResult = drcEvaluator({
+        traces: [],
+        routes: bestCandidate.routes,
+        hdRoutes: bestCandidate.routes,
+      })
+      const referenceErrors = Array.isArray(referenceResult)
+        ? referenceResult
+        : referenceResult.errors
+      if (referenceErrors.length === 0) {
         return {
-          routes: materializedRoutes,
+          routes: bestCandidate.routes,
           attemptedCandidateCount,
+          candidateValidationCount,
+          referenceValidationCount,
           repaired: true,
         }
       }
-      const prepared = prepareClearanceErrors({
-        errors,
-        errorsWithCenters: Array.isArray(result)
-          ? result
-          : (result.errorsWithCenters ?? result.errors),
-        routeIndexByTraceId,
-        padPositionById,
-      })
-      // A coupled move can temporarily split one deficit between two objects.
-      // Such intermediate routes stay private until every reference error clears.
-      if (prepared && prepared.deficit < best.deficit - 1e-9) {
-        bestRoutes = materializedRoutes
-        best = prepared
-      }
+      break
     }
-    if (bestRoutes === currentRoutes) break
-    currentRoutes = bestRoutes
-    current = best
+    const prepared = prepareClearanceErrors({
+      errors: candidateErrors,
+      errorsWithCenters: Array.isArray(candidateResult)
+        ? candidateResult
+        : (candidateResult.errorsWithCenters ?? candidateResult.errors),
+      routeIndexByTraceId,
+      padPositionById,
+    })
+    // A coupled move can temporarily split one deficit between two objects.
+    // Such intermediate routes stay private until every reference error clears.
+    if (!prepared || prepared.deficit >= current.deficit - 1e-9) break
+    currentRoutes = bestCandidate.routes
+    current = prepared
   }
-  return { routes, attemptedCandidateCount, repaired: false }
+  return {
+    routes,
+    attemptedCandidateCount,
+    candidateValidationCount,
+    referenceValidationCount,
+    repaired: false,
+  }
 }
