@@ -3,7 +3,7 @@ import type { PreloadedHighDensityRoute } from "lib/autorouter-pipelines/Autorou
 import { createRegionalFallbackProblem } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/pipeline9RegionalFallback"
 import type { NodeWithPortPoints } from "lib/types/high-density-types"
 
-test("Pipeline9 only makes preloaded sections on target layers movable", (): void => {
+test("Pipeline9 keeps preloaded sections immutable until promoted", (): void => {
   const node: NodeWithPortPoints = {
     capacityMeshNodeId: "cmn_target_layers",
     center: { x: 5, y: 5 },
@@ -62,12 +62,26 @@ test("Pipeline9 only makes preloaded sections on target layers movable", (): voi
 
   const problem = createRegionalFallbackProblem(node, fixedRoutes)
 
-  expect([...problem.fixedRouteSectionsByConnectionName.keys()]).toEqual([
-    "touches_target_layer",
-  ])
+  expect([...problem.fixedRouteSectionsByConnectionName.keys()]).toEqual([])
   expect(
     problem.fixedObstacleRoutes.map((route) => route.connectionName),
+  ).toEqual([
+    "top_only",
+    "touches_target_layer",
+    "touches_target_layer_outside_node",
+  ])
+  expect(problem.nodeWithPortPoints.portPoints).toHaveLength(2)
+  expect(problem.nodeWithPortPoints.portPointsInPairs).toHaveLength(0)
+
+  const promotedProblem = createRegionalFallbackProblem(
+    node,
+    fixedRoutes,
+    new Set(["touches_target_layer"]),
+  )
+  expect([
+    ...promotedProblem.fixedRouteSectionsByConnectionName.keys(),
+  ]).toEqual(["touches_target_layer"])
+  expect(
+    promotedProblem.fixedObstacleRoutes.map((route) => route.connectionName),
   ).toEqual(["top_only", "touches_target_layer_outside_node"])
-  expect(problem.nodeWithPortPoints.portPoints).toHaveLength(4)
-  expect(problem.nodeWithPortPoints.portPointsInPairs).toHaveLength(1)
 })

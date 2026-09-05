@@ -206,31 +206,11 @@ const fixedRouteSlicesAreContiguous = (
     next.sourceRoute.preloadedTraceIndex &&
   pointsAreEqual(previous.sourceRoute.route.at(-1)!, next.sourceRoute.route[0]!)
 
-const fixedRouteSliceTouchesTargetLayer = (
-  slice: FixedRouteSlice,
-  targetLayers: ReadonlySet<number>,
-): boolean => {
-  if (targetLayers.size === 0) return true
-  const routePointsInsideNode = [
-    slice.start.point,
-    ...slice.sourceRoute.route.slice(
-      slice.start.segmentIndex + 1,
-      slice.end.segmentIndex + 1,
-    ),
-    slice.end.point,
-  ]
-  return routePointsInsideNode.some((routePoint) =>
-    targetLayers.has(routePoint.z),
-  )
-}
-
 /**
- * Builds the regular high-density input used only after B01 fails. Fixed
- * each contiguous section of pre-routed copper crossing the node on a target
- * connection layer becomes one ordinary port pair, which lets the portfolio
- * reroute it together with the new traces in that region. Local fixed routes
- * on other layers remain immutable obstacles unless an immutable-first solve
- * proves that an exact route is the blocker and explicitly promotes it.
+ * Builds the regular high-density input used only after B01 fails. Existing
+ * copper remains immutable unless an immutable-first solve proves that an
+ * exact route is the blocker and explicitly promotes its contiguous section
+ * into the regional routing problem.
  * Repair-only callers with no target port points continue to make every
  * crossing section movable.
  */
@@ -244,7 +224,7 @@ export const createRegionalFallbackProblem = (
     FixedRouteSection
   >()
   const fallbackPortPairs: Array<[PortPoint, PortPoint]> = []
-  const targetLayers = new Set(node.portPoints.map((portPoint) => portPoint.z))
+  const isRepairOnly = node.portPoints.length === 0
 
   const localSlices = fixedRoutes
     .map((fixedRoute) => getFixedRouteSlice(fixedRoute, node))
@@ -253,7 +233,7 @@ export const createRegionalFallbackProblem = (
     .filter(
       (slice) =>
         slice.sourceRoute.isThroughObstacle !== true &&
-        (fixedRouteSliceTouchesTargetLayer(slice, targetLayers) ||
+        (isRepairOnly ||
           promotedFixedRouteConnectionNames.has(
             slice.sourceRoute.connectionName,
           )),
