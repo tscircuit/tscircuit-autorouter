@@ -85,7 +85,7 @@ import {
   convertPreloadedTraceToHdRoutes,
   type PreloadedHighDensityRoute,
 } from "./convertPreloadedTraceToHdRoutes"
-import { createPipeline9RelaxedDrcEvaluator } from "./createPipeline9RelaxedDrcEvaluator"
+import { createPipeline9HighDensityDrcEvaluator } from "./createPipeline9HighDensityDrcEvaluator"
 import { Pipeline9HighDensityDrcRepairSolver } from "./Pipeline9HighDensityDrcRepairSolver"
 import { Pipeline9HighDensitySolver } from "./Pipeline9HighDensitySolver"
 import { Pipeline9JointDrcRepairSolver } from "./Pipeline9JointDrcRepairSolver"
@@ -678,51 +678,45 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             "Pipeline9 invariant violated: high-density DRC repair requires point pairs and repaired high-density routes",
           )
         }
-        if (!cms.highDensityNodePortPoints || !cms.portPointPathingSolver) {
+        if (!cms.highDensityNodePortPoints) {
           throw new Error(
             "Pipeline9 invariant violated: high-density DRC repair requires routed node boundaries",
           )
         }
-        const portPointPathingSolver = cms.portPointPathingSolver
-        const portPointPathingOutput = portPointPathingSolver.getOutput()
         const newConnections = cms.netToPointPairsSolver.newConnections
+        const hdRoutes = cms.highDensityRepairSolver.getOutput()
+        const fixedHdRoutes =
+          cms.highDensityRouteSolver!.getUpdatedFixedHdRoutes()
         return [
           {
             nodePortPoints: cms.highDensityNodePortPoints,
-            hdRoutes: cms.highDensityRepairSolver.getOutput(),
-            fixedHdRoutes:
-              cms.highDensityRouteSolver!.getUpdatedFixedHdRoutes(),
+            hdRoutes,
+            fixedHdRoutes,
             newConnections,
-            drcEvaluator: createPipeline9RelaxedDrcEvaluator({
+            drcEvaluator: createPipeline9HighDensityDrcEvaluator({
               connections: newConnections,
               originalConnections: cms.originalSrj.connections,
+              originalFixedHdRoutes: cms.getOriginalFixedHdRoutes(),
+              hdRoutes,
+              fixedHdRoutes,
               layerCount: cms.srj.layerCount,
               obstacles: cms.srj.obstacles,
               defaultViaHoleDiameter: cms.viaHoleDiameter,
               connMap: cms.connMap,
               srjWithPointPairs: cms.srjWithPointPairs!,
               originalSrj: cms.originalSrj,
-              mutatedPreloadedTraces: [],
-              drcOptions: {
-                includeTraceContinuity: false,
-                includeBoardEdge: false,
-              },
             }),
             connMap: cms.connMap,
             colorMap: cms.colorMap,
             obstacles: cms.srj.obstacles,
             layerCount: cms.srj.layerCount,
             viaDiameter: cms.viaDiameter,
+            viaHoleDiameter: cms.viaHoleDiameter,
             traceWidth: cms.minTraceWidth,
             obstacleMargin: cms.srj.defaultObstacleMargin ?? 0.15,
             drcClearance: RELAXED_TRACE_CLEARANCE,
             effort: cms.effort,
-            nodePfById: new Map(
-              portPointPathingOutput.inputNodeWithPortPoints.map((node) => [
-                node.capacityMeshNodeId,
-                portPointPathingSolver.computeNodePf(node),
-              ]),
-            ),
+            nodePfById: cms.highDensityRouteSolver!.nodePfById,
           },
         ]
       },

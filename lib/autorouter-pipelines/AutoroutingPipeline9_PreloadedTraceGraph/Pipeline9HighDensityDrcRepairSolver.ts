@@ -4,12 +4,14 @@ import type { DrcEvaluator } from "high-density-repair03/lib"
 import { BaseSolver } from "lib/solvers/BaseSolver"
 import { HighDensitySolver } from "lib/solvers/HighDensitySolver/HighDensitySolver"
 import { isObstacleConnectedToRoute } from "lib/solvers/TraceWidthSolver/isObstacleConnectedToRoute"
+import { MIN_VIA_TO_VIA_CLEARANCE } from "lib/testing/getDrcErrors"
 import type { CapacityMeshNodeId } from "lib/types/capacity-mesh-types"
 import type {
   HighDensityRoute,
   NodeWithPortPoints,
 } from "lib/types/high-density-types"
 import type { Obstacle, SimpleRouteConnection } from "lib/types/srj-types"
+import { convertHdRouteToSimplifiedRoute } from "lib/utils/convertHdRouteToSimplifiedRoute"
 import { createObjectsWithZLayers } from "lib/utils/createObjectsWithZLayers"
 import { minimumDistanceBetweenSegments } from "lib/utils/minimumDistanceBetweenSegments"
 import { normalizePipeline9NodeRootConnectionNames } from "./Pipeline9HighDensitySolver"
@@ -40,6 +42,7 @@ export type Pipeline9HighDensityDrcRepairSolverParams = {
   obstacles: Obstacle[]
   layerCount: number
   viaDiameter: number
+  viaHoleDiameter: number
   traceWidth: number
   obstacleMargin: number
   drcClearance: number
@@ -60,6 +63,16 @@ type AxisAlignedBounds = {
   minY: number
   maxY: number
 }
+
+type DrilledVia = {
+  x: number
+  y: number
+  holeDiameter: number
+}
+
+// @tscircuit/checks uses this tolerance both to identify coincident vias and
+// when comparing drill-hole edge clearance in checkSameNetViaSpacing.
+const VIA_SPACING_EPSILON = 0.005
 
 const doesSegmentIntersectBounds = (
   start: { x: number; y: number },
@@ -202,30 +215,27 @@ const doRouteViasHaveCopperConflict = ({
   clearance,
   sameRoute = false,
 }: {
-  left: HighDensityRoute
-  right: HighDensityRoute
+  left: DrilledVia[]
+  right: DrilledVia[]
   clearance: number
   sameRoute?: boolean
 }): boolean => {
-  const leftVias = getPipeline9RouteCopperGeometry(left).viaSpans
-  const rightVias = getPipeline9RouteCopperGeometry(right).viaSpans
-  for (let leftIndex = 0; leftIndex < leftVias.length; leftIndex++) {
-    const leftVia = leftVias[leftIndex]!
+  for (let leftIndex = 0; leftIndex < left.length; leftIndex++) {
+    const leftVia = left[leftIndex]!
     for (
       let rightIndex = sameRoute ? leftIndex + 1 : 0;
-      rightIndex < rightVias.length;
+      rightIndex < right.length;
       rightIndex++
     ) {
-      const rightVia = rightVias[rightIndex]!
-      if (leftVia.minZ > rightVia.maxZ || rightVia.minZ > leftVia.maxZ) continue
-      const requiredClearance =
-        leftVia.diameter / 2 + rightVia.diameter / 2 + clearance
-      if (
-        Math.hypot(
-          leftVia.center.x - rightVia.center.x,
-          leftVia.center.y - rightVia.center.y,
-        ) < requiredClearance
-      ) {
+      const rightVia = right[rightIndex]!
+      const distance = Math.hypot(
+        leftVia.x - rightVia.x,
+        leftVia.y - rightVia.y,
+      )
+      if (distance <= VIA_SPACING_EPSILON) continue
+      const gap =
+        distance - leftVia.holeDiameter / 2 - rightVia.holeDiameter / 2
+      if (gap + VIA_SPACING_EPSILON < clearance) {
         return true
       }
     }
@@ -302,10 +312,22 @@ export class Pipeline9HighDensityDrcRepairSolver extends BaseSolver {
   private initialized = false
   private activeConnectionNames = new Set<string>()
   private acceptedCandidate: AcceptedHighDensityCandidate | null = null
+  private readonly drilledViasByRoute = new WeakMap<
+    HighDensityRoute,
+    DrilledVia[]
+  >()
+  private readonly fixedDrilledViasByRoute = new WeakMap<
+    HighDensityRoute,
+    DrilledVia[]
+  >()
+  private readonly connectionsByName: Map<string, SimpleRouteConnection>
 
   constructor(params: Pipeline9HighDensityDrcRepairSolverParams) {
     super()
     this.params = params
+    this.connectionsByName = new Map(
+      params.newConnections.map((connection) => [connection.name, connection]),
+    )
     // Keep the incumbent by reference until an accepted repair exists. Most
     // boards have no pre-stitch DRC, so cloning every route here needlessly
     // retains a second full geometry graph through the expensive later stages.
@@ -362,11 +384,12 @@ export class Pipeline9HighDensityDrcRepairSolver extends BaseSolver {
       leftIndex++
     ) {
       const left = this.outputHdRoutes[leftIndex]!
+      const leftVias = this.getDrilledVias(left)
       if (
         doRouteViasHaveCopperConflict({
-          left,
-          right: left,
-          clearance,
+          left: leftVias,
+          right: leftVias,
+          clearance: MIN_VIA_TO_VIA_CLEARANCE,
           sameRoute: true,
         })
       ) {
@@ -379,6 +402,15 @@ export class Pipeline9HighDensityDrcRepairSolver extends BaseSolver {
       ) {
         const right = this.outputHdRoutes[rightIndex]!
         if (arePipeline9RoutesOnSameNet(left, right, this.params.connMap)) {
+          if (
+            doRouteViasHaveCopperConflict({
+              left: leftVias,
+              right: this.getDrilledVias(right),
+              clearance: MIN_VIA_TO_VIA_CLEARANCE,
+            })
+          ) {
+            return true
+          }
           continue
         }
         if (
@@ -395,6 +427,15 @@ export class Pipeline9HighDensityDrcRepairSolver extends BaseSolver {
         if (
           arePipeline9RoutesOnSameNet(left, fixedRoute, this.params.connMap)
         ) {
+          if (
+            doRouteViasHaveCopperConflict({
+              left: leftVias,
+              right: this.getDrilledVias(fixedRoute, true),
+              clearance: MIN_VIA_TO_VIA_CLEARANCE,
+            })
+          ) {
+            return true
+          }
           continue
         }
         if (
@@ -420,6 +461,58 @@ export class Pipeline9HighDensityDrcRepairSolver extends BaseSolver {
           doesRouteConflictWithObstacle({ route, obstacle, clearance }),
       ),
     )
+  }
+
+  private getDrilledVias(
+    route: HighDensityRoute,
+    isFixedRoute = false,
+  ): DrilledVia[] {
+    const cache = isFixedRoute
+      ? this.fixedDrilledViasByRoute
+      : this.drilledViasByRoute
+    const cachedVias = cache.get(route)
+    if (cachedVias) return cachedVias
+    const connectionPoints = this.connectionsByName.get(
+      route.connectionName,
+    )?.pointsToConnect
+    if (
+      route.vias.length === 0 &&
+      !connectionPoints?.some(
+        (point) => "terminalVia" in point && point.terminalVia,
+      )
+    ) {
+      const vias: DrilledVia[] = []
+      cache.set(route, vias)
+      return vias
+    }
+    // Preloaded HD routes do not retain their original drill diameter. Their
+    // outer diameter bounds it conservatively; the official evaluator still
+    // checks the exact serialized drill before any repair is attempted.
+    const viaHoleDiameter = isFixedRoute
+      ? route.viaDiameter
+      : this.params.viaHoleDiameter
+    const vias = convertHdRouteToSimplifiedRoute(
+      route,
+      this.params.layerCount,
+      {
+        connectionPoints,
+        defaultViaHoleDiameter: viaHoleDiameter,
+        obstacles: this.params.obstacles,
+        connMap: this.params.connMap,
+      },
+    ).flatMap((segment): DrilledVia[] =>
+      segment.route_type === "via"
+        ? [
+            {
+              x: segment.x,
+              y: segment.y,
+              holeDiameter: segment.via_hole_diameter ?? viaHoleDiameter,
+            },
+          ]
+        : [],
+    )
+    cache.set(route, vias)
+    return vias
   }
 
   private initializeDrcEvaluation(): void {
