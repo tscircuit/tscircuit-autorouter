@@ -22,11 +22,11 @@ export const getConnectedPadSides = (
     const entersConnectedPad = obstacles.some(
       (obstacle) =>
         obstacle.__zLayers.includes(point.z) &&
-        isObstacleConnectedToRoute(obstacle, route, connMap) &&
         Math.abs(point.x - obstacle.center.x) <=
           obstacle.width / 2 + tolerance &&
         Math.abs(point.y - obstacle.center.y) <=
-          obstacle.height / 2 + tolerance,
+          obstacle.height / 2 + tolerance &&
+        isObstacleConnectedToRoute(obstacle, route, connMap),
     )
     if (!entersConnectedPad) continue
     if (Math.abs(point.x - (node.center.x - node.width / 2)) <= tolerance) {

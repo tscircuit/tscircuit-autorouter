@@ -1,4 +1,4 @@
-import { expect, test } from "bun:test"
+import { expect, spyOn, test } from "bun:test"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import { getConnectedPadSides } from "lib/solvers/HighDensityRepairSolver/getConnectedPadSides"
 import type {
@@ -49,6 +49,7 @@ test("repair02 pad sides require a same-layer connected terminal on the boundary
   expect(
     getConnectedPadSides(node, route, [{ ...pad, __zLayers: [1] }], connMap),
   ).toEqual([])
+  const connectivityCheck = spyOn(connMap, "areIdsConnected")
   expect(
     getConnectedPadSides(
       node,
@@ -57,6 +58,8 @@ test("repair02 pad sides require a same-layer connected terminal on the boundary
       connMap,
     ),
   ).toEqual([])
+  expect(connectivityCheck).not.toHaveBeenCalled()
+  connectivityCheck.mockRestore()
   expect(
     getConnectedPadSides({ ...node, height: 6 }, route, [pad], connMap),
   ).toEqual([])
