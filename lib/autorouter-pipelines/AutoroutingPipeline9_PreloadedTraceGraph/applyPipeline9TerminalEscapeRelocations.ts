@@ -1,7 +1,4 @@
-import {
-  repairFinePitchPadEscapes,
-  type DrcEvaluator,
-} from "high-density-repair03/lib"
+import type { DrcEvaluator } from "high-density-repair03/lib"
 import type {
   Obstacle,
   SimpleRouteConnection,
@@ -325,23 +322,10 @@ export const applyPipeline9TerminalEscapeRelocations = ({
     if (!acceptedOnPass || currentErrors.length === 0) break
   }
 
-  const padEscapeResult = repairFinePitchPadEscapes({
-    srj,
-    routes: currentRoutes,
-    routeIndexByTraceId: getPipeline9RouteIndexByTraceId({
-      routes: currentRoutes,
-      newConnections,
-      syntheticConnectionNames,
-    }),
-    drcEvaluator,
-  })
-
   return {
-    routes: padEscapeResult.routes,
-    attemptedCandidateCount:
-      attemptedCandidateCount + padEscapeResult.attemptedCandidateCount,
-    acceptedCandidateCount:
-      acceptedCandidateCount + padEscapeResult.acceptedCandidateCount,
-    remainingErrors: padEscapeResult.remainingErrors,
+    routes: currentRoutes,
+    attemptedCandidateCount,
+    acceptedCandidateCount,
+    remainingErrors: currentErrors,
   }
 }

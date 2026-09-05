@@ -3,6 +3,7 @@ import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { GraphicsObject } from "graphics-debug"
 import {
   AutoroutingDrcEngine,
+  FinePitchPadEscapeSolver,
   type DrcEvaluator,
   type SimpleRouteJson as RepairSimpleRouteJson,
   type SimplifiedPcbTraces as RepairSimplifiedPcbTraces,
@@ -53,6 +54,15 @@ const MAX_POST_EXACT_PRECISION_PASS_INDEXED_ISSUE_COUNT = 16
 const INDEXED_DRC_CANDIDATE_CACHE_SIZE = 64
 
 type DrcCandidateKey = string & { readonly __brand: "DrcCandidateKey" }
+
+type PostExactRepairState = {
+  terminalEscapeResult: ReturnType<
+    typeof applyPipeline9TerminalEscapeRelocations
+  >
+  shouldRunPostExactPrecisionPass: boolean
+  exactIndexedDrcIssueCount: number | undefined
+  postExactReferenceDrcIssueCount: number | undefined
+}
 
 type Pipeline9JointDrcRepairSolverParams = {
   srj: SimpleRouteJson
@@ -648,6 +658,8 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
   readonly fixedPreloadedObstacleRoutes: PreloadedHighDensityRoute[]
   readonly syntheticConnectionNames: ReadonlySet<string>
   readonly exactRepairSolver?: Pipeline7AdaptiveDrcBranchPortfolioSolver
+  finePitchPadEscapeSolver?: FinePitchPadEscapeSolver
+  private postExactRepairState?: PostExactRepairState
   private drcEvaluator?: DrcEvaluator
   private cachedReferenceDrcEvaluator?: DrcEvaluator
   private referenceDrcValidationCount = 0
@@ -1371,12 +1383,43 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
   }
 
   override _step(): void {
+    if (this.postExactRepairState) {
+      const padEscapeSolver = this.finePitchPadEscapeSolver!
+      padEscapeSolver.step()
+      this.MAX_ITERATIONS =
+        this.exactRepairSolver!.MAX_ITERATIONS +
+        padEscapeSolver.MAX_ITERATIONS +
+        2
+      this.progress = 0.9 + 0.1 * padEscapeSolver.progress
+      if (padEscapeSolver.failed) {
+        this.failed = true
+        this.error = padEscapeSolver.error
+        return
+      }
+      if (!padEscapeSolver.solved) return
+      const result = padEscapeSolver.getOutput()
+      const terminalResult = this.postExactRepairState.terminalEscapeResult
+      this.finishPostExactRepair({
+        ...this.postExactRepairState,
+        terminalEscapeResult: {
+          ...result,
+          attemptedCandidateCount:
+            terminalResult.attemptedCandidateCount +
+            result.attemptedCandidateCount,
+          acceptedCandidateCount:
+            terminalResult.acceptedCandidateCount +
+            result.acceptedCandidateCount,
+        },
+      })
+      return
+    }
     if (!this.exactRepairSolver) {
       this.solved = true
+      this.progress = 1
       return
     }
     this.exactRepairSolver.step()
-    this.progress = this.exactRepairSolver.progress
+    this.progress = 0.9 * this.exactRepairSolver.progress
     if (this.exactRepairSolver.failed) {
       this.failed = true
       this.error = this.exactRepairSolver.error
@@ -1446,6 +1489,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
           indexedDrcCandidateCacheCapacity: INDEXED_DRC_CANDIDATE_CACHE_SIZE,
         }
         this.solved = true
+        this.progress = 1
         return
       }
     }
@@ -1466,6 +1510,38 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
             exactOutput,
           ),
         }
+    const state: PostExactRepairState = {
+      terminalEscapeResult,
+      shouldRunPostExactPrecisionPass,
+      exactIndexedDrcIssueCount,
+      postExactReferenceDrcIssueCount,
+    }
+    if (shouldRunPostExactPrecisionPass) {
+      this.finePitchPadEscapeSolver = new FinePitchPadEscapeSolver({
+        srj: this.params.srj,
+        routes: terminalEscapeResult.routes,
+        routeIndexByTraceId: getPipeline9RouteIndexByTraceId({
+          routes: terminalEscapeResult.routes,
+          newConnections: this.params.newConnections,
+          syntheticConnectionNames: this.syntheticConnectionNames,
+        }),
+        drcEvaluator: this.drcEvaluator!,
+      })
+      this.postExactRepairState = state
+      this.activeSubSolver = this.finePitchPadEscapeSolver
+      this.MAX_ITERATIONS += this.finePitchPadEscapeSolver.MAX_ITERATIONS
+      this.progress = 0.9
+      return
+    }
+    this.finishPostExactRepair(state)
+  }
+
+  private finishPostExactRepair({
+    terminalEscapeResult,
+    shouldRunPostExactPrecisionPass,
+    exactIndexedDrcIssueCount,
+    postExactReferenceDrcIssueCount,
+  }: PostExactRepairState): void {
     const preloadRepairTraceIds = getPipeline9PreloadRepairTraceIds({
       routes: terminalEscapeResult.routes,
       newConnections: this.params.newConnections,
@@ -1495,7 +1571,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     this.combinedOutput = regionalB01RepairResult.routes
     this.stats = {
       ...this.stats,
-      ...this.exactRepairSolver.stats,
+      ...this.exactRepairSolver!.stats,
       postExactIndexedDrcIssueCount: exactIndexedDrcIssueCount,
       postExactPrecisionPassMaxIndexedIssueCount:
         MAX_POST_EXACT_PRECISION_PASS_INDEXED_ISSUE_COUNT,
@@ -1542,6 +1618,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       indexedDrcCandidateCacheCapacity: INDEXED_DRC_CANDIDATE_CACHE_SIZE,
     }
     this.solved = true
+    this.progress = 1
   }
 
   private getCombinedOutput(): HighDensityRoute[] {
@@ -1636,6 +1713,10 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
   }
 
   override visualize(): GraphicsObject {
-    return this.exactRepairSolver?.visualize() ?? {}
+    return (
+      this.finePitchPadEscapeSolver?.visualize() ??
+      this.exactRepairSolver?.visualize() ??
+      {}
+    )
   }
 }

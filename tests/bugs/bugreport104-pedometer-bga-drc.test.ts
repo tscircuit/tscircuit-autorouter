@@ -13,11 +13,31 @@ test("bugreport104 routes pedometer BGA traces without DRC errors in Pipeline9",
     structuredClone(input),
     { cacheProvider: null },
   )
-  solver.solve()
+  while (!solver.solved && !solver.failed) {
+    const padEscapeBefore =
+      solver.pipeline9JointDrcRepairSolver?.finePitchPadEscapeSolver
+    const iterationsBefore = padEscapeBefore?.iterations
+    const wasRunning = padEscapeBefore && !padEscapeBefore.solved
+    solver.step()
+    const padEscapeAfter =
+      solver.pipeline9JointDrcRepairSolver?.finePitchPadEscapeSolver
+    if (!padEscapeBefore && padEscapeAfter) {
+      expect(padEscapeAfter.iterations).toBe(0)
+      expect(padEscapeAfter.solved).toBe(false)
+    } else if (padEscapeAfter && wasRunning) {
+      expect(
+        padEscapeAfter.iterations - iterationsBefore!,
+      ).toBeLessThanOrEqual(1)
+    }
+  }
 
   expect(solver.failed, `Pipeline9 failed: ${solver.error}`).toBe(false)
   expect(solver.solved, "Pipeline9 did not finish").toBe(true)
   expect(solver.srjWithPointPairs).toBeDefined()
+  const padEscapeSolver =
+    solver.pipeline9JointDrcRepairSolver?.finePitchPadEscapeSolver
+  expect(padEscapeSolver?.solved).toBe(true)
+  expect(padEscapeSolver!.iterations).toBeGreaterThan(2)
 
   const { errors } = evaluateRelaxedDrc({
     inputSrj: input,

@@ -5,9 +5,9 @@ import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { GraphicsObject, Line } from "graphics-debug"
 import { HighDensityForceImproveSolver } from "high-density-repair01/lib/HighDensityForceImproveSolver"
 import {
+  FinePitchPadEscapeSolver,
   GlobalDrcBranchPortfolioSolver,
   GlobalDrcForceImproveSolver,
-  repairFinePitchPadEscapes,
 } from "high-density-repair03/lib"
 import { getGlobalInMemoryCache } from "lib/cache/setupGlobalCaches"
 import { CacheProvider } from "lib/cache/types"
@@ -228,6 +228,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
   highDensityRepairSolver?: Pipeline4HighDensityRepairSolver
   highDensityStitchSolver?: MultipleHighDensityRouteStitchSolver3
   globalDrcForceImproveSolver?: GlobalDrcForceImproveSolver
+  finePitchPadEscapeSolver?: FinePitchPadEscapeSolver
   exactGeometryDrcForceImproveSolver?: GlobalDrcBranchPortfolioSolver
   singleLayerNodeMerger?: SingleLayerNodeMergerSolver
   strawSolver?: StrawSolver
@@ -667,8 +668,8 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
       ],
     ),
     definePipelineStep(
-      "exactGeometryDrcForceImproveSolver",
-      GlobalDrcBranchPortfolioSolver,
+      "finePitchPadEscapeSolver",
+      FinePitchPadEscapeSolver,
       (cms) => {
         const hdRoutes = cms.globalDrcForceImproveSolver!.getOutput()
         const autoroutingDrcEvaluator = createPipeline7AutoroutingDrcEvaluator({
@@ -698,17 +699,27 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
             connectionRouteIndex + 1,
           )
         }
-        const padEscapeResult = repairFinePitchPadEscapes({
-          srj: cms.srjWithPointPairs!,
-          routes: hdRoutes,
-          routeIndexByTraceId,
-          drcEvaluator: autoroutingDrcEvaluator,
-        })
+        return [
+          {
+            srj: cms.srjWithPointPairs!,
+            routes: hdRoutes,
+            routeIndexByTraceId,
+            drcEvaluator: autoroutingDrcEvaluator,
+          },
+        ]
+      },
+    ),
+    definePipelineStep(
+      "exactGeometryDrcForceImproveSolver",
+      GlobalDrcBranchPortfolioSolver,
+      (cms) => {
+        const padEscapeSolver = cms.finePitchPadEscapeSolver!
+        const autoroutingDrcEvaluator = padEscapeSolver.params.drcEvaluator
 
         return [
           {
             srj: cms.srjWithPointPairs! as any,
-            hdRoutes: padEscapeResult.routes,
+            hdRoutes: padEscapeSolver.getOutput().routes,
             connMap: cms.connMap,
             effort: cms.effort,
             viaHoleDiameter: cms.viaHoleDiameter,
@@ -1115,6 +1126,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
       traceSimplificationViz,
       traceWidthViz,
       globalDrcForceImproveViz,
+      this.finePitchPadEscapeSolver?.visualize(),
       exactGeometryDrcForceImproveViz,
       lengthMatchingPostProcessingViz,
       this.solved
@@ -1199,6 +1211,9 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
     }
     return (
       this.exactGeometryDrcForceImproveSolver?.getOutput() ??
+      (this.finePitchPadEscapeSolver?.solved
+        ? this.finePitchPadEscapeSolver.getOutput().routes
+        : undefined) ??
       this.globalDrcForceImproveSolver?.getOutput() ??
       this.traceWidthSolver?.getHdRoutesWithWidths() ??
       this.traceSimplificationSolver?.simplifiedHdRoutes ??
