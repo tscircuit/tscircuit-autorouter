@@ -69,7 +69,6 @@ import { TraceSimplificationSolver } from "../../solvers/TraceSimplificationSolv
 import { TraceWidthSolver } from "../../solvers/TraceWidthSolver/TraceWidthSolver"
 import { PreprocessSimpleRouteJsonSolver } from "../AutoroutingPipeline4_TinyHypergraph/PreprocessSimpleRouteJsonSolver"
 import { MergedComponentTopologyView } from "./MergedComponentTopologyView"
-import { Pipeline7CompositeDrcRepairSolver } from "./Pipeline7CompositeDrcRepairSolver"
 import { PowerTraceExpansionSolver } from "./PowerTraceExpansionSolver"
 import { convertPipeline7HdRoutesToSimplifiedPcbTraces } from "./convertPipeline7HdRoutesToSimplifiedPcbTraces"
 import { createPipeline7AutoroutingDrcEvaluator } from "./create-pipeline7-autorouting-drc-evaluator"
@@ -668,7 +667,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
     ),
     definePipelineStep(
       "exactGeometryDrcForceImproveSolver",
-      Pipeline7CompositeDrcRepairSolver,
+      GlobalDrcBranchPortfolioSolver,
       (cms) => {
         const hdRoutes = cms.globalDrcForceImproveSolver!.getOutput()
         const autoroutingDrcEvaluator = createPipeline7AutoroutingDrcEvaluator({
@@ -686,7 +685,6 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
           {
             srj: cms.srjWithPointPairs! as any,
             hdRoutes,
-            newConnections: cms.netToPointPairsSolver?.newConnections ?? [],
             connMap: cms.connMap,
             effort: cms.effort,
             viaHoleDiameter: cms.viaHoleDiameter,
