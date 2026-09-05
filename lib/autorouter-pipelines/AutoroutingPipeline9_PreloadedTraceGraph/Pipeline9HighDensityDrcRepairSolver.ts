@@ -98,6 +98,8 @@ const replaceNodeRoutes = ({
 export class Pipeline9HighDensityDrcRepairSolver extends BaseSolver {
   readonly params: Pipeline9HighDensityDrcRepairSolverParams
   readonly attemptedNodeIds = new Set<string>()
+  private readonly inputHdRoutes: HighDensityRoute[]
+  private readonly initialErrors: Pipeline9DrcError[]
   outputHdRoutes: HighDensityRoute[]
   currentErrors: Pipeline9DrcError[]
   activeNode: NodeWithPortPoints | null = null
@@ -107,11 +109,13 @@ export class Pipeline9HighDensityDrcRepairSolver extends BaseSolver {
   constructor(params: Pipeline9HighDensityDrcRepairSolverParams) {
     super()
     this.params = params
-    this.outputHdRoutes = clonePipeline9HdRoutes(params.hdRoutes)
-    this.currentErrors = getPipeline9DrcErrors(
+    this.inputHdRoutes = clonePipeline9HdRoutes(params.hdRoutes)
+    this.outputHdRoutes = clonePipeline9HdRoutes(this.inputHdRoutes)
+    this.initialErrors = getPipeline9DrcErrors(
       params.drcEvaluator,
       this.outputHdRoutes,
     )
+    this.currentErrors = this.initialErrors
     this.MAX_ITERATIONS =
       Math.max(1, params.nodePortPoints.length) * 100e6 * params.effort
     this.stats = {
@@ -120,6 +124,7 @@ export class Pipeline9HighDensityDrcRepairSolver extends BaseSolver {
       drcNodeCount: this.getCurrentDrcNodeIds().size,
       attemptedNodeCount: 0,
       acceptedNodeCount: 0,
+      rolledBackNodeCount: 0,
       exhaustedNodeCount: 0,
       candidateAttemptCount: 0,
     }
@@ -263,6 +268,23 @@ export class Pipeline9HighDensityDrcRepairSolver extends BaseSolver {
     this.acceptedCandidate = null
   }
 
+  private finishRepairPass(): void {
+    const acceptedNodeCount = Number(this.stats.acceptedNodeCount ?? 0)
+    if (this.currentErrors.length > 0 && acceptedNodeCount > 0) {
+      // A partial high-density rewrite can make the later stitched/global
+      // repair problem worse even when it lowers this pre-stitch DRC score.
+      // Publish the batch only when it completes the high-density repair;
+      // otherwise preserve the exact incumbent for the unchanged downstream
+      // Repair03 stages.
+      this.outputHdRoutes = clonePipeline9HdRoutes(this.inputHdRoutes)
+      this.currentErrors = this.initialErrors
+      this.stats.rolledBackNodeCount = acceptedNodeCount
+      this.stats.acceptedNodeCount = 0
+    }
+    this.stats.finalDrcIssueCount = this.currentErrors.length
+    this.solved = true
+  }
+
   override _step(): void {
     if (this.activeSubSolver) {
       this.activeSubSolver.step()
@@ -311,8 +333,7 @@ export class Pipeline9HighDensityDrcRepairSolver extends BaseSolver {
       this.startNodeRepair(nextNode)
       return
     }
-    this.stats.finalDrcIssueCount = this.currentErrors.length
-    this.solved = true
+    this.finishRepairPass()
   }
 
   getOutput(): HighDensityRoute[] {

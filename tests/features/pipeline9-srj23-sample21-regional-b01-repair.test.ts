@@ -12,10 +12,6 @@ test("Pipeline9 keeps the current SRJ23 regional repair residue bounded", async 
 
   solver.solve()
 
-  console.log(
-    "Pipeline9 high-density DRC repair diagnostic",
-    solver.highDensityDrcRepairSolver?.stats,
-  )
   expect(solver.solved).toBeTrue()
   expect(solver.failed).toBeFalse()
   expect(
