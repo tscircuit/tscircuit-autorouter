@@ -7,7 +7,7 @@ import simpleRouteJson from "../../fixtures/bug-reports/gba-button-multiterminal
 }
 import { getLastStepSvg } from "../fixtures/getLastStepSvg"
 
-test("Pipeline9 records GBA multi-terminal traces crossing foreign pads", () => {
+test("Pipeline9 records false DRCs for internally connected switch pads", () => {
   // Exact button-pad positions and switch connectivity metadata extracted from
   // the full Game Boy Advance SRJ. No routed traces or route hints are preset.
   const srj = structuredClone(simpleRouteJson) as SimpleRouteJson
@@ -42,6 +42,26 @@ test("Pipeline9 records GBA multi-terminal traces crossing foreign pads", () => 
       )
       .sort(),
   ).toEqual(["pcb_port_365", "pcb_port_369", "pcb_port_382", "pcb_port_386"])
+  for (const error of errors) {
+    const errorPortIds = error.pcb_port_ids ?? []
+    const crossedPortId = errorPortIds.at(-1)
+    const crossedPad = srj.obstacles.find(
+      (obstacle) =>
+        obstacle.circuitJsonMetadata?.pcb_port_id === crossedPortId,
+    )
+    const endpointPads = srj.obstacles.filter((obstacle) =>
+      errorPortIds
+        .slice(0, -1)
+        .includes(obstacle.circuitJsonMetadata?.pcb_port_id ?? ""),
+    )
+    expect(
+      endpointPads.some((endpointPad) =>
+        endpointPad.offBoardConnectsTo?.some((internalConnectionId) =>
+          crossedPad?.offBoardConnectsTo?.includes(internalConnectionId),
+        ),
+      ),
+    ).toBeTrue()
+  }
   expect(getLastStepSvg(solver.visualize())).toMatchSvgSnapshot(
     import.meta.path,
   )
