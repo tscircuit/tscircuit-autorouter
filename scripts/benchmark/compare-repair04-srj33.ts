@@ -1,5 +1,5 @@
 import { readFile, writeFile } from "node:fs/promises"
-import { resolve } from "node:path"
+import { dirname, resolve } from "node:path"
 import { createHash } from "node:crypto"
 
 type BoardResult = {
@@ -29,6 +29,7 @@ type BenchmarkSummary = {
   complete: boolean
   results: BoardResult[]
   kind?: string
+  bundleSha256?: string
 }
 
 const [
@@ -43,12 +44,45 @@ if (!baselinePath || !candidatePath || !outputPath) {
     "Usage: bun scripts/benchmark/compare-repair04-srj33.ts baseline/summary.json candidate/summary.json comparison.json [current-manifest.json pinned-manifest.json]",
   )
 }
-const baseline: BenchmarkSummary = JSON.parse(
-  await readFile(resolve(baselinePath), "utf8"),
-)
-const candidate: BenchmarkSummary = JSON.parse(
-  await readFile(resolve(candidatePath), "utf8"),
-)
+const baselineText = await readFile(resolve(baselinePath), "utf8")
+const candidateText = await readFile(resolve(candidatePath), "utf8")
+const baseline: BenchmarkSummary = JSON.parse(baselineText)
+const candidate: BenchmarkSummary = JSON.parse(candidateText)
+const hashText = (text: string): string =>
+  createHash("sha256").update(text).digest("hex")
+let replayProvenance: {
+  candidateConfigurationSha256: string
+  bundleSha256: string
+  baselineFingerprintSha256: string
+} | undefined
+if (candidate.kind === "checkpoint-replay") {
+  const configurationText = await readFile(
+    resolve(dirname(resolve(candidatePath)), "configuration.json"),
+    "utf8",
+  )
+  const configuration = JSON.parse(configurationText) as {
+    bundleSha256?: string
+    baselineFingerprintSha256?: string
+    datasetCommit?: string
+  }
+  if (
+    !configuration.bundleSha256 ||
+    !/^[a-f0-9]{64}$/.test(configuration.bundleSha256) ||
+    !configuration.baselineFingerprintSha256 ||
+    !/^[a-f0-9]{64}$/.test(configuration.baselineFingerprintSha256) ||
+    candidate.bundleSha256 !== configuration.bundleSha256 ||
+    candidate.datasetCommit !== configuration.datasetCommit
+  ) {
+    throw new Error(
+      "Checkpoint summary does not match its bundle/baseline configuration",
+    )
+  }
+  replayProvenance = {
+    candidateConfigurationSha256: hashText(configurationText),
+    bundleSha256: configuration.bundleSha256,
+    baselineFingerprintSha256: configuration.baselineFingerprintSha256,
+  }
+}
 const expectedCommit = "f566b62be0f83395d9ab63ddc068f9d645b68b16"
 const expectedSampleNames = [
   1, 2, 3, 4, 5, 6, 10, 11, 12, 13, 20, 25, 32, 33, 34, 35, 36, 37, 38, 39, 40,
@@ -223,6 +257,11 @@ const metric = (kind: "relaxedErrors" | "strictErrors"): object => {
   }
 }
 const comparison = {
+  provenance: {
+    baselineSummarySha256: hashText(baselineText),
+    candidateSummarySha256: hashText(candidateText),
+    ...replayProvenance,
+  },
   datasetCommit: reportedCommit,
   sourceBenchmarkDatasetCommit: expectedCommit,
   denominator,

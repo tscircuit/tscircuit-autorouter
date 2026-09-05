@@ -90,8 +90,20 @@ for (const before of [...baseline.results].sort((a, b) =>
 }
 const baselineFingerprintSha256 = baselineFingerprint.digest("hex")
 const configurationPath = resolve(outDir, "configuration.json")
+const runtime = {
+  bunVersion: Bun.version,
+  architecture: process.arch,
+  platform: process.platform,
+  effort: 1,
+}
 if (await Bun.file(configurationPath).exists()) {
   const configuration = await Bun.file(configurationPath).json()
+  for (const key of Object.keys(runtime) as Array<keyof typeof runtime>) {
+    if (configuration[key] !== runtime[key])
+      throw new Error(
+        `Output directory has a different ${key}; use a new replay output directory`,
+      )
+  }
   if (configuration.bundleSha256 !== bundleSha256)
     throw new Error(
       "Output directory belongs to a different solver bundle; use a new directory",
@@ -126,15 +138,15 @@ if (await Bun.file(configurationPath).exists()) {
         baselineFingerprintScope:
           "Exact summary bytes and every baseline entry's checkpoint/output bytes, independent of sample selection",
         datasetCommit: "f566b62be0f83395d9ab63ddc068f9d645b68b16",
-        effort: 1,
+        effort: runtime.effort,
         execution:
           "Exact-output-validated post-repair03 checkpoint replay through the real Pipeline9 stages",
         timing:
           "Replay timings exclude upstream routing and must not be compared to full-solve baseline timings",
         createdAt: new Date().toISOString(),
-        bunVersion: Bun.version,
-        architecture: process.arch,
-        platform: process.platform,
+        bunVersion: runtime.bunVersion,
+        architecture: runtime.architecture,
+        platform: runtime.platform,
       },
       null,
       2,
