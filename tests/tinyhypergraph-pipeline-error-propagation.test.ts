@@ -15,9 +15,10 @@ type TinyHypergraphParams = ConstructorParameters<
 >[0]
 
 test("TinyHypergraph port-point pathing propagates pipeline errors", () => {
-  const solver = new TinyHypergraphPortPointPathingSolver(
-    structuredClone(input) as TinyHypergraphParams,
-  )
+  const params = structuredClone(input) as TinyHypergraphParams
+  params.flags.USE_SELECTIVE_RERIP_ROUTING = true
+  params.flags.CREATE_FINAL_APPROXIMATION_ON_TIMEOUT = true
+  const solver = new TinyHypergraphPortPointPathingSolver(params)
   const pipeline = (
     solver as unknown as { tinyPipelineSolver: TinyPipelineTestHarness }
   ).tinyPipelineSolver

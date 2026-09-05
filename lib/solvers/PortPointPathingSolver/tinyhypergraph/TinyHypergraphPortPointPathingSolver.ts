@@ -1090,6 +1090,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       : undefined
     if (
       params.flags.USE_SELECTIVE_RERIP_ROUTING === true &&
+      params.flags.CREATE_FINAL_APPROXIMATION_ON_TIMEOUT === true &&
       !hasPreloadedTraceOccupancy
     ) {
       this.approximationInput = serializedGraph
