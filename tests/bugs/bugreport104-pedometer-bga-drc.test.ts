@@ -25,9 +25,9 @@ test("bugreport104 routes pedometer BGA traces without DRC errors in Pipeline9",
       expect(padEscapeAfter.iterations).toBe(0)
       expect(padEscapeAfter.solved).toBe(false)
     } else if (padEscapeAfter && wasRunning) {
-      expect(
-        padEscapeAfter.iterations - iterationsBefore!,
-      ).toBeLessThanOrEqual(1)
+      expect(padEscapeAfter.iterations - iterationsBefore!).toBeLessThanOrEqual(
+        1,
+      )
     }
   }
 
