@@ -29,8 +29,9 @@ test("Pipeline9 records false DRCs for internally connected switch pads", () => 
   expect(solver.solved).toBeTrue()
   expect(errors).toHaveLength(4)
   expect(errors.every((error) => error.type === "pcb_trace_error")).toBeTrue()
+  const traceErrors = errors.filter((error) => error.type === "pcb_trace_error")
   expect(
-    errors
+    traceErrors
       .flatMap((error) => error.pcb_port_ids ?? [])
       .filter((portId) =>
         [
@@ -42,12 +43,11 @@ test("Pipeline9 records false DRCs for internally connected switch pads", () => 
       )
       .sort(),
   ).toEqual(["pcb_port_365", "pcb_port_369", "pcb_port_382", "pcb_port_386"])
-  for (const error of errors) {
+  for (const error of traceErrors) {
     const errorPortIds = error.pcb_port_ids ?? []
     const crossedPortId = errorPortIds.at(-1)
     const crossedPad = srj.obstacles.find(
-      (obstacle) =>
-        obstacle.circuitJsonMetadata?.pcb_port_id === crossedPortId,
+      (obstacle) => obstacle.circuitJsonMetadata?.pcb_port_id === crossedPortId,
     )
     const endpointPads = srj.obstacles.filter((obstacle) =>
       errorPortIds
