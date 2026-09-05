@@ -22,8 +22,10 @@ test("Pipeline9 repairs SRJ18 sample 8's crowded trace/via clearances", async ()
   expect(errors).toHaveLength(0)
   const repairStats = solver.pipeline9JointDrcRepairSolver!.stats
   expect(repairStats.clearancePrecisionRepaired).toBeTrue()
-  expect(Number(repairStats.clearancePrecisionCandidateCount)).toBeGreaterThan(0)
-  expect(Number(repairStats.clearancePrecisionCandidateCount)).toBeLessThanOrEqual(
-    24,
+  expect(Number(repairStats.clearancePrecisionCandidateCount)).toBeGreaterThan(
+    0,
   )
+  expect(
+    Number(repairStats.clearancePrecisionCandidateCount),
+  ).toBeLessThanOrEqual(24)
 })
