@@ -14,8 +14,10 @@ import { createObjectsWithZLayers } from "lib/utils/createObjectsWithZLayers"
 import { normalizePipeline9NodeRootConnectionNames } from "./Pipeline9HighDensitySolver"
 import {
   arePipeline9RoutesOnSameNet,
+  doPipeline9BoundsOverlap,
   doPipeline9RoutesHaveCopperConflict,
   getPipeline9FixedRouteObstacles,
+  getPipeline9RouteCopperBounds,
   getPipeline9RouteCopperGeometry,
 } from "./pipeline9FixedRouteCopper"
 import {
@@ -104,8 +106,20 @@ const doesRouteConflictWithObstacle = ({
   obstacle: Obstacle & { __zLayers: number[] }
   clearance: number
 }): boolean => {
-  const geometry = getPipeline9RouteCopperGeometry(route)
   const obstacleBounds = getObstacleBounds(obstacle)
+  const routeBounds = getPipeline9RouteCopperBounds(route)
+  if (
+    !routeBounds ||
+    !doPipeline9BoundsOverlap(routeBounds, {
+      minX: obstacleBounds.minX - clearance,
+      maxX: obstacleBounds.maxX + clearance,
+      minY: obstacleBounds.minY - clearance,
+      maxY: obstacleBounds.maxY + clearance,
+    })
+  ) {
+    return false
+  }
+  const geometry = getPipeline9RouteCopperGeometry(route)
   for (const wire of geometry.wireSegments) {
     if (!obstacle.__zLayers.includes(wire.z)) continue
     const expansion = wire.width / 2 + clearance
