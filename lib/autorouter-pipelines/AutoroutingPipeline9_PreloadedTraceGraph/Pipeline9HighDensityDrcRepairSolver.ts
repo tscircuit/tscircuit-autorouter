@@ -71,7 +71,7 @@ type DrilledVia = {
 }
 
 // @tscircuit/checks uses this tolerance both to identify coincident vias and
-// when comparing drill-hole edge clearance in checkSameNetViaSpacing.
+// when comparing drill-hole edge clearance for same-net and different-net vias.
 const VIA_SPACING_EPSILON = 0.005
 
 const doesSegmentIntersectBounds = (
@@ -401,16 +401,16 @@ export class Pipeline9HighDensityDrcRepairSolver extends BaseSolver {
         rightIndex++
       ) {
         const right = this.outputHdRoutes[rightIndex]!
+        if (
+          doRouteViasHaveCopperConflict({
+            left: leftVias,
+            right: this.getDrilledVias(right),
+            clearance: MIN_VIA_TO_VIA_CLEARANCE,
+          })
+        ) {
+          return true
+        }
         if (arePipeline9RoutesOnSameNet(left, right, this.params.connMap)) {
-          if (
-            doRouteViasHaveCopperConflict({
-              left: leftVias,
-              right: this.getDrilledVias(right),
-              clearance: MIN_VIA_TO_VIA_CLEARANCE,
-            })
-          ) {
-            return true
-          }
           continue
         }
         if (
@@ -425,17 +425,17 @@ export class Pipeline9HighDensityDrcRepairSolver extends BaseSolver {
       }
       for (const fixedRoute of this.params.fixedHdRoutes) {
         if (
+          doRouteViasHaveCopperConflict({
+            left: leftVias,
+            right: this.getDrilledVias(fixedRoute, true),
+            clearance: MIN_VIA_TO_VIA_CLEARANCE,
+          })
+        ) {
+          return true
+        }
+        if (
           arePipeline9RoutesOnSameNet(left, fixedRoute, this.params.connMap)
         ) {
-          if (
-            doRouteViasHaveCopperConflict({
-              left: leftVias,
-              right: this.getDrilledVias(fixedRoute, true),
-              clearance: MIN_VIA_TO_VIA_CLEARANCE,
-            })
-          ) {
-            return true
-          }
           continue
         }
         if (

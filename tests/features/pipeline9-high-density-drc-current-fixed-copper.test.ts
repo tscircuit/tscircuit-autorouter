@@ -76,6 +76,7 @@ test("Pipeline9 high-density DRC evaluates moved fixed copper at its current loc
     srjWithPointPairs: originalSrj,
     originalFixedHdRoutes: originalFixedRoutes,
     fixedHdRoutes: movedFixedRoutes,
+    changedPreloadedTraceSections: [],
     hdRoutes: [newRoute],
   })
 

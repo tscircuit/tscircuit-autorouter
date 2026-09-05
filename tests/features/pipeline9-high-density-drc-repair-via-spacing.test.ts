@@ -9,12 +9,14 @@ import type {
   SimpleRouteConnection,
   SimpleRouteJson,
 } from "lib/types/srj-types"
+import { mapZToLayerName } from "lib/utils/mapZToLayerName"
 
 type ViaSpacingCase = {
   name: string
   separation: number
   ownership: "same-route" | "new-route" | "fixed-route"
   throughObstacle?: boolean
+  differentNetBlindVias?: boolean
   expectedErrors: number
 }
 
@@ -34,7 +36,7 @@ const createViaRoute = (
   vias: [{ x, y: 0 }],
 })
 
-test("Pipeline9 prechecks actual same-net drill spacing across route ownership", (): void => {
+test("Pipeline9 prechecks actual drill spacing across nets and route ownership", (): void => {
   const cases: ViaSpacingCase[] = [
     {
       name: "one route",
@@ -73,11 +75,34 @@ test("Pipeline9 prechecks actual same-net drill spacing across route ownership",
       throughObstacle: true,
       expectedErrors: 0,
     },
+    {
+      name: "different-net blind vias on disjoint layer spans",
+      separation: 0.25,
+      ownership: "new-route",
+      differentNetBlindVias: true,
+      expectedErrors: 1,
+    },
+    {
+      name: "different-net fixed blind via on a disjoint layer span",
+      separation: 0.25,
+      ownership: "fixed-route",
+      differentNetBlindVias: true,
+      expectedErrors: 1,
+    },
   ]
 
   for (const scenario of cases) {
     const routeA = createViaRoute("A", 0)
     const routeB = createViaRoute("B", scenario.separation)
+    const layerCount = scenario.differentNetBlindVias ? 4 : 2
+    if (scenario.differentNetBlindVias) {
+      routeA.rootConnectionName = "A"
+      routeB.rootConnectionName = "B"
+      routeB.route = routeB.route.map((point) => ({
+        ...point,
+        z: point.z + 2,
+      }))
+    }
     const hdRoutes = [routeA]
     const fixedHdRoutes: HighDensityRoute[] = []
     if (scenario.ownership === "same-route") {
@@ -97,15 +122,15 @@ test("Pipeline9 prechecks actual same-net drill spacing across route ownership",
       ...fixedHdRoutes,
     ].map((route) => ({
       name: route.connectionName,
-      __netConnectionName: "shared-net",
+      __netConnectionName: route.rootConnectionName,
       pointsToConnect: [route.route[0]!, route.route.at(-1)!].map((point) => ({
         x: point.x,
         y: point.y,
-        layer: point.z === 0 ? "top" : "bottom",
+        layer: mapZToLayerName(point.z, layerCount),
       })),
     }))
     const srj: SimpleRouteJson = {
-      layerCount: 2,
+      layerCount,
       minTraceWidth: 0.1,
       minViaDiameter: 0.6,
       minViaHoleDiameter: 0.2,
@@ -113,13 +138,15 @@ test("Pipeline9 prechecks actual same-net drill spacing across route ownership",
       obstacles: [],
       connections,
     }
-    const connMap = new ConnectivityMap({
-      "shared-net": ["A", "B", "shared-net"],
-    })
+    const connMap = new ConnectivityMap(
+      scenario.differentNetBlindVias
+        ? { A: ["A"], B: ["B"] }
+        : { "shared-net": ["A", "B", "shared-net"] },
+    )
     const evaluate = createPipeline9RelaxedDrcEvaluator({
       connections,
       originalConnections: connections,
-      layerCount: 2,
+      layerCount,
       obstacles: [],
       defaultViaHoleDiameter: 0.2,
       connMap,
@@ -159,7 +186,7 @@ test("Pipeline9 prechecks actual same-net drill spacing across route ownership",
       connMap,
       colorMap: {},
       obstacles: [],
-      layerCount: 2,
+      layerCount,
       viaDiameter: 0.6,
       viaHoleDiameter: 0.2,
       traceWidth: 0.1,

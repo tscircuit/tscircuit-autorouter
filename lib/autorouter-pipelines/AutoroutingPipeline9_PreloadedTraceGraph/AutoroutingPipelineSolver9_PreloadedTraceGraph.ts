@@ -697,6 +697,8 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
               connections: newConnections,
               originalConnections: cms.originalSrj.connections,
               originalFixedHdRoutes: cms.getOriginalFixedHdRoutes(),
+              changedPreloadedTraceSections:
+                cms.getChangedPreloadedTraceSections(),
               hdRoutes,
               fixedHdRoutes,
               layerCount: cms.srj.layerCount,

@@ -3,6 +3,7 @@ import {
   createPipeline7HdRoutesToSimplifiedPcbTracesConverter,
   type ConvertPipeline7HdRoutesOptions,
 } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/convertPipeline7HdRoutesToSimplifiedPcbTraces"
+import type { ChangedPreloadedTraceSection } from "lib/solvers/PortPointPathingSolver/tinyhypergraph/TinyHypergraphPortPointPathingSolver"
 import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import type { SimpleRouteJson, SimplifiedPcbTrace } from "lib/types"
 import type { HighDensityRoute } from "lib/types/high-density-types"
@@ -16,6 +17,7 @@ type CreatePipeline9HighDensityDrcEvaluatorOptions =
   ConvertPipeline7HdRoutesOptions & {
     originalFixedHdRoutes: PreloadedHighDensityRoute[]
     fixedHdRoutes: PreloadedHighDensityRoute[]
+    changedPreloadedTraceSections: ChangedPreloadedTraceSection[]
     originalSrj: SimpleRouteJson
     srjWithPointPairs: SimpleRouteJson
   }
@@ -68,6 +70,15 @@ export const createPipeline9HighDensityDrcEvaluator = (
   options: CreatePipeline9HighDensityDrcEvaluatorOptions,
 ): DrcEvaluator => {
   const originalTraces = options.originalSrj.traces ?? []
+  const originalTraceById = new Map(
+    originalTraces.map((trace) => [trace.pcb_trace_id, trace]),
+  )
+  const traceIdBySectionConnectionName = new Map<string, string>(
+    options.changedPreloadedTraceSections.map((section) => [
+      section.connectionName,
+      section.traceId,
+    ]),
+  )
   const ownedConnectionNames = new Set(
     options.connections.map((connection) => connection.name),
   )
@@ -137,21 +148,23 @@ export const createPipeline9HighDensityDrcEvaluator = (
     })
   for (const hdRoute of options.hdRoutes) {
     if (ownedConnectionNames.has(hdRoute.connectionName)) continue
-    const originalTrace = originalTraces.find(
-      (trace) =>
-        trace.connection_name === hdRoute.rootConnectionName ||
-        options.connMap.areIdsConnected(
-          trace.connection_name,
-          hdRoute.rootConnectionName ?? hdRoute.connectionName,
-        ),
-    )
+    const traceId = traceIdBySectionConnectionName.get(hdRoute.connectionName)
+    if (traceId === undefined) {
+      throw new Error(
+        `Pipeline9 frozen high-density route "${hdRoute.connectionName}" has no changed preloaded section metadata`,
+      )
+    }
+    const originalTrace = originalTraceById.get(traceId)
     if (!originalTrace) {
       throw new Error(
-        `Pipeline9 frozen high-density route "${hdRoute.connectionName}" has no original preloaded net`,
+        `Pipeline9 frozen high-density route "${hdRoute.connectionName}" references missing preloaded trace "${traceId}"`,
       )
     }
     frozenRoutes.push({
-      hdRoute,
+      hdRoute: {
+        ...hdRoute,
+        rootConnectionName: originalTrace.connection_name,
+      },
       originalTrace,
       viaHoleDiameter: options.defaultViaHoleDiameter,
     })
