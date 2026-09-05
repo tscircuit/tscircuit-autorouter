@@ -22,6 +22,7 @@ import type {
 import type { HighDensityRoute } from "lib/types/high-density-types"
 import { convertHdRouteToSimplifiedRoute } from "lib/utils/convertHdRouteToSimplifiedRoute"
 import { mapZToLayerName } from "lib/utils/mapZToLayerName"
+import { removeCollinearRoutePoints } from "lib/utils/removeCollinearRoutePoints"
 import { Pipeline7AdaptiveDrcBranchPortfolioSolver } from "../AutoroutingPipeline7_MultiGraph/Pipeline7AdaptiveDrcBranchPortfolioSolver"
 import { createPipeline7HdRoutesToSimplifiedPcbTracesConverter } from "../AutoroutingPipeline7_MultiGraph/convertPipeline7HdRoutesToSimplifiedPcbTraces"
 import { applyPipeline9RegionalB01Repairs } from "./applyPipeline9RegionalB01Repairs"
@@ -1548,9 +1549,13 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
   }
 
   getOutput(): HighDensityRoute[] {
-    return this.getCombinedOutput().filter(
-      (route) => !this.syntheticConnectionNames.has(route.connectionName),
-    )
+    // Clean retraced spurs only after repair so point removal cannot change
+    // the repair solver's displacement decisions.
+    return this.getCombinedOutput()
+      .filter(
+        (route) => !this.syntheticConnectionNames.has(route.connectionName),
+      )
+      .map((route) => ({ ...route, route: removeCollinearRoutePoints(route) }))
   }
 
   getUpdatedPreloadedTraces(): SimplifiedPcbTrace[] {
