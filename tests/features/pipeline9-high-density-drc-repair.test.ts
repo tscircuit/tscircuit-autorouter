@@ -124,6 +124,7 @@ test("Pipeline9 reroutes DRC-bearing high-density nodes before stitching", (): v
   const solver = new Pipeline9HighDensityDrcRepairSolver({
     nodePortPoints: [node],
     hdRoutes: inputRoutes,
+    fixedHdRoutes: [],
     newConnections: connections,
     drcEvaluator,
     connMap: new ConnectivityMap({ A: ["A"], B: ["B"], C: ["C"] }),

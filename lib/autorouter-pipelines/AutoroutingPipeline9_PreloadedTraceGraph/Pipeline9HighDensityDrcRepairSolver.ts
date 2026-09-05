@@ -3,14 +3,21 @@ import type { GraphicsObject } from "graphics-debug"
 import type { DrcEvaluator } from "high-density-repair03/lib"
 import { BaseSolver } from "lib/solvers/BaseSolver"
 import { HighDensitySolver } from "lib/solvers/HighDensitySolver/HighDensitySolver"
+import { isObstacleConnectedToRoute } from "lib/solvers/TraceWidthSolver/isObstacleConnectedToRoute"
 import type { CapacityMeshNodeId } from "lib/types/capacity-mesh-types"
 import type {
   HighDensityRoute,
   NodeWithPortPoints,
 } from "lib/types/high-density-types"
 import type { Obstacle, SimpleRouteConnection } from "lib/types/srj-types"
+import { createObjectsWithZLayers } from "lib/utils/createObjectsWithZLayers"
 import { normalizePipeline9NodeRootConnectionNames } from "./Pipeline9HighDensitySolver"
-import { getPipeline9FixedRouteObstacles } from "./pipeline9FixedRouteCopper"
+import {
+  arePipeline9RoutesOnSameNet,
+  doPipeline9RoutesHaveCopperConflict,
+  getPipeline9FixedRouteObstacles,
+  getPipeline9RouteCopperGeometry,
+} from "./pipeline9FixedRouteCopper"
 import {
   getPipeline9DrcErrors,
   getPipeline9DrcErrorTraceIds,
@@ -22,6 +29,7 @@ import {
 export type Pipeline9HighDensityDrcRepairSolverParams = {
   nodePortPoints: NodeWithPortPoints[]
   hdRoutes: HighDensityRoute[]
+  fixedHdRoutes: HighDensityRoute[]
   newConnections: SimpleRouteConnection[]
   drcEvaluator: DrcEvaluator
   connMap: ConnectivityMap
@@ -40,6 +48,151 @@ export type Pipeline9HighDensityDrcRepairSolverParams = {
 type AcceptedHighDensityCandidate = {
   routes: HighDensityRoute[]
   errors: Pipeline9DrcError[]
+}
+
+type AxisAlignedBounds = {
+  minX: number
+  maxX: number
+  minY: number
+  maxY: number
+}
+
+const doesSegmentIntersectBounds = (
+  start: { x: number; y: number },
+  end: { x: number; y: number },
+  bounds: AxisAlignedBounds,
+): boolean => {
+  let minT = 0
+  let maxT = 1
+  for (const axis of ["x", "y"] as const) {
+    const delta = end[axis] - start[axis]
+    const min = axis === "x" ? bounds.minX : bounds.minY
+    const max = axis === "x" ? bounds.maxX : bounds.maxY
+    if (Math.abs(delta) <= 1e-9) {
+      if (start[axis] < min || start[axis] > max) return false
+      continue
+    }
+    const firstT = (min - start[axis]) / delta
+    const secondT = (max - start[axis]) / delta
+    minT = Math.max(minT, Math.min(firstT, secondT))
+    maxT = Math.min(maxT, Math.max(firstT, secondT))
+    if (minT > maxT) return false
+  }
+  return true
+}
+
+const getObstacleBounds = (obstacle: Obstacle): AxisAlignedBounds => {
+  const radians = ((obstacle.ccwRotationDegrees ?? 0) * Math.PI) / 180
+  const cosine = Math.abs(Math.cos(radians))
+  const sine = Math.abs(Math.sin(radians))
+  const halfWidth = (obstacle.width * cosine + obstacle.height * sine) / 2
+  const halfHeight = (obstacle.width * sine + obstacle.height * cosine) / 2
+  return {
+    minX: obstacle.center.x - halfWidth,
+    maxX: obstacle.center.x + halfWidth,
+    minY: obstacle.center.y - halfHeight,
+    maxY: obstacle.center.y + halfHeight,
+  }
+}
+
+const doesRouteConflictWithObstacle = ({
+  route,
+  obstacle,
+  clearance,
+}: {
+  route: HighDensityRoute
+  obstacle: Obstacle & { __zLayers: number[] }
+  clearance: number
+}): boolean => {
+  const geometry = getPipeline9RouteCopperGeometry(route)
+  const obstacleBounds = getObstacleBounds(obstacle)
+  for (const wire of geometry.wireSegments) {
+    if (!obstacle.__zLayers.includes(wire.z)) continue
+    const expansion = wire.width / 2 + clearance
+    if (
+      doesSegmentIntersectBounds(wire.start, wire.end, {
+        minX: obstacleBounds.minX - expansion,
+        maxX: obstacleBounds.maxX + expansion,
+        minY: obstacleBounds.minY - expansion,
+        maxY: obstacleBounds.maxY + expansion,
+      })
+    ) {
+      return true
+    }
+  }
+  for (const via of geometry.viaSpans) {
+    if (
+      !obstacle.__zLayers.some(
+        (z) => z >= via.minZ && z <= via.maxZ,
+      )
+    ) {
+      continue
+    }
+    const expansion = via.diameter / 2 + clearance
+    if (
+      via.center.x >= obstacleBounds.minX - expansion &&
+      via.center.x <= obstacleBounds.maxX + expansion &&
+      via.center.y >= obstacleBounds.minY - expansion &&
+      via.center.y <= obstacleBounds.maxY + expansion
+    ) {
+      return true
+    }
+  }
+  return false
+}
+
+const doRouteViasHaveCopperConflict = ({
+  left,
+  right,
+  clearance,
+  sameRoute = false,
+}: {
+  left: HighDensityRoute
+  right: HighDensityRoute
+  clearance: number
+  sameRoute?: boolean
+}): boolean => {
+  const leftVias = getPipeline9RouteCopperGeometry(left).viaSpans
+  const rightVias = getPipeline9RouteCopperGeometry(right).viaSpans
+  for (let leftIndex = 0; leftIndex < leftVias.length; leftIndex++) {
+    const leftVia = leftVias[leftIndex]!
+    for (
+      let rightIndex = sameRoute ? leftIndex + 1 : 0;
+      rightIndex < rightVias.length;
+      rightIndex++
+    ) {
+      const rightVia = rightVias[rightIndex]!
+      if (leftVia.minZ > rightVia.maxZ || rightVia.minZ > leftVia.maxZ) continue
+      const requiredClearance =
+        leftVia.diameter / 2 + rightVia.diameter / 2 + clearance
+      if (
+        Math.hypot(
+          leftVia.center.x - rightVia.center.x,
+          leftVia.center.y - rightVia.center.y,
+        ) < requiredClearance
+      ) {
+        return true
+      }
+    }
+  }
+  return false
+}
+
+const isHighDensityCopperDrcError = (
+  error: Pipeline9DrcError,
+): boolean => {
+  if (
+    error.type === "pcb_pad_trace_clearance_error" ||
+    error.type === "pcb_via_trace_clearance_error" ||
+    error.type === "pcb_via_clearance_error"
+  ) {
+    return true
+  }
+  return (
+    error.type === "pcb_trace_error" &&
+    typeof error.pcb_trace_error_id === "string" &&
+    error.pcb_trace_error_id.startsWith("overlap_")
+  )
 }
 
 const replaceNodeRoutes = ({
@@ -108,6 +261,7 @@ export class Pipeline9HighDensityDrcRepairSolver extends BaseSolver {
   currentErrors: Pipeline9DrcError[]
   activeNode: NodeWithPortPoints | null = null
   override activeSubSolver: HighDensitySolver | null = null
+  private initialized = false
   private activeConnectionNames = new Set<string>()
   private acceptedCandidate: AcceptedHighDensityCandidate | null = null
 
@@ -118,19 +272,19 @@ export class Pipeline9HighDensityDrcRepairSolver extends BaseSolver {
     // boards have no pre-stitch DRC, so cloning every route here needlessly
     // retains a second full geometry graph through the expensive later stages.
     this.outputHdRoutes = params.hdRoutes
-    this.currentErrors = this.getRepairableDrcErrors(this.outputHdRoutes)
+    this.currentErrors = []
     this.MAX_ITERATIONS =
       Math.max(1, params.nodePortPoints.length) * 100e6 * params.effort
     this.stats = {
-      initialDrcIssueCount: this.currentErrors.length,
-      finalDrcIssueCount: this.currentErrors.length,
-      drcNodeCount: this.getCurrentDrcNodeIds().size,
+      initialDrcIssueCount: 0,
+      finalDrcIssueCount: 0,
+      drcNodeCount: 0,
+      drcPrecheckFoundPotentialIssue: false,
       attemptedNodeCount: 0,
       acceptedNodeCount: 0,
       exhaustedNodeCount: 0,
       candidateAttemptCount: 0,
     }
-    if (this.currentErrors.length === 0) this.solved = true
   }
 
   override getConstructorParams(): readonly [
@@ -156,10 +310,108 @@ export class Pipeline9HighDensityDrcRepairSolver extends BaseSolver {
     const routeIndexByTraceId = this.getRouteIndexByTraceId(routes)
     return getPipeline9DrcErrors(this.params.drcEvaluator, routes).filter(
       (error) =>
+        isHighDensityCopperDrcError(error) &&
         getPipeline9DrcErrorTraceIds(error).some((traceId) =>
           routeIndexByTraceId.has(traceId),
         ),
     )
+  }
+
+  private hasPotentialHighDensityDrc(): boolean {
+    const clearance = this.params.obstacleMargin
+    for (let leftIndex = 0; leftIndex < this.outputHdRoutes.length; leftIndex++) {
+      const left = this.outputHdRoutes[leftIndex]!
+      if (
+        doRouteViasHaveCopperConflict({
+          left,
+          right: left,
+          clearance,
+          sameRoute: true,
+        })
+      ) {
+        return true
+      }
+      for (
+        let rightIndex = leftIndex + 1;
+        rightIndex < this.outputHdRoutes.length;
+        rightIndex++
+      ) {
+        const right = this.outputHdRoutes[rightIndex]!
+        if (arePipeline9RoutesOnSameNet(left, right, this.params.connMap)) {
+          if (
+            doRouteViasHaveCopperConflict({ left, right, clearance })
+          ) {
+            return true
+          }
+          continue
+        }
+        if (
+          doPipeline9RoutesHaveCopperConflict({
+            left,
+            right,
+            clearance,
+          })
+        ) {
+          return true
+        }
+      }
+      for (const fixedRoute of this.params.fixedHdRoutes) {
+        if (
+          arePipeline9RoutesOnSameNet(left, fixedRoute, this.params.connMap)
+        ) {
+          if (
+            doRouteViasHaveCopperConflict({
+              left,
+              right: fixedRoute,
+              clearance,
+            })
+          ) {
+            return true
+          }
+          continue
+        }
+        if (
+          doPipeline9RoutesHaveCopperConflict({
+            left,
+            right: fixedRoute,
+            clearance,
+          })
+        ) {
+          return true
+        }
+      }
+    }
+
+    const layeredObstacles = createObjectsWithZLayers(
+      this.params.obstacles,
+      this.params.layerCount,
+    )
+    return this.outputHdRoutes.some((route) =>
+      layeredObstacles.some(
+        (obstacle) =>
+          !isObstacleConnectedToRoute(
+            obstacle,
+            route,
+            this.params.connMap,
+          ) &&
+          doesRouteConflictWithObstacle({ route, obstacle, clearance }),
+      ),
+    )
+  }
+
+  private initializeDrcEvaluation(): void {
+    this.initialized = true
+    const hasPotentialDrc = this.hasPotentialHighDensityDrc()
+    this.stats.drcPrecheckFoundPotentialIssue = hasPotentialDrc
+    if (!hasPotentialDrc) {
+      this.solved = true
+      return
+    }
+    this.currentErrors = this.getRepairableDrcErrors(this.outputHdRoutes)
+    this.stats.initialDrcIssueCount = this.currentErrors.length
+    this.stats.finalDrcIssueCount = this.currentErrors.length
+    this.stats.drcNodeCount = this.getCurrentDrcNodeIds().size
+    if (this.currentErrors.length === 0) this.solved = true
   }
 
   private getCurrentDrcNodeIds(): Set<string> {
@@ -343,7 +595,10 @@ export class Pipeline9HighDensityDrcRepairSolver extends BaseSolver {
       obstacles: [
         ...this.params.obstacles,
         ...getPipeline9FixedRouteObstacles({
-          fixedObstacleRoutes: fixedNodeRoutes,
+          fixedObstacleRoutes: [
+            ...fixedNodeRoutes,
+            ...this.params.fixedHdRoutes,
+          ],
           layerCount: this.params.layerCount,
         }),
       ],
@@ -393,6 +648,11 @@ export class Pipeline9HighDensityDrcRepairSolver extends BaseSolver {
   }
 
   override _step(): void {
+    if (!this.initialized) {
+      this.initializeDrcEvaluation()
+      return
+    }
+
     if (this.activeSubSolver) {
       this.activeSubSolver.step()
       if (this.activeSubSolver.solved) {

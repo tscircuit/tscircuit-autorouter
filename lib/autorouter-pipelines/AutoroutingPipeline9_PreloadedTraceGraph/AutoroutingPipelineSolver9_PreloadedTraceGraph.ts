@@ -689,6 +689,8 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           {
             nodePortPoints: cms.highDensityNodePortPoints,
             hdRoutes: cms.highDensityRepairSolver.getOutput(),
+            fixedHdRoutes:
+              cms.highDensityRouteSolver!.getUpdatedFixedHdRoutes(),
             newConnections,
             drcEvaluator: createPipeline9RelaxedDrcEvaluator({
               connections: newConnections,

@@ -6,7 +6,7 @@ import type {
   HighDensityRoute,
   NodeWithPortPoints,
 } from "lib/types/high-density-types"
-import type { SimpleRouteConnection } from "lib/types/srj-types"
+import type { Obstacle, SimpleRouteConnection } from "lib/types/srj-types"
 
 const createNode = (
   nodeId: string,
@@ -42,12 +42,21 @@ const inputRoutes: HighDensityRoute[] = nodes.map((node) => ({
   route: node.portPoints.map((point) => ({ x: point.x, y: point.y, z: 0 })),
   vias: [],
 }))
+const obstacles: Obstacle[] = nodes.map((node) => ({
+  obstacleId: `obstacle-${node.capacityMeshNodeId}`,
+  type: "rect",
+  layers: ["top"],
+  center: node.center,
+  width: 0.2,
+  height: 0.2,
+  connectedTo: [],
+}))
 const drcEvaluator: DrcEvaluator = () => {
   const errors = inputRoutes.map((route, index) => ({
     type: "pcb_trace_error",
     pcb_trace_id: `${route.connectionName}_0`,
     pcb_trace_ids: [`${route.connectionName}_0`],
-    pcb_trace_error_id: `error_${route.connectionName}_0`,
+    pcb_trace_error_id: `overlap_${route.connectionName}_0_obstacle_${index}`,
     center: { x: 0, y: index === 0 ? -2 : 2 },
     message: "independent high-density DRC",
   }))
@@ -58,11 +67,12 @@ test("Pipeline9 preserves routes when no single node can clear every DRC", (): v
   const solver = new Pipeline9HighDensityDrcRepairSolver({
     nodePortPoints: nodes,
     hdRoutes: inputRoutes,
+    fixedHdRoutes: [],
     newConnections: connections,
     drcEvaluator,
     connMap: new ConnectivityMap({ A: ["A"], B: ["B"] }),
     colorMap: {},
-    obstacles: [],
+    obstacles,
     layerCount: 2,
     viaDiameter: 0.3,
     traceWidth: 0.1,
