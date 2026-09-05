@@ -84,6 +84,8 @@ import {
   convertPreloadedTraceToHdRoutes,
   type PreloadedHighDensityRoute,
 } from "./convertPreloadedTraceToHdRoutes"
+import { createPipeline9RelaxedDrcEvaluator } from "./createPipeline9RelaxedDrcEvaluator"
+import { Pipeline9HighDensityDrcRepairSolver } from "./Pipeline9HighDensityDrcRepairSolver"
 import { Pipeline9HighDensitySolver } from "./Pipeline9HighDensitySolver"
 import { Pipeline9JointDrcRepairSolver } from "./Pipeline9JointDrcRepairSolver"
 import { PreloadedTraceGraphSolver } from "./PreloadedTraceGraphSolver"
@@ -258,6 +260,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
   highDensityRouteSolver?: Pipeline9HighDensitySolver
   highDensityForceImproveSolver?: HighDensityForceImproveSolver
   highDensityRepairSolver?: Pipeline4HighDensityRepairSolver
+  highDensityDrcRepairSolver?: Pipeline9HighDensityDrcRepairSolver
   highDensityStitchSolver?: MultipleHighDensityRouteStitchSolver3
   globalDrcForceImproveSolver?: GlobalDrcForceImproveSolver
   pipeline9JointDrcRepairSolver?: Pipeline9JointDrcRepairSolver
@@ -666,6 +669,57 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       ],
     ),
     definePipelineStep(
+      "highDensityDrcRepairSolver",
+      Pipeline9HighDensityDrcRepairSolver,
+      (cms) => {
+        if (!cms.netToPointPairsSolver || !cms.highDensityRepairSolver) {
+          throw new Error(
+            "Pipeline9 invariant violated: high-density DRC repair requires point pairs and repaired high-density routes",
+          )
+        }
+        if (!cms.highDensityNodePortPoints || !cms.portPointPathingSolver) {
+          throw new Error(
+            "Pipeline9 invariant violated: high-density DRC repair requires routed node boundaries",
+          )
+        }
+        const newConnections = cms.netToPointPairsSolver.newConnections
+        return [
+          {
+            nodePortPoints: cms.highDensityNodePortPoints,
+            hdRoutes: cms.highDensityRepairSolver.getOutput(),
+            newConnections,
+            drcEvaluator: createPipeline9RelaxedDrcEvaluator({
+              connections: newConnections,
+              originalConnections: cms.originalSrj.connections,
+              layerCount: cms.srj.layerCount,
+              obstacles: cms.srj.obstacles,
+              defaultViaHoleDiameter: cms.viaHoleDiameter,
+              connMap: cms.connMap,
+              srjWithPointPairs: cms.srjWithPointPairs!,
+              originalSrj: cms.originalSrj,
+              mutatedPreloadedTraces: [],
+            }),
+            connMap: cms.connMap,
+            colorMap: cms.colorMap,
+            obstacles: cms.srj.obstacles,
+            layerCount: cms.srj.layerCount,
+            viaDiameter: cms.viaDiameter,
+            traceWidth: cms.minTraceWidth,
+            obstacleMargin: cms.srj.defaultObstacleMargin ?? 0.15,
+            effort: cms.effort,
+            nodePfById: new Map(
+              cms.portPointPathingSolver
+                .getOutput()
+                .inputNodeWithPortPoints.map((node) => [
+                  node.capacityMeshNodeId,
+                  cms.portPointPathingSolver.computeNodePf(node),
+                ] as const),
+            ),
+          },
+        ]
+      },
+    ),
+    definePipelineStep(
       "highDensityStitchSolver",
       MultipleHighDensityRouteStitchSolver3,
       (cms) => [
@@ -676,10 +730,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
               .getChangedPreloadedTraceSections()
               .map((section) => section.connection),
           ] as SimpleRouteConnection[],
-          hdRoutes:
-            cms.highDensityRepairSolver?.getOutput() ??
-            cms.highDensityForceImproveSolver?.getOutput() ??
-            cms.highDensityRouteSolver!.routes,
+          hdRoutes: cms.highDensityDrcRepairSolver!.getOutput(),
           colorMap: cms.colorMap,
           layerCount: cms.srj.layerCount,
           defaultViaDiameter: cms.viaDiameter,
@@ -1106,6 +1157,8 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     const highDensityForceImproveViz =
       this.highDensityForceImproveSolver?.visualize()
     const highDensityRepairViz = this.highDensityRepairSolver?.visualize()
+    const highDensityDrcRepairViz =
+      this.highDensityDrcRepairSolver?.visualize()
     const highDensityStitchViz = this.highDensityStitchSolver?.visualize()
     const traceSimplificationViz = this.traceSimplificationSolver?.visualize()
     const mutatedPreloadedTraceSimplificationViz =
@@ -1233,6 +1286,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
         : null,
       highDensityForceImproveViz,
       highDensityRepairViz,
+      highDensityDrcRepairViz,
       highDensityStitchViz,
       traceSimplificationViz,
       mutatedPreloadedTraceSimplificationViz,
