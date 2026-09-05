@@ -179,7 +179,6 @@ export class Pipeline9HighDensityDrcRepairSolver extends BaseSolver {
     candidateNodeRoutes: HighDensityRoute[],
     nodeId: string,
   ): boolean {
-    this.activeNodeCandidateAttemptCount += 1
     this.stats.candidateAttemptCount =
       Number(this.stats.candidateAttemptCount ?? 0) + 1
     const candidateRoutes = replaceNodeRoutes({
