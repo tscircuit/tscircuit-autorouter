@@ -111,10 +111,7 @@ export class Pipeline9HighDensityDrcRepairSolver extends BaseSolver {
     this.params = params
     this.inputHdRoutes = clonePipeline9HdRoutes(params.hdRoutes)
     this.outputHdRoutes = clonePipeline9HdRoutes(this.inputHdRoutes)
-    this.initialErrors = getPipeline9DrcErrors(
-      params.drcEvaluator,
-      this.outputHdRoutes,
-    )
+    this.initialErrors = this.getRepairableDrcErrors(this.outputHdRoutes)
     this.currentErrors = this.initialErrors
     this.MAX_ITERATIONS =
       Math.max(1, params.nodePortPoints.length) * 100e6 * params.effort
@@ -138,12 +135,30 @@ export class Pipeline9HighDensityDrcRepairSolver extends BaseSolver {
     return [constructorParams] as const
   }
 
-  private getCurrentDrcNodeIds(): Set<string> {
-    const routeIndexByTraceId = getPipeline9RouteIndexByTraceId({
-      routes: this.outputHdRoutes,
+  private getRouteIndexByTraceId(
+    routes: HighDensityRoute[],
+  ): Map<string, number> {
+    return getPipeline9RouteIndexByTraceId({
+      routes,
       newConnections: this.params.newConnections,
       syntheticConnectionNames: new Set<string>(),
     })
+  }
+
+  private getRepairableDrcErrors(
+    routes: HighDensityRoute[],
+  ): Pipeline9DrcError[] {
+    const routeIndexByTraceId = this.getRouteIndexByTraceId(routes)
+    return getPipeline9DrcErrors(this.params.drcEvaluator, routes).filter(
+      (error) =>
+        getPipeline9DrcErrorTraceIds(error).some((traceId) =>
+          routeIndexByTraceId.has(traceId),
+        ),
+    )
+  }
+
+  private getCurrentDrcNodeIds(): Set<string> {
+    const routeIndexByTraceId = this.getRouteIndexByTraceId(this.outputHdRoutes)
     const nodeIds = new Set<string>()
     for (const error of this.currentErrors) {
       for (const traceId of getPipeline9DrcErrorTraceIds(error)) {
@@ -159,6 +174,18 @@ export class Pipeline9HighDensityDrcRepairSolver extends BaseSolver {
       }
     }
     return nodeIds
+  }
+
+  private canStillCompleteRepair(): boolean {
+    const routeIndexByTraceId = this.getRouteIndexByTraceId(this.outputHdRoutes)
+    return this.currentErrors.every((error) =>
+      getPipeline9DrcErrorTraceIds(error).some((traceId) => {
+        const routeIndex = routeIndexByTraceId.get(traceId)
+        if (routeIndex === undefined) return false
+        const regionId = this.outputHdRoutes[routeIndex]!.regionId
+        return regionId !== undefined && !this.attemptedNodeIds.has(regionId)
+      }),
+    )
   }
 
   private getNextAffectedNode(): NodeWithPortPoints | undefined {
@@ -193,10 +220,7 @@ export class Pipeline9HighDensityDrcRepairSolver extends BaseSolver {
       nodeId,
     })
     if (!candidateRoutes) return false
-    const candidateErrors = getPipeline9DrcErrors(
-      this.params.drcEvaluator,
-      candidateRoutes,
-    )
+    const candidateErrors = this.getRepairableDrcErrors(candidateRoutes)
     if (!isPipeline9DrcCandidateBetter(candidateErrors, this.currentErrors)) {
       return false
     }
@@ -312,6 +336,11 @@ export class Pipeline9HighDensityDrcRepairSolver extends BaseSolver {
         this.activeSubSolver.error ??
           `Ordinary high-density reroute failed for node "${this.activeNode?.capacityMeshNodeId}"`,
       )
+      return
+    }
+
+    if (!this.canStillCompleteRepair()) {
+      this.finishRepairPass()
       return
     }
 
