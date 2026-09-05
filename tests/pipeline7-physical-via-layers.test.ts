@@ -68,6 +68,12 @@ test("Pipeline7 repair and reference checks include intermediate via layers", ()
     const result = evaluator({ traces: [], routes })
     if (Array.isArray(result)) throw new Error("Expected centered DRC result")
     expect(result.errors.length > 0).toBe(true)
+    expect(
+      result.errors.some(
+        (error) =>
+          Array.isArray(error.pcb_via_ids) && error.pcb_via_ids.length > 0,
+      ),
+    ).toBe(true)
     const json = convertToCircuitJson(srj, routes, { originalSrj })
     const via = json.find((element) => element.type === "pcb_via")
     expect(via?.layers).toEqual(
