@@ -106,11 +106,11 @@ const printHelp = () => {
   console.log(
     [
       "Usage:",
-      "  ./run-sample.sh [--pipeline 7] --srj-path path/to/srj.json",
-      "  ./run-sample.sh [--pipeline 7] --sample 1 [--dataset dataset01]",
+      "  ./run-sample.sh [--pipeline 9] --srj-path path/to/srj.json",
+      "  ./run-sample.sh [--pipeline 9] --sample 1 [--dataset dataset01]",
       "",
       "Options:",
-      "  --pipeline N     Pipeline to run (1, 2, 3, 4, 7, or 9; defaults to 7)",
+      "  --pipeline N     Pipeline to run (1, 2, 3, 4, 7, or 9; defaults to 9)",
       "  --srj-path PATH  Path to a SimpleRouteJson file",
       "  --sample N       1-based sample index from the benchmark dataset order",
       `  --dataset NAME   Dataset used with --sample (${DATASET_OPTIONS_LABEL}, defaults to dataset01)`,
@@ -290,7 +290,7 @@ const emitLogLines = async (
 const parseArgs = (): RunSampleOptions => {
   const args = process.argv.slice(2)
   const options: RunSampleOptions = {
-    pipeline: 7,
+    pipeline: 9,
     dataset: "dataset01",
     pngSize: 1536,
     writeAiVisuals: false,

@@ -74,7 +74,7 @@ const EFFORT_STORAGE_KEY = "selectedEffort"
 const LAYER_OVERRIDE_STORAGE_KEY = "selectedLayerOverride"
 const AUTO_SOLVE_STORAGE_KEY = "autoSolve"
 const AUTO_RUN_DRC_STORAGE_KEY = "autoRunDrc"
-const DEFAULT_PIPELINE_ID: PipelineId = "AutoroutingPipelineSolver7_MultiGraph"
+const DEFAULT_PIPELINE_ID: PipelineId = "AutoroutingPipelineSolver9_PreloadedTraceGraph"
 
 const parseLayerOverride = (value: string | null): LayerOverride => {
   if (value === "auto") return "auto"

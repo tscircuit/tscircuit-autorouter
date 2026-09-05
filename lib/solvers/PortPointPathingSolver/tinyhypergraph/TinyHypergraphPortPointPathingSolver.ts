@@ -23,6 +23,7 @@ import {
   DuplicateCongestedPortSolver,
   orderConnectionsByNetCardinality,
   type DuplicateCongestedPortSolverReport,
+  SelectiveReripTinyHyperGraphSolver,
   TinyHyperGraphSectionPipelineSolver,
   TinyHyperGraphSectionSolver,
   TinyHyperGraphSolver,
@@ -909,6 +910,7 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
   preloadedFixedSegmentCount = 0
   readonly crampedPortTraversalPenalty: number
   readonly useSelectiveReripRouting: boolean
+  private readonly selectiveReripSolverClass: typeof SelectiveReripTinyHyperGraphSolver
 
   constructor(
     inputProblem: TinyHyperGraphSectionPipelineInput,
@@ -922,6 +924,12 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
     )
     this.preloadedPortCount = preloadedStats.preloadedPortCount
     this.preloadedFixedSegmentCount = preloadedStats.preloadedAssignmentCount
+    // Generated routing seeds are ordinary routes that refinement may reopen.
+    // Only caller-owned copper needs restoration after a global rerip.
+    this.selectiveReripSolverClass =
+      this.preloadedPortCount > 0
+        ? SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments
+        : SelectiveReripTinyHyperGraphSolver
     if (useSelectiveReripRouting) {
       const solveGraphStep = this.pipelineDef.find(
         (pipelineStep) => pipelineStep.solverName === "solveGraph",
@@ -931,8 +939,7 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
           "Tiny hypergraph pipeline is missing the solveGraph stage",
         )
       }
-      solveGraphStep.solverClass =
-        SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments
+      solveGraphStep.solverClass = this.selectiveReripSolverClass
     }
     this.MAX_ITERATIONS = getTinyHyperGraphPipelineMaxIterations(inputProblem)
   }
@@ -974,7 +981,7 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
         this.inputProblem.serializedHyperGraph,
       )
       this.initialVisualizationSolver =
-        new SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments(
+        new this.selectiveReripSolverClass(
           topology,
           problem,
           this.getSolveGraphOptions(),
@@ -1079,7 +1086,11 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
           preloadedTraceStats.preloadedAssignmentCount,
         )
       : undefined
+    const createInitialAssignments =
+      params.flags.USE_SELECTIVE_RERIP_ROUTING === true &&
+      !hasPreloadedTraceOccupancy
     const shouldRunDuplicateCongestedPortPrepass =
+      createInitialAssignments ||
       connections.length <= MAX_CONNECTIONS_FOR_DUPLICATE_CONGESTED_PORT_PREPASS
     let graphForTiny = serializedGraph
     if (shouldRunDuplicateCongestedPortPrepass) {
@@ -1088,6 +1099,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
         {
           duplicatePortProximity: 0.05,
           useSerializedPortPenalties: false,
+          createInitialAssignments,
           routeSolveOptions: {
             ...getTinyViaSizeOptions(params.minViaPadDiameter),
             USE_SPARSE_CANDIDATE_STORAGE: false,
