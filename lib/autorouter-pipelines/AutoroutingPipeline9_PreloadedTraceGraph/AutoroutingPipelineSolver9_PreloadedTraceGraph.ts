@@ -88,6 +88,7 @@ import { Pipeline9HighDensitySolver } from "./Pipeline9HighDensitySolver"
 import { Pipeline9JointDrcRepairSolver } from "./Pipeline9JointDrcRepairSolver"
 import { Pipeline9Repair04Solver } from "./Pipeline9Repair04Solver"
 import { createPipeline9RelaxedDrcEvaluator } from "./createPipeline9RelaxedDrcEvaluator"
+import { createPipeline9FinalDrcAcceptanceEvaluator } from "./createPipeline9FinalDrcAcceptanceEvaluator"
 import { PreloadedTraceGraphSolver } from "./PreloadedTraceGraphSolver"
 import { PreprocessSimpleRouteJsonWithoutTraceObstaclesSolver } from "./PreprocessSimpleRouteJsonWithoutTraceObstaclesSolver"
 import { MergedComponentTopologyView } from "../AutoroutingPipeline7_MultiGraph/MergedComponentTopologyView"
@@ -857,6 +858,18 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             originalSrj: cms.originalSrj,
             newConnections: cms.netToPointPairsSolver?.newConnections ?? [],
             newHdRoutes: cms.repair04Solver!.getOutput(),
+            finalReferenceDrcEvaluator:
+              cms.opts.enableRepair04 === false
+                ? undefined
+                : createPipeline9FinalDrcAcceptanceEvaluator({
+                    connections: cms.netToPointPairsSolver!.newConnections,
+                    originalSrj: cms.originalSrj,
+                    srjWithPointPairs: cms.srjWithPointPairs!,
+                    obstacles: cms.srj.obstacles,
+                    layerCount: cms.srj.layerCount,
+                    defaultViaHoleDiameter: cms.viaHoleDiameter,
+                    connMap: cms.connMap,
+                  }),
             updatedPreloadedTraces:
               preloadedTraceUpdates.updatedPreloadedTraces,
             mutatedPreloadedTraceIds: new Set(

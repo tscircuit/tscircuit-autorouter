@@ -7,7 +7,8 @@ test("Pipeline9 preserves SRJ18 sample 9's reference-clean exact output", async 
   const { scenario } = await loadScenarioBySampleNumber("srj18", 9)
   const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(
     structuredClone(scenario),
-    { cacheProvider: null, effort: 1 },
+    // Preserve the joint stage's indexed-error precondition for this exact-pass regression.
+    { cacheProvider: null, effort: 1, enableRepair04: false },
   )
 
   solver.solve()

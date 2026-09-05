@@ -185,6 +185,7 @@ const result = {
   relaxedErrors: relaxed.errorsWithCenters,
   strictErrors: strict.errorsWithCenters,
   repair04Stats: pipeline.repair04Solver?.stats,
+  jointRepairStats: pipeline.pipeline9JointDrcRepairSolver?.stats,
   stageTiming: pipeline.timeSpentOnPhase,
 }
 await writeFile(

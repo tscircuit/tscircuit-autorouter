@@ -7,7 +7,8 @@ test("Pipeline9 bounds SRJ18 sample 13's high-residual precision pass", async ()
   const { scenario } = await loadScenarioBySampleNumber("srj18", 13)
   const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(
     structuredClone(scenario),
-    { cacheProvider: null, effort: 1 },
+    // Preserve the joint stage's high-residual precondition for this search-budget regression.
+    { cacheProvider: null, effort: 1, enableRepair04: false },
   )
 
   solver.solve()
