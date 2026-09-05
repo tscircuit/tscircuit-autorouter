@@ -44,6 +44,7 @@ import {
   getGraphicsLayerForObstacle,
 } from "lib/utils/getGraphicsObjectLayer"
 import { getPresuppliedTraceVisualization } from "lib/utils/getPresuppliedTraceVisualization"
+import { getPreferredClearanceSrj } from "lib/utils/getPreferredClearanceSrj"
 import { calculateOptimalCapacityDepth } from "lib/utils/getTunedTotalCapacity1"
 import { getViaDimensions } from "lib/utils/getViaDimensions"
 import {
@@ -725,7 +726,8 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             outline: cms.srj.outline,
             defaultViaDiameter: cms.viaDiameter,
             layerCount: cms.srj.layerCount,
-            minTraceToPadEdgeClearance: cms.srj.minTraceToPadEdgeClearance,
+            minTraceToPadEdgeClearance:
+              getPreferredClearanceSrj(cms.srj).minTraceToPadEdgeClearance,
             minBoardEdgeClearance: cms.srj.minBoardEdgeClearance,
             otherHdRoutes: preloadedHdRoutes,
             netByConnectionName,
@@ -761,7 +763,8 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             outline: cms.srj.outline,
             defaultViaDiameter: cms.viaDiameter,
             layerCount: cms.srj.layerCount,
-            minTraceToPadEdgeClearance: cms.srj.minTraceToPadEdgeClearance,
+            minTraceToPadEdgeClearance:
+              getPreferredClearanceSrj(cms.srj).minTraceToPadEdgeClearance,
             minBoardEdgeClearance: cms.srj.minBoardEdgeClearance,
             otherHdRoutes,
             netByConnectionName: getPipeline9NetByConnectionName(
@@ -783,7 +786,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
         colorMap: cms.colorMap,
         minTraceWidth: cms.minTraceWidth,
         connection: cms.srjWithPointPairs!.connections,
-        obstacleMargin: cms.srj.minTraceToPadEdgeClearance ?? 0.15,
+        obstacleMargin: Math.max(cms.srj.minTraceToPadEdgeClearance ?? 0.15, 0.1),
         layerCount: cms.srj.layerCount,
       },
     ]),
@@ -795,7 +798,9 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           cms.getSrjWithMaterializedPreloadedTraces()
         return [
           {
-            srj: srjWithMaterializedPreloadedTraces as any,
+            srj: getPreferredClearanceSrj(
+              srjWithMaterializedPreloadedTraces,
+            ) as any,
             hdRoutes: lockHdRouteTerminals(
               cms.traceWidthSolver!.getHdRoutesWithWidths(),
               cms.netToPointPairsSolver?.newConnections ?? [],

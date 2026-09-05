@@ -1,5 +1,6 @@
 import { expect, test } from "bun:test"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
+import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import { getBugReportSnapshotSvg } from "lib/testing/getBugReportSnapshotSvg"
 import type { SimpleRouteJson } from "lib/types"
 import pedometer from "../../fixtures/bug-reports/bugreport104-pedometer-v1.0.6.unrouted.srj.json" with {
@@ -21,6 +22,13 @@ test.skip("bugreport104 Pipeline9 solved board without preloaded traces", async 
   expect(solver.solved).toBe(true)
   const output = solver.getOutputSimpleRouteJson()
   expect(output.traces!.length).toBeGreaterThan(0)
+  expect(
+    evaluateRelaxedDrc({
+      inputSrj: input,
+      srjWithPointPairs: solver.srjWithPointPairs!,
+      routedTraces: output.traces!,
+    }).errors,
+  ).toHaveLength(0)
   await expect(
     getBugReportSnapshotSvg({
       inputSrj: input,

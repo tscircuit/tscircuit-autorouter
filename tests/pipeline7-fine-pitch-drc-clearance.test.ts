@@ -4,7 +4,7 @@ import type { SimpleRouteJson } from "lib/types"
 import type { HighDensityRoute } from "lib/types/high-density-types"
 import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
 
-test("Pipeline7 honors declared trace/pad and via/pad clearances without changing defaults", () => {
+test("Pipeline7 seeks relaxed trace spacing while honoring declared via/pad clearance", () => {
   const srj: SimpleRouteJson = {
     layerCount: 2,
     minTraceWidth: 0.1,
@@ -66,15 +66,11 @@ test("Pipeline7 honors declared trace/pad and via/pad clearances without changin
       originalSrj,
     })({ hdRoutes: routes, traces: [] })
     const errors = Array.isArray(result) ? result : result.errors
-    if (clearance === 0.05) {
-      expect(errors).toHaveLength(0)
-    } else {
-      expect(errors.some((error) => error.type === "pcb_trace_error")).toBe(
-        true,
-      )
-      expect(
-        errors.some((error) => error.type === "pcb_pad_pad_clearance_error"),
-      ).toBe(true)
-    }
+    expect(errors.some((error) => error.type === "pcb_trace_error")).toBe(
+      true,
+    )
+    expect(
+      errors.some((error) => error.type === "pcb_pad_pad_clearance_error"),
+    ).toBe(clearance !== 0.05)
   }
 })

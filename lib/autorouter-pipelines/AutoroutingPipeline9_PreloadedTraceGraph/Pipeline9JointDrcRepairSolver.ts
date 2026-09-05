@@ -23,6 +23,7 @@ import type {
 import type { HighDensityRoute } from "lib/types/high-density-types"
 import { convertHdRouteToSimplifiedRoute } from "lib/utils/convertHdRouteToSimplifiedRoute"
 import { mapZToLayerName } from "lib/utils/mapZToLayerName"
+import { getPreferredClearanceSrj } from "lib/utils/getPreferredClearanceSrj"
 import { Pipeline7AdaptiveDrcBranchPortfolioSolver } from "../AutoroutingPipeline7_MultiGraph/Pipeline7AdaptiveDrcBranchPortfolioSolver"
 import { createPipeline7HdRoutesToSimplifiedPcbTracesConverter } from "../AutoroutingPipeline7_MultiGraph/convertPipeline7HdRoutesToSimplifiedPcbTraces"
 import { applyPipeline9RegionalB01Repairs } from "./applyPipeline9RegionalB01Repairs"
@@ -719,10 +720,10 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       mutatedPreloadedTraces: currentMutatedPreloadedTraces,
       newTraces: currentNewTraces,
     })
-    const traceClearance =
-      params.originalSrj.minTraceToPadEdgeClearance ??
-      RELAXED_DRC_OPTIONS.traceClearance ??
-      0.1
+    const traceClearance = Math.max(
+      params.originalSrj.minTraceToPadEdgeClearance ?? 0.1,
+      RELAXED_DRC_OPTIONS.traceClearance ?? 0.1,
+    )
     const viaClearance = RELAXED_DRC_OPTIONS.viaClearance ?? 0.1
     // Via-to-via spacing remains on the benchmark policy; only via-to-pad
     // scoring follows the board's independently declared pad clearance.
@@ -1004,7 +1005,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     const { traces: _preloadedTraces, ...srjWithoutPreloadedTraceObstacles } =
       params.srjWithPointPairs
     const extendedSrjWithPointPairs: SimpleRouteJson = {
-      ...srjWithoutPreloadedTraceObstacles,
+      ...getPreferredClearanceSrj(srjWithoutPreloadedTraceObstacles),
       connections: [
         ...params.srjWithPointPairs.connections,
         ...syntheticConnectionByName.values(),
@@ -1495,7 +1496,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     }
     const terminalEscapeResult = shouldRunPostExactPrecisionPass
       ? applyPipeline9TerminalEscapeRelocations({
-          srj: this.params.srj,
+          srj: getPreferredClearanceSrj(this.params.srj),
           routes: exactOutput,
           newConnections: this.params.newConnections,
           syntheticConnectionNames: this.syntheticConnectionNames,
@@ -1518,7 +1519,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     }
     if (shouldRunPostExactPrecisionPass) {
       this.finePitchPadEscapeSolver = new FinePitchPadEscapeSolver({
-        srj: this.params.srj,
+        srj: getPreferredClearanceSrj(this.params.srj),
         routes: terminalEscapeResult.routes,
         routeIndexByTraceId: getPipeline9RouteIndexByTraceId({
           routes: terminalEscapeResult.routes,

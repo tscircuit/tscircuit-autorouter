@@ -33,9 +33,11 @@ export const createPipeline7AutoroutingDrcEvaluator = (
       conversionOptions.originalSrj.minViaDiameter ??
       conversionOptions.srjWithPointPairs.minViaDiameter,
   }
-  const traceClearance =
+  const traceClearance = Math.max(
     conversionOptions.originalSrj.minTraceToPadEdgeClearance ??
-    AUTOROUTING_TRACE_CLEARANCE
+      AUTOROUTING_TRACE_CLEARANCE,
+    AUTOROUTING_TRACE_CLEARANCE,
+  )
   const viaToPadClearance =
     conversionOptions.originalSrj.minViaEdgeToPadEdgeClearance ??
     AUTOROUTING_VIA_CLEARANCE
@@ -52,6 +54,7 @@ export const createPipeline7AutoroutingDrcEvaluator = (
     traceClearance,
     viaClearance: AUTOROUTING_VIA_CLEARANCE,
     viaToPadClearance,
+    includeTraceViaOwnerMetadata: true,
     spatialCellSize,
   })
   const convertCandidateRoutes =

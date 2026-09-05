@@ -46,6 +46,7 @@ import {
   getGraphicsLayerForObstacle,
 } from "lib/utils/getGraphicsObjectLayer"
 import { getPresuppliedTraceVisualization } from "lib/utils/getPresuppliedTraceVisualization"
+import { getPreferredClearanceSrj } from "lib/utils/getPreferredClearanceSrj"
 import { calculateOptimalCapacityDepth } from "lib/utils/getTunedTotalCapacity1"
 import { getViaDimensions } from "lib/utils/getViaDimensions"
 import {
@@ -625,7 +626,8 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
           outline: cms.srj.outline,
           defaultViaDiameter: cms.viaDiameter,
           layerCount: cms.srj.layerCount,
-          minTraceToPadEdgeClearance: cms.srj.minTraceToPadEdgeClearance,
+          minTraceToPadEdgeClearance:
+            getPreferredClearanceSrj(cms.srj).minTraceToPadEdgeClearance,
           minBoardEdgeClearance: cms.srj.minBoardEdgeClearance,
           enableCrossingViaReduction: true,
           iterations: 2,
@@ -640,7 +642,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
         colorMap: cms.colorMap,
         minTraceWidth: cms.minTraceWidth,
         connection: cms.srj.connections,
-        obstacleMargin: cms.srj.minTraceToPadEdgeClearance ?? 0.15,
+        obstacleMargin: Math.max(cms.srj.minTraceToPadEdgeClearance ?? 0.15, 0.1),
         layerCount: cms.srj.layerCount,
       },
     ]),
@@ -649,7 +651,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
       GlobalDrcForceImproveSolver,
       (cms) => [
         {
-          srj: cms.srjWithPointPairs! as any,
+          srj: getPreferredClearanceSrj(cms.srjWithPointPairs!) as any,
           hdRoutes: lockHdRouteTerminals(
             cms.traceWidthSolver!.getHdRoutesWithWidths(),
             cms.netToPointPairsSolver?.newConnections ?? [],
@@ -668,10 +670,9 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
       ],
     ),
     definePipelineStep(
-      "finePitchPadEscapeSolver",
-      FinePitchPadEscapeSolver,
+      "exactGeometryDrcForceImproveSolver",
+      GlobalDrcBranchPortfolioSolver,
       (cms) => {
-        const hdRoutes = cms.globalDrcForceImproveSolver!.getOutput()
         const autoroutingDrcEvaluator = createPipeline7AutoroutingDrcEvaluator({
           connections: cms.netToPointPairsSolver?.newConnections ?? [],
           originalConnections: cms.originalSrj.connections,
@@ -682,7 +683,36 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
           srjWithPointPairs: cms.srjWithPointPairs!,
           originalSrj: cms.originalSrj,
         })
-
+        return [
+          {
+            srj: getPreferredClearanceSrj(cms.srjWithPointPairs!) as any,
+            hdRoutes: cms.globalDrcForceImproveSolver!.getOutput(),
+            connMap: cms.connMap,
+            effort: cms.effort,
+            viaHoleDiameter: cms.viaHoleDiameter,
+            drcEvaluator: autoroutingDrcEvaluator,
+            viaInPadDrcEvaluator: autoroutingDrcEvaluator,
+            maxIterations: 32,
+            enableLargeBoardBroadFallback: false,
+            enableBroadFallback: false,
+            enableTargetedErrorSweep: true,
+            enableTraceViaOwnerTargeting: true,
+            enablePostSolveClearanceRelaxation: false,
+            enableSafeTraceLayerMoves: true,
+            enableViaInPadLayerMoves: cms.originalSrj.allowViaInPad ?? false,
+            viaInPadMaxIterations: 32,
+            broadMaxIterations: 12,
+            broadPassMultiplier: 3,
+          },
+        ]
+      },
+    ),
+    definePipelineStep(
+      "finePitchPadEscapeSolver",
+      FinePitchPadEscapeSolver,
+      (cms) => {
+        const exactSolver = cms.exactGeometryDrcForceImproveSolver!
+        const hdRoutes = exactSolver.getOutput()
         // Match the IDs emitted by Pipeline7's candidate trace converter.
         // Only generated routes are movable; the evaluator also checks fixed copper.
         const routeCountByConnectionName = new Map<string, number>()
@@ -701,40 +731,10 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
         }
         return [
           {
-            srj: cms.srjWithPointPairs!,
+            srj: getPreferredClearanceSrj(cms.srjWithPointPairs!),
             routes: hdRoutes,
             routeIndexByTraceId,
-            drcEvaluator: autoroutingDrcEvaluator,
-          },
-        ]
-      },
-    ),
-    definePipelineStep(
-      "exactGeometryDrcForceImproveSolver",
-      GlobalDrcBranchPortfolioSolver,
-      (cms) => {
-        const padEscapeSolver = cms.finePitchPadEscapeSolver!
-        const autoroutingDrcEvaluator = padEscapeSolver.params.drcEvaluator
-
-        return [
-          {
-            srj: cms.srjWithPointPairs! as any,
-            hdRoutes: padEscapeSolver.getOutput().routes,
-            connMap: cms.connMap,
-            effort: cms.effort,
-            viaHoleDiameter: cms.viaHoleDiameter,
-            drcEvaluator: autoroutingDrcEvaluator,
-            viaInPadDrcEvaluator: autoroutingDrcEvaluator,
-            maxIterations: 32,
-            enableLargeBoardBroadFallback: false,
-            enableBroadFallback: false,
-            enableTargetedErrorSweep: true,
-            enablePostSolveClearanceRelaxation: false,
-            enableSafeTraceLayerMoves: true,
-            enableViaInPadLayerMoves: cms.originalSrj.allowViaInPad ?? false,
-            viaInPadMaxIterations: 32,
-            broadMaxIterations: 12,
-            broadPassMultiplier: 3,
+            drcEvaluator: exactSolver.params.drcEvaluator!,
           },
         ]
       },
@@ -768,7 +768,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
             )
           }
         }
-        const hdRoutes = cms.exactGeometryDrcForceImproveSolver!.getOutput()
+        const hdRoutes = cms.finePitchPadEscapeSolver!.getOutput().routes
         const differentialPairs = (cms.srj.differentialPairs ?? []).map(
           (pair) => {
             const connectionNames = pair.connectionNames.map(
@@ -1210,10 +1210,10 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
       return hdRoutes
     }
     return (
-      this.exactGeometryDrcForceImproveSolver?.getOutput() ??
       (this.finePitchPadEscapeSolver?.solved
         ? this.finePitchPadEscapeSolver.getOutput().routes
         : undefined) ??
+      this.exactGeometryDrcForceImproveSolver?.getOutput() ??
       this.globalDrcForceImproveSolver?.getOutput() ??
       this.traceWidthSolver?.getHdRoutesWithWidths() ??
       this.traceSimplificationSolver?.simplifiedHdRoutes ??

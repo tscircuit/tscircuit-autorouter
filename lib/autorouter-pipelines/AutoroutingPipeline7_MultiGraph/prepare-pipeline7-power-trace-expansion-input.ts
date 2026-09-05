@@ -7,6 +7,7 @@ import type {
   SimplifiedPcbTrace,
   SimplifiedPcbTraces,
 } from "lib/types"
+import { getPreferredClearanceSrj } from "lib/utils/getPreferredClearanceSrj"
 
 export type Pipeline7PowerTraceExpansionInput = SimpleRouteJson & {
   fixedTraces: SimplifiedPcbTraces
@@ -64,7 +65,7 @@ export const preparePipeline7PowerTraceExpansionInput = ({
     })
 
   return {
-    ...originalSrj,
+    ...getPreferredClearanceSrj(originalSrj),
     traces: [...newlyRoutedTraces, ...mutablePreloadedTraces],
     fixedTraces,
   }
