@@ -59,19 +59,23 @@ const replaceNodeRoutes = ({
     candidatesByConnectionName.set(candidateRoute.connectionName, routes)
   }
 
-  const replacedRoutes = currentRoutes.map((currentRoute) => {
-    if (currentRoute.regionId !== nodeId) return currentRoute
+  const replacedRoutes: HighDensityRoute[] = []
+  for (const currentRoute of currentRoutes) {
+    if (currentRoute.regionId !== nodeId) {
+      replacedRoutes.push(currentRoute)
+      continue
+    }
     const candidates = candidatesByConnectionName.get(
       currentRoute.connectionName,
     )
     const candidate = candidates?.shift()
     if (!candidate) return null
-    return {
+    replacedRoutes.push({
       ...candidate,
       rootConnectionName: currentRoute.rootConnectionName,
       regionId: nodeId,
-    }
-  })
+    })
+  }
 
   // The node input can include preloaded pseudo-connections that are not owned
   // by this stage. Keep those preloads fixed; the board-level evaluator below
