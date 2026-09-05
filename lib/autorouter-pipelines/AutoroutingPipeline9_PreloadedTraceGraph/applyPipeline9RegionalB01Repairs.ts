@@ -153,16 +153,39 @@ export const getPipeline9RegionalRepairTraceIds = ({
     )
 }
 
-const asRegionalRoutes = (
+export const asRegionalRoutes = (
   routes: HighDensityRoute[],
-): PreloadedHighDensityRoute[] =>
-  routes.map((route, routeIndex) => ({
-    ...route,
-    preloadedTraceId: `pipeline9_joint_candidate_${routeIndex}`,
-    preloadedTraceIndex: routeIndex,
-    preloadedRouteIndex: 0,
-    isThroughObstacle: false,
-  }))
+  connMap: ConnectivityMap,
+): PreloadedHighDensityRoute[] => {
+  const counts = new Map<string, number>()
+  for (const route of routes) {
+    counts.set(route.connectionName, (counts.get(route.connectionName) ?? 0) + 1)
+  }
+  return routes.map((route, routeIndex) => {
+    // Separate pieces of one connection still need distinct splice identities.
+    const connectionName =
+      counts.get(route.connectionName)! > 1
+        ? `${route.connectionName}_regional_${routeIndex}`
+        : route.connectionName
+    if (connectionName !== route.connectionName) {
+      connMap.addConnections([
+        [
+          connectionName,
+          route.connectionName,
+          route.rootConnectionName ?? route.connectionName,
+        ],
+      ])
+    }
+    return {
+      ...route,
+      connectionName,
+      preloadedTraceId: `pipeline9_joint_candidate_${routeIndex}`,
+      preloadedTraceIndex: routeIndex,
+      preloadedRouteIndex: 0,
+      isThroughObstacle: false,
+    }
+  })
+}
 
 const boundsOverlap = (left: Bounds, right: Bounds): boolean => {
   return (
@@ -331,7 +354,7 @@ const getRegionalCandidate = ({
       usedFallback: boolean
     }
   | undefined => {
-  const regionalRoutes = asRegionalRoutes(routes)
+  const regionalRoutes = asRegionalRoutes(routes, connMap)
   const movableRoute = regionalRoutes[routeIndex]
   if (!movableRoute) return undefined
   const node = {
@@ -378,7 +401,10 @@ const getRegionalCandidate = ({
   return {
     routes: routes.map((route, candidateRouteIndex) =>
       candidateRouteIndex === routeIndex
-        ? spliceFixedRouteSection(movableSection, replacement)
+        ? {
+            ...spliceFixedRouteSection(movableSection, replacement),
+            connectionName: route.connectionName,
+          }
         : route,
     ),
     usedFallback: Number(solver.stats.fallbackNodeCount ?? 0) > 0,
@@ -410,7 +436,7 @@ const getRegularRegionalCandidate = ({
   obstacleMargin: number
   effort: number
 }): HighDensityRoute[] | undefined => {
-  const regionalRoutes = asRegionalRoutes(routes)
+  const regionalRoutes = asRegionalRoutes(routes, connMap)
   const node = {
     capacityMeshNodeId: "pipeline9_joint_drc_regular_fallback",
     center,
@@ -490,7 +516,12 @@ const getRegularRegionalCandidate = ({
   }
   const candidateRoutes = regionalRoutes.flatMap((route, routeIndex) => {
     if (removedOriginalIndexes.has(routeIndex)) return []
-    return [replacedRouteByOriginalIndex.get(routeIndex) ?? route]
+    return [
+      {
+        ...(replacedRouteByOriginalIndex.get(routeIndex) ?? route),
+        connectionName: routes[routeIndex]!.connectionName,
+      },
+    ]
   })
   if (
     candidateConflictsWithFixedRoutes({
