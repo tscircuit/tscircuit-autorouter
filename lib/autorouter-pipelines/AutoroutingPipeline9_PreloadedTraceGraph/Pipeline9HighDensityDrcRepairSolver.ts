@@ -334,9 +334,6 @@ export class Pipeline9HighDensityDrcRepairSolver extends BaseSolver {
       ) {
         const right = this.outputHdRoutes[rightIndex]!
         if (arePipeline9RoutesOnSameNet(left, right, this.params.connMap)) {
-          if (doRouteViasHaveCopperConflict({ left, right, clearance })) {
-            return true
-          }
           continue
         }
         if (
@@ -353,15 +350,6 @@ export class Pipeline9HighDensityDrcRepairSolver extends BaseSolver {
         if (
           arePipeline9RoutesOnSameNet(left, fixedRoute, this.params.connMap)
         ) {
-          if (
-            doRouteViasHaveCopperConflict({
-              left,
-              right: fixedRoute,
-              clearance,
-            })
-          ) {
-            return true
-          }
           continue
         }
         if (
