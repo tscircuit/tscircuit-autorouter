@@ -7,6 +7,7 @@ import { createObjectsWithZLayers } from "lib/utils/createObjectsWithZLayers"
 import { BaseSolver } from "../BaseSolver"
 import { SingleSimplifiedPathSolver } from "./SingleSimplifiedPathSolver"
 import { SingleSimplifiedPathSolver5 } from "./SingleSimplifiedPathSolver5_Deg45"
+import { VertexShortcutPathSolver } from "./VertexShortcutPathSolver"
 
 export class MultiSimplifiedPathSolver extends BaseSolver {
   override getSolverName(): string {
@@ -28,6 +29,7 @@ export class MultiSimplifiedPathSolver extends BaseSolver {
   minBoardEdgeClearance: number
   defaultViaDiameter: number
   useTraceWidthAwareClearance: boolean
+  enableVertexShortcuts: boolean
 
   constructor(params: {
     unsimplifiedHdRoutes: HighDensityIntraNodeRoute[]
@@ -40,6 +42,7 @@ export class MultiSimplifiedPathSolver extends BaseSolver {
     minBoardEdgeClearance?: number
     defaultViaDiameter?: number
     useTraceWidthAwareClearance?: boolean
+    enableVertexShortcuts?: boolean
   }) {
     super()
     this.MAX_ITERATIONS = 100e6
@@ -64,6 +67,7 @@ export class MultiSimplifiedPathSolver extends BaseSolver {
     this.defaultViaDiameter = params.defaultViaDiameter ?? 0.3
     this.useTraceWidthAwareClearance =
       params.useTraceWidthAwareClearance ?? false
+    this.enableVertexShortcuts = params.enableVertexShortcuts ?? false
 
     this.simplifiedHdRoutes = []
   }
@@ -97,6 +101,22 @@ export class MultiSimplifiedPathSolver extends BaseSolver {
 
     this.activeSubSolver.step()
     if (this.activeSubSolver.solved) {
+      if (
+        this.enableVertexShortcuts &&
+        !(this.activeSubSolver instanceof VertexShortcutPathSolver)
+      ) {
+        this.activeSubSolver = new VertexShortcutPathSolver({
+          inputRoute: this.activeSubSolver.simplifiedRoute,
+          otherHdRoutes: this.activeSubSolver.otherHdRoutes,
+          obstacles: this.obstacles,
+          connMap: this.connMap,
+          colorMap: this.colorMap,
+          outline: this.outline,
+          minBoardEdgeClearance: this.minBoardEdgeClearance,
+          useTraceWidthAwareClearance: this.useTraceWidthAwareClearance,
+        })
+        return
+      }
       this.simplifiedHdRoutes.push(this.activeSubSolver.simplifiedRoute)
       this.activeSubSolver = null
     }
