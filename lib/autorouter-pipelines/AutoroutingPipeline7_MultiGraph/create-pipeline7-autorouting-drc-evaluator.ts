@@ -69,7 +69,7 @@ export const createPipeline7AutoroutingDrcEvaluator = (
       applyViaLayerPolicyToTraces(
         tracesToEvaluate,
         conversionOptions.originalSrj,
-      ),
+      ) as RepairSimplifiedPcbTraces,
     )
   }
 }
