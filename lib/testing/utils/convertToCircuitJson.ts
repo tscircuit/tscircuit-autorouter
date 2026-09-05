@@ -1,4 +1,3 @@
-import { pointToBoxDistance } from "@tscircuit/math-utils"
 import type {
   AnyCircuitElement,
   PcbBoard,
@@ -14,6 +13,7 @@ import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivity
 import { getViaDimensions } from "lib/utils/getViaDimensions"
 import type { LayerName } from "lib/utils/mapZToLayerName"
 import { mapZToLayerName } from "lib/utils/mapZToLayerName"
+import { migrateLegacyObstacleCircuitJsonMetadata } from "./migrate-legacy-obstacle-circuit-json-metadata"
 
 /**
  * Convert a simplified PCB trace from the autorouter to a circuit-json compatible PCB trace
@@ -396,6 +396,10 @@ function createSourceTraces(
     connections,
     obstacles,
   })
+  const declaredConnectivityIds = new Set([
+    ...obstacles.flatMap((obstacle) => obstacle.connectedTo),
+    ...(sourceSrj.traces ?? []).flatMap((trace) => trace.connectsTo ?? []),
+  ])
 
   // Process each connection to create a source_trace
   connections.forEach((connection) => {
@@ -404,12 +408,23 @@ function createSourceTraces(
       .map((point) => point.pcb_port_id)
       .filter((pointId): pointId is string => Boolean(pointId))
     const connectedPortIdSet = new Set(connectedPortIds)
+    const logicalNet =
+      circuitJsonSourceTraceIdResolver.connMap.getNetConnectedToId(
+        connection.name,
+      )
     const getNonEndpointObstacleConnectivityIds = (
       matchingObstacles: Obstacle[],
     ) =>
-      getObstacleConnectivityIds(matchingObstacles).filter(
-        (id) => !connectedPortIdSet.has(id),
-      )
+      Array.from(
+        new Set([
+          ...getObstacleConnectivityIds(matchingObstacles),
+          ...(logicalNet
+            ? circuitJsonSourceTraceIdResolver.connMap
+                .getIdsConnectedToNet(logicalNet)
+                .filter((id) => declaredConnectivityIds.has(id))
+            : []),
+        ]),
+      ).filter((id) => !connectedPortIdSet.has(id))
     const connectedPointIds = connection.pointsToConnect
       .map((point) => point.pointId)
       .filter((pointId): pointId is string => Boolean(pointId))
@@ -423,32 +438,26 @@ function createSourceTraces(
 
     // Test for obstacles we're inside of
     const obstaclesContainingEndpoints: Obstacle[] = []
-    const hdRoute = hdRoutes.find(
-      (r) =>
-        ((r as any).connection_name ?? (r as any).connectionName) ===
-        connection.name,
-    )
-    if (hdRoute) {
-      const getPointFromSegment = (segment: (typeof hdRoute.route)[0]) => {
-        if ("route_type" in segment && segment.route_type === "jumper") {
-          return segment.start
-        }
-        if ("x" in segment && "y" in segment) {
-          return { x: segment.x, y: segment.y }
-        }
-        return { x: 0, y: 0 }
-      }
-
-      const endpoints = [
-        getPointFromSegment(hdRoute.route[0]),
-        getPointFromSegment(hdRoute.route[hdRoute.route.length - 1]),
-      ]
-
-      for (const endpoint of endpoints) {
-        for (const obstacle of obstacles) {
-          if (pointToBoxDistance(endpoint, obstacle) <= 0) {
-            obstaclesContainingEndpoints.push(obstacle)
-          }
+    // Logical connectivity comes from the requested terminals, never from
+    // routed endpoints that may have accidentally landed on another net.
+    for (const endpoint of connection.pointsToConnect) {
+      for (const obstacle of obstacles) {
+        if (
+          !getConnectionPointLayers(endpoint).some((layer) =>
+            obstacle.layers.includes(layer),
+          )
+        )
+          continue
+        const angle = (-(obstacle.ccwRotationDegrees ?? 0) * Math.PI) / 180
+        const dx = endpoint.x - obstacle.center.x
+        const dy = endpoint.y - obstacle.center.y
+        const x = dx * Math.cos(angle) - dy * Math.sin(angle)
+        const y = dx * Math.sin(angle) + dy * Math.cos(angle)
+        if (
+          Math.abs(x) <= obstacle.width / 2 &&
+          Math.abs(y) <= obstacle.height / 2
+        ) {
+          obstaclesContainingEndpoints.push(obstacle)
         }
       }
     }
@@ -495,6 +504,18 @@ function createSourceTraces(
       connections.map((connection) => [connection.name, connection]),
     )
     for (const trace of hdRoutes as SimplifiedPcbTrace[]) {
+      const logicalNet =
+        circuitJsonSourceTraceIdResolver.connMap.getNetConnectedToId(
+          trace.pcb_trace_id,
+        ) ??
+        circuitJsonSourceTraceIdResolver.connMap.getNetConnectedToId(
+          trace.connection_name,
+        )
+      const declaredConnectivity = logicalNet
+        ? circuitJsonSourceTraceIdResolver.connMap
+            .getIdsConnectedToNet(logicalNet)
+            .filter((id) => declaredConnectivityIds.has(id))
+        : []
       const connectedSourcePortIds = [
         ...new Set(
           (trace.connectsTo ?? []).filter((id) => declaredPcbPortIds.has(id)),
@@ -503,7 +524,7 @@ function createSourceTraces(
       const connectedSourcePortIdSet = new Set(connectedSourcePortIds)
       const connectedSourceNetIds = [
         ...new Set(
-          (trace.connectsTo ?? []).filter(
+          [...(trace.connectsTo ?? []), ...declaredConnectivity].filter(
             (id) => !connectedSourcePortIdSet.has(id),
           ),
         ),
@@ -648,8 +669,41 @@ const isLayerName = (layer: string): layer is LayerName => layerNames.has(layer)
  */
 function createPcbPadElements(srj: SimpleRouteJson): AnyCircuitElement[] {
   const pads: AnyCircuitElement[] = []
-  const addedSmtPadIds = new Set<string>()
-  const addedPlatedHoleIds = new Set<string>()
+  const geometriesByElementId = new Map<string, Map<string, string>>()
+  const reservedIds = new Set(
+    srj.obstacles.flatMap((obstacle) => {
+      const metadata = getCircuitJsonMetadata(obstacle)
+      return [metadata.pcb_smtpad_id, metadata.pcb_plated_hole_id].filter(
+        (id): id is string => Boolean(id),
+      )
+    }),
+  )
+  const getFragmentId = (
+    id: string,
+    obstacle: Obstacle,
+  ): string | undefined => {
+    const geometry = JSON.stringify([
+      obstacle.type,
+      obstacle.center,
+      obstacle.width,
+      obstacle.height,
+      obstacle.ccwRotationDegrees ?? 0,
+      [...obstacle.layers].sort(),
+    ])
+    const fragments = geometriesByElementId.get(id) ?? new Map<string, string>()
+    if (fragments.has(geometry)) return undefined
+    let fragmentId = id
+    if (fragments.size) {
+      let index = fragments.size
+      do {
+        fragmentId = `${id}__fragment_${index++}`
+      } while (reservedIds.has(fragmentId))
+    }
+    fragments.set(geometry, fragmentId)
+    reservedIds.add(fragmentId)
+    geometriesByElementId.set(id, fragments)
+    return fragmentId
+  }
   const portPositionMap = getPcbPortPositionMap(srj)
   const declaredPcbPortIds = getSrjDeclaredPcbPortIds(srj)
 
@@ -668,11 +722,13 @@ function createPcbPadElements(srj: SimpleRouteJson): AnyCircuitElement[] {
         ...connectedTo.filter((id) => declaredPcbPortIds.has(id)),
       ]),
     ]
-    const pcbPortId = getBestObstaclePcbPortId(
-      obstacle.center,
-      candidatePortIds,
-      portPositionMap,
-    )
+    const pcbPortId =
+      circuitJsonMetadata.pcb_port_id ??
+      getBestObstaclePcbPortId(
+        obstacle.center,
+        candidatePortIds,
+        portPositionMap,
+      )
 
     if (!smtPadId && !platedHoleId && !pcbPortId) continue
 
@@ -688,10 +744,31 @@ function createPcbPadElements(srj: SimpleRouteJson): AnyCircuitElement[] {
     const isMultiLayerObstacle = Boolean(platedHoleId) || layers.length > 1
 
     if (isMultiLayerObstacle) {
-      const id =
-        platedHoleId ?? `pcb_plated_hole_${x.toFixed(3)}_${y.toFixed(3)}`
-      if (addedPlatedHoleIds.has(id)) continue
-      addedPlatedHoleIds.add(id)
+      const id = getFragmentId(
+        platedHoleId ?? `pcb_plated_hole_${x}_${y}`,
+        obstacle,
+      )
+      if (!id) continue
+
+      // Legacy SRJs distinguish oval copper from rectangular copper. Equal
+      // width and height alone do not make a rectangular pad circular.
+      if ((obstacle as { type: string }).type === "oval") {
+        pads.push({
+          type: "pcb_plated_hole",
+          pcb_plated_hole_id: id,
+          shape: "oval",
+          outer_width: width,
+          outer_height: height,
+          hole_width: Math.min(width, height) * 0.5,
+          hole_height: Math.min(width, height) * 0.5,
+          ccw_rotation: rotationDegrees ?? 0,
+          x,
+          y,
+          layers,
+          ...(pcbPortId ? { pcb_port_id: pcbPortId } : {}),
+        })
+        continue
+      }
 
       if (
         typeof rotationDegrees === "number" &&
@@ -720,23 +797,6 @@ function createPcbPadElements(srj: SimpleRouteJson): AnyCircuitElement[] {
         continue
       }
 
-      const isCircularLike = Math.abs(width - height) < 0.001
-
-      if (isCircularLike) {
-        pads.push({
-          type: "pcb_plated_hole",
-          pcb_plated_hole_id: id,
-          shape: "circle",
-          outer_diameter: Math.max(width, height),
-          hole_diameter: Math.max(Math.min(width, height) * 0.5, 0.1),
-          x,
-          y,
-          layers,
-          ...(pcbPortId ? { pcb_port_id: pcbPortId } : {}),
-        })
-        continue
-      }
-
       pads.push({
         type: "pcb_plated_hole",
         pcb_plated_hole_id: id,
@@ -755,9 +815,28 @@ function createPcbPadElements(srj: SimpleRouteJson): AnyCircuitElement[] {
       continue
     }
 
-    const id = smtPadId ?? `pcb_smtpad_${x.toFixed(3)}_${y.toFixed(3)}`
-    if (addedSmtPadIds.has(id)) continue
-    addedSmtPadIds.add(id)
+    const id = getFragmentId(
+      smtPadId ?? `pcb_smtpad_${x}_${y}_${layers[0]}`,
+      obstacle,
+    )
+    if (!id) continue
+
+    if ((obstacle as { type: string }).type === "oval") {
+      pads.push({
+        type: "pcb_smtpad",
+        pcb_smtpad_id: id,
+        shape: "rotated_pill",
+        x,
+        y,
+        width,
+        height,
+        radius: Math.min(width, height) / 2,
+        ccw_rotation: rotationDegrees ?? 0,
+        layer: layers[0],
+        ...(pcbPortId ? { pcb_port_id: pcbPortId } : {}),
+      })
+      continue
+    }
 
     if (
       typeof rotationDegrees === "number" &&
@@ -929,9 +1008,14 @@ export function convertToCircuitJson(
     minTraceWidth = 0.1,
     minViaDiameter,
     minViaHoleDiameter,
-    originalSrj,
+    originalSrj: originalInputSrj,
     includeOriginalConnections = false,
   } = options
+  srjWithPointPairs =
+    migrateLegacyObstacleCircuitJsonMetadata(srjWithPointPairs)
+  const originalSrj = originalInputSrj
+    ? migrateLegacyObstacleCircuitJsonMetadata(originalInputSrj)
+    : undefined
   const viaDimensions = getViaDimensions(srjWithPointPairs)
   const resolvedMinViaDiameter = minViaDiameter ?? viaDimensions.padDiameter
   const requestedMinViaHoleDiameter =
