@@ -1518,8 +1518,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         regionalB01RepairResult.remainingDrcIssueCount,
       regionalB01RepairPreloadEligibleDrcIssueCount:
         regionalB01RepairResult.preloadEligibleDrcIssueCount,
-      regionalB01RepairAttempted:
-        regionalB01RepairResult.preloadRepairAttempted,
+      regionalB01RepairAttempted: regionalB01RepairResult.repairAttempted,
       regionalB01RepairTraceIdCount:
         preloadRepairTraceIds.size +
         (preloadRepairTraceIds.collidingFixedTraceIds?.size ?? 0),
