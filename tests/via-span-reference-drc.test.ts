@@ -44,9 +44,11 @@ test("reference and indexed DRC check the same declared via span", () => {
   const before = structuredClone(traces)
   const engine = new AutoroutingDrcEngine(srj)
   const json = convertToCircuitJson(srj, traces)
-  expect(json.find((element) => element.type === "pcb_via")?.layers).toEqual(
-    ["top", "inner1", "inner2"],
-  )
+  expect(json.find((element) => element.type === "pcb_via")?.layers).toEqual([
+    "top",
+    "inner1",
+    "inner2",
+  ])
   expect(engine.evaluate(traces).errors.length).toBeGreaterThan(0)
   expect(
     getDrcErrors(json, { includeTraceContinuity: false }).errors.length,
