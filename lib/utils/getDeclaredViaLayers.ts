@@ -28,7 +28,9 @@ export const getDeclaredViaLayers = ({
   const from = boardLayers.indexOf(fromLayer)
   const to = boardLayers.indexOf(toLayer)
   if (from < 0 || to < 0) {
-    throw new Error(`Via transition ${fromLayer} -> ${toLayer} is outside the board`)
+    throw new Error(
+      `Via transition ${fromLayer} -> ${toLayer} is outside the board`,
+    )
   }
   if (!allowBlindAndBuriedVias) return boardLayers
   if (!layers) {
@@ -44,7 +46,9 @@ export const getDeclaredViaLayers = ({
     ordered.length !== layers.length ||
     last - first + 1 !== ordered.length
   ) {
-    throw new Error("Via layers must form a board span containing the transition")
+    throw new Error(
+      "Via layers must form a board span containing the transition",
+    )
   }
   return ordered
 }
