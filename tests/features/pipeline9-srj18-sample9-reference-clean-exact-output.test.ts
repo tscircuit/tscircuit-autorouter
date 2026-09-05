@@ -22,6 +22,8 @@ test("Pipeline9 preserves SRJ18 sample 9's reference-clean exact output", async 
     postExactReferenceValidationSkippedForIndexedIssueCount: false,
     postExactReferenceDrcIssueCount: 0,
     postExactReferenceAccepted: true,
+    clearancePrecisionCandidateCount: 0,
+    clearancePrecisionRepaired: false,
     terminalEscapeSkippedForIndexedIssueCount: false,
     terminalEscapeCandidateCount: 0,
     terminalEscapeAcceptedCount: 0,

@@ -24,6 +24,7 @@ import { convertHdRouteToSimplifiedRoute } from "lib/utils/convertHdRouteToSimpl
 import { mapZToLayerName } from "lib/utils/mapZToLayerName"
 import { Pipeline7AdaptiveDrcBranchPortfolioSolver } from "../AutoroutingPipeline7_MultiGraph/Pipeline7AdaptiveDrcBranchPortfolioSolver"
 import { createPipeline7HdRoutesToSimplifiedPcbTracesConverter } from "../AutoroutingPipeline7_MultiGraph/convertPipeline7HdRoutesToSimplifiedPcbTraces"
+import { applyPipeline9ClearancePrecisionRepairs } from "./applyPipeline9ClearancePrecisionRepairs"
 import { applyPipeline9RegionalB01Repairs } from "./applyPipeline9RegionalB01Repairs"
 import { applyPipeline9TerminalEscapeRelocations } from "./applyPipeline9TerminalEscapeRelocations"
 import { assignUniquePcbTraceIdsToNewTraces } from "./assignUniquePcbTraceIdsToNewTraces"
@@ -1378,7 +1379,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       return
     }
     if (!this.exactRepairSolver.solved) return
-    const exactOutput = this.exactRepairSolver.getOutput()
+    let exactOutput = this.exactRepairSolver.getOutput()
     const exactIndexedDrcIssueCountStat =
       this.exactRepairSolver.stats.finalDrcIssueCount
     const exactIndexedDrcIssueCount =
@@ -1392,6 +1393,8 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       exactIndexedDrcIssueCount <=
         MAX_POST_EXACT_PRECISION_PASS_INDEXED_ISSUE_COUNT
     let postExactReferenceDrcIssueCount: number | undefined
+    let clearancePrecisionCandidateCount = 0
+    let clearancePrecisionRepaired = false
     if (shouldRunPostExactPrecisionPass) {
       // The indexed evaluator can retain conservative false positives after the
       // exact portfolio has produced a reference-clean result. Do not let later
@@ -1405,7 +1408,29 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         ? exactReferenceDrcResult
         : exactReferenceDrcResult.errors
       postExactReferenceDrcIssueCount = exactReferenceDrcErrors.length
-      if (exactReferenceDrcErrors.length === 0) {
+      if (exactReferenceDrcErrors.length > 0) {
+        const precisionResult = applyPipeline9ClearancePrecisionRepairs({
+          srj: this.params.srj,
+          routes: exactOutput,
+          newConnections: this.params.newConnections,
+          syntheticConnectionNames: this.syntheticConnectionNames,
+          connMap: this.params.connMap,
+          drcEvaluator: this.cachedReferenceDrcEvaluator!,
+          initialErrors: exactReferenceDrcErrors,
+          initialErrorsWithCenters: Array.isArray(exactReferenceDrcResult)
+            ? exactReferenceDrcResult
+            : (exactReferenceDrcResult.errorsWithCenters ??
+              exactReferenceDrcResult.errors),
+        })
+        clearancePrecisionCandidateCount =
+          precisionResult.attemptedCandidateCount
+        clearancePrecisionRepaired = precisionResult.repaired
+        if (precisionResult.repaired) {
+          exactOutput = precisionResult.routes
+          postExactReferenceDrcIssueCount = 0
+        }
+      }
+      if (postExactReferenceDrcIssueCount === 0) {
         this.combinedOutput = exactOutput
         this.stats = {
           ...this.stats,
@@ -1418,6 +1443,8 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
           postExactReferenceValidationSkippedForIndexedIssueCount: false,
           postExactReferenceDrcIssueCount: 0,
           postExactReferenceAccepted: true,
+          clearancePrecisionCandidateCount,
+          clearancePrecisionRepaired,
           regionalB01RepairCandidateCount: 0,
           regionalB01RepairAcceptedCount: 0,
           regionalB01RepairFallbackCandidateCount: 0,
@@ -1500,6 +1527,8 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         !shouldRunPostExactPrecisionPass,
       postExactReferenceDrcIssueCount,
       postExactReferenceAccepted: false,
+      clearancePrecisionCandidateCount,
+      clearancePrecisionRepaired,
       regionalB01RepairCandidateCount:
         regionalB01RepairResult.attemptedCandidateCount,
       regionalB01RepairAcceptedCount:
