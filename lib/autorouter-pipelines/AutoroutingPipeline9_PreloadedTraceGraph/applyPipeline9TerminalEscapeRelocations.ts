@@ -7,11 +7,11 @@ import type {
 import type { HighDensityRoute } from "lib/types/high-density-types"
 import { mapZToLayerName } from "lib/utils/mapZToLayerName"
 import {
+  type Pipeline9DrcError,
   clonePipeline9HdRoutes,
   getPipeline9DrcErrors,
   getPipeline9RouteIndexByTraceId,
   isPipeline9DrcCandidateBetter,
-  type Pipeline9DrcError,
 } from "./pipeline9JointDrcRepairUtils"
 
 type TerminalEscapeRelocationResult = {
@@ -28,7 +28,6 @@ const CANDIDATE_ANGLES = Array.from(
   { length: 16 },
   (_, angleIndex) => (angleIndex * Math.PI) / 8,
 )
-
 const isObstacleTraceError = (error: Pipeline9DrcError) => {
   if (error.type === "pcb_pad_trace_clearance_error") return true
   if (error.type !== "pcb_trace_error") return false

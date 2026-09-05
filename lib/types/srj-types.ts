@@ -115,6 +115,8 @@ export interface Obstacle {
    */
   circuitJsonMetadata?: CircuitJsonMetadata
   type: "rect"
+  /** Physical pad shape inside the obstacle's rectangular bounds. */
+  shape?: "rect" | "circle"
   layers: string[]
   /** Public z-layer indexes supplied by SimpleRouteJson producers. */
   zLayers?: number[]

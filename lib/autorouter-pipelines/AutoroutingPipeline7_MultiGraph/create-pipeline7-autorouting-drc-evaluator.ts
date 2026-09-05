@@ -33,6 +33,14 @@ export const createPipeline7AutoroutingDrcEvaluator = (
       conversionOptions.originalSrj.minViaDiameter ??
       conversionOptions.srjWithPointPairs.minViaDiameter,
   }
+  const traceClearance = Math.max(
+    conversionOptions.originalSrj.minTraceToPadEdgeClearance ??
+      AUTOROUTING_TRACE_CLEARANCE,
+    AUTOROUTING_TRACE_CLEARANCE,
+  )
+  const viaToPadClearance =
+    conversionOptions.originalSrj.minViaEdgeToPadEdgeClearance ??
+    AUTOROUTING_VIA_CLEARANCE
   // DRC interactions cannot span farther than the widest copper feature plus
   // clearance. Indexing at that physical scale avoids board-size-dependent
   // cells that become increasingly coarse on large layouts.
@@ -40,12 +48,13 @@ export const createPipeline7AutoroutingDrcEvaluator = (
     Math.max(
       getViaDimensions(conversionOptions.originalSrj).padDiameter,
       engineSrj.minTraceWidth,
-    ) + Math.max(AUTOROUTING_TRACE_CLEARANCE, AUTOROUTING_VIA_CLEARANCE)
+    ) + Math.max(traceClearance, viaToPadClearance, AUTOROUTING_VIA_CLEARANCE)
   const engine = new AutoroutingDrcEngine(engineSrj as RepairSimpleRouteJson, {
     connMap: conversionOptions.connMap,
-    includeTraceViaOwnerMetadata: true,
-    traceClearance: AUTOROUTING_TRACE_CLEARANCE,
+    traceClearance,
     viaClearance: AUTOROUTING_VIA_CLEARANCE,
+    viaToPadClearance,
+    includeTraceViaOwnerMetadata: true,
     spatialCellSize,
   })
   const convertCandidateRoutes =

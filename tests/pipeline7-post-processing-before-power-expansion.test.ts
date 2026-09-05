@@ -58,29 +58,31 @@ test("Pipeline7 runs post-processing before default power expansion", () => {
         __rootConnectionNames: [connection.name],
       })),
     },
-    exactGeometryDrcForceImproveSolver: {
-      getOutput: () => [
-        {
-          connectionName: "PAIR_P_mst0",
-          route: [
-            { x: 1, y: 2, z: 0 },
-            { x: 19, y: 2, z: 0 },
-          ],
-          traceThickness: 0.15,
-          viaDiameter: 0.3,
-          vias: [],
-        },
-        {
-          connectionName: "PAIR_N_mst0",
-          route: [
-            { x: 1, y: 6, z: 0 },
-            { x: 19, y: 6, z: 0 },
-          ],
-          traceThickness: 0.15,
-          viaDiameter: 0.3,
-          vias: [],
-        },
-      ],
+    finePitchPadEscapeSolver: {
+      getOutput: () => ({
+        routes: [
+          {
+            connectionName: "PAIR_P_mst0",
+            route: [
+              { x: 1, y: 2, z: 0 },
+              { x: 19, y: 2, z: 0 },
+            ],
+            traceThickness: 0.15,
+            viaDiameter: 0.3,
+            vias: [],
+          },
+          {
+            connectionName: "PAIR_N_mst0",
+            route: [
+              { x: 1, y: 6, z: 0 },
+              { x: 19, y: 6, z: 0 },
+            ],
+            traceThickness: 0.15,
+            viaDiameter: 0.3,
+            vias: [],
+          },
+        ],
+      }),
     },
   } as any)
 
