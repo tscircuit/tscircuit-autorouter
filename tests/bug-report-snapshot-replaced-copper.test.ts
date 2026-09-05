@@ -11,7 +11,10 @@ test("bug report SVG removes replaced copper from its count and drawing", () => 
     srjWithPointPairs: structuredClone(snapshotInput),
     drcOptions: { includeTraceContinuity: false },
     routedTraces: [
-      { ...structuredClone(crossingTrace), __replaces_pcb_trace_id: "existing" },
+      {
+        ...structuredClone(crossingTrace),
+        __replaces_pcb_trace_id: "existing",
+      },
     ],
   })
 
