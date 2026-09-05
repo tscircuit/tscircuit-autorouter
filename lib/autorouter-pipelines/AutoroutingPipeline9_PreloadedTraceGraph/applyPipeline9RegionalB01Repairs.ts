@@ -406,7 +406,15 @@ const getRegionalCandidate = ({
   )
   const solver = new Pipeline9HighDensitySolver({
     nodePortPoints: [movableProblem.nodeWithPortPoints],
-    fixedHdRoutes: [...fixedRoutes, ...fixedObstacleRoutes],
+    fixedHdRoutes: [...fixedRoutes, ...fixedObstacleRoutes].map((route) => ({
+      ...route,
+      rootConnectionName:
+        connMap.getNetConnectedToId(
+          route.rootConnectionName ?? route.connectionName,
+        ) ??
+        route.rootConnectionName ??
+        route.connectionName,
+    })),
     connMap,
     colorMap,
     obstacles: srj.obstacles,
@@ -583,6 +591,7 @@ export const applyPipeline9RegionalB01Repairs = ({
   syntheticConnectionNames,
   drcEvaluator,
   initialErrors,
+  allowTracePairRepair = false,
   preloadRepairTraceIds,
   connMap,
   colorMap,
@@ -598,6 +607,7 @@ export const applyPipeline9RegionalB01Repairs = ({
   syntheticConnectionNames: ReadonlySet<string>
   drcEvaluator: DrcEvaluator
   initialErrors?: Pipeline9DrcError[]
+  allowTracePairRepair?: boolean
   preloadRepairTraceIds: ReadonlySet<string>
   connMap: ConnectivityMap
   colorMap: Record<string, string>
@@ -630,9 +640,11 @@ export const applyPipeline9RegionalB01Repairs = ({
     newConnections,
     syntheticConnectionNames,
   })
-  const hasMovableTracePair = currentErrors.some((error) =>
-    isMovableTracePairError(error, initialRouteIndexByTraceId),
-  )
+  const hasMovableTracePair =
+    allowTracePairRepair &&
+    currentErrors.some((error) =>
+      isMovableTracePairError(error, initialRouteIndexByTraceId),
+    )
   if (preloadEligibleDrcIssueCount === 0 && !hasMovableTracePair) {
     return {
       routes: currentRoutes,
