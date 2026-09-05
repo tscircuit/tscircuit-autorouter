@@ -207,15 +207,17 @@ Track routing performance and benchmark results in the [Autorouter Benchmark Das
 ### DRC failure dataset (SRJ33)
 
 [dataset-srj33-drc-failures](https://github.com/tscircuit/dataset-srj33-drc-failures)
-contains 31 bug-report inputs (28 distinct SRJs) that completed Pipeline 7 routing
-but failed the dataset's pinned relaxed DRC checks. The integration loads the
-original inputs so current solvers can be compared against that baseline.
+contains 12 distinct inputs with at least one relaxed DRC issue in the
+[Pipeline 9 benchmark](https://github.com/tscircuit/tscircuit-autorouter/actions/runs/33978041068).
+The 19 passing samples have been removed. Original IDs are preserved:
+001–006, 010–013, 020, and 025.
 
 ```sh
-bun scripts/run-sample.ts --pipeline 7 --dataset srj33 --sample 1
+bun scripts/run-sample.ts --pipeline 9 --dataset srj33 --sample 1
 ```
 
 Use `srj33` in the benchmark workflow's dataset input, or open
-`benchmarks/dataset-srj33` in the Cosmos playground to browse samples 001–031.
-The dataset repository records source issues, duplicate inputs, routed baseline
-outputs, and DRC evidence.
+`benchmarks/dataset-srj33` in Cosmos. CLI `--sample` selects by position in the
+filtered list: `--sample 12` loads `sample025`. Cosmos uses the original IDs.
+The dataset records source issues and Pipeline 9 filtering evidence; its saved
+routed outputs remain the historical Pipeline 7 baseline.
