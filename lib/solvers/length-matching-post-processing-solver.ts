@@ -146,6 +146,7 @@ export class LengthMatchingPostProcessingSolver extends BaseSolver {
       obstacles: params.obstacles,
       bounds: params.bounds,
       layerCount: params.layerCount,
+      minTraceToPadEdgeClearance: params.obstacleMargin,
     })
     this.MAX_ITERATIONS =
       this.differentialPairSolver.MAX_ITERATIONS + 100_000 + 10
