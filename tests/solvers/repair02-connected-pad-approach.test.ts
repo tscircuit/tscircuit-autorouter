@@ -5,8 +5,10 @@ import type { HighDensityRoute } from "lib/types/high-density-types"
 
 test("repair02 adapter preserves the BGA pad approach using connMap", () => {
   const route: HighDensityRoute = {
-    connectionName: "source_trace_4", traceThickness: 0.1,
-    vias: [], viaDiameter: 0.5,
+    connectionName: "source_trace_4",
+    traceThickness: 0.1,
+    vias: [],
+    viaDiameter: 0.5,
     route: [
       { x: -0.825, y: -3.175, z: 0 },
       { x: -0.854, y: -3.305, z: 0 },
@@ -19,15 +21,28 @@ test("repair02 adapter preserves the BGA pad approach using connMap", () => {
     ],
   }
   const solver = new Pipeline4HighDensityRepairSolver({
-    nodeWithPortPoints: [{
-      capacityMeshNodeId: "cmn_1", center: { x: 0.15, y: -2.95 },
-      width: 4.65, height: 1.55, availableZ: [0, 1], portPoints: [],
-    }],
-    hdRoutes: [route], repairMargin: 0.2,
-    obstacles: [{
-      type: "rect", center: { x: -0.825, y: -4.2 },
-      width: 0.8, height: 0.95, layers: ["top"], connectedTo: ["pcb_smtpad_40"],
-    }],
+    nodeWithPortPoints: [
+      {
+        capacityMeshNodeId: "cmn_1",
+        center: { x: 0.15, y: -2.95 },
+        width: 4.65,
+        height: 1.55,
+        availableZ: [0, 1],
+        portPoints: [],
+      },
+    ],
+    hdRoutes: [route],
+    repairMargin: 0.2,
+    obstacles: [
+      {
+        type: "rect",
+        center: { x: -0.825, y: -4.2 },
+        width: 0.8,
+        height: 0.95,
+        layers: ["top"],
+        connectedTo: ["pcb_smtpad_40"],
+      },
+    ],
     connMap: new ConnectivityMap({ net: ["source_trace_4", "pcb_smtpad_40"] }),
   })
   solver.solve()

@@ -253,8 +253,8 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
       params.obstacles,
       Math.max(
         2,
-        ...params.nodeWithPortPoints.flatMap((node) =>
-          node.availableZ?.map((z) => z + 1) ?? [],
+        ...params.nodeWithPortPoints.flatMap(
+          (node) => node.availableZ?.map((z) => z + 1) ?? [],
         ),
       ),
     )
