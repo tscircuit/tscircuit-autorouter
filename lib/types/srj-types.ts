@@ -170,8 +170,6 @@ export interface SimplifiedPcbTrace {
         to_layer: string
         from_layer: string
         via_diameter?: number
-        /** Explicit copper layers; otherwise expand the inclusive from/to span. */
-        layers?: string[]
         via_hole_diameter?: number
       }
     | {

@@ -57,13 +57,13 @@ test("reference and indexed DRC check the same declared via span", () => {
 
   const via = traces[0]!.route[0]!
   if (via.route_type !== "via") throw new Error("Expected a via")
-  via.layers = ["top"]
-  const explicitJson = convertToCircuitJson(srj, traces)
+  via.to_layer = "top"
+  const singleLayerJson = convertToCircuitJson(srj, traces)
   expect(
-    explicitJson.find((element) => element.type === "pcb_via")?.layers,
+    singleLayerJson.find((element) => element.type === "pcb_via")?.layers,
   ).toEqual(["top"])
   expect(engine.evaluate(traces).errors).toEqual([])
   expect(
-    getDrcErrors(explicitJson, { includeTraceContinuity: false }).errors,
+    getDrcErrors(singleLayerJson, { includeTraceContinuity: false }).errors,
   ).toEqual([])
 })
