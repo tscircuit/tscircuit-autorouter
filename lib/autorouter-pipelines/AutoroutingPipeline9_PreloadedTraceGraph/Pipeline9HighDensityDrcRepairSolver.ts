@@ -202,6 +202,19 @@ export class Pipeline9HighDensityDrcRepairSolver extends BaseSolver {
     return true
   }
 
+  private getUnownedNodeConnectionName(
+    node: NodeWithPortPoints,
+  ): string | undefined {
+    const ownedConnectionNames = new Set(
+      this.outputHdRoutes
+        .filter((route) => route.regionId === node.capacityMeshNodeId)
+        .map((route) => route.connectionName),
+    )
+    return node.portPoints.find(
+      (portPoint) => !ownedConnectionNames.has(portPoint.connectionName),
+    )?.connectionName
+  }
+
   private startNodeRepair(node: NodeWithPortPoints): void {
     this.activeNode = node
     this.acceptedCandidate = null
@@ -282,6 +295,20 @@ export class Pipeline9HighDensityDrcRepairSolver extends BaseSolver {
 
     const nextNode = this.getNextAffectedNode()
     if (nextNode) {
+      const unownedConnectionName =
+        this.getUnownedNodeConnectionName(nextNode)
+      if (unownedConnectionName) {
+        this.attemptedNodeIds.add(nextNode.capacityMeshNodeId)
+        this.stats.attemptedNodeCount = this.attemptedNodeIds.size
+        // The ordinary solver routes every connection represented by the
+        // node. A fixed/preloaded pseudo-connection would therefore make the
+        // candidate fail the exact route-ownership check after doing all of
+        // the search work, so reject that impossible candidate up front.
+        this.finishExhaustedNodeRepair(
+          `Node "${nextNode.capacityMeshNodeId}" includes unowned connection "${unownedConnectionName}"`,
+        )
+        return
+      }
       this.startNodeRepair(nextNode)
       return
     }
