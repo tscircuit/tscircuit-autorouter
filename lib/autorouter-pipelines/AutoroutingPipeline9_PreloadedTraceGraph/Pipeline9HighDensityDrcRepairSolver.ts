@@ -50,7 +50,7 @@ const replaceNodeRoutes = ({
   currentRoutes: HighDensityRoute[]
   candidateRoutes: HighDensityRoute[]
   nodeId: string
-}): HighDensityRoute[] => {
+}): HighDensityRoute[] | null => {
   const candidatesByConnectionName = new Map<string, HighDensityRoute[]>()
   for (const candidateRoute of candidateRoutes) {
     const routes =
@@ -65,11 +65,7 @@ const replaceNodeRoutes = ({
       currentRoute.connectionName,
     )
     const candidate = candidates?.shift()
-    if (!candidate) {
-      throw new Error(
-        `Pipeline9 high-density DRC repair lost route "${currentRoute.connectionName}" in node "${nodeId}"`,
-      )
-    }
+    if (!candidate) return null
     return {
       ...candidate,
       rootConnectionName: currentRoute.rootConnectionName,
@@ -77,14 +73,9 @@ const replaceNodeRoutes = ({
     }
   })
 
-  const unusedCandidate = [...candidatesByConnectionName.values()].find(
-    (routes) => routes.length > 0,
-  )?.[0]
-  if (unusedCandidate) {
-    throw new Error(
-      `Pipeline9 high-density DRC repair produced an extra route "${unusedCandidate.connectionName}" in node "${nodeId}"`,
-    )
-  }
+  // The node input can include preloaded pseudo-connections that are not owned
+  // by this stage. Keep those preloads fixed; the board-level evaluator below
+  // checks the projected candidate against their original copper geometry.
   return replacedRoutes
 }
 
@@ -186,6 +177,7 @@ export class Pipeline9HighDensityDrcRepairSolver extends BaseSolver {
       candidateRoutes: candidateNodeRoutes,
       nodeId,
     })
+    if (!candidateRoutes) return false
     const candidateErrors = getPipeline9DrcErrors(
       this.params.drcEvaluator,
       candidateRoutes,
