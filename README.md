@@ -203,24 +203,3 @@ bun run build
 ## Maintainer resources
 
 Track routing performance and benchmark results in the [Autorouter Benchmark Dashboard](https://autorouter-benchmark-dashboard.vercel.app/).
-
-### DRC failure dataset (SRJ33)
-
-[dataset-srj33-drc-failures](https://github.com/tscircuit/dataset-srj33-drc-failures)
-contains 15 distinct inputs that complete Pipeline 9 routing with independently
-confirmed relaxed DRC errors. A [fresh Blacksmith audit](https://github.com/tscircuit/tscircuit-autorouter/actions/runs/33986579884)
-rechecked all 37 previous samples after conversion fixes: 16 pass DRC, and six
-more are excluded because their reported errors could not all be authenticated.
-The retained samples have 324 error records supported by independent geometry,
-layer, and net checks. Original IDs remain sparse.
-
-```sh
-bun scripts/run-sample.ts --pipeline 9 --dataset srj33 --sample 1
-```
-
-Use `srj33` in the benchmark workflow's dataset input, or open
-`benchmarks/dataset-srj33` in Cosmos. CLI `--sample` selects by position:
-`--sample 1` loads `sample002`, and `--sample 15` loads `sample056`.
-Cosmos uses the sample IDs. The dataset includes original inputs, fresh Pipeline 9
-outputs, exact DRC errors, per-error clearance witnesses, and a complete archive
-of all 37 revalidation results and inclusion/exclusion decisions.
