@@ -44,6 +44,19 @@ export const combinePreloadedAndRoutedTraces = (
   ]
 }
 
+const getObstacleConnectivityGroups = (srj: SimpleRouteJson): string[][] =>
+  srj.obstacles
+    .map((obstacle) => [
+      ...new Set(
+        [
+          obstacle.obstacleId,
+          ...obstacle.connectedTo,
+          ...(obstacle.offBoardConnectsTo ?? []),
+        ].filter((id): id is string => Boolean(id)),
+      ),
+    ])
+    .filter((connectionGroup) => connectionGroup.length > 1)
+
 /** Converts routed traces and evaluates them using the benchmark relaxed DRC. */
 export const evaluateRelaxedDrc = ({
   inputSrj,
@@ -68,6 +81,10 @@ export const evaluateRelaxedDrc = ({
     ...getDrcErrors(circuitJson, {
       ...RELAXED_DRC_OPTIONS,
       ...drcOptions,
+      additionalConnections: [
+        ...(drcOptions?.additionalConnections ?? []),
+        ...getObstacleConnectivityGroups(inputSrj),
+      ],
     }),
   }
 }

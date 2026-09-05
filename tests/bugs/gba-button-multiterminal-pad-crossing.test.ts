@@ -7,7 +7,7 @@ import simpleRouteJson from "../../fixtures/bug-reports/gba-button-multiterminal
 }
 import { getLastStepSvg } from "../fixtures/getLastStepSvg"
 
-test("Pipeline9 records false DRCs for internally connected switch pads", () => {
+test("Pipeline9 accepts traces crossing internally connected switch pads", () => {
   // Exact button-pad positions and switch connectivity metadata extracted from
   // the full Game Boy Advance SRJ. No routed traces or route hints are preset.
   const srj = structuredClone(simpleRouteJson) as SimpleRouteJson
@@ -18,18 +18,42 @@ test("Pipeline9 records false DRCs for internally connected switch pads", () => 
 
   solver.solve()
 
+  const routedTraces = solver.getOutputSimplifiedPcbTraces()
   const { errors } = evaluateRelaxedDrc({
     inputSrj: srj,
     srjWithPointPairs: solver.srjWithPointPairs!,
-    routedTraces: solver.getOutputSimplifiedPcbTraces(),
+    routedTraces,
   })
 
   expect(solver.error).toBeNull()
   expect(solver.failed).toBeFalse()
   expect(solver.solved).toBeTrue()
-  expect(errors).toHaveLength(4)
-  expect(errors.every((error) => error.type === "pcb_trace_error")).toBeTrue()
-  const traceErrors = errors.filter((error) => error.type === "pcb_trace_error")
+  expect(errors).toEqual([])
+
+  // Validate exactly the same automatically routed copper without the switch's
+  // internal connections. Undeclared pad contacts must still be reported.
+  const srjWithoutInternalConnections = structuredClone(srj)
+  const pointPairsWithoutInternalConnections = structuredClone(
+    solver.srjWithPointPairs!,
+  )
+  for (const validationSrj of [
+    srjWithoutInternalConnections,
+    pointPairsWithoutInternalConnections,
+  ]) {
+    for (const obstacle of validationSrj.obstacles) {
+      delete obstacle.offBoardConnectsTo
+    }
+  }
+  const { errors: undeclaredContactErrors } = evaluateRelaxedDrc({
+    inputSrj: srjWithoutInternalConnections,
+    srjWithPointPairs: pointPairsWithoutInternalConnections,
+    routedTraces,
+  })
+  expect(undeclaredContactErrors).toHaveLength(4)
+  const traceErrors = undeclaredContactErrors.filter(
+    (error) => error.type === "pcb_trace_error",
+  )
+  expect(traceErrors).toHaveLength(4)
   expect(
     traceErrors
       .flatMap((error) => error.pcb_port_ids ?? [])
@@ -65,4 +89,4 @@ test("Pipeline9 records false DRCs for internally connected switch pads", () => 
   expect(getLastStepSvg(solver.visualize())).toMatchSvgSnapshot(
     import.meta.path,
   )
-}, 30_000)
+})
