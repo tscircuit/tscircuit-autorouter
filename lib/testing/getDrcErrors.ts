@@ -114,9 +114,24 @@ export const getDrcErrors = (
       minClearance: viaClearance,
     }),
   ]
+  // This checker reports placement errors without a via identity or center.
+  // Evaluate each via with the unchanged pad/board context so its location is
+  // attached explicitly, without interpreting an opaque generated error ID.
+  const nonViaElements = options.includeViaPadChecks
+    ? circuitJson.filter((element): boolean => element.type !== "pcb_via")
+    : []
   const viaPadErrors = options.includeViaPadChecks
     ? [
-        ...checkViasInPads(circuitJson),
+        ...circuitJson.flatMap((element): DrcErrorWithCenter[] =>
+          element.type === "pcb_via"
+            ? checkViasInPads([...nonViaElements, element]).map(
+                (error): DrcErrorWithCenter => ({
+                  ...error,
+                  center: { x: element.x, y: element.y },
+                }),
+              )
+            : [],
+        ),
         ...checkViaPadClearance(circuitJson, {
           connMap,
           minClearance: options.traceClearance,
@@ -150,19 +165,6 @@ export const getDrcErrors = (
   const viasById = new Map(vias.map((via) => [via.pcb_via_id, via]))
 
   const errorsWithCenters = errors.map((error) => {
-    if (
-      error.type === "pcb_placement_error" &&
-      error.pcb_placement_error_id.startsWith("via_in_pad_")
-    ) {
-      const via = vias
-        .filter((candidate) =>
-          error.pcb_placement_error_id.startsWith(
-            `via_in_pad_${candidate.pcb_via_id}_`,
-          ),
-        )
-        .sort((a, b) => b.pcb_via_id.length - a.pcb_via_id.length)[0]
-      if (via) return { ...error, center: { x: via.x, y: via.y } }
-    }
     if (
       error.type === "pcb_via_trace_clearance_error" &&
       typeof error.pcb_via_id === "string"
