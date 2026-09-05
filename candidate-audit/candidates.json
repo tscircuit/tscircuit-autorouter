@@ -1,0 +1,261 @@
+[
+  {
+    "id": "sample001",
+    "title": "Autorouting Bug Report: <board#8659 />",
+    "input": "candidate-audit/inputs/sample001.json",
+    "sourceUrl": "https://api.tscircuit.com/autorouting/bug_reports/get?autorouting_bug_report_id=9ddc55f1-b346-442f-bc22-417e4de89d74&download=true",
+    "inputSha256": "847d55399e88c9edb69b22812ba27640427a3bfb7a043fcef6a7f68494bb86ba"
+  },
+  {
+    "id": "sample002",
+    "title": "Autorouter emits overlapping GPIO35/PSRAM vias causing a deterministic short",
+    "input": "candidate-audit/inputs/sample002.json",
+    "sourceUrl": "https://gist.githubusercontent.com/seveibar/5033268f8e1b21e34216dc96bfed2adc/raw/580c32a1340fc6667f22ab84972a70a0c6fdaf33/phase-0.input.simple-route.json",
+    "inputSha256": "cd88def57a6f06660f7738f72bb442a49e3e176498e65769d9671772347e1892"
+  },
+  {
+    "id": "sample003",
+    "title": "Autorouting Bug Report: <board#641049 />",
+    "input": "candidate-audit/inputs/sample003.json",
+    "sourceUrl": "https://api.tscircuit.com/autorouting/bug_reports/get?autorouting_bug_report_id=e7a942a4-7622-4e65-bfa0-35b0828044ae&download=true",
+    "inputSha256": "ba09ab829aebc24d867224786e68ff426d03aeb61120dfe1dd0d21b74decb2ac"
+  },
+  {
+    "id": "sample004",
+    "title": "Custom autorouter post-processing creates via overlap at U_MCU pin5 without targeted validation",
+    "input": "candidate-audit/inputs/sample004.json",
+    "sourceUrl": "https://api.tscircuit.com/autorouting/bug_reports/get?autorouting_bug_report_id=e921c12b-afce-4f7a-9166-8af3448907a2&download=true",
+    "inputSha256": "9206f7d3b960e8c8ed049cd5a43b009fe7335ff963363d1e390080d7013fe2cc"
+  },
+  {
+    "id": "sample005",
+    "title": "Autorouting Bug Report: <group#4190 name=\".ble_module\" />",
+    "input": "candidate-audit/inputs/sample005.json",
+    "sourceUrl": "https://api.tscircuit.com/autorouting/bug_reports/get?autorouting_bug_report_id=07f6a719-0729-4196-935f-db4b9740dbf2&download=true",
+    "inputSha256": "c34832df678a9c462b32dc0fc3d4113b50f37ba1aec44274c699e8bd5ba5f8e8"
+  },
+  {
+    "id": "sample006",
+    "title": "capacity-autorouter 0.0.670 stalls at 0% on BQ27441G1",
+    "input": "candidate-audit/inputs/sample006.json",
+    "sourceUrl": "https://gist.githubusercontent.com/0hmX/a501a11d49712163656a43a24f904960/raw/cc1e33c85ef613b33c39b3430f751af3007d6b06/BatteryManagement_BQ27441G1.phase-0.input.simple-route.json",
+    "inputSha256": "87ad3451cd50856f91dea424a1dcad73d4a58453fee8179f3dd610954c5e3c44"
+  },
+  {
+    "id": "sample010",
+    "title": "Autorouting Bug Report: <board#753 />",
+    "input": "candidate-audit/inputs/sample010.json",
+    "sourceUrl": "https://api.tscircuit.com/autorouting/bug_reports/get?autorouting_bug_report_id=bac7d21c-1248-4c48-9e22-07ee2477f344&download=true",
+    "inputSha256": "ab7d1cba166e25332dae37547cea73dcf7c669f0b0e142f684d748664e731a8e"
+  },
+  {
+    "id": "sample011",
+    "title": "Autorouting Bug Report: <board#335 />",
+    "input": "candidate-audit/inputs/sample011.json",
+    "sourceUrl": "https://api.tscircuit.com/autorouting/bug_reports/get?autorouting_bug_report_id=ea45dc58-8a3a-4e5c-97c5-6c6f0e8bcb4d&download=true",
+    "inputSha256": "d1bdb25e7859a0a6eb3d550dfcadefb66146780e9e5079c8dd4e551d095e6801"
+  },
+  {
+    "id": "sample012",
+    "title": "Autorouting Bug Report: <board#234 />",
+    "input": "candidate-audit/inputs/sample012.json",
+    "sourceUrl": "https://api.tscircuit.com/autorouting/bug_reports/get?autorouting_bug_report_id=dbb90e60-7b30-4891-9176-963c815a2b98&download=true",
+    "inputSha256": "b0a864400ef99f14e196bf47c1a1c95f895a0005464b26c3d26271a3a73eefea"
+  },
+  {
+    "id": "sample013",
+    "title": "Autorouting Bug Report: <board#242 />",
+    "input": "candidate-audit/inputs/sample013.json",
+    "sourceUrl": "https://api.tscircuit.com/autorouting/bug_reports/get?autorouting_bug_report_id=dfb7e9e0-fc7a-494e-9dea-1dad5aadde02&download=true",
+    "inputSha256": "af1e27443082dfa4248993a850ecf612b6c4371c63f01bea8c97987321cfd79f"
+  },
+  {
+    "id": "sample020",
+    "title": "Autorouting Bug Report: <board#131 />",
+    "input": "candidate-audit/inputs/sample020.json",
+    "sourceUrl": "https://api.tscircuit.com/autorouting/bug_reports/get?autorouting_bug_report_id=c8b4ed8c-80bb-4e59-a091-0114d1c997ef&download=true",
+    "inputSha256": "dd71c3dc93e55adb4712855e119118d969863c5daa4ae998e41b0d3ab9663df7"
+  },
+  {
+    "id": "sample025",
+    "title": "Autorouting Bug Report: <board#146 />",
+    "input": "candidate-audit/inputs/sample025.json",
+    "sourceUrl": "https://api.tscircuit.com/autorouting/bug_reports/get?autorouting_bug_report_id=046d75df-a5d8-460e-adf6-3944b7f6e259&download=true",
+    "inputSha256": "6df3dfc583b13ac23f756ee6cc62d6c65cf408d162aa521b71df64dbc9ff0cfe"
+  },
+  {
+    "id": "sample032",
+    "title": "Per-connection trace widths are ignored: 1.0 mm motor traces emit as 0.15 mm",
+    "input": "candidate-audit/inputs/sample032.json",
+    "sourceUrl": "https://gist.githubusercontent.com/seveibar/67a25d17202a343a1c8f3d4c47cd06d2/raw/8fe9d7685205efbf4e7511e9246681c7f312d27a/rp2040-trace-width-bug.json",
+    "inputSha256": "d1d2996fcc23a4a70fc0b0f664580cc0015d47b5c9de74a94e7b1559ecea3a00"
+  },
+  {
+    "id": "sample033",
+    "title": "Ergodox split keyboard not routing",
+    "input": "candidate-audit/inputs/sample033.json",
+    "sourceUrl": "https://api.tscircuit.com/autorouting/bug_reports/get?autorouting_bug_report_id=f03221db-9bc3-4fb1-b5bf-988fdb476477&download=true",
+    "inputSha256": "59670f91b1b5ed44a5a062f26cc7671cea03b8a83c684380de34fd006d3a126c"
+  },
+  {
+    "id": "sample034",
+    "title": "Autorouting Bug Report: <board#1936 />",
+    "input": "candidate-audit/inputs/sample034.json",
+    "sourceUrl": "https://api.tscircuit.com/autorouting/bug_reports/get?autorouting_bug_report_id=4e88f277-1f26-4a60-8e21-8b6e5a5d8f25&download=true",
+    "inputSha256": "136109e6aaf988a559e38f60284f4ed66d4e5191555d708737ddd487fe0387f8"
+  },
+  {
+    "id": "sample035",
+    "title": "Autorouting Bug Report: <board#203 />",
+    "input": "candidate-audit/inputs/sample035.json",
+    "sourceUrl": "https://api.tscircuit.com/autorouting/bug_reports/get?autorouting_bug_report_id=2af30ab2-f440-4dde-a296-9fe0a3588b17&download=true",
+    "inputSha256": "cc45a73498b007a94b49287b1c9eacda0e53178f2de20c2903492a1004859742"
+  },
+  {
+    "id": "sample036",
+    "title": "Autorouting Bug Report: <board#248 />",
+    "input": "candidate-audit/inputs/sample036.json",
+    "sourceUrl": "https://api.tscircuit.com/autorouting/bug_reports/get?autorouting_bug_report_id=f20111b2-e069-4bdb-ba52-08524eb330ba&download=true",
+    "inputSha256": "2eaa6dccdf5f39515fba88e95ec9ec67a6a6fd9d6505e6a6cac5b4ea4fe8fe43"
+  },
+  {
+    "id": "sample037",
+    "title": "Autorouting Bug Report: <board#905 />",
+    "input": "candidate-audit/inputs/sample037.json",
+    "sourceUrl": "https://api.tscircuit.com/autorouting/bug_reports/get?autorouting_bug_report_id=457bc0e3-c8cc-40c2-91e1-d67e2aa3f2a1&download=true",
+    "inputSha256": "7cc74e34422b9210f7d0f5a54d51d5ee762e0787aefd66ea1fb3326a7180581b"
+  },
+  {
+    "id": "sample038",
+    "title": "Autorouting Bug Report: <board#62 />",
+    "input": "candidate-audit/inputs/sample038.json",
+    "sourceUrl": "https://api.tscircuit.com/autorouting/bug_reports/get?autorouting_bug_report_id=097953e4-1bac-4381-9058-a654281b2cf8&download=true",
+    "inputSha256": "2709cdb08fb3cafb5e1a0154ab0b71cd0f4b08e7450bc7a0384c0e634bd24f7d"
+  },
+  {
+    "id": "sample039",
+    "title": "Autorouting Bug Report: <board#54 />",
+    "input": "candidate-audit/inputs/sample039.json",
+    "sourceUrl": "https://api.tscircuit.com/autorouting/bug_reports/get?autorouting_bug_report_id=a6619587-92d6-42e3-aa64-dcd5f9254122&download=true",
+    "inputSha256": "60dddd3f641bfa1b2148aa3524551066fba1ea18f7ed0d29cc963b805d5985cb"
+  },
+  {
+    "id": "sample040",
+    "title": "Autorouting Bug Report: <board#234 />",
+    "input": "candidate-audit/inputs/sample040.json",
+    "sourceUrl": "https://api.tscircuit.com/autorouting/bug_reports/get?autorouting_bug_report_id=d59ca8ab-c7e2-4a73-a6ee-84aac484bb2c&download=true",
+    "inputSha256": "1e38a9772026cea588e09354bf9e96e126e17dbfe03d5e741e806227734dfda5"
+  },
+  {
+    "id": "sample041",
+    "title": "Autorouting Bug Report: <board#183 />",
+    "input": "candidate-audit/inputs/sample041.json",
+    "sourceUrl": "https://api.tscircuit.com/autorouting/bug_reports/get?autorouting_bug_report_id=1f6f0469-8bca-485e-a589-c0b875b03bc3&download=true",
+    "inputSha256": "c5ebfdb18cb8bb62e37b44c044c06ba76ef585dcc8ff86bd9843a5c536fb497e"
+  },
+  {
+    "id": "sample042",
+    "title": "Autorouting Bug Report: <board#234 />",
+    "input": "candidate-audit/inputs/sample042.json",
+    "sourceUrl": "https://api.tscircuit.com/autorouting/bug_reports/get?autorouting_bug_report_id=fcc6767d-55f3-4082-b02b-36519b298331&download=true",
+    "inputSha256": "670509af60e27841bff61acd2826f51d9644865551fd1880e8a10275e1190b46"
+  },
+  {
+    "id": "sample043",
+    "title": "<board#12297 />",
+    "input": "candidate-audit/inputs/sample043.json",
+    "sourceUrl": "https://github.com/tscircuit/tscircuit-autorouter/blob/84a1d769eb1877c34041fefae1ddc8642957696f/fixtures/bug-reports/bugreport03-fe4a17/bugreport03-fe4a17.json",
+    "inputSha256": "4ef90e79bf12d813073681ae55a772a3ae2e3f0bf285588189912c340ad1b4c4"
+  },
+  {
+    "id": "sample044",
+    "title": "bugreport104-pedometer-v1.0.6.unrouted.srj.json",
+    "input": "candidate-audit/inputs/sample044.json",
+    "sourceUrl": "https://github.com/tscircuit/tscircuit-autorouter/blob/84a1d769eb1877c34041fefae1ddc8642957696f/fixtures/bug-reports/bugreport104-pedometer-v1.0.6.unrouted.srj.json",
+    "inputSha256": "e6c9d966d18d0a9750c98f424cb7fcac51296f3fc7ec6b4c33312a6cc9da3bfc"
+  },
+  {
+    "id": "sample045",
+    "title": "<board#111 />",
+    "input": "candidate-audit/inputs/sample045.json",
+    "sourceUrl": "https://github.com/tscircuit/tscircuit-autorouter/blob/84a1d769eb1877c34041fefae1ddc8642957696f/fixtures/bug-reports/bugreport11-b2de3c/bugreport11-b2de3c.json",
+    "inputSha256": "e4bfdad391ab0da92c2976d8221f886841b03a45f6376663ce39735f7da7c424"
+  },
+  {
+    "id": "sample046",
+    "title": "bugreport23-LGA15x4",
+    "input": "candidate-audit/inputs/sample046.json",
+    "sourceUrl": "https://github.com/tscircuit/tscircuit-autorouter/blob/84a1d769eb1877c34041fefae1ddc8642957696f/fixtures/bug-reports/bugreport23-LGA15x4/bugreport23-LGA15x4.srj.json",
+    "inputSha256": "fdfa18b2a42a5c3667159bf84f8bb732c23e0e2ce60d238fe4c9972c03cbae16"
+  },
+  {
+    "id": "sample047",
+    "title": "Issue #628 circuit (43) conversion bug report",
+    "input": "candidate-audit/inputs/sample047.json",
+    "sourceUrl": "https://github.com/tscircuit/tscircuit-autorouter/blob/84a1d769eb1877c34041fefae1ddc8642957696f/fixtures/bug-reports/bugreport45-issue628/bugreport45-issue628.json",
+    "inputSha256": "e309a2f3cdb9941972d57e120a50e8190886eb98b69d73655c9f3eae64f1e226"
+  },
+  {
+    "id": "sample048",
+    "title": "<board#112 />",
+    "input": "candidate-audit/inputs/sample048.json",
+    "sourceUrl": "https://github.com/tscircuit/tscircuit-autorouter/blob/84a1d769eb1877c34041fefae1ddc8642957696f/fixtures/bug-reports/bugreport64-be7d8f/bugreport64-be7d8f.json",
+    "inputSha256": "06173a51efb9b8495284527b0bc2eaceba40e8799035b8fc9e65b422992b6464"
+  },
+  {
+    "id": "sample049",
+    "title": "<board#726 />",
+    "input": "candidate-audit/inputs/sample049.json",
+    "sourceUrl": "https://github.com/tscircuit/tscircuit-autorouter/blob/84a1d769eb1877c34041fefae1ddc8642957696f/fixtures/bug-reports/bugreport67-a0cb81/bugreport67-a0cb81.json",
+    "inputSha256": "3b7b16b720d12ad1a99fdb3ac0160497fcdf96f8d52bd015a96e83d84a413818"
+  },
+  {
+    "id": "sample050",
+    "title": "<board#17141 />",
+    "input": "candidate-audit/inputs/sample050.json",
+    "sourceUrl": "https://github.com/tscircuit/tscircuit-autorouter/blob/84a1d769eb1877c34041fefae1ddc8642957696f/fixtures/bug-reports/bugreport68-41562e/bugreport68-41562e.json",
+    "inputSha256": "391553cf5afe591ffc7306d7f769d5b03febb65fcd253b6404fea8626bb7b512"
+  },
+  {
+    "id": "sample051",
+    "title": "bugreport68-solar-battery-charger",
+    "input": "candidate-audit/inputs/sample051.json",
+    "sourceUrl": "https://github.com/tscircuit/tscircuit-autorouter/blob/84a1d769eb1877c34041fefae1ddc8642957696f/fixtures/bug-reports/bugreport68-solar-battery-charger/bugreport68-solar-battery-charger.srj.json",
+    "inputSha256": "f6da0a75254d1644a33feac260a6b11835237eda2a2229dc571c76b0e258888c"
+  },
+  {
+    "id": "sample052",
+    "title": "bugreport73-qfp16",
+    "input": "candidate-audit/inputs/sample052.json",
+    "sourceUrl": "https://github.com/tscircuit/tscircuit-autorouter/blob/84a1d769eb1877c34041fefae1ddc8642957696f/fixtures/bug-reports/bugreport73-qfp16/bugreport73-qfp16.srj.json",
+    "inputSha256": "d6d6c31a35e22924371b67b532b400d1ba50b3927c5c24987cbb425079c00b11"
+  },
+  {
+    "id": "sample053",
+    "title": "F1C100S laptop motherboard: autorouter stalls at 0% in highDensityRouteSolver and times out after 600s",
+    "input": "candidate-audit/inputs/sample053.json",
+    "sourceUrl": "https://github.com/tscircuit/tscircuit-autorouter/blob/84a1d769eb1877c34041fefae1ddc8642957696f/fixtures/bug-reports/bugreport81-6b40e7/bugreport81-6b40e7.json",
+    "inputSha256": "49458120acb2b7c74279ca3f66e7f1d68ed4ecf4a52ffad598850b62f7f9774c"
+  },
+  {
+    "id": "sample054",
+    "title": "<board#31410 name=\".CORNE_CHOCOLATE_V4_1_LEFT\" />",
+    "input": "candidate-audit/inputs/sample054.json",
+    "sourceUrl": "https://github.com/tscircuit/tscircuit-autorouter/blob/84a1d769eb1877c34041fefae1ddc8642957696f/fixtures/bug-reports/bugreport94-56fa2e/bugreport94-56fa2e.json",
+    "inputSha256": "d9a08184f93e6f90109facfffde9f87a0ef51e5a6b08646bcf2b15ad30ae0e17"
+  },
+  {
+    "id": "sample055",
+    "title": "bugreport96-full-gameboy-no-breakout",
+    "input": "candidate-audit/inputs/sample055.json",
+    "sourceUrl": "https://github.com/tscircuit/tscircuit-autorouter/blob/84a1d769eb1877c34041fefae1ddc8642957696f/fixtures/bug-reports/bugreport96-full-gameboy-no-breakout/bugreport96-full-gameboy-no-breakout.srj.json",
+    "inputSha256": "f1c998df95ca10f4869857243354c06cc21b280e329033f91bd660c5c3b55a2c"
+  },
+  {
+    "id": "sample056",
+    "title": "bugreport99-nrf52810-drc-identity-swap",
+    "input": "candidate-audit/inputs/sample056.json",
+    "sourceUrl": "https://github.com/tscircuit/tscircuit-autorouter/blob/84a1d769eb1877c34041fefae1ddc8642957696f/fixtures/bug-reports/bugreport99-nrf52810-drc-identity-swap/bugreport99-nrf52810-drc-identity-swap.srj.json",
+    "inputSha256": "9167d70e320edc3bb42c0d1e8bb99989473e829d7f708ee83fcc8b2bfc958273"
+  }
+]
