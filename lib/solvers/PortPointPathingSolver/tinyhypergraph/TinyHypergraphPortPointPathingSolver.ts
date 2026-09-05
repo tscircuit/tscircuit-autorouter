@@ -980,12 +980,11 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
       const { topology, problem } = this.loadHyperGraph(
         this.inputProblem.serializedHyperGraph,
       )
-      this.initialVisualizationSolver =
-        new this.selectiveReripSolverClass(
-          topology,
-          problem,
-          this.getSolveGraphOptions(),
-        )
+      this.initialVisualizationSolver = new this.selectiveReripSolverClass(
+        topology,
+        problem,
+        this.getSolveGraphOptions(),
+      )
     }
     const solver = super.getInitialVisualizationSolver()
     this.configureSolver(solver)

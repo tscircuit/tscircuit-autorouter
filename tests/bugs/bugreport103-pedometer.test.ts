@@ -37,10 +37,13 @@ test("Pipeline9 retains every pedometer route with one hypergraph refinement ite
   if (!tinySolver) {
     throw new Error("Pipeline9 did not create a tiny-hypergraph solver")
   }
-  for (let regionId = 0; regionId < tinySolver.topology.regionCount; regionId++) {
-    for (const [routeId, fromPortId, toPortId] of tinySolver.state.regionSegments[
-      regionId
-    ]) {
+  for (
+    let regionId = 0;
+    regionId < tinySolver.topology.regionCount;
+    regionId++
+  ) {
+    for (const [routeId, fromPortId, toPortId] of tinySolver.state
+      .regionSegments[regionId]) {
       const netId = tinySolver.problem.routeNet[routeId]
       expect(tinySolver.state.portAssignment[fromPortId]).toBe(netId)
       expect(tinySolver.state.portAssignment[toPortId]).toBe(netId)
@@ -52,7 +55,9 @@ test("Pipeline9 retains every pedometer route with one hypergraph refinement ite
     backgroundColor: "white",
   })
   // The renderer's embedded script includes trailing whitespace.
-  await expect(svg.replace(/[ \t]+$/gm, "")).toMatchSvgSnapshot(import.meta.path)
+  await expect(svg.replace(/[ \t]+$/gm, "")).toMatchSvgSnapshot(
+    import.meta.path,
+  )
 
   // A complete seed must remain eligible for refinement, unlike caller-owned
   // preloaded copper that is restored by the stable-assignment solver.
