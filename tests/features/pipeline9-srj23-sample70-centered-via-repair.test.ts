@@ -7,7 +7,8 @@ test("Pipeline9 regional B01 uses the exact via error center in SRJ23 sample 70"
   const { scenario } = await loadScenarioBySampleNumber("srj23", 70)
   const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(
     structuredClone(scenario),
-    { cacheProvider: null, effort: 1 },
+    // Keep this defect available to the regional B01 stage under test.
+    { cacheProvider: null, effort: 1, enableRepair04: false },
   )
 
   solver.solve()

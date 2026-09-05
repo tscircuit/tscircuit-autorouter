@@ -822,23 +822,25 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     definePipelineStep("repair04Solver", Pipeline9Repair04Solver, (cms) => {
       const srj = cms.getSrjWithMaterializedPreloadedTraces()
       const updates = cms.getPreloadedTraceUpdatesAfterHighDensity()
-      return [{
-        srj,
-        hdRoutes: cms.globalDrcForceImproveSolver!.getOutput(),
-        connMap: cms.connMap,
-        enabled: cms.opts.enableRepair04 !== false,
-        referenceDrcEvaluator: createPipeline9RelaxedDrcEvaluator({
-          connections: cms.netToPointPairsSolver!.newConnections,
-          originalConnections: srj.connections,
-          layerCount: srj.layerCount,
-          obstacles: srj.obstacles,
-          defaultViaHoleDiameter: cms.viaHoleDiameter,
+      return [
+        {
+          srj,
+          hdRoutes: cms.globalDrcForceImproveSolver!.getOutput(),
           connMap: cms.connMap,
-          srjWithPointPairs: srj,
-          originalSrj: cms.originalSrj,
-          mutatedPreloadedTraces: updates.mutatedPreloadedTraces,
-        }),
-      }]
+          enabled: cms.opts.enableRepair04 !== false,
+          referenceDrcEvaluator: createPipeline9RelaxedDrcEvaluator({
+            connections: cms.netToPointPairsSolver!.newConnections,
+            originalConnections: srj.connections,
+            layerCount: srj.layerCount,
+            obstacles: srj.obstacles,
+            defaultViaHoleDiameter: cms.viaHoleDiameter,
+            connMap: cms.connMap,
+            srjWithPointPairs: srj,
+            originalSrj: cms.originalSrj,
+            mutatedPreloadedTraces: updates.mutatedPreloadedTraces,
+          }),
+        },
+      ]
     }),
     definePipelineStep(
       "pipeline9JointDrcRepairSolver",
@@ -1356,7 +1358,9 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     }
     return (
       this.pipeline9JointDrcRepairSolver?.getOutput() ??
-      (this.repair04Solver?.solved ? this.repair04Solver.getOutput() : undefined) ??
+      (this.repair04Solver?.solved
+        ? this.repair04Solver.getOutput()
+        : undefined) ??
       this.globalDrcForceImproveSolver?.getOutput() ??
       this.traceWidthSolver?.getHdRoutesWithWidths() ??
       this.traceSimplificationSolver?.simplifiedHdRoutes ??

@@ -11,9 +11,10 @@ import type { SimpleRouteJson, SimplifiedPcbTrace } from "../../lib/types"
 import { loadScenarios } from "./scenarios"
 
 const DATASET_COMMIT = "f566b62be0f83395d9ab63ddc068f9d645b68b16"
-const EXPECTED_SAMPLE_IDS = [1, 2, 3, 4, 5, 6, 10, 11, 12, 13, 20, 25, 32, 33,
-  34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51,
-  52, 53, 54, 55, 56].map((id) => `sample${String(id).padStart(3, "0")}`)
+const EXPECTED_SAMPLE_IDS = [
+  1, 2, 3, 4, 5, 6, 10, 11, 12, 13, 20, 25, 32, 33, 34, 35, 36, 37, 38, 39, 40,
+  41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56,
+].map((id) => `sample${String(id).padStart(3, "0")}`)
 
 type Result = {
   sample: string
@@ -46,19 +47,34 @@ const outDir = resolve(option("--out-dir", `repair04-benchmark/${mode}`))
 const concurrency = Number(option("--concurrency", "2"))
 const timeoutMs = Number(option("--timeout-ms", "1800000"))
 const effort = Number(option("--effort", "1"))
-if (![concurrency, timeoutMs, effort].every((value) => Number.isFinite(value) && value > 0)) {
+if (
+  ![concurrency, timeoutMs, effort].every(
+    (value) => Number.isFinite(value) && value > 0,
+  )
+) {
   throw new Error("Concurrency, timeout, and effort must be positive numbers")
 }
-if (!Number.isInteger(concurrency)) throw new Error("Concurrency must be an integer")
+if (!Number.isInteger(concurrency))
+  throw new Error("Concurrency must be an integer")
 await mkdir(outDir, { recursive: true })
 const scenarios = await loadScenarios("srj33")
-if (JSON.stringify(scenarios.map(([name]) => name)) !== JSON.stringify(EXPECTED_SAMPLE_IDS)) {
+if (
+  JSON.stringify(scenarios.map(([name]) => name)) !==
+  JSON.stringify(EXPECTED_SAMPLE_IDS)
+) {
   throw new Error("SRJ33 membership differs from the pinned 37-board dataset")
 }
 
-const evaluate = (inputSrj: SimpleRouteJson, srjWithPointPairs: SimpleRouteJson,
-  routedTraces: SimplifiedPcbTrace[]): { relaxedErrors: object[]; strictErrors: object[] } => {
-  const relaxed = evaluateRelaxedDrc({ inputSrj, srjWithPointPairs, routedTraces })
+const evaluate = (
+  inputSrj: SimpleRouteJson,
+  srjWithPointPairs: SimpleRouteJson,
+  routedTraces: SimplifiedPcbTrace[],
+): { relaxedErrors: object[]; strictErrors: object[] } => {
+  const relaxed = evaluateRelaxedDrc({
+    inputSrj,
+    srjWithPointPairs,
+    routedTraces,
+  })
   return {
     relaxedErrors: relaxed.errorsWithCenters,
     strictErrors: getDrcErrors(relaxed.circuitJson).errorsWithCenters,
@@ -69,21 +85,40 @@ const runWorker = async (sample: string): Promise<void> => {
   const entry = scenarios.find(([name]) => name === sample)
   if (!entry) throw new Error(`Unknown sample ${sample}`)
   const originalSrj = structuredClone(entry[1])
-  const inputSha256 = createHash("sha256").update(JSON.stringify(originalSrj)).digest("hex")
-  const result: Result = { sample, inputSha256, solved: false, timedOut: false, elapsedTimeMs: 0 }
+  const inputSha256 = createHash("sha256")
+    .update(JSON.stringify(originalSrj))
+    .digest("hex")
+  const result: Result = {
+    sample,
+    inputSha256,
+    solved: false,
+    timedOut: false,
+    elapsedTimeMs: 0,
+  }
   const start = performance.now()
   try {
-    const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(originalSrj, {
-      effort, cacheProvider: null, enableRepair04: mode === "candidate",
-    } as ConstructorParameters<typeof AutoroutingPipelineSolver9_PreloadedTraceGraph>[1])
+    const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(
+      originalSrj,
+      {
+        effort,
+        cacheProvider: null,
+        enableRepair04: mode === "candidate",
+      } as ConstructorParameters<
+        typeof AutoroutingPipelineSolver9_PreloadedTraceGraph
+      >[1],
+    )
     let captured = false
     let capturedRepair04 = false
-    let evaluateStageRoutes: ((routes: HighDensityRoute[]) => ReturnType<typeof evaluate>) | undefined
+    let evaluateStageRoutes:
+      | ((routes: HighDensityRoute[]) => ReturnType<typeof evaluate>)
+      | undefined
     let previousPhase = ""
     while (!solver.solved && !solver.failed) {
       const phase = solver.getCurrentPhase()
       if (phase !== previousPhase) {
-        console.log(`${sample} ${phase} ${Math.round(performance.now() - start)}ms`)
+        console.log(
+          `${sample} ${phase} ${Math.round(performance.now() - start)}ms`,
+        )
         previousPhase = phase
       }
       solver.step()
@@ -99,47 +134,89 @@ const runWorker = async (sample: string): Promise<void> => {
         }
         const srj = captureAccess.getSrjWithMaterializedPreloadedTraces()
         const updates = captureAccess.getPreloadedTraceUpdatesAfterHighDensity()
-        if (!solver.netToPointPairsSolver) throw new Error("Repair03 completed without point pairs")
+        if (!solver.netToPointPairsSolver)
+          throw new Error("Repair03 completed without point pairs")
         const params = {
-          srj, srjWithPointPairs: srj, originalSrj: solver.originalSrj,
+          srj,
+          srjWithPointPairs: srj,
+          originalSrj: solver.originalSrj,
           updatedPreloadedTraces: updates.updatedPreloadedTraces,
-          mutatedPreloadedTraceIds: new Set(updates.mutatedPreloadedTraces.map((trace) => trace.pcb_trace_id)),
-          layerCount: solver.srj.layerCount, defaultViaDiameter: solver.viaDiameter,
-          defaultViaHoleDiameter: solver.viaHoleDiameter, connMap: solver.connMap,
+          mutatedPreloadedTraceIds: new Set(
+            updates.mutatedPreloadedTraces.map((trace) => trace.pcb_trace_id),
+          ),
+          layerCount: solver.srj.layerCount,
+          defaultViaDiameter: solver.viaDiameter,
+          defaultViaHoleDiameter: solver.viaHoleDiameter,
+          connMap: solver.connMap,
           newConnections: solver.netToPointPairsSolver.newConnections,
           obstacles: solver.srj.obstacles,
         }
-        const hdRoutes = solver.globalDrcForceImproveSolver.getOutput() as HighDensityRoute[]
-        const newTraces = convertPipeline7HdRoutesToSimplifiedPcbTraces({ ...params, hdRoutes,
-          connections: params.newConnections, originalConnections: params.srj.connections })
-        const mutatedPreloadedTraces = params.updatedPreloadedTraces.filter((trace) =>
-          params.mutatedPreloadedTraceIds.has(trace.pcb_trace_id))
-        evaluateStageRoutes = (routes: HighDensityRoute[]): ReturnType<typeof evaluate> => {
-          const traces = convertPipeline7HdRoutesToSimplifiedPcbTraces({ ...params,
-            hdRoutes: routes, connections: params.newConnections, originalConnections: params.srj.connections })
-          return evaluate(params.originalSrj, params.srjWithPointPairs, preparePipeline9DrcRoutedTraces({
-            originalPreloadedTraces: params.originalSrj.traces ?? [], mutatedPreloadedTraces, newTraces: traces,
-          }))
+        const hdRoutes =
+          solver.globalDrcForceImproveSolver.getOutput() as HighDensityRoute[]
+        const newTraces = convertPipeline7HdRoutesToSimplifiedPcbTraces({
+          ...params,
+          hdRoutes,
+          connections: params.newConnections,
+          originalConnections: params.srj.connections,
+        })
+        const mutatedPreloadedTraces = params.updatedPreloadedTraces.filter(
+          (trace) => params.mutatedPreloadedTraceIds.has(trace.pcb_trace_id),
+        )
+        evaluateStageRoutes = (
+          routes: HighDensityRoute[],
+        ): ReturnType<typeof evaluate> => {
+          const traces = convertPipeline7HdRoutesToSimplifiedPcbTraces({
+            ...params,
+            hdRoutes: routes,
+            connections: params.newConnections,
+            originalConnections: params.srj.connections,
+          })
+          return evaluate(
+            params.originalSrj,
+            params.srjWithPointPairs,
+            preparePipeline9DrcRoutedTraces({
+              originalPreloadedTraces: params.originalSrj.traces ?? [],
+              mutatedPreloadedTraces,
+              newTraces: traces,
+            }),
+          )
         }
         const routedTraces = preparePipeline9DrcRoutedTraces({
-          originalPreloadedTraces: params.originalSrj.traces ?? [], mutatedPreloadedTraces, newTraces,
+          originalPreloadedTraces: params.originalSrj.traces ?? [],
+          mutatedPreloadedTraces,
+          newTraces,
         })
-        const postRepair03 = evaluate(params.originalSrj, params.srjWithPointPairs, routedTraces)
+        const postRepair03 = evaluate(
+          params.originalSrj,
+          params.srjWithPointPairs,
+          routedTraces,
+        )
         result.postRepair03RelaxedErrors = postRepair03.relaxedErrors
         result.postRepair03StrictErrors = postRepair03.strictErrors
-        await writeFile(resolve(outDir, `${sample}.post-repair03.json`), JSON.stringify({
-          datasetCommit: DATASET_COMMIT, inputSha256, originalSrj: params.originalSrj,
-          srj: params.srj, srjWithPointPairs: params.srjWithPointPairs, hdRoutes,
-          pipelineSrj: solver.srj, newConnections: params.newConnections,
-          updatedPreloadedTraces: params.updatedPreloadedTraces,
-          mutatedPreloadedTraceIds: [...params.mutatedPreloadedTraceIds],
-          layerCount: params.layerCount, defaultViaDiameter: params.defaultViaDiameter,
-          defaultViaHoleDiameter: params.defaultViaHoleDiameter, ...postRepair03,
-        }))
+        await writeFile(
+          resolve(outDir, `${sample}.post-repair03.json`),
+          JSON.stringify({
+            datasetCommit: DATASET_COMMIT,
+            inputSha256,
+            originalSrj: params.originalSrj,
+            srj: params.srj,
+            srjWithPointPairs: params.srjWithPointPairs,
+            hdRoutes,
+            pipelineSrj: solver.srj,
+            newConnections: params.newConnections,
+            updatedPreloadedTraces: params.updatedPreloadedTraces,
+            mutatedPreloadedTraceIds: [...params.mutatedPreloadedTraceIds],
+            layerCount: params.layerCount,
+            defaultViaDiameter: params.defaultViaDiameter,
+            defaultViaHoleDiameter: params.defaultViaHoleDiameter,
+            ...postRepair03,
+          }),
+        )
         captured = true
       }
       if (!capturedRepair04 && solver.repair04Solver?.solved) {
-        if (!evaluateStageRoutes) throw new Error("Repair04 completed before repair03 capture")
+        if (!evaluateStageRoutes)
+          throw new Error("Repair04 completed before repair03 capture")
         const after = evaluateStageRoutes(solver.repair04Solver.getOutput())
         result.postRepair04RelaxedErrors = after.relaxedErrors
         result.postRepair04StrictErrors = after.strictErrors
@@ -154,76 +231,170 @@ const runWorker = async (sample: string): Promise<void> => {
     }
     result.solved = solver.solved
     result.stageTiming = solver.timeSpentOnPhase
-    if (solver.failed) result.error = solver.error ?? "Pipeline failed without error"
+    if (solver.failed)
+      result.error = solver.error ?? "Pipeline failed without error"
     if (solver.solved) {
-      if (!solver.srjWithPointPairs) throw new Error("Solved pipeline has no point pairs")
-      Object.assign(result, evaluate(originalSrj, solver.srjWithPointPairs, solver.getOutputSimplifiedPcbTraces()))
-      await writeFile(resolve(outDir, `${sample}.output.json`), JSON.stringify(solver.getOutputSimpleRouteJson()))
+      if (!solver.srjWithPointPairs)
+        throw new Error("Solved pipeline has no point pairs")
+      Object.assign(
+        result,
+        evaluate(
+          originalSrj,
+          solver.srjWithPointPairs,
+          solver.getOutputSimplifiedPcbTraces(),
+        ),
+      )
+      await writeFile(
+        resolve(outDir, `${sample}.output.json`),
+        JSON.stringify(solver.getOutputSimpleRouteJson()),
+      )
     }
   } catch (error) {
     result.solved = false
-    result.error = error instanceof Error ? error.stack ?? error.message : String(error)
+    result.error =
+      error instanceof Error ? (error.stack ?? error.message) : String(error)
   }
   result.elapsedTimeMs = performance.now() - start
-  await writeFile(resolve(outDir, `${sample}.result.json`), JSON.stringify(result, null, 2))
-  console.log(JSON.stringify({ sample, solved: result.solved,
-    postRepair03Errors: result.postRepair03RelaxedErrors?.length,
-    relaxedErrors: result.relaxedErrors?.length, strictErrors: result.strictErrors?.length,
-    elapsedTimeMs: result.elapsedTimeMs, error: result.error }))
+  await writeFile(
+    resolve(outDir, `${sample}.result.json`),
+    JSON.stringify(result, null, 2),
+  )
+  console.log(
+    JSON.stringify({
+      sample,
+      solved: result.solved,
+      postRepair03Errors: result.postRepair03RelaxedErrors?.length,
+      relaxedErrors: result.relaxedErrors?.length,
+      strictErrors: result.strictErrors?.length,
+      elapsedTimeMs: result.elapsedTimeMs,
+      error: result.error,
+    }),
+  )
 }
 
 const workerSample = option("--worker", "")
 if (workerSample) {
   await runWorker(workerSample)
 } else {
-  const revisionProcess = Bun.spawn(["git", "rev-parse", "HEAD"], { stdout: "pipe" })
+  const revisionProcess = Bun.spawn(["git", "rev-parse", "HEAD"], {
+    stdout: "pipe",
+  })
   const revision = (await new Response(revisionProcess.stdout).text()).trim()
   await revisionProcess.exited
-  await writeFile(resolve(outDir, "configuration.json"), JSON.stringify({
-    datasetCommit: DATASET_COMMIT, samples: EXPECTED_SAMPLE_IDS, denominator: 37,
-    mode, revision, effort, concurrency, timeoutMs, bunVersion: Bun.version,
-    relaxed: { traceClearance: 0.1, viaClearance: 0.1 },
-    strict: "getDrcErrors(circuitJson) library defaults; identical conversion to relaxed",
-    createdAt: new Date().toISOString(),
-  }, null, 2))
+  await writeFile(
+    resolve(outDir, "configuration.json"),
+    JSON.stringify(
+      {
+        datasetCommit: DATASET_COMMIT,
+        samples: EXPECTED_SAMPLE_IDS,
+        denominator: 37,
+        mode,
+        revision,
+        effort,
+        concurrency,
+        timeoutMs,
+        bunVersion: Bun.version,
+        relaxed: { traceClearance: 0.1, viaClearance: 0.1 },
+        strict:
+          "getDrcErrors(circuitJson) library defaults; identical conversion to relaxed",
+        createdAt: new Date().toISOString(),
+      },
+      null,
+      2,
+    ),
+  )
   const requested = option("--samples", "").split(",").filter(Boolean)
   for (const sample of requested) {
-    if (!EXPECTED_SAMPLE_IDS.includes(sample)) throw new Error(`Unknown sample ${sample}`)
+    if (!EXPECTED_SAMPLE_IDS.includes(sample))
+      throw new Error(`Unknown sample ${sample}`)
   }
-  const queue = scenarios.filter(([name]) => requested.length === 0 || requested.includes(name))
+  const queue = scenarios.filter(
+    ([name]) => requested.length === 0 || requested.includes(name),
+  )
   const results: Result[] = []
   let saving = Promise.resolve()
-  await Promise.all(Array.from({ length: concurrency }, async (): Promise<void> => {
-    while (queue.length > 0) {
-      const [sample, srj] = queue.shift()!
-      const child = Bun.spawn([process.execPath, import.meta.path, "--worker", sample,
-        "--mode", mode, "--out-dir", outDir, "--effort", String(effort),
-        "--timeout-ms", String(timeoutMs)], { stdout: "inherit", stderr: "inherit" })
-      const killTimer = setTimeout(() => child.kill("SIGKILL"), timeoutMs + 60000)
-      const code = await child.exited
-      clearTimeout(killTimer)
-      let result: Result
-      if (code === 0) {
-        result = JSON.parse(await readFile(resolve(outDir, `${sample}.result.json`), "utf8"))
-      } else {
-        result = { sample, inputSha256: createHash("sha256").update(JSON.stringify(srj)).digest("hex"),
-          solved: false, timedOut: code === 137, elapsedTimeMs: timeoutMs,
-          error: `Worker exited with code ${code}` }
-        await writeFile(resolve(outDir, `${sample}.result.json`), JSON.stringify(result, null, 2))
+  await Promise.all(
+    Array.from({ length: concurrency }, async (): Promise<void> => {
+      while (queue.length > 0) {
+        const [sample, srj] = queue.shift()!
+        const child = Bun.spawn(
+          [
+            process.execPath,
+            import.meta.path,
+            "--worker",
+            sample,
+            "--mode",
+            mode,
+            "--out-dir",
+            outDir,
+            "--effort",
+            String(effort),
+            "--timeout-ms",
+            String(timeoutMs),
+          ],
+          { stdout: "inherit", stderr: "inherit" },
+        )
+        const killTimer = setTimeout(
+          () => child.kill("SIGKILL"),
+          timeoutMs + 60000,
+        )
+        const code = await child.exited
+        clearTimeout(killTimer)
+        let result: Result
+        if (code === 0) {
+          result = JSON.parse(
+            await readFile(resolve(outDir, `${sample}.result.json`), "utf8"),
+          )
+        } else {
+          result = {
+            sample,
+            inputSha256: createHash("sha256")
+              .update(JSON.stringify(srj))
+              .digest("hex"),
+            solved: false,
+            timedOut: code === 137,
+            elapsedTimeMs: timeoutMs,
+            error: `Worker exited with code ${code}`,
+          }
+          await writeFile(
+            resolve(outDir, `${sample}.result.json`),
+            JSON.stringify(result, null, 2),
+          )
+        }
+        results.push(result)
+        const ordered = [...results].sort(
+          (a, b) =>
+            EXPECTED_SAMPLE_IDS.indexOf(a.sample) -
+            EXPECTED_SAMPLE_IDS.indexOf(b.sample),
+        )
+        const summary = JSON.stringify(
+          {
+            datasetCommit: DATASET_COMMIT,
+            mode,
+            denominator: 37,
+            evaluated: ordered.length,
+            complete: ordered.length === 37,
+            solved: ordered.filter((r) => r.solved).length,
+            relaxedPassed: ordered.filter(
+              (r) => r.solved && r.relaxedErrors?.length === 0,
+            ).length,
+            strictPassed: ordered.filter(
+              (r) => r.solved && r.strictErrors?.length === 0,
+            ).length,
+            postRepair03RelaxedPassed: ordered.filter(
+              (r) => r.postRepair03RelaxedErrors?.length === 0,
+            ).length,
+            results: ordered,
+          },
+          null,
+          2,
+        )
+        saving = saving.then(() =>
+          writeFile(resolve(outDir, "summary.json"), summary),
+        )
+        await saving
       }
-      results.push(result)
-      const ordered = [...results].sort((a, b) => EXPECTED_SAMPLE_IDS.indexOf(a.sample) - EXPECTED_SAMPLE_IDS.indexOf(b.sample))
-      const summary = JSON.stringify({
-        datasetCommit: DATASET_COMMIT, mode, denominator: 37, evaluated: ordered.length,
-        complete: ordered.length === 37, solved: ordered.filter((r) => r.solved).length,
-        relaxedPassed: ordered.filter((r) => r.solved && r.relaxedErrors?.length === 0).length,
-        strictPassed: ordered.filter((r) => r.solved && r.strictErrors?.length === 0).length,
-        postRepair03RelaxedPassed: ordered.filter((r) => r.postRepair03RelaxedErrors?.length === 0).length,
-        results: ordered,
-      }, null, 2)
-      saving = saving.then(() => writeFile(resolve(outDir, "summary.json"), summary))
-      await saving
-    }
-  }))
+    }),
+  )
   await saving
 }

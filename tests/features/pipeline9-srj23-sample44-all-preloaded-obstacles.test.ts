@@ -7,7 +7,8 @@ test("Pipeline9 jointly repairs preloaded routes in SRJ23 sample 44", async () =
   const { scenario } = await loadScenarioBySampleNumber("srj23", 44)
   const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(
     structuredClone(scenario),
-    { cacheProvider: null, effort: 1 },
+    // Keep these defects available to the joint-repair stage under test.
+    { cacheProvider: null, effort: 1, enableRepair04: false },
   )
 
   solver.solve()

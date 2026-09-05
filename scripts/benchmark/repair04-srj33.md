@@ -55,9 +55,25 @@ that can affect later routing choices.
 
 The replay runner records the immutable bundle SHA-256 and rejects reusing
 an output directory with a different bundle. It can resume completed cases
-for that bundle. Keep the bundle and source revision with the results.
+for that bundle. Resuming also requires the exact baseline summary and every
+baseline checkpoint/output byte to match; older configurations without this
+fingerprint require a fresh output directory. Keep the bundle and source
+revision with the results.
 Candidate replay timings exclude upstream routing and must not be compared
 as a speed ratio with full baseline timings.
+
+Disjoint batches can run on separate benchmark machines using the identical
+frozen bundle, complete baseline, Bun version, architecture, and effort.
+Pass each batch's comma-separated sample selection as the runner's final
+argument. Merge their result directories after every board has a result:
+
+```sh
+bun scripts/benchmark/merge-repair04-replays.ts /tmp/repair04-complete /tmp/repair04-current15 /tmp/repair04-legacy22
+```
+
+The merger requires exactly one result for every source board and matching
+runtime, bundle, and full-baseline fingerprints. It retains source summary
+and configuration hashes so the combined report can be audited.
 
 ## Reporting the published 15-board revision
 

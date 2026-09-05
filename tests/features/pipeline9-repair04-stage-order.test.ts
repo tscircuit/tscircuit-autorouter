@@ -14,5 +14,7 @@ test("Pipeline9 runs bounded repair04 immediately after repair03 and before join
     "repair04Solver",
     "pipeline9JointDrcRepairSolver",
   ])
-  expect(pipeline.pipelineDef[repair04Index]!.solverClass).toBe(Pipeline9Repair04Solver)
+  expect(pipeline.pipelineDef[repair04Index]!.solverClass).toBe(
+    Pipeline9Repair04Solver,
+  )
 })
