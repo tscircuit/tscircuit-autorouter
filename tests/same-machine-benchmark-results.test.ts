@@ -24,6 +24,7 @@ test("same-machine benchmark comments compare matching reports", () => {
     overrides: Partial<BenchmarkReport>,
   ): BenchmarkReport => ({
     version: 1,
+    drcRevision: "b".repeat(40),
     datasetName: "srj18",
     scenarioCount: 2,
     effortLabel: "1x effort",
@@ -36,6 +37,7 @@ test("same-machine benchmark comments compare matching reports", () => {
     ...overrides,
   })
   const mainReport = makeReport({
+    solverRevision: "a".repeat(40),
     summary: [
       {
         solverName,
@@ -61,6 +63,7 @@ test("same-machine benchmark comments compare matching reports", () => {
     ],
   })
   const prReport = makeReport({
+    solverRevision: "b".repeat(40),
     summary: [
       {
         solverName,
@@ -98,6 +101,8 @@ test("same-machine benchmark comments compare matching reports", () => {
     "| Pipeline7 | Completion | 50.0% (🕒50.0%) | 100.0% (🕒0.0%) | +50.0 pp |",
   )
   expect(markdown).toContain("| Pipeline7 | DRC issues | 3 | 1 | -2 |")
+  expect(markdown).toContain("Both outputs use the same DRC conversion")
+  expect(markdown).toContain("| Pipeline7 | 2 | 3 | 1 | -2 |")
   expect(markdown).toContain("| Pipeline7 | Timeouts | 1 | 0 | -1 |")
   expect(markdown).toContain("| Pipeline7 | P50 time | 1.5s | 1.4s | -6.7% |")
   expect(markdown).toContain("| Pipeline7 | P60 time |")
@@ -105,7 +110,7 @@ test("same-machine benchmark comments compare matching reports", () => {
   expect(markdown).toContain("| Pipeline7 | P80 time |")
   expect(markdown).toContain("| Pipeline7 | P90 time |")
   expect(markdown).toContain("| Pipeline7 | P95 time |")
-  expect(markdown).toContain("Outcome changes: **1 improved**, **0 regressed**")
+  expect(markdown).toContain("Pass/fail outcome changes: **1 improved**, **0 regressed**")
   expect(markdown).toContain(
     "Timing percentiles include solved and timed-out samples",
   )

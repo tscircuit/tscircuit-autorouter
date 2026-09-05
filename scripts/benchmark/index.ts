@@ -810,7 +810,7 @@ const loadSolverNames = async (
 ): Promise<string[]> => {
   // Use autorouter-pipelines/index.ts as the source of truth for benchmarkable solvers
   const pipelinesIndexPath = path.join(
-    process.cwd(),
+    process.env.BENCHMARK_SOLVER_ROOT ?? process.cwd(),
     "lib",
     "autorouter-pipelines",
     "index.ts",
@@ -835,7 +835,11 @@ const loadSolverNames = async (
   }
 
   // Resolve aliases from lib/index.ts (e.g. "X as Y")
-  const libIndexPath = path.join(process.cwd(), "lib", "index.ts")
+  const libIndexPath = path.join(
+    process.env.BENCHMARK_SOLVER_ROOT ?? process.cwd(),
+    "lib",
+    "index.ts",
+  )
   const libIndex = await readFile(libIndexPath, "utf8")
 
   const solverNames = [...pipelineNames].flatMap((name) => {
@@ -1847,6 +1851,8 @@ const main = async () => {
   )
   const output: string = `Benchmark Results (${effortLabel})\n\n${table}\n\nDataset: ${datasetName}\nScenarios: ${scenarios.length}\n\nTop solver failure buckets:\n${solverFailureSummaryText}\n\nTop timeout buckets:\n${timeoutSummaryText}\n\nTop failure buckets:\n${failureSummaryText}\n`
   const report: BenchmarkReport = {
+    solverRevision: process.env.BENCHMARK_SOLVER_REVISION,
+    drcRevision: process.env.BENCHMARK_DRC_REVISION,
     version: 1,
     datasetName,
     scenarioCount: scenarios.length,

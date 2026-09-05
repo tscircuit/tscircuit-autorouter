@@ -1,8 +1,8 @@
 import { getSvgFromGraphicsObject } from "graphics-debug"
-import * as autorouterModule from "../../lib"
-import { convertSrjToGraphicsObject } from "../../lib"
-import { KrtAutoroutingPipelineSolver } from "../../lib/testing/KrtAutoroutingPipelineSolver"
+import { resolve } from "node:path"
+import { fileURLToPath, pathToFileURL } from "node:url"
 import { evaluateRelaxedDrc } from "../../lib/testing/evaluate-relaxed-drc"
+import { convertSrjToGraphicsObject } from "../../lib/utils/convertSrjToGraphicsObject"
 import type {
   SimpleRouteJson,
   SimplifiedPcbTrace,
@@ -70,6 +70,8 @@ type SolverConstructor = new (
 ) => SolverInstance
 
 type RunTaskOptions = {
+  solverRoot?: string
+  routedOutputDirectory?: string
   onProgress?: (progress: WorkerProgress) => void
   progressIntervalMs?: number
 }
@@ -117,21 +119,34 @@ export const getBenchmarkSolverOptions = (
   }
 }
 
-const getSolverConstructor = (solverName: string): SolverConstructor => {
-  if (solverName === "KrtAutoroutingPipelineSolver") {
-    return KrtAutoroutingPipelineSolver
-  }
-
-  const ctor = (autorouterModule as Record<string, unknown>)[solverName]
+const getSolverConstructor = async (
+  solverName: string,
+  solverRoot: string,
+): Promise<SolverConstructor> => {
+  const modulePath =
+    solverName === "KrtAutoroutingPipelineSolver"
+      ? "lib/testing/KrtAutoroutingPipelineSolver.ts"
+      : "lib/index.ts"
+  const module = await import(
+    pathToFileURL(resolve(solverRoot, modulePath)).href
+  )
+  const ctor = module[solverName]
   if (typeof ctor !== "function") {
-    throw new Error(`Solver "${solverName}" was not found`)
+    throw new Error(`Solver "${solverName}" was not found in ${solverRoot}`)
   }
   return ctor as SolverConstructor
 }
 
-export const createSolverForTask = (task: BenchmarkTask): SolverInstance => {
+export const createSolverForTask = async (
+  task: BenchmarkTask,
+  solverRoot: string = process.env.BENCHMARK_SOLVER_ROOT ??
+    fileURLToPath(new URL("../../", import.meta.url)),
+): Promise<SolverInstance> => {
   const constructorName = task.solverConstructorName ?? task.solverName
-  const SolverConstructor = getSolverConstructor(constructorName)
+  const SolverConstructor = await getSolverConstructor(
+    constructorName,
+    solverRoot,
+  )
   const scenarioOptions = getBenchmarkSolverOptions(task.scenario)
   if (!task.networkedCachePass) {
     return new SolverConstructor(task.scenario, scenarioOptions)
@@ -471,7 +486,7 @@ export const runTask = async (
   task: BenchmarkTask,
   options: RunTaskOptions = {},
 ): Promise<WorkerResultWithImage> => {
-  const solver = createSolverForTask(task)
+  const solver = await createSolverForTask(task, options.solverRoot)
   const start = performance.now()
   let solveError: string | undefined
 
@@ -526,11 +541,23 @@ export const runTask = async (
       ? []
       : (solver.getOutputSimplifiedPcbTraces?.() ?? [])
     const viaCount = countTraceVias(traces)
-    const { errors } = evaluateRelaxedDrc({
+    const drcInput = {
       inputSrj: task.scenario,
       srjWithPointPairs: solver.srjWithPointPairs ?? task.scenario,
       routedTraces: traces,
-    })
+    }
+    const outputDirectory =
+      options.routedOutputDirectory ?? process.env.BENCHMARK_ROUTED_OUTPUT_DIR
+    if (outputDirectory) {
+      await Bun.write(
+        resolve(
+          outputDirectory,
+          `${encodeURIComponent(task.solverName)}-${task.sampleNumber}.json`,
+        ),
+        JSON.stringify(drcInput),
+      )
+    }
+    const { errors } = evaluateRelaxedDrc(drcInput)
     const relaxedDrcPassed = errors.length === 0
     const drcSummary = summarizeDrcErrors(errors as object[])
     let benchmarkSnapshot: BenchmarkSnapshotWithImage | undefined

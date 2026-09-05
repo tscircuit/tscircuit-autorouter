@@ -206,6 +206,9 @@ export type BenchmarkBestViaCellsReport = {
 }
 
 export type BenchmarkReport = {
+  /** Exact revisions used by a paired run; absent in standalone reports. */
+  solverRevision?: string
+  drcRevision?: string
   version: 1
   datasetName: string
   scenarioCount: number

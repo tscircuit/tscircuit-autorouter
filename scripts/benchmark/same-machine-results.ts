@@ -162,10 +162,42 @@ export const renderSameMachineBenchmarkResults = ({
   repository,
   runnerName,
 }: SameMachineBenchmarkInput): string => {
+  if (
+    !mainReport.drcRevision ||
+    mainReport.drcRevision !== prReport.drcRevision
+  ) {
+    throw new Error("Same-machine reports must use the same DRC revision")
+  }
+  if (
+    mainReport.solverRevision !== mainSha ||
+    prReport.solverRevision !== prSha
+  ) {
+    throw new Error("Report solver revisions must match the comparison refs")
+  }
   if (mainReport.datasetName !== prReport.datasetName) {
     throw new Error(
       `Dataset mismatch: main=${mainReport.datasetName}, PR=${prReport.datasetName}`,
     )
+  }
+  const mainKeys = new Set(mainReport.tests.map(testKey))
+  const prKeys = new Set(prReport.tests.map(testKey))
+  if (
+    mainKeys.size !== mainReport.tests.length ||
+    prKeys.size !== prReport.tests.length ||
+    mainKeys.size !== prKeys.size ||
+    [...mainKeys].some((key) => !prKeys.has(key))
+  ) {
+    throw new Error("Same-machine reports must contain identical unique cases")
+  }
+  for (const test of [...mainReport.tests, ...prReport.tests]) {
+    if (
+      test.didSolve &&
+      (test.drcErrorCount === undefined ||
+        !Number.isInteger(test.drcErrorCount) ||
+        test.drcErrorCount < 0)
+    ) {
+      throw new Error(`Missing or invalid DRC count for ${testKey(test)}`)
+    }
   }
 
   const mainSummaries = new Map(
@@ -179,6 +211,7 @@ export const renderSameMachineBenchmarkResults = ({
     "",
     `Dataset: \`${mainReport.datasetName}\` · Scenarios: ${mainReport.scenarioCount}`,
     `Main: [\`${mainSha.slice(0, 7)}\`](https://github.com/${repository}/commit/${mainSha}) · PR: [\`${prSha.slice(0, 7)}\`](https://github.com/${repository}/commit/${prSha})`,
+    `Both outputs use the same DRC conversion, rules, and dependencies from [\`${mainReport.drcRevision.slice(0, 7)}\`](https://github.com/${repository}/commit/${mainReport.drcRevision}).`,
     "",
     "| Solver | Metric | Main | PR | Delta |",
     "| --- | --- | ---: | ---: | ---: |",
@@ -228,8 +261,41 @@ export const renderSameMachineBenchmarkResults = ({
   const regressionCount = changedOutcomes.length - improvementCount
   lines.push(
     "",
-    `Outcome changes: **${improvementCount} improved**, **${regressionCount} regressed**. DRC issues are totaled across solved samples. Timing percentiles include solved and timed-out samples; negative timing deltas are faster.`,
+    `Pass/fail outcome changes: **${improvementCount} improved**, **${regressionCount} regressed**. DRC issues are totaled across solved samples. Timing percentiles include solved and timed-out samples; negative timing deltas are faster.`,
   )
+
+  const mainTests = new Map(
+    mainReport.tests.map((test) => [testKey(test), test]),
+  )
+  const changedDrcCounts = prReport.tests.flatMap((prTest) => {
+    const mainTest = mainTests.get(testKey(prTest))
+    if (
+      !mainTest?.didSolve ||
+      !prTest.didSolve ||
+      mainTest.drcErrorCount === prTest.drcErrorCount
+    ) {
+      return []
+    }
+    if (
+      mainTest.drcErrorCount === undefined ||
+      prTest.drcErrorCount === undefined
+    ) {
+      throw new Error(`Missing DRC count for ${testKey(prTest)}`)
+    }
+    return [
+      `| ${escapeTableCell(formatSolverName(prTest.solverName))} | ${prTest.sampleNumber} | ${mainTest.drcErrorCount} | ${prTest.drcErrorCount} | ${formatCountDelta(mainTest.drcErrorCount, prTest.drcErrorCount)} |`,
+    ]
+  })
+  if (changedDrcCounts.length > 0) {
+    lines.push(
+      "",
+      "DRC count changes on boards solved by both revisions (including boards that fail on both):",
+      "",
+      "| Solver | Sample | Main issues | PR issues | Delta |",
+      "| --- | ---: | ---: | ---: | ---: |",
+      ...changedDrcCounts,
+    )
+  }
 
   if (changedOutcomes.length > 0) {
     lines.push(
