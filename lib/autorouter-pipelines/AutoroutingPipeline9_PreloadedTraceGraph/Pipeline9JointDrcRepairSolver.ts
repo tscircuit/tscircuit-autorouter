@@ -49,6 +49,13 @@ const EXACT_REPAIR_BROAD_MAX_ITERATIONS = 12
 // bounding terminal relocation's repeated whole-board indexed DRC scans.
 const MAX_POST_EXACT_PRECISION_PASS_INDEXED_ISSUE_COUNT = 16
 
+const isExpectedUnroutedConnectionError = (
+  error: Record<string, unknown>,
+): boolean =>
+  error.type === "pcb_trace_missing_error" ||
+  (typeof error.pcb_trace_error_id === "string" &&
+    error.pcb_trace_error_id.startsWith("missing_connection_"))
+
 type Pipeline9JointDrcRepairSolverParams = {
   srj: SimpleRouteJson
   srjWithPointPairs: SimpleRouteJson
@@ -685,6 +692,11 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       circuitJson: coreBaselineDrc.circuitJson,
       evaluatedTraceIds: baselineEvaluatedTraceIds,
     })
+    const expectedUnroutedBaselineErrors = coreBaselineErrors.filter(
+      isExpectedUnroutedConnectionError,
+    )
+    const expectedUnroutedBaselineErrorsWithCenters =
+      coreBaselineErrorsWithCenters.filter(isExpectedUnroutedConnectionError)
     const currentDrcResult = evaluateCoreRoutingDrc({
       inputSrj: params.originalSrj,
       srjWithPointPairs: params.srjWithPointPairs,
@@ -714,13 +726,13 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       ...currentDrcResult,
       errors: filterPipeline9DrcErrorsAgainstBaseline({
         errors: currentErrors,
-        baselineErrors: coreBaselineErrors,
+        baselineErrors: expectedUnroutedBaselineErrors,
         originalTraceIdByPreparedTraceId:
           preparedCurrentOutput.originalPreloadedTraceIdByPreparedTraceId,
       }),
       errorsWithCenters: filterPipeline9DrcErrorsAgainstBaseline({
         errors: currentErrorsWithCenters,
-        baselineErrors: coreBaselineErrorsWithCenters,
+        baselineErrors: expectedUnroutedBaselineErrorsWithCenters,
         originalTraceIdByPreparedTraceId:
           preparedCurrentOutput.originalPreloadedTraceIdByPreparedTraceId,
       }),
@@ -898,6 +910,8 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     this.stats = {
       initialJointDrcIssueCount: currentDrc.errors.length,
       baselineJointDrcIssueCount: coreBaselineDrc.errors.length,
+      expectedUnroutedBaselineDrcIssueCount:
+        expectedUnroutedBaselineErrors.length,
       initialJointDrcIssueCountByType: currentDrc.errors.reduce<
         Record<string, number>
       >((counts, error) => {
@@ -971,9 +985,6 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
             params.originalSrj.minTraceWidth,
           ) + Math.max(traceClearance, viaClearance),
       },
-    )
-    const indexedBaselineDrc = indexedDrcEngine.evaluate(
-      (params.originalSrj.traces ?? []) as RepairSimplifiedPcbTraces,
     )
     let referenceDrcCandidateCache:
       | {
@@ -1153,22 +1164,9 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       const evaluatedDrc = indexedDrcEngine.evaluate(
         candidateDrcInput.evaluatedTraces as RepairSimplifiedPcbTraces,
       )
-      const evaluatedNewErrors = filterPipeline9DrcErrorsAgainstBaseline({
-        errors: evaluatedDrc.errors,
-        baselineErrors: indexedBaselineDrc.errors,
-        originalTraceIdByPreparedTraceId:
-          candidateDrcInput.originalTraceIdByEvaluationTraceId,
-      })
-      const evaluatedNewErrorsWithCenters =
-        filterPipeline9DrcErrorsAgainstBaseline({
-          errors: evaluatedDrc.errorsWithCenters,
-          baselineErrors: indexedBaselineDrc.errorsWithCenters,
-          originalTraceIdByPreparedTraceId:
-            candidateDrcInput.originalTraceIdByEvaluationTraceId,
-        })
       return normalizeCandidateDrcResult({
-        errors: evaluatedNewErrors,
-        errorsWithCenters: evaluatedNewErrorsWithCenters,
+        errors: evaluatedDrc.errors,
+        errorsWithCenters: evaluatedDrc.errorsWithCenters,
         circuitJson: [],
         movableTraceIds: candidateDrcInput.movableTraceIds,
         solverTraceIdByEvaluationTraceId:
