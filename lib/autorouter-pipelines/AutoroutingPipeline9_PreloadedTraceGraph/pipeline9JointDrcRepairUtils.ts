@@ -135,6 +135,8 @@ export const isPipeline9IllegalCopperContactDrcError = (
   const message =
     typeof error.message === "string" ? error.message.toLowerCase() : ""
   if (message.includes("accidental contact")) return true
+  if (message.includes("overlaps with pcb_trace")) return true
+  if (message.includes("overlaps with pcb_via")) return true
 
   if (
     typeof error.actual_clearance === "number" &&
@@ -208,12 +210,7 @@ export const isPipeline9DrcCandidateNoWorse = (
     isPipeline9IllegalCopperContactDrcError,
   ).length
   if (candidateIllegalContactCount > currentIllegalContactCount) return false
-  if (
-    candidateIllegalContactCount === currentIllegalContactCount &&
-    hasNewIllegalCopperContact(candidateErrors, currentErrors)
-  ) {
-    return false
-  }
+  if (hasNewIllegalCopperContact(candidateErrors, currentErrors)) return false
   if (candidateErrors.length < currentErrors.length) return true
   if (candidateErrors.length > currentErrors.length) return false
   if (hasNewDrcError(candidateErrors, currentErrors)) return false
@@ -234,12 +231,7 @@ export const isPipeline9DrcCandidateBetter = (
     isPipeline9IllegalCopperContactDrcError,
   ).length
   if (candidateIllegalContactCount > currentIllegalContactCount) return false
-  if (
-    candidateIllegalContactCount === currentIllegalContactCount &&
-    hasNewIllegalCopperContact(candidateErrors, currentErrors)
-  ) {
-    return false
-  }
+  if (hasNewIllegalCopperContact(candidateErrors, currentErrors)) return false
 
   return (
     candidateErrors.length < currentErrors.length ||

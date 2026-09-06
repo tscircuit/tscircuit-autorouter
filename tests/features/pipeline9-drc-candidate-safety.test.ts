@@ -28,6 +28,25 @@ test("Pipeline9 repair candidates cannot trade DRCs for new illegal copper conta
       actual_clearance: -0.05,
     },
   ]
+  const existingIllegalContacts = [
+    {
+      type: "pcb_trace_error",
+      pcb_trace_error_id: "overlap_trace_b_pcb_via_a",
+      message: 'PCB trace "trace_b" overlaps with pcb_via "via_a"',
+    },
+    {
+      type: "pcb_trace_error",
+      pcb_trace_error_id: "overlap_trace_c_pcb_trace_d",
+      message: 'PCB trace "trace_c" overlaps with pcb_trace "trace_d"',
+    },
+  ]
+  const fewerButNewIllegalContacts = [
+    {
+      type: "pcb_trace_error",
+      pcb_trace_error_id: "overlap_trace_e_pcb_via_b",
+      message: 'PCB trace "trace_e" overlaps with pcb_via "via_b"',
+    },
+  ]
 
   expect(
     isPipeline9DrcCandidateBetter(fewerErrorsWithNewContact, currentErrors),
@@ -50,5 +69,17 @@ test("Pipeline9 repair candidates cannot trade DRCs for new illegal copper conta
   ).toBeTrue()
   expect(
     isPipeline9DrcCandidateNoWorse(fewerErrorsWithNewContact, currentErrors),
+  ).toBeFalse()
+  expect(
+    isPipeline9DrcCandidateBetter(
+      fewerButNewIllegalContacts,
+      existingIllegalContacts,
+    ),
+  ).toBeFalse()
+  expect(
+    isPipeline9DrcCandidateNoWorse(
+      fewerButNewIllegalContacts,
+      existingIllegalContacts,
+    ),
   ).toBeFalse()
 })
