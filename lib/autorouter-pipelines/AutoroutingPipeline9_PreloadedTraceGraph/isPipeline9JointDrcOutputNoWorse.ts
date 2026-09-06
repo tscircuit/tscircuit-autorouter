@@ -149,9 +149,7 @@ const getCopperErrorPair = (
     const viaIds = new Set([
       ...(typeof error.pcb_via_id === "string" ? [error.pcb_via_id] : []),
       ...(Array.isArray(error.pcb_via_ids)
-        ? error.pcb_via_ids.filter(
-            (id): id is string => typeof id === "string",
-          )
+        ? error.pcb_via_ids.filter((id): id is string => typeof id === "string")
         : []),
     ])
     if (viaIds.size === 1) {

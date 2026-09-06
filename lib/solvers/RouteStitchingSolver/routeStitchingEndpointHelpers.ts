@@ -1,5 +1,6 @@
 import { distance, type Point3 } from "@tscircuit/math-utils"
 import type { HighDensityIntraNodeRoute } from "lib/types/high-density-types"
+import type { StitchTerminal } from "./getStitchTerminal"
 import {
   comparePoints,
   compareRoutes,
@@ -181,10 +182,31 @@ export const selectIslandEndpoints = (params: {
  * already close enough to be considered the same stitch target.
  */
 export const snapIslandEndpointToNearestTerminal = (params: {
-  islandEndpoint: Point3
-  terminals: Point3[]
-}) => {
-  const sortedTerminals = [...params.terminals].sort(comparePoints)
+  islandEndpoint: StitchTerminal
+  terminals: StitchTerminal[]
+}): StitchTerminal => {
+  if (params.islandEndpoint.pcb_port_id) {
+    const claimedTerminal = params.terminals.find(
+      (terminal): boolean =>
+        terminal.pcb_port_id === params.islandEndpoint.pcb_port_id,
+    )
+    if (!claimedTerminal) {
+      throw new Error(
+        `Route stitching found unknown PCB terminal "${params.islandEndpoint.pcb_port_id}" on an island endpoint`,
+      )
+    }
+    return claimedTerminal
+  }
+  // A nearby boundary on another layer is not a physical terminal claim.
+  // Keep it as an island boundary instead of inventing a terminal transition.
+  const sortedTerminals = params.terminals
+    .filter(
+      (terminal): boolean =>
+        terminal.z === params.islandEndpoint.z ||
+        terminal.availableZ?.includes(params.islandEndpoint.z) === true,
+    )
+    .sort(comparePoints)
+  if (sortedTerminals.length === 0) return params.islandEndpoint
   let closestTerminal = sortedTerminals[0]
   let closestDistance = distance(params.islandEndpoint, closestTerminal)
 

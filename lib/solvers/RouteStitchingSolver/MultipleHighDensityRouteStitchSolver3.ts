@@ -8,7 +8,7 @@ import { BaseSolver } from "../BaseSolver"
 import { safeTransparentize } from "../colors"
 import { RouteStitchClearanceValidator } from "./route-stitch-clearance-validator"
 import { SingleHighDensityRouteStitchSolver3 } from "./SingleHighDensityRouteStitchSolver3"
-import { getStitchTerminal } from "./getStitchTerminal"
+import { type StitchTerminal, getStitchTerminal } from "./getStitchTerminal"
 import {
   EndpointClusterIndex,
   hasStitchableGapBetweenUnsolvedRoutes,
@@ -208,25 +208,44 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
       )!
 
       const possibleEndpoints1 = hdRoutes.flatMap((r) => [
-        r.route[0],
-        r.route[r.route.length - 1],
+        r.startPcbPortId
+          ? { ...r.route[0], pcb_port_id: r.startPcbPortId }
+          : r.route[0],
+        r.endPcbPortId
+          ? {
+              ...r.route[r.route.length - 1],
+              pcb_port_id: r.endPcbPortId,
+            }
+          : r.route[r.route.length - 1],
       ])
 
-      const possibleEndpointsByHash = new Map<
-        string,
-        { x: number; y: number; z: number }
-      >()
-      const possibleEndpoints2 = []
+      const possibleEndpointsByHash = new Map<string, StitchTerminal>()
+      const possibleEndpoints2: StitchTerminal[] = []
       for (const possibleEndpoint1 of possibleEndpoints1) {
         const pointHash = this.endpointIndex.getEndpointKey(
           hdRoutes[0].connectionName,
           possibleEndpoint1,
         )
-        if (!possibleEndpointsByHash.has(pointHash)) {
+        const existingEndpoint = possibleEndpointsByHash.get(pointHash)
+        if (
+          existingEndpoint?.pcb_port_id &&
+          possibleEndpoint1.pcb_port_id &&
+          existingEndpoint.pcb_port_id !== possibleEndpoint1.pcb_port_id
+        ) {
+          throw new Error(
+            `Route stitching found conflicting PCB terminal claims "${existingEndpoint.pcb_port_id}" and "${possibleEndpoint1.pcb_port_id}" in one endpoint cluster`,
+          )
+        }
+        if (
+          !existingEndpoint ||
+          (!existingEndpoint.pcb_port_id && possibleEndpoint1.pcb_port_id)
+        ) {
           possibleEndpointsByHash.set(pointHash, possibleEndpoint1)
         }
-        if (pointHashCounts.get(pointHash) === 1) {
-          possibleEndpoints2.push(possibleEndpoint1)
+      }
+      for (const [pointHash, endpoint] of possibleEndpointsByHash) {
+        if (endpoint.pcb_port_id || pointHashCounts.get(pointHash) === 1) {
+          possibleEndpoints2.push(endpoint)
         }
       }
 
@@ -239,8 +258,8 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
         continue
       }
 
-      let start: Point3
-      let end: Point3
+      let start: StitchTerminal
+      let end: StitchTerminal
 
       if (candidateEndpoints.length >= 2) {
         const globalStart = getStitchTerminal(

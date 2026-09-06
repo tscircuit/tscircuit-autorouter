@@ -84,8 +84,7 @@ test("Pipeline9 rejects a DRC-clean proposal that moves a real interior terminal
   expect(solver.getUpdatedPreloadedTraces()[0]?.route[1]).toEqual(terminal)
   const movedCandidate = structuredClone(unchangedCandidate)
   const movedSection = movedCandidate.find(
-    (candidate) =>
-      candidate.connectionName === section.syntheticConnectionName,
+    (candidate) => candidate.connectionName === section.syntheticConnectionName,
   )
   if (!movedSection) {
     throw new Error("Expected the inherited candidate section")

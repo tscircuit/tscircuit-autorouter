@@ -37,6 +37,7 @@ jobs:
             tests/features/pipeline9-joint-drc-*.test.ts \
             tests/features/pipeline9-srj23-sample49-inherited-copper-repair.test.ts \
             tests/features/pipeline7-srj20-sample169-multi-crossing-drc.test.ts \
+            tests/features/pipeline9-srj23-sample21-regional-b01-repair.test.ts \
             tests/stitch-solver \
             --timeout 300000
 

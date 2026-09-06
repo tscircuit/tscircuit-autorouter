@@ -29,6 +29,13 @@ test("Pipeline7 keeps srj20 sample169 DRC-clean after multi-crossing simplificat
               mergedStart: mergedPoints?.[0],
               mergedEnd: mergedPoints?.[mergedPoints.length - 1],
               remainingRouteCount: activeStitch.remainingHdRoutes.length,
+              inputHdRoutes: solver.highDensityRepairSolver
+                ?.getOutput()
+                .filter(
+                  (route): boolean =>
+                    route.connectionName ===
+                    activeStitch.mergedHdRoute?.connectionName,
+                ),
             }
           : null,
       }),
