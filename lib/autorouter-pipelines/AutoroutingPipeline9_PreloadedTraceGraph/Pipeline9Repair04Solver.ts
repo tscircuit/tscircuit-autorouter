@@ -125,6 +125,63 @@ export class Pipeline9Repair04Solver extends BaseSolver {
     ] as any).errorsWithCenters
   }
 
+  /** Prioritize dense residual regions without changing any search allowance. */
+  private getPrioritizedErrors(): DrcError[] {
+    const errors = [...this.referenceErrors!, ...this.issues!]
+    // Preserve established search order when this stage has its full allowance.
+    if (
+      this.initialReferenceErrors === null ||
+      this.input.fullEffortReferenceErrorCount === undefined ||
+      this.initialReferenceErrors <= this.input.fullEffortReferenceErrorCount
+    )
+      return errors
+    const centerOf = (error: DrcError): { x: number; y: number } | null => {
+      const targets = (error.existingViaRepairTargets ??
+        []) as ExistingViaRepairTarget[]
+      const center = targets[0] ?? error.center ?? error.pcb_center
+      if (
+        !center ||
+        typeof center !== "object" ||
+        !("x" in center) ||
+        !("y" in center)
+      )
+        return null
+      const { x, y } = center as { x: number; y: number }
+      return Number.isFinite(x) && Number.isFinite(y) ? { x, y } : null
+    }
+    const uniqueCenters = (items: DrcError[]): { x: number; y: number }[] => {
+      const centers = new Map<string, { x: number; y: number }>()
+      for (const error of items) {
+        const center = centerOf(error)
+        if (center) centers.set(`${center.x},${center.y}`, center)
+      }
+      return [...centers.values()]
+    }
+    const referenceCenters = uniqueCenters(this.referenceErrors!)
+    const centers = referenceCenters.length
+      ? referenceCenters
+      : uniqueCenters(this.issues!)
+    return errors
+      .map(
+        (error, index): { error: DrcError; index: number; coverage: number } => {
+          const center = centerOf(error)
+          let coverage = 0
+          if (center) {
+            for (const point of centers) {
+              if (
+                Math.abs(point.x - center.x) <= 5 &&
+                Math.abs(point.y - center.y) <= 5
+              )
+                coverage++
+            }
+          }
+          return { error, index, coverage }
+        },
+      )
+      .sort((a, b): number => b.coverage - a.coverage || a.index - b.index)
+      .map(({ error }): DrcError => error)
+  }
+
   private getCandidateAttemptLimit(): number | undefined {
     if (
       this.acceptedRegionCount === 0 &&
@@ -332,9 +389,8 @@ export class Pipeline9Repair04Solver extends BaseSolver {
       this.finishRepair("unsuccessful-work-budget")
       return
     }
-    // Escalate one issue's context before moving on; a long issue list must
-    // not consume the entire region budget before any larger bounds are tried.
-    for (const error of [...this.referenceErrors!, ...this.issues]) {
+    // Retain the existing context escalation within each prioritized issue.
+    for (const error of this.getPrioritizedErrors()) {
       for (const allowLayerChanges of this.input.allowLayerChanges === true
         ? [false, true]
         : [false]) {
