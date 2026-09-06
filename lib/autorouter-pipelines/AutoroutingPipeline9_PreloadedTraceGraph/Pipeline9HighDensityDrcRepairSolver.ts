@@ -14,6 +14,7 @@ import type {
 import type { Obstacle, SimpleRouteConnection } from "lib/types/srj-types"
 import { convertHdRouteToSimplifiedRoute } from "lib/utils/convertHdRouteToSimplifiedRoute"
 import { createObjectsWithZLayers } from "lib/utils/createObjectsWithZLayers"
+import { getBoundsFromNodeWithPortPoints } from "lib/utils/getBoundsFromNodeWithPortPoints"
 import { minimumDistanceBetweenSegments } from "lib/utils/minimumDistanceBetweenSegments"
 import { normalizePipeline9NodeRootConnectionNames } from "./Pipeline9HighDensitySolver"
 import type { Pipeline9HighDensityDrcEvaluator } from "./createPipeline9HighDensityDrcEvaluator"
@@ -705,10 +706,19 @@ export class Pipeline9HighDensityDrcRepairSolver extends BaseSolver {
         getPipeline9DrcErrorTraceIds(error).some((traceId) =>
           routeIndexByTraceId.has(traceId),
         )
+      const localCandidateErrors = local.candidateErrors.filter(isOwnedError)
       if (
         !isPipeline9DrcCandidateBetter(
-          local.candidateErrors.filter(isOwnedError),
+          localCandidateErrors,
           local.currentErrors.filter(isOwnedError),
+        ) ||
+        // Scoped pair counts and nonnegative severity are lower bounds on
+        // the full candidate. A pair already worse than the FULL incumbent
+        // cannot pass full validation. Do not compare pair identities only
+        // with the local baseline: a via owner can have remote conflicts.
+        !isPipeline9HighDensityDrcCandidateBetter(
+          localCandidateErrors,
+          this.currentErrors,
         )
       ) {
         return false
@@ -924,11 +934,12 @@ export class Pipeline9HighDensityDrcRepairSolver extends BaseSolver {
 
   private getNodeRepairObstacles(node: NodeWithPortPoints): Obstacle[] {
     const padding = this.params.viaDiameter / 2 + this.params.obstacleMargin
+    const nativeBounds = getBoundsFromNodeWithPortPoints(node)
     const bounds = {
-      minX: node.center.x - node.width / 2 - padding,
-      maxX: node.center.x + node.width / 2 + padding,
-      minY: node.center.y - node.height / 2 - padding,
-      maxY: node.center.y + node.height / 2 + padding,
+      minX: nativeBounds.minX - padding,
+      maxX: nativeBounds.maxX + padding,
+      minY: nativeBounds.minY - padding,
+      maxY: nativeBounds.maxY + padding,
     }
     const immutableRoutes = [
       ...this.outputHdRoutes.filter(
@@ -1087,11 +1098,12 @@ export class Pipeline9HighDensityDrcRepairSolver extends BaseSolver {
     // pairwise copper violations. Retry only nodes whose possible copper can
     // interact with an old or new changed fragment, including cross-layer drills.
     for (const node of this.nodePortPoints) {
+      const nativeBounds = getBoundsFromNodeWithPortPoints(node)
       const bounds = {
-        minX: node.center.x - node.width / 2 - padding,
-        maxX: node.center.x + node.width / 2 + padding,
-        minY: node.center.y - node.height / 2 - padding,
-        maxY: node.center.y + node.height / 2 + padding,
+        minX: nativeBounds.minX - padding,
+        maxX: nativeBounds.maxX + padding,
+        minY: nativeBounds.minY - padding,
+        maxY: nativeBounds.maxY + padding,
       }
       const drillBounds = drillBoundsByNodeId.get(node.capacityMeshNodeId)
       if (drillBounds) {

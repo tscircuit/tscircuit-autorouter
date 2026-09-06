@@ -4,6 +4,7 @@ import type {
   NodeWithPortPoints,
   PortPoint,
 } from "lib/types/high-density-types"
+import { getBoundsFromNodeWithPortPoints } from "lib/utils/getBoundsFromNodeWithPortPoints"
 
 type RoutePoint = HighDensityRoute["route"][number]
 
@@ -68,14 +69,15 @@ const isPointInsideNode = (
   point: RoutePoint,
   node: NodeWithPortPoints,
 ): boolean => {
+  const bounds = getBoundsFromNodeWithPortPoints(node)
   return (
     Number.isFinite(point.x) &&
     Number.isFinite(point.y) &&
     Number.isInteger(point.z) &&
-    point.x >= node.center.x - node.width / 2 &&
-    point.x <= node.center.x + node.width / 2 &&
-    point.y >= node.center.y - node.height / 2 &&
-    point.y <= node.center.y + node.height / 2 &&
+    point.x >= bounds.minX &&
+    point.x <= bounds.maxX &&
+    point.y >= bounds.minY &&
+    point.y <= bounds.maxY &&
     (node.availableZ === undefined || node.availableZ.includes(point.z))
   )
 }

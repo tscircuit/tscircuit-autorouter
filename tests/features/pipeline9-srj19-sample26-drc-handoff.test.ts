@@ -11,6 +11,7 @@ test("Pipeline9 preserves DRC-clean copper through SRJ19 sample 26", async (): P
     structuredClone(scenario),
     { cacheProvider: null, effort: 1 },
   )
+  const targetConnectionName = "bga_conn_012__passive_conn_019_mst0"
   const stageOutputs: Record<string, () => HighDensityRoute[]> = {
     highDensityRepairSolver: () => solver.highDensityRepairSolver!.getOutput(),
     highDensityDrcRepairSolver: () =>
@@ -46,6 +47,57 @@ test("Pipeline9 preserves DRC-clean copper through SRJ19 sample 26", async (): P
       // Diagnose copper before fragments become terminal-contiguous.
       drcOptions: { includeTraceContinuity: false, includeBoardEdge: false },
     })
+    if (
+      stage === "highDensityRepairSolver" ||
+      stage === "highDensityDrcRepairSolver" ||
+      stage === "highDensityStitchSolver"
+    ) {
+      const targetRoutes = hdRoutes.flatMap((route, globalRouteIndex) =>
+        route.connectionName === targetConnectionName
+          ? [{ globalRouteIndex, ...route }]
+          : [],
+      )
+      const targetNodeIds = new Set(targetRoutes.map((route) => route.regionId))
+      console.info(
+        JSON.stringify({
+          dataset: "srj19",
+          sampleNumber: 26,
+          stage,
+          diagnostic: "target-connection-stitch-geometry",
+          connection: solver.netToPointPairsSolver!.newConnections.find(
+            (connection) => connection.name === targetConnectionName,
+          ),
+          hdRoutes: targetRoutes.map((route, fragmentIndex) => ({
+            fragmentIndex,
+            ...route,
+          })),
+          serializedTraces: routedTraces.filter((trace) =>
+            trace.pcb_trace_id.startsWith(`${targetConnectionName}_`),
+          ),
+          nodes: solver.highDensityNodePortPoints
+            ?.filter((node) => targetNodeIds.has(node.capacityMeshNodeId))
+            .map((node) => ({
+              capacityMeshNodeId: node.capacityMeshNodeId,
+              center: node.center,
+              width: node.width,
+              height: node.height,
+              portPoints: node.portPoints.filter(
+                (point) => point.connectionName === targetConnectionName,
+              ),
+              portPointsInPairs: node.portPointsInPairs?.filter((pair) =>
+                pair.some(
+                  (point) => point.connectionName === targetConnectionName,
+                ),
+              ),
+            })),
+          nearbyPads: solver.srj.obstacles.filter((obstacle) =>
+            ["pcb_port_72", "pcb_port_119"].some((portId) =>
+              obstacle.connectedTo.includes(portId),
+            ),
+          ),
+        }),
+      )
+    }
     console.info(
       JSON.stringify({
         dataset: "srj19",

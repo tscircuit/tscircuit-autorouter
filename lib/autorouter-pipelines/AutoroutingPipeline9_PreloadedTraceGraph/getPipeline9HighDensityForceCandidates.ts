@@ -14,6 +14,8 @@ import type {
 } from "lib/types/high-density-types"
 import type { Obstacle } from "lib/types/srj-types"
 import { convertHdRouteToSimplifiedRoute } from "lib/utils/convertHdRouteToSimplifiedRoute"
+import { getBoundsFromNodeWithPortPoints } from "lib/utils/getBoundsFromNodeWithPortPoints"
+import { isPipeline9HighDensityRouteInsideBounds } from "./isPipeline9HighDensityRouteInsideBounds"
 import {
   getPipeline9DrcErrorTraceIds,
   type Pipeline9DrcError,
@@ -197,39 +199,6 @@ const hasPreservedLocalRouteAnchors = (local: LocalForceRoute): boolean => {
   return true
 }
 
-const hasValidLocalRouteGeometry = (
-  route: HighDensityRoute,
-  bounds: SimpleRouteJson["bounds"],
-  layerCount: number,
-): boolean => {
-  for (let index = 0; index < route.route.length; index++) {
-    const point = route.route[index]!
-    if (
-      !Number.isFinite(point.x) ||
-      !Number.isFinite(point.y) ||
-      !Number.isInteger(point.z) ||
-      point.z < 0 ||
-      point.z >= layerCount ||
-      point.x < bounds.minX ||
-      point.x > bounds.maxX ||
-      point.y < bounds.minY ||
-      point.y > bounds.maxY
-    ) {
-      return false
-    }
-    const next = route.route[index + 1]
-    if (
-      next &&
-      point.z !== next.z &&
-      point.toNextSegmentType !== "through_obstacle" &&
-      (point.x !== next.x || point.y !== next.y)
-    ) {
-      return false
-    }
-  }
-  return true
-}
-
 const getPadTargetedForceErrors = (
   errors: Pipeline9DrcError[],
 ): Pipeline9DrcError[] => {
@@ -287,12 +256,9 @@ export function* getPipeline9HighDensityForceCandidates({
   void,
   unknown
 > {
-  const nodeBounds = {
-    minX: node.center.x - node.width / 2,
-    maxX: node.center.x + node.width / 2,
-    minY: node.center.y - node.height / 2,
-    maxY: node.center.y + node.height / 2,
-  }
+  // Match IntraNodeSolver's exact domain, including terminal/leap port points
+  // outside the nominal node rectangle. This adds no discretionary margin.
+  const nodeBounds = getBoundsFromNodeWithPortPoints(node)
   // HD handoffs sit on node edges. Give the geometry operator room for their
   // copper radius, then enforce the exact node bounds on all candidate points.
   const copperRadius = Math.max(
@@ -400,7 +366,11 @@ export function* getPipeline9HighDensityForceCandidates({
         const candidates = materializeRoutes(mutableRoutes)
         if (
           !candidates.every((candidate) =>
-            hasValidLocalRouteGeometry(candidate, nodeBounds, layerCount),
+            isPipeline9HighDensityRouteInsideBounds(
+              candidate,
+              nodeBounds,
+              layerCount,
+            ),
           )
         ) {
           onCandidateRejected?.("geometry")

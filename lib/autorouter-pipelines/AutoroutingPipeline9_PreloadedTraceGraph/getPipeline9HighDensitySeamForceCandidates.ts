@@ -5,6 +5,7 @@ import type {
   NodeWithPortPoints,
   PortPoint,
 } from "lib/types/high-density-types"
+import { getBoundsFromNodeWithPortPoints } from "lib/utils/getBoundsFromNodeWithPortPoints"
 import { minimumDistanceBetweenSegments } from "lib/utils/minimumDistanceBetweenSegments"
 import {
   getPipeline9HighDensityForceCandidates,
@@ -338,8 +339,8 @@ export function* getPipeline9HighDensitySeamForceCandidates(
         ? sides[1].route.startPcbPortId
         : sides[1].route.endPcbPortId,
     }
-    const boundsA = getNodeBounds(sides[0].node)
-    const boundsB = getNodeBounds(sides[1].node)
+    const boundsA = getBoundsFromNodeWithPortPoints(sides[0].node)
+    const boundsB = getBoundsFromNodeWithPortPoints(sides[1].node)
     const bounds = {
       minX: Math.min(boundsA.minX, boundsB.minX),
       maxX: Math.max(boundsA.maxX, boundsB.maxX),

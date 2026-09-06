@@ -1,9 +1,6 @@
 import { getFullConnectivityMapFromCircuitJson } from "circuit-json-to-connectivity-map"
 import type { DrcEvaluator } from "high-density-repair03/lib"
-import {
-  createPipeline7HdRoutesToSimplifiedPcbTracesConverter,
-  type ConvertPipeline7HdRoutesOptions,
-} from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/convertPipeline7HdRoutesToSimplifiedPcbTraces"
+import type { ConvertPipeline7HdRoutesOptions } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/convertPipeline7HdRoutesToSimplifiedPcbTraces"
 import type { ChangedPreloadedTraceSection } from "lib/solvers/PortPointPathingSolver/tinyhypergraph/TinyHypergraphPortPointPathingSolver"
 import { RELAXED_DRC_OPTIONS } from "lib/testing/drcPresets"
 import { combinePreloadedAndRoutedTraces } from "lib/testing/evaluate-relaxed-drc"
@@ -19,6 +16,7 @@ import {
   type Pipeline9HighDensityDrcCandidateGate,
   type Pipeline9HighDensityDrcSnapshot,
 } from "./createPipeline9HighDensityDrcCandidateGate"
+import { createPipeline9ImmutableHdRoutesToSimplifiedPcbTracesConverter } from "./createPipeline9ImmutableHdRoutesToSimplifiedPcbTracesConverter"
 import { addAutoroutingViaTraceIds } from "./Pipeline9JointDrcRepairSolver"
 import { normalizePipeline9DrcErrorsForRepair } from "./normalizePipeline9DrcErrorsForRepair"
 import { preparePipeline9DrcRoutedTraces } from "./preparePipeline9DrcRoutedTraces"
@@ -292,7 +290,7 @@ export const createPipeline9HighDensityDrcEvaluator = (
   ]
   const inputSrj = { ...options.originalSrj, traces: frozenTraces }
   const convertNewRoutes =
-    createPipeline7HdRoutesToSimplifiedPcbTracesConverter(options)
+    createPipeline9ImmutableHdRoutesToSimplifiedPcbTracesConverter(options)
   const convertCircuitJson = createPreparedCircuitJsonConverter(
     options.srjWithPointPairs,
     {
