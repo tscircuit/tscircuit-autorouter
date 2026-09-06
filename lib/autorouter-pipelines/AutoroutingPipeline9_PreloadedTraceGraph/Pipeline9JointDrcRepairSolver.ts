@@ -966,8 +966,10 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
           params.srjWithPointPairs.minViaEdgeToPadEdgeClearance,
         viaHoleDiameter: viaDimensions.holeDiameter,
         spatialCellSize:
-          Math.max(viaDimensions.padDiameter, params.originalSrj.minTraceWidth) +
-          Math.max(traceClearance, viaClearance),
+          Math.max(
+            viaDimensions.padDiameter,
+            params.originalSrj.minTraceWidth,
+          ) + Math.max(traceClearance, viaClearance),
       },
     )
     const indexedBaselineDrc = indexedDrcEngine.evaluate(

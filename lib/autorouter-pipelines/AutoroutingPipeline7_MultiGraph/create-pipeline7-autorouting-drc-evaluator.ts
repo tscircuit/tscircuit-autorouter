@@ -43,13 +43,11 @@ export const createPipeline7AutoroutingDrcEvaluator = (
       conversionOptions.srjWithPointPairs.minViaEdgeToPadEdgeClearance,
     minViaHoleEdgeToViaHoleEdgeClearance:
       conversionOptions.originalSrj.minViaHoleEdgeToViaHoleEdgeClearance ??
-      conversionOptions.srjWithPointPairs
-        .minViaHoleEdgeToViaHoleEdgeClearance,
+      conversionOptions.srjWithPointPairs.minViaHoleEdgeToViaHoleEdgeClearance,
   }
   const viaDimensions = getViaDimensions(conversionOptions.originalSrj)
   const traceClearance =
-    engineSrj.minTraceToPadEdgeClearance ??
-    DEFAULT_AUTOROUTING_TRACE_CLEARANCE
+    engineSrj.minTraceToPadEdgeClearance ?? DEFAULT_AUTOROUTING_TRACE_CLEARANCE
   const viaClearance =
     engineSrj.minViaHoleEdgeToViaHoleEdgeClearance ??
     DEFAULT_AUTOROUTING_VIA_CLEARANCE
@@ -57,10 +55,8 @@ export const createPipeline7AutoroutingDrcEvaluator = (
   // clearance. Indexing at that physical scale avoids board-size-dependent
   // cells that become increasingly coarse on large layouts.
   const spatialCellSize =
-    Math.max(
-      viaDimensions.padDiameter,
-      engineSrj.minTraceWidth,
-    ) + Math.max(traceClearance, viaClearance)
+    Math.max(viaDimensions.padDiameter, engineSrj.minTraceWidth) +
+    Math.max(traceClearance, viaClearance)
   const engine = new AutoroutingDrcEngine(engineSrj as RepairSimpleRouteJson, {
     connMap: conversionOptions.connMap,
     includeTraceViaOwnerMetadata: true,
