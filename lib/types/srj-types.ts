@@ -65,6 +65,9 @@ export interface SimpleRouteJson {
   minTraceToPadEdgeClearance?: number
   minBoardEdgeClearance?: number
   minViaEdgeToPadEdgeClearance?: number
+  minPadEdgeToPadEdgeClearance?: number
+  minViaHoleEdgeToViaHoleEdgeClearance?: number
+  minPlatedHoleDrillEdgeToDrillEdgeClearance?: number
   obstacles: Obstacle[]
   connections: Array<SimpleRouteConnection>
   differentialPairs?: Array<DifferentialPair>
@@ -140,6 +143,10 @@ export interface SimpleRouteConnection {
   netConnectionName?: string
   __netConnectionName?: string
   nominalTraceWidth?: number
+  /** Maximum routed length in millimeters, matching source_trace.max_length. */
+  maxLength?: number
+  /** Maximum permitted layer-transition count, matching source_trace.max_via_count. */
+  maxViaCount?: number
   pointsToConnect: Array<ConnectionPoint>
 
   /** @deprecated DO NOT USE **/

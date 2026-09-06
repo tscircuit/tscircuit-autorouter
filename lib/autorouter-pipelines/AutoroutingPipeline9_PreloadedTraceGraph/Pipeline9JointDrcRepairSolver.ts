@@ -9,9 +9,9 @@ import {
 } from "high-density-repair03/lib"
 import { BaseSolver } from "lib/solvers/BaseSolver"
 import { RELAXED_DRC_OPTIONS } from "lib/testing/drcPresets"
+import { evaluateCoreRoutingDrc } from "lib/testing/evaluate-core-routing-drc"
 import {
   combinePreloadedAndRoutedTraces,
-  evaluateRelaxedDrc,
 } from "lib/testing/evaluate-relaxed-drc"
 import type {
   Obstacle,
@@ -712,11 +712,10 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       RELAXED_DRC_OPTIONS.traceClearance ??
       0.1
     const viaClearance = RELAXED_DRC_OPTIONS.viaClearance ?? 0.1
-    const baselineDrc = evaluateRelaxedDrc({
+    const baselineDrc = evaluateCoreRoutingDrc({
       inputSrj: params.originalSrj,
       srjWithPointPairs: params.srjWithPointPairs,
       routedTraces: [],
-      drcOptions: { traceClearance },
     })
     const baselineEvaluatedTraceIds = new Set(
       (params.originalSrj.traces ?? []).map((trace) => trace.pcb_trace_id),
@@ -733,11 +732,10 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       circuitJson: baselineDrc.circuitJson,
       evaluatedTraceIds: baselineEvaluatedTraceIds,
     })
-    const currentDrcResult = evaluateRelaxedDrc({
+    const currentDrcResult = evaluateCoreRoutingDrc({
       inputSrj: params.originalSrj,
       srjWithPointPairs: params.srjWithPointPairs,
       routedTraces: preparedCurrentOutput.routedTraces,
-      drcOptions: { traceClearance },
     })
     const currentEvaluatedTraceIds = new Set(
       combinePreloadedAndRoutedTraces(
@@ -1173,11 +1171,10 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         throw new Error("Pipeline9 reference DRC repair requires HD routes")
       }
       const candidateDrcInput = prepareCandidateDrcInput(evaluatedRoutes)
-      const evaluatedDrc = evaluateRelaxedDrc({
+      const evaluatedDrc = evaluateCoreRoutingDrc({
         inputSrj: params.originalSrj,
         srjWithPointPairs: params.srjWithPointPairs,
         routedTraces: candidateDrcInput.routedTraces,
-        drcOptions: { traceClearance },
       })
       const evaluatedTraceIds = new Set(
         candidateDrcInput.evaluatedTraces.map((trace) => trace.pcb_trace_id),
