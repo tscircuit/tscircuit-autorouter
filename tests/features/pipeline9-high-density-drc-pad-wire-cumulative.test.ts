@@ -132,10 +132,7 @@ test("Pipeline9 cumulative compensated pad-wire candidates never inherit native 
     { family: "pad-wire", scale: firstScale, application: 2 },
   ])
   expect(attempts).toHaveLength(getMaxTargetedCandidateAttemptsForEffort(1))
-  expect(first.value[0]!.route[3]!.y).toBeCloseTo(
-    TRACE_PAD_REPAIR_MAX_MOVE,
-    12,
-  )
+  expect(first.value[0]!.route[3]!.y).toBeCloseTo(TRACE_PAD_REPAIR_MAX_MOVE, 12)
   expect(second.value[0]!.route[3]!.y).toBeGreaterThan(
     first.value[0]!.route[3]!.y,
   )

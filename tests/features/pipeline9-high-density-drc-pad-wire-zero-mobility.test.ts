@@ -90,13 +90,17 @@ test("Pipeline9 keeps the native-only schedule when the pad witness is a locked 
     minClearance: 0.1,
   })
   expect(errors).toHaveLength(1)
+  const requirement = errors[0]!.minimum_clearance
+  if (typeof requirement !== "number") {
+    throw new Error("The official pad error must report its requirement")
+  }
   const target = getPipeline9PadCopperForceTarget({
     pad,
     route,
     obstacles,
     layerCount: 2,
   })!
-  expect(target.tracePoint).toEqual({ x: 0, y: 0 })
+  expect(target.tracePoint).toEqual(route.route[0])
   expect(
     getPipeline9PadTraceForceMobility({
       route,
@@ -110,7 +114,7 @@ test("Pipeline9 keeps the native-only schedule when the pad witness is a locked 
       route,
       target,
       protectedPointIndexes: new Set(),
-      minimumClearance: errors[0]!.minimum_clearance,
+      minimumClearance: requirement,
       scale: 1,
     }),
   ).toBe(false)

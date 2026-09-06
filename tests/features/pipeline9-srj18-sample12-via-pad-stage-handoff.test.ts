@@ -148,8 +148,7 @@ test("Pipeline9 repairs SRJ18 sample 12", async (): Promise<void> => {
                 targetPortPointsInPairs: node.portPointsInPairs?.filter(
                   (pair) =>
                     pair.some(
-                      (point) =>
-                        point.connectionName === targetConnectionName,
+                      (point) => point.connectionName === targetConnectionName,
                     ),
                 ),
               }

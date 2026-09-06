@@ -47,14 +47,16 @@ test("Pipeline9 scoped copper preserves native endpoint inference, pair contact 
     })),
   }
   const currentBoard: AnyCircuitElement[] = [
-    ...["start", "end"].map((name, index): PcbPort => ({
-      type: "pcb_port" as const,
-      pcb_port_id: `port-${name}`,
-      source_port_id: `source-${name}`,
-      x: index === 0 ? -1 : 1,
-      y: 0,
-      layers: ["top" as const],
-    })),
+    ...["start", "end"].map(
+      (name, index): PcbPort => ({
+        type: "pcb_port" as const,
+        pcb_port_id: `port-${name}`,
+        source_port_id: `source-${name}`,
+        x: index === 0 ? -1 : 1,
+        y: 0,
+        layers: ["top" as const],
+      }),
+    ),
     signal,
     {
       type: "pcb_via",
@@ -80,12 +82,10 @@ test("Pipeline9 scoped copper preserves native endpoint inference, pair contact 
     if (element !== signal) return element
     return {
       ...signal,
-      route: signal.route.map(
-        (point, index): PcbTrace["route"][number] => ({
-          ...point,
-          ...(index === 1 ? { y: -0.04 } : {}),
-        }),
-      ),
+      route: signal.route.map((point, index): PcbTrace["route"][number] => ({
+        ...point,
+        ...(index === 1 ? { y: -0.04 } : {}),
+      })),
     }
   })
   const currentRoutes: HighDensityRoute[] = [
@@ -180,9 +180,9 @@ test("Pipeline9 scoped copper preserves native endpoint inference, pair contact 
   const typedViaErrors = expectedCurrent.filter(
     (error): boolean => error.type === "pcb_via_trace_clearance_error",
   )
-  expect(
-    typedViaErrors.map((error): unknown => error.pcb_trace_id),
-  ).toEqual(["signal"])
+  expect(typedViaErrors.map((error): unknown => error.pcb_trace_id)).toEqual([
+    "signal",
+  ])
   expect(typedViaErrors[0]!.message).toContain("port-start")
   // Repeat through the cached incumbent path as well as the first evaluation.
   for (let evaluation = 0; evaluation < 2; evaluation++) {

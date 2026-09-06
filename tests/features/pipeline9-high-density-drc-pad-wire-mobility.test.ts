@@ -78,6 +78,13 @@ test("Pipeline9 compensates a free endpoint's contact weight using the official 
     const initialErrors = getErrors(route, minimumClearance)
     expect(initialErrors).toHaveLength(1)
     const requirement = initialErrors[0]!.minimum_clearance
+    const initialClearance = initialErrors[0]!.actual_clearance
+    if (
+      typeof requirement !== "number" ||
+      typeof initialClearance !== "number"
+    ) {
+      throw new Error("The official pad error must report both clearances")
+    }
     expect(requirement).toBe(minimumClearance)
     const target = getPipeline9PadCopperForceTarget({
       pad,
@@ -106,9 +113,11 @@ test("Pipeline9 compensates a free endpoint's contact weight using the official 
     undercorrected.route[1]!.y += oldMove
     const oldErrors = getErrors(undercorrected, requirement)
     expect(oldErrors).toHaveLength(1)
-    expect(oldErrors[0]!.actual_clearance).toBeGreaterThan(
-      initialErrors[0]!.actual_clearance,
-    )
+    const oldClearance = oldErrors[0]!.actual_clearance
+    if (typeof oldClearance !== "number") {
+      throw new Error("The remaining pad error must report its clearance")
+    }
+    expect(oldClearance).toBeGreaterThan(initialClearance)
     const repaired = structuredClone(route)
     expect(
       applyPipeline9PadTraceForce({
