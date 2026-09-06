@@ -55,7 +55,9 @@ test("Pipeline9 diagnoses remaining SRJ23 sample 42 copper by ownership", async 
       ),
     )
     const normalizedErrors = normalizePipeline9DrcErrorsForRepair({
-      errors: errorsWithCenters.map((error): Pipeline9DrcError => ({ ...error })),
+      errors: errorsWithCenters.map(
+        (error): Pipeline9DrcError => ({ ...error }),
+      ),
       circuitJson,
       newTraceIds: new Set(routedTracesById.keys()),
     })
