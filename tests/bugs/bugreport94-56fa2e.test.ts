@@ -10,8 +10,6 @@ import { getLastStepSvg } from "../fixtures/getLastStepSvg"
 
 const srj = bugReport.simple_route_json as SimpleRouteJson
 
-// The bounded repair passes add substantial work on this large board. Allow
-// their search budget while retaining every DRC and snapshot assertion.
 test("bugreport94-56fa2e.json with Pipeline 9", () => {
   const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(
     structuredClone(srj),
@@ -41,4 +39,4 @@ test("bugreport94-56fa2e.json with Pipeline 9", () => {
       ? import.meta.path.replace(/\.test\.ts$/, "-linux.test.ts")
       : import.meta.path
   expect(getLastStepSvg(solver.visualize())).toMatchSvgSnapshot(snapshotPath)
-}, 1_200_000)
+})

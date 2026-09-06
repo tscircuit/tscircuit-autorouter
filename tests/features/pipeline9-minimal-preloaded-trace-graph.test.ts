@@ -106,7 +106,7 @@ test("Pipeline9 owns copied stages with minimal preloaded-trace changes", () => 
   const pipeline7SharedStageCount = pipeline7.pipelineDef.filter(
     (step) => step.solverName !== "exactGeometryDrcForceImproveSolver",
   ).length
-  expect(solver.pipelineDef).toHaveLength(pipeline7SharedStageCount + 4)
+  expect(solver.pipelineDef).toHaveLength(pipeline7SharedStageCount + 5)
   for (const stageName of [
     "highDensityForceImproveSolver",
     "highDensityRepairSolver",
@@ -134,6 +134,17 @@ test("Pipeline9 owns copied stages with minimal preloaded-trace changes", () => 
   )
   expect(pipeline9StageNames.indexOf("repair04Solver")).toBe(
     pipeline9StageNames.indexOf("pipeline9JointDrcRepairSolver") - 1,
+  )
+  expect(
+    solver.pipelineDef.find(
+      (step) => step.solverName === "repair04AdvancedSolver",
+    )?.solverClass,
+  ).toBe(Pipeline9Repair04Solver)
+  expect(pipeline9StageNames.indexOf("repair04AdvancedSolver")).toBe(
+    pipeline9StageNames.indexOf("pipeline9JointDrcRepairSolver") + 1,
+  )
+  expect(pipeline9StageNames.indexOf("repair04AdvancedSolver")).toBe(
+    pipeline9StageNames.indexOf("lengthMatchingPostProcessingSolver") - 1,
   )
   const mutatedPreloadSimplificationStep = solver.pipelineDef.find(
     (step) => step.solverName === "mutatedPreloadedTraceSimplificationSolver",

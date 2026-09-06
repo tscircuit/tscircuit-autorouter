@@ -59,7 +59,8 @@ jobs:
           fi
 
           echo "Running ${#test_files[@]} test files from $test_plan"
-          bun test "${test_files[@]}" --timeout 600000
+          # CI owns timeouts; the large bounded-repair fixture exceeds 5 minutes.
+          bun test "${test_files[@]}" --timeout 1200000
 
       - name: Upload diff PNG and SVG snapshot artifacts
         if: failure()
