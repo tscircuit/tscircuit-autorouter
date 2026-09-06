@@ -5,10 +5,7 @@ import { createCrossingViaReductionRoutes } from "tests/fixtures/crossing-via-re
 
 test("preserves an existing via across a near-coincident layer transition", () => {
   const routes = createCrossingViaReductionRoutes()
-  routes[0]!.route.unshift(
-    { x: -4, y: 3, z: 1 },
-    { x: -3.9999998, y: 3, z: 0 },
-  )
+  routes[0]!.route.unshift({ x: -4, y: 3, z: 1 }, { x: -3.9999998, y: 3, z: 0 })
   routes[0]!.vias.unshift({ x: -4, y: 3 })
   const solver = new CrossingViaReductionSolver({
     inputHdRoutes: routes,
