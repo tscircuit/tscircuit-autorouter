@@ -59,11 +59,16 @@ describe.skipIf(process.env.RUN_FULL_GBA_REPRO !== "1")(
         }),
       ).toMatchSvgSnapshot(import.meta.path)
 
-      relaxedDrcErrors = evaluateRelaxedDrc({
+      const relaxedDrcResult = evaluateRelaxedDrc({
         inputSrj: input,
         srjWithPointPairs,
         routedTraces,
-      }).errors
+      })
+      relaxedDrcErrors = relaxedDrcResult.errors
+      console.log(
+        "FULL_GBA_RELAXED_DRC_ERRORS",
+        JSON.stringify(relaxedDrcResult.errorsWithCenters, null, 2),
+      )
     })
 
     test.failing("the fully routed board should pass relaxed DRC", () => {
