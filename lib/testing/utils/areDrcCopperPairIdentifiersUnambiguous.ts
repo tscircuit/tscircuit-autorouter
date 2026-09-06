@@ -1,6 +1,6 @@
 import type { AnyCircuitElement } from "circuit-json"
 
-const areDelimiterPrefixesUnique = (
+export const areDelimiterPrefixesUnique = (
   identifiers: ReadonlySet<string>,
 ): boolean => {
   for (const identifier of identifiers) {

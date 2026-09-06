@@ -39,6 +39,7 @@ jobs:
             tests/features/prepared-circuit-json-*.test.ts \
             tests/features/prepared-drc-connectivity-map.test.ts \
             tests/features/prepared-via-trace-clearance-*.test.ts \
+            tests/features/prepared-pad-trace-clearance-*.test.ts \
             tests/features/prepared-get-drc-errors-via-spacing-cache.test.ts \
             --timeout 300000
 

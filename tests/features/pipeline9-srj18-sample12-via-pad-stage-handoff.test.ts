@@ -22,6 +22,7 @@ test("Pipeline9 repairs SRJ18 sample 12", async (): Promise<void> => {
   )
   const targetConnectionName = "source_trace_13__source_net_13_mst7"
   let localDiagnosticsInstalled = false
+  let forceContextDiagnosticCaptured = false
   let candidateDiagnosticTimeMs = 0
   let omittedCandidateDiagnosticCount = 0
   // This is only a log/memory limit, never a candidate or solver-work budget.
@@ -63,6 +64,131 @@ test("Pipeline9 repairs SRJ18 sample 12", async (): Promise<void> => {
       throw new Error("Sample12 diagnostics require the production local gate")
     }
     localDiagnosticsInstalled = true
+    const getForceContext = evaluator.getForceContext
+    evaluator.getForceContext = (routes): ReturnType<typeof getForceContext> => {
+      const context = getForceContext(routes)
+      const diagnosticStartedAt = performance.now()
+      const node = repair.activeNode
+      if (
+        !forceContextDiagnosticCaptured &&
+        node?.capacityMeshNodeId === "cmn_244" &&
+        repair.currentErrors.some(
+          (error): boolean =>
+            error.pcb_pad_id === "pcb_smtpad_397" &&
+            error.pcb_trace_id === `${targetConnectionName}_1`,
+        )
+      ) {
+        forceContextDiagnosticCaptured = true
+        const routeIndexByTraceId = getPipeline9RouteIndexByTraceId({
+          routes,
+          newConnections: repair.params.newConnections,
+          syntheticConnectionNames: new Set<string>(),
+        })
+        const ownedRouteIndexes = new Set(routeIndexByTraceId.values())
+        const localRouteIndexes = new Set<number>()
+        const record = {
+          dataset: "srj18",
+          sampleNumber: 12,
+          stage: "highDensityDrcRepairSolver",
+          event: "pad397-actual-force-input",
+          acceptedRepairCount: repair.stats.acceptedRepairCount,
+          nodeRepairAttemptCount: repair.stats.nodeRepairAttemptCount,
+        }
+        console.info(
+          JSON.stringify({
+            ...record,
+            kind: "node",
+            node,
+            nativeBounds: getBoundsFromNodeWithPortPoints(node),
+            params: {
+              layerCount: repair.params.layerCount,
+              viaDiameter: repair.params.viaDiameter,
+              viaHoleDiameter: repair.params.viaHoleDiameter,
+              traceWidth: repair.params.traceWidth,
+              obstacleMargin: repair.params.obstacleMargin,
+              drcClearance: repair.params.drcClearance,
+              effort: repair.params.effort,
+            },
+          }),
+        )
+        for (const [globalRouteIndex, route] of routes.entries()) {
+          // Match startNodeRepair's exact owned-node scope and array order.
+          if (
+            route.regionId !== node.capacityMeshNodeId ||
+            !ownedRouteIndexes.has(globalRouteIndex)
+          ) {
+            continue
+          }
+          const localRouteIndex = localRouteIndexes.size
+          localRouteIndexes.add(globalRouteIndex)
+          console.info(
+            JSON.stringify({
+              ...record,
+              kind: "route",
+              globalRouteIndex,
+              localRouteIndex,
+              traceIds: [...routeIndexByTraceId].flatMap(
+                ([traceId, index]): string[] =>
+                  index === globalRouteIndex ? [traceId] : [],
+              ),
+              route,
+            }),
+          )
+        }
+        for (const [errorIndex, error] of repair.currentErrors.entries()) {
+          if (
+            !getPipeline9DrcErrorTraceIds(error).some((traceId): boolean => {
+              const index = routeIndexByTraceId.get(traceId)
+              return index !== undefined && localRouteIndexes.has(index)
+            })
+          ) {
+            continue
+          }
+          console.info(
+            JSON.stringify({ ...record, kind: "error", errorIndex, error }),
+          )
+        }
+        // These limits only split observational records; no routing/checking
+        // input is filtered. Keep both actual contexts used by the generator.
+        for (const [kind, obstacles] of [
+          ["physical-obstacles", context.obstacles],
+          ["routing-obstacles", repair.params.obstacles],
+        ] as const) {
+          for (let offset = 0; offset < obstacles.length; offset += 25) {
+            console.info(
+              JSON.stringify({
+                ...record,
+                kind,
+                offset,
+                totalCount: obstacles.length,
+                obstacles: obstacles.slice(offset, offset + 25),
+              }),
+            )
+          }
+        }
+        for (const [kind, connMap] of [
+          ["physical-connectivity", context.connMap],
+          ["routing-connectivity", repair.params.connMap],
+        ] as const) {
+          const entries = Object.entries(connMap.idToNetMap)
+          for (let offset = 0; offset < entries.length; offset += 100) {
+            console.info(
+              JSON.stringify({
+                ...record,
+                kind,
+                offset,
+                totalCount: entries.length,
+                entries: entries.slice(offset, offset + 100),
+              }),
+            )
+          }
+        }
+      }
+      candidateDiagnosticTimeMs += performance.now() - diagnosticStartedAt
+      // Observe this existing lookup only; never construct a second snapshot
+      // or clone/replace the actual force context handed to the generator.
+      return context
+    }
     evaluator.evaluateLocalCandidate = (
       params,
     ): ReturnType<Pipeline9HighDensityDrcCandidateGate> => {
