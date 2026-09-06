@@ -1,10 +1,15 @@
 import { expect, test } from "bun:test"
+import type { PcbVia } from "circuit-json"
 import { convertPipeline7HdRoutesToSimplifiedPcbTraces } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/convertPipeline7HdRoutesToSimplifiedPcbTraces"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
 import type { Pipeline9HighDensityDrcCandidateGate } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/createPipeline9HighDensityDrcCandidateGate"
 import { addAutoroutingViaTraceIds } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9JointDrcRepairSolver"
-import { getPipeline9DrcErrorTraceIds } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/pipeline9JointDrcRepairUtils"
+import {
+  getPipeline9DrcErrorTraceIds,
+  getPipeline9RouteIndexByTraceId,
+} from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/pipeline9JointDrcRepairUtils"
 import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
+import { convertToCircuitJson } from "lib/testing/utils/convertToCircuitJson"
 import type { HighDensityRoute } from "lib/types/high-density-types"
 import { getBoundsFromNodeWithPortPoints } from "lib/utils/getBoundsFromNodeWithPortPoints"
 import { loadScenarioBySampleNumber } from "../../scripts/benchmark/scenarios"
@@ -22,9 +27,36 @@ test("Pipeline9 repairs SRJ18 sample 12", async (): Promise<void> => {
   // This is only a log/memory limit, never a candidate or solver-work budget.
   const candidateDiagnosticRecordLimit = 64
   const loggedCandidateGeometry = new Set<string>()
+  const getDiagnosticCircuitJson = (
+    hdRoutes: HighDensityRoute[],
+  ): ReturnType<typeof convertToCircuitJson> => {
+    const routedTraces = convertPipeline7HdRoutesToSimplifiedPcbTraces({
+      connections: solver.netToPointPairsSolver!.newConnections,
+      originalConnections: solver.originalSrj.connections,
+      hdRoutes,
+      layerCount: solver.srj.layerCount,
+      obstacles: solver.srj.obstacles,
+      defaultViaHoleDiameter: solver.viaHoleDiameter,
+      connMap: solver.connMap,
+    })
+    // Match evaluateRelaxedDrc's public conversion, without calling a checker.
+    // The wrapper verifies this fixture has no original or frozen preload.
+    return convertToCircuitJson(solver.srjWithPointPairs!, routedTraces, {
+      minTraceWidth: scenario.minTraceWidth,
+      minViaDiameter: scenario.minViaDiameter,
+      originalSrj: scenario,
+      includeOriginalConnections: true,
+    })
+  }
   const installLocalCandidateDiagnostics = (): void => {
     const repair = solver.highDensityDrcRepairSolver
     if (!repair || localDiagnosticsInstalled) return
+    if (
+      (scenario.traces?.length ?? 0) !== 0 ||
+      repair.params.fixedHdRoutes.length !== 0
+    ) {
+      throw new Error("Sample12 diagnostics require no preloaded traces")
+    }
     const evaluator = repair.params.drcEvaluator
     const evaluateLocalCandidate = evaluator.evaluateLocalCandidate
     if (!evaluateLocalCandidate) {
@@ -64,6 +96,7 @@ test("Pipeline9 repairs SRJ18 sample 12", async (): Promise<void> => {
           omittedCandidateDiagnosticCount++
         } else if (!loggedCandidateGeometry.has(geometryKey)) {
           loggedCandidateGeometry.add(geometryKey)
+          const candidateRecordIndex = loggedCandidateGeometry.size - 1
           const candidateParticipants = new Set(
             result.candidateErrors.flatMap(getPipeline9DrcErrorTraceIds),
           )
@@ -73,6 +106,7 @@ test("Pipeline9 repairs SRJ18 sample 12", async (): Promise<void> => {
               sampleNumber: 12,
               stage: "highDensityDrcRepairSolver",
               event: "pad397-local-candidate",
+              candidateRecordIndex,
               activeNodeId: repair.activeNode?.capacityMeshNodeId,
               acceptedRepairCount: repair.stats.acceptedRepairCount,
               nodeRepairAttemptCount: repair.stats.nodeRepairAttemptCount,
@@ -92,6 +126,107 @@ test("Pipeline9 repairs SRJ18 sample 12", async (): Promise<void> => {
               ),
             }),
           )
+          const reportedViaIds = new Set<string>()
+          for (const error of [
+            ...result.currentErrors,
+            ...result.candidateErrors,
+          ]) {
+            if (typeof error.pcb_via_id === "string") {
+              reportedViaIds.add(error.pcb_via_id)
+            }
+            if (!Array.isArray(error.pcb_via_ids)) continue
+            for (const viaId of error.pcb_via_ids) {
+              if (typeof viaId === "string") reportedViaIds.add(viaId)
+            }
+          }
+          for (const [state, routes, targetRoute] of [
+            ["current", params.currentRoutes, currentTarget],
+            ["candidate", params.candidateRoutes, candidateTarget],
+          ] as const) {
+            const circuitJson = getDiagnosticCircuitJson(routes)
+            const routeIndexByTraceId = getPipeline9RouteIndexByTraceId({
+              routes,
+              newConnections: solver.netToPointPairsSolver!.newConnections,
+              syntheticConnectionNames: new Set<string>(),
+            })
+            const targetRouteIndex = routes.indexOf(targetRoute)
+            const targetTraces = circuitJson.filter(
+              (element): boolean =>
+                element.type === "pcb_trace" &&
+                routeIndexByTraceId.get(element.pcb_trace_id) ===
+                  targetRouteIndex,
+            )
+            if (targetTraces.length !== 1) {
+              throw new Error(
+                "Sample12 target must map to one serialized trace",
+              )
+            }
+            const viasByOwnerTraceId = new Map<string, PcbVia[]>()
+            const missingViaIds = new Set(reportedViaIds)
+            for (const element of circuitJson) {
+              if (
+                element.type !== "pcb_via" ||
+                !reportedViaIds.has(element.pcb_via_id)
+              ) {
+                continue
+              }
+              missingViaIds.delete(element.pcb_via_id)
+              if (
+                !("pcb_trace_id" in element) ||
+                typeof element.pcb_trace_id !== "string"
+              ) {
+                throw new Error(
+                  "Sample12 reported via must have a trace owner",
+                )
+              }
+              const ownerVias = viasByOwnerTraceId.get(element.pcb_trace_id)
+              if (ownerVias) ownerVias.push(element)
+              else viasByOwnerTraceId.set(element.pcb_trace_id, [element])
+            }
+            console.info(
+              JSON.stringify({
+                dataset: "srj18",
+                sampleNumber: 12,
+                stage: "highDensityDrcRepairSolver",
+                event: "pad397-local-candidate-target-copper",
+                candidateRecordIndex,
+                state,
+                serializedTargetTrace: targetTraces[0],
+                reportedViaIds: [...reportedViaIds],
+                missingReportedViaIds: [...missingViaIds],
+              }),
+            )
+            // One exact owner fragment per record keeps related-copper context
+            // bounded in line size. Via IDs are looked up, never decoded.
+            for (const [ownerTraceId, vias] of viasByOwnerTraceId) {
+              const ownerRouteIndex = routeIndexByTraceId.get(ownerTraceId)
+              const ownerTrace = circuitJson.find(
+                (element): boolean =>
+                  element.type === "pcb_trace" &&
+                  element.pcb_trace_id === ownerTraceId,
+              )
+              if (ownerRouteIndex === undefined || !ownerTrace) {
+                throw new Error(
+                  "Sample12 via owner must map to its HD fragment",
+                )
+              }
+              console.info(
+                JSON.stringify({
+                  dataset: "srj18",
+                  sampleNumber: 12,
+                  stage: "highDensityDrcRepairSolver",
+                  event: "pad397-local-candidate-via-owner-copper",
+                  candidateRecordIndex,
+                  state,
+                  ownerTraceId,
+                  ownerRouteIndex,
+                  hdRoute: routes[ownerRouteIndex],
+                  serializedOwnerTrace: ownerTrace,
+                  vias,
+                }),
+              )
+            }
+          }
         }
       }
       candidateDiagnosticTimeMs += performance.now() - diagnosticStartedAt
