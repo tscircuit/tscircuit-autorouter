@@ -52,12 +52,16 @@ export interface GetDrcErrorsOptions {
   traceClearance?: number
   includeTraceContinuity?: boolean
   includeTypedTraceClearance?: boolean
+  /** Additional electrical aliases that are not encoded in Circuit JSON. */
+  additionalConnections?: string[][]
 }
 
 const createDrcConnectivityMap = (
   circuitJson: CircuitJson,
+  additionalConnections: string[][] = [],
 ): ConnectivityMap => {
   const connMap = getFullConnectivityMapFromCircuitJson(circuitJson)
+  connMap.addConnections(additionalConnections)
   const viaTraceConnections = circuitJson
     .filter(
       (element): element is PcbViaWithTraceId =>
@@ -73,7 +77,10 @@ export const getDrcErrors = (
   circuitJson: CircuitJson,
   options: GetDrcErrorsOptions = {},
 ): GetDrcErrorsResult => {
-  const connMap = createDrcConnectivityMap(circuitJson)
+  const connMap = createDrcConnectivityMap(
+    circuitJson,
+    options.additionalConnections,
+  )
   const viaClearance = Math.max(
     options.viaClearance ?? MIN_VIA_TO_VIA_CLEARANCE,
     MIN_VIA_TO_VIA_CLEARANCE,
