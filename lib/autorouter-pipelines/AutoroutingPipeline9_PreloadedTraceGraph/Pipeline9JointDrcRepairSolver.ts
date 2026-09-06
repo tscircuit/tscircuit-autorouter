@@ -1458,7 +1458,15 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     const relaxedDrcEvaluator: DrcEvaluator = (input) => {
       const indexedResult = indexedDrcEvaluator(input)
       if (getIndexedDrcErrors(indexedResult).length > 0) return indexedResult
-      return sectionRelaxedReferenceDrcEvaluator(input)
+      this.referenceDrcValidationCount += 1
+      const referenceResult = sectionRelaxedReferenceDrcEvaluator(input)
+      const referenceErrors = Array.isArray(referenceResult)
+        ? referenceResult
+        : referenceResult.errors
+      if (referenceErrors.length > 0) {
+        this.referenceDrcFalseNegativeCount += 1
+      }
+      return referenceResult
     }
     this.drcEvaluator = drcEvaluator
     this.relaxedDrcEvaluator = relaxedDrcEvaluator
