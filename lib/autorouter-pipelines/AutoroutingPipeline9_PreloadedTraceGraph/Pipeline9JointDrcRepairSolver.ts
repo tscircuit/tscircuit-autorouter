@@ -677,6 +677,8 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
   readonly fixedPreloadedObstacleRoutes: PreloadedHighDensityRoute[]
   readonly syntheticConnectionNames: ReadonlySet<string>
   readonly exactRepairSolver?: Pipeline7AdaptiveDrcBranchPortfolioSolver
+  private coreRepairSolver?: Pipeline7AdaptiveDrcBranchPortfolioSolver
+  private repairSrj?: SimpleRouteJson
   private drcEvaluator?: DrcEvaluator
   private cachedReferenceDrcEvaluator?: DrcEvaluator
   private assembledRelaxedReferenceDrcEvaluator?: DrcEvaluator
@@ -1229,14 +1231,26 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
 
     const evaluateCandidateReferenceDrc = (
       evaluatedRoutes: HighDensityRoute[],
+      evaluationKind: "pipeline9" | "relaxed",
     ): NormalizedCandidateDrcResult => {
       const candidateDrcInput = prepareCandidateDrcInput(evaluatedRoutes)
-      const evaluatedDrcEvaluation = evaluatePipeline9ReferenceDrc({
-        inputSrj: params.originalSrj,
-        srjWithPointPairs: params.srjWithPointPairs,
-        routedTraces: candidateDrcInput.routedTraces,
-        traceClearance,
-      })
+      const evaluatedDrcEvaluation =
+        evaluationKind === "pipeline9"
+          ? evaluatePipeline9ReferenceDrc({
+              inputSrj: params.originalSrj,
+              srjWithPointPairs: params.srjWithPointPairs,
+              routedTraces: candidateDrcInput.routedTraces,
+              traceClearance,
+            })
+          : {
+              kind: "relaxed" as const,
+              result: evaluateRelaxedDrc({
+                inputSrj: params.originalSrj,
+                srjWithPointPairs: params.srjWithPointPairs,
+                routedTraces: candidateDrcInput.routedTraces,
+                drcOptions: { traceClearance },
+              }),
+            }
       const evaluatedDrc = evaluatedDrcEvaluation.result
       const candidateBaselineErrors =
         evaluatedDrcEvaluation.kind === "relaxed"
@@ -1290,7 +1304,17 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       if (!evaluatedRoutes) {
         throw new Error("Pipeline9 reference DRC repair requires HD routes")
       }
-      return evaluateCandidateReferenceDrc(evaluatedRoutes)
+      return evaluateCandidateReferenceDrc(evaluatedRoutes, "pipeline9")
+    }
+    const sectionRelaxedReferenceDrcEvaluator: DrcEvaluator = ({
+      routes,
+      hdRoutes,
+    }) => {
+      const evaluatedRoutes = routes ?? hdRoutes
+      if (!evaluatedRoutes) {
+        throw new Error("Pipeline9 relaxed DRC repair requires HD routes")
+      }
+      return evaluateCandidateReferenceDrc(evaluatedRoutes, "relaxed")
     }
     const assembledRelaxedReferenceDrcEvaluator: DrcEvaluator = ({
       routes,
@@ -1335,10 +1359,10 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     }
     this.cachedReferenceDrcEvaluator = cachedReferenceDrcEvaluator
 
-    const drcEvaluator: DrcEvaluator = ({ routes, hdRoutes }) => {
+    const indexedDrcEvaluator: DrcEvaluator = ({ routes, hdRoutes }) => {
       const evaluatedRoutes = routes ?? hdRoutes
       if (!evaluatedRoutes) {
-        throw new Error("Pipeline9 joint DRC repair requires HD routes")
+        throw new Error("Pipeline9 indexed DRC repair requires HD routes")
       }
       const candidateKey = JSON.stringify(evaluatedRoutes) as DrcCandidateKey
       const cachedResult = this.indexedDrcCandidateCache.get(candidateKey)
@@ -1390,27 +1414,6 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
           originalTraceIdByPreparedTraceId:
             candidateDrcInput.originalTraceIdByEvaluationTraceId,
         })
-      if (evaluatedNewErrors.length === 0) {
-        const validationCountBefore = this.referenceDrcValidationCount
-        const referenceResult = cachedReferenceDrcEvaluator({
-          traces: [],
-          routes: evaluatedRoutes,
-          hdRoutes: evaluatedRoutes,
-        })
-        const referenceErrors = Array.isArray(referenceResult)
-          ? referenceResult
-          : referenceResult.errors
-        if (
-          this.referenceDrcValidationCount > validationCountBefore &&
-          referenceErrors.length > 0
-        ) {
-          this.referenceDrcFalseNegativeCount += 1
-        }
-        this.indexedDrcEvaluationTimeMs +=
-          performance.now() - evaluationStartedAtMs
-        this.cacheIndexedDrcResult(candidateKey, referenceResult)
-        return referenceResult
-      }
       const candidateDrcResult = normalizeCandidateDrcResult({
         errors: evaluatedNewErrors,
         errorsWithCenters: evaluatedNewErrorsWithCenters,
@@ -1424,21 +1427,66 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       this.cacheIndexedDrcResult(candidateKey, candidateDrcResult)
       return candidateDrcResult
     }
+    const getIndexedDrcErrors = (
+      result: ReturnType<DrcEvaluator>,
+    ): Array<Record<string, unknown>> =>
+      Array.isArray(result) ? result : result.errors
+    const drcEvaluator: DrcEvaluator = (input) => {
+      const indexedResult = indexedDrcEvaluator(input)
+      if (getIndexedDrcErrors(indexedResult).length > 0) return indexedResult
+      const validationCountBefore = this.referenceDrcValidationCount
+      const referenceResult = cachedReferenceDrcEvaluator(input)
+      const referenceErrors = Array.isArray(referenceResult)
+        ? referenceResult
+        : referenceResult.errors
+      if (
+        this.referenceDrcValidationCount > validationCountBefore &&
+        referenceErrors.length > 0
+      ) {
+        this.referenceDrcFalseNegativeCount += 1
+      }
+      return referenceResult
+    }
+    const relaxedDrcEvaluator: DrcEvaluator = (input) => {
+      const indexedResult = indexedDrcEvaluator(input)
+      if (getIndexedDrcErrors(indexedResult).length > 0) return indexedResult
+      return sectionRelaxedReferenceDrcEvaluator(input)
+    }
     this.drcEvaluator = drcEvaluator
-
-    this.exactRepairSolver = new Pipeline7AdaptiveDrcBranchPortfolioSolver({
-      srj: extendedSrjWithPointPairs as any,
+    this.repairSrj = extendedSrjWithPointPairs
+    this.exactRepairSolver = this.createRepairSolver({
       hdRoutes: [
         ...params.newHdRoutes,
         ...this.movablePreloadedSections.map(
           (movableSection) => movableSection.hdRoute,
         ),
       ],
-      connMap: params.connMap,
-      effort: params.effort,
-      viaHoleDiameter: params.defaultViaHoleDiameter,
+      drcEvaluator: relaxedDrcEvaluator,
+    })
+    this.activeSubSolver = this.exactRepairSolver
+    this.MAX_ITERATIONS = this.exactRepairSolver.MAX_ITERATIONS + 1
+  }
+
+  private createRepairSolver({
+    hdRoutes,
+    drcEvaluator,
+    referenceDrcEvaluator,
+  }: {
+    hdRoutes: HighDensityRoute[]
+    drcEvaluator: DrcEvaluator
+    referenceDrcEvaluator?: DrcEvaluator
+  }): Pipeline7AdaptiveDrcBranchPortfolioSolver {
+    if (!this.repairSrj) {
+      throw new Error("Pipeline9 joint DRC repair is missing its repair SRJ")
+    }
+    return new Pipeline7AdaptiveDrcBranchPortfolioSolver({
+      srj: this.repairSrj as any,
+      hdRoutes,
+      connMap: this.params.connMap,
+      effort: this.params.effort,
+      viaHoleDiameter: this.params.defaultViaHoleDiameter,
       drcEvaluator,
-      referenceDrcEvaluator: assembledRelaxedReferenceDrcEvaluator,
+      referenceDrcEvaluator,
       viaInPadDrcEvaluator: drcEvaluator,
       maxIterations: EXACT_REPAIR_MAX_ITERATIONS,
       enableBroadFallback: false,
@@ -1447,13 +1495,11 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       enableTraceViaOwnerTargeting: true,
       enablePostSolveClearanceRelaxation: false,
       enableSafeTraceLayerMoves: true,
-      enableViaInPadLayerMoves: params.originalSrj.allowViaInPad ?? false,
+      enableViaInPadLayerMoves: this.params.originalSrj.allowViaInPad ?? false,
       viaInPadMaxIterations: EXACT_REPAIR_MAX_ITERATIONS,
       broadMaxIterations: EXACT_REPAIR_BROAD_MAX_ITERATIONS,
       broadPassMultiplier: 3,
     })
-    this.activeSubSolver = this.exactRepairSolver
-    this.MAX_ITERATIONS = this.exactRepairSolver.MAX_ITERATIONS + 1
   }
 
   override getSolverName(): string {
@@ -1465,17 +1511,39 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       this.solved = true
       return
     }
-    this.exactRepairSolver.step()
-    this.progress = this.exactRepairSolver.progress
-    if (this.exactRepairSolver.failed) {
-      this.failed = true
-      this.error = this.exactRepairSolver.error
+    if (!this.exactRepairSolver.solved) {
+      this.exactRepairSolver.step()
+      this.progress = this.exactRepairSolver.progress / 2
+      if (this.exactRepairSolver.failed) {
+        this.failed = true
+        this.error = this.exactRepairSolver.error
+      }
       return
     }
-    if (!this.exactRepairSolver.solved) return
-    const exactOutput = this.exactRepairSolver.getOutput()
+    if (!this.coreRepairSolver) {
+      this.coreRepairSolver = this.createRepairSolver({
+        hdRoutes: this.exactRepairSolver.getOutput(),
+        drcEvaluator: this.drcEvaluator!,
+        referenceDrcEvaluator: this.assembledRelaxedReferenceDrcEvaluator,
+      })
+      this.activeSubSolver = this.coreRepairSolver
+      this.MAX_ITERATIONS =
+        this.exactRepairSolver.MAX_ITERATIONS +
+        this.coreRepairSolver.MAX_ITERATIONS +
+        1
+      return
+    }
+    this.coreRepairSolver.step()
+    this.progress = 0.5 + this.coreRepairSolver.progress / 2
+    if (this.coreRepairSolver.failed) {
+      this.failed = true
+      this.error = this.coreRepairSolver.error
+      return
+    }
+    if (!this.coreRepairSolver.solved) return
+    const exactOutput = this.coreRepairSolver.getOutput()
     const exactIndexedDrcIssueCountStat =
-      this.exactRepairSolver.stats.finalDrcIssueCount
+      this.coreRepairSolver.stats.finalDrcIssueCount
     const exactIndexedDrcIssueCount =
       typeof exactIndexedDrcIssueCountStat === "number" &&
       Number.isFinite(exactIndexedDrcIssueCountStat) &&
@@ -1505,6 +1573,9 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         this.stats = {
           ...this.stats,
           ...this.exactRepairSolver.stats,
+          ...this.coreRepairSolver.stats,
+          relaxedRepairFinalDrcIssueCount:
+            this.exactRepairSolver.stats.finalDrcIssueCount,
           postExactIndexedDrcIssueCount: exactIndexedDrcIssueCount,
           postExactPrecisionPassMaxIndexedIssueCount:
             MAX_POST_EXACT_PRECISION_PASS_INDEXED_ISSUE_COUNT,
@@ -1601,6 +1672,9 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     this.stats = {
       ...this.stats,
       ...this.exactRepairSolver.stats,
+      ...this.coreRepairSolver.stats,
+      relaxedRepairFinalDrcIssueCount:
+        this.exactRepairSolver.stats.finalDrcIssueCount,
       postExactIndexedDrcIssueCount: exactIndexedDrcIssueCount,
       postExactPrecisionPassMaxIndexedIssueCount:
         MAX_POST_EXACT_PRECISION_PASS_INDEXED_ISSUE_COUNT,
