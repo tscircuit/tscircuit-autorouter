@@ -1038,10 +1038,18 @@ export function convertToCircuitJson(
     ),
   )
 
+  const routeConnections =
+    includeOriginalConnections && originalSrj
+      ? [...srjWithPointPairs.connections, ...originalSrj.connections]
+      : srjWithPointPairs.connections
   const routeCircuitJsonSourceTraceIdResolver =
     createCircuitJsonSourceTraceIdResolver(
-      srjWithPointPairs.connections,
-      getConnectivityMapFromSimpleRouteJson(srjWithPointPairs),
+      routeConnections,
+      getConnectivityMapFromSimpleRouteJson(
+        includeOriginalConnections && originalSrj
+          ? { ...originalSrj, connections: routeConnections }
+          : srjWithPointPairs,
+      ),
     )
 
   // Process routes based on their type
