@@ -138,6 +138,38 @@ export const isPipeline9DrcCandidateBetter = (
     getDrcIssueScore(candidateErrors) <
       getDrcIssueScore(currentErrors) - SCORE_EPSILON)
 
+const getPipeline9DrcErrorIdentity = (error: Pipeline9DrcError) => {
+  const identifiers = Object.entries(error)
+    .filter(
+      ([key, value]) =>
+        key !== "source_trace_id" &&
+        (key.endsWith("_id") || key.endsWith("_ids")) &&
+        value !== undefined &&
+        value !== "",
+    )
+    .sort(([keyA], [keyB]) => keyA.localeCompare(keyB))
+  const normalizedMessage =
+    typeof error.message === "string"
+      ? error.message.replace(/-?\d+\.\d+/g, "#")
+      : ""
+  return JSON.stringify([error.type, identifiers, normalizedMessage])
+}
+
+export const doesPipeline9DrcCandidateRegress = (
+  candidateErrors: Pipeline9DrcError[],
+  currentErrors: Pipeline9DrcError[],
+) => {
+  if (candidateErrors.length !== currentErrors.length) {
+    return candidateErrors.length > currentErrors.length
+  }
+  const currentIdentities = new Set(
+    currentErrors.map(getPipeline9DrcErrorIdentity),
+  )
+  return candidateErrors.some(
+    (error) => !currentIdentities.has(getPipeline9DrcErrorIdentity(error)),
+  )
+}
+
 export const getPipeline9RouteIndexByTraceId = ({
   routes,
   newConnections,

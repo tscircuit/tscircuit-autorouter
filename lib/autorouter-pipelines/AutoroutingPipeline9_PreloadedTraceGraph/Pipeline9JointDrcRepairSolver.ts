@@ -39,6 +39,7 @@ import { getPipeline9PreloadedViaPairTraceGroups } from "./getPipeline9Preloaded
 import { mergePipeline9MovablePreloadedVias } from "./mergePipeline9MovablePreloadedVias"
 import { normalizePipeline9DrcErrorsForRepair } from "./normalizePipeline9DrcErrorsForRepair"
 import {
+  doesPipeline9DrcCandidateRegress,
   getPipeline9DrcErrors,
   getPipeline9RouteIndexByTraceId,
   type Pipeline9CollapsedTraceParticipant,
@@ -678,6 +679,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
   readonly exactRepairSolver?: Pipeline7AdaptiveDrcBranchPortfolioSolver
   private drcEvaluator?: DrcEvaluator
   private cachedReferenceDrcEvaluator?: DrcEvaluator
+  private relaxedReferenceDrcEvaluator?: DrcEvaluator
   private referenceDrcValidationCount = 0
   private referenceDrcFalseNegativeCount = 0
   private indexedDrcEvaluationCount = 0
@@ -1312,6 +1314,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       }
       return evaluateCandidateReferenceDrc(evaluatedRoutes, "relaxed")
     }
+    this.relaxedReferenceDrcEvaluator = relaxedReferenceDrcEvaluator
     const cachedReferenceDrcEvaluator: DrcEvaluator = ({
       routes,
       hdRoutes,
@@ -1582,7 +1585,22 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         0.15,
       effort: this.params.effort,
     })
-    this.combinedOutput = regionalB01RepairResult.routes
+    const postRepairRelaxedInputErrors = getPipeline9DrcErrors(
+      this.relaxedReferenceDrcEvaluator!,
+      exactOutput,
+    )
+    const postRepairRelaxedCandidateErrors = getPipeline9DrcErrors(
+      this.relaxedReferenceDrcEvaluator!,
+      regionalB01RepairResult.routes,
+    )
+    const postRepairRelaxedCandidateRolledBack =
+      doesPipeline9DrcCandidateRegress(
+        postRepairRelaxedCandidateErrors,
+        postRepairRelaxedInputErrors,
+      )
+    this.combinedOutput = postRepairRelaxedCandidateRolledBack
+      ? exactOutput
+      : regionalB01RepairResult.routes
     this.stats = {
       ...this.stats,
       ...this.exactRepairSolver.stats,
@@ -1615,6 +1633,10 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         regionalB01RepairResult.preloadEligibleDrcIssueCount,
       regionalB01RepairAttempted:
         regionalB01RepairResult.preloadRepairAttempted,
+      postRepairRelaxedInputDrcIssueCount: postRepairRelaxedInputErrors.length,
+      postRepairRelaxedCandidateDrcIssueCount:
+        postRepairRelaxedCandidateErrors.length,
+      postRepairRelaxedCandidateRolledBack,
       regionalB01RepairTraceIdCount:
         preloadRepairTraceIds.size +
         (preloadRepairTraceIds.collidingFixedTraceIds?.size ?? 0),
