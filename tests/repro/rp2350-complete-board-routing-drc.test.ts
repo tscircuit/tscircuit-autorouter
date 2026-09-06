@@ -123,6 +123,17 @@ test("Pipeline9 routes the normal RP2350 core phase without DRC errors", (): voi
     throw new Error("Pipeline9 did not produce point-pair SRJ")
   }
 
+  console.info(
+    "RP2350 repair stats",
+    JSON.stringify({
+      joint: solver.pipeline9JointDrcRepairSolver?.stats,
+      postRepairPointCount:
+        solver.postRepairTraceSimplificationSolver?.simplifiedHdRoutes.reduce(
+          (sum, route): number => sum + route.route.length,
+          0,
+        ),
+    }),
+  )
   const routedTraces = solver.getOutputSimplifiedPcbTraces()
   const { errors, circuitJson }: EvaluateRelaxedDrcResult = evaluateRelaxedDrc({
     inputSrj: input,
