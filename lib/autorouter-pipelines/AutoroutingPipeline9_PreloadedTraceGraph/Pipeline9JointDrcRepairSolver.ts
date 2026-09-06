@@ -1136,22 +1136,9 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         circuitJson: evaluatedDrc.circuitJson,
         evaluatedTraceIds,
       })
-      const evaluatedNewErrors = filterPipeline9DrcErrorsAgainstBaseline({
-        errors: evaluatedErrors,
-        baselineErrors: coreBaselineErrors,
-        originalTraceIdByPreparedTraceId:
-          candidateDrcInput.originalTraceIdByEvaluationTraceId,
-      })
-      const evaluatedNewErrorsWithCenters =
-        filterPipeline9DrcErrorsAgainstBaseline({
-          errors: evaluatedErrorsWithCenters,
-          baselineErrors: coreBaselineErrorsWithCenters,
-          originalTraceIdByPreparedTraceId:
-            candidateDrcInput.originalTraceIdByEvaluationTraceId,
-        })
       return normalizeCandidateDrcResult({
-        errors: evaluatedNewErrors,
-        errorsWithCenters: evaluatedNewErrorsWithCenters,
+        errors: evaluatedErrors,
+        errorsWithCenters: evaluatedErrorsWithCenters,
         circuitJson: evaluatedDrc.circuitJson,
         movableTraceIds: candidateDrcInput.movableTraceIds,
         solverTraceIdByEvaluationTraceId:
