@@ -17,14 +17,15 @@ test("path sampling retains terminal point identities in both directions", (): v
       vias: [],
       route: reverse ? [...points].reverse() : points,
     }
-    const solver: SingleSimplifiedPathSolver5 =
-      new SingleSimplifiedPathSolver5({
+    const solver: SingleSimplifiedPathSolver5 = new SingleSimplifiedPathSolver5(
+      {
         inputRoute: route,
         otherHdRoutes: [],
         obstacles: [],
         connMap: new ConnectivityMap({}),
         colorMap: {},
-      })
+      },
+    )
     solver.solve()
 
     expect(solver.failed).toBeFalse()

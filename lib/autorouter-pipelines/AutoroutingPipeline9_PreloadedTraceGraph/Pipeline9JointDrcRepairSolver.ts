@@ -1448,6 +1448,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     const terminalEscapeResult = shouldRunPostExactPrecisionPass
       ? applyPipeline9TerminalEscapeRelocations({
           srj: this.params.srj,
+          originalObstacles: this.params.originalSrj.obstacles,
           routes: exactOutput,
           newConnections: this.params.newConnections,
           syntheticConnectionNames: this.syntheticConnectionNames,

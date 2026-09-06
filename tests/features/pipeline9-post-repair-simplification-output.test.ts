@@ -15,7 +15,9 @@ import type {
 
 type PipelineStep =
   AutoroutingPipelineSolver9_PreloadedTraceGraph["pipelineDef"][number]
-type SimplificationParams = ConstructorParameters<typeof TraceSimplificationSolver>
+type SimplificationParams = ConstructorParameters<
+  typeof TraceSimplificationSolver
+>
 type LengthMatchingParams = ConstructorParameters<
   typeof LengthMatchingPostProcessingSolver
 >
@@ -89,7 +91,9 @@ test("Pipeline9 uses repaired-route simplification while preserving current prel
     const names: string[] = pipeline.pipelineDef.map(
       (step: PipelineStep): string => step.solverName,
     )
-    const postIndex: number = names.indexOf("postRepairTraceSimplificationSolver")
+    const postIndex: number = names.indexOf(
+      "postRepairTraceSimplificationSolver",
+    )
     expect(postIndex).toBe(names.indexOf("pipeline9JointDrcRepairSolver") + 1)
     expect(names[postIndex + 1]).toBe("lengthMatchingPostProcessingSolver")
     const postStep: PipelineStep = pipeline.pipelineDef[postIndex]!

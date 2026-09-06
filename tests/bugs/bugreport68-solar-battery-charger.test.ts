@@ -58,7 +58,16 @@ test(
           routePoint.y <= bgaComponent.bounds.maxY,
       )
 
-    expect(routedViasInsideBga).toHaveLength(0)
+    expect(
+      routedViasInsideBga,
+      JSON.stringify(
+        routedTraces.filter((trace): boolean =>
+          trace.route.some((point): boolean =>
+            routedViasInsideBga.includes(point),
+          ),
+        ),
+      ),
+    ).toHaveLength(0)
     expect(getLastStepSvg(solver.visualize())).toMatchSvgSnapshot(
       import.meta.path,
     )

@@ -61,39 +61,43 @@ test("path simplification preserves plated spans between simplifiable wires", ()
         : points,
     }
     const snapshot: HighDensityRoute = structuredClone(route)
-    const solver: SingleSimplifiedPathSolver5 =
-      new SingleSimplifiedPathSolver5({
+    const solver: SingleSimplifiedPathSolver5 = new SingleSimplifiedPathSolver5(
+      {
         inputRoute: route,
         otherHdRoutes: [],
         obstacles: [],
         connMap: new ConnectivityMap({}),
         colorMap: {},
-      })
+      },
+    )
     solver.solve()
     const output: HighDensityRoute = solver.simplifiedRoute
-    const transitions: RoutePoint[][] = output.route.slice(1).flatMap(
-      (point, index): RoutePoint[][] =>
+    const transitions: RoutePoint[][] = output.route
+      .slice(1)
+      .flatMap((point, index): RoutePoint[][] =>
         point.z === output.route[index]!.z
           ? []
           : [[output.route[index]!, point]],
-    )
+      )
 
     expect(solver.failed).toBeFalse()
     expect(transitions).toEqual([[expectedPlatedStart, expectedPlatedEnd]])
     expect(output.vias).toEqual([])
     expect(output.route[0]).toEqual(route.route[0])
     expect(output.route.at(-1)).toEqual(route.route.at(-1))
-    const outputWireLength: number = output.route.slice(1).reduce(
-      (length, point, index): number =>
-        point.z === output.route[index]!.z
-          ? length +
-            Math.hypot(
-              point.x - output.route[index]!.x,
-              point.y - output.route[index]!.y,
-            )
-          : length,
-      0,
-    )
+    const outputWireLength: number = output.route
+      .slice(1)
+      .reduce(
+        (length, point, index): number =>
+          point.z === output.route[index]!.z
+            ? length +
+              Math.hypot(
+                point.x - output.route[index]!.x,
+                point.y - output.route[index]!.y,
+              )
+            : length,
+        0,
+      )
     expect(outputWireLength).toBeLessThan(
       (leading ? 2 : 4) * Math.hypot(1, 0.5),
     )

@@ -36,8 +36,9 @@ test("synthetic simplification sections recognize their pads and preserve foreig
     }
     const inputSnapshot: { route: HighDensityRoute; obstacle: Obstacle } =
       structuredClone({ route, obstacle })
-    const connectivitySnapshot: Record<string, string[]> =
-      structuredClone(connMap.netMap)
+    const connectivitySnapshot: Record<string, string[]> = structuredClone(
+      connMap.netMap,
+    )
     const solver: TraceSimplificationSolver = new TraceSimplificationSolver({
       hdRoutes: [route],
       obstacles: [obstacle],

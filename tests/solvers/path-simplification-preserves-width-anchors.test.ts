@@ -29,15 +29,16 @@ test("path simplification preserves taper anchors and simplifies uniform copper"
       route: points,
     }
     const snapshot: HighDensityRoute = structuredClone(route)
-    const solver: SingleSimplifiedPathSolver5 =
-      new SingleSimplifiedPathSolver5({
+    const solver: SingleSimplifiedPathSolver5 = new SingleSimplifiedPathSolver5(
+      {
         inputRoute: route,
         otherHdRoutes: [],
         obstacles: [],
         connMap: new ConnectivityMap({}),
         colorMap: {},
         useTraceWidthAwareClearance: true,
-      })
+      },
+    )
     solver.solve()
     const output: HighDensityRoute = solver.simplifiedRoute
     expect(solver.failed).toBeFalse()
@@ -79,15 +80,16 @@ test("path simplification preserves taper anchors and simplifies uniform copper"
         { x: 1, y: 0, z: 0, traceThickness: width },
       ],
     }
-    const solver: SingleSimplifiedPathSolver5 =
-      new SingleSimplifiedPathSolver5({
+    const solver: SingleSimplifiedPathSolver5 = new SingleSimplifiedPathSolver5(
+      {
         inputRoute: route,
         otherHdRoutes: [],
         obstacles: [],
         connMap: new ConnectivityMap({}),
         colorMap: {},
         useTraceWidthAwareClearance: true,
-      })
+      },
+    )
     solver.solve()
     expect(solver.failed).toBeFalse()
     expect(

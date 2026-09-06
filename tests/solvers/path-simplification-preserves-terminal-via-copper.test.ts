@@ -18,7 +18,10 @@ test("path simplification preserves terminal vias as copper in either direction"
       { x: 0, y: 0, z: 1 },
       { x: 1, y: 0, z: 1 },
     ],
-    [{ x: 0, y: 0, z: 0 }, { x: 0, y: 0, z: 1 }],
+    [
+      { x: 0, y: 0, z: 0 },
+      { x: 0, y: 0, z: 1 },
+    ],
     [
       { x: 0, y: 0, z: 0 },
       { x: 0, y: 0, z: 2 },
@@ -53,12 +56,13 @@ test("path simplification preserves terminal vias as copper in either direction"
       expect(output.route[0]).toEqual(route.route[0])
       expect(output.route.at(-1)).toEqual(route.route.at(-1))
       expect(output.vias).toEqual([{ x: 0, y: 0 }])
-      const transitions: RoutePoint[][] = output.route.slice(1).flatMap(
-        (point, index): RoutePoint[][] =>
+      const transitions: RoutePoint[][] = output.route
+        .slice(1)
+        .flatMap((point, index): RoutePoint[][] =>
           point.z === output.route[index]!.z
             ? []
             : [[output.route[index]!, point]],
-      )
+        )
       expect(transitions).toHaveLength(1)
       expect(transitions[0]!.map((point) => point.z)).toEqual(
         reverse

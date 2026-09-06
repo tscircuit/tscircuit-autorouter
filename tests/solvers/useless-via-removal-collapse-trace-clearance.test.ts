@@ -36,7 +36,10 @@ test("all basic section collapses preserve trace clearance and allow clear layer
                 ],
           vias:
             position === "middle"
-              ? [{ x: 1, y: 0 }, { x: 3, y: 0 }]
+              ? [
+                  { x: 1, y: 0 },
+                  { x: 3, y: 0 },
+                ]
               : [{ x: 1, y: 0 }],
         }
         if (position === "last") route.route.reverse()
@@ -102,7 +105,9 @@ test("all basic section collapses preserve trace clearance and allow clear layer
           expect(optimizedRoute.vias).toEqual(route.vias)
         } else {
           expect(optimizedRoute.vias).toHaveLength(0)
-          expect(optimizedRoute.route.every((point) => point.z === 0)).toBe(true)
+          expect(optimizedRoute.route.every((point) => point.z === 0)).toBe(
+            true,
+          )
         }
       }
     }

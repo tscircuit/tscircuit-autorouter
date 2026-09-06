@@ -238,6 +238,21 @@ export class SingleRouteUselessViaRemovalSolver extends BaseSolver {
     currentSection: RouteSection,
     nextSection: RouteSection,
   ): ViaPairShortcut | null {
+    // Every candidate replaces the whole middle section. Its width anchors
+    // reject every anchor pair, so check them before constructing candidates.
+    if (
+      currentSection.points.some(
+        (point: RoutePoint, index: number): boolean =>
+          (index > 0 &&
+            point.traceThickness !==
+              currentSection.points[index - 1].traceThickness) ||
+          (point.traceThickness !== undefined &&
+            point.traceThickness !== this.unsimplifiedRoute.traceThickness),
+      )
+    ) {
+      return null
+    }
+
     let bestShortcut: ViaPairShortcut | null = null
     for (
       let previousPointIndex = 0;
@@ -354,8 +369,7 @@ export class SingleRouteUselessViaRemovalSolver extends BaseSolver {
                 point.traceThickness !==
                   replacedPoints[index - 1].traceThickness) ||
               (point.traceThickness !== undefined &&
-                point.traceThickness !==
-                  this.unsimplifiedRoute.traceThickness),
+                point.traceThickness !== this.unsimplifiedRoute.traceThickness),
           ),
         )
       ) {

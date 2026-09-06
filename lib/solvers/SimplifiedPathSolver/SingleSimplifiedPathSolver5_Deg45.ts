@@ -381,6 +381,27 @@ export class SingleSimplifiedPathSolver5 extends SingleSimplifiedPathSolver {
     return p1.x === p2.x && p1.y === p2.y && p1.z === p2.z
   }
 
+  private getSegmentIndexAtDistance(distance: number): number {
+    let lower: number = 0
+    let upper: number = this.pathSegments.length
+    while (lower < upper) {
+      const middle: number = Math.floor((lower + upper) / 2)
+      if (this.pathSegments[middle]!.endDistance >= distance) {
+        upper = middle
+      } else {
+        lower = middle + 1
+      }
+    }
+    const segment: PathSegment | undefined = this.pathSegments[lower]
+    // Shared boundaries belong to the first containing segment, including
+    // zero-length transitions, just as the original inclusive scan did.
+    return segment &&
+      distance >= segment.startDistance &&
+      distance <= segment.endDistance
+      ? lower
+      : -1
+  }
+
   // Get point at a specific distance along the path
   private getPointAtDistance(distance: number): Point {
     // Ensure distance is within bounds
@@ -390,9 +411,8 @@ export class SingleSimplifiedPathSolver5 extends SingleSimplifiedPathSolver {
     }
 
     // Find the segment that contains this distance
-    const segment = this.pathSegments.find(
-      (seg) => distance >= seg.startDistance && distance <= seg.endDistance,
-    )
+    const segment: PathSegment | undefined =
+      this.pathSegments[this.getSegmentIndexAtDistance(distance)]
 
     if (!segment) {
       // Fallback to last point if segment not found
@@ -420,9 +440,7 @@ export class SingleSimplifiedPathSolver5 extends SingleSimplifiedPathSolver {
       return this.inputRoute.route.length - 1
 
     // Find the segment that contains this distance
-    const segmentIndex = this.pathSegments.findIndex(
-      (seg) => distance >= seg.startDistance && distance <= seg.endDistance,
-    )
+    const segmentIndex: number = this.getSegmentIndexAtDistance(distance)
 
     if (segmentIndex === -1) return 0
 
@@ -611,8 +629,9 @@ export class SingleSimplifiedPathSolver5 extends SingleSimplifiedPathSolver {
   private appendRoutePoint(
     point: HighDensityIntraNodeRoute["route"][number],
   ): void {
-    const previousPoint: HighDensityIntraNodeRoute["route"][number] | undefined =
-      this.newRoute.at(-1)
+    const previousPoint:
+      | HighDensityIntraNodeRoute["route"][number]
+      | undefined = this.newRoute.at(-1)
     // Retained original spans and zero-length terminal transitions carry the
     // same physical via copper as transitions reached by path sampling.
     if (
@@ -631,11 +650,7 @@ export class SingleSimplifiedPathSolver5 extends SingleSimplifiedPathSolver {
     startDistance: number,
     endIndexInclusive: number,
   ) {
-    const startIndex = this.pathSegments.findIndex(
-      (segment) =>
-        startDistance >= segment.startDistance &&
-        startDistance <= segment.endDistance,
-    )
+    const startIndex: number = this.getSegmentIndexAtDistance(startDistance)
     if (startIndex === -1) {
       throw new Error(
         `Could not find path segment containing distance ${startDistance}`,
@@ -755,13 +770,25 @@ export class SingleSimplifiedPathSolver5 extends SingleSimplifiedPathSolver {
     let protectedSegmentBetweenHeadAndTail: boolean = false
     let protectedSegmentAtDistance: number = -1
     let indexAfterProtectedSegment: number = -1
+    const tailSegmentIndex: number = this.getSegmentIndexAtDistance(
+      this.tailDistanceAlongPath,
+    )
+    if (tailSegmentIndex === -1) {
+      throw new Error(
+        "Path simplification lost the segment containing its tail",
+      )
+    }
 
     for (
-      let segmentIndex: number = this.nextProtectedSegmentSearchIndex;
+      let segmentIndex: number = Math.max(
+        this.nextProtectedSegmentSearchIndex,
+        tailSegmentIndex,
+      );
       segmentIndex < this.pathSegments.length;
       segmentIndex++
     ) {
       const segment: PathSegment = this.pathSegments[segmentIndex]!
+      if (segment.startDistance >= this.headDistanceAlongPath) break
       const startWidth: number =
         segment.start.traceThickness ?? this.inputRoute.traceThickness
       const endWidth: number =
@@ -851,10 +878,7 @@ export class SingleSimplifiedPathSolver5 extends SingleSimplifiedPathSolver {
       return
     }
 
-    if (
-      protectedSegmentBetweenHeadAndTail &&
-      protectedSegmentAtDistance >= 0
-    ) {
+    if (protectedSegmentBetweenHeadAndTail && protectedSegmentAtDistance >= 0) {
       const connectorStartDistance: number = this.lastValidPath
         ? this.lastValidPathHeadDistance
         : this.tailDistanceAlongPath
@@ -901,7 +925,10 @@ export class SingleSimplifiedPathSolver5 extends SingleSimplifiedPathSolver {
       if (preserveOriginalSegment) {
         const lastPointIndex: number = this.newRoute.length - 1
         if (
-          !this.arePointsEqual(this.newRoute[lastPointIndex]!, pointBeforeChange)
+          !this.arePointsEqual(
+            this.newRoute[lastPointIndex]!,
+            pointBeforeChange,
+          )
         ) {
           throw new Error(
             "Path simplification did not reach its protected copper span",
@@ -942,27 +969,26 @@ export class SingleSimplifiedPathSolver5 extends SingleSimplifiedPathSolver {
     }
 
     if (!path45 && !this.lastValidPath) {
-      const oldTailPoint = this.getPointAtDistance(this.tailDistanceAlongPath)
-
-      // Move tail and head forward by stepSize
-      this.tailDistanceAlongPath += this.minStepSize
-      this.moveHead(this.minStepSize)
-
-      const newTailIndex = this.getNearestIndexForDistance(
-        this.tailDistanceAlongPath,
-      )
-      const newTailPoint = this.inputRoute.route[newTailIndex]
-      const lastRoutePoint =
-        this.inputRoute.route[this.inputRoute.route.length - 1]
-
-      // Add the segment from old tail to new tail
-      if (
-        !this.arePointsEqual(oldTailPoint, newTailPoint) &&
-        !this.arePointsEqual(newTailPoint, lastRoutePoint)
+      let originalSegmentIndex: number = tailSegmentIndex
+      while (
+        originalSegmentIndex < this.pathSegments.length &&
+        this.pathSegments[originalSegmentIndex]!.endDistance <=
+          this.tailDistanceAlongPath
       ) {
-        this.appendRoutePoint(newTailPoint)
+        originalSegmentIndex++
+      }
+      const originalSegment: PathSegment | undefined =
+        this.pathSegments[originalSegmentIndex]
+      if (!originalSegment) {
+        throw new Error("Path simplification lost the segment after its tail")
       }
 
+      // Preserve the remaining original segment without skipping any corner.
+      // The next candidate must start at the endpoint actually emitted here.
+      this.appendRoutePoint({ ...originalSegment.end })
+      this.tailDistanceAlongPath = originalSegment.endDistance
+      this.headDistanceAlongPath = this.tailDistanceAlongPath
+      this.lastValidPathHeadDistance = this.tailDistanceAlongPath
       return
     }
 

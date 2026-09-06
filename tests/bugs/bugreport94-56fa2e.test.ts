@@ -19,7 +19,7 @@ test("bugreport94-56fa2e.json with Pipeline 9", () => {
   const circuitJson = getCurrentCircuitJson(solver)
   expect(circuitJson).not.toBeNull()
   const { errors } = getDrcErrors(circuitJson!)
-  expect(errors.length).toBeLessThanOrEqual(5)
+  expect(errors.length, JSON.stringify(errors)).toBeLessThanOrEqual(5)
   const targetOverlap = errors.find(
     (error) =>
       error.type === "pcb_trace_error" &&

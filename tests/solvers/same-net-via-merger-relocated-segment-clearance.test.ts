@@ -22,21 +22,33 @@ test("same-net via merging validates relocated adjacent copper at both merge dis
       connectionName: "anchor",
       traceThickness: 0.15,
       viaDiameter: 0.3,
-      route: [{ x: 0, y: 0, z: 0 }, { x: 0, y: 0, z: 1 }],
+      route: [
+        { x: 0, y: 0, z: 0 },
+        { x: 0, y: 0, z: 1 },
+      ],
       vias: [{ x: 0, y: 0 }],
     }
     const foreign: HighDensityRoute = {
       connectionName: "foreign",
       traceThickness: 0.15,
       viaDiameter: 0.3,
-      route: [{ x: -0.6, y: -0.32, z: 0 }, { x: -0.55, y: -0.32, z: 0 }],
+      route: [
+        { x: -0.6, y: -0.32, z: 0 },
+        { x: -0.55, y: -0.32, z: 0 },
+      ],
       vias: [],
     }
-    const snapshot: HighDensityRoute[] = structuredClone([editable, anchor, foreign])
+    const snapshot: HighDensityRoute[] = structuredClone([
+      editable,
+      anchor,
+      foreign,
+    ])
     expect(
       minimumDistanceBetweenSegments(
-        editable.route[0]!, editable.route[1]!,
-        foreign.route[0]!, foreign.route[1]!,
+        editable.route[0]!,
+        editable.route[1]!,
+        foreign.route[0]!,
+        foreign.route[1]!,
       ),
     ).toBeGreaterThan(0.15 + 0.1)
     const solver: SameNetViaMergerSolver = new SameNetViaMergerSolver({
@@ -46,7 +58,10 @@ test("same-net via merging validates relocated adjacent copper at both merge dis
       colorMap: {},
       layerCount: 2,
       preserveRouteEndpoints: true,
-      connMap: new ConnectivityMap({ signal: ["editable", "anchor"], other: ["foreign"] }),
+      connMap: new ConnectivityMap({
+        signal: ["editable", "anchor"],
+        other: ["foreign"],
+      }),
     })
     solver.solve()
     expect(solver.failed).toBeFalse()

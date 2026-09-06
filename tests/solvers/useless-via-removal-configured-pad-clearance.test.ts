@@ -21,7 +21,10 @@ test("basic via removal honors declared pad clearance without changing its defau
           { x: 3, y: 0, z: 0 },
           { x: 4, y: 0, z: 0 },
         ],
-        vias: [{ x: 1, y: 0 }, { x: 3, y: 0 }],
+        vias: [
+          { x: 1, y: 0 },
+          { x: 3, y: 0 },
+        ],
       }
       const foreignPad: Obstacle = {
         type: "rect",
