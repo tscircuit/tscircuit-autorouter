@@ -94,8 +94,8 @@ const pointIsBetweenCollinearNeighbors = (
   const secondDx = nextPoint.x - point.x
   const secondDy = nextPoint.y - point.y
   const crossProduct = firstDx * secondDy - firstDy * secondDx
-  if (Math.abs(crossProduct) > POINT_EPSILON) return false
-  return firstDx * secondDx + firstDy * secondDy >= -POINT_EPSILON
+  if (crossProduct !== 0) return false
+  return firstDx * secondDx + firstDy * secondDy >= 0
 }
 
 const removeCollinearMiddlePoints = (
@@ -133,6 +133,7 @@ const removeCollinearMiddlePoints = (
 }
 
 const getRouteVias = (
+  route: HighDensityRoute,
   points: RoutePoint[],
 ): Array<{ x: number; y: number }> => {
   const vias: Array<{ x: number; y: number }> = []
@@ -141,10 +142,18 @@ const getRouteVias = (
     const end = points[pointIndex + 1]!
     if (
       start.z !== end.z &&
-      start.toNextSegmentType !== "through_obstacle" &&
-      pointsAreColocated(start, end)
+      start.toNextSegmentType !== "through_obstacle"
     ) {
-      vias.push({ x: end.x, y: end.y })
+      const existingVia = route.vias.find(
+        (via) =>
+          pointsAreColocated(via, start) || pointsAreColocated(via, end),
+      )
+      if (!existingVia) {
+        throw new Error(
+          `Pipeline9 post-repair route "${route.connectionName}" changes layers without an explicit via`,
+        )
+      }
+      vias.push({ ...existingVia })
     }
   }
   return vias
@@ -158,7 +167,7 @@ const simplifyPipeline9PostRepairRoute = (
   return {
     ...route,
     route: routePoints,
-    vias: getRouteVias(routePoints),
+    vias: getRouteVias(route, routePoints),
   }
 }
 
