@@ -71,25 +71,32 @@ test("Pipeline7 keeps srj20 sample169 DRC-clean after multi-crossing simplificat
     0,
   )
 
-  if (viaCount !== 33) {
+  if (viaCount !== 33 || errors.length > 0) {
     console.error(
       JSON.stringify({
-        event: "pipeline7-srj20-sample169-via-count-mismatch",
+        event: "pipeline7-srj20-sample169-output-regression",
         viaCount,
-        routedVias: routedTraces.map((trace): RoutedViaSummary => ({
-          connectionName: trace.connection_name,
-          vias: trace.route.filter((point): boolean => point.route_type === "via"),
-        })),
+        errors,
+        routedVias: routedTraces.map(
+          (trace): RoutedViaSummary => ({
+            connectionName: trace.connection_name,
+            vias: trace.route.filter(
+              (point): boolean => point.route_type === "via",
+            ),
+          }),
+        ),
         stitchedVias: solver.highDensityStitchSolver?.mergedHdRoutes.map(
           (route): StitchedViaSummary => ({
             connectionName: route.connectionName,
             vias: route.vias,
-            transitions: route.route.flatMap((point, index): ViaTransition[] => {
-              const next = route.route[index + 1]
-              return next && point.z !== next.z
-                ? [{ start: point, end: next }]
-                : []
-            }),
+            transitions: route.route.flatMap(
+              (point, index): ViaTransition[] => {
+                const next = route.route[index + 1]
+                return next && point.z !== next.z
+                  ? [{ start: point, end: next }]
+                  : []
+              },
+            ),
           }),
         ),
       }),

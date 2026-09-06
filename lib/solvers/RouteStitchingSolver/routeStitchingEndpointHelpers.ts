@@ -2,9 +2,10 @@ import { distance, type Point3 } from "@tscircuit/math-utils"
 import type { HighDensityIntraNodeRoute } from "lib/types/high-density-types"
 import { getRouteStitchEndpoint } from "./getRouteStitchEndpoint"
 import type { StitchTerminal } from "./getStitchTerminal"
+import type { IsStitchSegmentClear } from "./route-stitch-clearance-validator"
+import { selectDirectedRouteStitchPath } from "./selectDirectedRouteStitchPath"
 import {
   comparePoints,
-  compareRoutes,
   DISTANCE_TIE_TOLERANCE,
   MAX_STITCH_GAP_DISTANCE_3,
   MAX_TERMINAL_STITCH_GAP_DISTANCE_3,
@@ -14,12 +15,6 @@ import {
  * Endpoints within this tolerance are treated as the same island endpoint.
  */
 export const ENDPOINT_MATCH_TOLERANCE = 0.1
-
-type EndpointEdge = {
-  nextHash: string
-  routeIndex: number | null
-  matchedOn?: "first" | "last"
-}
 
 export type OrderedRouteStitchEntry = {
   route: HighDensityIntraNodeRoute
@@ -31,7 +26,6 @@ export type RouteStitchPathSelection = {
   orderedRoutePath?: OrderedRouteStitchEntry[]
 }
 
-type EndpointPathCost = { gapCount: number; hopCount: number }
 type EndpointCluster = { key: string; point: StitchTerminal }
 
 export type CanStitchBetweenTerminals = (params: {
@@ -168,25 +162,6 @@ export class EndpointClusterIndex {
   }
 }
 
-const addAdjacencyEdge = (
-  adjacency: Map<string, EndpointEdge[]>,
-  fromHash: string,
-  edge: EndpointEdge,
-): void => {
-  const entries = adjacency.get(fromHash) ?? []
-  if (
-    entries.some(
-      (existingEdge) =>
-        existingEdge.nextHash === edge.nextHash &&
-        existingEdge.routeIndex === edge.routeIndex,
-    )
-  ) {
-    return
-  }
-  entries.push(edge)
-  adjacency.set(fromHash, entries)
-}
-
 /**
  * Chooses the island endpoints that best align to the requested connection
  * terminals, with deterministic tie-breaking.
@@ -288,177 +263,17 @@ export const selectRoutesAlongEndpointPath = (params: {
   start: StitchTerminal
   end: StitchTerminal
   endpointIndex: EndpointClusterIndex
+  isStitchSegmentClear: IsStitchSegmentClear
   canStitchBetweenTerminals: CanStitchBetweenTerminals
 }): RouteStitchPathSelection | null => {
   if (params.hdRoutes.length <= 2) return { hdRoutes: params.hdRoutes }
 
-  const canonicalHdRoutes = [...params.hdRoutes].sort(compareRoutes)
-
-  const startHash = params.endpointIndex.getClosestEndpointKey(
-    params.connectionName,
-    canonicalHdRoutes,
-    params.start,
-  )
-  const endHash = params.endpointIndex.getClosestEndpointKey(
-    params.connectionName,
-    canonicalHdRoutes,
-    params.end,
-  )
-
-  if (!startHash || !endHash || startHash === endHash) {
-    return null
-  }
-
-  const adjacency = new Map<string, EndpointEdge[]>()
-
-  for (let i = 0; i < canonicalHdRoutes.length; i++) {
-    const route = canonicalHdRoutes[i]!
-    const routeStartHash = params.endpointIndex.getEndpointKey(
-      params.connectionName,
-      getRouteStitchEndpoint(route, "first"),
-    )
-    const routeEndHash = params.endpointIndex.getEndpointKey(
-      params.connectionName,
-      getRouteStitchEndpoint(route, "last"),
-    )
-
-    addAdjacencyEdge(adjacency, routeStartHash, {
-      nextHash: routeEndHash,
-      routeIndex: i,
-      matchedOn: "first",
-    })
-    addAdjacencyEdge(adjacency, routeEndHash, {
-      nextHash: routeStartHash,
-      routeIndex: i,
-      matchedOn: "last",
-    })
-  }
-
-  const sortedEndpointClusters = [
-    ...params.endpointIndex.getClusters(params.connectionName),
-  ].sort((a, b) => comparePoints(a.point, b.point))
-  for (let i = 0; i < sortedEndpointClusters.length; i++) {
-    const endpointA = sortedEndpointClusters[i]!
-    for (let j = i + 1; j < sortedEndpointClusters.length; j++) {
-      const endpointB = sortedEndpointClusters[j]!
-      if (endpointA.point.z !== endpointB.point.z) continue
-      if (
-        distance(endpointA.point, endpointB.point) > MAX_STITCH_GAP_DISTANCE_3
-      )
-        continue
-
-      addAdjacencyEdge(adjacency, endpointA.key, {
-        nextHash: endpointB.key,
-        routeIndex: null,
-      })
-      addAdjacencyEdge(adjacency, endpointB.key, {
-        nextHash: endpointA.key,
-        routeIndex: null,
-      })
-    }
-  }
-
-  for (const [hash, edges] of adjacency.entries()) {
-    adjacency.set(
-      hash,
-      [...edges].sort((a, b) => {
-        if (a.routeIndex === null && b.routeIndex !== null) return 1
-        if (a.routeIndex !== null && b.routeIndex === null) return -1
-        if (a.routeIndex !== null && b.routeIndex !== null) {
-          const routeCmp = compareRoutes(
-            canonicalHdRoutes[a.routeIndex]!,
-            canonicalHdRoutes[b.routeIndex]!,
-          )
-          if (routeCmp !== 0) return routeCmp
-        }
-        return a.nextHash.localeCompare(b.nextHash)
-      }),
-    )
-  }
-
-  const pendingHashes = new Set<string>([startHash])
-  const settledHashes = new Set<string>()
-  const costsByHash = new Map<string, EndpointPathCost>([
-    [startHash, { gapCount: 0, hopCount: 0 }],
-  ])
-  const prevByHash = new Map<string, { prevHash: string; edge: EndpointEdge }>()
-
-  while (pendingHashes.size > 0) {
-    let currentHash: string | undefined
-    let currentCost: EndpointPathCost | undefined
-    for (const candidateHash of pendingHashes) {
-      const candidateCost = costsByHash.get(candidateHash)!
-      if (
-        !currentCost ||
-        candidateCost.gapCount < currentCost.gapCount ||
-        (candidateCost.gapCount === currentCost.gapCount &&
-          candidateCost.hopCount < currentCost.hopCount)
-      ) {
-        currentHash = candidateHash
-        currentCost = candidateCost
-      }
-    }
-    if (currentHash === undefined || currentCost === undefined) {
-      throw new Error("Route stitching path queue lost its endpoint cost")
-    }
-    pendingHashes.delete(currentHash)
-    settledHashes.add(currentHash)
-    if (currentHash === endHash) break
-
-    for (const edge of adjacency.get(currentHash) ?? []) {
-      if (settledHashes.has(edge.nextHash)) continue
-      const nextCost: EndpointPathCost = {
-        gapCount: currentCost.gapCount + (edge.routeIndex === null ? 1 : 0),
-        hopCount: currentCost.hopCount + 1,
-      }
-      const previousCost = costsByHash.get(edge.nextHash)
-      if (
-        previousCost &&
-        (previousCost.gapCount < nextCost.gapCount ||
-          (previousCost.gapCount === nextCost.gapCount &&
-            previousCost.hopCount <= nextCost.hopCount))
-      ) {
-        continue
-      }
-      costsByHash.set(edge.nextHash, nextCost)
-      prevByHash.set(edge.nextHash, {
-        prevHash: currentHash,
-        edge,
-      })
-      pendingHashes.add(edge.nextHash)
-    }
-  }
-
-  if (!settledHashes.has(endHash)) return null
-
-  const selectedEntriesInReverse: OrderedRouteStitchEntry[] = []
-  let cursorHash = endHash
-  while (cursorHash !== startHash) {
-    const prev = prevByHash.get(cursorHash)
-    if (!prev) {
-      throw new Error("Route stitching path lost its predecessor endpoint")
-    }
-    if (prev.edge.routeIndex !== null) {
-      if (!prev.edge.matchedOn) {
-        throw new Error("Route stitching path lost its route orientation")
-      }
-      selectedEntriesInReverse.push({
-        route: canonicalHdRoutes[prev.edge.routeIndex]!,
-        matchedOn: prev.edge.matchedOn,
-      })
-    }
-    cursorHash = prev.prevHash
-  }
-
-  if (selectedEntriesInReverse.length === 0) return null
-
-  const orderedRoutePath = selectedEntriesInReverse.reverse()
+  const orderedRoutePath = selectDirectedRouteStitchPath(params)
+  if (!orderedRoutePath) return null
   const selectedHdRoutes = orderedRoutePath.map(
     (entry): HighDensityIntraNodeRoute => entry.route,
   )
-
   if (
-    selectedHdRoutes.length > 0 &&
     !params.canStitchBetweenTerminals({
       connectionName: params.connectionName,
       hdRoutes: selectedHdRoutes,
@@ -471,7 +286,6 @@ export const selectRoutesAlongEndpointPath = (params: {
       `Selected route stitching path for "${params.connectionName}" cannot connect its terminals without violating stitch constraints`,
     )
   }
-
   return { hdRoutes: selectedHdRoutes, orderedRoutePath }
 }
 

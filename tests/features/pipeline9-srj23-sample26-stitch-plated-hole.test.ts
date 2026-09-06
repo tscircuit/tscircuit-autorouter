@@ -48,8 +48,7 @@ test("Pipeline9 SRJ23 sample26 does not introduce a plated-hole contact after st
         terminalIds.every((terminalId): boolean =>
           candidate.pointsToConnect.some(
             (point): boolean =>
-              point.pcb_port_id === terminalId ||
-              point.pointId === terminalId,
+              point.pcb_port_id === terminalId || point.pointId === terminalId,
           ),
         ),
     )
@@ -103,9 +102,8 @@ test("Pipeline9 SRJ23 sample26 does not introduce a plated-hole contact after st
         diagnosticTraceIds.add(error.pcb_trace_id)
       }
     }
-    const platedHoleContactCount = result.errors.filter(
-      isPlatedHoleContact,
-    ).length
+    const platedHoleContactCount =
+      result.errors.filter(isPlatedHoleContact).length
     console.info(
       JSON.stringify({
         diagnostic: "pipeline9-srj23-sample26-stage-drc",
@@ -174,8 +172,8 @@ test("Pipeline9 SRJ23 sample26 does not introduce a plated-hole contact after st
             diagnostic: "pipeline9-srj23-sample26-pre-stitch-geometry",
             stage,
             targetConnection,
-            targetHdFragments: solver.highDensityRepairSolver!
-              .getOutput()
+            targetHdFragments: solver
+              .highDensityRepairSolver!.getOutput()
               .filter(
                 (route): boolean =>
                   route.connectionName === targetConnection.name,

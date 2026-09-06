@@ -5,19 +5,20 @@ import { getJumpersGraphics } from "lib/utils/getJumperGraphics"
 import { getXyPointKey } from "lib/autorouter-pipelines/AutoroutingPipeline8/getXyPointKey"
 import { BaseSolver } from "../BaseSolver"
 import type { StitchTerminal } from "./getStitchTerminal"
+import { getRouteStitchOrientation } from "./getRouteStitchOrientation"
 import type { IsStitchSegmentClear } from "./route-stitch-clearance-validator"
 import type { OrderedRouteStitchEntry } from "./routeStitchingEndpointHelpers"
 import {
   comparePoints,
   compareRoutes,
   DISTANCE_TIE_TOLERANCE,
+  GEOMETRIC_STITCH_TOLERANCE as GEOMETRIC_TOLERANCE,
   MAX_STITCH_GAP_DISTANCE_3,
   MAX_TERMINAL_STITCH_GAP_DISTANCE_3,
 } from "./routeStitchingShared"
 
 const VIA_PENALTY = 1000
 const GAP_PENALTY = 100000
-const GEOMETRIC_TOLERANCE = 1e-3
 const COLLISION_PENALTY = MAX_STITCH_GAP_DISTANCE_3 + DISTANCE_TIE_TOLERANCE
 type RoutePoint = HighDensityIntraNodeRoute["route"][number]
 export type StitchClearanceMode = "require_clear" | "prefer_clear"
@@ -235,65 +236,29 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
       for (const taggedPcbPortId of taggedPcbPortIds) {
         if (!expectedPcbPortIds.has(taggedPcbPortId)) {
           throw new Error(
-            `SingleHighDensityRouteStitchSolver3 found unknown PCB terminal "${taggedPcbPortId}" on "${opts.connectionName}": ${JSON.stringify({
-              start: opts.start,
-              end: opts.end,
-              expectedPcbPortIds: [...expectedPcbPortIds],
-              offendingRoutes: canonicalHdRoutes.filter(
-                (route): boolean =>
-                  route.startPcbPortId === taggedPcbPortId ||
-                  route.endPcbPortId === taggedPcbPortId,
-              ),
-              orderedRoutePath: opts.orderedRoutePath,
-            })}`,
+            `SingleHighDensityRouteStitchSolver3 found unknown PCB terminal "${taggedPcbPortId}" on "${opts.connectionName}": ${JSON.stringify(
+              {
+                start: opts.start,
+                end: opts.end,
+                expectedPcbPortIds: [...expectedPcbPortIds],
+                offendingRoutes: canonicalHdRoutes.filter(
+                  (route): boolean =>
+                    route.startPcbPortId === taggedPcbPortId ||
+                    route.endPcbPortId === taggedPcbPortId,
+                ),
+                orderedRoutePath: opts.orderedRoutePath,
+              },
+            )}`,
           )
         }
       }
     }
 
-    let bestDist = Infinity
-    let firstRoute = canonicalHdRoutes[0]
-    let orientation: "start-to-end" | "end-to-start" = "start-to-end"
-
-    for (const route of canonicalHdRoutes) {
-      const firstPoint = route.route[0]
-      const lastPoint = route.route[route.route.length - 1]
-
-      const distStartToFirst = distance(opts.start, firstPoint)
-      const distStartToLast = distance(opts.start, lastPoint)
-      const distEndToFirst = distance(opts.end, firstPoint)
-      const distEndToLast = distance(opts.end, lastPoint)
-
-      const minDist = Math.min(
-        distStartToFirst,
-        distStartToLast,
-        distEndToFirst,
-        distEndToLast,
-      )
-
-      if (
-        minDist < bestDist - DISTANCE_TIE_TOLERANCE ||
-        (Math.abs(minDist - bestDist) <= DISTANCE_TIE_TOLERANCE &&
-          compareRoutes(route, firstRoute!) < 0)
-      ) {
-        bestDist = minDist
-        firstRoute = route
-        if (
-          Math.min(distEndToFirst, distEndToLast) <
-            Math.min(distStartToFirst, distStartToLast) -
-              DISTANCE_TIE_TOLERANCE ||
-          (Math.abs(
-            Math.min(distEndToFirst, distEndToLast) -
-              Math.min(distStartToFirst, distStartToLast),
-          ) <= DISTANCE_TIE_TOLERANCE &&
-            comparePoints(opts.end, opts.start) < 0)
-        ) {
-          orientation = "end-to-start"
-        } else {
-          orientation = "start-to-end"
-        }
-      }
-    }
+    let { firstRoute, orientation } = getRouteStitchOrientation({
+      hdRoutes: canonicalHdRoutes,
+      start: opts.start,
+      end: opts.end,
+    })
 
     if (this.remainingOrderedRoutePath && orientation === "end-to-start") {
       this.remainingOrderedRoutePath = [...this.remainingOrderedRoutePath]

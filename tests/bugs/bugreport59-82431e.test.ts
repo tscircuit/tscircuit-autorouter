@@ -89,8 +89,9 @@ test("bugreport59-82431e keeps effort 2 vias on preplaced assignable vias", () =
         : null
       const representedVerticalSpans = reportedRoutes
         ? reportedRoutes.flatMap((route): RepresentedVerticalSpan[] =>
-            route.route.slice(0, -1).flatMap(
-              (start, pointIndex): RepresentedVerticalSpan[] => {
+            route.route
+              .slice(0, -1)
+              .flatMap((start, pointIndex): RepresentedVerticalSpan[] => {
                 const end = route.route[pointIndex + 1]!
                 if (
                   start.x !== end.x ||
@@ -108,8 +109,7 @@ test("bugreport59-82431e keeps effort 2 vias on preplaced assignable vias", () =
                     throughObstacle:
                       start.toNextSegmentType === "through_obstacle",
                     listedInRouteVias: route.vias.some(
-                      (via): boolean =>
-                        via.x === start.x && via.y === start.y,
+                      (via): boolean => via.x === start.x && via.y === start.y,
                     ),
                     allowlisted:
                       stitchInput?.allowedLayerTransitionPointKeys?.has(
@@ -117,8 +117,7 @@ test("bugreport59-82431e keeps effort 2 vias on preplaced assignable vias", () =
                       ),
                   },
                 ]
-              },
-            ),
+              }),
           )
         : null
       console.error(
@@ -143,8 +142,7 @@ test("bugreport59-82431e keeps effort 2 vias on preplaced assignable vias", () =
               : [...stitchInput.allowedLayerTransitionPointKeys],
           assignableViaObstacles: solver.originalSrj.obstacles.filter(
             (obstacle): boolean =>
-              obstacle.netIsAssignable === true &&
-              obstacle.layers.length > 1,
+              obstacle.netIsAssignable === true && obstacle.layers.length > 1,
           ),
           handoffRoutes: reportedRoutes,
           representedVerticalSpans,
