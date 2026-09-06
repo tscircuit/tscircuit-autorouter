@@ -62,5 +62,17 @@ test("Pipeline9 uses Pipeline7 exact DRC budgets for SRJ23 sample 52", async () 
     srjWithPointPairs: solver.srjWithPointPairs!,
     routedTraces: solver.getOutputSimplifiedPcbTraces(),
   })
+  if (errors.length > 0) {
+    console.error(
+      JSON.stringify(
+        {
+          errors,
+          jointRepairStats: solver.pipeline9JointDrcRepairSolver?.stats,
+        },
+        null,
+        2,
+      ),
+    )
+  }
   expect(errors).toHaveLength(0)
 })

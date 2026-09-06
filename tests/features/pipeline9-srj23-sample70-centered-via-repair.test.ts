@@ -19,5 +19,17 @@ test("Pipeline9 keeps SRJ23 sample 70 DRC-clean after joint repair", async () =>
     srjWithPointPairs: solver.srjWithPointPairs!,
     routedTraces: solver.getOutputSimplifiedPcbTraces(),
   })
+  if (errors.length > 0) {
+    console.error(
+      JSON.stringify(
+        {
+          errors,
+          jointRepairStats: solver.pipeline9JointDrcRepairSolver?.stats,
+        },
+        null,
+        2,
+      ),
+    )
+  }
   expect(errors).toHaveLength(0)
 })
