@@ -563,7 +563,8 @@ const getRegularRegionalCandidate = ({
  * sub-15mm window. B01 sees every other route plus board copper as obstacles.
  * Candidate searches use a route-scaled budget because each search rebuilds
  * and evaluates board copper. If no B01 candidate helps, one regular
- * high-density candidate jointly reroutes all traces in the region.
+ * high-density candidate jointly reroutes all traces in the region. A
+ * separately bounded safe-layer pass follows the regional search.
  */
 export const applyPipeline9RegionalB01Repairs = ({
   srj,
@@ -806,9 +807,11 @@ export const applyPipeline9RegionalB01Repairs = ({
       error.type === "pcb_trace_error" ||
       error.type === "pcb_pad_trace_clearance_error",
   )
-  const safeTraceLayerRepairSkippedForBudget =
-    hasSafeLayerRepairableError && candidateSearchBudgetExhausted
-  if (hasSafeLayerRepairableError && !candidateSearchBudgetExhausted) {
+  // The candidate-search budget bounds regional solver rebuilds. This pass
+  // has its own iteration bound, so exhausting that budget must not suppress
+  // safe layer-only improvements to the remaining routes.
+  const safeTraceLayerRepairSkippedForBudget = false
+  if (hasSafeLayerRepairableError) {
     const safeTraceLayerSolver = new GlobalDrcForceImproveSolver({
       srj: { ...srj, traces: undefined },
       hdRoutes: currentRoutes,

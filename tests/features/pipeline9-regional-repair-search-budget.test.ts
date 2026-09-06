@@ -73,7 +73,7 @@ test("Pipeline9 bounds failed regional candidate searches by route complexity", 
     candidateSearchCount: 16,
     candidateSearchBudget: 16,
     candidateSearchBudgetExhausted: true,
-    safeTraceLayerRepairSkippedForBudget: true,
+    safeTraceLayerRepairSkippedForBudget: false,
     remainingDrcIssueCount: 3,
   })
 })
