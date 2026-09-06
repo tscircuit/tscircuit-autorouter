@@ -28,8 +28,8 @@ export default function NrfAfterCapture(): ReactElement {
       <h2>After: layer-aware port spacing</h2>
       <p>Frozen full-board output from {capture.sourceCommit}.</p>
       <p>
-        Current relaxed DRC errors: {errors.length}. This is not a DRC-clean board.
-        This count excludes the separate via-to-pad clearance checker.
+        Current relaxed DRC errors: {errors.length}. This is not a DRC-clean
+        board. This count excludes the separate via-to-pad clearance checker.
       </p>
       <InteractiveGraphics graphics={graphics} height={760} alwaysShowToolbar />
     </section>

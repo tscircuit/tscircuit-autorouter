@@ -45,7 +45,8 @@ as the autorouter evolves.
 
 ## Reproduce from the command line
 
-Run the full-board regression and its before/after SVG snapshots:
+Validated with Bun 1.3.8, matching CI. Run the full-board regression and its
+before/after SVG snapshots:
 
 ```sh
 bun test tests/bugs/bugreport106-nrf52810-battery-pad-short.test.ts --timeout 9999999
