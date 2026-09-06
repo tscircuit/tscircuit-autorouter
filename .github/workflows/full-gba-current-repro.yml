@@ -1,0 +1,30 @@
+name: Full GBA Pipeline 9 repro
+
+on:
+  push:
+    branches:
+      - codex/repro-full-gba-current-pipeline9
+
+jobs:
+  reproduce:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.8
+      - run: bun install --frozen-lockfile
+      - name: Route the full board and generate the DRC snapshot
+        env:
+          BUN_UPDATE_SNAPSHOTS: "1"
+          RUN_FULL_GBA_REPRO: "1"
+        run: bun test tests/bugs/full-gameboy-current-pipeline9.test.ts --timeout 3600000
+      - name: Upload routed repro artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: autorouter-full-gba-current-repro
+          path: |
+            tests/bugs/__snapshots__/full-gameboy-current-pipeline9*.snap.svg
+            tests/bugs/__snapshots__/*.diff.png
