@@ -44,6 +44,11 @@ export const identifyPipeline9ViaPadRepairTargets = ({
   const nonViaElements = circuitJson.filter(
     (element): boolean => element.type !== "pcb_via",
   )
+  const placementErrorIdsByVia = new Map<(typeof vias)[number], Set<string>>()
+  const geometryByRoute = new Map<
+    number,
+    ReturnType<typeof getRepairViaGeometry>
+  >()
   return errors.map((error): Record<string, unknown> => {
     const center = error.center as { x: number; y: number } | undefined
     const ids =
@@ -51,19 +56,28 @@ export const identifyPipeline9ViaPadRepairTargets = ({
       Array.isArray(error.pcb_pad_ids)
         ? error.pcb_pad_ids
         : []
-    const offendingVias = vias.filter(
-      (via): boolean =>
-        ids.includes(via.pcb_via_id) ||
-        (error.type === "pcb_placement_error" &&
-          center !== undefined &&
-          via.x === center.x &&
-          via.y === center.y &&
-          checkViasInPads([...nonViaElements, via]).some(
-            (placementError): boolean =>
-              placementError.pcb_placement_error_id ===
-              error.pcb_placement_error_id,
-          )),
-    )
+    const offendingVias = vias.filter((via): boolean => {
+      if (ids.includes(via.pcb_via_id)) return true
+      if (
+        error.type !== "pcb_placement_error" ||
+        center === undefined ||
+        via.x !== center.x ||
+        via.y !== center.y
+      )
+        return false
+      // Both error views can reference the same via. Its checker identities
+      // depend only on this evaluation's unchanged Circuit JSON.
+      let placementIds = placementErrorIdsByVia.get(via)
+      if (!placementIds) {
+        placementIds = new Set(
+          checkViasInPads([...nonViaElements, via]).map(
+            (placementError): string => placementError.pcb_placement_error_id,
+          ),
+        )
+        placementErrorIdsByVia.set(via, placementIds)
+      }
+      return placementIds.has(error.pcb_placement_error_id as string)
+    })
     const targets = offendingVias.flatMap((via): ExistingViaRepairTarget[] => {
       const routeIndex =
         typeof via.pcb_trace_id === "string"
@@ -71,7 +85,11 @@ export const identifyPipeline9ViaPadRepairTargets = ({
           : undefined
       if (routeIndex === undefined) return []
       const route = routes[routeIndex]!
-      const geometries = getRepairViaGeometry(route, layerCount)
+      let geometries = geometryByRoute.get(routeIndex)
+      if (!geometries) {
+        geometries = getRepairViaGeometry(route, layerCount)
+        geometryByRoute.set(routeIndex, geometries)
+      }
       const viaLayers = via.layers.map((layer): number =>
         layer === "top"
           ? 0

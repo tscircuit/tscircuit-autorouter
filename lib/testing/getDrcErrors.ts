@@ -114,24 +114,28 @@ export const getDrcErrors = (
       minClearance: viaClearance,
     }),
   ]
-  // This checker reports placement errors without a via identity or center.
-  // Evaluate each via with the unchanged pad/board context so its location is
-  // attached explicitly, without interpreting an opaque generated error ID.
-  const nonViaElements = options.includeViaPadChecks
+  // The checker builds a pad index on each call. A clean bulk result needs
+  // no per-via calls; retain those calls for explicit centers when errors exist.
+  const bulkViaInPadErrors = options.includeViaPadChecks
+    ? checkViasInPads(circuitJson)
+    : []
+  const nonViaElements = bulkViaInPadErrors.length > 0
     ? circuitJson.filter((element): boolean => element.type !== "pcb_via")
     : []
   const viaPadErrors = options.includeViaPadChecks
     ? [
-        ...circuitJson.flatMap((element): DrcErrorWithCenter[] =>
-          element.type === "pcb_via"
-            ? checkViasInPads([...nonViaElements, element]).map(
-                (error): DrcErrorWithCenter => ({
-                  ...error,
-                  center: { x: element.x, y: element.y },
-                }),
-              )
-            : [],
-        ),
+        ...(bulkViaInPadErrors.length > 0
+          ? circuitJson.flatMap((element): DrcErrorWithCenter[] =>
+              element.type === "pcb_via"
+                ? checkViasInPads([...nonViaElements, element]).map(
+                    (error): DrcErrorWithCenter => ({
+                      ...error,
+                      center: { x: element.x, y: element.y },
+                    }),
+                  )
+                : [],
+            )
+          : []),
         ...checkViaPadClearance(circuitJson, {
           connMap,
           minClearance: options.traceClearance,

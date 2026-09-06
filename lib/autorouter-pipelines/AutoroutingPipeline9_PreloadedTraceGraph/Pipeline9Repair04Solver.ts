@@ -107,43 +107,47 @@ export class Pipeline9Repair04Solver extends BaseSolver {
         region: this.region,
         repairedRoutes: this.localSolver.getOutput(),
       }) as HighDensityRoute[]
-      const candidateIssues = this.evaluate(candidate)
-      const fixedViolations = getFixedObstacleViolations({
-        srj: this.input.srj as any,
-        routes: candidate,
-      })
-      const preservesFixedObstacles = fixedViolations.every(
-        ({ key, severity }) =>
-          this.fixedViolations!.has(key) &&
-          severity <= this.fixedViolations!.get(key)! + 1e-8,
-      )
-      const preservesViaPadClearance =
-        getNewViaPadViolations({
+      // Merge still validates the complete boundary contract. If it retained
+      // every source route, all board-level checks have the same exact input.
+      if (candidate.some((route, index) => route !== this.routes[index])) {
+        const candidateIssues = this.evaluate(candidate)
+        const fixedViolations = getFixedObstacleViolations({
           srj: this.input.srj as any,
-          previousRoutes: this.routes,
           routes: candidate,
-        }).length === 0
-      if (
-        preservesViaPadClearance &&
-        preservesFixedObstacles &&
-        candidateIssues.length <= this.issues.length
-      ) {
-        const candidateReferenceErrors = this.evaluateReference(candidate)
+        })
+        const preservesFixedObstacles = fixedViolations.every(
+          ({ key, severity }) =>
+            this.fixedViolations!.has(key) &&
+            severity <= this.fixedViolations!.get(key)! + 1e-8,
+        )
+        const preservesViaPadClearance =
+          getNewViaPadViolations({
+            srj: this.input.srj as any,
+            previousRoutes: this.routes,
+            routes: candidate,
+          }).length === 0
         if (
-          candidateReferenceErrors.length <= this.referenceErrors!.length &&
-          (candidateIssues.length < this.issues.length ||
-            candidateReferenceErrors.length < this.referenceErrors!.length)
+          preservesViaPadClearance &&
+          preservesFixedObstacles &&
+          candidateIssues.length <= this.issues.length
         ) {
-          this.routes = candidate
-          this.issues = candidateIssues
-          this.referenceErrors = candidateReferenceErrors
-          this.fixedViolations = new Map(
-            fixedViolations.map((violation) => [
-              violation.key,
-              violation.severity,
-            ]),
-          )
-          this.acceptedRegionCount++
+          const candidateReferenceErrors = this.evaluateReference(candidate)
+          if (
+            candidateReferenceErrors.length <= this.referenceErrors!.length &&
+            (candidateIssues.length < this.issues.length ||
+              candidateReferenceErrors.length < this.referenceErrors!.length)
+          ) {
+            this.routes = candidate
+            this.issues = candidateIssues
+            this.referenceErrors = candidateReferenceErrors
+            this.fixedViolations = new Map(
+              fixedViolations.map((violation) => [
+                violation.key,
+                violation.severity,
+              ]),
+            )
+            this.acceptedRegionCount++
+          }
         }
       }
       this.localSolver = null
@@ -192,6 +196,15 @@ export class Pipeline9Repair04Solver extends BaseSolver {
           const key = `${Math.round(x * 2)},${Math.round(y * 2)},${size},${allowLayerChanges}`
           if (this.attempted.has(key)) continue
           this.attempted.add(key)
+          // The existing-via pass cannot move anything without a reference
+          // target. Keep the attempted key but avoid constructing a crop that
+          // would necessarily be discarded by the movable-via check below.
+          if (
+            this.input.allowLayerChanges === true &&
+            !allowLayerChanges &&
+            selectedVias.length === 0
+          )
+            continue
           const region = extractRepairRegion({
             srj: this.input.srj as any,
             routes: this.routes,

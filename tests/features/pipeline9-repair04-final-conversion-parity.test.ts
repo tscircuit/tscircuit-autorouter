@@ -102,4 +102,20 @@ test("repair reference matches emitted trace aliases and collision IDs without l
   expect(viaPlacement!.existingViaRepairTargets).toEqual([
     { routeIndex: 0, viaIndex: 0, x: 0, y: 0 },
   ])
+  // Reusing the evaluator must not retain a previous candidate's via location
+  // or clearance errors when the caller evaluates another route and returns.
+  const relocated = structuredClone(fixture.hdRoutes)
+  relocated[0]!.route[1]!.x = 1
+  relocated[0]!.route[2]!.x = 1
+  relocated[0]!.vias[0]!.x = 1
+  const movedResult = evaluate({ routes: relocated, traces: [] })
+  const movedErrors = Array.isArray(movedResult)
+    ? movedResult
+    : movedResult.errors
+  expect(
+    movedErrors.some(
+      (error): boolean => error.type === "pcb_placement_error",
+    ),
+  ).toBeFalse()
+  expect(evaluate({ routes: fixture.hdRoutes, traces: [] })).toEqual(result)
 })
