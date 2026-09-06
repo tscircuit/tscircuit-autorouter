@@ -47,6 +47,7 @@ const EXACT_REPAIR_BROAD_MAX_ITERATIONS = 12
 // residual sets. Keep that exhaustive search for compact residues while
 // bounding terminal relocation's repeated whole-board indexed DRC scans.
 const MAX_POST_EXACT_PRECISION_PASS_INDEXED_ISSUE_COUNT = 16
+const MAX_INDEXED_DRC_ISSUES_BEFORE_CORE_EVALUATION = 1
 const INDEXED_DRC_CANDIDATE_CACHE_SIZE = 64
 
 type DrcCandidateKey = string & { readonly __brand: "DrcCandidateKey" }
@@ -1319,7 +1320,12 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       Array.isArray(result) ? result : result.errors
     const drcEvaluator: DrcEvaluator = (input) => {
       const indexedResult = indexedDrcEvaluator(input)
-      if (getIndexedDrcErrors(indexedResult).length > 0) return indexedResult
+      const indexedErrors = getIndexedDrcErrors(indexedResult)
+      if (
+        indexedErrors.length > MAX_INDEXED_DRC_ISSUES_BEFORE_CORE_EVALUATION
+      ) {
+        return indexedResult
+      }
       const validationCountBefore = this.referenceDrcValidationCount
       const referenceResult = cachedReferenceDrcEvaluator(input)
       const referenceErrors = Array.isArray(referenceResult)
@@ -1327,6 +1333,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         : referenceResult.errors
       if (
         this.referenceDrcValidationCount > validationCountBefore &&
+        indexedErrors.length === 0 &&
         referenceErrors.length > 0
       ) {
         this.referenceDrcFalseNegativeCount += 1
