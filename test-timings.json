@@ -103,6 +103,7 @@
     "tests/bugs/bugreport92-951dfd.test.ts": 9.5,
     "tests/bugs/bugreport93-overlapping-vias.test.ts": 0,
     "tests/bugs/bugreport94-56fa2e.test.ts": 180.7,
+    "tests/bugs/full-gameboy-current-pipeline9.test.ts": 300,
     "tests/bugs/circuit015-accidental-contact.test.ts": 2.5,
     "tests/bugs/expansion_degrees_bug/expansion_degrees_bug.test.ts": 4.4,
     "tests/bugs/flatbush-zero-obstacles.test.ts": 0,
