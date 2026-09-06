@@ -25,6 +25,7 @@ import { mapZToLayerName } from "lib/utils/mapZToLayerName"
 import { Pipeline7AdaptiveDrcBranchPortfolioSolver } from "../AutoroutingPipeline7_MultiGraph/Pipeline7AdaptiveDrcBranchPortfolioSolver"
 import { createPipeline7HdRoutesToSimplifiedPcbTracesConverter } from "../AutoroutingPipeline7_MultiGraph/convertPipeline7HdRoutesToSimplifiedPcbTraces"
 import { applyPipeline9RegionalB01Repairs } from "./applyPipeline9RegionalB01Repairs"
+import { applyPipeline9ReferenceDrcRepairs } from "./applyPipeline9ReferenceDrcRepairs"
 import { applyPipeline9TerminalEscapeRelocations } from "./applyPipeline9TerminalEscapeRelocations"
 import { assignUniquePcbTraceIdsToNewTraces } from "./assignUniquePcbTraceIdsToNewTraces"
 import {
@@ -46,6 +47,7 @@ import { preparePipeline9DrcRoutedTracesWithMetadata } from "./preparePipeline9D
 
 const EXACT_REPAIR_MAX_ITERATIONS = 32
 const EXACT_REPAIR_BROAD_MAX_ITERATIONS = 12
+const REFERENCE_REPAIR_MIN_ITERATIONS = 20
 // Reference validation and terminal relocation are precision passes for small
 // residual sets. Keep that exhaustive search for compact residues while
 // bounding terminal relocation's repeated whole-board indexed DRC scans.
@@ -650,6 +652,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
   readonly exactRepairSolver?: Pipeline7AdaptiveDrcBranchPortfolioSolver
   private drcEvaluator?: DrcEvaluator
   private cachedReferenceDrcEvaluator?: DrcEvaluator
+  private referenceRepairSrj?: RepairSimpleRouteJson
   private referenceDrcValidationCount = 0
   private referenceDrcFalseNegativeCount = 0
   private indexedDrcEvaluationCount = 0
@@ -994,6 +997,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         ...syntheticConnectionByName.values(),
       ],
     }
+    this.referenceRepairSrj = extendedSrjWithPointPairs as RepairSimpleRouteJson
     const autoroutingDrcEngine = new AutoroutingDrcEngine(
       {
         ...extendedSrjWithPointPairs,
@@ -1392,11 +1396,19 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       exactIndexedDrcIssueCount <=
         MAX_POST_EXACT_PRECISION_PASS_INDEXED_ISSUE_COUNT
     let postExactReferenceDrcIssueCount: number | undefined
+    let referencePrecisionRepairResult:
+      | ReturnType<typeof applyPipeline9ReferenceDrcRepairs>
+      | undefined
     if (shouldRunPostExactPrecisionPass) {
+      const referenceDrcEvaluator = this.cachedReferenceDrcEvaluator
+      const referenceRepairSrj = this.referenceRepairSrj
+      if (!referenceDrcEvaluator || !referenceRepairSrj) {
+        throw new Error("Pipeline9 reference DRC repair was not initialized")
+      }
       // The indexed evaluator can retain conservative false positives after the
       // exact portfolio has produced a reference-clean result. Do not let later
       // heuristic repairs degrade an output already accepted by benchmark DRC.
-      const exactReferenceDrcResult = this.cachedReferenceDrcEvaluator!({
+      const exactReferenceDrcResult = referenceDrcEvaluator({
         traces: [],
         routes: exactOutput,
         hdRoutes: exactOutput,
@@ -1405,8 +1417,36 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         ? exactReferenceDrcResult
         : exactReferenceDrcResult.errors
       postExactReferenceDrcIssueCount = exactReferenceDrcErrors.length
-      if (exactReferenceDrcErrors.length === 0) {
-        this.combinedOutput = exactOutput
+      if (exactReferenceDrcErrors.length > 0) {
+        referencePrecisionRepairResult = applyPipeline9ReferenceDrcRepairs({
+          srj: referenceRepairSrj,
+          routes: exactOutput,
+          initialErrors: exactReferenceDrcErrors,
+          connMap: this.params.connMap,
+          drcEvaluator: referenceDrcEvaluator,
+          effort: this.params.effort,
+          maxIterations: Math.min(
+            EXACT_REPAIR_MAX_ITERATIONS,
+            Math.max(
+              REFERENCE_REPAIR_MIN_ITERATIONS,
+              exactReferenceDrcErrors.length * 4,
+            ),
+          ),
+          viaHoleDiameter: this.params.defaultViaHoleDiameter,
+          allowViaInPad: this.params.originalSrj.allowViaInPad ?? false,
+        })
+      }
+      const referencePrecisionErrors =
+        referencePrecisionRepairResult?.remainingErrors ??
+        exactReferenceDrcErrors
+      const referenceCleanRoutes =
+        exactReferenceDrcErrors.length === 0
+          ? exactOutput
+          : referencePrecisionErrors.length === 0
+            ? referencePrecisionRepairResult?.routes
+            : undefined
+      if (referenceCleanRoutes) {
+        this.combinedOutput = referenceCleanRoutes
         this.stats = {
           ...this.stats,
           ...this.exactRepairSolver.stats,
@@ -1416,8 +1456,16 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
           postExactPrecisionPassAttempted: true,
           postExactReferenceValidationAttempted: true,
           postExactReferenceValidationSkippedForIndexedIssueCount: false,
-          postExactReferenceDrcIssueCount: 0,
-          postExactReferenceAccepted: true,
+          postExactReferenceDrcIssueCount,
+          postExactReferenceAccepted: exactReferenceDrcErrors.length === 0,
+          referencePrecisionRepairAttempted: Boolean(
+            referencePrecisionRepairResult,
+          ),
+          referencePrecisionRepairAccepted:
+            referencePrecisionRepairResult?.accepted ?? false,
+          referencePrecisionRepairRemainingDrcIssueCount: 0,
+          referencePrecisionRepairSolverStats:
+            referencePrecisionRepairResult?.solverStats,
           regionalB01RepairCandidateCount: 0,
           regionalB01RepairAcceptedCount: 0,
           regionalB01RepairFallbackCandidateCount: 0,
@@ -1444,16 +1492,18 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         return
       }
     }
+    const postReferencePrecisionRoutes =
+      referencePrecisionRepairResult?.routes ?? exactOutput
     const terminalEscapeResult = shouldRunPostExactPrecisionPass
       ? applyPipeline9TerminalEscapeRelocations({
           srj: this.params.srj,
-          routes: exactOutput,
+          routes: postReferencePrecisionRoutes,
           newConnections: this.params.newConnections,
           syntheticConnectionNames: this.syntheticConnectionNames,
           drcEvaluator: this.drcEvaluator!,
         })
       : {
-          routes: exactOutput,
+          routes: postReferencePrecisionRoutes,
           attemptedCandidateCount: 0,
           acceptedCandidateCount: 0,
           remainingErrors: getPipeline9DrcErrors(
@@ -1500,6 +1550,15 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         !shouldRunPostExactPrecisionPass,
       postExactReferenceDrcIssueCount,
       postExactReferenceAccepted: false,
+      referencePrecisionRepairAttempted: Boolean(
+        referencePrecisionRepairResult,
+      ),
+      referencePrecisionRepairAccepted:
+        referencePrecisionRepairResult?.accepted ?? false,
+      referencePrecisionRepairRemainingDrcIssueCount:
+        referencePrecisionRepairResult?.remainingErrors.length,
+      referencePrecisionRepairSolverStats:
+        referencePrecisionRepairResult?.solverStats,
       regionalB01RepairCandidateCount:
         regionalB01RepairResult.attemptedCandidateCount,
       regionalB01RepairAcceptedCount:
