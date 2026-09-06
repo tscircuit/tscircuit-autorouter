@@ -211,7 +211,7 @@ const fixedRouteSliceTouchesTargetLayer = (
   targetLayers: ReadonlySet<number>,
 ): boolean => {
   if (targetLayers.size === 0) return true
-  const routePointsInsideNode = [
+  const routePointsInsideNode: RoutePoint[] = [
     slice.start.point,
     ...slice.sourceRoute.route.slice(
       slice.start.segmentIndex + 1,
@@ -219,9 +219,22 @@ const fixedRouteSliceTouchesTargetLayer = (
     ),
     slice.end.point,
   ]
-  return routePointsInsideNode.some((routePoint) =>
-    targetLayers.has(routePoint.z),
-  )
+  for (
+    let pointIndex = 0;
+    pointIndex < routePointsInsideNode.length;
+    pointIndex++
+  ) {
+    const point = routePointsInsideNode[pointIndex]!
+    if (targetLayers.has(point.z)) return true
+    const nextPoint = routePointsInsideNode[pointIndex + 1]
+    if (!nextPoint || point.z === nextPoint.z) continue
+    const minZ = Math.min(point.z, nextPoint.z)
+    const maxZ = Math.max(point.z, nextPoint.z)
+    for (const targetLayer of targetLayers) {
+      if (targetLayer >= minZ && targetLayer <= maxZ) return true
+    }
+  }
+  return false
 }
 
 /**
