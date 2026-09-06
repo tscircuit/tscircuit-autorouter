@@ -99,6 +99,7 @@ test("Pipeline9 seam splitting preserves directional widths and rejects ambiguou
     sides,
     sharedEdge,
     portPoint,
+    layerCount: 2,
   })
   expect(result).not.toBeNull()
   expect(result!.replacements.map((entry) => entry.routeIndex)).toEqual([3, 7])
@@ -166,6 +167,7 @@ test("Pipeline9 seam splitting preserves directional widths and rejects ambiguou
         sides,
         sharedEdge,
         portPoint,
+        layerCount: 2,
       }),
       invalid.name,
     ).toBeNull()

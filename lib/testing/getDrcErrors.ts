@@ -55,6 +55,25 @@ export interface GetDrcErrorsOptions {
   includeBoardEdge?: boolean
 }
 
+export type PreparedGetDrcErrorsStats = {
+  viaSpacingEvaluationCount: number
+  viaSpacingCacheHitCount: number
+}
+
+export type PreparedGetDrcErrors = {
+  (
+    circuitJson: CircuitJson,
+    options?: GetDrcErrorsOptions,
+  ): GetDrcErrorsResult
+  getStats: () => Readonly<PreparedGetDrcErrorsStats>
+}
+
+type ViaSpacingEvaluator = (
+  circuitJson: CircuitJson,
+  connMap: ConnectivityMap,
+  viaClearance: number,
+) => PcbViaClearanceError[]
+
 const createDrcConnectivityMap = (
   circuitJson: CircuitJson,
 ): ConnectivityMap => {
@@ -70,9 +89,25 @@ const createDrcConnectivityMap = (
   return connMap
 }
 
-export const getDrcErrors = (
+const evaluateOfficialViaSpacing: ViaSpacingEvaluator = (
+  circuitJson,
+  connMap,
+  viaClearance,
+): PcbViaClearanceError[] => [
+  ...checkSameNetViaSpacing(circuitJson, {
+    connMap,
+    minClearance: viaClearance,
+  }),
+  ...checkDifferentNetViaSpacing(circuitJson, {
+    connMap,
+    minClearance: viaClearance,
+  }),
+]
+
+const getDrcErrorsWithViaSpacingEvaluator = (
   circuitJson: CircuitJson,
-  options: GetDrcErrorsOptions = {},
+  options: GetDrcErrorsOptions,
+  evaluateViaSpacing: ViaSpacingEvaluator,
 ): GetDrcErrorsResult => {
   const connMap = createDrcConnectivityMap(circuitJson)
   const viaClearance = Math.max(
@@ -97,16 +132,7 @@ export const getDrcErrors = (
         minClearance: options.traceClearance,
       })
     : []
-  const viaErrors = [
-    ...checkSameNetViaSpacing(circuitJson, {
-      connMap,
-      minClearance: viaClearance,
-    }),
-    ...checkDifferentNetViaSpacing(circuitJson, {
-      connMap,
-      minClearance: viaClearance,
-    }),
-  ]
+  const viaErrors = evaluateViaSpacing(circuitJson, connMap, viaClearance)
 
   const errors: DrcError[] = [
     ...traceErrors,
@@ -217,3 +243,100 @@ export const getDrcErrors = (
     locationAwareErrors,
   }
 }
+
+const getViaSpacingCacheKey = (
+  circuitJson: CircuitJson,
+  connMap: ConnectivityMap,
+  viaClearance: number,
+): string => {
+  const nameRelevantCircuitJson = circuitJson.map((element): unknown => {
+    if (element.type !== "pcb_trace") return element
+    // A preceding trace can shadow an opaque via id during readable-name
+    // lookup. Its name uses these ordered port references, not wire geometry.
+    // Keep all other metadata and the complete element order in the key.
+    const connectedPcbPortIds = element.route
+      .flatMap((point) => [
+        "start_pcb_port_id" in point ? point.start_pcb_port_id : undefined,
+        "end_pcb_port_id" in point ? point.end_pcb_port_id : undefined,
+      ])
+      .filter(Boolean)
+    return { ...element, route: connectedPcbPortIds }
+  })
+  return JSON.stringify(
+    {
+      circuitJson: nameRelevantCircuitJson,
+      // Net labels themselves participate in areIdsConnected; preserving only
+      // canonical groups would not preserve arbitrary colliding opaque ids.
+      idToNetMap: connMap.idToNetMap,
+      viaClearance,
+    },
+    (_key: string, value: unknown): unknown => {
+      // Tag both numbers and existing strings, so non-finite values and -0
+      // cannot collide with JSON null, another number, or a literal string.
+      if (typeof value === "number") {
+        return `number:${Object.is(value, -0) ? "-0" : String(value)}`
+      }
+      if (typeof value === "string") return `string:${value}`
+      return value
+    },
+  )
+}
+
+/** Reuses only official via-spacing checks whose complete dependencies match. */
+export const createPreparedGetDrcErrors = (): PreparedGetDrcErrors => {
+  let cachedViaSpacing:
+    | { key: string; errors: PcbViaClearanceError[] }
+    | undefined
+  const stats: PreparedGetDrcErrorsStats = {
+    viaSpacingEvaluationCount: 0,
+    viaSpacingCacheHitCount: 0,
+  }
+  const evaluateViaSpacing: ViaSpacingEvaluator = (
+    circuitJson,
+    connMap,
+    viaClearance,
+  ): PcbViaClearanceError[] => {
+    // This runs at the original position of the spacing checks, after the
+    // overlap checker has inferred any missing endpoint port identities.
+    const key = getViaSpacingCacheKey(circuitJson, connMap, viaClearance)
+    if (cachedViaSpacing?.key === key) {
+      stats.viaSpacingCacheHitCount++
+      return structuredClone(cachedViaSpacing.errors)
+    }
+    const errors = evaluateOfficialViaSpacing(
+      circuitJson,
+      connMap,
+      viaClearance,
+    )
+    stats.viaSpacingEvaluationCount++
+    // Results expose mutable arrays and centers. Neither this result nor a
+    // future cache hit may allow consumers to mutate the retained raw errors.
+    cachedViaSpacing = { key, errors: structuredClone(errors) }
+    return errors
+  }
+  return Object.assign(
+    (
+      circuitJson: CircuitJson,
+      options: GetDrcErrorsOptions = {},
+    ): GetDrcErrorsResult =>
+      getDrcErrorsWithViaSpacingEvaluator(
+        circuitJson,
+        options,
+        evaluateViaSpacing,
+      ),
+    {
+      getStats: (): Readonly<PreparedGetDrcErrorsStats> => ({ ...stats }),
+    },
+  )
+}
+
+/** One-off callers retain direct native checks and input-mutation rules. */
+export const getDrcErrors = (
+  circuitJson: CircuitJson,
+  options: GetDrcErrorsOptions = {},
+): GetDrcErrorsResult =>
+  getDrcErrorsWithViaSpacingEvaluator(
+    circuitJson,
+    options,
+    evaluateOfficialViaSpacing,
+  )

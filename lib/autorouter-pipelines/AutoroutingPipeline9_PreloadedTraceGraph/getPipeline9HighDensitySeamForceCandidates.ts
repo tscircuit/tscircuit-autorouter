@@ -6,16 +6,16 @@ import type {
   PortPoint,
 } from "lib/types/high-density-types"
 import { getBoundsFromNodeWithPortPoints } from "lib/utils/getBoundsFromNodeWithPortPoints"
-import { minimumDistanceBetweenSegments } from "lib/utils/minimumDistanceBetweenSegments"
+import { doesPipeline9SeamTouchSameNetCopper } from "./doesPipeline9SeamTouchSameNetCopper"
 import {
   getPipeline9HighDensityForceCandidates,
   type Pipeline9HighDensityForceCandidateParams,
 } from "./getPipeline9HighDensityForceCandidates"
+import type { Pipeline9Bounds } from "./pipeline9FixedRouteCopper"
 import {
-  arePipeline9RoutesOnSameNet,
-  getPipeline9RouteCopperGeometry,
-  type Pipeline9Bounds,
-} from "./pipeline9FixedRouteCopper"
+  arePipeline9HdCoordinatesInSameCell,
+  matchesPipeline9HdTopologyCoordinate,
+} from "./pipeline9HighDensityCoordinatePrecision"
 import type { Pipeline9DrcError } from "./pipeline9JointDrcRepairUtils"
 import {
   type Pipeline9HighDensitySeamForceCandidate,
@@ -43,8 +43,23 @@ export type Pipeline9HighDensitySeamForceCandidateParams = Omit<
   fixedHdRoutes: HighDensityRoute[]
 }
 
-const pointsMatch = (left: RoutePoint, right: RoutePoint): boolean => {
-  return left.x === right.x && left.y === right.y && left.z === right.z
+const pointsMatch = (
+  routePoint: RoutePoint,
+  topologyPoint: RoutePoint,
+): boolean => {
+  return (
+    routePoint.z === topologyPoint.z &&
+    matchesPipeline9HdTopologyCoordinate(routePoint.x, topologyPoint.x) &&
+    matchesPipeline9HdTopologyCoordinate(routePoint.y, topologyPoint.y)
+  )
+}
+
+const pointsShareRepairCell = (left: RoutePoint, right: RoutePoint): boolean => {
+  return (
+    left.z === right.z &&
+    arePipeline9HdCoordinatesInSameCell(left.x, right.x) &&
+    arePipeline9HdCoordinatesInSameCell(left.y, right.y)
+  )
 }
 
 const getNodeBounds = (node: NodeWithPortPoints): Pipeline9Bounds => {
@@ -92,8 +107,8 @@ const matchesUniqueTopologyPair = (
   return (
     start.connectionName === portPoint.connectionName &&
     end.connectionName === portPoint.connectionName &&
-    ((pointsMatch(start, routeStart) && pointsMatch(end, routeEnd)) ||
-      (pointsMatch(start, routeEnd) && pointsMatch(end, routeStart)))
+    ((pointsMatch(routeStart, start) && pointsMatch(routeEnd, end)) ||
+      (pointsMatch(routeEnd, start) && pointsMatch(routeStart, end)))
   )
 }
 
@@ -120,7 +135,7 @@ const getSeamNeighborhoods = (
     const ports = node.portPoints.filter(
       (point) =>
         point.connectionName === affected.connectionName &&
-        pointsMatch(point, endpoint),
+        pointsMatch(endpoint, point),
     )
     if (
       ports.length !== 1 ||
@@ -144,7 +159,7 @@ const getSeamNeighborhoods = (
           ).length !== 1 ||
           owner.portPoints.some(
             (point) =>
-              pointsMatch(point, endpoint) &&
+              pointsShareRepairCell(point, endpoint) &&
               (point.portPointId !== portPoint.portPointId ||
                 point.connectionName !== portPoint.connectionName ||
                 point.pcb_port_id !== undefined),
@@ -159,7 +174,8 @@ const getSeamNeighborhoods = (
     if (!peerNode) continue
     const matchingEndpoints = params.hdRoutes.flatMap((route, routeIndex) =>
       [0, route.route.length - 1].flatMap((index) =>
-        route.route[index] && pointsMatch(route.route[index]!, endpoint)
+        route.route[index] &&
+        pointsShareRepairCell(route.route[index]!, endpoint)
           ? [{ routeIndex, endpointIndex: index, route }]
           : [],
       ),
@@ -175,21 +191,14 @@ const getSeamNeighborhoods = (
       peer.route.connectionName !== affected.connectionName ||
       peer.route.traceThickness !== affected.traceThickness ||
       peer.route.viaDiameter !== affected.viaDiameter ||
+      !pointsMatch(peer.route.route[peer.endpointIndex]!, portPoint) ||
       hasProtectedSeamEndpoint(peer.route, peer.endpointIndex)
     ) {
       continue
     }
     const nodeBounds = getNodeBounds(node)
     const peerBounds = getNodeBounds(peerNode)
-    if (
-      nodeBounds.maxX !== peerBounds.minX &&
-      peerBounds.maxX !== nodeBounds.minX &&
-      nodeBounds.maxY !== peerBounds.minY &&
-      peerBounds.maxY !== nodeBounds.minY
-    ) {
-      continue
-    }
-    const sharedEdge = getSharedEdgeForNodePair({
+    const nominalSharedEdge = getSharedEdgeForNodePair({
       nodeAId: node.capacityMeshNodeId,
       nodeBId: peerNode.capacityMeshNodeId,
       nodeBounds: new Map([
@@ -197,28 +206,54 @@ const getSeamNeighborhoods = (
         [peerNode.capacityMeshNodeId, peerBounds],
       ]),
     })
-    if (!sharedEdge) continue
-    const axis = sharedEdge.orientation === "vertical" ? "x" : "y"
+    if (!nominalSharedEdge) continue
+    const axis = nominalSharedEdge.orientation === "vertical" ? "x" : "y"
     const tangent = axis === "x" ? "y" : "x"
-    const boundary = axis === "x" ? sharedEdge.x1 : sharedEdge.y1
-    const tangentMin = axis === "x" ? sharedEdge.y1 : sharedEdge.x1
-    const tangentMax = axis === "x" ? sharedEdge.y2 : sharedEdge.x2
+    const nominalBoundary =
+      axis === "x" ? nominalSharedEdge.x1 : nominalSharedEdge.y1
+    const boundary = portPoint[axis]
+    const tangentMin =
+      axis === "x" ? nominalSharedEdge.y1 : nominalSharedEdge.x1
+    const tangentMax =
+      axis === "x" ? nominalSharedEdge.y2 : nominalSharedEdge.x2
     if (
-      endpoint[axis] !== boundary ||
+      !arePipeline9HdCoordinatesInSameCell(boundary, nominalBoundary) ||
+      owners.some((owner) =>
+        owner.portPoints.some(
+          (point) =>
+            point.portPointId === portPoint.portPointId &&
+            (point.x !== portPoint.x ||
+              point.y !== portPoint.y ||
+              point.z !== portPoint.z),
+        ),
+      ) ||
+      portPoint[tangent] <= tangentMin ||
+      portPoint[tangent] >= tangentMax ||
       endpoint[tangent] <= tangentMin ||
       endpoint[tangent] >= tangentMax ||
       [affected, peer.route].some(
         (route) =>
-          route.vias.some((via) => via[axis] === boundary) ||
+          route.vias.some((via) =>
+            arePipeline9HdCoordinatesInSameCell(via[axis], boundary),
+          ) ||
           route.route.some(
             (point, index) =>
-              point[axis] === boundary &&
+              arePipeline9HdCoordinatesInSameCell(point[axis], boundary) &&
               route.route[index + 1]?.z !== undefined &&
               point.z !== route.route[index + 1]!.z,
           ),
       )
     ) {
       continue
+    }
+    // Both native domains contain this identical structural port. Use its
+    // exact plane, not one owner's floating-point reconstruction of the edge.
+    const sharedEdge: SharedEdge = {
+      ...nominalSharedEdge,
+      ...(axis === "x"
+        ? { x1: boundary, x2: boundary }
+        : { y1: boundary, y2: boundary }),
+      center: { ...nominalSharedEdge.center, [axis]: boundary },
     }
     const sides: SeamNeighborhood["sides"] = [
       {
@@ -244,31 +279,12 @@ const getSeamNeighborhoods = (
       ),
       ...params.fixedHdRoutes,
     ]
-    const touchesSameNetBranch = immutableRoutes.some((route) => {
-      if (!arePipeline9RoutesOnSameNet(affected, route, params.connMap)) {
-        return false
-      }
-      const geometry = getPipeline9RouteCopperGeometry(route)
-      return (
-        geometry.wireSegments.some(
-          (segment) =>
-            segment.z === endpoint.z &&
-            minimumDistanceBetweenSegments(
-              endpoint,
-              endpoint,
-              segment.start,
-              segment.end,
-            ) <=
-              segment.width / 2 + affected.traceThickness / 2,
-        ) ||
-        geometry.viaSpans.some(
-          (via) =>
-            endpoint.z >= via.minZ &&
-            endpoint.z <= via.maxZ &&
-            Math.hypot(endpoint.x - via.center.x, endpoint.y - via.center.y) <=
-              via.diameter / 2 + affected.traceThickness / 2,
-        )
-      )
+    const touchesSameNetBranch = doesPipeline9SeamTouchSameNetCopper({
+      route: affected,
+      seamStart: endpoint,
+      seamEnd: peer.route.route[peer.endpointIndex]!,
+      immutableRoutes,
+      connMap: params.connMap,
     })
     if (touchesSameNetBranch) continue
     neighborhoods.push({ sides, portPoint, sharedEdge })
@@ -327,9 +343,22 @@ export function* getPipeline9HighDensitySeamForceCandidates(
         ? reversePipeline9HighDensitySeamRoutePoints(side.route.route)
         : side.route.route.map((point) => ({ ...point })),
     )
+    // This is a candidate move of the proven shared handoff, not an input
+    // rewrite. Keep one exact structural seam instead of a rounding-created
+    // backtrack, preserving the outgoing segment metadata from the right side.
+    const compositeSeam: RoutePoint = {
+      ...orientedPoints[1]![0]!,
+      x: portPoint.x,
+      y: portPoint.y,
+      z: portPoint.z,
+    }
     const composite: HighDensityRoute = {
       ...sides[0].route,
-      route: [...orientedPoints[0]!.slice(0, -1), ...orientedPoints[1]!],
+      route: [
+        ...orientedPoints[0]!.slice(0, -1),
+        compositeSeam,
+        ...orientedPoints[1]!.slice(1),
+      ],
       vias: sides.flatMap((side) => side.route.vias.map((via) => ({ ...via }))),
       jumpers: sides.flatMap((side) => side.route.jumpers ?? []),
       startPcbPortId: sides[0].reversed
@@ -362,7 +391,8 @@ export function* getPipeline9HighDensitySeamForceCandidates(
       },
       width: bounds.maxX - bounds.minX,
       height: bounds.maxY - bounds.minY,
-      portPoints: [],
+      // Retain actual topology provenance for unchanged rounded outer anchors.
+      portPoints: sides.flatMap((side) => side.node.portPoints),
     }
     for (const candidates of getPipeline9HighDensityForceCandidates({
       ...params,
@@ -381,6 +411,7 @@ export function* getPipeline9HighDensitySeamForceCandidates(
         sides,
         sharedEdge,
         portPoint,
+        layerCount: params.layerCount,
       })
       if (split) yield split
       else params.onCandidateRejected?.("geometry")

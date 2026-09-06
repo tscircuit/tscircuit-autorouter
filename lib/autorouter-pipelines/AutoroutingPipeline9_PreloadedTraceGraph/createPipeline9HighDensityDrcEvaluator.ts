@@ -4,7 +4,7 @@ import type { ConvertPipeline7HdRoutesOptions } from "lib/autorouter-pipelines/A
 import type { ChangedPreloadedTraceSection } from "lib/solvers/PortPointPathingSolver/tinyhypergraph/TinyHypergraphPortPointPathingSolver"
 import { RELAXED_DRC_OPTIONS } from "lib/testing/drcPresets"
 import { combinePreloadedAndRoutedTraces } from "lib/testing/evaluate-relaxed-drc"
-import { getDrcErrors } from "lib/testing/getDrcErrors"
+import { createPreparedGetDrcErrors } from "lib/testing/getDrcErrors"
 import { createPreparedCircuitJsonConverter } from "lib/testing/utils/convertToCircuitJson"
 import type { Obstacle, SimpleRouteJson, SimplifiedPcbTrace } from "lib/types"
 import type { HighDensityRoute } from "lib/types/high-density-types"
@@ -311,6 +311,7 @@ export const createPipeline9HighDensityDrcEvaluator = (
     HighDensityRoute[],
     CachedHighDensityDrcSnapshot
   >()
+  const evaluateDrc = createPreparedGetDrcErrors()
   const getSnapshot = (
     evaluatedRoutes: HighDensityRoute[],
   ): CachedHighDensityDrcSnapshot => {
@@ -411,7 +412,7 @@ export const createPipeline9HighDensityDrcEvaluator = (
           }
         : element,
     )
-    const { errors, errorsWithCenters } = getDrcErrors(circuitJson, {
+    const { errors, errorsWithCenters } = evaluateDrc(circuitJson, {
       ...RELAXED_DRC_OPTIONS,
       includeTraceContinuity: false,
       includeBoardEdge: false,

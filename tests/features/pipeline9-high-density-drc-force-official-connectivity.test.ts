@@ -110,7 +110,13 @@ test("Pipeline9 force repair follows official pad connectivity instead of routin
   // exclusion: the shared force operator sees no foreign obstacle to move from.
   expect(
     applyDrcErrorForces(
-      srj,
+      {
+        bounds: srj.bounds,
+        connections: srj.connections,
+        obstacles: srj.obstacles,
+        layerCount: srj.layerCount,
+        minTraceWidth: srj.minTraceWidth,
+      },
       legacyRoutes,
       [{ ...initialErrors[0]!, center: { ...srj.obstacles[0]!.center } }],
       new Map([["A_0", 0]]),

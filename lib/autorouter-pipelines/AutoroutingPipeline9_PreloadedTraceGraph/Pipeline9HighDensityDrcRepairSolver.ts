@@ -854,7 +854,9 @@ export class Pipeline9HighDensityDrcRepairSolver extends BaseSolver {
       traceWidth: this.params.traceWidth,
       obstacleMargin: this.params.obstacleMargin,
       connMap: this.params.connMap,
-      forceContext: this.params.drcEvaluator.getForceContext(this.outputHdRoutes),
+      forceContext: this.params.drcEvaluator.getForceContext(
+        this.outputHdRoutes,
+      ),
       effort: this.params.effort,
       onCandidateRejected: (reason): void => {
         const statName = {
@@ -893,7 +895,9 @@ export class Pipeline9HighDensityDrcRepairSolver extends BaseSolver {
         traceWidth: this.params.traceWidth,
         obstacleMargin: this.params.obstacleMargin,
         connMap: this.params.connMap,
-        forceContext: this.params.drcEvaluator.getForceContext(this.outputHdRoutes),
+        forceContext: this.params.drcEvaluator.getForceContext(
+          this.outputHdRoutes,
+        ),
         effort: this.params.effort,
       })
     }

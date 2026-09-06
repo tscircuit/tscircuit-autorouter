@@ -5,6 +5,8 @@ import type {
   PortPoint,
 } from "lib/types/high-density-types"
 import { getBoundsFromNodeWithPortPoints } from "lib/utils/getBoundsFromNodeWithPortPoints"
+import { isPipeline9HighDensityRouteInsideBounds } from "./isPipeline9HighDensityRouteInsideBounds"
+import { arePipeline9HdCoordinatesInSameCell } from "./pipeline9HighDensityCoordinatePrecision"
 
 type RoutePoint = HighDensityRoute["route"][number]
 
@@ -65,34 +67,19 @@ export const reversePipeline9HighDensitySeamRoutePoints = (
   return reversed
 }
 
-const isPointInsideNode = (
-  point: RoutePoint,
-  node: NodeWithPortPoints,
-): boolean => {
-  const bounds = getBoundsFromNodeWithPortPoints(node)
-  return (
-    Number.isFinite(point.x) &&
-    Number.isFinite(point.y) &&
-    Number.isInteger(point.z) &&
-    point.x >= bounds.minX &&
-    point.x <= bounds.maxX &&
-    point.y >= bounds.minY &&
-    point.y <= bounds.maxY &&
-    (node.availableZ === undefined || node.availableZ.includes(point.z))
-  )
-}
-
 /** Only a unique planar crossing can preserve both original node fragments. */
 export const splitPipeline9HighDensitySeamRoute = ({
   candidateRoute,
   sides,
   sharedEdge,
   portPoint,
+  layerCount,
 }: {
   candidateRoute: HighDensityRoute
   sides: [Pipeline9HighDensitySeamSide, Pipeline9HighDensitySeamSide]
   sharedEdge: SharedEdge
   portPoint: PortPoint & { portPointId: string }
+  layerCount: number
 }): Pipeline9HighDensitySeamForceCandidate | null => {
   const axis = sharedEdge.orientation === "vertical" ? "x" : "y"
   const tangent = axis === "x" ? "y" : "x"
@@ -190,9 +177,16 @@ export const splitPipeline9HighDensitySeamRoute = ({
     const side = sides[index]!
     if (
       replacement.route.route.length < 2 ||
-      replacement.route.route.some(
-        (point) => !isPointInsideNode(point, side.node),
-      )
+      !isPipeline9HighDensityRouteInsideBounds(
+        replacement.route,
+        getBoundsFromNodeWithPortPoints(side.node),
+        layerCount,
+        { originalRoute: side.route, node: side.node },
+      ) ||
+      (side.node.availableZ !== undefined &&
+        replacement.route.route.some(
+          (point) => !side.node.availableZ!.includes(point.z),
+        ))
     ) {
       return null
     }
@@ -214,14 +208,26 @@ export const splitPipeline9HighDensitySeamRoute = ({
     replacement.route.route[replacementOuterIndex] = { ...originalOuter }
     for (const point of side.route.route) {
       const isInternalSeam =
-        point[axis] === boundary &&
+        arePipeline9HdCoordinatesInSameCell(point[axis], boundary) &&
         point[tangent] > tangentMin &&
         point[tangent] < tangentMax
       const isNodeBoundary =
-        point.x === side.node.center.x - side.node.width / 2 ||
-        point.x === side.node.center.x + side.node.width / 2 ||
-        point.y === side.node.center.y - side.node.height / 2 ||
-        point.y === side.node.center.y + side.node.height / 2
+        arePipeline9HdCoordinatesInSameCell(
+          point.x,
+          side.node.center.x - side.node.width / 2,
+        ) ||
+        arePipeline9HdCoordinatesInSameCell(
+          point.x,
+          side.node.center.x + side.node.width / 2,
+        ) ||
+        arePipeline9HdCoordinatesInSameCell(
+          point.y,
+          side.node.center.y - side.node.height / 2,
+        ) ||
+        arePipeline9HdCoordinatesInSameCell(
+          point.y,
+          side.node.center.y + side.node.height / 2,
+        )
       if (
         !isInternalSeam &&
         isNodeBoundary &&

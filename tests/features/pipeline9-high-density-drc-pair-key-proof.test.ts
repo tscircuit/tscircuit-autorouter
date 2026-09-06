@@ -135,9 +135,8 @@ test("Pipeline9 proves pair-key uniqueness before treating scoped errors as a fu
   snapshots.set(safeRoutes, {
     circuitJson: safeCircuitJson,
     connMap: getFullConnectivityMapFromCircuitJson(safeCircuitJson),
-    normalizeErrors: (
-      errors: Record<string, unknown>[],
-    ): Pipeline9DrcError[] => errors,
+    normalizeErrors: (errors: Record<string, unknown>[]): Pipeline9DrcError[] =>
+      errors,
   })
   expect(
     gate({

@@ -20,7 +20,9 @@ export const getPipeline9HighDensityForceObstacles = ({
   const obstacles: Obstacle[] = []
   for (const element of circuitJson) {
     if (element.type === "pcb_hole") {
-      throw new Error("Pipeline9 force projection requires supported pad geometry")
+      throw new Error(
+        "Pipeline9 force projection requires supported pad geometry",
+      )
     }
     if (element.type !== "pcb_smtpad" && element.type !== "pcb_plated_hole") {
       continue
@@ -82,7 +84,9 @@ export const getPipeline9HighDensityForceObstacles = ({
       layers.length === 0 ||
       !layers.every((layer): layer is string => typeof layer === "string")
     ) {
-      throw new Error(`Pipeline9 serialized pad "${padId}" has invalid geometry`)
+      throw new Error(
+        `Pipeline9 serialized pad "${padId}" has invalid geometry`,
+      )
     }
     const obstacle: Obstacle = {
       type: "rect",

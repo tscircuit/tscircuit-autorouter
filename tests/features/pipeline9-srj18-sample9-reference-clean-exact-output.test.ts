@@ -140,6 +140,9 @@ test("Pipeline9 preserves SRJ18 sample 9's reference-clean exact output", async 
           affectedNodeIds.add(route.regionId)
         }
       }
+      if (!solver.highDensityNodePortPoints) {
+        throw new Error("Expected sample9 high-density node geometry")
+      }
       const nodes = solver.highDensityNodePortPoints.filter((node) =>
         affectedNodeIds.has(node.capacityMeshNodeId),
       )

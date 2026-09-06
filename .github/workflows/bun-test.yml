@@ -13,6 +13,33 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
+  high-density-force-repair:
+    if: github.event_name != 'pull_request' || !startsWith(github.head_ref, 'version-bumps/')
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: 1.3.8
+
+      - name: Install dependencies
+        run: bun install
+
+      # Keep small repair contracts observable even when a large-board shard
+      # reaches its time limit. The complete balanced suite still runs below.
+      - name: Run high-density force repair regressions
+        run: |
+          bun test \
+            tests/features/pipeline9-high-density-*.test.ts \
+            tests/features/pipeline9-immutable-hd-conversion.test.ts \
+            tests/features/prepared-circuit-json-*.test.ts \
+            tests/features/prepared-get-drc-errors-via-spacing-cache.test.ts \
+            --timeout 300000
+
   test:
     if: github.event_name != 'pull_request' || !startsWith(github.head_ref, 'version-bumps/')
     runs-on: ubuntu-latest

@@ -309,7 +309,9 @@ export function* getPipeline9HighDensityForceCandidates({
           !forceContext.connMap.areIdsConnected(traceId, identity),
       )
     ) {
-      throw new Error("Pipeline9 force routes require consistent PCB trace owners")
+      throw new Error(
+        "Pipeline9 force routes require consistent PCB trace owners",
+      )
     }
     return traceId
   })
@@ -391,11 +393,12 @@ export function* getPipeline9HighDensityForceCandidates({
         }
         const candidates = materializeRoutes(mutableRoutes)
         if (
-          !candidates.every((candidate) =>
+          !candidates.every((candidate, index) =>
             isPipeline9HighDensityRouteInsideBounds(
               candidate,
               nodeBounds,
               layerCount,
+              { originalRoute: hdRoutes[index]!, node },
             ),
           )
         ) {
