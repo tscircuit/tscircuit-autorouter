@@ -175,9 +175,7 @@ test("Pipeline9 repairs SRJ18 sample 12", async (): Promise<void> => {
                 !("pcb_trace_id" in element) ||
                 typeof element.pcb_trace_id !== "string"
               ) {
-                throw new Error(
-                  "Sample12 reported via must have a trace owner",
-                )
+                throw new Error("Sample12 reported via must have a trace owner")
               }
               const ownerVias = viasByOwnerTraceId.get(element.pcb_trace_id)
               if (ownerVias) ownerVias.push(element)

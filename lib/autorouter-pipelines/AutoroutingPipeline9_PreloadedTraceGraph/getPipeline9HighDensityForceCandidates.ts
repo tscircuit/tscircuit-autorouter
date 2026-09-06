@@ -51,6 +51,8 @@ type LocalForceRoute = {
 
 export type Pipeline9HighDensityForceFamily =
   | "pad-wire"
+  | "pad-wire-0"
+  | "pad-wire-1"
   | "native"
   | "trace-pair-0"
   | "trace-pair-1"
@@ -430,14 +432,19 @@ export function* getPipeline9HighDensityForceCandidates({
         (index) => [index, index + 1],
       ),
     )
+    const originalPadMobility =
+      originalPadTarget !== undefined && originalPadTarget.distance > 0
+        ? getPipeline9PadTraceForceMobility({
+            route: hdRoutes[primaryRouteIndex]!,
+            target: originalPadTarget,
+            protectedPointIndexes: originalProtectedIndexes,
+          })
+        : undefined
     const canApplyPadWireForce =
-      originalPadTarget !== undefined &&
-      originalPadTarget.distance > 0 &&
-      getPipeline9PadTraceForceMobility({
-        route: hdRoutes[primaryRouteIndex]!,
-        target: originalPadTarget,
-        protectedPointIndexes: originalProtectedIndexes,
-      }).contactWeight > 0
+      originalPadMobility !== undefined &&
+      originalPadMobility.contactWeight > 0
+    const canApplyOneEndpointPadForce =
+      canApplyPadWireForce && originalPadMobility!.pointIndexes.length === 2
     if (
       canApplyPadWireForce &&
       (typeof error.minimum_clearance !== "number" ||
@@ -487,12 +494,44 @@ export function* getPipeline9HighDensityForceCandidates({
         applicationEnd: 2,
       })
     }
+    if (canApplyOneEndpointPadForce) {
+      const firstPadPass = forcePasses[0]
+      const duplicatePadPass = forcePasses[2]
+      if (
+        firstPadPass === undefined ||
+        duplicatePadPass === undefined ||
+        maxCandidateApplications < 3 ||
+        Math.abs(firstPadPass.scale) !== Math.abs(duplicatePadPass.scale)
+      ) {
+        throw new Error(
+          "Pipeline9 endpoint pad forces require two duplicate rigid slots",
+        )
+      }
+      // The pad helper uses only abs(scale): its complete -1 rigid chain is
+      // identical to +1. Spend two duplicate slots on independent endpoints,
+      // keeping both distinct rigid scales and every native slot in order.
+      forcePasses.splice(
+        2,
+        1,
+        { ...duplicatePadPass, applicationStart: 1, applicationEnd: 2 },
+        { ...duplicatePadPass, applicationStart: 3 },
+      )
+      forcePasses.unshift(
+        { ...duplicatePadPass, applicationStart: 0, applicationEnd: 1 },
+        { ...duplicatePadPass, applicationStart: 2, applicationEnd: 3 },
+      )
+    }
+    const statesByScaleIndex = new Map<
+      number,
+      Map<Pipeline9HighDensityForceFamily, ForceFamilyState>
+    >()
     for (const pass of forcePasses) {
       const { scaleIndex, scale } = pass
-      const states = new Map<
-        Pipeline9HighDensityForceFamily,
-        ForceFamilyState
-      >()
+      let states = statesByScaleIndex.get(scaleIndex)
+      if (states === undefined) {
+        states = new Map()
+        statesByScaleIndex.set(scaleIndex, states)
+      }
       // Official accidental-contact errors have no graded overlap severity.
       // A bounded private force sequence can cross that plateau before any
       // candidate is accepted; never restart it from a published partial move.
@@ -505,14 +544,20 @@ export function* getPipeline9HighDensityForceCandidates({
         application++
       ) {
         // These are the original slot identities, even in the prefixed pass.
-        // Side 0, side 1 and the native family always have independent state;
-        // splitting their old shared pass does not change any native geometry.
+        // Endpoint families remain independent. Sharing each original scale's
+        // state across descriptors preserves split native cumulative chains.
         const family: Pipeline9HighDensityForceFamily =
           canApplyTracePairForce && scaleIndex === 1 && application < 2
             ? application === 0
               ? "trace-pair-0"
               : "trace-pair-1"
-            : families[application % families.length]!
+            : canApplyOneEndpointPadForce &&
+                scaleIndex === 2 &&
+                (application === 0 || application === 2)
+              ? application === 0
+                ? "pad-wire-0"
+                : "pad-wire-1"
+              : families[application % families.length]!
         let state = states.get(family)
         if (state === undefined) {
           const localRoutes = hdRoutes.map(
@@ -550,12 +595,24 @@ export function* getPipeline9HighDensityForceCandidates({
           continue
         }
         let changed: boolean
-        if (state.family === "pad-wire") {
+        if (
+          state.family === "pad-wire" ||
+          state.family === "pad-wire-0" ||
+          state.family === "pad-wire-1"
+        ) {
+          const protectedPointIndexes = new Set(
+            localRoutes[primaryRouteIndex]!.protectedPointIndexes,
+          )
+          if (state.family !== "pad-wire") {
+            protectedPointIndexes.add(
+              padTarget!.segmentIndex +
+                (state.family === "pad-wire-0" ? 1 : 0),
+            )
+          }
           changed = applyPipeline9PadTraceForce({
             route: mutableRoutes[primaryRouteIndex]!,
             target: padTarget!,
-            protectedPointIndexes:
-              localRoutes[primaryRouteIndex]!.protectedPointIndexes,
+            protectedPointIndexes,
             minimumClearance: error.minimum_clearance as number,
             scale,
           })

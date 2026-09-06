@@ -34,6 +34,9 @@ export type Pipeline9HighDensityDrcCandidateGate = (params: {
   currentErrors: Pipeline9DrcError[]
   candidateErrors: Pipeline9DrcError[]
   candidateErrorPairsAreUnambiguous: boolean
+  scopedBaselineEvaluationCount?: number
+  scopedBaselineCacheHitCount?: number
+  scopedBaselineRevisitCount?: number
   snapshotPreparationTimeMs?: number
   scopedCopperCheckTimeMs?: number
   scopedTraceOverlapCheckTimeMs?: number
@@ -51,11 +54,6 @@ type SnapshotCopper = {
   traces: Map<string, PcbTrace>
   traceBounds: Map<string, Pipeline9Bounds>
   vias: PcbVia[]
-}
-
-type LocalBaseline = {
-  contextKey: string
-  errors: Pipeline9DrcError[]
 }
 
 const getTraceBounds = (trace: PcbTrace): Pipeline9Bounds | undefined => {
@@ -175,9 +173,15 @@ export const createPipeline9HighDensityDrcCandidateGate = ({
     SnapshotCopper
   >()
   const boundsByTrace = new WeakMap<PcbTrace, Pipeline9Bounds | undefined>()
+  // Each immutable incumbent owns only its encountered scopes; weak keys do
+  // not retain obsolete route snapshots or their private normalized errors.
   const baselineBySnapshot = new WeakMap<
     Pipeline9HighDensityDrcSnapshot,
-    LocalBaseline
+    Map<string, Pipeline9DrcError[]>
+  >()
+  const previousScopeBySnapshot = new WeakMap<
+    Pipeline9HighDensityDrcSnapshot,
+    string
   >()
   const unambiguousPairsBySnapshot = new WeakMap<
     Pipeline9HighDensityDrcSnapshot,
@@ -293,11 +297,22 @@ export const createPipeline9HighDensityDrcCandidateGate = ({
     // pad/via clearance checks aggregate the entire trace-obstacle pair.
     const contextKey = JSON.stringify([
       [...selectedTraceIds].sort(),
-      currentCopper.vias
-        .filter((via) => selectedViaSites.has(`${via.x},${via.y}`))
-        .map((via) => via.pcb_via_id),
+      // Positions identify the exact immutable selection even when an input
+      // snapshot contains repeated opaque via ids at different copper sites.
+      currentCopper.vias.flatMap((via, index): number[] =>
+        selectedViaSites.has(`${via.x},${via.y}`) ? [index] : [],
+      ),
     ])
-    const cachedBaseline = baselineBySnapshot.get(currentSnapshot)
+    let baselines = baselineBySnapshot.get(currentSnapshot)
+    if (!baselines) {
+      baselines = new Map()
+      baselineBySnapshot.set(currentSnapshot, baselines)
+    }
+    const cachedBaseline = baselines.get(contextKey)
+    const isBaselineRevisit =
+      cachedBaseline !== undefined &&
+      previousScopeBySnapshot.get(currentSnapshot) !== contextKey
+    previousScopeBySnapshot.set(currentSnapshot, contextKey)
     const timings: ScopedCopperCheckTimings = {
       scopedTraceOverlapCheckTimeMs: 0,
       scopedViaTraceCheckTimeMs: 0,
@@ -305,8 +320,8 @@ export const createPipeline9HighDensityDrcCandidateGate = ({
     }
     const scopedChecksStartedAt = performance.now()
     const currentErrors =
-      cachedBaseline?.contextKey === contextKey
-        ? cachedBaseline.errors
+      cachedBaseline !== undefined
+        ? structuredClone(cachedBaseline)
         : evaluateScopedCopper(
             currentSnapshot,
             selectedTraceIds,
@@ -314,10 +329,11 @@ export const createPipeline9HighDensityDrcCandidateGate = ({
             timings,
             evaluateViaTraceClearance,
           )
-    baselineBySnapshot.set(currentSnapshot, {
-      contextKey,
-      errors: currentErrors,
-    })
+    if (cachedBaseline === undefined) {
+      // Baselines remain private: callers receive mutable error arrays and
+      // must not be able to change a later scope revisit's normalized result.
+      baselines.set(contextKey, structuredClone(currentErrors))
+    }
     const candidateErrors = evaluateScopedCopper(
       candidateSnapshot,
       selectedTraceIds,
@@ -329,6 +345,9 @@ export const createPipeline9HighDensityDrcCandidateGate = ({
       currentErrors,
       candidateErrors,
       candidateErrorPairsAreUnambiguous,
+      scopedBaselineEvaluationCount: cachedBaseline === undefined ? 1 : 0,
+      scopedBaselineCacheHitCount: cachedBaseline === undefined ? 0 : 1,
+      scopedBaselineRevisitCount: isBaselineRevisit ? 1 : 0,
       snapshotPreparationTimeMs,
       scopedCopperCheckTimeMs: performance.now() - scopedChecksStartedAt,
       ...timings,

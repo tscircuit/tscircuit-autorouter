@@ -5,10 +5,7 @@ import {
   getPipeline9PadTraceForceMobility,
 } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/applyPipeline9PadTraceForce"
 import { getPipeline9PadCopperForceTarget } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/getPipeline9PadCopperForceTarget"
-import {
-  getDrcErrors,
-  type GetDrcErrorsResult,
-} from "lib/testing/getDrcErrors"
+import { getDrcErrors, type GetDrcErrorsResult } from "lib/testing/getDrcErrors"
 import type { HighDensityRoute } from "lib/types/high-density-types"
 import type { Obstacle } from "lib/types/srj-types"
 
@@ -68,21 +65,18 @@ test("a synthetic pad repair can avoid a rigid move's foreign-via conflict by ho
       type: "pcb_trace",
       pcb_trace_id: "A_0",
       source_trace_id: "A",
-      route: candidate.route.map(
-        (point, index): PcbTrace["route"][number] => ({
-          route_type: "wire",
-          x: point.x,
-          y: point.y,
-          width: point.traceThickness ?? candidate.traceThickness,
-          layer: "top",
-          start_pcb_port_id:
-            index === 0 ? candidate.startPcbPortId : undefined,
-          end_pcb_port_id:
-            index === candidate.route.length - 1
-              ? candidate.endPcbPortId
-              : undefined,
-        }),
-      ),
+      route: candidate.route.map((point, index): PcbTrace["route"][number] => ({
+        route_type: "wire",
+        x: point.x,
+        y: point.y,
+        width: point.traceThickness ?? candidate.traceThickness,
+        layer: "top",
+        start_pcb_port_id: index === 0 ? candidate.startPcbPortId : undefined,
+        end_pcb_port_id:
+          index === candidate.route.length - 1
+            ? candidate.endPcbPortId
+            : undefined,
+      })),
     }
     // Public official checks build their own connectivity and retain overlap,
     // typed pad/via clearance and spacing checks; this open fixture has no board.
