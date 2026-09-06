@@ -1,0 +1,138 @@
+import { expect, test } from "bun:test"
+import { ConnectivityMap } from "circuit-json-to-connectivity-map"
+import { createPipeline9HighDensityDrcEvaluator } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/createPipeline9HighDensityDrcEvaluator"
+import { getPipeline9HighDensityForceCandidates } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/getPipeline9HighDensityForceCandidates"
+import { getPipeline9FixedRouteObstacles } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/pipeline9FixedRouteCopper"
+import { getPipeline9DrcErrors } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/pipeline9JointDrcRepairUtils"
+import type {
+  HighDensityRoute,
+  NodeWithPortPoints,
+} from "lib/types/high-density-types"
+import type { SimpleRouteJson } from "lib/types/srj-types"
+
+test("Pipeline9 local DRC forces repair pad clearance with fixed node handoffs and other copper", (): void => {
+  const node: NodeWithPortPoints = {
+    capacityMeshNodeId: "force-node",
+    center: { x: 0, y: 0 },
+    width: 10,
+    height: 10,
+    availableZ: [0, 1],
+    portPoints: [
+      { x: -5, y: 0, z: 1, connectionName: "A" },
+      { x: 5, y: 0, z: 0, connectionName: "A" },
+    ],
+  }
+  const affectedRoute: HighDensityRoute = {
+    connectionName: "A",
+    rootConnectionName: "A",
+    regionId: node.capacityMeshNodeId,
+    traceThickness: 0.1,
+    viaDiameter: 0.3,
+    startPcbPortId: "port-a-start",
+    endPcbPortId: "port-a-end",
+    route: [
+      { x: -5, y: 0, z: 1, pcb_port_id: "port-a-start" },
+      { x: -5, y: 0, z: 0 },
+      { x: -1, y: 0, z: 0 },
+      { x: 1, y: 0, z: 0 },
+      { x: 5, y: 0, z: 0, pcb_port_id: "port-a-end" },
+    ],
+    vias: [{ x: -5, y: 0 }],
+  }
+  const fixedRoute: HighDensityRoute = {
+    connectionName: "B",
+    rootConnectionName: "B",
+    regionId: node.capacityMeshNodeId,
+    traceThickness: 0.1,
+    viaDiameter: 0.3,
+    route: [
+      { x: -5, y: 3, z: 0 },
+      { x: 5, y: 3, z: 0 },
+    ],
+    vias: [],
+  }
+  const inputRoutes = [affectedRoute, fixedRoute]
+  const originalRoutes = structuredClone(inputRoutes)
+  const connMap = new ConnectivityMap({ A: ["A"], B: ["B"] })
+  const srj: SimpleRouteJson = {
+    layerCount: 2,
+    minTraceWidth: 0.1,
+    bounds: { minX: -6, maxX: 6, minY: -6, maxY: 6 },
+    obstacles: [
+      {
+        type: "rect",
+        obstacleId: "fixed-pad",
+        center: { x: 0, y: 0 },
+        width: 0.4,
+        height: 0.4,
+        layers: ["top"],
+        connectedTo: ["C"],
+      },
+    ],
+    connections: inputRoutes.map((route) => ({
+      name: route.connectionName,
+      pointsToConnect: [route.route[0]!, route.route.at(-1)!].map((point) => ({
+        x: point.x,
+        y: point.y,
+        layer: point.z === 0 ? "top" : "bottom",
+        pcb_port_id: point.pcb_port_id,
+      })),
+    })),
+  }
+  const drcEvaluator = createPipeline9HighDensityDrcEvaluator({
+    connections: srj.connections,
+    originalConnections: srj.connections,
+    originalFixedHdRoutes: [],
+    fixedHdRoutes: [],
+    changedPreloadedTraceSections: [],
+    hdRoutes: inputRoutes,
+    layerCount: 2,
+    obstacles: srj.obstacles,
+    defaultViaHoleDiameter: 0.15,
+    connMap,
+    originalSrj: srj,
+    srjWithPointPairs: srj,
+  })
+  const initialErrors = getPipeline9DrcErrors(drcEvaluator, inputRoutes)
+  expect(initialErrors.length).toBeGreaterThan(0)
+  const fixedObstacles = getPipeline9FixedRouteObstacles({
+    fixedObstacleRoutes: [fixedRoute],
+    layerCount: 2,
+  })
+  const originalFixedObstacles = structuredClone(fixedObstacles)
+  let improvedRoutes: HighDensityRoute[] | undefined
+  for (const candidate of getPipeline9HighDensityForceCandidates({
+    node,
+    hdRoutes: [affectedRoute],
+    errors: initialErrors,
+    traceRouteIndexById: new Map([["A_0", 0]]),
+    obstacles: [...srj.obstacles, ...fixedObstacles],
+    layerCount: 2,
+    viaDiameter: 0.3,
+    viaHoleDiameter: 0.15,
+    traceWidth: 0.1,
+    obstacleMargin: 0.15,
+    connMap,
+    effort: 1,
+  })) {
+    const errors = getPipeline9DrcErrors(drcEvaluator, [
+      ...candidate,
+      fixedRoute,
+    ])
+    if (errors.length < initialErrors.length) {
+      improvedRoutes = candidate
+      break
+    }
+  }
+  expect(improvedRoutes).toBeDefined()
+  expect(improvedRoutes![0]!.route.slice(0, 2)).toEqual(
+    affectedRoute.route.slice(0, 2),
+  )
+  expect(improvedRoutes![0]!.route.at(-1)).toEqual(affectedRoute.route.at(-1))
+  expect(improvedRoutes![0]!.vias).toEqual(affectedRoute.vias)
+  expect(improvedRoutes![0]!.regionId).toBe(affectedRoute.regionId)
+  expect(improvedRoutes![0]!.startPcbPortId).toBe(affectedRoute.startPcbPortId)
+  expect(improvedRoutes![0]!.endPcbPortId).toBe(affectedRoute.endPcbPortId)
+  expect(inputRoutes).toEqual(originalRoutes)
+  expect(fixedObstacles).toEqual(originalFixedObstacles)
+})

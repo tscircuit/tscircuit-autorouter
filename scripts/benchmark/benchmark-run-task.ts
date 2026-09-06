@@ -10,6 +10,7 @@ import type {
 import type {
   BenchmarkSnapshotWithImage,
   BenchmarkTask,
+  HighDensityDrcRepairBenchmarkMetrics,
   RoutingBenchmarkMetrics,
   TinyHypergraphBenchmarkMetrics,
   WorkerProgress,
@@ -54,6 +55,12 @@ type SolverInstance = PipelineStageTimingSource & {
     iterations?: number
     stats?: Record<string, unknown>
     waitForAllRemoteRequests?: () => Promise<void>
+  }
+  highDensityDrcRepairSolver?: {
+    solved: boolean
+    failed: boolean
+    iterations: number
+    stats: Record<string, unknown>
   }
   timeSpentOnPhase: Record<string, number>
 }
@@ -272,6 +279,31 @@ const getFailureInfo = (
   }
 }
 
+const getHighDensityDrcRepairBenchmarkMetrics = (
+  solver: SolverInstance,
+): HighDensityDrcRepairBenchmarkMetrics | undefined => {
+  const repairSolver = solver.highDensityDrcRepairSolver
+  if (!repairSolver) return undefined
+  const stats: Record<string, number | boolean> = {}
+  for (const [name, value] of Object.entries(repairSolver.stats)) {
+    if (
+      typeof value === "boolean" ||
+      (typeof value === "number" && Number.isFinite(value))
+    ) {
+      stats[name] = value
+    }
+  }
+  return {
+    status: repairSolver.failed
+      ? "failed"
+      : repairSolver.solved
+        ? "complete"
+        : "partial",
+    iterations: repairSolver.iterations,
+    stats,
+  }
+}
+
 const getProgressInfo = (
   task: BenchmarkTask,
   solver: SolverInstance,
@@ -331,6 +363,7 @@ const getRoutingBenchmarkMetrics = (
       solver.portPointPathingSolver?.getSolveGraphBenchmarkMetrics?.(),
     highDensityIterations: solver.highDensityRouteSolver?.iterations,
     phaseTimeMs: solver.timeSpentOnPhase,
+    highDensityDrcRepair: getHighDensityDrcRepairBenchmarkMetrics(solver),
     networkedHighDensity,
   }
 }
@@ -386,6 +419,9 @@ const solveWithProgress = async (
 
     lastProgressAt = elapsedTimeMs
     lastProgressKey = progressKey
+    progress.routingMetrics = {
+      highDensityDrcRepair: getHighDensityDrcRepairBenchmarkMetrics(solver),
+    }
     options.onProgress(progress)
   }
 

@@ -1,12 +1,16 @@
 import { expect, test } from "bun:test"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
-import type { DrcEvaluator } from "high-density-repair03/lib"
+import { createPipeline9HighDensityDrcEvaluator } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/createPipeline9HighDensityDrcEvaluator"
 import { Pipeline9HighDensityDrcRepairSolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9HighDensityDrcRepairSolver"
 import type {
   HighDensityRoute,
   NodeWithPortPoints,
 } from "lib/types/high-density-types"
-import type { Obstacle, SimpleRouteConnection } from "lib/types/srj-types"
+import type {
+  Obstacle,
+  SimpleRouteConnection,
+  SimpleRouteJson,
+} from "lib/types/srj-types"
 
 const createNode = (
   nodeId: string,
@@ -51,26 +55,37 @@ const obstacles: Obstacle[] = nodes.map((node) => ({
   height: 0.2,
   connectedTo: [],
 }))
-const drcEvaluator: DrcEvaluator = () => {
-  const errors = inputRoutes.map((route, index) => ({
-    type: "pcb_trace_error",
-    pcb_trace_id: `${route.connectionName}_0`,
-    pcb_trace_ids: [`${route.connectionName}_0`],
-    pcb_trace_error_id: `overlap_${route.connectionName}_0_obstacle_${index}`,
-    center: { x: 0, y: index === 0 ? -2 : 2 },
-    message: "independent high-density DRC",
-  }))
-  return { errors, errorsWithCenters: errors }
-}
-
-test("Pipeline9 preserves routes when no single node can clear every DRC", (): void => {
+test("Pipeline9 retains a local repair while independent node DRCs remain", (): void => {
+  const connMap = new ConnectivityMap({ A: ["A"], B: ["B"] })
+  const srj: SimpleRouteJson = {
+    layerCount: 2,
+    minTraceWidth: 0.1,
+    minViaDiameter: 0.3,
+    bounds: { minX: -3, maxX: 3, minY: -4, maxY: 4 },
+    connections,
+    obstacles,
+  }
+  const drcEvaluator = createPipeline9HighDensityDrcEvaluator({
+    connections,
+    originalConnections: connections,
+    hdRoutes: inputRoutes,
+    originalFixedHdRoutes: [],
+    fixedHdRoutes: [],
+    changedPreloadedTraceSections: [],
+    originalSrj: srj,
+    srjWithPointPairs: srj,
+    layerCount: 2,
+    obstacles,
+    defaultViaHoleDiameter: 0.15,
+    connMap,
+  })
   const solver = new Pipeline9HighDensityDrcRepairSolver({
     nodePortPoints: nodes,
     hdRoutes: inputRoutes,
     fixedHdRoutes: [],
     newConnections: connections,
     drcEvaluator,
-    connMap: new ConnectivityMap({ A: ["A"], B: ["B"] }),
+    connMap,
     colorMap: {},
     obstacles,
     layerCount: 2,
@@ -82,15 +97,31 @@ test("Pipeline9 preserves routes when no single node can clear every DRC", (): v
     effort: 0.1,
   })
 
+  solver.step()
+  const initialDrcIssueCount = Number(solver.stats.initialDrcIssueCount)
+  while (
+    !solver.solved &&
+    !solver.failed &&
+    solver.currentErrors.length >= initialDrcIssueCount
+  ) {
+    solver.step()
+  }
+
+  expect(Number(solver.stats.acceptedRepairCount)).toBeGreaterThan(0)
+  expect(solver.currentErrors.length).toBeGreaterThan(0)
+  expect(solver.currentErrors.length).toBeLessThan(
+    initialDrcIssueCount,
+  )
+  expect(solver.outputHdRoutes[1]).toBe(inputRoutes[1])
+
   solver.solve()
 
   expect(solver.solved).toBe(true)
   expect(solver.failed).toBe(false)
   expect(solver.stats).toMatchObject({
-    initialDrcIssueCount: 2,
-    finalDrcIssueCount: 2,
-    attemptedNodeCount: 0,
-    acceptedNodeCount: 0,
+    finalDrcIssueCount: 0,
+    attemptedNodeCount: 2,
+    acceptedNodeCount: 2,
   })
-  expect(solver.getOutput()).toBe(inputRoutes)
+  expect(solver.getOutput()).not.toEqual(inputRoutes)
 })
