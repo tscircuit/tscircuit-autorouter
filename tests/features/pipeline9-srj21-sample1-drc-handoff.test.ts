@@ -123,9 +123,17 @@ test("Pipeline9 clears SRJ21 sample1's two formerly retained pad pairs", async (
     routedTraces: solver.getOutputSimplifiedPcbTraces(),
   })
   console.info(
-    JSON.stringify({ dataset: "srj21", sampleNumber: 1, stage: "final", errors }),
+    JSON.stringify({
+      dataset: "srj21",
+      sampleNumber: 1,
+      stage: "final",
+      errors,
+    }),
   )
   expect(finalHandoffErrors).toBeDefined()
+  if (!finalHandoffErrors) {
+    throw new Error("Expected the final Pipeline9 DRC handoff")
+  }
   expect(errors).toEqual(finalHandoffErrors)
   // Same-machine f81b7519 benchmark confirms both formerly retained pairs clear.
   expect(errors).toHaveLength(0)

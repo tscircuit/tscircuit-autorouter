@@ -241,18 +241,15 @@ test("Pipeline9 repairs sample9 pad clearance without displacing either via", ()
   const firstScaleTrials = observations.filter(
     (observation) => observation.scale === firstScale,
   )
-  expect(firstScaleTrials.map((observation) => observation.family)).toEqual([
-    "pad-wire",
-    "native",
-    "pad-wire",
-  ])
+  expect(
+    firstScaleTrials.slice(0, 2).map((observation) => observation.family),
+  ).toEqual(["pad-wire", "native"])
   const firstWire = firstScaleTrials[0]!.candidate
   const native = firstScaleTrials[1]!.candidate
-  const secondWire = firstScaleTrials[2]!.candidate
   expect(firstWire.route[1]!.x).toBeGreaterThan(route.route[1]!.x)
-  expect(secondWire.route[1]!.x).toBeGreaterThan(firstWire.route[1]!.x)
-  // The native family's incidental via motion never leaks into the next
-  // cumulative wire-only trial. Each family starts from its own incumbent.
+  // The corrected first wire move clears the official constraint. A later
+  // slot may now have no movable witness; attempts still retain the same
+  // schedule, and the independent native family starts from the original via.
   const originalVia = route.vias[0]!
   const padCenter = srj.obstacles[0]!.center
   const viaDistance = Math.hypot(
@@ -264,7 +261,7 @@ test("Pipeline9 repairs sample9 pad clearance without displacing either via", ()
       ((originalVia.x - padCenter.x) / viaDistance) * MAX_ERROR_MOVE,
     12,
   )
-  expect(secondWire.vias).toEqual(route.vias)
+  expect(firstWire.vias).toEqual(route.vias)
   for (const scale of getForceScalesForEffort(1)) {
     const scaleAttempts = attempts.filter((attempt) => attempt.scale === scale)
     expect(scaleAttempts.length).toBeLessThanOrEqual(

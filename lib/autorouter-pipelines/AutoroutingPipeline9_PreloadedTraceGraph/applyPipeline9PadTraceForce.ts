@@ -9,8 +9,13 @@ type Pipeline9PadTraceForceParams = {
   route: HighDensityRoute
   target: Pipeline9PadCopperForceTarget
   protectedPointIndexes: ReadonlySet<number>
-  obstacleMargin: number
+  minimumClearance: number
   scale: number
+}
+
+export type Pipeline9PadTraceForceMobility = {
+  pointIndexes: number[]
+  contactWeight: number
 }
 
 export const getPipeline9PadTraceForceMovablePointIndexes = ({
@@ -86,37 +91,82 @@ export const getPipeline9PadTraceForceMovablePointIndexes = ({
   return [startIndex, endIndex].filter((index) => !fixedIndexes.has(index))
 }
 
+export const getPipeline9PadTraceForceMobility = ({
+  route,
+  target,
+  protectedPointIndexes,
+}: Pick<
+  Pipeline9PadTraceForceParams,
+  "route" | "target" | "protectedPointIndexes"
+>): Pipeline9PadTraceForceMobility => {
+  const pointIndexes = getPipeline9PadTraceForceMovablePointIndexes({
+    route,
+    target,
+    protectedPointIndexes,
+  })
+  // Translating both endpoints moves the complete segment rigidly. With one
+  // locked endpoint, only the witness's barycentric share of the free endpoint
+  // displacement reaches the original contact point.
+  if (pointIndexes.length !== 1) {
+    return { pointIndexes, contactWeight: pointIndexes.length === 2 ? 1 : 0 }
+  }
+  const movableIndex = pointIndexes[0]!
+  const fixedIndex =
+    movableIndex === target.segmentIndex
+      ? target.segmentIndex + 1
+      : target.segmentIndex
+  const fixed = route.route[fixedIndex]!
+  const movable = route.route[movableIndex]!
+  const segmentX = movable.x - fixed.x
+  const segmentY = movable.y - fixed.y
+  const length = Math.hypot(segmentX, segmentY)
+  if (!Number.isFinite(length) || length === 0) {
+    throw new Error("Pipeline9 pad-wire mobility requires a finite segment")
+  }
+  const weight =
+    ((target.tracePoint.x - fixed.x) * (segmentX / length) +
+      (target.tracePoint.y - fixed.y) * (segmentY / length)) /
+    length
+  if (!Number.isFinite(weight)) {
+    throw new Error("Pipeline9 pad-wire mobility requires a finite witness")
+  }
+  return { pointIndexes, contactWeight: Math.max(0, Math.min(1, weight)) }
+}
+
 /** Moves only the offending wire's free endpoints, never incidental vias. */
 export const applyPipeline9PadTraceForce = ({
   route,
   target,
   protectedPointIndexes,
-  obstacleMargin,
+  minimumClearance,
   scale,
 }: Pipeline9PadTraceForceParams): boolean => {
-  const movableIndexes = getPipeline9PadTraceForceMovablePointIndexes({
+  const { pointIndexes, contactWeight } = getPipeline9PadTraceForceMobility({
     route,
     target,
     protectedPointIndexes,
   })
   // A contact/interior witness has no outward normal. It is outside this
   // clearance-displacement family's domain; the native family is independent.
-  if (target.distance === 0 || movableIndexes.length === 0) return false
+  if (target.distance === 0 || contactWeight === 0) return false
+  if (!Number.isFinite(minimumClearance) || minimumClearance < 0) {
+    throw new Error("Pipeline9 pad-wire force requires an official clearance")
+  }
   const start = route.route[target.segmentIndex]!
   const requiredDistance =
     (start.traceThickness ?? route.traceThickness) / 2 +
-    obstacleMargin +
+    minimumClearance +
     CLEARANCE_SLACK
   const penetration = requiredDistance - target.distance
   if (penetration <= 0) return false
   const move = Math.min(
     TRACE_PAD_REPAIR_MAX_MOVE * Math.abs(scale),
-    penetration + CLEARANCE_SLACK,
+    (penetration + CLEARANCE_SLACK) / contactWeight,
   )
   if (move === 0) return false
   const dx = ((target.tracePoint.x - target.center.x) / target.distance) * move
   const dy = ((target.tracePoint.y - target.center.y) / target.distance) * move
-  for (const index of movableIndexes) {
+  for (const index of pointIndexes) {
     const point = route.route[index]!
     point.x += dx
     point.y += dy

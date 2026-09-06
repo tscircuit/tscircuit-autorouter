@@ -145,6 +145,7 @@ export class Pipeline9HighDensityDrcRepairSolver extends BaseSolver {
   private readonly nodeRepairBudgets = new Map<string, NodeRepairBudget>()
   private readonly nodeForceErrorCursorById = new Map<string, number>()
   private nodePortPoints: NodeWithPortPoints[]
+  private nextNodeIndex = 0
   outputHdRoutes: HighDensityRoute[]
   currentErrors: Pipeline9DrcError[]
   activeNode: NodeWithPortPoints | null = null
@@ -193,6 +194,8 @@ export class Pipeline9HighDensityDrcRepairSolver extends BaseSolver {
       nodeRepairAttemptCount: 0,
       acceptedNodeCount: 0,
       acceptedRepairCount: 0,
+      acceptedDrcCountReducingRepairCount: 0,
+      acceptedSeverityOnlyRepairCount: 0,
       acceptedForceRepairCount: 0,
       acceptedSeamForceRepairCount: 0,
       acceptedRerouteRepairCount: 0,
@@ -335,14 +338,23 @@ export class Pipeline9HighDensityDrcRepairSolver extends BaseSolver {
         `Pipeline9 cannot find high-density node "${missingNodeId}" selected for DRC repair`,
       )
     }
-    return this.nodePortPoints.find((node) => {
+    for (let offset = 0; offset < this.nodePortPoints.length; offset++) {
+      const nodeIndex =
+        (this.nextNodeIndex + offset) % this.nodePortPoints.length
+      const node = this.nodePortPoints[nodeIndex]!
       const budget = this.nodeRepairBudgets.get(node.capacityMeshNodeId)
-      return (
+      if (
         currentDrcNodeIds.has(node.capacityMeshNodeId) &&
         !this.attemptedNodeIdsAtCurrentRevision.has(node.capacityMeshNodeId) &&
         (budget === undefined || budget.attempts < budget.maxAttempts)
-      )
-    })
+      ) {
+        // Accepted severity improvements can make this node eligible again.
+        // Give later affected nodes a turn before revisiting that incumbent.
+        this.nextNodeIndex = (nodeIndex + 1) % this.nodePortPoints.length
+        return node
+      }
+    }
+    return undefined
   }
 
   private evaluateCandidateRoutes(
@@ -754,6 +766,11 @@ export class Pipeline9HighDensityDrcRepairSolver extends BaseSolver {
       )
     }
     this.invalidateChangedNodeContexts(this.acceptedCandidate.routes)
+    const improvementStat =
+      this.acceptedCandidate.errors.length < this.currentErrors.length
+        ? "acceptedDrcCountReducingRepairCount"
+        : "acceptedSeverityOnlyRepairCount"
+    this.stats[improvementStat] = Number(this.stats[improvementStat]) + 1
     this.outputHdRoutes = this.acceptedCandidate.routes
     this.currentErrors = this.acceptedCandidate.errors
     this.acceptedNodeIds.add(this.activeNode.capacityMeshNodeId)

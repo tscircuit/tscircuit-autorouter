@@ -1,10 +1,11 @@
 import { expect, test } from "bun:test"
 import { convertPipeline7HdRoutesToSimplifiedPcbTraces } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/convertPipeline7HdRoutesToSimplifiedPcbTraces"
+import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
 import { addAutoroutingViaTraceIds } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9JointDrcRepairSolver"
 import { getPipeline9DrcErrorTraceIds } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/pipeline9JointDrcRepairUtils"
-import type { HighDensityRoute } from "lib/types/high-density-types"
-import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
 import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
+import type { HighDensityRoute } from "lib/types/high-density-types"
+import { getBoundsFromNodeWithPortPoints } from "lib/utils/getBoundsFromNodeWithPortPoints"
 import { loadScenarioBySampleNumber } from "../../scripts/benchmark/scenarios"
 
 test("Pipeline9 repairs SRJ18 sample 12", async (): Promise<void> => {
@@ -13,6 +14,7 @@ test("Pipeline9 repairs SRJ18 sample 12", async (): Promise<void> => {
     structuredClone(scenario),
     { cacheProvider: null, effort: 1 },
   )
+  const targetConnectionName = "source_trace_13__source_net_13_mst7"
   const stageOutputs: Record<string, () => HighDensityRoute[]> = {
     highDensityRepairSolver: () => solver.highDensityRepairSolver!.getOutput(),
     highDensityDrcRepairSolver: () =>
@@ -94,6 +96,66 @@ test("Pipeline9 repairs SRJ18 sample 12", async (): Promise<void> => {
     const errorCountByType: Record<string, number> = {}
     for (const error of errors) {
       errorCountByType[error.type] = (errorCountByType[error.type] ?? 0) + 1
+    }
+    const isHighDensityHandoff =
+      stage === "highDensityRepairSolver" ||
+      stage === "highDensityDrcRepairSolver"
+    const targetPads = circuitJson.filter(
+      (element) =>
+        element.type === "pcb_smtpad" &&
+        element.pcb_smtpad_id === "pcb_smtpad_397",
+    )
+    let targetFragmentIndex = 0
+    for (const [globalRouteIndex, route] of hdRoutes.entries()) {
+      if (route.connectionName !== targetConnectionName) continue
+      const traceId = `${targetConnectionName}_${targetFragmentIndex++}`
+      const node = isHighDensityHandoff
+        ? solver.highDensityNodePortPoints?.find(
+            (candidate) => candidate.capacityMeshNodeId === route.regionId,
+          )
+        : undefined
+      // One target fragment per record avoids oversized all-board geometry
+      // logs. Original topology is labeled explicitly: accepted seam moves
+      // update the HD repair solver's private nodes, not these caller inputs.
+      console.info(
+        JSON.stringify({
+          dataset: "srj18",
+          sampleNumber: 12,
+          stage,
+          event: "pad397-target-geometry",
+          globalRouteIndex,
+          traceId,
+          hdRoute: route,
+          serializedTraces: routedTraces.filter(
+            (trace) => trace.pcb_trace_id === traceId,
+          ),
+          targetPads,
+          targetErrors: ownedCopperErrors.filter((error) =>
+            getPipeline9DrcErrorTraceIds(error).includes(traceId),
+          ),
+          originalNode: node
+            ? {
+                capacityMeshNodeId: node.capacityMeshNodeId,
+                center: node.center,
+                width: node.width,
+                height: node.height,
+                availableZ: node.availableZ,
+                nativeBounds: getBoundsFromNodeWithPortPoints(node),
+                totalPortPointCount: node.portPoints.length,
+                targetPortPoints: node.portPoints.filter(
+                  (point) => point.connectionName === targetConnectionName,
+                ),
+                targetPortPointsInPairs: node.portPointsInPairs?.filter(
+                  (pair) =>
+                    pair.some(
+                      (point) =>
+                        point.connectionName === targetConnectionName,
+                    ),
+                ),
+              }
+            : undefined,
+        }),
+      )
     }
     console.info(
       JSON.stringify({

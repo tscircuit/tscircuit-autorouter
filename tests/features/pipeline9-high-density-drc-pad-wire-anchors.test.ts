@@ -117,7 +117,7 @@ test("Pipeline9 pad-wire motion preserves via stacks, terminals and metadata", (
         route,
         target: target!,
         protectedPointIndexes,
-        obstacleMargin: 0.15,
+        minimumClearance: 0.15,
         scale: 1,
       }),
       name,

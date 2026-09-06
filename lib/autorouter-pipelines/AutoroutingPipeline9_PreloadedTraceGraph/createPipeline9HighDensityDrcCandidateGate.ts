@@ -3,12 +3,15 @@ import {
   checkEachPcbTraceNonOverlapping,
   checkPadTraceClearance,
   checkSameNetViaSpacing,
-  checkViaTraceClearance,
 } from "@tscircuit/checks"
 import type { AnyCircuitElement, PcbTrace, PcbVia } from "circuit-json"
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import { RELAXED_TRACE_CLEARANCE } from "lib/testing/drcPresets"
 import { MIN_VIA_TO_VIA_CLEARANCE } from "lib/testing/getDrcErrors"
+import {
+  createPreparedViaTraceClearanceChecker,
+  type PreparedViaTraceClearanceChecker,
+} from "lib/testing/utils/createPreparedViaTraceClearanceChecker"
 import type { HighDensityRoute } from "lib/types/high-density-types"
 import { arePipeline9HighDensityDrcPairIdentifiersUnambiguous } from "./arePipeline9HighDensityDrcPairIdentifiersUnambiguous"
 import {
@@ -105,6 +108,7 @@ const evaluateScopedCopper = (
   traceIds: ReadonlySet<string>,
   viaSites: ReadonlySet<string>,
   timings: ScopedCopperCheckTimings,
+  evaluateViaTraceClearance: PreparedViaTraceClearanceChecker,
 ): Pipeline9DrcError[] => {
   const circuitJson = snapshot.circuitJson.flatMap(
     (element): AnyCircuitElement[] => {
@@ -142,7 +146,7 @@ const evaluateScopedCopper = (
   const traceErrors = checkEachPcbTraceNonOverlapping(circuitJson, traceOptions)
   timings.scopedTraceOverlapCheckTimeMs += performance.now() - overlapStartedAt
   const viaTraceStartedAt = performance.now()
-  const viaTraceErrors = checkViaTraceClearance(circuitJson, traceOptions)
+  const viaTraceErrors = evaluateViaTraceClearance(circuitJson, traceOptions)
   timings.scopedViaTraceCheckTimeMs += performance.now() - viaTraceStartedAt
   const padTraceStartedAt = performance.now()
   const padTraceErrors = checkPadTraceClearance(circuitJson, traceOptions)
@@ -165,6 +169,7 @@ export const createPipeline9HighDensityDrcCandidateGate = ({
 }: {
   getSnapshot: (routes: HighDensityRoute[]) => Pipeline9HighDensityDrcSnapshot
 }): Pipeline9HighDensityDrcCandidateGate => {
+  const evaluateViaTraceClearance = createPreparedViaTraceClearanceChecker()
   const copperBySnapshot = new WeakMap<
     Pipeline9HighDensityDrcSnapshot,
     SnapshotCopper
@@ -307,6 +312,7 @@ export const createPipeline9HighDensityDrcCandidateGate = ({
             selectedTraceIds,
             selectedViaSites,
             timings,
+            evaluateViaTraceClearance,
           )
     baselineBySnapshot.set(currentSnapshot, {
       contextKey,
@@ -317,6 +323,7 @@ export const createPipeline9HighDensityDrcCandidateGate = ({
       selectedTraceIds,
       selectedViaSites,
       timings,
+      evaluateViaTraceClearance,
     )
     return {
       currentErrors,

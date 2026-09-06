@@ -19,7 +19,7 @@ import { convertHdRouteToSimplifiedRoute } from "lib/utils/convertHdRouteToSimpl
 import { getBoundsFromNodeWithPortPoints } from "lib/utils/getBoundsFromNodeWithPortPoints"
 import {
   applyPipeline9PadTraceForce,
-  getPipeline9PadTraceForceMovablePointIndexes,
+  getPipeline9PadTraceForceMobility,
 } from "./applyPipeline9PadTraceForce"
 import type { Pipeline9HighDensityForceContext } from "./getPipeline9HighDensityForceObstacles"
 import { getPipeline9PadCopperForceTarget } from "./getPipeline9PadCopperForceTarget"
@@ -426,11 +426,21 @@ export function* getPipeline9HighDensityForceCandidates({
     const canApplyPadWireForce =
       originalPadTarget !== undefined &&
       originalPadTarget.distance > 0 &&
-      getPipeline9PadTraceForceMovablePointIndexes({
+      getPipeline9PadTraceForceMobility({
         route: hdRoutes[primaryRouteIndex]!,
         target: originalPadTarget,
         protectedPointIndexes: originalProtectedIndexes,
-      }).length > 0
+      }).contactWeight > 0
+    if (
+      canApplyPadWireForce &&
+      (typeof error.minimum_clearance !== "number" ||
+        !Number.isFinite(error.minimum_clearance) ||
+        error.minimum_clearance < 0)
+    ) {
+      throw new Error(
+        "Pipeline9 pad-wire target requires an official clearance",
+      )
+    }
     const families: Pipeline9HighDensityForceFamily[] = canApplyPadWireForce
       ? ["pad-wire", "native"]
       : ["native"]
@@ -442,9 +452,13 @@ export function* getPipeline9HighDensityForceCandidates({
       !(Array.isArray(viaOwnerTraceIds) && viaOwnerTraceIds.length > 0) &&
       !(Array.isArray(error.__pad_ids) && error.__pad_ids.length > 0) &&
       participantTraceIds.length === 2 &&
-      participantTraceIds.every((traceId) => traceRouteIndexById.has(traceId)) &&
+      participantTraceIds.every((traceId) =>
+        traceRouteIndexById.has(traceId),
+      ) &&
       getTraceRoutePairForError(localError, traceRouteIndexById) !== undefined
-    for (const [scaleIndex, scale] of getForceScalesForEffort(effort).entries()) {
+    for (const [scaleIndex, scale] of getForceScalesForEffort(
+      effort,
+    ).entries()) {
       const states = new Map<
         Pipeline9HighDensityForceFamily,
         ForceFamilyState
@@ -513,7 +527,7 @@ export function* getPipeline9HighDensityForceCandidates({
             target: padTarget!,
             protectedPointIndexes:
               localRoutes[primaryRouteIndex]!.protectedPointIndexes,
-            obstacleMargin,
+            minimumClearance: error.minimum_clearance as number,
             scale,
           })
         } else if (
