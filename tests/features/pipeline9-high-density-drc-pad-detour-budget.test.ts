@@ -183,17 +183,17 @@ test("Pipeline9 uses only duplicate pad-native slots for independent detours and
     ).toEqual(
       ordinary.observations.filter((candidate) => candidate.scale !== -1),
     )
-    expect(ordinary.attempts.filter((attempt) => attempt.scale === -1)).toEqual([
-      { family: "pad-detour-nearest", scale: -1, application: 0 },
-      { family: "pad-detour-opposite", scale: -1, application: 1 },
-    ])
+    expect(ordinary.attempts.filter((attempt) => attempt.scale === -1)).toEqual(
+      [
+        { family: "pad-detour-nearest", scale: -1, application: 0 },
+        { family: "pad-detour-opposite", scale: -1, application: 1 },
+      ],
+    )
     expect(
       withFeedback.attempts.filter((attempt) => attempt.scale === -1),
-    ).toEqual([
-      { family: "native-feedback", scale: -1, application: 0 },
-    ])
-    const detours = ordinary.observations.filter(
-      (candidate) => candidate.family.startsWith("pad-detour-"),
+    ).toEqual([{ family: "native-feedback", scale: -1, application: 0 }])
+    const detours = ordinary.observations.filter((candidate) =>
+      candidate.family.startsWith("pad-detour-"),
     )
     expect(detours).toHaveLength(2)
     for (const detour of detours) {

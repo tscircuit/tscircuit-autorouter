@@ -136,7 +136,14 @@ test("Pipeline9 inserts an official-clean pad bypass without moving the interior
     __pad_ids: [pad.pcb_smtpad_id],
     __pad_copper: [pad],
   }))
-  const original = structuredClone({ route, node, pad, ports, obstacles, errors })
+  const original = structuredClone({
+    route,
+    node,
+    pad,
+    ports,
+    obstacles,
+    errors,
+  })
   for (const effort of [1, 2]) {
     const attempts: ForceAttempt[] = []
     const rejections: ForceRejection[] = []
@@ -169,9 +176,10 @@ test("Pipeline9 inserts an official-clean pad bypass without moving the interior
       observations.push({
         ...attempts.at(-1)!,
         route: candidates[0]!,
-        errors: getDrcErrors(getCircuitJson(candidates[0]!), options).errors.map(
-          (error): Pipeline9DrcError => ({ ...error }),
-        ),
+        errors: getDrcErrors(
+          getCircuitJson(candidates[0]!),
+          options,
+        ).errors.map((error): Pipeline9DrcError => ({ ...error })),
       })
     }
     expect(attemptedErrors).toEqual([0])
@@ -196,11 +204,14 @@ test("Pipeline9 inserts an official-clean pad bypass without moving the interior
     for (const candidate of observations) {
       expect(candidate.errors).toEqual([])
       expect(candidate.route.route).toHaveLength(route.route.length + 4)
-      expect(candidate.route.route.filter((point) => point.pcb_port_id)).toEqual(
-        route.route,
-      )
+      expect(
+        candidate.route.route.filter((point) => point.pcb_port_id),
+      ).toEqual(route.route)
       expect(candidate.route.vias).toEqual(route.vias)
-      expect(candidate.route).toEqual({ ...route, route: candidate.route.route })
+      expect(candidate.route).toEqual({
+        ...route,
+        route: candidate.route.route,
+      })
     }
     expect(observations[0]!.route.route[3]!.y).toBeLessThan(0)
     expect(observations[1]!.route.route[3]!.y).toBeGreaterThan(pad.y)

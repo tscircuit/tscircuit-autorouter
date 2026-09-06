@@ -272,7 +272,7 @@ test("Pipeline9 repairs sample9 pad clearance without displacing either via", ()
     ])
     expect(scaleAttempts.map((attempt) => attempt.family)).toEqual([
       "pad-wire",
-      "native",
+      scale === -1 ? "pad-detour-nearest" : "native",
       "pad-wire",
     ])
   }

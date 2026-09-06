@@ -55,7 +55,8 @@ test("pad detours preserve adjacent protected spans and reject unavailable geome
     obstacles,
     layerCount: 2,
   })
-  if (!target) throw new Error("The protected-span fixture needs its pad target")
+  if (!target)
+    throw new Error("The protected-span fixture needs its pad target")
   expect(target.segmentIndex).toBe(2)
   const original = structuredClone({ route, pad, obstacles, target })
   const candidate = structuredClone(route)

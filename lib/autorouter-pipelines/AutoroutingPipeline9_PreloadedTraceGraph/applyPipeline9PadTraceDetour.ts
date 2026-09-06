@@ -93,7 +93,9 @@ const getPhysicalPadProjection = (
     width <= 0 ||
     height <= 0
   ) {
-    throw new Error("Pipeline9 pad detour requires supported rectangular copper")
+    throw new Error(
+      "Pipeline9 pad detour requires supported rectangular copper",
+    )
   }
   const angle = (rotation * Math.PI) / 180
   const cosine = Math.cos(angle)
@@ -129,10 +131,7 @@ export const applyPipeline9PadTraceDetour = ({
   if (!start || !end) {
     throw new Error("Pipeline9 pad detour requires its selected segment")
   }
-  if (
-    start.z !== end.z ||
-    start.toNextSegmentType === "through_obstacle"
-  ) {
+  if (start.z !== end.z || start.toNextSegmentType === "through_obstacle") {
     return false
   }
   const width = start.traceThickness ?? route.traceThickness
@@ -142,7 +141,9 @@ export const applyPipeline9PadTraceDetour = ({
     !Number.isFinite(width) ||
     width <= 0
   ) {
-    throw new Error("Pipeline9 pad detour requires official clearance and width")
+    throw new Error(
+      "Pipeline9 pad detour requires official clearance and width",
+    )
   }
   const deltaX = end.x - start.x
   const deltaY = end.y - start.y

@@ -126,7 +126,13 @@ test("physical pad detours clear official copper checks while retaining fixed se
       layerCount: 2,
     })
     if (!target) throw new Error("The physical fixture must target its pad")
-    const original = structuredClone({ route, pad, fixedVia, obstacles, target })
+    const original = structuredClone({
+      route,
+      pad,
+      fixedVia,
+      obstacles,
+      target,
+    })
     const initialErrors = evaluate(route).errors
     expect(initialErrors, String(padIndex)).toHaveLength(1)
     if (padIndex === 0) {
@@ -162,9 +168,10 @@ test("physical pad detours clear official copper checks while retaining fixed se
         expect(point.pcb_port_id).toBeUndefined()
         expect(point.toNextSegmentType).toBeUndefined()
       }
-      expect(evaluate(candidate).errors, `${padIndex}:${direction}`).toHaveLength(
-        0,
-      )
+      expect(
+        evaluate(candidate).errors,
+        `${padIndex}:${direction}`,
+      ).toHaveLength(0)
     }
     expect({ route, pad, fixedVia, obstacles, target }).toEqual(original)
   }

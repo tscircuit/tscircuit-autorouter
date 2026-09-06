@@ -1,7 +1,12 @@
 import { expect, test } from "bun:test"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { DrcEvaluator } from "high-density-repair03/lib"
-import { getDrcScaledMaxIterations } from "high-density-repair03/lib/solvers/GlobalDrcForceImproveSolver/solverConfig"
+import {
+  getDrcScaledMaxIterations,
+  getForceScalesForEffort,
+  getMaxTargetedCandidateAttemptsForEffort,
+  MAX_ERROR_MOVE,
+} from "high-density-repair03/lib/solvers/GlobalDrcForceImproveSolver/solverConfig"
 import type { Pipeline9HighDensityForceContext } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/getPipeline9HighDensityForceObstacles"
 import { Pipeline9HighDensityDrcRepairSolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9HighDensityDrcRepairSolver"
 import type {
@@ -13,6 +18,14 @@ import type { SimpleRouteConnection } from "lib/types/srj-types"
 test("Pipeline9 bounds repeated severity-only force repairs and retains the accepted incumbent", (): void => {
   const effort = 1
   const maxNodePasses = getDrcScaledMaxIterations(1, effort)
+  const maxForceStepsPerPass =
+    getForceScalesForEffort(effort).length *
+    getMaxTargetedCandidateAttemptsForEffort(effort)
+  const maxForceTravel =
+    MAX_ERROR_MOVE *
+    Math.max(...getForceScalesForEffort(effort).map(Math.abs)) *
+    getMaxTargetedCandidateAttemptsForEffort(effort) *
+    maxNodePasses
   const route: HighDensityRoute = {
     connectionName: "A",
     rootConnectionName: "A",
@@ -45,7 +58,11 @@ test("Pipeline9 bounds repeated severity-only force repairs and retains the acce
     capacityMeshNodeId: "node-a",
     center: { x: 0, y: 0 },
     width: 100,
-    height: 40,
+    // Height 40 assumed one nudge per accepted pass. The unchanged 48-pass
+    // cap now permits each pass's best bounded cumulative candidate; reserve
+    // its derived travel so this synthetic objective tests termination, not
+    // accidental exhaustion at a fixture boundary.
+    height: 40 + 2 * maxForceTravel,
     availableZ: [0, 1],
     portPoints: [
       { ...route.route[0]!, connectionName: "A" },
@@ -114,11 +131,14 @@ test("Pipeline9 bounds repeated severity-only force repairs and retains the acce
   })
   let lastAcceptedRoutes = solver.outputHdRoutes
   let previousClearance = 0.5
-  // A pass starts on one step and accepts its first force on the next. Bound
-  // this test explicitly so removing the repair budget cannot hang hosted CI.
+  // A severity-only pass enumerates its existing native slots before accepting
+  // the best candidate. Include start/exhaustion and initialization/termination
+  // steps, while keeping the native repair-pass cap unchanged.
   for (
     let step = 0;
-    step < 2 * maxNodePasses + 2 && !solver.solved && !solver.failed;
+    step < (maxForceStepsPerPass + 2) * maxNodePasses + 2 &&
+    !solver.solved &&
+    !solver.failed;
     step++
   ) {
     solver.step()

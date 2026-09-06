@@ -672,11 +672,7 @@ export function* getPipeline9HighDensityForceCandidates({
             : undefined
         let family: Pipeline9HighDensityForceFamily =
           feedbackArguments === undefined ? ordinaryFamily : "native-feedback"
-        if (
-          family === "native" &&
-          scaleIndex === 2 &&
-          canSeedNativeFeedback
-        ) {
+        if (family === "native" && scaleIndex === 2 && canSeedNativeFeedback) {
           // Typed physical-pad native forces use abs(scale), so this entire
           // -1 chain repeats +1. If it is not continuing checked feedback,
           // spend its first two available slots on independent anchored

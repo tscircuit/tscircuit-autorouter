@@ -179,30 +179,32 @@ test("Pipeline9 endpoint pad slots retain distinct native and rigid candidates w
       errors.length * scales.length * maxApplications,
     )
     for (const errorIndex of [0, 1]) {
-      const originalSlots = scales.flatMap((scale, scaleIndex) =>
-        Array.from(
-          { length: maxApplications },
-          (_, application): ForceAttempt => ({
-            errorIndex,
-            family:
-              scaleIndex === 2 && application === 0
-                ? "pad-wire-0"
-                : scaleIndex === 2 && application === 1
-                  ? "pad-detour-nearest"
-                  : scaleIndex === 2 && application === 2
-                    ? "pad-wire-1"
-                    : scaleIndex === 2 && application === 3
-                      ? "pad-detour-opposite"
-                      : application % 2 === 0
-                        ? "pad-wire"
-                        : "native",
-            scale,
-            application,
-          }),
-        ),
-      ).filter(
-        (attempt) => attempt.scale !== -1 || attempt.family !== "native",
-      )
+      const originalSlots = scales
+        .flatMap((scale, scaleIndex) =>
+          Array.from(
+            { length: maxApplications },
+            (_, application): ForceAttempt => ({
+              errorIndex,
+              family:
+                scaleIndex === 2 && application === 0
+                  ? "pad-wire-0"
+                  : scaleIndex === 2 && application === 1
+                    ? "pad-detour-nearest"
+                    : scaleIndex === 2 && application === 2
+                      ? "pad-wire-1"
+                      : scaleIndex === 2 && application === 3
+                        ? "pad-detour-opposite"
+                        : application % 2 === 0
+                          ? "pad-wire"
+                          : "native",
+              scale,
+              application,
+            }),
+          ),
+        )
+        .filter(
+          (attempt) => attempt.scale !== -1 || attempt.family !== "native",
+        )
       expect(
         attempts.filter((attempt) => attempt.errorIndex === errorIndex),
       ).toEqual(originalSlots)
@@ -279,7 +281,9 @@ test("Pipeline9 endpoint pad slots retain distinct native and rigid candidates w
     const native = observations.filter((item) => item.family === "native")
     expect(native).toEqual(expectedNative.filter((item) => item.scale !== -1))
     for (const oldCandidate of expectedNative) {
-      expect(native.map((item) => item.route)).toContainEqual(oldCandidate.route)
+      expect(native.map((item) => item.route)).toContainEqual(
+        oldCandidate.route,
+      )
     }
     const rigid = observations.filter((item) => item.family === "pad-wire")
     for (const scale of [1, 1.75]) {

@@ -1,7 +1,11 @@
 import { expect, test } from "bun:test"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { DrcEvaluator } from "high-density-repair03/lib"
-import { getDrcScaledMaxIterations } from "high-density-repair03/lib/solvers/GlobalDrcForceImproveSolver/solverConfig"
+import {
+  getDrcScaledMaxIterations,
+  getForceScalesForEffort,
+  getMaxTargetedCandidateAttemptsForEffort,
+} from "high-density-repair03/lib/solvers/GlobalDrcForceImproveSolver/solverConfig"
 import { Pipeline9HighDensityDrcRepairSolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9HighDensityDrcRepairSolver"
 import type { Pipeline9HighDensityForceContext } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/getPipeline9HighDensityForceObstacles"
 import type {
@@ -10,7 +14,7 @@ import type {
 } from "lib/types/high-density-types"
 import type { SimpleRouteConnection } from "lib/types/srj-types"
 
-test("Pipeline9 advances the node force cursor past an improving early error", (): void => {
+test("Pipeline9 removes a later error before publishing early severity progress and retains the node cursor", (): void => {
   const routes: HighDensityRoute[] = ["A", "B"].map(
     (connectionName, index): HighDensityRoute => ({
       connectionName,
@@ -124,9 +128,13 @@ test("Pipeline9 advances the node force cursor past an improving early error", (
   const accepted: Array<{ aY: number; bY: number; errorCount: number }> = []
   let previousRoutes = solver.outputHdRoutes
   const maxNodePasses = getDrcScaledMaxIterations(2, 1)
+  const maxForceStepsPerPass =
+    getForceScalesForEffort(1).length *
+    getMaxTargetedCandidateAttemptsForEffort(1)
   for (
     let step = 0;
-    step < 2 * maxNodePasses + 2 && accepted.length < 3;
+    step < (maxForceStepsPerPass + 2) * maxNodePasses + 2 &&
+    accepted.length < 3;
     step++
   ) {
     solver.step()
@@ -140,11 +148,11 @@ test("Pipeline9 advances the node force cursor past an improving early error", (
   }
 
   expect(accepted).toHaveLength(3)
-  expect(accepted[0]!.aY).toBeGreaterThan(0)
-  expect(accepted[0]!.bY).toBe(5)
-  expect(accepted[0]!.errorCount).toBe(2)
-  expect(accepted[1]!.aY).toBe(accepted[0]!.aY)
-  expect(accepted[1]!.bY).toBeGreaterThan(5)
+  expect(accepted[0]!.aY).toBe(0)
+  expect(accepted[0]!.bY).toBeGreaterThan(5)
+  expect(accepted[0]!.errorCount).toBe(1)
+  expect(accepted[1]!.aY).toBeGreaterThan(0)
+  expect(accepted[1]!.bY).toBe(accepted[0]!.bY)
   expect(accepted[1]!.errorCount).toBe(1)
   // Removing B changes the error count. Modulo the new list, the persisted
   // cursor returns to A without resetting the budget or losing the incumbent.

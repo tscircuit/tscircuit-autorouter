@@ -1,7 +1,12 @@
 import { expect, test } from "bun:test"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { DrcEvaluator } from "high-density-repair03/lib"
-import { getDrcScaledMaxIterations } from "high-density-repair03/lib/solvers/GlobalDrcForceImproveSolver/solverConfig"
+import {
+  getDrcScaledMaxIterations,
+  getForceScalesForEffort,
+  getMaxTargetedCandidateAttemptsForEffort,
+  MAX_ERROR_MOVE,
+} from "high-density-repair03/lib/solvers/GlobalDrcForceImproveSolver/solverConfig"
 import type { Pipeline9HighDensityForceContext } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/getPipeline9HighDensityForceObstacles"
 import { Pipeline9HighDensityDrcRepairSolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9HighDensityDrcRepairSolver"
 import type {
@@ -13,6 +18,14 @@ import type { SimpleRouteConnection } from "lib/types/srj-types"
 test("Pipeline9 visits later affected nodes before repeating an improving early node", (): void => {
   const effort = 1
   const maxNodePasses = getDrcScaledMaxIterations(1, effort)
+  const maxForceStepsPerPass =
+    getForceScalesForEffort(effort).length *
+    getMaxTargetedCandidateAttemptsForEffort(effort)
+  const maxForceTravel =
+    MAX_ERROR_MOVE *
+    Math.max(...getForceScalesForEffort(effort).map(Math.abs)) *
+    getMaxTargetedCandidateAttemptsForEffort(effort) *
+    maxNodePasses
   const routes: HighDensityRoute[] = ["A", "B"].map(
     (connectionName, index): HighDensityRoute => ({
       connectionName,
@@ -34,7 +47,11 @@ test("Pipeline9 visits later affected nodes before repeating an improving early 
     capacityMeshNodeId: route.regionId!,
     center: { x: 0, y: index * 100 },
     width: 100,
-    height: 40,
+    // Height 40 assumed one nudge per accepted pass. The unchanged 48-pass
+    // cap now permits each pass's best bounded cumulative candidate; reserve
+    // its derived travel so this synthetic objective tests scheduling, not
+    // accidental exhaustion at a fixture boundary.
+    height: 40 + 2 * maxForceTravel,
     availableZ: [0, 1],
     portPoints: [route.route[0]!, route.route[2]!].map((point) => ({
       ...point,
@@ -126,11 +143,13 @@ test("Pipeline9 visits later affected nodes before repeating an improving early 
   const accepted: Array<{ aY: number; bY: number; errorCount: number }> = []
   let previousRoutes = solver.outputHdRoutes
   // A keeps its native first-visit cap; B needs exactly one additional pass.
-  // One initialization step, two steps per pass, and one termination step
-  // suffice. This explicit bound also catches accidental unbounded retries.
+  // Each severity-only pass enumerates its existing native slots, with one
+  // start and one exhaustion step. Keep initialization/termination bounded too.
   for (
     let step = 0;
-    step < 2 * (maxNodePasses + 1) + 2 && !solver.solved && !solver.failed;
+    step < (maxForceStepsPerPass + 2) * (maxNodePasses + 1) + 2 &&
+    !solver.solved &&
+    !solver.failed;
     step++
   ) {
     const previousActiveNode = solver.activeNode
