@@ -31,18 +31,20 @@ test("Pipeline9 regional repair clears a real via pair without moving fixed copp
     minTraceWidth: 0.1,
     minViaDiameter: 0.4,
     bounds: { minX: -3, minY: -2, maxX: 3, maxY: 2 },
-    obstacles: [-2, 2].map((x: number, index: number): Obstacle => ({
-      type: "rect",
-      center: { x, y: 0 },
-      width: 0.4,
-      height: 0.4,
-      layers: [index === 0 ? "top" : "bottom"],
-      connectedTo: [`pcb_port_${index}`, "signal"],
-      circuitJsonMetadata: {
-        pcb_smtpad_id: `pcb_smtpad_${index}`,
-        pcb_port_id: `pcb_port_${index}`,
-      },
-    })),
+    obstacles: [-2, 2].map(
+      (x: number, index: number): Obstacle => ({
+        type: "rect",
+        center: { x, y: 0 },
+        width: 0.4,
+        height: 0.4,
+        layers: [index === 0 ? "top" : "bottom"],
+        connectedTo: [`pcb_port_${index}`, "signal"],
+        circuitJsonMetadata: {
+          pcb_smtpad_id: `pcb_smtpad_${index}`,
+          pcb_port_id: `pcb_port_${index}`,
+        },
+      }),
+    ),
     connections: [
       {
         name: "signal",

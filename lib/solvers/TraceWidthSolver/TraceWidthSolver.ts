@@ -530,22 +530,15 @@ export class TraceWidthSolver extends BaseSolver {
         let exitRatio: number = 1
         if (dx !== 0) {
           const boundaryX: number = (Math.sign(dx) * obstacle.width) / 2
-          exitRatio = Math.min(
-            exitRatio,
-            (boundaryX - localPrevious.x) / dx,
-          )
+          exitRatio = Math.min(exitRatio, (boundaryX - localPrevious.x) / dx)
         }
         if (dy !== 0) {
           const boundaryY: number = (Math.sign(dy) * obstacle.height) / 2
-          exitRatio = Math.min(
-            exitRatio,
-            (boundaryY - localPrevious.y) / dy,
-          )
+          exitRatio = Math.min(exitRatio, (boundaryY - localPrevious.y) / dy)
         }
         return {
           tangent,
-          neckDistance:
-            neckDistance + segmentLength * Math.max(0, exitRatio),
+          neckDistance: neckDistance + segmentLength * Math.max(0, exitRatio),
         }
       }
       neckDistance += segmentLength

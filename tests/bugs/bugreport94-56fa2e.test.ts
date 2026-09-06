@@ -23,12 +23,13 @@ test("bugreport94-56fa2e.json with Pipeline 9", (): void => {
   const { errors } = getDrcErrors(circuitJson!)
   let diagnostic: string = JSON.stringify(errors)
   if (errors.length > 5) {
-    const affectedTraces: SimplifiedPcbTrace[] = combinePreloadedAndRoutedTraces(
-      srj.traces ?? [],
-      solver.getOutputSimplifiedPcbTraces(),
-    ).filter((trace: SimplifiedPcbTrace): boolean =>
-      diagnostic.includes(JSON.stringify(trace.pcb_trace_id)),
-    )
+    const affectedTraces: SimplifiedPcbTrace[] =
+      combinePreloadedAndRoutedTraces(
+        srj.traces ?? [],
+        solver.getOutputSimplifiedPcbTraces(),
+      ).filter((trace: SimplifiedPcbTrace): boolean =>
+        diagnostic.includes(JSON.stringify(trace.pcb_trace_id)),
+      )
     const affectedNetNames: Set<string> = new Set(
       affectedTraces.map(
         (trace: SimplifiedPcbTrace): string => trace.connection_name,
@@ -62,10 +63,11 @@ test("bugreport94-56fa2e.json with Pipeline 9", (): void => {
           affectedNetNames.has(trace.connection_name),
       ),
       joint: selectRelevantRoutes(joint.getOutput()),
-      jointPreloads: joint.getUpdatedPreloadedTraces().filter(
-        (trace: SimplifiedPcbTrace): boolean =>
+      jointPreloads: joint
+        .getUpdatedPreloadedTraces()
+        .filter((trace: SimplifiedPcbTrace): boolean =>
           affectedNetNames.has(trace.connection_name),
-      ),
+        ),
       postRepair: selectRelevantRoutes(postRepair.simplifiedHdRoutes),
       final: selectRelevantRoutes(solver._getOutputHdRoutes()),
       finalTraces: affectedTraces,

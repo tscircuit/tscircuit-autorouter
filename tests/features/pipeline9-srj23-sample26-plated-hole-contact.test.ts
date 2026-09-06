@@ -24,7 +24,8 @@ test("Pipeline9 avoids accidental plated-hole contact in SRJ23 sample 26", async
 
   expect(solver.solved).toBeTrue()
   expect(solver.failed).toBeFalse()
-  const routedTraces: SimplifiedPcbTrace[] = solver.getOutputSimplifiedPcbTraces()
+  const routedTraces: SimplifiedPcbTrace[] =
+    solver.getOutputSimplifiedPcbTraces()
   const result: EvaluateRelaxedDrcResult = evaluateRelaxedDrc({
     inputSrj: scenario,
     srjWithPointPairs: solver.srjWithPointPairs!,
@@ -46,12 +47,13 @@ test("Pipeline9 avoids accidental plated-hole contact in SRJ23 sample 26", async
           : [],
       ),
     )
-    const affectedTraces: SimplifiedPcbTrace[] = combinePreloadedAndRoutedTraces(
-      scenario.traces ?? [],
-      routedTraces,
-    ).filter((trace: SimplifiedPcbTrace): boolean =>
-      affectedTraceIds.has(trace.pcb_trace_id),
-    )
+    const affectedTraces: SimplifiedPcbTrace[] =
+      combinePreloadedAndRoutedTraces(
+        scenario.traces ?? [],
+        routedTraces,
+      ).filter((trace: SimplifiedPcbTrace): boolean =>
+        affectedTraceIds.has(trace.pcb_trace_id),
+      )
     const affectedNetNames: Set<string> = new Set(
       affectedTraces.map(
         (trace: SimplifiedPcbTrace): string => trace.connection_name,

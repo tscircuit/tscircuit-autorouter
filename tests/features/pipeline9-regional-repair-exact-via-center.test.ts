@@ -31,18 +31,20 @@ test("Pipeline9 regional repair targets the colliding via instead of the long tr
     minTraceWidth: 0.1,
     minViaDiameter: 0.3,
     bounds: { minX: -11, minY: -2, maxX: 11, maxY: 2 },
-    obstacles: [-10, 10].map((x: number, index: number): Obstacle => ({
-      type: "rect",
-      center: { x, y: 0 },
-      width: 0.4,
-      height: 0.4,
-      layers: ["top"],
-      connectedTo: [`pcb_port_${index}`, "signal"],
-      circuitJsonMetadata: {
-        pcb_smtpad_id: `pcb_smtpad_${index}`,
-        pcb_port_id: `pcb_port_${index}`,
-      },
-    })),
+    obstacles: [-10, 10].map(
+      (x: number, index: number): Obstacle => ({
+        type: "rect",
+        center: { x, y: 0 },
+        width: 0.4,
+        height: 0.4,
+        layers: ["top"],
+        connectedTo: [`pcb_port_${index}`, "signal"],
+        circuitJsonMetadata: {
+          pcb_smtpad_id: `pcb_smtpad_${index}`,
+          pcb_port_id: `pcb_port_${index}`,
+        },
+      }),
+    ),
     connections: [
       {
         name: "signal",
