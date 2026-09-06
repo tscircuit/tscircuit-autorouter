@@ -50,7 +50,7 @@ type Pipeline9Repair04SolverParams = {
 /** Owns board state; the external solver receives only one cropped region. */
 export class Pipeline9Repair04Solver extends BaseSolver {
   private routes: HighDensityRoute[]
-  private readonly engine: AutoroutingDrcEngine
+  private engine: AutoroutingDrcEngine | null = null
   private localSolver: Repair04Solver | null = null
   private region: ExtractedRepairRegion | null = null
   private issues: DrcError[] | null = null
@@ -96,11 +96,6 @@ export class Pipeline9Repair04Solver extends BaseSolver {
       input.maxPathSearchNodesSinceAcceptance !== undefined ||
       input.maxPathSearchNodesPerRegion !== undefined
     this.routes = input.hdRoutes
-    this.engine = new AutoroutingDrcEngine(input.srj as any, {
-      // Local DRC uses declared SRJ net aliases. The topology connectivity map
-      // can join distinct declared nets through geometric obstacle aliases.
-      includeTraceViaOwnerMetadata: true,
-    })
     this.MAX_ITERATIONS =
       (input.maxRegions ?? 32) *
         ((input.maxCandidatesPerRegion ?? 8000) * 2 + 6) +
@@ -117,6 +112,11 @@ export class Pipeline9Repair04Solver extends BaseSolver {
   }
 
   private evaluate(routes: HighDensityRoute[]): DrcError[] {
+    this.engine ??= new AutoroutingDrcEngine(this.input.srj as any, {
+      // Local DRC uses declared SRJ net aliases. The topology connectivity map
+      // can join distinct declared nets through geometric obstacle aliases.
+      includeTraceViaOwnerMetadata: true,
+    })
     return this.engine.evaluate([
       ...(this.input.srj.traces ?? []).map((trace) =>
         normalizeRepairTrace(trace as any, this.input.srj.minTraceWidth),
@@ -197,7 +197,6 @@ export class Pipeline9Repair04Solver extends BaseSolver {
 
   override _step(): void {
     if (!this.issues) {
-      this.issues = this.evaluate(this.routes)
       this.referenceErrors = this.evaluateReference(this.routes)
       if (this.input.maxTotalCandidateAttempts !== undefined) {
         this.initialReferenceErrors = this.referenceErrors.length
@@ -215,6 +214,13 @@ export class Pipeline9Repair04Solver extends BaseSolver {
         )
         this.stats = { ...this.stats, ...this.getTotalWorkStats() }
       }
+      // A reference-clean board is returned by identity. Indexed search and
+      // fixed-copper comparisons are needed only if repair will change it.
+      if (this.referenceErrors.length === 0) {
+        this.finishRepair("clean")
+        return
+      }
+      this.issues = this.evaluate(this.routes)
       this.fixedViolations = new Map(
         getFixedObstacleViolations({
           srj: this.input.srj as any,
