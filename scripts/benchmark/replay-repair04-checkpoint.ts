@@ -1,7 +1,10 @@
 import { createHash } from "node:crypto"
 import { readFile, writeFile } from "node:fs/promises"
 import { resolve } from "node:path"
-import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "../../lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
+import {
+  createRepair04BenchmarkPipeline,
+  REPAIR04_BENCHMARK_PIPELINE_VARIANTS,
+} from "./createRepair04BenchmarkPipeline"
 import { getConnectivityMapFromSimpleRouteJson } from "../../lib/utils/getConnectivityMapFromSimpleRouteJson"
 import { getColorMap } from "../../lib/solvers/colors"
 import { evaluateRelaxedDrc } from "../../lib/testing/evaluate-relaxed-drc"
@@ -40,14 +43,10 @@ const checkpoint: Checkpoint = JSON.parse(
   await readFile(resolve(checkpointPath), "utf8"),
 )
 const started = performance.now()
-const pipeline = new AutoroutingPipelineSolver9_PreloadedTraceGraph(
-  checkpoint.originalSrj,
-  {
-    effort: 1,
-    cacheProvider: null,
-    enableRepair04: mode === "candidate",
-  },
-)
+const pipeline = createRepair04BenchmarkPipeline(checkpoint.originalSrj, mode, {
+  effort: 1,
+  cacheProvider: null,
+})
 // Run the inexpensive original preprocessing stage to restore the exact board
 // state. Checkpoints created before pipelineSrj was recorded need this step.
 while (
@@ -73,7 +72,8 @@ const updates = {
   ),
 }
 // These are restored completed-stage outputs, not substitute routing results.
-// Every downstream solver remains the real Pipeline9 implementation.
+// Candidate stages are the production Pipeline9 implementations. Baseline
+// stage substitutions are confined to createRepair04BenchmarkPipeline.
 Object.assign(pipeline, {
   netToPointPairsSolver: {
     solved: true,
@@ -163,7 +163,7 @@ if (baselineOutputPath) {
   baselineGeometryMatches = matches(expected, JSON.parse(encodedOutput))
   if (!baselineGeometryMatches)
     throw new Error(
-      "Disabled checkpoint replay differs from the full baseline structure or geometry by more than 1e-12; do not use its candidate measurements",
+      "Benchmark baseline checkpoint replay differs from the full baseline structure or geometry by more than 1e-12; do not use its candidate measurements",
     )
 }
 const relaxed = evaluateRelaxedDrc({
@@ -176,6 +176,7 @@ const strict = getDrcErrors(relaxed.circuitJson, { includeViaPadChecks: true })
 await writeFile(resolve(outputPath), encodedOutput)
 const result = {
   mode,
+  pipelineVariant: REPAIR04_BENCHMARK_PIPELINE_VARIANTS[mode],
   validationSuite: "repair04-via-pad-v1",
   datasetCommit: checkpoint.datasetCommit,
   inputSha256: checkpoint.inputSha256,

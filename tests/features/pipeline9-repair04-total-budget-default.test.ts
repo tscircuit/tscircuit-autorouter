@@ -4,7 +4,7 @@ import { createPipeline9Repair04Fixture } from "../fixtures/pipeline9-repair04-f
 
 test("unconfigured stages preserve the original untracked child allowance and omit total-budget statistics", (): void => {
   const fixture = createPipeline9Repair04Fixture()
-  const solver = new Pipeline9Repair04Solver({ ...fixture, enabled: true })
+  const solver = new Pipeline9Repair04Solver({ ...fixture })
   solver.step()
   const child = (
     solver as unknown as {

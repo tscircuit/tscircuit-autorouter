@@ -16,7 +16,6 @@ test("total effort scales from the initial reference count with full effort for 
   ] as const) {
     const solver = new Pipeline9Repair04Solver({
       ...fixture,
-      enabled: true,
       maxTotalCandidateAttempts: total,
       ...(threshold === undefined
         ? {}

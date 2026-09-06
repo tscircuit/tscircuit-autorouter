@@ -81,7 +81,6 @@ test("reference-only existing via-in-pad repair moves only the offending physica
     ...fixture,
     connMap,
     referenceDrcEvaluator,
-    enabled: true,
     allowExistingViaRelocation: false,
     maxRegions: 3,
     maxCandidatesPerRegion: 512,
@@ -93,7 +92,6 @@ test("reference-only existing via-in-pad repair moves only the offending physica
     ...fixture,
     connMap,
     referenceDrcEvaluator,
-    enabled: true,
     maxRegions: 3,
     maxCandidatesPerRegion: 512,
   })

@@ -102,8 +102,6 @@ import {
 } from "../AutoroutingPipeline7_MultiGraph/prepare-pipeline7-power-trace-expansion-input"
 
 interface CapacityMeshSolverOptions {
-  /** Disable only for controlled repair04 before/after comparisons. */
-  enableRepair04?: boolean
   /** Disable advanced repair04 layer changes; the first pass is always planar. */
   repair04AllowLayerChanges?: boolean
   /** Disable relocation of existing vias that violate pad rules. */
@@ -840,7 +838,6 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           srj,
           hdRoutes: cms.globalDrcForceImproveSolver!.getOutput(),
           connMap: cms.connMap,
-          enabled: cms.opts.enableRepair04 !== false,
           allowLayerChanges: false,
           allowExistingViaRelocation: false,
           maxRegions: 3,
@@ -882,17 +879,15 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             newConnections: cms.netToPointPairsSolver?.newConnections ?? [],
             newHdRoutes: cms.repair04Solver!.getOutput(),
             finalReferenceDrcEvaluator:
-              cms.opts.enableRepair04 === false
-                ? undefined
-                : createPipeline9FinalDrcAcceptanceEvaluator({
-                    connections: cms.netToPointPairsSolver!.newConnections,
-                    originalSrj: cms.originalSrj,
-                    srjWithPointPairs: cms.srjWithPointPairs!,
-                    obstacles: cms.srj.obstacles,
-                    layerCount: cms.srj.layerCount,
-                    defaultViaHoleDiameter: cms.viaHoleDiameter,
-                    connMap: cms.connMap,
-                  }),
+              createPipeline9FinalDrcAcceptanceEvaluator({
+                connections: cms.netToPointPairsSolver!.newConnections,
+                originalSrj: cms.originalSrj,
+                srjWithPointPairs: cms.srjWithPointPairs!,
+                obstacles: cms.srj.obstacles,
+                layerCount: cms.srj.layerCount,
+                defaultViaHoleDiameter: cms.viaHoleDiameter,
+                connMap: cms.connMap,
+              }),
             updatedPreloadedTraces:
               preloadedTraceUpdates.updatedPreloadedTraces,
             mutatedPreloadedTraceIds: new Set(
@@ -927,7 +922,6 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             srj,
             hdRoutes: cms.pipeline9JointDrcRepairSolver!.getOutput(),
             connMap: cms.connMap,
-            enabled: cms.opts.enableRepair04 !== false,
             allowLayerChanges: cms.opts.repair04AllowLayerChanges !== false,
             traceOnlyFirst: false,
             allowExistingViaRelocation:

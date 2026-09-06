@@ -12,7 +12,6 @@ test("rejected regions retain the cumulative node charge and receive the smaller
   let referenceCalls = 0
   const solver = new Pipeline9Repair04Solver({
     ...fixture,
-    enabled: true,
     maxRegions: 5,
     maxPathSearchNodesPerRegion: 2,
     maxPathSearchNodesSinceAcceptance: 3,

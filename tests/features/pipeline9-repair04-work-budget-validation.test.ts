@@ -22,7 +22,6 @@ test("repair work limits validate input and do not hide checker failures", (): v
         () =>
           new Pipeline9Repair04Solver({
             ...fixture,
-            enabled: true,
             [name]: limit,
           }),
       ).toThrow(`${name} must be a positive safe integer`)
@@ -30,7 +29,6 @@ test("repair work limits validate input and do not hide checker failures", (): v
   }
   const solver = new Pipeline9Repair04Solver({
     ...fixture,
-    enabled: true,
     maxCandidateAttemptsSinceAcceptance: 1,
     referenceDrcEvaluator: (): never => {
       throw new Error("Unexpected checker failure")

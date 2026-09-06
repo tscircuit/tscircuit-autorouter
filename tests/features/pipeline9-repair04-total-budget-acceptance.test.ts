@@ -7,7 +7,6 @@ test("a total stage budget is not replenished by retained regions and limits the
   const fixture = createTotalBudgetFixture()
   const solver = new Pipeline9Repair04Solver({
     ...fixture,
-    enabled: true,
     maxRegions: 10,
     maxInitialCandidateAttempts: 1,
     maxCandidateAttemptsSinceAcceptance: 10,

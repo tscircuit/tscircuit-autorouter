@@ -20,7 +20,6 @@ test("total-work configuration rejects invalid limits and a scaling threshold wi
         () =>
           new Pipeline9Repair04Solver({
             ...fixture,
-            enabled: true,
             maxTotalCandidateAttempts: 10,
             [name]: limit,
           }),
@@ -31,22 +30,7 @@ test("total-work configuration rejects invalid limits and a scaling threshold wi
     () =>
       new Pipeline9Repair04Solver({
         ...fixture,
-        enabled: true,
         fullEffortReferenceErrorCount: 16,
       }),
   ).toThrow("fullEffortReferenceErrorCount requires maxTotalCandidateAttempts")
-  const disabled = new Pipeline9Repair04Solver({
-    ...fixture,
-    enabled: false,
-    maxTotalCandidateAttempts: 10,
-    fullEffortReferenceErrorCount: 16,
-    referenceDrcEvaluator: (): never => {
-      throw new Error("Disabled stage must not call DRC")
-    },
-  })
-  disabled.solve()
-  expect(disabled.stats.completionReason).toBe("disabled")
-  expect(disabled.stats.initialReferenceErrors).toBeNull()
-  expect(disabled.stats.effectiveMaxTotalCandidateAttempts).toBeNull()
-  expect(disabled.getOutput()).toBe(fixture.hdRoutes)
 })

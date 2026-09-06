@@ -7,7 +7,6 @@ test("empty crops charge zero work and malformed completed-child statistics fail
   const makeSolver = (): Pipeline9Repair04Solver =>
     new Pipeline9Repair04Solver({
       ...fixture,
-      enabled: true,
       maxRegions: 2,
       maxInitialCandidateAttempts: 1,
       maxCandidateAttemptsSinceAcceptance: 2,

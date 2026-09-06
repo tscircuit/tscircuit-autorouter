@@ -10,7 +10,6 @@ test("a locally improved but rejected region consumes the parent work budget", (
   const observedCounts: number[] = []
   const solver = new Pipeline9Repair04Solver({
     ...fixture,
-    enabled: true,
     maxCandidateAttemptsSinceAcceptance: 1,
     referenceDrcEvaluator: ({
       routes,

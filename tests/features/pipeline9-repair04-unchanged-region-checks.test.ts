@@ -7,7 +7,6 @@ test("an unchanged bounded result reuses its existing full-board validation", ()
   let referenceCalls = 0
   const solver = new Pipeline9Repair04Solver({
     ...fixture,
-    enabled: true,
     maxRegions: 1,
     maxCandidatesPerRegion: 1,
     referenceDrcEvaluator: () => {

@@ -7,8 +7,7 @@ test("Pipeline9 makes every preloaded trace in an SRJ23 sample 46 DRC region rer
   const { scenario } = await loadScenarioBySampleNumber("srj23", 46)
   const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(
     structuredClone(scenario),
-    // Keep the defect present for the joint repair stage under test.
-    { cacheProvider: null, effort: 1, enableRepair04: false },
+    { cacheProvider: null, effort: 1 },
   )
 
   solver.solve()

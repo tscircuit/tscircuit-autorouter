@@ -9,7 +9,6 @@ test("advanced repair does not crop an existing-via pass without selected vias",
   try {
     const solver = new Pipeline9Repair04Solver({
       ...fixture,
-      enabled: true,
       allowLayerChanges: true,
       traceOnlyFirst: false,
       maxRegions: 1,

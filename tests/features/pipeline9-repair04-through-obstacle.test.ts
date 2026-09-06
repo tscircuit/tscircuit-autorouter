@@ -106,7 +106,6 @@ test("repair04 preserves a real through-obstacle route while repairing nearby co
     hdRoutes: fixture.hdRoutes,
     connMap,
     referenceDrcEvaluator,
-    enabled: true,
     allowLayerChanges: false,
     allowExistingViaRelocation: false,
     maxRegions: 1,

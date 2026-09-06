@@ -7,7 +7,6 @@ test("only a retained full-board improvement replenishes the work allowance", ()
   const fixture = createPipeline9Repair04Fixture()
   const solver = new Pipeline9Repair04Solver({
     ...fixture,
-    enabled: true,
     maxRegions: 2,
     maxInitialCandidateAttempts: 1,
     maxCandidateAttemptsSinceAcceptance: 2,

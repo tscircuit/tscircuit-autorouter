@@ -38,7 +38,6 @@ test("repair04 rejects a local DRC improvement when the full-board reference wor
   const solver = new Pipeline9Repair04Solver({
     ...fixture,
     referenceDrcEvaluator,
-    enabled: true,
     maxRegions: 1,
     maxCandidatesPerRegion: 2000,
   })

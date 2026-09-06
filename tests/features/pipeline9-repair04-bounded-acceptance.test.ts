@@ -15,7 +15,6 @@ test("repair04 clears a reference DRC issue using only a bounded child input and
   expect(beforeErrors.length).toBeGreaterThan(0)
   const solver = new Pipeline9Repair04Solver({
     ...fixture,
-    enabled: true,
     maxRegions: 1,
     maxCandidatesPerRegion: 2000,
   })

@@ -37,7 +37,6 @@ test("repair04 still targets distinct declared nets falsely united by topology c
   const solver = new Pipeline9Repair04Solver({
     ...fixture,
     connMap: falseTopologyMap,
-    enabled: true,
     maxRegions: 1,
     maxCandidatesPerRegion: 37,
   })

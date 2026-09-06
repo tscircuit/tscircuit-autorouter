@@ -11,9 +11,6 @@ test("Pipeline9 routes the full Game Boy Advance parent directly to MCU pads", (
   const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(srj, {
     cacheProvider: null,
     effort: 1,
-    // Preserve the original MCU-pad routing and HD fixed-route ownership
-    // regression. Repair04 has separate default-enabled integration coverage.
-    enableRepair04: false,
   })
 
   expect(srj.connections).toHaveLength(21)

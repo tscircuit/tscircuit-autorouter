@@ -26,7 +26,6 @@ type Pipeline9Repair04SolverParams = {
   hdRoutes: HighDensityRoute[]
   connMap: ConnectivityMap
   referenceDrcEvaluator: DrcEvaluator
-  enabled: boolean
   maxRegions?: number
   maxCandidatesPerRegion?: number
   /** Stop after this many proposals without a retained full-board improvement. */
@@ -169,7 +168,6 @@ export class Pipeline9Repair04Solver extends BaseSolver {
 
   private finishRepair(
     completionReason:
-      | "disabled"
       | "clean"
       | "region-budget"
       | "unsuccessful-work-budget"
@@ -198,10 +196,6 @@ export class Pipeline9Repair04Solver extends BaseSolver {
   }
 
   override _step(): void {
-    if (!this.input.enabled) {
-      this.finishRepair("disabled")
-      return
-    }
     if (!this.issues) {
       this.issues = this.evaluate(this.routes)
       this.referenceErrors = this.evaluateReference(this.routes)

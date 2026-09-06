@@ -7,7 +7,6 @@ test("total-budget exhaustion retains existing geometry and remaining DRC when a
   let evaluations = 0
   const solver = new Pipeline9Repair04Solver({
     ...fixture,
-    enabled: true,
     maxTotalCandidateAttempts: 1,
     referenceDrcEvaluator: () =>
       Array.from({ length: ++evaluations }, () => ({

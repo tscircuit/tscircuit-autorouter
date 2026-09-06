@@ -41,7 +41,6 @@ test("repair04 parent rejects new same-net via-in-pad even when ordinary DRC imp
   const originalSrj = structuredClone(fixture.srj)
   const solver = new Pipeline9Repair04Solver({
     ...fixture,
-    enabled: true,
     maxRegions: 1,
   })
   solver.step()

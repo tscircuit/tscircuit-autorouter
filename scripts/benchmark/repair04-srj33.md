@@ -13,7 +13,7 @@ checkpoints, re-evaluate the unchanged final baseline outputs using the new
 suite in a new baseline directory, retain the exact original output/checkpoint
 bytes, and record the validation-suite marker in the new summary. Old stage
 error arrays are historical diagnostics unless independently re-evaluated.
-The disabled replay must still reproduce the original geometry exactly and
+The benchmark baseline replay must still reproduce the original geometry exactly and
 match the newly evaluated baseline DRC counts before a candidate can pass.
 
 Run these commands from the repository root in the benchmark environment. Keep
@@ -37,9 +37,14 @@ bun scripts/benchmark/repair04-srj33.ts --mode candidate --out-dir /tmp/repair04
 bun scripts/benchmark/compare-repair04-srj33.ts /tmp/repair04-baseline/summary.json /tmp/repair04-candidate/summary.json /tmp/repair04-comparison.json
 ```
 
-Baseline disables only `enableRepair04`. Both runs use the real Pipeline9,
-including its existing downstream joint repair, length matching, and power
-trace expansion. Every board remains in the denominator, including failures
+Candidate mode constructs the unconditional production Pipeline9 directly.
+Baseline mode uses `createRepair04BenchmarkPipeline.ts`, a benchmark-only
+factory that replaces the two repair04 stages with pass-through subclasses
+and omits the joint repair's final acceptance evaluator, matching the prior
+before-repair04 baseline definition. It preserves stage order, every other
+joint repair input, length matching, and power trace expansion. Normal routing
+has no option to disable repair04. New run metadata records `pipelineVariant`
+to distinguish this baseline from the production candidate. Every board remains in the denominator, including failures
 and timeouts. Both runs independently evaluate final output with the existing
 relaxed and default DRC evaluators with via-pad checks explicitly enabled.
 Both sides must use the same validation-suite marker, thresholds, and conversion.
@@ -60,8 +65,9 @@ bun scripts/benchmark/compare-repair04-srj33.ts /tmp/repair04-baseline/summary.j
 ```
 
 The replay restores captured repair03 output and then executes the actual
-remaining Pipeline9 stages. Before enabling repair04 for each board, it runs
-the disabled pipeline and requires the same output structure and metadata,
+remaining Pipeline9 stages using the benchmark factory. Before running the
+unmodified production candidate for each board, it runs the benchmark baseline
+and requires the same output structure and metadata,
 coordinates within `1e-12`, and identical strict and relaxed error counts as
 the full baseline. It records raw output equality and maximum numeric
 difference separately. A failed identity gate excludes that candidate from

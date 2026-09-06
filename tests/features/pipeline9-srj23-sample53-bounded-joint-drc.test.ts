@@ -7,8 +7,7 @@ test("Pipeline9 uses Pipeline7 exact DRC budgets for SRJ23 sample 53", async () 
   const { scenario } = await loadScenarioBySampleNumber("srj23", 53)
   const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(
     structuredClone(scenario),
-    // Keep the defect present for the joint repair stage under test.
-    { cacheProvider: null, effort: 1, enableRepair04: false },
+    { cacheProvider: null, effort: 1 },
   )
 
   solver.solve()

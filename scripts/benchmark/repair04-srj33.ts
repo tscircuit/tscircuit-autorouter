@@ -1,7 +1,10 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises"
 import { resolve } from "node:path"
 import { createHash } from "node:crypto"
-import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "../../lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
+import {
+  createRepair04BenchmarkPipeline,
+  REPAIR04_BENCHMARK_PIPELINE_VARIANTS,
+} from "./createRepair04BenchmarkPipeline"
 import { convertPipeline7HdRoutesToSimplifiedPcbTraces } from "../../lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/convertPipeline7HdRoutesToSimplifiedPcbTraces"
 import { preparePipeline9DrcRoutedTraces } from "../../lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/preparePipeline9DrcRoutedTraces"
 import { evaluateRelaxedDrc } from "../../lib/testing/evaluate-relaxed-drc"
@@ -109,16 +112,10 @@ const runWorker = async (sample: string): Promise<void> => {
   }
   const start = performance.now()
   try {
-    const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(
-      originalSrj,
-      {
-        effort,
-        cacheProvider: null,
-        enableRepair04: mode === "candidate",
-      } as ConstructorParameters<
-        typeof AutoroutingPipelineSolver9_PreloadedTraceGraph
-      >[1],
-    )
+    const solver = createRepair04BenchmarkPipeline(originalSrj, mode, {
+      effort,
+      cacheProvider: null,
+    })
     let captured = false
     let capturedRepair04 = false
     let evaluateStageRoutes:
@@ -320,7 +317,7 @@ if (workerSample) {
         selectedSamples: requested.length > 0 ? requested : EXPECTED_SAMPLE_IDS,
         denominator: 37,
         mode,
-        enableRepair04: mode === "candidate",
+        pipelineVariant: REPAIR04_BENCHMARK_PIPELINE_VARIANTS[mode],
         revision,
         bundleSha256,
         effort,
@@ -408,6 +405,7 @@ if (workerSample) {
             datasetCommit: DATASET_COMMIT,
             validationSuite: VALIDATION_SUITE,
             mode,
+            pipelineVariant: REPAIR04_BENCHMARK_PIPELINE_VARIANTS[mode],
             revision,
             bundleSha256,
             denominator: 37,
