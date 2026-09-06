@@ -110,7 +110,11 @@ test("Pipeline9 Repair03 consumes Core maximum-via DRC errors", () => {
     routedTraces,
   })
   expect(finalDrc.errors).toHaveLength(1)
-  expect(finalDrc.errors[0]?.pcb_trace_error_id).toStartWith(
-    "max_via_count_exceeded_",
-  )
+  const remainingError = finalDrc.errors[0]
+  expect(remainingError?.type).toBe("pcb_trace_error")
+  if (remainingError?.type !== "pcb_trace_error") {
+    throw new Error("Expected the maximum-via check to return a trace error")
+  }
+  expect(remainingError.source_trace_id).toBe("signal")
+  expect(remainingError.message).toContain("exceeding the 0 maximum")
 })

@@ -919,8 +919,7 @@ export type ConvertToCircuitJsonOptions = {
 
 export function createPcbBoardElement(srj: SimpleRouteJson): PcbBoard {
   const { minX, maxX, minY, maxY } = srj.bounds
-  const minViaHoleDiameter =
-    srj.min_via_hole_diameter ?? srj.minViaHoleDiameter
+  const minViaHoleDiameter = srj.min_via_hole_diameter ?? srj.minViaHoleDiameter
   const minViaPadDiameter =
     srj.min_via_pad_diameter ?? srj.minViaPadDiameter ?? srj.minViaDiameter
 
@@ -945,20 +944,17 @@ export function createPcbBoardElement(srj: SimpleRouteJson): PcbBoard {
       : {}),
     ...(srj.minTraceToPadEdgeClearance !== undefined
       ? {
-          min_trace_to_pad_edge_clearance:
-            srj.minTraceToPadEdgeClearance,
+          min_trace_to_pad_edge_clearance: srj.minTraceToPadEdgeClearance,
         }
       : {}),
     ...(srj.minViaEdgeToPadEdgeClearance !== undefined
       ? {
-          min_via_edge_to_pad_edge_clearance:
-            srj.minViaEdgeToPadEdgeClearance,
+          min_via_edge_to_pad_edge_clearance: srj.minViaEdgeToPadEdgeClearance,
         }
       : {}),
     ...(srj.minPadEdgeToPadEdgeClearance !== undefined
       ? {
-          min_pad_edge_to_pad_edge_clearance:
-            srj.minPadEdgeToPadEdgeClearance,
+          min_pad_edge_to_pad_edge_clearance: srj.minPadEdgeToPadEdgeClearance,
         }
       : {}),
     ...(srj.minViaHoleEdgeToViaHoleEdgeClearance !== undefined

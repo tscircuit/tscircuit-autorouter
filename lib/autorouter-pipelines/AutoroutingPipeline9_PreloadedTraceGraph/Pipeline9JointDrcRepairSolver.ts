@@ -10,9 +10,7 @@ import {
 import { BaseSolver } from "lib/solvers/BaseSolver"
 import { RELAXED_DRC_OPTIONS } from "lib/testing/drcPresets"
 import { evaluateCoreRoutingDrc } from "lib/testing/evaluate-core-routing-drc"
-import {
-  combinePreloadedAndRoutedTraces,
-} from "lib/testing/evaluate-relaxed-drc"
+import { combinePreloadedAndRoutedTraces } from "lib/testing/evaluate-relaxed-drc"
 import type {
   Obstacle,
   SimpleRouteConnection,
