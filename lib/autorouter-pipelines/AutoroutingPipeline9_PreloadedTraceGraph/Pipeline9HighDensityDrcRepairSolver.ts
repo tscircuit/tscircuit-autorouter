@@ -572,10 +572,9 @@ export class Pipeline9HighDensityDrcRepairSolver extends BaseSolver {
     this.initialized = true
     const hasPotentialDrc = this.hasPotentialHighDensityDrc()
     this.stats.drcPrecheckFoundPotentialIssue = hasPotentialDrc
-    if (!hasPotentialDrc) {
-      this.solved = true
-      return
-    }
+    // Routing aliases and reconstructed copper can differ from the final DRC
+    // identities. The geometric precheck is diagnostic, never proof that the
+    // owned copper is clean; only the official evaluator can establish that.
     this.currentErrors = this.getRepairableDrcErrors(this.outputHdRoutes)
     this.stats.initialDrcIssueCount = this.currentErrors.length
     this.stats.finalDrcIssueCount = this.currentErrors.length

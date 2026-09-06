@@ -43,7 +43,7 @@ const inputRoutes: HighDensityRoute[] = [
   },
 ]
 
-test("Pipeline9 skips the full DRC evaluator for clean high-density copper", (): void => {
+test("Pipeline9 verifies clean high-density copper with the official DRC evaluator", (): void => {
   let evaluatorCallCount = 0
   const drcEvaluator: DrcEvaluator = () => {
     evaluatorCallCount += 1
@@ -71,7 +71,7 @@ test("Pipeline9 skips the full DRC evaluator for clean high-density copper", ():
 
   expect(solver.solved).toBe(true)
   expect(solver.failed).toBe(false)
-  expect(evaluatorCallCount).toBe(0)
+  expect(evaluatorCallCount).toBe(1)
   expect(solver.stats.drcPrecheckFoundPotentialIssue).toBe(false)
   expect(solver.getOutput()).toBe(inputRoutes)
 })

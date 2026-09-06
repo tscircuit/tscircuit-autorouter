@@ -106,9 +106,7 @@ test("prepared circuit JSON preserves first-fragment seam connectivity and detac
     const port = actual.find((element) => element.type === "pcb_port")
     if (port?.type === "pcb_port") port.layers.push("bottom")
     const pad = actual.find((element) => element.type === "pcb_smtpad")
-    if (pad?.type === "pcb_smtpad") pad.x = 100
-    expect(prepared(routes)).toEqual(
-      convertToCircuitJson(srj, routes, options),
-    )
+    if (pad?.type === "pcb_smtpad" && pad.shape === "rect") pad.x = 100
+    expect(prepared(routes)).toEqual(convertToCircuitJson(srj, routes, options))
   }
 })

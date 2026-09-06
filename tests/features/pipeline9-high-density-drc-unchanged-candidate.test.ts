@@ -30,12 +30,11 @@ test("Pipeline9 rejects a cloned incumbent without repeating official candidate 
   ]
   let fullCalls = 0
   let localCalls = 0
-  const evaluator: Pipeline9HighDensityDrcEvaluator = (): ReturnType<
-    Pipeline9HighDensityDrcEvaluator
-  > => {
-    fullCalls++
-    return { errors, errorsWithCenters: errors }
-  }
+  const evaluator: Pipeline9HighDensityDrcEvaluator =
+    (): ReturnType<Pipeline9HighDensityDrcEvaluator> => {
+      fullCalls++
+      return { errors, errorsWithCenters: errors }
+    }
   evaluator.evaluateLocalCandidate = (): {
     currentErrors: Pipeline9DrcError[]
     candidateErrors: Pipeline9DrcError[]

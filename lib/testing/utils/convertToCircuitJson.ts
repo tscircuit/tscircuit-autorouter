@@ -493,7 +493,8 @@ function createSourceTracesConverter(
       // Check if this source_trace already exists
       const existingSourceTrace = sourceTraces.find(
         (st) =>
-          st.type === "source_trace" && st.source_trace_id === netConnectionName,
+          st.type === "source_trace" &&
+          st.source_trace_id === netConnectionName,
       )
 
       if (existingSourceTrace) {

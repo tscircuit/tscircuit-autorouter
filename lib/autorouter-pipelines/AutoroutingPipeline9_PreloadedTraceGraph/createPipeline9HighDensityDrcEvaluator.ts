@@ -82,8 +82,7 @@ const addCopperOwnerMetadata = (
               : [],
           ),
         ].filter(
-          (id): id is string =>
-            typeof id === "string" && padCenterById.has(id),
+          (id): id is string => typeof id === "string" && padCenterById.has(id),
         ),
       ),
     ]

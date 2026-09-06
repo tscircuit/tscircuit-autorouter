@@ -1,11 +1,15 @@
 import {
   getPipeline9DrcErrorTraceIds,
+  getPipeline9DrcScore,
   isPipeline9DrcCandidateBetter,
   type Pipeline9DrcError,
+  SCORE_EPSILON,
 } from "./pipeline9JointDrcRepairUtils"
 
-const getCopperConflictPairs = (errors: Pipeline9DrcError[]): Set<string> => {
-  const pairs = new Set<string>()
+const getCopperConflictPairErrors = (
+  errors: Pipeline9DrcError[],
+): Map<string, Pipeline9DrcError[]> => {
+  const pairs = new Map<string, Pipeline9DrcError[]>()
   for (const error of errors) {
     const viaOwnerIds = Array.isArray(error.__via_owner_trace_ids)
       ? error.__via_owner_trace_ids.filter(
@@ -80,21 +84,27 @@ const getCopperConflictPairs = (errors: Pipeline9DrcError[]): Set<string> => {
         "Pipeline9 high-density DRC acceptance requires copper participant identities",
       )
     }
+    const pairKeys: string[] = []
     if (identities.length === 1) {
       // Two vias on the same fragment have one normalized copper owner.
-      pairs.add(JSON.stringify([identities[0], identities[0]]))
-      continue
-    }
-    for (let left = 0; left < identities.length; left += 1) {
-      for (let right = left + 1; right < identities.length; right += 1) {
-        pairs.add(JSON.stringify([identities[left], identities[right]]))
+      pairKeys.push(JSON.stringify([identities[0], identities[0]]))
+    } else {
+      for (let left = 0; left < identities.length; left += 1) {
+        for (let right = left + 1; right < identities.length; right += 1) {
+          pairKeys.push(JSON.stringify([identities[left], identities[right]]))
+        }
       }
+    }
+    for (const key of pairKeys) {
+      const pairErrors = pairs.get(key) ?? []
+      pairErrors.push(error)
+      pairs.set(key, pairErrors)
     }
   }
   return pairs
 }
 
-/** Improves local DRC without transferring a violation to previously clear copper. */
+/** Improves DRC without creating a copper pair or worsening an existing pair. */
 export const isPipeline9HighDensityDrcCandidateBetter = (
   candidateErrors: Pipeline9DrcError[],
   currentErrors: Pipeline9DrcError[],
@@ -102,7 +112,21 @@ export const isPipeline9HighDensityDrcCandidateBetter = (
   if (!isPipeline9DrcCandidateBetter(candidateErrors, currentErrors)) {
     return false
   }
-  const currentPairs = getCopperConflictPairs(currentErrors)
-  const candidatePairs = getCopperConflictPairs(candidateErrors)
-  return [...candidatePairs].every((pair) => currentPairs.has(pair))
+  const currentPairs = getCopperConflictPairErrors(currentErrors)
+  const candidatePairs = getCopperConflictPairErrors(candidateErrors)
+  for (const [pair, candidatePairErrors] of candidatePairs) {
+    const currentPairErrors = currentPairs.get(pair)
+    if (!currentPairErrors) return false
+    // A total count reduction must not compensate for a retained pair becoming
+    // harder to repair. Keep Repair03-style severity steps within each pair,
+    // using the same score and numerical tolerance as shared DRC acceptance.
+    if (
+      candidatePairErrors.length > currentPairErrors.length ||
+      getPipeline9DrcScore(candidatePairErrors) >
+        getPipeline9DrcScore(currentPairErrors) + SCORE_EPSILON
+    ) {
+      return false
+    }
+  }
+  return true
 }
