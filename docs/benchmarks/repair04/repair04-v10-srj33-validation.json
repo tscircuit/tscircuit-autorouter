@@ -14,7 +14,8 @@
     "status": "passed",
     "evidenceFile": "v10-delivery-bun-test-run-validated.json",
     "evidenceSha256": "c9498c41605a0841241d6af53efaea49a8291644479b68e6ac1ba3d70f30c316",
-    "scope": "Completed Bun Test workflow attempt2 at exact delivery head; not a claim that every external status is green."
+    "scope": "Completed Bun Test workflow associated with delivery PR head984831c; actual checkout is PR merge634985de, which includes an upstream production change before repair03. This is not an exact-head runtime validation or a claim every external status is green.",
+    "executedSourceCommit": "634985de9c5efc147a7645d3c68493fdc139567e"
   },
   "checks": [
     {
@@ -34,12 +35,13 @@
       "evidenceSha256": "8366207267355d3e3d5bf3bf6e8c94c5f93f6078c34f08973fa2b38cdda6cc92"
     },
     {
-      "name": "Frozen Linux CI group 9",
+      "name": "CI group9 for frozen PR head",
       "status": "failed",
       "commit": "0e9cd6f8f4d31a09439948fed6e7f0155290ad8c",
-      "summary": "Bugreport94 reached its snapshot assertion after 571,967.35 ms; its first four assertions passed, including the at-most-five default DRC limit. The SVG comparison differed by 36.036%; no exact DRC count or expanded-zero result is inferred.",
+      "summary": "Bugreport94 reached its snapshot assertion after 571,967.35 ms; its first four assertions passed, including the at-most-five default DRC limit. The SVG comparison differed by 36.036%; no exact DRC count or expanded-zero result is inferred. Actual checkout was PR merge11e61e1319c04049cdf9ea61a5ed4ee113bc4988, not byte-identical frozen0e9cd6f8.",
       "evidenceFile": "../v10-ci-test9.log",
-      "evidenceSha256": "20e72572af0f90874473c458732c3e92f1f87e4c9adc5e1d3a551dcdddacf843"
+      "evidenceSha256": "20e72572af0f90874473c458732c3e92f1f87e4c9adc5e1d3a551dcdddacf843",
+      "executedSourceCommit": "11e61e1319c04049cdf9ea61a5ed4ee113bc4988"
     },
     {
       "name": "macOS bugreport94 full test",
@@ -61,49 +63,55 @@
       "name": "GitHub Bun Test workflow",
       "status": "passed",
       "commit": "984831c791a5cf6b5160ca293dd4d1a11971544b",
-      "summary": "Completed successfully at this exact commit, workflow run 34004418653, attempt 2. This records the GitHub workflow, separately from the external Vercel preview status.",
+      "summary": "Completed successfully for this associated PR head, workflow run 34004418653, attempt 2. This records the GitHub workflow, separately from the external Vercel preview status. The actual checkout was PR merge634985de9c5efc147a7645d3c68493fdc139567e, including upstream runtime changes; it was not byte-identical to the PR head.",
       "evidenceFile": "v10-delivery-bun-test-run.json",
-      "evidenceSha256": "f955f15b4c93882caa718d83497bde05221f18cf1de7d7a5403c7e2816ec77fb"
+      "evidenceSha256": "f955f15b4c93882caa718d83497bde05221f18cf1de7d7a5403c7e2816ec77fb",
+      "executedSourceCommit": "634985de9c5efc147a7645d3c68493fdc139567e"
     },
     {
       "name": "GitHub Build workflow",
       "status": "passed",
       "commit": "984831c791a5cf6b5160ca293dd4d1a11971544b",
-      "summary": "Completed successfully at this exact commit, workflow run 34004418558, attempt 1. This records the GitHub workflow, separately from the external Vercel preview status.",
+      "summary": "Completed successfully for this associated PR head, workflow run 34004418558, attempt 1. This records the GitHub workflow, separately from the external Vercel preview status. The actual checkout was PR merge634985de9c5efc147a7645d3c68493fdc139567e, including upstream runtime changes; it was not byte-identical to the PR head.",
       "evidenceFile": "v10-delivery-build-run.json",
-      "evidenceSha256": "60d09f5445c94154c8e6ef3d111e075b915d2667d145401c345001ddb32c5283"
+      "evidenceSha256": "60d09f5445c94154c8e6ef3d111e075b915d2667d145401c345001ddb32c5283",
+      "executedSourceCommit": "634985de9c5efc147a7645d3c68493fdc139567e"
     },
     {
       "name": "GitHub Type Check workflow",
       "status": "passed",
       "commit": "984831c791a5cf6b5160ca293dd4d1a11971544b",
-      "summary": "Completed successfully at this exact commit, workflow run 34004418604, attempt 1. This records the GitHub workflow, separately from the external Vercel preview status.",
+      "summary": "Completed successfully for this associated PR head, workflow run 34004418604, attempt 1. This records the GitHub workflow, separately from the external Vercel preview status. The actual checkout was PR merge634985de9c5efc147a7645d3c68493fdc139567e, including upstream runtime changes; it was not byte-identical to the PR head.",
       "evidenceFile": "v10-delivery-type-run.json",
-      "evidenceSha256": "d32aaea12a10ac0f36076db71534de8729f72acee6c055833cb71a0eee28972d"
+      "evidenceSha256": "d32aaea12a10ac0f36076db71534de8729f72acee6c055833cb71a0eee28972d",
+      "executedSourceCommit": "634985de9c5efc147a7645d3c68493fdc139567e"
     },
     {
       "name": "GitHub Format Check workflow",
       "status": "passed",
       "commit": "984831c791a5cf6b5160ca293dd4d1a11971544b",
-      "summary": "Completed successfully at this exact commit, workflow run 34004418661, attempt 2. This records the GitHub workflow, separately from the external Vercel preview status.",
+      "summary": "Completed successfully for this associated PR head, workflow run 34004418661, attempt 2. This records the GitHub workflow, separately from the external Vercel preview status. The actual checkout was PR merge634985de9c5efc147a7645d3c68493fdc139567e, including upstream runtime changes; it was not byte-identical to the PR head.",
       "evidenceFile": "v10-delivery-format-run.json",
-      "evidenceSha256": "b453811f4d021fd42af94bfb0eb26a05de1c668d0ee3786a01d064f5a94e06b7"
+      "evidenceSha256": "b453811f4d021fd42af94bfb0eb26a05de1c668d0ee3786a01d064f5a94e06b7",
+      "executedSourceCommit": "634985de9c5efc147a7645d3c68493fdc139567e"
     },
     {
       "name": "GitHub Vercel Build workflow",
       "status": "passed",
       "commit": "984831c791a5cf6b5160ca293dd4d1a11971544b",
-      "summary": "Completed successfully at this exact commit, workflow run 34004418592, attempt 1. This records the GitHub workflow, separately from the external Vercel preview status.",
+      "summary": "Completed successfully for this associated PR head, workflow run 34004418592, attempt 1. This records the GitHub workflow, separately from the external Vercel preview status. The actual checkout was PR merge634985de9c5efc147a7645d3c68493fdc139567e, including upstream runtime changes; it was not byte-identical to the PR head.",
       "evidenceFile": "v10-delivery-vercel-build-run.json",
-      "evidenceSha256": "263a66f57ff233fe504b2a1d751c2561ae5421c28b4fa1ddc7576607396f3162"
+      "evidenceSha256": "263a66f57ff233fe504b2a1d751c2561ae5421c28b4fa1ddc7576607396f3162",
+      "executedSourceCommit": "634985de9c5efc147a7645d3c68493fdc139567e"
     },
     {
       "name": "Linux CI group9 retry",
       "status": "passed",
       "commit": "984831c791a5cf6b5160ca293dd4d1a11971544b",
-      "summary": "Exact-head retry job101410483299 passed:52 tests passed,7 skipped,0 failed;470 assertion calls. Bugreport94 passed all five unchanged assertions, including snapshot comparison, in519393.18ms. No exact DRC count or expanded-zero result is inferred.",
+      "summary": "PR merge634985de retry job101410483299 passed:52 tests passed,7 skipped,0 failed;470 assertion calls. Bugreport94 passed all five unchanged assertions, including snapshot comparison, in519393.18ms. No exact DRC count or expanded-zero result is inferred. Workflow association is PR head984831c; the tested source was the merge commit.",
       "evidenceFile": "v10-delivery-test9.log",
-      "evidenceSha256": "55c7c8991b1fa818910a1661effbf8a3ef84a571c229604d7d9d8a4c81f4f55f"
+      "evidenceSha256": "55c7c8991b1fa818910a1661effbf8a3ef84a571c229604d7d9d8a4c81f4f55f",
+      "executedSourceCommit": "634985de9c5efc147a7645d3c68493fdc139567e"
     },
     {
       "name": "Delivery first Format installation attempt",
@@ -140,6 +148,11 @@
     "elapsedTimeMs": 519393.18,
     "evidenceFile": "v10-delivery-test9.log",
     "evidenceSha256": "55c7c8991b1fa818910a1661effbf8a3ef84a571c229604d7d9d8a4c81f4f55f",
-    "snapshotMode": "compare"
+    "snapshotMode": "compare",
+    "executedSourceCommit": "634985de9c5efc147a7645d3c68493fdc139567e"
+  },
+  "ciCheckoutProvenance": {
+    "evidenceFile": "v10-ci-checkout-provenance-audit.json",
+    "evidenceSha256": "4335ec1cf7d31d97f030c2475a01c796188dc868f1ac2ab6f2ce9cfb150bb845"
   }
 }

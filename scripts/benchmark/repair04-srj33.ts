@@ -289,11 +289,27 @@ const workerSample = option("--worker", "")
 if (workerSample) {
   await runWorker(workerSample)
 } else {
-  const revisionProcess = Bun.spawn(["git", "rev-parse", "HEAD"], {
-    stdout: "pipe",
-  })
-  const revision = (await new Response(revisionProcess.stdout).text()).trim()
-  await revisionProcess.exited
+  let revision = option("--source-revision", "")
+  if (!revision) {
+    const revisionProcess = Bun.spawn(["git", "rev-parse", "HEAD"], {
+      stdout: "pipe",
+    })
+    revision = (await new Response(revisionProcess.stdout).text()).trim()
+    if ((await revisionProcess.exited) !== 0)
+      throw new Error("Cannot identify benchmark source revision")
+  }
+  if (!/^[a-f0-9]{40}$/.test(revision))
+    throw new Error("Source revision must be a full Git commit SHA")
+  const bundleSha256 = createHash("sha256")
+    .update(new Uint8Array(await readFile(import.meta.path)))
+    .digest("hex")
+  const requested = option("--samples", "").split(",").filter(Boolean)
+  for (const sample of requested) {
+    if (!EXPECTED_SAMPLE_IDS.includes(sample))
+      throw new Error(`Unknown sample ${sample}`)
+  }
+  if (new Set(requested).size !== requested.length)
+    throw new Error("Requested sample list contains duplicates")
   await writeFile(
     resolve(outDir, "configuration.json"),
     JSON.stringify(
@@ -301,13 +317,18 @@ if (workerSample) {
         datasetCommit: DATASET_COMMIT,
         validationSuite: VALIDATION_SUITE,
         samples: EXPECTED_SAMPLE_IDS,
+        selectedSamples: requested.length > 0 ? requested : EXPECTED_SAMPLE_IDS,
         denominator: 37,
         mode,
+        enableRepair04: mode === "candidate",
         revision,
+        bundleSha256,
         effort,
         concurrency,
         timeoutMs,
         bunVersion: Bun.version,
+        architecture: process.arch,
+        platform: process.platform,
         relaxed: {
           traceClearance: 0.1,
           viaClearance: 0.1,
@@ -321,11 +342,6 @@ if (workerSample) {
       2,
     ),
   )
-  const requested = option("--samples", "").split(",").filter(Boolean)
-  for (const sample of requested) {
-    if (!EXPECTED_SAMPLE_IDS.includes(sample))
-      throw new Error(`Unknown sample ${sample}`)
-  }
   const queue = scenarios.filter(
     ([name]) => requested.length === 0 || requested.includes(name),
   )
@@ -335,6 +351,8 @@ if (workerSample) {
     Array.from({ length: concurrency }, async (): Promise<void> => {
       while (queue.length > 0) {
         const [sample, srj] = queue.shift()!
+        const childStart = performance.now()
+        let timerTriggered = false
         const child = Bun.spawn(
           [
             process.execPath,
@@ -352,10 +370,10 @@ if (workerSample) {
           ],
           { stdout: "inherit", stderr: "inherit" },
         )
-        const killTimer = setTimeout(
-          () => child.kill("SIGKILL"),
-          timeoutMs + 60000,
-        )
+        const killTimer = setTimeout(() => {
+          timerTriggered = true
+          child.kill("SIGKILL")
+        }, timeoutMs)
         const code = await child.exited
         clearTimeout(killTimer)
         let result: Result
@@ -370,9 +388,9 @@ if (workerSample) {
               .update(JSON.stringify(srj))
               .digest("hex"),
             solved: false,
-            timedOut: code === 137,
-            elapsedTimeMs: timeoutMs,
-            error: `Worker exited with code ${code}`,
+            timedOut: timerTriggered,
+            elapsedTimeMs: performance.now() - childStart,
+            error: `${timerTriggered ? "Timeout: " : ""}Worker exited with code ${code}`,
           }
           await writeFile(
             resolve(outDir, `${sample}.result.json`),
@@ -390,6 +408,8 @@ if (workerSample) {
             datasetCommit: DATASET_COMMIT,
             validationSuite: VALIDATION_SUITE,
             mode,
+            revision,
+            bundleSha256,
             denominator: 37,
             evaluated: ordered.length,
             complete: ordered.length === 37,
