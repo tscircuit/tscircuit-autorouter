@@ -11,8 +11,8 @@ import {
   createPipeline7HdRoutesToSimplifiedPcbTracesConverter,
 } from "./convertPipeline7HdRoutesToSimplifiedPcbTraces"
 
-const AUTOROUTING_TRACE_CLEARANCE = 0.1
-const AUTOROUTING_VIA_CLEARANCE = 0.1
+const DEFAULT_AUTOROUTING_TRACE_CLEARANCE = 0.1
+const DEFAULT_AUTOROUTING_VIA_CLEARANCE = 0.1
 
 /**
  * Scores Pipeline7 repair candidates with reusable autorouting-only DRC state.
@@ -32,20 +32,42 @@ export const createPipeline7AutoroutingDrcEvaluator = (
     minViaDiameter:
       conversionOptions.originalSrj.minViaDiameter ??
       conversionOptions.srjWithPointPairs.minViaDiameter,
+    minViaHoleDiameter:
+      conversionOptions.originalSrj.minViaHoleDiameter ??
+      conversionOptions.srjWithPointPairs.minViaHoleDiameter,
+    minTraceToPadEdgeClearance:
+      conversionOptions.originalSrj.minTraceToPadEdgeClearance ??
+      conversionOptions.srjWithPointPairs.minTraceToPadEdgeClearance,
+    minViaEdgeToPadEdgeClearance:
+      conversionOptions.originalSrj.minViaEdgeToPadEdgeClearance ??
+      conversionOptions.srjWithPointPairs.minViaEdgeToPadEdgeClearance,
+    minViaHoleEdgeToViaHoleEdgeClearance:
+      conversionOptions.originalSrj.minViaHoleEdgeToViaHoleEdgeClearance ??
+      conversionOptions.srjWithPointPairs
+        .minViaHoleEdgeToViaHoleEdgeClearance,
   }
+  const viaDimensions = getViaDimensions(conversionOptions.originalSrj)
+  const traceClearance =
+    engineSrj.minTraceToPadEdgeClearance ??
+    DEFAULT_AUTOROUTING_TRACE_CLEARANCE
+  const viaClearance =
+    engineSrj.minViaHoleEdgeToViaHoleEdgeClearance ??
+    DEFAULT_AUTOROUTING_VIA_CLEARANCE
   // DRC interactions cannot span farther than the widest copper feature plus
   // clearance. Indexing at that physical scale avoids board-size-dependent
   // cells that become increasingly coarse on large layouts.
   const spatialCellSize =
     Math.max(
-      getViaDimensions(conversionOptions.originalSrj).padDiameter,
+      viaDimensions.padDiameter,
       engineSrj.minTraceWidth,
-    ) + Math.max(AUTOROUTING_TRACE_CLEARANCE, AUTOROUTING_VIA_CLEARANCE)
+    ) + Math.max(traceClearance, viaClearance)
   const engine = new AutoroutingDrcEngine(engineSrj as RepairSimpleRouteJson, {
     connMap: conversionOptions.connMap,
     includeTraceViaOwnerMetadata: true,
-    traceClearance: AUTOROUTING_TRACE_CLEARANCE,
-    viaClearance: AUTOROUTING_VIA_CLEARANCE,
+    traceClearance,
+    viaClearance,
+    viaToPadClearance: engineSrj.minViaEdgeToPadEdgeClearance,
+    viaHoleDiameter: viaDimensions.holeDiameter,
     spatialCellSize,
   })
   const convertCandidateRoutes =

@@ -79,7 +79,7 @@ test("Pipeline9 reuses obstacle connectivity while evaluating changed repair geo
   const warmedConnectivityChecks = connectivityChecks
   const candidate = structuredClone(routes)
   const repeated = evaluate({ traces: [], routes: candidate })
-  expect(repeated).toBe(initial)
+  expect(repeated).toEqual(initial)
 
   // Exact cache hits must not reuse results after copper geometry changes.
   for (const point of candidate[1]!.route) point.x = 0.5
