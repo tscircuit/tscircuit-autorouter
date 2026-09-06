@@ -132,5 +132,9 @@ test("Pipeline9 routes the normal RP2350 core phase without DRC errors", (): voi
     },
   })
 
+  for (const error of errors) {
+    const errorDiagnostic: string = JSON.stringify(error)
+    console.error("RP2350 DRC", errorDiagnostic)
+  }
   expect(errors).toHaveLength(0)
 })

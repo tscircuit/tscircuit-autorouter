@@ -133,6 +133,7 @@ const removeConsecutiveDuplicatePoints = (
 
 const recomputeVias = (
   route: ReadonlyArray<RoutePoint>,
+  originalRoute: HighDensityRoute,
 ): HighDensityRoute["vias"] => {
   const vias: HighDensityRoute["vias"] = []
   const seenLocations = new Set<string>()
@@ -143,7 +144,7 @@ const recomputeVias = (
     if (previousPoint.toNextSegmentType === "through_obstacle") continue
     if (previousPoint.x !== point.x || previousPoint.y !== point.y) {
       throw new Error(
-        `CrossingViaReductionSolver found a layer transition without a via at route point ${index}`,
+        `CrossingViaReductionSolver found a layer transition without a via at route point ${index} in "${originalRoute.connectionName}": ${JSON.stringify({ originalRoute, candidateRoute: route })}`,
       )
     }
 
@@ -465,7 +466,7 @@ export class CrossingViaReductionSolver extends BaseSolver {
     return {
       ...route,
       route: routePoints,
-      vias: recomputeVias(routePoints),
+      vias: recomputeVias(routePoints, route),
     }
   }
 
@@ -505,7 +506,7 @@ export class CrossingViaReductionSolver extends BaseSolver {
       route: {
         ...route,
         route: routePoints,
-        vias: recomputeVias(routePoints),
+        vias: recomputeVias(routePoints, route),
       },
       relocatedVia: { x: split.point.x, y: split.point.y },
     }
@@ -593,7 +594,7 @@ export class CrossingViaReductionSolver extends BaseSolver {
       route: {
         ...route,
         route: routePoints,
-        vias: recomputeVias(routePoints),
+        vias: recomputeVias(routePoints, route),
       },
       relocatedVias,
     }

@@ -10,6 +10,8 @@ import bugReport from "../../fixtures/bug-reports/bugreport94-56fa2e/bugreport94
 import type { SimpleRouteJson, SimplifiedPcbTrace } from "lib/types"
 import { getLastStepSvg } from "../fixtures/getLastStepSvg"
 
+type DiagnosticRoute = HighDensityRoute | SimplifiedPcbTrace
+
 const srj = bugReport.simple_route_json as SimpleRouteJson
 
 test("bugreport94-56fa2e.json with Pipeline 9", (): void => {
@@ -54,32 +56,30 @@ test("bugreport94-56fa2e.json with Pipeline 9", (): void => {
     if (!joint || !postRepair) {
       throw new Error("Completed Pipeline9 output is missing repair stages")
     }
-    const stageDiagnostic: string = JSON.stringify(
-      {
-        errors,
-        affectedNetNames: [...affectedNetNames],
-        preJoint: selectRelevantRoutes(joint.params.newHdRoutes),
-        preJointPreloads: joint.params.updatedPreloadedTraces.filter(
-          (trace: SimplifiedPcbTrace): boolean =>
-            affectedNetNames.has(trace.connection_name),
+    const stages: Record<string, DiagnosticRoute[]> = {
+      preJoint: selectRelevantRoutes(joint.params.newHdRoutes),
+      preJointPreloads: joint.params.updatedPreloadedTraces.filter(
+        (trace: SimplifiedPcbTrace): boolean =>
+          affectedNetNames.has(trace.connection_name),
+      ),
+      joint: selectRelevantRoutes(joint.getOutput()),
+      jointPreloads: joint
+        .getUpdatedPreloadedTraces()
+        .filter((trace: SimplifiedPcbTrace): boolean =>
+          affectedNetNames.has(trace.connection_name),
         ),
-        joint: selectRelevantRoutes(joint.getOutput()),
-        jointPreloads: joint
-          .getUpdatedPreloadedTraces()
-          .filter((trace: SimplifiedPcbTrace): boolean =>
-            affectedNetNames.has(trace.connection_name),
-          ),
-        postRepair: selectRelevantRoutes(postRepair.simplifiedHdRoutes),
-        final: selectRelevantRoutes(solver._getOutputHdRoutes()),
-        finalTraces: affectedTraces,
-        jointStats: joint.stats,
-      },
-      null,
-      2,
-    )
-    // Multiline output avoids GitHub's single-log-line truncation and keeps
-    // the assertion message small while preserving replayable stage geometry.
-    console.error(stageDiagnostic)
+      postRepair: selectRelevantRoutes(postRepair.simplifiedHdRoutes),
+      final: selectRelevantRoutes(solver._getOutputHdRoutes()),
+      finalTraces: affectedTraces,
+    }
+    // Emit one route per call: even a multiline board-sized console payload
+    // can be truncated before the later stages reach the CI log.
+    for (const [stage, routes] of Object.entries(stages)) {
+      for (const route of routes) {
+        console.error("Bug94 route", JSON.stringify({ stage, route }))
+      }
+    }
+    console.error("Bug94 joint stats", JSON.stringify(joint.stats))
   }
   expect(errors.length, diagnostic).toBeLessThanOrEqual(5)
   const targetOverlap = errors.find(
