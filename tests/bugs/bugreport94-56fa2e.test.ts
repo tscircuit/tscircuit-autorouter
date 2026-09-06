@@ -57,20 +57,20 @@ test("bugreport94-56fa2e.json with Pipeline 9", (): void => {
       throw new Error("Completed Pipeline9 output is missing repair stages")
     }
     const stages: Record<string, DiagnosticRoute[]> = {
-      preJoint: selectRelevantRoutes(joint.params.newHdRoutes),
-      preJointPreloads: joint.params.updatedPreloadedTraces.filter(
-        (trace: SimplifiedPcbTrace): boolean =>
-          affectedNetNames.has(trace.connection_name),
-      ),
-      joint: selectRelevantRoutes(joint.getOutput()),
+      finalTraces: affectedTraces,
+      final: selectRelevantRoutes(solver._getOutputHdRoutes()),
+      postRepair: selectRelevantRoutes(postRepair.simplifiedHdRoutes),
       jointPreloads: joint
         .getUpdatedPreloadedTraces()
         .filter((trace: SimplifiedPcbTrace): boolean =>
           affectedNetNames.has(trace.connection_name),
         ),
-      postRepair: selectRelevantRoutes(postRepair.simplifiedHdRoutes),
-      final: selectRelevantRoutes(solver._getOutputHdRoutes()),
-      finalTraces: affectedTraces,
+      joint: selectRelevantRoutes(joint.getOutput()),
+      preJointPreloads: joint.params.updatedPreloadedTraces.filter(
+        (trace: SimplifiedPcbTrace): boolean =>
+          affectedNetNames.has(trace.connection_name),
+      ),
+      preJoint: selectRelevantRoutes(joint.params.newHdRoutes),
     }
     // Emit one route per call: even a multiline board-sized console payload
     // can be truncated before the later stages reach the CI log.

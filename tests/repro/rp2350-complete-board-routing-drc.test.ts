@@ -3,6 +3,7 @@ import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib"
 import type { Pipeline9HighDensitySolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9HighDensitySolver"
 import type { BaseSolver } from "lib/solvers/BaseSolver"
 import {
+  combinePreloadedAndRoutedTraces,
   evaluateRelaxedDrc,
   type EvaluateRelaxedDrcResult,
 } from "lib/testing/evaluate-relaxed-drc"
@@ -122,10 +123,11 @@ test("Pipeline9 routes the normal RP2350 core phase without DRC errors", (): voi
     throw new Error("Pipeline9 did not produce point-pair SRJ")
   }
 
-  const { errors }: EvaluateRelaxedDrcResult = evaluateRelaxedDrc({
+  const routedTraces = solver.getOutputSimplifiedPcbTraces()
+  const { errors, circuitJson }: EvaluateRelaxedDrcResult = evaluateRelaxedDrc({
     inputSrj: input,
     srjWithPointPairs: solver.srjWithPointPairs,
-    routedTraces: solver.getOutputSimplifiedPcbTraces(),
+    routedTraces,
     drcOptions: {
       traceClearance: 0.1,
       viaClearance: 0.1,
@@ -135,6 +137,56 @@ test("Pipeline9 routes the normal RP2350 core phase without DRC errors", (): voi
   for (const error of errors) {
     const errorDiagnostic: string = JSON.stringify(error)
     console.error("RP2350 DRC", errorDiagnostic)
+  }
+  const geometricErrors = errors.filter(
+    (error): boolean => !error.message.includes("disconnected endpoint"),
+  )
+  const affectedViaIds: Set<string> = new Set(
+    geometricErrors.flatMap((error): string[] =>
+      "pcb_via_id" in error && typeof error.pcb_via_id === "string"
+        ? [error.pcb_via_id]
+        : [],
+    ),
+  )
+  const affectedTraceIds: Set<string> = new Set(
+    geometricErrors.flatMap((error): string[] =>
+      "pcb_trace_id" in error && typeof error.pcb_trace_id === "string"
+        ? [error.pcb_trace_id]
+        : [],
+    ),
+  )
+  for (const element of circuitJson) {
+    if (
+      element.type !== "pcb_via" ||
+      !affectedViaIds.has(element.pcb_via_id)
+    ) {
+      continue
+    }
+    console.error("RP2350 affected via", JSON.stringify(element))
+    if (
+      "pcb_trace_id" in element &&
+      typeof element.pcb_trace_id === "string"
+    ) {
+      affectedTraceIds.add(element.pcb_trace_id)
+    }
+  }
+  for (const trace of combinePreloadedAndRoutedTraces(
+    input.traces ?? [],
+    routedTraces,
+  )) {
+    const appearsInTracePairError: boolean = geometricErrors.some(
+      (error): boolean =>
+        "pcb_trace_error_id" in error &&
+        typeof error.pcb_trace_error_id === "string" &&
+        error.pcb_trace_error_id.includes(trace.pcb_trace_id),
+    )
+    if (
+      !appearsInTracePairError &&
+      !affectedTraceIds.has(trace.pcb_trace_id)
+    ) {
+      continue
+    }
+    console.error("RP2350 affected trace", JSON.stringify(trace))
   }
   expect(errors).toHaveLength(0)
 })
