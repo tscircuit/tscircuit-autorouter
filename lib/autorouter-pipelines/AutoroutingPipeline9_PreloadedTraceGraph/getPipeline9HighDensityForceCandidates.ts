@@ -441,8 +441,7 @@ export function* getPipeline9HighDensityForceCandidates({
           })
         : undefined
     const canApplyPadWireForce =
-      originalPadMobility !== undefined &&
-      originalPadMobility.contactWeight > 0
+      originalPadMobility !== undefined && originalPadMobility.contactWeight > 0
     const canApplyOneEndpointPadForce =
       canApplyPadWireForce && originalPadMobility!.pointIndexes.length === 2
     if (
@@ -605,8 +604,7 @@ export function* getPipeline9HighDensityForceCandidates({
           )
           if (state.family !== "pad-wire") {
             protectedPointIndexes.add(
-              padTarget!.segmentIndex +
-                (state.family === "pad-wire-0" ? 1 : 0),
+              padTarget!.segmentIndex + (state.family === "pad-wire-0" ? 1 : 0),
             )
           }
           changed = applyPipeline9PadTraceForce({

@@ -216,16 +216,14 @@ test("Pipeline9 endpoint pad slots retain every native chain and distinct rigid 
         // Reconstruct the original unsplit schedule using the actual operators,
         // not the modified generator. Families start from separate incumbents.
         const referenceRoutes = new Map<string, HighDensityRoute>(
-          ["native", "pad-wire"].map(
-            (family): [string, HighDensityRoute] => [
-              family,
-              {
-                ...structuredClone(route),
-                connectionName: "A_0",
-                rootConnectionName: "A_0",
-              },
-            ],
-          ),
+          ["native", "pad-wire"].map((family): [string, HighDensityRoute] => [
+            family,
+            {
+              ...structuredClone(route),
+              connectionName: "A_0",
+              rootConnectionName: "A_0",
+            },
+          ]),
         )
         for (
           let application = 0;
@@ -295,15 +293,11 @@ test("Pipeline9 endpoint pad slots retain every native chain and distinct rigid 
     for (const errorIndex of [0, 1]) {
       expect(
         expectedRigid
-          .filter(
-            (item) => item.errorIndex === errorIndex && item.scale === -1,
-          )
+          .filter((item) => item.errorIndex === errorIndex && item.scale === -1)
           .map((item) => item.route),
       ).toEqual(
         expectedRigid
-          .filter(
-            (item) => item.errorIndex === errorIndex && item.scale === 1,
-          )
+          .filter((item) => item.errorIndex === errorIndex && item.scale === 1)
           .map((item) => item.route),
       )
     }

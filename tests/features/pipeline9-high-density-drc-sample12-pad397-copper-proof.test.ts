@@ -23,13 +23,19 @@ import type { Obstacle } from "lib/types/srj-types"
 import { convertHdRouteToSimplifiedRoute } from "lib/utils/convertHdRouteToSimplifiedRoute"
 import captured from "../fixtures/srj18-sample12-pad397-copper.json"
 
+type ForceAttempt = {
+  family: Pipeline9HighDensityForceFamily
+  scale: number
+  application: number
+}
+
 test("captured sample12 copper exposes the pad repair's clean via-owner dependency", (): void => {
   // Hosted 941f696f, sample12, node pass56: only net13's pad397 error is
   // initially present. The clean foreign via owner is another cmn244 fragment.
   // This is a captured copper neighbourhood, not a second pipeline solve.
   const route: HighDensityRoute = structuredClone(captured.targetHdRoute)
   const owner: HighDensityRoute = structuredClone(captured.ownerHdRoute)
-  const pad = captured.pad as PcbSmtPad
+  const pad = captured.pad as Extract<PcbSmtPad, { shape: "rect" }>
   const targetTrace = captured.targetTrace as PcbTrace
   const ownerTrace = captured.ownerTrace as PcbTrace
   const obstacles: Obstacle[] = [
@@ -89,10 +95,9 @@ test("captured sample12 copper exposes the pad repair's clean via-owner dependen
         source_trace_id: captured.ownerConnection.source_trace_id,
         // These exact real ports come from the original dataset connection.
         // Preserve pad-to-owner connectivity without inventing endpoint tags.
-        connected_source_port_ids:
-          captured.ownerConnection.pointsToConnect.map(
-            (point): string => point.pcb_port_id,
-          ),
+        connected_source_port_ids: captured.ownerConnection.pointsToConnect.map(
+          (point: { pcb_port_id: string }): string => point.pcb_port_id,
+        ),
       },
       serialize(candidate, targetTrace),
       serializedOwner,
@@ -137,7 +142,7 @@ test("captured sample12 copper exposes the pad repair's clean via-owner dependen
     ),
   ).not.toContain(ownerTrace.pcb_trace_id)
   const target = getPipeline9PadCopperForceTarget({
-    pad,
+    pad: { ...pad },
     route,
     obstacles,
     layerCount: 4,
@@ -222,8 +227,15 @@ test("captured sample12 copper exposes the pad repair's clean via-owner dependen
     __pad_centers: [{ x: pad.x, y: pad.y }],
     __pad_copper: [structuredClone(pad)],
   }
-  for (const includeOwner of [false, true]) {
-    const attempts: Pipeline9HighDensityForceFamily[] = []
+  // Effort 2 uses the native family's existing longer cumulative sequence;
+  // this probe does not alter production budgets or infer DRC-clean success.
+  const configurations = [
+    { includeOwner: false, effort: 1 },
+    { includeOwner: true, effort: 1 },
+    { includeOwner: true, effort: 2 },
+  ]
+  for (const { includeOwner, effort } of configurations) {
+    const attempts: ForceAttempt[] = []
     let nativeCandidates = 0
     const rejected: Record<string, number> = {}
     const traceRouteIndexById = new Map([[targetTrace.pcb_trace_id, 0]])
@@ -241,15 +253,16 @@ test("captured sample12 copper exposes the pad repair's clean via-owner dependen
       obstacleMargin: 0.15,
       connMap,
       forceContext: { connMap, obstacles },
-      effort: 1,
-      onCandidateAttempted: (family): void => {
-        attempts.push(family)
+      effort,
+      onCandidateAttempted: (family, scale, application): void => {
+        attempts.push({ family, scale, application })
       },
       onCandidateRejected: (reason): void => {
         rejected[reason] = (rejected[reason] ?? 0) + 1
       },
     })) {
-      if (attempts.at(-1) !== "native") continue
+      const attempt = attempts.at(-1)!
+      if (attempt.family !== "native") continue
       nativeCandidates++
       const candidateOwner = includeOwner ? candidate[1]! : owner
       const candidateOwnerTrace = serialize(candidateOwner, ownerTrace)
@@ -257,6 +270,9 @@ test("captured sample12 copper exposes the pad repair's clean via-owner dependen
         JSON.stringify({
           diagnostic: "sample12-pad397-captured-native-scope",
           scope: includeOwner ? "target-and-owner" : "target-only",
+          effort,
+          scale: attempt.scale,
+          application: attempt.application,
           nativeCandidateIndex: nativeCandidates - 1,
           ownerCopperChanged:
             JSON.stringify(candidateOwnerTrace) !== JSON.stringify(ownerTrace),
@@ -273,11 +289,12 @@ test("captured sample12 copper exposes the pad repair's clean via-owner dependen
         expect(fragment.route.at(-1)).toEqual(input.route.at(-1))
       }
     }
-    expect(attempts).toContain("native")
+    expect(attempts.map((attempt) => attempt.family)).toContain("native")
     console.info(
       JSON.stringify({
         diagnostic: "sample12-pad397-captured-native-scope-summary",
         scope: includeOwner ? "target-and-owner" : "target-only",
+        effort,
         nativeCandidates,
         rejected,
       }),

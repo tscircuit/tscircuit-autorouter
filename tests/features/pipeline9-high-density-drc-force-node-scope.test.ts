@@ -86,11 +86,13 @@ test("Pipeline9 force scope includes clean owned neighbours but not preloads or 
       .filter((route) => route.connectionName !== "preload-pseudo")
       .map((route) => ({
         name: route.connectionName,
-        pointsToConnect: [route.route[0]!, route.route.at(-1)!].map((point) => ({
-          x: point.x,
-          y: point.y,
-          layer: "top",
-        })),
+        pointsToConnect: [route.route[0]!, route.route.at(-1)!].map(
+          (point) => ({
+            x: point.x,
+            y: point.y,
+            layer: "top",
+          }),
+        ),
       })),
     drcEvaluator,
     connMap,

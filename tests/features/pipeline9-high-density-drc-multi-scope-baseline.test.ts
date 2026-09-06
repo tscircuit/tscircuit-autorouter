@@ -82,10 +82,11 @@ test("Pipeline9 reuses immutable baseline scopes without aliasing via sites or m
     },
   ]
   const candidateBoards = [-1, 1].map((x): AnyCircuitElement[] =>
-    currentBoard.map((element): AnyCircuitElement =>
-      element.type === "pcb_trace" && element.pcb_trace_id === "signal"
-        ? createSignal(x, 0.28)
-        : element,
+    currentBoard.map(
+      (element): AnyCircuitElement =>
+        element.type === "pcb_trace" && element.pcb_trace_id === "signal"
+          ? createSignal(x, 0.28)
+          : element,
     ),
   )
   const routesForBoard = (board: AnyCircuitElement[]): HighDensityRoute[] => {
@@ -98,11 +99,12 @@ test("Pipeline9 reuses immutable baseline scopes without aliasing via sites or m
         connectionName: "signal",
         traceThickness: 0.1,
         viaDiameter: 0.3,
-        route: signal.route.map((point): HighDensityRoute["route"][number] => ({
-          x: point.x,
-          y: point.y,
-          z: 0,
-        })),
+        route: signal.route.map((point): HighDensityRoute["route"][number] => {
+          if (point.route_type !== "wire" || point.layer !== "top") {
+            throw new Error("The fixture signal requires planar top wires")
+          }
+          return { x: point.x, y: point.y, z: 0 }
+        }),
         vias: [],
       },
     ]
@@ -214,10 +216,11 @@ test("Pipeline9 reuses immutable baseline scopes without aliasing via sites or m
 
   // The same geometry/scope in a new immutable snapshot must read its current
   // metadata. The source-component shadow changes the native via error name.
-  const renamedBoard = currentBoard.map((element): AnyCircuitElement =>
-    element.type === "source_component"
-      ? { ...element, name: "Renamed via" }
-      : element,
+  const renamedBoard = currentBoard.map(
+    (element): AnyCircuitElement =>
+      element.type === "source_component"
+        ? { ...element, name: "Renamed via" }
+        : element,
   )
   const renamedRoutes = routesForBoard(renamedBoard)
   boardsByRoutes.set(renamedRoutes, renamedBoard)
