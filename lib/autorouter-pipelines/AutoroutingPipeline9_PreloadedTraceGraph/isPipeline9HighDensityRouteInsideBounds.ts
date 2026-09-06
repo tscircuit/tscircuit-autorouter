@@ -8,6 +8,10 @@ import { matchesPipeline9HdTopologyCoordinate } from "./pipeline9HighDensityCoor
 type PreservedBoundaryAnchors = {
   originalRoute: HighDensityRoute
   node: NodeWithPortPoints
+  originalPointByCandidatePoint?: ReadonlyMap<
+    HighDensityRoute["route"][number],
+    HighDensityRoute["route"][number]
+  >
 }
 
 const getPreservedBoundaryAnchorIndexes = (
@@ -71,6 +75,38 @@ export const isPipeline9HighDensityRouteInsideBounds = (
     : new Set<number>()
   for (let index = 0; index < route.route.length; index++) {
     const point = route.route[index]!
+    const isOutsideBounds =
+      point.x < bounds.minX ||
+      point.x > bounds.maxX ||
+      point.y < bounds.minY ||
+      point.y > bounds.maxY
+    const originalPoint =
+      preservedAnchors?.originalPointByCandidatePoint?.get(point)
+    // Repair01 clamps ordinary wire points to raw bounds, then rounds every
+    // published XY to 0.001mm. Preserve only a proven original interior point
+    // at that exact rounded boundary, never a moved or generated waypoint.
+    // Outer anchors retain their separate actual-topology requirement above.
+    const preservesQuantizedBoundaryPoint =
+      isOutsideBounds &&
+      index > 0 &&
+      index < route.route.length - 1 &&
+      originalPoint !== undefined &&
+      preservedAnchors!.originalRoute.regionId ===
+        preservedAnchors!.node.capacityMeshNodeId &&
+      preservedAnchors!.originalRoute.route.includes(originalPoint) &&
+      Object.is(point.x, originalPoint.x) &&
+      Object.is(point.y, originalPoint.y) &&
+      Object.is(point.z, originalPoint.z) &&
+      (point.x < bounds.minX
+        ? matchesPipeline9HdTopologyCoordinate(point.x, bounds.minX)
+        : point.x > bounds.maxX
+          ? matchesPipeline9HdTopologyCoordinate(point.x, bounds.maxX)
+          : true) &&
+      (point.y < bounds.minY
+        ? matchesPipeline9HdTopologyCoordinate(point.y, bounds.minY)
+        : point.y > bounds.maxY
+          ? matchesPipeline9HdTopologyCoordinate(point.y, bounds.maxY)
+          : true)
     if (
       !Number.isFinite(point.x) ||
       !Number.isFinite(point.y) ||
@@ -78,10 +114,8 @@ export const isPipeline9HighDensityRouteInsideBounds = (
       point.z < 0 ||
       point.z >= layerCount ||
       (!preservedAnchorIndexes.has(index) &&
-        (point.x < bounds.minX ||
-          point.x > bounds.maxX ||
-          point.y < bounds.minY ||
-          point.y > bounds.maxY))
+        !preservesQuantizedBoundaryPoint &&
+        isOutsideBounds)
     ) {
       return false
     }

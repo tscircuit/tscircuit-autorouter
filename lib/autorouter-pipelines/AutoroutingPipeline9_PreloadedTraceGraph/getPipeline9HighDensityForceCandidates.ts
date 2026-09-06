@@ -835,7 +835,12 @@ export function* getPipeline9HighDensityForceCandidates({
               candidate,
               nodeBounds,
               layerCount,
-              { originalRoute: hdRoutes[index]!, node },
+              {
+                originalRoute: localRoutes[index]!.original,
+                node,
+                originalPointByCandidatePoint:
+                  localRoutes[index]!.originalPointByMutablePoint,
+              },
             ),
           )
         ) {

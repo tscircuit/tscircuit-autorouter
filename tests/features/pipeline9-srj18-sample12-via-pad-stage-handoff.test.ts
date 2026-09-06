@@ -65,7 +65,9 @@ test("Pipeline9 repairs SRJ18 sample 12", async (): Promise<void> => {
     }
     localDiagnosticsInstalled = true
     const getForceContext = evaluator.getForceContext
-    evaluator.getForceContext = (routes): ReturnType<typeof getForceContext> => {
+    evaluator.getForceContext = (
+      routes,
+    ): ReturnType<typeof getForceContext> => {
       const context = getForceContext(routes)
       const diagnosticStartedAt = performance.now()
       const node = repair.activeNode

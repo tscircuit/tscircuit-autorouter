@@ -47,6 +47,8 @@ type ForceObservation = {
   routes: HighDensityRoute[]
 }
 
+type RoutePoint = HighDensityRoute["route"][number]
+
 test("captured sample12 copper exposes the pad repair's clean via-owner dependency", (): void => {
   // Hosted 941f696f, sample12, node pass56: only net13's pad397 error is
   // initially present. The clean foreign via owner is another cmn244 fragment.
@@ -227,17 +229,69 @@ test("captured sample12 copper exposes the pad repair's clean via-owner dependen
   connMap.addConnections([
     [captured.reportedVia.pcb_via_id, ownerTrace.pcb_trace_id],
   ])
+  const recordedNode = captured.nodeCapture.node
+  // Actual aef8738b topology, not rounded route endpoints. Keep every original
+  // port; the force generator does not consume the separately captured pairs.
   const node: NodeWithPortPoints = {
-    capacityMeshNodeId: "cmn_244",
-    center: { x: 14.726999499999998, y: 10.785000499999999 },
-    width: 4.099998999999997,
-    height: 2.0699989999999993,
-    availableZ: [0, 1, 2, 3],
-    // Actual captured seam identities; no fabricated PCB terminal identities.
-    portPoints: [route, owner].flatMap((fragment) => [
-      { ...fragment.route[0]!, connectionName: fragment.connectionName },
-      { ...fragment.route.at(-1)!, connectionName: fragment.connectionName },
-    ]),
+    capacityMeshNodeId: recordedNode.capacityMeshNodeId,
+    center: { ...recordedNode.center },
+    width: recordedNode.width,
+    height: recordedNode.height,
+    availableZ: [...recordedNode.availableZ],
+    portPoints: structuredClone(recordedNode.portPoints),
+  }
+  const nodeBounds = getBoundsFromNodeWithPortPoints(node)
+  expect(nodeBounds).toEqual(captured.nodeCapture.nativeBounds)
+  expect(node.portPoints).toHaveLength(18)
+  expect(owner.route.at(-2)!.y).toBeLessThan(nodeBounds.minY)
+  expect(
+    isPipeline9HighDensityRouteInsideBounds(owner, nodeBounds, 4, {
+      originalRoute: owner,
+      node,
+    }),
+  ).toBe(false)
+  const expectPublishedBoundsPreserved = (
+    fragment: HighDensityRoute,
+    input: HighDensityRoute,
+  ): void => {
+    // Public output intentionally has no private provenance map. Independently
+    // require every out-of-domain point to be byte-equal to an original one,
+    // consuming each match once so extra copies cannot pass this assertion.
+    const originalOutsidePoints = input.route
+      .filter(
+        (point): boolean =>
+          point.x < nodeBounds.minX ||
+          point.x > nodeBounds.maxX ||
+          point.y < nodeBounds.minY ||
+          point.y > nodeBounds.maxY,
+      )
+      .map((point): string => JSON.stringify(point))
+    for (const [index, point] of fragment.route.entries()) {
+      expect(Number.isFinite(point.x)).toBe(true)
+      expect(Number.isFinite(point.y)).toBe(true)
+      expect(Number.isInteger(point.z)).toBe(true)
+      expect(point.z).toBeGreaterThanOrEqual(0)
+      expect(point.z).toBeLessThan(4)
+      if (
+        point.x < nodeBounds.minX ||
+        point.x > nodeBounds.maxX ||
+        point.y < nodeBounds.minY ||
+        point.y > nodeBounds.maxY
+      ) {
+        const match = originalOutsidePoints.indexOf(JSON.stringify(point))
+        expect(match).toBeGreaterThanOrEqual(0)
+        originalOutsidePoints.splice(match, 1)
+      }
+      const next = fragment.route[index + 1]
+      if (
+        next &&
+        point.z !== next.z &&
+        point.toNextSegmentType !== "through_obstacle"
+      ) {
+        expect(point.x).toBe(next.x)
+        expect(point.y).toBe(next.y)
+      }
+    }
   }
   const forceError: Pipeline9DrcError = {
     ...initialErrors[0],
@@ -334,7 +388,6 @@ test("captured sample12 copper exposes the pad repair's clean via-owner dependen
   const traceRouteIndexById = new Map(
     traceIds.map((traceId, index): [string, number] => [traceId, index]),
   )
-  const nodeBounds = getBoundsFromNodeWithPortPoints(node)
   const copperRadius = captured.reportedVia.outer_diameter / 2
   const forceSrj: ForceSimpleRouteJson & { minViaHoleDiameter: number } = {
     bounds: {
@@ -358,6 +411,15 @@ test("captured sample12 copper exposes the pad repair's clean via-owner dependen
       connectionName: traceIds[index]!,
       rootConnectionName: traceIds[index]!,
     }),
+  )
+  const originalPointByMutablePoint = mutable.map(
+    (fragment, routeIndex): ReadonlyMap<RoutePoint, RoutePoint> =>
+      new Map(
+        fragment.route.map((point, index): [RoutePoint, RoutePoint] => [
+          point,
+          originalNativePair[routeIndex]!.route[index]!,
+        ]),
+      ),
   )
   let refreshedCandidates = originalNativePair
   const maximumNativeCalls = getMaxTargetedCandidateAttemptsForEffort(1)
@@ -420,7 +482,8 @@ test("captured sample12 copper exposes the pad repair's clean via-owner dependen
       false,
       false,
     )
-    refreshedCandidates = materializeRoutes(mutable).map(
+    const materialized = materializeRoutes(mutable)
+    refreshedCandidates = materialized.map(
       (fragment, index): HighDensityRoute => ({
         ...originalNativePair[index]!,
         route: fragment.route.map((point) => ({ ...point })),
@@ -438,10 +501,11 @@ test("captured sample12 copper exposes the pad repair's clean via-owner dependen
         )
       },
     )
-    const insideBounds = refreshedCandidates.every((fragment, index) =>
+    const insideBounds = materialized.every((fragment, index) =>
       isPipeline9HighDensityRouteInsideBounds(fragment, nodeBounds, 4, {
         originalRoute: originalNativePair[index]!,
         node,
+        originalPointByCandidatePoint: originalPointByMutablePoint[index]!,
       }),
     )
     console.info(
@@ -535,12 +599,7 @@ test("captured sample12 copper exposes the pad repair's clean via-owner dependen
         const input = index === 0 ? route : owner
         expect(fragment.route[0]).toEqual(input.route[0])
         expect(fragment.route.at(-1)).toEqual(input.route.at(-1))
-        expect(
-          isPipeline9HighDensityRouteInsideBounds(fragment, nodeBounds, 4, {
-            originalRoute: input,
-            node,
-          }),
-        ).toBe(true)
+        expectPublishedBoundsPreserved(fragment, input)
       }
       next = iterator.next({ errors: feedbackErrors })
     }
@@ -560,5 +619,13 @@ test("captured sample12 copper exposes the pad repair's clean via-owner dependen
       expect(feedbackResults[0]).toHaveLength(0)
     }
   }
+  expect(node).toEqual({
+    capacityMeshNodeId: recordedNode.capacityMeshNodeId,
+    center: recordedNode.center,
+    width: recordedNode.width,
+    height: recordedNode.height,
+    availableZ: recordedNode.availableZ,
+    portPoints: recordedNode.portPoints,
+  })
   expect({ route, owner, pad, obstacles }).toEqual(original)
 })
