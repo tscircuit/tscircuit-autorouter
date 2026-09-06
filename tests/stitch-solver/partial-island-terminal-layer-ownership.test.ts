@@ -43,9 +43,9 @@ test("an unclaimed partial island boundary does not impersonate a nearby opposit
       { x: 2.4, y: 0, z: 0 },
     ]),
   )
-  expect(
-    [merged.startPcbPortId, merged.endPcbPortId].filter(Boolean),
-  ).toEqual(["start-port"])
+  expect([merged.startPcbPortId, merged.endPcbPortId].filter(Boolean)).toEqual([
+    "start-port",
+  ])
   expect(merged.vias).toEqual(route.vias)
   expect(merged.route).toHaveLength(route.route.length)
   expect(
