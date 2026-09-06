@@ -98,6 +98,7 @@ test("Pipeline9 pad forces target the referenced pad without rewriting official 
   for (const candidate of getPipeline9HighDensityForceCandidates({
     node,
     hdRoutes: [route],
+    forceContext: evaluator.getForceContext([route]),
     errors: initialErrors,
     traceRouteIndexById: new Map([["A_0", 0]]),
     obstacles: srj.obstacles,

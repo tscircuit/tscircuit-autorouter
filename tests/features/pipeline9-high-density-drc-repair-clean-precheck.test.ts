@@ -1,6 +1,7 @@
 import { expect, test } from "bun:test"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { DrcEvaluator } from "high-density-repair03/lib"
+import type { Pipeline9HighDensityForceContext } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/getPipeline9HighDensityForceObstacles"
 import { Pipeline9HighDensityDrcRepairSolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9HighDensityDrcRepairSolver"
 import type {
   HighDensityRoute,
@@ -45,10 +46,18 @@ const inputRoutes: HighDensityRoute[] = [
 
 test("Pipeline9 verifies clean high-density copper with the official DRC evaluator", (): void => {
   let evaluatorCallCount = 0
-  const drcEvaluator: DrcEvaluator = () => {
-    evaluatorCallCount += 1
-    return { errors: [], errorsWithCenters: [] }
-  }
+  const drcEvaluator = Object.assign(
+    (): ReturnType<DrcEvaluator> => {
+      evaluatorCallCount += 1
+      return { errors: [], errorsWithCenters: [] }
+    },
+    {
+      getForceContext: (): Pipeline9HighDensityForceContext => ({
+        connMap: new ConnectivityMap({ A: ["A", "A_0"] }),
+        obstacles: [],
+      }),
+    },
+  )
   const solver = new Pipeline9HighDensityDrcRepairSolver({
     nodePortPoints: [node],
     hdRoutes: inputRoutes,

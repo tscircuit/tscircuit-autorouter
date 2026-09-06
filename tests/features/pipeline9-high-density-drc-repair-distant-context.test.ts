@@ -137,14 +137,15 @@ test("Pipeline9 does not retry an exhausted node after a distant copper repair",
   let solver: Pipeline9HighDensityDrcRepairSolver
   let exhaustedNodeEvaluationCount = 0
   let exhaustedNodeAttemptCount = 0
-  const drcEvaluator: DrcEvaluator = (
-    params: Parameters<DrcEvaluator>[0],
-  ): ReturnType<DrcEvaluator> => {
-    if (solver.activeNode?.capacityMeshNodeId === "node-a") {
-      exhaustedNodeEvaluationCount++
-    }
-    return officialEvaluator(params)
-  }
+  const drcEvaluator = Object.assign(
+    (params: Parameters<DrcEvaluator>[0]): ReturnType<DrcEvaluator> => {
+      if (solver.activeNode?.capacityMeshNodeId === "node-a") {
+        exhaustedNodeEvaluationCount++
+      }
+      return officialEvaluator(params)
+    },
+    { getForceContext: officialEvaluator.getForceContext },
+  )
   solver = new Pipeline9HighDensityDrcRepairSolver({
     nodePortPoints: nodes,
     hdRoutes: inputRoutes,

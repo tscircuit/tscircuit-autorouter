@@ -95,6 +95,7 @@ test("Pipeline9 forces move a trace away from a fixed via without moving an unre
   for (const candidate of getPipeline9HighDensityForceCandidates({
     node,
     hdRoutes: [route],
+    forceContext: drcEvaluator.getForceContext(inputRoutes),
     errors: viaTraceErrors,
     traceRouteIndexById: new Map([["A_0", 0]]),
     obstacles: getPipeline9FixedRouteObstacles({

@@ -1,6 +1,7 @@
 import { expect, test } from "bun:test"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { DrcEvaluator } from "high-density-repair03/lib"
+import type { Pipeline9HighDensityForceContext } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/getPipeline9HighDensityForceObstacles"
 import { Pipeline9HighDensityDrcRepairSolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9HighDensityDrcRepairSolver"
 import type {
   HighDensityRoute,
@@ -96,29 +97,44 @@ const inputRoutes: HighDensityRoute[] = [
   },
 ]
 
-const drcEvaluator: DrcEvaluator = ({ hdRoutes, routes }) => {
-  const evaluatedRoutes = hdRoutes ?? routes ?? []
-  const routeA = evaluatedRoutes.find((route) => route.connectionName === "A")
-  const routeB = evaluatedRoutes.find((route) => route.connectionName === "B")
-  const hasCrossingInputGeometry =
-    routeA?.route[1]?.x === 0 &&
-    routeA.route[1]?.y === 2 &&
-    routeB?.route[1]?.x === 0 &&
-    routeB.route[1]?.y === -2
-  const errors = hasCrossingInputGeometry
-    ? [
-        {
-          type: "pcb_trace_error",
-          pcb_trace_id: "A_0",
-          pcb_trace_ids: ["A_0", "B_0"],
-          pcb_trace_error_id: "overlap_A_0_B_0",
-          center: { x: 0, y: 0 },
-          message: "crossing high-density routes",
-        },
-      ]
-    : []
-  return { errors, errorsWithCenters: errors }
-}
+const drcEvaluator = Object.assign(
+  ({
+    hdRoutes,
+    routes,
+  }: Parameters<DrcEvaluator>[0]): ReturnType<DrcEvaluator> => {
+    const evaluatedRoutes = hdRoutes ?? routes ?? []
+    const routeA = evaluatedRoutes.find((route) => route.connectionName === "A")
+    const routeB = evaluatedRoutes.find((route) => route.connectionName === "B")
+    const hasCrossingInputGeometry =
+      routeA?.route[1]?.x === 0 &&
+      routeA.route[1]?.y === 2 &&
+      routeB?.route[1]?.x === 0 &&
+      routeB.route[1]?.y === -2
+    const errors = hasCrossingInputGeometry
+      ? [
+          {
+            type: "pcb_trace_error",
+            pcb_trace_id: "A_0",
+            pcb_trace_ids: ["A_0", "B_0"],
+            pcb_trace_error_id: "overlap_A_0_B_0",
+            center: { x: 0, y: 0 },
+            message: "crossing high-density routes",
+          },
+        ]
+      : []
+    return { errors, errorsWithCenters: errors }
+  },
+  {
+    getForceContext: (): Pipeline9HighDensityForceContext => ({
+      connMap: new ConnectivityMap({
+        A: ["A", "A_0"],
+        B: ["B", "B_0"],
+        C: ["C", "C_0"],
+      }),
+      obstacles: [],
+    }),
+  },
+)
 
 test("Pipeline9 reroutes DRC-bearing high-density nodes before stitching", (): void => {
   const solver = new Pipeline9HighDensityDrcRepairSolver({

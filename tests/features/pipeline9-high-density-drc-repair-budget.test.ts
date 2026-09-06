@@ -2,6 +2,7 @@ import { expect, test } from "bun:test"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { DrcEvaluator } from "high-density-repair03/lib"
 import { getDrcScaledMaxIterations } from "high-density-repair03/lib/solvers/GlobalDrcForceImproveSolver/solverConfig"
+import type { Pipeline9HighDensityForceContext } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/getPipeline9HighDensityForceObstacles"
 import { Pipeline9HighDensityDrcRepairSolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9HighDensityDrcRepairSolver"
 import type {
   HighDensityRoute,
@@ -63,23 +64,34 @@ test("Pipeline9 bounds repeated severity-only force repairs and retains the acce
   // A deterministic synthetic objective isolates scheduler termination: every
   // upward interior force move improves severity, but never removes the error.
   // This is deliberately not a claim that the synthetic score is official DRC.
-  const drcEvaluator: DrcEvaluator = (
-    input: Parameters<DrcEvaluator>[0],
-  ): ReturnType<DrcEvaluator> => {
-    const midpoint = input.hdRoutes?.[0]?.route[1]
-    if (!midpoint) throw new Error("Budget fixture requires its interior point")
-    return [
-      {
-        type: "pcb_trace_error",
-        pcb_trace_error_id: "severity-only-contact",
-        pcb_trace_id: "A_0",
-        center: { x: midpoint.x, y: midpoint.y - 1 },
-        actual_clearance: 1 - 1 / (2 + midpoint.y),
-        minimum_clearance: 1,
-        message: "Synthetic severity-only contact for the repair pass budget",
-      },
-    ]
-  }
+  const drcEvaluator = Object.assign(
+    (input: Parameters<DrcEvaluator>[0]): ReturnType<DrcEvaluator> => {
+      const midpoint = input.hdRoutes?.[0]?.route[1]
+      if (!midpoint) {
+        throw new Error("Budget fixture requires its interior point")
+      }
+      return [
+        {
+          type: "pcb_trace_error",
+          pcb_trace_error_id: "severity-only-contact",
+          pcb_trace_id: "A_0",
+          center: { x: midpoint.x, y: midpoint.y - 1 },
+          actual_clearance: 1 - 1 / (2 + midpoint.y),
+          minimum_clearance: 1,
+          message: "Synthetic severity-only contact for the repair pass budget",
+        },
+      ]
+    },
+    {
+      getForceContext: (): Pipeline9HighDensityForceContext => ({
+        connMap: new ConnectivityMap({
+          A: ["A", "A_0", "A-start", "A-end"],
+          B: ["B"],
+        }),
+        obstacles: [],
+      }),
+    },
+  )
   const solver = new Pipeline9HighDensityDrcRepairSolver({
     nodePortPoints: [node],
     hdRoutes: [route],

@@ -6,7 +6,7 @@ import { RELAXED_DRC_OPTIONS } from "lib/testing/drcPresets"
 import { combinePreloadedAndRoutedTraces } from "lib/testing/evaluate-relaxed-drc"
 import { getDrcErrors } from "lib/testing/getDrcErrors"
 import { createPreparedCircuitJsonConverter } from "lib/testing/utils/convertToCircuitJson"
-import type { SimpleRouteJson, SimplifiedPcbTrace } from "lib/types"
+import type { Obstacle, SimpleRouteJson, SimplifiedPcbTrace } from "lib/types"
 import type { HighDensityRoute } from "lib/types/high-density-types"
 import { convertHdRouteToSimplifiedRoute } from "lib/utils/convertHdRouteToSimplifiedRoute"
 import { assignUniquePcbTraceIdsToNewTraces } from "./assignUniquePcbTraceIdsToNewTraces"
@@ -17,6 +17,10 @@ import {
   type Pipeline9HighDensityDrcSnapshot,
 } from "./createPipeline9HighDensityDrcCandidateGate"
 import { createPipeline9ImmutableHdRoutesToSimplifiedPcbTracesConverter } from "./createPipeline9ImmutableHdRoutesToSimplifiedPcbTracesConverter"
+import {
+  getPipeline9HighDensityForceObstacles,
+  type Pipeline9HighDensityForceContext,
+} from "./getPipeline9HighDensityForceObstacles"
 import { addAutoroutingViaTraceIds } from "./Pipeline9JointDrcRepairSolver"
 import { normalizePipeline9DrcErrorsForRepair } from "./normalizePipeline9DrcErrorsForRepair"
 import { preparePipeline9DrcRoutedTraces } from "./preparePipeline9DrcRoutedTraces"
@@ -49,6 +53,9 @@ type DrcPadCenter = { x: number; y: number }
 
 export type Pipeline9HighDensityDrcEvaluator = DrcEvaluator & {
   evaluateLocalCandidate?: Pipeline9HighDensityDrcCandidateGate
+  getForceContext: (
+    hdRoutes: HighDensityRoute[],
+  ) => Pipeline9HighDensityForceContext
 }
 
 const addCopperOwnerMetadata = (
@@ -386,7 +393,7 @@ export const createPipeline9HighDensityDrcEvaluator = (
     return snapshot
   }
 
-  const evaluator: Pipeline9HighDensityDrcEvaluator = ({
+  const evaluator: DrcEvaluator = ({
     routes,
     hdRoutes,
   }): HighDensityDrcResult => {
@@ -419,8 +426,24 @@ export const createPipeline9HighDensityDrcEvaluator = (
     }
     return snapshot.fullResult
   }
-  evaluator.evaluateLocalCandidate = createPipeline9HighDensityDrcCandidateGate(
-    { getSnapshot },
-  )
-  return evaluator
+  let forceObstacles: Obstacle[] | undefined
+  return Object.assign(evaluator, {
+    evaluateLocalCandidate: createPipeline9HighDensityDrcCandidateGate({
+      getSnapshot,
+    }),
+    getForceContext: (
+      hdRoutes: HighDensityRoute[],
+    ): Pipeline9HighDensityForceContext => {
+      const snapshot = getSnapshot(hdRoutes)
+      if (forceObstacles === undefined) {
+        forceObstacles = getPipeline9HighDensityForceObstacles({
+          circuitJson: snapshot.circuitJson,
+          bounds: options.originalSrj.bounds,
+          layerCount: options.layerCount,
+          minTraceWidth: options.originalSrj.minTraceWidth,
+        })
+      }
+      return { connMap: snapshot.connMap, obstacles: forceObstacles }
+    },
+  })
 }

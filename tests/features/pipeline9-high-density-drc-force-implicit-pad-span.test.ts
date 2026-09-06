@@ -153,6 +153,7 @@ test("Pipeline9 repairs local copper while preserving an untagged connected-pad 
   const forceParams = {
     node,
     hdRoutes: [route],
+    forceContext: drcEvaluator.getForceContext(inputRoutes),
     errors: initialErrors,
     traceRouteIndexById: new Map([["A_0", 0]]),
     obstacles: [
@@ -212,6 +213,7 @@ test("Pipeline9 repairs local copper while preserving an untagged connected-pad 
     ...getPipeline9HighDensityForceCandidates({
       ...forceParams,
       hdRoutes: [invalidRoute],
+      forceContext: drcEvaluator.getForceContext([invalidRoute, fixedRoute]),
     }),
   ]).toHaveLength(0)
   expect(inputRoutes).toEqual(originalRoutes)

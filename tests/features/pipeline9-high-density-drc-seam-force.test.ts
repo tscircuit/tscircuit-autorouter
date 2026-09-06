@@ -139,6 +139,7 @@ test("Pipeline9 seam forces move both handoffs without changing fixed copper", (
     affectedRouteIndex: 0,
     nodePortPoints: nodes,
     hdRoutes: routes,
+    forceContext: evaluator.getForceContext(routes),
     fixedHdRoutes,
     errors: initialErrors,
     traceRouteIndexById: new Map([

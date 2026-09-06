@@ -9,6 +9,7 @@ import type {
   NodeWithPortPoints,
   PortPoint,
 } from "lib/types/high-density-types"
+import type { Obstacle } from "lib/types/srj-types"
 
 test("Pipeline9 seam forces require an unbranched owned handoff", (): void => {
   const seam: PortPoint = {
@@ -45,10 +46,31 @@ test("Pipeline9 seam forces require an unbranched owned handoff", (): void => {
     route: [2, 0.5, 0].map((x) => ({ x: side * x, y: 0, z: 0 })),
     vias: [],
   }))
+  const obstacles: Obstacle[] = [
+    {
+      type: "rect",
+      center: { x: 0, y: 0.27 },
+      width: 0.4,
+      height: 0.4,
+      layers: ["top"],
+      connectedTo: ["B"],
+      circuitJsonMetadata: { pcb_smtpad_id: "pad-b" },
+    },
+  ]
   const params: Pipeline9HighDensitySeamForceCandidateParams = {
     affectedRouteIndex: 0,
     nodePortPoints: nodes,
     hdRoutes: routes,
+    forceContext: {
+      connMap: new ConnectivityMap({
+        A: ["A", "A_0", "A_1", "port--1", "port-1"],
+        B: ["B", "pad-b"],
+      }),
+      obstacles: obstacles.map((obstacle) => ({
+        ...obstacle,
+        connectedTo: ["pad-b"],
+      })),
+    },
     fixedHdRoutes: [],
     traceRouteIndexById: new Map([
       ["A_0", 0],
@@ -65,17 +87,7 @@ test("Pipeline9 seam forces require an unbranched owned handoff", (): void => {
         minimum_clearance: 0.1,
       },
     ],
-    obstacles: [
-      {
-        type: "rect",
-        center: { x: 0, y: 0.27 },
-        width: 0.4,
-        height: 0.4,
-        layers: ["top"],
-        connectedTo: ["B"],
-        circuitJsonMetadata: { pcb_smtpad_id: "pad-b" },
-      },
-    ],
+    obstacles,
     layerCount: 2,
     viaDiameter: 0.3,
     viaHoleDiameter: 0.15,

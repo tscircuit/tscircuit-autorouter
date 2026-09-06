@@ -1,6 +1,7 @@
 import { expect, test } from "bun:test"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { Pipeline9HighDensityDrcEvaluator } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/createPipeline9HighDensityDrcEvaluator"
+import type { Pipeline9HighDensityForceContext } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/getPipeline9HighDensityForceObstacles"
 import { Pipeline9HighDensityDrcRepairSolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9HighDensityDrcRepairSolver"
 import type { Pipeline9DrcError } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/pipeline9JointDrcRepairUtils"
 import type { HighDensityRoute } from "lib/types/high-density-types"
@@ -30,17 +31,29 @@ test("Pipeline9 rejects a cloned incumbent without repeating official candidate 
   ]
   let fullCalls = 0
   let localCalls = 0
-  const evaluator: Pipeline9HighDensityDrcEvaluator =
+  const evaluator: Pipeline9HighDensityDrcEvaluator = Object.assign(
     (): ReturnType<Pipeline9HighDensityDrcEvaluator> => {
       fullCalls++
       return { errors, errorsWithCenters: errors }
-    }
+    },
+    {
+      getForceContext: (): Pipeline9HighDensityForceContext => ({
+        connMap: new ConnectivityMap({ A: ["A", "A_0"], B: ["B", "B_0"] }),
+        obstacles: [],
+      }),
+    },
+  )
   evaluator.evaluateLocalCandidate = (): {
     currentErrors: Pipeline9DrcError[]
     candidateErrors: Pipeline9DrcError[]
+    candidateErrorPairsAreUnambiguous: boolean
   } => {
     localCalls++
-    return { currentErrors: errors, candidateErrors: errors }
+    return {
+      currentErrors: errors,
+      candidateErrors: errors,
+      candidateErrorPairsAreUnambiguous: false,
+    }
   }
   const solver = new Pipeline9HighDensityDrcRepairSolver({
     nodePortPoints: [

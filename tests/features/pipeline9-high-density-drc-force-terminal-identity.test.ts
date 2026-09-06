@@ -136,6 +136,7 @@ test("Pipeline9 local forces use inert HD terminal identities without changing p
     for (const candidate of getPipeline9HighDensityForceCandidates({
       node,
       hdRoutes: incumbentRoutes,
+      forceContext: drcEvaluator.getForceContext(incumbentRoutes),
       errors: currentErrors,
       traceRouteIndexById: new Map([["A_0", 0]]),
       obstacles: srj.obstacles,

@@ -96,6 +96,7 @@ test("Pipeline9 forces preserve an external terminal within the native HD domain
   for (const candidate of getPipeline9HighDensityForceCandidates({
     node,
     hdRoutes: [route],
+    forceContext: evaluator.getForceContext([route]),
     errors: initialErrors,
     traceRouteIndexById: new Map([["A_0", 0]]),
     obstacles: srj.obstacles,

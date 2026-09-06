@@ -1,6 +1,7 @@
 import { expect, test } from "bun:test"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { Pipeline9HighDensityDrcEvaluator } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/createPipeline9HighDensityDrcEvaluator"
+import type { Pipeline9HighDensityForceContext } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/getPipeline9HighDensityForceObstacles"
 import { Pipeline9HighDensityDrcRepairSolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9HighDensityDrcRepairSolver"
 import type { Pipeline9DrcError } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/pipeline9JointDrcRepairUtils"
 import type { HighDensityRoute } from "lib/types/high-density-types"
@@ -67,6 +68,7 @@ test("Pipeline9 prunes impossible local copper pairs before full DRC without los
     fullCandidateErrors: Pipeline9DrcError[]
     expectedFullCalls: number
     accepted: boolean
+    candidateErrorPairsAreUnambiguous: boolean
   }[] = [
     {
       name: "a new local pad pair cannot pass the full pair guard",
@@ -74,6 +76,7 @@ test("Pipeline9 prunes impossible local copper pairs before full DRC without los
       fullCandidateErrors: [],
       expectedFullCalls: 0,
       accepted: false,
+      candidateErrorPairsAreUnambiguous: true,
     },
     {
       name: "fewer local errors cannot compensate for a worse retained pair",
@@ -81,6 +84,7 @@ test("Pipeline9 prunes impossible local copper pairs before full DRC without los
       fullCandidateErrors: [],
       expectedFullCalls: 0,
       accepted: false,
+      candidateErrorPairsAreUnambiguous: true,
     },
     {
       name: "safe local progress still requires a successful full check",
@@ -88,6 +92,7 @@ test("Pipeline9 prunes impossible local copper pairs before full DRC without los
       fullCandidateErrors: [improvedPad, remoteVia],
       expectedFullCalls: 1,
       accepted: true,
+      candidateErrorPairsAreUnambiguous: true,
     },
     {
       name: "a full-board rejection overrides apparently safe local progress",
@@ -95,6 +100,7 @@ test("Pipeline9 prunes impossible local copper pairs before full DRC without los
       fullCandidateErrors: fullCurrentErrors,
       expectedFullCalls: 1,
       accepted: false,
+      candidateErrorPairsAreUnambiguous: true,
     },
     {
       name: "an existing remote via-owner pair is not a new local pair",
@@ -102,22 +108,44 @@ test("Pipeline9 prunes impossible local copper pairs before full DRC without los
       fullCandidateErrors: [improvedRemoteVia],
       expectedFullCalls: 1,
       accepted: true,
+      candidateErrorPairsAreUnambiguous: true,
+    },
+    {
+      name: "ambiguous official pair keys require full validation",
+      localCandidateErrors: [{ ...padA, pcb_pad_id: "pad-c" }],
+      fullCandidateErrors: [improvedPad],
+      expectedFullCalls: 1,
+      accepted: true,
+      candidateErrorPairsAreUnambiguous: false,
     },
   ]
   for (const scenario of cases) {
     let fullCalls = 0
     let localCalls = 0
-    const evaluator: Pipeline9HighDensityDrcEvaluator =
+    const evaluator: Pipeline9HighDensityDrcEvaluator = Object.assign(
       (): ReturnType<Pipeline9HighDensityDrcEvaluator> => {
         fullCalls++
         return {
           errors: scenario.fullCandidateErrors,
           errorsWithCenters: scenario.fullCandidateErrors,
         }
-      }
-    evaluator.evaluateLocalCandidate = ({ changedTraceIds }): {
+      },
+      {
+        getForceContext: (): Pipeline9HighDensityForceContext => ({
+          connMap: new ConnectivityMap({
+            A: ["A", "A_0", "via_7", "via_2"],
+            B: ["fixed-B"],
+          }),
+          obstacles: [],
+        }),
+      },
+    )
+    evaluator.evaluateLocalCandidate = ({
+      changedTraceIds,
+    }): {
       currentErrors: Pipeline9DrcError[]
       candidateErrors: Pipeline9DrcError[]
+      candidateErrorPairsAreUnambiguous: boolean
     } => {
       localCalls++
       expect([...changedTraceIds], scenario.name).toEqual(["A_0"])
@@ -126,6 +154,8 @@ test("Pipeline9 prunes impossible local copper pairs before full DRC without los
       return {
         currentErrors: [padA, padB],
         candidateErrors: scenario.localCandidateErrors,
+        candidateErrorPairsAreUnambiguous:
+          scenario.candidateErrorPairsAreUnambiguous,
       }
     }
     const solver = new Pipeline9HighDensityDrcRepairSolver({

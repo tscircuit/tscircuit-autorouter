@@ -143,6 +143,10 @@ test("Pipeline9 local DRC forces repair pad clearance with fixed node handoffs a
     for (const candidate of getPipeline9HighDensityForceCandidates({
       node,
       hdRoutes: improvedRoutes,
+      forceContext: drcEvaluator.getForceContext([
+        ...improvedRoutes,
+        fixedRoute,
+      ]),
       errors: currentErrors,
       traceRouteIndexById: new Map([["A_0", 0]]),
       obstacles: [...srj.obstacles, ...fixedObstacles],

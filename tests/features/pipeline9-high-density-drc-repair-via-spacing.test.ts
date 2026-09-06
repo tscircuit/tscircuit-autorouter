@@ -1,7 +1,9 @@
 import { expect, test } from "bun:test"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { DrcEvaluator } from "high-density-repair03/lib"
+import { createPipeline9HighDensityDrcEvaluator } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/createPipeline9HighDensityDrcEvaluator"
 import { createPipeline9RelaxedDrcEvaluator } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/createPipeline9RelaxedDrcEvaluator"
+import type { Pipeline9HighDensityForceContext } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/getPipeline9HighDensityForceObstacles"
 import { Pipeline9HighDensityDrcRepairSolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9HighDensityDrcRepairSolver"
 import { getPipeline9DrcErrors } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/pipeline9JointDrcRepairUtils"
 import type { HighDensityRoute } from "lib/types/high-density-types"
@@ -158,15 +160,44 @@ test("Pipeline9 prechecks actual drill spacing across nets and route ownership",
     expect(
       getPipeline9DrcErrors(evaluate, [...hdRoutes, ...fixedHdRoutes]),
     ).toHaveLength(scenario.expectedErrors)
+    const forceEvaluator = createPipeline9HighDensityDrcEvaluator({
+      connections,
+      originalConnections: connections,
+      hdRoutes: [...hdRoutes, ...fixedHdRoutes],
+      originalFixedHdRoutes: [],
+      fixedHdRoutes: [],
+      changedPreloadedTraceSections: [],
+      layerCount,
+      obstacles: [],
+      defaultViaHoleDiameter: 0.2,
+      connMap,
+      originalSrj: srj,
+      srjWithPointPairs: srj,
+    })
     let evaluatorCallCount = 0
-    const drcEvaluator: DrcEvaluator = ({ hdRoutes: candidateRoutes }) => {
-      if (!candidateRoutes) throw new Error("Expected high-density candidates")
-      evaluatorCallCount += 1
-      return evaluate({
-        hdRoutes: [...candidateRoutes, ...fixedHdRoutes],
-        traces: [],
-      })
-    }
+    const drcEvaluator = Object.assign(
+      ({
+        hdRoutes: candidateRoutes,
+      }: Parameters<DrcEvaluator>[0]): ReturnType<DrcEvaluator> => {
+        if (!candidateRoutes) {
+          throw new Error("Expected high-density candidates")
+        }
+        evaluatorCallCount += 1
+        return evaluate({
+          hdRoutes: [...candidateRoutes, ...fixedHdRoutes],
+          traces: [],
+        })
+      },
+      {
+        getForceContext: (
+          candidateRoutes: HighDensityRoute[],
+        ): Pipeline9HighDensityForceContext =>
+          forceEvaluator.getForceContext([
+            ...candidateRoutes,
+            ...fixedHdRoutes,
+          ]),
+      },
+    )
     const solver = new Pipeline9HighDensityDrcRepairSolver({
       nodePortPoints: [
         {
@@ -201,7 +232,7 @@ test("Pipeline9 prechecks actual drill spacing across nets and route ownership",
       scenario: scenario.name,
       errors: solver.currentErrors.length,
     }).toEqual({ scenario: scenario.name, errors: scenario.expectedErrors })
-    expect(evaluatorCallCount).toBe(scenario.expectedErrors > 0 ? 1 : 0)
+    expect(evaluatorCallCount).toBe(1)
     expect(solver.stats.drcPrecheckFoundPotentialIssue).toBe(
       scenario.expectedErrors > 0,
     )

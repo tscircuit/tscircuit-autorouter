@@ -15,6 +15,7 @@ import type {
 import type { Obstacle } from "lib/types/srj-types"
 import { convertHdRouteToSimplifiedRoute } from "lib/utils/convertHdRouteToSimplifiedRoute"
 import { getBoundsFromNodeWithPortPoints } from "lib/utils/getBoundsFromNodeWithPortPoints"
+import type { Pipeline9HighDensityForceContext } from "./getPipeline9HighDensityForceObstacles"
 import { isPipeline9HighDensityRouteInsideBounds } from "./isPipeline9HighDensityRouteInsideBounds"
 import {
   getPipeline9DrcErrorTraceIds,
@@ -51,6 +52,7 @@ export type Pipeline9HighDensityForceCandidateParams = {
   traceWidth: number
   obstacleMargin: number
   connMap: ConnectivityMap
+  forceContext: Pipeline9HighDensityForceContext
   effort: number
   onCandidateRejected?: (
     reason: Pipeline9HighDensityForceRejectionReason,
@@ -249,6 +251,7 @@ export function* getPipeline9HighDensityForceCandidates({
   traceWidth,
   obstacleMargin,
   connMap,
+  forceContext,
   effort,
   onCandidateRejected,
 }: Pipeline9HighDensityForceCandidateParams): Generator<
@@ -276,7 +279,7 @@ export function* getPipeline9HighDensityForceCandidates({
       maxY: nodeBounds.maxY + copperRadius,
     },
     connections: [],
-    obstacles,
+    obstacles: forceContext.obstacles,
     layerCount,
     minTraceWidth: traceWidth,
     minViaDiameter: viaDiameter,
@@ -293,6 +296,23 @@ export function* getPipeline9HighDensityForceCandidates({
         connMap,
       ),
   )
+  const forceTraceIds = hdRoutes.map((_, routeIndex): string => {
+    const traceIds = [...traceRouteIndexById].flatMap(([traceId, index]) =>
+      index === routeIndex ? [traceId] : [],
+    )
+    const traceId = traceIds[0]
+    if (
+      traceId === undefined ||
+      traceIds.some(
+        (identity) =>
+          identity !== traceId &&
+          !forceContext.connMap.areIdsConnected(traceId, identity),
+      )
+    ) {
+      throw new Error("Pipeline9 force routes require consistent PCB trace owners")
+    }
+    return traceId
+  })
   const maxCandidateApplications =
     getMaxTargetedCandidateAttemptsForEffort(effort)
   for (const error of getPadTargetedForceErrors(errors)) {
@@ -317,6 +337,12 @@ export function* getPipeline9HighDensityForceCandidates({
           ),
       )
       const mutableRoutes = localRoutes.map((local) => local.mutable)
+      for (const [index, route] of mutableRoutes.entries()) {
+        // Routing aliases can merge pads that the official serialized board
+        // treats as foreign. Only the private force geometry uses PCB owners.
+        route.connectionName = forceTraceIds[index]!
+        route.rootConnectionName = forceTraceIds[index]!
+      }
       // Official accidental-contact errors have no graded overlap severity.
       // A bounded private force sequence can cross that plateau before any
       // candidate is accepted; never restart it from a published partial move.
@@ -332,7 +358,7 @@ export function* getPipeline9HighDensityForceCandidates({
             [localError],
             traceRouteIndexById,
             scale,
-            connMap,
+            forceContext.connMap,
             true,
             false,
             false,

@@ -1,5 +1,6 @@
 import { expect, test } from "bun:test"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
+import type { Pipeline9HighDensityForceContext } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/getPipeline9HighDensityForceObstacles"
 import { Pipeline9HighDensityDrcRepairSolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9HighDensityDrcRepairSolver"
 import type {
   HighDensityRoute,
@@ -73,6 +74,22 @@ test("Pipeline9 indexes copper and retries across the native port-point domain",
     vias: [],
   }
   const originalInputs = structuredClone({ nodes, routes, fixedRoute })
+  const drcEvaluator = Object.assign(
+    (): never => {
+      throw new Error("The context-index regression must not evaluate DRCs")
+    },
+    {
+      getForceContext: (): Pipeline9HighDensityForceContext => ({
+        connMap: new ConnectivityMap({
+          A: ["A", "A_0"],
+          B: ["B", "B_0"],
+          C: ["C", "C_0"],
+          D: ["D"],
+        }),
+        obstacles: [],
+      }),
+    },
+  )
   const solver = new Pipeline9HighDensityDrcRepairSolver({
     nodePortPoints: nodes,
     hdRoutes: routes,
@@ -86,9 +103,7 @@ test("Pipeline9 indexes copper and retries across the native port-point domain",
       })),
     })),
     // This focused index regression does not run repair or assign DRC scores.
-    drcEvaluator: (): never => {
-      throw new Error("The context-index regression must not evaluate DRCs")
-    },
+    drcEvaluator,
     connMap: new ConnectivityMap({
       A: ["A"],
       B: ["B"],
@@ -118,10 +133,7 @@ test("Pipeline9 indexes copper and retries across the native port-point domain",
 
   // A changed fragment at x=-3 is outside A's nominal rectangle but inside its
   // actual routing domain. It must reopen A's context without retrying C.
-  solver.currentErrors = [
-    { pcb_trace_id: "A_0" },
-    { pcb_trace_id: "C_0" },
-  ]
+  solver.currentErrors = [{ pcb_trace_id: "A_0" }, { pcb_trace_id: "C_0" }]
   for (const node of nodes) {
     context.attemptedNodeIdsAtCurrentRevision.add(node.capacityMeshNodeId)
   }
@@ -129,11 +141,7 @@ test("Pipeline9 indexes copper and retries across the native port-point domain",
   solver.activeNode = nodes[1]!
   const changedRoute = structuredClone(routes[1]!)
   changedRoute.route[1]!.x = -2.8
-  context.invalidateChangedNodeContexts([
-    routes[0]!,
-    changedRoute,
-    routes[2]!,
-  ])
+  context.invalidateChangedNodeContexts([routes[0]!, changedRoute, routes[2]!])
   expect(context.attemptedNodeIdsAtCurrentRevision.has("node-a")).toBe(false)
   expect(context.attemptedNodeIdsAtCurrentRevision.has("node-b")).toBe(false)
   expect(context.attemptedNodeIdsAtCurrentRevision.has("node-c")).toBe(true)

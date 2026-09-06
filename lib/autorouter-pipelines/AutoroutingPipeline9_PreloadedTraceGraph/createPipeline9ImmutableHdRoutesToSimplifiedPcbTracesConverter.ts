@@ -70,9 +70,7 @@ export const createPipeline9ImmutableHdRoutesToSimplifiedPcbTracesConverter = (
         for (const route of connectionRoutes) {
           const convertedTrace = convertedTraces[convertedIndex++]
           if (!convertedTrace) {
-            throw new Error(
-              "Pipeline9 immutable HD conversion lost a fragment",
-            )
+            throw new Error("Pipeline9 immutable HD conversion lost a fragment")
           }
           let connectionTraces = tracesByHdRoute.get(route)
           if (!connectionTraces) {

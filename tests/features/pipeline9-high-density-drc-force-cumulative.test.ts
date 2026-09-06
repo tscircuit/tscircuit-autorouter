@@ -95,6 +95,7 @@ test("Pipeline9 cumulative forces cross a binary overlap without mutating earlie
   const candidates = getPipeline9HighDensityForceCandidates({
     node,
     hdRoutes: [route],
+    forceContext: evaluator.getForceContext([route]),
     errors: initialErrors,
     traceRouteIndexById: new Map([["A_0", 0]]),
     obstacles: srj.obstacles,

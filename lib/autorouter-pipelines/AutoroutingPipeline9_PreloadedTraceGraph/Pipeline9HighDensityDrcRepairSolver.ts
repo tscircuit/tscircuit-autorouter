@@ -712,14 +712,15 @@ export class Pipeline9HighDensityDrcRepairSolver extends BaseSolver {
           localCandidateErrors,
           local.currentErrors.filter(isOwnedError),
         ) ||
-        // Scoped pair counts and nonnegative severity are lower bounds on
-        // the full candidate. A pair already worse than the FULL incumbent
-        // cannot pass full validation. Do not compare pair identities only
-        // with the local baseline: a via owner can have remote conflicts.
-        !isPipeline9HighDensityDrcCandidateBetter(
-          localCandidateErrors,
-          this.currentErrors,
-        )
+        // With unambiguous official deduplication keys, scoped pair counts
+        // and nonnegative severity are lower bounds on the full candidate.
+        // Compare against the FULL incumbent: a via owner can have remote
+        // conflicts that are absent from the scoped baseline.
+        (local.candidateErrorPairsAreUnambiguous &&
+          !isPipeline9HighDensityDrcCandidateBetter(
+            localCandidateErrors,
+            this.currentErrors,
+          ))
       ) {
         return false
       }
@@ -853,6 +854,7 @@ export class Pipeline9HighDensityDrcRepairSolver extends BaseSolver {
       traceWidth: this.params.traceWidth,
       obstacleMargin: this.params.obstacleMargin,
       connMap: this.params.connMap,
+      forceContext: this.params.drcEvaluator.getForceContext(this.outputHdRoutes),
       effort: this.params.effort,
       onCandidateRejected: (reason): void => {
         const statName = {
@@ -891,6 +893,7 @@ export class Pipeline9HighDensityDrcRepairSolver extends BaseSolver {
         traceWidth: this.params.traceWidth,
         obstacleMargin: this.params.obstacleMargin,
         connMap: this.params.connMap,
+        forceContext: this.params.drcEvaluator.getForceContext(this.outputHdRoutes),
         effort: this.params.effort,
       })
     }

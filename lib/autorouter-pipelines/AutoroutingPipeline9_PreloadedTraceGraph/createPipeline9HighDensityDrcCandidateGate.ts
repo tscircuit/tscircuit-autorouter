@@ -10,6 +10,7 @@ import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import { RELAXED_TRACE_CLEARANCE } from "lib/testing/drcPresets"
 import { MIN_VIA_TO_VIA_CLEARANCE } from "lib/testing/getDrcErrors"
 import type { HighDensityRoute } from "lib/types/high-density-types"
+import { arePipeline9HighDensityDrcPairIdentifiersUnambiguous } from "./arePipeline9HighDensityDrcPairIdentifiersUnambiguous"
 import {
   doPipeline9BoundsOverlap,
   type Pipeline9Bounds,
@@ -29,6 +30,7 @@ export type Pipeline9HighDensityDrcCandidateGate = (params: {
 }) => {
   currentErrors: Pipeline9DrcError[]
   candidateErrors: Pipeline9DrcError[]
+  candidateErrorPairsAreUnambiguous: boolean
   snapshotPreparationTimeMs?: number
   scopedCopperCheckTimeMs?: number
 }
@@ -152,6 +154,10 @@ export const createPipeline9HighDensityDrcCandidateGate = ({
     Pipeline9HighDensityDrcSnapshot,
     LocalBaseline
   >()
+  const unambiguousPairsBySnapshot = new WeakMap<
+    Pipeline9HighDensityDrcSnapshot,
+    boolean
+  >()
   const getCopper = (
     snapshot: Pipeline9HighDensityDrcSnapshot,
   ): SnapshotCopper => {
@@ -182,6 +188,18 @@ export const createPipeline9HighDensityDrcCandidateGate = ({
     const snapshotStartedAt = performance.now()
     const currentSnapshot = getSnapshot(currentRoutes)
     const candidateSnapshot = getSnapshot(candidateRoutes)
+    let candidateErrorPairsAreUnambiguous =
+      unambiguousPairsBySnapshot.get(candidateSnapshot)
+    if (candidateErrorPairsAreUnambiguous === undefined) {
+      candidateErrorPairsAreUnambiguous =
+        arePipeline9HighDensityDrcPairIdentifiersUnambiguous(
+          candidateSnapshot.circuitJson,
+        )
+      unambiguousPairsBySnapshot.set(
+        candidateSnapshot,
+        candidateErrorPairsAreUnambiguous,
+      )
+    }
     const snapshotPreparationTimeMs = performance.now() - snapshotStartedAt
     const currentCopper = getCopper(currentSnapshot)
     const candidateCopper = getCopper(candidateSnapshot)
@@ -271,6 +289,7 @@ export const createPipeline9HighDensityDrcCandidateGate = ({
     return {
       currentErrors,
       candidateErrors,
+      candidateErrorPairsAreUnambiguous,
       snapshotPreparationTimeMs,
       scopedCopperCheckTimeMs: performance.now() - scopedChecksStartedAt,
     }

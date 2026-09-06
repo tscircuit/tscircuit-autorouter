@@ -5,6 +5,7 @@ import {
   getForceScalesForEffort,
   getMaxTargetedCandidateAttemptsForEffort,
 } from "high-density-repair03/lib/solvers/GlobalDrcForceImproveSolver/solverConfig"
+import type { Pipeline9HighDensityForceContext } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/getPipeline9HighDensityForceObstacles"
 import { Pipeline9HighDensityDrcRepairSolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9HighDensityDrcRepairSolver"
 import type { Pipeline9DrcError } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/pipeline9JointDrcRepairUtils"
 import type {
@@ -53,10 +54,18 @@ test("Pipeline9 honors an owned DRC when its geometric precheck is clear", (): v
   let evaluatorCallCount = 0
   // Isolate the evaluator-authority contract: this is a synthetic reported
   // contact, not a claim that the clean geometric fixture has a real overlap.
-  const drcEvaluator: DrcEvaluator = (): ReturnType<DrcEvaluator> => {
-    evaluatorCallCount++
-    return { errors, errorsWithCenters: errors }
-  }
+  const drcEvaluator = Object.assign(
+    (): ReturnType<DrcEvaluator> => {
+      evaluatorCallCount++
+      return { errors, errorsWithCenters: errors }
+    },
+    {
+      getForceContext: (): Pipeline9HighDensityForceContext => ({
+        connMap: new ConnectivityMap({ A: ["A", "A_0"] }),
+        obstacles: [],
+      }),
+    },
+  )
   const solver = new Pipeline9HighDensityDrcRepairSolver({
     nodePortPoints: [node],
     hdRoutes: inputRoutes,

@@ -244,12 +244,12 @@ test("Pipeline9 immutable HD conversion preserves fresh conversion semantics and
     const expected = convertToCircuitJson(srj, expectedTraces, circuitOptions)
     expect(actual).toEqual(expected)
     expect(
-      getDrcErrors(actual, {
+      getDrcErrors(structuredClone(actual), {
         includeTraceContinuity: false,
         includeBoardEdge: false,
       }),
     ).toEqual(
-      getDrcErrors(expected, {
+      getDrcErrors(structuredClone(expected), {
         includeTraceContinuity: false,
         includeBoardEdge: false,
       }),
