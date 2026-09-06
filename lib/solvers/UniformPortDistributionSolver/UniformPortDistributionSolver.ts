@@ -134,13 +134,15 @@ export class UniformPortDistributionSolver extends BaseSolver {
       for (const z of new Set(family.map((point) => point.z))) {
         const portsOnZ = family.filter((point) => point.z === z)
         const hasOverlappingPorts = portsOnZ.some((point, index) =>
-          portsOnZ.slice(index + 1).some(
-            (other) =>
-              (point.rootConnectionName ?? point.connectionName) !==
-                (other.rootConnectionName ?? other.connectionName) &&
-              Math.hypot(point.x - other.x, point.y - other.y) <
-                this.input.minTraceWidth - 1e-9,
-          ),
+          portsOnZ
+            .slice(index + 1)
+            .some(
+              (other) =>
+                (point.rootConnectionName ?? point.connectionName) !==
+                  (other.rootConnectionName ?? other.connectionName) &&
+                Math.hypot(point.x - other.x, point.y - other.y) <
+                  this.input.minTraceWidth - 1e-9,
+            ),
         )
         // Preserve obstacle-adjacent ports unless foreign-net copper overlaps.
         // A pad on another layer must not prevent resolving that overlap.
