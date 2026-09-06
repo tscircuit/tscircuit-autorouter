@@ -106,5 +106,7 @@ test("bugreport106 routes the full nRF input without shorting SWDCLK into the ba
       srjWithPointPairs: solver.srjWithPointPairs!,
       routedTraces,
     }),
-  ).toMatchSvgSnapshot(import.meta.path, { svgName: "after" })
+  ).toMatchSvgSnapshot(import.meta.path, {
+    svgName: process.platform === "linux" ? "after-linux" : "after",
+  })
 })
