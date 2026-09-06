@@ -153,11 +153,18 @@ test("Pipeline9 endpoint pad candidates clear a synthetic conflict without the r
     })
   }
   expect(attemptedErrors).toEqual([0])
-  expect(attempts.slice(0, 2)).toEqual(["pad-wire-0", "pad-wire-1"])
+  expect(attempts.slice(0, 2)).toEqual(["pad-wire", "native"])
+  expect(
+    attempts.filter(
+      (family) => family === "pad-wire-0" || family === "pad-wire-1",
+    ),
+  ).toEqual(["pad-wire-0", "pad-wire-1"])
   const firstAccepted = observations.find((observation) =>
     isPipeline9HighDensityDrcCandidateBetter(observation.errors, errors),
   )
-  expect(firstAccepted).toBe(observations[0])
+  expect(firstAccepted).toBe(
+    observations.find((observation) => observation.family === "pad-wire-0"),
+  )
   expect(firstAccepted?.family).toBe("pad-wire-0")
   expect(firstAccepted?.errors).toHaveLength(0)
   const rigid = observations.find(
@@ -166,6 +173,7 @@ test("Pipeline9 endpoint pad candidates clear a synthetic conflict without the r
   if (!rigid) {
     throw new Error("The distinct original rigid candidate must remain")
   }
+  expect(observations[0]).toBe(rigid)
   expect(rigid.errors).toHaveLength(1)
   expect(rigid.errors[0]).toMatchObject({
     type: "pcb_via_trace_clearance_error",

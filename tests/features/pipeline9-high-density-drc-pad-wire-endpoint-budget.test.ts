@@ -199,15 +199,7 @@ test("Pipeline9 endpoint pad slots retain every native chain and distinct rigid 
       )
       expect(
         attempts.filter((attempt) => attempt.errorIndex === errorIndex),
-      ).toEqual([
-        ...originalSlots.filter(
-          (slot) =>
-            slot.family === "pad-wire-0" || slot.family === "pad-wire-1",
-        ),
-        ...originalSlots.filter(
-          (slot) => slot.family === "native" || slot.family === "pad-wire",
-        ),
-      ])
+      ).toEqual(originalSlots)
     }
     const expectedNative: ForceObservation[] = []
     const expectedRigid: ForceObservation[] = []
@@ -275,8 +267,8 @@ test("Pipeline9 endpoint pad slots retain every native chain and distinct rigid 
         }
       }
     }
-    // In particular, the split -1 native slots 1, 3 and 5 must accumulate
-    // exactly as before; a descriptor-local state reset fails this comparison.
+    // In particular, the -1 native slots 1, 3 and 5 must still accumulate
+    // exactly as before, independently of the two endpoint replacements.
     expect(observations.filter((item) => item.family === "native")).toEqual(
       expectedNative,
     )

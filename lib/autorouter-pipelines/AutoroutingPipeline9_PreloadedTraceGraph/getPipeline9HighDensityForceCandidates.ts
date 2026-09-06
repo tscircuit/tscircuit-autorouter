@@ -508,17 +508,9 @@ export function* getPipeline9HighDensityForceCandidates({
       }
       // The pad helper uses only abs(scale): its complete -1 rigid chain is
       // identical to +1. Spend two duplicate slots on independent endpoints,
-      // keeping both distinct rigid scales and every native slot in order.
-      forcePasses.splice(
-        2,
-        1,
-        { ...duplicatePadPass, applicationStart: 1, applicationEnd: 2 },
-        { ...duplicatePadPass, applicationStart: 3 },
-      )
-      forcePasses.unshift(
-        { ...duplicatePadPass, applicationStart: 0, applicationEnd: 1 },
-        { ...duplicatePadPass, applicationStart: 2, applicationEnd: 3 },
-      )
+      // after the distinct rigid scales. A first-accepted endpoint rotation
+      // can leave a broad pad violation that rigid translation clears fully.
+      // Keep the original slots so it cannot preempt those rigid candidates.
     }
     const statesByScaleIndex = new Map<
       number,
