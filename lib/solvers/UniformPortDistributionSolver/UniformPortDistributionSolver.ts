@@ -2,6 +2,7 @@ import { BaseSolver } from "@tscircuit/solver-utils"
 import { GraphicsObject } from "graphics-debug"
 import { Obstacle } from "lib/types"
 import { NodeWithPortPoints } from "lib/types/high-density-types"
+import { createObjectsWithZLayers } from "lib/utils/createObjectsWithZLayers"
 import { getBoundsFromNodeWithPortPoints } from "lib/utils/getBoundsFromNodeWithPortPoints"
 import { InputNodeWithPortPoints } from "../PortPointPathingSolver/PortPointPathingSolver"
 import {
@@ -23,6 +24,8 @@ export interface UniformPortDistributionSolverInput {
   nodeWithPortPoints: NodeWithPortPoints[]
   inputNodesWithPortPoints: InputNodeWithPortPoints[]
   obstacles: Obstacle[]
+  minTraceWidth: number
+  layerCount?: number
 }
 
 /**
@@ -45,9 +48,14 @@ export class UniformPortDistributionSolver extends BaseSolver {
   ownerPairsToProcess: OwnerPairKey[] = []
   currentOwnerPairBeingProcessed: OwnerPairKey | null = null
   redistributedNodes: NodeWithPortPoints[] = []
+  obstacles: Array<Obstacle & { __zLayers: number[] }>
 
   constructor(private input: UniformPortDistributionSolverInput) {
     super()
+    this.obstacles = createObjectsWithZLayers(
+      input.obstacles,
+      input.layerCount ?? 2,
+    )
     for (const node of input.nodeWithPortPoints) {
       this.mapOfNodeIdToBounds.set(
         node.capacityMeshNodeId,
@@ -109,29 +117,47 @@ export class UniformPortDistributionSolver extends BaseSolver {
     const sharedEdge = this.mapOfOwnerPairToSharedEdge.get(ownerPairKey)
     if (!sharedEdge) return
 
-    if (
-      shouldIgnoreSharedEdge({ sharedEdge, obstacles: this.input.obstacles })
-    ) {
-      return
-    }
-
     const familyRaw = this.mapOfOwnerPairToPortPoints.get(ownerPairKey) ?? []
-    const family: PortPointWithOwnerPair[] = []
-    for (const portPoint of familyRaw) {
-      if (
+    const family = familyRaw.filter(
+      (portPoint) =>
         !shouldIgnorePortPoint({
           portPoint,
           ownerNodeIds: portPoint.ownerNodeIds,
           inputNodes: this.input.inputNodesWithPortPoints,
-        })
-      ) {
-        family.push(portPoint)
+        }),
+    )
+    const boundaryObstacles = this.obstacles.filter((obstacle) =>
+      shouldIgnoreSharedEdge({ sharedEdge, obstacles: [obstacle] }),
+    )
+    const blockedLayers = new Set<number>()
+    if (boundaryObstacles.length > 0) {
+      for (const z of new Set(family.map((point) => point.z))) {
+        const portsOnZ = family.filter((point) => point.z === z)
+        const hasOverlappingPorts = portsOnZ.some((point, index) =>
+          portsOnZ
+            .slice(index + 1)
+            .some(
+              (other) =>
+                (point.rootConnectionName ?? point.connectionName) !==
+                  (other.rootConnectionName ?? other.connectionName) &&
+                Math.hypot(point.x - other.x, point.y - other.y) <
+                  this.input.minTraceWidth - 1e-9,
+            ),
+        )
+        // Preserve obstacle-adjacent ports unless foreign-net copper overlaps.
+        // A pad on another layer must not prevent resolving that overlap.
+        if (
+          !hasOverlappingPorts ||
+          boundaryObstacles.some((obstacle) => obstacle.__zLayers.includes(z))
+        ) {
+          blockedLayers.add(z)
+        }
       }
+      if (family.every((point) => blockedLayers.has(point.z))) return
     }
-
     const redistributed = redistributePortPointsOnSharedEdge({
       sharedEdge,
-      portPoints: family,
+      portPoints: family.filter((point) => !blockedLayers.has(point.z)),
     })
 
     this.mapOfOwnerPairToPortPoints.set(ownerPairKey, redistributed)
