@@ -48,10 +48,12 @@ test("Pipeline9 routes the full Game Boy Advance parent directly to MCU pads", (
         originalFixedRoute,
         originalPreloadedTrace: srj.traces?.[replacement.preloadedTraceIndex],
         replacement,
-        mutationMask:
-          hdSolver.preloadedTraceMutationMasks.get(protectedConnectionName),
-        markedRemoved:
-          hdSolver.removedFixedRouteConnectionNames.has(protectedConnectionName),
+        mutationMask: hdSolver.preloadedTraceMutationMasks.get(
+          protectedConnectionName,
+        ),
+        markedRemoved: hdSolver.removedFixedRouteConnectionNames.has(
+          protectedConnectionName,
+        ),
       },
       null,
       2,
