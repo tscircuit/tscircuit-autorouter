@@ -55,6 +55,7 @@ export type WorkerProgress = {
   activeSubSolverProgress?: number
   activeSubSolverIterations?: number
   stageTiming?: BenchmarkStageTimingBreakdown
+  routingMetrics?: RoutingBenchmarkMetrics
 }
 
 export type TinyHypergraphBenchmarkMetrics = {
@@ -97,6 +98,7 @@ export type RoutingBenchmarkMetrics = {
   tinyHypergraph?: TinyHypergraphBenchmarkMetrics
   highDensityIterations?: number
   phaseTimeMs?: Record<string, number>
+  highDensityDrcRepair?: HighDensityDrcRepairBenchmarkMetrics
   networkedHighDensity?: {
     remoteRequestsStarted: number
     remoteRequestsCompleted: number
@@ -106,6 +108,12 @@ export type RoutingBenchmarkMetrics = {
     remoteSolverResults: number
     remoteTransportFallbacks: number
   }
+}
+
+export type HighDensityDrcRepairBenchmarkMetrics = {
+  status: "complete" | "failed" | "partial"
+  iterations: number
+  stats: Record<string, number | boolean>
 }
 
 export type WorkerResult<

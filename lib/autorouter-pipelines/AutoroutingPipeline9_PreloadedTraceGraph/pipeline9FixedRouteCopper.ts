@@ -4,7 +4,6 @@ import type { HighDensityRoute } from "lib/types/high-density-types"
 import { generateApproximatingRects } from "lib/utils/addApproximatingRectsToSrj"
 import { mapZToLayerName } from "lib/utils/mapZToLayerName"
 import { minimumDistanceBetweenSegments } from "lib/utils/minimumDistanceBetweenSegments"
-import type { PreloadedHighDensityRoute } from "./convertPreloadedTraceToHdRoutes"
 
 export type Pipeline9RouteWireSegment = {
   start: HighDensityRoute["route"][number]
@@ -43,6 +42,7 @@ const routeCopperGeometryCache = new WeakMap<
   HighDensityRoute,
   Pipeline9RouteCopperGeometry
 >()
+const routeCopperBoundsCache = new WeakMap<HighDensityRoute, Pipeline9Bounds>()
 
 export const getPipeline9RouteCopperGeometry = (
   route: HighDensityRoute,
@@ -109,6 +109,51 @@ export const getPipeline9RouteCopperGeometry = (
   return geometry
 }
 
+export const getPipeline9RouteCopperBounds = (
+  route: HighDensityRoute,
+): Pipeline9Bounds | undefined => {
+  const cachedBounds = routeCopperBoundsCache.get(route)
+  if (cachedBounds) return cachedBounds
+  const geometry = getPipeline9RouteCopperGeometry(route)
+  let bounds: Pipeline9Bounds | undefined
+  for (const wire of geometry.wireSegments) {
+    const radius = wire.width / 2
+    const wireBounds = {
+      minX: Math.min(wire.start.x, wire.end.x) - radius,
+      maxX: Math.max(wire.start.x, wire.end.x) + radius,
+      minY: Math.min(wire.start.y, wire.end.y) - radius,
+      maxY: Math.max(wire.start.y, wire.end.y) + radius,
+    }
+    bounds = bounds
+      ? {
+          minX: Math.min(bounds.minX, wireBounds.minX),
+          maxX: Math.max(bounds.maxX, wireBounds.maxX),
+          minY: Math.min(bounds.minY, wireBounds.minY),
+          maxY: Math.max(bounds.maxY, wireBounds.maxY),
+        }
+      : wireBounds
+  }
+  for (const via of geometry.viaSpans) {
+    const radius = via.diameter / 2
+    const viaBounds = {
+      minX: via.center.x - radius,
+      maxX: via.center.x + radius,
+      minY: via.center.y - radius,
+      maxY: via.center.y + radius,
+    }
+    bounds = bounds
+      ? {
+          minX: Math.min(bounds.minX, viaBounds.minX),
+          maxX: Math.max(bounds.maxX, viaBounds.maxX),
+          minY: Math.min(bounds.minY, viaBounds.minY),
+          maxY: Math.max(bounds.maxY, viaBounds.maxY),
+        }
+      : viaBounds
+  }
+  if (bounds) routeCopperBoundsCache.set(route, bounds)
+  return bounds
+}
+
 export const getPipeline9AxisAlignedWireApproximations = (
   segment: Pipeline9RouteWireSegment,
   maxApproximationLength: number,
@@ -148,7 +193,7 @@ export const getPipeline9FixedRouteObstacles = ({
   fixedObstacleRoutes,
   layerCount,
 }: {
-  fixedObstacleRoutes: PreloadedHighDensityRoute[]
+  fixedObstacleRoutes: HighDensityRoute[]
   layerCount: number
 }): Obstacle[] => {
   return fixedObstacleRoutes.flatMap((route, routeIndex) => {
@@ -211,7 +256,7 @@ export const arePipeline9RoutesOnSameNet = (
   )
 }
 
-const boundsOverlap = (
+export const doPipeline9BoundsOverlap = (
   left: Pipeline9Bounds,
   right: Pipeline9Bounds,
 ): boolean => {
@@ -233,7 +278,7 @@ const wireSegmentOverlapsBounds = (
     minY: Math.min(segment.start.y, segment.end.y) - segment.width / 2,
     maxY: Math.max(segment.start.y, segment.end.y) + segment.width / 2,
   }
-  return boundsOverlap(segmentBounds, bounds)
+  return doPipeline9BoundsOverlap(segmentBounds, bounds)
 }
 
 const viaSpanOverlapsBounds = (
@@ -246,7 +291,7 @@ const viaSpanOverlapsBounds = (
     minY: via.center.y - via.diameter / 2,
     maxY: via.center.y + via.diameter / 2,
   }
-  return boundsOverlap(viaBounds, bounds)
+  return doPipeline9BoundsOverlap(viaBounds, bounds)
 }
 
 export const doPipeline9RoutesHaveCopperConflict = ({
@@ -260,6 +305,23 @@ export const doPipeline9RoutesHaveCopperConflict = ({
   clearance: number
   leftBounds?: Pipeline9Bounds
 }): boolean => {
+  const leftCopperBounds = getPipeline9RouteCopperBounds(left)
+  const rightCopperBounds = getPipeline9RouteCopperBounds(right)
+  if (
+    !leftCopperBounds ||
+    !rightCopperBounds ||
+    !doPipeline9BoundsOverlap(
+      {
+        minX: leftCopperBounds.minX - clearance,
+        maxX: leftCopperBounds.maxX + clearance,
+        minY: leftCopperBounds.minY - clearance,
+        maxY: leftCopperBounds.maxY + clearance,
+      },
+      rightCopperBounds,
+    )
+  ) {
+    return false
+  }
   const leftGeometry = getPipeline9RouteCopperGeometry(left)
   const rightGeometry = getPipeline9RouteCopperGeometry(right)
   const leftWires = leftBounds
