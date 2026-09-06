@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
-import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
+import { evaluateCoreRoutingDrc } from "lib/testing/evaluate-core-routing-drc"
 import { loadScenarioBySampleNumber } from "../../scripts/benchmark/scenarios"
 
 test("Pipeline9 uses Pipeline7 exact DRC budgets for SRJ23 sample 52", async () => {
@@ -57,7 +57,7 @@ test("Pipeline9 uses Pipeline7 exact DRC budgets for SRJ23 sample 52", async () 
         .regionalB01RepairCandidateSearchCount,
     ),
   ).toBeGreaterThan(0)
-  const { errors } = evaluateRelaxedDrc({
+  const { errors } = evaluateCoreRoutingDrc({
     inputSrj: scenario,
     srjWithPointPairs: solver.srjWithPointPairs!,
     routedTraces: solver.getOutputSimplifiedPcbTraces(),
