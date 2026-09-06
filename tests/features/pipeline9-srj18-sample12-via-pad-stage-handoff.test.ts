@@ -1,6 +1,7 @@
 import { expect, test } from "bun:test"
 import { convertPipeline7HdRoutesToSimplifiedPcbTraces } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/convertPipeline7HdRoutesToSimplifiedPcbTraces"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
+import type { Pipeline9HighDensityDrcCandidateGate } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/createPipeline9HighDensityDrcCandidateGate"
 import { addAutoroutingViaTraceIds } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9JointDrcRepairSolver"
 import { getPipeline9DrcErrorTraceIds } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/pipeline9JointDrcRepairUtils"
 import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
@@ -15,6 +16,88 @@ test("Pipeline9 repairs SRJ18 sample 12", async (): Promise<void> => {
     { cacheProvider: null, effort: 1 },
   )
   const targetConnectionName = "source_trace_13__source_net_13_mst7"
+  let localDiagnosticsInstalled = false
+  let candidateDiagnosticTimeMs = 0
+  let omittedCandidateDiagnosticCount = 0
+  // This is only a log/memory limit, never a candidate or solver-work budget.
+  const candidateDiagnosticRecordLimit = 64
+  const loggedCandidateGeometry = new Set<string>()
+  const installLocalCandidateDiagnostics = (): void => {
+    const repair = solver.highDensityDrcRepairSolver
+    if (!repair || localDiagnosticsInstalled) return
+    const evaluator = repair.params.drcEvaluator
+    const evaluateLocalCandidate = evaluator.evaluateLocalCandidate
+    if (!evaluateLocalCandidate) {
+      throw new Error("Sample12 diagnostics require the production local gate")
+    }
+    localDiagnosticsInstalled = true
+    evaluator.evaluateLocalCandidate = (
+      params,
+    ): ReturnType<Pipeline9HighDensityDrcCandidateGate> => {
+      // Observe the actual production result, never run an extra candidate or
+      // checker. Return this exact object so diagnostics cannot alter the gate.
+      const result = evaluateLocalCandidate(params)
+      const diagnosticStartedAt = performance.now()
+      const currentTarget = params.currentRoutes.find(
+        (route) =>
+          route.connectionName === targetConnectionName &&
+          route.regionId === "cmn_244",
+      )
+      const candidateTarget = params.candidateRoutes.find(
+        (route) =>
+          route.connectionName === targetConnectionName &&
+          route.regionId === "cmn_244",
+      )
+      if (
+        currentTarget &&
+        candidateTarget &&
+        JSON.stringify(currentTarget) !== JSON.stringify(candidateTarget)
+      ) {
+        const geometryKey = JSON.stringify([
+          repair.stats.acceptedRepairCount,
+          currentTarget,
+          candidateTarget,
+          result.currentErrors,
+          result.candidateErrors,
+        ])
+        if (loggedCandidateGeometry.size >= candidateDiagnosticRecordLimit) {
+          omittedCandidateDiagnosticCount++
+        } else if (!loggedCandidateGeometry.has(geometryKey)) {
+          loggedCandidateGeometry.add(geometryKey)
+          const candidateParticipants = new Set(
+            result.candidateErrors.flatMap(getPipeline9DrcErrorTraceIds),
+          )
+          console.info(
+            JSON.stringify({
+              dataset: "srj18",
+              sampleNumber: 12,
+              stage: "highDensityDrcRepairSolver",
+              event: "pad397-local-candidate",
+              activeNodeId: repair.activeNode?.capacityMeshNodeId,
+              acceptedRepairCount: repair.stats.acceptedRepairCount,
+              nodeRepairAttemptCount: repair.stats.nodeRepairAttemptCount,
+              changedTraceIds: [...params.changedTraceIds],
+              currentTarget,
+              candidateTarget,
+              currentLocalErrors: result.currentErrors,
+              candidateLocalErrors: result.candidateErrors,
+              candidateErrorPairsAreUnambiguous:
+                result.candidateErrorPairsAreUnambiguous,
+              // A scoped candidate is also compared with the full incumbent's
+              // physical pairs. Include its participants' current errors.
+              participantCurrentErrors: repair.currentErrors.filter((error) =>
+                getPipeline9DrcErrorTraceIds(error).some((traceId) =>
+                  candidateParticipants.has(traceId),
+                ),
+              ),
+            }),
+          )
+        }
+      }
+      candidateDiagnosticTimeMs += performance.now() - diagnosticStartedAt
+      return result
+    }
+  }
   const stageOutputs: Record<string, () => HighDensityRoute[]> = {
     highDensityRepairSolver: () => solver.highDensityRepairSolver!.getOutput(),
     highDensityDrcRepairSolver: () =>
@@ -58,6 +141,13 @@ test("Pipeline9 repairs SRJ18 sample 12", async (): Promise<void> => {
           stage === "highDensityDrcRepairSolver"
             ? solver.highDensityDrcRepairSolver?.activeNode?.capacityMeshNodeId
             : undefined,
+        excludedCandidateDiagnosticTimeMs: candidateDiagnosticTimeMs,
+        candidateDiagnosticRecordCount: loggedCandidateGeometry.size,
+        omittedCandidateDiagnosticCount,
+        // Stage elapsed excludes observer work. Raw callback/nested reroute
+        // timers belong to the solver and include it; do not rewrite stats.
+        rawStatsIncludeCandidateDiagnosticTime:
+          stage === "highDensityDrcRepairSolver",
         stats: repairSolver?.stats,
       }),
     )
@@ -177,10 +267,15 @@ test("Pipeline9 repairs SRJ18 sample 12", async (): Promise<void> => {
   logStageProgress(solver.getCurrentPhase(), "start", 0)
   while (!solver.solved && !solver.failed) {
     const stage = solver.getCurrentPhase()
+    installLocalCandidateDiagnostics()
+    const priorCandidateDiagnosticTimeMs = candidateDiagnosticTimeMs
     const stepStartedAt = performance.now()
     solver.step()
     // Diagnostic DRC and logging time are excluded from solver-stage timings.
-    stageElapsedTimeMs += performance.now() - stepStartedAt
+    stageElapsedTimeMs +=
+      performance.now() -
+      stepStartedAt -
+      (candidateDiagnosticTimeMs - priorCandidateDiagnosticTimeMs)
     if (solver.getCurrentPhase() !== stage) {
       logStageProgress(stage, "complete", stageElapsedTimeMs)
       if (stageOutputs[stage]) logStageCopper(stage, stageOutputs[stage]!())

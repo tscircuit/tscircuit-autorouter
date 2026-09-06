@@ -62,6 +62,13 @@ type ForceFamilyState = {
   exhausted: boolean
 }
 
+type ForcePass = {
+  scaleIndex: number
+  scale: number
+  applicationStart: number
+  applicationEnd: number
+}
+
 export type Pipeline9HighDensityForceRejectionReason =
   | "no-motion"
   | "anchor"
@@ -456,9 +463,32 @@ export function* getPipeline9HighDensityForceCandidates({
         traceRouteIndexById.has(traceId),
       ) &&
       getTraceRoutePairForError(localError, traceRouteIndexById) !== undefined
-    for (const [scaleIndex, scale] of getForceScalesForEffort(
-      effort,
-    ).entries()) {
+    const forcePasses = getForceScalesForEffort(effort).map(
+      (scale, scaleIndex): ForcePass => ({
+        scaleIndex,
+        scale,
+        applicationStart: canApplyTracePairForce && scaleIndex === 1 ? 2 : 0,
+        applicationEnd: maxCandidateApplications,
+      }),
+    )
+    if (canApplyTracePairForce) {
+      const oneSidedPass = forcePasses[1]
+      if (oneSidedPass === undefined || maxCandidateApplications < 2) {
+        throw new Error(
+          "Pipeline9 trace-pair forces require two existing slots",
+        )
+      }
+      // First-improvement acceptance discards the remaining private search.
+      // Visit the two existing one-sided slots before graded native nudges,
+      // retaining every native scale, application and cumulative chain order.
+      forcePasses.unshift({
+        ...oneSidedPass,
+        applicationStart: 0,
+        applicationEnd: 2,
+      })
+    }
+    for (const pass of forcePasses) {
+      const { scaleIndex, scale } = pass
       const states = new Map<
         Pipeline9HighDensityForceFamily,
         ForceFamilyState
@@ -470,14 +500,13 @@ export function* getPipeline9HighDensityForceCandidates({
       // each with independent cumulative geometry. Ineligible contact targets
       // retain native-only search; exhausted slots are never reassigned.
       for (
-        let application = 0;
-        application < maxCandidateApplications;
+        let application = pass.applicationStart;
+        application < pass.applicationEnd;
         application++
       ) {
-        // Keep the complete first-scale native sequence. A trace-pair error
-        // then spends two existing slots on independent one-sided moves, not
-        // on another scale of the same bilateral displacement. Neither move
-        // is repeated at later scales or inherits the other side's geometry.
+        // These are the original slot identities, even in the prefixed pass.
+        // Side 0, side 1 and the native family always have independent state;
+        // splitting their old shared pass does not change any native geometry.
         const family: Pipeline9HighDensityForceFamily =
           canApplyTracePairForce && scaleIndex === 1 && application < 2
             ? application === 0

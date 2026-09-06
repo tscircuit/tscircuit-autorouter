@@ -17,7 +17,7 @@ import type {
 } from "lib/types/high-density-types"
 import type { SimpleRouteJson } from "lib/types/srj-types"
 
-test("Pipeline9 native severity acceptance precedes an available exact one-sided repair", (): void => {
+test("Pipeline9 selects an exact one-sided repair before a native severity-only step", (): void => {
   const anchored: HighDensityRoute = {
     connectionName: "A",
     rootConnectionName: "A",
@@ -131,33 +131,37 @@ test("Pipeline9 native severity acceptance precedes an available exact one-sided
       })
     }
     // The production stage publishes the first strict improvement and drops
-    // its generator. Enumerate the remaining existing slots only to prove
-    // which already-supported repair is missed by that acceptance order.
+    // its generator. The existing one-sided repair must now precede the native
+    // severity-only candidate that previously ended this same node visit.
     const firstAcceptedIndex = observations.findIndex((observation) =>
       isPipeline9HighDensityDrcCandidateBetter(observation.errors, errors),
     )
-    expect(firstAcceptedIndex).toBeGreaterThanOrEqual(0)
+    expect(firstAcceptedIndex).toBe(0)
     const firstAccepted = observations[firstAcceptedIndex]!
-    expect(firstAccepted.family).toBe("native")
-    expect(firstAccepted.scale).toBe(1)
-    expect(firstAccepted.application).toBe(visit === 0 ? 1 : 0)
-    expect(firstAccepted.errors).toHaveLength(1)
-    expect(getPipeline9DrcScore(firstAccepted.errors)).toBeLessThan(
+    expect(firstAccepted.family).toBe("trace-pair-1")
+    expect(firstAccepted.scale).toBe(1.75)
+    expect(firstAccepted.application).toBe(1)
+    expect(firstAccepted.errors).toHaveLength(0)
+    const firstNativeAcceptedIndex = observations.findIndex(
+      (observation) =>
+        observation.family === "native" &&
+        isPipeline9HighDensityDrcCandidateBetter(observation.errors, errors),
+    )
+    expect(firstNativeAcceptedIndex).toBeGreaterThan(firstAcceptedIndex)
+    const firstNativeAccepted = observations[firstNativeAcceptedIndex]!
+    expect(firstNativeAccepted.scale).toBe(1)
+    expect(firstNativeAccepted.application).toBe(visit === 0 ? 1 : 0)
+    expect(firstNativeAccepted.errors).toHaveLength(1)
+    expect(getPipeline9DrcScore(firstNativeAccepted.errors)).toBeLessThan(
       getPipeline9DrcScore(errors),
     )
-    const oneSidedIndex = observations.findIndex(
-      (observation) => observation.family === "trace-pair-1",
-    )
-    expect(oneSidedIndex).toBeGreaterThan(firstAcceptedIndex)
-    const oneSided = observations[oneSidedIndex]!
-    expect(oneSided.errors).toHaveLength(0)
     expect(
       isPipeline9HighDensityDrcCandidateBetter(
-        oneSided.errors,
         firstAccepted.errors,
+        firstNativeAccepted.errors,
       ),
     ).toBe(true)
-    expect(oneSided.routes[1]!.route[1]!.y).toBeCloseTo(0.2, 12)
+    expect(firstAccepted.routes[1]!.route[1]!.y).toBeCloseTo(0.2, 12)
     for (const observation of observations) {
       expect(observation.routes[0]).toEqual(anchored)
       expect(observation.routes[1]!.route[0]).toEqual(movable.route[0])
@@ -166,9 +170,9 @@ test("Pipeline9 native severity acceptance precedes an available exact one-sided
         true,
       )
     }
-    // Revisit only the actually first-accepted incumbent, not the later clean
-    // candidate. A single remaining error leaves the error cursor at index 0.
-    incumbent = firstAccepted.routes
+    // Reconstruct the old native-first revisit as a second counterexample.
+    // The current first-accepted candidate is already clean and needs no revisit.
+    incumbent = firstNativeAccepted.routes
   }
   expect({ routes, node, srj }).toEqual(original)
 })

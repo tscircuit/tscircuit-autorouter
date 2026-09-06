@@ -128,7 +128,7 @@ test("Pipeline9 repairs a trace pair by moving only the side inside its native d
   expect(repaired).toBeDefined()
   if (!repaired) throw new Error("Expected a legal one-sided trace repair")
   expect(getPipeline9DrcErrors(evaluator, repaired)).toHaveLength(0)
-  expect(attempts).toEqual(["native", "trace-pair-0", "trace-pair-1"])
+  expect(attempts).toEqual(["trace-pair-0", "trace-pair-1"])
   expect(attemptedErrors).toEqual([0])
   expect(repaired[0]).toEqual(anchored)
   expect(repaired[1]).toEqual({
