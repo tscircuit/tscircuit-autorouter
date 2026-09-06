@@ -23,7 +23,11 @@ type LengthMatchingParams = ConstructorParameters<
 >
 
 test("Pipeline9 uses repaired-route simplification while preserving current preload copper", (): void => {
-  for (const viaY of [-2, 0]) {
+  for (const { viaY, connected } of [
+    { viaY: -2, connected: false },
+    { viaY: 0, connected: false },
+    { viaY: 0, connected: true },
+  ]) {
     const repairedRoute: HighDensityRoute = {
       connectionName: "signal",
       traceThickness: 0.4,
@@ -39,7 +43,8 @@ test("Pipeline9 uses repaired-route simplification while preserving current prel
     const preload: SimplifiedPcbTrace = {
       type: "pcb_trace",
       pcb_trace_id: "foreign_preload",
-      connection_name: "foreign",
+      connection_name: "fanout_alias",
+      connectsTo: [connected ? "signal" : "foreign_net"],
       __replaces_pcb_trace_id: "foreign_preload",
       route: [
         {
@@ -110,6 +115,9 @@ test("Pipeline9 uses repaired-route simplification while preserving current prel
       ),
     ).toEqual([0, 3])
     expect(params[0].otherHdRoutes?.[0]?.viaDiameter).toBe(0.5)
+    expect(params[0].otherHdRoutes?.[0]?.rootConnectionName).toBe(
+      "fanout_alias",
+    )
     const postSolver: TraceSimplificationSolver = new TraceSimplificationSolver(
       ...params,
     )
@@ -122,7 +130,7 @@ test("Pipeline9 uses repaired-route simplification while preserving current prel
     expect(output.route[0]).toEqual(repairedRoute.route[0])
     expect(output.route.at(-1)).toEqual(repairedRoute.route.at(-1))
     expect(output.traceThickness).toBe(0.4)
-    if (viaY === -2) {
+    if (viaY === -2 || connected) {
       expect(
         output.route.every(
           (point: HighDensityRoute["route"][number]): boolean => point.y === 0,
@@ -149,7 +157,7 @@ test("Pipeline9 uses repaired-route simplification while preserving current prel
     const convertedOutput: SimplifiedPcbTraces =
       pipeline.getNewTracesBeforePowerExpansion()
     expect(convertedOutput).toHaveLength(1)
-    if (viaY === -2) {
+    if (viaY === -2 || connected) {
       expect(
         convertedOutput[0]!.route.every(
           (point: SimplifiedPcbTrace["route"][number]): boolean =>
