@@ -47,7 +47,7 @@ import { preparePipeline9DrcRoutedTracesWithMetadata } from "./preparePipeline9D
 
 const EXACT_REPAIR_MAX_ITERATIONS = 32
 const EXACT_REPAIR_BROAD_MAX_ITERATIONS = 12
-const REFERENCE_REPAIR_MIN_ITERATIONS = 12
+const REFERENCE_REPAIR_MIN_ITERATIONS = 16
 // Reference validation and terminal relocation are precision passes for small
 // residual sets. Keep that exhaustive search for compact residues while
 // bounding terminal relocation's repeated whole-board indexed DRC scans.
