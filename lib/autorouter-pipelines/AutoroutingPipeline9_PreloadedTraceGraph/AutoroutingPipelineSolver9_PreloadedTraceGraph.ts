@@ -104,8 +104,12 @@ import {
 interface CapacityMeshSolverOptions {
   /** Disable only for controlled repair04 before/after comparisons. */
   enableRepair04?: boolean
-  /** Opt in to repair04 via movement; its default repair is trace-only. */
+  /** Disable advanced repair04 layer changes; the first pass is always planar. */
   repair04AllowLayerChanges?: boolean
+  /** Disable relocation of existing vias that violate pad rules. */
+  repair04AllowExistingViaRelocation?: boolean
+  /** Candidate budget for the trace-only pass before joint repair. */
+  repair04TraceOnlyCandidateBudget?: number
   capacityDepth?: number
   targetMinCapacity?: number
   cacheProvider?: CacheProvider | null
@@ -268,6 +272,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
   highDensityStitchSolver?: MultipleHighDensityRouteStitchSolver3
   globalDrcForceImproveSolver?: GlobalDrcForceImproveSolver
   repair04Solver?: Pipeline9Repair04Solver
+  repair04AdvancedSolver?: Pipeline9Repair04Solver
   pipeline9JointDrcRepairSolver?: Pipeline9JointDrcRepairSolver
   singleLayerNodeMerger?: SingleLayerNodeMergerSolver
   strawSolver?: StrawSolver
@@ -831,13 +836,18 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           hdRoutes: cms.globalDrcForceImproveSolver!.getOutput(),
           connMap: cms.connMap,
           enabled: cms.opts.enableRepair04 !== false,
-          allowLayerChanges: cms.opts.repair04AllowLayerChanges === true,
+          allowLayerChanges: false,
+          allowExistingViaRelocation: false,
+          maxRegions: 3,
+          maxCandidatesPerRegion:
+            cms.opts.repair04TraceOnlyCandidateBudget ?? 512,
           referenceDrcEvaluator: createPipeline9RelaxedDrcEvaluator({
             includeViaPadChecks: true,
+            useFinalOutputConversion: true,
             connections: cms.netToPointPairsSolver!.newConnections,
             originalConnections: srj.connections,
             layerCount: srj.layerCount,
-            obstacles: srj.obstacles,
+            obstacles: cms.srj.obstacles,
             defaultViaHoleDiameter: cms.viaHoleDiameter,
             connMap: cms.connMap,
             srjWithPointPairs: srj,
@@ -892,6 +902,44 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
         ]
       },
     ),
+    // Let planar edits and the existing joint repair finish before considering
+    // a layer change. A board already clean under the expanded reference DRC
+    // passes through this stage unchanged.
+    definePipelineStep(
+      "repair04AdvancedSolver",
+      Pipeline9Repair04Solver,
+      (cms) => {
+        const srj: SimpleRouteJson = {
+          ...cms.srjWithPointPairs!,
+          traces: cms.getUpdatedPreloadedTraces(),
+        }
+        return [
+          {
+            srj,
+            hdRoutes: cms.pipeline9JointDrcRepairSolver!.getOutput(),
+            connMap: cms.connMap,
+            enabled: cms.opts.enableRepair04 !== false,
+            allowLayerChanges: cms.opts.repair04AllowLayerChanges !== false,
+            traceOnlyFirst: false,
+            allowExistingViaRelocation:
+              cms.opts.repair04AllowExistingViaRelocation !== false,
+            referenceDrcEvaluator: createPipeline9RelaxedDrcEvaluator({
+              includeViaPadChecks: true,
+              useFinalOutputConversion: true,
+              connections: cms.netToPointPairsSolver!.newConnections,
+              originalConnections: srj.connections,
+              layerCount: srj.layerCount,
+              obstacles: cms.srj.obstacles,
+              defaultViaHoleDiameter: cms.viaHoleDiameter,
+              connMap: cms.connMap,
+              srjWithPointPairs: srj,
+              originalSrj: cms.originalSrj,
+              mutatedPreloadedTraces: cms.getMutatedPreloadedTraces(),
+            }),
+          },
+        ]
+      },
+    ),
     definePipelineStep(
       "lengthMatchingPostProcessingSolver",
       LengthMatchingPostProcessingSolver,
@@ -921,7 +969,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             )
           }
         }
-        const hdRoutes = cms.pipeline9JointDrcRepairSolver!.getOutput()
+        const hdRoutes = cms.repair04AdvancedSolver!.getOutput()
         const differentialPairs = (cms.srj.differentialPairs ?? []).map(
           (pair) => {
             const connectionNames = pair.connectionNames.map(
@@ -1254,6 +1302,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     const pipeline9JointDrcRepairViz =
       this.pipeline9JointDrcRepairSolver?.visualize()
     const repair04Viz = this.repair04Solver?.visualize()
+    const repair04AdvancedViz = this.repair04AdvancedSolver?.visualize()
     const visualizations = [
       problemViz,
       processedProblemViz,
@@ -1286,6 +1335,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       globalDrcForceImproveViz,
       repair04Viz,
       pipeline9JointDrcRepairViz,
+      repair04AdvancedViz,
       lengthMatchingPostProcessingViz,
       powerTraceExpansionViz,
       this.solved
@@ -1374,6 +1424,9 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       return hdRoutes
     }
     return (
+      (this.repair04AdvancedSolver?.solved
+        ? this.repair04AdvancedSolver.getOutput()
+        : undefined) ??
       this.pipeline9JointDrcRepairSolver?.getOutput() ??
       (this.repair04Solver?.solved
         ? this.repair04Solver.getOutput()

@@ -1,5 +1,7 @@
+import type { ExistingViaRepairTarget } from "./identifyPipeline9ViaPadRepairTargets"
 import {
   Repair04Solver,
+  getRepairViaGeometry,
   extractRepairRegion,
   mergeRepairRegion,
   normalizeRepairTrace,
@@ -28,6 +30,10 @@ type Pipeline9Repair04SolverParams = {
   maxRegions?: number
   maxCandidatesPerRegion?: number
   allowLayerChanges?: boolean
+  /** Skip the child's repeated planar phase only when layer changes are permitted. */
+  traceOnlyFirst?: boolean
+  /** Relocate only reference-identified offending existing vias; never creates a via. */
+  allowExistingViaRelocation?: boolean
 }
 
 /** Owns board state; the external solver receives only one cropped region. */
@@ -151,7 +157,6 @@ export class Pipeline9Repair04Solver extends BaseSolver {
     }
     if (
       this.referenceErrors!.length === 0 ||
-      this.issues.length === 0 ||
       this.regionCount >= (this.input.maxRegions ?? 32)
     ) {
       this.solved = true
@@ -164,7 +169,17 @@ export class Pipeline9Repair04Solver extends BaseSolver {
         ? [false, true]
         : [false]) {
         for (const size of [10, 16, 24]) {
-          const center = error.center ?? error.pcb_center
+          const selectedVias =
+            this.input.allowExistingViaRelocation === false || allowLayerChanges
+              ? []
+              : this.referenceErrors!.flatMap(
+                  (referenceError): ExistingViaRepairTarget[] =>
+                    (referenceError.existingViaRepairTargets ??
+                      []) as ExistingViaRepairTarget[],
+                )
+          const errorViaTargets = (error.existingViaRepairTargets ??
+            []) as ExistingViaRepairTarget[]
+          const center = errorViaTargets[0] ?? error.center ?? error.pcb_center
           if (
             !center ||
             typeof center !== "object" ||
@@ -187,6 +202,47 @@ export class Pipeline9Repair04Solver extends BaseSolver {
               maxY: y + size / 2,
             },
           })
+          const movableVias = region.routes.flatMap(
+            (route, routeIndex): { routeIndex: number; viaIndex: number }[] => {
+              const sourceRouteIndex =
+                region.routeMappings[routeIndex]!.sourceRouteIndex
+              return getRepairViaGeometry(route, region.srj.layerCount).flatMap(
+                (via, viaIndex): { routeIndex: number; viaIndex: number }[] => {
+                  const selected = selectedVias.some((target): boolean => {
+                    if (target.routeIndex !== sourceRouteIndex) return false
+                    const sourceVia = getRepairViaGeometry(
+                      this.routes[sourceRouteIndex]!,
+                      region.srj.layerCount,
+                    )[target.viaIndex]
+                    return (
+                      sourceVia !== undefined &&
+                      sourceVia.identity === via.identity &&
+                      JSON.stringify(sourceVia.layerSequence) ===
+                        JSON.stringify(via.layerSequence)
+                    )
+                  })
+                  const locked = via.pointIndices.some(
+                    (pointIndex): boolean =>
+                      region.lockedPointIndices[routeIndex]![pointIndex]! ||
+                      pointIndex === 0 ||
+                      pointIndex === route.route.length - 1 ||
+                      Boolean(
+                        route.route[pointIndex]!.pcb_port_id ||
+                          route.route[pointIndex]!.insideJumperPad ||
+                          route.route[pointIndex]!.toNextSegmentType,
+                      ),
+                  )
+                  return selected && !locked ? [{ routeIndex, viaIndex }] : []
+                },
+              )
+            },
+          )
+          if (
+            this.input.allowLayerChanges === true &&
+            !allowLayerChanges &&
+            movableVias.length === 0
+          )
+            continue
           this.region = region
           this.localSolver = new Repair04Solver({
             srj: region.srj,
@@ -194,8 +250,13 @@ export class Pipeline9Repair04Solver extends BaseSolver {
             bounds: region.bounds,
             boundaryMargin: region.boundaryMargin,
             lockedPointIndices: region.lockedPointIndices,
-            maxCandidates: this.input.maxCandidatesPerRegion ?? 8000,
+            maxCandidates:
+              this.input.allowLayerChanges === true && !allowLayerChanges
+                ? Math.min(512, this.input.maxCandidatesPerRegion ?? 8000)
+                : (this.input.maxCandidatesPerRegion ?? 8000),
             allowLayerChanges,
+            traceOnlyFirst: this.input.traceOnlyFirst,
+            movableVias,
           })
           this.regionCount++
           return

@@ -1,3 +1,5 @@
+import { assignUniquePcbTraceIdsToNewTraces } from "./assignUniquePcbTraceIdsToNewTraces"
+import { identifyPipeline9ViaPadRepairTargets } from "./identifyPipeline9ViaPadRepairTargets"
 import type { DrcEvaluator } from "high-density-repair03/lib"
 import { convertPipeline7HdRoutesToSimplifiedPcbTraces } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/convertPipeline7HdRoutesToSimplifiedPcbTraces"
 import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
@@ -14,6 +16,8 @@ type CreatePipeline9RelaxedDrcEvaluatorOptions = Omit<
   originalSrj: SimpleRouteJson
   mutatedPreloadedTraces: SimplifiedPcbTrace[]
   includeViaPadChecks?: boolean
+  /** Match emitted Pipeline9 connection aliases and trace-ID assignment. */
+  useFinalOutputConversion?: boolean
 }
 
 /** Scores candidates using the same preloaded-trace replacement rules as output. */
@@ -26,9 +30,33 @@ export const createPipeline9RelaxedDrcEvaluator = (
       throw new Error("Pipeline9 relaxed DRC evaluation requires HD routes")
     }
 
-    const newTraces = convertPipeline7HdRoutesToSimplifiedPcbTraces({
+    const convertedTraces = convertPipeline7HdRoutesToSimplifiedPcbTraces({
       ...options,
+      originalConnections: options.useFinalOutputConversion
+        ? options.originalSrj.connections
+        : options.originalConnections,
       hdRoutes: evaluatedRoutes,
+    })
+    const newTraces = options.useFinalOutputConversion
+      ? assignUniquePcbTraceIdsToNewTraces(
+          convertedTraces,
+          options.originalSrj.traces ?? [],
+        )
+      : convertedTraces
+    const finalTraceIdByConvertedTraceId = new Map<string, string>()
+    const ambiguousConvertedIds = new Set<string>()
+    convertedTraces.forEach((trace, index): void => {
+      const convertedId = trace.pcb_trace_id
+      if (ambiguousConvertedIds.has(convertedId)) return
+      if (finalTraceIdByConvertedTraceId.has(convertedId)) {
+        finalTraceIdByConvertedTraceId.delete(convertedId)
+        ambiguousConvertedIds.add(convertedId)
+        return
+      }
+      finalTraceIdByConvertedTraceId.set(
+        convertedId,
+        newTraces[index]!.pcb_trace_id,
+      )
     })
     const newTraceIds = new Set(newTraces.map((trace) => trace.pcb_trace_id))
     const { errors, errorsWithCenters, circuitJson } = evaluateRelaxedDrc({
@@ -44,12 +72,24 @@ export const createPipeline9RelaxedDrcEvaluator = (
 
     return {
       errors: normalizePipeline9DrcErrorsForRepair({
-        errors: errors as unknown as Record<string, unknown>[],
+        errors: identifyPipeline9ViaPadRepairTargets({
+          errors: errors as unknown as Record<string, unknown>[],
+          circuitJson,
+          routes: evaluatedRoutes,
+          layerCount: options.layerCount,
+          finalTraceIdByConvertedTraceId,
+        }),
         circuitJson,
         newTraceIds,
       }),
       errorsWithCenters: normalizePipeline9DrcErrorsForRepair({
-        errors: errorsWithCenters as unknown as Record<string, unknown>[],
+        errors: identifyPipeline9ViaPadRepairTargets({
+          errors: errorsWithCenters as unknown as Record<string, unknown>[],
+          circuitJson,
+          routes: evaluatedRoutes,
+          layerCount: options.layerCount,
+          finalTraceIdByConvertedTraceId,
+        }),
         circuitJson,
         newTraceIds,
       }),

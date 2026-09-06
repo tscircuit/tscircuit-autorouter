@@ -187,6 +187,7 @@ const result = {
   relaxedErrors: relaxed.errorsWithCenters,
   strictErrors: strict.errorsWithCenters,
   repair04Stats: pipeline.repair04Solver?.stats,
+  repair04AdvancedStats: pipeline.repair04AdvancedSolver?.stats,
   jointRepairStats: pipeline.pipeline9JointDrcRepairSolver?.stats,
   stageTiming: pipeline.timeSpentOnPhase,
 }
