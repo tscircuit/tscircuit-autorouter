@@ -19,13 +19,13 @@ test("Pipeline9 pad witnesses match official physical shapes and layer spans", (
         shape: "rotated_rect",
         x: 0,
         y: 0,
-        width: 2,
-        height: 0.4,
+        width: 0.4,
+        height: 2,
         ccw_rotation: 90,
         layer: "top",
       },
-      traceY: 1.1,
-      copperY: 1,
+      traceY: 0.3,
+      copperY: 0.2,
     },
     {
       pad: {
@@ -103,6 +103,10 @@ test("Pipeline9 pad witnesses match official physical shapes and layer spans", (
     ] as unknown as AnyCircuitElement[]
     const errors = checkPadTraceClearance(circuitJson, { minClearance: 0.1 })
     expect(errors).toHaveLength(1)
+    const actualClearance = errors[0]!.actual_clearance
+    if (typeof actualClearance !== "number") {
+      throw new Error("Expected an official pad clearance measurement")
+    }
     const projections = getPipeline9HighDensityForceObstacles({
       circuitJson,
       bounds: { minX: -4, maxX: 4, minY: -4, maxY: 4 },
@@ -132,11 +136,9 @@ test("Pipeline9 pad witnesses match official physical shapes and layer spans", (
       route.route[1]!,
     )
     const witnessGap =
-      Math.hypot(
-        closest.x - target!.center.x,
-        closest.y - target!.center.y,
-      ) - route.traceThickness / 2
-    expect(witnessGap).toBeCloseTo(errors[0]!.actual_clearance, 12)
+      Math.hypot(closest.x - target!.center.x, closest.y - target!.center.y) -
+      route.traceThickness / 2
+    expect(witnessGap).toBeCloseTo(actualClearance, 12)
     expect(
       target!.obstacles.every(
         (obstacle) =>

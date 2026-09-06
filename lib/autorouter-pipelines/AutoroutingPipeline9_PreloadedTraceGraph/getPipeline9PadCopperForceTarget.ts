@@ -41,9 +41,7 @@ const getPadCopper = (element: Record<string, unknown>): PadCopper => {
     !Number.isFinite(element.x) ||
     !Number.isFinite(element.y)
   ) {
-    throw new Error(
-      "Pipeline9 pad force target requires physical pad geometry",
-    )
+    throw new Error("Pipeline9 pad force target requires physical pad geometry")
   }
   const center = { x: element.x, y: element.y }
   if (element.type === "pcb_plated_hole" && element.shape === "circle") {
@@ -92,10 +90,12 @@ const getPadCopper = (element: Record<string, unknown>): PadCopper => {
     { x: width / 2, y: -height / 2 },
     { x: width / 2, y: height / 2 },
     { x: -width / 2, y: height / 2 },
-  ].map((point): Point => ({
-    x: center.x + point.x * Math.cos(angle) - point.y * Math.sin(angle),
-    y: center.y + point.x * Math.sin(angle) + point.y * Math.cos(angle),
-  }))
+  ].map(
+    (point): Point => ({
+      x: center.x + point.x * Math.cos(angle) - point.y * Math.sin(angle),
+      y: center.y + point.x * Math.sin(angle) + point.y * Math.cos(angle),
+    }),
+  )
   return { id, layers, shape: "polygon", points }
 }
 

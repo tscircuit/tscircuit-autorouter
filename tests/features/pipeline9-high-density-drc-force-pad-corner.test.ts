@@ -58,38 +58,42 @@ test("Pipeline9 targets a violating pad corner instead of a nearer clear segment
           { x: -15, y: -5.345, layer: "top", pcb_port_id: "A-end" },
         ],
       },
-      ...["B", "C"].map((name, index): SimpleRouteConnection => ({
-        name,
-        pointsToConnect: [
-          {
-            x: -16.8,
-            y: -5.249,
-            layer: index === 0 ? "top" : "bottom",
-            pcb_port_id: `${name}-start`,
-          },
-          {
-            x: -17.5,
-            y: -4,
-            layer: index === 0 ? "top" : "bottom",
-            pcb_port_id: `${name}-end`,
-          },
-        ],
-      })),
+      ...["B", "C"].map(
+        (name, index): SimpleRouteConnection => ({
+          name,
+          pointsToConnect: [
+            {
+              x: -16.8,
+              y: -5.249,
+              layer: index === 0 ? "top" : "bottom",
+              pcb_port_id: `${name}-start`,
+            },
+            {
+              x: -17.5,
+              y: -4,
+              layer: index === 0 ? "top" : "bottom",
+              pcb_port_id: `${name}-end`,
+            },
+          ],
+        }),
+      ),
     ],
     // Put the coincident, wrong-layer pad first to exercise exact pad identity
     // rather than an order-dependent nearest-obstacle choice.
-    obstacles: ["C", "B"].map((name): Obstacle => ({
-      type: "rect",
-      center: { x: -16.8, y: -5.249 },
-      width: 1.2,
-      height: 0.3,
-      layers: [name === "B" ? "top" : "bottom"],
-      connectedTo: [name, `${name}-start`],
-      circuitJsonMetadata: {
-        pcb_smtpad_id: `pad-${name}`,
-        pcb_port_id: `${name}-start`,
-      },
-    })),
+    obstacles: ["C", "B"].map(
+      (name): Obstacle => ({
+        type: "rect",
+        center: { x: -16.8, y: -5.249 },
+        width: 1.2,
+        height: 0.3,
+        layers: [name === "B" ? "top" : "bottom"],
+        connectedTo: [name, `${name}-start`],
+        circuitJsonMetadata: {
+          pcb_smtpad_id: `pad-${name}`,
+          pcb_port_id: `${name}-start`,
+        },
+      }),
+    ),
   }
   const connMap = getConnectivityMapFromSimpleRouteJson(srj)
   const evaluator = createPipeline9HighDensityDrcEvaluator({

@@ -20,6 +20,7 @@ import {
 } from "circuit-json-to-connectivity-map"
 import { Point } from "graphics-debug"
 import { createPreparedDrcConnectivityMap } from "./utils/createPreparedDrcConnectivityMap"
+import { createPreparedViaTraceClearanceChecker } from "./utils/createPreparedViaTraceClearanceChecker"
 
 type CircuitJson = AnyCircuitElement[]
 type CircuitJsonElement = CircuitJson[number]
@@ -66,6 +67,13 @@ export type PreparedGetDrcErrorsStats = {
   viaTraceCheckTimeMs: number
   padTraceCheckTimeMs: number
   viaSpacingCheckTimeMs: number
+  viaTracePartitionEvaluationCount: number
+  viaTracePartitionAppliedEvaluationCount: number
+  viaTracePartitionNativeInvocationCount: number
+  viaTracePartitionTotalViaTracePairCount: number
+  viaTracePartitionSelectedViaTracePairCount: number
+  viaTracePartitionTotalViaSegmentPairCount: number
+  viaTracePartitionSelectedViaSegmentPairCount: number
 }
 
 export type PreparedGetDrcErrors = {
@@ -118,6 +126,7 @@ const getDrcErrorsWithViaSpacingEvaluator = (
   options: GetDrcErrorsOptions,
   connMap: ConnectivityMap,
   evaluateViaSpacing: ViaSpacingEvaluator,
+  evaluateViaTraceClearance: typeof checkViaTraceClearance,
   stats?: PreparedGetDrcErrorsStats,
 ): GetDrcErrorsResult => {
   const viaClearance = Math.max(
@@ -136,7 +145,7 @@ const getDrcErrorsWithViaSpacingEvaluator = (
     options.includeTypedTraceClearance !== false
   const viaTraceStartedAt = stats ? performance.now() : 0
   const viaTraceErrors = includeTypedTraceClearance
-    ? checkViaTraceClearance(circuitJson, {
+    ? evaluateViaTraceClearance(circuitJson, {
         connMap,
         minClearance: options.traceClearance,
       })
@@ -308,7 +317,7 @@ const getViaSpacingCacheKey = (
   )
 }
 
-/** Reuses only official via-spacing checks whose complete dependencies match. */
+/** Prepares exact dependencies while retaining the native official check order. */
 export const createPreparedGetDrcErrors = (): PreparedGetDrcErrors => {
   let cachedViaSpacing:
     | { key: string; errors: PcbViaClearanceError[] }
@@ -323,8 +332,16 @@ export const createPreparedGetDrcErrors = (): PreparedGetDrcErrors => {
     viaTraceCheckTimeMs: 0,
     padTraceCheckTimeMs: 0,
     viaSpacingCheckTimeMs: 0,
+    viaTracePartitionEvaluationCount: 0,
+    viaTracePartitionAppliedEvaluationCount: 0,
+    viaTracePartitionNativeInvocationCount: 0,
+    viaTracePartitionTotalViaTracePairCount: 0,
+    viaTracePartitionSelectedViaTracePairCount: 0,
+    viaTracePartitionTotalViaSegmentPairCount: 0,
+    viaTracePartitionSelectedViaSegmentPairCount: 0,
   }
   const prepareConnectivityMap = createPreparedDrcConnectivityMap()
+  const evaluateViaTraceClearance = createPreparedViaTraceClearanceChecker()
   const evaluateViaSpacing: ViaSpacingEvaluator = (
     circuitJson,
     connMap,
@@ -361,19 +378,37 @@ export const createPreparedGetDrcErrors = (): PreparedGetDrcErrors => {
       stats.connectivityPreparationTimeMs +=
         performance.now() - connectivityStartedAt
       const connectivityStats = prepareConnectivityMap.getStats()
-      stats.connectivityConstructionCount =
-        connectivityStats.constructionCount
+      stats.connectivityConstructionCount = connectivityStats.constructionCount
       stats.connectivityCacheHitCount = connectivityStats.cacheHitCount
       return getDrcErrorsWithViaSpacingEvaluator(
         circuitJson,
         options,
         connMap,
         evaluateViaSpacing,
+        evaluateViaTraceClearance,
         stats,
       )
     },
     {
-      getStats: (): Readonly<PreparedGetDrcErrorsStats> => ({ ...stats }),
+      getStats: (): Readonly<PreparedGetDrcErrorsStats> => {
+        const viaTraceStats = evaluateViaTraceClearance.getStats()
+        return {
+          ...stats,
+          viaTracePartitionEvaluationCount: viaTraceStats.evaluationCount,
+          viaTracePartitionAppliedEvaluationCount:
+            viaTraceStats.partitionedEvaluationCount,
+          viaTracePartitionNativeInvocationCount:
+            viaTraceStats.nativeInvocationCount,
+          viaTracePartitionTotalViaTracePairCount:
+            viaTraceStats.totalViaTracePairCount,
+          viaTracePartitionSelectedViaTracePairCount:
+            viaTraceStats.selectedViaTracePairCount,
+          viaTracePartitionTotalViaSegmentPairCount:
+            viaTraceStats.totalViaSegmentPairCount,
+          viaTracePartitionSelectedViaSegmentPairCount:
+            viaTraceStats.selectedViaSegmentPairCount,
+        }
+      },
     },
   )
 }
@@ -388,4 +423,5 @@ export const getDrcErrors = (
     options,
     createDrcConnectivityMap(circuitJson),
     evaluateOfficialViaSpacing,
+    checkViaTraceClearance,
   )

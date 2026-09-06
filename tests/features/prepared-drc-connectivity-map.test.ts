@@ -6,7 +6,7 @@ import {
   checkSameNetViaSpacing,
   checkViaTraceClearance,
 } from "@tscircuit/checks"
-import type { AnyCircuitElement } from "circuit-json"
+import type { AnyCircuitElement, PcbTrace } from "circuit-json"
 import {
   type ConnectivityMap,
   getFullConnectivityMapFromCircuitJson,
@@ -152,8 +152,8 @@ test("prepared connectivity preserves exact ordered declarations and augmentatio
     expect(
       prepared.getStats().constructionCount - before.constructionCount,
     ).toBe(expectedHit ? 0 : 1)
-    if (expectedHit) expect(actual).toBe(previousMap)
-    else expect(actual).not.toBe(previousMap)
+    if (expectedHit) expect(previousMap).toBe(actual)
+    else expect(previousMap).not.toBe(actual)
     previousMap = actual
     return actual
   }
@@ -179,7 +179,12 @@ test("prepared connectivity preserves exact ordered declarations and augmentatio
     if (element.type === "pcb_trace") {
       return {
         ...element,
-        route: element.route.map((point) => ({ ...point, x: point.x + 0.1 })),
+        route: element.route.map((point): PcbTrace["route"][number] => {
+          if (point.route_type !== "wire") {
+            throw new Error("Connectivity fixture requires wire-only traces")
+          }
+          return { ...point, x: point.x + 0.1 }
+        }),
       }
     }
     if (element.type === "pcb_via") return { ...element, x: element.x + 0.2 }

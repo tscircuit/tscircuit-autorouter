@@ -241,9 +241,7 @@ function* getPadTargetedForceErrors(
             ? pad.pcb_smtpad_id
             : pad.pcb_plated_hole_id) !== padIds[index]
         ) {
-          throw new Error(
-            "Pipeline9 pad force geometry has a different owner",
-          )
+          throw new Error("Pipeline9 pad force geometry has a different owner")
         }
         yield { kind: "pad", error, pad }
       }
@@ -410,8 +408,7 @@ export function* getPipeline9HighDensityForceCandidates({
           forceTarget.kind === "pad"
             ? getPipeline9PadCopperForceTarget({
                 pad: forceTarget.pad,
-                route:
-                  mutableRoutes[traceRouteIndexById.get(movableTraceId)!]!,
+                route: mutableRoutes[traceRouteIndexById.get(movableTraceId)!]!,
                 obstacles: forceContext.obstacles,
                 layerCount,
               })

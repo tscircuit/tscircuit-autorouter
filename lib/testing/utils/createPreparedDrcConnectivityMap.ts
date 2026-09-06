@@ -40,9 +40,7 @@ const getDrcConnectivityKey = (
       case "pcb_smtpad":
         return [[element.type, element.pcb_smtpad_id, element.pcb_port_id]]
       case "pcb_plated_hole":
-        return [
-          [element.type, element.pcb_plated_hole_id, element.pcb_port_id],
-        ]
+        return [[element.type, element.pcb_plated_hole_id, element.pcb_port_id]]
       case "pcb_trace":
         return [[element.type, element.pcb_trace_id, element.source_trace_id]]
       default:

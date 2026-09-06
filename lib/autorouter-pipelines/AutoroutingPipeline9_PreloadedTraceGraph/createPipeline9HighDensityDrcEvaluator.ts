@@ -368,10 +368,7 @@ export const createPipeline9HighDensityDrcEvaluator = (
         )
       }
       padCenterById.set(padId, { x: element.x, y: element.y })
-      padCopperById.set(
-        padId,
-        element as unknown as Record<string, unknown>,
-      )
+      padCopperById.set(padId, element as unknown as Record<string, unknown>)
     }
     // Exact non-via identities take precedence over encoded via-like suffixes.
     // Pad ids are opaque and may themselves end with a real serialized via id.

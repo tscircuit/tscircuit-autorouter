@@ -66,7 +66,11 @@ test("immutable circuit snapshots borrow unchanged geometry but detach official 
   }
   const moved: SimplifiedPcbTrace = {
     ...first,
-    route: [first.route[0]!, { ...first.route[1]!, y: 0.2 }, first.route[2]!],
+    route: [
+      first.route[0]!,
+      { route_type: "wire", x: 0, y: 0.2, layer: "top", width: 0.1 },
+      first.route[2]!,
+    ],
   }
   const originalInputs = structuredClone({ srj, first, neighbour, moved })
   const convert = createPreparedImmutableCircuitJsonConverter(srj)
@@ -79,7 +83,9 @@ test("immutable circuit snapshots borrow unchanged geometry but detach official 
   const originalPort = original.find((element) => element.type === "pcb_port")
   expect(originalPad).toBeDefined()
   expect(originalPort).toBeDefined()
-  expect(original.filter((element) => element.type === "pcb_via")).toHaveLength(1)
+  expect(original.filter((element) => element.type === "pcb_via")).toHaveLength(
+    1,
+  )
   for (const candidate of [moved, first, moved, first]) {
     const routes = [candidate, neighbour]
     const snapshot = convert(routes)

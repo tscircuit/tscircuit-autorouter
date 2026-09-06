@@ -241,11 +241,10 @@ export class Pipeline9HighDensityDrcRepairSolver extends BaseSolver {
     const routeIndexByTraceId = this.getRouteIndexByTraceId(routes)
     const errors = getPipeline9DrcErrors(this.params.drcEvaluator, routes)
     Object.assign(this.stats, this.params.drcEvaluator.getPreparationStats?.())
-    return errors.filter(
-      (error) =>
-        getPipeline9DrcErrorTraceIds(error).some((traceId) =>
-          routeIndexByTraceId.has(traceId),
-        ),
+    return errors.filter((error) =>
+      getPipeline9DrcErrorTraceIds(error).some((traceId) =>
+        routeIndexByTraceId.has(traceId),
+      ),
     )
   }
 
