@@ -85,9 +85,7 @@ export class TraceSimplificationSolver extends BaseSolver {
     return this.hdRoutes.map((route: HighDensityRoute): HighDensityRoute => {
       const connectionName: string | undefined =
         this.connectionNameByInternalName.get(route.connectionName)
-      return connectionName === undefined
-        ? route
-        : { ...route, connectionName }
+      return connectionName === undefined ? route : { ...route, connectionName }
     })
   }
 

@@ -98,10 +98,7 @@ test("private fragment identities cannot alias existing signals or erase sibling
     const route: HighDensityRoute = indexedRoutes[routeIndex]!
     const matches: ReturnType<
       HighDensityRouteSpatialIndex["getConflictingRoutesNearPoint"]
-    > = index.getConflictingRoutesNearPoint(
-      { x: 1, y: routeIndex, z: 0 },
-      0.01,
-    )
+    > = index.getConflictingRoutesNearPoint({ x: 1, y: routeIndex, z: 0 }, 0.01)
     expect(
       matches.map((match): string => match.conflictingRoute.connectionName),
     ).toContain(route.connectionName)

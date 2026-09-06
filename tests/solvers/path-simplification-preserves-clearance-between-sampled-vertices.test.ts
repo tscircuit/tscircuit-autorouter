@@ -36,12 +36,14 @@ test("path simplification preserves copper clearance when sampling passes nearby
     { x: 1, y: 0 },
   ]
   for (const [rotation, reverse] of orientations) {
-    const points: RoutePoint[] = coordinates.map(({ x, y }): RoutePoint => ({
-      x: x * Math.cos(rotation) - y * Math.sin(rotation),
-      y: x * Math.sin(rotation) + y * Math.cos(rotation),
-      z: 0,
-      traceThickness,
-    }))
+    const points: RoutePoint[] = coordinates.map(
+      ({ x, y }): RoutePoint => ({
+        x: x * Math.cos(rotation) - y * Math.sin(rotation),
+        y: x * Math.sin(rotation) + y * Math.cos(rotation),
+        z: 0,
+        traceThickness,
+      }),
+    )
     if (reverse) points.reverse()
     points[0]!.pcb_port_id = "start_port"
     points[points.length - 1]!.pcb_port_id = "end_port"

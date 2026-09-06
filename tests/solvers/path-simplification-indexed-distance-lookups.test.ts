@@ -23,17 +23,14 @@ const measureRoute = (
   inputRoute: HighDensityRoute,
   useLinearLookup: boolean,
 ): MeasuredOutput => {
-  const solver: SingleSimplifiedPathSolver5 = new SingleSimplifiedPathSolver5(
-    {
-      inputRoute,
-      otherHdRoutes: [],
-      obstacles: [],
-      connMap: new ConnectivityMap({}),
-      colorMap: {},
-    },
-  )
-  const lookup: DistanceLookupSolver =
-    solver as unknown as DistanceLookupSolver
+  const solver: SingleSimplifiedPathSolver5 = new SingleSimplifiedPathSolver5({
+    inputRoute,
+    otherHdRoutes: [],
+    obstacles: [],
+    connMap: new ConnectivityMap({}),
+    colorMap: {},
+  })
+  const lookup: DistanceLookupSolver = solver as unknown as DistanceLookupSolver
   let reads: number = 0
   lookup.pathSegments = new Proxy(lookup.pathSegments, {
     get(target: Segment[], property: string | symbol): unknown {
@@ -45,8 +42,7 @@ const measureRoute = (
     lookup.getSegmentIndexAtDistance = (distance: number): number => {
       return lookup.pathSegments.findIndex(
         (segment: Segment): boolean =>
-          distance >= segment.startDistance &&
-          distance <= segment.endDistance,
+          distance >= segment.startDistance && distance <= segment.endDistance,
       )
     }
   }
@@ -84,10 +80,12 @@ test("indexed distance lookups preserve inclusive copper boundaries without pref
     })
     const uniformRoute: HighDensityRoute = {
       ...route,
-      route: route.route.map((point: Point): Point => ({
-        ...point,
-        traceThickness: 0.15,
-      })),
+      route: route.route.map(
+        (point: Point): Point => ({
+          ...point,
+          traceThickness: 0.15,
+        }),
+      ),
     }
     expect(measureRoute(uniformRoute, false).output).toEqual(
       measureRoute(uniformRoute, true).output,
@@ -208,9 +206,9 @@ test("indexed distance lookups preserve inclusive copper boundaries without pref
       }
     }
     expect(lookup.getPointAtDistance(-1)).toEqual(
-      totalDistance === 0 ? route.route.at(-1) : route.route[0],
+      totalDistance === 0 ? route.route.at(-1)! : route.route[0],
     )
-    expect(lookup.getPointAtDistance(Infinity)).toEqual(route.route.at(-1))
+    expect(lookup.getPointAtDistance(Infinity)).toEqual(route.route.at(-1)!)
     expect(lookup.getNearestIndexForDistance(-1)).toBe(0)
     expect(lookup.getNearestIndexForDistance(Infinity)).toBe(
       route.route.length - 1,

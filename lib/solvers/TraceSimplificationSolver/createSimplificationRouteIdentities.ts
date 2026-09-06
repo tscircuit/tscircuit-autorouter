@@ -99,8 +99,9 @@ export const createSimplificationRouteIdentities = (
         ? undefined
         : connMap.getNetConnectedToId(route.rootConnectionName))
     if (netName === undefined) continue
-    const existingNetName: string | undefined =
-      netByOriginalConnectionName.get(route.connectionName)
+    const existingNetName: string | undefined = netByOriginalConnectionName.get(
+      route.connectionName,
+    )
     if (existingNetName !== undefined && existingNetName !== netName) {
       throw new Error(
         `TraceSimplificationSolver connection "${route.connectionName}" has fragments on different nets`,
@@ -117,8 +118,9 @@ export const createSimplificationRouteIdentities = (
         reservedNames,
       )
       connectionNameByInternalName.set(connectionName, route.connectionName)
-      let netName: string | undefined =
-        netByOriginalConnectionName.get(route.connectionName)
+      let netName: string | undefined = netByOriginalConnectionName.get(
+        route.connectionName,
+      )
       if (netName === undefined) {
         // Equal connection IDs already express common membership even when
         // the caller has not registered that connection in its map.
