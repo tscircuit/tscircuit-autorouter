@@ -170,7 +170,9 @@ test("prepared via-trace partitions preserve complete official errors, names and
     return actual
   }
   const baseline = compareWithNative(board)
-  expect(baseline.map((error) => [error.pcb_via_id, error.pcb_trace_id])).toEqual([
+  expect(
+    baseline.map((error) => [error.pcb_via_id, error.pcb_trace_id]),
+  ).toEqual([
     ["viaA", "signal"],
     ["viaB", "signal"],
     ["viaBottom", "bottom"],

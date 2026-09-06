@@ -26,7 +26,7 @@ type CapturedRoute = Omit<HighDensityRoute, "route"> & {
   route: (HighDensityRoute["route"][number] & Partial<PortPoint>)[]
 }
 
-test("Pipeline9 rejects the native pad-force family's collateral via move", (): void => {
+test("Pipeline9 repairs sample9 pad clearance without displacing either via", (): void => {
   // Captured before Pipeline9's new HD stage in SRJ18 sample9, cmn4. The
   // nearby net36 wire is immutable during the target net21 fragment's force.
   const targetName = "source_trace_21__source_net_21_mst1"
@@ -178,9 +178,19 @@ test("Pipeline9 rejects the native pad-force family's collateral via move", (): 
   })
   expect(errors[0]!.actual_clearance).toBeCloseTo(0.08401448724426523, 12)
   const original = structuredClone({ boardRoutes, node, srj, errors })
-  const candidateErrors: Pipeline9DrcError[][] = []
-  const candidates: HighDensityRoute[][] = []
-  const attemptedFamilies: Pipeline9HighDensityForceFamily[] = []
+  const attempts: {
+    family: Pipeline9HighDensityForceFamily
+    scale: number
+    application: number
+  }[] = []
+  const observations: {
+    family: Pipeline9HighDensityForceFamily
+    scale: number
+    application: number
+    candidate: HighDensityRoute
+    errors: Pipeline9DrcError[]
+  }[] = []
+  const attemptedErrors: number[] = []
   for (const candidate of getPipeline9HighDensityForceCandidates({
     node,
     hdRoutes: [route],
@@ -195,70 +205,81 @@ test("Pipeline9 rejects the native pad-force family's collateral via move", (): 
     connMap,
     forceContext: evaluator.getForceContext(boardRoutes),
     effort: 1,
-    onCandidateAttempted: (family): void => {
-      attemptedFamilies.push(family)
+    onErrorAttempted: (index): void => {
+      attemptedErrors.push(index)
+    },
+    onCandidateAttempted: (family, scale, application): void => {
+      attempts.push({ family, scale, application })
     },
   })) {
-    // Preserve the hosted native-operator proof independently of the new
-    // pad-wire family. Only the deliberate native trials belong to this test.
-    if (attemptedFamilies.at(-1) !== "native") continue
-    const nextErrors = getPipeline9DrcErrors(evaluator, [
-      candidate[0]!,
-      fixedRoute,
-    ])
-    candidates.push(candidate)
-    candidateErrors.push(nextErrors)
-    console.info(
-      JSON.stringify({
-        diagnostic: "sample9-pad123-collateral-via",
-        candidateIndex: candidates.length - 1,
-        firstVia: candidate[0]!.vias[0],
-        accepted: isPipeline9HighDensityDrcCandidateBetter(nextErrors, errors),
-        errors: nextErrors.map((error) => ({
-          type: error.type,
-          padId: error.pcb_pad_id,
-          traceId: error.pcb_trace_id,
-          viaOwners: error.__via_owner_trace_ids,
-          segmentOwner: error.__trace_segment_owner_trace_id,
-          actualClearance: error.actual_clearance,
-        })),
-      }),
-    )
-    expect(candidate[0]!.route[0]).toEqual(route.route[0])
-    expect(candidate[0]!.route.at(-1)).toEqual(route.route.at(-1))
+    const attempt = attempts.at(-1)!
+    observations.push({
+      ...attempt,
+      candidate: candidate[0]!,
+      errors: getPipeline9DrcErrors(evaluator, [candidate[0]!, fixedRoute]),
+    })
   }
-  expect(candidates.length).toBeGreaterThan(0)
-  expect(candidates.length).toBeLessThanOrEqual(
-    getForceScalesForEffort(1).length *
-      getMaxTargetedCandidateAttemptsForEffort(1),
-  )
-  // Native applyDrcErrorForces also moves the closest via away from the pad
-  // center by MAX_ERROR_MOVE, using its pre-segment-move ViaNode coordinates.
-  const firstVia = route.vias[0]!
-  const padCenter = srj.obstacles[0]!.center
-  const distance = Math.hypot(
-    firstVia.x - padCenter.x,
-    firstVia.y - padCenter.y,
-  )
-  expect(candidates[0]![0]!.vias[0]!.x).toBeCloseTo(
-    firstVia.x + ((firstVia.x - padCenter.x) / distance) * MAX_ERROR_MOVE,
-    12,
-  )
-  expect(candidates[0]![0]!.vias[0]!.y).toBeCloseTo(
-    firstVia.y + ((firstVia.y - padCenter.y) / distance) * MAX_ERROR_MOVE,
-    12,
-  )
-  const collateralError = candidateErrors[0]!.find(
-    (error) =>
-      error.type === "pcb_via_trace_clearance_error" &&
-      error.__trace_segment_owner_trace_id === `${fixedName}_0` &&
-      Array.isArray(error.__via_owner_trace_ids) &&
-      error.__via_owner_trace_ids.includes(`${targetName}_0`),
-  )
-  expect(collateralError).toBeDefined()
-  expect(collateralError!.actual_clearance).toBeCloseTo(0.06346992295170772, 12)
+  expect(attemptedErrors).toEqual([0])
+  const first = observations[0]!
+  expect(first.family).toBe("pad-wire")
+  expect(first.errors).toHaveLength(0)
   expect(
-    isPipeline9HighDensityDrcCandidateBetter(candidateErrors[0]!, errors),
-  ).toBeFalse()
+    isPipeline9HighDensityDrcCandidateBetter(first.errors, errors),
+  ).toBeTrue()
+  for (const observation of observations) {
+    if (observation.family !== "pad-wire") continue
+    expect(observation.candidate.vias).toEqual(route.vias)
+    expect(observation.candidate.route).toHaveLength(route.route.length)
+    for (const [index, point] of route.route.entries()) {
+      // Only the one free endpoint of the offending top-layer segment moves.
+      if (index !== 1) {
+        expect(observation.candidate.route[index]).toEqual(point)
+      }
+    }
+  }
+  const firstScale = getForceScalesForEffort(1)[0]
+  const firstScaleTrials = observations.filter(
+    (observation) => observation.scale === firstScale,
+  )
+  expect(firstScaleTrials.map((observation) => observation.family)).toEqual([
+    "pad-wire",
+    "native",
+    "pad-wire",
+  ])
+  const firstWire = firstScaleTrials[0]!.candidate
+  const native = firstScaleTrials[1]!.candidate
+  const secondWire = firstScaleTrials[2]!.candidate
+  expect(firstWire.route[1]!.x).toBeGreaterThan(route.route[1]!.x)
+  expect(secondWire.route[1]!.x).toBeGreaterThan(firstWire.route[1]!.x)
+  // The native family's incidental via motion never leaks into the next
+  // cumulative wire-only trial. Each family starts from its own incumbent.
+  const originalVia = route.vias[0]!
+  const padCenter = srj.obstacles[0]!.center
+  const viaDistance = Math.hypot(
+    originalVia.x - padCenter.x,
+    originalVia.y - padCenter.y,
+  )
+  expect(native.vias[0]!.x).toBeCloseTo(
+    originalVia.x +
+      ((originalVia.x - padCenter.x) / viaDistance) * MAX_ERROR_MOVE,
+    12,
+  )
+  expect(secondWire.vias).toEqual(route.vias)
+  for (const scale of getForceScalesForEffort(1)) {
+    const scaleAttempts = attempts.filter((attempt) => attempt.scale === scale)
+    expect(scaleAttempts.length).toBeLessThanOrEqual(
+      getMaxTargetedCandidateAttemptsForEffort(1),
+    )
+    expect(scaleAttempts.map((attempt) => attempt.application)).toEqual([
+      0,
+      1,
+      2,
+    ])
+    expect(scaleAttempts.map((attempt) => attempt.family)).toEqual([
+      "pad-wire",
+      "native",
+      "pad-wire",
+    ])
+  }
   expect({ boardRoutes, node, srj, errors }).toEqual(original)
 })

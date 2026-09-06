@@ -15,9 +15,11 @@ type PadCopper = {
   | { shape: "polygon"; points: Point[] }
   | { shape: "circle"; center: Point; radius: number }
 )
-type CopperWitness = { point: Point; distance: number }
+type CopperWitness = { point: Point; tracePoint: Point; distance: number }
 export type Pipeline9PadCopperForceTarget = {
   center: Point
+  tracePoint: Point
+  distance: number
   segmentIndex: number
   obstacles: Obstacle[]
 }
@@ -109,20 +111,23 @@ const getSegmentCopperWitness = (
     const dx = closest.x - copper.center.x
     const dy = closest.y - copper.center.y
     const distance = Math.hypot(dx, dy)
-    if (distance <= copper.radius) return { point: closest, distance: 0 }
+    if (distance <= copper.radius) {
+      return { point: closest, tracePoint: { ...closest }, distance: 0 }
+    }
     return {
       point: {
         x: copper.center.x + (dx * copper.radius) / distance,
         y: copper.center.y + (dy * copper.radius) / distance,
       },
+      tracePoint: { ...closest },
       distance: distance - copper.radius,
     }
   }
   if (isPointInsidePolygon(start, copper.points)) {
-    return { point: { ...start }, distance: 0 }
+    return { point: { ...start }, tracePoint: { ...start }, distance: 0 }
   }
   if (isPointInsidePolygon(end, copper.points)) {
-    return { point: { ...end }, distance: 0 }
+    return { point: { ...end }, tracePoint: { ...end }, distance: 0 }
   }
   let best: CopperWitness | undefined
   // This is the same segment/polygon endpoint-projection construction used by
@@ -130,7 +135,13 @@ const getSegmentCopperWitness = (
   for (const [index, edgeStart] of copper.points.entries()) {
     const edgeEnd = copper.points[(index + 1) % copper.points.length]!
     const intersection = getSegmentIntersection(start, end, edgeStart, edgeEnd)
-    if (intersection) return { point: intersection, distance: 0 }
+    if (intersection) {
+      return {
+        point: intersection,
+        tracePoint: { ...intersection },
+        distance: 0,
+      }
+    }
     const candidates = [
       {
         trace: start,
@@ -149,7 +160,11 @@ const getSegmentCopperWitness = (
         candidate.trace.y - candidate.pad.y,
       )
       if (best === undefined || distance < best.distance) {
-        best = { point: { ...candidate.pad }, distance }
+        best = {
+          point: { ...candidate.pad },
+          tracePoint: { ...candidate.trace },
+          distance,
+        }
       }
     }
   }
@@ -198,6 +213,8 @@ export const getPipeline9PadCopperForceTarget = ({
         gap,
         target: {
           center: witness.point,
+          tracePoint: witness.tracePoint,
+          distance: witness.distance,
           segmentIndex: index,
           // A pad-side witness is on this copper, never outside Repair03's
           // near-obstacle lookup radius. Other pads cannot steal its identity;

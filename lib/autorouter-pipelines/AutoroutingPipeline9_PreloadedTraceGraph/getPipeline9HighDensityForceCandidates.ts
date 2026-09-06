@@ -15,6 +15,10 @@ import type {
 import type { Obstacle } from "lib/types/srj-types"
 import { convertHdRouteToSimplifiedRoute } from "lib/utils/convertHdRouteToSimplifiedRoute"
 import { getBoundsFromNodeWithPortPoints } from "lib/utils/getBoundsFromNodeWithPortPoints"
+import {
+  applyPipeline9PadTraceForce,
+  getPipeline9PadTraceForceMovablePointIndexes,
+} from "./applyPipeline9PadTraceForce"
 import type { Pipeline9HighDensityForceContext } from "./getPipeline9HighDensityForceObstacles"
 import { getPipeline9PadCopperForceTarget } from "./getPipeline9PadCopperForceTarget"
 import { isPipeline9HighDensityRouteInsideBounds } from "./isPipeline9HighDensityRouteInsideBounds"
@@ -43,6 +47,15 @@ type LocalForceRoute = {
   terminalSuffixLength: number
 }
 
+export type Pipeline9HighDensityForceFamily = "pad-wire" | "native"
+
+type ForceFamilyState = {
+  family: Pipeline9HighDensityForceFamily
+  localRoutes: LocalForceRoute[]
+  mutableRoutes: HighDensityRoute[]
+  exhausted: boolean
+}
+
 export type Pipeline9HighDensityForceRejectionReason =
   | "no-motion"
   | "anchor"
@@ -64,6 +77,12 @@ export type Pipeline9HighDensityForceCandidateParams = {
   effort: number
   /** Reports the original error index before private pad-center expansion. */
   onErrorAttempted?: (errorIndex: number) => void
+  /** Reports an actual family attempt within the existing per-scale budget. */
+  onCandidateAttempted?: (
+    family: Pipeline9HighDensityForceFamily,
+    scale: number,
+    application: number,
+  ) => void
   onCandidateRejected?: (
     reason: Pipeline9HighDensityForceRejectionReason,
   ) => void
@@ -300,6 +319,7 @@ export function* getPipeline9HighDensityForceCandidates({
   forceContext,
   effort,
   onErrorAttempted,
+  onCandidateAttempted,
   onCandidateRejected,
 }: Pipeline9HighDensityForceCandidateParams): Generator<
   HighDensityRoute[],
@@ -381,68 +401,119 @@ export function* getPipeline9HighDensityForceCandidates({
     const primaryOwnsReportedVia =
       Array.isArray(viaOwnerTraceIds) &&
       viaOwnerTraceIds.includes(movableTraceId)
+    const primaryRouteIndex = traceRouteIndexById.get(movableTraceId)!
+    const originalPadTarget =
+      forceTarget.kind === "pad"
+        ? getPipeline9PadCopperForceTarget({
+            pad: forceTarget.pad,
+            route: hdRoutes[primaryRouteIndex]!,
+            obstacles: forceContext.obstacles,
+            layerCount,
+          })
+        : undefined
+    const originalProtectedIndexes = new Set(
+      [...throughObstacleSpanStartIndexesByRoute[primaryRouteIndex]!].flatMap(
+        (index) => [index, index + 1],
+      ),
+    )
+    const canApplyPadWireForce =
+      originalPadTarget !== undefined &&
+      originalPadTarget.distance > 0 &&
+      getPipeline9PadTraceForceMovablePointIndexes({
+        route: hdRoutes[primaryRouteIndex]!,
+        target: originalPadTarget,
+        protectedPointIndexes: originalProtectedIndexes,
+      }).length > 0
+    const families: Pipeline9HighDensityForceFamily[] = canApplyPadWireForce
+      ? ["pad-wire", "native"]
+      : ["native"]
     for (const scale of getForceScalesForEffort(effort)) {
-      const localRoutes = hdRoutes.map(
-        (route, index): LocalForceRoute =>
-          createLocalForceRoute(
-            route,
-            throughObstacleSpanStartIndexesByRoute[index]!,
-          ),
-      )
-      const mutableRoutes = localRoutes.map((local) => local.mutable)
-      for (const [index, route] of mutableRoutes.entries()) {
-        // Routing aliases can merge pads that the official serialized board
-        // treats as foreign. Only the private force geometry uses PCB owners.
-        route.connectionName = forceTraceIds[index]!
-        route.rootConnectionName = forceTraceIds[index]!
-      }
+      const states = new Map<Pipeline9HighDensityForceFamily, ForceFamilyState>()
       // Official accidental-contact errors have no graded overlap severity.
       // A bounded private force sequence can cross that plateau before any
       // candidate is accepted; never restart it from a published partial move.
+      // Eligible pad-wire/native families alternate within this SAME budget,
+      // each with independent cumulative geometry. Ineligible contact targets
+      // retain native-only search; exhausted slots are never reassigned.
       for (
         let application = 0;
         application < maxCandidateApplications;
         application++
       ) {
+        const family = families[application % families.length]!
+        let state = states.get(family)
+        if (state === undefined) {
+          const localRoutes = hdRoutes.map(
+            (route, index): LocalForceRoute =>
+              createLocalForceRoute(
+                route,
+                throughObstacleSpanStartIndexesByRoute[index]!,
+              ),
+          )
+          const mutableRoutes = localRoutes.map((local) => local.mutable)
+          for (const [index, route] of mutableRoutes.entries()) {
+            // Routing aliases can merge pads that the official serialized board
+            // treats as foreign. Only private force geometry uses PCB owners.
+            route.connectionName = forceTraceIds[index]!
+            route.rootConnectionName = forceTraceIds[index]!
+          }
+          state = { family, localRoutes, mutableRoutes, exhausted: false }
+          states.set(family, state)
+        }
+        if (state.exhausted) continue
+        const { localRoutes, mutableRoutes } = state
+        onCandidateAttempted?.(state.family, scale, application)
         const padTarget =
           forceTarget.kind === "pad"
             ? getPipeline9PadCopperForceTarget({
                 pad: forceTarget.pad,
-                route: mutableRoutes[traceRouteIndexById.get(movableTraceId)!]!,
+                route: mutableRoutes[primaryRouteIndex]!,
                 obstacles: forceContext.obstacles,
                 layerCount,
               })
             : undefined
         if (forceTarget.kind === "pad" && padTarget === undefined) {
           onCandidateRejected?.("no-motion")
-          break
+          state.exhausted = true
+          continue
         }
-        if (
-          !applyDrcErrorForces(
-            padTarget ? { ...srj, obstacles: padTarget.obstacles } : srj,
-            mutableRoutes,
-            [
-              padTarget
-                ? { ...localError, center: padTarget.center }
-                : localError,
-            ],
-            traceRouteIndexById,
-            scale,
-            forceContext.connMap,
-            true,
-            false,
-            false,
-            primaryOwnsReportedVia,
-          )
-        ) {
+        const changed =
+          state.family === "pad-wire"
+            ? applyPipeline9PadTraceForce({
+                route: mutableRoutes[primaryRouteIndex]!,
+                target: padTarget!,
+                protectedPointIndexes:
+                  localRoutes[primaryRouteIndex]!.protectedPointIndexes,
+                obstacleMargin,
+                scale,
+              })
+            : applyDrcErrorForces(
+                padTarget ? { ...srj, obstacles: padTarget.obstacles } : srj,
+                mutableRoutes,
+                [
+                  padTarget
+                    ? { ...localError, center: padTarget.center }
+                    : localError,
+                ],
+                traceRouteIndexById,
+                scale,
+                forceContext.connMap,
+                true,
+                false,
+                false,
+                primaryOwnsReportedVia,
+              )
+        if (!changed) {
           onCandidateRejected?.("no-motion")
-          break
+          state.exhausted = true
+          continue
         }
         if (
           localRoutes.some((local) => !hasPreservedLocalRouteAnchors(local))
         ) {
           onCandidateRejected?.("anchor")
-          break
+          state.exhausted = true
+          continue
         }
         for (const local of localRoutes) {
           // The force operator copies the starting point for detours. New
@@ -471,7 +542,8 @@ export function* getPipeline9HighDensityForceCandidates({
           )
         ) {
           onCandidateRejected?.("geometry")
-          break
+          state.exhausted = true
+          continue
         }
         // Keep temporary pad-span tags through validation and via derivation:
         // an implicit coincident pad transition must not become a drilled via.

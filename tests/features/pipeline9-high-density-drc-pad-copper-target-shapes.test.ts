@@ -139,6 +139,12 @@ test("Pipeline9 pad witnesses match official physical shapes and layer spans", (
       Math.hypot(closest.x - target!.center.x, closest.y - target!.center.y) -
       route.traceThickness / 2
     expect(witnessGap).toBeCloseTo(actualClearance, 12)
+    expect(target!.tracePoint.x).toBeCloseTo(closest.x, 12)
+    expect(target!.tracePoint.y).toBeCloseTo(closest.y, 12)
+    expect(target!.distance - route.traceThickness / 2).toBeCloseTo(
+      actualClearance,
+      12,
+    )
     expect(
       target!.obstacles.every(
         (obstacle) =>

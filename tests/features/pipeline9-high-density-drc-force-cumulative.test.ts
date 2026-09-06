@@ -1,6 +1,10 @@
 import { expect, test } from "bun:test"
+import { getMaxTargetedCandidateAttemptsForEffort } from "high-density-repair03/lib/solvers/GlobalDrcForceImproveSolver/solverConfig"
 import { createPipeline9HighDensityDrcEvaluator } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/createPipeline9HighDensityDrcEvaluator"
-import { getPipeline9HighDensityForceCandidates } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/getPipeline9HighDensityForceCandidates"
+import {
+  getPipeline9HighDensityForceCandidates,
+  type Pipeline9HighDensityForceFamily,
+} from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/getPipeline9HighDensityForceCandidates"
 import { isPipeline9HighDensityDrcCandidateBetter } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/isPipeline9HighDensityDrcCandidateBetter"
 import { getPipeline9DrcErrors } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/pipeline9JointDrcRepairUtils"
 import type {
@@ -92,6 +96,11 @@ test("Pipeline9 cumulative forces cross a binary overlap without mutating earlie
   })
   const initialErrors = getPipeline9DrcErrors(evaluator, [route])
   expect(initialErrors.length).toBeGreaterThan(0)
+  const attempts: {
+    family: Pipeline9HighDensityForceFamily
+    scale: number
+    application: number
+  }[] = []
   const candidates = getPipeline9HighDensityForceCandidates({
     node,
     hdRoutes: [route],
@@ -106,6 +115,9 @@ test("Pipeline9 cumulative forces cross a binary overlap without mutating earlie
     obstacleMargin: 0.15,
     connMap,
     effort: 1,
+    onCandidateAttempted: (family, scale, application): void => {
+      attempts.push({ family, scale, application })
+    },
   })
   const first = candidates.next()
   if (first.done) throw new Error("Expected the initial force candidate")
@@ -135,4 +147,16 @@ test("Pipeline9 cumulative forces cross a binary overlap without mutating earlie
   expect(first.value).toEqual(originalFirstCandidate)
   expect(second.value).toEqual(originalSecondCandidate)
   expect(route).toEqual(originalRoute)
+  expect(attempts.every((attempt) => attempt.family === "native")).toBeTrue()
+  expect(attempts.slice(0, 3)).toEqual([
+    { family: "native", scale: 1, application: 0 },
+    { family: "native", scale: 1, application: 1 },
+    { family: "native", scale: 1, application: 2 },
+  ])
+  expect(
+    attempts.every(
+      (attempt) =>
+        attempt.application < getMaxTargetedCandidateAttemptsForEffort(1),
+    ),
+  ).toBeTrue()
 })
