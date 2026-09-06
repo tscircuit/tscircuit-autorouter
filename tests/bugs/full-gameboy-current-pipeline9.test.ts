@@ -19,7 +19,10 @@ describe("full Game Boy Advance Pipeline 9 repro", () => {
 
   beforeAll(async () => {
     const fixtureBytes = readFileSync(fixtureUrl)
-    expect(createHash("sha256").update(fixtureBytes).digest("hex")).toBe(
+    const fixtureSha256 = createHash("sha256")
+      .update(new Uint8Array(fixtureBytes))
+      .digest("hex")
+    expect(fixtureSha256).toBe(
       "493b7759d3751457119bf5e4f15138665c5f2fa2f578bf562c1e92def60392f4",
     )
 
