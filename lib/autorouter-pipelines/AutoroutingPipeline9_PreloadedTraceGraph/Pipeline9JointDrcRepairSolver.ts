@@ -1489,8 +1489,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       drcEvaluator: this.drcEvaluator!,
       initialErrors: terminalEscapeResult.remainingErrors,
       preloadRepairTraceIds,
-      additionalRepairConnectionNames:
-        additionalRegionalRepairConnectionNames,
+      additionalRepairConnectionNames: additionalRegionalRepairConnectionNames,
       connMap: this.params.connMap,
       colorMap: this.params.colorMap,
       viaDiameter: this.params.defaultViaDiameter,
@@ -1536,8 +1535,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         regionalB01RepairResult.preloadEligibleDrcIssueCount,
       regionalB01RepairEligibleDrcIssueCount:
         regionalB01RepairResult.eligibleDrcIssueCount,
-      regionalB01RepairAttempted:
-        regionalB01RepairResult.repairAttempted,
+      regionalB01RepairAttempted: regionalB01RepairResult.repairAttempted,
       regionalB01RepairPreloadAttempted:
         regionalB01RepairResult.preloadRepairAttempted,
       regionalB01RepairConnectionNameCount:
