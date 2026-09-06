@@ -16,9 +16,9 @@ jobs:
   test:
     if: github.event_name != 'pull_request' || !startsWith(github.head_ref, 'version-bumps/')
     runs-on: ubuntu-latest
-    # Pipeline9's bounded repair search adds work to the existing board cases.
-    # Keep those end-to-end checks enabled and allow their full search budgets.
-    timeout-minutes: 30
+    # Balanced plans target roughly ten minutes of test work; leave room for
+    # checkout, dependency installation, and runner variance.
+    timeout-minutes: 15
     strategy:
       fail-fast: false
       matrix:
@@ -59,8 +59,7 @@ jobs:
           fi
 
           echo "Running ${#test_files[@]} test files from $test_plan"
-          # CI owns timeouts; the large bounded-repair fixture exceeds 5 minutes.
-          bun test "${test_files[@]}" --timeout 1200000
+          bun test "${test_files[@]}" --timeout 300000
 
       - name: Upload diff PNG and SVG snapshot artifacts
         if: failure()

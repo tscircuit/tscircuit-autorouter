@@ -32,7 +32,7 @@ type PcbViaWithTraceId = CircuitJsonElement & {
   pcb_trace_id: string
 }
 
-export type DrcError =
+type DrcError =
   | PcbTraceError
   | PcbViaTraceClearanceError
   | PcbPadTraceClearanceError
@@ -40,9 +40,9 @@ export type DrcError =
   | PcbPadPadClearanceError
   | PcbPlacementError
 
-export type DrcErrorWithCenter = DrcError & { center?: Point }
+type DrcErrorWithCenter = DrcError & { center?: Point }
 
-export type LocationAwareDrcError = DrcError & { center: Point }
+type LocationAwareDrcError = DrcError & { center: Point }
 
 export const MIN_VIA_TO_VIA_CLEARANCE = 0.1
 export const PREFERRED_VIA_TO_VIA_CLEARANCE = 0.2
