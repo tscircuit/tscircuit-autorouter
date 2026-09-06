@@ -138,7 +138,7 @@ test("Core routing DRC parity preserves repair ownership", async () => {
     pcb_via_id: "via_0",
     center: { x: -0.5, y: 0 },
   })
-    expect(
-      result.errors.some((error) => error.type === "pcb_pad_pad_clearance_error"),
-    ).toBeTrue()
+  expect(
+    result.errors.some((error) => error.type === "pcb_pad_pad_clearance_error"),
+  ).toBeTrue()
 })
