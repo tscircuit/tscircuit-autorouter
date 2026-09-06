@@ -8,13 +8,8 @@ import {
   type SimplifiedPcbTraces as RepairSimplifiedPcbTraces,
 } from "high-density-repair03/lib"
 import { BaseSolver } from "lib/solvers/BaseSolver"
-import { RELAXED_DRC_OPTIONS } from "lib/testing/drcPresets"
 import { evaluateCoreRoutingDrc } from "lib/testing/evaluate-core-routing-drc"
-import {
-  combinePreloadedAndRoutedTraces,
-  evaluateRelaxedDrc,
-  type EvaluateRelaxedDrcInput,
-} from "lib/testing/evaluate-relaxed-drc"
+import { combinePreloadedAndRoutedTraces } from "lib/testing/evaluate-relaxed-drc"
 import type {
   Obstacle,
   SimpleRouteConnection,
@@ -39,7 +34,6 @@ import { getPipeline9PreloadedViaPairTraceGroups } from "./getPipeline9Preloaded
 import { mergePipeline9MovablePreloadedVias } from "./mergePipeline9MovablePreloadedVias"
 import { normalizePipeline9DrcErrorsForRepair } from "./normalizePipeline9DrcErrorsForRepair"
 import {
-  doesPipeline9DrcCandidateRegress,
   getPipeline9DrcErrors,
   getPipeline9RouteIndexByTraceId,
   type Pipeline9CollapsedTraceParticipant,
@@ -102,38 +96,12 @@ type NormalizedCandidateDrcResult = {
   errorsWithCenters: Array<Record<string, unknown>>
 }
 
-type Pipeline9ReferenceDrcEvaluation =
-  | {
-      kind: "relaxed"
-      result: ReturnType<typeof evaluateRelaxedDrc>
-    }
-  | {
-      kind: "core"
-      result: ReturnType<typeof evaluateCoreRoutingDrc>
-    }
-
 type Pipeline9PostExactPrecisionResult = {
   routes: HighDensityRoute[]
   stats: Record<string, unknown>
 }
 
 const POINT_EPSILON = 1e-9
-
-const evaluatePipeline9ReferenceDrc = ({
-  traceClearance,
-  ...input
-}: Omit<EvaluateRelaxedDrcInput, "drcOptions"> & {
-  traceClearance: number
-}): Pipeline9ReferenceDrcEvaluation => {
-  const relaxedDrc = evaluateRelaxedDrc({
-    ...input,
-    drcOptions: { traceClearance },
-  })
-  if (relaxedDrc.errors.length > 0) {
-    return { kind: "relaxed", result: relaxedDrc }
-  }
-  return { kind: "core", result: evaluateCoreRoutingDrc(input) }
-}
 
 const getAutoroutingViaElements = (
   traces: readonly SimplifiedPcbTrace[],
@@ -682,14 +650,9 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
   readonly fixedPreloadedObstacleRoutes: PreloadedHighDensityRoute[]
   readonly syntheticConnectionNames: ReadonlySet<string>
   readonly exactRepairSolver?: Pipeline7AdaptiveDrcBranchPortfolioSolver
-  private coreRepairSolver?: Pipeline7AdaptiveDrcBranchPortfolioSolver
   private repairSrj?: SimpleRouteJson
   private drcEvaluator?: DrcEvaluator
-  private relaxedDrcEvaluator?: DrcEvaluator
-  private sectionRelaxedReferenceDrcEvaluator?: DrcEvaluator
   private cachedReferenceDrcEvaluator?: DrcEvaluator
-  private assembledRelaxedReferenceDrcEvaluator?: DrcEvaluator
-  private relaxedPrecisionResult?: Pipeline9PostExactPrecisionResult
   private referenceDrcValidationCount = 0
   private referenceDrcFalseNegativeCount = 0
   private indexedDrcEvaluationCount = 0
@@ -747,21 +710,12 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       mutatedPreloadedTraces: currentMutatedPreloadedTraces,
       newTraces: currentNewTraces,
     })
-    const traceClearance =
-      params.originalSrj.minTraceToPadEdgeClearance ??
-      RELAXED_DRC_OPTIONS.traceClearance ??
-      0.1
-    const viaClearance = RELAXED_DRC_OPTIONS.viaClearance ?? 0.1
+    const traceClearance = params.originalSrj.minTraceToPadEdgeClearance ?? 0.1
+    const viaClearance = traceClearance
     const coreBaselineDrc = evaluateCoreRoutingDrc({
       inputSrj: params.originalSrj,
       srjWithPointPairs: params.srjWithPointPairs,
       routedTraces: [],
-    })
-    const relaxedBaselineDrc = evaluateRelaxedDrc({
-      inputSrj: params.originalSrj,
-      srjWithPointPairs: params.srjWithPointPairs,
-      routedTraces: [],
-      drcOptions: { traceClearance },
     })
     const baselineEvaluatedTraceIds = new Set(
       (params.originalSrj.traces ?? []).map((trace) => trace.pcb_trace_id),
@@ -780,35 +734,11 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       circuitJson: coreBaselineDrc.circuitJson,
       evaluatedTraceIds: baselineEvaluatedTraceIds,
     })
-    const relaxedBaselineErrors = addAutoroutingViaTraceIds({
-      errors: relaxedBaselineDrc.errors as unknown as Array<
-        Record<string, unknown>
-      >,
-      circuitJson: relaxedBaselineDrc.circuitJson,
-      evaluatedTraceIds: baselineEvaluatedTraceIds,
-    })
-    const relaxedBaselineErrorsWithCenters = addAutoroutingViaTraceIds({
-      errors: relaxedBaselineDrc.errorsWithCenters as unknown as Array<
-        Record<string, unknown>
-      >,
-      circuitJson: relaxedBaselineDrc.circuitJson,
-      evaluatedTraceIds: baselineEvaluatedTraceIds,
-    })
-    const currentDrcEvaluation = evaluatePipeline9ReferenceDrc({
+    const currentDrcResult = evaluateCoreRoutingDrc({
       inputSrj: params.originalSrj,
       srjWithPointPairs: params.srjWithPointPairs,
       routedTraces: preparedCurrentOutput.routedTraces,
-      traceClearance,
     })
-    const currentDrcResult = currentDrcEvaluation.result
-    const currentBaselineErrors =
-      currentDrcEvaluation.kind === "relaxed"
-        ? relaxedBaselineErrors
-        : coreBaselineErrors
-    const currentBaselineErrorsWithCenters =
-      currentDrcEvaluation.kind === "relaxed"
-        ? relaxedBaselineErrorsWithCenters
-        : coreBaselineErrorsWithCenters
     const currentEvaluatedTraceIds = new Set(
       combinePreloadedAndRoutedTraces(
         params.originalSrj.traces ?? [],
@@ -833,13 +763,13 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       ...currentDrcResult,
       errors: filterPipeline9DrcErrorsAgainstBaseline({
         errors: currentErrors,
-        baselineErrors: currentBaselineErrors,
+        baselineErrors: coreBaselineErrors,
         originalTraceIdByPreparedTraceId:
           preparedCurrentOutput.originalPreloadedTraceIdByPreparedTraceId,
       }),
       errorsWithCenters: filterPipeline9DrcErrorsAgainstBaseline({
         errors: currentErrorsWithCenters,
-        baselineErrors: currentBaselineErrorsWithCenters,
+        baselineErrors: coreBaselineErrorsWithCenters,
         originalTraceIdByPreparedTraceId:
           preparedCurrentOutput.originalPreloadedTraceIdByPreparedTraceId,
       }),
@@ -1239,35 +1169,13 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
 
     const evaluateCandidateReferenceDrc = (
       evaluatedRoutes: HighDensityRoute[],
-      evaluationKind: "pipeline9" | "relaxed",
     ): NormalizedCandidateDrcResult => {
       const candidateDrcInput = prepareCandidateDrcInput(evaluatedRoutes)
-      const evaluatedDrcEvaluation =
-        evaluationKind === "pipeline9"
-          ? evaluatePipeline9ReferenceDrc({
-              inputSrj: params.originalSrj,
-              srjWithPointPairs: params.srjWithPointPairs,
-              routedTraces: candidateDrcInput.routedTraces,
-              traceClearance,
-            })
-          : {
-              kind: "relaxed" as const,
-              result: evaluateRelaxedDrc({
-                inputSrj: params.originalSrj,
-                srjWithPointPairs: params.srjWithPointPairs,
-                routedTraces: candidateDrcInput.routedTraces,
-                drcOptions: { traceClearance },
-              }),
-            }
-      const evaluatedDrc = evaluatedDrcEvaluation.result
-      const candidateBaselineErrors =
-        evaluatedDrcEvaluation.kind === "relaxed"
-          ? relaxedBaselineErrors
-          : coreBaselineErrors
-      const candidateBaselineErrorsWithCenters =
-        evaluatedDrcEvaluation.kind === "relaxed"
-          ? relaxedBaselineErrorsWithCenters
-          : coreBaselineErrorsWithCenters
+      const evaluatedDrc = evaluateCoreRoutingDrc({
+        inputSrj: params.originalSrj,
+        srjWithPointPairs: params.srjWithPointPairs,
+        routedTraces: candidateDrcInput.routedTraces,
+      })
       const evaluatedTraceIds = new Set(
         candidateDrcInput.evaluatedTraces.map((trace) => trace.pcb_trace_id),
       )
@@ -1287,14 +1195,14 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       })
       const evaluatedNewErrors = filterPipeline9DrcErrorsAgainstBaseline({
         errors: evaluatedErrors,
-        baselineErrors: candidateBaselineErrors,
+        baselineErrors: coreBaselineErrors,
         originalTraceIdByPreparedTraceId:
           candidateDrcInput.originalTraceIdByEvaluationTraceId,
       })
       const evaluatedNewErrorsWithCenters =
         filterPipeline9DrcErrorsAgainstBaseline({
           errors: evaluatedErrorsWithCenters,
-          baselineErrors: candidateBaselineErrorsWithCenters,
+          baselineErrors: coreBaselineErrorsWithCenters,
           originalTraceIdByPreparedTraceId:
             candidateDrcInput.originalTraceIdByEvaluationTraceId,
         })
@@ -1312,38 +1220,8 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       if (!evaluatedRoutes) {
         throw new Error("Pipeline9 reference DRC repair requires HD routes")
       }
-      return evaluateCandidateReferenceDrc(evaluatedRoutes, "pipeline9")
+      return evaluateCandidateReferenceDrc(evaluatedRoutes)
     }
-    const sectionRelaxedReferenceDrcEvaluator: DrcEvaluator = ({
-      routes,
-      hdRoutes,
-    }) => {
-      const evaluatedRoutes = routes ?? hdRoutes
-      if (!evaluatedRoutes) {
-        throw new Error("Pipeline9 relaxed DRC repair requires HD routes")
-      }
-      return evaluateCandidateReferenceDrc(evaluatedRoutes, "relaxed")
-    }
-    const assembledRelaxedReferenceDrcEvaluator: DrcEvaluator = ({
-      routes,
-      hdRoutes,
-    }) => {
-      const evaluatedRoutes = routes ?? hdRoutes
-      if (!evaluatedRoutes) {
-        throw new Error("Pipeline9 relaxed DRC guard requires HD routes")
-      }
-      const evaluatedDrc = this.evaluateAssembledRelaxedDrc(evaluatedRoutes)
-      return {
-        errors: evaluatedDrc.errors as unknown as Array<
-          Record<string, unknown>
-        >,
-        errorsWithCenters: evaluatedDrc.errorsWithCenters as unknown as Array<
-          Record<string, unknown>
-        >,
-      }
-    }
-    this.assembledRelaxedReferenceDrcEvaluator =
-      assembledRelaxedReferenceDrcEvaluator
     const cachedReferenceDrcEvaluator: DrcEvaluator = ({
       routes,
       hdRoutes,
@@ -1455,23 +1333,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       }
       return referenceResult
     }
-    const relaxedDrcEvaluator: DrcEvaluator = (input) => {
-      const indexedResult = indexedDrcEvaluator(input)
-      if (getIndexedDrcErrors(indexedResult).length > 0) return indexedResult
-      this.referenceDrcValidationCount += 1
-      const referenceResult = sectionRelaxedReferenceDrcEvaluator(input)
-      const referenceErrors = Array.isArray(referenceResult)
-        ? referenceResult
-        : referenceResult.errors
-      if (referenceErrors.length > 0) {
-        this.referenceDrcFalseNegativeCount += 1
-      }
-      return referenceResult
-    }
     this.drcEvaluator = drcEvaluator
-    this.relaxedDrcEvaluator = relaxedDrcEvaluator
-    this.sectionRelaxedReferenceDrcEvaluator =
-      sectionRelaxedReferenceDrcEvaluator
     this.repairSrj = extendedSrjWithPointPairs
     this.exactRepairSolver = this.createRepairSolver({
       hdRoutes: [
@@ -1480,7 +1342,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
           (movableSection) => movableSection.hdRoute,
         ),
       ],
-      drcEvaluator: relaxedDrcEvaluator,
+      drcEvaluator,
     })
     this.activeSubSolver = this.exactRepairSolver
     this.MAX_ITERATIONS = this.exactRepairSolver.MAX_ITERATIONS + 1
@@ -1489,11 +1351,9 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
   private createRepairSolver({
     hdRoutes,
     drcEvaluator,
-    referenceDrcEvaluator,
   }: {
     hdRoutes: HighDensityRoute[]
     drcEvaluator: DrcEvaluator
-    referenceDrcEvaluator?: DrcEvaluator
   }): Pipeline7AdaptiveDrcBranchPortfolioSolver {
     if (!this.repairSrj) {
       throw new Error("Pipeline9 joint DRC repair is missing its repair SRJ")
@@ -1505,7 +1365,6 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       effort: this.params.effort,
       viaHoleDiameter: this.params.defaultViaHoleDiameter,
       drcEvaluator,
-      referenceDrcEvaluator,
       viaInPadDrcEvaluator: drcEvaluator,
       maxIterations: EXACT_REPAIR_MAX_ITERATIONS,
       enableBroadFallback: false,
@@ -1624,25 +1483,8 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         0.15,
       effort: this.params.effort,
     })
-    const postRepairRelaxedInputErrors = getPipeline9DrcErrors(
-      this.assembledRelaxedReferenceDrcEvaluator!,
-      exactOutput,
-    )
-    const postRepairRelaxedCandidateErrors = getPipeline9DrcErrors(
-      this.assembledRelaxedReferenceDrcEvaluator!,
-      regionalB01RepairResult.routes,
-    )
-    const postRepairRelaxedCandidateRolledBack =
-      doesPipeline9DrcCandidateRegress(
-        postRepairRelaxedCandidateErrors,
-        postRepairRelaxedInputErrors,
-      )
-    const routes = postRepairRelaxedCandidateRolledBack
-      ? exactOutput
-      : regionalB01RepairResult.routes
-
     return {
-      routes,
+      routes: regionalB01RepairResult.routes,
       stats: {
         postExactIndexedDrcIssueCount: exactIndexedDrcIssueCount,
         postExactPrecisionPassMaxIndexedIssueCount:
@@ -1673,11 +1515,6 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
           regionalB01RepairResult.preloadEligibleDrcIssueCount,
         regionalB01RepairAttempted:
           regionalB01RepairResult.preloadRepairAttempted,
-        postRepairRelaxedInputDrcIssueCount:
-          postRepairRelaxedInputErrors.length,
-        postRepairRelaxedCandidateDrcIssueCount:
-          postRepairRelaxedCandidateErrors.length,
-        postRepairRelaxedCandidateRolledBack,
         regionalB01RepairTraceIdCount:
           preloadRepairTraceIds.size +
           (preloadRepairTraceIds.collidingFixedTraceIds?.size ?? 0),
@@ -1698,66 +1535,25 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     }
     if (!this.exactRepairSolver.solved) {
       this.exactRepairSolver.step()
-      this.progress = this.exactRepairSolver.progress / 2
+      this.progress = this.exactRepairSolver.progress
       if (this.exactRepairSolver.failed) {
         this.failed = true
         this.error = this.exactRepairSolver.error
       }
       return
     }
-    if (!this.coreRepairSolver) {
-      this.relaxedPrecisionResult = this.runPostExactPrecisionPass({
-        exactOutput: this.exactRepairSolver.getOutput(),
-        exactIndexedDrcIssueCountStat:
-          this.exactRepairSolver.stats.finalDrcIssueCount,
-        drcEvaluator: this.relaxedDrcEvaluator!,
-        referenceDrcEvaluator: this.sectionRelaxedReferenceDrcEvaluator!,
-      })
-      this.coreRepairSolver = this.createRepairSolver({
-        hdRoutes: this.relaxedPrecisionResult.routes,
-        drcEvaluator: this.drcEvaluator!,
-        referenceDrcEvaluator: this.assembledRelaxedReferenceDrcEvaluator,
-      })
-      this.activeSubSolver = this.coreRepairSolver
-      this.MAX_ITERATIONS =
-        this.exactRepairSolver.MAX_ITERATIONS +
-        this.coreRepairSolver.MAX_ITERATIONS +
-        1
-      return
-    }
-    this.coreRepairSolver.step()
-    this.progress = 0.5 + this.coreRepairSolver.progress / 2
-    if (this.coreRepairSolver.failed) {
-      this.failed = true
-      this.error = this.coreRepairSolver.error
-      return
-    }
-    if (!this.coreRepairSolver.solved) return
-    const corePrecisionResult = this.runPostExactPrecisionPass({
-      exactOutput: this.coreRepairSolver.getOutput(),
+    const precisionResult = this.runPostExactPrecisionPass({
+      exactOutput: this.exactRepairSolver.getOutput(),
       exactIndexedDrcIssueCountStat:
-        this.coreRepairSolver.stats.finalDrcIssueCount,
+        this.exactRepairSolver.stats.finalDrcIssueCount,
       drcEvaluator: this.drcEvaluator!,
       referenceDrcEvaluator: this.cachedReferenceDrcEvaluator!,
     })
-    this.combinedOutput = corePrecisionResult.routes
+    this.combinedOutput = precisionResult.routes
     this.stats = {
       ...this.stats,
-      ...this.coreRepairSolver.stats,
-      coreRepairFinalDrcIssueCount:
-        this.coreRepairSolver.stats.finalDrcIssueCount,
-      corePostExactReferenceDrcIssueCount:
-        corePrecisionResult.stats.postExactReferenceDrcIssueCount,
-      corePostExactReferenceAccepted:
-        corePrecisionResult.stats.postExactReferenceAccepted,
-      coreRegionalB01RepairAcceptedCount:
-        corePrecisionResult.stats.regionalB01RepairAcceptedCount,
-      corePostRepairRelaxedCandidateRolledBack:
-        corePrecisionResult.stats.postRepairRelaxedCandidateRolledBack,
       ...this.exactRepairSolver.stats,
-      ...this.relaxedPrecisionResult!.stats,
-      relaxedRepairFinalDrcIssueCount:
-        this.exactRepairSolver.stats.finalDrcIssueCount,
+      ...precisionResult.stats,
       referenceDrcValidationCount: this.referenceDrcValidationCount,
       referenceDrcFalseNegativeCount: this.referenceDrcFalseNegativeCount,
       indexedDrcEvaluationCount: this.indexedDrcEvaluationCount,
@@ -1848,53 +1644,6 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     return this.inputUpdatedPreloadedTraces.map(
       (trace) => repairedTraceById.get(trace.pcb_trace_id) ?? trace,
     )
-  }
-
-  private evaluateAssembledRelaxedDrc(outputRoutes: HighDensityRoute[]) {
-    const convertNewRoutes =
-      createPipeline7HdRoutesToSimplifiedPcbTracesConverter({
-        connections: this.params.newConnections,
-        originalConnections: this.params.originalSrj.connections,
-        layerCount: this.params.layerCount,
-        obstacles: this.params.obstacles,
-        defaultViaHoleDiameter: this.params.defaultViaHoleDiameter,
-        connMap: this.params.connMap,
-      })
-    const newTraces = assignUniquePcbTraceIdsToNewTraces(
-      convertNewRoutes(
-        outputRoutes.filter(
-          (route) => !this.syntheticConnectionNames.has(route.connectionName),
-        ),
-      ),
-      this.params.originalSrj.traces ?? [],
-    )
-    const updatedPreloadedTraces =
-      this.getUpdatedPreloadedTracesForRoutes(outputRoutes)
-    const mutatedPreloadedTraceIds = new Set([
-      ...this.params.mutatedPreloadedTraceIds,
-      ...this.movablePreloadedSections.map(
-        (movableSection) => movableSection.originalTrace.pcb_trace_id,
-      ),
-    ])
-    const mutatedPreloadedTraces = updatedPreloadedTraces.filter((trace) =>
-      mutatedPreloadedTraceIds.has(trace.pcb_trace_id),
-    )
-    const preparedOutput = preparePipeline9DrcRoutedTracesWithMetadata({
-      originalPreloadedTraces: this.params.originalSrj.traces ?? [],
-      mutatedPreloadedTraces,
-      newTraces,
-    })
-    return evaluateRelaxedDrc({
-      inputSrj: this.params.originalSrj,
-      srjWithPointPairs: this.params.srjWithPointPairs,
-      routedTraces: preparedOutput.routedTraces,
-      drcOptions: {
-        traceClearance:
-          this.params.originalSrj.minTraceToPadEdgeClearance ??
-          RELAXED_DRC_OPTIONS.traceClearance ??
-          0.1,
-      },
-    })
   }
 
   getUpdatedPreloadedTraces(): SimplifiedPcbTrace[] {
