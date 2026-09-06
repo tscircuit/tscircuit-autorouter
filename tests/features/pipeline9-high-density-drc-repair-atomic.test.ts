@@ -48,26 +48,45 @@ const inputRoutes: HighDensityRoute[] = nodes.map((node) => ({
 }))
 const obstacles: Obstacle[] = nodes.map((node) => ({
   obstacleId: `obstacle-${node.capacityMeshNodeId}`,
+  circuitJsonMetadata: {
+    pcb_smtpad_id: `pad-${node.capacityMeshNodeId}`,
+    pcb_port_id: `port-${node.capacityMeshNodeId}`,
+  },
   type: "rect",
   layers: ["top"],
   center: node.center,
   width: 0.2,
   height: 0.2,
-  connectedTo: [],
+  connectedTo: ["C", `port-${node.capacityMeshNodeId}`],
 }))
 test("Pipeline9 retains a local repair while independent node DRCs remain", (): void => {
-  const connMap = new ConnectivityMap({ A: ["A"], B: ["B"] })
+  const connMap = new ConnectivityMap({
+    A: ["A"],
+    B: ["B"],
+    C: ["C", "port-node-a", "port-node-b"],
+  })
   const srj: SimpleRouteJson = {
     layerCount: 2,
     minTraceWidth: 0.1,
     minViaDiameter: 0.3,
     bounds: { minX: -3, maxX: 3, minY: -4, maxY: 4 },
-    connections,
+    connections: [
+      ...connections,
+      {
+        name: "C",
+        pointsToConnect: nodes.map((node) => ({
+          x: node.center.x,
+          y: node.center.y,
+          layer: "top",
+          pcb_port_id: `port-${node.capacityMeshNodeId}`,
+        })),
+      },
+    ],
     obstacles,
   }
   const drcEvaluator = createPipeline9HighDensityDrcEvaluator({
     connections,
-    originalConnections: connections,
+    originalConnections: srj.connections,
     hdRoutes: inputRoutes,
     originalFixedHdRoutes: [],
     fixedHdRoutes: [],
@@ -99,6 +118,7 @@ test("Pipeline9 retains a local repair while independent node DRCs remain", (): 
 
   solver.step()
   const initialDrcIssueCount = Number(solver.stats.initialDrcIssueCount)
+  expect(initialDrcIssueCount).toBeGreaterThan(1)
   while (
     !solver.solved &&
     !solver.failed &&

@@ -26,6 +26,11 @@ type LocalForceRoute = {
   terminalSuffixLength: number
 }
 
+export type Pipeline9HighDensityForceRejectionReason =
+  | "no-motion"
+  | "anchor"
+  | "geometry"
+
 export type Pipeline9HighDensityForceCandidateParams = {
   node: NodeWithPortPoints
   hdRoutes: HighDensityRoute[]
@@ -39,6 +44,9 @@ export type Pipeline9HighDensityForceCandidateParams = {
   obstacleMargin: number
   connMap: ConnectivityMap
   effort: number
+  onCandidateRejected?: (
+    reason: Pipeline9HighDensityForceRejectionReason,
+  ) => void
 }
 
 const createLocalForceRoute = (original: HighDensityRoute): LocalForceRoute => {
@@ -47,6 +55,15 @@ const createLocalForceRoute = (original: HighDensityRoute): LocalForceRoute => {
   const last = originalPoints.at(-1)
   if (!first || !last) {
     throw new Error("Pipeline9 local DRC forces require nonempty routes")
+  }
+  // Earlier HD stages keep terminal identity on the route rather than on its
+  // points. The force operator needs the real identity on each temporary end
+  // point so it searches interior moves instead of moving a connected pad end.
+  if (first.pcb_port_id === undefined && original.startPcbPortId !== undefined) {
+    first.pcb_port_id = original.startPcbPortId
+  }
+  if (last.pcb_port_id === undefined && original.endPcbPortId !== undefined) {
+    last.pcb_port_id = original.endPcbPortId
   }
   const protectedPointIndexes = new Set<number>()
   let terminalPrefixLength = 0
@@ -178,6 +195,7 @@ export function* getPipeline9HighDensityForceCandidates({
   obstacleMargin,
   connMap,
   effort,
+  onCandidateRejected,
 }: Pipeline9HighDensityForceCandidateParams): Generator<
   HighDensityRoute[],
   void,
@@ -220,6 +238,13 @@ export function* getPipeline9HighDensityForceCandidates({
     )
     if (movableTraceId === undefined) continue
     const localError = { ...error, pcb_trace_id: movableTraceId }
+    // A trace omitted from the local route map may own either the segment or
+    // the via. Only actual via ownership permits the operator's specialized
+    // via-owner move; otherwise it must work on the mapped trace segment.
+    const viaOwnerTraceIds = error.__via_owner_trace_ids
+    const primaryOwnsReportedVia =
+      Array.isArray(viaOwnerTraceIds) &&
+      viaOwnerTraceIds.includes(movableTraceId)
     for (const scale of getForceScalesForEffort(effort)) {
       const localRoutes = hdRoutes.map(createLocalForceRoute)
       const mutableRoutes = localRoutes.map((local) => local.mutable)
@@ -234,19 +259,36 @@ export function* getPipeline9HighDensityForceCandidates({
           true,
           false,
           false,
-          true,
-        ) ||
-        localRoutes.some((local) => !hasPreservedLocalRouteAnchors(local))
+          primaryOwnsReportedVia,
+        )
       ) {
+        onCandidateRejected?.("no-motion")
+        continue
+      }
+      if (localRoutes.some((local) => !hasPreservedLocalRouteAnchors(local))) {
+        onCandidateRejected?.("anchor")
         continue
       }
       for (const local of localRoutes) {
-        const originalPointSet = new Set(local.originalPoints)
+        const originalPointByMutablePoint = new Map(
+          local.originalPoints.map((point, index) => [
+            point,
+            local.original.route[index]!,
+          ]),
+        )
         // The force operator builds detours by copying the starting point. An
         // inserted waypoint inherits segment width, but is not a PCB terminal
         // or a jumper/through-obstacle anchor.
         local.mutable.route = local.mutable.route.map((point) => {
-          if (originalPointSet.has(point)) return point
+          const originalPoint = originalPointByMutablePoint.get(point)
+          if (originalPoint) {
+            return {
+              ...originalPoint,
+              x: point.x,
+              y: point.y,
+              z: point.z,
+            }
+          }
           const {
             pcb_port_id,
             insideJumperPad,
@@ -272,6 +314,8 @@ export function* getPipeline9HighDensityForceCandidates({
         )
       ) {
         yield candidates
+      } else {
+        onCandidateRejected?.("geometry")
       }
     }
   }

@@ -356,6 +356,9 @@ export class Pipeline9HighDensityDrcRepairSolver extends BaseSolver {
       acceptedForceRepairCount: 0,
       acceptedRerouteRepairCount: 0,
       forceCandidateAttemptCount: 0,
+      forceNoMotionCount: 0,
+      forceAnchorRejectedCount: 0,
+      forceGeometryRejectedCount: 0,
       exhaustedNodeCount: 0,
       candidateAttemptCount: 0,
     }
@@ -693,6 +696,14 @@ export class Pipeline9HighDensityDrcRepairSolver extends BaseSolver {
       obstacleMargin: this.params.obstacleMargin,
       connMap: this.params.connMap,
       effort: this.params.effort,
+      onCandidateRejected: (reason): void => {
+        const statName = {
+          "no-motion": "forceNoMotionCount",
+          anchor: "forceAnchorRejectedCount",
+          geometry: "forceGeometryRejectedCount",
+        }[reason]
+        this.stats[statName] = Number(this.stats[statName]) + 1
+      },
     })
   }
 
@@ -760,6 +771,7 @@ export class Pipeline9HighDensityDrcRepairSolver extends BaseSolver {
         "Pipeline9 high-density DRC repair solver finished without an accepted candidate",
       )
     }
+    this.invalidateChangedNodeContexts(this.acceptedCandidate.routes)
     this.outputHdRoutes = this.acceptedCandidate.routes
     this.currentErrors = this.acceptedCandidate.errors
     this.acceptedNodeIds.add(this.activeNode.capacityMeshNodeId)
@@ -771,13 +783,88 @@ export class Pipeline9HighDensityDrcRepairSolver extends BaseSolver {
         : "acceptedRerouteRepairCount"
     this.stats[sourceStat] = Number(this.stats[sourceStat]) + 1
     this.stats.finalDrcIssueCount = this.currentErrors.length
-    this.attemptedNodeIdsAtCurrentRevision.clear()
     this.acceptedCandidate = null
     this.activeNode = null
     this.activeConnectionNames.clear()
     this.activeSubSolver = null
     this.activeForceCandidates = null
     this.activeRepairObstacles = []
+  }
+
+  private invalidateChangedNodeContexts(nextRoutes: HighDensityRoute[]): void {
+    const copperRadius = this.outputHdRoutes.reduce(
+      (radius, route) =>
+        Math.max(
+          radius,
+          route.viaDiameter / 2,
+          route.traceThickness / 2,
+          ...route.route.map((point) => (point.traceThickness ?? 0) / 2),
+        ),
+      Math.max(
+        this.params.viaDiameter / 2,
+        this.params.traceWidth / 2,
+        ...this.params.newConnections.flatMap((connection) =>
+          connection.pointsToConnect.map((point) =>
+            "terminalVia" in point
+              ? (point.terminalVia?.viaDiameter ?? 0) / 2
+              : 0,
+          ),
+        ),
+      ),
+    )
+    const changedBounds = this.outputHdRoutes.flatMap((route, index) => {
+      const nextRoute = nextRoutes[index]!
+      if (route === nextRoute) return []
+      return [route, nextRoute].flatMap((changedRoute) => {
+        const bounds = getPipeline9RouteCopperBounds(changedRoute)
+        return [
+          ...(bounds ? [bounds] : []),
+          ...this.getDrilledVias(changedRoute).map((via) => ({
+            minX: via.x - copperRadius,
+            maxX: via.x + copperRadius,
+            minY: via.y - copperRadius,
+            maxY: via.y + copperRadius,
+          })),
+        ]
+      })
+    })
+    const padding =
+      copperRadius +
+      Math.max(
+        this.params.obstacleMargin,
+        this.params.drcClearance,
+        MIN_VIA_TO_VIA_CLEARANCE,
+      )
+    // A distant repair cannot change this node's geometry, obstacle context or
+    // pairwise copper violations. Retry only nodes whose possible copper can
+    // interact with an old or new changed fragment, including cross-layer drills.
+    for (const node of this.params.nodePortPoints) {
+      const bounds = {
+        minX: node.center.x - node.width / 2 - padding,
+        maxX: node.center.x + node.width / 2 + padding,
+        minY: node.center.y - node.height / 2 - padding,
+        maxY: node.center.y + node.height / 2 + padding,
+      }
+      // Serialized terminal vias can sit at their connection point, slightly
+      // beyond the HD endpoint. Include those actual drill sites as well.
+      for (const route of this.outputHdRoutes) {
+        if (route.regionId !== node.capacityMeshNodeId) continue
+        for (const via of this.getDrilledVias(route)) {
+          bounds.minX = Math.min(bounds.minX, via.x - padding)
+          bounds.maxX = Math.max(bounds.maxX, via.x + padding)
+          bounds.minY = Math.min(bounds.minY, via.y - padding)
+          bounds.maxY = Math.max(bounds.maxY, via.y + padding)
+        }
+      }
+      if (
+        node.capacityMeshNodeId === this.activeNode!.capacityMeshNodeId ||
+        changedBounds.some((changed) =>
+          doPipeline9BoundsOverlap(bounds, changed),
+        )
+      ) {
+        this.attemptedNodeIdsAtCurrentRevision.delete(node.capacityMeshNodeId)
+      }
+    }
   }
 
   private finishExhaustedNodeRepair(error: string): void {

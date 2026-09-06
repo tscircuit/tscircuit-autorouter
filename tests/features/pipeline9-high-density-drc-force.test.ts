@@ -53,7 +53,11 @@ test("Pipeline9 local DRC forces repair pad clearance with fixed node handoffs a
   }
   const inputRoutes = [affectedRoute, fixedRoute]
   const originalRoutes = structuredClone(inputRoutes)
-  const connMap = new ConnectivityMap({ A: ["A"], B: ["B"] })
+  const connMap = new ConnectivityMap({
+    A: ["A"],
+    B: ["B"],
+    C: ["C", "port-c-start", "port-c-end"],
+  })
   const srj: SimpleRouteJson = {
     layerCount: 2,
     minTraceWidth: 0.1,
@@ -62,25 +66,38 @@ test("Pipeline9 local DRC forces repair pad clearance with fixed node handoffs a
       {
         type: "rect",
         obstacleId: "fixed-pad",
+        circuitJsonMetadata: {
+          pcb_smtpad_id: "pad-c-start",
+          pcb_port_id: "port-c-start",
+        },
         center: { x: 0, y: 0 },
         width: 0.4,
         height: 0.4,
         layers: ["top"],
-        connectedTo: ["C"],
+        connectedTo: ["C", "port-c-start"],
       },
     ],
-    connections: inputRoutes.map((route) => ({
-      name: route.connectionName,
-      pointsToConnect: [route.route[0]!, route.route.at(-1)!].map((point) => ({
-        x: point.x,
-        y: point.y,
-        layer: point.z === 0 ? "top" : "bottom",
-        pcb_port_id: point.pcb_port_id,
+    connections: [
+      ...inputRoutes.map((route) => ({
+        name: route.connectionName,
+        pointsToConnect: [route.route[0]!, route.route.at(-1)!].map((point) => ({
+          x: point.x,
+          y: point.y,
+          layer: point.z === 0 ? "top" : "bottom",
+          pcb_port_id: point.pcb_port_id,
+        })),
       })),
-    })),
+      {
+        name: "C",
+        pointsToConnect: [
+          { x: 0, y: 0, layer: "top", pcb_port_id: "port-c-start" },
+          { x: 0, y: 4, layer: "top", pcb_port_id: "port-c-end" },
+        ],
+      },
+    ],
   }
   const drcEvaluator = createPipeline9HighDensityDrcEvaluator({
-    connections: srj.connections,
+    connections: srj.connections.filter((connection) => connection.name !== "C"),
     originalConnections: srj.connections,
     originalFixedHdRoutes: [],
     fixedHdRoutes: [],

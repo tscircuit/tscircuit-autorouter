@@ -10,6 +10,7 @@ import type { HighDensityRoute } from "lib/types/high-density-types"
 import { convertHdRouteToSimplifiedRoute } from "lib/utils/convertHdRouteToSimplifiedRoute"
 import { assignUniquePcbTraceIdsToNewTraces } from "./assignUniquePcbTraceIdsToNewTraces"
 import type { PreloadedHighDensityRoute } from "./convertPreloadedTraceToHdRoutes"
+import { addAutoroutingViaTraceIds } from "./Pipeline9JointDrcRepairSolver"
 import { normalizePipeline9DrcErrorsForRepair } from "./normalizePipeline9DrcErrorsForRepair"
 import { preparePipeline9DrcRoutedTraces } from "./preparePipeline9DrcRoutedTraces"
 
@@ -31,6 +32,44 @@ type FrozenHighDensityTrace = {
 type HighDensityDrcResult = {
   errors: Record<string, unknown>[]
   errorsWithCenters: Record<string, unknown>[]
+}
+
+const addCopperOwnerMetadata = (
+  errors: Record<string, unknown>[],
+  traceIdByViaId: ReadonlyMap<string, string>,
+): Record<string, unknown>[] => {
+  return errors.map((error) => {
+    const viaIds = [
+      ...(typeof error.pcb_via_id === "string" ? [error.pcb_via_id] : []),
+      ...(Array.isArray(error.pcb_via_ids)
+        ? error.pcb_via_ids.filter(
+            (viaId): viaId is string => typeof viaId === "string",
+          )
+        : []),
+    ]
+    const viaOwnerTraceIds = [
+      ...new Set(
+        viaIds.flatMap((viaId) => {
+          const traceId = traceIdByViaId.get(viaId)
+          return traceId === undefined ? [] : [traceId]
+        }),
+      ),
+    ]
+    if (viaOwnerTraceIds.length === 0) return error
+    const segmentOwnerTraceId =
+      (error.type === "pcb_trace_error" ||
+        error.type === "pcb_via_trace_clearance_error") &&
+      typeof error.pcb_trace_id === "string"
+        ? error.pcb_trace_id
+        : undefined
+    return {
+      ...error,
+      __via_owner_trace_ids: viaOwnerTraceIds,
+      ...(segmentOwnerTraceId === undefined
+        ? {}
+        : { __trace_segment_owner_trace_id: segmentOwnerTraceId }),
+    }
+  })
 }
 
 const hasSameFixedCopper = (
@@ -216,14 +255,41 @@ export const createPipeline9HighDensityDrcEvaluator = (
         includeBoardEdge: false,
       },
     })
+    const evaluatedTraceIds = new Set(
+      circuitJson.flatMap((element) =>
+        element.type === "pcb_trace" ? [element.pcb_trace_id] : [],
+      ),
+    )
+    const traceIdByViaId = new Map(
+      circuitJson.flatMap((element) =>
+        element.type === "pcb_via" &&
+        typeof element.pcb_trace_id === "string"
+          ? [[element.pcb_via_id, element.pcb_trace_id] as const]
+          : [],
+      ),
+    )
     return {
       errors: normalizePipeline9DrcErrorsForRepair({
-        errors: errors as unknown as Record<string, unknown>[],
+        errors: addCopperOwnerMetadata(
+          addAutoroutingViaTraceIds({
+            errors: errors as unknown as Record<string, unknown>[],
+            circuitJson,
+            evaluatedTraceIds,
+          }),
+          traceIdByViaId,
+        ),
         circuitJson,
         newTraceIds,
       }),
       errorsWithCenters: normalizePipeline9DrcErrorsForRepair({
-        errors: errorsWithCenters as unknown as Record<string, unknown>[],
+        errors: addCopperOwnerMetadata(
+          addAutoroutingViaTraceIds({
+            errors: errorsWithCenters as unknown as Record<string, unknown>[],
+            circuitJson,
+            evaluatedTraceIds,
+          }),
+          traceIdByViaId,
+        ),
         circuitJson,
         newTraceIds,
       }),
