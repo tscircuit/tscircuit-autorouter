@@ -1340,9 +1340,9 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       }
       return {
         errors: result.errors.filter(isPipeline9IllegalCopperContactDrcError),
-        errorsWithCenters: (
-          result.errorsWithCenters ?? result.errors
-        ).filter(isPipeline9IllegalCopperContactDrcError),
+        errorsWithCenters: (result.errorsWithCenters ?? result.errors).filter(
+          isPipeline9IllegalCopperContactDrcError,
+        ),
       }
     }
 

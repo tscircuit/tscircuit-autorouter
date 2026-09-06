@@ -27,10 +27,7 @@ test("Pipeline9 repair candidates cannot trade DRCs for new illegal copper conta
   ]
 
   expect(
-    isPipeline9DrcCandidateBetter(
-      fewerErrorsWithNewContact,
-      currentErrors,
-    ),
+    isPipeline9DrcCandidateBetter(fewerErrorsWithNewContact, currentErrors),
   ).toBeFalse()
   expect(
     isPipeline9DrcCandidateBetter(
