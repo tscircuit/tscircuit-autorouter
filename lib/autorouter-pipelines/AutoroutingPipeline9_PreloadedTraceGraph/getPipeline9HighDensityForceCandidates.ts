@@ -54,6 +54,7 @@ export type Pipeline9HighDensityForceFamily =
   | "pad-wire-0"
   | "pad-wire-1"
   | "native"
+  | "native-feedback"
   | "trace-pair-0"
   | "trace-pair-1"
 
@@ -62,6 +63,15 @@ type ForceFamilyState = {
   localRoutes: LocalForceRoute[]
   mutableRoutes: HighDensityRoute[]
   exhausted: boolean
+}
+
+export type Pipeline9HighDensityForceFeedback =
+  | { errors: Pipeline9DrcError[] }
+  | undefined
+
+type NativeFeedbackState = {
+  state: ForceFamilyState
+  errors: Pipeline9DrcError[]
 }
 
 type ForcePass = {
@@ -92,7 +102,7 @@ export type Pipeline9HighDensityForceCandidateParams = {
   effort: number
   /** Reports the original error index before private pad-center expansion. */
   onErrorAttempted?: (errorIndex: number) => void
-  /** Reports an actual family attempt within the existing per-scale budget. */
+  /** Original slot scale; native-feedback applies +1 in a redundant -1 slot. */
   onCandidateAttempted?: (
     family: Pipeline9HighDensityForceFamily,
     scale: number,
@@ -314,6 +324,91 @@ function* getPadTargetedForceErrors(
   }
 }
 
+const getLocalNativeFeedbackErrors = (
+  feedback: Pipeline9HighDensityForceFeedback,
+  traceRouteIndexById: ReadonlyMap<string, number>,
+): Pipeline9DrcError[] | undefined => {
+  if (feedback === undefined) return undefined
+  const selected: Pipeline9DrcError[] = []
+  for (const error of feedback.errors) {
+    const padIds = new Set(
+      Array.isArray(error.__pad_ids) ? error.__pad_ids : [],
+    )
+    const participants = [
+      ...getPipeline9DrcErrorTraceIds(error),
+      ...(Array.isArray(error.__via_owner_trace_ids)
+        ? error.__via_owner_trace_ids
+        : []),
+      error.__trace_segment_owner_trace_id,
+    ].filter(
+      (identity): identity is string =>
+        typeof identity === "string" && !padIds.has(identity),
+    )
+    if (!participants.some((identity) => traceRouteIndexById.has(identity))) {
+      continue
+    }
+    // Native owner promotion is one flag for the entire call. Only wholly
+    // local copper pairs can share the captured false-promotion protocol.
+    // External-only errors are guidance-ineligible, not removed from checks.
+    if (
+      typeof error.pcb_trace_id !== "string" ||
+      !traceRouteIndexById.has(error.pcb_trace_id) ||
+      participants.some((identity) => !traceRouteIndexById.has(identity))
+    ) {
+      return undefined
+    }
+    selected.push(error)
+  }
+  return selected
+}
+
+const getNativeFeedbackForceArguments = (
+  feedback: NativeFeedbackState,
+  traceRouteIndexById: ReadonlyMap<string, number>,
+  obstacles: Obstacle[],
+  layerCount: number,
+): { errors: Pipeline9DrcError[]; obstacles: Obstacle[] } | undefined => {
+  const errors: Pipeline9DrcError[] = []
+  let padObstacles: Obstacle[] | undefined
+  for (const target of getPadTargetedForceErrors(feedback.errors)) {
+    if (target.kind !== "pad") {
+      if (
+        target.error.type === "pcb_pad_trace_clearance_error" ||
+        (Array.isArray(target.error.__pad_ids) &&
+          target.error.__pad_ids.length > 0)
+      ) {
+        return undefined
+      }
+      errors.push(target.error)
+      continue
+    }
+    const routeIndex = traceRouteIndexById.get(
+      target.error.pcb_trace_id as string,
+    )!
+    const padTarget = getPipeline9PadCopperForceTarget({
+      pad: target.pad,
+      route: feedback.state.mutableRoutes[routeIndex]!,
+      obstacles,
+      layerCount,
+    })
+    if (padTarget === undefined) return undefined
+    // One native call has one obstacle context. Different physical pad
+    // projections cannot share it without stealing each other's targets.
+    if (
+      padObstacles !== undefined &&
+      (padObstacles.length !== padTarget.obstacles.length ||
+        padObstacles.some(
+          (obstacle, index) => obstacle !== padTarget.obstacles[index],
+        ))
+    ) {
+      return undefined
+    }
+    padObstacles = padTarget.obstacles
+    errors.push({ ...target.error, center: padTarget.center })
+  }
+  return { errors, obstacles: padObstacles ?? obstacles }
+}
+
 /**
  * Applies Repair03's error-directed geometry operator to one HD node's mutable
  * fragments. The caller evaluates every yielded candidate against the complete
@@ -339,7 +434,7 @@ export function* getPipeline9HighDensityForceCandidates({
 }: Pipeline9HighDensityForceCandidateParams): Generator<
   HighDensityRoute[],
   void,
-  unknown
+  Pipeline9HighDensityForceFeedback
 > {
   // Match IntraNodeSolver's exact domain, including terminal/leap port points
   // outside the nominal node rectangle. This adds no discretionary margin.
@@ -516,6 +611,10 @@ export function* getPipeline9HighDensityForceCandidates({
       number,
       Map<Pipeline9HighDensityForceFamily, ForceFamilyState>
     >()
+    const canSeedNativeFeedback =
+      forceTarget.kind === "pad" &&
+      error.type === "pcb_pad_trace_clearance_error"
+    let nativeFeedback: NativeFeedbackState | undefined
     for (const pass of forcePasses) {
       const { scaleIndex, scale } = pass
       let states = statesByScaleIndex.get(scaleIndex)
@@ -537,7 +636,7 @@ export function* getPipeline9HighDensityForceCandidates({
         // These are the original slot identities, even in the prefixed pass.
         // Endpoint families remain independent. Sharing each original scale's
         // state across descriptors preserves split native cumulative chains.
-        const family: Pipeline9HighDensityForceFamily =
+        const ordinaryFamily: Pipeline9HighDensityForceFamily =
           canApplyTracePairForce && scaleIndex === 1 && application < 2
             ? application === 0
               ? "trace-pair-0"
@@ -549,7 +648,32 @@ export function* getPipeline9HighDensityForceCandidates({
                 ? "pad-wire-0"
                 : "pad-wire-1"
               : families[application % families.length]!
-        let state = states.get(family)
+        if (
+          ordinaryFamily === "native" &&
+          scaleIndex === 2 &&
+          nativeFeedback?.state.exhausted
+        ) {
+          continue
+        }
+        const feedbackArguments =
+          ordinaryFamily === "native" &&
+          scaleIndex === 2 &&
+          nativeFeedback !== undefined
+            ? getNativeFeedbackForceArguments(
+                nativeFeedback,
+                traceRouteIndexById,
+                forceContext.obstacles,
+                layerCount,
+              )
+            : undefined
+        const family =
+          feedbackArguments === undefined
+            ? ordinaryFamily
+            : "native-feedback"
+        let state =
+          family === "native-feedback"
+            ? nativeFeedback!.state
+            : states.get(family)
         if (state === undefined) {
           const localRoutes = hdRoutes.map(
             (route, index): LocalForceRoute =>
@@ -572,7 +696,7 @@ export function* getPipeline9HighDensityForceCandidates({
         const { localRoutes, mutableRoutes } = state
         onCandidateAttempted?.(state.family, scale, application)
         const padTarget =
-          forceTarget.kind === "pad"
+          forceTarget.kind === "pad" && state.family !== "native-feedback"
             ? getPipeline9PadCopperForceTarget({
                 pad: forceTarget.pad,
                 route: mutableRoutes[primaryRouteIndex]!,
@@ -580,13 +704,33 @@ export function* getPipeline9HighDensityForceCandidates({
                 layerCount,
               })
             : undefined
-        if (forceTarget.kind === "pad" && padTarget === undefined) {
+        if (
+          forceTarget.kind === "pad" &&
+          state.family !== "native-feedback" &&
+          padTarget === undefined
+        ) {
           onCandidateRejected?.("no-motion")
           state.exhausted = true
           continue
         }
         let changed: boolean
-        if (
+        if (state.family === "native-feedback") {
+          // Original typed physical-pad +1/-1 native chains are identical:
+          // their obstacle and via moves use abs(scale). Reuse only those
+          // duplicate -1 slots; new error types always receive source scale +1.
+          changed = applyDrcErrorForces(
+            { ...srj, obstacles: feedbackArguments!.obstacles },
+            mutableRoutes,
+            feedbackArguments!.errors,
+            traceRouteIndexById,
+            1,
+            forceContext.connMap,
+            true,
+            false,
+            false,
+            false,
+          )
+        } else if (
           state.family === "pad-wire" ||
           state.family === "pad-wire-0" ||
           state.family === "pad-wire-1"
@@ -704,22 +848,57 @@ export function* getPipeline9HighDensityForceCandidates({
         // Keep temporary pad-span tags through validation and via derivation:
         // an implicit coincident pad transition must not become a drilled via.
         // Detach every published point before the next private force step.
-        yield candidates.map((candidate, index): HighDensityRoute => {
-          const local = localRoutes[index]!
-          return {
-            ...hdRoutes[index]!,
-            vias: (hasUnchangedGeometry[index]
-              ? local.original.vias
-              : candidate.vias
-            ).map((via) => ({ ...via })),
-            route: candidate.route.map((point): HighDensityPoint => {
-              const originalPoint = local.originalPointByMutablePoint.get(point)
-              return originalPoint
-                ? { ...originalPoint, x: point.x, y: point.y, z: point.z }
-                : { ...point }
-            }),
+        const feedback = yield candidates.map(
+          (candidate, index): HighDensityRoute => {
+            const local = localRoutes[index]!
+            return {
+              ...hdRoutes[index]!,
+              vias: (hasUnchangedGeometry[index]
+                ? local.original.vias
+                : candidate.vias
+              ).map((via) => ({ ...via })),
+              route: candidate.route.map((point): HighDensityPoint => {
+                const originalPoint =
+                  local.originalPointByMutablePoint.get(point)
+                return originalPoint
+                  ? { ...originalPoint, x: point.x, y: point.y, z: point.z }
+                  : { ...point }
+              }),
+            }
+          },
+        )
+        if (
+          (canSeedNativeFeedback &&
+            state.family === "native" &&
+            scaleIndex === 0) ||
+          state.family === "native-feedback"
+        ) {
+          const feedbackErrors = getLocalNativeFeedbackErrors(
+            feedback,
+            traceRouteIndexById,
+          )
+          if (feedbackErrors === undefined) {
+            if (
+              feedback !== undefined ||
+              state.family === "native-feedback"
+            ) {
+              nativeFeedback = undefined
+            }
+          } else {
+            // Clone immediately after this exact yield resumes. Later +1
+            // trials can mutate and fail, so their live state is not a checkpoint.
+            const checkpoint = structuredClone(localRoutes)
+            nativeFeedback = {
+              state: {
+                family: "native-feedback",
+                localRoutes: checkpoint,
+                mutableRoutes: checkpoint.map((local) => local.mutable),
+                exhausted: false,
+              },
+              errors: structuredClone(feedbackErrors),
+            }
           }
-        })
+        }
       }
     }
   }

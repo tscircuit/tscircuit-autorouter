@@ -33,6 +33,7 @@ export type Pipeline9HighDensityDrcCandidateGate = (params: {
 }) => {
   currentErrors: Pipeline9DrcError[]
   candidateErrors: Pipeline9DrcError[]
+  candidateForceErrors?: Pipeline9DrcError[]
   candidateErrorPairsAreUnambiguous: boolean
   scopedBaselineEvaluationCount?: number
   scopedBaselineCacheHitCount?: number
@@ -99,6 +100,47 @@ const getViaBounds = (via: PcbVia): Pipeline9Bounds => {
     minY: via.y - radius,
     maxY: via.y + radius,
   }
+}
+
+const getCandidateForceErrors = (
+  candidateErrors: Pipeline9DrcError[],
+  candidateVias: PcbVia[],
+): Pipeline9DrcError[] => {
+  const viasById = new Map<unknown, PcbVia>(
+    candidateVias.map((via) => [via.pcb_via_id, via]),
+  )
+  const forceErrors = structuredClone(candidateErrors)
+  for (const error of forceErrors) {
+    // Match public getDrcErrors center precedence on this exact snapshot.
+    // Repeated opaque IDs resolve to the last physical via in board order.
+    if (
+      error.type === "pcb_via_trace_clearance_error" &&
+      typeof error.pcb_via_id === "string"
+    ) {
+      const via = viasById.get(error.pcb_via_id)
+      if (via) {
+        error.center = { x: via.x, y: via.y }
+        continue
+      }
+    }
+    if (error.center) continue
+    if (error.pcb_center) {
+      error.center = error.pcb_center
+      continue
+    }
+    if (Array.isArray(error.pcb_via_ids)) {
+      const [viaAId, viaBId] = error.pcb_via_ids
+      const viaA = viasById.get(viaAId)
+      const viaB = viasById.get(viaBId)
+      if (viaA && viaB) {
+        error.center = {
+          x: (viaA.x + viaB.x) / 2,
+          y: (viaA.y + viaB.y) / 2,
+        }
+      }
+    }
+  }
+  return forceErrors
 }
 
 const evaluateScopedCopper = (
@@ -344,6 +386,10 @@ export const createPipeline9HighDensityDrcCandidateGate = ({
     return {
       currentErrors,
       candidateErrors,
+      candidateForceErrors: getCandidateForceErrors(
+        candidateErrors,
+        candidateCopper.vias,
+      ),
       candidateErrorPairsAreUnambiguous,
       scopedBaselineEvaluationCount: cachedBaseline === undefined ? 1 : 0,
       scopedBaselineCacheHitCount: cachedBaseline === undefined ? 0 : 1,

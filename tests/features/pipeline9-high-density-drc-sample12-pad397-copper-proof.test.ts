@@ -2,7 +2,10 @@ import { expect, test } from "bun:test"
 import type { AnyCircuitElement, PcbSmtPad, PcbTrace } from "circuit-json"
 import { getFullConnectivityMapFromCircuitJson } from "circuit-json-to-connectivity-map"
 import type { SimpleRouteJson as ForceSimpleRouteJson } from "high-density-repair03/lib"
-import { getMaxTargetedCandidateAttemptsForEffort } from "high-density-repair03/lib/solvers/GlobalDrcForceImproveSolver/solverConfig"
+import {
+  getForceScalesForEffort,
+  getMaxTargetedCandidateAttemptsForEffort,
+} from "high-density-repair03/lib/solvers/GlobalDrcForceImproveSolver/solverConfig"
 import {
   applyDrcErrorForces,
   materializeRoutes,
@@ -37,6 +40,11 @@ type ForceAttempt = {
   family: Pipeline9HighDensityForceFamily
   scale: number
   application: number
+}
+
+type ForceObservation = {
+  attempt: ForceAttempt
+  routes: HighDensityRoute[]
 }
 
 test("captured sample12 copper exposes the pad repair's clean via-owner dependency", (): void => {
@@ -244,9 +252,12 @@ test("captured sample12 copper exposes the pad repair's clean via-owner dependen
     { includeOwner: true, effort: 1 },
     { includeOwner: true, effort: 2 },
   ]
+  const baselineByEffort = new Map<number, ForceObservation[]>()
   let firstNativePair: HighDensityRoute[] | undefined
   for (const { includeOwner, effort } of configurations) {
     const attempts: ForceAttempt[] = []
+    const observations: ForceObservation[] = []
+    if (includeOwner) baselineByEffort.set(effort, observations)
     let nativeCandidates = 0
     const rejected: Record<string, number> = {}
     const traceRouteIndexById = new Map([[targetTrace.pcb_trace_id, 0]])
@@ -273,6 +284,7 @@ test("captured sample12 copper exposes the pad repair's clean via-owner dependen
       },
     })) {
       const attempt = attempts.at(-1)!
+      observations.push({ attempt: { ...attempt }, routes: candidate })
       if (attempt.family !== "native") continue
       if (includeOwner && effort === 1 && firstNativePair === undefined) {
         firstNativePair = structuredClone(candidate)
@@ -450,6 +462,103 @@ test("captured sample12 copper exposes the pad repair's clean via-owner dependen
       }),
     )
     if (!changed || !anchorsPreserved || !insideBounds) break
+  }
+  for (const effort of [1, 2]) {
+    const attempts: ForceAttempt[] = []
+    const observations: ForceObservation[] = []
+    const feedbackResults: Pipeline9DrcError[][] = []
+    const iterator = getPipeline9HighDensityForceCandidates({
+      node,
+      hdRoutes: [route, owner],
+      errors: [forceError],
+      traceRouteIndexById,
+      obstacles,
+      layerCount: 4,
+      viaDiameter: 0.3,
+      viaHoleDiameter: 0.15,
+      traceWidth: 0.1,
+      obstacleMargin: 0.15,
+      connMap,
+      forceContext: { connMap, obstacles },
+      effort,
+      onCandidateAttempted: (family, scale, application): void => {
+        attempts.push({ family, scale, application })
+      },
+    })
+    let next = iterator.next()
+    while (!next.done) {
+      const candidates = next.value
+      const attempt = attempts.at(-1)!
+      observations.push({ attempt: { ...attempt }, routes: candidates })
+      const currentCircuitJson = getCircuitJson(candidates[0]!, candidates[1]!)
+      const checked = evaluate(candidates[0]!, candidates[1]!)
+      const feedbackErrors = normalizePipeline9DrcErrorsForRepair({
+        errors: addAutoroutingViaTraceIds({
+          errors: checked.errorsWithCenters.map((error) => ({ ...error })),
+          circuitJson: currentCircuitJson,
+          evaluatedTraceIds: new Set(traceIds),
+        }),
+        circuitJson: currentCircuitJson,
+        newTraceIds: new Set(traceIds),
+      }).map((error): Pipeline9DrcError => {
+        if (
+          error.pcb_pad_id !== pad.pcb_smtpad_id &&
+          error.pcb_trace_error_id !==
+            `overlap_${error.pcb_trace_id}_${pad.pcb_smtpad_id}`
+        ) {
+          return error
+        }
+        return {
+          ...error,
+          __pad_ids: [pad.pcb_smtpad_id],
+          __pad_centers: [{ x: pad.x, y: pad.y }],
+          __pad_copper: [structuredClone(pad)],
+        }
+      })
+      if (attempt.family === "native-feedback") {
+        feedbackResults.push(checked.errors.map((error) => ({ ...error })))
+        console.info(
+          JSON.stringify({
+            diagnostic: "sample12-pad397-integrated-native-feedback",
+            effort,
+            reservedSlotScale: attempt.scale,
+            application: attempt.application,
+            errors: checked.errors,
+            targetPoints: candidates[0]!.route.slice(1, 5),
+            ownerVias: serialize(candidates[1]!, ownerTrace).route.filter(
+              (point) => point.route_type === "via",
+            ),
+          }),
+        )
+      }
+      for (const [index, fragment] of candidates.entries()) {
+        const input = index === 0 ? route : owner
+        expect(fragment.route[0]).toEqual(input.route[0])
+        expect(fragment.route.at(-1)).toEqual(input.route.at(-1))
+        expect(
+          isPipeline9HighDensityRouteInsideBounds(fragment, nodeBounds, 4, {
+            originalRoute: input,
+            node,
+          }),
+        ).toBe(true)
+      }
+      next = iterator.next({ errors: feedbackErrors })
+    }
+    // Every distinct original positive-scale chain is byte-for-byte retained.
+    // Only negative native slots, whose values duplicate +1, may give feedback.
+    expect(observations.filter((item) => item.attempt.scale > 0)).toEqual(
+      baselineByEffort.get(effort)!.filter((item) => item.attempt.scale > 0),
+    )
+    expect(attempts.length).toBeLessThanOrEqual(
+      getForceScalesForEffort(effort).length *
+        getMaxTargetedCandidateAttemptsForEffort(effort),
+    )
+    expect(feedbackResults.length).toBeGreaterThan(0)
+    if (effort === 1) {
+      // Hosted 04018 proved this exact first native checkpoint needs only one
+      // fresh-error call. The production generator must now expose that repair.
+      expect(feedbackResults[0]).toHaveLength(0)
+    }
   }
   expect({ route, owner, pad, obstacles }).toEqual(original)
 })

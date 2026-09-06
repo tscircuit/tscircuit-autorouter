@@ -15,7 +15,11 @@ import { convertHdRouteToSimplifiedRoute } from "lib/utils/convertHdRouteToSimpl
 import { getBoundsFromNodeWithPortPoints } from "lib/utils/getBoundsFromNodeWithPortPoints"
 import { normalizePipeline9NodeRootConnectionNames } from "./Pipeline9HighDensitySolver"
 import type { Pipeline9HighDensityDrcEvaluator } from "./createPipeline9HighDensityDrcEvaluator"
-import { getPipeline9HighDensityForceCandidates } from "./getPipeline9HighDensityForceCandidates"
+import {
+  getPipeline9HighDensityForceCandidates,
+  type Pipeline9HighDensityForceFamily,
+  type Pipeline9HighDensityForceFeedback,
+} from "./getPipeline9HighDensityForceCandidates"
 import {
   getPipeline9HighDensitySeamForceCandidates,
   type Pipeline9HighDensitySeamForceCandidate,
@@ -167,8 +171,10 @@ export class Pipeline9HighDensityDrcRepairSolver extends BaseSolver {
   private activeForceCandidates: Generator<
     HighDensityRoute[],
     void,
-    unknown
+    Pipeline9HighDensityForceFeedback
   > | null = null
+  private activeForceCandidateFeedback: Pipeline9HighDensityForceFeedback
+  private activeForceFamily: Pipeline9HighDensityForceFamily | undefined
   private activeRepairObstacles: Obstacle[] = []
   private activeSeamForceCandidates: Generator<
     Pipeline9HighDensitySeamForceCandidate,
@@ -207,9 +213,11 @@ export class Pipeline9HighDensityDrcRepairSolver extends BaseSolver {
       acceptedDrcCountReducingRepairCount: 0,
       acceptedSeverityOnlyRepairCount: 0,
       acceptedForceRepairCount: 0,
+      acceptedForceFeedbackRepairCount: 0,
       acceptedSeamForceRepairCount: 0,
       acceptedRerouteRepairCount: 0,
       forceCandidateAttemptCount: 0,
+      forceFeedbackAttemptCount: 0,
       seamForceCandidateAttemptCount: 0,
       forceNoMotionCount: 0,
       forceAnchorRejectedCount: 0,
@@ -436,6 +444,17 @@ export class Pipeline9HighDensityDrcRepairSolver extends BaseSolver {
         candidateRoutes,
         changedTraceIds,
       })
+      if (
+        this.activeForceCandidates !== null &&
+        local.candidateForceErrors !== undefined
+      ) {
+        // Feedback describes this rejected private trial, never a new
+        // incumbent. The generator can use it only inside its existing budget;
+        // all scoped and complete-board acceptance checks below stay intact.
+        this.activeForceCandidateFeedback = {
+          errors: local.candidateForceErrors,
+        }
+      }
       Object.assign(
         this.stats,
         this.params.drcEvaluator.getPreparationStats?.(),
@@ -624,6 +643,8 @@ export class Pipeline9HighDensityDrcRepairSolver extends BaseSolver {
       this.nodeRepairBudgets.set(node.capacityMeshNodeId, budget)
     }
     budget.attempts++
+    this.activeForceCandidateFeedback = undefined
+    this.activeForceFamily = undefined
     this.activeForceCandidates = getPipeline9HighDensityForceCandidates({
       node,
       hdRoutes: localRoutes,
@@ -650,6 +671,13 @@ export class Pipeline9HighDensityDrcRepairSolver extends BaseSolver {
           node.capacityMeshNodeId,
           (startErrorIndex + errorIndex + 1) % nodeErrors.length,
         )
+      },
+      onCandidateAttempted: (family): void => {
+        this.activeForceFamily = family
+        if (family === "native-feedback") {
+          this.stats.forceFeedbackAttemptCount =
+            Number(this.stats.forceFeedbackAttemptCount) + 1
+        }
       },
       onCandidateRejected: (reason): void => {
         const statName = {
@@ -817,6 +845,10 @@ export class Pipeline9HighDensityDrcRepairSolver extends BaseSolver {
         ? "acceptedRerouteRepairCount"
         : "acceptedForceRepairCount"
     this.stats[sourceStat] = Number(this.stats[sourceStat]) + 1
+    if (source === "force" && this.activeForceFamily === "native-feedback") {
+      this.stats.acceptedForceFeedbackRepairCount =
+        Number(this.stats.acceptedForceFeedbackRepairCount) + 1
+    }
     if (source === "seam") {
       this.stats.acceptedSeamForceRepairCount =
         Number(this.stats.acceptedSeamForceRepairCount) + 1
@@ -828,6 +860,8 @@ export class Pipeline9HighDensityDrcRepairSolver extends BaseSolver {
     this.activeForceConnectionNames.clear()
     this.activeSubSolver = null
     this.activeForceCandidates = null
+    this.activeForceCandidateFeedback = undefined
+    this.activeForceFamily = undefined
     this.activeSeamForceCandidates = null
     this.activeRepairObstacles = []
   }
@@ -943,6 +977,8 @@ export class Pipeline9HighDensityDrcRepairSolver extends BaseSolver {
     this.activeForceConnectionNames.clear()
     this.acceptedCandidate = null
     this.activeForceCandidates = null
+    this.activeForceCandidateFeedback = undefined
+    this.activeForceFamily = undefined
     this.activeSeamForceCandidates = null
     this.activeRepairObstacles = []
   }
@@ -954,6 +990,8 @@ export class Pipeline9HighDensityDrcRepairSolver extends BaseSolver {
     this.activeForceConnectionNames.clear()
     this.acceptedCandidate = null
     this.activeForceCandidates = null
+    this.activeForceCandidateFeedback = undefined
+    this.activeForceFamily = undefined
     this.activeSeamForceCandidates = null
     this.activeRepairObstacles = []
     this.stats.finalDrcIssueCount = this.currentErrors.length
@@ -977,13 +1015,16 @@ export class Pipeline9HighDensityDrcRepairSolver extends BaseSolver {
         throw new Error("Pipeline9 high-density forces require an active node")
       }
       const forceStartedAt = performance.now()
-      const candidate = this.activeForceCandidates.next()
+      const feedback = this.activeForceCandidateFeedback
+      this.activeForceCandidateFeedback = undefined
+      const candidate = this.activeForceCandidates.next(feedback)
       this.stats.forceGenerationTimeMs =
         Number(this.stats.forceGenerationTimeMs) +
         performance.now() -
         forceStartedAt
       if (candidate.done) {
         this.activeForceCandidates = null
+        this.activeForceFamily = undefined
         return
       }
       this.stats.forceCandidateAttemptCount =
