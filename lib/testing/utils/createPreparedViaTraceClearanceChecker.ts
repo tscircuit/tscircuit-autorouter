@@ -220,6 +220,10 @@ export const createPreparedViaTraceClearanceChecker =
           vias.length *
           traces.reduce((count, trace) => count + trace.segmentCount, 0)
         const errors: ViaTraceClearanceErrors = []
+        // Native read-only accessors query the current array. Reuse this private
+        // container within this evaluation so native metadata setup runs once;
+        // a new evaluation still gets fresh initialization and failure behavior.
+        const partition: AnyCircuitElement[] = []
         for (const { via } of vias) {
           const selectedTraces = new Set<PcbTrace>()
           for (const copper of traces) {
@@ -235,11 +239,14 @@ export const createPreparedViaTraceClearanceChecker =
           // including non-copper IDs shadowing a via/trace. Keep all metadata.
           // Complete traces preserve pair-wide contact suppression, minimum
           // gap, endpoint-derived names and the native whole-trace midpoint.
-          const partition = circuitJson.filter((element) => {
-            if (element.type === "pcb_via") return element === via
-            if (element.type === "pcb_trace") return selectedTraces.has(element)
-            return true
-          })
+          partition.length = 0
+          for (const element of circuitJson) {
+            if (element.type === "pcb_via" && element !== via) continue
+            if (element.type === "pcb_trace" && !selectedTraces.has(element)) {
+              continue
+            }
+            partition.push(element)
+          }
           stats.nativeInvocationCount++
           errors.push(...checkViaTraceClearance(partition, options))
         }

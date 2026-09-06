@@ -21,6 +21,13 @@ import type {
   NodeWithPortPoints,
 } from "lib/types/high-density-types"
 
+type ForceAttempt = {
+  errorIndex: number
+  family: Pipeline9HighDensityForceFamily
+  scale: number
+  application: number
+}
+
 test("Pipeline9 trace-pair slots preserve exact native geometry, budget and error cursor", (): void => {
   const routes: HighDensityRoute[] = [
     {
@@ -102,12 +109,7 @@ test("Pipeline9 trace-pair slots preserve exact native geometry, budget and erro
       0.4 + 0.1 + CLEARANCE_SLACK,
     )
     const attemptedErrors: number[] = []
-    const attempts: {
-      errorIndex: number
-      family: Pipeline9HighDensityForceFamily
-      scale: number
-      application: number
-    }[] = []
+    const attempts: ForceAttempt[] = []
     const candidatesByFamily = new Map<
       Pipeline9HighDensityForceFamily,
       HighDensityRoute[][]
@@ -150,17 +152,20 @@ test("Pipeline9 trace-pair slots preserve exact native geometry, budget and erro
         (attempt) => attempt.errorIndex === errorIndex,
       )
       const originalSlots = scales.flatMap((scale, scaleIndex) =>
-        Array.from({ length: maxApplications }, (_, application) => ({
-          errorIndex,
-          family:
-            scaleIndex === 1 && application < 2
-              ? application === 0
-                ? "trace-pair-0"
-                : "trace-pair-1"
-              : "native",
-          scale,
-          application,
-        })),
+        Array.from(
+          { length: maxApplications },
+          (_, application): ForceAttempt => ({
+            errorIndex,
+            family:
+              scaleIndex === 1 && application < 2
+                ? application === 0
+                  ? "trace-pair-0"
+                  : "trace-pair-1"
+                : "native",
+            scale,
+            application,
+          }),
+        ),
       )
       expect(targetAttempts).toEqual([
         ...originalSlots.filter((slot) => slot.family !== "native"),
