@@ -29890,8 +29890,8 @@
         "top"
       ],
       "center": {
-        "x": -6,
-        "y": 10
+        "x": -1.8,
+        "y": 5.95
       },
       "width": 1.1,
       "height": 1.1,
@@ -65483,8 +65483,8 @@
     {
       "name": "source_trace_57",
       "source_trace_id": "source_trace_57",
-      "nominalTraceWidth": 0.15,
-      "width": 0.15,
+      "nominalTraceWidth": 0.1,
+      "width": 0.1,
       "pointsToConnect": [
         {
           "x": -0.40005000000000035,
@@ -65507,8 +65507,8 @@
     {
       "name": "source_trace_59",
       "source_trace_id": "source_trace_59",
-      "nominalTraceWidth": 0.15,
-      "width": 0.15,
+      "nominalTraceWidth": 0.1,
+      "width": 0.1,
       "pointsToConnect": [
         {
           "x": -0.8001000000000004,
@@ -65699,8 +65699,8 @@
     {
       "name": "source_trace_72",
       "source_trace_id": "source_trace_72",
-      "nominalTraceWidth": 0.15,
-      "width": 0.15,
+      "nominalTraceWidth": 0.1,
+      "width": 0.1,
       "pointsToConnect": [
         {
           "x": 0.48999999999999877,
@@ -65723,8 +65723,8 @@
     {
       "name": "source_trace_74",
       "source_trace_id": "source_trace_74",
-      "nominalTraceWidth": 0.15,
-      "width": 0.15,
+      "nominalTraceWidth": 0.1,
+      "width": 0.1,
       "pointsToConnect": [
         {
           "x": 3.8999279999999987,
@@ -65747,8 +65747,8 @@
     {
       "name": "source_trace_75",
       "source_trace_id": "source_trace_75",
-      "nominalTraceWidth": 0.15,
-      "width": 0.15,
+      "nominalTraceWidth": 0.1,
+      "width": 0.1,
       "pointsToConnect": [
         {
           "x": 2.567199999999999,
@@ -65771,8 +65771,8 @@
     {
       "name": "source_trace_77",
       "source_trace_id": "source_trace_77",
-      "nominalTraceWidth": 0.15,
-      "width": 0.15,
+      "nominalTraceWidth": 0.1,
+      "width": 0.1,
       "pointsToConnect": [
         {
           "x": -0.40004999999999946,
@@ -65939,8 +65939,8 @@
     {
       "name": "source_trace_86",
       "source_trace_id": "source_trace_86",
-      "nominalTraceWidth": 0.15,
-      "width": 0.15,
+      "nominalTraceWidth": 0.1,
+      "width": 0.1,
       "pointsToConnect": [
         {
           "x": 11.700023999999999,
@@ -65963,8 +65963,8 @@
     {
       "name": "source_trace_87",
       "source_trace_id": "source_trace_87",
-      "nominalTraceWidth": 0.15,
-      "width": 0.15,
+      "nominalTraceWidth": 0.1,
+      "width": 0.1,
       "pointsToConnect": [
         {
           "x": 6.279883999999999,
@@ -65987,8 +65987,8 @@
     {
       "name": "source_trace_90",
       "source_trace_id": "source_trace_90",
-      "nominalTraceWidth": 0.15,
-      "width": 0.15,
+      "nominalTraceWidth": 0.1,
+      "width": 0.1,
       "pointsToConnect": [
         {
           "x": 16,
@@ -66011,8 +66011,8 @@
     {
       "name": "source_trace_93",
       "source_trace_id": "source_trace_93",
-      "nominalTraceWidth": 0.15,
-      "width": 0.15,
+      "nominalTraceWidth": 0.1,
+      "width": 0.1,
       "pointsToConnect": [
         {
           "x": -14,
@@ -66131,8 +66131,8 @@
     {
       "name": "source_trace_101",
       "source_trace_id": "source_trace_101",
-      "nominalTraceWidth": 0.15,
-      "width": 0.15,
+      "nominalTraceWidth": 0.1,
+      "width": 0.1,
       "pointsToConnect": [
         {
           "x": 1.5999460000000008,
@@ -66155,8 +66155,8 @@
     {
       "name": "source_trace_102",
       "source_trace_id": "source_trace_102",
-      "nominalTraceWidth": 0.15,
-      "width": 0.15,
+      "nominalTraceWidth": 0.1,
+      "width": 0.1,
       "pointsToConnect": [
         {
           "x": 8.94996,
@@ -66179,8 +66179,8 @@
     {
       "name": "source_trace_103",
       "source_trace_id": "source_trace_103",
-      "nominalTraceWidth": 0.15,
-      "width": 0.15,
+      "nominalTraceWidth": 0.1,
+      "width": 0.1,
       "pointsToConnect": [
         {
           "x": 5.5,
@@ -66251,8 +66251,8 @@
     {
       "name": "source_trace_108",
       "source_trace_id": "source_trace_108",
-      "nominalTraceWidth": 0.15,
-      "width": 0.15,
+      "nominalTraceWidth": 0.1,
+      "width": 0.1,
       "pointsToConnect": [
         {
           "x": -12,
@@ -66275,8 +66275,8 @@
     {
       "name": "source_trace_110",
       "source_trace_id": "source_trace_110",
-      "nominalTraceWidth": 0.15,
-      "width": 0.15,
+      "nominalTraceWidth": 0.1,
+      "width": 0.1,
       "pointsToConnect": [
         {
           "x": -10.100072,
@@ -66299,8 +66299,8 @@
     {
       "name": "source_trace_120",
       "source_trace_id": "source_trace_120",
-      "nominalTraceWidth": 0.15,
-      "width": 0.15,
+      "nominalTraceWidth": 0.1,
+      "width": 0.1,
       "pointsToConnect": [
         {
           "x": -1.249807,
@@ -66323,8 +66323,8 @@
     {
       "name": "source_trace_121",
       "source_trace_id": "source_trace_121",
-      "nominalTraceWidth": 0.15,
-      "width": 0.15,
+      "nominalTraceWidth": 0.1,
+      "width": 0.1,
       "pointsToConnect": [
         {
           "x": 1.750187,
@@ -66395,8 +66395,8 @@
     {
       "name": "source_trace_130",
       "source_trace_id": "source_trace_130",
-      "nominalTraceWidth": 0.15,
-      "width": 0.15,
+      "nominalTraceWidth": 0.1,
+      "width": 0.1,
       "pointsToConnect": [
         {
           "x": -0.8000999999999995,
@@ -66407,8 +66407,8 @@
           "port_selector": "U1.SWDIO"
         },
         {
-          "x": -6,
-          "y": 10,
+          "x": -1.8,
+          "y": 5.95,
           "layer": "top",
           "pointId": "pcb_port_204",
           "pcb_port_id": "pcb_port_204",
@@ -66587,8 +66587,8 @@
     {
       "name": "source_trace_147",
       "source_trace_id": "source_trace_147",
-      "nominalTraceWidth": 0.15,
-      "width": 0.15,
+      "nominalTraceWidth": 0.1,
+      "width": 0.1,
       "pointsToConnect": [
         {
           "x": -32.5,
@@ -66611,8 +66611,8 @@
     {
       "name": "source_trace_148",
       "source_trace_id": "source_trace_148",
-      "nominalTraceWidth": 0.15,
-      "width": 0.15,
+      "nominalTraceWidth": 0.1,
+      "width": 0.1,
       "pointsToConnect": [
         {
           "x": -6.01,
@@ -66635,8 +66635,8 @@
     {
       "name": "source_trace_151",
       "source_trace_id": "source_trace_151",
-      "nominalTraceWidth": 0.15,
-      "width": 0.15,
+      "nominalTraceWidth": 0.1,
+      "width": 0.1,
       "pointsToConnect": [
         {
           "x": -11,
@@ -66659,8 +66659,8 @@
     {
       "name": "source_trace_152",
       "source_trace_id": "source_trace_152",
-      "nominalTraceWidth": 0.15,
-      "width": 0.15,
+      "nominalTraceWidth": 0.1,
+      "width": 0.1,
       "pointsToConnect": [
         {
           "x": -6.01,
@@ -66707,8 +66707,8 @@
     {
       "name": "source_trace_156",
       "source_trace_id": "source_trace_156",
-      "nominalTraceWidth": 0.15,
-      "width": 0.15,
+      "nominalTraceWidth": 0.1,
+      "width": 0.1,
       "pointsToConnect": [
         {
           "x": -45.5,
@@ -66731,8 +66731,8 @@
     {
       "name": "source_trace_157",
       "source_trace_id": "source_trace_157",
-      "nominalTraceWidth": 0.15,
-      "width": 0.15,
+      "nominalTraceWidth": 0.1,
+      "width": 0.1,
       "pointsToConnect": [
         {
           "x": -50.51,
@@ -66755,8 +66755,8 @@
     {
       "name": "source_trace_159",
       "source_trace_id": "source_trace_159",
-      "nominalTraceWidth": 0.15,
-      "width": 0.15,
+      "nominalTraceWidth": 0.1,
+      "width": 0.1,
       "pointsToConnect": [
         {
           "x": -26.55,
@@ -66779,8 +66779,8 @@
     {
       "name": "source_trace_160",
       "source_trace_id": "source_trace_160",
-      "nominalTraceWidth": 0.15,
-      "width": 0.15,
+      "nominalTraceWidth": 0.1,
+      "width": 0.1,
       "pointsToConnect": [
         {
           "x": -48.5,
@@ -66971,8 +66971,8 @@
     {
       "name": "source_trace_174",
       "source_trace_id": "source_trace_174",
-      "nominalTraceWidth": 0.15,
-      "width": 0.15,
+      "nominalTraceWidth": 0.1,
+      "width": 0.1,
       "pointsToConnect": [
         {
           "x": -12.8,
@@ -66995,8 +66995,8 @@
     {
       "name": "source_trace_175",
       "source_trace_id": "source_trace_175",
-      "nominalTraceWidth": 0.15,
-      "width": 0.15,
+      "nominalTraceWidth": 0.1,
+      "width": 0.1,
       "pointsToConnect": [
         {
           "x": -22.5,
@@ -67019,8 +67019,8 @@
     {
       "name": "source_trace_176",
       "source_trace_id": "source_trace_176",
-      "nominalTraceWidth": 0.15,
-      "width": 0.15,
+      "nominalTraceWidth": 0.1,
+      "width": 0.1,
       "pointsToConnect": [
         {
           "x": -26.55,
@@ -67043,8 +67043,8 @@
     {
       "name": "source_trace_188",
       "source_trace_id": "source_trace_188",
-      "nominalTraceWidth": 0.15,
-      "width": 0.15,
+      "nominalTraceWidth": 0.1,
+      "width": 0.1,
       "pointsToConnect": [
         {
           "x": -34.375,
@@ -67067,8 +67067,8 @@
     {
       "name": "source_trace_190",
       "source_trace_id": "source_trace_190",
-      "nominalTraceWidth": 0.15,
-      "width": 0.15,
+      "nominalTraceWidth": 0.1,
+      "width": 0.1,
       "pointsToConnect": [
         {
           "x": -29.9,
@@ -67331,8 +67331,8 @@
     {
       "name": "source_trace_229",
       "source_trace_id": "source_trace_229",
-      "nominalTraceWidth": 0.15,
-      "width": 0.15,
+      "nominalTraceWidth": 0.1,
+      "width": 0.1,
       "pointsToConnect": [
         {
           "x": 33.6,
@@ -67355,8 +67355,8 @@
     {
       "name": "source_trace_230",
       "source_trace_id": "source_trace_230",
-      "nominalTraceWidth": 0.15,
-      "width": 0.15,
+      "nominalTraceWidth": 0.1,
+      "width": 0.1,
       "pointsToConnect": [
         {
           "x": 31.8,
@@ -67379,8 +67379,8 @@
     {
       "name": "source_trace_233",
       "source_trace_id": "source_trace_233",
-      "nominalTraceWidth": 0.15,
-      "width": 0.15,
+      "nominalTraceWidth": 0.1,
+      "width": 0.1,
       "pointsToConnect": [
         {
           "x": 38.5,
@@ -67403,8 +67403,8 @@
     {
       "name": "source_trace_234",
       "source_trace_id": "source_trace_234",
-      "nominalTraceWidth": 0.15,
-      "width": 0.15,
+      "nominalTraceWidth": 0.1,
+      "width": 0.1,
       "pointsToConnect": [
         {
           "x": 36.9,
@@ -67427,8 +67427,8 @@
     {
       "name": "source_trace_235",
       "source_trace_id": "source_trace_235",
-      "nominalTraceWidth": 0.15,
-      "width": 0.15,
+      "nominalTraceWidth": 0.1,
+      "width": 0.1,
       "pointsToConnect": [
         {
           "x": 35.300000000000004,
@@ -67451,8 +67451,8 @@
     {
       "name": "source_trace_236",
       "source_trace_id": "source_trace_236",
-      "nominalTraceWidth": 0.15,
-      "width": 0.15,
+      "nominalTraceWidth": 0.1,
+      "width": 0.1,
       "pointsToConnect": [
         {
           "x": 29.900000000000002,
@@ -67475,8 +67475,8 @@
     {
       "name": "source_trace_237",
       "source_trace_id": "source_trace_237",
-      "nominalTraceWidth": 0.15,
-      "width": 0.15,
+      "nominalTraceWidth": 0.1,
+      "width": 0.1,
       "pointsToConnect": [
         {
           "x": 28.3,
@@ -67499,8 +67499,8 @@
     {
       "name": "source_trace_238",
       "source_trace_id": "source_trace_238",
-      "nominalTraceWidth": 0.15,
-      "width": 0.15,
+      "nominalTraceWidth": 0.1,
+      "width": 0.1,
       "pointsToConnect": [
         {
           "x": 5.400000000000002,
@@ -67523,8 +67523,8 @@
     {
       "name": "source_trace_245",
       "source_trace_id": "source_trace_245",
-      "nominalTraceWidth": 0.15,
-      "width": 0.15,
+      "nominalTraceWidth": 0.1,
+      "width": 0.1,
       "pointsToConnect": [
         {
           "x": 31.14999,
@@ -67547,8 +67547,8 @@
     {
       "name": "source_trace_246",
       "source_trace_id": "source_trace_246",
-      "nominalTraceWidth": 0.15,
-      "width": 0.15,
+      "nominalTraceWidth": 0.1,
+      "width": 0.1,
       "pointsToConnect": [
         {
           "x": 31.14999,
@@ -67571,8 +67571,8 @@
     {
       "name": "source_trace_247",
       "source_trace_id": "source_trace_247",
-      "nominalTraceWidth": 0.15,
-      "width": 0.15,
+      "nominalTraceWidth": 0.1,
+      "width": 0.1,
       "pointsToConnect": [
         {
           "x": 33.85001,
@@ -67595,8 +67595,8 @@
     {
       "name": "source_trace_248",
       "source_trace_id": "source_trace_248",
-      "nominalTraceWidth": 0.15,
-      "width": 0.15,
+      "nominalTraceWidth": 0.1,
+      "width": 0.1,
       "pointsToConnect": [
         {
           "x": 33.85001,
@@ -67619,8 +67619,8 @@
     {
       "name": "source_trace_251",
       "source_trace_id": "source_trace_251",
-      "nominalTraceWidth": 0.15,
-      "width": 0.15,
+      "nominalTraceWidth": 0.1,
+      "width": 0.1,
       "pointsToConnect": [
         {
           "x": 31.8400475,
@@ -67643,8 +67643,8 @@
     {
       "name": "source_trace_252",
       "source_trace_id": "source_trace_252",
-      "nominalTraceWidth": 0.15,
-      "width": 0.15,
+      "nominalTraceWidth": 0.1,
+      "width": 0.1,
       "pointsToConnect": [
         {
           "x": 34.0399161,
@@ -67667,8 +67667,8 @@
     {
       "name": "source_trace_253",
       "source_trace_id": "source_trace_253",
-      "nominalTraceWidth": 0.15,
-      "width": 0.15,
+      "nominalTraceWidth": 0.1,
+      "width": 0.1,
       "pointsToConnect": [
         {
           "x": 29.639950300000002,
@@ -67691,8 +67691,8 @@
     {
       "name": "source_trace_254",
       "source_trace_id": "source_trace_254",
-      "nominalTraceWidth": 0.15,
-      "width": 0.15,
+      "nominalTraceWidth": 0.1,
+      "width": 0.1,
       "pointsToConnect": [
         {
           "x": 35.1399647,
@@ -67715,8 +67715,8 @@
     {
       "name": "source_trace_255",
       "source_trace_id": "source_trace_255",
-      "nominalTraceWidth": 0.15,
-      "width": 0.15,
+      "nominalTraceWidth": 0.1,
+      "width": 0.1,
       "pointsToConnect": [
         {
           "x": 27.440030900000004,
@@ -67739,8 +67739,8 @@
     {
       "name": "source_trace_258",
       "source_trace_id": "source_trace_258",
-      "nominalTraceWidth": 0.15,
-      "width": 0.15,
+      "nominalTraceWidth": 0.1,
+      "width": 0.1,
       "pointsToConnect": [
         {
           "x": -59.799983,
@@ -67763,8 +67763,8 @@
     {
       "name": "source_trace_260",
       "source_trace_id": "source_trace_260",
-      "nominalTraceWidth": 0.15,
-      "width": 0.15,
+      "nominalTraceWidth": 0.1,
+      "width": 0.1,
       "pointsToConnect": [
         {
           "x": -59.799983,
@@ -67787,8 +67787,8 @@
     {
       "name": "source_trace_262",
       "source_trace_id": "source_trace_262",
-      "nominalTraceWidth": 0.15,
-      "width": 0.15,
+      "nominalTraceWidth": 0.1,
+      "width": 0.1,
       "pointsToConnect": [
         {
           "x": -47.799983,
@@ -67811,8 +67811,8 @@
     {
       "name": "source_trace_264",
       "source_trace_id": "source_trace_264",
-      "nominalTraceWidth": 0.15,
-      "width": 0.15,
+      "nominalTraceWidth": 0.1,
+      "width": 0.1,
       "pointsToConnect": [
         {
           "x": -47.799983,
@@ -67835,8 +67835,8 @@
     {
       "name": "source_trace_266",
       "source_trace_id": "source_trace_266",
-      "nominalTraceWidth": 0.15,
-      "width": 0.15,
+      "nominalTraceWidth": 0.1,
+      "width": 0.1,
       "pointsToConnect": [
         {
           "x": 59.799983,
@@ -67859,8 +67859,8 @@
     {
       "name": "source_trace_268",
       "source_trace_id": "source_trace_268",
-      "nominalTraceWidth": 0.15,
-      "width": 0.15,
+      "nominalTraceWidth": 0.1,
+      "width": 0.1,
       "pointsToConnect": [
         {
           "x": 59.799983,
@@ -67883,8 +67883,8 @@
     {
       "name": "source_trace_270",
       "source_trace_id": "source_trace_270",
-      "nominalTraceWidth": 0.15,
-      "width": 0.15,
+      "nominalTraceWidth": 0.1,
+      "width": 0.1,
       "pointsToConnect": [
         {
           "x": 47.799983,
@@ -67907,8 +67907,8 @@
     {
       "name": "source_trace_272",
       "source_trace_id": "source_trace_272",
-      "nominalTraceWidth": 0.15,
-      "width": 0.15,
+      "nominalTraceWidth": 0.1,
+      "width": 0.1,
       "pointsToConnect": [
         {
           "x": 47.799983,
@@ -67931,8 +67931,8 @@
     {
       "name": "source_trace_274",
       "source_trace_id": "source_trace_274",
-      "nominalTraceWidth": 0.15,
-      "width": 0.15,
+      "nominalTraceWidth": 0.1,
+      "width": 0.1,
       "pointsToConnect": [
         {
           "x": -45.799983,
@@ -67955,8 +67955,8 @@
     {
       "name": "source_trace_276",
       "source_trace_id": "source_trace_276",
-      "nominalTraceWidth": 0.15,
-      "width": 0.15,
+      "nominalTraceWidth": 0.1,
+      "width": 0.1,
       "pointsToConnect": [
         {
           "x": 45.799983,
@@ -67979,8 +67979,8 @@
     {
       "name": "source_trace_280",
       "source_trace_id": "source_trace_280",
-      "nominalTraceWidth": 0.15,
-      "width": 0.15,
+      "nominalTraceWidth": 0.1,
+      "width": 0.1,
       "pointsToConnect": [
         {
           "x": 41,
@@ -68003,8 +68003,8 @@
     {
       "name": "source_trace_281",
       "source_trace_id": "source_trace_281",
-      "nominalTraceWidth": 0.15,
-      "width": 0.15,
+      "nominalTraceWidth": 0.1,
+      "width": 0.1,
       "pointsToConnect": [
         {
           "x": 41,
@@ -68027,8 +68027,8 @@
     {
       "name": "source_trace_282",
       "source_trace_id": "source_trace_282",
-      "nominalTraceWidth": 0.15,
-      "width": 0.15,
+      "nominalTraceWidth": 0.1,
+      "width": 0.1,
       "pointsToConnect": [
         {
           "x": 41,
@@ -68051,8 +68051,8 @@
     {
       "name": "source_trace_283",
       "source_trace_id": "source_trace_283",
-      "nominalTraceWidth": 0.15,
-      "width": 0.15,
+      "nominalTraceWidth": 0.1,
+      "width": 0.1,
       "pointsToConnect": [
         {
           "x": 41,
@@ -68075,8 +68075,8 @@
     {
       "name": "source_trace_284",
       "source_trace_id": "source_trace_284",
-      "nominalTraceWidth": 0.15,
-      "width": 0.15,
+      "nominalTraceWidth": 0.1,
+      "width": 0.1,
       "pointsToConnect": [
         {
           "x": 41,
@@ -68099,8 +68099,8 @@
     {
       "name": "source_trace_286",
       "source_trace_id": "source_trace_286",
-      "nominalTraceWidth": 0.15,
-      "width": 0.15,
+      "nominalTraceWidth": 0.1,
+      "width": 0.1,
       "pointsToConnect": [
         {
           "x": 41,
@@ -69685,7 +69685,6 @@
   "minPlatedHoleDrillEdgeToDrillEdgeClearance": 0.45,
   "minPadEdgeToPadEdgeClearance": 0.1,
   "minBoardEdgeClearance": 0.2,
-  "nominalTraceWidth": 0.15,
   "outline": [
     {
       "x": -66,
