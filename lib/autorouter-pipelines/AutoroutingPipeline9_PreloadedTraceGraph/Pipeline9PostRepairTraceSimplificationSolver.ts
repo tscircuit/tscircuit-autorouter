@@ -38,9 +38,13 @@ const eraseClosedCopperDetours = (route: HighDensityRoute): RoutePoint[] => {
   const cleanedPoints: RoutePoint[] = []
   const pointIndexByKey = new Map<string, number>()
 
-  for (const point of route.route) {
+  for (let pointIndex = 0; pointIndex < route.route.length; pointIndex++) {
+    const point = route.route[pointIndex]!
     const previousPoint = cleanedPoints.at(-1)
-    if (previousPoint?.toNextSegmentType !== undefined) {
+    if (
+      previousPoint?.toNextSegmentType !== undefined ||
+      previousPoint?.toNextSegmentCircuitJsonMetadata !== undefined
+    ) {
       pointIndexByKey.clear()
     }
 
@@ -53,6 +57,7 @@ const eraseClosedCopperDetours = (route: HighDensityRoute): RoutePoint[] => {
     const canEraseDetour =
       repeatedPointIndex !== undefined &&
       repeatedPoint !== undefined &&
+      pointIndex < route.route.length - 1 &&
       !pointBlocksCopperSubsetCleanup(point, route) &&
       repeatedPoint.traceThickness === point.traceThickness
 

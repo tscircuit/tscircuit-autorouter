@@ -24,7 +24,19 @@ test("Pipeline9 post-repair simplification removes only redundant copper", (): v
     jumpers: [],
   }
   const solver = new Pipeline9PostRepairTraceSimplificationSolver({
-    hdRoutes: [inputRoute],
+    hdRoutes: [
+      inputRoute,
+      {
+        ...inputRoute,
+        connectionName: "closed-same-position-endpoints",
+        route: [
+          { x: 0, y: 0, z: 0 },
+          { x: 1, y: 0, z: 0 },
+          { x: 0, y: 0, z: 0 },
+        ],
+        vias: [],
+      },
+    ],
   })
 
   solver.solve()
@@ -40,10 +52,20 @@ test("Pipeline9 post-repair simplification removes only redundant copper", (): v
       ],
       vias: [],
     },
+    {
+      ...inputRoute,
+      connectionName: "closed-same-position-endpoints",
+      route: [
+        { x: 0, y: 0, z: 0 },
+        { x: 1, y: 0, z: 0 },
+        { x: 0, y: 0, z: 0 },
+      ],
+      vias: [],
+    },
   ])
   expect(solver.stats).toEqual({
-    inputPointCount: 8,
-    outputPointCount: 3,
+    inputPointCount: 11,
+    outputPointCount: 6,
     inputViaCount: 2,
     outputViaCount: 0,
   })
