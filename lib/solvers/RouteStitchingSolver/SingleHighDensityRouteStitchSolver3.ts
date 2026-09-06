@@ -452,10 +452,7 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
         string,
         HighDensityIntraNodeRoute["vias"][number]
       >()
-      for (const via of [
-        ...this.mergedHdRoute.vias,
-        ...hdRouteToMerge.vias,
-      ]) {
+      for (const via of [...this.mergedHdRoute.vias, ...hdRouteToMerge.vias]) {
         if (
           Math.hypot(via.x - lastMergedPoint.x, via.y - lastMergedPoint.y) <
             GEOMETRIC_TOLERANCE &&

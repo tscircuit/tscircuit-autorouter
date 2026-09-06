@@ -156,17 +156,11 @@ test("Pipeline9 routes the normal RP2350 core phase without DRC errors", (): voi
     ),
   )
   for (const element of circuitJson) {
-    if (
-      element.type !== "pcb_via" ||
-      !affectedViaIds.has(element.pcb_via_id)
-    ) {
+    if (element.type !== "pcb_via" || !affectedViaIds.has(element.pcb_via_id)) {
       continue
     }
     console.error("RP2350 affected via", JSON.stringify(element))
-    if (
-      "pcb_trace_id" in element &&
-      typeof element.pcb_trace_id === "string"
-    ) {
+    if ("pcb_trace_id" in element && typeof element.pcb_trace_id === "string") {
       affectedTraceIds.add(element.pcb_trace_id)
     }
   }
@@ -180,10 +174,7 @@ test("Pipeline9 routes the normal RP2350 core phase without DRC errors", (): voi
         typeof error.pcb_trace_error_id === "string" &&
         error.pcb_trace_error_id.includes(trace.pcb_trace_id),
     )
-    if (
-      !appearsInTracePairError &&
-      !affectedTraceIds.has(trace.pcb_trace_id)
-    ) {
+    if (!appearsInTracePairError && !affectedTraceIds.has(trace.pcb_trace_id)) {
       continue
     }
     console.error("RP2350 affected trace", JSON.stringify(trace))

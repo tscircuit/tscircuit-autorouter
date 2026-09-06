@@ -30,8 +30,8 @@ test("nearby physical inputs cannot reuse an inexact intra-node route", () => {
       hyperParameters: { SHUFFLE_SEED: 0 },
       cacheProvider: null,
     })
-  const baseKey: string = createSolver(node).computeCacheKeyAndTransform()
-    .cacheKey
+  const baseKey: string =
+    createSolver(node).computeCacheKeyAndTransform().cacheKey
   const translatedNode: NodeWithPortPoints = {
     ...node,
     center: { x: 0.0002, y: 0 },
@@ -54,9 +54,7 @@ test("nearby physical inputs cannot reuse an inexact intra-node route", () => {
       createSolver(node, { obstacleMargin: 0.1502 }),
     ].map((solver) => solver.computeCacheKeyAndTransform().cacheKey),
   ).not.toContain(baseKey)
-  expect(renamedNodeSolver.computeCacheKeyAndTransform().cacheKey).toBe(
-    baseKey,
-  )
+  expect(renamedNodeSolver.computeCacheKeyAndTransform().cacheKey).toBe(baseKey)
   renamedNodeSolver.applyCachedSolution({
     success: true,
     solvedRoutes: [

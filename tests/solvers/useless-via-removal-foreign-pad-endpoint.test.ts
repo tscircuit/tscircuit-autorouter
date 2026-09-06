@@ -33,8 +33,10 @@ test("via-removal validators reject a foreign pad centered at a segment endpoint
   })
   const hdRouteSHI: HighDensityRouteSpatialIndex =
     new HighDensityRouteSpatialIndex([route])
-  const obstacleSHI: ObstacleSpatialHashIndex =
-    new ObstacleSpatialHashIndex("flatbush", [foreignPad])
+  const obstacleSHI: ObstacleSpatialHashIndex = new ObstacleSpatialHashIndex(
+    "flatbush",
+    [foreignPad],
+  )
 
   expect(
     canSectionMoveToLayer({

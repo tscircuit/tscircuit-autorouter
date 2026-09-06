@@ -513,8 +513,7 @@ export class SameNetViaMergerSolver extends BaseSolver {
                       netByConnectionName: this.netByConnectionName,
                       minTraceToPadEdgeClearance:
                         this.input.minTraceToPadEdgeClearance,
-                      minBoardEdgeClearance:
-                        this.input.minBoardEdgeClearance,
+                      minBoardEdgeClearance: this.input.minBoardEdgeClearance,
                       outline: this.outline,
                     })
               if (!canRemove) continue
