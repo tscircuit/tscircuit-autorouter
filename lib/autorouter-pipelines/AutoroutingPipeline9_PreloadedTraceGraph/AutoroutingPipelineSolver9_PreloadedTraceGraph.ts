@@ -85,6 +85,7 @@ import {
   type PreloadedHighDensityRoute,
 } from "./convertPreloadedTraceToHdRoutes"
 import { Pipeline9HighDensitySolver } from "./Pipeline9HighDensitySolver"
+import { Pipeline9InheritedDrcRepairSolver } from "./Pipeline9InheritedDrcRepairSolver"
 import { Pipeline9JointDrcRepairSolver } from "./Pipeline9JointDrcRepairSolver"
 import { PreloadedTraceGraphSolver } from "./PreloadedTraceGraphSolver"
 import { PreprocessSimpleRouteJsonWithoutTraceObstaclesSolver } from "./PreprocessSimpleRouteJsonWithoutTraceObstaclesSolver"
@@ -261,6 +262,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
   highDensityStitchSolver?: MultipleHighDensityRouteStitchSolver3
   globalDrcForceImproveSolver?: GlobalDrcForceImproveSolver
   pipeline9JointDrcRepairSolver?: Pipeline9JointDrcRepairSolver
+  pipeline9InheritedDrcRepairSolver?: Pipeline9InheritedDrcRepairSolver
   singleLayerNodeMerger?: SingleLayerNodeMergerSolver
   strawSolver?: StrawSolver
   deadEndSolver?: DeadEndSolver
@@ -852,6 +854,37 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       },
     ),
     definePipelineStep(
+      "pipeline9InheritedDrcRepairSolver",
+      Pipeline9InheritedDrcRepairSolver,
+      (cms) => {
+        const jointRepair = cms.pipeline9JointDrcRepairSolver
+        if (!jointRepair || !jointRepair.solved || jointRepair.failed) {
+          throw new Error(
+            "Pipeline9 inherited repair requires completed joint repair",
+          )
+        }
+        const updatedPreloadedTraces = jointRepair.getUpdatedPreloadedTraces()
+        const srjWithRepairedPreloadedTraces = {
+          ...jointRepair.params.srjWithPointPairs,
+          traces: updatedPreloadedTraces,
+        }
+        return [
+          {
+            ...jointRepair.params,
+            srj: srjWithRepairedPreloadedTraces,
+            srjWithPointPairs: srjWithRepairedPreloadedTraces,
+            newHdRoutes: jointRepair.getOutput(),
+            updatedPreloadedTraces,
+            mutatedPreloadedTraceIds: new Set(
+              jointRepair
+                .getMutatedPreloadedTraces()
+                .map((trace) => trace.pcb_trace_id),
+            ),
+          },
+        ]
+      },
+    ),
+    definePipelineStep(
       "lengthMatchingPostProcessingSolver",
       LengthMatchingPostProcessingSolver,
       (cms) => {
@@ -880,7 +913,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             )
           }
         }
-        const hdRoutes = cms.pipeline9JointDrcRepairSolver!.getOutput()
+        const hdRoutes = cms.pipeline9InheritedDrcRepairSolver!.getOutput()
         const differentialPairs = (cms.srj.differentialPairs ?? []).map(
           (pair) => {
             const connectionNames = pair.connectionNames.map(
@@ -1212,6 +1245,8 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       this.globalDrcForceImproveSolver?.visualize()
     const pipeline9JointDrcRepairViz =
       this.pipeline9JointDrcRepairSolver?.visualize()
+    const pipeline9InheritedDrcRepairViz =
+      this.pipeline9InheritedDrcRepairSolver?.visualize()
     const visualizations = [
       problemViz,
       processedProblemViz,
@@ -1243,6 +1278,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       traceWidthViz,
       globalDrcForceImproveViz,
       pipeline9JointDrcRepairViz,
+      pipeline9InheritedDrcRepairViz,
       lengthMatchingPostProcessingViz,
       powerTraceExpansionViz,
       this.solved
@@ -1331,6 +1367,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       return hdRoutes
     }
     return (
+      this.pipeline9InheritedDrcRepairSolver?.getOutput() ??
       this.pipeline9JointDrcRepairSolver?.getOutput() ??
       this.globalDrcForceImproveSolver?.getOutput() ??
       this.traceWidthSolver?.getHdRoutesWithWidths() ??
@@ -1457,6 +1494,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
 
   getUpdatedPreloadedTraces(): SimplifiedPcbTraces {
     return (
+      this.pipeline9InheritedDrcRepairSolver?.getUpdatedPreloadedTraces() ??
       this.pipeline9JointDrcRepairSolver?.getUpdatedPreloadedTraces() ??
       this.getPreloadedTraceUpdatesAfterHighDensity().updatedPreloadedTraces
     )
@@ -1464,6 +1502,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
 
   getMutatedPreloadedTraces(): SimplifiedPcbTraces {
     return (
+      this.pipeline9InheritedDrcRepairSolver?.getMutatedPreloadedTraces() ??
       this.pipeline9JointDrcRepairSolver?.getMutatedPreloadedTraces() ??
       this.getPreloadedTraceUpdatesAfterHighDensity().mutatedPreloadedTraces
     )

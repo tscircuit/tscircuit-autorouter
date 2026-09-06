@@ -13,6 +13,44 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
+  inherited-copper-and-stitching:
+    if: github.event_name != 'pull_request' || !startsWith(github.head_ref, 'version-bumps/')
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: 1.3.8
+
+      - name: Install dependencies
+        run: bun install
+
+      # Keep the focused ownership and shared-stitch contracts observable even
+      # when an unrelated large-board test consumes a balanced shard's budget.
+      - name: Run inherited copper and stitching regressions
+        run: |
+          bun test \
+            tests/features/pipeline9-joint-drc-*.test.ts \
+            tests/features/pipeline9-inherited-drc-*.test.ts \
+            tests/features/pipeline9-minimal-preloaded-trace-graph.test.ts \
+            tests/features/pipeline7-dataset01-circuit143-trace-clearance.test.ts \
+            tests/features/pipeline9-srj23-sample49-inherited-copper-repair.test.ts \
+            tests/features/pipeline9-srj23-sample26-stitch-plated-hole.test.ts \
+            tests/features/pipeline9-srj23-sample45-stitch-completion.test.ts \
+            tests/features/pipeline7-srj20-sample169-multi-crossing-drc.test.ts \
+            tests/features/pipeline9-srj23-sample21-regional-b01-repair.test.ts \
+            tests/features/pipeline9-srj18-sample13-bounded-post-exact-precision.test.ts \
+            tests/features/pipeline9-srj18-sample3-terminal-ownership.test.ts \
+            tests/features/pipeline4-dataset01-circuit011-visual.test.ts \
+            tests/bugs/bugreport59-82431e.test.ts \
+            tests/bugs/bugreport88-9a86ed.test.ts \
+            tests/stitch-solver \
+            --timeout 300000
+
   test:
     if: github.event_name != 'pull_request' || !startsWith(github.head_ref, 'version-bumps/')
     runs-on: ubuntu-latest
