@@ -16,9 +16,9 @@ test("benchmark baseline preserves routes without repair04", (): void => {
     fixture.srj,
   )
   const repairNames = ["repair04Solver", "repair04AdvancedSolver"]
-  expect(
-    pipeline.pipelineDef.map((stage): string => stage.solverName),
-  ).toEqual(production.pipelineDef.map((stage): string => stage.solverName))
+  expect(pipeline.pipelineDef.map((stage): string => stage.solverName)).toEqual(
+    production.pipelineDef.map((stage): string => stage.solverName),
+  )
   const changedClasses = pipeline.pipelineDef.filter(
     (stage, index): boolean =>
       stage.solverClass !== production.pipelineDef[index]!.solverClass,

@@ -53,7 +53,9 @@ test("repair04 runs with default Pipeline9 options and validates a repaired regi
   ) as ConstructorParameters<typeof Pipeline9Repair04Solver>
   const evaluateReference = params.referenceDrcEvaluator
   let referenceEvaluations = 0
-  params.referenceDrcEvaluator = (input): ReturnType<typeof evaluateReference> => {
+  params.referenceDrcEvaluator = (
+    input,
+  ): ReturnType<typeof evaluateReference> => {
     referenceEvaluations++
     return evaluateReference(input)
   }

@@ -36,9 +36,8 @@ test("Pipeline9 repairs SRJ23 sample 44 before joint repair and preserves preloa
   )
   expect(replacements.length).toBeGreaterThan(0)
   expect(
-    new Set(
-      replacements.map((trace): string => trace.__replaces_pcb_trace_id!),
-    ).size,
+    new Set(replacements.map((trace): string => trace.__replaces_pcb_trace_id!))
+      .size,
   ).toBe(replacements.length)
   for (const trace of replacements) {
     expect(preloadedTraceIds.has(trace.__replaces_pcb_trace_id!)).toBeTrue()
