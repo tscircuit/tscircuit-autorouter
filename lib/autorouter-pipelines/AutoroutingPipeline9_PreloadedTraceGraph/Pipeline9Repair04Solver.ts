@@ -125,14 +125,14 @@ export class Pipeline9Repair04Solver extends BaseSolver {
     ] as any).errorsWithCenters
   }
 
-  /** Prioritize dense residual regions without changing any search allowance. */
+  /** Prioritize dense regions when the initial search allowance is below half. */
   private getPrioritizedErrors(): DrcError[] {
     const errors = [...this.referenceErrors!, ...this.issues!]
-    // Preserve established search order when this stage has its full allowance.
+    // Preserve established order for boards with at least half the configured budget.
     if (
       this.initialReferenceErrors === null ||
       this.input.fullEffortReferenceErrorCount === undefined ||
-      this.initialReferenceErrors <= this.input.fullEffortReferenceErrorCount
+      this.initialReferenceErrors <= 2 * this.input.fullEffortReferenceErrorCount
     )
       return errors
     const centerOf = (error: DrcError): { x: number; y: number } | null => {
@@ -267,7 +267,14 @@ export class Pipeline9Repair04Solver extends BaseSolver {
               )
         this.effectiveMaxTotalCandidateAttempts = Math.max(
           1,
-          Math.floor(this.input.maxTotalCandidateAttempts * scale),
+          Math.min(
+            Math.floor(this.input.maxTotalCandidateAttempts * scale),
+            // Boards below half the allowance share one full region's
+            // proposal budget across all accepted regions.
+            scale < 0.5
+              ? (this.input.maxCandidatesPerRegion ?? 8000)
+              : Number.MAX_SAFE_INTEGER,
+          ),
         )
         this.stats = { ...this.stats, ...this.getTotalWorkStats() }
       }

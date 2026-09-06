@@ -2,7 +2,7 @@ import { expect, test } from "bun:test"
 import { Pipeline9Repair04Solver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9Repair04Solver"
 import { createTotalBudgetFixture } from "../fixtures/pipeline9-repair04-total-budget-fixture"
 
-test("repair04 prioritizes a dense independent region while keeping the child and total allowances", (): void => {
+test("repair04 prioritizes dense regions only below half the total allowance", (): void => {
   const fixture = createTotalBudgetFixture()
   fixture.referenceDrcEvaluator = (): any[] => [
     { type: "pcb_trace_error", message: "isolated", center: { x: 0, y: 0 } },
@@ -26,12 +26,23 @@ test("repair04 prioritizes a dense independent region while keeping the child an
   fullEffortSolver.step()
   expect(fullEffortSolver.region.bounds).toEqual(defaultSolver.region.bounds)
   expect(fullEffortSolver.effectiveMaxTotalCandidateAttempts).toBe(7)
+  for (const threshold of [3, 2]) {
+    const moderateSolver = new Pipeline9Repair04Solver({
+      ...fixture,
+      maxTotalCandidateAttempts: 20,
+      fullEffortReferenceErrorCount: threshold,
+      maxCandidatesPerRegion: 4,
+    }) as any
+    moderateSolver.step()
+    expect(moderateSolver.region.bounds).toEqual(defaultSolver.region.bounds)
+    expect(moderateSolver.effectiveMaxTotalCandidateAttempts).toBe(5 * threshold)
+  }
   const solver = new Pipeline9Repair04Solver({
     ...fixture,
     maxCandidatesPerRegion: 40,
     maxInitialCandidateAttempts: 5,
-    maxTotalCandidateAttempts: 7,
-    fullEffortReferenceErrorCount: 3,
+    maxTotalCandidateAttempts: 20,
+    fullEffortReferenceErrorCount: 1,
     maxPathSearchNodesPerRegion: 123,
   }) as any
   solver.step()
