@@ -86,6 +86,7 @@ import {
 } from "./convertPreloadedTraceToHdRoutes"
 import { Pipeline9HighDensitySolver } from "./Pipeline9HighDensitySolver"
 import { Pipeline9JointDrcRepairSolver } from "./Pipeline9JointDrcRepairSolver"
+import { Pipeline9PostRepairTraceSimplificationSolver } from "./Pipeline9PostRepairTraceSimplificationSolver"
 import { PreloadedTraceGraphSolver } from "./PreloadedTraceGraphSolver"
 import { PreprocessSimpleRouteJsonWithoutTraceObstaclesSolver } from "./PreprocessSimpleRouteJsonWithoutTraceObstaclesSolver"
 import { MergedComponentTopologyView } from "../AutoroutingPipeline7_MultiGraph/MergedComponentTopologyView"
@@ -261,7 +262,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
   highDensityStitchSolver?: MultipleHighDensityRouteStitchSolver3
   globalDrcForceImproveSolver?: GlobalDrcForceImproveSolver
   pipeline9JointDrcRepairSolver?: Pipeline9JointDrcRepairSolver
-  postRepairTraceSimplificationSolver?: TraceSimplificationSolver
+  postRepairTraceSimplificationSolver?: Pipeline9PostRepairTraceSimplificationSolver
   singleLayerNodeMerger?: SingleLayerNodeMergerSolver
   strawSolver?: StrawSolver
   deadEndSolver?: DeadEndSolver
@@ -854,57 +855,14 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     ),
     definePipelineStep(
       "postRepairTraceSimplificationSolver",
-      TraceSimplificationSolver,
-      (cms) => {
-        const repairedHdRoutes: HighDensityRoute[] =
-          materializePipeline9HdRouteVias(
+      Pipeline9PostRepairTraceSimplificationSolver,
+      (cms) => [
+        {
+          hdRoutes: materializePipeline9HdRouteVias(
             cms.pipeline9JointDrcRepairSolver!.getOutput(),
-          )
-        const preloadedHdRoutes: PreloadedHighDensityRoute[] = cms
-          .pipeline9JointDrcRepairSolver!.getUpdatedPreloadedTraces()
-          .flatMap((trace, traceIndex): PreloadedHighDensityRoute[] =>
-            convertPreloadedTraceToHdRoutes(
-              trace,
-              traceIndex,
-              cms.srj.layerCount,
-              cms.viaDiameter,
-              cms.connMap,
-            ).map((route) => ({
-              ...route,
-              rootConnectionName: trace.connection_name,
-            })),
-          )
-        const netByConnectionName: ReadonlyMap<string, string> =
-          getPipeline9NetByConnectionName(
-            [...repairedHdRoutes, ...preloadedHdRoutes],
-            cms.connMap,
-          )
-
-        // Repair can introduce bends after the first simplification. Keep
-        // repaired preloads fixed and retain physical terminal/layer anchors.
-        return [
-          {
-            hdRoutes: repairedHdRoutes,
-            otherHdRoutes: preloadedHdRoutes,
-            obstacles: cms.srj.obstacles,
-            connMap: cms.connMap,
-            colorMap: cms.colorMap,
-            outline: cms.srj.outline,
-            defaultViaDiameter: cms.viaDiameter,
-            layerCount: cms.srj.layerCount,
-            minTraceToPadEdgeClearance: cms.srj.minTraceToPadEdgeClearance,
-            minBoardEdgeClearance: cms.srj.minBoardEdgeClearance,
-            netByConnectionName,
-            preserveRouteEndpoints: true,
-            useTraceWidthAwareClearance: true,
-            terminalLayerIndicesByPcbPortId: getTerminalLayerIndicesByPcbPortId(
-              cms.srj.connections,
-              cms.srj.obstacles,
-              cms.srj.layerCount,
-            ),
-          },
-        ]
-      },
+          ),
+        },
+      ],
     ),
     definePipelineStep(
       "lengthMatchingPostProcessingSolver",

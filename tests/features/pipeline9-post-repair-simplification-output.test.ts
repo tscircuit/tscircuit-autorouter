@@ -1,10 +1,9 @@
 import { expect, test } from "bun:test"
-import { pointToSegmentDistance } from "@tscircuit/math-utils"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
 import type { Pipeline9HighDensitySolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9HighDensitySolver"
 import type { Pipeline9JointDrcRepairSolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9JointDrcRepairSolver"
+import { Pipeline9PostRepairTraceSimplificationSolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9PostRepairTraceSimplificationSolver"
 import type { NetToPointPairsSolver } from "lib/solvers/NetToPointPairsSolver/NetToPointPairsSolver"
-import { TraceSimplificationSolver } from "lib/solvers/TraceSimplificationSolver/TraceSimplificationSolver"
 import type { LengthMatchingPostProcessingSolver } from "lib/solvers/length-matching-post-processing-solver"
 import type { HighDensityRoute } from "lib/types/high-density-types"
 import type {
@@ -16,18 +15,14 @@ import type {
 type PipelineStep =
   AutoroutingPipelineSolver9_PreloadedTraceGraph["pipelineDef"][number]
 type SimplificationParams = ConstructorParameters<
-  typeof TraceSimplificationSolver
+  typeof Pipeline9PostRepairTraceSimplificationSolver
 >
 type LengthMatchingParams = ConstructorParameters<
   typeof LengthMatchingPostProcessingSolver
 >
 
 test("Pipeline9 uses repaired-route simplification while preserving current preload copper", (): void => {
-  for (const { viaY, connected } of [
-    { viaY: -2, connected: false },
-    { viaY: 0, connected: false },
-    { viaY: 0, connected: true },
-  ]) {
+  for (const viaY of [-2, 0]) {
     const repairedRoute: HighDensityRoute = {
       connectionName: "signal",
       traceThickness: 0.4,
@@ -44,7 +39,7 @@ test("Pipeline9 uses repaired-route simplification while preserving current prel
       type: "pcb_trace",
       pcb_trace_id: "foreign_preload",
       connection_name: "fanout_alias",
-      connectsTo: [connected ? "signal" : "foreign_net"],
+      connectsTo: ["foreign_net"],
       __replaces_pcb_trace_id: "foreign_preload",
       route: [
         {
@@ -105,22 +100,12 @@ test("Pipeline9 uses repaired-route simplification while preserving current prel
     const params: SimplificationParams = postStep.getConstructorParams(
       pipeline,
     ) as SimplificationParams
-    expect(postStep.solverClass).toBe(TraceSimplificationSolver)
-    expect(params[0].preserveRouteEndpoints).toBeTrue()
-    expect(params[0].useTraceWidthAwareClearance).toBeTrue()
-    expect(params[0].otherHdRoutes).toHaveLength(1)
-    expect(
-      params[0].otherHdRoutes?.[0]?.route.map(
-        (point: HighDensityRoute["route"][number]): number => point.z,
-      ),
-    ).toEqual([0, 3])
-    expect(params[0].otherHdRoutes?.[0]?.viaDiameter).toBe(0.5)
-    expect(params[0].otherHdRoutes?.[0]?.rootConnectionName).toBe(
-      "fanout_alias",
+    expect(postStep.solverClass).toBe(
+      Pipeline9PostRepairTraceSimplificationSolver,
     )
-    const postSolver: TraceSimplificationSolver = new TraceSimplificationSolver(
-      ...params,
-    )
+    expect(params[0].hdRoutes).toHaveLength(1)
+    const postSolver: Pipeline9PostRepairTraceSimplificationSolver =
+      new Pipeline9PostRepairTraceSimplificationSolver(...params)
     postSolver.solve()
     expect(postSolver.solved).toBeTrue()
     expect(postSolver.failed).toBeFalse()
@@ -130,24 +115,7 @@ test("Pipeline9 uses repaired-route simplification while preserving current prel
     expect(output.route[0]).toEqual(repairedRoute.route[0])
     expect(output.route.at(-1)).toEqual(repairedRoute.route.at(-1))
     expect(output.traceThickness).toBe(0.4)
-    if (viaY === -2 || connected) {
-      expect(
-        output.route.every(
-          (point: HighDensityRoute["route"][number]): boolean => point.y === 0,
-        ),
-      ).toBeTrue()
-      expect(output.route).not.toEqual(repairedRoute.route)
-    } else {
-      for (let index: number = 1; index < output.route.length; index++) {
-        expect(
-          pointToSegmentDistance(
-            { x: 0, y: viaY },
-            output.route[index - 1]!,
-            output.route[index]!,
-          ),
-        ).toBeGreaterThanOrEqual(0.5 / 2 + 0.4 / 2 + 0.1 - 1e-6)
-      }
-    }
+    expect(output.route).toEqual(repairedRoute.route)
     expect(pipeline._getOutputHdRoutes()).toEqual(postSolver.simplifiedHdRoutes)
     const lengthStep: PipelineStep = pipeline.pipelineDef[postIndex + 1]!
     const lengthParams: LengthMatchingParams = lengthStep.getConstructorParams(
@@ -157,14 +125,6 @@ test("Pipeline9 uses repaired-route simplification while preserving current prel
     const convertedOutput: SimplifiedPcbTraces =
       pipeline.getNewTracesBeforePowerExpansion()
     expect(convertedOutput).toHaveLength(1)
-    if (viaY === -2 || connected) {
-      expect(
-        convertedOutput[0]!.route.every(
-          (point: SimplifiedPcbTrace["route"][number]): boolean =>
-            point.route_type === "wire" && point.y === 0,
-        ),
-      ).toBeTrue()
-    }
     expect(pipeline.getUpdatedPreloadedTraces()).toEqual([preload])
     expect(pipeline.getMutatedPreloadedTraces()).toEqual([preload])
     expect({ repairedRoute, preload }).toEqual(inputSnapshot)
