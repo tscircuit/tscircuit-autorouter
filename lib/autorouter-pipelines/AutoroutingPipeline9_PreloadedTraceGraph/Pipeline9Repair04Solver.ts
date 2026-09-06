@@ -50,7 +50,7 @@ type Pipeline9Repair04SolverParams = {
 /** Owns board state; the external solver receives only one cropped region. */
 export class Pipeline9Repair04Solver extends BaseSolver {
   private routes: HighDensityRoute[]
-  private readonly engine: AutoroutingDrcEngine
+  private engine: AutoroutingDrcEngine | null = null
   private localSolver: Repair04Solver | null = null
   private region: ExtractedRepairRegion | null = null
   private issues: DrcError[] | null = null
@@ -96,11 +96,6 @@ export class Pipeline9Repair04Solver extends BaseSolver {
       input.maxPathSearchNodesSinceAcceptance !== undefined ||
       input.maxPathSearchNodesPerRegion !== undefined
     this.routes = input.hdRoutes
-    this.engine = new AutoroutingDrcEngine(input.srj as any, {
-      // Local DRC uses declared SRJ net aliases. The topology connectivity map
-      // can join distinct declared nets through geometric obstacle aliases.
-      includeTraceViaOwnerMetadata: true,
-    })
     this.MAX_ITERATIONS =
       (input.maxRegions ?? 32) *
         ((input.maxCandidatesPerRegion ?? 8000) * 2 + 6) +
@@ -117,12 +112,74 @@ export class Pipeline9Repair04Solver extends BaseSolver {
   }
 
   private evaluate(routes: HighDensityRoute[]): DrcError[] {
+    this.engine ??= new AutoroutingDrcEngine(this.input.srj as any, {
+      // Local DRC uses declared SRJ net aliases. The topology connectivity map
+      // can join distinct declared nets through geometric obstacle aliases.
+      includeTraceViaOwnerMetadata: true,
+    })
     return this.engine.evaluate([
       ...(this.input.srj.traces ?? []).map((trace) =>
         normalizeRepairTrace(trace as any, this.input.srj.minTraceWidth),
       ),
       ...convertRepairRoutesToTraces(routes, this.input.srj.layerCount),
     ] as any).errorsWithCenters
+  }
+
+  /** Prioritize dense regions when the initial search allowance is below half. */
+  private getPrioritizedErrors(): DrcError[] {
+    const errors = [...this.referenceErrors!, ...this.issues!]
+    // Preserve established order for boards with at least half the configured budget.
+    if (
+      this.initialReferenceErrors === null ||
+      this.input.fullEffortReferenceErrorCount === undefined ||
+      this.initialReferenceErrors <= 2 * this.input.fullEffortReferenceErrorCount
+    )
+      return errors
+    const centerOf = (error: DrcError): { x: number; y: number } | null => {
+      const targets = (error.existingViaRepairTargets ??
+        []) as ExistingViaRepairTarget[]
+      const center = targets[0] ?? error.center ?? error.pcb_center
+      if (
+        !center ||
+        typeof center !== "object" ||
+        !("x" in center) ||
+        !("y" in center)
+      )
+        return null
+      const { x, y } = center as { x: number; y: number }
+      return Number.isFinite(x) && Number.isFinite(y) ? { x, y } : null
+    }
+    const uniqueCenters = (items: DrcError[]): { x: number; y: number }[] => {
+      const centers = new Map<string, { x: number; y: number }>()
+      for (const error of items) {
+        const center = centerOf(error)
+        if (center) centers.set(`${center.x},${center.y}`, center)
+      }
+      return [...centers.values()]
+    }
+    const referenceCenters = uniqueCenters(this.referenceErrors!)
+    const centers = referenceCenters.length
+      ? referenceCenters
+      : uniqueCenters(this.issues!)
+    return errors
+      .map(
+        (error, index): { error: DrcError; index: number; coverage: number } => {
+          const center = centerOf(error)
+          let coverage = 0
+          if (center) {
+            for (const point of centers) {
+              if (
+                Math.abs(point.x - center.x) <= 5 &&
+                Math.abs(point.y - center.y) <= 5
+              )
+                coverage++
+            }
+          }
+          return { error, index, coverage }
+        },
+      )
+      .sort((a, b): number => b.coverage - a.coverage || a.index - b.index)
+      .map(({ error }): DrcError => error)
   }
 
   private getCandidateAttemptLimit(): number | undefined {
@@ -197,7 +254,6 @@ export class Pipeline9Repair04Solver extends BaseSolver {
 
   override _step(): void {
     if (!this.issues) {
-      this.issues = this.evaluate(this.routes)
       this.referenceErrors = this.evaluateReference(this.routes)
       if (this.input.maxTotalCandidateAttempts !== undefined) {
         this.initialReferenceErrors = this.referenceErrors.length
@@ -211,10 +267,24 @@ export class Pipeline9Repair04Solver extends BaseSolver {
               )
         this.effectiveMaxTotalCandidateAttempts = Math.max(
           1,
-          Math.floor(this.input.maxTotalCandidateAttempts * scale),
+          Math.min(
+            Math.floor(this.input.maxTotalCandidateAttempts * scale),
+            // Boards below half the allowance share one full region's
+            // proposal budget across all accepted regions.
+            scale < 0.5
+              ? (this.input.maxCandidatesPerRegion ?? 8000)
+              : Number.MAX_SAFE_INTEGER,
+          ),
         )
         this.stats = { ...this.stats, ...this.getTotalWorkStats() }
       }
+      // A reference-clean board is returned by identity. Indexed search and
+      // fixed-copper comparisons are needed only if repair will change it.
+      if (this.referenceErrors.length === 0) {
+        this.finishRepair("clean")
+        return
+      }
+      this.issues = this.evaluate(this.routes)
       this.fixedViolations = new Map(
         getFixedObstacleViolations({
           srj: this.input.srj as any,
@@ -326,9 +396,8 @@ export class Pipeline9Repair04Solver extends BaseSolver {
       this.finishRepair("unsuccessful-work-budget")
       return
     }
-    // Escalate one issue's context before moving on; a long issue list must
-    // not consume the entire region budget before any larger bounds are tried.
-    for (const error of [...this.referenceErrors!, ...this.issues]) {
+    // Retain the existing context escalation within each prioritized issue.
+    for (const error of this.getPrioritizedErrors()) {
       for (const allowLayerChanges of this.input.allowLayerChanges === true
         ? [false, true]
         : [false]) {

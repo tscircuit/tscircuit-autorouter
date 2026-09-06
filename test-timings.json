@@ -6,7 +6,9 @@
     "31432202969",
     "31436492559",
     "31646368017",
-    "32252254138"
+    "32252254138",
+    "34053385564",
+    "34055995279"
   ],
   "timings": {
     "tests/auto-capacity-depth.test.ts": 0,
@@ -155,7 +157,7 @@
     "tests/features/arduino-uno-inner-pours.test.ts": 0,
     "tests/features/build-hypergraph-net-id.test.ts": 0,
     "tests/features/capacity-node-tree-spans-all-overlapped-buckets.test.ts": 0,
-    "tests/features/dataset-srj29-ddr3-bga-routing-pipeline.test.ts": 84.2,
+    "tests/features/dataset-srj29-ddr3-bga-routing-pipeline.test.ts": 275.9,
     "tests/features/fixed-topology-high-density-bottom-layer-input.test.ts": 0,
     "tests/features/fixed-topology-high-density-intra-node-solver.test.ts": 0.5,
     "tests/features/high-density-cmn159-investigation.test.ts": 0.1,
@@ -235,6 +237,8 @@
     "tests/features/pipeline9-regional-fallback-materializes-vias.test.ts": 0,
     "tests/features/pipeline9-regional-fallback-target-layers.test.ts": 0,
     "tests/features/pipeline9-splices-hypergraph-preloaded-section.test.ts": 0,
+    "tests/features/pipeline9-srj18-sample12-via-pad-stage-handoff.test.ts": 224.5,
+    "tests/features/pipeline9-srj18-sample13-bounded-post-exact-precision.test.ts": 207.7,
     "tests/features/pipeline9-srj23-sample10-regional-fallback.test.ts": 0.5,
     "tests/features/pipeline9-srj23-sample21-regional-b01-repair.test.ts": 84.2,
     "tests/features/pipeline9-srj23-sample25-terminal-metadata.test.ts": 1.7,
