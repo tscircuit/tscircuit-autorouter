@@ -69,11 +69,12 @@ describe.skipIf(process.env.RUN_FULL_GBA_REPRO !== "1")(
         (error) => (error.center ? [error.center] : []),
       )
       const nearbyRoutedTraces = routedTraces.filter((trace) =>
-        trace.route.some((point) =>
-          errorCenters.some(
+        trace.route.some((point) => {
+          if (!("x" in point) || !("y" in point)) return false
+          return errorCenters.some(
             (center) => Math.hypot(point.x - center.x, point.y - center.y) < 2,
-          ),
-        ),
+          )
+        }),
       )
       const implicatedVias = relaxedDrcResult.circuitJson.filter(
         (element) =>
