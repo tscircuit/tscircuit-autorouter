@@ -7,12 +7,13 @@ import srj from "../../fixtures/repro/rp2350-complete-board-drc/rp2350-normal-co
   type: "json",
 }
 
-test.skip("Pipeline9 routes the normal RP2350 core phase without DRC errors", (): void => {
-  const input = structuredClone(srj) as SimpleRouteJson
-  const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(input, {
-    cacheProvider: null,
-    effort: 1,
-  })
+test("Pipeline9 routes the normal RP2350 core phase without DRC errors", (): void => {
+  const input: SimpleRouteJson = structuredClone(srj) as SimpleRouteJson
+  const solver: AutoroutingPipelineSolver9_PreloadedTraceGraph =
+    new AutoroutingPipelineSolver9_PreloadedTraceGraph(input, {
+      cacheProvider: null,
+      effort: 1,
+    })
 
   solver.solve()
 

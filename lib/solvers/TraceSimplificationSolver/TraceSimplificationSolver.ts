@@ -9,6 +9,7 @@ import { GraphicsObject } from "graphics-debug"
 import { getJumpersGraphics } from "lib/utils/getJumperGraphics"
 import { createObjectsWithZLayers } from "lib/utils/createObjectsWithZLayers"
 import { CrossingViaReductionSolver } from "lib/solvers/CrossingViaReductionSolver/crossing-via-reduction-solver"
+import { createSimplificationConnectivityMap } from "./createSimplificationConnectivityMap"
 
 type Phase =
   | "via_removal"
@@ -131,6 +132,10 @@ export class TraceSimplificationSolver extends BaseSolver {
     super()
     this.simplificationConfig = {
       ...simplificationConfig,
+      connMap: createSimplificationConnectivityMap(
+        simplificationConfig.connMap,
+        simplificationConfig.netByConnectionName,
+      ),
       obstacles: createObjectsWithZLayers(
         simplificationConfig.obstacles,
         simplificationConfig.layerCount,
@@ -409,6 +414,10 @@ export class TraceSimplificationSolver extends BaseSolver {
             colorMap: { ...this.simplificationConfig.colorMap },
             layerCount: this.simplificationConfig.layerCount,
             connMap: this.simplificationConfig.connMap,
+            minTraceToPadEdgeClearance:
+              this.simplificationConfig.minTraceToPadEdgeClearance,
+            minBoardEdgeClearance:
+              this.simplificationConfig.minBoardEdgeClearance,
             outline: this.simplificationConfig.outline
               ? [...this.simplificationConfig.outline]
               : undefined,
@@ -431,6 +440,8 @@ export class TraceSimplificationSolver extends BaseSolver {
               : undefined,
             minBoardEdgeClearance:
               this.simplificationConfig.minBoardEdgeClearance,
+            minTraceToPadEdgeClearance:
+              this.simplificationConfig.minTraceToPadEdgeClearance,
             defaultViaDiameter: this.simplificationConfig.defaultViaDiameter,
             useTraceWidthAwareClearance:
               this.simplificationConfig.useTraceWidthAwareClearance,

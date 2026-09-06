@@ -18,11 +18,7 @@ import {
 import { doesSegmentCrossPolygonBoundary } from "lib/utils/polygonContainment"
 import { JUMPER_DIMENSIONS } from "lib/utils/jumperSizes"
 
-interface Point {
-  x: number
-  y: number
-  z: number
-}
+type Point = HighDensityIntraNodeRoute["route"][number]
 
 interface PathSegment {
   start: Point
@@ -40,6 +36,7 @@ export class SingleSimplifiedPathSolver5 extends SingleSimplifiedPathSolver {
   private minStepSize: number = 0.25 // Default step size, can be adjusted
   private lastValidPath: Point[] | null = null // Store the current valid path
   private lastValidPathHeadDistance: number = 0
+  private nextProtectedSegmentSearchIndex: number = 0
 
   /** Amount the step size is reduced when the step isn't possible */
   STEP_SIZE_REDUCTION_FACTOR = 0.25
@@ -69,6 +66,7 @@ export class SingleSimplifiedPathSolver5 extends SingleSimplifiedPathSolver {
   TRACE_THICKNESS = 0.15
   private useTraceWidthAwareClearance = false
   private clearanceTraceThickness = this.TRACE_THICKNESS
+  private minTraceToPadEdgeClearance: number
 
   TAIL_JUMP_RATIO: number = 0.8
 
@@ -94,11 +92,14 @@ export class SingleSimplifiedPathSolver5 extends SingleSimplifiedPathSolver {
   constructor(
     params: ConstructorParameters<typeof SingleSimplifiedPathSolver>[0] & {
       useTraceWidthAwareClearance?: boolean
+      minTraceToPadEdgeClearance?: number
     },
   ) {
     super(params)
 
     this.cachedValidPathSegments = new Set()
+    this.minTraceToPadEdgeClearance =
+      params.minTraceToPadEdgeClearance ?? this.OBSTACLE_MARGIN
     this.useTraceWidthAwareClearance =
       params.useTraceWidthAwareClearance ?? false
     this.clearanceTraceThickness = this.useTraceWidthAwareClearance
@@ -167,7 +168,7 @@ export class SingleSimplifiedPathSolver5 extends SingleSimplifiedPathSolver {
 
         if (
           distance <
-          this.OBSTACLE_MARGIN + this.clearanceTraceThickness / 2
+          this.minTraceToPadEdgeClearance + this.clearanceTraceThickness / 2
         ) {
           return true
         }
@@ -384,6 +385,9 @@ export class SingleSimplifiedPathSolver5 extends SingleSimplifiedPathSolver {
   private getPointAtDistance(distance: number): Point {
     // Ensure distance is within bounds
     distance = Math.max(0, Math.min(distance, this.totalPathLength))
+    if (distance === this.totalPathLength) {
+      return this.inputRoute.route[this.inputRoute.route.length - 1]!
+    }
 
     // Find the segment that contains this distance
     const segment = this.pathSegments.find(
@@ -394,6 +398,8 @@ export class SingleSimplifiedPathSolver5 extends SingleSimplifiedPathSolver {
       // Fallback to last point if segment not found
       return this.inputRoute.route[this.inputRoute.route.length - 1]
     }
+    if (distance === segment.startDistance) return segment.start
+    if (distance === segment.endDistance) return segment.end
 
     // Calculate interpolation factor (between 0 and 1)
     const factor = (distance - segment.startDistance) / segment.length
@@ -403,6 +409,7 @@ export class SingleSimplifiedPathSolver5 extends SingleSimplifiedPathSolver {
       x: segment.start.x + factor * (segment.end.x - segment.start.x),
       y: segment.start.y + factor * (segment.end.y - segment.start.y),
       z: factor < 0.5 ? segment.start.z : segment.end.z, // Z doesn't interpolate - use the segment's start z value
+      traceThickness: segment.start.traceThickness,
     }
   }
 
@@ -439,7 +446,7 @@ export class SingleSimplifiedPathSolver5 extends SingleSimplifiedPathSolver {
       // Check if the line might intersect with this obstacle's borders
       if (
         distToObstacle <
-        this.OBSTACLE_MARGIN + this.clearanceTraceThickness / 2
+        this.minTraceToPadEdgeClearance + this.clearanceTraceThickness / 2
       ) {
         return false
       }
@@ -562,7 +569,16 @@ export class SingleSimplifiedPathSolver5 extends SingleSimplifiedPathSolver {
     // Check each path for validity
     for (const path of possiblePaths) {
       // Convert the 2D points to 3D points with the correct z value
-      const fullPath = path.map((p) => ({ x: p.x, y: p.y, z: start.z }))
+      const fullPath: Point[] = path.map((point, index): Point => {
+        if (index === 0) return { ...start }
+        if (index === path.length - 1) return { ...end }
+        return {
+          x: point.x,
+          y: point.y,
+          z: start.z,
+          traceThickness: start.traceThickness,
+        }
+      })
 
       // Check if this path is valid
       if (this.isValidPath(fullPath)) {
@@ -587,9 +603,28 @@ export class SingleSimplifiedPathSolver5 extends SingleSimplifiedPathSolver {
       ) {
         continue
       }
-      this.newRoute.push(path[i])
+      this.appendRoutePoint(path[i])
     }
     this.currentStepSize = this.maxStepSize
+  }
+
+  private appendRoutePoint(
+    point: HighDensityIntraNodeRoute["route"][number],
+  ): void {
+    const previousPoint: HighDensityIntraNodeRoute["route"][number] | undefined =
+      this.newRoute.at(-1)
+    // Retained original spans and zero-length terminal transitions carry the
+    // same physical via copper as transitions reached by path sampling.
+    if (
+      previousPoint &&
+      previousPoint.z !== point.z &&
+      previousPoint.x === point.x &&
+      previousPoint.y === point.y &&
+      previousPoint.toNextSegmentType !== "through_obstacle"
+    ) {
+      this.newVias.push({ x: point.x, y: point.y })
+    }
+    this.newRoute.push(point)
   }
 
   private appendOriginalRouteSlice(
@@ -623,7 +658,7 @@ export class SingleSimplifiedPathSolver5 extends SingleSimplifiedPathSolver {
         continue
       }
 
-      this.newRoute.push({ ...originalPoint })
+      this.appendRoutePoint({ ...originalPoint })
     }
   }
 
@@ -658,7 +693,7 @@ export class SingleSimplifiedPathSolver5 extends SingleSimplifiedPathSolver {
         !this.arePointsEqual(this.newRoute[this.newRoute.length - 1], lastPoint)
       ) {
         // TODO find path from tail to end w/ 45 degree paths
-        this.newRoute.push(lastPoint)
+        this.appendRoutePoint(lastPoint)
       }
       this.solved = true
       return
@@ -716,26 +751,37 @@ export class SingleSimplifiedPathSolver5 extends SingleSimplifiedPathSolver {
       this.headDistanceAlongPath,
     )
 
-    // If there's a potential layer change in this segment
-    let layerChangeBtwHeadAndTail = false
-    let layerChangeAtDistance = -1
+    // Copper transitions are exact spans, not rounded sampling positions.
+    let protectedSegmentBetweenHeadAndTail: boolean = false
+    let protectedSegmentAtDistance: number = -1
+    let indexAfterProtectedSegment: number = -1
 
-    for (let i = tailIndex; i < headIndex; i++) {
+    for (
+      let segmentIndex: number = this.nextProtectedSegmentSearchIndex;
+      segmentIndex < this.pathSegments.length;
+      segmentIndex++
+    ) {
+      const segment: PathSegment = this.pathSegments[segmentIndex]!
+      const startWidth: number =
+        segment.start.traceThickness ?? this.inputRoute.traceThickness
+      const endWidth: number =
+        segment.end.traceThickness ?? this.inputRoute.traceThickness
       if (
-        i + 1 < this.inputRoute.route.length &&
-        this.inputRoute.route[i].z !== this.inputRoute.route[i + 1].z
+        (segment.start.z !== segment.end.z ||
+          segment.start.toNextSegmentType !== undefined ||
+          startWidth !== endWidth) &&
+        segment.startDistance >= this.tailDistanceAlongPath &&
+        segment.startDistance < this.headDistanceAlongPath
       ) {
-        layerChangeBtwHeadAndTail = true
-        // Find the segment with the layer change
-        const changeSegmentIndex = i
-        layerChangeAtDistance =
-          this.pathSegments[changeSegmentIndex].startDistance
+        protectedSegmentBetweenHeadAndTail = true
+        protectedSegmentAtDistance = segment.startDistance
+        indexAfterProtectedSegment = segmentIndex + 1
         break
       }
     }
 
     if (
-      layerChangeBtwHeadAndTail &&
+      protectedSegmentBetweenHeadAndTail &&
       this.lastHeadMoveDistance > this.minStepSize
     ) {
       this.stepBackAndReduceStepSize()
@@ -788,7 +834,7 @@ export class SingleSimplifiedPathSolver5 extends SingleSimplifiedPathSolver {
         lastPointInNewRoute.y !== jumperPadPoint.y
       ) {
         // Add the jumper pad point explicitly
-        this.newRoute.push({
+        this.appendRoutePoint({
           x: jumperPadPoint.x,
           y: jumperPadPoint.y,
           z: jumperPadPoint.z,
@@ -805,39 +851,42 @@ export class SingleSimplifiedPathSolver5 extends SingleSimplifiedPathSolver {
       return
     }
 
-    // If there's a layer change, handle it
-    // Inside the _step method, within the layer change handling block:
-    if (layerChangeBtwHeadAndTail && layerChangeAtDistance > 0) {
-      const connectorStartDistance = this.lastValidPath
+    if (
+      protectedSegmentBetweenHeadAndTail &&
+      protectedSegmentAtDistance >= 0
+    ) {
+      const connectorStartDistance: number = this.lastValidPath
         ? this.lastValidPathHeadDistance
         : this.tailDistanceAlongPath
-      // Get the point *after* the layer change from the original route.
-      // This point's XY coordinates define the via location.
-      const indexAfterLayerChange =
-        this.getNearestIndexForDistance(layerChangeAtDistance) + 1
-      const pointAfterChange = this.inputRoute.route[indexAfterLayerChange]
-      const viaLocation = { x: pointAfterChange.x, y: pointAfterChange.y }
+      const pointAfterChange: Point =
+        this.inputRoute.route[indexAfterProtectedSegment]!
+      const pointBeforeChange: Point =
+        this.inputRoute.route[indexAfterProtectedSegment - 1]!
+      const preserveOriginalSegment: boolean =
+        pointBeforeChange.toNextSegmentType !== undefined ||
+        pointBeforeChange.z === pointAfterChange.z
 
-      // 1. Add the last valid path found *before* the layer change.
+      // Commit the simplified wire leading to the protected copper span.
       if (this.lastValidPath) {
         this.addPathToResult(this.lastValidPath)
         this.lastValidPath = null // Clear it after adding
       }
 
-      // 2. Reach the via on the current layer without introducing an
-      // unchecked shortcut. If a direct 45-degree path is illegal, preserve
-      // the original geometry up to the via.
-      const lastPointInNewRoute = this.newRoute[this.newRoute.length - 1]
-      const viaPointOnLeavingLayer = {
-        x: viaLocation.x,
-        y: viaLocation.y,
-        z: lastPointInNewRoute.z,
-      }
+      const lastPointInNewRoute: Point =
+        this.newRoute[this.newRoute.length - 1]!
+      const pointOnLeavingLayer: Point = preserveOriginalSegment
+        ? pointBeforeChange
+        : {
+            ...pointBeforeChange,
+            x: pointAfterChange.x,
+            y: pointAfterChange.y,
+            z: lastPointInNewRoute.z,
+          }
 
-      if (!this.arePointsEqual(lastPointInNewRoute, viaPointOnLeavingLayer)) {
+      if (!this.arePointsEqual(lastPointInNewRoute, pointOnLeavingLayer)) {
         const pathToVia = this.find45DegreePath(
           lastPointInNewRoute,
-          viaPointOnLeavingLayer,
+          pointOnLeavingLayer,
         )
 
         if (pathToVia) {
@@ -845,72 +894,43 @@ export class SingleSimplifiedPathSolver5 extends SingleSimplifiedPathSolver {
         } else {
           this.appendOriginalRouteSlice(
             connectorStartDistance,
-            indexAfterLayerChange - 1,
+            indexAfterProtectedSegment - 1,
           )
         }
       }
+      if (preserveOriginalSegment) {
+        const lastPointIndex: number = this.newRoute.length - 1
+        if (
+          !this.arePointsEqual(this.newRoute[lastPointIndex]!, pointBeforeChange)
+        ) {
+          throw new Error(
+            "Path simplification did not reach its protected copper span",
+          )
+        }
+        this.newRoute[lastPointIndex] = { ...pointBeforeChange }
+      }
 
-      // 3. Add the via itself.
-      this.newVias.push(viaLocation)
-
-      // 4. Add the point *after* the layer change, starting the segment on the *new* layer.
-      // Ensure this point also uses the precise via location and the *new* Z coordinate.
-      this.newRoute.push({
-        x: viaLocation.x,
-        y: viaLocation.y,
-        z: pointAfterChange.z, // Use the Z of the layer we are entering
-      })
-
-      // 5. Reset state for the next segment.
+      // Preserve original width and plated-span anchors, including via copper.
+      this.appendRoutePoint({ ...pointAfterChange })
+      this.nextProtectedSegmentSearchIndex = indexAfterProtectedSegment
       this.currentStepSize = this.maxStepSize
 
-      // Update tail to the start of the segment *after* the layer change point
-      const segmentIndexAfterChange = this.pathSegments.findIndex(
-        (seg) => seg.start === pointAfterChange,
-      )
-
-      if (segmentIndexAfterChange !== -1) {
-        this.tailDistanceAlongPath =
-          this.pathSegments[segmentIndexAfterChange].startDistance
-        this.headDistanceAlongPath = this.tailDistanceAlongPath // Reset head to tail
-        this.lastValidPath = null // Ensure lastValidPath is clear
-        this.lastValidPathHeadDistance = this.tailDistanceAlongPath
-      } else if (indexAfterLayerChange < this.inputRoute.route.length) {
-        // Check if it's the last point - if so, we are done as there are no more segments
-        if (indexAfterLayerChange === this.inputRoute.route.length - 1) {
-          this.solved = true
-          return
-        }
-
-        // Fallback if the exact segment wasn't found but index is valid
-        // This might happen due to floating point comparisons if getPointAtDistance was used previously
-        console.warn(
-          "Fallback used for tailDistanceAlongPath after layer change",
-        )
-        const segment = this.pathSegments.find(
-          (seg) => seg.start === this.inputRoute.route[indexAfterLayerChange],
-        )
-        if (segment) {
-          this.tailDistanceAlongPath = segment.startDistance
-          this.headDistanceAlongPath = this.tailDistanceAlongPath
-          this.lastValidPath = null
-          this.lastValidPathHeadDistance = this.tailDistanceAlongPath
-        } else {
-          console.error(
-            `[${this.inputRoute.connectionName}] Could not find segment start after layer change. Path might be incomplete.
-            Index sought: ${indexAfterLayerChange}, Point: (${this.inputRoute.route[indexAfterLayerChange].x.toFixed(3)}, ${this.inputRoute.route[indexAfterLayerChange].y.toFixed(3)}, z=${this.inputRoute.route[indexAfterLayerChange].z})
-            Route Length: ${this.inputRoute.route.length}, Path Segments: ${this.pathSegments.length}`,
-          )
-          this.solved = true // Prevent infinite loop
-        }
-      } else {
-        // Layer change occurred at the very last point/segment.
-        console.warn("Layer change occurred at the end of the path.")
-        // The last point on the new layer is already added. We are done.
+      if (indexAfterProtectedSegment === this.inputRoute.route.length - 1) {
         this.solved = true
+        return
       }
-
-      return // End the step after handling the layer change
+      const nextSegment: PathSegment | undefined =
+        this.pathSegments[indexAfterProtectedSegment]
+      if (!nextSegment || nextSegment.start !== pointAfterChange) {
+        throw new Error(
+          "Path simplification lost the segment after a copper anchor",
+        )
+      }
+      this.tailDistanceAlongPath = nextSegment.startDistance
+      this.headDistanceAlongPath = this.tailDistanceAlongPath
+      this.lastValidPath = null
+      this.lastValidPathHeadDistance = this.tailDistanceAlongPath
+      return
     }
 
     // Try to find a valid 45-degree path from tail to head
@@ -940,7 +960,7 @@ export class SingleSimplifiedPathSolver5 extends SingleSimplifiedPathSolver {
         !this.arePointsEqual(oldTailPoint, newTailPoint) &&
         !this.arePointsEqual(newTailPoint, lastRoutePoint)
       ) {
-        this.newRoute.push(newTailPoint)
+        this.appendRoutePoint(newTailPoint)
       }
 
       return
