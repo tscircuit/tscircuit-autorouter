@@ -21,7 +21,8 @@ test("a locally improved but rejected region consumes the parent work budget", (
         ...convertRepairRoutesToTraces(routes, fixture.srj.layerCount),
       ]).errors.length
       observedCounts.push(count)
-      if (count > 0) return fixture.referenceDrcEvaluator({ routes, traces: [] })
+      if (count > 0)
+        return fixture.referenceDrcEvaluator({ routes, traces: [] })
       return [
         { type: "reference_constraint", center: { x: 0, y: 0 } },
         { type: "another_reference_constraint", center: { x: 0, y: 0 } },

@@ -110,6 +110,10 @@ test("advanced repair follows joint repair, uses its current preloaded copper, a
   expect(params.srj.traces).toBe(currentPreloads)
   expect(params.allowLayerChanges).toBe(true)
   expect(params.allowExistingViaRelocation).toBe(true)
+  expect(params.maxInitialCandidateAttempts).toBe(1024)
+  expect(params.maxCandidateAttemptsSinceAcceptance).toBe(10_000)
+  expect(params.maxPathSearchNodesPerRegion).toBe(500_000)
+  expect(params.maxPathSearchNodesSinceAcceptance).toBe(1_000_000)
   const currentReference = params.referenceDrcEvaluator({
     routes: fixture.hdRoutes,
     traces: [],

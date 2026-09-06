@@ -272,7 +272,8 @@ export class Pipeline9Repair04Solver extends BaseSolver {
       (candidateAttemptLimit !== undefined &&
         this.attemptsSinceAcceptance >= candidateAttemptLimit) ||
       (this.input.maxPathSearchNodesSinceAcceptance !== undefined &&
-        this.nodesSinceAcceptance >= this.input.maxPathSearchNodesSinceAcceptance)
+        this.nodesSinceAcceptance >=
+          this.input.maxPathSearchNodesSinceAcceptance)
     ) {
       this.finishRepair("unsuccessful-work-budget")
       return
@@ -390,7 +391,7 @@ export class Pipeline9Repair04Solver extends BaseSolver {
                     this.input.maxPathSearchNodesSinceAcceptance === undefined
                       ? Number.MAX_SAFE_INTEGER
                       : this.input.maxPathSearchNodesSinceAcceptance -
-                        this.nodesSinceAcceptance,
+                          this.nodesSinceAcceptance,
                   ),
                 }
               : {}),

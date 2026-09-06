@@ -10,9 +10,21 @@ test("repair work limits validate input and do not hide checker failures", (): v
     "maxPathSearchNodesSinceAcceptance",
     "maxPathSearchNodesPerRegion",
   ]) {
-    for (const limit of [0, -1, 1.5, NaN, Infinity, Number.MAX_SAFE_INTEGER + 1]) {
+    for (const limit of [
+      0,
+      -1,
+      1.5,
+      NaN,
+      Infinity,
+      Number.MAX_SAFE_INTEGER + 1,
+    ]) {
       expect(
-        () => new Pipeline9Repair04Solver({ ...fixture, enabled: true, [name]: limit }),
+        () =>
+          new Pipeline9Repair04Solver({
+            ...fixture,
+            enabled: true,
+            [name]: limit,
+          }),
       ).toThrow(`${name} must be a positive safe integer`)
     }
   }

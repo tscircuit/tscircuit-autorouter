@@ -834,6 +834,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     definePipelineStep("repair04Solver", Pipeline9Repair04Solver, (cms) => {
       const srj = cms.getSrjWithMaterializedPreloadedTraces()
       const updates = cms.getPreloadedTraceUpdatesAfterHighDensity()
+      const candidateBudget = cms.opts.repair04TraceOnlyCandidateBudget ?? 512
       return [
         {
           srj,
@@ -843,8 +844,12 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           allowLayerChanges: false,
           allowExistingViaRelocation: false,
           maxRegions: 3,
-          maxCandidatesPerRegion:
-            cms.opts.repair04TraceOnlyCandidateBudget ?? 512,
+          maxCandidatesPerRegion: candidateBudget,
+          // Bound unsuccessful prepass work while permitting a second context.
+          maxInitialCandidateAttempts: candidateBudget * 2,
+          maxCandidateAttemptsSinceAcceptance: candidateBudget * 2,
+          maxPathSearchNodesPerRegion: 100_000,
+          maxPathSearchNodesSinceAcceptance: 200_000,
           referenceDrcEvaluator: createPipeline9RelaxedDrcEvaluator({
             includeViaPadChecks: true,
             useFinalOutputConversion: true,
@@ -927,6 +932,12 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             traceOnlyFirst: false,
             allowExistingViaRelocation:
               cms.opts.repair04AllowExistingViaRelocation !== false,
+            // Retained full-board improvements earn further search effort;
+            // child-local changes rejected by the parent do not replenish it.
+            maxInitialCandidateAttempts: 1024,
+            maxCandidateAttemptsSinceAcceptance: 10_000,
+            maxPathSearchNodesPerRegion: 500_000,
+            maxPathSearchNodesSinceAcceptance: 1_000_000,
             referenceDrcEvaluator: createPipeline9RelaxedDrcEvaluator({
               includeViaPadChecks: true,
               useFinalOutputConversion: true,
