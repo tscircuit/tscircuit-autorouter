@@ -3,13 +3,12 @@ import { ConnectivityMap } from "connectivity-map"
 import { GraphicsObject } from "graphics-debug"
 import { SimpleRouteConnection } from "lib/types"
 import { HighDensityIntraNodeRoute } from "lib/types/high-density-types"
-import { getConnectionPointLayer } from "lib/types/srj-types"
 import { getJumpersGraphics } from "lib/utils/getJumperGraphics"
-import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
 import { BaseSolver } from "../BaseSolver"
 import { safeTransparentize } from "../colors"
 import { RouteStitchClearanceValidator } from "./route-stitch-clearance-validator"
 import { SingleHighDensityRouteStitchSolver3 } from "./SingleHighDensityRouteStitchSolver3"
+import { getStitchTerminal } from "./getStitchTerminal"
 import {
   EndpointClusterIndex,
   hasStitchableGapBetweenUnsolvedRoutes,
@@ -244,20 +243,14 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
       let end: Point3
 
       if (candidateEndpoints.length >= 2) {
-        const globalStart = {
-          ...connection.pointsToConnect[0],
-          z: mapLayerNameToZ(
-            getConnectionPointLayer(connection.pointsToConnect[0]),
-            params.layerCount,
-          ),
-        }
-        const globalEnd = {
-          ...connection.pointsToConnect[1],
-          z: mapLayerNameToZ(
-            getConnectionPointLayer(connection.pointsToConnect[1]),
-            params.layerCount,
-          ),
-        }
+        const globalStart = getStitchTerminal(
+          connection.pointsToConnect[0],
+          params.layerCount,
+        )
+        const globalEnd = getStitchTerminal(
+          connection.pointsToConnect[1],
+          params.layerCount,
+        )
         ;({ start, end } = selectIslandEndpoints({
           possibleEndpoints: candidateEndpoints,
           globalStart,
@@ -280,20 +273,14 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
           terminals: [globalStart, globalEnd],
         })
       } else {
-        start = {
-          ...connection.pointsToConnect[0],
-          z: mapLayerNameToZ(
-            getConnectionPointLayer(connection.pointsToConnect[0]),
-            params.layerCount,
-          ),
-        }
-        end = {
-          ...connection.pointsToConnect[1],
-          z: mapLayerNameToZ(
-            getConnectionPointLayer(connection.pointsToConnect[1]),
-            params.layerCount,
-          ),
-        }
+        start = getStitchTerminal(
+          connection.pointsToConnect[0],
+          params.layerCount,
+        )
+        end = getStitchTerminal(
+          connection.pointsToConnect[1],
+          params.layerCount,
+        )
       }
 
       const selectedHdRoutes = selectRoutesAlongEndpointPath({
@@ -343,20 +330,14 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
 
       if (!connection) return unsolvedRoutes
 
-      const start = {
-        ...connection.pointsToConnect[0],
-        z: mapLayerNameToZ(
-          getConnectionPointLayer(connection.pointsToConnect[0]),
-          params.layerCount,
-        ),
-      }
-      const end = {
-        ...connection.pointsToConnect[1],
-        z: mapLayerNameToZ(
-          getConnectionPointLayer(connection.pointsToConnect[1]),
-          params.layerCount,
-        ),
-      }
+      const start = getStitchTerminal(
+        connection.pointsToConnect[0],
+        params.layerCount,
+      )
+      const end = getStitchTerminal(
+        connection.pointsToConnect[1],
+        params.layerCount,
+      )
 
       const hdRoutes = unsolvedRoutes.flatMap(
         (unsolvedRoute) => unsolvedRoute.hdRoutes,
