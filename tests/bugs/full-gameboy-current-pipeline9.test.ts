@@ -65,9 +65,43 @@ describe.skipIf(process.env.RUN_FULL_GBA_REPRO !== "1")(
         routedTraces,
       })
       relaxedDrcErrors = relaxedDrcResult.errors
+      const errorCenters = relaxedDrcResult.errorsWithCenters.flatMap(
+        (error) => (error.center ? [error.center] : []),
+      )
+      const nearbyRoutedTraces = routedTraces.filter((trace) =>
+        trace.route.some((point) =>
+          errorCenters.some(
+            (center) => Math.hypot(point.x - center.x, point.y - center.y) < 2,
+          ),
+        ),
+      )
+      const implicatedVias = relaxedDrcResult.circuitJson.filter(
+        (element) =>
+          element.type === "pcb_via" &&
+          relaxedDrcResult.errors.some(
+            (error) =>
+              "pcb_via_id" in error &&
+              error.pcb_via_id === element.pcb_via_id,
+          ),
+      )
       console.log(
         "FULL_GBA_RELAXED_DRC_ERRORS",
         JSON.stringify(relaxedDrcResult.errorsWithCenters, null, 2),
+      )
+      console.log(
+        "FULL_GBA_DRC_REPAIR_STATS",
+        JSON.stringify(
+          {
+            global: solver.globalDrcForceImproveSolver?.stats,
+            joint: solver.pipeline9JointDrcRepairSolver?.stats,
+          },
+          null,
+          2,
+        ),
+      )
+      console.log(
+        "FULL_GBA_DRC_NEARBY_GEOMETRY",
+        JSON.stringify({ implicatedVias, nearbyRoutedTraces }, null, 2),
       )
     })
 
