@@ -24,7 +24,7 @@ const cloneValue = <T>(value: T): T =>
 
 setupGlobalCaches()
 
-const INTRA_NODE_CACHE_SCHEMA_VERSION = 4
+const INTRA_NODE_CACHE_SCHEMA_VERSION = 5
 
 export class CachedIntraNodeRouteSolver
   extends IntraNodeRouteSolver
@@ -101,6 +101,8 @@ export class CachedIntraNodeRouteSolver
         rootConnectionName,
         points: points.map((point) => ({
           connectionName,
+          exactX: point.x,
+          exactY: point.y,
           x: roundCoord(point.x - center.x),
           y: roundCoord(point.y - center.y),
           z: point.z ?? 0,
@@ -125,6 +127,8 @@ export class CachedIntraNodeRouteSolver
         portPointId: portPoint.portPointId,
         prevPortPointId: portPoint.prevPortPointId,
         nextPortPointId: portPoint.nextPortPointId,
+        exactX: portPoint.x,
+        exactY: portPoint.y,
         x: roundCoord(portPoint.x - center.x),
         y: roundCoord(portPoint.y - center.y),
         z: portPoint.z ?? 0,
@@ -149,6 +153,15 @@ export class CachedIntraNodeRouteSolver
 
     const keyData = {
       cacheSchemaVersion: INTRA_NODE_CACHE_SCHEMA_VERSION,
+      exactPhysicalInput: {
+        center: this.nodeWithPortPoints.center,
+        width: this.nodeWithPortPoints.width,
+        height: this.nodeWithPortPoints.height,
+        minDistBetweenEnteringPoints: this.minDistBetweenEnteringPoints,
+        traceWidth: this.traceWidth,
+        viaDiameter: this.viaDiameter,
+        obstacleMargin: this.obstacleMargin,
+      },
       node: {
         width: roundCoord(this.nodeWithPortPoints.width),
         height: roundCoord(this.nodeWithPortPoints.height),
@@ -186,7 +199,12 @@ export class CachedIntraNodeRouteSolver
 
   applyCachedSolution(cachedSolution: CachedSolvedIntraNodeRouteSolver): void {
     if (cachedSolution.success) {
-      this.solvedRoutes = cloneValue(cachedSolution.solvedRoutes)
+      this.solvedRoutes = cloneValue(cachedSolution.solvedRoutes).map(
+        (route) => ({
+          ...route,
+          regionId: this.nodeWithPortPoints.capacityMeshNodeId,
+        }),
+      )
       this.solved = true
       this.failed = false
     } else {
