@@ -47,6 +47,7 @@ import { preparePipeline9DrcRoutedTracesWithMetadata } from "./preparePipeline9D
 
 const EXACT_REPAIR_MAX_ITERATIONS = 32
 const EXACT_REPAIR_BROAD_MAX_ITERATIONS = 12
+const REFERENCE_REPAIR_MIN_ITERATIONS = 12
 // Reference validation and terminal relocation are precision passes for small
 // residual sets. Keep that exhaustive search for compact residues while
 // bounding terminal relocation's repeated whole-board indexed DRC scans.
@@ -1426,7 +1427,10 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
           effort: this.params.effort,
           maxIterations: Math.min(
             EXACT_REPAIR_MAX_ITERATIONS,
-            Math.max(8, exactReferenceDrcErrors.length * 4),
+            Math.max(
+              REFERENCE_REPAIR_MIN_ITERATIONS,
+              exactReferenceDrcErrors.length * 4,
+            ),
           ),
           viaHoleDiameter: this.params.defaultViaHoleDiameter,
           allowViaInPad: this.params.originalSrj.allowViaInPad ?? false,
