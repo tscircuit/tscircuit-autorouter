@@ -1429,7 +1429,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
           effort: this.params.effort,
           maxIterations: Math.min(
             EXACT_REPAIR_MAX_ITERATIONS,
-            Math.max(4, exactReferenceDrcErrors.length * 2),
+            Math.max(8, exactReferenceDrcErrors.length * 4),
           ),
           viaHoleDiameter: this.params.defaultViaHoleDiameter,
           allowViaInPad: this.params.originalSrj.allowViaInPad ?? false,
