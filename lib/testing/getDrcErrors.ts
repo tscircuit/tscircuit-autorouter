@@ -61,10 +61,7 @@ export type PreparedGetDrcErrorsStats = {
 }
 
 export type PreparedGetDrcErrors = {
-  (
-    circuitJson: CircuitJson,
-    options?: GetDrcErrorsOptions,
-  ): GetDrcErrorsResult
+  (circuitJson: CircuitJson, options?: GetDrcErrorsOptions): GetDrcErrorsResult
   getStats: () => Readonly<PreparedGetDrcErrorsStats>
 }
 

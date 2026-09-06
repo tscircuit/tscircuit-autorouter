@@ -54,7 +54,10 @@ const pointsMatch = (
   )
 }
 
-const pointsShareRepairCell = (left: RoutePoint, right: RoutePoint): boolean => {
+const pointsShareRepairCell = (
+  left: RoutePoint,
+  right: RoutePoint,
+): boolean => {
   return (
     left.z === right.z &&
     arePipeline9HdCoordinatesInSameCell(left.x, right.x) &&

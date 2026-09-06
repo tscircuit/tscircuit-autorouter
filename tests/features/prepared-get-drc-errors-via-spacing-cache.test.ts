@@ -38,11 +38,13 @@ test("prepared DRC reuses only identical via-spacing dependencies and preserves 
       type: "source_trace",
       source_trace_id: "net-a",
       connected_source_port_ids: ["source-port-a"],
+      connected_source_net_ids: [],
     },
     {
       type: "source_trace",
       source_trace_id: "net-b",
       connected_source_port_ids: ["source-port-b"],
+      connected_source_net_ids: [],
     },
     {
       type: "pcb_port",
@@ -137,10 +139,11 @@ test("prepared DRC reuses only identical via-spacing dependencies and preserves 
   mutatedError.pcb_center.x = 99
   compareWithFresh(wireOnly, true)
 
-  const movedVia = board.map((element): AnyCircuitElement =>
-    element.type === "pcb_via" && element.pcb_via_id === "via_1"
-      ? { ...element, x: 0.5 }
-      : element,
+  const movedVia = board.map(
+    (element): AnyCircuitElement =>
+      element.type === "pcb_via" && element.pcb_via_id === "via_1"
+        ? { ...element, x: 0.5 }
+        : element,
   )
   expect(compareWithFresh(movedVia, false).errors).toHaveLength(0)
   const deletedVia = board.filter(
@@ -156,28 +159,32 @@ test("prepared DRC reuses only identical via-spacing dependencies and preserves 
   expect(compareWithFresh(reorderedVias, false).errors[0]).toMatchObject({
     pcb_via_ids: ["via_1", "via_0"],
   })
-  const changedHole = board.map((element): AnyCircuitElement =>
-    element.type === "pcb_via" && element.pcb_via_id === "via_1"
-      ? { ...element, hole_diameter: 0.3 }
-      : element,
+  const changedHole = board.map(
+    (element): AnyCircuitElement =>
+      element.type === "pcb_via" && element.pcb_via_id === "via_1"
+        ? { ...element, hole_diameter: 0.3 }
+        : element,
   )
   compareWithFresh(changedHole, false)
-  const nonFiniteHole = board.map((element): AnyCircuitElement =>
-    element.type === "pcb_via" && element.pcb_via_id === "via_1"
-      ? { ...element, hole_diameter: Number.NaN }
-      : element,
+  const nonFiniteHole = board.map(
+    (element): AnyCircuitElement =>
+      element.type === "pcb_via" && element.pcb_via_id === "via_1"
+        ? { ...element, hole_diameter: Number.NaN }
+        : element,
   )
   compareWithFresh(nonFiniteHole, false)
-  const infiniteHole = nonFiniteHole.map((element): AnyCircuitElement =>
-    element.type === "pcb_via" && element.pcb_via_id === "via_1"
-      ? { ...element, hole_diameter: Number.POSITIVE_INFINITY }
-      : element,
+  const infiniteHole = nonFiniteHole.map(
+    (element): AnyCircuitElement =>
+      element.type === "pcb_via" && element.pcb_via_id === "via_1"
+        ? { ...element, hole_diameter: Number.POSITIVE_INFINITY }
+        : element,
   )
   compareWithFresh(infiniteHole, false)
-  const mergedNets = board.map((element): AnyCircuitElement =>
-    element.type === "source_trace" && element.source_trace_id === "net-b"
-      ? { ...element, connected_source_port_ids: ["source-port-a"] }
-      : element,
+  const mergedNets = board.map(
+    (element): AnyCircuitElement =>
+      element.type === "source_trace" && element.source_trace_id === "net-b"
+        ? { ...element, connected_source_port_ids: ["source-port-a"] }
+        : element,
   )
   expect(compareWithFresh(mergedNets, false).errors[0]).toMatchObject({
     pcb_error_id: "same_net_vias_close_via_0_via_1",
@@ -205,14 +212,32 @@ test("prepared DRC reuses only identical via-spacing dependencies and preserves 
     ...options,
     viaClearance: Number.POSITIVE_INFINITY,
   })
-  const relabeledNets = [board[1]!, board[0]!, ...board.slice(2)]
-  expect(
-    getFullConnectivityMapFromCircuitJson(relabeledNets).getNetConnectedToId(
-      "via_0",
-    ),
-  ).not.toBe(
-    getFullConnectivityMapFromCircuitJson(board).getNetConnectedToId("via_0"),
-  )
+  // PCB trace encounter order changes generated net labels without changing
+  // connectivity membership or the physical via order.
+  const relabeledNets = [...board.slice(0, 6), board[7]!, board[6]!]
+  const getFirstViaNetLabel = (
+    circuitJson: AnyCircuitElement[],
+  ): string | undefined => {
+    const connMap = getFullConnectivityMapFromCircuitJson(circuitJson)
+    const viaConnections = circuitJson.flatMap((element): string[][] => {
+      if (
+        element.type !== "pcb_via" ||
+        typeof element.pcb_trace_id !== "string"
+      ) {
+        return []
+      }
+      return [[element.pcb_via_id, element.pcb_trace_id]]
+    })
+    // Match getDrcErrors' explicit via-owner augmentation; the source-only
+    // connectivity conversion does not itself assign these physical vias.
+    connMap.addConnections(viaConnections)
+    return connMap.getNetConnectedToId("via_0")
+  }
+  const originalNetLabel = getFirstViaNetLabel(board)
+  const reorderedNetLabel = getFirstViaNetLabel(relabeledNets)
+  expect(originalNetLabel).toBeDefined()
+  expect(reorderedNetLabel).toBeDefined()
+  expect(reorderedNetLabel).not.toBe(originalNetLabel)
   compareWithFresh(relabeledNets, false)
 
   // Arbitrary callers may put a trace before an identically named via. The

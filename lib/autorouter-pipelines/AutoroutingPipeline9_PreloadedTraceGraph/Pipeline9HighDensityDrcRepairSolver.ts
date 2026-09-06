@@ -322,6 +322,7 @@ export class Pipeline9HighDensityDrcRepairSolver extends BaseSolver {
   private readonly attemptedNodeIdsAtCurrentRevision = new Set<string>()
   private readonly acceptedNodeIds = new Set<string>()
   private readonly nodeRepairBudgets = new Map<string, NodeRepairBudget>()
+  private readonly nodeForceErrorCursorById = new Map<string, number>()
   private nodePortPoints: NodeWithPortPoints[]
   outputHdRoutes: HighDensityRoute[]
   currentErrors: Pipeline9DrcError[]
@@ -825,6 +826,12 @@ export class Pipeline9HighDensityDrcRepairSolver extends BaseSolver {
         traceRouteIndexById.has(traceId),
       ),
     )
+    const startErrorIndex =
+      (this.nodeForceErrorCursorById.get(node.capacityMeshNodeId) ?? 0) %
+      nodeErrors.length
+    const orderedNodeErrors = nodeErrors.map(
+      (_, offset) => nodeErrors[(startErrorIndex + offset) % nodeErrors.length]!,
+    )
     let budget = this.nodeRepairBudgets.get(node.capacityMeshNodeId)
     if (budget === undefined) {
       // Reuse Repair03's effort/initial-DRC search budget for this HD region.
@@ -843,7 +850,7 @@ export class Pipeline9HighDensityDrcRepairSolver extends BaseSolver {
     this.activeForceCandidates = getPipeline9HighDensityForceCandidates({
       node,
       hdRoutes: localRoutes,
-      errors: nodeErrors,
+      errors: orderedNodeErrors,
       traceRouteIndexById,
       // Fixed-route rectangles guide rerouting, but are not movable PCB pads.
       // Every force candidate still undergoes exact fixed-copper validation.
@@ -858,6 +865,15 @@ export class Pipeline9HighDensityDrcRepairSolver extends BaseSolver {
         this.outputHdRoutes,
       ),
       effort: this.params.effort,
+      onErrorAttempted: (errorIndex): void => {
+        // Repair03 advances its cursor before applying a target's force. Keep
+        // that fairness across accepted node revisions: an early error's tiny
+        // severity improvements must not starve later repairable violations.
+        this.nodeForceErrorCursorById.set(
+          node.capacityMeshNodeId,
+          (startErrorIndex + errorIndex + 1) % nodeErrors.length,
+        )
+      },
       onCandidateRejected: (reason): void => {
         const statName = {
           "no-motion": "forceNoMotionCount",

@@ -54,6 +54,8 @@ export type Pipeline9HighDensityForceCandidateParams = {
   connMap: ConnectivityMap
   forceContext: Pipeline9HighDensityForceContext
   effort: number
+  /** Reports the original error index before private pad-center expansion. */
+  onErrorAttempted?: (errorIndex: number) => void
   onCandidateRejected?: (
     reason: Pipeline9HighDensityForceRejectionReason,
   ) => void
@@ -201,21 +203,24 @@ const hasPreservedLocalRouteAnchors = (local: LocalForceRoute): boolean => {
   return true
 }
 
-const getPadTargetedForceErrors = (
+function* getPadTargetedForceErrors(
   errors: Pipeline9DrcError[],
-): Pipeline9DrcError[] => {
-  return errors.flatMap((error): Pipeline9DrcError[] => {
+  onErrorAttempted?: (errorIndex: number) => void,
+): Generator<Pipeline9DrcError, void, unknown> {
+  for (const [errorIndex, error] of errors.entries()) {
+    onErrorAttempted?.(errorIndex)
     const centers = error.__pad_centers
     if (
       error.type !== "pcb_pad_trace_clearance_error" ||
       centers === undefined
     ) {
-      return [error]
+      yield error
+      continue
     }
     if (!Array.isArray(centers) || centers.length === 0) {
       throw new Error("Pipeline9 pad clearance forces require pad centers")
     }
-    return centers.map((center): Pipeline9DrcError => {
+    for (const center of centers) {
       if (
         !center ||
         typeof center !== "object" ||
@@ -229,9 +234,9 @@ const getPadTargetedForceErrors = (
       // checkPadTraceClearance reports the whole fragment's endpoint midpoint,
       // which need not be near the offending pad. Target the exact serialized
       // pad for this private force call; official errors and scoring stay intact.
-      return { ...error, center: { x: center.x, y: center.y } }
-    })
-  })
+      yield { ...error, center: { x: center.x, y: center.y } }
+    }
+  }
 }
 
 /**
@@ -253,6 +258,7 @@ export function* getPipeline9HighDensityForceCandidates({
   connMap,
   forceContext,
   effort,
+  onErrorAttempted,
   onCandidateRejected,
 }: Pipeline9HighDensityForceCandidateParams): Generator<
   HighDensityRoute[],
@@ -317,7 +323,7 @@ export function* getPipeline9HighDensityForceCandidates({
   })
   const maxCandidateApplications =
     getMaxTargetedCandidateAttemptsForEffort(effort)
-  for (const error of getPadTargetedForceErrors(errors)) {
+  for (const error of getPadTargetedForceErrors(errors, onErrorAttempted)) {
     const movableTraceId = getPipeline9DrcErrorTraceIds(error).find((traceId) =>
       traceRouteIndexById.has(traceId),
     )
