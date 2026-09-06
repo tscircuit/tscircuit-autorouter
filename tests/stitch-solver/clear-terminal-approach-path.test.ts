@@ -104,9 +104,7 @@ test("terminal path selection skips a blocked nearest approach for a clear exist
     expect(merged.startPcbPortId).toBe(
       startsAtStart ? "start-port" : "end-port",
     )
-    expect(merged.endPcbPortId).toBe(
-      startsAtStart ? "end-port" : "start-port",
-    )
+    expect(merged.endPcbPortId).toBe(startsAtStart ? "end-port" : "start-port")
     expect(merged.route).toEqual(
       startsAtStart ? completePoints : [...completePoints].reverse(),
     )

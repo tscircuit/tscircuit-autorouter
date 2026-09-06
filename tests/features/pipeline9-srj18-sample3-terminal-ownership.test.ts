@@ -60,9 +60,7 @@ test("Pipeline9 preserves SRJ18 sample3's child-terminal ownership and clean com
             (connection): boolean => connection.name === connectionName,
           ),
           inputFragmentOwnership: capture.input?.hdRoutes
-            .filter(
-              (route): boolean => route.connectionName === connectionName,
-            )
+            .filter((route): boolean => route.connectionName === connectionName)
             .map(
               (route): FragmentOwnership => ({
                 connectionName: route.connectionName,

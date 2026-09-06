@@ -47,16 +47,16 @@ export const selectDirectedRouteStitchPath = (params: {
   end: StitchTerminal
   isStitchSegmentClear: IsStitchSegmentClear
 }): OrderedRouteStitchEntry[] | null => {
-  const fragments = [...params.hdRoutes].sort(compareRoutes).flatMap(
-    (route): DirectedFragment[] => {
+  const fragments = [...params.hdRoutes]
+    .sort(compareRoutes)
+    .flatMap((route): DirectedFragment[] => {
       const first = getRouteStitchEndpoint(route, "first")
       const last = getRouteStitchEndpoint(route, "last")
       return [
         { route, matchedOn: "first", start: first, end: last },
         { route, matchedOn: "last", start: last, end: first },
       ]
-    },
-  )
+    })
   const gapCosts = new Map<string, number | null>()
   const routeIndexes = new Map<HighDensityIntraNodeRoute, number>()
   const routeOrientations = new Map<
@@ -268,7 +268,10 @@ export const selectDirectedRouteStitchPath = (params: {
         throw new Error("Directed stitch search lost its predecessor state")
       }
       const fragment = fragments[state.fragmentIndex]!
-      pathInReverse.push({ route: fragment.route, matchedOn: fragment.matchedOn })
+      pathInReverse.push({
+        route: fragment.route,
+        matchedOn: fragment.matchedOn,
+      })
       cursorKey = state.previousKey
     }
     const path = pathInReverse.reverse()

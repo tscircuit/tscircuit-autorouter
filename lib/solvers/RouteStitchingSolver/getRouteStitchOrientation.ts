@@ -45,7 +45,8 @@ export const getRouteStitchOrientation = (params: {
       firstRoute = route
       if (
         Math.min(distEndToFirst, distEndToLast) <
-          Math.min(distStartToFirst, distStartToLast) - DISTANCE_TIE_TOLERANCE ||
+          Math.min(distStartToFirst, distStartToLast) -
+            DISTANCE_TIE_TOLERANCE ||
         (Math.abs(
           Math.min(distEndToFirst, distEndToLast) -
             Math.min(distStartToFirst, distStartToLast),
