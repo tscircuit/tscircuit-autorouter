@@ -480,6 +480,7 @@ export class SameNetViaMergerSolver extends BaseSolver {
         const cellY = Math.floor(keep.y / cellSize)
         const neighborCellRadius = Math.ceil(NEAR_VIA_MERGE_DISTANCE_MULTIPLIER)
         const remove: Via[] = []
+        const removeKeys = new Set<string>()
 
         for (let dx = -neighborCellRadius; dx <= neighborCellRadius; dx++) {
           for (let dy = -neighborCellRadius; dy <= neighborCellRadius; dy++) {
@@ -500,27 +501,28 @@ export class SameNetViaMergerSolver extends BaseSolver {
               const nearMergeDistance =
                 directOverlapDistance * NEAR_VIA_MERGE_DISTANCE_MULTIPLIER
 
-              if (squaredDistance === 0) {
-                if (!keep.mutable) remove.push(candidate)
-                continue
-              }
+              const canRemove =
+                squaredDistance === 0
+                  ? !keep.mutable
+                  : squaredDistance <= nearMergeDistance * nearMergeDistance &&
+                    canMoveViaTo(candidate, keep, {
+                      connMap: this.connMap,
+                      mergedViaHdRoutes: this.mergedViaHdRoutes,
+                      hdRouteSHI: this.hdRouteSHI,
+                      obstacleSHI: this.obstacleSHI,
+                      netByConnectionName: this.netByConnectionName,
+                      minTraceToPadEdgeClearance:
+                        this.input.minTraceToPadEdgeClearance,
+                      minBoardEdgeClearance:
+                        this.input.minBoardEdgeClearance,
+                      outline: this.outline,
+                    })
+              if (!canRemove) continue
 
-              if (
-                squaredDistance <= nearMergeDistance * nearMergeDistance &&
-                canMoveViaTo(candidate, keep, {
-                  connMap: this.connMap,
-                  mergedViaHdRoutes: this.mergedViaHdRoutes,
-                  hdRouteSHI: this.hdRouteSHI,
-                  obstacleSHI: this.obstacleSHI,
-                  netByConnectionName: this.netByConnectionName,
-                  minTraceToPadEdgeClearance:
-                    this.input.minTraceToPadEdgeClearance,
-                  minBoardEdgeClearance: this.input.minBoardEdgeClearance,
-                  outline: this.outline,
-                })
-              ) {
-                remove.push(candidate)
-              }
+              const candidateKey = this.getViaKey(candidate)
+              if (removeKeys.has(candidateKey)) continue
+              removeKeys.add(candidateKey)
+              remove.push(candidate)
             }
           }
         }
