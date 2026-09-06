@@ -1,5 +1,8 @@
 import { expect, test } from "bun:test"
-import { isPipeline9DrcCandidateBetter } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/pipeline9JointDrcRepairUtils"
+import {
+  isPipeline9DrcCandidateBetter,
+  isPipeline9DrcCandidateNoWorse,
+} from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/pipeline9JointDrcRepairUtils"
 
 test("Pipeline9 repair candidates cannot trade DRCs for new illegal copper contacts", () => {
   const currentErrors = [
@@ -42,4 +45,13 @@ test("Pipeline9 repair candidates cannot trade DRCs for new illegal copper conta
       currentErrors,
     ),
   ).toBeTrue()
+  expect(
+    isPipeline9DrcCandidateNoWorse(currentErrors, currentErrors),
+  ).toBeTrue()
+  expect(
+    isPipeline9DrcCandidateNoWorse(
+      fewerErrorsWithNewContact,
+      currentErrors,
+    ),
+  ).toBeFalse()
 })

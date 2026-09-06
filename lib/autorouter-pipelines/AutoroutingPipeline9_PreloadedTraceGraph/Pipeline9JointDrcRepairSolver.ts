@@ -39,6 +39,7 @@ import { normalizePipeline9DrcErrorsForRepair } from "./normalizePipeline9DrcErr
 import {
   getPipeline9DrcErrors,
   getPipeline9RouteIndexByTraceId,
+  isPipeline9DrcCandidateNoWorse,
   isPipeline9IllegalCopperContactDrcError,
   type Pipeline9CollapsedTraceParticipant,
   type Pipeline9PreloadRepairTraceIds,
@@ -1393,15 +1394,55 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       return
     }
     if (!this.exactRepairSolver.solved) return
-    const exactOutput = this.exactRepairSolver.getOutput()
+    const exactCandidateOutput = this.exactRepairSolver.getOutput()
     const exactIndexedDrcIssueCountStat =
       this.exactRepairSolver.stats.finalDrcIssueCount
-    const exactIndexedDrcIssueCount =
+    let exactIndexedDrcIssueCount =
       typeof exactIndexedDrcIssueCountStat === "number" &&
       Number.isFinite(exactIndexedDrcIssueCountStat) &&
       exactIndexedDrcIssueCountStat >= 0
         ? exactIndexedDrcIssueCountStat
         : undefined
+    let exactOutput = exactCandidateOutput
+    let exactReferenceInputDrcIssueCount: number | undefined
+    let exactReferenceCandidateDrcIssueCount: number | undefined
+    let exactReferenceCandidateRolledBack = false
+    let exactOutputReferenceDrcErrors:
+      | Array<Record<string, unknown>>
+      | undefined
+    if (
+      exactIndexedDrcIssueCount === undefined ||
+      exactIndexedDrcIssueCount <=
+        MAX_POST_EXACT_PRECISION_PASS_INDEXED_ISSUE_COUNT
+    ) {
+      const exactInputReferenceDrcErrors = getPipeline9DrcErrors(
+        this.cachedReferenceDrcEvaluator!,
+        this.exactRepairSolver.inputHdRoutes,
+      )
+      const exactCandidateReferenceDrcErrors = getPipeline9DrcErrors(
+        this.cachedReferenceDrcEvaluator!,
+        exactCandidateOutput,
+      )
+      exactReferenceInputDrcIssueCount = exactInputReferenceDrcErrors.length
+      exactReferenceCandidateDrcIssueCount =
+        exactCandidateReferenceDrcErrors.length
+      if (
+        isPipeline9DrcCandidateNoWorse(
+          exactCandidateReferenceDrcErrors,
+          exactInputReferenceDrcErrors,
+        )
+      ) {
+        exactOutputReferenceDrcErrors = exactCandidateReferenceDrcErrors
+      } else {
+        exactOutput = this.exactRepairSolver.inputHdRoutes
+        exactOutputReferenceDrcErrors = exactInputReferenceDrcErrors
+        exactReferenceCandidateRolledBack = true
+        exactIndexedDrcIssueCount = getPipeline9DrcErrors(
+          this.drcEvaluator!,
+          exactOutput,
+        ).length
+      }
+    }
     const shouldRunPostExactPrecisionPass =
       exactIndexedDrcIssueCount === undefined ||
       exactIndexedDrcIssueCount <=
@@ -1411,20 +1452,21 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       // The indexed evaluator can retain conservative false positives after the
       // exact portfolio has produced a reference-clean result. Do not let later
       // heuristic repairs degrade an output already accepted by benchmark DRC.
-      const exactReferenceDrcResult = this.cachedReferenceDrcEvaluator!({
-        traces: [],
-        routes: exactOutput,
-        hdRoutes: exactOutput,
-      })
-      const exactReferenceDrcErrors = Array.isArray(exactReferenceDrcResult)
-        ? exactReferenceDrcResult
-        : exactReferenceDrcResult.errors
+      const exactReferenceDrcErrors =
+        exactOutputReferenceDrcErrors ??
+        getPipeline9DrcErrors(this.cachedReferenceDrcEvaluator!, exactOutput)
       postExactReferenceDrcIssueCount = exactReferenceDrcErrors.length
       if (exactReferenceDrcErrors.length === 0) {
         this.combinedOutput = exactOutput
         this.stats = {
           ...this.stats,
           ...this.exactRepairSolver.stats,
+          pipeline9ExactReferenceInputDrcIssueCount:
+            exactReferenceInputDrcIssueCount,
+          pipeline9ExactReferenceCandidateDrcIssueCount:
+            exactReferenceCandidateDrcIssueCount,
+          pipeline9ExactReferenceCandidateRolledBack:
+            exactReferenceCandidateRolledBack,
           postExactIndexedDrcIssueCount: exactIndexedDrcIssueCount,
           postExactPrecisionPassMaxIndexedIssueCount:
             MAX_POST_EXACT_PRECISION_PASS_INDEXED_ISSUE_COUNT,
@@ -1460,7 +1502,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         return
       }
     }
-    const terminalEscapeResult = shouldRunPostExactPrecisionPass
+    const indexedTerminalEscapeResult = shouldRunPostExactPrecisionPass
       ? applyPipeline9TerminalEscapeRelocations({
           srj: this.params.srj,
           originalObstacles: this.params.originalSrj.obstacles,
@@ -1478,6 +1520,37 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
             exactOutput,
           ),
         }
+    let terminalEscapeResult = indexedTerminalEscapeResult
+    let terminalEscapeReferenceCandidateDrcIssueCount: number | undefined
+    let terminalEscapeReferenceCandidateRolledBack = false
+    let terminalEscapeReferenceDrcErrors = exactOutputReferenceDrcErrors
+    if (shouldRunPostExactPrecisionPass) {
+      const candidateReferenceDrcErrors = getPipeline9DrcErrors(
+        this.cachedReferenceDrcEvaluator!,
+        indexedTerminalEscapeResult.routes,
+      )
+      terminalEscapeReferenceCandidateDrcIssueCount =
+        candidateReferenceDrcErrors.length
+      if (
+        isPipeline9DrcCandidateNoWorse(
+          candidateReferenceDrcErrors,
+          exactOutputReferenceDrcErrors!,
+        )
+      ) {
+        terminalEscapeReferenceDrcErrors = candidateReferenceDrcErrors
+      } else {
+        terminalEscapeReferenceCandidateRolledBack = true
+        terminalEscapeResult = {
+          ...indexedTerminalEscapeResult,
+          routes: exactOutput,
+          acceptedCandidateCount: 0,
+          remainingErrors: getPipeline9DrcErrors(
+            this.drcEvaluator!,
+            exactOutput,
+          ),
+        }
+      }
+    }
     const preloadRepairTraceIds = getPipeline9PreloadRepairTraceIds({
       routes: terminalEscapeResult.routes,
       newConnections: this.params.newConnections,
@@ -1494,7 +1567,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
             ...this.syntheticConnectionNames,
           ])
         : new Set<string>()
-    const regionalB01RepairResult = applyPipeline9RegionalB01Repairs({
+    const indexedRegionalB01RepairResult = applyPipeline9RegionalB01Repairs({
       srj: this.params.srj,
       routes: terminalEscapeResult.routes,
       fixedObstacleRoutes: this.fixedPreloadedObstacleRoutes,
@@ -1514,10 +1587,41 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         0.15,
       effort: this.params.effort,
     })
+    let regionalB01RepairResult = indexedRegionalB01RepairResult
+    let regionalB01ReferenceCandidateDrcIssueCount: number | undefined
+    let regionalB01ReferenceCandidateRolledBack = false
+    if (shouldRunPostExactPrecisionPass) {
+      const candidateReferenceDrcErrors = getPipeline9DrcErrors(
+        this.cachedReferenceDrcEvaluator!,
+        indexedRegionalB01RepairResult.routes,
+      )
+      regionalB01ReferenceCandidateDrcIssueCount =
+        candidateReferenceDrcErrors.length
+      if (
+        !isPipeline9DrcCandidateNoWorse(
+          candidateReferenceDrcErrors,
+          terminalEscapeReferenceDrcErrors!,
+        )
+      ) {
+        regionalB01ReferenceCandidateRolledBack = true
+        regionalB01RepairResult = {
+          ...indexedRegionalB01RepairResult,
+          routes: terminalEscapeResult.routes,
+          acceptedCandidateCount: 0,
+          remainingDrcIssueCount: terminalEscapeResult.remainingErrors.length,
+        }
+      }
+    }
     this.combinedOutput = regionalB01RepairResult.routes
     this.stats = {
       ...this.stats,
       ...this.exactRepairSolver.stats,
+      pipeline9ExactReferenceInputDrcIssueCount:
+        exactReferenceInputDrcIssueCount,
+      pipeline9ExactReferenceCandidateDrcIssueCount:
+        exactReferenceCandidateDrcIssueCount,
+      pipeline9ExactReferenceCandidateRolledBack:
+        exactReferenceCandidateRolledBack,
       postExactIndexedDrcIssueCount: exactIndexedDrcIssueCount,
       postExactPrecisionPassMaxIndexedIssueCount:
         MAX_POST_EXACT_PRECISION_PASS_INDEXED_ISSUE_COUNT,
@@ -1562,6 +1666,10 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       terminalEscapeCandidateCount:
         terminalEscapeResult.attemptedCandidateCount,
       terminalEscapeAcceptedCount: terminalEscapeResult.acceptedCandidateCount,
+      terminalEscapeReferenceCandidateDrcIssueCount,
+      terminalEscapeReferenceCandidateRolledBack,
+      regionalB01ReferenceCandidateDrcIssueCount,
+      regionalB01ReferenceCandidateRolledBack,
       referenceDrcValidationCount: this.referenceDrcValidationCount,
       referenceDrcFalseNegativeCount: this.referenceDrcFalseNegativeCount,
       indexedDrcEvaluationCount: this.indexedDrcEvaluationCount,

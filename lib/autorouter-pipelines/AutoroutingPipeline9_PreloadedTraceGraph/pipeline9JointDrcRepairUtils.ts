@@ -111,7 +111,7 @@ export const isPipeline9DrcErrorOwnedByPreloadRepair = ({
   )
 }
 
-const getDrcIssueScore = (errors: Pipeline9DrcError[]) =>
+const getDrcIssueScore = (errors: Pipeline9DrcError[]): number =>
   errors.reduce((score, error) => {
     if (
       typeof error.actual_clearance === "number" &&
@@ -185,10 +185,49 @@ const hasNewIllegalCopperContact = (
     )
 }
 
+const hasNewDrcError = (
+  candidateErrors: Pipeline9DrcError[],
+  currentErrors: Pipeline9DrcError[],
+): boolean => {
+  const currentErrorIdentities = new Set(
+    currentErrors.map(getPipeline9DrcErrorIdentity),
+  )
+  return candidateErrors.some(
+    (error) =>
+      !currentErrorIdentities.has(getPipeline9DrcErrorIdentity(error)),
+  )
+}
+
+export const isPipeline9DrcCandidateNoWorse = (
+  candidateErrors: Pipeline9DrcError[],
+  currentErrors: Pipeline9DrcError[],
+): boolean => {
+  const candidateIllegalContactCount = candidateErrors.filter(
+    isPipeline9IllegalCopperContactDrcError,
+  ).length
+  const currentIllegalContactCount = currentErrors.filter(
+    isPipeline9IllegalCopperContactDrcError,
+  ).length
+  if (candidateIllegalContactCount > currentIllegalContactCount) return false
+  if (
+    candidateIllegalContactCount === currentIllegalContactCount &&
+    hasNewIllegalCopperContact(candidateErrors, currentErrors)
+  ) {
+    return false
+  }
+  if (candidateErrors.length < currentErrors.length) return true
+  if (candidateErrors.length > currentErrors.length) return false
+  if (hasNewDrcError(candidateErrors, currentErrors)) return false
+  return (
+    getDrcIssueScore(candidateErrors) <=
+    getDrcIssueScore(currentErrors) + SCORE_EPSILON
+  )
+}
+
 export const isPipeline9DrcCandidateBetter = (
   candidateErrors: Pipeline9DrcError[],
   currentErrors: Pipeline9DrcError[],
-) => {
+): boolean => {
   const candidateIllegalContactCount = candidateErrors.filter(
     isPipeline9IllegalCopperContactDrcError,
   ).length
