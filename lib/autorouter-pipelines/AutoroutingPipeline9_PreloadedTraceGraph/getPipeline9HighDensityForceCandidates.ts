@@ -667,9 +667,7 @@ export function* getPipeline9HighDensityForceCandidates({
               )
             : undefined
         const family =
-          feedbackArguments === undefined
-            ? ordinaryFamily
-            : "native-feedback"
+          feedbackArguments === undefined ? ordinaryFamily : "native-feedback"
         let state =
           family === "native-feedback"
             ? nativeFeedback!.state
@@ -878,10 +876,7 @@ export function* getPipeline9HighDensityForceCandidates({
             traceRouteIndexById,
           )
           if (feedbackErrors === undefined) {
-            if (
-              feedback !== undefined ||
-              state.family === "native-feedback"
-            ) {
+            if (feedback !== undefined || state.family === "native-feedback") {
               nativeFeedback = undefined
             }
           } else {

@@ -108,11 +108,11 @@ test("Pipeline9 candidate force centers use the current physical via snapshot wi
     ]
     const connMap = getFullConnectivityMapFromCircuitJson(board)
     connMap.addConnections(
-      board.flatMap((element): Array<[string, string]> =>
-        element.type === "pcb_via" &&
-        typeof element.pcb_trace_id === "string"
-          ? [[element.pcb_via_id, element.pcb_trace_id]]
-          : [],
+      board.flatMap(
+        (element): Array<[string, string]> =>
+          element.type === "pcb_via" && typeof element.pcb_trace_id === "string"
+            ? [[element.pcb_via_id, element.pcb_trace_id]]
+            : [],
       ),
     )
     snapshots.set(routes, {
@@ -182,8 +182,9 @@ test("Pipeline9 candidate force centers use the current physical via snapshot wi
     expect(rawViaError.center).toEqual({ x: 0, y: 0 })
     expect(viaError.center).not.toEqual(rawViaError.center)
     const viasById = new Map(
-      board.flatMap((element): Array<[string, PcbVia]> =>
-        element.type === "pcb_via" ? [[element.pcb_via_id, element]] : [],
+      board.flatMap(
+        (element): Array<[string, PcbVia]> =>
+          element.type === "pcb_via" ? [[element.pcb_via_id, element]] : [],
       ),
     )
     if (typeof viaError.pcb_via_id !== "string") {
