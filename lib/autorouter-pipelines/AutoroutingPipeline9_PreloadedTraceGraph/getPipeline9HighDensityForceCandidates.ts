@@ -178,7 +178,11 @@ export function* getPipeline9HighDensityForceCandidates({
   obstacleMargin,
   connMap,
   effort,
-}: Pipeline9HighDensityForceCandidateParams): Generator<HighDensityRoute[], void, unknown> {
+}: Pipeline9HighDensityForceCandidateParams): Generator<
+  HighDensityRoute[],
+  void,
+  unknown
+> {
   const nodeBounds = {
     minX: node.center.x - node.width / 2,
     maxX: node.center.x + node.width / 2,
@@ -255,11 +259,13 @@ export function* getPipeline9HighDensityForceCandidates({
       }
       const candidates = materializeRoutes(
         localRoutes.map((local) => local.mutable),
-      ).map((candidate, index): HighDensityRoute => ({
-        ...hdRoutes[index]!,
-        route: candidate.route,
-        vias: candidate.vias,
-      }))
+      ).map(
+        (candidate, index): HighDensityRoute => ({
+          ...hdRoutes[index]!,
+          route: candidate.route,
+          vias: candidate.vias,
+        }),
+      )
       if (
         candidates.every((candidate) =>
           hasValidLocalRouteGeometry(candidate, nodeBounds, layerCount),

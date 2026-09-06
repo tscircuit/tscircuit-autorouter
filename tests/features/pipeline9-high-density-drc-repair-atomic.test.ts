@@ -109,9 +109,7 @@ test("Pipeline9 retains a local repair while independent node DRCs remain", (): 
 
   expect(Number(solver.stats.acceptedRepairCount)).toBeGreaterThan(0)
   expect(solver.currentErrors.length).toBeGreaterThan(0)
-  expect(solver.currentErrors.length).toBeLessThan(
-    initialDrcIssueCount,
-  )
+  expect(solver.currentErrors.length).toBeLessThan(initialDrcIssueCount)
   expect(solver.outputHdRoutes[1]).toBe(inputRoutes[1])
 
   solver.solve()

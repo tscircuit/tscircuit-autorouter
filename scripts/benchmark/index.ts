@@ -915,9 +915,7 @@ const formatTable = (rows: SolverRunSummary[]) => {
   return [separator, headerLine, separator, ...bodyLines, separator].join("\n")
 }
 
-const formatHighDensityDrcRepairMetrics = (
-  results: WorkerResult[],
-): string => {
+const formatHighDensityDrcRepairMetrics = (results: WorkerResult[]): string => {
   const rows = results.flatMap((result): string[] => {
     const metrics = result.routingMetrics?.highDensityDrcRepair
     if (!metrics) return []
