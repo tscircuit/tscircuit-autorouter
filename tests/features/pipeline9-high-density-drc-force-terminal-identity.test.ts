@@ -153,7 +153,10 @@ test("Pipeline9 local forces use inert HD terminal identities without changing p
       yieldedCandidateCount++
       const candidateErrors = getPipeline9DrcErrors(drcEvaluator, candidate)
       if (
-        !isPipeline9HighDensityDrcCandidateBetter(candidateErrors, currentErrors)
+        !isPipeline9HighDensityDrcCandidateBetter(
+          candidateErrors,
+          currentErrors,
+        )
       ) {
         continue
       }

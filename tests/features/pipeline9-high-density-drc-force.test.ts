@@ -1,7 +1,9 @@
 import { expect, test } from "bun:test"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
+import { getBaseMaxIterations } from "high-density-repair03/lib/solvers/GlobalDrcForceImproveSolver/solverConfig"
 import { createPipeline9HighDensityDrcEvaluator } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/createPipeline9HighDensityDrcEvaluator"
 import { getPipeline9HighDensityForceCandidates } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/getPipeline9HighDensityForceCandidates"
+import { isPipeline9HighDensityDrcCandidateBetter } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/isPipeline9HighDensityDrcCandidateBetter"
 import { getPipeline9FixedRouteObstacles } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/pipeline9FixedRouteCopper"
 import { getPipeline9DrcErrors } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/pipeline9JointDrcRepairUtils"
 import type {
@@ -119,7 +121,8 @@ test("Pipeline9 local DRC forces repair pad clearance with fixed node handoffs a
   expect(
     initialErrors.some(
       (error) =>
-        Array.isArray(error.__pad_ids) && error.__pad_ids.includes("pad-c-start"),
+        Array.isArray(error.__pad_ids) &&
+        error.__pad_ids.includes("pad-c-start"),
     ),
   ).toBe(true)
   const fixedObstacles = getPipeline9FixedRouteObstacles({
@@ -127,31 +130,52 @@ test("Pipeline9 local DRC forces repair pad clearance with fixed node handoffs a
     layerCount: 2,
   })
   const originalFixedObstacles = structuredClone(fixedObstacles)
-  let improvedRoutes: HighDensityRoute[] | undefined
-  for (const candidate of getPipeline9HighDensityForceCandidates({
-    node,
-    hdRoutes: [affectedRoute],
-    errors: initialErrors,
-    traceRouteIndexById: new Map([["A_0", 0]]),
-    obstacles: [...srj.obstacles, ...fixedObstacles],
-    layerCount: 2,
-    viaDiameter: 0.3,
-    viaHoleDiameter: 0.15,
-    traceWidth: 0.1,
-    obstacleMargin: 0.15,
-    connMap,
-    effort: 1,
-  })) {
-    const errors = getPipeline9DrcErrors(drcEvaluator, [
-      ...candidate,
-      fixedRoute,
-    ])
-    if (errors.length < initialErrors.length) {
+  let improvedRoutes = [affectedRoute]
+  let currentErrors = initialErrors
+  let acceptedPassCount = 0
+  let yieldedCandidateCount = 0
+  for (
+    let pass = 0;
+    pass < getBaseMaxIterations(1) && currentErrors.length > 0;
+    pass++
+  ) {
+    let accepted = false
+    for (const candidate of getPipeline9HighDensityForceCandidates({
+      node,
+      hdRoutes: improvedRoutes,
+      errors: currentErrors,
+      traceRouteIndexById: new Map([["A_0", 0]]),
+      obstacles: [...srj.obstacles, ...fixedObstacles],
+      layerCount: 2,
+      viaDiameter: 0.3,
+      viaHoleDiameter: 0.15,
+      traceWidth: 0.1,
+      obstacleMargin: 0.15,
+      connMap,
+      effort: 1,
+    })) {
+      yieldedCandidateCount++
+      const errors = getPipeline9DrcErrors(drcEvaluator, [
+        ...candidate,
+        fixedRoute,
+      ])
+      if (!isPipeline9HighDensityDrcCandidateBetter(errors, currentErrors)) {
+        continue
+      }
       improvedRoutes = candidate
+      currentErrors = errors
+      acceptedPassCount++
+      accepted = true
       break
     }
+    if (!accepted) break
   }
-  expect(improvedRoutes).toBeDefined()
+  expect({
+    remainingErrors: currentErrors.length,
+    acceptedPassCount,
+    yieldedCandidateCount,
+  }).toMatchObject({ remainingErrors: 0 })
+  expect(acceptedPassCount).toBeGreaterThan(0)
   expect(improvedRoutes![0]!.route.slice(0, 2)).toEqual(
     affectedRoute.route.slice(0, 2),
   )

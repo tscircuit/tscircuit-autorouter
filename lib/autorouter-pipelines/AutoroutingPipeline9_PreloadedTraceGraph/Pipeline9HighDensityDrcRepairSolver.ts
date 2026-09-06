@@ -17,6 +17,10 @@ import { minimumDistanceBetweenSegments } from "lib/utils/minimumDistanceBetween
 import { normalizePipeline9NodeRootConnectionNames } from "./Pipeline9HighDensitySolver"
 import type { Pipeline9HighDensityDrcEvaluator } from "./createPipeline9HighDensityDrcEvaluator"
 import { getPipeline9HighDensityForceCandidates } from "./getPipeline9HighDensityForceCandidates"
+import {
+  getPipeline9HighDensitySeamForceCandidates,
+  type Pipeline9HighDensitySeamForceCandidate,
+} from "./getPipeline9HighDensitySeamForceCandidates"
 import { isPipeline9HighDensityDrcCandidateBetter } from "./isPipeline9HighDensityDrcCandidateBetter"
 import {
   arePipeline9RoutesOnSameNet,
@@ -30,6 +34,7 @@ import {
   getPipeline9DrcErrors,
   getPipeline9DrcErrorTraceIds,
   getPipeline9RouteIndexByTraceId,
+  isPipeline9DrcCandidateBetter,
   type Pipeline9DrcError,
 } from "./pipeline9JointDrcRepairUtils"
 
@@ -315,6 +320,7 @@ export class Pipeline9HighDensityDrcRepairSolver extends BaseSolver {
   private readonly attemptedNodeIdsAtCurrentRevision = new Set<string>()
   private readonly acceptedNodeIds = new Set<string>()
   private readonly nodeRepairBudgets = new Map<string, NodeRepairBudget>()
+  private nodePortPoints: NodeWithPortPoints[]
   outputHdRoutes: HighDensityRoute[]
   currentErrors: Pipeline9DrcError[]
   activeNode: NodeWithPortPoints | null = null
@@ -329,6 +335,11 @@ export class Pipeline9HighDensityDrcRepairSolver extends BaseSolver {
     unknown
   > | null = null
   private activeRepairObstacles: Obstacle[] = []
+  private activeSeamForceCandidates: Generator<
+    Pipeline9HighDensitySeamForceCandidate,
+    void,
+    unknown
+  > | null = null
   private readonly activeCandidateGeometryKeys = new Set<string>()
   private readonly drilledViasByRoute = new WeakMap<
     HighDensityRoute,
@@ -343,6 +354,7 @@ export class Pipeline9HighDensityDrcRepairSolver extends BaseSolver {
   constructor(params: Pipeline9HighDensityDrcRepairSolverParams) {
     super()
     this.params = params
+    this.nodePortPoints = params.nodePortPoints
     this.connectionsByName = new Map(
       params.newConnections.map((connection) => [connection.name, connection]),
     )
@@ -363,8 +375,10 @@ export class Pipeline9HighDensityDrcRepairSolver extends BaseSolver {
       acceptedNodeCount: 0,
       acceptedRepairCount: 0,
       acceptedForceRepairCount: 0,
+      acceptedSeamForceRepairCount: 0,
       acceptedRerouteRepairCount: 0,
       forceCandidateAttemptCount: 0,
+      seamForceCandidateAttemptCount: 0,
       forceNoMotionCount: 0,
       forceAnchorRejectedCount: 0,
       forceGeometryRejectedCount: 0,
@@ -373,6 +387,11 @@ export class Pipeline9HighDensityDrcRepairSolver extends BaseSolver {
       duplicateCandidateCount: 0,
       localCandidateEvaluationCount: 0,
       fullCandidateEvaluationCount: 0,
+      localCandidateEvaluationTimeMs: 0,
+      fullCandidateEvaluationTimeMs: 0,
+      forceGenerationTimeMs: 0,
+      seamForceGenerationTimeMs: 0,
+      rerouteStepTimeMs: 0,
       budgetExhaustedNodeCount: 0,
     }
   }
@@ -582,7 +601,7 @@ export class Pipeline9HighDensityDrcRepairSolver extends BaseSolver {
   private getNextAffectedNode(): NodeWithPortPoints | undefined {
     const currentDrcNodeIds = this.getCurrentDrcNodeIds()
     const knownNodeIds = new Set(
-      this.params.nodePortPoints.map((node) => node.capacityMeshNodeId),
+      this.nodePortPoints.map((node) => node.capacityMeshNodeId),
     )
     const missingNodeId = [...currentDrcNodeIds].find(
       (nodeId) => !knownNodeIds.has(nodeId),
@@ -592,7 +611,7 @@ export class Pipeline9HighDensityDrcRepairSolver extends BaseSolver {
         `Pipeline9 cannot find high-density node "${missingNodeId}" selected for DRC repair`,
       )
     }
-    return this.params.nodePortPoints.find((node) => {
+    return this.nodePortPoints.find((node) => {
       const budget = this.nodeRepairBudgets.get(node.capacityMeshNodeId)
       return (
         currentDrcNodeIds.has(node.capacityMeshNodeId) &&
@@ -606,9 +625,25 @@ export class Pipeline9HighDensityDrcRepairSolver extends BaseSolver {
     candidateNodeRoutes: HighDensityRoute[],
     nodeId: string,
   ): boolean {
+    const candidateRoutes = replaceNodeRoutes({
+      currentRoutes: this.outputHdRoutes,
+      candidateRoutes: candidateNodeRoutes,
+      nodeId,
+      connectionNames: this.activeConnectionNames,
+    })
+    if (!candidateRoutes) return false
+    return this.evaluateCandidateBoardRoutes(
+      candidateRoutes,
+      JSON.stringify(["node", nodeId, candidateNodeRoutes]),
+    )
+  }
+
+  private evaluateCandidateBoardRoutes(
+    candidateRoutes: HighDensityRoute[],
+    candidateKey: string,
+  ): boolean {
     this.stats.candidateAttemptCount =
       Number(this.stats.candidateAttemptCount ?? 0) + 1
-    const candidateKey = JSON.stringify(candidateNodeRoutes)
     if (this.activeCandidateGeometryKeys.has(candidateKey)) {
       this.stats.duplicateCandidateCount =
         Number(this.stats.duplicateCandidateCount) + 1
@@ -618,15 +653,9 @@ export class Pipeline9HighDensityDrcRepairSolver extends BaseSolver {
       )
     }
     this.activeCandidateGeometryKeys.add(candidateKey)
-    const candidateRoutes = replaceNodeRoutes({
-      currentRoutes: this.outputHdRoutes,
-      candidateRoutes: candidateNodeRoutes,
-      nodeId,
-      connectionNames: this.activeConnectionNames,
-    })
-    if (!candidateRoutes) return false
     const routeIndexByTraceId = this.getRouteIndexByTraceId(candidateRoutes)
-    const evaluateLocalCandidate = this.params.drcEvaluator.evaluateLocalCandidate
+    const evaluateLocalCandidate =
+      this.params.drcEvaluator.evaluateLocalCandidate
     if (evaluateLocalCandidate) {
       const changedTraceIds = new Set(
         [...routeIndexByTraceId].flatMap(([traceId, routeIndex]) =>
@@ -635,11 +664,16 @@ export class Pipeline9HighDensityDrcRepairSolver extends BaseSolver {
             : [traceId],
         ),
       )
+      const localEvaluationStartedAt = performance.now()
       const local = evaluateLocalCandidate({
         currentRoutes: this.outputHdRoutes,
         candidateRoutes,
         changedTraceIds,
       })
+      this.stats.localCandidateEvaluationTimeMs =
+        Number(this.stats.localCandidateEvaluationTimeMs) +
+        performance.now() -
+        localEvaluationStartedAt
       this.stats.localCandidateEvaluationCount =
         Number(this.stats.localCandidateEvaluationCount) + 1
       const isOwnedError = (error: Pipeline9DrcError): boolean =>
@@ -647,7 +681,7 @@ export class Pipeline9HighDensityDrcRepairSolver extends BaseSolver {
           routeIndexByTraceId.has(traceId),
         )
       if (
-        !isPipeline9HighDensityDrcCandidateBetter(
+        !isPipeline9DrcCandidateBetter(
           local.candidateErrors.filter(isOwnedError),
           local.currentErrors.filter(isOwnedError),
         )
@@ -657,7 +691,12 @@ export class Pipeline9HighDensityDrcRepairSolver extends BaseSolver {
     }
     this.stats.fullCandidateEvaluationCount =
       Number(this.stats.fullCandidateEvaluationCount) + 1
+    const fullEvaluationStartedAt = performance.now()
     const candidateErrors = this.getRepairableDrcErrors(candidateRoutes)
+    this.stats.fullCandidateEvaluationTimeMs =
+      Number(this.stats.fullCandidateEvaluationTimeMs) +
+      performance.now() -
+      fullEvaluationStartedAt
     if (
       !isPipeline9HighDensityDrcCandidateBetter(
         candidateErrors,
@@ -787,6 +826,71 @@ export class Pipeline9HighDensityDrcRepairSolver extends BaseSolver {
         this.stats[statName] = Number(this.stats[statName]) + 1
       },
     })
+    this.activeSeamForceCandidates = this.getSeamForceCandidates(node)
+  }
+
+  private *getSeamForceCandidates(
+    node: NodeWithPortPoints,
+  ): Generator<Pipeline9HighDensitySeamForceCandidate, void, unknown> {
+    const traceRouteIndexById = this.getRouteIndexByTraceId(this.outputHdRoutes)
+    for (const [affectedRouteIndex, route] of this.outputHdRoutes.entries()) {
+      if (
+        route.regionId !== node.capacityMeshNodeId ||
+        !this.activeConnectionNames.has(route.connectionName)
+      ) {
+        continue
+      }
+      yield* getPipeline9HighDensitySeamForceCandidates({
+        affectedRouteIndex,
+        nodePortPoints: this.nodePortPoints,
+        hdRoutes: this.outputHdRoutes,
+        fixedHdRoutes: this.params.fixedHdRoutes,
+        traceRouteIndexById,
+        errors: this.currentErrors,
+        obstacles: this.params.obstacles,
+        layerCount: this.params.layerCount,
+        viaDiameter: this.params.viaDiameter,
+        viaHoleDiameter: this.params.viaHoleDiameter,
+        traceWidth: this.params.traceWidth,
+        obstacleMargin: this.params.obstacleMargin,
+        connMap: this.params.connMap,
+        effort: this.params.effort,
+      })
+    }
+  }
+
+  private acceptSeamForceCandidate(
+    candidate: Pipeline9HighDensitySeamForceCandidate,
+  ): void {
+    const { seam } = candidate
+    const updatePoint = (
+      point: NodeWithPortPoints["portPoints"][number],
+    ): NodeWithPortPoints["portPoints"][number] => {
+      if (
+        point.portPointId !== seam.portPointId ||
+        point.connectionName !== seam.connectionName
+      ) {
+        return point
+      }
+      return { ...point, x: seam.x, y: seam.y, z: seam.z }
+    }
+    // Copy only accepted handoff metadata. Caller-owned nodes and routes stay
+    // immutable, and subsequent node reroutes use both ends of the new seam.
+    this.nodePortPoints = this.nodePortPoints.map((node): NodeWithPortPoints => {
+      if (!seam.ownerNodeIds.includes(node.capacityMeshNodeId)) return node
+      return {
+        ...node,
+        portPoints: node.portPoints.map(updatePoint),
+        portPointsInPairs: node.portPointsInPairs?.map(([start, end]) => [
+          updatePoint(start),
+          updatePoint(end),
+        ]),
+      }
+    })
+    for (const nodeId of seam.ownerNodeIds) {
+      this.acceptedNodeIds.add(nodeId)
+    }
+    this.finishAcceptedNodeRepair("seam")
   }
 
   private getNodeRepairObstacles(node: NodeWithPortPoints): Obstacle[] {
@@ -847,7 +951,7 @@ export class Pipeline9HighDensityDrcRepairSolver extends BaseSolver {
     })
   }
 
-  private finishAcceptedNodeRepair(source: "force" | "reroute"): void {
+  private finishAcceptedNodeRepair(source: "force" | "seam" | "reroute"): void {
     if (!this.acceptedCandidate || !this.activeNode) {
       throw new Error(
         "Pipeline9 high-density DRC repair solver finished without an accepted candidate",
@@ -860,16 +964,21 @@ export class Pipeline9HighDensityDrcRepairSolver extends BaseSolver {
     this.stats.acceptedNodeCount = this.acceptedNodeIds.size
     this.stats.acceptedRepairCount = Number(this.stats.acceptedRepairCount) + 1
     const sourceStat =
-      source === "force"
-        ? "acceptedForceRepairCount"
-        : "acceptedRerouteRepairCount"
+      source === "reroute"
+        ? "acceptedRerouteRepairCount"
+        : "acceptedForceRepairCount"
     this.stats[sourceStat] = Number(this.stats[sourceStat]) + 1
+    if (source === "seam") {
+      this.stats.acceptedSeamForceRepairCount =
+        Number(this.stats.acceptedSeamForceRepairCount) + 1
+    }
     this.stats.finalDrcIssueCount = this.currentErrors.length
     this.acceptedCandidate = null
     this.activeNode = null
     this.activeConnectionNames.clear()
     this.activeSubSolver = null
     this.activeForceCandidates = null
+    this.activeSeamForceCandidates = null
     this.activeRepairObstacles = []
   }
 
@@ -917,26 +1026,50 @@ export class Pipeline9HighDensityDrcRepairSolver extends BaseSolver {
         this.params.drcClearance,
         MIN_VIA_TO_VIA_CLEARANCE,
       )
+    const knownNodeIds = new Set(
+      this.params.nodePortPoints.map((node) => node.capacityMeshNodeId),
+    )
+    const drillBoundsByNodeId = new Map<string, AxisAlignedBounds>()
+    // Serialized terminal vias can sit slightly beyond the HD endpoint.
+    // Group their actual drill sites once instead of rescanning every route
+    // for each node whose repair context may need to be invalidated.
+    for (const route of this.outputHdRoutes) {
+      if (route.regionId === undefined || !knownNodeIds.has(route.regionId)) {
+        continue
+      }
+      for (const via of this.getDrilledVias(route)) {
+        const bounds = drillBoundsByNodeId.get(route.regionId)
+        if (bounds) {
+          bounds.minX = Math.min(bounds.minX, via.x - padding)
+          bounds.maxX = Math.max(bounds.maxX, via.x + padding)
+          bounds.minY = Math.min(bounds.minY, via.y - padding)
+          bounds.maxY = Math.max(bounds.maxY, via.y + padding)
+        } else {
+          drillBoundsByNodeId.set(route.regionId, {
+            minX: via.x - padding,
+            maxX: via.x + padding,
+            minY: via.y - padding,
+            maxY: via.y + padding,
+          })
+        }
+      }
+    }
     // A distant repair cannot change this node's geometry, obstacle context or
     // pairwise copper violations. Retry only nodes whose possible copper can
     // interact with an old or new changed fragment, including cross-layer drills.
-    for (const node of this.params.nodePortPoints) {
+    for (const node of this.nodePortPoints) {
       const bounds = {
         minX: node.center.x - node.width / 2 - padding,
         maxX: node.center.x + node.width / 2 + padding,
         minY: node.center.y - node.height / 2 - padding,
         maxY: node.center.y + node.height / 2 + padding,
       }
-      // Serialized terminal vias can sit at their connection point, slightly
-      // beyond the HD endpoint. Include those actual drill sites as well.
-      for (const route of this.outputHdRoutes) {
-        if (route.regionId !== node.capacityMeshNodeId) continue
-        for (const via of this.getDrilledVias(route)) {
-          bounds.minX = Math.min(bounds.minX, via.x - padding)
-          bounds.maxX = Math.max(bounds.maxX, via.x + padding)
-          bounds.minY = Math.min(bounds.minY, via.y - padding)
-          bounds.maxY = Math.max(bounds.maxY, via.y + padding)
-        }
+      const drillBounds = drillBoundsByNodeId.get(node.capacityMeshNodeId)
+      if (drillBounds) {
+        bounds.minX = Math.min(bounds.minX, drillBounds.minX)
+        bounds.maxX = Math.max(bounds.maxX, drillBounds.maxX)
+        bounds.minY = Math.min(bounds.minY, drillBounds.minY)
+        bounds.maxY = Math.max(bounds.maxY, drillBounds.maxY)
       }
       if (
         node.capacityMeshNodeId === this.activeNode!.capacityMeshNodeId ||
@@ -958,6 +1091,7 @@ export class Pipeline9HighDensityDrcRepairSolver extends BaseSolver {
     this.activeConnectionNames.clear()
     this.acceptedCandidate = null
     this.activeForceCandidates = null
+    this.activeSeamForceCandidates = null
     this.activeRepairObstacles = []
   }
 
@@ -967,14 +1101,15 @@ export class Pipeline9HighDensityDrcRepairSolver extends BaseSolver {
     this.activeConnectionNames.clear()
     this.acceptedCandidate = null
     this.activeForceCandidates = null
+    this.activeSeamForceCandidates = null
     this.activeRepairObstacles = []
     this.stats.finalDrcIssueCount = this.currentErrors.length
-    this.stats.budgetExhaustedNodeCount = [...this.getCurrentDrcNodeIds()].filter(
-      (nodeId) => {
-        const budget = this.nodeRepairBudgets.get(nodeId)
-        return budget !== undefined && budget.attempts >= budget.maxAttempts
-      },
-    ).length
+    this.stats.budgetExhaustedNodeCount = [
+      ...this.getCurrentDrcNodeIds(),
+    ].filter((nodeId) => {
+      const budget = this.nodeRepairBudgets.get(nodeId)
+      return budget !== undefined && budget.attempts >= budget.maxAttempts
+    }).length
     this.solved = true
   }
 
@@ -988,10 +1123,14 @@ export class Pipeline9HighDensityDrcRepairSolver extends BaseSolver {
       if (!this.activeNode) {
         throw new Error("Pipeline9 high-density forces require an active node")
       }
+      const forceStartedAt = performance.now()
       const candidate = this.activeForceCandidates.next()
+      this.stats.forceGenerationTimeMs =
+        Number(this.stats.forceGenerationTimeMs) +
+        performance.now() -
+        forceStartedAt
       if (candidate.done) {
         this.activeForceCandidates = null
-        this.startNodeReroute(this.activeNode)
         return
       }
       this.stats.forceCandidateAttemptCount =
@@ -1007,8 +1146,47 @@ export class Pipeline9HighDensityDrcRepairSolver extends BaseSolver {
       return
     }
 
+    if (this.activeSeamForceCandidates) {
+      if (!this.activeNode) {
+        throw new Error("Pipeline9 seam forces require an active node")
+      }
+      const seamStartedAt = performance.now()
+      const candidate = this.activeSeamForceCandidates.next()
+      this.stats.seamForceGenerationTimeMs =
+        Number(this.stats.seamForceGenerationTimeMs) +
+        performance.now() -
+        seamStartedAt
+      if (candidate.done) {
+        this.activeSeamForceCandidates = null
+        this.startNodeReroute(this.activeNode)
+        return
+      }
+      this.stats.seamForceCandidateAttemptCount =
+        Number(this.stats.seamForceCandidateAttemptCount) + 1
+      const candidateRoutes = [...this.outputHdRoutes]
+      for (const { routeIndex, route } of candidate.value.replacements) {
+        candidateRoutes[routeIndex] = route
+      }
+      if (
+        this.evaluateCandidateBoardRoutes(
+          candidateRoutes,
+          JSON.stringify(["seam", candidate.value.replacements]),
+        )
+      ) {
+        this.acceptSeamForceCandidate(candidate.value)
+      }
+      return
+    }
+
     if (this.activeSubSolver) {
+      const rerouteStartedAt = performance.now()
       this.activeSubSolver.step()
+      // Includes validator callbacks; evaluation counters above separate their
+      // cost from the total ordinary high-density reroute step time.
+      this.stats.rerouteStepTimeMs =
+        Number(this.stats.rerouteStepTimeMs) +
+        performance.now() -
+        rerouteStartedAt
       if (this.activeSubSolver.solved) {
         if (!this.activeNode) {
           throw new Error(

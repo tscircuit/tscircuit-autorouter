@@ -61,7 +61,9 @@ test("Pipeline9 high-density repair does not trade pad errors for a new copper p
   }
 
   // A lower aggregate error count previously admitted this new trace pair.
-  expect(isPipeline9DrcCandidateBetter([newTraceConflict], padErrors)).toBeTrue()
+  expect(
+    isPipeline9DrcCandidateBetter([newTraceConflict], padErrors),
+  ).toBeTrue()
   for (const candidate of [
     {
       name: "new trace pair despite removing both pad errors",

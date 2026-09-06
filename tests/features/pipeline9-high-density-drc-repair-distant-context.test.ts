@@ -58,19 +58,21 @@ test("Pipeline9 does not retry an exhausted node after a distant copper repair",
     vias: [],
   }))
   const obstacles: Obstacle[] = [
-    ...["top", "bottom"].map((layer): Obstacle => ({
-      obstacleId: `locked-endpoint-pad-${layer}`,
-      circuitJsonMetadata: {
-        pcb_smtpad_id: `pad-c-start-${layer}`,
-        pcb_port_id: `C-start-${layer}`,
-      },
-      type: "rect",
-      layers: [layer],
-      center: { x: -2, y: 0.22 },
-      width: 0.2,
-      height: 0.2,
-      connectedTo: ["C", `C-start-${layer}`],
-    })),
+    ...["top", "bottom"].map(
+      (layer): Obstacle => ({
+        obstacleId: `locked-endpoint-pad-${layer}`,
+        circuitJsonMetadata: {
+          pcb_smtpad_id: `pad-c-start-${layer}`,
+          pcb_port_id: `C-start-${layer}`,
+        },
+        type: "rect",
+        layers: [layer],
+        center: { x: -2, y: 0.22 },
+        width: 0.2,
+        height: 0.2,
+        connectedTo: ["C", `C-start-${layer}`],
+      }),
+    ),
     {
       obstacleId: "repairable-center-pad",
       circuitJsonMetadata: {

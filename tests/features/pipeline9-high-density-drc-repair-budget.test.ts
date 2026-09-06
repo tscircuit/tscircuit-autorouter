@@ -133,7 +133,9 @@ test("Pipeline9 bounds repeated severity-only force repairs and retains the acce
   expect(solver.getOutput()).toBe(lastAcceptedRoutes)
   expect(solver.getOutput()[0]).not.toEqual(originalRoute)
   expect(solver.getOutput()[0]!.route[0]).toEqual(originalRoute.route[0])
-  expect(solver.getOutput()[0]!.route.at(-1)).toEqual(originalRoute.route.at(-1))
+  expect(solver.getOutput()[0]!.route.at(-1)).toEqual(
+    originalRoute.route.at(-1),
+  )
   expect(route).toEqual(originalRoute)
   expect(fixedRoute).toEqual(originalFixedRoute)
 })

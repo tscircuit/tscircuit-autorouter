@@ -335,6 +335,9 @@ export const createPipeline9HighDensityDrcEvaluator = (
         return []
       }),
     )
+    // Exact non-via identities take precedence over encoded via-like suffixes.
+    // Pad ids are opaque and may themselves end with a real serialized via id.
+    const nonViaCopperIds = new Set([...evaluatedTraceIds, ...padIds])
     const connMap = getFullConnectivityMapFromCircuitJson(circuitJson)
     connMap.addConnections([...traceIdByViaId])
     const snapshot: CachedHighDensityDrcSnapshot = {
@@ -348,7 +351,7 @@ export const createPipeline9HighDensityDrcEvaluator = (
             addAutoroutingViaTraceIds({
               errors,
               circuitJson,
-              evaluatedTraceIds,
+              evaluatedTraceIds: nonViaCopperIds,
             }),
             traceIdByViaId,
             padIds,
@@ -394,7 +397,8 @@ export const createPipeline9HighDensityDrcEvaluator = (
     }
     return snapshot.fullResult
   }
-  evaluator.evaluateLocalCandidate =
-    createPipeline9HighDensityDrcCandidateGate({ getSnapshot })
+  evaluator.evaluateLocalCandidate = createPipeline9HighDensityDrcCandidateGate(
+    { getSnapshot },
+  )
   return evaluator
 }

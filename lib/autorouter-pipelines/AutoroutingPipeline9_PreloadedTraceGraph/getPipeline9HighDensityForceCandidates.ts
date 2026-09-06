@@ -1,6 +1,9 @@
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { SimpleRouteJson } from "high-density-repair03/lib"
-import { getForceScalesForEffort } from "high-density-repair03/lib/solvers/GlobalDrcForceImproveSolver/solverConfig"
+import {
+  getForceScalesForEffort,
+  getMaxTargetedCandidateAttemptsForEffort,
+} from "high-density-repair03/lib/solvers/GlobalDrcForceImproveSolver/solverConfig"
 import {
   applyDrcErrorForces,
   materializeRoutes,
@@ -10,6 +13,7 @@ import type {
   NodeWithPortPoints,
 } from "lib/types/high-density-types"
 import type { Obstacle } from "lib/types/srj-types"
+import { convertHdRouteToSimplifiedRoute } from "lib/utils/convertHdRouteToSimplifiedRoute"
 import {
   getPipeline9DrcErrorTraceIds,
   type Pipeline9DrcError,
@@ -21,7 +25,9 @@ type LocalForceRoute = {
   original: HighDensityRoute
   mutable: HighDensityRoute
   originalPoints: HighDensityPoint[]
+  originalPointByMutablePoint: Map<HighDensityPoint, HighDensityPoint>
   protectedPointIndexes: Set<number>
+  throughObstacleSpanStartIndexes: ReadonlySet<number>
   terminalPrefixLength: number
   terminalSuffixLength: number
 }
@@ -49,7 +55,42 @@ export type Pipeline9HighDensityForceCandidateParams = {
   ) => void
 }
 
-const createLocalForceRoute = (original: HighDensityRoute): LocalForceRoute => {
+const getOriginalThroughObstacleSpanStartIndexes = (
+  original: HighDensityRoute,
+  layerCount: number,
+  obstacles: Obstacle[],
+  connMap: ConnectivityMap,
+): ReadonlySet<number> => {
+  const spanStartIndexes = new Set<number>()
+  for (let index = 0; index < original.route.length - 1; index++) {
+    const start = original.route[index]!
+    const end = original.route[index + 1]!
+    if (start.toNextSegmentType === "through_obstacle") {
+      spanStartIndexes.add(index)
+      continue
+    }
+    if (start.z === end.z) continue
+    // Ordinary HD repair can drop point tags. Serialize this original edge
+    // through the official converter, retaining its exact connected-pad
+    // predicate without confusing repeated coordinates elsewhere in the route.
+    const serializedSpan = convertHdRouteToSimplifiedRoute(
+      { ...original, route: [start, end] },
+      layerCount,
+      { obstacles, connMap },
+    )
+    if (
+      serializedSpan.some((segment) => segment.route_type === "through_obstacle")
+    ) {
+      spanStartIndexes.add(index)
+    }
+  }
+  return spanStartIndexes
+}
+
+const createLocalForceRoute = (
+  original: HighDensityRoute,
+  throughObstacleSpanStartIndexes: ReadonlySet<number>,
+): LocalForceRoute => {
   const originalPoints = original.route.map((point) => ({ ...point }))
   const first = originalPoints[0]
   const last = originalPoints.at(-1)
@@ -67,6 +108,9 @@ const createLocalForceRoute = (original: HighDensityRoute): LocalForceRoute => {
   }
   if (last.pcb_port_id === undefined && original.endPcbPortId !== undefined) {
     last.pcb_port_id = original.endPcbPortId
+  }
+  for (const index of throughObstacleSpanStartIndexes) {
+    originalPoints[index]!.toNextSegmentType = "through_obstacle"
   }
   const protectedPointIndexes = new Set<number>()
   let terminalPrefixLength = 0
@@ -100,7 +144,11 @@ const createLocalForceRoute = (original: HighDensityRoute): LocalForceRoute => {
   return {
     original,
     originalPoints,
+    originalPointByMutablePoint: new Map(
+      originalPoints.map((point, index) => [point, original.route[index]!]),
+    ),
     protectedPointIndexes,
+    throughObstacleSpanStartIndexes,
     terminalPrefixLength,
     terminalSuffixLength,
     mutable: {
@@ -127,7 +175,7 @@ const hasPreservedLocalRouteAnchors = (local: LocalForceRoute): boolean => {
       return false
     }
     if (
-      originalPoint.toNextSegmentType === "through_obstacle" &&
+      local.throughObstacleSpanStartIndexes.has(index) &&
       points[points.indexOf(point) + 1] !== local.originalPoints[index + 1]
     ) {
       return false
@@ -235,6 +283,17 @@ export function* getPipeline9HighDensityForceCandidates({
     minTraceToPadEdgeClearance: obstacleMargin,
     minViaEdgeToPadEdgeClearance: obstacleMargin,
   }
+  const throughObstacleSpanStartIndexesByRoute = hdRoutes.map(
+    (route): ReadonlySet<number> =>
+      getOriginalThroughObstacleSpanStartIndexes(
+        route,
+        layerCount,
+        obstacles,
+        connMap,
+      ),
+  )
+  const maxCandidateApplications =
+    getMaxTargetedCandidateAttemptsForEffort(effort)
   for (const error of errors) {
     const movableTraceId = getPipeline9DrcErrorTraceIds(error).find((traceId) =>
       traceRouteIndexById.has(traceId),
@@ -249,76 +308,82 @@ export function* getPipeline9HighDensityForceCandidates({
       Array.isArray(viaOwnerTraceIds) &&
       viaOwnerTraceIds.includes(movableTraceId)
     for (const scale of getForceScalesForEffort(effort)) {
-      const localRoutes = hdRoutes.map(createLocalForceRoute)
-      const mutableRoutes = localRoutes.map((local) => local.mutable)
-      if (
-        !applyDrcErrorForces(
-          srj,
-          mutableRoutes,
-          [localError],
-          traceRouteIndexById,
-          scale,
-          connMap,
-          true,
-          false,
-          false,
-          primaryOwnsReportedVia,
-        )
-      ) {
-        onCandidateRejected?.("no-motion")
-        continue
-      }
-      if (localRoutes.some((local) => !hasPreservedLocalRouteAnchors(local))) {
-        onCandidateRejected?.("anchor")
-        continue
-      }
-      for (const local of localRoutes) {
-        const originalPointByMutablePoint = new Map(
-          local.originalPoints.map((point, index) => [
-            point,
-            local.original.route[index]!,
-          ]),
-        )
-        // The force operator builds detours by copying the starting point. An
-        // inserted waypoint inherits segment width, but is not a PCB terminal
-        // or a jumper/through-obstacle anchor.
-        local.mutable.route = local.mutable.route.map((point) => {
-          const originalPoint = originalPointByMutablePoint.get(point)
-          if (originalPoint) {
-            return {
-              ...originalPoint,
-              x: point.x,
-              y: point.y,
-              z: point.z,
-            }
-          }
-          const {
-            pcb_port_id,
-            insideJumperPad,
-            toNextSegmentType,
-            toNextSegmentCircuitJsonMetadata,
-            ...waypoint
-          } = point
-          return waypoint
-        })
-      }
-      const candidates = materializeRoutes(
-        localRoutes.map((local) => local.mutable),
-      ).map(
-        (candidate, index): HighDensityRoute => ({
-          ...hdRoutes[index]!,
-          route: candidate.route,
-          vias: candidate.vias,
-        }),
+      const localRoutes = hdRoutes.map((route, index): LocalForceRoute =>
+        createLocalForceRoute(
+          route,
+          throughObstacleSpanStartIndexesByRoute[index]!,
+        ),
       )
-      if (
-        candidates.every((candidate) =>
-          hasValidLocalRouteGeometry(candidate, nodeBounds, layerCount),
-        )
+      const mutableRoutes = localRoutes.map((local) => local.mutable)
+      // Official accidental-contact errors have no graded overlap severity.
+      // A bounded private force sequence can cross that plateau before any
+      // candidate is accepted; never restart it from a published partial move.
+      for (
+        let application = 0;
+        application < maxCandidateApplications;
+        application++
       ) {
-        yield candidates
-      } else {
-        onCandidateRejected?.("geometry")
+        if (
+          !applyDrcErrorForces(
+            srj,
+            mutableRoutes,
+            [localError],
+            traceRouteIndexById,
+            scale,
+            connMap,
+            true,
+            false,
+            false,
+            primaryOwnsReportedVia,
+          )
+        ) {
+          onCandidateRejected?.("no-motion")
+          break
+        }
+        if (localRoutes.some((local) => !hasPreservedLocalRouteAnchors(local))) {
+          onCandidateRejected?.("anchor")
+          break
+        }
+        for (const local of localRoutes) {
+          // The force operator copies the starting point for detours. New
+          // waypoints inherit width, not terminal or through-obstacle identity.
+          local.mutable.route = local.mutable.route.map((point) => {
+            if (local.originalPointByMutablePoint.has(point)) return point
+            const {
+              pcb_port_id,
+              insideJumperPad,
+              toNextSegmentType,
+              toNextSegmentCircuitJsonMetadata,
+              ...waypoint
+            } = point
+            return waypoint
+          })
+        }
+        const candidates = materializeRoutes(mutableRoutes)
+        if (
+          !candidates.every((candidate) =>
+            hasValidLocalRouteGeometry(candidate, nodeBounds, layerCount),
+          )
+        ) {
+          onCandidateRejected?.("geometry")
+          break
+        }
+        // Keep temporary pad-span tags through validation and via derivation:
+        // an implicit coincident pad transition must not become a drilled via.
+        // Detach every published point before the next private force step.
+        yield candidates.map((candidate, index): HighDensityRoute => {
+          const local = localRoutes[index]!
+          return {
+            ...hdRoutes[index]!,
+            vias: candidate.vias.map((via) => ({ ...via })),
+            route: candidate.route.map((point): HighDensityPoint => {
+              const originalPoint = local.originalPointByMutablePoint.get(point)
+              return originalPoint
+                ? { ...originalPoint, x: point.x, y: point.y, z: point.z }
+                : { ...point }
+            }),
+          }
+        })
       }
     }
   }
