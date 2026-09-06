@@ -33,7 +33,7 @@ type ForceAttempt = {
 }
 type ForceObservation = ForceAttempt & { route: HighDensityRoute }
 
-test("Pipeline9 endpoint pad slots retain every native chain and distinct rigid candidate within the original budget", (): void => {
+test("Pipeline9 endpoint pad slots retain distinct native and rigid candidates within the original budget", (): void => {
   const route: HighDensityRoute = {
     connectionName: "A",
     rootConnectionName: "A",
@@ -175,7 +175,7 @@ test("Pipeline9 endpoint pad slots retain every native chain and distinct rigid 
       observations.push({ ...attempts.at(-1)!, route: candidates[0]! })
     }
     expect(attemptedErrors).toEqual([0, 1])
-    expect(attempts).toHaveLength(
+    expect(attempts.length).toBeLessThanOrEqual(
       errors.length * scales.length * maxApplications,
     )
     for (const errorIndex of [0, 1]) {
@@ -187,15 +187,21 @@ test("Pipeline9 endpoint pad slots retain every native chain and distinct rigid 
             family:
               scaleIndex === 2 && application === 0
                 ? "pad-wire-0"
-                : scaleIndex === 2 && application === 2
-                  ? "pad-wire-1"
-                  : application % 2 === 0
-                    ? "pad-wire"
-                    : "native",
+                : scaleIndex === 2 && application === 1
+                  ? "pad-detour-nearest"
+                  : scaleIndex === 2 && application === 2
+                    ? "pad-wire-1"
+                    : scaleIndex === 2 && application === 3
+                      ? "pad-detour-opposite"
+                      : application % 2 === 0
+                        ? "pad-wire"
+                        : "native",
             scale,
             application,
           }),
         ),
+      ).filter(
+        (attempt) => attempt.scale !== -1 || attempt.family !== "native",
       )
       expect(
         attempts.filter((attempt) => attempt.errorIndex === errorIndex),
@@ -267,11 +273,14 @@ test("Pipeline9 endpoint pad slots retain every native chain and distinct rigid 
         }
       }
     }
-    // In particular, the -1 native slots 1, 3 and 5 must still accumulate
-    // exactly as before, independently of the two endpoint replacements.
-    expect(observations.filter((item) => item.family === "native")).toEqual(
-      expectedNative,
-    )
+    // The positive native chains remain byte-for-byte identical. Typed pad
+    // -1 duplicates now fund at most two detours; no distinct native geometry
+    // is lost, and the endpoint and rigid slots keep their original identities.
+    const native = observations.filter((item) => item.family === "native")
+    expect(native).toEqual(expectedNative.filter((item) => item.scale !== -1))
+    for (const oldCandidate of expectedNative) {
+      expect(native.map((item) => item.route)).toContainEqual(oldCandidate.route)
+    }
     const rigid = observations.filter((item) => item.family === "pad-wire")
     for (const scale of [1, 1.75]) {
       expect(rigid.filter((item) => item.scale === scale)).toEqual(

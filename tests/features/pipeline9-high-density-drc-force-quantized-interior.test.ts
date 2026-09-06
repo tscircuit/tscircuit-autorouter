@@ -157,12 +157,10 @@ test("Pipeline9 preserves only unchanged proven interior points at Repair01's qu
       originalRoute: invalidAnchor,
       node,
       originalPointByCandidatePoint: new Map(
-        anchorCandidate.route.map(
-          (point, index): [RoutePoint, RoutePoint] => [
-            point,
-            invalidAnchor.route[index]!,
-          ],
-        ),
+        anchorCandidate.route.map((point, index): [RoutePoint, RoutePoint] => [
+          point,
+          invalidAnchor.route[index]!,
+        ]),
       ),
     }),
   ).toBe(false)

@@ -21,6 +21,7 @@ import {
   applyPipeline9PadTraceForce,
   getPipeline9PadTraceForceMobility,
 } from "./applyPipeline9PadTraceForce"
+import { applyPipeline9PadTraceDetour } from "./applyPipeline9PadTraceDetour"
 import type { Pipeline9HighDensityForceContext } from "./getPipeline9HighDensityForceObstacles"
 import { getPipeline9PadCopperForceTarget } from "./getPipeline9PadCopperForceTarget"
 import { isPipeline9HighDensityRouteInsideBounds } from "./isPipeline9HighDensityRouteInsideBounds"
@@ -53,6 +54,8 @@ export type Pipeline9HighDensityForceFamily =
   | "pad-wire"
   | "pad-wire-0"
   | "pad-wire-1"
+  | "pad-detour-nearest"
+  | "pad-detour-opposite"
   | "native"
   | "native-feedback"
   | "trace-pair-0"
@@ -615,6 +618,7 @@ export function* getPipeline9HighDensityForceCandidates({
       forceTarget.kind === "pad" &&
       error.type === "pcb_pad_trace_clearance_error"
     let nativeFeedback: NativeFeedbackState | undefined
+    let padDetourAttemptCount = 0
     for (const pass of forcePasses) {
       const { scaleIndex, scale } = pass
       let states = statesByScaleIndex.get(scaleIndex)
@@ -666,8 +670,23 @@ export function* getPipeline9HighDensityForceCandidates({
                 layerCount,
               )
             : undefined
-        const family =
+        let family: Pipeline9HighDensityForceFamily =
           feedbackArguments === undefined ? ordinaryFamily : "native-feedback"
+        if (
+          family === "native" &&
+          scaleIndex === 2 &&
+          canSeedNativeFeedback
+        ) {
+          // Typed physical-pad native forces use abs(scale), so this entire
+          // -1 chain repeats +1. If it is not continuing checked feedback,
+          // spend its first two available slots on independent anchored
+          // bypasses. Remaining duplicate slots add no distinct geometry.
+          if (padDetourAttemptCount >= 2) continue
+          family =
+            padDetourAttemptCount++ === 0
+              ? "pad-detour-nearest"
+              : "pad-detour-opposite"
+        }
         let state =
           family === "native-feedback"
             ? nativeFeedback!.state
@@ -728,6 +747,25 @@ export function* getPipeline9HighDensityForceCandidates({
             false,
             false,
           )
+        } else if (
+          state.family === "pad-detour-nearest" ||
+          state.family === "pad-detour-opposite"
+        ) {
+          if (forceTarget.kind !== "pad" || padTarget === undefined) {
+            throw new Error(
+              "Pipeline9 pad detours require their physical clearance target",
+            )
+          }
+          changed = applyPipeline9PadTraceDetour({
+            route: mutableRoutes[primaryRouteIndex]!,
+            target: padTarget,
+            pad: forceTarget.pad,
+            minimumClearance: error.minimum_clearance as number,
+            direction:
+              state.family === "pad-detour-nearest" ? "nearest" : "opposite",
+            bounds: nodeBounds,
+            layerCount,
+          })
         } else if (
           state.family === "pad-wire" ||
           state.family === "pad-wire-0" ||

@@ -64,6 +64,12 @@ type AcceptedHighDensityCandidate = {
   errors: Pipeline9DrcError[]
 }
 
+type PendingHighDensityForceCandidate = {
+  candidate: AcceptedHighDensityCandidate
+  geometryKey: string
+  family: Pipeline9HighDensityForceFamily
+}
+
 type AxisAlignedBounds = {
   minX: number
   maxX: number
@@ -168,6 +174,7 @@ export class Pipeline9HighDensityDrcRepairSolver extends BaseSolver {
   private activeForceConnectionNames = new Set<string>()
   private acceptedCandidate: AcceptedHighDensityCandidate | null = null
   private acceptedCandidateGeometryKey: string | null = null
+  private pendingForceCandidate: PendingHighDensityForceCandidate | null = null
   private activeForceCandidates: Generator<
     HighDensityRoute[],
     void,
@@ -214,10 +221,13 @@ export class Pipeline9HighDensityDrcRepairSolver extends BaseSolver {
       acceptedSeverityOnlyRepairCount: 0,
       acceptedForceRepairCount: 0,
       acceptedForceFeedbackRepairCount: 0,
+      acceptedPadDetourRepairCount: 0,
       acceptedSeamForceRepairCount: 0,
       acceptedRerouteRepairCount: 0,
       forceCandidateAttemptCount: 0,
       forceFeedbackAttemptCount: 0,
+      forcePadDetourAttemptCount: 0,
+      deferredSeverityOnlyCandidateCount: 0,
       seamForceCandidateAttemptCount: 0,
       forceNoMotionCount: 0,
       forceAnchorRejectedCount: 0,
@@ -574,6 +584,7 @@ export class Pipeline9HighDensityDrcRepairSolver extends BaseSolver {
     this.activeCandidateGeometryKeys.clear()
     this.acceptedCandidate = null
     this.acceptedCandidateGeometryKey = null
+    this.pendingForceCandidate = null
     this.activeConnectionNames = this.getDrcConnectionNamesForNode(
       node.capacityMeshNodeId,
     )
@@ -677,6 +688,13 @@ export class Pipeline9HighDensityDrcRepairSolver extends BaseSolver {
         if (family === "native-feedback") {
           this.stats.forceFeedbackAttemptCount =
             Number(this.stats.forceFeedbackAttemptCount) + 1
+        }
+        if (
+          family === "pad-detour-nearest" ||
+          family === "pad-detour-opposite"
+        ) {
+          this.stats.forcePadDetourAttemptCount =
+            Number(this.stats.forcePadDetourAttemptCount) + 1
         }
       },
       onCandidateRejected: (reason): void => {
@@ -823,6 +841,39 @@ export class Pipeline9HighDensityDrcRepairSolver extends BaseSolver {
     })
   }
 
+  private retainAcceptedForceCandidate(): void {
+    if (
+      !this.acceptedCandidate ||
+      this.acceptedCandidateGeometryKey === null ||
+      this.activeForceFamily === undefined
+    ) {
+      throw new Error(
+        "Pipeline9 cannot retain an unvalidated force candidate without its geometry and source family",
+      )
+    }
+    this.stats.deferredSeverityOnlyCandidateCount =
+      Number(this.stats.deferredSeverityOnlyCandidateCount) + 1
+    if (
+      this.pendingForceCandidate === null ||
+      isPipeline9HighDensityDrcCandidateBetter(
+        this.acceptedCandidate.errors,
+        this.pendingForceCandidate.candidate.errors,
+      )
+    ) {
+      // The generator detaches published points from its mutable force graph.
+      // Keep the fully checked board, not that graph or a scoped error count.
+      this.pendingForceCandidate = {
+        candidate: this.acceptedCandidate,
+        geometryKey: this.acceptedCandidateGeometryKey,
+        family: this.activeForceFamily,
+      }
+    }
+    // A duplicate trial must not look like a newly accepted pending repair.
+    // The incumbent, node contexts and latest trial feedback stay unchanged.
+    this.acceptedCandidate = null
+    this.acceptedCandidateGeometryKey = null
+  }
+
   private finishAcceptedNodeRepair(source: "force" | "seam" | "reroute"): void {
     if (!this.acceptedCandidate || !this.activeNode) {
       throw new Error(
@@ -849,12 +900,22 @@ export class Pipeline9HighDensityDrcRepairSolver extends BaseSolver {
       this.stats.acceptedForceFeedbackRepairCount =
         Number(this.stats.acceptedForceFeedbackRepairCount) + 1
     }
+    if (
+      source === "force" &&
+      (this.activeForceFamily === "pad-detour-nearest" ||
+        this.activeForceFamily === "pad-detour-opposite")
+    ) {
+      this.stats.acceptedPadDetourRepairCount =
+        Number(this.stats.acceptedPadDetourRepairCount) + 1
+    }
     if (source === "seam") {
       this.stats.acceptedSeamForceRepairCount =
         Number(this.stats.acceptedSeamForceRepairCount) + 1
     }
     this.stats.finalDrcIssueCount = this.currentErrors.length
     this.acceptedCandidate = null
+    this.acceptedCandidateGeometryKey = null
+    this.pendingForceCandidate = null
     this.activeNode = null
     this.activeConnectionNames.clear()
     this.activeForceConnectionNames.clear()
@@ -976,6 +1037,8 @@ export class Pipeline9HighDensityDrcRepairSolver extends BaseSolver {
     this.activeConnectionNames.clear()
     this.activeForceConnectionNames.clear()
     this.acceptedCandidate = null
+    this.acceptedCandidateGeometryKey = null
+    this.pendingForceCandidate = null
     this.activeForceCandidates = null
     this.activeForceCandidateFeedback = undefined
     this.activeForceFamily = undefined
@@ -989,6 +1052,8 @@ export class Pipeline9HighDensityDrcRepairSolver extends BaseSolver {
     this.activeConnectionNames.clear()
     this.activeForceConnectionNames.clear()
     this.acceptedCandidate = null
+    this.acceptedCandidateGeometryKey = null
+    this.pendingForceCandidate = null
     this.activeForceCandidates = null
     this.activeForceCandidateFeedback = undefined
     this.activeForceFamily = undefined
@@ -1023,6 +1088,14 @@ export class Pipeline9HighDensityDrcRepairSolver extends BaseSolver {
         performance.now() -
         forceStartedAt
       if (candidate.done) {
+        if (this.pendingForceCandidate !== null) {
+          this.acceptedCandidate = this.pendingForceCandidate.candidate
+          this.acceptedCandidateGeometryKey =
+            this.pendingForceCandidate.geometryKey
+          this.activeForceFamily = this.pendingForceCandidate.family
+          this.finishAcceptedNodeRepair("force")
+          return
+        }
         this.activeForceCandidates = null
         this.activeForceFamily = undefined
         return
@@ -1036,7 +1109,19 @@ export class Pipeline9HighDensityDrcRepairSolver extends BaseSolver {
           this.activeForceConnectionNames,
         )
       ) {
-        this.finishAcceptedNodeRepair("force")
+        if (!this.acceptedCandidate) {
+          throw new Error(
+            "Pipeline9 force validation succeeded without a checked candidate",
+          )
+        }
+        if (this.acceptedCandidate.errors.length < this.currentErrors.length) {
+          this.finishAcceptedNodeRepair("force")
+        } else {
+          // Do not let the first graded nudge discard the remaining existing
+          // force candidates. Prefer a fully checked count reduction; publish
+          // retained severity progress when this same bounded pass is complete.
+          this.retainAcceptedForceCandidate()
+        }
       }
       return
     }

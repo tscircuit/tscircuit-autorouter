@@ -14,6 +14,7 @@ import {
 } from "lib/testing/utils/createPreparedViaTraceClearanceChecker"
 import type { HighDensityRoute } from "lib/types/high-density-types"
 import { arePipeline9HighDensityDrcPairIdentifiersUnambiguous } from "./arePipeline9HighDensityDrcPairIdentifiersUnambiguous"
+import { clonePipeline9TraceForDrc } from "./clonePipeline9TraceForDrc"
 import {
   doPipeline9BoundsOverlap,
   type Pipeline9Bounds,
@@ -156,12 +157,7 @@ const evaluateScopedCopper = (
         if (!traceIds.has(element.pcb_trace_id)) return []
         // The official overlap check fills missing endpoint port identities.
         // Keep the full conversion immutable for later full-board validation.
-        return [
-          {
-            ...element,
-            route: element.route.map((point) => ({ ...point })),
-          },
-        ]
+        return [clonePipeline9TraceForDrc(element)]
       }
       if (
         element.type === "pcb_via" &&

@@ -22,7 +22,7 @@ import type {
 } from "lib/types/high-density-types"
 import type { Obstacle } from "lib/types/srj-types"
 
-test("Pipeline9 keeps the native-only schedule when the pad witness is a locked endpoint", (): void => {
+test("Pipeline9 preserves positive native slots and rejects endpoint detours for a locked pad witness", (): void => {
   const route: HighDensityRoute = {
     connectionName: "A",
     rootConnectionName: "A",
@@ -124,6 +124,7 @@ test("Pipeline9 keeps the native-only schedule when the pad witness is a locked 
     application: number
   }[] = []
   const attemptedErrors: number[] = []
+  const publishedFamilies: Pipeline9HighDensityForceFamily[] = []
   const params: Pipeline9HighDensityForceCandidateParams = {
     node,
     hdRoutes: [route],
@@ -150,12 +151,22 @@ test("Pipeline9 keeps the native-only schedule when the pad witness is a locked 
     },
   }
   for (const candidate of getPipeline9HighDensityForceCandidates(params)) {
+    publishedFamilies.push(attempts.at(-1)!.family)
     expect(candidate[0]!.route[0]).toEqual(route.route[0])
     expect(candidate[0]!.route.at(-1)).toEqual(route.route.at(-1))
   }
   expect(attemptedErrors).toEqual([0])
   expect(attempts.length).toBeGreaterThan(0)
-  expect(attempts.every((attempt) => attempt.family === "native")).toBe(true)
+  expect(
+    attempts
+      .filter((attempt) => attempt.scale !== -1)
+      .every((attempt) => attempt.family === "native"),
+  ).toBe(true)
+  expect(attempts.filter((attempt) => attempt.scale === -1)).toEqual([
+    { family: "pad-detour-nearest", scale: -1, application: 0 },
+    { family: "pad-detour-opposite", scale: -1, application: 1 },
+  ])
+  expect(publishedFamilies.every((family) => family === "native")).toBe(true)
   expect(attempts.length).toBeLessThanOrEqual(
     getForceScalesForEffort(1).length *
       getMaxTargetedCandidateAttemptsForEffort(1),

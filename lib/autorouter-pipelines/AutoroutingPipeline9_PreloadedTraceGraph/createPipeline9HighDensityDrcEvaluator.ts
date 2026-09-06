@@ -10,6 +10,7 @@ import type { Obstacle, SimpleRouteJson, SimplifiedPcbTrace } from "lib/types"
 import type { HighDensityRoute } from "lib/types/high-density-types"
 import { convertHdRouteToSimplifiedRoute } from "lib/utils/convertHdRouteToSimplifiedRoute"
 import { assignUniquePcbTraceIdsToNewTraces } from "./assignUniquePcbTraceIdsToNewTraces"
+import { clonePipeline9TraceForDrc } from "./clonePipeline9TraceForDrc"
 import type { PreloadedHighDensityRoute } from "./convertPreloadedTraceToHdRoutes"
 import {
   createPipeline9HighDensityDrcCandidateGate,
@@ -414,10 +415,7 @@ export const createPipeline9HighDensityDrcEvaluator = (
     if (snapshot.fullResult) return snapshot.fullResult
     const circuitJson = snapshot.circuitJson.map((element) =>
       element.type === "pcb_trace"
-        ? {
-            ...element,
-            route: element.route.map((point) => ({ ...point })),
-          }
+        ? clonePipeline9TraceForDrc(element)
         : element,
     )
     const { errors, errorsWithCenters } = evaluateDrc(circuitJson, {
