@@ -193,8 +193,7 @@ const hasNewDrcError = (
     currentErrors.map(getPipeline9DrcErrorIdentity),
   )
   return candidateErrors.some(
-    (error) =>
-      !currentErrorIdentities.has(getPipeline9DrcErrorIdentity(error)),
+    (error) => !currentErrorIdentities.has(getPipeline9DrcErrorIdentity(error)),
   )
 }
 

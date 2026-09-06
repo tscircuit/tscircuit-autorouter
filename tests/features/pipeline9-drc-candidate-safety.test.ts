@@ -49,9 +49,6 @@ test("Pipeline9 repair candidates cannot trade DRCs for new illegal copper conta
     isPipeline9DrcCandidateNoWorse(currentErrors, currentErrors),
   ).toBeTrue()
   expect(
-    isPipeline9DrcCandidateNoWorse(
-      fewerErrorsWithNewContact,
-      currentErrors,
-    ),
+    isPipeline9DrcCandidateNoWorse(fewerErrorsWithNewContact, currentErrors),
   ).toBeFalse()
 })

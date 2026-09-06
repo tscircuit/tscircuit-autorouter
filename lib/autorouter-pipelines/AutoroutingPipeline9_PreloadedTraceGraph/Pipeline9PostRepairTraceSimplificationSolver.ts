@@ -34,9 +34,7 @@ const pointBlocksCopperSubsetCleanup = (
   point.toNextSegmentCircuitJsonMetadata !== undefined ||
   pointIsJumperEndpoint(point, route)
 
-const eraseClosedCopperDetours = (
-  route: HighDensityRoute,
-): RoutePoint[] => {
+const eraseClosedCopperDetours = (route: HighDensityRoute): RoutePoint[] => {
   const cleanedPoints: RoutePoint[] = []
   const pointIndexByKey = new Map<string, number>()
 
@@ -109,8 +107,7 @@ const removeCollinearMiddlePoints = (
       const previousPoint = cleanedPoints.at(-3)!
       const middlePoint = cleanedPoints.at(-2)!
       const nextPoint = cleanedPoints.at(-1)!
-      const segmentWidth =
-        previousPoint.traceThickness ?? route.traceThickness
+      const segmentWidth = previousPoint.traceThickness ?? route.traceThickness
       const widthsMatch =
         (middlePoint.traceThickness ?? route.traceThickness) === segmentWidth &&
         (nextPoint.traceThickness ?? route.traceThickness) === segmentWidth
@@ -118,11 +115,7 @@ const removeCollinearMiddlePoints = (
         !widthsMatch ||
         pointBlocksCopperSubsetCleanup(middlePoint, route) ||
         previousPoint.toNextSegmentType !== undefined ||
-        !pointIsBetweenCollinearNeighbors(
-          previousPoint,
-          middlePoint,
-          nextPoint,
-        )
+        !pointIsBetweenCollinearNeighbors(previousPoint, middlePoint, nextPoint)
       ) {
         break
       }
@@ -140,13 +133,9 @@ const getRouteVias = (
   for (let pointIndex = 0; pointIndex < points.length - 1; pointIndex++) {
     const start = points[pointIndex]!
     const end = points[pointIndex + 1]!
-    if (
-      start.z !== end.z &&
-      start.toNextSegmentType !== "through_obstacle"
-    ) {
+    if (start.z !== end.z && start.toNextSegmentType !== "through_obstacle") {
       const existingVia = route.vias.find(
-        (via) =>
-          pointsAreColocated(via, start) || pointsAreColocated(via, end),
+        (via) => pointsAreColocated(via, start) || pointsAreColocated(via, end),
       )
       if (!existingVia) {
         throw new Error(
@@ -186,9 +175,7 @@ export class Pipeline9PostRepairTraceSimplificationSolver extends BaseSolver {
     this.MAX_ITERATIONS = 1
   }
 
-  override getConstructorParams(): [
-    { hdRoutes: readonly HighDensityRoute[] },
-  ] {
+  override getConstructorParams(): [{ hdRoutes: readonly HighDensityRoute[] }] {
     return [{ hdRoutes: this.inputHdRoutes }]
   }
 
