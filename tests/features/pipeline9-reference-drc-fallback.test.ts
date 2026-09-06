@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test"
 import { convertPipeline7HdRoutesToSimplifiedPcbTraces } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/convertPipeline7HdRoutesToSimplifiedPcbTraces"
 import { Pipeline9JointDrcRepairSolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9JointDrcRepairSolver"
-import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
+import { evaluateCoreRoutingDrc } from "lib/testing/evaluate-core-routing-drc"
 import type { Obstacle, SimpleRouteJson } from "lib/types"
 import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
 
@@ -18,7 +18,7 @@ const createEndpointPad = (x: number, pcbPortId: string): Obstacle => ({
   },
 })
 
-test("Pipeline9 falls back to reference DRC for an indexed-engine false negative", () => {
+test("Pipeline9 uses Core DRC throughout joint repair", () => {
   const connection = {
     name: "route",
     pointsToConnect: [
@@ -83,7 +83,6 @@ test("Pipeline9 falls back to reference DRC for an indexed-engine false negative
   expect(solver.failed).toBeFalse()
   expect(solver.solved).toBeTrue()
   expect(Number(solver.stats.referenceDrcValidationCount)).toBeGreaterThan(0)
-  expect(Number(solver.stats.referenceDrcFalseNegativeCount)).toBeGreaterThan(0)
   expect(solver.stats).toMatchObject({
     initialJointDrcIssueCount: 1,
     finalDrcIssueCount: 0,
@@ -99,7 +98,7 @@ test("Pipeline9 falls back to reference DRC for an indexed-engine false negative
     defaultViaHoleDiameter: 0.15,
     connMap: solver.params.connMap,
   })
-  const finalDrc = evaluateRelaxedDrc({
+  const finalDrc = evaluateCoreRoutingDrc({
     inputSrj: srj,
     srjWithPointPairs: srj,
     routedTraces,

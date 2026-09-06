@@ -137,8 +137,7 @@ const addRepairOwnership = (
 
 /**
  * Runs Core's final routing checks plus the route-dependent via-in-pad
- * placement check. This is the authoritative acceptance evaluator; hot-path
- * candidate scoring remains in Repair03's indexed DRC engine.
+ * placement check.
  */
 export const evaluateCoreRoutingDrc = ({
   inputSrj,
