@@ -59,6 +59,7 @@ export const applyPipeline9ReferenceDrcRepairs = ({
     enablePostSolveClearanceRelaxation: false,
     enableSafeTraceLayerMoves: true,
     enableViaInPadLayerMoves: allowViaInPad,
+    enableTraceViaOwnerTargeting: true,
   })
   solver.solve()
   if (solver.failed || !solver.solved) {

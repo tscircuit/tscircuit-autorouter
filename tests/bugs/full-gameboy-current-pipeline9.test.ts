@@ -51,14 +51,6 @@ describe.skipIf(process.env.RUN_FULL_GBA_REPRO !== "1")(
         throw new Error("Pipeline 9 did not produce point-pair SRJ")
       }
 
-      await expect(
-        getBugReportSnapshotSvg({
-          inputSrj: input,
-          srjWithPointPairs,
-          routedTraces,
-        }),
-      ).toMatchSvgSnapshot(import.meta.path)
-
       const relaxedDrcResult = evaluateRelaxedDrc({
         inputSrj: input,
         srjWithPointPairs,
@@ -104,6 +96,14 @@ describe.skipIf(process.env.RUN_FULL_GBA_REPRO !== "1")(
         "FULL_GBA_DRC_NEARBY_GEOMETRY",
         JSON.stringify({ implicatedVias, nearbyRoutedTraces }, null, 2),
       )
+
+      await expect(
+        getBugReportSnapshotSvg({
+          inputSrj: input,
+          srjWithPointPairs,
+          routedTraces,
+        }),
+      ).toMatchSvgSnapshot(import.meta.path)
     })
 
     test.failing("the fully routed board should pass relaxed DRC", () => {
