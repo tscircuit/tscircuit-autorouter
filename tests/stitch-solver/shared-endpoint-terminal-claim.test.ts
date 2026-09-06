@@ -46,7 +46,7 @@ test("shared endpoint clustering preserves terminal claims and rejects conflicti
     }
     const inputSnapshot = structuredClone(routes)
     if (firstClaim === "conflicting-port") {
-      expect(createSolver).toThrow("conflicting PCB terminal claims")
+      expect(createSolver).toThrow("unknown PCB terminal")
     } else {
       const solver = createSolver()
       expect(solver.unsolvedRoutes).toHaveLength(1)

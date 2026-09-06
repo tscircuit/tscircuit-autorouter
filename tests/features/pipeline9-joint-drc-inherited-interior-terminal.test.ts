@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test"
-import { Pipeline9JointDrcRepairSolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9JointDrcRepairSolver"
+import { Pipeline9InheritedDrcRepairSolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9InheritedDrcRepairSolver"
 import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
 import { createPipeline9InheritedPadClearanceFixture } from "../fixtures/create-pipeline9-inherited-pad-clearance-fixture"
@@ -54,7 +54,7 @@ test("Pipeline9 rejects a DRC-clean proposal that moves a real interior terminal
     ],
   })
   const originalSrj = structuredClone(srj)
-  const solver = new Pipeline9JointDrcRepairSolver({
+  const solver = new Pipeline9InheritedDrcRepairSolver({
     ...fixture.solver.params,
     srj,
     srjWithPointPairs: srj,
@@ -64,7 +64,7 @@ test("Pipeline9 rejects a DRC-clean proposal that moves a real interior terminal
     obstacles: srj.obstacles,
   })
   const section = solver.movablePreloadedSections.find(
-    (candidate) => candidate.originalTrace === trace,
+    (candidate) => candidate.originalTrace.pcb_trace_id === trace.pcb_trace_id,
   )
   if (!section) throw new Error("Expected the inherited trace to be selected")
   expect(section.hdRoute.route[1]).toMatchObject({

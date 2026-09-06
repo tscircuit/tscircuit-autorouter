@@ -6,6 +6,7 @@ import { getXyPointKey } from "lib/autorouter-pipelines/AutoroutingPipeline8/get
 import { BaseSolver } from "../BaseSolver"
 import type { StitchTerminal } from "./getStitchTerminal"
 import type { IsStitchSegmentClear } from "./route-stitch-clearance-validator"
+import type { OrderedRouteStitchEntry } from "./routeStitchingEndpointHelpers"
 import {
   comparePoints,
   compareRoutes,
@@ -51,6 +52,7 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
 
   mergedHdRoute!: HighDensityIntraNodeRoute
   remainingHdRoutes: HighDensityIntraNodeRoute[]
+  private remainingOrderedRoutePath?: OrderedRouteStitchEntry[]
   start: StitchTerminal
   end: StitchTerminal
   colorMap: Record<string, string>
@@ -118,6 +120,7 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
   constructor(opts: {
     connectionName: string
     hdRoutes: HighDensityIntraNodeRoute[]
+    orderedRoutePath?: OrderedRouteStitchEntry[]
     start: StitchTerminal
     end: StitchTerminal
     colorMap?: Record<string, string>
@@ -129,6 +132,23 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
     stitchClearanceMode: StitchClearanceMode
   }) {
     super()
+    if (opts.orderedRoutePath) {
+      const pathRouteSet = new Set(
+        opts.orderedRoutePath.map(
+          (entry): HighDensityIntraNodeRoute => entry.route,
+        ),
+      )
+      if (
+        opts.orderedRoutePath.length !== opts.hdRoutes.length ||
+        pathRouteSet.size !== opts.hdRoutes.length ||
+        opts.hdRoutes.some((route): boolean => !pathRouteSet.has(route))
+      ) {
+        throw new Error(
+          `Ordered stitching path for "${opts.connectionName}" does not match its input routes`,
+        )
+      }
+      this.remainingOrderedRoutePath = [...opts.orderedRoutePath]
+    }
     const canonicalHdRoutes = [...opts.hdRoutes].sort(compareRoutes)
     this.remainingHdRoutes = canonicalHdRoutes
     this.colorMap = opts.colorMap ?? {}
@@ -265,6 +285,12 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
       }
     }
 
+    const firstPathEntry = this.remainingOrderedRoutePath?.[0]
+    if (firstPathEntry) {
+      firstRoute = firstPathEntry.route
+      orientation = "start-to-end"
+    }
+
     if (orientation === "start-to-end") {
       this.start = opts.start
       this.end = opts.end
@@ -277,10 +303,13 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
     const firstRouteLastPoint = firstRoute.route[firstRoute.route.length - 1]
     const distToFirst = distance(this.start, firstRouteFirstPoint)
     const distToLast = distance(this.start, firstRouteLastPoint)
-    const closestFirstRoutePoint =
-      distToFirst < distToLast - DISTANCE_TIE_TOLERANCE ||
-      (Math.abs(distToFirst - distToLast) <= DISTANCE_TIE_TOLERANCE &&
-        comparePoints(firstRouteFirstPoint, firstRouteLastPoint) <= 0)
+    const closestFirstRoutePoint = firstPathEntry
+      ? firstPathEntry.matchedOn === "first"
+        ? firstRouteFirstPoint
+        : firstRouteLastPoint
+      : distToFirst < distToLast - DISTANCE_TIE_TOLERANCE ||
+          (Math.abs(distToFirst - distToLast) <= DISTANCE_TIE_TOLERANCE &&
+            comparePoints(firstRouteFirstPoint, firstRouteLastPoint) <= 0)
         ? firstRouteFirstPoint
         : firstRouteLastPoint
     const closestFirstRoutePcbPortId =
@@ -417,6 +446,7 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
     const lastMergedPoint =
       this.mergedHdRoute.route[this.mergedHdRoute.route.length - 1]
     const startsAtTerminal = this.mergedHdRoute.route.length === 1
+    const nextPathEntry = this.remainingOrderedRoutePath?.[0]
 
     let closestRouteIndex = -1
     let matchedOn: "first" | "last" = "first"
@@ -425,6 +455,7 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
 
     for (let i = 0; i < this.remainingHdRoutes.length; i++) {
       const hdRoute = this.remainingHdRoutes[i]
+      if (nextPathEntry && hdRoute !== nextPathEntry.route) continue
       const firstPointInCandidate = hdRoute.route[0]
       const lastPointInCandidate = hdRoute.route[hdRoute.route.length - 1]
 
@@ -466,7 +497,10 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
         scoreFirst = VIA_PENALTY + distToFirst
       }
 
-      if (scoreFirst < bestScore) {
+      if (
+        (!nextPathEntry || nextPathEntry.matchedOn === "first") &&
+        scoreFirst < bestScore
+      ) {
         bestScore = scoreFirst
         closestRouteIndex = i
         matchedOn = "first"
@@ -507,7 +541,10 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
         scoreLast = VIA_PENALTY + distToLast
       }
 
-      if (scoreLast < bestScore) {
+      if (
+        (!nextPathEntry || nextPathEntry.matchedOn === "last") &&
+        scoreLast < bestScore
+      ) {
         bestScore = scoreLast
         closestRouteIndex = i
         matchedOn = "last"
@@ -515,6 +552,11 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
     }
 
     if (closestRouteIndex === -1) {
+      if (nextPathEntry) {
+        this.failed = true
+        this.error = `Ordered route stitch for "${this.mergedHdRoute.connectionName}" cannot follow its selected endpoint path`
+        return
+      }
       if (blockedByCollision) {
         this.failed = true
         this.error = `Route stitch for "${this.mergedHdRoute.connectionName}" violates copper clearance`
@@ -531,6 +573,7 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
 
     const hdRouteToMerge = this.remainingHdRoutes[closestRouteIndex]
     this.remainingHdRoutes.splice(closestRouteIndex, 1)
+    if (nextPathEntry) this.remainingOrderedRoutePath!.shift()
 
     let pointsToAdd: RoutePoint[]
     if (matchedOn === "first") {

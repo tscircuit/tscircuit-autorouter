@@ -1,4 +1,4 @@
-import { distance, type Point3 } from "@tscircuit/math-utils"
+import { distance } from "@tscircuit/math-utils"
 import { ConnectivityMap } from "connectivity-map"
 import { GraphicsObject } from "graphics-debug"
 import { SimpleRouteConnection } from "lib/types"
@@ -8,9 +8,12 @@ import { BaseSolver } from "../BaseSolver"
 import { safeTransparentize } from "../colors"
 import { RouteStitchClearanceValidator } from "./route-stitch-clearance-validator"
 import { SingleHighDensityRouteStitchSolver3 } from "./SingleHighDensityRouteStitchSolver3"
+import { getRouteStitchEndpoint } from "./getRouteStitchEndpoint"
 import { type StitchTerminal, getStitchTerminal } from "./getStitchTerminal"
 import {
   EndpointClusterIndex,
+  type OrderedRouteStitchEntry,
+  type RouteStitchPathSelection,
   hasStitchableGapBetweenUnsolvedRoutes,
   selectIslandEndpoints,
   selectRoutesAlongEndpointPath,
@@ -24,8 +27,9 @@ import {
 export type UnsolvedRoute3 = {
   connectionName: string
   hdRoutes: HighDensityIntraNodeRoute[]
-  start: Point3
-  end: Point3
+  orderedRoutePath?: OrderedRouteStitchEntry[]
+  start: StitchTerminal
+  end: StitchTerminal
 }
 
 export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
@@ -47,12 +51,14 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
   private canStitchBetweenTerminals(params: {
     connectionName: string
     hdRoutes: HighDensityIntraNodeRoute[]
-    start: Point3
-    end: Point3
-  }) {
+    start: StitchTerminal
+    end: StitchTerminal
+    orderedRoutePath?: OrderedRouteStitchEntry[]
+  }): boolean {
     const stitchSolver = new SingleHighDensityRouteStitchSolver3({
       connectionName: params.connectionName,
       hdRoutes: params.hdRoutes,
+      orderedRoutePath: params.orderedRoutePath,
       start: params.start,
       end: params.end,
       colorMap: this.colorMap,
@@ -73,7 +79,7 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
       stitchSolver.step()
     }
 
-    if (stitchSolver.failed) return false
+    if (stitchSolver.failed || !stitchSolver.solved) return false
 
     const routeStart = stitchSolver.mergedHdRoute.route[0]
     const routeEnd =
@@ -97,9 +103,9 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
     rootConnectionName?: string
     hdRoutes: HighDensityIntraNodeRoute[]
     allHdRoutes: HighDensityIntraNodeRoute[]
-    start: Point3
-    end: Point3
-  }) {
+    start: StitchTerminal
+    end: StitchTerminal
+  }): RouteStitchPathSelection | null {
     const rootConnectionName = params.rootConnectionName
     if (!rootConnectionName) return null
 
@@ -114,7 +120,7 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
       return null
     }
 
-    const pathRoutes = selectRoutesAlongEndpointPath({
+    const selection = selectRoutesAlongEndpointPath({
       connectionName: params.connectionName,
       hdRoutes: sameRootRoutes,
       start: params.start,
@@ -123,16 +129,16 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
       canStitchBetweenTerminals: (selection) =>
         this.canStitchBetweenTerminals(selection),
     })
+    if (!selection) return null
+    const pathRoutes = selection.hdRoutes
 
     const includesSharedRootBridge = pathRoutes.some(
       (route) => !currentRouteSet.has(route),
     )
-    // The endpoint path helper returns all candidate routes as a fallback when
-    // no path is found, so only accept a strict same-root subset.
-    if (!includesSharedRootBridge || pathRoutes.length >= sameRootRoutes.length)
-      return null
+    // A shared-root selection must actually add a bridge to this island.
+    if (!includesSharedRootBridge) return null
 
-    return pathRoutes
+    return selection
   }
 
   constructor(params: {
@@ -170,8 +176,8 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
 
     for (let i = 0; i < canonicalHdRoutes.length; i++) {
       const hdRoute = canonicalHdRoutes[i]
-      const start = hdRoute.route[0]
-      const end = hdRoute.route[hdRoute.route.length - 1]
+      const start = getRouteStitchEndpoint(hdRoute, "first")
+      const end = getRouteStitchEndpoint(hdRoute, "last")
       routeIslandConnections.push([
         `route_island_${i}`,
         this.endpointIndex.getEndpointKey(hdRoute.connectionName, start),
@@ -208,15 +214,8 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
       )!
 
       const possibleEndpoints1 = hdRoutes.flatMap((r) => [
-        r.startPcbPortId
-          ? { ...r.route[0], pcb_port_id: r.startPcbPortId }
-          : r.route[0],
-        r.endPcbPortId
-          ? {
-              ...r.route[r.route.length - 1],
-              pcb_port_id: r.endPcbPortId,
-            }
-          : r.route[r.route.length - 1],
+        getRouteStitchEndpoint(r, "first"),
+        getRouteStitchEndpoint(r, "last"),
       ])
 
       const possibleEndpointsByHash = new Map<string, StitchTerminal>()
@@ -302,19 +301,11 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
         )
       }
 
-      const selectedHdRoutes = selectRoutesAlongEndpointPath({
-        connectionName: hdRoutes[0].connectionName,
-        hdRoutes,
-        start,
-        end,
-        endpointIndex: this.endpointIndex,
-        canStitchBetweenTerminals: (selection) =>
-          this.canStitchBetweenTerminals(selection),
-      })
-
+      // Keep provisional islands intact until their connection-level merge
+      // is known; a nearby spur is not itself a required terminal path.
       this.unsolvedRoutes.push({
         connectionName: hdRoutes[0].connectionName,
-        hdRoutes: selectedHdRoutes,
+        hdRoutes,
         start,
         end,
       })
@@ -376,27 +367,39 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
           : null
 
       if (!hasDegenerateRoute && !hasStitchableGap && !sharedRootPathRoutes) {
-        return unsolvedRoutes
+        return unsolvedRoutes.map((route): UnsolvedRoute3 => {
+          const selection = selectRoutesAlongEndpointPath({
+            ...route,
+            endpointIndex: this.endpointIndex,
+            canStitchBetweenTerminals: (candidate) =>
+              this.canStitchBetweenTerminals(candidate),
+          })
+          if (!selection) {
+            throw new Error(
+              `No endpoint path connects the final route island for "${connectionName}"`,
+            )
+          }
+          return { ...route, ...selection }
+        })
       }
 
-      return [
-        {
+      const selection =
+        sharedRootPathRoutes ??
+        selectRoutesAlongEndpointPath({
           connectionName,
-          hdRoutes:
-            sharedRootPathRoutes ??
-            selectRoutesAlongEndpointPath({
-              connectionName,
-              hdRoutes,
-              start,
-              end,
-              endpointIndex: this.endpointIndex,
-              canStitchBetweenTerminals: (selection) =>
-                this.canStitchBetweenTerminals(selection),
-            }),
+          hdRoutes,
           start,
           end,
-        },
-      ]
+          endpointIndex: this.endpointIndex,
+          canStitchBetweenTerminals: (candidate) =>
+            this.canStitchBetweenTerminals(candidate),
+        })
+      if (!selection) {
+        throw new Error(
+          `No endpoint path connects the merged route islands for "${connectionName}"`,
+        )
+      }
+      return [{ connectionName, ...selection, start, end }]
     })
 
     this.MAX_ITERATIONS = 100e3
@@ -428,6 +431,7 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
     this.activeSolver = new SingleHighDensityRouteStitchSolver3({
       connectionName: unsolvedRoute.connectionName,
       hdRoutes: unsolvedRoute.hdRoutes,
+      orderedRoutePath: unsolvedRoute.orderedRoutePath,
       start: unsolvedRoute.start,
       end: unsolvedRoute.end,
       colorMap: this.colorMap,

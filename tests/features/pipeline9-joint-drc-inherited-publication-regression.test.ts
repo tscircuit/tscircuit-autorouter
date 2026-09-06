@@ -9,7 +9,8 @@ test("Pipeline9 publication rejects worse inherited copper without leaking repai
   if (!exactRepairSolver) {
     throw new Error("Expected inherited copper to enter exact repair")
   }
-  const originalPreloadedTraces = solver.inputUpdatedPreloadedTraces
+  const originalPreloadedTraces =
+    solver.getConstructorParams()[0].updatedPreloadedTraces
   const originalTraceRoute = trace.route
   const initialRoutes = structuredClone(exactRepairSolver.params.hdRoutes)
   expect(initialRoutes).toHaveLength(1)

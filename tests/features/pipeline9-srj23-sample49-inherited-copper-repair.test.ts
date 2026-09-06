@@ -26,7 +26,7 @@ test("Pipeline9 reduces inherited copper DRCs on SRJ23 benchmark sample 49", asy
 
   expect(solver.solved).toBeTrue()
   expect(solver.failed).toBeFalse()
-  const jointRepair = solver.pipeline9JointDrcRepairSolver
+  const jointRepair = solver.pipeline9InheritedDrcRepairSolver
   expect(jointRepair).toBeDefined()
   expect(Number(jointRepair?.stats.movablePreloadedTraceCount)).toBeGreaterThan(
     0,

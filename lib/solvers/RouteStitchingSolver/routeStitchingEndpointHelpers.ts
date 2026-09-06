@@ -1,5 +1,6 @@
 import { distance, type Point3 } from "@tscircuit/math-utils"
 import type { HighDensityIntraNodeRoute } from "lib/types/high-density-types"
+import { getRouteStitchEndpoint } from "./getRouteStitchEndpoint"
 import type { StitchTerminal } from "./getStitchTerminal"
 import {
   comparePoints,
@@ -17,13 +18,28 @@ export const ENDPOINT_MATCH_TOLERANCE = 0.1
 type EndpointEdge = {
   nextHash: string
   routeIndex: number | null
+  matchedOn?: "first" | "last"
 }
+
+export type OrderedRouteStitchEntry = {
+  route: HighDensityIntraNodeRoute
+  matchedOn: "first" | "last"
+}
+
+export type RouteStitchPathSelection = {
+  hdRoutes: HighDensityIntraNodeRoute[]
+  orderedRoutePath?: OrderedRouteStitchEntry[]
+}
+
+type EndpointPathCost = { gapCount: number; hopCount: number }
+type EndpointCluster = { key: string; point: StitchTerminal }
 
 export type CanStitchBetweenTerminals = (params: {
   connectionName: string
   hdRoutes: HighDensityIntraNodeRoute[]
-  start: Point3
-  end: Point3
+  start: StitchTerminal
+  end: StitchTerminal
+  orderedRoutePath?: OrderedRouteStitchEntry[]
 }) => boolean
 
 /**
@@ -31,21 +47,38 @@ export type CanStitchBetweenTerminals = (params: {
  * fragments that terminate at effectively the same location share one key.
  */
 export class EndpointClusterIndex {
-  private endpointClusters = new Map<
-    string,
-    Array<{ key: string; point: Point3 }>
-  >()
+  private endpointClusters = new Map<string, EndpointCluster[]>()
+  private assignedEndpointKeys = new Map<string, Map<string, string>>()
 
   constructor(private readonly preferSameLayerTerminalEndpoints = false) {}
 
-  getEndpointKey(connectionName: string, point: Point3) {
+  getEndpointKey(connectionName: string, point: StitchTerminal): string {
+    const pointIdentity = JSON.stringify([
+      point.x,
+      point.y,
+      point.z,
+      point.pcb_port_id,
+    ])
+    const assignedKeys =
+      this.assignedEndpointKeys.get(connectionName) ?? new Map<string, string>()
+    const assignedKey = assignedKeys.get(pointIdentity)
+    if (assignedKey !== undefined) return assignedKey
     const clusters = this.endpointClusters.get(connectionName) ?? []
 
-    let bestCluster: { key: string; point: Point3 } | undefined
+    let bestCluster: EndpointCluster | undefined
     let bestDistance = Infinity
 
     for (const cluster of clusters) {
       if (cluster.point.z !== point.z) continue
+      // Nearby same-net pads can overlap while remaining distinct terminals.
+      // Their route boundaries must not lose identity through fuzzy matching.
+      if (
+        cluster.point.pcb_port_id &&
+        point.pcb_port_id &&
+        cluster.point.pcb_port_id !== point.pcb_port_id
+      ) {
+        continue
+      }
       const clusterDistance = distance(cluster.point, point)
       if (
         clusterDistance <= ENDPOINT_MATCH_TOLERANCE &&
@@ -60,38 +93,55 @@ export class EndpointClusterIndex {
     }
 
     if (bestCluster) {
+      if (!bestCluster.point.pcb_port_id && point.pcb_port_id) {
+        bestCluster.point = {
+          ...bestCluster.point,
+          pcb_port_id: point.pcb_port_id,
+        }
+      }
+      assignedKeys.set(pointIdentity, bestCluster.key)
+      this.assignedEndpointKeys.set(connectionName, assignedKeys)
       return bestCluster.key
     }
 
     const key = `${connectionName}:endpoint_${clusters.length}`
     clusters.push({
       key,
-      point: { x: point.x, y: point.y, z: point.z },
+      point: { ...point },
     })
+    assignedKeys.set(pointIdentity, key)
+    this.assignedEndpointKeys.set(connectionName, assignedKeys)
     this.endpointClusters.set(connectionName, clusters)
     return key
   }
 
-  getClusters(connectionName: string) {
+  getClusters(connectionName: string): EndpointCluster[] {
     return this.endpointClusters.get(connectionName) ?? []
   }
 
   getClosestEndpointKey(
     connectionName: string,
     routes: HighDensityIntraNodeRoute[],
-    point: Point3,
-  ) {
+    point: StitchTerminal,
+  ): string | null {
     const routeEndpoints = routes.flatMap((route) => [
-      route.route[0]!,
-      route.route[route.route.length - 1]!,
+      getRouteStitchEndpoint(route, "first"),
+      getRouteStitchEndpoint(route, "last"),
     ])
-    const sameLayerEndpoints = routeEndpoints.filter(
+    const claimedEndpoints = point.pcb_port_id
+      ? routeEndpoints.filter(
+          (endpoint): boolean => endpoint.pcb_port_id === point.pcb_port_id,
+        )
+      : []
+    const matchingEndpoints =
+      claimedEndpoints.length > 0 ? claimedEndpoints : routeEndpoints
+    const sameLayerEndpoints = matchingEndpoints.filter(
       (endpoint) => endpoint.z === point.z,
     )
     const candidateEndpoints =
       this.preferSameLayerTerminalEndpoints && sameLayerEndpoints.length > 0
         ? sameLayerEndpoints
-        : routeEndpoints
+        : matchingEndpoints
     let bestHash: string | null = null
     let bestEndpoint: Point3 | null = null
     let bestDist = Infinity
@@ -122,7 +172,7 @@ const addAdjacencyEdge = (
   adjacency: Map<string, EndpointEdge[]>,
   fromHash: string,
   edge: EndpointEdge,
-) => {
+): void => {
   const entries = adjacency.get(fromHash) ?? []
   if (
     entries.some(
@@ -142,10 +192,10 @@ const addAdjacencyEdge = (
  * terminals, with deterministic tie-breaking.
  */
 export const selectIslandEndpoints = (params: {
-  possibleEndpoints: Point3[]
-  globalStart: Point3
-  globalEnd: Point3
-}) => {
+  possibleEndpoints: StitchTerminal[]
+  globalStart: StitchTerminal
+  globalEnd: StitchTerminal
+}): { start: StitchTerminal; end: StitchTerminal } => {
   const sortedEndpoints = [...params.possibleEndpoints].sort(comparePoints)
   const start = sortedEndpoints.reduce((bestPoint, point) => {
     const pointDistance = distance(point, params.globalStart)
@@ -229,18 +279,18 @@ export const snapIslandEndpointToNearestTerminal = (params: {
 
 /**
  * Returns the route islands on the deterministic endpoint path between the
- * chosen terminals. If the subset cannot actually stitch to both terminals,
- * the full route set is returned instead.
+ * chosen terminals, minimizing newly introduced gaps before route hops.
+ * A rejected path must not become an unvalidated superset of route islands.
  */
 export const selectRoutesAlongEndpointPath = (params: {
   connectionName: string
   hdRoutes: HighDensityIntraNodeRoute[]
-  start: Point3
-  end: Point3
+  start: StitchTerminal
+  end: StitchTerminal
   endpointIndex: EndpointClusterIndex
   canStitchBetweenTerminals: CanStitchBetweenTerminals
-}) => {
-  if (params.hdRoutes.length <= 2) return params.hdRoutes
+}): RouteStitchPathSelection | null => {
+  if (params.hdRoutes.length <= 2) return { hdRoutes: params.hdRoutes }
 
   const canonicalHdRoutes = [...params.hdRoutes].sort(compareRoutes)
 
@@ -256,7 +306,7 @@ export const selectRoutesAlongEndpointPath = (params: {
   )
 
   if (!startHash || !endHash || startHash === endHash) {
-    return canonicalHdRoutes
+    return null
   }
 
   const adjacency = new Map<string, EndpointEdge[]>()
@@ -265,20 +315,22 @@ export const selectRoutesAlongEndpointPath = (params: {
     const route = canonicalHdRoutes[i]!
     const routeStartHash = params.endpointIndex.getEndpointKey(
       params.connectionName,
-      route.route[0]!,
+      getRouteStitchEndpoint(route, "first"),
     )
     const routeEndHash = params.endpointIndex.getEndpointKey(
       params.connectionName,
-      route.route[route.route.length - 1]!,
+      getRouteStitchEndpoint(route, "last"),
     )
 
     addAdjacencyEdge(adjacency, routeStartHash, {
       nextHash: routeEndHash,
       routeIndex: i,
+      matchedOn: "first",
     })
     addAdjacencyEdge(adjacency, routeEndHash, {
       nextHash: routeStartHash,
       routeIndex: i,
+      matchedOn: "last",
     })
   }
 
@@ -324,46 +376,89 @@ export const selectRoutesAlongEndpointPath = (params: {
     )
   }
 
-  const queue = [startHash]
-  const visitedHashes = new Set<string>([startHash])
+  const pendingHashes = new Set<string>([startHash])
+  const settledHashes = new Set<string>()
+  const costsByHash = new Map<string, EndpointPathCost>([
+    [startHash, { gapCount: 0, hopCount: 0 }],
+  ])
   const prevByHash = new Map<
     string,
-    { prevHash: string; routeIndex: number | null }
+    { prevHash: string; edge: EndpointEdge }
   >()
 
-  while (queue.length > 0) {
-    const currentHash = queue.shift()!
+  while (pendingHashes.size > 0) {
+    let currentHash: string | undefined
+    let currentCost: EndpointPathCost | undefined
+    for (const candidateHash of pendingHashes) {
+      const candidateCost = costsByHash.get(candidateHash)!
+      if (
+        !currentCost ||
+        candidateCost.gapCount < currentCost.gapCount ||
+        (candidateCost.gapCount === currentCost.gapCount &&
+          candidateCost.hopCount < currentCost.hopCount)
+      ) {
+        currentHash = candidateHash
+        currentCost = candidateCost
+      }
+    }
+    if (currentHash === undefined || currentCost === undefined) {
+      throw new Error("Route stitching path queue lost its endpoint cost")
+    }
+    pendingHashes.delete(currentHash)
+    settledHashes.add(currentHash)
     if (currentHash === endHash) break
 
     for (const edge of adjacency.get(currentHash) ?? []) {
-      if (visitedHashes.has(edge.nextHash)) continue
-      visitedHashes.add(edge.nextHash)
+      if (settledHashes.has(edge.nextHash)) continue
+      const nextCost: EndpointPathCost = {
+        gapCount: currentCost.gapCount + (edge.routeIndex === null ? 1 : 0),
+        hopCount: currentCost.hopCount + 1,
+      }
+      const previousCost = costsByHash.get(edge.nextHash)
+      if (
+        previousCost &&
+        (previousCost.gapCount < nextCost.gapCount ||
+          (previousCost.gapCount === nextCost.gapCount &&
+            previousCost.hopCount <= nextCost.hopCount))
+      ) {
+        continue
+      }
+      costsByHash.set(edge.nextHash, nextCost)
       prevByHash.set(edge.nextHash, {
         prevHash: currentHash,
-        routeIndex: edge.routeIndex,
+        edge,
       })
-      queue.push(edge.nextHash)
+      pendingHashes.add(edge.nextHash)
     }
   }
 
-  if (!visitedHashes.has(endHash)) return canonicalHdRoutes
+  if (!settledHashes.has(endHash)) return null
 
-  const selectedRouteIndexesInReverse: number[] = []
+  const selectedEntriesInReverse: OrderedRouteStitchEntry[] = []
   let cursorHash = endHash
   while (cursorHash !== startHash) {
     const prev = prevByHash.get(cursorHash)
-    if (!prev) return canonicalHdRoutes
-    if (prev.routeIndex !== null) {
-      selectedRouteIndexesInReverse.push(prev.routeIndex)
+    if (!prev) {
+      throw new Error("Route stitching path lost its predecessor endpoint")
+    }
+    if (prev.edge.routeIndex !== null) {
+      if (!prev.edge.matchedOn) {
+        throw new Error("Route stitching path lost its route orientation")
+      }
+      selectedEntriesInReverse.push({
+        route: canonicalHdRoutes[prev.edge.routeIndex]!,
+        matchedOn: prev.edge.matchedOn,
+      })
     }
     cursorHash = prev.prevHash
   }
 
-  if (selectedRouteIndexesInReverse.length === 0) return params.hdRoutes
+  if (selectedEntriesInReverse.length === 0) return null
 
-  const selectedHdRoutes = selectedRouteIndexesInReverse
-    .reverse()
-    .map((routeIndex) => canonicalHdRoutes[routeIndex]!)
+  const orderedRoutePath = selectedEntriesInReverse.reverse()
+  const selectedHdRoutes = orderedRoutePath.map(
+    (entry): HighDensityIntraNodeRoute => entry.route,
+  )
 
   if (
     selectedHdRoutes.length > 0 &&
@@ -372,12 +467,15 @@ export const selectRoutesAlongEndpointPath = (params: {
       hdRoutes: selectedHdRoutes,
       start: params.start,
       end: params.end,
+      orderedRoutePath,
     })
   ) {
-    return canonicalHdRoutes
+    throw new Error(
+      `Selected route stitching path for "${params.connectionName}" cannot connect its terminals without violating stitch constraints`,
+    )
   }
 
-  return selectedHdRoutes
+  return { hdRoutes: selectedHdRoutes, orderedRoutePath }
 }
 
 export const hasStitchableGapBetweenUnsolvedRoutes = (

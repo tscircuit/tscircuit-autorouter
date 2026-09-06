@@ -1,4 +1,4 @@
-import { Pipeline9JointDrcRepairSolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9JointDrcRepairSolver"
+import { Pipeline9InheritedDrcRepairSolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9InheritedDrcRepairSolver"
 import type { Obstacle, SimpleRouteJson, SimplifiedPcbTrace } from "lib/types"
 import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
 
@@ -6,7 +6,7 @@ type InheritedPadClearanceFixture = {
   srj: SimpleRouteJson
   originalSrj: SimpleRouteJson
   trace: SimplifiedPcbTrace
-  solver: Pipeline9JointDrcRepairSolver
+  solver: Pipeline9InheritedDrcRepairSolver
 }
 
 export const createPipeline9InheritedPadClearanceFixture = (
@@ -150,7 +150,7 @@ export const createPipeline9InheritedPadClearanceFixture = (
     traces: [trace],
   }
   const originalSrj = structuredClone(srj)
-  const solver = new Pipeline9JointDrcRepairSolver({
+  const solver = new Pipeline9InheritedDrcRepairSolver({
     srj,
     srjWithPointPairs: srj,
     originalSrj: srj,
