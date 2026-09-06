@@ -23,7 +23,9 @@ describe.skipIf(process.env.RUN_GBA_THROUGH_VIA_REPRO !== "1")(
           import.meta.url,
         ),
       )
-      const inputSha256 = createHash("sha256").update(inputBytes).digest("hex")
+      const inputSha256 = createHash("sha256")
+        .update(new Uint8Array(inputBytes))
+        .digest("hex")
       expect(inputSha256).toBe(
         "aa8aae92f1f829a02d808d7590cf276882619dfa90693eb7c18094a060a7ac6b",
       )
