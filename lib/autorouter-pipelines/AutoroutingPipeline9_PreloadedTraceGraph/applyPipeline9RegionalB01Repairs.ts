@@ -740,10 +740,13 @@ export const applyPipeline9RegionalB01Repairs = ({
           if (isPipeline9DrcCandidateBetter(candidateErrors, bestErrors)) {
             bestRoutes = candidate.routes
             bestErrors = candidateErrors
+            // Commit the first monotonic improvement for this finding. The
+            // refreshed DRC set is more useful than spending the bounded
+            // search budget comparing larger windows against stale geometry.
+            break
           }
-          if (bestErrors.length === 0) break
         }
-        if (bestErrors.length === 0) break
+        if (bestRoutes !== currentRoutes) break
       }
       if (bestRoutes === currentRoutes && !candidateSearchBudgetExhausted) {
         const searchKey = `regular:${center.x}:${center.y}`
