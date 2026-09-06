@@ -29,6 +29,14 @@ type Pipeline9Repair04SolverParams = {
   enabled: boolean
   maxRegions?: number
   maxCandidatesPerRegion?: number
+  /** Stop after this many proposals without a retained full-board improvement. */
+  maxCandidateAttemptsSinceAcceptance?: number
+  /** Smaller initial allowance before this stage has demonstrated a valid repair. */
+  maxInitialCandidateAttempts?: number
+  /** Bound A* heap pops across regions until a full-board improvement is retained. */
+  maxPathSearchNodesSinceAcceptance?: number
+  /** Limit one crop so unsuccessful searches can still try larger bounds. */
+  maxPathSearchNodesPerRegion?: number
   allowLayerChanges?: boolean
   /** Skip the child's repeated planar phase only when layer changes are permitted. */
   traceOnlyFirst?: boolean
@@ -48,9 +56,30 @@ export class Pipeline9Repair04Solver extends BaseSolver {
   private attempted = new Set<string>()
   private regionCount = 0
   private acceptedRegionCount = 0
+  private candidateAttempts = 0
+  private pathSearchNodes = 0
+  private pathSearchCalls = 0
+  private attemptsSinceAcceptance = 0
+  private nodesSinceAcceptance = 0
+  private readonly trackWork: boolean
 
   constructor(private readonly input: Pipeline9Repair04SolverParams) {
     super()
+    for (const name of [
+      "maxCandidateAttemptsSinceAcceptance",
+      "maxInitialCandidateAttempts",
+      "maxPathSearchNodesSinceAcceptance",
+      "maxPathSearchNodesPerRegion",
+    ] as const) {
+      const limit = input[name]
+      if (limit !== undefined && (!Number.isSafeInteger(limit) || limit < 1))
+        throw new Error(`repair04: ${name} must be a positive safe integer`)
+    }
+    this.trackWork =
+      input.maxCandidateAttemptsSinceAcceptance !== undefined ||
+      input.maxInitialCandidateAttempts !== undefined ||
+      input.maxPathSearchNodesSinceAcceptance !== undefined ||
+      input.maxPathSearchNodesPerRegion !== undefined
     this.routes = input.hdRoutes
     this.engine = new AutoroutingDrcEngine(input.srj as any, {
       // Local DRC uses declared SRJ net aliases. The topology connectivity map
@@ -81,9 +110,66 @@ export class Pipeline9Repair04Solver extends BaseSolver {
     ] as any).errorsWithCenters
   }
 
+  private getCandidateAttemptLimit(): number | undefined {
+    if (
+      this.acceptedRegionCount === 0 &&
+      this.input.maxInitialCandidateAttempts !== undefined
+    )
+      return this.input.maxInitialCandidateAttempts
+    return this.input.maxCandidateAttemptsSinceAcceptance
+  }
+
+  private recordCompletedWork(): void {
+    if (!this.trackWork) return
+    if (!this.localSolver) throw new Error("repair04: missing work source")
+    const { candidateAttempts, pathSearchNodes, pathSearchCalls } =
+      this.localSolver.stats
+    for (const [name, count] of Object.entries({
+      candidateAttempts,
+      pathSearchNodes,
+      pathSearchCalls,
+    })) {
+      if (!Number.isSafeInteger(count) || count < 0)
+        throw new Error(`repair04: invalid completed child ${name}`)
+    }
+    this.candidateAttempts += candidateAttempts
+    this.pathSearchNodes += pathSearchNodes
+    this.pathSearchCalls += pathSearchCalls
+    this.attemptsSinceAcceptance += candidateAttempts
+    this.nodesSinceAcceptance += pathSearchNodes
+  }
+
+  private finishRepair(
+    completionReason:
+      | "disabled"
+      | "clean"
+      | "region-budget"
+      | "unsuccessful-work-budget"
+      | "search-exhausted",
+  ): void {
+    this.stats = {
+      ...this.stats,
+      regions: this.regionCount,
+      acceptedRegions: this.acceptedRegionCount,
+      indexedErrors: this.issues?.length ?? null,
+      referenceErrors: this.referenceErrors?.length ?? null,
+      completionReason,
+      ...(this.trackWork
+        ? {
+            candidateAttempts: this.candidateAttempts,
+            pathSearchNodes: this.pathSearchNodes,
+            pathSearchCalls: this.pathSearchCalls,
+            attemptsSinceAcceptance: this.attemptsSinceAcceptance,
+            nodesSinceAcceptance: this.nodesSinceAcceptance,
+          }
+        : {}),
+    }
+    this.solved = true
+  }
+
   override _step(): void {
     if (!this.input.enabled) {
-      this.solved = true
+      this.finishRepair("disabled")
       return
     }
     if (!this.issues) {
@@ -102,6 +188,7 @@ export class Pipeline9Repair04Solver extends BaseSolver {
         throw new Error(`repair04 failed: ${this.localSolver.error}`)
       if (!this.localSolver.solved) return
       if (!this.region) throw new Error("repair04: completed region is missing")
+      this.recordCompletedWork()
       const candidate = mergeRepairRegion({
         routes: this.routes,
         region: this.region,
@@ -147,6 +234,10 @@ export class Pipeline9Repair04Solver extends BaseSolver {
               ]),
             )
             this.acceptedRegionCount++
+            // Child-local improvements do not reset this ledger. Only the
+            // proposal retained by every full-board acceptance guard does.
+            this.attemptsSinceAcceptance = 0
+            this.nodesSinceAcceptance = 0
           }
         }
       }
@@ -157,13 +248,33 @@ export class Pipeline9Repair04Solver extends BaseSolver {
         acceptedRegions: this.acceptedRegionCount,
         indexedErrors: this.issues.length,
         referenceErrors: this.referenceErrors!.length,
+        ...(this.trackWork
+          ? {
+              candidateAttempts: this.candidateAttempts,
+              pathSearchNodes: this.pathSearchNodes,
+              pathSearchCalls: this.pathSearchCalls,
+              attemptsSinceAcceptance: this.attemptsSinceAcceptance,
+              nodesSinceAcceptance: this.nodesSinceAcceptance,
+            }
+          : {}),
       }
     }
+    if (this.referenceErrors!.length === 0) {
+      this.finishRepair("clean")
+      return
+    }
+    if (this.regionCount >= (this.input.maxRegions ?? 32)) {
+      this.finishRepair("region-budget")
+      return
+    }
+    const candidateAttemptLimit = this.getCandidateAttemptLimit()
     if (
-      this.referenceErrors!.length === 0 ||
-      this.regionCount >= (this.input.maxRegions ?? 32)
+      (candidateAttemptLimit !== undefined &&
+        this.attemptsSinceAcceptance >= candidateAttemptLimit) ||
+      (this.input.maxPathSearchNodesSinceAcceptance !== undefined &&
+        this.nodesSinceAcceptance >= this.input.maxPathSearchNodesSinceAcceptance)
     ) {
-      this.solved = true
+      this.finishRepair("unsuccessful-work-budget")
       return
     }
     // Escalate one issue's context before moving on; a long issue list must
@@ -267,6 +378,22 @@ export class Pipeline9Repair04Solver extends BaseSolver {
               this.input.allowLayerChanges === true && !allowLayerChanges
                 ? Math.min(512, this.input.maxCandidatesPerRegion ?? 8000)
                 : (this.input.maxCandidatesPerRegion ?? 8000),
+            ...(this.trackWork
+              ? {
+                  maxCandidateAttempts:
+                    candidateAttemptLimit === undefined
+                      ? Number.MAX_SAFE_INTEGER
+                      : candidateAttemptLimit - this.attemptsSinceAcceptance,
+                  maxPathSearchNodes: Math.min(
+                    this.input.maxPathSearchNodesPerRegion ??
+                      Number.MAX_SAFE_INTEGER,
+                    this.input.maxPathSearchNodesSinceAcceptance === undefined
+                      ? Number.MAX_SAFE_INTEGER
+                      : this.input.maxPathSearchNodesSinceAcceptance -
+                        this.nodesSinceAcceptance,
+                  ),
+                }
+              : {}),
             allowLayerChanges,
             traceOnlyFirst: this.input.traceOnlyFirst,
             movableVias,
@@ -276,7 +403,7 @@ export class Pipeline9Repair04Solver extends BaseSolver {
         }
       }
     }
-    this.solved = true
+    this.finishRepair("search-exhausted")
   }
 
   getOutput(): HighDensityRoute[] {
