@@ -3,7 +3,7 @@ import {
   checkViasInPads,
   dedupePcbDrcErrors,
   runAllRoutingChecks,
-} from "@tscircuit/checks"
+} from "@tscircuit/checks-core-drc"
 import { evaluateCoreRoutingDrc } from "lib/testing/evaluate-core-routing-drc"
 import type { SimpleRouteJson, SimplifiedPcbTrace } from "lib/types"
 
@@ -113,12 +113,15 @@ test("Core routing DRC parity preserves repair ownership", async () => {
     srjWithPointPairs: srj,
     routedTraces: [routedTrace],
   })
-  const coreRoutingResults = await runAllRoutingChecks(result.circuitJson)
+  const coreChecksCircuitJson = result.circuitJson as unknown as Parameters<
+    typeof runAllRoutingChecks
+  >[0]
+  const coreRoutingResults = await runAllRoutingChecks(coreChecksCircuitJson)
   const expectedErrors = dedupePcbDrcErrors([
     ...coreRoutingResults.filter(
       (element) => element.type !== "pcb_trace_too_long_warning",
     ),
-    ...checkViasInPads(result.circuitJson),
+    ...checkViasInPads(coreChecksCircuitJson),
   ])
   const maxViaError = result.errors.find(
     (error) =>

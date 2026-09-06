@@ -13,7 +13,7 @@ import {
   checkViaTraceClearance,
   checkViasInPads,
   dedupePcbDrcErrors,
-} from "@tscircuit/checks"
+} from "@tscircuit/checks-core-drc"
 import type {
   AnyCircuitElement,
   PcbPadPadClearanceError,
@@ -162,26 +162,29 @@ export const evaluateCoreRoutingDrc = ({
       includeOriginalConnections: true,
     }),
   ]
-  const warnings = checkPcbTraceLengths(circuitJson)
-  const maxViaCountErrors = checkPcbTraceViaCounts(circuitJson)
+  const coreChecksCircuitJson = circuitJson as unknown as Parameters<
+    typeof checkPcbTraceLengths
+  >[0]
+  const warnings = checkPcbTraceLengths(coreChecksCircuitJson)
+  const maxViaCountErrors = checkPcbTraceViaCounts(coreChecksCircuitJson)
   const routingErrors = [
-    ...checkEachPcbPortConnectedToPcbTraces(circuitJson),
-    ...checkSourceTracesHavePcbTraces(circuitJson),
+    ...checkEachPcbPortConnectedToPcbTraces(coreChecksCircuitJson),
+    ...checkSourceTracesHavePcbTraces(coreChecksCircuitJson),
     ...maxViaCountErrors,
-    ...checkEachPcbTraceNonOverlapping(circuitJson),
-    ...checkPadTraceClearance(circuitJson),
-    ...checkViaTraceClearance(circuitJson),
-    ...checkViaPadClearance(circuitJson),
-    ...checkSameNetViaSpacing(circuitJson),
-    ...checkDifferentNetViaSpacing(circuitJson),
-    ...checkTracesAreContiguous(circuitJson),
-    ...checkPcbTracesOutOfBoard(circuitJson),
-    ...checkViasInPads(circuitJson),
-  ] as AnyCircuitElement[]
+    ...checkEachPcbTraceNonOverlapping(coreChecksCircuitJson),
+    ...checkPadTraceClearance(coreChecksCircuitJson),
+    ...checkViaTraceClearance(coreChecksCircuitJson),
+    ...checkViaPadClearance(coreChecksCircuitJson),
+    ...checkSameNetViaSpacing(coreChecksCircuitJson),
+    ...checkDifferentNetViaSpacing(coreChecksCircuitJson),
+    ...checkTracesAreContiguous(coreChecksCircuitJson),
+    ...checkPcbTracesOutOfBoard(coreChecksCircuitJson),
+    ...checkViasInPads(coreChecksCircuitJson),
+  ]
   const errors = addRepairOwnership(
-    dedupePcbDrcErrors(routingErrors),
+    dedupePcbDrcErrors(routingErrors) as unknown as AnyCircuitElement[],
     circuitJson,
-    new Set(maxViaCountErrors),
+    new Set(maxViaCountErrors) as unknown as ReadonlySet<AnyCircuitElement>,
   )
   const errorsWithCenters = errors.filter(
     (error) => error.center !== undefined || error.pcb_center !== undefined,
@@ -196,6 +199,6 @@ export const evaluateCoreRoutingDrc = ({
     errors,
     errorsWithCenters,
     locationAwareErrors,
-    warnings,
+    warnings: warnings as unknown as PcbTraceTooLongWarning[],
   }
 }

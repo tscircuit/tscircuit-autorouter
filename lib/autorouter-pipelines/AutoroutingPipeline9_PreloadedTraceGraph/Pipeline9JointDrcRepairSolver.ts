@@ -1225,18 +1225,28 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       }
     }
 
-    const referenceDrcEvaluator: DrcEvaluator = ({ routes, hdRoutes }) => {
-      const evaluatedRoutes = routes ?? hdRoutes
-      if (!evaluatedRoutes) {
-        throw new Error("Pipeline9 reference DRC repair requires HD routes")
-      }
+    const evaluateCandidateReferenceDrc = (
+      evaluatedRoutes: HighDensityRoute[],
+      evaluationKind: "pipeline9" | "relaxed",
+    ): NormalizedCandidateDrcResult => {
       const candidateDrcInput = prepareCandidateDrcInput(evaluatedRoutes)
-      const evaluatedDrcEvaluation = evaluatePipeline9ReferenceDrc({
-        inputSrj: params.originalSrj,
-        srjWithPointPairs: params.srjWithPointPairs,
-        routedTraces: candidateDrcInput.routedTraces,
-        traceClearance,
-      })
+      const evaluatedDrcEvaluation =
+        evaluationKind === "pipeline9"
+          ? evaluatePipeline9ReferenceDrc({
+              inputSrj: params.originalSrj,
+              srjWithPointPairs: params.srjWithPointPairs,
+              routedTraces: candidateDrcInput.routedTraces,
+              traceClearance,
+            })
+          : {
+              kind: "relaxed" as const,
+              result: evaluateRelaxedDrc({
+                inputSrj: params.originalSrj,
+                srjWithPointPairs: params.srjWithPointPairs,
+                routedTraces: candidateDrcInput.routedTraces,
+                drcOptions: { traceClearance },
+              }),
+            }
       const evaluatedDrc = evaluatedDrcEvaluation.result
       const candidateBaselineErrors =
         evaluatedDrcEvaluation.kind === "relaxed"
@@ -1284,6 +1294,23 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         solverTraceIdByEvaluationTraceId:
           candidateDrcInput.solverTraceIdByEvaluationTraceId,
       })
+    }
+    const referenceDrcEvaluator: DrcEvaluator = ({ routes, hdRoutes }) => {
+      const evaluatedRoutes = routes ?? hdRoutes
+      if (!evaluatedRoutes) {
+        throw new Error("Pipeline9 reference DRC repair requires HD routes")
+      }
+      return evaluateCandidateReferenceDrc(evaluatedRoutes, "pipeline9")
+    }
+    const relaxedReferenceDrcEvaluator: DrcEvaluator = ({
+      routes,
+      hdRoutes,
+    }) => {
+      const evaluatedRoutes = routes ?? hdRoutes
+      if (!evaluatedRoutes) {
+        throw new Error("Pipeline9 relaxed DRC guard requires HD routes")
+      }
+      return evaluateCandidateReferenceDrc(evaluatedRoutes, "relaxed")
     }
     const cachedReferenceDrcEvaluator: DrcEvaluator = ({
       routes,
@@ -1411,6 +1438,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       effort: params.effort,
       viaHoleDiameter: params.defaultViaHoleDiameter,
       drcEvaluator,
+      referenceDrcEvaluator: relaxedReferenceDrcEvaluator,
       viaInPadDrcEvaluator: drcEvaluator,
       maxIterations: EXACT_REPAIR_MAX_ITERATIONS,
       enableBroadFallback: false,
