@@ -108,6 +108,7 @@ test("Pipeline9 regional repair clears a real via pair without moving fixed copp
       syntheticConnectionNames: new Set(),
       drcEvaluator,
       preloadRepairTraceIds: new Set(["signal_0"]),
+      additionalRepairConnectionNames: new Set(),
       connMap,
       colorMap: {},
       viaDiameter: 0.4,

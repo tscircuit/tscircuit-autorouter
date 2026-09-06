@@ -9,7 +9,7 @@ import type { Obstacle, SimpleRouteJson, SimplifiedPcbTrace } from "lib/types"
 import type { HighDensityRoute } from "lib/types/high-density-types"
 import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
 
-test("Pipeline9 regional repair targets the colliding via instead of the long trace midpoint", (): void => {
+test("Pipeline9 regional repair targets a routable via at its exact collision center", (): void => {
   const fixedTrace: SimplifiedPcbTrace = {
     type: "pcb_trace",
     pcb_trace_id: "fixed_via_trace",
@@ -116,7 +116,8 @@ test("Pipeline9 regional repair targets the colliding via instead of the long tr
       newConnections: srj.connections,
       syntheticConnectionNames: new Set(),
       drcEvaluator,
-      preloadRepairTraceIds: new Set(["signal_0"]),
+      preloadRepairTraceIds: new Set(),
+      additionalRepairConnectionNames: new Set(["signal"]),
       connMap,
       colorMap: {},
       viaDiameter: 0.3,
@@ -126,6 +127,8 @@ test("Pipeline9 regional repair targets the colliding via instead of the long tr
     })
 
   expect(result.acceptedCandidateCount).toBeGreaterThan(0)
+  expect(result.repairAttempted).toBeTrue()
+  expect(result.preloadRepairAttempted).toBeFalse()
   expect(result.routes).toHaveLength(1)
   expect(getPipeline9DrcErrors(drcEvaluator, result.routes)).toHaveLength(0)
   expect(result.routes[0]!.route[0]).toEqual(routeSnapshot[0]!.route[0])

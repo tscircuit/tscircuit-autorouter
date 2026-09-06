@@ -1470,6 +1470,15 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       fixedPreloadedObstacleRoutes: this.fixedPreloadedObstacleRoutes,
       updatedPreloadedTraces: this.params.updatedPreloadedTraces,
     })
+    const additionalRegionalRepairConnectionNames =
+      shouldRunPostExactPrecisionPass
+        ? new Set([
+            ...this.params.newConnections.map(
+              (connection): string => connection.name,
+            ),
+            ...this.syntheticConnectionNames,
+          ])
+        : new Set<string>()
     const regionalB01RepairResult = applyPipeline9RegionalB01Repairs({
       srj: this.params.srj,
       routes: terminalEscapeResult.routes,
@@ -1479,6 +1488,8 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       drcEvaluator: this.drcEvaluator!,
       initialErrors: terminalEscapeResult.remainingErrors,
       preloadRepairTraceIds,
+      additionalRepairConnectionNames:
+        additionalRegionalRepairConnectionNames,
       connMap: this.params.connMap,
       colorMap: this.params.colorMap,
       viaDiameter: this.params.defaultViaDiameter,
@@ -1520,8 +1531,14 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         regionalB01RepairResult.remainingDrcIssueCount,
       regionalB01RepairPreloadEligibleDrcIssueCount:
         regionalB01RepairResult.preloadEligibleDrcIssueCount,
+      regionalB01RepairEligibleDrcIssueCount:
+        regionalB01RepairResult.eligibleDrcIssueCount,
       regionalB01RepairAttempted:
+        regionalB01RepairResult.repairAttempted,
+      regionalB01RepairPreloadAttempted:
         regionalB01RepairResult.preloadRepairAttempted,
+      regionalB01RepairConnectionNameCount:
+        additionalRegionalRepairConnectionNames.size,
       regionalB01RepairTraceIdCount:
         preloadRepairTraceIds.size +
         (preloadRepairTraceIds.collidingFixedTraceIds?.size ?? 0),

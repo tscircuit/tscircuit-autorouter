@@ -41,7 +41,9 @@ type RegionalB01RepairResult = {
   candidateSearchBudgetExhausted: boolean
   safeTraceLayerRepairSkippedForBudget: boolean
   remainingDrcIssueCount: number
+  eligibleDrcIssueCount: number
   preloadEligibleDrcIssueCount: number
+  repairAttempted: boolean
   preloadRepairAttempted: boolean
 }
 
@@ -109,6 +111,20 @@ const getRepairCenter = (error: Pipeline9DrcError, srj: SimpleRouteJson) => {
     if (obstacle) return obstacle.center
   }
   return getErrorCenter(error)
+}
+
+const getDrcErrorIdentity = (error: Pipeline9DrcError): string | undefined => {
+  const identityFields = [
+    "pcb_trace_error_id",
+    "pcb_pad_trace_clearance_error_id",
+    "pcb_via_trace_clearance_error_id",
+    "pcb_via_clearance_error_id",
+  ]
+  for (const identityField of identityFields) {
+    const identity = error[identityField]
+    if (typeof identity === "string") return `${error.type}:${identity}`
+  }
+  return undefined
 }
 
 export const getPipeline9RegionalRepairTraceIds = ({
@@ -541,12 +557,12 @@ const getRegularRegionalCandidate = ({
 }
 
 /**
- * Activates for a remaining preload-owned DRC error, then reroutes supported
- * joint-output participants with B01 in a sub-15mm window. B01 sees every
- * other route plus board copper as obstacles. Candidate searches use a
- * route-scaled budget because each search rebuilds and evaluates board copper.
- * If no B01 candidate helps, one regular high-density candidate jointly
- * reroutes all traces in the region.
+ * Activates for a remaining preload-owned DRC error or a selected routable
+ * connection, then reroutes supported joint-output participants with B01 in a
+ * sub-15mm window. B01 sees every other route plus board copper as obstacles.
+ * Candidate searches use a route-scaled budget because each search rebuilds
+ * and evaluates board copper. If no B01 candidate helps, one regular
+ * high-density candidate jointly reroutes all traces in the region.
  */
 export const applyPipeline9RegionalB01Repairs = ({
   srj,
@@ -557,6 +573,7 @@ export const applyPipeline9RegionalB01Repairs = ({
   drcEvaluator,
   initialErrors,
   preloadRepairTraceIds,
+  additionalRepairConnectionNames,
   connMap,
   colorMap,
   viaDiameter,
@@ -572,6 +589,7 @@ export const applyPipeline9RegionalB01Repairs = ({
   drcEvaluator: DrcEvaluator
   initialErrors?: Pipeline9DrcError[]
   preloadRepairTraceIds: ReadonlySet<string>
+  additionalRepairConnectionNames: ReadonlySet<string>
   connMap: ConnectivityMap
   colorMap: Record<string, string>
   viaDiameter: number
@@ -596,9 +614,33 @@ export const applyPipeline9RegionalB01Repairs = ({
       preloadRepairTraceIds,
     })
   }
+  let routeIndexByTraceId = getPipeline9RouteIndexByTraceId({
+    routes: currentRoutes,
+    newConnections,
+    syntheticConnectionNames,
+  })
+  const isAdditionalRepairError = (error: Pipeline9DrcError): boolean => {
+    return getPipeline9RegionalRepairTraceIds({
+      error,
+      routeIndexByTraceId,
+    }).some((traceId: string): boolean => {
+      const routeIndex = routeIndexByTraceId.get(traceId)
+      return (
+        routeIndex !== undefined &&
+        additionalRepairConnectionNames.has(
+          currentRoutes[routeIndex]!.connectionName,
+        )
+      )
+    })
+  }
   const preloadEligibleDrcIssueCount =
     currentErrors.filter(isPreloadRepairError).length
-  if (preloadEligibleDrcIssueCount === 0) {
+  const isEligibleRepairError = (error: Pipeline9DrcError): boolean =>
+    isPreloadRepairError(error) || isAdditionalRepairError(error)
+  const eligibleDrcIssueCount = currentErrors.filter(
+    isEligibleRepairError,
+  ).length
+  if (eligibleDrcIssueCount === 0) {
     return {
       routes: currentRoutes,
       attemptedCandidateCount,
@@ -609,7 +651,9 @@ export const applyPipeline9RegionalB01Repairs = ({
       candidateSearchBudgetExhausted,
       safeTraceLayerRepairSkippedForBudget: false,
       remainingDrcIssueCount: currentErrors.length,
+      eligibleDrcIssueCount,
       preloadEligibleDrcIssueCount,
+      repairAttempted: false,
       preloadRepairAttempted: false,
     }
   }
@@ -619,7 +663,7 @@ export const applyPipeline9RegionalB01Repairs = ({
   for (let pass = 0; pass < 2; pass++) {
     if (candidateSearchBudgetExhausted) break
     let acceptedOnPass = false
-    const routeIndexByTraceId = getPipeline9RouteIndexByTraceId({
+    routeIndexByTraceId = getPipeline9RouteIndexByTraceId({
       routes: currentRoutes,
       newConnections,
       syntheticConnectionNames,
@@ -632,8 +676,18 @@ export const applyPipeline9RegionalB01Repairs = ({
           error.type === "pcb_via_clearance_error") &&
         typeof error.pcb_trace_id === "string",
     )
-    for (const error of repairableErrors) {
+    for (const scheduledError of repairableErrors) {
       if (candidateSearchBudgetExhausted) break
+      // An accepted regional repair can clear several queued collisions or
+      // move a remaining collision. Use its current finding before searching.
+      const scheduledErrorIdentity = getDrcErrorIdentity(scheduledError)
+      const error = scheduledErrorIdentity
+        ? currentErrors.find(
+            (currentError): boolean =>
+              getDrcErrorIdentity(currentError) === scheduledErrorIdentity,
+          )
+        : scheduledError
+      if (!error) continue
       const center = getRepairCenter(error, srj)
       const traceIds = getPipeline9RegionalRepairTraceIds({
         error,
@@ -720,6 +774,11 @@ export const applyPipeline9RegionalB01Repairs = ({
         currentErrors = bestErrors
         acceptedCandidateCount++
         acceptedOnPass = true
+        routeIndexByTraceId = getPipeline9RouteIndexByTraceId({
+          routes: currentRoutes,
+          newConnections,
+          syntheticConnectionNames,
+        })
       }
       if (candidateSearchBudgetExhausted) break
     }
@@ -771,7 +830,9 @@ export const applyPipeline9RegionalB01Repairs = ({
     candidateSearchBudgetExhausted,
     safeTraceLayerRepairSkippedForBudget,
     remainingDrcIssueCount: currentErrors.length,
+    eligibleDrcIssueCount,
     preloadEligibleDrcIssueCount,
+    repairAttempted: eligibleDrcIssueCount > 0,
     preloadRepairAttempted: preloadEligibleDrcIssueCount > 0,
   }
 }
