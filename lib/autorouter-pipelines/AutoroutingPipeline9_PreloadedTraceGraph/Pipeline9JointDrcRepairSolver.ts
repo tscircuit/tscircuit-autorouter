@@ -39,6 +39,7 @@ import { normalizePipeline9DrcErrorsForRepair } from "./normalizePipeline9DrcErr
 import {
   getPipeline9DrcErrors,
   getPipeline9RouteIndexByTraceId,
+  isPipeline9IllegalCopperContactDrcError,
   type Pipeline9CollapsedTraceParticipant,
   type Pipeline9PreloadRepairTraceIds,
 } from "./pipeline9JointDrcRepairUtils"
@@ -1332,6 +1333,18 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       return candidateDrcResult
     }
     this.drcEvaluator = drcEvaluator
+    const illegalCopperContactDrcEvaluator: DrcEvaluator = (input) => {
+      const result = drcEvaluator(input)
+      if (Array.isArray(result)) {
+        return result.filter(isPipeline9IllegalCopperContactDrcError)
+      }
+      return {
+        errors: result.errors.filter(isPipeline9IllegalCopperContactDrcError),
+        errorsWithCenters: (
+          result.errorsWithCenters ?? result.errors
+        ).filter(isPipeline9IllegalCopperContactDrcError),
+      }
+    }
 
     this.exactRepairSolver = new Pipeline7AdaptiveDrcBranchPortfolioSolver({
       srj: extendedSrjWithPointPairs as any,
@@ -1345,6 +1358,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       effort: params.effort,
       viaHoleDiameter: params.defaultViaHoleDiameter,
       drcEvaluator,
+      referenceDrcEvaluator: illegalCopperContactDrcEvaluator,
       viaInPadDrcEvaluator: drcEvaluator,
       maxIterations: EXACT_REPAIR_MAX_ITERATIONS,
       enableBroadFallback: false,
