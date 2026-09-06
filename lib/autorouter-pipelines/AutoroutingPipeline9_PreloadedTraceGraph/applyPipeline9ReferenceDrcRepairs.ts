@@ -6,6 +6,7 @@ import {
 } from "high-density-repair03/lib"
 import type { HighDensityRoute } from "lib/types/high-density-types"
 import {
+  getPipeline9DrcErrorTraceIds,
   getPipeline9DrcErrors,
   isPipeline9DrcCandidateBetter,
   type Pipeline9DrcError,
@@ -46,16 +47,83 @@ export const applyPipeline9ReferenceDrcRepairs = ({
   viaHoleDiameter,
   allowViaInPad,
 }: ApplyPipeline9ReferenceDrcRepairsParams): Pipeline9ReferenceDrcRepairResult => {
+  const routeCountByConnectionName = new Map<string, number>()
+  const routeIndexByTraceId = new Map<string, number>()
+  for (let routeIndex = 0; routeIndex < routes.length; routeIndex += 1) {
+    const route = routes[routeIndex]!
+    const connectionRouteIndex =
+      routeCountByConnectionName.get(route.connectionName) ?? 0
+    routeCountByConnectionName.set(
+      route.connectionName,
+      connectionRouteIndex + 1,
+    )
+    routeIndexByTraceId.set(
+      `${route.connectionName}_${connectionRouteIndex}`,
+      routeIndex,
+    )
+  }
+
+  const repairConnectionNames = new Set<string>()
+  for (const error of initialErrors) {
+    const errorRouteIndexes = getPipeline9DrcErrorTraceIds(error).flatMap(
+      (traceId) => {
+        const routeIndex = routeIndexByTraceId.get(traceId)
+        return routeIndex === undefined ? [] : [routeIndex]
+      },
+    )
+    if (errorRouteIndexes.length === 0) {
+      throw new Error(
+        "Pipeline9 reference DRC repair could not resolve a movable error participant",
+      )
+    }
+    for (const routeIndex of errorRouteIndexes) {
+      repairConnectionNames.add(routes[routeIndex]!.connectionName)
+    }
+  }
+  const repairRouteIndexes = routes.flatMap((route, routeIndex) =>
+    repairConnectionNames.has(route.connectionName) ? [routeIndex] : [],
+  )
+  const repairRoutes = repairRouteIndexes.map(
+    (routeIndex) => routes[routeIndex]!,
+  )
+  const scopedDrcEvaluator: DrcEvaluator = ({
+    routes: candidateRoutes,
+    hdRoutes,
+  }) => {
+    const candidateRepairRoutes = candidateRoutes ?? hdRoutes
+    if (!candidateRepairRoutes) {
+      throw new Error("Pipeline9 reference DRC repair requires HD routes")
+    }
+    if (candidateRepairRoutes.length !== repairRouteIndexes.length) {
+      throw new Error(
+        "Pipeline9 reference DRC repair changed its scoped route count",
+      )
+    }
+    const candidateFullRoutes = [...routes]
+    for (
+      let repairRouteIndex = 0;
+      repairRouteIndex < repairRouteIndexes.length;
+      repairRouteIndex += 1
+    ) {
+      candidateFullRoutes[repairRouteIndexes[repairRouteIndex]!] =
+        candidateRepairRoutes[repairRouteIndex]!
+    }
+    return drcEvaluator({
+      traces: [],
+      routes: candidateFullRoutes,
+      hdRoutes: candidateFullRoutes,
+    })
+  }
   const precisionEffort = Math.min(effort, 1)
   const solver = new GlobalDrcForceImproveSolver({
     srj,
-    hdRoutes: routes,
+    hdRoutes: repairRoutes,
     connMap,
     effort: precisionEffort,
-    drcEvaluator,
+    drcEvaluator: scopedDrcEvaluator,
     viaHoleDiameter,
     maxIterations,
-    enableBroadFallback: false,
+    enableBroadFallback: true,
     enableLargeBoardBroadFallback: false,
     enableTargetedErrorSweep: true,
     enablePostSolveClearanceRelaxation: false,
@@ -70,9 +138,20 @@ export const applyPipeline9ReferenceDrcRepairs = ({
     )
   }
 
-  const candidateRoutes = solver.getOutput()
-  if (candidateRoutes.length !== routes.length) {
-    throw new Error("Pipeline9 reference DRC repair changed the route count")
+  const candidateRepairRoutes = solver.getOutput()
+  if (candidateRepairRoutes.length !== repairRouteIndexes.length) {
+    throw new Error(
+      "Pipeline9 reference DRC repair changed its scoped route count",
+    )
+  }
+  const candidateRoutes = [...routes]
+  for (
+    let repairRouteIndex = 0;
+    repairRouteIndex < repairRouteIndexes.length;
+    repairRouteIndex += 1
+  ) {
+    candidateRoutes[repairRouteIndexes[repairRouteIndex]!] =
+      candidateRepairRoutes[repairRouteIndex]!
   }
   for (let routeIndex = 0; routeIndex < routes.length; routeIndex += 1) {
     const inputRoute = routes[routeIndex]!
@@ -113,6 +192,9 @@ export const applyPipeline9ReferenceDrcRepairs = ({
     routes: accepted ? candidateRoutes : routes,
     remainingErrors: accepted ? candidateErrors : initialErrors,
     accepted,
-    solverStats: solver.stats,
+    solverStats: {
+      ...solver.stats,
+      referencePrecisionRepairRouteCount: repairRouteIndexes.length,
+    },
   }
 }

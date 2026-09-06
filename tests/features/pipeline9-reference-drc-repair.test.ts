@@ -18,6 +18,13 @@ test("Pipeline9 reference DRC repair preserves electrical route invariants", () 
           { x: 2, y: -1, layer: "top", pcb_port_id: "signal_end" },
         ],
       },
+      {
+        name: "unrelated",
+        pointsToConnect: [
+          { x: -2, y: 1.5, layer: "top" },
+          { x: 2, y: 1.5, layer: "top" },
+        ],
+      },
     ],
     obstacles: [
       {
@@ -58,6 +65,16 @@ test("Pipeline9 reference DRC repair preserves electrical route invariants", () 
         { x: 0, y: 0, z: 0 },
         { x: 2, y: 0, z: 0 },
         { x: 2, y: -1, z: 0, pcb_port_id: "signal_end" },
+      ],
+      vias: [],
+      traceThickness: 0.1,
+      viaDiameter: 0.3,
+    },
+    {
+      connectionName: "unrelated",
+      route: [
+        { x: -2, y: 1.5, z: 0 },
+        { x: 2, y: 1.5, z: 0 },
       ],
       vias: [],
       traceThickness: 0.1,
@@ -109,4 +126,5 @@ test("Pipeline9 reference DRC repair preserves electrical route invariants", () 
   expect(result.routes[0]?.route.at(-1)).toMatchObject(
     routes[0]!.route.at(-1)!,
   )
+  expect(result.routes[1]).toEqual(routes[1])
 })
