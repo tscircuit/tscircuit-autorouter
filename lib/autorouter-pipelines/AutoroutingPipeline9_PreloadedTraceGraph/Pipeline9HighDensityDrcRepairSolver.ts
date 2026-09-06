@@ -4,7 +4,6 @@ import type { GraphicsObject } from "graphics-debug"
 import { getDrcScaledMaxIterations } from "high-density-repair03/lib/solvers/GlobalDrcForceImproveSolver/solverConfig"
 import { BaseSolver } from "lib/solvers/BaseSolver"
 import { HighDensitySolver } from "lib/solvers/HighDensitySolver/HighDensitySolver"
-import { isObstacleConnectedToRoute } from "lib/solvers/TraceWidthSolver/isObstacleConnectedToRoute"
 import { MIN_VIA_TO_VIA_CLEARANCE } from "lib/testing/getDrcErrors"
 import type { CapacityMeshNodeId } from "lib/types/capacity-mesh-types"
 import type {
@@ -13,9 +12,7 @@ import type {
 } from "lib/types/high-density-types"
 import type { Obstacle, SimpleRouteConnection } from "lib/types/srj-types"
 import { convertHdRouteToSimplifiedRoute } from "lib/utils/convertHdRouteToSimplifiedRoute"
-import { createObjectsWithZLayers } from "lib/utils/createObjectsWithZLayers"
 import { getBoundsFromNodeWithPortPoints } from "lib/utils/getBoundsFromNodeWithPortPoints"
-import { minimumDistanceBetweenSegments } from "lib/utils/minimumDistanceBetweenSegments"
 import { normalizePipeline9NodeRootConnectionNames } from "./Pipeline9HighDensitySolver"
 import type { Pipeline9HighDensityDrcEvaluator } from "./createPipeline9HighDensityDrcEvaluator"
 import { getPipeline9HighDensityForceCandidates } from "./getPipeline9HighDensityForceCandidates"
@@ -25,12 +22,9 @@ import {
 } from "./getPipeline9HighDensitySeamForceCandidates"
 import { isPipeline9HighDensityDrcCandidateBetter } from "./isPipeline9HighDensityDrcCandidateBetter"
 import {
-  arePipeline9RoutesOnSameNet,
   doPipeline9BoundsOverlap,
-  doPipeline9RoutesHaveCopperConflict,
   getPipeline9FixedRouteObstacles,
   getPipeline9RouteCopperBounds,
-  getPipeline9RouteCopperGeometry,
 } from "./pipeline9FixedRouteCopper"
 import {
   getPipeline9DrcErrors,
@@ -82,179 +76,6 @@ type DrilledVia = {
 type NodeRepairBudget = {
   attempts: number
   maxAttempts: number
-}
-
-// @tscircuit/checks uses this tolerance both to identify coincident vias and
-// when comparing drill-hole edge clearance for same-net and different-net vias.
-const VIA_SPACING_EPSILON = 0.005
-
-const doesSegmentIntersectBounds = (
-  start: { x: number; y: number },
-  end: { x: number; y: number },
-  bounds: AxisAlignedBounds,
-): boolean => {
-  let minT = 0
-  let maxT = 1
-  for (const axis of ["x", "y"] as const) {
-    const delta = end[axis] - start[axis]
-    const min = axis === "x" ? bounds.minX : bounds.minY
-    const max = axis === "x" ? bounds.maxX : bounds.maxY
-    if (Math.abs(delta) <= 1e-9) {
-      if (start[axis] < min || start[axis] > max) return false
-      continue
-    }
-    const firstT = (min - start[axis]) / delta
-    const secondT = (max - start[axis]) / delta
-    minT = Math.max(minT, Math.min(firstT, secondT))
-    maxT = Math.min(maxT, Math.max(firstT, secondT))
-    if (minT > maxT) return false
-  }
-  return true
-}
-
-const getObstacleBounds = (obstacle: Obstacle): AxisAlignedBounds => {
-  const radians = ((obstacle.ccwRotationDegrees ?? 0) * Math.PI) / 180
-  const cosine = Math.abs(Math.cos(radians))
-  const sine = Math.abs(Math.sin(radians))
-  const halfWidth = (obstacle.width * cosine + obstacle.height * sine) / 2
-  const halfHeight = (obstacle.width * sine + obstacle.height * cosine) / 2
-  return {
-    minX: obstacle.center.x - halfWidth,
-    maxX: obstacle.center.x + halfWidth,
-    minY: obstacle.center.y - halfHeight,
-    maxY: obstacle.center.y + halfHeight,
-  }
-}
-
-const getObstacleLocalPoint = (
-  point: { x: number; y: number },
-  obstacle: Obstacle,
-): { x: number; y: number } => {
-  const radians = (-(obstacle.ccwRotationDegrees ?? 0) * Math.PI) / 180
-  const offsetX = point.x - obstacle.center.x
-  const offsetY = point.y - obstacle.center.y
-  return {
-    x: offsetX * Math.cos(radians) - offsetY * Math.sin(radians),
-    y: offsetX * Math.sin(radians) + offsetY * Math.cos(radians),
-  }
-}
-
-const getMinimumDistanceBetweenSegmentAndObstacle = (
-  start: { x: number; y: number },
-  end: { x: number; y: number },
-  obstacle: Obstacle,
-): number => {
-  const localStart = getObstacleLocalPoint(start, obstacle)
-  const localEnd = getObstacleLocalPoint(end, obstacle)
-  const halfWidth = obstacle.width / 2
-  const halfHeight = obstacle.height / 2
-  const bounds = {
-    minX: -halfWidth,
-    maxX: halfWidth,
-    minY: -halfHeight,
-    maxY: halfHeight,
-  }
-  if (doesSegmentIntersectBounds(localStart, localEnd, bounds)) return 0
-  const corners = [
-    { x: bounds.minX, y: bounds.minY },
-    { x: bounds.maxX, y: bounds.minY },
-    { x: bounds.maxX, y: bounds.maxY },
-    { x: bounds.minX, y: bounds.maxY },
-  ]
-  return Math.min(
-    ...corners.map((corner, cornerIndex) =>
-      minimumDistanceBetweenSegments(
-        localStart,
-        localEnd,
-        corner,
-        corners[(cornerIndex + 1) % corners.length]!,
-      ),
-    ),
-  )
-}
-
-const doesRouteConflictWithObstacle = ({
-  route,
-  obstacle,
-  clearance,
-}: {
-  route: HighDensityRoute
-  obstacle: Obstacle & { __zLayers: number[] }
-  clearance: number
-}): boolean => {
-  const obstacleBounds = getObstacleBounds(obstacle)
-  const routeBounds = getPipeline9RouteCopperBounds(route)
-  if (
-    !routeBounds ||
-    !doPipeline9BoundsOverlap(routeBounds, {
-      minX: obstacleBounds.minX - clearance,
-      maxX: obstacleBounds.maxX + clearance,
-      minY: obstacleBounds.minY - clearance,
-      maxY: obstacleBounds.maxY + clearance,
-    })
-  ) {
-    return false
-  }
-  const geometry = getPipeline9RouteCopperGeometry(route)
-  for (const wire of geometry.wireSegments) {
-    if (!obstacle.__zLayers.includes(wire.z)) continue
-    if (
-      getMinimumDistanceBetweenSegmentAndObstacle(
-        wire.start,
-        wire.end,
-        obstacle,
-      ) <
-      wire.width / 2 + clearance
-    ) {
-      return true
-    }
-  }
-  for (const via of geometry.viaSpans) {
-    if (!obstacle.__zLayers.some((z) => z >= via.minZ && z <= via.maxZ)) {
-      continue
-    }
-    const localVia = getObstacleLocalPoint(via.center, obstacle)
-    const deltaX = Math.max(Math.abs(localVia.x) - obstacle.width / 2, 0)
-    const deltaY = Math.max(Math.abs(localVia.y) - obstacle.height / 2, 0)
-    if (Math.hypot(deltaX, deltaY) < via.diameter / 2 + clearance) {
-      return true
-    }
-  }
-  return false
-}
-
-const doRouteViasHaveCopperConflict = ({
-  left,
-  right,
-  clearance,
-  sameRoute = false,
-}: {
-  left: DrilledVia[]
-  right: DrilledVia[]
-  clearance: number
-  sameRoute?: boolean
-}): boolean => {
-  for (let leftIndex = 0; leftIndex < left.length; leftIndex++) {
-    const leftVia = left[leftIndex]!
-    for (
-      let rightIndex = sameRoute ? leftIndex + 1 : 0;
-      rightIndex < right.length;
-      rightIndex++
-    ) {
-      const rightVia = right[rightIndex]!
-      const distance = Math.hypot(
-        leftVia.x - rightVia.x,
-        leftVia.y - rightVia.y,
-      )
-      if (distance <= VIA_SPACING_EPSILON) continue
-      const gap =
-        distance - leftVia.holeDiameter / 2 - rightVia.holeDiameter / 2
-      if (gap + VIA_SPACING_EPSILON < clearance) {
-        return true
-      }
-    }
-  }
-  return false
 }
 
 const replaceNodeRoutes = ({
@@ -348,10 +169,6 @@ export class Pipeline9HighDensityDrcRepairSolver extends BaseSolver {
     HighDensityRoute,
     DrilledVia[]
   >()
-  private readonly fixedDrilledViasByRoute = new WeakMap<
-    HighDensityRoute,
-    DrilledVia[]
-  >()
   private readonly connectionsByName: Map<string, SimpleRouteConnection>
 
   constructor(params: Pipeline9HighDensityDrcRepairSolverParams) {
@@ -372,7 +189,6 @@ export class Pipeline9HighDensityDrcRepairSolver extends BaseSolver {
       initialDrcIssueCount: 0,
       finalDrcIssueCount: 0,
       drcNodeCount: 0,
-      drcPrecheckFoundPotentialIssue: false,
       attemptedNodeCount: 0,
       nodeRepairAttemptCount: 0,
       acceptedNodeCount: 0,
@@ -423,7 +239,9 @@ export class Pipeline9HighDensityDrcRepairSolver extends BaseSolver {
     routes: HighDensityRoute[],
   ): Pipeline9DrcError[] {
     const routeIndexByTraceId = this.getRouteIndexByTraceId(routes)
-    return getPipeline9DrcErrors(this.params.drcEvaluator, routes).filter(
+    const errors = getPipeline9DrcErrors(this.params.drcEvaluator, routes)
+    Object.assign(this.stats, this.params.drcEvaluator.getPreparationStats?.())
+    return errors.filter(
       (error) =>
         getPipeline9DrcErrorTraceIds(error).some((traceId) =>
           routeIndexByTraceId.has(traceId),
@@ -431,101 +249,8 @@ export class Pipeline9HighDensityDrcRepairSolver extends BaseSolver {
     )
   }
 
-  private hasPotentialHighDensityDrc(): boolean {
-    const clearance = this.params.drcClearance
-    for (
-      let leftIndex = 0;
-      leftIndex < this.outputHdRoutes.length;
-      leftIndex++
-    ) {
-      const left = this.outputHdRoutes[leftIndex]!
-      const leftVias = this.getDrilledVias(left)
-      if (
-        doRouteViasHaveCopperConflict({
-          left: leftVias,
-          right: leftVias,
-          clearance: MIN_VIA_TO_VIA_CLEARANCE,
-          sameRoute: true,
-        })
-      ) {
-        return true
-      }
-      for (
-        let rightIndex = leftIndex + 1;
-        rightIndex < this.outputHdRoutes.length;
-        rightIndex++
-      ) {
-        const right = this.outputHdRoutes[rightIndex]!
-        if (
-          doRouteViasHaveCopperConflict({
-            left: leftVias,
-            right: this.getDrilledVias(right),
-            clearance: MIN_VIA_TO_VIA_CLEARANCE,
-          })
-        ) {
-          return true
-        }
-        if (arePipeline9RoutesOnSameNet(left, right, this.params.connMap)) {
-          continue
-        }
-        if (
-          doPipeline9RoutesHaveCopperConflict({
-            left,
-            right,
-            clearance,
-          })
-        ) {
-          return true
-        }
-      }
-      for (const fixedRoute of this.params.fixedHdRoutes) {
-        if (
-          doRouteViasHaveCopperConflict({
-            left: leftVias,
-            right: this.getDrilledVias(fixedRoute, true),
-            clearance: MIN_VIA_TO_VIA_CLEARANCE,
-          })
-        ) {
-          return true
-        }
-        if (
-          arePipeline9RoutesOnSameNet(left, fixedRoute, this.params.connMap)
-        ) {
-          continue
-        }
-        if (
-          doPipeline9RoutesHaveCopperConflict({
-            left,
-            right: fixedRoute,
-            clearance,
-          })
-        ) {
-          return true
-        }
-      }
-    }
-
-    const layeredObstacles = createObjectsWithZLayers(
-      this.params.obstacles,
-      this.params.layerCount,
-    )
-    return this.outputHdRoutes.some((route) =>
-      layeredObstacles.some(
-        (obstacle) =>
-          !isObstacleConnectedToRoute(obstacle, route, this.params.connMap) &&
-          doesRouteConflictWithObstacle({ route, obstacle, clearance }),
-      ),
-    )
-  }
-
-  private getDrilledVias(
-    route: HighDensityRoute,
-    isFixedRoute = false,
-  ): DrilledVia[] {
-    const cache = isFixedRoute
-      ? this.fixedDrilledViasByRoute
-      : this.drilledViasByRoute
-    const cachedVias = cache.get(route)
+  private getDrilledVias(route: HighDensityRoute): DrilledVia[] {
+    const cachedVias = this.drilledViasByRoute.get(route)
     if (cachedVias) return cachedVias
     const connectionPoints = this.connectionsByName.get(
       route.connectionName,
@@ -537,15 +262,10 @@ export class Pipeline9HighDensityDrcRepairSolver extends BaseSolver {
       )
     ) {
       const vias: DrilledVia[] = []
-      cache.set(route, vias)
+      this.drilledViasByRoute.set(route, vias)
       return vias
     }
-    // Preloaded HD routes do not retain their original drill diameter. Their
-    // outer diameter bounds it conservatively; the official evaluator still
-    // checks the exact serialized drill before any repair is attempted.
-    const viaHoleDiameter = isFixedRoute
-      ? route.viaDiameter
-      : this.params.viaHoleDiameter
+    const viaHoleDiameter = this.params.viaHoleDiameter
     const vias = convertHdRouteToSimplifiedRoute(
       route,
       this.params.layerCount,
@@ -566,17 +286,14 @@ export class Pipeline9HighDensityDrcRepairSolver extends BaseSolver {
           ]
         : [],
     )
-    cache.set(route, vias)
+    this.drilledViasByRoute.set(route, vias)
     return vias
   }
 
   private initializeDrcEvaluation(): void {
     this.initialized = true
-    const hasPotentialDrc = this.hasPotentialHighDensityDrc()
-    this.stats.drcPrecheckFoundPotentialIssue = hasPotentialDrc
     // Routing aliases and reconstructed copper can differ from the final DRC
-    // identities. The geometric precheck is diagnostic, never proof that the
-    // owned copper is clean; only the official evaluator can establish that.
+    // identities. Only the official evaluator establishes owned copper errors.
     this.currentErrors = this.getRepairableDrcErrors(this.outputHdRoutes)
     this.stats.initialDrcIssueCount = this.currentErrors.length
     this.stats.finalDrcIssueCount = this.currentErrors.length
@@ -691,6 +408,10 @@ export class Pipeline9HighDensityDrcRepairSolver extends BaseSolver {
         candidateRoutes,
         changedTraceIds,
       })
+      Object.assign(
+        this.stats,
+        this.params.drcEvaluator.getPreparationStats?.(),
+      )
       this.stats.localCandidateEvaluationTimeMs =
         Number(this.stats.localCandidateEvaluationTimeMs) +
         performance.now() -
@@ -830,7 +551,8 @@ export class Pipeline9HighDensityDrcRepairSolver extends BaseSolver {
       (this.nodeForceErrorCursorById.get(node.capacityMeshNodeId) ?? 0) %
       nodeErrors.length
     const orderedNodeErrors = nodeErrors.map(
-      (_, offset) => nodeErrors[(startErrorIndex + offset) % nodeErrors.length]!,
+      (_, offset) =>
+        nodeErrors[(startErrorIndex + offset) % nodeErrors.length]!,
     )
     let budget = this.nodeRepairBudgets.get(node.capacityMeshNodeId)
     if (budget === undefined) {

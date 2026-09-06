@@ -128,6 +128,10 @@ test("prepared DRC reuses only identical via-spacing dependencies and preserves 
     }
   })
   const reused = compareWithFresh(wireOnly, true)
+  expect(prepared.getStats()).toMatchObject({
+    connectivityConstructionCount: 1,
+    connectivityCacheHitCount: 1,
+  })
   const mutatedError = reused.errors.find(
     (error) => error.type === "pcb_via_clearance_error",
   )

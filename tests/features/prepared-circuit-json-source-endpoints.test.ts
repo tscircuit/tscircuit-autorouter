@@ -3,6 +3,7 @@ import { getDrcErrors } from "lib/testing/getDrcErrors"
 import {
   convertToCircuitJson,
   createPreparedCircuitJsonConverter,
+  createPreparedImmutableCircuitJsonConverter,
 } from "lib/testing/utils/convertToCircuitJson"
 import type { SimpleRouteJson, SimplifiedPcbTrace } from "lib/types"
 
@@ -72,10 +73,12 @@ test("prepared circuit JSON preserves first-fragment seam connectivity and detac
   ]
   const options = { originalSrj: srj, includeOriginalConnections: true }
   const prepared = createPreparedCircuitJsonConverter(srj, options)
+  const immutable = createPreparedImmutableCircuitJsonConverter(srj, options)
   for (const routes of [original, original, moved, moved, original]) {
     const actual = prepared(routes)
     const expected = convertToCircuitJson(srj, routes, options)
     expect(actual).toEqual(expected)
+    expect(immutable(routes)).toEqual(expected)
     const source = actual.find(
       (element) =>
         element.type === "source_trace" && element.source_trace_id === "A",

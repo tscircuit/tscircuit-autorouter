@@ -16,6 +16,7 @@ import type { Obstacle } from "lib/types/srj-types"
 import { convertHdRouteToSimplifiedRoute } from "lib/utils/convertHdRouteToSimplifiedRoute"
 import { getBoundsFromNodeWithPortPoints } from "lib/utils/getBoundsFromNodeWithPortPoints"
 import type { Pipeline9HighDensityForceContext } from "./getPipeline9HighDensityForceObstacles"
+import { getPipeline9PadCopperForceTarget } from "./getPipeline9PadCopperForceTarget"
 import { isPipeline9HighDensityRouteInsideBounds } from "./isPipeline9HighDensityRouteInsideBounds"
 import {
   getPipeline9DrcErrorTraceIds,
@@ -23,6 +24,13 @@ import {
 } from "./pipeline9JointDrcRepairUtils"
 
 type HighDensityPoint = HighDensityRoute["route"][number]
+type ForceErrorTarget =
+  | { kind: "native"; error: Pipeline9DrcError }
+  | {
+      kind: "pad"
+      error: Pipeline9DrcError
+      pad: Record<string, unknown>
+    }
 
 type LocalForceRoute = {
   original: HighDensityRoute
@@ -206,15 +214,47 @@ const hasPreservedLocalRouteAnchors = (local: LocalForceRoute): boolean => {
 function* getPadTargetedForceErrors(
   errors: Pipeline9DrcError[],
   onErrorAttempted?: (errorIndex: number) => void,
-): Generator<Pipeline9DrcError, void, unknown> {
+): Generator<ForceErrorTarget, void, unknown> {
   for (const [errorIndex, error] of errors.entries()) {
     onErrorAttempted?.(errorIndex)
+    if (
+      error.type === "pcb_pad_trace_clearance_error" &&
+      error.__pad_ids !== undefined
+    ) {
+      const padIds = error.__pad_ids
+      const pads = error.__pad_copper
+      if (
+        !Array.isArray(padIds) ||
+        padIds.length === 0 ||
+        !Array.isArray(pads) ||
+        pads.length !== padIds.length
+      ) {
+        throw new Error(
+          "Pipeline9 pad forces require exact physical pad owners",
+        )
+      }
+      for (const [index, pad] of pads.entries()) {
+        if (
+          !pad ||
+          typeof pad !== "object" ||
+          (pad.type === "pcb_smtpad"
+            ? pad.pcb_smtpad_id
+            : pad.pcb_plated_hole_id) !== padIds[index]
+        ) {
+          throw new Error(
+            "Pipeline9 pad force geometry has a different owner",
+          )
+        }
+        yield { kind: "pad", error, pad }
+      }
+      continue
+    }
     const centers = error.__pad_centers
     if (
       error.type !== "pcb_pad_trace_clearance_error" ||
       centers === undefined
     ) {
-      yield error
+      yield { kind: "native", error }
       continue
     }
     if (!Array.isArray(centers) || centers.length === 0) {
@@ -234,7 +274,10 @@ function* getPadTargetedForceErrors(
       // checkPadTraceClearance reports the whole fragment's endpoint midpoint,
       // which need not be near the offending pad. Target the exact serialized
       // pad for this private force call; official errors and scoring stay intact.
-      yield { ...error, center: { x: center.x, y: center.y } }
+      yield {
+        kind: "native",
+        error: { ...error, center: { x: center.x, y: center.y } },
+      }
     }
   }
 }
@@ -323,7 +366,11 @@ export function* getPipeline9HighDensityForceCandidates({
   })
   const maxCandidateApplications =
     getMaxTargetedCandidateAttemptsForEffort(effort)
-  for (const error of getPadTargetedForceErrors(errors, onErrorAttempted)) {
+  for (const forceTarget of getPadTargetedForceErrors(
+    errors,
+    onErrorAttempted,
+  )) {
+    const { error } = forceTarget
     const movableTraceId = getPipeline9DrcErrorTraceIds(error).find((traceId) =>
       traceRouteIndexById.has(traceId),
     )
@@ -359,11 +406,29 @@ export function* getPipeline9HighDensityForceCandidates({
         application < maxCandidateApplications;
         application++
       ) {
+        const padTarget =
+          forceTarget.kind === "pad"
+            ? getPipeline9PadCopperForceTarget({
+                pad: forceTarget.pad,
+                route:
+                  mutableRoutes[traceRouteIndexById.get(movableTraceId)!]!,
+                obstacles: forceContext.obstacles,
+                layerCount,
+              })
+            : undefined
+        if (forceTarget.kind === "pad" && padTarget === undefined) {
+          onCandidateRejected?.("no-motion")
+          break
+        }
         if (
           !applyDrcErrorForces(
-            srj,
+            padTarget ? { ...srj, obstacles: padTarget.obstacles } : srj,
             mutableRoutes,
-            [localError],
+            [
+              padTarget
+                ? { ...localError, center: padTarget.center }
+                : localError,
+            ],
             traceRouteIndexById,
             scale,
             forceContext.connMap,

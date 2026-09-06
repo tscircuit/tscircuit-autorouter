@@ -38,7 +38,7 @@ const createViaRoute = (
   vias: [{ x, y: 0 }],
 })
 
-test("Pipeline9 prechecks actual drill spacing across nets and route ownership", (): void => {
+test("Pipeline9 checks official drill spacing across nets and route ownership", (): void => {
   const cases: ViaSpacingCase[] = [
     {
       name: "one route",
@@ -233,8 +233,5 @@ test("Pipeline9 prechecks actual drill spacing across nets and route ownership",
       errors: solver.currentErrors.length,
     }).toEqual({ scenario: scenario.name, errors: scenario.expectedErrors })
     expect(evaluatorCallCount).toBe(1)
-    expect(solver.stats.drcPrecheckFoundPotentialIssue).toBe(
-      scenario.expectedErrors > 0,
-    )
   }
 })

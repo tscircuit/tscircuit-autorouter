@@ -21,6 +21,14 @@ export type PreparedCircuitJsonConverter = (
   routes: CircuitJsonInputRoutes,
 ) => AnyCircuitElement[]
 
+type PreparedCircuitJsonParts = {
+  sourceTraces: AnyCircuitElement[]
+  pcbPorts: AnyCircuitElement[]
+  pcbPads: AnyCircuitElement[]
+  vias: PcbVia[]
+  traces: PcbTrace[]
+}
+
 /**
  * Convert a simplified PCB trace from the autorouter to a circuit-json compatible PCB trace
  */
@@ -958,14 +966,10 @@ export function createPcbBoardElement(srj: SimpleRouteJson): PcbBoard {
   }
 }
 
-/**
- * Prepares conversion for immutable SRJ and route inputs. Returned circuit JSON
- * is detached from cached geometry and source connectivity for official checks.
- */
-export function createPreparedCircuitJsonConverter(
+function createPreparedCircuitJsonPartsConverter(
   srjWithPointPairs: SimpleRouteJson,
-  options: ConvertToCircuitJsonOptions = {},
-): PreparedCircuitJsonConverter {
+  options: ConvertToCircuitJsonOptions,
+): (routes: CircuitJsonInputRoutes) => PreparedCircuitJsonParts {
   const {
     minTraceWidth = 0.1,
     minViaDiameter,
@@ -1003,21 +1007,22 @@ export function createPreparedCircuitJsonConverter(
     { index: number; traces: PcbTrace[] }
   >()
 
-  return (routes: CircuitJsonInputRoutes): AnyCircuitElement[] => {
-    const circuitJson: AnyCircuitElement[] = [
-      ...convertSourceTraces(routes),
-      ...structuredClone(pcbPorts),
-      ...structuredClone(pcbPads),
+  return (routes: CircuitJsonInputRoutes): PreparedCircuitJsonParts => {
+    const parts: PreparedCircuitJsonParts = {
+      sourceTraces: convertSourceTraces(routes),
+      pcbPorts,
+      pcbPads,
       // Always use the current full route order: the first colocated via wins
       // its owner and dimensions, and removing it renumbers subsequent vias.
-      ...extractViasFromRoutes(
+      vias: extractViasFromRoutes(
         routes,
         srjWithPointPairs.layerCount,
         resolvedMinViaDiameter,
         resolvedMinViaHoleDiameter,
       ),
-    ]
-    if (routes.length === 0) return circuitJson
+      traces: [],
+    }
+    if (routes.length === 0) return parts
     if ("type" in routes[0] && routes[0].type === "pcb_trace") {
       for (const trace of routes as SimplifiedPcbTrace[]) {
         let convertedTrace = simplifiedTraceCache.get(trace)
@@ -1042,10 +1047,7 @@ export function createPreparedCircuitJsonConverter(
           )
           simplifiedTraceCache.set(trace, convertedTrace)
         }
-        circuitJson.push({
-          ...convertedTrace,
-          route: convertedTrace.route.map((point) => ({ ...point })),
-        })
+        parts.traces.push(convertedTrace)
       }
     } else {
       for (const [index, route] of (routes as HighDensityRoute[]).entries()) {
@@ -1068,15 +1070,65 @@ export function createPreparedCircuitJsonConverter(
           }
           hdTraceCache.set(route, cached)
         }
-        for (const trace of cached.traces) {
-          circuitJson.push({
-            ...trace,
-            route: trace.route.map((point) => ({ ...point })),
-          })
-        }
+        parts.traces.push(...cached.traces)
       }
     }
-    return circuitJson
+    return parts
+  }
+}
+
+/**
+ * Prepares conversion for immutable SRJ and route inputs. Returned circuit JSON
+ * is detached from cached geometry and source connectivity for official checks.
+ */
+export function createPreparedCircuitJsonConverter(
+  srjWithPointPairs: SimpleRouteJson,
+  options: ConvertToCircuitJsonOptions = {},
+): PreparedCircuitJsonConverter {
+  const convertParts = createPreparedCircuitJsonPartsConverter(
+    srjWithPointPairs,
+    options,
+  )
+  return (routes: CircuitJsonInputRoutes): AnyCircuitElement[] => {
+    const parts = convertParts(routes)
+    return [
+      ...parts.sourceTraces,
+      ...structuredClone(parts.pcbPorts),
+      ...structuredClone(parts.pcbPads),
+      ...parts.vias,
+      ...parts.traces.map(
+        (trace): PcbTrace => ({
+          ...trace,
+          route: trace.route.map((point) => ({ ...point })),
+        }),
+      ),
+    ]
+  }
+}
+
+/**
+ * Borrows immutable converted trace/pad objects for internal candidate snapshots.
+ * Consumers must detach any copper passed to a mutating checker. Unlike the
+ * public prepared converter, unchanged trace geometry retains its identity, so
+ * rejected local trials need not copy or rescan every wire on the entire board.
+ */
+export function createPreparedImmutableCircuitJsonConverter(
+  srjWithPointPairs: SimpleRouteJson,
+  options: ConvertToCircuitJsonOptions = {},
+): PreparedCircuitJsonConverter {
+  const convertParts = createPreparedCircuitJsonPartsConverter(
+    srjWithPointPairs,
+    options,
+  )
+  return (routes: CircuitJsonInputRoutes): AnyCircuitElement[] => {
+    const parts = convertParts(routes)
+    return [
+      ...parts.sourceTraces,
+      ...parts.pcbPorts,
+      ...parts.pcbPads,
+      ...parts.vias,
+      ...parts.traces,
+    ]
   }
 }
 

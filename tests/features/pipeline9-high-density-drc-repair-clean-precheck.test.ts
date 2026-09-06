@@ -81,6 +81,5 @@ test("Pipeline9 verifies clean high-density copper with the official DRC evaluat
   expect(solver.solved).toBe(true)
   expect(solver.failed).toBe(false)
   expect(evaluatorCallCount).toBe(1)
-  expect(solver.stats.drcPrecheckFoundPotentialIssue).toBe(false)
   expect(solver.getOutput()).toBe(inputRoutes)
 })

@@ -20,9 +20,11 @@ test("Pipeline9 advances the node force cursor past an improving early error", (
       endPcbPortId: `${connectionName}-end`,
       traceThickness: 0.1,
       viaDiameter: 0.3,
-      route: [-50, 0, 50].map(
-        (x): HighDensityRoute["route"][number] => ({ x, y: index * 5, z: 0 }),
-      ),
+      route: [-50, 0, 50].map((x): HighDensityRoute["route"][number] => ({
+        x,
+        y: index * 5,
+        z: 0,
+      })),
       vias: [],
     }),
   )
@@ -161,7 +163,9 @@ test("Pipeline9 advances the node force cursor past an improving early error", (
   })
   for (const [index, route] of routes.entries()) {
     expect(solver.outputHdRoutes[index]!.route[0]).toEqual(route.route[0])
-    expect(solver.outputHdRoutes[index]!.route.at(-1)).toEqual(route.route.at(-1))
+    expect(solver.outputHdRoutes[index]!.route.at(-1)).toEqual(
+      route.route.at(-1),
+    )
   }
   expect({ routes, node, connections }).toEqual(originalInputs)
 })

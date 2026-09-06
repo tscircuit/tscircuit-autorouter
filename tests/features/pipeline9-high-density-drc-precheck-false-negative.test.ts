@@ -13,7 +13,7 @@ import type {
   NodeWithPortPoints,
 } from "lib/types/high-density-types"
 
-test("Pipeline9 honors an owned DRC when its geometric precheck is clear", (): void => {
+test("Pipeline9 honors an official owned DRC on apparently clear routing geometry", (): void => {
   const effort = 0.1
   const inputRoutes: HighDensityRoute[] = [
     {
@@ -107,7 +107,6 @@ test("Pipeline9 honors an owned DRC when its geometric precheck is clear", (): v
   ) {
     solver.step()
   }
-  expect(solver.stats.drcPrecheckFoundPotentialIssue).toBe(false)
   expect(solver.stats.initialDrcIssueCount).toBe(1)
   expect(evaluatorCallCount).toBeGreaterThan(0)
   expect(solver.activeSubSolver).not.toBeNull()

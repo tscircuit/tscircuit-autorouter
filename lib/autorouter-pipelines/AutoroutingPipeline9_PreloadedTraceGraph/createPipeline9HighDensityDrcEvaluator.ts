@@ -1,11 +1,11 @@
-import { getFullConnectivityMapFromCircuitJson } from "circuit-json-to-connectivity-map"
 import type { DrcEvaluator } from "high-density-repair03/lib"
 import type { ConvertPipeline7HdRoutesOptions } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/convertPipeline7HdRoutesToSimplifiedPcbTraces"
 import type { ChangedPreloadedTraceSection } from "lib/solvers/PortPointPathingSolver/tinyhypergraph/TinyHypergraphPortPointPathingSolver"
 import { RELAXED_DRC_OPTIONS } from "lib/testing/drcPresets"
 import { combinePreloadedAndRoutedTraces } from "lib/testing/evaluate-relaxed-drc"
 import { createPreparedGetDrcErrors } from "lib/testing/getDrcErrors"
-import { createPreparedCircuitJsonConverter } from "lib/testing/utils/convertToCircuitJson"
+import { createPreparedImmutableCircuitJsonConverter } from "lib/testing/utils/convertToCircuitJson"
+import { createPreparedDrcConnectivityMap } from "lib/testing/utils/createPreparedDrcConnectivityMap"
 import type { Obstacle, SimpleRouteJson, SimplifiedPcbTrace } from "lib/types"
 import type { HighDensityRoute } from "lib/types/high-density-types"
 import { convertHdRouteToSimplifiedRoute } from "lib/utils/convertHdRouteToSimplifiedRoute"
@@ -53,6 +53,7 @@ type DrcPadCenter = { x: number; y: number }
 
 export type Pipeline9HighDensityDrcEvaluator = DrcEvaluator & {
   evaluateLocalCandidate?: Pipeline9HighDensityDrcCandidateGate
+  getPreparationStats?: () => Record<string, number>
   getForceContext: (
     hdRoutes: HighDensityRoute[],
   ) => Pipeline9HighDensityForceContext
@@ -62,6 +63,7 @@ const addCopperOwnerMetadata = (
   errors: Record<string, unknown>[],
   traceIdByViaId: ReadonlyMap<string, string>,
   padCenterById: ReadonlyMap<string, DrcPadCenter>,
+  padCopperById: ReadonlyMap<string, Record<string, unknown>>,
 ): Record<string, unknown>[] => {
   return errors.map((error) => {
     const primaryTraceId =
@@ -128,6 +130,9 @@ const addCopperOwnerMetadata = (
             __pad_centers: reportedPadIds.map((id) => ({
               ...padCenterById.get(id)!,
             })),
+            __pad_copper: reportedPadIds.map((id) =>
+              structuredClone(padCopperById.get(id)!),
+            ),
           }),
       ...(segmentOwnerTraceId === undefined
         ? {}
@@ -298,7 +303,7 @@ export const createPipeline9HighDensityDrcEvaluator = (
   const inputSrj = { ...options.originalSrj, traces: frozenTraces }
   const convertNewRoutes =
     createPipeline9ImmutableHdRoutesToSimplifiedPcbTracesConverter(options)
-  const convertCircuitJson = createPreparedCircuitJsonConverter(
+  const convertCircuitJson = createPreparedImmutableCircuitJsonConverter(
     options.srjWithPointPairs,
     {
       minTraceWidth: inputSrj.minTraceWidth,
@@ -312,6 +317,7 @@ export const createPipeline9HighDensityDrcEvaluator = (
     CachedHighDensityDrcSnapshot
   >()
   const evaluateDrc = createPreparedGetDrcErrors()
+  const prepareConnectivityMap = createPreparedDrcConnectivityMap()
   const getSnapshot = (
     evaluatedRoutes: HighDensityRoute[],
   ): CachedHighDensityDrcSnapshot => {
@@ -341,6 +347,7 @@ export const createPipeline9HighDensityDrcEvaluator = (
       ),
     )
     const padCenterById = new Map<string, DrcPadCenter>()
+    const padCopperById = new Map<string, Record<string, unknown>>()
     for (const element of circuitJson) {
       let padId: string
       if (element.type === "pcb_smtpad") padId = element.pcb_smtpad_id
@@ -361,6 +368,10 @@ export const createPipeline9HighDensityDrcEvaluator = (
         )
       }
       padCenterById.set(padId, { x: element.x, y: element.y })
+      padCopperById.set(
+        padId,
+        element as unknown as Record<string, unknown>,
+      )
     }
     // Exact non-via identities take precedence over encoded via-like suffixes.
     // Pad ids are opaque and may themselves end with a real serialized via id.
@@ -368,8 +379,7 @@ export const createPipeline9HighDensityDrcEvaluator = (
       ...evaluatedTraceIds,
       ...padCenterById.keys(),
     ])
-    const connMap = getFullConnectivityMapFromCircuitJson(circuitJson)
-    connMap.addConnections([...traceIdByViaId])
+    const connMap = prepareConnectivityMap(circuitJson, traceIdByViaId)
     const snapshot: CachedHighDensityDrcSnapshot = {
       circuitJson,
       connMap,
@@ -385,6 +395,7 @@ export const createPipeline9HighDensityDrcEvaluator = (
             }),
             traceIdByViaId,
             padCenterById,
+            padCopperById,
           ),
           circuitJson,
           newTraceIds,
@@ -429,6 +440,15 @@ export const createPipeline9HighDensityDrcEvaluator = (
   }
   let forceObstacles: Obstacle[] | undefined
   return Object.assign(evaluator, {
+    getPreparationStats: (): Record<string, number> => {
+      const connectivityStats = prepareConnectivityMap.getStats()
+      return {
+        ...evaluateDrc.getStats(),
+        snapshotConnectivityConstructionCount:
+          connectivityStats.constructionCount,
+        snapshotConnectivityCacheHitCount: connectivityStats.cacheHitCount,
+      }
+    },
     evaluateLocalCandidate: createPipeline9HighDensityDrcCandidateGate({
       getSnapshot,
     }),

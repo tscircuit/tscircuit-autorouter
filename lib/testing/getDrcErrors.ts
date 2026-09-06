@@ -19,6 +19,7 @@ import {
   getFullConnectivityMapFromCircuitJson,
 } from "circuit-json-to-connectivity-map"
 import { Point } from "graphics-debug"
+import { createPreparedDrcConnectivityMap } from "./utils/createPreparedDrcConnectivityMap"
 
 type CircuitJson = AnyCircuitElement[]
 type CircuitJsonElement = CircuitJson[number]
@@ -58,6 +59,13 @@ export interface GetDrcErrorsOptions {
 export type PreparedGetDrcErrorsStats = {
   viaSpacingEvaluationCount: number
   viaSpacingCacheHitCount: number
+  connectivityConstructionCount: number
+  connectivityCacheHitCount: number
+  connectivityPreparationTimeMs: number
+  traceOverlapCheckTimeMs: number
+  viaTraceCheckTimeMs: number
+  padTraceCheckTimeMs: number
+  viaSpacingCheckTimeMs: number
 }
 
 export type PreparedGetDrcErrors = {
@@ -71,18 +79,22 @@ type ViaSpacingEvaluator = (
   viaClearance: number,
 ) => PcbViaClearanceError[]
 
-const createDrcConnectivityMap = (
+const getDrcViaTraceConnections = (
   circuitJson: CircuitJson,
-): ConnectivityMap => {
-  const connMap = getFullConnectivityMapFromCircuitJson(circuitJson)
-  const viaTraceConnections = circuitJson
+): Array<[string, string]> => {
+  return circuitJson
     .filter(
       (element): element is PcbViaWithTraceId =>
         element.type === "pcb_via" && typeof element.pcb_trace_id === "string",
     )
-    .map((via) => [via.pcb_via_id, via.pcb_trace_id])
+    .map((via): [string, string] => [via.pcb_via_id, via.pcb_trace_id])
+}
 
-  connMap.addConnections(viaTraceConnections)
+const createDrcConnectivityMap = (
+  circuitJson: CircuitJson,
+): ConnectivityMap => {
+  const connMap = getFullConnectivityMapFromCircuitJson(circuitJson)
+  connMap.addConnections(getDrcViaTraceConnections(circuitJson))
   return connMap
 }
 
@@ -104,32 +116,49 @@ const evaluateOfficialViaSpacing: ViaSpacingEvaluator = (
 const getDrcErrorsWithViaSpacingEvaluator = (
   circuitJson: CircuitJson,
   options: GetDrcErrorsOptions,
+  connMap: ConnectivityMap,
   evaluateViaSpacing: ViaSpacingEvaluator,
+  stats?: PreparedGetDrcErrorsStats,
 ): GetDrcErrorsResult => {
-  const connMap = createDrcConnectivityMap(circuitJson)
   const viaClearance = Math.max(
     options.viaClearance ?? MIN_VIA_TO_VIA_CLEARANCE,
     MIN_VIA_TO_VIA_CLEARANCE,
   )
+  const traceOverlapStartedAt = stats ? performance.now() : 0
   const traceErrors = checkEachPcbTraceNonOverlapping(circuitJson, {
     connMap,
     minClearance: options.traceClearance,
   })
+  if (stats) {
+    stats.traceOverlapCheckTimeMs += performance.now() - traceOverlapStartedAt
+  }
   const includeTypedTraceClearance =
     options.includeTypedTraceClearance !== false
+  const viaTraceStartedAt = stats ? performance.now() : 0
   const viaTraceErrors = includeTypedTraceClearance
     ? checkViaTraceClearance(circuitJson, {
         connMap,
         minClearance: options.traceClearance,
       })
     : []
+  if (stats) {
+    stats.viaTraceCheckTimeMs += performance.now() - viaTraceStartedAt
+  }
+  const padTraceStartedAt = stats ? performance.now() : 0
   const padTraceErrors = includeTypedTraceClearance
     ? checkPadTraceClearance(circuitJson, {
         connMap,
         minClearance: options.traceClearance,
       })
     : []
+  if (stats) {
+    stats.padTraceCheckTimeMs += performance.now() - padTraceStartedAt
+  }
+  const viaSpacingStartedAt = stats ? performance.now() : 0
   const viaErrors = evaluateViaSpacing(circuitJson, connMap, viaClearance)
+  if (stats) {
+    stats.viaSpacingCheckTimeMs += performance.now() - viaSpacingStartedAt
+  }
 
   const errors: DrcError[] = [
     ...traceErrors,
@@ -287,7 +316,15 @@ export const createPreparedGetDrcErrors = (): PreparedGetDrcErrors => {
   const stats: PreparedGetDrcErrorsStats = {
     viaSpacingEvaluationCount: 0,
     viaSpacingCacheHitCount: 0,
+    connectivityConstructionCount: 0,
+    connectivityCacheHitCount: 0,
+    connectivityPreparationTimeMs: 0,
+    traceOverlapCheckTimeMs: 0,
+    viaTraceCheckTimeMs: 0,
+    padTraceCheckTimeMs: 0,
+    viaSpacingCheckTimeMs: 0,
   }
+  const prepareConnectivityMap = createPreparedDrcConnectivityMap()
   const evaluateViaSpacing: ViaSpacingEvaluator = (
     circuitJson,
     connMap,
@@ -315,12 +352,26 @@ export const createPreparedGetDrcErrors = (): PreparedGetDrcErrors => {
     (
       circuitJson: CircuitJson,
       options: GetDrcErrorsOptions = {},
-    ): GetDrcErrorsResult =>
-      getDrcErrorsWithViaSpacingEvaluator(
+    ): GetDrcErrorsResult => {
+      const connectivityStartedAt = performance.now()
+      const connMap = prepareConnectivityMap(
+        circuitJson,
+        getDrcViaTraceConnections(circuitJson),
+      )
+      stats.connectivityPreparationTimeMs +=
+        performance.now() - connectivityStartedAt
+      const connectivityStats = prepareConnectivityMap.getStats()
+      stats.connectivityConstructionCount =
+        connectivityStats.constructionCount
+      stats.connectivityCacheHitCount = connectivityStats.cacheHitCount
+      return getDrcErrorsWithViaSpacingEvaluator(
         circuitJson,
         options,
+        connMap,
         evaluateViaSpacing,
-      ),
+        stats,
+      )
+    },
     {
       getStats: (): Readonly<PreparedGetDrcErrorsStats> => ({ ...stats }),
     },
@@ -335,5 +386,6 @@ export const getDrcErrors = (
   getDrcErrorsWithViaSpacingEvaluator(
     circuitJson,
     options,
+    createDrcConnectivityMap(circuitJson),
     evaluateOfficialViaSpacing,
   )

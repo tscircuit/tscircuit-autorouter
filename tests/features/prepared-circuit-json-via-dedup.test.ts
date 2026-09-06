@@ -3,6 +3,7 @@ import { getDrcErrors } from "lib/testing/getDrcErrors"
 import {
   convertToCircuitJson,
   createPreparedCircuitJsonConverter,
+  createPreparedImmutableCircuitJsonConverter,
 } from "lib/testing/utils/convertToCircuitJson"
 import type { SimpleRouteJson, SimplifiedPcbTrace } from "lib/types"
 
@@ -53,6 +54,7 @@ test("prepared circuit JSON preserves exposed via winners, global numbering and 
   const original = [first, hidden, distant, fixed]
   const exposed = [createViaTrace("A", 2, 0.3, 0.1), hidden, distant, fixed]
   const prepared = createPreparedCircuitJsonConverter(srj)
+  const immutable = createPreparedImmutableCircuitJsonConverter(srj)
   const baseline = prepared(original)
   const baselineCopy = structuredClone(baseline)
   const baselineDrc = getDrcErrors(structuredClone(baseline), {
@@ -63,6 +65,7 @@ test("prepared circuit JSON preserves exposed via winners, global numbering and 
     const actual = prepared(routes)
     const expected = convertToCircuitJson(srj, routes)
     expect(actual).toEqual(expected)
+    expect(immutable(routes)).toEqual(expected)
     const actualDrc = getDrcErrors(actual, {
       includeTraceContinuity: false,
       includeBoardEdge: false,

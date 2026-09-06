@@ -150,6 +150,7 @@ export const createPipeline9HighDensityDrcCandidateGate = ({
     Pipeline9HighDensityDrcSnapshot,
     SnapshotCopper
   >()
+  const boundsByTrace = new WeakMap<PcbTrace, Pipeline9Bounds | undefined>()
   const baselineBySnapshot = new WeakMap<
     Pipeline9HighDensityDrcSnapshot,
     LocalBaseline
@@ -169,7 +170,12 @@ export const createPipeline9HighDensityDrcCandidateGate = ({
     for (const element of snapshot.circuitJson) {
       if (element.type === "pcb_trace") {
         traces.set(element.pcb_trace_id, element)
-        const bounds = getTraceBounds(element)
+        // Snapshots borrow immutable converted traces. Only changed geometry
+        // needs another vertex scan; immutable neighbour bounds stay exact.
+        if (!boundsByTrace.has(element)) {
+          boundsByTrace.set(element, getTraceBounds(element))
+        }
+        const bounds = boundsByTrace.get(element)
         if (bounds) traceBounds.set(element.pcb_trace_id, bounds)
       } else if (element.type === "pcb_via") {
         vias.push(element)

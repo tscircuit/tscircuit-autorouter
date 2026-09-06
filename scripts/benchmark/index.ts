@@ -923,7 +923,6 @@ const formatHighDensityDrcRepairMetrics = (results: WorkerResult[]): string => {
       result.solverName,
       result.sampleNumber,
       metrics.status,
-      metrics.stats.drcPrecheckFoundPotentialIssue,
       metrics.stats.initialDrcIssueCount,
       metrics.stats.finalDrcIssueCount,
       metrics.stats.drcNodeCount,
@@ -940,8 +939,8 @@ const formatHighDensityDrcRepairMetrics = (results: WorkerResult[]): string => {
   return [
     "High-density DRC repair stage (per sample):",
     "",
-    "| Solver | Sample | Stage status | Potential DRC | Initial DRC | Final DRC | Affected nodes | Attempted nodes | Accepted nodes | Exhausted nodes | Candidates | Accepted repairs | Force candidates |",
-    "| --- | ---: | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |",
+    "| Solver | Sample | Stage status | Initial DRC | Final DRC | Affected nodes | Attempted nodes | Accepted nodes | Exhausted nodes | Candidates | Accepted repairs | Force candidates |",
+    "| --- | ---: | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |",
     ...rows,
     "",
     "Counts describe this stage's repairable copper, before later pipeline stages. Partial rows are the last worker observation. All numeric and boolean stage stats are included in benchmark-result.json.",

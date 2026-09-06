@@ -82,6 +82,18 @@ test("Pipeline9 seam forces require an unbranched owned handoff", (): void => {
         pcb_trace_id: "A_0",
         pcb_pad_id: "pad-b",
         __pad_ids: ["pad-b"],
+        __pad_copper: [
+          {
+            type: "pcb_smtpad",
+            pcb_smtpad_id: "pad-b",
+            shape: "rect",
+            x: 0,
+            y: 0.27,
+            width: 0.4,
+            height: 0.4,
+            layer: "top",
+          },
+        ],
         center: { x: 0, y: 0 },
         actual_clearance: 0.02,
         minimum_clearance: 0.1,
