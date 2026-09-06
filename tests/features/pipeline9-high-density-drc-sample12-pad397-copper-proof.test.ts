@@ -1,6 +1,12 @@
 import { expect, test } from "bun:test"
 import type { AnyCircuitElement, PcbSmtPad, PcbTrace } from "circuit-json"
 import { getFullConnectivityMapFromCircuitJson } from "circuit-json-to-connectivity-map"
+import type { SimpleRouteJson as ForceSimpleRouteJson } from "high-density-repair03/lib"
+import { getMaxTargetedCandidateAttemptsForEffort } from "high-density-repair03/lib/solvers/GlobalDrcForceImproveSolver/solverConfig"
+import {
+  applyDrcErrorForces,
+  materializeRoutes,
+} from "high-density-repair03/lib/solvers/GlobalDrcForceImproveSolver/solverHelpers"
 import {
   applyPipeline9PadTraceForce,
   getPipeline9PadTraceForceMobility,
@@ -10,6 +16,9 @@ import {
   type Pipeline9HighDensityForceFamily,
 } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/getPipeline9HighDensityForceCandidates"
 import { getPipeline9PadCopperForceTarget } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/getPipeline9PadCopperForceTarget"
+import { isPipeline9HighDensityRouteInsideBounds } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/isPipeline9HighDensityRouteInsideBounds"
+import { addAutoroutingViaTraceIds } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9JointDrcRepairSolver"
+import { normalizePipeline9DrcErrorsForRepair } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/normalizePipeline9DrcErrorsForRepair"
 import {
   getPipeline9DrcErrorTraceIds,
   type Pipeline9DrcError,
@@ -21,6 +30,7 @@ import type {
 } from "lib/types/high-density-types"
 import type { Obstacle } from "lib/types/srj-types"
 import { convertHdRouteToSimplifiedRoute } from "lib/utils/convertHdRouteToSimplifiedRoute"
+import { getBoundsFromNodeWithPortPoints } from "lib/utils/getBoundsFromNodeWithPortPoints"
 import captured from "../fixtures/srj18-sample12-pad397-copper.json"
 
 type ForceAttempt = {
@@ -234,6 +244,7 @@ test("captured sample12 copper exposes the pad repair's clean via-owner dependen
     { includeOwner: true, effort: 1 },
     { includeOwner: true, effort: 2 },
   ]
+  let firstNativePair: HighDensityRoute[] | undefined
   for (const { includeOwner, effort } of configurations) {
     const attempts: ForceAttempt[] = []
     let nativeCandidates = 0
@@ -263,6 +274,9 @@ test("captured sample12 copper exposes the pad repair's clean via-owner dependen
     })) {
       const attempt = attempts.at(-1)!
       if (attempt.family !== "native") continue
+      if (includeOwner && effort === 1 && firstNativePair === undefined) {
+        firstNativePair = structuredClone(candidate)
+      }
       nativeCandidates++
       const candidateOwner = includeOwner ? candidate[1]! : owner
       const candidateOwnerTrace = serialize(candidateOwner, ownerTrace)
@@ -299,6 +313,143 @@ test("captured sample12 copper exposes the pad repair's clean via-owner dependen
         rejected,
       }),
     )
+  }
+  if (!firstNativePair) {
+    throw new Error("The captured probe requires its published native pair")
+  }
+  const originalNativePair = firstNativePair
+  const traceIds = [targetTrace.pcb_trace_id, ownerTrace.pcb_trace_id]
+  const traceRouteIndexById = new Map(
+    traceIds.map((traceId, index): [string, number] => [traceId, index]),
+  )
+  const nodeBounds = getBoundsFromNodeWithPortPoints(node)
+  const copperRadius = captured.reportedVia.outer_diameter / 2
+  const forceSrj: ForceSimpleRouteJson & { minViaHoleDiameter: number } = {
+    bounds: {
+      minX: nodeBounds.minX - copperRadius,
+      maxX: nodeBounds.maxX + copperRadius,
+      minY: nodeBounds.minY - copperRadius,
+      maxY: nodeBounds.maxY + copperRadius,
+    },
+    connections: [],
+    obstacles,
+    layerCount: 4,
+    minTraceWidth: 0.1,
+    minViaDiameter: 0.3,
+    minViaHoleDiameter: 0.15,
+    minTraceToPadEdgeClearance: 0.15,
+    minViaEdgeToPadEdgeClearance: 0.15,
+  }
+  const mutable = structuredClone(originalNativePair).map(
+    (fragment, index): HighDensityRoute => ({
+      ...fragment,
+      connectionName: traceIds[index]!,
+      rootConnectionName: traceIds[index]!,
+    }),
+  )
+  let refreshedCandidates = originalNativePair
+  const maximumNativeCalls = getMaxTargetedCandidateAttemptsForEffort(1)
+  expect(maximumNativeCalls).toBe(3)
+  // The first call is the real published native candidate above. Re-evaluate
+  // all actual errors before each of the remaining two calls; no extra budget,
+  // hand-written error, accepted intermediate geometry, or outcome assumption.
+  for (let nativeCall = 1; nativeCall < maximumNativeCalls; nativeCall++) {
+    const currentCircuitJson = getCircuitJson(
+      refreshedCandidates[0]!,
+      refreshedCandidates[1]!,
+    )
+    const fresh = evaluate(refreshedCandidates[0]!, refreshedCandidates[1]!)
+    // errorsWithCenters locates typed via errors at the actual physical via.
+    // Use the same exact-ID via enrichment and primary normalization as HD.
+    const freshErrors = normalizePipeline9DrcErrorsForRepair({
+      errors: addAutoroutingViaTraceIds({
+        errors: fresh.errorsWithCenters.map((error) => ({ ...error })),
+        circuitJson: currentCircuitJson,
+        evaluatedTraceIds: new Set(traceIds),
+      }),
+      circuitJson: currentCircuitJson,
+      newTraceIds: new Set(traceIds),
+    })
+    let forceObstacles = obstacles
+    const freshForceErrors = freshErrors.map((error): Pipeline9DrcError => {
+      const routeIndex =
+        typeof error.pcb_trace_id === "string"
+          ? traceRouteIndexById.get(error.pcb_trace_id)
+          : undefined
+      const isCapturedPadError =
+        error.pcb_pad_id === pad.pcb_smtpad_id ||
+        error.pcb_trace_error_id ===
+          `overlap_${error.pcb_trace_id}_${pad.pcb_smtpad_id}`
+      const padTarget =
+        isCapturedPadError && routeIndex !== undefined
+          ? getPipeline9PadCopperForceTarget({
+              pad: { ...pad },
+              route: mutable[routeIndex]!,
+              obstacles,
+              layerCount: 4,
+            })
+          : undefined
+      if (isCapturedPadError && !padTarget) {
+        throw new Error("A fresh captured pad error requires its exact target")
+      }
+      if (!padTarget) return error
+      forceObstacles = padTarget.obstacles
+      return { ...error, center: padTarget.center }
+    })
+    const changed = applyDrcErrorForces(
+      { ...forceSrj, obstacles: forceObstacles },
+      mutable,
+      freshForceErrors,
+      traceRouteIndexById,
+      1,
+      connMap,
+      true,
+      false,
+      false,
+      false,
+    )
+    refreshedCandidates = materializeRoutes(mutable).map(
+      (fragment, index): HighDensityRoute => ({
+        ...originalNativePair[index]!,
+        route: fragment.route.map((point) => ({ ...point })),
+        vias: fragment.vias.map((via) => ({ ...via })),
+      }),
+    )
+    const anchorsPreserved = refreshedCandidates.every(
+      (fragment, index): boolean => {
+        const input = originalNativePair[index]!
+        return (
+          JSON.stringify(fragment.route[0]) ===
+            JSON.stringify(input.route[0]) &&
+          JSON.stringify(fragment.route.at(-1)) ===
+            JSON.stringify(input.route.at(-1))
+        )
+      },
+    )
+    const insideBounds = refreshedCandidates.every((fragment, index) =>
+      isPipeline9HighDensityRouteInsideBounds(fragment, nodeBounds, 4, {
+        originalRoute: originalNativePair[index]!,
+        node,
+      }),
+    )
+    console.info(
+      JSON.stringify({
+        diagnostic: "sample12-pad397-captured-fresh-error-continuation",
+        nativeCall,
+        maximumNativeCalls,
+        changed,
+        anchorsPreserved,
+        insideBounds,
+        inputErrors: freshErrors,
+        targetPoints: refreshedCandidates[0]!.route.slice(1, 5),
+        ownerVias: serialize(refreshedCandidates[1]!, ownerTrace).route.filter(
+          (point) => point.route_type === "via",
+        ),
+        errors: evaluate(refreshedCandidates[0]!, refreshedCandidates[1]!)
+          .errors,
+      }),
+    )
+    if (!changed || !anchorsPreserved || !insideBounds) break
   }
   expect({ route, owner, pad, obstacles }).toEqual(original)
 })
