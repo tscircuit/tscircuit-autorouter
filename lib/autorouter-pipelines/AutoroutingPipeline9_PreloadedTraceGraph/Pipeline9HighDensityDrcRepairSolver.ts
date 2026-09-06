@@ -1,6 +1,6 @@
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { GraphicsObject } from "graphics-debug"
-import type { DrcEvaluator } from "high-density-repair03/lib"
+import { getDrcScaledMaxIterations } from "high-density-repair03/lib/solvers/GlobalDrcForceImproveSolver/solverConfig"
 import { BaseSolver } from "lib/solvers/BaseSolver"
 import { HighDensitySolver } from "lib/solvers/HighDensitySolver/HighDensitySolver"
 import { isObstacleConnectedToRoute } from "lib/solvers/TraceWidthSolver/isObstacleConnectedToRoute"
@@ -15,7 +15,9 @@ import { convertHdRouteToSimplifiedRoute } from "lib/utils/convertHdRouteToSimpl
 import { createObjectsWithZLayers } from "lib/utils/createObjectsWithZLayers"
 import { minimumDistanceBetweenSegments } from "lib/utils/minimumDistanceBetweenSegments"
 import { normalizePipeline9NodeRootConnectionNames } from "./Pipeline9HighDensitySolver"
+import type { Pipeline9HighDensityDrcEvaluator } from "./createPipeline9HighDensityDrcEvaluator"
 import { getPipeline9HighDensityForceCandidates } from "./getPipeline9HighDensityForceCandidates"
+import { isPipeline9HighDensityDrcCandidateBetter } from "./isPipeline9HighDensityDrcCandidateBetter"
 import {
   arePipeline9RoutesOnSameNet,
   doPipeline9BoundsOverlap,
@@ -28,7 +30,6 @@ import {
   getPipeline9DrcErrors,
   getPipeline9DrcErrorTraceIds,
   getPipeline9RouteIndexByTraceId,
-  isPipeline9DrcCandidateBetter,
   type Pipeline9DrcError,
 } from "./pipeline9JointDrcRepairUtils"
 
@@ -37,7 +38,7 @@ export type Pipeline9HighDensityDrcRepairSolverParams = {
   hdRoutes: HighDensityRoute[]
   fixedHdRoutes: HighDensityRoute[]
   newConnections: SimpleRouteConnection[]
-  drcEvaluator: DrcEvaluator
+  drcEvaluator: Pipeline9HighDensityDrcEvaluator
   connMap: ConnectivityMap
   colorMap: Record<string, string>
   obstacles: Obstacle[]
@@ -69,6 +70,11 @@ type DrilledVia = {
   x: number
   y: number
   holeDiameter: number
+}
+
+type NodeRepairBudget = {
+  attempts: number
+  maxAttempts: number
 }
 
 // @tscircuit/checks uses this tolerance both to identify coincident vias and
@@ -308,6 +314,7 @@ export class Pipeline9HighDensityDrcRepairSolver extends BaseSolver {
   readonly attemptedNodeIds = new Set<string>()
   private readonly attemptedNodeIdsAtCurrentRevision = new Set<string>()
   private readonly acceptedNodeIds = new Set<string>()
+  private readonly nodeRepairBudgets = new Map<string, NodeRepairBudget>()
   outputHdRoutes: HighDensityRoute[]
   currentErrors: Pipeline9DrcError[]
   activeNode: NodeWithPortPoints | null = null
@@ -315,12 +322,14 @@ export class Pipeline9HighDensityDrcRepairSolver extends BaseSolver {
   private initialized = false
   private activeConnectionNames = new Set<string>()
   private acceptedCandidate: AcceptedHighDensityCandidate | null = null
+  private acceptedCandidateGeometryKey: string | null = null
   private activeForceCandidates: Generator<
     HighDensityRoute[],
     void,
     unknown
   > | null = null
   private activeRepairObstacles: Obstacle[] = []
+  private readonly activeCandidateGeometryKeys = new Set<string>()
   private readonly drilledViasByRoute = new WeakMap<
     HighDensityRoute,
     DrilledVia[]
@@ -361,6 +370,10 @@ export class Pipeline9HighDensityDrcRepairSolver extends BaseSolver {
       forceGeometryRejectedCount: 0,
       exhaustedNodeCount: 0,
       candidateAttemptCount: 0,
+      duplicateCandidateCount: 0,
+      localCandidateEvaluationCount: 0,
+      fullCandidateEvaluationCount: 0,
+      budgetExhaustedNodeCount: 0,
     }
   }
 
@@ -579,11 +592,14 @@ export class Pipeline9HighDensityDrcRepairSolver extends BaseSolver {
         `Pipeline9 cannot find high-density node "${missingNodeId}" selected for DRC repair`,
       )
     }
-    return this.params.nodePortPoints.find(
-      (node) =>
+    return this.params.nodePortPoints.find((node) => {
+      const budget = this.nodeRepairBudgets.get(node.capacityMeshNodeId)
+      return (
         currentDrcNodeIds.has(node.capacityMeshNodeId) &&
-        !this.attemptedNodeIdsAtCurrentRevision.has(node.capacityMeshNodeId),
-    )
+        !this.attemptedNodeIdsAtCurrentRevision.has(node.capacityMeshNodeId) &&
+        (budget === undefined || budget.attempts < budget.maxAttempts)
+      )
+    })
   }
 
   private evaluateCandidateRoutes(
@@ -592,6 +608,16 @@ export class Pipeline9HighDensityDrcRepairSolver extends BaseSolver {
   ): boolean {
     this.stats.candidateAttemptCount =
       Number(this.stats.candidateAttemptCount ?? 0) + 1
+    const candidateKey = JSON.stringify(candidateNodeRoutes)
+    if (this.activeCandidateGeometryKeys.has(candidateKey)) {
+      this.stats.duplicateCandidateCount =
+        Number(this.stats.duplicateCandidateCount) + 1
+      return (
+        this.acceptedCandidate !== null &&
+        this.acceptedCandidateGeometryKey === candidateKey
+      )
+    }
+    this.activeCandidateGeometryKeys.add(candidateKey)
     const candidateRoutes = replaceNodeRoutes({
       currentRoutes: this.outputHdRoutes,
       candidateRoutes: candidateNodeRoutes,
@@ -599,14 +625,52 @@ export class Pipeline9HighDensityDrcRepairSolver extends BaseSolver {
       connectionNames: this.activeConnectionNames,
     })
     if (!candidateRoutes) return false
+    const routeIndexByTraceId = this.getRouteIndexByTraceId(candidateRoutes)
+    const evaluateLocalCandidate = this.params.drcEvaluator.evaluateLocalCandidate
+    if (evaluateLocalCandidate) {
+      const changedTraceIds = new Set(
+        [...routeIndexByTraceId].flatMap(([traceId, routeIndex]) =>
+          this.outputHdRoutes[routeIndex] === candidateRoutes[routeIndex]
+            ? []
+            : [traceId],
+        ),
+      )
+      const local = evaluateLocalCandidate({
+        currentRoutes: this.outputHdRoutes,
+        candidateRoutes,
+        changedTraceIds,
+      })
+      this.stats.localCandidateEvaluationCount =
+        Number(this.stats.localCandidateEvaluationCount) + 1
+      const isOwnedError = (error: Pipeline9DrcError): boolean =>
+        getPipeline9DrcErrorTraceIds(error).some((traceId) =>
+          routeIndexByTraceId.has(traceId),
+        )
+      if (
+        !isPipeline9HighDensityDrcCandidateBetter(
+          local.candidateErrors.filter(isOwnedError),
+          local.currentErrors.filter(isOwnedError),
+        )
+      ) {
+        return false
+      }
+    }
+    this.stats.fullCandidateEvaluationCount =
+      Number(this.stats.fullCandidateEvaluationCount) + 1
     const candidateErrors = this.getRepairableDrcErrors(candidateRoutes)
-    if (!isPipeline9DrcCandidateBetter(candidateErrors, this.currentErrors)) {
+    if (
+      !isPipeline9HighDensityDrcCandidateBetter(
+        candidateErrors,
+        this.currentErrors,
+      )
+    ) {
       return false
     }
     this.acceptedCandidate = {
       routes: candidateRoutes,
       errors: candidateErrors,
     }
+    this.acceptedCandidateGeometryKey = candidateKey
     return true
   }
 
@@ -645,7 +709,9 @@ export class Pipeline9HighDensityDrcRepairSolver extends BaseSolver {
 
   private startNodeRepair(node: NodeWithPortPoints): void {
     this.activeNode = node
+    this.activeCandidateGeometryKeys.clear()
     this.acceptedCandidate = null
+    this.acceptedCandidateGeometryKey = null
     this.activeConnectionNames = this.getDrcConnectionNamesForNode(
       node.capacityMeshNodeId,
     )
@@ -679,14 +745,30 @@ export class Pipeline9HighDensityDrcRepairSolver extends BaseSolver {
       const localIndex = localRouteIndexByGlobalIndex.get(globalIndex)
       if (localIndex !== undefined) traceRouteIndexById.set(traceId, localIndex)
     }
+    const nodeErrors = this.currentErrors.filter((error) =>
+      getPipeline9DrcErrorTraceIds(error).some((traceId) =>
+        traceRouteIndexById.has(traceId),
+      ),
+    )
+    let budget = this.nodeRepairBudgets.get(node.capacityMeshNodeId)
+    if (budget === undefined) {
+      // Reuse Repair03's effort/initial-DRC search budget for this HD region.
+      // Tiny severity improvements must not turn a local repair into an
+      // unbounded optimization loop. The budget is fixed on the first visit.
+      budget = {
+        attempts: 0,
+        maxAttempts: getDrcScaledMaxIterations(
+          nodeErrors.length,
+          this.params.effort,
+        ),
+      }
+      this.nodeRepairBudgets.set(node.capacityMeshNodeId, budget)
+    }
+    budget.attempts++
     this.activeForceCandidates = getPipeline9HighDensityForceCandidates({
       node,
       hdRoutes: localRoutes,
-      errors: this.currentErrors.filter((error) =>
-        getPipeline9DrcErrorTraceIds(error).some((traceId) =>
-          traceRouteIndexById.has(traceId),
-        ),
-      ),
+      errors: nodeErrors,
       traceRouteIndexById,
       obstacles: this.activeRepairObstacles,
       layerCount: this.params.layerCount,
@@ -887,6 +969,12 @@ export class Pipeline9HighDensityDrcRepairSolver extends BaseSolver {
     this.activeForceCandidates = null
     this.activeRepairObstacles = []
     this.stats.finalDrcIssueCount = this.currentErrors.length
+    this.stats.budgetExhaustedNodeCount = [...this.getCurrentDrcNodeIds()].filter(
+      (nodeId) => {
+        const budget = this.nodeRepairBudgets.get(nodeId)
+        return budget !== undefined && budget.attempts >= budget.maxAttempts
+      },
+    ).length
     this.solved = true
   }
 

@@ -59,7 +59,10 @@ const createLocalForceRoute = (original: HighDensityRoute): LocalForceRoute => {
   // Earlier HD stages keep terminal identity on the route rather than on its
   // points. The force operator needs the real identity on each temporary end
   // point so it searches interior moves instead of moving a connected pad end.
-  if (first.pcb_port_id === undefined && original.startPcbPortId !== undefined) {
+  if (
+    first.pcb_port_id === undefined &&
+    original.startPcbPortId !== undefined
+  ) {
     first.pcb_port_id = original.startPcbPortId
   }
   if (last.pcb_port_id === undefined && original.endPcbPortId !== undefined) {

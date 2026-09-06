@@ -80,12 +80,14 @@ test("Pipeline9 local DRC forces repair pad clearance with fixed node handoffs a
     connections: [
       ...inputRoutes.map((route) => ({
         name: route.connectionName,
-        pointsToConnect: [route.route[0]!, route.route.at(-1)!].map((point) => ({
-          x: point.x,
-          y: point.y,
-          layer: point.z === 0 ? "top" : "bottom",
-          pcb_port_id: point.pcb_port_id,
-        })),
+        pointsToConnect: [route.route[0]!, route.route.at(-1)!].map(
+          (point) => ({
+            x: point.x,
+            y: point.y,
+            layer: point.z === 0 ? "top" : "bottom",
+            pcb_port_id: point.pcb_port_id,
+          }),
+        ),
       })),
       {
         name: "C",
@@ -97,7 +99,9 @@ test("Pipeline9 local DRC forces repair pad clearance with fixed node handoffs a
     ],
   }
   const drcEvaluator = createPipeline9HighDensityDrcEvaluator({
-    connections: srj.connections.filter((connection) => connection.name !== "C"),
+    connections: srj.connections.filter(
+      (connection) => connection.name !== "C",
+    ),
     originalConnections: srj.connections,
     originalFixedHdRoutes: [],
     fixedHdRoutes: [],
@@ -112,6 +116,12 @@ test("Pipeline9 local DRC forces repair pad clearance with fixed node handoffs a
   })
   const initialErrors = getPipeline9DrcErrors(drcEvaluator, inputRoutes)
   expect(initialErrors.length).toBeGreaterThan(0)
+  expect(
+    initialErrors.some(
+      (error) =>
+        Array.isArray(error.__pad_ids) && error.__pad_ids.includes("pad-c-start"),
+    ),
+  ).toBe(true)
   const fixedObstacles = getPipeline9FixedRouteObstacles({
     fixedObstacleRoutes: [fixedRoute],
     layerCount: 2,

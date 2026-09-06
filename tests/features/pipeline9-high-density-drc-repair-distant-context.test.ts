@@ -58,19 +58,19 @@ test("Pipeline9 does not retry an exhausted node after a distant copper repair",
     vias: [],
   }))
   const obstacles: Obstacle[] = [
-    {
-      obstacleId: "locked-endpoint-pad",
+    ...["top", "bottom"].map((layer): Obstacle => ({
+      obstacleId: `locked-endpoint-pad-${layer}`,
       circuitJsonMetadata: {
-        pcb_plated_hole_id: "pad-c-start",
-        pcb_port_id: "C-start",
+        pcb_smtpad_id: `pad-c-start-${layer}`,
+        pcb_port_id: `C-start-${layer}`,
       },
       type: "rect",
-      layers: ["top", "bottom"],
-      center: { x: -2, y: 0 },
+      layers: [layer],
+      center: { x: -2, y: 0.22 },
       width: 0.2,
       height: 0.2,
-      connectedTo: ["C", "C-start"],
-    },
+      connectedTo: ["C", `C-start-${layer}`],
+    })),
     {
       obstacleId: "repairable-center-pad",
       circuitJsonMetadata: {
@@ -88,7 +88,7 @@ test("Pipeline9 does not retry an exhausted node after a distant copper repair",
   const connMap = new ConnectivityMap({
     A: ["A", "A-start", "A-end"],
     B: ["B", "B-start", "B-end"],
-    C: ["C", "C-start", "C-end"],
+    C: ["C", "C-start-top", "C-start-bottom", "C-end"],
   })
   const srj: SimpleRouteJson = {
     layerCount: 2,
@@ -100,7 +100,18 @@ test("Pipeline9 does not retry an exhausted node after a distant copper repair",
       {
         name: "C",
         pointsToConnect: [
-          { x: -2, y: 0, layer: "top", pcb_port_id: "C-start" },
+          {
+            x: -2,
+            y: 0.22,
+            layer: "top",
+            pcb_port_id: "C-start-top",
+          },
+          {
+            x: -2,
+            y: 0.22,
+            layer: "bottom",
+            pcb_port_id: "C-start-bottom",
+          },
           { x: 0, y: 10, layer: "top", pcb_port_id: "C-end" },
         ],
       },
@@ -160,7 +171,8 @@ test("Pipeline9 does not retry an exhausted node after a distant copper repair",
     }
   }
 
-  // A cannot clear the foreign pad at its locked endpoint on either layer.
+  // A's locked endpoint has only 0.07 mm copper clearance on either layer.
+  // The pads do not touch the endpoint, so conversion cannot infer a connection.
   // B can detour around its center pad without changing A's copper context.
   while (
     !solver.solved &&

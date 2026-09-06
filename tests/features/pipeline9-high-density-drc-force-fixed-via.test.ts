@@ -84,9 +84,10 @@ test("Pipeline9 forces move a trace away from a fixed via without moving an unre
     originalSrj: srj,
     srjWithPointPairs: srj,
   })
-  const viaTraceErrors = getPipeline9DrcErrors(drcEvaluator, inputRoutes).filter(
-    (error) => error.type === "pcb_via_trace_clearance_error",
-  )
+  const viaTraceErrors = getPipeline9DrcErrors(
+    drcEvaluator,
+    inputRoutes,
+  ).filter((error) => error.type === "pcb_via_trace_clearance_error")
   expect(viaTraceErrors.length).toBeGreaterThan(0)
   expect(viaTraceErrors[0]!.__via_owner_trace_ids).toEqual(["B_0"])
   expect(viaTraceErrors[0]!.__trace_segment_owner_trace_id).toBe("A_0")

@@ -1,15 +1,24 @@
+import { getFullConnectivityMapFromCircuitJson } from "circuit-json-to-connectivity-map"
 import type { DrcEvaluator } from "high-density-repair03/lib"
 import {
   createPipeline7HdRoutesToSimplifiedPcbTracesConverter,
   type ConvertPipeline7HdRoutesOptions,
 } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/convertPipeline7HdRoutesToSimplifiedPcbTraces"
 import type { ChangedPreloadedTraceSection } from "lib/solvers/PortPointPathingSolver/tinyhypergraph/TinyHypergraphPortPointPathingSolver"
-import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
+import { RELAXED_DRC_OPTIONS } from "lib/testing/drcPresets"
+import { combinePreloadedAndRoutedTraces } from "lib/testing/evaluate-relaxed-drc"
+import { getDrcErrors } from "lib/testing/getDrcErrors"
+import { convertToCircuitJson } from "lib/testing/utils/convertToCircuitJson"
 import type { SimpleRouteJson, SimplifiedPcbTrace } from "lib/types"
 import type { HighDensityRoute } from "lib/types/high-density-types"
 import { convertHdRouteToSimplifiedRoute } from "lib/utils/convertHdRouteToSimplifiedRoute"
 import { assignUniquePcbTraceIdsToNewTraces } from "./assignUniquePcbTraceIdsToNewTraces"
 import type { PreloadedHighDensityRoute } from "./convertPreloadedTraceToHdRoutes"
+import {
+  createPipeline9HighDensityDrcCandidateGate,
+  type Pipeline9HighDensityDrcCandidateGate,
+  type Pipeline9HighDensityDrcSnapshot,
+} from "./createPipeline9HighDensityDrcCandidateGate"
 import { addAutoroutingViaTraceIds } from "./Pipeline9JointDrcRepairSolver"
 import { normalizePipeline9DrcErrorsForRepair } from "./normalizePipeline9DrcErrorsForRepair"
 import { preparePipeline9DrcRoutedTraces } from "./preparePipeline9DrcRoutedTraces"
@@ -34,11 +43,47 @@ type HighDensityDrcResult = {
   errorsWithCenters: Record<string, unknown>[]
 }
 
+type CachedHighDensityDrcSnapshot = Pipeline9HighDensityDrcSnapshot & {
+  fullResult?: HighDensityDrcResult
+}
+
+export type Pipeline9HighDensityDrcEvaluator = DrcEvaluator & {
+  evaluateLocalCandidate?: Pipeline9HighDensityDrcCandidateGate
+}
+
 const addCopperOwnerMetadata = (
   errors: Record<string, unknown>[],
   traceIdByViaId: ReadonlyMap<string, string>,
+  padIds: ReadonlySet<string>,
 ): Record<string, unknown>[] => {
   return errors.map((error) => {
+    const primaryTraceId =
+      typeof error.pcb_trace_id === "string" ? error.pcb_trace_id : undefined
+    const overlapPrefix = primaryTraceId
+      ? `overlap_${primaryTraceId}_`
+      : undefined
+    const encodedOtherId =
+      overlapPrefix &&
+      typeof error.pcb_trace_error_id === "string" &&
+      error.pcb_trace_error_id.startsWith(overlapPrefix)
+        ? error.pcb_trace_error_id.slice(overlapPrefix.length)
+        : undefined
+    const reportedPadIds = [
+      ...new Set(
+        [
+          encodedOtherId,
+          ...Object.entries(error).flatMap(([key, value]) =>
+            /^pcb_(?:smtpad|pad|plated_hole|hole)_ids?$/.test(key)
+              ? Array.isArray(value)
+                ? value
+                : [value]
+              : [],
+          ),
+        ].filter(
+          (id): id is string => typeof id === "string" && padIds.has(id),
+        ),
+      ),
+    ]
     const viaIds = [
       ...(typeof error.pcb_via_id === "string" ? [error.pcb_via_id] : []),
       ...(Array.isArray(error.pcb_via_ids)
@@ -55,7 +100,9 @@ const addCopperOwnerMetadata = (
         }),
       ),
     ]
-    if (viaOwnerTraceIds.length === 0) return error
+    if (viaOwnerTraceIds.length === 0 && reportedPadIds.length === 0) {
+      return error
+    }
     const segmentOwnerTraceId =
       (error.type === "pcb_trace_error" ||
         error.type === "pcb_via_trace_clearance_error") &&
@@ -64,7 +111,10 @@ const addCopperOwnerMetadata = (
         : undefined
     return {
       ...error,
-      __via_owner_trace_ids: viaOwnerTraceIds,
+      ...(viaOwnerTraceIds.length === 0
+        ? {}
+        : { __via_owner_trace_ids: viaOwnerTraceIds }),
+      ...(reportedPadIds.length === 0 ? {} : { __pad_ids: reportedPadIds }),
       ...(segmentOwnerTraceId === undefined
         ? {}
         : { __trace_segment_owner_trace_id: segmentOwnerTraceId }),
@@ -107,7 +157,7 @@ const hasSameFixedCopper = (
 /** Checks current pre-stitch copper without restoring removed preload sections. */
 export const createPipeline9HighDensityDrcEvaluator = (
   options: CreatePipeline9HighDensityDrcEvaluatorOptions,
-): DrcEvaluator => {
+): Pipeline9HighDensityDrcEvaluator => {
   const originalTraces = options.originalSrj.traces ?? []
   const originalTraceById = new Map(
     originalTraces.map((trace) => [trace.pcb_trace_id, trace]),
@@ -234,27 +284,35 @@ export const createPipeline9HighDensityDrcEvaluator = (
   const inputSrj = { ...options.originalSrj, traces: frozenTraces }
   const convertNewRoutes =
     createPipeline7HdRoutesToSimplifiedPcbTracesConverter(options)
-
-  return ({ routes, hdRoutes }): HighDensityDrcResult => {
-    const evaluatedRoutes = routes ?? hdRoutes
-    if (!evaluatedRoutes) {
-      throw new Error("Pipeline9 high-density DRC evaluation requires routes")
-    }
+  const snapshotByRoutes = new WeakMap<
+    HighDensityRoute[],
+    CachedHighDensityDrcSnapshot
+  >()
+  const getSnapshot = (
+    evaluatedRoutes: HighDensityRoute[],
+  ): CachedHighDensityDrcSnapshot => {
+    const cached = snapshotByRoutes.get(evaluatedRoutes)
+    if (cached) return cached
     const newTraces = convertNewRoutes(evaluatedRoutes)
     const newTraceIds = new Set(newTraces.map((trace) => trace.pcb_trace_id))
-    const { errors, errorsWithCenters, circuitJson } = evaluateRelaxedDrc({
-      inputSrj,
-      srjWithPointPairs: options.srjWithPointPairs,
-      routedTraces: preparePipeline9DrcRoutedTraces({
+    const jointTraces = combinePreloadedAndRoutedTraces(
+      frozenTraces,
+      preparePipeline9DrcRoutedTraces({
         originalPreloadedTraces: frozenTraces,
         mutatedPreloadedTraces: [],
         newTraces,
       }),
-      drcOptions: {
-        includeTraceContinuity: false,
-        includeBoardEdge: false,
+    )
+    const circuitJson = convertToCircuitJson(
+      options.srjWithPointPairs,
+      jointTraces,
+      {
+        minTraceWidth: inputSrj.minTraceWidth,
+        minViaDiameter: inputSrj.minViaDiameter,
+        originalSrj: inputSrj,
+        includeOriginalConnections: true,
       },
-    })
+    )
     const evaluatedTraceIds = new Set(
       circuitJson.flatMap((element) =>
         element.type === "pcb_trace" ? [element.pcb_trace_id] : [],
@@ -262,37 +320,81 @@ export const createPipeline9HighDensityDrcEvaluator = (
     )
     const traceIdByViaId = new Map(
       circuitJson.flatMap((element) =>
-        element.type === "pcb_via" &&
-        typeof element.pcb_trace_id === "string"
+        element.type === "pcb_via" && typeof element.pcb_trace_id === "string"
           ? [[element.pcb_via_id, element.pcb_trace_id] as const]
           : [],
       ),
     )
-    return {
-      errors: normalizePipeline9DrcErrorsForRepair({
-        errors: addCopperOwnerMetadata(
-          addAutoroutingViaTraceIds({
-            errors: errors as unknown as Record<string, unknown>[],
-            circuitJson,
-            evaluatedTraceIds,
-          }),
-          traceIdByViaId,
-        ),
-        circuitJson,
-        newTraceIds,
+    const padIds = new Set(
+      circuitJson.flatMap((element): string[] => {
+        if (element.type === "pcb_smtpad") return [element.pcb_smtpad_id]
+        if (element.type === "pcb_plated_hole") {
+          return [element.pcb_plated_hole_id]
+        }
+        if (element.type === "pcb_hole") return [element.pcb_hole_id]
+        return []
       }),
-      errorsWithCenters: normalizePipeline9DrcErrorsForRepair({
-        errors: addCopperOwnerMetadata(
-          addAutoroutingViaTraceIds({
-            errors: errorsWithCenters as unknown as Record<string, unknown>[],
-            circuitJson,
-            evaluatedTraceIds,
-          }),
-          traceIdByViaId,
-        ),
-        circuitJson,
-        newTraceIds,
-      }),
+    )
+    const connMap = getFullConnectivityMapFromCircuitJson(circuitJson)
+    connMap.addConnections([...traceIdByViaId])
+    const snapshot: CachedHighDensityDrcSnapshot = {
+      circuitJson,
+      connMap,
+      normalizeErrors: (
+        errors: Record<string, unknown>[],
+      ): Record<string, unknown>[] =>
+        normalizePipeline9DrcErrorsForRepair({
+          errors: addCopperOwnerMetadata(
+            addAutoroutingViaTraceIds({
+              errors,
+              circuitJson,
+              evaluatedTraceIds,
+            }),
+            traceIdByViaId,
+            padIds,
+          ),
+          circuitJson,
+          newTraceIds,
+        }),
     }
+    snapshotByRoutes.set(evaluatedRoutes, snapshot)
+    return snapshot
   }
+
+  const evaluator: Pipeline9HighDensityDrcEvaluator = ({
+    routes,
+    hdRoutes,
+  }): HighDensityDrcResult => {
+    const evaluatedRoutes = routes ?? hdRoutes
+    if (!evaluatedRoutes) {
+      throw new Error("Pipeline9 high-density DRC evaluation requires routes")
+    }
+    const snapshot = getSnapshot(evaluatedRoutes)
+    if (snapshot.fullResult) return snapshot.fullResult
+    const circuitJson = snapshot.circuitJson.map((element) =>
+      element.type === "pcb_trace"
+        ? {
+            ...element,
+            route: element.route.map((point) => ({ ...point })),
+          }
+        : element,
+    )
+    const { errors, errorsWithCenters } = getDrcErrors(circuitJson, {
+      ...RELAXED_DRC_OPTIONS,
+      includeTraceContinuity: false,
+      includeBoardEdge: false,
+    })
+    snapshot.fullResult = {
+      errors: snapshot.normalizeErrors(
+        errors as unknown as Record<string, unknown>[],
+      ),
+      errorsWithCenters: snapshot.normalizeErrors(
+        errorsWithCenters as unknown as Record<string, unknown>[],
+      ),
+    }
+    return snapshot.fullResult
+  }
+  evaluator.evaluateLocalCandidate =
+    createPipeline9HighDensityDrcCandidateGate({ getSnapshot })
+  return evaluator
 }
