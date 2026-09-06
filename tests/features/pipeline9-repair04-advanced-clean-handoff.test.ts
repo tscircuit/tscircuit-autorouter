@@ -112,6 +112,8 @@ test("advanced repair follows joint repair, uses its current preloaded copper, a
   expect(params.allowExistingViaRelocation).toBe(true)
   expect(params.maxInitialCandidateAttempts).toBe(1024)
   expect(params.maxCandidateAttemptsSinceAcceptance).toBe(10_000)
+  expect(params.maxTotalCandidateAttempts).toBe(32_768)
+  expect(params.fullEffortReferenceErrorCount).toBe(16)
   expect(params.maxPathSearchNodesPerRegion).toBe(500_000)
   expect(params.maxPathSearchNodesSinceAcceptance).toBe(1_000_000)
   const currentReference = params.referenceDrcEvaluator({

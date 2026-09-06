@@ -936,6 +936,9 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             // child-local changes rejected by the parent do not replenish it.
             maxInitialCandidateAttempts: 1024,
             maxCandidateAttemptsSinceAcceptance: 10_000,
+            // Reserve the full total allowance for inputs closer to clean.
+            maxTotalCandidateAttempts: 32_768,
+            fullEffortReferenceErrorCount: 16,
             maxPathSearchNodesPerRegion: 500_000,
             maxPathSearchNodesSinceAcceptance: 1_000_000,
             referenceDrcEvaluator: createPipeline9RelaxedDrcEvaluator({

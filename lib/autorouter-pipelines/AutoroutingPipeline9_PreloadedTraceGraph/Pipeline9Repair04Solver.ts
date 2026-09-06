@@ -33,6 +33,10 @@ type Pipeline9Repair04SolverParams = {
   maxCandidateAttemptsSinceAcceptance?: number
   /** Smaller initial allowance before this stage has demonstrated a valid repair. */
   maxInitialCandidateAttempts?: number
+  /** Bound all proposal attempts across this stage, including accepted repairs. */
+  maxTotalCandidateAttempts?: number
+  /** Scale total work down when the initial reference error count exceeds this value. */
+  fullEffortReferenceErrorCount?: number
   /** Bound A* heap pops across regions until a full-board improvement is retained. */
   maxPathSearchNodesSinceAcceptance?: number
   /** Limit one crop so unsuccessful searches can still try larger bounds. */
@@ -61,6 +65,8 @@ export class Pipeline9Repair04Solver extends BaseSolver {
   private pathSearchCalls = 0
   private attemptsSinceAcceptance = 0
   private nodesSinceAcceptance = 0
+  private initialReferenceErrors: number | null = null
+  private effectiveMaxTotalCandidateAttempts: number | null = null
   private readonly trackWork: boolean
 
   constructor(private readonly input: Pipeline9Repair04SolverParams) {
@@ -68,6 +74,8 @@ export class Pipeline9Repair04Solver extends BaseSolver {
     for (const name of [
       "maxCandidateAttemptsSinceAcceptance",
       "maxInitialCandidateAttempts",
+      "maxTotalCandidateAttempts",
+      "fullEffortReferenceErrorCount",
       "maxPathSearchNodesSinceAcceptance",
       "maxPathSearchNodesPerRegion",
     ] as const) {
@@ -75,9 +83,17 @@ export class Pipeline9Repair04Solver extends BaseSolver {
       if (limit !== undefined && (!Number.isSafeInteger(limit) || limit < 1))
         throw new Error(`repair04: ${name} must be a positive safe integer`)
     }
+    if (
+      input.fullEffortReferenceErrorCount !== undefined &&
+      input.maxTotalCandidateAttempts === undefined
+    )
+      throw new Error(
+        "repair04: fullEffortReferenceErrorCount requires maxTotalCandidateAttempts",
+      )
     this.trackWork =
       input.maxCandidateAttemptsSinceAcceptance !== undefined ||
       input.maxInitialCandidateAttempts !== undefined ||
+      input.maxTotalCandidateAttempts !== undefined ||
       input.maxPathSearchNodesSinceAcceptance !== undefined ||
       input.maxPathSearchNodesPerRegion !== undefined
     this.routes = input.hdRoutes
@@ -119,6 +135,18 @@ export class Pipeline9Repair04Solver extends BaseSolver {
     return this.input.maxCandidateAttemptsSinceAcceptance
   }
 
+  private getTotalWorkStats(): {
+    initialReferenceErrors?: number | null
+    effectiveMaxTotalCandidateAttempts?: number | null
+  } {
+    if (this.input.maxTotalCandidateAttempts === undefined) return {}
+    return {
+      initialReferenceErrors: this.initialReferenceErrors,
+      effectiveMaxTotalCandidateAttempts:
+        this.effectiveMaxTotalCandidateAttempts,
+    }
+  }
+
   private recordCompletedWork(): void {
     if (!this.trackWork) return
     if (!this.localSolver) throw new Error("repair04: missing work source")
@@ -145,6 +173,7 @@ export class Pipeline9Repair04Solver extends BaseSolver {
       | "clean"
       | "region-budget"
       | "unsuccessful-work-budget"
+      | "total-work-budget"
       | "search-exhausted",
   ): void {
     this.stats = {
@@ -154,6 +183,7 @@ export class Pipeline9Repair04Solver extends BaseSolver {
       indexedErrors: this.issues?.length ?? null,
       referenceErrors: this.referenceErrors?.length ?? null,
       completionReason,
+      ...this.getTotalWorkStats(),
       ...(this.trackWork
         ? {
             candidateAttempts: this.candidateAttempts,
@@ -175,6 +205,22 @@ export class Pipeline9Repair04Solver extends BaseSolver {
     if (!this.issues) {
       this.issues = this.evaluate(this.routes)
       this.referenceErrors = this.evaluateReference(this.routes)
+      if (this.input.maxTotalCandidateAttempts !== undefined) {
+        this.initialReferenceErrors = this.referenceErrors.length
+        const scale =
+          this.input.fullEffortReferenceErrorCount === undefined
+            ? 1
+            : Math.min(
+                1,
+                this.input.fullEffortReferenceErrorCount /
+                  Math.max(1, this.initialReferenceErrors),
+              )
+        this.effectiveMaxTotalCandidateAttempts = Math.max(
+          1,
+          Math.floor(this.input.maxTotalCandidateAttempts * scale),
+        )
+        this.stats = { ...this.stats, ...this.getTotalWorkStats() }
+      }
       this.fixedViolations = new Map(
         getFixedObstacleViolations({
           srj: this.input.srj as any,
@@ -248,6 +294,7 @@ export class Pipeline9Repair04Solver extends BaseSolver {
         acceptedRegions: this.acceptedRegionCount,
         indexedErrors: this.issues.length,
         referenceErrors: this.referenceErrors!.length,
+        ...this.getTotalWorkStats(),
         ...(this.trackWork
           ? {
               candidateAttempts: this.candidateAttempts,
@@ -261,6 +308,13 @@ export class Pipeline9Repair04Solver extends BaseSolver {
     }
     if (this.referenceErrors!.length === 0) {
       this.finishRepair("clean")
+      return
+    }
+    if (
+      this.effectiveMaxTotalCandidateAttempts !== null &&
+      this.candidateAttempts >= this.effectiveMaxTotalCandidateAttempts
+    ) {
+      this.finishRepair("total-work-budget")
       return
     }
     if (this.regionCount >= (this.input.maxRegions ?? 32)) {
@@ -381,10 +435,15 @@ export class Pipeline9Repair04Solver extends BaseSolver {
                 : (this.input.maxCandidatesPerRegion ?? 8000),
             ...(this.trackWork
               ? {
-                  maxCandidateAttempts:
+                  maxCandidateAttempts: Math.min(
                     candidateAttemptLimit === undefined
                       ? Number.MAX_SAFE_INTEGER
                       : candidateAttemptLimit - this.attemptsSinceAcceptance,
+                    this.effectiveMaxTotalCandidateAttempts === null
+                      ? Number.MAX_SAFE_INTEGER
+                      : this.effectiveMaxTotalCandidateAttempts -
+                          this.candidateAttempts,
+                  ),
                   maxPathSearchNodes: Math.min(
                     this.input.maxPathSearchNodesPerRegion ??
                       Number.MAX_SAFE_INTEGER,
