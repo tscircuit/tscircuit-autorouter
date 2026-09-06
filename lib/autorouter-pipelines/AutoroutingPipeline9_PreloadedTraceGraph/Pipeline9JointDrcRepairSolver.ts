@@ -1423,6 +1423,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
           regionalB01RepairAcceptedCount: 0,
           regionalB01RepairFallbackCandidateCount: 0,
           regionalB01RepairCandidateSearchCount: 0,
+          regionalB01RepairCandidateSearchReuseCount: 0,
           regionalB01RepairCandidateSearchBudget: 0,
           regionalB01RepairCandidateSearchBudgetExhausted: false,
           regionalB01RepairSafeTraceLayerSkippedForBudget: false,
@@ -1521,6 +1522,8 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         regionalB01RepairResult.fallbackCandidateCount,
       regionalB01RepairCandidateSearchCount:
         regionalB01RepairResult.candidateSearchCount,
+      regionalB01RepairCandidateSearchReuseCount:
+        regionalB01RepairResult.candidateSearchReuseCount,
       regionalB01RepairCandidateSearchBudget:
         regionalB01RepairResult.candidateSearchBudget,
       regionalB01RepairCandidateSearchBudgetExhausted:

@@ -37,6 +37,7 @@ type RegionalB01RepairResult = {
   acceptedCandidateCount: number
   fallbackCandidateCount: number
   candidateSearchCount: number
+  candidateSearchReuseCount: number
   candidateSearchBudget: number
   candidateSearchBudgetExhausted: boolean
   safeTraceLayerRepairSkippedForBudget: boolean
@@ -604,7 +605,9 @@ export const applyPipeline9RegionalB01Repairs = ({
   let acceptedCandidateCount = 0
   let fallbackCandidateCount = 0
   let candidateSearchCount = 0
+  let candidateSearchReuseCount = 0
   let candidateSearchBudgetExhausted = false
+  const searchedCandidateKeys = new Set<string>()
   const candidateSearchBudget = getPipeline9RegionalRepairSearchBudget(
     routes.length,
   )
@@ -647,6 +650,7 @@ export const applyPipeline9RegionalB01Repairs = ({
       acceptedCandidateCount,
       fallbackCandidateCount,
       candidateSearchCount,
+      candidateSearchReuseCount,
       candidateSearchBudget,
       candidateSearchBudgetExhausted,
       safeTraceLayerRepairSkippedForBudget: false,
@@ -701,10 +705,16 @@ export const applyPipeline9RegionalB01Repairs = ({
         const routeIndex = routeIndexByTraceId.get(traceId)
         if (routeIndex === undefined) continue
         for (const regionSize of REGION_SIZES) {
+          const searchKey = `b01:${routeIndex}:${center.x}:${center.y}:${regionSize}`
+          if (searchedCandidateKeys.has(searchKey)) {
+            candidateSearchReuseCount++
+            continue
+          }
           if (candidateSearchCount >= candidateSearchBudget) {
             candidateSearchBudgetExhausted = true
             break
           }
+          searchedCandidateKeys.add(searchKey)
           candidateSearchCount++
           const candidate = getRegionalCandidate({
             routes: currentRoutes,
@@ -736,36 +746,38 @@ export const applyPipeline9RegionalB01Repairs = ({
         if (bestErrors.length === 0) break
       }
       if (bestRoutes === currentRoutes && !candidateSearchBudgetExhausted) {
-        if (candidateSearchCount >= candidateSearchBudget) {
+        const searchKey = `regular:${center.x}:${center.y}`
+        if (searchedCandidateKeys.has(searchKey)) {
+          candidateSearchReuseCount++
+        } else if (candidateSearchCount >= candidateSearchBudget) {
           candidateSearchBudgetExhausted = true
         } else {
+          searchedCandidateKeys.add(searchKey)
           candidateSearchCount++
-        }
-      }
-      if (bestRoutes === currentRoutes && !candidateSearchBudgetExhausted) {
-        const fallbackRoutes = getRegularRegionalCandidate({
-          routes: currentRoutes,
-          fixedRouteCopperSpatialIndex,
-          center,
-          regionSize: 3,
-          srj,
-          connMap,
-          colorMap,
-          viaDiameter,
-          traceWidth,
-          obstacleMargin,
-          effort,
-        })
-        if (fallbackRoutes) {
-          attemptedCandidateCount++
-          fallbackCandidateCount++
-          const fallbackErrors = getPipeline9DrcErrors(
-            drcEvaluator,
-            fallbackRoutes,
-          )
-          if (isPipeline9DrcCandidateBetter(fallbackErrors, bestErrors)) {
-            bestRoutes = fallbackRoutes
-            bestErrors = fallbackErrors
+          const fallbackRoutes = getRegularRegionalCandidate({
+            routes: currentRoutes,
+            fixedRouteCopperSpatialIndex,
+            center,
+            regionSize: 3,
+            srj,
+            connMap,
+            colorMap,
+            viaDiameter,
+            traceWidth,
+            obstacleMargin,
+            effort,
+          })
+          if (fallbackRoutes) {
+            attemptedCandidateCount++
+            fallbackCandidateCount++
+            const fallbackErrors = getPipeline9DrcErrors(
+              drcEvaluator,
+              fallbackRoutes,
+            )
+            if (isPipeline9DrcCandidateBetter(fallbackErrors, bestErrors)) {
+              bestRoutes = fallbackRoutes
+              bestErrors = fallbackErrors
+            }
           }
         }
       }
@@ -774,6 +786,7 @@ export const applyPipeline9RegionalB01Repairs = ({
         currentErrors = bestErrors
         acceptedCandidateCount++
         acceptedOnPass = true
+        searchedCandidateKeys.clear()
         routeIndexByTraceId = getPipeline9RouteIndexByTraceId({
           routes: currentRoutes,
           newConnections,
@@ -826,6 +839,7 @@ export const applyPipeline9RegionalB01Repairs = ({
     acceptedCandidateCount,
     fallbackCandidateCount,
     candidateSearchCount,
+    candidateSearchReuseCount,
     candidateSearchBudget,
     candidateSearchBudgetExhausted,
     safeTraceLayerRepairSkippedForBudget,
