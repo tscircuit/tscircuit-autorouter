@@ -142,16 +142,28 @@ const recomputeVias = (
     const point = route[index]
     if (previousPoint.z === point.z) continue
     if (previousPoint.toNextSegmentType === "through_obstacle") continue
-    if (previousPoint.x !== point.x || previousPoint.y !== point.y) {
+    if (
+      Math.hypot(
+        previousPoint.x - point.x,
+        previousPoint.y - point.y,
+      ) > EPSILON
+    ) {
       throw new Error(
         `CrossingViaReductionSolver found a layer transition without a via at route point ${index} in "${originalRoute.connectionName}": ${JSON.stringify({ originalRoute, candidateRoute: route })}`,
       )
     }
 
-    const key = `${point.x}:${point.y}`
+    const originalVia = originalRoute.vias.find(
+      (via) =>
+        Math.hypot(via.x - previousPoint.x, via.y - previousPoint.y) <=
+          EPSILON &&
+        Math.hypot(via.x - point.x, via.y - point.y) <= EPSILON,
+    )
+    const via = originalVia ?? { x: previousPoint.x, y: previousPoint.y }
+    const key = `${via.x}:${via.y}`
     if (seenLocations.has(key)) continue
     seenLocations.add(key)
-    vias.push({ x: point.x, y: point.y })
+    vias.push({ ...via })
   }
   return vias
 }
