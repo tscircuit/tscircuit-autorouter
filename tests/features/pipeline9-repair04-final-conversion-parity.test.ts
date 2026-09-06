@@ -113,9 +113,7 @@ test("repair reference matches emitted trace aliases and collision IDs without l
     ? movedResult
     : movedResult.errors
   expect(
-    movedErrors.some(
-      (error): boolean => error.type === "pcb_placement_error",
-    ),
+    movedErrors.some((error): boolean => error.type === "pcb_placement_error"),
   ).toBeFalse()
   expect(evaluate({ routes: fixture.hdRoutes, traces: [] })).toEqual(result)
 })

@@ -24,9 +24,9 @@ type CreatePipeline9RelaxedDrcEvaluatorOptions = Omit<
 export const createPipeline9RelaxedDrcEvaluator = (
   options: CreatePipeline9RelaxedDrcEvaluatorOptions,
 ): DrcEvaluator => {
-  let convertRoutes: ReturnType<
-    typeof createPipeline7HdRoutesToSimplifiedPcbTracesConverter
-  > | undefined
+  let convertRoutes:
+    | ReturnType<typeof createPipeline7HdRoutesToSimplifiedPcbTracesConverter>
+    | undefined
   return ({ routes, hdRoutes }) => {
     const evaluatedRoutes = routes ?? hdRoutes
     if (!evaluatedRoutes) {

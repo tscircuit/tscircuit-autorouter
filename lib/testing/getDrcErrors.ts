@@ -1,3 +1,4 @@
+import { getViaInPadErrorsWithCenters } from "./getViaInPadErrorsWithCenters"
 import {
   checkDifferentNetViaSpacing,
   checkEachPcbTraceNonOverlapping,
@@ -7,7 +8,6 @@ import {
   checkTracesAreContiguous,
   checkViaPadClearance,
   checkViaTraceClearance,
-  checkViasInPads,
 } from "@tscircuit/checks"
 import type {
   AnyCircuitElement,
@@ -114,28 +114,9 @@ export const getDrcErrors = (
       minClearance: viaClearance,
     }),
   ]
-  // The checker builds a pad index on each call. A clean bulk result needs
-  // no per-via calls; retain those calls for explicit centers when errors exist.
-  const bulkViaInPadErrors = options.includeViaPadChecks
-    ? checkViasInPads(circuitJson)
-    : []
-  const nonViaElements = bulkViaInPadErrors.length > 0
-    ? circuitJson.filter((element): boolean => element.type !== "pcb_via")
-    : []
   const viaPadErrors = options.includeViaPadChecks
     ? [
-        ...(bulkViaInPadErrors.length > 0
-          ? circuitJson.flatMap((element): DrcErrorWithCenter[] =>
-              element.type === "pcb_via"
-                ? checkViasInPads([...nonViaElements, element]).map(
-                    (error): DrcErrorWithCenter => ({
-                      ...error,
-                      center: { x: element.x, y: element.y },
-                    }),
-                  )
-                : [],
-            )
-          : []),
+        ...getViaInPadErrorsWithCenters(circuitJson),
         ...checkViaPadClearance(circuitJson, {
           connMap,
           minClearance: options.traceClearance,
