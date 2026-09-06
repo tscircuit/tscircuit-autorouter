@@ -54,6 +54,12 @@ const INDEXED_DRC_CANDIDATE_CACHE_SIZE = 64
 
 type DrcCandidateKey = string & { readonly __brand: "DrcCandidateKey" }
 
+export type Pipeline9JointDrcOutput = {
+  newHdRoutes: HighDensityRoute[]
+  updatedPreloadedTraces: SimplifiedPcbTrace[]
+  mutatedPreloadedTraces: SimplifiedPcbTrace[]
+}
+
 type Pipeline9JointDrcRepairSolverParams = {
   srj: SimpleRouteJson
   srjWithPointPairs: SimpleRouteJson
@@ -69,6 +75,8 @@ type Pipeline9JointDrcRepairSolverParams = {
   defaultViaHoleDiameter: number
   effort: number
   colorMap: Record<string, string>
+  /** Independent final-output check, separate from the portfolio's search score. */
+  finalReferenceDrcEvaluator?: (output: Pipeline9JointDrcOutput) => number
 }
 
 type MovablePreloadedSection = {
@@ -660,6 +668,43 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     ReturnType<DrcEvaluator>
   >()
   private combinedOutput?: HighDensityRoute[]
+  private readonly referenceInput?: Pipeline9JointDrcOutput
+  private readonly initialFinalReferenceDrcIssueCount?: number
+  private rejectedOptimizationCandidate = false
+
+  private evaluateFinalReference(output: Pipeline9JointDrcOutput): number {
+    const count = this.params.finalReferenceDrcEvaluator!(output)
+    if (!Number.isInteger(count) || count < 0) {
+      throw new Error(
+        "Pipeline9 final reference evaluation must return a nonnegative integer",
+      )
+    }
+    return count
+  }
+
+  private completeOptimization(): void {
+    if (this.referenceInput) {
+      const candidateCount = this.evaluateFinalReference({
+        newHdRoutes: this.getOutput(),
+        updatedPreloadedTraces: this.getUpdatedPreloadedTraces(),
+        mutatedPreloadedTraces: this.getMutatedPreloadedTraces(),
+      })
+      this.rejectedOptimizationCandidate =
+        candidateCount > this.initialFinalReferenceDrcIssueCount!
+      this.stats = {
+        ...this.stats,
+        finalReferenceAcceptanceChecked: true,
+        initialFinalReferenceDrcIssueCount:
+          this.initialFinalReferenceDrcIssueCount,
+        candidateFinalReferenceDrcIssueCount: candidateCount,
+        outputFinalReferenceDrcIssueCount: this.rejectedOptimizationCandidate
+          ? this.initialFinalReferenceDrcIssueCount
+          : candidateCount,
+        rejectedOptimizationCandidate: this.rejectedOptimizationCandidate,
+      }
+    }
+    this.solved = true
+  }
 
   private cacheIndexedDrcResult(
     candidateKey: DrcCandidateKey,
@@ -683,6 +728,21 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     this.params = params
     this.inputNewHdRoutes = params.newHdRoutes
     this.inputUpdatedPreloadedTraces = params.updatedPreloadedTraces
+    if (params.finalReferenceDrcEvaluator) {
+      const updatedPreloadedTraces = structuredClone(
+        params.updatedPreloadedTraces,
+      )
+      this.referenceInput = {
+        newHdRoutes: structuredClone(params.newHdRoutes),
+        updatedPreloadedTraces,
+        mutatedPreloadedTraces: updatedPreloadedTraces.filter((trace) =>
+          params.mutatedPreloadedTraceIds.has(trace.pcb_trace_id),
+        ),
+      }
+      this.initialFinalReferenceDrcIssueCount = this.evaluateFinalReference(
+        this.referenceInput,
+      )
+    }
 
     const currentMutatedPreloadedTraces = params.updatedPreloadedTraces.filter(
       (trace) => params.mutatedPreloadedTraceIds.has(trace.pcb_trace_id),
@@ -963,7 +1023,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     }
 
     if (currentDrc.errors.length === 0) {
-      this.solved = true
+      this.completeOptimization()
       return
     }
 
@@ -1367,7 +1427,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
 
   override _step(): void {
     if (!this.exactRepairSolver) {
-      this.solved = true
+      this.completeOptimization()
       return
     }
     this.exactRepairSolver.step()
@@ -1440,7 +1500,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
           indexedDrcCandidateCacheSize: this.indexedDrcCandidateCache.size,
           indexedDrcCandidateCacheCapacity: INDEXED_DRC_CANDIDATE_CACHE_SIZE,
         }
-        this.solved = true
+        this.completeOptimization()
         return
       }
     }
@@ -1536,7 +1596,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       indexedDrcCandidateCacheSize: this.indexedDrcCandidateCache.size,
       indexedDrcCandidateCacheCapacity: INDEXED_DRC_CANDIDATE_CACHE_SIZE,
     }
-    this.solved = true
+    this.completeOptimization()
   }
 
   private getCombinedOutput(): HighDensityRoute[] {
@@ -1548,12 +1608,16 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
   }
 
   getOutput(): HighDensityRoute[] {
+    if (this.rejectedOptimizationCandidate)
+      return this.referenceInput!.newHdRoutes
     return this.getCombinedOutput().filter(
       (route) => !this.syntheticConnectionNames.has(route.connectionName),
     )
   }
 
   getUpdatedPreloadedTraces(): SimplifiedPcbTrace[] {
+    if (this.rejectedOptimizationCandidate)
+      return this.referenceInput!.updatedPreloadedTraces
     const outputRouteByConnectionName = new Map(
       this.getCombinedOutput().map((route) => [route.connectionName, route]),
     )
@@ -1619,6 +1683,8 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
   }
 
   getMutatedPreloadedTraces(): SimplifiedPcbTrace[] {
+    if (this.rejectedOptimizationCandidate)
+      return this.referenceInput!.mutatedPreloadedTraces
     const mutatedTraceIds = new Set([
       ...this.params.mutatedPreloadedTraceIds,
       ...this.movablePreloadedSections.map(

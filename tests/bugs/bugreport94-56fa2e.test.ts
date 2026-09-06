@@ -39,4 +39,4 @@ test("bugreport94-56fa2e.json with Pipeline 9", () => {
       ? import.meta.path.replace(/\.test\.ts$/, "-linux.test.ts")
       : import.meta.path
   expect(getLastStepSvg(solver.visualize())).toMatchSvgSnapshot(snapshotPath)
-}, 300_000)
+})

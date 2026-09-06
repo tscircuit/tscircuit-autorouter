@@ -1,5 +1,7 @@
+import { assignUniquePcbTraceIdsToNewTraces } from "./assignUniquePcbTraceIdsToNewTraces"
+import { identifyPipeline9ViaPadRepairTargets } from "./identifyPipeline9ViaPadRepairTargets"
 import type { DrcEvaluator } from "high-density-repair03/lib"
-import { convertPipeline7HdRoutesToSimplifiedPcbTraces } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/convertPipeline7HdRoutesToSimplifiedPcbTraces"
+import { createPipeline7HdRoutesToSimplifiedPcbTracesConverter } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/convertPipeline7HdRoutesToSimplifiedPcbTraces"
 import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import type { SimpleRouteJson, SimplifiedPcbTrace } from "lib/types"
 import type { ConvertPipeline7HdRoutesOptions } from "../AutoroutingPipeline7_MultiGraph/convertPipeline7HdRoutesToSimplifiedPcbTraces"
@@ -13,25 +15,58 @@ type CreatePipeline9RelaxedDrcEvaluatorOptions = Omit<
   srjWithPointPairs: SimpleRouteJson
   originalSrj: SimpleRouteJson
   mutatedPreloadedTraces: SimplifiedPcbTrace[]
+  includeViaPadChecks?: boolean
+  /** Match emitted Pipeline9 connection aliases and trace-ID assignment. */
+  useFinalOutputConversion?: boolean
 }
 
 /** Scores candidates using the same preloaded-trace replacement rules as output. */
 export const createPipeline9RelaxedDrcEvaluator = (
   options: CreatePipeline9RelaxedDrcEvaluatorOptions,
 ): DrcEvaluator => {
+  let convertRoutes:
+    | ReturnType<typeof createPipeline7HdRoutesToSimplifiedPcbTracesConverter>
+    | undefined
   return ({ routes, hdRoutes }) => {
     const evaluatedRoutes = routes ?? hdRoutes
     if (!evaluatedRoutes) {
       throw new Error("Pipeline9 relaxed DRC evaluation requires HD routes")
     }
 
-    const newTraces = convertPipeline7HdRoutesToSimplifiedPcbTraces({
+    // Connections and obstacle ownership stay fixed for this evaluator. Build
+    // their lookup once, but convert the current candidate routes each time.
+    convertRoutes ??= createPipeline7HdRoutesToSimplifiedPcbTracesConverter({
       ...options,
-      hdRoutes: evaluatedRoutes,
+      originalConnections: options.useFinalOutputConversion
+        ? options.originalSrj.connections
+        : options.originalConnections,
+    })
+    const convertedTraces = convertRoutes(evaluatedRoutes)
+    const newTraces = options.useFinalOutputConversion
+      ? assignUniquePcbTraceIdsToNewTraces(
+          convertedTraces,
+          options.originalSrj.traces ?? [],
+        )
+      : convertedTraces
+    const finalTraceIdByConvertedTraceId = new Map<string, string>()
+    const ambiguousConvertedIds = new Set<string>()
+    convertedTraces.forEach((trace, index): void => {
+      const convertedId = trace.pcb_trace_id
+      if (ambiguousConvertedIds.has(convertedId)) return
+      if (finalTraceIdByConvertedTraceId.has(convertedId)) {
+        finalTraceIdByConvertedTraceId.delete(convertedId)
+        ambiguousConvertedIds.add(convertedId)
+        return
+      }
+      finalTraceIdByConvertedTraceId.set(
+        convertedId,
+        newTraces[index]!.pcb_trace_id,
+      )
     })
     const newTraceIds = new Set(newTraces.map((trace) => trace.pcb_trace_id))
     const { errors, errorsWithCenters, circuitJson } = evaluateRelaxedDrc({
       inputSrj: options.originalSrj,
+      drcOptions: { includeViaPadChecks: options.includeViaPadChecks },
       srjWithPointPairs: options.srjWithPointPairs,
       routedTraces: preparePipeline9DrcRoutedTraces({
         originalPreloadedTraces: options.originalSrj.traces ?? [],
@@ -40,14 +75,24 @@ export const createPipeline9RelaxedDrcEvaluator = (
       }),
     })
 
+    const identifiedErrors = identifyPipeline9ViaPadRepairTargets({
+      errors: [...errors, ...errorsWithCenters] as unknown as Record<
+        string,
+        unknown
+      >[],
+      circuitJson,
+      routes: evaluatedRoutes,
+      layerCount: options.layerCount,
+      finalTraceIdByConvertedTraceId,
+    })
     return {
       errors: normalizePipeline9DrcErrorsForRepair({
-        errors: errors as unknown as Record<string, unknown>[],
+        errors: identifiedErrors.slice(0, errors.length),
         circuitJson,
         newTraceIds,
       }),
       errorsWithCenters: normalizePipeline9DrcErrorsForRepair({
-        errors: errorsWithCenters as unknown as Record<string, unknown>[],
+        errors: identifiedErrors.slice(errors.length),
         circuitJson,
         newTraceIds,
       }),

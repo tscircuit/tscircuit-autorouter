@@ -1,3 +1,4 @@
+import { getViaInPadErrorsWithCenters } from "./getViaInPadErrorsWithCenters"
 import {
   checkDifferentNetViaSpacing,
   checkEachPcbTraceNonOverlapping,
@@ -5,11 +6,14 @@ import {
   checkPcbTracesOutOfBoard,
   checkSameNetViaSpacing,
   checkTracesAreContiguous,
+  checkViaPadClearance,
   checkViaTraceClearance,
 } from "@tscircuit/checks"
 import type {
   AnyCircuitElement,
   PcbPadTraceClearanceError,
+  PcbPadPadClearanceError,
+  PcbPlacementError,
   PcbTraceError,
   PcbViaClearanceError,
   PcbViaTraceClearanceError,
@@ -33,6 +37,8 @@ type DrcError =
   | PcbViaTraceClearanceError
   | PcbPadTraceClearanceError
   | PcbViaClearanceError
+  | PcbPadPadClearanceError
+  | PcbPlacementError
 
 type DrcErrorWithCenter = DrcError & { center?: Point }
 
@@ -52,6 +58,8 @@ export interface GetDrcErrorsOptions {
   traceClearance?: number
   includeTraceContinuity?: boolean
   includeTypedTraceClearance?: boolean
+  /** Include via-in-pad placement and via-to-pad clearance checks. */
+  includeViaPadChecks?: boolean
 }
 
 const createDrcConnectivityMap = (
@@ -106,6 +114,15 @@ export const getDrcErrors = (
       minClearance: viaClearance,
     }),
   ]
+  const viaPadErrors = options.includeViaPadChecks
+    ? [
+        ...getViaInPadErrorsWithCenters(circuitJson),
+        ...checkViaPadClearance(circuitJson, {
+          connMap,
+          minClearance: options.traceClearance,
+        }),
+      ]
+    : []
 
   const errors: DrcError[] = [
     ...traceErrors,
@@ -116,6 +133,7 @@ export const getDrcErrors = (
     ...viaTraceErrors,
     ...padTraceErrors,
     ...viaErrors,
+    ...viaPadErrors,
   ]
 
   const vias = circuitJson.filter(
