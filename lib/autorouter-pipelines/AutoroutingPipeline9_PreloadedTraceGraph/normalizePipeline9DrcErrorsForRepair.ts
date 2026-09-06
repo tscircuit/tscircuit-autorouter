@@ -2,26 +2,34 @@ import type { AnyCircuitElement } from "circuit-json"
 
 type DrcError = Record<string, unknown>
 
+export const getPipeline9TraceIdByViaId = (
+  circuitJson: AnyCircuitElement[],
+): ReadonlyMap<string, string> => {
+  const traceIdByViaId = new Map<string, string>()
+  for (const element of circuitJson) {
+    if (
+      element.type === "pcb_via" &&
+      typeof element.pcb_via_id === "string" &&
+      typeof element.pcb_trace_id === "string"
+    ) {
+      traceIdByViaId.set(element.pcb_via_id, element.pcb_trace_id)
+    }
+  }
+  return traceIdByViaId
+}
+
 /** Makes the movable new route the primary identity in joint DRC errors. */
 export const normalizePipeline9DrcErrorsForRepair = ({
   errors,
   circuitJson,
+  traceIdByViaId = getPipeline9TraceIdByViaId(circuitJson),
   newTraceIds,
 }: {
   errors: DrcError[]
   circuitJson: AnyCircuitElement[]
+  traceIdByViaId?: ReadonlyMap<string, string>
   newTraceIds: ReadonlySet<string>
 }): DrcError[] => {
-  const traceIdByViaId = new Map(
-    circuitJson.flatMap((element) =>
-      element.type === "pcb_via" &&
-      typeof element.pcb_via_id === "string" &&
-      typeof element.pcb_trace_id === "string"
-        ? [[element.pcb_via_id, element.pcb_trace_id] as const]
-        : [],
-    ),
-  )
-
   return errors.map((error) => {
     const primaryTraceId =
       typeof error.pcb_trace_id === "string" ? error.pcb_trace_id : undefined

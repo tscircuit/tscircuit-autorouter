@@ -7,6 +7,12 @@ const DRC_ERROR_ID_KEYS = [
   "pcb_pad_trace_clearance_error_id",
 ] as const
 
+type PreparedTraceAlias = readonly [string, string]
+const preparedTraceAliasesByMap = new WeakMap<
+  ReadonlyMap<string, string>,
+  readonly PreparedTraceAlias[]
+>()
+
 const isMissingConnectionError = (error: DrcError): boolean =>
   typeof error.pcb_trace_error_id === "string" &&
   error.pcb_trace_error_id.startsWith("missing_connection_")
@@ -16,9 +22,13 @@ const normalizePreparedTraceIds = (
   originalTraceIdByPreparedTraceId: ReadonlyMap<string, string>,
 ): string => {
   let normalized = value
-  const aliases = [...originalTraceIdByPreparedTraceId].sort(
-    ([left], [right]) => right.length - left.length,
-  )
+  let aliases = preparedTraceAliasesByMap.get(originalTraceIdByPreparedTraceId)
+  if (!aliases) {
+    aliases = [...originalTraceIdByPreparedTraceId].sort(
+      ([left], [right]) => right.length - left.length,
+    )
+    preparedTraceAliasesByMap.set(originalTraceIdByPreparedTraceId, aliases)
+  }
   for (const [preparedTraceId, originalTraceId] of aliases) {
     normalized = normalized.replaceAll(preparedTraceId, originalTraceId)
   }
@@ -113,6 +123,22 @@ export const filterPipeline9DrcErrorsAgainstBaseline = <
   baselineErrors: DrcError[]
   originalTraceIdByPreparedTraceId?: ReadonlyMap<string, string>
 }): TError[] => {
+  const filterErrors = createPipeline9DrcBaselineFilter({ baselineErrors })
+  return filterErrors({ errors, originalTraceIdByPreparedTraceId })
+}
+
+/** Compiles inherited error identities once for repeated candidate checks. */
+export const createPipeline9DrcBaselineFilter = ({
+  baselineErrors,
+}: {
+  baselineErrors: DrcError[]
+}): (<TError extends DrcError>({
+  errors,
+  originalTraceIdByPreparedTraceId,
+}: {
+  errors: TError[]
+  originalTraceIdByPreparedTraceId?: ReadonlyMap<string, string>
+}) => TError[]) => {
   const baselineErrorIdentities = new Set(
     baselineErrors
       // A missing connection describes unfinished routing, not an inherited
@@ -122,11 +148,18 @@ export const filterPipeline9DrcErrorsAgainstBaseline = <
       .map((error) => getDrcErrorIdentity(error, new Map())),
   )
   baselineErrorIdentities.delete(undefined)
-  return errors.filter((error) => {
-    const identity = getDrcErrorIdentity(
-      error,
-      originalTraceIdByPreparedTraceId,
-    )
-    return identity === undefined || !baselineErrorIdentities.has(identity)
-  })
+  return <TError extends DrcError>({
+    errors,
+    originalTraceIdByPreparedTraceId = new Map(),
+  }: {
+    errors: TError[]
+    originalTraceIdByPreparedTraceId?: ReadonlyMap<string, string>
+  }): TError[] =>
+    errors.filter((error) => {
+      const identity = getDrcErrorIdentity(
+        error,
+        originalTraceIdByPreparedTraceId,
+      )
+      return identity === undefined || !baselineErrorIdentities.has(identity)
+    })
 }
