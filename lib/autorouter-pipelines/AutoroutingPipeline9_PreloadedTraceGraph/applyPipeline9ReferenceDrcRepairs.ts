@@ -46,11 +46,12 @@ export const applyPipeline9ReferenceDrcRepairs = ({
   viaHoleDiameter,
   allowViaInPad,
 }: ApplyPipeline9ReferenceDrcRepairsParams): Pipeline9ReferenceDrcRepairResult => {
+  const precisionEffort = Math.min(effort, 1)
   const solver = new GlobalDrcForceImproveSolver({
     srj,
     hdRoutes: routes,
     connMap,
-    effort,
+    effort: precisionEffort,
     drcEvaluator,
     viaHoleDiameter,
     maxIterations,
@@ -58,7 +59,7 @@ export const applyPipeline9ReferenceDrcRepairs = ({
     enableLargeBoardBroadFallback: false,
     enableTargetedErrorSweep: true,
     enablePostSolveClearanceRelaxation: false,
-    enableSafeTraceLayerMoves: false,
+    enableSafeTraceLayerMoves: true,
     enableViaInPadLayerMoves: allowViaInPad,
     enableTraceViaOwnerTargeting: true,
   })
