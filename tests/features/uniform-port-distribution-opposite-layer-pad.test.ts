@@ -7,7 +7,7 @@ import {
   type GraphicsSvgFrame,
 } from "../fixtures/solver-svg-frames"
 
-test("a bottom pad boundary only prevents redistribution of bottom-layer ports", async (): Promise<void> => {
+test("overlapping top-layer ports are spaced despite a bottom pad boundary", async (): Promise<void> => {
   const frames: GraphicsSvgFrame[] = []
   const outputByLayer = new Map<number, NodeWithPortPoints[]>()
   for (const z of [0, 1]) {
@@ -39,6 +39,7 @@ test("a bottom pad boundary only prevents redistribution of bottom-layer ports",
       nodeWithPortPoints: nodes,
       inputNodesWithPortPoints: inputNodes,
       layerCount: 2,
+      minTraceWidth: 0.15,
       obstacles: [
         {
           type: "rect",
