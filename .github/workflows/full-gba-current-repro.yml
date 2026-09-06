@@ -1,0 +1,46 @@
+name: Full GBA Pipeline 9 repro
+
+on:
+  pull_request:
+    paths:
+      - "lib/**"
+      - "fixtures/bug-reports/full-gameboy-current-pipeline9/**"
+      - "tests/bugs/full-gameboy-current-pipeline9.test.ts"
+      - "tests/bugs/__snapshots__/full-gameboy-current-pipeline9.snap.svg"
+      - ".github/workflows/full-gba-current-repro.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: full-gba-repro-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  reproduce:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: 1.3.8
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Route the full board
+        env:
+          RUN_FULL_GBA_REPRO: "1"
+        run: >-
+          bun test tests/bugs/full-gameboy-current-pipeline9.test.ts
+          --timeout 600000
+
+      - name: Upload snapshot artifacts on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: full-gba-current-repro-snapshots
+          path: |
+            tests/bugs/__snapshots__/full-gameboy-current-pipeline9*.svg
