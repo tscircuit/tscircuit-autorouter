@@ -150,8 +150,7 @@ export const expectPipeline9FixedRouteContinuity = ({
       const start: RoutePoint = replacement.route[segmentIndex]!
       const end: RoutePoint = replacement.route[segmentIndex + 1]!
       return (
-        mutated &&
-        (start.x !== end.x || start.y !== end.y || start.z !== end.z)
+        mutated && (start.x !== end.x || start.y !== end.y || start.z !== end.z)
       )
     }),
   ).toBeTrue()

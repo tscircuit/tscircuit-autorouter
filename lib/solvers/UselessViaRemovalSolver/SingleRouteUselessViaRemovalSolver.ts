@@ -557,9 +557,7 @@ export class SingleRouteUselessViaRemovalSolver extends BaseSolver {
       ...point,
       z: collapse.targetZ,
     }))
-    const removeConsecutiveDuplicates = (
-      points: RoutePoint[],
-    ): RoutePoint[] =>
+    const removeConsecutiveDuplicates = (points: RoutePoint[]): RoutePoint[] =>
       points.filter((point: RoutePoint, index: number): boolean => {
         const previousPoint: RoutePoint | undefined = points[index - 1]
         // Retained section tails can contain coincident plated-span anchors.
