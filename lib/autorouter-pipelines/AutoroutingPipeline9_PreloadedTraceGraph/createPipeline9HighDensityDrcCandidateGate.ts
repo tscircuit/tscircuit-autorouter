@@ -33,6 +33,15 @@ export type Pipeline9HighDensityDrcCandidateGate = (params: {
   candidateErrorPairsAreUnambiguous: boolean
   snapshotPreparationTimeMs?: number
   scopedCopperCheckTimeMs?: number
+  scopedTraceOverlapCheckTimeMs?: number
+  scopedViaTraceCheckTimeMs?: number
+  scopedPadTraceCheckTimeMs?: number
+}
+
+type ScopedCopperCheckTimings = {
+  scopedTraceOverlapCheckTimeMs: number
+  scopedViaTraceCheckTimeMs: number
+  scopedPadTraceCheckTimeMs: number
 }
 
 type SnapshotCopper = {
@@ -95,6 +104,7 @@ const evaluateScopedCopper = (
   snapshot: Pipeline9HighDensityDrcSnapshot,
   traceIds: ReadonlySet<string>,
   viaSites: ReadonlySet<string>,
+  timings: ScopedCopperCheckTimings,
 ): Pipeline9DrcError[] => {
   const circuitJson = snapshot.circuitJson.flatMap(
     (element): AnyCircuitElement[] => {
@@ -128,10 +138,19 @@ const evaluateScopedCopper = (
     connMap: snapshot.connMap,
     minClearance: MIN_VIA_TO_VIA_CLEARANCE,
   }
+  const overlapStartedAt = performance.now()
+  const traceErrors = checkEachPcbTraceNonOverlapping(circuitJson, traceOptions)
+  timings.scopedTraceOverlapCheckTimeMs += performance.now() - overlapStartedAt
+  const viaTraceStartedAt = performance.now()
+  const viaTraceErrors = checkViaTraceClearance(circuitJson, traceOptions)
+  timings.scopedViaTraceCheckTimeMs += performance.now() - viaTraceStartedAt
+  const padTraceStartedAt = performance.now()
+  const padTraceErrors = checkPadTraceClearance(circuitJson, traceOptions)
+  timings.scopedPadTraceCheckTimeMs += performance.now() - padTraceStartedAt
   const errors = [
-    ...checkEachPcbTraceNonOverlapping(circuitJson, traceOptions),
-    ...checkViaTraceClearance(circuitJson, traceOptions),
-    ...checkPadTraceClearance(circuitJson, traceOptions),
+    ...traceErrors,
+    ...viaTraceErrors,
+    ...padTraceErrors,
     ...checkSameNetViaSpacing(circuitJson, viaOptions),
     ...checkDifferentNetViaSpacing(circuitJson, viaOptions),
   ]
@@ -274,6 +293,11 @@ export const createPipeline9HighDensityDrcCandidateGate = ({
         .map((via) => via.pcb_via_id),
     ])
     const cachedBaseline = baselineBySnapshot.get(currentSnapshot)
+    const timings: ScopedCopperCheckTimings = {
+      scopedTraceOverlapCheckTimeMs: 0,
+      scopedViaTraceCheckTimeMs: 0,
+      scopedPadTraceCheckTimeMs: 0,
+    }
     const scopedChecksStartedAt = performance.now()
     const currentErrors =
       cachedBaseline?.contextKey === contextKey
@@ -282,6 +306,7 @@ export const createPipeline9HighDensityDrcCandidateGate = ({
             currentSnapshot,
             selectedTraceIds,
             selectedViaSites,
+            timings,
           )
     baselineBySnapshot.set(currentSnapshot, {
       contextKey,
@@ -291,6 +316,7 @@ export const createPipeline9HighDensityDrcCandidateGate = ({
       candidateSnapshot,
       selectedTraceIds,
       selectedViaSites,
+      timings,
     )
     return {
       currentErrors,
@@ -298,6 +324,7 @@ export const createPipeline9HighDensityDrcCandidateGate = ({
       candidateErrorPairsAreUnambiguous,
       snapshotPreparationTimeMs,
       scopedCopperCheckTimeMs: performance.now() - scopedChecksStartedAt,
+      ...timings,
     }
   }
 }

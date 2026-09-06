@@ -271,9 +271,7 @@ test("Pipeline9 repairs sample9 pad clearance without displacing either via", ()
       getMaxTargetedCandidateAttemptsForEffort(1),
     )
     expect(scaleAttempts.map((attempt) => attempt.application)).toEqual([
-      0,
-      1,
-      2,
+      0, 1, 2,
     ])
     expect(scaleAttempts.map((attempt) => attempt.family)).toEqual([
       "pad-wire",

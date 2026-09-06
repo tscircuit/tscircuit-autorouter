@@ -6,6 +6,8 @@ import {
 } from "high-density-repair03/lib/solvers/GlobalDrcForceImproveSolver/solverConfig"
 import {
   applyDrcErrorForces,
+  applyTracePairSegmentDisplacementForError,
+  getTraceRoutePairForError,
   materializeRoutes,
 } from "high-density-repair03/lib/solvers/GlobalDrcForceImproveSolver/solverHelpers"
 import type {
@@ -47,7 +49,11 @@ type LocalForceRoute = {
   terminalSuffixLength: number
 }
 
-export type Pipeline9HighDensityForceFamily = "pad-wire" | "native"
+export type Pipeline9HighDensityForceFamily =
+  | "pad-wire"
+  | "native"
+  | "trace-pair-0"
+  | "trace-pair-1"
 
 type ForceFamilyState = {
   family: Pipeline9HighDensityForceFamily
@@ -389,7 +395,8 @@ export function* getPipeline9HighDensityForceCandidates({
     onErrorAttempted,
   )) {
     const { error } = forceTarget
-    const movableTraceId = getPipeline9DrcErrorTraceIds(error).find((traceId) =>
+    const participantTraceIds = getPipeline9DrcErrorTraceIds(error)
+    const movableTraceId = participantTraceIds.find((traceId) =>
       traceRouteIndexById.has(traceId),
     )
     if (movableTraceId === undefined) continue
@@ -427,8 +434,21 @@ export function* getPipeline9HighDensityForceCandidates({
     const families: Pipeline9HighDensityForceFamily[] = canApplyPadWireForce
       ? ["pad-wire", "native"]
       : ["native"]
-    for (const scale of getForceScalesForEffort(effort)) {
-      const states = new Map<Pipeline9HighDensityForceFamily, ForceFamilyState>()
+    const canApplyTracePairForce =
+      forceTarget.kind === "native" &&
+      error.type === "pcb_trace_error" &&
+      error.pcb_via_id === undefined &&
+      !(Array.isArray(error.pcb_via_ids) && error.pcb_via_ids.length > 0) &&
+      !(Array.isArray(viaOwnerTraceIds) && viaOwnerTraceIds.length > 0) &&
+      !(Array.isArray(error.__pad_ids) && error.__pad_ids.length > 0) &&
+      participantTraceIds.length === 2 &&
+      participantTraceIds.every((traceId) => traceRouteIndexById.has(traceId)) &&
+      getTraceRoutePairForError(localError, traceRouteIndexById) !== undefined
+    for (const [scaleIndex, scale] of getForceScalesForEffort(effort).entries()) {
+      const states = new Map<
+        Pipeline9HighDensityForceFamily,
+        ForceFamilyState
+      >()
       // Official accidental-contact errors have no graded overlap severity.
       // A bounded private force sequence can cross that plateau before any
       // candidate is accepted; never restart it from a published partial move.
@@ -440,7 +460,16 @@ export function* getPipeline9HighDensityForceCandidates({
         application < maxCandidateApplications;
         application++
       ) {
-        const family = families[application % families.length]!
+        // Keep the complete first-scale native sequence. A trace-pair error
+        // then spends two existing slots on independent one-sided moves, not
+        // on another scale of the same bilateral displacement. Neither move
+        // is repeated at later scales or inherits the other side's geometry.
+        const family: Pipeline9HighDensityForceFamily =
+          canApplyTracePairForce && scaleIndex === 1 && application < 2
+            ? application === 0
+              ? "trace-pair-0"
+              : "trace-pair-1"
+            : families[application % families.length]!
         let state = states.get(family)
         if (state === undefined) {
           const localRoutes = hdRoutes.map(
@@ -477,32 +506,46 @@ export function* getPipeline9HighDensityForceCandidates({
           state.exhausted = true
           continue
         }
-        const changed =
-          state.family === "pad-wire"
-            ? applyPipeline9PadTraceForce({
-                route: mutableRoutes[primaryRouteIndex]!,
-                target: padTarget!,
-                protectedPointIndexes:
-                  localRoutes[primaryRouteIndex]!.protectedPointIndexes,
-                obstacleMargin,
-                scale,
-              })
-            : applyDrcErrorForces(
-                padTarget ? { ...srj, obstacles: padTarget.obstacles } : srj,
-                mutableRoutes,
-                [
-                  padTarget
-                    ? { ...localError, center: padTarget.center }
-                    : localError,
-                ],
-                traceRouteIndexById,
-                scale,
-                forceContext.connMap,
-                true,
-                false,
-                false,
-                primaryOwnsReportedVia,
-              )
+        let changed: boolean
+        if (state.family === "pad-wire") {
+          changed = applyPipeline9PadTraceForce({
+            route: mutableRoutes[primaryRouteIndex]!,
+            target: padTarget!,
+            protectedPointIndexes:
+              localRoutes[primaryRouteIndex]!.protectedPointIndexes,
+            obstacleMargin,
+            scale,
+          })
+        } else if (
+          state.family === "trace-pair-0" ||
+          state.family === "trace-pair-1"
+        ) {
+          changed =
+            applyTracePairSegmentDisplacementForError(
+              srj,
+              mutableRoutes,
+              localError,
+              traceRouteIndexById,
+              state.family === "trace-pair-0" ? 0 : 1,
+            ) !== undefined
+        } else {
+          changed = applyDrcErrorForces(
+            padTarget ? { ...srj, obstacles: padTarget.obstacles } : srj,
+            mutableRoutes,
+            [
+              padTarget
+                ? { ...localError, center: padTarget.center }
+                : localError,
+            ],
+            traceRouteIndexById,
+            scale,
+            forceContext.connMap,
+            true,
+            false,
+            false,
+            primaryOwnsReportedVia,
+          )
+        }
         if (!changed) {
           onCandidateRejected?.("no-motion")
           state.exhausted = true

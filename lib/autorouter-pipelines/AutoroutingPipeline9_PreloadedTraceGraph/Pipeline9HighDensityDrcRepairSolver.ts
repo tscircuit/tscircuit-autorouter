@@ -210,6 +210,9 @@ export class Pipeline9HighDensityDrcRepairSolver extends BaseSolver {
       localCandidateEvaluationTimeMs: 0,
       snapshotPreparationTimeMs: 0,
       scopedCopperCheckTimeMs: 0,
+      scopedTraceOverlapCheckTimeMs: 0,
+      scopedViaTraceCheckTimeMs: 0,
+      scopedPadTraceCheckTimeMs: 0,
       fullCandidateEvaluationTimeMs: 0,
       forceGenerationTimeMs: 0,
       seamForceGenerationTimeMs: 0,
@@ -421,6 +424,15 @@ export class Pipeline9HighDensityDrcRepairSolver extends BaseSolver {
       this.stats.scopedCopperCheckTimeMs =
         Number(this.stats.scopedCopperCheckTimeMs) +
         (local.scopedCopperCheckTimeMs ?? 0)
+      this.stats.scopedTraceOverlapCheckTimeMs =
+        Number(this.stats.scopedTraceOverlapCheckTimeMs) +
+        (local.scopedTraceOverlapCheckTimeMs ?? 0)
+      this.stats.scopedViaTraceCheckTimeMs =
+        Number(this.stats.scopedViaTraceCheckTimeMs) +
+        (local.scopedViaTraceCheckTimeMs ?? 0)
+      this.stats.scopedPadTraceCheckTimeMs =
+        Number(this.stats.scopedPadTraceCheckTimeMs) +
+        (local.scopedPadTraceCheckTimeMs ?? 0)
       this.stats.localCandidateEvaluationCount =
         Number(this.stats.localCandidateEvaluationCount) + 1
       const isOwnedError = (error: Pipeline9DrcError): boolean =>

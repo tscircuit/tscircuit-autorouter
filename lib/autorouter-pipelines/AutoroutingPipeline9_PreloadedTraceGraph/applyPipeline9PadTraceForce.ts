@@ -26,7 +26,9 @@ export const getPipeline9PadTraceForceMovablePointIndexes = ({
   const start = route.route[startIndex]
   const end = route.route[endIndex]
   if (!start || !end || start.z !== end.z) {
-    throw new Error("Pipeline9 pad-wire force requires its exact planar segment")
+    throw new Error(
+      "Pipeline9 pad-wire force requires its exact planar segment",
+    )
   }
   const fixedIndexes = new Set(protectedPointIndexes)
   const firstPoint = route.route[0]!

@@ -149,6 +149,21 @@ test("Pipeline9 local DRC gate preserves via ownership changes and full-board sc
     },
   ]) {
     const local = evaluateLocalCandidate(scenario)
+    const scopedPhaseTimes = [
+      local.scopedTraceOverlapCheckTimeMs!,
+      local.scopedViaTraceCheckTimeMs!,
+      local.scopedPadTraceCheckTimeMs!,
+    ]
+    for (const phaseTime of scopedPhaseTimes) {
+      expect(Number.isFinite(phaseTime)).toBeTrue()
+      expect(phaseTime).toBeGreaterThanOrEqual(0)
+    }
+    expect(
+      scopedPhaseTimes.reduce(
+        (total, phaseTime): number => total + phaseTime,
+        0,
+      ),
+    ).toBeLessThanOrEqual(local.scopedCopperCheckTimeMs!)
     const fullCurrentErrors = getPipeline9DrcErrors(
       evaluator,
       scenario.currentRoutes,

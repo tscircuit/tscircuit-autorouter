@@ -50,11 +50,7 @@ test("Pipeline9 pad-wire motion preserves via stacks, terminals and metadata", (
       route.route[0] = { ...route.route[1]! }
     }
     if (name === "terminal-suffix") {
-      route.route = [
-        route.route[0]!,
-        route.route[1]!,
-        { ...route.route[1]! },
-      ]
+      route.route = [route.route[0]!, route.route[1]!, { ...route.route[1]! }]
       route.vias = []
     }
     if (name === "coincident-via-stack") {
