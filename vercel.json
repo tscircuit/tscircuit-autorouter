@@ -1,0 +1,3 @@
+{
+  "installCommand": "bunx bun@1.4.2 install"
+}
