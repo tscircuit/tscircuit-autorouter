@@ -25,7 +25,7 @@ describe.skipIf(process.env.RUN_FULL_GBA_REPRO !== "1")(
         .update(new Uint8Array(fixtureBytes))
         .digest("hex")
       expect(fixtureSha256).toBe(
-        "35f25a0c8cba7ba7de9c07dfbb2fcab15831640ce412ed52901aabe0a94cf16b",
+        "e923e714d60e37fe3b2215062c4cd4985b3beae75897b6fce03b4c86cfae68f7",
       )
 
       const input = structuredClone(fullGameboySrj) as SimpleRouteJson
