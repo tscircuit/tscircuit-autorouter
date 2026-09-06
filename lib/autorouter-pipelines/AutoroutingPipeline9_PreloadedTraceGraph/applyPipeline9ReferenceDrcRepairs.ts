@@ -180,14 +180,8 @@ export const applyPipeline9ReferenceDrcRepairs = ({
     }
   }
 
-  const candidateErrors = getPipeline9DrcErrors(
-    drcEvaluator,
-    candidateRoutes,
-  )
-  const accepted = isPipeline9DrcCandidateBetter(
-    candidateErrors,
-    initialErrors,
-  )
+  const candidateErrors = getPipeline9DrcErrors(drcEvaluator, candidateRoutes)
+  const accepted = isPipeline9DrcCandidateBetter(candidateErrors, initialErrors)
   return {
     routes: accepted ? candidateRoutes : routes,
     remainingErrors: accepted ? candidateErrors : initialErrors,

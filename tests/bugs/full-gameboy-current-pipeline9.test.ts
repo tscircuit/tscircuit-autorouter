@@ -73,8 +73,7 @@ describe.skipIf(process.env.RUN_FULL_GBA_REPRO !== "1")(
           element.type === "pcb_via" &&
           relaxedDrcResult.errors.some(
             (error) =>
-              "pcb_via_id" in error &&
-              error.pcb_via_id === element.pcb_via_id,
+              "pcb_via_id" in error && error.pcb_via_id === element.pcb_via_id,
           ),
       )
       console.log(

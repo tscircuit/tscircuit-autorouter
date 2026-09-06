@@ -1,9 +1,6 @@
 import { expect, test } from "bun:test"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
-import type {
-  DrcEvaluator,
-  SimpleRouteJson,
-} from "high-density-repair03/lib"
+import type { DrcEvaluator, SimpleRouteJson } from "high-density-repair03/lib"
 import { applyPipeline9ReferenceDrcRepairs } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/applyPipeline9ReferenceDrcRepairs"
 import type { HighDensityRoute } from "lib/types/high-density-types"
 
@@ -123,8 +120,6 @@ test("Pipeline9 reference DRC repair preserves electrical route invariants", () 
   expect(result.routes[0]?.connectionName).toBe("signal")
   expect(result.routes[0]?.traceThickness).toBe(0.1)
   expect(result.routes[0]?.route[0]).toMatchObject(routes[0]!.route[0]!)
-  expect(result.routes[0]?.route.at(-1)).toMatchObject(
-    routes[0]!.route.at(-1)!,
-  )
+  expect(result.routes[0]?.route.at(-1)).toMatchObject(routes[0]!.route.at(-1)!)
   expect(result.routes[1]).toEqual(routes[1])
 })

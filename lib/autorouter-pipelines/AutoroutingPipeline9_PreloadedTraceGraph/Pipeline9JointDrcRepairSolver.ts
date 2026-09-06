@@ -996,8 +996,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         ...syntheticConnectionByName.values(),
       ],
     }
-    this.referenceRepairSrj =
-      extendedSrjWithPointPairs as RepairSimpleRouteJson
+    this.referenceRepairSrj = extendedSrjWithPointPairs as RepairSimpleRouteJson
     const autoroutingDrcEngine = new AutoroutingDrcEngine(
       {
         ...extendedSrjWithPointPairs,
@@ -1403,9 +1402,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       const referenceDrcEvaluator = this.cachedReferenceDrcEvaluator
       const referenceRepairSrj = this.referenceRepairSrj
       if (!referenceDrcEvaluator || !referenceRepairSrj) {
-        throw new Error(
-          "Pipeline9 reference DRC repair was not initialized",
-        )
+        throw new Error("Pipeline9 reference DRC repair was not initialized")
       }
       // The indexed evaluator can retain conservative false positives after the
       // exact portfolio has produced a reference-clean result. Do not let later
