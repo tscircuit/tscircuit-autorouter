@@ -42,9 +42,10 @@ test("Pipeline9 simplifies BGA phase-two approaches without avoiding their own f
       )
     }
   }
-  expect(routedTraces.filter((trace) => trace.route.length === 2)).toHaveLength(
-    4,
-  )
+  expect(
+    routedTraces.filter((trace) => trace.route.length === 2),
+    JSON.stringify(routedTraces),
+  ).toHaveLength(4)
 
   const snapshotInput = {
     inputSrj: input,

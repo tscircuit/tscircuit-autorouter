@@ -9,6 +9,8 @@ import { GraphicsObject } from "graphics-debug"
 import { getJumpersGraphics } from "lib/utils/getJumperGraphics"
 import { createObjectsWithZLayers } from "lib/utils/createObjectsWithZLayers"
 import { CrossingViaReductionSolver } from "lib/solvers/CrossingViaReductionSolver/crossing-via-reduction-solver"
+import { createSimplificationConnectivityMap } from "./createSimplificationConnectivityMap"
+import { createSimplificationRouteIdentities } from "./createSimplificationRouteIdentities"
 
 type Phase =
   | "via_removal"
@@ -51,6 +53,8 @@ export class TraceSimplificationSolver extends BaseSolver {
 
   hdRoutes: HighDensityRoute[] = []
 
+  private readonly connectionNameByInternalName: ReadonlyMap<string, string>
+
   private readonly preservedRouteEndpoints?: ReadonlyMap<
     string,
     {
@@ -77,7 +81,12 @@ export class TraceSimplificationSolver extends BaseSolver {
 
   /** Returns the simplified routes. This is the primary output of the solver. */
   get simplifiedHdRoutes(): HighDensityRoute[] {
-    return this.hdRoutes
+    if (this.connectionNameByInternalName.size === 0) return this.hdRoutes
+    return this.hdRoutes.map((route: HighDensityRoute): HighDensityRoute => {
+      const connectionName: string | undefined =
+        this.connectionNameByInternalName.get(route.connectionName)
+      return connectionName === undefined ? route : { ...route, connectionName }
+    })
   }
 
   /**
@@ -129,16 +138,30 @@ export class TraceSimplificationSolver extends BaseSolver {
     },
   ) {
     super()
+    const routeIdentities: ReturnType<
+      typeof createSimplificationRouteIdentities
+    > = createSimplificationRouteIdentities({
+      hdRoutes: simplificationConfig.hdRoutes,
+      otherHdRoutes: simplificationConfig.otherHdRoutes ?? [],
+      obstacles: simplificationConfig.obstacles,
+      connMap: createSimplificationConnectivityMap(
+        simplificationConfig.connMap,
+        simplificationConfig.netByConnectionName,
+      ),
+      netByConnectionName: simplificationConfig.netByConnectionName,
+      colorMap: simplificationConfig.colorMap,
+    })
     this.simplificationConfig = {
       ...simplificationConfig,
+      ...routeIdentities,
       obstacles: createObjectsWithZLayers(
         simplificationConfig.obstacles,
         simplificationConfig.layerCount,
       ),
     }
-    this.hdRoutes = this.markThroughObstacleSegments(
-      simplificationConfig.hdRoutes,
-    )
+    this.connectionNameByInternalName =
+      routeIdentities.connectionNameByInternalName
+    this.hdRoutes = this.markThroughObstacleSegments(routeIdentities.hdRoutes)
     if (simplificationConfig.preserveRouteEndpoints) {
       const endpointByConnectionName = new Map<
         string,
@@ -147,7 +170,7 @@ export class TraceSimplificationSolver extends BaseSolver {
           end: HighDensityRoute["route"][number]
         }
       >()
-      for (const route of simplificationConfig.hdRoutes) {
+      for (const route of this.hdRoutes) {
         const start = route.route[0]
         const end = route.route.at(-1)
         if (!start || !end) {
@@ -409,6 +432,10 @@ export class TraceSimplificationSolver extends BaseSolver {
             colorMap: { ...this.simplificationConfig.colorMap },
             layerCount: this.simplificationConfig.layerCount,
             connMap: this.simplificationConfig.connMap,
+            minTraceToPadEdgeClearance:
+              this.simplificationConfig.minTraceToPadEdgeClearance,
+            minBoardEdgeClearance:
+              this.simplificationConfig.minBoardEdgeClearance,
             outline: this.simplificationConfig.outline
               ? [...this.simplificationConfig.outline]
               : undefined,
@@ -431,6 +458,8 @@ export class TraceSimplificationSolver extends BaseSolver {
               : undefined,
             minBoardEdgeClearance:
               this.simplificationConfig.minBoardEdgeClearance,
+            minTraceToPadEdgeClearance:
+              this.simplificationConfig.minTraceToPadEdgeClearance,
             defaultViaDiameter: this.simplificationConfig.defaultViaDiameter,
             useTraceWidthAwareClearance:
               this.simplificationConfig.useTraceWidthAwareClearance,

@@ -1,4 +1,4 @@
-<svg width="640" height="640" viewBox="0 0 640 640" xmlns="http://www.w3.org/2000/svg"><rect width="100%" height="100%" fill="white"/><g><polyline data-points="0,0 0,0" data-type="line" data-label="route0 (z=0)" points="90.90909090909088,320 90.90909090909088,320" fill="none" stroke="red" stroke-linejoin="round" stroke-width="38.18181818181818"/></g><g><polyline data-points="0,0 0,0" data-type="line" data-label="route0 (z=0)" points="90.90909090909088,320 90.90909090909088,320" fill="none" stroke="red" stroke-linejoin="round" stroke-width="38.18181818181818"/></g><g><polyline data-points="0,0 1,0" data-type="line" data-label="route0 (z=0)" points="90.90909090909088,320 345.4545454545454,320" fill="none" stroke="red" stroke-linejoin="round" stroke-width="38.18181818181818"/></g><g><polyline data-points="1,0 2,0" data-type="line" data-label="route0 (z=1)" points="345.4545454545454,320 600,320" fill="none" stroke="blue" stroke-linejoin="round" stroke-width="38.18181818181818"/></g><g><polyline data-points="2,0 2,0" data-type="line" data-label="route0 (z=1)" points="600,320 600,320" fill="none" stroke="blue" stroke-linejoin="round" stroke-width="38.18181818181818"/></g><g><rect data-type="rect" data-label="Obstacle (Z: 0)" data-x="0" data-y="0" x="39.99999999999997" y="269.0909090909091" width="101.81818181818181" height="101.81818181818176" fill="rgba(255, 0, 0, 0.2)" stroke="black" stroke-width="0.003928571428571429"/></g><g><rect data-type="rect" data-label="Obstacle (Z: 1)" data-x="0.15" data-y="0" x="78.18181818181816" y="269.0909090909091" width="101.8181818181818" height="101.81818181818176" fill="rgba(0, 0, 255, 0.2)" stroke="black" stroke-width="0.003928571428571429"/></g><circle data-type="circle" data-label="" data-x="1" data-y="0" cx="345.4545454545454" cy="320" r="38.18181818181818" fill="rgba(255, 0, 255, 0.5)" stroke="black" stroke-width="0.003928571428571429"/><g id="crosshair" style="display: none"><line id="crosshair-h" y1="0" y2="640" stroke="#666" stroke-width="0.5"/><line id="crosshair-v" x1="0" x2="640" stroke="#666" stroke-width="0.5"/><text id="coordinates" font-family="monospace" font-size="12" fill="#666"></text></g><script><![CDATA[
+<svg width="640" height="640" viewBox="0 0 640 640" xmlns="http://www.w3.org/2000/svg"><rect width="100%" height="100%" fill="white"/><g><polyline data-points="0,0 1,0" data-type="line" data-label="route0 (z=0)" points="90.90909090909088,320 345.4545454545454,320" fill="none" stroke="red" stroke-linejoin="round" stroke-width="38.18181818181818"/></g><g><polyline data-points="1,0 2,0" data-type="line" data-label="route0 (z=1)" points="345.4545454545454,320 600,320" fill="none" stroke="blue" stroke-linejoin="round" stroke-width="38.18181818181818"/></g><g><polyline data-points="2,0 2,0" data-type="line" data-label="route0 (z=1)" points="600,320 600,320" fill="none" stroke="blue" stroke-linejoin="round" stroke-width="38.18181818181818"/></g><g><rect data-type="rect" data-label="Obstacle (Z: 0)" data-x="0" data-y="0" x="39.99999999999997" y="269.0909090909091" width="101.81818181818181" height="101.81818181818176" fill="rgba(255, 0, 0, 0.2)" stroke="black" stroke-width="0.003928571428571429"/></g><g><rect data-type="rect" data-label="Obstacle (Z: 1)" data-x="0.15" data-y="0" x="78.18181818181816" y="269.0909090909091" width="101.8181818181818" height="101.81818181818176" fill="rgba(0, 0, 255, 0.2)" stroke="black" stroke-width="0.003928571428571429"/></g><circle data-type="circle" data-label="" data-x="1" data-y="0" cx="345.4545454545454" cy="320" r="38.18181818181818" fill="rgba(255, 0, 255, 0.5)" stroke="black" stroke-width="0.003928571428571429"/><g id="crosshair" style="display: none"><line id="crosshair-h" y1="0" y2="640" stroke="#666" stroke-width="0.5"/><line id="crosshair-v" x1="0" x2="640" stroke="#666" stroke-width="0.5"/><text id="coordinates" font-family="monospace" font-size="12" fill="#666"></text></g><script><![CDATA[
               document.currentScript.parentElement.addEventListener('mousemove', (e) => {
                 const svg = e.currentTarget;
                 const rect = svg.getBoundingClientRect();
@@ -8,7 +8,7 @@
                 const h = svg.getElementById('crosshair-h');
                 const v = svg.getElementById('crosshair-v');
                 const coords = svg.getElementById('coordinates');
-
+                
                 crosshair.style.display = 'block';
                 h.setAttribute('x1', '0');
                 h.setAttribute('x2', '640');
@@ -27,13 +27,13 @@
                 // y' = (y - ty) / sy
                 const sx = matrix.a;
                 const sy = matrix.d;
-                const tx = matrix.e;
+                const tx = matrix.e; 
                 const ty = matrix.f;
                 const realPoint = {
                   x: (x - tx) / sx,
                   y: (y - ty) / sy // Flip y back since we used negative scale
                 }
-
+                
                 coords.textContent = `(${realPoint.x.toFixed(2)}, ${realPoint.y.toFixed(2)})`;
                 coords.setAttribute('x', (x + 5).toString());
                 coords.setAttribute('y', (y - 5).toString());

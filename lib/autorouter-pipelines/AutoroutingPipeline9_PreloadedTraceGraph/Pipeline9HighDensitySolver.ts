@@ -780,7 +780,47 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       }
     }
 
-    // Capture the accepted regional envelope immediately against the
+    // Splicing is authoritative for surviving replacement copper, including
+    // closed paths that have no distinct pair of regional routing terminals.
+    const markedTraceIndexes: Set<number> = new Set<number>()
+    for (const {
+      connectionName,
+      replacementProducedSegment,
+    } of pendingFixedRouteReplacements) {
+      if (!replacementProducedSegment) continue
+      const replacement: PreloadedHighDensityRoute | undefined =
+        this.fixedRouteReplacements.get(connectionName)
+      const mask: boolean[] | undefined =
+        this.preloadedTraceMutationMasks.get(connectionName)
+      if (!replacement || !mask) {
+        throw new Error(
+          `Pipeline9 accepted replacement for "${connectionName}" is missing its mutation provenance`,
+        )
+      }
+      if (mask.length !== replacement.route.length - 1) {
+        throw new Error(
+          `Pipeline9 fixed route mutation mask for "${connectionName}" has ${mask.length} segments, expected ${replacement.route.length - 1}`,
+        )
+      }
+      const hasSurvivingMutationSegment: boolean = mask.some(
+        (mutated: boolean, segmentIndex: number): boolean => {
+          if (!mutated) return false
+          const start: HighDensityRoute["route"][number] =
+            replacement.route[segmentIndex]!
+          const end: HighDensityRoute["route"][number] =
+            replacement.route[segmentIndex + 1]!
+          return start.x !== end.x || start.y !== end.y || start.z !== end.z
+        },
+      )
+      if (!hasSurvivingMutationSegment) {
+        throw new Error(
+          `Pipeline9 accepted replacement for "${connectionName}" has no surviving mutation segment`,
+        )
+      }
+      markedTraceIndexes.add(replacement.preloadedTraceIndex)
+    }
+
+    // Expand the accepted regional envelope immediately against the
     // post-splice geometry. Segment masks are carried by later splices, so a
     // future fallback never has to replay this node's now-stale bounds.
     const postSpliceProblem = createRegionalFallbackProblem(
@@ -795,7 +835,6 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       },
       this.getUpdatedFixedHdRoutes(),
     )
-    const markedTraceIndexes = new Set<number>()
     for (const section of postSpliceProblem.fixedRouteSectionsByConnectionName.values()) {
       const firstSourceRoute = section.sourceRoutes[0]
       if (!firstSourceRoute) continue

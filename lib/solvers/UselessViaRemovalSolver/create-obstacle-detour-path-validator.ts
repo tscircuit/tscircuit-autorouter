@@ -132,15 +132,6 @@ export const createObstacleDetourPathValidator = ({
         }
         if (obstacleIsSameNet) continue
 
-        if (obstacle.__zLayers?.includes(targetZ)) {
-          const isAtObstacle =
-            (Math.abs(A.x - obstacle.center.x) < 0.01 &&
-              Math.abs(A.y - obstacle.center.y) < 0.01) ||
-            (Math.abs(B.x - obstacle.center.x) < 0.01 &&
-              Math.abs(B.y - obstacle.center.y) < 0.01)
-          if (isAtObstacle) continue
-        }
-
         const distToObstacle = segmentToBoxMinDistance(A, B, obstacle)
         if (distToObstacle < obstacleSearchMargin) {
           segmentClearanceCache.set(segmentCacheKey, false)

@@ -111,7 +111,7 @@ export const isPipeline9DrcErrorOwnedByPreloadRepair = ({
   )
 }
 
-const getDrcIssueScore = (errors: Pipeline9DrcError[]) =>
+const getDrcIssueScore = (errors: Pipeline9DrcError[]): number =>
   errors.reduce((score, error) => {
     if (
       typeof error.actual_clearance === "number" &&
@@ -129,14 +129,117 @@ const getDrcIssueScore = (errors: Pipeline9DrcError[]) =>
     return score + 1
   }, 0)
 
+export const isPipeline9IllegalCopperContactDrcError = (
+  error: Pipeline9DrcError,
+): boolean => {
+  const message =
+    typeof error.message === "string" ? error.message.toLowerCase() : ""
+  if (message.includes("accidental contact")) return true
+  if (message.includes("overlaps with pcb_trace")) return true
+  if (message.includes("overlaps with pcb_via")) return true
+
+  if (
+    typeof error.actual_clearance === "number" &&
+    error.actual_clearance < 0
+  ) {
+    return true
+  }
+
+  const gapMatch = message.match(/gap: (-?\d+(?:\.\d+)?)mm/)
+  return gapMatch !== null && Number.parseFloat(gapMatch[1]!) < 0
+}
+
+const getPipeline9DrcErrorIdentity = (error: Pipeline9DrcError): string => {
+  const identifiers = Object.entries(error)
+    .filter(
+      ([key, value]) =>
+        key !== "source_trace_id" &&
+        (key.endsWith("_id") || key.endsWith("_ids")) &&
+        value !== undefined &&
+        value !== "",
+    )
+    .sort(([leftKey], [rightKey]) => leftKey.localeCompare(rightKey))
+  const normalizedMessage =
+    typeof error.message === "string"
+      ? error.message.replace(/-?\d+\.\d+/g, "#")
+      : ""
+  return JSON.stringify([
+    error.type ?? error.error_type,
+    identifiers,
+    normalizedMessage,
+  ])
+}
+
+const hasNewIllegalCopperContact = (
+  candidateErrors: Pipeline9DrcError[],
+  currentErrors: Pipeline9DrcError[],
+): boolean => {
+  const currentContactIdentities = new Set(
+    currentErrors
+      .filter(isPipeline9IllegalCopperContactDrcError)
+      .map(getPipeline9DrcErrorIdentity),
+  )
+  return candidateErrors
+    .filter(isPipeline9IllegalCopperContactDrcError)
+    .some(
+      (error) =>
+        !currentContactIdentities.has(getPipeline9DrcErrorIdentity(error)),
+    )
+}
+
+const hasNewDrcError = (
+  candidateErrors: Pipeline9DrcError[],
+  currentErrors: Pipeline9DrcError[],
+): boolean => {
+  const currentErrorIdentities = new Set(
+    currentErrors.map(getPipeline9DrcErrorIdentity),
+  )
+  return candidateErrors.some(
+    (error) => !currentErrorIdentities.has(getPipeline9DrcErrorIdentity(error)),
+  )
+}
+
+export const isPipeline9DrcCandidateNoWorse = (
+  candidateErrors: Pipeline9DrcError[],
+  currentErrors: Pipeline9DrcError[],
+): boolean => {
+  const candidateIllegalContactCount = candidateErrors.filter(
+    isPipeline9IllegalCopperContactDrcError,
+  ).length
+  const currentIllegalContactCount = currentErrors.filter(
+    isPipeline9IllegalCopperContactDrcError,
+  ).length
+  if (candidateIllegalContactCount > currentIllegalContactCount) return false
+  if (hasNewIllegalCopperContact(candidateErrors, currentErrors)) return false
+  if (candidateErrors.length < currentErrors.length) return true
+  if (candidateErrors.length > currentErrors.length) return false
+  if (hasNewDrcError(candidateErrors, currentErrors)) return false
+  return (
+    getDrcIssueScore(candidateErrors) <=
+    getDrcIssueScore(currentErrors) + SCORE_EPSILON
+  )
+}
+
 export const isPipeline9DrcCandidateBetter = (
   candidateErrors: Pipeline9DrcError[],
   currentErrors: Pipeline9DrcError[],
-) =>
-  candidateErrors.length < currentErrors.length ||
-  (candidateErrors.length === currentErrors.length &&
-    getDrcIssueScore(candidateErrors) <
-      getDrcIssueScore(currentErrors) - SCORE_EPSILON)
+): boolean => {
+  const candidateIllegalContactCount = candidateErrors.filter(
+    isPipeline9IllegalCopperContactDrcError,
+  ).length
+  const currentIllegalContactCount = currentErrors.filter(
+    isPipeline9IllegalCopperContactDrcError,
+  ).length
+  if (candidateIllegalContactCount > currentIllegalContactCount) return false
+  if (hasNewIllegalCopperContact(candidateErrors, currentErrors)) return false
+
+  return (
+    candidateErrors.length < currentErrors.length ||
+    (candidateErrors.length === currentErrors.length &&
+      getDrcIssueScore(candidateErrors) <
+        getDrcIssueScore(currentErrors) - SCORE_EPSILON)
+  )
+}
 
 export const getPipeline9RouteIndexByTraceId = ({
   routes,

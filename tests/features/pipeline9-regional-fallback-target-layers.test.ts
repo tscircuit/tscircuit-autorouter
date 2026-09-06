@@ -45,6 +45,19 @@ test("Pipeline9 only makes preloaded sections on target layers movable", (): voi
       preloadedRouteIndex: 0,
     },
     {
+      connectionName: "via_spans_target_layer",
+      rootConnectionName: "via_spans_target_layer",
+      traceThickness: 0.1,
+      viaDiameter: 0.3,
+      route: [
+        { x: 7, y: 4, z: 0 },
+        { x: 7, y: 4, z: 2 },
+      ],
+      vias: [{ x: 7, y: 4 }],
+      preloadedTraceIndex: 2,
+      preloadedRouteIndex: 0,
+    },
+    {
       connectionName: "touches_target_layer_outside_node",
       rootConnectionName: "touches_target_layer_outside_node",
       traceThickness: 0.1,
@@ -55,7 +68,7 @@ test("Pipeline9 only makes preloaded sections on target layers movable", (): voi
         { x: 12, y: 9, z: 1 },
       ],
       vias: [{ x: 12, y: 9 }],
-      preloadedTraceIndex: 2,
+      preloadedTraceIndex: 3,
       preloadedRouteIndex: 0,
     },
   ]
@@ -64,10 +77,11 @@ test("Pipeline9 only makes preloaded sections on target layers movable", (): voi
 
   expect([...problem.fixedRouteSectionsByConnectionName.keys()]).toEqual([
     "touches_target_layer",
+    "via_spans_target_layer",
   ])
   expect(
     problem.fixedObstacleRoutes.map((route) => route.connectionName),
   ).toEqual(["top_only", "touches_target_layer_outside_node"])
-  expect(problem.nodeWithPortPoints.portPoints).toHaveLength(4)
-  expect(problem.nodeWithPortPoints.portPointsInPairs).toHaveLength(1)
+  expect(problem.nodeWithPortPoints.portPoints).toHaveLength(6)
+  expect(problem.nodeWithPortPoints.portPointsInPairs).toHaveLength(2)
 })

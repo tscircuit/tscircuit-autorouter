@@ -50,7 +50,7 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
     hdRoutes: HighDensityIntraNodeRoute[]
     start: Point3
     end: Point3
-  }) {
+  }): boolean {
     const stitchSolver = new SingleHighDensityRouteStitchSolver3({
       connectionName: params.connectionName,
       hdRoutes: params.hdRoutes,
@@ -82,14 +82,14 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
         stitchSolver.mergedHdRoute.route.length - 1
       ]
 
-    const directDistance =
-      distance(routeStart, params.start) + distance(routeEnd, params.end)
-    const swappedDistance =
-      distance(routeStart, params.end) + distance(routeEnd, params.start)
-
+    // Use the stitcher's chosen orientation: nearby terminals on opposite
+    // layers cannot be exchanged just because their XY distances are small.
     return (
-      Math.min(directDistance, swappedDistance) <=
-      MAX_TERMINAL_STITCH_GAP_DISTANCE_3
+      routeStart.z === stitchSolver.start.z &&
+      routeEnd.z === stitchSolver.end.z &&
+      distance(routeStart, stitchSolver.start) +
+        distance(routeEnd, stitchSolver.end) <=
+        MAX_TERMINAL_STITCH_GAP_DISTANCE_3
     )
   }
 

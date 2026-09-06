@@ -44,6 +44,7 @@ export class SingleRouteUselessViaRemovalSolver extends BaseSolver {
   connMap: ConnectivityMap
   outline?: Array<{ x: number; y: number }>
   terminalLayerIndicesByPcbPortId?: ReadonlyMap<string, ReadonlySet<number>>
+  private configuredObstacleMargin?: number
 
   routeSections: Array<RouteSection>
 
@@ -89,6 +90,9 @@ export class SingleRouteUselessViaRemovalSolver extends BaseSolver {
     this.GEOMETRY_SHORTCUT_OBSTACLE_MARGIN =
       params.geometryShortcutObstacleMargin ??
       this.GEOMETRY_SHORTCUT_OBSTACLE_MARGIN
+    this.configuredObstacleMargin = params.geometryShortcutObstacleMargin
+    this.OBSTACLE_MARGIN =
+      params.geometryShortcutObstacleMargin ?? this.OBSTACLE_MARGIN
     this.ENABLE_GEOMETRY_SHORTCUTS = params.enableGeometryShortcuts ?? true
     this.ENABLE_OBSTACLE_DETOUR_SHORTCUTS =
       params.enableObstacleDetourShortcuts ?? false
@@ -125,7 +129,12 @@ export class SingleRouteUselessViaRemovalSolver extends BaseSolver {
     return uniquePoints.map((point, index): RoutePoint => {
       if (index === 0) return { ...start }
       if (index === uniquePoints.length - 1) return { ...end }
-      return { x: point.x, y: point.y, z: start.z }
+      return {
+        x: point.x,
+        y: point.y,
+        z: start.z,
+        traceThickness: start.traceThickness,
+      }
     })
   }
 
@@ -229,6 +238,21 @@ export class SingleRouteUselessViaRemovalSolver extends BaseSolver {
     currentSection: RouteSection,
     nextSection: RouteSection,
   ): ViaPairShortcut | null {
+    // Every candidate replaces the whole middle section. Its width anchors
+    // reject every anchor pair, so check them before constructing candidates.
+    if (
+      currentSection.points.some(
+        (point: RoutePoint, index: number): boolean =>
+          (index > 0 &&
+            point.traceThickness !==
+              currentSection.points[index - 1].traceThickness) ||
+          (point.traceThickness !== undefined &&
+            point.traceThickness !== this.unsimplifiedRoute.traceThickness),
+      )
+    ) {
+      return null
+    }
+
     let bestShortcut: ViaPairShortcut | null = null
     for (
       let previousPointIndex = 0;
@@ -248,8 +272,17 @@ export class SingleRouteUselessViaRemovalSolver extends BaseSolver {
           ...nextSection.points.slice(0, nextPointIndex + 1),
         ]
         if (
-          replacedPoints.some(
-            (point) => point.insideJumperPad || point.toNextSegmentType,
+          replacedPoints.some((point, index): boolean =>
+            Boolean(
+              point.insideJumperPad ||
+                point.toNextSegmentType ||
+                (index > 0 &&
+                  point.traceThickness !==
+                    replacedPoints[index - 1].traceThickness) ||
+                (point.traceThickness !== undefined &&
+                  point.traceThickness !==
+                    this.unsimplifiedRoute.traceThickness),
+            ),
           )
         ) {
           continue
@@ -328,8 +361,16 @@ export class SingleRouteUselessViaRemovalSolver extends BaseSolver {
         ...nextSection.points.slice(0, nextPointIndex + 1),
       ]
       if (
-        replacedPoints.some(
-          (point) => point.insideJumperPad || point.toNextSegmentType,
+        replacedPoints.some((point, index): boolean =>
+          Boolean(
+            point.insideJumperPad ||
+              point.toNextSegmentType ||
+              (index > 0 &&
+                point.traceThickness !==
+                  replacedPoints[index - 1].traceThickness) ||
+              (point.traceThickness !== undefined &&
+                point.traceThickness !== this.unsimplifiedRoute.traceThickness),
+          ),
         )
       ) {
         continue
@@ -516,14 +557,22 @@ export class SingleRouteUselessViaRemovalSolver extends BaseSolver {
       ...point,
       z: collapse.targetZ,
     }))
-    const removeConsecutiveDuplicates = (points: RoutePoint[]) =>
-      points.filter((point, index) => {
-        const previousPoint = points[index - 1]
+    const removeConsecutiveDuplicates = (points: RoutePoint[]): RoutePoint[] =>
+      points.filter((point: RoutePoint, index: number): boolean => {
+        const previousPoint: RoutePoint | undefined = points[index - 1]
+        // Retained section tails can contain coincident plated-span anchors.
+        // Equal positions do not make their outgoing metadata interchangeable.
         return (
           !previousPoint ||
           point.x !== previousPoint.x ||
           point.y !== previousPoint.y ||
-          point.z !== previousPoint.z
+          point.z !== previousPoint.z ||
+          point.pcb_port_id !== previousPoint.pcb_port_id ||
+          point.traceThickness !== previousPoint.traceThickness ||
+          point.insideJumperPad !== previousPoint.insideJumperPad ||
+          point.toNextSegmentType !== previousPoint.toNextSegmentType ||
+          point.toNextSegmentCircuitJsonMetadata !==
+            previousPoint.toNextSegmentCircuitJsonMetadata
         )
       })
 
@@ -596,6 +645,7 @@ export class SingleRouteUselessViaRemovalSolver extends BaseSolver {
             connMap: this.connMap,
             defaultTraceThickness: this.TRACE_THICKNESS,
             obstacleMargin: this.OBSTACLE_MARGIN,
+            traceMargin: this.GEOMETRY_SHORTCUT_TRACE_MARGIN,
           })
         ) {
           firstSection.z = targetZ
@@ -646,6 +696,7 @@ export class SingleRouteUselessViaRemovalSolver extends BaseSolver {
               connMap: this.connMap,
               defaultTraceThickness: this.TRACE_THICKNESS,
               obstacleMargin: this.OBSTACLE_MARGIN,
+              traceMargin: this.GEOMETRY_SHORTCUT_TRACE_MARGIN,
             })
           ) {
             lastSection.z = targetZ
@@ -692,6 +743,7 @@ export class SingleRouteUselessViaRemovalSolver extends BaseSolver {
         connMap: this.connMap,
         defaultTraceThickness: this.TRACE_THICKNESS,
         obstacleMargin: this.OBSTACLE_MARGIN,
+        traceMargin: this.GEOMETRY_SHORTCUT_TRACE_MARGIN,
       })
     ) {
       currentSection.z = targetZ
@@ -725,7 +777,7 @@ export class SingleRouteUselessViaRemovalSolver extends BaseSolver {
       connMap: this.connMap,
       outline: this.outline,
       geometryShortcutTraceMargin: this.GEOMETRY_SHORTCUT_TRACE_MARGIN,
-      geometryShortcutObstacleMargin: this.GEOMETRY_SHORTCUT_OBSTACLE_MARGIN,
+      geometryShortcutObstacleMargin: this.configuredObstacleMargin,
       enableGeometryShortcuts: this.ENABLE_GEOMETRY_SHORTCUTS,
       enableObstacleDetourShortcuts: this.ENABLE_OBSTACLE_DETOUR_SHORTCUTS,
       preserveRouteEndpoints: this.PRESERVE_ROUTE_ENDPOINTS,

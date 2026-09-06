@@ -37,11 +37,14 @@ type RegionalB01RepairResult = {
   acceptedCandidateCount: number
   fallbackCandidateCount: number
   candidateSearchCount: number
+  candidateSearchReuseCount: number
   candidateSearchBudget: number
   candidateSearchBudgetExhausted: boolean
   safeTraceLayerRepairSkippedForBudget: boolean
   remainingDrcIssueCount: number
+  eligibleDrcIssueCount: number
   preloadEligibleDrcIssueCount: number
+  repairAttempted: boolean
   preloadRepairAttempted: boolean
 }
 
@@ -109,6 +112,20 @@ const getRepairCenter = (error: Pipeline9DrcError, srj: SimpleRouteJson) => {
     if (obstacle) return obstacle.center
   }
   return getErrorCenter(error)
+}
+
+const getDrcErrorIdentity = (error: Pipeline9DrcError): string | undefined => {
+  const identityFields = [
+    "pcb_trace_error_id",
+    "pcb_pad_trace_clearance_error_id",
+    "pcb_via_trace_clearance_error_id",
+    "pcb_via_clearance_error_id",
+  ]
+  for (const identityField of identityFields) {
+    const identity = error[identityField]
+    if (typeof identity === "string") return `${error.type}:${identity}`
+  }
+  return undefined
 }
 
 export const getPipeline9RegionalRepairTraceIds = ({
@@ -541,12 +558,13 @@ const getRegularRegionalCandidate = ({
 }
 
 /**
- * Activates for a remaining preload-owned DRC error, then reroutes supported
- * joint-output participants with B01 in a sub-15mm window. B01 sees every
- * other route plus board copper as obstacles. Candidate searches use a
- * route-scaled budget because each search rebuilds and evaluates board copper.
- * If no B01 candidate helps, one regular high-density candidate jointly
- * reroutes all traces in the region.
+ * Activates for a remaining preload-owned DRC error or a selected routable
+ * connection, then reroutes supported joint-output participants with B01 in a
+ * sub-15mm window. B01 sees every other route plus board copper as obstacles.
+ * Candidate searches use a route-scaled budget because each search rebuilds
+ * and evaluates board copper. If no B01 candidate helps, one regular
+ * high-density candidate jointly reroutes all traces in the region. A
+ * separately bounded safe-layer pass follows the regional search.
  */
 export const applyPipeline9RegionalB01Repairs = ({
   srj,
@@ -557,6 +575,7 @@ export const applyPipeline9RegionalB01Repairs = ({
   drcEvaluator,
   initialErrors,
   preloadRepairTraceIds,
+  additionalRepairConnectionNames,
   connMap,
   colorMap,
   viaDiameter,
@@ -572,6 +591,7 @@ export const applyPipeline9RegionalB01Repairs = ({
   drcEvaluator: DrcEvaluator
   initialErrors?: Pipeline9DrcError[]
   preloadRepairTraceIds: ReadonlySet<string>
+  additionalRepairConnectionNames: ReadonlySet<string>
   connMap: ConnectivityMap
   colorMap: Record<string, string>
   viaDiameter: number
@@ -586,7 +606,9 @@ export const applyPipeline9RegionalB01Repairs = ({
   let acceptedCandidateCount = 0
   let fallbackCandidateCount = 0
   let candidateSearchCount = 0
+  let candidateSearchReuseCount = 0
   let candidateSearchBudgetExhausted = false
+  const searchedCandidateKeys = new Set<string>()
   const candidateSearchBudget = getPipeline9RegionalRepairSearchBudget(
     routes.length,
   )
@@ -596,20 +618,47 @@ export const applyPipeline9RegionalB01Repairs = ({
       preloadRepairTraceIds,
     })
   }
+  let routeIndexByTraceId = getPipeline9RouteIndexByTraceId({
+    routes: currentRoutes,
+    newConnections,
+    syntheticConnectionNames,
+  })
+  const isAdditionalRepairError = (error: Pipeline9DrcError): boolean => {
+    return getPipeline9RegionalRepairTraceIds({
+      error,
+      routeIndexByTraceId,
+    }).some((traceId: string): boolean => {
+      const routeIndex = routeIndexByTraceId.get(traceId)
+      return (
+        routeIndex !== undefined &&
+        additionalRepairConnectionNames.has(
+          currentRoutes[routeIndex]!.connectionName,
+        )
+      )
+    })
+  }
   const preloadEligibleDrcIssueCount =
     currentErrors.filter(isPreloadRepairError).length
-  if (preloadEligibleDrcIssueCount === 0) {
+  const isEligibleRepairError = (error: Pipeline9DrcError): boolean =>
+    isPreloadRepairError(error) || isAdditionalRepairError(error)
+  const eligibleDrcIssueCount = currentErrors.filter(
+    isEligibleRepairError,
+  ).length
+  if (eligibleDrcIssueCount === 0) {
     return {
       routes: currentRoutes,
       attemptedCandidateCount,
       acceptedCandidateCount,
       fallbackCandidateCount,
       candidateSearchCount,
+      candidateSearchReuseCount,
       candidateSearchBudget,
       candidateSearchBudgetExhausted,
       safeTraceLayerRepairSkippedForBudget: false,
       remainingDrcIssueCount: currentErrors.length,
+      eligibleDrcIssueCount,
       preloadEligibleDrcIssueCount,
+      repairAttempted: false,
       preloadRepairAttempted: false,
     }
   }
@@ -619,7 +668,7 @@ export const applyPipeline9RegionalB01Repairs = ({
   for (let pass = 0; pass < 2; pass++) {
     if (candidateSearchBudgetExhausted) break
     let acceptedOnPass = false
-    const routeIndexByTraceId = getPipeline9RouteIndexByTraceId({
+    routeIndexByTraceId = getPipeline9RouteIndexByTraceId({
       routes: currentRoutes,
       newConnections,
       syntheticConnectionNames,
@@ -632,8 +681,18 @@ export const applyPipeline9RegionalB01Repairs = ({
           error.type === "pcb_via_clearance_error") &&
         typeof error.pcb_trace_id === "string",
     )
-    for (const error of repairableErrors) {
+    for (const scheduledError of repairableErrors) {
       if (candidateSearchBudgetExhausted) break
+      // An accepted regional repair can clear several queued collisions or
+      // move a remaining collision. Use its current finding before searching.
+      const scheduledErrorIdentity = getDrcErrorIdentity(scheduledError)
+      const error = scheduledErrorIdentity
+        ? currentErrors.find(
+            (currentError): boolean =>
+              getDrcErrorIdentity(currentError) === scheduledErrorIdentity,
+          )
+        : scheduledError
+      if (!error) continue
       const center = getRepairCenter(error, srj)
       const traceIds = getPipeline9RegionalRepairTraceIds({
         error,
@@ -647,10 +706,16 @@ export const applyPipeline9RegionalB01Repairs = ({
         const routeIndex = routeIndexByTraceId.get(traceId)
         if (routeIndex === undefined) continue
         for (const regionSize of REGION_SIZES) {
+          const searchKey = `b01:${routeIndex}:${center.x}:${center.y}:${regionSize}`
+          if (searchedCandidateKeys.has(searchKey)) {
+            candidateSearchReuseCount++
+            continue
+          }
           if (candidateSearchCount >= candidateSearchBudget) {
             candidateSearchBudgetExhausted = true
             break
           }
+          searchedCandidateKeys.add(searchKey)
           candidateSearchCount++
           const candidate = getRegionalCandidate({
             routes: currentRoutes,
@@ -676,42 +741,47 @@ export const applyPipeline9RegionalB01Repairs = ({
           if (isPipeline9DrcCandidateBetter(candidateErrors, bestErrors)) {
             bestRoutes = candidate.routes
             bestErrors = candidateErrors
+            // Commit the first monotonic improvement for this finding. The
+            // refreshed DRC set is more useful than spending the bounded
+            // search budget comparing larger windows against stale geometry.
+            break
           }
-          if (bestErrors.length === 0) break
         }
-        if (bestErrors.length === 0) break
+        if (bestRoutes !== currentRoutes) break
       }
       if (bestRoutes === currentRoutes && !candidateSearchBudgetExhausted) {
-        if (candidateSearchCount >= candidateSearchBudget) {
+        const searchKey = `regular:${center.x}:${center.y}`
+        if (searchedCandidateKeys.has(searchKey)) {
+          candidateSearchReuseCount++
+        } else if (candidateSearchCount >= candidateSearchBudget) {
           candidateSearchBudgetExhausted = true
         } else {
+          searchedCandidateKeys.add(searchKey)
           candidateSearchCount++
-        }
-      }
-      if (bestRoutes === currentRoutes && !candidateSearchBudgetExhausted) {
-        const fallbackRoutes = getRegularRegionalCandidate({
-          routes: currentRoutes,
-          fixedRouteCopperSpatialIndex,
-          center,
-          regionSize: 3,
-          srj,
-          connMap,
-          colorMap,
-          viaDiameter,
-          traceWidth,
-          obstacleMargin,
-          effort,
-        })
-        if (fallbackRoutes) {
-          attemptedCandidateCount++
-          fallbackCandidateCount++
-          const fallbackErrors = getPipeline9DrcErrors(
-            drcEvaluator,
-            fallbackRoutes,
-          )
-          if (isPipeline9DrcCandidateBetter(fallbackErrors, bestErrors)) {
-            bestRoutes = fallbackRoutes
-            bestErrors = fallbackErrors
+          const fallbackRoutes = getRegularRegionalCandidate({
+            routes: currentRoutes,
+            fixedRouteCopperSpatialIndex,
+            center,
+            regionSize: 3,
+            srj,
+            connMap,
+            colorMap,
+            viaDiameter,
+            traceWidth,
+            obstacleMargin,
+            effort,
+          })
+          if (fallbackRoutes) {
+            attemptedCandidateCount++
+            fallbackCandidateCount++
+            const fallbackErrors = getPipeline9DrcErrors(
+              drcEvaluator,
+              fallbackRoutes,
+            )
+            if (isPipeline9DrcCandidateBetter(fallbackErrors, bestErrors)) {
+              bestRoutes = fallbackRoutes
+              bestErrors = fallbackErrors
+            }
           }
         }
       }
@@ -720,6 +790,12 @@ export const applyPipeline9RegionalB01Repairs = ({
         currentErrors = bestErrors
         acceptedCandidateCount++
         acceptedOnPass = true
+        searchedCandidateKeys.clear()
+        routeIndexByTraceId = getPipeline9RouteIndexByTraceId({
+          routes: currentRoutes,
+          newConnections,
+          syntheticConnectionNames,
+        })
       }
       if (candidateSearchBudgetExhausted) break
     }
@@ -731,9 +807,11 @@ export const applyPipeline9RegionalB01Repairs = ({
       error.type === "pcb_trace_error" ||
       error.type === "pcb_pad_trace_clearance_error",
   )
-  const safeTraceLayerRepairSkippedForBudget =
-    hasSafeLayerRepairableError && candidateSearchBudgetExhausted
-  if (hasSafeLayerRepairableError && !candidateSearchBudgetExhausted) {
+  // The candidate-search budget bounds regional solver rebuilds. This pass
+  // has its own iteration bound, so exhausting that budget must not suppress
+  // safe layer-only improvements to the remaining routes.
+  const safeTraceLayerRepairSkippedForBudget = false
+  if (hasSafeLayerRepairableError) {
     const safeTraceLayerSolver = new GlobalDrcForceImproveSolver({
       srj: { ...srj, traces: undefined },
       hdRoutes: currentRoutes,
@@ -767,11 +845,14 @@ export const applyPipeline9RegionalB01Repairs = ({
     acceptedCandidateCount,
     fallbackCandidateCount,
     candidateSearchCount,
+    candidateSearchReuseCount,
     candidateSearchBudget,
     candidateSearchBudgetExhausted,
     safeTraceLayerRepairSkippedForBudget,
     remainingDrcIssueCount: currentErrors.length,
+    eligibleDrcIssueCount,
     preloadEligibleDrcIssueCount,
+    repairAttempted: eligibleDrcIssueCount > 0,
     preloadRepairAttempted: preloadEligibleDrcIssueCount > 0,
   }
 }
