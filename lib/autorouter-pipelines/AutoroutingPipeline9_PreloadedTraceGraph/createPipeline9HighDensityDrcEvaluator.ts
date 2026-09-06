@@ -8,7 +8,7 @@ import type { ChangedPreloadedTraceSection } from "lib/solvers/PortPointPathingS
 import { RELAXED_DRC_OPTIONS } from "lib/testing/drcPresets"
 import { combinePreloadedAndRoutedTraces } from "lib/testing/evaluate-relaxed-drc"
 import { getDrcErrors } from "lib/testing/getDrcErrors"
-import { convertToCircuitJson } from "lib/testing/utils/convertToCircuitJson"
+import { createPreparedCircuitJsonConverter } from "lib/testing/utils/convertToCircuitJson"
 import type { SimpleRouteJson, SimplifiedPcbTrace } from "lib/types"
 import type { HighDensityRoute } from "lib/types/high-density-types"
 import { convertHdRouteToSimplifiedRoute } from "lib/utils/convertHdRouteToSimplifiedRoute"
@@ -47,6 +47,8 @@ type CachedHighDensityDrcSnapshot = Pipeline9HighDensityDrcSnapshot & {
   fullResult?: HighDensityDrcResult
 }
 
+type DrcPadCenter = { x: number; y: number }
+
 export type Pipeline9HighDensityDrcEvaluator = DrcEvaluator & {
   evaluateLocalCandidate?: Pipeline9HighDensityDrcCandidateGate
 }
@@ -54,7 +56,7 @@ export type Pipeline9HighDensityDrcEvaluator = DrcEvaluator & {
 const addCopperOwnerMetadata = (
   errors: Record<string, unknown>[],
   traceIdByViaId: ReadonlyMap<string, string>,
-  padIds: ReadonlySet<string>,
+  padCenterById: ReadonlyMap<string, DrcPadCenter>,
 ): Record<string, unknown>[] => {
   return errors.map((error) => {
     const primaryTraceId =
@@ -80,7 +82,8 @@ const addCopperOwnerMetadata = (
               : [],
           ),
         ].filter(
-          (id): id is string => typeof id === "string" && padIds.has(id),
+          (id): id is string =>
+            typeof id === "string" && padCenterById.has(id),
         ),
       ),
     ]
@@ -114,7 +117,14 @@ const addCopperOwnerMetadata = (
       ...(viaOwnerTraceIds.length === 0
         ? {}
         : { __via_owner_trace_ids: viaOwnerTraceIds }),
-      ...(reportedPadIds.length === 0 ? {} : { __pad_ids: reportedPadIds }),
+      ...(reportedPadIds.length === 0
+        ? {}
+        : {
+            __pad_ids: reportedPadIds,
+            __pad_centers: reportedPadIds.map((id) => ({
+              ...padCenterById.get(id)!,
+            })),
+          }),
       ...(segmentOwnerTraceId === undefined
         ? {}
         : { __trace_segment_owner_trace_id: segmentOwnerTraceId }),
@@ -284,6 +294,15 @@ export const createPipeline9HighDensityDrcEvaluator = (
   const inputSrj = { ...options.originalSrj, traces: frozenTraces }
   const convertNewRoutes =
     createPipeline7HdRoutesToSimplifiedPcbTracesConverter(options)
+  const convertCircuitJson = createPreparedCircuitJsonConverter(
+    options.srjWithPointPairs,
+    {
+      minTraceWidth: inputSrj.minTraceWidth,
+      minViaDiameter: inputSrj.minViaDiameter,
+      originalSrj: inputSrj,
+      includeOriginalConnections: true,
+    },
+  )
   const snapshotByRoutes = new WeakMap<
     HighDensityRoute[],
     CachedHighDensityDrcSnapshot
@@ -303,16 +322,7 @@ export const createPipeline9HighDensityDrcEvaluator = (
         newTraces,
       }),
     )
-    const circuitJson = convertToCircuitJson(
-      options.srjWithPointPairs,
-      jointTraces,
-      {
-        minTraceWidth: inputSrj.minTraceWidth,
-        minViaDiameter: inputSrj.minViaDiameter,
-        originalSrj: inputSrj,
-        includeOriginalConnections: true,
-      },
-    )
+    const circuitJson = convertCircuitJson(jointTraces)
     const evaluatedTraceIds = new Set(
       circuitJson.flatMap((element) =>
         element.type === "pcb_trace" ? [element.pcb_trace_id] : [],
@@ -325,19 +335,34 @@ export const createPipeline9HighDensityDrcEvaluator = (
           : [],
       ),
     )
-    const padIds = new Set(
-      circuitJson.flatMap((element): string[] => {
-        if (element.type === "pcb_smtpad") return [element.pcb_smtpad_id]
-        if (element.type === "pcb_plated_hole") {
-          return [element.pcb_plated_hole_id]
-        }
-        if (element.type === "pcb_hole") return [element.pcb_hole_id]
-        return []
-      }),
-    )
+    const padCenterById = new Map<string, DrcPadCenter>()
+    for (const element of circuitJson) {
+      let padId: string
+      if (element.type === "pcb_smtpad") padId = element.pcb_smtpad_id
+      else if (element.type === "pcb_plated_hole") {
+        padId = element.pcb_plated_hole_id
+      } else if (element.type === "pcb_hole") padId = element.pcb_hole_id
+      else continue
+      if (
+        !("x" in element) ||
+        !("y" in element) ||
+        typeof element.x !== "number" ||
+        typeof element.y !== "number" ||
+        !Number.isFinite(element.x) ||
+        !Number.isFinite(element.y)
+      ) {
+        throw new Error(
+          `Pipeline9 DRC pad "${padId}" has no finite serialized center`,
+        )
+      }
+      padCenterById.set(padId, { x: element.x, y: element.y })
+    }
     // Exact non-via identities take precedence over encoded via-like suffixes.
     // Pad ids are opaque and may themselves end with a real serialized via id.
-    const nonViaCopperIds = new Set([...evaluatedTraceIds, ...padIds])
+    const nonViaCopperIds = new Set([
+      ...evaluatedTraceIds,
+      ...padCenterById.keys(),
+    ])
     const connMap = getFullConnectivityMapFromCircuitJson(circuitJson)
     connMap.addConnections([...traceIdByViaId])
     const snapshot: CachedHighDensityDrcSnapshot = {
@@ -354,7 +379,7 @@ export const createPipeline9HighDensityDrcEvaluator = (
               evaluatedTraceIds: nonViaCopperIds,
             }),
             traceIdByViaId,
-            padIds,
+            padCenterById,
           ),
           circuitJson,
           newTraceIds,

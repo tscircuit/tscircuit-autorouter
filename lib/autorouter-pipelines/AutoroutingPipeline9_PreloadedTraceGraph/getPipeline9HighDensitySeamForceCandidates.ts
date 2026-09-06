@@ -12,9 +12,6 @@ import {
 } from "./getPipeline9HighDensityForceCandidates"
 import {
   arePipeline9RoutesOnSameNet,
-  doPipeline9BoundsOverlap,
-  getPipeline9FixedRouteObstacles,
-  getPipeline9RouteCopperBounds,
   getPipeline9RouteCopperGeometry,
   type Pipeline9Bounds,
 } from "./pipeline9FixedRouteCopper"
@@ -46,11 +43,7 @@ export type Pipeline9HighDensitySeamForceCandidateParams = Omit<
 }
 
 const pointsMatch = (left: RoutePoint, right: RoutePoint): boolean => {
-  return (
-    left.x === right.x &&
-    left.y === right.y &&
-    left.z === right.z
-  )
+  return left.x === right.x && left.y === right.y && left.z === right.z
 }
 
 const getNodeBounds = (node: NodeWithPortPoints): Pipeline9Bounds => {
@@ -360,23 +353,6 @@ export function* getPipeline9HighDensitySeamForceCandidates(
       ),
     )
     const compositeTraceId = [...traceIds][0]!
-    const padding = composite.viaDiameter / 2 + params.obstacleMargin
-    const nearbyBounds = {
-      minX: bounds.minX - padding,
-      maxX: bounds.maxX + padding,
-      minY: bounds.minY - padding,
-      maxY: bounds.maxY + padding,
-    }
-    const immutableRoutes = [
-      ...params.hdRoutes.filter((_, index) => !pairIndexes.has(index)),
-      ...params.fixedHdRoutes,
-    ].filter((route) => {
-      const copperBounds = getPipeline9RouteCopperBounds(route)
-      return (
-        copperBounds !== undefined &&
-        doPipeline9BoundsOverlap(nearbyBounds, copperBounds)
-      )
-    })
     const node: NodeWithPortPoints = {
       capacityMeshNodeId: `pipeline9-seam-${portPoint.portPointId}`,
       center: {
@@ -392,14 +368,12 @@ export function* getPipeline9HighDensitySeamForceCandidates(
       node,
       hdRoutes: [composite],
       errors: getCompositeErrors(params.errors, traceIds, compositeTraceId),
-      traceRouteIndexById: new Map([...traceIds].map((traceId) => [traceId, 0])),
-      obstacles: [
-        ...params.obstacles,
-        ...getPipeline9FixedRouteObstacles({
-          fixedObstacleRoutes: immutableRoutes,
-          layerCount: params.layerCount,
-        }),
-      ],
+      traceRouteIndexById: new Map(
+        [...traceIds].map((traceId) => [traceId, 0]),
+      ),
+      // A fixed same-net wire is not a pad allowing endpoint translation.
+      // Eligibility and the caller's official checks still retain all copper.
+      obstacles: params.obstacles,
     })) {
       const split = splitPipeline9HighDensitySeamRoute({
         candidateRoute: candidates[0]!,

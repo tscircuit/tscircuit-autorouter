@@ -193,9 +193,11 @@ test("Pipeline9 repairs local copper while preserving an untagged connected-pad 
     ),
   ).toBe(true)
   expect(
-    convertHdRouteToSimplifiedRoute(improvedRoute!, 2, conversionOptions).filter(
-      (segment) => segment.route_type !== "wire",
-    ),
+    convertHdRouteToSimplifiedRoute(
+      improvedRoute!,
+      2,
+      conversionOptions,
+    ).filter((segment) => segment.route_type !== "wire"),
   ).toEqual(originalTransitions)
 
   // No obstacle witnesses this different-XY jump. It must remain invalid,

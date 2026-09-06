@@ -79,7 +79,9 @@ const getOriginalThroughObstacleSpanStartIndexes = (
       { obstacles, connMap },
     )
     if (
-      serializedSpan.some((segment) => segment.route_type === "through_obstacle")
+      serializedSpan.some(
+        (segment) => segment.route_type === "through_obstacle",
+      )
     ) {
       spanStartIndexes.add(index)
     }
@@ -228,6 +230,39 @@ const hasValidLocalRouteGeometry = (
   return true
 }
 
+const getPadTargetedForceErrors = (
+  errors: Pipeline9DrcError[],
+): Pipeline9DrcError[] => {
+  return errors.flatMap((error): Pipeline9DrcError[] => {
+    const centers = error.__pad_centers
+    if (
+      error.type !== "pcb_pad_trace_clearance_error" ||
+      centers === undefined
+    ) {
+      return [error]
+    }
+    if (!Array.isArray(centers) || centers.length === 0) {
+      throw new Error("Pipeline9 pad clearance forces require pad centers")
+    }
+    return centers.map((center): Pipeline9DrcError => {
+      if (
+        !center ||
+        typeof center !== "object" ||
+        typeof center.x !== "number" ||
+        typeof center.y !== "number" ||
+        !Number.isFinite(center.x) ||
+        !Number.isFinite(center.y)
+      ) {
+        throw new Error("Pipeline9 pad clearance force center is invalid")
+      }
+      // checkPadTraceClearance reports the whole fragment's endpoint midpoint,
+      // which need not be near the offending pad. Target the exact serialized
+      // pad for this private force call; official errors and scoring stay intact.
+      return { ...error, center: { x: center.x, y: center.y } }
+    })
+  })
+}
+
 /**
  * Applies Repair03's error-directed geometry operator to one HD node's mutable
  * fragments. The caller evaluates every yielded candidate against the complete
@@ -294,7 +329,7 @@ export function* getPipeline9HighDensityForceCandidates({
   )
   const maxCandidateApplications =
     getMaxTargetedCandidateAttemptsForEffort(effort)
-  for (const error of errors) {
+  for (const error of getPadTargetedForceErrors(errors)) {
     const movableTraceId = getPipeline9DrcErrorTraceIds(error).find((traceId) =>
       traceRouteIndexById.has(traceId),
     )
@@ -308,11 +343,12 @@ export function* getPipeline9HighDensityForceCandidates({
       Array.isArray(viaOwnerTraceIds) &&
       viaOwnerTraceIds.includes(movableTraceId)
     for (const scale of getForceScalesForEffort(effort)) {
-      const localRoutes = hdRoutes.map((route, index): LocalForceRoute =>
-        createLocalForceRoute(
-          route,
-          throughObstacleSpanStartIndexesByRoute[index]!,
-        ),
+      const localRoutes = hdRoutes.map(
+        (route, index): LocalForceRoute =>
+          createLocalForceRoute(
+            route,
+            throughObstacleSpanStartIndexesByRoute[index]!,
+          ),
       )
       const mutableRoutes = localRoutes.map((local) => local.mutable)
       // Official accidental-contact errors have no graded overlap severity.
@@ -340,7 +376,9 @@ export function* getPipeline9HighDensityForceCandidates({
           onCandidateRejected?.("no-motion")
           break
         }
-        if (localRoutes.some((local) => !hasPreservedLocalRouteAnchors(local))) {
+        if (
+          localRoutes.some((local) => !hasPreservedLocalRouteAnchors(local))
+        ) {
           onCandidateRejected?.("anchor")
           break
         }

@@ -50,20 +50,20 @@ test("Pipeline9 repairs SRJ18 sample 12", async (): Promise<void> => {
         event,
         elapsedTimeMs,
         iterations: repairSolver?.iterations,
-        activeSubSolver: solver.activeSubSolver?.activeSubSolver?.getSolverName(),
+        activeSubSolver:
+          solver.activeSubSolver?.activeSubSolver?.getSolverName(),
         activeNodeId:
           stage === "highDensityDrcRepairSolver"
             ? solver.highDensityDrcRepairSolver?.activeNode?.capacityMeshNodeId
             : undefined,
         stats: repairSolver?.stats,
-        incumbentOwnedCopperErrors:
-          stage === "highDensityDrcRepairSolver"
-            ? solver.highDensityDrcRepairSolver?.currentErrors
-            : undefined,
       }),
     )
   }
-  const logStageCopper = (stage: string, hdRoutes: HighDensityRoute[]): void => {
+  const logStageCopper = (
+    stage: string,
+    hdRoutes: HighDensityRoute[],
+  ): void => {
     const diagnosticStartedAt = performance.now()
     const routedTraces = convertPipeline7HdRoutesToSimplifiedPcbTraces({
       connections: solver.netToPointPairsSolver!.newConnections,
@@ -81,7 +81,9 @@ test("Pipeline9 repairs SRJ18 sample 12", async (): Promise<void> => {
       // Handoff fragments are not individually terminal-contiguous.
       drcOptions: { includeTraceContinuity: false, includeBoardEdge: false },
     })
-    const ownedTraceIds = new Set(routedTraces.map((trace) => trace.pcb_trace_id))
+    const ownedTraceIds = new Set(
+      routedTraces.map((trace) => trace.pcb_trace_id),
+    )
     const ownedCopperErrors = addAutoroutingViaTraceIds({
       errors: errorsWithCenters as unknown as Record<string, unknown>[],
       circuitJson,
@@ -128,7 +130,9 @@ test("Pipeline9 repairs SRJ18 sample 12", async (): Promise<void> => {
     }
     const nodePassCount =
       stage === "highDensityDrcRepairSolver"
-        ? Number(solver.highDensityDrcRepairSolver?.stats.nodeRepairAttemptCount)
+        ? Number(
+            solver.highDensityDrcRepairSolver?.stats.nodeRepairAttemptCount,
+          )
         : 0
     if (
       stageElapsedTimeMs >= nextProgressElapsedTimeMs ||
@@ -150,6 +154,13 @@ test("Pipeline9 repairs SRJ18 sample 12", async (): Promise<void> => {
     srjWithPointPairs: solver.srjWithPointPairs!,
     routedTraces: solver.getOutputSimplifiedPcbTraces(),
   })
-  console.info(JSON.stringify({ dataset: "srj18", sampleNumber: 12, stage: "final", errors }))
+  console.info(
+    JSON.stringify({
+      dataset: "srj18",
+      sampleNumber: 12,
+      stage: "final",
+      errors,
+    }),
+  )
   expect(errors).toHaveLength(0)
 })

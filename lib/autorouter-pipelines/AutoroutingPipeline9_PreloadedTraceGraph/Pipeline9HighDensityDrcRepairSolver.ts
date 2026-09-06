@@ -1,4 +1,5 @@
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
+import stableStringify from "fast-json-stable-stringify"
 import type { GraphicsObject } from "graphics-debug"
 import { getDrcScaledMaxIterations } from "high-density-repair03/lib/solvers/GlobalDrcForceImproveSolver/solverConfig"
 import { BaseSolver } from "lib/solvers/BaseSolver"
@@ -384,10 +385,13 @@ export class Pipeline9HighDensityDrcRepairSolver extends BaseSolver {
       forceGeometryRejectedCount: 0,
       exhaustedNodeCount: 0,
       candidateAttemptCount: 0,
+      unchangedCandidateCount: 0,
       duplicateCandidateCount: 0,
       localCandidateEvaluationCount: 0,
       fullCandidateEvaluationCount: 0,
       localCandidateEvaluationTimeMs: 0,
+      snapshotPreparationTimeMs: 0,
+      scopedCopperCheckTimeMs: 0,
       fullCandidateEvaluationTimeMs: 0,
       forceGenerationTimeMs: 0,
       seamForceGenerationTimeMs: 0,
@@ -644,6 +648,22 @@ export class Pipeline9HighDensityDrcRepairSolver extends BaseSolver {
   ): boolean {
     this.stats.candidateAttemptCount =
       Number(this.stats.candidateAttemptCount ?? 0) + 1
+    // An ordinary node reroute can reproduce the incumbent after an accepted
+    // revision. Its new object identities do not make it new copper: the same
+    // serialized routes cannot improve any official DRC score.
+    if (
+      candidateRoutes.length === this.outputHdRoutes.length &&
+      candidateRoutes.every(
+        (route, index) =>
+          route === this.outputHdRoutes[index] ||
+          stableStringify(route) ===
+            stableStringify(this.outputHdRoutes[index]),
+      )
+    ) {
+      this.stats.unchangedCandidateCount =
+        Number(this.stats.unchangedCandidateCount) + 1
+      return false
+    }
     if (this.activeCandidateGeometryKeys.has(candidateKey)) {
       this.stats.duplicateCandidateCount =
         Number(this.stats.duplicateCandidateCount) + 1
@@ -674,6 +694,12 @@ export class Pipeline9HighDensityDrcRepairSolver extends BaseSolver {
         Number(this.stats.localCandidateEvaluationTimeMs) +
         performance.now() -
         localEvaluationStartedAt
+      this.stats.snapshotPreparationTimeMs =
+        Number(this.stats.snapshotPreparationTimeMs) +
+        (local.snapshotPreparationTimeMs ?? 0)
+      this.stats.scopedCopperCheckTimeMs =
+        Number(this.stats.scopedCopperCheckTimeMs) +
+        (local.scopedCopperCheckTimeMs ?? 0)
       this.stats.localCandidateEvaluationCount =
         Number(this.stats.localCandidateEvaluationCount) + 1
       const isOwnedError = (error: Pipeline9DrcError): boolean =>
@@ -809,7 +835,9 @@ export class Pipeline9HighDensityDrcRepairSolver extends BaseSolver {
       hdRoutes: localRoutes,
       errors: nodeErrors,
       traceRouteIndexById,
-      obstacles: this.activeRepairObstacles,
+      // Fixed-route rectangles guide rerouting, but are not movable PCB pads.
+      // Every force candidate still undergoes exact fixed-copper validation.
+      obstacles: this.params.obstacles,
       layerCount: this.params.layerCount,
       viaDiameter: this.params.viaDiameter,
       viaHoleDiameter: this.params.viaHoleDiameter,
@@ -876,17 +904,19 @@ export class Pipeline9HighDensityDrcRepairSolver extends BaseSolver {
     }
     // Copy only accepted handoff metadata. Caller-owned nodes and routes stay
     // immutable, and subsequent node reroutes use both ends of the new seam.
-    this.nodePortPoints = this.nodePortPoints.map((node): NodeWithPortPoints => {
-      if (!seam.ownerNodeIds.includes(node.capacityMeshNodeId)) return node
-      return {
-        ...node,
-        portPoints: node.portPoints.map(updatePoint),
-        portPointsInPairs: node.portPointsInPairs?.map(([start, end]) => [
-          updatePoint(start),
-          updatePoint(end),
-        ]),
-      }
-    })
+    this.nodePortPoints = this.nodePortPoints.map(
+      (node): NodeWithPortPoints => {
+        if (!seam.ownerNodeIds.includes(node.capacityMeshNodeId)) return node
+        return {
+          ...node,
+          portPoints: node.portPoints.map(updatePoint),
+          portPointsInPairs: node.portPointsInPairs?.map(([start, end]) => [
+            updatePoint(start),
+            updatePoint(end),
+          ]),
+        }
+      },
+    )
     for (const nodeId of seam.ownerNodeIds) {
       this.acceptedNodeIds.add(nodeId)
     }

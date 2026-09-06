@@ -119,7 +119,22 @@ test("Pipeline9 seam forces move both handoffs without changing fixed copper", (
   })
   const initialErrors = getPipeline9DrcErrors(evaluator, routes)
   expect(initialErrors.length).toBeGreaterThan(0)
+  const leftPadError = initialErrors.find(
+    (error) =>
+      error.type === "pcb_pad_trace_clearance_error" &&
+      error.pcb_trace_id === "A_0",
+  )
+  expect(leftPadError).toMatchObject({
+    center: { x: -1, y: 0 },
+    __pad_centers: [{ x: 0, y: 0.27 }],
+  })
+  const originalErrors = structuredClone(initialErrors)
   let improved: Pipeline9HighDensitySeamForceCandidate | undefined
+  const rejections: Record<string, number> = {}
+  const candidateEvaluations: Array<{
+    seam: Pipeline9HighDensitySeamForceCandidate["seam"]
+    errors: ReturnType<typeof getPipeline9DrcErrors>
+  }> = []
   for (const candidate of getPipeline9HighDensitySeamForceCandidates({
     affectedRouteIndex: 0,
     nodePortPoints: nodes,
@@ -138,27 +153,37 @@ test("Pipeline9 seam forces move both handoffs without changing fixed copper", (
     obstacleMargin: 0.15,
     connMap,
     effort: 1,
+    onCandidateRejected: (reason): void => {
+      rejections[reason] = (rejections[reason] ?? 0) + 1
+    },
   })) {
     const candidateRoutes = [...routes]
     for (const replacement of candidate.replacements) {
       candidateRoutes[replacement.routeIndex] = replacement.route
     }
-    if (
-      isPipeline9HighDensityDrcCandidateBetter(
-        getPipeline9DrcErrors(evaluator, candidateRoutes),
-        initialErrors,
-      )
-    ) {
+    const errors = getPipeline9DrcErrors(evaluator, candidateRoutes)
+    candidateEvaluations.push({ seam: candidate.seam, errors })
+    if (isPipeline9HighDensityDrcCandidateBetter(errors, initialErrors)) {
       improved = candidate
       break
     }
+  }
+  if (!improved) {
+    console.log("Pipeline9 seam force candidate diagnostics", {
+      initialErrors,
+      rejections,
+      yieldedCandidateCount: candidateEvaluations.length,
+      candidateEvaluations,
+    })
   }
   expect(improved).toBeDefined()
   expect(improved!.seam.portPointId).toBe("seam-A")
   expect(improved!.seam.ownerNodeIds).toEqual(["L", "R"])
   expect(improved!.seam.x).toBe(0)
   expect(improved!.seam.y).not.toBe(0)
-  expect(improved!.replacements.map((entry) => entry.routeIndex)).toEqual([0, 1])
+  expect(improved!.replacements.map((entry) => entry.routeIndex)).toEqual([
+    0, 1,
+  ])
   const [left, right] = improved!.replacements.map((entry) => entry.route)
   expect(left!.route.at(-1)).toEqual(right!.route.at(-1))
   for (const [index, replacement] of improved!.replacements.entries()) {
@@ -167,4 +192,5 @@ test("Pipeline9 seam forces move both handoffs without changing fixed copper", (
     expect(replacement.route.startPcbPortId).toBe(routes[index]!.startPcbPortId)
   }
   expect({ routes, nodes, fixedHdRoutes, srj }).toEqual(originalInputs)
+  expect(initialErrors).toEqual(originalErrors)
 })

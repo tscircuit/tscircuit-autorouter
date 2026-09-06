@@ -127,10 +127,7 @@ export const splitPipeline9HighDensitySeamRoute = ({
         beforeIndex: index - 1,
         afterIndex: index + 1,
       }
-    } else if (
-      next &&
-      (point[axis] - boundary) * (next[axis] - boundary) < 0
-    ) {
+    } else if (next && (point[axis] - boundary) * (next[axis] - boundary) < 0) {
       if (
         crossing !== undefined ||
         point.z !== next.z ||

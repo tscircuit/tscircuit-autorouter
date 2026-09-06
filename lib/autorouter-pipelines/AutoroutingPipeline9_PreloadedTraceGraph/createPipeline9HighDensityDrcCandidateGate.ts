@@ -29,6 +29,8 @@ export type Pipeline9HighDensityDrcCandidateGate = (params: {
 }) => {
   currentErrors: Pipeline9DrcError[]
   candidateErrors: Pipeline9DrcError[]
+  snapshotPreparationTimeMs?: number
+  scopedCopperCheckTimeMs?: number
 }
 
 type SnapshotCopper = {
@@ -177,8 +179,10 @@ export const createPipeline9HighDensityDrcCandidateGate = ({
     candidateRoutes,
     changedTraceIds,
   }): ReturnType<Pipeline9HighDensityDrcCandidateGate> => {
+    const snapshotStartedAt = performance.now()
     const currentSnapshot = getSnapshot(currentRoutes)
     const candidateSnapshot = getSnapshot(candidateRoutes)
+    const snapshotPreparationTimeMs = performance.now() - snapshotStartedAt
     const currentCopper = getCopper(currentSnapshot)
     const candidateCopper = getCopper(candidateSnapshot)
     const changedBounds: Pipeline9Bounds[] = []
@@ -246,6 +250,7 @@ export const createPipeline9HighDensityDrcCandidateGate = ({
         .map((via) => via.pcb_via_id),
     ])
     const cachedBaseline = baselineBySnapshot.get(currentSnapshot)
+    const scopedChecksStartedAt = performance.now()
     const currentErrors =
       cachedBaseline?.contextKey === contextKey
         ? cachedBaseline.errors
@@ -258,13 +263,16 @@ export const createPipeline9HighDensityDrcCandidateGate = ({
       contextKey,
       errors: currentErrors,
     })
+    const candidateErrors = evaluateScopedCopper(
+      candidateSnapshot,
+      selectedTraceIds,
+      selectedViaSites,
+    )
     return {
       currentErrors,
-      candidateErrors: evaluateScopedCopper(
-        candidateSnapshot,
-        selectedTraceIds,
-        selectedViaSites,
-      ),
+      candidateErrors,
+      snapshotPreparationTimeMs,
+      scopedCopperCheckTimeMs: performance.now() - scopedChecksStartedAt,
     }
   }
 }
