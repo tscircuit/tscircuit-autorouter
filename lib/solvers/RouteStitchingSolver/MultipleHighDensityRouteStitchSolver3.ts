@@ -79,7 +79,23 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
       stitchSolver.step()
     }
 
-    if (stitchSolver.failed || !stitchSolver.solved) return false
+    if (stitchSolver.failed || !stitchSolver.solved) {
+      throw new Error(
+        `Selected route stitching path for "${params.connectionName}" failed physical validation: ${JSON.stringify({
+          error: stitchSolver.error,
+          solved: stitchSolver.solved,
+          failed: stitchSolver.failed,
+          start: params.start,
+          end: params.end,
+          mergedRoute: stitchSolver.mergedHdRoute,
+          remainingRoutes: stitchSolver.remainingHdRoutes,
+          orderedRoutePath: params.orderedRoutePath,
+          allowedLayerTransitionPointKeys: this.allowedLayerTransitionPointKeys
+            ? [...this.allowedLayerTransitionPointKeys]
+            : undefined,
+        })}`,
+      )
+    }
 
     const routeStart = stitchSolver.mergedHdRoute.route[0]
     const routeEnd =
@@ -92,10 +108,23 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
     const swappedDistance =
       distance(routeStart, params.end) + distance(routeEnd, params.start)
 
-    return (
-      Math.min(directDistance, swappedDistance) <=
+    if (
+      Math.min(directDistance, swappedDistance) >
       MAX_TERMINAL_STITCH_GAP_DISTANCE_3
-    )
+    ) {
+      throw new Error(
+        `Selected route stitching path for "${params.connectionName}" did not reach both terminals: ${JSON.stringify({
+          start: params.start,
+          end: params.end,
+          routeStart,
+          routeEnd,
+          directDistance,
+          swappedDistance,
+          orderedRoutePath: params.orderedRoutePath,
+        })}`,
+      )
+    }
+    return true
   }
 
   private getSharedRootPathRoutes(params: {
@@ -376,7 +405,12 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
           })
           if (!selection) {
             throw new Error(
-              `No endpoint path connects the final route island for "${connectionName}"`,
+              `No endpoint path connects the final route island for "${connectionName}": ${JSON.stringify({
+                start: route.start,
+                end: route.end,
+                hdRoutes: route.hdRoutes,
+                clusters: this.endpointIndex.getClusters(connectionName),
+              })}`,
             )
           }
           return { ...route, ...selection }
@@ -396,7 +430,12 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
         })
       if (!selection) {
         throw new Error(
-          `No endpoint path connects the merged route islands for "${connectionName}"`,
+          `No endpoint path connects the merged route islands for "${connectionName}": ${JSON.stringify({
+            start,
+            end,
+            hdRoutes,
+            clusters: this.endpointIndex.getClusters(connectionName),
+          })}`,
         )
       }
       return [{ connectionName, ...selection, start, end }]

@@ -235,7 +235,17 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
       for (const taggedPcbPortId of taggedPcbPortIds) {
         if (!expectedPcbPortIds.has(taggedPcbPortId)) {
           throw new Error(
-            `SingleHighDensityRouteStitchSolver3 found unknown PCB terminal "${taggedPcbPortId}" on "${opts.connectionName}"`,
+            `SingleHighDensityRouteStitchSolver3 found unknown PCB terminal "${taggedPcbPortId}" on "${opts.connectionName}": ${JSON.stringify({
+              start: opts.start,
+              end: opts.end,
+              expectedPcbPortIds: [...expectedPcbPortIds],
+              offendingRoutes: canonicalHdRoutes.filter(
+                (route): boolean =>
+                  route.startPcbPortId === taggedPcbPortId ||
+                  route.endPcbPortId === taggedPcbPortId,
+              ),
+              orderedRoutePath: opts.orderedRoutePath,
+            })}`,
           )
         }
       }
@@ -285,10 +295,19 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
       }
     }
 
+    if (this.remainingOrderedRoutePath && orientation === "end-to-start") {
+      this.remainingOrderedRoutePath = [...this.remainingOrderedRoutePath]
+        .reverse()
+        .map(
+          (entry): OrderedRouteStitchEntry => ({
+            route: entry.route,
+            matchedOn: entry.matchedOn === "first" ? "last" : "first",
+          }),
+        )
+    }
     const firstPathEntry = this.remainingOrderedRoutePath?.[0]
     if (firstPathEntry) {
       firstRoute = firstPathEntry.route
-      orientation = "start-to-end"
     }
 
     if (orientation === "start-to-end") {

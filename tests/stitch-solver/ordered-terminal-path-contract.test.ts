@@ -5,7 +5,7 @@ import type { StitchSegment } from "lib/solvers/RouteStitchingSolver/route-stitc
 import type { OrderedRouteStitchEntry } from "lib/solvers/RouteStitchingSolver/routeStitchingEndpointHelpers"
 import type { HighDensityIntraNodeRoute } from "lib/types/high-density-types"
 
-test("an ordered terminal path retains its direction and rejects a blocked planned gap", (): void => {
+test("an ordered path preserves legacy terminal orientation and rejects a blocked planned gap", (): void => {
   const start: StitchTerminal = {
     x: 0,
     y: 0,
@@ -35,7 +35,7 @@ test("an ordered terminal path retains its direction and rejects a blocked plann
     viaDiameter: firstRoute.viaDiameter,
     route: [
       { x: 0, y: 0.1, z: 0 },
-      { x: 2, y: 0, z: 0 },
+      { x: 2, y: 0.2, z: 0 },
     ],
     vias: [],
   }
@@ -51,8 +51,9 @@ test("an ordered terminal path retains its direction and rejects a blocked plann
     end,
   })
 
-  // Without a directed plan, the fragment touching the end terminal wins
-  // over the first fragment, which needs a half-unit gap from the start.
+  // The fragment touching the end terminal establishes the legacy global
+  // orientation. The selected plan must reverse both its entry order and
+  // each matched endpoint, without mutating the caller's start-to-end plan.
   const unconstrained = new SingleHighDensityRouteStitchSolver3({
     connectionName: firstRoute.connectionName,
     hdRoutes,
@@ -65,7 +66,7 @@ test("an ordered terminal path retains its direction and rejects a blocked plann
   expect(unconstrained.start.pcb_port_id).toBe("end-port")
   expect(unconstrained.end.pcb_port_id).toBe("start-port")
 
-  for (const firstGapIsClear of [true, false]) {
+  for (const interiorGapIsClear of [true, false]) {
     const checkedSegments: StitchSegment[] = []
     const solver = new SingleHighDensityRouteStitchSolver3({
       connectionName: firstRoute.connectionName,
@@ -77,46 +78,55 @@ test("an ordered terminal path retains its direction and rejects a blocked plann
       preserveTerminalPcbPortIds: true,
       isStitchSegmentClear: (segment): boolean => {
         checkedSegments.push(structuredClone(segment))
-        const isFirstPlannedGap =
-          segment.start.x === 0 &&
-          segment.start.y === 0 &&
-          segment.end.x === 0.5 &&
+        const isPlannedInteriorGap =
+          segment.start.x === 2 &&
+          segment.start.y === 0.2 &&
+          segment.end.x === 2 &&
           segment.end.y === 0
-        return firstGapIsClear || !isFirstPlannedGap
+        return interiorGapIsClear || !isPlannedInteriorGap
       },
       stitchClearanceMode: "require_clear",
     })
-    expect(solver.start).toEqual(start)
-    expect(solver.end).toEqual(end)
+    expect(solver.start).toEqual(end)
+    expect(solver.end).toEqual(start)
     solver.solve()
 
-    expect(solver.solved).toBe(firstGapIsClear)
-    expect(solver.failed).toBe(!firstGapIsClear)
-    expect(solver.mergedHdRoute.startPcbPortId).toBe("start-port")
-    expect(solver.mergedHdRoute.endPcbPortId).toBe("end-port")
+    expect(solver.solved).toBe(interiorGapIsClear)
+    expect(solver.failed).toBe(!interiorGapIsClear)
+    expect(solver.mergedHdRoute.startPcbPortId).toBe("end-port")
+    expect(solver.mergedHdRoute.endPcbPortId).toBe("start-port")
     expect(solver.mergedHdRoute.vias).toEqual([])
-    expect(checkedSegments).toEqual([
-      {
+    expect(checkedSegments).toHaveLength(interiorGapIsClear ? 2 : 1)
+    expect(checkedSegments[0]).toEqual({
+      connectionName: firstRoute.connectionName,
+      start: { x: 2, y: 0.2, z: 0 },
+      end: { x: 2, y: 0, z: 0 },
+      traceThickness: firstRoute.traceThickness,
+    })
+    if (interiorGapIsClear) {
+      expect(checkedSegments[1]).toEqual({
         connectionName: firstRoute.connectionName,
-        start: { x: 0, y: 0, z: 0 },
-        end: { x: 0.5, y: 0, z: 0 },
+        start: { x: 0.5, y: 0, z: 0 },
+        end: { x: 0, y: 0, z: 0 },
         traceThickness: firstRoute.traceThickness,
-      },
-    ])
-    if (firstGapIsClear) {
+      })
       expect(solver.mergedHdRoute.route).toEqual([
-        { x: 0, y: 0, z: 0 },
-        { x: 0.5, y: 0, z: 0 },
-        { x: 2, y: 0, z: 0 },
         { x: 0, y: 0.1, z: 0 },
+        { x: 2, y: 0.2, z: 0 },
+        { x: 2, y: 0, z: 0 },
+        { x: 0.5, y: 0, z: 0 },
+        { x: 0, y: 0, z: 0 },
       ])
       expect(solver.remainingHdRoutes).toEqual([])
     } else {
       expect(solver.error).toContain("selected endpoint path")
-      expect(solver.mergedHdRoute.route).toEqual([{ x: 0, y: 0, z: 0 }])
-      expect(solver.remainingHdRoutes).toHaveLength(2)
+      expect(solver.mergedHdRoute.route).toEqual([
+        { x: 0, y: 0.1, z: 0 },
+        { x: 2, y: 0.2, z: 0 },
+      ])
+      expect(solver.remainingHdRoutes).toHaveLength(1)
       expect(solver.remainingHdRoutes).toContain(firstRoute)
-      expect(solver.remainingHdRoutes).toContain(secondRoute)
+      expect(solver.remainingHdRoutes).not.toContain(secondRoute)
     }
     expect({ hdRoutes, orderedRoutePath, start, end }).toEqual(inputSnapshot)
     expect(orderedRoutePath[0]!.route).toBe(firstRoute)

@@ -36,7 +36,11 @@ jobs:
           bun test \
             tests/features/pipeline9-joint-drc-*.test.ts \
             tests/features/pipeline9-inherited-drc-*.test.ts \
+            tests/features/pipeline9-minimal-preloaded-trace-graph.test.ts \
+            tests/features/pipeline7-dataset01-circuit143-trace-clearance.test.ts \
             tests/features/pipeline9-srj23-sample49-inherited-copper-repair.test.ts \
+            tests/features/pipeline9-srj23-sample26-stitch-plated-hole.test.ts \
+            tests/features/pipeline9-srj23-sample45-stitch-completion.test.ts \
             tests/features/pipeline7-srj20-sample169-multi-crossing-drc.test.ts \
             tests/features/pipeline9-srj23-sample21-regional-b01-repair.test.ts \
             tests/features/pipeline9-srj18-sample13-bounded-post-exact-precision.test.ts \

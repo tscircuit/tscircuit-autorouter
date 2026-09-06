@@ -381,10 +381,7 @@ export const selectRoutesAlongEndpointPath = (params: {
   const costsByHash = new Map<string, EndpointPathCost>([
     [startHash, { gapCount: 0, hopCount: 0 }],
   ])
-  const prevByHash = new Map<
-    string,
-    { prevHash: string; edge: EndpointEdge }
-  >()
+  const prevByHash = new Map<string, { prevHash: string; edge: EndpointEdge }>()
 
   while (pendingHashes.size > 0) {
     let currentHash: string | undefined

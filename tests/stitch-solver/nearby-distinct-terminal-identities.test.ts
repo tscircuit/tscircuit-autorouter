@@ -71,9 +71,7 @@ test("nearby distinct PCB terminals retain their identities and exact copper pat
     expect(merged.startPcbPortId).toBe(
       startsAtStart ? "start-port" : "end-port",
     )
-    expect(merged.endPcbPortId).toBe(
-      startsAtStart ? "end-port" : "start-port",
-    )
+    expect(merged.endPcbPortId).toBe(startsAtStart ? "end-port" : "start-port")
     expect(
       merged.route.map(({ x, y, z }): RoutePoint => ({ x, y, z })),
     ).toEqual(expectedPoints)

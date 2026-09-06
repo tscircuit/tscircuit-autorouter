@@ -29,9 +29,7 @@ test("an exact terminal path wins over a nearby via shortcut requiring new gaps"
     (point, index): HighDensityIntraNodeRoute => ({
       connectionName: completeRoute.connectionName,
       ...(index === 0 ? { startPcbPortId: "start-port" } : {}),
-      ...(index === chainPoints.length - 2
-        ? { endPcbPortId: "end-port" }
-        : {}),
+      ...(index === chainPoints.length - 2 ? { endPcbPortId: "end-port" } : {}),
       traceThickness: completeRoute.traceThickness,
       viaDiameter: completeRoute.viaDiameter,
       route: [point, chainPoints[index + 1]!],
@@ -118,15 +116,15 @@ test("an exact terminal path wins over a nearby via shortcut requiring new gaps"
     expect(merged.startPcbPortId).toBe(
       startsAtStart ? "start-port" : "end-port",
     )
-    expect(merged.endPcbPortId).toBe(
-      startsAtStart ? "end-port" : "start-port",
-    )
+    expect(merged.endPcbPortId).toBe(startsAtStart ? "end-port" : "start-port")
     expect(
-      merged.route.map(({ x, y, z }): RoutePoint => ({
-        x,
-        y,
-        z,
-      })),
+      merged.route.map(
+        ({ x, y, z }): RoutePoint => ({
+          x,
+          y,
+          z,
+        }),
+      ),
     ).toEqual(expectedPoints)
     expect(merged.vias).toEqual([])
     expect(merged.traceThickness).toBe(completeRoute.traceThickness)

@@ -78,8 +78,8 @@ test("endpoint claims preserve established cluster geometry and reject conflicti
   const inputSnapshot = structuredClone({ route, conflictingRoute })
   expect(getRouteStitchEndpoint(route, "first")).toEqual(claimedC)
   expect(getRouteStitchEndpoint(route, "last")).toEqual(claimedD)
-  expect((): StitchTerminal =>
-    getRouteStitchEndpoint(conflictingRoute, "first"),
+  expect(
+    (): StitchTerminal => getRouteStitchEndpoint(conflictingRoute, "first"),
   ).toThrow("conflicting PCB terminal identities")
   expect({ route, conflictingRoute }).toEqual(inputSnapshot)
   expect(anonymousA).toEqual({ x: 0, y: 0, z: 0 })

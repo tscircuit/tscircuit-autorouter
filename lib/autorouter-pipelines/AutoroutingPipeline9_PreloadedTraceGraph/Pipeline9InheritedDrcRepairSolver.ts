@@ -78,13 +78,13 @@ export class Pipeline9InheritedDrcRepairSolver extends Pipeline9JointDrcRepairSo
     return [this.incumbentParams]
   }
 
-  protected override selectDrcErrors<TError extends Record<string, unknown>>(
-    input: {
-      errors: TError[]
-      baselineErrors: Array<Record<string, unknown>>
-      originalTraceIdByPreparedTraceId?: ReadonlyMap<string, string>
-    },
-  ): TError[] {
+  protected override selectDrcErrors<
+    TError extends Record<string, unknown>,
+  >(input: {
+    errors: TError[]
+    baselineErrors: Array<Record<string, unknown>>
+    originalTraceIdByPreparedTraceId?: ReadonlyMap<string, string>
+  }): TError[] {
     // Provenance does not exempt an ordinary wire from this layer's objective.
     // Keep the complete official set, including inherited same-ID worsening.
     return input.errors
@@ -131,37 +131,35 @@ export class Pipeline9InheritedDrcRepairSolver extends Pipeline9JointDrcRepairSo
     const rebuilt = super.rebuildPreloadedTrace(input)
     return {
       ...rebuilt,
-      route: rebuilt.route.map(
-        (point): SimplifiedPcbTrace["route"][number] => {
-          const originalPoint =
-            point.route_type === "wire"
-              ? input.originalTrace.route.find(
-                  (primitive): boolean =>
-                    primitive.route_type === "wire" &&
-                    primitive.x === point.x &&
-                    primitive.y === point.y &&
-                    primitive.layer === point.layer &&
-                    (primitive.start_pcb_port_id !== undefined ||
-                      primitive.end_pcb_port_id !== undefined),
-                )
-              : undefined
-          if (
-            point.route_type !== "wire" ||
-            originalPoint?.route_type !== "wire"
-          ) {
-            return point
-          }
-          return {
-            ...point,
-            ...(originalPoint.start_pcb_port_id === undefined
-              ? {}
-              : { start_pcb_port_id: originalPoint.start_pcb_port_id }),
-            ...(originalPoint.end_pcb_port_id === undefined
-              ? {}
-              : { end_pcb_port_id: originalPoint.end_pcb_port_id }),
-          }
-        },
-      ),
+      route: rebuilt.route.map((point): SimplifiedPcbTrace["route"][number] => {
+        const originalPoint =
+          point.route_type === "wire"
+            ? input.originalTrace.route.find(
+                (primitive): boolean =>
+                  primitive.route_type === "wire" &&
+                  primitive.x === point.x &&
+                  primitive.y === point.y &&
+                  primitive.layer === point.layer &&
+                  (primitive.start_pcb_port_id !== undefined ||
+                    primitive.end_pcb_port_id !== undefined),
+              )
+            : undefined
+        if (
+          point.route_type !== "wire" ||
+          originalPoint?.route_type !== "wire"
+        ) {
+          return point
+        }
+        return {
+          ...point,
+          ...(originalPoint.start_pcb_port_id === undefined
+            ? {}
+            : { start_pcb_port_id: originalPoint.start_pcb_port_id }),
+          ...(originalPoint.end_pcb_port_id === undefined
+            ? {}
+            : { end_pcb_port_id: originalPoint.end_pcb_port_id }),
+        }
+      }),
     }
   }
 
@@ -176,8 +174,8 @@ export class Pipeline9InheritedDrcRepairSolver extends Pipeline9JointDrcRepairSo
     this.stats.publishedJointDrcIssueCount = currentDrcResult.errors.length
     // Synthetic section boundaries anchor on real terminals or protected
     // through-obstacle spans. A section must not detach from either end.
-    const inheritedSections =
-      this.movablePreloadedSections as InheritedMovablePreloadedSection[]
+    const inheritedSections = this
+      .movablePreloadedSections as InheritedMovablePreloadedSection[]
     for (const section of inheritedSections) {
       const candidateSections = routes.filter(
         (route) => route.connectionName === section.syntheticConnectionName,
