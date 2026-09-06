@@ -54,10 +54,11 @@ export const applyPipeline9ReferenceDrcRepairs = ({
     drcEvaluator,
     viaHoleDiameter,
     maxIterations,
+    enableBroadFallback: false,
     enableLargeBoardBroadFallback: false,
     enableTargetedErrorSweep: true,
     enablePostSolveClearanceRelaxation: false,
-    enableSafeTraceLayerMoves: true,
+    enableSafeTraceLayerMoves: false,
     enableViaInPadLayerMoves: allowViaInPad,
     enableTraceViaOwnerTargeting: true,
   })

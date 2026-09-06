@@ -14,15 +14,8 @@ test("Pipeline9 reference DRC repair preserves electrical route invariants", () 
       {
         name: "signal",
         pointsToConnect: [
-          { x: -2, y: 0, layer: "top", pcb_port_id: "signal_start" },
-          { x: 2, y: 0, layer: "top", pcb_port_id: "signal_end" },
-        ],
-      },
-      {
-        name: "blocker",
-        pointsToConnect: [
-          { x: 0, y: -1, layer: "top" },
-          { x: 0, y: 1, layer: "top" },
+          { x: -2, y: -1, layer: "top", pcb_port_id: "signal_start" },
+          { x: 2, y: -1, layer: "top", pcb_port_id: "signal_end" },
         ],
       },
     ],
@@ -30,7 +23,7 @@ test("Pipeline9 reference DRC repair preserves electrical route invariants", () 
       {
         type: "rect",
         layers: ["top"],
-        center: { x: -2, y: 0 },
+        center: { x: -2, y: -1 },
         width: 0.4,
         height: 0.4,
         connectedTo: ["signal", "signal_start"],
@@ -38,10 +31,18 @@ test("Pipeline9 reference DRC repair preserves electrical route invariants", () 
       {
         type: "rect",
         layers: ["top"],
-        center: { x: 2, y: 0 },
+        center: { x: 2, y: -1 },
         width: 0.4,
         height: 0.4,
         connectedTo: ["signal", "signal_end"],
+      },
+      {
+        type: "rect",
+        layers: ["top"],
+        center: { x: 0, y: 0 },
+        width: 0.5,
+        height: 0.5,
+        connectedTo: ["foreign_pad"],
       },
     ],
     layerCount: 3,
@@ -52,20 +53,11 @@ test("Pipeline9 reference DRC repair preserves electrical route invariants", () 
     {
       connectionName: "signal",
       route: [
-        { x: -2, y: 0, z: 0, pcb_port_id: "signal_start" },
-        { x: -0.5, y: 0, z: 0 },
-        { x: 0.5, y: 0, z: 0 },
-        { x: 2, y: 0, z: 0, pcb_port_id: "signal_end" },
-      ],
-      vias: [],
-      traceThickness: 0.1,
-      viaDiameter: 0.3,
-    },
-    {
-      connectionName: "blocker",
-      route: [
-        { x: 0, y: -1, z: 0 },
-        { x: 0, y: 1, z: 0 },
+        { x: -2, y: -1, z: 0, pcb_port_id: "signal_start" },
+        { x: -2, y: 0, z: 0 },
+        { x: 0, y: 0, z: 0 },
+        { x: 2, y: 0, z: 0 },
+        { x: 2, y: -1, z: 0, pcb_port_id: "signal_end" },
       ],
       vias: [],
       traceThickness: 0.1,
@@ -77,19 +69,15 @@ test("Pipeline9 reference DRC repair preserves electrical route invariants", () 
     const signalRoute = candidateRoutes.find(
       (route) => route.connectionName === "signal",
     )
-    const signalRepaired =
-      signalRoute?.route.some((point) => point.z === 2) &&
-      signalRoute.vias.length === 2 &&
-      signalRoute.vias.every((via) => Math.abs(via.x) > 1.5)
+    const signalRepaired = (signalRoute?.route[1]?.y ?? 0) >= 0.2
     const errors = signalRepaired
       ? []
       : [
           {
             type: "pcb_trace_error",
-            pcb_trace_id: "blocker_0",
-            pcb_trace_error_id: "overlap_blocker_0_signal_0",
+            pcb_trace_id: "signal_0",
             center: { x: 0, y: 0 },
-            message: "Signal trace crosses another trace",
+            message: "Signal trace overlaps a foreign pad",
           },
         ]
     return { errors, errorsWithCenters: errors }
@@ -99,10 +87,7 @@ test("Pipeline9 reference DRC repair preserves electrical route invariants", () 
     throw new Error("Expected structured DRC evaluation result")
   }
   const connMap = new ConnectivityMap({})
-  connMap.addConnections([
-    ["signal", "signal_start", "signal_end"],
-    ["blocker"],
-  ])
+  connMap.addConnections([["signal", "signal_start", "signal_end"]])
 
   const result = applyPipeline9ReferenceDrcRepairs({
     srj,
