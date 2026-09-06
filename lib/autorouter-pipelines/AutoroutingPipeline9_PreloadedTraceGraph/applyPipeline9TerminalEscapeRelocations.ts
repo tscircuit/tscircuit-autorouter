@@ -224,22 +224,27 @@ const createTerminalCandidate = ({
  */
 export const applyPipeline9TerminalEscapeRelocations = ({
   srj,
+  originalObstacles,
   routes,
   newConnections,
   syntheticConnectionNames,
   drcEvaluator,
 }: {
   srj: SimpleRouteJson
+  originalObstacles: Obstacle[]
   routes: HighDensityRoute[]
   newConnections: SimpleRouteConnection[]
   syntheticConnectionNames: ReadonlySet<string>
   drcEvaluator: DrcEvaluator
 }): TerminalEscapeRelocationResult => {
+  // Routing approximations can extend beyond rotated pads. Terminal candidates
+  // must stay inside the original copper, not its axis-aligned routing cover.
+  const terminalSrj: SimpleRouteJson = { ...srj, obstacles: originalObstacles }
   let currentRoutes = routes
   let currentErrors = getPipeline9DrcErrors(drcEvaluator, currentRoutes)
   let attemptedCandidateCount = 0
   let acceptedCandidateCount = 0
-  const portPositionMap = getPcbPortPositionMap(srj)
+  const portPositionMap = getPcbPortPositionMap(terminalSrj)
 
   for (let pass = 0; pass < 2; pass++) {
     let acceptedOnPass = false
@@ -252,7 +257,7 @@ export const applyPipeline9TerminalEscapeRelocations = ({
       if (typeof error.pcb_trace_id !== "string") continue
       const routeIndex = routeIndexByTraceId.get(error.pcb_trace_id)
       const conflictingObstacle = getObstacleById(
-        srj,
+        terminalSrj,
         getErrorObstacleId(error),
       )
       if (routeIndex === undefined || !conflictingObstacle) continue
@@ -265,7 +270,7 @@ export const applyPipeline9TerminalEscapeRelocations = ({
           endpointIndex === 0 ? route.route[0] : route.route.at(-1)
         if (!endpoint || typeof endpoint.pcb_port_id !== "string") continue
         const terminalObstacle = getTerminalObstacle({
-          srj,
+          srj: terminalSrj,
           pcbPortId: endpoint.pcb_port_id,
           z: endpoint.z,
           portPositionMap,

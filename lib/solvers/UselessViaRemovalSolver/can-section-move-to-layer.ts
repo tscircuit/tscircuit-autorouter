@@ -28,14 +28,13 @@ export const canSectionMoveToLayer = ({
   connMap: ConnectivityMap
   defaultTraceThickness: number
   obstacleMargin: number
-  traceMargin?: number
+  traceMargin: number
   shouldCheckStaticGeometryForSegment?: (
     start: RouteSection["points"][number],
     end: RouteSection["points"][number],
   ) => boolean
 }): boolean => {
   const currentTraceThickness = route.traceThickness ?? defaultTraceThickness
-  const minTraceMargin = traceMargin ?? 0
   const routeIds = [route.connectionName, route.rootConnectionName].filter(
     (id): id is string => id !== undefined,
   )
@@ -46,10 +45,10 @@ export const canSectionMoveToLayer = ({
     const conflictingRoutes = hdRouteSHI.getConflictingRoutesForSegment(
       A,
       B,
-      currentTraceThickness / 2 + minTraceMargin,
+      currentTraceThickness / 2 + traceMargin,
     )
 
-    for (const { conflictingRoute, distance } of conflictingRoutes) {
+    for (const { conflictingRoute } of conflictingRoutes) {
       const conflictingRouteIds = [
         conflictingRoute.connectionName,
         conflictingRoute.rootConnectionName,
@@ -63,15 +62,10 @@ export const canSectionMoveToLayer = ({
       )
       if (conflictingRouteIsSameNet) continue
 
-      const otherTraceThickness =
-        conflictingRoute.traceThickness ?? defaultTraceThickness
-      const otherCopperRadius =
-        minTraceMargin > 0
-          ? Math.max(otherTraceThickness / 2, conflictingRoute.viaDiameter / 2)
-          : otherTraceThickness / 2
-      const minDistance =
-        currentTraceThickness / 2 + otherCopperRadius + minTraceMargin
-      if (distance < minDistance) return false
+      // The index already checks each trace and via with its own copper
+      // radius. Rechecking its route-level distance as trace copper can
+      // discard a wider via's collision, including on intermediate layers.
+      return false
     }
 
     if (shouldCheckStaticGeometryForSegment?.(A, B) === false) continue

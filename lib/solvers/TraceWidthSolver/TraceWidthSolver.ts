@@ -1,5 +1,6 @@
 import { BaseSolver } from "../BaseSolver"
 import {
+  type Box,
   distance,
   getUnitVectorFromPointAToB,
   pointToBoxDistance,
@@ -31,6 +32,10 @@ interface Point3D extends Point2D {
 type RoutePoint = HighDensityRoute["route"][number]
 type TerminalPadLimit = {
   width: number
+  neckDistance: number
+}
+type TerminalPadEntry = {
+  tangent: Point2D
   neckDistance: number
 }
 type TaperRoutePointEntry = {
@@ -464,26 +469,88 @@ export class TraceWidthSolver extends BaseSolver {
     return !obstacle.__zLayers || obstacle.__zLayers.includes(point.z)
   }
 
-  private getAdjacentNonCoincidentRoutePoint(
+  private getTerminalPadEntry(
     route: HighDensityRoute,
     endpointIndex: number,
-  ): RoutePoint | undefined {
-    const endpoint = route.route[endpointIndex]
+    obstacle: Obstacle,
+  ): TerminalPadEntry | undefined {
+    const endpoint: RoutePoint | undefined = route.route[endpointIndex]
     if (!endpoint) return undefined
 
-    const step = endpointIndex === 0 ? 1 : -1
+    const rotationRadians: number =
+      ((obstacle.ccwRotationDegrees ?? 0) * Math.PI) / 180
+    const cos: number = Math.cos(rotationRadians)
+    const sin: number = Math.sin(rotationRadians)
+    const localBox: Box = {
+      center: { x: 0, y: 0 },
+      width: obstacle.width,
+      height: obstacle.height,
+    }
+    let previous: RoutePoint = endpoint
+    let localPrevious: Point2D = {
+      x:
+        (endpoint.x - obstacle.center.x) * cos +
+        (endpoint.y - obstacle.center.y) * sin,
+      y:
+        -(endpoint.x - obstacle.center.x) * sin +
+        (endpoint.y - obstacle.center.y) * cos,
+    }
+    if (pointToBoxDistance(localPrevious, localBox) > COORDINATE_EPSILON) {
+      return undefined
+    }
+
+    let terminalTangent: Point2D | undefined
+    let neckDistance: number = 0
+    const step: number = endpointIndex === 0 ? 1 : -1
+    // In-pad alignment bends do not determine the direction in which the
+    // trace enters the pad. Walk to that boundary before choosing the width.
     for (
-      let index = endpointIndex + step;
+      let index: number = endpointIndex + step;
       index >= 0 && index < route.route.length;
       index += step
     ) {
-      const candidate = route.route[index]!
-      if (distance(candidate, endpoint) > COORDINATE_EPSILON) {
-        return candidate
+      const candidate: RoutePoint = route.route[index]!
+      if (candidate.z !== endpoint.z) break
+      const segmentLength: number = distance(previous, candidate)
+      if (segmentLength <= COORDINATE_EPSILON) continue
+
+      const tangent: Point2D = getUnitVectorFromPointAToB(previous, candidate)
+      if (!terminalTangent) terminalTangent = tangent
+      const localCandidate: Point2D = {
+        x:
+          (candidate.x - obstacle.center.x) * cos +
+          (candidate.y - obstacle.center.y) * sin,
+        y:
+          -(candidate.x - obstacle.center.x) * sin +
+          (candidate.y - obstacle.center.y) * cos,
       }
+      if (pointToBoxDistance(localCandidate, localBox) > COORDINATE_EPSILON) {
+        const dx: number = localCandidate.x - localPrevious.x
+        const dy: number = localCandidate.y - localPrevious.y
+        let exitRatio: number = 1
+        if (dx !== 0) {
+          const boundaryX: number = (Math.sign(dx) * obstacle.width) / 2
+          exitRatio = Math.min(exitRatio, (boundaryX - localPrevious.x) / dx)
+        }
+        if (dy !== 0) {
+          const boundaryY: number = (Math.sign(dy) * obstacle.height) / 2
+          exitRatio = Math.min(exitRatio, (boundaryY - localPrevious.y) / dy)
+        }
+        return {
+          tangent,
+          neckDistance: neckDistance + segmentLength * Math.max(0, exitRatio),
+        }
+      }
+      neckDistance += segmentLength
+      previous = candidate
+      localPrevious = localCandidate
     }
 
-    return undefined
+    // A terminal-layer section inside the pad has no entry boundary. Its
+    // terminal segment determines the orientation and in-pad neck length.
+    return terminalTangent
+      ? { tangent: terminalTangent, neckDistance }
+      : undefined
   }
 
   private getObstacleWidthAlongVector(
@@ -509,37 +576,26 @@ export class TraceWidthSolver extends BaseSolver {
     endpointIndex: number,
     traceWidth: number,
   ): TerminalPadLimit | undefined {
-    const endpoint = route.route[endpointIndex]
+    const endpoint: RoutePoint | undefined = route.route[endpointIndex]
     if (!endpoint) return undefined
 
-    const adjacent = this.getAdjacentNonCoincidentRoutePoint(
-      route,
-      endpointIndex,
-    )
-    if (!adjacent) return undefined
-
-    const tangent =
-      endpointIndex === 0
-        ? getUnitVectorFromPointAToB(endpoint, adjacent)
-        : getUnitVectorFromPointAToB(adjacent, endpoint)
-
-    if (distance(tangent, { x: 0, y: 0 }) <= COORDINATE_EPSILON) {
-      return undefined
-    }
-
-    const normal = { x: -tangent.y, y: tangent.x }
     let narrowestLimit: TerminalPadLimit | undefined
 
     for (const obstacle of this.obstacles) {
       if (!this.isObstacleOnPointLayer(obstacle, endpoint)) continue
       if (!isObstacleConnectedToRoute(obstacle, route, this.connMap)) continue
-      if (pointToBoxDistance(endpoint, obstacle) > COORDINATE_EPSILON) continue
+      const entry: TerminalPadEntry | undefined = this.getTerminalPadEntry(
+        route,
+        endpointIndex,
+        obstacle,
+      )
+      if (!entry) continue
 
-      const limit = this.getObstacleWidthAlongVector(obstacle, normal)
+      const normal: Point2D = { x: -entry.tangent.y, y: entry.tangent.x }
+      const limit: number = this.getObstacleWidthAlongVector(obstacle, normal)
       if (limit <= COORDINATE_EPSILON) continue
 
-      const neckDistance =
-        this.getObstacleWidthAlongVector(obstacle, tangent) / 2
+      const neckDistance: number = entry.neckDistance
       if (
         !narrowestLimit ||
         limit < narrowestLimit.width ||

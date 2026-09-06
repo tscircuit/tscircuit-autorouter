@@ -261,6 +261,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
   highDensityStitchSolver?: MultipleHighDensityRouteStitchSolver3
   globalDrcForceImproveSolver?: GlobalDrcForceImproveSolver
   pipeline9JointDrcRepairSolver?: Pipeline9JointDrcRepairSolver
+  postRepairTraceSimplificationSolver?: TraceSimplificationSolver
   singleLayerNodeMerger?: SingleLayerNodeMergerSolver
   strawSolver?: StrawSolver
   deadEndSolver?: DeadEndSolver
@@ -852,6 +853,57 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       },
     ),
     definePipelineStep(
+      "postRepairTraceSimplificationSolver",
+      TraceSimplificationSolver,
+      (cms) => {
+        const repairedHdRoutes: HighDensityRoute[] =
+          materializePipeline9HdRouteVias(
+            cms.pipeline9JointDrcRepairSolver!.getOutput(),
+          )
+        const preloadedHdRoutes: PreloadedHighDensityRoute[] = cms
+          .pipeline9JointDrcRepairSolver!.getUpdatedPreloadedTraces()
+          .flatMap((trace, traceIndex): PreloadedHighDensityRoute[] =>
+            convertPreloadedTraceToHdRoutes(
+              trace,
+              traceIndex,
+              cms.srj.layerCount,
+              cms.viaDiameter,
+              cms.connMap,
+            ),
+          )
+        const netByConnectionName: ReadonlyMap<string, string> =
+          getPipeline9NetByConnectionName(
+            [...repairedHdRoutes, ...preloadedHdRoutes],
+            cms.connMap,
+          )
+
+        // Repair can introduce bends after the first simplification. Keep
+        // repaired preloads fixed and retain physical terminal/layer anchors.
+        return [
+          {
+            hdRoutes: repairedHdRoutes,
+            otherHdRoutes: preloadedHdRoutes,
+            obstacles: cms.srj.obstacles,
+            connMap: cms.connMap,
+            colorMap: cms.colorMap,
+            outline: cms.srj.outline,
+            defaultViaDiameter: cms.viaDiameter,
+            layerCount: cms.srj.layerCount,
+            minTraceToPadEdgeClearance: cms.srj.minTraceToPadEdgeClearance,
+            minBoardEdgeClearance: cms.srj.minBoardEdgeClearance,
+            netByConnectionName,
+            preserveRouteEndpoints: true,
+            useTraceWidthAwareClearance: true,
+            terminalLayerIndicesByPcbPortId: getTerminalLayerIndicesByPcbPortId(
+              cms.srj.connections,
+              cms.srj.obstacles,
+              cms.srj.layerCount,
+            ),
+          },
+        ]
+      },
+    ),
+    definePipelineStep(
       "lengthMatchingPostProcessingSolver",
       LengthMatchingPostProcessingSolver,
       (cms) => {
@@ -880,7 +932,8 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             )
           }
         }
-        const hdRoutes = cms.pipeline9JointDrcRepairSolver!.getOutput()
+        const hdRoutes =
+          cms.postRepairTraceSimplificationSolver!.simplifiedHdRoutes
         const differentialPairs = (cms.srj.differentialPairs ?? []).map(
           (pair) => {
             const connectionNames = pair.connectionNames.map(
@@ -1114,6 +1167,8 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     const traceSimplificationViz = this.traceSimplificationSolver?.visualize()
     const mutatedPreloadedTraceSimplificationViz =
       this.mutatedPreloadedTraceSimplificationSolver?.visualize()
+    const postRepairTraceSimplificationViz: GraphicsObject | undefined =
+      this.postRepairTraceSimplificationSolver?.visualize()
     const lengthMatchingPostProcessingViz =
       this.lengthMatchingPostProcessingSolver?.visualize()
     const powerTraceExpansionViz = this.powerTraceExpansionSolver?.visualize()
@@ -1243,6 +1298,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       traceWidthViz,
       globalDrcForceImproveViz,
       pipeline9JointDrcRepairViz,
+      postRepairTraceSimplificationViz,
       lengthMatchingPostProcessingViz,
       powerTraceExpansionViz,
       this.solved
@@ -1331,6 +1387,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       return hdRoutes
     }
     return (
+      this.postRepairTraceSimplificationSolver?.simplifiedHdRoutes ??
       this.pipeline9JointDrcRepairSolver?.getOutput() ??
       this.globalDrcForceImproveSolver?.getOutput() ??
       this.traceWidthSolver?.getHdRoutesWithWidths() ??

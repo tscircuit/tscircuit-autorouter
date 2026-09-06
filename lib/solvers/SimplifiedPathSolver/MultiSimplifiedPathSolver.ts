@@ -27,6 +27,7 @@ export class MultiSimplifiedPathSolver extends BaseSolver {
   colorMap: Record<string, string>
   outline?: Array<{ x: number; y: number }>
   minBoardEdgeClearance: number
+  minTraceToPadEdgeClearance?: number
   defaultViaDiameter: number
   useTraceWidthAwareClearance: boolean
   enableVertexShortcuts: boolean
@@ -40,6 +41,7 @@ export class MultiSimplifiedPathSolver extends BaseSolver {
     colorMap?: Record<string, string>
     outline?: Array<{ x: number; y: number }>
     minBoardEdgeClearance?: number
+    minTraceToPadEdgeClearance?: number
     defaultViaDiameter?: number
     useTraceWidthAwareClearance?: boolean
     enableVertexShortcuts?: boolean
@@ -64,6 +66,7 @@ export class MultiSimplifiedPathSolver extends BaseSolver {
     this.colorMap = params.colorMap || {}
     this.outline = params.outline
     this.minBoardEdgeClearance = params.minBoardEdgeClearance ?? 0.2
+    this.minTraceToPadEdgeClearance = params.minTraceToPadEdgeClearance
     this.defaultViaDiameter = params.defaultViaDiameter ?? 0.3
     this.useTraceWidthAwareClearance =
       params.useTraceWidthAwareClearance ?? false
@@ -93,6 +96,7 @@ export class MultiSimplifiedPathSolver extends BaseSolver {
         colorMap: this.colorMap,
         outline: this.outline,
         minBoardEdgeClearance: this.minBoardEdgeClearance,
+        minTraceToPadEdgeClearance: this.minTraceToPadEdgeClearance,
         useTraceWidthAwareClearance: this.useTraceWidthAwareClearance,
       })
       this.currentUnsimplifiedHdRouteIndex++
@@ -100,6 +104,11 @@ export class MultiSimplifiedPathSolver extends BaseSolver {
     }
 
     this.activeSubSolver.step()
+    if (this.activeSubSolver.failed) {
+      this.failed = true
+      this.error = this.activeSubSolver.error
+      return
+    }
     if (this.activeSubSolver.solved) {
       if (
         this.enableVertexShortcuts &&
@@ -113,6 +122,7 @@ export class MultiSimplifiedPathSolver extends BaseSolver {
           colorMap: this.colorMap,
           outline: this.outline,
           minBoardEdgeClearance: this.minBoardEdgeClearance,
+          minTraceToPadEdgeClearance: this.minTraceToPadEdgeClearance,
           useTraceWidthAwareClearance: this.useTraceWidthAwareClearance,
         })
         return

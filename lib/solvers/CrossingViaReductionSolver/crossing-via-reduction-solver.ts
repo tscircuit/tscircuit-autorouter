@@ -112,19 +112,28 @@ const getRouteSegmentKeys = (route: HighDensityRoute): ReadonlySet<string> => {
 const removeConsecutiveDuplicatePoints = (
   points: RoutePoint[],
 ): RoutePoint[] => {
-  return points.filter((point, index) => {
-    const previousPoint = points[index - 1]
+  // Coincident positions can still delimit terminals, widths or plated spans.
+  // Removing either point must not discard its distinct routing metadata.
+  return points.filter((point: RoutePoint, index: number): boolean => {
+    const previousPoint: RoutePoint | undefined = points[index - 1]
     return (
       !previousPoint ||
       point.x !== previousPoint.x ||
       point.y !== previousPoint.y ||
-      point.z !== previousPoint.z
+      point.z !== previousPoint.z ||
+      point.pcb_port_id !== previousPoint.pcb_port_id ||
+      point.traceThickness !== previousPoint.traceThickness ||
+      point.insideJumperPad !== previousPoint.insideJumperPad ||
+      point.toNextSegmentType !== previousPoint.toNextSegmentType ||
+      point.toNextSegmentCircuitJsonMetadata !==
+        previousPoint.toNextSegmentCircuitJsonMetadata
     )
   })
 }
 
 const recomputeVias = (
   route: ReadonlyArray<RoutePoint>,
+  originalRoute: HighDensityRoute,
 ): HighDensityRoute["vias"] => {
   const vias: HighDensityRoute["vias"] = []
   const seenLocations = new Set<string>()
@@ -135,7 +144,7 @@ const recomputeVias = (
     if (previousPoint.toNextSegmentType === "through_obstacle") continue
     if (previousPoint.x !== point.x || previousPoint.y !== point.y) {
       throw new Error(
-        `CrossingViaReductionSolver found a layer transition without a via at route point ${index}`,
+        `CrossingViaReductionSolver found a layer transition without a via at route point ${index} in "${originalRoute.connectionName}": ${JSON.stringify({ originalRoute, candidateRoute: route })}`,
       )
     }
 
@@ -457,7 +466,7 @@ export class CrossingViaReductionSolver extends BaseSolver {
     return {
       ...route,
       route: routePoints,
-      vias: recomputeVias(routePoints),
+      vias: recomputeVias(routePoints, route),
     }
   }
 
@@ -497,7 +506,7 @@ export class CrossingViaReductionSolver extends BaseSolver {
       route: {
         ...route,
         route: routePoints,
-        vias: recomputeVias(routePoints),
+        vias: recomputeVias(routePoints, route),
       },
       relocatedVia: { x: split.point.x, y: split.point.y },
     }
@@ -585,7 +594,7 @@ export class CrossingViaReductionSolver extends BaseSolver {
       route: {
         ...route,
         route: routePoints,
-        vias: recomputeVias(routePoints),
+        vias: recomputeVias(routePoints, route),
       },
       relocatedVias,
     }
