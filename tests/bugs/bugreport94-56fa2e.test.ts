@@ -21,14 +21,14 @@ test("bugreport94-56fa2e.json with Pipeline 9", (): void => {
   const circuitJson = getCurrentCircuitJson(solver)
   expect(circuitJson).not.toBeNull()
   const { errors } = getDrcErrors(circuitJson!)
-  let diagnostic: string = JSON.stringify(errors)
+  const diagnostic: string = JSON.stringify(errors)
   if (errors.length > 5) {
     const affectedTraces: SimplifiedPcbTrace[] =
       combinePreloadedAndRoutedTraces(
         srj.traces ?? [],
         solver.getOutputSimplifiedPcbTraces(),
       ).filter((trace: SimplifiedPcbTrace): boolean =>
-        diagnostic.includes(JSON.stringify(trace.pcb_trace_id)),
+        diagnostic.includes(trace.pcb_trace_id),
       )
     const affectedNetNames: Set<string> = new Set(
       affectedTraces.map(
@@ -54,25 +54,32 @@ test("bugreport94-56fa2e.json with Pipeline 9", (): void => {
     if (!joint || !postRepair) {
       throw new Error("Completed Pipeline9 output is missing repair stages")
     }
-    diagnostic = JSON.stringify({
-      errors,
-      affectedNetNames: [...affectedNetNames],
-      preJoint: selectRelevantRoutes(joint.params.newHdRoutes),
-      preJointPreloads: joint.params.updatedPreloadedTraces.filter(
-        (trace: SimplifiedPcbTrace): boolean =>
-          affectedNetNames.has(trace.connection_name),
-      ),
-      joint: selectRelevantRoutes(joint.getOutput()),
-      jointPreloads: joint
-        .getUpdatedPreloadedTraces()
-        .filter((trace: SimplifiedPcbTrace): boolean =>
-          affectedNetNames.has(trace.connection_name),
+    const stageDiagnostic: string = JSON.stringify(
+      {
+        errors,
+        affectedNetNames: [...affectedNetNames],
+        preJoint: selectRelevantRoutes(joint.params.newHdRoutes),
+        preJointPreloads: joint.params.updatedPreloadedTraces.filter(
+          (trace: SimplifiedPcbTrace): boolean =>
+            affectedNetNames.has(trace.connection_name),
         ),
-      postRepair: selectRelevantRoutes(postRepair.simplifiedHdRoutes),
-      final: selectRelevantRoutes(solver._getOutputHdRoutes()),
-      finalTraces: affectedTraces,
-      jointStats: joint.stats,
-    })
+        joint: selectRelevantRoutes(joint.getOutput()),
+        jointPreloads: joint
+          .getUpdatedPreloadedTraces()
+          .filter((trace: SimplifiedPcbTrace): boolean =>
+            affectedNetNames.has(trace.connection_name),
+          ),
+        postRepair: selectRelevantRoutes(postRepair.simplifiedHdRoutes),
+        final: selectRelevantRoutes(solver._getOutputHdRoutes()),
+        finalTraces: affectedTraces,
+        jointStats: joint.stats,
+      },
+      null,
+      2,
+    )
+    // Multiline output avoids GitHub's single-log-line truncation and keeps
+    // the assertion message small while preserving replayable stage geometry.
+    console.error(stageDiagnostic)
   }
   expect(errors.length, diagnostic).toBeLessThanOrEqual(5)
   const targetOverlap = errors.find(

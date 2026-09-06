@@ -112,13 +112,21 @@ const getRouteSegmentKeys = (route: HighDensityRoute): ReadonlySet<string> => {
 const removeConsecutiveDuplicatePoints = (
   points: RoutePoint[],
 ): RoutePoint[] => {
-  return points.filter((point, index) => {
-    const previousPoint = points[index - 1]
+  // Coincident positions can still delimit terminals, widths or plated spans.
+  // Removing either point must not discard its distinct routing metadata.
+  return points.filter((point: RoutePoint, index: number): boolean => {
+    const previousPoint: RoutePoint | undefined = points[index - 1]
     return (
       !previousPoint ||
       point.x !== previousPoint.x ||
       point.y !== previousPoint.y ||
-      point.z !== previousPoint.z
+      point.z !== previousPoint.z ||
+      point.pcb_port_id !== previousPoint.pcb_port_id ||
+      point.traceThickness !== previousPoint.traceThickness ||
+      point.insideJumperPad !== previousPoint.insideJumperPad ||
+      point.toNextSegmentType !== previousPoint.toNextSegmentType ||
+      point.toNextSegmentCircuitJsonMetadata !==
+        previousPoint.toNextSegmentCircuitJsonMetadata
     )
   })
 }
