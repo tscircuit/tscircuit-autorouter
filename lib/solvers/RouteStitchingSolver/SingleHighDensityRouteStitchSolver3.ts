@@ -440,13 +440,65 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
       pointsToAdd = reverseRoutePoints(hdRouteToMerge.route)
     }
 
+    const nextPoint: RoutePoint | undefined = pointsToAdd[0]
+    if (
+      nextPoint &&
+      lastMergedPoint.z !== nextPoint.z &&
+      distance(lastMergedPoint, nextPoint) < GEOMETRIC_TOLERANCE
+    ) {
+      const explicitStitchVias = new Map<
+        string,
+        HighDensityIntraNodeRoute["vias"][number]
+      >()
+      for (const via of [
+        ...this.mergedHdRoute.vias,
+        ...hdRouteToMerge.vias,
+      ]) {
+        if (
+          Math.hypot(via.x - lastMergedPoint.x, via.y - lastMergedPoint.y) <
+            GEOMETRIC_TOLERANCE &&
+          Math.hypot(via.x - nextPoint.x, via.y - nextPoint.y) <
+            GEOMETRIC_TOLERANCE
+        ) {
+          explicitStitchVias.set(`${via.x}:${via.y}`, via)
+        }
+      }
+      if (explicitStitchVias.size > 1) {
+        throw new Error(
+          `SingleHighDensityRouteStitchSolver3 found ambiguous explicit vias between nearby route fragments for "${this.mergedHdRoute.connectionName}"`,
+        )
+      }
+      const explicitStitchVia = explicitStitchVias.values().next().value
+      if (explicitStitchVia) {
+        if (
+          lastMergedPoint.x !== explicitStitchVia.x ||
+          lastMergedPoint.y !== explicitStitchVia.y
+        ) {
+          this.mergedHdRoute.route.push({
+            x: explicitStitchVia.x,
+            y: explicitStitchVia.y,
+            z: lastMergedPoint.z,
+          })
+        }
+        this.mergedHdRoute.route.push({
+          x: explicitStitchVia.x,
+          y: explicitStitchVia.y,
+          z: nextPoint.z,
+        })
+      }
+    }
+
     if (
       pointsToAdd.length > 0 &&
-      distance(lastMergedPoint, pointsToAdd[0]) < GEOMETRIC_TOLERANCE &&
-      lastMergedPoint.z === pointsToAdd[0].z
+      distance(this.mergedHdRoute.route.at(-1)!, pointsToAdd[0]) <
+        GEOMETRIC_TOLERANCE &&
+      this.mergedHdRoute.route.at(-1)!.z === pointsToAdd[0].z &&
+      this.mergedHdRoute.route.at(-1)!.x === pointsToAdd[0].x &&
+      this.mergedHdRoute.route.at(-1)!.y === pointsToAdd[0].y
     ) {
       if (pointsToAdd[0].toNextSegmentType) {
-        lastMergedPoint.toNextSegmentType = pointsToAdd[0].toNextSegmentType
+        this.mergedHdRoute.route.at(-1)!.toNextSegmentType =
+          pointsToAdd[0].toNextSegmentType
       }
       this.mergedHdRoute.route.push(...pointsToAdd.slice(1))
     } else {
