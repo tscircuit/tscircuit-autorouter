@@ -1,16 +1,18 @@
 import { expect, test } from "bun:test"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib"
 import { getCurrentCircuitJson } from "lib/testing/autorouting-pipeline-debugger/getCurrentCircuitJson"
+import { combinePreloadedAndRoutedTraces } from "lib/testing/evaluate-relaxed-drc"
 import { getDrcErrors } from "lib/testing/getDrcErrors"
+import type { HighDensityRoute } from "lib/types/high-density-types"
 import bugReport from "../../fixtures/bug-reports/bugreport94-56fa2e/bugreport94-56fa2e.json" with {
   type: "json",
 }
-import type { SimpleRouteJson } from "lib/types"
+import type { SimpleRouteJson, SimplifiedPcbTrace } from "lib/types"
 import { getLastStepSvg } from "../fixtures/getLastStepSvg"
 
 const srj = bugReport.simple_route_json as SimpleRouteJson
 
-test("bugreport94-56fa2e.json with Pipeline 9", () => {
+test("bugreport94-56fa2e.json with Pipeline 9", (): void => {
   const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(
     structuredClone(srj),
   )
@@ -19,7 +21,58 @@ test("bugreport94-56fa2e.json with Pipeline 9", () => {
   const circuitJson = getCurrentCircuitJson(solver)
   expect(circuitJson).not.toBeNull()
   const { errors } = getDrcErrors(circuitJson!)
-  expect(errors.length, JSON.stringify(errors)).toBeLessThanOrEqual(5)
+  let diagnostic: string = JSON.stringify(errors)
+  if (errors.length > 5) {
+    const affectedTraces: SimplifiedPcbTrace[] = combinePreloadedAndRoutedTraces(
+      srj.traces ?? [],
+      solver.getOutputSimplifiedPcbTraces(),
+    ).filter((trace: SimplifiedPcbTrace): boolean =>
+      diagnostic.includes(JSON.stringify(trace.pcb_trace_id)),
+    )
+    const affectedNetNames: Set<string> = new Set(
+      affectedTraces.map(
+        (trace: SimplifiedPcbTrace): string => trace.connection_name,
+      ),
+    )
+    const selectRelevantRoutes = (
+      routes: HighDensityRoute[],
+    ): HighDensityRoute[] =>
+      routes.filter((route: HighDensityRoute): boolean =>
+        [...affectedNetNames].some(
+          (netName: string): boolean =>
+            route.connectionName === netName ||
+            route.rootConnectionName === netName ||
+            solver.connMap.areIdsConnected(route.connectionName, netName),
+        ),
+      )
+    const joint: NonNullable<typeof solver.pipeline9JointDrcRepairSolver> =
+      solver.pipeline9JointDrcRepairSolver!
+    const postRepair: NonNullable<
+      typeof solver.postRepairTraceSimplificationSolver
+    > = solver.postRepairTraceSimplificationSolver!
+    if (!joint || !postRepair) {
+      throw new Error("Completed Pipeline9 output is missing repair stages")
+    }
+    diagnostic = JSON.stringify({
+      errors,
+      affectedNetNames: [...affectedNetNames],
+      preJoint: selectRelevantRoutes(joint.params.newHdRoutes),
+      preJointPreloads: joint.params.updatedPreloadedTraces.filter(
+        (trace: SimplifiedPcbTrace): boolean =>
+          affectedNetNames.has(trace.connection_name),
+      ),
+      joint: selectRelevantRoutes(joint.getOutput()),
+      jointPreloads: joint.getUpdatedPreloadedTraces().filter(
+        (trace: SimplifiedPcbTrace): boolean =>
+          affectedNetNames.has(trace.connection_name),
+      ),
+      postRepair: selectRelevantRoutes(postRepair.simplifiedHdRoutes),
+      final: selectRelevantRoutes(solver._getOutputHdRoutes()),
+      finalTraces: affectedTraces,
+      jointStats: joint.stats,
+    })
+  }
+  expect(errors.length, diagnostic).toBeLessThanOrEqual(5)
   const targetOverlap = errors.find(
     (error) =>
       error.type === "pcb_trace_error" &&
@@ -39,4 +92,4 @@ test("bugreport94-56fa2e.json with Pipeline 9", () => {
       ? import.meta.path.replace(/\.test\.ts$/, "-linux.test.ts")
       : import.meta.path
   expect(getLastStepSvg(solver.visualize())).toMatchSvgSnapshot(snapshotPath)
-}, 300_000)
+})
