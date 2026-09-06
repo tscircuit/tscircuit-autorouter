@@ -105,7 +105,7 @@ describe.skipIf(process.env.RUN_FULL_GBA_REPRO !== "1")(
       ).toMatchSvgSnapshot(import.meta.path)
     })
 
-    test.failing("the fully routed board should pass relaxed DRC", () => {
+    test("the fully routed board should pass relaxed DRC", () => {
       expect(relaxedDrcErrors).toEqual([])
     })
   },
