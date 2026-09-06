@@ -8,7 +8,7 @@ import {
   applyDrcErrorForces,
   applyTracePairSegmentDisplacementForError,
   getTraceRoutePairForError,
-  materializeRoutes,
+  materializeRoutesForIndexes,
 } from "high-density-repair03/lib/solvers/GlobalDrcForceImproveSolver/solverHelpers"
 import type {
   HighDensityRoute,
@@ -663,7 +663,30 @@ export function* getPipeline9HighDensityForceCandidates({
             return waypoint
           })
         }
-        const candidates = materializeRoutes(mutableRoutes)
+        // Native materialization re-derives every via from transition points.
+        // An untouched neighbour can instead retain its published rounded via
+        // metadata. Require exact ordered provenance as well as coordinates;
+        // inserted or replaced points still take the normal derivation path.
+        const hasUnchangedGeometry = localRoutes.map(
+          (local): boolean =>
+            local.mutable.route.length === local.original.route.length &&
+            local.mutable.route.every((point, index): boolean => {
+              const originalPoint = local.original.route[index]!
+              return (
+                local.originalPointByMutablePoint.get(point) ===
+                  originalPoint &&
+                Object.is(point.x, originalPoint.x) &&
+                Object.is(point.y, originalPoint.y) &&
+                Object.is(point.z, originalPoint.z)
+              )
+            }),
+        )
+        const candidates = materializeRoutesForIndexes(
+          mutableRoutes,
+          hasUnchangedGeometry.flatMap((unchanged, index): number[] =>
+            unchanged ? [] : [index],
+          ),
+        )
         if (
           !candidates.every((candidate, index) =>
             isPipeline9HighDensityRouteInsideBounds(
@@ -685,7 +708,10 @@ export function* getPipeline9HighDensityForceCandidates({
           const local = localRoutes[index]!
           return {
             ...hdRoutes[index]!,
-            vias: candidate.vias.map((via) => ({ ...via })),
+            vias: (hasUnchangedGeometry[index]
+              ? local.original.vias
+              : candidate.vias
+            ).map((via) => ({ ...via })),
             route: candidate.route.map((point): HighDensityPoint => {
               const originalPoint = local.originalPointByMutablePoint.get(point)
               return originalPoint
