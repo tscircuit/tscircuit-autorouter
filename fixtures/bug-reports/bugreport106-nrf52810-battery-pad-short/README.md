@@ -14,8 +14,8 @@ three fixtures:
 - `bugreport106-nrf52810-battery-pad-short-before`: the frozen Pipeline9
   0.0.885 output, including the SWDCLK via inside the bottom battery GND pad.
 - `bugreport106-nrf52810-battery-pad-short-after`: the frozen output after
-  layer-aware uniform port distribution. This removes that battery-pad short,
-  but it does not resolve every DRC error on the board.
+  overlap-only, layer-aware port distribution. This removes that battery-pad
+  short, but it does not resolve every DRC error on the board.
 - `bugreport106-nrf52810-battery-pad-short`: the live Pipeline9 debugger. Use
   its existing step, run, stage, and DRC controls to inspect the current code.
   Pipeline9 is explicitly constructed and its cache is disabled.
@@ -27,7 +27,7 @@ traces, respecting explicit replacement metadata, and display the relaxed DRC
 count computed by the current checkout. Remaining errors are intentionally
 visible; neither capture should be interpreted as a DRC-clean board.
 
-The baseline has 3 relaxed DRC errors and the spacing fix has 2. These counts
+The baseline has 3 relaxed DRC errors and the spacing fix has 1. These counts
 exclude the separate via-to-pad clearance checker; other smaller clearance
 violations remain. The focused regression checks the SWDCLK-to-battery-pad
 physical short independently of that relaxed DRC count.
@@ -67,6 +67,10 @@ This reruns the current solver; it does not replace either frozen capture.
 
 The underlying issue was a bottom-layer pad boundary suppressing redistribution
 of top-layer ports. Two foreign-net ports were left only 0.025 mm apart,
-forcing an invalid regional routing problem. The fix applies the shared-edge
-obstacle check only to ports on the obstacle's layer. The small independent
-regression is `tests/features/uniform-port-distribution-opposite-layer-pad.test.ts`.
+forcing an invalid regional routing problem. The fix preserves existing ports
+along obstacle boundaries unless different-net traces overlap on a layer where
+the boundary obstacle is absent. It uses the minimum trace width already passed
+into the solver and the existing uniform redistribution. On this board, only
+one shared edge needs correction; safe ports and same-net overlaps stay fixed.
+The small independent regression is
+`tests/features/uniform-port-distribution-opposite-layer-pad.test.ts`.
