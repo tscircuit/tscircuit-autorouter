@@ -444,6 +444,8 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
     if (
       nextPoint &&
       lastMergedPoint.z !== nextPoint.z &&
+      (lastMergedPoint.x !== nextPoint.x ||
+        lastMergedPoint.y !== nextPoint.y) &&
       distance(lastMergedPoint, nextPoint) < GEOMETRIC_TOLERANCE
     ) {
       const explicitStitchVias = new Map<

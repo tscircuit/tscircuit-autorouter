@@ -64,4 +64,43 @@ test("stitching materializes nearby layer changes at explicit via anchors", (): 
     })
   }
   expect(JSON.stringify([firstFragment, secondFragment])).toBe(inputBefore)
+
+  const exactTransitionSolver: SingleHighDensityRouteStitchSolver3 =
+    new SingleHighDensityRouteStitchSolver3({
+      connectionName: "exact-signal",
+      start: { x: -1, y: 0, z: 1 },
+      end: { x: 1, y: 0, z: 0 },
+      hdRoutes: [
+        {
+          ...firstFragment,
+          connectionName: "exact-signal",
+          route: [
+            { x: -1, y: 0, z: 1 },
+            { x: 0.25, y: 0, z: 1 },
+          ],
+          vias: [{ x: 0.2505, y: 0 }],
+        },
+        {
+          ...secondFragment,
+          connectionName: "exact-signal",
+          route: [
+            { x: 0.25, y: 0, z: 0 },
+            { x: 1, y: 0, z: 0 },
+          ],
+        },
+      ],
+      isStitchSegmentClear: (): boolean => true,
+      stitchClearanceMode: "require_clear",
+    })
+
+  exactTransitionSolver.solve()
+
+  expect(exactTransitionSolver.solved).toBeTrue()
+  expect(exactTransitionSolver.failed).toBeFalse()
+  expect(exactTransitionSolver.mergedHdRoute.route).toEqual([
+    { x: 1, y: 0, z: 0 },
+    { x: 0.25, y: 0, z: 0 },
+    { x: 0.25, y: 0, z: 1 },
+    { x: -1, y: 0, z: 1 },
+  ])
 })
