@@ -290,8 +290,7 @@ const combinePreloadedTraceSectionGroup = ({
     if (taggedWire?.route_type === "wire") {
       route[index] = {
         ...point,
-        pcb_port_id:
-          taggedWire.start_pcb_port_id ?? taggedWire.end_pcb_port_id,
+        pcb_port_id: taggedWire.start_pcb_port_id ?? taggedWire.end_pcb_port_id,
       }
     }
   }
@@ -1055,8 +1054,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       ])
       // Check the exact public reconstruction, not the separate synthetic
       // sections used for search. Reattach every protected primitive first.
-      const updatedPreloadedTraces =
-        this.rebuildUpdatedPreloadedTraces(routes)
+      const updatedPreloadedTraces = this.rebuildUpdatedPreloadedTraces(routes)
       for (const [
         index,
         originalTrace,
@@ -1087,8 +1085,8 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       }
       const preparedOutput = preparePipeline9DrcRoutedTracesWithMetadata({
         originalPreloadedTraces: params.originalSrj.traces ?? [],
-        mutatedPreloadedTraces: updatedPreloadedTraces.filter(
-          (trace) => changedPreloadedTraceIds.has(trace.pcb_trace_id),
+        mutatedPreloadedTraces: updatedPreloadedTraces.filter((trace) =>
+          changedPreloadedTraceIds.has(trace.pcb_trace_id),
         ),
         newTraces: convertNewRoutes(
           routes.filter(

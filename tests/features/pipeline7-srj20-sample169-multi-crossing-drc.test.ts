@@ -9,6 +9,32 @@ test("Pipeline7 keeps srj20 sample169 DRC-clean after multi-crossing simplificat
 
   solver.solve()
 
+  if (!solver.solved) {
+    const stitchSolver = solver.highDensityStitchSolver
+    const activeStitch = stitchSolver?.activeSolver
+    const mergedPoints = activeStitch?.mergedHdRoute?.route
+    console.error(
+      JSON.stringify({
+        event: "pipeline7-srj20-sample169-routing-failure",
+        phase: solver.getCurrentPhase(),
+        failed: solver.failed,
+        error: solver.error,
+        stitchError: stitchSolver?.error,
+        activeStitch: activeStitch
+          ? {
+              error: activeStitch.error,
+              connectionName: activeStitch.mergedHdRoute?.connectionName,
+              start: activeStitch.start,
+              end: activeStitch.end,
+              mergedStart: mergedPoints?.[0],
+              mergedEnd: mergedPoints?.[mergedPoints.length - 1],
+              remainingRouteCount: activeStitch.remainingHdRoutes.length,
+            }
+          : null,
+      }),
+    )
+  }
+
   expect(solver.solved).toBe(true)
   const routedTraces = solver.getOutputSimplifiedPcbTraces()
   const { errors } = evaluateRelaxedDrc({

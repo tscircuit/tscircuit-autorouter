@@ -103,14 +103,19 @@ export const createPipeline9InheritedPadClearanceFixture = (
     },
   ]
   if (includeThroughObstacle) {
+    // This compound start pad contains its declared terminal and the whole
+    // protected span; a net-name-only obstacle has no physical port in DRC.
     obstacles.push({
       type: "rect",
-      center: { x: -2.5, y: routeY },
-      width: 1,
+      center: { x: -3, y: routeY },
+      width: 2.5,
       height: 0.5,
       layers: ["top"],
-      connectedTo: ["preloaded"],
-      circuitJsonMetadata: { pcb_smtpad_id: "pad_through" },
+      connectedTo: ["preloaded_start"],
+      circuitJsonMetadata: {
+        pcb_smtpad_id: "pad_through",
+        pcb_port_id: "preloaded_start",
+      },
     })
   }
   const srj: SimpleRouteJson = {

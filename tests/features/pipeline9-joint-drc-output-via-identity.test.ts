@@ -88,16 +88,20 @@ test("Pipeline9 matches residual vias by physical site", () => {
     isPipeline9JointDrcOutputNoWorse({
       current,
       candidate: {
-        errors: [
-          {
-            ...reindexedError,
-            pcb_error_id: "same_net_vias_close_via_12_via_7",
-          },
-        ],
+        errors: [{ ...reindexedError, minimum_clearance: 0.2 }],
         circuitJson: reindexedCircuit,
       },
     }),
   ).toBe(false)
+  expect(
+    isPipeline9JointDrcOutputNoWorse({
+      current,
+      candidate: {
+        errors: [{ ...reindexedError, pcb_error_id: "opaque-diagnostic" }],
+        circuitJson: reindexedCircuit,
+      },
+    }),
+  ).toBe(true)
 
   const traceViaContact = {
     type: "pcb_trace_error",

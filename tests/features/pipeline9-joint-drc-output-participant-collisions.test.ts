@@ -48,19 +48,46 @@ test("Pipeline9 resolves involved copper using explicit roles", () => {
       candidate: { errors: [], circuitJson },
     }),
   ).toBe(true)
-  expect(() =>
+  expect(
     isPipeline9JointDrcOutputNoWorse({
       current: { errors: [genericError], circuitJson },
       candidate: { errors: [genericError], circuitJson },
     }),
-  ).toThrow("cannot resolve copper participant")
+  ).toBe(true)
+  expect(
+    isPipeline9JointDrcOutputNoWorse({
+      current: { errors: [genericError], circuitJson },
+      candidate: {
+        errors: [{ ...genericError, pcb_trace_error_id: "opaque-diagnostic" }],
+        circuitJson,
+      },
+    }),
+  ).toBe(false)
+  const changedViaContext = circuitJson.map((element) =>
+    element.type === "pcb_via" && element.pcb_via_id === "via_7"
+      ? { ...element, pcb_trace_id: "via_7", x: 1 }
+      : element,
+  )
+  for (const error of [
+    genericError,
+    {
+      ...genericError,
+      pcb_via_id: "via_7",
+      message: "PCB trace ordinary overlaps with a via (accidental contact)",
+    },
+  ]) {
+    expect(
+      isPipeline9JointDrcOutputNoWorse({
+        current: { errors: [error], circuitJson },
+        candidate: { errors: [error], circuitJson: changedViaContext },
+      }),
+    ).toBe(false)
+  }
   expect(() =>
     isPipeline9JointDrcOutputNoWorse({
       current: { errors: [typedViaError], circuitJson },
       candidate: {
-        errors: [
-          { ...typedViaError, pcb_via_id: "unrelated_ownerless_via" },
-        ],
+        errors: [{ ...typedViaError, pcb_via_id: "unrelated_ownerless_via" }],
         circuitJson,
       },
     }),

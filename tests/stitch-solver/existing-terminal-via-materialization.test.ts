@@ -87,9 +87,7 @@ test("terminal transitions reuse explicitly represented via spans and obey the a
       start: { x: 0, y: 0, z: 0, pcb_port_id: "start-port" },
       end: { x: 2, y: 0, z: 0, pcb_port_id: "end-port" },
       hdRoutes: [solverRoute],
-      allowedLayerTransitionPointKeys: new Set(
-        allowedVias.map(getXyPointKey),
-      ),
+      allowedLayerTransitionPointKeys: new Set(allowedVias.map(getXyPointKey)),
       preserveTerminalPcbPortIds: true,
       isStitchSegmentClear: (): boolean => true,
       stitchClearanceMode: "require_clear",

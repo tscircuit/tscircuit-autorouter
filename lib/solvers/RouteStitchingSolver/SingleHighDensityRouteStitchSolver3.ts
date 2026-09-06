@@ -93,8 +93,7 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
     // via element, so reuse only the exact already represented transition.
     const fromZ =
       orientation === "forward" ? transitionStart.z : transitionEnd.z
-    const toZ =
-      orientation === "forward" ? transitionEnd.z : transitionStart.z
+    const toZ = orientation === "forward" ? transitionEnd.z : transitionStart.z
     for (let index = 0; index < route.route.length - 1; index += 1) {
       const start = route.route[index]!
       const end = route.route[index + 1]!
@@ -151,10 +150,8 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
         this.error = `Terminal stitch for "${opts.connectionName}" requires an existing via between terminal layers`
         return
       }
-      const routePoints = [
-        { x: opts.start.x, y: opts.start.y, z: commonLayer },
-      ]
-      const vias = []
+      const routePoints = [{ x: opts.start.x, y: opts.start.y, z: commonLayer }]
+      const vias: HighDensityIntraNodeRoute["vias"] = []
 
       const stitchStart = routePoints[routePoints.length - 1]!
       const stitchEnd = { x: opts.end.x, y: opts.end.y, z: commonLayer }
@@ -392,8 +389,7 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
       ) {
         if (
           !this.isPlanarStitchClear(lastMergedPoint, terminalPoint) &&
-          (requiresTerminalVia ||
-            this.stitchClearanceMode === "require_clear")
+          (requiresTerminalVia || this.stitchClearanceMode === "require_clear")
         ) {
           this.failed = true
           this.error = `Terminal stitch for "${this.mergedHdRoute.connectionName}" violates copper clearance`

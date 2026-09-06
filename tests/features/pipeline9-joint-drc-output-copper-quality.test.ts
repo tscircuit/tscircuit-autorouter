@@ -47,6 +47,11 @@ test("Pipeline9 rejects copper pair replacement and worsening", () => {
     },
     {
       current: initial,
+      candidate: [{ ...padError("pad_a", 0.05), minimum_clearance: 0.2 }],
+      accepted: false,
+    },
+    {
+      current: initial,
       candidate: [padError("pad_a", 0.09), padError("pad_b", 0.03)],
       accepted: false,
     },
@@ -110,6 +115,7 @@ test("Pipeline9 rejects copper pair replacement and worsening", () => {
   const traceContact = {
     type: "pcb_trace_error",
     pcb_trace_id: "ordinary",
+    pcb_trace_ids: ["ordinary", "other"],
     pcb_trace_error_id: "overlap_ordinary_other",
     message: "Traces are too close (gap: 0.020mm)",
   }
@@ -129,6 +135,24 @@ test("Pipeline9 rejects copper pair replacement and worsening", () => {
       },
     }),
   ).toBe(true)
+  const unannotatedTraceContact = {
+    ...traceContact,
+    pcb_trace_ids: undefined,
+  }
+  expect(
+    isPipeline9JointDrcOutputNoWorse({
+      current: { errors: [unannotatedTraceContact], circuitJson },
+      candidate: {
+        errors: [
+          {
+            ...unannotatedTraceContact,
+            message: "Traces are too close (gap: 0.040mm)",
+          },
+        ],
+        circuitJson,
+      },
+    }),
+  ).toBe(false)
   expect(() =>
     isPipeline9JointDrcOutputNoWorse({
       current: { errors: initial, circuitJson },

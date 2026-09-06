@@ -121,7 +121,6 @@ const getCopperErrorPair = (
     typeof error.pcb_trace_id === "string" ? error.pcb_trace_id : undefined
   let participantIds: string[]
   let expectedKinds: CopperParticipant["kind"][]
-  let relation = "copper-gap"
   if (errorType === "pcb_pad_trace_clearance_error") {
     if (!traceId || typeof error.pcb_pad_id !== "string") {
       throw new Error("Pipeline9 joint pad DRC requires both copper identities")
@@ -146,41 +145,36 @@ const getCopperErrorPair = (
     }
     participantIds = error.pcb_via_ids as string[]
     expectedKinds = ["via", "via"]
-    const errorId = error.pcb_error_id
-    if (
-      typeof errorId !== "string" ||
-      (!errorId.startsWith("same_net_vias_close_") &&
-        !errorId.startsWith("different_net_vias_close_"))
-    ) {
-      throw new Error(
-        "Pipeline9 joint via-spacing DRC requires its net relation",
-      )
-    }
-    relation = errorId.startsWith("same_net_")
-      ? "same-net-via-gap"
-      : "different-net-via-gap"
-  } else if (
-    errorType === "pcb_trace_error" &&
-    typeof error.pcb_trace_error_id === "string" &&
-    error.pcb_trace_error_id.startsWith("overlap_")
-  ) {
-    const prefix = `overlap_${traceId}_`
-    if (!traceId || !error.pcb_trace_error_id.startsWith(prefix)) {
-      throw new Error("Pipeline9 joint overlap DRC requires its primary trace")
-    }
-    const otherId = error.pcb_trace_error_id.slice(prefix.length)
-    participantIds = [traceId, otherId]
-    expectedKinds = ["trace"]
-    if (
-      error.pcb_via_id === otherId ||
-      (Array.isArray(error.pcb_via_ids) && error.pcb_via_ids.includes(otherId))
-    ) {
-      expectedKinds.push("via")
-    } else if (
-      Array.isArray(error.pcb_trace_ids) &&
-      error.pcb_trace_ids.includes(otherId)
-    ) {
-      expectedKinds.push("trace")
+  } else if (errorType === "pcb_trace_error" && traceId) {
+    const viaIds = new Set([
+      ...(typeof error.pcb_via_id === "string" ? [error.pcb_via_id] : []),
+      ...(Array.isArray(error.pcb_via_ids)
+        ? error.pcb_via_ids.filter(
+            (id): id is string => typeof id === "string",
+          )
+        : []),
+    ])
+    if (viaIds.size === 1) {
+      participantIds = [traceId, ...viaIds]
+      expectedKinds = ["trace", "via"]
+    } else if (typeof error.pcb_pad_id === "string" && viaIds.size === 0) {
+      participantIds = [traceId, error.pcb_pad_id]
+      expectedKinds = ["trace", "obstacle"]
+    } else if (Array.isArray(error.pcb_trace_ids) && viaIds.size === 0) {
+      participantIds = [
+        ...new Set([
+          traceId,
+          ...error.pcb_trace_ids.filter(
+            (id): id is string => typeof id === "string",
+          ),
+        ]),
+      ]
+      if (participantIds.length !== 2) return undefined
+      expectedKinds = ["trace", "trace"]
+    } else {
+      // Diagnostic IDs are opaque, not a source of participant metadata.
+      // Unannotated generic findings require exact retention or full removal.
+      return undefined
     }
   } else {
     return undefined
@@ -189,11 +183,18 @@ const getCopperErrorPair = (
     return resolveCopperParticipant(elementsById, id, expectedKinds[index])
       .identity
   })
-  return JSON.stringify([relation, ...identities.sort()])
+  // A changed required clearance is a different constraint, even if its
+  // physical participants and measured gap happen to remain the same.
+  return JSON.stringify([
+    "copper-gap",
+    error.minimum_clearance,
+    ...identities.sort(),
+  ])
 }
 
 const getErrorGroups = (snapshot: JointDrcSnapshot): Map<string, number[]> => {
   const elementsById = getCopperElementsById(snapshot.circuitJson)
+  let completeCopperContext: string | undefined
   const groups = new Map<string, number[]>()
   for (const error of snapshot.errors) {
     const pair = getCopperErrorPair(error, elementsById)
@@ -214,14 +215,26 @@ const getErrorGroups = (snapshot: JointDrcSnapshot): Map<string, number[]> => {
       const match = error.message.match(/gap: (-?\d+(?:\.\d+)?)mm/)
       if (match) gap = Number.parseFloat(match[1]!)
     }
-    // Generic too-close errors expose only the official checker's rounded
-    // message measurement. Contacts have no measured gap, so require their
-    // exact record to remain unchanged or disappear. Do not manufacture a
-    // score for connectivity, board-edge, or unknown findings either.
+    // Diagnostic IDs cannot prove unchanged copper ownership. If a generic
+    // error omits its participants, retaining its record requires the entire
+    // evaluated copper context to stay unchanged. This deliberately rejects
+    // unrelated repairs while an unannotated generic finding remains.
+    let exactContext = pair
+    if (
+      pair === undefined &&
+      (error.type ?? error.error_type) === "pcb_trace_error"
+    ) {
+      completeCopperContext ??= JSON.stringify(
+        [...elementsById.values()].flat().map(stringifyDrcRecord).sort(),
+      )
+      exactContext = completeCopperContext
+    }
+    // Annotated contacts expose no measured gap: retain their exact record
+    // AND physical pair or remove them. Never invent a penetration score.
     const key =
       pair !== undefined && gap !== undefined
         ? pair
-        : `exact:${stringifyDrcRecord(error)}`
+        : JSON.stringify(["exact", exactContext, stringifyDrcRecord(error)])
     const severities = groups.get(key) ?? []
     severities.push(gap === undefined ? 0 : -gap)
     groups.set(key, severities)

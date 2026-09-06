@@ -16,6 +16,12 @@ test("Pipeline9 repairs inherited wire sections without moving through-obstacle 
     srjWithPointPairs: srj,
     routedTraces: [],
   })
+  console.log(
+    JSON.stringify({
+      fixture: "inherited-through-obstacle",
+      baselineErrors: baseline.errors,
+    }),
+  )
   expect(baseline.errors).toHaveLength(1)
   expect(solver.movablePreloadedSections).toHaveLength(2)
   expect(solver.fixedPreloadedObstacleRoutes).toHaveLength(1)

@@ -8,8 +8,8 @@ test("Pipeline9 keeps an inherited pad pair visible when its clearance worsens",
   const evaluate = solver.exactRepairSolver?.params.drcEvaluator
   expect(evaluate).toBeDefined()
   if (!evaluate) throw new Error("Expected inherited copper DRC evaluator")
-  const initialRoutes = solver.movablePreloadedSections.map(
-    (section) => structuredClone(section.hdRoute),
+  const initialRoutes = solver.movablePreloadedSections.map((section) =>
+    structuredClone(section.hdRoute),
   )
   const worsenedRoutes = structuredClone(initialRoutes)
   for (const point of worsenedRoutes[0]!.route.slice(1, -1)) {

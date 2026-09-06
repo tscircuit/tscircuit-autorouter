@@ -50,9 +50,7 @@ test("four-layer terminal stitching cannot extend blind vias or orphan via entri
       start: { x: 0, y: 0, z: 0 },
       end: { x: 2, y: 0, z: endLayer },
       hdRoutes: [route],
-      allowedLayerTransitionPointKeys: new Set([
-        getXyPointKey({ x: 2, y: 0 }),
-      ]),
+      allowedLayerTransitionPointKeys: new Set([getXyPointKey({ x: 2, y: 0 })]),
       isStitchSegmentClear: (): boolean => true,
       stitchClearanceMode: "prefer_clear",
     })
