@@ -21,6 +21,16 @@ export type FutureConnection = {
   points: { x: number; y: number; z: number }[]
 }
 
+type SharedPlanarViaQuery = {
+  index: Flatbush
+  minX: number
+  minY: number
+  maxX: number
+  maxY: number
+  proximity: number
+  viaIds?: number[]
+}
+
 const MAX_EXPLORED_BITMAP_CELLS = 1_000_000
 
 class BitmapExploredNodeSet extends Set<number> {
@@ -139,6 +149,10 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
   obstacleSegmentIndexByLayer = new Map<number, Flatbush>()
   obstacleVias: IndexedObstacleVia[] = []
   obstacleViaIndex: Flatbush | null = null
+  private sharedPlanarViaQueries = new WeakMap<
+    PlanarObstacleQuery,
+    SharedPlanarViaQuery
+  >()
 
   /** For debugging/animating the exploration */
   debug_exploredNodesOrdered: Array<{
@@ -401,14 +415,38 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
 
     const viaProximity = this.viaDiameter / 2 + this.traceThickness / 2 + margin
     if (this.obstacleViaIndex) {
-      const nearbyViaIds = this.obstacleViaIndex.search(
-        node.x - viaProximity,
-        node.y - viaProximity,
-        node.x + viaProximity,
-        node.y + viaProximity,
-      )
+      const minX = node.x - viaProximity
+      const minY = node.y - viaProximity
+      const maxX = node.x + viaProximity
+      const maxY = node.y + viaProximity
+      const sharedQuery =
+        !isVia && planarObstacleQuery
+          ? this.sharedPlanarViaQueries.get(planarObstacleQuery)
+          : undefined
+      const canShareViaQuery =
+        sharedQuery &&
+        sharedQuery.index === this.obstacleViaIndex &&
+        sharedQuery.proximity === viaProximity &&
+        sharedQuery.minX <= minX &&
+        sharedQuery.minY <= minY &&
+        sharedQuery.maxX >= maxX &&
+        sharedQuery.maxY >= maxY
+      // Defer the union query until a candidate survives segment clearance.
+      // Its IDs live only as long as this expansion's planar query object.
+      const nearbyViaIds = canShareViaQuery
+        ? (sharedQuery.viaIds ??= this.obstacleViaIndex.search(
+            sharedQuery.minX,
+            sharedQuery.minY,
+            sharedQuery.maxX,
+            sharedQuery.maxY,
+          ))
+        : this.obstacleViaIndex.search(minX, minY, maxX, maxY)
       for (const viaId of nearbyViaIds) {
         const via = this.obstacleVias[viaId]
+        if (
+          canShareViaQuery && via &&
+          (maxX < via.x || maxY < via.y || minX > via.x || minY > via.y)
+        ) continue
         if (via && distance(node, via) < viaProximity) {
           return true
         }
@@ -539,7 +577,7 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
 
     // All planar neighbors share a parent and layer. Query their combined
     // bounds once; the collision checks still filter each candidate's bounds.
-    return {
+    const query = {
       segments,
       segmentIds: segmentIndex.search(
         Math.min(
@@ -560,9 +598,23 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
         ),
       ),
     }
+    if (this.obstacleViaIndex) {
+      const proximity =
+        this.viaDiameter / 2 + this.traceThickness / 2 + this.obstacleMargin
+      this.sharedPlanarViaQueries.set(query, {
+        index: this.obstacleViaIndex,
+        minX: clamp(node.x - this.cellStep, minX, maxX) - proximity,
+        minY: clamp(node.y - this.cellStep, minY, maxY) - proximity,
+        maxX: clamp(node.x + this.cellStep, minX, maxX) + proximity,
+        maxY: clamp(node.y + this.cellStep, minY, maxY) + proximity,
+        proximity,
+      })
+    }
+    return query
   }
 
   buildObstacleIndexes() {
+    this.sharedPlanarViaQueries = new WeakMap()
     if (this.obstacleRoutes.length === 0) {
       this.obstacleSegmentIndex = null
       this.obstacleSegmentsByLayer.clear()
