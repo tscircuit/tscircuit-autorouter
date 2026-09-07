@@ -21,27 +21,46 @@ export const getInstalledDependencyInventory = async (
     try {
       entries = await readdir(directory, { withFileTypes: true })
     } catch (error) {
-      if ((error as NodeJS.ErrnoException).code === "ENOENT" && directory !== join(repositoryRoot, "node_modules")) continue
+      if (
+        (error as NodeJS.ErrnoException).code === "ENOENT" &&
+        directory !== join(repositoryRoot, "node_modules")
+      )
+        continue
       throw error
     }
     for (const entry of entries) {
-      if (entry.name.startsWith(".") || (!entry.isDirectory() && !entry.isSymbolicLink())) continue
+      if (
+        entry.name.startsWith(".") ||
+        (!entry.isDirectory() && !entry.isSymbolicLink())
+      )
+        continue
       const packageDirectory = join(directory, entry.name)
       if (entry.name.startsWith("@")) {
         directories.push(packageDirectory)
         continue
       }
-      const manifestText = await readFile(join(packageDirectory, "package.json"), "utf8")
-      const manifest = JSON.parse(manifestText) as { name?: string; version?: string }
-      if (!manifest.name) throw new Error(`Installed dependency has no name: ${packageDirectory}`)
+      const manifestText = await readFile(
+        join(packageDirectory, "package.json"),
+        "utf8",
+      )
+      const manifest = JSON.parse(manifestText) as {
+        name?: string
+        version?: string
+      }
+      if (!manifest.name)
+        throw new Error(`Installed dependency has no name: ${packageDirectory}`)
       inventory.push({
         path: relative(repositoryRoot, packageDirectory),
         name: manifest.name,
         version: manifest.version ?? null,
-        packageJsonSha256: createHash("sha256").update(manifestText).digest("hex"),
+        packageJsonSha256: createHash("sha256")
+          .update(manifestText)
+          .digest("hex"),
       })
       directories.push(join(packageDirectory, "node_modules"))
     }
   }
-  return inventory.sort((first, second) => first.path.localeCompare(second.path))
+  return inventory.sort((first, second) =>
+    first.path.localeCompare(second.path),
+  )
 }

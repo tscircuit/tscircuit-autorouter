@@ -25,7 +25,9 @@ export function projectAllwinnerInput(source: SourceInput): SimpleRouteJson {
   const obstacles = source.obstacles.map((obstacle, index): Obstacle => {
     const rotation = ((obstacle.ccwRotationDegrees ?? 0) + 360) % 360
     if (![0, 90, 180, 270].includes(rotation)) {
-      throw new Error(`Cannot exactly bound obstacle ${index} at ${rotation}deg`)
+      throw new Error(
+        `Cannot exactly bound obstacle ${index} at ${rotation}deg`,
+      )
     }
     const connectedTo = obstacle.connectedTo.filter((name) =>
       connectionNames.has(name),
@@ -66,7 +68,9 @@ export function projectAllwinnerInput(source: SourceInput): SimpleRouteJson {
         Math.abs(point.x - obstacle.center.x) > obstacle.width / 2 ||
         Math.abs(point.y - obstacle.center.y) > obstacle.height / 2
       ) {
-        throw new Error(`Terminal/net geometry mismatch at ${point.pcb_port_id}`)
+        throw new Error(
+          `Terminal/net geometry mismatch at ${point.pcb_port_id}`,
+        )
       }
       terminalObstacles.add(obstacle)
       const common = {
@@ -82,7 +86,9 @@ export function projectAllwinnerInput(source: SourceInput): SimpleRouteJson {
   }))
   for (const obstacle of obstacles) {
     if (obstacle.connectedTo.length > 0 && !terminalObstacles.has(obstacle)) {
-      throw new Error(`Signal pad has no requested terminal: ${obstacle.obstacleId}`)
+      throw new Error(
+        `Signal pad has no requested terminal: ${obstacle.obstacleId}`,
+      )
     }
   }
   return {
@@ -105,10 +111,17 @@ export function projectAllwinnerInput(source: SourceInput): SimpleRouteJson {
 
 if (import.meta.main) {
   const source = gunzipSync(
-    new Uint8Array(readFileSync(new URL("./frozen-source.srj.json.gz", import.meta.url))),
+    new Uint8Array(
+      readFileSync(new URL("./frozen-source.srj.json.gz", import.meta.url)),
+    ),
   )
-  const sourceHash = createHash("sha256").update(new Uint8Array(source)).digest("hex")
-  if (sourceHash !== "447174f009434e9c5bb026bf53ed8a053fccd8b307328c5a092bba1c3f481bdb") {
+  const sourceHash = createHash("sha256")
+    .update(new Uint8Array(source))
+    .digest("hex")
+  if (
+    sourceHash !==
+    "447174f009434e9c5bb026bf53ed8a053fccd8b307328c5a092bba1c3f481bdb"
+  ) {
     throw new Error("Frozen Allwinner source SHA-256 does not match")
   }
   const projected = projectAllwinnerInput(JSON.parse(source.toString()))

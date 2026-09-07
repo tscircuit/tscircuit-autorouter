@@ -9,10 +9,34 @@ test("recorded Freerouting 2.4.1 sessions preserve surface and plated-pad connec
   // automatic_neckdown disabled. The second input adds the through pad below.
   // They are interoperability fixtures, not benchmark timing measurements.
   const srj = routingFixture()
-  const viaSession = await Bun.file(new URL("./freeroutingVia.ses", import.meta.url)).text()
-  expect(scoreRouting(srj, parseFreeroutingSession(viaSession, srj))).toMatchObject({ valid: true, connectedConnections: 1, viaCount: 1 })
-  srj.obstacles.push({ type: "rect", center: { x: 0, y: 0 }, width: 1, height: 1, layers: ["top", "bottom"], connectedTo: ["signal"] })
-  srj.connections[0].pointsToConnect.push({ x: 0, y: 0, layers: ["top", "bottom"] })
-  const throughSession = await Bun.file(new URL("./freeroutingThroughPad.ses", import.meta.url)).text()
-  expect(scoreRouting(srj, parseFreeroutingSession(throughSession, srj))).toMatchObject({ valid: true, connectedConnections: 1, viaCount: 0, traceLengthMm: 6 })
+  const viaSession = await Bun.file(
+    new URL("./freeroutingVia.ses", import.meta.url),
+  ).text()
+  expect(
+    scoreRouting(srj, parseFreeroutingSession(viaSession, srj)),
+  ).toMatchObject({ valid: true, connectedConnections: 1, viaCount: 1 })
+  srj.obstacles.push({
+    type: "rect",
+    center: { x: 0, y: 0 },
+    width: 1,
+    height: 1,
+    layers: ["top", "bottom"],
+    connectedTo: ["signal"],
+  })
+  srj.connections[0].pointsToConnect.push({
+    x: 0,
+    y: 0,
+    layers: ["top", "bottom"],
+  })
+  const throughSession = await Bun.file(
+    new URL("./freeroutingThroughPad.ses", import.meta.url),
+  ).text()
+  expect(
+    scoreRouting(srj, parseFreeroutingSession(throughSession, srj)),
+  ).toMatchObject({
+    valid: true,
+    connectedConnections: 1,
+    viaCount: 0,
+    traceLengthMm: 6,
+  })
 })
