@@ -188,7 +188,10 @@ test("dense cost storage preserves original Map searches and calculation counts"
     }
     memoized.solve()
     reference.solve()
-    const storage = memoized as unknown as { denseNodeCostTerms: unknown[]; nodeCostTermsByGridKey: Map<number, unknown> }
+    const storage = memoized as unknown as {
+      denseNodeCostTerms: unknown[]
+      nodeCostTermsByGridKey: Map<number, unknown>
+    }
     expect(storage.denseNodeCostTerms.length).toBeLessThanOrEqual(65_536)
     expect(storage.nodeCostTermsByGridKey.size).toBe(0)
     if (sampleMemoizedCalculations === sampleReferenceCalculations) {

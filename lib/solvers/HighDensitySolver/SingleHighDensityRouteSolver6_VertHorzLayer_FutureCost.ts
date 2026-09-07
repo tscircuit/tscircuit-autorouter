@@ -24,7 +24,10 @@ export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends Sing
   futureConnectionPoints: Array<{ x: number; y: number; z: number }>
   futureConnectionSegmentsCache: FutureConnectionSegment[] | null = null
   private nodeCostTermsByGridKey = new Map<number, NodeCostTerms>()
-  private denseNodeCostTerms: Array<NodeCostTerms | undefined> | null | undefined
+  private denseNodeCostTerms:
+    | Array<NodeCostTerms | undefined>
+    | null
+    | undefined
 
   constructor(
     opts: ConstructorParameters<typeof SingleHighDensityRouteSolver>[0],
@@ -216,9 +219,8 @@ export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends Sing
 
   private initializeDenseNodeCostTerms(): void {
     this.denseNodeCostTerms = null
-    if (
-      this.getNodeKey !== SingleHighDensityRouteSolver.prototype.getNodeKey
-    ) return
+    if (this.getNodeKey !== SingleHighDensityRouteSolver.prototype.getNodeKey)
+      return
     let maxZ = Math.max(this.layerCount - 1, this.A.z, this.B.z)
     for (const z of this.availableZ) maxZ = Math.max(maxZ, z)
     const cellCount = this.gridWidth * this.gridHeight * (maxZ + 1)

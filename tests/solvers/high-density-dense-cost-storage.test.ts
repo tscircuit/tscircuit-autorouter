@@ -3,7 +3,10 @@ import type { Node } from "lib/data-structures/SingleRouteCandidatePriorityQueue
 import { SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost } from "lib/solvers/HighDensitySolver/SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost"
 
 type CostStorage = {
-  denseNodeCostTerms: Array<Record<string, unknown> | undefined> | null | undefined
+  denseNodeCostTerms:
+    | Array<Record<string, unknown> | undefined>
+    | null
+    | undefined
   nodeCostTermsByGridKey: Map<number, unknown>
 }
 
@@ -11,7 +14,8 @@ class CustomKeySolver extends SingleHighDensityRouteSolver6_VertHorzLayer_Future
   override getNodeKey(node: Node): number {
     const xIndex = Math.round(node.x / this.cellStep) - this.gridMinXIndex
     const yIndex = Math.round(node.y / this.cellStep) - this.gridMinYIndex
-    const originalKey = (node.z * this.gridHeight + yIndex) * this.gridWidth + xIndex
+    const originalKey =
+      (node.z * this.gridHeight + yIndex) * this.gridWidth + xIndex
     const customKey = -originalKey - 0.5
     return customKey
   }
@@ -26,14 +30,21 @@ test("dense cost slots initialize lazily and retain sparse handling of custom, o
     A: { x: -2, y: 0, z: 0 },
     B: { x: 2, y: 0, z: 0 },
     availableZ: [0, 1],
-    futureConnections: [{
-      connectionName: "future",
-      points: [{ x: -0.5, y: -1, z: 0 }, { x: 0.5, y: 1, z: 1 }],
-    }],
+    futureConnections: [
+      {
+        connectionName: "future",
+        points: [
+          { x: -0.5, y: -1, z: 0 },
+          { x: 0.5, y: 1, z: 1 },
+        ],
+      },
+    ],
   }
   const parent: Node = { x: -0.05, y: 0, z: 0, g: 1, h: 0, f: 0, parent: null }
   const node = { ...parent, x: 0, parent }
-  const solver = new SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost(options)
+  const solver = new SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost(
+    options,
+  )
   const storage = solver as unknown as CostStorage
   expect(storage.denseNodeCostTerms).toBeUndefined()
   solver.setNodeCosts(node)
@@ -47,7 +58,9 @@ test("dense cost slots initialize lazily and retain sparse handling of custom, o
 
   const outside = { ...node, x: 1e6 }
   solver.setNodeCosts(outside)
-  expect(storage.nodeCostTermsByGridKey.has(solver.getNodeKey(outside))).toBe(true)
+  expect(storage.nodeCostTermsByGridKey.has(solver.getNodeKey(outside))).toBe(
+    true,
+  )
   solver.setNodeCosts(node)
   expect(storage.denseNodeCostTerms![solver.getNodeKey(node)]).toBe(firstEntry)
 
@@ -56,8 +69,14 @@ test("dense cost slots initialize lazily and retain sparse handling of custom, o
   custom.setNodeCosts(customNode)
   const customStorage = custom as unknown as CostStorage
   expect(customStorage.denseNodeCostTerms).toBeNull()
-  expect(customStorage.nodeCostTermsByGridKey.has(custom.getNodeKey(customNode))).toBe(true)
-  expect([customNode.g, customNode.h, customNode.f]).toEqual([node.g, node.h, node.f])
+  expect(
+    customStorage.nodeCostTermsByGridKey.has(custom.getNodeKey(customNode)),
+  ).toBe(true)
+  expect([customNode.g, customNode.h, customNode.f]).toEqual([
+    node.g,
+    node.h,
+    node.f,
+  ])
 
   const large = new SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost({
     ...options,
@@ -78,6 +97,10 @@ test("dense cost slots initialize lazily and retain sparse handling of custom, o
     const candidate = { ...node }
     solver.setNodeCosts(candidate)
     expect(storage.nodeCostTermsByGridKey.has(key)).toBe(true)
-    expect([candidate.g, candidate.h, candidate.f]).toEqual([node.g, node.h, node.f])
+    expect([candidate.g, candidate.h, candidate.f]).toEqual([
+      node.g,
+      node.h,
+      node.f,
+    ])
   }
 })
