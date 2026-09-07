@@ -654,6 +654,8 @@ function createPcbPadElements(srj: SimpleRouteJson): AnyCircuitElement[] {
   const pads: AnyCircuitElement[] = []
   const addedSmtPadIds = new Set<string>()
   const addedPlatedHoleIds = new Set<string>()
+  const platedHoleGeometryById = new Map<string, Set<string>>()
+  let reservedPlatedHoleIds: Set<string> | undefined
   const portPositionMap = getPcbPortPositionMap(srj)
   const declaredPcbPortIds = getSrjDeclaredPcbPortIds(srj)
 
@@ -692,9 +694,37 @@ function createPcbPadElements(srj: SimpleRouteJson): AnyCircuitElement[] {
     const isMultiLayerObstacle = Boolean(platedHoleId) || layers.length > 1
 
     if (isMultiLayerObstacle) {
-      const id =
+      const sourceId =
         platedHoleId ?? `pcb_plated_hole_${x.toFixed(3)}_${y.toFixed(3)}`
-      if (addedPlatedHoleIds.has(id)) continue
+      const geometryKey = JSON.stringify([
+        x, y, width, height,
+        Number.isFinite(rotationDegrees) ? rotationDegrees : null,
+        [...layers].sort(),
+      ])
+      let geometries = platedHoleGeometryById.get(sourceId)
+      if (geometries?.has(geometryKey)) continue
+      let id = sourceId
+      if (geometries) {
+        reservedPlatedHoleIds ??= new Set(
+          srj.obstacles.flatMap((candidate): string[] => {
+            const metadata = getCircuitJsonMetadata(candidate)
+            if (!metadata.pcb_plated_hole_id && candidate.layers.length < 2)
+              return []
+            return [
+              metadata.pcb_plated_hole_id ??
+                `pcb_plated_hole_${candidate.center.x.toFixed(3)}_${candidate.center.y.toFixed(3)}`,
+            ]
+          }),
+        )
+        let suffix = 1
+        do {
+          id = `${sourceId}__geometry_${suffix++}`
+        } while (addedPlatedHoleIds.has(id) || reservedPlatedHoleIds.has(id))
+      } else {
+        geometries = new Set<string>()
+        platedHoleGeometryById.set(sourceId, geometries)
+      }
+      geometries.add(geometryKey)
       addedPlatedHoleIds.add(id)
 
       if (
