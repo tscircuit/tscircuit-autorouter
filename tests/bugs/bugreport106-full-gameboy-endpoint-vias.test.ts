@@ -10,7 +10,7 @@ test("Pipeline9 keeps full Game Boy endpoint vias clear of foreign pads", () => 
   const srj = structuredClone(simpleRouteJson) as SimpleRouteJson
   const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(srj, {
     cacheProvider: null,
-    effort: 1,
+    effort: 5,
   })
 
   expect(srj.connections).toHaveLength(145)
@@ -22,10 +22,10 @@ test("Pipeline9 keeps full Game Boy endpoint vias clear of foreign pads", () => 
   expect(solver.error).toBeNull()
   expect(solver.failed).toBeFalse()
   expect(solver.solved).toBeTrue()
-  expect(solver.traceSimplificationSolver).toBeDefined()
+  expect(solver.pipeline9JointDrcRepairSolver).toBeDefined()
   expect(
     hasPipeline9ViaToBoardObstacleConflict({
-      routes: solver.traceSimplificationSolver!.simplifiedHdRoutes,
+      routes: solver.pipeline9JointDrcRepairSolver!.getOutput(),
       boardObstacles: srj.obstacles,
       connMap: solver.connMap,
       layerCount: srj.layerCount,
