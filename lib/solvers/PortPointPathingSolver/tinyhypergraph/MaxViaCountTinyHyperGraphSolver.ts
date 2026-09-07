@@ -4,10 +4,7 @@ import { SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments } from "
 
 const LAYER_CHANGE_PRIORITY_COST = 1_000_000
 
-const countLayerChanges = (
-  candidate: Candidate,
-  portZ: Int32Array,
-): number => {
+const countLayerChanges = (candidate: Candidate, portZ: Int32Array): number => {
   let layerChangeCount = 0
   let currentCandidate: Candidate | undefined = candidate
 

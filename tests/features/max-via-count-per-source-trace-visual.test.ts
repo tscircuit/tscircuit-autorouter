@@ -77,7 +77,7 @@ test("maxViaCount applies to a source trace after its net is merged", (): void =
     ),
     traces: connectedNetTraces,
   }
-  expect(
-    convertSrjToGraphicsObject(focusedSimpleRouteJson),
-  ).toMatchGraphicsSvg(import.meta.path)
+  expect(convertSrjToGraphicsObject(focusedSimpleRouteJson)).toMatchGraphicsSvg(
+    import.meta.path,
+  )
 })

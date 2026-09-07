@@ -566,10 +566,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
           maxViaCountByConnectionName: Object.fromEntries(
             (cms.srjWithPointPairs?.connections ?? [])
               .filter((connection) => connection.maxViaCount !== undefined)
-              .map((connection) => [
-                connection.name,
-                connection.maxViaCount!,
-              ]),
+              .map((connection) => [connection.name, connection.maxViaCount!]),
           ),
         },
       ]

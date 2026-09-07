@@ -371,8 +371,7 @@ export class HighDensitySolver extends BaseSolver {
         const solvedRoutes = this.preserveTerminalPcbPortIds
           ? this.getSolvedRoutesWithTerminalPcbPortIds(this.activeSubSolver)
           : this.activeSubSolver.solvedRoutes
-        const maxViaCountViolation =
-          this.getMaxViaCountViolation(solvedRoutes)
+        const maxViaCountViolation = this.getMaxViaCountViolation(solvedRoutes)
         if (maxViaCountViolation) {
           this.activeSubSolver.solved = false
           this.activeSubSolver.failed = true

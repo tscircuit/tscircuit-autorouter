@@ -45,9 +45,7 @@ type PortfolioIntraNodeSolver =
   | HighDensityA03Solver
 
 /** Coordinates a fitness-scheduled portfolio of intra-node routing solvers. */
-export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolver<
-  PortfolioIntraNodeSolver
-> {
+export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolver<PortfolioIntraNodeSolver> {
   override getSolverName(): string {
     return "PortfolioSingleIntraNodeSolver"
   }
@@ -177,9 +175,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     return true
   }
 
-  override getSupervisedSolverWithBestFitness():
-    | SupervisedSolver<PortfolioIntraNodeSolver>
-    | null {
+  override getSupervisedSolverWithBestFitness(): SupervisedSolver<PortfolioIntraNodeSolver> | null {
     for (const supervisedSolver of this.supervisedSolvers ?? []) {
       if (!supervisedSolver.solver.solved) continue
       this.rejectCandidateForMaxViaCount(supervisedSolver.solver)
