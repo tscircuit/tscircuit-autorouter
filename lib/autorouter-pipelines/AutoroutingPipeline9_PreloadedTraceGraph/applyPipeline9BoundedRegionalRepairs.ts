@@ -63,10 +63,7 @@ export const applyPipeline9BoundedRegionalRepairs = ({
   let currentErrors = Array.isArray(reference) ? reference : reference.errors
   result.initialDrcIssueCount = currentErrors.length
   result.finalDrcIssueCount = currentErrors.length
-  if (
-    currentErrors.length === 0 ||
-    currentErrors.length > MAX_REFERENCE_ISSUES
-  ) {
+  if (currentErrors.length === 0 || currentErrors.length > MAX_REFERENCE_ISSUES) {
     return result
   }
 
@@ -103,12 +100,12 @@ export const applyPipeline9BoundedRegionalRepairs = ({
         }
         const { x, y } = point
         return !attemptedBounds.some(
-            (bounds) =>
-              x >= bounds.minX &&
-              x <= bounds.maxX &&
-              y >= bounds.minY &&
-              y <= bounds.maxY,
-          )
+          (bounds) =>
+            x >= bounds.minX &&
+            x <= bounds.maxX &&
+            y >= bounds.minY &&
+            y <= bounds.maxY,
+        )
       })
     if (!center) break
     const region = extractRepairRegion({
@@ -138,7 +135,9 @@ export const applyPipeline9BoundedRegionalRepairs = ({
     })
     solver.solve()
     if (solver.failed) {
-      throw new Error(`Pipeline9 bounded regional repair failed: ${solver.error}`)
+      throw new Error(
+        `Pipeline9 bounded regional repair failed: ${solver.error}`,
+      )
     }
     const { candidateAttempts, pathSearchNodes } = solver.stats
     if (
@@ -149,7 +148,9 @@ export const applyPipeline9BoundedRegionalRepairs = ({
       pathSearchNodes < 0 ||
       pathSearchNodes > MAX_PATH_SEARCH_NODES_PER_REGION
     ) {
-      throw new Error("Pipeline9 bounded regional repair exceeded its work budget")
+      throw new Error(
+        "Pipeline9 bounded regional repair exceeded its work budget",
+      )
     }
     result.candidateAttemptCount += candidateAttempts
     result.pathSearchNodeCount += pathSearchNodes

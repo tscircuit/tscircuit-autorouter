@@ -18,5 +18,7 @@ test("bounded regional repair clears physical copper without moving its terminal
   expect(result.pathSearchNodeCount).toBeLessThanOrEqual(4 * 120_000)
   expect(result.referenceValidationCount).toBeGreaterThan(1)
   const validation = fixture.drcEvaluator({ traces: [], routes: result.routes })
-  expect(Array.isArray(validation) ? validation : validation.errors).toHaveLength(0)
+  expect(
+    Array.isArray(validation) ? validation : validation.errors,
+  ).toHaveLength(0)
 })

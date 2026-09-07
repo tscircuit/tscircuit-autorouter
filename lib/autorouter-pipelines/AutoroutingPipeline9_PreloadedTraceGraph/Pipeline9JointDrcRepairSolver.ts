@@ -31,6 +31,7 @@ import {
   applyPipeline9ClearancePrecisionRepairs,
   type ClearanceMarginDrcEvaluator,
 } from "./applyPipeline9ClearancePrecisionRepairs"
+import { applyPipeline9BoundedRegionalRepairs } from "./applyPipeline9BoundedRegionalRepairs"
 import { applyPipeline9RegionalB01Repairs } from "./applyPipeline9RegionalB01Repairs"
 import { applyPipeline9TerminalEscapeRelocations } from "./applyPipeline9TerminalEscapeRelocations"
 import { assignUniquePcbTraceIdsToNewTraces } from "./assignUniquePcbTraceIdsToNewTraces"
@@ -1610,7 +1611,17 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         0.15,
       effort: this.params.effort,
     })
-    this.combinedOutput = regionalB01RepairResult.routes
+    const boundedRegionalRepairStartedAt = performance.now()
+    const boundedRegionalRepairResult = shouldRunPostExactPrecisionPass
+      ? applyPipeline9BoundedRegionalRepairs({
+          originalSrj: this.params.originalSrj,
+          routes: regionalB01RepairResult.routes,
+          syntheticConnectionNames: this.syntheticConnectionNames,
+          drcEvaluator: this.cachedReferenceDrcEvaluator!,
+        })
+      : undefined
+    this.combinedOutput =
+      boundedRegionalRepairResult?.routes ?? regionalB01RepairResult.routes
     this.stats = {
       ...this.stats,
       ...this.exactRepairSolver.stats,
@@ -1627,6 +1638,20 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       clearancePrecisionCandidateValidationCount,
       clearancePrecisionReferenceValidationCount,
       clearancePrecisionRepaired,
+      boundedRegionalRepairAttemptedRegionCount:
+        boundedRegionalRepairResult?.attemptedRegionCount ?? 0,
+      boundedRegionalRepairAcceptedRegionCount:
+        boundedRegionalRepairResult?.acceptedRegionCount ?? 0,
+      boundedRegionalRepairCandidateAttemptCount:
+        boundedRegionalRepairResult?.candidateAttemptCount ?? 0,
+      boundedRegionalRepairPathSearchNodeCount:
+        boundedRegionalRepairResult?.pathSearchNodeCount ?? 0,
+      boundedRegionalRepairReferenceValidationCount:
+        boundedRegionalRepairResult?.referenceValidationCount ?? 0,
+      boundedRegionalRepairRepaired:
+        boundedRegionalRepairResult?.repaired ?? false,
+      boundedRegionalRepairTimeMs:
+        performance.now() - boundedRegionalRepairStartedAt,
       regionalB01RepairCandidateCount:
         regionalB01RepairResult.attemptedCandidateCount,
       regionalB01RepairAcceptedCount:

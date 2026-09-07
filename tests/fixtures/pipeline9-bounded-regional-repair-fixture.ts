@@ -23,7 +23,10 @@ export const createBoundedRegionalRepairFixture = (): {
         height: 0.5,
         layers: ["top"],
         connectedTo: ["signal", "start"],
-        circuitJsonMetadata: { pcb_smtpad_id: "start_pad", pcb_port_id: "start" },
+        circuitJsonMetadata: {
+          pcb_smtpad_id: "start_pad",
+          pcb_port_id: "start",
+        },
       },
       {
         type: "rect",
@@ -85,5 +88,10 @@ export const createBoundedRegionalRepairFixture = (): {
       }),
     }) as unknown as ReturnType<DrcEvaluator>
   }
-  return { originalSrj, routes, syntheticConnectionNames: new Set(), drcEvaluator }
+  return {
+    originalSrj,
+    routes,
+    syntheticConnectionNames: new Set(),
+    drcEvaluator,
+  }
 }
