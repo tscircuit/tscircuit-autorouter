@@ -9,7 +9,7 @@ import type { HighDensityRoute } from "lib/types/high-density-types"
 import { convertHdRouteToSimplifiedRoute } from "lib/utils/convertHdRouteToSimplifiedRoute"
 
 test("clearance projection repairs translated and rotated sets of nine physical pairs", (): void => {
-  for (const quarterTurns of [0, 1, 2]) {
+  for (const [quarterTurns, clearance] of [[0, 0.1], [1, 0.15], [2, 0.2]] as const) {
     const transform = (x: number, y: number): { x: number; y: number } => {
       let rotatedX = x
       let rotatedY = y
@@ -41,7 +41,7 @@ test("clearance projection repairs translated and rotated sets of nine physical 
         traceThickness: 0.1,
         viaDiameter: 0.3,
         route: [-1, -0.5, 0.5, 1].map((dx) => ({
-          ...transform(x + dx, y + 0.289),
+          ...transform(x + dx, y + clearance + 0.189),
           z: 0,
         })),
         vias: [],
@@ -52,6 +52,7 @@ test("clearance projection repairs translated and rotated sets of nine physical 
       layerCount: 2,
       minTraceWidth: 0.1,
       minViaDiameter: 0.3,
+      minTraceToPadEdgeClearance: clearance,
       obstacles: routes.flatMap((route) =>
         [route.route[0]!, route.route.at(-1)!].map((point, endpoint) => ({
           type: "rect",
@@ -92,6 +93,7 @@ test("clearance projection repairs translated and rotated sets of nine physical 
         inputSrj: srj,
         srjWithPointPairs: srj,
         routedTraces: traces,
+        drcOptions: { traceClearance: clearance },
       })
     }
     const drcEvaluator: DrcEvaluator = ({ routes: candidate, hdRoutes }) => {
@@ -133,11 +135,11 @@ test("clearance projection repairs translated and rotated sets of nine physical 
     const final = evaluate(result)
     expect(final.errors).toHaveLength(0)
     const physicalGaps = checkViaTraceClearance(final.circuitJson, {
-      minClearance: 0.2,
+      minClearance: clearance + 0.1,
     })
     expect(physicalGaps).toHaveLength(9)
     for (const gap of physicalGaps) {
-      expect(gap.actual_clearance).toBeGreaterThanOrEqual(0.11 - 1e-9)
+      expect(gap.actual_clearance).toBeGreaterThanOrEqual(clearance + 0.01 - 1e-9)
     }
     for (let index = 0; index < routes.length; index++) {
       expect(result[index]!.route[0]).toEqual(routes[index]!.route[0])
