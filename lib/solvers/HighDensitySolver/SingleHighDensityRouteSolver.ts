@@ -401,7 +401,8 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
       for (const viaId of nearbyViaIds) {
         const via = this.obstacleVias[viaId]
         if (
-          pointToSegmentDistance(via, parent, node) < via.radius + traceReach
+          pointToSegmentDistance(via, parent, node) <
+          via.radius + traceReach
         ) {
           return true
         }
