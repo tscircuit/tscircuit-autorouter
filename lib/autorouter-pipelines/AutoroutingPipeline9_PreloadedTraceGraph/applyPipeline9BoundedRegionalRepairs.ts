@@ -35,7 +35,6 @@ type RepairRegionLocation = {
   size: number
 }
 
-const MAX_REFERENCE_ISSUES = 8
 const MAX_REGIONS = 4
 const MAX_CANDIDATE_ATTEMPTS_PER_REGION = 256
 const MAX_PATH_SEARCH_NODES_PER_REGION = 120_000
@@ -94,10 +93,7 @@ export const applyPipeline9BoundedRegionalRepairs = ({
   let currentErrors = Array.isArray(reference) ? reference : reference.errors
   result.initialDrcIssueCount = currentErrors.length
   result.finalDrcIssueCount = currentErrors.length
-  if (
-    currentErrors.length === 0 ||
-    currentErrors.length > MAX_REFERENCE_ISSUES
-  ) {
+  if (currentErrors.length === 0) {
     return result
   }
 

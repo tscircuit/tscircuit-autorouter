@@ -51,7 +51,7 @@ test("clearance margin measures the copper gap beyond checker tolerance", (): vo
     })
     expect(measured).toHaveLength(1)
     expect(measured[0]!.actual_clearance).toBeCloseTo(gap, 10)
-    const errors = getPipeline9ClearanceMarginErrors({
+    const measurement = getPipeline9ClearanceMarginErrors({
       circuitJson,
       originalCircuitJson: circuitJson,
       targets: [
@@ -64,6 +64,11 @@ test("clearance margin measures the copper gap beyond checker tolerance", (): vo
         },
       ],
     })
+    expect(measurement.status).toBe("measured")
+    if (measurement.status !== "measured") {
+      throw new Error("Expected a measurable clearance pair")
+    }
+    const { errors } = measurement
     expect(errors).toHaveLength(gap < 0.11 ? 1 : 0)
     if (gap < 0.11) {
       expect(errors[0]!.actual_clearance).toBeCloseTo(gap, 10)

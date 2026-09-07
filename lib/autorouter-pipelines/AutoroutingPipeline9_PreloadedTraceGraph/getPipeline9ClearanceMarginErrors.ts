@@ -3,7 +3,10 @@ import {
   checkViaTraceClearance,
 } from "@tscircuit/checks"
 import type { AnyCircuitElement } from "circuit-json"
-import { CLEARANCE_PRECISION_MARGIN } from "./applyPipeline9ClearancePrecisionRepairs"
+import {
+  CLEARANCE_PRECISION_MARGIN,
+  type ClearanceMarginMeasurement,
+} from "./applyPipeline9ClearancePrecisionRepairs"
 import type { Pipeline9DrcError } from "./pipeline9JointDrcRepairUtils"
 
 /** Measures the original failing pairs beyond the reference checker's tolerance. */
@@ -15,7 +18,7 @@ export const getPipeline9ClearanceMarginErrors = ({
   circuitJson: AnyCircuitElement[]
   originalCircuitJson: AnyCircuitElement[]
   targets: Pipeline9DrcError[]
-}): Pipeline9DrcError[] => {
+}): ClearanceMarginMeasurement => {
   const traces = new Map(
     circuitJson
       .filter((element) => element.type === "pcb_trace")
@@ -114,7 +117,7 @@ export const getPipeline9ClearanceMarginErrors = ({
       // Opposite-direction transitions at one site have separate converter
       // identities. Reject an ambiguous pair rather than infer its owner event.
       if (matchingTransitions.length !== 1) {
-        return [{ type: "pipeline9_clearance_margin_identity_error" }]
+        return { status: "unsupported-identity" }
       }
       const originalTransitionIndex = matchingTransitions[0]!.index
       const owner = traces.get(originalObstacle.pcb_trace_id)
@@ -130,7 +133,7 @@ export const getPipeline9ClearanceMarginErrors = ({
             segment.to_layer !== originalTransitions[index]!.to_layer,
         )
       ) {
-        return [{ type: "pipeline9_clearance_margin_identity_error" }]
+        return { status: "unsupported-identity" }
       }
       const transition = transitions[originalTransitionIndex]!
       // Global via_N ids can shift when a shared-site move deduplicates vias.
@@ -153,7 +156,7 @@ export const getPipeline9ClearanceMarginErrors = ({
         )
     }
     if (!trace || !obstacle || !("x" in obstacle) || !("y" in obstacle)) {
-      return [{ type: "pipeline9_clearance_margin_identity_error" }]
+      return { status: "unsupported-identity" }
     }
     // Each pair already failed reference DRC on different nets. Measure only
     // those two objects; unrelated nearby copper keeps its original rules.
@@ -192,5 +195,5 @@ export const getPipeline9ClearanceMarginErrors = ({
   }
   // The typed clearance checks omit actual overlaps. The caller must still
   // require complete reference DRC, including overlap and continuity checks.
-  return errors
+  return { status: "measured", errors }
 }

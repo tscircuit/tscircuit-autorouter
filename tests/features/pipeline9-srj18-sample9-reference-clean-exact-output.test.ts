@@ -18,16 +18,13 @@ test("Pipeline9 preserves SRJ18 sample 9's reference-clean exact output", async 
   // Original pad geometry removes the indexed evaluator's false positives.
   expect(Number(repairStats?.finalDrcIssueCount)).toBe(0)
   expect(repairStats).toMatchObject({
-    postExactPrecisionPassAttempted: true,
     postExactReferenceValidationAttempted: true,
-    postExactReferenceValidationSkippedForIndexedIssueCount: false,
     postExactReferenceDrcIssueCount: 0,
     postExactReferenceAccepted: true,
     clearancePrecisionCandidateCount: 0,
     clearancePrecisionCandidateValidationCount: 0,
     clearancePrecisionReferenceValidationCount: 0,
     clearancePrecisionRepaired: false,
-    terminalEscapeSkippedForIndexedIssueCount: false,
     terminalEscapeCandidateCount: 0,
     terminalEscapeAcceptedCount: 0,
     regionalB01RepairAttempted: false,

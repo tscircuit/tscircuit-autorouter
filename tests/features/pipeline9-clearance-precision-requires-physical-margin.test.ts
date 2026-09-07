@@ -120,18 +120,19 @@ test("clearance precision keeps a relaxed-clean candidate private until its phys
     candidateDrcEvaluator: () => ({ errors: [], errorsWithCenters: [] }),
     marginDrcEvaluator: (candidateRoutes, targets, initialRoutes) => {
       const circuitJson = getCircuitJson(candidateRoutes)
-      const errors = getPipeline9ClearanceMarginErrors({
+      const measurement = getPipeline9ClearanceMarginErrors({
         circuitJson,
         originalCircuitJson: getCircuitJson(initialRoutes),
         targets,
       })
       if (
-        errors.length > 0 &&
+        measurement.status === "measured" &&
+        measurement.errors.length > 0 &&
         checkViaTraceClearance(circuitJson, { minClearance: 0.1 }).length === 0
       ) {
         cleanCandidatesWithoutMargin++
       }
-      return errors
+      return measurement
     },
     drcEvaluator: ({ routes: candidateRoutes }) => {
       referenceChecks++

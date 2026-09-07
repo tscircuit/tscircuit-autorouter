@@ -5,7 +5,9 @@ import type { SimpleRouteJson } from "lib/types"
 import type { HighDensityRoute } from "lib/types/high-density-types"
 import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
 
-export const createBoundedRegionalRepairFixture = (): {
+export const createBoundedRegionalRepairFixture = (
+  signalCount = 1,
+): {
   originalSrj: SimpleRouteJson
   routes: HighDensityRoute[]
   syntheticConnectionNames: ReadonlySet<string>
@@ -70,6 +72,48 @@ export const createBoundedRegionalRepairFixture = (): {
       vias: [],
     },
   ]
+  if (signalCount > 1) {
+    const obstacles = originalSrj.obstacles
+    const connection = originalSrj.connections[0]!
+    const route = routes[0]!
+    originalSrj.bounds.maxY = Math.max(8, signalCount)
+    originalSrj.obstacles = []
+    originalSrj.connections = []
+    routes.length = 0
+    for (let index = 0; index < signalCount; index++) {
+      originalSrj.obstacles.push(
+        ...obstacles.map((obstacle) => ({
+          ...obstacle,
+          center: { x: obstacle.center.x, y: index },
+          connectedTo: obstacle.connectedTo.map((id) => `${id}_${index}`),
+          circuitJsonMetadata: {
+            pcb_smtpad_id: `${obstacle.circuitJsonMetadata!.pcb_smtpad_id}_${index}`,
+            ...(obstacle.circuitJsonMetadata!.pcb_port_id
+              ? {
+                  pcb_port_id: `${obstacle.circuitJsonMetadata!.pcb_port_id}_${index}`,
+                }
+              : {}),
+          },
+        })),
+      )
+      originalSrj.connections.push({
+        ...connection,
+        name: `${connection.name}_${index}`,
+        pointsToConnect: connection.pointsToConnect.map((point) => ({
+          ...point,
+          y: index,
+          pointId: `${point.pointId}_${index}`,
+          pcb_port_id: `${point.pcb_port_id}_${index}`,
+        })),
+      })
+      routes.push({
+        ...route,
+        connectionName: `${route.connectionName}_${index}`,
+        route: route.route.map((point) => ({ ...point, y: index })),
+        vias: [],
+      })
+    }
+  }
   const connMap = getConnectivityMapFromSimpleRouteJson(originalSrj)
   const drcEvaluator: DrcEvaluator = ({ routes: candidate, hdRoutes }) => {
     const evaluatedRoutes = candidate ?? hdRoutes

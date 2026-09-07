@@ -39,7 +39,7 @@ test("clearance precision preserves original routes until full reference DRC pas
   const originalRoutes = structuredClone(routes)
   let evaluationCount = 0
   let indexedEvaluationCount = 0
-  const result = applyPipeline9ClearancePrecisionRepairs({
+  const params: Parameters<typeof applyPipeline9ClearancePrecisionRepairs>[0] = {
     srj,
     routes,
     newConnections: srj.connections,
@@ -68,7 +68,7 @@ test("clearance precision preserves original routes until full reference DRC pas
       ]
     },
     candidateDrcEvaluator: () => ({ errors: [], errorsWithCenters: [] }),
-    marginDrcEvaluator: () => [],
+    marginDrcEvaluator: () => ({ status: "measured", errors: [] }),
     drcEvaluator: () => {
       evaluationCount++
       return {
@@ -76,7 +76,8 @@ test("clearance precision preserves original routes until full reference DRC pas
         errorsWithCenters: [],
       }
     },
-  })
+  }
+  const result = applyPipeline9ClearancePrecisionRepairs(params)
   expect(evaluationCount).toBeGreaterThan(0)
   expect(result.repaired).toBeFalse()
   expect(result.routes).toBe(routes)
@@ -86,4 +87,15 @@ test("clearance precision preserves original routes until full reference DRC pas
   expect(result.referenceValidationCount).toBe(evaluationCount)
   expect(result.referenceValidationCount).toBe(1)
   expect(result.attemptedCandidateCount).toBeLessThanOrEqual(24)
+  const unsupported = applyPipeline9ClearancePrecisionRepairs({
+    ...params,
+    marginDrcEvaluator: () => ({ status: "unsupported-identity" }),
+    drcEvaluator: () => {
+      throw new Error("An unmeasurable candidate must not reach publication")
+    },
+  })
+  expect(unsupported.repaired).toBeFalse()
+  expect(unsupported.routes).toBe(routes)
+  expect(unsupported.referenceValidationCount).toBe(0)
+  expect(routes).toEqual(originalRoutes)
 })

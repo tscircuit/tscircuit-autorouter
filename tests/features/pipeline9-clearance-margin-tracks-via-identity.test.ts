@@ -136,11 +136,16 @@ test("clearance margin follows the owner's via transition after shared-site dedu
       actual_clearance: 0.089,
     },
   ]
-  const errors = getPipeline9ClearanceMarginErrors({
+  const measurement = getPipeline9ClearanceMarginErrors({
     circuitJson,
     originalCircuitJson,
     targets,
   })
+  expect(measurement.status).toBe("measured")
+  if (measurement.status !== "measured") {
+    throw new Error("Expected the moved via to retain its identity")
+  }
+  const { errors } = measurement
   expect(errors).toHaveLength(1)
   expect(errors[0]!.actual_clearance).toBeCloseTo(0.0995, 10)
   expect(errors[0]!.pcb_via_id).toBe("via_2")
@@ -161,7 +166,7 @@ test("clearance margin follows the owner's via transition after shared-site dedu
       originalCircuitJson,
       targets,
     }),
-  ).toHaveLength(0)
+  ).toEqual({ status: "measured", errors: [] })
 
   // Opposite-direction events can retain a larger copper diameter at the same
   // site. Measuring the first converted via would overstate this clearance.
@@ -175,11 +180,16 @@ test("clearance margin follows the owner's via transition after shared-site dedu
     pcb_trace_id: "later_owner_0",
     outer_diameter: 0.36,
   })
-  const largerViaErrors = getPipeline9ClearanceMarginErrors({
+  const largerViaMeasurement = getPipeline9ClearanceMarginErrors({
     circuitJson: clearedCircuitJson,
     originalCircuitJson,
     targets,
   })
+  expect(largerViaMeasurement.status).toBe("measured")
+  if (largerViaMeasurement.status !== "measured") {
+    throw new Error("Expected a measurable shared via site")
+  }
+  const largerViaErrors = largerViaMeasurement.errors
   expect(largerViaErrors).toHaveLength(1)
   expect(largerViaErrors[0]!.actual_clearance).toBeCloseTo(0.082, 10)
   expect(largerViaErrors[0]!.pcb_via_id).toBe("larger_reverse_via")
@@ -197,5 +207,5 @@ test("clearance margin follows the owner's via transition after shared-site dedu
       originalCircuitJson,
       targets,
     }),
-  ).toEqual([{ type: "pipeline9_clearance_margin_identity_error" }])
+  ).toEqual({ status: "unsupported-identity" })
 })
