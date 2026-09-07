@@ -15,7 +15,7 @@ test("Pipeline9 keeps full Game Boy endpoint vias clear of foreign pads", () => 
 
   expect(srj.connections).toHaveLength(145)
   expect(srj.obstacles).toHaveLength(675)
-  expect(srj.traces).toHaveLength(0)
+  expect(srj.traces ?? []).toHaveLength(0)
 
   solver.solve()
 
