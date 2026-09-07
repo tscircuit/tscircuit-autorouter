@@ -11,9 +11,6 @@ const srj = bugReport.simple_route_json as SimpleRouteJson
 test("bugreport18-1b2d06.json", () => {
   const solver = new AutoroutingPipelineSolver(srj)
   solver.solve()
-  expect(getLastStepSvg(solver.visualize())).toMatchSvgSnapshot(
-    import.meta.path,
-  )
 
   const simplifiedTraces = solver.getOutputSimplifiedPcbTraces()
   const viaCount = simplifiedTraces
@@ -21,4 +18,7 @@ test("bugreport18-1b2d06.json", () => {
     .filter((segment) => segment.route_type === "via").length
 
   expect(viaCount).toBe(0)
+  expect(getLastStepSvg(solver.visualize())).toMatchSvgSnapshot(
+    import.meta.path,
+  )
 })

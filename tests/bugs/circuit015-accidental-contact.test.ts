@@ -50,8 +50,8 @@ test(
       circles: errorCircles,
     })
 
-    expect(finalViz).toMatchGraphicsSvg(import.meta.path)
     expect(accidentalContacts.length).toBe(0)
+    expect(finalViz).toMatchGraphicsSvg(import.meta.path)
   },
   { timeout: 120_000 },
 )

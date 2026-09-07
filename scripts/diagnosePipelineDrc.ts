@@ -1,4 +1,4 @@
-import { mkdir, writeFile } from "node:fs/promises"
+import { mkdir, readFile, writeFile } from "node:fs/promises"
 import path from "node:path"
 import { AutoroutingPipelineSolver7_MultiGraph } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/AutoroutingPipelineSolver7_MultiGraph"
 import { convertPipeline7HdRoutesToSimplifiedPcbTraces } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/convertPipeline7HdRoutesToSimplifiedPcbTraces"
@@ -13,7 +13,8 @@ import type {
   HighDensityRoute,
   NodeWithPortPoints,
 } from "lib/types/high-density-types"
-import type { SimplifiedPcbTrace } from "lib/types/srj-types"
+import type { SimpleRouteJson, SimplifiedPcbTrace } from "lib/types/srj-types"
+import { getBenchmarkSolverOptions } from "./benchmark/benchmark-run-task"
 import {
   loadScenarioBySampleNumber,
   parseDatasetName,
@@ -186,26 +187,45 @@ const writeStage = async (
 }
 
 const diagnosePipelineDrc = async (): Promise<void> => {
-  const [datasetArg, sampleArg, pipelineArg, outputDir] = process.argv.slice(2)
+  const [datasetArg, sampleArg, pipelineArg, outputDir, fixturePath] =
+    process.argv.slice(2)
   const dataset = parseDatasetName(datasetArg)
   const sample = Number(sampleArg)
   if (
-    !dataset ||
+    (!dataset && !(datasetArg === "fixture" && fixturePath)) ||
+    (dataset && fixturePath) ||
     !Number.isInteger(sample) ||
     sample < 1 ||
     (pipelineArg !== "7" && pipelineArg !== "9") ||
     !outputDir
   ) {
     throw new Error(
-      "Usage: bun scripts/diagnosePipelineDrc.ts DATASET SAMPLE 7|9 OUTPUT_DIR",
+      "Usage: bun scripts/diagnosePipelineDrc.ts DATASET|fixture SAMPLE 7|9 OUTPUT_DIR [BUG_REPORT_JSON]",
     )
   }
   await mkdir(outputDir, { recursive: true })
-  const { scenario } = await loadScenarioBySampleNumber(dataset, sample)
+  let scenario: SimpleRouteJson
+  if (dataset) {
+    scenario = (await loadScenarioBySampleNumber(dataset, sample)).scenario
+  } else if (fixturePath) {
+    const report: { simple_route_json?: SimpleRouteJson } = JSON.parse(
+      await readFile(fixturePath, "utf8"),
+    )
+    if (!report.simple_route_json) {
+      throw new Error(`Missing simple_route_json in fixture "${fixturePath}"`)
+    }
+    scenario = report.simple_route_json
+  } else {
+    throw new Error("Diagnostic input source was not resolved")
+  }
+  const scenarioOptions = getBenchmarkSolverOptions(scenario)
   const pipeline: Pipeline =
     pipelineArg === "9"
-      ? new AutoroutingPipelineSolver9_PreloadedTraceGraph(scenario)
-      : new AutoroutingPipelineSolver7_MultiGraph(scenario)
+      ? new AutoroutingPipelineSolver9_PreloadedTraceGraph(
+          scenario,
+          scenarioOptions,
+        )
+      : new AutoroutingPipelineSolver7_MultiGraph(scenario, scenarioOptions)
   await writeFile(
     path.join(outputDir, "scenario.json"),
     JSON.stringify(scenario),
@@ -325,7 +345,13 @@ const diagnosePipelineDrc = async (): Promise<void> => {
   )
   await writeFile(
     path.join(outputDir, "summary.json"),
-    JSON.stringify({ dataset, sample, pipeline: pipelineArg, summaries }),
+    JSON.stringify({
+      dataset: datasetArg,
+      sample,
+      fixturePath,
+      pipeline: pipelineArg,
+      summaries,
+    }),
   )
 }
 

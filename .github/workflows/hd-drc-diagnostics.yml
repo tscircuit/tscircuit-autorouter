@@ -21,16 +21,43 @@ jobs:
       fail-fast: false
       matrix:
         include:
+          - { dataset: srj18, sample: 2, pipeline: 9 }
           - { dataset: srj18, sample: 10, pipeline: 9 }
+          - { dataset: srj18, sample: 13, pipeline: 9 }
+          - { dataset: srj19, sample: 21, pipeline: 9 }
+          - { dataset: srj19, sample: 37, pipeline: 9 }
+          - { dataset: srj19, sample: 40, pipeline: 9 }
+          - { dataset: srj19, sample: 42, pipeline: 9 }
+          - { dataset: srj19, sample: 45, pipeline: 9 }
           - { dataset: srj19, sample: 49, pipeline: 9 }
           - { dataset: srj19, sample: 22, pipeline: 9 }
           - { dataset: srj19, sample: 32, pipeline: 9 }
           - { dataset: srj19, sample: 56, pipeline: 9 }
           - { dataset: srj19, sample: 98, pipeline: 9 }
           - { dataset: srj19, sample: 104, pipeline: 9 }
+          - { dataset: srj19, sample: 83, pipeline: 9 }
+          - { dataset: srj19, sample: 86, pipeline: 9 }
+          - { dataset: srj19, sample: 91, pipeline: 9 }
+          - { dataset: srj19, sample: 97, pipeline: 9 }
+          - { dataset: srj19, sample: 105, pipeline: 9 }
+          - { dataset: srj19, sample: 118, pipeline: 9 }
+          - { dataset: srj19, sample: 164, pipeline: 9 }
+          - { dataset: srj19, sample: 165, pipeline: 9 }
           - { dataset: srj20, sample: 3, pipeline: 9 }
           - { dataset: srj20, sample: 4, pipeline: 9 }
+          - { dataset: srj20, sample: 6, pipeline: 9 }
+          - { dataset: srj20, sample: 11, pipeline: 9 }
+          - { dataset: srj20, sample: 12, pipeline: 9 }
+          - { dataset: srj20, sample: 43, pipeline: 9 }
+          - { dataset: srj20, sample: 53, pipeline: 9 }
+          - { dataset: srj20, sample: 80, pipeline: 9 }
+          - { dataset: srj20, sample: 81, pipeline: 9 }
           - { dataset: srj20, sample: 111, pipeline: 9 }
+          - { dataset: srj20, sample: 115, pipeline: 9 }
+          - { dataset: srj20, sample: 116, pipeline: 9 }
+          - { dataset: srj20, sample: 168, pipeline: 9 }
+          - { dataset: srj20, sample: 169, pipeline: 9 }
+          - { dataset: srj20, sample: 191, pipeline: 9 }
           - { dataset: srj20, sample: 55, pipeline: 9 }
           - { dataset: srj20, sample: 140, pipeline: 9 }
           - { dataset: srj21, sample: 1, pipeline: 9 }
@@ -40,6 +67,14 @@ jobs:
           - { dataset: srj23, sample: 49, pipeline: 9 }
           - { dataset: srj23, sample: 72, pipeline: 9 }
           - { dataset: srj20, sample: 169, pipeline: 7 }
+          - dataset: fixture
+            sample: 77
+            pipeline: 7
+            fixturePath: fixtures/bug-reports/bugreport77-07f6a7/bugreport77-07f6a7.json
+          - dataset: fixture
+            sample: 94
+            pipeline: 9
+            fixturePath: fixtures/bug-reports/bugreport94-56fa2e/bugreport94-56fa2e.json
     steps:
       - name: Checkout PR head
         uses: actions/checkout@v4
@@ -75,12 +110,12 @@ jobs:
       # benchmark commands and their equal main/PR budgets remain unchanged.
       - name: Diagnose paired main
         working-directory: diagnostic-main
-        run: bun scripts/diagnosePipelineDrc.ts ${{ matrix.dataset }} ${{ matrix.sample }} ${{ matrix.pipeline }} ../diagnostic-results/main
+        run: bun scripts/diagnosePipelineDrc.ts ${{ matrix.dataset }} ${{ matrix.sample }} ${{ matrix.pipeline }} ../diagnostic-results/main ${{ matrix.fixturePath }}
 
       - name: Diagnose PR head
         if: success() || failure()
         working-directory: diagnostic-pr
-        run: bun scripts/diagnosePipelineDrc.ts ${{ matrix.dataset }} ${{ matrix.sample }} ${{ matrix.pipeline }} ../diagnostic-results/pr
+        run: bun scripts/diagnosePipelineDrc.ts ${{ matrix.dataset }} ${{ matrix.sample }} ${{ matrix.pipeline }} ../diagnostic-results/pr ${{ matrix.fixturePath }}
 
       - name: Record exact revisions
         if: always()

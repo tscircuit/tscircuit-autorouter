@@ -38,7 +38,16 @@ jobs:
 
       - name: Run focused copper-preserving path tests
         if: matrix.node == 1
-        run: bun test tests/stitch-solver/endpoint-path*.test.ts tests/solvers/simplified-path-original-advance*.test.ts --timeout 300000
+        run: >-
+          bun test tests/stitch-solver/endpoint-path*.test.ts
+          tests/solvers/simplified-path-original-advance*.test.ts
+          tests/solvers/simplified-path-actual-*.test.ts
+          tests/solvers/simplified-path-thick-peer-query.test.ts
+          tests/solvers/simplified-path-requested-pad-clearance.test.ts
+          tests/solvers/multi-head-polyline-trace-width.test.ts
+          tests/solvers/portfolio-multi-head-trace-width.test.ts
+          tests/solvers/portfolio-trace-width-cache-schema.test.ts
+          --timeout 300000
 
       # Replaces `npm install -g @tscircuit/bun-test-plan && bun-test-plan`.
       # Distributes by recorded runtime instead of alphabetical round-robin,
