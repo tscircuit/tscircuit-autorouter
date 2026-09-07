@@ -13,12 +13,16 @@ class GridOnlyPortfolio extends PortfolioSingleIntraNodeSolver {
 }
 
 class NoClosedFormPortfolio extends PortfolioSingleIntraNodeSolver {
-  override getHyperParameterDefs(): ReturnType<PortfolioSingleIntraNodeSolver["getHyperParameterDefs"]> {
-    return super.getHyperParameterDefs().map((definition) =>
-      definition.name === "closedFormSingleTrace"
-        ? { ...definition, possibleValues: [] }
-        : definition,
-    )
+  override getHyperParameterDefs(): ReturnType<
+    PortfolioSingleIntraNodeSolver["getHyperParameterDefs"]
+  > {
+    return super
+      .getHyperParameterDefs()
+      .map((definition) =>
+        definition.name === "closedFormSingleTrace"
+          ? { ...definition, possibleValues: [] }
+          : definition,
+      )
   }
 }
 
@@ -40,10 +44,18 @@ test("constructor preflight respects customized portfolio definitions", () => {
     const solver = new Solver({ nodeWithPortPoints })
     solver.initializeSolvers()
 
-    expect(solver.supervisedSolvers!.map(({ hyperParameters }) => hyperParameters))
-      .toEqual(eagerSolver.supervisedSolvers!.map(({ hyperParameters }) => hyperParameters))
-    expect(solver.supervisedSolvers!.some(({ solver }) => solver.solved)).toBe(false)
-    expect(solver.supervisedSolvers!.every(({ solver }) => solver.iterations === 0))
-      .toBe(true)
+    expect(
+      solver.supervisedSolvers!.map(({ hyperParameters }) => hyperParameters),
+    ).toEqual(
+      eagerSolver.supervisedSolvers!.map(
+        ({ hyperParameters }) => hyperParameters,
+      ),
+    )
+    expect(solver.supervisedSolvers!.some(({ solver }) => solver.solved)).toBe(
+      false,
+    )
+    expect(
+      solver.supervisedSolvers!.every(({ solver }) => solver.iterations === 0),
+    ).toBe(true)
   }
 })

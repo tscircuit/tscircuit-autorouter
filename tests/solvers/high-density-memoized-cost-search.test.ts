@@ -12,8 +12,12 @@ class UncachedFutureCostSolver extends SingleHighDensityRouteSolver6_VertHorzLay
     const dist = Math.sqrt(dx ** 2 + dy ** 2)
     const isEvenLayer = node.z % 2 === 0
     const misalignedDist = !this.FLIP_TRACE_ALIGNMENT_DIRECTION
-      ? isEvenLayer ? dy : dx
-      : isEvenLayer ? dx : dy
+      ? isEvenLayer
+        ? dy
+        : dx
+      : isEvenLayer
+        ? dx
+        : dy
     const baseG =
       (node.parent?.g ?? 0) +
       (node.z === node.parent?.z ? 0 : this.viaPenaltyDistance) +
@@ -75,7 +79,10 @@ test("memoized costs preserve full searches across exact starts, bounds and laye
         connectionName: "exact-start-obstacle",
         traceThickness: 0.15,
         viaDiameter: 0.3,
-        route: [{ x: -1.42, y: -1.7, z: 0 }, { x: -1.42, y: 1.7, z: 0 }],
+        route: [
+          { x: -1.42, y: -1.7, z: 0 },
+          { x: -1.42, y: 1.7, z: 0 },
+        ],
         vias: [],
       })
     }
@@ -84,9 +91,10 @@ test("memoized costs preserve full searches across exact starts, bounds and laye
       obstacleRoutes,
       minDistBetweenEnteringPoints: 0.15,
       bounds,
-      A: sample % 8 === 0
-        ? { x: -1.113, y: -0.737, z: 0 }
-        : { x: bounds.minX, y: -0.753 + random() * 1.5, z: 0 },
+      A:
+        sample % 8 === 0
+          ? { x: -1.113, y: -0.737, z: 0 }
+          : { x: bounds.minX, y: -0.753 + random() * 1.5, z: 0 },
       B: { x: bounds.maxX, y: -0.731 + random() * 1.5, z: sample % layerCount },
       layerCount,
       availableZ: Array.from({ length: layerCount }, (_, z) => z),
@@ -97,15 +105,23 @@ test("memoized costs preserve full searches across exact starts, bounds and laye
       futureConnections: [
         {
           connectionName: "future-a",
-          points: [{ x: 0, y: bounds.minY, z: 0 }, { x: 0, y: bounds.maxY, z: 1 }],
+          points: [
+            { x: 0, y: bounds.minY, z: 0 },
+            { x: 0, y: bounds.maxY, z: 1 },
+          ],
         },
         {
           connectionName: "future-b",
-          points: [{ x: -0.41, y: -1, z: 0 }, { x: 0.73, y: 1, z: layerCount - 1 }],
+          points: [
+            { x: -0.41, y: -1, z: 0 },
+            { x: 0.73, y: 1, z: layerCount - 1 },
+          ],
         },
       ],
     }
-    const memoized = new SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost(opts)
+    const memoized = new SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost(
+      opts,
+    )
     const reference = new UncachedFutureCostSolver(opts)
     if (memoized.candidates.peek()!.parent === null) {
       exactStartCases++
@@ -113,16 +129,23 @@ test("memoized costs preserve full searches across exact starts, bounds and laye
       expect(memoized.candidates.peek()!.y).toBe(opts.A.y)
     }
     const memoizedPenalty = memoized.getFutureConnectionPenalty.bind(memoized)
-    const referencePenalty = reference.getFutureConnectionPenalty.bind(reference)
+    const referencePenalty =
+      reference.getFutureConnectionPenalty.bind(reference)
     let sampleMemoizedCalculations = 0
     let sampleReferenceCalculations = 0
-    memoized.getFutureConnectionPenalty = (node: Node, isVia: boolean): number => {
+    memoized.getFutureConnectionPenalty = (
+      node: Node,
+      isVia: boolean,
+    ): number => {
       sampleMemoizedCalculations++
       const penalty = memoizedPenalty(node, isVia)
       memoizedCalculations++
       return penalty
     }
-    reference.getFutureConnectionPenalty = (node: Node, isVia: boolean): number => {
+    reference.getFutureConnectionPenalty = (
+      node: Node,
+      isVia: boolean,
+    ): number => {
       sampleReferenceCalculations++
       const penalty = referencePenalty(node, isVia)
       referenceCalculations++

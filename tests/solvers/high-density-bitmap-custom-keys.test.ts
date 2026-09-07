@@ -22,10 +22,15 @@ test("bounded explored storage handles custom key functions and very large grids
     A: { x: -2, y: 0, z: 0 },
     B: { x: 2, y: 0, z: 1 },
     availableZ: [0, 1],
-    futureConnections: [{
-      connectionName: "future",
-      points: [{ x: 0, y: -2, z: 0 }, { x: 0, y: 2, z: 1 }],
-    }],
+    futureConnections: [
+      {
+        connectionName: "future",
+        points: [
+          { x: 0, y: -2, z: 0 },
+          { x: 0, y: 2, z: 1 },
+        ],
+      },
+    ],
   }
   const custom = new CustomKeySolver(opts)
   const nativeSet = new CustomKeySolver(opts)
@@ -56,7 +61,9 @@ test("bounded explored storage handles custom key functions and very large grids
     minDistBetweenEnteringPoints: 0,
     bounds: { minX: -500, maxX: 500, minY: -500, maxY: 500 },
   })
-  const storage = large.exploredNodes as Set<number> & { bitmap: Uint8Array | null }
+  const storage = large.exploredNodes as Set<number> & {
+    bitmap: Uint8Array | null
+  }
   expect(storage.bitmap).toBeNull()
   const key = large.getNodeKey(parent)
   storage.add(key)

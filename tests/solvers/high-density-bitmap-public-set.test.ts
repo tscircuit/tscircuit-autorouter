@@ -53,16 +53,29 @@ test("explored nodes retain public Set mutation and iteration behavior", () => {
   for (const key of keys) expect(explored.has(key)).toBe(false)
 
   const parent: Node = { x: 0, y: 0, z: 0, g: 0, h: 0, f: 0, parent: null }
-  const blockedKey = solver.getNodeKey({ ...parent, x: solver.cellStep, parent })
+  const blockedKey = solver.getNodeKey({
+    ...parent,
+    x: solver.cellStep,
+    parent,
+  })
   explored.add(blockedKey)
-  expect(solver.getNeighbors(parent).some((node) => solver.getNodeKey(node) === blockedKey))
-    .toBe(false)
+  expect(
+    solver
+      .getNeighbors(parent)
+      .some((node) => solver.getNodeKey(node) === blockedKey),
+  ).toBe(false)
   explored.delete(blockedKey)
-  expect(solver.getNeighbors(parent).some((node) => solver.getNodeKey(node) === blockedKey))
-    .toBe(true)
+  expect(
+    solver
+      .getNeighbors(parent)
+      .some((node) => solver.getNodeKey(node) === blockedKey),
+  ).toBe(true)
   const replacement = new Set([blockedKey])
   solver.exploredNodes = replacement
   expect(solver.exploredNodes).toBe(replacement)
-  expect(solver.getNeighbors(parent).some((node) => solver.getNodeKey(node) === blockedKey))
-    .toBe(false)
+  expect(
+    solver
+      .getNeighbors(parent)
+      .some((node) => solver.getNodeKey(node) === blockedKey),
+  ).toBe(false)
 })

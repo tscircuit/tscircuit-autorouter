@@ -21,10 +21,19 @@ test("search candidates retain the original portfolio order without advancing", 
   const solver = new PortfolioSingleIntraNodeSolver(params)
   solver.initializeSolvers()
 
-  expect(solver.supervisedSolvers!.map(({ hyperParameters }) => hyperParameters))
-    .toEqual(eagerSolver.supervisedSolvers!.map(({ hyperParameters }) => hyperParameters))
-  expect(solver.supervisedSolvers!.map(({ solver }) => solver.getSolverName()))
-    .toEqual(eagerSolver.supervisedSolvers!.map(({ solver }) => solver.getSolverName()))
-  expect(solver.supervisedSolvers!.every(({ solver }) => solver.iterations === 0))
-    .toBe(true)
+  expect(
+    solver.supervisedSolvers!.map(({ hyperParameters }) => hyperParameters),
+  ).toEqual(
+    eagerSolver.supervisedSolvers!.map(
+      ({ hyperParameters }) => hyperParameters,
+    ),
+  )
+  expect(
+    solver.supervisedSolvers!.map(({ solver }) => solver.getSolverName()),
+  ).toEqual(
+    eagerSolver.supervisedSolvers!.map(({ solver }) => solver.getSolverName()),
+  )
+  expect(
+    solver.supervisedSolvers!.every(({ solver }) => solver.iterations === 0),
+  ).toBe(true)
 })

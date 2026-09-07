@@ -11,11 +11,13 @@ test("serialized cache keys preserve hyperparameter order and non-finite distinc
     height: 2,
     availableZ: [0, 1],
     portPoints: [
-      { connectionName: "a:[]\"undefined", x: -1, y: 0, z: 0 },
-      { connectionName: "a:[]\"undefined", x: 1, y: 0, z: 0 },
+      { connectionName: 'a:[]"undefined', x: -1, y: 0, z: 0 },
+      { connectionName: 'a:[]"undefined', x: 1, y: 0, z: 0 },
     ],
   }
-  const getKey = (hyperParameters: Partial<HighDensityHyperParameters>): string => {
+  const getKey = (
+    hyperParameters: Partial<HighDensityHyperParameters>,
+  ): string => {
     const solver = new CachedIntraNodeRouteSolver({
       nodeWithPortPoints: node,
       hyperParameters,
@@ -33,5 +35,7 @@ test("serialized cache keys preserve hyperparameter order and non-finite distinc
     (ITERATION_PENALTY) => getKey({ ITERATION_PENALTY }),
   )
   expect(new Set(keys).size).toBe(keys.length)
-  expect(keys.every((key) => /^intranode-solver:[a-f0-9]{40}$/.test(key))).toBe(true)
+  expect(keys.every((key) => /^intranode-solver:[a-f0-9]{40}$/.test(key))).toBe(
+    true,
+  )
 })

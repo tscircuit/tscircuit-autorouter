@@ -4,7 +4,11 @@ import { SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost } from "lib/solv
 import type { HighDensityIntraNodeRoute } from "lib/types/high-density-types"
 
 class NativeSetReferenceSolver extends SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost {
-  constructor(opts: ConstructorParameters<typeof SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost>[0]) {
+  constructor(
+    opts: ConstructorParameters<
+      typeof SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost
+    >[0],
+  ) {
     super(opts)
     const originalEntries = [...this.exploredNodes]
     this.exploredNodes = new Set(originalEntries)
@@ -37,7 +41,10 @@ test("bitmap membership and delayed allocation preserve native Set searches", ()
           connectionName: `obstacle-${index}`,
           traceThickness: 0.15,
           viaDiameter: 0.3,
-          route: [{ x, y, z }, { x: x + random() - 0.5, y: y + random() - 0.5, z }],
+          route: [
+            { x, y, z },
+            { x: x + random() - 0.5, y: y + random() - 0.5, z },
+          ],
           vias: index === 0 ? [{ x, y }] : [],
         }
       },
@@ -46,18 +53,30 @@ test("bitmap membership and delayed allocation preserve native Set searches", ()
       connectionName: "route",
       obstacleRoutes,
       minDistBetweenEnteringPoints: 0.15,
-      bounds: { minX: -2 + jitter, maxX: 2.013, minY: -2.017, maxY: 2.007 - jitter },
+      bounds: {
+        minX: -2 + jitter,
+        maxX: 2.013,
+        minY: -2.017,
+        maxY: 2.007 - jitter,
+      },
       A: { x: -2 + jitter, y: -0.751 + random() * 1.5, z: 0 },
       B: { x: 2.013, y: -0.747 + random() * 1.5, z: sample % layerCount },
       availableZ: Array.from({ length: layerCount }, (_, z) => z),
       layerCount,
       hyperParameters: { CELL_SIZE_FACTOR: sample % 2 === 0 ? 0.5 : 1 },
-      futureConnections: [{
-        connectionName: "future",
-        points: [{ x: -0.3, y: -2.017, z: 0 }, { x: 0.7, y: 2.007 - jitter, z: layerCount - 1 }],
-      }],
+      futureConnections: [
+        {
+          connectionName: "future",
+          points: [
+            { x: -0.3, y: -2.017, z: 0 },
+            { x: 0.7, y: 2.007 - jitter, z: layerCount - 1 },
+          ],
+        },
+      ],
     }
-    const bitmap = new SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost(opts)
+    const bitmap = new SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost(
+      opts,
+    )
     const nativeSet = new NativeSetReferenceSolver(opts)
     bitmap.solve()
     nativeSet.solve()

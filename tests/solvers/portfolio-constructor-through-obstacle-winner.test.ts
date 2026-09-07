@@ -16,14 +16,16 @@ test("the first constructor winner keeps priority without creating search candid
       { x: 0.2, y: 0, z: 1, connectionName: "net1" },
     ],
   }
-  const obstacles: Obstacle[] = [{
-    type: "rect",
-    center: { x: 0, y: 0 },
-    width: 1,
-    height: 1,
-    layers: ["top", "bottom"],
-    connectedTo: ["net1"],
-  }]
+  const obstacles: Obstacle[] = [
+    {
+      type: "rect",
+      center: { x: 0, y: 0 },
+      width: 1,
+      height: 1,
+      layers: ["top", "bottom"],
+      connectedTo: ["net1"],
+    },
+  ]
   const params = { nodeWithPortPoints, obstacles, layerCount: 2 }
   const eagerSolver = new PortfolioSingleIntraNodeSolver(params)
   HyperParameterSupervisorSolver.prototype.initializeSolvers.call(eagerSolver)

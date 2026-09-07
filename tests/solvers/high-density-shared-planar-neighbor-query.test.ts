@@ -9,7 +9,9 @@ class IndividualQuerySolver extends SingleHighDensityRouteSolver6_VertHorzLayer_
     node: Node,
     margin?: number,
     isVia?: boolean,
-    query?: Parameters<SingleHighDensityRouteSolver["isNodeTooCloseToObstacle"]>[3],
+    query?: Parameters<
+      SingleHighDensityRouteSolver["isNodeTooCloseToObstacle"]
+    >[3],
   ): boolean {
     return super.isNodeTooCloseToObstacle(
       node,
@@ -21,7 +23,9 @@ class IndividualQuerySolver extends SingleHighDensityRouteSolver6_VertHorzLayer_
 
   override doesPathToParentIntersectObstacle(
     node: Node,
-    query?: Parameters<SingleHighDensityRouteSolver["doesPathToParentIntersectObstacle"]>[1],
+    query?: Parameters<
+      SingleHighDensityRouteSolver["doesPathToParentIntersectObstacle"]
+    >[1],
   ): boolean {
     return super.doesPathToParentIntersectObstacle(
       node,
@@ -75,7 +79,9 @@ test("sharing planar neighbor queries preserves the complete search and queries 
         },
       ],
     }
-    const shared = new SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost(opts)
+    const shared = new SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost(
+      opts,
+    )
     const individual = new IndividualQuerySolver(opts)
     shared.solve()
     individual.solve()
@@ -106,13 +112,18 @@ test("sharing planar neighbor queries preserves the complete search and queries 
     A: { x: -2, y: 0, z: 0 },
     B: { x: 2, y: 0, z: 0 },
     availableZ: [0],
-    obstacleRoutes: [{
-      connectionName: "obstacle",
-      traceThickness: 0.15,
-      viaDiameter: 0.3,
-      route: [{ x: -1, y: 1, z: 0 }, { x: 1, y: 1, z: 0 }],
-      vias: [],
-    }],
+    obstacleRoutes: [
+      {
+        connectionName: "obstacle",
+        traceThickness: 0.15,
+        viaDiameter: 0.3,
+        route: [
+          { x: -1, y: 1, z: 0 },
+          { x: 1, y: 1, z: 0 },
+        ],
+        vias: [],
+      },
+    ],
   })
   const index = solver.obstacleSegmentIndexByLayer.get(0)!
   const originalSearch = index.search.bind(index)
@@ -122,7 +133,13 @@ test("sharing planar neighbor queries preserves the complete search and queries 
     return originalSearch(...args)
   }
   const neighbors = solver.getNeighbors({
-    x: 0, y: 0, z: 0, g: 0, h: 0, f: 0, parent: null,
+    x: 0,
+    y: 0,
+    z: 0,
+    g: 0,
+    h: 0,
+    f: 0,
+    parent: null,
   })
   expect(neighbors).toHaveLength(8)
   expect(searches).toBe(1)

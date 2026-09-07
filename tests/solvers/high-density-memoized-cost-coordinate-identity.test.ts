@@ -11,10 +11,15 @@ test("cost memoization distinguishes exact coordinates and planar versus via arr
     A: { x: -2, y: 0, z: 0 },
     B: { x: 2, y: 0, z: 0 },
     availableZ: [0, 1, 2, 3],
-    futureConnections: [{
-      connectionName: "future",
-      points: [{ x: 0.1, y: 0.1, z: 0 }, { x: 0.2, y: 0.2, z: 1 }],
-    }],
+    futureConnections: [
+      {
+        connectionName: "future",
+        points: [
+          { x: 0.1, y: 0.1, z: 0 },
+          { x: 0.2, y: 0.2, z: 1 },
+        ],
+      },
+    ],
   })
   const getPenalty = solver.getFutureConnectionPenalty.bind(solver)
   let calculations = 0

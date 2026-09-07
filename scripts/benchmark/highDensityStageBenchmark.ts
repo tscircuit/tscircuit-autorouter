@@ -114,24 +114,42 @@ const capture = async (outputPath: string): Promise<void> => {
   let previousPhase = ""
   while (pipeline.getCurrentPhase() !== "highDensityRouteSolver") {
     if (pipeline.solved || pipeline.failed) {
-      throw new Error(`Capture failed at ${pipeline.getCurrentPhase()}: ${pipeline.error}`)
+      throw new Error(
+        `Capture failed at ${pipeline.getCurrentPhase()}: ${pipeline.error}`,
+      )
     }
     if (pipeline.getCurrentPhase() !== previousPhase) {
       previousPhase = pipeline.getCurrentPhase()
-      console.log(JSON.stringify({ sample, phase: previousPhase, elapsedTimeMs: performance.now() - startedAt }))
+      console.log(
+        JSON.stringify({
+          sample,
+          phase: previousPhase,
+          elapsedTimeMs: performance.now() - startedAt,
+        }),
+      )
     }
     pipeline.step()
-    if ((pipeline.iterations & 1023) === 0 && performance.now() - startedAt > timeoutMs) {
+    if (
+      (pipeline.iterations & 1023) === 0 &&
+      performance.now() - startedAt > timeoutMs
+    ) {
       throw new Error(`Capture timed out at ${pipeline.getCurrentPhase()}`)
     }
   }
   const stage = pipeline.pipelineDef[pipeline.currentPipelineStepIndex]!
-  const [params] = stage.getConstructorParams(pipeline) as [Pipeline9HighDensitySolverParams]
-  const nodePfById = params.nodePfById instanceof Map
-    ? Object.fromEntries(params.nodePfById)
-    : params.nodePfById
+  const [params] = stage.getConstructorParams(pipeline) as [
+    Pipeline9HighDensitySolverParams,
+  ]
+  const nodePfById =
+    params.nodePfById instanceof Map
+      ? Object.fromEntries(params.nodePfById)
+      : params.nodePfById
   if (!nodePfById) throw new Error("Pipeline9 stage is missing nodePfById")
-  if (Object.values(nodePfById).some((value) => value !== null && !Number.isFinite(value))) {
+  if (
+    Object.values(nodePfById).some(
+      (value) => value !== null && !Number.isFinite(value),
+    )
+  ) {
     throw new Error("Pipeline9 stage has a non-finite node probability")
   }
   const captured: CapturedStage = {
@@ -152,7 +170,13 @@ const capture = async (outputPath: string): Promise<void> => {
     },
   }
   await saveJson(outputPath, captured)
-  console.log(JSON.stringify({ sample, nodeCount: params.nodePortPoints.length, captureTimeMs: captured.captureTimeMs }))
+  console.log(
+    JSON.stringify({
+      sample,
+      nodeCount: params.nodePortPoints.length,
+      captureTimeMs: captured.captureTimeMs,
+    }),
+  )
 }
 
 const replay = async (outputPath: string): Promise<void> => {
@@ -160,9 +184,12 @@ const replay = async (outputPath: string): Promise<void> => {
   const inputText = await readFile(values.input, "utf8")
   const captured = JSON.parse(inputText) as CapturedStage
   if (captured.version !== 1) throw new Error("Unsupported capture version")
-  const inputHash = createHash("sha256").update(stableStringify(captured.params)).digest("hex")
+  const inputHash = createHash("sha256")
+    .update(stableStringify(captured.params))
+    .digest("hex")
   const timeoutMs = Number(values["timeout-seconds"]) * 1_000
-  if (!Number.isFinite(timeoutMs) || timeoutMs <= 0) throw new Error("Invalid timeout")
+  if (!Number.isFinite(timeoutMs) || timeoutMs <= 0)
+    throw new Error("Invalid timeout")
   const connMap = new ConnectivityMap(captured.params.connMap.netMap)
   connMap.idToNetMap = captured.params.connMap.idToNetMap
   // Every invocation is a fresh process; explicitly reset the autorouter caches
@@ -176,7 +203,10 @@ const replay = async (outputPath: string): Promise<void> => {
   try {
     while (!solver.solved && !solver.failed) {
       solver.step()
-      if ((solver.iterations & 1023) === 0 && performance.now() - startedAt > timeoutMs) {
+      if (
+        (solver.iterations & 1023) === 0 &&
+        performance.now() - startedAt > timeoutMs
+      ) {
         timedOut = true
         break
       }
@@ -191,7 +221,9 @@ const replay = async (outputPath: string): Promise<void> => {
   const output = {
     routes: solver.routes,
     fixedRoutes: solver.getUpdatedFixedHdRoutes(),
-    removedFixedRouteConnectionNames: [...solver.removedFixedRouteConnectionNames],
+    removedFixedRouteConnectionNames: [
+      ...solver.removedFixedRouteConnectionNames,
+    ],
     preloadedTraceMutationMasks: [...solver.preloadedTraceMutationMasks],
   }
   const result: StageBenchmarkResult = {
@@ -203,7 +235,9 @@ const replay = async (outputPath: string): Promise<void> => {
     revision: values.revision!,
     bunVersion: Bun.version,
     inputHash,
-    outputHash: createHash("sha256").update(stableStringify(output)).digest("hex"),
+    outputHash: createHash("sha256")
+      .update(stableStringify(output))
+      .digest("hex"),
     solved: solver.solved,
     failed: solver.failed,
     timedOut,
@@ -212,7 +246,10 @@ const replay = async (outputPath: string): Promise<void> => {
     peakRssBytes,
     iterations: solver.iterations,
     routeCount: solver.routes.length,
-    routePointCount: solver.routes.reduce((sum, route) => sum + route.route.length, 0),
+    routePointCount: solver.routes.reduce(
+      (sum, route) => sum + route.route.length,
+      0,
+    ),
     viaCount: solver.routes.reduce((sum, route) => sum + route.vias.length, 0),
     fixedRouteCount: output.fixedRoutes.length,
     unsolvedNodeCount: solver.unsolvedNodePortPoints.length,
@@ -225,7 +262,8 @@ const replay = async (outputPath: string): Promise<void> => {
   if (thrownError) process.exitCode = 1
 }
 
-if (!values.output) throw new Error("Use --output PATH and --mode capture|replay")
+if (!values.output)
+  throw new Error("Use --output PATH and --mode capture|replay")
 if (values.mode === "capture") await capture(values.output)
 else if (values.mode === "replay") await replay(values.output)
 else throw new Error("Use --mode capture|replay")

@@ -13,7 +13,13 @@ test("prepared portfolio connections preserve routes and isolate candidate state
     availableZ: [0, 1],
     portPoints: [
       { connectionName: "a", rootConnectionName: "root-a", x: -2, y: -1, z: 0 },
-      { connectionName: "a", rootConnectionName: "root-a", x: -2 + 1e-8, y: -1, z: 0 },
+      {
+        connectionName: "a",
+        rootConnectionName: "root-a",
+        x: -2 + 1e-8,
+        y: -1,
+        z: 0,
+      },
       { connectionName: "a", rootConnectionName: "root-a", x: 2, y: -1, z: 0 },
       { connectionName: "b", rootConnectionName: "root-b", x: -2, y: 1, z: 0 },
       { connectionName: "b", rootConnectionName: "root-b", x: 2, y: 1, z: 0 },
@@ -36,7 +42,9 @@ test("prepared portfolio connections preserve routes and isolate candidate state
       cacheProvider: new InMemoryCache(),
     })
     expect(prepared.unsolvedConnections).toEqual(standalone.unsolvedConnections)
-    expect(prepared.minDistBetweenEnteringPoints).toBe(standalone.minDistBetweenEnteringPoints)
+    expect(prepared.minDistBetweenEnteringPoints).toBe(
+      standalone.minDistBetweenEnteringPoints,
+    )
     expect(prepared.computeCacheKeyAndTransform().cacheKey).toBe(
       standalone.computeCacheKeyAndTransform().cacheKey,
     )
@@ -46,8 +54,14 @@ test("prepared portfolio connections preserve routes and isolate candidate state
     expect(prepared.solvedRoutes).toEqual(standalone.solvedRoutes)
     expect(prepared.iterations).toBe(standalone.iterations)
   }
-  const first = new CachedIntraNodeRouteSolver({ nodeWithPortPoints: node, preparedConnections })
-  const second = new CachedIntraNodeRouteSolver({ nodeWithPortPoints: node, preparedConnections })
+  const first = new CachedIntraNodeRouteSolver({
+    nodeWithPortPoints: node,
+    preparedConnections,
+  })
+  const second = new CachedIntraNodeRouteSolver({
+    nodeWithPortPoints: node,
+    preparedConnections,
+  })
   const key = first.computeCacheKeyAndTransform().cacheKey
   first.unsolvedConnections[0]!.points[0]!.x = 123
   first.unsolvedConnections.pop()

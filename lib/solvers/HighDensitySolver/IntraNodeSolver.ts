@@ -65,7 +65,13 @@ export const prepareIntraNodeRouteSolverConnections = (
 ): PreparedIntraNodeConnections => {
   const pointsByConnection = new Map<string, ConnectionPoint[]>()
   const rootConnectionNameByConnectionName = new Map<string, string>()
-  for (const { connectionName, rootConnectionName, x, y, z } of node.portPoints) {
+  for (const {
+    connectionName,
+    rootConnectionName,
+    x,
+    y,
+    z,
+  } of node.portPoints) {
     if (rootConnectionName) {
       rootConnectionNameByConnectionName.set(connectionName, rootConnectionName)
     }
@@ -79,7 +85,8 @@ export const prepareIntraNodeRouteSolverConnections = (
   return {
     connections: Array.from(pointsByConnection, ([connectionName, points]) => ({
       connectionName,
-      rootConnectionName: rootConnectionNameByConnectionName.get(connectionName),
+      rootConnectionName:
+        rootConnectionNameByConnectionName.get(connectionName),
       points: dedupeConnectionPoints(points),
     })),
     rootConnectionNameByConnectionName,
