@@ -103,6 +103,17 @@ export const applyPipeline9BoundedRegionalRepairs = ({
     ...createSrjWithBoardValidObstacleLayers(originalSrj),
     traces: undefined,
   }
+  const obstacleCenterById = new Map<string, { x: number; y: number }>()
+  for (const obstacle of originalSrj.obstacles) {
+    for (const id of [
+      obstacle.obstacleId,
+      obstacle.circuitJsonMetadata?.pcb_smtpad_id,
+      obstacle.circuitJsonMetadata?.pcb_plated_hole_id,
+      obstacle.connectedTo[0],
+    ]) {
+      if (typeof id === "string") obstacleCenterById.set(id, obstacle.center)
+    }
+  }
   const attemptedRegions: Array<{ bounds: Bounds; size: number }> = []
   let fixedViolations = new Map(
     getFixedObstacleViolations({ srj, routes: currentRoutes }).map(
@@ -114,7 +125,23 @@ export const applyPipeline9BoundedRegionalRepairs = ({
       ? reference
       : (reference.errorsWithCenters ?? reference.errors)
     const centers = centeredErrors
-      .map((error) => error.center ?? error.pcb_center)
+      .map((error) => {
+        // Pad clearance reports can place their display marker at the trace's
+        // midpoint, far from the offending copper. Crop around the pad itself.
+        const padId =
+          typeof error.pcb_pad_id === "string"
+            ? error.pcb_pad_id
+            : typeof error.pcb_trace_error_id === "string"
+              ? error.pcb_trace_error_id.match(
+                  /_(pcb_(?:smtpad|plated_hole|hole|keepout)_\d+)$/,
+                )?.[1]
+              : undefined
+        return (
+          (padId ? obstacleCenterById.get(padId) : undefined) ??
+          error.center ??
+          error.pcb_center
+        )
+      })
       .filter(
         (point): point is { x: number; y: number } =>
           point !== null &&
