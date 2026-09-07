@@ -57,6 +57,31 @@ export const applyPipeline9BoundedRegionalRepairs = ({
   if (originalSrj.traces?.length || syntheticConnectionNames.size > 0) {
     return result
   }
+  const clearance = Math.max(
+    originalSrj.defaultObstacleMargin ?? 0.2,
+    originalSrj.minTraceToPadEdgeClearance ?? 0,
+    originalSrj.minViaEdgeToPadEdgeClearance ?? 0,
+  )
+  let maxCopperDiameter = Math.max(
+    originalSrj.minTraceWidth,
+    originalSrj.minViaDiameter ?? 0,
+  )
+  for (const route of routes) {
+    maxCopperDiameter = Math.max(
+      maxCopperDiameter,
+      route.traceThickness,
+      route.viaDiameter,
+    )
+    for (const point of route.route) {
+      maxCopperDiameter = Math.max(maxCopperDiameter, point.traceThickness ?? 0)
+    }
+  }
+  // Repair04 requires a fixed collar of one copper diameter plus clearance.
+  // Wide copper is outside this pass's fixed 10 mm regional search scope.
+  const boundaryMargin = Math.max(0.5, maxCopperDiameter + clearance)
+  if (Number.isFinite(boundaryMargin) && boundaryMargin * 2 >= REGION_SIZE) {
+    return result
+  }
   let currentRoutes = routes
   let reference = drcEvaluator({ traces: [], routes, hdRoutes: routes })
   result.referenceValidationCount++
