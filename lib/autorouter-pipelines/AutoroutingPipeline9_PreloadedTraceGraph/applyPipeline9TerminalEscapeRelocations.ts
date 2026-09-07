@@ -224,12 +224,14 @@ const createTerminalCandidate = ({
  */
 export const applyPipeline9TerminalEscapeRelocations = ({
   srj,
+  originalSrj,
   routes,
   newConnections,
   syntheticConnectionNames,
   drcEvaluator,
 }: {
   srj: SimpleRouteJson
+  originalSrj: SimpleRouteJson
   routes: HighDensityRoute[]
   newConnections: SimpleRouteConnection[]
   syntheticConnectionNames: ReadonlySet<string>
@@ -239,7 +241,7 @@ export const applyPipeline9TerminalEscapeRelocations = ({
   let currentErrors = getPipeline9DrcErrors(drcEvaluator, currentRoutes)
   let attemptedCandidateCount = 0
   let acceptedCandidateCount = 0
-  const portPositionMap = getPcbPortPositionMap(srj)
+  const portPositionMap = getPcbPortPositionMap(originalSrj)
 
   for (let pass = 0; pass < 2; pass++) {
     let acceptedOnPass = false
@@ -265,7 +267,9 @@ export const applyPipeline9TerminalEscapeRelocations = ({
           endpointIndex === 0 ? route.route[0] : route.route.at(-1)
         if (!endpoint || typeof endpoint.pcb_port_id !== "string") continue
         const terminalObstacle = getTerminalObstacle({
-          srj,
+          // Routing envelopes can extend outside a rotated pad. Terminal
+          // relocation must stay inside the original physical copper.
+          srj: originalSrj,
           pcbPortId: endpoint.pcb_port_id,
           z: endpoint.z,
           portPositionMap,
