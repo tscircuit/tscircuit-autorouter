@@ -8,7 +8,7 @@ import bugReport from "../../fixtures/bug-reports/bugreport106-ab9d90/bugreport1
 
 const srj = bugReport.simple_route_json as SimpleRouteJson
 
-test("bugreport106 Corne keyboard records three Pipeline 9 DRC errors", (): void => {
+test("bugreport106 Corne keyboard routes without Pipeline 9 DRC errors", (): void => {
   const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(
     structuredClone(srj),
     { cacheProvider: null },
@@ -35,10 +35,5 @@ test("bugreport106 Corne keyboard records three Pipeline 9 DRC errors", (): void
     routedTraces: solver.getOutputSimplifiedPcbTraces(),
   })
 
-  expect(errors).toHaveLength(3)
-  expect(errors.map((error) => error.type).sort()).toEqual([
-    "pcb_trace_error",
-    "pcb_via_trace_clearance_error",
-    "pcb_via_trace_clearance_error",
-  ])
+  expect(errors).toHaveLength(0)
 })

@@ -26,6 +26,7 @@ import { Pipeline9HighDensitySolver } from "./Pipeline9HighDensitySolver"
 import { Pipeline9RegionalFallbackSolver } from "./Pipeline9RegionalFallbackSolver"
 import {
   getPipeline9DrcErrors,
+  getPipeline9DrcErrorTraceIds,
   getPipeline9RouteIndexByTraceId,
   isPipeline9DrcErrorOwnedByPreloadRepair,
   isPipeline9DrcCandidateBetter,
@@ -62,6 +63,35 @@ const FIXED_ROUTE_INDEX_CELL_SIZE = 4
 const REGIONAL_REPAIR_SEARCH_VOLUME = 7_000
 const MIN_REGIONAL_REPAIR_SEARCH_BUDGET = 16
 const MAX_REGIONAL_REPAIR_SEARCH_BUDGET = 192
+
+const DRC_ERROR_ID_KEYS = [
+  "pcb_trace_error_id",
+  "pcb_error_id",
+  "pcb_via_trace_clearance_error_id",
+  "pcb_pad_trace_clearance_error_id",
+] as const
+
+const getCurrentRegionalRepairError = (
+  queuedError: Pipeline9DrcError,
+  currentErrors: Pipeline9DrcError[],
+): Pipeline9DrcError | undefined => {
+  const idKey = DRC_ERROR_ID_KEYS.find(
+    (key) => typeof queuedError[key] === "string",
+  )
+  // Custom evaluators can omit error IDs, so only skip a queued error when
+  // its identity can establish that the violation has been resolved.
+  if (!idKey) return queuedError
+  const traceIds = JSON.stringify(
+    getPipeline9DrcErrorTraceIds(queuedError).sort(),
+  )
+  return currentErrors.find(
+    (error) =>
+      error.type === queuedError.type &&
+      error[idKey] === queuedError[idKey] &&
+      // Via IDs are sequential and can change owners after a reroute.
+      JSON.stringify(getPipeline9DrcErrorTraceIds(error).sort()) === traceIds,
+  )
+}
 
 export { getPipeline9FixedRouteObstacles }
 
@@ -679,8 +709,12 @@ export const applyPipeline9RegionalB01Repairs = ({
           error.type === "pcb_via_clearance_error") &&
         typeof error.pcb_trace_id === "string",
     )
-    for (const error of repairableErrors) {
+    for (const queuedError of repairableErrors) {
       if (candidateSearchBudgetExhausted) break
+      // One accepted reroute can resolve several queued errors. Refresh the
+      // remaining violation and its center before spending another search.
+      const error = getCurrentRegionalRepairError(queuedError, currentErrors)
+      if (!error) continue
       const center = getRepairCenter(error, srj)
       const traceIds = getPipeline9RegionalRepairTraceIds({
         error,
