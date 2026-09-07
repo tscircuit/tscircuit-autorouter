@@ -154,23 +154,6 @@ export const getPipeline9RegionalRepairTraceIds = ({
     )
 }
 
-const isMovableTracePairError = (
-  error: Pipeline9DrcError,
-  routeIndexByTraceId: ReadonlyMap<string, number>,
-): boolean => {
-  if (
-    error.type !== "pcb_trace_error" ||
-    typeof error.pcb_via_id === "string" ||
-    (Array.isArray(error.pcb_via_ids) && error.pcb_via_ids.length > 0)
-  ) {
-    return false
-  }
-  return (
-    getPipeline9RegionalRepairTraceIds({ error, routeIndexByTraceId })
-      .length === 2
-  )
-}
-
 const getViaIssueCount = (errors: Pipeline9DrcError[]): number => {
   return errors.filter(
     (error) =>
@@ -591,7 +574,6 @@ export const applyPipeline9RegionalB01Repairs = ({
   syntheticConnectionNames,
   drcEvaluator,
   initialErrors,
-  allowTracePairRepair = false,
   preloadRepairTraceIds,
   connMap,
   colorMap,
@@ -607,7 +589,6 @@ export const applyPipeline9RegionalB01Repairs = ({
   syntheticConnectionNames: ReadonlySet<string>
   drcEvaluator: DrcEvaluator
   initialErrors?: Pipeline9DrcError[]
-  allowTracePairRepair?: boolean
   preloadRepairTraceIds: ReadonlySet<string>
   connMap: ConnectivityMap
   colorMap: Record<string, string>
@@ -635,31 +616,6 @@ export const applyPipeline9RegionalB01Repairs = ({
   }
   const preloadEligibleDrcIssueCount =
     currentErrors.filter(isPreloadRepairError).length
-  const initialRouteIndexByTraceId = getPipeline9RouteIndexByTraceId({
-    routes: currentRoutes,
-    newConnections,
-    syntheticConnectionNames,
-  })
-  const hasMovableTracePair =
-    allowTracePairRepair &&
-    currentErrors.some((error) =>
-      isMovableTracePairError(error, initialRouteIndexByTraceId),
-    )
-  if (preloadEligibleDrcIssueCount === 0 && !hasMovableTracePair) {
-    return {
-      routes: currentRoutes,
-      attemptedCandidateCount,
-      acceptedCandidateCount,
-      fallbackCandidateCount,
-      candidateSearchCount,
-      candidateSearchBudget,
-      candidateSearchBudgetExhausted,
-      safeTraceLayerRepairSkippedForBudget: false,
-      remainingDrcIssueCount: currentErrors.length,
-      preloadEligibleDrcIssueCount,
-      preloadRepairAttempted: false,
-    }
-  }
   const fixedRouteCopperSpatialIndex =
     createFixedRouteCopperSpatialIndex(fixedObstacleRoutes)
 
