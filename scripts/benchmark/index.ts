@@ -915,6 +915,38 @@ const formatTable = (rows: SolverRunSummary[]) => {
   return [separator, headerLine, separator, ...bodyLines, separator].join("\n")
 }
 
+const formatHighDensityDrcRepairMetrics = (results: WorkerResult[]): string => {
+  const rows = results.flatMap((result): string[] => {
+    const metrics = result.routingMetrics?.highDensityDrcRepair
+    if (!metrics) return []
+    const cells = [
+      result.solverName,
+      result.sampleNumber,
+      metrics.status,
+      metrics.stats.initialDrcIssueCount,
+      metrics.stats.finalDrcIssueCount,
+      metrics.stats.drcNodeCount,
+      metrics.stats.attemptedNodeCount,
+      metrics.stats.acceptedNodeCount,
+      metrics.stats.exhaustedNodeCount,
+      metrics.stats.candidateAttemptCount,
+      metrics.stats.acceptedRepairCount,
+      metrics.stats.forceCandidateAttemptCount,
+    ].map((value) => String(value ?? "n/a").replace(/\|/g, "\\|"))
+    return [`| ${cells.join(" | ")} |`]
+  })
+  if (rows.length === 0) return ""
+  return [
+    "High-density DRC repair stage (per sample):",
+    "",
+    "| Solver | Sample | Stage status | Initial DRC | Final DRC | Affected nodes | Attempted nodes | Accepted nodes | Exhausted nodes | Candidates | Accepted repairs | Force candidates |",
+    "| --- | ---: | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |",
+    ...rows,
+    "",
+    "Counts describe this stage's repairable copper, before later pipeline stages. Partial rows are the last worker observation. All numeric and boolean stage stats are included in benchmark-result.json.",
+  ].join("\n")
+}
+
 const formatSampleNumbers = (sampleNumbers: number[]) => {
   const shown = sampleNumbers.slice(0, 8).join(", ")
   return sampleNumbers.length > 8 ? `${shown}, ...` : shown
@@ -1145,6 +1177,7 @@ export const createFailedResult = (
     progressElapsedTimeMs: latestProgress?.elapsedTimeMs,
     finalElapsedTimeMs: elapsedTimeMs,
   }),
+  routingMetrics: latestProgress?.routingMetrics,
 })
 
 const getTaskEffort = (task: BenchmarkTask) => {
@@ -1836,6 +1869,7 @@ const main = async () => {
     ),
   )
   const table = formatTable(rows)
+  const highDensityDrcRepairMetrics = formatHighDensityDrcRepairMetrics(results)
   const solverFailureSummary = summarizeSolverFailures(results)
   const solverFailureSummaryText = formatFailureSummary(solverFailureSummary)
   const timeoutSummary = summarizeTimeouts(results)
@@ -1845,7 +1879,7 @@ const main = async () => {
   const snapshots = results.flatMap((result): BenchmarkSnapshot[] =>
     result.benchmarkSnapshot ? [result.benchmarkSnapshot] : [],
   )
-  const output: string = `Benchmark Results (${effortLabel})\n\n${table}\n\nDataset: ${datasetName}\nScenarios: ${scenarios.length}\n\nTop solver failure buckets:\n${solverFailureSummaryText}\n\nTop timeout buckets:\n${timeoutSummaryText}\n\nTop failure buckets:\n${failureSummaryText}\n`
+  const output: string = `Benchmark Results (${effortLabel})\n\n${table}\n\nDataset: ${datasetName}\nScenarios: ${scenarios.length}\n\nTop solver failure buckets:\n${solverFailureSummaryText}\n\nTop timeout buckets:\n${timeoutSummaryText}\n\nTop failure buckets:\n${failureSummaryText}\n${highDensityDrcRepairMetrics ? `\n${highDensityDrcRepairMetrics}\n` : ""}`
   const report: BenchmarkReport = {
     version: 1,
     datasetName,
@@ -1871,6 +1905,9 @@ const main = async () => {
   console.log(timeoutSummaryText)
   console.log("\nTop failure buckets:")
   console.log(failureSummaryText)
+  if (highDensityDrcRepairMetrics) {
+    console.log(`\n${highDensityDrcRepairMetrics}`)
+  }
   console.log(
     `Results written to benchmark-result.txt, benchmark-result.json, and ${BENCHMARK_SNAPSHOTS_HTML_PATH}`,
   )

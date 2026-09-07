@@ -1,6 +1,7 @@
 import type { DrcEvaluator } from "high-density-repair03/lib"
 import { convertPipeline7HdRoutesToSimplifiedPcbTraces } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/convertPipeline7HdRoutesToSimplifiedPcbTraces"
 import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
+import type { GetDrcErrorsOptions } from "lib/testing/getDrcErrors"
 import type { SimpleRouteJson, SimplifiedPcbTrace } from "lib/types"
 import type { ConvertPipeline7HdRoutesOptions } from "../AutoroutingPipeline7_MultiGraph/convertPipeline7HdRoutesToSimplifiedPcbTraces"
 import { normalizePipeline9DrcErrorsForRepair } from "./normalizePipeline9DrcErrorsForRepair"
@@ -13,6 +14,7 @@ type CreatePipeline9RelaxedDrcEvaluatorOptions = Omit<
   srjWithPointPairs: SimpleRouteJson
   originalSrj: SimpleRouteJson
   mutatedPreloadedTraces: SimplifiedPcbTrace[]
+  drcOptions?: GetDrcErrorsOptions
 }
 
 /** Scores candidates using the same preloaded-trace replacement rules as output. */
@@ -38,6 +40,7 @@ export const createPipeline9RelaxedDrcEvaluator = (
         mutatedPreloadedTraces: options.mutatedPreloadedTraces,
         newTraces,
       }),
+      drcOptions: options.drcOptions,
     })
 
     return {

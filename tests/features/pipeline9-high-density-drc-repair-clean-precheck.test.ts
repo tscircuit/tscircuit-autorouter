@@ -1,0 +1,85 @@
+import { expect, test } from "bun:test"
+import { ConnectivityMap } from "circuit-json-to-connectivity-map"
+import type { DrcEvaluator } from "high-density-repair03/lib"
+import type { Pipeline9HighDensityForceContext } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/getPipeline9HighDensityForceObstacles"
+import { Pipeline9HighDensityDrcRepairSolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9HighDensityDrcRepairSolver"
+import type {
+  HighDensityRoute,
+  NodeWithPortPoints,
+} from "lib/types/high-density-types"
+import type { SimpleRouteConnection } from "lib/types/srj-types"
+
+const node: NodeWithPortPoints = {
+  capacityMeshNodeId: "node-a",
+  center: { x: 0, y: 0 },
+  width: 4,
+  height: 2,
+  availableZ: [0, 1],
+  portPoints: [
+    { x: -2, y: 0, z: 0, connectionName: "A", rootConnectionName: "A" },
+    { x: 2, y: 0, z: 0, connectionName: "A", rootConnectionName: "A" },
+  ],
+}
+const connections: SimpleRouteConnection[] = [
+  {
+    name: "A",
+    pointsToConnect: [
+      { x: -2, y: 0, layer: "top" },
+      { x: 2, y: 0, layer: "top" },
+    ],
+  },
+]
+const inputRoutes: HighDensityRoute[] = [
+  {
+    connectionName: "A",
+    rootConnectionName: "A",
+    regionId: "node-a",
+    traceThickness: 0.1,
+    viaDiameter: 0.3,
+    route: [
+      { x: -2, y: 0, z: 0 },
+      { x: 2, y: 0, z: 0 },
+    ],
+    vias: [],
+  },
+]
+
+test("Pipeline9 verifies clean high-density copper with the official DRC evaluator", (): void => {
+  let evaluatorCallCount = 0
+  const drcEvaluator = Object.assign(
+    (): ReturnType<DrcEvaluator> => {
+      evaluatorCallCount += 1
+      return { errors: [], errorsWithCenters: [] }
+    },
+    {
+      getForceContext: (): Pipeline9HighDensityForceContext => ({
+        connMap: new ConnectivityMap({ A: ["A", "A_0"] }),
+        obstacles: [],
+      }),
+    },
+  )
+  const solver = new Pipeline9HighDensityDrcRepairSolver({
+    nodePortPoints: [node],
+    hdRoutes: inputRoutes,
+    fixedHdRoutes: [],
+    newConnections: connections,
+    drcEvaluator,
+    connMap: new ConnectivityMap({ A: ["A"] }),
+    colorMap: {},
+    obstacles: [],
+    layerCount: 2,
+    viaDiameter: 0.3,
+    viaHoleDiameter: 0.15,
+    traceWidth: 0.1,
+    obstacleMargin: 0.15,
+    drcClearance: 0.1,
+    effort: 0.1,
+  })
+
+  solver.solve()
+
+  expect(solver.solved).toBe(true)
+  expect(solver.failed).toBe(false)
+  expect(evaluatorCallCount).toBe(1)
+  expect(solver.getOutput()).toBe(inputRoutes)
+})

@@ -6,6 +6,7 @@ import type { HighDensityIntraNodeRoute } from "lib/types/high-density-types"
  * geometric candidates. Keeping this shared makes route selection stable.
  */
 export const DISTANCE_TIE_TOLERANCE = 1e-9
+export const GEOMETRIC_STITCH_TOLERANCE = 1e-3
 
 /**
  * Maximum same-layer gap that can be bridged while stitching route islands.
