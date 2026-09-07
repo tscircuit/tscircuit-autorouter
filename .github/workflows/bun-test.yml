@@ -36,9 +36,9 @@ jobs:
       - name: Install dependencies
         run: bun install
 
-      - name: Run focused HD via-clearance tests
+      - name: Run focused copper-preserving stitch tests
         if: matrix.node == 1
-        run: bun test tests/high-density/via-clearance*.test.ts --timeout 300000
+        run: bun test tests/stitch-solver/endpoint-path*.test.ts --timeout 300000
 
       # Replaces `npm install -g @tscircuit/bun-test-plan && bun-test-plan`.
       # Distributes by recorded runtime instead of alphabetical round-robin,

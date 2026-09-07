@@ -206,7 +206,7 @@ const diagnosePipelineDrc = async (): Promise<void> => {
     pipelineArg === "9"
       ? new AutoroutingPipelineSolver9_PreloadedTraceGraph(scenario)
       : new AutoroutingPipelineSolver7_MultiGraph(scenario)
-  await writeFile(path.join(outputDir, "input.json"), JSON.stringify(scenario))
+  await writeFile(path.join(outputDir, "scenario.json"), JSON.stringify(scenario))
   const summaries: StageSummary[] = [
     await writeStage(pipeline, outputDir, "input", [], [], "input"),
   ]
@@ -220,13 +220,34 @@ const diagnosePipelineDrc = async (): Promise<void> => {
         : undefined
     const node = hd?.activeNode
     const regular = hd?.activeRegularSolver
-    const nodeSolver = regular ?? hd?.activeB01Solver ?? hd?.activeFallbackSolver
+    const nodeSolver =
+      regular ?? hd?.activeB01Solver ?? hd?.activeFallbackSolver
     const grow = regular?.activeSubSolver
     if (node && grow instanceof GrowShrinkHighDensityIntraNodeSolver) {
       growthByNode.set(node.capacityMeshNodeId, grow)
     }
     const routeStart = hd?.routes.length ?? 0
+    const simplification =
+      phase === "traceSimplificationSolver"
+        ? pipeline.traceSimplificationSolver
+        : undefined
+    const simplificationPhase = simplification
+      ? `${simplification.simplificationPipelineLoops}-${simplification.currentPhase}`
+      : null
     pipeline.step()
+    if (
+      simplification &&
+      simplificationPhase !==
+        `${simplification.simplificationPipelineLoops}-${simplification.currentPhase}`
+    ) {
+      await writeFile(
+        path.join(outputDir, `simplification-${simplificationPhase}.json`),
+        JSON.stringify({
+          phase: simplificationPhase,
+          hdRoutes: simplification.simplifiedHdRoutes,
+        }),
+      )
+    }
     if (hd && node && nodeSolver && hd.activeNode !== node) {
       const completedGrowth = regular
         ? growthByNode.get(node.capacityMeshNodeId)

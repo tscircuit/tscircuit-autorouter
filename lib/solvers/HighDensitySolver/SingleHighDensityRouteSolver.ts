@@ -282,7 +282,7 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     margin?: number,
     isVia?: boolean,
     planarObstacleQuery?: PlanarObstacleQuery,
-  ): boolean {
+  ) {
     margin ??= this.obstacleMargin
 
     if (isVia && node.parent) {
@@ -334,19 +334,17 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
       }
     }
 
-    // The via index contains copper bounds, so expand the query only by the
-    // candidate's reach. Use each obstacle's radius in the exact check.
-    const viaQueryRadius = this.traceThickness / 2 + margin
+    const viaProximity = this.viaDiameter / 2 + this.traceThickness / 2 + margin
     if (this.obstacleViaIndex) {
       const nearbyViaIds = this.obstacleViaIndex.search(
-        node.x - viaQueryRadius,
-        node.y - viaQueryRadius,
-        node.x + viaQueryRadius,
-        node.y + viaQueryRadius,
+        node.x - viaProximity,
+        node.y - viaProximity,
+        node.x + viaProximity,
+        node.y + viaProximity,
       )
       for (const viaId of nearbyViaIds) {
         const via = this.obstacleVias[viaId]
-        if (distance(node, via) < via.radius + viaQueryRadius) {
+        if (via && distance(node, via) < viaProximity) {
           return true
         }
       }
@@ -379,36 +377,9 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
   doesPathToParentIntersectObstacle(
     node: Node,
     planarObstacleQuery?: PlanarObstacleQuery,
-  ): boolean {
+  ) {
     const parent = node.parent
     if (!parent) return false
-
-    const minX = Math.min(node.x, parent.x)
-    const maxX = Math.max(node.x, parent.x)
-    const minY = Math.min(node.y, parent.y)
-    const maxY = Math.max(node.y, parent.y)
-
-    // Legal endpoints do not guarantee a legal edge, including the final
-    // connector to B. Vias must be checked even without segments on this layer.
-    if (node.z === parent.z && this.obstacleViaIndex) {
-      const traceReach = this.traceThickness / 2 + this.obstacleMargin
-      const nearbyViaIds = this.obstacleViaIndex.search(
-        minX - traceReach,
-        minY - traceReach,
-        maxX + traceReach,
-        maxY + traceReach,
-      )
-      for (const viaId of nearbyViaIds) {
-        const via = this.obstacleVias[viaId]
-        if (
-          pointToSegmentDistance(via, parent, node) <
-          via.radius + traceReach
-        ) {
-          return true
-        }
-      }
-    }
-
     const indexedSegments =
       planarObstacleQuery?.segments ?? this.obstacleSegmentsByLayer.get(node.z)
     if (!indexedSegments) return false
@@ -417,6 +388,11 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
       node.z === parent.z && this.obstacleSegments.length > 0
         ? this.NEARBY_SEGMENT_CLEARANCE
         : 0
+
+    const minX = Math.min(node.x, parent.x)
+    const maxX = Math.max(node.x, parent.x)
+    const minY = Math.min(node.y, parent.y)
+    const maxY = Math.max(node.y, parent.y)
 
     const nearbySegmentIds =
       planarObstacleQuery?.segmentIds ??
@@ -486,7 +462,7 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     }
   }
 
-  buildObstacleIndexes(): void {
+  buildObstacleIndexes() {
     if (this.obstacleRoutes.length === 0) {
       this.obstacleSegmentIndex = null
       this.obstacleSegmentsByLayer.clear()
@@ -517,7 +493,7 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
       }
 
       for (const via of route.vias) {
-        obstacleVias.push({ ...via, radius: route.viaDiameter / 2 })
+        obstacleVias.push(via)
       }
     }
 
@@ -558,12 +534,7 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     if (obstacleVias.length > 0) {
       const viaIndex = new Flatbush(obstacleVias.length)
       for (const via of obstacleVias) {
-        viaIndex.add(
-          via.x - via.radius,
-          via.y - via.radius,
-          via.x + via.radius,
-          via.y + via.radius,
-        )
+        viaIndex.add(via.x, via.y, via.x, via.y)
       }
       viaIndex.finish()
       this.obstacleViaIndex = viaIndex
@@ -656,8 +627,7 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
           if (this.debugEnabled) {
             this.debug_nodePathToParentIntersectsObstacle.add(neighborKey)
           }
-          // Only this incoming edge is blocked. Another parent may reach the
-          // same point with a legal segment, so do not close the point here.
+          this.exploredNodes.add(neighborKey)
           continue
         }
 
@@ -1016,7 +986,7 @@ type IndexedObstacleSegment = {
   connectedToCurrentConnection: boolean
 }
 
-type IndexedObstacleVia = { x: number; y: number; radius: number }
+type IndexedObstacleVia = { x: number; y: number }
 
 type PlanarObstacleQuery = {
   segments: IndexedObstacleSegment[]

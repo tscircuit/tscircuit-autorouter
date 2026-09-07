@@ -24,7 +24,7 @@ const cloneValue = <T>(value: T): T =>
 
 setupGlobalCaches()
 
-const INTRA_NODE_CACHE_SCHEMA_VERSION = 5
+const INTRA_NODE_CACHE_SCHEMA_VERSION = 4
 
 export class CachedIntraNodeRouteSolver
   extends IntraNodeRouteSolver
