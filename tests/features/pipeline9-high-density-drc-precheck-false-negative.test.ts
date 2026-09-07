@@ -95,11 +95,12 @@ test("Pipeline9 honors an official owned DRC on apparently clear routing geometr
   const maxForceCandidates =
     getForceScalesForEffort(effort).length *
     getMaxTargetedCandidateAttemptsForEffort(effort)
-  // One initialization, node selection and each force/seam stream completion
-  // accompany the bounded force candidates. No neighboring seam exists here.
+  // Initialization, node selection and force/seam stream completion accompany
+  // the bounded candidates. Also retain the two completion steps that used to
+  // follow the explicit child handoff; no neighboring seam exists here.
   for (
     let step = 0;
-    step < maxForceCandidates + 4 && !solver.solved && !solver.failed;
+    step < maxForceCandidates + 6 && !solver.solved && !solver.failed;
     step++
   ) {
     solver.step()
