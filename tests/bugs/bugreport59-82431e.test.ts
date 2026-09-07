@@ -39,9 +39,7 @@ test("bugreport59-82431e keeps effort 2 vias on preplaced assignable vias", () =
     const nextInput = stitchSolver?.activeSolver
       ? undefined
       : stitchSolver?.unsolvedRoutes.at(-1)
-    const nextInputSnapshot = nextInput
-      ? structuredClone(nextInput)
-      : undefined
+    const nextInputSnapshot = nextInput ? structuredClone(nextInput) : undefined
     advancePipeline()
     const activeStitch = solver.highDensityStitchSolver?.activeSolver
     if (
@@ -83,8 +81,7 @@ test("bugreport59-82431e keeps effort 2 vias on preplaced assignable vias", () =
           constructorOptions: {
             defaultTraceThickness: stitchSolver.defaultTraceThickness,
             defaultViaDiameter: stitchSolver.defaultViaDiameter,
-            preserveTerminalPcbPortIds:
-              stitchSolver.preserveTerminalPcbPortIds,
+            preserveTerminalPcbPortIds: stitchSolver.preserveTerminalPcbPortIds,
             stitchClearanceMode: failedStitch.stitchClearanceMode,
           },
           materializationStart: failedStitch.start,
