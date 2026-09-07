@@ -40,7 +40,7 @@ const MAX_CANDIDATE_ATTEMPTS_PER_REGION = 256
 const MAX_PATH_SEARCH_NODES_PER_REGION = 120_000
 const REGION_SIZES = [10, 16] as const
 
-/** Keeps intermediate regional improvements private until full reference DRC passes. */
+/** Retains fully scored regional improvements while preserving fixed copper. */
 export const applyPipeline9BoundedRegionalRepairs = ({
   originalSrj,
   routes,
@@ -269,9 +269,9 @@ export const applyPipeline9BoundedRegionalRepairs = ({
       ]),
     )
     result.acceptedRegionCount++
+    result.routes = currentRoutes
     result.finalDrcIssueCount = currentErrors.length
     if (currentErrors.length === 0) {
-      result.routes = currentRoutes
       result.repaired = true
       return result
     }
