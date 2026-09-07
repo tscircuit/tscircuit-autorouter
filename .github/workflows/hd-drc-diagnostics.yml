@@ -23,6 +23,7 @@ jobs:
         include:
           - { dataset: srj18, sample: 2, pipeline: 9 }
           - { dataset: srj18, sample: 10, pipeline: 9 }
+          - { dataset: srj18, sample: 12, pipeline: 9 }
           - { dataset: srj18, sample: 13, pipeline: 9 }
           - { dataset: srj19, sample: 21, pipeline: 9 }
           - { dataset: srj19, sample: 37, pipeline: 9 }

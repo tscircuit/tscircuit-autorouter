@@ -373,10 +373,9 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
         }
       } else if (
         distToFirst < GEOMETRIC_TOLERANCE &&
-        (!this.allowedLayerTransitionPointKeys ||
-          this.allowedLayerTransitionPointKeys.has(
-            getXyPointKey(firstPointInCandidate),
-          ))
+        this.allowedLayerTransitionPointKeys?.has(
+          getXyPointKey(firstPointInCandidate),
+        )
       ) {
         scoreFirst = VIA_PENALTY + distToFirst
       }
@@ -405,10 +404,9 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
         }
       } else if (
         distToLast < GEOMETRIC_TOLERANCE &&
-        (!this.allowedLayerTransitionPointKeys ||
-          this.allowedLayerTransitionPointKeys.has(
-            getXyPointKey(lastPointInCandidate),
-          ))
+        this.allowedLayerTransitionPointKeys?.has(
+          getXyPointKey(lastPointInCandidate),
+        )
       ) {
         scoreLast = VIA_PENALTY + distToLast
       }
@@ -426,7 +424,8 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
         this.error = `Route stitch for "${this.mergedHdRoute.connectionName}" violates copper clearance`
         return
       }
-      this.remainingHdRoutes = []
+      this.failed = true
+      this.error = `Route stitch for "${this.mergedHdRoute.connectionName}" cannot connect ${this.remainingHdRoutes.length} unconsumed route fragment(s) from (${lastMergedPoint.x}, ${lastMergedPoint.y}, z=${lastMergedPoint.z})`
       return
     }
 

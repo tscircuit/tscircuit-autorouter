@@ -40,6 +40,13 @@ jobs:
         if: matrix.node == 1
         run: >-
           bun test tests/stitch-solver/endpoint-path*.test.ts
+          tests/stitch-solver/single-stitch-retains-moved-via-transition.test.ts
+          tests/stitch-solver/single-stitch-explicitly-allowed-layer-transition.test.ts
+          tests/stitch-solver/single-stitch-rejects-unowned-layer-transition.test.ts
+          tests/stitch-solver/single-high-density-route-stitch-gap-bridge.test.ts
+          tests/stitch-solver/single-high-density-route-stitch-large-gap.test.ts
+          tests/stitch-solver/single-high-density-route-stitch-terminal-gap.test.ts
+          tests/stitch-solver/single-high-density-route-stitch-fanout-tags.test.ts
           tests/solvers/simplified-path-original-advance*.test.ts
           tests/solvers/simplified-path-actual-*.test.ts
           tests/solvers/simplified-path-thick-peer-query.test.ts
