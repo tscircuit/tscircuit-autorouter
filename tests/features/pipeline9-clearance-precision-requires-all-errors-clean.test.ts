@@ -39,44 +39,45 @@ test("clearance precision preserves original routes until full reference DRC pas
   const originalRoutes = structuredClone(routes)
   let evaluationCount = 0
   let indexedEvaluationCount = 0
-  const params: Parameters<typeof applyPipeline9ClearancePrecisionRepairs>[0] = {
-    srj,
-    routes,
-    newConnections: srj.connections,
-    syntheticConnectionNames: new Set(),
-    connMap: getConnectivityMapFromSimpleRouteJson(srj),
-    initialErrors: [
-      {
-        type: "pcb_via_trace_clearance_error",
-        pcb_trace_id: "signal_0",
-        pcb_trace_ids: ["signal_0", "via_owner_0"],
-        pcb_via_id: "via_0",
-        pcb_via_ids: ["via_0"],
-        actual_clearance: 0.089,
-        minimum_clearance: 0.1,
-        center: { x: 0, y: 0 },
-      },
-    ],
-    indexedDrcEvaluator: () => {
-      indexedEvaluationCount++
-      return [
+  const params: Parameters<typeof applyPipeline9ClearancePrecisionRepairs>[0] =
+    {
+      srj,
+      routes,
+      newConnections: srj.connections,
+      syntheticConnectionNames: new Set(),
+      connMap: getConnectivityMapFromSimpleRouteJson(srj),
+      initialErrors: [
         {
-          type: "pcb_trace_error",
-          minimum_clearance: 1,
-          actual_clearance: indexedEvaluationCount === 1 ? 0 : 1,
+          type: "pcb_via_trace_clearance_error",
+          pcb_trace_id: "signal_0",
+          pcb_trace_ids: ["signal_0", "via_owner_0"],
+          pcb_via_id: "via_0",
+          pcb_via_ids: ["via_0"],
+          actual_clearance: 0.089,
+          minimum_clearance: 0.1,
+          center: { x: 0, y: 0 },
         },
-      ]
-    },
-    candidateDrcEvaluator: () => ({ errors: [], errorsWithCenters: [] }),
-    marginDrcEvaluator: () => ({ status: "measured", errors: [] }),
-    drcEvaluator: () => {
-      evaluationCount++
-      return {
-        errors: [{ type: "pcb_trace_error", message: "Missing connection" }],
-        errorsWithCenters: [],
-      }
-    },
-  }
+      ],
+      indexedDrcEvaluator: () => {
+        indexedEvaluationCount++
+        return [
+          {
+            type: "pcb_trace_error",
+            minimum_clearance: 1,
+            actual_clearance: indexedEvaluationCount === 1 ? 0 : 1,
+          },
+        ]
+      },
+      candidateDrcEvaluator: () => ({ errors: [], errorsWithCenters: [] }),
+      marginDrcEvaluator: () => ({ status: "measured", errors: [] }),
+      drcEvaluator: () => {
+        evaluationCount++
+        return {
+          errors: [{ type: "pcb_trace_error", message: "Missing connection" }],
+          errorsWithCenters: [],
+        }
+      },
+    }
   const result = applyPipeline9ClearancePrecisionRepairs(params)
   expect(evaluationCount).toBeGreaterThan(0)
   expect(result.repaired).toBeFalse()

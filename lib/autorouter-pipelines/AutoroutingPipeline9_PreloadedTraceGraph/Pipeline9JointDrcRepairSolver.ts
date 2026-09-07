@@ -1486,8 +1486,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
           : (exactReferenceDrcResult.errorsWithCenters ??
             exactReferenceDrcResult.errors),
       })
-      clearancePrecisionCandidateCount =
-        precisionResult.attemptedCandidateCount
+      clearancePrecisionCandidateCount = precisionResult.attemptedCandidateCount
       clearancePrecisionCandidateValidationCount =
         precisionResult.candidateValidationCount
       clearancePrecisionReferenceValidationCount =
@@ -1606,8 +1605,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         boundedRegionalRepairResult.pathSearchNodeCount,
       boundedRegionalRepairReferenceValidationCount:
         boundedRegionalRepairResult.referenceValidationCount,
-      boundedRegionalRepairRepaired:
-        boundedRegionalRepairResult.repaired,
+      boundedRegionalRepairRepaired: boundedRegionalRepairResult.repaired,
       boundedRegionalRepairTimeMs:
         performance.now() - boundedRegionalRepairStartedAt,
       regionalB01RepairCandidateCount:
