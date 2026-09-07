@@ -55,7 +55,10 @@ export const identifyPipeline9ViaPadRepairTargets = ({
       error.type === "pcb_pad_pad_clearance_error" &&
       Array.isArray(error.pcb_pad_ids)
         ? error.pcb_pad_ids
-        : []
+        : error.type === "pcb_via_trace_clearance_error" &&
+            typeof error.pcb_via_id === "string"
+          ? [error.pcb_via_id]
+          : []
     const offendingVias = vias.filter((via): boolean => {
       if (ids.includes(via.pcb_via_id)) return true
       if (

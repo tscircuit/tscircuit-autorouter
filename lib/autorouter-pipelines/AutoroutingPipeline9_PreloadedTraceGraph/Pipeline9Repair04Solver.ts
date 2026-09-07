@@ -1,3 +1,4 @@
+import { getStandardDrcErrorCount } from "./getStandardDrcErrorCount"
 import type { ExistingViaRepairTarget } from "./identifyPipeline9ViaPadRepairTargets"
 import {
   Repair04Solver,
@@ -59,6 +60,7 @@ export class Pipeline9Repair04Solver extends BaseSolver {
   private attempted = new Set<string>()
   private regionCount = 0
   private acceptedRegionCount = 0
+  private referenceImproved = false
   private candidateAttempts = 0
   private pathSearchNodes = 0
   private pathSearchCalls = 0
@@ -184,7 +186,7 @@ export class Pipeline9Repair04Solver extends BaseSolver {
 
   private getCandidateAttemptLimit(): number | undefined {
     if (
-      this.acceptedRegionCount === 0 &&
+      !this.referenceImproved &&
       this.input.maxInitialCandidateAttempts !== undefined
     )
       return this.input.maxInitialCandidateAttempts
@@ -331,9 +333,13 @@ export class Pipeline9Repair04Solver extends BaseSolver {
           const candidateReferenceErrors = this.evaluateReference(candidate)
           if (
             candidateReferenceErrors.length <= this.referenceErrors!.length &&
+            getStandardDrcErrorCount(candidateReferenceErrors) <=
+              getStandardDrcErrorCount(this.referenceErrors!) &&
             (candidateIssues.length < this.issues.length ||
               candidateReferenceErrors.length < this.referenceErrors!.length)
           ) {
+            const referenceImproved =
+              candidateReferenceErrors.length < this.referenceErrors!.length
             this.routes = candidate
             this.issues = candidateIssues
             this.referenceErrors = candidateReferenceErrors
@@ -344,10 +350,12 @@ export class Pipeline9Repair04Solver extends BaseSolver {
               ]),
             )
             this.acceptedRegionCount++
-            // Child-local improvements do not reset this ledger. Only the
-            // proposal retained by every full-board acceptance guard does.
-            this.attemptsSinceAcceptance = 0
-            this.nodesSinceAcceptance = 0
+            // Retain indexed-only improvements without extending the search.
+            if (referenceImproved) {
+              this.referenceImproved = true
+              this.attemptsSinceAcceptance = 0
+              this.nodesSinceAcceptance = 0
+            }
           }
         }
       }
@@ -398,14 +406,18 @@ export class Pipeline9Repair04Solver extends BaseSolver {
     }
     // Retain the existing context escalation within each prioritized issue.
     for (const error of this.getPrioritizedErrors()) {
-      for (const allowLayerChanges of this.input.allowLayerChanges === true
-        ? [false, true]
-        : [false]) {
-        for (const size of [10, 16, 24]) {
+      for (const size of [10, 16, 24]) {
+        for (const allowLayerChanges of this.input.allowLayerChanges === true
+          ? [false, true]
+          : [false]) {
           const selectedVias =
             this.input.allowExistingViaRelocation === false || allowLayerChanges
               ? []
-              : this.referenceErrors!.flatMap(
+              : this.referenceErrors!.filter(
+                  (referenceError): boolean =>
+                    referenceError.type !== "pcb_via_trace_clearance_error" ||
+                    referenceError === error,
+                ).flatMap(
                   (referenceError): ExistingViaRepairTarget[] =>
                     (referenceError.existingViaRepairTargets ??
                       []) as ExistingViaRepairTarget[],
@@ -422,7 +434,15 @@ export class Pipeline9Repair04Solver extends BaseSolver {
             continue
           const { x, y } = center as { x: number; y: number }
           if (!Number.isFinite(x) || !Number.isFinite(y)) continue
-          const key = `${Math.round(x * 2)},${Math.round(y * 2)},${size},${allowLayerChanges}`
+          const typedViaKey =
+            !allowLayerChanges &&
+            this.input.allowExistingViaRelocation !== false &&
+            error.type === "pcb_via_trace_clearance_error"
+              ? errorViaTargets.map(({ routeIndex, viaIndex }): string =>
+                  `${routeIndex}:${viaIndex}`,
+                ).sort().join(";")
+              : ""
+          const key = `${Math.round(x * 2)},${Math.round(y * 2)},${size},${allowLayerChanges}${typedViaKey ? `,${typedViaKey}` : ""}`
           if (this.attempted.has(key)) continue
           this.attempted.add(key)
           // The existing-via pass cannot move anything without a reference

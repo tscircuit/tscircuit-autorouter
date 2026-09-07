@@ -14,6 +14,8 @@ import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivity
 import { getViaDimensions } from "lib/utils/getViaDimensions"
 import type { LayerName } from "lib/utils/mapZToLayerName"
 import { mapZToLayerName } from "lib/utils/mapZToLayerName"
+import { getTraceConnectivityIds } from "./getTraceConnectivityIds"
+import { mergeRectangularSmtPadObstacles } from "./mergeRectangularSmtPadObstacles"
 
 /**
  * Convert a simplified PCB trace from the autorouter to a circuit-json compatible PCB trace
@@ -497,13 +499,15 @@ function createSourceTraces(
     for (const trace of hdRoutes as SimplifiedPcbTrace[]) {
       const connectedSourcePortIds = [
         ...new Set(
-          (trace.connectsTo ?? []).filter((id) => declaredPcbPortIds.has(id)),
+          getTraceConnectivityIds(trace).filter((id) =>
+            declaredPcbPortIds.has(id),
+          ),
         ),
       ]
       const connectedSourcePortIdSet = new Set(connectedSourcePortIds)
       const connectedSourceNetIds = [
         ...new Set(
-          (trace.connectsTo ?? []).filter(
+          getTraceConnectivityIds(trace).filter(
             (id) => !connectedSourcePortIdSet.has(id),
           ),
         ),
@@ -520,8 +524,8 @@ function createSourceTraces(
           circuitJsonSourceTraceIdResolver,
           trace.connection_name,
         ) ??
-        trace.connectsTo
-          ?.map((connectionId) =>
+        getTraceConnectivityIds(trace)
+          .map((connectionId) =>
             resolveCircuitJsonSourceTraceId(
               circuitJsonSourceTraceIdResolver,
               connectionId,
@@ -653,7 +657,7 @@ function createPcbPadElements(srj: SimpleRouteJson): AnyCircuitElement[] {
   const portPositionMap = getPcbPortPositionMap(srj)
   const declaredPcbPortIds = getSrjDeclaredPcbPortIds(srj)
 
-  for (const obstacle of srj.obstacles) {
+  for (const obstacle of mergeRectangularSmtPadObstacles(srj.obstacles)) {
     const connectedTo = obstacle.connectedTo
     const circuitJsonMetadata = getCircuitJsonMetadata(obstacle)
     if (circuitJsonMetadata.pcb_via_id) continue
@@ -996,8 +1000,8 @@ export function convertToCircuitJson(
             routeCircuitJsonSourceTraceIdResolver,
             trace.connection_name,
           ) ??
-          trace.connectsTo
-            ?.map((connectionId) =>
+          getTraceConnectivityIds(trace)
+            .map((connectionId) =>
               resolveCircuitJsonSourceTraceId(
                 routeCircuitJsonSourceTraceIdResolver,
                 connectionId,
