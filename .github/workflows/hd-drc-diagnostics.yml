@@ -1,0 +1,96 @@
+name: HD DRC stage diagnostics
+
+on:
+  pull_request:
+    paths:
+      - scripts/diagnosePipelineDrc.ts
+      - .github/workflows/hd-drc-diagnostics.yml
+
+permissions:
+  contents: read
+
+concurrency:
+  group: hd-drc-diagnostics-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { dataset: srj18, sample: 10, pipeline: 9 }
+          - { dataset: srj19, sample: 49, pipeline: 9 }
+          - { dataset: srj19, sample: 22, pipeline: 9 }
+          - { dataset: srj19, sample: 32, pipeline: 9 }
+          - { dataset: srj19, sample: 56, pipeline: 9 }
+          - { dataset: srj20, sample: 3, pipeline: 9 }
+          - { dataset: srj20, sample: 4, pipeline: 9 }
+          - { dataset: srj20, sample: 111, pipeline: 9 }
+          - { dataset: srj20, sample: 55, pipeline: 9 }
+          - { dataset: srj20, sample: 140, pipeline: 9 }
+          - { dataset: srj21, sample: 1, pipeline: 9 }
+          - { dataset: srj23, sample: 17, pipeline: 9 }
+          - { dataset: srj23, sample: 49, pipeline: 9 }
+          - { dataset: srj23, sample: 72, pipeline: 9 }
+          - { dataset: srj20, sample: 169, pipeline: 7 }
+    steps:
+      - name: Checkout PR head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          path: diagnostic-pr
+          persist-credentials: false
+
+      - name: Checkout paired main
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          path: diagnostic-main
+          persist-credentials: false
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: 1.3.8
+
+      - name: Install main dependencies
+        working-directory: diagnostic-main
+        run: bun install
+
+      - name: Install PR dependencies
+        working-directory: diagnostic-pr
+        run: bun install
+
+      - name: Use identical diagnostic controller
+        run: cp diagnostic-pr/scripts/diagnosePipelineDrc.ts diagnostic-main/scripts/diagnosePipelineDrc.ts
+
+      # These stage evaluations are diagnostics, not timed benchmarks. Normal
+      # benchmark commands and their equal main/PR budgets remain unchanged.
+      - name: Diagnose paired main
+        working-directory: diagnostic-main
+        run: bun scripts/diagnosePipelineDrc.ts ${{ matrix.dataset }} ${{ matrix.sample }} ${{ matrix.pipeline }} ../diagnostic-results/main
+
+      - name: Diagnose PR head
+        if: success() || failure()
+        working-directory: diagnostic-pr
+        run: bun scripts/diagnosePipelineDrc.ts ${{ matrix.dataset }} ${{ matrix.sample }} ${{ matrix.pipeline }} ../diagnostic-results/pr
+
+      - name: Record exact revisions
+        if: always()
+        env:
+          MAIN_SHA: ${{ github.event.pull_request.base.sha }}
+          PR_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          mkdir -p diagnostic-results
+          printenv MAIN_SHA PR_SHA > diagnostic-results/revisions.txt
+
+      - name: Upload stage errors and route ownership
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: hd-drc-${{ matrix.dataset }}-${{ matrix.sample }}-pipeline${{ matrix.pipeline }}
+          path: diagnostic-results
+          if-no-files-found: error
