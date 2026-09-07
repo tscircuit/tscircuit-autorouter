@@ -12,7 +12,7 @@ test("Pipeline9 publication rejects worse inherited copper without leaking repai
   const originalPreloadedTraces =
     solver.getConstructorParams()[0].updatedPreloadedTraces
   const originalTraceRoute = trace.route
-  const initialRoutes = structuredClone(exactRepairSolver.params.hdRoutes)
+  const initialRoutes = structuredClone(exactRepairSolver.inputHdRoutes)
   expect(initialRoutes).toHaveLength(1)
   const worseningCandidate = structuredClone(initialRoutes)
   for (const point of worseningCandidate[0]!.route.slice(1, -1)) {

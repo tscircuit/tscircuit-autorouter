@@ -4,6 +4,8 @@ import type { GraphicsObject } from "graphics-debug"
 import {
   AutoroutingDrcEngine,
   type DrcEvaluator,
+  type GlobalDrcBranchPortfolioSolverParams,
+  type GlobalDrcForceImproveSolver,
   type SimpleRouteJson as RepairSimpleRouteJson,
   type SimplifiedPcbTraces as RepairSimplifiedPcbTraces,
 } from "high-density-repair03/lib"
@@ -53,6 +55,10 @@ const MAX_POST_EXACT_PRECISION_PASS_INDEXED_ISSUE_COUNT = 16
 const INDEXED_DRC_CANDIDATE_CACHE_SIZE = 64
 
 type DrcCandidateKey = string & { readonly __brand: "DrcCandidateKey" }
+
+export type Pipeline9ExactDrcRepairSolver =
+  | Pipeline7AdaptiveDrcBranchPortfolioSolver
+  | GlobalDrcForceImproveSolver
 
 export type Pipeline9JointDrcRepairSolverParams = {
   srj: SimpleRouteJson
@@ -649,7 +655,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
   readonly movablePreloadedSections: MovablePreloadedSection[]
   readonly fixedPreloadedObstacleRoutes: PreloadedHighDensityRoute[]
   readonly syntheticConnectionNames: ReadonlySet<string>
-  readonly exactRepairSolver?: Pipeline7AdaptiveDrcBranchPortfolioSolver
+  readonly exactRepairSolver?: Pipeline9ExactDrcRepairSolver
   private drcEvaluator?: DrcEvaluator
   private cachedReferenceDrcEvaluator?: DrcEvaluator
   private referenceDrcValidationCount = 0
@@ -1346,7 +1352,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     }
     this.drcEvaluator = drcEvaluator
 
-    this.exactRepairSolver = new Pipeline7AdaptiveDrcBranchPortfolioSolver({
+    this.exactRepairSolver = this.createExactRepairSolver({
       srj: extendedSrjWithPointPairs as any,
       hdRoutes: [
         ...params.newHdRoutes,
@@ -1375,6 +1381,13 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     this.MAX_ITERATIONS = this.exactRepairSolver.MAX_ITERATIONS + 1
   }
 
+  protected createExactRepairSolver(
+    params: GlobalDrcBranchPortfolioSolverParams,
+  ): Pipeline9ExactDrcRepairSolver {
+    // The original Joint stage retains its established portfolio policy.
+    return new Pipeline7AdaptiveDrcBranchPortfolioSolver(params)
+  }
+
   override getSolverName(): string {
     return "Pipeline9JointDrcRepairSolver"
   }
@@ -1392,9 +1405,12 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       return
     }
     if (!this.exactRepairSolver.solved) return
-    const exactOutput = this.exactRepairSolver.getOutput()
+    this.finishExactRepair(this.exactRepairSolver.getOutput())
+  }
+
+  protected finishExactRepair(exactOutput: HighDensityRoute[]): void {
     const exactIndexedDrcIssueCountStat =
-      this.exactRepairSolver.stats.finalDrcIssueCount
+      this.exactRepairSolver!.stats.finalDrcIssueCount
     const exactIndexedDrcIssueCount =
       typeof exactIndexedDrcIssueCountStat === "number" &&
       Number.isFinite(exactIndexedDrcIssueCountStat) &&
@@ -1423,7 +1439,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         this.publishValidatedOutput(exactOutput)
         this.stats = {
           ...this.stats,
-          ...this.exactRepairSolver.stats,
+          ...this.exactRepairSolver!.stats,
           postExactIndexedDrcIssueCount: exactIndexedDrcIssueCount,
           postExactPrecisionPassMaxIndexedIssueCount:
             MAX_POST_EXACT_PRECISION_PASS_INDEXED_ISSUE_COUNT,
@@ -1504,7 +1520,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     this.publishValidatedOutput(regionalB01RepairResult.routes)
     this.stats = {
       ...this.stats,
-      ...this.exactRepairSolver.stats,
+      ...this.exactRepairSolver!.stats,
       postExactIndexedDrcIssueCount: exactIndexedDrcIssueCount,
       postExactPrecisionPassMaxIndexedIssueCount:
         MAX_POST_EXACT_PRECISION_PASS_INDEXED_ISSUE_COUNT,

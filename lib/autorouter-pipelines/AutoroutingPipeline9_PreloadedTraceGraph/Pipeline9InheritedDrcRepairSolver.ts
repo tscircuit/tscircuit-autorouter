@@ -1,4 +1,8 @@
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
+import {
+  GlobalDrcForceImproveSolver,
+  type GlobalDrcBranchPortfolioSolverParams,
+} from "high-density-repair03/lib"
 import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import type { SimplifiedPcbTrace } from "lib/types"
 import type { HighDensityRoute } from "lib/types/high-density-types"
@@ -21,7 +25,8 @@ type InheritedMovablePreloadedSection = MovablePreloadedSection & {
  * Repairs inherited ordinary copper only after the existing joint repair has
  * finished. Its full published board is the incumbent, never the earlier
  * global-repair output. Native Repair03 and the original joint policy remain
- * unchanged; this layer specializes ownership and publication only.
+ * unchanged; this layer uses one fixed native pass, specialized ownership and
+ * transactional publication without the joint portfolio or regional retries.
  */
 export class Pipeline9InheritedDrcRepairSolver extends Pipeline9JointDrcRepairSolver {
   private readonly incumbentParams: Pipeline9JointDrcRepairSolverParams
@@ -76,6 +81,51 @@ export class Pipeline9InheritedDrcRepairSolver extends Pipeline9JointDrcRepairSo
 
   override getConstructorParams(): [Pipeline9JointDrcRepairSolverParams] {
     return [this.incumbentParams]
+  }
+
+  protected override createExactRepairSolver(
+    params: GlobalDrcBranchPortfolioSolverParams,
+  ): GlobalDrcForceImproveSolver {
+    if (
+      params.maxIterations === undefined ||
+      !Number.isInteger(params.maxIterations) ||
+      params.maxIterations <= 0
+    ) {
+      throw new Error(
+        "Pipeline9 inherited repair requires a fixed native budget",
+      )
+    }
+    // These are the existing native policy fields, fixed for this added pass.
+    // Supplying the Joint budget prevents native effort/count budget growth;
+    // no probe result or failed solve chooses another search implementation.
+    return new GlobalDrcForceImproveSolver({
+      srj: params.srj,
+      hdRoutes: params.hdRoutes,
+      connMap: params.connMap,
+      effort: params.effort,
+      drcEvaluator: params.drcEvaluator,
+      viaHoleDiameter: params.viaHoleDiameter,
+      maxIterations: params.maxIterations,
+      enableBroadFallback: false,
+      enableLargeBoardBroadFallback: false,
+      enableTargetedErrorSweep: true,
+      enableTraceViaOwnerTargeting: true,
+      enablePostSolveClearanceRelaxation: false,
+      enableSafeTraceLayerMoves: true,
+      enableViaInPadLayerMoves: params.enableViaInPadLayerMoves,
+    })
+  }
+
+  protected override finishExactRepair(routes: HighDensityRoute[]): void {
+    // Publish through the inherited full-board/anchor gate directly. In
+    // particular, completion must not enter Joint's terminal/B01 retry chain.
+    this.stats = {
+      ...this.stats,
+      ...this.exactRepairSolver!.stats,
+    }
+    this.publishValidatedOutput(routes)
+    this.activeSubSolver = null
+    this.solved = true
   }
 
   protected override selectDrcErrors<

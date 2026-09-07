@@ -15,7 +15,7 @@ export type Pipeline9PreloadRepairTraceIds = ReadonlySet<string> & {
   readonly collidingFixedTraceIds?: ReadonlySet<string>
 }
 
-const SCORE_EPSILON = 1e-9
+export const SCORE_EPSILON = 1e-9
 
 export const clonePipeline9HdRoutes = (
   routes: HighDensityRoute[],
@@ -111,7 +111,7 @@ export const isPipeline9DrcErrorOwnedByPreloadRepair = ({
   )
 }
 
-const getDrcIssueScore = (errors: Pipeline9DrcError[]) =>
+export const getPipeline9DrcScore = (errors: Pipeline9DrcError[]): number =>
   errors.reduce((score, error) => {
     if (
       typeof error.actual_clearance === "number" &&
@@ -135,8 +135,8 @@ export const isPipeline9DrcCandidateBetter = (
 ) =>
   candidateErrors.length < currentErrors.length ||
   (candidateErrors.length === currentErrors.length &&
-    getDrcIssueScore(candidateErrors) <
-      getDrcIssueScore(currentErrors) - SCORE_EPSILON)
+    getPipeline9DrcScore(candidateErrors) <
+      getPipeline9DrcScore(currentErrors) - SCORE_EPSILON)
 
 export const getPipeline9RouteIndexByTraceId = ({
   routes,

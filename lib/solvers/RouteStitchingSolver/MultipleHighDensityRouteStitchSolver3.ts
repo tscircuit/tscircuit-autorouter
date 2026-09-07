@@ -144,11 +144,33 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
     if (!rootConnectionName) return null
 
     const currentRouteSet = new Set(params.hdRoutes)
-    const sameRootRoutes = params.allHdRoutes.filter(
-      (route) =>
-        (route.rootConnectionName ?? route.connectionName) ===
-        rootConnectionName,
+    const expectedPcbPortIds = new Set(
+      (this.preserveTerminalPcbPortIds
+        ? [params.start.pcb_port_id, params.end.pcb_port_id]
+        : []
+      ).filter((pcbPortId): pcbPortId is string => pcbPortId !== undefined),
     )
+    const sameRootRoutes = params.allHdRoutes.filter((route): boolean => {
+      if (
+        (route.rootConnectionName ?? route.connectionName) !== rootConnectionName
+      ) {
+        return false
+      }
+      if (currentRouteSet.has(route) || expectedPcbPortIds.size === 0) {
+        return true
+      }
+      // Shared net membership does not make a sibling's physical terminal
+      // part of this child connection. Apply the terminal invariant before
+      // path selection, without discarding claims or changing owned fragments.
+      return [
+        getRouteStitchEndpoint(route, "first"),
+        getRouteStitchEndpoint(route, "last"),
+      ].every(
+        (endpoint): boolean =>
+          endpoint.pcb_port_id === undefined ||
+          expectedPcbPortIds.has(endpoint.pcb_port_id),
+      )
+    })
 
     if (sameRootRoutes.every((route) => currentRouteSet.has(route))) {
       return null

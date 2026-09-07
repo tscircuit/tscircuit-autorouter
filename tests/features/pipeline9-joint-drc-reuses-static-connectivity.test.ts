@@ -74,7 +74,8 @@ test("Pipeline9 reuses obstacle connectivity while evaluating changed repair geo
     effort: 1,
     colorMap: {},
   })
-  const evaluate = solver.exactRepairSolver!.params.drcEvaluator!
+  const evaluate =
+    solver.exactRepairSolver!.getConstructorParams()[0].drcEvaluator!
   const initial = evaluate({ traces: [], routes })
   const warmedConnectivityChecks = connectivityChecks
   const candidate = structuredClone(routes)

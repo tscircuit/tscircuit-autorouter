@@ -122,7 +122,7 @@ test("Pipeline9 inherited rejection preserves the completed joint board despite 
   expect(next.params.connMap.netMap[aliasNet]).not.toBe(
     callerConnMap.netMap[aliasNet],
   )
-  const workingRoutes = next.exactRepairSolver!.params.hdRoutes
+  const workingRoutes = next.exactRepairSolver!.inputHdRoutes
   const workingNewRoute = workingRoutes.find(
     (route) => route.connectionName === newConnection.name,
   )

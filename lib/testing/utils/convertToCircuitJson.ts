@@ -15,6 +15,20 @@ import { getViaDimensions } from "lib/utils/getViaDimensions"
 import type { LayerName } from "lib/utils/mapZToLayerName"
 import { mapZToLayerName } from "lib/utils/mapZToLayerName"
 
+type CircuitJsonInputRoutes = SimplifiedPcbTrace[] | HighDensityRoute[]
+
+export type PreparedCircuitJsonConverter = (
+  routes: CircuitJsonInputRoutes,
+) => AnyCircuitElement[]
+
+type PreparedCircuitJsonParts = {
+  sourceTraces: AnyCircuitElement[]
+  pcbPorts: AnyCircuitElement[]
+  pcbPads: AnyCircuitElement[]
+  vias: PcbVia[]
+  traces: PcbTrace[]
+}
+
 /**
  * Convert a simplified PCB trace from the autorouter to a circuit-json compatible PCB trace
  */
@@ -370,16 +384,23 @@ const resolveCircuitJsonSourceTraceId = (
   return sourceTraceIds.values().next().value
 }
 
-/**
- * Create source_trace elements from the SimpleRouteJson connections
- * These represent the logical connections between points
- */
-function createSourceTraces(
+function getSourceTraceEndpoint(
+  segment: CircuitJsonInputRoutes[number]["route"][number],
+): { x: number; y: number } {
+  if ("route_type" in segment && segment.route_type === "jumper") {
+    return segment.start
+  }
+  if ("x" in segment && "y" in segment) {
+    return { x: segment.x, y: segment.y }
+  }
+  return { x: 0, y: 0 }
+}
+
+/** Prepares source connectivity while retaining endpoint-dependent inference. */
+function createSourceTracesConverter(
   srj: SimpleRouteJson,
-  hdRoutes: SimplifiedPcbTrace[] | HighDensityRoute[],
-  sourceSrj = srj,
-): AnyCircuitElement[] {
-  const sourceTraces: AnyCircuitElement[] = []
+  sourceSrj: SimpleRouteJson,
+): (routes: CircuitJsonInputRoutes) => AnyCircuitElement[] {
   const connections =
     sourceSrj === srj
       ? srj.connections
@@ -397,175 +418,200 @@ function createSourceTraces(
     obstacles,
   })
 
-  // Process each connection to create a source_trace
-  connections.forEach((connection) => {
-    // Extract port IDs from the connection points
-    const connectedPortIds = connection.pointsToConnect
-      .map((point) => point.pcb_port_id)
-      .filter((pointId): pointId is string => Boolean(pointId))
-    const connectedPortIdSet = new Set(connectedPortIds)
-    const getNonEndpointObstacleConnectivityIds = (
-      matchingObstacles: Obstacle[],
-    ) =>
-      getObstacleConnectivityIds(matchingObstacles).filter(
-        (id) => !connectedPortIdSet.has(id),
-      )
-    const connectedPointIds = connection.pointsToConnect
-      .map((point) => point.pointId)
-      .filter((pointId): pointId is string => Boolean(pointId))
-
-    // Look for original connection name (might be MST-suffixed by NetToPointPairsSolver)
-    const netConnectionName =
-      resolveCircuitJsonSourceTraceId(
-        circuitJsonSourceTraceIdResolver,
-        connection.name,
-      ) ?? getCircuitJsonSourceTraceId(connection)
-
-    // Test for obstacles we're inside of
-    const obstaclesContainingEndpoints: Obstacle[] = []
-    const hdRoute = hdRoutes.find(
-      (r) =>
-        ((r as any).connection_name ?? (r as any).connectionName) ===
-        connection.name,
-    )
-    if (hdRoute) {
-      const getPointFromSegment = (segment: (typeof hdRoute.route)[0]) => {
-        if ("route_type" in segment && segment.route_type === "jumper") {
-          return segment.start
-        }
-        if ("x" in segment && "y" in segment) {
-          return { x: segment.x, y: segment.y }
-        }
-        return { x: 0, y: 0 }
+  let cachedKey: string | undefined
+  let cachedSourceTraces: AnyCircuitElement[] = []
+  return (hdRoutes: CircuitJsonInputRoutes): AnyCircuitElement[] => {
+    const firstRouteByConnectionName = new Map<
+      string,
+      CircuitJsonInputRoutes[number]
+    >()
+    for (const route of hdRoutes) {
+      const name =
+        (route as SimplifiedPcbTrace).connection_name ??
+        (route as HighDensityRoute).connectionName
+      if (!firstRouteByConnectionName.has(name)) {
+        firstRouteByConnectionName.set(name, route)
       }
+    }
+    // Only the first matching fragment's endpoints affect source connectivity.
+    // Seam repair can move one of them even when the net and ports stay fixed.
+    const key = JSON.stringify([
+      connections.map((connection) => {
+        const route = firstRouteByConnectionName.get(connection.name)
+        return route
+          ? [
+              getSourceTraceEndpoint(route.route[0]!),
+              getSourceTraceEndpoint(route.route[route.route.length - 1]!),
+            ]
+          : null
+      }),
+      hdRoutes[0] && "type" in hdRoutes[0]
+        ? (hdRoutes as SimplifiedPcbTrace[]).map((trace) => [
+            trace.connection_name,
+            trace.connectsTo,
+          ])
+        : null,
+    ])
+    if (key === cachedKey) {
+      return structuredClone(cachedSourceTraces)
+    }
+    const sourceTraces: AnyCircuitElement[] = []
+    // Process each connection to create a source_trace
+    connections.forEach((connection) => {
+      // Extract port IDs from the connection points
+      const connectedPortIds = connection.pointsToConnect
+        .map((point) => point.pcb_port_id)
+        .filter((pointId): pointId is string => Boolean(pointId))
+      const connectedPortIdSet = new Set(connectedPortIds)
+      const getNonEndpointObstacleConnectivityIds = (
+        matchingObstacles: Obstacle[],
+      ) =>
+        getObstacleConnectivityIds(matchingObstacles).filter(
+          (id) => !connectedPortIdSet.has(id),
+        )
+      const connectedPointIds = connection.pointsToConnect
+        .map((point) => point.pointId)
+        .filter((pointId): pointId is string => Boolean(pointId))
 
-      const endpoints = [
-        getPointFromSegment(hdRoute.route[0]),
-        getPointFromSegment(hdRoute.route[hdRoute.route.length - 1]),
-      ]
+      // Look for original connection name (might be MST-suffixed by NetToPointPairsSolver)
+      const netConnectionName =
+        resolveCircuitJsonSourceTraceId(
+          circuitJsonSourceTraceIdResolver,
+          connection.name,
+        ) ?? getCircuitJsonSourceTraceId(connection)
 
-      for (const endpoint of endpoints) {
-        for (const obstacle of obstacles) {
-          if (pointToBoxDistance(endpoint, obstacle) <= 0) {
-            obstaclesContainingEndpoints.push(obstacle)
+      // Test for obstacles we're inside of
+      const obstaclesContainingEndpoints: Obstacle[] = []
+      const hdRoute = firstRouteByConnectionName.get(connection.name)
+      if (hdRoute) {
+        const endpoints = [
+          getSourceTraceEndpoint(hdRoute.route[0]!),
+          getSourceTraceEndpoint(hdRoute.route[hdRoute.route.length - 1]!),
+        ]
+
+        for (const endpoint of endpoints) {
+          for (const obstacle of obstacles) {
+            if (pointToBoxDistance(endpoint, obstacle) <= 0) {
+              obstaclesContainingEndpoints.push(obstacle)
+            }
           }
         }
       }
-    }
 
-    // Check if this source_trace already exists
-    const existingSourceTrace = sourceTraces.find(
-      (st) =>
-        st.type === "source_trace" && st.source_trace_id === netConnectionName,
-    )
-
-    if (existingSourceTrace) {
-      // Add these port IDs to the existing source_trace
-      const sourceTrace = existingSourceTrace as any
-      sourceTrace.connected_source_port_ids = [
-        ...new Set([
-          ...sourceTrace.connected_source_port_ids,
-          ...connectedPortIds,
-        ]),
-      ]
-      sourceTrace.connected_source_net_ids = [
-        ...new Set([
-          ...(sourceTrace.connected_source_net_ids ?? []),
-          ...connectedPointIds,
-          ...getNonEndpointObstacleConnectivityIds(
-            obstaclesContainingEndpoints,
-          ),
-        ]),
-      ]
-    } else {
-      // Create a new source_trace for this connection
-      sourceTraces.push({
-        type: "source_trace",
-        source_trace_id: netConnectionName,
-        connected_source_port_ids: connectedPortIds,
-        connected_source_net_ids: getNonEndpointObstacleConnectivityIds(
-          obstaclesContainingEndpoints,
-        ).concat(connectedPointIds),
-      })
-    }
-  })
-
-  if (hdRoutes[0] && "type" in hdRoutes[0]) {
-    const connectionByName = new Map(
-      connections.map((connection) => [connection.name, connection]),
-    )
-    for (const trace of hdRoutes as SimplifiedPcbTrace[]) {
-      const connectedSourcePortIds = [
-        ...new Set(
-          (trace.connectsTo ?? []).filter((id) => declaredPcbPortIds.has(id)),
-        ),
-      ]
-      const connectedSourcePortIdSet = new Set(connectedSourcePortIds)
-      const connectedSourceNetIds = [
-        ...new Set(
-          (trace.connectsTo ?? []).filter(
-            (id) => !connectedSourcePortIdSet.has(id),
-          ),
-        ),
-      ]
-      if (
-        connectedSourcePortIds.length === 0 &&
-        connectedSourceNetIds.length === 0
-      )
-        continue
-
-      const connection = connectionByName.get(trace.connection_name)
-      const sourceTraceId =
-        resolveCircuitJsonSourceTraceId(
-          circuitJsonSourceTraceIdResolver,
-          trace.connection_name,
-        ) ??
-        trace.connectsTo
-          ?.map((connectionId) =>
-            resolveCircuitJsonSourceTraceId(
-              circuitJsonSourceTraceIdResolver,
-              connectionId,
-            ),
-          )
-          .find((connectionName) => connectionName !== undefined) ??
-        (connection
-          ? getCircuitJsonSourceTraceId(connection)
-          : (trace.connection_name as CircuitJsonSourceTraceId))
+      // Check if this source_trace already exists
       const existingSourceTrace = sourceTraces.find(
-        (sourceTrace) =>
-          sourceTrace.type === "source_trace" &&
-          sourceTrace.source_trace_id === sourceTraceId,
+        (st) =>
+          st.type === "source_trace" &&
+          st.source_trace_id === netConnectionName,
       )
-      if (existingSourceTrace?.type === "source_trace") {
-        existingSourceTrace.connected_source_port_ids = [
-          ...new Set([
-            ...existingSourceTrace.connected_source_port_ids,
-            ...connectedSourcePortIds,
-          ]),
-        ]
-        existingSourceTrace.connected_source_net_ids = [
-          ...new Set([
-            ...(existingSourceTrace.connected_source_net_ids ?? []),
-            ...connectedSourceNetIds,
-          ]),
-        ]
-        continue
-      }
-      sourceTraces.push({
-        type: "source_trace",
-        source_trace_id: sourceTraceId,
-        connected_source_port_ids: connectedSourcePortIds,
-        connected_source_net_ids: connectedSourceNetIds,
-      })
-    }
-  }
 
-  return sourceTraces
+      if (existingSourceTrace) {
+        // Add these port IDs to the existing source_trace
+        const sourceTrace = existingSourceTrace as any
+        sourceTrace.connected_source_port_ids = [
+          ...new Set([
+            ...sourceTrace.connected_source_port_ids,
+            ...connectedPortIds,
+          ]),
+        ]
+        sourceTrace.connected_source_net_ids = [
+          ...new Set([
+            ...(sourceTrace.connected_source_net_ids ?? []),
+            ...connectedPointIds,
+            ...getNonEndpointObstacleConnectivityIds(
+              obstaclesContainingEndpoints,
+            ),
+          ]),
+        ]
+      } else {
+        // Create a new source_trace for this connection
+        sourceTraces.push({
+          type: "source_trace",
+          source_trace_id: netConnectionName,
+          connected_source_port_ids: connectedPortIds,
+          connected_source_net_ids: getNonEndpointObstacleConnectivityIds(
+            obstaclesContainingEndpoints,
+          ).concat(connectedPointIds),
+        })
+      }
+    })
+
+    if (hdRoutes[0] && "type" in hdRoutes[0]) {
+      const connectionByName = new Map(
+        connections.map((connection) => [connection.name, connection]),
+      )
+      for (const trace of hdRoutes as SimplifiedPcbTrace[]) {
+        const connectedSourcePortIds = [
+          ...new Set(
+            (trace.connectsTo ?? []).filter((id) => declaredPcbPortIds.has(id)),
+          ),
+        ]
+        const connectedSourcePortIdSet = new Set(connectedSourcePortIds)
+        const connectedSourceNetIds = [
+          ...new Set(
+            (trace.connectsTo ?? []).filter(
+              (id) => !connectedSourcePortIdSet.has(id),
+            ),
+          ),
+        ]
+        if (
+          connectedSourcePortIds.length === 0 &&
+          connectedSourceNetIds.length === 0
+        )
+          continue
+
+        const connection = connectionByName.get(trace.connection_name)
+        const sourceTraceId =
+          resolveCircuitJsonSourceTraceId(
+            circuitJsonSourceTraceIdResolver,
+            trace.connection_name,
+          ) ??
+          trace.connectsTo
+            ?.map((connectionId) =>
+              resolveCircuitJsonSourceTraceId(
+                circuitJsonSourceTraceIdResolver,
+                connectionId,
+              ),
+            )
+            .find((connectionName) => connectionName !== undefined) ??
+          (connection
+            ? getCircuitJsonSourceTraceId(connection)
+            : (trace.connection_name as CircuitJsonSourceTraceId))
+        const existingSourceTrace = sourceTraces.find(
+          (sourceTrace) =>
+            sourceTrace.type === "source_trace" &&
+            sourceTrace.source_trace_id === sourceTraceId,
+        )
+        if (existingSourceTrace?.type === "source_trace") {
+          existingSourceTrace.connected_source_port_ids = [
+            ...new Set([
+              ...existingSourceTrace.connected_source_port_ids,
+              ...connectedSourcePortIds,
+            ]),
+          ]
+          existingSourceTrace.connected_source_net_ids = [
+            ...new Set([
+              ...(existingSourceTrace.connected_source_net_ids ?? []),
+              ...connectedSourceNetIds,
+            ]),
+          ]
+          continue
+        }
+        sourceTraces.push({
+          type: "source_trace",
+          source_trace_id: sourceTraceId,
+          connected_source_port_ids: connectedSourcePortIds,
+          connected_source_net_ids: connectedSourceNetIds,
+        })
+      }
+    }
+
+    cachedKey = key
+    cachedSourceTraces = structuredClone(sourceTraces)
+    return sourceTraces
+  }
 }
 
-/**
- * Create circuit-json pcb_port elements for the connection points
- */
 function createPcbPorts(srj: SimpleRouteJson): AnyCircuitElement[] {
   const portMap = new Map<string, any>()
 
@@ -920,11 +966,10 @@ export function createPcbBoardElement(srj: SimpleRouteJson): PcbBoard {
   }
 }
 
-export function convertToCircuitJson(
+function createPreparedCircuitJsonPartsConverter(
   srjWithPointPairs: SimpleRouteJson,
-  routes: SimplifiedPcbTrace[] | HighDensityRoute[],
-  options: ConvertToCircuitJsonOptions = {},
-): AnyCircuitElement[] {
+  options: ConvertToCircuitJsonOptions,
+): (routes: CircuitJsonInputRoutes) => PreparedCircuitJsonParts {
   const {
     minTraceWidth = 0.1,
     minViaDiameter,
@@ -943,94 +988,156 @@ export function convertToCircuitJson(
     (minViaDiameter !== undefined
       ? resolvedMinViaDiameter * 0.5
       : viaDimensions.holeDiameter)
-
-  // Start with empty circuit JSON
-  const circuitJson: AnyCircuitElement[] = []
-
-  // Add source traces from connection information
-  circuitJson.push(
-    ...createSourceTraces(
-      srjWithPointPairs,
-      routes,
-      includeOriginalConnections && originalSrj
-        ? originalSrj
-        : srjWithPointPairs,
-    ),
+  const sourceSrj =
+    includeOriginalConnections && originalSrj ? originalSrj : srjWithPointPairs
+  const convertSourceTraces = createSourceTracesConverter(
+    srjWithPointPairs,
+    sourceSrj,
   )
-
-  // Add PCB ports for connection points
-  circuitJson.push(
-    ...createPcbPorts(
-      includeOriginalConnections && originalSrj
-        ? originalSrj
-        : srjWithPointPairs,
-    ),
-  )
-
-  // Add PCB pads / plated holes represented by SRJ obstacles
-  circuitJson.push(...createPcbPadElements(originalSrj ?? srjWithPointPairs))
-
-  // Extract and add vias as independent pcb_via elements
-  circuitJson.push(
-    ...extractViasFromRoutes(
-      routes,
-      srjWithPointPairs.layerCount,
-      resolvedMinViaDiameter,
-      resolvedMinViaHoleDiameter,
-    ),
-  )
-
+  const pcbPorts = createPcbPorts(sourceSrj)
+  const pcbPads = createPcbPadElements(originalSrj ?? srjWithPointPairs)
   const routeCircuitJsonSourceTraceIdResolver =
     createCircuitJsonSourceTraceIdResolver(
       srjWithPointPairs.connections,
       getConnectivityMapFromSimpleRouteJson(srjWithPointPairs),
     )
+  const simplifiedTraceCache = new WeakMap<SimplifiedPcbTrace, PcbTrace>()
+  const hdTraceCache = new WeakMap<
+    HighDensityRoute,
+    { index: number; traces: PcbTrace[] }
+  >()
 
-  // Process routes based on their type
-  if (routes.length > 0) {
+  return (routes: CircuitJsonInputRoutes): PreparedCircuitJsonParts => {
+    const parts: PreparedCircuitJsonParts = {
+      sourceTraces: convertSourceTraces(routes),
+      pcbPorts,
+      pcbPads,
+      // Always use the current full route order: the first colocated via wins
+      // its owner and dimensions, and removing it renumbers subsequent vias.
+      vias: extractViasFromRoutes(
+        routes,
+        srjWithPointPairs.layerCount,
+        resolvedMinViaDiameter,
+        resolvedMinViaHoleDiameter,
+      ),
+      traces: [],
+    }
+    if (routes.length === 0) return parts
     if ("type" in routes[0] && routes[0].type === "pcb_trace") {
-      // Handle SimplifiedPcbTraces
-      ;(routes as SimplifiedPcbTrace[]).forEach((trace) => {
-        const connectionName =
-          resolveCircuitJsonSourceTraceId(
-            routeCircuitJsonSourceTraceIdResolver,
-            trace.connection_name,
-          ) ??
-          trace.connectsTo
-            ?.map((connectionId) =>
-              resolveCircuitJsonSourceTraceId(
-                routeCircuitJsonSourceTraceIdResolver,
-                connectionId,
-              ),
-            )
-            .find((mappedConnectionName) => Boolean(mappedConnectionName)) ??
-          (trace.connection_name as CircuitJsonSourceTraceId)
-        circuitJson.push(
-          convertSimplifiedPcbTraceToCircuitJson(
+      for (const trace of routes as SimplifiedPcbTrace[]) {
+        let convertedTrace = simplifiedTraceCache.get(trace)
+        if (!convertedTrace) {
+          const connectionName =
+            resolveCircuitJsonSourceTraceId(
+              routeCircuitJsonSourceTraceIdResolver,
+              trace.connection_name,
+            ) ??
+            trace.connectsTo
+              ?.map((connectionId) =>
+                resolveCircuitJsonSourceTraceId(
+                  routeCircuitJsonSourceTraceIdResolver,
+                  connectionId,
+                ),
+              )
+              .find((mappedConnectionName) => Boolean(mappedConnectionName)) ??
+            (trace.connection_name as CircuitJsonSourceTraceId)
+          convertedTrace = convertSimplifiedPcbTraceToCircuitJson(
             trace,
             connectionName,
-          ) as AnyCircuitElement,
-        )
-      })
+          )
+          simplifiedTraceCache.set(trace, convertedTrace)
+        }
+        parts.traces.push(convertedTrace)
+      }
     } else {
-      // Handle HighDensityRoutes - may produce multiple traces per route if jumpers exist
-      ;(routes as HighDensityRoute[]).forEach((route, index) => {
-        const connectionName =
-          resolveCircuitJsonSourceTraceId(
-            routeCircuitJsonSourceTraceIdResolver,
-            route.connectionName,
-          ) ?? (route.connectionName as CircuitJsonSourceTraceId)
-        const traces = convertHdRouteToCircuitJsonTraces(
-          route,
-          `trace_${index}`,
-          connectionName,
-          srjWithPointPairs.layerCount,
-          minTraceWidth,
-        )
-        circuitJson.push(...(traces as AnyCircuitElement[]))
-      })
+      for (const [index, route] of (routes as HighDensityRoute[]).entries()) {
+        let cached = hdTraceCache.get(route)
+        if (!cached || cached.index !== index) {
+          const connectionName =
+            resolveCircuitJsonSourceTraceId(
+              routeCircuitJsonSourceTraceIdResolver,
+              route.connectionName,
+            ) ?? (route.connectionName as CircuitJsonSourceTraceId)
+          cached = {
+            index,
+            traces: convertHdRouteToCircuitJsonTraces(
+              route,
+              `trace_${index}`,
+              connectionName,
+              srjWithPointPairs.layerCount,
+              minTraceWidth,
+            ),
+          }
+          hdTraceCache.set(route, cached)
+        }
+        parts.traces.push(...cached.traces)
+      }
     }
+    return parts
   }
+}
 
-  return circuitJson
+/**
+ * Prepares conversion for immutable SRJ and route inputs. Returned circuit JSON
+ * is detached from cached geometry and source connectivity for official checks.
+ */
+export function createPreparedCircuitJsonConverter(
+  srjWithPointPairs: SimpleRouteJson,
+  options: ConvertToCircuitJsonOptions = {},
+): PreparedCircuitJsonConverter {
+  const convertParts = createPreparedCircuitJsonPartsConverter(
+    srjWithPointPairs,
+    options,
+  )
+  return (routes: CircuitJsonInputRoutes): AnyCircuitElement[] => {
+    const parts = convertParts(routes)
+    return [
+      ...parts.sourceTraces,
+      ...structuredClone(parts.pcbPorts),
+      ...structuredClone(parts.pcbPads),
+      ...parts.vias,
+      ...parts.traces.map(
+        (trace): PcbTrace => ({
+          ...trace,
+          route: trace.route.map((point) => ({ ...point })),
+        }),
+      ),
+    ]
+  }
+}
+
+/**
+ * Borrows immutable converted trace/pad objects for internal candidate snapshots.
+ * Consumers must detach any copper passed to a mutating checker. Unlike the
+ * public prepared converter, unchanged trace geometry retains its identity, so
+ * rejected local trials need not copy or rescan every wire on the entire board.
+ */
+export function createPreparedImmutableCircuitJsonConverter(
+  srjWithPointPairs: SimpleRouteJson,
+  options: ConvertToCircuitJsonOptions = {},
+): PreparedCircuitJsonConverter {
+  const convertParts = createPreparedCircuitJsonPartsConverter(
+    srjWithPointPairs,
+    options,
+  )
+  return (routes: CircuitJsonInputRoutes): AnyCircuitElement[] => {
+    const parts = convertParts(routes)
+    return [
+      ...parts.sourceTraces,
+      ...parts.pcbPorts,
+      ...parts.pcbPads,
+      ...parts.vias,
+      ...parts.traces,
+    ]
+  }
+}
+
+export function convertToCircuitJson(
+  srjWithPointPairs: SimpleRouteJson,
+  routes: CircuitJsonInputRoutes,
+  options: ConvertToCircuitJsonOptions = {},
+): AnyCircuitElement[] {
+  // General callers may mutate inputs between calls. Only explicitly prepared
+  // consumers retain caches; the existing conversion API remains stateless.
+  return createPreparedCircuitJsonConverter(srjWithPointPairs, options)(routes)
 }

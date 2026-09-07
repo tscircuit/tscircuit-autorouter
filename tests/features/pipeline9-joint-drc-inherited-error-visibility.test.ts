@@ -5,7 +5,8 @@ import { createPipeline9InheritedPadClearanceFixture } from "../fixtures/create-
 test("Pipeline9 keeps an inherited pad pair visible when its clearance worsens", (): void => {
   const { srj, originalSrj, trace, solver } =
     createPipeline9InheritedPadClearanceFixture()
-  const evaluate = solver.exactRepairSolver?.params.drcEvaluator
+  const evaluate =
+    solver.exactRepairSolver?.getConstructorParams()[0].drcEvaluator
   expect(evaluate).toBeDefined()
   if (!evaluate) throw new Error("Expected inherited copper DRC evaluator")
   const initialRoutes = solver.movablePreloadedSections.map((section) =>

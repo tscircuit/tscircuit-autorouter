@@ -75,7 +75,7 @@ test("Pipeline9 rejects a DRC-clean proposal that moves a real interior terminal
   })
   const exactRepair = solver.exactRepairSolver
   if (!exactRepair) throw new Error("Expected inherited copper exact repair")
-  const unchangedCandidate = structuredClone(exactRepair.params.hdRoutes)
+  const unchangedCandidate = structuredClone(exactRepair.inputHdRoutes)
 
   // Publication-state contract: unchanged geometry must preserve the raw tag.
   solver["publishValidatedOutput"](unchangedCandidate)
