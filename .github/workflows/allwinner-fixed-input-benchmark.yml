@@ -1,0 +1,68 @@
+name: Allwinner Fixed Input Benchmark
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/allwinner-fixed-input-benchmark.yml'
+      - 'scripts/benchmark/fixed-input/**'
+      - 'tests/fixtures/allwinner-t113/**'
+  workflow_dispatch:
+    inputs:
+      budget_ms:
+        description: 'Equal wall-clock budget per engine, including process startup and output export'
+        type: string
+        default: '180000'
+      repetitions:
+        description: 'Paired repetitions; engine order alternates'
+        type: string
+        default: '2'
+
+permissions:
+  contents: read
+
+jobs:
+  compare:
+    runs-on: blacksmith-8vcpu-ubuntu-2404-arm
+    timeout-minutes: 150
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: '1.3.2'
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '25.0.2'
+      - name: Install native router dependencies
+        run: bun install
+      - name: Download pinned Freerouting
+        run: |
+          mkdir -p tmp
+          curl --fail --location --retry 3 https://github.com/freerouting/freerouting/releases/download/v2.4.1/freerouting-2.4.1.jar --output tmp/freerouting-2.4.1.jar
+          printf '%s  %s\n' '251101c3eeac22d7e7dfcf6796603279e5d1000283eb82d8f093780f7afc6aa9' 'tmp/freerouting-2.4.1.jar' | sha256sum --check
+      - name: Compare engines sequentially on this runner
+        env:
+          ROUTING_BUDGET_MS: ${{ inputs.budget_ms || '180000' }}
+          ROUTING_REPETITIONS: ${{ inputs.repetitions || '2' }}
+        run: |
+          bun scripts/benchmark/fixed-input/runFixedInputBenchmark.ts \
+            --jar tmp/freerouting-2.4.1.jar \
+            --budget-ms "$ROUTING_BUDGET_MS" \
+            --repetitions "$ROUTING_REPETITIONS" \
+            --output tmp/allwinner-fixed-input-benchmark
+      - name: Add comparison to workflow summary
+        if: always()
+        run: |
+          if test -f tmp/allwinner-fixed-input-benchmark/comparison.md; then
+            cat tmp/allwinner-fixed-input-benchmark/comparison.md >> "$GITHUB_STEP_SUMMARY"
+          fi
+      - name: Preserve inputs, raw routes, logs, scores, and environment
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: allwinner-fixed-input-benchmark
+          path: tmp/allwinner-fixed-input-benchmark
+          if-no-files-found: warn

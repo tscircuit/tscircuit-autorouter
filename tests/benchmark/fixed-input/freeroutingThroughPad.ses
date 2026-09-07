@@ -1,0 +1,49 @@
+(session "t113-adapter-through-smoke"
+  (base_design "t113-adapter-through-smoke")
+  (placement
+    (resolution um 1000)
+    (component "pad_0"
+      (place "pad_0" -3000000 0 front 0)
+    )
+    (component "pad_1"
+      (place "pad_1" 3000000 0 front 0)
+    )
+    (component "pad_2"
+      (place "pad_2" 0 0 front 0)
+    )
+  )
+  (was_is
+  )
+  (routes
+    (resolution um 1000)
+    (parser
+    )
+    (library_out
+      (padstack "benchmark_via"
+        (shape
+          (circle F.Cu 600000 0 0)
+        )
+        (shape
+          (circle B.Cu 600000 0 0)
+        )
+        (attach off)
+      )
+    )
+    (network_out
+      (net signal
+        (wire
+          (path B.Cu 150000
+            3000000 0
+            0 0
+          )
+        )
+        (wire
+          (path F.Cu 150000
+            0 0
+            -3000000 0
+          )
+        )
+      )
+    )
+  )
+)
