@@ -7,9 +7,11 @@ type NodeCostTerms = {
   y: number
   z: number
   goalDistancePower: number
-  planarFuturePenalty?: number
-  viaFuturePenalty?: number
+  planarFuturePenalty: number | undefined
+  viaFuturePenalty: number | undefined
 }
+
+const MAX_DENSE_COST_CACHE_SLOTS = 65_536
 
 export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends SingleHighDensityRouteSolver {
   FUTURE_CONNECTION_PROX_TRACE_PENALTY_FACTOR = 2
@@ -22,6 +24,7 @@ export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends Sing
   futureConnectionPoints: Array<{ x: number; y: number; z: number }>
   futureConnectionSegmentsCache: FutureConnectionSegment[] | null = null
   private nodeCostTermsByGridKey = new Map<number, NodeCostTerms>()
+  private denseNodeCostTerms: Array<NodeCostTerms | undefined> | null | undefined
 
   constructor(
     opts: ConstructorParameters<typeof SingleHighDensityRouteSolver>[0],
@@ -211,6 +214,25 @@ export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends Sing
     )
   }
 
+  private initializeDenseNodeCostTerms(): void {
+    this.denseNodeCostTerms = null
+    if (
+      this.getNodeKey !== SingleHighDensityRouteSolver.prototype.getNodeKey
+    ) return
+    let maxZ = Math.max(this.layerCount - 1, this.A.z, this.B.z)
+    for (const z of this.availableZ) maxZ = Math.max(maxZ, z)
+    const cellCount = this.gridWidth * this.gridHeight * (maxZ + 1)
+    // Allocate only when costs are first needed, with bounded slot storage.
+    // Custom keys and grids above this limit continue to use the sparse Map.
+    if (
+      Number.isSafeInteger(cellCount) &&
+      cellCount > 0 &&
+      cellCount <= MAX_DENSE_COST_CACHE_SLOTS
+    ) {
+      this.denseNodeCostTerms = new Array<NodeCostTerms | undefined>(cellCount)
+    }
+  }
+
   override setNodeCosts(node: Node): void {
     const dx = Math.abs(node.x - node.parent!.x)
     const dy = Math.abs(node.y - node.parent!.y)
@@ -230,7 +252,19 @@ export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends Sing
       misalignedDist * this.MISALIGNED_DIST_PENALTY_FACTOR
 
     const gridKey = this.getNodeKey(node)
-    let costTerms = this.nodeCostTermsByGridKey.get(gridKey)
+    if (this.denseNodeCostTerms === undefined) {
+      this.initializeDenseNodeCostTerms()
+    }
+    const denseCache = this.denseNodeCostTerms
+    const useDenseCache =
+      denseCache &&
+      this.getNodeKey === SingleHighDensityRouteSolver.prototype.getNodeKey &&
+      Number.isInteger(gridKey) &&
+      gridKey >= 0 &&
+      gridKey < denseCache.length
+    let costTerms = useDenseCache
+      ? denseCache[gridKey]
+      : this.nodeCostTermsByGridKey.get(gridKey)
     // Exact starts, clamped boundary points and accumulated floating-point
     // steps can share a grid key without sharing coordinates. Only reuse the
     // coordinate-dependent terms when all three coordinates match exactly.
@@ -245,8 +279,11 @@ export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends Sing
         y: node.y,
         z: node.z,
         goalDistancePower: distance(node, this.B) ** 1.6,
+        planarFuturePenalty: undefined,
+        viaFuturePenalty: undefined,
       }
-      this.nodeCostTermsByGridKey.set(gridKey, costTerms)
+      if (useDenseCache) denseCache[gridKey] = costTerms
+      else this.nodeCostTermsByGridKey.set(gridKey, costTerms)
     }
     const baseH =
       costTerms.goalDistancePower +
