@@ -36,20 +36,26 @@ test("coupled pad-trace keys and name shadows retain complete native evaluation 
   const otherTrace: PcbTrace = {
     ...trace,
     pcb_trace_id: "other",
-    route: trace.route.map(
-      (point): PcbTrace["route"][number] => ({ ...point, y: -0.02 }),
+    route: trace.route.map((point): PcbTrace["route"][number] =>
+      point.route_type === "wire" ? { ...point, y: -0.02 } : point,
     ),
   }
   const connMap = new ConnectivityMap({})
   const options: NativeOptions = { connMap, minClearance: 0.1 }
-  const scenarios: Array<{ board: AnyCircuitElement[]; options: NativeOptions }> = [
+  const scenarios: Array<{
+    board: AnyCircuitElement[]
+    options: NativeOptions
+  }> = [
     { board: [trace], options },
     { board: [trace, pad], options: { minClearance: 0.1 } },
     {
       board: [trace, pad],
       options: { connMap: null, minClearance: 0.1 } as unknown as NativeOptions,
     },
-    { board: [trace, { ...trace, route: [...trace.route].reverse() }, pad], options },
+    {
+      board: [trace, { ...trace, route: [...trace.route].reverse() }, pad],
+      options,
+    },
     {
       board: [trace, { ...otherTrace, pcb_trace_id: "signal_extra" }, pad],
       options,
@@ -109,12 +115,14 @@ test("coupled pad-trace keys and name shadows retain complete native evaluation 
     const original = structuredClone(scenario.board)
     for (let visit = 0; visit < 2; visit++) {
       const before = prepared.getStats()
-      const expected = capture((): ReturnType<typeof checkPadTraceClearance> =>
-        checkPadTraceClearance(scenario.board, scenario.options),
+      const expected = capture(
+        (): ReturnType<typeof checkPadTraceClearance> =>
+          checkPadTraceClearance(scenario.board, scenario.options),
       )
       expect(
-        capture((): ReturnType<typeof checkPadTraceClearance> =>
-          prepared(scenario.board, scenario.options),
+        capture(
+          (): ReturnType<typeof checkPadTraceClearance> =>
+            prepared(scenario.board, scenario.options),
         ),
       ).toEqual(expected)
       expect(prepared.getStats().nativeInvocationCount).toBe(

@@ -77,30 +77,40 @@ test("prepared pad checks invalidate exact native name, endpoint, pad, connectiv
   expect(initial[0]!.message).toContain("Original pad name")
   compare(board, { connMap })
   expect(prepared.getStats().nativeInvocationCount).toBe(1)
-  const renamed = board.map((element): AnyCircuitElement =>
-    element.type === "source_component"
-      ? { ...element, name: "New pad name" }
-      : element,
+  const renamed = board.map(
+    (element): AnyCircuitElement =>
+      element.type === "source_component"
+        ? { ...element, name: "New pad name" }
+        : element,
   )
   expect(compare(renamed, { connMap })[0]!.message).toContain("New pad name")
-  const replacedPort = renamed.map((element): AnyCircuitElement =>
-    element.type === "pcb_port" && element.pcb_port_id === "port-0"
-      ? { ...element, pcb_port_id: "replacement-port" }
-      : element,
+  const replacedPort = renamed.map(
+    (element): AnyCircuitElement =>
+      element.type === "pcb_port" && element.pcb_port_id === "port-0"
+        ? { ...element, pcb_port_id: "replacement-port" }
+        : element,
   )
   compare(replacedPort, { connMap })
-  const movedPad = replacedPort.map((element): AnyCircuitElement =>
-    element.type === "pcb_smtpad" ? { ...element, y: 0.23 } : element,
+  const movedPad = replacedPort.map(
+    (element): AnyCircuitElement =>
+      element.type === "pcb_smtpad" && element.shape === "circle"
+        ? { ...element, y: 0.23 }
+        : element,
   )
   compare(movedPad, { connMap })
-  const smallerDefault = movedPad.map((element): AnyCircuitElement =>
-    element.type === "pcb_board"
-      ? { ...element, min_trace_to_pad_edge_clearance: 0.05 }
-      : element,
+  const smallerDefault = movedPad.map(
+    (element): AnyCircuitElement =>
+      element.type === "pcb_board"
+        ? { ...element, min_trace_to_pad_edge_clearance: 0.05 }
+        : element,
   )
   expect(compare(smallerDefault, { connMap })).toHaveLength(0)
-  expect(compare(smallerDefault, { connMap, minClearance: 0.1 })).toHaveLength(1)
+  expect(compare(smallerDefault, { connMap, minClearance: 0.1 })).toHaveLength(
+    1,
+  )
   connMap.addConnections([["signal", "pad"]])
-  expect(compare(smallerDefault, { connMap, minClearance: 0.1 })).toHaveLength(0)
+  expect(compare(smallerDefault, { connMap, minClearance: 0.1 })).toHaveLength(
+    0,
+  )
   expect(prepared.getStats().nativeInvocationCount).toBe(7)
 })

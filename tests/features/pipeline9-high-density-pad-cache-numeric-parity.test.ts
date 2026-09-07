@@ -35,11 +35,15 @@ test("prepared pad dependencies distinguish nonfinite numbers, signed zero and o
       pad,
     ]
     const before = prepared.getStats()
-    expect(prepared(board, options)).toEqual(checkPadTraceClearance(board, options))
+    expect(prepared(board, options)).toEqual(
+      checkPadTraceClearance(board, options),
+    )
     expect(prepared.getStats().nativeInvocationCount).toBe(
       before.nativeInvocationCount + 1,
     )
-    expect(prepared(board, options)).toEqual(checkPadTraceClearance(board, options))
+    expect(prepared(board, options)).toEqual(
+      checkPadTraceClearance(board, options),
+    )
     expect(prepared.getStats().nativeInvocationCount).toBe(
       before.nativeInvocationCount + 1,
     )

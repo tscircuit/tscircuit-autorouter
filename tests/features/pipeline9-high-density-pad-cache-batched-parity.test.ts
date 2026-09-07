@@ -108,7 +108,11 @@ test("prepared pad checks batch changed traces and retain native order, contact 
         ]
       : [element],
   )
-  for (const nextBoard of [splitBoard, [...splitBoard].reverse(), changedBoard]) {
+  for (const nextBoard of [
+    splitBoard,
+    [...splitBoard].reverse(),
+    changedBoard,
+  ]) {
     expect(prepared(nextBoard, options)).toEqual(
       checkPadTraceClearance(nextBoard, options),
     )

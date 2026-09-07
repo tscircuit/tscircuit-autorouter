@@ -13,15 +13,13 @@ test("HD prepared full checks reuse unchanged pad pairs without changing native 
       type: "pcb_trace",
       pcb_trace_id: `signal-${index}`,
       source_trace_id: `net-${index}`,
-      route: [-1, 0, 1].map(
-        (x): PcbTrace["route"][number] => ({
-          route_type: "wire",
-          x,
-          y,
-          width: 0.1,
-          layer: "top",
-        }),
-      ),
+      route: [-1, 0, 1].map((x): PcbTrace["route"][number] => ({
+        route_type: "wire",
+        x,
+        y,
+        width: 0.1,
+        layer: "top",
+      })),
     }),
   )
   const board: AnyCircuitElement[] = traces.flatMap(
@@ -79,9 +77,10 @@ test("HD prepared full checks reuse unchanged pad pairs without changing native 
     }
     return {
       ...element,
-      route: element.route.map(
-        (point, index): PcbTrace["route"][number] =>
-          index === 1 ? { ...point, y: 0.7 } : point,
+      route: element.route.map((point, index): PcbTrace["route"][number] =>
+        index === 1 && point.route_type === "wire"
+          ? { ...point, y: 0.7 }
+          : point,
       ),
     }
   })

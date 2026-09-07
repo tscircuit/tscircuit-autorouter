@@ -70,10 +70,12 @@ const getPadTraceContextKey = (
     // interior references and first-primary-ID shadows. All non-trace
     // metadata, pad order, board defaults and trace metadata remain exact.
     const connectedPcbPortIds = element.route
-      .flatMap((point): Array<string | undefined> => [
-        "start_pcb_port_id" in point ? point.start_pcb_port_id : undefined,
-        "end_pcb_port_id" in point ? point.end_pcb_port_id : undefined,
-      ])
+      .flatMap(
+        (point): Array<string | undefined> => [
+          "start_pcb_port_id" in point ? point.start_pcb_port_id : undefined,
+          "end_pcb_port_id" in point ? point.end_pcb_port_id : undefined,
+        ],
+      )
       .filter(Boolean)
     return { ...element, route: connectedPcbPortIds }
   })
