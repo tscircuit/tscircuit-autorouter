@@ -34,7 +34,7 @@ const MAX_REFERENCE_ISSUES = 8
 const MAX_REGIONS = 4
 const MAX_CANDIDATE_ATTEMPTS_PER_REGION = 512
 const MAX_PATH_SEARCH_NODES_PER_REGION = 120_000
-const REGION_SIZE = 10
+const REGION_SIZE = 16
 
 /** Keeps intermediate regional improvements private until full reference DRC passes. */
 export const applyPipeline9BoundedRegionalRepairs = ({
