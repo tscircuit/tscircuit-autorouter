@@ -34,7 +34,7 @@ import {
 import { filterPipeline9DrcErrorsAgainstBaseline } from "./filterPipeline9DrcErrorsAgainstBaseline"
 import { getPipeline9PreloadedTraceIdsInInitialDrcRegions } from "./getPipeline9PreloadedTraceIdsInInitialDrcRegions"
 import { getPipeline9PreloadedViaPairTraceGroups } from "./getPipeline9PreloadedViaPairTraceGroups"
-import { mergePipeline9MovablePreloadedVias } from "./mergePipeline9MovablePreloadedVias"
+import { mergePipeline9SameNetVias } from "./mergePipeline9SameNetVias"
 import { normalizePipeline9DrcErrorsForRepair } from "./normalizePipeline9DrcErrorsForRepair"
 import {
   getPipeline9DrcErrors,
@@ -681,7 +681,25 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
   constructor(params: Pipeline9JointDrcRepairSolverParams) {
     super()
     this.params = params
-    this.inputNewHdRoutes = params.newHdRoutes
+    const preloadedObstacleRoutes = params.updatedPreloadedTraces.flatMap(
+      (trace, traceIndex) =>
+        convertPreloadedTraceToHdRoutes(
+          trace,
+          traceIndex,
+          params.layerCount,
+          params.defaultViaDiameter,
+          params.connMap,
+        ),
+    )
+    this.inputNewHdRoutes = mergePipeline9SameNetVias({
+      routes: params.newHdRoutes,
+      otherHdRoutes: preloadedObstacleRoutes,
+      obstacles: params.obstacles,
+      colorMap: params.colorMap,
+      layerCount: params.layerCount,
+      connMap: params.connMap,
+      preserveRouteEndpoints: true,
+    })
     this.inputUpdatedPreloadedTraces = params.updatedPreloadedTraces
 
     const currentMutatedPreloadedTraces = params.updatedPreloadedTraces.filter(
@@ -698,7 +716,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         defaultViaHoleDiameter: params.defaultViaHoleDiameter,
         connMap: params.connMap,
       })
-    const currentNewTraces = convertNewRoutes(params.newHdRoutes)
+    const currentNewTraces = convertNewRoutes(this.inputNewHdRoutes)
     const currentNewTraceIds = new Set(
       currentNewTraces.map((trace) => trace.pcb_trace_id),
     )
@@ -914,13 +932,13 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         )
       if (movableSectionIndexes.length === 0) continue
       const movableSectionIndexSet = new Set(movableSectionIndexes)
-      const mergedRoutes = mergePipeline9MovablePreloadedVias({
+      const mergedRoutes = mergePipeline9SameNetVias({
         routes: movableSectionIndexes.map(
           (movableSectionIndex) =>
             this.movablePreloadedSections[movableSectionIndex]!.hdRoute,
         ),
         otherHdRoutes: [
-          ...params.newHdRoutes,
+          ...this.inputNewHdRoutes,
           ...this.fixedPreloadedObstacleRoutes,
           ...this.movablePreloadedSections.flatMap(
             (movableSection, movableSectionIndex) =>
@@ -1335,7 +1353,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     this.exactRepairSolver = new Pipeline7AdaptiveDrcBranchPortfolioSolver({
       srj: extendedSrjWithPointPairs as any,
       hdRoutes: [
-        ...params.newHdRoutes,
+        ...this.inputNewHdRoutes,
         ...this.movablePreloadedSections.map(
           (movableSection) => movableSection.hdRoute,
         ),
