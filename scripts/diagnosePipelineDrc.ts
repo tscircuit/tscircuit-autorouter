@@ -172,6 +172,8 @@ const writeStage = async (
       ...summary,
       // Before stitching these are node fragments, not a final-board score.
       // Keep original and routed geometry to diagnose seam/ownership effects.
+      // Changed preload fragments absent from newConnections remain in hdRoutes
+      // but are not materialized in this pre-stitch copper projection.
       errors: result.errorsWithCenters,
       traceOwnership,
       routedTraces,
@@ -274,6 +276,17 @@ const diagnosePipelineDrc = async (): Promise<void> => {
     }
   }
   if (!pipeline.solved) {
+    await writeFile(
+      path.join(outputDir, "progress.json"),
+      JSON.stringify({
+        phase: pipeline.getCurrentPhase(),
+        solved: pipeline.solved,
+        failed: pipeline.failed,
+        error: pipeline.error,
+        summaries,
+      }),
+    )
+    await writeFile(path.join(outputDir, "nodes.json"), JSON.stringify(nodes))
     throw new Error(`Diagnostic solve failed: ${pipeline.error}`)
   }
   summaries.push(
