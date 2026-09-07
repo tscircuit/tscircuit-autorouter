@@ -11,9 +11,13 @@ class IndividualViaQuerySolver extends SingleHighDensityRouteSolver6_VertHorzLay
     node: Node,
     margin?: number,
     isVia?: boolean,
-    planarObstacleQuery?: Parameters<SingleHighDensityRouteSolver["isNodeTooCloseToObstacle"]>[3],
+    planarObstacleQuery?: Parameters<
+      SingleHighDensityRouteSolver["isNodeTooCloseToObstacle"]
+    >[3],
   ): boolean {
-    if (this.uncachedObstacleClearance(node, margin, isVia, planarObstacleQuery)) {
+    if (
+      this.uncachedObstacleClearance(node, margin, isVia, planarObstacleQuery)
+    ) {
       return true
     }
     return Boolean(isVia && this.isViaTooCloseToFutureConnectionTrace(node))
@@ -24,7 +28,9 @@ class IndividualViaQuerySolver extends SingleHighDensityRouteSolver6_VertHorzLay
     node: Node,
     margin?: number,
     isVia?: boolean,
-    planarObstacleQuery?: Parameters<SingleHighDensityRouteSolver["isNodeTooCloseToObstacle"]>[3],
+    planarObstacleQuery?: Parameters<
+      SingleHighDensityRouteSolver["isNodeTooCloseToObstacle"]
+    >[3],
   ): boolean {
     margin ??= this.obstacleMargin
 
@@ -95,7 +101,6 @@ class IndividualViaQuerySolver extends SingleHighDensityRouteSolver6_VertHorzLay
 
     return false
   }
-
 }
 
 test("shared planar via queries preserve complete searches across exact starts, bounds and layers", () => {
@@ -142,7 +147,10 @@ test("shared planar via queries preserve complete searches across exact starts, 
         connectionName: "exact-start-obstacle",
         traceThickness: 0.15,
         viaDiameter: 0.3,
-        route: [{ x: -1.42, y: -1.7, z: 0 }, { x: -1.42, y: 1.7, z: 0 }],
+        route: [
+          { x: -1.42, y: -1.7, z: 0 },
+          { x: -1.42, y: 1.7, z: 0 },
+        ],
         vias: [],
       })
     }
@@ -151,9 +159,10 @@ test("shared planar via queries preserve complete searches across exact starts, 
       obstacleRoutes,
       minDistBetweenEnteringPoints: 0.15,
       bounds,
-      A: sample % 8 === 0
-        ? { x: -1.113, y: -0.737, z: 0 }
-        : { x: bounds.minX, y: -0.753 + random() * 1.5, z: 0 },
+      A:
+        sample % 8 === 0
+          ? { x: -1.113, y: -0.737, z: 0 }
+          : { x: bounds.minX, y: -0.753 + random() * 1.5, z: 0 },
       B: { x: bounds.maxX, y: -0.731 + random() * 1.5, z: sample % layerCount },
       layerCount,
       availableZ: Array.from({ length: layerCount }, (_, z) => z),
@@ -164,15 +173,23 @@ test("shared planar via queries preserve complete searches across exact starts, 
       futureConnections: [
         {
           connectionName: "future-a",
-          points: [{ x: 0, y: bounds.minY, z: 0 }, { x: 0, y: bounds.maxY, z: 1 }],
+          points: [
+            { x: 0, y: bounds.minY, z: 0 },
+            { x: 0, y: bounds.maxY, z: 1 },
+          ],
         },
         {
           connectionName: "future-b",
-          points: [{ x: -0.41, y: -1, z: 0 }, { x: 0.73, y: 1, z: layerCount - 1 }],
+          points: [
+            { x: -0.41, y: -1, z: 0 },
+            { x: 0.73, y: 1, z: layerCount - 1 },
+          ],
         },
       ],
     }
-    const shared = new SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost(opts)
+    const shared = new SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost(
+      opts,
+    )
     const reference = new IndividualViaQuerySolver(opts)
     if (shared.candidates.peek()!.parent === null) {
       exactStartCases++
@@ -181,8 +198,14 @@ test("shared planar via queries preserve complete searches across exact starts, 
     }
     let sampleSharedQueries = 0
     let sampleIndividualQueries = 0
-    for (const [solver, isMemoized] of [[shared, true], [reference, false]] as const) {
-      for (const index of [solver.obstacleSegmentIndex, solver.obstacleViaIndex]) {
+    for (const [solver, isMemoized] of [
+      [shared, true],
+      [reference, false],
+    ] as const) {
+      for (const index of [
+        solver.obstacleSegmentIndex,
+        solver.obstacleViaIndex,
+      ]) {
         if (!index) continue
         const search = index.search.bind(index)
         index.search = (...args: Parameters<typeof search>): number[] => {

@@ -444,9 +444,11 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
       for (const viaId of nearbyViaIds) {
         const via = this.obstacleVias[viaId]
         if (
-          canShareViaQuery && via &&
+          canShareViaQuery &&
+          via &&
           (maxX < via.x || maxY < via.y || minX > via.x || minY > via.y)
-        ) continue
+        )
+          continue
         if (via && distance(node, via) < viaProximity) {
           return true
         }
