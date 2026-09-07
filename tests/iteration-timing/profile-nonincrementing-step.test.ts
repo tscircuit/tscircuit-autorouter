@@ -29,8 +29,12 @@ test("counts actual root and child calls when step overrides never increment ite
   expect(solver.iterations).toBe(0)
   expect(solver.activeSubSolver!.iterations).toBe(0)
   expect(profile.totalIterations).toBe(3)
-  expect(profile.iterations.map((item) => item.rootIteration)).toEqual([1, 2, 3])
-  expect(profile.iterations.map((item) => item.localIteration)).toEqual([1, 2, 3])
+  expect(profile.iterations.map((item) => item.rootIteration)).toEqual([
+    1, 2, 3,
+  ])
+  expect(profile.iterations.map((item) => item.localIteration)).toEqual([
+    1, 2, 3,
+  ])
   expect(profile.solverTimings[0]).toMatchObject({
     solverName: "LeafSolver",
     iterations: 3,

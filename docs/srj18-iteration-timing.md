@@ -103,3 +103,45 @@ Relevant source: Pipeline 7's stage definitions; the tiny-hypergraph
 constructor and `computeNodePf()`; and the corresponding solvers' constructors
 and `_step()` methods. The JSON artifacts preserve the exact active paths and
 local iterations for each observation.
+
+## Confirmation and 100ms watchlist
+
+The [confirmation run](https://github.com/tscircuit/tscircuit-autorouter/actions/runs/34166478437)
+used the final attribution rules and matched both slow pipeline iterations to the
+three whitelist entries: iteration 9255 was **1,284.4ms**, and iteration 199986
+was **1,767.4ms**. It completed 247,488 iterations with **zero unlisted iterations
+over 1s**. The full instrumented solve took 43.53s.
+
+The following is the complete set of material contributors in its 27 retained
+pipeline iterations over 100ms. Values are attributed time, excluding separately
+reported nested calls. Comma-separated call numbers are independent observations;
+an en-dash denotes multiple synchronous calls within one pipeline iteration.
+Only the three entries explicitly marked "whitelisted" are approved at the
+initial 1s budget. The others are the starting worklist for the 100ms budget.
+
+| Deepest solver | Phase | Observed local calls | Largest attributed time | Status |
+| --- | --- | --- | ---: | --- |
+| RectDiffGridSolverPipeline | initialization | 0 | 124.3ms | Candidate |
+| TopologyMergingSolver | step | 316 | 176.1ms | Candidate |
+| DuplicateCongestedPortSolver | step | 1 | 683.7ms | Whitelisted contributor |
+| TinyHypergraphPortPointPathingSolver | initialization | 0 | 261.1ms | Whitelisted contributor |
+| SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments | initialization | 0 | 100.3ms | Candidate |
+| TinyHyperGraphSectionSolver | initialization | 0 | 109.8ms | Candidate |
+| UniformPortDistributionSolver | initialization | 0 | 983.9ms | Candidate; close to 1s |
+| HighDensitySolver | initialization | 0 | 1,767.4ms | Whitelisted |
+| SingleHighDensityRouteSolver | step | 1–77, 600–699 | 153.2ms | Candidate: synchronous batches |
+| CachedIntraNodeRouteSolver | initialization | 0 | 118.7ms | Candidate |
+| CachedIntraNodeRouteSolver | step | 238–250 | 173.2ms | Candidate: synchronous batch |
+| HighDensityForceImproveSolver | step | 315 | 149.2ms | Candidate |
+| MultipleHighDensityRouteStitchSolver3 | initialization | 0 | 262.0ms | Candidate |
+| CrossingViaReductionSolver | step | 1 | 484.3ms | Candidate |
+| GlobalDrcForceImproveSolver | step | 1, 2, 22, 24, 25, 26, 27, 28, 30, 32 | 293.5ms | Candidate: repeated whole-route DRC |
+| PostProcessingSolver | initialization | 0 | 137.5ms | Candidate |
+| PowerTraceExpansionSolver | initialization | 0 | 112.0ms | Candidate |
+
+Additional candidate work: topology merging's last step finalizes and validates
+the merged regions; section-solver construction rebuilds its baseline and
+intersection summaries; high-density force improvement processes a whole node
+through multiple force/clearance passes; length-matching post-processing clones
+the input and builds a private copper model. The artifacts include full paths to
+distinguish direct DRC repair from repair inside a portfolio solver.

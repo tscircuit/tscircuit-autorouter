@@ -209,7 +209,8 @@ export function profileSolverIterations(
         if (next === active) return
         const firstAssignment = next && !assignedSolvers.has(next)
         const affectedFrames = frames.filter(
-          (frame) => frame.solver === solver || frame.activeChain.includes(solver),
+          (frame) =>
+            frame.solver === solver || frame.activeChain.includes(solver),
         )
         const assignedAt = now()
         for (const frame of affectedFrames) {

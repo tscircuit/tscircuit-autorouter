@@ -48,6 +48,7 @@ test("a cumulatively slow step requires all contributors when none exceeds 100ms
     unlistedAttributions: [],
   })
   expect(
-    classifyIteration({ ...iteration, attributions: [] }, whitelist).whitelisted,
+    classifyIteration({ ...iteration, attributions: [] }, whitelist)
+      .whitelisted,
   ).toBeFalse()
 })
