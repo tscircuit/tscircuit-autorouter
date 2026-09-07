@@ -88,7 +88,10 @@ export const applyPipeline9BoundedRegionalRepairs = ({
   let currentErrors = Array.isArray(reference) ? reference : reference.errors
   result.initialDrcIssueCount = currentErrors.length
   result.finalDrcIssueCount = currentErrors.length
-  if (currentErrors.length === 0 || currentErrors.length > MAX_REFERENCE_ISSUES) {
+  if (
+    currentErrors.length === 0 ||
+    currentErrors.length > MAX_REFERENCE_ISSUES
+  ) {
     return result
   }
 
@@ -184,7 +187,9 @@ export const applyPipeline9BoundedRegionalRepairs = ({
       region,
       repairedRoutes: solver.getOutput(),
     })
-    if (candidateRoutes.every((route, index) => route === currentRoutes[index])) {
+    if (
+      candidateRoutes.every((route, index) => route === currentRoutes[index])
+    ) {
       continue
     }
     const candidateFixedViolations = getFixedObstacleViolations({

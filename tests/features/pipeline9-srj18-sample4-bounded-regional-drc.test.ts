@@ -21,9 +21,9 @@ test("Pipeline9 repairs SRJ18 sample 4 within its regional work budget", async (
   expect(errors).toEqual([])
   const stats = solver.pipeline9JointDrcRepairSolver!.stats
   expect(stats.boundedRegionalRepairRepaired).toBeTrue()
-  expect(Number(stats.boundedRegionalRepairAttemptedRegionCount)).toBeGreaterThan(
-    0,
-  )
+  expect(
+    Number(stats.boundedRegionalRepairAttemptedRegionCount),
+  ).toBeGreaterThan(0)
   expect(
     Number(stats.boundedRegionalRepairAttemptedRegionCount),
   ).toBeLessThanOrEqual(4)
