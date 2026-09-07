@@ -41,5 +41,7 @@ test("Pipeline9 bounds SRJ18 sample 13's high-residual precision pass", async ()
     srjWithPointPairs: solver.srjWithPointPairs!,
     routedTraces: solver.getOutputSimplifiedPcbTraces(),
   })
-  expect(errors.length).toBeLessThanOrEqual(46)
+  expect(errors.length).toBeLessThanOrEqual(
+    Number(repairStats?.postExactReferenceDrcIssueCount),
+  )
 })
