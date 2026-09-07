@@ -345,6 +345,7 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
     let closestRouteIndex = -1
     let matchedOn: "first" | "last" = "first"
     let bestScore = Infinity
+    let bestMatchedPoint: RoutePoint | undefined
     let blockedByCollision = false
 
     for (let i = 0; i < this.remainingHdRoutes.length; i++) {
@@ -380,10 +381,22 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
         scoreFirst = VIA_PENALTY + distToFirst
       }
 
-      if (scoreFirst < bestScore) {
+      // Consume a point fragment before leaving its shared endpoint. Its first
+      // and last point are identical, so this also covers reverse entry.
+      if (
+        scoreFirst < bestScore ||
+        (scoreFirst === bestScore &&
+          bestMatchedPoint !== undefined &&
+          hdRoute.route.length === 1 &&
+          this.remainingHdRoutes[closestRouteIndex].route.length > 1 &&
+          firstPointInCandidate.x === bestMatchedPoint.x &&
+          firstPointInCandidate.y === bestMatchedPoint.y &&
+          firstPointInCandidate.z === bestMatchedPoint.z)
+      ) {
         bestScore = scoreFirst
         closestRouteIndex = i
         matchedOn = "first"
+        bestMatchedPoint = firstPointInCandidate
       }
 
       let scoreLast = Infinity
@@ -415,6 +428,7 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
         bestScore = scoreLast
         closestRouteIndex = i
         matchedOn = "last"
+        bestMatchedPoint = lastPointInCandidate
       }
     }
 

@@ -43,6 +43,7 @@ jobs:
           tests/stitch-solver/single-stitch-retains-moved-via-transition.test.ts
           tests/stitch-solver/single-stitch-explicitly-allowed-layer-transition.test.ts
           tests/stitch-solver/single-stitch-rejects-unowned-layer-transition.test.ts
+          tests/stitch-solver/single-stitch-consumes-shared-point-before-continuation.test.ts
           tests/stitch-solver/single-high-density-route-stitch-gap-bridge.test.ts
           tests/stitch-solver/single-high-density-route-stitch-large-gap.test.ts
           tests/stitch-solver/single-high-density-route-stitch-terminal-gap.test.ts

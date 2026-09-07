@@ -24,6 +24,11 @@ test("bugreport59-82431e.json", () => {
 test("bugreport59-82431e keeps effort 2 vias on preplaced assignable vias", () => {
   const solver = new AutoroutingPipelineSolver8(srj, { effort: 2 })
   solver.solve()
+  if (!solver.solved) {
+    throw new Error(
+      `bugreport59 effort 2 routing did not complete in ${solver.getCurrentPhase()}: ${String(solver.error)}`,
+    )
+  }
 
   const allowedViaPointKeys = getAssignableViaPointKeys(srj.obstacles)
   const outputVias = solver
