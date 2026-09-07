@@ -206,7 +206,10 @@ const diagnosePipelineDrc = async (): Promise<void> => {
     pipelineArg === "9"
       ? new AutoroutingPipelineSolver9_PreloadedTraceGraph(scenario)
       : new AutoroutingPipelineSolver7_MultiGraph(scenario)
-  await writeFile(path.join(outputDir, "scenario.json"), JSON.stringify(scenario))
+  await writeFile(
+    path.join(outputDir, "scenario.json"),
+    JSON.stringify(scenario),
+  )
   const summaries: StageSummary[] = [
     await writeStage(pipeline, outputDir, "input", [], [], "input"),
   ]

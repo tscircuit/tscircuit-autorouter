@@ -395,6 +395,14 @@ export class SingleSimplifiedPathSolver5 extends SingleSimplifiedPathSolver {
       return this.inputRoute.route[this.inputRoute.route.length - 1]
     }
 
+    // Preserve exact vertices when a committed original span ends here.
+    if (distance === segment.startDistance) {
+      return segment.start
+    }
+    if (distance === segment.endDistance) {
+      return segment.end
+    }
+
     // Calculate interpolation factor (between 0 and 1)
     const factor = (distance - segment.startDistance) / segment.length
 
@@ -595,7 +603,14 @@ export class SingleSimplifiedPathSolver5 extends SingleSimplifiedPathSolver {
   private appendOriginalRouteSlice(
     startDistance: number,
     endIndexInclusive: number,
-  ) {
+  ): void {
+    const committedPoint = this.newRoute[this.newRoute.length - 1]
+    const startPoint = this.getPointAtDistance(startDistance)
+    if (!committedPoint || !this.arePointsEqual(committedPoint, startPoint)) {
+      throw new Error(
+        `Cannot preserve original copper from an uncommitted tail at distance ${startDistance}`,
+      )
+    }
     const startIndex = this.pathSegments.findIndex(
       (segment) =>
         startDistance >= segment.startDistance &&
@@ -620,11 +635,35 @@ export class SingleSimplifiedPathSolver5 extends SingleSimplifiedPathSolver {
         lastPointInNewRoute &&
         this.arePointsEqual(lastPointInNewRoute, originalPoint)
       ) {
+        // The source vertex also owns outgoing segment and pad metadata.
+        this.newRoute[this.newRoute.length - 1] = { ...originalPoint }
         continue
       }
 
+      const previousOriginalPoint = this.inputRoute.route[routeIndex - 1]
+      if (previousOriginalPoint.z !== originalPoint.z) {
+        this.newVias.push({ x: originalPoint.x, y: originalPoint.y })
+      }
       this.newRoute.push({ ...originalPoint })
     }
+  }
+
+  private advanceTailAlongOriginalRoute(): void {
+    const segmentIndex = this.pathSegments.findIndex(
+      (segment): boolean => segment.endDistance > this.tailDistanceAlongPath,
+    )
+    if (segmentIndex === -1) {
+      throw new Error(
+        `Cannot advance original copper past distance ${this.tailDistanceAlongPath}`,
+      )
+    }
+    const segment = this.pathSegments[segmentIndex]
+    this.appendOriginalRouteSlice(this.tailDistanceAlongPath, segmentIndex + 1)
+    // The retained vertex, not an interpolation near it, is the next tail.
+    this.tailDistanceAlongPath = segment.endDistance
+    this.headDistanceAlongPath = segment.endDistance
+    this.lastValidPathHeadDistance = segment.endDistance
+    this.lastHeadMoveDistance = 0
   }
 
   moveHead(distance: number) {
@@ -772,7 +811,9 @@ export class SingleSimplifiedPathSolver5 extends SingleSimplifiedPathSolver {
 
     // If there's a jumper pad point, handle it (force stop at the pad)
     if (jumperPadBtwHeadAndTail && jumperPadAtIndex >= 0) {
-      const jumperPadPoint = this.inputRoute.route[jumperPadAtIndex]
+      const connectorStartDistance = this.lastValidPath
+        ? this.lastValidPathHeadDistance
+        : this.tailDistanceAlongPath
 
       // 1. Add the last valid path found *before* the jumper pad.
       if (this.lastValidPath) {
@@ -780,20 +821,8 @@ export class SingleSimplifiedPathSolver5 extends SingleSimplifiedPathSolver {
         this.lastValidPath = null
       }
 
-      // 2. Ensure the route connects *exactly* to the jumper pad location
-      const lastPointInNewRoute = this.newRoute[this.newRoute.length - 1]
-      if (
-        !lastPointInNewRoute ||
-        lastPointInNewRoute.x !== jumperPadPoint.x ||
-        lastPointInNewRoute.y !== jumperPadPoint.y
-      ) {
-        // Add the jumper pad point explicitly
-        this.newRoute.push({
-          x: jumperPadPoint.x,
-          y: jumperPadPoint.y,
-          z: jumperPadPoint.z,
-        })
-      }
+      // 2. Preserve the original connector and every bend up to the pad.
+      this.appendOriginalRouteSlice(connectorStartDistance, jumperPadAtIndex)
 
       // 3. Reset state for the next segment (after the jumper pad)
       this.currentStepSize = this.maxStepSize
@@ -922,27 +951,7 @@ export class SingleSimplifiedPathSolver5 extends SingleSimplifiedPathSolver {
     }
 
     if (!path45 && !this.lastValidPath) {
-      const oldTailPoint = this.getPointAtDistance(this.tailDistanceAlongPath)
-
-      // Move tail and head forward by stepSize
-      this.tailDistanceAlongPath += this.minStepSize
-      this.moveHead(this.minStepSize)
-
-      const newTailIndex = this.getNearestIndexForDistance(
-        this.tailDistanceAlongPath,
-      )
-      const newTailPoint = this.inputRoute.route[newTailIndex]
-      const lastRoutePoint =
-        this.inputRoute.route[this.inputRoute.route.length - 1]
-
-      // Add the segment from old tail to new tail
-      if (
-        !this.arePointsEqual(oldTailPoint, newTailPoint) &&
-        !this.arePointsEqual(newTailPoint, lastRoutePoint)
-      ) {
-        this.newRoute.push(newTailPoint)
-      }
-
+      this.advanceTailAlongOriginalRoute()
       return
     }
 

@@ -16,10 +16,11 @@ export const ENDPOINT_MATCH_TOLERANCE = 0.1
 type EndpointEdge = {
   nextHash: string
   routeIndex: number | null
+  gapLength: number
 }
 
 type EndpointPathCost = {
-  gapCount: number
+  gapLength: number
   hopCount: number
 }
 
@@ -212,7 +213,7 @@ export const snapIslandEndpointToNearestTerminal = (params: {
 
 /**
  * Returns the route islands on the deterministic endpoint path between the
- * chosen terminals, minimizing new gaps before route hops. Existing routed
+ * chosen terminals, minimizing new gap length before route hops. Existing routed
  * detours must not be replaced with shorter chains of invented stitch segments.
  * If the subset cannot actually stitch to both terminals, the full route set
  * is returned instead.
@@ -260,10 +261,12 @@ export const selectRoutesAlongEndpointPath = (params: {
     addAdjacencyEdge(adjacency, routeStartHash, {
       nextHash: routeEndHash,
       routeIndex: i,
+      gapLength: 0,
     })
     addAdjacencyEdge(adjacency, routeEndHash, {
       nextHash: routeStartHash,
       routeIndex: i,
+      gapLength: 0,
     })
   }
 
@@ -275,18 +278,18 @@ export const selectRoutesAlongEndpointPath = (params: {
     for (let j = i + 1; j < sortedEndpointClusters.length; j++) {
       const endpointB = sortedEndpointClusters[j]!
       if (endpointA.point.z !== endpointB.point.z) continue
-      if (
-        distance(endpointA.point, endpointB.point) > MAX_STITCH_GAP_DISTANCE_3
-      )
-        continue
+      const gapLength = distance(endpointA.point, endpointB.point)
+      if (gapLength > MAX_STITCH_GAP_DISTANCE_3) continue
 
       addAdjacencyEdge(adjacency, endpointA.key, {
         nextHash: endpointB.key,
         routeIndex: null,
+        gapLength,
       })
       addAdjacencyEdge(adjacency, endpointB.key, {
         nextHash: endpointA.key,
         routeIndex: null,
+        gapLength,
       })
     }
   }
@@ -310,7 +313,7 @@ export const selectRoutesAlongEndpointPath = (params: {
   }
 
   const pendingCosts = new Map<string, EndpointPathCost>([
-    [startHash, { gapCount: 0, hopCount: 0 }],
+    [startHash, { gapLength: 0, hopCount: 0 }],
   ])
   const visitedHashes = new Set<string>()
   const prevByHash = new Map<
@@ -320,10 +323,12 @@ export const selectRoutesAlongEndpointPath = (params: {
 
   while (pendingCosts.size > 0) {
     let [currentHash, currentCost] = pendingCosts.entries().next().value!
+    // Exact ordering keeps Dijkstra's finalized labels valid. Treating nearby
+    // lengths as equal would make the comparison non-transitive.
     for (const [hash, cost] of pendingCosts) {
       if (
-        cost.gapCount < currentCost.gapCount ||
-        (cost.gapCount === currentCost.gapCount &&
+        cost.gapLength < currentCost.gapLength ||
+        (cost.gapLength === currentCost.gapLength &&
           cost.hopCount < currentCost.hopCount)
       ) {
         currentHash = hash
@@ -337,14 +342,14 @@ export const selectRoutesAlongEndpointPath = (params: {
     for (const edge of adjacency.get(currentHash) ?? []) {
       if (visitedHashes.has(edge.nextHash)) continue
       const nextCost: EndpointPathCost = {
-        gapCount: currentCost.gapCount + (edge.routeIndex === null ? 1 : 0),
+        gapLength: currentCost.gapLength + edge.gapLength,
         hopCount: currentCost.hopCount + 1,
       }
       const previousCost = pendingCosts.get(edge.nextHash)
       if (
         previousCost &&
-        (previousCost.gapCount < nextCost.gapCount ||
-          (previousCost.gapCount === nextCost.gapCount &&
+        (previousCost.gapLength < nextCost.gapLength ||
+          (previousCost.gapLength === nextCost.gapLength &&
             previousCost.hopCount <= nextCost.hopCount))
       ) {
         continue

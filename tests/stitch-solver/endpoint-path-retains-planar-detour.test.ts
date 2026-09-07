@@ -17,9 +17,7 @@ test("stitching retains a routed planar detour instead of terminal shortcuts", (
       connectionName: "detour",
       rootConnectionName: "detour",
       ...(index === 0 ? { startPcbPortId: "terminal_start" } : {}),
-      ...(index === points.length - 2
-        ? { endPcbPortId: "terminal_end" }
-        : {}),
+      ...(index === points.length - 2 ? { endPcbPortId: "terminal_end" } : {}),
       traceThickness: 0.15,
       viaDiameter: 0.3,
       route: [points[index]!, point],
