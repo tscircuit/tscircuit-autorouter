@@ -135,12 +135,14 @@ test("Pipeline9 indexes copper and retries across the native port-point domain",
     maxY: nativeBounds.maxY + padding,
   }
   const obstacles = getPipeline9FixedRouteObstacles({
-    fixedObstacleRoutes: [routes[1]!, routes[2]!, fixedRoute].filter((route) => {
-      const bounds = getPipeline9RouteCopperBounds(route)
-      return (
-        bounds !== undefined && doPipeline9BoundsOverlap(searchBounds, bounds)
-      )
-    }),
+    fixedObstacleRoutes: [routes[1]!, routes[2]!, fixedRoute].filter(
+      (route) => {
+        const bounds = getPipeline9RouteCopperBounds(route)
+        return (
+          bounds !== undefined && doPipeline9BoundsOverlap(searchBounds, bounds)
+        )
+      },
+    ),
     layerCount: 2,
   })
   const obstacleConnections = new Set(

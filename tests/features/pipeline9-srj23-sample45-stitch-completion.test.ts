@@ -246,8 +246,7 @@ test("Pipeline9 preserves SRJ23 sample45's completed DRC-clean preloaded path", 
                   const metadata = tiny!.topology.regionMetadata?.[regionId]
                   const originalNode = solver.capacityNodes?.find(
                     (node): boolean =>
-                      node.capacityMeshNodeId ===
-                      metadata?.capacityMeshNodeId,
+                      node.capacityMeshNodeId === metadata?.capacityMeshNodeId,
                   )
                   return {
                     regionId,
@@ -261,9 +260,7 @@ test("Pipeline9 preserves SRJ23 sample45's completed DRC-clean preloaded path", 
                     height: tiny!.topology.regionHeight[regionId],
                     availableZMask:
                       tiny!.topology.regionAvailableZMask?.[regionId] ?? null,
-                    assignedPairs: tiny!.state.regionSegments[
-                      regionId
-                    ]?.filter(
+                    assignedPairs: tiny!.state.regionSegments[regionId]?.filter(
                       ([assignedRouteId]): boolean =>
                         assignedRouteId === routeId,
                     ),
@@ -303,30 +300,37 @@ test("Pipeline9 preserves SRJ23 sample45's completed DRC-clean preloaded path", 
                 ? tinyRoute.solver.problem.routeMetadata?.[tinyRoute.routeId]
                 : null,
               endpointPorts,
-              stages: stageSnapshots.map((snapshot): StageSnapshot => ({
-                stage: snapshot.stage,
-                nodes: snapshot.nodes
-                  ?.filter((node): boolean =>
-                    node.portPointsInPairs?.some((pair): boolean =>
-                      pair.some((point): boolean =>
-                        point.connectionName === section.connectionName,
-                      ),
-                    ) === true,
-                  )
-                  .map((node): NodeSnapshot => ({
-                    ...node,
-                    portPointsInPairs: node.portPointsInPairs?.filter(
-                      (pair): boolean =>
-                        pair.some((point): boolean =>
-                          point.connectionName === section.connectionName,
+              stages: stageSnapshots.map(
+                (snapshot): StageSnapshot => ({
+                  stage: snapshot.stage,
+                  nodes: snapshot.nodes
+                    ?.filter(
+                      (node): boolean =>
+                        node.portPointsInPairs?.some((pair): boolean =>
+                          pair.some(
+                            (point): boolean =>
+                              point.connectionName === section.connectionName,
+                          ),
+                        ) === true,
+                    )
+                    .map(
+                      (node): NodeSnapshot => ({
+                        ...node,
+                        portPointsInPairs: node.portPointsInPairs?.filter(
+                          (pair): boolean =>
+                            pair.some(
+                              (point): boolean =>
+                                point.connectionName === section.connectionName,
+                            ),
                         ),
+                      }),
                     ),
-                  })),
-                routes: snapshot.routes?.filter(
-                  (route): boolean =>
-                    route.connectionName === section.connectionName,
-                ),
-              })),
+                  routes: snapshot.routes?.filter(
+                    (route): boolean =>
+                      route.connectionName === section.connectionName,
+                  ),
+                }),
+              ),
             }),
           )
         }

@@ -152,7 +152,8 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
     )
     const sameRootRoutes = params.allHdRoutes.filter((route): boolean => {
       if (
-        (route.rootConnectionName ?? route.connectionName) !== rootConnectionName
+        (route.rootConnectionName ?? route.connectionName) !==
+        rootConnectionName
       ) {
         return false
       }

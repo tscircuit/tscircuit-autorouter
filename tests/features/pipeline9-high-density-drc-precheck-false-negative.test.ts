@@ -99,9 +99,7 @@ test("Pipeline9 honors an official owned DRC on apparently clear routing geometr
   // accompany the bounded force candidates. No neighboring seam exists here.
   for (
     let step = 0;
-    step < maxForceCandidates + 4 &&
-    !solver.solved &&
-    !solver.failed;
+    step < maxForceCandidates + 4 && !solver.solved && !solver.failed;
     step++
   ) {
     solver.step()
