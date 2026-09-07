@@ -2,6 +2,15 @@ import { distance, pointToSegmentDistance } from "@tscircuit/math-utils"
 import { SingleHighDensityRouteSolver } from "./SingleHighDensityRouteSolver"
 import { Node } from "lib/data-structures/SingleRouteCandidatePriorityQueue"
 
+type NodeCostTerms = {
+  x: number
+  y: number
+  z: number
+  goalDistancePower: number
+  planarFuturePenalty?: number
+  viaFuturePenalty?: number
+}
+
 export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends SingleHighDensityRouteSolver {
   FUTURE_CONNECTION_PROX_TRACE_PENALTY_FACTOR = 2
   FUTURE_CONNECTION_PROX_VIA_PENALTY_FACTOR = 1
@@ -12,6 +21,7 @@ export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends Sing
   FUTURE_CONNECTION_VIA_TRACE_CLEARANCE = 0.1
   futureConnectionPoints: Array<{ x: number; y: number; z: number }>
   futureConnectionSegmentsCache: FutureConnectionSegment[] | null = null
+  private nodeCostTermsByGridKey = new Map<number, NodeCostTerms>()
 
   constructor(
     opts: ConstructorParameters<typeof SingleHighDensityRouteSolver>[0],
@@ -201,7 +211,7 @@ export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends Sing
     )
   }
 
-  override setNodeCosts(node: Node) {
+  override setNodeCosts(node: Node): void {
     const dx = Math.abs(node.x - node.parent!.x)
     const dy = Math.abs(node.y - node.parent!.y)
     const dist = Math.sqrt(dx ** 2 + dy ** 2)
@@ -219,13 +229,37 @@ export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends Sing
       dist +
       misalignedDist * this.MISALIGNED_DIST_PENALTY_FACTOR
 
-    const goalDist = distance(node, this.B) ** 1.6
-    const baseH = goalDist + (node.z !== this.B.z ? this.viaPenaltyDistance : 0)
-    const futureConnectionPenalty = this.getFutureConnectionPenalty(
-      node,
-      node.z !== node.parent?.z,
-    )
-
+    const gridKey = this.getNodeKey(node)
+    let costTerms = this.nodeCostTermsByGridKey.get(gridKey)
+    // Exact starts, clamped boundary points and accumulated floating-point
+    // steps can share a grid key without sharing coordinates. Only reuse the
+    // coordinate-dependent terms when all three coordinates match exactly.
+    if (
+      !costTerms ||
+      costTerms.x !== node.x ||
+      costTerms.y !== node.y ||
+      costTerms.z !== node.z
+    ) {
+      costTerms = {
+        x: node.x,
+        y: node.y,
+        z: node.z,
+        goalDistancePower: distance(node, this.B) ** 1.6,
+      }
+      this.nodeCostTermsByGridKey.set(gridKey, costTerms)
+    }
+    const baseH =
+      costTerms.goalDistancePower +
+      (node.z !== this.B.z ? this.viaPenaltyDistance : 0)
+    const isVia = node.z !== node.parent?.z
+    let futureConnectionPenalty = isVia
+      ? costTerms.viaFuturePenalty
+      : costTerms.planarFuturePenalty
+    if (futureConnectionPenalty === undefined) {
+      futureConnectionPenalty = this.getFutureConnectionPenalty(node, isVia)
+      if (isVia) costTerms.viaFuturePenalty = futureConnectionPenalty
+      else costTerms.planarFuturePenalty = futureConnectionPenalty
+    }
     node.g = baseG + futureConnectionPenalty
     node.h = baseH + futureConnectionPenalty
     node.f = this.computeF(node.g, node.h)
