@@ -1362,7 +1362,6 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
             candidateDrcInput.originalTraceIdByEvaluationTraceId,
         })
       if (evaluatedNewErrors.length === 0) {
-        const validationCountBefore = this.referenceDrcValidationCount
         const referenceResult = cachedReferenceDrcEvaluator({
           traces: [],
           routes: evaluatedRoutes,
@@ -1371,10 +1370,9 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         const referenceErrors = Array.isArray(referenceResult)
           ? referenceResult
           : referenceResult.errors
-        if (
-          this.referenceDrcValidationCount > validationCountBefore &&
-          referenceErrors.length > 0
-        ) {
+        // A reference result warmed by portfolio validation still proves an
+        // indexed false negative. The indexed cache prevents duplicate counts.
+        if (referenceErrors.length > 0) {
           this.referenceDrcFalseNegativeCount += 1
         }
         this.indexedDrcEvaluationTimeMs +=
@@ -1409,6 +1407,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       effort: params.effort,
       viaHoleDiameter: params.defaultViaHoleDiameter,
       drcEvaluator,
+      referenceDrcEvaluator: cachedReferenceDrcEvaluator,
       viaInPadDrcEvaluator: drcEvaluator,
       maxIterations: EXACT_REPAIR_MAX_ITERATIONS,
       enableBroadFallback: false,
