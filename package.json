@@ -105,6 +105,7 @@
   "dependencies": {
     "fast-json-stable-stringify": "^2.1.0",
     "object-hash": "^3.0.0",
-    "stack-svgs": "^0.0.1"
+    "stack-svgs": "^0.0.1",
+    "@tscircuit/repair04": "https://codeload.github.com/tscircuit/repair04/tar.gz/79f794a426c32740ad89edf3624ac9e0c881bc13"
   }
 }
