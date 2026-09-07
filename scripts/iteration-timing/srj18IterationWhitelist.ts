@@ -29,6 +29,13 @@ export const srj18IterationWhitelist: IterationWhitelistEntry[] = [
       "Hypergraph construction, serialization and input-node preparation share pipeline iteration 9255 with the separately attributed congestion prepass.",
   },
   {
+    solverName: "UniformPortDistributionSolver",
+    phase: "initialization",
+    localIteration: 0,
+    reason:
+      "Preparing pathing output, ownership pairs and shared edges took 1.04s in pipeline iteration 199302 on a repeated Blacksmith run.",
+  },
+  {
     solverName: "HighDensitySolver",
     phase: "initialization",
     localIteration: 0,

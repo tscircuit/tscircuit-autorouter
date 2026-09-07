@@ -70,18 +70,25 @@ The three fastest completed samples were each measured three times:
 | sample003 | Arduino Micro | 30.24s | 30.38s, 30.24s, 30.03s |
 | sample001 | Arduino Leonardo | 33.67s | 33.49s, 33.67s, 34.33s |
 
-The instrumented run completed 247,488 pipeline iterations. Two exceeded the
-initial 1,000ms warning budget; their three material solver/iteration identities
-are the initial whitelist (initialization includes argument preparation):
+The first instrumented run completed 247,488 pipeline iterations. Two exceeded
+the initial 1,000ms warning budget, identifying the first three material
+solver/iteration identities (initialization includes argument preparation):
 
 | Pipeline iteration | Wall time | Exact whitelist entries |
 | ---: | ---: | --- |
 | 9255 | 1,288.1ms | `DuplicateCongestedPortSolver` step **1** (706.4ms self), `TinyHypergraphPortPointPathingSolver` initialization **0** (259.7ms self); the remaining time includes many short nested connection solves. |
 | 199986 | 1,627.0ms | `HighDensitySolver` initialization **0** (1,626.9ms). |
 
+A [subsequent repeat](https://github.com/tscircuit/tscircuit-autorouter/actions/runs/34166676921)
+measured **UniformPortDistributionSolver initialization 0** at **1,035.5ms** in
+pipeline iteration **199302**, after earlier measurements of 931.0ms and 983.9ms.
+This is the fourth whitelist entry. That repeat measured iterations 9255 and
+199986 at 1,751.2ms and 1,773.0ms respectively.
+
 These measurements include profiler overhead and are observations, not fixed
-timing assertions. Later runs can reveal additional exceptions. Entries below
-1s remain visible in the report without automatically gaining whitelist status.
+timing assertions. The whitelist covers all three pipeline iterations observed
+over 1s across the Blacksmith runs. Entries below 1s remain visible in the report
+without automatically gaining whitelist status.
 
 The measured initialization interval includes parameter preparation immediately
 before `new Solver(...)`. These are the source operations associated with the
@@ -116,8 +123,9 @@ The following is the complete set of material contributors in its 27 retained
 pipeline iterations over 100ms. Values are attributed time, excluding separately
 reported nested calls. Comma-separated call numbers are independent observations;
 an en-dash denotes multiple synchronous calls within one pipeline iteration.
-Only the three entries explicitly marked "whitelisted" are approved at the
-initial 1s budget. The others are the starting worklist for the 100ms budget.
+Whitelist status includes the subsequent repeat that added port distribution.
+Only the four entries explicitly marked "whitelisted" are approved at the initial
+1s budget. The others are the starting worklist for the 100ms budget.
 
 | Deepest solver | Phase | Observed local calls | Largest attributed time | Status |
 | --- | --- | --- | ---: | --- |
@@ -127,7 +135,7 @@ initial 1s budget. The others are the starting worklist for the 100ms budget.
 | TinyHypergraphPortPointPathingSolver | initialization | 0 | 261.1ms | Whitelisted contributor |
 | SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments | initialization | 0 | 100.3ms | Candidate |
 | TinyHyperGraphSectionSolver | initialization | 0 | 109.8ms | Candidate |
-| UniformPortDistributionSolver | initialization | 0 | 983.9ms | Candidate; close to 1s |
+| UniformPortDistributionSolver | initialization | 0 | 983.9ms | Whitelisted after repeat reached 1,035.5ms |
 | HighDensitySolver | initialization | 0 | 1,767.4ms | Whitelisted |
 | SingleHighDensityRouteSolver | step | 1–77, 600–699 | 153.2ms | Candidate: synchronous batches |
 | CachedIntraNodeRouteSolver | initialization | 0 | 118.7ms | Candidate |
@@ -145,3 +153,17 @@ intersection summaries; high-density force improvement processes a whole node
 through multiple force/clearance passes; length-matching post-processing clones
 the input and builds a private copper model. The artifacts include full paths to
 distinguish direct DRC repair from repair inside a portfolio solver.
+
+The other setup intervals build obstacle indexes (`RectDiffGridSolverPipeline`),
+allocate graph routing/candidate storage (`SelectiveReripTinyHyperGraphSolver`),
+group route endpoints and compare their minimum spacing (`CachedIntraNodeRouteSolver`),
+or clone traces and prepare connectivity, width deficits, and obstacle indexes
+(`PowerTraceExpansionSolver`). Caching is disabled: the cached solver's name does
+not imply cache I/O caused its delay.
+
+The high-density search ranges are synchronous batches: the portfolio requests
+`MIN_SUBSTEPS = 100`, and `HyperParameterSupervisorSolver` runs those child steps
+inside one parent call. `SingleHighDensityRouteSolver` repeatedly expands search
+candidates, checks clearance, and enqueues neighbors. `CachedIntraNodeRouteSolver`
+orchestrates route searches and scans completed routes for via/trace conflicts;
+its separately timed descendants are not double-counted.
