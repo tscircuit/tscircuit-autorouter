@@ -36,6 +36,10 @@ jobs:
       - name: Install dependencies
         run: bun install
 
+      - name: Run focused HD via-clearance tests
+        if: matrix.node == 1
+        run: bun test tests/high-density/via-clearance*.test.ts --timeout 300000
+
       # Replaces `npm install -g @tscircuit/bun-test-plan && bun-test-plan`.
       # Distributes by recorded runtime instead of alphabetical round-robin,
       # and drops a global npm install from every shard.
