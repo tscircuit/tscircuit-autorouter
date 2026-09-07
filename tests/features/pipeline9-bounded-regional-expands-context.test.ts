@@ -1,5 +1,5 @@
-import { expect, test } from "bun:test"
 import { getNewViaPadViolations } from "@tscircuit/repair04"
+import { expect, test } from "bun:test"
 import type { DrcEvaluator } from "high-density-repair03/lib"
 import { convertPipeline7HdRoutesToSimplifiedPcbTraces } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/convertPipeline7HdRoutesToSimplifiedPcbTraces"
 import { applyPipeline9BoundedRegionalRepairs } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/applyPipeline9BoundedRegionalRepairs"
