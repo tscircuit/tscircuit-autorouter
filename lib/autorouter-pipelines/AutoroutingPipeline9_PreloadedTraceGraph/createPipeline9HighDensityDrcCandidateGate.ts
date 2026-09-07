@@ -1,13 +1,16 @@
 import {
   checkDifferentNetViaSpacing,
   checkEachPcbTraceNonOverlapping,
-  checkPadTraceClearance,
   checkSameNetViaSpacing,
 } from "@tscircuit/checks"
 import type { AnyCircuitElement, PcbTrace, PcbVia } from "circuit-json"
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import { RELAXED_TRACE_CLEARANCE } from "lib/testing/drcPresets"
 import { MIN_VIA_TO_VIA_CLEARANCE } from "lib/testing/getDrcErrors"
+import {
+  createPreparedPadTraceClearanceChecker,
+  type PreparedPadTraceClearanceChecker,
+} from "lib/testing/utils/createPreparedPadTraceClearanceChecker"
 import {
   createPreparedViaTraceClearanceChecker,
   type PreparedViaTraceClearanceChecker,
@@ -150,6 +153,7 @@ const evaluateScopedCopper = (
   viaSites: ReadonlySet<string>,
   timings: ScopedCopperCheckTimings,
   evaluateViaTraceClearance: PreparedViaTraceClearanceChecker,
+  evaluatePadTraceClearance: PreparedPadTraceClearanceChecker,
 ): Pipeline9DrcError[] => {
   const circuitJson = snapshot.circuitJson.flatMap(
     (element): AnyCircuitElement[] => {
@@ -185,7 +189,7 @@ const evaluateScopedCopper = (
   const viaTraceErrors = evaluateViaTraceClearance(circuitJson, traceOptions)
   timings.scopedViaTraceCheckTimeMs += performance.now() - viaTraceStartedAt
   const padTraceStartedAt = performance.now()
-  const padTraceErrors = checkPadTraceClearance(circuitJson, traceOptions)
+  const padTraceErrors = evaluatePadTraceClearance(circuitJson, traceOptions)
   timings.scopedPadTraceCheckTimeMs += performance.now() - padTraceStartedAt
   const errors = [
     ...traceErrors,
@@ -206,6 +210,7 @@ export const createPipeline9HighDensityDrcCandidateGate = ({
   getSnapshot: (routes: HighDensityRoute[]) => Pipeline9HighDensityDrcSnapshot
 }): Pipeline9HighDensityDrcCandidateGate => {
   const evaluateViaTraceClearance = createPreparedViaTraceClearanceChecker()
+  const evaluatePadTraceClearance = createPreparedPadTraceClearanceChecker()
   const copperBySnapshot = new WeakMap<
     Pipeline9HighDensityDrcSnapshot,
     SnapshotCopper
@@ -366,6 +371,7 @@ export const createPipeline9HighDensityDrcCandidateGate = ({
             selectedViaSites,
             timings,
             evaluateViaTraceClearance,
+            evaluatePadTraceClearance,
           )
     if (cachedBaseline === undefined) {
       // Baselines remain private: callers receive mutable error arrays and
@@ -378,6 +384,7 @@ export const createPipeline9HighDensityDrcCandidateGate = ({
       selectedViaSites,
       timings,
       evaluateViaTraceClearance,
+      evaluatePadTraceClearance,
     )
     return {
       currentErrors,

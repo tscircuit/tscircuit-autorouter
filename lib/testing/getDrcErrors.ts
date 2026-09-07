@@ -20,6 +20,7 @@ import {
 } from "circuit-json-to-connectivity-map"
 import { Point } from "graphics-debug"
 import { createPreparedDrcConnectivityMap } from "./utils/createPreparedDrcConnectivityMap"
+import { createPreparedPadTraceClearanceChecker } from "./utils/createPreparedPadTraceClearanceChecker"
 import { createPreparedViaTraceClearanceChecker } from "./utils/createPreparedViaTraceClearanceChecker"
 
 type CircuitJson = AnyCircuitElement[]
@@ -74,6 +75,10 @@ export type PreparedGetDrcErrorsStats = {
   viaTracePartitionSelectedViaTracePairCount: number
   viaTracePartitionTotalViaSegmentPairCount: number
   viaTracePartitionSelectedViaSegmentPairCount: number
+  padTraceEvaluationCount: number
+  padTraceNativeInvocationCount: number
+  padTraceEvaluatedTraceCount: number
+  padTraceCacheHitTraceCount: number
 }
 
 export type PreparedGetDrcErrors = {
@@ -127,6 +132,7 @@ const getDrcErrorsWithViaSpacingEvaluator = (
   connMap: ConnectivityMap,
   evaluateViaSpacing: ViaSpacingEvaluator,
   evaluateViaTraceClearance: typeof checkViaTraceClearance,
+  evaluatePadTraceClearance: typeof checkPadTraceClearance,
   stats?: PreparedGetDrcErrorsStats,
 ): GetDrcErrorsResult => {
   const viaClearance = Math.max(
@@ -155,7 +161,7 @@ const getDrcErrorsWithViaSpacingEvaluator = (
   }
   const padTraceStartedAt = stats ? performance.now() : 0
   const padTraceErrors = includeTypedTraceClearance
-    ? checkPadTraceClearance(circuitJson, {
+    ? evaluatePadTraceClearance(circuitJson, {
         connMap,
         minClearance: options.traceClearance,
       })
@@ -339,9 +345,14 @@ export const createPreparedGetDrcErrors = (): PreparedGetDrcErrors => {
     viaTracePartitionSelectedViaTracePairCount: 0,
     viaTracePartitionTotalViaSegmentPairCount: 0,
     viaTracePartitionSelectedViaSegmentPairCount: 0,
+    padTraceEvaluationCount: 0,
+    padTraceNativeInvocationCount: 0,
+    padTraceEvaluatedTraceCount: 0,
+    padTraceCacheHitTraceCount: 0,
   }
   const prepareConnectivityMap = createPreparedDrcConnectivityMap()
   const evaluateViaTraceClearance = createPreparedViaTraceClearanceChecker()
+  const evaluatePadTraceClearance = createPreparedPadTraceClearanceChecker()
   const evaluateViaSpacing: ViaSpacingEvaluator = (
     circuitJson,
     connMap,
@@ -386,14 +397,20 @@ export const createPreparedGetDrcErrors = (): PreparedGetDrcErrors => {
         connMap,
         evaluateViaSpacing,
         evaluateViaTraceClearance,
+        evaluatePadTraceClearance,
         stats,
       )
     },
     {
       getStats: (): Readonly<PreparedGetDrcErrorsStats> => {
         const viaTraceStats = evaluateViaTraceClearance.getStats()
+        const padTraceStats = evaluatePadTraceClearance.getStats()
         return {
           ...stats,
+          padTraceEvaluationCount: padTraceStats.evaluationCount,
+          padTraceNativeInvocationCount: padTraceStats.nativeInvocationCount,
+          padTraceEvaluatedTraceCount: padTraceStats.evaluatedTraceCount,
+          padTraceCacheHitTraceCount: padTraceStats.cacheHitTraceCount,
           viaTracePartitionEvaluationCount: viaTraceStats.evaluationCount,
           viaTracePartitionAppliedEvaluationCount:
             viaTraceStats.partitionedEvaluationCount,
@@ -424,4 +441,5 @@ export const getDrcErrors = (
     createDrcConnectivityMap(circuitJson),
     evaluateOfficialViaSpacing,
     checkViaTraceClearance,
+    checkPadTraceClearance,
   )
