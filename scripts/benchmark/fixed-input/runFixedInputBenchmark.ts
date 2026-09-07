@@ -156,7 +156,7 @@ const report: ComparisonReport = {
     },
     freeroutingOptions: {
       version: "2.4.1",
-      maxPasses: 999999,
+      maxPasses: 0,
       maxThreads: 1,
       optimizer: false,
       fanout: false,

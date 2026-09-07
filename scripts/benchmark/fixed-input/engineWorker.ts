@@ -91,7 +91,7 @@ if (engine === "native") {
     `--user_data_path=${userDataPath}`,
     "-da",
     "--gui.enabled=false",
-    "--router.max_passes=999999",
+    "--router.max_passes=0",
     "--router.max_threads=1",
     "--router.optimizer.enabled=false",
     "--router.fanout.enabled=false",

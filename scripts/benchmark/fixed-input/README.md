@@ -67,8 +67,8 @@ Observed elapsed time includes process termination overhead and is recorded.
 
 Native uses `AutoroutingPipelineSolver9_PreloadedTraceGraph`, effort 1, and
 `cacheProvider: null`. Freerouting has fanout, optimization, and automatic
-neckdown disabled, one routing/optimizer thread, and a high pass cap so the
-common deadline normally limits the run. Native's own pipeline repair phases
+neckdown disabled, one routing/optimizer thread, and `max_passes=0` (unlimited),
+so the common deadline limits unfinished runs. Native's own pipeline repair phases
 remain enabled; this compares these documented engine configurations, not
 identical algorithms or equal iteration counts. Each engine can finish or
 report failure before its budget is exhausted. No external warm cache is used;
