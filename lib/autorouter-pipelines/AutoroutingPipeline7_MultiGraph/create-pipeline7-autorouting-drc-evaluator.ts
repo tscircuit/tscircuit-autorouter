@@ -28,6 +28,8 @@ export const createPipeline7AutoroutingDrcEvaluator = (
 ): DrcEvaluator => {
   const engineSrj = {
     ...conversionOptions.srjWithPointPairs,
+    // Preserve physical pad geometry rather than routing approximations.
+    obstacles: conversionOptions.originalSrj.obstacles,
     minTraceWidth: conversionOptions.originalSrj.minTraceWidth,
     minViaDiameter:
       conversionOptions.originalSrj.minViaDiameter ??

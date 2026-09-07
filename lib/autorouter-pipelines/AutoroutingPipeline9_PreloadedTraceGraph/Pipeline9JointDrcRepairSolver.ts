@@ -997,6 +997,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     const autoroutingDrcEngine = new AutoroutingDrcEngine(
       {
         ...extendedSrjWithPointPairs,
+        obstacles: params.originalSrj.obstacles,
         minTraceWidth: params.originalSrj.minTraceWidth,
         minViaDiameter:
           params.originalSrj.minViaDiameter ?? params.defaultViaDiameter,
@@ -1476,6 +1477,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       syntheticConnectionNames: this.syntheticConnectionNames,
       drcEvaluator: this.drcEvaluator!,
       initialErrors: terminalEscapeResult.remainingErrors,
+      allowTracePairRepair: shouldRunPostExactPrecisionPass,
       preloadRepairTraceIds,
       connMap: this.params.connMap,
       colorMap: this.params.colorMap,
