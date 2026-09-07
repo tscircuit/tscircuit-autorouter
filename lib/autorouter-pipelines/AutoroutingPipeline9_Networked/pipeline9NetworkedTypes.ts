@@ -24,8 +24,10 @@ export type Pipeline9NetworkedHighDensityNodeInput = {
   viaDiameter: number
   traceWidth: number
   obstacleMargin: number
+  viaToPadClearance?: number
   effort: 1
   obstacles: Obstacle[]
+  boardObstacles: Obstacle[]
   regionalObstacles: Obstacle[]
   layerCount: number
   nodePf: number | null
