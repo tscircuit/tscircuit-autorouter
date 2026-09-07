@@ -3,27 +3,33 @@ import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-p
 import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import { loadScenarioBySampleNumber } from "../../scripts/benchmark/scenarios"
 
-test("Pipeline9 relocates an SRJ23 terminal escape within its own pad", async (): Promise<void> => {
-  const { scenario } = await loadScenarioBySampleNumber("srj23", 50)
+test("Pipeline9 repairs SRJ18 sample 4 within its regional work budget", async (): Promise<void> => {
+  const { scenario } = await loadScenarioBySampleNumber("srj18", 4)
   const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(
     structuredClone(scenario),
     { cacheProvider: null, effort: 1 },
   )
-
   solver.solve()
 
   expect(solver.solved).toBeTrue()
   expect(solver.failed).toBeFalse()
-  expect(
-    solver.pipeline9JointDrcRepairSolver?.stats.postExactReferenceAccepted,
-  ).toBeFalse()
-  expect(
-    solver.pipeline9JointDrcRepairSolver?.stats.terminalEscapeAcceptedCount,
-  ).toBeGreaterThan(0)
   const { errors } = evaluateRelaxedDrc({
     inputSrj: scenario,
     srjWithPointPairs: solver.srjWithPointPairs!,
     routedTraces: solver.getOutputSimplifiedPcbTraces(),
   })
-  expect(errors).toHaveLength(0)
+  expect(errors).toEqual([])
+  const stats = solver.pipeline9JointDrcRepairSolver!.stats
+  expect(
+    Number(stats.boundedRegionalRepairAttemptedRegionCount),
+  ).toBeLessThanOrEqual(4)
+  expect(
+    Number(stats.boundedRegionalRepairCandidateAttemptCount),
+  ).toBeLessThanOrEqual(1_024)
+  expect(
+    Number(stats.boundedRegionalRepairPathSearchNodeCount),
+  ).toBeLessThanOrEqual(480_000)
+  expect(
+    Number(stats.boundedRegionalRepairReferenceValidationCount),
+  ).toBeLessThanOrEqual(5)
 })

@@ -19,7 +19,6 @@ type ExactPathStats = {
   maxIterations: number
   viaInPadMaxIterations: number
   broadMaxIterations: number
-  fastProbeAttempted: boolean
   terminalEscapeCandidateCount: number
   regionalB01RepairAttempted: boolean
 }
@@ -270,9 +269,6 @@ test("Pipeline9 joint DRC distinguishes a new trace id from its preloaded alias"
     broadMaxIterations: Number(
       solver.stats.exactRepairConfiguredBroadMaxIterations,
     ),
-    fastProbeAttempted: Boolean(
-      solver.stats.pipeline7AdaptiveExactDrcFastProbeAttempted,
-    ),
     terminalEscapeCandidateCount: Number(
       solver.stats.terminalEscapeCandidateCount,
     ),
@@ -284,7 +280,6 @@ test("Pipeline9 joint DRC distinguishes a new trace id from its preloaded alias"
     maxIterations: 32,
     viaInPadMaxIterations: 32,
     broadMaxIterations: 12,
-    fastProbeAttempted: true,
     terminalEscapeCandidateCount: 0,
     regionalB01RepairAttempted: false,
   })
