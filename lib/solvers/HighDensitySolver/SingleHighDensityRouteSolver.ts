@@ -215,7 +215,7 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
       opts.availableZ && opts.availableZ.length > 0
         ? [...new Set(opts.availableZ)].sort((a, b) => a - b)
         : Array.from({ length: this.layerCount }, (_, index) => index)
-    this.exploredNodes = new BitmapExploredNodeSet()
+    this.exploredNodes = new Set()
     this.straightLineDistance = distance(this.A, this.B)
     this.futureConnections = opts.futureConnections ?? []
     this.NEARBY_SEGMENT_CLEARANCE = opts.nearbySegmentClearance ?? 0.15
