@@ -30,11 +30,16 @@ type Pipeline9BoundedRegionalRepairParams = {
   drcEvaluator: DrcEvaluator
 }
 
+type RepairRegionLocation = {
+  center: { x: number; y: number }
+  size: number
+}
+
 const MAX_REFERENCE_ISSUES = 8
 const MAX_REGIONS = 4
-const MAX_CANDIDATE_ATTEMPTS_PER_REGION = 512
+const MAX_CANDIDATE_ATTEMPTS_PER_REGION = 256
 const MAX_PATH_SEARCH_NODES_PER_REGION = 120_000
-const REGION_SIZE = 16
+const REGION_SIZES = [10, 16] as const
 
 /** Keeps intermediate regional improvements private until full reference DRC passes. */
 export const applyPipeline9BoundedRegionalRepairs = ({
@@ -77,11 +82,12 @@ export const applyPipeline9BoundedRegionalRepairs = ({
     }
   }
   // Repair04 requires a fixed collar of one copper diameter plus clearance.
-  // Wide copper is outside this pass's fixed 10 mm regional search scope.
+  // Keep only bounded contexts that leave room for mutable copper.
   const boundaryMargin = Math.max(0.5, maxCopperDiameter + clearance)
-  if (Number.isFinite(boundaryMargin) && boundaryMargin * 2 >= REGION_SIZE) {
-    return result
-  }
+  const regionSizes = REGION_SIZES.filter(
+    (size) => !Number.isFinite(boundaryMargin) || boundaryMargin * 2 < size,
+  )
+  if (regionSizes.length === 0) return result
   let currentRoutes = routes
   let reference = drcEvaluator({ traces: [], routes, hdRoutes: routes })
   result.referenceValidationCount++
@@ -101,7 +107,7 @@ export const applyPipeline9BoundedRegionalRepairs = ({
     ...createSrjWithBoardValidObstacleLayers(originalSrj),
     traces: undefined,
   }
-  const attemptedBounds: Bounds[] = []
+  const attemptedRegions: Array<{ bounds: Bounds; size: number }> = []
   let fixedViolations = new Map(
     getFixedObstacleViolations({ srj, routes: currentRoutes }).map(
       (violation) => [violation.key, violation.severity],
@@ -111,42 +117,52 @@ export const applyPipeline9BoundedRegionalRepairs = ({
     const centeredErrors = Array.isArray(reference)
       ? reference
       : (reference.errorsWithCenters ?? reference.errors)
-    const center = centeredErrors
+    const centers = centeredErrors
       .map((error) => error.center ?? error.pcb_center)
-      .find((point): point is { x: number; y: number } => {
-        if (
-          point === null ||
-          typeof point !== "object" ||
-          !("x" in point) ||
-          !("y" in point) ||
-          typeof point.x !== "number" ||
-          typeof point.y !== "number" ||
-          !Number.isFinite(point.x) ||
-          !Number.isFinite(point.y)
-        ) {
-          return false
-        }
-        const { x, y } = point
-        return !attemptedBounds.some(
-          (bounds) =>
-            x >= bounds.minX &&
-            x <= bounds.maxX &&
-            y >= bounds.minY &&
-            y <= bounds.maxY,
-        )
-      })
-    if (!center) break
+      .filter(
+        (point): point is { x: number; y: number } =>
+          point !== null &&
+          typeof point === "object" &&
+          "x" in point &&
+          "y" in point &&
+          typeof point.x === "number" &&
+          typeof point.y === "number" &&
+          Number.isFinite(point.x) &&
+          Number.isFinite(point.y),
+      )
+    let nextRegion: RepairRegionLocation | undefined
+    // Wider context can move coupled errors away from a smaller region's
+    // locked collar. Both sizes share the same four-region work budget.
+    for (const size of regionSizes) {
+      const center = centers.find(
+        ({ x, y }) =>
+          !attemptedRegions.some(
+            ({ bounds, size: attemptedSize }) =>
+              size === attemptedSize &&
+              x >= bounds.minX &&
+              x <= bounds.maxX &&
+              y >= bounds.minY &&
+              y <= bounds.maxY,
+          ),
+      )
+      if (center) {
+        nextRegion = { center, size }
+        break
+      }
+    }
+    if (!nextRegion) break
+    const { center, size } = nextRegion
     const region = extractRepairRegion({
       srj,
       routes: currentRoutes,
       bounds: {
-        minX: center.x - REGION_SIZE / 2,
-        maxX: center.x + REGION_SIZE / 2,
-        minY: center.y - REGION_SIZE / 2,
-        maxY: center.y + REGION_SIZE / 2,
+        minX: center.x - size / 2,
+        maxX: center.x + size / 2,
+        minY: center.y - size / 2,
+        maxY: center.y + size / 2,
       },
     })
-    attemptedBounds.push(region.mutableBounds)
+    attemptedRegions.push({ bounds: region.mutableBounds, size })
     result.attemptedRegionCount++
     if (region.routes.length === 0) continue
     const solver = new Repair04Solver({

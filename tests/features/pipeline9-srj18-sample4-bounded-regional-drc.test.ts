@@ -29,7 +29,7 @@ test("Pipeline9 repairs SRJ18 sample 4 within its regional work budget", async (
   ).toBeLessThanOrEqual(4)
   expect(
     Number(stats.boundedRegionalRepairCandidateAttemptCount),
-  ).toBeLessThanOrEqual(2_048)
+  ).toBeLessThanOrEqual(1_024)
   expect(
     Number(stats.boundedRegionalRepairPathSearchNodeCount),
   ).toBeLessThanOrEqual(480_000)

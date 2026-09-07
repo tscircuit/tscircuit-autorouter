@@ -27,6 +27,6 @@ test("a regional improvement stays private while a reference connectivity error 
   expect(result.routes).toBe(fixture.routes)
   expect(fixture.routes).toEqual(original)
   expect(result.attemptedRegionCount).toBeLessThanOrEqual(4)
-  expect(result.candidateAttemptCount).toBeLessThanOrEqual(4 * 512)
+  expect(result.candidateAttemptCount).toBeLessThanOrEqual(4 * 256)
   expect(result.pathSearchNodeCount).toBeLessThanOrEqual(4 * 120_000)
 })

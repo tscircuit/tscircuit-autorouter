@@ -7,28 +7,28 @@ type Fixture = ReturnType<typeof createBoundedRegionalRepairFixture>
 test("bounded regional repair skips copper whose safety collar cannot fit its fixed region", (): void => {
   const widenCollar: Array<(fixture: Fixture) => void> = [
     (fixture) => {
-      fixture.originalSrj.minTraceWidth = 4.8
+      fixture.originalSrj.minTraceWidth = 7.8
     },
     (fixture) => {
-      fixture.originalSrj.minViaDiameter = 4.8
+      fixture.originalSrj.minViaDiameter = 7.8
     },
     (fixture) => {
-      fixture.routes[0]!.traceThickness = 4.8
+      fixture.routes[0]!.traceThickness = 7.8
     },
     (fixture) => {
-      fixture.routes[0]!.viaDiameter = 4.8
+      fixture.routes[0]!.viaDiameter = 7.8
     },
     (fixture) => {
-      fixture.routes[0]!.route[1]!.traceThickness = 4.8
+      fixture.routes[0]!.route[1]!.traceThickness = 7.8
     },
     (fixture) => {
-      fixture.originalSrj.defaultObstacleMargin = 4.7
+      fixture.originalSrj.defaultObstacleMargin = 7.7
     },
     (fixture) => {
-      fixture.originalSrj.minTraceToPadEdgeClearance = 4.7
+      fixture.originalSrj.minTraceToPadEdgeClearance = 7.7
     },
     (fixture) => {
-      fixture.originalSrj.minViaEdgeToPadEdgeClearance = 4.7
+      fixture.originalSrj.minViaEdgeToPadEdgeClearance = 7.7
     },
   ]
   for (const configure of widenCollar) {
