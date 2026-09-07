@@ -1,0 +1,39 @@
+name: Update GBA route snapshot
+
+on:
+  push:
+    branches:
+      - codex/pipeline9-merge-same-net-vias
+    paths:
+      - '.github/workflows/update-gba-route-snapshot.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: codex/pipeline9-merge-same-net-vias
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: '1.3.8'
+      - run: bun install --frozen-lockfile
+      - name: Regenerate only the changed full-board snapshot
+        env:
+          BUN_UPDATE_SNAPSHOTS: '1'
+        run: bun test tests/bugs/bugreport96-full-gameboy-no-breakout.test.ts --timeout 9999999
+      - name: Commit the regenerated snapshot
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add tests/bugs/__snapshots__/bugreport96-full-gameboy-no-breakout-routed.snap.svg
+          if git diff --cached --quiet; then
+            echo "The focused test did not update its snapshot"
+            exit 1
+          fi
+          git commit -m "Update full Game Boy routing snapshot"
+          git push origin HEAD:codex/pipeline9-merge-same-net-vias
