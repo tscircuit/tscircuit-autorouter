@@ -3,11 +3,13 @@ import {
   checkViaTraceClearance,
 } from "@tscircuit/checks"
 import type { AnyCircuitElement } from "circuit-json"
-import {
-  CLEARANCE_PRECISION_MARGIN,
-  type ClearanceMarginMeasurement,
-} from "./applyPipeline9ClearancePrecisionRepairs"
-import type { Pipeline9DrcError } from "./pipeline9JointDrcRepairUtils"
+import type { Pipeline9DrcError } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/pipeline9JointDrcRepairUtils"
+
+type ClearanceMarginMeasurement =
+  | { status: "measured"; errors: Pipeline9DrcError[] }
+  | { status: "unsupported-identity" }
+
+const CLEARANCE_PRECISION_MARGIN = 0.01
 
 /** Measures the original failing pairs beyond the reference checker's tolerance. */
 export const getPipeline9ClearanceMarginErrors = ({
