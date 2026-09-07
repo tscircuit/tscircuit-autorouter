@@ -19,5 +19,7 @@ test("restores profiling hooks and permits another run after a solver throws", (
   expect(() => profileSolverIterations(new ThrowingSolver())).toThrow(failure)
   expect(BaseSolver.prototype.step).toBe(originalStep)
   expect(ThrowingSolver.prototype.step).toBe(originalThrowingStep)
-  expect(profileSolverIterations(new SuccessfulSolver()).totalIterations).toBe(1)
+  expect(profileSolverIterations(new SuccessfulSolver()).totalIterations).toBe(
+    1,
+  )
 })

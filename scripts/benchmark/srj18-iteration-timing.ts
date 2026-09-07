@@ -20,7 +20,10 @@ export const runSrj18IterationTiming = async (
   const thresholdMs = Number(
     process.env.SRJ18_ITERATION_THRESHOLD_MS ?? SRJ18_ITERATION_THRESHOLD_MS,
   )
-  if (!Number.isFinite(thresholdMs) || thresholdMs < SRJ18_ITERATION_TARGET_MS) {
+  if (
+    !Number.isFinite(thresholdMs) ||
+    thresholdMs < SRJ18_ITERATION_TARGET_MS
+  ) {
     throw new Error("SRJ18_ITERATION_THRESHOLD_MS must be at least 100ms")
   }
   const scenarios = await loadScenarios("srj18", { effort: 1 })
@@ -62,9 +65,13 @@ if (import.meta.main) {
     const { discoverFastestSrj18Sample } = await import(
       "../iteration-timing/discoverFastestSrj18Sample"
     )
-    const outputDir = process.env.SRJ18_ITERATION_REPORT_DIR ?? "iteration-timing-results"
+    const outputDir =
+      process.env.SRJ18_ITERATION_REPORT_DIR ?? "iteration-timing-results"
     await discoverFastestSrj18Sample(outputDir)
-    appendFileSync(join(outputDir, "summary.md"), `\n${readFileSync(join(outputDir, "discovery.md"), "utf8")}`)
+    appendFileSync(
+      join(outputDir, "summary.md"),
+      `\n${readFileSync(join(outputDir, "discovery.md"), "utf8")}`,
+    )
   } else {
     const sampleIndex = process.argv.indexOf("--sample")
     const result = await runSrj18IterationTiming(

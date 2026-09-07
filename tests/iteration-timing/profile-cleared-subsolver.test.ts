@@ -37,5 +37,7 @@ test("attributes a completed and cleared subsolver to its own iteration", (): vo
   })
   expect(solver.activeSubSolver).toBeNull()
   expect(BaseSolver.prototype.step).toBe(originalStep)
-  expect(Object.getOwnPropertyDescriptor(solver, "activeSubSolver")?.get).toBeUndefined()
+  expect(
+    Object.getOwnPropertyDescriptor(solver, "activeSubSolver")?.get,
+  ).toBeUndefined()
 })

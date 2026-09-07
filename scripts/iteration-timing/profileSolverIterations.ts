@@ -1,4 +1,6 @@
 import { BaseSolver as ExternalBaseSolver } from "@tscircuit/solver-utils"
+import { PowerTraceExpanderSolver } from "@tscircuit/power-trace-expander"
+import { ConvexRegionsSolver } from "pcb-poly-hyper-graph"
 import { BaseSolver } from "../../lib/solvers/BaseSolver"
 
 export type ProfiledSolver = {
@@ -12,6 +14,7 @@ export type ProfiledSolver = {
 
 export type SolverIterationAttribution = {
   solverName: string
+  /** Observed step calls per instance; initialization is 0. */
   localIteration: number
   /** Present when several synchronous calls to this solver blocked one root step. */
   iterationEnd?: number
@@ -57,7 +60,8 @@ type Frame = {
   path: string[]
   lastTime: number
   pendingSelfMs: number
-  activeAtStart: ProfiledSolver[]
+  activeChain: ProfiledSolver[]
+  canAttributeInitialization: boolean
 }
 
 type PropertyRestore = {
@@ -71,15 +75,17 @@ let profiling = false
 
 /**
  * Profiles synchronous step() calls without changing production solver code.
- * Run in an isolated process: the two BaseSolver prototypes are patched only for
+ * Run in an isolated process: solver prototypes are patched only for
  * this synchronous call and are restored even when a solver throws. The external
- * base also covers tiny-hypergraph, pcb-poly-hyper-graph and high-density-repair03.
+ * base covers tiny-hypergraph and high-density-repair03; exported solvers also
+ * locate the separate solver-utils versions used by polygon and power routing.
  */
 export function profileSolverIterations(
   root: ProfiledSolver,
   options: ProfileOptions = {},
 ): SolverIterationProfile {
-  if (profiling) throw new Error("A solver iteration profile is already running")
+  if (profiling)
+    throw new Error("A solver iteration profile is already running")
   const thresholdMs = options.thresholdMs ?? 100
   if (!Number.isFinite(thresholdMs) || thresholdMs < 0) {
     throw new Error("thresholdMs must be a finite non-negative number")
@@ -90,13 +96,17 @@ export function profileSolverIterations(
   const observedSolvers = new WeakSet<object>()
   const assignedSolvers = new WeakSet<object>()
   const solverNames = new WeakMap<object, string>()
+  const stepCounts = new WeakMap<ProfiledSolver, number>()
   const frames: Frame[] = []
   const summaries = new Map<string, SolverTimingSummary>()
   const summaryIterations = new WeakMap<
     ProfiledSolver,
     Map<string, { iteration: number; elapsedMs: number }>
   >()
-  let attributions = new Map<ProfiledSolver, Map<string, SolverIterationAttribution>>()
+  let attributions = new Map<
+    ProfiledSolver,
+    Map<string, SolverIterationAttribution>
+  >()
   const result: SolverIterationProfile = {
     iterations: [],
     totalIterations: 0,
@@ -173,8 +183,14 @@ export function profileSolverIterations(
     if (observedSolvers.has(solver)) return
     observedSolvers.add(solver)
     patchStepPrototype(solver)
-    const descriptor = Object.getOwnPropertyDescriptor(solver, "activeSubSolver")
-    if (descriptor && (!descriptor.configurable || descriptor.get || descriptor.set)) {
+    const descriptor = Object.getOwnPropertyDescriptor(
+      solver,
+      "activeSubSolver",
+    )
+    if (
+      descriptor &&
+      (!descriptor.configurable || descriptor.get || descriptor.set)
+    ) {
       throw new Error(`Cannot observe ${solverName(solver)}.activeSubSolver`)
     }
     let active = solver.activeSubSolver
@@ -189,25 +205,52 @@ export function profileSolverIterations(
       enumerable: descriptor?.enumerable ?? true,
       get: (): ProfiledSolver | null | undefined => active,
       set: (next: ProfiledSolver | null | undefined): void => {
+        // Reaffirming the active child does not end its current time interval.
+        if (next === active) return
         const firstAssignment = next && !assignedSolvers.has(next)
+        const affectedFrames = frames.filter(
+          (frame) => frame.solver === solver || frame.activeChain.includes(solver),
+        )
+        const assignedAt = now()
+        for (const frame of affectedFrames) {
+          // Ancestors are paused inside the current call: their pending self
+          // time excludes that nested call and must not be charged twice.
+          if (frame === frames.at(-1)) {
+            frame.pendingSelfMs += assignedAt - frame.lastTime
+            frame.lastTime = assignedAt
+          }
+          if (
+            frame.solver === solver &&
+            frame.canAttributeInitialization &&
+            firstAssignment &&
+            next
+          ) {
+            const activeChain = getActiveChain(next)
+            const deepest = activeChain.at(-1) ?? next
+            const path = [
+              ...frame.path,
+              solverName(next),
+              ...activeChain.map(solverName),
+            ]
+            // A construction-only transition includes parameter preparation.
+            // After a clear/replacement, retain parent work under the parent:
+            // a child's initialization whitelist must not cover teardown.
+            record(deepest, "initialization", 0, path, frame.pendingSelfMs)
+            frame.pendingSelfMs = 0
+          } else {
+            const isReplacement = frame.solver === solver && firstAssignment
+            recordPendingSelf(frame, Boolean(isReplacement))
+          }
+          frame.canAttributeInitialization = false
+        }
         active = next
         if (next) {
           assignedSolvers.add(next)
           observeSolver(next)
         }
-        if (!firstAssignment || !next) return
-        const frame = frames.findLast((item) => item.solver === solver)
-        if (!frame) return
-        const assignedAt = now()
-        frame.pendingSelfMs += assignedAt - frame.lastTime
-        frame.lastTime = assignedAt
-        const activeChain = getActiveChain(next)
-        const deepest = activeChain.at(-1) ?? next
-        const path = [...frame.path, solverName(next), ...activeChain.map(solverName)]
-        // This includes constructor parameters and synchronous construction.
-        // Nested step()/solve() work has already been subtracted from self time.
-        record(deepest, "initialization", 0, path, frame.pendingSelfMs)
-        frame.pendingSelfMs = 0
+        for (const frame of affectedFrames) {
+          frame.activeChain = getActiveChain(frame.solver)
+        }
       },
     })
     if (active) {
@@ -227,6 +270,23 @@ export function profileSolverIterations(
     }
     if (child) throw new Error("Cycle in the active subsolver chain")
     return chain
+  }
+
+  function recordPendingSelf(frame: Frame, forceParent = false): void {
+    const activeChain = forceParent ? [] : frame.activeChain
+    const deepest = activeChain.at(-1) ?? frame.solver
+    const iteration =
+      deepest === frame.solver
+        ? frame.iteration
+        : (stepCounts.get(deepest) ?? deepest.iterations)
+    record(
+      deepest,
+      iteration === 0 ? "initialization" : "step",
+      iteration,
+      [...frame.path, ...activeChain.map(solverName)],
+      frame.pendingSelfMs,
+    )
+    frame.pendingSelfMs = 0
   }
 
   function patchStepPrototype(target: object): void {
@@ -254,13 +314,19 @@ export function profileSolverIterations(
           parent.pendingSelfMs += startedAt - parent.lastTime
         }
         observeSolver(this)
+        // Some external overrides never increment this.iterations, so whitelist
+        // identity must follow observed calls rather than that mutable field.
+        const iteration = (stepCounts.get(this) ?? this.iterations) + 1
+        stepCounts.set(this, iteration)
+        const activeChain = getActiveChain(this)
         const frame: Frame = {
           solver: this,
-          iteration: this.iterations + 1,
+          iteration,
           path: [...(parent?.path ?? []), solverName(this)],
           lastTime: startedAt,
           pendingSelfMs: 0,
-          activeAtStart: getActiveChain(this),
+          activeChain,
+          canAttributeInitialization: activeChain.length === 0,
         }
         frames.push(frame)
         try {
@@ -268,15 +334,7 @@ export function profileSolverIterations(
         } finally {
           const endedAt = now()
           frame.pendingSelfMs += endedAt - frame.lastTime
-          const activeChain = frame.activeAtStart
-          const deepest = activeChain.at(-1) ?? this
-          record(
-            deepest,
-            "step",
-            deepest === this ? frame.iteration : Math.max(1, deepest.iterations),
-            [...frame.path, ...activeChain.map(solverName)],
-            frame.pendingSelfMs,
-          )
+          recordPendingSelf(frame)
           frames.pop()
           if (parent) parent.lastTime = endedAt
         }
@@ -289,6 +347,8 @@ export function profileSolverIterations(
     for (const prototype of [
       BaseSolver.prototype,
       ExternalBaseSolver.prototype,
+      ConvexRegionsSolver.prototype,
+      PowerTraceExpanderSolver.prototype,
       ...(options.additionalSolverPrototypes ?? []),
     ]) {
       patchStepPrototype(prototype)
@@ -311,13 +371,15 @@ export function profileSolverIterations(
       }
       result.iterations.push({
         ...entries[0],
-        rootIteration: root.iterations,
+        rootIteration: stepCounts.get(root)!,
         elapsedMs,
         attributions: entries,
       })
     }
     result.elapsedMs = now() - startedAt
-    result.solverTimings = [...summaries.values()].sort((a, b) => b.maxMs - a.maxMs)
+    result.solverTimings = [...summaries.values()].sort(
+      (a, b) => b.maxMs - a.maxMs,
+    )
     return result
   } finally {
     for (const restore of restores.reverse()) {
@@ -340,7 +402,11 @@ export function profileSolverIterations(
           }
         }
       } else {
-        Object.defineProperty(restore.target, restore.property, restore.descriptor!)
+        Object.defineProperty(
+          restore.target,
+          restore.property,
+          restore.descriptor!,
+        )
       }
     }
     profiling = false

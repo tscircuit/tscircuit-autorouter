@@ -1,5 +1,11 @@
 import { spawn } from "node:child_process"
-import { closeSync, mkdirSync, openSync, readFileSync, writeFileSync } from "node:fs"
+import {
+  closeSync,
+  mkdirSync,
+  openSync,
+  readFileSync,
+  writeFileSync,
+} from "node:fs"
 import { arch, cpus, platform } from "node:os"
 import { join, resolve } from "node:path"
 import { fileURLToPath } from "node:url"
@@ -65,7 +71,9 @@ export function getSrj18DiscoveryRankings(
   const sampleNames = [...new Set(trials.map((trial) => trial.sampleName))]
   const rankings: Srj18DiscoveryRanking[] = []
   for (const sampleName of sampleNames) {
-    const sampleTrials = trials.filter((trial) => trial.sampleName === sampleName)
+    const sampleTrials = trials.filter(
+      (trial) => trial.sampleName === sampleName,
+    )
     if (
       sampleTrials.length !== requiredTrials ||
       sampleTrials.some((trial) => trial.status !== "solved")
@@ -88,7 +96,8 @@ export function getSrj18DiscoveryRankings(
   }
   return rankings.sort(
     (a, b) =>
-      a.medianTimeMs - b.medianTimeMs || a.sampleName.localeCompare(b.sampleName),
+      a.medianTimeMs - b.medianTimeMs ||
+      a.sampleName.localeCompare(b.sampleName),
   )
 }
 
@@ -132,7 +141,8 @@ async function runChildSample(
       status: "failed",
       elapsedTimeMs: performance.now() - startedAt,
       iterations: 0,
-      error: error instanceof Error ? error.stack || error.message : String(error),
+      error:
+        error instanceof Error ? error.stack || error.message : String(error),
     }
   }
   writeFileSync(outputPath, `${JSON.stringify(result, null, 2)}\n`)
@@ -171,7 +181,11 @@ async function runDiscoveryTrial(
     }, timeoutMs)
     child.once("error", (error) => {
       clearTimeout(timer)
-      resolveOutcome({ exitCode: null, signal: null, spawnError: error.message })
+      resolveOutcome({
+        exitCode: null,
+        signal: null,
+        spawnError: error.message,
+      })
     })
     child.once("close", (exitCode, signal) => {
       clearTimeout(timer)

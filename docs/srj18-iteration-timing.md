@@ -58,5 +58,48 @@ sample or whitelist; review the result and update the constant when needed.
 
 ## Initial observations
 
-Baseline measurements and solver explanations will be recorded here after the
-serial discovery and instrumented Blacksmith runs.
+The [serial Blacksmith baseline](https://github.com/tscircuit/tscircuit-autorouter/actions/runs/34165277363)
+used Bun 1.3.8 on Linux ARM64 with the dataset pinned at
+`c0aad90256a95256fcac814f9f7da81a82a2fdea`. All 16 samples were attempted; five
+completed the first pass and eleven exceeded the approximately 60s deadline.
+The three fastest completed samples were each measured three times:
+
+| Sample | Board | Median | Three trials |
+| --- | --- | ---: | --- |
+| **sample005** | **Arduino Uno** | **25.13s** | 25.13s, 25.17s, 24.97s |
+| sample003 | Arduino Micro | 30.24s | 30.38s, 30.24s, 30.03s |
+| sample001 | Arduino Leonardo | 33.67s | 33.49s, 33.67s, 34.33s |
+
+The instrumented run completed 247,488 pipeline iterations. Two exceeded the
+initial 1,000ms warning budget; their three material solver/iteration identities
+are the initial whitelist (initialization includes argument preparation):
+
+| Pipeline iteration | Wall time | Exact whitelist entries |
+| ---: | ---: | --- |
+| 9255 | 1,288.1ms | `DuplicateCongestedPortSolver` step **1** (706.4ms self), `TinyHypergraphPortPointPathingSolver` initialization **0** (259.7ms self); the remaining time includes many short nested connection solves. |
+| 199986 | 1,627.0ms | `HighDensitySolver` initialization **0** (1,626.9ms). |
+
+These measurements include profiler overhead and are observations, not fixed
+timing assertions. Later runs can reveal additional exceptions. Entries below
+1s remain visible in the report without automatically gaining whitelist status.
+
+The measured initialization interval includes parameter preparation immediately
+before `new Solver(...)`. These are the source operations associated with the
+initial hotspots; timing does not isolate individual helper functions within
+each interval.
+
+| Solver / local iteration | Synchronous work to consider splitting up |
+| --- | --- |
+| `DuplicateCongestedPortSolver` step 1 | The first setup routes every connection independently with synchronous `TinyHyperGraphSolver.solve()` calls, counts used ports, clones the graph, and duplicates congested ports. Instrumented child solve calls are reported separately. |
+| `TinyHypergraphPortPointPathingSolver` initialization 0 | Builds and serializes the hypergraph, runs the congestion duplication prepass, constructs the tiny section pipeline, and reconstructs input-node metadata. |
+| `UniformPortDistributionSolver` initialization 0 | Prepares the pathing output, finds ownership pairs for all node port points, precomputes shared edges, and sorts them. |
+| `HighDensitySolver` initialization 0 | Prepares cloned nodes and computes failure probability for each node. `computeNodePf()` repeatedly calls `getOutput()`, which rebuilds the complete region output. The constructor itself mainly assigns fields. |
+| `MultipleHighDensityRouteStitchSolver3` initialization 0 | Sorts routes, builds clearance indexes and connectivity islands, chooses endpoints and paths, and consolidates fragmented connections. |
+| `CrossingViaReductionSolver` step 1 | Runs the crossing reduction search: splits routes into sections, finds detours, builds indexes, enumerates candidates, checks clearance, and applies a reduction or completes. |
+| `GlobalDrcForceImproveSolver` later steps | Clones and materializes route geometry for several repair candidates, then runs whole-route DRC for each. This occurs both directly and inside `GlobalDrcBranchPortfolioSolver`; the deepest solver's own call number is reported in both cases. |
+
+Relevant source: Pipeline 7's stage definitions; the tiny-hypergraph
+`DuplicateCongestedPortSolver`; `TinyHypergraphPortPointPathingSolver`'s
+constructor and `computeNodePf()`; and the corresponding solvers' constructors
+and `_step()` methods. The JSON artifacts preserve the exact active paths and
+local iterations for each observation.

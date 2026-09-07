@@ -68,7 +68,10 @@ export const writeIterationTimingReport = (
   },
 ): void => {
   mkdirSync(outputDir, { recursive: true })
-  writeFileSync(join(outputDir, "iterations.json"), JSON.stringify(report, null, 2))
+  writeFileSync(
+    join(outputDir, "iterations.json"),
+    JSON.stringify(report, null, 2),
+  )
   const warnings = report.iterations.filter(
     (iteration) => iteration.elapsedMs > report.thresholdMs,
   )
@@ -86,9 +89,14 @@ export const writeIterationTimingReport = (
     "| Pipeline iteration | Duration (ms) | Deepest solver / local iteration | Status |",
     "| ---: | ---: | --- | --- |",
     ...report.iterations.map((entry) => {
-      const status = entry.elapsedMs > report.thresholdMs
-        ? entry.whitelisted ? "Whitelisted slow iteration" : "WARNING: unlisted"
-        : entry.whitelisted ? "Whitelisted >100ms candidate" : ">100ms candidate"
+      const status =
+        entry.elapsedMs > report.thresholdMs
+          ? entry.whitelisted
+            ? "Whitelisted slow iteration"
+            : "WARNING: unlisted"
+          : entry.whitelisted
+            ? "Whitelisted >100ms candidate"
+            : ">100ms candidate"
       const contributors = entry.attributions
         .filter((part) => part.elapsedMs > SRJ18_ITERATION_TARGET_MS)
         .map(describeAttribution)
@@ -106,9 +114,11 @@ export const writeIterationTimingReport = (
       .map(describeAttribution)
       .join("; ")
     const message = `${report.sampleName} pipeline iteration ${iteration.rootIteration}: ${iteration.elapsedMs.toFixed(1)}ms > ${report.thresholdMs}ms [${status}]; ${detail || `${iteration.solverName} ${iteration.phase} ${iteration.localIteration}`}`
-    console.warn(process.env.GITHUB_ACTIONS === "true"
-      ? `::warning title=Slow SRJ18 iteration::${message.replaceAll("%", "%25").replaceAll("\r", "%0D").replaceAll("\n", "%0A")}`
-      : `WARNING: ${message}`)
+    console.warn(
+      process.env.GITHUB_ACTIONS === "true"
+        ? `::warning title=Slow SRJ18 iteration::${message.replaceAll("%", "%25").replaceAll("\r", "%0D").replaceAll("\n", "%0A")}`
+        : `WARNING: ${message}`,
+    )
   }
   console.log(summary)
 }

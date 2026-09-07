@@ -52,7 +52,7 @@ jobs:
         run: bun test tests/benchmarks/srj18-iteration-timing.test.ts --timeout 600000
 
       - name: Rediscover the fastest SRJ18 sample
-        if: github.event_name == 'pull_request' || (github.event_name == 'workflow_dispatch' && inputs.discover_fastest)
+        if: github.event_name == 'workflow_dispatch' && inputs.discover_fastest
         run: bun scripts/benchmark/srj18-iteration-timing.ts --discover
 
       - name: Publish iteration timing summary
