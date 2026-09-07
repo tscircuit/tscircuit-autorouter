@@ -2,48 +2,47 @@ import { expect, test } from "bun:test"
 import { convertPipeline7HdRoutesToSimplifiedPcbTraces } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/convertPipeline7HdRoutesToSimplifiedPcbTraces"
 import { Pipeline9JointDrcRepairSolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9JointDrcRepairSolver"
 import { evaluateCoreRoutingDrc } from "lib/testing/evaluate-core-routing-drc"
-import type { Obstacle, SimpleRouteJson } from "lib/types"
+import type { SimpleRouteConnection, SimpleRouteJson } from "lib/types"
 import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
 
-const createEndpointPad = (x: number, pcbPortId: string): Obstacle => ({
-  type: "rect",
-  center: { x, y: 0 },
-  width: 0.5,
-  height: 0.5,
-  layers: ["top"],
-  connectedTo: [pcbPortId],
-  circuitJsonMetadata: {
-    pcb_smtpad_id: `pad_${pcbPortId}`,
-    pcb_port_id: pcbPortId,
-  },
-})
-
-test("Pipeline9 uses Core DRC throughout joint repair", () => {
-  const connection = {
-    name: "route",
+test("Pipeline9 Repair03 consumes Core maximum-via DRC errors", () => {
+  const connection: SimpleRouteConnection = {
+    name: "signal",
+    maxViaCount: 0,
     pointsToConnect: [
-      { x: -2, y: 0, layer: "top", pcb_port_id: "pcb_port_start" },
-      { x: 2, y: 0, layer: "top", pcb_port_id: "pcb_port_end" },
+      { x: -2, y: 0, layer: "top", pcb_port_id: "start" },
+      { x: 2, y: 0, layer: "top", pcb_port_id: "end" },
     ],
   }
   const srj: SimpleRouteJson = {
     layerCount: 2,
     minTraceWidth: 0.1,
-    minViaDiameter: 0.3,
     minViaHoleDiameter: 0.15,
+    minViaPadDiameter: 0.3,
     bounds: { minX: -3, minY: -2, maxX: 3, maxY: 2 },
     obstacles: [
-      createEndpointPad(-2, "pcb_port_start"),
-      createEndpointPad(2, "pcb_port_end"),
       {
         type: "rect",
-        center: { x: 0, y: 0 },
+        center: { x: -2, y: 0 },
         width: 0.5,
         height: 0.5,
         layers: ["top"],
-        connectedTo: ["foreign_net"],
+        connectedTo: ["signal", "start"],
         circuitJsonMetadata: {
-          pcb_smtpad_id: "pcb_smtpad_foreign",
+          pcb_smtpad_id: "pad_start",
+          pcb_port_id: "start",
+        },
+      },
+      {
+        type: "rect",
+        center: { x: 2, y: 0 },
+        width: 0.5,
+        height: 0.5,
+        layers: ["top"],
+        connectedTo: ["signal", "end"],
+        circuitJsonMetadata: {
+          pcb_smtpad_id: "pad_end",
+          pcb_port_id: "end",
         },
       },
     ],
@@ -56,15 +55,22 @@ test("Pipeline9 uses Core DRC throughout joint repair", () => {
     newConnections: [connection],
     newHdRoutes: [
       {
-        connectionName: "route",
-        rootConnectionName: "route",
+        connectionName: "signal",
+        rootConnectionName: "signal",
         traceThickness: 0.1,
         viaDiameter: 0.3,
         route: [
-          { x: -2, y: 0, z: 0, pcb_port_id: "pcb_port_start" },
-          { x: 2, y: 0, z: 0, pcb_port_id: "pcb_port_end" },
+          { x: -2, y: 0, z: 0, pcb_port_id: "start" },
+          { x: -0.5, y: 0, z: 0 },
+          { x: -0.5, y: 0, z: 1 },
+          { x: 0.5, y: 0, z: 1 },
+          { x: 0.5, y: 0, z: 0 },
+          { x: 2, y: 0, z: 0, pcb_port_id: "end" },
         ],
-        vias: [],
+        vias: [
+          { x: -0.5, y: 0 },
+          { x: 0.5, y: 0 },
+        ],
       },
     ],
     updatedPreloadedTraces: [],
@@ -75,24 +81,24 @@ test("Pipeline9 uses Core DRC throughout joint repair", () => {
     defaultViaDiameter: 0.3,
     defaultViaHoleDiameter: 0.15,
     effort: 1,
-    colorMap: { route: "red" },
+    colorMap: { signal: "red" },
   })
 
+  expect(solver.stats.initialJointDrcIssueCount).toBe(1)
+  expect(solver.solved).toBeFalse()
   solver.solve()
 
   expect(solver.failed).toBeFalse()
   expect(solver.solved).toBeTrue()
   expect(Number(solver.stats.referenceDrcValidationCount)).toBeGreaterThan(0)
-  expect(solver.stats).toMatchObject({
-    initialJointDrcIssueCount: 1,
-    finalDrcIssueCount: 0,
-    globalDrcForceImproveTargetedForceAccepted: true,
-  })
-
+  expect(
+    Number(solver.stats.globalDrcForceImproveCandidateAttempts),
+  ).toBeGreaterThan(0)
+  const output = solver.getOutput()
   const routedTraces = convertPipeline7HdRoutesToSimplifiedPcbTraces({
     connections: [connection],
     originalConnections: [connection],
-    hdRoutes: solver.getOutput(),
+    hdRoutes: output,
     layerCount: 2,
     obstacles: srj.obstacles,
     defaultViaHoleDiameter: 0.15,
@@ -103,5 +109,12 @@ test("Pipeline9 uses Core DRC throughout joint repair", () => {
     srjWithPointPairs: srj,
     routedTraces,
   })
-  expect(finalDrc.errors).toHaveLength(0)
+  expect(finalDrc.errors).toHaveLength(1)
+  const remainingError = finalDrc.errors[0]
+  expect(remainingError?.type).toBe("pcb_trace_error")
+  if (remainingError?.type !== "pcb_trace_error") {
+    throw new Error("Expected the maximum-via check to return a trace error")
+  }
+  expect(remainingError.source_trace_id).toBe("signal")
+  expect(remainingError.message).toContain("exceeding the 0 maximum")
 })

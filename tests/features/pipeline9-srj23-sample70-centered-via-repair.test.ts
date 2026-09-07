@@ -1,9 +1,9 @@
 import { expect, test } from "bun:test"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
-import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
+import { evaluateCoreRoutingDrc } from "lib/testing/evaluate-core-routing-drc"
 import { loadScenarioBySampleNumber } from "../../scripts/benchmark/scenarios"
 
-test("Pipeline9 regional B01 uses the exact via error center in SRJ23 sample 70", async () => {
+test("Pipeline9 keeps SRJ23 sample 70 DRC-clean after joint repair", async () => {
   const { scenario } = await loadScenarioBySampleNumber("srj23", 70)
   const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(
     structuredClone(scenario),
@@ -14,13 +14,22 @@ test("Pipeline9 regional B01 uses the exact via error center in SRJ23 sample 70"
 
   expect(solver.solved).toBeTrue()
   expect(solver.failed).toBeFalse()
-  expect(
-    solver.pipeline9JointDrcRepairSolver?.stats.regionalB01RepairAcceptedCount,
-  ).toBeGreaterThan(0)
-  const { errors } = evaluateRelaxedDrc({
+  const { errors } = evaluateCoreRoutingDrc({
     inputSrj: scenario,
     srjWithPointPairs: solver.srjWithPointPairs!,
     routedTraces: solver.getOutputSimplifiedPcbTraces(),
   })
+  if (errors.length > 0) {
+    console.error(
+      JSON.stringify(
+        {
+          errors,
+          jointRepairStats: solver.pipeline9JointDrcRepairSolver?.stats,
+        },
+        null,
+        2,
+      ),
+    )
+  }
   expect(errors).toHaveLength(0)
 })

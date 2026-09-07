@@ -8,11 +8,8 @@ import {
   type SimplifiedPcbTraces as RepairSimplifiedPcbTraces,
 } from "high-density-repair03/lib"
 import { BaseSolver } from "lib/solvers/BaseSolver"
-import { RELAXED_DRC_OPTIONS } from "lib/testing/drcPresets"
-import {
-  combinePreloadedAndRoutedTraces,
-  evaluateRelaxedDrc,
-} from "lib/testing/evaluate-relaxed-drc"
+import { evaluateCoreRoutingDrc } from "lib/testing/evaluate-core-routing-drc"
+import { combinePreloadedAndRoutedTraces } from "lib/testing/evaluate-relaxed-drc"
 import type {
   Obstacle,
   SimpleRouteConnection,
@@ -21,6 +18,7 @@ import type {
 } from "lib/types"
 import type { HighDensityRoute } from "lib/types/high-density-types"
 import { convertHdRouteToSimplifiedRoute } from "lib/utils/convertHdRouteToSimplifiedRoute"
+import { getViaDimensions } from "lib/utils/getViaDimensions"
 import { mapZToLayerName } from "lib/utils/mapZToLayerName"
 import { Pipeline7AdaptiveDrcBranchPortfolioSolver } from "../AutoroutingPipeline7_MultiGraph/Pipeline7AdaptiveDrcBranchPortfolioSolver"
 import { createPipeline7HdRoutesToSimplifiedPcbTracesConverter } from "../AutoroutingPipeline7_MultiGraph/convertPipeline7HdRoutesToSimplifiedPcbTraces"
@@ -50,9 +48,6 @@ const EXACT_REPAIR_BROAD_MAX_ITERATIONS = 12
 // residual sets. Keep that exhaustive search for compact residues while
 // bounding terminal relocation's repeated whole-board indexed DRC scans.
 const MAX_POST_EXACT_PRECISION_PASS_INDEXED_ISSUE_COUNT = 16
-const INDEXED_DRC_CANDIDATE_CACHE_SIZE = 64
-
-type DrcCandidateKey = string & { readonly __brand: "DrcCandidateKey" }
 
 type Pipeline9JointDrcRepairSolverParams = {
   srj: SimpleRouteJson
@@ -99,28 +94,12 @@ type NormalizedCandidateDrcResult = {
   errorsWithCenters: Array<Record<string, unknown>>
 }
 
-const POINT_EPSILON = 1e-9
-
-const getAutoroutingViaElements = (
-  traces: readonly SimplifiedPcbTrace[],
-): AnyCircuitElement[] => {
-  const viaLocations = new Set<string>()
-  const vias: AnyCircuitElement[] = []
-  for (const trace of traces) {
-    for (const routePoint of trace.route) {
-      if (routePoint.route_type !== "via") continue
-      const locationKey = `${routePoint.x},${routePoint.y},${routePoint.from_layer},${routePoint.to_layer}`
-      if (viaLocations.has(locationKey)) continue
-      viaLocations.add(locationKey)
-      vias.push({
-        type: "pcb_via",
-        pcb_via_id: `via_${vias.length}`,
-        pcb_trace_id: trace.pcb_trace_id,
-      } as AnyCircuitElement)
-    }
-  }
-  return vias
+type Pipeline9PostExactPrecisionResult = {
+  routes: HighDensityRoute[]
+  stats: Record<string, unknown>
 }
+
+const POINT_EPSILON = 1e-9
 
 export const addAutoroutingViaTraceIds = ({
   errors,
@@ -648,35 +627,12 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
   readonly fixedPreloadedObstacleRoutes: PreloadedHighDensityRoute[]
   readonly syntheticConnectionNames: ReadonlySet<string>
   readonly exactRepairSolver?: Pipeline7AdaptiveDrcBranchPortfolioSolver
+  private repairSrj?: SimpleRouteJson
   private drcEvaluator?: DrcEvaluator
   private cachedReferenceDrcEvaluator?: DrcEvaluator
   private referenceDrcValidationCount = 0
-  private referenceDrcFalseNegativeCount = 0
-  private indexedDrcEvaluationCount = 0
-  private indexedDrcCacheHitCount = 0
-  private indexedDrcEvaluationTimeMs = 0
-  private readonly indexedDrcCandidateCache = new Map<
-    DrcCandidateKey,
-    ReturnType<DrcEvaluator>
-  >()
+  private indexedDrcValidationCount = 0
   private combinedOutput?: HighDensityRoute[]
-
-  private cacheIndexedDrcResult(
-    candidateKey: DrcCandidateKey,
-    result: ReturnType<DrcEvaluator>,
-  ): void {
-    if (
-      this.indexedDrcCandidateCache.size >= INDEXED_DRC_CANDIDATE_CACHE_SIZE
-    ) {
-      const oldestCandidateKey = this.indexedDrcCandidateCache
-        .keys()
-        .next().value
-      if (oldestCandidateKey !== undefined) {
-        this.indexedDrcCandidateCache.delete(oldestCandidateKey)
-      }
-    }
-    this.indexedDrcCandidateCache.set(candidateKey, result)
-  }
 
   constructor(params: Pipeline9JointDrcRepairSolverParams) {
     super()
@@ -707,37 +663,32 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       mutatedPreloadedTraces: currentMutatedPreloadedTraces,
       newTraces: currentNewTraces,
     })
-    const traceClearance =
-      params.originalSrj.minTraceToPadEdgeClearance ??
-      RELAXED_DRC_OPTIONS.traceClearance ??
-      0.1
-    const viaClearance = RELAXED_DRC_OPTIONS.viaClearance ?? 0.1
-    const baselineDrc = evaluateRelaxedDrc({
+    const coreBaselineDrc = evaluateCoreRoutingDrc({
       inputSrj: params.originalSrj,
       srjWithPointPairs: params.srjWithPointPairs,
       routedTraces: [],
-      drcOptions: { traceClearance },
     })
     const baselineEvaluatedTraceIds = new Set(
       (params.originalSrj.traces ?? []).map((trace) => trace.pcb_trace_id),
     )
-    const baselineErrors = addAutoroutingViaTraceIds({
-      errors: baselineDrc.errors as unknown as Array<Record<string, unknown>>,
-      circuitJson: baselineDrc.circuitJson,
-      evaluatedTraceIds: baselineEvaluatedTraceIds,
-    })
-    const baselineErrorsWithCenters = addAutoroutingViaTraceIds({
-      errors: baselineDrc.errorsWithCenters as unknown as Array<
+    const coreBaselineErrors = addAutoroutingViaTraceIds({
+      errors: coreBaselineDrc.errors as unknown as Array<
         Record<string, unknown>
       >,
-      circuitJson: baselineDrc.circuitJson,
+      circuitJson: coreBaselineDrc.circuitJson,
       evaluatedTraceIds: baselineEvaluatedTraceIds,
     })
-    const currentDrcResult = evaluateRelaxedDrc({
+    const coreBaselineErrorsWithCenters = addAutoroutingViaTraceIds({
+      errors: coreBaselineDrc.errorsWithCenters as unknown as Array<
+        Record<string, unknown>
+      >,
+      circuitJson: coreBaselineDrc.circuitJson,
+      evaluatedTraceIds: baselineEvaluatedTraceIds,
+    })
+    const currentDrcResult = evaluateCoreRoutingDrc({
       inputSrj: params.originalSrj,
       srjWithPointPairs: params.srjWithPointPairs,
       routedTraces: preparedCurrentOutput.routedTraces,
-      drcOptions: { traceClearance },
     })
     const currentEvaluatedTraceIds = new Set(
       combinePreloadedAndRoutedTraces(
@@ -763,13 +714,13 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       ...currentDrcResult,
       errors: filterPipeline9DrcErrorsAgainstBaseline({
         errors: currentErrors,
-        baselineErrors,
+        baselineErrors: coreBaselineErrors,
         originalTraceIdByPreparedTraceId:
           preparedCurrentOutput.originalPreloadedTraceIdByPreparedTraceId,
       }),
       errorsWithCenters: filterPipeline9DrcErrorsAgainstBaseline({
         errors: currentErrorsWithCenters,
-        baselineErrors: baselineErrorsWithCenters,
+        baselineErrors: coreBaselineErrorsWithCenters,
         originalTraceIdByPreparedTraceId:
           preparedCurrentOutput.originalPreloadedTraceIdByPreparedTraceId,
       }),
@@ -946,7 +897,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     }
     this.stats = {
       initialJointDrcIssueCount: currentDrc.errors.length,
-      baselineJointDrcIssueCount: baselineDrc.errors.length,
+      baselineJointDrcIssueCount: coreBaselineDrc.errors.length,
       initialJointDrcIssueCountByType: currentDrc.errors.reduce<
         Record<string, number>
       >((counts, error) => {
@@ -994,44 +945,36 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         ...syntheticConnectionByName.values(),
       ],
     }
-    const autoroutingDrcEngine = new AutoroutingDrcEngine(
-      {
-        ...extendedSrjWithPointPairs,
-        minTraceWidth: params.originalSrj.minTraceWidth,
-        minViaDiameter:
-          params.originalSrj.minViaDiameter ?? params.defaultViaDiameter,
-      } as RepairSimpleRouteJson,
+    const viaDimensions = getViaDimensions(params.originalSrj)
+    const traceClearance =
+      params.originalSrj.minTraceToPadEdgeClearance ??
+      params.srjWithPointPairs.minTraceToPadEdgeClearance ??
+      0.1
+    const viaClearance =
+      params.originalSrj.minViaHoleEdgeToViaHoleEdgeClearance ??
+      params.srjWithPointPairs.minViaHoleEdgeToViaHoleEdgeClearance ??
+      0.1
+    const indexedDrcEngine = new AutoroutingDrcEngine(
+      extendedSrjWithPointPairs as unknown as RepairSimpleRouteJson,
       {
         connMap: params.connMap,
+        includeTraceViaOwnerMetadata: true,
         traceClearance,
         viaClearance,
-        includeTraceViaOwnerMetadata: true,
+        viaToPadClearance:
+          params.originalSrj.minViaEdgeToPadEdgeClearance ??
+          params.srjWithPointPairs.minViaEdgeToPadEdgeClearance,
+        viaHoleDiameter: viaDimensions.holeDiameter,
         spatialCellSize:
           Math.max(
-            params.defaultViaDiameter,
+            viaDimensions.padDiameter,
             params.originalSrj.minTraceWidth,
           ) + Math.max(traceClearance, viaClearance),
       },
     )
-    const autoroutingBaselineDrcResult = autoroutingDrcEngine.evaluate(
+    const indexedBaselineDrc = indexedDrcEngine.evaluate(
       (params.originalSrj.traces ?? []) as RepairSimplifiedPcbTraces,
     )
-    const autoroutingBaselineViaCircuitJson = getAutoroutingViaElements(
-      params.originalSrj.traces ?? [],
-    )
-    const autoroutingBaselineDrc = {
-      ...autoroutingBaselineDrcResult,
-      errors: addAutoroutingViaTraceIds({
-        errors: autoroutingBaselineDrcResult.errors,
-        circuitJson: autoroutingBaselineViaCircuitJson,
-        evaluatedTraceIds: baselineEvaluatedTraceIds,
-      }),
-      errorsWithCenters: addAutoroutingViaTraceIds({
-        errors: autoroutingBaselineDrcResult.errorsWithCenters,
-        circuitJson: autoroutingBaselineViaCircuitJson,
-        evaluatedTraceIds: baselineEvaluatedTraceIds,
-      }),
-    }
     let referenceDrcCandidateCache:
       | {
           candidateKey: string
@@ -1167,17 +1110,14 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       }
     }
 
-    const referenceDrcEvaluator: DrcEvaluator = ({ routes, hdRoutes }) => {
-      const evaluatedRoutes = routes ?? hdRoutes
-      if (!evaluatedRoutes) {
-        throw new Error("Pipeline9 reference DRC repair requires HD routes")
-      }
+    const evaluateCandidateReferenceDrc = (
+      evaluatedRoutes: HighDensityRoute[],
+    ): NormalizedCandidateDrcResult => {
       const candidateDrcInput = prepareCandidateDrcInput(evaluatedRoutes)
-      const evaluatedDrc = evaluateRelaxedDrc({
+      const evaluatedDrc = evaluateCoreRoutingDrc({
         inputSrj: params.originalSrj,
         srjWithPointPairs: params.srjWithPointPairs,
         routedTraces: candidateDrcInput.routedTraces,
-        drcOptions: { traceClearance },
       })
       const evaluatedTraceIds = new Set(
         candidateDrcInput.evaluatedTraces.map((trace) => trace.pcb_trace_id),
@@ -1196,27 +1136,51 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         circuitJson: evaluatedDrc.circuitJson,
         evaluatedTraceIds,
       })
-      const evaluatedNewErrors = filterPipeline9DrcErrorsAgainstBaseline({
+      return normalizeCandidateDrcResult({
         errors: evaluatedErrors,
-        baselineErrors,
+        errorsWithCenters: evaluatedErrorsWithCenters,
+        circuitJson: evaluatedDrc.circuitJson,
+        movableTraceIds: candidateDrcInput.movableTraceIds,
+        solverTraceIdByEvaluationTraceId:
+          candidateDrcInput.solverTraceIdByEvaluationTraceId,
+      })
+    }
+    const evaluateCandidateIndexedDrc = (
+      evaluatedRoutes: HighDensityRoute[],
+    ): NormalizedCandidateDrcResult => {
+      this.indexedDrcValidationCount += 1
+      const candidateDrcInput = prepareCandidateDrcInput(evaluatedRoutes)
+      const evaluatedDrc = indexedDrcEngine.evaluate(
+        candidateDrcInput.evaluatedTraces as RepairSimplifiedPcbTraces,
+      )
+      const evaluatedNewErrors = filterPipeline9DrcErrorsAgainstBaseline({
+        errors: evaluatedDrc.errors,
+        baselineErrors: indexedBaselineDrc.errors,
         originalTraceIdByPreparedTraceId:
           candidateDrcInput.originalTraceIdByEvaluationTraceId,
       })
       const evaluatedNewErrorsWithCenters =
         filterPipeline9DrcErrorsAgainstBaseline({
-          errors: evaluatedErrorsWithCenters,
-          baselineErrors: baselineErrorsWithCenters,
+          errors: evaluatedDrc.errorsWithCenters,
+          baselineErrors: indexedBaselineDrc.errorsWithCenters,
           originalTraceIdByPreparedTraceId:
             candidateDrcInput.originalTraceIdByEvaluationTraceId,
         })
       return normalizeCandidateDrcResult({
         errors: evaluatedNewErrors,
         errorsWithCenters: evaluatedNewErrorsWithCenters,
-        circuitJson: evaluatedDrc.circuitJson,
+        circuitJson: [],
         movableTraceIds: candidateDrcInput.movableTraceIds,
         solverTraceIdByEvaluationTraceId:
           candidateDrcInput.solverTraceIdByEvaluationTraceId,
       })
+    }
+    const referenceDrcEvaluator: DrcEvaluator = ({ routes, hdRoutes }) => {
+      const evaluatedRoutes = routes ?? hdRoutes
+      if (!evaluatedRoutes) {
+        throw new Error("Pipeline9 reference DRC repair requires HD routes")
+      }
+      return evaluateCandidateReferenceDrc(evaluatedRoutes)
     }
     const cachedReferenceDrcEvaluator: DrcEvaluator = ({
       routes,
@@ -1241,109 +1205,59 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     }
     this.cachedReferenceDrcEvaluator = cachedReferenceDrcEvaluator
 
+    // Most repair candidates are still geometrically invalid. Reject those
+    // with the reusable indexed evaluator, then pay for Core's complete DRC
+    // only when a candidate is otherwise ready to accept. This keeps Core as
+    // the final authority without rebuilding Circuit JSON for every mutation.
     const drcEvaluator: DrcEvaluator = ({ routes, hdRoutes }) => {
       const evaluatedRoutes = routes ?? hdRoutes
       if (!evaluatedRoutes) {
-        throw new Error("Pipeline9 joint DRC repair requires HD routes")
+        throw new Error("Pipeline9 DRC repair requires HD routes")
       }
-      const candidateKey = JSON.stringify(evaluatedRoutes) as DrcCandidateKey
-      const cachedResult = this.indexedDrcCandidateCache.get(candidateKey)
-      if (cachedResult !== undefined) {
-        this.indexedDrcCacheHitCount += 1
-        return cachedResult
-      }
-      const evaluationStartedAtMs = performance.now()
-      this.indexedDrcEvaluationCount += 1
-      const candidateDrcInput = prepareCandidateDrcInput(evaluatedRoutes)
-      const evaluatedDrc = autoroutingDrcEngine.evaluate(
-        candidateDrcInput.evaluatedTraces as RepairSimplifiedPcbTraces,
-      )
-      const viaCircuitJson = getAutoroutingViaElements(
-        candidateDrcInput.evaluatedTraces,
-      )
-      const evaluatedTraceIds = new Set(
-        candidateDrcInput.evaluatedTraces.map((trace) => trace.pcb_trace_id),
-      )
-      const evaluatedErrors = addAutoroutingViaTraceIds({
-        errors: evaluatedDrc.errors as unknown as Array<
-          Record<string, unknown>
-        >,
-        circuitJson: viaCircuitJson,
-        evaluatedTraceIds,
+      const indexedResult = evaluateCandidateIndexedDrc(evaluatedRoutes)
+      if (indexedResult.errors.length > 0) return indexedResult
+      return cachedReferenceDrcEvaluator({
+        traces: [],
+        routes: evaluatedRoutes,
+        hdRoutes: evaluatedRoutes,
       })
-      const evaluatedErrorsWithCenters = addAutoroutingViaTraceIds({
-        errors: evaluatedDrc.errorsWithCenters as unknown as Array<
-          Record<string, unknown>
-        >,
-        circuitJson: viaCircuitJson,
-        evaluatedTraceIds,
-      })
-      const evaluatedNewErrors = filterPipeline9DrcErrorsAgainstBaseline({
-        errors: evaluatedErrors,
-        baselineErrors: autoroutingBaselineDrc.errors as unknown as Array<
-          Record<string, unknown>
-        >,
-        originalTraceIdByPreparedTraceId:
-          candidateDrcInput.originalTraceIdByEvaluationTraceId,
-      })
-      const evaluatedNewErrorsWithCenters =
-        filterPipeline9DrcErrorsAgainstBaseline({
-          errors: evaluatedErrorsWithCenters,
-          baselineErrors:
-            autoroutingBaselineDrc.errorsWithCenters as unknown as Array<
-              Record<string, unknown>
-            >,
-          originalTraceIdByPreparedTraceId:
-            candidateDrcInput.originalTraceIdByEvaluationTraceId,
-        })
-      if (evaluatedNewErrors.length === 0) {
-        const validationCountBefore = this.referenceDrcValidationCount
-        const referenceResult = cachedReferenceDrcEvaluator({
-          traces: [],
-          routes: evaluatedRoutes,
-          hdRoutes: evaluatedRoutes,
-        })
-        const referenceErrors = Array.isArray(referenceResult)
-          ? referenceResult
-          : referenceResult.errors
-        if (
-          this.referenceDrcValidationCount > validationCountBefore &&
-          referenceErrors.length > 0
-        ) {
-          this.referenceDrcFalseNegativeCount += 1
-        }
-        this.indexedDrcEvaluationTimeMs +=
-          performance.now() - evaluationStartedAtMs
-        this.cacheIndexedDrcResult(candidateKey, referenceResult)
-        return referenceResult
-      }
-      const candidateDrcResult = normalizeCandidateDrcResult({
-        errors: evaluatedNewErrors,
-        errorsWithCenters: evaluatedNewErrorsWithCenters,
-        circuitJson: viaCircuitJson,
-        movableTraceIds: candidateDrcInput.movableTraceIds,
-        solverTraceIdByEvaluationTraceId:
-          candidateDrcInput.solverTraceIdByEvaluationTraceId,
-      })
-      this.indexedDrcEvaluationTimeMs +=
-        performance.now() - evaluationStartedAtMs
-      this.cacheIndexedDrcResult(candidateKey, candidateDrcResult)
-      return candidateDrcResult
     }
     this.drcEvaluator = drcEvaluator
-
-    this.exactRepairSolver = new Pipeline7AdaptiveDrcBranchPortfolioSolver({
-      srj: extendedSrjWithPointPairs as any,
+    this.repairSrj = extendedSrjWithPointPairs
+    this.exactRepairSolver = this.createRepairSolver({
       hdRoutes: [
         ...params.newHdRoutes,
         ...this.movablePreloadedSections.map(
           (movableSection) => movableSection.hdRoute,
         ),
       ],
-      connMap: params.connMap,
-      effort: params.effort,
-      viaHoleDiameter: params.defaultViaHoleDiameter,
       drcEvaluator,
+      referenceDrcEvaluator: cachedReferenceDrcEvaluator,
+    })
+    this.activeSubSolver = this.exactRepairSolver
+    this.MAX_ITERATIONS = this.exactRepairSolver.MAX_ITERATIONS + 1
+  }
+
+  private createRepairSolver({
+    hdRoutes,
+    drcEvaluator,
+    referenceDrcEvaluator,
+  }: {
+    hdRoutes: HighDensityRoute[]
+    drcEvaluator: DrcEvaluator
+    referenceDrcEvaluator: DrcEvaluator
+  }): Pipeline7AdaptiveDrcBranchPortfolioSolver {
+    if (!this.repairSrj) {
+      throw new Error("Pipeline9 joint DRC repair is missing its repair SRJ")
+    }
+    return new Pipeline7AdaptiveDrcBranchPortfolioSolver({
+      srj: this.repairSrj as any,
+      hdRoutes,
+      connMap: this.params.connMap,
+      effort: this.params.effort,
+      viaHoleDiameter: this.params.defaultViaHoleDiameter,
+      drcEvaluator,
+      referenceDrcEvaluator,
       viaInPadDrcEvaluator: drcEvaluator,
       maxIterations: EXACT_REPAIR_MAX_ITERATIONS,
       enableBroadFallback: false,
@@ -1352,35 +1266,28 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       enableTraceViaOwnerTargeting: true,
       enablePostSolveClearanceRelaxation: false,
       enableSafeTraceLayerMoves: true,
-      enableViaInPadLayerMoves: params.originalSrj.allowViaInPad ?? false,
+      enableViaInPadLayerMoves: this.params.originalSrj.allowViaInPad ?? false,
       viaInPadMaxIterations: EXACT_REPAIR_MAX_ITERATIONS,
       broadMaxIterations: EXACT_REPAIR_BROAD_MAX_ITERATIONS,
       broadPassMultiplier: 3,
     })
-    this.activeSubSolver = this.exactRepairSolver
-    this.MAX_ITERATIONS = this.exactRepairSolver.MAX_ITERATIONS + 1
   }
 
   override getSolverName(): string {
     return "Pipeline9JointDrcRepairSolver"
   }
 
-  override _step(): void {
-    if (!this.exactRepairSolver) {
-      this.solved = true
-      return
-    }
-    this.exactRepairSolver.step()
-    this.progress = this.exactRepairSolver.progress
-    if (this.exactRepairSolver.failed) {
-      this.failed = true
-      this.error = this.exactRepairSolver.error
-      return
-    }
-    if (!this.exactRepairSolver.solved) return
-    const exactOutput = this.exactRepairSolver.getOutput()
-    const exactIndexedDrcIssueCountStat =
-      this.exactRepairSolver.stats.finalDrcIssueCount
+  private runPostExactPrecisionPass({
+    exactOutput,
+    exactIndexedDrcIssueCountStat,
+    drcEvaluator,
+    referenceDrcEvaluator,
+  }: {
+    exactOutput: HighDensityRoute[]
+    exactIndexedDrcIssueCountStat: unknown
+    drcEvaluator: DrcEvaluator
+    referenceDrcEvaluator: DrcEvaluator
+  }): Pipeline9PostExactPrecisionResult {
     const exactIndexedDrcIssueCount =
       typeof exactIndexedDrcIssueCountStat === "number" &&
       Number.isFinite(exactIndexedDrcIssueCountStat) &&
@@ -1393,73 +1300,55 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         MAX_POST_EXACT_PRECISION_PASS_INDEXED_ISSUE_COUNT
     let postExactReferenceDrcIssueCount: number | undefined
     if (shouldRunPostExactPrecisionPass) {
-      // The indexed evaluator can retain conservative false positives after the
-      // exact portfolio has produced a reference-clean result. Do not let later
-      // heuristic repairs degrade an output already accepted by benchmark DRC.
-      const exactReferenceDrcResult = this.cachedReferenceDrcEvaluator!({
-        traces: [],
-        routes: exactOutput,
-        hdRoutes: exactOutput,
-      })
-      const exactReferenceDrcErrors = Array.isArray(exactReferenceDrcResult)
-        ? exactReferenceDrcResult
-        : exactReferenceDrcResult.errors
+      const exactReferenceDrcErrors = getPipeline9DrcErrors(
+        referenceDrcEvaluator,
+        exactOutput,
+      )
       postExactReferenceDrcIssueCount = exactReferenceDrcErrors.length
       if (exactReferenceDrcErrors.length === 0) {
-        this.combinedOutput = exactOutput
-        this.stats = {
-          ...this.stats,
-          ...this.exactRepairSolver.stats,
-          postExactIndexedDrcIssueCount: exactIndexedDrcIssueCount,
-          postExactPrecisionPassMaxIndexedIssueCount:
-            MAX_POST_EXACT_PRECISION_PASS_INDEXED_ISSUE_COUNT,
-          postExactPrecisionPassAttempted: true,
-          postExactReferenceValidationAttempted: true,
-          postExactReferenceValidationSkippedForIndexedIssueCount: false,
-          postExactReferenceDrcIssueCount: 0,
-          postExactReferenceAccepted: true,
-          regionalB01RepairCandidateCount: 0,
-          regionalB01RepairAcceptedCount: 0,
-          regionalB01RepairFallbackCandidateCount: 0,
-          regionalB01RepairCandidateSearchCount: 0,
-          regionalB01RepairCandidateSearchBudget: 0,
-          regionalB01RepairCandidateSearchBudgetExhausted: false,
-          regionalB01RepairSafeTraceLayerSkippedForBudget: false,
-          regionalB01RepairRemainingDrcIssueCount: 0,
-          regionalB01RepairPreloadEligibleDrcIssueCount: 0,
-          regionalB01RepairAttempted: false,
-          regionalB01RepairTraceIdCount: 0,
-          terminalEscapeSkippedForIndexedIssueCount: false,
-          terminalEscapeCandidateCount: 0,
-          terminalEscapeAcceptedCount: 0,
-          referenceDrcValidationCount: this.referenceDrcValidationCount,
-          referenceDrcFalseNegativeCount: this.referenceDrcFalseNegativeCount,
-          indexedDrcEvaluationCount: this.indexedDrcEvaluationCount,
-          indexedDrcCacheHitCount: this.indexedDrcCacheHitCount,
-          indexedDrcEvaluationTimeMs: this.indexedDrcEvaluationTimeMs,
-          indexedDrcCandidateCacheSize: this.indexedDrcCandidateCache.size,
-          indexedDrcCandidateCacheCapacity: INDEXED_DRC_CANDIDATE_CACHE_SIZE,
+        return {
+          routes: exactOutput,
+          stats: {
+            postExactIndexedDrcIssueCount: exactIndexedDrcIssueCount,
+            postExactPrecisionPassMaxIndexedIssueCount:
+              MAX_POST_EXACT_PRECISION_PASS_INDEXED_ISSUE_COUNT,
+            postExactPrecisionPassAttempted: true,
+            postExactReferenceValidationAttempted: true,
+            postExactReferenceValidationSkippedForIndexedIssueCount: false,
+            postExactReferenceDrcIssueCount: 0,
+            postExactReferenceAccepted: true,
+            regionalB01RepairCandidateCount: 0,
+            regionalB01RepairAcceptedCount: 0,
+            regionalB01RepairFallbackCandidateCount: 0,
+            regionalB01RepairCandidateSearchCount: 0,
+            regionalB01RepairCandidateSearchBudget: 0,
+            regionalB01RepairCandidateSearchBudgetExhausted: false,
+            regionalB01RepairSafeTraceLayerSkippedForBudget: false,
+            regionalB01RepairRemainingDrcIssueCount: 0,
+            regionalB01RepairPreloadEligibleDrcIssueCount: 0,
+            regionalB01RepairAttempted: false,
+            regionalB01RepairTraceIdCount: 0,
+            terminalEscapeSkippedForIndexedIssueCount: false,
+            terminalEscapeCandidateCount: 0,
+            terminalEscapeAcceptedCount: 0,
+          },
         }
-        this.solved = true
-        return
       }
     }
+
     const terminalEscapeResult = shouldRunPostExactPrecisionPass
       ? applyPipeline9TerminalEscapeRelocations({
           srj: this.params.srj,
           routes: exactOutput,
           newConnections: this.params.newConnections,
           syntheticConnectionNames: this.syntheticConnectionNames,
-          drcEvaluator: this.drcEvaluator!,
+          drcEvaluator,
         })
       : {
           routes: exactOutput,
           attemptedCandidateCount: 0,
           acceptedCandidateCount: 0,
-          remainingErrors: getPipeline9DrcErrors(
-            this.drcEvaluator!,
-            exactOutput,
-          ),
+          remainingErrors: getPipeline9DrcErrors(drcEvaluator, exactOutput),
         }
     const preloadRepairTraceIds = getPipeline9PreloadRepairTraceIds({
       routes: terminalEscapeResult.routes,
@@ -1474,7 +1363,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       fixedObstacleRoutes: this.fixedPreloadedObstacleRoutes,
       newConnections: this.params.newConnections,
       syntheticConnectionNames: this.syntheticConnectionNames,
-      drcEvaluator: this.drcEvaluator!,
+      drcEvaluator,
       initialErrors: terminalEscapeResult.remainingErrors,
       preloadRepairTraceIds,
       connMap: this.params.connMap,
@@ -1487,54 +1376,102 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         0.15,
       effort: this.params.effort,
     })
-    this.combinedOutput = regionalB01RepairResult.routes
+    return {
+      routes: regionalB01RepairResult.routes,
+      stats: {
+        postExactIndexedDrcIssueCount: exactIndexedDrcIssueCount,
+        postExactPrecisionPassMaxIndexedIssueCount:
+          MAX_POST_EXACT_PRECISION_PASS_INDEXED_ISSUE_COUNT,
+        postExactPrecisionPassAttempted: shouldRunPostExactPrecisionPass,
+        postExactReferenceValidationAttempted: shouldRunPostExactPrecisionPass,
+        postExactReferenceValidationSkippedForIndexedIssueCount:
+          !shouldRunPostExactPrecisionPass,
+        postExactReferenceDrcIssueCount,
+        postExactReferenceAccepted: false,
+        regionalB01RepairCandidateCount:
+          regionalB01RepairResult.attemptedCandidateCount,
+        regionalB01RepairAcceptedCount:
+          regionalB01RepairResult.acceptedCandidateCount,
+        regionalB01RepairFallbackCandidateCount:
+          regionalB01RepairResult.fallbackCandidateCount,
+        regionalB01RepairCandidateSearchCount:
+          regionalB01RepairResult.candidateSearchCount,
+        regionalB01RepairCandidateSearchBudget:
+          regionalB01RepairResult.candidateSearchBudget,
+        regionalB01RepairCandidateSearchBudgetExhausted:
+          regionalB01RepairResult.candidateSearchBudgetExhausted,
+        regionalB01RepairSafeTraceLayerSkippedForBudget:
+          regionalB01RepairResult.safeTraceLayerRepairSkippedForBudget,
+        regionalB01RepairRemainingDrcIssueCount:
+          regionalB01RepairResult.remainingDrcIssueCount,
+        regionalB01RepairPreloadEligibleDrcIssueCount:
+          regionalB01RepairResult.preloadEligibleDrcIssueCount,
+        regionalB01RepairAttempted:
+          regionalB01RepairResult.preloadRepairAttempted,
+        regionalB01RepairTraceIdCount:
+          preloadRepairTraceIds.size +
+          (preloadRepairTraceIds.collidingFixedTraceIds?.size ?? 0),
+        terminalEscapeSkippedForIndexedIssueCount:
+          !shouldRunPostExactPrecisionPass,
+        terminalEscapeCandidateCount:
+          terminalEscapeResult.attemptedCandidateCount,
+        terminalEscapeAcceptedCount:
+          terminalEscapeResult.acceptedCandidateCount,
+      },
+    }
+  }
+
+  override _step(): void {
+    if (!this.exactRepairSolver) {
+      this.solved = true
+      return
+    }
+    if (!this.exactRepairSolver.solved) {
+      this.exactRepairSolver.step()
+      this.progress = this.exactRepairSolver.progress
+      if (this.exactRepairSolver.failed) {
+        this.failed = true
+        this.error = this.exactRepairSolver.error
+      }
+      return
+    }
+    const exactOutput = this.exactRepairSolver.getOutput()
+    const precisionResult = this.runPostExactPrecisionPass({
+      exactOutput,
+      exactIndexedDrcIssueCountStat:
+        this.exactRepairSolver.stats.finalDrcIssueCount,
+      drcEvaluator: this.drcEvaluator!,
+      referenceDrcEvaluator: this.cachedReferenceDrcEvaluator!,
+    })
+    const exactCoreDrcErrors = getPipeline9DrcErrors(
+      this.cachedReferenceDrcEvaluator!,
+      exactOutput,
+    )
+    const precisionCoreDrcErrors = getPipeline9DrcErrors(
+      this.cachedReferenceDrcEvaluator!,
+      precisionResult.routes,
+    )
+    const postExactNewCoreDrcErrors = filterPipeline9DrcErrorsAgainstBaseline({
+      errors: precisionCoreDrcErrors,
+      baselineErrors: exactCoreDrcErrors,
+    })
+    const postExactDrcCandidateRolledBack =
+      precisionCoreDrcErrors.length > exactCoreDrcErrors.length ||
+      (precisionCoreDrcErrors.length === exactCoreDrcErrors.length &&
+        postExactNewCoreDrcErrors.length > 0)
+    this.combinedOutput = postExactDrcCandidateRolledBack
+      ? exactOutput
+      : precisionResult.routes
     this.stats = {
       ...this.stats,
       ...this.exactRepairSolver.stats,
-      postExactIndexedDrcIssueCount: exactIndexedDrcIssueCount,
-      postExactPrecisionPassMaxIndexedIssueCount:
-        MAX_POST_EXACT_PRECISION_PASS_INDEXED_ISSUE_COUNT,
-      postExactPrecisionPassAttempted: shouldRunPostExactPrecisionPass,
-      postExactReferenceValidationAttempted: shouldRunPostExactPrecisionPass,
-      postExactReferenceValidationSkippedForIndexedIssueCount:
-        !shouldRunPostExactPrecisionPass,
-      postExactReferenceDrcIssueCount,
-      postExactReferenceAccepted: false,
-      regionalB01RepairCandidateCount:
-        regionalB01RepairResult.attemptedCandidateCount,
-      regionalB01RepairAcceptedCount:
-        regionalB01RepairResult.acceptedCandidateCount,
-      regionalB01RepairFallbackCandidateCount:
-        regionalB01RepairResult.fallbackCandidateCount,
-      regionalB01RepairCandidateSearchCount:
-        regionalB01RepairResult.candidateSearchCount,
-      regionalB01RepairCandidateSearchBudget:
-        regionalB01RepairResult.candidateSearchBudget,
-      regionalB01RepairCandidateSearchBudgetExhausted:
-        regionalB01RepairResult.candidateSearchBudgetExhausted,
-      regionalB01RepairSafeTraceLayerSkippedForBudget:
-        regionalB01RepairResult.safeTraceLayerRepairSkippedForBudget,
-      regionalB01RepairRemainingDrcIssueCount:
-        regionalB01RepairResult.remainingDrcIssueCount,
-      regionalB01RepairPreloadEligibleDrcIssueCount:
-        regionalB01RepairResult.preloadEligibleDrcIssueCount,
-      regionalB01RepairAttempted:
-        regionalB01RepairResult.preloadRepairAttempted,
-      regionalB01RepairTraceIdCount:
-        preloadRepairTraceIds.size +
-        (preloadRepairTraceIds.collidingFixedTraceIds?.size ?? 0),
-      terminalEscapeSkippedForIndexedIssueCount:
-        !shouldRunPostExactPrecisionPass,
-      terminalEscapeCandidateCount:
-        terminalEscapeResult.attemptedCandidateCount,
-      terminalEscapeAcceptedCount: terminalEscapeResult.acceptedCandidateCount,
+      ...precisionResult.stats,
+      postExactInputDrcIssueCount: exactCoreDrcErrors.length,
+      postExactCandidateDrcIssueCount: precisionCoreDrcErrors.length,
+      postExactCandidateNewDrcIssueCount: postExactNewCoreDrcErrors.length,
+      postExactDrcCandidateRolledBack,
+      indexedDrcValidationCount: this.indexedDrcValidationCount,
       referenceDrcValidationCount: this.referenceDrcValidationCount,
-      referenceDrcFalseNegativeCount: this.referenceDrcFalseNegativeCount,
-      indexedDrcEvaluationCount: this.indexedDrcEvaluationCount,
-      indexedDrcCacheHitCount: this.indexedDrcCacheHitCount,
-      indexedDrcEvaluationTimeMs: this.indexedDrcEvaluationTimeMs,
-      indexedDrcCandidateCacheSize: this.indexedDrcCandidateCache.size,
-      indexedDrcCandidateCacheCapacity: INDEXED_DRC_CANDIDATE_CACHE_SIZE,
     }
     this.solved = true
   }
@@ -1553,9 +1490,11 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     )
   }
 
-  getUpdatedPreloadedTraces(): SimplifiedPcbTrace[] {
+  private getUpdatedPreloadedTracesForRoutes(
+    outputRoutes: HighDensityRoute[],
+  ): SimplifiedPcbTrace[] {
     const outputRouteByConnectionName = new Map(
-      this.getCombinedOutput().map((route) => [route.connectionName, route]),
+      outputRoutes.map((route) => [route.connectionName, route]),
     )
     const repairedSectionsByOriginalTraceId = new Map<
       string,
@@ -1616,6 +1555,10 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     return this.inputUpdatedPreloadedTraces.map(
       (trace) => repairedTraceById.get(trace.pcb_trace_id) ?? trace,
     )
+  }
+
+  getUpdatedPreloadedTraces(): SimplifiedPcbTrace[] {
+    return this.getUpdatedPreloadedTracesForRoutes(this.getCombinedOutput())
   }
 
   getMutatedPreloadedTraces(): SimplifiedPcbTrace[] {

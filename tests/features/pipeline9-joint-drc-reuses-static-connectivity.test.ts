@@ -11,8 +11,8 @@ test("Pipeline9 reuses obstacle connectivity while evaluating changed repair geo
       traceThickness: 0.1,
       viaDiameter: 0.3,
       route: [
-        { x: -1, y: 0, z: 0 },
-        { x: 1, y: 0, z: 0 },
+        { x: -1, y: 0, z: 0, pcb_port_id: "horizontal_0" },
+        { x: 1, y: 0, z: 0, pcb_port_id: "horizontal_1" },
       ],
       vias: [],
     },
@@ -21,8 +21,8 @@ test("Pipeline9 reuses obstacle connectivity while evaluating changed repair geo
       traceThickness: 0.1,
       viaDiameter: 0.3,
       route: [
-        { x: 0, y: -1, z: 0 },
-        { x: 0, y: 1, z: 0 },
+        { x: 0, y: -1, z: 0, pcb_port_id: "vertical_0" },
+        { x: 0, y: 1, z: 0, pcb_port_id: "vertical_1" },
       ],
       vias: [],
     },
@@ -37,7 +37,7 @@ test("Pipeline9 reuses obstacle connectivity while evaluating changed repair geo
         x: point.x,
         y: point.y,
         layer: "top",
-        pointId: `${route.connectionName}_${index}`,
+        pcb_port_id: `${route.connectionName}_${index}`,
       })),
     })),
     obstacles: [
@@ -79,7 +79,7 @@ test("Pipeline9 reuses obstacle connectivity while evaluating changed repair geo
   const warmedConnectivityChecks = connectivityChecks
   const candidate = structuredClone(routes)
   const repeated = evaluate({ traces: [], routes: candidate })
-  expect(repeated).toBe(initial)
+  expect(repeated).toEqual(initial)
 
   // Exact cache hits must not reuse results after copper geometry changes.
   for (const point of candidate[1]!.route) point.x = 0.5

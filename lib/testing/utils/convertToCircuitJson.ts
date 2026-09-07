@@ -477,6 +477,18 @@ function createSourceTraces(
           ),
         ]),
       ]
+      if (connection.maxLength !== undefined) {
+        sourceTrace.max_length = Math.min(
+          sourceTrace.max_length ?? Number.POSITIVE_INFINITY,
+          connection.maxLength,
+        )
+      }
+      if (connection.maxViaCount !== undefined) {
+        sourceTrace.max_via_count = Math.min(
+          sourceTrace.max_via_count ?? Number.POSITIVE_INFINITY,
+          connection.maxViaCount,
+        )
+      }
     } else {
       // Create a new source_trace for this connection
       sourceTraces.push({
@@ -486,6 +498,12 @@ function createSourceTraces(
         connected_source_net_ids: getNonEndpointObstacleConnectivityIds(
           obstaclesContainingEndpoints,
         ).concat(connectedPointIds),
+        ...(connection.maxLength !== undefined
+          ? { max_length: connection.maxLength }
+          : {}),
+        ...(connection.maxViaCount !== undefined
+          ? { max_via_count: connection.maxViaCount }
+          : {}),
       })
     }
   })
@@ -901,6 +919,9 @@ export type ConvertToCircuitJsonOptions = {
 
 export function createPcbBoardElement(srj: SimpleRouteJson): PcbBoard {
   const { minX, maxX, minY, maxY } = srj.bounds
+  const minViaHoleDiameter = srj.min_via_hole_diameter ?? srj.minViaHoleDiameter
+  const minViaPadDiameter =
+    srj.min_via_pad_diameter ?? srj.minViaPadDiameter ?? srj.minViaDiameter
 
   return {
     type: "pcb_board",
@@ -914,6 +935,43 @@ export function createPcbBoardElement(srj: SimpleRouteJson): PcbBoard {
       ? { outline: srj.outline, shape: "polygon" as const }
       : { shape: "rect" as const }),
     material: "fr4",
+    min_trace_width: srj.minTraceWidth,
+    ...(minViaHoleDiameter !== undefined
+      ? { min_via_hole_diameter: minViaHoleDiameter }
+      : {}),
+    ...(minViaPadDiameter !== undefined
+      ? { min_via_pad_diameter: minViaPadDiameter }
+      : {}),
+    ...(srj.minTraceToPadEdgeClearance !== undefined
+      ? {
+          min_trace_to_pad_edge_clearance: srj.minTraceToPadEdgeClearance,
+        }
+      : {}),
+    ...(srj.minViaEdgeToPadEdgeClearance !== undefined
+      ? {
+          min_via_edge_to_pad_edge_clearance: srj.minViaEdgeToPadEdgeClearance,
+        }
+      : {}),
+    ...(srj.minPadEdgeToPadEdgeClearance !== undefined
+      ? {
+          min_pad_edge_to_pad_edge_clearance: srj.minPadEdgeToPadEdgeClearance,
+        }
+      : {}),
+    ...(srj.minViaHoleEdgeToViaHoleEdgeClearance !== undefined
+      ? {
+          min_via_hole_edge_to_via_hole_edge_clearance:
+            srj.minViaHoleEdgeToViaHoleEdgeClearance,
+        }
+      : {}),
+    ...(srj.minPlatedHoleDrillEdgeToDrillEdgeClearance !== undefined
+      ? {
+          min_plated_hole_drill_edge_to_drill_edge_clearance:
+            srj.minPlatedHoleDrillEdgeToDrillEdgeClearance,
+        }
+      : {}),
+    ...(srj.allowViaInPad !== undefined
+      ? { is_via_in_pad_allowed: srj.allowViaInPad }
+      : {}),
     ...(srj.minBoardEdgeClearance !== undefined
       ? { min_board_edge_clearance: srj.minBoardEdgeClearance }
       : {}),
@@ -980,10 +1038,18 @@ export function convertToCircuitJson(
     ),
   )
 
+  const routeConnections =
+    includeOriginalConnections && originalSrj
+      ? [...srjWithPointPairs.connections, ...originalSrj.connections]
+      : srjWithPointPairs.connections
   const routeCircuitJsonSourceTraceIdResolver =
     createCircuitJsonSourceTraceIdResolver(
-      srjWithPointPairs.connections,
-      getConnectivityMapFromSimpleRouteJson(srjWithPointPairs),
+      routeConnections,
+      getConnectivityMapFromSimpleRouteJson(
+        includeOriginalConnections && originalSrj
+          ? { ...originalSrj, connections: routeConnections }
+          : srjWithPointPairs,
+      ),
     )
 
   // Process routes based on their type
