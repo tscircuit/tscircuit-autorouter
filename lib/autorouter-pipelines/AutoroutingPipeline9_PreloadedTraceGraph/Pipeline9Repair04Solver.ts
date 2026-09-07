@@ -1,3 +1,4 @@
+import { getStandardDrcErrorCount } from "./getStandardDrcErrorCount"
 import type { ExistingViaRepairTarget } from "./identifyPipeline9ViaPadRepairTargets"
 import {
   Repair04Solver,
@@ -331,6 +332,8 @@ export class Pipeline9Repair04Solver extends BaseSolver {
           const candidateReferenceErrors = this.evaluateReference(candidate)
           if (
             candidateReferenceErrors.length <= this.referenceErrors!.length &&
+            getStandardDrcErrorCount(candidateReferenceErrors) <=
+              getStandardDrcErrorCount(this.referenceErrors!) &&
             (candidateIssues.length < this.issues.length ||
               candidateReferenceErrors.length < this.referenceErrors!.length)
           ) {
@@ -398,10 +401,10 @@ export class Pipeline9Repair04Solver extends BaseSolver {
     }
     // Retain the existing context escalation within each prioritized issue.
     for (const error of this.getPrioritizedErrors()) {
-      for (const allowLayerChanges of this.input.allowLayerChanges === true
-        ? [false, true]
-        : [false]) {
-        for (const size of [10, 16, 24]) {
+      for (const size of [10, 16, 24]) {
+        for (const allowLayerChanges of this.input.allowLayerChanges === true
+          ? [false, true]
+          : [false]) {
           const selectedVias =
             this.input.allowExistingViaRelocation === false || allowLayerChanges
               ? []
