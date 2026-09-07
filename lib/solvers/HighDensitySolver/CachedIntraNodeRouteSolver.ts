@@ -24,7 +24,7 @@ const cloneValue = <T>(value: T): T =>
 
 setupGlobalCaches()
 
-const INTRA_NODE_CACHE_SCHEMA_VERSION = 4
+const INTRA_NODE_CACHE_SCHEMA_VERSION = 5
 
 export class CachedIntraNodeRouteSolver
   extends IntraNodeRouteSolver
@@ -61,7 +61,13 @@ export class CachedIntraNodeRouteSolver
       params.cacheProvider === undefined
         ? getGlobalInMemoryCache()
         : params.cacheProvider
-    this.initialUnsolvedConnections = cloneValue(this.unsolvedConnections)
+    this.initialUnsolvedConnections = this.unsolvedConnections.map(
+      ({ connectionName, rootConnectionName, points }) => ({
+        connectionName,
+        rootConnectionName,
+        points: points.map(({ x, y, z }) => ({ x, y, z })),
+      }),
+    )
 
     if ((this.solved || this.failed) && this.cacheProvider && !this.cacheHit) {
       this.saveToCacheSync()
@@ -172,10 +178,17 @@ export class CachedIntraNodeRouteSolver
       normalizedConnMap,
     }
 
-    const cacheKey = `intranode-solver:${objectHash(keyData, {
-      respectType: false,
-      unorderedObjects: false,
-    })}`
+    // The schema above fixes object field order and sorts dynamic entries.
+    // Hash one serialized string instead of recursively feeding every field
+    // through object-hash's general-purpose object/type traversal.
+    const serializedKey = JSON.stringify(keyData, (_key, value: unknown) => {
+      if (typeof value === "number" && !Number.isFinite(value)) {
+        return ["number", String(value)]
+      }
+      if (value === undefined) return ["undefined"]
+      return value
+    })
+    const cacheKey = `intranode-solver:${objectHash(serializedKey)}`
     const cacheToSolveSpaceTransform: CacheToIntraNodeSolverTransform = {}
 
     this.cacheKey = cacheKey

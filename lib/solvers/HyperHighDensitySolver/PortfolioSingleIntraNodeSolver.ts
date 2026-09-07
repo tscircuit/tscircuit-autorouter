@@ -8,7 +8,10 @@ import {
   NodeWithPortPoints,
 } from "lib/types/high-density-types"
 import { CachedIntraNodeRouteSolver } from "../HighDensitySolver/CachedIntraNodeRouteSolver"
-import { IntraNodeRouteSolver } from "../HighDensitySolver/IntraNodeSolver"
+import {
+  IntraNodeRouteSolver,
+  prepareIntraNodeRouteSolverConnections,
+} from "../HighDensitySolver/IntraNodeSolver"
 import { MultiHeadPolyLineIntraNodeSolver2 } from "../HighDensitySolver/MultiHeadPolyLineIntraNodeSolver/MultiHeadPolyLineIntraNodeSolver2_Optimized"
 import { MultiHeadPolyLineIntraNodeSolver3 } from "../HighDensitySolver/MultiHeadPolyLineIntraNodeSolver/MultiHeadPolyLineIntraNodeSolver3_ViaPossibilitiesSolverIntegration"
 import { SingleLayerNoDifferentRootIntersectionsIntraNodeSolver } from "../HighDensitySolver/SingleLayerNoDifferentRootIntersectionsIntraNodeSolver"
@@ -48,6 +51,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
   connMap?: ConnectivityMap
   effort: number
   adaptiveSearchExpanded = false
+  private constructorCandidates = new Map<string, IntraNodeRouteSolver>()
 
   private getSolvedSegmentCount(solver: unknown): number | null {
     const solvedConnectionsMap = (solver as any).solvedConnectionsMap
@@ -303,7 +307,50 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     this.stats.dynamicSupervisorIterationLimit = this.MAX_ITERATIONS
   }
 
-  override initializeSolvers() {
+  override initializeSolvers(): void {
+    this.constructorCandidates.clear()
+    this.supervisedSolvers = []
+    const defaultPortfolio = PortfolioSingleIntraNodeSolver.prototype
+    const canPreflightConstructorCandidates =
+      this.getCombinationDefs === defaultPortfolio.getCombinationDefs &&
+      this.getHyperParameterDefs === defaultPortfolio.getHyperParameterDefs &&
+      this.getHyperParameterCombinations ===
+        defaultPortfolio.getHyperParameterCombinations &&
+      this.generateSolver === defaultPortfolio.generateSolver
+    // These are the only default candidates that can solve in their
+    // constructors, in the same order in which the supervisor selects them.
+    // Check them before allocating the search candidates and their grids.
+    // Customized portfolios must construct their actual candidate definitions.
+    const constructorCandidateNames = canPreflightConstructorCandidates
+      ? ["THROUGH_OBSTACLE", "CLOSED_FORM_SINGLE_TRANSITION"]
+      : []
+    for (const candidateName of constructorCandidateNames) {
+      const hyperParameters = { [candidateName]: true }
+      const solver = this.generateSolver(hyperParameters)
+      const g = this.computeG(solver)
+      this.supervisedSolvers.push({
+        hyperParameters,
+        solver,
+        h: 0,
+        g,
+        f: g,
+      })
+      if (solver.solved) {
+        this.constructorCandidates.clear()
+        this.stats.dynamicExpansionWorkBudget =
+          this.getDynamicExpansionWorkBudget()
+        this.refreshDynamicIterationLimit()
+        return
+      }
+      this.constructorCandidates.set(candidateName, solver)
+    }
+
+    this.constructorParams = {
+      ...this.constructorParams,
+      preparedConnections: prepareIntraNodeRouteSolverConnections(
+        this.nodeWithPortPoints,
+      ),
+    }
     super.initializeSolvers()
     for (const { solver } of this.supervisedSolvers ?? []) {
       this.initializeCandidateBudget(solver)
@@ -400,6 +447,20 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
   }
 
   generateSolver(hyperParameters: any): IntraNodeRouteSolver {
+    const constructorCandidateName = hyperParameters.THROUGH_OBSTACLE
+      ? "THROUGH_OBSTACLE"
+      : hyperParameters.CLOSED_FORM_SINGLE_TRANSITION
+        ? "CLOSED_FORM_SINGLE_TRANSITION"
+        : undefined
+    if (constructorCandidateName) {
+      const constructorCandidate = this.constructorCandidates.get(
+        constructorCandidateName,
+      )
+      if (constructorCandidate) {
+        this.constructorCandidates.delete(constructorCandidateName)
+        return constructorCandidate
+      }
+    }
     if (hyperParameters.SINGLE_LAYER_NO_DIFFERENT_ROOT_INTERSECTIONS) {
       if (
         !SingleLayerNoDifferentRootIntersectionsIntraNodeSolver.isApplicable(
