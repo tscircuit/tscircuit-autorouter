@@ -59,7 +59,7 @@ test("bounded regional repair expands context for errors inside an attempted reg
   }
   expect(
     getNewViaPadViolations({
-      srj: originalSrj,
+      srj: { ...originalSrj, traces: undefined },
       previousRoutes: routes,
       routes: result.routes,
     }),
