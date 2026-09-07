@@ -31,9 +31,7 @@ test("stitching supports an explicitly authorized coincident layer transition", 
       hdRoutes: [firstRoute, { ...secondRoute, route }],
       start: { x: -1, y: 0, z: 0 },
       end: { x: 1, y: 0, z: 1 },
-      allowedLayerTransitionPointKeys: new Set([
-        getXyPointKey({ x: 0, y: 0 }),
-      ]),
+      allowedLayerTransitionPointKeys: new Set([getXyPointKey({ x: 0, y: 0 })]),
       isStitchSegmentClear: (): boolean => true,
       stitchClearanceMode: "require_clear",
     })
