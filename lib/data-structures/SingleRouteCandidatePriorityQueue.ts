@@ -12,9 +12,13 @@ export type Node = {
 
 export class SingleRouteCandidatePriorityQueue<T extends Node = Node> {
   private heap: T[] = []
+  private priorities: Float64Array | null
 
-  constructor(nodes: T[]) {
+  constructor(nodes: T[], options?: { cachePriorities?: boolean }) {
     this.heap = []
+    // Routing candidates have fixed costs after enqueueing. Keep those costs
+    // contiguous so heap comparisons do not chase references to search nodes.
+    this.priorities = options?.cachePriorities ? new Float64Array(64) : null
 
     for (const node of nodes) {
       this.enqueue(node)
@@ -30,6 +34,9 @@ export class SingleRouteCandidatePriorityQueue<T extends Node = Node> {
     }
     const item = this.heap[0]
     this.heap[0] = this.heap[this.heap.length - 1]
+    if (this.priorities) {
+      this.priorities[0] = this.priorities[this.heap.length - 1]
+    }
     this.heap.pop()
     this.heapifyDown()
     return item
@@ -43,6 +50,14 @@ export class SingleRouteCandidatePriorityQueue<T extends Node = Node> {
   }
 
   enqueue(item: T) {
+    if (this.priorities) {
+      if (this.heap.length === this.priorities.length) {
+        const priorities = new Float64Array(this.priorities.length * 2)
+        priorities.set(this.priorities)
+        this.priorities = priorities
+      }
+      this.priorities[this.heap.length] = item.f
+    }
     this.heap.push(item)
     this.heapifyUp()
   }
@@ -50,14 +65,19 @@ export class SingleRouteCandidatePriorityQueue<T extends Node = Node> {
   heapifyUp() {
     let index = this.heap.length - 1
     const item = this.heap[index]
+    const priorities = this.priorities
+    const itemPriority = priorities ? priorities[index] : item.f
     while (index > 0) {
       const parentIndex = Math.floor((index - 1) / 2)
       const parent = this.heap[parentIndex]
-      if (parent.f <= item.f) break
+      const parentPriority = priorities ? priorities[parentIndex] : parent.f
+      if (parentPriority <= itemPriority) break
       this.heap[index] = parent
+      if (priorities) priorities[index] = parentPriority
       index = parentIndex
     }
     this.heap[index] = item
+    if (priorities) priorities[index] = itemPriority
   }
 
   heapifyDown() {
@@ -65,24 +85,35 @@ export class SingleRouteCandidatePriorityQueue<T extends Node = Node> {
     const heapLength = this.heap.length
     const item = this.heap[index]
     if (!item) return
+    const priorities = this.priorities
+    const itemPriority = priorities ? priorities[index] : item.f
     while (true) {
       const leftChildIndex = 2 * index + 1
       if (leftChildIndex >= heapLength) break
       const rightChildIndex = leftChildIndex + 1
       let smallerChildIndex = leftChildIndex
+      const leftPriority = priorities
+        ? priorities[leftChildIndex]
+        : this.heap[leftChildIndex].f
       if (
         rightChildIndex < heapLength &&
-        this.heap[rightChildIndex].f < this.heap[leftChildIndex].f
+        (priorities ? priorities[rightChildIndex] : this.heap[rightChildIndex].f) <
+          leftPriority
       ) {
         smallerChildIndex = rightChildIndex
       }
-      if (item.f < this.heap[smallerChildIndex].f) {
+      const childPriority = priorities
+        ? priorities[smallerChildIndex]
+        : this.heap[smallerChildIndex].f
+      if (itemPriority < childPriority) {
         break
       }
       this.heap[index] = this.heap[smallerChildIndex]
+      if (priorities) priorities[index] = childPriority
       index = smallerChildIndex
     }
     this.heap[index] = item
+    if (priorities) priorities[index] = itemPriority
   }
 
   /**

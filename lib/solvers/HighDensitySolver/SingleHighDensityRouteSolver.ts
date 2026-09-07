@@ -21,6 +21,76 @@ export type FutureConnection = {
   points: { x: number; y: number; z: number }[]
 }
 
+type StaticObstacleClearance = {
+  x: number
+  y: number
+  z: number
+  margin: number
+  traceThickness: number
+  viaDiameter: number
+  blocked: boolean
+}
+
+type CompletePlanarQueryBounds = {
+  minX: number
+  minY: number
+  maxX: number
+  maxY: number
+  z: number
+  segments: IndexedObstacleSegment[]
+  segmentIds: number[]
+}
+
+const MAX_EXPLORED_BITMAP_CELLS = 1_000_000
+
+class BitmapExploredNodeSet extends Set<number> {
+  private bitmap: Uint8Array | null = null
+
+  initializeBitmap(cellCount: number): void {
+    // Keep native Set storage authoritative for iteration and public edits.
+    // The bounded bitmap only accelerates repeated membership checks.
+    this.bitmap = new Uint8Array(cellCount)
+    for (const key of this) {
+      if (Number.isInteger(key) && key >= 0 && key < cellCount) {
+        this.bitmap[key] = 1
+      }
+    }
+  }
+
+  override has(key: number): boolean {
+    const bitmap = this.bitmap
+    if (bitmap && Number.isInteger(key) && key >= 0 && key < bitmap.length) {
+      return bitmap[key] === 1
+    }
+    return super.has(key)
+  }
+
+  override add(key: number): this {
+    const bitmap = this.bitmap
+    if (bitmap && Number.isInteger(key) && key >= 0 && key < bitmap.length) {
+      bitmap[key] = 1
+    }
+    return super.add(key)
+  }
+
+  override delete(key: number): boolean {
+    const deleted = super.delete(key)
+    const bitmap = this.bitmap
+    if (bitmap && Number.isInteger(key) && key >= 0 && key < bitmap.length) {
+      bitmap[key] = 0
+    }
+    return deleted
+  }
+
+  override clear(): void {
+    super.clear()
+    // The Set can be reused through its public API after clearing it.
+    if (this.bitmap) {
+      this.bitmap.fill(0)
+    }
+  }
+}
+
 const connectionLabel = (
   connectionName: string,
   rootConnectionName?: string,
@@ -89,6 +159,9 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
   obstacleSegmentIndexByLayer = new Map<number, Flatbush>()
   obstacleVias: IndexedObstacleVia[] = []
   obstacleViaIndex: Flatbush | null = null
+  private viaObstacleClearanceByGridKey = new Map<number, StaticObstacleClearance>()
+  private planarObstacleClearanceByGridKey = new Map<number, StaticObstacleClearance>()
+  private completePlanarQueryBounds = new WeakMap<PlanarObstacleQuery, CompletePlanarQueryBounds>()
 
   /** For debugging/animating the exploration */
   debug_exploredNodesOrdered: Array<{
@@ -151,7 +224,7 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
       opts.availableZ && opts.availableZ.length > 0
         ? [...new Set(opts.availableZ)].sort((a, b) => a - b)
         : Array.from({ length: this.layerCount }, (_, index) => index)
-    this.exploredNodes = new Set()
+    this.exploredNodes = new BitmapExploredNodeSet()
     this.straightLineDistance = distance(this.A, this.B)
     this.futureConnections = opts.futureConnections ?? []
     this.NEARBY_SEGMENT_CLEARANCE = opts.nearbySegmentClearance ?? 0.15
@@ -184,6 +257,21 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     const gridMaxYIndex = Math.round(this.bounds.maxY / this.cellStep) + 1
     this.gridWidth = gridMaxXIndex - this.gridMinXIndex + 1
     this.gridHeight = gridMaxYIndex - this.gridMinYIndex + 1
+    const bitmapLayerCount = Math.max(
+      this.layerCount,
+      this.A.z + 1,
+      this.B.z + 1,
+      ...this.availableZ.map((z) => z + 1),
+    )
+    const bitmapCellCount = this.gridWidth * this.gridHeight * bitmapLayerCount
+    if (
+      this.exploredNodes instanceof BitmapExploredNodeSet &&
+      Number.isSafeInteger(bitmapCellCount) &&
+      bitmapCellCount > 0 &&
+      bitmapCellCount <= MAX_EXPLORED_BITMAP_CELLS
+    ) {
+      this.exploredNodes.initializeBitmap(bitmapCellCount)
+    }
 
     const isOnSameEdge =
       (Math.abs(this.A.x - this.bounds.minX) < 0.001 &&
@@ -244,7 +332,7 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
 
     this.candidates = new SingleRouteCandidatePriorityQueue([
       shouldFallbackToExactStart ? initialParent : roundedInitialNode,
-    ])
+    ], { cachePriorities: true })
   }
 
   handleSimpleCases() {
@@ -294,7 +382,49 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
       }
     }
 
+    // Own-route vias remain path-dependent and must be checked before lookup.
+    // Only base-created queries covering the complete endpoint clearance box
+    // may reuse planar results; arbitrary supplied queries keep their semantics.
     const traceProximity = this.traceThickness + margin
+    const queryBounds = planarObstacleQuery
+      ? this.completePlanarQueryBounds.get(planarObstacleQuery)
+      : undefined
+    const completePlanarQuery = !isVia && (!planarObstacleQuery || (
+      queryBounds &&
+      queryBounds.z === node.z &&
+      queryBounds.minX <= node.x - traceProximity &&
+      queryBounds.minY <= node.y - traceProximity &&
+      queryBounds.maxX >= node.x + traceProximity &&
+      queryBounds.maxY >= node.y + traceProximity &&
+      planarObstacleQuery.segments === queryBounds.segments &&
+      planarObstacleQuery.segmentIds.length === queryBounds.segmentIds.length &&
+      planarObstacleQuery.segmentIds.every((id, index) => id === queryBounds.segmentIds[index])
+    ))
+    const clearanceCache = isVia && !planarObstacleQuery
+      ? this.viaObstacleClearanceByGridKey
+      : completePlanarQuery ? this.planarObstacleClearanceByGridKey : undefined
+    // Static via clearance checks all layers, so its destination z is irrelevant.
+    const cacheKey = clearanceCache
+      ? ((isVia ? 0 : node.z * this.gridHeight) +
+          (Math.round(node.y / this.cellStep) - this.gridMinYIndex)) * this.gridWidth +
+        (Math.round(node.x / this.cellStep) - this.gridMinXIndex)
+      : undefined
+    if (cacheKey !== undefined) {
+      const cached = clearanceCache!.get(cacheKey)
+      if (
+        cached &&
+        cached.x === node.x &&
+        cached.y === node.y &&
+        (isVia || cached.z === node.z) &&
+        cached.margin === margin &&
+        cached.traceThickness === this.traceThickness &&
+        cached.viaDiameter === this.viaDiameter
+      ) {
+        return cached.blocked
+      }
+    }
+
+    let blocked = false
     const indexedSegments =
       planarObstacleQuery?.segments ??
       (!isVia
@@ -329,13 +459,14 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
         if (
           pointToSegmentDistance(node, segment.A, segment.B) < traceProximity
         ) {
-          return true
+          blocked = true
+          break
         }
       }
     }
 
     const viaProximity = this.viaDiameter / 2 + this.traceThickness / 2 + margin
-    if (this.obstacleViaIndex) {
+    if (!blocked && this.obstacleViaIndex) {
       const nearbyViaIds = this.obstacleViaIndex.search(
         node.x - viaProximity,
         node.y - viaProximity,
@@ -345,12 +476,24 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
       for (const viaId of nearbyViaIds) {
         const via = this.obstacleVias[viaId]
         if (via && distance(node, via) < viaProximity) {
-          return true
+          blocked = true
+          break
         }
       }
     }
 
-    return false
+    if (cacheKey !== undefined) {
+      clearanceCache!.set(cacheKey, {
+        x: node.x,
+        y: node.y,
+        z: node.z,
+        margin,
+        traceThickness: this.traceThickness,
+        viaDiameter: this.viaDiameter,
+        blocked,
+      })
+    }
+    return blocked
   }
 
   isNodeTooCloseToEdge(node: Node, isVia?: boolean) {
@@ -451,18 +594,76 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
         ? this.NEARBY_SEGMENT_CLEARANCE
         : 0
 
-    return {
+    const queryBounds = {
+      minX: Math.min(node.x - traceProximity, parent.x - clearance),
+      minY: Math.min(node.y - traceProximity, parent.y - clearance),
+      maxX: Math.max(node.x + traceProximity, parent.x + clearance),
+      maxY: Math.max(node.y + traceProximity, parent.y + clearance),
+      z: node.z,
+    }
+    const query = {
       segments,
       segmentIds: segmentIndex.search(
-        Math.min(node.x - traceProximity, parent.x - clearance),
-        Math.min(node.y - traceProximity, parent.y - clearance),
-        Math.max(node.x + traceProximity, parent.x + clearance),
-        Math.max(node.y + traceProximity, parent.y + clearance),
+        queryBounds.minX, queryBounds.minY, queryBounds.maxX, queryBounds.maxY,
       ),
     }
+    if (this.getPlanarObstacleQuery === SingleHighDensityRouteSolver.prototype.getPlanarObstacleQuery) {
+      this.completePlanarQueryBounds.set(query, {
+        ...queryBounds, segments, segmentIds: query.segmentIds.slice(),
+      })
+    }
+    return query
+  }
+
+  getPlanarNeighborObstacleQuery(node: Node): PlanarObstacleQuery | undefined {
+    const segmentIndex = this.obstacleSegmentIndexByLayer.get(node.z)
+    const segments = this.obstacleSegmentsByLayer.get(node.z)
+    if (!segmentIndex || !segments) return undefined
+
+    const traceProximity = this.traceThickness + this.obstacleMargin
+    const clearance =
+      this.obstacleSegments.length > 0 ? this.NEARBY_SEGMENT_CLEARANCE : 0
+    const { minX, minY, maxX, maxY } = this.bounds
+
+    // All planar neighbors share a parent and layer. Query their combined
+    // bounds once; the collision checks still filter each candidate's bounds.
+    const queryBounds = {
+      minX: Math.min(
+        clamp(node.x - this.cellStep, minX, maxX) - traceProximity,
+        node.x - clearance,
+      ),
+      minY: Math.min(
+        clamp(node.y - this.cellStep, minY, maxY) - traceProximity,
+        node.y - clearance,
+      ),
+      maxX: Math.max(
+        clamp(node.x + this.cellStep, minX, maxX) + traceProximity,
+        node.x + clearance,
+      ),
+      maxY: Math.max(
+        clamp(node.y + this.cellStep, minY, maxY) + traceProximity,
+        node.y + clearance,
+      ),
+      z: node.z,
+    }
+    const query = {
+      segments,
+      segmentIds: segmentIndex.search(
+        queryBounds.minX, queryBounds.minY, queryBounds.maxX, queryBounds.maxY,
+      ),
+    }
+    if (this.getPlanarNeighborObstacleQuery === SingleHighDensityRouteSolver.prototype.getPlanarNeighborObstacleQuery) {
+      this.completePlanarQueryBounds.set(query, {
+        ...queryBounds, segments, segmentIds: query.segmentIds.slice(),
+      })
+    }
+    return query
   }
 
   buildObstacleIndexes() {
+    this.viaObstacleClearanceByGridKey.clear()
+    this.planarObstacleClearanceByGridKey.clear()
+    this.completePlanarQueryBounds = new WeakMap()
     if (this.obstacleRoutes.length === 0) {
       this.obstacleSegmentIndex = null
       this.obstacleSegmentsByLayer.clear()
@@ -577,6 +778,11 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
 
   getNeighbors(node: Node) {
     const neighbors: Node[] = []
+    let planarObstacleQuery: PlanarObstacleQuery | undefined
+    const canSharePlanarObstacleQuery =
+      this.NEARBY_SEGMENT_CLEARANCE <= this.traceThickness + this.obstacleMargin
+    const canComputeCoordinateKey =
+      this.getNodeKey === SingleHighDensityRouteSolver.prototype.getNodeKey
 
     const { maxX, minX, maxY, minY } = this.bounds
 
@@ -584,9 +790,33 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
       for (let y = -1; y <= 1; y++) {
         if (x === 0 && y === 0) continue
 
-        const neighbor: Node = {
-          x: clamp(node.x + x * this.cellStep, minX, maxX),
-          y: clamp(node.y + y * this.cellStep, minY, maxY),
+        const neighborX = clamp(node.x + x * this.cellStep, minX, maxX)
+        const neighborY = clamp(node.y + y * this.cellStep, minY, maxY)
+        let neighbor: Node | undefined
+        if (!canComputeCoordinateKey) {
+          neighbor = {
+            x: neighborX,
+            y: neighborY,
+            z: node.z,
+            g: node.g,
+            h: node.h,
+            f: node.f,
+            parent: node,
+          }
+        }
+        const neighborKey = neighbor
+          ? this.getNodeKey(neighbor)
+          : (node.z * this.gridHeight +
+              (Math.round(neighborY / this.cellStep) - this.gridMinYIndex)) *
+              this.gridWidth +
+            (Math.round(neighborX / this.cellStep) - this.gridMinXIndex)
+
+        if (this.exploredNodes.has(neighborKey)) {
+          continue
+        }
+        neighbor ??= {
+          x: neighborX,
+          y: neighborY,
           z: node.z,
           g: node.g,
           h: node.h,
@@ -594,13 +824,11 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
           parent: node,
         }
 
-        const neighborKey = this.getNodeKey(neighbor)
-
-        if (this.exploredNodes.has(neighborKey)) {
-          continue
+        if (canSharePlanarObstacleQuery) {
+          planarObstacleQuery ??= this.getPlanarNeighborObstacleQuery(node)
+        } else {
+          planarObstacleQuery = this.getPlanarObstacleQuery(neighbor)
         }
-
-        const planarObstacleQuery = this.getPlanarObstacleQuery(neighbor)
         if (
           this.isNodeTooCloseToObstacle(
             neighbor,
@@ -641,7 +869,26 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     for (const newZ of this.availableZ) {
       if (newZ === node.z) continue
 
-      const viaNeighbor: Node = {
+      let viaNeighbor: Node | undefined
+      if (!canComputeCoordinateKey) {
+        viaNeighbor = {
+          x: node.x,
+          y: node.y,
+          z: newZ,
+          g: node.g,
+          h: node.h,
+          f: node.f,
+          parent: node,
+        }
+      }
+      const viaKey = viaNeighbor
+        ? this.getNodeKey(viaNeighbor)
+        : (newZ * this.gridHeight +
+            (Math.round(node.y / this.cellStep) - this.gridMinYIndex)) *
+            this.gridWidth +
+          (Math.round(node.x / this.cellStep) - this.gridMinXIndex)
+      if (this.exploredNodes.has(viaKey)) continue
+      viaNeighbor ??= {
         x: node.x,
         y: node.y,
         z: newZ,
@@ -652,7 +899,6 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
       }
 
       if (
-        !this.exploredNodes.has(this.getNodeKey(viaNeighbor)) &&
         !this.isNodeTooCloseToObstacle(
           viaNeighbor,
           this.viaDiameter / 2 + this.obstacleMargin / 2,
