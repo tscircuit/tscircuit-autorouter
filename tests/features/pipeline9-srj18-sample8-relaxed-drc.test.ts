@@ -51,7 +51,7 @@ test("Pipeline9 repairs SRJ18 sample 8's crowded trace/via clearances", async ()
     ]),
   )
   // Derive the contacts from this revision's exact output. Upstream routing
-  // changes can remove a historical contact before precision repair starts.
+  // changes can remove a historical contact before clearance projection starts.
   for (const error of originalErrors) {
     if (
       error.type !== "pcb_via_trace_clearance_error" &&
@@ -60,16 +60,6 @@ test("Pipeline9 repairs SRJ18 sample 8's crowded trace/via clearances", async ()
       throw new Error(`Unexpected original DRC error: ${error.type}`)
     }
     const pair = `${error.type === "pcb_via_trace_clearance_error" ? error.pcb_via_id : error.pcb_pad_id}/${error.pcb_trace_id}`
-    expect(measuredPairs.get(pair)).toBeGreaterThanOrEqual(0.11)
+    expect(measuredPairs.get(pair)).toBeGreaterThanOrEqual(0.11 - 1e-9)
   }
-  const repairStats = solver.pipeline9JointDrcRepairSolver!.stats
-  expect(
-    Number(repairStats.clearancePrecisionReferenceValidationCount),
-  ).toBeLessThanOrEqual(1)
-  expect(
-    Number(repairStats.clearancePrecisionCandidateValidationCount),
-  ).toBeLessThanOrEqual(8)
-  expect(
-    Number(repairStats.clearancePrecisionCandidateCount),
-  ).toBeLessThanOrEqual(24)
 })

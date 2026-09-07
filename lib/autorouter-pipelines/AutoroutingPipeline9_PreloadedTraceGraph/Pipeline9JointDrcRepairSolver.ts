@@ -14,7 +14,6 @@ import {
   combinePreloadedAndRoutedTraces,
   evaluateRelaxedDrc,
 } from "lib/testing/evaluate-relaxed-drc"
-import { convertToCircuitJson } from "lib/testing/utils/convertToCircuitJson"
 import type {
   Obstacle,
   SimpleRouteConnection,
@@ -25,10 +24,7 @@ import type { HighDensityRoute } from "lib/types/high-density-types"
 import { convertHdRouteToSimplifiedRoute } from "lib/utils/convertHdRouteToSimplifiedRoute"
 import { mapZToLayerName } from "lib/utils/mapZToLayerName"
 import { createPipeline7HdRoutesToSimplifiedPcbTracesConverter } from "../AutoroutingPipeline7_MultiGraph/convertPipeline7HdRoutesToSimplifiedPcbTraces"
-import {
-  applyPipeline9ClearancePrecisionRepairs,
-  type ClearanceMarginDrcEvaluator,
-} from "./applyPipeline9ClearancePrecisionRepairs"
+import { applyPipeline9ClearanceProjection } from "./applyPipeline9ClearanceProjection"
 import { applyPipeline9BoundedRegionalRepairs } from "./applyPipeline9BoundedRegionalRepairs"
 import { applyPipeline9RegionalB01Repairs } from "./applyPipeline9RegionalB01Repairs"
 import { applyPipeline9TerminalEscapeRelocations } from "./applyPipeline9TerminalEscapeRelocations"
@@ -38,7 +34,6 @@ import {
   convertPreloadedTraceToHdRoutes,
 } from "./convertPreloadedTraceToHdRoutes"
 import { filterPipeline9DrcErrorsAgainstBaseline } from "./filterPipeline9DrcErrorsAgainstBaseline"
-import { getPipeline9ClearanceMarginErrors } from "./getPipeline9ClearanceMarginErrors"
 import { getPipeline9PreloadedTraceIdsInInitialDrcRegions } from "./getPipeline9PreloadedTraceIdsInInitialDrcRegions"
 import { getPipeline9PreloadedViaPairTraceGroups } from "./getPipeline9PreloadedViaPairTraceGroups"
 import { mergePipeline9MovablePreloadedVias } from "./mergePipeline9MovablePreloadedVias"
@@ -653,9 +648,6 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
   readonly exactRepairSolver?: GlobalDrcBranchPortfolioSolver
   private drcEvaluator?: DrcEvaluator
   private cachedReferenceDrcEvaluator?: DrcEvaluator
-  private clearancePrecisionDrcEvaluator?: DrcEvaluator
-  private clearancePrecisionIndexedDrcEvaluator?: DrcEvaluator
-  private clearanceMarginDrcEvaluator?: ClearanceMarginDrcEvaluator
   private referenceDrcValidationCount = 0
   private referenceDrcFalseNegativeCount = 0
   private indexedDrcEvaluationCount = 0
@@ -1174,10 +1166,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       }
     }
 
-    const referenceDrcEvaluator = (
-      { routes, hdRoutes }: Parameters<DrcEvaluator>[0],
-      includeTraceContinuity = true,
-    ): ReturnType<DrcEvaluator> => {
+    const referenceDrcEvaluator: DrcEvaluator = ({ routes, hdRoutes }) => {
       const evaluatedRoutes = routes ?? hdRoutes
       if (!evaluatedRoutes) {
         throw new Error("Pipeline9 reference DRC repair requires HD routes")
@@ -1187,7 +1176,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         inputSrj: params.originalSrj,
         srjWithPointPairs: params.srjWithPointPairs,
         routedTraces: candidateDrcInput.routedTraces,
-        drcOptions: { traceClearance, includeTraceContinuity },
+        drcOptions: { traceClearance },
       })
       const evaluatedTraceIds = new Set(
         candidateDrcInput.evaluatedTraces.map((trace) => trace.pcb_trace_id),
@@ -1250,62 +1239,6 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       return result
     }
     this.cachedReferenceDrcEvaluator = cachedReferenceDrcEvaluator
-    this.clearancePrecisionDrcEvaluator = ({
-      routes,
-      hdRoutes,
-    }): ReturnType<DrcEvaluator> =>
-      referenceDrcEvaluator({ traces: [], routes, hdRoutes }, false)
-    const createMarginCircuitJson = (
-      routes: HighDensityRoute[],
-    ): AnyCircuitElement[] => {
-      const candidateDrcInput = prepareCandidateDrcInput(routes)
-      return convertToCircuitJson(
-        params.srjWithPointPairs,
-        candidateDrcInput.routedTraces,
-        {
-          minTraceWidth: params.originalSrj.minTraceWidth,
-          minViaDiameter: params.originalSrj.minViaDiameter,
-          originalSrj: params.originalSrj,
-          includeOriginalConnections: true,
-        },
-      )
-    }
-    let marginOriginalCircuit:
-      | { routes: HighDensityRoute[]; circuitJson: AnyCircuitElement[] }
-      | undefined
-    this.clearanceMarginDrcEvaluator = (
-      routes,
-      targets,
-      originalRoutes,
-    ): ReturnType<ClearanceMarginDrcEvaluator> => {
-      if (marginOriginalCircuit?.routes !== originalRoutes) {
-        marginOriginalCircuit = {
-          routes: originalRoutes,
-          circuitJson: createMarginCircuitJson(originalRoutes),
-        }
-      }
-      return getPipeline9ClearanceMarginErrors({
-        circuitJson: createMarginCircuitJson(routes),
-        originalCircuitJson: marginOriginalCircuit.circuitJson,
-        targets,
-      })
-    }
-    this.clearancePrecisionIndexedDrcEvaluator = ({
-      routes,
-      hdRoutes,
-    }): ReturnType<DrcEvaluator> => {
-      const evaluatedRoutes = routes ?? hdRoutes
-      if (!evaluatedRoutes) {
-        throw new Error("Pipeline9 clearance ranking requires HD routes")
-      }
-      const candidateDrcInput = prepareCandidateDrcInput(evaluatedRoutes)
-      // Ranking is private and must not populate the exact evaluator's cache
-      // with results that have not undergone its reference-zero validation.
-      return autoroutingDrcEngine.evaluate(
-        candidateDrcInput.evaluatedTraces as RepairSimplifiedPcbTraces,
-      )
-    }
-
     const drcEvaluator: DrcEvaluator = ({ routes, hdRoutes }) => {
       const evaluatedRoutes = routes ?? hdRoutes
       if (!evaluatedRoutes) {
@@ -1443,7 +1376,14 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       return
     }
     if (!this.exactRepairSolver.solved) return
-    let exactOutput = this.exactRepairSolver.getOutput()
+    const exactRoutes = this.exactRepairSolver.getOutput()
+    const exactOutput = applyPipeline9ClearanceProjection({
+      originalSrj: this.params.originalSrj,
+      routes: exactRoutes,
+      syntheticConnectionNames: this.syntheticConnectionNames,
+      drcEvaluator: this.cachedReferenceDrcEvaluator!,
+    })
+    const clearanceProjectionAccepted = exactOutput !== exactRoutes
     const exactIndexedDrcIssueCountStat =
       this.exactRepairSolver.stats.finalDrcIssueCount
     const exactIndexedDrcIssueCount =
@@ -1452,11 +1392,6 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       exactIndexedDrcIssueCountStat >= 0
         ? exactIndexedDrcIssueCountStat
         : undefined
-    let postExactReferenceDrcIssueCount: number | undefined
-    let clearancePrecisionCandidateCount = 0
-    let clearancePrecisionCandidateValidationCount = 0
-    let clearancePrecisionReferenceValidationCount = 0
-    let clearancePrecisionRepaired = false
     // The indexed evaluator can retain conservative false positives after the
     // exact portfolio has produced a reference-clean result. Do not let later
     // heuristic repairs degrade an output already accepted by benchmark DRC.
@@ -1468,35 +1403,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     const exactReferenceDrcErrors = Array.isArray(exactReferenceDrcResult)
       ? exactReferenceDrcResult
       : exactReferenceDrcResult.errors
-    postExactReferenceDrcIssueCount = exactReferenceDrcErrors.length
-    if (exactReferenceDrcErrors.length > 0) {
-      const precisionResult = applyPipeline9ClearancePrecisionRepairs({
-        srj: this.params.srj,
-        routes: exactOutput,
-        newConnections: this.params.newConnections,
-        syntheticConnectionNames: this.syntheticConnectionNames,
-        connMap: this.params.connMap,
-        indexedDrcEvaluator: this.clearancePrecisionIndexedDrcEvaluator!,
-        candidateDrcEvaluator: this.clearancePrecisionDrcEvaluator!,
-        marginDrcEvaluator: this.clearanceMarginDrcEvaluator!,
-        drcEvaluator: this.cachedReferenceDrcEvaluator!,
-        initialErrors: exactReferenceDrcErrors,
-        initialErrorsWithCenters: Array.isArray(exactReferenceDrcResult)
-          ? exactReferenceDrcResult
-          : (exactReferenceDrcResult.errorsWithCenters ??
-            exactReferenceDrcResult.errors),
-      })
-      clearancePrecisionCandidateCount = precisionResult.attemptedCandidateCount
-      clearancePrecisionCandidateValidationCount =
-        precisionResult.candidateValidationCount
-      clearancePrecisionReferenceValidationCount =
-        precisionResult.referenceValidationCount
-      clearancePrecisionRepaired = precisionResult.repaired
-      if (precisionResult.repaired) {
-        exactOutput = precisionResult.routes
-        postExactReferenceDrcIssueCount = 0
-      }
-    }
+    const postExactReferenceDrcIssueCount = exactReferenceDrcErrors.length
     if (postExactReferenceDrcIssueCount === 0) {
       this.combinedOutput = exactOutput
       this.stats = {
@@ -1506,10 +1413,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         postExactReferenceValidationAttempted: true,
         postExactReferenceDrcIssueCount: 0,
         postExactReferenceAccepted: true,
-        clearancePrecisionCandidateCount,
-        clearancePrecisionCandidateValidationCount,
-        clearancePrecisionReferenceValidationCount,
-        clearancePrecisionRepaired,
+        clearanceProjectionAccepted,
         boundedRegionalRepairAttemptedRegionCount: 0,
         boundedRegionalRepairAcceptedRegionCount: 0,
         boundedRegionalRepairCandidateAttemptCount: 0,
@@ -1590,10 +1494,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       postExactReferenceValidationAttempted: true,
       postExactReferenceDrcIssueCount,
       postExactReferenceAccepted: false,
-      clearancePrecisionCandidateCount,
-      clearancePrecisionCandidateValidationCount,
-      clearancePrecisionReferenceValidationCount,
-      clearancePrecisionRepaired,
+      clearanceProjectionAccepted,
       boundedRegionalRepairAttemptedRegionCount:
         boundedRegionalRepairResult.attemptedRegionCount,
       boundedRegionalRepairAcceptedRegionCount:

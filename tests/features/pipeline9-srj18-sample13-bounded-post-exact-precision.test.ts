@@ -3,7 +3,7 @@ import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-p
 import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import { loadScenarioBySampleNumber } from "../../scripts/benchmark/scenarios"
 
-test("Pipeline9 bounds SRJ18 sample 13's high-residual precision pass", async (): Promise<void> => {
+test("Pipeline9 bounds SRJ18 sample 13's regional repair work", async (): Promise<void> => {
   const { scenario } = await loadScenarioBySampleNumber("srj18", 13)
   const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(
     structuredClone(scenario),
@@ -24,9 +24,6 @@ test("Pipeline9 bounds SRJ18 sample 13's high-residual precision pass", async ()
   ).toBeLessThanOrEqual(
     Number(repairStats?.regionalB01RepairCandidateSearchBudget),
   )
-  expect(
-    Number(repairStats?.clearancePrecisionCandidateCount),
-  ).toBeLessThanOrEqual(24)
   expect(
     Number(repairStats?.boundedRegionalRepairAttemptedRegionCount),
   ).toBeLessThanOrEqual(4)
