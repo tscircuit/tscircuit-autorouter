@@ -61,6 +61,34 @@ export class CapacityMeshEdgeSolver extends BaseSolver {
     const nodeById = new Map(
       this.nodes.map((node) => [node.capacityMeshNodeId, node]),
     )
+    // Target regions may overlap many other targets. Scanning every existing
+    // edge for each candidate pair makes this pass dominate large boards.
+    // Build this index from the current edges because subclasses create them
+    // incrementally before calling handleTargetNodes().
+    const neighborsByNodeId = new Map<
+      CapacityMeshNodeId,
+      Set<CapacityMeshNodeId>
+    >()
+    const indexEdge = (
+      nodeAId: CapacityMeshNodeId,
+      nodeBId: CapacityMeshNodeId,
+    ): void => {
+      let neighborsA = neighborsByNodeId.get(nodeAId)
+      if (!neighborsA) {
+        neighborsA = new Set()
+        neighborsByNodeId.set(nodeAId, neighborsA)
+      }
+      neighborsA.add(nodeBId)
+      let neighborsB = neighborsByNodeId.get(nodeBId)
+      if (!neighborsB) {
+        neighborsB = new Set()
+        neighborsByNodeId.set(nodeBId, neighborsB)
+      }
+      neighborsB.add(nodeAId)
+    }
+    for (const edge of this.edges) {
+      indexEdge(edge.nodeIds[0], edge.nodeIds[1])
+    }
 
     for (let i = 0; i < targetNodes.length; i++) {
       for (let j = i + 1; j < targetNodes.length; j++) {
@@ -68,12 +96,18 @@ export class CapacityMeshEdgeSolver extends BaseSolver {
         const nodeB = targetNodes[j]!
         if (!this.doNodesHaveSharedLayer(nodeA, nodeB)) continue
         if (!this.doNodesTouchOrOverlap(nodeA, nodeB)) continue
-        if (this.hasEdgeBetween(nodeA, nodeB)) continue
+        if (
+          neighborsByNodeId
+            .get(nodeA.capacityMeshNodeId)
+            ?.has(nodeB.capacityMeshNodeId)
+        )
+          continue
 
         this.edges.push({
           capacityMeshEdgeId: this.getNextCapacityMeshEdgeId(),
           nodeIds: [nodeA.capacityMeshNodeId, nodeB.capacityMeshNodeId],
         })
+        indexEdge(nodeA.capacityMeshNodeId, nodeB.capacityMeshNodeId)
       }
     }
 
@@ -82,12 +116,9 @@ export class CapacityMeshEdgeSolver extends BaseSolver {
         continue
       }
 
-      const hasRoutingEdge = this.edges.some((edge) => {
-        if (!edge.nodeIds.includes(targetNode.capacityMeshNodeId)) return false
-        const otherNodeId =
-          edge.nodeIds[0] === targetNode.capacityMeshNodeId
-            ? edge.nodeIds[1]
-            : edge.nodeIds[0]
+      const hasRoutingEdge = Array.from(
+        neighborsByNodeId.get(targetNode.capacityMeshNodeId) ?? [],
+      ).some((otherNodeId) => {
         const otherNode = nodeById.get(otherNodeId)
         if (!otherNode) return false
 

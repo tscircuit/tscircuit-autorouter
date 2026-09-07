@@ -36,6 +36,7 @@ import {
   type TraceColorMode,
 } from "lib/utils/convertSrjToGraphicsObject"
 import { createSrjWithBoardValidObstacleLayers } from "lib/utils/create-srj-with-board-valid-obstacle-layers"
+import { createSrjWithUniqueObstacleConnections } from "lib/utils/createSrjWithUniqueObstacleConnections"
 import { createObstacleLabelFormatter } from "lib/utils/formatObstacleLabel"
 import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
 import { getInitiallyConnectedMapFromSimpleRouteJson } from "lib/utils/get-initially-connected-map-from-simple-route-json"
@@ -971,7 +972,9 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
   ) {
     super()
     const srjWithBoardValidObstacleLayers =
-      createSrjWithBoardValidObstacleLayers(srj)
+      createSrjWithBoardValidObstacleLayers(
+        createSrjWithUniqueObstacleConnections(srj),
+      )
     this.originalSrj = srjWithBoardValidObstacleLayers
     this.opts = { ...opts }
     const mutableOpts = this.opts
@@ -1041,11 +1044,11 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     if (this.activeSubSolver) {
       this.activeSubSolver.step()
       if (this.activeSubSolver.solved) {
+        pipelineStepDef.onSolved?.(this)
         this.endTimeOfPhase[pipelineStepDef.solverName] = performance.now()
         this.timeSpentOnPhase[pipelineStepDef.solverName] =
           this.endTimeOfPhase[pipelineStepDef.solverName] -
           this.startTimeOfPhase[pipelineStepDef.solverName]
-        pipelineStepDef.onSolved?.(this)
         this.activeSubSolver = null
         this.currentPipelineStepIndex++
       } else if (this.activeSubSolver.failed) {
@@ -1056,6 +1059,8 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       return
     }
 
+    this.timeSpentOnPhase[pipelineStepDef.solverName] = 0
+    this.startTimeOfPhase[pipelineStepDef.solverName] = performance.now()
     const constructorParams = pipelineStepDef.getConstructorParams(this)
     // @ts-ignore
     this.activeSubSolver = new pipelineStepDef.solverClass(...constructorParams)
@@ -1068,8 +1073,6 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
         this.iterations + this.activeSubSolver.MAX_ITERATIONS + 1,
       )
     ;(this as any)[pipelineStepDef.solverName] = this.activeSubSolver
-    this.timeSpentOnPhase[pipelineStepDef.solverName] = 0
-    this.startTimeOfPhase[pipelineStepDef.solverName] = performance.now()
   }
 
   solveUntilPhase(phase: string) {
