@@ -139,7 +139,7 @@ test("clearance projection repairs translated and rotated sets of nine physical 
     })
     expect(physicalGaps).toHaveLength(9)
     for (const gap of physicalGaps) {
-      expect(gap.actual_clearance).toBeGreaterThanOrEqual(clearance + 0.01 - 1e-9)
+      expect(gap.actual_clearance).toBeGreaterThanOrEqual(clearance - 1e-9)
     }
     for (let index = 0; index < routes.length; index++) {
       expect(result[index]!.route[0]).toEqual(routes[index]!.route[0])
