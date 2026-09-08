@@ -354,9 +354,10 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
   }
 
   isNodeTooCloseToEdge(node: Node, isVia?: boolean) {
+    // Adjacent nodes each reserve half the gap outside the copper edge.
     const margin = isVia
       ? this.viaDiameter / 2 + this.obstacleMargin / 2
-      : this.obstacleMargin / 2
+      : this.traceThickness / 2 + this.obstacleMargin / 2
     const tooClose =
       node.x < this.bounds.minX + margin ||
       node.x > this.bounds.maxX - margin ||
