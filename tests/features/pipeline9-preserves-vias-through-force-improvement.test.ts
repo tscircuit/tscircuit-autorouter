@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test"
 import { HighDensityForceImproveSolver } from "high-density-repair01/lib/HighDensityForceImproveSolver"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
-import type { Pipeline9HighDensitySolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9HighDensitySolver"
+import { Pipeline9HighDensitySolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9HighDensitySolver"
 import type { SimpleRouteJson } from "lib/types"
 import type {
   HighDensityRoute,
@@ -52,9 +52,18 @@ test("Pipeline9 preserves vias through force improvement", (): void => {
   })
   pipeline9.colorMap = { route: "#ff0000" }
   pipeline9.highDensityNodePortPoints = [nodeWithPortPoints]
-  pipeline9.highDensityRouteSolver = {
-    routes: [rawRoute],
-  } as Pipeline9HighDensitySolver
+  pipeline9.highDensityRouteSolver = new Pipeline9HighDensitySolver({
+    nodePortPoints: [nodeWithPortPoints],
+    fixedHdRoutes: [],
+    connMap: pipeline9.connMap,
+    obstacles: [],
+    layerCount: srj.layerCount,
+    viaDiameter: 0.3,
+    traceWidth: srj.minTraceWidth,
+    obstacleMargin: 0.2,
+    effort: 0.1,
+  })
+  pipeline9.highDensityRouteSolver.routes.push(rawRoute)
 
   const forceImproveStep = pipeline9.pipelineDef.find(
     (step) => step.solverName === "highDensityForceImproveSolver",
