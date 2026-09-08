@@ -35,7 +35,9 @@ export const getT113BootRoutingPcbSvg = ({
     !bootSource ||
     !bootComponent
   ) {
-    throw new Error("The PCB snapshot requires the real board and boot resistor")
+    throw new Error(
+      "The PCB snapshot requires the real board and boot resistor",
+    )
   }
   const nativeCopper = convertToCircuitJson(srj, traces).filter(
     (element) => element.type === "pcb_trace" || element.type === "pcb_via",

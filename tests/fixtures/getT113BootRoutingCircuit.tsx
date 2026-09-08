@@ -43,11 +43,7 @@ export const T113BootRoutingCircuit = (): ReactElement => (
       pcbY={-1.9}
       pcbRotation={270}
     />
-    <trace
-      name="BOOT_SEL1"
-      from=".R_BOOT_SEL1 > .pin1"
-      to=".U_SOC > .PC5"
-    />
+    <trace name="BOOT_SEL1" from=".R_BOOT_SEL1 > .pin1" to=".U_SOC > .PC5" />
     <trace name="BOOT_GND" from=".R_BOOT_SEL1 > .pin2" to="net.GND" />
     {Array.from({ length: 5 }, (_, index) => (
       <resistor
@@ -68,12 +64,7 @@ export const T113BootRoutingCircuit = (): ReactElement => (
         to={`.R_SD${index} > .pin1`}
       />
     ))}
-    <silkscreentext
-      pcbX={5}
-      pcbY={-2}
-      text="R_BOOT_SEL1 3k3"
-      fontSize={0.7}
-    />
+    <silkscreentext pcbX={5} pcbY={-2} text="R_BOOT_SEL1 3k3" fontSize={0.7} />
     {Array.from({ length: 5 }, (_, index) => (
       <silkscreentext
         key={index}

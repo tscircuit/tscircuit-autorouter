@@ -166,12 +166,7 @@ export const T113S3BootRoutingChip = (): ReactElement => (
           />
         ))}
         <silkscreenrect pcbX={0} pcbY={0} width={14} height={14} />
-        <silkscreentext
-          pcbX={0}
-          pcbY={5}
-          text="U_SOC T113-S3"
-          fontSize={1}
-        />
+        <silkscreentext pcbX={0} pcbY={5} text="U_SOC T113-S3" fontSize={1} />
       </footprint>
     }
   />
