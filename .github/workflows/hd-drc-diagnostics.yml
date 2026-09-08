@@ -28,6 +28,10 @@ jobs:
           - { dataset: srj18, sample: 12, pipeline: 9 }
           - { dataset: srj18, sample: 13, pipeline: 9 }
           - { dataset: srj18, sample: 16, pipeline: 9 }
+          - { dataset: srj19, sample: 7, pipeline: 9 }
+          - { dataset: srj19, sample: 29, pipeline: 9 }
+          - { dataset: srj19, sample: 50, pipeline: 9 }
+          - { dataset: srj19, sample: 195, pipeline: 9 }
           - { dataset: srj19, sample: 21, pipeline: 9 }
           - { dataset: srj19, sample: 37, pipeline: 9 }
           - { dataset: srj19, sample: 40, pipeline: 9 }

@@ -327,17 +327,12 @@ const captureUniformFailure = (
   }
   // TypeScript-private constructor inputs are ordinary own properties. Select
   // their existing data without calling a solver or requiring a new main API.
-  const selectedOwnFields = new Set([
+  const ownState = selectDiagnosticOwnFields(uniform, [
     "input",
     "canonicalNetIdByPortId",
     "fixedPortIds",
     "physicalPortWitnesses",
   ])
-  const ownState = Object.fromEntries(
-    Object.entries(uniform ?? {}).filter(([name]): boolean =>
-      selectedOwnFields.has(name),
-    ),
-  )
   const failure =
     error instanceof Error
       ? { name: error.name, message: error.message, stack: error.stack ?? null }
@@ -377,6 +372,27 @@ const captureUniformFailure = (
       family: family ?? null,
       sharedEdge: sharedEdge ?? null,
       ownerBounds,
+      solverState: selectDiagnosticOwnFields(uniform, [
+        "iterations",
+        "failed",
+        "solved",
+        "error",
+        "ownerPairsToProcess",
+        "currentOwnerPairBeingProcessed",
+      ]),
+      orderedPlacementState: {
+        status: "intermediate-state-not-retained-on-solver-instance",
+        retainedOrder: "family preserves stored owner-pair input order",
+        unavailable: [
+          "activeLayer",
+          "sortedLayerPorts",
+          "selectedAndRepresentableChannels",
+          "placementPorts",
+          "backwardLatestBounds",
+          "forwardPositions",
+        ],
+        reconstructionPerformed: false,
+      },
       // These retained public collections include original proxy assignments
       // and physical tracePoint metadata; they are not pristine stage copies.
       pathingInputSharedEdges,
