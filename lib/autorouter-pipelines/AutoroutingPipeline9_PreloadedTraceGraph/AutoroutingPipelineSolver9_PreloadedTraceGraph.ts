@@ -625,7 +625,10 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             nodePfById: new Map(
               portPointPathingOutput.inputNodeWithPortPoints.map((node) => [
                 node.capacityMeshNodeId,
-                portPointPathingSolver.computeNodePf(node),
+                portPointPathingSolver.computeNodePf(
+                  node,
+                  portPointPathingOutput.nodesWithPortPoints,
+                ),
               ]),
             ),
             preserveTerminalPcbPortIds: true,
