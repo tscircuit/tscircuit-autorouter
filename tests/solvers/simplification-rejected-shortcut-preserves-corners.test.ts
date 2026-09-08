@@ -58,7 +58,8 @@ test("rejected shortcuts preserve original corners beside a pad", () => {
           solver.newRoute[index - 1]!,
           solver.newRoute[index]!,
           obstacle,
-        ) - input.traceThickness / 2
+        ) -
+        input.traceThickness / 2
       expect(gap).toBeGreaterThanOrEqual(0.01 - 1e-9)
     }
   }
