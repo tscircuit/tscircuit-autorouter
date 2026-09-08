@@ -23,15 +23,17 @@ export function createPreviousPhysicalPairCacheData(
       if (left.y !== right.y) return left.y - right.y
       return left.z - right.z
     })
-    .map((port): Record<string, unknown> => ({
-      connectionName: port.connectionName,
-      portPointId: port.portPointId,
-      x: port.x,
-      y: port.y,
-      z: port.z,
-      prevPortPointId: port.prevPortPointId,
-      nextPortPointId: port.nextPortPointId,
-    }))
+    .map(
+      (port): Record<string, unknown> => ({
+        connectionName: port.connectionName,
+        portPointId: port.portPointId,
+        x: port.x,
+        y: port.y,
+        z: port.z,
+        prevPortPointId: port.prevPortPointId,
+        nextPortPointId: port.nextPortPointId,
+      }),
+    )
   const connectedIds = [
     ...new Set(solver.connMap.getIdsConnectedToNet("paired-net") ?? []),
   ].sort()
@@ -66,16 +68,18 @@ export function createPreviousPhysicalPairCacheData(
       cacheSchemaVersion: 7,
       node: {
         ...baseNode,
-        portPoints: ports.map((port): Record<string, unknown> => ({
-          connectionName: port.connectionName,
-          rootConnectionName: "paired-root",
-          portPointId: port.portPointId,
-          prevPortPointId: port.prevPortPointId,
-          nextPortPointId: port.nextPortPointId,
-          x: port.x,
-          y: port.y,
-          z: port.z,
-        })),
+        portPoints: ports.map(
+          (port): Record<string, unknown> => ({
+            connectionName: port.connectionName,
+            rootConnectionName: "paired-root",
+            portPointId: port.portPointId,
+            prevPortPointId: port.prevPortPointId,
+            nextPortPointId: port.nextPortPointId,
+            x: port.x,
+            y: port.y,
+            z: port.z,
+          }),
+        ),
       },
       normalizedConnections: [
         {

@@ -37,9 +37,12 @@ export function captureUnassignedHyperGraphInput(
     },
   )
   const ports = graph.ports.map(
-    (
-      { region1, region2, d, ...port },
-    ): CapturedHyperGraphInput["ports"][number] => {
+    ({
+      region1,
+      region2,
+      d,
+      ...port
+    }): CapturedHyperGraphInput["ports"][number] => {
       if (region1 === undefined || region2 === undefined) {
         throw new Error("The source graph fixture requires both port regions")
       }
@@ -47,14 +50,19 @@ export function captureUnassignedHyperGraphInput(
         ...port,
         region1: region1.regionId,
         region2: region2.regionId,
-        d: { ...d, regions: d.regions.map((region): string => region.regionId) },
+        d: {
+          ...d,
+          regions: d.regions.map((region): string => region.regionId),
+        },
       }
     },
   )
   const capturedConnections = connections.map(
-    (
-      { startRegion, endRegion, ...connection },
-    ): CapturedHyperGraphInput["connections"][number] => ({
+    ({
+      startRegion,
+      endRegion,
+      ...connection
+    }): CapturedHyperGraphInput["connections"][number] => ({
       ...connection,
       startRegion: startRegion.regionId,
       endRegion: endRegion.regionId,

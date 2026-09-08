@@ -171,9 +171,7 @@ export class IntraNodeRouteSolver extends BaseSolver {
         },
       }
     }
-    let physicalConnectionTasks:
-      | PhysicalIntraNodeConnectionTask[]
-      | undefined
+    let physicalConnectionTasks: PhysicalIntraNodeConnectionTask[] | undefined
     if (
       this.physicalClearanceContext &&
       nodeWithPortPoints.portPointsInPairs !== undefined &&
@@ -558,9 +556,8 @@ export class IntraNodeRouteSolver extends BaseSolver {
   }
 
   private queueConnectionForPostrouteRepair(connectionName: string): boolean {
-    const originalTasks = this.originalPhysicalConnectionTasksByName.get(
-      connectionName,
-    )
+    const originalTasks =
+      this.originalPhysicalConnectionTasksByName.get(connectionName)
     if (originalTasks) {
       this.solvedRoutes = this.solvedRoutes.filter(
         (route): boolean => route.connectionName !== connectionName,

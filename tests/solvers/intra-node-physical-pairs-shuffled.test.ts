@@ -12,18 +12,16 @@ test("physical pair scheduling shuffles complete pairs without reconstructing a 
       hyperParameters: { SHUFFLE_SEED: seed },
     })
     expect(solver.totalConnections).toBe(2)
-    const scheduledPairs = solver.unsolvedConnections.map(
-      (task): string => {
-        expect(task.connectionName).toBe("paired-net")
-        expect(task.rootConnectionName).toBe("paired-root")
-        expect(task.points).toHaveLength(2)
-        expect(task.points[0]!.z).toBe(task.points[1]!.z)
-        return task.points
-          .map((point): string => `${point.x},${point.y},${point.z}`)
-          .sort()
-          .join("|")
-      },
-    )
+    const scheduledPairs = solver.unsolvedConnections.map((task): string => {
+      expect(task.connectionName).toBe("paired-net")
+      expect(task.rootConnectionName).toBe("paired-root")
+      expect(task.points).toHaveLength(2)
+      expect(task.points[0]!.z).toBe(task.points[1]!.z)
+      return task.points
+        .map((point): string => `${point.x},${point.y},${point.z}`)
+        .sort()
+        .join("|")
+    })
     const declaredPairs = pairs.map((pair): string =>
       pair
         .map((point): string => `${point.x},${point.y},${point.z}`)

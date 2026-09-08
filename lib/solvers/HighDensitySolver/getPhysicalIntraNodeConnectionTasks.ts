@@ -81,7 +81,7 @@ export function getPhysicalIntraNodeConnectionTasks({
     for (const identity of identities) {
       if (identity === canonicalNetId) continue
       const declaredNet = canonicalNetIdByConnectionName.get(identity)
-      const mappedNet = connMap
+      const mappedNet: string | undefined = connMap
         ? Object.hasOwn(connMap.netMap, identity)
           ? identity
           : connMap.getNetConnectedToId(identity)
@@ -135,7 +135,9 @@ export function getPhysicalIntraNodeConnectionTasks({
   }
   for (const sourceKey of sourcePortKeys) {
     if (!coveredPortKeys.has(sourceKey)) {
-      throw new Error(`${prefix} leave a node port without a routing obligation`)
+      throw new Error(
+        `${prefix} leave a node port without a routing obligation`,
+      )
     }
   }
   return tasks

@@ -50,18 +50,20 @@ test("physical intra-node cache separates pair obligations and rejects old name-
     {
       ...oldData,
       cacheSchemaVersion: 8,
-      normalizedConnections: expectedTasks.map((task): NormalizedTask => ({
-        connectionName: task.connectionName,
-        rootConnectionName: task.rootConnectionName,
-        points: task.points.map(
-          ({ x, y, z }): NormalizedTask["points"][number] => ({
-            connectionName: task.connectionName,
-            x,
-            y,
-            z,
-          }),
-        ),
-      })),
+      normalizedConnections: expectedTasks.map(
+        (task): NormalizedTask => ({
+          connectionName: task.connectionName,
+          rootConnectionName: task.rootConnectionName,
+          points: task.points.map(
+            ({ x, y, z }): NormalizedTask["points"][number] => ({
+              connectionName: task.connectionName,
+              x,
+              y,
+              z,
+            }),
+          ),
+        }),
+      ),
       normalizedConnMap: expectedTasks.map(
         ({ connectionName }): NormalizedNet => ({
           connectionName,

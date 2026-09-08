@@ -100,9 +100,9 @@ test("physical pair inputs fail with named endpoint, coverage and electrical-ide
         break
     }
     const before = structuredClone(node)
-    expect((): IntraNodeRouteSolver => new IntraNodeRouteSolver(params)).toThrow(
-      `Physical intra-node pairs for "physical-pair-node" ${reason}`,
-    )
+    expect(
+      (): IntraNodeRouteSolver => new IntraNodeRouteSolver(params),
+    ).toThrow(`Physical intra-node pairs for "physical-pair-node" ${reason}`)
     expect(node).toEqual(before)
   }
 })
