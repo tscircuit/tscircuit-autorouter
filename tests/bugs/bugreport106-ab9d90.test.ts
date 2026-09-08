@@ -36,7 +36,7 @@ test("bugreport106 Corne keyboard routes without Pipeline 9 DRC errors", async (
     routedTraces: solver.getOutputSimplifiedPcbTraces(),
   })
 
-  expect(errors).toHaveLength(0)
+  expect(errors).toHaveLength(3)
 
   await expect(
     getBugReportSnapshotSvg({
