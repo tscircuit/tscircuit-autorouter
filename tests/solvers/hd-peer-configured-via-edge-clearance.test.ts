@@ -16,25 +16,27 @@ test("physical via edges and future traces use their configured gap independentl
         traceToTraceClearance: viaToTraceClearance === 0 ? 0.4 : 0,
         viaToTraceClearance,
       }
-      const solver = new SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost({
-        ...options,
-        traceThickness: 0.15,
-        viaDiameter: 0.3,
-        obstacleMargin: 0.15,
-        physicalClearanceContext,
-        obstacleRoutes: [
-          {
-            connectionName: "foreign-net",
-            traceThickness: 0.15,
-            viaDiameter: 0.3,
-            route: [
-              { x: 0, y: 0.3 / q, z: 0 },
-              { x: 0, y: 0.3 / q, z: 1 },
-            ],
-            vias: [{ x: 0, y: 0.3 / q }],
-          },
-        ],
-      })
+      const solver = new SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost(
+        {
+          ...options,
+          traceThickness: 0.15,
+          viaDiameter: 0.3,
+          obstacleMargin: 0.15,
+          physicalClearanceContext,
+          obstacleRoutes: [
+            {
+              connectionName: "foreign-net",
+              traceThickness: 0.15,
+              viaDiameter: 0.3,
+              route: [
+                { x: 0, y: 0.3 / q, z: 0 },
+                { x: 0, y: 0.3 / q, z: 1 },
+              ],
+              vias: [{ x: 0, y: 0.3 / q }],
+            },
+          ],
+        },
+      )
       const edge = createHdPeerNode(
         0.4 / q,
         0,

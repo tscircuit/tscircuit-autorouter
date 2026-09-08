@@ -181,8 +181,7 @@ export class CachedIntraNodeRouteSolver
                 physicalClearanceContext.viaClearanceIndex.cacheFingerprint,
               traceToTraceClearance:
                 physicalClearanceContext.traceToTraceClearance,
-              viaToTraceClearance:
-                physicalClearanceContext.viaToTraceClearance,
+              viaToTraceClearance: physicalClearanceContext.viaToTraceClearance,
               solveToPhysicalTransform:
                 physicalClearanceContext.solveToPhysicalTransform,
               canonicalNetIds: [

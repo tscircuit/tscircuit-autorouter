@@ -37,9 +37,7 @@ test("expanded peer point queries use physical widths and physical explicit marg
   const explicitMarginPoint = createHdPeerNode(0, 0.85)
   expect(solver.isNodeTooCloseToObstacle(explicitMarginPoint, 0)).toBeFalse()
   expect(solver.isNodeTooCloseToObstacle(explicitMarginPoint, 0.025)).toBeTrue()
-  expect(
-    solver.isNodeTooCloseToObstacle(createHdPeerNode(0, 1.6)),
-  ).toBeFalse()
+  expect(solver.isNodeTooCloseToObstacle(createHdPeerNode(0, 1.6))).toBeFalse()
   expect(
     solver.isNodeTooCloseToObstacle(createHdPeerNode(0, 0.8, 1)),
   ).toBeFalse()

@@ -6,6 +6,7 @@ import type {
 } from "lib/data-structures/FixedCopperClearanceIndex"
 import { Obstacle } from "lib/types"
 import { NodeWithPortPoints } from "lib/types/high-density-types"
+import { getObstacleZLayersOnBoard } from "lib/utils/create-srj-with-board-valid-obstacle-layers"
 import { getBoundsFromNodeWithPortPoints } from "lib/utils/getBoundsFromNodeWithPortPoints"
 import { InputNodeWithPortPoints } from "../PortPointPathingSolver/PortPointPathingSolver"
 import {
@@ -382,10 +383,6 @@ export class UniformPortDistributionSolver extends BaseSolver {
         `Uniform edge "${sharedEdge.ownerPairKey}" has no port family`,
       )
     }
-    const fixedEdge = shouldIgnoreSharedEdge({
-      sharedEdge,
-      obstacles: this.input.obstacles,
-    })
     const portsByZ = new Map<number, PortPointWithOwnerPair[]>()
     for (const portPoint of family) {
       const portsOnZ = portsByZ.get(portPoint.z)
@@ -394,6 +391,15 @@ export class UniformPortDistributionSolver extends BaseSolver {
     }
     const redistributed: PortPointWithOwnerPair[] = []
     for (const z of [...portsByZ.keys()].sort((a, b): number => a - b)) {
+      // A pad boundary only constrains ports on its actual copper layers.
+      // The legacy all-layer boundary test can otherwise freeze a legal
+      // opposite-layer family before physical spacing has been assigned.
+      const fixedEdge = shouldIgnoreSharedEdge({
+        sharedEdge,
+        obstacles: this.input.obstacles.filter((obstacle): boolean =>
+          getObstacleZLayersOnBoard(obstacle, context.layerCount).includes(z),
+        ),
+      })
       const ports = portsByZ.get(z)!
       ports.sort((a, b): number =>
         sharedEdge.orientation === "horizontal" ? a.x - b.x : a.y - b.y,

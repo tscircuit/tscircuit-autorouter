@@ -154,8 +154,7 @@ export class CachedPortfolioSingleIntraNodeSolver
                 physicalClearanceContext.viaClearanceIndex.cacheFingerprint,
               traceToTraceClearance:
                 physicalClearanceContext.traceToTraceClearance,
-              viaToTraceClearance:
-                physicalClearanceContext.viaToTraceClearance,
+              viaToTraceClearance: physicalClearanceContext.viaToTraceClearance,
               solveToPhysicalTransform:
                 physicalClearanceContext.solveToPhysicalTransform,
               canonicalNetIds: [

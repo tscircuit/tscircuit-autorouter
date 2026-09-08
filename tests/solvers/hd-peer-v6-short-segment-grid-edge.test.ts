@@ -10,34 +10,36 @@ test("physical V6 grid edges reject short peer copper between clear endpoints", 
   for (const scale of [undefined, 1, 0.25, 2]) {
     const q = scale ?? 1
     for (const peerLayer of [0, 1]) {
-      const solver = new SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost({
-        ...createHdPeerClearanceOptions(scale),
-        bounds: {
-          minX: -4 / q,
-          maxX: 4 / q,
-          minY: -4 / q,
-          maxY: 4 / q,
-        },
-        A: { x: -0.4 / q, y: 0, z: 0 },
-        B: { x: 3 / q, y: 0, z: 0 },
-        traceThickness: 0.15,
-        viaDiameter: 0.3,
-        obstacleMargin: 0.15,
-        availableZ: [0],
-        minDistBetweenEnteringPoints: 0.8 / q,
-        obstacleRoutes: [
-          {
-            connectionName: "foreign-net",
-            traceThickness: 0.15,
-            viaDiameter: 0.3,
-            route: [
-              { x: -0.1 / q, y: 0.24 / q, z: peerLayer },
-              { x: 0.1 / q, y: 0.24 / q, z: peerLayer },
-            ],
-            vias: [],
+      const solver = new SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost(
+        {
+          ...createHdPeerClearanceOptions(scale),
+          bounds: {
+            minX: -4 / q,
+            maxX: 4 / q,
+            minY: -4 / q,
+            maxY: 4 / q,
           },
-        ],
-      })
+          A: { x: -0.4 / q, y: 0, z: 0 },
+          B: { x: 3 / q, y: 0, z: 0 },
+          traceThickness: 0.15,
+          viaDiameter: 0.3,
+          obstacleMargin: 0.15,
+          availableZ: [0],
+          minDistBetweenEnteringPoints: 0.8 / q,
+          obstacleRoutes: [
+            {
+              connectionName: "foreign-net",
+              traceThickness: 0.15,
+              viaDiameter: 0.3,
+              route: [
+                { x: -0.1 / q, y: 0.24 / q, z: peerLayer },
+                { x: 0.1 / q, y: 0.24 / q, z: peerLayer },
+              ],
+              vias: [],
+            },
+          ],
+        },
+      )
       const parent = createHdPeerNode(-0.4 / q, 0)
       const endpoint = createHdPeerNode(0.4 / q, 0, 0, parent)
       const query = solver.getPlanarObstacleQuery(endpoint)
@@ -52,10 +54,12 @@ test("physical V6 grid edges reject short peer copper between clear endpoints", 
         blocked,
       )
       expect(
-        solver.getNeighbors(parent).some(
-          (node: Node): boolean =>
-            node.x === endpoint.x && node.y === endpoint.y && node.z === 0,
-        ),
+        solver
+          .getNeighbors(parent)
+          .some(
+            (node: Node): boolean =>
+              node.x === endpoint.x && node.y === endpoint.y && node.z === 0,
+          ),
       ).toBe(!blocked)
       if (blocked) {
         expect(query?.segmentIds).toEqual([0])

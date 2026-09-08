@@ -38,9 +38,7 @@ test("peer scaling leaves fixed-pad queries and emitted copper diameters physica
     const parent = createHdPeerNode(0.35 / q, 0)
     const nearPad = createHdPeerNode(0.35 / q, 0, 1, parent)
     expect(solver.isNodeTooCloseToObstacle(nearPad)).toBeFalse()
-    expect(
-      solver.isNodeTooCloseToObstacle(nearPad, undefined, true),
-    ).toBeTrue()
+    expect(solver.isNodeTooCloseToObstacle(nearPad, undefined, true)).toBeTrue()
     expect(
       solver.isNodeTooCloseToObstacle(
         createHdPeerNode(0.5 / q, 0, 1, createHdPeerNode(0.5 / q, 0)),

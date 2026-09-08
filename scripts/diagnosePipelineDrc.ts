@@ -262,7 +262,12 @@ const captureTinyFailure = (
       ]),
       preparedFixedCopper: selectDiagnosticOwnFields(
         getDiagnosticOwnValue(pipeline, "fixedPadClearance"),
-        ["rectangles", "layerCount", "traceToPadClearance", "viaToPadClearance"],
+        [
+          "rectangles",
+          "layerCount",
+          "traceToPadClearance",
+          "viaToPadClearance",
+        ],
       ),
       nativeInstances,
     },

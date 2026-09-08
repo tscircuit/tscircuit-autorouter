@@ -55,12 +55,10 @@ test("physical context rejects invalid transforms and rules and fails blocked ex
       Number.NaN,
       Number.POSITIVE_INFINITY,
       Number.NEGATIVE_INFINITY,
-    ].flatMap(
-      (clearance: number): SingleRoutePhysicalClearanceContext[] => [
-        { ...context, traceToTraceClearance: clearance },
-        { ...context, viaToTraceClearance: clearance },
-      ],
-    ),
+    ].flatMap((clearance: number): SingleRoutePhysicalClearanceContext[] => [
+      { ...context, traceToTraceClearance: clearance },
+      { ...context, viaToTraceClearance: clearance },
+    ]),
   ]
   for (const physicalClearanceContext of invalidContexts) {
     expect((): void => {

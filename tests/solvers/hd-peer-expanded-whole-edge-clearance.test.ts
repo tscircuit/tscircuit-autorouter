@@ -29,9 +29,7 @@ test("expanded whole-edge clearance includes an interior peer outside the old br
   expect(solver.isNodeTooCloseToObstacle(blocked)).toBeFalse()
   expect(query?.segmentIds).toEqual([0])
   expect(solver.doesPathToParentIntersectObstacle(blocked)).toBeTrue()
-  expect(
-    solver.doesPathToParentIntersectObstacle(blocked, query),
-  ).toBeTrue()
+  expect(solver.doesPathToParentIntersectObstacle(blocked, query)).toBeTrue()
   const clear = createHdPeerNode(2, -0.8, 0, createHdPeerNode(-2, -0.8))
   expect(solver.doesPathToParentIntersectObstacle(clear)).toBeFalse()
   expect(

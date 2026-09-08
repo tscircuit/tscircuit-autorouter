@@ -34,9 +34,9 @@ test("contraction scales peer thresholds down while unit scale retains legacy pr
     expect(solver.doesPathToParentIntersectObstacle(edge, query)).toBe(
       scale !== 2,
     )
-    expect(
-      solver.isNodeTooCloseToObstacle(edge, undefined, false, query),
-    ).toBe(scale !== 2)
+    expect(solver.isNodeTooCloseToObstacle(edge, undefined, false, query)).toBe(
+      scale !== 2,
+    )
     expect(solver.traceThickness).toBe(0.2)
     expect(solver.viaDiameter).toBe(0.6)
   }

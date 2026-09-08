@@ -54,10 +54,12 @@ test("physical grid edges check peer vias even without a peer trace index", (): 
         scale !== undefined,
       )
       expect(
-        solver.getNeighbors(parent).some(
-          (node: Node): boolean =>
-            node.x === endpoint.x && node.y === endpoint.y && node.z === z,
-        ),
+        solver
+          .getNeighbors(parent)
+          .some(
+            (node: Node): boolean =>
+              node.x === endpoint.x && node.y === endpoint.y && node.z === z,
+          ),
       ).toBe(scale === undefined)
       const clear = createHdPeerNode(
         -3.2 / q,

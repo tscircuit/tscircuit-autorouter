@@ -50,10 +50,12 @@ test("physical terminal departure preserves an exact legal copper gap despite a 
       ),
     ).toBeFalse()
     expect(
-      solver.getNeighbors(parent).some(
-        (node: Node): boolean =>
-          node.x === endpoint.x && node.y === endpoint.y && node.z === 0,
-      ),
+      solver
+        .getNeighbors(parent)
+        .some(
+          (node: Node): boolean =>
+            node.x === endpoint.x && node.y === endpoint.y && node.z === 0,
+        ),
     ).toBeTrue()
   }
 })

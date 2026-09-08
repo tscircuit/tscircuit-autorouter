@@ -158,7 +158,7 @@ test("portfolio physical domain rejects schemas 3, 4 and 5 and accepts schema 6 
     expect(cache.cacheMisses).toBe(1)
     expect(cache.cacheHits).toBe(1)
     expect(cache.getAllCacheKeys().sort()).toEqual(
-      [legacyKey, previousKey, currentKey].sort(),
+      [legacyKey, previousKey, previousPhysicalKey, currentKey].sort(),
     )
   } finally {
     if (memoryCacheDescriptor) {
