@@ -2,6 +2,7 @@ import { mkdir, readFile, writeFile } from "node:fs/promises"
 import path from "node:path"
 import { isDeepStrictEqual } from "node:util"
 import { Repair04Solver } from "@tscircuit/repair04"
+import type { DrcEvaluator } from "high-density-repair03/lib"
 import { AutoroutingPipelineSolver7_MultiGraph } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/AutoroutingPipelineSolver7_MultiGraph"
 import { convertPipeline7HdRoutesToSimplifiedPcbTraces } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/convertPipeline7HdRoutesToSimplifiedPcbTraces"
 import { assignUniquePcbTraceIdsToNewTraces } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/assignUniquePcbTraceIdsToNewTraces"
@@ -496,6 +497,31 @@ type Repair04InvalidOutputCapture = {
   stats: Repair04Solver["stats"]
 }
 
+type JointEvaluatorName = "drcEvaluator" | "cachedReferenceDrcEvaluator"
+
+type JointEvaluatorInvalidInputCapture = {
+  phase: string
+  evaluatorName: JointEvaluatorName
+  callSequence: number
+  evaluatorCallSequence: number
+  callStack: string | null
+  inputField: "routes" | "hdRoutes"
+  inputRouteCount: number
+  inputRouteIndex: number
+  route: Repair04Route
+  invalidTransitions: InvalidRepair04Transition[]
+}
+
+type JointEvaluatorDiagnostic = {
+  hooks: {
+    evaluatorName: JointEvaluatorName
+    status: "installed" | "unavailable-writable-own-function" | "install-error"
+  }[]
+  callCount: number
+  observations: JointEvaluatorInvalidInputCapture[]
+  failure: { phase: string; message: string; stack: string | null } | null
+}
+
 // Match the pinned Repair04 merge invariant, not a routing clearance tolerance.
 const REPAIR04_REGION_EPSILON = 1e-8
 
@@ -537,6 +563,126 @@ const getInvalidRepair04Transitions = (
     })
   }
   return invalidTransitions
+}
+
+const installJointEvaluatorInputCapture = (
+  pipeline: AutoroutingPipelineSolver9_PreloadedTraceGraph,
+  diagnostic: JointEvaluatorDiagnostic,
+): (() => void) => {
+  const joint = pipeline.pipeline9JointDrcRepairSolver!
+  const originals: {
+    evaluatorName: JointEvaluatorName
+    descriptor: PropertyDescriptor
+  }[] = []
+  for (const evaluatorName of [
+    "drcEvaluator",
+    "cachedReferenceDrcEvaluator",
+  ] as const) {
+    const descriptor = Object.getOwnPropertyDescriptor(joint, evaluatorName)
+    if (
+      !descriptor ||
+      !("value" in descriptor) ||
+      descriptor.writable !== true ||
+      typeof descriptor.value !== "function"
+    ) {
+      diagnostic.hooks.push({
+        evaluatorName,
+        status: "unavailable-writable-own-function",
+      })
+      continue
+    }
+    const original = descriptor.value as DrcEvaluator
+    let evaluatorCallSequence = 0
+    const observedEvaluator = function (
+      this: unknown,
+      ...args: Parameters<DrcEvaluator>
+    ): ReturnType<DrcEvaluator> {
+      diagnostic.callCount++
+      evaluatorCallSequence++
+      try {
+        // Inspect data descriptors only: a diagnostic must not invoke a lazy
+        // input getter before the original evaluator reads its arguments.
+        const input = args[0]
+        const routesDescriptor = Object.getOwnPropertyDescriptor(
+          input,
+          "routes",
+        )
+        let inputField: "routes" | "hdRoutes" | undefined
+        let routes: unknown
+        if (routesDescriptor && "value" in routesDescriptor) {
+          if (
+            routesDescriptor.value !== undefined &&
+            routesDescriptor.value !== null
+          ) {
+            inputField = "routes"
+            routes = routesDescriptor.value
+          }
+        }
+        if (
+          inputField === undefined &&
+          (!routesDescriptor || "value" in routesDescriptor)
+        ) {
+          const hdRoutesDescriptor = Object.getOwnPropertyDescriptor(
+            input,
+            "hdRoutes",
+          )
+          if (hdRoutesDescriptor && "value" in hdRoutesDescriptor) {
+            inputField = "hdRoutes"
+            routes = hdRoutesDescriptor.value
+          }
+        }
+        if (inputField !== undefined && Array.isArray(routes)) {
+          const observedRoutes = routes as Repair04Route[]
+          for (const [inputRouteIndex, route] of observedRoutes.entries()) {
+            const invalidTransitions: InvalidRepair04Transition[] = []
+            for (const transition of getInvalidRepair04Transitions(route)) {
+              if (transition.exceedsColocationTolerance) {
+                invalidTransitions.push(transition)
+              }
+            }
+            if (invalidTransitions.length === 0) continue
+            diagnostic.observations.push({
+              phase: pipeline.getCurrentPhase(),
+              evaluatorName,
+              callSequence: diagnostic.callCount,
+              evaluatorCallSequence,
+              callStack:
+                new Error("Joint evaluator input observation").stack ?? null,
+              inputField,
+              inputRouteCount: observedRoutes.length,
+              inputRouteIndex,
+              route: structuredClone(route),
+              invalidTransitions: structuredClone(invalidTransitions),
+            })
+          }
+        }
+      } catch (captureError) {
+        // Observation failures must not change the evaluator call or its error.
+        console.error("Joint evaluator input capture failed", captureError)
+      }
+      return original.apply(this, args)
+    }
+    try {
+      Object.defineProperty(joint, evaluatorName, {
+        ...descriptor,
+        value: observedEvaluator,
+      })
+      originals.push({ evaluatorName, descriptor })
+      diagnostic.hooks.push({ evaluatorName, status: "installed" })
+    } catch (captureError) {
+      diagnostic.hooks.push({ evaluatorName, status: "install-error" })
+      console.error("Joint evaluator capture hook failed", captureError)
+    }
+  }
+  return (): void => {
+    for (const { evaluatorName, descriptor } of originals) {
+      try {
+        Object.defineProperty(joint, evaluatorName, descriptor)
+      } catch (captureError) {
+        console.error("Joint evaluator capture restore failed", captureError)
+      }
+    }
+  }
 }
 
 const NODE_PHASES = new Set([
@@ -739,6 +885,13 @@ const diagnosePipelineDrc = async (): Promise<void> => {
   const growthByNode = new Map<string, GrowShrinkHighDensityIntraNodeSolver>()
   let mergedCapacityNodes: CapacityNodeCapture[] | null = null
   const repair04InvalidOutputs: Repair04InvalidOutputCapture[] = []
+  const jointEvaluatorDiagnostic: JointEvaluatorDiagnostic = {
+    hooks: [],
+    callCount: 0,
+    observations: [],
+    failure: null,
+  }
+  let restoreJointEvaluators: (() => void) | undefined
   let uniformFailureDiagnostic: UniformFailureDiagnostic | undefined
   let tinyFailureDiagnostic: TinyFailureDiagnostic | undefined
   let previousPathingWrapper: unknown
@@ -799,6 +952,19 @@ const diagnosePipelineDrc = async (): Promise<void> => {
   try {
     while (!pipeline.solved && !pipeline.failed) {
       const phase = pipeline.getCurrentPhase()
+      if (
+        phase === "pipeline9JointDrcRepairSolver" &&
+        pipeline instanceof AutoroutingPipelineSolver9_PreloadedTraceGraph &&
+        pipeline.pipeline9JointDrcRepairSolver &&
+        restoreJointEvaluators === undefined
+      ) {
+        // Pipeline construction and advancement occur on separate normal
+        // steps, so these instance hooks are installed before Joint advances.
+        restoreJointEvaluators = installJointEvaluatorInputCapture(
+          pipeline,
+          jointEvaluatorDiagnostic,
+        )
+      }
       if (phase === "portPointPathingSolver") {
         // Retain references only. Copy no topology or search state while routing.
         previousPathingWrapper = pipeline.portPointPathingSolver
@@ -828,6 +994,13 @@ const diagnosePipelineDrc = async (): Promise<void> => {
       try {
         pipeline.step()
       } catch (error) {
+        if (pipeline.getCurrentPhase() === "pipeline9JointDrcRepairSolver") {
+          jointEvaluatorDiagnostic.failure = {
+            phase: pipeline.getCurrentPhase(),
+            message: error instanceof Error ? error.message : String(error),
+            stack: error instanceof Error ? (error.stack ?? null) : null,
+          }
+        }
         if (
           phase === "portPointPathingSolver" ||
           pipeline.getCurrentPhase() === "portPointPathingSolver"
@@ -1017,6 +1190,47 @@ const diagnosePipelineDrc = async (): Promise<void> => {
     }
   } finally {
     Repair04Solver.prototype.getOutput = originalRepair04GetOutput
+    restoreJointEvaluators?.()
+    if (
+      pipeline.failed &&
+      pipeline.getCurrentPhase() === "pipeline9JointDrcRepairSolver" &&
+      jointEvaluatorDiagnostic.failure === null
+    ) {
+      jointEvaluatorDiagnostic.failure = {
+        phase: pipeline.getCurrentPhase(),
+        message: String(pipeline.error),
+        stack: null,
+      }
+    }
+    if (
+      jointEvaluatorDiagnostic.failure ||
+      jointEvaluatorDiagnostic.observations.length > 0
+    ) {
+      try {
+        await writeFile(
+          path.join(outputDir, "joint-evaluator-invalid-input.json"),
+          JSON.stringify({
+            diagnostic: "joint-evaluator-invalid-input",
+            dataset: datasetArg,
+            sample,
+            pipeline: pipelineArg,
+            ...jointEvaluatorDiagnostic,
+            limitations: [
+              "An evaluator input may be a rejected candidate; observation does not establish acceptance.",
+              "Input route indexes address the observed evaluator array, not an inferred source-board mapping.",
+              "Call stacks identify observed callers; stack-local extraction routes and accepted region counts are not retained by this hook.",
+              "Constructor-captured callback references are not replaced; only calls through the observed Joint instance fields are intercepted.",
+              "Only noncolocated ordinary layer transitions are captured; explicit through-obstacle transitions are excluded.",
+            ],
+          }),
+        )
+      } catch (artifactError) {
+        console.error(
+          "Joint evaluator capture artifact write failed",
+          artifactError,
+        )
+      }
+    }
     if (tinyFailureDiagnostic) {
       try {
         await writeFile(

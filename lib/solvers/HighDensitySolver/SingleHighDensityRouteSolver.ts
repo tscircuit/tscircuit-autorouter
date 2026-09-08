@@ -456,9 +456,7 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     // Only planar defaults use the physical copper rules. Explicit margins and
     // every via-candidate policy keep their existing interpretation.
     const physicalPointContext =
-      !isVia && margin === undefined
-        ? this.physicalClearanceContext
-        : undefined
+      !isVia && margin === undefined ? this.physicalClearanceContext : undefined
     margin ??= this.obstacleMargin
 
     if (

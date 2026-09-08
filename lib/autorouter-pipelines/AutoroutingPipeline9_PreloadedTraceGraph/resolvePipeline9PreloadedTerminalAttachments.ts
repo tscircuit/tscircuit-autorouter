@@ -76,9 +76,7 @@ const getUniqueExistingAttachment = (params: {
       const endpoint = side === "start" ? trace.route[0] : trace.route.at(-1)
       if (endpoint?.route_type !== "wire") continue
       const endpointPcbPortId =
-        side === "start"
-          ? endpoint.start_pcb_port_id
-          : endpoint.end_pcb_port_id
+        side === "start" ? endpoint.start_pcb_port_id : endpoint.end_pcb_port_id
       if (
         (endpointPcbPortId !== undefined &&
           endpointPcbPortId !== params.pcbPortId) ||
@@ -153,8 +151,9 @@ export const resolvePipeline9PreloadedTerminalAttachments = (params: {
       ) {
         const z = mapLayerNameToZ(point.layer, originalSrj.layerCount)
         const originalPoints = new Map<string, SingleLayerConnectionPoint>()
-        for (const originalPoint of
-          originalPointsByPcbPortId.get(point.pcb_port_id) ?? []) {
+        for (const originalPoint of originalPointsByPcbPortId.get(
+          point.pcb_port_id,
+        ) ?? []) {
           if (
             mapLayerNameToZ(originalPoint.layer, originalSrj.layerCount) === z
           ) {
