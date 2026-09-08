@@ -6,6 +6,7 @@ import { NodeDimensionSubdivisionSolver } from "lib/solvers/NodeDimensionSubdivi
 import { buildHyperGraph } from "lib/solvers/PortPointPathingSolver/hgportpointpathingsolver"
 import { TinyHypergraphPortPointPathingSolver } from "lib/solvers/PortPointPathingSolver/tinyhypergraph/TinyHypergraphPortPointPathingSolver"
 import type { TinyHyperGraphSolver } from "tiny-hypergraph/lib/index"
+import { captureUnassignedHyperGraphInput } from "../fixtures/tinygraph/captureUnassignedHyperGraphInput"
 import { createPhysicalNodeCutNativeInput } from "../fixtures/tinygraph/createPhysicalNodeCutNativeInput"
 import { createPhysicalWrapperProblem } from "../fixtures/tinygraph/createPhysicalWrapperProblem"
 
@@ -50,8 +51,10 @@ test("eight same-net branches can share the seven original finite-cut sites with
     connectivityMap: input.connectivityMap,
     layerCount: input.context.layerCount,
   })
-  const originalGraph = structuredClone(graph)
-  const originalGraphConnections = structuredClone(connections)
+  const originalGraphInput = captureUnassignedHyperGraphInput(
+    graph,
+    connections,
+  )
   const solver = new TinyHypergraphPortPointPathingSolver({
     ...createPhysicalWrapperProblem(),
     graph,
@@ -114,6 +117,7 @@ test("eight same-net branches can share the seven original finite-cut sites with
   expect(input.nodes).toEqual(originalNodes)
   expect(input.connections).toEqual(originalConnections)
   expect(input.context).toEqual(originalContext)
-  expect(graph).toEqual(originalGraph)
-  expect(connections).toEqual(originalGraphConnections)
+  expect(captureUnassignedHyperGraphInput(graph, connections)).toEqual(
+    originalGraphInput,
+  )
 })
