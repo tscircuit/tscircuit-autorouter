@@ -24,7 +24,7 @@ const cloneValue = <T>(value: T): T =>
 
 setupGlobalCaches()
 
-const INTRA_NODE_CACHE_SCHEMA_VERSION = 4
+const INTRA_NODE_CACHE_SCHEMA_VERSION = 5
 
 export class CachedIntraNodeRouteSolver
   extends IntraNodeRouteSolver
@@ -146,6 +146,7 @@ export class CachedIntraNodeRouteSolver
           ].sort(),
         }))
       : undefined
+    const physicalClearanceContext = this.physicalClearanceContext
 
     const keyData = {
       cacheSchemaVersion: INTRA_NODE_CACHE_SCHEMA_VERSION,
@@ -170,6 +171,42 @@ export class CachedIntraNodeRouteSolver
       viaDiameter: roundCoord(this.viaDiameter),
       obstacleMargin: roundCoord(this.obstacleMargin),
       normalizedConnMap,
+      ...(physicalClearanceContext === undefined
+        ? {}
+        : {
+            physicalClearance: {
+              traceIndex:
+                physicalClearanceContext.traceClearanceIndex.cacheFingerprint,
+              viaIndex:
+                physicalClearanceContext.viaClearanceIndex.cacheFingerprint,
+              solveToPhysicalTransform:
+                physicalClearanceContext.solveToPhysicalTransform,
+              canonicalNetIds: [
+                ...physicalClearanceContext.canonicalNetIdByConnectionName,
+              ].sort(([a], [b]) => a.localeCompare(b)),
+              layerCount: this.layerCount,
+              // Five-micrometer rounding is not a safe equivalence at a hard
+              // copper-clearance boundary. Keep every query input exact.
+              node: {
+                center: this.nodeWithPortPoints.center,
+                width: this.nodeWithPortPoints.width,
+                height: this.nodeWithPortPoints.height,
+                portPoints: this.nodeWithPortPoints.portPoints.map(
+                  ({ connectionName, x, y, z }) => ({
+                    connectionName,
+                    x,
+                    y,
+                    z,
+                  }),
+                ),
+              },
+              connections: this.initialUnsolvedConnections,
+              minDistBetweenEnteringPoints: this.minDistBetweenEnteringPoints,
+              traceWidth: this.traceWidth,
+              viaDiameter: this.viaDiameter,
+              obstacleMargin: this.obstacleMargin,
+            },
+          }),
     }
 
     const cacheKey = `intranode-solver:${objectHash(keyData, {

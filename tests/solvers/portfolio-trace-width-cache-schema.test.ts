@@ -6,7 +6,7 @@ import type {
 } from "lib/types/high-density-types"
 import objectHash from "object-hash"
 
-test("portfolio width correction rejects schema 3 and accepts schema 4 cache entries", async (): Promise<void> => {
+test("portfolio physical domain rejects schemas 3 and 4 and accepts schema 5 cache entries", async (): Promise<void> => {
   const memoryCacheDescriptor = Object.getOwnPropertyDescriptor(
     globalThis,
     "TSCIRCUIT_AUTOROUTER_IN_MEMORY_CACHE",
@@ -89,9 +89,13 @@ test("portfolio width correction rejects schema 3 and accepts schema 4 cache ent
       obstacleMargin: 0.1,
     }
     const legacyKey = `intranode:${objectHash(legacyKeyData)}`
-    const currentKey = `intranode:${objectHash({
+    const previousKey = `intranode:${objectHash({
       ...legacyKeyData,
       cacheSchemaVersion: 4,
+    })}`
+    const currentKey = `intranode:${objectHash({
+      ...legacyKeyData,
+      cacheSchemaVersion: 5,
     })}`
     const legacyRoute: HighDensityRoute = {
       connectionName: "signal",
@@ -107,9 +111,14 @@ test("portfolio width correction rejects schema 3 and accepts schema 4 cache ent
       success: true,
       solvedRoutes: [legacyRoute],
     })
+    cache.setCachedSolutionSync(previousKey, {
+      success: true,
+      solvedRoutes: [legacyRoute],
+    })
     const miss = new CachedPortfolioSingleIntraNodeSolver(params)
     expect(miss.computeCacheKeyAndTransform().cacheKey).toBe(currentKey)
     expect(currentKey).not.toBe(legacyKey)
+    expect(currentKey).not.toBe(previousKey)
     expect(miss.attemptToUseCacheSync()).toBeFalse()
     expect(miss.hasAttemptedToUseCache).toBeTrue()
     expect(miss.cacheHit).toBeFalse()
@@ -140,7 +149,7 @@ test("portfolio width correction rejects schema 3 and accepts schema 4 cache ent
     expect(cache.cacheMisses).toBe(1)
     expect(cache.cacheHits).toBe(1)
     expect(cache.getAllCacheKeys().sort()).toEqual(
-      [legacyKey, currentKey].sort(),
+      [legacyKey, previousKey, currentKey].sort(),
     )
   } finally {
     if (memoryCacheDescriptor) {

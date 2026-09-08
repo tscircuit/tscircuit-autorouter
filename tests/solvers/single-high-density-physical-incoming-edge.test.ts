@@ -50,16 +50,20 @@ test("a blocked physical incoming edge does not close a legal destination for an
   expect(solver.cellStep).toBe(0.2)
   expect(solver.isNodeTooCloseToObstacle(destination)).toBeFalse()
   expect(
-    solver.getNeighbors(blockedParent).some(
-      (node: Node): boolean =>
-        node.x === destination.x && node.y === destination.y && node.z === 0,
-    ),
+    solver
+      .getNeighbors(blockedParent)
+      .some(
+        (node: Node): boolean =>
+          node.x === destination.x && node.y === destination.y && node.z === 0,
+      ),
   ).toBeFalse()
   expect(solver.exploredNodes.has(solver.getNodeKey(destination))).toBeFalse()
   expect(
-    solver.getNeighbors(safeParent).some(
-      (node: Node): boolean =>
-        node.x === destination.x && node.y === destination.y && node.z === 0,
-    ),
+    solver
+      .getNeighbors(safeParent)
+      .some(
+        (node: Node): boolean =>
+          node.x === destination.x && node.y === destination.y && node.z === 0,
+      ),
   ).toBeTrue()
 })

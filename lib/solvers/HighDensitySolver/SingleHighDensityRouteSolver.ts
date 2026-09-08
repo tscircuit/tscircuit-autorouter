@@ -771,7 +771,11 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
           if (this.debugEnabled) {
             this.debug_nodePathToParentIntersectsObstacle.add(neighborKey)
           }
-          // This edge is blocked, but another parent may reach the same point.
+          // Physical edge clearance is parent-dependent. Keep the historical
+          // search policy unchanged for callers outside this input domain.
+          if (!this.physicalClearanceContext) {
+            this.exploredNodes.add(neighborKey)
+          }
           continue
         }
 

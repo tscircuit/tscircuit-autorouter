@@ -17,7 +17,10 @@ test("point net domains intersect actual overlapping copper owners in one spatia
     ...first,
     ownerNetIds: new Set(["net-b"]),
   }
-  for (const rectangles of [[first, second], [second, first]]) {
+  for (const rectangles of [
+    [first, second],
+    [second, first],
+  ]) {
     const index = new FixedCopperClearanceIndex({
       rectangles,
       layerCount: 2,

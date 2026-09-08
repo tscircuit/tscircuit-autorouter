@@ -1,3 +1,4 @@
+import type { FixedCopperRectangle } from "../../data-structures/FixedCopperClearanceIndex"
 import type {
   HighDensityIntraNodeRoute,
   NodeWithPortPoints,
@@ -6,8 +7,18 @@ import type { Obstacle } from "../../types/srj-types"
 
 export type Pipeline9NetworkedCacheSource = "cache" | "solver"
 
+/** Older implementations must reject rather than ignore physical-pad inputs. */
 export const PIPELINE9_NETWORKED_SOLVE_POLICY =
-  "ordinary_then_regional_without_fixed_copper_v1" as const
+  "ordinary_with_fixed_pad_clearance_then_regional_without_fixed_copper_v2" as const
+
+export type Pipeline9NetworkedFixedPadClearance = {
+  readonly rectangles: readonly (Omit<FixedCopperRectangle, "ownerNetIds"> & {
+    readonly ownerNetIds: readonly string[]
+  })[]
+  readonly layerCount: number
+  readonly traceToPadClearance: number
+  readonly viaToPadClearance: number
+}
 
 /**
  * Every solution-affecting input for Pipeline9's terminal single-node policy:
@@ -29,6 +40,8 @@ export type Pipeline9NetworkedHighDensityNodeInput = {
   regionalObstacles: Obstacle[]
   layerCount: number
   nodePf: number | null
+  /** Canonical fixed-pad geometry; requires a server implementing policy v2. */
+  fixedPadClearance?: Pipeline9NetworkedFixedPadClearance
 }
 
 export type Pipeline9NetworkedHighDensityNodeOutput =

@@ -54,7 +54,10 @@ test("physical routing anchors its grid at the exact start and checks exact-goal
       }),
     ).toBeTrue()
   }
-  expect(startSolver.candidates.peek()).toMatchObject({ ...start, parent: null })
+  expect(startSolver.candidates.peek()).toMatchObject({
+    ...start,
+    parent: null,
+  })
   expect(startSolver.initialNodeGridOffset).toEqual({ x: start.x, y: 0 })
 
   const goalIndex = new FixedCopperClearanceIndex({

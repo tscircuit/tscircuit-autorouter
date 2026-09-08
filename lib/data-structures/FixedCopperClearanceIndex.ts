@@ -207,9 +207,7 @@ export class FixedCopperClearanceIndex {
     this.assertPoint(query.start)
     this.assertPoint(query.end)
     if (query.start.z !== query.end.z) {
-      throw new Error(
-        "FixedCopperClearanceIndex requires a same-layer segment",
-      )
+      throw new Error("FixedCopperClearanceIndex requires a same-layer segment")
     }
     this.assertCanonicalNetId(query.canonicalNetId)
     const margin = this.getRequiredCenterDistance(query.copperDiameter)
@@ -247,10 +245,8 @@ export class FixedCopperClearanceIndex {
   }
 
   private assertCanonicalNetId(canonicalNetId: string): void {
-    if (
-      typeof canonicalNetId !== "string" ||
-      canonicalNetId.length === 0
-    ) {
+    // An absent electrical identity cannot grant a same-net copper exemption.
+    if (typeof canonicalNetId !== "string" || canonicalNetId.length === 0) {
       throw new Error("FixedCopperClearanceIndex requires a canonical net ID")
     }
   }

@@ -60,6 +60,23 @@ jobs:
           tests/solvers/fixed-copper-clearance-*.test.ts
           tests/solvers/single-high-density-physical-*.test.ts
           tests/caching/fixed-copper-clearance-fingerprint.test.ts
+          tests/caching/cached-intra-physical-clearance-*.test.ts
+          tests/caching/cached-portfolio-physical-clearance-*.test.ts
+          tests/solvers/grow-shrink-physical-transform.test.ts
+          tests/solvers/high-density-physical-board-layer-count.test.ts
+          tests/solvers/intra-node-physical-via-span.test.ts
+          tests/solvers/ordered-port-placement-*.test.ts
+          tests/solvers/pipeline9-canonical-port-net-ids.test.ts
+          tests/solvers/pipeline9-fixed-pad-clearance-*.test.ts
+          tests/solvers/pipeline9-fixed-pad-selection-invalid-sizes.test.ts
+          tests/solvers/pipeline9-networked-fixed-pad-*.test.ts
+          tests/features/pipeline9-networked-fixed-pad-routing-parity.test.ts
+          tests/solvers/pipeline9-physical-*.test.ts
+          tests/solvers/portfolio-physical-clearance-*.test.ts
+          tests/solvers/representable-fixed-copper-channel-*.test.ts
+          tests/solvers/tinygraph-fixed-copper-*.test.ts
+          tests/solvers/tinygraph-wrapper-physical-*.test.ts
+          tests/solvers/uniform-physical-clearance-*.test.ts
           --timeout 300000
 
       # Replaces `npm install -g @tscircuit/bun-test-plan && bun-test-plan`.

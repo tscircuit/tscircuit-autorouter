@@ -19,6 +19,8 @@ import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
 import { BaseSolver } from "../../solvers/BaseSolver"
 import { HighDensitySolver } from "../../solvers/HighDensitySolver/HighDensitySolver"
 import type { PreloadedHighDensityRoute } from "./convertPreloadedTraceToHdRoutes"
+import type { Pipeline9FixedPadClearance } from "./createPipeline9FixedPadClearance"
+import { createPipeline9NodePhysicalClearanceContext } from "./createPipeline9NodePhysicalClearanceContext"
 import {
   arePipeline9RoutesOnSameNet,
   doPipeline9RoutesHaveCopperConflict,
@@ -42,6 +44,7 @@ export type Pipeline9HighDensitySolverParams = {
   traceWidth: number
   obstacleMargin: number
   viaToPadClearance?: number
+  fixedPadClearance?: Pipeline9FixedPadClearance
   effort: number
   nodePfById?:
     | Map<CapacityMeshNodeId, number | null>
@@ -328,6 +331,7 @@ export type Pipeline9RegularNodeSolverParams = {
     | Record<string, number | null>
   obstacles: Obstacle[]
   layerCount: number
+  fixedPadClearance?: Pipeline9FixedPadClearance
 }
 
 /**
@@ -346,11 +350,24 @@ export const createPipeline9RegularNodeSolver = ({
   nodePfById,
   obstacles,
   layerCount,
-}: Pipeline9RegularNodeSolverParams): HighDensitySolver =>
-  new HighDensitySolver({
-    nodePortPoints: [
-      normalizePipeline9NodeRootConnectionNames(nodeWithPortPoints, connMap),
-    ],
+  fixedPadClearance,
+}: Pipeline9RegularNodeSolverParams): HighDensitySolver => {
+  const node = normalizePipeline9NodeRootConnectionNames(
+    nodeWithPortPoints,
+    connMap,
+  )
+  const physicalClearanceContext = fixedPadClearance
+    ? createPipeline9NodePhysicalClearanceContext({
+        node,
+        connMap,
+        fixedPadClearance,
+        traceWidth,
+        viaDiameter,
+        layerCount,
+      })
+    : undefined
+  return new HighDensitySolver({
+    nodePortPoints: [node],
     colorMap,
     connMap,
     viaDiameter,
@@ -360,11 +377,13 @@ export const createPipeline9RegularNodeSolver = ({
     nodePfById,
     obstacles,
     layerCount,
+    physicalClearanceContext,
     useGrowShrinkHighDensityIntraNodeSolver: true,
     preserveTerminalPcbPortIds: false,
     growShrinkFallbackToInvalidGeometryOnFailure: false,
     captureSearchDebug: false,
   })
+}
 
 /**
  * Uses Pipeline7's detailed solver for ordinary nodes and B01 where local
@@ -381,6 +400,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
   readonly traceWidth: number
   readonly obstacleMargin: number
   readonly viaToPadClearance?: number
+  readonly fixedPadClearance?: Pipeline9FixedPadClearance
   readonly effort: number
   readonly nodePfById: Map<CapacityMeshNodeId, number | null>
   readonly preserveTerminalPcbPortIds: boolean
@@ -414,6 +434,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     this.traceWidth = params.traceWidth
     this.obstacleMargin = params.obstacleMargin
     this.viaToPadClearance = params.viaToPadClearance
+    this.fixedPadClearance = params.fixedPadClearance
     this.effort = params.effort
     this.nodePfById =
       params.nodePfById instanceof Map
@@ -490,6 +511,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       nodePfById: this.nodePfById,
       obstacles: this.obstacles,
       layerCount: this.layerCount,
+      fixedPadClearance: this.fixedPadClearance,
     })
     this.stats.regularNodeCount = Number(this.stats.regularNodeCount ?? 0) + 1
   }

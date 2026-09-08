@@ -118,6 +118,32 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
     super()
     this.constructorParams = params
     this.nodeWithPortPoints = params.nodeWithPortPoints
+    if (params.physicalClearanceContext) {
+      const context = params.physicalClearanceContext
+      const { center, scale } = context.solveToPhysicalTransform
+      if (
+        !Number.isFinite(center.x) ||
+        !Number.isFinite(center.y) ||
+        center.x !== this.nodeWithPortPoints.center.x ||
+        center.y !== this.nodeWithPortPoints.center.y ||
+        !Number.isFinite(scale) ||
+        scale <= 0
+      ) {
+        throw new Error(
+          `GrowShrinkHighDensityIntraNodeSolver node "${this.nodeWithPortPoints.capacityMeshNodeId}" requires a finite node-centered physical clearance transform`,
+        )
+      }
+      this.constructorParams = {
+        ...params,
+        physicalClearanceContext: {
+          ...context,
+          canonicalNetIdByConnectionName: new Map(
+            context.canonicalNetIdByConnectionName,
+          ),
+          solveToPhysicalTransform: { center: { ...center }, scale },
+        },
+      }
+    }
     this.maxGrowthAttempts =
       params.maxGrowthAttempts ?? DEFAULT_MAX_GROWTH_ATTEMPTS
     this.MAX_ITERATIONS =
@@ -149,11 +175,34 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
     return this.constructorParams
   }
 
-  private createActiveSubSolver() {
-    const { growShrinkSolutionValidator: _, ...portfolioParams } =
-      this.constructorParams
+  private createActiveSubSolver(): void {
+    const {
+      growShrinkSolutionValidator: _,
+      physicalClearanceContext,
+      ...portfolioParams
+    } = this.constructorParams
+    const physicalScale = physicalClearanceContext
+      ? physicalClearanceContext.solveToPhysicalTransform.scale / this.scaleFactor
+      : undefined
+    if (
+      physicalScale !== undefined &&
+      (!Number.isFinite(physicalScale) || physicalScale <= 0)
+    ) {
+      throw new Error(
+        `GrowShrinkHighDensityIntraNodeSolver node "${this.nodeWithPortPoints.capacityMeshNodeId}" cannot represent its physical clearance scale`,
+      )
+    }
     this.activeSubSolver = new PortfolioSingleIntraNodeSolver({
       ...portfolioParams,
+      physicalClearanceContext: physicalClearanceContext
+        ? {
+            ...physicalClearanceContext,
+            solveToPhysicalTransform: {
+              center: physicalClearanceContext.solveToPhysicalTransform.center,
+              scale: physicalScale!,
+            },
+          }
+        : undefined,
       nodeWithPortPoints: scaleNodeWithPortPoints(
         this.nodeWithPortPoints,
         this.scaleFactor,

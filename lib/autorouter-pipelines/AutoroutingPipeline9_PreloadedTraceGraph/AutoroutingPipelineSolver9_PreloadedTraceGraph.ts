@@ -68,6 +68,11 @@ import { TraceWidthSolver } from "../../solvers/TraceWidthSolver/TraceWidthSolve
 import { LengthMatchingPostProcessingSolver } from "../../solvers/length-matching-post-processing-solver"
 import { applyFixedRouteReplacementsToPreloadedTraces } from "./applyFixedRouteReplacementsToPreloadedTraces"
 import { assignUniquePcbTraceIdsToNewTraces } from "./assignUniquePcbTraceIdsToNewTraces"
+import {
+  createPipeline9FixedPadClearance,
+  type Pipeline9FixedPadClearance,
+} from "./createPipeline9FixedPadClearance"
+import { getPipeline9CanonicalPortNetIds } from "./getPipeline9CanonicalPortNetIds"
 import { getTerminalLayerIndicesByPcbPortId } from "./getTerminalLayerIndicesByPcbPortId"
 import { getPipeline9NetByConnectionName } from "./getPipeline9NetByConnectionName"
 import {
@@ -299,6 +304,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
   /** Available segment points after non-component cramped points are filtered. */
   sharedEdgeSegmentsWithNecessaryCrampedPortPoints?: SharedEdgeSegment[]
   highDensityNodePortPoints?: NodeWithPortPoints[]
+  private fixedPadClearance?: Pipeline9FixedPadClearance
 
   cacheProvider: CacheProvider | null = null
   pipelineDef = [
@@ -528,6 +534,10 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             effort: cms.effort,
             preserveTerminalPcbPortIds: true,
             minViaPadDiameter: cms.viaDiameter,
+            physicalClearance: {
+              clearanceIndex: cms.getFixedPadClearance().traceClearanceIndex,
+              traceWidth: cms.minTraceWidth,
+            },
             flags: {
               FORCE_CENTER_FIRST: true,
               RIPPING_ENABLED: true,
@@ -561,18 +571,32 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     definePipelineStep(
       "uniformPortDistributionSolver",
       UniformPortDistributionSolver,
-      (cms) => [
-        {
-          nodeWithPortPoints:
-            cms.portPointPathingSolver?.getOutput().nodesWithPortPoints ?? [],
-          inputNodesWithPortPoints:
-            cms.portPointPathingSolver?.getOutput().inputNodeWithPortPoints ??
-            [],
-          minTraceWidth: cms.minTraceWidth,
-          obstacles: cms.srj.obstacles,
-          layerCount: cms.srj.layerCount,
-        },
-      ],
+      (cms) => {
+        if (!cms.portPointPathingSolver?.solved) {
+          throw new Error("Pipeline9 port distribution requires solved port pathing")
+        }
+        const output = cms.portPointPathingSolver.getOutput()
+        const clearance = cms.getFixedPadClearance()
+        return [
+          {
+            nodeWithPortPoints: output.nodesWithPortPoints,
+            inputNodesWithPortPoints: output.inputNodeWithPortPoints,
+            obstacles: cms.srj.obstacles,
+            physicalClearanceContext: {
+              rectangles: clearance.rectangles,
+              traceClearanceIndex: clearance.traceClearanceIndex,
+              layerCount: clearance.layerCount,
+              traceWidth: cms.minTraceWidth,
+              traceToPadClearance: clearance.traceToPadClearance,
+              traceToTraceClearance: 0.1,
+              canonicalNetIdByConnectionName: getPipeline9CanonicalPortNetIds(
+                output.nodesWithPortPoints,
+                cms.connMap,
+              ),
+            },
+          },
+        ]
+      },
     ),
     definePipelineStep(
       "highDensityRouteSolver",
@@ -620,6 +644,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             traceWidth: cms.minTraceWidth,
             obstacleMargin: cms.srj.defaultObstacleMargin ?? 0.15,
             viaToPadClearance: cms.srj.minViaEdgeToPadEdgeClearance,
+            fixedPadClearance: cms.getFixedPadClearance(),
             effort: cms.effort,
             includeBoardObstacles: true,
             nodePfById: new Map(
@@ -1005,6 +1030,21 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     this.startTimeOfPhase = {}
     this.endTimeOfPhase = {}
     this.timeSpentOnPhase = {}
+  }
+
+  private getFixedPadClearance(): Pipeline9FixedPadClearance {
+    if (!this.fixedPadClearance) {
+      // Match detailed path routing's 0.1 mm physical clearance default;
+      // capacity obstacle expansion is a different rule. Preserve explicit 0.
+      this.fixedPadClearance = createPipeline9FixedPadClearance({
+        obstacles: this.originalSrj.obstacles,
+        connMap: this.connMap,
+        layerCount: this.originalSrj.layerCount,
+        traceToPadClearance: this.originalSrj.minTraceToPadEdgeClearance ?? 0.1,
+        viaToPadClearance: this.originalSrj.minViaEdgeToPadEdgeClearance ?? 0.1,
+      })
+    }
+    return this.fixedPadClearance
   }
 
   private setSimpleRouteJson(srj: SimpleRouteJson) {

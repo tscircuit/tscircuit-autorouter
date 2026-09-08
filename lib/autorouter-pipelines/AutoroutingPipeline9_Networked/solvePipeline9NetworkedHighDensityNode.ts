@@ -10,6 +10,7 @@ import type {
   Pipeline9NetworkedHighDensityNodeOutput,
 } from "./pipeline9NetworkedTypes"
 import { PIPELINE9_NETWORKED_SOLVE_POLICY } from "./pipeline9NetworkedTypes"
+import { deserializePipeline9FixedPadClearance } from "./pipeline9NetworkedFixedPadClearance"
 
 type Pipeline9OrdinaryNodeResult =
   | {
@@ -44,6 +45,9 @@ const solvePipeline9OrdinaryHighDensityNode = ({
     },
     obstacles: input.obstacles,
     layerCount: input.layerCount,
+    fixedPadClearance: input.fixedPadClearance
+      ? deserializePipeline9FixedPadClearance(input.fixedPadClearance)
+      : undefined,
   })
   solver.solve()
   return solver.solved

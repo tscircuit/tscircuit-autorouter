@@ -48,18 +48,22 @@ test("center and search vias check their full physical layer span and actual dia
       for (const z of [0, 2]) {
         const parent: Node = { x: 0, y: 0, z, g: 0, h: 0, f: 0, parent: null }
         expect(
-          solver.getNeighbors(parent).some(
-            (node: Node): boolean => node.z !== z,
-          ),
+          solver
+            .getNeighbors(parent)
+            .some((node: Node): boolean => node.z !== z),
         ).toBeFalse()
         const clearParent: Node = { ...parent, x: 0.6 }
         expect(
-          solver.getNeighbors(clearParent).some(
-            (node: Node): boolean => node.z !== z,
-          ),
+          solver
+            .getNeighbors(clearParent)
+            .some((node: Node): boolean => node.z !== z),
         ).toBeTrue()
         const widthParent: Node = { ...parent, x: 0.3 }
-        const viaNode: Node = { ...widthParent, z: z === 0 ? 2 : 0, parent: widthParent }
+        const viaNode: Node = {
+          ...widthParent,
+          z: z === 0 ? 2 : 0,
+          parent: widthParent,
+        }
         expect(solver.isNodeTooCloseToObstacle(viaNode, undefined, true)).toBe(
           viaDiameter === 0.5,
         )

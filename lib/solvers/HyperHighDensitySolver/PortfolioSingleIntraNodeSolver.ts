@@ -28,6 +28,17 @@ import { repairDisconnectedSameRootPortPoints } from "./repairDisconnectedSameRo
 // derived exploration budget or exhausts all of its candidates.
 const ORDERING_SHUFFLE_SEEDS = Array.from({ length: 6 }, (_, seed) => seed)
 
+const UNSUPPORTED_PHYSICAL_CLEARANCE_SOLVER_PARAMETERS = [
+  "SINGLE_LAYER_NO_DIFFERENT_ROOT_INTERSECTIONS",
+  "HIGH_DENSITY_A01",
+  "HIGH_DENSITY_A03",
+  "CLOSED_FORM_TWO_TRACE_SAME_LAYER",
+  "CLOSED_FORM_TWO_TRACE_TRANSITION_CROSSING",
+  "CLOSED_FORM_SINGLE_TRANSITION",
+  "THROUGH_OBSTACLE",
+  "MULTI_HEAD_POLYLINE_SOLVER",
+] as const
+
 /** Coordinates a fitness-scheduled portfolio of intra-node routing solvers. */
 export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolver<
   | IntraNodeRouteSolver
@@ -109,6 +120,31 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     this.nodeWithPortPoints = opts.nodeWithPortPoints
     this.connMap = opts.connMap
     this.constructorParams = opts
+    if (opts.physicalClearanceContext) {
+      if (
+        opts.layerCount === undefined ||
+        !Number.isSafeInteger(opts.layerCount) ||
+        opts.layerCount <= 0
+      ) {
+        throw new Error(
+          "PortfolioSingleIntraNodeSolver requires the physical board layer count",
+        )
+      }
+      const context = opts.physicalClearanceContext
+      this.constructorParams = {
+        ...opts,
+        physicalClearanceContext: {
+          ...context,
+          canonicalNetIdByConnectionName: new Map(
+            context.canonicalNetIdByConnectionName,
+          ),
+          solveToPhysicalTransform: {
+            center: { ...context.solveToPhysicalTransform.center },
+            scale: context.solveToPhysicalTransform.scale,
+          },
+        },
+      }
+    }
     this.effort = opts.effort ?? 1
     this.MAX_ITERATIONS = 20_000_000 * this.effort
     this.GREEDY_MULTIPLIER = 5
@@ -116,6 +152,16 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
   }
 
   getCombinationDefs() {
+    if (this.constructorParams.physicalClearanceContext) {
+      // Only these existing native candidates consume the physical input.
+      // Select their domain before routing; do not reject and retry outputs.
+      return [
+        ["majorCombinations", "orderings6", "cellSizeFactor"],
+        ["noVias"],
+        ["orderings50"],
+        ["flipTraceAlignmentDirection", "orderings6"],
+      ]
+    }
     return [
       ["throughObstacle"],
       ["singleLayerNoDifferentRootIntersections"],
@@ -356,6 +402,12 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
   }
 
   override _step() {
+    if (this.constructorParams.physicalClearanceContext) {
+      // This input domain has a fixed candidate set. The legacy expansion
+      // adds an external solver that does not consume physical clearance.
+      super._step()
+      return
+    }
     if (!this.supervisedSolvers) this.initializeSolvers()
 
     if (
@@ -400,6 +452,17 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
   }
 
   generateSolver(hyperParameters: any): IntraNodeRouteSolver {
+    if (this.constructorParams.physicalClearanceContext) {
+      const unsupportedParameter =
+        UNSUPPORTED_PHYSICAL_CLEARANCE_SOLVER_PARAMETERS.find(
+          (parameter) => hyperParameters[parameter],
+        )
+      if (unsupportedParameter !== undefined) {
+        throw new Error(
+          `PortfolioSingleIntraNodeSolver physical clearance does not support ${unsupportedParameter}`,
+        )
+      }
+    }
     if (hyperParameters.SINGLE_LAYER_NO_DIFFERENT_ROOT_INTERSECTIONS) {
       if (
         !SingleLayerNoDifferentRootIntersectionsIntraNodeSolver.isApplicable(
