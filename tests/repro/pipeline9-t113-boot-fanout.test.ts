@@ -55,7 +55,6 @@ test("Pipeline9 routes real T113-S3 SD connections around a boot fanout", async 
       circuitJson,
       srj,
       traces: preloadedTraces,
-      routingCompleted: sdSolver.solved,
     }),
   ).toMatchSvgSnapshot(import.meta.path)
 })
