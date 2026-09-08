@@ -238,7 +238,10 @@ export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends Sing
       Object.is(previous.goalX, this.B.x) &&
       Object.is(previous.goalY, this.B.y) &&
       Object.is(previous.viaDiameter, this.viaDiameter) &&
-      Object.is(previous.futureProximity, this.FUTURE_CONNECTION_PROXIMITY_VD) &&
+      Object.is(
+        previous.futureProximity,
+        this.FUTURE_CONNECTION_PROXIMITY_VD,
+      ) &&
       Object.is(
         previous.futureTracePenaltyFactor,
         this.FUTURE_CONNECTION_PROX_TRACE_PENALTY_FACTOR,
@@ -264,7 +267,8 @@ export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends Sing
         goalY: this.B.y,
         viaDiameter: this.viaDiameter,
         futureProximity: this.FUTURE_CONNECTION_PROXIMITY_VD,
-        futureTracePenaltyFactor: this.FUTURE_CONNECTION_PROX_TRACE_PENALTY_FACTOR,
+        futureTracePenaltyFactor:
+          this.FUTURE_CONNECTION_PROX_TRACE_PENALTY_FACTOR,
         futureViaPenaltyFactor: this.FUTURE_CONNECTION_PROX_VIA_PENALTY_FACTOR,
         straightLineDistance: this.straightLineDistance,
         viaPenaltyDistance,
@@ -276,8 +280,10 @@ export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends Sing
     previous.goalY = this.B.y
     previous.viaDiameter = this.viaDiameter
     previous.futureProximity = this.FUTURE_CONNECTION_PROXIMITY_VD
-    previous.futureTracePenaltyFactor = this.FUTURE_CONNECTION_PROX_TRACE_PENALTY_FACTOR
-    previous.futureViaPenaltyFactor = this.FUTURE_CONNECTION_PROX_VIA_PENALTY_FACTOR
+    previous.futureTracePenaltyFactor =
+      this.FUTURE_CONNECTION_PROX_TRACE_PENALTY_FACTOR
+    previous.futureViaPenaltyFactor =
+      this.FUTURE_CONNECTION_PROX_VIA_PENALTY_FACTOR
     previous.straightLineDistance = this.straightLineDistance
     previous.viaPenaltyDistance = viaPenaltyDistance
     previous.futureConnectionPoints = this.futureConnectionPoints
@@ -358,10 +364,13 @@ export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends Sing
       costTerms.goalDistancePower +
       (node.z !== this.B.z ? this.viaPenaltyDistance : 0)
     const isVia = node.z !== node.parent?.z
-    const defaultCosts = SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost.prototype
+    const defaultCosts =
+      SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost.prototype
     const canMemoizeFuturePenalty =
-      this.getFutureConnectionPenalty === defaultCosts.getFutureConnectionPenalty &&
-      this.getClosestFutureConnectionPoint === defaultCosts.getClosestFutureConnectionPoint
+      this.getFutureConnectionPenalty ===
+        defaultCosts.getFutureConnectionPenalty &&
+      this.getClosestFutureConnectionPoint ===
+        defaultCosts.getClosestFutureConnectionPoint
     let futureConnectionPenalty = canMemoizeFuturePenalty
       ? isVia
         ? costTerms.viaFuturePenalty

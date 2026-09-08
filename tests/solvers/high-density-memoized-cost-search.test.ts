@@ -130,24 +130,30 @@ test("memoized costs preserve full searches across exact starts, bounds and laye
     }
     let sampleMemoizedCalculations = 0
     let sampleReferenceCalculations = 0
-    memoized.futureConnectionPoints = new Proxy(memoized.futureConnectionPoints, {
-      get(target, property, receiver) {
-        if (property === Symbol.iterator) {
-          sampleMemoizedCalculations++
-          memoizedCalculations++
-        }
-        return Reflect.get(target, property, receiver)
+    memoized.futureConnectionPoints = new Proxy(
+      memoized.futureConnectionPoints,
+      {
+        get(target, property, receiver) {
+          if (property === Symbol.iterator) {
+            sampleMemoizedCalculations++
+            memoizedCalculations++
+          }
+          return Reflect.get(target, property, receiver)
+        },
       },
-    })
-    reference.futureConnectionPoints = new Proxy(reference.futureConnectionPoints, {
-      get(target, property, receiver) {
-        if (property === Symbol.iterator) {
-          sampleReferenceCalculations++
-          referenceCalculations++
-        }
-        return Reflect.get(target, property, receiver)
+    )
+    reference.futureConnectionPoints = new Proxy(
+      reference.futureConnectionPoints,
+      {
+        get(target, property, receiver) {
+          if (property === Symbol.iterator) {
+            sampleReferenceCalculations++
+            referenceCalculations++
+          }
+          return Reflect.get(target, property, receiver)
+        },
       },
-    })
+    )
     memoized.solve()
     reference.solve()
     if (sampleMemoizedCalculations < sampleReferenceCalculations) {

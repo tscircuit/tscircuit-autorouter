@@ -5,9 +5,9 @@ import { SingleHighDensityRouteSolver } from "lib/solvers/HighDensitySolver/Sing
 class FilteredPlanarQuerySolver extends SingleHighDensityRouteSolver {
   queriedNodes: Array<{ x: number; y: number; z: number }> = []
 
-  override getPlanarObstacleQuery(node: Node): ReturnType<
-    SingleHighDensityRouteSolver["getPlanarObstacleQuery"]
-  > {
+  override getPlanarObstacleQuery(
+    node: Node,
+  ): ReturnType<SingleHighDensityRouteSolver["getPlanarObstacleQuery"]> {
     this.queriedNodes.push({ x: node.x, y: node.y, z: node.z })
     const query = super.getPlanarObstacleQuery(node)
     if (!query) return undefined

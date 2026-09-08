@@ -17,25 +17,56 @@ test("cached costs respond to scalar parameter changes and replacement future po
     A: { x: -2, y: 0, z: 0 },
     B: { x: 2, y: 0, z: 0 },
     availableZ: [0, 1],
-    futureConnections: [{
-      connectionName: "future",
-      points: [{ x: 0.1, y: 0.1, z: 1 }, { x: 0.6, y: 0.1, z: 0 }],
-    }],
+    futureConnections: [
+      {
+        connectionName: "future",
+        points: [
+          { x: 0.1, y: 0.1, z: 1 },
+          { x: 0.6, y: 0.1, z: 0 },
+        ],
+      },
+    ],
   }
   const mutations: Array<(solver: FutureCost) => void> = [
-    (solver) => { solver.B.x = 0.08 },
-    (solver) => { solver.B.y = 1 },
-    (solver) => { solver.B.z = 1 },
-    (solver) => { solver.viaDiameter *= 2 },
-    (solver) => { solver.FUTURE_CONNECTION_PROXIMITY_VD *= 2 },
-    (solver) => { solver.FUTURE_CONNECTION_PROX_TRACE_PENALTY_FACTOR *= 2 },
-    (solver) => { solver.FUTURE_CONNECTION_PROX_VIA_PENALTY_FACTOR *= 2 },
-    (solver) => { solver.straightLineDistance *= 2 },
-    (solver) => { solver.VIA_PENALTY_FACTOR = 0 },
-    (solver) => { solver.cellStep *= 100 },
-    (solver) => { solver.MISALIGNED_DIST_PENALTY_FACTOR *= 2 },
-    (solver) => { solver.FLIP_TRACE_ALIGNMENT_DIRECTION = true },
-    (solver) => { solver.futureConnectionPoints = [{ x: 0.025, y: 0, z: 0 }] },
+    (solver) => {
+      solver.B.x = 0.08
+    },
+    (solver) => {
+      solver.B.y = 1
+    },
+    (solver) => {
+      solver.B.z = 1
+    },
+    (solver) => {
+      solver.viaDiameter *= 2
+    },
+    (solver) => {
+      solver.FUTURE_CONNECTION_PROXIMITY_VD *= 2
+    },
+    (solver) => {
+      solver.FUTURE_CONNECTION_PROX_TRACE_PENALTY_FACTOR *= 2
+    },
+    (solver) => {
+      solver.FUTURE_CONNECTION_PROX_VIA_PENALTY_FACTOR *= 2
+    },
+    (solver) => {
+      solver.straightLineDistance *= 2
+    },
+    (solver) => {
+      solver.VIA_PENALTY_FACTOR = 0
+    },
+    (solver) => {
+      solver.cellStep *= 100
+    },
+    (solver) => {
+      solver.MISALIGNED_DIST_PENALTY_FACTOR *= 2
+    },
+    (solver) => {
+      solver.FLIP_TRACE_ALIGNMENT_DIRECTION = true
+    },
+    (solver) => {
+      solver.futureConnectionPoints = [{ x: 0.025, y: 0, z: 0 }]
+    },
   ]
   for (const Solver of [FutureCost, SparseCostSolver]) {
     for (const mutate of mutations) {
@@ -46,8 +77,21 @@ test("cached costs respond to scalar parameter changes and replacement future po
         nodeCostTermsByGridKey: Map<number, unknown>
       }
       const makeNode = (parentZ: number): Node => ({
-        x: 0, y: 0, z: 0, g: 0, h: 0, f: 0,
-        parent: { x: -0.05, y: -0.025, z: parentZ, g: 1, h: 0, f: 0, parent: null },
+        x: 0,
+        y: 0,
+        z: 0,
+        g: 0,
+        h: 0,
+        f: 0,
+        parent: {
+          x: -0.05,
+          y: -0.025,
+          z: parentZ,
+          g: 1,
+          h: 0,
+          f: 0,
+          parent: null,
+        },
       })
       const before: number[][] = []
       for (const parentZ of [0, 1]) {
@@ -66,7 +110,9 @@ test("cached costs respond to scalar parameter changes and replacement future po
         const expectedH = solver.computeH(node)
         solver.setNodeCosts(node)
         expect([node.g, node.h, node.f]).toEqual([
-          expectedG, expectedH, solver.computeF(expectedG, expectedH),
+          expectedG,
+          expectedH,
+          solver.computeF(expectedG, expectedH),
         ])
         after.push([node.g, node.h, node.f])
         // Repeated unchanged calls retain both cache storage and snapshot.
@@ -81,7 +127,12 @@ test("cached costs respond to scalar parameter changes and replacement future po
     // Snapshot equality must distinguish -0 and +0, unlike numeric ===.
     const zeroSolver = new Solver({ ...options, B: { ...options.B } })
     const zeroNode: Node = {
-      x: 0, y: 0, z: 0, g: 0, h: 0, f: 0,
+      x: 0,
+      y: 0,
+      z: 0,
+      g: 0,
+      h: 0,
+      f: 0,
       parent: { x: -0.05, y: 0, z: 0, g: 1, h: 0, f: 0, parent: null },
     }
     zeroSolver.FUTURE_CONNECTION_PROXIMITY_VD = -0

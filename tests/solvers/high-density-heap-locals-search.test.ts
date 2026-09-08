@@ -115,9 +115,8 @@ test("heap locals preserve complete search routes and expansion order", () => {
     const solver = new SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost(
       opts,
     )
-    const reference = new SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost(
-      opts,
-    )
+    const reference =
+      new SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost(opts)
     const initialHeap = (reference.candidates as unknown as { heap: Node[] })
       .heap
     reference.candidates = new OriginalHeapQueue([])
