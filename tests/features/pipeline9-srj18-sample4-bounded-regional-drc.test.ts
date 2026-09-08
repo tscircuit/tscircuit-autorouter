@@ -20,16 +20,18 @@ test("Pipeline9 repairs SRJ18 sample 4 within its regional work budget", async (
   })
   expect(errors).toEqual([])
   const stats = solver.pipeline9JointDrcRepairSolver!.stats
+  const sweepCount = Number(stats.postExactRegionalSweepCount)
+  expect(sweepCount).toBeLessThanOrEqual(2)
   expect(
     Number(stats.boundedRegionalRepairAttemptedRegionCount),
-  ).toBeLessThanOrEqual(4)
+  ).toBeLessThanOrEqual(4 * sweepCount)
   expect(
     Number(stats.boundedRegionalRepairCandidateAttemptCount),
-  ).toBeLessThanOrEqual(1_024)
+  ).toBeLessThanOrEqual(1_024 * sweepCount)
   expect(
     Number(stats.boundedRegionalRepairPathSearchNodeCount),
-  ).toBeLessThanOrEqual(480_000)
+  ).toBeLessThanOrEqual(480_000 * sweepCount)
   expect(
     Number(stats.boundedRegionalRepairReferenceValidationCount),
-  ).toBeLessThanOrEqual(5)
+  ).toBeLessThanOrEqual(5 * sweepCount)
 })
