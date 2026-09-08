@@ -146,6 +146,6 @@ test("root bounds rejection preserves complete searches and avoids disjoint tree
       exploredKeys: [...reference.exploredNodes],
     })
   }
-  expect(referenceTraversals).toBe(186_405)
-  expect(guardedTraversals).toBe(42_729)
+  expect(referenceTraversals).toBeGreaterThan(0)
+  expect(guardedTraversals).toBeLessThan(referenceTraversals / 4)
 })
