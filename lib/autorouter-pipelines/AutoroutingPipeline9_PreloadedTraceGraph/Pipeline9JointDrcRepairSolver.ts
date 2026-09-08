@@ -1349,6 +1349,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       viaClearance,
     })
     this.exactRepairSolver = new GlobalDrcBranchPortfolioSolver({
+      fixedObstacleRoutes: this.fixedPreloadedObstacleRoutes,
       isValidCandidate: (routes): boolean =>
         evaluateViaPadContacts({
           previousRoutes: originalExactRoutes,
