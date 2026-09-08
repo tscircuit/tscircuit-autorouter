@@ -49,6 +49,7 @@ import { calculateOptimalCapacityDepth } from "lib/utils/getTunedTotalCapacity1"
 import { getViaDimensions } from "lib/utils/getViaDimensions"
 import {
   AvailableSegmentPointSolver,
+  type PhysicalCrampedPortContext,
   type SharedEdgeSegment,
 } from "../../solvers/AvailableSegmentPointSolver/AvailableSegmentPointSolver"
 import { BaseSolver } from "../../solvers/BaseSolver"
@@ -470,6 +471,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           traceWidth: cms.minTraceWidth,
           colorMap: cms.colorMap,
           shouldReturnCrampedPortPoints: true,
+          physicalCrampedPortContext: cms.createPhysicalCrampedPortContext(),
           ...(cms.physicalNodeCutContext === undefined
             ? {}
             : {
@@ -1105,6 +1107,26 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       padGap: clearance.traceToPadClearance,
       routableNetIds,
       protectedPoints,
+    }
+  }
+
+  private createPhysicalCrampedPortContext():
+    | PhysicalCrampedPortContext
+    | undefined {
+    // Both site producers use the same generated-copper source domain. This
+    // preparation excludes original preloads before any graph ports exist;
+    // no result from an unsuccessful routing attempt selects this domain.
+    const generatedCopper = this.createPhysicalNodeCutContext()
+    if (generatedCopper === undefined) return undefined
+    const clearance = this.getFixedPadClearance()
+    return {
+      rectangles: generatedCopper.rectangles,
+      clearanceIndex: clearance.traceClearanceIndex,
+      layerCount: generatedCopper.layerCount,
+      traceWidth: generatedCopper.traceWidth,
+      traceGap: generatedCopper.traceGap,
+      padGap: generatedCopper.padGap,
+      routableNetIds: generatedCopper.routableNetIds,
     }
   }
 
