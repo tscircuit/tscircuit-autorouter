@@ -4,7 +4,6 @@
 const runtimeUrl = import.meta.resolve("tscircuit-for-pipeline9-fixtures")
 const coreUrl = import.meta.resolve("@tscircuit/core", runtimeUrl)
 
-export const {
-  RootCircuit,
-  getSimpleRouteJsonFromCircuitJson,
-} = await import(coreUrl)
+export const { RootCircuit, getSimpleRouteJsonFromCircuitJson } = await import(
+  coreUrl
+)
