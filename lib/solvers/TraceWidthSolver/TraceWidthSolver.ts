@@ -626,40 +626,27 @@ export class TraceWidthSolver extends BaseSolver {
   }): number {
     let width = traceWidth
 
-    if (
-      startLimit !== undefined &&
-      distanceFromStart <= Math.max(taperDistance, startLimit.neckDistance)
-    ) {
-      const neckDistance = startLimit.neckDistance
-      if (distanceFromStart <= neckDistance) {
-        width = Math.min(width, startLimit.width)
-      } else {
-        const t =
-          (distanceFromStart - neckDistance) /
-          Math.max(taperDistance - neckDistance, COORDINATE_EPSILON)
-        width = Math.min(
-          width,
-          startLimit.width + (traceWidth - startLimit.width) * t,
-        )
-      }
+    if (startLimit !== undefined) {
+      const t = Math.max(
+        0,
+        Math.min(1, (distanceFromStart - startLimit.neckDistance) / taperDistance),
+      )
+      width = Math.min(
+        width,
+        startLimit.width + (traceWidth - startLimit.width) * t,
+      )
     }
 
     if (endLimit !== undefined) {
       const distanceFromEnd = totalDistance - distanceFromStart
-      if (distanceFromEnd <= Math.max(taperDistance, endLimit.neckDistance)) {
-        const neckDistance = endLimit.neckDistance
-        if (distanceFromEnd <= neckDistance) {
-          width = Math.min(width, endLimit.width)
-        } else {
-          const t =
-            (distanceFromEnd - neckDistance) /
-            Math.max(taperDistance - neckDistance, COORDINATE_EPSILON)
-          width = Math.min(
-            width,
-            endLimit.width + (traceWidth - endLimit.width) * t,
-          )
-        }
-      }
+      const t = Math.max(
+        0,
+        Math.min(1, (distanceFromEnd - endLimit.neckDistance) / taperDistance),
+      )
+      width = Math.min(
+        width,
+        endLimit.width + (traceWidth - endLimit.width) * t,
+      )
     }
 
     return width
@@ -711,7 +698,8 @@ export class TraceWidthSolver extends BaseSolver {
       insertionDistances.push(startLimit.neckDistance)
       for (let step = 0; step <= TERMINAL_TAPER_SEGMENT_COUNT; step++) {
         insertionDistances.push(
-          (taperDistance * step) / TERMINAL_TAPER_SEGMENT_COUNT,
+          startLimit.neckDistance +
+            (taperDistance * step) / TERMINAL_TAPER_SEGMENT_COUNT,
         )
       }
     }
@@ -721,6 +709,7 @@ export class TraceWidthSolver extends BaseSolver {
       for (let step = 0; step <= TERMINAL_TAPER_SEGMENT_COUNT; step++) {
         insertionDistances.push(
           totalDistance -
+            endLimit.neckDistance -
             taperDistance +
             (taperDistance * step) / TERMINAL_TAPER_SEGMENT_COUNT,
         )
