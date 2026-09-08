@@ -16,7 +16,6 @@ test("deferred visited storage exposes a live native Set with original insertion
     hasExploredNode(key: number): boolean
     addExploredNode(key: number): void
     exploredNodeBitmap: Uint8Array | null | undefined
-    exploredNodeSet: Set<number> | undefined
   }
   for (const mode of ["normal", "replacement", "subclass-field", "custom-keys"]) {
     const solver = makeSolver()
@@ -39,7 +38,7 @@ test("deferred visited storage exposes a live native Set with original insertion
       reference.add(key)
     }
     if (mode === "normal") {
-      expect(internal.exploredNodeSet).toBeUndefined()
+      expect(Object.getOwnPropertyDescriptor(solver, "exploredNodes")?.get).toBeFunction()
       expect(internal.exploredNodeBitmap).toBeInstanceOf(Uint8Array)
     }
     const visible = solver.exploredNodes
@@ -65,6 +64,29 @@ test("deferred visited storage exposes a live native Set with original insertion
     solver.exploredNodes.clear()
     expect(internal.hasExploredNode(13)).toBe(false)
   }
+  class MaterializingParent extends SingleHighDensityRouteSolver {
+    constructor() {
+      const template = makeSolver()
+      super({
+        connectionName: "route",
+        obstacleRoutes: [],
+        minDistBetweenEnteringPoints: 0.15,
+        bounds: template.bounds,
+        A: template.A,
+        B: template.B,
+        layerCount: 2,
+      })
+      void this.exploredNodes
+    }
+  }
+  class SetFieldChild extends MaterializingParent {
+    override exploredNodes = new Set([42])
+  }
+  const child = new SetFieldChild()
+  expect((child as unknown as Internal).hasExploredNode(42)).toBe(true)
+  child.exploredNodes = new Set([43])
+  expect((child as unknown as Internal).hasExploredNode(43)).toBe(true)
+  expect((child as unknown as Internal).hasExploredNode(42)).toBe(false)
   for (const key of [-0, -1, 0.5, NaN, Infinity, Number.MAX_SAFE_INTEGER]) {
     const solver = makeSolver()
     const internal = solver as unknown as Internal

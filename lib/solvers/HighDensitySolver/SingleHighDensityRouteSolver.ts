@@ -74,10 +74,8 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
   NEARBY_SEGMENT_CLEARANCE: number
 
   exploredNodes!: Set<number>
-  private exploredNodeSet: Set<number> | undefined
   private exploredNodeBitmap: Uint8Array | null | undefined
   private exploredNodeOrder: number[] = []
-  private customExploredNodeProperty = false
   viasInPathByNode = new WeakMap<Node, { x: number; y: number }[]>()
 
   gridMinXIndex: number
@@ -669,25 +667,27 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
   }
 
   private materializeExploredNodes(): Set<number> {
-    if (!this.exploredNodeSet) {
-      this.exploredNodeSet = new Set(this.exploredNodeOrder)
-      this.exploredNodeBitmap = null
-      this.exploredNodeOrder = []
-    }
-    return this.exploredNodeSet
+    if (this.exploredNodeBitmap === null) return this.exploredNodes
+    const value = new Set(this.exploredNodeOrder)
+    this.replaceExploredNodes(value)
+    return value
   }
 
   private replaceExploredNodes(value: Set<number>): void {
-    this.exploredNodeSet = value
     this.exploredNodeBitmap = null
     this.exploredNodeOrder = []
+    Object.defineProperty(this, "exploredNodes", {
+      configurable: true,
+      enumerable: true,
+      writable: true,
+      value,
+    })
   }
 
   private initializeExploredNodeBitmap(): void {
     const descriptor = Object.getOwnPropertyDescriptor(this, "exploredNodes")
     if (descriptor?.get !== this.materializeExploredNodes) {
       // A subclass can declare its own Set field after the base constructor.
-      this.customExploredNodeProperty = true
       this.exploredNodeBitmap = null
       return
     }
@@ -710,9 +710,8 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     if (this.exploredNodeBitmap === undefined) {
       this.initializeExploredNodeBitmap()
     }
-    if (this.customExploredNodeProperty) return this.exploredNodes.has(key)
-    if (this.exploredNodeSet) return this.exploredNodeSet.has(key)
-    const bitmap = this.exploredNodeBitmap!
+    const bitmap = this.exploredNodeBitmap
+    if (!bitmap) return this.exploredNodes.has(key)
     if (Number.isInteger(key) && key >= 0 && key < bitmap.length) {
       return bitmap[key] === 1
     }
@@ -723,15 +722,11 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     if (this.exploredNodeBitmap === undefined) {
       this.initializeExploredNodeBitmap()
     }
-    if (this.customExploredNodeProperty) {
+    const bitmap = this.exploredNodeBitmap
+    if (!bitmap) {
       this.exploredNodes.add(key)
       return
     }
-    if (this.exploredNodeSet) {
-      this.exploredNodeSet.add(key)
-      return
-    }
-    const bitmap = this.exploredNodeBitmap!
     if (Number.isInteger(key) && key >= 0 && key < bitmap.length) {
       if (bitmap[key] === 0) {
         bitmap[key] = 1
