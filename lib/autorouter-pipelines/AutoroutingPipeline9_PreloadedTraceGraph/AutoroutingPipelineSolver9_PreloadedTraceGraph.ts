@@ -93,6 +93,7 @@ import { Pipeline9HighDensitySolver } from "./Pipeline9HighDensitySolver"
 import { Pipeline9JointDrcRepairSolver } from "./Pipeline9JointDrcRepairSolver"
 import { PreloadedTraceGraphSolver } from "./PreloadedTraceGraphSolver"
 import { PreprocessSimpleRouteJsonWithoutTraceObstaclesSolver } from "./PreprocessSimpleRouteJsonWithoutTraceObstaclesSolver"
+import { resolvePipeline9PreloadedTerminalAttachments } from "./resolvePipeline9PreloadedTerminalAttachments"
 import { MergedComponentTopologyView } from "../AutoroutingPipeline7_MultiGraph/MergedComponentTopologyView"
 import { PowerTraceExpansionSolver } from "../AutoroutingPipeline7_MultiGraph/PowerTraceExpansionSolver"
 import { convertPipeline7HdRoutesToSimplifiedPcbTraces } from "../AutoroutingPipeline7_MultiGraph/convertPipeline7HdRoutesToSimplifiedPcbTraces"
@@ -318,7 +319,11 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       {
         onSolved: (cms) => {
           cms.setSimpleRouteJson(
-            cms.preprocessSimpleRouteJsonSolver!.getOutputSimpleRouteJson(),
+            resolvePipeline9PreloadedTerminalAttachments({
+              originalSrj: cms.originalSrj,
+              routingSrj:
+                cms.preprocessSimpleRouteJsonSolver!.getOutputSimpleRouteJson(),
+            }),
           )
         },
       },

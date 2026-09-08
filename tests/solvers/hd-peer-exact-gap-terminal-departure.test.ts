@@ -35,12 +35,12 @@ test("physical terminal departure preserves an exact legal copper gap despite a 
     })
     const parent = createHdPeerNode(0, 0)
     const endpoint = createHdPeerNode(0.8 / q, 0, 0, parent)
-    // Fixed terminals can start inside the unchanged search point envelope.
-    // Full-edge copper gap .25 - .15 = .1 must still permit departure.
+    // Physical point and full-edge defaults both permit the exact .1 gap.
+    // The no-context point test retains its larger legacy search envelope.
     expect(solver.failed).toBeFalse()
     expect(solver.candidates.peek()).toMatchObject({ x: 0, y: 0, z: 0 })
     expect(solver.cellStep).toBe(0.8 / q)
-    expect(solver.isNodeTooCloseToObstacle(parent)).toBeTrue()
+    expect(solver.isNodeTooCloseToObstacle(parent)).toBe(scale === undefined)
     expect(solver.isNodeTooCloseToObstacle(endpoint)).toBeFalse()
     expect(solver.doesPathToParentIntersectObstacle(endpoint)).toBeFalse()
     expect(

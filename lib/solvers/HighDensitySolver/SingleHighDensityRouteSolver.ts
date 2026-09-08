@@ -452,7 +452,13 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     margin?: number,
     isVia?: boolean,
     planarObstacleQuery?: PlanarObstacleQuery,
-  ) {
+  ): boolean {
+    // Only planar defaults use the physical copper rules. Explicit margins and
+    // every via-candidate policy keep their existing interpretation.
+    const physicalPointContext =
+      !isVia && margin === undefined
+        ? this.physicalClearanceContext
+        : undefined
     margin ??= this.obstacleMargin
 
     if (
@@ -476,7 +482,10 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     }
 
     const traceProximity = this.getSolveSpaceLength(
-      this.traceThickness + margin,
+      this.traceThickness +
+        (physicalPointContext
+          ? physicalPointContext.traceToTraceClearance
+          : margin),
     )
     const indexedSegments =
       planarObstacleQuery?.segments ??
@@ -518,7 +527,11 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     }
 
     const viaProximity = this.getSolveSpaceLength(
-      this.viaDiameter / 2 + this.traceThickness / 2 + margin,
+      this.viaDiameter / 2 +
+        this.traceThickness / 2 +
+        (physicalPointContext
+          ? physicalPointContext.viaToTraceClearance
+          : margin),
     )
     if (this.obstacleViaIndex) {
       const nearbyViaIds = this.obstacleViaIndex.search(
@@ -661,8 +674,16 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     const segments = this.obstacleSegmentsByLayer.get(node.z)
     if (!segmentIndex || !segments) return undefined
 
+    // Cover the physical default even when its rule exceeds the legacy margin;
+    // retaining the old envelope does not impose that margin in the point test.
+    const pointMargin = this.physicalClearanceContext
+      ? Math.max(
+          this.obstacleMargin,
+          this.physicalClearanceContext.traceToTraceClearance,
+        )
+      : this.obstacleMargin
     const traceProximity = this.getSolveSpaceLength(
-      this.traceThickness + this.obstacleMargin,
+      this.traceThickness + pointMargin,
     )
     const clearance =
       node.z === parent.z && this.obstacleSegments.length > 0

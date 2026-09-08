@@ -6,7 +6,7 @@ import type {
 } from "lib/types/high-density-types"
 import objectHash from "object-hash"
 
-test("portfolio physical domain rejects schemas 3, 4 and 5 and accepts schema 6 cache entries", async (): Promise<void> => {
+test("portfolio physical domain rejects schemas 3 through 6 and accepts schema 7 cache entries", async (): Promise<void> => {
   const memoryCacheDescriptor = Object.getOwnPropertyDescriptor(
     globalThis,
     "TSCIRCUIT_AUTOROUTER_IN_MEMORY_CACHE",
@@ -97,9 +97,13 @@ test("portfolio physical domain rejects schemas 3, 4 and 5 and accepts schema 6 
       ...legacyKeyData,
       cacheSchemaVersion: 5,
     })}`
-    const currentKey = `intranode:${objectHash({
+    const previousPeerKey = `intranode:${objectHash({
       ...legacyKeyData,
       cacheSchemaVersion: 6,
+    })}`
+    const currentKey = `intranode:${objectHash({
+      ...legacyKeyData,
+      cacheSchemaVersion: 7,
     })}`
     const legacyRoute: HighDensityRoute = {
       connectionName: "signal",
@@ -123,11 +127,16 @@ test("portfolio physical domain rejects schemas 3, 4 and 5 and accepts schema 6 
       success: true,
       solvedRoutes: [legacyRoute],
     })
+    cache.setCachedSolutionSync(previousPeerKey, {
+      success: true,
+      solvedRoutes: [legacyRoute],
+    })
     const miss = new CachedPortfolioSingleIntraNodeSolver(params)
     expect(miss.computeCacheKeyAndTransform().cacheKey).toBe(currentKey)
     expect(currentKey).not.toBe(legacyKey)
     expect(currentKey).not.toBe(previousKey)
     expect(currentKey).not.toBe(previousPhysicalKey)
+    expect(currentKey).not.toBe(previousPeerKey)
     expect(miss.attemptToUseCacheSync()).toBeFalse()
     expect(miss.hasAttemptedToUseCache).toBeTrue()
     expect(miss.cacheHit).toBeFalse()
@@ -158,7 +167,13 @@ test("portfolio physical domain rejects schemas 3, 4 and 5 and accepts schema 6 
     expect(cache.cacheMisses).toBe(1)
     expect(cache.cacheHits).toBe(1)
     expect(cache.getAllCacheKeys().sort()).toEqual(
-      [legacyKey, previousKey, previousPhysicalKey, currentKey].sort(),
+      [
+        legacyKey,
+        previousKey,
+        previousPhysicalKey,
+        previousPeerKey,
+        currentKey,
+      ].sort(),
     )
   } finally {
     if (memoryCacheDescriptor) {

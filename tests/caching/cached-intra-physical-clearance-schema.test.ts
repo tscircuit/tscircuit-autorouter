@@ -4,7 +4,7 @@ import { CachedIntraNodeRouteSolver } from "lib/solvers/HighDensitySolver/Cached
 import type { NodeWithPortPoints } from "lib/types/high-density-types"
 import objectHash from "object-hash"
 
-test("physical-clearance cache schema invalidates versions 4 and 5 while retaining legacy key inputs", (): void => {
+test("physical-clearance cache schema invalidates versions 4, 5 and 6 while retaining legacy key inputs", (): void => {
   const node: NodeWithPortPoints = {
     capacityMeshNodeId: "schema-node",
     center: { x: 0, y: 0 },
@@ -80,13 +80,18 @@ test("physical-clearance cache schema invalidates versions 4 and 5 while retaini
     { ...legacyData, cacheSchemaVersion: 5 },
     options,
   )}`
-  const currentKey = `intranode-solver:${objectHash(
+  const previousPeerKey = `intranode-solver:${objectHash(
     { ...legacyData, cacheSchemaVersion: 6 },
+    options,
+  )}`
+  const currentKey = `intranode-solver:${objectHash(
+    { ...legacyData, cacheSchemaVersion: 7 },
     options,
   )}`
   expect(solver.computeCacheKeyAndTransform().cacheKey).toBe(currentKey)
   expect(currentKey).not.toBe(legacyKey)
   expect(currentKey).not.toBe(previousKey)
+  expect(currentKey).not.toBe(previousPeerKey)
   cacheProvider.setCachedSolutionSync(legacyKey, {
     success: false,
     error: "schema 4 result",
@@ -95,9 +100,17 @@ test("physical-clearance cache schema invalidates versions 4 and 5 while retaini
     success: false,
     error: "schema 5 result",
   })
+  cacheProvider.setCachedSolutionSync(previousPeerKey, {
+    success: false,
+    error: "schema 6 result",
+  })
   expect(solver.attemptToUseCacheSync()).toBeFalse()
   expect(solver.failed).toBeFalse()
   expect(solver.solved).toBeFalse()
   expect(solver.iterations).toBe(0)
-  expect(cacheProvider.getAllCacheKeys()).toEqual([legacyKey, previousKey])
+  expect(cacheProvider.getAllCacheKeys()).toEqual([
+    legacyKey,
+    previousKey,
+    previousPeerKey,
+  ])
 })

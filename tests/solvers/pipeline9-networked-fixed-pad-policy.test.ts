@@ -28,10 +28,11 @@ test("the physical-clearance network schema rejects previous policies before rou
   const input = solver["createNodeInput"](node)
   expect(input.solvePolicy).toBe(PIPELINE9_NETWORKED_SOLVE_POLICY)
   expect(input.solvePolicy).toContain("fixed_pad_clearance")
-  expect(input.solvePolicy.endsWith("_v3")).toBeTrue()
+  expect(input.solvePolicy.endsWith("_v4")).toBeTrue()
   for (const solvePolicy of [
     "ordinary_then_regional_without_fixed_copper_v1",
     "ordinary_with_fixed_pad_clearance_then_regional_without_fixed_copper_v2",
+    "ordinary_with_fixed_pad_clearance_then_regional_without_fixed_copper_v3",
   ]) {
     const legacyInput = {
       ...input,
