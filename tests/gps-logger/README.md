@@ -22,6 +22,10 @@ Zero-clearance checking distinguishes a physical short from a spacing violation.
 
 To regenerate the snapshot, prefix the test command with `BUN_UPDATE_SNAPSHOTS=1`.
 
-This draft is stacked on #2457. Skipping force improvement when fixed copper
-is present removes the short, but previously measured phase-1 relaxed DRC errors
-increase from 3 to 5. The candidate is not ready to merge.
+This candidate is stacked on #2458 and uses the default routing effort.
+Regional force improvement retains safe adjustments and restores only routes
+involved in newly introduced copper contacts. The full TSX reproduction locally
+improves from 5 to 0 relaxed DRC errors and retains zero trace contacts.
+The numeric DRC assertion runs before the snapshot assertion.
+The Game Boy fixture remains at 34 errors but gains two vias and one via-clearance
+report while removing one trace report. Cross-platform validation is still pending.
