@@ -1593,14 +1593,16 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       // instead requires the regional solver's fixed-section splice support.
       if (canMoveWholeRoutes) {
         const boundedStartedAt = performance.now()
-        const boundedRegionalRepairResult = applyPipeline9BoundedRegionalRepairs({
-          originalSrj: this.params.originalSrj,
-          routes: terminalEscapeResult.routes,
-          syntheticConnectionNames: this.syntheticConnectionNames,
-          drcEvaluator: this.cachedReferenceDrcEvaluator!,
-          viaHoleDiameter: this.params.defaultViaHoleDiameter,
-        })
-        stats.boundedRegionalRepairTimeMs += performance.now() - boundedStartedAt
+        const boundedRegionalRepairResult =
+          applyPipeline9BoundedRegionalRepairs({
+            originalSrj: this.params.originalSrj,
+            routes: terminalEscapeResult.routes,
+            syntheticConnectionNames: this.syntheticConnectionNames,
+            drcEvaluator: this.cachedReferenceDrcEvaluator!,
+            viaHoleDiameter: this.params.defaultViaHoleDiameter,
+          })
+        stats.boundedRegionalRepairTimeMs +=
+          performance.now() - boundedStartedAt
         stats.boundedRegionalRepairAttemptedRegionCount +=
           boundedRegionalRepairResult.attemptedRegionCount
         stats.boundedRegionalRepairAcceptedRegionCount +=
