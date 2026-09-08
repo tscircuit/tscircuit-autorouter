@@ -87,6 +87,31 @@ test("deferred visited storage exposes a live native Set with original insertion
   child.exploredNodes = new Set([43])
   expect((child as unknown as Internal).hasExploredNode(43)).toBe(true)
   expect((child as unknown as Internal).hasExploredNode(42)).toBe(false)
+  for (const getter of [false, true]) {
+    const solver = makeSolver()
+    const internal = solver as unknown as Internal
+    internal.addExploredNode(1)
+    const replacement = new Set([42])
+    let getterCalls = 0
+    Object.defineProperty(solver, "exploredNodes", getter ? {
+      configurable: true,
+      enumerable: true,
+      get: () => {
+        getterCalls++
+        return replacement
+      },
+    } : {
+      configurable: true,
+      enumerable: true,
+      writable: true,
+      value: replacement,
+    })
+    expect(internal.hasExploredNode(1)).toBe(false)
+    expect(internal.hasExploredNode(42)).toBe(true)
+    internal.addExploredNode(43)
+    expect([...replacement]).toEqual([42, 43])
+    expect(getterCalls).toBe(getter ? 3 : 0)
+  }
   for (const key of [-0, -1, 0.5, NaN, Infinity, Number.MAX_SAFE_INTEGER]) {
     const solver = makeSolver()
     const internal = solver as unknown as Internal

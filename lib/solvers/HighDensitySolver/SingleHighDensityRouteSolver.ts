@@ -31,6 +31,13 @@ type SharedPlanarViaQuery = {
   viaIds?: number[]
 }
 
+// Read an accessor's identity without invoking it or allocating a descriptor.
+const lookupPropertyGetter = (
+  Object.prototype as unknown as {
+    __lookupGetter__(key: string): (() => unknown) | undefined
+  }
+).__lookupGetter__
+
 const connectionLabel = (
   connectionName: string,
   rootConnectionName?: string,
@@ -710,7 +717,15 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     if (this.exploredNodeBitmap === undefined) {
       this.initializeExploredNodeBitmap()
     }
-    const bitmap = this.exploredNodeBitmap
+    let bitmap = this.exploredNodeBitmap
+    if (
+      bitmap &&
+      lookupPropertyGetter.call(this, "exploredNodes") !==
+        this.materializeExploredNodes
+    ) {
+      this.exploredNodeBitmap = bitmap = null
+      this.exploredNodeOrder = []
+    }
     if (!bitmap) return this.exploredNodes.has(key)
     if (Number.isInteger(key) && key >= 0 && key < bitmap.length) {
       return bitmap[key] === 1
@@ -722,7 +737,15 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     if (this.exploredNodeBitmap === undefined) {
       this.initializeExploredNodeBitmap()
     }
-    const bitmap = this.exploredNodeBitmap
+    let bitmap = this.exploredNodeBitmap
+    if (
+      bitmap &&
+      lookupPropertyGetter.call(this, "exploredNodes") !==
+        this.materializeExploredNodes
+    ) {
+      this.exploredNodeBitmap = bitmap = null
+      this.exploredNodeOrder = []
+    }
     if (!bitmap) {
       this.exploredNodes.add(key)
       return
