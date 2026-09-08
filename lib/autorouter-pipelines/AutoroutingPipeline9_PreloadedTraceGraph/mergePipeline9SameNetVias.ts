@@ -4,13 +4,14 @@ import type { HighDensityRoute } from "lib/types/high-density-types"
 import type { Obstacle } from "lib/types/srj-types"
 import { getPipeline9NetByConnectionName } from "./getPipeline9NetByConnectionName"
 
-export const mergePipeline9MovablePreloadedVias = ({
+export const mergePipeline9SameNetVias = ({
   routes,
   otherHdRoutes,
   obstacles,
   colorMap,
   layerCount,
   connMap,
+  preserveRouteEndpoints = false,
 }: {
   routes: HighDensityRoute[]
   otherHdRoutes: HighDensityRoute[]
@@ -18,6 +19,7 @@ export const mergePipeline9MovablePreloadedVias = ({
   colorMap: Record<string, string>
   layerCount: number
   connMap: ConnectivityMap
+  preserveRouteEndpoints?: boolean
 }): HighDensityRoute[] => {
   const netByConnectionName = getPipeline9NetByConnectionName(
     [...routes, ...otherHdRoutes],
@@ -31,11 +33,12 @@ export const mergePipeline9MovablePreloadedVias = ({
     colorMap,
     layerCount,
     connMap,
+    preserveRouteEndpoints,
   })
   solver.solve()
   if (solver.failed) {
     throw new Error(
-      `Pipeline9 could not merge movable preloaded vias: ${solver.error ?? "unknown error"}`,
+      `Pipeline9 could not merge same-net vias: ${solver.error ?? "unknown error"}`,
     )
   }
   return solver.getMergedViaHdRoutes() ?? routes
