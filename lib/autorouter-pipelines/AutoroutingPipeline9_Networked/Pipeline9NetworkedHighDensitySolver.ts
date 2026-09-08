@@ -143,25 +143,21 @@ export class Pipeline9NetworkedHighDensitySolver extends Pipeline9HighDensitySol
   private createNodeInput(
     node: NodeWithPortPoints,
   ): Pipeline9NetworkedHighDensityNodeInput {
-    const regionalInput = this.enableRegionalFallback
-      ? projectPipeline9RegionalHighDensityInput({
-          nodeWithPortPoints: node,
-          connMap: this.connMap,
-          obstacles: this.obstacles,
-          obstacleMargin: this.obstacleMargin,
-          traceWidth: this.traceWidth,
-          viaDiameter: this.viaDiameter,
-        })
-      : { connectivityNetMap: {}, obstacles: [] }
+    const nearbyBoardInput = projectPipeline9RegionalHighDensityInput({
+      nodeWithPortPoints: node,
+      connMap: this.connMap,
+      obstacles: this.obstacles,
+      obstacleMargin: this.obstacleMargin,
+      traceWidth: this.traceWidth,
+      viaDiameter: this.viaDiameter,
+    })
     const projectedInput = projectPipeline9OrdinaryHighDensityInput({
       nodeWithPortPoints: node,
       connMap: this.connMap,
       colorMap: this.colorMap,
       // The regional projection already conservatively retains every obstacle
       // in the ordinary 8x envelope, so avoid scanning the full board twice.
-      obstacles: this.enableRegionalFallback
-        ? regionalInput.obstacles
-        : this.obstacles,
+      obstacles: nearbyBoardInput.obstacles,
       obstacleMargin: this.obstacleMargin,
       traceWidth: this.traceWidth,
       viaDiameter: this.viaDiameter,
@@ -172,15 +168,19 @@ export class Pipeline9NetworkedHighDensitySolver extends Pipeline9HighDensitySol
       nodeWithPortPoints: node,
       connectivityNetMap: mergePipeline9ProjectedConnectivityNetMaps(
         projectedInput.connectivityNetMap,
-        regionalInput.connectivityNetMap,
+        nearbyBoardInput.connectivityNetMap,
       ),
       colorMap: projectedInput.colorMap,
       viaDiameter: this.viaDiameter,
       traceWidth: this.traceWidth,
       obstacleMargin: this.obstacleMargin,
+      viaToPadClearance: this.viaToPadClearance,
       effort: 1,
       obstacles: projectedInput.obstacles,
-      regionalObstacles: regionalInput.obstacles,
+      boardObstacles: nearbyBoardInput.obstacles,
+      regionalObstacles: this.enableRegionalFallback
+        ? nearbyBoardInput.obstacles
+        : [],
       layerCount: this.layerCount,
       nodePf: this.nodePfById.get(node.capacityMeshNodeId) ?? null,
     }

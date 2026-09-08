@@ -30,6 +30,7 @@ import {
   spliceFixedRouteSectionWithMutationMask,
 } from "./pipeline9RegionalFallback"
 import { Pipeline9RegionalFallbackSolver } from "./Pipeline9RegionalFallbackSolver"
+import { hasPipeline9ViaToBoardObstacleConflict } from "./hasPipeline9ViaToBoardObstacleConflict"
 
 export type Pipeline9HighDensitySolverParams = {
   nodePortPoints: NodeWithPortPoints[]
@@ -327,6 +328,8 @@ export type Pipeline9RegularNodeSolverParams = {
     | Map<CapacityMeshNodeId, number | null>
     | Record<string, number | null>
   obstacles: Obstacle[]
+  boardObstacles?: Obstacle[]
+  viaToPadClearance?: number
   layerCount: number
 }
 
@@ -345,6 +348,8 @@ export const createPipeline9RegularNodeSolver = ({
   effort,
   nodePfById,
   obstacles,
+  boardObstacles,
+  viaToPadClearance,
   layerCount,
 }: Pipeline9RegularNodeSolverParams): HighDensitySolver =>
   new HighDensitySolver({
@@ -363,6 +368,17 @@ export const createPipeline9RegularNodeSolver = ({
     useGrowShrinkHighDensityIntraNodeSolver: true,
     preserveTerminalPcbPortIds: false,
     growShrinkFallbackToInvalidGeometryOnFailure: false,
+    growShrinkSolutionValidator:
+      boardObstacles && viaToPadClearance !== undefined
+        ? (routes) =>
+            !hasPipeline9ViaToBoardObstacleConflict({
+              routes,
+              boardObstacles,
+              connMap,
+              layerCount,
+              viaToPadClearance,
+            })
+        : undefined,
     captureSearchDebug: false,
   })
 
@@ -489,6 +505,8 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       effort: this.effort,
       nodePfById: this.nodePfById,
       obstacles: this.obstacles,
+      boardObstacles: this.obstacles,
+      viaToPadClearance: this.viaToPadClearance,
       layerCount: this.layerCount,
     })
     this.stats.regularNodeCount = Number(this.stats.regularNodeCount ?? 0) + 1
