@@ -195,9 +195,7 @@ export const applyBoundedRegionalRepairs = ({
     attemptedRegions.push({ bounds: region.mutableBounds, size })
     result.attemptedRegionCount++
     if (region.routes.length === 0) continue
-    const dirtyTraceIds = new Set(
-      currentErrors.flatMap(getDrcErrorTraceIds),
-    )
+    const dirtyTraceIds = new Set(currentErrors.flatMap(getDrcErrorTraceIds))
     const dirtyRouteIndices = region.routes.flatMap(
       (route, routeIndex): number[] =>
         [...dirtyTraceIds].some(
@@ -235,9 +233,7 @@ export const applyBoundedRegionalRepairs = ({
       pathSearchNodes < 0 ||
       pathSearchNodes + result.pathSearchNodeCount > MAX_PATH_SEARCH_NODES
     ) {
-      throw new Error(
-        "Bounded regional repair exceeded its work budget",
-      )
+      throw new Error("Bounded regional repair exceeded its work budget")
     }
     result.candidateAttemptCount += candidateAttempts
     result.pathSearchNodeCount += pathSearchNodes

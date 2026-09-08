@@ -19,16 +19,48 @@ test("projection rejects new foreign vertex contacts and collinear overlaps", ()
           z: 0,
         })),
       })
-      const wire = makeRoute("horizontal", [[-1, 0], [1, 0]])
-      const separated = makeRoute("foreign", [[-0.75, 1], [-0.5, 0.2], [0.5, 0.2], [0.75, 1]])
-      const vertexContact = makeRoute("foreign", [[-0.75, 1], [0, 0], [0.5, 0.2], [0.75, 1]])
-      const overlap = makeRoute("foreign", [[-0.75, 1], [-0.5, 0], [0.5, 0], [0.75, 1]])
-      const disjoint = makeRoute("foreign", [[2, 0], [3, 0]])
-      expect(createsTraceCrossing([wire, separated], [wire, vertexContact])).toBe(true)
-      expect(createsTraceCrossing([wire, separated], [wire, overlap])).toBe(true)
+      const wire = makeRoute("horizontal", [
+        [-1, 0],
+        [1, 0],
+      ])
+      const separated = makeRoute("foreign", [
+        [-0.75, 1],
+        [-0.5, 0.2],
+        [0.5, 0.2],
+        [0.75, 1],
+      ])
+      const vertexContact = makeRoute("foreign", [
+        [-0.75, 1],
+        [0, 0],
+        [0.5, 0.2],
+        [0.75, 1],
+      ])
+      const overlap = makeRoute("foreign", [
+        [-0.75, 1],
+        [-0.5, 0],
+        [0.5, 0],
+        [0.75, 1],
+      ])
+      const disjoint = makeRoute("foreign", [
+        [2, 0],
+        [3, 0],
+      ])
+      expect(
+        createsTraceCrossing([wire, separated], [wire, vertexContact]),
+      ).toBe(true)
+      expect(createsTraceCrossing([wire, separated], [wire, overlap])).toBe(
+        true,
+      )
       expect(createsTraceCrossing([wire, overlap], [wire, overlap])).toBe(false)
-      expect(createsTraceCrossing([wire, disjoint], [wire, disjoint])).toBe(false)
-      expect(createsTraceCrossing([wire, separated], [wire, { ...overlap, rootConnectionName: "horizontal" }])).toBe(false)
+      expect(createsTraceCrossing([wire, disjoint], [wire, disjoint])).toBe(
+        false,
+      )
+      expect(
+        createsTraceCrossing(
+          [wire, separated],
+          [wire, { ...overlap, rootConnectionName: "horizontal" }],
+        ),
+      ).toBe(false)
     }
   }
 })

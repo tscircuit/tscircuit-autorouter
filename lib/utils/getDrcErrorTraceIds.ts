@@ -47,4 +47,3 @@ export const getDrcErrorTraceIds = (
       allTraceIds.indexOf(traceId) === traceIndex,
   )
 }
-

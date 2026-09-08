@@ -7,7 +7,11 @@ test("single-transition routes require a feasible via interval and preserve term
     { x: 0, y: 0 },
     { x: 12.5, y: -6.5 },
   ]) {
-    const dimensions: [number, number][] = [[0.4, 1], [1, 0.4], [0.5, 1]]
+    const dimensions: [number, number][] = [
+      [0.4, 1],
+      [1, 0.4],
+      [0.5, 1],
+    ]
     for (const [width, height] of dimensions) {
       const node: NodeWithPortPoints = {
         capacityMeshNodeId: "via-region",
