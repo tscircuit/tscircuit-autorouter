@@ -121,7 +121,8 @@ const toRepairRoute = (
   capacityMeshNodeId: route.regionId,
   connectionName: route.connectionName,
   rootConnectionName:
-    connMap?.getNetConnectedToId(route.connectionName) ?? route.rootConnectionName,
+    connMap?.getNetConnectedToId(route.connectionName) ??
+    route.rootConnectionName,
   route: route.route.map((point) => ({
     x: point.x,
     y: point.y,
