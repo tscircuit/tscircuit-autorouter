@@ -377,9 +377,35 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
   doesPathToParentIntersectObstacle(
     node: Node,
     planarObstacleQuery?: PlanarObstacleQuery,
-  ) {
+  ): boolean {
     const parent = node.parent
     if (!parent) return false
+
+    const minX = Math.min(node.x, parent.x)
+    const maxX = Math.max(node.x, parent.x)
+    const minY = Math.min(node.y, parent.y)
+    const maxY = Math.max(node.y, parent.y)
+
+    // Clear endpoints do not guarantee that the connecting segment clears a
+    // via. This also checks the final connector to B, even on a layer without
+    // planar obstacle segments, using the same clearance as endpoint checks.
+    if (node.z === parent.z && this.obstacleViaIndex) {
+      const viaProximity =
+        this.viaDiameter / 2 + this.traceThickness / 2 + this.obstacleMargin
+      const nearbyViaIds = this.obstacleViaIndex.search(
+        minX - viaProximity,
+        minY - viaProximity,
+        maxX + viaProximity,
+        maxY + viaProximity,
+      )
+      for (const viaId of nearbyViaIds) {
+        const via = this.obstacleVias[viaId]!
+        if (pointToSegmentDistance(via, parent, node) < viaProximity) {
+          return true
+        }
+      }
+    }
+
     const indexedSegments =
       planarObstacleQuery?.segments ?? this.obstacleSegmentsByLayer.get(node.z)
     if (!indexedSegments) return false
@@ -388,11 +414,6 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
       node.z === parent.z && this.obstacleSegments.length > 0
         ? this.NEARBY_SEGMENT_CLEARANCE
         : 0
-
-    const minX = Math.min(node.x, parent.x)
-    const maxX = Math.max(node.x, parent.x)
-    const minY = Math.min(node.y, parent.y)
-    const maxY = Math.max(node.y, parent.y)
 
     const nearbySegmentIds =
       planarObstacleQuery?.segmentIds ??
@@ -627,7 +648,8 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
           if (this.debugEnabled) {
             this.debug_nodePathToParentIntersectsObstacle.add(neighborKey)
           }
-          this.exploredNodes.add(neighborKey)
+          // Only this incoming edge is blocked. A different parent may reach
+          // the same point through a clear segment.
           continue
         }
 
