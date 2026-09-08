@@ -1207,7 +1207,10 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
   }
 
   getOutputSimplifiedPcbTraces(): SimplifiedPcbTraces {
-    if (!this.solved || !this.highDensityRouteSolver) {
+    if (!this.highDensityRouteSolver) {
+      throw new Error("Cannot get output before solving is complete")
+    }
+    if (!this.solved && !this.failed) {
       throw new Error("Cannot get output before solving is complete")
     }
 
