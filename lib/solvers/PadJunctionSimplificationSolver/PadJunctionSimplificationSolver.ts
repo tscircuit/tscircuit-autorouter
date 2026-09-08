@@ -1,4 +1,13 @@
 /** Domain vocabulary shared by the search, output, and debugger.
+ *
+ * Anchor A --- first_trunk --- Junction --- second_trunk --- Anchor B
+ *                                |
+ *                             pad_stem
+ *                                |
+ *                               Pad
+ *
+ * The trunk consists of two arms; the pad stem joins them at the junction.
+ *
  * Parsed input: validated geometry and normalized options used by the solver.
  * Junction path: an ordered sequence of routing points.
  * Candidate progress: the current arm stage plus only its completed arms.
