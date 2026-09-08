@@ -31,6 +31,9 @@ import { repairDisconnectedSameRootPortPoints } from "./repairDisconnectedSameRo
 // derived exploration budget or exhausts all of its candidates.
 const ORDERING_SHUFFLE_SEEDS = Array.from({ length: 6 }, (_, seed) => seed)
 const defaultNativeBatch = HighDensitySolverA01.prototype.stepNativeBatch
+const defaultNativeA03Batch = HighDensityA03Solver.prototype.stepNativeBatch
+const nativeHasInstance = Function.prototype[Symbol.hasInstance]
+const nativeApply = Reflect.apply
 
 /** Coordinates a fitness-scheduled portfolio of intra-node routing solvers. */
 export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolver<
@@ -62,7 +65,8 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       !(
         initial &&
         "value" in initial &&
-        initial.value instanceof HighDensitySolverA01
+        (initial.value instanceof HighDensitySolverA01 ||
+          nativeApply(nativeHasInstance, HighDensityA03Solver, [initial.value]))
       )
     ) {
       super.stepSupervisedSolver(supervisedSolver)
@@ -77,12 +81,18 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
         "solver",
       )
       const solver = candidate && "value" in candidate ? candidate.value : null
+      const defaultBatch =
+        solver instanceof HighDensitySolverA01
+          ? defaultNativeBatch
+          : nativeApply(nativeHasInstance, HighDensityA03Solver, [solver])
+            ? defaultNativeA03Batch
+            : null
       const remaining =
         limit && "value" in limit && typeof limit.value === "number"
           ? limit.value - i
           : 0
       if (
-        solver instanceof HighDensitySolverA01 &&
+        defaultBatch &&
         Number.isSafeInteger(remaining) &&
         remaining > 1
       ) {
@@ -92,8 +102,8 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
           batch = Object.getOwnPropertyDescriptor(owner, "stepNativeBatch")
           owner = Object.getPrototypeOf(owner)
         }
-        if (batch && "value" in batch && batch.value === defaultNativeBatch) {
-          const consumed = defaultNativeBatch.call(solver, remaining)
+        if (batch && "value" in batch && batch.value === defaultBatch) {
+          const consumed = defaultBatch.call(solver, remaining)
           if (consumed > 0) {
             i += consumed
             continue
@@ -559,6 +569,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     }
     if (hyperParameters.HIGH_DENSITY_A03) {
       const solver = new HighDensityA03Solver({
+        useNativeSearch: true,
         nodeWithPortPoints: this.nodeWithPortPoints,
         highResolutionCellSize: 0.1,
         highResolutionCellThickness: 8,
