@@ -22,6 +22,11 @@ Zero-clearance checking distinguishes a physical short from a spacing violation.
 
 To regenerate the snapshot, prefix the test command with `BUN_UPDATE_SNAPSHOTS=1`.
 
-This draft is stacked on #2457. Skipping force improvement when fixed copper
-is present removes the short, but previously measured phase-1 relaxed DRC errors
-increase from 3 to 5. The candidate is not ready to merge.
+This draft is stacked on #2458 and uses routing effort 4 for both phases.
+The full TSX regression passes with zero trace-to-trace contacts and one relaxed
+DRC error, down from five at effort 1. This changes the reproduction’s routing
+configuration, not the autorouter algorithm or DRC thresholds.
+
+The remaining report concerns SW_RUN pins 1 and 2, declared internally connected
+in the original Circuit JSON. Correct reconstruction of that relationship for
+DRC needs separate work. The board is not yet DRC-clean.

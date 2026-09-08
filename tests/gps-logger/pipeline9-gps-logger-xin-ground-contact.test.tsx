@@ -5,6 +5,7 @@ import { Fragment } from "react"
 import type { AutorouterConfig } from "@tscircuit/props"
 import { checkEachPcbTraceNonOverlapping } from "@tscircuit/checks"
 import { getBugReportSnapshotSvg } from "lib/testing/getBugReportSnapshotSvg"
+import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
 import type { SimpleRouteJson } from "lib/types"
 import {
@@ -488,7 +489,10 @@ test("pipeline9 gps logger preserves separation between XIN and ground", async (
   circuit.add(
     <GpsLogger
       algorithmFn={async (input: SimpleRouteJson) => {
-        const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(input)
+        const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(
+          input,
+          { effort: 4 },
+        )
         phaseSolvers.push(solver)
         solver.solve()
         expect(solver.solved).toBe(true)
@@ -530,11 +534,14 @@ test("pipeline9 gps logger preserves separation between XIN and ground", async (
   })
   expect(contacts).toHaveLength(0)
 
-  await expect(
-    getBugReportSnapshotSvg({
-      inputSrj: phaseSolvers[1].originalSrj,
-      srjWithPointPairs: phaseSolvers[1].srjWithPointPairs!,
-      routedTraces: phaseSolvers[1].getOutputSimplifiedPcbTraces(),
-    }),
-  ).toMatchSvgSnapshot(import.meta.path, { svgName: "full-board" })
+  const snapshotInput = {
+    inputSrj: phaseSolvers[1].originalSrj,
+    srjWithPointPairs: phaseSolvers[1].srjWithPointPairs!,
+    routedTraces: phaseSolvers[1].getOutputSimplifiedPcbTraces(),
+  }
+  await expect(getBugReportSnapshotSvg(snapshotInput)).toMatchSvgSnapshot(
+    import.meta.path,
+    { svgName: "full-board" },
+  )
+  expect(evaluateRelaxedDrc(snapshotInput).errors).toHaveLength(1)
 })
