@@ -5,7 +5,7 @@ import type { HighDensityRoute } from "lib/types/high-density-types"
 import type { SimpleRouteJson } from "lib/types"
 import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
 
-test("coalesces overlapping drills at the existing site with clear pad clearance", (): void => {
+test("coalesces overlapping drills at the existing site with declared pad clearance", (): void => {
   const routes: HighDensityRoute[] = [0, 0.1].map(
     (viaX, i): HighDensityRoute => ({
       connectionName: `branch_${i}`,
@@ -25,6 +25,7 @@ test("coalesces overlapping drills at the existing site with clear pad clearance
     bounds: { minX: -2, minY: -2, maxX: 2, maxY: 2 },
     layerCount: 2,
     minTraceWidth: 0.1,
+    minViaEdgeToPadEdgeClearance: 0.1,
     connections: routes.map((route) => ({
       name: route.connectionName,
       __netConnectionName: "shared_net",
