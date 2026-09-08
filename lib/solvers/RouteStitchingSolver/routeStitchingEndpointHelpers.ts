@@ -1,4 +1,5 @@
 import { distance, type Point3 } from "@tscircuit/math-utils"
+import { PriorityQueue } from "lib/data-structures/PriorityQueue"
 import type { HighDensityIntraNodeRoute } from "lib/types/high-density-types"
 import {
   comparePoints,
@@ -12,6 +13,9 @@ import {
  * Endpoints within this tolerance are treated as the same island endpoint.
  */
 export const ENDPOINT_MATCH_TOLERANCE = 0.1
+
+type EndpointKey = string
+type EndpointSearchCandidate = { hash: EndpointKey; f: number }
 
 type EndpointEdge = {
   nextHash: string
@@ -302,29 +306,37 @@ export const selectRoutesAlongEndpointPath = (params: {
     )
   }
 
-  const queue = [startHash]
-  const visitedHashes = new Set<string>([startHash])
+  // One gap costs more than a simple path through every existing route.
+  // Among equally connected paths, keep the path with fewer route fragments.
+  const gapCost = canonicalHdRoutes.length + 1
+  const queue = new PriorityQueue<EndpointSearchCandidate>(
+    [{ hash: startHash, f: 0 }],
+    [...adjacency.values()].reduce((count, edges) => count + edges.length, 1),
+  )
+  const costByHash = new Map<EndpointKey, number>([[startHash, 0]])
   const prevByHash = new Map<
-    string,
+    EndpointKey,
     { prevHash: string; routeIndex: number | null }
   >()
 
-  while (queue.length > 0) {
-    const currentHash = queue.shift()!
+  while (!queue.isEmpty()) {
+    const { hash: currentHash, f: currentCost } = queue.dequeue()!
+    if (currentCost !== costByHash.get(currentHash)) continue
     if (currentHash === endHash) break
 
     for (const edge of adjacency.get(currentHash) ?? []) {
-      if (visitedHashes.has(edge.nextHash)) continue
-      visitedHashes.add(edge.nextHash)
+      const cost = currentCost + (edge.routeIndex === null ? gapCost : 1)
+      if (cost >= (costByHash.get(edge.nextHash) ?? Infinity)) continue
+      costByHash.set(edge.nextHash, cost)
       prevByHash.set(edge.nextHash, {
         prevHash: currentHash,
         routeIndex: edge.routeIndex,
       })
-      queue.push(edge.nextHash)
+      queue.enqueue({ hash: edge.nextHash, f: cost })
     }
   }
 
-  if (!visitedHashes.has(endHash)) return canonicalHdRoutes
+  if (!costByHash.has(endHash)) return canonicalHdRoutes
 
   const selectedRouteIndexesInReverse: number[] = []
   let cursorHash = endHash
