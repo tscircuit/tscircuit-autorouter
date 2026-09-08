@@ -28,7 +28,10 @@ const MAX_DENSE_COST_CACHE_SLOTS = 65_536
 export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends SingleHighDensityRouteSolver {
   protected override planarClearanceMethod =
     futureCostPlanarClearance
-  protected override planarCacheCostMethods = futurePlanarCacheCostMethods
+  protected override planarCacheCostMethods =
+    SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost.planarCostMethods
+  protected override planarCostMethod =
+    SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost.defaultPlanarCostMethod
   protected override planarCacheCostIterable = "futureConnectionPoints"
   FUTURE_CONNECTION_PROX_TRACE_PENALTY_FACTOR = 2
   FUTURE_CONNECTION_PROX_VIA_PENALTY_FACTOR = 1
@@ -312,6 +315,22 @@ export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends Sing
   }
 
   override setNodeCosts(node: Node): void {
+    this.setNodeCostsCore(node, undefined, true)
+  }
+
+  protected override setPlanarNodeCosts(
+    node: Node,
+    gridKey: number,
+    validateParameters: boolean,
+  ): void {
+    this.setNodeCostsCore(node, gridKey, validateParameters)
+  }
+
+  private setNodeCostsCore(
+    node: Node,
+    knownGridKey: number | undefined,
+    validateParameters: boolean,
+  ): void {
     const dx = Math.abs(node.x - node.parent!.x)
     const dy = Math.abs(node.y - node.parent!.y)
     const dist = Math.sqrt(dx ** 2 + dy ** 2)
@@ -329,8 +348,8 @@ export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends Sing
       dist +
       misalignedDist * this.MISALIGNED_DIST_PENALTY_FACTOR
 
-    this.invalidateChangedNodeCostParameters()
-    const gridKey = this.getNodeKey(node)
+    if (validateParameters) this.invalidateChangedNodeCostParameters()
+    const gridKey = knownGridKey ?? this.getNodeKey(node)
     if (this.denseNodeCostTerms === undefined) {
       this.initializeDenseNodeCostTerms()
     }
@@ -392,6 +411,20 @@ export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends Sing
     node.h = baseH + futureConnectionPenalty
     node.f = this.computeF(node.g, node.h)
   }
+
+  // Capture internal methods with the public cost hooks. A customized method
+  // must retain the ordinary per-call validation path for the whole expansion.
+  private static readonly defaultPlanarCostMethod =
+    SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost.prototype.setPlanarNodeCosts
+  private static readonly planarCostMethods = [
+    ["setNodeCosts", SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost.prototype.setNodeCosts],
+    ["getFutureConnectionPenalty", SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost.prototype.getFutureConnectionPenalty],
+    ["getClosestFutureConnectionPoint", SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost.prototype.getClosestFutureConnectionPoint],
+    ["setPlanarNodeCosts", SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost.defaultPlanarCostMethod],
+    ["setNodeCostsCore", SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost.prototype.setNodeCostsCore],
+    ["invalidateChangedNodeCostParameters", SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost.prototype.invalidateChangedNodeCostParameters],
+    ["initializeDenseNodeCostTerms", SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost.prototype.initializeDenseNodeCostTerms],
+  ] as const
 }
 
 type FutureConnectionSegment = {
@@ -402,9 +435,3 @@ type FutureConnectionSegment = {
 
 const futureCostPlanarClearance =
   SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost.prototype.isNodeTooCloseToObstacle
-
-const futurePlanarCacheCostMethods = [
-  ["setNodeCosts", SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost.prototype.setNodeCosts],
-  ["getFutureConnectionPenalty", SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost.prototype.getFutureConnectionPenalty],
-  ["getClosestFutureConnectionPoint", SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost.prototype.getClosestFutureConnectionPoint],
-] as const

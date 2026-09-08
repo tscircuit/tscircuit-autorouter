@@ -66,6 +66,13 @@ const connectionLabel = (
     .join("\n")
 
 export class SingleHighDensityRouteSolver extends BaseSolver {
+  private static readonly basePlanarCostMethods = [
+    ["setNodeCosts", SingleHighDensityRouteSolver.prototype.setNodeCosts],
+    ["computeG", SingleHighDensityRouteSolver.prototype.computeG],
+    ["computeH", SingleHighDensityRouteSolver.prototype.computeH],
+    ["setPlanarNodeCosts", SingleHighDensityRouteSolver.prototype.setPlanarNodeCosts],
+  ] as const
+
   override getSolverName(): string {
     return "SingleHighDensityRouteSolver"
   }
@@ -124,8 +131,11 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
   protected planarClearanceMethod =
     planarCacheDefaults.isNodeTooCloseToObstacle
   protected planarCacheCostMethods: ReadonlyArray<readonly [string, unknown]> =
-    basePlanarCacheCostMethods
+    SingleHighDensityRouteSolver.basePlanarCostMethods
   protected planarCacheCostIterable: string | undefined
+  protected planarCostMethod:
+    | ((node: Node, gridKey: number, validateParameters: boolean) => void)
+    | undefined
   private sharedPlanarViaQueries = new WeakMap<
     PlanarObstacleQuery,
     SharedPlanarViaQuery
@@ -791,6 +801,14 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     return cache
   }
 
+  protected setPlanarNodeCosts(
+    node: Node,
+    _gridKey: number,
+    _validateParameters: boolean,
+  ): void {
+    this.setNodeCosts(node)
+  }
+
   getNeighbors(node: Node) {
     const neighbors: Node[] = []
     let planarObstacleQuery: PlanarObstacleQuery | undefined
@@ -799,6 +817,10 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     // neighbors, so validate once. Any custom callback uses ordinary clearance
     // for the entire expansion, including callbacks that mutate live widths.
     const planarFreeCache = this.getPlanarFreeCache()
+    const canReusePlanarCostContext = planarFreeCache && this.planarCostMethod
+    // No state survives this call or reaches the via phase. The first accepted
+    // planar cost validates at its original point, even after an earlier error.
+    let validatePlanarCostParameters = true
     const canSharePlanarObstacleQuery =
       this.getPlanarObstacleQuery ===
         SingleHighDensityRouteSolver.prototype.getPlanarObstacleQuery &&
@@ -901,7 +923,16 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
           continue
         }
 
-        this.setNodeCosts(neighbor)
+        if (canReusePlanarCostContext) {
+          this.setPlanarNodeCosts(
+            neighbor,
+            neighborKey,
+            validatePlanarCostParameters,
+          )
+          validatePlanarCostParameters = false
+        } else {
+          this.setNodeCosts(neighbor)
+        }
 
         neighbors.push(neighbor)
       }
@@ -1261,6 +1292,7 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
 
     return graphics
   }
+
 }
 
 type IndexedObstacleSegment = {
@@ -1330,9 +1362,3 @@ const planarCacheDefaults = {
   computeF: SingleHighDensityRouteSolver.prototype.computeF,
   viaPenaltyDistance: Object.getOwnPropertyDescriptor(SingleHighDensityRouteSolver.prototype, "viaPenaltyDistance")!.get,
 }
-
-const basePlanarCacheCostMethods = [
-  ["setNodeCosts", SingleHighDensityRouteSolver.prototype.setNodeCosts],
-  ["computeG", SingleHighDensityRouteSolver.prototype.computeG],
-  ["computeH", SingleHighDensityRouteSolver.prototype.computeH],
-] as const
