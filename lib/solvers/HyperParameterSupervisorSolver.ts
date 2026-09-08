@@ -144,6 +144,12 @@ export class HyperParameterSupervisorSolver<
       .join(", ")}`
   }
 
+  protected stepSupervisedSolver(supervisedSolver: SupervisedSolver<T>): void {
+    for (let i = 0; i < this.MIN_SUBSTEPS; i++) {
+      supervisedSolver.solver.step()
+    }
+  }
+
   _step() {
     if (!this.supervisedSolvers) this.initializeSolvers()
 
@@ -155,9 +161,7 @@ export class HyperParameterSupervisorSolver<
       return
     }
 
-    for (let i = 0; i < this.MIN_SUBSTEPS; i++) {
-      supervisedSolver.solver.step()
-    }
+    this.stepSupervisedSolver(supervisedSolver)
     this.activeSubSolver = supervisedSolver.solver
 
     supervisedSolver.g = this.computeG(supervisedSolver.solver)

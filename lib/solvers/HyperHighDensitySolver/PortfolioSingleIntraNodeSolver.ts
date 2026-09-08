@@ -30,6 +30,7 @@ import { repairDisconnectedSameRootPortPoints } from "./repairDisconnectedSameRo
 // orderings are introduced only after that portfolio spends its dynamically
 // derived exploration budget or exhausts all of its candidates.
 const ORDERING_SHUFFLE_SEEDS = Array.from({ length: 6 }, (_, seed) => seed)
+const defaultNativeBatch = HighDensitySolverA01.prototype.stepNativeBatch
 
 /** Coordinates a fitness-scheduled portfolio of intra-node routing solvers. */
 export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolver<
@@ -52,6 +53,46 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
   effort: number
   adaptiveSearchExpanded = false
   private constructorCandidates = new Map<string, IntraNodeRouteSolver>()
+
+  protected override stepSupervisedSolver(
+    supervisedSolver: SupervisedSolver<IntraNodeRouteSolver>,
+  ): void {
+    const initial = Object.getOwnPropertyDescriptor(supervisedSolver, "solver")
+    if (!(initial && "value" in initial && initial.value instanceof HighDensitySolverA01)) {
+      super.stepSupervisedSolver(supervisedSolver)
+      return
+    }
+    for (let i = 0; i < this.MIN_SUBSTEPS;) {
+      // Only ordinary data properties can remain unchanged while native code
+      // runs. Accessors and custom batch methods keep the public step loop.
+      const limit = Object.getOwnPropertyDescriptor(this, "MIN_SUBSTEPS")
+      const candidate = Object.getOwnPropertyDescriptor(supervisedSolver, "solver")
+      const solver = candidate && "value" in candidate ? candidate.value : null
+      const remaining = limit && "value" in limit && typeof limit.value === "number"
+        ? limit.value - i
+        : 0
+      if (
+        solver instanceof HighDensitySolverA01 &&
+        Number.isSafeInteger(remaining) && remaining > 1
+      ) {
+        let owner: object | null = solver
+        let batch: PropertyDescriptor | undefined
+        while (owner && !batch) {
+          batch = Object.getOwnPropertyDescriptor(owner, "stepNativeBatch")
+          owner = Object.getPrototypeOf(owner)
+        }
+        if (batch && "value" in batch && batch.value === defaultNativeBatch) {
+          const consumed = defaultNativeBatch.call(solver, remaining)
+          if (consumed > 0) {
+            i += consumed
+            continue
+          }
+        }
+      }
+      supervisedSolver.solver.step()
+      i++
+    }
+  }
 
   private getSolvedSegmentCount(solver: unknown): number | null {
     const solvedConnectionsMap = (solver as any).solvedConnectionsMap
