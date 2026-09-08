@@ -125,10 +125,13 @@ const clipRouteSegmentToBounds = (
 const getFixedRouteSlice = (
   route: PreloadedHighDensityRoute,
   node: NodeWithPortPoints,
+  includeClosedSectionsForMutationProvenance: boolean,
 ): FixedRouteSlice | null => {
   const bounds = getNodeBounds(node)
   let start: RouteLocation | undefined
   let end: RouteLocation | undefined
+  let firstNonemptySegment: RouteLocation | undefined
+  let lastNonemptySegment: RouteLocation | undefined
 
   for (
     let segmentIndex = 0;
@@ -150,6 +153,15 @@ const getFixedRouteSlice = (
       segmentIndex,
       point: clippedSegment.end,
     }
+    if (
+      includeClosedSectionsForMutationProvenance &&
+      (Math.abs(clippedSegment.start.x - clippedSegment.end.x) > POINT_EPSILON ||
+        Math.abs(clippedSegment.start.y - clippedSegment.end.y) > POINT_EPSILON ||
+        clippedSegment.start.z !== clippedSegment.end.z)
+    ) {
+      firstNonemptySegment ??= { segmentIndex, point: clippedSegment.start }
+      lastNonemptySegment = end
+    }
   }
 
   if (!start || !end) return null
@@ -158,7 +170,12 @@ const getFixedRouteSlice = (
     Math.abs(start.point.y - end.point.y) <= POINT_EPSILON &&
     start.point.z === end.point.z
   ) {
-    return null
+    // A closed hairpin cannot supply an ordinary routing port pair, but its
+    // surviving interior copper still has mutation provenance. Point-only
+    // contacts on the outside prefix/suffix do not belong to that envelope.
+    if (!firstNonemptySegment || !lastNonemptySegment) return null
+    start = firstNonemptySegment
+    end = lastNonemptySegment
   }
 
   return {
@@ -238,6 +255,7 @@ export const createRegionalFallbackProblem = (
   node: NodeWithPortPoints,
   fixedRoutes: PreloadedHighDensityRoute[],
   promotedFixedRouteConnectionNames: ReadonlySet<string> = new Set(),
+  options?: { includeClosedSectionsForMutationProvenance?: boolean },
 ): RegionalFallbackProblem => {
   const fixedRouteSectionsByConnectionName = new Map<
     string,
@@ -247,7 +265,13 @@ export const createRegionalFallbackProblem = (
   const targetLayers = new Set(node.portPoints.map((portPoint) => portPoint.z))
 
   const localSlices = fixedRoutes
-    .map((fixedRoute) => getFixedRouteSlice(fixedRoute, node))
+    .map((fixedRoute) =>
+      getFixedRouteSlice(
+        fixedRoute,
+        node,
+        options?.includeClosedSectionsForMutationProvenance === true,
+      ),
+    )
     .filter((slice): slice is FixedRouteSlice => slice !== null)
   const slices = localSlices
     .filter(
