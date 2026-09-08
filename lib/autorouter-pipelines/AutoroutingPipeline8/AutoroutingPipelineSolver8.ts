@@ -59,6 +59,7 @@ import { TraceSimplificationSolver } from "../../solvers/TraceSimplificationSolv
 import { TraceWidthSolver } from "../../solvers/TraceWidthSolver/TraceWidthSolver"
 import { PreprocessSimpleRouteJsonSolver } from "../AutoroutingPipeline4_TinyHypergraph/PreprocessSimpleRouteJsonSolver"
 import { SplitNodesIntoSingleLayerNodeSolver } from "./SplitNodesIntoSingleLayerNodeSolver"
+import { materializeAndValidateGeneratedThroughVias } from "lib/utils/materializeAndValidateGeneratedThroughVias"
 
 interface CapacityMeshSolverOptions {
   capacityDepth?: number
@@ -892,6 +893,7 @@ export class AutoroutingPipelineSolver8 extends BaseSolver {
             defaultViaHoleDiameter: this.viaHoleDiameter,
             obstacles: this.srj.obstacles,
             connMap: this.connMap,
+            allowBlindAndBuriedVias: this.srj.allowBlindAndBuriedVias,
           }),
         }
 
@@ -899,7 +901,10 @@ export class AutoroutingPipelineSolver8 extends BaseSolver {
       }
     }
 
-    return traces
+    return materializeAndValidateGeneratedThroughVias({
+      srj: this.originalSrj,
+      outputTraces: traces,
+    })
   }
 
   getOutputSimpleRouteJson(): SimpleRouteJson {

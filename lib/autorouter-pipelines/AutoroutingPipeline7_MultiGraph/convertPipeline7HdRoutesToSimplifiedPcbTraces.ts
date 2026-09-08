@@ -16,6 +16,7 @@ export interface ConvertPipeline7HdRoutesOptions {
   obstacles: Obstacle[]
   defaultViaHoleDiameter: number
   connMap: ConnectivityMap
+  allowBlindAndBuriedVias?: boolean
 }
 
 type StaticConvertPipeline7HdRoutesOptions = Omit<
@@ -36,6 +37,7 @@ export const createPipeline7HdRoutesToSimplifiedPcbTracesConverter = ({
   obstacles,
   defaultViaHoleDiameter,
   connMap,
+  allowBlindAndBuriedVias,
 }: StaticConvertPipeline7HdRoutesOptions) => {
   const netConnectionNameByOriginalConnectionName = new Map<
     string,
@@ -134,6 +136,7 @@ export const createPipeline7HdRoutesToSimplifiedPcbTracesConverter = ({
             connectedMultilayerObstacles:
               getConnectedMultilayerObstacles(hdRoute),
             connMap,
+            allowBlindAndBuriedVias,
           }),
         })
       }
@@ -152,6 +155,7 @@ export const convertPipeline7HdRoutesToSimplifiedPcbTraces = ({
   obstacles,
   defaultViaHoleDiameter,
   connMap,
+  allowBlindAndBuriedVias,
 }: ConvertPipeline7HdRoutesOptions): SimplifiedPcbTraces =>
   createPipeline7HdRoutesToSimplifiedPcbTracesConverter({
     connections,
@@ -160,4 +164,5 @@ export const convertPipeline7HdRoutesToSimplifiedPcbTraces = ({
     obstacles,
     defaultViaHoleDiameter,
     connMap,
+    allowBlindAndBuriedVias,
   })(hdRoutes)

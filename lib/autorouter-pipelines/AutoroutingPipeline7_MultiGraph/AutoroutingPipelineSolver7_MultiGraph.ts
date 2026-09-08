@@ -75,6 +75,7 @@ import { createPipeline7AutoroutingDrcEvaluator } from "./create-pipeline7-autor
 import { getPowerTraceExpansionConnectionNames } from "./getPowerTraceExpansionConnectionNames"
 import { lockHdRouteTerminals } from "./lock-hd-route-terminals"
 import { preparePipeline7PowerTraceExpansionInput } from "./prepare-pipeline7-power-trace-expansion-input"
+import { materializeAndValidateGeneratedThroughVias } from "lib/utils/materializeAndValidateGeneratedThroughVias"
 
 interface CapacityMeshSolverOptions {
   capacityDepth?: number
@@ -677,6 +678,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
           obstacles: cms.srj.obstacles,
           defaultViaHoleDiameter: cms.viaHoleDiameter,
           connMap: cms.connMap,
+          allowBlindAndBuriedVias: cms.srj.allowBlindAndBuriedVias,
           srjWithPointPairs: cms.srjWithPointPairs!,
           originalSrj: cms.originalSrj,
         })
@@ -1187,11 +1189,13 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
       throw new Error("Cannot get output before solving is complete")
     }
 
-    if (this.powerTraceExpansionSolver) {
-      return this.powerTraceExpansionSolver.getOutput()
-    }
-
-    return this.getPrePowerTraceOutputSimplifiedPcbTraces()
+    const traces = this.powerTraceExpansionSolver
+      ? this.powerTraceExpansionSolver.getOutput()
+      : this.getPrePowerTraceOutputSimplifiedPcbTraces()
+    return materializeAndValidateGeneratedThroughVias({
+      srj: this.originalSrj,
+      outputTraces: traces,
+    })
   }
 
   getPrePowerTraceOutputSimplifiedPcbTraces(): SimplifiedPcbTraces {
@@ -1203,6 +1207,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
       obstacles: this.srj.obstacles,
       defaultViaHoleDiameter: this.viaHoleDiameter,
       connMap: this.connMap,
+      allowBlindAndBuriedVias: this.srj.allowBlindAndBuriedVias,
     })
   }
 

@@ -38,6 +38,7 @@ import {
 import { createSrjWithBoardValidObstacleLayers } from "lib/utils/create-srj-with-board-valid-obstacle-layers"
 import { createObstacleLabelFormatter } from "lib/utils/formatObstacleLabel"
 import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
+import { materializeAndValidateGeneratedThroughVias } from "lib/utils/materializeAndValidateGeneratedThroughVias"
 import { getInitiallyConnectedMapFromSimpleRouteJson } from "lib/utils/get-initially-connected-map-from-simple-route-json"
 import {
   getGraphicsLayerForConnectionPoint,
@@ -1444,6 +1445,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       defaultViaHoleDiameter: this.viaHoleDiameter,
       obstacles: this.originalSrj.obstacles,
       connMap: this.connMap,
+      allowBlindAndBuriedVias: this.originalSrj.allowBlindAndBuriedVias,
     })
   }
 
@@ -1482,6 +1484,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       obstacles: this.srj.obstacles,
       defaultViaHoleDiameter: this.viaHoleDiameter,
       connMap: this.connMap,
+      allowBlindAndBuriedVias: this.srj.allowBlindAndBuriedVias,
     })
     return assignUniquePcbTraceIdsToNewTraces(
       routedTraces,
@@ -1510,12 +1513,15 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
         "Pipeline9 invariant violated: solved pipeline is missing the unconditional power-trace expansion solver",
       )
     }
-    return [
-      ...this.getPowerTraceExpansionFixedTraces().filter(
-        (trace) => trace.__replaces_pcb_trace_id !== undefined,
-      ),
-      ...this.powerTraceExpansionSolver.getOutput(),
-    ]
+    return materializeAndValidateGeneratedThroughVias({
+      srj: this.originalSrj,
+      outputTraces: [
+        ...this.getPowerTraceExpansionFixedTraces().filter(
+          (trace) => trace.__replaces_pcb_trace_id !== undefined,
+        ),
+        ...this.powerTraceExpansionSolver.getOutput(),
+      ],
+    })
   }
 
   getOutputSimpleRouteJson(): SimpleRouteJson {
@@ -1527,10 +1533,13 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
         "Pipeline9 invariant violated: solved pipeline is missing the unconditional power-trace expansion solver",
       )
     }
-    const traces = [
-      ...this.getPowerTraceExpansionFixedTraces(),
-      ...this.powerTraceExpansionSolver.getOutput(),
-    ]
+    const traces = materializeAndValidateGeneratedThroughVias({
+      srj: this.originalSrj,
+      outputTraces: [
+        ...this.getPowerTraceExpansionFixedTraces(),
+        ...this.powerTraceExpansionSolver.getOutput(),
+      ],
+    })
     return {
       ...this.originalSrj,
       traces,

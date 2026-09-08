@@ -47,6 +47,7 @@ import { SingleLayerNodeMergerSolver } from "../../solvers/SingleLayerNodeMerger
 import { StrawSolver } from "../../solvers/StrawSolver/StrawSolver"
 import { TraceSimplificationSolver } from "../../solvers/TraceSimplificationSolver/TraceSimplificationSolver"
 import { TraceWidthSolver } from "../../solvers/TraceWidthSolver/TraceWidthSolver"
+import { materializeAndValidateGeneratedThroughVias } from "lib/utils/materializeAndValidateGeneratedThroughVias"
 
 interface CapacityMeshSolverOptions {
   capacityDepth?: number
@@ -623,14 +624,19 @@ export class AutoroutingPipelineSolver3_HgPortPointPathing extends BaseSolver {
             netConnectionName ??
             connection.__rootConnectionNames?.[0] ??
             connection.name,
-          route: convertHdRouteToSimplifiedRoute(hdRoute, this.srj.layerCount),
+          route: convertHdRouteToSimplifiedRoute(hdRoute, this.srj.layerCount, {
+            allowBlindAndBuriedVias: this.srj.allowBlindAndBuriedVias,
+          }),
         }
 
         traces.push(simplifiedPcbTrace)
       }
     }
 
-    return traces
+    return materializeAndValidateGeneratedThroughVias({
+      srj: this.srj,
+      outputTraces: traces,
+    })
   }
 
   getOutputSimpleRouteJson(): SimpleRouteJson {
