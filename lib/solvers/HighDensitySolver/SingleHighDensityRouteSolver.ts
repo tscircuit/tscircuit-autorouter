@@ -13,6 +13,7 @@ import {
 import type { HighDensityIntraNodeRoute } from "lib/types/high-density-types"
 import { BaseSolver } from "../BaseSolver"
 import { HighDensityHyperParameters } from "./HighDensityHyperParameters"
+import { searchObstacleIndex } from "./searchObstacleIndex"
 
 export type FutureConnection = {
   connectionName: string
@@ -315,16 +316,15 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
         : this.obstacleSegments)
     const nearbySegmentIds =
       planarObstacleQuery?.segmentIds ??
-      (!isVia
-        ? this.obstacleSegmentIndexByLayer.get(node.z)
-        : this.obstacleSegmentIndex
-      )?.search(
+      searchObstacleIndex(
+        !isVia
+          ? this.obstacleSegmentIndexByLayer.get(node.z)
+          : this.obstacleSegmentIndex,
         node.x - traceProximity,
         node.y - traceProximity,
         node.x + traceProximity,
         node.y + traceProximity,
-      ) ??
-      []
+      )
     if (indexedSegments) {
       for (const segmentId of nearbySegmentIds) {
         const segment = indexedSegments[segmentId]
@@ -368,13 +368,14 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
       // Defer the union query until a candidate survives segment clearance.
       // Its IDs live only as long as this expansion's planar query object.
       const nearbyViaIds = canShareViaQuery
-        ? (sharedQuery.viaIds ??= this.obstacleViaIndex.search(
+        ? (sharedQuery.viaIds ??= searchObstacleIndex(
+            this.obstacleViaIndex,
             sharedQuery.minX,
             sharedQuery.minY,
             sharedQuery.maxX,
             sharedQuery.maxY,
           ))
-        : this.obstacleViaIndex.search(minX, minY, maxX, maxY)
+        : searchObstacleIndex(this.obstacleViaIndex, minX, minY, maxX, maxY)
       for (const viaId of nearbyViaIds) {
         const via = this.obstacleVias[viaId]
         if (
@@ -435,15 +436,13 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
 
     const nearbySegmentIds =
       planarObstacleQuery?.segmentIds ??
-      this.obstacleSegmentIndexByLayer
-        .get(node.z)
-        ?.search(
-          minX - clearance,
-          minY - clearance,
-          maxX + clearance,
-          maxY + clearance,
-        ) ??
-      []
+      searchObstacleIndex(
+        this.obstacleSegmentIndexByLayer.get(node.z),
+        minX - clearance,
+        minY - clearance,
+        maxX + clearance,
+        maxY + clearance,
+      )
 
     for (const segmentId of nearbySegmentIds) {
       const segment = indexedSegments[segmentId]
@@ -492,7 +491,8 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
 
     return {
       segments,
-      segmentIds: segmentIndex.search(
+      segmentIds: searchObstacleIndex(
+        segmentIndex,
         Math.min(node.x - traceProximity, parent.x - clearance),
         Math.min(node.y - traceProximity, parent.y - clearance),
         Math.max(node.x + traceProximity, parent.x + clearance),
@@ -515,7 +515,8 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     // bounds once; the collision checks still filter each candidate's bounds.
     const query = {
       segments,
-      segmentIds: segmentIndex.search(
+      segmentIds: searchObstacleIndex(
+        segmentIndex,
         Math.min(
           clamp(node.x - this.cellStep, minX, maxX) - traceProximity,
           node.x - clearance,
