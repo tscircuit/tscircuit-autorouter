@@ -30,6 +30,8 @@ test("clearance projection repairs translated and rotated sets of nine physical 
         viaDiameter: 0.3,
         route: [
           { ...transform(x - 1, y), z: 0 },
+          { ...transform(x - 0.5, y), z: 0 },
+          { ...transform(x - 0.5, y), z: 0 },
           { ...transform(x, y), z: 0 },
           { ...transform(x, y), z: 1 },
           { ...transform(x + 1, y), z: 1 },
@@ -142,6 +144,9 @@ test("clearance projection repairs translated and rotated sets of nine physical 
       expect(gap.actual_clearance).toBeGreaterThanOrEqual(clearance - 1e-9)
     }
     for (let index = 0; index < routes.length; index++) {
+      expect(result[index]!.route.map((point) => point.z)).toEqual(
+        routes[index]!.route.map((point) => point.z),
+      )
       expect(result[index]!.route[0]).toEqual(routes[index]!.route[0])
       expect(result[index]!.route.at(-1)).toEqual(
         routes[index]!.route.at(-1),

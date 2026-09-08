@@ -1,8 +1,6 @@
 import {
-  extractRepairRegion,
   getFixedObstacleViolations,
   getNewViaPadViolations,
-  mergeRepairRegion,
   relaxTraceClearance,
 } from "@tscircuit/repair04"
 import type { DrcEvaluator } from "high-density-repair03/lib"
@@ -37,7 +35,23 @@ export const applyPipeline9ClearanceProjection = ({
   const centerY = (srj.bounds.minY + srj.bounds.maxY) / 2
   const width = Math.max(10, srj.bounds.maxX - srj.bounds.minX)
   const height = Math.max(10, srj.bounds.maxY - srj.bounds.minY)
-  const region = extractRepairRegion({
+  let maxCopperRadius = 0
+  for (const route of routes) {
+    maxCopperRadius = Math.max(
+      maxCopperRadius,
+      route.viaDiameter / 2,
+      route.traceThickness / 2,
+    )
+    for (const point of route.route) {
+      maxCopperRadius = Math.max(
+        maxCopperRadius,
+        (point.traceThickness ?? route.traceThickness) / 2,
+      )
+    }
+  }
+  // Whole-board projection needs no cropping or splicing. Preserve every
+  // transition's point indices so the via guard can prove its identity.
+  const candidate = relaxTraceClearance({
     srj,
     routes,
     bounds: {
@@ -46,18 +60,13 @@ export const applyPipeline9ClearanceProjection = ({
       minY: centerY - height / 2,
       maxY: centerY + height / 2,
     },
-  })
-  const candidate = mergeRepairRegion({
-    routes,
-    region,
-    repairedRoutes: relaxTraceClearance({
-      ...region,
-      allowViaMovement: true,
-      traceClearance:
-        originalSrj.minTraceToPadEdgeClearance ??
-        RELAXED_DRC_OPTIONS.traceClearance,
-      viaClearance: RELAXED_DRC_OPTIONS.viaClearance,
-    }),
+    boundaryMargin: maxCopperRadius + (originalSrj.minBoardEdgeClearance ?? 0),
+    lockedPointIndices: routes.map((route) => route.route.map(() => false)),
+    allowViaMovement: true,
+    traceClearance:
+      originalSrj.minTraceToPadEdgeClearance ??
+      RELAXED_DRC_OPTIONS.traceClearance,
+    viaClearance: RELAXED_DRC_OPTIONS.viaClearance,
   })
   const fixedViolations = new Map(
     getFixedObstacleViolations({ srj, routes }).map((violation) => [
