@@ -1,0 +1,12 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "paths": {
+      "lib/*": ["lib/*"],
+      "@tscircuit/core": ["tests/gps-logger/node_modules/@tscircuit/core"],
+      "@tscircuit/capacity-autorouter": ["lib/index.ts"]
+    }
+  },
+  "include": ["./**/*.tsx", "../fixtures/preload.ts", "../../types/external-modules.d.ts", "../../json-modules.d.ts"],
+  "exclude": ["node_modules"]
+}

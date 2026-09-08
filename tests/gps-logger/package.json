@@ -1,0 +1,16 @@
+{
+  "name": "gps-logger-routing-repro",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@tscircuit/core": "0.0.1861",
+    "@tscircuit/common": "0.0.65",
+    "@tscircuit/checks": "0.0.184",
+    "@tscircuit/props": "0.0.646",
+    "@tscircuit/circuit-json-util": "0.0.111",
+    "@tscircuit/capacity-autorouter": "0.0.886",
+    "circuit-json": "0.0.484",
+    "circuit-to-svg": "0.0.413",
+    "react": "19.2.8"
+  }
+}
