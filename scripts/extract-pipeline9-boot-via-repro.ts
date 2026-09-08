@@ -135,7 +135,8 @@ const sourceIds = new Set([
 ])
 const pcbComponents = circuit.filter(
   (record) =>
-    record.type === "pcb_component" && sourceIds.has(record.source_component_id),
+    record.type === "pcb_component" &&
+    sourceIds.has(record.source_component_id),
 )
 assert.equal(pcbComponents.length, 2)
 const pcbIds = new Set(pcbComponents.map((record) => record.pcb_component_id))
@@ -185,7 +186,10 @@ for (const record of circuit) {
         "port_hints",
       ]),
     )
-  } else if (record.type === "pcb_port" && pcbIds.has(record.pcb_component_id)) {
+  } else if (
+    record.type === "pcb_port" &&
+    pcbIds.has(record.pcb_component_id)
+  ) {
     circuitJson.push(
       selectFields(record, [
         "pcb_port_id",
@@ -196,7 +200,10 @@ for (const record of circuit) {
         "layers",
       ]),
     )
-  } else if (record.type === "pcb_smtpad" && pcbIds.has(record.pcb_component_id)) {
+  } else if (
+    record.type === "pcb_smtpad" &&
+    pcbIds.has(record.pcb_component_id)
+  ) {
     circuitJson.push(
       selectFields(record, [
         "pcb_smtpad_id",
