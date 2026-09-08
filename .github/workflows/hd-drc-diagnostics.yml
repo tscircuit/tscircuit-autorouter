@@ -68,7 +68,11 @@ jobs:
           - { dataset: srj20, sample: 140, pipeline: 9 }
           - { dataset: srj21, sample: 1, pipeline: 9 }
           - { dataset: srj21, sample: 3, pipeline: 9 }
+          - { dataset: srj23, sample: 14, pipeline: 9 }
           - { dataset: srj23, sample: 17, pipeline: 9 }
+          - { dataset: srj23, sample: 26, pipeline: 9 }
+          - { dataset: srj23, sample: 42, pipeline: 9 }
+          - { dataset: srj23, sample: 43, pipeline: 9 }
           - { dataset: srj23, sample: 45, pipeline: 9 }
           - { dataset: srj23, sample: 46, pipeline: 9 }
           - { dataset: srj23, sample: 49, pipeline: 9 }
