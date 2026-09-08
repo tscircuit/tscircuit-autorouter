@@ -16,25 +16,6 @@ type Route = {
 
 type NodeBounds = { minX: number; maxX: number; minY: number; maxY: number }
 
-/**
- * Clamps a value when the range is valid.
- *
- * @param params - Clamp inputs.
- * @returns Clamped value when `min <= max`; otherwise the original value.
- * @caution Invalid ranges are treated as a no-op to preserve routing behavior
- * for degenerate node bounds.
- */
-const clampWithFallback = (params: {
-  value: number
-  min: number
-  max: number
-}) => {
-  if (params.min <= params.max) {
-    return clamp(params.value, params.min, params.max)
-  }
-  return params.value
-}
-
 export class SingleTransitionIntraNodeSolver extends BaseSolver {
   override getSolverName(): string {
     return "SingleTransitionIntraNodeSolver"
@@ -83,18 +64,26 @@ export class SingleTransitionIntraNodeSolver extends BaseSolver {
     }
 
     const margin = this.viaDiameter / 2 + this.obstacleMargin
+    if (
+      this.nodeWithPortPoints.width < 2 * margin ||
+      this.nodeWithPortPoints.height < 2 * margin
+    ) {
+      this.failed = true
+      this.error = `Node ${this.nodeWithPortPoints.capacityMeshNodeId} has no feasible via interval for diameter ${this.viaDiameter} and clearance ${this.obstacleMargin}`
+      return
+    }
 
     const viaPosition = {
-      x: clampWithFallback({
-        value: (route.A.x + route.B.x) / 2,
-        min: this.bounds.minX + margin,
-        max: this.bounds.maxX - margin,
-      }),
-      y: clampWithFallback({
-        value: (route.A.y + route.B.y) / 2,
-        min: this.bounds.minY + margin,
-        max: this.bounds.maxY - margin,
-      }),
+      x: clamp(
+        (route.A.x + route.B.x) / 2,
+        this.bounds.minX + margin,
+        this.bounds.maxX - margin,
+      ),
+      y: clamp(
+        (route.A.y + route.B.y) / 2,
+        this.bounds.minY + margin,
+        this.bounds.maxY - margin,
+      ),
     }
     this.solvedRoutes.push(
       this.createTransitionRoute({
