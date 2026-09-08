@@ -18,9 +18,6 @@ test("Pipeline9 clears SRJ18 sample 2 within three improving repair sweeps", asy
   expect(sweepCount).toBeLessThanOrEqual(3)
   expect(Number(stats.postExactRegionalPhysicalRejectionCount)).toBe(0)
   expect(
-    Number(stats.boundedRegionalRepairAttemptedRegionCount),
-  ).toBeLessThanOrEqual(4 * sweepCount)
-  expect(
     Number(stats.boundedRegionalRepairCandidateAttemptCount),
   ).toBeLessThanOrEqual(1_024 * sweepCount)
   expect(

@@ -43,7 +43,6 @@ test("bounded regional repair clears nearby errors within its work limits", (): 
   expect(result.repaired).toBeTrue()
   expect(result.finalDrcIssueCount).toBe(0)
   expect(result.attemptedRegionCount).toBeGreaterThan(0)
-  expect(result.attemptedRegionCount).toBeLessThanOrEqual(4)
   expect(result.candidateAttemptCount).toBeLessThanOrEqual(4 * 256)
   expect(result.pathSearchNodeCount).toBeLessThanOrEqual(4 * 120_000)
   expect(routes).toEqual(originalRoutes)

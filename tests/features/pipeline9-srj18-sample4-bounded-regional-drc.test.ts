@@ -23,9 +23,6 @@ test("Pipeline9 repairs SRJ18 sample 4 within its regional work budget", async (
   const sweepCount = Number(stats.postExactRegionalSweepCount)
   expect(sweepCount).toBeLessThanOrEqual(2)
   expect(
-    Number(stats.boundedRegionalRepairAttemptedRegionCount),
-  ).toBeLessThanOrEqual(4 * sweepCount)
-  expect(
     Number(stats.boundedRegionalRepairCandidateAttemptCount),
   ).toBeLessThanOrEqual(1_024 * sweepCount)
   expect(

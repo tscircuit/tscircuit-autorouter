@@ -13,7 +13,6 @@ test("bounded regional repair clears physical copper without moving its terminal
   expect(fixture.routes).toEqual(original)
   expect(result.routes[0]!.route[0]).toEqual(original[0]!.route[0])
   expect(result.routes[0]!.route.at(-1)).toEqual(original[0]!.route.at(-1))
-  expect(result.attemptedRegionCount).toBeLessThanOrEqual(4)
   expect(result.candidateAttemptCount).toBeLessThanOrEqual(4 * 256)
   expect(result.pathSearchNodeCount).toBeLessThanOrEqual(4 * 120_000)
   expect(result.referenceValidationCount).toBeGreaterThan(1)

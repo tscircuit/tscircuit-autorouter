@@ -27,9 +27,6 @@ test("Pipeline9 clears SRJ18 sample 13 within bounded regional work", async (): 
     Number(repairStats?.regionalB01RepairCandidateSearchBudget),
   )
   expect(
-    Number(repairStats?.boundedRegionalRepairAttemptedRegionCount),
-  ).toBeLessThanOrEqual(4 * sweepCount)
-  expect(
     Number(repairStats?.boundedRegionalRepairCandidateAttemptCount),
   ).toBeLessThanOrEqual(1_024 * sweepCount)
   expect(

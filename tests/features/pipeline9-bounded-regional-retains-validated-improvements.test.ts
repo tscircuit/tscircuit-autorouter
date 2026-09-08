@@ -41,7 +41,6 @@ test("regional repair retains safe improvements and reports unresolved connectiv
     }),
   ).toEqual([])
   expect(fixture.routes).toEqual(original)
-  expect(result.attemptedRegionCount).toBeLessThanOrEqual(4)
   expect(result.candidateAttemptCount).toBeLessThanOrEqual(4 * 256)
   expect(result.pathSearchNodeCount).toBeLessThanOrEqual(4 * 120_000)
 })

@@ -39,9 +39,8 @@ type RepairRegionLocation = {
   size: number
 }
 
-const MAX_REGIONS = 4
-const MAX_CANDIDATE_ATTEMPTS = MAX_REGIONS * 256
-const MAX_PATH_SEARCH_NODES = MAX_REGIONS * 120_000
+const MAX_CANDIDATE_ATTEMPTS = 1024
+const MAX_PATH_SEARCH_NODES = 480_000
 const REGION_SIZES = [10, 16] as const
 
 /** Retains fully scored regional improvements while preserving fixed copper. */
@@ -126,7 +125,6 @@ export const applyPipeline9BoundedRegionalRepairs = ({
     ),
   )
   while (
-    result.attemptedRegionCount < MAX_REGIONS &&
     result.candidateAttemptCount < MAX_CANDIDATE_ATTEMPTS &&
     result.pathSearchNodeCount < MAX_PATH_SEARCH_NODES
   ) {
@@ -164,7 +162,7 @@ export const applyPipeline9BoundedRegionalRepairs = ({
       )
     let nextRegion: RepairRegionLocation | undefined
     // Wider context can move coupled errors away from a smaller region's
-    // locked collar. Both sizes share the same four-region work budget.
+    // locked collar. Both sizes share the same call and search-node budgets.
     for (const size of regionSizes) {
       const center = centers.find(
         ({ x, y }) =>
