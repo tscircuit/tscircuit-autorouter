@@ -1342,7 +1342,10 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       ...this.movablePreloadedSections.map((section) => section.hdRoute),
     ]
     const evaluateViaPadContacts = createNewViaPadViolationEvaluator({
-      srj: createSrjWithBoardValidObstacleLayers(params.originalSrj),
+      srj: {
+        ...createSrjWithBoardValidObstacleLayers(params.originalSrj),
+        traces: undefined,
+      },
       viaClearance,
     })
     this.exactRepairSolver = new GlobalDrcBranchPortfolioSolver({
