@@ -1,7 +1,6 @@
 import { BaseSolver } from "../BaseSolver"
 import {
   distance,
-  getUnitVectorFromPointAToB,
   pointToBoxDistance,
 } from "@tscircuit/math-utils"
 import { HighDensityRoute } from "lib/types/high-density-types"
@@ -464,44 +463,58 @@ export class TraceWidthSolver extends BaseSolver {
     return !obstacle.__zLayers || obstacle.__zLayers.includes(point.z)
   }
 
-  private getAdjacentNonCoincidentRoutePoint(
+  private getTerminalPadNeckDistance(
     route: HighDensityRoute,
     endpointIndex: number,
-  ): RoutePoint | undefined {
-    const endpoint = route.route[endpointIndex]
-    if (!endpoint) return undefined
-
+    obstacle: Obstacle,
+  ): number {
+    const endpoint = route.route[endpointIndex]!
     const step = endpointIndex === 0 ? 1 : -1
+    const radians = ((obstacle.ccwRotationDegrees ?? 0) * Math.PI) / 180
+    const cos = Math.cos(radians)
+    const sin = Math.sin(radians)
+    const halfWidth = obstacle.width / 2
+    const halfHeight = obstacle.height / 2
+    let neckDistance = 0
+
     for (
       let index = endpointIndex + step;
       index >= 0 && index < route.route.length;
       index += step
     ) {
-      const candidate = route.route[index]!
-      if (distance(candidate, endpoint) > COORDINATE_EPSILON) {
-        return candidate
+      const previous = route.route[index - step]!
+      const current = route.route[index]!
+      if (current.z !== endpoint.z) return neckDistance
+      const dx = current.x - obstacle.center.x
+      const dy = current.y - obstacle.center.y
+      const x = dx * cos + dy * sin
+      const y = -dx * sin + dy * cos
+      const segmentLength = distance(previous, current)
+      if (Math.abs(x) <= halfWidth && Math.abs(y) <= halfHeight) {
+        neckDistance += segmentLength
+        continue
       }
+
+      const previousDx = previous.x - obstacle.center.x
+      const previousDy = previous.y - obstacle.center.y
+      const previousX = previousDx * cos + previousDy * sin
+      const previousY = -previousDx * sin + previousDy * cos
+      let exitFraction = 1
+      if (Math.abs(x) > halfWidth) {
+        exitFraction = Math.min(
+          exitFraction,
+          (Math.sign(x) * halfWidth - previousX) / (x - previousX),
+        )
+      }
+      if (Math.abs(y) > halfHeight) {
+        exitFraction = Math.min(
+          exitFraction,
+          (Math.sign(y) * halfHeight - previousY) / (y - previousY),
+        )
+      }
+      return neckDistance + segmentLength * Math.max(0, exitFraction)
     }
-
-    return undefined
-  }
-
-  private getObstacleWidthAlongVector(
-    obstacle: Obstacle,
-    vector: Point2D,
-  ): number {
-    const rotationRadians = ((obstacle.ccwRotationDegrees ?? 0) * Math.PI) / 180
-    const cos = Math.cos(rotationRadians)
-    const sin = Math.sin(rotationRadians)
-    const widthAxis = { x: cos, y: sin }
-    const heightAxis = { x: -sin, y: cos }
-
-    return (
-      Math.abs(vector.x * widthAxis.x + vector.y * widthAxis.y) *
-        obstacle.width +
-      Math.abs(vector.x * heightAxis.x + vector.y * heightAxis.y) *
-        obstacle.height
-    )
+    return neckDistance
   }
 
   private getTerminalPadWidthLimit(
@@ -512,22 +525,6 @@ export class TraceWidthSolver extends BaseSolver {
     const endpoint = route.route[endpointIndex]
     if (!endpoint) return undefined
 
-    const adjacent = this.getAdjacentNonCoincidentRoutePoint(
-      route,
-      endpointIndex,
-    )
-    if (!adjacent) return undefined
-
-    const tangent =
-      endpointIndex === 0
-        ? getUnitVectorFromPointAToB(endpoint, adjacent)
-        : getUnitVectorFromPointAToB(adjacent, endpoint)
-
-    if (distance(tangent, { x: 0, y: 0 }) <= COORDINATE_EPSILON) {
-      return undefined
-    }
-
-    const normal = { x: -tangent.y, y: tangent.x }
     let narrowestLimit: TerminalPadLimit | undefined
 
     for (const obstacle of this.obstacles) {
@@ -535,11 +532,16 @@ export class TraceWidthSolver extends BaseSolver {
       if (!isObstacleConnectedToRoute(obstacle, route, this.connMap)) continue
       if (pointToBoxDistance(endpoint, obstacle) > COORDINATE_EPSILON) continue
 
-      const limit = this.getObstacleWidthAlongVector(obstacle, normal)
+      // The terminal stroke has a round cap, so its diameter must fit the
+      // pad's narrow dimension regardless of a tiny final segment's direction.
+      const limit = Math.min(obstacle.width, obstacle.height)
       if (limit <= COORDINATE_EPSILON) continue
 
-      const neckDistance =
-        this.getObstacleWidthAlongVector(obstacle, tangent) / 2
+      const neckDistance = this.getTerminalPadNeckDistance(
+        route,
+        endpointIndex,
+        obstacle,
+      )
       if (
         !narrowestLimit ||
         limit < narrowestLimit.width ||
@@ -624,8 +626,11 @@ export class TraceWidthSolver extends BaseSolver {
   }): number {
     let width = traceWidth
 
-    if (startLimit !== undefined && distanceFromStart <= taperDistance) {
-      const neckDistance = Math.min(startLimit.neckDistance, taperDistance)
+    if (
+      startLimit !== undefined &&
+      distanceFromStart <= Math.max(taperDistance, startLimit.neckDistance)
+    ) {
+      const neckDistance = startLimit.neckDistance
       if (distanceFromStart <= neckDistance) {
         width = Math.min(width, startLimit.width)
       } else {
@@ -641,8 +646,8 @@ export class TraceWidthSolver extends BaseSolver {
 
     if (endLimit !== undefined) {
       const distanceFromEnd = totalDistance - distanceFromStart
-      if (distanceFromEnd <= taperDistance) {
-        const neckDistance = Math.min(endLimit.neckDistance, taperDistance)
+      if (distanceFromEnd <= Math.max(taperDistance, endLimit.neckDistance)) {
+        const neckDistance = endLimit.neckDistance
         if (distanceFromEnd <= neckDistance) {
           width = Math.min(width, endLimit.width)
         } else {
