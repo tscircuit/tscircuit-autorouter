@@ -58,22 +58,33 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     supervisedSolver: SupervisedSolver<IntraNodeRouteSolver>,
   ): void {
     const initial = Object.getOwnPropertyDescriptor(supervisedSolver, "solver")
-    if (!(initial && "value" in initial && initial.value instanceof HighDensitySolverA01)) {
+    if (
+      !(
+        initial &&
+        "value" in initial &&
+        initial.value instanceof HighDensitySolverA01
+      )
+    ) {
       super.stepSupervisedSolver(supervisedSolver)
       return
     }
-    for (let i = 0; i < this.MIN_SUBSTEPS;) {
+    for (let i = 0; i < this.MIN_SUBSTEPS; ) {
       // Only ordinary data properties can remain unchanged while native code
       // runs. Accessors and custom batch methods keep the public step loop.
       const limit = Object.getOwnPropertyDescriptor(this, "MIN_SUBSTEPS")
-      const candidate = Object.getOwnPropertyDescriptor(supervisedSolver, "solver")
+      const candidate = Object.getOwnPropertyDescriptor(
+        supervisedSolver,
+        "solver",
+      )
       const solver = candidate && "value" in candidate ? candidate.value : null
-      const remaining = limit && "value" in limit && typeof limit.value === "number"
-        ? limit.value - i
-        : 0
+      const remaining =
+        limit && "value" in limit && typeof limit.value === "number"
+          ? limit.value - i
+          : 0
       if (
         solver instanceof HighDensitySolverA01 &&
-        Number.isSafeInteger(remaining) && remaining > 1
+        Number.isSafeInteger(remaining) &&
+        remaining > 1
       ) {
         let owner: object | null = solver
         let batch: PropertyDescriptor | undefined
