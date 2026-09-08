@@ -1,6 +1,6 @@
 import { BaseSolver } from "../BaseSolver"
 import { HighDensityRoute } from "lib/types/high-density-types"
-import { Obstacle } from "lib/types"
+import { Obstacle, type SimpleRouteJson } from "lib/types"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import { UselessViaRemovalSolver } from "lib/solvers/UselessViaRemovalSolver/UselessViaRemovalSolver"
 import { MultiSimplifiedPathSolver } from "lib/solvers/SimplifiedPathSolver/MultiSimplifiedPathSolver"
@@ -9,12 +9,14 @@ import { GraphicsObject } from "graphics-debug"
 import { getJumpersGraphics } from "lib/utils/getJumperGraphics"
 import { createObjectsWithZLayers } from "lib/utils/createObjectsWithZLayers"
 import { CrossingViaReductionSolver } from "lib/solvers/CrossingViaReductionSolver/crossing-via-reduction-solver"
+import { PadJunctionSimplificationSolver } from "lib/solvers/PadJunctionSimplificationSolver/PadJunctionSimplificationSolver"
 
 type Phase =
   | "via_removal"
   | "crossing_via_reduction"
   | "via_merging"
   | "path_simplification"
+  | "pad_junction_simplification"
 
 const VIA_INSIDE_OBSTACLE_TOLERANCE = 1e-6
 
@@ -42,7 +44,9 @@ const isMultilayerObstacle = (obstacle: Obstacle) =>
  * 3. "via_merging" - Merges redundant vias on the same net using SameNetViaMergerSolver
  * 4. "path_simplification" - Simplifies routing paths using MultiSimplifiedPathSolver
  *
- * Each iteration consists of all phases executed sequentially.
+ * Each iteration consists of these phases executed sequentially. A final
+ * pad-junction pass shares pad entries after the last path simplification,
+ * so independent path cleanup cannot undo the accepted junctions.
  */
 export class TraceSimplificationSolver extends BaseSolver {
   override getSolverName(): string {
@@ -68,6 +72,7 @@ export class TraceSimplificationSolver extends BaseSolver {
     "crossing_via_reduction",
     "via_merging",
     "path_simplification",
+    "pad_junction_simplification",
   ]
 
   currentPhase: Phase = "via_removal"
@@ -112,6 +117,7 @@ export class TraceSimplificationSolver extends BaseSolver {
       readonly connMap: ConnectivityMap
       readonly colorMap: Readonly<Record<string, string>>
       readonly outline?: ReadonlyArray<{ x: number; y: number }>
+      readonly bounds?: SimpleRouteJson["bounds"]
       readonly defaultViaDiameter: number
       readonly layerCount: number
       readonly minTraceToPadEdgeClearance?: number
@@ -328,6 +334,12 @@ export class TraceSimplificationSolver extends BaseSolver {
           this.currentPhase = "via_merging"
         } else if (this.currentPhase === "via_merging") {
           this.currentPhase = "path_simplification"
+        } else if (
+          this.currentPhase === "path_simplification" &&
+          this.simplificationPipelineLoops + 1 >=
+            this.MAX_SIMPLIFICATION_PIPELINE_LOOPS
+        ) {
+          this.currentPhase = "pad_junction_simplification"
         } else {
           this.currentPhase = "via_removal"
           this.simplificationPipelineLoops++
@@ -440,6 +452,29 @@ export class TraceSimplificationSolver extends BaseSolver {
           this.extractResult = (s) =>
             (s as MultiSimplifiedPathSolver).simplifiedHdRoutes
           break
+
+        case "pad_junction_simplification": {
+          const padJunctionSolver = new PadJunctionSimplificationSolver({
+            hdRoutes: this.hdRoutes,
+            otherHdRoutes: this.simplificationConfig.otherHdRoutes,
+            obstacles: this.simplificationConfig.obstacles,
+            connMap: this.simplificationConfig.connMap,
+            colorMap: this.simplificationConfig.colorMap,
+            layerCount: this.simplificationConfig.layerCount,
+            outline: this.simplificationConfig.outline,
+            bounds: this.simplificationConfig.bounds,
+            minTraceToPadEdgeClearance:
+              this.simplificationConfig.minTraceToPadEdgeClearance,
+            minBoardEdgeClearance:
+              this.simplificationConfig.minBoardEdgeClearance,
+            netByConnectionName: this.simplificationConfig.netByConnectionName,
+            preserveRouteEndpoints:
+              this.simplificationConfig.preserveRouteEndpoints,
+          })
+          this.activeSubSolver = padJunctionSolver
+          this.extractResult = () => padJunctionSolver.getOutput()
+          break
+        }
 
         default:
           this.failed = true
