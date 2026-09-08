@@ -93,7 +93,6 @@ export type PadJunctionSimplificationInput = {
   bounds?: { minX: number; minY: number; maxX: number; maxY: number }
   minTraceToPadEdgeClearance?: number
   minBoardEdgeClearance?: number
-  netByConnectionName?: ReadonlyMap<string, string>
   preserveRouteEndpoints?: boolean
   searchBudget?: SearchBudget
   gridStep?: number
@@ -269,13 +268,23 @@ export class PadJunctionSimplificationSolver extends BaseSolver {
     this.MAX_ITERATIONS = 100e6
   }
 
+  /** Route identities may name a member ID or a net key from ConnectivityMap. */
+  private getNetForIdentity(identity: string): string | undefined {
+    const memberNet = this.parsed.connMap.getNetConnectedToId(identity)
+    if (memberNet !== undefined) return memberNet
+    const [member] = this.parsed.connMap.getIdsConnectedToNet(identity)
+    return member === undefined
+      ? undefined
+      : this.parsed.connMap.getNetConnectedToId(member)
+  }
+
   private isConnected(route: HighDensityRoute, connectedId: string): boolean {
     const identities = [route.connectionName]
     if (route.rootConnectionName) identities.push(route.rootConnectionName)
-    const net = this.parsed.netByConnectionName?.get(route.connectionName)
-    if (net) identities.push(net)
+    const connectedNet = this.getNetForIdentity(connectedId)
     for (const identity of identities) {
-      if (identity === connectedId || this.parsed.connMap.areIdsConnected(identity, connectedId)) return true
+      if (identity === connectedId) return true
+      if (connectedNet !== undefined && this.getNetForIdentity(identity) === connectedNet) return true
     }
     return false
   }
@@ -283,8 +292,6 @@ export class PadJunctionSimplificationSolver extends BaseSolver {
   private routesAreConnected(left: HighDensityRoute, right: HighDensityRoute): boolean {
     const identities = [right.connectionName]
     if (right.rootConnectionName) identities.push(right.rootConnectionName)
-    const net = this.parsed.netByConnectionName?.get(right.connectionName)
-    if (net) identities.push(net)
     return identities.some((identity) => this.isConnected(left, identity))
   }
 

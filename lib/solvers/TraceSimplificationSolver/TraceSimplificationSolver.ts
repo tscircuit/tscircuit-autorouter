@@ -471,7 +471,6 @@ export class TraceSimplificationSolver extends BaseSolver {
               this.simplificationConfig.minTraceToPadEdgeClearance,
             minBoardEdgeClearance:
               this.simplificationConfig.minBoardEdgeClearance,
-            netByConnectionName: this.simplificationConfig.netByConnectionName,
             preserveRouteEndpoints:
               this.simplificationConfig.preserveRouteEndpoints,
           })
