@@ -13,7 +13,7 @@ type BootRoutingResult = {
 }
 
 /** Every preload is generated here by an unmodified native solver. */
-export const getT113BootRoutingResult = async (): Promise<BootRoutingResult> => {
+export async function getT113BootRoutingResult(): Promise<BootRoutingResult> {
   const { circuitJson, srj } = await getT113BootRoutingCircuit()
   const bootSignalInput = {
     ...srj,

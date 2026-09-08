@@ -37,7 +37,9 @@ declare module "react-for-pipeline9-fixtures/jsx-runtime" {
       }
       footprint: FixtureProps<FootprintProps>
       net: FixtureProps<NetProps>
-      resistor: FixtureProps<ResistorProps> & { manufacturerPartNumber?: string }
+      resistor: FixtureProps<ResistorProps> & {
+        manufacturerPartNumber?: string
+      }
       silkscreenrect: FixtureProps<SilkscreenRectProps>
       silkscreentext: FixtureProps<SilkscreenTextProps>
       smtpad: FixtureProps<SmtPadProps>
