@@ -22,14 +22,16 @@ test("a long curved route inside a pad retains a complete taper after exiting", 
     minTraceWidth: 0.5,
     layerCount: 2,
     connection: [{ name: "power", pointsToConnect: [] }],
-    obstacles: [{
-      type: "rect",
-      center: { x: 0, y: 0 },
-      width: 4,
-      height: 0.3,
-      layers: ["top"],
-      connectedTo: ["power"],
-    }],
+    obstacles: [
+      {
+        type: "rect",
+        center: { x: 0, y: 0 },
+        width: 4,
+        height: 0.3,
+        layers: ["top"],
+        connectedTo: ["power"],
+      },
+    ],
   })
   solver.solve()
   expect(solver.solved).toBeTrue()

@@ -28,15 +28,17 @@ test("terminal necks stay narrow through the pad despite a tiny diagonal endpoin
       minTraceWidth: 0.5,
       layerCount: 2,
       connection: [{ name: "power", pointsToConnect: [] }],
-      obstacles: [{
-        type: "rect",
-        center: { x: 7, y: -3 },
-        width: 1.1,
-        height: 0.3,
-        layers: ["top"],
-        ccwRotationDegrees: angle,
-        connectedTo: ["power"],
-      }],
+      obstacles: [
+        {
+          type: "rect",
+          center: { x: 7, y: -3 },
+          width: 1.1,
+          height: 0.3,
+          layers: ["top"],
+          ccwRotationDegrees: angle,
+          connectedTo: ["power"],
+        },
+      ],
     })
     solver.solve()
     expect(solver.solved).toBeTrue()

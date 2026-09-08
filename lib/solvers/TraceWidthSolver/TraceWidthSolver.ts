@@ -1,8 +1,5 @@
 import { BaseSolver } from "../BaseSolver"
-import {
-  distance,
-  pointToBoxDistance,
-} from "@tscircuit/math-utils"
+import { distance, pointToBoxDistance } from "@tscircuit/math-utils"
 import { HighDensityRoute } from "lib/types/high-density-types"
 import { Obstacle, SimpleRouteConnection, SimpleRouteJson } from "lib/types"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
@@ -629,7 +626,10 @@ export class TraceWidthSolver extends BaseSolver {
     if (startLimit !== undefined) {
       const t = Math.max(
         0,
-        Math.min(1, (distanceFromStart - startLimit.neckDistance) / taperDistance),
+        Math.min(
+          1,
+          (distanceFromStart - startLimit.neckDistance) / taperDistance,
+        ),
       )
       width = Math.min(
         width,
