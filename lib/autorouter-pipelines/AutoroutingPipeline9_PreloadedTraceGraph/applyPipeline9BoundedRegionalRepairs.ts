@@ -31,6 +31,7 @@ type Pipeline9BoundedRegionalRepairParams = {
   routes: HighDensityRoute[]
   syntheticConnectionNames: ReadonlySet<string>
   drcEvaluator: DrcEvaluator
+  viaHoleDiameter?: number
 }
 
 type RepairRegionLocation = {
@@ -49,6 +50,7 @@ export const applyPipeline9BoundedRegionalRepairs = ({
   routes,
   syntheticConnectionNames,
   drcEvaluator,
+  viaHoleDiameter,
 }: Pipeline9BoundedRegionalRepairParams): Pipeline9BoundedRegionalRepairResult => {
   const result: Pipeline9BoundedRegionalRepairResult = {
     routes,
@@ -216,6 +218,7 @@ export const applyPipeline9BoundedRegionalRepairs = ({
       allowLayerChanges: true,
       traceClearance: RELAXED_DRC_OPTIONS.traceClearance!,
       viaClearance: RELAXED_DRC_OPTIONS.viaClearance!,
+      viaHoleDiameter,
     })
     const { pathSearchCalls: candidateAttempts, pathSearchNodes } = repair
     if (

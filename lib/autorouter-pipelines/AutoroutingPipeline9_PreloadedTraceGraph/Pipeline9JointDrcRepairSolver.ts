@@ -1616,6 +1616,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         routes: regionalB01RepairResult.routes,
         syntheticConnectionNames: this.syntheticConnectionNames,
         drcEvaluator: this.cachedReferenceDrcEvaluator!,
+        viaHoleDiameter: this.params.defaultViaHoleDiameter,
       })
       stats.boundedRegionalRepairTimeMs += performance.now() - boundedStartedAt
       stats.boundedRegionalRepairAttemptedRegionCount +=
