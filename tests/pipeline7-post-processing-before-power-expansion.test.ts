@@ -58,7 +58,7 @@ test("Pipeline7 runs post-processing before default power expansion", () => {
         __rootConnectionNames: [connection.name],
       })),
     },
-    clearanceProjectionSolver: {
+    boundedRegionalRepairSolver: {
       getOutput: () => [
         {
           connectionName: "PAIR_P_mst0",
