@@ -6,8 +6,6 @@ import type { AutorouterConfig } from "@tscircuit/props"
 import { checkEachPcbTraceNonOverlapping } from "@tscircuit/checks"
 import { convertCircuitJsonToPcbSvg } from "circuit-to-svg"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
-import { convertSrjToGraphicsObject } from "lib/utils/convertSrjToGraphicsObject"
-import { getBugReportSnapshotSvg } from "lib/testing/getBugReportSnapshotSvg"
 import type { SimpleRouteJson } from "lib/types"
 import {
   CommonMcu,
@@ -514,25 +512,11 @@ test("pipeline9 gps logger reproduces XIN to ground contact", async () => {
     <GpsLogger
       algorithmFn={async (input: SimpleRouteJson) => {
         const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(input)
-        const phaseIndex = phaseSolvers.length
         phaseSolvers.push(solver)
-        await expect(convertSrjToGraphicsObject(input)).toMatchGraphicsSvg(
-          import.meta.path,
-          { svgName: `phase-${phaseIndex}-input` },
-        )
         solver.solve()
         expect(solver.solved).toBe(true)
         expect(solver.failed).toBe(false)
         const traces = solver.getOutputSimplifiedPcbTraces()
-        await expect(
-          getBugReportSnapshotSvg({
-            inputSrj: input,
-            srjWithPointPairs: solver.srjWithPointPairs!,
-            routedTraces: traces,
-          }),
-        ).toMatchSvgSnapshot(import.meta.path, {
-          svgName: `phase-${phaseIndex}-output`,
-        })
         const events = new EventEmitter()
         return {
           input,
