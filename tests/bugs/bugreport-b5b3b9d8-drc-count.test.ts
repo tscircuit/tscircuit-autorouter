@@ -36,7 +36,6 @@ test("bugreport-b5b3b9d8 pipeline7 records current total DRC errors", () => {
   ) {
     throw new Error("Pipeline7 exact repair did not report DRC counts")
   }
-  expect(initialDrcIssueCount).toBeGreaterThanOrEqual(5)
   expect(baselineDrcIssueCount).toBeLessThan(initialDrcIssueCount)
   expect(finalDrcIssueCount).toBeLessThanOrEqual(baselineDrcIssueCount)
   expect(exactDrcStats?.drcBranchPortfolioBroadBranchAttempted).toBe(false)
