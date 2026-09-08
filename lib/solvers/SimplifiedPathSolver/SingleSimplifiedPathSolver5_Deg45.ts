@@ -922,26 +922,22 @@ export class SingleSimplifiedPathSolver5 extends SingleSimplifiedPathSolver {
     }
 
     if (!path45 && !this.lastValidPath) {
-      const oldTailPoint = this.getPointAtDistance(this.tailDistanceAlongPath)
-
-      // Move tail and head forward by stepSize
-      this.tailDistanceAlongPath += this.minStepSize
-      this.moveHead(this.minStepSize)
-
-      const newTailIndex = this.getNearestIndexForDistance(
-        this.tailDistanceAlongPath,
+      // A rejected shortcut does not authorize a different connector. Follow
+      // the input polyline exactly until its next vertex, then resume search.
+      const nextSegmentIndex = this.pathSegments.findIndex(
+        (segment) => segment.endDistance > this.tailDistanceAlongPath,
       )
-      const newTailPoint = this.inputRoute.route[newTailIndex]
-      const lastRoutePoint =
-        this.inputRoute.route[this.inputRoute.route.length - 1]
-
-      // Add the segment from old tail to new tail
-      if (
-        !this.arePointsEqual(oldTailPoint, newTailPoint) &&
-        !this.arePointsEqual(newTailPoint, lastRoutePoint)
-      ) {
-        this.newRoute.push(newTailPoint)
+      if (nextSegmentIndex === -1) {
+        throw new Error("Missing original path segment after rejected shortcut")
       }
+      const nextDistance = this.pathSegments[nextSegmentIndex].endDistance
+      this.appendOriginalRouteSlice(
+        this.tailDistanceAlongPath,
+        nextSegmentIndex + 1,
+      )
+      this.tailDistanceAlongPath = nextDistance
+      this.headDistanceAlongPath = nextDistance
+      this.currentStepSize = this.maxStepSize
 
       return
     }
