@@ -41,6 +41,8 @@ test("physical routing anchors its grid at the exact start and checks exact-goal
     physicalClearanceContext: {
       traceClearanceIndex: startIndex,
       viaClearanceIndex: startIndex,
+      traceToTraceClearance: 0.1,
+      viaToTraceClearance: 0.1,
       canonicalNetId: "route-net",
       solveToPhysicalTransform: { center: { x: 0, y: 0 }, scale: 1 },
     },
@@ -88,6 +90,8 @@ test("physical routing anchors its grid at the exact start and checks exact-goal
       physicalClearanceContext: {
         traceClearanceIndex: goalIndex,
         viaClearanceIndex: goalIndex,
+        traceToTraceClearance: 0.1,
+        viaToTraceClearance: 0.1,
         canonicalNetId: "route-net",
         solveToPhysicalTransform: { center: { x: 0, y: 0 }, scale: 1 },
       },

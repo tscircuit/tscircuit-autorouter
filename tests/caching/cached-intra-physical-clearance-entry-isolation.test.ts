@@ -42,6 +42,8 @@ test("physical context changes isolate cached successes and failures without rou
   const context: IntraNodePhysicalClearanceContext = {
     traceClearanceIndex: clearIndex,
     viaClearanceIndex: clearIndex,
+    traceToTraceClearance: 0.1,
+    viaToTraceClearance: 0.1,
     canonicalNetIdByConnectionName: new Map([["signal", "signal"]]),
     solveToPhysicalTransform: { center: { x: 0, y: 0 }, scale: 1 },
   }

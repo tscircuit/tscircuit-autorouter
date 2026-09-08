@@ -32,6 +32,8 @@ test("solve-space scaling preserves physical copper widths and copied transform 
       physicalClearanceContext: {
         traceClearanceIndex: index,
         viaClearanceIndex: index,
+        traceToTraceClearance: 0.1,
+        viaToTraceClearance: 0.1,
         canonicalNetId: "route-net",
         solveToPhysicalTransform: transform,
       },

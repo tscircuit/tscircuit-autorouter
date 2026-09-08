@@ -15,6 +15,7 @@ import {
   SingleRouteCandidatePriorityQueue,
 } from "lib/data-structures/SingleRouteCandidatePriorityQueue"
 import type { HighDensityIntraNodeRoute } from "lib/types/high-density-types"
+import { getSolveSpaceLengthFromPhysicalLength } from "lib/utils/getSolveSpaceLengthFromPhysicalLength"
 import { BaseSolver } from "../BaseSolver"
 import { HighDensityHyperParameters } from "./HighDensityHyperParameters"
 
@@ -29,6 +30,8 @@ export type SingleRoutePhysicalClearanceContext = {
   readonly traceClearanceIndex: FixedCopperClearanceIndex
   readonly viaClearanceIndex: FixedCopperClearanceIndex
   readonly canonicalNetId: string
+  readonly traceToTraceClearance: number
+  readonly viaToTraceClearance: number
   /** physical = center + (solve - center) * scale; diameters remain physical. */
   readonly solveToPhysicalTransform: {
     readonly center: Readonly<{ x: number; y: number }>
@@ -328,6 +331,10 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
       !(context.viaClearanceIndex instanceof FixedCopperClearanceIndex) ||
       typeof context.canonicalNetId !== "string" ||
       context.canonicalNetId.length === 0 ||
+      !Number.isFinite(context.traceToTraceClearance) ||
+      context.traceToTraceClearance < 0 ||
+      !Number.isFinite(context.viaToTraceClearance) ||
+      context.viaToTraceClearance < 0 ||
       !Number.isFinite(center.x) ||
       !Number.isFinite(center.y) ||
       !Number.isFinite(scale) ||
@@ -341,6 +348,8 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
       traceClearanceIndex: context.traceClearanceIndex,
       viaClearanceIndex: context.viaClearanceIndex,
       canonicalNetId: context.canonicalNetId,
+      traceToTraceClearance: context.traceToTraceClearance,
+      viaToTraceClearance: context.viaToTraceClearance,
       solveToPhysicalTransform: { center: { ...center }, scale },
     }
   }
@@ -407,6 +416,37 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     return this.cellStep + this.straightLineDistance * this.VIA_PENALTY_FACTOR
   }
 
+  protected getSolveSpaceLength(physicalLength: number): number {
+    const context = this.physicalClearanceContext
+    if (context === undefined) return physicalLength
+    // Copper dimensions stay physical in route metadata and fixed-pad queries.
+    // Peer geometry and node bounds are in the transformed solve coordinates.
+    return getSolveSpaceLengthFromPhysicalLength({
+      physicalLength,
+      solveToPhysicalScale: context.solveToPhysicalTransform.scale,
+    })
+  }
+
+  protected getPlanarSegmentClearance(): number {
+    const physicalClearance =
+      this.physicalClearanceContext === undefined
+        ? this.NEARBY_SEGMENT_CLEARANCE
+        : Math.max(
+            this.NEARBY_SEGMENT_CLEARANCE,
+            this.traceThickness +
+              this.physicalClearanceContext.traceToTraceClearance,
+          )
+    return this.getSolveSpaceLength(physicalClearance)
+  }
+
+  protected getViaToTraceClearance(legacyClearance: number): number {
+    const context = this.physicalClearanceContext
+    if (context === undefined) {
+      return legacyClearance
+    }
+    return context.viaToTraceClearance
+  }
+
   isNodeTooCloseToObstacle(
     node: Node,
     margin?: number,
@@ -425,14 +465,19 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
 
     if (isVia && node.parent) {
       const viasInMyRoute = this.getViasInNodePath(node.parent)
+      const ownViaProximity = this.getSolveSpaceLength(
+        this.viaDiameter / 2 + margin,
+      )
       for (const via of viasInMyRoute) {
-        if (distance(node, via) < this.viaDiameter / 2 + margin) {
+        if (distance(node, via) < ownViaProximity) {
           return true
         }
       }
     }
 
-    const traceProximity = this.traceThickness + margin
+    const traceProximity = this.getSolveSpaceLength(
+      this.traceThickness + margin,
+    )
     const indexedSegments =
       planarObstacleQuery?.segments ??
       (!isVia
@@ -472,7 +517,9 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
       }
     }
 
-    const viaProximity = this.viaDiameter / 2 + this.traceThickness / 2 + margin
+    const viaProximity = this.getSolveSpaceLength(
+      this.viaDiameter / 2 + this.traceThickness / 2 + margin,
+    )
     if (this.obstacleViaIndex) {
       const nearbyViaIds = this.obstacleViaIndex.search(
         node.x - viaProximity,
@@ -492,9 +539,11 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
   }
 
   isNodeTooCloseToEdge(node: Node, isVia?: boolean) {
-    const margin = isVia
-      ? this.viaDiameter / 2 + this.obstacleMargin / 2
-      : this.obstacleMargin / 2
+    const margin = this.getSolveSpaceLength(
+      isVia
+        ? this.viaDiameter / 2 + this.obstacleMargin / 2
+        : this.obstacleMargin / 2,
+    )
     const tooClose =
       node.x < this.bounds.minX + margin ||
       node.x > this.bounds.maxX - margin ||
@@ -524,13 +573,36 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     ) {
       return true
     }
+    if (
+      this.physicalClearanceContext !== undefined &&
+      node.z === parent.z &&
+      this.obstacleViaIndex
+    ) {
+      const viaProximity = this.getSolveSpaceLength(
+        this.viaDiameter / 2 +
+          this.traceThickness / 2 +
+          this.physicalClearanceContext.viaToTraceClearance,
+      )
+      const nearbyViaIds = this.obstacleViaIndex.search(
+        Math.min(node.x, parent.x) - viaProximity,
+        Math.min(node.y, parent.y) - viaProximity,
+        Math.max(node.x, parent.x) + viaProximity,
+        Math.max(node.y, parent.y) + viaProximity,
+      )
+      for (const viaId of nearbyViaIds) {
+        const via = this.obstacleVias[viaId]
+        if (via && pointToSegmentDistance(via, parent, node) < viaProximity) {
+          return true
+        }
+      }
+    }
     const indexedSegments =
       planarObstacleQuery?.segments ?? this.obstacleSegmentsByLayer.get(node.z)
     if (!indexedSegments) return false
 
     const clearance =
       node.z === parent.z && this.obstacleSegments.length > 0
-        ? this.NEARBY_SEGMENT_CLEARANCE
+        ? this.getPlanarSegmentClearance()
         : 0
 
     const minX = Math.min(node.x, parent.x)
@@ -589,10 +661,12 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     const segments = this.obstacleSegmentsByLayer.get(node.z)
     if (!segmentIndex || !segments) return undefined
 
-    const traceProximity = this.traceThickness + this.obstacleMargin
+    const traceProximity = this.getSolveSpaceLength(
+      this.traceThickness + this.obstacleMargin,
+    )
     const clearance =
       node.z === parent.z && this.obstacleSegments.length > 0
-        ? this.NEARBY_SEGMENT_CLEARANCE
+        ? this.getPlanarSegmentClearance()
         : 0
 
     return {

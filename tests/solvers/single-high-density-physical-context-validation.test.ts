@@ -5,7 +5,7 @@ import {
   type SingleRoutePhysicalClearanceContext,
 } from "lib/solvers/HighDensitySolver/SingleHighDensityRouteSolver"
 
-test("physical context rejects invalid transforms and fails blocked exact terminals without moving them", (): void => {
+test("physical context rejects invalid transforms and rules and fails blocked exact terminals without moving them", (): void => {
   const index = new FixedCopperClearanceIndex({
     rectangles: [
       {
@@ -23,6 +23,8 @@ test("physical context rejects invalid transforms and fails blocked exact termin
   const context: SingleRoutePhysicalClearanceContext = {
     traceClearanceIndex: index,
     viaClearanceIndex: index,
+    traceToTraceClearance: 0.1,
+    viaToTraceClearance: 0.1,
     canonicalNetId: "route-net",
     solveToPhysicalTransform: { center: { x: 0, y: 0 }, scale: 1 },
   }
@@ -48,10 +50,34 @@ test("physical context rejects invalid transforms and fails blocked exact termin
         solveToPhysicalTransform: { center: { x: 0, y: 0 }, scale },
       }),
     ),
+    ...[
+      -1,
+      Number.NaN,
+      Number.POSITIVE_INFINITY,
+      Number.NEGATIVE_INFINITY,
+    ].flatMap(
+      (clearance: number): SingleRoutePhysicalClearanceContext[] => [
+        { ...context, traceToTraceClearance: clearance },
+        { ...context, viaToTraceClearance: clearance },
+      ],
+    ),
   ]
   for (const physicalClearanceContext of invalidContexts) {
     expect((): void => {
       new SingleHighDensityRouteSolver({ ...opts, physicalClearanceContext })
+    }).toThrow("invalid physical clearance context")
+  }
+  for (const field of [
+    "traceToTraceClearance",
+    "viaToTraceClearance",
+  ] as const) {
+    const missingRule = { ...context }
+    expect(Reflect.deleteProperty(missingRule, field)).toBeTrue()
+    expect((): void => {
+      new SingleHighDensityRouteSolver({
+        ...opts,
+        physicalClearanceContext: missingRule,
+      })
     }).toThrow("invalid physical clearance context")
   }
   const blocked = new SingleHighDensityRouteSolver({
@@ -71,6 +97,17 @@ test("physical context rejects invalid transforms and fails blocked exact termin
   })
   expect(ownPad.solved).toBeTrue()
   expect(ownPad.failed).toBeFalse()
+  const zeroClearance = new SingleHighDensityRouteSolver({
+    ...opts,
+    physicalClearanceContext: {
+      ...context,
+      canonicalNetId: "pad-net",
+      traceToTraceClearance: 0,
+      viaToTraceClearance: 0,
+    },
+  })
+  expect(zeroClearance.failed).toBeFalse()
+  expect(zeroClearance.solved).toBeTrue()
   const legacy = new SingleHighDensityRouteSolver(opts)
   expect(legacy.solved).toBeTrue()
   expect(legacy.failed).toBeFalse()

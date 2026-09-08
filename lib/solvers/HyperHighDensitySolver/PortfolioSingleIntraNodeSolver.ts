@@ -7,6 +7,7 @@ import {
   HighDensityIntraNodeRoute,
   NodeWithPortPoints,
 } from "lib/types/high-density-types"
+import { assertPhysicalPeerClearances } from "lib/utils/assertPhysicalPeerClearances"
 import { CachedIntraNodeRouteSolver } from "../HighDensitySolver/CachedIntraNodeRouteSolver"
 import { IntraNodeRouteSolver } from "../HighDensitySolver/IntraNodeSolver"
 import { MultiHeadPolyLineIntraNodeSolver2 } from "../HighDensitySolver/MultiHeadPolyLineIntraNodeSolver/MultiHeadPolyLineIntraNodeSolver2_Optimized"
@@ -131,6 +132,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
         )
       }
       const context = opts.physicalClearanceContext
+      assertPhysicalPeerClearances(context)
       this.constructorParams = {
         ...opts,
         physicalClearanceContext: {

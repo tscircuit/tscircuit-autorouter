@@ -31,6 +31,8 @@ test("grow-shrink composes node-centered physical scales without changing copper
     physicalClearanceContext: {
       traceClearanceIndex: index,
       viaClearanceIndex: index,
+      traceToTraceClearance: 0.1,
+      viaToTraceClearance: 0.1,
       canonicalNetIdByConnectionName: new Map([["route-net", "route-net"]]),
       solveToPhysicalTransform: { center: { x: 3, y: -2 }, scale: 0.5 },
     },

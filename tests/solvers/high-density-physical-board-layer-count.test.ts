@@ -12,6 +12,8 @@ test("high-density physical input requires an explicit positive board layer coun
   const physicalClearanceContext: IntraNodePhysicalClearanceContext = {
     traceClearanceIndex: index,
     viaClearanceIndex: index,
+    traceToTraceClearance: 0.1,
+    viaToTraceClearance: 0.1,
     canonicalNetIdByConnectionName: new Map(),
     solveToPhysicalTransform: { center: { x: 0, y: 0 }, scale: 1 },
   }

@@ -33,6 +33,8 @@ test("physical cache keys include exact queries, frames, rules and canonical own
   const context: IntraNodePhysicalClearanceContext = {
     traceClearanceIndex,
     viaClearanceIndex,
+    traceToTraceClearance: 0.1,
+    viaToTraceClearance: 0.1,
     canonicalNetIdByConnectionName: new Map([
       ["a", "net-a"],
       ["b", "net-b"],
@@ -74,6 +76,8 @@ test("physical cache keys include exact queries, frames, rules and canonical own
     ),
   }
   const changedContexts: IntraNodePhysicalClearanceContext[] = [
+    { ...context, traceToTraceClearance: 0.1001 },
+    { ...context, viaToTraceClearance: 0.1001 },
     { ...context, traceClearanceIndex: viaClearanceIndex },
     { ...context, viaClearanceIndex: traceClearanceIndex },
     {

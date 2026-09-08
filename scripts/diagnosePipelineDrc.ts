@@ -68,6 +68,240 @@ type UniformOwnerBoundsCapture = {
   bounds: unknown
 }
 
+type TinyFailureDiagnostic = {
+  serialized: string
+  status: "loaded-tiny-state" | "loaded-tiny-instance-unavailable"
+  nativeInstanceCount: number
+  errorMessage: string
+}
+
+const getDiagnosticOwnValue = (value: unknown, name: string): unknown => {
+  if (typeof value !== "object" || value === null) return undefined
+  const descriptor = Object.getOwnPropertyDescriptor(value, name)
+  // In particular, never invoke the native solver's lazy problemSetup getter.
+  if (!descriptor || !("value" in descriptor)) return undefined
+  return descriptor.value
+}
+
+const selectDiagnosticOwnFields = (
+  value: unknown,
+  names: readonly string[],
+): Record<string, unknown> => {
+  const selected: Record<string, unknown> = {}
+  for (const name of names) {
+    const field = getDiagnosticOwnValue(value, name)
+    selected[name] = field === undefined ? null : field
+  }
+  return selected
+}
+
+const captureTinyFailure = (
+  pipeline: Pipeline,
+  error: unknown,
+  previousWrapper: unknown,
+  previousActiveSolver: unknown,
+): TinyFailureDiagnostic => {
+  const wrapper = pipeline.portPointPathingSolver ?? previousWrapper
+  const sectionPipeline = getDiagnosticOwnValue(wrapper, "tinyPipelineSolver")
+  const inputProblem = getDiagnosticOwnValue(sectionPipeline, "inputProblem")
+  const nativeInstances: Record<string, unknown>[] = []
+  const seen = new Set<unknown>()
+  const candidates: { source: string; solver: unknown }[] = [
+    {
+      source: "current-section-pipeline-active-child",
+      solver: getDiagnosticOwnValue(sectionPipeline, "activeSubSolver"),
+    },
+    {
+      source: "current-wrapper-active-child",
+      solver: getDiagnosticOwnValue(wrapper, "activeSubSolver"),
+    },
+    { source: "pre-step-observed-active-child", solver: previousActiveSolver },
+  ]
+  for (const candidate of candidates) {
+    let solver = candidate.solver
+    let source = candidate.source
+    while (typeof solver === "object" && solver !== null && !seen.has(solver)) {
+      seen.add(solver)
+      const topology = getDiagnosticOwnValue(solver, "topology")
+      const problem = getDiagnosticOwnValue(solver, "problem")
+      if (topology !== undefined && problem !== undefined) {
+        const setup = getDiagnosticOwnValue(solver, "_problemSetup")
+        const state = getDiagnosticOwnValue(solver, "state")
+        const queue = getDiagnosticOwnValue(state, "candidateQueue")
+        const queueItems = getDiagnosticOwnValue(queue, "items")
+        nativeInstances.push({
+          source,
+          ...selectDiagnosticOwnFields(solver, [
+            "iterations",
+            "MAX_ITERATIONS",
+            "solved",
+            "failed",
+            "error",
+            "stats",
+            "STATIC_REACHABILITY_PRECHECK",
+            "STATIC_REACHABILITY_PRECHECK_MAX_HOPS",
+            "routeAttemptCountByRouteId",
+            "routeSuccessCountByRouteId",
+            "staticallyUnroutableRoutes",
+            "selectiveReripStats",
+            "failedOwnerPairCounts",
+            "selectiveReripCongestionUpdateCount",
+            "fixedCopperPortReservations",
+          ]),
+          topology: selectDiagnosticOwnFields(topology, [
+            "portCount",
+            "regionCount",
+            "regionIncidentPorts",
+            "incidentPortRegion",
+            "regionWidth",
+            "regionHeight",
+            "regionCenterX",
+            "regionCenterY",
+            "regionAvailableZMask",
+            "regionMetadata",
+            "portX",
+            "portY",
+            "portZ",
+            "portMetadata",
+          ]),
+          problem: selectDiagnosticOwnFields(problem, [
+            "routeCount",
+            "routeMetadata",
+            "routeNet",
+            "routeStartPort",
+            "routeEndPort",
+            "portSectionMask",
+            "regionNetId",
+            "portPenalty",
+            "initialAssignments",
+          ]),
+          setupStatus:
+            setup === undefined
+              ? "unavailable-not-retained-or-not-computed"
+              : "already-computed-own-data",
+          // A setup exception can discard its local arrays before _problemSetup
+          // is assigned. Do not recreate masks or reconstruct an earlier mask.
+          originalDenseReservationStatus: "not-separately-retained",
+          setup: selectDiagnosticOwnFields(setup, [
+            "portEndpointReservationNetId",
+            "portEndpointNetIds",
+          ]),
+          fixedCopperContext: selectDiagnosticOwnFields(
+            getDiagnosticOwnValue(solver, "fixedCopperContext"),
+            [
+              "traceWidth",
+              "canonicalNetIdByNetId",
+              "netIdByCanonicalNetId",
+              "connectionIdByRouteId",
+            ],
+          ),
+          state: selectDiagnosticOwnFields(state, [
+            "currentRouteId",
+            "currentRouteNetId",
+            "goalPortId",
+            "unroutedRoutes",
+            "ripCount",
+            "portAssignment",
+            "regionSegments",
+            "regionCongestionCost",
+          ]),
+          queueStatus: Array.isArray(queueItems)
+            ? "existing-minheap-items"
+            : "queue-storage-unavailable",
+          pendingQueueLength: Array.isArray(queueItems)
+            ? queueItems.length
+            : null,
+          pendingQueueRoot:
+            Array.isArray(queueItems) && queueItems.length > 0
+              ? selectDiagnosticOwnFields(queueItems[0], [
+                  "prevRegionId",
+                  "portId",
+                  "nextRegionId",
+                  "f",
+                  "g",
+                  "h",
+                ])
+              : null,
+          currentDequeuedCandidateStatus: "local-variable-not-retained",
+        })
+      }
+      solver = getDiagnosticOwnValue(solver, "activeSubSolver")
+      source = `${source}.activeSubSolver`
+    }
+  }
+  const failure =
+    error instanceof Error
+      ? { name: error.name, message: error.message, stack: error.stack ?? null }
+      : { name: "RecordedSolverFailure", message: String(error), stack: null }
+  const status =
+    nativeInstances.length > 0
+      ? "loaded-tiny-state"
+      : "loaded-tiny-instance-unavailable"
+  const serialized = JSON.stringify(
+    {
+      diagnostic: "tiny-failure",
+      phase: pipeline.getCurrentPhase(),
+      status,
+      failure,
+      unavailableFieldMeaning: "null means absent or null own data, not zero",
+      wrapper: selectDiagnosticOwnFields(wrapper, [
+        "iterations",
+        "MAX_ITERATIONS",
+        "failed",
+        "error",
+        "stats",
+        "candidatePortfolioPhase",
+        "selectedCandidate",
+      ]),
+      // The retained input is the graph actually supplied to Tiny, after any
+      // duplicate admission. It includes original serialized terminal metadata.
+      sectionPipelineInput: selectDiagnosticOwnFields(inputProblem, [
+        "serializedHyperGraph",
+        "solveGraphOptions",
+        "sectionSolverOptions",
+      ]),
+      preparedFixedCopper: selectDiagnosticOwnFields(
+        getDiagnosticOwnValue(pipeline, "fixedPadClearance"),
+        ["rectangles", "layerCount", "traceToPadClearance", "viaToPadClearance"],
+      ),
+      nativeInstances,
+    },
+    (key: string, value: unknown): unknown => {
+      if (key === "_parent") return undefined
+      if (
+        (key === "portMetadata" || key === "regionMetadata") &&
+        Array.isArray(value)
+      ) {
+        const idField =
+          key === "portMetadata" ? "serializedPortId" : "serializedRegionId"
+        // The pinned loader defines these reverse-map IDs as non-enumerable.
+        // Wrap the retained data without modifying its descriptors or contents.
+        return value.map(
+          (metadata: unknown): Record<string, unknown> => ({
+            data: metadata,
+            [idField]: getDiagnosticOwnValue(metadata, idField) ?? null,
+          }),
+        )
+      }
+      if (value instanceof Map) return [...value.entries()]
+      if (value instanceof Set) return [...value.values()]
+      if (ArrayBuffer.isView(value) && !(value instanceof DataView)) {
+        return Object.values(value)
+      }
+      if (typeof value === "number" && !Number.isFinite(value)) {
+        return { nonfiniteNumber: String(value) }
+      }
+      return value
+    },
+  )
+  return {
+    serialized,
+    status,
+    nativeInstanceCount: nativeInstances.length,
+    errorMessage: failure.message,
+  }
+}
+
 const captureUniformFailure = (
   pipeline: Pipeline,
   error: unknown,
@@ -485,6 +719,9 @@ const diagnosePipelineDrc = async (): Promise<void> => {
   let mergedCapacityNodes: CapacityNodeCapture[] | null = null
   const repair04InvalidOutputs: Repair04InvalidOutputCapture[] = []
   let uniformFailureDiagnostic: UniformFailureDiagnostic | undefined
+  let tinyFailureDiagnostic: TinyFailureDiagnostic | undefined
+  let previousPathingWrapper: unknown
+  let previousPathingActiveSolver: unknown
   const originalRepair04GetOutput = Repair04Solver.prototype.getOutput
   // This controller runs in its own process, never a shared Bun test process.
   Repair04Solver.prototype.getOutput = function (
@@ -541,6 +778,12 @@ const diagnosePipelineDrc = async (): Promise<void> => {
   try {
     while (!pipeline.solved && !pipeline.failed) {
       const phase = pipeline.getCurrentPhase()
+      if (phase === "portPointPathingSolver") {
+        // Retain references only. Copy no topology or search state while routing.
+        previousPathingWrapper = pipeline.portPointPathingSolver
+        previousPathingActiveSolver =
+          pipeline.portPointPathingSolver?.activeSubSolver
+      }
       const hd =
         pipeline instanceof AutoroutingPipelineSolver9_PreloadedTraceGraph
           ? pipeline.highDensityRouteSolver
@@ -564,6 +807,32 @@ const diagnosePipelineDrc = async (): Promise<void> => {
       try {
         pipeline.step()
       } catch (error) {
+        if (
+          phase === "portPointPathingSolver" ||
+          pipeline.getCurrentPhase() === "portPointPathingSolver"
+        ) {
+          try {
+            tinyFailureDiagnostic = captureTinyFailure(
+              pipeline,
+              error,
+              previousPathingWrapper,
+              previousPathingActiveSolver,
+            )
+            console.error(
+              JSON.stringify({
+                diagnostic: "tiny-failure",
+                dataset: datasetArg,
+                sample,
+                pipeline: pipelineArg,
+                status: tinyFailureDiagnostic.status,
+                nativeInstanceCount: tinyFailureDiagnostic.nativeInstanceCount,
+                error: tinyFailureDiagnostic.errorMessage,
+              }),
+            )
+          } catch (captureError) {
+            console.error("tiny failure state capture failed", captureError)
+          }
+        }
         if (
           phase === "uniformPortDistributionSolver" ||
           pipeline.getCurrentPhase() === "uniformPortDistributionSolver"
@@ -699,8 +968,45 @@ const diagnosePipelineDrc = async (): Promise<void> => {
         }
       }
     }
+    if (
+      pipeline.failed &&
+      pipeline.getCurrentPhase() === "portPointPathingSolver"
+    ) {
+      try {
+        tinyFailureDiagnostic = captureTinyFailure(
+          pipeline,
+          pipeline.error,
+          previousPathingWrapper,
+          previousPathingActiveSolver,
+        )
+        console.error(
+          JSON.stringify({
+            diagnostic: "tiny-failure",
+            dataset: datasetArg,
+            sample,
+            pipeline: pipelineArg,
+            status: tinyFailureDiagnostic.status,
+            nativeInstanceCount: tinyFailureDiagnostic.nativeInstanceCount,
+            error: tinyFailureDiagnostic.errorMessage,
+          }),
+        )
+      } catch (captureError) {
+        console.error("tiny failure state capture failed", captureError)
+      }
+    }
   } finally {
     Repair04Solver.prototype.getOutput = originalRepair04GetOutput
+    if (tinyFailureDiagnostic) {
+      try {
+        await writeFile(
+          path.join(outputDir, "tiny-failure.json"),
+          tinyFailureDiagnostic.serialized,
+        )
+      } catch (artifactError) {
+        // Preserve the original throw or recorded failed-state outcome.
+        console.error("tiny capture artifact write failed", artifactError)
+      }
+    }
     if (uniformFailureDiagnostic) {
       try {
         await writeFile(

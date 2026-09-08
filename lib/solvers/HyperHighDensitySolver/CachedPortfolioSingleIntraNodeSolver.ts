@@ -28,7 +28,7 @@ const roundCoord = (n: number) => Math.round(n * 200) / 200
 
 setupGlobalCaches()
 
-const PORTFOLIO_SINGLE_INTRA_NODE_CACHE_SCHEMA_VERSION = 5
+const PORTFOLIO_SINGLE_INTRA_NODE_CACHE_SCHEMA_VERSION = 6
 
 export class CachedPortfolioSingleIntraNodeSolver
   extends PortfolioSingleIntraNodeSolver
@@ -152,6 +152,10 @@ export class CachedPortfolioSingleIntraNodeSolver
                 physicalClearanceContext.traceClearanceIndex.cacheFingerprint,
               viaIndex:
                 physicalClearanceContext.viaClearanceIndex.cacheFingerprint,
+              traceToTraceClearance:
+                physicalClearanceContext.traceToTraceClearance,
+              viaToTraceClearance:
+                physicalClearanceContext.viaToTraceClearance,
               solveToPhysicalTransform:
                 physicalClearanceContext.solveToPhysicalTransform,
               canonicalNetIds: [

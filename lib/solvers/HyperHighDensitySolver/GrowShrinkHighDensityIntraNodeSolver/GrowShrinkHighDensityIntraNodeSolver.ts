@@ -4,6 +4,7 @@ import type {
   NodeWithPortPoints,
   PortPoint,
 } from "lib/types/high-density-types"
+import { assertPhysicalPeerClearances } from "lib/utils/assertPhysicalPeerClearances"
 import { BaseSolver } from "../../BaseSolver"
 import { PortfolioSingleIntraNodeSolver } from "../PortfolioSingleIntraNodeSolver"
 import {
@@ -120,6 +121,7 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
     this.nodeWithPortPoints = params.nodeWithPortPoints
     if (params.physicalClearanceContext) {
       const context = params.physicalClearanceContext
+      assertPhysicalPeerClearances(context)
       const { center, scale } = context.solveToPhysicalTransform
       if (
         !Number.isFinite(center.x) ||

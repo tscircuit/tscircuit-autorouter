@@ -1,9 +1,11 @@
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { GraphicsObject } from "graphics-debug"
 import { HighDensityRouteSpatialIndex } from "lib/data-structures/HighDensityRouteSpatialIndex"
+import { assertPhysicalPeerClearances } from "lib/utils/assertPhysicalPeerClearances"
 import { cloneAndShuffleArray } from "lib/utils/cloneAndShuffleArray"
 import { getBoundsFromNodeWithPortPoints } from "lib/utils/getBoundsFromNodeWithPortPoints"
 import { getMinDistBetweenEnteringPoints } from "lib/utils/getMinDistBetweenEnteringPoints"
+import { getSolveSpaceLengthFromPhysicalLength } from "lib/utils/getSolveSpaceLengthFromPhysicalLength"
 import type {
   HighDensityIntraNodeRoute,
   NodeWithPortPoints,
@@ -19,6 +21,12 @@ import {
 import { SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost } from "./SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost"
 
 type ConnectionPoint = { x: number; y: number; z: number }
+
+type SolvedViaTraceConflict = {
+  route: HighDensityIntraNodeRoute
+  via: { x: number; y: number }
+  conflictingRoute: HighDensityIntraNodeRoute
+}
 
 export type IntraNodePhysicalClearanceContext = Omit<
   SingleRoutePhysicalClearanceContext,
@@ -140,9 +148,12 @@ export class IntraNodeRouteSolver extends BaseSolver {
         )
       }
       const context = params.physicalClearanceContext
+      assertPhysicalPeerClearances(context)
       this.physicalClearanceContext = {
         traceClearanceIndex: context.traceClearanceIndex,
         viaClearanceIndex: context.viaClearanceIndex,
+        traceToTraceClearance: context.traceToTraceClearance,
+        viaToTraceClearance: context.viaToTraceClearance,
         canonicalNetIdByConnectionName: new Map(
           context.canonicalNetIdByConnectionName,
         ),
@@ -280,6 +291,9 @@ export class IntraNodeRouteSolver extends BaseSolver {
       physicalClearanceContext = {
         traceClearanceIndex: this.physicalClearanceContext.traceClearanceIndex,
         viaClearanceIndex: this.physicalClearanceContext.viaClearanceIndex,
+        traceToTraceClearance:
+          this.physicalClearanceContext.traceToTraceClearance,
+        viaToTraceClearance: this.physicalClearanceContext.viaToTraceClearance,
         solveToPhysicalTransform:
           this.physicalClearanceContext.solveToPhysicalTransform,
         canonicalNetId,
@@ -408,14 +422,56 @@ export class IntraNodeRouteSolver extends BaseSolver {
     ].sort((a, b) => a - b)
   }
 
-  private getFirstSolvedViaTraceConflict() {
+  private getFirstSolvedViaTraceConflict(): SolvedViaTraceConflict | null {
     if (this.solvedRoutes.length < 2) return null
 
-    const spatialIndex = new HighDensityRouteSpatialIndex(this.solvedRoutes)
+    const scale = this.physicalClearanceContext?.solveToPhysicalTransform.scale
+    let originalRouteByIndexedRoute:
+      | Map<HighDensityIntraNodeRoute, HighDensityIntraNodeRoute>
+      | undefined
+    let indexedRoutes = this.solvedRoutes
+    if (scale !== undefined && scale !== 1) {
+      const originalRoutes = new Map<
+        HighDensityIntraNodeRoute,
+        HighDensityIntraNodeRoute
+      >()
+      indexedRoutes = this.solvedRoutes.map(
+        (route): HighDensityIntraNodeRoute => {
+          // Coordinates are already in solve space; only index-local copper
+          // dimensions need conversion. Published route dimensions stay physical.
+          const indexedRoute: HighDensityIntraNodeRoute = {
+            ...route,
+            traceThickness: getSolveSpaceLengthFromPhysicalLength({
+              physicalLength: route.traceThickness,
+              solveToPhysicalScale: scale,
+            }),
+            viaDiameter: getSolveSpaceLengthFromPhysicalLength({
+              physicalLength: route.viaDiameter,
+              solveToPhysicalScale: scale,
+            }),
+          }
+          originalRoutes.set(indexedRoute, route)
+          return indexedRoute
+        },
+      )
+      originalRouteByIndexedRoute = originalRoutes
+    }
+    const spatialIndex = new HighDensityRouteSpatialIndex(indexedRoutes)
     const availableZ = this.getAvailableZLayers()
+    const viaToTraceClearance =
+      this.physicalClearanceContext === undefined
+        ? this.POSTROUTE_VIA_TRACE_CLEARANCE
+        : this.physicalClearanceContext.viaToTraceClearance
 
     for (const route of this.solvedRoutes) {
-      const margin = route.viaDiameter / 2 + this.POSTROUTE_VIA_TRACE_CLEARANCE
+      const physicalMargin = route.viaDiameter / 2 + viaToTraceClearance
+      const margin =
+        scale === undefined || scale === 1
+          ? physicalMargin
+          : getSolveSpaceLengthFromPhysicalLength({
+              physicalLength: physicalMargin,
+              solveToPhysicalScale: scale,
+            })
 
       for (const via of route.vias) {
         for (const z of availableZ) {
@@ -435,10 +491,17 @@ export class IntraNodeRouteSolver extends BaseSolver {
             })
 
           if (conflicts.length > 0) {
+            const indexedConflict = conflicts[0]!.conflictingRoute
+            const conflictingRoute = originalRouteByIndexedRoute
+              ? originalRouteByIndexedRoute.get(indexedConflict)
+              : indexedConflict
+            if (!conflictingRoute) {
+              throw new Error("Indexed via conflict has no original route")
+            }
             return {
               route,
               via,
-              conflictingRoute: conflicts[0]!.conflictingRoute,
+              conflictingRoute,
             }
           }
         }

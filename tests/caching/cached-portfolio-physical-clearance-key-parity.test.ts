@@ -28,6 +28,8 @@ test("outer portfolio and native caches both distinguish exact physical query in
     minClearance: 0.1,
   })
   const changedContexts: IntraNodePhysicalClearanceContext[] = [
+    { ...context, traceToTraceClearance: 0.1001 },
+    { ...context, viaToTraceClearance: 0.1001 },
     { ...context, traceClearanceIndex: changedIndex },
     { ...context, viaClearanceIndex: changedIndex },
     { ...context, traceClearanceIndex: context.viaClearanceIndex },

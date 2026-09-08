@@ -41,6 +41,8 @@ test("single-route search detours around foreign corner copper between legal ter
         physicalClearanceContext: {
           traceClearanceIndex: index,
           viaClearanceIndex: index,
+          traceToTraceClearance: 0.1,
+          viaToTraceClearance: 0.1,
           canonicalNetId: "route-net",
           solveToPhysicalTransform: { center: { x: 0, y: 0 }, scale: 1 },
         },

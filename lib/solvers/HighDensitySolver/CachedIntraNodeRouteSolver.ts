@@ -24,7 +24,7 @@ const cloneValue = <T>(value: T): T =>
 
 setupGlobalCaches()
 
-const INTRA_NODE_CACHE_SCHEMA_VERSION = 5
+const INTRA_NODE_CACHE_SCHEMA_VERSION = 6
 
 export class CachedIntraNodeRouteSolver
   extends IntraNodeRouteSolver
@@ -179,6 +179,10 @@ export class CachedIntraNodeRouteSolver
                 physicalClearanceContext.traceClearanceIndex.cacheFingerprint,
               viaIndex:
                 physicalClearanceContext.viaClearanceIndex.cacheFingerprint,
+              traceToTraceClearance:
+                physicalClearanceContext.traceToTraceClearance,
+              viaToTraceClearance:
+                physicalClearanceContext.viaToTraceClearance,
               solveToPhysicalTransform:
                 physicalClearanceContext.solveToPhysicalTransform,
               canonicalNetIds: [

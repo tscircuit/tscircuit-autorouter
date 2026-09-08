@@ -65,6 +65,9 @@ jobs:
           tests/solvers/grow-shrink-physical-transform.test.ts
           tests/solvers/high-density-physical-board-layer-count.test.ts
           tests/solvers/intra-node-physical-via-span.test.ts
+          tests/solvers/intra-node-peer-clearance-*.test.ts
+          tests/solvers/hd-peer-*.test.ts
+          tests/solvers/physical-length-*.test.ts
           tests/solvers/ordered-port-placement-*.test.ts
           tests/solvers/pipeline9-canonical-port-net-ids.test.ts
           tests/solvers/pipeline9-fixed-pad-clearance-*.test.ts

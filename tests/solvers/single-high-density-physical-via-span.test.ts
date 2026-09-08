@@ -38,6 +38,8 @@ test("center and search vias check their full physical layer span and actual dia
         physicalClearanceContext: {
           traceClearanceIndex: index,
           viaClearanceIndex: index,
+          traceToTraceClearance: 0.1,
+          viaToTraceClearance: 0.1,
           canonicalNetId: "route-net",
           solveToPhysicalTransform: { center: { x: 0, y: 0 }, scale: 1 },
         },

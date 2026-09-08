@@ -39,6 +39,8 @@ test("same-point intra-node transition checks intermediate fixed copper layers",
       physicalClearanceContext: {
         traceClearanceIndex: index,
         viaClearanceIndex: index,
+        traceToTraceClearance: 0.1,
+        viaToTraceClearance: 0.1,
         canonicalNetIdByConnectionName: new Map([["route", canonicalNetId]]),
         solveToPhysicalTransform: { center: { x: 0, y: 0 }, scale: 1 },
       },

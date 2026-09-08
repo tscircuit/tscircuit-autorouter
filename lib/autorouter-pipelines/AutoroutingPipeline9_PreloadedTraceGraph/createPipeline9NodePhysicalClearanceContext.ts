@@ -45,6 +45,10 @@ export const createPipeline9NodePhysicalClearanceContext = ({
   return {
     traceClearanceIndex: fixedPadClearance.traceClearanceIndex,
     viaClearanceIndex: fixedPadClearance.viaClearanceIndex,
+    // Match the existing Pipeline9 uniform-port and post-route copper rules,
+    // independently of its search obstacle margin or fixed-pad clearances.
+    traceToTraceClearance: 0.1,
+    viaToTraceClearance: 0.1,
     canonicalNetIdByConnectionName,
     solveToPhysicalTransform: { center: { ...node.center }, scale: 1 },
   }

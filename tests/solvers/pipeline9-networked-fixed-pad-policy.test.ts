@@ -6,7 +6,7 @@ import { PIPELINE9_NETWORKED_SOLVE_POLICY } from "lib/autorouter-pipelines/Autor
 import { solvePipeline9NetworkedHighDensityNode } from "lib/autorouter-pipelines/AutoroutingPipeline9_Networked/solvePipeline9NetworkedHighDensityNode"
 import { createNetworkFixedPadProblem } from "../fixtures/createNetworkFixedPadProblem"
 
-test("the fixed-pad network schema rejects the previous unconstrained policy before routing", (): void => {
+test("the physical-clearance network schema rejects previous policies before routing", (): void => {
   const { node, connMap, obstacles, fixedPadClearance } =
     createNetworkFixedPadProblem()
   const solver = new Pipeline9NetworkedHighDensitySolver({
@@ -28,13 +28,18 @@ test("the fixed-pad network schema rejects the previous unconstrained policy bef
   const input = solver["createNodeInput"](node)
   expect(input.solvePolicy).toBe(PIPELINE9_NETWORKED_SOLVE_POLICY)
   expect(input.solvePolicy).toContain("fixed_pad_clearance")
-  expect(input.solvePolicy.endsWith("_v2")).toBeTrue()
-  const legacyInput = {
-    ...input,
-    solvePolicy: "ordinary_then_regional_without_fixed_copper_v1",
-  } as unknown as Pipeline9NetworkedHighDensityNodeInput
-  expect((): void => {
-    solvePipeline9NetworkedHighDensityNode(legacyInput)
-  }).toThrow("Unsupported Pipeline9 networked solve policy")
+  expect(input.solvePolicy.endsWith("_v3")).toBeTrue()
+  for (const solvePolicy of [
+    "ordinary_then_regional_without_fixed_copper_v1",
+    "ordinary_with_fixed_pad_clearance_then_regional_without_fixed_copper_v2",
+  ]) {
+    const legacyInput = {
+      ...input,
+      solvePolicy,
+    } as unknown as Pipeline9NetworkedHighDensityNodeInput
+    expect((): void => {
+      solvePipeline9NetworkedHighDensityNode(legacyInput)
+    }).toThrow("Unsupported Pipeline9 networked solve policy")
+  }
   expect(solver.stats.remoteRequestsStarted).toBe(0)
 })

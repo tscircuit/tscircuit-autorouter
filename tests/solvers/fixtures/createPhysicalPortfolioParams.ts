@@ -40,6 +40,8 @@ export const createPhysicalPortfolioParams = (): PhysicalPortfolioParams => {
     physicalClearanceContext: {
       traceClearanceIndex,
       viaClearanceIndex,
+      traceToTraceClearance: 0.1,
+      viaToTraceClearance: 0.1,
       canonicalNetIdByConnectionName: new Map([["signal", "net-signal"]]),
       solveToPhysicalTransform: { center: { x: 0, y: 0 }, scale: 1 },
     },

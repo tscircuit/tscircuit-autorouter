@@ -21,11 +21,13 @@ jobs:
       fail-fast: false
       matrix:
         include:
+          - { dataset: dataset01, sample: 66, pipeline: 9 }
           - { dataset: srj18, sample: 2, pipeline: 9 }
           - { dataset: srj18, sample: 8, pipeline: 9 }
           - { dataset: srj18, sample: 10, pipeline: 9 }
           - { dataset: srj18, sample: 12, pipeline: 9 }
           - { dataset: srj18, sample: 13, pipeline: 9 }
+          - { dataset: srj18, sample: 16, pipeline: 9 }
           - { dataset: srj19, sample: 21, pipeline: 9 }
           - { dataset: srj19, sample: 37, pipeline: 9 }
           - { dataset: srj19, sample: 40, pipeline: 9 }
@@ -65,10 +67,12 @@ jobs:
           - { dataset: srj20, sample: 55, pipeline: 9 }
           - { dataset: srj20, sample: 140, pipeline: 9 }
           - { dataset: srj21, sample: 1, pipeline: 9 }
+          - { dataset: srj21, sample: 3, pipeline: 9 }
           - { dataset: srj23, sample: 17, pipeline: 9 }
           - { dataset: srj23, sample: 45, pipeline: 9 }
           - { dataset: srj23, sample: 46, pipeline: 9 }
           - { dataset: srj23, sample: 49, pipeline: 9 }
+          - { dataset: srj23, sample: 50, pipeline: 9 }
           - { dataset: srj23, sample: 72, pipeline: 9 }
           - { dataset: srj20, sample: 169, pipeline: 7 }
           - dataset: fixture
