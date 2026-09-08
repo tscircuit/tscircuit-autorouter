@@ -21,6 +21,10 @@ test("only canonical portfolio-owned candidates enable the fixed obstacle geomet
   expect(enabled(direct)).toBe(true)
   const owned = new PortfolioSingleIntraNodeSolver({ nodeWithPortPoints }).generateSolver({})
   expect(enabled(owned)).toBe(true)
+  const explicitlyDisabled = new PortfolioSingleIntraNodeSolver({
+    nodeWithPortPoints, fixedObstacleGeometry: false,
+  }).generateSolver({})
+  expect(enabled(explicitlyDisabled)).toBe(false)
   for (const method of ["getCombinationDefs", "getHyperParameterDefs", "getHyperParameterCombinations", "getSupervisedSolverWithBestFitness", "generateSolver"] as const) {
     const portfolio = new PortfolioSingleIntraNodeSolver({ nodeWithPortPoints })
     const original = portfolio[method].bind(portfolio)
