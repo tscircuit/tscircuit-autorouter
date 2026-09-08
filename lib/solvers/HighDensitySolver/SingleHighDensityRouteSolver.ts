@@ -336,14 +336,26 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
 
     const viaProximity = this.viaDiameter / 2 + this.traceThickness / 2 + margin
     if (this.obstacleViaIndex) {
-      const nearbyViaIds = this.obstacleViaIndex.search(
-        node.x - viaProximity,
-        node.y - viaProximity,
-        node.x + viaProximity,
-        node.y + viaProximity,
-      )
+      const nearbyViaIds =
+        planarObstacleQuery?.viaIds ??
+        this.obstacleViaIndex.search(
+          node.x - viaProximity,
+          node.y - viaProximity,
+          node.x + viaProximity,
+          node.y + viaProximity,
+        )
       for (const viaId of nearbyViaIds) {
         const via = this.obstacleVias[viaId]
+        if (
+          via &&
+          planarObstacleQuery &&
+          (via.x < node.x - viaProximity ||
+            via.x > node.x + viaProximity ||
+            via.y < node.y - viaProximity ||
+            via.y > node.y + viaProximity)
+        ) {
+          continue
+        }
         if (via && distance(node, via) < viaProximity) {
           return true
         }
@@ -392,14 +404,25 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     if (node.z === parent.z && this.obstacleViaIndex) {
       const viaProximity =
         this.viaDiameter / 2 + this.traceThickness / 2 + this.obstacleMargin
-      const nearbyViaIds = this.obstacleViaIndex.search(
-        minX - viaProximity,
-        minY - viaProximity,
-        maxX + viaProximity,
-        maxY + viaProximity,
-      )
+      const nearbyViaIds =
+        planarObstacleQuery?.viaIds ??
+        this.obstacleViaIndex.search(
+          minX - viaProximity,
+          minY - viaProximity,
+          maxX + viaProximity,
+          maxY + viaProximity,
+        )
       for (const viaId of nearbyViaIds) {
         const via = this.obstacleVias[viaId]!
+        if (
+          planarObstacleQuery &&
+          (via.x < minX - viaProximity ||
+            via.x > maxX + viaProximity ||
+            via.y < minY - viaProximity ||
+            via.y > maxY + viaProximity)
+        ) {
+          continue
+        }
         if (pointToSegmentDistance(via, parent, node) < viaProximity) {
           return true
         }
@@ -480,6 +503,41 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
         Math.max(node.x + traceProximity, parent.x + clearance),
         Math.max(node.y + traceProximity, parent.y + clearance),
       ),
+    }
+  }
+
+  getNeighborObstacleQuery(node: Node): PlanarObstacleQuery | undefined {
+    const segmentIndex = this.obstacleSegmentIndexByLayer.get(node.z)
+    if (!segmentIndex && !this.obstacleViaIndex) return undefined
+
+    const { minX, maxX, minY, maxY } = this.bounds
+    const clearance = Math.max(
+      this.traceThickness + this.obstacleMargin,
+      this.NEARBY_SEGMENT_CLEARANCE,
+      this.viaDiameter / 2 + this.traceThickness / 2 + this.obstacleMargin,
+    )
+    const queryMinX =
+      Math.min(node.x, clamp(node.x - this.cellStep, minX, maxX)) - clearance
+    const queryMaxX =
+      Math.max(node.x, clamp(node.x + this.cellStep, minX, maxX)) + clearance
+    const queryMinY =
+      Math.min(node.y, clamp(node.y - this.cellStep, minY, maxY)) - clearance
+    const queryMaxY =
+      Math.max(node.y, clamp(node.y + this.cellStep, minY, maxY)) + clearance
+
+    // All planar neighbors share this broad phase. Their point and edge
+    // checks still use each neighbor's exact clearance and geometry.
+    return {
+      segments: this.obstacleSegmentsByLayer.get(node.z) ?? [],
+      segmentIds:
+        segmentIndex?.search(queryMinX, queryMinY, queryMaxX, queryMaxY) ?? [],
+      viaIds:
+        this.obstacleViaIndex?.search(
+          queryMinX,
+          queryMinY,
+          queryMaxX,
+          queryMaxY,
+        ) ?? [],
     }
   }
 
@@ -598,6 +656,7 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
 
   getNeighbors(node: Node) {
     const neighbors: Node[] = []
+    const planarObstacleQuery = this.getNeighborObstacleQuery(node)
 
     const { maxX, minX, maxY, minY } = this.bounds
 
@@ -621,7 +680,6 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
           continue
         }
 
-        const planarObstacleQuery = this.getPlanarObstacleQuery(neighbor)
         if (
           this.isNodeTooCloseToObstacle(
             neighbor,
@@ -1013,6 +1071,7 @@ type IndexedObstacleVia = { x: number; y: number }
 type PlanarObstacleQuery = {
   segments: IndexedObstacleSegment[]
   segmentIds: number[]
+  viaIds?: number[]
 }
 
 function getSameLayerPointPairs(route: HighDensityIntraNodeRoute) {
