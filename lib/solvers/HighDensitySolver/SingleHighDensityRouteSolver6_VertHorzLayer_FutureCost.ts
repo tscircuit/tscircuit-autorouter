@@ -338,7 +338,7 @@ export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends Sing
       gridKey >= 0 &&
       gridKey < denseCache.length
     let costTerms = useDenseCache
-      ? denseCache[gridKey]
+      ? denseCache[gridKey | 0]
       : this.nodeCostTermsByGridKey.get(gridKey)
     // Exact starts, clamped boundary points and accumulated floating-point
     // steps can share a grid key without sharing coordinates. Only reuse the
@@ -357,7 +357,7 @@ export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends Sing
         planarFuturePenalty: undefined,
         viaFuturePenalty: undefined,
       }
-      if (useDenseCache) denseCache[gridKey] = costTerms
+      if (useDenseCache) denseCache[gridKey | 0] = costTerms
       else this.nodeCostTermsByGridKey.set(gridKey, costTerms)
     }
     const baseH =
