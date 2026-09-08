@@ -93,7 +93,6 @@ export type PadJunctionSimplificationInput = {
   bounds?: { minX: number; minY: number; maxX: number; maxY: number }
   minTraceToPadEdgeClearance?: number
   minBoardEdgeClearance?: number
-  preserveRouteEndpoints?: boolean
   gridStep?: number
 }
 type CandidateProgress =

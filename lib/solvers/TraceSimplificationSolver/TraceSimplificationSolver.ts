@@ -471,8 +471,6 @@ export class TraceSimplificationSolver extends BaseSolver {
               this.simplificationConfig.minTraceToPadEdgeClearance,
             minBoardEdgeClearance:
               this.simplificationConfig.minBoardEdgeClearance,
-            preserveRouteEndpoints:
-              this.simplificationConfig.preserveRouteEndpoints,
           })
           this.activeSubSolver = padJunctionSolver
           this.extractResult = () => padJunctionSolver.getOutput()
