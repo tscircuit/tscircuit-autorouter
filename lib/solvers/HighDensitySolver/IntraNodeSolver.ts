@@ -15,6 +15,10 @@ import { BaseSolver } from "../BaseSolver"
 import { safeTransparentize } from "../colors"
 import { HighDensityHyperParameters } from "./HighDensityHyperParameters"
 import {
+  getPhysicalIntraNodeConnectionTasks,
+  type PhysicalIntraNodeConnectionTask,
+} from "./getPhysicalIntraNodeConnectionTasks"
+import {
   SingleHighDensityRouteSolver,
   type SingleRoutePhysicalClearanceContext,
 } from "./SingleHighDensityRouteSolver"
@@ -81,6 +85,10 @@ export class IntraNodeRouteSolver extends BaseSolver {
   }[]
   originalConnectionPointsByName: Map<string, ConnectionPoint[]>
   rootConnectionNameByConnectionName: Map<string, string>
+  private readonly originalPhysicalConnectionTasksByName = new Map<
+    string,
+    PhysicalIntraNodeConnectionTask[]
+  >()
 
   totalConnections: number
   solvedRoutes: HighDensityIntraNodeRoute[]
@@ -163,6 +171,23 @@ export class IntraNodeRouteSolver extends BaseSolver {
         },
       }
     }
+    let physicalConnectionTasks:
+      | PhysicalIntraNodeConnectionTask[]
+      | undefined
+    if (
+      this.physicalClearanceContext &&
+      nodeWithPortPoints.portPointsInPairs !== undefined &&
+      (!Array.isArray(nodeWithPortPoints.portPointsInPairs) ||
+        nodeWithPortPoints.portPointsInPairs.length > 0)
+    ) {
+      physicalConnectionTasks = getPhysicalIntraNodeConnectionTasks({
+        nodeWithPortPoints,
+        canonicalNetIdByConnectionName:
+          this.physicalClearanceContext.canonicalNetIdByConnectionName,
+        connMap: this.connMap,
+        layerCount: this.layerCount!,
+      })
+    }
     const unsolvedConnectionsMap: Map<string, ConnectionPoint[]> = new Map()
     this.rootConnectionNameByConnectionName = new Map()
     for (const {
@@ -199,6 +224,25 @@ export class IntraNodeRouteSolver extends BaseSolver {
         points: dedupeConnectionPoints(points),
       })),
     )
+    if (physicalConnectionTasks) {
+      for (const task of physicalConnectionTasks) {
+        const originalTasks = this.originalPhysicalConnectionTasksByName.get(
+          task.connectionName,
+        )
+        const originalTask: PhysicalIntraNodeConnectionTask = {
+          ...task,
+          points: [{ ...task.points[0] }, { ...task.points[1] }],
+        }
+        if (originalTasks) {
+          originalTasks.push(originalTask)
+        } else {
+          this.originalPhysicalConnectionTasksByName.set(task.connectionName, [
+            originalTask,
+          ])
+        }
+      }
+      this.unsolvedConnections = physicalConnectionTasks
+    }
     this.rerouteAttemptsByConnection = new Map()
 
     if (this.hyperParameters.SHUFFLE_SEED) {
@@ -221,7 +265,9 @@ export class IntraNodeRouteSolver extends BaseSolver {
     }
 
     this.totalConnections = this.unsolvedConnections.length
-    this.MAX_ITERATIONS = 1_000 * this.totalConnections ** 1.5
+    // Explicit tasks correct the local obligations and progress denominator,
+    // but do not expand the existing connection-name-based search budget.
+    this.MAX_ITERATIONS = 1_000 * unsolvedConnectionsMap.size ** 1.5
 
     this.minDistBetweenEnteringPoints = getMinDistBetweenEnteringPoints(
       this.nodeWithPortPoints,
@@ -511,7 +557,26 @@ export class IntraNodeRouteSolver extends BaseSolver {
     return null
   }
 
-  private queueConnectionForPostrouteRepair(connectionName: string) {
+  private queueConnectionForPostrouteRepair(connectionName: string): boolean {
+    const originalTasks = this.originalPhysicalConnectionTasksByName.get(
+      connectionName,
+    )
+    if (originalTasks) {
+      this.solvedRoutes = this.solvedRoutes.filter(
+        (route): boolean => route.connectionName !== connectionName,
+      )
+      for (const task of originalTasks) {
+        this.unsolvedConnections.push({
+          ...task,
+          points: [{ ...task.points[0] }, { ...task.points[1] }],
+        })
+      }
+      this.rerouteAttemptsByConnection.set(
+        connectionName,
+        (this.rerouteAttemptsByConnection.get(connectionName) ?? 0) + 1,
+      )
+      return true
+    }
     const points = this.originalConnectionPointsByName.get(connectionName)
     if (!points || points.length < 2) {
       return false

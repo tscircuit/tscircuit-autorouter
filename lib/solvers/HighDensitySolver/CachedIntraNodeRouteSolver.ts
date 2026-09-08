@@ -25,6 +25,7 @@ const cloneValue = <T>(value: T): T =>
 setupGlobalCaches()
 
 const INTRA_NODE_CACHE_SCHEMA_VERSION = 7
+const PHYSICAL_INTRA_NODE_CACHE_SCHEMA_VERSION = 8
 
 export class CachedIntraNodeRouteSolver
   extends IntraNodeRouteSolver
@@ -149,7 +150,11 @@ export class CachedIntraNodeRouteSolver
     const physicalClearanceContext = this.physicalClearanceContext
 
     const keyData = {
-      cacheSchemaVersion: INTRA_NODE_CACHE_SCHEMA_VERSION,
+      // Physical routing now preserves explicit pair tasks, including reroutes.
+      // No-context solvers retain their existing behavior and cache domain.
+      cacheSchemaVersion: physicalClearanceContext
+        ? PHYSICAL_INTRA_NODE_CACHE_SCHEMA_VERSION
+        : INTRA_NODE_CACHE_SCHEMA_VERSION,
       node: {
         width: roundCoord(this.nodeWithPortPoints.width),
         height: roundCoord(this.nodeWithPortPoints.height),

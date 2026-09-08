@@ -4,7 +4,7 @@ import { CachedIntraNodeRouteSolver } from "lib/solvers/HighDensitySolver/Cached
 import type { NodeWithPortPoints } from "lib/types/high-density-types"
 import objectHash from "object-hash"
 
-test("physical-clearance cache schema invalidates versions 4, 5 and 6 while retaining legacy key inputs", (): void => {
+test("no-context intra-node cache retains schema 7 and rejects versions 4 through 6", (): void => {
   const node: NodeWithPortPoints = {
     capacityMeshNodeId: "schema-node",
     center: { x: 0, y: 0 },

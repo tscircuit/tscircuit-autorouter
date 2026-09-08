@@ -29,6 +29,7 @@ const roundCoord = (n: number) => Math.round(n * 200) / 200
 setupGlobalCaches()
 
 const PORTFOLIO_SINGLE_INTRA_NODE_CACHE_SCHEMA_VERSION = 7
+const PHYSICAL_PORTFOLIO_SINGLE_INTRA_NODE_CACHE_SCHEMA_VERSION = 8
 
 export class CachedPortfolioSingleIntraNodeSolver
   extends PortfolioSingleIntraNodeSolver
@@ -137,7 +138,11 @@ export class CachedPortfolioSingleIntraNodeSolver
 
     // Note: connMap is omitted as hashing it is complex and might be too broad.
     const keyData = {
-      cacheSchemaVersion: PORTFOLIO_SINGLE_INTRA_NODE_CACHE_SCHEMA_VERSION,
+      // Do not reuse successes or failures from the former name-grouped tasks.
+      // The no-context portfolio keeps its unchanged cache domain.
+      cacheSchemaVersion: physicalClearanceContext
+        ? PHYSICAL_PORTFOLIO_SINGLE_INTRA_NODE_CACHE_SCHEMA_VERSION
+        : PORTFOLIO_SINGLE_INTRA_NODE_CACHE_SCHEMA_VERSION,
       normalizedNodeData,
       normalizedHyperParameters,
       traceWidth: roundCoord(this.constructorParams.traceWidth ?? 0.15),

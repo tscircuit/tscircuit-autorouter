@@ -6,7 +6,7 @@ import type {
 } from "lib/types/high-density-types"
 import objectHash from "object-hash"
 
-test("portfolio physical domain rejects schemas 3 through 6 and accepts schema 7 cache entries", async (): Promise<void> => {
+test("no-context portfolio rejects schemas 3 through 6 and retains schema 7 cache entries", async (): Promise<void> => {
   const memoryCacheDescriptor = Object.getOwnPropertyDescriptor(
     globalThis,
     "TSCIRCUIT_AUTOROUTER_IN_MEMORY_CACHE",

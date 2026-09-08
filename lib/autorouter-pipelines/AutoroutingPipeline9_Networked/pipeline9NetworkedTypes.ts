@@ -9,7 +9,7 @@ export type Pipeline9NetworkedCacheSource = "cache" | "solver"
 
 /** Older implementations must reject missing pad or scaled peer clearance. */
 export const PIPELINE9_NETWORKED_SOLVE_POLICY =
-  "ordinary_with_fixed_pad_clearance_then_regional_without_fixed_copper_v4" as const
+  "ordinary_with_fixed_pad_clearance_then_regional_without_fixed_copper_v5" as const
 
 export type Pipeline9NetworkedFixedPadClearance = {
   readonly rectangles: readonly (Omit<FixedCopperRectangle, "ownerNetIds"> & {
@@ -40,7 +40,7 @@ export type Pipeline9NetworkedHighDensityNodeInput = {
   regionalObstacles: Obstacle[]
   layerCount: number
   nodePf: number | null
-  /** Canonical fixed-pad geometry; requires a server implementing policy v4. */
+  /** Canonical fixed-pad geometry; requires the explicit-pair policy v5. */
   fixedPadClearance?: Pipeline9NetworkedFixedPadClearance
 }
 
