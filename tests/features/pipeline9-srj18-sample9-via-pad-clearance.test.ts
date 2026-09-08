@@ -2,12 +2,13 @@ import { expect, test } from "bun:test"
 import {
   getFixedObstacleViolations,
   getNewViaPadViolations,
+  getRepairViaGeometry,
 } from "@tscircuit/repair04"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
 import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import { loadScenarioBySampleNumber } from "../../scripts/benchmark/scenarios"
 
-test("Pipeline9 repairs SRJ18 sample 9 without adding via-pad contacts", async (): Promise<void> => {
+test("Pipeline9 routes SRJ18 sample 9 with full via and pad clearance", async (): Promise<void> => {
   const { scenario } = await loadScenarioBySampleNumber("srj18", 9)
   const input = structuredClone(scenario)
   const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(input, {
@@ -28,22 +29,19 @@ test("Pipeline9 repairs SRJ18 sample 9 without adding via-pad contacts", async (
   const previousRoutes = repairSolver.params.newHdRoutes
   const routes = repairSolver.getOutput()
   const physicalSrj = { ...solver.originalSrj, traces: undefined }
-  const originalViolations = new Map(
-    getFixedObstacleViolations({
-      srj: physicalSrj,
-      routes: previousRoutes,
-    }).map(({ key, severity }) => [key, severity]),
-  )
-  for (const { key, severity } of getFixedObstacleViolations({
-    srj: physicalSrj,
-    routes,
-  })) {
-    expect(originalViolations.has(key)).toBeTrue()
-    expect(severity).toBeLessThanOrEqual(originalViolations.get(key)! + 1e-8)
-  }
+  expect(getFixedObstacleViolations({ srj: physicalSrj, routes })).toEqual([])
   expect(
-    getNewViaPadViolations({ srj: physicalSrj, previousRoutes, routes }),
-  ).toHaveLength(0)
+    getNewViaPadViolations({
+      srj: physicalSrj,
+      previousRoutes: routes,
+      routes,
+      includeExistingVias: routes.flatMap((route, routeIndex) =>
+        getRepairViaGeometry(route, physicalSrj.layerCount).map(
+          (_, viaIndex) => ({ routeIndex, viaIndex }),
+        ),
+      ),
+    }),
+  ).toEqual([])
   expect(
     routes.map((route) => [route.traceThickness, route.viaDiameter]),
   ).toEqual(
