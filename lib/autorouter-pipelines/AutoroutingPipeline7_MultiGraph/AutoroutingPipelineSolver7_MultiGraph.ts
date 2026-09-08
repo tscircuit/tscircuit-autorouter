@@ -71,6 +71,9 @@ import { PreprocessSimpleRouteJsonSolver } from "../AutoroutingPipeline4_TinyHyp
 import { MergedComponentTopologyView } from "./MergedComponentTopologyView"
 import { PowerTraceExpansionSolver } from "./PowerTraceExpansionSolver"
 import { convertPipeline7HdRoutesToSimplifiedPcbTraces } from "./convertPipeline7HdRoutesToSimplifiedPcbTraces"
+import { ClearanceProjectionSolver } from "lib/solvers/ClearanceProjectionSolver/ClearanceProjectionSolver"
+import { convertPreloadedTraceToHdRoutes } from "lib/utils/convertPreloadedTraceToHdRoutes"
+import { createPipeline7RelaxedDrcEvaluator } from "./create-pipeline7-relaxed-drc-evaluator"
 import { createPipeline7AutoroutingDrcEvaluator } from "./create-pipeline7-autorouting-drc-evaluator"
 import { getPowerTraceExpansionConnectionNames } from "./getPowerTraceExpansionConnectionNames"
 import { lockHdRouteTerminals } from "./lock-hd-route-terminals"
@@ -228,6 +231,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
   highDensityStitchSolver?: MultipleHighDensityRouteStitchSolver3
   globalDrcForceImproveSolver?: GlobalDrcForceImproveSolver
   exactGeometryDrcForceImproveSolver?: GlobalDrcBranchPortfolioSolver
+  clearanceProjectionSolver?: ClearanceProjectionSolver
   singleLayerNodeMerger?: SingleLayerNodeMergerSolver
   strawSolver?: StrawSolver
   deadEndSolver?: DeadEndSolver
@@ -705,6 +709,38 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
       },
     ),
     definePipelineStep(
+      "clearanceProjectionSolver",
+      ClearanceProjectionSolver,
+      (cms) => [
+        {
+          originalSrj: cms.originalSrj,
+          routes: cms.exactGeometryDrcForceImproveSolver!.getOutput(),
+          fixedObstacleRoutes: (cms.originalSrj.traces ?? []).flatMap(
+            (trace, index) =>
+              convertPreloadedTraceToHdRoutes(
+                trace,
+                index,
+                cms.srj.layerCount,
+                cms.viaDiameter,
+                cms.connMap,
+              ),
+          ),
+          connMap: cms.connMap,
+          colorMap: cms.colorMap,
+          drcEvaluator: createPipeline7RelaxedDrcEvaluator({
+            connections: cms.netToPointPairsSolver!.newConnections,
+            originalConnections: cms.originalSrj.connections,
+            layerCount: cms.srj.layerCount,
+            obstacles: cms.srj.obstacles,
+            defaultViaHoleDiameter: cms.viaHoleDiameter,
+            connMap: cms.connMap,
+            srjWithPointPairs: cms.srjWithPointPairs!,
+            originalSrj: cms.originalSrj,
+          }),
+        },
+      ],
+    ),
+    definePipelineStep(
       "lengthMatchingPostProcessingSolver",
       DifferentialPairPostProcessingSolver,
       (cms) => {
@@ -733,7 +769,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
             )
           }
         }
-        const hdRoutes = cms.exactGeometryDrcForceImproveSolver!.getOutput()
+        const hdRoutes = cms.clearanceProjectionSolver!.getOutput()
         const differentialPairs = (cms.srj.differentialPairs ?? []).map(
           (pair) => {
             const connectionNames = pair.connectionNames.map(
@@ -1062,6 +1098,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
       this.globalDrcForceImproveSolver?.visualize()
     const exactGeometryDrcForceImproveViz =
       this.exactGeometryDrcForceImproveSolver?.visualize()
+    const clearanceProjectionViz = this.clearanceProjectionSolver?.visualize()
     const visualizations = [
       problemViz,
       processedProblemViz,
@@ -1092,6 +1129,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
       traceWidthViz,
       globalDrcForceImproveViz,
       exactGeometryDrcForceImproveViz,
+      clearanceProjectionViz,
       lengthMatchingPostProcessingViz,
       this.solved
         ? combineVisualizations(
@@ -1174,6 +1212,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
       return hdRoutes
     }
     return (
+      this.clearanceProjectionSolver?.getOutput() ??
       this.exactGeometryDrcForceImproveSolver?.getOutput() ??
       this.globalDrcForceImproveSolver?.getOutput() ??
       this.traceWidthSolver?.getHdRoutesWithWidths() ??
