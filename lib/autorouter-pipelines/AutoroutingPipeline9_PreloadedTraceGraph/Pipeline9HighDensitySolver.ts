@@ -586,6 +586,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       movablePreloadedConnectionNames: movableFixedRouteConnectionNames,
       viaToPadClearance: this.viaToPadClearance,
       layerCount: this.layerCount,
+      fixedPadClearance: this.fixedPadClearance,
     })
     if (promotedFixedRouteConnectionNames.size === 0) {
       this.stats.fallbackNodeCount =

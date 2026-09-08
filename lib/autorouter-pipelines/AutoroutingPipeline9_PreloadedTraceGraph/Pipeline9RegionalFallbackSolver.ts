@@ -12,6 +12,8 @@ import type {
 } from "lib/types/high-density-types"
 import type { Obstacle } from "lib/types/srj-types"
 import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
+import type { Pipeline9FixedPadClearance } from "./createPipeline9FixedPadClearance"
+import { createPipeline9NodePhysicalClearanceContext } from "./createPipeline9NodePhysicalClearanceContext"
 import { materializePipeline9HdRouteVias } from "./materializePipeline9HdRouteVias"
 import { getPipeline9RouteCopperGeometry } from "./pipeline9FixedRouteCopper"
 
@@ -31,6 +33,7 @@ type Pipeline9RegionalFallbackSolverParams = {
   movablePreloadedConnectionNames?: ReadonlySet<string>
   viaToPadClearance?: number
   layerCount: number
+  fixedPadClearance?: Pipeline9FixedPadClearance
 }
 
 type RegionalFallbackPhase = "route" | "improve" | "repair" | "done"
@@ -113,6 +116,16 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
       forceImproveCandidateRejectionCount: 0,
       repairCandidateRejectionCount: 0,
     }
+    const physicalClearanceContext = params.fixedPadClearance
+      ? createPipeline9NodePhysicalClearanceContext({
+          node: params.nodeWithPortPoints,
+          connMap: params.connMap,
+          fixedPadClearance: params.fixedPadClearance,
+          traceWidth: params.traceWidth,
+          viaDiameter: params.viaDiameter,
+          layerCount: params.layerCount,
+        })
+      : undefined
     this.highDensitySolver = new HighDensitySolver({
       nodePortPoints: [params.nodeWithPortPoints],
       colorMap: params.colorMap,
@@ -124,6 +137,7 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
       nodePfById: params.nodePfById,
       obstacles: params.obstacles,
       layerCount: params.layerCount,
+      physicalClearanceContext,
       useGrowShrinkHighDensityIntraNodeSolver: true,
       preserveTerminalPcbPortIds: false,
       growShrinkFallbackToInvalidGeometryOnFailure: false,

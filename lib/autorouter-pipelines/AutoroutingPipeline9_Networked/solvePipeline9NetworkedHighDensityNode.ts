@@ -1,4 +1,5 @@
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
+import type { Pipeline9FixedPadClearance } from "../AutoroutingPipeline9_PreloadedTraceGraph/createPipeline9FixedPadClearance"
 import {
   createPipeline9RegularNodeSolver,
   normalizePipeline9NodeRootConnectionNames,
@@ -28,9 +29,11 @@ type Pipeline9OrdinaryNodeResult =
 const solvePipeline9OrdinaryHighDensityNode = ({
   input,
   connMap,
+  fixedPadClearance,
 }: {
   input: Pipeline9NetworkedHighDensityNodeInput
   connMap: ConnectivityMap
+  fixedPadClearance?: Pipeline9FixedPadClearance
 }): Pipeline9OrdinaryNodeResult => {
   const solver = createPipeline9RegularNodeSolver({
     nodeWithPortPoints: input.nodeWithPortPoints,
@@ -45,9 +48,7 @@ const solvePipeline9OrdinaryHighDensityNode = ({
     },
     obstacles: input.obstacles,
     layerCount: input.layerCount,
-    fixedPadClearance: input.fixedPadClearance
-      ? deserializePipeline9FixedPadClearance(input.fixedPadClearance)
-      : undefined,
+    fixedPadClearance,
   })
   solver.solve()
   return solver.solved
@@ -59,9 +60,10 @@ const solvePipeline9OrdinaryHighDensityNode = ({
 }
 
 /**
- * Runs Pipeline9's terminal no-fixed-copper node policy. hd-cache2 calls this
- * exported helper so ordinary and regional cache entries can only be produced
- * by its installed autorouter implementation.
+ * Runs Pipeline9's terminal no-fixed-trace-copper node policy. Fixed board pads
+ * remain physical constraints in both ordinary and regional HD. hd-cache2 calls
+ * this exported helper so ordinary and regional cache entries can only be
+ * produced by its installed autorouter implementation.
  */
 export function solvePipeline9NetworkedHighDensityNode(
   input: Pipeline9NetworkedHighDensityNodeInput,
@@ -78,9 +80,13 @@ export function solvePipeline9NetworkedHighDensityNode(
   }
 
   const connMap = new ConnectivityMap(input.connectivityNetMap)
+  const fixedPadClearance = input.fixedPadClearance
+    ? deserializePipeline9FixedPadClearance(input.fixedPadClearance)
+    : undefined
   const ordinaryResult = solvePipeline9OrdinaryHighDensityNode({
     input,
     connMap,
+    fixedPadClearance,
   })
   if (ordinaryResult.status === "solved") {
     return {
@@ -123,6 +129,7 @@ export function solvePipeline9NetworkedHighDensityNode(
     },
     obstacles: input.regionalObstacles,
     layerCount: input.layerCount,
+    fixedPadClearance,
   })
   regionalSolver.solve()
   if (regionalSolver.solved) {
