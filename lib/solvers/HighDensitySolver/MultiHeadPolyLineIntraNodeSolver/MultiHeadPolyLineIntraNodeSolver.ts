@@ -1061,9 +1061,12 @@ export class MultiHeadPolyLineIntraNodeSolver extends BaseSolver {
     return [newNeighbor]
   }
 
-  checkIfSolved(candidate: Pick<Candidate, "polyLines" | "minGaps">) {
+  checkIfSolved(
+    candidate: Pick<Candidate, "polyLines" | "minGaps">,
+    minimumGap = this.obstacleMargin,
+  ): boolean {
     const minGapsToOtherConnectionsValid = candidate.minGaps.every(
-      (minGap) => minGap >= this.obstacleMargin,
+      (minGap) => minGap >= minimumGap,
     )
 
     const allPointsWithinBounds = candidate.polyLines.every((polyLine) => {
@@ -1091,10 +1094,8 @@ export class MultiHeadPolyLineIntraNodeSolver extends BaseSolver {
     )
       return
 
-    // take the smallest layer-to-layer gap of the last explored candidate
-    const minGapAchieved = Math.min(...this.lastCandidate.minGaps)
-    if (minGapAchieved >= minGapTarget) {
-      // Accept this imperfect but good-enough solution
+    // The final gap target may differ, but physical bounds still apply.
+    if (this.checkIfSolved(this.lastCandidate, minGapTarget)) {
       this.solved = true
       this._setSolvedRoutes()
       return
