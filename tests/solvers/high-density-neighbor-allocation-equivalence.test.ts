@@ -64,9 +64,8 @@ test("delayed neighbor allocation preserves object-first searches", () => {
         },
       ],
     }
-    const optimized = new SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost(
-      opts,
-    )
+    const optimized =
+      new SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost(opts)
     const reference = new OriginalAllocationReferenceSolver(opts)
     optimized.solve()
     reference.solve()

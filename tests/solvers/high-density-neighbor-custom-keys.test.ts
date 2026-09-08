@@ -40,7 +40,7 @@ test("custom node keys receive the actual neighbor objects before visited checks
   const visitedKey = custom.getNodeKey(neighbors[0]!)
   custom.exploredNodes.add(visitedKey)
   const remaining = custom.getNeighbors(parent)
-  expect(remaining.every((node) => custom.getNodeKey(node) !== visitedKey)).toBe(
-    true,
-  )
+  expect(
+    remaining.every((node) => custom.getNodeKey(node) !== visitedKey),
+  ).toBe(true)
 })
