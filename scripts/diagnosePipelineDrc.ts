@@ -7,6 +7,7 @@ import { AutoroutingPipelineSolver7_MultiGraph } from "lib/autorouter-pipelines/
 import { convertPipeline7HdRoutesToSimplifiedPcbTraces } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/convertPipeline7HdRoutesToSimplifiedPcbTraces"
 import { assignUniquePcbTraceIdsToNewTraces } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/assignUniquePcbTraceIdsToNewTraces"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
+import { IntraNodeRouteSolver } from "lib/solvers/HighDensitySolver/IntraNodeSolver"
 import { SingleHighDensityRouteSolver } from "lib/solvers/HighDensitySolver/SingleHighDensityRouteSolver"
 import { GrowShrinkHighDensityIntraNodeSolver } from "lib/solvers/HyperHighDensitySolver/GrowShrinkHighDensityIntraNodeSolver"
 import { PortfolioSingleIntraNodeSolver } from "lib/solvers/HyperHighDensitySolver/PortfolioSingleIntraNodeSolver"
@@ -954,8 +955,30 @@ type PhysicalQueryCounters = {
   unattributedCalls: number
 }
 
+type HdFailureCopyState = {
+  remainingValues: number
+  ancestors: Set<object>
+  omissions: { path: string; reason: string; omittedCount: number | null }[]
+}
+
+type HdNativeFailureDiagnostic = {
+  nodeId: string
+  maxSnapshotsPerLaneAndScale: number
+  maxSnapshots: number
+  maxCollectionItems: number
+  maxDepth: number
+  maxValuesPerSnapshot: number
+  terminalInstances: number
+  omittedSnapshots: number
+  lanes: Record<string, { observed: number; captured: number; omitted: number }>
+  fixedPadSource: unknown
+  snapshots: unknown[]
+}
+
 type HdRuntimeDiagnostic = {
   diagnostic: "hd-runtime-observation"
+  runtimeMetricsEnabled: boolean
+  nativeFailures: HdNativeFailureDiagnostic | null
   recentPointKeyLimitPerSingle: number
   observingHighDensity: boolean
   enteredHighDensity: boolean
@@ -1024,12 +1047,217 @@ const getDiagnosticScalarFields = (
   return result
 }
 
+/** Copy source data only: never invoke a source getter, toJSON or solver method. */
+const copyHdFailureData = (
+  value: unknown,
+  state: HdFailureCopyState,
+  path: string,
+  depth: number = 0,
+): unknown => {
+  if (state.remainingValues-- <= 0 || depth > 12) {
+    state.omissions.push({
+      path,
+      reason: "value-or-depth-limit",
+      omittedCount: null,
+    })
+    return { unavailable: "capture-limit" }
+  }
+  if (value === undefined) return { unavailable: "missing-own-data" }
+  if (value === null || typeof value === "string" || typeof value === "boolean") {
+    return value
+  }
+  if (typeof value === "number") {
+    return !Number.isFinite(value) || Object.is(value, -0)
+      ? { exactNumber: Object.is(value, -0) ? "-0" : String(value) }
+      : value
+  }
+  if (typeof value !== "object" || state.ancestors.has(value)) {
+    state.omissions.push({ path, reason: "non-data-or-cycle", omittedCount: null })
+    return { unavailable: "non-data-or-cycle" }
+  }
+  state.ancestors.add(value)
+  try {
+    if (value instanceof Map || value instanceof Set) {
+      const items: unknown[] = []
+      let count = 0
+      // Use built-in collection iteration, not an overridable source iterator.
+      const entries: IterableIterator<unknown> =
+        value instanceof Map
+          ? Map.prototype.entries.call(value)
+          : Set.prototype.values.call(value)
+      for (const entry of entries) {
+        if (count < 256 && state.remainingValues > 0) {
+          items.push(
+            copyHdFailureData(entry, state, `${path}[${count}]`, depth + 1),
+          )
+        }
+        count++
+      }
+      if (count > items.length) {
+        state.omissions.push({
+          path,
+          reason: "collection-limit",
+          omittedCount: count - items.length,
+        })
+      }
+      return { collection: value instanceof Map ? "Map" : "Set", count, items }
+    }
+    if (Array.isArray(value)) {
+      const length = getDiagnosticOwnValue(value, "length") as number
+      const items: unknown[] = []
+      for (
+        let index = 0;
+        index < Math.min(length, 256) && state.remainingValues > 0;
+        index++
+      ) {
+        items.push(
+          copyHdFailureData(
+            getDiagnosticOwnValue(value, String(index)),
+            state,
+            `${path}[${index}]`,
+            depth + 1,
+          ),
+        )
+      }
+      if (length > items.length) {
+        state.omissions.push({
+          path,
+          reason: "collection-limit",
+          omittedCount: length - items.length,
+        })
+      }
+      return items
+    }
+    const prototype = Object.getPrototypeOf(value)
+    if (prototype !== Object.prototype && prototype !== null) {
+      state.omissions.push({
+        path,
+        reason: "non-plain-source-object",
+        omittedCount: null,
+      })
+      return { unavailable: "non-plain-source-object" }
+    }
+    const result: Record<string, unknown> = {}
+    const descriptors = Object.entries(Object.getOwnPropertyDescriptors(value))
+    let copied = 0
+    for (const [key, descriptor] of descriptors) {
+      if (copied >= 256 || state.remainingValues <= 0) break
+      result[key] =
+        "value" in descriptor
+          ? copyHdFailureData(descriptor.value, state, `${path}.${key}`, depth + 1)
+          : { unavailable: "accessor-not-read" }
+      copied++
+    }
+    if (descriptors.length > copied) {
+      state.omissions.push({
+        path,
+        reason: "field-limit",
+        omittedCount: descriptors.length - copied,
+      })
+    }
+    return result
+  } finally {
+    state.ancestors.delete(value)
+  }
+}
+
+const selectHdFailureOwnFields = (
+  value: unknown,
+  names: readonly string[],
+): Record<string, unknown> => {
+  const selected: Record<string, unknown> = {}
+  for (const name of names) {
+    selected[name] = getDiagnosticOwnValue(value, name)
+  }
+  return selected
+}
+
+const getHdFailurePhysicalContext = (
+  solver: unknown,
+): Record<string, unknown> => {
+  const context = getDiagnosticOwnValue(solver, "physicalClearanceContext")
+  const result = selectHdFailureOwnFields(context, [
+    "canonicalNetId",
+    "canonicalNetIdByConnectionName",
+    "traceToTraceClearance",
+    "viaToTraceClearance",
+    "solveToPhysicalTransform",
+  ])
+  result.status =
+    context === undefined ? "own-context-unavailable" : "own-context-present"
+  for (const field of ["traceClearanceIndex", "viaClearanceIndex"]) {
+    const index = getDiagnosticOwnValue(context, field)
+    result[field] = {
+      status: index === undefined ? "own-index-unavailable" : "own-index-present",
+      ...selectHdFailureOwnFields(index, [
+        "cacheFingerprint",
+        "layerCount",
+        "minClearance",
+      ]),
+    }
+  }
+  return result
+}
+
+const getHdFailedSingleSource = (single: unknown): Record<string, unknown> => {
+  const queue = getDiagnosticOwnValue(single, "candidates")
+  const heap = getDiagnosticOwnValue(queue, "heap")
+  return {
+    solverClass: getDiagnosticClassName(single),
+    scalarState: getDiagnosticScalarFields(single),
+    physicalContext: getHdFailurePhysicalContext(single),
+    ...selectHdFailureOwnFields(single, [
+      "A",
+      "B",
+      "bounds",
+      "boundsSize",
+      "boundsCenter",
+      "availableZ",
+      "initialNodeGridOffset",
+      "hyperParameters",
+      "obstacleRoutes",
+      "futureConnections",
+      "futureConnectionPoints",
+      "futureConnectionSegmentsCache",
+      "solvedPath",
+      "debug_exploredNodesOrdered",
+    ]),
+    connMapNetMap: getDiagnosticOwnValue(
+      getDiagnosticOwnValue(single, "connMap"),
+      "netMap",
+    ),
+    queueHeapLength: getDiagnosticOwnValue(heap, "length"),
+    queueHeapStatus: Array.isArray(heap) ? "own-heap-array" : "own-heap-unavailable",
+  }
+}
+
 /** Isolated diagnostic process only; no routing predicates are memoized. */
 const installHdRuntimeObservation = (
   pipeline: Pipeline,
+  runtimeMetricsEnabled: boolean,
+  failureNodeId: string | undefined,
 ): HdRuntimeObservation => {
   const diagnostic: HdRuntimeDiagnostic = {
     diagnostic: "hd-runtime-observation",
+    runtimeMetricsEnabled,
+    nativeFailures:
+      failureNodeId === undefined
+        ? null
+        : {
+            nodeId: failureNodeId,
+            maxSnapshotsPerLaneAndScale: 8,
+            maxSnapshots: 64,
+            maxCollectionItems: 256,
+            maxDepth: 12,
+            maxValuesPerSnapshot: 40000,
+            terminalInstances: 0,
+            omittedSnapshots: 0,
+            lanes: {},
+            fixedPadSource: {
+              unavailable: "no-selected-terminal-failure-observed",
+            },
+            snapshots: [],
+          },
     recentPointKeyLimitPerSingle: 4096,
     observingHighDensity: false,
     enteredHighDensity: false,
@@ -1057,6 +1285,11 @@ const installHdRuntimeObservation = (
       "Selected hyperparameters include existing own scalar fields only; arrays, nested objects and getters are not traversed.",
       "Cache and remote successes that bypass observed Portfolio methods have no inferred candidate work; unavailable methods are reported explicitly.",
       "Hard process termination may leave only the most recent completed-node checkpoint; active unfinished-node work after it is unavailable.",
+      "Native failure capture observes Intra.step after the original inherited BaseSolver.step, including its iteration-budget failure; it does not run _step, predicates, queues or output methods again.",
+      "Native captures cover selected-node Intra instances actually stepped here, not constructor failures, remote solvers or external candidates; caller identity is reported unavailable unless the active supervisor contains that exact instance.",
+      "Native snapshots copy bounded own source data immediately after failure or throw; missing own fields, accessors, class instances and truncation are explicit. No live solver, Map, index or RBush is serialized.",
+      "debug_exploredNodesOrdered contains remapped display coordinates (round(x/cellStep)*cellStep plus initialNodeGridOffset), not necessarily actual dequeued XY after boundary clamping; it is not exact explored geometry.",
+      "An original thrown error is rethrown unchanged. Observation errors are separately reported and do not convert solver failure to success.",
     ],
   }
   const originals: {
@@ -1068,6 +1301,7 @@ const installHdRuntimeObservation = (
   const registeredSingles = new WeakSet<object>()
   const installedIndexes = new WeakSet<object>()
   const recordedPortfolios = new WeakSet<object>()
+  const recordedFailedIntras = new WeakSet<object>()
   let nextIndexId = 0
   let activeSingle: object | undefined
   let restored = false
@@ -1113,6 +1347,201 @@ const installHdRuntimeObservation = (
       diagnostic.hooks.push({ target: label, status: "install-error" })
       recordObservationError(error)
     }
+  }
+
+  const captureNativeFailure = (intra: object, returned: boolean): void => {
+    const failures = diagnostic.nativeFailures
+    const node = getDiagnosticOwnValue(intra, "nodeWithPortPoints")
+    if (
+      !failures ||
+      getDiagnosticOwnValue(node, "capacityMeshNodeId") !== failures.nodeId ||
+      recordedFailedIntras.has(intra)
+    ) {
+      return
+    }
+    recordedFailedIntras.add(intra)
+    failures.terminalInstances++
+    const hd = getDiagnosticOwnValue(pipeline, "highDensityRouteSolver")
+    const regional = getDiagnosticOwnValue(hd, "activeFallbackSolver")
+    const possibleCallers = [
+      {
+        lane: "activeRegularSolver",
+        solver: getDiagnosticOwnValue(hd, "activeRegularSolver"),
+      },
+      {
+        lane: "activeFallbackSolver.highDensitySolver",
+        solver: getDiagnosticOwnValue(regional, "highDensitySolver"),
+      },
+      { lane: "highDensityRouteSolver", solver: hd },
+    ]
+    let caller: Record<string, unknown> = {
+      status: "active-supervisor-identity-unavailable",
+    }
+    for (const possibleCaller of possibleCallers) {
+      const grow = getDiagnosticOwnValue(possibleCaller.solver, "activeSubSolver")
+      const portfolio = getDiagnosticOwnValue(grow, "activeSubSolver")
+      const candidates = getDiagnosticOwnValue(portfolio, "supervisedSolvers")
+      if (!Array.isArray(candidates)) continue
+      const candidateIndex = candidates.findIndex(
+        (candidate): boolean =>
+          getDiagnosticOwnValue(candidate, "solver") === intra,
+      )
+      if (candidateIndex < 0) continue
+      caller = {
+        status: "exact-active-supervisor-member",
+        lane: possibleCaller.lane,
+        outerHdClass: getDiagnosticClassName(hd),
+        callerClass: getDiagnosticClassName(possibleCaller.solver),
+        growClass: getDiagnosticClassName(grow),
+        ...selectHdFailureOwnFields(grow, ["scaleFactor", "growthAttempts"]),
+        portfolioClass: getDiagnosticClassName(portfolio),
+        portfolioIterations: getDiagnosticOwnValue(portfolio, "iterations"),
+        candidateIndex,
+        candidateCount: candidates.length,
+        candidateScalars: getDiagnosticScalarFields(candidates[candidateIndex]),
+        candidateHyperParameters: getDiagnosticOwnValue(
+          candidates[candidateIndex],
+          "hyperParameters",
+        ),
+        regionalPhase: getDiagnosticOwnValue(regional, "phase"),
+        regionalReason: getDiagnosticOwnValue(hd, "activeFallbackReason"),
+      }
+      break
+    }
+    const context = getHdFailurePhysicalContext(intra)
+    const laneKey = JSON.stringify([
+      caller.lane ?? "unavailable",
+      caller.scaleFactor ?? "unavailable",
+      getDiagnosticOwnValue(context.solveToPhysicalTransform, "scale") ??
+        "unavailable",
+    ])
+    const lane = failures.lanes[laneKey] ?? { observed: 0, captured: 0, omitted: 0 }
+    failures.lanes[laneKey] = lane
+    lane.observed++
+    if (
+      lane.captured >= failures.maxSnapshotsPerLaneAndScale ||
+      failures.snapshots.length >= failures.maxSnapshots
+    ) {
+      lane.omitted++
+      failures.omittedSnapshots++
+      return
+    }
+    if (failures.terminalInstances === 1) {
+      const sourceState: HdFailureCopyState = {
+        remainingValues: failures.maxValuesPerSnapshot,
+        ancestors: new Set(),
+        omissions: [],
+      }
+      const fixedPads = getDiagnosticOwnValue(pipeline, "fixedPadClearance")
+      failures.fixedPadSource = {
+        data: copyHdFailureData(
+          {
+            status:
+              fixedPads === undefined
+                ? "pipeline-own-context-unavailable"
+                : "pipeline-own-context-present",
+            ...selectHdFailureOwnFields(fixedPads, [
+              "rectangles",
+              "layerCount",
+              "traceToPadClearance",
+              "viaToPadClearance",
+            ]),
+            traceIndexFingerprint: getDiagnosticOwnValue(
+              getDiagnosticOwnValue(fixedPads, "traceClearanceIndex"),
+              "cacheFingerprint",
+            ),
+            viaIndexFingerprint: getDiagnosticOwnValue(
+              getDiagnosticOwnValue(fixedPads, "viaClearanceIndex"),
+              "cacheFingerprint",
+            ),
+          },
+          sourceState,
+          "fixedPadSource",
+        ),
+        omissions: sourceState.omissions,
+      }
+    }
+    const failedSingles = getDiagnosticOwnValue(intra, "failedSubSolvers")
+    const retainedActiveSingle = getDiagnosticOwnValue(intra, "activeSubSolver")
+    const failedSingleSources = Array.isArray(failedSingles)
+      ? failedSingles.slice(0, 8).map(getHdFailedSingleSource)
+      : undefined
+    const state: HdFailureCopyState = {
+      remainingValues: failures.maxValuesPerSnapshot,
+      ancestors: new Set(),
+      omissions: [],
+    }
+    const source = {
+      outcome: returned ? "failed-after-original-step" : "original-step-threw",
+      caller,
+      solverClass: getDiagnosticClassName(intra),
+      scalarState: getDiagnosticScalarFields(intra),
+      physicalContext: context,
+      ...selectHdFailureOwnFields(intra, [
+        "nodeWithPortPoints",
+        "hyperParameters",
+        "originalPhysicalConnectionTasksByName",
+        "originalConnectionPointsByName",
+        "rootConnectionNameByConnectionName",
+        "rerouteAttemptsByConnection",
+        "solvedRoutes",
+        "unsolvedConnections",
+      ]),
+      failedSingleCount: Array.isArray(failedSingles) ? failedSingles.length : null,
+      omittedFailedSingleCount: Array.isArray(failedSingles)
+        ? Math.max(0, failedSingles.length - 8)
+        : null,
+      failedSingles: failedSingleSources,
+      retainedActiveSingle:
+        retainedActiveSingle == null
+          ? {
+              status:
+                retainedActiveSingle === null
+                  ? "explicit-null"
+                  : "own-field-unavailable",
+            }
+          : getHdFailedSingleSource(retainedActiveSingle),
+    }
+    failures.snapshots.push({
+      laneKey,
+      data: copyHdFailureData(source, state, "snapshot"),
+      omissions: state.omissions,
+    })
+    lane.captured++
+  }
+
+  if (diagnostic.nativeFailures) {
+    const createObservedIntraStep = (
+      original: DiagnosticMethod,
+    ): DiagnosticMethod => {
+      return function (this: unknown, ...args: unknown[]): unknown {
+        let returned = false
+        try {
+          const result = original.apply(this, args)
+          returned = true
+          return result
+        } finally {
+          try {
+            if (
+              diagnostic.observingHighDensity &&
+              typeof this === "object" &&
+              this !== null &&
+              (!returned || getDiagnosticOwnValue(this, "failed") === true)
+            ) {
+              captureNativeFailure(this, returned)
+            }
+          } catch (error) {
+            recordObservationError(error)
+          }
+        }
+      }
+    }
+    wrapMethod(
+      IntraNodeRouteSolver.prototype,
+      "step",
+      "Intra.step-terminal-failure",
+      createObservedIntraStep,
+    )
   }
 
   const observePointResult = (
@@ -1238,6 +1667,7 @@ const installHdRuntimeObservation = (
     "isPhysicalTraceSegmentClear",
     "isPhysicalViaClear",
   ]) {
+    if (!runtimeMetricsEnabled) continue
     const createObservedSingleMethod = (
       original: DiagnosticMethod,
     ): DiagnosticMethod => {
@@ -1330,6 +1760,7 @@ const installHdRuntimeObservation = (
     })
   }
   for (const method of ["onSolve", "_step"] as const) {
+    if (!runtimeMetricsEnabled) continue
     const createObservedPortfolioMethod = (
       original: DiagnosticMethod,
     ): DiagnosticMethod => {
@@ -1384,6 +1815,7 @@ const installHdRuntimeObservation = (
         return
       }
       diagnostic.enteredHighDensity = true
+      if (!runtimeMetricsEnabled) return
       try {
         const context = getDiagnosticOwnValue(pipeline, "fixedPadClearance")
         if (context === undefined) {
@@ -1698,9 +2130,11 @@ const diagnosePipelineDrc = async (): Promise<void> => {
   let tinyFailureDiagnostic: TinyFailureDiagnostic | undefined
   let previousPathingWrapper: unknown
   let previousPathingActiveSolver: unknown
+  const runtimeMetricsEnabled = process.env.HD_DRC_RUNTIME_OBSERVATION === "1"
+  const failureNodeId = process.env.PIPELINE9_HD_FAILURE_NODE_ID || undefined
   const hdRuntimeObservation =
-    process.env.HD_DRC_RUNTIME_OBSERVATION === "1"
-      ? installHdRuntimeObservation(pipeline)
+    runtimeMetricsEnabled || failureNodeId !== undefined
+      ? installHdRuntimeObservation(pipeline, runtimeMetricsEnabled, failureNodeId)
       : undefined
   const writeRuntimeObservation = async (checkpoint: string): Promise<void> => {
     if (!hdRuntimeObservation) return

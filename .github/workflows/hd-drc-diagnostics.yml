@@ -74,7 +74,7 @@ jobs:
           - { dataset: srj20, sample: 191, pipeline: 9 }
           - { dataset: srj20, sample: 55, pipeline: 9 }
           - { dataset: srj20, sample: 140, pipeline: 9 }
-          - { dataset: srj21, sample: 1, pipeline: 9 }
+          - { dataset: srj21, sample: 1, pipeline: 9, failureNodeId: cmn_3 }
           - { dataset: srj21, sample: 3, pipeline: 9, observeRegional: true }
           - { dataset: srj23, sample: 14, pipeline: 9 }
           - { dataset: srj23, sample: 17, pipeline: 9 }
@@ -137,6 +137,7 @@ jobs:
           HD_DRC_RUNTIME_OBSERVATION: ${{ matrix.observeRuntime && '1' || '' }}
           HD_DRC_REGIONAL_OBSERVATION: ${{ matrix.observeRegional && '1' || '' }}
           HD_DRC_STATIC_REACHABILITY_CERTIFICATE: ${{ matrix.staticCertificate && '1' || '' }}
+          PIPELINE9_HD_FAILURE_NODE_ID: ${{ matrix.failureNodeId }}
         run: bun scripts/diagnosePipelineDrc.ts ${{ matrix.dataset }} ${{ matrix.sample }} ${{ matrix.pipeline }} ../diagnostic-results/main ${{ matrix.fixturePath }}
 
       - name: Diagnose PR head
@@ -146,6 +147,7 @@ jobs:
           HD_DRC_RUNTIME_OBSERVATION: ${{ matrix.observeRuntime && '1' || '' }}
           HD_DRC_REGIONAL_OBSERVATION: ${{ matrix.observeRegional && '1' || '' }}
           HD_DRC_STATIC_REACHABILITY_CERTIFICATE: ${{ matrix.staticCertificate && '1' || '' }}
+          PIPELINE9_HD_FAILURE_NODE_ID: ${{ matrix.failureNodeId }}
         run: bun scripts/diagnosePipelineDrc.ts ${{ matrix.dataset }} ${{ matrix.sample }} ${{ matrix.pipeline }} ../diagnostic-results/pr ${{ matrix.fixturePath }}
 
       - name: Record exact revisions
