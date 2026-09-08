@@ -17,9 +17,21 @@ type Segment = {
 const orientation = (a: Point, b: Point, c: Point): number =>
   (b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x)
 
-const crosses = (a: Point, b: Point, c: Point, d: Point): boolean =>
-  orientation(a, b, c) * orientation(a, b, d) < -1e-18 &&
-  orientation(c, d, a) * orientation(c, d, b) < -1e-18
+const crosses = (a: Point, b: Point, c: Point, d: Point): boolean => {
+  if (
+    Math.max(a.x, b.x) < Math.min(c.x, d.x) ||
+    Math.max(c.x, d.x) < Math.min(a.x, b.x) ||
+    Math.max(a.y, b.y) < Math.min(c.y, d.y) ||
+    Math.max(c.y, d.y) < Math.min(a.y, b.y)
+  ) {
+    return false
+  }
+  // A vertex touching a foreign wire, or collinear overlap, also shorts copper.
+  return (
+    orientation(a, b, c) * orientation(a, b, d) <= 0 &&
+    orientation(c, d, a) * orientation(c, d, b) <= 0
+  )
+}
 
 /** Projection preserves point order, so each candidate segment has an exact predecessor. */
 export const createsTraceCrossing = (
