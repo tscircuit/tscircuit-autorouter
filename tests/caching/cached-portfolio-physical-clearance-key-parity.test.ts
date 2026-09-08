@@ -77,10 +77,13 @@ test("outer portfolio and native caches both distinguish exact physical query in
     CachedIntraNodeRouteSolver,
     CachedPortfolioSingleIntraNodeSolver,
   ]) {
-    const baselineKey = new Solver(params).computeCacheKeyAndTransform().cacheKey
+    const baselineKey = new Solver(params).computeCacheKeyAndTransform()
+      .cacheKey
     for (const changed of changedParams) {
       const solver = new Solver(changed)
-      expect(solver.computeCacheKeyAndTransform().cacheKey).not.toBe(baselineKey)
+      expect(solver.computeCacheKeyAndTransform().cacheKey).not.toBe(
+        baselineKey,
+      )
       expect(solver.iterations).toBe(0)
     }
     const equivalent = new Solver({

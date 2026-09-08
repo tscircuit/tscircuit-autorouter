@@ -26,7 +26,7 @@ const getAdjacentFloat = (
   }
   adjacentFloatView.setFloat64(0, value)
   const bits = adjacentFloatView.getBigUint64(0)
-  const bitStep = (value > 0) === (direction === "up") ? 1n : -1n
+  const bitStep = value > 0 === (direction === "up") ? 1n : -1n
   adjacentFloatView.setBigUint64(0, bits + bitStep)
   const adjacent = adjacentFloatView.getFloat64(0)
   if (!Number.isFinite(adjacent)) {
@@ -232,7 +232,11 @@ export const placeOrderedPortsInClearanceIntervals = (params: {
 
   // Do not silently accept a rounded bound that violates a physical constraint.
   for (let index = 0; index < positions.length; index++) {
-    for (let laterIndex = index + 1; laterIndex < positions.length; laterIndex++) {
+    for (
+      let laterIndex = index + 1;
+      laterIndex < positions.length;
+      laterIndex++
+    ) {
       const spacing = getRequiredSpacing(
         preparedPorts[index],
         preparedPorts[laterIndex],

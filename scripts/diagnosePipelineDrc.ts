@@ -119,19 +119,19 @@ const captureUniformFailure = (
   )
   const pathingInputSharedEdges =
     pipeline instanceof AutoroutingPipelineSolver9_PreloadedTraceGraph
-      ? pipeline.sharedEdgeSegmentsWithNecessaryCrampedPortPoints?.filter(
+      ? (pipeline.sharedEdgeSegmentsWithNecessaryCrampedPortPoints?.filter(
           (edge): boolean =>
             ownerNodeIds.has(edge.nodeIds[0]) &&
             ownerNodeIds.has(edge.nodeIds[1]),
-        ) ?? null
+        ) ?? null)
       : null
   const availableSharedEdges =
     pipeline instanceof AutoroutingPipelineSolver9_PreloadedTraceGraph
-      ? pipeline.availableSegmentPointSolver?.sharedEdgeSegments.filter(
+      ? (pipeline.availableSegmentPointSolver?.sharedEdgeSegments.filter(
           (edge): boolean =>
             ownerNodeIds.has(edge.nodeIds[0]) &&
             ownerNodeIds.has(edge.nodeIds[1]),
-        ) ?? null
+        ) ?? null)
       : null
   const serialized = JSON.stringify(
     {
@@ -168,7 +168,10 @@ const captureUniformFailure = (
       }
       if (value instanceof Map) {
         const entries: [unknown, unknown][] = [...value.entries()]
-        if (key === "canonicalNetIdByPortId" || key === "physicalPortWitnesses") {
+        if (
+          key === "canonicalNetIdByPortId" ||
+          key === "physicalPortWitnesses"
+        ) {
           return entries.filter(
             ([portId]): boolean =>
               typeof portId === "string" && familyPortIds.has(portId),

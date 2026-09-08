@@ -40,7 +40,8 @@ export const createPipeline9FixedPadRectanglePredicate = ({
       (value): boolean => Number.isFinite(value),
     ) ||
     node.portPoints.some(
-      (point): boolean => !Number.isFinite(point.x) || !Number.isFinite(point.y),
+      (point): boolean =>
+        !Number.isFinite(point.x) || !Number.isFinite(point.y),
     ) ||
     !Object.values(bounds).every((value): boolean => Number.isFinite(value)) ||
     bounds.minX > bounds.maxX ||

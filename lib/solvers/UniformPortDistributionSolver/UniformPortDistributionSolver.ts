@@ -70,7 +70,13 @@ export class UniformPortDistributionSolver extends BaseSolver {
   private readonly fixedPortIds = new Set<string>()
   private readonly physicalPortWitnesses = new Map<
     string,
-    { ownerPairKey: string; ownerNodeIds: OwnerPair; x: number; y: number; z: number }
+    {
+      ownerPairKey: string
+      ownerNodeIds: OwnerPair
+      x: number
+      y: number
+      z: number
+    }
   >()
 
   constructor(private input: UniformPortDistributionSolverInput) {
@@ -98,15 +104,20 @@ export class UniformPortDistributionSolver extends BaseSolver {
           if (!referencedPortIds.has(port.portPointId)) continue
           const owners = port.connectionNodeIds
           if (
-            !owners || owners.length !== 2 ||
+            !owners ||
+            owners.length !== 2 ||
             !owners.includes(node.capacityMeshNodeId)
           ) {
-            throw new Error(`Uniform input port "${port.portPointId}" has inconsistent physical ownership`)
+            throw new Error(
+              `Uniform input port "${port.portPointId}" has inconsistent physical ownership`,
+            )
           }
           const key = getOwnerPairKey(normalizeOwnerPair(owners[0], owners[1]))
           const previous = inputOwnerPairByPortId.get(port.portPointId)
           if (previous !== undefined && previous !== key) {
-            throw new Error(`Uniform input port "${port.portPointId}" has conflicting owner pairs`)
+            throw new Error(
+              `Uniform input port "${port.portPointId}" has conflicting owner pairs`,
+            )
           }
           inputOwnerPairByPortId.set(port.portPointId, key)
         }
@@ -125,7 +136,9 @@ export class UniformPortDistributionSolver extends BaseSolver {
         const ownerPairKey = getOwnerPairKey(ownerNodeIds)
         if (input.physicalClearanceContext) {
           if (!ownerNodeIds.includes(node.capacityMeshNodeId)) {
-            throw new Error(`Uniform port "${portPoint.portPointId}" is used outside its physical owner pair`)
+            throw new Error(
+              `Uniform port "${portPoint.portPointId}" is used outside its physical owner pair`,
+            )
           }
           const previousWitness = this.physicalPortWitnesses.get(
             portPoint.portPointId,
@@ -152,7 +165,10 @@ export class UniformPortDistributionSolver extends BaseSolver {
             input.physicalClearanceContext.canonicalNetIdByConnectionName.get(
               portPoint.connectionName,
             )
-          if (typeof canonicalNetId !== "string" || canonicalNetId.length === 0) {
+          if (
+            typeof canonicalNetId !== "string" ||
+            canonicalNetId.length === 0
+          ) {
             throw new Error(
               `Uniform port "${portPoint.portPointId}" has no canonical physical net for "${portPoint.connectionName}"`,
             )
@@ -198,16 +214,22 @@ export class UniformPortDistributionSolver extends BaseSolver {
         for (const port of (node.portPointsInPairs ?? []).flat()) {
           if (!port.portPointId) continue
           const witness = this.physicalPortWitnesses.get(port.portPointId)
-          const netId = input.physicalClearanceContext
-            .canonicalNetIdByConnectionName.get(port.connectionName)
+          const netId =
+            input.physicalClearanceContext.canonicalNetIdByConnectionName.get(
+              port.connectionName,
+            )
           if (
             !witness ||
             !witness.ownerNodeIds.includes(node.capacityMeshNodeId) ||
-            witness.x !== port.x || witness.y !== port.y || witness.z !== port.z ||
+            witness.x !== port.x ||
+            witness.y !== port.y ||
+            witness.z !== port.z ||
             netId === undefined ||
             netId !== this.canonicalNetIdByPortId.get(port.portPointId)
           ) {
-            throw new Error(`Uniform pair port "${port.portPointId}" has inconsistent physical ownership, coordinates or net`)
+            throw new Error(
+              `Uniform pair port "${port.portPointId}" has inconsistent physical ownership, coordinates or net`,
+            )
           }
         }
       }
@@ -281,17 +303,25 @@ export class UniformPortDistributionSolver extends BaseSolver {
   ): SharedEdge | null {
     const context = this.input.physicalClearanceContext
     if (!context) {
-      throw new Error("Uniform physical edge classification requires its copper context")
+      throw new Error(
+        "Uniform physical edge classification requires its copper context",
+      )
     }
-    const family = this.mapOfOwnerPairToPortPoints.get(sharedEdgeBounds.ownerPairKey)
+    const family = this.mapOfOwnerPairToPortPoints.get(
+      sharedEdgeBounds.ownerPairKey,
+    )
     if (!family || family.length === 0) {
-      throw new Error(`Uniform edge "${sharedEdgeBounds.ownerPairKey}" has no port family`)
+      throw new Error(
+        `Uniform edge "${sharedEdgeBounds.ownerPairKey}" has no port family`,
+      )
     }
     const horizontal = sharedEdgeBounds.orientation === "horizontal"
     const fixedCoordinate = horizontal ? family[0].y : family[0].x
     for (const port of family) {
       if ((horizontal ? port.y : port.x) !== fixedCoordinate) {
-        throw new Error(`Uniform edge "${sharedEdgeBounds.ownerPairKey}" has inconsistent physical port coordinates`)
+        throw new Error(
+          `Uniform edge "${sharedEdgeBounds.ownerPairKey}" has inconsistent physical port coordinates`,
+        )
       }
     }
     // Shared-port generation uses the overlap midpoint, which can differ from
@@ -310,22 +340,28 @@ export class UniformPortDistributionSolver extends BaseSolver {
     }
     for (const port of family) {
       if (!port.portPointId) {
-        throw new Error(`Uniform edge "${sharedEdge.ownerPairKey}" has an unnamed physical port`)
+        throw new Error(
+          `Uniform edge "${sharedEdge.ownerPairKey}" has an unnamed physical port`,
+        )
       }
       const canonicalNetId = this.canonicalNetIdByPortId.get(port.portPointId)
       if (!canonicalNetId) {
-        throw new Error(`Uniform port "${port.portPointId}" has no physical net`)
+        throw new Error(
+          `Uniform port "${port.portPointId}" has no physical net`,
+        )
       }
       // Classify the input domain before placement. The legacy branch can
       // use a slightly different owner boundary, so both full segments must
       // be clear before retaining that branch's exact existing behavior.
       for (const edge of [sharedEdge, sharedEdgeBounds]) {
-        if (!context.traceClearanceIndex.isSegmentClear({
-          start: { x: edge.x1, y: edge.y1, z: port.z },
-          end: { x: edge.x2, y: edge.y2, z: port.z },
-          canonicalNetId,
-          copperDiameter: context.traceWidth,
-        })) {
+        if (
+          !context.traceClearanceIndex.isSegmentClear({
+            start: { x: edge.x1, y: edge.y1, z: port.z },
+            end: { x: edge.x2, y: edge.y2, z: port.z },
+            canonicalNetId,
+            copperDiameter: context.traceWidth,
+          })
+        ) {
           return sharedEdge
         }
       }
@@ -336,11 +372,15 @@ export class UniformPortDistributionSolver extends BaseSolver {
   private redistributePhysicallyClearPorts(sharedEdge: SharedEdge): void {
     const context = this.input.physicalClearanceContext
     if (!context) {
-      throw new Error("Uniform physical redistribution requires its copper context")
+      throw new Error(
+        "Uniform physical redistribution requires its copper context",
+      )
     }
     const family = this.mapOfOwnerPairToPortPoints.get(sharedEdge.ownerPairKey)
     if (!family || family.length === 0) {
-      throw new Error(`Uniform edge "${sharedEdge.ownerPairKey}" has no port family`)
+      throw new Error(
+        `Uniform edge "${sharedEdge.ownerPairKey}" has no port family`,
+      )
     }
     const fixedEdge = shouldIgnoreSharedEdge({
       sharedEdge,

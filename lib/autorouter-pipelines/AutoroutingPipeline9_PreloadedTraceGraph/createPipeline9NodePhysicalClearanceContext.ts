@@ -37,8 +37,9 @@ export const createPipeline9NodePhysicalClearanceContext = ({
   })
   const hasForeignCopper = fixedPadClearance.rectangles.some(
     (rectangle): boolean =>
-      ![...netIds].every((netId): boolean => rectangle.ownerNetIds.has(netId)) &&
-      overlapsPhysicalNode(rectangle),
+      ![...netIds].every((netId): boolean =>
+        rectangle.ownerNetIds.has(netId),
+      ) && overlapsPhysicalNode(rectangle),
   )
   if (!hasForeignCopper) return undefined
   return {

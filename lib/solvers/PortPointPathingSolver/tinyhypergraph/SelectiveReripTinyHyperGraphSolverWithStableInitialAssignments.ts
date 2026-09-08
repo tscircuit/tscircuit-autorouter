@@ -44,8 +44,12 @@ export class SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments exte
       }
       this.fixedCopperContext = {
         ...fixedCopperContext,
-        canonicalNetIdByNetId: new Map(fixedCopperContext.canonicalNetIdByNetId),
-        netIdByCanonicalNetId: new Map(fixedCopperContext.netIdByCanonicalNetId),
+        canonicalNetIdByNetId: new Map(
+          fixedCopperContext.canonicalNetIdByNetId,
+        ),
+        netIdByCanonicalNetId: new Map(
+          fixedCopperContext.netIdByCanonicalNetId,
+        ),
         connectionIdByRouteId: [...fixedCopperContext.connectionIdByRouteId],
       }
     }

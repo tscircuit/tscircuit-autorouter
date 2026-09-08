@@ -573,7 +573,9 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       UniformPortDistributionSolver,
       (cms) => {
         if (!cms.portPointPathingSolver?.solved) {
-          throw new Error("Pipeline9 port distribution requires solved port pathing")
+          throw new Error(
+            "Pipeline9 port distribution requires solved port pathing",
+          )
         }
         const output = cms.portPointPathingSolver.getOutput()
         const clearance = cms.getFixedPadClearance()

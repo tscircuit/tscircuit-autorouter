@@ -264,7 +264,9 @@ export class IntraNodeRouteSolver extends BaseSolver {
     points: { x: number; y: number; z: number }[]
   }): ConstructorParameters<typeof SingleHighDensityRouteSolver>[0] {
     const { connectionName, rootConnectionName, points } = unsolvedConnection
-    let physicalClearanceContext: SingleRoutePhysicalClearanceContext | undefined
+    let physicalClearanceContext:
+      | SingleRoutePhysicalClearanceContext
+      | undefined
     if (this.physicalClearanceContext) {
       const canonicalNetId =
         this.physicalClearanceContext.canonicalNetIdByConnectionName.get(
@@ -302,13 +304,12 @@ export class IntraNodeRouteSolver extends BaseSolver {
           )
         : this.solvedRoutes,
       futureConnections: this.unsolvedConnections,
-      layerCount:
-        this.physicalClearanceContext
-          ? this.layerCount
-          : this.nodeWithPortPoints.portPoints.reduce(
-              (max, p) => Math.max(max, (p.z ?? 0) + 1),
-              2,
-            ),
+      layerCount: this.physicalClearanceContext
+        ? this.layerCount
+        : this.nodeWithPortPoints.portPoints.reduce(
+            (max, p) => Math.max(max, (p.z ?? 0) + 1),
+            2,
+          ),
       availableZ:
         this.nodeWithPortPoints.availableZ &&
         this.nodeWithPortPoints.availableZ.length > 0

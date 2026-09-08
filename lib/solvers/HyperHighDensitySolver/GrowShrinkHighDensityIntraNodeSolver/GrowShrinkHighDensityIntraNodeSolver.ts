@@ -182,7 +182,8 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
       ...portfolioParams
     } = this.constructorParams
     const physicalScale = physicalClearanceContext
-      ? physicalClearanceContext.solveToPhysicalTransform.scale / this.scaleFactor
+      ? physicalClearanceContext.solveToPhysicalTransform.scale /
+        this.scaleFactor
       : undefined
     if (
       physicalScale !== undefined &&

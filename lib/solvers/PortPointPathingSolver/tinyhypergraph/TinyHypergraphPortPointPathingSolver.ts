@@ -39,6 +39,7 @@ import type {
 import { createTinyGraphFixedCopperClearanceContext } from "./createTinyGraphFixedCopperClearanceContext"
 import { createTinyRouteNetIndexer } from "./createTinyRouteNetIndexer"
 import { getRegionNetIdByRegionId } from "./getRegionNetIdByRegionId"
+import { limitCrampedTinyGraphDuplicatePorts } from "./limitCrampedTinyGraphDuplicatePorts"
 import { SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments } from "./SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments"
 import {
   getSerializedPreloadedTraceStats,
@@ -1074,6 +1075,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
   private duplicateCongestedPortReport?: DuplicateCongestedPortSolverReport
   private duplicateCongestedPortError?: string
   private duplicatedPortCount = 0
+  private rejectedCrampedDuplicatePortCount = 0
   private inputNodeWithPortPoints: InputNodeWithPortPoints[]
   private originalRegionById: Map<
     CapacityMeshNodeId,
@@ -1156,7 +1158,22 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       } else {
         this.duplicateCongestedPortReport = duplicateCongestedPortSolver.report
         graphForTiny = duplicateCongestedPortSolver.getOutput()
+        if (this.physicalClearance) {
+          // Do not expand the producer's cramped-port capacity before routing.
+          // This is conservative admission, not a proof of every net-dependent
+          // channel's maximum capacity; all original portals remain available.
+          const admitted = limitCrampedTinyGraphDuplicatePorts({
+            originalGraph: serializedGraph,
+            proposedGraph: graphForTiny,
+          })
+          graphForTiny = admitted.graph
+          this.rejectedCrampedDuplicatePortCount = admitted.removedPortIds.length
+        }
+        const originalPortIds = new Set(
+          serializedGraph.ports.map((port): string => port.portId),
+        )
         for (const port of graphForTiny.ports) {
+          if (originalPortIds.has(port.portId)) continue
           const metadata = asTinyPortMetadata(port.d)
           if (typeof metadata.duplicatedFromPortId !== "string") continue
           delete metadata._preloadedFixedNetIds
@@ -1166,11 +1183,16 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
     } else {
       this.duplicateCongestedPortError = `Skipped for ${connections.length} connections`
     }
-    this.duplicatedPortCount =
+    const proposedDuplicatePortCount =
       this.duplicateCongestedPortReport?.duplicatedPorts.reduce(
         (sum, duplicatedPort) => sum + duplicatedPort.duplicatePortIds.length,
         0,
       ) ?? 0
+    this.duplicatedPortCount =
+      proposedDuplicatePortCount - this.rejectedCrampedDuplicatePortCount
+    if (this.duplicatedPortCount < 0) {
+      throw new Error("Tiny duplicate admission removed more ports than proposed")
+    }
     const tinyPipelineInput = getTinyHyperGraphPipelineInput(
       {
         ...graphForTiny,
@@ -1544,11 +1566,14 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
     this.stats = {
       duplicateCongestedPortSourceCount:
         this.duplicateCongestedPortReport?.duplicatedPorts.length ?? 0,
-      duplicateCongestedPortCount:
+      duplicateCongestedPortCount: this.duplicatedPortCount,
+      duplicateCongestedPortProposedCount:
         this.duplicateCongestedPortReport?.duplicatedPorts.reduce(
           (sum, duplicatedPort) => sum + duplicatedPort.duplicatePortIds.length,
           0,
         ) ?? 0,
+      duplicateCongestedPortRejectedCrampedCount:
+        this.rejectedCrampedDuplicatePortCount,
       duplicateCongestedPortFallbackToOriginal: Boolean(
         this.duplicateCongestedPortError,
       ),

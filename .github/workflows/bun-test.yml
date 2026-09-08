@@ -75,6 +75,7 @@ jobs:
           tests/solvers/portfolio-physical-clearance-*.test.ts
           tests/solvers/representable-fixed-copper-channel-*.test.ts
           tests/solvers/tinygraph-fixed-copper-*.test.ts
+          tests/solvers/tinygraph-physical-duplicate-capacity-*.test.ts
           tests/solvers/tinygraph-wrapper-physical-*.test.ts
           tests/solvers/uniform-physical-clearance-*.test.ts
           --timeout 300000
