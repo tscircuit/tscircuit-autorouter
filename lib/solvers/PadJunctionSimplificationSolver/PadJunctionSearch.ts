@@ -17,27 +17,6 @@ export type SearchResult =
   | { status: "found"; path: JunctionPath }
   | { status: "no_path" }
 
-/**
- * Anchor A                   Junction                    Anchor B
- * (-4, 4)                     (0, 4)                     (4, 4)
- *    o <------------------------o--------------------------> o
- *           first trunk         |         second trunk
- *                               |
- *                               | pad stem
- *                               v
- *                       +---------------+
- *                       |  .---------.  |
- *                       |  |    o    |  |  Target pad
- *                       |  |  entry  |  |
- *                       |  '---------'  |
- *                       +---------------+
- *
- * Each search starts at the junction. Its goal is Anchor A, Anchor B, or
- * anywhere inside the inset pad rectangle (the inner box). The inset is half
- * the trace width so the full trace fits inside the pad. Both anchors and the
- * pad geometry are supplied to all three searches to construct their grids.
- * Initial directions in this example: west, east, and south, respectively.
- */
 type SearchInput = {
   start: PadJunctionPoint
   goal: SearchGoal
