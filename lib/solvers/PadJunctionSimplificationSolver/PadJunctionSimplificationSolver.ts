@@ -41,7 +41,11 @@ import type { GraphicsObject } from "graphics-debug"
 import type { HighDensityRoute } from "lib/types/high-density-types"
 import { SinglePadJunctionSolver } from "./SinglePadJunctionSolver"
 import { getItemOrThrow, parsePadJunctionInput } from "./padJunctionGeometry"
-import type { PadJunctionSimplificationInput, PadJunctionOutcome, AcceptedReplacement } from "./padJunctionGeometry"
+import type {
+  PadJunctionSimplificationInput,
+  PadJunctionOutcome,
+  AcceptedReplacement,
+} from "./padJunctionGeometry"
 
 export * from "./padJunctionGeometry"
 
@@ -59,7 +63,9 @@ export class PadJunctionSimplificationSolver extends BaseSolver {
   constructor(private readonly input: PadJunctionSimplificationInput) {
     super()
     this.parsed = parsePadJunctionInput(input)
-    this.output = this.parsed.hdRoutes.map(({ firstPoint, lastPoint, ...route }) => route)
+    this.output = this.parsed.hdRoutes.map(
+      ({ firstPoint, lastPoint, ...route }) => route,
+    )
     this.MAX_ITERATIONS = 100e6
   }
 
@@ -70,7 +76,9 @@ export class PadJunctionSimplificationSolver extends BaseSolver {
         return
       }
       this.activeSubSolver = new SinglePadJunctionSolver({
-        ...this.parsed, hdRoutes: this.output, targetPadIndex: this.obstacleIndex++,
+        ...this.parsed,
+        hdRoutes: this.output,
+        targetPadIndex: this.obstacleIndex++,
         lockedRouteIndices: [...this.lockedRouteIndices],
       })
     }
@@ -78,8 +86,15 @@ export class PadJunctionSimplificationSolver extends BaseSolver {
     const previousExpanded = solver.expandedStateCount
     solver.step()
     this.expandedStateCount += solver.expandedStateCount - previousExpanded
-    this.stats = { ...solver.stats, expandedStates: this.expandedStateCount, padsVisited: this.obstacleIndex }
-    if (solver.failed) throw new Error(`PadJunctionSimplificationSolver: child failed: ${solver.error}`)
+    this.stats = {
+      ...solver.stats,
+      expandedStates: this.expandedStateCount,
+      padsVisited: this.obstacleIndex,
+    }
+    if (solver.failed)
+      throw new Error(
+        `PadJunctionSimplificationSolver: child failed: ${solver.error}`,
+      )
     if (!solver.solved) return
     const result = solver.getOutput()
     this.outcomes.push(result.outcome)
@@ -87,7 +102,8 @@ export class PadJunctionSimplificationSolver extends BaseSolver {
       this.output[routeIndex] = route
       this.lockedRouteIndices.add(routeIndex)
     }
-    if (solver.acceptedReplacement) this.acceptedReplacement = solver.acceptedReplacement
+    if (solver.acceptedReplacement)
+      this.acceptedReplacement = solver.acceptedReplacement
   }
 
   override getConstructorParams(): [PadJunctionSimplificationInput] {
@@ -95,7 +111,10 @@ export class PadJunctionSimplificationSolver extends BaseSolver {
   }
 
   override getOutput(): HighDensityRoute[] {
-    if (!this.solved) throw new Error("PadJunctionSimplificationSolver: output requested before completion")
+    if (!this.solved)
+      throw new Error(
+        "PadJunctionSimplificationSolver: output requested before completion",
+      )
     return this.output
   }
 
@@ -104,16 +123,29 @@ export class PadJunctionSimplificationSolver extends BaseSolver {
     return {
       title: "Pad junction simplification: ready",
       coordinateSystem: "cartesian",
-      rects: this.parsed.obstacles.map((pad) => ({ center: pad.center, width: pad.width,
-        height: pad.height, fill: "rgba(255,0,0,0.15)", label: "Obstacle",
-        layer: getGraphicsLayerForObstacle(pad, this.parsed.layerCount) })),
-      lines: this.output.flatMap((route) => route.route.slice(1).flatMap((end, index) => {
-        const start = getItemOrThrow(route.route, index)
-        if (start.z !== end.z) return []
-        return [{ points: [start, end], strokeWidth: route.traceThickness,
-          strokeColor: this.parsed.colorMap[route.connectionName] ?? "red",
-          layer: `z${start.z}`, label: route.connectionName }]
+      rects: this.parsed.obstacles.map((pad) => ({
+        center: pad.center,
+        width: pad.width,
+        height: pad.height,
+        fill: "rgba(255,0,0,0.15)",
+        label: "Obstacle",
+        layer: getGraphicsLayerForObstacle(pad, this.parsed.layerCount),
       })),
+      lines: this.output.flatMap((route) =>
+        route.route.slice(1).flatMap((end, index) => {
+          const start = getItemOrThrow(route.route, index)
+          if (start.z !== end.z) return []
+          return [
+            {
+              points: [start, end],
+              strokeWidth: route.traceThickness,
+              strokeColor: this.parsed.colorMap[route.connectionName] ?? "red",
+              layer: `z${start.z}`,
+              label: route.connectionName,
+            },
+          ]
+        }),
+      ),
     }
   }
 }

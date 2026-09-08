@@ -391,7 +391,8 @@ export class TraceSimplificationSolver extends BaseSolver {
               this.simplificationConfig.terminalLayerIndicesByPcbPortId,
           })
           this.activeSubSolver = viaRemovalSolver
-          this.extractResult = () => viaRemovalSolver.getOptimizedHdRoutes() ?? []
+          this.extractResult = () =>
+            viaRemovalSolver.getOptimizedHdRoutes() ?? []
           break
         }
 
@@ -410,7 +411,8 @@ export class TraceSimplificationSolver extends BaseSolver {
               this.simplificationConfig.minTraceToPadEdgeClearance ?? 0.15,
           })
           this.activeSubSolver = crossingViaReductionSolver
-          this.extractResult = () => crossingViaReductionSolver.getReducedHdRoutes()
+          this.extractResult = () =>
+            crossingViaReductionSolver.getReducedHdRoutes()
           break
         }
 
@@ -430,7 +432,8 @@ export class TraceSimplificationSolver extends BaseSolver {
               this.simplificationConfig.preserveRouteEndpoints,
           })
           this.activeSubSolver = viaMergerSolver
-          this.extractResult = () => viaMergerSolver.getMergedViaHdRoutes() ?? []
+          this.extractResult = () =>
+            viaMergerSolver.getMergedViaHdRoutes() ?? []
           break
         }
 
