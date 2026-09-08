@@ -38,8 +38,12 @@ the output checker loses the preloaded resistor's ground-port metadata and
 incorrectly reports its intentional plane termination as disconnected. No DRC
 errors are filtered or waived.
 
-The newer core, React JSX runtime, and fanout solver are pinned as test-only
-aliases, leaving the versions used by existing core integration tests unchanged.
+The complete tscircuit runtime, React JSX runtime, and fanout solver are pinned
+as test-only aliases, leaving existing core integration dependencies unchanged.
+Core alone declares wildcard peers, which can resolve incompatible older
+packages on a clean install. The complete runtime supplies compatible versions;
+the Bun-only helper resolves its native core without importing eval/CLI exports.
+It does not modify installed modules or use local dependency symlinks.
 Run both the native circuit and its SVG check with:
 
 ```sh
