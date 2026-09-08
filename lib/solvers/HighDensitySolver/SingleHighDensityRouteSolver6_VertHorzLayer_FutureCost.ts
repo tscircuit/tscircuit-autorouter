@@ -127,11 +127,29 @@ export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends Sing
       this.viaDiameter / 2 +
       this.traceThickness / 2 +
       this.FUTURE_CONNECTION_VIA_TRACE_CLEARANCE
+    const squaredMinDistance = minCenterlineDistance * minCenterlineDistance
 
     for (const segment of this.getFutureConnectionSegments()) {
+      const { start, end } = segment
+      if (minCenterlineDistance >= 0) {
+        // Match the interpolation endpoint, which can round past end itself.
+        // Every finite clamped projection stays inside these live bounds.
+        const projectedEndX = start.x + (end.x - start.x)
+        const projectedEndY = start.y + (end.y - start.y)
+        const minX = Math.min(start.x, projectedEndX)
+        const maxX = Math.max(start.x, projectedEndX)
+        const minY = Math.min(start.y, projectedEndY)
+        const maxY = Math.max(start.y, projectedEndY)
+        const dx =
+          node.x < minX ? node.x - minX : node.x > maxX ? node.x - maxX : 0
+        const dy =
+          node.y < minY ? node.y - minY : node.y > maxY ? node.y - maxY : 0
+        // Strict comparison keeps the bound conservative when squaring the
+        // threshold rounds or underflows; nearby segments use the exact test.
+        if (dx * dx + dy * dy > squaredMinDistance) continue
+      }
       if (
-        pointToSegmentDistance(node, segment.start, segment.end) <
-        minCenterlineDistance
+        pointToSegmentDistance(node, start, end) < minCenterlineDistance
       ) {
         return true
       }
