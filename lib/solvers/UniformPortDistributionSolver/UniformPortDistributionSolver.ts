@@ -144,14 +144,14 @@ export class UniformPortDistributionSolver extends BaseSolver {
     const fixedCopper = this.input.fixedCopper
     if (fixedCopper) {
       for (const point of redistributed) {
-        const requiredNetId = getFixedCopperPortNetId(
-          point,
-          fixedCopper,
-        )
+        const requiredNetId = getFixedCopperPortNetId(point, fixedCopper)
         if (requiredNetId === undefined) continue
-        const netId = fixedCopper.connectivityMap.getNetConnectedToId(
-          point.rootConnectionName ?? point.connectionName,
-        )
+        const name = point.rootConnectionName ?? point.connectionName
+        const netId =
+          fixedCopper.connectivityMap.getNetConnectedToId(name) ??
+          (Object.hasOwn(fixedCopper.connectivityMap.netMap, name)
+            ? name
+            : undefined)
         if (requiredNetId === null || requiredNetId !== netId) return
       }
     }
