@@ -155,8 +155,10 @@ const getFixedRouteSlice = (
     }
     if (
       includeClosedSectionsForMutationProvenance &&
-      (Math.abs(clippedSegment.start.x - clippedSegment.end.x) > POINT_EPSILON ||
-        Math.abs(clippedSegment.start.y - clippedSegment.end.y) > POINT_EPSILON ||
+      (Math.abs(clippedSegment.start.x - clippedSegment.end.x) >
+        POINT_EPSILON ||
+        Math.abs(clippedSegment.start.y - clippedSegment.end.y) >
+          POINT_EPSILON ||
         clippedSegment.start.z !== clippedSegment.end.z)
     ) {
       firstNonemptySegment ??= { segmentIndex, point: clippedSegment.start }
