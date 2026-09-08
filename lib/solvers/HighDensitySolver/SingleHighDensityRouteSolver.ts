@@ -11,6 +11,7 @@ import {
   SingleRouteCandidatePriorityQueue,
 } from "lib/data-structures/SingleRouteCandidatePriorityQueue"
 import type { HighDensityIntraNodeRoute } from "lib/types/high-density-types"
+import { pointToSegmentDistanceScalar } from "lib/utils/pointToSegmentDistanceScalar"
 import { BaseSolver } from "../BaseSolver"
 import { HighDensityHyperParameters } from "./HighDensityHyperParameters"
 
@@ -340,7 +341,7 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
           continue
         }
         if (
-          pointToSegmentDistance(node, segment.A, segment.B) < traceProximity
+          pointToSegmentDistanceScalar(node, segment.A, segment.B) < traceProximity
         ) {
           return true
         }
