@@ -114,10 +114,14 @@ const findNodeIndexForRoute = (
   return -1
 }
 
-const toRepairRoute = (route: HighDensityRoute): RepairHdRoute => ({
+const toRepairRoute = (
+  route: HighDensityRoute,
+  connMap?: ConnectivityMap,
+): RepairHdRoute => ({
   capacityMeshNodeId: route.regionId,
   connectionName: route.connectionName,
-  rootConnectionName: route.rootConnectionName,
+  rootConnectionName:
+    connMap?.getNetConnectedToId(route.connectionName) ?? route.rootConnectionName,
   route: route.route.map((point) => ({
     x: point.x,
     y: point.y,
@@ -137,8 +141,7 @@ const fromRepairRoute = (
   fallbackRoute: HighDensityRoute,
 ): HighDensityRoute => ({
   connectionName: route.connectionName ?? fallbackRoute.connectionName,
-  rootConnectionName:
-    route.rootConnectionName ?? fallbackRoute.rootConnectionName,
+  rootConnectionName: fallbackRoute.rootConnectionName,
   ...(fallbackRoute.startPcbPortId
     ? { startPcbPortId: fallbackRoute.startPcbPortId }
     : {}),
@@ -197,6 +200,7 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
   readonly originalHdRoutes: HighDensityRoute[]
   readonly originalNodeWithPortPoints: NodeWithPortPoints[]
   readonly originalObstacles: Obstacle[]
+  readonly fixedHdRoutes: HighDensityRoute[]
   readonly obstacleSHI: ObstacleSpatialHashIndex
   readonly colorMap: Record<string, string>
   readonly connMap?: ConnectivityMap
@@ -210,6 +214,7 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
     nodeWithPortPoints: NodeWithPortPoints[]
     hdRoutes: HighDensityRoute[]
     obstacles: Obstacle[]
+    fixedHdRoutes?: HighDensityRoute[]
     repairMargin?: number
     colorMap?: Record<string, string>
     maxSampleEntries?: number
@@ -220,6 +225,7 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
     this.originalHdRoutes = params.hdRoutes
     this.originalNodeWithPortPoints = params.nodeWithPortPoints
     this.originalObstacles = params.obstacles
+    this.fixedHdRoutes = params.fixedHdRoutes ?? []
     this.obstacleSHI = new ObstacleSpatialHashIndex(
       "flatbush",
       this.originalObstacles,
@@ -258,6 +264,9 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
         ),
       ),
     )
+    const fixedRepairRoutes = this.fixedHdRoutes.map((route) =>
+      toRepairRoute(route, params.connMap),
+    )
     const sampleEntries = Array.from(routeIndexesByNode.entries()).map(
       ([nodeIndex, routeIndexes]) => {
         const node = params.nodeWithPortPoints[nodeIndex]
@@ -281,7 +290,7 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
               })),
             },
             nodeHdRoutes: routeIndexes.map((routeIndex) => ({
-              ...toRepairRoute(params.hdRoutes[routeIndex]),
+              ...toRepairRoute(params.hdRoutes[routeIndex], params.connMap),
               ...(params.connMap
                 ? {
                     connectedPadSides: getConnectedPadSides(
@@ -293,6 +302,7 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
                   }
                 : {}),
             })),
+            fixedHdRoutes: fixedRepairRoutes,
             adjacentObstacles: getAdjacentObstacles(
               node,
               this.obstacleSHI,
@@ -332,6 +342,7 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
         nodeWithPortPoints: this.sampleEntries.map((entry) => entry.node),
         hdRoutes: this.originalHdRoutes,
         obstacles: this.originalObstacles,
+        fixedHdRoutes: this.fixedHdRoutes,
         repairMargin: this.repairMargin,
         colorMap: this.colorMap,
         connMap: this.connMap,
