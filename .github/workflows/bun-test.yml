@@ -52,6 +52,8 @@ jobs:
           tests/solvers/simplified-path-actual-*.test.ts
           tests/solvers/simplified-path-thick-peer-query.test.ts
           tests/solvers/simplified-path-requested-pad-clearance.test.ts
+          tests/solvers/single-simplified-path-exact-generated-duplicates.test.ts
+          tests/features/trace-simplification-plated-hole-departure-identity.test.ts
           tests/solvers/multi-head-polyline-trace-width.test.ts
           tests/solvers/portfolio-multi-head-trace-width.test.ts
           tests/solvers/portfolio-trace-width-cache-schema.test.ts

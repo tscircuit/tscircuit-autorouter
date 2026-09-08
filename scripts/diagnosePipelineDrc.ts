@@ -438,8 +438,12 @@ const diagnosePipelineDrc = async (): Promise<void> => {
           node,
           solver: nodeSolver.getSolverName(),
           scaleFactor: completedGrowth ? completedGrowth.scaleFactor : null,
-          growthAttempts: completedGrowth ? completedGrowth.growthAttempts : null,
-          metadata: regular ? [...regular.nodeSolveMetadataById.values()] : null,
+          growthAttempts: completedGrowth
+            ? completedGrowth.growthAttempts
+            : null,
+          metadata: regular
+            ? [...regular.nodeSolveMetadataById.values()]
+            : null,
           routes: hd.routes.slice(routeStart),
         })
       }

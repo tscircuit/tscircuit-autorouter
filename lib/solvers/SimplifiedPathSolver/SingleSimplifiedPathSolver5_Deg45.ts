@@ -583,20 +583,17 @@ export class SingleSimplifiedPathSolver5 extends SingleSimplifiedPathSolver {
     return null
   }
 
-  // Add a path to the result, skipping the first point if it's already added
-  private addPathToResult(path: Point[]) {
+  // Generated paths carry XYZ only. Do not create duplicate corners that can
+  // separate an outgoing through-obstacle marker from its departure vertex.
+  private addPathToResult(path: Point[]): void {
     if (path.length === 0) return
 
-    for (let i = 0; i < path.length; i++) {
-      // Skip the first point if it's already added
-      if (
-        i === 0 &&
-        this.newRoute.length > 0 &&
-        this.arePointsEqual(this.newRoute[this.newRoute.length - 1], path[i])
-      ) {
+    for (const point of path) {
+      const previousPoint = this.newRoute[this.newRoute.length - 1]
+      if (previousPoint && this.arePointsEqual(previousPoint, point)) {
         continue
       }
-      this.newRoute.push(path[i])
+      this.newRoute.push(point)
     }
     this.currentStepSize = this.maxStepSize
   }
