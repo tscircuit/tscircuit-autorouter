@@ -6,6 +6,7 @@ type NodeCostTerms = {
   x: number
   y: number
   z: number
+  goalDistance: number
   goalDistancePower: number
   planarFuturePenalty: number | undefined
   viaFuturePenalty: number | undefined
@@ -170,10 +171,18 @@ export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends Sing
   }
 
   getFutureConnectionPenalty(node: Node, isVia: boolean) {
+    return this.computeFutureConnectionPenalty(node, isVia)
+  }
+
+  private computeFutureConnectionPenalty(
+    node: Node,
+    isVia: boolean,
+    cachedGoalDistance?: number,
+  ): number {
     let futureConnectionPenalty = 0
     const closestFuturePoint = this.getClosestFutureConnectionPoint(node)
-    const goalDist = distance(node, this.B)
     if (closestFuturePoint) {
+      const goalDist = cachedGoalDistance ?? distance(node, this.B)
       const distToFuturePoint = distance(node, closestFuturePoint)
       if (goalDist <= distToFuturePoint) return 0
       const maxDist = this.viaDiameter * this.FUTURE_CONNECTION_PROXIMITY_VD
@@ -349,11 +358,13 @@ export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends Sing
       costTerms.y !== node.y ||
       costTerms.z !== node.z
     ) {
+      const goalDistance = distance(node, this.B)
       costTerms = {
         x: node.x,
         y: node.y,
         z: node.z,
-        goalDistancePower: distance(node, this.B) ** 1.6,
+        goalDistance,
+        goalDistancePower: goalDistance ** 1.6,
         planarFuturePenalty: undefined,
         viaFuturePenalty: undefined,
       }
@@ -377,7 +388,9 @@ export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends Sing
         : costTerms.planarFuturePenalty
       : undefined
     if (futureConnectionPenalty === undefined) {
-      futureConnectionPenalty = this.getFutureConnectionPenalty(node, isVia)
+      futureConnectionPenalty = canMemoizeFuturePenalty
+        ? this.computeFutureConnectionPenalty(node, isVia, costTerms.goalDistance)
+        : this.getFutureConnectionPenalty(node, isVia)
       // Custom hooks can depend on the parent or other mutable search state.
       if (canMemoizeFuturePenalty) {
         if (isVia) costTerms.viaFuturePenalty = futureConnectionPenalty
