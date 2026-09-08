@@ -29,4 +29,4 @@ but has five relaxed DRC errors, including a trace-to-pad contact.
 This draft only excludes regions near fixed copper. It restores force
 improvement elsewhere, but brings back the XIN–ground short and still produces
 five relaxed DRC errors. The zero-contact regression assertion intentionally
-remains failing. The snapshot marks the returned short. Do not merge.
+remains failing. The bug-report snapshot includes the measured DRC count. Do not merge.
