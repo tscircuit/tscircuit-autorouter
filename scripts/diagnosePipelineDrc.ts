@@ -77,6 +77,21 @@ type RawHdTransitionDiagnostic = {
   regionalInnerStageProvenance: "unavailable-not-observed"
 }
 
+type RegionalBoundaryObservation = {
+  ordinal: number
+  boundaryCount: number
+  solver: object
+  highDensitySolver: unknown
+  grow: GrowShrinkHighDensityIntraNodeSolver | null
+}
+
+type RegionalStepObservation = {
+  entry: RegionalBoundaryObservation
+  phaseBefore: unknown
+  outerHd: unknown
+  outerRouteStart: number
+}
+
 type CapacityNodeCapture = Omit<CapacityMeshNode, "_parent"> & {
   parentCapacityMeshNodeId: string | null
 }
@@ -218,6 +233,100 @@ const captureInvalidRawHdTransitions = (
     })
   }
   return diagnostic
+}
+
+const captureRegionalBoundaryData = (
+  observation: RegionalStepObservation,
+): Record<string, unknown> => {
+  const { entry } = observation
+  const params = getDiagnosticOwnValue(entry.solver, "params")
+  const force = getDiagnosticOwnValue(entry.solver, "forceImproveSolver")
+  const repair = getDiagnosticOwnValue(entry.solver, "repairSolver")
+  const forceOverrides = getDiagnosticOwnValue(force, "improvedRoutesByIndex")
+  const repairOverrides = getDiagnosticOwnValue(repair, "repairedRoutesByIndex")
+  const metadata = getDiagnosticOwnValue(
+    entry.highDensitySolver,
+    "nodeSolveMetadataById",
+  )
+  const winner = getDiagnosticOwnValue(entry.grow, "winningSolver")
+  const preScaleRoutes = getDiagnosticOwnValue(winner, "solvedRoutes")
+  const postScaleRoutes = getDiagnosticOwnValue(entry.grow, "solvedRoutes")
+  const outerRoutes = getDiagnosticOwnValue(observation.outerHd, "routes")
+  const growParams = getDiagnosticOwnValue(entry.grow, "constructorParams")
+  const growSolutionObserved =
+    getDiagnosticOwnValue(entry.grow, "solved") === true &&
+    Array.isArray(preScaleRoutes) &&
+    Array.isArray(postScaleRoutes)
+  return {
+    input: selectDiagnosticOwnFields(params, [
+      "nodeWithPortPoints",
+      "viaDiameter",
+      "traceWidth",
+      "obstacleMargin",
+      "layerCount",
+    ]),
+    regionalState: selectDiagnosticOwnFields(entry.solver, [
+      "phase",
+      "solved",
+      "failed",
+      "error",
+    ]),
+    rawRegionalHd: selectDiagnosticOwnFields(entry.highDensitySolver, [
+      "solved",
+      "failed",
+      "routes",
+    ]),
+    nodeSolveMetadataEntries:
+      metadata instanceof Map
+        ? Array.from(Map.prototype.entries.call(metadata))
+        : null,
+    grow: {
+      status: growSolutionObserved
+        ? "observed-successful-grow-arrays"
+        : "successful-grow-arrays-unavailable",
+      ...selectDiagnosticOwnFields(entry.grow, [
+        "scaleFactor",
+        "growthAttempts",
+        "nodeWithPortPoints",
+      ]),
+      dimensions: selectDiagnosticOwnFields(growParams, [
+        "traceWidth",
+        "viaDiameter",
+        "obstacleMargin",
+      ]),
+      winningPortfolioNode:
+        getDiagnosticOwnValue(winner, "nodeWithPortPoints") ?? null,
+      preInverseScaleRoutes: growSolutionObserved ? preScaleRoutes : null,
+      postInverseScaleRoutes: growSolutionObserved ? postScaleRoutes : null,
+    },
+    force: {
+      ...selectDiagnosticOwnFields(force, [
+        "originalHdRoutes",
+        "originalNodeWithPortPoints",
+        "solved",
+        "failed",
+      ]),
+      improvedRoutesByIndexEntries:
+        forceOverrides instanceof Map
+          ? Array.from(Map.prototype.entries.call(forceOverrides))
+          : null,
+    },
+    repair: {
+      ...selectDiagnosticOwnFields(repair, [
+        "originalHdRoutes",
+        "originalNodeWithPortPoints",
+        "solved",
+        "failed",
+      ]),
+      repairedRoutesByIndexEntries:
+        repairOverrides instanceof Map
+          ? Array.from(Map.prototype.entries.call(repairOverrides))
+          : null,
+    },
+    outerPublishedRoutesThisStep: Array.isArray(outerRoutes)
+      ? outerRoutes.slice(observation.outerRouteStart)
+      : null,
+  }
 }
 
 const captureTinyFailure = (
@@ -1514,6 +1623,64 @@ const diagnosePipelineDrc = async (): Promise<void> => {
   ]
   const nodes: NodeObservation[] = []
   const growthByNode = new Map<string, GrowShrinkHighDensityIntraNodeSolver>()
+  const observeRegional = process.env.HD_DRC_REGIONAL_OBSERVATION === "1"
+  const regionalObservations = new WeakMap<object, RegionalBoundaryObservation>()
+  let regionalOrdinal = 0
+  const writeRegionalBoundary = async (
+    observation: RegionalStepObservation | null,
+    event: "normal-step" | "step-threw",
+    error: unknown,
+  ): Promise<void> => {
+    if (!observation) return
+    try {
+      const { entry } = observation
+      const phaseAfter = getDiagnosticOwnValue(entry.solver, "phase")
+      if (
+        event === "normal-step" &&
+        phaseAfter === observation.phaseBefore &&
+        getDiagnosticOwnValue(entry.solver, "failed") !== true
+      ) {
+        return
+      }
+      const sequence = entry.boundaryCount++
+      await writeFile(
+        path.join(
+          outputDir,
+          `regional-boundary-${entry.ordinal}-${sequence}.json`,
+        ),
+        JSON.stringify({
+          diagnostic: "regional-boundary",
+          dataset: datasetArg,
+          sample,
+          pipeline: pipelineArg,
+          regionalOrdinal: entry.ordinal,
+          sequence,
+          event,
+          phaseBefore: observation.phaseBefore ?? null,
+          phaseAfter: phaseAfter ?? null,
+          error:
+            event === "step-threw"
+              ? error instanceof Error
+                ? error.message
+                : String(error)
+              : null,
+          stack: error instanceof Error ? (error.stack ?? null) : null,
+          ...captureRegionalBoundaryData(observation),
+          limitations: [
+            "Snapshots are observed after one normal pipeline step, not interceptions of constructor-local arguments.",
+            "A route-to-improve boundary is after force construction; originalHdRoutes is the force instance's retained input.",
+            "At improve-to-repair, repair.originalHdRoutes is the result of the regional solver's existing force output call.",
+            "Repair inputs and sparse override entries are captured separately; no output is reconstructed or requested.",
+            "Grow's winning portfolio retains solve-space routes; successful Grow routes are the separately accepted inverse-scaled routes (the same array at scale one).",
+            "Missing descriptors or unobserved successful Grow state are unavailable, not empty geometry.",
+          ],
+        }),
+      )
+    } catch (captureError) {
+      // Observation cannot change the original routing result or exception.
+      console.error("regional boundary capture failed", captureError)
+    }
+  }
   let mergedCapacityNodes: CapacityNodeCapture[] | null = null
   const repair04InvalidOutputs: Repair04InvalidOutputCapture[] = []
   const jointEvaluatorDiagnostic: JointEvaluatorDiagnostic = {
@@ -1642,6 +1809,43 @@ const diagnosePipelineDrc = async (): Promise<void> => {
         growthByNode.set(node.capacityMeshNodeId, grow)
       }
       const routeStart = hd?.routes.length ?? 0
+      let regionalObservation: RegionalStepObservation | null = null
+      if (observeRegional && phase === "highDensityRouteSolver") {
+        try {
+          const regional = getDiagnosticOwnValue(hd, "activeFallbackSolver")
+          if (typeof regional === "object" && regional !== null) {
+            let entry = regionalObservations.get(regional)
+            if (!entry) {
+              entry = {
+                ordinal: regionalOrdinal++,
+                boundaryCount: 0,
+                solver: regional,
+                highDensitySolver: getDiagnosticOwnValue(
+                  regional,
+                  "highDensitySolver",
+                ),
+                grow: null,
+              }
+              regionalObservations.set(regional, entry)
+            }
+            const regionalGrow = getDiagnosticOwnValue(
+              entry.highDensitySolver,
+              "activeSubSolver",
+            )
+            if (regionalGrow instanceof GrowShrinkHighDensityIntraNodeSolver) {
+              entry.grow = regionalGrow
+            }
+            regionalObservation = {
+              entry,
+              phaseBefore: getDiagnosticOwnValue(regional, "phase"),
+              outerHd: hd,
+              outerRouteStart: routeStart,
+            }
+          }
+        } catch (captureError) {
+          console.error("regional reference observation failed", captureError)
+        }
+      }
       const simplification =
         phase === "traceSimplificationSolver"
           ? pipeline.traceSimplificationSolver
@@ -1652,6 +1856,9 @@ const diagnosePipelineDrc = async (): Promise<void> => {
       try {
         pipeline.step()
       } catch (error) {
+        if (regionalObservation) {
+          await writeRegionalBoundary(regionalObservation, "step-threw", error)
+        }
         if (
           pipeline instanceof AutoroutingPipelineSolver9_PreloadedTraceGraph &&
           (phase === "highDensityForceImproveSolver" ||
@@ -1770,6 +1977,20 @@ const diagnosePipelineDrc = async (): Promise<void> => {
           }
         }
         throw error
+      }
+      if (regionalObservation) {
+        try {
+          if (
+            getDiagnosticOwnValue(regionalObservation.entry.solver, "phase") !==
+              regionalObservation.phaseBefore ||
+            getDiagnosticOwnValue(regionalObservation.entry.solver, "failed") ===
+              true
+          ) {
+            await writeRegionalBoundary(regionalObservation, "normal-step", null)
+          }
+        } catch (captureError) {
+          console.error("regional boundary observation failed", captureError)
+        }
       }
       if (
         simplification &&

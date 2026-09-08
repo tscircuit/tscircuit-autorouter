@@ -39,7 +39,7 @@ jobs:
           - { dataset: srj19, sample: 37, pipeline: 9 }
           - { dataset: srj19, sample: 40, pipeline: 9 }
           - { dataset: srj19, sample: 42, pipeline: 9 }
-          - { dataset: srj19, sample: 45, pipeline: 9 }
+          - { dataset: srj19, sample: 45, pipeline: 9, observeRegional: true }
           - { dataset: srj19, sample: 49, pipeline: 9 }
           - { dataset: srj19, sample: 22, pipeline: 9 }
           - { dataset: srj19, sample: 32, pipeline: 9 }
@@ -135,6 +135,7 @@ jobs:
         working-directory: diagnostic-main
         env:
           HD_DRC_RUNTIME_OBSERVATION: ${{ matrix.observeRuntime && '1' || '' }}
+          HD_DRC_REGIONAL_OBSERVATION: ${{ matrix.observeRegional && '1' || '' }}
           HD_DRC_STATIC_REACHABILITY_CERTIFICATE: ${{ matrix.staticCertificate && '1' || '' }}
         run: bun scripts/diagnosePipelineDrc.ts ${{ matrix.dataset }} ${{ matrix.sample }} ${{ matrix.pipeline }} ../diagnostic-results/main ${{ matrix.fixturePath }}
 
@@ -143,6 +144,7 @@ jobs:
         working-directory: diagnostic-pr
         env:
           HD_DRC_RUNTIME_OBSERVATION: ${{ matrix.observeRuntime && '1' || '' }}
+          HD_DRC_REGIONAL_OBSERVATION: ${{ matrix.observeRegional && '1' || '' }}
           HD_DRC_STATIC_REACHABILITY_CERTIFICATE: ${{ matrix.staticCertificate && '1' || '' }}
         run: bun scripts/diagnosePipelineDrc.ts ${{ matrix.dataset }} ${{ matrix.sample }} ${{ matrix.pipeline }} ../diagnostic-results/pr ${{ matrix.fixturePath }}
 
