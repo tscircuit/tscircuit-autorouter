@@ -680,6 +680,8 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           defaultViaDiameter: cms.viaDiameter,
           preserveTerminalPcbPortIds: true,
           preferSameLayerTerminalEndpoints: true,
+          obstacles: cms.originalSrj.obstacles,
+          minClearance: cms.originalSrj.minTraceToPadEdgeClearance ?? 0.1,
         },
       ],
     ),
