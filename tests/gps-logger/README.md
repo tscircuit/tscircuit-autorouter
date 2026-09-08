@@ -2,8 +2,9 @@
 
 The complete board TSX and one test live in
 `pipeline9-gps-logger-xin-ground-contact.test.tsx`. The test runs local Pipeline9,
-checks that XIN and ground no longer touch, and saves one full-board PCB SVG.
-The cyan PCB note points to the short. Imported component footprints retain
+checks that XIN and ground no longer touch, and saves one full-board bug-report SVG.
+The bug-report SVG shows routed copper and the measured relaxed DRC count.
+Imported component footprints retain
 the original board geometry; this is a full-board reproduction, not a reduced circuit.
 
 ```sh

@@ -466,29 +466,6 @@ function GpsLogger({
           />
         </Fragment>
       ))}
-      <pcbnoterect
-        pcbX={-10.534003438860754}
-        pcbY={-5.472430517590865}
-        width={1.5}
-        height={1.5}
-        strokeWidth={0.12}
-        color="#00ffff"
-      />
-      <pcbnoteline
-        x1={-18}
-        y1={-10}
-        x2={-10.534003438860754}
-        y2={-5.472430517590865}
-        strokeWidth={0.12}
-        color="#00ffff"
-      />
-      <pcbnotetext
-        text="XIN / GND SEPARATE"
-        pcbX={-23}
-        pcbY={-11}
-        fontSize={0.9}
-        color="#00ffff"
-      />
       <silkscreentext
         text="GPS LOGGER / RP2040"
         pcbX={-14}
