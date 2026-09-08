@@ -321,11 +321,9 @@ export function applyForcesReference(
   for (let i = 0; i < numPolyLines; i++) {
     const polyLine = polyLines[i]
     const points = [polyLine.start, ...polyLine.mPoints, polyLine.end]
-    const vias: Array<{ point: MHPoint2; layers: number[]; index: number }> =
-      []
+    const vias: Array<{ point: MHPoint2; layers: number[]; index: number }> = []
     points.forEach((p, k) => {
-      if (p.z1 !== p.z2)
-        vias.push({ point: p, layers: [p.z1, p.z2], index: k })
+      if (p.z1 !== p.z2) vias.push({ point: p, layers: [p.z1, p.z2], index: k })
     })
 
     if (vias.length < 2) continue // Need at least two vias to interact
