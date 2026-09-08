@@ -335,14 +335,9 @@ export class SameNetViaMergerSolver extends BaseSolver {
   }
 
   private getViaKey(via: Via): string {
-    return [
-      via.mutable ? "mutable" : "immutable",
-      via.routeIndex,
-      via.x,
-      via.y,
-      via.layers.join(","),
-      via.net,
-    ].join(":")
+    // Every route at the same drilled site must move together. Claiming only
+    // one route alias allows different groups to split and swap the same site.
+    return [via.net, via.x, via.y].join(":")
   }
 
   private dedupeRouteVias(route: HighDensityRoute): void {
@@ -362,6 +357,12 @@ export class SameNetViaMergerSolver extends BaseSolver {
 
     for (const viasInNet of this.viasByNet.values()) {
       if (viasInNet.length < 2) continue
+
+      const ownerCountBySite = new Map<string, number>()
+      for (const via of viasInNet) {
+        const key = this.getViaKey(via)
+        ownerCountBySite.set(key, (ownerCountBySite.get(key) ?? 0) + 1)
+      }
 
       const maxDiameter = Math.max(
         1e-6,
@@ -437,7 +438,27 @@ export class SameNetViaMergerSolver extends BaseSolver {
           }
         }
 
-        if (remove.length > 0) candidateGroups.push({ keep, remove })
+        const eligibleOwnerCountBySite = new Map<string, number>()
+        for (const via of remove) {
+          const key = this.getViaKey(via)
+          eligibleOwnerCountBySite.set(
+            key,
+            (eligibleOwnerCountBySite.get(key) ?? 0) + 1,
+          )
+        }
+        const keepKey = this.getViaKey(keep)
+        const completeSites = remove.filter((via): boolean => {
+          const key = this.getViaKey(via)
+          // Reusing a coincident immutable anchor only removes a redundant
+          // drill record. Every actual relocation must remove the whole site.
+          return (
+            key === keepKey ||
+            eligibleOwnerCountBySite.get(key) === ownerCountBySite.get(key)
+          )
+        })
+        if (completeSites.length > 0) {
+          candidateGroups.push({ keep, remove: completeSites })
+        }
       }
     }
 
