@@ -3,14 +3,8 @@ import { pointToSegmentDistance } from "@tscircuit/math-utils"
 import { SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost } from "lib/solvers/HighDensitySolver/SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost"
 
 test("native routing reserves copper clearance across a shared node edge", (): void => {
-  for (const offset of [
-    { x: 0, y: 0 },
-    { x: 12, y: -8 },
-  ]) {
-    const point = (
-      x: number,
-      y: number,
-    ): { x: number; y: number; z: number } => ({
+  for (const offset of [{ x: 0, y: 0 }, { x: 12, y: -8 }]) {
+    const point = (x: number, y: number): { x: number; y: number; z: number } => ({
       x: x + offset.x,
       y: y + offset.y,
       z: 0,
