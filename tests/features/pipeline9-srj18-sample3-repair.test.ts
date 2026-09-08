@@ -20,7 +20,10 @@ test("Pipeline9 repairs SRJ18 sample 3 with unchanged routing obstacles", async 
     routedTraces: solver.getOutputSimplifiedPcbTraces(),
   }
   expect(evaluateRelaxedDrc(output).errors).toHaveLength(0)
-  await expect(getBugReportSnapshotSvg(output)).toMatchSvgSnapshot(
-    import.meta.path,
-  )
+  const snapshotPath =
+    process.platform === "linux"
+      ? import.meta.path.replace(/\.test\.ts$/, "-linux.test.ts")
+      : import.meta.path
+
+  await expect(getBugReportSnapshotSvg(output)).toMatchSvgSnapshot(snapshotPath)
 })
