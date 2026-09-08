@@ -1,4 +1,7 @@
 import { expect, test } from "bun:test"
+import { pointToBoxDistance } from "@tscircuit/math-utils"
+import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
+import { isPointInOrOnPolygon } from "lib/utils/polygonContainment"
 import { getT113BootRoutingPcbSvg } from "../fixtures/getT113BootRoutingPcbSvg"
 import { getT113BootRoutingResult } from "../fixtures/getT113BootRoutingResult"
 
@@ -44,17 +47,52 @@ test("Pipeline9 routes real T113-S3 SD connections around a boot fanout", async 
   expect(preloadedTraces).toHaveLength(2)
   expect(sdInput.traces).toEqual(preloadedTraces)
 
-  // The repro commit records the real failure. The stacked fix completes it.
-  expect(sdSolver.solved).toBeFalse()
-  expect(sdSolver.failed).toBeTrue()
-  expect(sdSolver.error).toContain(
-    "regional route output failed its candidate validator",
+  expect(sdSolver.failed).toBeFalse()
+  expect(sdSolver.solved).toBeTrue()
+  const traces = sdSolver.getOutputSimpleRouteJson().traces!
+  expect(traces).toHaveLength(7)
+  // Preserve the original boot-port metadata as well as the five SD links.
+  // No continuity errors or clearance errors are excluded from this check.
+  const drc = evaluateRelaxedDrc({
+    inputSrj: srj,
+    srjWithPointPairs: sdSolver.srjWithPointPairs!,
+    routedTraces: traces,
+  })
+  expect(drc.errors).toEqual([])
+  const groundTrace = traces.find(
+    (trace) => trace.connection_name === "source_trace_1",
+  )!
+  expect(groundTrace.route).not.toEqual(preloadedTraces[1]!.route)
+  const vias = traces.flatMap((trace) =>
+    trace.route.filter((point) => point.route_type === "via"),
   )
+  expect(vias).toHaveLength(1)
+  const via = vias[0]!
+  expect(via).toMatchObject({
+    from_layer: "top",
+    to_layer: "bottom",
+    via_diameter: 0.55,
+    via_hole_diameter: 0.3,
+  })
+  for (const pad of srj.obstacles) {
+    if (pad.connectedTo.includes(groundTrace.connection_name)) continue
+    const clearance = pointToBoxDistance(via, pad) - via.via_diameter! / 2
+    expect(clearance).toBeGreaterThanOrEqual(0.1 - 1e-9)
+  }
+  const groundPour = circuitJson.find(
+    (element) => element.type === "pcb_copper_pour",
+  )!
+  expect(groundPour.shape).toBe("brep")
+  if (groundPour.shape !== "brep") throw new Error("Expected a native pour")
+  expect(groundPour.brep_shape.inner_rings).toHaveLength(0)
+  expect(
+    isPointInOrOnPolygon(via, groundPour.brep_shape.outer_ring.vertices),
+  ).toBeTrue()
   expect(
     getT113BootRoutingPcbSvg({
       circuitJson,
       srj,
-      traces: preloadedTraces,
+      traces,
     }),
   ).toMatchSvgSnapshot(import.meta.path)
 })
