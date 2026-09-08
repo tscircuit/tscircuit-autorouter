@@ -3,6 +3,7 @@ import type { GraphicsObject } from "graphics-debug"
 import type { DrcEvaluator } from "high-density-repair03/lib"
 import type { SimpleRouteJson } from "lib/types"
 import type { HighDensityRoute } from "lib/types/high-density-types"
+import { visualizeHighDensityRoutes } from "lib/utils/visualizeHighDensityRoutes"
 import { BaseSolver } from "../BaseSolver"
 import { applyClearanceProjection } from "./applyClearanceProjection"
 import { createsTraceCrossing } from "./createsTraceCrossing"
@@ -68,31 +69,10 @@ export class ClearanceProjectionSolver extends BaseSolver {
   }
 
   override visualize(): GraphicsObject {
-    const lines: NonNullable<GraphicsObject["lines"]> = []
-    const circles: NonNullable<GraphicsObject["circles"]> = []
-    for (const route of this.routes) {
-      const color = this.params.colorMap[route.connectionName] ?? "#0ea5e9"
-      for (let index = 0; index < route.route.length - 1; index++) {
-        const a = route.route[index]!
-        const b = route.route[index + 1]!
-        if (a.z !== b.z) continue
-        lines.push({
-          points: [a, b],
-          strokeColor: color,
-          strokeWidth: a.traceThickness ?? route.traceThickness,
-          layer: `z${a.z}`,
-          strokeDash: a.z === 0 ? undefined : [0.1, 0.3],
-        })
-      }
-      for (const via of route.vias) {
-        circles.push({
-          center: via,
-          radius: route.viaDiameter / 2,
-          stroke: color,
-          fill: "rgba(14,165,233,0.12)",
-        })
-      }
-    }
-    return { title: "Coupled clearance projection", lines, circles }
+    return visualizeHighDensityRoutes(
+      this.routes,
+      this.params.colorMap,
+      "Coupled clearance projection",
+    )
   }
 }

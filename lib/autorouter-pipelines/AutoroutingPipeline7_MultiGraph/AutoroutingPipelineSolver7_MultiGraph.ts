@@ -10,6 +10,7 @@ import {
 } from "high-density-repair03/lib"
 import { getGlobalInMemoryCache } from "lib/cache/setupGlobalCaches"
 import { CacheProvider } from "lib/cache/types"
+import { BoundedRegionalRepairSolver } from "lib/solvers/BoundedRegionalRepairSolver/BoundedRegionalRepairSolver"
 import { ComponentDetectionSolver } from "lib/solvers/ComponentDetectionSolver/ComponentDetectionSolver"
 import { MultiTargetNecessaryCrampedPortPointSolver } from "lib/solvers/NecessaryCrampedPortPointSolver/MultiTargetNecessaryCrampedPortPointSolver"
 import { NodeDimensionSubdivisionSolver } from "lib/solvers/NodeDimensionSubdivisionSolver/NodeDimensionSubdivisionSolver"
@@ -233,6 +234,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
   highDensityStitchSolver?: MultipleHighDensityRouteStitchSolver3
   globalDrcForceImproveSolver?: GlobalDrcForceImproveSolver
   exactGeometryDrcForceImproveSolver?: GlobalDrcBranchPortfolioSolver
+  boundedRegionalRepairSolver?: BoundedRegionalRepairSolver
   clearanceProjectionSolver?: ClearanceProjectionSolver
   singleLayerNodeMerger?: SingleLayerNodeMergerSolver
   strawSolver?: StrawSolver
@@ -738,12 +740,38 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
       },
     ),
     definePipelineStep(
+      "boundedRegionalRepairSolver",
+      BoundedRegionalRepairSolver,
+      (cms) => [
+        {
+          originalSrj: {
+            ...cms.originalSrj,
+            connections: cms.srjWithPointPairs!.connections,
+          },
+          routes: cms.exactGeometryDrcForceImproveSolver!.getOutput(),
+          syntheticConnectionNames: new Set<string>(),
+          viaHoleDiameter: cms.viaHoleDiameter,
+          colorMap: cms.colorMap,
+          drcEvaluator: createPipeline7RelaxedDrcEvaluator({
+            connections: cms.netToPointPairsSolver!.newConnections,
+            originalConnections: cms.originalSrj.connections,
+            layerCount: cms.srj.layerCount,
+            obstacles: cms.srj.obstacles,
+            defaultViaHoleDiameter: cms.viaHoleDiameter,
+            connMap: cms.connMap,
+            srjWithPointPairs: cms.srjWithPointPairs!,
+            originalSrj: cms.originalSrj,
+          }),
+        },
+      ],
+    ),
+    definePipelineStep(
       "clearanceProjectionSolver",
       ClearanceProjectionSolver,
       (cms) => [
         {
           originalSrj: cms.originalSrj,
-          routes: cms.exactGeometryDrcForceImproveSolver!.getOutput(),
+          routes: cms.boundedRegionalRepairSolver!.getOutput(),
           fixedObstacleRoutes: cms.getFixedObstacleRoutes(),
           connMap: cms.connMap,
           colorMap: cms.colorMap,
@@ -1118,6 +1146,8 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
       this.globalDrcForceImproveSolver?.visualize()
     const exactGeometryDrcForceImproveViz =
       this.exactGeometryDrcForceImproveSolver?.visualize()
+    const boundedRegionalRepairViz =
+      this.boundedRegionalRepairSolver?.visualize()
     const clearanceProjectionViz = this.clearanceProjectionSolver?.visualize()
     const visualizations = [
       problemViz,
@@ -1149,6 +1179,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
       traceWidthViz,
       globalDrcForceImproveViz,
       exactGeometryDrcForceImproveViz,
+      boundedRegionalRepairViz,
       clearanceProjectionViz,
       lengthMatchingPostProcessingViz,
       this.solved
@@ -1233,6 +1264,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
     }
     return (
       this.clearanceProjectionSolver?.getOutput() ??
+      this.boundedRegionalRepairSolver?.getOutput() ??
       this.exactGeometryDrcForceImproveSolver?.getOutput() ??
       this.globalDrcForceImproveSolver?.getOutput() ??
       this.traceWidthSolver?.getHdRoutesWithWidths() ??
