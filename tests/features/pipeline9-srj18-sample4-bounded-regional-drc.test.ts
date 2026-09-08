@@ -31,7 +31,11 @@ test("Pipeline9 repairs SRJ18 sample 4 within its regional work budget", async (
   expect(
     Number(stats.boundedRegionalRepairPathSearchNodeCount),
   ).toBeLessThanOrEqual(480_000 * sweepCount)
+  // Each sweep evaluates its input once. A changed region can evaluate the
+  // projection input/output and the complete atomic proposal (three calls).
   expect(
     Number(stats.boundedRegionalRepairReferenceValidationCount),
-  ).toBeLessThanOrEqual(5 * sweepCount)
+  ).toBeLessThanOrEqual(
+    sweepCount + 3 * Number(stats.boundedRegionalRepairAttemptedRegionCount),
+  )
 })
