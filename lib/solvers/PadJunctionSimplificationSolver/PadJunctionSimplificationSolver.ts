@@ -30,6 +30,7 @@ import { PadJunctionSearch } from "./PadJunctionSearch"
  * Accepted replacement: a fully checked candidate improving the original cost.
  *
  * Scope: two equal-width, same-layer terminal runs at an axis-aligned pad.
+ * Pads with three or more discovered terminal branches are skipped.
  * Other layers and route metadata remain unchanged. Unsupported geometry is an
  * explicit no-op. A* finds shortest lexicographic paths on a bounded orthogonal
  * grid; sequential arm routing and first improvement do NOT guarantee a globally
@@ -317,6 +318,7 @@ export class PadJunctionSimplificationSolver extends BaseSolver {
       discoveredBranches.push({ routeIndex, route, points, anchor: getItemOrThrow(points, anchorIndex), terminal, anchorIndex, reversed: startInside })
     }
     const [firstBranch, secondBranch] = discoveredBranches
+    // Only two-branch junctions are supported; skip pads with three or more branches.
     if (discoveredBranches.length !== 2 || !firstBranch || !secondBranch) return null
     const branches: [BranchAnchor, BranchAnchor] = [firstBranch, secondBranch]
     const connectionNames = branches.map((branch) => branch.route.connectionName)
