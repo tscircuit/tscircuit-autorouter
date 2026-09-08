@@ -42,20 +42,21 @@ export const applyClearanceProjection = ({
     ),
     allowViaMovement: true,
     traceClearance:
-      originalSrj.minTraceToPadEdgeClearance ?? RELAXED_DRC_OPTIONS.traceClearance,
+      originalSrj.minTraceToPadEdgeClearance ??
+      RELAXED_DRC_OPTIONS.traceClearance,
     viaClearance: RELAXED_DRC_OPTIONS.viaClearance,
   })
   const candidate = projectedGeometry.slice(0, routes.length)
   const fixedViolations = new Map(
-    getFixedObstacleViolations({ srj, routes: geometryRoutes }).map((violation) => [
-      violation.key,
-      violation.severity,
-    ]),
+    getFixedObstacleViolations({ srj, routes: geometryRoutes }).map(
+      (violation) => [violation.key, violation.severity],
+    ),
   )
   if (
     getFixedObstacleViolations({ srj, routes: projectedGeometry }).some(
       ({ key, severity }) =>
-        !fixedViolations.has(key) || severity > fixedViolations.get(key)! + 1e-8,
+        !fixedViolations.has(key) ||
+        severity > fixedViolations.get(key)! + 1e-8,
     ) ||
     getNewViaPadViolations({
       srj,

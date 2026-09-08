@@ -38,7 +38,9 @@ export class ClearanceProjectionSolver extends BaseSolver {
       ...this.params,
       drcEvaluator: (input): ReturnType<DrcEvaluator> => {
         const result = this.params.drcEvaluator(input)
-        counts.push(Array.isArray(result) ? result.length : result.errors.length)
+        counts.push(
+          Array.isArray(result) ? result.length : result.errors.length,
+        )
         return result
       },
     })

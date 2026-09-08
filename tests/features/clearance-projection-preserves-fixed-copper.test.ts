@@ -79,12 +79,14 @@ test("coupled projection opens a via gap without moving fixed copper or crossing
     ),
     connections: geometry.map((route) => ({
       name: route.connectionName,
-      pointsToConnect: [route.route[0]!, route.route.at(-1)!].map((point, index) => ({
-        x: point.x,
-        y: point.y,
-        layer: point.z === 0 ? "top" : "bottom",
-        pcb_port_id: `${route.connectionName}_port_${index}`,
-      })),
+      pointsToConnect: [route.route[0]!, route.route.at(-1)!].map(
+        (point, index) => ({
+          x: point.x,
+          y: point.y,
+          layer: point.z === 0 ? "top" : "bottom",
+          pcb_port_id: `${route.connectionName}_port_${index}`,
+        }),
+      ),
     })),
   }
   const original = structuredClone({ srj, routes, fixedRoute })
@@ -116,7 +118,8 @@ test("coupled projection opens a via gap without moving fixed copper or crossing
   const via = result[0]!.route[1]!
   expect(via.x - srj.bounds.minX - 0.15).toBeGreaterThanOrEqual(0.2 - 1e-9)
   expect(
-    pointToSegmentDistance(via, result[1]!.route[1]!, result[1]!.route[2]!) - 0.2,
+    pointToSegmentDistance(via, result[1]!.route[1]!, result[1]!.route[2]!) -
+      0.2,
   ).toBeGreaterThanOrEqual(0.1 - 1e-6)
   expect(result[0]!.route[2]).toEqual({ ...via, z: 1 })
   const projectedGeometry = [...result, fixedRoute]

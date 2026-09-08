@@ -31,7 +31,11 @@ export const createsTraceCrossing = (
   for (const [routeIndex, route] of routes.entries()) {
     const name = route.rootConnectionName ?? route.connectionName
     const root = connMap?.getNetConnectedToId(name) ?? name
-    for (let pointIndex = 0; pointIndex < route.route.length - 1; pointIndex++) {
+    for (
+      let pointIndex = 0;
+      pointIndex < route.route.length - 1;
+      pointIndex++
+    ) {
       const a = route.route[pointIndex]!
       const b = route.route[pointIndex + 1]!
       if (a.z !== b.z || a.toNextSegmentType === "through_obstacle") continue
