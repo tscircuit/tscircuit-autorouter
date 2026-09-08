@@ -2,7 +2,7 @@
 
 The complete board TSX and one test live in
 `pipeline9-gps-logger-xin-ground-contact.test.tsx`. The test runs local Pipeline9,
-checks for one physical XIN–ground short, and saves one full-board bug-report SVG.
+checks that XIN and ground no longer touch, and saves one full-board bug-report SVG.
 The bug-report SVG shows routed copper and the measured relaxed DRC count.
 Imported component footprints retain
 the original board geometry; this is a full-board reproduction, not a reduced circuit.
@@ -21,3 +21,7 @@ It retains the RP2040 library’s crystal phase and core’s remaining-net phase
 Zero-clearance checking distinguishes a physical short from a spacing violation.
 
 To regenerate the snapshot, prefix the test command with `BUN_UPDATE_SNAPSHOTS=1`.
+
+This draft is stacked on #2457. Skipping force improvement when fixed copper
+is present removes the short, but previously measured phase-1 relaxed DRC errors
+increase from 3 to 5. The candidate is not ready to merge.

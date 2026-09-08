@@ -636,17 +636,24 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     definePipelineStep(
       "highDensityForceImproveSolver",
       HighDensityForceImproveSolver,
-      (cms) => [
-        {
-          nodeWithPortPoints: cms.highDensityNodePortPoints ?? [],
-          hdRoutes: materializePipeline9HdRouteVias(
-            cms.highDensityRouteSolver!.routes,
-          ),
-          colorMap: cms.colorMap,
-          totalStepsPerNode: Math.max(12, Math.round(20 * cms.effort)),
-          nodeAssignmentMargin: cms.srj.defaultObstacleMargin ?? 0.2,
-        },
-      ],
+      (cms) => {
+        let nodeWithPortPoints = cms.highDensityNodePortPoints ?? []
+        // Force improvement cannot constrain movement against fixed copper.
+        if (cms.highDensityRouteSolver!.getUpdatedFixedHdRoutes().length > 0) {
+          nodeWithPortPoints = []
+        }
+        return [
+          {
+            nodeWithPortPoints,
+            hdRoutes: materializePipeline9HdRouteVias(
+              cms.highDensityRouteSolver!.routes,
+            ),
+            colorMap: cms.colorMap,
+            totalStepsPerNode: Math.max(12, Math.round(20 * cms.effort)),
+            nodeAssignmentMargin: cms.srj.defaultObstacleMargin ?? 0.2,
+          },
+        ]
+      },
     ),
     definePipelineStep(
       "highDensityRepairSolver",

@@ -480,7 +480,7 @@ function GpsLogger({
   )
 }
 
-test("pipeline9 gps logger reproduces XIN to ground contact", async () => {
+test("pipeline9 gps logger preserves separation between XIN and ground", async () => {
   const circuit = new RootCircuit()
   circuit.platform = { partsEngineDisabled: true }
   const phaseSolvers: AutoroutingPipelineSolver9_PreloadedTraceGraph[] = []
@@ -513,6 +513,12 @@ test("pipeline9 gps logger reproduces XIN to ground contact", async () => {
 
   await circuit.renderUntilSettled()
   expect(phaseSolvers).toHaveLength(2)
+  expect(
+    phaseSolvers[0].highDensityForceImproveSolver!.sampleEntries.length,
+  ).toBeGreaterThan(0)
+  expect(
+    phaseSolvers[1].highDensityForceImproveSolver!.sampleEntries,
+  ).toHaveLength(0)
   expect(phaseSolvers[0].getOutputSimplifiedPcbTraces()).toHaveLength(4)
   expect(phaseSolvers[1].getOutputSimplifiedPcbTraces().length).toBeGreaterThan(
     4,
@@ -522,9 +528,7 @@ test("pipeline9 gps logger reproduces XIN to ground contact", async () => {
   const contacts = checkEachPcbTraceNonOverlapping(circuitJson, {
     minClearance: 0,
   })
-  expect(contacts).toHaveLength(1)
-  expect(contacts[0].center?.x).toBeCloseTo(-10.534003438860754, 5)
-  expect(contacts[0].center?.y).toBeCloseTo(-5.472430517590865, 5)
+  expect(contacts).toHaveLength(0)
 
   await expect(
     getBugReportSnapshotSvg({
