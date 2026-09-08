@@ -1,4 +1,5 @@
-import { distance, pointToSegmentDistance } from "@tscircuit/math-utils"
+import { distance } from "@tscircuit/math-utils"
+import { pointToSegmentDistanceScalar } from "lib/utils/pointToSegmentDistanceScalar"
 import { SingleHighDensityRouteSolver } from "./SingleHighDensityRouteSolver"
 import { Node } from "lib/data-structures/SingleRouteCandidatePriorityQueue"
 
@@ -130,7 +131,7 @@ export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends Sing
 
     for (const segment of this.getFutureConnectionSegments()) {
       if (
-        pointToSegmentDistance(node, segment.start, segment.end) <
+        pointToSegmentDistanceScalar(node, segment.start, segment.end) <
         minCenterlineDistance
       ) {
         return true
