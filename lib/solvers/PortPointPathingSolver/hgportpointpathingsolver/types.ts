@@ -22,6 +22,8 @@ export type RawPort = {
   z: number
   distToCentermostPortOnZ: number
   cramped?: boolean
+  /** Preserves the finite resource identity across layer-specific graph ports. */
+  physicalCutId?: string
   regions: RegionHg[]
   tinyHypergraphPortPenalty?: number
   _preloadedFixedNetIds?: string[]

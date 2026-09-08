@@ -3,6 +3,7 @@ import type { GraphicsObject } from "graphics-debug"
 import type { FixedCopperClearanceIndex } from "lib/data-structures/FixedCopperClearanceIndex"
 import { BaseSolver } from "lib/solvers/BaseSolver"
 import type { PreloadedTracePortAssignment } from "lib/solvers/AvailableSegmentPointSolver/AvailableSegmentPointSolver"
+import { getPhysicalCutIdOrThrow } from "lib/solvers/AvailableSegmentPointSolver/getPhysicalCutIdOrThrow"
 import type {
   InputNodeWithPortPoints,
   InputPortPoint,
@@ -206,6 +207,7 @@ type TinyPortMetadata = {
   nextPortPointId?: string
   distToCentermostPortOnZ?: number
   cramped?: boolean
+  physicalCutId?: string
   _tinyTerminal?: boolean
   tinyHypergraphPortPenalty?: number
   duplicatedFromPortId?: string
@@ -425,8 +427,12 @@ const toSerializedRegionData = (
 
 const toSerializedPortData = (
   port: HgPortPointPathingSolverParams["graph"]["ports"][number],
-) => {
+): SerializedHyperGraph["ports"][number]["d"] => {
   const portMetadata = port.d as typeof port.d & TinyPortMetadata
+  const physicalCutId = getPhysicalCutIdOrThrow(
+    port.d.physicalCutId,
+    port.d.portId,
+  )
   return {
     portId: port.d.portId,
     x: port.d.x,
@@ -437,6 +443,7 @@ const toSerializedPortData = (
     distToCentermostPortOnZ: port.d.distToCentermostPortOnZ,
     tinyHypergraphPortPenalty: port.d.tinyHypergraphPortPenalty,
     cramped: port.d.cramped,
+    ...(physicalCutId === undefined ? {} : { physicalCutId }),
     _preloadedFixedNetIds: port.d._preloadedFixedNetIds,
     _preloadedTracePortAssignments: port.d._preloadedTracePortAssignments,
   }
@@ -1075,7 +1082,9 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
   private duplicateCongestedPortReport?: DuplicateCongestedPortSolverReport
   private duplicateCongestedPortError?: string
   private duplicatedPortCount = 0
+  private rejectedDuplicatePortCount = 0
   private rejectedCrampedDuplicatePortCount = 0
+  private rejectedPhysicalCutDuplicatePortCount = 0
   private inputNodeWithPortPoints: InputNodeWithPortPoints[]
   private originalRegionById: Map<
     CapacityMeshNodeId,
@@ -1158,8 +1167,13 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       } else {
         this.duplicateCongestedPortReport = duplicateCongestedPortSolver.report
         graphForTiny = duplicateCongestedPortSolver.getOutput()
-        if (this.physicalClearance) {
-          // Do not expand the producer's cramped-port capacity before routing.
+        if (
+          this.physicalClearance ||
+          serializedGraph.ports.some(
+            (port): boolean => port.d?.physicalCutId !== undefined,
+          )
+        ) {
+          // Do not expand the producer's cramped or finite-cut capacity.
           // This is conservative admission, not a proof of every net-dependent
           // channel's maximum capacity; all original portals remain available.
           const admitted = limitCrampedTinyGraphDuplicatePorts({
@@ -1167,8 +1181,11 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
             proposedGraph: graphForTiny,
           })
           graphForTiny = admitted.graph
+          this.rejectedDuplicatePortCount = admitted.removedPortIds.length
           this.rejectedCrampedDuplicatePortCount =
-            admitted.removedPortIds.length
+            admitted.removedCrampedPortIds.length
+          this.rejectedPhysicalCutDuplicatePortCount =
+            admitted.removedPhysicalCutPortIds.length
         }
         const originalPortIds = new Set(
           serializedGraph.ports.map((port): string => port.portId),
@@ -1190,7 +1207,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
         0,
       ) ?? 0
     this.duplicatedPortCount =
-      proposedDuplicatePortCount - this.rejectedCrampedDuplicatePortCount
+      proposedDuplicatePortCount - this.rejectedDuplicatePortCount
     if (this.duplicatedPortCount < 0) {
       throw new Error(
         "Tiny duplicate admission removed more ports than proposed",
@@ -1577,6 +1594,10 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
         ) ?? 0,
       duplicateCongestedPortRejectedCrampedCount:
         this.rejectedCrampedDuplicatePortCount,
+      // Reason counts can overlap when an original site has both markers.
+      duplicateCongestedPortRejectedPhysicalCutCount:
+        this.rejectedPhysicalCutDuplicatePortCount,
+      duplicateCongestedPortRejectedCount: this.rejectedDuplicatePortCount,
       duplicateCongestedPortFallbackToOriginal: Boolean(
         this.duplicateCongestedPortError,
       ),

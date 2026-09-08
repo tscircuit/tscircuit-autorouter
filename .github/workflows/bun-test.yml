@@ -55,10 +55,17 @@ jobs:
           tests/solvers/single-simplified-path-exact-generated-duplicates.test.ts
           tests/features/trace-simplification-plated-hole-departure-identity.test.ts
           tests/features/pipeline9-preload-attachment-*.test.ts
+          tests/features/pipeline9-assignable-preload-attachment-*.test.ts
+          tests/features/pipeline9-physical-node-cut-*.test.ts
+          tests/features/pipeline9-pad-area-terminal-*.test.ts
+          tests/diagnostics/tiny-static-certificate-*.test.ts
           tests/solvers/multi-head-polyline-trace-width.test.ts
           tests/solvers/portfolio-multi-head-trace-width.test.ts
           tests/solvers/portfolio-trace-width-cache-schema.test.ts
           tests/solvers/fixed-copper-clearance-*.test.ts
+          tests/solvers/fixed-copper-portal-sites-*.test.ts
+          tests/solvers/available-physical-cut-*.test.ts
+          tests/solvers/physical-node-cut-*.test.ts
           tests/solvers/single-high-density-physical-*.test.ts
           tests/caching/fixed-copper-clearance-fingerprint.test.ts
           tests/caching/cached-intra-physical-clearance-*.test.ts
@@ -80,6 +87,7 @@ jobs:
           tests/solvers/representable-fixed-copper-channel-*.test.ts
           tests/solvers/tinygraph-fixed-copper-*.test.ts
           tests/solvers/tinygraph-physical-duplicate-capacity-*.test.ts
+          tests/solvers/tinygraph-physical-cut-*.test.ts
           tests/solvers/tinygraph-wrapper-physical-*.test.ts
           tests/solvers/uniform-physical-clearance-*.test.ts
           --timeout 300000

@@ -13,6 +13,10 @@ import {
   createPipeline9FixedPadClearance,
   type Pipeline9FixedPadClearance,
 } from "./createPipeline9FixedPadClearance"
+import {
+  createPipeline9SourceAttachmentEligibility,
+  type Pipeline9SourceAttachmentEligibility,
+} from "./createPipeline9SourceAttachmentEligibility"
 
 type ExistingTerminalAttachment = {
   x: number
@@ -58,6 +62,10 @@ const getUniqueExistingAttachment = (params: {
   ownPad: Obstacle
   z: number
   layerCount: number
+  sourceEligibility?: {
+    context: Pipeline9SourceAttachmentEligibility
+    connectionName: string
+  }
 }): ExistingTerminalAttachment | undefined => {
   const attachments = new Map<string, ExistingTerminalAttachment>()
   for (const trace of params.traces) {
@@ -66,7 +74,14 @@ const getUniqueExistingAttachment = (params: {
       params.connMap.getNetConnectedToId(trace.pcb_trace_id) !==
         params.canonicalNetId ||
       params.connMap.getNetConnectedToId(trace.connection_name) !==
-        params.canonicalNetId
+        params.canonicalNetId ||
+      (params.sourceEligibility &&
+        !params.sourceEligibility.context.isEligibleAttachment({
+          connectionName: params.sourceEligibility.connectionName,
+          pcbPortId: params.pcbPortId,
+          ownPad: params.ownPad,
+          trace,
+        }))
     ) {
       continue
     }
@@ -134,6 +149,9 @@ export const resolvePipeline9PreloadedTerminalAttachments = (params: {
     }
   }
   let fixedPadClearance: Pipeline9FixedPadClearance | undefined
+  let sourceAttachmentEligibility:
+    | Pipeline9SourceAttachmentEligibility
+    | undefined
   let changed = false
   const connections: SimpleRouteJson["connections"] = []
   for (const connection of routingSrj.connections) {
@@ -177,7 +195,6 @@ export const resolvePipeline9PreloadedTerminalAttachments = (params: {
           const ownerEnvelopes: Obstacle[] = []
           for (const obstacle of originalSrj.obstacles) {
             if (
-              obstacle.netIsAssignable === true ||
               obstacle.isCopperPour === true ||
               !obstacle.connectedTo.includes(point.pcb_port_id) ||
               !isInsideOriginalObstacleEnvelope(originalPoint, obstacle) ||
@@ -194,14 +211,33 @@ export const resolvePipeline9PreloadedTerminalAttachments = (params: {
             ownerEnvelopes.length === 1 &&
             ownerEnvelopes[0]!.type === "rect"
           ) {
+            const ownPad = ownerEnvelopes[0]!
+            if (
+              ownPad.netIsAssignable === true &&
+              !sourceAttachmentEligibility
+            ) {
+              sourceAttachmentEligibility =
+                createPipeline9SourceAttachmentEligibility({
+                  originalSrj,
+                  containsPointInObstacleEnvelope:
+                    isInsideOriginalObstacleEnvelope,
+                })
+            }
             const attachment = getUniqueExistingAttachment({
               traces: originalSrj.traces,
               pcbPortId: point.pcb_port_id,
               canonicalNetId,
               connMap,
-              ownPad: ownerEnvelopes[0]!,
+              ownPad,
               z,
               layerCount: originalSrj.layerCount,
+              sourceEligibility:
+                ownPad.netIsAssignable === true
+                  ? {
+                      context: sourceAttachmentEligibility!,
+                      connectionName: connection.name,
+                    }
+                  : undefined,
             })
             if (attachment) {
               if (!fixedPadClearance) {

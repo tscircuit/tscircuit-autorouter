@@ -9,6 +9,7 @@ import { CacheProvider } from "lib/cache/types"
 import { ComponentDetectionSolver } from "lib/solvers/ComponentDetectionSolver/ComponentDetectionSolver"
 import { MultiTargetNecessaryCrampedPortPointSolver } from "lib/solvers/NecessaryCrampedPortPointSolver/MultiTargetNecessaryCrampedPortPointSolver"
 import { NodeDimensionSubdivisionSolver } from "lib/solvers/NodeDimensionSubdivisionSolver/NodeDimensionSubdivisionSolver"
+import type { PhysicalNodeCutContext } from "lib/solvers/NodeDimensionSubdivisionSolver/physicalNodeCuts"
 import { buildHyperGraph } from "lib/solvers/PortPointPathingSolver/hgportpointpathingsolver"
 import {
   type ChangedPreloadedTraceSection,
@@ -94,6 +95,7 @@ import { Pipeline9JointDrcRepairSolver } from "./Pipeline9JointDrcRepairSolver"
 import { PreloadedTraceGraphSolver } from "./PreloadedTraceGraphSolver"
 import { PreprocessSimpleRouteJsonWithoutTraceObstaclesSolver } from "./PreprocessSimpleRouteJsonWithoutTraceObstaclesSolver"
 import { resolvePipeline9PreloadedTerminalAttachments } from "./resolvePipeline9PreloadedTerminalAttachments"
+import { resolvePipeline9PadAreaTerminals } from "./resolvePipeline9PadAreaTerminals"
 import { MergedComponentTopologyView } from "../AutoroutingPipeline7_MultiGraph/MergedComponentTopologyView"
 import { PowerTraceExpansionSolver } from "../AutoroutingPipeline7_MultiGraph/PowerTraceExpansionSolver"
 import { convertPipeline7HdRoutesToSimplifiedPcbTraces } from "../AutoroutingPipeline7_MultiGraph/convertPipeline7HdRoutesToSimplifiedPcbTraces"
@@ -306,6 +308,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
   sharedEdgeSegmentsWithNecessaryCrampedPortPoints?: SharedEdgeSegment[]
   highDensityNodePortPoints?: NodeWithPortPoints[]
   private fixedPadClearance?: Pipeline9FixedPadClearance
+  private physicalNodeCutContext?: PhysicalNodeCutContext
 
   cacheProvider: CacheProvider | null = null
   pipelineDef = [
@@ -319,10 +322,13 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       {
         onSolved: (cms) => {
           cms.setSimpleRouteJson(
-            resolvePipeline9PreloadedTerminalAttachments({
+            resolvePipeline9PadAreaTerminals({
               originalSrj: cms.originalSrj,
-              routingSrj:
-                cms.preprocessSimpleRouteJsonSolver!.getOutputSimpleRouteJson(),
+              routingSrj: resolvePipeline9PreloadedTerminalAttachments({
+                originalSrj: cms.originalSrj,
+                routingSrj:
+                  cms.preprocessSimpleRouteJsonSolver!.getOutputSimpleRouteJson(),
+              }),
             }),
           )
         },
@@ -428,12 +434,16 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     definePipelineStep(
       "nodeDimensionSubdivisionSolver",
       NodeDimensionSubdivisionSolver,
-      (cms) => [
-        cms.capacityNodes!,
-        cms.maxNodeDimension,
-        cms.maxNodeRatio,
-        cms.minNodeArea,
-      ],
+      (cms) => {
+        cms.physicalNodeCutContext = cms.createPhysicalNodeCutContext()
+        return [
+          cms.capacityNodes!,
+          cms.maxNodeDimension,
+          cms.maxNodeRatio,
+          cms.minNodeArea,
+          cms.physicalNodeCutContext,
+        ]
+      },
       {
         onSolved: (cms) => {
           cms.capacityNodes = cms.nodeDimensionSubdivisionSolver!.outputNodes
@@ -460,6 +470,14 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           traceWidth: cms.minTraceWidth,
           colorMap: cms.colorMap,
           shouldReturnCrampedPortPoints: true,
+          ...(cms.physicalNodeCutContext === undefined
+            ? {}
+            : {
+                physicalNodeCuts: {
+                  context: cms.physicalNodeCutContext,
+                  cuts: cms.nodeDimensionSubdivisionSolver!.outputPhysicalCuts,
+                },
+              }),
         },
       ],
     ),
@@ -1037,6 +1055,52 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     this.startTimeOfPhase = {}
     this.endTimeOfPhase = {}
     this.timeSpentOnPhase = {}
+  }
+
+  private createPhysicalNodeCutContext(): PhysicalNodeCutContext | undefined {
+    // Finite cuts currently model generated copper only. The existing preload
+    // producer projects copper onto nearby graph ports; that projection does
+    // not yet preserve finite cut capacity. Classify the input before routing,
+    // without changing source copper or retrying an unsuccessful strategy.
+    if (this.originalSrj.traces !== undefined && this.originalSrj.traces.length > 0) {
+      return undefined
+    }
+    const routingSrj = this.srjWithPointPairs
+    if (routingSrj === undefined) {
+      throw new Error("Pipeline9 physical node cuts require the routing connections")
+    }
+    if (routingSrj.connections.length === 0) return undefined
+    const routableNetIds = new Set<string>()
+    const protectedPoints: { x: number; y: number }[] = []
+    for (const connection of routingSrj.connections) {
+      const netId = this.connMap.getNetConnectedToId(connection.name)
+      if (typeof netId !== "string" || netId.length === 0) {
+        throw new Error(
+          `Pipeline9 physical node cuts require the net for "${connection.name}"`,
+        )
+      }
+      routableNetIds.add(netId)
+      for (const point of connection.pointsToConnect) {
+        protectedPoints.push({ x: point.x, y: point.y })
+      }
+    }
+    // Preserve original declared anchors as well as generated escape/MST ones.
+    // Protection on every layer is intentionally conservative at this boundary.
+    for (const connection of this.originalSrj.connections) {
+      for (const point of connection.pointsToConnect) {
+        protectedPoints.push({ x: point.x, y: point.y })
+      }
+    }
+    const clearance = this.getFixedPadClearance()
+    return {
+      rectangles: clearance.rectangles,
+      layerCount: clearance.layerCount,
+      traceWidth: this.minTraceWidth,
+      traceGap: 0.1,
+      padGap: clearance.traceToPadClearance,
+      routableNetIds,
+      protectedPoints,
+    }
   }
 
   private getFixedPadClearance(): Pipeline9FixedPadClearance {

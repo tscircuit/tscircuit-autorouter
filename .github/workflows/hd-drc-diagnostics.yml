@@ -4,6 +4,7 @@ on:
   pull_request:
     paths:
       - scripts/diagnosePipelineDrc.ts
+      - scripts/diagnostics/createTinyStaticReachabilityCertificate.ts
       - .github/workflows/hd-drc-diagnostics.yml
 
 permissions:
@@ -21,14 +22,14 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - { dataset: dataset01, sample: 66, pipeline: 9 }
+          - { dataset: dataset01, sample: 66, pipeline: 9, observeRuntime: true }
           - { dataset: srj18, sample: 2, pipeline: 9 }
           - { dataset: srj18, sample: 4, pipeline: 9 }
-          - { dataset: srj18, sample: 8, pipeline: 9 }
+          - { dataset: srj18, sample: 8, pipeline: 9, observeRuntime: true }
           - { dataset: srj18, sample: 9, pipeline: 9 }
           - { dataset: srj18, sample: 10, pipeline: 9 }
           - { dataset: srj18, sample: 12, pipeline: 9 }
-          - { dataset: srj18, sample: 13, pipeline: 9 }
+          - { dataset: srj18, sample: 13, pipeline: 9, staticCertificate: true }
           - { dataset: srj18, sample: 16, pipeline: 9 }
           - { dataset: srj19, sample: 7, pipeline: 9 }
           - { dataset: srj19, sample: 29, pipeline: 9 }
@@ -48,6 +49,7 @@ jobs:
           - { dataset: srj19, sample: 83, pipeline: 9 }
           - { dataset: srj19, sample: 86, pipeline: 9 }
           - { dataset: srj19, sample: 91, pipeline: 9 }
+          - { dataset: srj19, sample: 95, pipeline: 9 }
           - { dataset: srj19, sample: 97, pipeline: 9 }
           - { dataset: srj19, sample: 105, pipeline: 9 }
           - { dataset: srj19, sample: 118, pipeline: 9 }
@@ -122,17 +124,26 @@ jobs:
         run: bun install
 
       - name: Use identical diagnostic controller
-        run: cp diagnostic-pr/scripts/diagnosePipelineDrc.ts diagnostic-main/scripts/diagnosePipelineDrc.ts
+        run: |
+          cp diagnostic-pr/scripts/diagnosePipelineDrc.ts diagnostic-main/scripts/diagnosePipelineDrc.ts
+          mkdir -p diagnostic-main/scripts/diagnostics
+          cp diagnostic-pr/scripts/diagnostics/createTinyStaticReachabilityCertificate.ts diagnostic-main/scripts/diagnostics/createTinyStaticReachabilityCertificate.ts
 
       # These stage evaluations are diagnostics, not timed benchmarks. Normal
       # benchmark commands and their equal main/PR budgets remain unchanged.
       - name: Diagnose paired main
         working-directory: diagnostic-main
+        env:
+          HD_DRC_RUNTIME_OBSERVATION: ${{ matrix.observeRuntime && '1' || '' }}
+          HD_DRC_STATIC_REACHABILITY_CERTIFICATE: ${{ matrix.staticCertificate && '1' || '' }}
         run: bun scripts/diagnosePipelineDrc.ts ${{ matrix.dataset }} ${{ matrix.sample }} ${{ matrix.pipeline }} ../diagnostic-results/main ${{ matrix.fixturePath }}
 
       - name: Diagnose PR head
         if: success() || failure()
         working-directory: diagnostic-pr
+        env:
+          HD_DRC_RUNTIME_OBSERVATION: ${{ matrix.observeRuntime && '1' || '' }}
+          HD_DRC_STATIC_REACHABILITY_CERTIFICATE: ${{ matrix.staticCertificate && '1' || '' }}
         run: bun scripts/diagnosePipelineDrc.ts ${{ matrix.dataset }} ${{ matrix.sample }} ${{ matrix.pipeline }} ../diagnostic-results/pr ${{ matrix.fixturePath }}
 
       - name: Record exact revisions

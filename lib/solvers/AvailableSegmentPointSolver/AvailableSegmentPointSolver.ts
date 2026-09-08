@@ -7,6 +7,17 @@ import type {
 } from "../../types"
 import type { GraphicsObject } from "graphics-debug"
 import { getNodeEdgeMap } from "../CapacityMeshSolver/getNodeEdgeMap"
+import type {
+  PhysicalNodeCut,
+  PhysicalNodeCutContext,
+} from "../NodeDimensionSubdivisionSolver/physicalNodeCuts"
+import { getFixedCopperPortalSites } from "../UniformPortDistributionSolver/getFixedCopperPortalSites"
+import { getPhysicalCutIdOrThrow } from "./getPhysicalCutIdOrThrow"
+
+type PhysicalNodeCutInput = {
+  readonly context: PhysicalNodeCutContext
+  readonly cuts: readonly PhysicalNodeCut[]
+}
 
 export interface PreloadedTracePortAssignment {
   traceId: string
@@ -33,6 +44,8 @@ export interface SegmentPortPoint {
    * ideally this port points should be discarded but we need them in some cases
    */
   cramped: boolean
+  /** Finite physical-cut resource whose original sites must not be duplicated. */
+  physicalCutId?: string
   /** Extra tiny-hypergraph traversal cost for fallback ports. */
   tinyHypergraphPortPenalty?: number
   /** Canonical fixed-net ids loaded onto this existing graph port. */
@@ -88,6 +101,12 @@ export class AvailableSegmentPointSolver extends BaseSolver {
 
   colorMap: Record<string, string>
   shouldReturnCrampedPortPoints: boolean
+  private readonly physicalNodeCuts: PhysicalNodeCutInput | undefined
+  private readonly physicalCutByNodePair = new Map<
+    string,
+    Map<string, PhysicalNodeCut>
+  >()
+  private readonly consumedPhysicalCutIds = new Set<string>()
 
   // edgeMargin = 0.25
 
@@ -98,6 +117,7 @@ export class AvailableSegmentPointSolver extends BaseSolver {
     obstacleMargin,
     colorMap,
     shouldReturnCrampedPortPoints,
+    physicalNodeCuts,
   }: {
     nodes: CapacityMeshNode[]
     edges: CapacityMeshEdge[]
@@ -105,6 +125,7 @@ export class AvailableSegmentPointSolver extends BaseSolver {
     obstacleMargin?: number
     colorMap?: Record<string, string>
     shouldReturnCrampedPortPoints: boolean
+    physicalNodeCuts?: PhysicalNodeCutInput
   }) {
     super()
     this.nodes = nodes
@@ -119,6 +140,8 @@ export class AvailableSegmentPointSolver extends BaseSolver {
 
     this.nodeMap = new Map(nodes.map((node) => [node.capacityMeshNodeId, node]))
     this.nodeEdgeMap = getNodeEdgeMap(edges)
+    this.physicalNodeCuts = physicalNodeCuts
+    this.indexPhysicalNodeCuts()
 
     // This solver completes in a single step
     this.MAX_ITERATIONS = 1
@@ -127,6 +150,46 @@ export class AvailableSegmentPointSolver extends BaseSolver {
   _step() {
     this.computeAllSharedEdgeSegments()
     this.solved = true
+  }
+
+  private indexPhysicalNodeCuts(): void {
+    if (this.physicalNodeCuts === undefined) return
+    if (this.physicalNodeCuts.context.traceWidth !== this.traceWidth) {
+      throw new Error("Physical node cuts must use the shared-edge trace width")
+    }
+    const cutIds = new Set<string>()
+    for (const cut of this.physicalNodeCuts.cuts) {
+      const physicalCutId = getPhysicalCutIdOrThrow(
+        cut.physicalCutId,
+        "physical node cut",
+      )
+      if (physicalCutId === undefined || cutIds.has(physicalCutId)) {
+        throw new Error("Physical node cuts require distinct resource IDs")
+      }
+      const [firstId, secondId] = cut.nodeIds
+      if (
+        firstId === secondId ||
+        !this.nodeMap.has(firstId) ||
+        !this.nodeMap.has(secondId)
+      ) {
+        throw new Error(`Physical node cut "${physicalCutId}" has invalid nodes`)
+      }
+      cutIds.add(physicalCutId)
+      for (const [fromId, toId] of [
+        [firstId, secondId],
+        [secondId, firstId],
+      ] as const) {
+        let neighbors = this.physicalCutByNodePair.get(fromId)
+        if (neighbors === undefined) {
+          neighbors = new Map<string, PhysicalNodeCut>()
+          this.physicalCutByNodePair.set(fromId, neighbors)
+        }
+        if (neighbors.has(toId)) {
+          throw new Error("Physical node cuts cannot repeat a shared node pair")
+        }
+        neighbors.set(toId, cut)
+      }
+    }
   }
 
   private computeAllSharedEdgeSegments() {
@@ -147,6 +210,73 @@ export class AvailableSegmentPointSolver extends BaseSolver {
         }
       }
     }
+    if (this.physicalNodeCuts !== undefined) {
+      for (const cut of this.physicalNodeCuts.cuts) {
+        if (!this.consumedPhysicalCutIds.has(cut.physicalCutId)) {
+          throw new Error(
+            `Physical node cut "${cut.physicalCutId}" has no shared graph edge`,
+          )
+        }
+      }
+    }
+  }
+
+  private createPhysicalCutSegment(
+    edge: CapacityMeshEdge,
+    overlap: { start: { x: number; y: number }; end: { x: number; y: number } },
+    availableZ: number[],
+    cut: PhysicalNodeCut,
+  ): SharedEdgeSegment {
+    if (this.physicalNodeCuts === undefined) {
+      throw new Error("Physical cut sites require their source geometry context")
+    }
+    if (this.consumedPhysicalCutIds.has(cut.physicalCutId)) {
+      throw new Error(`Physical node cut "${cut.physicalCutId}" has repeated edges`)
+    }
+    // Recompute on the actual shared edge, not its nominal subdivision plane:
+    // reconstructing centers and dimensions can change a boundary by an ULP.
+    const physicalSites = getFixedCopperPortalSites({
+      ...this.physicalNodeCuts.context,
+      start: overlap.start,
+      end: overlap.end,
+      zLayers: availableZ,
+    })
+    const portPoints: SegmentPortPoint[] = []
+    const axis = physicalSites.axis
+    const center = (physicalSites.start[axis] + physicalSites.end[axis]) / 2
+    for (const layer of physicalSites.layers) {
+      let centermostSite = layer.sites[0]
+      // A blocked layer has no resource. Do not invent a cramped midpoint.
+      if (centermostSite === undefined) continue
+      for (const site of layer.sites) {
+        if (Math.abs(site[axis] - center) < Math.abs(centermostSite[axis] - center)) {
+          centermostSite = site
+        }
+      }
+      for (const site of layer.sites) {
+        portPoints.push({
+          segmentPortPointId: `${edge.capacityMeshEdgeId}_pp${site.index}_z${layer.z}`,
+          x: site.x,
+          y: site.y,
+          availableZ: [layer.z],
+          nodeIds: [...edge.nodeIds],
+          edgeId: edge.capacityMeshEdgeId,
+          connectionName: null,
+          distToCentermostPortOnZ: Math.abs(site[axis] - centermostSite[axis]),
+          cramped: false,
+          physicalCutId: cut.physicalCutId,
+        })
+      }
+    }
+    this.consumedPhysicalCutIds.add(cut.physicalCutId)
+    return {
+      edgeId: edge.capacityMeshEdgeId,
+      nodeIds: [...edge.nodeIds],
+      start: overlap.start,
+      end: overlap.end,
+      availableZ,
+      portPoints,
+    }
   }
 
   private computeSharedEdgeSegment(
@@ -162,6 +292,13 @@ export class AvailableSegmentPointSolver extends BaseSolver {
       node2.availableZ.includes(z),
     )
     if (availableZ.length === 0) return null
+
+    const physicalCut = this.physicalCutByNodePair
+      .get(node1.capacityMeshNodeId)
+      ?.get(node2.capacityMeshNodeId)
+    if (physicalCut !== undefined) {
+      return this.createPhysicalCutSegment(edge, overlap, availableZ, physicalCut)
+    }
 
     // Compute how many port points can fit on this segment
     const segmentLength = Math.sqrt(

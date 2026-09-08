@@ -2,22 +2,36 @@ import type { GraphicsObject } from "graphics-debug"
 import type { CapacityMeshNode } from "lib/types"
 import { BaseSolver } from "lib/solvers/BaseSolver"
 import { areNodesBordering } from "lib/utils/areNodesBordering"
+import {
+  createFixedCopperNodeCutContext,
+  type FixedCopperNodeCutContext,
+  getFixedCopperNodeCuts,
+} from "./getFixedCopperNodeCuts"
+import {
+  MIN_CONNECTIVITY_BRIDGE_DIMENSION,
+  type PhysicalNodeCut,
+  type PhysicalNodeCutContext,
+} from "./physicalNodeCuts"
 
 const DEFAULT_MIN_NODE_AREA = 0.1 ** 2
-// Twice areNodesBordering's epsilon; thinner slices are coordinate artifacts.
-const MIN_CONNECTIVITY_BRIDGE_DIMENSION = 0.002
 
 export class NodeDimensionSubdivisionSolver extends BaseSolver {
   public readonly outputNodes: CapacityMeshNode[]
+  public readonly outputPhysicalCuts: PhysicalNodeCut[] = []
+  private readonly physicalCutContext?: FixedCopperNodeCutContext
 
   constructor(
     private readonly nodes: CapacityMeshNode[],
     private readonly maxNodeDimension: number,
     private readonly maxNodeRatio: number = Number.POSITIVE_INFINITY,
     private readonly minNodeArea: number = DEFAULT_MIN_NODE_AREA,
+    physicalCutContext?: PhysicalNodeCutContext,
   ) {
     super()
     this.outputNodes = []
+    this.physicalCutContext = physicalCutContext
+      ? createFixedCopperNodeCutContext(physicalCutContext)
+      : undefined
   }
 
   override getSolverName(): string {
@@ -159,7 +173,31 @@ export class NodeDimensionSubdivisionSolver extends BaseSolver {
       if (subdividedNodes.length > 1) {
         subdividedNodeCount++
       }
-      this.outputNodes.push(...subdividedNodes)
+      for (const child of subdividedNodes) {
+        if (!this.physicalCutContext) {
+          this.outputNodes.push(child)
+          continue
+        }
+        const physical = getFixedCopperNodeCuts({
+          node: child,
+          context: this.physicalCutContext,
+          maxNodeRatio: this.maxNodeRatio,
+        })
+        this.outputNodes.push(...physical.nodes)
+        this.outputPhysicalCuts.push(...physical.cuts)
+      }
+    }
+
+    if (this.physicalCutContext) {
+      const outputNodeIds = new Set<string>()
+      for (const node of this.outputNodes) {
+        if (outputNodeIds.has(node.capacityMeshNodeId)) {
+          throw new Error(
+            `Physical node cuts produced duplicate node ${node.capacityMeshNodeId}`,
+          )
+        }
+        outputNodeIds.add(node.capacityMeshNodeId)
+      }
     }
 
     this.stats = {
@@ -171,6 +209,9 @@ export class NodeDimensionSubdivisionSolver extends BaseSolver {
       maxNodeDimension: this.maxNodeDimension,
       maxNodeRatio: this.maxNodeRatio,
       minNodeArea: this.minNodeArea,
+      ...(this.physicalCutContext
+        ? { physicalCutCount: this.outputPhysicalCuts.length }
+        : {}),
     }
     this.solved = true
   }

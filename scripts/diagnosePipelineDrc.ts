@@ -7,7 +7,9 @@ import { AutoroutingPipelineSolver7_MultiGraph } from "lib/autorouter-pipelines/
 import { convertPipeline7HdRoutesToSimplifiedPcbTraces } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/convertPipeline7HdRoutesToSimplifiedPcbTraces"
 import { assignUniquePcbTraceIdsToNewTraces } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/assignUniquePcbTraceIdsToNewTraces"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
+import { SingleHighDensityRouteSolver } from "lib/solvers/HighDensitySolver/SingleHighDensityRouteSolver"
 import { GrowShrinkHighDensityIntraNodeSolver } from "lib/solvers/HyperHighDensitySolver/GrowShrinkHighDensityIntraNodeSolver"
+import { PortfolioSingleIntraNodeSolver } from "lib/solvers/HyperHighDensitySolver/PortfolioSingleIntraNodeSolver"
 import {
   combinePreloadedAndRoutedTraces,
   evaluateRelaxedDrc,
@@ -23,6 +25,7 @@ import {
   loadScenarioBySampleNumber,
   parseDatasetName,
 } from "./benchmark/scenarios"
+import { createTinyStaticReachabilityCertificate } from "./diagnostics/createTinyStaticReachabilityCertificate"
 
 type Pipeline =
   | AutoroutingPipelineSolver7_MultiGraph
@@ -44,6 +47,34 @@ type NodeObservation = {
   growthAttempts: number | null
   metadata: unknown
   routes: HighDensityRoute[]
+}
+
+type InvalidRawHdTransition = {
+  previousPointIndex: number
+  pointIndex: number
+  previousPoint: HighDensityRoute["route"][number]
+  point: HighDensityRoute["route"][number]
+  previousPointViaIndexes: number[]
+  pointViaIndexes: number[]
+  reason: "missing-explicit-endpoint-via" | "ambiguous-endpoint-vias"
+}
+
+type InvalidRawHdRouteCapture = {
+  inputRouteIndex: number
+  route: HighDensityRoute
+  transitions: InvalidRawHdTransition[]
+  producers: (Omit<NodeObservation, "routes"> & {
+    nodeRouteIndex: number
+  })[]
+  producerStatus: "observed-route-identity" | "unavailable"
+}
+
+type RawHdTransitionDiagnostic = {
+  status: "captured-raw-hd-routes" | "raw-hd-routes-unavailable"
+  positionEpsilon: number
+  inputRouteCount: number | null
+  invalidRoutes: InvalidRawHdRouteCapture[]
+  regionalInnerStageProvenance: "unavailable-not-observed"
 }
 
 type CapacityNodeCapture = Omit<CapacityMeshNode, "_parent"> & {
@@ -96,6 +127,99 @@ const selectDiagnosticOwnFields = (
   return selected
 }
 
+const captureInvalidRawHdTransitions = (
+  pipeline: AutoroutingPipelineSolver9_PreloadedTraceGraph,
+  nodes: readonly NodeObservation[],
+): RawHdTransitionDiagnostic => {
+  const hd = getDiagnosticOwnValue(pipeline, "highDensityRouteSolver")
+  const rawRoutes = getDiagnosticOwnValue(hd, "routes")
+  const positionEpsilon = 1e-6
+  const diagnostic: RawHdTransitionDiagnostic = {
+    status: Array.isArray(rawRoutes)
+      ? "captured-raw-hd-routes"
+      : "raw-hd-routes-unavailable",
+    positionEpsilon,
+    inputRouteCount: Array.isArray(rawRoutes) ? rawRoutes.length : null,
+    invalidRoutes: [],
+    regionalInnerStageProvenance: "unavailable-not-observed",
+  }
+  if (!Array.isArray(rawRoutes)) return diagnostic
+  const routes: readonly HighDensityRoute[] = rawRoutes
+  for (const [inputRouteIndex, route] of routes.entries()) {
+    const transitions: InvalidRawHdTransition[] = []
+    for (let pointIndex = 1; pointIndex < route.route.length; pointIndex++) {
+      const previousPoint = route.route[pointIndex - 1]!
+      const point = route.route[pointIndex]!
+      if (
+        previousPoint.z === point.z ||
+        previousPoint.toNextSegmentType === "through_obstacle"
+      ) {
+        continue
+      }
+      // Match materializePipeline9HdRouteVias without invoking it. Its inserted
+      // points precede the original point, so the next pair is still this pair.
+      const transitionIsColocated =
+        Math.abs(previousPoint.x - point.x) <= positionEpsilon &&
+        Math.abs(previousPoint.y - point.y) <= positionEpsilon
+      if (transitionIsColocated) continue
+      const previousPointViaIndexes: number[] = []
+      const pointViaIndexes: number[] = []
+      for (const [viaIndex, via] of route.vias.entries()) {
+        if (
+          Math.abs(via.x - previousPoint.x) <= positionEpsilon &&
+          Math.abs(via.y - previousPoint.y) <= positionEpsilon
+        ) {
+          previousPointViaIndexes.push(viaIndex)
+        }
+        if (
+          Math.abs(via.x - point.x) <= positionEpsilon &&
+          Math.abs(via.y - point.y) <= positionEpsilon
+        ) {
+          pointViaIndexes.push(viaIndex)
+        }
+      }
+      const hasViaAtPreviousPoint = previousPointViaIndexes.length > 0
+      const hasViaAtPoint = pointViaIndexes.length > 0
+      if (hasViaAtPreviousPoint !== hasViaAtPoint) continue
+      transitions.push({
+        previousPointIndex: pointIndex - 1,
+        pointIndex,
+        previousPoint,
+        point,
+        previousPointViaIndexes,
+        pointViaIndexes,
+        reason: hasViaAtPreviousPoint
+          ? "ambiguous-endpoint-vias"
+          : "missing-explicit-endpoint-via",
+      })
+    }
+    if (transitions.length === 0) continue
+    const producers: InvalidRawHdRouteCapture["producers"] = []
+    for (const observation of nodes) {
+      const nodeRouteIndex = observation.routes.indexOf(route)
+      if (nodeRouteIndex < 0) continue
+      producers.push({
+        nodeId: observation.nodeId,
+        node: observation.node,
+        solver: observation.solver,
+        scaleFactor: observation.scaleFactor,
+        growthAttempts: observation.growthAttempts,
+        metadata: observation.metadata,
+        nodeRouteIndex,
+      })
+    }
+    diagnostic.invalidRoutes.push({
+      inputRouteIndex,
+      route,
+      transitions,
+      producers,
+      producerStatus:
+        producers.length > 0 ? "observed-route-identity" : "unavailable",
+    })
+  }
+  return diagnostic
+}
+
 const captureTinyFailure = (
   pipeline: Pipeline,
   error: unknown,
@@ -127,11 +251,35 @@ const captureTinyFailure = (
       const problem = getDiagnosticOwnValue(solver, "problem")
       if (topology !== undefined && problem !== undefined) {
         const setup = getDiagnosticOwnValue(solver, "_problemSetup")
+        const initialAssignmentsDescriptor =
+          typeof problem === "object" && problem !== null
+            ? Object.getOwnPropertyDescriptor(problem, "initialAssignments")
+            : null
+        const nativeConstructor = getDiagnosticOwnValue(
+          Object.getPrototypeOf(solver),
+          "constructor",
+        )
+        const nativeSolverClass =
+          typeof nativeConstructor === "function"
+            ? Object.getOwnPropertyDescriptor(nativeConstructor, "name")?.value
+            : undefined
         const state = getDiagnosticOwnValue(solver, "state")
         const queue = getDiagnosticOwnValue(state, "candidateQueue")
         const queueItems = getDiagnosticOwnValue(queue, "items")
         nativeInstances.push({
           source,
+          nativeSolverClass:
+            typeof nativeSolverClass === "string" ? nativeSolverClass : null,
+          // Native loader omits this optional property when no seeds exist.
+          // Keep observed absence distinct from arbitrary null capture data.
+          initialAssignmentsStatus:
+            initialAssignmentsDescriptor === undefined
+              ? "absent-optional-native-field"
+              : initialAssignmentsDescriptor &&
+                  "value" in initialAssignmentsDescriptor &&
+                  Array.isArray(initialAssignmentsDescriptor.value)
+                ? "captured-array"
+                : "unsupported-native-value",
           ...selectDiagnosticOwnFields(solver, [
             "iterations",
             "MAX_ITERATIONS",
@@ -685,6 +833,489 @@ const installJointEvaluatorInputCapture = (
   }
 }
 
+type DiagnosticMethod = (this: unknown, ...args: unknown[]) => unknown
+
+type PhysicalQueryCounters = {
+  calls: number
+  returnedTrue: number
+  returnedFalse: number
+  threw: number
+  originalElapsedMs: number
+  attributedToSingleCalls: number
+  unattributedCalls: number
+}
+
+type HdRuntimeDiagnostic = {
+  diagnostic: "hd-runtime-observation"
+  recentPointKeyLimitPerSingle: number
+  observingHighDensity: boolean
+  enteredHighDensity: boolean
+  observedSingleCount: number
+  pointQueries: PhysicalQueryCounters
+  segmentQueries: PhysicalQueryCounters
+  exactRecentPointRepeatHits: number
+  repeatResultDisagreements: number
+  recentPointWindowInsertions: number
+  recentPointWindowEvictions: number
+  pointKeyUnavailableCalls: number
+  observationErrors: number
+  lastObservationError: string | null
+  hooks: { target: string; status: string }[]
+  portfolioOutcomes: Record<string, unknown>[]
+  limitations: string[]
+}
+
+type HdRuntimeObservation = {
+  diagnostic: HdRuntimeDiagnostic
+  setPhase: (phase: string) => void
+  restore: () => void
+}
+
+const createPhysicalQueryCounters = (): PhysicalQueryCounters => {
+  return {
+    calls: 0,
+    returnedTrue: 0,
+    returnedFalse: 0,
+    threw: 0,
+    originalElapsedMs: 0,
+    attributedToSingleCalls: 0,
+    unattributedCalls: 0,
+  }
+}
+
+const getDiagnosticClassName = (value: unknown): string | null => {
+  if (typeof value !== "object" || value === null) return null
+  const prototype = Object.getPrototypeOf(value)
+  if (!prototype) return null
+  const constructor = Object.getOwnPropertyDescriptor(prototype, "constructor")
+  if (!constructor || typeof constructor.value !== "function") return null
+  const name = Object.getOwnPropertyDescriptor(constructor.value, "name")
+  return typeof name?.value === "string" ? name.value : null
+}
+
+const getDiagnosticScalarFields = (
+  value: unknown,
+): Record<string, string | number | boolean | null> => {
+  const result: Record<string, string | number | boolean | null> = {}
+  if (typeof value !== "object" || value === null) return result
+  for (const [key, descriptor] of Object.entries(
+    Object.getOwnPropertyDescriptors(value),
+  )) {
+    if (!("value" in descriptor)) continue
+    const field = descriptor.value
+    if (
+      field === null ||
+      typeof field === "string" ||
+      typeof field === "number" ||
+      typeof field === "boolean"
+    ) {
+      result[key] = field
+    }
+  }
+  return result
+}
+
+/** Isolated diagnostic process only; no routing predicates are memoized. */
+const installHdRuntimeObservation = (
+  pipeline: Pipeline,
+): HdRuntimeObservation => {
+  const diagnostic: HdRuntimeDiagnostic = {
+    diagnostic: "hd-runtime-observation",
+    recentPointKeyLimitPerSingle: 4096,
+    observingHighDensity: false,
+    enteredHighDensity: false,
+    observedSingleCount: 0,
+    pointQueries: createPhysicalQueryCounters(),
+    segmentQueries: createPhysicalQueryCounters(),
+    exactRecentPointRepeatHits: 0,
+    repeatResultDisagreements: 0,
+    recentPointWindowInsertions: 0,
+    recentPointWindowEvictions: 0,
+    pointKeyUnavailableCalls: 0,
+    observationErrors: 0,
+    lastObservationError: null,
+    hooks: [],
+    portfolioOutcomes: [],
+    limitations: [
+      "Instrumentation overhead changes diagnostic wall time; this is not a timed benchmark.",
+      "Method elapsed includes the original call, not post-call observer bookkeeping; timer overhead and runtime perturbation remain.",
+      "Exact repeat hits are a lower bound within a 4096 most-recent-distinct-key window per Single instance; evicted keys are not globally unique.",
+      "Point keys include exact numeric XYZ including signed zero, copper diameter, canonical net and physical index identity. Only returned booleans enter the window.",
+      "Recent keys live only in a WeakMap keyed by their Single solver; no point lists or solver references are retained in the artifact.",
+      "observedSingleCount counts instances with a successfully recorded point key, not all constructed Single solvers.",
+      "Portfolio onSolve observations identify that supervisor's selected candidate, not necessarily the final node or board winner; later growth or publication can still fail.",
+      "Candidate iteration totals use each candidate's own counter; they are not recursively summed Single search expansions or measured CPU savings.",
+      "Selected hyperparameters include existing own scalar fields only; arrays, nested objects and getters are not traversed.",
+      "Cache and remote successes that bypass observed Portfolio methods have no inferred candidate work; unavailable methods are reported explicitly.",
+      "Hard process termination may leave only the most recent completed-node checkpoint; active unfinished-node work after it is unavailable.",
+    ],
+  }
+  const originals: {
+    target: object
+    name: string
+    descriptor: PropertyDescriptor | undefined
+  }[] = []
+  const singleWindows = new WeakMap<object, Map<string, boolean>>()
+  const registeredSingles = new WeakSet<object>()
+  const installedIndexes = new WeakSet<object>()
+  const recordedPortfolios = new WeakSet<object>()
+  let nextIndexId = 0
+  let activeSingle: object | undefined
+  let restored = false
+
+  const recordObservationError = (error: unknown): void => {
+    diagnostic.observationErrors++
+    diagnostic.lastObservationError =
+      error instanceof Error ? error.message : String(error)
+    if (diagnostic.observationErrors === 1) {
+      console.error("HD runtime observation failed", error)
+    }
+  }
+
+  const wrapMethod = (
+    target: object,
+    name: string,
+    label: string,
+    createWrapper: (original: DiagnosticMethod) => DiagnosticMethod,
+  ): void => {
+    try {
+      const ownDescriptor = Object.getOwnPropertyDescriptor(target, name)
+      let owner: object | null = target
+      let descriptor = ownDescriptor
+      while (owner && descriptor === undefined) {
+        owner = Object.getPrototypeOf(owner)
+        if (owner) descriptor = Object.getOwnPropertyDescriptor(owner, name)
+      }
+      if (
+        !descriptor ||
+        !("value" in descriptor) ||
+        typeof descriptor.value !== "function"
+      ) {
+        diagnostic.hooks.push({ target: label, status: "method-unavailable" })
+        return
+      }
+      Object.defineProperty(target, name, {
+        ...descriptor,
+        value: createWrapper(descriptor.value as DiagnosticMethod),
+      })
+      originals.push({ target, name, descriptor: ownDescriptor })
+      diagnostic.hooks.push({ target: label, status: "installed" })
+    } catch (error) {
+      diagnostic.hooks.push({ target: label, status: "install-error" })
+      recordObservationError(error)
+    }
+  }
+
+  const observePointResult = (
+    query: unknown,
+    indexId: number,
+    result: boolean,
+    single: object,
+  ): void => {
+    const point = getDiagnosticOwnValue(query, "point")
+    const coordinates = [
+      getDiagnosticOwnValue(point, "x"),
+      getDiagnosticOwnValue(point, "y"),
+      getDiagnosticOwnValue(point, "z"),
+      getDiagnosticOwnValue(query, "copperDiameter"),
+    ]
+    const netId = getDiagnosticOwnValue(query, "canonicalNetId")
+    if (
+      typeof netId !== "string" ||
+      coordinates.some(
+        (value): boolean =>
+          typeof value !== "number" || !Number.isFinite(value),
+      )
+    ) {
+      diagnostic.pointKeyUnavailableCalls++
+      return
+    }
+    const key = JSON.stringify([
+      indexId,
+      netId,
+      ...coordinates.map((value): string =>
+        Object.is(value, -0) ? "-0" : String(value),
+      ),
+    ])
+    let window = singleWindows.get(single)
+    if (!window) {
+      window = new Map<string, boolean>()
+      singleWindows.set(single, window)
+      diagnostic.observedSingleCount++
+    }
+    if (window.has(key)) {
+      diagnostic.exactRecentPointRepeatHits++
+      if (window.get(key) !== result) diagnostic.repeatResultDisagreements++
+      window.delete(key)
+    } else {
+      diagnostic.recentPointWindowInsertions++
+      if (window.size === diagnostic.recentPointKeyLimitPerSingle) {
+        const oldest = window.keys().next()
+        if (!oldest.done) window.delete(oldest.value)
+        diagnostic.recentPointWindowEvictions++
+      }
+    }
+    window.set(key, result)
+  }
+
+  const installContextIndexes = (context: unknown): void => {
+    for (const field of ["traceClearanceIndex", "viaClearanceIndex"]) {
+      const index = getDiagnosticOwnValue(context, field)
+      if (
+        typeof index !== "object" ||
+        index === null ||
+        installedIndexes.has(index)
+      ) {
+        continue
+      }
+      installedIndexes.add(index)
+      const indexId = nextIndexId++
+      for (const method of ["isPointClear", "isSegmentClear"] as const) {
+        const createObservedIndexMethod = (
+          original: DiagnosticMethod,
+        ): DiagnosticMethod => {
+          return function (this: unknown, ...args: unknown[]): unknown {
+            if (!diagnostic.observingHighDensity) {
+              return original.apply(this, args)
+            }
+            const single = activeSingle
+            const started = performance.now()
+            let returned = false
+            let result: unknown
+            try {
+              result = original.apply(this, args)
+              returned = true
+              return result
+            } finally {
+              const elapsed = performance.now() - started
+              try {
+                const counters =
+                  method === "isPointClear"
+                    ? diagnostic.pointQueries
+                    : diagnostic.segmentQueries
+                counters.calls++
+                counters.originalElapsedMs += elapsed
+                if (single) counters.attributedToSingleCalls++
+                else counters.unattributedCalls++
+                if (!returned) counters.threw++
+                else if (result === true) counters.returnedTrue++
+                else if (result === false) counters.returnedFalse++
+                if (
+                  method === "isPointClear" &&
+                  single &&
+                  typeof result === "boolean" &&
+                  returned
+                ) {
+                  observePointResult(args[0], indexId, result, single)
+                }
+              } catch (error) {
+                recordObservationError(error)
+              }
+            }
+          }
+        }
+        wrapMethod(
+          index,
+          method,
+          `index${indexId}.${field}.${method}`,
+          createObservedIndexMethod,
+        )
+      }
+    }
+  }
+
+  for (const method of [
+    "isPhysicalTracePointClear",
+    "isPhysicalTraceSegmentClear",
+    "isPhysicalViaClear",
+  ]) {
+    const createObservedSingleMethod = (
+      original: DiagnosticMethod,
+    ): DiagnosticMethod => {
+      return function (this: unknown, ...args: unknown[]): unknown {
+        const previousSingle = activeSingle
+        try {
+          if (
+            diagnostic.observingHighDensity &&
+            typeof this === "object" &&
+            this !== null
+          ) {
+            activeSingle = this
+            if (!registeredSingles.has(this)) {
+              installContextIndexes(
+                getDiagnosticOwnValue(this, "physicalClearanceContext"),
+              )
+              registeredSingles.add(this)
+            }
+          }
+        } catch (error) {
+          recordObservationError(error)
+        }
+        try {
+          return original.apply(this, args)
+        } finally {
+          activeSingle = previousSingle
+        }
+      }
+    }
+    wrapMethod(
+      SingleHighDensityRouteSolver.prototype,
+      method,
+      `Single.${method}`,
+      createObservedSingleMethod,
+    )
+  }
+
+  const capturePortfolio = (
+    portfolio: object,
+    selected: unknown,
+    outcome: string,
+  ): void => {
+    if (recordedPortfolios.has(portfolio)) return
+    recordedPortfolios.add(portfolio)
+    const candidates = getDiagnosticOwnValue(portfolio, "supervisedSolvers")
+    const workByClass: Record<
+      string,
+      { count: number; iterations: number; solved: number; failed: number }
+    > = {}
+    let totalCandidateIterations = 0
+    if (Array.isArray(candidates)) {
+      for (const candidate of candidates) {
+        const solver = getDiagnosticOwnValue(candidate, "solver")
+        const className = getDiagnosticClassName(solver) ?? "unavailable"
+        const iterations = getDiagnosticOwnValue(solver, "iterations")
+        if (!workByClass[className]) {
+          workByClass[className] = {
+            count: 0,
+            iterations: 0,
+            solved: 0,
+            failed: 0,
+          }
+        }
+        const work = workByClass[className]!
+        work.count++
+        if (typeof iterations === "number") {
+          work.iterations += iterations
+          totalCandidateIterations += iterations
+        }
+        if (getDiagnosticOwnValue(solver, "solved") === true) work.solved++
+        if (getDiagnosticOwnValue(solver, "failed") === true) work.failed++
+      }
+    }
+    const winner = getDiagnosticOwnValue(selected, "solver")
+    const node = getDiagnosticOwnValue(portfolio, "nodeWithPortPoints")
+    diagnostic.portfolioOutcomes.push({
+      outcome,
+      nodeId: getDiagnosticOwnValue(node, "capacityMeshNodeId") ?? null,
+      portfolioClass: getDiagnosticClassName(portfolio),
+      portfolioIterations: getDiagnosticOwnValue(portfolio, "iterations") ?? null,
+      candidateCount: Array.isArray(candidates) ? candidates.length : null,
+      totalCandidateIterations,
+      workByClass,
+      selectedClass: getDiagnosticClassName(winner),
+      selectedIterations: getDiagnosticOwnValue(winner, "iterations") ?? null,
+      selectedScalarHyperParameters: getDiagnosticScalarFields(
+        getDiagnosticOwnValue(selected, "hyperParameters"),
+      ),
+    })
+  }
+  for (const method of ["onSolve", "_step"] as const) {
+    const createObservedPortfolioMethod = (
+      original: DiagnosticMethod,
+    ): DiagnosticMethod => {
+      return function (this: unknown, ...args: unknown[]): unknown {
+        let returned = false
+        try {
+          const result = original.apply(this, args)
+          returned = true
+          return result
+        } finally {
+          try {
+            if (
+              diagnostic.observingHighDensity &&
+              typeof this === "object" &&
+              this !== null
+            ) {
+              if (method === "onSolve") {
+                capturePortfolio(
+                  this,
+                  args[0],
+                  returned ? "onSolve-returned" : "onSolve-threw",
+                )
+              } else if (
+                !returned ||
+                getDiagnosticOwnValue(this, "failed") === true
+              ) {
+                capturePortfolio(
+                  this,
+                  undefined,
+                  returned ? "failed-step" : "step-threw",
+                )
+              }
+            }
+          } catch (error) {
+            recordObservationError(error)
+          }
+        }
+      }
+    }
+    wrapMethod(
+      PortfolioSingleIntraNodeSolver.prototype,
+      method,
+      `Portfolio.${method}`,
+      createObservedPortfolioMethod,
+    )
+  }
+  return {
+    diagnostic,
+    setPhase: (phase): void => {
+      diagnostic.observingHighDensity = phase === "highDensityRouteSolver"
+      if (!diagnostic.observingHighDensity || diagnostic.enteredHighDensity) {
+        return
+      }
+      diagnostic.enteredHighDensity = true
+      try {
+        const context = getDiagnosticOwnValue(pipeline, "fixedPadClearance")
+        if (context === undefined) {
+          diagnostic.hooks.push({
+            target: "Pipeline.fixedPadClearance",
+            status: "context-unavailable-at-hd-entry",
+          })
+        } else {
+          installContextIndexes(context)
+        }
+      } catch (error) {
+        recordObservationError(error)
+      }
+    },
+    restore: (): void => {
+      diagnostic.observingHighDensity = false
+      if (restored) return
+      restored = true
+      for (const original of originals.reverse()) {
+        try {
+          if (original.descriptor) {
+            Object.defineProperty(
+              original.target,
+              original.name,
+              original.descriptor,
+            )
+          } else {
+            if (!Reflect.deleteProperty(original.target, original.name)) {
+              throw new Error(
+                `HD runtime observer could not restore ${original.name}`,
+              )
+            }
+          }
+        } catch (error) {
+          recordObservationError(error)
+        }
+      }
+      originals.length = 0
+    },
+  }
+}
+
 const NODE_PHASES = new Set([
   "highDensityRouteSolver",
   "highDensityForceImproveSolver",
@@ -896,6 +1527,32 @@ const diagnosePipelineDrc = async (): Promise<void> => {
   let tinyFailureDiagnostic: TinyFailureDiagnostic | undefined
   let previousPathingWrapper: unknown
   let previousPathingActiveSolver: unknown
+  const hdRuntimeObservation =
+    process.env.HD_DRC_RUNTIME_OBSERVATION === "1"
+      ? installHdRuntimeObservation(pipeline)
+      : undefined
+  const writeRuntimeObservation = async (checkpoint: string): Promise<void> => {
+    if (!hdRuntimeObservation) return
+    try {
+      await writeFile(
+        path.join(outputDir, "hd-runtime-observation.json"),
+        JSON.stringify({
+          dataset: datasetArg,
+          sample,
+          pipeline: pipelineArg,
+          checkpoint,
+          phase:
+            pipeline.pipelineDef[pipeline.currentPipelineStepIndex]?.solverName,
+          solved: pipeline.solved,
+          failed: pipeline.failed,
+          error: pipeline.error,
+          ...hdRuntimeObservation.diagnostic,
+        }),
+      )
+    } catch (artifactError) {
+      console.error("HD runtime observation artifact write failed", artifactError)
+    }
+  }
   const originalRepair04GetOutput = Repair04Solver.prototype.getOutput
   // This controller runs in its own process, never a shared Bun test process.
   Repair04Solver.prototype.getOutput = function (
@@ -952,6 +1609,7 @@ const diagnosePipelineDrc = async (): Promise<void> => {
   try {
     while (!pipeline.solved && !pipeline.failed) {
       const phase = pipeline.getCurrentPhase()
+      hdRuntimeObservation?.setPhase(phase)
       if (
         phase === "pipeline9JointDrcRepairSolver" &&
         pipeline instanceof AutoroutingPipelineSolver9_PreloadedTraceGraph &&
@@ -994,6 +1652,68 @@ const diagnosePipelineDrc = async (): Promise<void> => {
       try {
         pipeline.step()
       } catch (error) {
+        if (
+          pipeline instanceof AutoroutingPipelineSolver9_PreloadedTraceGraph &&
+          (phase === "highDensityForceImproveSolver" ||
+            pipeline.getCurrentPhase() === "highDensityForceImproveSolver")
+        ) {
+          try {
+            const forceDescriptor = Object.getOwnPropertyDescriptor(
+              pipeline,
+              "highDensityForceImproveSolver",
+            )
+            const forceInstance = getDiagnosticOwnValue(
+              pipeline,
+              "highDensityForceImproveSolver",
+            )
+            await writeFile(
+              path.join(outputDir, "high-density-force-step-failure.json"),
+              JSON.stringify({
+                diagnostic: "high-density-force-step-failure",
+                dataset: datasetArg,
+                sample,
+                pipeline: pipelineArg,
+                phaseBeforeStep: phase,
+                phaseAfterStep: pipeline.getCurrentPhase(),
+                error: error instanceof Error ? error.message : String(error),
+                stack: error instanceof Error ? (error.stack ?? null) : null,
+                pipelineState: selectDiagnosticOwnFields(pipeline, [
+                  "solved",
+                  "failed",
+                  "error",
+                ]),
+                outerForceOwnFieldStatus:
+                  forceDescriptor === undefined
+                    ? "absent-own-field"
+                    : "value" in forceDescriptor
+                      ? "observed-own-data-field"
+                      : "unsupported-own-accessor",
+                outerForceInstancePresent:
+                  forceDescriptor === undefined || "value" in forceDescriptor
+                    ? typeof forceInstance === "object" &&
+                      forceInstance !== null
+                    : null,
+                outerForceState: selectDiagnosticOwnFields(forceInstance, [
+                  "solved",
+                  "failed",
+                  "iterations",
+                  "error",
+                ]),
+                limitations: [
+                  "The phase name can identify constructor input preparation before a force instance exists.",
+                  "No force output is requested during failure capture; completed force output uses the existing stage artifact.",
+                  "Regional inner-stage provenance is unavailable unless separately observed.",
+                ],
+              }),
+            )
+          } catch (captureError) {
+            // Preserve the same solver exception, even if artifact I/O fails.
+            console.error(
+              "high-density force failure capture failed",
+              captureError,
+            )
+          }
+        }
         if (pipeline.getCurrentPhase() === "pipeline9JointDrcRepairSolver") {
           jointEvaluatorDiagnostic.failure = {
             phase: pipeline.getCurrentPhase(),
@@ -1081,8 +1801,46 @@ const diagnosePipelineDrc = async (): Promise<void> => {
             : null,
           routes: hd.routes.slice(routeStart),
         })
+        if (hdRuntimeObservation) {
+          await writeRuntimeObservation("completed-node")
+        }
       }
       if (pipeline.getCurrentPhase() !== phase) {
+        if (
+          phase === "highDensityRouteSolver" &&
+          pipeline instanceof AutoroutingPipelineSolver9_PreloadedTraceGraph
+        ) {
+          try {
+            // Serialize raw copper before conversion/evaluation and before the
+            // next normal pipeline step prepares the outer force constructor.
+            await writeFile(
+              path.join(outputDir, "high-density-raw-invalid-transitions.json"),
+              JSON.stringify({
+                diagnostic: "high-density-raw-invalid-transitions",
+                dataset: datasetArg,
+                sample,
+                pipeline: pipelineArg,
+                phase,
+                nextPhase: pipeline.getCurrentPhase(),
+                ...captureInvalidRawHdTransitions(pipeline, nodes),
+                limitations: [
+                  "Raw outer-HD output can include an existing regional solver's internal force and repair stages.",
+                  "Producer metadata is attached only through retained route object identity, not connection-name inference.",
+                  "Only transitions rejected by the current materializer predicate are retained; no route is changed or replayed.",
+                ],
+              }),
+            )
+          } catch (captureError) {
+            console.error(
+              "raw high-density transition capture failed",
+              captureError,
+            )
+          }
+        }
+        if (phase === "highDensityRouteSolver" && hdRuntimeObservation) {
+          hdRuntimeObservation.restore()
+          await writeRuntimeObservation("high-density-complete")
+        }
         if (
           phase === "topologyMergingSolver" &&
           pipeline instanceof AutoroutingPipelineSolver9_PreloadedTraceGraph
@@ -1191,6 +1949,10 @@ const diagnosePipelineDrc = async (): Promise<void> => {
   } finally {
     Repair04Solver.prototype.getOutput = originalRepair04GetOutput
     restoreJointEvaluators?.()
+    hdRuntimeObservation?.restore()
+    if (hdRuntimeObservation) {
+      await writeRuntimeObservation("final-or-failure")
+    }
     if (
       pipeline.failed &&
       pipeline.getCurrentPhase() === "pipeline9JointDrcRepairSolver" &&
@@ -1240,6 +2002,50 @@ const diagnosePipelineDrc = async (): Promise<void> => {
       } catch (artifactError) {
         // Preserve the original throw or recorded failed-state outcome.
         console.error("tiny capture artifact write failed", artifactError)
+      }
+      if (process.env.HD_DRC_STATIC_REACHABILITY_CERTIFICATE === "1") {
+        try {
+          // Observation is restored above. Analyze only the completed capture,
+          // never a live solver, its queues, or a reconstructed routing pass.
+          const certificate = createTinyStaticReachabilityCertificate(
+            JSON.parse(tinyFailureDiagnostic.serialized),
+          )
+          await writeFile(
+            path.join(outputDir, "tiny-static-reachability.json"),
+            JSON.stringify({
+              dataset: datasetArg,
+              sample,
+              pipeline: pipelineArg,
+              ...certificate,
+            }),
+          )
+          console.error(
+            JSON.stringify({
+              diagnostic: certificate.diagnostic,
+              status: certificate.status,
+              model: certificate.model,
+              elapsedMs: certificate.elapsedMs,
+              instances: certificate.instances.map(
+                (instance): Record<string, unknown> =>
+                  instance.status === "complete"
+                    ? {
+                        source: instance.source,
+                        attemptedNeverSuccessfulCount:
+                          instance.attemptedNeverSuccessfulCount,
+                        disconnectedCount: instance.routes.filter(
+                          (route): boolean =>
+                            route.status ===
+                            "disconnected-in-optimistic-graph",
+                        ).length,
+                      }
+                    : instance,
+              ),
+            }),
+          )
+        } catch (certificateError) {
+          // Diagnostic failure must not replace the original solver outcome.
+          console.error("tiny static certificate failed", certificateError)
+        }
       }
     }
     if (uniformFailureDiagnostic) {
