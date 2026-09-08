@@ -1586,74 +1586,87 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         syntheticConnectionNames: this.syntheticConnectionNames,
         drcEvaluator: this.drcEvaluator!,
       })
-      const preloadRepairTraceIds = getPipeline9PreloadRepairTraceIds({
-        routes: terminalEscapeResult.routes,
-        newConnections: this.params.newConnections,
-        syntheticConnectionNames: this.syntheticConnectionNames,
-        fixedPreloadedObstacleRoutes: this.fixedPreloadedObstacleRoutes,
-        updatedPreloadedTraces: this.params.updatedPreloadedTraces,
-      })
-      const regionalStartedAt = performance.now()
-      const regionalB01RepairResult = applyPipeline9RegionalB01Repairs({
-        srj: this.params.srj,
-        routes: terminalEscapeResult.routes,
-        fixedObstacleRoutes: this.fixedPreloadedObstacleRoutes,
-        newConnections: this.params.newConnections,
-        syntheticConnectionNames: this.syntheticConnectionNames,
-        drcEvaluator: this.drcEvaluator!,
-        initialErrors: terminalEscapeResult.remainingErrors,
-        preloadRepairTraceIds,
-        connMap: this.params.connMap,
-        colorMap: this.params.colorMap,
-        viaDiameter: this.params.defaultViaDiameter,
-        traceWidth: this.params.srj.minTraceWidth,
-        obstacleMargin:
-          this.params.srj.defaultObstacleMargin ??
-          this.params.srj.minTraceToPadEdgeClearance ??
-          0.15,
-        effort: this.params.effort,
-      })
-      stats.regionalB01RepairTimeMs += performance.now() - regionalStartedAt
-      const boundedStartedAt = performance.now()
-      const boundedRegionalRepairResult = applyPipeline9BoundedRegionalRepairs({
-        originalSrj: this.params.originalSrj,
-        routes: regionalB01RepairResult.routes,
-        syntheticConnectionNames: this.syntheticConnectionNames,
-        drcEvaluator: this.cachedReferenceDrcEvaluator!,
-        viaHoleDiameter: this.params.defaultViaHoleDiameter,
-      })
-      stats.boundedRegionalRepairTimeMs += performance.now() - boundedStartedAt
-      stats.boundedRegionalRepairAttemptedRegionCount +=
-        boundedRegionalRepairResult.attemptedRegionCount
-      stats.boundedRegionalRepairAcceptedRegionCount +=
-        boundedRegionalRepairResult.acceptedRegionCount
-      stats.boundedRegionalRepairCandidateAttemptCount +=
-        boundedRegionalRepairResult.candidateAttemptCount
-      stats.boundedRegionalRepairPathSearchNodeCount +=
-        boundedRegionalRepairResult.pathSearchNodeCount
-      stats.boundedRegionalRepairReferenceValidationCount +=
-        boundedRegionalRepairResult.referenceValidationCount
-      stats.regionalB01RepairCandidateCount +=
-        regionalB01RepairResult.attemptedCandidateCount
-      stats.regionalB01RepairAcceptedCount +=
-        regionalB01RepairResult.acceptedCandidateCount
-      stats.regionalB01RepairFallbackCandidateCount +=
-        regionalB01RepairResult.fallbackCandidateCount
-      stats.regionalB01RepairCandidateSearchCount +=
-        regionalB01RepairResult.candidateSearchCount
-      stats.regionalB01RepairCandidateSearchBudget +=
-        regionalB01RepairResult.candidateSearchBudget
-      stats.regionalB01RepairCandidateSearchBudgetExhausted ||=
-        regionalB01RepairResult.candidateSearchBudgetExhausted
-      stats.regionalB01RepairSafeTraceLayerSkippedForBudget ||=
-        regionalB01RepairResult.safeTraceLayerRepairSkippedForBudget
-      stats.regionalB01RepairPreloadEligibleDrcIssueCount =
-        regionalB01RepairResult.preloadEligibleDrcIssueCount
-      stats.regionalB01RepairAttempted ||=
-        regionalB01RepairResult.preloadRepairAttempted
-      stats.regionalB01RepairTraceIdCount =
-        preloadRepairTraceIds.size +
-        (preloadRepairTraceIds.collidingFixedTraceIds?.size ?? 0)
+      let regionalRoutes = terminalEscapeResult.routes
+      let boundedRegionalRepaired = false
+      let regionalB01RemainingDrcIssueCount = 0
+      // Cropped negotiated repair edits complete routes. Preloaded copper
+      // instead requires the regional solver's fixed-section splice support.
+      if (canMoveWholeRoutes) {
+        const boundedStartedAt = performance.now()
+        const boundedRegionalRepairResult = applyPipeline9BoundedRegionalRepairs({
+          originalSrj: this.params.originalSrj,
+          routes: terminalEscapeResult.routes,
+          syntheticConnectionNames: this.syntheticConnectionNames,
+          drcEvaluator: this.cachedReferenceDrcEvaluator!,
+          viaHoleDiameter: this.params.defaultViaHoleDiameter,
+        })
+        stats.boundedRegionalRepairTimeMs += performance.now() - boundedStartedAt
+        stats.boundedRegionalRepairAttemptedRegionCount +=
+          boundedRegionalRepairResult.attemptedRegionCount
+        stats.boundedRegionalRepairAcceptedRegionCount +=
+          boundedRegionalRepairResult.acceptedRegionCount
+        stats.boundedRegionalRepairCandidateAttemptCount +=
+          boundedRegionalRepairResult.candidateAttemptCount
+        stats.boundedRegionalRepairPathSearchNodeCount +=
+          boundedRegionalRepairResult.pathSearchNodeCount
+        stats.boundedRegionalRepairReferenceValidationCount +=
+          boundedRegionalRepairResult.referenceValidationCount
+        regionalRoutes = boundedRegionalRepairResult.routes
+        boundedRegionalRepaired = boundedRegionalRepairResult.repaired
+      } else {
+        const preloadRepairTraceIds = getPipeline9PreloadRepairTraceIds({
+          routes: terminalEscapeResult.routes,
+          newConnections: this.params.newConnections,
+          syntheticConnectionNames: this.syntheticConnectionNames,
+          fixedPreloadedObstacleRoutes: this.fixedPreloadedObstacleRoutes,
+          updatedPreloadedTraces: this.params.updatedPreloadedTraces,
+        })
+        const regionalStartedAt = performance.now()
+        const regionalB01RepairResult = applyPipeline9RegionalB01Repairs({
+          srj: this.params.srj,
+          routes: terminalEscapeResult.routes,
+          fixedObstacleRoutes: this.fixedPreloadedObstacleRoutes,
+          newConnections: this.params.newConnections,
+          syntheticConnectionNames: this.syntheticConnectionNames,
+          drcEvaluator: this.drcEvaluator!,
+          initialErrors: terminalEscapeResult.remainingErrors,
+          preloadRepairTraceIds,
+          connMap: this.params.connMap,
+          colorMap: this.params.colorMap,
+          viaDiameter: this.params.defaultViaDiameter,
+          traceWidth: this.params.srj.minTraceWidth,
+          obstacleMargin:
+            this.params.srj.defaultObstacleMargin ??
+            this.params.srj.minTraceToPadEdgeClearance ??
+            0.15,
+          effort: this.params.effort,
+        })
+        stats.regionalB01RepairTimeMs += performance.now() - regionalStartedAt
+        stats.regionalB01RepairCandidateCount +=
+          regionalB01RepairResult.attemptedCandidateCount
+        stats.regionalB01RepairAcceptedCount +=
+          regionalB01RepairResult.acceptedCandidateCount
+        stats.regionalB01RepairFallbackCandidateCount +=
+          regionalB01RepairResult.fallbackCandidateCount
+        stats.regionalB01RepairCandidateSearchCount +=
+          regionalB01RepairResult.candidateSearchCount
+        stats.regionalB01RepairCandidateSearchBudget +=
+          regionalB01RepairResult.candidateSearchBudget
+        stats.regionalB01RepairCandidateSearchBudgetExhausted ||=
+          regionalB01RepairResult.candidateSearchBudgetExhausted
+        stats.regionalB01RepairSafeTraceLayerSkippedForBudget ||=
+          regionalB01RepairResult.safeTraceLayerRepairSkippedForBudget
+        stats.regionalB01RepairPreloadEligibleDrcIssueCount =
+          regionalB01RepairResult.preloadEligibleDrcIssueCount
+        stats.regionalB01RepairAttempted ||=
+          regionalB01RepairResult.preloadRepairAttempted
+        stats.regionalB01RepairTraceIdCount =
+          preloadRepairTraceIds.size +
+          (preloadRepairTraceIds.collidingFixedTraceIds?.size ?? 0)
+        regionalRoutes = regionalB01RepairResult.routes
+        regionalB01RemainingDrcIssueCount =
+          regionalB01RepairResult.remainingDrcIssueCount
+      }
       stats.terminalEscapeCandidateCount +=
         terminalEscapeResult.attemptedCandidateCount
       stats.terminalEscapeAcceptedCount +=
@@ -1662,13 +1675,13 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       const projectionStartedAt = performance.now()
       const projectedRoutes = applyPipeline9ClearanceProjection({
         originalSrj: this.params.originalSrj,
-        routes: boundedRegionalRepairResult.routes,
+        routes: regionalRoutes,
         syntheticConnectionNames: this.syntheticConnectionNames,
         drcEvaluator: this.cachedReferenceDrcEvaluator!,
       })
       stats.postExactRegionalProjectionTimeMs +=
         performance.now() - projectionStartedAt
-      if (projectedRoutes !== boundedRegionalRepairResult.routes) {
+      if (projectedRoutes !== regionalRoutes) {
         stats.postExactRegionalProjectionAcceptedCount++
       }
       // Rerouting and projection can bring same-net drills together again.
@@ -1712,10 +1725,9 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       if (coalescedRoutes !== routes || candidate !== projectedRoutes) {
         stats.coalescedViaSweepCount++
       }
-      stats.boundedRegionalRepairRepaired ||=
-        boundedRegionalRepairResult.repaired
+      stats.boundedRegionalRepairRepaired ||= boundedRegionalRepaired
       stats.regionalB01RepairRemainingDrcIssueCount =
-        regionalB01RepairResult.remainingDrcIssueCount
+        regionalB01RemainingDrcIssueCount
       routes = candidate
       errorCount = candidateErrorCount
     }
