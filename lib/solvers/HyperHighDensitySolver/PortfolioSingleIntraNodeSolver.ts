@@ -316,11 +316,13 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       this.getHyperParameterDefs === defaultPortfolio.getHyperParameterDefs &&
       this.getHyperParameterCombinations ===
         defaultPortfolio.getHyperParameterCombinations &&
-      this.generateSolver === defaultPortfolio.generateSolver
+      this.generateSolver === defaultPortfolio.generateSolver &&
+      this.getSupervisedSolverWithBestFitness ===
+        defaultPortfolio.getSupervisedSolverWithBestFitness
     // These are the only default candidates that can solve in their
     // constructors, in the same order in which the supervisor selects them.
     // Check them before allocating the search candidates and their grids.
-    // Customized portfolios must construct their actual candidate definitions.
+    // Customized definitions and selectors require the complete portfolio.
     const constructorCandidateNames = canPreflightConstructorCandidates
       ? ["THROUGH_OBSTACLE", "CLOSED_FORM_SINGLE_TRANSITION"]
       : []

@@ -667,6 +667,8 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     const neighbors: Node[] = []
     let planarObstacleQuery: PlanarObstacleQuery | undefined
     const canSharePlanarObstacleQuery =
+      this.getPlanarObstacleQuery ===
+        SingleHighDensityRouteSolver.prototype.getPlanarObstacleQuery &&
       this.NEARBY_SEGMENT_CLEARANCE <= this.traceThickness + this.obstacleMargin
     const canComputeCoordinateKey =
       this.getNodeKey === SingleHighDensityRouteSolver.prototype.getNodeKey

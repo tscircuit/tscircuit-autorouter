@@ -21,14 +21,13 @@ test("cost memoization distinguishes exact coordinates and planar versus via arr
       },
     ],
   })
-  const getPenalty = solver.getFutureConnectionPenalty.bind(solver)
   let calculations = 0
-  solver.getFutureConnectionPenalty = (node: Node, isVia: boolean): number => {
-    calculations++
-    const penalty = getPenalty(node, isVia)
-    expect(Number.isFinite(penalty)).toBe(true)
-    return penalty
-  }
+  solver.futureConnectionPoints = new Proxy(solver.futureConnectionPoints, {
+    get(target, property, receiver) {
+      if (property === Symbol.iterator) calculations++
+      return Reflect.get(target, property, receiver)
+    },
+  })
   const parent: Node = { x: -0.05, y: 0, z: 0, g: 1, h: 0, f: 0, parent: null }
   const node: Node = { x: 0, y: 0, z: 0, g: 0, h: 0, f: 0, parent }
   solver.setNodeCosts(node)

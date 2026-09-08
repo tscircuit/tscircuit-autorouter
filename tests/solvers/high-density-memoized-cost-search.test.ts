@@ -128,29 +128,26 @@ test("memoized costs preserve full searches across exact starts, bounds and laye
       expect(memoized.candidates.peek()!.x).toBe(opts.A.x)
       expect(memoized.candidates.peek()!.y).toBe(opts.A.y)
     }
-    const memoizedPenalty = memoized.getFutureConnectionPenalty.bind(memoized)
-    const referencePenalty =
-      reference.getFutureConnectionPenalty.bind(reference)
     let sampleMemoizedCalculations = 0
     let sampleReferenceCalculations = 0
-    memoized.getFutureConnectionPenalty = (
-      node: Node,
-      isVia: boolean,
-    ): number => {
-      sampleMemoizedCalculations++
-      const penalty = memoizedPenalty(node, isVia)
-      memoizedCalculations++
-      return penalty
-    }
-    reference.getFutureConnectionPenalty = (
-      node: Node,
-      isVia: boolean,
-    ): number => {
-      sampleReferenceCalculations++
-      const penalty = referencePenalty(node, isVia)
-      referenceCalculations++
-      return penalty
-    }
+    memoized.futureConnectionPoints = new Proxy(memoized.futureConnectionPoints, {
+      get(target, property, receiver) {
+        if (property === Symbol.iterator) {
+          sampleMemoizedCalculations++
+          memoizedCalculations++
+        }
+        return Reflect.get(target, property, receiver)
+      },
+    })
+    reference.futureConnectionPoints = new Proxy(reference.futureConnectionPoints, {
+      get(target, property, receiver) {
+        if (property === Symbol.iterator) {
+          sampleReferenceCalculations++
+          referenceCalculations++
+        }
+        return Reflect.get(target, property, receiver)
+      },
+    })
     memoized.solve()
     reference.solve()
     if (sampleMemoizedCalculations < sampleReferenceCalculations) {

@@ -11,6 +11,18 @@ type NodeCostTerms = {
   viaFuturePenalty: number | undefined
 }
 
+type NodeCostParameters = {
+  goalX: number
+  goalY: number
+  viaDiameter: number
+  futureProximity: number
+  futureTracePenaltyFactor: number
+  futureViaPenaltyFactor: number
+  straightLineDistance: number
+  viaPenaltyDistance: number
+  futureConnectionPoints: Array<{ x: number; y: number; z: number }>
+}
+
 const MAX_DENSE_COST_CACHE_SLOTS = 65_536
 
 export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends SingleHighDensityRouteSolver {
@@ -23,6 +35,7 @@ export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends Sing
   FUTURE_CONNECTION_VIA_TRACE_CLEARANCE = 0.1
   futureConnectionPoints: Array<{ x: number; y: number; z: number }>
   futureConnectionSegmentsCache: FutureConnectionSegment[] | null = null
+  private nodeCostParameters: NodeCostParameters | undefined
   private nodeCostTermsByGridKey = new Map<number, NodeCostTerms>()
   private denseNodeCostTerms:
     | Array<NodeCostTerms | undefined>
@@ -217,6 +230,59 @@ export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends Sing
     )
   }
 
+  private invalidateChangedNodeCostParameters(): void {
+    const previous = this.nodeCostParameters
+    const viaPenaltyDistance = this.viaPenaltyDistance
+    if (
+      previous &&
+      Object.is(previous.goalX, this.B.x) &&
+      Object.is(previous.goalY, this.B.y) &&
+      Object.is(previous.viaDiameter, this.viaDiameter) &&
+      Object.is(previous.futureProximity, this.FUTURE_CONNECTION_PROXIMITY_VD) &&
+      Object.is(
+        previous.futureTracePenaltyFactor,
+        this.FUTURE_CONNECTION_PROX_TRACE_PENALTY_FACTOR,
+      ) &&
+      Object.is(
+        previous.futureViaPenaltyFactor,
+        this.FUTURE_CONNECTION_PROX_VIA_PENALTY_FACTOR,
+      ) &&
+      Object.is(previous.straightLineDistance, this.straightLineDistance) &&
+      Object.is(previous.viaPenaltyDistance, viaPenaltyDistance) &&
+      previous.futureConnectionPoints === this.futureConnectionPoints
+    ) {
+      return
+    }
+
+    // Point geometry stays fixed during a search. Replace the array when
+    // changing future points; scalar routing parameters can change in place.
+    this.nodeCostTermsByGridKey.clear()
+    this.denseNodeCostTerms?.fill(undefined)
+    if (!previous) {
+      this.nodeCostParameters = {
+        goalX: this.B.x,
+        goalY: this.B.y,
+        viaDiameter: this.viaDiameter,
+        futureProximity: this.FUTURE_CONNECTION_PROXIMITY_VD,
+        futureTracePenaltyFactor: this.FUTURE_CONNECTION_PROX_TRACE_PENALTY_FACTOR,
+        futureViaPenaltyFactor: this.FUTURE_CONNECTION_PROX_VIA_PENALTY_FACTOR,
+        straightLineDistance: this.straightLineDistance,
+        viaPenaltyDistance,
+        futureConnectionPoints: this.futureConnectionPoints,
+      }
+      return
+    }
+    previous.goalX = this.B.x
+    previous.goalY = this.B.y
+    previous.viaDiameter = this.viaDiameter
+    previous.futureProximity = this.FUTURE_CONNECTION_PROXIMITY_VD
+    previous.futureTracePenaltyFactor = this.FUTURE_CONNECTION_PROX_TRACE_PENALTY_FACTOR
+    previous.futureViaPenaltyFactor = this.FUTURE_CONNECTION_PROX_VIA_PENALTY_FACTOR
+    previous.straightLineDistance = this.straightLineDistance
+    previous.viaPenaltyDistance = viaPenaltyDistance
+    previous.futureConnectionPoints = this.futureConnectionPoints
+  }
+
   private initializeDenseNodeCostTerms(): void {
     this.denseNodeCostTerms = null
     if (this.getNodeKey !== SingleHighDensityRouteSolver.prototype.getNodeKey)
@@ -253,6 +319,7 @@ export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends Sing
       dist +
       misalignedDist * this.MISALIGNED_DIST_PENALTY_FACTOR
 
+    this.invalidateChangedNodeCostParameters()
     const gridKey = this.getNodeKey(node)
     if (this.denseNodeCostTerms === undefined) {
       this.initializeDenseNodeCostTerms()
@@ -291,13 +358,22 @@ export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends Sing
       costTerms.goalDistancePower +
       (node.z !== this.B.z ? this.viaPenaltyDistance : 0)
     const isVia = node.z !== node.parent?.z
-    let futureConnectionPenalty = isVia
-      ? costTerms.viaFuturePenalty
-      : costTerms.planarFuturePenalty
+    const defaultCosts = SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost.prototype
+    const canMemoizeFuturePenalty =
+      this.getFutureConnectionPenalty === defaultCosts.getFutureConnectionPenalty &&
+      this.getClosestFutureConnectionPoint === defaultCosts.getClosestFutureConnectionPoint
+    let futureConnectionPenalty = canMemoizeFuturePenalty
+      ? isVia
+        ? costTerms.viaFuturePenalty
+        : costTerms.planarFuturePenalty
+      : undefined
     if (futureConnectionPenalty === undefined) {
       futureConnectionPenalty = this.getFutureConnectionPenalty(node, isVia)
-      if (isVia) costTerms.viaFuturePenalty = futureConnectionPenalty
-      else costTerms.planarFuturePenalty = futureConnectionPenalty
+      // Custom hooks can depend on the parent or other mutable search state.
+      if (canMemoizeFuturePenalty) {
+        if (isVia) costTerms.viaFuturePenalty = futureConnectionPenalty
+        else costTerms.planarFuturePenalty = futureConnectionPenalty
+      }
     }
     node.g = baseG + futureConnectionPenalty
     node.h = baseH + futureConnectionPenalty
