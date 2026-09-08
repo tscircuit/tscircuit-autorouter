@@ -1,6 +1,7 @@
 import { expect, test } from "bun:test"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib"
 import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
+import { getBugReportSnapshotSvg } from "lib/testing/getBugReportSnapshotSvg"
 import type { SimpleRouteJson } from "lib/types"
 import bugReport from "../../fixtures/bug-reports/bugreport106-ab9d90/bugreport106-ab9d90.json" with {
   type: "json",
@@ -8,7 +9,7 @@ import bugReport from "../../fixtures/bug-reports/bugreport106-ab9d90/bugreport1
 
 const srj = bugReport.simple_route_json as SimpleRouteJson
 
-test("bugreport106 Corne keyboard records three Pipeline 9 DRC errors", (): void => {
+test("bugreport106 Corne keyboard records three Pipeline 9 DRC errors", async (): Promise<void> => {
   const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(
     structuredClone(srj),
     { cacheProvider: null },
@@ -41,4 +42,12 @@ test("bugreport106 Corne keyboard records three Pipeline 9 DRC errors", (): void
     "pcb_via_trace_clearance_error",
     "pcb_via_trace_clearance_error",
   ])
+
+  await expect(
+    getBugReportSnapshotSvg({
+      inputSrj: srj,
+      srjWithPointPairs,
+      routedTraces: solver.getOutputSimplifiedPcbTraces(),
+    }),
+  ).toMatchSvgSnapshot(import.meta.path)
 })
