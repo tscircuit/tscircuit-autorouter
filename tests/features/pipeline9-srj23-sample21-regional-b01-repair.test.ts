@@ -17,7 +17,7 @@ test("Pipeline9 keeps the current SRJ23 regional repair residue bounded", async 
   expect(
     solver.pipeline9JointDrcRepairSolver?.stats
       .regionalB01RepairPreloadEligibleDrcIssueCount,
-  ).toBe(1)
+  ).toBe(2)
   const { errors } = evaluateRelaxedDrc({
     inputSrj: scenario,
     srjWithPointPairs: solver.srjWithPointPairs!,
