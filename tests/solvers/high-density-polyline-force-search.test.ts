@@ -8,7 +8,10 @@ import cn705 from "fixtures/legacy/assets/cn705-nodeWithPortPoints.json"
 test("polyline geometry reuse preserves complete candidate state during fixture searches", () => {
   const fixtures = [
     {
-      capacityMeshNodeId: "force-simple", center: { x: 5, y: 5 }, width: 2, height: 2,
+      capacityMeshNodeId: "force-simple",
+      center: { x: 5, y: 5 },
+      width: 2,
+      height: 2,
       availableZ: [0, 1],
       portPoints: [
         { connectionName: "A", x: 4, y: 4, z: 1 },
@@ -21,15 +24,27 @@ test("polyline geometry reuse preserves complete candidate state during fixture 
     cn705.nodeWithPortPoints,
   ]
   const state = (solver: MultiHeadPolyLineIntraNodeSolver2) => ({
-    solved: solver.solved, failed: solver.failed, error: solver.error,
-    iterations: solver.iterations, phase: solver.phase, progress: solver.progress,
-    candidates: solver.candidates, lastCandidate: solver.lastCandidate,
-    solvedRoutes: solver.solvedRoutes, unsolvedConnections: solver.unsolvedConnections,
+    solved: solver.solved,
+    failed: solver.failed,
+    error: solver.error,
+    iterations: solver.iterations,
+    phase: solver.phase,
+    progress: solver.progress,
+    candidates: solver.candidates,
+    lastCandidate: solver.lastCandidate,
+    solvedRoutes: solver.solvedRoutes,
+    unsolvedConnections: solver.unsolvedConnections,
   })
   let forceSteps = 0
-  for (const Solver of [MultiHeadPolyLineIntraNodeSolver2, MultiHeadPolyLineIntraNodeSolver3]) {
+  for (const Solver of [
+    MultiHeadPolyLineIntraNodeSolver2,
+    MultiHeadPolyLineIntraNodeSolver3,
+  ]) {
     for (const nodeWithPortPoints of fixtures) {
-      const options = { nodeWithPortPoints, hyperParameters: { SEGMENTS_PER_POLYLINE: 4 } }
+      const options = {
+        nodeWithPortPoints,
+        hyperParameters: { SEGMENTS_PER_POLYLINE: 4 },
+      }
       const optimized = new Solver(options)
       const reference = new Solver(options)
       reference.applyForcesToPolyLines = applyForcesReference

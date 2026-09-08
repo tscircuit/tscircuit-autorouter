@@ -12,30 +12,42 @@ test("per-call polyline geometry preserves every force and point across repeated
   const options = {
     nodeWithPortPoints: {
       capacityMeshNodeId: "force-parity",
-      center: { x: 0, y: 0 }, width: 4, height: 4,
-      availableZ: [0, 1, 2, 3], portPoints: [],
+      center: { x: 0, y: 0 },
+      width: 4,
+      height: 4,
+      availableZ: [0, 1, 2, 3],
+      portPoints: [],
     },
   }
   for (let sample = 0; sample < 24; sample++) {
     const optimized = new MultiHeadPolyLineIntraNodeSolver2(options)
     const reference = new MultiHeadPolyLineIntraNodeSolver2(options)
-    const polyLines: PolyLine2[] = Array.from({ length: sample % 7 }, (_, line) => {
-      let layer = line % 4
-      const start = { x: -2, y: random() * 4 - 2, z1: layer, z2: layer }
-      const mPoints = Array.from({ length: sample % 9 === 0 ? 0 : 2 + line % 4 }, (_, point) => {
-        const z1 = layer
-        if ((sample + point) % 3 === 0) layer = (layer + 1) % 4
+    const polyLines: PolyLine2[] = Array.from(
+      { length: sample % 7 },
+      (_, line) => {
+        let layer = line % 4
+        const start = { x: -2, y: random() * 4 - 2, z1: layer, z2: layer }
+        const mPoints = Array.from(
+          { length: sample % 9 === 0 ? 0 : 2 + (line % 4) },
+          (_, point) => {
+            const z1 = layer
+            if ((sample + point) % 3 === 0) layer = (layer + 1) % 4
+            return {
+              x: sample % 5 === 0 ? 0 : random() * 4.2 - 2.1,
+              y: sample % 5 === 0 ? 0 : random() * 4.2 - 2.1,
+              z1,
+              z2: layer,
+            }
+          },
+        )
         return {
-          x: sample % 5 === 0 ? 0 : random() * 4.2 - 2.1,
-          y: sample % 5 === 0 ? 0 : random() * 4.2 - 2.1,
-          z1, z2: layer,
+          connectionName: `line-${line}`,
+          start,
+          mPoints,
+          end: { x: 2, y: random() * 4 - 2, z1: layer, z2: layer },
         }
-      })
-      return {
-        connectionName: `line-${line}`, start, mPoints,
-        end: { x: 2, y: random() * 4 - 2, z1: layer, z2: layer },
-      }
-    })
+      },
+    )
     const originalPolyLines = structuredClone(polyLines)
     for (let step = 0; step < 24; step++) {
       if (step === 7) {
