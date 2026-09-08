@@ -87,14 +87,13 @@ export type PadJunctionSimplificationInput = {
   otherHdRoutes?: ReadonlyArray<HighDensityRoute>
   obstacles: ReadonlyArray<Obstacle>
   connMap: ConnectivityMap
-  colorMap: Readonly<Record<string, string>>
+  colorMap?: Readonly<Record<string, string>>
   layerCount: number
   outline?: ReadonlyArray<{ x: number; y: number }>
   bounds?: { minX: number; minY: number; maxX: number; maxY: number }
   minTraceToPadEdgeClearance?: number
   minBoardEdgeClearance?: number
   preserveRouteEndpoints?: boolean
-  searchBudget?: SearchBudget
   gridStep?: number
 }
 type CandidateProgress =
@@ -103,13 +102,13 @@ type CandidateProgress =
   | { stage: "pad_stem"; junction: Junction; trunk: Trunk }
 type ParsedInput = Omit<PadJunctionSimplificationInput,
   "hdRoutes" | "otherHdRoutes" | "obstacles" | "minTraceToPadEdgeClearance" |
-  "minBoardEdgeClearance" | "searchBudget"> & {
+  "minBoardEdgeClearance" | "colorMap"> & {
   hdRoutes: ParsedRoute[]
   otherHdRoutes: ParsedRoute[]
   obstacles: TargetPad[]
   minTraceToPadEdgeClearance: number
   minBoardEdgeClearance: number
-  searchBudget: number
+  colorMap: Readonly<Record<string, string>>
 }
 type PadJunctionProblem = {
   targetPad: TargetPad
@@ -166,13 +165,11 @@ function parseRoute(route: HighDensityRoute, layerCount: number): ParsedRoute {
 function parsePadJunctionInput(input: PadJunctionSimplificationInput): ParsedInput {
   const clearance = input.minTraceToPadEdgeClearance ?? 0.15
   const boardClearance = input.minBoardEdgeClearance ?? 0
-  const searchBudget = input.searchBudget ?? 20000
   if (!Number.isInteger(input.layerCount) || input.layerCount < 1 ||
     !Number.isFinite(clearance) || clearance < 0 ||
     !Number.isFinite(boardClearance) || boardClearance < 0 ||
-    (input.gridStep !== undefined && (!Number.isFinite(input.gridStep) || input.gridStep <= 0)) ||
-    !Number.isInteger(searchBudget) || searchBudget < 1) {
-    throw new Error("PadJunctionSimplificationSolver: invalid layers, clearance, grid step, or search budget")
+    (input.gridStep !== undefined && (!Number.isFinite(input.gridStep) || input.gridStep <= 0))) {
+    throw new Error("PadJunctionSimplificationSolver: invalid layers, clearance, or grid step")
   }
   if (input.bounds) {
     const { minX, minY, maxX, maxY } = input.bounds
@@ -209,7 +206,7 @@ function parsePadJunctionInput(input: PadJunctionSimplificationInput): ParsedInp
     hdRoutes: input.hdRoutes.map((route) => parseRoute(route, input.layerCount)),
     otherHdRoutes: (input.otherHdRoutes ?? []).map((route) => parseRoute(route, input.layerCount)),
     obstacles, minTraceToPadEdgeClearance: clearance,
-    minBoardEdgeClearance: boardClearance, searchBudget,
+    minBoardEdgeClearance: boardClearance, colorMap: input.colorMap ?? {},
     bounds: input.bounds ? { ...input.bounds } : undefined,
     outline: input.outline?.map((point) => ({ ...point })),
   }
@@ -254,6 +251,7 @@ export class PadJunctionSimplificationSolver extends BaseSolver {
   private obstacleIndex = 0
   private readonly lockedRouteIndices = new Set<number>()
   private problem: PadJunctionProblem | null = null
+  private readonly searchBudget: SearchBudget
   private readonly clearance: Clearance
 
   private readonly parsed: ParsedInput
@@ -265,6 +263,7 @@ export class PadJunctionSimplificationSolver extends BaseSolver {
     this.clearance = this.parsed.minTraceToPadEdgeClearance
     this.obstacles = this.parsed.obstacles
     this.output = [...this.parsed.hdRoutes]
+    this.searchBudget = 20000
     this.MAX_ITERATIONS = 100e6
   }
 
@@ -675,7 +674,7 @@ export class PadJunctionSimplificationSolver extends BaseSolver {
       return
     }
     const problem = this.problem
-    if (problem.expanded >= this.parsed.searchBudget) {
+    if (problem.expanded >= this.searchBudget) {
       this.finishProblem("search_budget_reached", "Expanded-state budget reached without an accepted improvement")
       return
     }
