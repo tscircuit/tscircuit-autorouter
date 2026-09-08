@@ -1511,7 +1511,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       this.syntheticConnectionNames.size === 0
     // A regional change can free the space needed by the next operation.
     // Repeat the same work once while full-board DRC keeps improving.
-    const sweepBudget = canMoveWholeRoutes ? 2 : 1
+    const sweepBudget = canMoveWholeRoutes ? 3 : 1
     const stats = {
       postExactRegionalSweepBudget: sweepBudget,
       postExactRegionalSweepCount: 0,
