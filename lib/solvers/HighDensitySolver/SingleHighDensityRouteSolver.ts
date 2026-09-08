@@ -73,7 +73,11 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
   CELL_SIZE_FACTOR: number
   NEARBY_SEGMENT_CLEARANCE: number
 
-  exploredNodes: Set<number>
+  exploredNodes!: Set<number>
+  private exploredNodeSet: Set<number> | undefined
+  private exploredNodeBitmap: Uint8Array | null | undefined
+  private exploredNodeOrder: number[] = []
+  private customExploredNodeProperty = false
   viasInPathByNode = new WeakMap<Node, { x: number; y: number }[]>()
 
   gridMinXIndex: number
@@ -165,7 +169,14 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
       opts.availableZ && opts.availableZ.length > 0
         ? [...new Set(opts.availableZ)].sort((a, b) => a - b)
         : Array.from({ length: this.layerCount }, (_, index) => index)
-    this.exploredNodes = new Set()
+    // Internal searches need membership, while public callers need a mutable
+    // native Set. Materialize that Set only when its public property is read.
+    Object.defineProperty(this, "exploredNodes", {
+      configurable: true,
+      enumerable: true,
+      get: this.materializeExploredNodes,
+      set: this.replaceExploredNodes,
+    })
     this.straightLineDistance = distance(this.A, this.B)
     this.futureConnections = opts.futureConnections ?? []
     this.NEARBY_SEGMENT_CLEARANCE = opts.nearbySegmentClearance ?? 0.15
@@ -657,6 +668,80 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     node.f = this.computeF(node.g, node.h)
   }
 
+  private materializeExploredNodes(): Set<number> {
+    if (!this.exploredNodeSet) {
+      this.exploredNodeSet = new Set(this.exploredNodeOrder)
+      this.exploredNodeBitmap = null
+      this.exploredNodeOrder = []
+    }
+    return this.exploredNodeSet
+  }
+
+  private replaceExploredNodes(value: Set<number>): void {
+    this.exploredNodeSet = value
+    this.exploredNodeBitmap = null
+    this.exploredNodeOrder = []
+  }
+
+  private initializeExploredNodeBitmap(): void {
+    const descriptor = Object.getOwnPropertyDescriptor(this, "exploredNodes")
+    if (descriptor?.get !== this.materializeExploredNodes) {
+      // A subclass can declare its own Set field after the base constructor.
+      this.customExploredNodeProperty = true
+      this.exploredNodeBitmap = null
+      return
+    }
+    let maxZ = Math.max(this.layerCount - 1, this.A.z, this.B.z)
+    for (const z of this.availableZ) maxZ = Math.max(maxZ, z)
+    const cellCount = this.gridWidth * this.gridHeight * (maxZ + 1)
+    if (
+      this.getNodeKey === SingleHighDensityRouteSolver.prototype.getNodeKey &&
+      Number.isSafeInteger(cellCount) &&
+      cellCount > 0 &&
+      cellCount <= 1_048_576
+    ) {
+      this.exploredNodeBitmap = new Uint8Array(cellCount)
+    } else {
+      this.materializeExploredNodes()
+    }
+  }
+
+  private hasExploredNode(key: number): boolean {
+    if (this.exploredNodeBitmap === undefined) {
+      this.initializeExploredNodeBitmap()
+    }
+    if (this.customExploredNodeProperty) return this.exploredNodes.has(key)
+    if (this.exploredNodeSet) return this.exploredNodeSet.has(key)
+    const bitmap = this.exploredNodeBitmap!
+    if (Number.isInteger(key) && key >= 0 && key < bitmap.length) {
+      return bitmap[key] === 1
+    }
+    return this.materializeExploredNodes().has(key)
+  }
+
+  private addExploredNode(key: number): void {
+    if (this.exploredNodeBitmap === undefined) {
+      this.initializeExploredNodeBitmap()
+    }
+    if (this.customExploredNodeProperty) {
+      this.exploredNodes.add(key)
+      return
+    }
+    if (this.exploredNodeSet) {
+      this.exploredNodeSet.add(key)
+      return
+    }
+    const bitmap = this.exploredNodeBitmap!
+    if (Number.isInteger(key) && key >= 0 && key < bitmap.length) {
+      if (bitmap[key] === 0) {
+        bitmap[key] = 1
+        this.exploredNodeOrder.push(key === 0 ? 0 : key)
+      }
+      return
+    }
+    this.materializeExploredNodes().add(key)
+  }
+
   getNodeKey(node: Node) {
     const xIndex = Math.round(node.x / this.cellStep) - this.gridMinXIndex
     const yIndex = Math.round(node.y / this.cellStep) - this.gridMinYIndex
@@ -700,7 +785,7 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
               this.gridWidth +
             (Math.round(neighborX / this.cellStep) - this.gridMinXIndex)
 
-        if (this.exploredNodes.has(neighborKey)) {
+        if (this.hasExploredNode(neighborKey)) {
           continue
         }
         neighbor ??= {
@@ -729,12 +814,12 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
           if (this.debugEnabled) {
             this.debug_nodesTooCloseToObstacle.add(neighborKey)
           }
-          this.exploredNodes.add(neighborKey)
+          this.addExploredNode(neighborKey)
           continue
         }
 
         if (this.isNodeTooCloseToEdge(neighbor, false)) {
-          this.exploredNodes.add(neighborKey)
+          this.addExploredNode(neighborKey)
           continue
         }
 
@@ -744,7 +829,7 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
           if (this.debugEnabled) {
             this.debug_nodePathToParentIntersectsObstacle.add(neighborKey)
           }
-          this.exploredNodes.add(neighborKey)
+          this.addExploredNode(neighborKey)
           continue
         }
 
@@ -776,7 +861,7 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
             (Math.round(node.y / this.cellStep) - this.gridMinYIndex)) *
             this.gridWidth +
           (Math.round(node.x / this.cellStep) - this.gridMinXIndex)
-      if (this.exploredNodes.has(viaKey)) continue
+      if (this.hasExploredNode(viaKey)) continue
       viaNeighbor ??= {
         x: node.x,
         y: node.y,
@@ -882,7 +967,7 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     while (
       currentNode &&
       currentNodeKey &&
-      this.exploredNodes.has(currentNodeKey)
+      this.hasExploredNode(currentNodeKey)
     ) {
       currentNode = this.candidates.dequeue()
       currentNodeKey = currentNode ? this.getNodeKey(currentNode) : undefined
@@ -893,7 +978,7 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
       this.error = "Ran out of candidate nodes to explore"
       return
     }
-    this.exploredNodes.add(currentNodeKey)
+    this.addExploredNode(currentNodeKey)
     if (this.debugEnabled) {
       this.debug_exploredNodesOrdered.push({
         key: currentNodeKey,
