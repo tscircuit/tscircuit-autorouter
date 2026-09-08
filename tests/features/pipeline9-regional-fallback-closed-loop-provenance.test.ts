@@ -58,10 +58,10 @@ const prepareAcceptedReplacement = (
     effort: 1,
   })
   solver.activeNode = node
-  solver.activeFallbackFixedRouteSections = createRegionalFallbackProblem(node, [
-    first,
-    second,
-  ]).fixedRouteSectionsByConnectionName
+  solver.activeFallbackFixedRouteSections = createRegionalFallbackProblem(
+    node,
+    [first, second],
+  ).fixedRouteSectionsByConnectionName
   solver.activeFallbackSolver = {
     stats: {},
     getOutput: (): PreloadedHighDensityRoute[] => [
