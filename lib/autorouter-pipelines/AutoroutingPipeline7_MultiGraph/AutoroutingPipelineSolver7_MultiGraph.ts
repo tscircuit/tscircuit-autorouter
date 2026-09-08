@@ -37,6 +37,7 @@ import {
   convertSrjToGraphicsObject,
 } from "lib/utils/convertSrjToGraphicsObject"
 import { createSrjWithBoardValidObstacleLayers } from "lib/utils/create-srj-with-board-valid-obstacle-layers"
+import { getSameLayerCrossingFailure } from "lib/utils/findSameLayerDifferentConnectionCrossings"
 import { createObstacleLabelFormatter } from "lib/utils/formatObstacleLabel"
 import { getInitiallyConnectedMapFromSimpleRouteJson } from "lib/utils/get-initially-connected-map-from-simple-route-json"
 import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
@@ -887,7 +888,10 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
   _step() {
     const pipelineStepDef = this.pipelineDef[this.currentPipelineStepIndex]
     if (!pipelineStepDef) {
-      this.solved = true
+      this.failClosedOnSameLayerCrossings()
+      if (!this.failed) {
+        this.solved = true
+      }
       return
     }
 
@@ -1180,6 +1184,26 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
       this.traceSimplificationSolver?.simplifiedHdRoutes ??
       this.highDensityStitchSolver!.mergedHdRoutes
     )
+  }
+
+  /**
+   * Solver7 must not report success with a same-layer short between different
+   * connections. If output traces cannot be materialized, skip the check rather
+   * than false-failing.
+   */
+  private failClosedOnSameLayerCrossings() {
+    try {
+      const traces = this.powerTraceExpansionSolver
+        ? this.powerTraceExpansionSolver.getOutput()
+        : this.getPrePowerTraceOutputSimplifiedPcbTraces()
+      const crossingError = getSameLayerCrossingFailure(traces, this.connMap)
+      if (crossingError) {
+        this.error = crossingError
+        this.failed = true
+      }
+    } catch {
+      // Missing stitch output should not itself mark the pipeline failed.
+    }
   }
 
   getOutputSimplifiedPcbTraces(): SimplifiedPcbTraces {
