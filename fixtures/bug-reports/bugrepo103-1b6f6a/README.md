@@ -8,9 +8,8 @@ Benchmark artifact (relative to the supplied pcb-generation-benchmark directory)
 
 `data/runs/2026-09-05-codegen-pilot-01/voltage-divider/tscircuit-codegen/replicate-1/artifacts/attempt-03`
 
-The original `index.circuit.tsx` remains in that benchmark artifact (dependency: tscircuit 0.0.2462).
+The original `index.circuit.tsx` and routed output `dist/index/circuit.json` remain in that benchmark artifact (dependency: tscircuit 0.0.2462).
 
-- `bugrepo103-1b6f6a.routed.circuit.json`: unchanged saved output, preserving the reported routing for comparison.
 - `bugrepo103-1b6f6a.srj.json`: fresh routing input extracted from that saved output using @tscircuit/core 0.0.1837.
 - `bugrepo103-1b6f6a.fixture.tsx`: interactive autorouting pipeline debugger.
 
@@ -22,4 +21,4 @@ The suffix is the first six characters of SHA-256 over the committed SRJ file by
 
 ## Open the repro
 
-Run `bun run start` from the repository root and select `bug-reports/bugrepo103-1b6f6a` in Cosmos. Use the pipeline selector to compare routing stages and final output around R2. The saved routed circuit JSON preserves the original result independently of changes to the current solver.
+Run `bun run start` from the repository root and select `bug-reports/bugrepo103-1b6f6a` in Cosmos. Use the pipeline selector to compare routing stages and final output around R2.
