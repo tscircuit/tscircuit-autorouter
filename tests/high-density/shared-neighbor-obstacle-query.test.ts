@@ -10,7 +10,9 @@ class IndependentQuerySolver extends SingleHighDensityRouteSolver {
 
 test("shared neighbor queries preserve exact wire and via collision decisions", (): void => {
   for (const offset of [0, -17.3, 52.8]) {
-    const options: ConstructorParameters<typeof SingleHighDensityRouteSolver>[0] = {
+    const options: ConstructorParameters<
+      typeof SingleHighDensityRouteSolver
+    >[0] = {
       connectionName: "routed-net",
       minDistBetweenEnteringPoints: 0.2,
       bounds: {
@@ -64,7 +66,9 @@ test("shared neighbor queries preserve exact wire and via collision decisions", 
           }
           shared.exploredNodes.clear()
           independent.exploredNodes.clear()
-          expect(shared.getNeighbors(node)).toEqual(independent.getNeighbors(node))
+          expect(shared.getNeighbors(node)).toEqual(
+            independent.getNeighbors(node),
+          )
         }
       }
     }
