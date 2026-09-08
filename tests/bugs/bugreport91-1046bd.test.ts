@@ -4,6 +4,7 @@ import bugReport from "../../fixtures/bug-reports/bugreport91-1046bd/bugreport91
   type: "json",
 }
 import type { SimpleRouteJson } from "lib/types"
+import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import { getLastStepSvg } from "../fixtures/getLastStepSvg"
 
 const srj = bugReport.simple_route_json as SimpleRouteJson
@@ -30,7 +31,15 @@ test("bugreport91 routes every connector escape end-to-end", () => {
       routedConnectionNames.has(connection.name),
     ),
   ).toBe(true)
-  expect(getLastStepSvg(solver.visualize())).toMatchSvgSnapshot(
-    import.meta.path,
-  )
+  const { errors } = evaluateRelaxedDrc({
+    inputSrj: srj,
+    srjWithPointPairs: solver.srjWithPointPairs!,
+    routedTraces: solver.getOutputSimplifiedPcbTraces(),
+  })
+  expect(errors).toHaveLength(0)
+  const snapshotPath =
+    process.platform === "linux"
+      ? import.meta.path.replace(/\.test\.ts$/, "-linux.test.ts")
+      : import.meta.path
+  expect(getLastStepSvg(solver.visualize())).toMatchSvgSnapshot(snapshotPath)
 })
