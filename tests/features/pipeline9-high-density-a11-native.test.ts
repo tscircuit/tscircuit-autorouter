@@ -34,7 +34,6 @@ const makePortfolio = (nodeWithPortPoints = makeNode()) => {
     effort: 1,
     obstacles: [],
     layerCount: 2,
-    useHighDensitySolverA11: true,
   })
   solver.initializeSolvers()
   return solver
@@ -111,24 +110,9 @@ test("Pipeline9 integrates bounded native A11 with exact routes and unchanged sc
       effort: 1,
       obstacles: [],
       layerCount: 2,
-      useHighDensitySolverA11: true,
     }
     const nativePortfolio = new PortfolioSingleIntraNodeSolver(solverParams)
     nativePortfolio.initializeSolvers()
-    for (const { solver: candidate } of nativePortfolio.supervisedSolvers ??
-      []) {
-      candidate.failed = true
-    }
-    nativePortfolio.step()
-    nativePortfolio.solved = false
-    nativePortfolio.failed = false
-    nativePortfolio.winningSolver = undefined
-    for (const { solver: candidate } of nativePortfolio.supervisedSolvers ??
-      []) {
-      candidate.solved = false
-      candidate.failed = true
-    }
-    nativePortfolio.step()
     const a11Candidate = nativePortfolio.supervisedSolvers?.find(
       ({ solver: candidateSolver }) =>
         candidateSolver instanceof HighDensitySolverA11,
@@ -144,23 +128,33 @@ test("Pipeline9 integrates bounded native A11 with exact routes and unchanged sc
     if (!(a11Candidate instanceof HighDensitySolverA11)) {
       throw new Error("Native portfolio did not create an A11 candidate")
     }
-    expect(a11Candidate.MAX_ITERATIONS).toBe(5_000)
-    expect(a11Candidate.rows).toBeUndefined()
-    a11Candidate.step()
-    expect(a11Candidate.rows).toBeDefined()
-    expect(a11Candidate.MAX_ITERATIONS).toBe(5_000)
-
-    const standardPortfolio = new PortfolioSingleIntraNodeSolver({
-      ...solverParams,
-      useHighDensitySolverA11: false,
+    const standaloneA11 = new HighDensitySolverA11({
+      nodeWithPortPoints,
+      viaDiameter: 0.3,
+      viaMinDistFromBorder: 0.15,
+      traceMargin: 0.1,
+      traceThickness: 0.1,
+      effort: 1,
+      hyperParameters: { shuffleSeed: 0 },
     })
-    standardPortfolio.initializeSolvers()
+    standaloneA11.setup()
+    expect(a11Candidate.MAX_ITERATIONS).toBe(standaloneA11.MAX_ITERATIONS)
+    expect(Number.isFinite(a11Candidate.MAX_ITERATIONS)).toBe(true)
+    expect(a11Candidate.MAX_ITERATIONS).toBeGreaterThan(0)
+    expect(a11Candidate.rows).toBeDefined()
+    expect(a11Candidate.iterations).toBe(0)
+
+    for (const { solver: candidate } of nativePortfolio.supervisedSolvers!) {
+      candidate.failed = true
+    }
+    nativePortfolio.step()
+    expect(nativePortfolio.adaptiveSearchExpanded).toBe(true)
     expect(
-      standardPortfolio.supervisedSolvers?.some(
+      nativePortfolio.supervisedSolvers?.filter(
         ({ solver: candidateSolver }) =>
           candidateSolver instanceof HighDensitySolverA11,
       ),
-    ).toBe(false)
+    ).toHaveLength(1)
 
     const grownSolver = new GrowShrinkHighDensityIntraNodeSolver(solverParams)
     grownSolver.scaleFactor = 2
@@ -170,9 +164,6 @@ test("Pipeline9 integrates bounded native A11 with exact routes and unchanged sc
       PortfolioSingleIntraNodeSolver,
     )
     expect(
-      grownSolver.activeSubSolver?.constructorParams.useHighDensitySolverA11,
-    ).toBe(false)
-    expect(
       grownSolver.activeSubSolver?.supervisedSolvers?.some(
         ({ solver: candidateSolver }) =>
           candidateSolver.getSolverName() === "HighDensitySolverA11" ||
@@ -181,7 +172,7 @@ test("Pipeline9 integrates bounded native A11 with exact routes and unchanged sc
     ).toBe(false)
   }
 
-  // native A11 stays lazy on sparse nodes and prioritized on congested nodes
+  // A11 uses the same grid-solver scheduling on sparse and congested nodes
   {
     const sparsePortfolio = makePortfolio()
     const {
@@ -189,11 +180,10 @@ test("Pipeline9 integrates bounded native A11 with exact routes and unchanged sc
       a11Candidate: sparseA11Candidate,
     } = getNativeGridCandidates(sparsePortfolio)
 
-    expect(sparseA11Candidate?.solver.MAX_ITERATIONS).toBe(5_000)
-    expect(sparseA11Candidate!.f).toBeGreaterThan(sparseA01Candidate!.f)
-
-    sparsePortfolio.step()
-    expect(sparsePortfolio.activeSubSolver).not.toBe(sparseA11Candidate?.solver)
+    expect(sparseA11Candidate?.f).toBe(sparseA01Candidate?.f)
+    expect(sparsePortfolio.computeG(sparseA11Candidate!.solver)).toBe(
+      sparsePortfolio.computeG(sparseA01Candidate!.solver),
+    )
     expect(sparseA11Candidate?.solver.iterations).toBe(0)
 
     const sparseNode = makeNode()
@@ -212,7 +202,6 @@ test("Pipeline9 integrates bounded native A11 with exact routes and unchanged sc
       a11Candidate: congestedA11Candidate,
     } = getNativeGridCandidates(congestedPortfolio)
 
-    expect(congestedA11Candidate?.solver.MAX_ITERATIONS).toBe(100_000)
     expect(congestedA11Candidate?.f).toBe(congestedA01Candidate?.f)
     expect(congestedPortfolio.computeG(congestedA11Candidate!.solver)).toBe(
       congestedPortfolio.computeG(congestedA01Candidate!.solver),
@@ -326,7 +315,6 @@ test("Pipeline9 integrates bounded native A11 with exact routes and unchanged sc
     const originalNode = structuredClone(nodeWithPortPoints)
     const portfolio = new PortfolioSingleIntraNodeSolver({
       nodeWithPortPoints,
-      useHighDensitySolverA11: true,
     })
     portfolio.initializeSolvers()
     portfolio.adaptiveSearchExpanded = true
@@ -334,6 +322,14 @@ test("Pipeline9 integrates bounded native A11 with exact routes and unchanged sc
       ({ hyperParameters }) => hyperParameters.HIGH_DENSITY_A11,
     )
     expect(nativeCandidates).toHaveLength(1)
+    expect(portfolio.stats.dynamicExpansionWorkBudget).toBe(
+      Math.max(
+        1,
+        ...portfolio.supervisedSolvers!
+          .filter(({ solver }) => !solver.failed)
+          .map(({ solver }) => solver.MAX_ITERATIONS),
+      ),
+    )
     for (const { solver } of nativeCandidates) {
       solver.step()
       expect(solver.failed).toBe(true)

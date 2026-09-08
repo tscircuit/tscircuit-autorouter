@@ -32,9 +32,6 @@ import {
 // orderings are introduced only after that portfolio spends its dynamically
 // derived exploration budget or exhausts all of its candidates.
 const ORDERING_SHUFFLE_SEEDS = Array.from({ length: 6 }, (_, seed) => seed)
-const HIGH_DENSITY_A11_MAX_ITERATIONS = 5_000
-const HIGH_DENSITY_A11_CONGESTED_MAX_ITERATIONS = 100_000
-const NATIVE_GRID_BOUNDARY_PRESSURE_THRESHOLD = 0.75
 const NATIVE_GRID_BOUNDS_TOLERANCE_MM = 1e-9
 
 type ExternalGridSolver =
@@ -61,20 +58,13 @@ function isExternalGridSolver(
   )
 }
 
-export type PortfolioSingleIntraNodeSolverParams = ConstructorParameters<
-  typeof CachedIntraNodeRouteSolver
->[0] & {
-  effort?: number
-  useHighDensitySolverA11?: boolean
-}
-
 /** Coordinates a fitness-scheduled portfolio of intra-node routing solvers. */
 export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolver<PortfolioCandidateSolver> {
   override getSolverName(): string {
     return "PortfolioSingleIntraNodeSolver"
   }
 
-  constructorParams: PortfolioSingleIntraNodeSolverParams
+  constructorParams: ConstructorParameters<typeof CachedIntraNodeRouteSolver>[0]
   solvedRoutes: HighDensityIntraNodeRoute[] = []
   nodeWithPortPoints: NodeWithPortPoints
   connMap?: ConnectivityMap
@@ -106,16 +96,6 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     )
   }
 
-  private getNativeGridBoundaryPressure(): number {
-    const perimeter =
-      2 * (this.nodeWithPortPoints.width + this.nodeWithPortPoints.height)
-    if (perimeter <= 0) return Infinity
-
-    const endpointCount = this.nodeWithPortPoints.portPoints.length
-    const endpointPitch = this.constructorParams.viaDiameter ?? 0.3
-    return (endpointCount * endpointPitch) / perimeter
-  }
-
   private getCandidateProgress(solver: PortfolioCandidateSolver): number {
     // Setup can reject an ineligible candidate before allocating route state.
     // Failed candidates have no usable progress and are excluded by scheduling.
@@ -141,13 +121,17 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     // to fail or introducing a wall-clock iteration constant.
     return Math.max(
       1,
-      ...(this.supervisedSolvers ?? []).map(
-        ({ solver }) => solver.MAX_ITERATIONS,
-      ),
+      ...(this.supervisedSolvers ?? [])
+        .filter(({ solver }) => !solver.failed)
+        .map(({ solver }) => solver.MAX_ITERATIONS),
     )
   }
 
-  constructor(opts: PortfolioSingleIntraNodeSolverParams) {
+  constructor(
+    opts: ConstructorParameters<typeof CachedIntraNodeRouteSolver>[0] & {
+      effort?: number
+    },
+  ) {
     super()
     this.nodeWithPortPoints = opts.nodeWithPortPoints
     this.connMap = opts.connMap
@@ -159,7 +143,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
   }
 
   getCombinationDefs() {
-    const combinations = [
+    return [
       ["throughObstacle"],
       ["singleLayerNoDifferentRootIntersections"],
       ["multiHeadPolyLine"],
@@ -171,11 +155,8 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       // ["closedFormTwoTrace"],
       ["highDensityA01"],
       ["highDensityA03"],
+      ["highDensityA11"],
     ]
-    if (this.constructorParams.useHighDensitySolverA11) {
-      combinations.push(["highDensityA11"])
-    }
-    return combinations
   }
 
   getHyperParameterDefs() {
@@ -331,10 +312,6 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
    * not advance the solver or give it preference in the portfolio.
    */
   private initializeCandidateBudget(solver: PortfolioCandidateSolver) {
-    // Keep the fine-grid solvers lazy so easy nodes do not pay their setup cost.
-    if (solver instanceof HighDensitySolverA11) {
-      return
-    }
     if (isExternalGridSolver(solver)) solver.setup()
   }
 
@@ -432,18 +409,6 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
   }
 
   computeG(solver: PortfolioCandidateSolver) {
-    if (solver instanceof HighDensitySolverA11) {
-      // A11 is most valuable when boundary demand makes native routing
-      // difficult. Give them normal grid-solver priority there, while keeping
-      // their setup lazy on lower-pressure nodes whose established routes are
-      // already fast and stable.
-      const startupPenalty =
-        this.getNativeGridBoundaryPressure() >=
-        NATIVE_GRID_BOUNDARY_PRESSURE_THRESHOLD
-          ? 0
-          : 4
-      return startupPenalty + solver.iterations / 1_000_000
-    }
     if (
       solver instanceof HighDensitySolverA01 ||
       solver instanceof HighDensityA03Solver
@@ -543,11 +508,6 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
           shuffleSeed: hyperParameters.SHUFFLE_SEED ?? 0,
         },
       })
-      solver.MAX_ITERATIONS =
-        this.getNativeGridBoundaryPressure() >=
-        NATIVE_GRID_BOUNDARY_PRESSURE_THRESHOLD
-          ? HIGH_DENSITY_A11_CONGESTED_MAX_ITERATIONS
-          : HIGH_DENSITY_A11_MAX_ITERATIONS
       return solver
     }
     if (hyperParameters.CLOSED_FORM_TWO_TRACE_SAME_LAYER) {
