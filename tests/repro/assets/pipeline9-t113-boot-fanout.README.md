@@ -28,8 +28,9 @@ That can accept a bad candidate which then fails final materialized validation.
 The fix evaluates the actual copper while choosing a candidate, allowing the
 native solver to select a valid alternative.
 
-The PCB SVG shows actual rendered components and native output copper, including
-a close-up of the boot resistor. It is not an internal node/port diagram.
+The PCB snapshot is the unmodified output of `convertCircuitJsonToPcbSvg`, using
+the rendered TSX circuit and native output copper with the renderer's defaults.
+There are no custom SVG elements, annotations, crops, zooms, or color overrides.
 
 The fix checks the complete output with all original connection metadata. The
 final phase alone contains only the five SD connections; passing only those to
