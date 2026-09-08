@@ -3,11 +3,7 @@ import type { Node } from "lib/data-structures/SingleRouteCandidatePriorityQueue
 import { SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost } from "lib/solvers/HighDensitySolver/SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost"
 
 type CostStorage = {
-  denseNodeCostTerms:
-    | Array<Record<string, unknown> | undefined>
-    | null
-    | undefined
-  nodeCostTermsByGridKey: Map<number, unknown>
+  nodeCostTermsByGridKey: Map<number, Record<string, unknown>>
 }
 
 class CustomKeySolver extends SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost {
@@ -21,7 +17,7 @@ class CustomKeySolver extends SingleHighDensityRouteSolver6_VertHorzLayer_Future
   }
 }
 
-test("dense cost slots initialize lazily and retain sparse handling of custom, oversized and out-of-range keys", () => {
+test("Map cost storage retains exact entries for ordinary, custom, oversized and out-of-range keys", () => {
   const options = {
     connectionName: "route",
     obstacleRoutes: [],
@@ -46,15 +42,13 @@ test("dense cost slots initialize lazily and retain sparse handling of custom, o
     options,
   )
   const storage = solver as unknown as CostStorage
-  expect(storage.denseNodeCostTerms).toBeUndefined()
+  expect(storage.nodeCostTermsByGridKey.size).toBe(0)
   solver.setNodeCosts(node)
-  expect(Array.isArray(storage.denseNodeCostTerms)).toBe(true)
-  expect(storage.denseNodeCostTerms!.length).toBeLessThanOrEqual(65_536)
-  const firstEntry = storage.denseNodeCostTerms![solver.getNodeKey(node)]!
+  const firstEntry = storage.nodeCostTermsByGridKey.get(solver.getNodeKey(node))!
   expect(Object.hasOwn(firstEntry, "planarFuturePenalty")).toBe(true)
   expect(Object.hasOwn(firstEntry, "viaFuturePenalty")).toBe(true)
   expect(firstEntry.viaFuturePenalty).toBeUndefined()
-  expect(storage.nodeCostTermsByGridKey.size).toBe(0)
+  expect(storage.nodeCostTermsByGridKey.size).toBe(1)
 
   const outside = { ...node, x: 1e6 }
   solver.setNodeCosts(outside)
@@ -62,13 +56,12 @@ test("dense cost slots initialize lazily and retain sparse handling of custom, o
     true,
   )
   solver.setNodeCosts(node)
-  expect(storage.denseNodeCostTerms![solver.getNodeKey(node)]).toBe(firstEntry)
+  expect(storage.nodeCostTermsByGridKey.get(solver.getNodeKey(node))).toBe(firstEntry)
 
   const custom = new CustomKeySolver(options)
   const customNode = { ...node }
   custom.setNodeCosts(customNode)
   const customStorage = custom as unknown as CostStorage
-  expect(customStorage.denseNodeCostTerms).toBeNull()
   expect(
     customStorage.nodeCostTermsByGridKey.has(custom.getNodeKey(customNode)),
   ).toBe(true)
@@ -84,14 +77,12 @@ test("dense cost slots initialize lazily and retain sparse handling of custom, o
   })
   large.setNodeCosts({ ...node })
   const largeStorage = large as unknown as CostStorage
-  expect(largeStorage.denseNodeCostTerms).toBeNull()
   expect(largeStorage.nodeCostTermsByGridKey.size).toBe(1)
 
-  // A later custom key must never become a fractional array property.
+  // Later key overrides use the same Map without integer coercion.
   solver.getNodeKey = (candidate: Node): number => candidate.x + 0.25
   solver.setNodeCosts({ ...node })
   expect(storage.nodeCostTermsByGridKey.has(0.25)).toBe(true)
-  expect(Object.hasOwn(storage.denseNodeCostTerms!, "0.25")).toBe(false)
   for (const key of [NaN, Infinity, -Infinity, -2, 65_536]) {
     solver.getNodeKey = (_candidate: Node): number => key
     const candidate = { ...node }

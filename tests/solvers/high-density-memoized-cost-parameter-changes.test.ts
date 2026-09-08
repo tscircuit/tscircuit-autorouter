@@ -73,7 +73,6 @@ test("cached costs respond to scalar parameter changes and replacement future po
       const solver = new Solver({ ...options, B: { ...options.B } })
       const storage = solver as unknown as {
         nodeCostParameters: object
-        denseNodeCostTerms: unknown[] | null
         nodeCostTermsByGridKey: Map<number, unknown>
       }
       const makeNode = (parentZ: number): Node => ({
@@ -100,7 +99,6 @@ test("cached costs respond to scalar parameter changes and replacement future po
         before.push([node.g, node.h, node.f])
       }
       const snapshot = storage.nodeCostParameters
-      const denseSlots = storage.denseNodeCostTerms
       const sparseMap = storage.nodeCostTermsByGridKey
       mutate(solver)
       const after: number[][] = []
@@ -118,7 +116,6 @@ test("cached costs respond to scalar parameter changes and replacement future po
         // Repeated unchanged calls retain both cache storage and snapshot.
         solver.setNodeCosts(makeNode(parentZ))
         expect(storage.nodeCostParameters).toBe(snapshot)
-        expect(storage.denseNodeCostTerms).toBe(denseSlots)
         expect(storage.nodeCostTermsByGridKey).toBe(sparseMap)
       }
       expect(after).not.toEqual(before)

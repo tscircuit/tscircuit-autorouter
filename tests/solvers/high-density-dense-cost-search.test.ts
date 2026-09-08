@@ -70,7 +70,7 @@ class MapCostReferenceSolver extends SingleHighDensityRouteSolver6_VertHorzLayer
   }
 }
 
-test("dense cost storage preserves original Map searches and calculation counts", () => {
+test("Map cost storage preserves original memoized searches and calculation counts", () => {
   let seed = 71329
   const random = (): number => {
     seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0
@@ -192,11 +192,9 @@ test("dense cost storage preserves original Map searches and calculation counts"
     memoized.solve()
     reference.solve()
     const storage = memoized as unknown as {
-      denseNodeCostTerms: unknown[]
       nodeCostTermsByGridKey: Map<number, unknown>
     }
-    expect(storage.denseNodeCostTerms.length).toBeLessThanOrEqual(65_536)
-    expect(storage.nodeCostTermsByGridKey.size).toBe(0)
+    expect(storage.nodeCostTermsByGridKey.size).toBeGreaterThan(0)
     if (sampleMemoizedCalculations === sampleReferenceCalculations) {
       repeatedCoordinateSavings++
     }
