@@ -1349,10 +1349,11 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       viaClearance,
     })
     this.exactRepairSolver = new GlobalDrcBranchPortfolioSolver({
-      isValidCandidate: (routes): boolean => evaluateViaPadContacts({
-        previousRoutes: originalExactRoutes,
-        routes,
-      }).length === 0,
+      isValidCandidate: (routes): boolean =>
+        evaluateViaPadContacts({
+          previousRoutes: originalExactRoutes,
+          routes,
+        }).length === 0,
       srj: extendedSrjWithPointPairs as RepairSimpleRouteJson,
       hdRoutes: [
         ...params.newHdRoutes,
@@ -1557,7 +1558,9 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       hdRoutes: routes,
     })
     let errorCount = (
-      Array.isArray(initialReference) ? initialReference : initialReference.errors
+      Array.isArray(initialReference)
+        ? initialReference
+        : initialReference.errors
     ).length
     for (let sweep = 0; sweep < sweepBudget && errorCount > 0; sweep++) {
       stats.postExactRegionalSweepCount++
@@ -1652,7 +1655,8 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         (preloadRepairTraceIds.collidingFixedTraceIds?.size ?? 0)
       stats.terminalEscapeCandidateCount +=
         terminalEscapeResult.attemptedCandidateCount
-      stats.terminalEscapeAcceptedCount += terminalEscapeResult.acceptedCandidateCount
+      stats.terminalEscapeAcceptedCount +=
+        terminalEscapeResult.acceptedCandidateCount
 
       const projectionStartedAt = performance.now()
       const projectedRoutes = applyPipeline9ClearanceProjection({
@@ -1684,9 +1688,13 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         Array.isArray(reference) ? reference : reference.errors
       ).length
       const physicalRegression =
-        getFixedObstacleViolations({ srj: physicalSrj, routes: candidate }).some(
+        getFixedObstacleViolations({
+          srj: physicalSrj,
+          routes: candidate,
+        }).some(
           ({ key, severity }) =>
-            !fixedViolations.has(key) || severity > fixedViolations.get(key)! + 1e-8,
+            !fixedViolations.has(key) ||
+            severity > fixedViolations.get(key)! + 1e-8,
         ) ||
         getNewViaPadViolations({
           srj: physicalSrj,
@@ -1703,7 +1711,8 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       if (coalescedRoutes !== routes || candidate !== projectedRoutes) {
         stats.coalescedViaSweepCount++
       }
-      stats.boundedRegionalRepairRepaired ||= boundedRegionalRepairResult.repaired
+      stats.boundedRegionalRepairRepaired ||=
+        boundedRegionalRepairResult.repaired
       stats.regionalB01RepairRemainingDrcIssueCount =
         regionalB01RepairResult.remainingDrcIssueCount
       routes = candidate

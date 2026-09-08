@@ -34,9 +34,10 @@ test("Pipeline9 repairs SRJ18 sample 8's crowded trace/via clearances", async ()
     traces: undefined,
   }
   const originalViolations = new Map(
-    getFixedObstacleViolations({ srj: physicalSrj, routes: previousRoutes }).map(
-      ({ key, severity }) => [key, severity],
-    ),
+    getFixedObstacleViolations({
+      srj: physicalSrj,
+      routes: previousRoutes,
+    }).map(({ key, severity }) => [key, severity]),
   )
   for (const { key, severity } of getFixedObstacleViolations({
     srj: physicalSrj,

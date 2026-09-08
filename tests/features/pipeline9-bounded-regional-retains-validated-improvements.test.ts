@@ -26,7 +26,10 @@ test("regional repair retains safe improvements and reports unresolved connectiv
   expect(result.finalDrcIssueCount).toBe(1)
   expect(result.repaired).toBeFalse()
   expect(result.routes).not.toBe(fixture.routes)
-  const reference = fixture.drcEvaluator({ traces: [], hdRoutes: result.routes })
+  const reference = fixture.drcEvaluator({
+    traces: [],
+    hdRoutes: result.routes,
+  })
   expect(Array.isArray(reference) ? reference : reference.errors).toEqual([])
   expect(result.routes[0]!.route[0]).toEqual(original[0]!.route[0])
   expect(result.routes[0]!.route.at(-1)).toEqual(original[0]!.route.at(-1))

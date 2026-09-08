@@ -63,7 +63,8 @@ export const coalesceOverlappingSameNetVias = ({
         pointIndex !== route.route.length - 1 &&
         !point.pcb_port_id &&
         !point.insideJumperPad
-      ) continue
+      )
+        continue
       const location = locations.get(`${point.x},${point.y}`)
       if (location) location.locked = true
     }
@@ -75,7 +76,8 @@ export const coalesceOverlappingSameNetVias = ({
     routes,
   })
   for (const contact of existingPadContacts) {
-    const location = locationsByNet.get(netIds[contact.routeIndex]!)!
+    const location = locationsByNet
+      .get(netIds[contact.routeIndex]!)!
       .get(`${contact.center.x},${contact.center.y}`)
     if (location) location.hasPadContact = true
   }
@@ -85,23 +87,24 @@ export const coalesceOverlappingSameNetVias = ({
     ),
   )
   const movesByNet = new Map<string, Map<string, ViaLocation>>()
-  const buildCandidate = (): HighDensityRoute[] => routes.map((route, routeIndex) => {
-    const moves = movesByNet.get(netIds[routeIndex]!)
-    if (!moves) return route
-    const vias = new Map<string, { x: number; y: number }>()
-    for (const via of route.vias) {
-      const moved = moves.get(`${via.x},${via.y}`) ?? via
-      vias.set(`${moved.x},${moved.y}`, { x: moved.x, y: moved.y })
-    }
-    return {
-      ...route,
-      route: route.route.map((point) => {
-        const moved = moves.get(`${point.x},${point.y}`)
-        return moved ? { ...point, x: moved.x, y: moved.y } : point
-      }),
-      vias: [...vias.values()],
-    }
-  })
+  const buildCandidate = (): HighDensityRoute[] =>
+    routes.map((route, routeIndex) => {
+      const moves = movesByNet.get(netIds[routeIndex]!)
+      if (!moves) return route
+      const vias = new Map<string, { x: number; y: number }>()
+      for (const via of route.vias) {
+        const moved = moves.get(`${via.x},${via.y}`) ?? via
+        vias.set(`${moved.x},${moved.y}`, { x: moved.x, y: moved.y })
+      }
+      return {
+        ...route,
+        route: route.route.map((point) => {
+          const moved = moves.get(`${point.x},${point.y}`)
+          return moved ? { ...point, x: moved.x, y: moved.y } : point
+        }),
+        vias: [...vias.values()],
+      }
+    })
   let output = routes
   for (const [netId, locations] of locationsByNet) {
     const anchors: ViaLocation[] = []
@@ -114,14 +117,20 @@ export const coalesceOverlappingSameNetVias = ({
     for (const location of ordered) {
       if (!location.locked) {
         for (const anchor of anchors) {
-          if (Math.hypot(anchor.x - location.x, anchor.y - location.y) >= viaHoleDiameter) {
+          if (
+            Math.hypot(anchor.x - location.x, anchor.y - location.y) >=
+            viaHoleDiameter
+          ) {
             continue
           }
           moves.set(location.key, anchor)
           movesByNet.set(netId, moves)
           const candidate = buildCandidate()
           const hasPhysicalRegression =
-            getFixedObstacleViolations({ srj: physicalSrj, routes: candidate }).some(
+            getFixedObstacleViolations({
+              srj: physicalSrj,
+              routes: candidate,
+            }).some(
               ({ key, severity }) =>
                 !initialFixedViolations.has(key) ||
                 severity > initialFixedViolations.get(key)! + 1e-8,

@@ -7,7 +7,8 @@ test("bounded repair locates the physical pad when the DRC display marker is rem
   const fixture = createBoundedRegionalRepairFixture()
   const drcEvaluator: DrcEvaluator = (input) => {
     const evaluated = fixture.drcEvaluator(input)
-    if (Array.isArray(evaluated)) throw new Error("Fixture requires centered errors")
+    if (Array.isArray(evaluated))
+      throw new Error("Fixture requires centered errors")
     return {
       ...evaluated,
       errorsWithCenters: evaluated.errors.map((error) => ({
@@ -17,12 +18,17 @@ test("bounded repair locates the physical pad when the DRC display marker is rem
       })),
     }
   }
-  const result = applyPipeline9BoundedRegionalRepairs({ ...fixture, drcEvaluator })
+  const result = applyPipeline9BoundedRegionalRepairs({
+    ...fixture,
+    drcEvaluator,
+  })
   expect(result.initialDrcIssueCount).toBeGreaterThan(0)
   expect(result.repaired).toBeTrue()
   expect(result.finalDrcIssueCount).toBe(0)
   const validation = fixture.drcEvaluator({ traces: [], routes: result.routes })
   expect(Array.isArray(validation) ? validation : validation.errors).toEqual([])
   expect(result.routes[0]!.route[0]).toEqual(fixture.routes[0]!.route[0])
-  expect(result.routes[0]!.route.at(-1)).toEqual(fixture.routes[0]!.route.at(-1))
+  expect(result.routes[0]!.route.at(-1)).toEqual(
+    fixture.routes[0]!.route.at(-1),
+  )
 })

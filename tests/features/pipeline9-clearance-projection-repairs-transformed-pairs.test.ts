@@ -9,7 +9,11 @@ import type { HighDensityRoute } from "lib/types/high-density-types"
 import { convertHdRouteToSimplifiedRoute } from "lib/utils/convertHdRouteToSimplifiedRoute"
 
 test("clearance projection repairs translated and rotated sets of nine physical pairs", (): void => {
-  for (const [quarterTurns, clearance] of [[0, 0.1], [1, 0.15], [2, 0.2]] as const) {
+  for (const [quarterTurns, clearance] of [
+    [0, 0.1],
+    [1, 0.15],
+    [2, 0.2],
+  ] as const) {
     const transform = (x: number, y: number): { x: number; y: number } => {
       let rotatedX = x
       let rotatedY = y
@@ -148,12 +152,8 @@ test("clearance projection repairs translated and rotated sets of nine physical 
         routes[index]!.route.map((point) => point.z),
       )
       expect(result[index]!.route[0]).toEqual(routes[index]!.route[0])
-      expect(result[index]!.route.at(-1)).toEqual(
-        routes[index]!.route.at(-1),
-      )
-      expect(result[index]!.traceThickness).toBe(
-        routes[index]!.traceThickness,
-      )
+      expect(result[index]!.route.at(-1)).toEqual(routes[index]!.route.at(-1))
+      expect(result[index]!.traceThickness).toBe(routes[index]!.traceThickness)
       expect(result[index]!.viaDiameter).toBe(routes[index]!.viaDiameter)
     }
   }

@@ -611,9 +611,10 @@ export const applyPipeline9RegionalB01Repairs = ({
     candidateRoutes: HighDensityRoute[],
   ): boolean => {
     const fixedViolations = new Map(
-      getFixedObstacleViolations({ srj: physicalSrj, routes: previousRoutes }).map(
-        (violation) => [violation.key, violation.severity],
-      ),
+      getFixedObstacleViolations({
+        srj: physicalSrj,
+        routes: previousRoutes,
+      }).map((violation) => [violation.key, violation.severity]),
     )
     return (
       !getFixedObstacleViolations({
@@ -621,7 +622,8 @@ export const applyPipeline9RegionalB01Repairs = ({
         routes: candidateRoutes,
       }).some(
         ({ key, severity }) =>
-          !fixedViolations.has(key) || severity > fixedViolations.get(key)! + 1e-8,
+          !fixedViolations.has(key) ||
+          severity > fixedViolations.get(key)! + 1e-8,
       ) &&
       getNewViaPadViolations({
         srj: physicalSrj,

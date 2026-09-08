@@ -197,11 +197,18 @@ export const applyPipeline9BoundedRegionalRepairs = ({
     attemptedRegions.push({ bounds: region.mutableBounds, size })
     result.attemptedRegionCount++
     if (region.routes.length === 0) continue
-    const dirtyTraceIds = new Set(currentErrors.flatMap(getPipeline9DrcErrorTraceIds))
-    const dirtyRouteIndices = region.routes.flatMap((route, routeIndex): number[] =>
-      [...dirtyTraceIds].some((traceId): boolean =>
-        traceId === route.connectionName || traceId.startsWith(`${route.connectionName}_`),
-      ) ? [routeIndex] : [],
+    const dirtyTraceIds = new Set(
+      currentErrors.flatMap(getPipeline9DrcErrorTraceIds),
+    )
+    const dirtyRouteIndices = region.routes.flatMap(
+      (route, routeIndex): number[] =>
+        [...dirtyTraceIds].some(
+          (traceId): boolean =>
+            traceId === route.connectionName ||
+            traceId.startsWith(`${route.connectionName}_`),
+        )
+          ? [routeIndex]
+          : [],
     )
     // Share the work limit across regions so congestion history survives
     // while a coupled group is rerouted. Early convergence leaves work for
@@ -224,7 +231,8 @@ export const applyPipeline9BoundedRegionalRepairs = ({
     if (
       !Number.isSafeInteger(candidateAttempts) ||
       candidateAttempts < 0 ||
-      candidateAttempts + result.candidateAttemptCount > MAX_CANDIDATE_ATTEMPTS ||
+      candidateAttempts + result.candidateAttemptCount >
+        MAX_CANDIDATE_ATTEMPTS ||
       !Number.isSafeInteger(pathSearchNodes) ||
       pathSearchNodes < 0 ||
       pathSearchNodes + result.pathSearchNodeCount > MAX_PATH_SEARCH_NODES

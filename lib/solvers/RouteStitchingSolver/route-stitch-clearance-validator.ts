@@ -144,7 +144,9 @@ export class RouteStitchClearanceValidator {
   }) {
     this.minClearance = minClearance
     if (obstacles.length > 0 && layerCount === undefined) {
-      throw new Error("Stitch obstacle clearance requires the board layer count")
+      throw new Error(
+        "Stitch obstacle clearance requires the board layer count",
+      )
     }
     for (const hdRoute of hdRoutes) {
       this.addRoute(hdRoute)
@@ -155,13 +157,14 @@ export class RouteStitchClearanceValidator {
       const cosine = Math.cos(angle)
       const sine = Math.sin(angle)
       const halfWidth =
-        (Math.abs(cosine) * obstacle.width +
-          Math.abs(sine) * obstacle.height) / 2
+        (Math.abs(cosine) * obstacle.width + Math.abs(sine) * obstacle.height) /
+        2
       const halfHeight =
-        (Math.abs(sine) * obstacle.width +
-          Math.abs(cosine) * obstacle.height) / 2
+        (Math.abs(sine) * obstacle.width + Math.abs(cosine) * obstacle.height) /
+        2
       const zLayers =
-        obstacle.__zLayers ?? obstacle.zLayers ??
+        obstacle.__zLayers ??
+        obstacle.zLayers ??
         getUniqueValidZLayersFromLayerNames(obstacle.layers, layerCount!)
       for (const z of zLayers) {
         let index = this.obstacleIndexesByLayer.get(z)
@@ -326,16 +329,17 @@ export class RouteStitchClearanceValidator {
     const queryMaxY = Math.max(start.y, end.y) + queryMargin
 
     const nearbyObstacles =
-      this.obstacleIndexesByLayer.get(start.z)?.search(
-        queryMinX, queryMinY, queryMaxX, queryMaxY,
-      ) ?? []
+      this.obstacleIndexesByLayer
+        .get(start.z)
+        ?.search(queryMinX, queryMinY, queryMaxX, queryMaxY) ?? []
     const roots = this.rootsByConnection.get(connectionName)
     for (const indexedObstacle of nearbyObstacles) {
       if (
         indexedObstacle.obstacle.connectedTo.some(
           (id) => id === connectionName || roots?.has(id),
         )
-      ) continue
+      )
+        continue
       const gaps = getObstacleSegmentGaps(indexedObstacle, start, end)
       if (
         gaps.segmentGap < queryMargin &&

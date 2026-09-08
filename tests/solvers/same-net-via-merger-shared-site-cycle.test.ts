@@ -30,14 +30,16 @@ test("shared drill sites merge only when every attached route can move", () => {
     const solver = new SameNetViaMergerSolver({
       inputHdRoutes: routes,
       obstacles: blocked
-        ? [{
-            type: "rect",
-            center: { x: 0.3, y: 0 },
-            width: 0.1,
-            height: 0.1,
-            layers: ["inner2"],
-            connectedTo: ["foreign-pad"],
-          }]
+        ? [
+            {
+              type: "rect",
+              center: { x: 0.3, y: 0 },
+              width: 0.1,
+              height: 0.1,
+              layers: ["inner2"],
+              connectedTo: ["foreign-pad"],
+            },
+          ]
         : [],
       colorMap: {},
       layerCount: 4,
@@ -54,9 +56,9 @@ test("shared drill sites merge only when every attached route can move", () => {
     expect(solver.solved).toBeTrue()
     expect(solver.failed).toBeFalse()
     const output = solver.getMergedViaHdRoutes()!
-    const sites = new Set(output.flatMap((route) =>
-      route.vias.map((via) => `${via.x}:${via.y}`),
-    ))
+    const sites = new Set(
+      output.flatMap((route) => route.vias.map((via) => `${via.x}:${via.y}`)),
+    )
     expect(sites.size).toBe(blocked ? 2 : 1)
     if (blocked) expect(output).toEqual(routes)
   }

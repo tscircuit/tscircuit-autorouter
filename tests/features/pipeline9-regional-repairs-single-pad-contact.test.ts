@@ -10,7 +10,10 @@ test("regional routing repairs a single movable trace touching a foreign pad", (
     connectionName: "neighbor",
     traceThickness: 0.1,
     viaDiameter: 0.3,
-    route: [{ x: -4, y: 1, z: 0 }, { x: 4, y: 1, z: 0 }],
+    route: [
+      { x: -4, y: 1, z: 0 },
+      { x: 4, y: 1, z: 0 },
+    ],
     vias: [],
   })
   originalSrj.connections.push({
@@ -20,7 +23,10 @@ test("regional routing repairs a single movable trace touching a foreign pad", (
       { x: 4, y: 1, layer: "top", pcb_port_id: "neighbor_end" },
     ],
   })
-  for (const [x, port] of [[-4, "neighbor_start"], [4, "neighbor_end"]] as const) {
+  for (const [x, port] of [
+    [-4, "neighbor_start"],
+    [4, "neighbor_end"],
+  ] as const) {
     originalSrj.obstacles.push({
       type: "rect",
       center: { x, y: 1 },

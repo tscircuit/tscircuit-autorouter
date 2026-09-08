@@ -4,7 +4,10 @@ import { coalesceOverlappingSameNetVias } from "lib/autorouter-pipelines/Autorou
 import type { HighDensityRoute } from "lib/types/high-density-types"
 
 test("shares overlapping drills without moving terminals or foreign-net vias", () => {
-  const createRoute = (connectionName: string, viaX: number): HighDensityRoute => ({
+  const createRoute = (
+    connectionName: string,
+    viaX: number,
+  ): HighDensityRoute => ({
     connectionName,
     traceThickness: 0.1,
     viaDiameter: 0.3,
@@ -24,7 +27,10 @@ test("shares overlapping drills without moving terminals or foreign-net vias", (
       connectionName: "branch",
       traceThickness: 0.1,
       viaDiameter: 0.3,
-      route: [{ x: 0.02, y: 0, z: 0 }, { x: 0.02, y: 1, z: 0 }],
+      route: [
+        { x: 0.02, y: 0, z: 0 },
+        { x: 0.02, y: 1, z: 0 },
+      ],
       vias: [],
     },
   ] satisfies HighDensityRoute[]

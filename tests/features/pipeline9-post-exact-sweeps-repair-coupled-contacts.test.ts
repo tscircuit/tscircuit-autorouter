@@ -12,7 +12,9 @@ test("clears coupled post-exact contacts with bounded, physically valid sweeps",
   const srj = structuredClone(fixture.srj) as SimpleRouteJson
   const routes = structuredClone(fixture.routes) as HighDensityRoute[]
   const connMap = getConnectivityMapFromSimpleRouteJson(srj)
-  const evaluate = (hdRoutes: HighDensityRoute[]): ReturnType<typeof evaluateRelaxedDrc> =>
+  const evaluate = (
+    hdRoutes: HighDensityRoute[],
+  ): ReturnType<typeof evaluateRelaxedDrc> =>
     evaluateRelaxedDrc({
       inputSrj: srj,
       srjWithPointPairs: srj,
@@ -61,7 +63,9 @@ test("clears coupled post-exact contacts with bounded, physically valid sweeps",
   ).toEqual([])
   expect(Number(solver.stats.coalescedViaSweepCount)).toBe(1)
   expect(Number(solver.stats.postExactRegionalSweepCount)).toBeGreaterThan(0)
-  expect(Number(solver.stats.postExactRegionalSweepCount)).toBeLessThanOrEqual(2)
+  expect(Number(solver.stats.postExactRegionalSweepCount)).toBeLessThanOrEqual(
+    2,
+  )
   expect(
     Number(solver.stats.regionalB01RepairCandidateSearchCount),
   ).toBeLessThanOrEqual(
