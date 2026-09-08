@@ -1428,6 +1428,8 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         postExactRegionalLastCandidateDrcIssueCount: 0,
         postExactRegionalFinalReferenceDrcIssueCount: 0,
         postExactRegionalTimeMs: 0,
+        postExactRegionalProjectionAcceptedCount: 0,
+        postExactRegionalProjectionTimeMs: 0,
         coalescedViaSweepCount: 0,
         regionalB01RepairTimeMs: 0,
         boundedRegionalRepairAttemptedRegionCount: 0,
@@ -1501,6 +1503,8 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       postExactRegionalPhysicalRejectionCount: 0,
       postExactRegionalLastCandidateDrcIssueCount: 0,
       postExactRegionalTimeMs: 0,
+      postExactRegionalProjectionAcceptedCount: 0,
+      postExactRegionalProjectionTimeMs: 0,
       coalescedViaSweepCount: 0,
       boundedRegionalRepairAttemptedRegionCount: 0,
       boundedRegionalRepairAcceptedRegionCount: 0,
@@ -1632,7 +1636,18 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         terminalEscapeResult.attemptedCandidateCount
       stats.terminalEscapeAcceptedCount += terminalEscapeResult.acceptedCandidateCount
 
-      const candidate = boundedRegionalRepairResult.routes
+      const projectionStartedAt = performance.now()
+      const candidate = applyPipeline9ClearanceProjection({
+        originalSrj: this.params.originalSrj,
+        routes: boundedRegionalRepairResult.routes,
+        syntheticConnectionNames: this.syntheticConnectionNames,
+        drcEvaluator: this.cachedReferenceDrcEvaluator!,
+      })
+      stats.postExactRegionalProjectionTimeMs +=
+        performance.now() - projectionStartedAt
+      if (candidate !== boundedRegionalRepairResult.routes) {
+        stats.postExactRegionalProjectionAcceptedCount++
+      }
       const reference = this.cachedReferenceDrcEvaluator!({
         traces: [],
         routes: candidate,
