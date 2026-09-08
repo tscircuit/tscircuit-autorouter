@@ -489,10 +489,7 @@ test("pipeline9 gps logger preserves separation between XIN and ground", async (
   circuit.add(
     <GpsLogger
       algorithmFn={async (input: SimpleRouteJson) => {
-        const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(
-          input,
-          { effort: 4 },
-        )
+        const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(input)
         phaseSolvers.push(solver)
         solver.solve()
         expect(solver.solved).toBe(true)
@@ -539,9 +536,9 @@ test("pipeline9 gps logger preserves separation between XIN and ground", async (
     srjWithPointPairs: phaseSolvers[1].srjWithPointPairs!,
     routedTraces: phaseSolvers[1].getOutputSimplifiedPcbTraces(),
   }
+  expect(evaluateRelaxedDrc(snapshotInput).errors).toHaveLength(0)
   await expect(getBugReportSnapshotSvg(snapshotInput)).toMatchSvgSnapshot(
     import.meta.path,
     { svgName: "full-board" },
   )
-  expect(evaluateRelaxedDrc(snapshotInput).errors).toHaveLength(1)
 })

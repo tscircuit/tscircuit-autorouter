@@ -22,11 +22,10 @@ Zero-clearance checking distinguishes a physical short from a spacing violation.
 
 To regenerate the snapshot, prefix the test command with `BUN_UPDATE_SNAPSHOTS=1`.
 
-This draft is stacked on #2458 and uses routing effort 4 for both phases.
-The full TSX regression passes with zero trace-to-trace contacts and one relaxed
-DRC error, down from five at effort 1. This changes the reproduction’s routing
-configuration, not the autorouter algorithm or DRC thresholds.
-
-The remaining report concerns SW_RUN pins 1 and 2, declared internally connected
-in the original Circuit JSON. Correct reconstruction of that relationship for
-DRC needs separate work. The board is not yet DRC-clean.
+This candidate is stacked on #2458 and uses the default routing effort.
+Regional force improvement retains safe adjustments and restores only routes
+involved in newly introduced copper contacts. The full TSX reproduction locally
+improves from 5 to 0 relaxed DRC errors and retains zero trace contacts.
+The numeric DRC assertion runs before the snapshot assertion.
+The Game Boy fixture remains at 34 errors but gains two vias and one via-clearance
+report while removing one trace report. Cross-platform validation is still pending.

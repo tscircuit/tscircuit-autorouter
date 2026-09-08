@@ -1,6 +1,7 @@
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { GraphicsObject } from "graphics-debug"
 import { HighDensityForceImproveSolver } from "high-density-repair01/lib/HighDensityForceImproveSolver"
+import { retainRoutesWithoutNewCopperContacts } from "./retainRoutesWithoutNewCopperContacts"
 import { BaseSolver } from "lib/solvers/BaseSolver"
 import { Pipeline4HighDensityRepairSolver } from "lib/solvers/HighDensityRepairSolver/Pipeline4HighDensityRepairSolver"
 import { HighDensitySolver } from "lib/solvers/HighDensitySolver/HighDensitySolver"
@@ -208,7 +209,11 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
         return
       }
       if (!this.forceImproveSolver!.solved) return
-      const forceImprovedRoutes = this.forceImproveSolver!.getOutput()
+      const forceImprovedRoutes = retainRoutesWithoutNewCopperContacts({
+        originalRoutes: this.forceImproveSolver!.originalHdRoutes,
+        candidateRoutes: this.forceImproveSolver!.getOutput(),
+        connMap: this.params.connMap,
+      })
       if (!this.validateCandidateRoutes(forceImprovedRoutes)) {
         this.stats.forceImproveCandidateRejectionCount =
           Number(this.stats.forceImproveCandidateRejectionCount ?? 0) + 1
