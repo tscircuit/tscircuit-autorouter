@@ -273,22 +273,6 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
       routes: this.getFixedObstacleRoutes(),
       traceWidth: this.minTraceWidth,
       clearance: this.originalSrj.minTraceToPadEdgeClearance ?? 0.1,
-      obstacles: this.originalSrj.obstacles.map((obstacle) => ({
-        type: obstacle.type,
-        center: obstacle.center,
-        width: obstacle.width,
-        height: obstacle.height,
-        ccwRotationDegrees: obstacle.ccwRotationDegrees,
-        zLayers:
-          obstacle.zLayers ??
-          obstacle.layers.map((layer) =>
-            mapLayerNameToZ(layer, this.originalSrj.layerCount),
-          ),
-        netId:
-          obstacle.connectedTo.length > 0
-            ? (this.connMap.getNetConnectedToId(obstacle.connectedTo[0]!) ?? null)
-            : null,
-      })),
     }
   }
 
