@@ -2,6 +2,10 @@ import type { SerializedHyperGraph } from "@tscircuit/hypergraph"
 import { expect, test } from "bun:test"
 import { limitCrampedTinyGraphDuplicatePorts } from "lib/solvers/PortPointPathingSolver/tinyhypergraph/limitCrampedTinyGraphDuplicatePorts"
 
+type SerializedCandidate = NonNullable<
+  SerializedHyperGraph["solvedRoutes"]
+>[number]["path"][number]
+
 test("cramped admission leaves input graphs and seeded copper identities unchanged", (): void => {
   const connection = {
     connectionId: "seeded-route",
@@ -55,9 +59,10 @@ test("cramped admission leaves input graphs and seeded copper identities unchang
       },
     ],
     regions: [
-      { regionId: "left", pointIds: ["seed-in"] },
+      { regionId: "left", pointIds: ["seed-in"], d: {} },
       {
         regionId: "center",
+        d: {},
         pointIds: ["seed-in", "seed-out"],
         assignments: [
           {
@@ -67,14 +72,21 @@ test("cramped admission leaves input graphs and seeded copper identities unchang
           },
         ],
       },
-      { regionId: "right", pointIds: ["seed-out"] },
+      { regionId: "right", pointIds: ["seed-out"], d: {} },
     ],
     connections: [connection],
     solvedRoutes: [
       {
         connection,
         requiredRip: false,
-        path: [{ portId: "seed-in" }, { portId: "seed-out" }],
+        path: ["seed-in", "seed-out"].map((portId): SerializedCandidate => ({
+          portId,
+          g: 0,
+          h: 0,
+          f: 0,
+          hops: 0,
+          ripRequired: false,
+        })),
       },
     ],
   }

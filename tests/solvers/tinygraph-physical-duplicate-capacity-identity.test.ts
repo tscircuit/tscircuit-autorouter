@@ -33,6 +33,7 @@ test("cramped admission preserves every original port and removes both duplicate
     regions: [
       {
         regionId: "left",
+        d: {},
         pointIds: [
           "first-original",
           "second-original",
@@ -41,6 +42,7 @@ test("cramped admission preserves every original port and removes both duplicate
       },
       {
         regionId: "right",
+        d: {},
         pointIds: [
           "original-with-prior-provenance",
           "second-original",

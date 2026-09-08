@@ -398,28 +398,32 @@ export class UniformPortDistributionSolver extends BaseSolver {
       ports.sort((a, b): number =>
         sharedEdge.orientation === "horizontal" ? a.x - b.x : a.y - b.y,
       )
-      const axisStart = sharedEdge.orientation === "horizontal"
-        ? sharedEdge.x1
-        : sharedEdge.y1
-      const axisEnd = sharedEdge.orientation === "horizontal"
-        ? sharedEdge.x2
-        : sharedEdge.y2
+      const axisStart =
+        sharedEdge.orientation === "horizontal" ? sharedEdge.x1 : sharedEdge.y1
+      const axisEnd =
+        sharedEdge.orientation === "horizontal" ? sharedEdge.x2 : sharedEdge.y2
       const placementPorts = ports.map((port, index): OrderedPhysicalPort => {
         if (!port.portPointId) {
-          throw new Error(`Uniform edge "${sharedEdge.ownerPairKey}" has an unnamed physical port`)
+          throw new Error(
+            `Uniform edge "${sharedEdge.ownerPairKey}" has an unnamed physical port`,
+          )
         }
         const canonicalNetId = this.canonicalNetIdByPortId.get(port.portPointId)
         if (!canonicalNetId) {
-          throw new Error(`Uniform port "${port.portPointId}" has no physical net`)
+          throw new Error(
+            `Uniform port "${port.portPointId}" has no physical net`,
+          )
         }
-        const selected = sharedEdge.orientation === "horizontal"
-          ? port.x
-          : port.y
-        const onEdge = sharedEdge.orientation === "horizontal"
-          ? port.y === sharedEdge.y1
-          : port.x === sharedEdge.x1
+        const selected =
+          sharedEdge.orientation === "horizontal" ? port.x : port.y
+        const onEdge =
+          sharedEdge.orientation === "horizontal"
+            ? port.y === sharedEdge.y1
+            : port.x === sharedEdge.x1
         if (!onEdge || selected < axisStart || selected > axisEnd) {
-          throw new Error(`Uniform port "${port.portPointId}" is outside its physical edge`)
+          throw new Error(
+            `Uniform port "${port.portPointId}" is outside its physical edge`,
+          )
         }
         const intervals = getFixedCopperClearanceIntervals({
           start: { x: sharedEdge.x1, y: sharedEdge.y1 },
@@ -435,7 +439,8 @@ export class UniformPortDistributionSolver extends BaseSolver {
           end: axisStart + interval.end,
         }))
         const selectedChannel = intervals.find(
-          (interval): boolean => selected >= interval.start && selected <= interval.end,
+          (interval): boolean =>
+            selected >= interval.start && selected <= interval.end,
         )
         if (
           !selectedChannel ||
@@ -445,27 +450,32 @@ export class UniformPortDistributionSolver extends BaseSolver {
             copperDiameter: context.traceWidth,
           })
         ) {
-          throw new Error(`Uniform port "${port.portPointId}" was selected inside forbidden fixed copper clearance`)
+          throw new Error(
+            `Uniform port "${port.portPointId}" was selected inside forbidden fixed copper clearance`,
+          )
         }
         const fixed = fixedEdge || this.fixedPortIds.has(port.portPointId)
-        const representableChannel = getRepresentableFixedCopperClearanceChannel({
-          interval: selectedChannel,
-          axis: sharedEdge.orientation === "horizontal" ? "x" : "y",
-          fixedCoordinate: sharedEdge.orientation === "horizontal"
-            ? sharedEdge.y1
-            : sharedEdge.x1,
-          z,
-          selectedCoordinate: selected,
-          canonicalNetId,
-          copperDiameter: context.traceWidth,
-          clearanceIndex: context.traceClearanceIndex,
-        })
+        const representableChannel =
+          getRepresentableFixedCopperClearanceChannel({
+            interval: selectedChannel,
+            axis: sharedEdge.orientation === "horizontal" ? "x" : "y",
+            fixedCoordinate:
+              sharedEdge.orientation === "horizontal"
+                ? sharedEdge.y1
+                : sharedEdge.x1,
+            z,
+            selectedCoordinate: selected,
+            canonicalNetId,
+            copperDiameter: context.traceWidth,
+            clearanceIndex: context.traceClearanceIndex,
+          })
         return {
           allowedIntervals: fixed
             ? [{ start: selected, end: selected }]
             : [representableChannel],
           uniformTarget:
-            axisStart + sharedEdge.length * (2 * index + 1) / (2 * ports.length),
+            axisStart +
+            (sharedEdge.length * (2 * index + 1)) / (2 * ports.length),
           canonicalNetId,
           copperDiameter: context.traceWidth,
         }
@@ -477,19 +487,25 @@ export class UniformPortDistributionSolver extends BaseSolver {
       for (const [index, port] of ports.entries()) {
         const updated = {
           ...port,
-          x: sharedEdge.orientation === "horizontal"
-            ? positions[index]!
-            : sharedEdge.x1,
-          y: sharedEdge.orientation === "horizontal"
-            ? sharedEdge.y1
-            : positions[index]!,
+          x:
+            sharedEdge.orientation === "horizontal"
+              ? positions[index]!
+              : sharedEdge.x1,
+          y:
+            sharedEdge.orientation === "horizontal"
+              ? sharedEdge.y1
+              : positions[index]!,
         }
-        if (!context.traceClearanceIndex.isPointClear({
-          point: updated,
-          canonicalNetId: placementPorts[index]!.canonicalNetId,
-          copperDiameter: context.traceWidth,
-        })) {
-          throw new Error(`Uniform port "${port.portPointId}" has unrepresentable fixed copper clearance after placement`)
+        if (
+          !context.traceClearanceIndex.isPointClear({
+            point: updated,
+            canonicalNetId: placementPorts[index]!.canonicalNetId,
+            copperDiameter: context.traceWidth,
+          })
+        ) {
+          throw new Error(
+            `Uniform port "${port.portPointId}" has unrepresentable fixed copper clearance after placement`,
+          )
         }
         redistributed.push(updated)
       }

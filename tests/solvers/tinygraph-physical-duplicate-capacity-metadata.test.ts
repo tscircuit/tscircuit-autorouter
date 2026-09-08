@@ -21,24 +21,19 @@ test("cramped duplicate admission uses original source metadata and retains fals
         portId: "unspecified-source",
         region1Id: "left",
         region2Id: "right",
+        d: {},
       },
     ],
     regions: [
       {
         regionId: "left",
-        pointIds: [
-          "cramped-source",
-          "ordinary-source",
-          "unspecified-source",
-        ],
+        d: {},
+        pointIds: ["cramped-source", "ordinary-source", "unspecified-source"],
       },
       {
         regionId: "right",
-        pointIds: [
-          "cramped-source",
-          "ordinary-source",
-          "unspecified-source",
-        ],
+        d: {},
+        pointIds: ["cramped-source", "ordinary-source", "unspecified-source"],
       },
     ],
   }

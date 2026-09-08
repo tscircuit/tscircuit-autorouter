@@ -1167,7 +1167,8 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
             proposedGraph: graphForTiny,
           })
           graphForTiny = admitted.graph
-          this.rejectedCrampedDuplicatePortCount = admitted.removedPortIds.length
+          this.rejectedCrampedDuplicatePortCount =
+            admitted.removedPortIds.length
         }
         const originalPortIds = new Set(
           serializedGraph.ports.map((port): string => port.portId),
@@ -1191,7 +1192,9 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
     this.duplicatedPortCount =
       proposedDuplicatePortCount - this.rejectedCrampedDuplicatePortCount
     if (this.duplicatedPortCount < 0) {
-      throw new Error("Tiny duplicate admission removed more ports than proposed")
+      throw new Error(
+        "Tiny duplicate admission removed more ports than proposed",
+      )
     }
     const tinyPipelineInput = getTinyHyperGraphPipelineInput(
       {

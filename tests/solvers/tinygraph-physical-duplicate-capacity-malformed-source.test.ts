@@ -13,8 +13,8 @@ test("cramped admission fails loudly on malformed new provenance or missing orig
       },
     ],
     regions: [
-      { regionId: "left", pointIds: ["source"] },
-      { regionId: "right", pointIds: ["source"] },
+      { regionId: "left", pointIds: ["source"], d: {} },
+      { regionId: "right", pointIds: ["source"], d: {} },
     ],
   }
   for (const duplicatedFromPortId of [undefined, null, 7, "", "missing"]) {
