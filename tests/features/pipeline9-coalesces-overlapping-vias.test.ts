@@ -35,6 +35,13 @@ test("shares overlapping drills without moving terminals or foreign-net vias", (
     routes,
     connMap,
     viaHoleDiameter: 0.15,
+    srj: {
+      bounds: { minX: -2, minY: -2, maxX: 2, maxY: 2 },
+      layerCount: 2,
+      minTraceWidth: 0.1,
+      obstacles: [],
+      connections: [],
+    },
   })
 
   expect(routes).toEqual(original)

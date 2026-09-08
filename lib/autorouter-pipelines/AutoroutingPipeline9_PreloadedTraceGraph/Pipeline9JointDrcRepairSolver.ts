@@ -1555,6 +1555,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
             routes,
             connMap: this.params.connMap,
             viaHoleDiameter: this.params.defaultViaHoleDiameter,
+            srj: this.params.originalSrj,
           })
         : routes
       const terminalEscapeResult = applyPipeline9TerminalEscapeRelocations({
@@ -1637,7 +1638,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       stats.terminalEscapeAcceptedCount += terminalEscapeResult.acceptedCandidateCount
 
       const projectionStartedAt = performance.now()
-      const candidate = applyPipeline9ClearanceProjection({
+      const projectedRoutes = applyPipeline9ClearanceProjection({
         originalSrj: this.params.originalSrj,
         routes: boundedRegionalRepairResult.routes,
         syntheticConnectionNames: this.syntheticConnectionNames,
@@ -1645,9 +1646,18 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       })
       stats.postExactRegionalProjectionTimeMs +=
         performance.now() - projectionStartedAt
-      if (candidate !== boundedRegionalRepairResult.routes) {
+      if (projectedRoutes !== boundedRegionalRepairResult.routes) {
         stats.postExactRegionalProjectionAcceptedCount++
       }
+      // Rerouting and projection can bring same-net drills together again.
+      const candidate = canMoveWholeRoutes
+        ? coalesceOverlappingSameNetVias({
+            routes: projectedRoutes,
+            connMap: this.params.connMap,
+            viaHoleDiameter: this.params.defaultViaHoleDiameter,
+            srj: this.params.originalSrj,
+          })
+        : projectedRoutes
       const reference = this.cachedReferenceDrcEvaluator!({
         traces: [],
         routes: candidate,
@@ -1673,7 +1683,9 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         break
       }
       stats.postExactRegionalAcceptedSweepCount++
-      if (coalescedRoutes !== routes) stats.coalescedViaSweepCount++
+      if (coalescedRoutes !== routes || candidate !== projectedRoutes) {
+        stats.coalescedViaSweepCount++
+      }
       stats.boundedRegionalRepairRepaired ||= boundedRegionalRepairResult.repaired
       stats.regionalB01RepairRemainingDrcIssueCount =
         regionalB01RepairResult.remainingDrcIssueCount
