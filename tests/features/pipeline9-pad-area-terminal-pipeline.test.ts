@@ -30,7 +30,9 @@ test("Pipeline9 carries a pad-area landing through MST and native pathing into s
   const pairedSrj = pipeline.srjWithPointPairs
   const pathing = pipeline.portPointPathingSolver
   if (!pairedSrj || pairedSrj.connections.length !== 1 || !pathing?.solved) {
-    throw new Error("Pad-area fixture requires one pair and solved native pathing")
+    throw new Error(
+      "Pad-area fixture requires one pair and solved native pathing",
+    )
   }
   const connection = pairedSrj.connections[0]!
   const landing = connection.pointsToConnect.find(
@@ -47,10 +49,11 @@ test("Pipeline9 carries a pad-area landing through MST and native pathing into s
   expect(landing.layer).toBe("top")
   expect(landing.pointId).toBe("logical-a")
   expect(connection.name).toBe("net-a")
-  const nativeTerminals = pathing.getOutput().nodesWithPortPoints.flatMap(
-    (node): typeof node.portPoints =>
+  const nativeTerminals = pathing
+    .getOutput()
+    .nodesWithPortPoints.flatMap((node): typeof node.portPoints =>
       node.portPoints.filter((point): boolean => point.pcb_port_id === "pcb-a"),
-  )
+    )
   expect(nativeTerminals.length).toBeGreaterThan(0)
   for (const terminal of nativeTerminals) {
     expect(terminal.x).toBe(landing.x)

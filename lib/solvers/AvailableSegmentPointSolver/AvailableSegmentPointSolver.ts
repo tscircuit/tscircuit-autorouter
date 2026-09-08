@@ -172,7 +172,9 @@ export class AvailableSegmentPointSolver extends BaseSolver {
         !this.nodeMap.has(firstId) ||
         !this.nodeMap.has(secondId)
       ) {
-        throw new Error(`Physical node cut "${physicalCutId}" has invalid nodes`)
+        throw new Error(
+          `Physical node cut "${physicalCutId}" has invalid nodes`,
+        )
       }
       cutIds.add(physicalCutId)
       for (const [fromId, toId] of [
@@ -228,10 +230,14 @@ export class AvailableSegmentPointSolver extends BaseSolver {
     cut: PhysicalNodeCut,
   ): SharedEdgeSegment {
     if (this.physicalNodeCuts === undefined) {
-      throw new Error("Physical cut sites require their source geometry context")
+      throw new Error(
+        "Physical cut sites require their source geometry context",
+      )
     }
     if (this.consumedPhysicalCutIds.has(cut.physicalCutId)) {
-      throw new Error(`Physical node cut "${cut.physicalCutId}" has repeated edges`)
+      throw new Error(
+        `Physical node cut "${cut.physicalCutId}" has repeated edges`,
+      )
     }
     // Recompute on the actual shared edge, not its nominal subdivision plane:
     // reconstructing centers and dimensions can change a boundary by an ULP.
@@ -249,7 +255,10 @@ export class AvailableSegmentPointSolver extends BaseSolver {
       // A blocked layer has no resource. Do not invent a cramped midpoint.
       if (centermostSite === undefined) continue
       for (const site of layer.sites) {
-        if (Math.abs(site[axis] - center) < Math.abs(centermostSite[axis] - center)) {
+        if (
+          Math.abs(site[axis] - center) <
+          Math.abs(centermostSite[axis] - center)
+        ) {
           centermostSite = site
         }
       }
@@ -297,7 +306,12 @@ export class AvailableSegmentPointSolver extends BaseSolver {
       .get(node1.capacityMeshNodeId)
       ?.get(node2.capacityMeshNodeId)
     if (physicalCut !== undefined) {
-      return this.createPhysicalCutSegment(edge, overlap, availableZ, physicalCut)
+      return this.createPhysicalCutSegment(
+        edge,
+        overlap,
+        availableZ,
+        physicalCut,
+      )
     }
 
     // Compute how many port points can fit on this segment

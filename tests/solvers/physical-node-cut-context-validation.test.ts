@@ -16,7 +16,10 @@ test("physical node cut context validates spatial inputs before indexing and cop
     { ...context, layerCount: 0 },
     { ...context, routableNetIds: new Set() },
     { ...context, protectedPoints: [{ x: 0, y: Number.NaN }] },
-    { ...context, rectangles: [{ ...context.rectangles[0]!, width: Number.NaN }] },
+    {
+      ...context,
+      rectangles: [{ ...context.rectangles[0]!, width: Number.NaN }],
+    },
     { ...context, rectangles: [{ ...context.rectangles[0]!, zLayers: [2] }] },
     {
       ...context,
@@ -45,7 +48,9 @@ test("physical node cut context validates spatial inputs before indexing and cop
   mutableCenter.x = 100
   mutableOwners.add("route-a")
   mutableLayers[0] = 0
-  expect(getFixedCopperNodeCuts({ node, context: prepared }).cuts).toHaveLength(3)
+  expect(getFixedCopperNodeCuts({ node, context: prepared }).cuts).toHaveLength(
+    3,
+  )
   expect((): void => {
     getFixedCopperNodeCuts({
       node: { ...node, center: { x: Number.NaN, y: 0 } },

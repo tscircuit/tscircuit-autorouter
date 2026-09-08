@@ -5,11 +5,15 @@ import { CapacityMeshEdgeSolver } from "lib/solvers/CapacityMeshSolver/CapacityM
 import { NodeDimensionSubdivisionSolver } from "lib/solvers/NodeDimensionSubdivisionSolver/NodeDimensionSubdivisionSolver"
 import { buildHyperGraph } from "lib/solvers/PortPointPathingSolver/hgportpointpathingsolver"
 import { TinyHypergraphPortPointPathingSolver } from "lib/solvers/PortPointPathingSolver/tinyhypergraph/TinyHypergraphPortPointPathingSolver"
+import type { TinyHyperGraphSolver } from "tiny-hypergraph/lib/index"
 import { createPhysicalNodeCutNativeInput } from "../fixtures/tinygraph/createPhysicalNodeCutNativeInput"
 import { createPhysicalWrapperProblem } from "../fixtures/tinygraph/createPhysicalWrapperProblem"
 
 test("eight same-net branches can share the seven original finite-cut sites without an outside route", (): void => {
   const input = createPhysicalNodeCutNativeInput(true)
+  const originalNodes = structuredClone(input.nodes)
+  const originalConnections = structuredClone(input.connections)
+  const originalContext = structuredClone(input.context)
   expect(input.context.routableNetIds.size).toBe(1)
   expect(
     input.nodes.some(
@@ -46,6 +50,8 @@ test("eight same-net branches can share the seven original finite-cut sites with
     connectivityMap: input.connectivityMap,
     layerCount: input.context.layerCount,
   })
+  const originalGraph = structuredClone(graph)
+  const originalGraphConnections = structuredClone(connections)
   const solver = new TinyHypergraphPortPointPathingSolver({
     ...createPhysicalWrapperProblem(),
     graph,
@@ -64,10 +70,19 @@ test("eight same-net branches can share the seven original finite-cut sites with
   expect(solver.error).toBeNull()
   expect(solver.failed).toBeFalse()
   expect(solver.solved).toBeTrue()
+  const initialNative =
+    solver["tinyPipelineSolver"].getSolver<TinyHyperGraphSolver>("solveGraph")
+  if (initialNative === undefined) {
+    throw new Error("The initial native routing stage was not retained")
+  }
+  // The final section stage replays solved assignments; the initial routing
+  // stage must have solved these routes without any preloaded assignments.
+  expect(initialNative.problem.initialAssignments ?? []).toEqual([])
+  expect(initialNative.solved).toBeTrue()
+  expect(initialNative.state.unroutedRoutes).toEqual([])
   const native = solver["getSolvedTinySolver"]()
   expect(native.problem.routeCount).toBe(8)
   expect(new Set(native.problem.routeNet).size).toBe(1)
-  expect(native.problem.initialAssignments ?? []).toEqual([])
   expect(native.state.unroutedRoutes).toEqual([])
   const cutRoutes = new Map<string, Set<number>>()
   const siteRoutes = new Map<number, Set<number>>()
@@ -96,4 +111,9 @@ test("eight same-net branches can share the seven original finite-cut sites with
     [...siteRoutes.values()].some((routes): boolean => routes.size > 1),
   ).toBeTrue()
   expect(solver.getOutput().changedPreloadedTraceSections).toEqual([])
+  expect(input.nodes).toEqual(originalNodes)
+  expect(input.connections).toEqual(originalConnections)
+  expect(input.context).toEqual(originalContext)
+  expect(graph).toEqual(originalGraph)
+  expect(connections).toEqual(originalGraphConnections)
 })

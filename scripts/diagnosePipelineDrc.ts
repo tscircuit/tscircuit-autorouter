@@ -1317,7 +1317,8 @@ const installHdRuntimeObservation = (
       outcome,
       nodeId: getDiagnosticOwnValue(node, "capacityMeshNodeId") ?? null,
       portfolioClass: getDiagnosticClassName(portfolio),
-      portfolioIterations: getDiagnosticOwnValue(portfolio, "iterations") ?? null,
+      portfolioIterations:
+        getDiagnosticOwnValue(portfolio, "iterations") ?? null,
       candidateCount: Array.isArray(candidates) ? candidates.length : null,
       totalCandidateIterations,
       workByClass,
@@ -1624,7 +1625,10 @@ const diagnosePipelineDrc = async (): Promise<void> => {
   const nodes: NodeObservation[] = []
   const growthByNode = new Map<string, GrowShrinkHighDensityIntraNodeSolver>()
   const observeRegional = process.env.HD_DRC_REGIONAL_OBSERVATION === "1"
-  const regionalObservations = new WeakMap<object, RegionalBoundaryObservation>()
+  const regionalObservations = new WeakMap<
+    object,
+    RegionalBoundaryObservation
+  >()
   let regionalOrdinal = 0
   const writeRegionalBoundary = async (
     observation: RegionalStepObservation | null,
@@ -1717,7 +1721,10 @@ const diagnosePipelineDrc = async (): Promise<void> => {
         }),
       )
     } catch (artifactError) {
-      console.error("HD runtime observation artifact write failed", artifactError)
+      console.error(
+        "HD runtime observation artifact write failed",
+        artifactError,
+      )
     }
   }
   const originalRepair04GetOutput = Repair04Solver.prototype.getOutput
@@ -1983,10 +1990,16 @@ const diagnosePipelineDrc = async (): Promise<void> => {
           if (
             getDiagnosticOwnValue(regionalObservation.entry.solver, "phase") !==
               regionalObservation.phaseBefore ||
-            getDiagnosticOwnValue(regionalObservation.entry.solver, "failed") ===
-              true
+            getDiagnosticOwnValue(
+              regionalObservation.entry.solver,
+              "failed",
+            ) === true
           ) {
-            await writeRegionalBoundary(regionalObservation, "normal-step", null)
+            await writeRegionalBoundary(
+              regionalObservation,
+              "normal-step",
+              null,
+            )
           }
         } catch (captureError) {
           console.error("regional boundary observation failed", captureError)
@@ -2255,8 +2268,7 @@ const diagnosePipelineDrc = async (): Promise<void> => {
                           instance.attemptedNeverSuccessfulCount,
                         disconnectedCount: instance.routes.filter(
                           (route): boolean =>
-                            route.status ===
-                            "disconnected-in-optimistic-graph",
+                            route.status === "disconnected-in-optimistic-graph",
                         ).length,
                       }
                     : instance,

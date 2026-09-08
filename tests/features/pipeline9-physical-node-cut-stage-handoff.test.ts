@@ -103,14 +103,16 @@ test("Pipeline9 hands real physical subdivision cuts to available ports without 
   expect(available.getOutput()).toHaveLength(3)
   const cutCoordinates: number[] = []
   for (const cut of dimension.outputPhysicalCuts) {
-    const matchingEdges = pipeline.capacityEdges!.filter(
-      (edge): boolean =>
-        cut.nodeIds.every((nodeId): boolean => edge.nodeIds.includes(nodeId)),
+    const matchingEdges = pipeline.capacityEdges!.filter((edge): boolean =>
+      cut.nodeIds.every((nodeId): boolean => edge.nodeIds.includes(nodeId)),
     )
     expect(matchingEdges).toHaveLength(1)
-    const segments = available.getOutput().filter(
-      (segment): boolean => segment.edgeId === matchingEdges[0]!.capacityMeshEdgeId,
-    )
+    const segments = available
+      .getOutput()
+      .filter(
+        (segment): boolean =>
+          segment.edgeId === matchingEdges[0]!.capacityMeshEdgeId,
+      )
     expect(segments).toHaveLength(1)
     const segment = segments[0]!
     expect(segment.nodeIds).toEqual(matchingEdges[0]!.nodeIds)
@@ -145,7 +147,8 @@ test("Pipeline9 hands real physical subdivision cuts to available ports without 
   for (const anchor of capacityNodes.slice(1)) {
     expect(
       pipeline.capacityNodes!.find(
-        (node): boolean => node.capacityMeshNodeId === anchor.capacityMeshNodeId,
+        (node): boolean =>
+          node.capacityMeshNodeId === anchor.capacityMeshNodeId,
       ),
     ).toBe(anchor)
   }

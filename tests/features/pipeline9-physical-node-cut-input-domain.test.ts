@@ -8,22 +8,26 @@ test("Pipeline9 derives finite cuts only from generated-copper input while retai
     minTraceWidth: 0.125,
     minTraceToPadEdgeClearance: 0.0625,
     bounds: { minX: -2, maxX: 2, minY: -4, maxY: 4 },
-    obstacles: [{
-      obstacleId: "foreign-fixed-pad",
-      type: "rect",
-      center: { x: 0.5, y: 0 },
-      width: 0.125,
-      height: 1,
-      layers: ["bottom"],
-      connectedTo: ["unused-fixed-net"],
-    }],
-    connections: [{
-      name: "route-a",
-      pointsToConnect: [
-        { x: -0.25, y: -3, layer: "top", pcb_port_id: "port-a" },
-        { x: -0.25, y: 3, layer: "bottom", pcb_port_id: "port-b" },
-      ],
-    }],
+    obstacles: [
+      {
+        obstacleId: "foreign-fixed-pad",
+        type: "rect",
+        center: { x: 0.5, y: 0 },
+        width: 0.125,
+        height: 1,
+        layers: ["bottom"],
+        connectedTo: ["unused-fixed-net"],
+      },
+    ],
+    connections: [
+      {
+        name: "route-a",
+        pointsToConnect: [
+          { x: -0.25, y: -3, layer: "top", pcb_port_id: "port-a" },
+          { x: -0.25, y: 3, layer: "bottom", pcb_port_id: "port-b" },
+        ],
+      },
+    ],
   }
   const before = structuredClone(srj)
   const pipeline = new AutoroutingPipelineSolver9_PreloadedTraceGraph(srj, {
@@ -44,16 +48,18 @@ test("Pipeline9 derives finite cuts only from generated-copper input while retai
   expect(srj).toEqual(before)
 
   const withPreload = structuredClone(srj)
-  withPreload.traces = [{
-    type: "pcb_trace",
-    pcb_trace_id: "unchanged-source-copper",
-    connection_name: "route-a",
-    connectsTo: ["port-a", "port-b"],
-    route: [
-      { route_type: "wire", x: -0.25, y: -3, width: 0.125, layer: "top" },
-      { route_type: "wire", x: -0.25, y: 3, width: 0.125, layer: "top" },
-    ],
-  }]
+  withPreload.traces = [
+    {
+      type: "pcb_trace",
+      pcb_trace_id: "unchanged-source-copper",
+      connection_name: "route-a",
+      connectsTo: ["port-a", "port-b"],
+      route: [
+        { route_type: "wire", x: -0.25, y: -3, width: 0.125, layer: "top" },
+        { route_type: "wire", x: -0.25, y: 3, width: 0.125, layer: "top" },
+      ],
+    },
+  ]
   const preloadBefore = structuredClone(withPreload)
   const preloadedPipeline = new AutoroutingPipelineSolver9_PreloadedTraceGraph(
     withPreload,

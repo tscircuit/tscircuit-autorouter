@@ -154,7 +154,10 @@ export const getFixedCopperPortalSites = (
     const sites: FixedCopperPortalSite[] = []
     let nextCoordinate: number | undefined
     for (const interval of intervals) {
-      let coordinate = Math.max(interval.start, nextCoordinate ?? interval.start)
+      let coordinate = Math.max(
+        interval.start,
+        nextCoordinate ?? interval.start,
+      )
       while (coordinate <= interval.end) {
         sites.push({
           index: sites.length,
@@ -174,7 +177,9 @@ export const getFixedCopperPortalSites = (
     }
     totalCapacity += sites.length
     if (!Number.isSafeInteger(totalCapacity)) {
-      throw new Error("getFixedCopperPortalSites cannot represent total capacity")
+      throw new Error(
+        "getFixedCopperPortalSites cannot represent total capacity",
+      )
     }
     layers.push({ z, intervals, sites, capacity: sites.length })
   }

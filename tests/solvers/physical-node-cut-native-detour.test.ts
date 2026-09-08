@@ -5,6 +5,7 @@ import { CapacityMeshEdgeSolver } from "lib/solvers/CapacityMeshSolver/CapacityM
 import { NodeDimensionSubdivisionSolver } from "lib/solvers/NodeDimensionSubdivisionSolver/NodeDimensionSubdivisionSolver"
 import { buildHyperGraph } from "lib/solvers/PortPointPathingSolver/hgportpointpathingsolver"
 import { TinyHypergraphPortPointPathingSolver } from "lib/solvers/PortPointPathingSolver/tinyhypergraph/TinyHypergraphPortPointPathingSolver"
+import type { TinyHyperGraphSolver } from "tiny-hypergraph/lib/index"
 import { createPhysicalNodeCutNativeInput } from "../fixtures/tinygraph/createPhysicalNodeCutNativeInput"
 import { createPhysicalWrapperProblem } from "../fixtures/tinygraph/createPhysicalWrapperProblem"
 
@@ -68,6 +69,8 @@ test("native routing respects produced four-plus-three cut sites and sends exces
     connectivityMap: input.connectivityMap,
     layerCount: input.context.layerCount,
   })
+  const originalGraph = structuredClone(graph)
+  const originalGraphConnections = structuredClone(connections)
   const solver = new TinyHypergraphPortPointPathingSolver({
     ...createPhysicalWrapperProblem(),
     graph,
@@ -86,10 +89,19 @@ test("native routing respects produced four-plus-three cut sites and sends exces
   expect(solver.error).toBeNull()
   expect(solver.failed).toBeFalse()
   expect(solver.solved).toBeTrue()
+  const initialNative =
+    solver["tinyPipelineSolver"].getSolver<TinyHyperGraphSolver>("solveGraph")
+  if (initialNative === undefined) {
+    throw new Error("The initial native routing stage was not retained")
+  }
+  // The final section stage replays solved assignments; the initial routing
+  // stage must have solved these routes without any preloaded assignments.
+  expect(initialNative.problem.initialAssignments ?? []).toEqual([])
+  expect(initialNative.solved).toBeTrue()
+  expect(initialNative.state.unroutedRoutes).toEqual([])
   const native = solver["getSolvedTinySolver"]()
   expect(native.problem.routeCount).toBe(8)
   expect(new Set(native.problem.routeNet).size).toBe(8)
-  expect(native.problem.initialAssignments ?? []).toEqual([])
   expect(native.state.unroutedRoutes).toEqual([])
   for (let routeId = 0; routeId < native.problem.routeCount; routeId++) {
     const connectionId: unknown =
@@ -152,4 +164,6 @@ test("native routing respects produced four-plus-three cut sites and sends exces
   expect(input.nodes).toEqual(originalNodes)
   expect(input.connections).toEqual(originalConnections)
   expect(input.context).toEqual(originalContext)
+  expect(graph).toEqual(originalGraph)
+  expect(connections).toEqual(originalGraphConnections)
 })

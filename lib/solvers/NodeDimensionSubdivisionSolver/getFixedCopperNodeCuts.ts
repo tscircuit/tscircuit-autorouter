@@ -85,7 +85,9 @@ export const createFixedCopperNodeCutContext = (
       !Number.isFinite(rotation) ||
       rectangle.zLayers.length === 0
     ) {
-      throw new Error("Physical node cuts have invalid fixed rectangle geometry")
+      throw new Error(
+        "Physical node cuts have invalid fixed rectangle geometry",
+      )
     }
     for (const z of rectangle.zLayers) {
       if (!Number.isInteger(z) || z < 0 || z >= input.layerCount) {
@@ -110,7 +112,9 @@ export const createFixedCopperNodeCutContext = (
       maxX: rectangle.center.x + halfWidth,
       maxY: rectangle.center.y + halfHeight,
     }
-    if (Object.values(bounds).some((value): boolean => !Number.isFinite(value))) {
+    if (
+      Object.values(bounds).some((value): boolean => !Number.isFinite(value))
+    ) {
       throw new Error("Physical node cuts cannot represent rectangle bounds")
     }
     if (
@@ -221,7 +225,12 @@ export const getFixedCopperNodeCuts = (params: {
     return { nodes: [node], cuts: [] }
   }
   const margin = context.traceWidth / 2 + context.padGap
-  const queryBounds = [minX - margin, minY - margin, maxX + margin, maxY + margin]
+  const queryBounds = [
+    minX - margin,
+    minY - margin,
+    maxX + margin,
+    maxY + margin,
+  ]
   if (!queryBounds.every(Number.isFinite)) {
     throw new Error(
       `Physical node cuts cannot query bounds of ${node.capacityMeshNodeId}`,
@@ -251,7 +260,9 @@ export const getFixedCopperNodeCuts = (params: {
     coordinates.add(entry.rectangle.center[axis])
     coordinates.add(axis === "x" ? entry.maxX : entry.maxY)
   }
-  const rectangles = nearby.map((entry): FixedCopperRectangle => entry.rectangle)
+  const rectangles = nearby.map(
+    (entry): FixedCopperRectangle => entry.rectangle,
+  )
   const accepted: number[] = []
   let previous = minimum
   let unblockedCapacity: number | undefined

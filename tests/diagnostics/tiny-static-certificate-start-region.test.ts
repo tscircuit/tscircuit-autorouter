@@ -15,7 +15,12 @@ test("the certificate selects the native first-free then own starting region ins
   expect(wrongWay.startingRegionId).toBe(0)
   expect(wrongWay.status).toBe("disconnected-in-optimistic-graph")
   expect(wrongWay.frontier).toEqual([
-    { regionId: 0, portId: 0, nextRegionId: null, reason: "no-opposite-region" },
+    {
+      regionId: 0,
+      portId: 0,
+      nextRegionId: null,
+      reason: "no-opposite-region",
+    },
   ])
   native.problem.regionNetId[0] = 1
   const rightWay = getOnlyTinyStaticRoute(

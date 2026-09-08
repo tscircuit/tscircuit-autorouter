@@ -40,8 +40,12 @@ test("unknown capture data and seeds are never interpreted as free topology or e
     expect(result.status).toBe("unavailable")
     expect(result.instances[0]).toMatchObject({ status: "unsupported-input" })
   }
-  expect(createTinyStaticReachabilityCertificate(null).status).toBe("unavailable")
+  expect(createTinyStaticReachabilityCertificate(null).status).toBe(
+    "unavailable",
+  )
   native.initialAssignmentsStatus = "absent-optional-native-field"
   native.problem.initialAssignments = null
-  expect(createTinyStaticReachabilityCertificate(capture).status).toBe("complete")
+  expect(createTinyStaticReachabilityCertificate(capture).status).toBe(
+    "complete",
+  )
 })

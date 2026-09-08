@@ -29,7 +29,13 @@ test("physical cut admission respects the existing aspect-ratio limit without re
       Math.max(child.width, child.height) / Math.min(child.width, child.height)
     expect(ratio).toBeLessThanOrEqual(2)
   }
-  expect(solver.outputPhysicalCuts[0]!.nodeIds).toEqual(
-    solver.outputNodes.map((child): string => child.capacityMeshNodeId),
-  )
+  const [firstChild, secondChild] = solver.outputNodes
+  if (firstChild === undefined || secondChild === undefined) {
+    throw new Error("The physical cut must retain both adjacent children")
+  }
+  const expectedNodeIds: readonly [string, string] = [
+    firstChild.capacityMeshNodeId,
+    secondChild.capacityMeshNodeId,
+  ]
+  expect(solver.outputPhysicalCuts[0]!.nodeIds).toEqual(expectedNodeIds)
 })

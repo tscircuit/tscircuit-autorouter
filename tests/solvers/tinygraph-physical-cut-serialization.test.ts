@@ -77,8 +77,7 @@ test("finite physical-cut provenance survives layer expansion and native seriali
     expect(serializedPort?.d?.physicalCutId).toBe("shared-edge-cut")
     expect(serializedPort?.d?.z).toBe(sourcePort.d.z)
     const nativePort = topology.portMetadata?.find(
-      (metadata): boolean =>
-        metadata.serializedPortId === sourcePort.d.portId,
+      (metadata): boolean => metadata.serializedPortId === sourcePort.d.portId,
     )
     expect(nativePort?.physicalCutId).toBe("shared-edge-cut")
     expect(nativePort?.x).toBe(sourcePort.d.x)

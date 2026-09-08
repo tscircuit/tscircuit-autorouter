@@ -45,7 +45,8 @@ test("portal capacity reuses rotated rectangle intervals without a bounding-box 
   for (const [index, site] of result.layers[0]!.sites.entries()) {
     expect(
       intervals.some(
-        (interval): boolean => site.x >= interval.start && site.x <= interval.end,
+        (interval): boolean =>
+          site.x >= interval.start && site.x <= interval.end,
       ),
     ).toBe(true)
     if (index > 0) {

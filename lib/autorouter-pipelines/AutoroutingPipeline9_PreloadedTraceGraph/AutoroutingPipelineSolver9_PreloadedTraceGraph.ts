@@ -1062,12 +1062,17 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     // producer projects copper onto nearby graph ports; that projection does
     // not yet preserve finite cut capacity. Classify the input before routing,
     // without changing source copper or retrying an unsuccessful strategy.
-    if (this.originalSrj.traces !== undefined && this.originalSrj.traces.length > 0) {
+    if (
+      this.originalSrj.traces !== undefined &&
+      this.originalSrj.traces.length > 0
+    ) {
       return undefined
     }
     const routingSrj = this.srjWithPointPairs
     if (routingSrj === undefined) {
-      throw new Error("Pipeline9 physical node cuts require the routing connections")
+      throw new Error(
+        "Pipeline9 physical node cuts require the routing connections",
+      )
     }
     if (routingSrj.connections.length === 0) return undefined
     const routableNetIds = new Set<string>()

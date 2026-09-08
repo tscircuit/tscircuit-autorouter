@@ -79,9 +79,7 @@ export type TinyStaticRouteCertificate = {
   startPortId: number
   goalPortId: number
   startingRegionId: number | null
-  status:
-    | "connected-in-optimistic-graph"
-    | "disconnected-in-optimistic-graph"
+  status: "connected-in-optimistic-graph" | "disconnected-in-optimistic-graph"
   reachedStateCount: number
   /** Complete directed closure only for a disconnected result. */
   reachedStates: [number, number][] | null

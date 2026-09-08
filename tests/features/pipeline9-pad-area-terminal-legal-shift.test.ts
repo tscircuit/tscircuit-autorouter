@@ -40,7 +40,10 @@ test("pad-area terminals choose the closest legal interior landing in original r
           canonicalNetId: netId,
         }),
       ).toBeFalse()
-      const result = resolvePipeline9PadAreaTerminals({ originalSrj, routingSrj })
+      const result = resolvePipeline9PadAreaTerminals({
+        originalSrj,
+        routingSrj,
+      })
       const landing = result.connections[0]!.pointsToConnect[0]!
       const angle = (rotation * Math.PI) / 180
       expect(landing.x).toBeCloseTo(translation.x + 0.63 * Math.cos(angle), 12)

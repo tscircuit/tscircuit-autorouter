@@ -197,10 +197,14 @@ const getRequiredLandingWidth = (params: {
 }): number => {
   const width = params.routingSrj.minTraceWidth
   if (!Number.isFinite(width) || width <= 0 || width / 2 <= 0) {
-    throw new Error("Pipeline9 pad-area terminals require a finite positive width")
+    throw new Error(
+      "Pipeline9 pad-area terminals require a finite positive width",
+    )
   }
   if (width !== params.originalSrj.minTraceWidth) {
-    throw new Error("Pipeline9 pad-area inputs must use the same minimum trace width")
+    throw new Error(
+      "Pipeline9 pad-area inputs must use the same minimum trace width",
+    )
   }
   // This is the actual generated HD width. Nominal/bus widths remain preferred
   // targets of the unchanged later TraceWidthSolver, which can keep min width.
@@ -339,7 +343,8 @@ export const resolvePipeline9PadAreaTerminals = (params: {
     }
     const oldCoordinateKey = getRoutingCoordinateKey(sourcePoint, [z])
     if (coordinateIdentity.declaredElectricalIds.has(oldCoordinateKey)) continue
-    const oldReferences = coordinateIdentity.referencesByKey.get(oldCoordinateKey)
+    const oldReferences =
+      coordinateIdentity.referencesByKey.get(oldCoordinateKey)
     if (oldReferences === undefined) {
       throw new Error(
         `Pipeline9 pad-area terminal "${pcbPortId}" has no routing coordinate reference`,
@@ -389,7 +394,9 @@ export const resolvePipeline9PadAreaTerminals = (params: {
       radius <= 0 ||
       !Number.isFinite(boardGap) ||
       boardGap < 0 ||
-      ![bounds.minX, bounds.maxX, bounds.minY, bounds.maxY].every(Number.isFinite) ||
+      ![bounds.minX, bounds.maxX, bounds.minY, bounds.maxY].every(
+        Number.isFinite,
+      ) ||
       bounds.minX >= bounds.maxX ||
       bounds.minY >= bounds.maxY
     ) {
@@ -463,7 +470,8 @@ export const resolvePipeline9PadAreaTerminals = (params: {
         if (
           !connection.pointsToConnect.some(
             (point): boolean =>
-              point.pcb_port_id !== undefined && landings.has(point.pcb_port_id),
+              point.pcb_port_id !== undefined &&
+              landings.has(point.pcb_port_id),
           )
         ) {
           return connection

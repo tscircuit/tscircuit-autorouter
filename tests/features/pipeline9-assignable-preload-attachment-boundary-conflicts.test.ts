@@ -79,8 +79,7 @@ test("unknown or foreign actual source boundaries cannot authorize assignable at
           },
         ]
       } else {
-        const layer =
-          boundaryKind === "other-layer-control" ? "bottom" : "top"
+        const layer = boundaryKind === "other-layer-control" ? "bottom" : "top"
         route = [
           {
             route_type: "wire",

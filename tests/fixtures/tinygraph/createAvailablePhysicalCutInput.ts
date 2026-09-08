@@ -16,8 +16,7 @@ export function createAvailablePhysicalCutInput(
   const nodes: CapacityMeshNode[] = [-0.875, 1.125].map(
     (coordinate, index): CapacityMeshNode => ({
       capacityMeshNodeId: index === 0 ? "first" : "second",
-      center:
-        axis === "x" ? { x: 0, y: coordinate } : { x: coordinate, y: 0 },
+      center: axis === "x" ? { x: 0, y: coordinate } : { x: coordinate, y: 0 },
       width: 2,
       height: 2,
       layer: "top",

@@ -9,12 +9,14 @@ test("empty declared aliases cannot merge competing source attachment identities
     originalSrj.connections.push({
       name: "foreign-declaration",
       __rootConnectionNames: [invalidId],
-      pointsToConnect: [{
-        x: 6,
-        y: 0,
-        layer: "top",
-        pcb_port_id: "foreign-terminal",
-      }],
+      pointsToConnect: [
+        {
+          x: 6,
+          y: 0,
+          layer: "top",
+          pcb_port_id: "foreign-terminal",
+        },
+      ],
     })
     const before = structuredClone(originalSrj)
     expect((): void => {

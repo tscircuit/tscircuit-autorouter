@@ -43,7 +43,9 @@ test("finite-cut admission rejects malformed explicit identities and changed ori
     proposedGraph.ports[0]!.d = { x: 0, y: 0, z: 0, physicalCutId }
     expect((): void => {
       limitCrampedTinyGraphDuplicatePorts({ originalGraph, proposedGraph })
-    }).toThrow('proposal changed physicalCutId of original port "original-site"')
+    }).toThrow(
+      'proposal changed physicalCutId of original port "original-site"',
+    )
   }
   const proposedGraph = structuredClone(originalGraph)
   const result = limitCrampedTinyGraphDuplicatePorts({

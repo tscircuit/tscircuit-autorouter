@@ -34,10 +34,9 @@ test("every occurrence of one PCB terminal receives one landing without changing
   expect(result).not.toBe(routingSrj)
   expect(result.obstacles).toBe(routingSrj.obstacles)
   expect(result.traces).toBe(routingSrj.traces)
-  expect(result.connections.map((connection): string => connection.name)).toEqual([
-    "net-a",
-    "another-pair",
-  ])
+  expect(
+    result.connections.map((connection): string => connection.name),
+  ).toEqual(["net-a", "another-pair"])
   const first = result.connections[0]!.pointsToConnect[0]!
   const second = result.connections[1]!.pointsToConnect[0]!
   expect(first.x).toBeCloseTo(0.63, 12)

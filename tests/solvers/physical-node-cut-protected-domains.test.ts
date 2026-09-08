@@ -53,5 +53,7 @@ test("physical cuts preserve source-anchor tolerance and special node ownership 
     expect(result.cuts).toEqual([])
     expect(result.nodes[0]).toBe(node)
   }
-  expect(getFixedCopperNodeCuts({ node, context: prepared }).cuts).toHaveLength(3)
+  expect(getFixedCopperNodeCuts({ node, context: prepared }).cuts).toHaveLength(
+    3,
+  )
 })

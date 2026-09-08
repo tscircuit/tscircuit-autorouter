@@ -16,7 +16,9 @@ test("physical node cuts retain min center max projections and actual adjacent c
   })
   expect(result.nodes).toHaveLength(4)
   expect(result.cuts).toHaveLength(3)
-  expect(result.nodes.map((child): number => child.height)).toEqual([3, 1, 1, 3])
+  expect(result.nodes.map((child): number => child.height)).toEqual([
+    3, 1, 1, 3,
+  ])
   expect(result.nodes.map((child): number => child.center.y)).toEqual([
     -2.5, -0.5, 0.5, 2.5,
   ])
@@ -39,7 +41,9 @@ test("physical node cuts retain min center max projections and actual adjacent c
     expect(sites.layers.map((layer): number => layer.capacity)).toEqual([9, 8])
     expect(sites.totalCapacity).toBe(17)
   }
-  expect(new Set(result.cuts.map((cut): string => cut.physicalCutId)).size).toBe(3)
+  expect(
+    new Set(result.cuts.map((cut): string => cut.physicalCutId)).size,
+  ).toBe(3)
   expect(result.nodes[0]!.center.y - result.nodes[0]!.height / 2).toBe(-4)
   expect(result.nodes[3]!.center.y + result.nodes[3]!.height / 2).toBe(4)
   expect({ node, context }).toEqual(before)

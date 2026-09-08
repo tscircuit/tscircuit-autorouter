@@ -28,7 +28,10 @@ test("portal capacity rejects unsupported cuts missing net domains and invalid p
   const changes: Partial<FixedCopperPortalSitesInput>[] = [
     { start: { x: Number.NaN, y: 0 } },
     { end: { x: 1, y: 1 } },
-    { start: { x: -Number.MAX_VALUE, y: 0 }, end: { x: Number.MAX_VALUE, y: 0 } },
+    {
+      start: { x: -Number.MAX_VALUE, y: 0 },
+      end: { x: Number.MAX_VALUE, y: 0 },
+    },
     { layerCount: 0 },
     { layerCount: 1.5 },
     { zLayers: [] },

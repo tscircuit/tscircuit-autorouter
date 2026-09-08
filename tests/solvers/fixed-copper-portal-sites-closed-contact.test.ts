@@ -15,14 +15,16 @@ test("exact clearance contacts and a legal singleton cut retain their physical s
     traceGap: 0.25,
     padGap: 0.125,
     routableNetIds: new Set(["route-net"]),
-    rectangles: [-1, 1].map((y): FixedCopperRectangle => ({
-      kind: "fixed-rectangle",
-      center: { x: 0, y },
-      width: 1,
-      height: 1.5,
-      zLayers: [0],
-      ownerNetIds: new Set(["pad-net"]),
-    })),
+    rectangles: [-1, 1].map(
+      (y): FixedCopperRectangle => ({
+        kind: "fixed-rectangle",
+        center: { x: 0, y },
+        width: 1,
+        height: 1.5,
+        zLayers: [0],
+        ownerNetIds: new Set(["pad-net"]),
+      }),
+    ),
   }
   const result = getFixedCopperPortalSites(input)
   expect(result.axis).toBe("y")
