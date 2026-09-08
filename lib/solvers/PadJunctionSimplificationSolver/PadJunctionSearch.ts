@@ -1,28 +1,51 @@
 import type {
   PadJunctionPoint,
+  JunctionPath,
+  SearchDirection,
   SearchCost,
   SearchState,
   TargetPad,
 } from "./PadJunctionSimplificationSolver"
 import { simplifyJunctionPath } from "./PadJunctionSimplificationSolver"
 
+type SearchGoal =
+  | { kind: "anchor"; point: PadJunctionPoint }
+  | { kind: "pad" }
+
+export type SearchResult =
+  | { status: "searching" }
+  | { status: "found"; path: JunctionPath }
+  | { status: "no_path" }
+
 type SearchInput = {
   start: PadJunctionPoint
-  anchor: PadJunctionPoint | null
+  goal: SearchGoal
   anchors: [PadJunctionPoint, PadJunctionPoint]
   pad: TargetPad
   width: number
   gridStep: number
-  direction: number
+  direction: SearchDirection
   segmentIsClear: (start: PadJunctionPoint, end: PadJunctionPoint) => boolean
 }
 type FrontierEntry = SearchState & {
   estimate: SearchCost
   xIndex: number
   yIndex: number
+  predecessor: FrontierEntry | null
 }
 const EPSILON = 1e-7
-const DIRECTIONS = [[1, 0], [0, 1], [-1, 0], [0, -1]] as const
+type GridDirection = {
+  direction: SearchDirection
+  opposite: SearchDirection
+  xOffset: number
+  yOffset: number
+}
+const DIRECTIONS: ReadonlyArray<GridDirection> = [
+  { direction: 0, opposite: 2, xOffset: 1, yOffset: 0 },
+  { direction: 1, opposite: 3, xOffset: 0, yOffset: 1 },
+  { direction: 2, opposite: 0, xOffset: -1, yOffset: 0 },
+  { direction: 3, opposite: 1, xOffset: 0, yOffset: -1 },
+]
 
 /** One frontier expansion per step. Costs are lexicographic, never weighted.
  * The heuristic adds zero bends and straight-line distance to the anchor/pad.
@@ -31,13 +54,10 @@ const DIRECTIONS = [[1, 0], [0, 1], [-1, 0], [0, -1]] as const
  * already placed by the parent remain fixed during this search.
  */
 export class PadJunctionSearch {
-  finished = false
-  path: PadJunctionPoint[] | null = null
+  result: SearchResult = { status: "searching" }
   readonly expandedPoints: PadJunctionPoint[] = []
   private readonly frontier: FrontierEntry[] = []
   private readonly bestCosts = new Map<string, SearchCost>()
-  private readonly predecessors = new Map<string, string>()
-  private readonly states = new Map<string, FrontierEntry>()
   private readonly xCoordinates: number[]
   private readonly yCoordinates: number[]
 
@@ -54,10 +74,9 @@ export class PadJunctionSearch {
       direction: input.direction,
       cost: { bends: 0, length: 0 },
       estimate: { bends: 0, length: this.distanceToGoal(input.start) },
-      key, xIndex, yIndex,
+      key, xIndex, yIndex, predecessor: null,
     }
     this.bestCosts.set(key, start.cost)
-    this.states.set(key, start)
     this.push(start)
   }
 
@@ -73,15 +92,17 @@ export class PadJunctionSearch {
     const minimum = Math.min(...exact) - padding
     const maximum = Math.max(...exact) + padding
     for (let coordinate = minimum; coordinate <= maximum; coordinate += input.gridStep) exact.push(coordinate)
-    return [...new Set(exact)].sort((a, b) => a - b).filter((value, index, values) =>
-      index === 0 || value - values[index - 1] > EPSILON ||
-      value === input.start[axis] || value === input.anchors[0][axis] ||
-      value === input.anchors[1][axis],
-    )
+    return [...new Set(exact)].sort((a, b) => a - b).filter((value, index, values): boolean => {
+      const previous = values[index - 1]
+      return previous === undefined || value - previous > EPSILON ||
+        value === input.start[axis] || value === input.anchors[0][axis] ||
+        value === input.anchors[1][axis]
+    })
   }
 
   private distanceToGoal(point: PadJunctionPoint): number {
-    if (this.input.anchor) return Math.hypot(point.x - this.input.anchor.x, point.y - this.input.anchor.y)
+    const goal = this.input.goal
+    if (goal.kind === "anchor") return Math.hypot(point.x - goal.point.x, point.y - goal.point.y)
     const halfWidth = this.input.pad.width / 2 - this.input.width / 2
     const halfHeight = this.input.pad.height / 2 - this.input.width / 2
     const dx = Math.max(0, Math.abs(point.x - this.input.pad.center.x) - halfWidth)
@@ -96,29 +117,43 @@ export class PadJunctionSearch {
     return first.key < second.key
   }
 
+  private getFrontierEntryOrThrow(index: number): FrontierEntry {
+    const entry = this.frontier[index]
+    if (!entry) {
+      throw new Error(`PadJunctionSearch: missing frontier entry at index ${index}`)
+    }
+    return entry
+  }
+
   private push(entry: FrontierEntry): void {
     this.frontier.push(entry)
     let index = this.frontier.length - 1
     while (index > 0) {
       const parentIndex = Math.floor((index - 1) / 2)
-      if (!this.precedes(entry, this.frontier[parentIndex])) break
-      this.frontier[index] = this.frontier[parentIndex]
+      const parent = this.getFrontierEntryOrThrow(parentIndex)
+      if (!this.precedes(entry, parent)) break
+      this.frontier[index] = parent
       index = parentIndex
     }
     this.frontier[index] = entry
   }
 
   private pop(): FrontierEntry | null {
-    if (this.frontier.length === 0) return null
+    const last = this.frontier.pop()
+    if (!last) return null
     const first = this.frontier[0]
-    const last = this.frontier.pop()!
-    if (this.frontier.length === 0) return first
+    if (!first) return last
     let index = 0
     while (index * 2 + 1 < this.frontier.length) {
       let child = index * 2 + 1
-      if (child + 1 < this.frontier.length && this.precedes(this.frontier[child + 1], this.frontier[child])) child++
-      if (!this.precedes(this.frontier[child], last)) break
-      this.frontier[index] = this.frontier[child]
+      let childEntry = this.getFrontierEntryOrThrow(child)
+      const rightChild = this.frontier[child + 1]
+      if (rightChild && this.precedes(rightChild, childEntry)) {
+        child++
+        childEntry = rightChild
+      }
+      if (!this.precedes(childEntry, last)) break
+      this.frontier[index] = childEntry
       index = child
     }
     this.frontier[index] = last
@@ -126,34 +161,36 @@ export class PadJunctionSearch {
   }
 
   step(): void {
-    if (this.finished) return
+    if (this.result.status !== "searching") return
     const current = this.pop()
     if (!current) {
-      this.finished = true
+      this.result = { status: "no_path" }
       return
     }
     if (this.bestCosts.get(current.key) !== current.cost) return
     this.expandedPoints.push(current.point)
     if (this.distanceToGoal(current.point) < EPSILON) {
       const points: PadJunctionPoint[] = []
-      let key: string | undefined = current.key
-      while (key !== undefined) {
-        const state = this.states.get(key)
-        if (!state) throw new Error(`PadJunctionSearch: missing predecessor state ${key}`)
+      let state: FrontierEntry | null = current
+      while (state !== null) {
         points.push(state.point)
-        key = this.predecessors.get(key)
+        state = state.predecessor
       }
-      this.path = simplifyJunctionPath(points.reverse())
-      this.finished = true
+      const [first, ...remaining] = simplifyJunctionPath(points.reverse())
+      if (!first) throw new Error("PadJunctionSearch: reached goal without a path")
+      this.result = { status: "found", path: [first, ...remaining] }
       return
     }
-    for (let direction = 0; direction < DIRECTIONS.length; direction++) {
+    for (const { direction, opposite, xOffset, yOffset } of DIRECTIONS) {
       if (current.cost.length === 0 && direction !== this.input.direction) continue
-      if ((direction + 2) % 4 === current.direction) continue
-      const xIndex = current.xIndex + DIRECTIONS[direction][0]
-      const yIndex = current.yIndex + DIRECTIONS[direction][1]
+      if (opposite === current.direction) continue
+      const xIndex = current.xIndex + xOffset
+      const yIndex = current.yIndex + yOffset
       if (xIndex < 0 || yIndex < 0 || xIndex >= this.xCoordinates.length || yIndex >= this.yCoordinates.length) continue
-      const point = { x: this.xCoordinates[xIndex], y: this.yCoordinates[yIndex], z: current.point.z }
+      const x = this.xCoordinates[xIndex]
+      const y = this.yCoordinates[yIndex]
+      if (x === undefined || y === undefined) throw new Error("PadJunctionSearch: neighbor missing from grid")
+      const point = { x, y, z: current.point.z }
       if (!this.input.segmentIsClear(current.point, point)) continue
       const key = `${xIndex},${yIndex},${direction}`
       const cost = {
@@ -172,11 +209,9 @@ export class PadJunctionSearch {
           bends: cost.bends,
           length: cost.length + this.distanceToGoal(point),
         },
-        key, xIndex, yIndex,
+        key, xIndex, yIndex, predecessor: current,
       }
       this.bestCosts.set(key, cost)
-      this.predecessors.set(key, current.key)
-      this.states.set(key, state)
       this.push(state)
     }
   }
