@@ -54,17 +54,21 @@ test("joint repair retains drill ownership across disjoint copper layers", (): v
     ),
     connections: routes.map((route) => ({
       name: route.connectionName,
-      pointsToConnect: [route.route[0]!, route.route.at(-1)!].map((point, index) => ({
-        x: point.x,
-        y: point.y,
-        layer: layers[point.z]!,
-        pcb_port_id: `${route.connectionName}_${index}`,
-      })),
+      pointsToConnect: [route.route[0]!, route.route.at(-1)!].map(
+        (point, index) => ({
+          x: point.x,
+          y: point.y,
+          layer: layers[point.z]!,
+          pcb_port_id: `${route.connectionName}_${index}`,
+        }),
+      ),
     })),
   }
   const originalRoutes = structuredClone(routes)
   const connMap = getConnectivityMapFromSimpleRouteJson(srj)
-  const evaluate = (hdRoutes: HighDensityRoute[]): ReturnType<typeof evaluateRelaxedDrc> =>
+  const evaluate = (
+    hdRoutes: HighDensityRoute[],
+  ): ReturnType<typeof evaluateRelaxedDrc> =>
     evaluateRelaxedDrc({
       inputSrj: srj,
       srjWithPointPairs: srj,

@@ -3,7 +3,7 @@ import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-p
 import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import { loadScenarioBySampleNumber } from "../../scripts/benchmark/scenarios"
 
-test("Pipeline9 bounds SRJ18 sample 13's regional repair work", async (): Promise<void> => {
+test("Pipeline9 clears SRJ18 sample 13 within bounded regional work", async (): Promise<void> => {
   const { scenario } = await loadScenarioBySampleNumber("srj18", 13)
   const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(
     structuredClone(scenario),
@@ -40,7 +40,5 @@ test("Pipeline9 bounds SRJ18 sample 13's regional repair work", async (): Promis
     srjWithPointPairs: solver.srjWithPointPairs!,
     routedTraces: solver.getOutputSimplifiedPcbTraces(),
   })
-  expect(errors.length).toBeLessThanOrEqual(
-    Number(repairStats?.postExactReferenceDrcIssueCount),
-  )
+  expect(errors).toHaveLength(0)
 })
