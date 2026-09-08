@@ -31,6 +31,17 @@ type SharedPlanarViaQuery = {
   viaIds?: number[]
 }
 
+type PlanarFreeCache = {
+  valid: Uint8Array
+  coordinates: Float64Array
+  traceThickness: number
+  obstacleMargin: number
+  viaDiameter: number
+}
+
+const MAX_PLANAR_FREE_CACHE_SLOTS = 65_536
+const flatbushSearch = Flatbush.prototype.search
+
 const connectionLabel = (
   connectionName: string,
   rootConnectionName?: string,
@@ -99,6 +110,11 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
   obstacleSegmentIndexByLayer = new Map<number, Flatbush>()
   obstacleVias: IndexedObstacleVia[] = []
   obstacleViaIndex: Flatbush | null = null
+  private readonly fixedObstacleGeometry: boolean
+  private planarFreeCache: PlanarFreeCache | null | undefined
+  private fixedObstacleIndexes = false
+  protected planarClearanceMethod =
+    planarCacheDefaults.isNodeTooCloseToObstacle
   private sharedPlanarViaQueries = new WeakMap<
     PlanarObstacleQuery,
     SharedPlanarViaQuery
@@ -137,6 +153,14 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     connMap?: ConnectivityMap
     nearbySegmentClearance?: number
     captureSearchDebug?: boolean
+    /**
+     * Opt in only when obstacle points, connectivity and index implementations
+     * remain fixed between buildObstacleIndexes calls. Numeric dimensions may
+     * be assigned directly; accessor-valued dimensions are not supported by
+     * this optimization. Routing hooks must be ordinary method data properties,
+     * not accessor-valued hooks. Public/direct clearance calls are never cached.
+     */
+    fixedObstacleGeometry?: boolean
   }) {
     super()
     this.bounds = opts.bounds
@@ -155,6 +179,7 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     this.rootConnectionName = opts.rootConnectionName
     this.regionId = opts.regionId
     this.obstacleRoutes = opts.obstacleRoutes
+    this.fixedObstacleGeometry = opts.fixedObstacleGeometry ?? false
     this.A = opts.A
     this.B = opts.B
     this.viaDiameter = opts.viaDiameter ?? 0.3
@@ -551,6 +576,11 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
 
   buildObstacleIndexes() {
     this.sharedPlanarViaQueries = new WeakMap()
+    this.planarFreeCache = undefined
+    this.fixedObstacleIndexes =
+      this.fixedObstacleGeometry &&
+      Object.getOwnPropertyDescriptor(Flatbush.prototype, "search")?.value ===
+      flatbushSearch
     if (this.obstacleRoutes.length === 0) {
       this.obstacleSegmentIndex = null
       this.obstacleSegmentsByLayer.clear()
@@ -663,9 +693,89 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     return (node.z * this.gridHeight + yIndex) * this.gridWidth + xIndex
   }
 
+  private getPlanarFreeCache(
+    key: number,
+    queryTraceProximity: number | undefined,
+    queryCellStep: number | undefined,
+  ): PlanarFreeCache | undefined {
+    const defaults = planarCacheDefaults
+    if (
+      !this.fixedObstacleGeometry ||
+      !this.fixedObstacleIndexes ||
+      SingleHighDensityRouteSolver.prototype.isNodeTooCloseToObstacle !== defaults.isNodeTooCloseToObstacle ||
+      this.isNodeTooCloseToObstacle !== this.planarClearanceMethod ||
+      this.getNodeKey !== defaults.getNodeKey ||
+      this.getPlanarObstacleQuery !== defaults.getPlanarObstacleQuery ||
+      this.getPlanarNeighborObstacleQuery !== defaults.getPlanarNeighborObstacleQuery ||
+      this.doesPathToParentIntersectObstacle !== defaults.doesPathToParentIntersectObstacle
+    ) return undefined
+
+    if (this.planarFreeCache === undefined) {
+      // Check index implementations once, without invoking custom getters.
+      // Opted-in owners rebuild before changing these implementations.
+      for (const index of this.obstacleSegmentIndexByLayer.values()) {
+        if (
+          Object.getPrototypeOf(index) !== Flatbush.prototype ||
+          Object.getOwnPropertyDescriptor(index, "search")
+        ) {
+          this.fixedObstacleIndexes = false
+          return undefined
+        }
+      }
+      if (
+        this.obstacleViaIndex &&
+        (Object.getPrototypeOf(this.obstacleViaIndex) !== Flatbush.prototype ||
+          Object.getOwnPropertyDescriptor(this.obstacleViaIndex, "search"))
+      ) {
+        this.fixedObstacleIndexes = false
+        return undefined
+      }
+      let maxZ = Math.max(this.layerCount - 1, this.A.z, this.B.z)
+      for (const z of this.availableZ) maxZ = Math.max(maxZ, z)
+      const slots = this.gridWidth * this.gridHeight * (maxZ + 1)
+      // Later grid changes keep this bounded allocation. Exact coordinates
+      // protect remapped keys; keys outside its capacity simply are not cached.
+      this.planarFreeCache =
+        Number.isSafeInteger(slots) && slots > 0 && slots <= MAX_PLANAR_FREE_CACHE_SLOTS
+          ? {
+              valid: new Uint8Array(slots),
+              coordinates: new Float64Array(slots * 3),
+              traceThickness: this.traceThickness,
+              obstacleMargin: this.obstacleMargin,
+              viaDiameter: this.viaDiameter,
+            }
+          : null
+    }
+    const cache = this.planarFreeCache
+    if (!cache || !Number.isInteger(key) || key < 0 || key >= cache.valid.length) {
+      return undefined
+    }
+    if (
+      cache.traceThickness !== this.traceThickness ||
+      cache.obstacleMargin !== this.obstacleMargin ||
+      cache.viaDiameter !== this.viaDiameter
+    ) {
+      cache.valid.fill(0)
+      cache.traceThickness = this.traceThickness
+      cache.obstacleMargin = this.obstacleMargin
+      cache.viaDiameter = this.viaDiameter
+    }
+    // A callback can change a live dimension after a shared query was made.
+    // Preserve that call's original query behavior without reusing its result
+    // for a later expansion whose broad-phase bounds cover the new dimension.
+    if (
+      (queryTraceProximity !== undefined &&
+        queryTraceProximity !== cache.traceThickness + cache.obstacleMargin) ||
+      (queryCellStep !== undefined && queryCellStep !== this.cellStep)
+    ) return undefined
+    return cache
+  }
+
   getNeighbors(node: Node) {
     const neighbors: Node[] = []
     let planarObstacleQuery: PlanarObstacleQuery | undefined
+    let planarQueryTraceProximity: number | undefined
+    let planarQueryCellStep: number | undefined
     const canSharePlanarObstacleQuery =
       this.getPlanarObstacleQuery ===
         SingleHighDensityRouteSolver.prototype.getPlanarObstacleQuery &&
@@ -714,11 +824,34 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
         }
 
         if (canSharePlanarObstacleQuery) {
-          planarObstacleQuery ??= this.getPlanarNeighborObstacleQuery(node)
+          if (!planarObstacleQuery) {
+            planarObstacleQuery = this.getPlanarNeighborObstacleQuery(node)
+            if (this.fixedObstacleGeometry && planarObstacleQuery) {
+              planarQueryTraceProximity = this.traceThickness + this.obstacleMargin
+              planarQueryCellStep = this.cellStep
+            }
+          }
         } else {
           planarObstacleQuery = this.getPlanarObstacleQuery(neighbor)
+          if (this.fixedObstacleGeometry && planarObstacleQuery) {
+            planarQueryTraceProximity = this.traceThickness + this.obstacleMargin
+          }
+          planarQueryCellStep = undefined
         }
+        const planarFreeCache = this.getPlanarFreeCache(
+          neighborKey,
+          planarQueryTraceProximity,
+          planarQueryCellStep,
+        )
+        const coordinateOffset = neighborKey * 3
+        const knownPlanarFree =
+          planarFreeCache &&
+          planarFreeCache.valid[neighborKey] !== 0 &&
+          planarFreeCache.coordinates[coordinateOffset] === neighbor.x &&
+          planarFreeCache.coordinates[coordinateOffset + 1] === neighbor.y &&
+          planarFreeCache.coordinates[coordinateOffset + 2] === neighbor.z
         if (
+          !knownPlanarFree &&
           this.isNodeTooCloseToObstacle(
             neighbor,
             undefined,
@@ -731,6 +864,13 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
           }
           this.exploredNodes.add(neighborKey)
           continue
+        }
+
+        if (planarFreeCache && !knownPlanarFree) {
+          planarFreeCache.valid[neighborKey] = 1
+          planarFreeCache.coordinates[coordinateOffset] = neighbor.x
+          planarFreeCache.coordinates[coordinateOffset + 1] = neighbor.y
+          planarFreeCache.coordinates[coordinateOffset + 2] = neighbor.z
         }
 
         if (this.isNodeTooCloseToEdge(neighbor, false)) {
@@ -1164,4 +1304,13 @@ function getSegmentToSegmentCenterlineDistance(
     pointToSegmentDistance(rightA, leftA, leftB),
     pointToSegmentDistance(rightB, leftA, leftB),
   )
+}
+
+// Capture implementations before consumers can customize public prototypes.
+const planarCacheDefaults = {
+  isNodeTooCloseToObstacle: SingleHighDensityRouteSolver.prototype.isNodeTooCloseToObstacle,
+  getNodeKey: SingleHighDensityRouteSolver.prototype.getNodeKey,
+  getPlanarObstacleQuery: SingleHighDensityRouteSolver.prototype.getPlanarObstacleQuery,
+  getPlanarNeighborObstacleQuery: SingleHighDensityRouteSolver.prototype.getPlanarNeighborObstacleQuery,
+  doesPathToParentIntersectObstacle: SingleHighDensityRouteSolver.prototype.doesPathToParentIntersectObstacle,
 }

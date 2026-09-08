@@ -615,6 +615,14 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     return new CachedIntraNodeRouteSolver({
       ...this.constructorParams,
       hyperParameters,
+      // These candidates own their obstacle routes for the complete search.
+      // Custom portfolio definitions retain the ordinary mutable-geometry API.
+      fixedObstacleGeometry:
+        this.generateSolver === PortfolioSingleIntraNodeSolver.prototype.generateSolver &&
+        this.getCombinationDefs === PortfolioSingleIntraNodeSolver.prototype.getCombinationDefs &&
+        this.getHyperParameterDefs === PortfolioSingleIntraNodeSolver.prototype.getHyperParameterDefs &&
+        this.getHyperParameterCombinations === PortfolioSingleIntraNodeSolver.prototype.getHyperParameterCombinations &&
+        this.getSupervisedSolverWithBestFitness === PortfolioSingleIntraNodeSolver.prototype.getSupervisedSolverWithBestFitness,
     })
   }
 
