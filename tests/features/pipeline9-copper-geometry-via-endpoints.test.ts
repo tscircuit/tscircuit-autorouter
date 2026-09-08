@@ -37,7 +37,9 @@ test("Pipeline9 copper geometry follows either explicit transition endpoint", ()
         },
       ])
       const materializedRoute = materializePipeline9HdRouteVias([hdRoute])[0]!
-      expect(getPipeline9RouteCopperGeometry(materializedRoute)).toEqual(geometry)
+      expect(getPipeline9RouteCopperGeometry(materializedRoute)).toEqual(
+        geometry,
+      )
       expect(hdRoute).toEqual(originalRoute)
     }
   }
