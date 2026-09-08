@@ -11,7 +11,7 @@ import {
   PortPointWithOwnerPair,
   SharedEdge,
 } from "./types"
-import { determineOwnerPair } from "./determineOwnerPair"
+import { getPortPointOwnerPairs } from "./getPortPointOwnerPairs"
 import { getOwnerPairKey } from "./getOwnerPairKey"
 import { precomputeSharedEdges } from "./precomputeSharedEdges"
 import { redistributePortPointsOnSharedEdge } from "./redistributePortPointsOnSharedEdge"
@@ -55,15 +55,16 @@ export class UniformPortDistributionSolver extends BaseSolver {
       )
     }
 
+    const ownerPairsByPortPointId = getPortPointOwnerPairs(
+      input.inputNodesWithPortPoints,
+    )
     const uniqueOwnerPairs = new Map<OwnerPairKey, OwnerPair>()
     for (const node of input.nodeWithPortPoints) {
       for (const portPoint of node.portPoints) {
         if (!portPoint.portPointId) continue
-        const ownerNodeIds = determineOwnerPair({
-          portPointId: portPoint.portPointId,
-          currentNodeId: node.capacityMeshNodeId,
-          inputNodes: input.inputNodesWithPortPoints,
-        })
+        const ownerNodeIds: OwnerPair = ownerPairsByPortPointId.get(
+          portPoint.portPointId,
+        ) ?? [node.capacityMeshNodeId, node.capacityMeshNodeId]
         const ownerPairKey = getOwnerPairKey(ownerNodeIds)
         const existing = this.mapOfOwnerPairToPortPoints.get(ownerPairKey) ?? []
         const alreadyPresent = existing.some(
