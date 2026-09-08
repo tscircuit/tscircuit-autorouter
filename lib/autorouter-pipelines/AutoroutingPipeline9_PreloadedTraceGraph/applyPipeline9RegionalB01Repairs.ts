@@ -1,3 +1,8 @@
+import {
+  getFixedObstacleViolations,
+  getNewViaPadViolations,
+} from "@tscircuit/repair04"
+import { createSrjWithBoardValidObstacleLayers } from "lib/utils/create-srj-with-board-valid-obstacle-layers"
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import {
   GlobalDrcForceImproveSolver,
@@ -597,6 +602,34 @@ export const applyPipeline9RegionalB01Repairs = ({
   obstacleMargin: number
   effort: number
 }): RegionalB01RepairResult => {
+  const physicalSrj = {
+    ...createSrjWithBoardValidObstacleLayers(srj),
+    traces: undefined,
+  }
+  const candidatePreservesPhysicalClearance = (
+    previousRoutes: HighDensityRoute[],
+    candidateRoutes: HighDensityRoute[],
+  ): boolean => {
+    const fixedViolations = new Map(
+      getFixedObstacleViolations({ srj: physicalSrj, routes: previousRoutes }).map(
+        (violation) => [violation.key, violation.severity],
+      ),
+    )
+    return (
+      !getFixedObstacleViolations({
+        srj: physicalSrj,
+        routes: candidateRoutes,
+      }).some(
+        ({ key, severity }) =>
+          !fixedViolations.has(key) || severity > fixedViolations.get(key)! + 1e-8,
+      ) &&
+      getNewViaPadViolations({
+        srj: physicalSrj,
+        previousRoutes,
+        routes: candidateRoutes,
+      }).length === 0
+    )
+  }
   let currentRoutes = routes
   let currentErrors =
     initialErrors ?? getPipeline9DrcErrors(drcEvaluator, currentRoutes)
@@ -676,7 +709,10 @@ export const applyPipeline9RegionalB01Repairs = ({
             drcEvaluator,
             candidate.routes,
           )
-          if (isPipeline9DrcCandidateBetter(candidateErrors, bestErrors)) {
+          if (
+            isPipeline9DrcCandidateBetter(candidateErrors, bestErrors) &&
+            candidatePreservesPhysicalClearance(currentRoutes, candidate.routes)
+          ) {
             bestRoutes = candidate.routes
             bestErrors = candidateErrors
           }
@@ -712,7 +748,10 @@ export const applyPipeline9RegionalB01Repairs = ({
             drcEvaluator,
             fallbackRoutes,
           )
-          if (isPipeline9DrcCandidateBetter(fallbackErrors, bestErrors)) {
+          if (
+            isPipeline9DrcCandidateBetter(fallbackErrors, bestErrors) &&
+            candidatePreservesPhysicalClearance(currentRoutes, fallbackRoutes)
+          ) {
             bestRoutes = fallbackRoutes
             bestErrors = fallbackErrors
           }
@@ -743,7 +782,8 @@ export const applyPipeline9RegionalB01Repairs = ({
       const refinedErrors = getPipeline9DrcErrors(drcEvaluator, refinedRoutes)
       if (
         getViaIssueCount(refinedErrors) <= getViaIssueCount(currentErrors) &&
-        isPipeline9DrcCandidateBetter(refinedErrors, currentErrors)
+        isPipeline9DrcCandidateBetter(refinedErrors, currentErrors) &&
+        candidatePreservesPhysicalClearance(currentRoutes, refinedRoutes)
       ) {
         currentRoutes = refinedRoutes
         currentErrors = refinedErrors
@@ -780,7 +820,10 @@ export const applyPipeline9RegionalB01Repairs = ({
     }
     const safeLayerRoutes = safeTraceLayerSolver.getOutput()
     const safeLayerErrors = getPipeline9DrcErrors(drcEvaluator, safeLayerRoutes)
-    if (isPipeline9DrcCandidateBetter(safeLayerErrors, currentErrors)) {
+    if (
+      isPipeline9DrcCandidateBetter(safeLayerErrors, currentErrors) &&
+      candidatePreservesPhysicalClearance(currentRoutes, safeLayerRoutes)
+    ) {
       currentRoutes = safeLayerRoutes
       currentErrors = safeLayerErrors
     }

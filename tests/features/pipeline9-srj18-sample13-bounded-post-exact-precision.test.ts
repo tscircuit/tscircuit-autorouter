@@ -16,8 +16,10 @@ test("Pipeline9 bounds SRJ18 sample 13's regional repair work", async (): Promis
   expect(solver.failed).toBeFalse()
   const repairStats = solver.pipeline9JointDrcRepairSolver?.stats
   expect(repairStats?.postExactReferenceValidationAttempted).toBeTrue()
+  const sweepCount = Number(repairStats?.postExactRegionalSweepCount)
+  expect(sweepCount).toBeLessThanOrEqual(2)
   expect(Number(repairStats?.terminalEscapeCandidateCount)).toBeLessThanOrEqual(
-    256,
+    256 * sweepCount,
   )
   expect(
     Number(repairStats?.regionalB01RepairCandidateSearchCount),
@@ -26,13 +28,13 @@ test("Pipeline9 bounds SRJ18 sample 13's regional repair work", async (): Promis
   )
   expect(
     Number(repairStats?.boundedRegionalRepairAttemptedRegionCount),
-  ).toBeLessThanOrEqual(4)
+  ).toBeLessThanOrEqual(4 * sweepCount)
   expect(
     Number(repairStats?.boundedRegionalRepairCandidateAttemptCount),
-  ).toBeLessThanOrEqual(1_024)
+  ).toBeLessThanOrEqual(1_024 * sweepCount)
   expect(
     Number(repairStats?.boundedRegionalRepairPathSearchNodeCount),
-  ).toBeLessThanOrEqual(480_000)
+  ).toBeLessThanOrEqual(480_000 * sweepCount)
   const { errors } = evaluateRelaxedDrc({
     inputSrj: scenario,
     srjWithPointPairs: solver.srjWithPointPairs!,
