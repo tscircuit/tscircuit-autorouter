@@ -7,6 +7,10 @@ import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import Flatbush from "flatbush"
 import type { GraphicsObject } from "graphics-debug"
 import {
+  FixedCopperClearanceIndex,
+  type PhysicalCopperPoint,
+} from "lib/data-structures/FixedCopperClearanceIndex"
+import {
   Node,
   SingleRouteCandidatePriorityQueue,
 } from "lib/data-structures/SingleRouteCandidatePriorityQueue"
@@ -19,6 +23,17 @@ export type FutureConnection = {
   rootConnectionName?: string
   regionId?: string
   points: { x: number; y: number; z: number }[]
+}
+
+export type SingleRoutePhysicalClearanceContext = {
+  readonly traceClearanceIndex: FixedCopperClearanceIndex
+  readonly viaClearanceIndex: FixedCopperClearanceIndex
+  readonly canonicalNetId: string
+  /** physical = center + (solve - center) * scale; diameters remain physical. */
+  readonly solveToPhysicalTransform: {
+    readonly center: Readonly<{ x: number; y: number }>
+    readonly scale: number
+  }
 }
 
 const connectionLabel = (
@@ -82,6 +97,7 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
   hyperParameters: Partial<HighDensityHyperParameters>
 
   connMap?: ConnectivityMap
+  private readonly physicalClearanceContext?: SingleRoutePhysicalClearanceContext
 
   obstacleSegments: IndexedObstacleSegment[] = []
   obstacleSegmentIndex: Flatbush | null = null
@@ -123,6 +139,7 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     connMap?: ConnectivityMap
     nearbySegmentClearance?: number
     captureSearchDebug?: boolean
+    physicalClearanceContext?: SingleRoutePhysicalClearanceContext
   }) {
     super()
     this.bounds = opts.bounds
@@ -147,6 +164,9 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     this.traceThickness = opts.traceThickness ?? 0.15
     this.obstacleMargin = opts.obstacleMargin ?? 0.15
     this.layerCount = opts.layerCount ?? 2
+    this.physicalClearanceContext = this.preparePhysicalClearanceContext(
+      opts.physicalClearanceContext,
+    )
     this.availableZ =
       opts.availableZ && opts.availableZ.length > 0
         ? [...new Set(opts.availableZ)].sort((a, b) => a - b)
@@ -185,6 +205,10 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     this.gridWidth = gridMaxXIndex - this.gridMinXIndex + 1
     this.gridHeight = gridMaxYIndex - this.gridMinYIndex + 1
 
+    const terminalIsBlocked =
+      !this.isPhysicalTracePointClear(this.A) ||
+      !this.isPhysicalTracePointClear(this.B)
+
     const isOnSameEdge =
       (Math.abs(this.A.x - this.bounds.minX) < 0.001 &&
         Math.abs(this.B.x - this.bounds.minX) < 0.001) || // both on left
@@ -199,15 +223,18 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
       this.futureConnections &&
       this.futureConnections.length === 0 &&
       this.obstacleRoutes.length === 0 &&
-      !isOnSameEdge
+      !isOnSameEdge &&
+      !terminalIsBlocked
     ) {
       this.handleSimpleCases()
     }
 
-    const initialNodePosition = {
-      x: Math.round(opts.A.x / (this.cellStep / 2)) * (this.cellStep / 2),
-      y: Math.round(opts.A.y / (this.cellStep / 2)) * (this.cellStep / 2),
-    }
+    const initialNodePosition = this.physicalClearanceContext
+      ? { x: this.A.x, y: this.A.y }
+      : {
+          x: Math.round(opts.A.x / (this.cellStep / 2)) * (this.cellStep / 2),
+          y: Math.round(opts.A.y / (this.cellStep / 2)) * (this.cellStep / 2),
+        }
     this.initialNodeGridOffset = {
       x:
         initialNodePosition.x -
@@ -237,19 +264,26 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
       Math.abs(roundedInitialNode.x - opts.A.x) > 1e-9 ||
       Math.abs(roundedInitialNode.y - opts.A.y) > 1e-9
     const shouldFallbackToExactStart =
+      !this.physicalClearanceContext &&
       roundedInitialNodeDiffersFromA &&
       (this.isNodeTooCloseToObstacle(roundedInitialNode) ||
         this.isNodeTooCloseToEdge(roundedInitialNode, false) ||
         this.doesPathToParentIntersectObstacle(roundedInitialNode))
 
     this.candidates = new SingleRouteCandidatePriorityQueue([
-      shouldFallbackToExactStart ? initialParent : roundedInitialNode,
+      this.physicalClearanceContext || shouldFallbackToExactStart
+        ? initialParent
+        : roundedInitialNode,
     ])
+    if (terminalIsBlocked) {
+      this.failed = true
+      this.error = `Connection "${this.connectionName}" has a terminal that violates fixed copper clearance`
+    }
   }
 
   handleSimpleCases() {
-    this.solved = true
     const { A, B } = this
+    if (!this.isPhysicalTracePointClear(A)) return
     const route =
       A.z === B.z
         ? [A, B]
@@ -262,6 +296,17 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
             },
             B,
           ]
+    for (let pointIndex = 1; pointIndex < route.length; pointIndex++) {
+      const start = route[pointIndex - 1]!
+      const end = route[pointIndex]!
+      if (!this.isPhysicalTracePointClear(end)) return
+      if (start.z === end.z) {
+        if (!this.isPhysicalTraceSegmentClear(start, end)) return
+      } else if (!this.isPhysicalViaClear(end, start.z, end.z)) {
+        return
+      }
+    }
+    this.solved = true
     this.solvedPath = {
       connectionName: this.connectionName,
       rootConnectionName: this.rootConnectionName,
@@ -271,6 +316,91 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
       viaDiameter: this.viaDiameter,
       vias: this.A.z === this.B.z ? [] : [this.boundsCenter],
     }
+  }
+
+  private preparePhysicalClearanceContext(
+    context: SingleRoutePhysicalClearanceContext | undefined,
+  ): SingleRoutePhysicalClearanceContext | undefined {
+    if (context === undefined) return undefined
+    const { center, scale } = context.solveToPhysicalTransform
+    if (
+      !(context.traceClearanceIndex instanceof FixedCopperClearanceIndex) ||
+      !(context.viaClearanceIndex instanceof FixedCopperClearanceIndex) ||
+      typeof context.canonicalNetId !== "string" ||
+      context.canonicalNetId.length === 0 ||
+      !Number.isFinite(center.x) ||
+      !Number.isFinite(center.y) ||
+      !Number.isFinite(scale) ||
+      scale <= 0
+    ) {
+      throw new Error(
+        "Single route solver has invalid physical clearance context",
+      )
+    }
+    return {
+      traceClearanceIndex: context.traceClearanceIndex,
+      viaClearanceIndex: context.viaClearanceIndex,
+      canonicalNetId: context.canonicalNetId,
+      solveToPhysicalTransform: { center: { ...center }, scale },
+    }
+  }
+
+  private toPhysicalPoint(
+    point: PhysicalCopperPoint,
+    context: SingleRoutePhysicalClearanceContext,
+  ): PhysicalCopperPoint {
+    const { center, scale } = context.solveToPhysicalTransform
+    return {
+      x: center.x + (point.x - center.x) * scale,
+      y: center.y + (point.y - center.y) * scale,
+      z: point.z,
+    }
+  }
+
+  private isPhysicalTracePointClear(point: PhysicalCopperPoint): boolean {
+    const context = this.physicalClearanceContext
+    if (!context) return true
+    return context.traceClearanceIndex.isPointClear({
+      point: this.toPhysicalPoint(point, context),
+      canonicalNetId: context.canonicalNetId,
+      copperDiameter: this.traceThickness,
+    })
+  }
+
+  private isPhysicalTraceSegmentClear(
+    start: PhysicalCopperPoint,
+    end: PhysicalCopperPoint,
+  ): boolean {
+    const context = this.physicalClearanceContext
+    if (!context) return true
+    return context.traceClearanceIndex.isSegmentClear({
+      start: this.toPhysicalPoint(start, context),
+      end: this.toPhysicalPoint(end, context),
+      canonicalNetId: context.canonicalNetId,
+      copperDiameter: this.traceThickness,
+    })
+  }
+
+  private isPhysicalViaClear(
+    point: PhysicalCopperPoint,
+    startZ: number,
+    endZ: number,
+  ): boolean {
+    const context = this.physicalClearanceContext
+    if (!context) return true
+    const physicalPoint = this.toPhysicalPoint(point, context)
+    for (let z = Math.min(startZ, endZ); z <= Math.max(startZ, endZ); z++) {
+      if (
+        !context.viaClearanceIndex.isPointClear({
+          point: { ...physicalPoint, z },
+          canonicalNetId: context.canonicalNetId,
+          copperDiameter: this.viaDiameter,
+        })
+      ) {
+        return false
+      }
+    }
+    return true
   }
 
   get viaPenaltyDistance() {
@@ -284,6 +414,14 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     planarObstacleQuery?: PlanarObstacleQuery,
   ) {
     margin ??= this.obstacleMargin
+
+    if (
+      !this.isPhysicalTracePointClear(node) ||
+      (isVia &&
+        !this.isPhysicalViaClear(node, node.parent?.z ?? node.z, node.z))
+    ) {
+      return true
+    }
 
     if (isVia && node.parent) {
       const viasInMyRoute = this.getViasInNodePath(node.parent)
@@ -380,6 +518,12 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
   ) {
     const parent = node.parent
     if (!parent) return false
+    if (
+      node.z === parent.z &&
+      !this.isPhysicalTraceSegmentClear(parent, node)
+    ) {
+      return true
+    }
     const indexedSegments =
       planarObstacleQuery?.segments ?? this.obstacleSegmentsByLayer.get(node.z)
     if (!indexedSegments) return false
@@ -627,7 +771,7 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
           if (this.debugEnabled) {
             this.debug_nodePathToParentIntersectsObstacle.add(neighborKey)
           }
-          this.exploredNodes.add(neighborKey)
+          // This edge is blocked, but another parent may reach the same point.
           continue
         }
 

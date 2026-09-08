@@ -57,6 +57,9 @@ jobs:
           tests/solvers/multi-head-polyline-trace-width.test.ts
           tests/solvers/portfolio-multi-head-trace-width.test.ts
           tests/solvers/portfolio-trace-width-cache-schema.test.ts
+          tests/solvers/fixed-copper-clearance-*.test.ts
+          tests/solvers/single-high-density-physical-*.test.ts
+          tests/caching/fixed-copper-clearance-fingerprint.test.ts
           --timeout 300000
 
       # Replaces `npm install -g @tscircuit/bun-test-plan && bun-test-plan`.
