@@ -22,6 +22,7 @@ jobs:
       matrix:
         include:
           - { dataset: srj18, sample: 2, pipeline: 9 }
+          - { dataset: srj18, sample: 8, pipeline: 9 }
           - { dataset: srj18, sample: 10, pipeline: 9 }
           - { dataset: srj18, sample: 12, pipeline: 9 }
           - { dataset: srj18, sample: 13, pipeline: 9 }
@@ -42,8 +43,10 @@ jobs:
           - { dataset: srj19, sample: 97, pipeline: 9 }
           - { dataset: srj19, sample: 105, pipeline: 9 }
           - { dataset: srj19, sample: 118, pipeline: 9 }
+          - { dataset: srj19, sample: 147, pipeline: 9 }
           - { dataset: srj19, sample: 164, pipeline: 9 }
           - { dataset: srj19, sample: 165, pipeline: 9 }
+          - { dataset: srj19, sample: 189, pipeline: 9 }
           - { dataset: srj20, sample: 3, pipeline: 9 }
           - { dataset: srj20, sample: 4, pipeline: 9 }
           - { dataset: srj20, sample: 6, pipeline: 9 }

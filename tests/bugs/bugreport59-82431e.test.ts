@@ -17,6 +17,20 @@ type CapturedStitchInput = {
   routeReferences: HighDensityIntraNodeRoute[]
 }
 
+type CapturedRouteEndpoints = {
+  connectionName: string
+  regionId: string | undefined
+  pointCount: number
+  start: HighDensityIntraNodeRoute["route"][number] | undefined
+  end: HighDensityIntraNodeRoute["route"][number] | undefined
+  vias: HighDensityIntraNodeRoute["vias"]
+}
+
+type CapturedStageEndpoints = {
+  phase: string
+  routes: CapturedRouteEndpoints[] | undefined
+}
+
 const srj = bugReport.simple_route_json as SimpleRouteJson
 
 test("bugreport59-82431e.json", () => {
@@ -33,14 +47,46 @@ test("bugreport59-82431e.json", () => {
 test("bugreport59-82431e keeps effort 2 vias on preplaced assignable vias", () => {
   const solver = new AutoroutingPipelineSolver8(srj, { effort: 2 })
   const stitchInputCapture: { current?: CapturedStitchInput } = {}
+  const stageEndpointCaptures: CapturedStageEndpoints[] = []
   const advancePipeline = solver._step.bind(solver)
   solver._step = (): void => {
+    const previousPhase = solver.getCurrentPhase()
     const stitchSolver = solver.highDensityStitchSolver
     const nextInput = stitchSolver?.activeSolver
       ? undefined
       : stitchSolver?.unsolvedRoutes.at(-1)
     const nextInputSnapshot = nextInput ? structuredClone(nextInput) : undefined
     advancePipeline()
+    if (
+      solver.getCurrentPhase() !== previousPhase &&
+      (previousPhase === "highDensityRouteSolver" ||
+        previousPhase === "highDensityForceImproveSolver" ||
+        previousPhase === "highDensityRepairSolver")
+    ) {
+      const stageRoutes =
+        previousPhase === "highDensityRouteSolver"
+          ? solver.highDensityRouteSolver?.routes
+          : previousPhase === "highDensityForceImproveSolver"
+            ? solver.highDensityForceImproveRoutes
+            : solver.highDensityRepairRoutes
+      stageEndpointCaptures.push({
+        phase: previousPhase,
+        routes: stageRoutes?.map((route): CapturedRouteEndpoints => {
+          const start = route.route[0]
+          const end = route.route.at(-1)
+          return {
+            connectionName: route.connectionName,
+            regionId: route.regionId,
+            pointCount: route.route.length,
+            start: start ? { ...start } : undefined,
+            end: end ? { ...end } : undefined,
+            vias: route.vias.map((via): { x: number; y: number } => ({
+              ...via,
+            })),
+          }
+        }),
+      })
+    }
     const activeStitch = solver.highDensityStitchSolver?.activeSolver
     if (
       nextInput &&
@@ -72,6 +118,28 @@ test("bugreport59-82431e keeps effort 2 vias on preplaced assignable vias", () =
         input.connectionName,
         ...input.hdRoutes.map((route): string => route.connectionName),
       ])
+      const connectionNodes = solver.highDensityNodePortPoints?.filter(
+        (node): boolean =>
+          node.portPoints.some((point): boolean =>
+            connectionNames.has(point.connectionName),
+          ),
+      )
+      // Separate records keep endpoint provenance below GitHub's log-line cap.
+      // Capture at completed phases so later postprocessing cannot rewrite it.
+      for (const capture of stageEndpointCaptures) {
+        console.error(
+          "BUGREPORT59_STAGE_ENDPOINTS_JSON",
+          JSON.stringify({
+            phase: capture.phase,
+            routes: capture.routes?.filter((route): boolean =>
+              connectionNames.has(route.connectionName),
+            ),
+          }),
+        )
+      }
+      connectionNodes?.forEach((node): void => {
+        console.error("BUGREPORT59_CONNECTION_NODE_JSON", JSON.stringify(node))
+      })
       console.error(
         "BUGREPORT59_STITCH_FAILURE_JSON",
         JSON.stringify({
@@ -105,11 +173,8 @@ test("bugreport59-82431e keeps effort 2 vias on preplaced assignable vias", () =
               connectionNames.has(route.connectionName) &&
               !routeReferences.includes(route),
           ),
-          connectionNodes: solver.highDensityNodePortPoints?.filter(
-            (node): boolean =>
-              node.portPoints.some((point): boolean =>
-                connectionNames.has(point.connectionName),
-              ),
+          connectionNodeIds: connectionNodes?.map(
+            (node): string => node.capacityMeshNodeId,
           ),
         }),
       )
