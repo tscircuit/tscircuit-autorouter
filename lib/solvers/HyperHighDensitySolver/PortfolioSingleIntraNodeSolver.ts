@@ -615,6 +615,15 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     return new CachedIntraNodeRouteSolver({
       ...this.constructorParams,
       hyperParameters,
+      // These candidates own their obstacle routes for the complete search.
+      // Custom portfolio definitions retain the ordinary mutable-geometry API.
+      fixedObstacleGeometry:
+        this.constructorParams.fixedObstacleGeometry !== false &&
+        this.generateSolver === fixedGeometryPortfolioDefaults.generateSolver &&
+        this.getCombinationDefs === fixedGeometryPortfolioDefaults.getCombinationDefs &&
+        this.getHyperParameterDefs === fixedGeometryPortfolioDefaults.getHyperParameterDefs &&
+        this.getHyperParameterCombinations === fixedGeometryPortfolioDefaults.getHyperParameterCombinations &&
+        this.getSupervisedSolverWithBestFitness === fixedGeometryPortfolioDefaults.getSupervisedSolverWithBestFitness,
     })
   }
 
@@ -646,4 +655,14 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       this.nodeWithPortPoints,
     )
   }
+}
+
+// Only the factory and definitions captured when this module loaded can opt in
+// their owned solvers. Later prototype customization keeps ordinary clearance.
+const fixedGeometryPortfolioDefaults = {
+  generateSolver: PortfolioSingleIntraNodeSolver.prototype.generateSolver,
+  getCombinationDefs: PortfolioSingleIntraNodeSolver.prototype.getCombinationDefs,
+  getHyperParameterDefs: PortfolioSingleIntraNodeSolver.prototype.getHyperParameterDefs,
+  getHyperParameterCombinations: PortfolioSingleIntraNodeSolver.prototype.getHyperParameterCombinations,
+  getSupervisedSolverWithBestFitness: PortfolioSingleIntraNodeSolver.prototype.getSupervisedSolverWithBestFitness,
 }

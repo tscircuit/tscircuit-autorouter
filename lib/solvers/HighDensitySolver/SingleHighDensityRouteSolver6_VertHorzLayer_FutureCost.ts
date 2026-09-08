@@ -26,6 +26,10 @@ type NodeCostParameters = {
 const MAX_DENSE_COST_CACHE_SLOTS = 65_536
 
 export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends SingleHighDensityRouteSolver {
+  protected override planarClearanceMethod =
+    futureCostPlanarClearance
+  protected override planarCacheCostMethods = futurePlanarCacheCostMethods
+  protected override planarCacheCostIterable = "futureConnectionPoints"
   FUTURE_CONNECTION_PROX_TRACE_PENALTY_FACTOR = 2
   FUTURE_CONNECTION_PROX_VIA_PENALTY_FACTOR = 1
   FUTURE_CONNECTION_PROXIMITY_VD = 10
@@ -395,3 +399,12 @@ type FutureConnectionSegment = {
   start: { x: number; y: number; z: number }
   end: { x: number; y: number; z: number }
 }
+
+const futureCostPlanarClearance =
+  SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost.prototype.isNodeTooCloseToObstacle
+
+const futurePlanarCacheCostMethods = [
+  ["setNodeCosts", SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost.prototype.setNodeCosts],
+  ["getFutureConnectionPenalty", SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost.prototype.getFutureConnectionPenalty],
+  ["getClosestFutureConnectionPoint", SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost.prototype.getClosestFutureConnectionPoint],
+] as const
