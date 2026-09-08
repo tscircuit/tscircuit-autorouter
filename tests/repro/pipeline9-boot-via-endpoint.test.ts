@@ -139,10 +139,8 @@ test("Pipeline9 validates the captured T113-S3 boot resistor via endpoint", () =
     pointToBoxDistance(actualVia.center, signalPad) - actualVia.diameter / 2,
   ).toBeCloseTo(0.051188823, 8)
   expect(materializedAccepted).toBeFalse()
-  // Repro baseline: identical physical copper is incorrectly accepted before
-  // materialization. The stacked fix changes this assertion and the SVG.
-  expect(rawAccepted).toBeTrue()
-  expect(rawGeometry.viaSpans).not.toEqual(materializedGeometry.viaSpans)
+  expect(rawAccepted).toBeFalse()
+  expect(rawGeometry).toEqual(materializedGeometry)
   expect(captured).toEqual(originalCapture)
 
   const snapshot = getGraphicsSvgFrames({
