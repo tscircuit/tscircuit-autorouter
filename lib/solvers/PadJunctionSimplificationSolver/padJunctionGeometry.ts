@@ -1,0 +1,239 @@
+import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
+import type { Obstacle } from "lib/types"
+import type { HighDensityRoute, HighDensityRoutePoint as RoutePoint } from "lib/types/high-density-types"
+import { createObjectsWithZLayers } from "lib/utils/createObjectsWithZLayers"
+import type { PadJunctionSearch } from "./PadJunctionSearch"
+
+/** Domain vocabulary shared by the search, output, and debugger.
+ * Parsed input: validated geometry and normalized options used by the solver.
+ * Junction path: an ordered sequence of routing points.
+ * Candidate progress: the current arm stage plus only its completed arms.
+ * Target pad: rectangular conductive area receiving both routes.
+ * Branch anchor: fixed end of the same-layer terminal run being replaced.
+ * Trunk: the connection between the two branch anchors, through the junction.
+ * Junction: the single point where the pad stem joins the trunk.
+ * Pad stem: the shared connection from the junction to the pad entry.
+ * Pad entry: a point inside the pad, inset by half the trace width.
+ * Candidate: a proposed trunk, junction, and pad stem.
+ * Fixed copper: all route segments outside the two replaceable terminal runs.
+ * Clearance: minimum edge-to-edge separation from unrelated copper.
+ * Search state: grid position and incoming direction.
+ * Search frontier: discovered states awaiting expansion in a priority queue.
+ * Search cost: lexicographic pair (bend count, copper length).
+ * Heuristic estimate: (zero bends, Euclidean distance to the goal).
+ * Search budget: maximum expanded states for one pad-junction problem.
+ * Accepted replacement: a fully checked candidate improving the original cost.
+ *
+ * Scope: two equal-width, same-layer terminal runs at an axis-aligned pad.
+ * Pads with three or more discovered terminal branches are skipped.
+ * Other layers and route metadata remain unchanged. Unsupported geometry is an
+ * explicit no-op. A* finds shortest lexicographic paths on a bounded orthogonal
+ * grid; sequential arm routing and first improvement do NOT guarantee a globally
+ * optimal copper tree. Original endpoints are retained inside the conductive pad.
+ */
+export type PadJunctionPoint = { x: number; y: number; z: number }
+export type JunctionPath = PadJunctionPoint[]
+export type SearchDirection = "east" | "north" | "west" | "south"
+export type TargetPad = Obstacle & { __zLayers: number[] }
+export type ParsedRoute = HighDensityRoute & {
+  route: RoutePoint[]
+  firstPoint: RoutePoint
+  lastPoint: RoutePoint
+}
+export type BranchAnchor = {
+  routeIndex: number
+  route: ParsedRoute
+  points: RoutePoint[]
+  anchor: RoutePoint
+  terminal: RoutePoint
+  anchorIndex: number
+  reversed: boolean
+}
+export type Trunk = [JunctionPath, JunctionPath]
+export type Junction = PadJunctionPoint
+export type PadStem = JunctionPath
+export type PadEntry = PadJunctionPoint
+export type Candidate = { trunk: Trunk; junction: Junction; padStem: PadStem }
+export type FixedCopper = {
+  start: PadJunctionPoint
+  end: PadJunctionPoint
+  width: number
+  routeIndex: number
+  sameNet: boolean
+}
+export type Clearance = number
+export type SearchCost = { bends: number; length: number }
+export type SearchState = {
+  point: PadJunctionPoint
+  direction: SearchDirection
+  cost: SearchCost
+  key: string
+}
+export type SearchFrontier = SearchState[]
+export type HeuristicEstimate = SearchCost
+export type SearchBudget = number
+export type AcceptedReplacement = Candidate
+export type PadJunctionOutcome = {
+  outcome: "accepted" | "no_improvement" | "no_path" | "search_budget_reached" | "unsupported"
+  reason: string
+  connectionNames: string[]
+}
+export type PadJunctionSimplificationInput = {
+  hdRoutes: ReadonlyArray<HighDensityRoute>
+  otherHdRoutes?: ReadonlyArray<HighDensityRoute>
+  obstacles: ReadonlyArray<Obstacle>
+  connMap: ConnectivityMap
+  colorMap?: Readonly<Record<string, string>>
+  layerCount: number
+  outline?: ReadonlyArray<{ x: number; y: number }>
+  bounds?: { minX: number; minY: number; maxX: number; maxY: number }
+  minTraceToPadEdgeClearance?: number
+  minBoardEdgeClearance?: number
+  gridStep?: number
+}
+export type CandidateProgress =
+  | { stage: "first_trunk"; junction: Junction }
+  | { stage: "second_trunk"; junction: Junction; firstTrunk: JunctionPath }
+  | { stage: "pad_stem"; junction: Junction; trunk: Trunk }
+export type ParsedInput = Omit<PadJunctionSimplificationInput,
+  "hdRoutes" | "otherHdRoutes" | "obstacles" | "minTraceToPadEdgeClearance" |
+  "minBoardEdgeClearance" | "colorMap"> & {
+  hdRoutes: ParsedRoute[]
+  otherHdRoutes: ParsedRoute[]
+  obstacles: TargetPad[]
+  minTraceToPadEdgeClearance: number
+  minBoardEdgeClearance: number
+  colorMap: Readonly<Record<string, string>>
+}
+export type PadJunctionProblem = {
+  targetPad: TargetPad
+  branches: [BranchAnchor, BranchAnchor]
+  width: number
+  z: number
+  originalCost: SearchCost
+  fixedCopper: FixedCopper[]
+  junctions: Junction[]
+  junctionIndex: number
+  currentCandidate: CandidateProgress | null
+  search: PadJunctionSearch | null
+  expanded: number
+  foundValid: boolean
+}
+export const EPSILON = 1e-7
+
+/** Indexed geometry loops have runtime bounds that TypeScript cannot prove. */
+export function getItemOrThrow<T>(items: ReadonlyArray<T>, index: number): T {
+  const item = items[index]
+  if (item === undefined) {
+    throw new Error(`PadJunctionSimplificationSolver: missing item at index ${index}`)
+  }
+  return item
+}
+
+/** Parsing boundary: validate external geometry and construct nonempty routes.
+ * Parsed routes carry their endpoints, so internal routing never guesses whether
+ * a terminal exists. Metadata is preserved until output removes these caches.
+ */
+function parseRoute(route: HighDensityRoute, layerCount: number): ParsedRoute {
+  const points = route.route.map((point): RoutePoint => ({ ...point }))
+  const [firstPoint] = points
+  const lastPoint = points.at(-1)
+  const invalidPoint = points.some((point) =>
+    !Number.isFinite(point.x) || !Number.isFinite(point.y) ||
+    !Number.isInteger(point.z) || point.z < 0 || point.z >= layerCount ||
+    (point.traceThickness !== undefined &&
+      (!Number.isFinite(point.traceThickness) || point.traceThickness <= 0)),
+  )
+  const invalidVia = route.vias.some((via) =>
+    !Number.isFinite(via.x) || !Number.isFinite(via.y))
+  if (!firstPoint || !lastPoint || invalidPoint || invalidVia ||
+    !Number.isFinite(route.traceThickness) || route.traceThickness <= 0 ||
+    !Number.isFinite(route.viaDiameter) || route.viaDiameter <= 0) {
+    throw new Error(`PadJunctionSimplificationSolver: invalid route "${route.connectionName}"`)
+  }
+  return {
+    ...route, route: points, firstPoint, lastPoint,
+    vias: route.vias.map((via) => ({ ...via })),
+  }
+}
+
+export function parsePadJunctionInput(input: PadJunctionSimplificationInput): ParsedInput {
+  const clearance = input.minTraceToPadEdgeClearance ?? 0.15
+  const boardClearance = input.minBoardEdgeClearance ?? 0
+  if (!Number.isInteger(input.layerCount) || input.layerCount < 1 ||
+    !Number.isFinite(clearance) || clearance < 0 ||
+    !Number.isFinite(boardClearance) || boardClearance < 0 ||
+    (input.gridStep !== undefined && (!Number.isFinite(input.gridStep) || input.gridStep <= 0))) {
+    throw new Error("PadJunctionSimplificationSolver: invalid layers, clearance, or grid step")
+  }
+  if (input.bounds) {
+    const { minX, minY, maxX, maxY } = input.bounds
+    if (![minX, minY, maxX, maxY].every(Number.isFinite) || minX >= maxX || minY >= maxY) {
+      throw new Error("PadJunctionSimplificationSolver: invalid board bounds")
+    }
+  }
+  if (input.outline && (input.outline.length < 3 || input.outline.some((point) =>
+    !Number.isFinite(point.x) || !Number.isFinite(point.y)))) {
+    throw new Error("PadJunctionSimplificationSolver: invalid board outline")
+  }
+  for (const obstacle of input.obstacles) {
+    if (![obstacle.center.x, obstacle.center.y, obstacle.width, obstacle.height].every(Number.isFinite) ||
+      obstacle.width <= 0 || obstacle.height <= 0 ||
+      (obstacle.ccwRotationDegrees !== undefined && !Number.isFinite(obstacle.ccwRotationDegrees)) ||
+      ("shape" in obstacle && obstacle.shape !== undefined && typeof obstacle.shape !== "string")) {
+      throw new Error(`PadJunctionSimplificationSolver: invalid obstacle "${obstacle.obstacleId}"`)
+    }
+    for (const layers of [obstacle.__zLayers, obstacle.zLayers]) {
+      if (layers && (layers.length === 0 || layers.some((z) =>
+        !Number.isInteger(z) || z < 0 || z >= input.layerCount))) {
+        throw new Error(`PadJunctionSimplificationSolver: invalid obstacle layers "${obstacle.obstacleId}"`)
+      }
+    }
+  }
+  const obstacles = createObjectsWithZLayers(input.obstacles, input.layerCount)
+    .map((obstacle): TargetPad => ({
+      ...obstacle,
+      center: { ...obstacle.center },
+      connectedTo: [...obstacle.connectedTo],
+    }))
+  return {
+    ...input,
+    hdRoutes: input.hdRoutes.map((route) => parseRoute(route, input.layerCount)),
+    otherHdRoutes: (input.otherHdRoutes ?? []).map((route) => parseRoute(route, input.layerCount)),
+    obstacles, minTraceToPadEdgeClearance: clearance,
+    minBoardEdgeClearance: boardClearance, colorMap: input.colorMap ?? {},
+    bounds: input.bounds ? { ...input.bounds } : undefined,
+    outline: input.outline?.map((point) => ({ ...point })),
+  }
+}
+
+
+export function getPathCost(points: ReadonlyArray<PadJunctionPoint>): SearchCost {
+  let length = 0
+  let bends = 0
+  for (let index = 1; index < points.length; index++) {
+    const start = getItemOrThrow(points, index - 1)
+    const end = getItemOrThrow(points, index)
+    length += Math.hypot(end.x - start.x, end.y - start.y)
+    if (index < 2) continue
+    const previous = getItemOrThrow(points, index - 2)
+    const cross = (start.x - previous.x) * (end.y - start.y) - (start.y - previous.y) * (end.x - start.x)
+    const dot = (start.x - previous.x) * (end.x - start.x) + (start.y - previous.y) * (end.y - start.y)
+    if (Math.abs(cross) > EPSILON || dot < 0) bends++
+  }
+  return { bends, length }
+}
+
+export function simplifyJunctionPath(points: PadJunctionPoint[]): PadJunctionPoint[] {
+  const result: PadJunctionPoint[] = []
+  for (const point of points) {
+    const previous = result.at(-1)
+    if (previous && Math.hypot(previous.x - point.x, previous.y - point.y) < EPSILON) continue
+    result.push(point)
+    while (result.length >= 3 && getPathCost(result.slice(-3)).bends === 0) {
+      result.splice(result.length - 2, 1)
+    }
+  }
+  return result
+}
+

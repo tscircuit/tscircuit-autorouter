@@ -5,8 +5,8 @@ import type {
   SearchCost,
   SearchState,
   TargetPad,
-} from "./PadJunctionSimplificationSolver"
-import { simplifyJunctionPath } from "./PadJunctionSimplificationSolver"
+} from "./padJunctionGeometry"
+import { simplifyJunctionPath } from "./padJunctionGeometry"
 
 type SearchGoal =
   | { kind: "anchor"; point: PadJunctionPoint }
