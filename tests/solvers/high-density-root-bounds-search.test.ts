@@ -88,9 +88,8 @@ test("root bounds rejection preserves complete searches and avoids disjoint tree
     const guarded = new SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost(
       opts,
     )
-    const reference = new SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost(
-      opts,
-    )
+    const reference =
+      new SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost(opts)
     for (const [solver, isReference] of [
       [guarded, false],
       [reference, true],
