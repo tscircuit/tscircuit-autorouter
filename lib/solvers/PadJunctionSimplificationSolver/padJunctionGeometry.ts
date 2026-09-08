@@ -4,33 +4,6 @@ import type { HighDensityRoute, HighDensityRoutePoint as RoutePoint } from "lib/
 import { createObjectsWithZLayers } from "lib/utils/createObjectsWithZLayers"
 import type { PadJunctionSearch } from "./PadJunctionSearch"
 
-/** Domain vocabulary shared by the search, output, and debugger.
- * Parsed input: validated geometry and normalized options used by the solver.
- * Junction path: an ordered sequence of routing points.
- * Candidate progress: the current arm stage plus only its completed arms.
- * Target pad: rectangular conductive area receiving both routes.
- * Branch anchor: fixed end of the same-layer terminal run being replaced.
- * Trunk: the connection between the two branch anchors, through the junction.
- * Junction: the single point where the pad stem joins the trunk.
- * Pad stem: the shared connection from the junction to the pad entry.
- * Pad entry: a point inside the pad, inset by half the trace width.
- * Candidate: a proposed trunk, junction, and pad stem.
- * Fixed copper: all route segments outside the two replaceable terminal runs.
- * Clearance: minimum edge-to-edge separation from unrelated copper.
- * Search state: grid position and incoming direction.
- * Search frontier: discovered states awaiting expansion in a priority queue.
- * Search cost: lexicographic pair (bend count, copper length).
- * Heuristic estimate: (zero bends, Euclidean distance to the goal).
- * Search budget: maximum expanded states for one pad-junction problem.
- * Accepted replacement: a fully checked candidate improving the original cost.
- *
- * Scope: two equal-width, same-layer terminal runs at an axis-aligned pad.
- * Pads with three or more discovered terminal branches are skipped.
- * Other layers and route metadata remain unchanged. Unsupported geometry is an
- * explicit no-op. A* finds shortest lexicographic paths on a bounded orthogonal
- * grid; sequential arm routing and first improvement do NOT guarantee a globally
- * optimal copper tree. Original endpoints are retained inside the conductive pad.
- */
 export type PadJunctionPoint = { x: number; y: number; z: number }
 export type JunctionPath = PadJunctionPoint[]
 export type SearchDirection = "east" | "north" | "west" | "south"
