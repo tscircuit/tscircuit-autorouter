@@ -1,5 +1,6 @@
 import {
   getFixedObstacleViolations,
+  createNewViaPadViolationEvaluator,
   getNewViaPadViolations,
 } from "@tscircuit/repair04"
 import type { AnyCircuitElement } from "circuit-json"
@@ -1336,7 +1337,19 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     }
     this.drcEvaluator = drcEvaluator
 
+    const originalExactRoutes = [
+      ...params.newHdRoutes,
+      ...this.movablePreloadedSections.map((section) => section.hdRoute),
+    ]
+    const evaluateViaPadContacts = createNewViaPadViolationEvaluator({
+      srj: createSrjWithBoardValidObstacleLayers(params.originalSrj),
+      viaClearance,
+    })
     this.exactRepairSolver = new GlobalDrcBranchPortfolioSolver({
+      isValidCandidate: (routes): boolean => evaluateViaPadContacts({
+        previousRoutes: originalExactRoutes,
+        routes,
+      }).length === 0,
       srj: extendedSrjWithPointPairs as RepairSimpleRouteJson,
       hdRoutes: [
         ...params.newHdRoutes,
