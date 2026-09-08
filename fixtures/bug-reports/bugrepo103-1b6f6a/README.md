@@ -8,7 +8,8 @@ Benchmark artifact (relative to the supplied pcb-generation-benchmark directory)
 
 `data/runs/2026-09-05-codegen-pilot-01/voltage-divider/tscircuit-codegen/replicate-1/artifacts/attempt-03`
 
-- `bugrepo103-1b6f6a.circuit.tsx`: unchanged original TSX (benchmark dependency: tscircuit 0.0.2462).
+The original `index.circuit.tsx` remains in that benchmark artifact (dependency: tscircuit 0.0.2462).
+
 - `bugrepo103-1b6f6a.routed.circuit.json`: unchanged saved output, preserving the reported routing for comparison.
 - `bugrepo103-1b6f6a.srj.json`: fresh routing input extracted from that saved output using @tscircuit/core 0.0.1837.
 - `bugrepo103-1b6f6a.fixture.tsx`: interactive autorouting pipeline debugger.
