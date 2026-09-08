@@ -209,21 +209,19 @@ export const snapIslandEndpointToNearestTerminal = (params: {
     : params.islandEndpoint
 }
 
-/**
- * Returns the route islands on the deterministic endpoint path between the
- * chosen terminals. If the subset cannot actually stitch to both terminals,
- * the full route set is returned instead.
- */
-export const selectRoutesAlongEndpointPath = (params: {
+type EndpointPathParams = {
   connectionName: string
   hdRoutes: HighDensityIntraNodeRoute[]
   start: Point3
   end: Point3
   endpointIndex: EndpointClusterIndex
   canStitchBetweenTerminals: CanStitchBetweenTerminals
-}) => {
-  if (params.hdRoutes.length <= 2) return params.hdRoutes
+}
 
+/** Returns a validated terminal-to-terminal path, or null when none is found. */
+export const findRoutesAlongEndpointPath = (
+  params: EndpointPathParams,
+): HighDensityIntraNodeRoute[] | null => {
   const canonicalHdRoutes = [...params.hdRoutes].sort(compareRoutes)
 
   const startHash = params.endpointIndex.getClosestEndpointKey(
@@ -238,7 +236,7 @@ export const selectRoutesAlongEndpointPath = (params: {
   )
 
   if (!startHash || !endHash || startHash === endHash) {
-    return canonicalHdRoutes
+    return null
   }
 
   const adjacency = new Map<string, EndpointEdge[]>()
@@ -336,20 +334,20 @@ export const selectRoutesAlongEndpointPath = (params: {
     }
   }
 
-  if (!costByHash.has(endHash)) return canonicalHdRoutes
+  if (!costByHash.has(endHash)) return null
 
   const selectedRouteIndexesInReverse: number[] = []
   let cursorHash = endHash
   while (cursorHash !== startHash) {
     const prev = prevByHash.get(cursorHash)
-    if (!prev) return canonicalHdRoutes
+    if (!prev) return null
     if (prev.routeIndex !== null) {
       selectedRouteIndexesInReverse.push(prev.routeIndex)
     }
     cursorHash = prev.prevHash
   }
 
-  if (selectedRouteIndexesInReverse.length === 0) return params.hdRoutes
+  if (selectedRouteIndexesInReverse.length === 0) return null
 
   const selectedHdRoutes = selectedRouteIndexesInReverse
     .reverse()
@@ -364,10 +362,21 @@ export const selectRoutesAlongEndpointPath = (params: {
       end: params.end,
     })
   ) {
-    return canonicalHdRoutes
+    return null
   }
 
   return selectedHdRoutes
+}
+
+/** Retains the existing island-selection behavior when no path is found. */
+export const selectRoutesAlongEndpointPath = (
+  params: EndpointPathParams,
+): HighDensityIntraNodeRoute[] => {
+  if (params.hdRoutes.length <= 2) return params.hdRoutes
+  return (
+    findRoutesAlongEndpointPath(params) ??
+    [...params.hdRoutes].sort(compareRoutes)
+  )
 }
 
 export const hasStitchableGapBetweenUnsolvedRoutes = (
