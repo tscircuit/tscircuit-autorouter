@@ -3,7 +3,7 @@ import { pointToSegmentDistance, segmentToBoxMinDistance } from "@tscircuit/math
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { GraphicsObject, Line, Point, Rect } from "graphics-debug"
 import type { Obstacle } from "lib/types"
-import type { HighDensityRoute } from "lib/types/high-density-types"
+import type { HighDensityRoute, HighDensityRoutePoint as RoutePoint } from "lib/types/high-density-types"
 import { createObjectsWithZLayers } from "lib/utils/createObjectsWithZLayers"
 import { minimumDistanceBetweenSegments } from "lib/utils/minimumDistanceBetweenSegments"
 import { isPointInOrOnPolygon } from "lib/utils/polygonContainment"
@@ -11,7 +11,7 @@ import { PadJunctionSearch } from "./PadJunctionSearch"
 
 /** Domain vocabulary shared by the search, output, and debugger.
  * Parsed input: validated geometry and normalized options used by the solver.
- * Junction path: a nonempty sequence of routing points.
+ * Junction path: an ordered sequence of routing points.
  * Candidate progress: the current arm stage plus only its completed arms.
  * Target pad: rectangular conductive area receiving both routes.
  * Branch anchor: fixed end of the same-layer terminal run being replaced.
@@ -36,19 +36,18 @@ import { PadJunctionSearch } from "./PadJunctionSearch"
  * optimal copper tree. Original endpoints are retained inside the conductive pad.
  */
 export type PadJunctionPoint = { x: number; y: number; z: number }
-export type JunctionPath = [PadJunctionPoint, ...PadJunctionPoint[]]
-export type SearchDirection = 0 | 1 | 2 | 3
-export type TargetPad = Obstacle & { __zLayers: number[]; hasRectangularShape: boolean }
-type RoutePoint = HighDensityRoute["route"][number]
+export type JunctionPath = PadJunctionPoint[]
+export type SearchDirection = "east" | "north" | "west" | "south"
+export type TargetPad = Obstacle & { __zLayers: number[] }
 type ParsedRoute = HighDensityRoute & {
-  route: [RoutePoint, ...RoutePoint[]]
+  route: RoutePoint[]
   firstPoint: RoutePoint
   lastPoint: RoutePoint
 }
 export type BranchAnchor = {
   routeIndex: number
   route: ParsedRoute
-  points: HighDensityRoute["route"]
+  points: RoutePoint[]
   anchor: RoutePoint
   terminal: RoutePoint
   anchorIndex: number
@@ -160,7 +159,7 @@ function parseRoute(route: HighDensityRoute, layerCount: number): ParsedRoute {
     throw new Error(`PadJunctionSimplificationSolver: invalid route "${route.connectionName}"`)
   }
   return {
-    ...route, route: [firstPoint, ...points.slice(1)], firstPoint, lastPoint,
+    ...route, route: points, firstPoint, lastPoint,
     vias: route.vias.map((via) => ({ ...via })),
   }
 }
@@ -205,8 +204,6 @@ function parsePadJunctionInput(input: PadJunctionSimplificationInput): ParsedInp
       ...obstacle,
       center: { ...obstacle.center },
       connectedTo: [...obstacle.connectedTo],
-      hasRectangularShape: obstacle.type === "rect" &&
-        (!("shape" in obstacle) || obstacle.shape === undefined || obstacle.shape === "rect"),
     }))
   return {
     ...input,
@@ -327,7 +324,8 @@ export class PadJunctionSimplificationSolver extends BaseSolver {
     }
     const width = branches[0].route.traceThickness
     const z = branches[0].terminal.z
-    const unsupported = !targetPad.hasRectangularShape ||
+    const unsupported = targetPad.type !== "rect" ||
+      ("shape" in targetPad && targetPad.shape !== undefined && targetPad.shape !== "rect") ||
       targetPad.ccwRotationDegrees || targetPad.isCopperPour ||
       targetPad.width <= width || targetPad.height <= width ||
       branches.some((branch) => {
@@ -575,7 +573,7 @@ export class PadJunctionSimplificationSolver extends BaseSolver {
       const firstPoint = getItemOrThrow(orderedPoints, 0)
       const lastPoint = getItemOrThrow(orderedPoints, orderedPoints.length - 1)
       replacements.push({
-        ...route, route: [firstPoint, ...orderedPoints.slice(1)], firstPoint, lastPoint,
+        ...route, route: orderedPoints, firstPoint, lastPoint,
       })
     }
     for (const [index, branch] of problem.branches.entries()) {
@@ -691,16 +689,16 @@ export class PadJunctionSimplificationSolver extends BaseSolver {
       const horizontalTrunk = (first.x - candidate.junction.x) * (second.x - candidate.junction.x) < 0
       const anchor = candidate.stage === "first_trunk" ? first
         : candidate.stage === "second_trunk" ? second : null
-      // Direction indices follow east, north, west, south in PadJunctionSearch.
+      // Choose the initial direction toward the anchor or perpendicular pad stem.
       let direction: SearchDirection
       if (anchor) {
         direction = horizontalTrunk
-          ? (anchor.x < candidate.junction.x ? 2 : 0)
-          : (anchor.y < candidate.junction.y ? 3 : 1)
+          ? (anchor.x < candidate.junction.x ? "west" : "east")
+          : (anchor.y < candidate.junction.y ? "south" : "north")
       } else {
         direction = horizontalTrunk
-          ? (problem.targetPad.center.y < candidate.junction.y ? 3 : 1)
-          : (problem.targetPad.center.x < candidate.junction.x ? 2 : 0)
+          ? (problem.targetPad.center.y < candidate.junction.y ? "south" : "north")
+          : (problem.targetPad.center.x < candidate.junction.x ? "west" : "east")
       }
       problem.search = new PadJunctionSearch({
         start: candidate.junction,

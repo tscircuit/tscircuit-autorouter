@@ -41,10 +41,10 @@ type GridDirection = {
   yOffset: number
 }
 const DIRECTIONS: ReadonlyArray<GridDirection> = [
-  { direction: 0, opposite: 2, xOffset: 1, yOffset: 0 },
-  { direction: 1, opposite: 3, xOffset: 0, yOffset: 1 },
-  { direction: 2, opposite: 0, xOffset: -1, yOffset: 0 },
-  { direction: 3, opposite: 1, xOffset: 0, yOffset: -1 },
+  { direction: "east", opposite: "west", xOffset: 1, yOffset: 0 },
+  { direction: "north", opposite: "south", xOffset: 0, yOffset: 1 },
+  { direction: "west", opposite: "east", xOffset: -1, yOffset: 0 },
+  { direction: "south", opposite: "north", xOffset: 0, yOffset: -1 },
 ]
 
 /** One frontier expansion per step. Costs are lexicographic, never weighted.
@@ -176,9 +176,9 @@ export class PadJunctionSearch {
         points.push(state.point)
         state = state.predecessor
       }
-      const [first, ...remaining] = simplifyJunctionPath(points.reverse())
-      if (!first) throw new Error("PadJunctionSearch: reached goal without a path")
-      this.result = { status: "found", path: [first, ...remaining] }
+      const path = simplifyJunctionPath(points.reverse())
+      if (path.length === 0) throw new Error("PadJunctionSearch: reached goal without a path")
+      this.result = { status: "found", path }
       return
     }
     for (const { direction, opposite, xOffset, yOffset } of DIRECTIONS) {
