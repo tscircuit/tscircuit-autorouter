@@ -1,3 +1,4 @@
+import { getForceImproveNodesClearOfFixedCopper } from "./getForceImproveNodesClearOfFixedCopper"
 import { RectDiffPipeline } from "@tscircuit/rectdiff"
 import type { PowerTraceExpanderOptions } from "@tscircuit/power-trace-expander"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
@@ -637,11 +638,15 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       "highDensityForceImproveSolver",
       HighDensityForceImproveSolver,
       (cms) => {
-        let nodeWithPortPoints = cms.highDensityNodePortPoints ?? []
-        // Force improvement cannot constrain movement against fixed copper.
-        if (cms.highDensityRouteSolver!.getUpdatedFixedHdRoutes().length > 0) {
-          nodeWithPortPoints = []
-        }
+        // Exclude regions near fixed copper from force improvement.
+        const nodeWithPortPoints = getForceImproveNodesClearOfFixedCopper({
+          nodes: cms.highDensityNodePortPoints ?? [],
+          fixedRoutes: cms.highDensityRouteSolver!.getUpdatedFixedHdRoutes(),
+          layerCount: cms.srj.layerCount,
+          clearance:
+            (cms.srj.defaultObstacleMargin ?? 0.2) +
+            Math.max(cms.minTraceWidth, cms.viaDiameter) / 2,
+        })
         return [
           {
             nodeWithPortPoints,

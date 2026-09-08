@@ -466,6 +466,29 @@ function GpsLogger({
           />
         </Fragment>
       ))}
+      <pcbnoterect
+        pcbX={-10.534003438860754}
+        pcbY={-5.472430517590865}
+        width={1.5}
+        height={1.5}
+        strokeWidth={0.12}
+        color="#00ffff"
+      />
+      <pcbnoteline
+        x1={-18}
+        y1={-10}
+        x2={-10.534003438860754}
+        y2={-5.472430517590865}
+        strokeWidth={0.12}
+        color="#00ffff"
+      />
+      <pcbnotetext
+        text="XIN / GND SHORT"
+        pcbX={-23}
+        pcbY={-11}
+        fontSize={0.9}
+        color="#00ffff"
+      />
       <silkscreentext
         text="GPS LOGGER / RP2040"
         pcbX={-14}
@@ -517,8 +540,8 @@ test("pipeline9 gps logger preserves separation between XIN and ground", async (
     phaseSolvers[0].highDensityForceImproveSolver!.sampleEntries.length,
   ).toBeGreaterThan(0)
   expect(
-    phaseSolvers[1].highDensityForceImproveSolver!.sampleEntries,
-  ).toHaveLength(0)
+    phaseSolvers[1].highDensityForceImproveSolver!.sampleEntries.length,
+  ).toBeGreaterThan(0)
   expect(phaseSolvers[0].getOutputSimplifiedPcbTraces()).toHaveLength(4)
   expect(phaseSolvers[1].getOutputSimplifiedPcbTraces().length).toBeGreaterThan(
     4,
@@ -528,7 +551,6 @@ test("pipeline9 gps logger preserves separation between XIN and ground", async (
   const contacts = checkEachPcbTraceNonOverlapping(circuitJson, {
     minClearance: 0,
   })
-  expect(contacts).toHaveLength(0)
 
   await expect(
     getBugReportSnapshotSvg({
@@ -537,4 +559,5 @@ test("pipeline9 gps logger preserves separation between XIN and ground", async (
       routedTraces: phaseSolvers[1].getOutputSimplifiedPcbTraces(),
     }),
   ).toMatchSvgSnapshot(import.meta.path, { svgName: "full-board" })
+  expect(contacts).toHaveLength(0)
 })

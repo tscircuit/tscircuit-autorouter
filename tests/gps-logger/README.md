@@ -22,6 +22,11 @@ Zero-clearance checking distinguishes a physical short from a spacing violation.
 
 To regenerate the snapshot, prefix the test command with `BUN_UPDATE_SNAPSHOTS=1`.
 
-This draft is stacked on #2457. Skipping force improvement when fixed copper
-is present removes the short, but previously measured phase-1 relaxed DRC errors
-increase from 3 to 5. The candidate is not ready to merge.
+This experiment is stacked on #2458. That parent disables force improvement
+for the whole board when fixed copper exists: it removes the crystal short,
+but has five relaxed DRC errors, including a trace-to-pad contact.
+
+This draft only excludes regions near fixed copper. It restores force
+improvement elsewhere, but brings back the XIN–ground short and still produces
+five relaxed DRC errors. The zero-contact regression assertion intentionally
+remains failing. The snapshot marks the returned short. Do not merge.
