@@ -4,7 +4,7 @@ import { RootCircuit } from "@tscircuit/core"
 import { Fragment } from "react"
 import type { AutorouterConfig } from "@tscircuit/props"
 import { checkEachPcbTraceNonOverlapping } from "@tscircuit/checks"
-import { convertCircuitJsonToPcbSvg } from "circuit-to-svg"
+import { getBugReportSnapshotSvg } from "lib/testing/getBugReportSnapshotSvg"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
 import type { SimpleRouteJson } from "lib/types"
 import {
@@ -466,29 +466,6 @@ function GpsLogger({
           />
         </Fragment>
       ))}
-      <pcbnoterect
-        pcbX={-10.534003438860754}
-        pcbY={-5.472430517590865}
-        width={1.5}
-        height={1.5}
-        strokeWidth={0.12}
-        color="#00ffff"
-      />
-      <pcbnoteline
-        x1={-18}
-        y1={-10}
-        x2={-10.534003438860754}
-        y2={-5.472430517590865}
-        strokeWidth={0.12}
-        color="#00ffff"
-      />
-      <pcbnotetext
-        text="XIN / GND SHORT"
-        pcbX={-23}
-        pcbY={-11}
-        fontSize={0.9}
-        color="#00ffff"
-      />
       <silkscreentext
         text="GPS LOGGER / RP2040"
         pcbX={-14}
@@ -550,11 +527,10 @@ test("pipeline9 gps logger reproduces XIN to ground contact", async () => {
   expect(contacts[0].center?.y).toBeCloseTo(-5.472430517590865, 5)
 
   await expect(
-    convertCircuitJsonToPcbSvg(circuitJson, {
-      width: 1400,
-      height: 1150,
-      shouldDrawErrors: false,
-      showPcbNotes: true,
+    getBugReportSnapshotSvg({
+      inputSrj: phaseSolvers[1].originalSrj,
+      srjWithPointPairs: phaseSolvers[1].srjWithPointPairs!,
+      routedTraces: phaseSolvers[1].getOutputSimplifiedPcbTraces(),
     }),
   ).toMatchSvgSnapshot(import.meta.path, { svgName: "full-board" })
 })
