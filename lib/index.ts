@@ -112,3 +112,13 @@ export type {
   SingleLayerConnectionPoint,
   TerminalViaHint,
 } from "./types/srj-types"
+export {
+  validateSimpleRouteJsonOutput,
+  getSimpleRouteJsonOutputValidationFailure,
+  DEFAULT_VIA_TO_PAD_CLEARANCE,
+} from "./utils/validateSimpleRouteJsonOutput"
+export type {
+  AutorouterOutputViolation,
+  AutorouterOutputViolationType,
+  ValidateSimpleRouteJsonOutputOptions,
+} from "./utils/validateSimpleRouteJsonOutput"
