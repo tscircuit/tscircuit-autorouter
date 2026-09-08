@@ -13,7 +13,7 @@ class CustomKeySolver extends SingleHighDensityRouteSolver {
   }
 }
 
-test("bounded explored storage handles custom key functions and very large grids", () => {
+test("custom node keys receive the actual neighbor objects before visited checks", () => {
   const opts = {
     connectionName: "custom-keys",
     obstacleRoutes: [],
@@ -33,40 +33,14 @@ test("bounded explored storage handles custom key functions and very large grids
     ],
   }
   const custom = new CustomKeySolver(opts)
-  const nativeSet = new CustomKeySolver(opts)
-  nativeSet.exploredNodes = new Set()
   const parent: Node = { x: 0, y: 0, z: 0, g: 2, h: 3, f: 4, parent: null }
   const neighbors = custom.getNeighbors(parent)
   expect(neighbors.length).toBeGreaterThan(0)
   expect(neighbors.every((node) => custom.keyedNodes.has(node))).toBe(true)
-  custom.exploredNodes.clear()
-  custom.solve()
-  nativeSet.solve()
-  expect({
-    solved: custom.solved,
-    failed: custom.failed,
-    iterations: custom.iterations,
-    route: custom.solvedPath,
-    explored: [...custom.exploredNodes],
-  }).toEqual({
-    solved: nativeSet.solved,
-    failed: nativeSet.failed,
-    iterations: nativeSet.iterations,
-    route: nativeSet.solvedPath,
-    explored: [...nativeSet.exploredNodes],
-  })
-
-  const large = new SingleHighDensityRouteSolver({
-    ...opts,
-    minDistBetweenEnteringPoints: 0,
-    bounds: { minX: -500, maxX: 500, minY: -500, maxY: 500 },
-  })
-  const storage = large.exploredNodes as Set<number> & {
-    bitmap: Uint8Array | null
-  }
-  expect(storage.bitmap).toBeNull()
-  const key = large.getNodeKey(parent)
-  storage.add(key)
-  expect(storage.has(key)).toBe(true)
-  expect([...storage]).toEqual([key])
+  const visitedKey = custom.getNodeKey(neighbors[0]!)
+  custom.exploredNodes.add(visitedKey)
+  const remaining = custom.getNeighbors(parent)
+  expect(remaining.every((node) => custom.getNodeKey(node) !== visitedKey)).toBe(
+    true,
+  )
 })

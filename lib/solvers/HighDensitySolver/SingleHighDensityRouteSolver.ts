@@ -31,56 +31,6 @@ type SharedPlanarViaQuery = {
   viaIds?: number[]
 }
 
-const MAX_EXPLORED_BITMAP_CELLS = 1_000_000
-
-class BitmapExploredNodeSet extends Set<number> {
-  private bitmap: Uint8Array | null = null
-
-  initializeBitmap(cellCount: number): void {
-    // Keep native Set storage authoritative for iteration and public edits.
-    // The bounded bitmap only accelerates repeated membership checks.
-    this.bitmap = new Uint8Array(cellCount)
-    for (const key of this) {
-      if (Number.isInteger(key) && key >= 0 && key < cellCount) {
-        this.bitmap[key] = 1
-      }
-    }
-  }
-
-  override has(key: number): boolean {
-    const bitmap = this.bitmap
-    if (bitmap && Number.isInteger(key) && key >= 0 && key < bitmap.length) {
-      return bitmap[key] === 1
-    }
-    return super.has(key)
-  }
-
-  override add(key: number): this {
-    const bitmap = this.bitmap
-    if (bitmap && Number.isInteger(key) && key >= 0 && key < bitmap.length) {
-      bitmap[key] = 1
-    }
-    return super.add(key)
-  }
-
-  override delete(key: number): boolean {
-    const deleted = super.delete(key)
-    const bitmap = this.bitmap
-    if (bitmap && Number.isInteger(key) && key >= 0 && key < bitmap.length) {
-      bitmap[key] = 0
-    }
-    return deleted
-  }
-
-  override clear(): void {
-    super.clear()
-    // The Set can be reused through its public API after clearing it.
-    if (this.bitmap) {
-      this.bitmap.fill(0)
-    }
-  }
-}
-
 const connectionLabel = (
   connectionName: string,
   rootConnectionName?: string,
@@ -215,7 +165,7 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
       opts.availableZ && opts.availableZ.length > 0
         ? [...new Set(opts.availableZ)].sort((a, b) => a - b)
         : Array.from({ length: this.layerCount }, (_, index) => index)
-    this.exploredNodes = new BitmapExploredNodeSet()
+    this.exploredNodes = new Set()
     this.straightLineDistance = distance(this.A, this.B)
     this.futureConnections = opts.futureConnections ?? []
     this.NEARBY_SEGMENT_CLEARANCE = opts.nearbySegmentClearance ?? 0.15
@@ -248,22 +198,6 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     const gridMaxYIndex = Math.round(this.bounds.maxY / this.cellStep) + 1
     this.gridWidth = gridMaxXIndex - this.gridMinXIndex + 1
     this.gridHeight = gridMaxYIndex - this.gridMinYIndex + 1
-    const bitmapLayerCount = Math.max(
-      this.layerCount,
-      this.A.z + 1,
-      this.B.z + 1,
-      ...this.availableZ.map((z) => z + 1),
-    )
-    const bitmapCellCount = this.gridWidth * this.gridHeight * bitmapLayerCount
-    if (
-      this.exploredNodes instanceof BitmapExploredNodeSet &&
-      Number.isSafeInteger(bitmapCellCount) &&
-      bitmapCellCount > 0 &&
-      bitmapCellCount <= MAX_EXPLORED_BITMAP_CELLS
-    ) {
-      this.exploredNodes.initializeBitmap(bitmapCellCount)
-    }
-
     const isOnSameEdge =
       (Math.abs(this.A.x - this.bounds.minX) < 0.001 &&
         Math.abs(this.B.x - this.bounds.minX) < 0.001) || // both on left

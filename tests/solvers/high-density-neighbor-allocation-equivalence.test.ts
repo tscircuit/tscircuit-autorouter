@@ -3,17 +3,7 @@ import type { Node } from "lib/data-structures/SingleRouteCandidatePriorityQueue
 import { SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost } from "lib/solvers/HighDensitySolver/SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost"
 import type { HighDensityIntraNodeRoute } from "lib/types/high-density-types"
 
-class NativeSetReferenceSolver extends SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost {
-  constructor(
-    opts: ConstructorParameters<
-      typeof SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost
-    >[0],
-  ) {
-    super(opts)
-    const originalEntries = [...this.exploredNodes]
-    this.exploredNodes = new Set(originalEntries)
-  }
-
+class OriginalAllocationReferenceSolver extends SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost {
   override getNodeKey(node: Node): number {
     const xIndex = Math.round(node.x / this.cellStep) - this.gridMinXIndex
     const yIndex = Math.round(node.y / this.cellStep) - this.gridMinYIndex
@@ -22,7 +12,7 @@ class NativeSetReferenceSolver extends SingleHighDensityRouteSolver6_VertHorzLay
   }
 }
 
-test("bitmap membership and delayed allocation preserve native Set searches", () => {
+test("delayed neighbor allocation preserves object-first searches", () => {
   let randomSeed = 84137
   const random = (): number => {
     randomSeed = (Math.imul(randomSeed, 1664525) + 1013904223) >>> 0
@@ -74,32 +64,32 @@ test("bitmap membership and delayed allocation preserve native Set searches", ()
         },
       ],
     }
-    const bitmap = new SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost(
+    const optimized = new SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost(
       opts,
     )
-    const nativeSet = new NativeSetReferenceSolver(opts)
-    bitmap.solve()
-    nativeSet.solve()
+    const reference = new OriginalAllocationReferenceSolver(opts)
+    optimized.solve()
+    reference.solve()
     expect({
-      solved: bitmap.solved,
-      failed: bitmap.failed,
-      error: bitmap.error,
-      iterations: bitmap.iterations,
-      route: bitmap.solvedPath,
-      explored: [...bitmap.exploredNodes],
-      explorationOrder: bitmap.debug_exploredNodesOrdered,
-      blocked: [...bitmap.debug_nodesTooCloseToObstacle],
-      intersected: [...bitmap.debug_nodePathToParentIntersectsObstacle],
+      solved: optimized.solved,
+      failed: optimized.failed,
+      error: optimized.error,
+      iterations: optimized.iterations,
+      route: optimized.solvedPath,
+      explored: [...optimized.exploredNodes],
+      explorationOrder: optimized.debug_exploredNodesOrdered,
+      blocked: [...optimized.debug_nodesTooCloseToObstacle],
+      intersected: [...optimized.debug_nodePathToParentIntersectsObstacle],
     }).toEqual({
-      solved: nativeSet.solved,
-      failed: nativeSet.failed,
-      error: nativeSet.error,
-      iterations: nativeSet.iterations,
-      route: nativeSet.solvedPath,
-      explored: [...nativeSet.exploredNodes],
-      explorationOrder: nativeSet.debug_exploredNodesOrdered,
-      blocked: [...nativeSet.debug_nodesTooCloseToObstacle],
-      intersected: [...nativeSet.debug_nodePathToParentIntersectsObstacle],
+      solved: reference.solved,
+      failed: reference.failed,
+      error: reference.error,
+      iterations: reference.iterations,
+      route: reference.solvedPath,
+      explored: [...reference.exploredNodes],
+      explorationOrder: reference.debug_exploredNodesOrdered,
+      blocked: [...reference.debug_nodesTooCloseToObstacle],
+      intersected: [...reference.debug_nodePathToParentIntersectsObstacle],
     })
   }
 })
