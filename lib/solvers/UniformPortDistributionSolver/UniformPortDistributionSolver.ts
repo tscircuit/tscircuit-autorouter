@@ -1,7 +1,12 @@
+import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import { BaseSolver } from "@tscircuit/solver-utils"
 import { GraphicsObject } from "graphics-debug"
 import { Obstacle } from "lib/types"
 import { NodeWithPortPoints } from "lib/types/high-density-types"
+import {
+  getFixedCopperPortNetId,
+  type FixedCopperGeometry,
+} from "lib/utils/getFixedCopperPortNetId"
 import { getBoundsFromNodeWithPortPoints } from "lib/utils/getBoundsFromNodeWithPortPoints"
 import { InputNodeWithPortPoints } from "../PortPointPathingSolver/PortPointPathingSolver"
 import {
@@ -23,6 +28,7 @@ export interface UniformPortDistributionSolverInput {
   nodeWithPortPoints: NodeWithPortPoints[]
   inputNodesWithPortPoints: InputNodeWithPortPoints[]
   obstacles: Obstacle[]
+  fixedCopper?: FixedCopperGeometry & { connectivityMap: ConnectivityMap }
 }
 
 /**
@@ -134,6 +140,21 @@ export class UniformPortDistributionSolver extends BaseSolver {
       sharedEdge,
       portPoints: family,
     })
+
+    const fixedCopper = this.input.fixedCopper
+    if (fixedCopper) {
+      for (const point of redistributed) {
+        const requiredNetId = getFixedCopperPortNetId(
+          point,
+          fixedCopper,
+        )
+        if (requiredNetId === undefined) continue
+        const netId = fixedCopper.connectivityMap.getNetConnectedToId(
+          point.rootConnectionName ?? point.connectionName,
+        )
+        if (requiredNetId === null || requiredNetId !== netId) return
+      }
+    }
 
     this.mapOfOwnerPairToPortPoints.set(ownerPairKey, redistributed)
   }

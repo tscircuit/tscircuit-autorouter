@@ -11,6 +11,10 @@ import {
   getAssignableViaId,
   isAssignableViaObstacle,
 } from "lib/autorouter-pipelines/AutoroutingPipeline8/assignableViaUtils"
+import {
+  getFixedCopperPortNetId,
+  type FixedCopperGeometry,
+} from "lib/utils/getFixedCopperPortNetId"
 import { assertDefined } from "./assertDefined"
 import { selectConnectionPointRegion } from "./select-connection-point-region"
 import type {
@@ -161,6 +165,7 @@ export function buildHyperGraph(params: {
   layerCount: number
   connectivityMap: ConnectivityMap
   assignableViaObstacles?: Obstacle[]
+  fixedCopper?: FixedCopperGeometry
 }): {
   graph: HyperGraphHg
   connections: ConnectionHgWithSimpleRouteConnection[]
@@ -214,6 +219,12 @@ export function buildHyperGraph(params: {
         portId: `${spp.segmentPortPointId}::${z}`,
         x: spp.x,
         y: spp.y,
+        requiredNetId: params.fixedCopper
+          ? getFixedCopperPortNetId(
+              { x: spp.x, y: spp.y, z },
+              params.fixedCopper,
+            )
+          : undefined,
         z,
         distToCentermostPortOnZ: spp.distToCentermostPortOnZ,
         cramped: spp.cramped,

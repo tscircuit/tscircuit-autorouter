@@ -182,6 +182,7 @@ type TinyRegionMetadata = {
 }
 
 type TinyPortMetadata = {
+  requiredNetId?: string | null
   serializedPortId?: string
   x?: number
   y?: number
@@ -208,6 +209,7 @@ type LoadedTinyGraph = {
     routeMetadata?: RouteMetadata[]
     routeNet: Int32Array
     regionNetId: Int32Array
+    portNetId?: Int32Array
     portPenalty?: Float64Array
     metadataPortPenaltiesApplied?: boolean
   }
@@ -414,6 +416,7 @@ const toSerializedPortData = (
   const portMetadata = port.d as typeof port.d & TinyPortMetadata
   return {
     portId: port.d.portId,
+    requiredNetId: port.d.requiredNetId,
     x: port.d.x,
     y: port.d.y,
     z: port.d.z,
@@ -735,6 +738,16 @@ const applyTerminalRegionNetIds = (loaded: LoadedTinyGraph) => {
     }
     netIndexById.set(netId, loaded.problem.routeNet[routeId]!)
   }
+
+  let portNetId: Int32Array | undefined
+  for (let portId = 0; portId < loaded.topology.portCount; portId++) {
+    const requiredNetId = loaded.topology.portMetadata?.[portId]?.requiredNetId
+    if (requiredNetId === undefined) continue
+    portNetId ??= new Int32Array(loaded.topology.portCount).fill(-1)
+    portNetId[portId] =
+      requiredNetId === null ? -2 : (netIndexById.get(requiredNetId) ?? -2)
+  }
+  loaded.problem.portNetId = portNetId
 
   for (
     let regionIndex = 0;

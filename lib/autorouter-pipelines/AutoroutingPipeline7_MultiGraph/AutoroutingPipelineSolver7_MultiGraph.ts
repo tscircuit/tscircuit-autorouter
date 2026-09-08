@@ -38,6 +38,7 @@ import {
 } from "lib/utils/convertSrjToGraphicsObject"
 import { createSrjWithBoardValidObstacleLayers } from "lib/utils/create-srj-with-board-valid-obstacle-layers"
 import { createObstacleLabelFormatter } from "lib/utils/formatObstacleLabel"
+import type { FixedCopperGeometry } from "lib/utils/getFixedCopperPortNetId"
 import { getInitiallyConnectedMapFromSimpleRouteJson } from "lib/utils/get-initially-connected-map-from-simple-route-json"
 import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
 import {
@@ -47,6 +48,7 @@ import {
 import { getPresuppliedTraceVisualization } from "lib/utils/getPresuppliedTraceVisualization"
 import { calculateOptimalCapacityDepth } from "lib/utils/getTunedTotalCapacity1"
 import { getViaDimensions } from "lib/utils/getViaDimensions"
+import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
 import {
   AvailableSegmentPointSolver,
   type SharedEdgeSegment,
@@ -253,6 +255,42 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
   maxNodeRatio: number
   minNodeArea: number
   visualizationTraceColorMode: TraceColorMode
+
+  private getFixedObstacleRoutes(): HighDensityRoute[] {
+    return (this.originalSrj.traces ?? []).flatMap((trace, traceIndex) =>
+      convertPreloadedTraceToHdRoutes(
+        trace,
+        traceIndex,
+        this.srj.layerCount,
+        this.viaDiameter,
+        this.connMap,
+      ),
+    )
+  }
+
+  private getFixedCopperGeometry(): FixedCopperGeometry {
+    return {
+      routes: this.getFixedObstacleRoutes(),
+      traceWidth: this.minTraceWidth,
+      clearance: this.originalSrj.minTraceToPadEdgeClearance ?? 0.1,
+      obstacles: this.originalSrj.obstacles.map((obstacle) => ({
+        type: obstacle.type,
+        center: obstacle.center,
+        width: obstacle.width,
+        height: obstacle.height,
+        ccwRotationDegrees: obstacle.ccwRotationDegrees,
+        zLayers:
+          obstacle.zLayers ??
+          obstacle.layers.map((layer) =>
+            mapLayerNameToZ(layer, this.originalSrj.layerCount),
+          ),
+        netId:
+          obstacle.connectedTo.length > 0
+            ? (this.connMap.getNetConnectedToId(obstacle.connectedTo[0]!) ?? null)
+            : null,
+      })),
+    }
+  }
 
   startTimeOfPhase: Record<string, number>
   endTimeOfPhase: Record<string, number>
@@ -475,6 +513,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
           capacityMeshNodes: cms.capacityNodes!,
           layerCount: cms.srj.layerCount,
           connectivityMap: cms.connMap,
+          fixedCopper: cms.getFixedCopperGeometry(),
           segmentPortPoints: sharedEdgeSegments.flatMap(
             (seg) => seg.portPoints,
           ),
@@ -529,6 +568,10 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
             cms.portPointPathingSolver?.getOutput().inputNodeWithPortPoints ??
             [],
           minTraceWidth: cms.minTraceWidth,
+          fixedCopper: {
+            ...cms.getFixedCopperGeometry(),
+            connectivityMap: cms.connMap,
+          },
           obstacles: cms.srj.obstacles,
           layerCount: cms.srj.layerCount,
         },
@@ -652,6 +695,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
       (cms) => [
         {
           srj: cms.srjWithPointPairs! as any,
+          fixedObstacleRoutes: cms.getFixedObstacleRoutes(),
           hdRoutes: lockHdRouteTerminals(
             cms.traceWidthSolver!.getHdRoutesWithWidths(),
             cms.netToPointPairsSolver?.newConnections ?? [],
@@ -688,6 +732,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
         return [
           {
             srj: cms.srjWithPointPairs! as any,
+            fixedObstacleRoutes: cms.getFixedObstacleRoutes(),
             hdRoutes,
             connMap: cms.connMap,
             effort: cms.effort,
@@ -715,16 +760,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
         {
           originalSrj: cms.originalSrj,
           routes: cms.exactGeometryDrcForceImproveSolver!.getOutput(),
-          fixedObstacleRoutes: (cms.originalSrj.traces ?? []).flatMap(
-            (trace, index) =>
-              convertPreloadedTraceToHdRoutes(
-                trace,
-                index,
-                cms.srj.layerCount,
-                cms.viaDiameter,
-                cms.connMap,
-              ),
-          ),
+          fixedObstacleRoutes: cms.getFixedObstacleRoutes(),
           connMap: cms.connMap,
           colorMap: cms.colorMap,
           drcEvaluator: createPipeline7RelaxedDrcEvaluator({
