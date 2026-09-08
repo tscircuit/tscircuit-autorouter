@@ -40,10 +40,7 @@ test("Pipeline9 endpoint resolution leaves through-obstacle copper unchanged", (
   for (const explicitVia of [false, true]) {
     const colocatedRoute: HighDensityRoute = {
       ...hdRoute,
-      route: [
-        hdRoute.route[0]!,
-        { x: 0, y: 0, z: 2, traceThickness: 0.7 },
-      ],
+      route: [hdRoute.route[0]!, { x: 0, y: 0, z: 2, traceThickness: 0.7 }],
       vias: explicitVia ? [{ x: 0, y: 0 }] : [],
     }
     expect(getPipeline9RouteCopperGeometry(colocatedRoute)).toEqual({
