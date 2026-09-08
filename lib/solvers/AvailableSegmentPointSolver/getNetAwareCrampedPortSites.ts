@@ -245,10 +245,7 @@ export const getNetAwareCrampedPortSites = (
   let nextCoordinate: number | undefined
   for (const [intervalIndex, interval] of intervals.entries()) {
     if (emptyIntervalIndexes.has(intervalIndex)) continue
-    let coordinate = Math.max(
-      interval.start,
-      nextCoordinate ?? interval.start,
-    )
+    let coordinate = Math.max(interval.start, nextCoordinate ?? interval.start)
     while (coordinate <= interval.end) {
       schedule.push({
         intervalIndex,
@@ -369,7 +366,9 @@ const assertCrampedSiteInputs = (
   }
   for (const netId of params.routableNetIds) {
     if (typeof netId !== "string" || netId.length === 0) {
-      throw new Error("getNetAwareCrampedPortSites requires canonical route nets")
+      throw new Error(
+        "getNetAwareCrampedPortSites requires canonical route nets",
+      )
     }
   }
 }

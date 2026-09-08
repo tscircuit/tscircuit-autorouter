@@ -63,7 +63,9 @@ test("Available validates the complete physical source before taking edge-local 
   const { input } = createAvailableNetAwareCrampedPorts()
   const initial = new AvailableSegmentPointSolver(input)
   const mutableRectangles = input.physicalCrampedPortContext.rectangles.map(
-    (rectangle): {
+    (
+      rectangle,
+    ): {
       kind: "fixed-rectangle"
       center: { x: number; y: number }
       width: number

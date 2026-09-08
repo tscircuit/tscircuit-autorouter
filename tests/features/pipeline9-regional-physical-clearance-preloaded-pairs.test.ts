@@ -35,9 +35,9 @@ test("ordinary preloaded regional pairs keep source aliases and exact clipped ob
   if (!context) throw new Error("Expected complete regional physical context")
   const preloadNet = fixture.connMap.getNetConnectedToId("preload-source")
   if (preloadNet === undefined) throw new Error("Expected recorded preload net")
-  expect(context.canonicalNetIdByConnectionName.get(preload.connectionName)).toBe(
-    preloadNet,
-  )
+  expect(
+    context.canonicalNetIdByConnectionName.get(preload.connectionName),
+  ).toBe(preloadNet)
   expect(context.canonicalNetIdByConnectionName.get("local-target")).toBe(
     fixture.canonicalTargetNetId,
   )

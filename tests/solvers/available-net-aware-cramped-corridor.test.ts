@@ -37,9 +37,9 @@ test("Available supplies original owned corridor ports with real graph incidence
     expect(
       segment.portPoints.filter((port): boolean => port.availableZ[0] === 1),
     ).toEqual(
-      legacy.edgeSegmentMap.get(segment.edgeId)!.portPoints.filter(
-        (port): boolean => port.availableZ[0] === 1,
-      ),
+      legacy.edgeSegmentMap
+        .get(segment.edgeId)!
+        .portPoints.filter((port): boolean => port.availableZ[0] === 1),
     )
     for (const port of segment.portPoints) {
       expect(port.cramped).toBeTrue()

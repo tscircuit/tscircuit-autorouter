@@ -98,9 +98,7 @@ test("Pipeline9 prepares canonical cramped sites only for original-preload-free 
       expect(topPorts).toHaveLength(2)
       expect(topPorts[0]!.y).toBeLessThan(0.46875)
       expect(topPorts[1]!.y).toBeGreaterThan(0.53125)
-      expect(topPorts[1]!.y - topPorts[0]!.y).toBeGreaterThanOrEqual(
-        0.25 + 0.1,
-      )
+      expect(topPorts[1]!.y - topPorts[0]!.y).toBeGreaterThanOrEqual(0.25 + 0.1)
       for (const port of topPorts) {
         const allowed = context!.clearanceIndex.getAllowedNetIdsAtPoint({
           point: { x: port.x, y: port.y, z: 0 },
@@ -108,8 +106,8 @@ test("Pipeline9 prepares canonical cramped sites only for original-preload-free 
         })
         expect(allowed).not.toBeNull()
         expect(
-          [...allowed!].some(
-            (netId): boolean => context!.routableNetIds.has(netId),
+          [...allowed!].some((netId): boolean =>
+            context!.routableNetIds.has(netId),
           ),
         ).toBeTrue()
       }

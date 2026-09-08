@@ -221,7 +221,8 @@ export class AvailableSegmentPointSolver extends BaseSolver {
       minClearance: context.padGap,
     })
     if (
-      validationIndex.cacheFingerprint !== context.clearanceIndex.cacheFingerprint
+      validationIndex.cacheFingerprint !==
+      context.clearanceIndex.cacheFingerprint
     ) {
       throw new Error(
         "AvailableSegmentPointSolver cramped-port geometry must match its whole-board index",
@@ -286,7 +287,9 @@ export class AvailableSegmentPointSolver extends BaseSolver {
     const maxX = Math.max(overlap.start.x, overlap.end.x) + margin
     const maxY = Math.max(overlap.start.y, overlap.end.y) + margin
     if (
-      ![minX, minY, maxX, maxY].every((value): boolean => Number.isFinite(value))
+      ![minX, minY, maxX, maxY].every((value): boolean =>
+        Number.isFinite(value),
+      )
     ) {
       throw new Error(
         `Physical cramped edge "${edge.capacityMeshEdgeId}" layer ${z} has nonfinite query bounds`,
@@ -536,7 +539,12 @@ export class AvailableSegmentPointSolver extends BaseSolver {
           !node2._isVirtualOffboard
         ) {
           crampedPortPoints.push(
-            ...this.getPhysicalCrampedPortPoints(edge, overlap, existingPort, z),
+            ...this.getPhysicalCrampedPortPoints(
+              edge,
+              overlap,
+              existingPort,
+              z,
+            ),
           )
         } else {
           crampedPortPoints.push(existingPort)

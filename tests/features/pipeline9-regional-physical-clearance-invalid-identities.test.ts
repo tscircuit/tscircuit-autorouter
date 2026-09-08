@@ -41,7 +41,8 @@ test("regional physical inputs fail named for unresolved nets and partially cove
     nodeWithPortPoints: node,
   })
   const context = solver.highDensitySolver.physicalClearanceContext
-  if (!context) throw new Error("Expected physical input before pair validation")
+  if (!context)
+    throw new Error("Expected physical input before pair validation")
   expect((): void => {
     new IntraNodeRouteSolver({
       ...fixture.params,

@@ -35,7 +35,9 @@ test("an index-empty singleton is explicit evidence and does not discard wider u
   })
   expect(result.status).toBe("complete")
   if (result.status !== "complete") {
-    throw new Error("A proven empty singleton must not invalidate other channels")
+    throw new Error(
+      "A proven empty singleton must not invalidate other channels",
+    )
   }
   expect(result.intervals).toEqual([
     { start: -3, end: -2 },

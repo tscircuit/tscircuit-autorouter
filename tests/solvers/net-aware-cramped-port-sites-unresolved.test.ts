@@ -86,7 +86,9 @@ test("an index-rejected centered site exposes evidence without a retry or partia
   })
   expect(result.status).toBe("unresolved-index-boundary")
   if (result.status !== "unresolved-index-boundary") {
-    throw new Error("A rejected analytic site must remain explicitly unresolved")
+    throw new Error(
+      "A rejected analytic site must remain explicitly unresolved",
+    )
   }
   expect(result.reason).toBe("packed-site-blocked-by-index")
   expect(result.attemptedSite).toEqual({

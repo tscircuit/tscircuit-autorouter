@@ -63,8 +63,14 @@ export function createAvailableNetAwareCrampedPorts(): AvailableNetAwareCrampedF
     { capacityMeshEdgeId: "left-turn", nodeIds: ["gap-left", "gap-mid"] },
     { capacityMeshEdgeId: "upper-turn", nodeIds: ["gap-mid", "gap-right"] },
     { capacityMeshEdgeId: "route-exit", nodeIds: ["gap-right", "route-end"] },
-    { capacityMeshEdgeId: "upper-entry", nodeIds: ["upper-start", "upper-end"] },
-    { capacityMeshEdgeId: "right-entry", nodeIds: ["right-start", "right-end"] },
+    {
+      capacityMeshEdgeId: "upper-entry",
+      nodeIds: ["upper-start", "upper-end"],
+    },
+    {
+      capacityMeshEdgeId: "right-entry",
+      nodeIds: ["right-start", "right-end"],
+    },
   ]
   const connMap = new ConnectivityMap({
     "route-net": ["route-net", "route-a", "route-b"],
@@ -108,12 +114,14 @@ export function createAvailableNetAwareCrampedPorts(): AvailableNetAwareCrampedF
         name,
         pointsToConnect: definitions
           .filter((node): boolean => node.net === name)
-          .map((node): ConnectionPoint => ({
-            x: node.x,
-            y: node.y,
-            layer: "top",
-            pcb_port_id: node.port!,
-          })),
+          .map(
+            (node): ConnectionPoint => ({
+              x: node.x,
+              y: node.y,
+              layer: "top",
+              pcb_port_id: node.port!,
+            }),
+          ),
       }),
     ),
   }
