@@ -23,15 +23,17 @@ test("original pad ownership survives preprocessing that deduplicates geometry i
         pointsToConnect: [{ x: 4, y: 4, layer: "top" }],
       },
     ],
-    obstacles: ["a", "b"].map((suffix): Obstacle => ({
-      type: "rect",
-      obstacleId: `pad-${suffix}`,
-      connectedTo: [`port-${suffix}`],
-      center: { x: 0, y: 0 },
-      width: 1,
-      height: 1,
-      layers: ["top"],
-    })),
+    obstacles: ["a", "b"].map(
+      (suffix): Obstacle => ({
+        type: "rect",
+        obstacleId: `pad-${suffix}`,
+        connectedTo: [`port-${suffix}`],
+        center: { x: 0, y: 0 },
+        width: 1,
+        height: 1,
+        layers: ["top"],
+      }),
+    ),
   }
   const original = structuredClone(srj)
   const preprocessed = addApproximatingRectsToSrj(

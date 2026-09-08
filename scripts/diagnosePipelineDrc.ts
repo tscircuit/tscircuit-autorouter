@@ -55,6 +55,148 @@ type TopologySourceGroupCapture = {
   nodes: (CapacityNodeCapture & { sourceKey: string })[]
 }
 
+type UniformFailureDiagnostic = {
+  serialized: string
+  status: "active-uniform-solver" | "uniform-instance-unavailable"
+  ownerPairKey: string | null
+  familyPortCount: number
+  errorMessage: string
+}
+
+type UniformOwnerBoundsCapture = {
+  nodeId: string
+  bounds: unknown
+}
+
+const captureUniformFailure = (
+  pipeline: Pipeline,
+  error: unknown,
+): UniformFailureDiagnostic => {
+  const uniform = pipeline.uniformPortDistributionSolver
+  const ownerPairKey = uniform?.currentOwnerPairBeingProcessed ?? null
+  const family = ownerPairKey
+    ? uniform!.mapOfOwnerPairToPortPoints.get(ownerPairKey)
+    : undefined
+  const sharedEdge = ownerPairKey
+    ? uniform!.mapOfOwnerPairToSharedEdge.get(ownerPairKey)
+    : undefined
+  const ownerNodeIds = new Set<string>()
+  for (const port of family ?? []) {
+    for (const ownerId of port.ownerNodeIds) ownerNodeIds.add(ownerId)
+  }
+  for (const ownerId of sharedEdge?.ownerNodeIds ?? []) {
+    ownerNodeIds.add(ownerId)
+  }
+  const familyPortIds = new Set<string>()
+  for (const port of family ?? []) {
+    if (port.portPointId) familyPortIds.add(port.portPointId)
+  }
+  // TypeScript-private constructor inputs are ordinary own properties. Select
+  // their existing data without calling a solver or requiring a new main API.
+  const selectedOwnFields = new Set([
+    "input",
+    "canonicalNetIdByPortId",
+    "fixedPortIds",
+    "physicalPortWitnesses",
+  ])
+  const ownState = Object.fromEntries(
+    Object.entries(uniform ?? {}).filter(([name]): boolean =>
+      selectedOwnFields.has(name),
+    ),
+  )
+  const failure =
+    error instanceof Error
+      ? { name: error.name, message: error.message, stack: error.stack ?? null }
+      : { name: "NonErrorThrow", message: String(error), stack: null }
+  const status = uniform
+    ? "active-uniform-solver"
+    : "uniform-instance-unavailable"
+  const ownerBounds = [...ownerNodeIds].map(
+    (nodeId): UniformOwnerBoundsCapture => ({
+      nodeId,
+      bounds: uniform?.mapOfNodeIdToBounds.get(nodeId) ?? null,
+    }),
+  )
+  const pathingInputSharedEdges =
+    pipeline instanceof AutoroutingPipelineSolver9_PreloadedTraceGraph
+      ? pipeline.sharedEdgeSegmentsWithNecessaryCrampedPortPoints?.filter(
+          (edge): boolean =>
+            ownerNodeIds.has(edge.nodeIds[0]) &&
+            ownerNodeIds.has(edge.nodeIds[1]),
+        ) ?? null
+      : null
+  const availableSharedEdges =
+    pipeline instanceof AutoroutingPipelineSolver9_PreloadedTraceGraph
+      ? pipeline.availableSegmentPointSolver?.sharedEdgeSegments.filter(
+          (edge): boolean =>
+            ownerNodeIds.has(edge.nodeIds[0]) &&
+            ownerNodeIds.has(edge.nodeIds[1]),
+        ) ?? null
+      : null
+  const serialized = JSON.stringify(
+    {
+      diagnostic: "uniform-failure",
+      phase: pipeline.getCurrentPhase(),
+      status,
+      failure,
+      ownerPairKey,
+      family: family ?? null,
+      sharedEdge: sharedEdge ?? null,
+      ownerBounds,
+      // These retained public collections include original proxy assignments
+      // and physical tracePoint metadata; they are not pristine stage copies.
+      pathingInputSharedEdges,
+      availableSharedEdges,
+      ...ownState,
+    },
+    (key: string, value: unknown): unknown => {
+      // Keep the exact prepared rectangle/rule inputs, never implementation
+      // internals of spatial indexes or circular capacity-node parent graphs.
+      if (key === "traceClearanceIndex" || key === "_parent") return undefined
+      if (
+        (key === "nodeWithPortPoints" || key === "inputNodesWithPortPoints") &&
+        Array.isArray(value)
+      ) {
+        return value.filter(
+          (node: unknown): boolean =>
+            typeof node === "object" &&
+            node !== null &&
+            "capacityMeshNodeId" in node &&
+            typeof node.capacityMeshNodeId === "string" &&
+            ownerNodeIds.has(node.capacityMeshNodeId),
+        )
+      }
+      if (value instanceof Map) {
+        const entries: [unknown, unknown][] = [...value.entries()]
+        if (key === "canonicalNetIdByPortId" || key === "physicalPortWitnesses") {
+          return entries.filter(
+            ([portId]): boolean =>
+              typeof portId === "string" && familyPortIds.has(portId),
+          )
+        }
+        return entries
+      }
+      if (value instanceof Set) {
+        const values: unknown[] = [...value.values()]
+        return key === "fixedPortIds"
+          ? values.filter(
+              (portId): boolean =>
+                typeof portId === "string" && familyPortIds.has(portId),
+            )
+          : values
+      }
+      return value
+    },
+  )
+  return {
+    serialized,
+    status,
+    ownerPairKey,
+    familyPortCount: family?.length ?? 0,
+    errorMessage: failure.message,
+  }
+}
+
 const captureCapacityNode = (node: CapacityMeshNode): CapacityNodeCapture => {
   const { _parent, ...nodeData } = node
   return {
@@ -339,6 +481,7 @@ const diagnosePipelineDrc = async (): Promise<void> => {
   const growthByNode = new Map<string, GrowShrinkHighDensityIntraNodeSolver>()
   let mergedCapacityNodes: CapacityNodeCapture[] | null = null
   const repair04InvalidOutputs: Repair04InvalidOutputCapture[] = []
+  let uniformFailureDiagnostic: UniformFailureDiagnostic | undefined
   const originalRepair04GetOutput = Repair04Solver.prototype.getOutput
   // This controller runs in its own process, never a shared Bun test process.
   Repair04Solver.prototype.getOutput = function (
@@ -415,7 +558,33 @@ const diagnosePipelineDrc = async (): Promise<void> => {
       const simplificationPhase = simplification
         ? `${simplification.simplificationPipelineLoops}-${simplification.currentPhase}`
         : null
-      pipeline.step()
+      try {
+        pipeline.step()
+      } catch (error) {
+        if (
+          phase === "uniformPortDistributionSolver" ||
+          pipeline.getCurrentPhase() === "uniformPortDistributionSolver"
+        ) {
+          try {
+            uniformFailureDiagnostic = captureUniformFailure(pipeline, error)
+            console.error(
+              JSON.stringify({
+                diagnostic: "uniform-failure",
+                dataset: datasetArg,
+                sample,
+                pipeline: pipelineArg,
+                status: uniformFailureDiagnostic.status,
+                ownerPairKey: uniformFailureDiagnostic.ownerPairKey,
+                familyPortCount: uniformFailureDiagnostic.familyPortCount,
+                error: uniformFailureDiagnostic.errorMessage,
+              }),
+            )
+          } catch (captureError) {
+            console.error("uniform failure state capture failed", captureError)
+          }
+        }
+        throw error
+      }
       if (
         simplification &&
         simplificationPhase !==
@@ -529,6 +698,17 @@ const diagnosePipelineDrc = async (): Promise<void> => {
     }
   } finally {
     Repair04Solver.prototype.getOutput = originalRepair04GetOutput
+    if (uniformFailureDiagnostic) {
+      try {
+        await writeFile(
+          path.join(outputDir, "uniform-failure.json"),
+          uniformFailureDiagnostic.serialized,
+        )
+      } catch (artifactError) {
+        // Diagnostic I/O must not replace the original Uniform exception.
+        console.error("uniform capture artifact write failed", artifactError)
+      }
+    }
     if (repair04InvalidOutputs.length > 0) {
       // BaseSolver rethrows invariant errors, bypassing the normal final files.
       try {

@@ -59,7 +59,10 @@ test("Pipeline9 fixed-pad context preserves original rotation layers ownership a
   }
   expect(context.traceClearanceIndex.isPointClear(query)).toBeFalse()
   expect(
-    context.traceClearanceIndex.isPointClear({ ...query, canonicalNetId: owner }),
+    context.traceClearanceIndex.isPointClear({
+      ...query,
+      canonicalNetId: owner,
+    }),
   ).toBeTrue()
   expect(
     context.traceClearanceIndex.isPointClear({

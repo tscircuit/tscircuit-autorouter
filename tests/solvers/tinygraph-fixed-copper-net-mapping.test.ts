@@ -11,7 +11,10 @@ test("physical reservation context derives native net IDs from loaded metadata a
     layerCount: 2,
     minClearance: 0.05,
   })
-  for (const nativeIds of [[7, 11], [11, 7]]) {
+  for (const nativeIds of [
+    [7, 11],
+    [11, 7],
+  ]) {
     const { topology, problem } = createPhysicalReservationProblem()
     problem.routeNet = new Int32Array(nativeIds)
     const context = createTinyGraphFixedCopperClearanceContext({
@@ -85,8 +88,9 @@ test("physical reservation context derives native net IDs from loaded metadata a
       traceWidth: 0.1,
     })
     if (includeThirdNet) {
-      expect((): Int32Array =>
-        getTinyGraphFixedCopperPortReservations({ topology, context }),
+      expect(
+        (): Int32Array =>
+          getTinyGraphFixedCopperPortReservations({ topology, context }),
       ).toThrow("cannot represent the allowed net set")
     } else {
       expect(

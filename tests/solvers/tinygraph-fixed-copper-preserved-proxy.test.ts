@@ -24,16 +24,17 @@ test("unchanged initial assignments are not rejected as new copper at their logi
     layerCount: 2,
     minClearance: 0.05,
   })
-  const solver = new SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments(
-    topology,
-    problem,
-    undefined,
-    createTinyGraphFixedCopperClearanceContext({
+  const solver =
+    new SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments(
+      topology,
       problem,
-      clearanceIndex: index,
-      traceWidth: 0.1,
-    }),
-  )
+      undefined,
+      createTinyGraphFixedCopperClearanceContext({
+        problem,
+        clearanceIndex: index,
+        traceWidth: 0.1,
+      }),
+    )
   expect(solver.state.unroutedRoutes).toEqual([1])
   expect(solver.problemSetup.portEndpointReservationNetId[0]).toBe(-2)
   expect(solver.state.regionSegments).toEqual([[[0, 0, 2]]])

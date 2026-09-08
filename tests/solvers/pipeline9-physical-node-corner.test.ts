@@ -22,25 +22,29 @@ test("Pipeline9 ordinary routing preserves a physical detour between clear pad-c
   }
   const fixedPadClearance = createPipeline9FixedPadClearance({
     connMap,
-    obstacles: [{
-      type: "rect",
-      center: { x: 1.6, y: -1.6 },
-      width: 0.36,
-      height: 0.36,
-      layers: ["top"],
-      connectedTo: ["pad"],
-    }],
+    obstacles: [
+      {
+        type: "rect",
+        center: { x: 1.6, y: -1.6 },
+        width: 0.36,
+        height: 0.36,
+        layers: ["top"],
+        connectedTo: ["pad"],
+      },
+    ],
     layerCount: 2,
     traceToPadClearance: 0.1,
     viaToPadClearance: 0.1,
   })
   const index = fixedPadClearance.traceClearanceIndex
-  expect(index.isSegmentClear({
-    start: node.portPoints[0],
-    end: node.portPoints[1],
-    canonicalNetId: "route-net",
-    copperDiameter: 0.15,
-  })).toBe(false)
+  expect(
+    index.isSegmentClear({
+      start: node.portPoints[0],
+      end: node.portPoints[1],
+      canonicalNetId: "route-net",
+      copperDiameter: 0.15,
+    }),
+  ).toBe(false)
   const solver = createPipeline9RegularNodeSolver({
     nodeWithPortPoints: node,
     connMap,
@@ -63,11 +67,13 @@ test("Pipeline9 ordinary routing preserves a physical detour between clear pad-c
   expect(route.traceThickness).toBe(0.15)
   expect(route.route.length).toBeGreaterThan(2)
   for (let position = 1; position < route.route.length; position++) {
-    expect(index.isSegmentClear({
-      start: route.route[position - 1],
-      end: route.route[position],
-      canonicalNetId: "route-net",
-      copperDiameter: route.traceThickness,
-    })).toBe(true)
+    expect(
+      index.isSegmentClear({
+        start: route.route[position - 1],
+        end: route.route[position],
+        canonicalNetId: "route-net",
+        copperDiameter: route.traceThickness,
+      }),
+    ).toBe(true)
   }
 })

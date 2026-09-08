@@ -56,7 +56,9 @@ test("physical endpoint checks use the inherited partial-rip endpoints instead o
   )
   expect(solver.problemSetup.portEndpointReservationNetId[1]).toBe(11)
   solver.activatePartialRoute(1, 2)
-  expect((): number => solver.getActiveEndpoint("start")).toThrow("start port 1")
+  expect((): number => solver.getActiveEndpoint("start")).toThrow(
+    "start port 1",
+  )
   solver.activatePartialRoute(0, 1)
   expect(solver.getActiveEndpoint("start")).toBe(0)
   expect((): number => solver.getActiveEndpoint("end")).toThrow("end port 1")

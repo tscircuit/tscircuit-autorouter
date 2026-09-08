@@ -10,7 +10,10 @@ import type {
   UniformPortDistributionSolverInput,
   UniformPortPhysicalClearanceContext,
 } from "lib/solvers/UniformPortDistributionSolver/UniformPortDistributionSolver"
-import type { NodeWithPortPoints, PortPoint } from "lib/types/high-density-types"
+import type {
+  NodeWithPortPoints,
+  PortPoint,
+} from "lib/types/high-density-types"
 
 type NamedPortPoint = PortPoint & { portPointId: string }
 

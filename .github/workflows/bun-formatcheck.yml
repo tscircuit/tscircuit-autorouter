@@ -24,4 +24,4 @@ jobs:
         run: bun install
 
       - name: Run format check
-        run: bun run format:check
+        run: bun run format:check --max-diagnostics=100

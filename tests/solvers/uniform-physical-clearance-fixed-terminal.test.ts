@@ -44,7 +44,9 @@ test("target terminals and exact singleton clearance channels remain fixed", ():
     traceToTraceClearance: 0.25,
   })
   terminalInput.inputNodesWithPortPoints[0]._containsTarget = true
-  const originalTerminalNodes = structuredClone(terminalInput.nodeWithPortPoints)
+  const originalTerminalNodes = structuredClone(
+    terminalInput.nodeWithPortPoints,
+  )
   const terminalSolver = new UniformPortDistributionSolver(terminalInput)
   terminalSolver.solve()
   expect(terminalSolver.solved).toBe(true)

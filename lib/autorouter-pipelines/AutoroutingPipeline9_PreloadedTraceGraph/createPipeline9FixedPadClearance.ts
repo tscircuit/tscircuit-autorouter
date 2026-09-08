@@ -16,7 +16,10 @@ export type Pipeline9FixedPadClearance = {
 }
 
 /**
- * Prepare the original SRJ's fixed rectangles once for physical routing.
+ * Prepare the original SRJ's fixed routing envelopes once for physical routing.
+ * Like addApproximatingRectsToSrj, runtime ovals use their conservative
+ * rectangular routing envelope, not exact oval or circle geometry. Retain the
+ * original dimensions and rotation instead of the approximated rectangles.
  * Assignable copper remains under its existing claim-aware routing contract;
  * its initial connectedTo identifiers are not an assignment to a routed net.
  */
@@ -30,9 +33,10 @@ export const createPipeline9FixedPadClearance = (params: {
   const rectangles: FixedCopperRectangle[] = []
   for (const [obstacleIndex, obstacle] of params.obstacles.entries()) {
     if (obstacle.netIsAssignable === true) continue
-    if (obstacle.type !== "rect") {
+    const obstacleType = (obstacle as { type?: string }).type
+    if (obstacleType !== "rect" && obstacleType !== "oval") {
       throw new Error(
-        `Pipeline9 fixed pad ${obstacleIndex} is not represented as a rectangle`,
+        `Pipeline9 fixed pad ${obstacleIndex} has unsupported shape "${obstacleType}"`,
       )
     }
     const ownerNetIds = new Set<string>()

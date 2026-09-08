@@ -99,7 +99,11 @@ test("physical context changes isolate cached successes and failures without rou
     if (cachedValue.success) {
       expect(equivalent.solvedRoutes).toEqual(cachedValue.solvedRoutes)
     } else {
-      expect(equivalent.error).toBe(cachedValue.error)
+      const expectedError = cachedValue.error
+      if (typeof expectedError !== "string") {
+        throw new Error("Cached failure fixture requires an error message")
+      }
+      expect(equivalent.error).toBe(expectedError)
     }
     expect(equivalent.iterations).toBe(0)
     expect(cacheProvider.cacheHits).toBe(1)

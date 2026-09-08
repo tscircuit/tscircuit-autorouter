@@ -44,7 +44,9 @@ test("physical uniform placement preserves the shared midpoint of overlapping ow
     const originalNodes = structuredClone(input.nodeWithPortPoints)
     const solver = new UniformPortDistributionSolver(input)
     const reconstructedEdge = [...solver.mapOfOwnerPairToSharedEdge.values()][0]
-    expect(horizontal ? reconstructedEdge.y1 : reconstructedEdge.x1).not.toBe(20)
+    expect(horizontal ? reconstructedEdge.y1 : reconstructedEdge.x1).not.toBe(
+      20,
+    )
     solver.solve()
     expect(solver.solved).toBe(true)
     for (const node of solver.getOutput()) {
@@ -55,11 +57,13 @@ test("physical uniform placement preserves the shared midpoint of overlapping ow
           y: horizontal ? 20 : 11,
         },
       ])
-      expect(input.physicalClearanceContext.traceClearanceIndex.isPointClear({
-        point: node.portPoints[0],
-        canonicalNetId: "route-net",
-        copperDiameter: 0.5,
-      })).toBe(true)
+      expect(
+        input.physicalClearanceContext.traceClearanceIndex.isPointClear({
+          point: node.portPoints[0],
+          canonicalNetId: "route-net",
+          copperDiameter: 0.5,
+        }),
+      ).toBe(true)
     }
     expect(input.nodeWithPortPoints).toEqual(originalNodes)
   }

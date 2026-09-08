@@ -11,7 +11,10 @@ test("native graph search takes an existing legal portal instead of a foreign-pa
   const topology: TinyHyperGraphTopology = {
     portCount: 4,
     regionCount: 2,
-    regionIncidentPorts: [[0, 1, 3], [1, 2, 3]],
+    regionIncidentPorts: [
+      [0, 1, 3],
+      [1, 2, 3],
+    ],
     incidentPortRegion: [[0], [0, 1], [1], [0, 1]],
     regionWidth: new Float64Array([1, 1]),
     regionHeight: new Float64Array([2, 2]),
@@ -49,16 +52,17 @@ test("native graph search takes an existing legal portal instead of a foreign-pa
     layerCount: 2,
     minClearance: 0.05,
   })
-  const solver = new SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments(
-    topology,
-    problem,
-    undefined,
-    createTinyGraphFixedCopperClearanceContext({
+  const solver =
+    new SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments(
+      topology,
       problem,
-      clearanceIndex: index,
-      traceWidth: 0.1,
-    }),
-  )
+      undefined,
+      createTinyGraphFixedCopperClearanceContext({
+        problem,
+        clearanceIndex: index,
+        traceWidth: 0.1,
+      }),
+    )
   solver.solve()
   expect(solver.failed).toBeFalse()
   expect(solver.solved).toBeTrue()

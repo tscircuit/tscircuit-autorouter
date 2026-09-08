@@ -38,7 +38,8 @@ test("ordinary and density-configured native loads compile fresh physical contex
     const stage = pipeline.pipelineDef.find(
       (step): boolean => step.solverName === "solveGraph",
     )
-    if (!stage) throw new Error("Fixture is missing its native solveGraph stage")
+    if (!stage)
+      throw new Error("Fixture is missing its native solveGraph stage")
     expect(stage.solverClass).toBe(
       SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments,
     )

@@ -25,12 +25,13 @@ test("an empty loaded TinyGraph has explicit empty metadata and completes with p
   expect(context.canonicalNetIdByNetId.size).toBe(0)
   expect(context.netIdByCanonicalNetId.size).toBe(0)
   expect(context.connectionIdByRouteId).toEqual([])
-  const solver = new SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments(
-    topology,
-    problem,
-    undefined,
-    context,
-  )
+  const solver =
+    new SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments(
+      topology,
+      problem,
+      undefined,
+      context,
+    )
   expect(solver.problemSetup.portEndpointReservationNetId).toHaveLength(0)
   solver.solve()
   expect(solver.failed).toBeFalse()

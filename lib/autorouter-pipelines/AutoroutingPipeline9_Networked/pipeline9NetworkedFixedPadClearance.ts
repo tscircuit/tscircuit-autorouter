@@ -16,7 +16,9 @@ export const serializePipeline9FixedPadClearanceForNode = (params: {
   rectangles: params.fixedPadClearance.rectangles
     .filter(createPipeline9FixedPadRectanglePredicate(params))
     .map(
-      (rectangle): Pipeline9NetworkedFixedPadClearance["rectangles"][number] => ({
+      (
+        rectangle,
+      ): Pipeline9NetworkedFixedPadClearance["rectangles"][number] => ({
         ...rectangle,
         center: { ...rectangle.center },
         zLayers: [...rectangle.zLayers],

@@ -24,7 +24,10 @@ test("invalid physical sizes cannot bypass pad-aware node selection through NaN 
     }).toThrow("requires finite physical sizes and clearances")
   }
   for (const invalidGap of [Number.NaN, -0.1, Number.POSITIVE_INFINITY]) {
-    for (const gapName of ["traceToPadClearance", "viaToPadClearance"] as const) {
+    for (const gapName of [
+      "traceToPadClearance",
+      "viaToPadClearance",
+    ] as const) {
       expect((): void => {
         createPipeline9NodePhysicalClearanceContext({
           node,

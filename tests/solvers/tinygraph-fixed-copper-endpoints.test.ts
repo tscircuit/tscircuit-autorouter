@@ -22,21 +22,20 @@ test("unrouted physical starts ends and equal endpoints cannot bypass reservatio
       layerCount: 2,
       minClearance: 0.05,
     })
-    const solver = new SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments(
-      topology,
-      problem,
-      undefined,
-      createTinyGraphFixedCopperClearanceContext({
+    const solver =
+      new SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments(
+        topology,
         problem,
-        clearanceIndex: index,
-        traceWidth: 0.1,
-      }),
-    )
+        undefined,
+        createTinyGraphFixedCopperClearanceContext({
+          problem,
+          clearanceIndex: index,
+          traceWidth: 0.1,
+        }),
+      )
     expect((): void => {
       void solver.problemSetup
-    }).toThrow(
-      `route 0 ${endpoint === "end" ? "end" : "start"} port`,
-    )
+    }).toThrow(`route 0 ${endpoint === "end" ? "end" : "start"} port`)
     expect(solver.solved).toBeFalse()
     expect(solver.state.regionSegments).toEqual([[]])
   }

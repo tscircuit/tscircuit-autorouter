@@ -10,23 +10,27 @@ test("Pipeline9 carries original fixed-pad geometry through pathing distribution
     minTraceToPadEdgeClearance: 0.1,
     minViaEdgeToPadEdgeClearance: 0.1,
     bounds: { minX: -3, maxX: 3, minY: -2, maxY: 2 },
-    obstacles: [{
-      type: "rect",
-      obstacleId: "foreign-pad",
-      center: { x: 0, y: 0 },
-      width: 0.8,
-      height: 0.8,
-      ccwRotationDegrees: 45,
-      layers: ["top"],
-      connectedTo: [],
-    }],
-    connections: [{
-      name: "signal",
-      pointsToConnect: [
-        { x: -2, y: 0, layer: "top" },
-        { x: 2, y: 0, layer: "top" },
-      ],
-    }],
+    obstacles: [
+      {
+        type: "rect",
+        obstacleId: "foreign-pad",
+        center: { x: 0, y: 0 },
+        width: 0.8,
+        height: 0.8,
+        ccwRotationDegrees: 45,
+        layers: ["top"],
+        connectedTo: [],
+      },
+    ],
+    connections: [
+      {
+        name: "signal",
+        pointsToConnect: [
+          { x: -2, y: 0, layer: "top" },
+          { x: 2, y: 0, layer: "top" },
+        ],
+      },
+    ],
   }
   const original = structuredClone(srj)
   const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(srj)
@@ -49,19 +53,27 @@ test("Pipeline9 carries original fixed-pad geometry through pathing distribution
       const start = route.route[position - 1]
       const end = route.route[position]
       if (start.z === end.z) {
-        expect(clearance.traceClearanceIndex.isSegmentClear({
-          start,
-          end,
-          canonicalNetId: netId!,
-          copperDiameter: route.traceThickness,
-        })).toBe(true)
-      } else {
-        for (let z = Math.min(start.z, end.z); z <= Math.max(start.z, end.z); z++) {
-          expect(clearance.viaClearanceIndex.isPointClear({
-            point: { ...end, z },
+        expect(
+          clearance.traceClearanceIndex.isSegmentClear({
+            start,
+            end,
             canonicalNetId: netId!,
-            copperDiameter: route.viaDiameter,
-          })).toBe(true)
+            copperDiameter: route.traceThickness,
+          }),
+        ).toBe(true)
+      } else {
+        for (
+          let z = Math.min(start.z, end.z);
+          z <= Math.max(start.z, end.z);
+          z++
+        ) {
+          expect(
+            clearance.viaClearanceIndex.isPointClear({
+              point: { ...end, z },
+              canonicalNetId: netId!,
+              copperDiameter: route.viaDiameter,
+            }),
+          ).toBe(true)
         }
       }
     }

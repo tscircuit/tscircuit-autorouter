@@ -40,7 +40,9 @@ test("pad-unconstrained families preserve legacy uniform and fixed-terminal outp
       const originalNodes = structuredClone(input.nodeWithPortPoints)
       const legacySolver = new UniformPortDistributionSolver({
         nodeWithPortPoints: structuredClone(input.nodeWithPortPoints),
-        inputNodesWithPortPoints: structuredClone(input.inputNodesWithPortPoints),
+        inputNodesWithPortPoints: structuredClone(
+          input.inputNodesWithPortPoints,
+        ),
         obstacles: [],
       })
       const physicalSolver = new UniformPortDistributionSolver(input)

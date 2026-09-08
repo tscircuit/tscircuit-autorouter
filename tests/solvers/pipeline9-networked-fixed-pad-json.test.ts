@@ -67,9 +67,15 @@ test("fixed-pad JSON preserves canonical owners rotation all layers zero rules a
   ) as Pipeline9NetworkedFixedPadClearance
   const restored = deserializePipeline9FixedPadClearance(jsonCopy)
   expect(restored.rectangles).toEqual(original.rectangles.slice(0, 2))
-  expect(restored.rectangles[0]?.center).not.toBe(jsonCopy.rectangles[0]?.center)
-  expect(restored.rectangles[0]?.zLayers).not.toBe(jsonCopy.rectangles[0]?.zLayers)
-  expect(serialized.rectangles[0]?.center).not.toBe(original.rectangles[0]?.center)
+  expect(restored.rectangles[0]?.center).not.toBe(
+    jsonCopy.rectangles[0]?.center,
+  )
+  expect(restored.rectangles[0]?.zLayers).not.toBe(
+    jsonCopy.rectangles[0]?.zLayers,
+  )
+  expect(serialized.rectangles[0]?.center).not.toBe(
+    original.rectangles[0]?.center,
+  )
   for (const z of [0, 1]) {
     for (const x of [-0.25, 0, 0.25]) {
       for (const y of [-0.25, 0, 0.25]) {

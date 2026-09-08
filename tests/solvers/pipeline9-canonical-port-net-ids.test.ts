@@ -13,16 +13,19 @@ test("Pipeline9 generated connection aliases resolve one recorded net without in
     center: { x: 0, y: 0 },
     width: 1,
     height: 1,
-    portPoints: [{
-      x: 0,
-      y: 0,
-      z: 0,
-      connectionName: "generated-section",
-      rootConnectionName: "first-net",
-    }],
+    portPoints: [
+      {
+        x: 0,
+        y: 0,
+        z: 0,
+        connectionName: "generated-section",
+        rootConnectionName: "first-net",
+      },
+    ],
   }
-  expect(getPipeline9CanonicalPortNetIds([node], connMap).get("generated-section"))
-    .toBe("first-net")
+  expect(
+    getPipeline9CanonicalPortNetIds([node], connMap).get("generated-section"),
+  ).toBe("first-net")
   node.portPoints[0].connectionName = "first-route"
   node.portPoints[0].rootConnectionName = "second-route"
   expect((): void => {

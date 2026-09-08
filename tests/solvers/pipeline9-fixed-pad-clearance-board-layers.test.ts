@@ -19,15 +19,17 @@ test("fixed-pad layers use the same board-valid policy as preprocessing without 
     minTraceWidth: 0.15,
     bounds: { minX: -5, maxX: 5, minY: -5, maxY: 5 },
     connections: [],
-    obstacles: layerDeclarations.map((declaration, index): Obstacle => ({
-      type: "rect",
-      connectedTo: [],
-      center: { x: index, y: 0 },
-      width: 0.5,
-      height: 0.25,
-      ccwRotationDegrees: 45,
-      ...declaration,
-    })),
+    obstacles: layerDeclarations.map(
+      (declaration, index): Obstacle => ({
+        type: "rect",
+        connectedTo: [],
+        center: { x: index, y: 0 },
+        width: 0.5,
+        height: 0.25,
+        ccwRotationDegrees: 45,
+        ...declaration,
+      }),
+    ),
   }
   const original = structuredClone(srj)
   const normalized = createSrjWithBoardValidObstacleLayers(srj)
@@ -46,7 +48,13 @@ test("fixed-pad layers use the same board-valid policy as preprocessing without 
     [2],
   ])
   expect(context.rectangles.map((rectangle) => rectangle.zLayers)).toEqual(
-    normalized.obstacles.map((obstacle) => obstacle.__zLayers),
+    normalized.obstacles.map((obstacle): number[] => {
+      const zLayers = obstacle.__zLayers
+      if (zLayers === undefined) {
+        throw new Error("Preprocessing must produce canonical obstacle layers")
+      }
+      return zLayers
+    }),
   )
   for (const [index, rectangle] of context.rectangles.entries()) {
     expect(rectangle).toMatchObject({
