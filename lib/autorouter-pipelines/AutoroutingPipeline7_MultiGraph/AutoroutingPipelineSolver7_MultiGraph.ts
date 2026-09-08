@@ -740,17 +740,14 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
       },
     ),
     definePipelineStep(
-      "boundedRegionalRepairSolver",
-      BoundedRegionalRepairSolver,
+      "clearanceProjectionSolver",
+      ClearanceProjectionSolver,
       (cms) => [
         {
-          originalSrj: {
-            ...cms.originalSrj,
-            connections: cms.srjWithPointPairs!.connections,
-          },
+          originalSrj: cms.originalSrj,
           routes: cms.exactGeometryDrcForceImproveSolver!.getOutput(),
-          syntheticConnectionNames: new Set<string>(),
-          viaHoleDiameter: cms.viaHoleDiameter,
+          fixedObstacleRoutes: cms.getFixedObstacleRoutes(),
+          connMap: cms.connMap,
           colorMap: cms.colorMap,
           drcEvaluator: createPipeline7RelaxedDrcEvaluator({
             connections: cms.netToPointPairsSolver!.newConnections,
@@ -766,14 +763,17 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
       ],
     ),
     definePipelineStep(
-      "clearanceProjectionSolver",
-      ClearanceProjectionSolver,
+      "boundedRegionalRepairSolver",
+      BoundedRegionalRepairSolver,
       (cms) => [
         {
-          originalSrj: cms.originalSrj,
-          routes: cms.boundedRegionalRepairSolver!.getOutput(),
-          fixedObstacleRoutes: cms.getFixedObstacleRoutes(),
-          connMap: cms.connMap,
+          originalSrj: {
+            ...cms.originalSrj,
+            connections: cms.srjWithPointPairs!.connections,
+          },
+          routes: cms.clearanceProjectionSolver!.getOutput(),
+          syntheticConnectionNames: new Set<string>(),
+          viaHoleDiameter: cms.viaHoleDiameter,
           colorMap: cms.colorMap,
           drcEvaluator: createPipeline7RelaxedDrcEvaluator({
             connections: cms.netToPointPairsSolver!.newConnections,
@@ -817,7 +817,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
             )
           }
         }
-        const hdRoutes = cms.clearanceProjectionSolver!.getOutput()
+        const hdRoutes = cms.boundedRegionalRepairSolver!.getOutput()
         const differentialPairs = (cms.srj.differentialPairs ?? []).map(
           (pair) => {
             const connectionNames = pair.connectionNames.map(
@@ -1179,8 +1179,8 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
       traceWidthViz,
       globalDrcForceImproveViz,
       exactGeometryDrcForceImproveViz,
-      boundedRegionalRepairViz,
       clearanceProjectionViz,
+      boundedRegionalRepairViz,
       lengthMatchingPostProcessingViz,
       this.solved
         ? combineVisualizations(
@@ -1263,8 +1263,8 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
       return hdRoutes
     }
     return (
-      this.clearanceProjectionSolver?.getOutput() ??
       this.boundedRegionalRepairSolver?.getOutput() ??
+      this.clearanceProjectionSolver?.getOutput() ??
       this.exactGeometryDrcForceImproveSolver?.getOutput() ??
       this.globalDrcForceImproveSolver?.getOutput() ??
       this.traceWidthSolver?.getHdRoutesWithWidths() ??
