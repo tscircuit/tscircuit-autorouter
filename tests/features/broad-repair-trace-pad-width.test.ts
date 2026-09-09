@@ -1,8 +1,8 @@
 import { expect, test } from "bun:test"
 import { segmentToBoxMinDistance } from "@tscircuit/math-utils"
 import { applyBroadRepulsionForces } from "high-density-repair03/lib/solvers/GlobalDrcForceImproveSolver/solverHelpers"
-import type { SimpleRouteJson } from "lib/types"
-import type { HighDensityRoute } from "lib/types/high-density-types"
+import type { SimpleRouteJson } from "high-density-repair03/lib/types"
+import type { HighDensityRoute } from "high-density-repair03/lib/types/high-density-types"
 
 test("broad pad repulsion uses the actual trace copper width", (): void => {
   const srj: SimpleRouteJson = {
