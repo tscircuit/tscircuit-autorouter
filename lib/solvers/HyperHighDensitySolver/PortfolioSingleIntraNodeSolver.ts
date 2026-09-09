@@ -498,6 +498,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     }
     return new CachedIntraNodeRouteSolver({
       ...this.constructorParams,
+      viaExpansion: this.constructorParams.viaExpansion ?? "physical",
       hyperParameters,
     })
   }

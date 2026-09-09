@@ -54,6 +54,7 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
   obstacleMargin: number
   layerCount: number
   availableZ: number[]
+  viaExpansion: "per-layer" | "physical"
   minCellSize = 0.05
   cellStep = 0.05
   GREEDY_MULTIPLER = 1.1
@@ -123,6 +124,12 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     connMap?: ConnectivityMap
     nearbySegmentClearance?: number
     captureSearchDebug?: boolean
+    /**
+     * Physical expansion requires layer-independent, side-effect-free via
+     * clearance checks and cost calculations that do not mutate geometry or
+     * destination eligibility.
+     */
+    viaExpansion?: "per-layer" | "physical"
   }) {
     super()
     this.bounds = opts.bounds
@@ -156,6 +163,7 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     this.futureConnections = opts.futureConnections ?? []
     this.NEARBY_SEGMENT_CLEARANCE = opts.nearbySegmentClearance ?? 0.15
     this.debugEnabled = opts.captureSearchDebug ?? true
+    this.viaExpansion = opts.viaExpansion ?? "per-layer"
     this.MAX_ITERATIONS = 10e3 // 5000
 
     this.debug_exploredNodesOrdered = []
@@ -635,6 +643,43 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
 
         neighbors.push(neighbor)
       }
+    }
+
+    // A through via has one physical clearance test and several possible
+    // destination layers. Evaluate that transition before emitting its edges.
+    if (this.viaExpansion === "physical" && this.availableZ.length > 2) {
+      const viaNeighbors: Node[] = []
+      for (const newZ of this.availableZ) {
+        if (newZ === node.z) continue
+        const neighbor: Node = {
+          x: node.x,
+          y: node.y,
+          z: newZ,
+          g: node.g,
+          h: node.h,
+          f: node.f,
+          parent: node,
+        }
+        if (!this.exploredNodes.has(this.getNodeKey(neighbor))) {
+          viaNeighbors.push(neighbor)
+        }
+      }
+      const firstViaNeighbor = viaNeighbors[0]
+      if (
+        firstViaNeighbor &&
+        !this.isNodeTooCloseToObstacle(
+          firstViaNeighbor,
+          this.viaDiameter / 2 + this.obstacleMargin / 2,
+          true,
+        ) &&
+        !this.isNodeTooCloseToEdge(firstViaNeighbor, true)
+      ) {
+        for (const neighbor of viaNeighbors) {
+          this.setNodeCosts(neighbor)
+          neighbors.push(neighbor)
+        }
+      }
+      return neighbors
     }
 
     // Add via neighbors for all other layers (a via can connect any layer to any other layer)
