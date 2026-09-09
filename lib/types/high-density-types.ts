@@ -22,6 +22,18 @@ export type NodeWithPortPoints = {
   portPointsInPairs?: [PortPoint, PortPoint][]
 }
 
+export type HighDensityRoutePoint = {
+  x: number
+  y: number
+  z: number
+  traceThickness?: number
+  /** Keeps routed terminals fixed during post-route DRC optimization. */
+  pcb_port_id?: string
+  insideJumperPad?: boolean
+  toNextSegmentType?: "through_obstacle"
+  toNextSegmentCircuitJsonMetadata?: CircuitJsonMetadata
+}
+
 /**
  * A path for a wire in high-density intra-node routing.
  *
@@ -44,17 +56,7 @@ export type HighDensityIntraNodeRoute = {
   endPcbPortId?: string
   traceThickness: number
   viaDiameter: number
-  route: Array<{
-    x: number
-    y: number
-    z: number
-    traceThickness?: number
-    /** Keeps routed terminals fixed during post-route DRC optimization. */
-    pcb_port_id?: string
-    insideJumperPad?: boolean
-    toNextSegmentType?: "through_obstacle"
-    toNextSegmentCircuitJsonMetadata?: CircuitJsonMetadata
-  }>
+  route: HighDensityRoutePoint[]
   vias: Array<{ x: number; y: number }>
   jumpers?: Jumper[]
   regionId?: string

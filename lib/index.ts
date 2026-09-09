@@ -112,3 +112,5 @@ export type {
   SingleLayerConnectionPoint,
   TerminalViaHint,
 } from "./types/srj-types"
+
+export { PadJunctionSimplificationSolver } from "@tscircuit/pad-junction-simplifier"
