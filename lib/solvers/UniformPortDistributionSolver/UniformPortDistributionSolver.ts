@@ -1,7 +1,12 @@
+import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import { BaseSolver } from "@tscircuit/solver-utils"
 import { GraphicsObject } from "graphics-debug"
 import { Obstacle } from "lib/types"
 import { NodeWithPortPoints } from "lib/types/high-density-types"
+import {
+  getFixedCopperPortNetId,
+  type FixedCopperGeometry,
+} from "lib/utils/getFixedCopperPortNetId"
 import { getBoundsFromNodeWithPortPoints } from "lib/utils/getBoundsFromNodeWithPortPoints"
 import { InputNodeWithPortPoints } from "../PortPointPathingSolver/PortPointPathingSolver"
 import {
@@ -11,7 +16,7 @@ import {
   PortPointWithOwnerPair,
   SharedEdge,
 } from "./types"
-import { determineOwnerPair } from "./determineOwnerPair"
+import { getPortPointOwnerPairs } from "./getPortPointOwnerPairs"
 import { getOwnerPairKey } from "./getOwnerPairKey"
 import { precomputeSharedEdges } from "./precomputeSharedEdges"
 import { redistributePortPointsOnSharedEdge } from "./redistributePortPointsOnSharedEdge"
@@ -23,6 +28,7 @@ export interface UniformPortDistributionSolverInput {
   nodeWithPortPoints: NodeWithPortPoints[]
   inputNodesWithPortPoints: InputNodeWithPortPoints[]
   obstacles: Obstacle[]
+  fixedCopper?: FixedCopperGeometry & { connectivityMap: ConnectivityMap }
 }
 
 /**
@@ -55,15 +61,16 @@ export class UniformPortDistributionSolver extends BaseSolver {
       )
     }
 
+    const ownerPairsByPortPointId = getPortPointOwnerPairs(
+      input.inputNodesWithPortPoints,
+    )
     const uniqueOwnerPairs = new Map<OwnerPairKey, OwnerPair>()
     for (const node of input.nodeWithPortPoints) {
       for (const portPoint of node.portPoints) {
         if (!portPoint.portPointId) continue
-        const ownerNodeIds = determineOwnerPair({
-          portPointId: portPoint.portPointId,
-          currentNodeId: node.capacityMeshNodeId,
-          inputNodes: input.inputNodesWithPortPoints,
-        })
+        const ownerNodeIds: OwnerPair = ownerPairsByPortPointId.get(
+          portPoint.portPointId,
+        ) ?? [node.capacityMeshNodeId, node.capacityMeshNodeId]
         const ownerPairKey = getOwnerPairKey(ownerNodeIds)
         const existing = this.mapOfOwnerPairToPortPoints.get(ownerPairKey) ?? []
         const alreadyPresent = existing.some(
@@ -133,6 +140,21 @@ export class UniformPortDistributionSolver extends BaseSolver {
       sharedEdge,
       portPoints: family,
     })
+
+    const fixedCopper = this.input.fixedCopper
+    if (fixedCopper) {
+      for (const point of redistributed) {
+        const requiredNetId = getFixedCopperPortNetId(point, fixedCopper)
+        if (requiredNetId === undefined) continue
+        const name = point.rootConnectionName ?? point.connectionName
+        const netId =
+          fixedCopper.connectivityMap.getNetConnectedToId(name) ??
+          (Object.hasOwn(fixedCopper.connectivityMap.netMap, name)
+            ? name
+            : undefined)
+        if (requiredNetId === null || requiredNetId !== netId) return
+      }
+    }
 
     this.mapOfOwnerPairToPortPoints.set(ownerPairKey, redistributed)
   }

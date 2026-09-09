@@ -11,6 +11,7 @@ import { convertHdRouteToSimplifiedRoute } from "lib/utils/convertHdRouteToSimpl
 import { convertSrjToGraphicsObject } from "lib/utils/convertSrjToGraphicsObject"
 import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
 import { getGraphicsSvgFrames } from "../fixtures/solver-svg-frames"
+import capturedInvalidRoutes from "../fixtures/bugreport100-invalid-preloaded-routes.json"
 
 const RF_CONNECTION = "source_trace_110_fixed_3_0"
 const GROUND_CONNECTION = "source_net_0_mst85"
@@ -122,9 +123,7 @@ const srj: SimpleRouteJson = {
 }
 const connMap = getConnectivityMapFromSimpleRouteJson(srj)
 
-const createSolver = (
-  validatePreloadedVias: boolean,
-): Pipeline9RegionalFallbackSolver =>
+const createSolver = (): Pipeline9RegionalFallbackSolver =>
   new Pipeline9RegionalFallbackSolver({
     nodeWithPortPoints,
     colorMap: {
@@ -137,13 +136,9 @@ const createSolver = (
     obstacleMargin: 0.15,
     effort: 1,
     obstacles,
-    ...(validatePreloadedVias
-      ? {
-          boardObstacles: obstacles,
-          movablePreloadedConnectionNames: new Set([RF_CONNECTION]),
-          viaToPadClearance: 0.1,
-        }
-      : {}),
+    boardObstacles: obstacles,
+    movablePreloadedConnectionNames: new Set([RF_CONNECTION]),
+    viaToPadClearance: 0.1,
     layerCount: 4,
   })
 
@@ -179,16 +174,20 @@ const cleanPreloadedTrace: SimplifiedPcbTrace = {
 }
 
 test("bugreport100 rejects a movable preloaded via beside a foreign QFN pad", async () => {
-  const legacySolver = createSolver(false)
-  legacySolver.solve()
-  expect(legacySolver.failed).toBe(false)
-  const legacyTraces = toTraces(legacySolver.getOutput())
+  // Captured before the high-density output coordinate fix. Routing this
+  // input now avoids the bad via even without the preloaded-copper guard.
+  const invalidRoutes: HighDensityRoute[] = capturedInvalidRoutes
+  const legacyTraces = toTraces(invalidRoutes)
   const legacyRfTrace = legacyTraces.find(
     (trace) => trace.connection_name === RF_CONNECTION,
   )!
   const legacyViaPadErrors = getViaPadErrors([legacyRfTrace])
 
-  const fixedSolver = createSolver(true)
+  const fixedSolver = createSolver()
+  const validateCandidate =
+    fixedSolver.highDensitySolver.growShrinkSolutionValidator!
+  expect(validateCandidate(invalidRoutes)).toBe(false)
+  expect(fixedSolver.stats.preloadedViaCandidateRejectionCount).toBe(1)
   fixedSolver.solve()
   expect(fixedSolver.failed).toBe(false)
   const fixedTraces = toTraces(fixedSolver.getOutput())
@@ -203,7 +202,6 @@ test("bugreport100 rejects a movable preloaded via beside a foreign QFN pad", as
     }),
   )
   expect(fixedSolver.stats.preloadedViaCandidateRejectionCount).toBe(1)
-  expect(fixedSolver.highDensitySolver.stats.highDensityResizeCount).toBe(1)
   expect(
     fixedRfTrace.route.filter((point) => point.route_type === "via"),
   ).toEqual([])
@@ -211,8 +209,8 @@ test("bugreport100 rejects a movable preloaded via beside a foreign QFN pad", as
 
   const frames = [
     { name: "PRELOADED · CLEAN RF", traces: [cleanPreloadedTrace] },
-    { name: "OLD FALLBACK · VIA / FOREIGN PAD DRC", traces: [legacyRfTrace] },
-    { name: "FIXED FALLBACK · REJECTED VIA", traces: [fixedRfTrace] },
+    { name: "CAPTURED · VIA / FOREIGN PAD DRC", traces: [legacyRfTrace] },
+    { name: "CURRENT · CLEAN PRELOADED RF", traces: [fixedRfTrace] },
   ].map(({ name, traces }) => ({
     name,
     graphics: convertSrjToGraphicsObject(

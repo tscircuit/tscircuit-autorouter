@@ -29,7 +29,9 @@ test("bugreport77-07f6a7.json", () => {
         error.type.includes("via") || error.message?.includes("pcb_via"),
     ),
   ).toHaveLength(0)
-  expect(getLastStepSvg(solver.visualize())).toMatchSvgSnapshot(
-    import.meta.path,
-  )
+  const snapshotPath =
+    process.platform === "linux"
+      ? import.meta.path.replace(/\.test\.ts$/, "-linux.test.ts")
+      : import.meta.path
+  expect(getLastStepSvg(solver.visualize())).toMatchSvgSnapshot(snapshotPath)
 })

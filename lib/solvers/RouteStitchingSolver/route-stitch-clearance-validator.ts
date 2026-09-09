@@ -1,6 +1,8 @@
 import { pointToSegmentDistance, type Point3 } from "@tscircuit/math-utils"
 import { RbushIndex } from "lib/data-structures/RbushIndex"
+import type { Obstacle } from "lib/types"
 import type { HighDensityIntraNodeRoute } from "lib/types/high-density-types"
+import { getUniqueValidZLayersFromLayerNames } from "lib/utils/mapLayerNameToZ"
 import { minimumDistanceBetweenSegments } from "lib/utils/minimumDistanceBetweenSegments"
 
 export type StitchSegment = {
@@ -24,6 +26,54 @@ type RouteVia = {
   x: number
   y: number
   diameter: number
+}
+
+type IndexedObstacle = {
+  obstacle: Obstacle
+  cosine: number
+  sine: number
+}
+
+const getObstacleSegmentGaps = (
+  { obstacle, cosine, sine }: IndexedObstacle,
+  start: Point3,
+  end: Point3,
+): { startGap: number; endGap: number; segmentGap: number } => {
+  const toLocal = (point: Point3): { x: number; y: number } => {
+    const x = point.x - obstacle.center.x
+    const y = point.y - obstacle.center.y
+    return { x: x * cosine + y * sine, y: -x * sine + y * cosine }
+  }
+  const a = toLocal(start)
+  const b = toLocal(end)
+  const halfWidth = obstacle.width / 2
+  const halfHeight = obstacle.height / 2
+  const pointGap = (point: { x: number; y: number }): number =>
+    Math.hypot(
+      Math.max(0, Math.abs(point.x) - halfWidth),
+      Math.max(0, Math.abs(point.y) - halfHeight),
+    )
+  const startGap = pointGap(a)
+  const endGap = pointGap(b)
+  const corners = [
+    { x: -halfWidth, y: -halfHeight },
+    { x: halfWidth, y: -halfHeight },
+    { x: halfWidth, y: halfHeight },
+    { x: -halfWidth, y: halfHeight },
+  ]
+  let segmentGap = Math.min(startGap, endGap)
+  for (let index = 0; index < corners.length; index++) {
+    segmentGap = Math.min(
+      segmentGap,
+      minimumDistanceBetweenSegments(
+        a,
+        b,
+        corners[index]!,
+        corners[(index + 1) % corners.length]!,
+      ),
+    )
+  }
+  return { startGap, endGap, segmentGap }
 }
 
 const DEFAULT_AUTOROUTING_CLEARANCE = 0.1
@@ -76,19 +126,61 @@ export class RouteStitchClearanceValidator {
     | Map<number, RbushIndex<RouteSegment>>
     | undefined
   private viaIndex: RbushIndex<RouteVia> | undefined
+  private readonly obstacleIndexesByLayer = new Map<
+    number,
+    RbushIndex<IndexedObstacle>
+  >()
 
   constructor({
     hdRoutes,
     minClearance = DEFAULT_AUTOROUTING_CLEARANCE,
+    obstacles = [],
+    layerCount,
   }: {
     hdRoutes: HighDensityIntraNodeRoute[]
     minClearance?: number
+    obstacles?: Obstacle[]
+    layerCount?: number
   }) {
     this.minClearance = minClearance
+    if (obstacles.length > 0 && layerCount === undefined) {
+      throw new Error(
+        "Stitch obstacle clearance requires the board layer count",
+      )
+    }
     for (const hdRoute of hdRoutes) {
       this.addRoute(hdRoute)
     }
     this.buildSpatialIndexes()
+    for (const obstacle of obstacles) {
+      const angle = ((obstacle.ccwRotationDegrees ?? 0) * Math.PI) / 180
+      const cosine = Math.cos(angle)
+      const sine = Math.sin(angle)
+      const halfWidth =
+        (Math.abs(cosine) * obstacle.width + Math.abs(sine) * obstacle.height) /
+        2
+      const halfHeight =
+        (Math.abs(sine) * obstacle.width + Math.abs(cosine) * obstacle.height) /
+        2
+      const zLayers =
+        obstacle.__zLayers ??
+        obstacle.zLayers ??
+        getUniqueValidZLayersFromLayerNames(obstacle.layers, layerCount!)
+      for (const z of zLayers) {
+        let index = this.obstacleIndexesByLayer.get(z)
+        if (!index) {
+          index = new RbushIndex<IndexedObstacle>()
+          this.obstacleIndexesByLayer.set(z, index)
+        }
+        index.insert(
+          { obstacle, cosine, sine },
+          obstacle.center.x - halfWidth,
+          obstacle.center.y - halfHeight,
+          obstacle.center.x + halfWidth,
+          obstacle.center.y + halfHeight,
+        )
+      }
+    }
   }
 
   addRoute(hdRoute: HighDensityIntraNodeRoute): void {
@@ -235,6 +327,27 @@ export class RouteStitchClearanceValidator {
     const queryMinY = Math.min(start.y, end.y) - queryMargin
     const queryMaxX = Math.max(start.x, end.x) + queryMargin
     const queryMaxY = Math.max(start.y, end.y) + queryMargin
+
+    const nearbyObstacles =
+      this.obstacleIndexesByLayer
+        .get(start.z)
+        ?.search(queryMinX, queryMinY, queryMaxX, queryMaxY) ?? []
+    const roots = this.rootsByConnection.get(connectionName)
+    for (const indexedObstacle of nearbyObstacles) {
+      if (
+        indexedObstacle.obstacle.connectedTo.some(
+          (id) => id === connectionName || roots?.has(id),
+        )
+      )
+        continue
+      const gaps = getObstacleSegmentGaps(indexedObstacle, start, end)
+      if (
+        gaps.segmentGap < queryMargin &&
+        !preservesEndpointClearance({ ...gaps, requiredGap: queryMargin })
+      ) {
+        return false
+      }
+    }
 
     const nearbySegments =
       this.segmentIndexesByLayer

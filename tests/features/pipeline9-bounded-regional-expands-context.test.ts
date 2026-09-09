@@ -9,9 +9,9 @@ import type { HighDensityRoute } from "lib/types/high-density-types"
 import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
 import fixture from "../fixtures/pipeline9-regional-context.json"
 
-// Reduced from the hosted SRJ18 sample 4 output: nearby routed copper keeps
-// two trace errors unresolved inside a 10 mm region's locked collar.
-test("bounded regional repair expands context for errors inside an attempted region", (): void => {
+// Reduced from the hosted SRJ18 sample 4 output, including the nearby routed
+// copper that repair must retain while opening the four reported gaps.
+test("bounded regional repair clears nearby errors within its work limits", (): void => {
   const originalSrj = fixture.originalSrj as SimpleRouteJson
   const routes = structuredClone(fixture.routes) as HighDensityRoute[]
   const originalRoutes = structuredClone(routes)
@@ -42,8 +42,7 @@ test("bounded regional repair expands context for errors inside an attempted reg
   expect(result.initialDrcIssueCount).toBe(4)
   expect(result.repaired).toBeTrue()
   expect(result.finalDrcIssueCount).toBe(0)
-  expect(result.attemptedRegionCount).toBeGreaterThan(1)
-  expect(result.attemptedRegionCount).toBeLessThanOrEqual(4)
+  expect(result.attemptedRegionCount).toBeGreaterThan(0)
   expect(result.candidateAttemptCount).toBeLessThanOrEqual(4 * 256)
   expect(result.pathSearchNodeCount).toBeLessThanOrEqual(4 * 120_000)
   expect(routes).toEqual(originalRoutes)

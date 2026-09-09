@@ -20,16 +20,19 @@ test("Pipeline9 repairs SRJ18 sample 4 within its regional work budget", async (
   })
   expect(errors).toEqual([])
   const stats = solver.pipeline9JointDrcRepairSolver!.stats
-  expect(
-    Number(stats.boundedRegionalRepairAttemptedRegionCount),
-  ).toBeLessThanOrEqual(4)
+  const sweepCount = Number(stats.postExactRegionalSweepCount)
+  expect(sweepCount).toBeLessThanOrEqual(2)
   expect(
     Number(stats.boundedRegionalRepairCandidateAttemptCount),
-  ).toBeLessThanOrEqual(1_024)
+  ).toBeLessThanOrEqual(1_024 * sweepCount)
   expect(
     Number(stats.boundedRegionalRepairPathSearchNodeCount),
-  ).toBeLessThanOrEqual(480_000)
+  ).toBeLessThanOrEqual(480_000 * sweepCount)
+  // Each sweep evaluates its input once. A changed region can evaluate the
+  // projection input/output and the complete atomic proposal (three calls).
   expect(
     Number(stats.boundedRegionalRepairReferenceValidationCount),
-  ).toBeLessThanOrEqual(5)
+  ).toBeLessThanOrEqual(
+    sweepCount + 3 * Number(stats.boundedRegionalRepairAttemptedRegionCount),
+  )
 })

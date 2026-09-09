@@ -3,8 +3,8 @@ import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-p
 import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import { loadScenarioBySampleNumber } from "../../scripts/benchmark/scenarios"
 
-test("Pipeline9 preserves SRJ18 sample 9's reference-clean exact output", async () => {
-  const { scenario } = await loadScenarioBySampleNumber("srj18", 9)
+test("Pipeline9 clears SRJ18 sample 13 within bounded regional work", async (): Promise<void> => {
+  const { scenario } = await loadScenarioBySampleNumber("srj18", 13)
   const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(
     structuredClone(scenario),
     { cacheProvider: null, effort: 1 },
@@ -15,21 +15,23 @@ test("Pipeline9 preserves SRJ18 sample 9's reference-clean exact output", async 
   expect(solver.solved).toBeTrue()
   expect(solver.failed).toBeFalse()
   const repairStats = solver.pipeline9JointDrcRepairSolver?.stats
-  // Original pad geometry removes the indexed evaluator's false positives.
-  expect(Number(repairStats?.finalDrcIssueCount)).toBe(0)
-  expect(repairStats).toMatchObject({
-    postExactReferenceValidationAttempted: true,
-    postExactReferenceDrcIssueCount: 0,
-    postExactReferenceAccepted: true,
-    clearancePrecisionCandidateCount: 0,
-    clearancePrecisionCandidateValidationCount: 0,
-    clearancePrecisionReferenceValidationCount: 0,
-    clearancePrecisionRepaired: false,
-    terminalEscapeCandidateCount: 0,
-    terminalEscapeAcceptedCount: 0,
-    regionalB01RepairAttempted: false,
-    regionalB01RepairCandidateSearchCount: 0,
-  })
+  expect(repairStats?.postExactReferenceValidationAttempted).toBeTrue()
+  const sweepCount = Number(repairStats?.postExactRegionalSweepCount)
+  expect(sweepCount).toBeLessThanOrEqual(2)
+  expect(Number(repairStats?.terminalEscapeCandidateCount)).toBeLessThanOrEqual(
+    256 * sweepCount,
+  )
+  expect(
+    Number(repairStats?.regionalB01RepairCandidateSearchCount),
+  ).toBeLessThanOrEqual(
+    Number(repairStats?.regionalB01RepairCandidateSearchBudget),
+  )
+  expect(
+    Number(repairStats?.boundedRegionalRepairCandidateAttemptCount),
+  ).toBeLessThanOrEqual(1_024 * sweepCount)
+  expect(
+    Number(repairStats?.boundedRegionalRepairPathSearchNodeCount),
+  ).toBeLessThanOrEqual(480_000 * sweepCount)
   const { errors } = evaluateRelaxedDrc({
     inputSrj: scenario,
     srjWithPointPairs: solver.srjWithPointPairs!,

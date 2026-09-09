@@ -10,6 +10,7 @@ import {
 } from "high-density-repair03/lib"
 import { getGlobalInMemoryCache } from "lib/cache/setupGlobalCaches"
 import { CacheProvider } from "lib/cache/types"
+import { BoundedRegionalRepairSolver } from "lib/solvers/BoundedRegionalRepairSolver/BoundedRegionalRepairSolver"
 import { ComponentDetectionSolver } from "lib/solvers/ComponentDetectionSolver/ComponentDetectionSolver"
 import { MultiTargetNecessaryCrampedPortPointSolver } from "lib/solvers/NecessaryCrampedPortPointSolver/MultiTargetNecessaryCrampedPortPointSolver"
 import { NodeDimensionSubdivisionSolver } from "lib/solvers/NodeDimensionSubdivisionSolver/NodeDimensionSubdivisionSolver"
@@ -38,6 +39,7 @@ import {
 } from "lib/utils/convertSrjToGraphicsObject"
 import { createSrjWithBoardValidObstacleLayers } from "lib/utils/create-srj-with-board-valid-obstacle-layers"
 import { createObstacleLabelFormatter } from "lib/utils/formatObstacleLabel"
+import type { FixedCopperGeometry } from "lib/utils/getFixedCopperPortNetId"
 import { getInitiallyConnectedMapFromSimpleRouteJson } from "lib/utils/get-initially-connected-map-from-simple-route-json"
 import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
 import {
@@ -47,6 +49,7 @@ import {
 import { getPresuppliedTraceVisualization } from "lib/utils/getPresuppliedTraceVisualization"
 import { calculateOptimalCapacityDepth } from "lib/utils/getTunedTotalCapacity1"
 import { getViaDimensions } from "lib/utils/getViaDimensions"
+import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
 import {
   AvailableSegmentPointSolver,
   type SharedEdgeSegment,
@@ -71,6 +74,9 @@ import { PreprocessSimpleRouteJsonSolver } from "../AutoroutingPipeline4_TinyHyp
 import { MergedComponentTopologyView } from "./MergedComponentTopologyView"
 import { PowerTraceExpansionSolver } from "./PowerTraceExpansionSolver"
 import { convertPipeline7HdRoutesToSimplifiedPcbTraces } from "./convertPipeline7HdRoutesToSimplifiedPcbTraces"
+import { ClearanceProjectionSolver } from "lib/solvers/ClearanceProjectionSolver/ClearanceProjectionSolver"
+import { convertPreloadedTraceToHdRoutes } from "lib/utils/convertPreloadedTraceToHdRoutes"
+import { createPipeline7RelaxedDrcEvaluator } from "./create-pipeline7-relaxed-drc-evaluator"
 import { createPipeline7AutoroutingDrcEvaluator } from "./create-pipeline7-autorouting-drc-evaluator"
 import { getPowerTraceExpansionConnectionNames } from "./getPowerTraceExpansionConnectionNames"
 import { lockHdRouteTerminals } from "./lock-hd-route-terminals"
@@ -228,6 +234,8 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
   highDensityStitchSolver?: MultipleHighDensityRouteStitchSolver3
   globalDrcForceImproveSolver?: GlobalDrcForceImproveSolver
   exactGeometryDrcForceImproveSolver?: GlobalDrcBranchPortfolioSolver
+  boundedRegionalRepairSolver?: BoundedRegionalRepairSolver
+  clearanceProjectionSolver?: ClearanceProjectionSolver
   singleLayerNodeMerger?: SingleLayerNodeMergerSolver
   strawSolver?: StrawSolver
   deadEndSolver?: DeadEndSolver
@@ -249,6 +257,26 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
   maxNodeRatio: number
   minNodeArea: number
   visualizationTraceColorMode: TraceColorMode
+
+  private getFixedObstacleRoutes(): HighDensityRoute[] {
+    return (this.originalSrj.traces ?? []).flatMap((trace, traceIndex) =>
+      convertPreloadedTraceToHdRoutes(
+        trace,
+        traceIndex,
+        this.srj.layerCount,
+        this.viaDiameter,
+        this.connMap,
+      ),
+    )
+  }
+
+  private getFixedCopperGeometry(): FixedCopperGeometry {
+    return {
+      routes: this.getFixedObstacleRoutes(),
+      traceWidth: this.minTraceWidth,
+      clearance: this.originalSrj.minTraceToPadEdgeClearance ?? 0.1,
+    }
+  }
 
   startTimeOfPhase: Record<string, number>
   endTimeOfPhase: Record<string, number>
@@ -471,6 +499,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
           capacityMeshNodes: cms.capacityNodes!,
           layerCount: cms.srj.layerCount,
           connectivityMap: cms.connMap,
+          fixedCopper: cms.getFixedCopperGeometry(),
           segmentPortPoints: sharedEdgeSegments.flatMap(
             (seg) => seg.portPoints,
           ),
@@ -525,6 +554,10 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
             cms.portPointPathingSolver?.getOutput().inputNodeWithPortPoints ??
             [],
           minTraceWidth: cms.minTraceWidth,
+          fixedCopper: {
+            ...cms.getFixedCopperGeometry(),
+            connectivityMap: cms.connMap,
+          },
           obstacles: cms.srj.obstacles,
           layerCount: cms.srj.layerCount,
         },
@@ -648,6 +681,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
       (cms) => [
         {
           srj: cms.srjWithPointPairs! as any,
+          fixedObstacleRoutes: cms.getFixedObstacleRoutes(),
           hdRoutes: lockHdRouteTerminals(
             cms.traceWidthSolver!.getHdRoutesWithWidths(),
             cms.netToPointPairsSolver?.newConnections ?? [],
@@ -684,6 +718,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
         return [
           {
             srj: cms.srjWithPointPairs! as any,
+            fixedObstacleRoutes: cms.getFixedObstacleRoutes(),
             hdRoutes,
             connMap: cms.connMap,
             effort: cms.effort,
@@ -703,6 +738,55 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
           },
         ]
       },
+    ),
+    definePipelineStep(
+      "clearanceProjectionSolver",
+      ClearanceProjectionSolver,
+      (cms) => [
+        {
+          originalSrj: cms.originalSrj,
+          routes: cms.exactGeometryDrcForceImproveSolver!.getOutput(),
+          fixedObstacleRoutes: cms.getFixedObstacleRoutes(),
+          connMap: cms.connMap,
+          colorMap: cms.colorMap,
+          drcEvaluator: createPipeline7RelaxedDrcEvaluator({
+            connections: cms.netToPointPairsSolver!.newConnections,
+            originalConnections: cms.originalSrj.connections,
+            layerCount: cms.srj.layerCount,
+            obstacles: cms.srj.obstacles,
+            defaultViaHoleDiameter: cms.viaHoleDiameter,
+            connMap: cms.connMap,
+            srjWithPointPairs: cms.srjWithPointPairs!,
+            originalSrj: cms.originalSrj,
+          }),
+        },
+      ],
+    ),
+    definePipelineStep(
+      "boundedRegionalRepairSolver",
+      BoundedRegionalRepairSolver,
+      (cms) => [
+        {
+          originalSrj: {
+            ...cms.originalSrj,
+            connections: cms.srjWithPointPairs!.connections,
+          },
+          routes: cms.clearanceProjectionSolver!.getOutput(),
+          syntheticConnectionNames: new Set<string>(),
+          viaHoleDiameter: cms.viaHoleDiameter,
+          colorMap: cms.colorMap,
+          drcEvaluator: createPipeline7RelaxedDrcEvaluator({
+            connections: cms.netToPointPairsSolver!.newConnections,
+            originalConnections: cms.originalSrj.connections,
+            layerCount: cms.srj.layerCount,
+            obstacles: cms.srj.obstacles,
+            defaultViaHoleDiameter: cms.viaHoleDiameter,
+            connMap: cms.connMap,
+            srjWithPointPairs: cms.srjWithPointPairs!,
+            originalSrj: cms.originalSrj,
+          }),
+        },
+      ],
     ),
     definePipelineStep(
       "lengthMatchingPostProcessingSolver",
@@ -733,7 +817,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
             )
           }
         }
-        const hdRoutes = cms.exactGeometryDrcForceImproveSolver!.getOutput()
+        const hdRoutes = cms.boundedRegionalRepairSolver!.getOutput()
         const differentialPairs = (cms.srj.differentialPairs ?? []).map(
           (pair) => {
             const connectionNames = pair.connectionNames.map(
@@ -1062,6 +1146,9 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
       this.globalDrcForceImproveSolver?.visualize()
     const exactGeometryDrcForceImproveViz =
       this.exactGeometryDrcForceImproveSolver?.visualize()
+    const boundedRegionalRepairViz =
+      this.boundedRegionalRepairSolver?.visualize()
+    const clearanceProjectionViz = this.clearanceProjectionSolver?.visualize()
     const visualizations = [
       problemViz,
       processedProblemViz,
@@ -1092,6 +1179,8 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
       traceWidthViz,
       globalDrcForceImproveViz,
       exactGeometryDrcForceImproveViz,
+      clearanceProjectionViz,
+      boundedRegionalRepairViz,
       lengthMatchingPostProcessingViz,
       this.solved
         ? combineVisualizations(
@@ -1174,6 +1263,8 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
       return hdRoutes
     }
     return (
+      this.boundedRegionalRepairSolver?.getOutput() ??
+      this.clearanceProjectionSolver?.getOutput() ??
       this.exactGeometryDrcForceImproveSolver?.getOutput() ??
       this.globalDrcForceImproveSolver?.getOutput() ??
       this.traceWidthSolver?.getHdRoutesWithWidths() ??

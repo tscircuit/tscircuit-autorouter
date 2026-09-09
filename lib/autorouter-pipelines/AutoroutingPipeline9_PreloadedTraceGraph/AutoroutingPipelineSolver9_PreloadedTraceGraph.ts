@@ -622,12 +622,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             viaToPadClearance: cms.srj.minViaEdgeToPadEdgeClearance,
             effort: cms.effort,
             includeBoardObstacles: true,
-            nodePfById: new Map(
-              portPointPathingOutput.inputNodeWithPortPoints.map((node) => [
-                node.capacityMeshNodeId,
-                portPointPathingSolver.computeNodePf(node),
-              ]),
-            ),
+            nodePfById: portPointPathingSolver.computeNodePfMap(),
             preserveTerminalPcbPortIds: true,
           },
         ]
@@ -658,6 +653,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             cms.highDensityForceImproveSolver?.getOutput() ??
             cms.highDensityRouteSolver!.routes,
           obstacles: cms.srj.obstacles,
+          fixedHdRoutes: cms.highDensityRouteSolver!.getUpdatedFixedHdRoutes(),
           colorMap: cms.colorMap,
           repairMargin: cms.srj.defaultObstacleMargin ?? 0.2,
           maxSampleEntries: 80,
@@ -685,6 +681,8 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           defaultViaDiameter: cms.viaDiameter,
           preserveTerminalPcbPortIds: true,
           preferSameLayerTerminalEndpoints: true,
+          obstacles: cms.originalSrj.obstacles,
+          minClearance: cms.originalSrj.minTraceToPadEdgeClearance ?? 0.1,
         },
       ],
     ),

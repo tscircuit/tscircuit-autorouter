@@ -1,3 +1,4 @@
+import { addAutoroutingViaTraceIds } from "lib/utils/addAutoroutingViaTraceIds"
 import type { DrcEvaluator } from "high-density-repair03/lib"
 import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import type { SimpleRouteJson } from "lib/types"
@@ -23,18 +24,24 @@ export const createPipeline7RelaxedDrcEvaluator = (
       ...conversionOptions,
       hdRoutes: evaluatedRoutes,
     })
-    const { errors, errorsWithCenters } = evaluateRelaxedDrc({
+    const { errors, errorsWithCenters, circuitJson } = evaluateRelaxedDrc({
       inputSrj: conversionOptions.originalSrj,
       srjWithPointPairs: conversionOptions.srjWithPointPairs,
       routedTraces: traces,
     })
 
+    const evaluatedTraceIds = new Set(traces.map((trace) => trace.pcb_trace_id))
     return {
-      errors: errors as unknown as Record<string, unknown>[],
-      errorsWithCenters: errorsWithCenters as unknown as Record<
-        string,
-        unknown
-      >[],
+      errors: addAutoroutingViaTraceIds({
+        errors: errors as unknown as Record<string, unknown>[],
+        circuitJson,
+        evaluatedTraceIds,
+      }),
+      errorsWithCenters: addAutoroutingViaTraceIds({
+        errors: errorsWithCenters as unknown as Record<string, unknown>[],
+        circuitJson,
+        evaluatedTraceIds,
+      }),
     }
   }
 }

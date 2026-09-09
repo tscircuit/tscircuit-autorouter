@@ -1,7 +1,7 @@
 import { distance, type Point3 } from "@tscircuit/math-utils"
 import { ConnectivityMap } from "connectivity-map"
 import { GraphicsObject } from "graphics-debug"
-import { SimpleRouteConnection } from "lib/types"
+import { SimpleRouteConnection, type Obstacle } from "lib/types"
 import { HighDensityIntraNodeRoute } from "lib/types/high-density-types"
 import { getConnectionPointLayer } from "lib/types/srj-types"
 import { getJumpersGraphics } from "lib/utils/getJumperGraphics"
@@ -82,14 +82,12 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
         stitchSolver.mergedHdRoute.route.length - 1
       ]
 
-    const directDistance =
-      distance(routeStart, params.start) + distance(routeEnd, params.end)
-    const swappedDistance =
-      distance(routeStart, params.end) + distance(routeEnd, params.start)
-
     return (
-      Math.min(directDistance, swappedDistance) <=
-      MAX_TERMINAL_STITCH_GAP_DISTANCE_3
+      routeStart.z === stitchSolver.start.z &&
+      routeEnd.z === stitchSolver.end.z &&
+      distance(routeStart, stitchSolver.start) +
+        distance(routeEnd, stitchSolver.end) <=
+        MAX_TERMINAL_STITCH_GAP_DISTANCE_3
     )
   }
 
@@ -145,6 +143,8 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
     allowedLayerTransitionPointKeys?: Set<string>
     preserveTerminalPcbPortIds?: boolean
     preferSameLayerTerminalEndpoints?: boolean
+    obstacles?: Obstacle[]
+    minClearance?: number
   }) {
     super()
     this.endpointIndex = new EndpointClusterIndex(
@@ -158,6 +158,9 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
     const canonicalHdRoutes = [...params.hdRoutes].sort(compareRoutes)
     this.clearanceValidator = new RouteStitchClearanceValidator({
       hdRoutes: canonicalHdRoutes,
+      obstacles: params.obstacles,
+      layerCount: params.layerCount,
+      minClearance: params.minClearance,
     })
 
     const firstRoute = canonicalHdRoutes[0]

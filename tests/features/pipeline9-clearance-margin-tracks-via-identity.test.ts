@@ -6,7 +6,7 @@ import {
   cloneRoutes,
   materializeRoutes,
 } from "high-density-repair03/lib/solvers/GlobalDrcForceImproveSolver/solverHelpers"
-import { getPipeline9ClearanceMarginErrors } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/getPipeline9ClearanceMarginErrors"
+import { getPipeline9ClearanceMarginErrors } from "../fixtures/getPipeline9ClearanceMarginErrors"
 import { convertToCircuitJson } from "lib/testing/utils/convertToCircuitJson"
 import type { SimpleRouteJson, SimplifiedPcbTrace } from "lib/types"
 import type { HighDensityRoute } from "lib/types/high-density-types"

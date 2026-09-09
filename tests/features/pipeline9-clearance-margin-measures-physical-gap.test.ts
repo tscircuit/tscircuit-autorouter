@@ -1,7 +1,7 @@
 import { checkViaTraceClearance } from "@tscircuit/checks"
 import { expect, test } from "bun:test"
 import type { AnyCircuitElement } from "circuit-json"
-import { getPipeline9ClearanceMarginErrors } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/getPipeline9ClearanceMarginErrors"
+import { getPipeline9ClearanceMarginErrors } from "../fixtures/getPipeline9ClearanceMarginErrors"
 
 test("clearance margin measures the copper gap beyond checker tolerance", (): void => {
   for (const gap of [0.0995, 0.1095, 0.11, 0.1101, 0.12]) {

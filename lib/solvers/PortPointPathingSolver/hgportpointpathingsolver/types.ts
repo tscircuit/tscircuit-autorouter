@@ -24,6 +24,8 @@ export type RawPort = {
   cramped?: boolean
   regions: RegionHg[]
   tinyHypergraphPortPenalty?: number
+  /** Required canonical copper net; null means incompatible fixed nets block the port. */
+  requiredNetId?: string | null
   _preloadedFixedNetIds?: string[]
   _preloadedTracePortAssignments?: PreloadedTracePortAssignment[]
 }

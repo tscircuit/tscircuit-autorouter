@@ -1,17 +1,19 @@
 import { checkViaTraceClearance } from "@tscircuit/checks"
 import { expect, test } from "bun:test"
 import type { DrcEvaluator } from "high-density-repair03/lib"
-import { applyPipeline9ClearancePrecisionRepairs } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/applyPipeline9ClearancePrecisionRepairs"
-import { getPipeline9ClearanceMarginErrors } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/getPipeline9ClearanceMarginErrors"
+import { applyPipeline9ClearanceProjection } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/applyPipeline9ClearanceProjection"
 import type { Pipeline9DrcError } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/pipeline9JointDrcRepairUtils"
 import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import type { SimpleRouteJson, SimplifiedPcbTrace } from "lib/types"
 import type { HighDensityRoute } from "lib/types/high-density-types"
 import { convertHdRouteToSimplifiedRoute } from "lib/utils/convertHdRouteToSimplifiedRoute"
-import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
 
-test("clearance precision repairs translated and rotated sets of nine physical pairs", (): void => {
-  for (const quarterTurns of [0, 1, 2]) {
+test("clearance projection repairs translated and rotated sets of nine physical pairs", (): void => {
+  for (const [quarterTurns, clearance] of [
+    [0, 0.1],
+    [1, 0.15],
+    [2, 0.2],
+  ] as const) {
     const transform = (x: number, y: number): { x: number; y: number } => {
       let rotatedX = x
       let rotatedY = y
@@ -32,6 +34,8 @@ test("clearance precision repairs translated and rotated sets of nine physical p
         viaDiameter: 0.3,
         route: [
           { ...transform(x - 1, y), z: 0 },
+          { ...transform(x - 0.5, y), z: 0 },
+          { ...transform(x - 0.5, y), z: 0 },
           { ...transform(x, y), z: 0 },
           { ...transform(x, y), z: 1 },
           { ...transform(x + 1, y), z: 1 },
@@ -43,7 +47,7 @@ test("clearance precision repairs translated and rotated sets of nine physical p
         traceThickness: 0.1,
         viaDiameter: 0.3,
         route: [-1, -0.5, 0.5, 1].map((dx) => ({
-          ...transform(x + dx, y + 0.289),
+          ...transform(x + dx, y + clearance + 0.189),
           z: 0,
         })),
         vias: [],
@@ -54,6 +58,7 @@ test("clearance precision repairs translated and rotated sets of nine physical p
       layerCount: 2,
       minTraceWidth: 0.1,
       minViaDiameter: 0.3,
+      minTraceToPadEdgeClearance: clearance,
       obstacles: routes.flatMap((route) =>
         [route.route[0]!, route.route.at(-1)!].map((point, endpoint) => ({
           type: "rect",
@@ -94,6 +99,7 @@ test("clearance precision repairs translated and rotated sets of nine physical p
         inputSrj: srj,
         srjWithPointPairs: srj,
         routedTraces: traces,
+        drcOptions: { traceClearance: clearance },
       })
     }
     const drcEvaluator: DrcEvaluator = ({ routes: candidate, hdRoutes }) => {
@@ -124,48 +130,31 @@ test("clearance precision repairs translated and rotated sets of nine physical p
     const initial = drcEvaluator({ traces: [], routes })
     if (Array.isArray(initial)) throw new Error("Missing centered DRC result")
     expect(initial.errors).toHaveLength(9)
-    const result = applyPipeline9ClearancePrecisionRepairs({
-      srj,
+    const result = applyPipeline9ClearanceProjection({
+      originalSrj: srj,
       routes,
-      newConnections: srj.connections,
       syntheticConnectionNames: new Set(),
-      connMap: getConnectivityMapFromSimpleRouteJson(srj),
-      indexedDrcEvaluator: drcEvaluator,
-      candidateDrcEvaluator: drcEvaluator,
-      marginDrcEvaluator: (candidate, targets, original) =>
-        getPipeline9ClearanceMarginErrors({
-          circuitJson: evaluate(candidate).circuitJson,
-          originalCircuitJson: evaluate(original).circuitJson,
-          targets,
-        }),
       drcEvaluator,
-      initialErrors: initial.errors,
-      initialErrorsWithCenters: initial.errorsWithCenters,
     })
-    expect(result.repaired).toBeTrue()
-    expect(result.attemptedCandidateCount).toBeGreaterThan(0)
-    expect(result.attemptedCandidateCount).toBeLessThanOrEqual(24)
-    expect(result.candidateValidationCount).toBeLessThanOrEqual(8)
-    expect(result.referenceValidationCount).toBe(1)
+    expect(result).not.toBe(routes)
     expect(routes).toEqual(originalRoutes)
-    const final = evaluate(result.routes)
+    const final = evaluate(result)
     expect(final.errors).toHaveLength(0)
     const physicalGaps = checkViaTraceClearance(final.circuitJson, {
-      minClearance: 0.2,
+      minClearance: clearance + 0.1,
     })
     expect(physicalGaps).toHaveLength(9)
     for (const gap of physicalGaps) {
-      expect(gap.actual_clearance).toBeGreaterThanOrEqual(0.11)
+      expect(gap.actual_clearance).toBeGreaterThanOrEqual(clearance - 1e-9)
     }
     for (let index = 0; index < routes.length; index++) {
-      expect(result.routes[index]!.route[0]).toEqual(routes[index]!.route[0])
-      expect(result.routes[index]!.route.at(-1)).toEqual(
-        routes[index]!.route.at(-1),
+      expect(result[index]!.route.map((point) => point.z)).toEqual(
+        routes[index]!.route.map((point) => point.z),
       )
-      expect(result.routes[index]!.traceThickness).toBe(
-        routes[index]!.traceThickness,
-      )
-      expect(result.routes[index]!.viaDiameter).toBe(routes[index]!.viaDiameter)
+      expect(result[index]!.route[0]).toEqual(routes[index]!.route[0])
+      expect(result[index]!.route.at(-1)).toEqual(routes[index]!.route.at(-1))
+      expect(result[index]!.traceThickness).toBe(routes[index]!.traceThickness)
+      expect(result[index]!.viaDiameter).toBe(routes[index]!.viaDiameter)
     }
   }
 })

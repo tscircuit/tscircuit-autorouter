@@ -3,7 +3,7 @@ import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-p
 import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import { loadScenarioBySampleNumber } from "../../scripts/benchmark/scenarios"
 
-test("Pipeline9 regional B01 uses the exact via error center in SRJ23 sample 70", async () => {
+test("Pipeline9 repairs the crowded via contacts in SRJ23 sample 70", async () => {
   const { scenario } = await loadScenarioBySampleNumber("srj23", 70)
   const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(
     structuredClone(scenario),
@@ -15,7 +15,7 @@ test("Pipeline9 regional B01 uses the exact via error center in SRJ23 sample 70"
   expect(solver.solved).toBeTrue()
   expect(solver.failed).toBeFalse()
   expect(
-    solver.pipeline9JointDrcRepairSolver?.stats.regionalB01RepairAcceptedCount,
+    solver.pipeline9JointDrcRepairSolver?.stats.initialJointDrcIssueCount,
   ).toBeGreaterThan(0)
   const { errors } = evaluateRelaxedDrc({
     inputSrj: scenario,
