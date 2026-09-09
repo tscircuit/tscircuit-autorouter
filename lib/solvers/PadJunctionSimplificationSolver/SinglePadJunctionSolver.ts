@@ -1,3 +1,4 @@
+import { getOctilinearCandidates } from "./getOctilinearCandidates"
 import {
   getPadTerminalEntry,
   entriesMatchPadJunctionPattern,
@@ -555,6 +556,49 @@ export class SinglePadJunctionSolver extends BaseSolver {
     problem: PadJunctionProblem,
     candidate: Candidate,
   ): boolean {
+    for (const arm of [...candidate.trunk, candidate.padStem]) {
+      for (let index = 1; index < arm.length; index++) {
+        const start = getItemOrThrow(arm, index - 1)
+        const end = getItemOrThrow(arm, index)
+        const dx = end.x - start.x
+        const dy = end.y - start.y
+        if (
+          Math.abs(dx) > EPSILON &&
+          Math.abs(dy) > EPSILON &&
+          Math.abs(Math.abs(dx) - Math.abs(dy)) > EPSILON
+        )
+          return this.rejectCandidate(
+            candidate,
+            "Requires cardinal or 45-degree segments",
+          )
+        if (index > 1) {
+          const previous = getItemOrThrow(arm, index - 2)
+          if (
+            (start.x - previous.x) * dx + (start.y - previous.y) * dy <
+            -EPSILON
+          )
+            return this.rejectCandidate(
+              candidate,
+              "Replacement creates an acute bend",
+            )
+        }
+      }
+    }
+    for (const [index, branch] of problem.branches.entries()) {
+      if (branch.anchorIndex === 0) continue
+      const previous = getItemOrThrow(branch.points, branch.anchorIndex - 1)
+      const arm = getItemOrThrow(candidate.trunk, index)
+      const next = getItemOrThrow(arm, arm.length - 2)
+      if (
+        (branch.anchor.x - previous.x) * (next.x - branch.anchor.x) +
+          (branch.anchor.y - previous.y) * (next.y - branch.anchor.y) <
+        -EPSILON
+      )
+        return this.rejectCandidate(
+          candidate,
+          "Replacement creates an acute bend at the anchor",
+        )
+    }
     for (const arm of candidate.trunk) {
       for (let index = 1; index < arm.length; index++) {
         if (
@@ -611,16 +655,13 @@ export class SinglePadJunctionSolver extends BaseSolver {
               const p = getItemOrThrow(firstArm, 1)
               const q = getItemOrThrow(secondArm, 1)
               const junction = candidate.junction
-              const cross =
-                (p.x - junction.x) * (q.y - junction.y) -
-                (p.y - junction.y) * (q.x - junction.x)
               const dot =
                 (p.x - junction.x) * (q.x - junction.x) +
                 (p.y - junction.y) * (q.y - junction.y)
-              if (Math.abs(cross) < EPSILON && dot > 0)
+              if (dot > EPSILON)
                 return this.rejectCandidate(
                   candidate,
-                  "Arms overlap at the junction",
+                  "Arms form an acute angle at the junction",
                 )
               continue
             }
@@ -752,43 +793,8 @@ export class SinglePadJunctionSolver extends BaseSolver {
       y: first.y + fraction * dy,
       z: problem.z,
     }
-    // Intersect the perpendicular junction-to-center ray with inset pad copper.
-    // Coordinate-wise clamping would tilt a diagonal stem toward a pad corner.
-    const offsetX = junction.x - pad.center.x
-    const offsetY = junction.y - pad.center.y
-    const halfWidth = (pad.width - problem.width) / 2
-    const halfHeight = (pad.height - problem.width) / 2
-    const rayFraction = Math.min(
-      1,
-      Math.abs(offsetX) > EPSILON ? halfWidth / Math.abs(offsetX) : 1,
-      Math.abs(offsetY) > EPSILON ? halfHeight / Math.abs(offsetY) : 1,
-    )
-    const padEntry = {
-      x: pad.center.x + offsetX * rayFraction,
-      y: pad.center.y + offsetY * rayFraction,
-      z: problem.z,
-    }
-    if (fraction > 0 && fraction < 1 && !this.insidePad(junction, pad)) {
-      const direct: Candidate = {
-        junction,
-        trunk: [
-          [junction, first],
-          [junction, second],
-        ],
-        padStem: [junction, padEntry],
-      }
-      if (this.acceptCandidate(problem, direct)) return
-      if (
-        problem.foundValid &&
-        problem.originalCost.bends === 0 &&
-        (Math.abs(dx) < EPSILON || Math.abs(dy) < EPSILON)
-      ) {
-        this.finishProblem(
-          "no_improvement",
-          "Existing connection matches the straight, minimum-length T",
-        )
-        return
-      }
+    for (const candidate of getOctilinearCandidates(problem)) {
+      if (this.acceptCandidate(problem, candidate)) return
     }
     const step = this.parsed.gridStep ?? Math.max(problem.width, 0.25)
     const { minX, minY, maxX, maxY } = problem.searchBounds
