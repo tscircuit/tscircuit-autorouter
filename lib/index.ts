@@ -113,4 +113,4 @@ export type {
   TerminalViaHint,
 } from "./types/srj-types"
 
-export { PadJunctionSimplificationSolver } from "./solvers/PadJunctionSimplificationSolver/PadJunctionSimplificationSolver"
+export { PadJunctionSimplificationSolver } from "@tscircuit/pad-junction-simplifier"

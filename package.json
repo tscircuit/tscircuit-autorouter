@@ -109,6 +109,7 @@
   "dependencies": {
     "fast-json-stable-stringify": "^2.1.0",
     "object-hash": "^3.0.0",
-    "stack-svgs": "^0.0.1"
+    "stack-svgs": "^0.0.1",
+    "@tscircuit/pad-junction-simplifier": "git+https://github.com/tscircuit/pad-junction-simplifier.git#d4271387a53e095a36361361edcc84d4eae55b6e"
   }
 }
