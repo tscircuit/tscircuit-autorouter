@@ -17,8 +17,8 @@ export function getOctilinearCandidates(
   const first = problem.branches[0].anchor
   const second = problem.branches[1].anchor
   const paths: JunctionPath[] = []
-  // Small lead-ins retain the incoming trace direction when a direct head would
-  // turn backwards at a preserved anchor. They remain outside the target pad.
+  // Lead-ins retain the incoming trace direction when a direct head would turn
+  // backwards. Also sample the available run up to the pad's trace-width margin.
   const leads = (index: 0 | 1): JunctionPath => {
     const branch = problem.branches[index]
     const vx = branch.terminal.x - branch.anchor.x
@@ -26,7 +26,28 @@ export function getOctilinearCandidates(
     const length = Math.hypot(vx, vy)
     if (length < EPSILON) return [branch.anchor]
     const maximum = Math.min(length / 3, Math.max(problem.width * 2, 0.25))
-    return [0, maximum / 4, maximum / 2, maximum].map((distance) => ({
+    let entryFraction = 0
+    const axes: ("x" | "y")[] = ["x", "y"]
+    for (const axis of axes) {
+      const halfSize =
+        ((axis === "x" ? problem.targetPad.width : problem.targetPad.height) +
+          problem.width) / 2
+      const minimum = problem.targetPad.center[axis] - halfSize
+      const maximum = problem.targetPad.center[axis] + halfSize
+      const start = branch.anchor[axis]
+      const delta = branch.terminal[axis] - start
+      if (start < minimum) {
+        entryFraction = Math.max(entryFraction, (minimum - start) / delta)
+      } else if (start > maximum) {
+        entryFraction = Math.max(entryFraction, (maximum - start) / delta)
+      }
+    }
+    const available = length * entryFraction
+    const distances = new Set([
+      0, maximum / 4, maximum / 2, maximum,
+      available / 2, available * 0.75, available,
+    ])
+    return [...distances].map((distance) => ({
       x: branch.anchor.x + (vx * distance) / length,
       y: branch.anchor.y + (vy * distance) / length,
       z: problem.z,
