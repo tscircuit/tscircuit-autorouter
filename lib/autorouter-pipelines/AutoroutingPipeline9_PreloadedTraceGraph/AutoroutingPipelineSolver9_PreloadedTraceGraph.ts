@@ -21,6 +21,7 @@ import { getColorMap } from "lib/solvers/colors"
 import {
   CapacityMeshEdge,
   CapacityMeshNode,
+  DifferentialPair,
   SimpleRouteConnection,
   SimpleRouteJson,
   SimplifiedPcbTraces,
@@ -893,8 +894,13 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
               throw new Error(
                 `Pipeline9: differential pair ${pair.connectionNames.join("/")} resolves both members to "${connectionNames[0]}"`,
               )
-            if (pair.traceGap === undefined)
-              return { connectionNames, lengthTolerance: pair.lengthTolerance }
+            const resolvedPair: DifferentialPair = {
+              connectionNames,
+              lengthTolerance: pair.lengthTolerance,
+            }
+            if (pair.maxUncoupledLength !== undefined)
+              resolvedPair.maxUncoupledLength = pair.maxUncoupledLength
+            if (pair.traceGap === undefined) return resolvedPair
             const pairRoutes = connectionNames.map((connectionName) => {
               const matchingRoutes = hdRoutes.filter(
                 (route) => route.connectionName === connectionName,
@@ -913,8 +919,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
                 0,
               )
             return {
-              connectionNames,
-              lengthTolerance: pair.lengthTolerance,
+              ...resolvedPair,
               minimumCenterlineDistance: centerlineDistance,
               maximumCenterlineDistance: centerlineDistance,
             }
