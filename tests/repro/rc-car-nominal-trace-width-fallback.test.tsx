@@ -7,7 +7,7 @@ import {
   getSimpleRouteJsonFromCircuitJson,
 } from "../fixtures/pipeline9CoreRuntime.mjs"
 
-test("reproduces undersized motor routes with a nominal width request", async () => {
+test("rejects rc car motor routes below their required minimum width", async () => {
   const circuit = new RootCircuit()
   circuit.schematicDisabled = true
   const motorTraceWidth = 1.2
@@ -75,4 +75,17 @@ test("reproduces undersized motor routes with a nominal width request", async ()
     ],
   }).toMatchGraphicsSvg(import.meta.path)
 
+  const solver = new CapacityMeshSolver({
+    ...routingInput,
+    connections: routingInput.connections.map((connection) => ({
+      ...connection,
+      minTraceWidth: motorTraceWidth,
+    })),
+  })
+  solver.solve()
+  expect(solver.failed).toBe(true)
+  expect(solver.solved).toBe(false)
+  expect(solver.error).toContain("requires at least 1.2mm copper width")
+  expect(solver.traceWidthSolver?.getHdRoutesWithWidths()).toEqual([])
+  expect(() => solver.getOutputSimplifiedPcbTraces()).toThrow()
 })

@@ -141,6 +141,8 @@ export interface SimpleRouteConnection {
   __netConnectionName?: string
   nominalTraceWidth?: number
   pointsToConnect: Array<ConnectionPoint>
+  /** Required minimum copper width, including terminal tapers, in millimeters. */
+  minTraceWidth?: number
 
   /** @deprecated DO NOT USE **/
   externallyConnectedPointIds?: PointId[][]
