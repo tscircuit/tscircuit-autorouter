@@ -1,4 +1,5 @@
 import type { GraphicsObject } from "graphics-debug"
+import { getPhysicalCutIdOrThrow } from "lib/solvers/AvailableSegmentPointSolver/getPhysicalCutIdOrThrow"
 import { BaseSolver } from "lib/solvers/BaseSolver"
 import type { InputNodeWithPortPoints } from "lib/solvers/PortPointPathingSolver/PortPointPathingSolver"
 import { calculateNodeProbabilityOfFailure } from "lib/solvers/UnravelSolver/calculateCrossingProbabilityOfFailure"
@@ -22,6 +23,7 @@ type PortData = {
   z: number
   distToCentermostPortOnZ: number
   cramped?: boolean
+  physicalCutId?: string
 }
 
 type SerializedPort = {
@@ -99,19 +101,26 @@ type RuntimePortInput = {
   region2: { regionId: string }
 }
 
-const serializePort = (port: RuntimePortInput): SerializedPort => ({
-  portId: port.d.portId,
-  region1Id: port.region1.regionId,
-  region2Id: port.region2.regionId,
-  d: {
+const serializePort = (port: RuntimePortInput): SerializedPort => {
+  const physicalCutId = getPhysicalCutIdOrThrow(
+    port.d.physicalCutId,
+    port.d.portId,
+  )
+  return {
     portId: port.d.portId,
-    x: port.d.x,
-    y: port.d.y,
-    z: port.d.z,
-    distToCentermostPortOnZ: port.d.distToCentermostPortOnZ,
-    cramped: (port.d as any).cramped,
-  },
-})
+    region1Id: port.region1.regionId,
+    region2Id: port.region2.regionId,
+    d: {
+      portId: port.d.portId,
+      x: port.d.x,
+      y: port.d.y,
+      z: port.d.z,
+      distToCentermostPortOnZ: port.d.distToCentermostPortOnZ,
+      cramped: (port.d as any).cramped,
+      ...(physicalCutId === undefined ? {} : { physicalCutId }),
+    },
+  }
+}
 
 const isSerializedParams = (
   params:

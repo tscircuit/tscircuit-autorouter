@@ -6,7 +6,33 @@ import type {
   SimpleRouteJson,
 } from "../../types"
 import type { GraphicsObject } from "graphics-debug"
+import {
+  FixedCopperClearanceIndex,
+  type FixedCopperRectangle,
+} from "lib/data-structures/FixedCopperClearanceIndex"
+import { RbushIndex } from "lib/data-structures/RbushIndex"
 import { getNodeEdgeMap } from "../CapacityMeshSolver/getNodeEdgeMap"
+import type {
+  PhysicalNodeCut,
+  PhysicalNodeCutContext,
+} from "../NodeDimensionSubdivisionSolver/physicalNodeCuts"
+import { getFixedCopperPortalSites } from "../UniformPortDistributionSolver/getFixedCopperPortalSites"
+import { getPhysicalCutIdOrThrow } from "./getPhysicalCutIdOrThrow"
+import {
+  getNetAwareCrampedPortSites,
+  type NetAwareCrampedPortSitesInput,
+} from "./getNetAwareCrampedPortSites"
+
+type PhysicalNodeCutInput = {
+  readonly context: PhysicalNodeCutContext
+  readonly cuts: readonly PhysicalNodeCut[]
+}
+
+/** Complete immutable board geometry; edge subsets are prepared internally. */
+export type PhysicalCrampedPortContext = Omit<
+  NetAwareCrampedPortSitesInput,
+  "start" | "end" | "existingPoint"
+>
 
 export interface PreloadedTracePortAssignment {
   traceId: string
@@ -33,6 +59,8 @@ export interface SegmentPortPoint {
    * ideally this port points should be discarded but we need them in some cases
    */
   cramped: boolean
+  /** Finite physical-cut resource whose original sites must not be duplicated. */
+  physicalCutId?: string
   /** Extra tiny-hypergraph traversal cost for fallback ports. */
   tinyHypergraphPortPenalty?: number
   /** Canonical fixed-net ids loaded onto this existing graph port. */
@@ -88,6 +116,17 @@ export class AvailableSegmentPointSolver extends BaseSolver {
 
   colorMap: Record<string, string>
   shouldReturnCrampedPortPoints: boolean
+  private readonly physicalNodeCuts: PhysicalNodeCutInput | undefined
+  private readonly physicalCutByNodePair = new Map<
+    string,
+    Map<string, PhysicalNodeCut>
+  >()
+  private readonly consumedPhysicalCutIds = new Set<string>()
+  private readonly physicalCrampedPortContext?: PhysicalCrampedPortContext
+  private readonly crampedRectangleIndexes = new Map<
+    number,
+    RbushIndex<FixedCopperRectangle>
+  >()
 
   // edgeMargin = 0.25
 
@@ -98,6 +137,8 @@ export class AvailableSegmentPointSolver extends BaseSolver {
     obstacleMargin,
     colorMap,
     shouldReturnCrampedPortPoints,
+    physicalNodeCuts,
+    physicalCrampedPortContext,
   }: {
     nodes: CapacityMeshNode[]
     edges: CapacityMeshEdge[]
@@ -105,6 +146,8 @@ export class AvailableSegmentPointSolver extends BaseSolver {
     obstacleMargin?: number
     colorMap?: Record<string, string>
     shouldReturnCrampedPortPoints: boolean
+    physicalNodeCuts?: PhysicalNodeCutInput
+    physicalCrampedPortContext?: PhysicalCrampedPortContext
   }) {
     super()
     this.nodes = nodes
@@ -119,6 +162,13 @@ export class AvailableSegmentPointSolver extends BaseSolver {
 
     this.nodeMap = new Map(nodes.map((node) => [node.capacityMeshNodeId, node]))
     this.nodeEdgeMap = getNodeEdgeMap(edges)
+    this.physicalNodeCuts = physicalNodeCuts
+    this.indexPhysicalNodeCuts()
+    if (physicalCrampedPortContext !== undefined) {
+      this.physicalCrampedPortContext = this.preparePhysicalCrampedPortContext(
+        physicalCrampedPortContext,
+      )
+    }
 
     // This solver completes in a single step
     this.MAX_ITERATIONS = 1
@@ -127,6 +177,201 @@ export class AvailableSegmentPointSolver extends BaseSolver {
   _step() {
     this.computeAllSharedEdgeSegments()
     this.solved = true
+  }
+
+  private preparePhysicalCrampedPortContext(
+    context: PhysicalCrampedPortContext,
+  ): PhysicalCrampedPortContext {
+    if (
+      context.traceWidth !== this.traceWidth ||
+      !Number.isFinite(context.traceWidth) ||
+      context.traceWidth / 2 <= 0 ||
+      !Number.isFinite(context.traceGap) ||
+      context.traceGap < 0 ||
+      !Number.isFinite(context.traceWidth + context.traceGap) ||
+      context.routableNetIds.size === 0 ||
+      !(context.clearanceIndex instanceof FixedCopperClearanceIndex)
+    ) {
+      throw new Error(
+        "AvailableSegmentPointSolver requires a common physical cramped-port width and context",
+      )
+    }
+    const routableNetIds = new Set(context.routableNetIds)
+    for (const netId of routableNetIds) {
+      if (typeof netId !== "string" || netId.length === 0) {
+        throw new Error(
+          "AvailableSegmentPointSolver requires canonical cramped-port nets",
+        )
+      }
+    }
+    const rectangles = context.rectangles.map(
+      (rectangle): FixedCopperRectangle => ({
+        ...rectangle,
+        center: { ...rectangle.center },
+        zLayers: [...rectangle.zLayers],
+        ownerNetIds: new Set(rectangle.ownerNetIds),
+      }),
+    )
+    // Validate the complete source once, including distant and owned copper.
+    // The public fingerprint verifies that the supplied whole-board predicate
+    // uses these exact rectangles, layers and pad-clearance rules.
+    const validationIndex = new FixedCopperClearanceIndex({
+      rectangles,
+      layerCount: context.layerCount,
+      minClearance: context.padGap,
+    })
+    if (
+      validationIndex.cacheFingerprint !==
+      context.clearanceIndex.cacheFingerprint
+    ) {
+      throw new Error(
+        "AvailableSegmentPointSolver cramped-port geometry must match its whole-board index",
+      )
+    }
+    for (const rectangle of rectangles) {
+      const angle =
+        (((rectangle.ccwRotationDegrees ?? 0) % 360) * Math.PI) / 180
+      const cos = Math.cos(angle)
+      const sin = Math.sin(angle)
+      const halfWidth =
+        Math.abs(cos) * (rectangle.width / 2) +
+        Math.abs(sin) * (rectangle.height / 2)
+      const halfHeight =
+        Math.abs(sin) * (rectangle.width / 2) +
+        Math.abs(cos) * (rectangle.height / 2)
+      for (const z of new Set(rectangle.zLayers)) {
+        let index = this.crampedRectangleIndexes.get(z)
+        if (index === undefined) {
+          index = new RbushIndex<FixedCopperRectangle>()
+          this.crampedRectangleIndexes.set(z, index)
+        }
+        // Identical public-geometry AABBs to FixedCopperClearanceIndex. Every
+        // point query on the edge has bounds contained in its expanded edge
+        // query, so omitted rectangles cannot affect any emitted point there.
+        index.insert(
+          rectangle,
+          rectangle.center.x - halfWidth,
+          rectangle.center.y - halfHeight,
+          rectangle.center.x + halfWidth,
+          rectangle.center.y + halfHeight,
+        )
+      }
+    }
+    return { ...context, rectangles, routableNetIds }
+  }
+
+  private getPhysicalCrampedPortPoints(
+    edge: CapacityMeshEdge,
+    overlap: { start: { x: number; y: number }; end: { x: number; y: number } },
+    existingPort: SegmentPortPoint,
+    z: number,
+  ): SegmentPortPoint[] {
+    const context = this.physicalCrampedPortContext
+    if (context === undefined) {
+      throw new Error("Physical cramped ports require their source context")
+    }
+    const point = { x: existingPort.x, y: existingPort.y, z }
+    const allowed = context.clearanceIndex.getAllowedNetIdsAtPoint({
+      point,
+      copperDiameter: context.traceWidth,
+    })
+    if (
+      allowed === null ||
+      [...allowed].some((netId): boolean => context.routableNetIds.has(netId))
+    ) {
+      return [existingPort]
+    }
+    const margin = context.traceWidth / 2 + context.padGap
+    const minX = Math.min(overlap.start.x, overlap.end.x) - margin
+    const minY = Math.min(overlap.start.y, overlap.end.y) - margin
+    const maxX = Math.max(overlap.start.x, overlap.end.x) + margin
+    const maxY = Math.max(overlap.start.y, overlap.end.y) + margin
+    if (
+      ![minX, minY, maxX, maxY].every((value): boolean =>
+        Number.isFinite(value),
+      )
+    ) {
+      throw new Error(
+        `Physical cramped edge "${edge.capacityMeshEdgeId}" layer ${z} has nonfinite query bounds`,
+      )
+    }
+    const index = this.crampedRectangleIndexes.get(z)
+    const rectangles =
+      index === undefined ? [] : index.search(minX, minY, maxX, maxY)
+    const result = getNetAwareCrampedPortSites({
+      ...context,
+      rectangles,
+      start: overlap.start,
+      end: overlap.end,
+      existingPoint: point,
+    })
+    if (result.status !== "complete") {
+      throw new Error(
+        `Physical cramped edge "${edge.capacityMeshEdgeId}" layer ${z} is unresolved: ${JSON.stringify(result)}`,
+      )
+    }
+    if (result.sites.length === 0) return []
+    const axis = result.axis
+    let centermostSite = result.sites[0]!
+    for (const site of result.sites) {
+      if (
+        Math.abs(site[axis] - point[axis]) <
+        Math.abs(centermostSite[axis] - point[axis])
+      ) {
+        centermostSite = site
+      }
+    }
+    return result.sites.map(
+      (site): SegmentPortPoint => ({
+        ...existingPort,
+        segmentPortPointId: `${edge.capacityMeshEdgeId}_pp${site.index}_z${z}_cramped`,
+        x: site.x,
+        y: site.y,
+        distToCentermostPortOnZ: Math.abs(site[axis] - centermostSite[axis]),
+      }),
+    )
+  }
+
+  private indexPhysicalNodeCuts(): void {
+    if (this.physicalNodeCuts === undefined) return
+    if (this.physicalNodeCuts.context.traceWidth !== this.traceWidth) {
+      throw new Error("Physical node cuts must use the shared-edge trace width")
+    }
+    const cutIds = new Set<string>()
+    for (const cut of this.physicalNodeCuts.cuts) {
+      const physicalCutId = getPhysicalCutIdOrThrow(
+        cut.physicalCutId,
+        "physical node cut",
+      )
+      if (physicalCutId === undefined || cutIds.has(physicalCutId)) {
+        throw new Error("Physical node cuts require distinct resource IDs")
+      }
+      const [firstId, secondId] = cut.nodeIds
+      if (
+        firstId === secondId ||
+        !this.nodeMap.has(firstId) ||
+        !this.nodeMap.has(secondId)
+      ) {
+        throw new Error(
+          `Physical node cut "${physicalCutId}" has invalid nodes`,
+        )
+      }
+      cutIds.add(physicalCutId)
+      for (const [fromId, toId] of [
+        [firstId, secondId],
+        [secondId, firstId],
+      ] as const) {
+        let neighbors = this.physicalCutByNodePair.get(fromId)
+        if (neighbors === undefined) {
+          neighbors = new Map<string, PhysicalNodeCut>()
+          this.physicalCutByNodePair.set(fromId, neighbors)
+        }
+        if (neighbors.has(toId)) {
+          throw new Error("Physical node cuts cannot repeat a shared node pair")
+        }
+        neighbors.set(toId, cut)
+      }
+    }
   }
 
   private computeAllSharedEdgeSegments() {
@@ -147,6 +392,80 @@ export class AvailableSegmentPointSolver extends BaseSolver {
         }
       }
     }
+    if (this.physicalNodeCuts !== undefined) {
+      for (const cut of this.physicalNodeCuts.cuts) {
+        if (!this.consumedPhysicalCutIds.has(cut.physicalCutId)) {
+          throw new Error(
+            `Physical node cut "${cut.physicalCutId}" has no shared graph edge`,
+          )
+        }
+      }
+    }
+  }
+
+  private createPhysicalCutSegment(
+    edge: CapacityMeshEdge,
+    overlap: { start: { x: number; y: number }; end: { x: number; y: number } },
+    availableZ: number[],
+    cut: PhysicalNodeCut,
+  ): SharedEdgeSegment {
+    if (this.physicalNodeCuts === undefined) {
+      throw new Error(
+        "Physical cut sites require their source geometry context",
+      )
+    }
+    if (this.consumedPhysicalCutIds.has(cut.physicalCutId)) {
+      throw new Error(
+        `Physical node cut "${cut.physicalCutId}" has repeated edges`,
+      )
+    }
+    // Recompute on the actual shared edge, not its nominal subdivision plane:
+    // reconstructing centers and dimensions can change a boundary by an ULP.
+    const physicalSites = getFixedCopperPortalSites({
+      ...this.physicalNodeCuts.context,
+      start: overlap.start,
+      end: overlap.end,
+      zLayers: availableZ,
+    })
+    const portPoints: SegmentPortPoint[] = []
+    const axis = physicalSites.axis
+    const center = (physicalSites.start[axis] + physicalSites.end[axis]) / 2
+    for (const layer of physicalSites.layers) {
+      let centermostSite = layer.sites[0]
+      // A blocked layer has no resource. Do not invent a cramped midpoint.
+      if (centermostSite === undefined) continue
+      for (const site of layer.sites) {
+        if (
+          Math.abs(site[axis] - center) <
+          Math.abs(centermostSite[axis] - center)
+        ) {
+          centermostSite = site
+        }
+      }
+      for (const site of layer.sites) {
+        portPoints.push({
+          segmentPortPointId: `${edge.capacityMeshEdgeId}_pp${site.index}_z${layer.z}`,
+          x: site.x,
+          y: site.y,
+          availableZ: [layer.z],
+          nodeIds: [...edge.nodeIds],
+          edgeId: edge.capacityMeshEdgeId,
+          connectionName: null,
+          distToCentermostPortOnZ: Math.abs(site[axis] - centermostSite[axis]),
+          cramped: false,
+          physicalCutId: cut.physicalCutId,
+        })
+      }
+    }
+    this.consumedPhysicalCutIds.add(cut.physicalCutId)
+    return {
+      edgeId: edge.capacityMeshEdgeId,
+      nodeIds: [...edge.nodeIds],
+      start: overlap.start,
+      end: overlap.end,
+      availableZ,
+      portPoints,
+    }
   }
 
   private computeSharedEdgeSegment(
@@ -162,6 +481,18 @@ export class AvailableSegmentPointSolver extends BaseSolver {
       node2.availableZ.includes(z),
     )
     if (availableZ.length === 0) return null
+
+    const physicalCut = this.physicalCutByNodePair
+      .get(node1.capacityMeshNodeId)
+      ?.get(node2.capacityMeshNodeId)
+    if (physicalCut !== undefined) {
+      return this.createPhysicalCutSegment(
+        edge,
+        overlap,
+        availableZ,
+        physicalCut,
+      )
+    }
 
     // Compute how many port points can fit on this segment
     const segmentLength = Math.sqrt(
@@ -187,7 +518,7 @@ export class AvailableSegmentPointSolver extends BaseSolver {
       }
       const crampedPortPoints: SegmentPortPoint[] = []
       for (const z of availableZ) {
-        crampedPortPoints.push({
+        const existingPort: SegmentPortPoint = {
           segmentPortPointId: `${edge.capacityMeshEdgeId}_pp0_z${z}_cramped`,
           x: (overlap.start.x + overlap.end.x) / 2,
           y: (overlap.start.y + overlap.end.y) / 2,
@@ -197,7 +528,27 @@ export class AvailableSegmentPointSolver extends BaseSolver {
           connectionName: null,
           distToCentermostPortOnZ: 0,
           cramped: true,
-        })
+        }
+        if (
+          this.physicalCrampedPortContext !== undefined &&
+          segmentLength > 0 &&
+          !edge.isOffboardEdge &&
+          !node1._offBoardConnectionId &&
+          !node2._offBoardConnectionId &&
+          !node1._isVirtualOffboard &&
+          !node2._isVirtualOffboard
+        ) {
+          crampedPortPoints.push(
+            ...this.getPhysicalCrampedPortPoints(
+              edge,
+              overlap,
+              existingPort,
+              z,
+            ),
+          )
+        } else {
+          crampedPortPoints.push(existingPort)
+        }
       }
       return {
         edgeId: edge.capacityMeshEdgeId,

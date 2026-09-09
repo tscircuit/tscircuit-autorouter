@@ -1,9 +1,11 @@
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { GraphicsObject } from "graphics-debug"
 import { HighDensityRouteSpatialIndex } from "lib/data-structures/HighDensityRouteSpatialIndex"
+import { assertPhysicalPeerClearances } from "lib/utils/assertPhysicalPeerClearances"
 import { cloneAndShuffleArray } from "lib/utils/cloneAndShuffleArray"
 import { getBoundsFromNodeWithPortPoints } from "lib/utils/getBoundsFromNodeWithPortPoints"
 import { getMinDistBetweenEnteringPoints } from "lib/utils/getMinDistBetweenEnteringPoints"
+import { getSolveSpaceLengthFromPhysicalLength } from "lib/utils/getSolveSpaceLengthFromPhysicalLength"
 import type {
   HighDensityIntraNodeRoute,
   NodeWithPortPoints,
@@ -12,10 +14,30 @@ import type { Obstacle } from "../../types/srj-types"
 import { BaseSolver } from "../BaseSolver"
 import { safeTransparentize } from "../colors"
 import { HighDensityHyperParameters } from "./HighDensityHyperParameters"
-import { SingleHighDensityRouteSolver } from "./SingleHighDensityRouteSolver"
+import {
+  getPhysicalIntraNodeConnectionTasks,
+  type PhysicalIntraNodeConnectionTask,
+} from "./getPhysicalIntraNodeConnectionTasks"
+import {
+  SingleHighDensityRouteSolver,
+  type SingleRoutePhysicalClearanceContext,
+} from "./SingleHighDensityRouteSolver"
 import { SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost } from "./SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost"
 
 type ConnectionPoint = { x: number; y: number; z: number }
+
+type SolvedViaTraceConflict = {
+  route: HighDensityIntraNodeRoute
+  via: { x: number; y: number }
+  conflictingRoute: HighDensityIntraNodeRoute
+}
+
+export type IntraNodePhysicalClearanceContext = Omit<
+  SingleRoutePhysicalClearanceContext,
+  "canonicalNetId"
+> & {
+  readonly canonicalNetIdByConnectionName: ReadonlyMap<string, string>
+}
 
 const connectionLabel = (
   connectionName: string,
@@ -63,6 +85,10 @@ export class IntraNodeRouteSolver extends BaseSolver {
   }[]
   originalConnectionPointsByName: Map<string, ConnectionPoint[]>
   rootConnectionNameByConnectionName: Map<string, string>
+  private readonly originalPhysicalConnectionTasksByName = new Map<
+    string,
+    PhysicalIntraNodeConnectionTask[]
+  >()
 
   totalConnections: number
   solvedRoutes: HighDensityIntraNodeRoute[]
@@ -73,6 +99,8 @@ export class IntraNodeRouteSolver extends BaseSolver {
   traceWidth: number
   obstacleMargin: number
   captureSearchDebug: boolean
+  readonly layerCount?: number
+  readonly physicalClearanceContext?: IntraNodePhysicalClearanceContext
   rerouteAttemptsByConnection: Map<string, number>
 
   POSTROUTE_VIA_TRACE_CLEARANCE = 0.1
@@ -102,6 +130,7 @@ export class IntraNodeRouteSolver extends BaseSolver {
     captureSearchDebug?: boolean
     obstacles?: Obstacle[]
     layerCount?: number
+    physicalClearanceContext?: IntraNodePhysicalClearanceContext
   }) {
     const { nodeWithPortPoints, colorMap } = params
     super()
@@ -115,6 +144,48 @@ export class IntraNodeRouteSolver extends BaseSolver {
     this.traceWidth = params.traceWidth ?? 0.15
     this.obstacleMargin = params.obstacleMargin ?? 0.15
     this.captureSearchDebug = params.captureSearchDebug ?? true
+    this.layerCount = params.layerCount
+    if (params.physicalClearanceContext) {
+      if (
+        this.layerCount === undefined ||
+        !Number.isSafeInteger(this.layerCount) ||
+        this.layerCount <= 0
+      ) {
+        throw new Error(
+          `IntraNodeRouteSolver node "${nodeWithPortPoints.capacityMeshNodeId}" requires the physical board layer count`,
+        )
+      }
+      const context = params.physicalClearanceContext
+      assertPhysicalPeerClearances(context)
+      this.physicalClearanceContext = {
+        traceClearanceIndex: context.traceClearanceIndex,
+        viaClearanceIndex: context.viaClearanceIndex,
+        traceToTraceClearance: context.traceToTraceClearance,
+        viaToTraceClearance: context.viaToTraceClearance,
+        canonicalNetIdByConnectionName: new Map(
+          context.canonicalNetIdByConnectionName,
+        ),
+        solveToPhysicalTransform: {
+          center: { ...context.solveToPhysicalTransform.center },
+          scale: context.solveToPhysicalTransform.scale,
+        },
+      }
+    }
+    let physicalConnectionTasks: PhysicalIntraNodeConnectionTask[] | undefined
+    if (
+      this.physicalClearanceContext &&
+      nodeWithPortPoints.portPointsInPairs !== undefined &&
+      (!Array.isArray(nodeWithPortPoints.portPointsInPairs) ||
+        nodeWithPortPoints.portPointsInPairs.length > 0)
+    ) {
+      physicalConnectionTasks = getPhysicalIntraNodeConnectionTasks({
+        nodeWithPortPoints,
+        canonicalNetIdByConnectionName:
+          this.physicalClearanceContext.canonicalNetIdByConnectionName,
+        connMap: this.connMap,
+        layerCount: this.layerCount!,
+      })
+    }
     const unsolvedConnectionsMap: Map<string, ConnectionPoint[]> = new Map()
     this.rootConnectionNameByConnectionName = new Map()
     for (const {
@@ -151,6 +222,25 @@ export class IntraNodeRouteSolver extends BaseSolver {
         points: dedupeConnectionPoints(points),
       })),
     )
+    if (physicalConnectionTasks) {
+      for (const task of physicalConnectionTasks) {
+        const originalTasks = this.originalPhysicalConnectionTasksByName.get(
+          task.connectionName,
+        )
+        const originalTask: PhysicalIntraNodeConnectionTask = {
+          ...task,
+          points: [{ ...task.points[0] }, { ...task.points[1] }],
+        }
+        if (originalTasks) {
+          originalTasks.push(originalTask)
+        } else {
+          this.originalPhysicalConnectionTasksByName.set(task.connectionName, [
+            originalTask,
+          ])
+        }
+      }
+      this.unsolvedConnections = physicalConnectionTasks
+    }
     this.rerouteAttemptsByConnection = new Map()
 
     if (this.hyperParameters.SHUFFLE_SEED) {
@@ -173,7 +263,9 @@ export class IntraNodeRouteSolver extends BaseSolver {
     }
 
     this.totalConnections = this.unsolvedConnections.length
-    this.MAX_ITERATIONS = 1_000 * this.totalConnections ** 1.5
+    // Explicit tasks correct the local obligations and progress denominator,
+    // but do not expand the existing connection-name-based search budget.
+    this.MAX_ITERATIONS = 1_000 * unsolvedConnectionsMap.size ** 1.5
 
     this.minDistBetweenEnteringPoints = getMinDistBetweenEnteringPoints(
       this.nodeWithPortPoints,
@@ -225,8 +317,32 @@ export class IntraNodeRouteSolver extends BaseSolver {
     connectionName: string
     rootConnectionName?: string
     points: { x: number; y: number; z: number }[]
-  }) {
+  }): ConstructorParameters<typeof SingleHighDensityRouteSolver>[0] {
     const { connectionName, rootConnectionName, points } = unsolvedConnection
+    let physicalClearanceContext:
+      | SingleRoutePhysicalClearanceContext
+      | undefined
+    if (this.physicalClearanceContext) {
+      const canonicalNetId =
+        this.physicalClearanceContext.canonicalNetIdByConnectionName.get(
+          connectionName,
+        )
+      if (typeof canonicalNetId !== "string" || canonicalNetId.length === 0) {
+        throw new Error(
+          `IntraNodeRouteSolver node "${this.nodeWithPortPoints.capacityMeshNodeId}" has no canonical physical net for connection "${connectionName}"`,
+        )
+      }
+      physicalClearanceContext = {
+        traceClearanceIndex: this.physicalClearanceContext.traceClearanceIndex,
+        viaClearanceIndex: this.physicalClearanceContext.viaClearanceIndex,
+        traceToTraceClearance:
+          this.physicalClearanceContext.traceToTraceClearance,
+        viaToTraceClearance: this.physicalClearanceContext.viaToTraceClearance,
+        solveToPhysicalTransform:
+          this.physicalClearanceContext.solveToPhysicalTransform,
+        canonicalNetId,
+      }
+    }
     return {
       connectionName,
       rootConnectionName,
@@ -246,10 +362,12 @@ export class IntraNodeRouteSolver extends BaseSolver {
           )
         : this.solvedRoutes,
       futureConnections: this.unsolvedConnections,
-      layerCount: this.nodeWithPortPoints.portPoints.reduce(
-        (max, p) => Math.max(max, (p.z ?? 0) + 1),
-        2,
-      ),
+      layerCount: this.physicalClearanceContext
+        ? this.layerCount
+        : this.nodeWithPortPoints.portPoints.reduce(
+            (max, p) => Math.max(max, (p.z ?? 0) + 1),
+            2,
+          ),
       availableZ:
         this.nodeWithPortPoints.availableZ &&
         this.nodeWithPortPoints.availableZ.length > 0
@@ -265,6 +383,7 @@ export class IntraNodeRouteSolver extends BaseSolver {
       traceThickness: this.traceWidth,
       obstacleMargin: this.obstacleMargin,
       captureSearchDebug: this.captureSearchDebug,
+      physicalClearanceContext,
     }
   }
 
@@ -347,14 +466,56 @@ export class IntraNodeRouteSolver extends BaseSolver {
     ].sort((a, b) => a - b)
   }
 
-  private getFirstSolvedViaTraceConflict() {
+  private getFirstSolvedViaTraceConflict(): SolvedViaTraceConflict | null {
     if (this.solvedRoutes.length < 2) return null
 
-    const spatialIndex = new HighDensityRouteSpatialIndex(this.solvedRoutes)
+    const scale = this.physicalClearanceContext?.solveToPhysicalTransform.scale
+    let originalRouteByIndexedRoute:
+      | Map<HighDensityIntraNodeRoute, HighDensityIntraNodeRoute>
+      | undefined
+    let indexedRoutes = this.solvedRoutes
+    if (scale !== undefined && scale !== 1) {
+      const originalRoutes = new Map<
+        HighDensityIntraNodeRoute,
+        HighDensityIntraNodeRoute
+      >()
+      indexedRoutes = this.solvedRoutes.map(
+        (route): HighDensityIntraNodeRoute => {
+          // Coordinates are already in solve space; only index-local copper
+          // dimensions need conversion. Published route dimensions stay physical.
+          const indexedRoute: HighDensityIntraNodeRoute = {
+            ...route,
+            traceThickness: getSolveSpaceLengthFromPhysicalLength({
+              physicalLength: route.traceThickness,
+              solveToPhysicalScale: scale,
+            }),
+            viaDiameter: getSolveSpaceLengthFromPhysicalLength({
+              physicalLength: route.viaDiameter,
+              solveToPhysicalScale: scale,
+            }),
+          }
+          originalRoutes.set(indexedRoute, route)
+          return indexedRoute
+        },
+      )
+      originalRouteByIndexedRoute = originalRoutes
+    }
+    const spatialIndex = new HighDensityRouteSpatialIndex(indexedRoutes)
     const availableZ = this.getAvailableZLayers()
+    const viaToTraceClearance =
+      this.physicalClearanceContext === undefined
+        ? this.POSTROUTE_VIA_TRACE_CLEARANCE
+        : this.physicalClearanceContext.viaToTraceClearance
 
     for (const route of this.solvedRoutes) {
-      const margin = route.viaDiameter / 2 + this.POSTROUTE_VIA_TRACE_CLEARANCE
+      const physicalMargin = route.viaDiameter / 2 + viaToTraceClearance
+      const margin =
+        scale === undefined || scale === 1
+          ? physicalMargin
+          : getSolveSpaceLengthFromPhysicalLength({
+              physicalLength: physicalMargin,
+              solveToPhysicalScale: scale,
+            })
 
       for (const via of route.vias) {
         for (const z of availableZ) {
@@ -374,10 +535,17 @@ export class IntraNodeRouteSolver extends BaseSolver {
             })
 
           if (conflicts.length > 0) {
+            const indexedConflict = conflicts[0]!.conflictingRoute
+            const conflictingRoute = originalRouteByIndexedRoute
+              ? originalRouteByIndexedRoute.get(indexedConflict)
+              : indexedConflict
+            if (!conflictingRoute) {
+              throw new Error("Indexed via conflict has no original route")
+            }
             return {
               route,
               via,
-              conflictingRoute: conflicts[0]!.conflictingRoute,
+              conflictingRoute,
             }
           }
         }
@@ -387,7 +555,25 @@ export class IntraNodeRouteSolver extends BaseSolver {
     return null
   }
 
-  private queueConnectionForPostrouteRepair(connectionName: string) {
+  private queueConnectionForPostrouteRepair(connectionName: string): boolean {
+    const originalTasks =
+      this.originalPhysicalConnectionTasksByName.get(connectionName)
+    if (originalTasks) {
+      this.solvedRoutes = this.solvedRoutes.filter(
+        (route): boolean => route.connectionName !== connectionName,
+      )
+      for (const task of originalTasks) {
+        this.unsolvedConnections.push({
+          ...task,
+          points: [{ ...task.points[0] }, { ...task.points[1] }],
+        })
+      }
+      this.rerouteAttemptsByConnection.set(
+        connectionName,
+        (this.rerouteAttemptsByConnection.get(connectionName) ?? 0) + 1,
+      )
+      return true
+    }
     const points = this.originalConnectionPointsByName.get(connectionName)
     if (!points || points.length < 2) {
       return false
@@ -602,7 +788,7 @@ const isEndpointViaSafe = (
   const viaNode = {
     x: viaPoint.x,
     y: viaPoint.y,
-    z: A.z,
+    z: B.z,
     parent: {
       x: A.x,
       y: A.y,

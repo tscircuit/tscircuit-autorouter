@@ -13,9 +13,6 @@ const srj = bugReport.simple_route_json as SimpleRouteJson
 test("bugreport66-e6c7e0.json", () => {
   const solver = new AutoroutingPipelineSolver(srj)
   solver.solve()
-  expect(getLastStepSvg(solver.visualize())).toMatchSvgSnapshot(
-    import.meta.path,
-  )
 
   const circuitJson = getCurrentCircuitJson(solver)
   expect(circuitJson).not.toBeNull()
@@ -27,4 +24,7 @@ test("bugreport66-e6c7e0.json", () => {
       error.pcb_port_ids.includes("pcb_port_115"),
   )
   expect(errorsForPcbPort115).toEqual([])
+  expect(getLastStepSvg(solver.visualize())).toMatchSvgSnapshot(
+    import.meta.path,
+  )
 }, 300_000)

@@ -19,6 +19,7 @@ import {
 } from "./pipeline9NetworkedInputProjection"
 import type { Pipeline9NetworkedHighDensityNodeInput } from "./pipeline9NetworkedTypes"
 import { PIPELINE9_NETWORKED_SOLVE_POLICY } from "./pipeline9NetworkedTypes"
+import { serializePipeline9FixedPadClearanceForNode } from "./pipeline9NetworkedFixedPadClearance"
 
 export { DEFAULT_HD_CACHE2_SERVER_URL } from "./HdCache2Client"
 
@@ -183,6 +184,16 @@ export class Pipeline9NetworkedHighDensitySolver extends Pipeline9HighDensitySol
       regionalObstacles: regionalInput.obstacles,
       layerCount: this.layerCount,
       nodePf: this.nodePfById.get(node.capacityMeshNodeId) ?? null,
+      ...(this.fixedPadClearance
+        ? {
+            fixedPadClearance: serializePipeline9FixedPadClearanceForNode({
+              node,
+              fixedPadClearance: this.fixedPadClearance,
+              traceWidth: this.traceWidth,
+              viaDiameter: this.viaDiameter,
+            }),
+          }
+        : {}),
     }
   }
 

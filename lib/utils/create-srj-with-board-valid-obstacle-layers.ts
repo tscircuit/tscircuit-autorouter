@@ -5,7 +5,7 @@ import {
 } from "lib/utils/mapLayerNameToZ"
 import { mapZToLayerName } from "lib/utils/mapZToLayerName"
 
-function getObstacleZLayersOnBoard(
+export function getObstacleZLayersOnBoard(
   obstacle: Obstacle,
   layerCount: number,
 ): number[] {

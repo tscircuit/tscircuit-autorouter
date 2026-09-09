@@ -197,17 +197,17 @@ test("bugreport100 rejects a movable preloaded via beside a foreign QFN pad", as
   )!
   const fixedViaPadErrors = getViaPadErrors([fixedRfTrace])
 
+  expect(
+    fixedRfTrace.route.filter((point) => point.route_type === "via"),
+  ).toEqual([])
+  expect(fixedViaPadErrors).toEqual([])
+  expect(fixedSolver.stats.preloadedViaCandidateRejectionCount).toBe(1)
+  expect(fixedSolver.highDensitySolver.stats.highDensityResizeCount).toBe(1)
   expect(legacyViaPadErrors).toContainEqual(
     expect.objectContaining({
       pcb_pad_ids: expect.arrayContaining(["pcb_smtpad_30"]),
     }),
   )
-  expect(fixedSolver.stats.preloadedViaCandidateRejectionCount).toBe(1)
-  expect(fixedSolver.highDensitySolver.stats.highDensityResizeCount).toBe(1)
-  expect(
-    fixedRfTrace.route.filter((point) => point.route_type === "via"),
-  ).toEqual([])
-  expect(fixedViaPadErrors).toEqual([])
 
   const frames = [
     { name: "PRELOADED · CLEAN RF", traces: [cleanPreloadedTrace] },

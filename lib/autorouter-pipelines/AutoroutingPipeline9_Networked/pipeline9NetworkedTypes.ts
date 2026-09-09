@@ -1,3 +1,4 @@
+import type { FixedCopperRectangle } from "../../data-structures/FixedCopperClearanceIndex"
 import type {
   HighDensityIntraNodeRoute,
   NodeWithPortPoints,
@@ -6,14 +7,25 @@ import type { Obstacle } from "../../types/srj-types"
 
 export type Pipeline9NetworkedCacheSource = "cache" | "solver"
 
+/** Older implementations must reject missing regional pad/peer constraints. */
 export const PIPELINE9_NETWORKED_SOLVE_POLICY =
-  "ordinary_then_regional_without_fixed_copper_v1" as const
+  "ordinary_and_regional_with_fixed_pad_clearance_without_fixed_trace_copper_v6" as const
+
+export type Pipeline9NetworkedFixedPadClearance = {
+  readonly rectangles: readonly (Omit<FixedCopperRectangle, "ownerNetIds"> & {
+    readonly ownerNetIds: readonly string[]
+  })[]
+  readonly layerCount: number
+  readonly traceToPadClearance: number
+  readonly viaToPadClearance: number
+}
 
 /**
  * Every solution-affecting input for Pipeline9's terminal single-node policy:
  * ordinary high-density routing followed, when enabled, by the regional
- * no-fixed-copper fallback. The shape is JSON-serializable so the exact same
- * helper can run in the cache service.
+ * no-fixed-trace-copper fallback. Fixed pads are still physical constraints.
+ * The shape is JSON-serializable so the exact same helper can run in the cache
+ * service.
  */
 export type Pipeline9NetworkedHighDensityNodeInput = {
   solvePolicy: typeof PIPELINE9_NETWORKED_SOLVE_POLICY
@@ -29,6 +41,8 @@ export type Pipeline9NetworkedHighDensityNodeInput = {
   regionalObstacles: Obstacle[]
   layerCount: number
   nodePf: number | null
+  /** Canonical fixed pads for both HD stages; requires regional policy v6. */
+  fixedPadClearance?: Pipeline9NetworkedFixedPadClearance
 }
 
 export type Pipeline9NetworkedHighDensityNodeOutput =

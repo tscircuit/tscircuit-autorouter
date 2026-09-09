@@ -36,6 +36,69 @@ jobs:
       - name: Install dependencies
         run: bun install
 
+      - name: Run focused copper-preserving path tests
+        if: matrix.node == 1
+        run: >-
+          bun test tests/stitch-solver/endpoint-path*.test.ts
+          tests/stitch-solver/single-stitch-retains-moved-via-transition.test.ts
+          tests/stitch-solver/single-stitch-explicitly-allowed-layer-transition.test.ts
+          tests/stitch-solver/single-stitch-rejects-unowned-layer-transition.test.ts
+          tests/stitch-solver/single-stitch-consumes-shared-point-before-continuation.test.ts
+          tests/stitch-solver/single-high-density-route-stitch-gap-bridge.test.ts
+          tests/stitch-solver/single-high-density-route-stitch-large-gap.test.ts
+          tests/stitch-solver/single-high-density-route-stitch-terminal-gap.test.ts
+          tests/stitch-solver/single-high-density-route-stitch-fanout-tags.test.ts
+          tests/solvers/simplified-path-original-advance*.test.ts
+          tests/solvers/simplified-path-actual-*.test.ts
+          tests/solvers/simplified-path-thick-peer-query.test.ts
+          tests/solvers/simplified-path-requested-pad-clearance.test.ts
+          tests/solvers/single-simplified-path-exact-generated-duplicates.test.ts
+          tests/features/trace-simplification-plated-hole-departure-identity.test.ts
+          tests/features/pipeline9-preload-attachment-*.test.ts
+          tests/features/pipeline9-assignable-preload-attachment-*.test.ts
+          tests/features/pipeline9-physical-node-cut-*.test.ts
+          tests/features/pipeline9-net-aware-cramped-*.test.ts
+          tests/features/pipeline9-pad-area-terminal-*.test.ts
+          tests/diagnostics/tiny-static-certificate-*.test.ts
+          tests/solvers/multi-head-polyline-trace-width.test.ts
+          tests/solvers/portfolio-multi-head-trace-width.test.ts
+          tests/solvers/portfolio-trace-width-cache-schema.test.ts
+          tests/solvers/fixed-copper-clearance-*.test.ts
+          tests/solvers/fixed-copper-portal-sites-*.test.ts
+          tests/solvers/available-physical-cut-*.test.ts
+          tests/solvers/available-net-aware-cramped-*.test.ts
+          tests/solvers/net-aware-cramped-port-sites-*.test.ts
+          tests/solvers/physical-node-cut-*.test.ts
+          tests/solvers/single-high-density-physical-*.test.ts
+          tests/caching/fixed-copper-clearance-fingerprint.test.ts
+          tests/caching/cached-intra-physical-clearance-*.test.ts
+          tests/caching/cached-portfolio-physical-clearance-*.test.ts
+          tests/solvers/grow-shrink-physical-transform.test.ts
+          tests/solvers/high-density-physical-board-layer-count.test.ts
+          tests/solvers/intra-node-physical-via-span.test.ts
+          tests/solvers/intra-node-physical-pairs-*.test.ts
+          tests/solvers/intra-node-peer-clearance-*.test.ts
+          tests/solvers/hd-peer-*.test.ts
+          tests/caching/physical-pair-*.test.ts
+          tests/solvers/physical-length-*.test.ts
+          tests/solvers/ordered-port-placement-*.test.ts
+          tests/solvers/pipeline9-canonical-port-net-ids.test.ts
+          tests/solvers/pipeline9-fixed-pad-clearance-*.test.ts
+          tests/solvers/pipeline9-fixed-pad-selection-invalid-sizes.test.ts
+          tests/solvers/pipeline9-networked-fixed-pad-*.test.ts
+          tests/features/pipeline9-networked-fixed-pad-routing-parity.test.ts
+          tests/features/pipeline9-regional-physical-clearance-*.test.ts
+          tests/features/pipeline9-networked-regional-physical-clearance-parity.test.ts
+          tests/solvers/pipeline9-physical-*.test.ts
+          tests/solvers/portfolio-physical-clearance-*.test.ts
+          tests/solvers/representable-fixed-copper-channel-*.test.ts
+          tests/solvers/tinygraph-fixed-copper-*.test.ts
+          tests/solvers/tinygraph-physical-duplicate-capacity-*.test.ts
+          tests/solvers/tinygraph-physical-cut-*.test.ts
+          tests/solvers/tinygraph-wrapper-physical-*.test.ts
+          tests/solvers/uniform-physical-clearance-*.test.ts
+          --timeout 300000
+
       # Replaces `npm install -g @tscircuit/bun-test-plan && bun-test-plan`.
       # Distributes by recorded runtime instead of alphabetical round-robin,
       # and drops a global npm install from every shard.

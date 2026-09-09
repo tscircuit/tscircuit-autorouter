@@ -28,7 +28,8 @@ const roundCoord = (n: number) => Math.round(n * 200) / 200
 
 setupGlobalCaches()
 
-const PORTFOLIO_SINGLE_INTRA_NODE_CACHE_SCHEMA_VERSION = 3
+const PORTFOLIO_SINGLE_INTRA_NODE_CACHE_SCHEMA_VERSION = 7
+const PHYSICAL_PORTFOLIO_SINGLE_INTRA_NODE_CACHE_SCHEMA_VERSION = 8
 
 export class CachedPortfolioSingleIntraNodeSolver
   extends PortfolioSingleIntraNodeSolver
@@ -132,16 +133,50 @@ export class CachedPortfolioSingleIntraNodeSolver
         .filter(([, value]) => value !== undefined)
         .sort(([a], [b]) => a.localeCompare(b)),
     )
+    const physicalClearanceContext =
+      this.constructorParams.physicalClearanceContext
 
     // Note: connMap is omitted as hashing it is complex and might be too broad.
     const keyData = {
-      cacheSchemaVersion: PORTFOLIO_SINGLE_INTRA_NODE_CACHE_SCHEMA_VERSION,
+      // Do not reuse successes or failures from the former name-grouped tasks.
+      // The no-context portfolio keeps its unchanged cache domain.
+      cacheSchemaVersion: physicalClearanceContext
+        ? PHYSICAL_PORTFOLIO_SINGLE_INTRA_NODE_CACHE_SCHEMA_VERSION
+        : PORTFOLIO_SINGLE_INTRA_NODE_CACHE_SCHEMA_VERSION,
       normalizedNodeData,
       normalizedHyperParameters,
       traceWidth: roundCoord(this.constructorParams.traceWidth ?? 0.15),
       viaDiameter: roundCoord(this.constructorParams.viaDiameter ?? 0.3),
       obstacleMargin: roundCoord(this.constructorParams.obstacleMargin ?? 0.15),
       // TODO connMap
+      ...(physicalClearanceContext === undefined
+        ? {}
+        : {
+            physicalClearance: {
+              traceIndex:
+                physicalClearanceContext.traceClearanceIndex.cacheFingerprint,
+              viaIndex:
+                physicalClearanceContext.viaClearanceIndex.cacheFingerprint,
+              traceToTraceClearance:
+                physicalClearanceContext.traceToTraceClearance,
+              viaToTraceClearance: physicalClearanceContext.viaToTraceClearance,
+              solveToPhysicalTransform:
+                physicalClearanceContext.solveToPhysicalTransform,
+              canonicalNetIds: [
+                ...physicalClearanceContext.canonicalNetIdByConnectionName,
+              ].sort(([a], [b]) => a.localeCompare(b)),
+              layerCount: this.constructorParams.layerCount,
+              // Exact node geometry and input order determine every native
+              // candidate's endpoints, derived spacing and connection order.
+              node,
+              traceWidth: this.constructorParams.traceWidth ?? 0.15,
+              viaDiameter: this.constructorParams.viaDiameter ?? 0.3,
+              obstacleMargin: this.constructorParams.obstacleMargin ?? 0.15,
+              connectedIds: normalizedRelevantConnMap.map((ids) =>
+                [...new Set(ids)].sort(),
+              ),
+            },
+          }),
     }
 
     const cacheKey = `intranode:${objectHash(keyData)}`
@@ -157,9 +192,9 @@ export class CachedPortfolioSingleIntraNodeSolver
     cachedSolution: CachedSolvedPortfolioSingleIntraNode,
   ): void {
     if (cachedSolution.success) {
-      // Important: Deep clone the cached routes if they might be mutated later
-      // For now, assuming they are treated as immutable after retrieval.
-      this.solvedRoutes = cachedSolution.solvedRoutes
+      this.solvedRoutes = this.constructorParams.physicalClearanceContext
+        ? structuredClone(cachedSolution.solvedRoutes)
+        : cachedSolution.solvedRoutes
       this.solved = true
       this.failed = false
     } else {
@@ -241,8 +276,12 @@ export class CachedPortfolioSingleIntraNodeSolver
     if (this.failed) {
       solutionToCache = { success: false }
     } else if (this.solved) {
-      // Important: Deep clone routes if necessary before caching
-      solutionToCache = { success: true, solvedRoutes: this.solvedRoutes }
+      solutionToCache = {
+        success: true,
+        solvedRoutes: this.constructorParams.physicalClearanceContext
+          ? structuredClone(this.solvedRoutes)
+          : this.solvedRoutes,
+      }
     } else {
       // Solver finished without being solved or failed? Should not happen in typical flow.
       // console.warn("Attempting to save cache for solver that is neither solved nor failed.")

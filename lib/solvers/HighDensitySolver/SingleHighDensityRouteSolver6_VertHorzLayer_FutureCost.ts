@@ -94,10 +94,11 @@ export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends Sing
   }
 
   isViaTooCloseToFutureConnectionTrace(node: Node) {
-    const minCenterlineDistance =
+    const minCenterlineDistance = this.getSolveSpaceLength(
       this.viaDiameter / 2 +
-      this.traceThickness / 2 +
-      this.FUTURE_CONNECTION_VIA_TRACE_CLEARANCE
+        this.traceThickness / 2 +
+        this.getViaToTraceClearance(this.FUTURE_CONNECTION_VIA_TRACE_CLEARANCE),
+    )
 
     for (const segment of this.getFutureConnectionSegments()) {
       if (

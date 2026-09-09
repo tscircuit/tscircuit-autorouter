@@ -67,8 +67,8 @@ export class SingleSimplifiedPathSolver5 extends SingleSimplifiedPathSolver {
 
   OBSTACLE_MARGIN = 0.1
   TRACE_THICKNESS = 0.15
-  private useTraceWidthAwareClearance = false
-  private clearanceTraceThickness = this.TRACE_THICKNESS
+  private clearanceTraceThickness: number
+  private minTraceToPadEdgeClearance: number
 
   TAIL_JUMP_RATIO: number = 0.8
 
@@ -93,17 +93,26 @@ export class SingleSimplifiedPathSolver5 extends SingleSimplifiedPathSolver {
 
   constructor(
     params: ConstructorParameters<typeof SingleSimplifiedPathSolver>[0] & {
+      /** @deprecated Actual copper widths are always used for clearance. */
       useTraceWidthAwareClearance?: boolean
+      minTraceToPadEdgeClearance?: number
     },
   ) {
     super(params)
 
     this.cachedValidPathSegments = new Set()
-    this.useTraceWidthAwareClearance =
-      params.useTraceWidthAwareClearance ?? false
-    this.clearanceTraceThickness = this.useTraceWidthAwareClearance
-      ? this.inputRoute.traceThickness
-      : this.TRACE_THICKNESS
+    // New shortcut points use the route width, while retained vertices can
+    // carry wider copper. Cover both without changing any emitted widths.
+    this.clearanceTraceThickness = this.inputRoute.route.reduce(
+      (maximum, point): number =>
+        Math.max(
+          maximum,
+          point.traceThickness ?? this.inputRoute.traceThickness,
+        ),
+      this.inputRoute.traceThickness,
+    )
+    this.minTraceToPadEdgeClearance =
+      params.minTraceToPadEdgeClearance ?? this.OBSTACLE_MARGIN
 
     // Handle empty or single-point routes
     if (this.inputRoute.route.length <= 1) {
@@ -122,22 +131,24 @@ export class SingleSimplifiedPathSolver5 extends SingleSimplifiedPathSolver {
       },
       { minX: Infinity, maxX: -Infinity, minY: Infinity, maxY: -Infinity },
     )
-    const maximumOtherTraceThickness = this.useTraceWidthAwareClearance
-      ? Math.max(
-          0,
-          ...this.otherHdRoutes.flatMap((route) => [
-            route.traceThickness,
-            ...route.route.map(
-              (point) => point.traceThickness ?? route.traceThickness,
+    const maximumOtherTraceThickness = this.otherHdRoutes.reduce(
+      (maximum, route): number => {
+        if (this.isSameNetRoute(route)) return maximum
+        return route.route.reduce(
+          (routeMaximum, point): number =>
+            Math.max(
+              routeMaximum,
+              point.traceThickness ?? route.traceThickness,
             ),
-          ]),
+          Math.max(maximum, route.traceThickness),
         )
-      : this.TRACE_THICKNESS
-    const routeSegmentMargin = this.useTraceWidthAwareClearance
-      ? this.OBSTACLE_MARGIN +
-        this.clearanceTraceThickness / 2 +
-        maximumOtherTraceThickness / 2
-      : this.OBSTACLE_MARGIN + this.TRACE_THICKNESS
+      },
+      0,
+    )
+    const routeSegmentMargin =
+      this.OBSTACLE_MARGIN +
+      this.clearanceTraceThickness / 2 +
+      maximumOtherTraceThickness / 2
     const boundsBox = {
       center: {
         x: (bounds.minX + bounds.maxX) / 2,
@@ -167,7 +178,7 @@ export class SingleSimplifiedPathSolver5 extends SingleSimplifiedPathSolver {
 
         if (
           distance <
-          this.OBSTACLE_MARGIN + this.clearanceTraceThickness / 2
+          this.minTraceToPadEdgeClearance + this.clearanceTraceThickness / 2
         ) {
           return true
         }
@@ -192,28 +203,27 @@ export class SingleSimplifiedPathSolver5 extends SingleSimplifiedPathSolver {
           ) {
             segments.push([start, end])
             const segmentId = `${start.x}-${start.y}-${start.z}-${end.x}-${end.y}-${end.z}`
-            if (this.useTraceWidthAwareClearance) {
-              const segmentTraceThickness = Math.max(
-                start.traceThickness ?? hdRoute.traceThickness,
-                end.traceThickness ?? hdRoute.traceThickness,
-              )
-              this.traceThicknessByObstacleSegmentId.set(
-                segmentId,
-                Math.max(
-                  this.traceThicknessByObstacleSegmentId.get(segmentId) ?? 0,
-                  segmentTraceThickness,
-                ),
-              )
-            }
+            const segmentTraceThickness = Math.max(
+              start.traceThickness ?? hdRoute.traceThickness,
+              end.traceThickness ?? hdRoute.traceThickness,
+            )
+            this.traceThicknessByObstacleSegmentId.set(
+              segmentId,
+              Math.max(
+                this.traceThicknessByObstacleSegmentId.get(segmentId) ?? 0,
+                segmentTraceThickness,
+              ),
+            )
           }
         }
 
         return segments
       },
     )
-    this.segmentTree = this.useTraceWidthAwareClearance
-      ? new SegmentTree(this.filteredObstaclePathSegments, routeSegmentMargin)
-      : new SegmentTree(this.filteredObstaclePathSegments)
+    this.segmentTree = new SegmentTree(
+      this.filteredObstaclePathSegments,
+      routeSegmentMargin,
+    )
 
     this.filteredVias = this.otherHdRoutes.flatMap((hdRoute) => {
       if (this.isSameNetRoute(hdRoute)) {
@@ -274,7 +284,7 @@ export class SingleSimplifiedPathSolver5 extends SingleSimplifiedPathSolver {
 
         // Check if start pad is within bounds
         const startMargin =
-          this.OBSTACLE_MARGIN + this.clearanceTraceThickness / 2
+          this.minTraceToPadEdgeClearance + this.clearanceTraceThickness / 2
         if (
           jumper.start.x - padWidth / 2 - startMargin <= bounds.maxX &&
           jumper.start.x + padWidth / 2 + startMargin >= bounds.minX &&
@@ -395,6 +405,14 @@ export class SingleSimplifiedPathSolver5 extends SingleSimplifiedPathSolver {
       return this.inputRoute.route[this.inputRoute.route.length - 1]
     }
 
+    // Preserve exact vertices when a committed original span ends here.
+    if (distance === segment.startDistance) {
+      return segment.start
+    }
+    if (distance === segment.endDistance) {
+      return segment.end
+    }
+
     // Calculate interpolation factor (between 0 and 1)
     const factor = (distance - segment.startDistance) / segment.length
 
@@ -439,7 +457,7 @@ export class SingleSimplifiedPathSolver5 extends SingleSimplifiedPathSolver {
       // Check if the line might intersect with this obstacle's borders
       if (
         distToObstacle <
-        this.OBSTACLE_MARGIN + this.clearanceTraceThickness / 2
+        this.minTraceToPadEdgeClearance + this.clearanceTraceThickness / 2
       ) {
         return false
       }
@@ -457,15 +475,6 @@ export class SingleSimplifiedPathSolver5 extends SingleSimplifiedPathSolver {
           { x: otherSegA.x, y: otherSegA.y },
           { x: otherSegB.x, y: otherSegB.y },
         )
-        if (!this.useTraceWidthAwareClearance) {
-          if (
-            distBetweenSegments <
-            this.OBSTACLE_MARGIN + this.TRACE_THICKNESS
-          ) {
-            return false
-          }
-          continue
-        }
         const otherTraceThickness =
           this.traceThicknessByObstacleSegmentId.get(segId)
         if (otherTraceThickness === undefined) {
@@ -498,7 +507,7 @@ export class SingleSimplifiedPathSolver5 extends SingleSimplifiedPathSolver {
 
       if (
         distToJumperPad <
-        this.OBSTACLE_MARGIN + this.clearanceTraceThickness / 2
+        this.minTraceToPadEdgeClearance + this.clearanceTraceThickness / 2
       ) {
         return false
       }
@@ -509,7 +518,7 @@ export class SingleSimplifiedPathSolver5 extends SingleSimplifiedPathSolver {
         start: { x: start.x, y: start.y },
         end: { x: end.x, y: end.y },
         polygon: this.outline,
-        margin: this.minBoardEdgeClearance + this.inputRoute.traceThickness / 2,
+        margin: this.minBoardEdgeClearance + this.clearanceTraceThickness / 2,
       })
 
       if (crossesOutline) {
@@ -574,20 +583,17 @@ export class SingleSimplifiedPathSolver5 extends SingleSimplifiedPathSolver {
     return null
   }
 
-  // Add a path to the result, skipping the first point if it's already added
-  private addPathToResult(path: Point[]) {
+  // Generated paths carry XYZ only. Do not create duplicate corners that can
+  // separate an outgoing through-obstacle marker from its departure vertex.
+  private addPathToResult(path: Point[]): void {
     if (path.length === 0) return
 
-    for (let i = 0; i < path.length; i++) {
-      // Skip the first point if it's already added
-      if (
-        i === 0 &&
-        this.newRoute.length > 0 &&
-        this.arePointsEqual(this.newRoute[this.newRoute.length - 1], path[i])
-      ) {
+    for (const point of path) {
+      const previousPoint = this.newRoute[this.newRoute.length - 1]
+      if (previousPoint && this.arePointsEqual(previousPoint, point)) {
         continue
       }
-      this.newRoute.push(path[i])
+      this.newRoute.push(point)
     }
     this.currentStepSize = this.maxStepSize
   }
@@ -595,7 +601,14 @@ export class SingleSimplifiedPathSolver5 extends SingleSimplifiedPathSolver {
   private appendOriginalRouteSlice(
     startDistance: number,
     endIndexInclusive: number,
-  ) {
+  ): void {
+    const committedPoint = this.newRoute[this.newRoute.length - 1]
+    const startPoint = this.getPointAtDistance(startDistance)
+    if (!committedPoint || !this.arePointsEqual(committedPoint, startPoint)) {
+      throw new Error(
+        `Cannot preserve original copper from an uncommitted tail at distance ${startDistance}`,
+      )
+    }
     const startIndex = this.pathSegments.findIndex(
       (segment) =>
         startDistance >= segment.startDistance &&
@@ -620,11 +633,35 @@ export class SingleSimplifiedPathSolver5 extends SingleSimplifiedPathSolver {
         lastPointInNewRoute &&
         this.arePointsEqual(lastPointInNewRoute, originalPoint)
       ) {
+        // The source vertex also owns outgoing segment and pad metadata.
+        this.newRoute[this.newRoute.length - 1] = { ...originalPoint }
         continue
       }
 
+      const previousOriginalPoint = this.inputRoute.route[routeIndex - 1]
+      if (previousOriginalPoint.z !== originalPoint.z) {
+        this.newVias.push({ x: originalPoint.x, y: originalPoint.y })
+      }
       this.newRoute.push({ ...originalPoint })
     }
+  }
+
+  private advanceTailAlongOriginalRoute(): void {
+    const segmentIndex = this.pathSegments.findIndex(
+      (segment): boolean => segment.endDistance > this.tailDistanceAlongPath,
+    )
+    if (segmentIndex === -1) {
+      throw new Error(
+        `Cannot advance original copper past distance ${this.tailDistanceAlongPath}`,
+      )
+    }
+    const segment = this.pathSegments[segmentIndex]
+    this.appendOriginalRouteSlice(this.tailDistanceAlongPath, segmentIndex + 1)
+    // The retained vertex, not an interpolation near it, is the next tail.
+    this.tailDistanceAlongPath = segment.endDistance
+    this.headDistanceAlongPath = segment.endDistance
+    this.lastValidPathHeadDistance = segment.endDistance
+    this.lastHeadMoveDistance = 0
   }
 
   moveHead(distance: number) {
@@ -772,7 +809,9 @@ export class SingleSimplifiedPathSolver5 extends SingleSimplifiedPathSolver {
 
     // If there's a jumper pad point, handle it (force stop at the pad)
     if (jumperPadBtwHeadAndTail && jumperPadAtIndex >= 0) {
-      const jumperPadPoint = this.inputRoute.route[jumperPadAtIndex]
+      const connectorStartDistance = this.lastValidPath
+        ? this.lastValidPathHeadDistance
+        : this.tailDistanceAlongPath
 
       // 1. Add the last valid path found *before* the jumper pad.
       if (this.lastValidPath) {
@@ -780,20 +819,8 @@ export class SingleSimplifiedPathSolver5 extends SingleSimplifiedPathSolver {
         this.lastValidPath = null
       }
 
-      // 2. Ensure the route connects *exactly* to the jumper pad location
-      const lastPointInNewRoute = this.newRoute[this.newRoute.length - 1]
-      if (
-        !lastPointInNewRoute ||
-        lastPointInNewRoute.x !== jumperPadPoint.x ||
-        lastPointInNewRoute.y !== jumperPadPoint.y
-      ) {
-        // Add the jumper pad point explicitly
-        this.newRoute.push({
-          x: jumperPadPoint.x,
-          y: jumperPadPoint.y,
-          z: jumperPadPoint.z,
-        })
-      }
+      // 2. Preserve the original connector and every bend up to the pad.
+      this.appendOriginalRouteSlice(connectorStartDistance, jumperPadAtIndex)
 
       // 3. Reset state for the next segment (after the jumper pad)
       this.currentStepSize = this.maxStepSize
@@ -922,27 +949,7 @@ export class SingleSimplifiedPathSolver5 extends SingleSimplifiedPathSolver {
     }
 
     if (!path45 && !this.lastValidPath) {
-      const oldTailPoint = this.getPointAtDistance(this.tailDistanceAlongPath)
-
-      // Move tail and head forward by stepSize
-      this.tailDistanceAlongPath += this.minStepSize
-      this.moveHead(this.minStepSize)
-
-      const newTailIndex = this.getNearestIndexForDistance(
-        this.tailDistanceAlongPath,
-      )
-      const newTailPoint = this.inputRoute.route[newTailIndex]
-      const lastRoutePoint =
-        this.inputRoute.route[this.inputRoute.route.length - 1]
-
-      // Add the segment from old tail to new tail
-      if (
-        !this.arePointsEqual(oldTailPoint, newTailPoint) &&
-        !this.arePointsEqual(newTailPoint, lastRoutePoint)
-      ) {
-        this.newRoute.push(newTailPoint)
-      }
-
+      this.advanceTailAlongOriginalRoute()
       return
     }
 

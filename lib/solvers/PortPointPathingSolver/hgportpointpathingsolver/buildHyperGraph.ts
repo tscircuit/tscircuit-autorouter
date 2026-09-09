@@ -1,6 +1,7 @@
 import { pointToBoxDistance } from "@tscircuit/math-utils"
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { SegmentPortPoint } from "lib/solvers/AvailableSegmentPointSolver/AvailableSegmentPointSolver"
+import { getPhysicalCutIdOrThrow } from "lib/solvers/AvailableSegmentPointSolver/getPhysicalCutIdOrThrow"
 import type {
   CapacityMeshNode,
   Obstacle,
@@ -188,6 +189,10 @@ export function buildHyperGraph(params: {
   }
 
   for (const spp of params.segmentPortPoints) {
+    const physicalCutId = getPhysicalCutIdOrThrow(
+      spp.physicalCutId,
+      spp.segmentPortPointId,
+    )
     const [region1Id, region2Id] = spp.nodeIds
     const region1 = graph.regions.find(
       (region) => region.regionId === region1Id,
@@ -217,6 +222,7 @@ export function buildHyperGraph(params: {
         z,
         distToCentermostPortOnZ: spp.distToCentermostPortOnZ,
         cramped: spp.cramped,
+        ...(physicalCutId === undefined ? {} : { physicalCutId }),
         regions: [region1, region2],
         tinyHypergraphPortPenalty: spp.tinyHypergraphPortPenalty,
         _preloadedFixedNetIds:

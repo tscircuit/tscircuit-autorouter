@@ -97,8 +97,8 @@ export class TraceSimplificationSolver extends BaseSolver {
    *   - enableCrossingViaReduction: Enables coordinated crossing layer swaps
    *   - preserveRouteEndpoints: Prevents simplification from moving endpoint
    *     coordinates or layers when routes represent spliceable local sections
-   *   - useTraceWidthAwareClearance: Uses each route segment's actual copper
-   *     width when checking path-simplification clearance
+   *   - useTraceWidthAwareClearance: Deprecated compatibility option; path
+   *     simplification always checks actual copper widths
    *   - enableVertexShortcuts: Adds a vertex cleanup pass after path sampling
    *   - terminalLayerIndicesByPcbPortId: Physical copper-layer indices on
    *     which each PCB-port terminal can directly accept a route endpoint
@@ -120,6 +120,7 @@ export class TraceSimplificationSolver extends BaseSolver {
       readonly netByConnectionName?: ReadonlyMap<string, string>
       readonly enableCrossingViaReduction?: boolean
       readonly preserveRouteEndpoints?: boolean
+      /** @deprecated Actual copper widths are always used for clearance. */
       readonly useTraceWidthAwareClearance?: boolean
       readonly enableVertexShortcuts?: boolean
       readonly terminalLayerIndicesByPcbPortId?: ReadonlyMap<
@@ -431,6 +432,8 @@ export class TraceSimplificationSolver extends BaseSolver {
               : undefined,
             minBoardEdgeClearance:
               this.simplificationConfig.minBoardEdgeClearance,
+            minTraceToPadEdgeClearance:
+              this.simplificationConfig.minTraceToPadEdgeClearance,
             defaultViaDiameter: this.simplificationConfig.defaultViaDiameter,
             useTraceWidthAwareClearance:
               this.simplificationConfig.useTraceWidthAwareClearance,

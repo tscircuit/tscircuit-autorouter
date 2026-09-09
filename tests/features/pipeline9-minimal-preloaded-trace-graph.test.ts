@@ -2,15 +2,17 @@ import { expect, test } from "bun:test"
 import { AutoroutingPipelineSolver7_MultiGraph } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/AutoroutingPipelineSolver7_MultiGraph"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
 import { Pipeline9HighDensitySolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9HighDensitySolver"
+import { NodeDimensionSubdivisionSolver } from "lib/solvers/NodeDimensionSubdivisionSolver/NodeDimensionSubdivisionSolver"
 import { TraceSimplificationSolver } from "lib/solvers/TraceSimplificationSolver/TraceSimplificationSolver"
 import type { SimpleRouteJson } from "lib/types"
 import scenario from "./preexisting-connected-traces/srj/preexisting-connected-traces06.srj.json" with {
   type: "json",
 }
 
-test("Pipeline9 owns copied stages with minimal preloaded-trace changes", () => {
+test("Pipeline9 owns copied stages with minimal preloaded-trace changes", (): void => {
   const srj = structuredClone(scenario) as SimpleRouteJson
   srj.minBoardEdgeClearance = 0.23
+  const originalSrj = structuredClone(srj)
   const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(srj, {
     targetMinCapacity: 0.75,
     maxNodeDimension: 3,
@@ -75,6 +77,20 @@ test("Pipeline9 owns copied stages with minimal preloaded-trace changes", () => 
     preloadedTraceCount: 0,
     topologyChanged: false,
   })
+  // Preloaded copper keeps ordinary subdivision; finite physical cuts apply
+  // only to the separate trace-free input domain. Compare the same upstream
+  // nodes and all ordinary subdivision limits without adding a cut context.
+  const ordinarySubdivision = new NodeDimensionSubdivisionSolver(
+    structuredClone(solver.topologyMergingSolver!.getOutput()),
+    solver.maxNodeDimension,
+    solver.maxNodeRatio,
+    solver.minNodeArea,
+  )
+  ordinarySubdivision.solve()
+  expect(ordinarySubdivision.solved).toBe(true)
+  expect(ordinarySubdivision.failed).toBe(false)
+  expect(ordinarySubdivision.outputPhysicalCuts).toEqual([])
+  expect(solver.nodeDimensionSubdivisionSolver?.outputPhysicalCuts).toEqual([])
   expect(
     solver.capacityNodes?.map(
       ({ capacityMeshNodeId, center, width, height, layer, availableZ }) => ({
@@ -87,7 +103,7 @@ test("Pipeline9 owns copied stages with minimal preloaded-trace changes", () => 
       }),
     ),
   ).toEqual(
-    traceFreeSolver.capacityNodes?.map(
+    ordinarySubdivision.outputNodes.map(
       ({ capacityMeshNodeId, center, width, height, layer, availableZ }) => ({
         capacityMeshNodeId,
         center,
@@ -177,4 +193,5 @@ test("Pipeline9 owns copied stages with minimal preloaded-trace changes", () => 
     .getOutputSimplifiedPcbTraces()
     .map((trace) => trace.pcb_trace_id)
   expect(new Set(outputTraceIds).size).toBe(outputTraceIds.length)
+  expect(srj).toEqual(originalSrj)
 })
