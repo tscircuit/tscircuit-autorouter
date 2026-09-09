@@ -32,7 +32,7 @@ jobs:
           package-manager-cache: false
       - run: npm install -g pver
       - run: bun install --frozen-lockfile
-      - run: bun run build
+      # npm prepublishOnly builds after pver has written the release version.
       - run: pver release --no-push-main
         env:
           GITHUB_TOKEN: ${{ secrets.TSCIRCUIT_BOT_GITHUB_TOKEN }}
