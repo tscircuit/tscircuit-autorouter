@@ -689,6 +689,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           minBoardEdgeClearance: cms.srj.minBoardEdgeClearance,
           areIdsConnected: (firstId: string, secondId: string) =>
             cms.connMap.areIdsConnected(firstId, secondId),
+          stitchClearanceMode: "require_clear",
         },
       ],
     ),

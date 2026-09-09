@@ -127,7 +127,11 @@ const preservesEndpointClearance = ({
     endGap < requiredGap &&
     startGap >= requiredGap - CLEARANCE_TOLERANCE &&
     segmentGap >= endGap - CLEARANCE_TOLERANCE
-  return escapesFromStart || escapesFromEnd
+  const preservesExistingViolation =
+    startGap < requiredGap &&
+    endGap < requiredGap &&
+    segmentGap >= Math.min(startGap, endGap) - CLEARANCE_TOLERANCE
+  return escapesFromStart || escapesFromEnd || preservesExistingViolation
 }
 
 export class RouteStitchClearanceValidator {

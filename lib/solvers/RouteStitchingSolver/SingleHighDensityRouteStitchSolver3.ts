@@ -86,11 +86,12 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
     if (this.isStitchSegmentClear(stitchSegment)) {
       return [stitchSegment.start, stitchSegment.end]
     }
+    if (this.stitchClearanceMode === "prefer_clear") {
+      return [stitchSegment.start, stitchSegment.end]
+    }
     const repairedPath = this.findStitchSegmentPath?.(stitchSegment)
     if (!repairedPath) {
-      return this.stitchClearanceMode === "prefer_clear"
-        ? [stitchSegment.start, stitchSegment.end]
-        : undefined
+      return undefined
     }
     const firstPoint = repairedPath[0]
     const lastPoint = repairedPath[repairedPath.length - 1]

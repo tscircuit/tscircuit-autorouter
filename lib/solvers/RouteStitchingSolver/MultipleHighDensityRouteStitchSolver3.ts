@@ -12,7 +12,10 @@ import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
 import { BaseSolver } from "../BaseSolver"
 import { safeTransparentize } from "../colors"
 import { RouteStitchClearanceValidator } from "./route-stitch-clearance-validator"
-import { SingleHighDensityRouteStitchSolver3 } from "./SingleHighDensityRouteStitchSolver3"
+import {
+  SingleHighDensityRouteStitchSolver3,
+  type StitchClearanceMode,
+} from "./SingleHighDensityRouteStitchSolver3"
 import {
   EndpointClusterIndex,
   hasStitchableGapBetweenUnsolvedRoutes,
@@ -45,6 +48,7 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
   defaultViaDiameter: number
   allowedLayerTransitionPointKeys?: Set<string>
   preserveTerminalPcbPortIds: boolean
+  stitchClearanceMode: StitchClearanceMode
   private endpointIndex: EndpointClusterIndex
   private clearanceValidator: RouteStitchClearanceValidator
 
@@ -68,7 +72,7 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
         this.clearanceValidator.isSegmentClear(stitchSegment),
       findStitchSegmentPath: (stitchSegment) =>
         this.clearanceValidator.findClearPath(stitchSegment),
-      stitchClearanceMode: "require_clear",
+      stitchClearanceMode: this.stitchClearanceMode,
     })
 
     while (
@@ -154,6 +158,7 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
     outline?: Array<{ x: number; y: number }>
     minBoardEdgeClearance?: number
     areIdsConnected?: (firstId: string, secondId: string) => boolean
+    stitchClearanceMode?: StitchClearanceMode
   }) {
     super()
     this.endpointIndex = new EndpointClusterIndex(
@@ -163,6 +168,7 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
     this.allowedLayerTransitionPointKeys =
       params.allowedLayerTransitionPointKeys
     this.preserveTerminalPcbPortIds = params.preserveTerminalPcbPortIds ?? false
+    this.stitchClearanceMode = params.stitchClearanceMode ?? "prefer_clear"
 
     const canonicalHdRoutes = [...params.hdRoutes].sort(compareRoutes)
     this.clearanceValidator = new RouteStitchClearanceValidator({
@@ -457,7 +463,7 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
         this.clearanceValidator.isSegmentClear(stitchSegment),
       findStitchSegmentPath: (stitchSegment) =>
         this.clearanceValidator.findClearPath(stitchSegment),
-      stitchClearanceMode: "require_clear",
+      stitchClearanceMode: this.stitchClearanceMode,
     })
   }
 
