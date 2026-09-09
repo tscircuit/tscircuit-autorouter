@@ -49,6 +49,51 @@ const dedupeConnectionPoints = (points: ConnectionPoint[]) => {
   return deduped
 }
 
+export type PreparedIntraNodeConnections = {
+  connections: {
+    connectionName: string
+    rootConnectionName?: string
+    points: ConnectionPoint[]
+  }[]
+  rootConnectionNameByConnectionName: Map<string, string>
+  minDistBetweenEnteringPoints: number
+}
+
+/** Prepare the node geometry once for candidates in the same portfolio. */
+export const prepareIntraNodeRouteSolverConnections = (
+  node: NodeWithPortPoints,
+): PreparedIntraNodeConnections => {
+  const pointsByConnection = new Map<string, ConnectionPoint[]>()
+  const rootConnectionNameByConnectionName = new Map<string, string>()
+  for (const {
+    connectionName,
+    rootConnectionName,
+    x,
+    y,
+    z,
+  } of node.portPoints) {
+    if (rootConnectionName) {
+      rootConnectionNameByConnectionName.set(connectionName, rootConnectionName)
+    }
+    let points = pointsByConnection.get(connectionName)
+    if (!points) {
+      points = []
+      pointsByConnection.set(connectionName, points)
+    }
+    points.push({ x, y, z: z ?? 0 })
+  }
+  return {
+    connections: Array.from(pointsByConnection, ([connectionName, points]) => ({
+      connectionName,
+      rootConnectionName:
+        rootConnectionNameByConnectionName.get(connectionName),
+      points: dedupeConnectionPoints(points),
+    })),
+    rootConnectionNameByConnectionName,
+    minDistBetweenEnteringPoints: getMinDistBetweenEnteringPoints(node),
+  }
+}
+
 export class IntraNodeRouteSolver extends BaseSolver {
   override getSolverName(): string {
     return "IntraNodeRouteSolver"
@@ -102,6 +147,7 @@ export class IntraNodeRouteSolver extends BaseSolver {
     captureSearchDebug?: boolean
     obstacles?: Obstacle[]
     layerCount?: number
+    preparedConnections?: PreparedIntraNodeConnections
   }) {
     const { nodeWithPortPoints, colorMap } = params
     super()
@@ -115,41 +161,26 @@ export class IntraNodeRouteSolver extends BaseSolver {
     this.traceWidth = params.traceWidth ?? 0.15
     this.obstacleMargin = params.obstacleMargin ?? 0.15
     this.captureSearchDebug = params.captureSearchDebug ?? true
-    const unsolvedConnectionsMap: Map<string, ConnectionPoint[]> = new Map()
-    this.rootConnectionNameByConnectionName = new Map()
-    for (const {
-      connectionName,
-      rootConnectionName,
-      x,
-      y,
-      z,
-    } of nodeWithPortPoints.portPoints) {
-      if (rootConnectionName) {
-        this.rootConnectionNameByConnectionName.set(
-          connectionName,
-          rootConnectionName,
-        )
-      }
-      unsolvedConnectionsMap.set(connectionName, [
-        ...(unsolvedConnectionsMap.get(connectionName) ?? []),
-        { x, y, z: z ?? 0 },
-      ])
-    }
-    this.originalConnectionPointsByName = new Map(
-      Array.from(unsolvedConnectionsMap.entries()).map(
-        ([connectionName, points]) => [
-          connectionName,
-          dedupeConnectionPoints(points),
-        ],
-      ),
+    const preparedConnections =
+      params.preparedConnections ??
+      prepareIntraNodeRouteSolverConnections(nodeWithPortPoints)
+    this.rootConnectionNameByConnectionName = new Map(
+      preparedConnections.rootConnectionNameByConnectionName,
     )
-    this.unsolvedConnections = Array.from(
-      unsolvedConnectionsMap.entries().map(([connectionName, points]) => ({
+    // Each candidate owns its mutable queues and points. Only the expensive
+    // grouping, deduplication and pairwise distance calculation are shared.
+    this.unsolvedConnections = preparedConnections.connections.map(
+      ({ connectionName, rootConnectionName, points }) => ({
         connectionName,
-        rootConnectionName:
-          this.rootConnectionNameByConnectionName.get(connectionName),
-        points: dedupeConnectionPoints(points),
-      })),
+        rootConnectionName,
+        points: points.map((point) => ({ ...point })),
+      }),
+    )
+    this.originalConnectionPointsByName = new Map(
+      this.unsolvedConnections.map(({ connectionName, points }) => [
+        connectionName,
+        [...points],
+      ]),
     )
     this.rerouteAttemptsByConnection = new Map()
 
@@ -175,9 +206,8 @@ export class IntraNodeRouteSolver extends BaseSolver {
     this.totalConnections = this.unsolvedConnections.length
     this.MAX_ITERATIONS = 1_000 * this.totalConnections ** 1.5
 
-    this.minDistBetweenEnteringPoints = getMinDistBetweenEnteringPoints(
-      this.nodeWithPortPoints,
-    )
+    this.minDistBetweenEnteringPoints =
+      preparedConnections.minDistBetweenEnteringPoints
 
     // const {
     //   numEntryExitLayerChanges,

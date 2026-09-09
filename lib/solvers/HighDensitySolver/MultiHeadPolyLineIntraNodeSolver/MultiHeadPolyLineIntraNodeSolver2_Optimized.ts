@@ -1,7 +1,4 @@
-import {
-  segmentToSegmentMinDistance,
-  pointToSegmentClosestPoint,
-} from "@tscircuit/math-utils"
+import { pointToSegmentClosestPoint } from "@tscircuit/math-utils"
 import { PolyLine2, MHPoint2, Candidate2 } from "./types2"
 import { MultiHeadPolyLineIntraNodeSolver } from "./MultiHeadPolyLineIntraNodeSolver"
 
@@ -170,66 +167,43 @@ export class MultiHeadPolyLineIntraNodeSolver2 extends MultiHeadPolyLineIntraNod
       addNetForce(oppLine, otherSeg.p2Idx, -fx / 2, -fy / 2)
     }
 
+    // Forces accumulate before any point moves. Each line's geometry can
+    // therefore serve every pair and its own via interactions during this call.
+    const geometryByLine = polyLines.map((polyLine) => {
+      const points = [polyLine.start, ...polyLine.mPoints, polyLine.end]
+      const segments: Array<{
+        p1: MHPoint2
+        p2: MHPoint2
+        layer: number
+        p1Idx: number
+        p2Idx: number
+      }> = []
+      const vias: Array<{
+        point: MHPoint2
+        layers: number[]
+        index: number
+      }> = []
+      for (let k = 0; k < points.length - 1; k++) {
+        segments.push({
+          p1: points[k],
+          p2: points[k + 1],
+          layer: points[k].z2,
+          p1Idx: k,
+          p2Idx: k + 1,
+        })
+      }
+      points.forEach((point, index) => {
+        if (point.z1 !== point.z2) {
+          vias.push({ point, layers: [point.z1, point.z2], index })
+        }
+      })
+      return { segments, vias }
+    })
+
     for (let i = 0; i < numPolyLines; i++) {
       for (let j = i + 1; j < numPolyLines; j++) {
-        const polyLine1 = polyLines[i]
-        const polyLine2 = polyLines[j]
-
-        const points1 = [polyLine1.start, ...polyLine1.mPoints, polyLine1.end]
-        const points2 = [polyLine2.start, ...polyLine2.mPoints, polyLine2.end]
-
-        // Extract segments and vias for easier processing
-        const segments1: Array<{
-          p1: MHPoint2
-          p2: MHPoint2
-          layer: number
-          p1Idx: number
-          p2Idx: number
-        }> = []
-        const vias1: Array<{
-          point: MHPoint2
-          layers: number[]
-          index: number
-        }> = []
-        for (let k = 0; k < points1.length - 1; k++) {
-          segments1.push({
-            p1: points1[k],
-            p2: points1[k + 1],
-            layer: points1[k].z2,
-            p1Idx: k,
-            p2Idx: k + 1,
-          })
-        }
-        points1.forEach((p, k) => {
-          if (p.z1 !== p.z2)
-            vias1.push({ point: p, layers: [p.z1, p.z2], index: k })
-        })
-
-        const segments2: Array<{
-          p1: MHPoint2
-          p2: MHPoint2
-          layer: number
-          p1Idx: number
-          p2Idx: number
-        }> = []
-        const vias2: Array<{
-          point: MHPoint2
-          layers: number[]
-          index: number
-        }> = []
-        for (let k = 0; k < points2.length - 1; k++) {
-          segments2.push({
-            p1: points2[k],
-            p2: points2[k + 1],
-            layer: points2[k].z2,
-            p1Idx: k,
-            p2Idx: k + 1,
-          })
-        }
-        points2.forEach((p, k) => {
-          if (p.z1 !== p.z2)
-            vias2.push({ point: p, layers: [p.z1, p.z2], index: k })
-        })
+        const { segments: segments1, vias: vias1 } = geometryByLine[i]
+        const { segments: segments2, vias: vias2 } = geometryByLine[j]
 
         // --- Interaction Calculations ---
 
@@ -237,12 +211,6 @@ export class MultiHeadPolyLineIntraNodeSolver2 extends MultiHeadPolyLineIntraNod
         for (const seg1 of segments1) {
           for (const seg2 of segments2) {
             if (seg1.layer === seg2.layer) {
-              const minDist = segmentToSegmentMinDistance(
-                seg1.p1,
-                seg1.p2,
-                seg2.p1,
-                seg2.p2,
-              )
               // endpoints of s1 against s2
               endpointForce(seg1.p1, seg1.p1Idx, seg2, i, j)
               endpointForce(seg1.p2, seg1.p2Idx, seg2, i, j)
@@ -401,14 +369,7 @@ export class MultiHeadPolyLineIntraNodeSolver2 extends MultiHeadPolyLineIntraNod
 
     // 2.5 Calculate forces between vias WITHIN the SAME polyline
     for (let i = 0; i < numPolyLines; i++) {
-      const polyLine = polyLines[i]
-      const points = [polyLine.start, ...polyLine.mPoints, polyLine.end]
-      const vias: Array<{ point: MHPoint2; layers: number[]; index: number }> =
-        []
-      points.forEach((p, k) => {
-        if (p.z1 !== p.z2)
-          vias.push({ point: p, layers: [p.z1, p.z2], index: k })
-      })
+      const { vias } = geometryByLine[i]
 
       if (vias.length < 2) continue // Need at least two vias to interact
 

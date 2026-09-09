@@ -8,7 +8,10 @@ import {
   NodeWithPortPoints,
 } from "lib/types/high-density-types"
 import { CachedIntraNodeRouteSolver } from "../HighDensitySolver/CachedIntraNodeRouteSolver"
-import { IntraNodeRouteSolver } from "../HighDensitySolver/IntraNodeSolver"
+import {
+  IntraNodeRouteSolver,
+  prepareIntraNodeRouteSolverConnections,
+} from "../HighDensitySolver/IntraNodeSolver"
 import { MultiHeadPolyLineIntraNodeSolver2 } from "../HighDensitySolver/MultiHeadPolyLineIntraNodeSolver/MultiHeadPolyLineIntraNodeSolver2_Optimized"
 import { MultiHeadPolyLineIntraNodeSolver3 } from "../HighDensitySolver/MultiHeadPolyLineIntraNodeSolver/MultiHeadPolyLineIntraNodeSolver3_ViaPossibilitiesSolverIntegration"
 import { SingleLayerNoDifferentRootIntersectionsIntraNodeSolver } from "../HighDensitySolver/SingleLayerNoDifferentRootIntersectionsIntraNodeSolver"
@@ -27,6 +30,7 @@ import { repairDisconnectedSameRootPortPoints } from "./repairDisconnectedSameRo
 // orderings are introduced only after that portfolio spends its dynamically
 // derived exploration budget or exhausts all of its candidates.
 const ORDERING_SHUFFLE_SEEDS = Array.from({ length: 6 }, (_, seed) => seed)
+const defaultNativeBatch = HighDensitySolverA01.prototype.stepNativeBatch
 
 /** Coordinates a fitness-scheduled portfolio of intra-node routing solvers. */
 export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolver<
@@ -48,6 +52,58 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
   connMap?: ConnectivityMap
   effort: number
   adaptiveSearchExpanded = false
+  private constructorCandidates = new Map<string, IntraNodeRouteSolver>()
+
+  protected override stepSupervisedSolver(
+    supervisedSolver: SupervisedSolver<IntraNodeRouteSolver>,
+  ): void {
+    const initial = Object.getOwnPropertyDescriptor(supervisedSolver, "solver")
+    if (
+      !(
+        initial &&
+        "value" in initial &&
+        initial.value instanceof HighDensitySolverA01
+      )
+    ) {
+      super.stepSupervisedSolver(supervisedSolver)
+      return
+    }
+    for (let i = 0; i < this.MIN_SUBSTEPS; ) {
+      // Only ordinary data properties can remain unchanged while native code
+      // runs. Accessors and custom batch methods keep the public step loop.
+      const limit = Object.getOwnPropertyDescriptor(this, "MIN_SUBSTEPS")
+      const candidate = Object.getOwnPropertyDescriptor(
+        supervisedSolver,
+        "solver",
+      )
+      const solver = candidate && "value" in candidate ? candidate.value : null
+      const remaining =
+        limit && "value" in limit && typeof limit.value === "number"
+          ? limit.value - i
+          : 0
+      if (
+        solver instanceof HighDensitySolverA01 &&
+        Number.isSafeInteger(remaining) &&
+        remaining > 1
+      ) {
+        let owner: object | null = solver
+        let batch: PropertyDescriptor | undefined
+        while (owner && !batch) {
+          batch = Object.getOwnPropertyDescriptor(owner, "stepNativeBatch")
+          owner = Object.getPrototypeOf(owner)
+        }
+        if (batch && "value" in batch && batch.value === defaultNativeBatch) {
+          const consumed = defaultNativeBatch.call(solver, remaining)
+          if (consumed > 0) {
+            i += consumed
+            continue
+          }
+        }
+      }
+      supervisedSolver.solver.step()
+      i++
+    }
+  }
 
   private getSolvedSegmentCount(solver: unknown): number | null {
     const solvedConnectionsMap = (solver as any).solvedConnectionsMap
@@ -303,7 +359,52 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     this.stats.dynamicSupervisorIterationLimit = this.MAX_ITERATIONS
   }
 
-  override initializeSolvers() {
+  override initializeSolvers(): void {
+    this.constructorCandidates.clear()
+    this.supervisedSolvers = []
+    const defaultPortfolio = PortfolioSingleIntraNodeSolver.prototype
+    const canPreflightConstructorCandidates =
+      this.getCombinationDefs === defaultPortfolio.getCombinationDefs &&
+      this.getHyperParameterDefs === defaultPortfolio.getHyperParameterDefs &&
+      this.getHyperParameterCombinations ===
+        defaultPortfolio.getHyperParameterCombinations &&
+      this.generateSolver === defaultPortfolio.generateSolver &&
+      this.getSupervisedSolverWithBestFitness ===
+        defaultPortfolio.getSupervisedSolverWithBestFitness
+    // These are the only default candidates that can solve in their
+    // constructors, in the same order in which the supervisor selects them.
+    // Check them before allocating the search candidates and their grids.
+    // Customized definitions and selectors require the complete portfolio.
+    const constructorCandidateNames = canPreflightConstructorCandidates
+      ? ["THROUGH_OBSTACLE", "CLOSED_FORM_SINGLE_TRANSITION"]
+      : []
+    for (const candidateName of constructorCandidateNames) {
+      const hyperParameters = { [candidateName]: true }
+      const solver = this.generateSolver(hyperParameters)
+      const g = this.computeG(solver)
+      this.supervisedSolvers.push({
+        hyperParameters,
+        solver,
+        h: 0,
+        g,
+        f: g,
+      })
+      if (solver.solved) {
+        this.constructorCandidates.clear()
+        this.stats.dynamicExpansionWorkBudget =
+          this.getDynamicExpansionWorkBudget()
+        this.refreshDynamicIterationLimit()
+        return
+      }
+      this.constructorCandidates.set(candidateName, solver)
+    }
+
+    this.constructorParams = {
+      ...this.constructorParams,
+      preparedConnections: prepareIntraNodeRouteSolverConnections(
+        this.nodeWithPortPoints,
+      ),
+    }
     super.initializeSolvers()
     for (const { solver } of this.supervisedSolvers ?? []) {
       this.initializeCandidateBudget(solver)
@@ -400,6 +501,20 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
   }
 
   generateSolver(hyperParameters: any): IntraNodeRouteSolver {
+    const constructorCandidateName = hyperParameters.THROUGH_OBSTACLE
+      ? "THROUGH_OBSTACLE"
+      : hyperParameters.CLOSED_FORM_SINGLE_TRANSITION
+        ? "CLOSED_FORM_SINGLE_TRANSITION"
+        : undefined
+    if (constructorCandidateName) {
+      const constructorCandidate = this.constructorCandidates.get(
+        constructorCandidateName,
+      )
+      if (constructorCandidate) {
+        this.constructorCandidates.delete(constructorCandidateName)
+        return constructorCandidate
+      }
+    }
     if (hyperParameters.SINGLE_LAYER_NO_DIFFERENT_ROOT_INTERSECTIONS) {
       if (
         !SingleLayerNoDifferentRootIntersectionsIntraNodeSolver.isApplicable(
@@ -428,6 +543,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
 
     if (hyperParameters.HIGH_DENSITY_A01) {
       const solver = new HighDensitySolverA01({
+        useNativeSearch: true,
         nodeWithPortPoints: this.nodeWithPortPoints,
         cellSizeMm: 0.1,
         viaDiameter: this.constructorParams.viaDiameter ?? 0.3,
