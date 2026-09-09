@@ -14,7 +14,7 @@ jobs:
   benchmark:
     name: Run benchmark
     runs-on: blacksmith-4vcpu-ubuntu-2404-arm
-    timeout-minutes: 60
+    timeout-minutes: 120
 
     steps:
       - name: Begin Testbox
