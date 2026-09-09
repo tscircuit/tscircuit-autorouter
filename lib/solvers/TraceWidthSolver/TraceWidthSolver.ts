@@ -367,12 +367,14 @@ export class TraceWidthSolver extends BaseSolver {
 
     // Query the complete clearance envelope, using explicit bounds rather than
     // passing a radius to an API that expects full width and height.
-    const nearbyObstacles = new Set(this.obstacleSHI?.search({
-      minX: Math.min(start.x, end.x) - requiredClearance,
-      minY: Math.min(start.y, end.y) - requiredClearance,
-      maxX: Math.max(start.x, end.x) + requiredClearance,
-      maxY: Math.max(start.y, end.y) + requiredClearance,
-    }))
+    const nearbyObstacles = new Set(
+      this.obstacleSHI?.search({
+        minX: Math.min(start.x, end.x) - requiredClearance,
+        minY: Math.min(start.y, end.y) - requiredClearance,
+        maxX: Math.max(start.x, end.x) + requiredClearance,
+        maxY: Math.max(start.y, end.y) + requiredClearance,
+      }),
+    )
     // ObstacleTree indexes unrotated extents. Include rotated pads explicitly
     // so their copper outside those extents is also considered.
     for (const obstacle of this.obstacles) {
@@ -380,30 +382,45 @@ export class TraceWidthSolver extends BaseSolver {
     }
     for (const obstacle of nearbyObstacles) {
       if (!this.isObstacleOnPointLayer(obstacle, start)) continue
-      if (isObstacleConnectedToRoute(obstacle, this.currentTrace, this.connMap)) continue
-      if (obstacle.obstacleId &&
-          this.connMap?.areIdsConnected(rootConnectionName, obstacle.obstacleId)) continue
+      if (isObstacleConnectedToRoute(obstacle, this.currentTrace, this.connMap))
+        continue
+      if (
+        obstacle.obstacleId &&
+        this.connMap?.areIdsConnected(rootConnectionName, obstacle.obstacleId)
+      )
+        continue
       if (this.isObstacleOwnJumperPad(obstacle)) continue
-      const angle = -(obstacle.ccwRotationDegrees ?? 0) * Math.PI / 180
+      const angle = (-(obstacle.ccwRotationDegrees ?? 0) * Math.PI) / 180
       const cos = Math.cos(angle)
       const sin = Math.sin(angle)
       const localStart = {
-        x: (start.x - obstacle.center.x) * cos - (start.y - obstacle.center.y) * sin,
-        y: (start.x - obstacle.center.x) * sin + (start.y - obstacle.center.y) * cos,
+        x:
+          (start.x - obstacle.center.x) * cos -
+          (start.y - obstacle.center.y) * sin,
+        y:
+          (start.x - obstacle.center.x) * sin +
+          (start.y - obstacle.center.y) * cos,
       }
       const localEnd = {
-        x: (end.x - obstacle.center.x) * cos - (end.y - obstacle.center.y) * sin,
-        y: (end.x - obstacle.center.x) * sin + (end.y - obstacle.center.y) * cos,
+        x:
+          (end.x - obstacle.center.x) * cos - (end.y - obstacle.center.y) * sin,
+        y:
+          (end.x - obstacle.center.x) * sin + (end.y - obstacle.center.y) * cos,
       }
       const clearance = segmentToBoxMinDistance(localStart, localEnd, {
-        center: { x: 0, y: 0 }, width: obstacle.width, height: obstacle.height,
+        center: { x: 0, y: 0 },
+        width: obstacle.width,
+        height: obstacle.height,
       })
       minClearance = Math.min(minClearance, clearance)
-      if (clearance < requiredClearance) this.lastCollidingObstacles.push(obstacle)
+      if (clearance < requiredClearance)
+        this.lastCollidingObstacles.push(obstacle)
     }
 
     const nearbyRoutes = this.hdRouteSHI.getConflictingRoutesForSegment(
-      start, end, requiredClearance,
+      start,
+      end,
+      requiredClearance,
     )
     for (const { conflictingRoute } of nearbyRoutes) {
       const route = conflictingRoute as HighDensityRoute
@@ -417,17 +434,22 @@ export class TraceWidthSolver extends BaseSolver {
         if (a.z !== b.z || a.z !== start.z) continue
         if (a.insideJumperPad && b.insideJumperPad) continue
         if (a.toNextSegmentType === "through_obstacle") continue
-        clearance = Math.min(clearance,
+        clearance = Math.min(
+          clearance,
           segmentToSegmentMinDistance(start, end, a, b) -
-          (a.traceThickness ?? route.traceThickness) / 2,
+            (a.traceThickness ?? route.traceThickness) / 2,
         )
       }
       // The spatial index returns owning routes for both traces and vias.
       // Measure each via's copper radius, not its owner's trace half-width.
       for (const via of route.vias) {
-        clearance = Math.min(clearance, segmentToCircleMinDistance(start, end, {
-          ...via, radius: route.viaDiameter / 2,
-        }))
+        clearance = Math.min(
+          clearance,
+          segmentToCircleMinDistance(start, end, {
+            ...via,
+            radius: route.viaDiameter / 2,
+          }),
+        )
       }
       minClearance = Math.min(minClearance, clearance)
       if (clearance < requiredClearance) this.lastCollidingRoutes.push(route)
