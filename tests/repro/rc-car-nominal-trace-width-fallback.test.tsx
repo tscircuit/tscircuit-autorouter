@@ -1,76 +1,78 @@
-import { RootCircuit } from "@tscircuit/core"
+/** @jsxImportSource react-for-pipeline9-fixtures */
 import { expect, test } from "bun:test"
-import type { AnyCircuitElement } from "circuit-json"
-import { convertCircuitJsonToPcbSvg } from "circuit-to-svg"
-import type { SimpleRouteConnection } from "lib/types"
-import { CapacityMeshAutorouterCoreBinding } from "../fixtures/CapacityMeshAutorouterCoreBinding"
+import { CapacityMeshSolver } from "lib/index"
+import { convertSrjToGraphicsObject } from "lib/utils/convertSrjToGraphicsObject"
+import {
+  RootCircuit,
+  getSimpleRouteJsonFromCircuitJson,
+} from "../fixtures/pipeline9CoreRuntime.mjs"
 
-test("reproduces rc car motor trace falling below its requested width", async () => {
+test("reproduces undersized motor routes with a nominal width request", async () => {
   const circuit = new RootCircuit()
-
+  circuit.schematicDisabled = true
+  const motorTraceWidth = 1.2
   circuit.add(
-    <board
-      width="30mm"
-      height="12mm"
-      autorouter={{
-        local: true,
-        groupMode: "subcircuit",
-        async algorithmFn(simpleRouteJson) {
-          return new CapacityMeshAutorouterCoreBinding({
-            ...simpleRouteJson,
-            connections: simpleRouteJson.connections.map(
-              (connection: SimpleRouteConnection) => ({
-                ...connection,
-                nominalTraceWidth: 1.2,
-                width: 1.2,
-              }),
-            ),
-          })
-        },
-      }}
-    >
-      <chip
-        name="U1"
-        pcbX={-10}
-        footprint="soic16"
-        pinLabels={{ pin1: ["AOUT1"], pin2: ["AOUT2"] }}
-      />
+    <board width="30mm" height="12mm" routingDisabled>
+      <chip name="U1" pcbX={-10} footprint="soic16" />
       <pinheader
         name="J1"
         pinCount={2}
         pitch="2.54mm"
         pcbX={11}
         pcbRotation={90}
-        pinLabels={["MOTOR_A1", "MOTOR_A2"]}
       />
-      <capacitor
-        name="C1"
-        capacitance="100nF"
-        footprint="0805"
-        pcbX={7}
-      />
-      <trace from=".U1 > .AOUT1" to="net.MOTOR_A1" thickness="1.2mm" />
-      <trace from=".J1 > .MOTOR_A1" to="net.MOTOR_A1" thickness="1.2mm" />
-      <trace from=".C1 > .pos" to="net.MOTOR_A1" thickness="1.2mm" />
-      <trace from=".U1 > .AOUT2" to="net.MOTOR_A2" thickness="1.2mm" />
-      <trace from=".J1 > .MOTOR_A2" to="net.MOTOR_A2" thickness="1.2mm" />
-      <trace from=".C1 > .neg" to="net.MOTOR_A2" thickness="1.2mm" />
+      <capacitor name="C1" capacitance="100nF" footprint="0805" pcbX={7} />
+      <trace from=".U1 > .pin1" to="net.MOTOR_A1" thickness={motorTraceWidth} />
+      <trace from=".J1 > .pin1" to="net.MOTOR_A1" thickness={motorTraceWidth} />
+      <trace from=".C1 > .pin1" to="net.MOTOR_A1" thickness={motorTraceWidth} />
+      <trace from=".U1 > .pin2" to="net.MOTOR_A2" thickness={motorTraceWidth} />
+      <trace from=".J1 > .pin2" to="net.MOTOR_A2" thickness={motorTraceWidth} />
+      <trace from=".C1 > .pin2" to="net.MOTOR_A2" thickness={motorTraceWidth} />
     </board>,
   )
-
   await circuit.renderUntilSettled()
-
   const circuitJson = circuit.getCircuitJson()
-  const routedWidths = circuitJson
-    .filter((element) => element.type === "pcb_trace")
-    .flatMap((trace) =>
-      trace.route.flatMap((point) =>
-        point.route_type === "wire" ? [point.width] : [],
-      ),
-    )
+  const { simpleRouteJson } = getSimpleRouteJsonFromCircuitJson({
+    circuitJson,
+    minTraceWidth: 0.15,
+  })
+  const { traces, ...routingInput } = simpleRouteJson
+  expect(traces ?? []).toHaveLength(0)
+  expect(routingInput.connections).toHaveLength(2)
+  for (const connection of routingInput.connections) {
+    expect(connection.pointsToConnect).toHaveLength(3)
+    expect(connection.nominalTraceWidth).toBe(motorTraceWidth)
+  }
+
+  const nominalSolver = new CapacityMeshSolver(routingInput)
+  nominalSolver.solve()
+  expect(nominalSolver.solved).toBe(true)
+  const nominalTraces = nominalSolver.getOutputSimplifiedPcbTraces()
+  const routedWidths = nominalTraces.flatMap((trace) =>
+    trace.route.flatMap((point) => {
+      if (point.route_type === "wire") return [point.width]
+      return []
+    }),
+  )
   expect(Math.min(...routedWidths)).toBe(0.15)
-  expect(routedWidths.some((width) => width < 1.2)).toBe(true)
-  expect(
-    convertCircuitJsonToPcbSvg(circuitJson as AnyCircuitElement[]),
-  ).toMatchSvgSnapshot(import.meta.path)
+  const nominalBoardGraphics = convertSrjToGraphicsObject(
+    nominalSolver.getOutputSimpleRouteJson(),
+  )
+  const { minX, maxX, minY, maxY } = routingInput.bounds
+  nominalBoardGraphics.rects.push({
+    center: { x: (minX + maxX) / 2, y: (minY + maxY) / 2 },
+    width: maxX - minX,
+    height: maxY - minY,
+    fill: "transparent",
+    stroke: "gray",
+  })
+  expect({
+    ...nominalBoardGraphics,
+    texts: [
+      { x: -10, y: 5.5, text: "U1 motor driver", fontSize: 0.5 },
+      { x: 10, y: 5.5, text: "J1 motor", fontSize: 0.5 },
+      { x: 0, y: -5, text: "1.2 mm requested / 0.15 mm routed", fontSize: 0.5 },
+    ],
+  }).toMatchGraphicsSvg(import.meta.path)
+
 })
