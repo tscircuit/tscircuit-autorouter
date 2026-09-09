@@ -1,7 +1,14 @@
-import { pointToSegmentDistance, type Point3 } from "@tscircuit/math-utils"
+import {
+  pointToSegmentDistance,
+  segmentToBoxMinDistance,
+  type Point3,
+} from "@tscircuit/math-utils"
 import { RbushIndex } from "lib/data-structures/RbushIndex"
-import type { HighDensityIntraNodeRoute } from "lib/types/high-density-types"
+import type { Obstacle } from "lib/types"
+import type { HighDensityRoute } from "lib/types/high-density-types"
+import { createObjectsWithZLayers } from "lib/utils/createObjectsWithZLayers"
 import { minimumDistanceBetweenSegments } from "lib/utils/minimumDistanceBetweenSegments"
+import { doesSegmentCrossPolygonBoundary } from "lib/utils/polygonContainment"
 
 export type StitchSegment = {
   connectionName: string
@@ -11,11 +18,18 @@ export type StitchSegment = {
 }
 
 export type IsStitchSegmentClear = (stitchSegment: StitchSegment) => boolean
+export type FindStitchSegmentPath = (
+  stitchSegment: StitchSegment,
+) => Point3[] | undefined
 
-type ConnectionName = HighDensityIntraNodeRoute["connectionName"]
+type ConnectionName = HighDensityRoute["connectionName"]
 type RootConnectionName = NonNullable<
-  HighDensityIntraNodeRoute["rootConnectionName"]
+  HighDensityRoute["rootConnectionName"]
 >
+
+type ConnectivityLike = {
+  areIdsConnected: (firstId: string, secondId: string) => boolean
+}
 
 type RouteSegment = StitchSegment
 
@@ -28,6 +42,37 @@ type RouteVia = {
 
 const DEFAULT_AUTOROUTING_CLEARANCE = 0.1
 const CLEARANCE_TOLERANCE = 1e-6
+
+const removeConsecutiveDuplicatePoints = (points: Point3[]): Point3[] => {
+  const deduplicatedPoints: Point3[] = []
+  for (const point of points) {
+    const previousPoint = deduplicatedPoints[deduplicatedPoints.length - 1]
+    if (
+      previousPoint &&
+      previousPoint.x === point.x &&
+      previousPoint.y === point.y
+    )
+      continue
+    deduplicatedPoints.push(point)
+  }
+  return deduplicatedPoints
+}
+
+const getPathLength = (points: Point3[]): number => {
+  let pathLength = 0
+  for (let pointIndex = 1; pointIndex < points.length; pointIndex += 1) {
+    const previousPoint = points[pointIndex - 1]!
+    const point = points[pointIndex]!
+    pathLength += Math.hypot(point.x - previousPoint.x, point.y - previousPoint.y)
+  }
+  return pathLength
+}
+
+const getPathKey = (points: Point3[]): string => {
+  return points
+    .map((point) => `${point.x.toFixed(9)},${point.y.toFixed(9)},${point.z}`)
+    .join("|")
+}
 
 /**
  * Allows a stitch to leave copper that already violates clearance at one
@@ -62,6 +107,9 @@ const preservesEndpointClearance = ({
 
 export class RouteStitchClearanceValidator {
   private readonly minClearance: number
+  private readonly minBoardEdgeClearance: number
+  private readonly areIdsConnected?: ConnectivityLike["areIdsConnected"]
+  private readonly outline: Array<{ x: number; y: number }>
   private readonly rootsByConnection = new Map<
     ConnectionName,
     Set<RootConnectionName>
@@ -72,26 +120,42 @@ export class RouteStitchClearanceValidator {
   >()
   private readonly segments: RouteSegment[] = []
   private readonly vias: RouteVia[] = []
+  private readonly obstacles: Obstacle[]
   private segmentIndexesByLayer:
     | Map<number, RbushIndex<RouteSegment>>
     | undefined
   private viaIndex: RbushIndex<RouteVia> | undefined
+  private obstacleIndex: RbushIndex<Obstacle> | undefined
 
   constructor({
     hdRoutes,
+    obstacles = [],
+    layerCount = 2,
+    areIdsConnected,
+    outline = [],
+    minBoardEdgeClearance = 0,
     minClearance = DEFAULT_AUTOROUTING_CLEARANCE,
   }: {
-    hdRoutes: HighDensityIntraNodeRoute[]
+    hdRoutes: HighDensityRoute[]
+    obstacles?: Obstacle[]
+    layerCount?: number
+    areIdsConnected?: ConnectivityLike["areIdsConnected"]
+    outline?: Array<{ x: number; y: number }>
+    minBoardEdgeClearance?: number
     minClearance?: number
   }) {
     this.minClearance = minClearance
+    this.minBoardEdgeClearance = minBoardEdgeClearance
+    this.areIdsConnected = areIdsConnected
+    this.outline = outline
+    this.obstacles = createObjectsWithZLayers(obstacles, layerCount)
     for (const hdRoute of hdRoutes) {
       this.addRoute(hdRoute)
     }
     this.buildSpatialIndexes()
   }
 
-  addRoute(hdRoute: HighDensityIntraNodeRoute): void {
+  addRoute(hdRoute: HighDensityRoute): void {
     const roots =
       this.rootsByConnection.get(hdRoute.connectionName) ?? new Set()
     roots.add(hdRoute.rootConnectionName ?? hdRoute.connectionName)
@@ -192,6 +256,17 @@ export class RouteStitchClearanceValidator {
         }
       }),
     )
+
+    this.obstacleIndex = new RbushIndex<Obstacle>()
+    this.obstacleIndex.bulkLoad(
+      this.obstacles.map((obstacle) => ({
+        item: obstacle,
+        minX: obstacle.center.x - obstacle.width / 2,
+        minY: obstacle.center.y - obstacle.height / 2,
+        maxX: obstacle.center.x + obstacle.width / 2,
+        maxY: obstacle.center.y + obstacle.height / 2,
+      })),
+    )
   }
 
   private areSameNet(
@@ -205,13 +280,21 @@ export class RouteStitchClearanceValidator {
     if (cached !== undefined) return cached
     const firstRoots = this.rootsByConnection.get(firstConnectionName)
     const secondRoots = this.rootsByConnection.get(secondConnectionName)
-    let sameNet = false
+    let sameNet = Boolean(
+      this.areIdsConnected?.(firstConnectionName, secondConnectionName),
+    )
     if (firstRoots && secondRoots) {
       for (const root of firstRoots) {
-        if (secondRoots.has(root)) {
-          sameNet = true
-          break
+        for (const secondRoot of secondRoots) {
+          if (
+            root === secondRoot ||
+            this.areIdsConnected?.(root, secondRoot)
+          ) {
+            sameNet = true
+            break
+          }
         }
+        if (sameNet) break
       }
     }
     let connectionsFromFirst = this.sameNetCache.get(firstConnectionName)
@@ -221,6 +304,23 @@ export class RouteStitchClearanceValidator {
     }
     connectionsFromFirst.set(secondConnectionName, sameNet)
     return sameNet
+  }
+
+  private isObstacleOnSameNet(
+    connectionName: ConnectionName,
+    obstacle: Obstacle,
+  ): boolean {
+    const connectionIds = new Set<string>([
+      connectionName,
+      ...(this.rootsByConnection.get(connectionName) ?? []),
+    ])
+    return obstacle.connectedTo.some((obstacleId) =>
+      [...connectionIds].some(
+        (connectionId) =>
+          connectionId === obstacleId ||
+          this.areIdsConnected?.(connectionId, obstacleId),
+      ),
+    )
   }
 
   isSegmentClear({
@@ -235,6 +335,42 @@ export class RouteStitchClearanceValidator {
     const queryMinY = Math.min(start.y, end.y) - queryMargin
     const queryMaxX = Math.max(start.x, end.x) + queryMargin
     const queryMaxY = Math.max(start.y, end.y) + queryMargin
+
+    if (
+      this.outline.length >= 3 &&
+      doesSegmentCrossPolygonBoundary({
+        start,
+        end,
+        polygon: this.outline,
+        margin: this.minBoardEdgeClearance + traceRadius,
+      })
+    ) {
+      return false
+    }
+
+    const nearbyObstacles =
+      this.obstacleIndex?.search(
+        queryMinX,
+        queryMinY,
+        queryMaxX,
+        queryMaxY,
+      ) ?? []
+    for (const obstacle of nearbyObstacles) {
+      if (!obstacle.__zLayers?.includes(start.z)) continue
+      if (this.isObstacleOnSameNet(connectionName, obstacle)) continue
+      const segmentGap = segmentToBoxMinDistance(start, end, obstacle)
+      if (
+        segmentGap < queryMargin &&
+        !preservesEndpointClearance({
+          startGap: segmentToBoxMinDistance(start, start, obstacle),
+          endGap: segmentToBoxMinDistance(end, end, obstacle),
+          segmentGap,
+          requiredGap: queryMargin,
+        })
+      ) {
+        return false
+      }
+    }
 
     const nearbySegments =
       this.segmentIndexesByLayer
@@ -285,5 +421,133 @@ export class RouteStitchClearanceValidator {
     }
 
     return true
+  }
+  findClearPath(stitchSegment: StitchSegment): Point3[] | undefined {
+    if (stitchSegment.start.z !== stitchSegment.end.z) return undefined
+    if (this.isSegmentClear(stitchSegment)) {
+      return [stitchSegment.start, stitchSegment.end]
+    }
+
+    const xCandidates = new Set<number>([
+      stitchSegment.start.x,
+      stitchSegment.end.x,
+    ])
+    const yCandidates = new Set<number>([
+      stitchSegment.start.y,
+      stitchSegment.end.y,
+    ])
+    this.addLocalDetourAxes(stitchSegment, xCandidates, yCandidates)
+
+    const candidatePaths: Point3[][] = []
+    for (const y of [...yCandidates].sort((left, right) => left - right)) {
+      candidatePaths.push(
+        removeConsecutiveDuplicatePoints([
+          stitchSegment.start,
+          { x: stitchSegment.start.x, y, z: stitchSegment.start.z },
+          { x: stitchSegment.end.x, y, z: stitchSegment.start.z },
+          stitchSegment.end,
+        ]),
+      )
+    }
+    for (const x of [...xCandidates].sort((left, right) => left - right)) {
+      candidatePaths.push(
+        removeConsecutiveDuplicatePoints([
+          stitchSegment.start,
+          { x, y: stitchSegment.start.y, z: stitchSegment.start.z },
+          { x, y: stitchSegment.end.y, z: stitchSegment.start.z },
+          stitchSegment.end,
+        ]),
+      )
+    }
+
+    return candidatePaths
+      .filter((path) => this.isPathClear(stitchSegment, path))
+      .sort(
+        (left, right) =>
+          getPathLength(left) - getPathLength(right) ||
+          getPathKey(left).localeCompare(getPathKey(right)),
+      )[0]
+  }
+
+  private isPathClear(stitchSegment: StitchSegment, path: Point3[]): boolean {
+    if (path.length < 2) return false
+    for (let pointIndex = 1; pointIndex < path.length; pointIndex += 1) {
+      if (
+        !this.isSegmentClear({
+          ...stitchSegment,
+          start: path[pointIndex - 1]!,
+          end: path[pointIndex]!,
+        })
+      ) {
+        return false
+      }
+    }
+    return true
+  }
+
+  private addLocalDetourAxes(
+    stitchSegment: StitchSegment,
+    xCandidates: Set<number>,
+    yCandidates: Set<number>,
+  ): void {
+    const traceRadius = stitchSegment.traceThickness / 2
+    const directDistance = Math.hypot(
+      stitchSegment.end.x - stitchSegment.start.x,
+      stitchSegment.end.y - stitchSegment.start.y,
+    )
+    const searchMargin = directDistance + this.minClearance + traceRadius
+    const minX =
+      Math.min(stitchSegment.start.x, stitchSegment.end.x) - searchMargin
+    const minY =
+      Math.min(stitchSegment.start.y, stitchSegment.end.y) - searchMargin
+    const maxX =
+      Math.max(stitchSegment.start.x, stitchSegment.end.x) + searchMargin
+    const maxY =
+      Math.max(stitchSegment.start.y, stitchSegment.end.y) + searchMargin
+
+    for (const obstacle of this.obstacleIndex?.search(
+      minX,
+      minY,
+      maxX,
+      maxY,
+    ) ?? []) {
+      if (!obstacle.__zLayers?.includes(stitchSegment.start.z)) continue
+      if (this.isObstacleOnSameNet(stitchSegment.connectionName, obstacle))
+        continue
+      const clearance = this.minClearance + traceRadius + CLEARANCE_TOLERANCE
+      xCandidates.add(obstacle.center.x - obstacle.width / 2 - clearance)
+      xCandidates.add(obstacle.center.x + obstacle.width / 2 + clearance)
+      yCandidates.add(obstacle.center.y - obstacle.height / 2 - clearance)
+      yCandidates.add(obstacle.center.y + obstacle.height / 2 + clearance)
+    }
+
+    for (const segment of this.segmentIndexesByLayer
+      ?.get(stitchSegment.start.z)
+      ?.search(minX, minY, maxX, maxY) ?? []) {
+      if (
+        this.areSameNet(stitchSegment.connectionName, segment.connectionName)
+      )
+        continue
+      const clearance =
+        this.minClearance +
+        traceRadius +
+        segment.traceThickness / 2 +
+        CLEARANCE_TOLERANCE
+      xCandidates.add(Math.min(segment.start.x, segment.end.x) - clearance)
+      xCandidates.add(Math.max(segment.start.x, segment.end.x) + clearance)
+      yCandidates.add(Math.min(segment.start.y, segment.end.y) - clearance)
+      yCandidates.add(Math.max(segment.start.y, segment.end.y) + clearance)
+    }
+
+    for (const via of this.viaIndex?.search(minX, minY, maxX, maxY) ?? []) {
+      if (this.areSameNet(stitchSegment.connectionName, via.connectionName))
+        continue
+      const clearance =
+        this.minClearance + traceRadius + via.diameter / 2 + CLEARANCE_TOLERANCE
+      xCandidates.add(via.x - clearance)
+      xCandidates.add(via.x + clearance)
+      yCandidates.add(via.y - clearance)
+      yCandidates.add(via.y + clearance)
+    }
   }
 }

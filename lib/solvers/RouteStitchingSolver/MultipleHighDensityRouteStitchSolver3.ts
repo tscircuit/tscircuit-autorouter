@@ -1,8 +1,11 @@
 import { distance, type Point3 } from "@tscircuit/math-utils"
 import { ConnectivityMap } from "connectivity-map"
 import { GraphicsObject } from "graphics-debug"
-import { SimpleRouteConnection } from "lib/types"
-import { HighDensityIntraNodeRoute } from "lib/types/high-density-types"
+import { type Obstacle, SimpleRouteConnection } from "lib/types"
+import {
+  HighDensityIntraNodeRoute,
+  type HighDensityRoute,
+} from "lib/types/high-density-types"
 import { getConnectionPointLayer } from "lib/types/srj-types"
 import { getJumpersGraphics } from "lib/utils/getJumperGraphics"
 import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
@@ -63,6 +66,8 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
       preserveTerminalPcbPortIds: this.preserveTerminalPcbPortIds,
       isStitchSegmentClear: (stitchSegment) =>
         this.clearanceValidator.isSegmentClear(stitchSegment),
+      findStitchSegmentPath: (stitchSegment) =>
+        this.clearanceValidator.findClearPath(stitchSegment),
       stitchClearanceMode: "require_clear",
     })
 
@@ -143,6 +148,12 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
     allowedLayerTransitionPointKeys?: Set<string>
     preserveTerminalPcbPortIds?: boolean
     preferSameLayerTerminalEndpoints?: boolean
+    additionalObstacleRoutes?: HighDensityRoute[]
+    obstacles?: Obstacle[]
+    minClearance?: number
+    outline?: Array<{ x: number; y: number }>
+    minBoardEdgeClearance?: number
+    areIdsConnected?: (firstId: string, secondId: string) => boolean
   }) {
     super()
     this.endpointIndex = new EndpointClusterIndex(
@@ -155,7 +166,16 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
 
     const canonicalHdRoutes = [...params.hdRoutes].sort(compareRoutes)
     this.clearanceValidator = new RouteStitchClearanceValidator({
-      hdRoutes: canonicalHdRoutes,
+      hdRoutes: [
+        ...canonicalHdRoutes,
+        ...(params.additionalObstacleRoutes ?? []),
+      ],
+      obstacles: params.obstacles,
+      layerCount: params.layerCount,
+      minClearance: params.minClearance,
+      outline: params.outline,
+      minBoardEdgeClearance: params.minBoardEdgeClearance,
+      areIdsConnected: params.areIdsConnected,
     })
 
     const firstRoute = canonicalHdRoutes[0]
@@ -435,7 +455,9 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
       preserveTerminalPcbPortIds: this.preserveTerminalPcbPortIds,
       isStitchSegmentClear: (stitchSegment) =>
         this.clearanceValidator.isSegmentClear(stitchSegment),
-      stitchClearanceMode: "prefer_clear",
+      findStitchSegmentPath: (stitchSegment) =>
+        this.clearanceValidator.findClearPath(stitchSegment),
+      stitchClearanceMode: "require_clear",
     })
   }
 
