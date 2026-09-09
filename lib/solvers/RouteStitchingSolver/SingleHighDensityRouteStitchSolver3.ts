@@ -193,6 +193,8 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
           return
         }
         routePoints.push(...stitchPath.slice(1))
+      } else {
+        routePoints.push(stitchEnd)
       }
 
       this.mergedHdRoute = {
@@ -384,6 +386,15 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
         terminalDistance > GEOMETRIC_TOLERANCE &&
         terminalDistance <= MAX_TERMINAL_STITCH_GAP_DISTANCE_3
       ) {
+        if (this.stitchClearanceMode === "prefer_clear") {
+          this.mergedHdRoute.route.push({
+            x: this.end.x,
+            y: this.end.y,
+            z: lastMergedPoint.z,
+          })
+          this.solved = true
+          return
+        }
         const stitchPath = this.getPlanarStitchPath({
           connectionName: this.mergedHdRoute.connectionName,
           start: lastMergedPoint,
