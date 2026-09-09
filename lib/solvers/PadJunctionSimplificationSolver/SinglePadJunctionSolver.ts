@@ -13,6 +13,7 @@ import type { GraphicsObject, Line, Point, Rect, Circle } from "graphics-debug"
 import type { HighDensityRoute } from "lib/types/high-density-types"
 import { minimumDistanceBetweenSegments } from "lib/utils/minimumDistanceBetweenSegments"
 import { isPointInOrOnPolygon } from "lib/utils/polygonContainment"
+import { PadJunctionSearch } from "./PadJunctionSearch"
 import {
   EPSILON,
   getItemOrThrow,
@@ -27,12 +28,16 @@ import type {
   ParsedRoute,
   TargetPad,
   PadJunctionProblem,
+  SearchBudget,
   Clearance,
   ParsedInput,
   BranchAnchor,
   PadJunctionPoint,
+  SearchCost,
   FixedCopper,
   Candidate,
+  JunctionPath,
+  SearchDirection,
 } from "./padJunctionGeometry"
 
 export type SinglePadJunctionInput = PadJunctionSimplificationInput & {
@@ -47,8 +52,7 @@ export type SinglePadJunctionOutput = {
 export class SinglePadJunctionSolver extends BaseSolver {
   rejectedCandidate: { candidate: Candidate; reason: string } | null = null
   readonly outcomes: PadJunctionOutcome[] = []
-  candidatesTried = 0
-  private candidates: Candidate[] = []
+  expandedStateCount = 0
   acceptedReplacement: AcceptedReplacement | null = null
   private readonly output: ParsedRoute[]
   private readonly obstacles: TargetPad[]
@@ -58,20 +62,22 @@ export class SinglePadJunctionSolver extends BaseSolver {
   private readonly targetPad: TargetPad
   private readonly lockedRouteIndices = new Set<number>()
   private problem: PadJunctionProblem | null = null
+  private readonly searchBudget: SearchBudget
   private readonly clearance: Clearance
 
   private readonly parsed: ParsedInput
 
   constructor(private readonly input: SinglePadJunctionInput) {
     super()
-    // Parse once at the boundary. Geometry checks only consume this model.
+    // Parse once at the boundary. Geometry and search only consume this model.
     this.parsed = parsePadJunctionInput(input)
     this.clearance = this.parsed.minTraceToPadEdgeClearance
     this.obstacles = this.parsed.obstacles
     this.output = [...this.parsed.hdRoutes]
     this.targetPad = getItemOrThrow(this.obstacles, input.targetPadIndex)
     this.lockedRouteIndices = new Set(input.lockedRouteIndices ?? [])
-    this.MAX_ITERATIONS = 6 // Setup, at most four proposals, then completion.
+    this.searchBudget = 20000
+    this.MAX_ITERATIONS = this.searchBudget + 3
   }
 
   /** Route identities may name a member ID or a net key from ConnectivityMap. */
@@ -225,17 +231,17 @@ export class SinglePadJunctionSolver extends BaseSolver {
       return null
     }
     const localMargin = Math.max(targetPad.width, targetPad.height)
-    const localBounds = {
+    const searchBounds = {
       minX: targetPad.center.x - targetPad.width / 2 - localMargin,
       maxX: targetPad.center.x + targetPad.width / 2 + localMargin,
       minY: targetPad.center.y - targetPad.height / 2 - localMargin,
       maxY: targetPad.center.y + targetPad.height / 2 + localMargin,
     }
-    const firstEntry = getPadTerminalEntry(firstBranch, targetPad, localBounds)
+    const firstEntry = getPadTerminalEntry(firstBranch, targetPad, searchBounds)
     const secondEntry = getPadTerminalEntry(
       secondBranch,
       targetPad,
-      localBounds,
+      searchBounds,
     )
     if (
       !firstEntry ||
@@ -245,7 +251,8 @@ export class SinglePadJunctionSolver extends BaseSolver {
       this.outcomes.push({
         outcome: "unsupported",
         connectionNames,
-        reason: "Requires an acute same-edge V meeting inside the pad",
+        reason:
+          "Requires a same-edge V or adjacent-edge corner meeting inside the pad",
       })
       return null
     }
@@ -257,9 +264,67 @@ export class SinglePadJunctionSolver extends BaseSolver {
     const second = simplifyJunctionPath(
       branches[1].points.slice(branches[1].anchorIndex),
     )
-    const originalCost = getPathCost(
-      simplifyJunctionPath([...first, ...second.slice(0, -1).reverse()]),
+    let sharedCount = 0
+    while (sharedCount < Math.min(first.length, second.length)) {
+      const a = getItemOrThrow(first, first.length - 1 - sharedCount)
+      const b = getItemOrThrow(second, second.length - 1 - sharedCount)
+      if (Math.hypot(a.x - b.x, a.y - b.y) > EPSILON) break
+      sharedCount++
+    }
+    const firstTrunk = first.slice(
+      0,
+      first.length - Math.max(0, sharedCount - 1),
     )
+    const secondTrunk = second.slice(
+      0,
+      second.length - Math.max(0, sharedCount - 1),
+    )
+    const originalTrunk = simplifyJunctionPath([
+      ...firstTrunk,
+      ...[...secondTrunk].reverse(),
+    ])
+    const originalCost = getPathCost(originalTrunk)
+    if (sharedCount > 1) {
+      const sharedStem = first.slice(first.length - sharedCount)
+      const entryIndex = sharedStem.findIndex((point) =>
+        this.insidePad(point, targetPad, width / 2),
+      )
+      const exteriorStem = sharedStem.slice(
+        0,
+        entryIndex >= 0 ? entryIndex + 1 : sharedStem.length,
+      )
+      if (entryIndex > 0) {
+        const start = getItemOrThrow(sharedStem, entryIndex - 1)
+        const end = getItemOrThrow(sharedStem, entryIndex)
+        let fraction = 0
+        const axes: ("x" | "y")[] = ["x", "y"]
+        for (const axis of axes) {
+          const halfSize =
+            (axis === "x" ? targetPad.width : targetPad.height) / 2 - width / 2
+          const minimum = targetPad.center[axis] - halfSize
+          const maximum = targetPad.center[axis] + halfSize
+          if (start[axis] < minimum) {
+            fraction = Math.max(
+              fraction,
+              (minimum - start[axis]) / (end[axis] - start[axis]),
+            )
+          } else if (start[axis] > maximum) {
+            fraction = Math.max(
+              fraction,
+              (maximum - start[axis]) / (end[axis] - start[axis]),
+            )
+          }
+        }
+        exteriorStem[exteriorStem.length - 1] = {
+          x: start.x + fraction * (end.x - start.x),
+          y: start.y + fraction * (end.y - start.y),
+          z,
+        }
+      }
+      const stemCost = getPathCost(exteriorStem)
+      originalCost.bends += stemCost.bends
+      originalCost.length += stemCost.length
+    }
     const fixedCopper: FixedCopper[] = []
     for (const [routeIndex, route] of [
       ...this.output,
@@ -364,13 +429,18 @@ export class SinglePadJunctionSolver extends BaseSolver {
       }
     }
     return {
-      localBounds,
+      searchBounds,
       targetPad,
       branches: [branches[0], branches[1]],
       width,
       z,
       originalCost,
       fixedCopper,
+      junctions: [],
+      junctionIndex: 0,
+      currentCandidate: null,
+      search: null,
+      expanded: 0,
       foundValid: false,
     }
   }
@@ -382,10 +452,10 @@ export class SinglePadJunctionSolver extends BaseSolver {
   ): boolean {
     for (const point of [start, end]) {
       if (
-        point.x < problem.localBounds.minX - EPSILON ||
-        point.x > problem.localBounds.maxX + EPSILON ||
-        point.y < problem.localBounds.minY - EPSILON ||
-        point.y > problem.localBounds.maxY + EPSILON
+        point.x < problem.searchBounds.minX - EPSILON ||
+        point.x > problem.searchBounds.maxX + EPSILON ||
+        point.y < problem.searchBounds.minY - EPSILON ||
+        point.y > problem.searchBounds.maxY + EPSILON
       )
         return false
     }
@@ -704,6 +774,63 @@ export class SinglePadJunctionSolver extends BaseSolver {
     return true
   }
 
+  private initializeSearch(problem: PadJunctionProblem): void {
+    const first = problem.branches[0].anchor
+    const second = problem.branches[1].anchor
+    const pad = problem.targetPad
+    const dx = second.x - first.x
+    const dy = second.y - first.y
+    const squaredLength = dx * dx + dy * dy
+    if (squaredLength < EPSILON) {
+      this.finishProblem("no_improvement", "Branch anchors coincide")
+      return
+    }
+    const fraction =
+      ((pad.center.x - first.x) * dx + (pad.center.y - first.y) * dy) /
+      squaredLength
+    const junction = {
+      x: first.x + fraction * dx,
+      y: first.y + fraction * dy,
+      z: problem.z,
+    }
+    for (const candidate of getOctilinearCandidates(problem)) {
+      if (this.acceptCandidate(problem, candidate)) return
+    }
+    const step = this.parsed.gridStep ?? Math.max(problem.width, 0.25)
+    const { minX, minY, maxX, maxY } = problem.searchBounds
+    const count =
+      Math.ceil((maxX - minX) / step) * Math.ceil((maxY - minY) / step)
+    if (count > 20000) {
+      this.finishProblem(
+        "search_budget_reached",
+        "Requested grid exceeds 20000 junction positions; choose a coarser grid",
+      )
+      return
+    }
+    for (let x = minX; x <= maxX + EPSILON; x += step) {
+      for (let y = minY; y <= maxY + EPSILON; y += step) {
+        const position = { x, y, z: problem.z }
+        if (
+          this.insidePad(position, pad) ||
+          !this.segmentIsClear(problem, position, position)
+        )
+          continue
+        // A T requires anchors on opposite sides of one junction axis.
+        if (
+          (first.x - x) * (second.x - x) >= 0 &&
+          (first.y - y) * (second.y - y) >= 0
+        )
+          continue
+        problem.junctions.push(position)
+      }
+    }
+    problem.junctions.sort(
+      (a, b) =>
+        Math.hypot(a.x - junction.x, a.y - junction.y) -
+        Math.hypot(b.x - junction.x, b.y - junction.y),
+    )
+  }
+
   private finishProblem(
     outcome: PadJunctionOutcome["outcome"],
     reason: string,
@@ -718,7 +845,7 @@ export class SinglePadJunctionSolver extends BaseSolver {
       ),
     })
     this.stats = {
-      candidatesTried: this.candidatesTried,
+      expandedStates: this.expandedStateCount,
       outcome,
       reason,
       rejectedCandidateReason: this.rejectedCandidate?.reason,
@@ -730,7 +857,7 @@ export class SinglePadJunctionSolver extends BaseSolver {
     if (!this.initialized) {
       this.initialized = true
       this.problem = this.createProblem(this.targetPad)
-      if (this.problem) this.candidates = getOctilinearCandidates(this.problem)
+      if (this.problem) this.initializeSearch(this.problem)
       else {
         this.solved = true
         this.stats = {
@@ -742,16 +869,152 @@ export class SinglePadJunctionSolver extends BaseSolver {
     }
     if (!this.problem)
       throw new Error("SinglePadJunctionSolver: missing active problem")
-    const candidate = this.candidates[this.candidatesTried]
-    if (!candidate) {
+    const problem = this.problem
+    if (problem.expanded >= this.searchBudget) {
       this.finishProblem(
-        this.problem.foundValid ? "no_improvement" : "no_path",
-        "Direct V candidates exhausted",
+        "search_budget_reached",
+        "Expanded-state budget reached without an accepted improvement",
       )
       return
     }
-    this.candidatesTried++
-    this.acceptCandidate(this.problem, candidate)
+    if (!problem.currentCandidate) {
+      const junction = problem.junctions[problem.junctionIndex++]
+      if (!junction) {
+        this.finishProblem(
+          problem.foundValid ? "no_improvement" : "no_path",
+          "Bounded junction search exhausted",
+        )
+        return
+      }
+      problem.currentCandidate = { stage: "first_trunk", junction }
+    }
+    const candidate = problem.currentCandidate
+    const completedArms: JunctionPath[] =
+      candidate.stage === "first_trunk"
+        ? []
+        : candidate.stage === "second_trunk"
+          ? [candidate.firstTrunk]
+          : candidate.trunk
+    if (!problem.search) {
+      const first = problem.branches[0].anchor
+      const second = problem.branches[1].anchor
+      const horizontalTrunk =
+        (first.x - candidate.junction.x) * (second.x - candidate.junction.x) < 0
+      const anchor =
+        candidate.stage === "first_trunk"
+          ? first
+          : candidate.stage === "second_trunk"
+            ? second
+            : null
+      // Choose the initial direction toward the anchor or perpendicular pad stem.
+      let direction: SearchDirection
+      if (anchor) {
+        direction = horizontalTrunk
+          ? anchor.x < candidate.junction.x
+            ? "west"
+            : "east"
+          : anchor.y < candidate.junction.y
+            ? "south"
+            : "north"
+      } else {
+        direction = horizontalTrunk
+          ? problem.targetPad.center.y < candidate.junction.y
+            ? "south"
+            : "north"
+          : problem.targetPad.center.x < candidate.junction.x
+            ? "west"
+            : "east"
+      }
+      problem.search = new PadJunctionSearch({
+        bounds: problem.searchBounds,
+        start: candidate.junction,
+        goal: anchor ? { kind: "anchor", point: anchor } : { kind: "pad" },
+        pad: problem.targetPad,
+        width: problem.width,
+        anchors: [first, second],
+        gridStep: this.parsed.gridStep ?? Math.max(problem.width, 0.25),
+        direction,
+        segmentIsClear: (start, end): boolean => {
+          if (!this.segmentIsClear(problem, start, end)) return false
+          if (
+            candidate.stage !== "pad_stem" &&
+            segmentToBoxMinDistance(start, end, problem.targetPad) <
+              problem.width / 2 - EPSILON
+          )
+            return false
+          for (const arm of completedArms) {
+            for (let index = 1; index < arm.length; index++) {
+              if (
+                index === 1 &&
+                Math.hypot(
+                  start.x - candidate.junction.x,
+                  start.y - candidate.junction.y,
+                ) < EPSILON
+              )
+                continue
+              if (
+                minimumDistanceBetweenSegments(
+                  start,
+                  end,
+                  getItemOrThrow(arm, index - 1),
+                  getItemOrThrow(arm, index),
+                ) < EPSILON
+              )
+                return false
+            }
+          }
+          return true
+        },
+      })
+    }
+    problem.search.step()
+    problem.expanded++
+    this.expandedStateCount++
+    this.stats = {
+      rejectedCandidateReason: this.rejectedCandidate?.reason,
+      expandedStates: this.expandedStateCount,
+      junctionsTried: problem.junctionIndex,
+      arm: completedArms.length,
+    }
+    const result = problem.search.result
+    if (result.status === "searching") return
+    problem.search = null
+    if (result.status === "no_path") {
+      problem.currentCandidate = null
+      return
+    }
+    switch (candidate.stage) {
+      case "first_trunk":
+        problem.currentCandidate = {
+          stage: "second_trunk",
+          junction: candidate.junction,
+          firstTrunk: result.path,
+        }
+        return
+      case "second_trunk":
+        problem.currentCandidate = {
+          stage: "pad_stem",
+          junction: candidate.junction,
+          trunk: [candidate.firstTrunk, result.path],
+        }
+        return
+      case "pad_stem": {
+        const complete: Candidate = {
+          junction: candidate.junction,
+          trunk: candidate.trunk,
+          padStem: result.path,
+        }
+        if (!this.acceptCandidate(problem, complete))
+          problem.currentCandidate = null
+        return
+      }
+      default: {
+        const unexpectedStage: never = candidate
+        throw new Error(
+          `SinglePadJunctionSolver: unknown candidate stage ${unexpectedStage}`,
+        )
+      }
+    }
   }
 
   override getConstructorParams(): [SinglePadJunctionInput] {
@@ -775,7 +1038,7 @@ export class SinglePadJunctionSolver extends BaseSolver {
     const rects: Rect[] = []
     const circles: Circle[] = []
     const graphics: GraphicsObject = {
-      title: `Pad ${this.targetPad.obstacleId ?? this.input.targetPadIndex}: ${this.outcomes[0]?.reason ?? "Checking V candidates"} (${this.candidatesTried} candidates tried)`,
+      title: `Pad ${this.targetPad.obstacleId ?? this.input.targetPadIndex}: ${this.outcomes[0]?.reason ?? this.problem?.currentCandidate?.stage ?? "Discovering branches"} (${this.expandedStateCount} expanded)`,
       coordinateSystem: "cartesian",
       lines,
       points,
@@ -876,7 +1139,9 @@ export class SinglePadJunctionSolver extends BaseSolver {
       })
     }
     const candidate =
-      this.acceptedReplacement ?? this.rejectedCandidate?.candidate
+      this.acceptedReplacement ??
+      this.problem?.currentCandidate ??
+      this.rejectedCandidate?.candidate
     if (candidate) {
       const rejected = candidate === this.rejectedCandidate?.candidate
       const candidateColor = rejected ? "orange" : "teal"
@@ -886,7 +1151,14 @@ export class SinglePadJunctionSolver extends BaseSolver {
         label: rejected ? this.rejectedCandidate?.reason : "Junction",
         layer: `z${candidate.junction.z}`,
       })
-      const arms = [...candidate.trunk, candidate.padStem]
+      const arms: JunctionPath[] =
+        "stage" in candidate
+          ? candidate.stage === "first_trunk"
+            ? []
+            : candidate.stage === "second_trunk"
+              ? [candidate.firstTrunk]
+              : candidate.trunk
+          : [...candidate.trunk, candidate.padStem]
       for (const [index, arm] of arms.entries()) {
         lines.push({
           points: arm,
@@ -914,6 +1186,20 @@ export class SinglePadJunctionSolver extends BaseSolver {
         layer: `z${branch.anchor.z}`,
       })
     }
+    for (const point of this.problem?.search?.expandedPoints ?? [])
+      points.push({
+        ...point,
+        color: "rgba(0,128,128,0.3)",
+        layer: `z${point.z}`,
+        label: "Expanded",
+      })
+    for (const point of this.problem?.search?.frontierPoints ?? [])
+      points.push({
+        ...point,
+        color: "orange",
+        layer: `z${point.z}`,
+        label: "Frontier",
+      })
     return graphics
   }
 }
