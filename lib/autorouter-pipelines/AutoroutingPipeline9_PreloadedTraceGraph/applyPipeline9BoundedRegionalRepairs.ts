@@ -254,7 +254,8 @@ export const applyPipeline9BoundedRegionalRepairs = ({
     if (
       !Number.isSafeInteger(candidateAttempts) ||
       candidateAttempts < 0 ||
-      candidateAttempts + result.candidateAttemptCount > MAX_CANDIDATE_ATTEMPTS ||
+      candidateAttempts + result.candidateAttemptCount >
+        MAX_CANDIDATE_ATTEMPTS ||
       !Number.isSafeInteger(pathSearchNodes) ||
       pathSearchNodes < 0 ||
       pathSearchNodes + result.pathSearchNodeCount > MAX_PATH_SEARCH_NODES
@@ -270,7 +271,9 @@ export const applyPipeline9BoundedRegionalRepairs = ({
       region,
       repairedRoutes: repair.routes,
     })
-    if (negotiatedRoutes.every((route, index) => route === currentRoutes[index])) {
+    if (
+      negotiatedRoutes.every((route, index) => route === currentRoutes[index])
+    ) {
       continue
     }
     // Negotiation can leave small coupled gaps. Project the complete proposal

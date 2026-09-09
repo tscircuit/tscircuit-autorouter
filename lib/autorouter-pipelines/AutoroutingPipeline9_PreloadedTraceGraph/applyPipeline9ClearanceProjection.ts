@@ -42,9 +42,10 @@ export const applyPipeline9ClearanceProjection = ({
     viaClearance: RELAXED_DRC_OPTIONS.viaClearance,
   })
   const fixedViolations = new Map(
-    getFixedObstacleViolations({ srj, routes }).map(
-      (violation) => [violation.key, violation.severity],
-    ),
+    getFixedObstacleViolations({ srj, routes }).map((violation) => [
+      violation.key,
+      violation.severity,
+    ]),
   )
   if (
     getFixedObstacleViolations({ srj, routes: candidate }).some(
