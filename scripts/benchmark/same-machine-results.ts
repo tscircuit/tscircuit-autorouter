@@ -1,3 +1,4 @@
+import { renderBenchmarkStageTimings } from "./renderBenchmarkStageTimings.js"
 import { readFile, writeFile } from "node:fs/promises"
 import type { BenchmarkReport, WorkerResult } from "./benchmark-types"
 
@@ -229,6 +230,11 @@ export const renderSameMachineBenchmarkResults = ({
   lines.push(
     "",
     `Outcome changes: **${improvementCount} improved**, **${regressionCount} regressed**. DRC issues are totaled across solved samples. Timing percentiles include solved and timed-out samples; negative timing deltas are faster.`,
+  )
+
+  lines.push(
+    ...renderBenchmarkStageTimings(mainReport, "Main"),
+    ...renderBenchmarkStageTimings(prReport, "PR"),
   )
 
   if (changedOutcomes.length > 0) {
