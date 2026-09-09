@@ -173,6 +173,7 @@ export const parsePrBenchmarkCommand = (body) => {
     benchmarkArgs,
     datasetName,
     profileSolvers,
-    sameMachineCompare,
+    sameMachineCompare:
+      sameMachineCompare || (isBenchmark && !usesNetworkedPipeline9),
   }
 }

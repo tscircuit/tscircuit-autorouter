@@ -15,7 +15,7 @@ test("PR benchmark commands preserve arguments and fan-out behavior", () => {
     benchmarkArgs: [],
     datasetName: "dataset01",
     profileSolvers: false,
-    sameMachineCompare: false,
+    sameMachineCompare: true,
   })
   expect(parsePrBenchmarkCommand("/benchmark \r\n")).toEqual(
     parsePrBenchmarkCommand("/benchmark"),
@@ -29,7 +29,7 @@ test("PR benchmark commands preserve arguments and fan-out behavior", () => {
     benchmarkArgs: ["--dataset", "18", "--sample-timeout", "2000s"],
     datasetName: "18",
     profileSolvers: false,
-    sameMachineCompare: false,
+    sameMachineCompare: true,
   })
   expect(
     parsePrBenchmarkCommand(
@@ -40,7 +40,7 @@ test("PR benchmark commands preserve arguments and fan-out behavior", () => {
     benchmarkArgs: ["--solver", "Solver With Spaces"],
     datasetName: "dataset01",
     profileSolvers: true,
-    sameMachineCompare: false,
+    sameMachineCompare: true,
   })
   expect(
     parsePrBenchmarkCommand("/benchmark --pipeline 10 --dataset 29"),
@@ -49,7 +49,7 @@ test("PR benchmark commands preserve arguments and fan-out behavior", () => {
     benchmarkArgs: ["--pipeline", "10", "--dataset", "29"],
     datasetName: "29",
     profileSolvers: false,
-    sameMachineCompare: false,
+    sameMachineCompare: true,
   })
   expect(
     parsePrBenchmarkCommand("/benchmark --pipeline 9net --dataset 18"),
@@ -88,7 +88,7 @@ test("PR benchmark commands preserve arguments and fan-out behavior", () => {
     ],
     datasetName: "29",
     profileSolvers: false,
-    sameMachineCompare: false,
+    sameMachineCompare: true,
   })
   expect(parsePrBenchmarkCommand("/benchmark-long --dataset srj18")).toEqual({
     kind: "benchmark-long",
