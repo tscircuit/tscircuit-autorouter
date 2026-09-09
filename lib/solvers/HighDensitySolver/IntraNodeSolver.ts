@@ -73,7 +73,7 @@ export class IntraNodeRouteSolver extends BaseSolver {
   traceWidth: number
   obstacleMargin: number
   captureSearchDebug: boolean
-  futurePointSearch: "linear" | "spatial"
+  futurePointSearch: "linear" | "layered"
   rerouteAttemptsByConnection: Map<string, number>
 
   POSTROUTE_VIA_TRACE_CLEARANCE = 0.1
@@ -102,10 +102,10 @@ export class IntraNodeRouteSolver extends BaseSolver {
     obstacleMargin?: number
     captureSearchDebug?: boolean
     /**
-     * Spatial nearest search requires fixed child future-connection geometry
+     * Layered nearest search requires fixed child future-connection geometry
      * and ordinary Math and via-penalty getters while a child is searching.
      */
-    futurePointSearch?: "linear" | "spatial"
+    futurePointSearch?: "linear" | "layered"
     obstacles?: Obstacle[]
     layerCount?: number
   }) {

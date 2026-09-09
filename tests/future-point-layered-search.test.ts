@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test"
 import { SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost as Solver } from "../lib/solvers/HighDensitySolver/SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost"
 
-test("spatial future-point search preserves live penalties and direct linear behavior", () => {
+test("layered future-point search preserves live penalties and direct linear behavior", () => {
   const opts = {
     connectionName: "route",
     minDistBetweenEnteringPoints: 0.2,
@@ -24,10 +24,10 @@ test("spatial future-point search preserves live penalties and direct linear beh
     ],
   }
   const linear = new Solver(opts)
-  const spatial = new Solver({ ...opts, futurePointSearch: "spatial" })
+  const layered = new Solver({ ...opts, futurePointSearch: "layered" })
   for (const penaltyFactor of [0, 0.25, 4, -2, Infinity, NaN]) {
     linear.VIA_PENALTY_FACTOR = penaltyFactor
-    spatial.VIA_PENALTY_FACTOR = penaltyFactor
+    layered.VIA_PENALTY_FACTOR = penaltyFactor
     for (let i = 0; i < 24; i++) {
       const node = {
         x: i / 3,
@@ -38,7 +38,7 @@ test("spatial future-point search preserves live penalties and direct linear beh
         f: 0,
         parent: null,
       }
-      expect(spatial.getClosestFutureConnectionPoint(node)).toBe(
+      expect(layered.getClosestFutureConnectionPoint(node)).toBe(
         linear.getClosestFutureConnectionPoint(node),
       )
     }

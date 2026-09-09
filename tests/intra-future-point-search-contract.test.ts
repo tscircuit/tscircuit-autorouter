@@ -3,7 +3,7 @@ import type { SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost as FutureCo
 import { IntraNodeRouteSolver } from "../lib/solvers/HighDensitySolver/IntraNodeSolver"
 import { PortfolioSingleIntraNodeSolver } from "../lib/solvers/HyperHighDensitySolver/PortfolioSingleIntraNodeSolver"
 
-test("direct intra-node users retain live geometry unless they select spatial search", () => {
+test("direct intra-node users retain live geometry unless they select layered search", () => {
   const nodeWithPortPoints = {
     capacityMeshNodeId: "future-point-contract",
     center: { x: 0, y: 0 },
@@ -32,7 +32,7 @@ test("direct intra-node users retain live geometry unless they select spatial se
     }),
   ).toBe(replacement)
   const portfolio = new PortfolioSingleIntraNodeSolver({ nodeWithPortPoints })
-  expect(portfolio.generateSolver({}).futurePointSearch).toBe("spatial")
+  expect(portfolio.generateSolver({}).futurePointSearch).toBe("layered")
   const linearPortfolio = new PortfolioSingleIntraNodeSolver({
     nodeWithPortPoints,
     futurePointSearch: "linear",

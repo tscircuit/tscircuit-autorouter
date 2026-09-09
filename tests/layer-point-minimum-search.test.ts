@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test"
-import { LayerPointSpatialIndex } from "../lib/data-structures/LayerPointSpatialIndex"
+import { LayerPointMinimumSearch } from "../lib/data-structures/LayerPointMinimumSearch"
 
-test("spatial nearest search preserves weighted distances and original point ties", () => {
+test("layered nearest search preserves weighted distances and original point ties", () => {
   type Point = { x: number; y: number; z: number }
   const nearest = (
     points: Point[],
@@ -55,7 +55,7 @@ test("spatial nearest search preserves weighted distances and original point tie
       y: coordinate(),
       z: Math.floor(random() * 6),
     }))
-    const index = new LayerPointSpatialIndex(points)
+    const index = new LayerPointMinimumSearch(points)
     for (let query = 0; query < 50; query++) {
       const node = {
         x: coordinate(),
@@ -75,7 +75,7 @@ test("spatial nearest search preserves weighted distances and original point tie
     { x: 0, y: 1, z: 0 },
     { x: 0, y: -1, z: 0 },
   ]
-  const index = new LayerPointSpatialIndex(ties)
+  const index = new LayerPointMinimumSearch(ties)
   for (const penalty of [0, -1, 1, 1e100, -1e100]) {
     const node = { x: 0, y: 0, z: 0 }
     expect(index.findNearestPoint(node, penalty)).toBe(

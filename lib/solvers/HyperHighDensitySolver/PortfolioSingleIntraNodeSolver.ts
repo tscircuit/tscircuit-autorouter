@@ -498,7 +498,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     }
     return new CachedIntraNodeRouteSolver({
       ...this.constructorParams,
-      futurePointSearch: this.constructorParams.futurePointSearch ?? "spatial",
+      futurePointSearch: this.constructorParams.futurePointSearch ?? "layered",
       hyperParameters,
     })
   }
