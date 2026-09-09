@@ -1,5 +1,8 @@
 import { expect, test } from "bun:test"
-import { getNewViaPadViolations, getRepairViaGeometry } from "@tscircuit/repair04"
+import {
+  getNewViaPadViolations,
+  getRepairViaGeometry,
+} from "@tscircuit/repair04"
 import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import { createSrjWithBoardValidObstacleLayers } from "lib/utils/create-srj-with-board-valid-obstacle-layers"
 import { AutoroutingPipelineSolver7_MultiGraph } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/AutoroutingPipelineSolver7_MultiGraph"
