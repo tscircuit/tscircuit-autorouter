@@ -5,11 +5,9 @@ import type {
   HighDensityRoutePoint as RoutePoint,
 } from "lib/types/high-density-types"
 import { createObjectsWithZLayers } from "lib/utils/createObjectsWithZLayers"
-import type { PadJunctionSearch } from "./PadJunctionSearch"
 
 export type PadJunctionPoint = { x: number; y: number; z: number }
 export type JunctionPath = PadJunctionPoint[]
-export type SearchDirection = "east" | "north" | "west" | "south"
 export type TargetPad = Obstacle & { __zLayers: number[] }
 export type ParsedRoute = HighDensityRoute & {
   route: RoutePoint[]
@@ -38,24 +36,10 @@ export type FixedCopper = {
   sameNet: boolean
 }
 export type Clearance = number
-export type SearchCost = { bends: number; length: number }
-export type SearchState = {
-  point: PadJunctionPoint
-  direction: SearchDirection
-  cost: SearchCost
-  key: string
-}
-export type SearchFrontier = SearchState[]
-export type HeuristicEstimate = SearchCost
-export type SearchBudget = number
+export type PathCost = { bends: number; length: number }
 export type AcceptedReplacement = Candidate
 export type PadJunctionOutcome = {
-  outcome:
-    | "accepted"
-    | "no_improvement"
-    | "no_path"
-    | "search_budget_reached"
-    | "unsupported"
+  outcome: "accepted" | "no_improvement" | "no_path" | "unsupported"
   reason: string
   connectionNames: string[]
 }
@@ -70,12 +54,7 @@ export type PadJunctionSimplificationInput = {
   bounds?: { minX: number; minY: number; maxX: number; maxY: number }
   minTraceToPadEdgeClearance?: number
   minBoardEdgeClearance?: number
-  gridStep?: number
 }
-export type CandidateProgress =
-  | { stage: "first_trunk"; junction: Junction }
-  | { stage: "second_trunk"; junction: Junction; firstTrunk: JunctionPath }
-  | { stage: "pad_stem"; junction: Junction; trunk: Trunk }
 export type ParsedInput = Omit<
   PadJunctionSimplificationInput,
   | "hdRoutes"
@@ -100,18 +79,13 @@ export type PadJunctionBounds = {
 }
 
 export type PadJunctionProblem = {
-  searchBounds: PadJunctionBounds
+  localBounds: PadJunctionBounds
   targetPad: TargetPad
   branches: [BranchAnchor, BranchAnchor]
   width: number
   z: number
-  originalCost: SearchCost
+  originalCost: PathCost
   fixedCopper: FixedCopper[]
-  junctions: Junction[]
-  junctionIndex: number
-  currentCandidate: CandidateProgress | null
-  search: PadJunctionSearch | null
-  expanded: number
   foundValid: boolean
 }
 export const EPSILON = 1e-7
@@ -182,12 +156,10 @@ export function parsePadJunctionInput(
     !Number.isFinite(clearance) ||
     clearance < 0 ||
     !Number.isFinite(boardClearance) ||
-    boardClearance < 0 ||
-    (input.gridStep !== undefined &&
-      (!Number.isFinite(input.gridStep) || input.gridStep <= 0))
+    boardClearance < 0
   ) {
     throw new Error(
-      "PadJunctionSimplificationSolver: invalid layers, clearance, or grid step",
+      "PadJunctionSimplificationSolver: invalid layers or clearance",
     )
   }
   if (input.bounds) {
@@ -270,9 +242,7 @@ export function parsePadJunctionInput(
   }
 }
 
-export function getPathCost(
-  points: ReadonlyArray<PadJunctionPoint>,
-): SearchCost {
+export function getPathCost(points: ReadonlyArray<PadJunctionPoint>): PathCost {
   let length = 0
   let bends = 0
   for (let index = 1; index < points.length; index++) {

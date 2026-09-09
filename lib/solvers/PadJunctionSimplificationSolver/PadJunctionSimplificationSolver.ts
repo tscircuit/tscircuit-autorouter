@@ -1,6 +1,6 @@
-/** Domain vocabulary shared by the search, output, and debugger.
+/** Domain vocabulary shared by candidate construction, output, and debugger.
  *
- * Anchor A --- first_trunk --- Junction --- second_trunk --- Anchor B
+ * Anchor A --- Trunk arm A --- Junction --- Trunk arm B --- Anchor B
  *                                |
  *                             pad_stem
  *                                |
@@ -10,7 +10,6 @@
  *
  * Parsed input: validated geometry and normalized options used by the solver.
  * Junction path: an ordered sequence of routing points.
- * Candidate progress: the current arm stage plus only its completed arms.
  * Target pad: rectangular conductive area receiving both routes.
  * Branch anchor: fixed end of the local straight terminal run being replaced.
  * Trunk: the connection between the two branch anchors, through the junction.
@@ -20,23 +19,19 @@
  * Candidate: a proposed trunk, junction, and pad stem.
  * Fixed copper: all route segments outside the two replaceable terminal runs.
  * Clearance: minimum edge-to-edge separation from unrelated copper.
- * Search state: grid position and incoming direction.
- * Search frontier: discovered states awaiting expansion in a priority queue.
- * Search cost: lexicographic pair (bend count, copper length).
- * Heuristic estimate: (zero bends, Euclidean distance to the goal).
- * Search budget: maximum expanded states for one pad-junction problem.
+ * Candidate cost: lexicographic pair (bend count, copper length).
  * Accepted replacement: a fully checked candidate improving the original cost.
  *
  * Scope: two equal-width, same-layer terminal runs at an axis-aligned pad.
  * Only acute V entries through the same unambiguous edge, sharing an interior
- * endpoint, are eligible, including rotations and reflections. Search stays within
+ * endpoint, are eligible, including rotations and reflections. Replacements stay within
  * one pad-size margin; earlier route geometry is preserved. Opposite-edge entries,
  * corner entries, existing shared stems, and pads with three or more branches
  * are skipped.
  * Other layers and route metadata remain unchanged. Unsupported geometry is an
- * explicit no-op. A* finds shortest lexicographic paths on a bounded orthogonal
- * grid; sequential arm routing and first improvement do NOT guarantee a globally
- * optimal copper tree. Original endpoints are retained inside the conductive pad.
+ * explicit no-op. Each pad tries at most four direct 45-degree trunk/stem
+ * proposals, one per step. No grid search is performed. Only validated cost
+ * improvements are accepted; original endpoints remain inside the pad.
  */
 
 import { getGraphicsLayerForObstacle } from "lib/utils/getGraphicsObjectLayer"
@@ -56,7 +51,7 @@ export * from "./padJunctionGeometry"
 /** Visits pads sequentially and applies each accepted two-branch replacement. */
 export class PadJunctionSimplificationSolver extends BaseSolver {
   readonly outcomes: PadJunctionOutcome[] = []
-  expandedStateCount = 0
+  candidatesTried = 0
   acceptedReplacement: AcceptedReplacement | null = null
   override activeSubSolver: SinglePadJunctionSolver | null = null
   private readonly output: HighDensityRoute[]
@@ -70,7 +65,7 @@ export class PadJunctionSimplificationSolver extends BaseSolver {
     this.output = this.parsed.hdRoutes.map(
       ({ firstPoint, lastPoint, ...route }) => route,
     )
-    this.MAX_ITERATIONS = 100e6
+    this.MAX_ITERATIONS = this.parsed.obstacles.length * 6 + 1
   }
 
   override _step(): void {
@@ -87,12 +82,12 @@ export class PadJunctionSimplificationSolver extends BaseSolver {
       })
     }
     const solver = this.activeSubSolver
-    const previousExpanded = solver.expandedStateCount
+    const previousTried = solver.candidatesTried
     solver.step()
-    this.expandedStateCount += solver.expandedStateCount - previousExpanded
+    this.candidatesTried += solver.candidatesTried - previousTried
     this.stats = {
       ...solver.stats,
-      expandedStates: this.expandedStateCount,
+      candidatesTried: this.candidatesTried,
       padsVisited: this.obstacleIndex,
     }
     if (solver.failed)
