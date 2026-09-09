@@ -428,6 +428,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
 
     if (hyperParameters.HIGH_DENSITY_A01) {
       const solver = new HighDensitySolverA01({
+        priorityQueue: "bucketed",
         nodeWithPortPoints: this.nodeWithPortPoints,
         cellSizeMm: 0.1,
         viaDiameter: this.constructorParams.viaDiameter ?? 0.3,
