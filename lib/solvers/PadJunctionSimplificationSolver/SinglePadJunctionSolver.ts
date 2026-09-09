@@ -1,3 +1,4 @@
+import { candidateHasCenteredTJunction } from "./candidateHasCenteredTJunction"
 import { getOctilinearCandidates } from "./getOctilinearCandidates"
 import {
   getPadTerminalEntry,
@@ -430,12 +431,36 @@ export class SinglePadJunctionSolver extends BaseSolver {
     }
     return {
       searchBounds,
+      obstacles: this.obstacles.filter((obstacle) => {
+        const margin = width / 2 + this.clearance
+        return (
+          obstacle.__zLayers.includes(z) &&
+          obstacle.center.x + obstacle.width / 2 + margin >=
+            searchBounds.minX &&
+          obstacle.center.x - obstacle.width / 2 - margin <=
+            searchBounds.maxX &&
+          obstacle.center.y + obstacle.height / 2 + margin >=
+            searchBounds.minY &&
+          obstacle.center.y - obstacle.height / 2 - margin <= searchBounds.maxY
+        )
+      }),
       targetPad,
       branches: [branches[0], branches[1]],
       width,
       z,
       originalCost,
-      fixedCopper,
+      fixedCopper: fixedCopper.filter((copper) => {
+        const margin = (width + copper.width) / 2 + this.clearance
+        return (
+          Math.max(copper.start.x, copper.end.x) + margin >=
+            searchBounds.minX &&
+          Math.min(copper.start.x, copper.end.x) - margin <=
+            searchBounds.maxX &&
+          Math.max(copper.start.y, copper.end.y) + margin >=
+            searchBounds.minY &&
+          Math.min(copper.start.y, copper.end.y) - margin <= searchBounds.maxY
+        )
+      }),
       junctions: [],
       junctionIndex: 0,
       currentCandidate: null,
@@ -459,7 +484,7 @@ export class SinglePadJunctionSolver extends BaseSolver {
       )
         return false
     }
-    for (const obstacle of this.obstacles) {
+    for (const obstacle of problem.obstacles) {
       if (
         !obstacle.__zLayers.includes(problem.z) ||
         obstacle === problem.targetPad
@@ -493,7 +518,21 @@ export class SinglePadJunctionSolver extends BaseSolver {
           Math.hypot(anchor.x - copper.start.x, anchor.y - copper.start.y) <
             EPSILON ||
           Math.hypot(anchor.x - copper.end.x, anchor.y - copper.end.y) < EPSILON
-        return replacementTouches && continuationTouches
+        if (!continuationTouches) return false
+        if (replacementTouches) return true
+        const far =
+          Math.hypot(anchor.x - copper.start.x, anchor.y - copper.start.y) <
+          EPSILON
+            ? copper.end
+            : copper.start
+        const awayX = anchor.x - far.x
+        const awayY = anchor.y - far.y
+        if (Math.hypot(awayX, awayY) < EPSILON) return false
+        return [start, end].every(
+          (point) =>
+            (point.x - anchor.x) * awayX + (point.y - anchor.y) * awayY >=
+            -EPSILON,
+        )
       })
       if (joinsOwnContinuation) continue
       const distance = minimumDistanceBetweenSegments(
@@ -556,6 +595,25 @@ export class SinglePadJunctionSolver extends BaseSolver {
     problem: PadJunctionProblem,
     candidate: Candidate,
   ): boolean {
+    if (!candidateHasCenteredTJunction(candidate))
+      return this.rejectCandidate(
+        candidate,
+        "Requires a perpendicular T within the middle 50% of the head",
+      )
+    for (const arm of candidate.trunk) {
+      const next = getItemOrThrow(arm, 1)
+      if (
+        Math.hypot(
+          next.x - candidate.junction.x,
+          next.y - candidate.junction.y,
+        ) <
+        problem.width - EPSILON
+      )
+        return this.rejectCandidate(
+          candidate,
+          "Head must remain straight for a trace width on each side of the stem",
+        )
+    }
     for (const arm of [...candidate.trunk, candidate.padStem]) {
       for (let index = 1; index < arm.length; index++) {
         const start = getItemOrThrow(arm, index - 1)
@@ -706,18 +764,27 @@ export class SinglePadJunctionSolver extends BaseSolver {
       .concat(candidate.trunk[1].slice(1))
     const trunkCost = getPathCost(simplifyJunctionPath(trunk))
     const stemCost = getPathCost(candidate.padStem)
+    const padEntry = getItemOrThrow(
+      candidate.padStem,
+      candidate.padStem.length - 1,
+    )
+    const terminal = problem.branches[0].terminal
+    // The shared in-pad tail exists once as physical copper, although both
+    // point-to-point output routes contain it. Original cost includes pad tails.
     const cost = {
       bends: trunkCost.bends + stemCost.bends,
-      length: trunkCost.length + stemCost.length,
+      length:
+        trunkCost.length +
+        stemCost.length +
+        Math.hypot(padEntry.x - terminal.x, padEntry.y - terminal.y),
     }
     const improvesCost =
-      cost.bends < problem.originalCost.bends ||
-      (cost.bends === problem.originalCost.bends &&
-        cost.length < problem.originalCost.length - EPSILON)
+      cost.bends <= problem.originalCost.bends + 2 &&
+      cost.length <= problem.originalCost.length * 1.1 + EPSILON
     if (!improvesCost)
       return this.rejectCandidate(
         candidate,
-        "Candidate does not improve bend count and length",
+        "Centered T exceeds 10% copper growth or two additional bends",
       )
     const replacements: ParsedRoute[] = []
     for (const [index, branch] of problem.branches.entries()) {

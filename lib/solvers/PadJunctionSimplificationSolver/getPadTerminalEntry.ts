@@ -144,6 +144,10 @@ export function entriesMatchPadJunctionPattern(
     (first.point.x - a.x) * (second.point.y - a.y) -
     (first.point.y - a.y) * (second.point.x - a.x)
   if (Math.abs(cross) <= EPSILON) return false
+  const dot =
+    (first.point.x - a.x) * (second.point.x - a.x) +
+    (first.point.y - a.y) * (second.point.y - a.y)
+  if (dot < -EPSILON) return false
   return first.sides.some((left) =>
     second.sides.some(
       (right) =>

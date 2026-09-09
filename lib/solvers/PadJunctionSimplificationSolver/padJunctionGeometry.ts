@@ -107,6 +107,7 @@ export type PadJunctionProblem = {
   z: number
   originalCost: SearchCost
   fixedCopper: FixedCopper[]
+  obstacles: TargetPad[]
   junctions: Junction[]
   junctionIndex: number
   currentCandidate: CandidateProgress | null

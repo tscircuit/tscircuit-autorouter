@@ -14,7 +14,8 @@
  * Target pad: rectangular conductive area receiving both routes.
  * Branch anchor: fixed end of the local straight terminal run being replaced.
  * Trunk: the connection between the two branch anchors, through the junction.
- * Junction: the single point where the pad stem joins the trunk.
+ * Junction: the perpendicular stem attachment, within the middle 50% of the
+ * trunk length measured through its bends (25%-75% from either anchor).
  * Pad stem: the shared connection from the junction to the pad entry.
  * Pad entry: a point inside the pad, inset by half the trace width.
  * Candidate: a proposed trunk, junction, and pad stem.
@@ -25,10 +26,11 @@
  * Search cost: lexicographic pair (bend count, copper length).
  * Heuristic estimate: (zero bends, Euclidean distance to the goal).
  * Search budget: maximum expanded states for one pad-junction problem.
- * Accepted replacement: a fully checked candidate improving the original cost.
+ * Accepted replacement: validated centered T, allowing at most 10% more unique
+ * copper and two extra bends for clean 45-degree approaches.
  *
  * Scope: two equal-width, same-layer terminal runs at an axis-aligned pad.
- * Only same-edge V entries and adjacent-edge corners sharing an interior
+ * Only acute/right-angle same-edge V entries and adjacent-edge corners sharing an interior
  * endpoint are eligible, including rotations and reflections. Search stays within
  * one pad-size margin; earlier route geometry is preserved. Opposite-edge entries,
  * existing shared stems, and pads with three or more branches are skipped.
