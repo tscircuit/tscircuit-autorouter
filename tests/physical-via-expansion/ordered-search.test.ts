@@ -5,7 +5,12 @@ import type { HighDensityIntraNodeRoute } from "lib/types/high-density-types"
 test("physical via expansion preserves complete search states and order", () => {
   let originalChecks = 0
   let physicalChecks = 0
-  const layerSets = [[0, 1], [0, 3], [0, 1, 2, 3], [0, 2, 5]]
+  const layerSets = [
+    [0, 1],
+    [0, 3],
+    [0, 1, 2, 3],
+    [0, 2, 5],
+  ]
   for (const availableZ of layerSets) {
     for (const scenario of [0, 1, 2, 3]) {
       const obstacleRoutes: HighDensityIntraNodeRoute[] = []
@@ -21,9 +26,16 @@ test("physical via expansion preserves complete search states and order", () => 
           vias: scenario === 3 ? [{ x: 1, y: 1.2 }] : [],
         })
       }
-      const futurePoints = scenario < 2
-        ? [{ x: 4, y: 4, z: 0 }, { x: 5, y: 4, z: 0 }]
-        : [{ x: 0.4, y: 1, z: 0 }, { x: 1.6, y: 1, z: 0 }]
+      const futurePoints =
+        scenario < 2
+          ? [
+              { x: 4, y: 4, z: 0 },
+              { x: 5, y: 4, z: 0 },
+            ]
+          : [
+              { x: 0.4, y: 1, z: 0 },
+              { x: 1.6, y: 1, z: 0 },
+            ]
       const opts = {
         connectionName: "route",
         minDistBetweenEnteringPoints: 0.4,
@@ -36,10 +48,12 @@ test("physical via expansion preserves complete search states and order", () => 
         availableZ,
         layerCount: 6,
         obstacleRoutes,
-        futureConnections: [{
-          connectionName: "future",
-          points: futurePoints,
-        }],
+        futureConnections: [
+          {
+            connectionName: "future",
+            points: futurePoints,
+          },
+        ],
         hyperParameters: { CELL_SIZE_FACTOR: 1 },
       }
       const control =

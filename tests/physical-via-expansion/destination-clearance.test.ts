@@ -13,10 +13,18 @@ test("one physical transition preserves destination filtering and clearance", ()
         obstacleRoutes: [],
         availableZ: [0, 1, 2, 3, 4, 5],
         layerCount: 6,
-        futureConnections: scenario === 2 ? [{
-          connectionName: "future",
-          points: [{ x: 0, y: 1, z: 0 }, { x: 2, y: 1, z: 0 }],
-        }] : [],
+        futureConnections:
+          scenario === 2
+            ? [
+                {
+                  connectionName: "future",
+                  points: [
+                    { x: 0, y: 1, z: 0 },
+                    { x: 2, y: 1, z: 0 },
+                  ],
+                },
+              ]
+            : [],
       }
       const control =
         new SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost(opts)
