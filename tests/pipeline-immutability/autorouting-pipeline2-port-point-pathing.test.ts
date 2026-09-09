@@ -15,10 +15,6 @@ test(
     expect(solver.solved).toBe(true)
     expect(solver.failed).toBe(false)
     expect(srj).toEqual(before)
-    expect(solver.powerTraceExpansionSolver?.stats.selectedTraceCount).toBe(0)
-    expect(solver.getOutputSimplifiedPcbTraces()).toEqual(
-      solver.getPrePowerTraceOutputSimplifiedPcbTraces(),
-    )
   },
   { timeout: 180_000 },
 )

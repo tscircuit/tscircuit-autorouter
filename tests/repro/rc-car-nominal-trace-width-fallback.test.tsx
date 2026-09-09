@@ -1,7 +1,7 @@
 /** @jsxImportSource react-for-pipeline9-fixtures */
 import { measureTraceWidths } from "@tscircuit/power-trace-expander"
 import { expect, test } from "bun:test"
-import { CapacityMeshSolver } from "lib/index"
+import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/index"
 import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import { convertSrjToGraphicsObject } from "lib/utils/convertSrjToGraphicsObject"
 import {
@@ -46,7 +46,24 @@ test("reroutes motor traces at their requested width with short pad neckdowns", 
     expect(connection.nominalTraceWidth).toBe(motorTraceWidth)
   }
 
-  const nominalSolver = new CapacityMeshSolver(routingInput)
+  const beforeSolver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(
+    { ...routingInput, defaultObstacleMargin: 0.15 },
+    { powerTraceExpansion: { allowNewVias: false } },
+  )
+  beforeSolver.solve()
+  expect(beforeSolver.solved).toBe(true)
+  const beforeExpander =
+    beforeSolver.powerTraceExpansionSolver!.powerTraceExpanderSolver
+  const beforeWidths = measureTraceWidths(
+    beforeExpander.inputProblem,
+    beforeExpander.getOutput(),
+  ).get(motorTraceWidth)!
+  expect(beforeWidths.nominalCoverage).toBeLessThan(0.9)
+
+  const nominalSolver = new AutoroutingPipelineSolver9_PreloadedTraceGraph({
+    ...routingInput,
+    defaultObstacleMargin: 0.15,
+  })
   nominalSolver.solve()
   expect(nominalSolver.solved).toBe(true)
   const nominalTraces = nominalSolver.getOutputSimplifiedPcbTraces()
@@ -74,28 +91,33 @@ test("reroutes motor traces at their requested width with short pad neckdowns", 
       drcOptions: { traceClearance: 0.15, includeTraceContinuity: true },
     }).errors,
   ).toEqual([])
-  const nominalBoardGraphics = convertSrjToGraphicsObject(
-    nominalSolver.getOutputSimpleRouteJson(),
-  )
-  const { minX, maxX, minY, maxY } = routingInput.bounds
-  nominalBoardGraphics.rects.push({
-    center: { x: (minX + maxX) / 2, y: (minY + maxY) / 2 },
-    width: maxX - minX,
-    height: maxY - minY,
-    fill: "transparent",
-    stroke: "gray",
-  })
-  expect({
-    ...nominalBoardGraphics,
-    texts: [
-      { x: -10, y: 5.5, text: "U1 motor driver", fontSize: 0.5 },
-      { x: 10, y: 5.5, text: "J1 motor", fontSize: 0.5 },
-      {
-        x: 0,
-        y: -5,
-        text: "1.2 mm motor runs / short pad neckdowns",
-        fontSize: 0.5,
-      },
-    ],
-  }).toMatchGraphicsSvg(import.meta.path)
+  for (const [solver, snapshotPath] of [
+    [beforeSolver, `${import.meta.path}-before`],
+    [nominalSolver, import.meta.path],
+  ] as const) {
+    const graphics = convertSrjToGraphicsObject(
+      solver.getOutputSimpleRouteJson(),
+    )
+    const { minX, maxX, minY, maxY } = routingInput.bounds
+    graphics.rects.push({
+      center: { x: (minX + maxX) / 2, y: (minY + maxY) / 2 },
+      width: maxX - minX,
+      height: maxY - minY,
+      fill: "transparent",
+      stroke: "gray",
+    })
+    expect({
+      ...graphics,
+      texts: [
+        { x: -10, y: 5.5, text: "U1 motor driver", fontSize: 0.5 },
+        { x: 10, y: 5.5, text: "J1 motor", fontSize: 0.5 },
+        {
+          x: 0,
+          y: -5,
+          text: "1.2 mm motor traces / 0.15 mm clearance",
+          fontSize: 0.5,
+        },
+      ],
+    }).toMatchGraphicsSvg(snapshotPath)
+  }
 })

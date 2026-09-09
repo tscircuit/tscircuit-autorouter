@@ -45,9 +45,6 @@ import { SingleLayerNodeMergerSolver } from "../../solvers/SingleLayerNodeMerger
 import { StrawSolver } from "../../solvers/StrawSolver/StrawSolver"
 import { TraceSimplificationSolver } from "../../solvers/TraceSimplificationSolver/TraceSimplificationSolver"
 import { TraceWidthSolver } from "../../solvers/TraceWidthSolver/TraceWidthSolver"
-import { preparePipeline7PowerTraceExpansionInput } from "../AutoroutingPipeline7_MultiGraph/prepare-pipeline7-power-trace-expansion-input"
-import { PowerTraceExpansionSolver } from "../AutoroutingPipeline7_MultiGraph/PowerTraceExpansionSolver"
-import { getPowerTraceExpansionConnectionNames } from "../AutoroutingPipeline7_MultiGraph/getPowerTraceExpansionConnectionNames"
 import { getColorMap } from "../../solvers/colors"
 import type {
   CapacityMeshEdge,
@@ -122,7 +119,6 @@ export class AutoroutingPipelineSolver2_PortPointPathing extends BaseSolver {
   multiSectionPortPointOptimizer?: MultiSectionPortPointOptimizer
   uniformPortDistributionSolver?: UniformPortDistributionSolver
   traceWidthSolver?: TraceWidthSolver
-  powerTraceExpansionSolver?: PowerTraceExpansionSolver
   viaDiameter: number
   minTraceWidth: number
   effort: number
@@ -408,18 +404,6 @@ export class AutoroutingPipelineSolver2_PortPointPathing extends BaseSolver {
         },
       ]
     }),
-    definePipelineStep(
-      "powerTraceExpansionSolver",
-      PowerTraceExpansionSolver,
-      (cms) => [
-        preparePipeline7PowerTraceExpansionInput({
-          originalSrj: cms.srj,
-          newlyRoutedTraces: cms.getPrePowerTraceOutputSimplifiedPcbTraces(),
-          expandedConnectionNames: [],
-        }),
-        { onlyConnectionNames: getPowerTraceExpansionConnectionNames(cms.srj) },
-      ],
-    ),
   ]
 
   constructor(
@@ -689,10 +673,6 @@ export class AutoroutingPipelineSolver2_PortPointPathing extends BaseSolver {
       throw new Error("Cannot get output before solving is complete")
     }
 
-    return this.powerTraceExpansionSolver!.getOutput()
-  }
-
-  getPrePowerTraceOutputSimplifiedPcbTraces(): SimplifiedPcbTraces {
     const traces: SimplifiedPcbTraces = []
     const allHdRoutes = this._getOutputHdRoutes()
 
