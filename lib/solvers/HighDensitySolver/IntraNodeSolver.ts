@@ -73,6 +73,7 @@ export class IntraNodeRouteSolver extends BaseSolver {
   traceWidth: number
   obstacleMargin: number
   captureSearchDebug: boolean
+  futurePointSearch: "linear" | "spatial"
   rerouteAttemptsByConnection: Map<string, number>
 
   POSTROUTE_VIA_TRACE_CLEARANCE = 0.1
@@ -100,6 +101,11 @@ export class IntraNodeRouteSolver extends BaseSolver {
     traceWidth?: number
     obstacleMargin?: number
     captureSearchDebug?: boolean
+    /**
+     * Spatial nearest search requires fixed child future-connection geometry
+     * and ordinary Math and via-penalty getters while a child is searching.
+     */
+    futurePointSearch?: "linear" | "spatial"
     obstacles?: Obstacle[]
     layerCount?: number
   }) {
@@ -115,6 +121,7 @@ export class IntraNodeRouteSolver extends BaseSolver {
     this.traceWidth = params.traceWidth ?? 0.15
     this.obstacleMargin = params.obstacleMargin ?? 0.15
     this.captureSearchDebug = params.captureSearchDebug ?? true
+    this.futurePointSearch = params.futurePointSearch ?? "linear"
     const unsolvedConnectionsMap: Map<string, ConnectionPoint[]> = new Map()
     this.rootConnectionNameByConnectionName = new Map()
     for (const {
@@ -246,6 +253,7 @@ export class IntraNodeRouteSolver extends BaseSolver {
           )
         : this.solvedRoutes,
       futureConnections: this.unsolvedConnections,
+      futurePointSearch: this.futurePointSearch,
       layerCount: this.nodeWithPortPoints.portPoints.reduce(
         (max, p) => Math.max(max, (p.z ?? 0) + 1),
         2,

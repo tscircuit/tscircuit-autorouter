@@ -1,6 +1,7 @@
 import { distance, pointToSegmentDistance } from "@tscircuit/math-utils"
 import { SingleHighDensityRouteSolver } from "./SingleHighDensityRouteSolver"
 import { Node } from "lib/data-structures/SingleRouteCandidatePriorityQueue"
+import { LayerPointSpatialIndex } from "lib/data-structures/LayerPointSpatialIndex"
 
 export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends SingleHighDensityRouteSolver {
   FUTURE_CONNECTION_PROX_TRACE_PENALTY_FACTOR = 2
@@ -11,10 +12,18 @@ export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends Sing
   FLIP_TRACE_ALIGNMENT_DIRECTION = false
   FUTURE_CONNECTION_VIA_TRACE_CLEARANCE = 0.1
   futureConnectionPoints: Array<{ x: number; y: number; z: number }>
+  private futureConnectionPointIndex: LayerPointSpatialIndex | null
   futureConnectionSegmentsCache: FutureConnectionSegment[] | null = null
 
   constructor(
-    opts: ConstructorParameters<typeof SingleHighDensityRouteSolver>[0],
+    opts: ConstructorParameters<typeof SingleHighDensityRouteSolver>[0] & {
+      /**
+       * Spatial search requires fixed future-connection coordinates, layers and
+       * array order, with ordinary Math and a pure viaPenaltyDistance getter.
+       * The via penalty may change between queries. Direct solvers default to linear.
+       */
+      futurePointSearch?: "linear" | "spatial"
+    },
   ) {
     super({
       ...opts,
@@ -36,9 +45,24 @@ export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends Sing
     this.futureConnectionPoints = this.futureConnections.flatMap(
       (connection) => connection.points,
     )
+    this.futureConnectionPointIndex =
+      opts.futurePointSearch === "spatial" &&
+      this.futureConnectionPoints.length >= 8 &&
+      this.futureConnectionPoints.every(
+        (point) => Number.isFinite(point.x) && Number.isFinite(point.y) && Number.isFinite(point.z),
+      )
+        ? new LayerPointSpatialIndex(this.futureConnectionPoints)
+        : null
   }
 
   getClosestFutureConnectionPoint(node: Node) {
+    if (this.futureConnectionPointIndex) {
+      const viaPenaltyDistance = this.viaPenaltyDistance
+      if (
+        Number.isFinite(node.x) && Number.isFinite(node.y) &&
+        Number.isFinite(node.z) && Number.isFinite(viaPenaltyDistance)
+      ) return this.futureConnectionPointIndex.findNearestPoint(node, viaPenaltyDistance)
+    }
     let minDist = Infinity
     let closestPoint = null
 
