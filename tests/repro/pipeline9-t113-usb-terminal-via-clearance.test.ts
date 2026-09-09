@@ -21,7 +21,9 @@ import {
 import type { SimpleRouteJson } from "lib/types"
 
 type SmtPad = Extract<CircuitJson[number], { type: "pcb_smtpad" }>
-type RoutePoint = NonNullable<SimpleRouteJson["traces"]>[number]["route"][number]
+type RoutePoint = NonNullable<
+  SimpleRouteJson["traces"]
+>[number]["route"][number]
 type RouteVia = Extract<RoutePoint, { route_type: "via" }>
 
 const getViaPadGapMm = (via: RouteVia, pad: SmtPad): number => {
