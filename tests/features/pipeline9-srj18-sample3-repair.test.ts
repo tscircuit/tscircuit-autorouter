@@ -3,6 +3,7 @@ import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-p
 import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import { getBugReportSnapshotSvg } from "lib/testing/getBugReportSnapshotSvg"
 import { loadScenarioBySampleNumber } from "../../scripts/benchmark/scenarios"
+import { diagnoseStitchRepair } from "../fixtures/diagnoseStitchRepair"
 
 test("Pipeline9 repairs SRJ18 sample 3 with unchanged routing obstacles", async () => {
   const { scenario } = await loadScenarioBySampleNumber("srj18", 3)
@@ -10,7 +11,7 @@ test("Pipeline9 repairs SRJ18 sample 3 with unchanged routing obstacles", async 
     structuredClone(scenario),
     { cacheProvider: null },
   )
-  solver.solve()
+  diagnoseStitchRepair(solver)
 
   expect(solver.error).toBeNull()
   expect(solver.solved).toBe(true)
