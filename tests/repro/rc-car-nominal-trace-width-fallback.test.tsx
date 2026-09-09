@@ -1,64 +1,76 @@
+import { RootCircuit } from "@tscircuit/core"
 import { expect, test } from "bun:test"
-import { TraceWidthSolver } from "lib/solvers/TraceWidthSolver/TraceWidthSolver"
-import type { HighDensityRoute } from "lib/types/high-density-types"
-import type { Obstacle, SimpleRouteConnection } from "lib/types"
+import type { AnyCircuitElement } from "circuit-json"
+import { convertCircuitJsonToPcbSvg } from "circuit-to-svg"
+import type { SimpleRouteConnection } from "lib/types"
+import { CapacityMeshAutorouterCoreBinding } from "../fixtures/CapacityMeshAutorouterCoreBinding"
 
-test("reproduces rc car power trace width falling back below 1.2mm", () => {
-  const connection: SimpleRouteConnection = {
-    name: "MOTOR_A1",
-    nominalTraceWidth: 1.2,
-    pointsToConnect: [
-      { x: 0, y: 0, layer: "top" },
-      { x: 10, y: 0, layer: "top" },
-    ],
-  }
-  const hdRoute: HighDensityRoute = {
-    connectionName: "MOTOR_A1",
-    traceThickness: 0.15,
-    viaDiameter: 0.6,
-    route: [
-      { x: 0, y: 0, z: 0 },
-      { x: 10, y: 0, z: 0 },
-    ],
-    vias: [],
-  }
-  const obstacles: Obstacle[] = [
-    {
-      obstacleId: "nearby-copper",
-      type: "rect",
-      center: { x: 5, y: 0.45 },
-      width: 8,
-      height: 0.2,
-      layers: ["top"],
-      connectedTo: ["OTHER_NET"],
-    },
-  ]
-  const solver = new TraceWidthSolver({
-    hdRoutes: [hdRoute],
-    connection: [connection],
-    obstacles,
-    minTraceWidth: 0.15,
-    obstacleMargin: 0.1,
-    layerCount: 2,
-  })
+test("reproduces rc car motor trace falling below its requested width", async () => {
+  const circuit = new RootCircuit()
 
-  solver.solve()
+  circuit.add(
+    <board
+      width="30mm"
+      height="12mm"
+      autorouter={{
+        local: true,
+        groupMode: "subcircuit",
+        async algorithmFn(simpleRouteJson) {
+          return new CapacityMeshAutorouterCoreBinding({
+            ...simpleRouteJson,
+            connections: simpleRouteJson.connections.map(
+              (connection: SimpleRouteConnection) => ({
+                ...connection,
+                nominalTraceWidth: 1.2,
+                width: 1.2,
+              }),
+            ),
+          })
+        },
+      }}
+    >
+      <chip
+        name="U1"
+        pcbX={-10}
+        footprint="soic16"
+        pinLabels={{ pin1: ["AOUT1"], pin2: ["AOUT2"] }}
+      />
+      <pinheader
+        name="J1"
+        pinCount={2}
+        pitch="2.54mm"
+        pcbX={11}
+        pcbRotation={90}
+        pinLabels={["MOTOR_A1", "MOTOR_A2"]}
+      />
+      <capacitor
+        name="C1"
+        capacitance="100nF"
+        footprint="0805"
+        pcbX={7}
+      />
+      <trace from=".U1 > .AOUT1" to="net.MOTOR_A1" thickness="1.2mm" />
+      <trace from=".J1 > .MOTOR_A1" to="net.MOTOR_A1" thickness="1.2mm" />
+      <trace from=".C1 > .pos" to="net.MOTOR_A1" thickness="1.2mm" />
+      <trace from=".U1 > .AOUT2" to="net.MOTOR_A2" thickness="1.2mm" />
+      <trace from=".J1 > .MOTOR_A2" to="net.MOTOR_A2" thickness="1.2mm" />
+      <trace from=".C1 > .neg" to="net.MOTOR_A2" thickness="1.2mm" />
+    </board>,
+  )
 
-  const output = solver.getHdRoutesWithWidths()
-  expect(output).toHaveLength(1)
-  expect(output[0]!.traceThickness).toBe(0.15)
-  expect(connection.nominalTraceWidth).toBe(1.2)
-  const graphics = solver.visualize()
-  graphics.texts = [
-    ...(graphics.texts ?? []),
-    {
-      x: 0,
-      y: 1.2,
-      text: "REQUESTED: 1.20mm / ROUTED: 0.15mm",
-      fontSize: 0.3,
-      color: "black",
-      anchorSide: "center_left",
-    },
-  ]
-  expect(graphics).toMatchGraphicsSvg(import.meta.path)
+  await circuit.renderUntilSettled()
+
+  const circuitJson = circuit.getCircuitJson()
+  const routedWidths = circuitJson
+    .filter((element) => element.type === "pcb_trace")
+    .flatMap((trace) =>
+      trace.route.flatMap((point) =>
+        point.route_type === "wire" ? [point.width] : [],
+      ),
+    )
+  expect(Math.min(...routedWidths)).toBe(0.15)
+  expect(routedWidths.some((width) => width < 1.2)).toBe(true)
+  expect(
+    convertCircuitJsonToPcbSvg(circuitJson as AnyCircuitElement[]),
+  ).toMatchSvgSnapshot(import.meta.path)
 })
