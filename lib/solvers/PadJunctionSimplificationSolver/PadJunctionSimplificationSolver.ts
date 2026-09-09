@@ -12,7 +12,7 @@
  * Junction path: an ordered sequence of routing points.
  * Candidate progress: the current arm stage plus only its completed arms.
  * Target pad: rectangular conductive area receiving both routes.
- * Branch anchor: fixed end of the same-layer terminal run being replaced.
+ * Branch anchor: fixed end of the local straight terminal run being replaced.
  * Trunk: the connection between the two branch anchors, through the junction.
  * Junction: the single point where the pad stem joins the trunk.
  * Pad stem: the shared connection from the junction to the pad entry.
@@ -28,7 +28,10 @@
  * Accepted replacement: a fully checked candidate improving the original cost.
  *
  * Scope: two equal-width, same-layer terminal runs at an axis-aligned pad.
- * Pads with three or more discovered terminal branches are skipped.
+ * Only same-edge V entries and adjacent-edge corners sharing an interior
+ * endpoint are eligible, including rotations and reflections. Search stays within
+ * one pad-size margin; earlier route geometry is preserved. Opposite-edge entries,
+ * existing shared stems, and pads with three or more branches are skipped.
  * Other layers and route metadata remain unchanged. Unsupported geometry is an
  * explicit no-op. A* finds shortest lexicographic paths on a bounded orthogonal
  * grid; sequential arm routing and first improvement do NOT guarantee a globally

@@ -1,4 +1,5 @@
 import type {
+  PadJunctionBounds,
   PadJunctionPoint,
   JunctionPath,
   SearchDirection,
@@ -16,6 +17,7 @@ export type SearchResult =
   | { status: "no_path" }
 
 type SearchInput = {
+  bounds: PadJunctionBounds
   start: PadJunctionPoint
   goal: SearchGoal
   anchors: [PadJunctionPoint, PadJunctionPoint]
@@ -60,13 +62,8 @@ export class PadJunctionSearch {
   private readonly yCoordinates: number[]
 
   constructor(private readonly input: SearchInput) {
-    const padding = Math.max(
-      input.pad.width,
-      input.pad.height,
-      input.gridStep * 4,
-    )
-    this.xCoordinates = this.createCoordinates("x", padding)
-    this.yCoordinates = this.createCoordinates("y", padding)
+    this.xCoordinates = this.createCoordinates("x")
+    this.yCoordinates = this.createCoordinates("y")
     const xIndex = this.xCoordinates.indexOf(input.start.x)
     const yIndex = this.yCoordinates.indexOf(input.start.y)
     if (xIndex < 0 || yIndex < 0)
@@ -86,7 +83,7 @@ export class PadJunctionSearch {
     this.push(start)
   }
 
-  private createCoordinates(axis: "x" | "y", padding: number): number[] {
+  private createCoordinates(axis: "x" | "y"): number[] {
     const { input } = this
     const halfSize =
       (axis === "x" ? input.pad.width : input.pad.height) / 2 - input.width / 2
@@ -98,8 +95,8 @@ export class PadJunctionSearch {
       input.pad.center[axis] - halfSize,
       input.pad.center[axis] + halfSize,
     ]
-    const minimum = Math.min(...exact) - padding
-    const maximum = Math.max(...exact) + padding
+    const minimum = axis === "x" ? input.bounds.minX : input.bounds.minY
+    const maximum = axis === "x" ? input.bounds.maxX : input.bounds.maxY
     for (
       let coordinate = minimum;
       coordinate <= maximum;
@@ -107,6 +104,7 @@ export class PadJunctionSearch {
     )
       exact.push(coordinate)
     return [...new Set(exact)]
+      .filter((value) => value >= minimum && value <= maximum)
       .sort((a, b) => a - b)
       .filter((value, index, values): boolean => {
         const previous = values[index - 1]

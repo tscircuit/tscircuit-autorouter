@@ -1,3 +1,7 @@
+import {
+  getPadTerminalEntry,
+  entriesMatchPadJunctionPattern,
+} from "./getPadTerminalEntry"
 import { getGraphicsLayerForObstacle } from "lib/utils/getGraphicsObjectLayer"
 import { BaseSolver } from "@tscircuit/solver-utils"
 import {
@@ -170,7 +174,7 @@ export class SinglePadJunctionSolver extends BaseSolver {
       })
       return null
     }
-    const branches: [BranchAnchor, BranchAnchor] = [firstBranch, secondBranch]
+    let branches: [BranchAnchor, BranchAnchor] = [firstBranch, secondBranch]
     const connectionNames = branches.map(
       (branch) => branch.route.connectionName,
     )
@@ -225,6 +229,34 @@ export class SinglePadJunctionSolver extends BaseSolver {
       })
       return null
     }
+    const localMargin = Math.max(targetPad.width, targetPad.height)
+    const searchBounds = {
+      minX: targetPad.center.x - targetPad.width / 2 - localMargin,
+      maxX: targetPad.center.x + targetPad.width / 2 + localMargin,
+      minY: targetPad.center.y - targetPad.height / 2 - localMargin,
+      maxY: targetPad.center.y + targetPad.height / 2 + localMargin,
+    }
+    const firstEntry = getPadTerminalEntry(firstBranch, targetPad, searchBounds)
+    const secondEntry = getPadTerminalEntry(
+      secondBranch,
+      targetPad,
+      searchBounds,
+    )
+    if (
+      !firstEntry ||
+      !secondEntry ||
+      !entriesMatchPadJunctionPattern(firstEntry, secondEntry)
+    ) {
+      this.outcomes.push({
+        outcome: "unsupported",
+        connectionNames,
+        reason:
+          "Requires a same-edge V or adjacent-edge corner meeting inside the pad",
+      })
+      return null
+    }
+    branches = [firstEntry.branch, secondEntry.branch]
+    this.discoveredBranches = branches
     const first = simplifyJunctionPath(
       branches[0].points.slice(branches[0].anchorIndex),
     )
@@ -396,6 +428,7 @@ export class SinglePadJunctionSolver extends BaseSolver {
       }
     }
     return {
+      searchBounds,
       targetPad,
       branches: [branches[0], branches[1]],
       width,
@@ -416,6 +449,15 @@ export class SinglePadJunctionSolver extends BaseSolver {
     start: PadJunctionPoint,
     end: PadJunctionPoint,
   ): boolean {
+    for (const point of [start, end]) {
+      if (
+        point.x < problem.searchBounds.minX - EPSILON ||
+        point.x > problem.searchBounds.maxX + EPSILON ||
+        point.y < problem.searchBounds.minY - EPSILON ||
+        point.y > problem.searchBounds.maxY + EPSILON
+      )
+        return false
+    }
     for (const obstacle of this.obstacles) {
       if (
         !obstacle.__zLayers.includes(problem.z) ||
@@ -749,11 +791,7 @@ export class SinglePadJunctionSolver extends BaseSolver {
       }
     }
     const step = this.parsed.gridStep ?? Math.max(problem.width, 0.25)
-    const margin = Math.max(pad.width, pad.height, step * 4)
-    const minX = Math.min(first.x, second.x, pad.center.x) - margin
-    const maxX = Math.max(first.x, second.x, pad.center.x) + margin
-    const minY = Math.min(first.y, second.y, pad.center.y) - margin
-    const maxY = Math.max(first.y, second.y, pad.center.y) + margin
+    const { minX, minY, maxX, maxY } = problem.searchBounds
     const count =
       Math.ceil((maxX - minX) / step) * Math.ceil((maxY - minY) / step)
     if (count > 20000) {
@@ -882,6 +920,7 @@ export class SinglePadJunctionSolver extends BaseSolver {
             : "east"
       }
       problem.search = new PadJunctionSearch({
+        bounds: problem.searchBounds,
         start: candidate.junction,
         goal: anchor ? { kind: "anchor", point: anchor } : { kind: "pad" },
         pad: problem.targetPad,

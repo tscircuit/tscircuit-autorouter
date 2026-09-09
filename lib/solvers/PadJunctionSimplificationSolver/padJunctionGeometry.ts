@@ -92,7 +92,15 @@ export type ParsedInput = Omit<
   minBoardEdgeClearance: number
   colorMap: Readonly<Record<string, string>>
 }
+export type PadJunctionBounds = {
+  minX: number
+  minY: number
+  maxX: number
+  maxY: number
+}
+
 export type PadJunctionProblem = {
+  searchBounds: PadJunctionBounds
   targetPad: TargetPad
   branches: [BranchAnchor, BranchAnchor]
   width: number
