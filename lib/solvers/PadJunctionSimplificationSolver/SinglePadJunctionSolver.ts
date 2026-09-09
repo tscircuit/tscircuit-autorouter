@@ -3,6 +3,7 @@ import { getOctilinearCandidates } from "./getOctilinearCandidates"
 import {
   getPadTerminalEntry,
   entriesMatchPadJunctionPattern,
+  PAD_TERMINAL_TOLERANCE,
 } from "./getPadTerminalEntry"
 import { getGraphicsLayerForObstacle } from "lib/utils/getGraphicsObjectLayer"
 import { BaseSolver } from "@tscircuit/solver-utils"
@@ -244,6 +245,14 @@ export class SinglePadJunctionSolver extends BaseSolver {
       targetPad,
       searchBounds,
     )
+    if (firstEntry?.perpendicularToSide && secondEntry?.perpendicularToSide) {
+      this.outcomes.push({
+        outcome: "unsupported",
+        connectionNames,
+        reason: "Both terminal branches already enter perpendicular to their pad sides",
+      })
+      return null
+    }
     if (
       !firstEntry ||
       !secondEntry ||
@@ -253,7 +262,7 @@ export class SinglePadJunctionSolver extends BaseSolver {
         outcome: "unsupported",
         connectionNames,
         reason:
-          "Requires a same-edge V or adjacent-edge corner meeting inside the pad",
+          "Requires converging acute or right-angle entries meeting inside the pad",
       })
       return null
     }
@@ -595,6 +604,40 @@ export class SinglePadJunctionSolver extends BaseSolver {
     problem: PadJunctionProblem,
     candidate: Candidate,
   ): boolean {
+    // Include the preserved endpoint tail: it is part of the visible pad stem.
+    // A straight cardinal stem must cross the matching side of the rectangle.
+    for (const branch of problem.branches) {
+      const start = candidate.junction
+      const terminal = branch.terminal
+      const dx = terminal.x - start.x
+      const dy = terminal.y - start.y
+      // Only the original endpoint may differ by the routing rounding quantum.
+      // All generated stem points must remain exactly on the cardinal axis.
+      const horizontal = Math.abs(dy) <= PAD_TERMINAL_TOLERANCE && Math.abs(dx) > PAD_TERMINAL_TOLERANCE
+      const vertical = Math.abs(dx) <= PAD_TERMINAL_TOLERANCE && Math.abs(dy) > PAD_TERMINAL_TOLERANCE
+      const pad = problem.targetPad
+      const crossesSide = horizontal
+        ? Math.abs(start.x - pad.center.x) > pad.width / 2
+        : vertical && Math.abs(start.y - pad.center.y) > pad.height / 2
+      let previousDistance = 0
+      const straight = candidate.padStem.every((point) => {
+        const distance = horizontal
+          ? (point.x - start.x) * Math.sign(dx)
+          : (point.y - start.y) * Math.sign(dy)
+        const onAxis = horizontal
+          ? Math.abs(point.y - start.y) < EPSILON
+          : Math.abs(point.x - start.x) < EPSILON
+        const valid = onAxis && distance >= previousDistance - EPSILON &&
+          distance <= Math.hypot(dx, dy) + EPSILON
+        previousDistance = distance
+        return valid
+      })
+      if (!crossesSide || !straight)
+        return this.rejectCandidate(
+          candidate,
+          "Pad stem must be straight and perpendicular to the pad side through the preserved endpoint",
+        )
+    }
     if (!candidateHasCenteredTJunction(candidate))
       return this.rejectCandidate(
         candidate,
@@ -874,8 +917,16 @@ export class SinglePadJunctionSolver extends BaseSolver {
       )
       return
     }
-    for (let x = minX; x <= maxX + EPSILON; x += step) {
-      for (let y = minY; y <= maxY + EPSILON; y += step) {
+    const terminal = problem.branches[0].terminal
+    const xCoordinates = new Set([terminal.x])
+    const yCoordinates = new Set([terminal.y])
+    for (let x = minX; x <= maxX; x += step) xCoordinates.add(x)
+    for (let y = minY; y <= maxY; y += step) yCoordinates.add(y)
+    for (const x of xCoordinates) {
+      for (const y of yCoordinates) {
+        // A straight pad-normal stem must align with the preserved endpoint.
+        if (Math.abs(x - terminal.x) > EPSILON &&
+          Math.abs(y - terminal.y) > EPSILON) continue
         const position = { x, y, z: problem.z }
         if (
           this.insidePad(position, pad) ||

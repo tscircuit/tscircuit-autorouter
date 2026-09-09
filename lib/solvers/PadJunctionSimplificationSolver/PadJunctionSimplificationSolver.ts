@@ -16,7 +16,9 @@
  * Trunk: the connection between the two branch anchors, through the junction.
  * Junction: the perpendicular stem attachment, within the middle 50% of the
  * trunk length measured through its bends (25%-75% from either anchor).
- * Pad stem: the shared connection from the junction to the pad entry.
+ * Pad stem: a straight connection perpendicular to the pad side, from the
+ * junction through the pad entry to the preserved endpoint. Original endpoints
+ * may differ by up to 0.001 mm due to coordinate rounding inside the pad.
  * Pad entry: a point inside the pad, inset by half the trace width.
  * Candidate: a proposed trunk, junction, and pad stem.
  * Fixed copper: all route segments outside the two replaceable terminal runs.
@@ -30,10 +32,12 @@
  * copper and two extra bends for clean 45-degree approaches.
  *
  * Scope: two equal-width, same-layer terminal runs at an axis-aligned pad.
- * Only acute/right-angle same-edge V entries and adjacent-edge corners sharing an interior
- * endpoint are eligible, including rotations and reflections. Search stays within
- * one pad-size margin; earlier route geometry is preserved. Opposite-edge entries,
- * existing shared stems, and pads with three or more branches are skipped.
+ * Only converging acute/right-angle entries sharing an interior endpoint are
+ * eligible, including opposite-side V entries, rotations, and reflections.
+ * Search stays within one pad-size margin; earlier route geometry is preserved.
+ * Existing shared stems and pads with three or more branches are skipped.
+ * Two entries already perpendicular to their respective pad sides are skipped;
+ * entry direction is measured on the segment crossing the pad boundary.
  * Other layers and route metadata remain unchanged. Unsupported geometry is an
  * explicit no-op. A* finds shortest lexicographic paths on a bounded orthogonal
  * grid; sequential arm routing and first improvement do NOT guarantee a globally

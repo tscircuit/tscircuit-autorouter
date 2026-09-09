@@ -6,11 +6,15 @@ import type {
 } from "./padJunctionGeometry"
 import { EPSILON, getItemOrThrow, getPathCost } from "./padJunctionGeometry"
 
+// Routing coordinates may be rounded to 0.001 mm while pad centers are exact.
+export const PAD_TERMINAL_TOLERANCE = 0.001
+
 type PadSide = "left" | "right" | "bottom" | "top"
 export type PadTerminalEntry = {
   branch: BranchAnchor
   sides: PadSide[]
   point: PadJunctionPoint
+  perpendicularToSide: boolean
 }
 
 /** Find the last straight entry and preserve all copper before the local window. */
@@ -124,6 +128,13 @@ export function getPadTerminalEntry(
       anchor: getItemOrThrow(points, anchorIndex),
     },
     point,
+    // Use the segment crossing the boundary, not earlier bends in the route.
+    perpendicularToSide: crossings.some((crossing) =>
+      Math.abs(crossing.fraction - entryFraction) < EPSILON &&
+      (crossing.side === "left" || crossing.side === "right"
+        ? Math.abs(terminal.y - outside.y) < EPSILON
+        : Math.abs(terminal.x - outside.x) < EPSILON),
+    ),
     sides: crossings
       .filter(
         (crossing) => Math.abs(crossing.fraction - entryFraction) < EPSILON,
@@ -132,28 +143,21 @@ export function getPadTerminalEntry(
   }
 }
 
-/** Only converging same-edge V entries and adjacent-edge corners are eligible. */
+/** Converging acute/right-angle entries may cross any pair of pad sides. */
 export function entriesMatchPadJunctionPattern(
   first: PadTerminalEntry,
   second: PadTerminalEntry,
 ): boolean {
+  if (first.perpendicularToSide && second.perpendicularToSide) return false
   const a = first.branch.terminal
   const b = second.branch.terminal
-  if (Math.hypot(a.x - b.x, a.y - b.y) > EPSILON) return false
+  if (Math.hypot(a.x - b.x, a.y - b.y) > PAD_TERMINAL_TOLERANCE) return false
   const cross =
-    (first.point.x - a.x) * (second.point.y - a.y) -
-    (first.point.y - a.y) * (second.point.x - a.x)
+    (first.point.x - a.x) * (second.point.y - b.y) -
+    (first.point.y - a.y) * (second.point.x - b.x)
   if (Math.abs(cross) <= EPSILON) return false
   const dot =
-    (first.point.x - a.x) * (second.point.x - a.x) +
-    (first.point.y - a.y) * (second.point.y - a.y)
-  if (dot < -EPSILON) return false
-  return first.sides.some((left) =>
-    second.sides.some(
-      (right) =>
-        left === right ||
-        (left === "left" || left === "right") !==
-          (right === "left" || right === "right"),
-    ),
-  )
+    (first.point.x - a.x) * (second.point.x - b.x) +
+    (first.point.y - a.y) * (second.point.y - b.y)
+  return dot >= -EPSILON
 }
