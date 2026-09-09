@@ -16,6 +16,15 @@ type PortfolioSingleIntraNodeSolverParams = ConstructorParameters<
   typeof PortfolioSingleIntraNodeSolver
 >[0]
 
+// Scaled retries keep the existing coarse portfolio; A11 is native-only.
+class ScaledPortfolioSingleIntraNodeSolver extends PortfolioSingleIntraNodeSolver {
+  override getCombinationDefs(): string[][] {
+    return super
+      .getCombinationDefs()
+      .filter((combination) => !combination.includes("highDensityA11"))
+  }
+}
+
 export const DEFAULT_MAX_GROWTH_ATTEMPTS = 3
 
 export type GrowShrinkHighDensityIntraNodeSolverParams =
@@ -152,7 +161,11 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
   private createActiveSubSolver() {
     const { growShrinkSolutionValidator: _, ...portfolioParams } =
       this.constructorParams
-    this.activeSubSolver = new PortfolioSingleIntraNodeSolver({
+    const PortfolioSolver =
+      this.scaleFactor === 1
+        ? PortfolioSingleIntraNodeSolver
+        : ScaledPortfolioSingleIntraNodeSolver
+    this.activeSubSolver = new PortfolioSolver({
       ...portfolioParams,
       nodeWithPortPoints: scaleNodeWithPortPoints(
         this.nodeWithPortPoints,
