@@ -20,6 +20,10 @@ test("Pipeline9 makes every preloaded trace in an SRJ23 sample 46 DRC region rer
     routedTraces: solver.getOutputSimplifiedPcbTraces(),
   })
   expect(errors).toEqual([])
+  console.error(
+    "STITCH_REPAIR_SAMPLE46_STATS",
+    JSON.stringify(solver.pipeline9JointDrcRepairSolver?.stats),
+  )
   expect(
     solver.pipeline9JointDrcRepairSolver?.stats.regionalB01RepairAcceptedCount,
   ).toBeGreaterThan(0)

@@ -28,20 +28,30 @@ export function diagnoseStitchRepair(solver: BaseSolver): void {
     spy.mockRestore()
   }
   if (solver.failed && rejected) {
-    console.error(
-      "STITCH_REPAIR_FAILURE",
-      JSON.stringify(rejected, (key, value) => {
-        if (
-          key === "sameNetCache" ||
-          key === "segmentIndexesByLayer" ||
-          key === "viaIndex" ||
-          key === "obstacleIndex"
-        )
-          return undefined
-        if (value instanceof Map) return [...value.entries()]
-        if (value instanceof Set) return [...value]
-        return value
-      }),
-    )
+    const diagnostic = JSON.stringify(rejected, (key, value) => {
+      if (
+        key === "sameNetCache" ||
+        key === "segmentIndexesByLayer" ||
+        key === "viaIndex" ||
+        key === "obstacleIndex"
+      )
+        return undefined
+      if (value instanceof Map) return [...value.entries()]
+      if (value instanceof Set) return [...value]
+      return value
+    })
+    // Hosted test output truncates a single large log record. Chunk only the
+    // diagnostic transport, without changing solver execution or its inputs.
+    for (let offset = 0; offset < diagnostic.length; offset += 8000) {
+      console.error(
+        "STITCH_REPAIR_FAILURE_CHUNK",
+        JSON.stringify({
+          connectionName: rejected.segment.connectionName,
+          offset,
+          totalLength: diagnostic.length,
+          data: diagnostic.slice(offset, offset + 8000),
+        }),
+      )
+    }
   }
 }
