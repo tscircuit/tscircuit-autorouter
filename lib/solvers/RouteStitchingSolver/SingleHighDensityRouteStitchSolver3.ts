@@ -115,6 +115,10 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
           ...stitchSegment,
           start: repairedPath[pointIndex - 1]!,
           end: repairedPath[pointIndex]!,
+          allowedClearanceViolationEndpoints: [
+            stitchSegment.start,
+            stitchSegment.end,
+          ],
         })
       ) {
         throw new Error(

@@ -15,6 +15,7 @@ export type StitchSegment = {
   start: Point3
   end: Point3
   traceThickness: number
+  allowedClearanceViolationEndpoints?: Point3[]
 }
 
 export type IsStitchSegmentClear = (stitchSegment: StitchSegment) => boolean
@@ -38,8 +39,22 @@ type RouteVia = {
   diameter: number
 }
 
+type CollisionBoundary = {
+  minX: number
+  minY: number
+  maxX: number
+  maxY: number
+  directlyBlocksRequest: boolean
+}
+
+type VisibilityEdge = {
+  index: number
+  length: number
+}
+
 const DEFAULT_AUTOROUTING_CLEARANCE = 0.1
 const CLEARANCE_TOLERANCE = 1e-6
+const ENDPOINT_MATCH_TOLERANCE = 1e-6
 
 const removeConsecutiveDuplicatePoints = (points: Point3[]): Point3[] => {
   const deduplicatedPoints: Point3[] = []
@@ -56,23 +71,34 @@ const removeConsecutiveDuplicatePoints = (points: Point3[]): Point3[] => {
   return deduplicatedPoints
 }
 
-const getPathLength = (points: Point3[]): number => {
-  let pathLength = 0
-  for (let pointIndex = 1; pointIndex < points.length; pointIndex += 1) {
-    const previousPoint = points[pointIndex - 1]!
-    const point = points[pointIndex]!
-    pathLength += Math.hypot(
-      point.x - previousPoint.x,
-      point.y - previousPoint.y,
-    )
-  }
-  return pathLength
-}
-
 const getPathKey = (points: Point3[]): string => {
   return points
     .map((point) => `${point.x.toFixed(9)},${point.y.toFixed(9)},${point.z}`)
     .join("|")
+}
+
+const collisionBoundariesOverlap = (
+  first: CollisionBoundary,
+  second: CollisionBoundary,
+): boolean => {
+  return (
+    first.minX <= second.maxX &&
+    first.maxX >= second.minX &&
+    first.minY <= second.maxY &&
+    first.maxY >= second.minY
+  )
+}
+
+const isEligibleViolationEndpoint = (
+  point: Point3,
+  eligibleEndpoints: Point3[],
+): boolean => {
+  return eligibleEndpoints.some(
+    (endpoint) =>
+      endpoint.z === point.z &&
+      Math.hypot(endpoint.x - point.x, endpoint.y - point.y) <
+        ENDPOINT_MATCH_TOLERANCE,
+  )
 }
 
 /**
@@ -80,30 +106,33 @@ const getPathKey = (points: Point3[]): string => {
  * endpoint, provided the stitch never gets closer and exits the violation.
  */
 const preservesEndpointClearance = ({
+  segmentStart,
+  segmentEnd,
+  eligibleEndpoints,
   startGap,
   endGap,
   segmentGap,
   requiredGap,
 }: {
+  segmentStart: Point3
+  segmentEnd: Point3
+  eligibleEndpoints: Point3[]
   startGap: number
   endGap: number
   segmentGap: number
   requiredGap: number
 }): boolean => {
   const escapesFromStart =
+    isEligibleViolationEndpoint(segmentStart, eligibleEndpoints) &&
     startGap < requiredGap &&
     endGap >= requiredGap - CLEARANCE_TOLERANCE &&
     segmentGap >= startGap - CLEARANCE_TOLERANCE
   const escapesFromEnd =
+    isEligibleViolationEndpoint(segmentEnd, eligibleEndpoints) &&
     endGap < requiredGap &&
     startGap >= requiredGap - CLEARANCE_TOLERANCE &&
     segmentGap >= endGap - CLEARANCE_TOLERANCE
-  const preservesExistingViolation =
-    startGap < requiredGap &&
-    endGap < requiredGap &&
-    segmentGap >= Math.min(startGap, endGap) - CLEARANCE_TOLERANCE
-
-  return escapesFromStart || escapesFromEnd || preservesExistingViolation
+  return escapesFromStart || escapesFromEnd
 }
 
 export class RouteStitchClearanceValidator {
@@ -326,6 +355,7 @@ export class RouteStitchClearanceValidator {
     start,
     end,
     traceThickness,
+    allowedClearanceViolationEndpoints = [start, end],
   }: StitchSegment): boolean {
     const traceRadius = traceThickness / 2
     const queryMargin = this.minClearance + traceRadius
@@ -356,6 +386,9 @@ export class RouteStitchClearanceValidator {
       if (
         segmentGap < queryMargin &&
         !preservesEndpointClearance({
+          segmentStart: start,
+          segmentEnd: end,
+          eligibleEndpoints: allowedClearanceViolationEndpoints,
           startGap: segmentToBoxMinDistance(start, start, obstacle),
           endGap: segmentToBoxMinDistance(end, end, obstacle),
           segmentGap,
@@ -384,6 +417,9 @@ export class RouteStitchClearanceValidator {
       if (
         segmentGap < requiredGap &&
         !preservesEndpointClearance({
+          segmentStart: start,
+          segmentEnd: end,
+          eligibleEndpoints: allowedClearanceViolationEndpoints,
           startGap: pointToSegmentDistance(start, segment.start, segment.end),
           endGap: pointToSegmentDistance(end, segment.start, segment.end),
           segmentGap,
@@ -404,6 +440,9 @@ export class RouteStitchClearanceValidator {
       if (
         segmentGap < requiredGap &&
         !preservesEndpointClearance({
+          segmentStart: start,
+          segmentEnd: end,
+          eligibleEndpoints: allowedClearanceViolationEndpoints,
           startGap: Math.hypot(start.x - via.x, start.y - via.y),
           endGap: Math.hypot(end.x - via.x, end.y - via.y),
           segmentGap,
@@ -422,74 +461,14 @@ export class RouteStitchClearanceValidator {
       return [stitchSegment.start, stitchSegment.end]
     }
 
-    const xCandidates = new Set<number>([
-      stitchSegment.start.x,
-      stitchSegment.end.x,
-    ])
-    const yCandidates = new Set<number>([
-      stitchSegment.start.y,
-      stitchSegment.end.y,
-    ])
-    this.addLocalDetourAxes(stitchSegment, xCandidates, yCandidates)
-
-    const candidatePaths: Point3[][] = []
-    const sortedXCandidates = [...xCandidates].sort(
-      (left, right) => left - right,
-    )
-    const sortedYCandidates = [...yCandidates].sort(
-      (left, right) => left - right,
-    )
-    for (const x of sortedXCandidates) {
-      for (const y of sortedYCandidates) {
-        candidatePaths.push(
-          removeConsecutiveDuplicatePoints([
-            stitchSegment.start,
-            { x, y: stitchSegment.start.y, z: stitchSegment.start.z },
-            { x, y, z: stitchSegment.start.z },
-            { x: stitchSegment.end.x, y, z: stitchSegment.start.z },
-            stitchSegment.end,
-          ]),
-          removeConsecutiveDuplicatePoints([
-            stitchSegment.start,
-            { x: stitchSegment.start.x, y, z: stitchSegment.start.z },
-            { x, y, z: stitchSegment.start.z },
-            { x, y: stitchSegment.end.y, z: stitchSegment.start.z },
-            stitchSegment.end,
-          ]),
-        )
-      }
-    }
-
-    return candidatePaths
-      .filter((path) => this.isPathClear(stitchSegment, path))
-      .sort(
-        (left, right) =>
-          getPathLength(left) - getPathLength(right) ||
-          getPathKey(left).localeCompare(getPathKey(right)),
-      )[0]
+    const boundaries = this.getRelevantCollisionBoundaries(stitchSegment)
+    const visibilityPoints = this.getVisibilityPoints(stitchSegment, boundaries)
+    return this.findShortestClearPath(stitchSegment, visibilityPoints)
   }
 
-  private isPathClear(stitchSegment: StitchSegment, path: Point3[]): boolean {
-    if (path.length < 2) return false
-    for (let pointIndex = 1; pointIndex < path.length; pointIndex += 1) {
-      if (
-        !this.isSegmentClear({
-          ...stitchSegment,
-          start: path[pointIndex - 1]!,
-          end: path[pointIndex]!,
-        })
-      ) {
-        return false
-      }
-    }
-    return true
-  }
-
-  private addLocalDetourAxes(
+  private getRelevantCollisionBoundaries(
     stitchSegment: StitchSegment,
-    xCandidates: Set<number>,
-    yCandidates: Set<number>,
-  ): void {
+  ): CollisionBoundary[] {
     const traceRadius = stitchSegment.traceThickness / 2
     const directDistance = Math.hypot(
       stitchSegment.end.x - stitchSegment.start.x,
@@ -505,14 +484,7 @@ export class RouteStitchClearanceValidator {
     const maxY =
       Math.max(stitchSegment.start.y, stitchSegment.end.y) + searchMargin
 
-    const boardEdgeClearance =
-      this.minBoardEdgeClearance + traceRadius + CLEARANCE_TOLERANCE
-    for (const outlinePoint of this.outline) {
-      xCandidates.add(outlinePoint.x - boardEdgeClearance)
-      xCandidates.add(outlinePoint.x + boardEdgeClearance)
-      yCandidates.add(outlinePoint.y - boardEdgeClearance)
-      yCandidates.add(outlinePoint.y + boardEdgeClearance)
-    }
+    const boundaries: CollisionBoundary[] = []
 
     for (const obstacle of this.obstacleIndex?.search(minX, minY, maxX, maxY) ??
       []) {
@@ -520,10 +492,18 @@ export class RouteStitchClearanceValidator {
       if (this.isObstacleOnSameNet(stitchSegment.connectionName, obstacle))
         continue
       const clearance = this.minClearance + traceRadius + CLEARANCE_TOLERANCE
-      xCandidates.add(obstacle.center.x - obstacle.width / 2 - clearance)
-      xCandidates.add(obstacle.center.x + obstacle.width / 2 + clearance)
-      yCandidates.add(obstacle.center.y - obstacle.height / 2 - clearance)
-      yCandidates.add(obstacle.center.y + obstacle.height / 2 + clearance)
+      boundaries.push({
+        minX: obstacle.center.x - obstacle.width / 2 - clearance,
+        minY: obstacle.center.y - obstacle.height / 2 - clearance,
+        maxX: obstacle.center.x + obstacle.width / 2 + clearance,
+        maxY: obstacle.center.y + obstacle.height / 2 + clearance,
+        directlyBlocksRequest:
+          segmentToBoxMinDistance(
+            stitchSegment.start,
+            stitchSegment.end,
+            obstacle,
+          ) < clearance,
+      })
     }
 
     for (const segment of this.segmentIndexesByLayer
@@ -536,10 +516,19 @@ export class RouteStitchClearanceValidator {
         traceRadius +
         segment.traceThickness / 2 +
         CLEARANCE_TOLERANCE
-      xCandidates.add(Math.min(segment.start.x, segment.end.x) - clearance)
-      xCandidates.add(Math.max(segment.start.x, segment.end.x) + clearance)
-      yCandidates.add(Math.min(segment.start.y, segment.end.y) - clearance)
-      yCandidates.add(Math.max(segment.start.y, segment.end.y) + clearance)
+      boundaries.push({
+        minX: Math.min(segment.start.x, segment.end.x) - clearance,
+        minY: Math.min(segment.start.y, segment.end.y) - clearance,
+        maxX: Math.max(segment.start.x, segment.end.x) + clearance,
+        maxY: Math.max(segment.start.y, segment.end.y) + clearance,
+        directlyBlocksRequest:
+          minimumDistanceBetweenSegments(
+            stitchSegment.start,
+            stitchSegment.end,
+            segment.start,
+            segment.end,
+          ) < clearance,
+      })
     }
 
     for (const via of this.viaIndex?.search(minX, minY, maxX, maxY) ?? []) {
@@ -547,10 +536,206 @@ export class RouteStitchClearanceValidator {
         continue
       const clearance =
         this.minClearance + traceRadius + via.diameter / 2 + CLEARANCE_TOLERANCE
-      xCandidates.add(via.x - clearance)
-      xCandidates.add(via.x + clearance)
-      yCandidates.add(via.y - clearance)
-      yCandidates.add(via.y + clearance)
+      boundaries.push({
+        minX: via.x - clearance,
+        minY: via.y - clearance,
+        maxX: via.x + clearance,
+        maxY: via.y + clearance,
+        directlyBlocksRequest:
+          pointToSegmentDistance(
+            via,
+            stitchSegment.start,
+            stitchSegment.end,
+          ) < clearance,
+      })
     }
+
+    const relevantIndexes = new Set<number>()
+    const pendingIndexes: number[] = []
+    for (
+      let boundaryIndex = 0;
+      boundaryIndex < boundaries.length;
+      boundaryIndex += 1
+    ) {
+      if (!boundaries[boundaryIndex]!.directlyBlocksRequest) continue
+      relevantIndexes.add(boundaryIndex)
+      pendingIndexes.push(boundaryIndex)
+    }
+    while (pendingIndexes.length > 0) {
+      const currentIndex = pendingIndexes.pop()!
+      for (
+        let boundaryIndex = 0;
+        boundaryIndex < boundaries.length;
+        boundaryIndex += 1
+      ) {
+        if (relevantIndexes.has(boundaryIndex)) continue
+        if (
+          !collisionBoundariesOverlap(
+            boundaries[currentIndex]!,
+            boundaries[boundaryIndex]!,
+          )
+        )
+          continue
+        relevantIndexes.add(boundaryIndex)
+        pendingIndexes.push(boundaryIndex)
+      }
+    }
+    return [...relevantIndexes]
+      .sort((left, right) => left - right)
+      .map((boundaryIndex) => boundaries[boundaryIndex]!)
+  }
+
+  private getVisibilityPoints(
+    stitchSegment: StitchSegment,
+    boundaries: CollisionBoundary[],
+  ): Point3[] {
+    const points: Point3[] = [stitchSegment.start, stitchSegment.end]
+    const pointKeys = new Set(points.map((point) => getPathKey([point])))
+    const addPoint = (x: number, y: number): void => {
+      const point = { x, y, z: stitchSegment.start.z }
+      const key = getPathKey([point])
+      if (pointKeys.has(key)) return
+      pointKeys.add(key)
+      points.push(point)
+    }
+
+    for (const boundary of boundaries) {
+      addPoint(boundary.minX, boundary.minY)
+      addPoint(boundary.minX, boundary.maxY)
+      addPoint(boundary.maxX, boundary.minY)
+      addPoint(boundary.maxX, boundary.maxY)
+      for (const endpoint of [stitchSegment.start, stitchSegment.end]) {
+        if (
+          endpoint.x < boundary.minX ||
+          endpoint.x > boundary.maxX ||
+          endpoint.y < boundary.minY ||
+          endpoint.y > boundary.maxY
+        )
+          continue
+        addPoint(boundary.minX, endpoint.y)
+        addPoint(boundary.maxX, endpoint.y)
+        addPoint(endpoint.x, boundary.minY)
+        addPoint(endpoint.x, boundary.maxY)
+      }
+    }
+
+    for (
+      let firstIndex = 0;
+      firstIndex < boundaries.length;
+      firstIndex += 1
+    ) {
+      for (
+        let secondIndex = firstIndex + 1;
+        secondIndex < boundaries.length;
+        secondIndex += 1
+      ) {
+        const first = boundaries[firstIndex]!
+        const second = boundaries[secondIndex]!
+        for (const x of [first.minX, first.maxX]) {
+          if (x >= second.minX && x <= second.maxX) {
+            addPoint(x, second.minY)
+            addPoint(x, second.maxY)
+          }
+        }
+        for (const x of [second.minX, second.maxX]) {
+          if (x >= first.minX && x <= first.maxX) {
+            addPoint(x, first.minY)
+            addPoint(x, first.maxY)
+          }
+        }
+      }
+    }
+
+    const boardEdgeClearance =
+      this.minBoardEdgeClearance +
+      stitchSegment.traceThickness / 2 +
+      CLEARANCE_TOLERANCE
+    for (const outlinePoint of this.outline) {
+      for (const xOffset of [-boardEdgeClearance, boardEdgeClearance]) {
+        for (const yOffset of [-boardEdgeClearance, boardEdgeClearance]) {
+          addPoint(outlinePoint.x + xOffset, outlinePoint.y + yOffset)
+        }
+      }
+    }
+
+    const intermediatePoints = points
+      .slice(2)
+      .sort((left, right) =>
+        getPathKey([left]).localeCompare(getPathKey([right])),
+      )
+    return [points[0]!, points[1]!, ...intermediatePoints]
+  }
+
+  private findShortestClearPath(
+    stitchSegment: StitchSegment,
+    points: Point3[],
+  ): Point3[] | undefined {
+    const edges: VisibilityEdge[][] = points.map(() => [])
+    for (
+      let firstIndex = 0;
+      firstIndex < points.length;
+      firstIndex += 1
+    ) {
+      for (
+        let secondIndex = firstIndex + 1;
+        secondIndex < points.length;
+        secondIndex += 1
+      ) {
+        const start = points[firstIndex]!
+        const end = points[secondIndex]!
+        if (
+          !this.isSegmentClear({
+            ...stitchSegment,
+            start,
+            end,
+            allowedClearanceViolationEndpoints: [
+              stitchSegment.start,
+              stitchSegment.end,
+            ],
+          })
+        )
+          continue
+        const length = Math.hypot(end.x - start.x, end.y - start.y)
+        edges[firstIndex]!.push({ index: secondIndex, length })
+        edges[secondIndex]!.push({ index: firstIndex, length })
+      }
+    }
+
+    const distances = points.map(() => Infinity)
+    const previousIndexes = points.map(() => -1)
+    const visited = points.map(() => false)
+    distances[0] = 0
+    for (let iteration = 0; iteration < points.length; iteration += 1) {
+      let currentIndex = -1
+      for (let pointIndex = 0; pointIndex < points.length; pointIndex += 1) {
+        if (visited[pointIndex]) continue
+        if (
+          currentIndex === -1 ||
+          distances[pointIndex]! < distances[currentIndex]!
+        ) {
+          currentIndex = pointIndex
+        }
+      }
+      if (currentIndex === -1 || !Number.isFinite(distances[currentIndex]))
+        break
+      if (currentIndex === 1) break
+      visited[currentIndex] = true
+      for (const edge of edges[currentIndex]!) {
+        if (visited[edge.index]) continue
+        const candidateDistance = distances[currentIndex]! + edge.length
+        if (candidateDistance >= distances[edge.index]!) continue
+        distances[edge.index] = candidateDistance
+        previousIndexes[edge.index] = currentIndex
+      }
+    }
+    if (!Number.isFinite(distances[1])) return undefined
+
+    const path: Point3[] = []
+    for (let pointIndex = 1; pointIndex !== -1; ) {
+      path.push(points[pointIndex]!)
+      pointIndex = previousIndexes[pointIndex]!
+    }
+    path.reverse()
+    return removeConsecutiveDuplicatePoints(path)
   }
 }
