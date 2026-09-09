@@ -12,6 +12,7 @@ test("Pipeline9 clears SRJ18 sample 13 within its regional work budget", async (
 
   solver.solve()
 
+  expect(solver.error).toBeNull()
   expect(solver.solved).toBeTrue()
   expect(solver.failed).toBeFalse()
   const repairStats = solver.pipeline9JointDrcRepairSolver?.stats

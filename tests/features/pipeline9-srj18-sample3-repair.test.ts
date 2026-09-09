@@ -12,6 +12,7 @@ test("Pipeline9 repairs SRJ18 sample 3 with unchanged routing obstacles", async 
   )
   solver.solve()
 
+  expect(solver.error).toBeNull()
   expect(solver.solved).toBe(true)
   expect(solver.failed).toBe(false)
   const output = {

@@ -70,9 +70,12 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
       preserveTerminalPcbPortIds: this.preserveTerminalPcbPortIds,
       isStitchSegmentClear: (stitchSegment) =>
         this.clearanceValidator.isSegmentClear(stitchSegment),
-      findStitchSegmentPath: (stitchSegment) =>
-        this.clearanceValidator.findClearPath(stitchSegment),
-      stitchClearanceMode: this.stitchClearanceMode,
+      findStitchSegmentPath:
+        this.stitchClearanceMode === "require_clear"
+          ? (stitchSegment) =>
+              this.clearanceValidator.findClearPath(stitchSegment)
+          : undefined,
+      stitchClearanceMode: "require_clear",
     })
 
     while (

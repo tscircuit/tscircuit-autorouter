@@ -128,6 +128,8 @@ const preservesEndpointClearance = ({
     startGap >= requiredGap - CLEARANCE_TOLERANCE &&
     segmentGap >= endGap - CLEARANCE_TOLERANCE
   const preservesExistingViolation =
+    isEligibleViolationEndpoint(segmentStart, eligibleEndpoints) &&
+    isEligibleViolationEndpoint(segmentEnd, eligibleEndpoints) &&
     startGap < requiredGap &&
     endGap < requiredGap &&
     segmentGap >= Math.min(startGap, endGap) - CLEARANCE_TOLERANCE
