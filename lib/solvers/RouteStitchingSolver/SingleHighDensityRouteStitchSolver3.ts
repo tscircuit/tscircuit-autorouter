@@ -105,7 +105,11 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
         "Stitch repair path must preserve its exact endpoints and layer",
       )
     }
-    for (let pointIndex = 1; pointIndex < repairedPath.length; pointIndex += 1) {
+    for (
+      let pointIndex = 1;
+      pointIndex < repairedPath.length;
+      pointIndex += 1
+    ) {
       if (
         !this.isStitchSegmentClear({
           ...stitchSegment,
@@ -431,9 +435,7 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
               ? 0
               : COLLISION_PENALTY
             scoreFirst =
-              GAP_PENALTY +
-              clearancePenalty +
-              getStitchPathLength(stitchPath)
+              GAP_PENALTY + clearancePenalty + getStitchPathLength(stitchPath)
           } else {
             blockedByCollision = true
           }
@@ -476,9 +478,7 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
               ? 0
               : COLLISION_PENALTY
             scoreLast =
-              GAP_PENALTY +
-              clearancePenalty +
-              getStitchPathLength(stitchPath)
+              GAP_PENALTY + clearancePenalty + getStitchPathLength(stitchPath)
           } else {
             blockedByCollision = true
           }

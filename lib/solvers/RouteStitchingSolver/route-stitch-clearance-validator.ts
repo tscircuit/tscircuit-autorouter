@@ -23,9 +23,7 @@ export type FindStitchSegmentPath = (
 ) => Point3[] | undefined
 
 type ConnectionName = HighDensityRoute["connectionName"]
-type RootConnectionName = NonNullable<
-  HighDensityRoute["rootConnectionName"]
->
+type RootConnectionName = NonNullable<HighDensityRoute["rootConnectionName"]>
 
 type ConnectivityLike = {
   areIdsConnected: (firstId: string, secondId: string) => boolean
@@ -63,7 +61,10 @@ const getPathLength = (points: Point3[]): number => {
   for (let pointIndex = 1; pointIndex < points.length; pointIndex += 1) {
     const previousPoint = points[pointIndex - 1]!
     const point = points[pointIndex]!
-    pathLength += Math.hypot(point.x - previousPoint.x, point.y - previousPoint.y)
+    pathLength += Math.hypot(
+      point.x - previousPoint.x,
+      point.y - previousPoint.y,
+    )
   }
   return pathLength
 }
@@ -286,10 +287,7 @@ export class RouteStitchClearanceValidator {
     if (firstRoots && secondRoots) {
       for (const root of firstRoots) {
         for (const secondRoot of secondRoots) {
-          if (
-            root === secondRoot ||
-            this.areIdsConnected?.(root, secondRoot)
-          ) {
+          if (root === secondRoot || this.areIdsConnected?.(root, secondRoot)) {
             sameNet = true
             break
           }
@@ -349,12 +347,8 @@ export class RouteStitchClearanceValidator {
     }
 
     const nearbyObstacles =
-      this.obstacleIndex?.search(
-        queryMinX,
-        queryMinY,
-        queryMaxX,
-        queryMaxY,
-      ) ?? []
+      this.obstacleIndex?.search(queryMinX, queryMinY, queryMaxX, queryMaxY) ??
+      []
     for (const obstacle of nearbyObstacles) {
       if (!obstacle.__zLayers?.includes(start.z)) continue
       if (this.isObstacleOnSameNet(connectionName, obstacle)) continue
@@ -439,25 +433,31 @@ export class RouteStitchClearanceValidator {
     this.addLocalDetourAxes(stitchSegment, xCandidates, yCandidates)
 
     const candidatePaths: Point3[][] = []
-    for (const y of [...yCandidates].sort((left, right) => left - right)) {
-      candidatePaths.push(
-        removeConsecutiveDuplicatePoints([
-          stitchSegment.start,
-          { x: stitchSegment.start.x, y, z: stitchSegment.start.z },
-          { x: stitchSegment.end.x, y, z: stitchSegment.start.z },
-          stitchSegment.end,
-        ]),
-      )
-    }
-    for (const x of [...xCandidates].sort((left, right) => left - right)) {
-      candidatePaths.push(
-        removeConsecutiveDuplicatePoints([
-          stitchSegment.start,
-          { x, y: stitchSegment.start.y, z: stitchSegment.start.z },
-          { x, y: stitchSegment.end.y, z: stitchSegment.start.z },
-          stitchSegment.end,
-        ]),
-      )
+    const sortedXCandidates = [...xCandidates].sort(
+      (left, right) => left - right,
+    )
+    const sortedYCandidates = [...yCandidates].sort(
+      (left, right) => left - right,
+    )
+    for (const x of sortedXCandidates) {
+      for (const y of sortedYCandidates) {
+        candidatePaths.push(
+          removeConsecutiveDuplicatePoints([
+            stitchSegment.start,
+            { x, y: stitchSegment.start.y, z: stitchSegment.start.z },
+            { x, y, z: stitchSegment.start.z },
+            { x: stitchSegment.end.x, y, z: stitchSegment.start.z },
+            stitchSegment.end,
+          ]),
+          removeConsecutiveDuplicatePoints([
+            stitchSegment.start,
+            { x: stitchSegment.start.x, y, z: stitchSegment.start.z },
+            { x, y, z: stitchSegment.start.z },
+            { x, y: stitchSegment.end.y, z: stitchSegment.start.z },
+            stitchSegment.end,
+          ]),
+        )
+      }
     }
 
     return candidatePaths
@@ -505,12 +505,17 @@ export class RouteStitchClearanceValidator {
     const maxY =
       Math.max(stitchSegment.start.y, stitchSegment.end.y) + searchMargin
 
-    for (const obstacle of this.obstacleIndex?.search(
-      minX,
-      minY,
-      maxX,
-      maxY,
-    ) ?? []) {
+    const boardEdgeClearance =
+      this.minBoardEdgeClearance + traceRadius + CLEARANCE_TOLERANCE
+    for (const outlinePoint of this.outline) {
+      xCandidates.add(outlinePoint.x - boardEdgeClearance)
+      xCandidates.add(outlinePoint.x + boardEdgeClearance)
+      yCandidates.add(outlinePoint.y - boardEdgeClearance)
+      yCandidates.add(outlinePoint.y + boardEdgeClearance)
+    }
+
+    for (const obstacle of this.obstacleIndex?.search(minX, minY, maxX, maxY) ??
+      []) {
       if (!obstacle.__zLayers?.includes(stitchSegment.start.z)) continue
       if (this.isObstacleOnSameNet(stitchSegment.connectionName, obstacle))
         continue
@@ -524,9 +529,7 @@ export class RouteStitchClearanceValidator {
     for (const segment of this.segmentIndexesByLayer
       ?.get(stitchSegment.start.z)
       ?.search(minX, minY, maxX, maxY) ?? []) {
-      if (
-        this.areSameNet(stitchSegment.connectionName, segment.connectionName)
-      )
+      if (this.areSameNet(stitchSegment.connectionName, segment.connectionName))
         continue
       const clearance =
         this.minClearance +
