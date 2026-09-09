@@ -459,16 +459,16 @@ export class SameNetViaMergerSolver extends BaseSolver {
       const keepKey = this.getViaKey(candidateGroup.keep)
       if (touchedViaKeys.has(keepKey)) continue
 
-      const remove = candidateGroup.remove.filter(
-        (viaToRemove) => !touchedViaKeys.has(this.getViaKey(viaToRemove)),
-      )
+      const remove = candidateGroup.remove.filter((viaToRemove): boolean => {
+        const viaKey = this.getViaKey(viaToRemove)
+        if (touchedViaKeys.has(viaKey)) return false
+        touchedViaKeys.add(viaKey)
+        return true
+      })
       if (remove.length === 0) continue
 
       groups.push({ keep: candidateGroup.keep, remove })
       touchedViaKeys.add(keepKey)
-      for (const viaToRemove of remove) {
-        touchedViaKeys.add(this.getViaKey(viaToRemove))
-      }
     }
 
     return groups
