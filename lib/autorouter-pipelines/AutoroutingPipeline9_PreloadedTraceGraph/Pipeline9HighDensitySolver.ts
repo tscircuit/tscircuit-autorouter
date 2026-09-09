@@ -794,6 +794,8 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
         availableZ: Array.from({ length: this.layerCount }, (_, z) => z),
       },
       this.getUpdatedFixedHdRoutes(),
+      new Set(),
+      { includeClosedSectionsForMutationProvenance: true },
     )
     const markedTraceIndexes = new Set<number>()
     for (const section of postSpliceProblem.fixedRouteSectionsByConnectionName.values()) {

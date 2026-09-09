@@ -73,6 +73,7 @@ export class IntraNodeRouteSolver extends BaseSolver {
   traceWidth: number
   obstacleMargin: number
   captureSearchDebug: boolean
+  viaExpansion: "per-layer" | "physical"
   rerouteAttemptsByConnection: Map<string, number>
 
   POSTROUTE_VIA_TRACE_CLEARANCE = 0.1
@@ -100,6 +101,8 @@ export class IntraNodeRouteSolver extends BaseSolver {
     traceWidth?: number
     obstacleMargin?: number
     captureSearchDebug?: boolean
+    /** Requires canonical, layer-independent child via clearance checks. */
+    viaExpansion?: "per-layer" | "physical"
     obstacles?: Obstacle[]
     layerCount?: number
   }) {
@@ -115,6 +118,7 @@ export class IntraNodeRouteSolver extends BaseSolver {
     this.traceWidth = params.traceWidth ?? 0.15
     this.obstacleMargin = params.obstacleMargin ?? 0.15
     this.captureSearchDebug = params.captureSearchDebug ?? true
+    this.viaExpansion = params.viaExpansion ?? "per-layer"
     const unsolvedConnectionsMap: Map<string, ConnectionPoint[]> = new Map()
     this.rootConnectionNameByConnectionName = new Map()
     for (const {
@@ -265,6 +269,7 @@ export class IntraNodeRouteSolver extends BaseSolver {
       traceThickness: this.traceWidth,
       obstacleMargin: this.obstacleMargin,
       captureSearchDebug: this.captureSearchDebug,
+      viaExpansion: this.viaExpansion,
     }
   }
 
