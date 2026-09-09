@@ -20,9 +20,12 @@ test("partial publication rejects new pairs, worsening gaps and unsupported erro
     originalSrj: fixture.srj as SimpleRouteJson,
     initialErrors: [clearanceError, overlapError],
   }
-  expect(canPublishPartialFixedObstacleRepair({
-    ...params, remainingErrors: [clearanceError],
-  })).toBeTrue()
+  expect(
+    canPublishPartialFixedObstacleRepair({
+      ...params,
+      remainingErrors: [clearanceError],
+    }),
+  ).toBeTrue()
   for (const error of [
     { ...clearanceError, pcb_pad_id: "pcb_smtpad_168" },
     { ...clearanceError, pcb_trace_id: "new_trace_0" },
@@ -33,11 +36,17 @@ test("partial publication rejects new pairs, worsening gaps and unsupported erro
     { ...overlapError, pcb_trace_error_id: "overlap_other_0_via_0" },
     { type: "pcb_trace_error", message: "Missing connection" },
   ]) {
-    expect(canPublishPartialFixedObstacleRepair({
-      ...params, remainingErrors: [error],
-    })).toBeFalse()
+    expect(
+      canPublishPartialFixedObstacleRepair({
+        ...params,
+        remainingErrors: [error],
+      }),
+    ).toBeFalse()
   }
-  expect(canPublishPartialFixedObstacleRepair({
-    ...params, remainingErrors: params.initialErrors,
-  })).toBeFalse()
+  expect(
+    canPublishPartialFixedObstacleRepair({
+      ...params,
+      remainingErrors: params.initialErrors,
+    }),
+  ).toBeFalse()
 })
