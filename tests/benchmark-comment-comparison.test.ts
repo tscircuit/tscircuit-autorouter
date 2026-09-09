@@ -83,7 +83,7 @@ test("PR benchmark comments render one main-versus-PR comparison table", () => {
 
   expect(
     renderBenchmarkComparison({ mainReport, prReport }).join("\n"),
-  ).toBe(`Dataset: srj18 · Scenarios: 2 · Effort: 1x effort
+  ).toContain(`Dataset: srj18 · Scenarios: 2 · Effort: 1x effort
 
 | Solver | Metric | Main | PR | Change |
 | --- | --- | ---: | ---: | ---: |

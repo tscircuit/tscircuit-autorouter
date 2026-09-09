@@ -1,3 +1,5 @@
+import { renderBenchmarkStageTimings } from "./renderBenchmarkStageTimings.js"
+
 const formatTime = (timeMs) => {
   if (typeof timeMs !== "number" || !Number.isFinite(timeMs)) {
     return "n/a"
@@ -186,10 +188,10 @@ export const renderBenchmarkComparison = ({
       fallbackText.length > maxLength
         ? `${fallbackText.slice(0, maxLength)}\n\n...truncated...`
         : fallbackText
-    return ["```", truncated, "```"]
+    return ["```", truncated, "```", ...renderBenchmarkStageTimings(prReport, "PR")]
   }
   if (isNetworkedColdHotReport(prReport)) {
-    return renderNetworkedColdHotComparison(prReport)
+    return [...renderNetworkedColdHotComparison(prReport), ...renderBenchmarkStageTimings(prReport, "Cold/hot")]
   }
 
   const mainSummaries = new Map(
@@ -242,5 +244,7 @@ export const renderBenchmarkComparison = ({
     ...rows,
     "",
     "_DRC issues are totaled across solved samples. Timing percentiles include solved and timed-out samples; negative timing changes are faster._",
+    ...renderBenchmarkStageTimings(mainReport, "Main"),
+    ...renderBenchmarkStageTimings(prReport, "PR"),
   ]
 }
