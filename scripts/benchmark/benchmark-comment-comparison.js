@@ -188,10 +188,18 @@ export const renderBenchmarkComparison = ({
       fallbackText.length > maxLength
         ? `${fallbackText.slice(0, maxLength)}\n\n...truncated...`
         : fallbackText
-    return ["```", truncated, "```", ...renderBenchmarkStageTimings(prReport, "PR")]
+    return [
+      "```",
+      truncated,
+      "```",
+      ...renderBenchmarkStageTimings(prReport, "PR"),
+    ]
   }
   if (isNetworkedColdHotReport(prReport)) {
-    return [...renderNetworkedColdHotComparison(prReport), ...renderBenchmarkStageTimings(prReport, "Cold/hot")]
+    return [
+      ...renderNetworkedColdHotComparison(prReport),
+      ...renderBenchmarkStageTimings(prReport, "Cold/hot"),
+    ]
   }
 
   const mainSummaries = new Map(
