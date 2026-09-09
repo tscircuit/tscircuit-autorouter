@@ -3,7 +3,7 @@ import { MultipleHighDensityRouteStitchSolver3 } from "lib/solvers/RouteStitchin
 import type { SimpleRouteConnection } from "lib/types"
 import fixture from "./fixtures/close-multilayer-terminals.json"
 
-test("does not replace nearby multilayer terminals with a reversed layer shortcut", () => {
+test("does not replace nearby multilayer terminals with a reversed layer shortcut", (): void => {
   const solver = new MultipleHighDensityRouteStitchSolver3({
     ...fixture,
     connections: fixture.connections as SimpleRouteConnection[],
