@@ -2,7 +2,7 @@ import packageJson from "../package.json" with { type: "json" }
 
 // Resolve the built artifact at runtime so source typechecks need no dist folder.
 const { AUTOROUTER_VERSION } = await import(
-  new URL("../dist/index.js", import.meta.url).href,
+  new URL("../dist/index.js", import.meta.url).href
 )
 
 if (AUTOROUTER_VERSION !== packageJson.version) {
