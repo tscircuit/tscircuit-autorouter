@@ -1,13 +1,15 @@
 /** @jsxImportSource react-for-pipeline9-fixtures */
+import { measureTraceWidths } from "@tscircuit/power-trace-expander"
 import { expect, test } from "bun:test"
 import { CapacityMeshSolver } from "lib/index"
+import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import { convertSrjToGraphicsObject } from "lib/utils/convertSrjToGraphicsObject"
 import {
   RootCircuit,
   getSimpleRouteJsonFromCircuitJson,
 } from "../fixtures/pipeline9CoreRuntime.mjs"
 
-test("rejects rc car motor routes below their required minimum width", async () => {
+test("reroutes motor traces at their requested width with short pad neckdowns", async () => {
   const circuit = new RootCircuit()
   circuit.schematicDisabled = true
   const motorTraceWidth = 1.2
@@ -54,7 +56,24 @@ test("rejects rc car motor routes below their required minimum width", async () 
       return []
     }),
   )
-  expect(Math.min(...routedWidths)).toBe(0.15)
+  expect(Math.min(...routedWidths)).toBeGreaterThanOrEqual(0.6)
+  const expander =
+    nominalSolver.powerTraceExpansionSolver!.powerTraceExpanderSolver
+  const widths = measureTraceWidths(
+    expander.inputProblem,
+    expander.getOutput(),
+  ).get(motorTraceWidth)!
+  expect(widths.nominalCoverage).toBeGreaterThan(0.9)
+  expect(widths.longestUnderNominalRun).toBeLessThan(1)
+  expect(nominalTraces).toHaveLength(4)
+  expect(
+    evaluateRelaxedDrc({
+      inputSrj: routingInput,
+      srjWithPointPairs: nominalSolver.srjWithPointPairs!,
+      routedTraces: nominalTraces,
+      drcOptions: { traceClearance: 0.15, includeTraceContinuity: true },
+    }).errors,
+  ).toEqual([])
   const nominalBoardGraphics = convertSrjToGraphicsObject(
     nominalSolver.getOutputSimpleRouteJson(),
   )
@@ -71,21 +90,12 @@ test("rejects rc car motor routes below their required minimum width", async () 
     texts: [
       { x: -10, y: 5.5, text: "U1 motor driver", fontSize: 0.5 },
       { x: 10, y: 5.5, text: "J1 motor", fontSize: 0.5 },
-      { x: 0, y: -5, text: "1.2 mm requested / 0.15 mm routed", fontSize: 0.5 },
+      {
+        x: 0,
+        y: -5,
+        text: "1.2 mm motor runs / short pad neckdowns",
+        fontSize: 0.5,
+      },
     ],
   }).toMatchGraphicsSvg(import.meta.path)
-
-  const solver = new CapacityMeshSolver({
-    ...routingInput,
-    connections: routingInput.connections.map((connection) => ({
-      ...connection,
-      minTraceWidth: motorTraceWidth,
-    })),
-  })
-  solver.solve()
-  expect(solver.failed).toBe(true)
-  expect(solver.solved).toBe(false)
-  expect(solver.error).toContain("requires at least 1.2mm copper width")
-  expect(solver.traceWidthSolver?.getHdRoutesWithWidths()).toEqual([])
-  expect(() => solver.getOutputSimplifiedPcbTraces()).toThrow()
 })

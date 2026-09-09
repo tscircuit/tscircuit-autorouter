@@ -13,7 +13,6 @@ import { GraphicsObject } from "graphics-debug"
 import { getJumpersGraphics } from "lib/utils/getJumperGraphics"
 import { createObjectsWithZLayers } from "lib/utils/createObjectsWithZLayers"
 import { isObstacleConnectedToRoute } from "lib/solvers/TraceWidthSolver/isObstacleConnectedToRoute"
-import { getMinimumTraceWidthError } from "./getMinimumTraceWidthError"
 
 const CURSOR_STEP_DISTANCE = 0.1
 const MIN_TERMINAL_TAPER_DISTANCE = 0.75
@@ -76,7 +75,6 @@ export class TraceWidthSolver extends BaseSolver {
   obstacleMargin: number
   TRACE_WIDTH_SCHEDULE: number[]
   connectionNominalTraceWidthMap: Map<string, number>
-  private connections: SimpleRouteConnection[]
 
   unprocessedRoutes: HighDensityRoute[] = []
   processedRoutes: HighDensityRoute[] = []
@@ -106,7 +104,6 @@ export class TraceWidthSolver extends BaseSolver {
     this.MAX_ITERATIONS = 1e6
 
     this.hdRoutes = [...input.hdRoutes]
-    this.connections = input.connection
     this.minTraceWidth = input.minTraceWidth
     this.obstacleMargin = input.obstacleMargin ?? 0.15
     this.nominalTraceWidth = 0
@@ -123,14 +120,12 @@ export class TraceWidthSolver extends BaseSolver {
     this.connectionNominalTraceWidthMap = new Map()
 
     for (const connection of input.connection) {
-      const nominalTraceWidth =
-        connection.nominalTraceWidth ?? connection.minTraceWidth
-      if (nominalTraceWidth === undefined) {
+      if (connection.nominalTraceWidth === undefined) {
         continue
       }
       this.connectionNominalTraceWidthMap.set(
         connection.name,
-        nominalTraceWidth,
+        connection.nominalTraceWidth,
       )
     }
 
@@ -163,14 +158,6 @@ export class TraceWidthSolver extends BaseSolver {
       const nextTrace = this.unprocessedRoutes.shift()
 
       if (!nextTrace) {
-        this.error = getMinimumTraceWidthError({
-          routes: this.processedRoutes,
-          connections: this.connections,
-        })
-        if (this.error !== null) {
-          this.failed = true
-          return
-        }
         // All traces processed
         this.hdRoutesWithWidths = this.processedRoutes
         this.solved = true
