@@ -118,6 +118,7 @@ export class IntraNodeRouteSolver extends BaseSolver {
   traceWidth: number
   obstacleMargin: number
   captureSearchDebug: boolean
+  private readonly fixedFutureConnectionGeometry: boolean
   rerouteAttemptsByConnection: Map<string, number>
 
   POSTROUTE_VIA_TRACE_CLEARANCE = 0.1
@@ -145,6 +146,8 @@ export class IntraNodeRouteSolver extends BaseSolver {
     traceWidth?: number
     obstacleMargin?: number
     captureSearchDebug?: boolean
+    /** Future connection data stays ordinary and fixed while a route is searched. */
+    fixedFutureConnectionGeometry?: boolean
     obstacles?: Obstacle[]
     layerCount?: number
     preparedConnections?: PreparedIntraNodeConnections
@@ -161,6 +164,7 @@ export class IntraNodeRouteSolver extends BaseSolver {
     this.traceWidth = params.traceWidth ?? 0.15
     this.obstacleMargin = params.obstacleMargin ?? 0.15
     this.captureSearchDebug = params.captureSearchDebug ?? true
+    this.fixedFutureConnectionGeometry = params.fixedFutureConnectionGeometry ?? false
     const preparedConnections =
       params.preparedConnections ??
       prepareIntraNodeRouteSolverConnections(nodeWithPortPoints)
@@ -251,6 +255,18 @@ export class IntraNodeRouteSolver extends BaseSolver {
     )
   }
 
+  private hasCanonicalSingleRouteOptions(): boolean {
+    let current: object | null = this
+    while (current !== null) {
+      const descriptor = futureOptionsOwnDescriptor(current, "getSingleRouteSolverOpts")
+      if (descriptor) {
+        return descriptor.value === fixedFutureSingleRouteOptions
+      }
+      current = futureOptionsGetPrototypeOf(current)
+    }
+    return false
+  }
+
   private getSingleRouteSolverOpts(unsolvedConnection: {
     connectionName: string
     rootConnectionName?: string
@@ -295,6 +311,8 @@ export class IntraNodeRouteSolver extends BaseSolver {
       traceThickness: this.traceWidth,
       obstacleMargin: this.obstacleMargin,
       captureSearchDebug: this.captureSearchDebug,
+      fixedFutureConnectionGeometry:
+        this.fixedFutureConnectionGeometry && this.hasCanonicalSingleRouteOptions(),
     }
   }
 
@@ -663,3 +681,9 @@ const isEndpointViaSafe = (
 
   return true
 }
+
+const fixedFutureSingleRouteOptions =
+  (IntraNodeRouteSolver.prototype as any).getSingleRouteSolverOpts
+
+const futureOptionsOwnDescriptor = Object.getOwnPropertyDescriptor
+const futureOptionsGetPrototypeOf = Object.getPrototypeOf

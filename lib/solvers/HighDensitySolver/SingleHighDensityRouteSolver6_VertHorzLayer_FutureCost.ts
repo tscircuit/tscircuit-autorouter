@@ -25,6 +25,31 @@ type NodeCostParameters = {
 
 const MAX_DENSE_COST_CACHE_SLOTS = 65_536
 
+const fixedTraceGlobal = globalThis
+const fixedTraceArrayPrototype = Array.prototype
+const fixedTraceSymbolIterator = Symbol.iterator
+const fixedTraceMathObject = Math
+const fixedTraceMath = { min: Math.min, max: Math.max, sqrt: Math.sqrt }
+const fixedTraceArrayIterator = Array.prototype[Symbol.iterator]
+const fixedTraceIteratorPrototype = Object.getPrototypeOf(
+  fixedTraceArrayIterator.call([]),
+)
+const fixedTraceIteratorNext = fixedTraceIteratorPrototype.next
+const fixedTraceIteratorParent = Object.getPrototypeOf(fixedTraceIteratorPrototype)
+const fixedTraceIteratorRoot = Object.getPrototypeOf(fixedTraceIteratorParent)
+const fixedTraceApply = Reflect.apply
+const fixedTraceOwnDescriptor = Object.getOwnPropertyDescriptor
+const fixedTraceGetPrototypeOf = Object.getPrototypeOf
+const fixedTraceGetNeighbors = SingleHighDensityRouteSolver.prototype.getNeighbors
+
+type FutureViaClearanceMemo = {
+  x: number
+  y: number
+  threshold: number
+  segments: FutureConnectionSegment[]
+  tooClose: boolean
+}
+
 export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends SingleHighDensityRouteSolver {
   FUTURE_CONNECTION_PROX_TRACE_PENALTY_FACTOR = 2
   FUTURE_CONNECTION_PROX_VIA_PENALTY_FACTOR = 1
@@ -35,6 +60,8 @@ export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends Sing
   FUTURE_CONNECTION_VIA_TRACE_CLEARANCE = 0.1
   futureConnectionPoints: Array<{ x: number; y: number; z: number }>
   futureConnectionSegmentsCache: FutureConnectionSegment[] | null = null
+  private readonly fixedFutureConnectionGeometry: boolean
+  private futureViaClearanceMemo: FutureViaClearanceMemo | undefined
   private nodeCostParameters: NodeCostParameters | undefined
   private nodeCostTermsByGridKey = new Map<number, NodeCostTerms>()
   private denseNodeCostTerms:
@@ -43,7 +70,13 @@ export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends Sing
     | undefined
 
   constructor(
-    opts: ConstructorParameters<typeof SingleHighDensityRouteSolver>[0],
+    opts: ConstructorParameters<typeof SingleHighDensityRouteSolver>[0] & {
+      /**
+       * The caller owns ordinary future segment/point data and generated nodes
+       * throughout this search. Rebuild the segment cache when geometry changes.
+       */
+      fixedFutureConnectionGeometry?: boolean
+    },
   ) {
     super({
       ...opts,
@@ -65,6 +98,8 @@ export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends Sing
     this.futureConnectionPoints = this.futureConnections.flatMap(
       (connection) => connection.points,
     )
+    this.fixedFutureConnectionGeometry =
+      opts.fixedFutureConnectionGeometry === true && this.availableZ.length > 2
   }
 
   getClosestFutureConnectionPoint(node: Node) {
@@ -123,6 +158,9 @@ export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends Sing
   }
 
   isViaTooCloseToFutureConnectionTrace(node: Node) {
+    if (this.fixedFutureConnectionGeometry) {
+      return this.isViaTooCloseToFixedFutureTrace(node)
+    }
     const minCenterlineDistance =
       this.viaDiameter / 2 +
       this.traceThickness / 2 +
@@ -138,6 +176,89 @@ export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends Sing
     }
 
     return false
+  }
+
+  private isViaTooCloseToFixedFutureTrace(node: Node): boolean {
+    const minCenterlineDistance =
+      this.viaDiameter / 2 +
+      this.traceThickness / 2 +
+      this.FUTURE_CONNECTION_VIA_TRACE_CLEARANCE
+    const getSegments = this.getFutureConnectionSegments
+    const segments: FutureConnectionSegment[] = fixedTraceApply(
+      getSegments,
+      this,
+      [],
+    )
+    const ownNeighborMethod = fixedTraceOwnDescriptor(this, "getNeighbors")
+    const canMemoize =
+      getSegments === fixedFutureTraceDefaults.getFutureConnectionSegments &&
+      segments.length > 0 &&
+      (ownNeighborMethod
+        ? ownNeighborMethod.value === fixedTraceGetNeighbors
+        : fixedTraceGetPrototypeOf(this) === SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost.prototype &&
+          fixedTraceOwnDescriptor(SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost.prototype, "getNeighbors") === undefined &&
+          fixedTraceOwnDescriptor(SingleHighDensityRouteSolver.prototype, "getNeighbors")?.value === fixedTraceGetNeighbors) &&
+      fixedTraceOwnDescriptor(fixedTraceGlobal, "Math")?.value === fixedTraceMathObject &&
+      fixedTraceGetPrototypeOf(segments) === fixedTraceArrayPrototype &&
+      fixedTraceOwnDescriptor(fixedTraceMathObject, "min")?.value === fixedTraceMath.min &&
+      fixedTraceOwnDescriptor(fixedTraceMathObject, "max")?.value === fixedTraceMath.max &&
+      fixedTraceOwnDescriptor(fixedTraceMathObject, "sqrt")?.value === fixedTraceMath.sqrt &&
+      fixedTraceOwnDescriptor(segments, fixedTraceSymbolIterator) === undefined &&
+      fixedTraceOwnDescriptor(fixedTraceArrayPrototype, fixedTraceSymbolIterator)?.value === fixedTraceArrayIterator &&
+      fixedTraceOwnDescriptor(fixedTraceIteratorPrototype, "next")?.value === fixedTraceIteratorNext &&
+      fixedTraceGetPrototypeOf(fixedTraceIteratorPrototype) === fixedTraceIteratorParent &&
+      fixedTraceGetPrototypeOf(fixedTraceIteratorParent) === fixedTraceIteratorRoot &&
+      fixedTraceGetPrototypeOf(fixedTraceIteratorRoot) === null &&
+      !("return" in fixedTraceIteratorPrototype)
+    if (!canMemoize) {
+      for (const segment of segments) {
+        if (
+          pointToSegmentDistance(node, segment.start, segment.end) <
+          minCenterlineDistance
+        ) {
+          return true
+        }
+      }
+      return false
+    }
+    const x = node.x
+    const y = node.y
+    const previous = this.futureViaClearanceMemo
+    if (
+      previous &&
+      previous.x === x &&
+      previous.y === y &&
+      previous.threshold === minCenterlineDistance &&
+      previous.segments === segments
+    ) {
+      return previous.tooClose
+    }
+    let tooClose = false
+    for (const segment of segments) {
+      if (
+        pointToSegmentDistance(node, segment.start, segment.end) <
+        minCenterlineDistance
+      ) {
+        tooClose = true
+        break
+      }
+    }
+    if (previous) {
+      previous.x = x
+      previous.y = y
+      previous.threshold = minCenterlineDistance
+      previous.segments = segments
+      previous.tooClose = tooClose
+    } else {
+      this.futureViaClearanceMemo = {
+        x,
+        y,
+        threshold: minCenterlineDistance,
+        segments,
+        tooClose,
+      }
+    }
+    return tooClose
   }
 
   override isNodeTooCloseToObstacle(
@@ -394,4 +515,9 @@ type FutureConnectionSegment = {
   connectionName: string
   start: { x: number; y: number; z: number }
   end: { x: number; y: number; z: number }
+}
+
+const fixedFutureTraceDefaults = {
+  getFutureConnectionSegments:
+    SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost.prototype.getFutureConnectionSegments,
 }

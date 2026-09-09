@@ -615,6 +615,11 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     return new CachedIntraNodeRouteSolver({
       ...this.constructorParams,
       hyperParameters,
+      // Each canonical candidate owns its copied future points and generates
+      // ordinary search nodes. Custom portfolio definitions keep the public API.
+      fixedFutureConnectionGeometry:
+        this.constructorParams.fixedFutureConnectionGeometry !== false &&
+        hasFixedFutureGeometryPortfolioMethods(this),
     })
   }
 
@@ -646,4 +651,32 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       this.nodeWithPortPoints,
     )
   }
+}
+
+const fixedFutureGeometryPortfolioDefaults = {
+  generateSolver: PortfolioSingleIntraNodeSolver.prototype.generateSolver,
+  getCombinationDefs: PortfolioSingleIntraNodeSolver.prototype.getCombinationDefs,
+  getHyperParameterDefs: PortfolioSingleIntraNodeSolver.prototype.getHyperParameterDefs,
+  getHyperParameterCombinations: PortfolioSingleIntraNodeSolver.prototype.getHyperParameterCombinations,
+  getSupervisedSolverWithBestFitness: PortfolioSingleIntraNodeSolver.prototype.getSupervisedSolverWithBestFitness,
+}
+
+const futureGeometryOwnDescriptor = Object.getOwnPropertyDescriptor
+const futureGeometryGetPrototypeOf = Object.getPrototypeOf
+
+function hasFixedFutureGeometryPortfolioMethods(solver: object): boolean {
+  for (const key in fixedFutureGeometryPortfolioDefaults) {
+    let current: object | null = solver
+    let matched = false
+    while (current !== null) {
+      const descriptor = futureGeometryOwnDescriptor(current, key)
+      if (descriptor) {
+        matched = descriptor.value === fixedFutureGeometryPortfolioDefaults[key as keyof typeof fixedFutureGeometryPortfolioDefaults]
+        break
+      }
+      current = futureGeometryGetPrototypeOf(current)
+    }
+    if (!matched) return false
+  }
+  return true
 }
