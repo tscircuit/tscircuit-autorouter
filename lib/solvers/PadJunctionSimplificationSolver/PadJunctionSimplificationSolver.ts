@@ -1,118 +1,556 @@
-/** Domain vocabulary shared by the search, output, and debugger.
+/**
+ * Terminology dictionary
+ * Point: a route coordinate and its layer.
+ * Terminal position: a terminal's route index and point index.
+ * Pad: a rectangular conductive obstacle. Route: one routed connection.
+ * Net: the canonical connectivity identity shared by connected routes and pads.
+ * Terminal: a preserved route endpoint inside a pad.
+ * Run: the final straight part of a route approaching its terminal.
+ * Run direction: traversal from the terminal toward the route start or end.
+ * Cut: where a run meets the new head; all earlier copper is preserved.
+ * Head: the straight connection between the two cuts of a V.
+ * Gap: half a trace width of empty space between the head edge and pad edge.
+ * Junction: the point on the head directly outside the terminal.
+ * Stem: the shared perpendicular connection from junction to terminal.
  *
- * Anchor A --- first_trunk --- Junction --- second_trunk --- Anchor B
- *                                |
- *                             pad_stem
- *                                |
- *                               Pad
+ * Before                         After
+ *   preserved route   route        preserved route   route
+ *          \         /                    \         /
+ *           \ Run   / Run              Cut o----+----o Cut  <-- Head
+ *            \     /                           |
+ *          +--\---/--+                 Gap      | Stem
+ *          |   \ /   |                     +---|---+
+ *          |    o    | Pad                 |   o   | Pad
+ *          +---------+                     +-------+
+ *            Terminal                       Terminal
  *
- * The trunk consists of two arms; the pad stem joins them at the junction.
+ * The + in the Head marks the Junction. The Gap is measured
+ * from the copper edge of the Head to the Pad edge, beside the Stem.
  *
- * Parsed input: validated geometry and normalized options used by the solver.
- * Junction path: an ordered sequence of routing points.
- * Candidate progress: the current arm stage plus only its completed arms.
- * Target pad: rectangular conductive area receiving both routes.
- * Branch anchor: fixed end of the local straight terminal run being replaced.
- * Trunk: the connection between the two branch anchors, through the junction.
- * Junction: the perpendicular stem attachment, within the middle 50% of the
- * trunk length measured through its bends (25%-75% from either anchor).
- * Pad stem: a straight connection perpendicular to the pad side, from the
- * junction through the pad entry to the preserved endpoint. Original endpoints
- * may differ by up to 0.001 mm due to coordinate rounding inside the pad.
- * Pad entry: a point inside the pad, inset by half the trace width.
- * Candidate: a proposed trunk, junction, and pad stem.
- * Fixed copper: all route segments outside the two replaceable terminal runs.
- * Clearance: minimum edge-to-edge separation from unrelated copper.
- * Search state: grid position and incoming direction.
- * Search frontier: discovered states awaiting expansion in a priority queue.
- * Search cost: lexicographic pair (bend count, copper length).
- * Heuristic estimate: (zero bends, Euclidean distance to the goal).
- * Search budget: maximum expanded states for one pad-junction problem.
- * Accepted replacement: validated centered T, allowing at most 10% more unique
- * copper and two extra bends for clean 45-degree approaches.
- *
- * Scope: two equal-width, same-layer terminal runs at an axis-aligned pad.
- * Only converging acute/right-angle entries sharing an interior endpoint are
- * eligible, including opposite-side V entries, rotations, and reflections.
- * Search stays within one pad-size margin; earlier route geometry is preserved.
- * Existing shared stems and pads with three or more branches are skipped.
- * Two entries already perpendicular to their respective pad sides are skipped;
- * entry direction is measured on the segment crossing the pad boundary.
- * Other layers and route metadata remain unchanged. Unsupported geometry is an
- * explicit no-op. A* finds shortest lexicographic paths on a bounded orthogonal
- * grid; sequential arm routing and first improvement do NOT guarantee a globally
- * optimal copper tree. Original endpoints are retained inside the conductive pad.
+ * A V has two converging runs on opposite sides of a cardinal stem axis.
+ * Intersect both runs with the nearest head outside the pad, then add the stem.
+ * There is one construction, no routing search. Unsupported or blocked Vs stay
+ * unchanged. One step visits one pad; route terminals are indexed once by net.
  */
-
-import { getGraphicsLayerForObstacle } from "lib/utils/getGraphicsObjectLayer"
 import { BaseSolver } from "@tscircuit/solver-utils"
+import {
+  pointToSegmentDistance,
+  segmentToBoxMinDistance,
+} from "@tscircuit/math-utils"
 import type { GraphicsObject } from "graphics-debug"
-import type { HighDensityRoute } from "lib/types/high-density-types"
-import { SinglePadJunctionSolver } from "./SinglePadJunctionSolver"
-import { getItemOrThrow, parsePadJunctionInput } from "./padJunctionGeometry"
 import type {
-  PadJunctionSimplificationInput,
-  PadJunctionOutcome,
-  AcceptedReplacement,
-} from "./padJunctionGeometry"
+  HighDensityRoute,
+  HighDensityRoutePoint,
+} from "lib/types/high-density-types"
+import { isPointInRect } from "lib/utils/isPointInRect"
+import { minimumDistanceBetweenSegments } from "lib/utils/minimumDistanceBetweenSegments"
+import { isPointInOrOnPolygon } from "lib/utils/polygonContainment"
 
-export * from "./padJunctionGeometry"
+import {
+  parsePadJunctionInput,
+  type Pad,
+  type PadJunctionSimplificationInput,
+  type TerminalPosition,
+} from "./parsePadJunctionInput"
+import { visualizePadJunctionSimplification } from "./visualizePadJunctionSimplification"
 
-/** Visits pads sequentially and applies each accepted two-branch replacement. */
+export type { PadJunctionSimplificationInput } from "./parsePadJunctionInput"
+
+type Point = HighDensityRoutePoint
+enum RunDirection {
+  TowardRouteStart = -1,
+  TowardRouteEnd = 1,
+}
+type Run = TerminalPosition & {
+  terminal: Point
+  start: Point
+  startIndex: number
+  direction: RunDirection
+}
+type CutRun = Run & { cut: Point; preserved: Point[] }
+export type AcceptedReplacement = {
+  junction: Point
+  head: [Point, Point]
+  stem: [Point, Point]
+}
+export type PadJunctionOutcome = {
+  outcome: "accepted" | "unsupported" | "no_path" | "no_improvement"
+  reason: string
+  connectionNames: string[]
+}
+const EPSILON = 1e-7
+const TERMINAL_TOLERANCE = 0.001
+
 export class PadJunctionSimplificationSolver extends BaseSolver {
   readonly outcomes: PadJunctionOutcome[] = []
-  expandedStateCount = 0
   acceptedReplacement: AcceptedReplacement | null = null
-  override activeSubSolver: SinglePadJunctionSolver | null = null
   private readonly output: HighDensityRoute[]
-  private obstacleIndex = 0
-  private readonly lockedRouteIndices = new Set<number>()
-  private readonly parsed: ReturnType<typeof parsePadJunctionInput>
+  private readonly pads: Pad[]
+  private readonly terminalsByNet: Map<string, TerminalPosition[]>
+  private readonly nets = new Map<string, string>()
+  private readonly lockedRoutes = new Set<number>()
+  private readonly clearance: number
+  private readonly boardClearance: number
+  private padIndex = 0
 
   constructor(private readonly input: PadJunctionSimplificationInput) {
     super()
-    this.parsed = parsePadJunctionInput(input)
-    this.output = this.parsed.hdRoutes.map(
-      ({ firstPoint, lastPoint, ...route }) => route,
+    const parsed = parsePadJunctionInput(input, (identity): string =>
+      this.getNet(identity),
     )
-    this.MAX_ITERATIONS = 100e6
+    this.clearance = parsed.clearance
+    this.boardClearance = parsed.boardClearance
+    this.output = parsed.output
+    this.pads = parsed.pads
+    this.terminalsByNet = parsed.terminalsByNet
+    this.MAX_ITERATIONS = this.pads.length + 1
+  }
+
+  private getNet(identity: string): string {
+    const cached = this.nets.get(identity)
+    if (cached !== undefined) return cached
+    const map = this.input.connMap
+    let net = map.getNetConnectedToId(identity)
+    if (net === undefined) {
+      const member = map.getIdsConnectedToNet(identity)[0]
+      net = member === undefined ? identity : map.getNetConnectedToId(member)
+    }
+    if (net === undefined)
+      throw new Error(
+        `PadJunctionSimplificationSolver: net missing for "${identity}"`,
+      )
+    this.nets.set(identity, net)
+    return net
+  }
+
+  private getRun(terminalPosition: TerminalPosition, pad: Pad): Run | null {
+    const route = this.output[terminalPosition.routeIndex]!
+    const points = route.route
+    const terminal = points[terminalPosition.index]!
+    const direction =
+      terminalPosition.index === 0
+        ? RunDirection.TowardRouteEnd
+        : RunDirection.TowardRouteStart
+    let startIndex = terminalPosition.index + direction
+    while (
+      startIndex >= 0 &&
+      startIndex < points.length &&
+      points[startIndex]!.z === terminal.z &&
+      Math.hypot(
+        points[startIndex]!.x - terminal.x,
+        points[startIndex]!.y - terminal.y,
+      ) < EPSILON
+    )
+      startIndex += direction
+    if (startIndex < 0 || startIndex >= points.length) return null
+    const first = points[startIndex]!
+    const dx = first.x - terminal.x
+    const dy = first.y - terminal.y
+    while (
+      startIndex + direction >= 0 &&
+      startIndex + direction < points.length
+    ) {
+      const next = points[startIndex + direction]!
+      const previous = points[startIndex]!
+      if (
+        next.z !== terminal.z ||
+        Math.abs(dx * (next.y - terminal.y) - dy * (next.x - terminal.x)) >
+          EPSILON ||
+        dx * (next.x - previous.x) + dy * (next.y - previous.y) <= EPSILON
+      )
+        break
+      startIndex += direction
+    }
+    const start = points[startIndex]!
+    if (
+      start.z !== terminal.z ||
+      isPointInRect(start, pad) ||
+      route.jumpers?.length
+    )
+      return null
+    for (
+      let index = terminalPosition.index;
+      index !== startIndex + direction;
+      index += direction
+    ) {
+      const point = points[index]!
+      if (!Number.isFinite(point.x) || !Number.isFinite(point.y))
+        throw new Error(
+          `PadJunctionSimplificationSolver: invalid run "${route.connectionName}"`,
+        )
+      if (
+        point.insideJumperPad ||
+        point.toNextSegmentType ||
+        point.toNextSegmentCircuitJsonMetadata ||
+        (index !== terminalPosition.index &&
+          index !== startIndex &&
+          point.pcb_port_id) ||
+        (point.traceThickness !== undefined &&
+          point.traceThickness !== route.traceThickness)
+      )
+        return null
+    }
+    return { ...terminalPosition, terminal, start, startIndex, direction }
+  }
+
+  private simplifyPad(
+    pad: Pad,
+    terminalPositions: [TerminalPosition, TerminalPosition],
+  ): PadJunctionOutcome {
+    const connectionNames = terminalPositions.map(
+      ({ routeIndex }) => this.output[routeIndex]!.connectionName,
+    )
+    const unsupported: PadJunctionOutcome = {
+      outcome: "unsupported",
+      reason: "Requires two straight runs forming a V around a cardinal stem",
+      connectionNames,
+    }
+    if (
+      terminalPositions.some(({ routeIndex }) =>
+        this.lockedRoutes.has(routeIndex),
+      )
+    )
+      return unsupported
+    const first = this.getRun(terminalPositions[0], pad)
+    const second = this.getRun(terminalPositions[1], pad)
+    if (!first || !second) return unsupported
+    const width = this.output[first.routeIndex]!.traceThickness
+    if (
+      this.output[second.routeIndex]!.traceThickness !== width ||
+      first.terminal.z !== second.terminal.z ||
+      pad.width <= width ||
+      pad.height <= width ||
+      Math.hypot(
+        first.terminal.x - second.terminal.x,
+        first.terminal.y - second.terminal.y,
+      ) > TERMINAL_TOLERANCE
+    )
+      return unsupported
+    const ax = first.start.x - first.terminal.x
+    const ay = first.start.y - first.terminal.y
+    const bx = second.start.x - second.terminal.x
+    const by = second.start.y - second.terminal.y
+    if (ax * bx + ay * by < -EPSILON) return unsupported
+    const axis =
+      ay * by > EPSILON && ax * bx < -EPSILON
+        ? "y"
+        : ax * bx > EPSILON && ay * by < -EPSILON
+          ? "x"
+          : null
+    if (!axis) return unsupported
+    const across = axis === "x" ? "y" : "x"
+    const sign = Math.sign(first.start[axis] - first.terminal[axis])
+    const terminal = first.terminal
+    const runs: [Run, Run] = [first, second]
+    const gap = width / 2
+    let height =
+      sign * pad.center[axis] +
+      (axis === "x" ? pad.width : pad.height) / 2 +
+      width / 2 +
+      gap
+    for (const run of runs) {
+      const slope =
+        (run.start[across] - run.terminal[across]) /
+        (sign * (run.start[axis] - run.terminal[axis]))
+      height = Math.max(
+        height,
+        sign * run.terminal[axis] +
+          (width -
+            Math.sign(slope) * (run.terminal[across] - terminal[across])) /
+            Math.abs(slope),
+      )
+    }
+    const junction: Point = {
+      x: terminal.x,
+      y: terminal.y,
+      z: terminal.z,
+      [axis]: sign * height,
+    }
+    const cuts: CutRun[] = []
+    for (const run of runs) {
+      const fraction =
+        (sign * height - run.terminal[axis]) /
+        (run.start[axis] - run.terminal[axis])
+      if (fraction <= 0 || fraction > 1 + EPSILON)
+        return {
+          outcome: "no_path",
+          reason: "Insufficient straight-run room for the head gap",
+          connectionNames,
+        }
+      const cut: Point = {
+        x: run.terminal.x + fraction * (run.start.x - run.terminal.x),
+        y: run.terminal.y + fraction * (run.start.y - run.terminal.y),
+        z: terminal.z,
+      }
+      const points = this.output[run.routeIndex]!.route
+      let cutIndex = run.startIndex
+      while (
+        cutIndex - run.direction !== run.index &&
+        sign * points[cutIndex - run.direction]![axis] >= height - EPSILON
+      )
+        cutIndex -= run.direction
+      const preserved =
+        run.direction === RunDirection.TowardRouteStart
+          ? points.slice(0, cutIndex + 1)
+          : points.slice(cutIndex).reverse()
+      if (
+        Math.hypot(preserved.at(-1)!.x - cut.x, preserved.at(-1)!.y - cut.y) >
+        EPSILON
+      )
+        preserved.push(cut)
+      cuts.push({ ...run, cut, preserved })
+    }
+    const [left, right] = cuts as [CutRun, CutRun]
+    const leftLength = Math.abs(left.cut[across] - junction[across])
+    const rightLength = Math.abs(right.cut[across] - junction[across])
+    if (
+      Math.min(leftLength, rightLength) <
+      (leftLength + rightLength) / 4 - EPSILON
+    )
+      return unsupported
+    const oldLength =
+      Math.hypot(left.cut.x - left.terminal.x, left.cut.y - left.terminal.y) +
+      Math.hypot(right.cut.x - right.terminal.x, right.cut.y - right.terminal.y)
+    const newLength =
+      leftLength + rightLength + Math.abs(junction[axis] - terminal[axis])
+    if (newLength > oldLength * 1.1 + EPSILON)
+      return {
+        outcome: "no_improvement",
+        reason: "Head and stem exceed 10% copper growth",
+        connectionNames,
+      }
+    const replacement: AcceptedReplacement = {
+      junction,
+      head: [left.cut, right.cut],
+      stem: [junction, terminal],
+    }
+    const blocked = this.checkClearance(pad, [left, right], replacement, width)
+    if (blocked) return { outcome: "no_path", reason: blocked, connectionNames }
+    for (const run of cuts) {
+      const points = [...run.preserved, junction, run.terminal]
+      if (run.direction === RunDirection.TowardRouteEnd) points.reverse()
+      this.output[run.routeIndex] = {
+        ...this.output[run.routeIndex]!,
+        route: points,
+      }
+      this.lockedRoutes.add(run.routeIndex)
+    }
+    this.acceptedReplacement = replacement
+    return {
+      outcome: "accepted",
+      reason: "Replaced V with a straight head and perpendicular stem",
+      connectionNames,
+    }
+  }
+
+  private checkClearance(
+    pad: Pad,
+    runs: [CutRun, CutRun],
+    replacement: AcceptedReplacement,
+    width: number,
+  ): string | null {
+    const { junction } = replacement
+    const segments: [Point, Point][] = [
+      [runs[0].cut, runs[1].cut],
+      [junction, runs[0].terminal],
+      [junction, runs[1].terminal],
+    ]
+    const z = junction.z
+    const firstRoute = this.output[runs[0].routeIndex]!
+    const nets = new Set([this.getNet(firstRoute.connectionName)])
+    if (firstRoute.rootConnectionName)
+      nets.add(this.getNet(firstRoute.rootConnectionName))
+    for (const obstacle of this.pads) {
+      if (obstacle === pad || !obstacle.__zLayers.includes(z)) continue
+      if (obstacle.ccwRotationDegrees)
+        return "Rotated obstacles are unsupported"
+      const sameNet = obstacle.connectedTo.some((identity) =>
+        nets.has(this.getNet(identity)),
+      )
+      if (
+        sameNet &&
+        runs.some(
+          (run) =>
+            segmentToBoxMinDistance(run.cut, run.cut, obstacle) <=
+            width / 2 + EPSILON,
+        )
+      )
+        continue
+      if (
+        sameNet &&
+        runs.some(
+          (run) =>
+            segmentToBoxMinDistance(run.cut, run.terminal, obstacle) <
+            width / 2 - EPSILON,
+        )
+      )
+        return "A removed run touches another connected pad"
+      if (
+        segments.some(
+          ([start, end]) =>
+            segmentToBoxMinDistance(start, end, obstacle) <
+            width / 2 + this.clearance - EPSILON,
+        )
+      )
+        return "Head or stem violates pad clearance"
+    }
+    const allRoutes = [...this.output, ...(this.input.otherHdRoutes ?? [])]
+    for (const [routeIndex, route] of allRoutes.entries()) {
+      const sameNet =
+        nets.has(this.getNet(route.connectionName)) ||
+        (route.rootConnectionName !== undefined &&
+          nets.has(this.getNet(route.rootConnectionName)))
+      const run = runs.find((candidate) => candidate.routeIndex === routeIndex)
+      const points = run ? run.preserved : route.route
+      for (let index = 1; index < points.length; index++) {
+        const start = points[index - 1]!
+        const end = points[index]!
+        if (start.z !== z || end.z !== z) continue
+        const copperWidth = start.traceThickness ?? route.traceThickness
+        if (!sameNet) {
+          if (
+            segments.some(
+              ([a, b]) =>
+                minimumDistanceBetweenSegments(a, b, start, end) <
+                (width + copperWidth) / 2 + this.clearance - EPSILON,
+            )
+          )
+            return "Head or stem violates trace clearance"
+          continue
+        }
+        if (isPointInRect(start, pad) && isPointInRect(end, pad)) continue
+        for (const removed of runs) {
+          // Copper touching the preserved cut remains connected after replacement.
+          if (
+            pointToSegmentDistance(removed.cut, start, end) <=
+            (width + copperWidth) / 2 + EPSILON
+          )
+            continue
+          if (
+            minimumDistanceBetweenSegments(
+              removed.cut,
+              removed.terminal,
+              start,
+              end,
+            ) <
+            (width + copperWidth) / 2 - EPSILON
+          )
+            return "A removed run has an existing copper tap"
+        }
+      }
+      for (const via of route.vias) {
+        if (
+          !sameNet &&
+          segments.some(
+            ([start, end]) =>
+              pointToSegmentDistance(via, start, end) <
+              (width + route.viaDiameter) / 2 + this.clearance - EPSILON,
+          )
+        )
+          return "Head or stem violates via clearance"
+        if (
+          sameNet &&
+          !isPointInRect(via, pad) &&
+          runs.some(
+            (removed) =>
+              Math.hypot(via.x - removed.cut.x, via.y - removed.cut.y) >
+                (width + route.viaDiameter) / 2 + EPSILON &&
+              pointToSegmentDistance(via, removed.cut, removed.terminal) <
+                (width + route.viaDiameter) / 2 - EPSILON,
+          )
+        )
+          return "A removed run has an existing via tap"
+      }
+    }
+    const margin = width / 2 + this.boardClearance
+    const outline = this.input.outline ? [...this.input.outline] : undefined
+    for (const [start, end] of segments) {
+      if (outline) {
+        if (
+          !isPointInOrOnPolygon(start, outline) ||
+          !isPointInOrOnPolygon(end, outline)
+        )
+          return "Head or stem leaves the board"
+        for (let index = 0; index < outline.length; index++)
+          if (
+            minimumDistanceBetweenSegments(
+              start,
+              end,
+              outline[index]!,
+              outline[(index + 1) % outline.length]!,
+            ) <
+            margin - EPSILON
+          )
+            return "Head or stem violates board clearance"
+      } else if (this.input.bounds) {
+        const { minX, minY, maxX, maxY } = this.input.bounds
+        if (
+          [start, end].some(
+            (point) =>
+              point.x < minX + margin - EPSILON ||
+              point.x > maxX - margin + EPSILON ||
+              point.y < minY + margin - EPSILON ||
+              point.y > maxY - margin + EPSILON,
+          )
+        )
+          return "Head or stem violates board clearance"
+      }
+    }
+    return null
   }
 
   override _step(): void {
-    if (!this.activeSubSolver || this.activeSubSolver.solved) {
-      if (this.obstacleIndex >= this.parsed.obstacles.length) {
-        this.solved = true
-        return
+    const pad = this.pads[this.padIndex++]
+    if (!pad) {
+      this.solved = true
+      return
+    }
+    if (
+      pad.type !== "rect" ||
+      pad.ccwRotationDegrees ||
+      pad.isCopperPour ||
+      ("shape" in pad && pad.shape !== undefined && pad.shape !== "rect")
+    ) {
+      if (this.padIndex === this.pads.length) this.solved = true
+      return
+    }
+    const found = new Map<number, TerminalPosition>()
+    const visitedNets = new Set<string>()
+    for (const identity of pad.connectedTo) {
+      const net = this.getNet(identity)
+      if (visitedNets.has(net)) continue
+      visitedNets.add(net)
+      const terminalPositions = this.terminalsByNet.get(net)
+      if (!terminalPositions) continue
+      for (const terminalPosition of terminalPositions) {
+        const points = this.output[terminalPosition.routeIndex]!.route
+        const index = terminalPosition.index === 0 ? 0 : points.length - 1
+        const point = points[index]!
+        if (!pad.__zLayers.includes(point.z) || !isPointInRect(point, pad))
+          continue
+        const opposite = points[index === 0 ? points.length - 1 : 0]!
+        if (pad.__zLayers.includes(opposite.z) && isPointInRect(opposite, pad))
+          continue
+        found.set(terminalPosition.routeIndex, {
+          routeIndex: terminalPosition.routeIndex,
+          index,
+        })
+        if (found.size > 2) break
       }
-      this.activeSubSolver = new SinglePadJunctionSolver({
-        ...this.parsed,
-        hdRoutes: this.output,
-        targetPadIndex: this.obstacleIndex++,
-        lockedRouteIndices: [...this.lockedRouteIndices],
-      })
+      if (found.size > 2) break
     }
-    const solver = this.activeSubSolver
-    const previousExpanded = solver.expandedStateCount
-    solver.step()
-    this.expandedStateCount += solver.expandedStateCount - previousExpanded
-    this.stats = {
-      ...solver.stats,
-      expandedStates: this.expandedStateCount,
-      padsVisited: this.obstacleIndex,
-    }
-    if (solver.failed)
-      throw new Error(
-        `PadJunctionSimplificationSolver: child failed: ${solver.error}`,
+    if (found.size === 2)
+      this.outcomes.push(
+        this.simplifyPad(pad, [...found.values()] as [
+          TerminalPosition,
+          TerminalPosition,
+        ]),
       )
-    if (!solver.solved) return
-    const result = solver.getOutput()
-    this.outcomes.push(result.outcome)
-    for (const { routeIndex, route } of result.replacements) {
-      this.output[routeIndex] = route
-      this.lockedRouteIndices.add(routeIndex)
+    this.stats = {
+      padsVisited: this.padIndex,
+      replacements: this.lockedRoutes.size / 2,
     }
-    if (solver.acceptedReplacement)
-      this.acceptedReplacement = solver.acceptedReplacement
+    if (this.padIndex === this.pads.length) this.solved = true
   }
 
   override getConstructorParams(): [PadJunctionSimplificationInput] {
@@ -128,33 +566,11 @@ export class PadJunctionSimplificationSolver extends BaseSolver {
   }
 
   override visualize(): GraphicsObject {
-    if (this.activeSubSolver) return this.activeSubSolver.visualize()
-    return {
-      title: "Pad junction simplification: ready",
-      coordinateSystem: "cartesian",
-      rects: this.parsed.obstacles.map((pad) => ({
-        center: pad.center,
-        width: pad.width,
-        height: pad.height,
-        fill: "rgba(255,0,0,0.15)",
-        label: "Obstacle",
-        layer: getGraphicsLayerForObstacle(pad, this.parsed.layerCount),
-      })),
-      lines: this.output.flatMap((route) =>
-        route.route.slice(1).flatMap((end, index) => {
-          const start = getItemOrThrow(route.route, index)
-          if (start.z !== end.z) return []
-          return [
-            {
-              points: [start, end],
-              strokeWidth: route.traceThickness,
-              strokeColor: this.parsed.colorMap[route.connectionName] ?? "red",
-              layer: `z${start.z}`,
-              label: route.connectionName,
-            },
-          ]
-        }),
-      ),
-    }
+    return visualizePadJunctionSimplification(
+      this.input,
+      this.output,
+      this.pads,
+      this.solved ? undefined : this.pads[Math.max(0, this.padIndex - 1)],
+    )
   }
 }
