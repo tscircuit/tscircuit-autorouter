@@ -11,14 +11,6 @@ test("Pipeline9 repairs SRJ18 sample 4 within its regional work budget", async (
   )
   solver.solve()
 
-  if (!solver.solved) {
-    console.error("Pipeline9 SRJ18 sample 4 diagnostic", {
-      pipelineError: solver.error,
-      activeStage: solver.activeSubSolver?.getSolverName(),
-      activeStageError: solver.activeSubSolver?.error,
-      stitchError: solver.highDensityStitchSolver?.error,
-    })
-  }
   expect(solver.solved).toBeTrue()
   expect(solver.failed).toBeFalse()
   const { errors } = evaluateRelaxedDrc({

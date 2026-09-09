@@ -47,11 +47,6 @@ type CollisionBoundary = {
   directlyBlocksRequest: boolean
 }
 
-type VisibilityEdge = {
-  index: number
-  length: number
-}
-
 const DEFAULT_AUTOROUTING_CLEARANCE = 0.1
 const CLEARANCE_TOLERANCE = 1e-6
 const ENDPOINT_MATCH_TOLERANCE = 1e-6
@@ -542,47 +537,60 @@ export class RouteStitchClearanceValidator {
         maxX: via.x + clearance,
         maxY: via.y + clearance,
         directlyBlocksRequest:
-          pointToSegmentDistance(
-            via,
-            stitchSegment.start,
-            stitchSegment.end,
-          ) < clearance,
+          pointToSegmentDistance(via, stitchSegment.start, stitchSegment.end) <
+          clearance,
       })
     }
 
-    const relevantIndexes = new Set<number>()
-    const pendingIndexes: number[] = []
-    for (
-      let boundaryIndex = 0;
-      boundaryIndex < boundaries.length;
-      boundaryIndex += 1
-    ) {
-      if (!boundaries[boundaryIndex]!.directlyBlocksRequest) continue
-      relevantIndexes.add(boundaryIndex)
-      pendingIndexes.push(boundaryIndex)
-    }
-    while (pendingIndexes.length > 0) {
-      const currentIndex = pendingIndexes.pop()!
-      for (
-        let boundaryIndex = 0;
-        boundaryIndex < boundaries.length;
-        boundaryIndex += 1
-      ) {
-        if (relevantIndexes.has(boundaryIndex)) continue
-        if (
-          !collisionBoundariesOverlap(
-            boundaries[currentIndex]!,
-            boundaries[boundaryIndex]!,
+    const boundaryIndex = new RbushIndex<CollisionBoundary>()
+    boundaryIndex.bulkLoad(
+      boundaries.map((boundary) => ({ item: boundary, ...boundary })),
+    )
+    const assignedBoundaries = new Set<CollisionBoundary>()
+    const mergedBlockingComponents: CollisionBoundary[] = []
+    for (const boundary of boundaries) {
+      if (!boundary.directlyBlocksRequest || assignedBoundaries.has(boundary))
+        continue
+
+      const pendingBoundaries = [boundary]
+      assignedBoundaries.add(boundary)
+      const componentBoundary = { ...boundary }
+      while (pendingBoundaries.length > 0) {
+        const currentBoundary = pendingBoundaries.pop()!
+        for (const overlappingBoundary of boundaryIndex.search(
+          currentBoundary.minX,
+          currentBoundary.minY,
+          currentBoundary.maxX,
+          currentBoundary.maxY,
+        )) {
+          if (
+            assignedBoundaries.has(overlappingBoundary) ||
+            !collisionBoundariesOverlap(currentBoundary, overlappingBoundary)
           )
-        )
-          continue
-        relevantIndexes.add(boundaryIndex)
-        pendingIndexes.push(boundaryIndex)
+            continue
+          assignedBoundaries.add(overlappingBoundary)
+          pendingBoundaries.push(overlappingBoundary)
+          componentBoundary.minX = Math.min(
+            componentBoundary.minX,
+            overlappingBoundary.minX,
+          )
+          componentBoundary.minY = Math.min(
+            componentBoundary.minY,
+            overlappingBoundary.minY,
+          )
+          componentBoundary.maxX = Math.max(
+            componentBoundary.maxX,
+            overlappingBoundary.maxX,
+          )
+          componentBoundary.maxY = Math.max(
+            componentBoundary.maxY,
+            overlappingBoundary.maxY,
+          )
+        }
       }
+      mergedBlockingComponents.push(componentBoundary)
     }
-    return [...relevantIndexes]
-      .sort((left, right) => left - right)
-      .map((boundaryIndex) => boundaries[boundaryIndex]!)
+    return mergedBlockingComponents
   }
 
   private getVisibilityPoints(
@@ -619,33 +627,6 @@ export class RouteStitchClearanceValidator {
       }
     }
 
-    for (
-      let firstIndex = 0;
-      firstIndex < boundaries.length;
-      firstIndex += 1
-    ) {
-      for (
-        let secondIndex = firstIndex + 1;
-        secondIndex < boundaries.length;
-        secondIndex += 1
-      ) {
-        const first = boundaries[firstIndex]!
-        const second = boundaries[secondIndex]!
-        for (const x of [first.minX, first.maxX]) {
-          if (x >= second.minX && x <= second.maxX) {
-            addPoint(x, second.minY)
-            addPoint(x, second.maxY)
-          }
-        }
-        for (const x of [second.minX, second.maxX]) {
-          if (x >= first.minX && x <= first.maxX) {
-            addPoint(x, first.minY)
-            addPoint(x, first.maxY)
-          }
-        }
-      }
-    }
-
     const boardEdgeClearance =
       this.minBoardEdgeClearance +
       stitchSegment.traceThickness / 2 +
@@ -670,19 +651,38 @@ export class RouteStitchClearanceValidator {
     stitchSegment: StitchSegment,
     points: Point3[],
   ): Point3[] | undefined {
-    const edges: VisibilityEdge[][] = points.map(() => [])
-    for (
-      let firstIndex = 0;
-      firstIndex < points.length;
-      firstIndex += 1
-    ) {
-      for (
-        let secondIndex = firstIndex + 1;
-        secondIndex < points.length;
-        secondIndex += 1
-      ) {
-        const start = points[firstIndex]!
-        const end = points[secondIndex]!
+    const distances = points.map(() => Infinity)
+    const previousIndexes = points.map(() => -1)
+    const visited = points.map(() => false)
+    const estimatedDistanceToEnd = (pointIndex: number): number => {
+      const point = points[pointIndex]!
+      return Math.hypot(points[1]!.x - point.x, points[1]!.y - point.y)
+    }
+    distances[0] = 0
+    for (let iteration = 0; iteration < points.length; iteration += 1) {
+      let currentIndex = -1
+      for (let pointIndex = 0; pointIndex < points.length; pointIndex += 1) {
+        if (visited[pointIndex]) continue
+        if (
+          currentIndex === -1 ||
+          distances[pointIndex]! + estimatedDistanceToEnd(pointIndex) <
+            distances[currentIndex]! + estimatedDistanceToEnd(currentIndex)
+        ) {
+          currentIndex = pointIndex
+        }
+      }
+      if (currentIndex === -1 || !Number.isFinite(distances[currentIndex]))
+        break
+      if (currentIndex === 1) break
+      visited[currentIndex] = true
+
+      const relaxCandidate = (candidateIndex: number): void => {
+        if (candidateIndex === currentIndex || visited[candidateIndex]) return
+        const start = points[currentIndex]!
+        const end = points[candidateIndex]!
+        const edgeLength = Math.hypot(end.x - start.x, end.y - start.y)
+        const candidateDistance = distances[currentIndex]! + edgeLength
+        if (candidateDistance >= distances[candidateIndex]!) return
         if (
           !this.isSegmentClear({
             ...stitchSegment,
@@ -694,38 +694,20 @@ export class RouteStitchClearanceValidator {
             ],
           })
         )
-          continue
-        const length = Math.hypot(end.x - start.x, end.y - start.y)
-        edges[firstIndex]!.push({ index: secondIndex, length })
-        edges[secondIndex]!.push({ index: firstIndex, length })
+          return
+        distances[candidateIndex] = candidateDistance
+        previousIndexes[candidateIndex] = currentIndex
       }
-    }
 
-    const distances = points.map(() => Infinity)
-    const previousIndexes = points.map(() => -1)
-    const visited = points.map(() => false)
-    distances[0] = 0
-    for (let iteration = 0; iteration < points.length; iteration += 1) {
-      let currentIndex = -1
-      for (let pointIndex = 0; pointIndex < points.length; pointIndex += 1) {
-        if (visited[pointIndex]) continue
-        if (
-          currentIndex === -1 ||
-          distances[pointIndex]! < distances[currentIndex]!
-        ) {
-          currentIndex = pointIndex
-        }
-      }
-      if (currentIndex === -1 || !Number.isFinite(distances[currentIndex]))
-        break
-      if (currentIndex === 1) break
-      visited[currentIndex] = true
-      for (const edge of edges[currentIndex]!) {
-        if (visited[edge.index]) continue
-        const candidateDistance = distances[currentIndex]! + edge.length
-        if (candidateDistance >= distances[edge.index]!) continue
-        distances[edge.index] = candidateDistance
-        previousIndexes[edge.index] = currentIndex
+      // Check the destination first so a short route does not require building
+      // the complete visibility graph.
+      relaxCandidate(1)
+      for (
+        let candidateIndex = 2;
+        candidateIndex < points.length;
+        candidateIndex += 1
+      ) {
+        relaxCandidate(candidateIndex)
       }
     }
     if (!Number.isFinite(distances[1])) return undefined
