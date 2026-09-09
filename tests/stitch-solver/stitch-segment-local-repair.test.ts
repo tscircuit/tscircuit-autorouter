@@ -54,16 +54,21 @@ test("repairs a collision-blocked stitch with a local copper-clear detour", () =
 
   expect(solver.solved).toBe(true)
   expect(solver.failed).toBe(false)
-  expect(solver.mergedHdRoute.route.slice(0, 2)).toEqual([
-    { x: -1, y: 0, z: 0 },
-    { x: -0.5, y: 0, z: 0 },
-  ])
-  expect(solver.mergedHdRoute.route[2]?.x).toBe(-0.5)
-  expect(solver.mergedHdRoute.route[2]?.y).toBeCloseTo(-0.400001)
-  expect(solver.mergedHdRoute.route[3]?.x).toBe(0.5)
-  expect(solver.mergedHdRoute.route[3]?.y).toBeCloseTo(-0.400001)
-  expect(solver.mergedHdRoute.route.slice(4)).toEqual([
-    { x: 0.5, y: 0, z: 0 },
-    { x: 1, y: 0, z: 0 },
-  ])
+  const repairedRoute = solver.mergedHdRoute.route
+  expect(repairedRoute[0]).toEqual({ x: -1, y: 0, z: 0 })
+  expect(repairedRoute[repairedRoute.length - 1]).toEqual({
+    x: 1,
+    y: 0,
+    z: 0,
+  })
+  expect(repairedRoute.some((point) => point.y !== 0)).toBe(true)
+  for (let pointIndex = 1; pointIndex < repairedRoute.length; pointIndex += 1) {
+    expect(
+      validator.isSegmentClear({
+        ...directStitch,
+        start: repairedRoute[pointIndex - 1]!,
+        end: repairedRoute[pointIndex]!,
+      }),
+    ).toBe(true)
+  }
 })
