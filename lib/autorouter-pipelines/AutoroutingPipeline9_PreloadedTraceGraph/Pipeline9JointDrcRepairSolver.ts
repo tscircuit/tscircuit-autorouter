@@ -1613,6 +1613,8 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       boundedRegionalRepairReferenceValidationCount:
         boundedRegionalRepairResult.referenceValidationCount,
       boundedRegionalRepairRepaired: boundedRegionalRepairResult.repaired,
+      boundedRegionalRepairPublishedDrcIssueCount:
+        boundedRegionalRepairResult.publishedDrcIssueCount,
       boundedRegionalRepairTimeMs:
         performance.now() - boundedRegionalRepairStartedAt,
       regionalB01RepairCandidateCount:

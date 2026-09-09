@@ -13,6 +13,7 @@ import type { HighDensityRoute } from "lib/types/high-density-types"
 import { createSrjWithBoardValidObstacleLayers } from "lib/utils/create-srj-with-board-valid-obstacle-layers"
 import { getDrcErrorTraceIds } from "lib/utils/getDrcErrorTraceIds"
 import { applyPipeline9ClearanceProjection } from "./applyPipeline9ClearanceProjection"
+import { canPublishPartialFixedObstacleRepair } from "./canPublishPartialFixedObstacleRepair"
 
 export type Pipeline9BoundedRegionalRepairResult = {
   routes: HighDensityRoute[]
@@ -23,6 +24,7 @@ export type Pipeline9BoundedRegionalRepairResult = {
   referenceValidationCount: number
   initialDrcIssueCount: number | undefined
   finalDrcIssueCount: number | undefined
+  publishedDrcIssueCount: number | undefined
   repaired: boolean
 }
 
@@ -44,7 +46,7 @@ const MAX_CANDIDATE_ATTEMPTS = 1024
 const MAX_PATH_SEARCH_NODES = 480_000
 const REGION_SIZES = [10, 16] as const
 
-/** Keeps intermediate regional improvements private until full reference DRC passes. */
+/** Publishes complete repairs or guarded improvements with only fixed-pad errors left. */
 export const applyPipeline9BoundedRegionalRepairs = ({
   originalSrj,
   routes,
@@ -61,6 +63,7 @@ export const applyPipeline9BoundedRegionalRepairs = ({
     referenceValidationCount: 0,
     initialDrcIssueCount: undefined,
     finalDrcIssueCount: undefined,
+    publishedDrcIssueCount: undefined,
     repaired: false,
   }
   if (originalSrj.traces?.length || syntheticConnectionNames.size > 0) {
@@ -96,6 +99,8 @@ export const applyPipeline9BoundedRegionalRepairs = ({
   let reference = drcEvaluator({ traces: [], routes, hdRoutes: routes })
   result.referenceValidationCount++
   let currentErrors = Array.isArray(reference) ? reference : reference.errors
+  const initialErrors = currentErrors
+  result.publishedDrcIssueCount = currentErrors.length
   result.initialDrcIssueCount = currentErrors.length
   result.finalDrcIssueCount = currentErrors.length
   if (currentErrors.length === 0) {
@@ -122,6 +127,7 @@ export const applyPipeline9BoundedRegionalRepairs = ({
     result.finalDrcIssueCount = currentErrors.length
     if (currentErrors.length === 0) {
       result.routes = currentRoutes
+      result.publishedDrcIssueCount = 0
       result.repaired = true
       return result
     }
@@ -327,9 +333,20 @@ export const applyPipeline9BoundedRegionalRepairs = ({
     result.finalDrcIssueCount = currentErrors.length
     if (currentErrors.length === 0) {
       result.routes = currentRoutes
+      result.publishedDrcIssueCount = 0
       result.repaired = true
       return result
     }
+  }
+  if (
+    canPublishPartialFixedObstacleRepair({
+      originalSrj,
+      initialErrors,
+      remainingErrors: currentErrors,
+    })
+  ) {
+    result.routes = currentRoutes
+    result.publishedDrcIssueCount = currentErrors.length
   }
   return result
 }
