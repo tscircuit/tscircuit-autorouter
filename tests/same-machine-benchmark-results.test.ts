@@ -57,6 +57,7 @@ test("same-machine benchmark comments compare matching reports", () => {
       makeTest(2, {
         relaxedDrcPassed: false,
         drcErrorCount: 3,
+        routingMetrics: { highDensityResizeCount: 3 },
       }),
     ],
   })
@@ -73,10 +74,15 @@ test("same-machine benchmark comments compare matching reports", () => {
       },
     ],
     tests: [
-      makeTest(1, { elapsedTimeMs: 1_800, drcErrorCount: 0 }),
+      makeTest(1, {
+        elapsedTimeMs: 1_800,
+        drcErrorCount: 0,
+        routingMetrics: { highDensityResizeCount: 0 },
+      }),
       makeTest(2, {
         relaxedDrcPassed: false,
         drcErrorCount: 1,
+        routingMetrics: { highDensityResizeCount: 1 },
       }),
     ],
   })
@@ -98,6 +104,7 @@ test("same-machine benchmark comments compare matching reports", () => {
     "| Pipeline7 | Completion | 50.0% (🕒50.0%) | 100.0% (🕒0.0%) | +50.0 pp |",
   )
   expect(markdown).toContain("| Pipeline7 | DRC issues | 3 | 1 | -2 |")
+  expect(markdown).toContain("| Pipeline7 | Growth attempts | 3 | 1 | -2 |")
   expect(markdown).toContain("| Pipeline7 | Timeouts | 1 | 0 | -1 |")
   expect(markdown).toContain("| Pipeline7 | P50 time | 1.5s | 1.4s | -6.7% |")
   expect(markdown).toContain("| Pipeline7 | P60 time |")
@@ -110,6 +117,29 @@ test("same-machine benchmark comments compare matching reports", () => {
     "Timing percentiles include solved and timed-out samples",
   )
   expect(markdown).toContain("| Pipeline7 | 1 | Timeout | DRC passed |")
+  const oldReportMarkdown = renderSameMachineBenchmarkResults({
+    mainReport: {
+      ...mainReport,
+      tests: mainReport.tests.map((testResult) => ({
+        ...testResult,
+        routingMetrics: undefined,
+      })),
+    },
+    prReport: {
+      ...prReport,
+      tests: prReport.tests.map((testResult) => ({
+        ...testResult,
+        routingMetrics: undefined,
+      })),
+    },
+    mainSha: "a".repeat(40),
+    prSha: "b".repeat(40),
+    repository: "tscircuit/tscircuit-autorouter",
+    runnerName: "blacksmith-test-runner",
+  })
+  expect(oldReportMarkdown).toContain(
+    "| Pipeline7 | Growth attempts | n/a | n/a | n/a |",
+  )
   expect(() =>
     renderSameMachineBenchmarkResults({
       mainReport,

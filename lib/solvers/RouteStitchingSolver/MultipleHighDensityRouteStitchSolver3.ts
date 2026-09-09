@@ -12,6 +12,7 @@ import { RouteStitchClearanceValidator } from "./route-stitch-clearance-validato
 import { SingleHighDensityRouteStitchSolver3 } from "./SingleHighDensityRouteStitchSolver3"
 import {
   EndpointClusterIndex,
+  findRoutesAlongEndpointPath,
   hasStitchableGapBetweenUnsolvedRoutes,
   selectIslandEndpoints,
   selectRoutesAlongEndpointPath,
@@ -21,6 +22,8 @@ import {
   compareRoutes,
   MAX_TERMINAL_STITCH_GAP_DISTANCE_3,
 } from "./routeStitchingShared"
+
+type StitchTerminal = SingleHighDensityRouteStitchSolver3["start"]
 
 export type UnsolvedRoute3 = {
   connectionName: string
@@ -96,24 +99,35 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
     rootConnectionName?: string
     hdRoutes: HighDensityIntraNodeRoute[]
     allHdRoutes: HighDensityIntraNodeRoute[]
-    start: Point3
-    end: Point3
-  }) {
+    start: StitchTerminal
+    end: StitchTerminal
+  }): HighDensityIntraNodeRoute[] | null {
     const rootConnectionName = params.rootConnectionName
     if (!rootConnectionName) return null
 
     const currentRouteSet = new Set(params.hdRoutes)
+    const terminalPcbPortIds = new Set(
+      [params.start.pcb_port_id, params.end.pcb_port_id].filter(
+        (pcbPortId): pcbPortId is string => pcbPortId !== undefined,
+      ),
+    )
     const sameRootRoutes = params.allHdRoutes.filter(
       (route) =>
         (route.rootConnectionName ?? route.connectionName) ===
-        rootConnectionName,
+          rootConnectionName &&
+        (!this.preserveTerminalPcbPortIds ||
+          terminalPcbPortIds.size === 0 ||
+          [route.startPcbPortId, route.endPcbPortId].every(
+            (pcbPortId) =>
+              pcbPortId === undefined || terminalPcbPortIds.has(pcbPortId),
+          )),
     )
 
     if (sameRootRoutes.every((route) => currentRouteSet.has(route))) {
       return null
     }
 
-    const pathRoutes = selectRoutesAlongEndpointPath({
+    const pathRoutes = findRoutesAlongEndpointPath({
       connectionName: params.connectionName,
       hdRoutes: sameRootRoutes,
       start: params.start,
@@ -123,13 +137,10 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
         this.canStitchBetweenTerminals(selection),
     })
 
-    const includesSharedRootBridge = pathRoutes.some(
+    const includesSharedRootBridge = pathRoutes?.some(
       (route) => !currentRouteSet.has(route),
     )
-    // The endpoint path helper returns all candidate routes as a fallback when
-    // no path is found, so only accept a strict same-root subset.
-    if (!includesSharedRootBridge || pathRoutes.length >= sameRootRoutes.length)
-      return null
+    if (!includesSharedRootBridge) return null
 
     return pathRoutes
   }
@@ -210,6 +221,12 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
         r.route[0],
         r.route[r.route.length - 1],
       ])
+      const terminalEndpoints = new Set(
+        hdRoutes.flatMap((route) => [
+          ...(route.startPcbPortId ? [route.route[0]!] : []),
+          ...(route.endPcbPortId ? [route.route[route.route.length - 1]!] : []),
+        ]),
+      )
 
       const possibleEndpointsByHash = new Map<
         string,
@@ -224,7 +241,10 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
         if (!possibleEndpointsByHash.has(pointHash)) {
           possibleEndpointsByHash.set(pointHash, possibleEndpoint1)
         }
-        if (pointHashCounts.get(pointHash) === 1) {
+        if (
+          pointHashCounts.get(pointHash) === 1 ||
+          terminalEndpoints.has(possibleEndpoint1)
+        ) {
           possibleEndpoints2.push(possibleEndpoint1)
         }
       }
@@ -359,8 +379,18 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
       const hdRoutes = unsolvedRoutes.flatMap(
         (unsolvedRoute) => unsolvedRoute.hdRoutes,
       )
+      const routedTerminalPcbPortIds = new Set(
+        hdRoutes.flatMap((route) => [route.startPcbPortId, route.endPcbPortId]),
+      )
+      const hasMissingTerminal =
+        this.preserveTerminalPcbPortIds &&
+        [start, end].some(
+          (terminal) =>
+            terminal.pcb_port_id !== undefined &&
+            !routedTerminalPcbPortIds.has(terminal.pcb_port_id),
+        )
       const sharedRootPathRoutes =
-        unsolvedRoutes.length > 1
+        unsolvedRoutes.length > 1 || hasMissingTerminal
           ? this.getSharedRootPathRoutes({
               connectionName,
               rootConnectionName:

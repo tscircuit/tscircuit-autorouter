@@ -5,6 +5,9 @@ import type {
 } from "lib/types/high-density-types"
 import { getConnectionPortPointPairs } from "lib/utils/getConnectionPortPointPairs"
 
+type PhysicalPairKey = string & { readonly __brand: "PhysicalPairKey" }
+type ConnectionName = PortPoint["connectionName"]
+
 const pointKey = (point: { x: number; y: number; z: number }) =>
   `${point.x.toFixed(6)},${point.y.toFixed(6)},${point.z}`
 
@@ -12,6 +15,78 @@ const routeEndpoints = (route: HighDensityIntraNodeRoute) => [
   route.route[0],
   route.route[route.route.length - 1],
 ]
+
+const getPhysicalPairKey = (
+  pair: readonly [
+    { x: number; y: number; z: number },
+    { x: number; y: number; z: number },
+  ],
+  rootConnectionName: string,
+): PhysicalPairKey => {
+  const endpointKeys = pair
+    .map((point) => JSON.stringify([point.x, point.y, point.z]))
+    .sort()
+  return JSON.stringify([rootConnectionName, endpointKeys]) as PhysicalPairKey
+}
+
+const getExpectedPhysicalPortPointPairs = (
+  nodeWithPortPoints: NodeWithPortPoints,
+): Array<[PortPoint, PortPoint]> => {
+  const explicitPairs = nodeWithPortPoints.portPointsInPairs ?? []
+  if (explicitPairs.length > 0) return explicitPairs
+
+  const connectionNames = new Set(
+    nodeWithPortPoints.portPoints.map((portPoint) => portPoint.connectionName),
+  )
+  return [...connectionNames].flatMap((connectionName) =>
+    getConnectionPortPointPairs(
+      nodeWithPortPoints.portPoints.filter(
+        (portPoint) => portPoint.connectionName === connectionName,
+      ),
+    ),
+  )
+}
+
+export const doRoutesCoverNodePortPointPairsExactlyOnce = (
+  routes: HighDensityIntraNodeRoute[],
+  nodeWithPortPoints: NodeWithPortPoints,
+): boolean => {
+  const remainingPairs = new Map<PhysicalPairKey, Set<ConnectionName>>()
+  for (const pair of getExpectedPhysicalPortPointPairs(nodeWithPortPoints)) {
+    const [start, end] = pair
+    const rootConnectionName = start.rootConnectionName ?? start.connectionName
+    if (
+      start.connectionName !== end.connectionName ||
+      rootConnectionName !== (end.rootConnectionName ?? end.connectionName) ||
+      pair.some((point) => ![point.x, point.y, point.z].every(Number.isFinite))
+    ) {
+      return false
+    }
+    const pairKey = getPhysicalPairKey(pair, rootConnectionName)
+    const connectionNames =
+      remainingPairs.get(pairKey) ?? new Set<ConnectionName>()
+    connectionNames.add(start.connectionName)
+    remainingPairs.set(pairKey, connectionNames)
+  }
+
+  for (const route of routes) {
+    const [start, end] = routeEndpoints(route)
+    if (!start || !end) return false
+    if (
+      ![start.x, start.y, start.z, end.x, end.y, end.z].every(Number.isFinite)
+    ) {
+      return false
+    }
+    const pairKey = getPhysicalPairKey(
+      [start, end],
+      route.rootConnectionName ?? route.connectionName,
+    )
+    if (!remainingPairs.get(pairKey)?.has(route.connectionName)) return false
+    remainingPairs.delete(pairKey)
+  }
+
+  return remainingPairs.size === 0
+}
 
 const getConnectedPointKeysForConnection = (
   routes: HighDensityIntraNodeRoute[],

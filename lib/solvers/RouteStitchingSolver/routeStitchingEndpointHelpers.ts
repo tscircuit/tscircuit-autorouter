@@ -1,4 +1,5 @@
 import { distance, type Point3 } from "@tscircuit/math-utils"
+import { PriorityQueue } from "lib/data-structures/PriorityQueue"
 import type { HighDensityIntraNodeRoute } from "lib/types/high-density-types"
 import {
   comparePoints,
@@ -12,6 +13,9 @@ import {
  * Endpoints within this tolerance are treated as the same island endpoint.
  */
 export const ENDPOINT_MATCH_TOLERANCE = 0.1
+
+type EndpointKey = string
+type EndpointSearchCandidate = { hash: EndpointKey; f: number }
 
 type EndpointEdge = {
   nextHash: string
@@ -205,21 +209,19 @@ export const snapIslandEndpointToNearestTerminal = (params: {
     : params.islandEndpoint
 }
 
-/**
- * Returns the route islands on the deterministic endpoint path between the
- * chosen terminals. If the subset cannot actually stitch to both terminals,
- * the full route set is returned instead.
- */
-export const selectRoutesAlongEndpointPath = (params: {
+type EndpointPathParams = {
   connectionName: string
   hdRoutes: HighDensityIntraNodeRoute[]
   start: Point3
   end: Point3
   endpointIndex: EndpointClusterIndex
   canStitchBetweenTerminals: CanStitchBetweenTerminals
-}) => {
-  if (params.hdRoutes.length <= 2) return params.hdRoutes
+}
 
+/** Returns a validated terminal-to-terminal path, or null when none is found. */
+export const findRoutesAlongEndpointPath = (
+  params: EndpointPathParams,
+): HighDensityIntraNodeRoute[] | null => {
   const canonicalHdRoutes = [...params.hdRoutes].sort(compareRoutes)
 
   const startHash = params.endpointIndex.getClosestEndpointKey(
@@ -234,7 +236,7 @@ export const selectRoutesAlongEndpointPath = (params: {
   )
 
   if (!startHash || !endHash || startHash === endHash) {
-    return canonicalHdRoutes
+    return null
   }
 
   const adjacency = new Map<string, EndpointEdge[]>()
@@ -302,42 +304,50 @@ export const selectRoutesAlongEndpointPath = (params: {
     )
   }
 
-  const queue = [startHash]
-  const visitedHashes = new Set<string>([startHash])
+  // One gap costs more than a simple path through every existing route.
+  // Among equally connected paths, keep the path with fewer route fragments.
+  const gapCost = canonicalHdRoutes.length + 1
+  const queue = new PriorityQueue<EndpointSearchCandidate>(
+    [{ hash: startHash, f: 0 }],
+    [...adjacency.values()].reduce((count, edges) => count + edges.length, 1),
+  )
+  const costByHash = new Map<EndpointKey, number>([[startHash, 0]])
   const prevByHash = new Map<
-    string,
+    EndpointKey,
     { prevHash: string; routeIndex: number | null }
   >()
 
-  while (queue.length > 0) {
-    const currentHash = queue.shift()!
+  while (!queue.isEmpty()) {
+    const { hash: currentHash, f: currentCost } = queue.dequeue()!
+    if (currentCost !== costByHash.get(currentHash)) continue
     if (currentHash === endHash) break
 
     for (const edge of adjacency.get(currentHash) ?? []) {
-      if (visitedHashes.has(edge.nextHash)) continue
-      visitedHashes.add(edge.nextHash)
+      const cost = currentCost + (edge.routeIndex === null ? gapCost : 1)
+      if (cost >= (costByHash.get(edge.nextHash) ?? Infinity)) continue
+      costByHash.set(edge.nextHash, cost)
       prevByHash.set(edge.nextHash, {
         prevHash: currentHash,
         routeIndex: edge.routeIndex,
       })
-      queue.push(edge.nextHash)
+      queue.enqueue({ hash: edge.nextHash, f: cost })
     }
   }
 
-  if (!visitedHashes.has(endHash)) return canonicalHdRoutes
+  if (!costByHash.has(endHash)) return null
 
   const selectedRouteIndexesInReverse: number[] = []
   let cursorHash = endHash
   while (cursorHash !== startHash) {
     const prev = prevByHash.get(cursorHash)
-    if (!prev) return canonicalHdRoutes
+    if (!prev) return null
     if (prev.routeIndex !== null) {
       selectedRouteIndexesInReverse.push(prev.routeIndex)
     }
     cursorHash = prev.prevHash
   }
 
-  if (selectedRouteIndexesInReverse.length === 0) return params.hdRoutes
+  if (selectedRouteIndexesInReverse.length === 0) return null
 
   const selectedHdRoutes = selectedRouteIndexesInReverse
     .reverse()
@@ -352,10 +362,21 @@ export const selectRoutesAlongEndpointPath = (params: {
       end: params.end,
     })
   ) {
-    return canonicalHdRoutes
+    return null
   }
 
   return selectedHdRoutes
+}
+
+/** Retains the existing island-selection behavior when no path is found. */
+export const selectRoutesAlongEndpointPath = (
+  params: EndpointPathParams,
+): HighDensityIntraNodeRoute[] => {
+  if (params.hdRoutes.length <= 2) return params.hdRoutes
+  return (
+    findRoutesAlongEndpointPath(params) ??
+    [...params.hdRoutes].sort(compareRoutes)
+  )
 }
 
 export const hasStitchableGapBetweenUnsolvedRoutes = (
