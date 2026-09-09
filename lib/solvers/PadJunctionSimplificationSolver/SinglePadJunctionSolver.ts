@@ -252,7 +252,7 @@ export class SinglePadJunctionSolver extends BaseSolver {
         outcome: "unsupported",
         connectionNames,
         reason:
-          "Requires a same-edge V or adjacent-edge corner meeting inside the pad",
+          "Requires an acute same-edge V meeting inside the pad",
       })
       return null
     }

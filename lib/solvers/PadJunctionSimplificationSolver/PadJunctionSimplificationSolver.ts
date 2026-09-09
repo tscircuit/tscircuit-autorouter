@@ -28,10 +28,11 @@
  * Accepted replacement: a fully checked candidate improving the original cost.
  *
  * Scope: two equal-width, same-layer terminal runs at an axis-aligned pad.
- * Only same-edge V entries and adjacent-edge corners sharing an interior
- * endpoint are eligible, including rotations and reflections. Search stays within
+ * Only acute V entries through the same unambiguous edge, sharing an interior
+ * endpoint, are eligible, including rotations and reflections. Search stays within
  * one pad-size margin; earlier route geometry is preserved. Opposite-edge entries,
- * existing shared stems, and pads with three or more branches are skipped.
+ * corner entries, existing shared stems, and pads with three or more branches
+ * are skipped.
  * Other layers and route metadata remain unchanged. Unsupported geometry is an
  * explicit no-op. A* finds shortest lexicographic paths on a bounded orthogonal
  * grid; sequential arm routing and first improvement do NOT guarantee a globally
