@@ -1,4 +1,5 @@
 import { spyOn } from "bun:test"
+import { mkdirSync, writeFileSync } from "node:fs"
 import {
   RouteStitchClearanceValidator,
   type StitchSegment,
@@ -40,18 +41,11 @@ export function diagnoseStitchRepair(solver: BaseSolver): void {
       if (value instanceof Set) return [...value]
       return value
     })
-    // Hosted test output truncates a single large log record. Chunk only the
-    // diagnostic transport, without changing solver execution or its inputs.
-    for (let offset = 0; offset < diagnostic.length; offset += 8000) {
-      console.error(
-        "STITCH_REPAIR_FAILURE_CHUNK",
-        JSON.stringify({
-          connectionName: rejected.segment.connectionName,
-          offset,
-          totalLength: diagnostic.length,
-          data: diagnostic.slice(offset, offset + 8000),
-        }),
-      )
-    }
+    // Preserve the full payload as a hosted artifact: the test runner drops
+    // records when a large geometry dump fills its output buffer.
+    mkdirSync("stitch-repair-diagnostics", { recursive: true })
+    const filename = encodeURIComponent(rejected.segment.connectionName)
+    writeFileSync(`stitch-repair-diagnostics/${filename}.json`, diagnostic)
+    console.error("STITCH_REPAIR_FAILURE_ARTIFACT", filename)
   }
 }

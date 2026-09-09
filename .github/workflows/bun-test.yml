@@ -70,3 +70,4 @@ jobs:
             **/*.diff.png
             **/*.received.svg
             **/*.snap.svg
+            stitch-repair-diagnostics/*.json

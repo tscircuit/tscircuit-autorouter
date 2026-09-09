@@ -3,7 +3,7 @@ import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-p
 import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import { loadScenarioBySampleNumber } from "../../scripts/benchmark/scenarios"
 
-test("Pipeline9 makes every preloaded trace in an SRJ23 sample 46 DRC region reroutable", async () => {
+test("Pipeline9 clears SRJ23 sample 46 with movable preloaded traces", async () => {
   const { scenario } = await loadScenarioBySampleNumber("srj23", 46)
   const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(
     structuredClone(scenario),
@@ -20,11 +20,12 @@ test("Pipeline9 makes every preloaded trace in an SRJ23 sample 46 DRC region rer
     routedTraces: solver.getOutputSimplifiedPcbTraces(),
   })
   expect(errors).toEqual([])
-  console.error(
-    "STITCH_REPAIR_SAMPLE46_STATS",
-    JSON.stringify(solver.pipeline9JointDrcRepairSolver?.stats),
-  )
+  // DRC-aware stitching can let exact repair finish before regional repair.
+  // Require movable preloads and clean output, not a particular repair phase.
   expect(
-    solver.pipeline9JointDrcRepairSolver?.stats.regionalB01RepairAcceptedCount,
+    solver.pipeline9JointDrcRepairSolver?.stats.movablePreloadedTraceCount,
   ).toBeGreaterThan(0)
+  expect(
+    solver.pipeline9JointDrcRepairSolver?.stats.regionalB01RepairRemainingDrcIssueCount,
+  ).toBe(0)
 })
