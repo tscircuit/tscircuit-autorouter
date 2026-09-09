@@ -85,14 +85,12 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
         stitchSolver.mergedHdRoute.route.length - 1
       ]
 
-    const directDistance =
-      distance(routeStart, params.start) + distance(routeEnd, params.end)
-    const swappedDistance =
-      distance(routeStart, params.end) + distance(routeEnd, params.start)
-
     return (
-      Math.min(directDistance, swappedDistance) <=
-      MAX_TERMINAL_STITCH_GAP_DISTANCE_3
+      routeStart.z === stitchSolver.start.z &&
+      routeEnd.z === stitchSolver.end.z &&
+      distance(routeStart, stitchSolver.start) +
+        distance(routeEnd, stitchSolver.end) <=
+        MAX_TERMINAL_STITCH_GAP_DISTANCE_3
     )
   }
 

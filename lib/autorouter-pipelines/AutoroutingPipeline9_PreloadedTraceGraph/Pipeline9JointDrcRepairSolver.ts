@@ -1577,7 +1577,14 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     })
     const boundedRegionalRepairStartedAt = performance.now()
     const boundedRegionalRepairResult = applyPipeline9BoundedRegionalRepairs({
-      originalSrj: this.params.originalSrj,
+      originalSrj: {
+        ...this.params.originalSrj,
+        connections: [
+          ...this.params.originalSrj.connections,
+          ...this.params.newConnections,
+        ],
+      },
+      viaHoleDiameter: this.params.defaultViaHoleDiameter,
       routes: regionalB01RepairResult.routes,
       syntheticConnectionNames: this.syntheticConnectionNames,
       drcEvaluator: this.cachedReferenceDrcEvaluator!,
