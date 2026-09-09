@@ -428,6 +428,8 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
 
     if (hyperParameters.HIGH_DENSITY_A01) {
       const solver = new HighDensitySolverA01({
+        viaOccupantQuery: "row-runs",
+        viaExpansion: "physical",
         nodeWithPortPoints: this.nodeWithPortPoints,
         cellSizeMm: 0.1,
         viaDiameter: this.constructorParams.viaDiameter ?? 0.3,
@@ -444,6 +446,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     if (hyperParameters.HIGH_DENSITY_A03) {
       const solver = new HighDensityA03Solver({
         viaOccupantQuery: "owner-runs",
+        viaExpansion: "physical",
         nodeWithPortPoints: this.nodeWithPortPoints,
         highResolutionCellSize: 0.1,
         highResolutionCellThickness: 8,
@@ -499,7 +502,6 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     }
     return new CachedIntraNodeRouteSolver({
       ...this.constructorParams,
-      viaExpansion: this.constructorParams.viaExpansion ?? "physical",
       hyperParameters,
     })
   }
