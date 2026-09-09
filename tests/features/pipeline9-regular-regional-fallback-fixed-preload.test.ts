@@ -72,7 +72,7 @@ test("Pipeline9 regular regional fallback keeps immutable preloads as obstacles"
       { x: 1, y: 0, z: 0 },
       { x: 2, y: 1, z: 1 },
     ],
-    vias: [],
+    vias: [{ x: 2, y: 1 }],
   }
   const srj: SimpleRouteJson = {
     layerCount: 2,

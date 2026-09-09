@@ -623,12 +623,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             viaToPadClearance: cms.srj.minViaEdgeToPadEdgeClearance,
             effort: cms.effort,
             includeBoardObstacles: true,
-            nodePfById: new Map(
-              portPointPathingOutput.inputNodeWithPortPoints.map((node) => [
-                node.capacityMeshNodeId,
-                portPointPathingSolver.computeNodePf(node),
-              ]),
-            ),
+            nodePfById: portPointPathingSolver.computeNodePfMap(),
             preserveTerminalPcbPortIds: true,
           },
         ]
