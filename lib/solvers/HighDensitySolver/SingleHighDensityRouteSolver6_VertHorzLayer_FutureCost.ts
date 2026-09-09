@@ -49,7 +49,10 @@ export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends Sing
       opts.futurePointSearch === "spatial" &&
       this.futureConnectionPoints.length >= 8 &&
       this.futureConnectionPoints.every(
-        (point) => Number.isFinite(point.x) && Number.isFinite(point.y) && Number.isFinite(point.z),
+        (point) =>
+          Number.isFinite(point.x) &&
+          Number.isFinite(point.y) &&
+          Number.isFinite(point.z),
       )
         ? new LayerPointSpatialIndex(this.futureConnectionPoints)
         : null
@@ -59,9 +62,15 @@ export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends Sing
     if (this.futureConnectionPointIndex) {
       const viaPenaltyDistance = this.viaPenaltyDistance
       if (
-        Number.isFinite(node.x) && Number.isFinite(node.y) &&
-        Number.isFinite(node.z) && Number.isFinite(viaPenaltyDistance)
-      ) return this.futureConnectionPointIndex.findNearestPoint(node, viaPenaltyDistance)
+        Number.isFinite(node.x) &&
+        Number.isFinite(node.y) &&
+        Number.isFinite(node.z) &&
+        Number.isFinite(viaPenaltyDistance)
+      )
+        return this.futureConnectionPointIndex.findNearestPoint(
+          node,
+          viaPenaltyDistance,
+        )
     }
     let minDist = Infinity
     let closestPoint = null

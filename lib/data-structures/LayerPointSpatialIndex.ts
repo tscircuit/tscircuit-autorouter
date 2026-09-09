@@ -7,10 +7,11 @@ type TreeBounds = {
   maxY: number
   firstOrder: number
 }
-type PointTree = TreeBounds & (
-  | { kind: "leaf"; entries: Entry[] }
-  | { kind: "branch"; left: PointTree; right: PointTree }
-)
+type PointTree = TreeBounds &
+  (
+    | { kind: "leaf"; entries: Entry[] }
+    | { kind: "branch"; left: PointTree; right: PointTree }
+  )
 
 function buildTree(entries: Entry[]): PointTree {
   const xs = entries.map(({ point }) => point.x)
@@ -23,7 +24,8 @@ function buildTree(entries: Entry[]): PointTree {
     firstOrder: Math.min(...entries.map(({ order }) => order)),
   }
   if (entries.length <= 4) return { ...bounds, kind: "leaf", entries }
-  const axis = bounds.maxX - bounds.minX >= bounds.maxY - bounds.minY ? "x" : "y"
+  const axis =
+    bounds.maxX - bounds.minX >= bounds.maxY - bounds.minY ? "x" : "y"
   entries.sort((a, b) => a.point[axis] - b.point[axis] || a.order - b.order)
   const middle = entries.length >> 1
   return {
@@ -45,22 +47,39 @@ export class LayerPointSpatialIndex {
       entries.push({ point, order })
       byLayer.set(point.z, entries)
     }
-    this.roots = [...byLayer].map(([z, entries]) => ({ z, tree: buildTree(entries) }))
+    this.roots = [...byLayer].map(([z, entries]) => ({
+      z,
+      tree: buildTree(entries),
+    }))
   }
 
-  findNearestPoint(node: LayerPoint, viaPenaltyDistance: number): LayerPoint | null {
+  findNearestPoint(
+    node: LayerPoint,
+    viaPenaltyDistance: number,
+  ): LayerPoint | null {
     let bestDistance = Infinity
     let bestOrder = Infinity
     let closest: LayerPoint | null = null
 
     const lowerBound = (tree: PointTree, penalty: number): number => {
-      const dx = node.x < tree.minX ? tree.minX - node.x : node.x > tree.maxX ? node.x - tree.maxX : 0
-      const dy = node.y < tree.minY ? tree.minY - node.y : node.y > tree.maxY ? node.y - tree.maxY : 0
+      const dx =
+        node.x < tree.minX
+          ? tree.minX - node.x
+          : node.x > tree.maxX
+            ? node.x - tree.maxX
+            : 0
+      const dy =
+        node.y < tree.minY
+          ? tree.minY - node.y
+          : node.y > tree.maxY
+            ? node.y - tree.maxY
+            : 0
       const axisDistance = Math.max(dx, dy)
       // L-infinity distance bounds Euclidean distance from below. Round the
       // bound outward to preserve the original sqrt(dx*dx + dy*dy) comparison.
       // Below 1e-150, use zero so subnormal squares cannot invalidate the bound.
-      const lower = axisDistance < 1e-150 ? 0 : axisDistance * (1 - 8 * Number.EPSILON)
+      const lower =
+        axisDistance < 1e-150 ? 0 : axisDistance * (1 - 8 * Number.EPSILON)
       return lower + penalty
     }
 
@@ -68,7 +87,8 @@ export class LayerPointSpatialIndex {
       if (
         lower > bestDistance ||
         (lower === bestDistance && tree.firstOrder >= bestOrder)
-      ) return
+      )
+        return
 
       if (tree.kind === "leaf") {
         for (const { point, order } of tree.entries) {
@@ -93,7 +113,8 @@ export class LayerPointSpatialIndex {
       const rightBound = lowerBound(tree.right, penalty)
       if (
         leftBound < rightBound ||
-        (leftBound === rightBound && tree.left.firstOrder < tree.right.firstOrder)
+        (leftBound === rightBound &&
+          tree.left.firstOrder < tree.right.firstOrder)
       ) {
         visit(tree.left, penalty, leftBound)
         visit(tree.right, penalty, rightBound)

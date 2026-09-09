@@ -12,10 +12,16 @@ test("spatial future-point search preserves live penalties and direct linear beh
     obstacleMargin: 0.1,
     layerCount: 4,
     obstacleRoutes: [],
-    futureConnections: [{
-      connectionName: "future",
-      points: Array.from({ length: 24 }, (_, i) => ({ x: (i % 6) * 1.5, y: Math.floor(i / 6) * 1.5, z: i % 4 })),
-    }],
+    futureConnections: [
+      {
+        connectionName: "future",
+        points: Array.from({ length: 24 }, (_, i) => ({
+          x: (i % 6) * 1.5,
+          y: Math.floor(i / 6) * 1.5,
+          z: i % 4,
+        })),
+      },
+    ],
   }
   const linear = new Solver(opts)
   const spatial = new Solver({ ...opts, futurePointSearch: "spatial" })
@@ -23,13 +29,25 @@ test("spatial future-point search preserves live penalties and direct linear beh
     linear.VIA_PENALTY_FACTOR = penaltyFactor
     spatial.VIA_PENALTY_FACTOR = penaltyFactor
     for (let i = 0; i < 24; i++) {
-      const node = { x: i / 3, y: i % 5, z: i % 4, g: 0, h: 0, f: 0, parent: null }
-      expect(spatial.getClosestFutureConnectionPoint(node)).toBe(linear.getClosestFutureConnectionPoint(node))
+      const node = {
+        x: i / 3,
+        y: i % 5,
+        z: i % 4,
+        g: 0,
+        h: 0,
+        f: 0,
+        parent: null,
+      }
+      expect(spatial.getClosestFutureConnectionPoint(node)).toBe(
+        linear.getClosestFutureConnectionPoint(node),
+      )
     }
   }
   // Direct callers have not opted into fixed geometry and retain live point edits.
   linear.VIA_PENALTY_FACTOR = 0
   linear.futureConnectionPoints[0].x = 8
   linear.futureConnectionPoints[0].y = 8
-  expect(linear.getClosestFutureConnectionPoint({ x: 8, y: 8, z: 0 } as any)).toBe(linear.futureConnectionPoints[0])
+  expect(
+    linear.getClosestFutureConnectionPoint({ x: 8, y: 8, z: 0 } as any),
+  ).toBe(linear.futureConnectionPoints[0])
 })
