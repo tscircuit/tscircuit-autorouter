@@ -13,8 +13,9 @@ the source repository and are not part of this library translation pass.
 The initial translation was followed by Rust formatting and compilation fixes.
 `cargo fmt`, `cargo check`, and `cargo build` pass locally. The compiler reports
 four dead-code warnings for retained source fields and helper methods.
-No tests, linters, or benchmarks have been run. Dispatch equivalence and behavior
-parity remain unverified; compilation does not establish behavioral equivalence.
+The sibling [WASM bindings](../tiny-hypergraph-wasm/README.md) have basic Node
+and Bun smoke tests. Full dispatch equivalence and TypeScript/Rust behavior
+parity remain unverified. No linters or benchmarks have been run.
 
 Translation conventions:
 
@@ -31,6 +32,16 @@ Translation conventions:
 - Preserve recovery branches already present in the original implementation;
   the port is not an algorithm or fallback-policy rewrite.
 
-Next passes, deliberately deferred: port/run selected source tests and compare
-behavior, then design WASM packaging and TypeScript calls. There are no WASM bindings, JavaScript loading changes, generated binaries,
-or published packages in this pass.
+The library builds for `wasm32-unknown-unknown`. The seeded shuffle needs no OS
+randomness, and section timing uses `web-time` for JavaScript environments.
+
+```sh
+cargo build --manifest-path rust/tiny-hypergraph/Cargo.toml --locked
+cargo build --manifest-path rust/tiny-hypergraph/Cargo.toml --locked --target wasm32-unknown-unknown
+```
+
+This crate remains a Rust library; the sibling bindings crate supplies the
+JavaScript-callable WASM package. TypeScript integration is next. Automatic section
+search still uses `catch_unwind`; expected candidate rejection must become
+explicit error handling before exposing that path on the default WASM target,
+where panics abort. Behavior parity remains unverified.

@@ -1,0 +1,16 @@
+[package]
+name = "tiny-hypergraph-wasm"
+version = "0.1.0"
+edition = "2024"
+publish = false
+license = "MIT"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+tiny-hypergraph = { path = "../tiny-hypergraph" }
+serde = { version = "1", features = ["derive"] }
+serde-wasm-bindgen = "0.6"
+wasm-bindgen = "=0.2.128"
+js-sys = "0.3"

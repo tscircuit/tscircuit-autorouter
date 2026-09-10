@@ -9,7 +9,7 @@ use crate::graphics::GraphicsObject;
 use serde_json::{Value, json};
 use std::collections::HashSet;
 use std::panic::{AssertUnwindSafe, catch_unwind};
-use std::time::Instant;
+use web_time::Instant;
 
 pub struct AutomaticSectionSearchResult {
     pub port_section_mask: Vec<i32>,
