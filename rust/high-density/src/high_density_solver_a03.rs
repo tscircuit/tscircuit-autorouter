@@ -282,6 +282,8 @@ pub struct HighDensitySolverA03 {
     connNameToId: HashMap<String, usize>,
     connIdToName: Vec<String>,
     connIdToRootNet: Vec<String>,
+    rootNetNameToId: HashMap<String, usize>,
+    connIdToRootNetId: Vec<usize>,
     overlapFriendlyRootNets: HashSet<String>,
     unsolvedSegs: Vec<ConnectionSeg>,
     solvedRoutes: Vec<Option<Vec<SolvedRouteInternal>>>,
@@ -372,6 +374,8 @@ impl HighDensitySolverA03 {
         self.connNameToId.clear();
         self.connIdToName.clear();
         self.connIdToRootNet.clear();
+        self.rootNetNameToId.clear();
+        self.connIdToRootNetId.clear();
         self.overlapFriendlyRootNets.clear();
         self.unsolvedSegs = self.buildConnectionSegs();
         self.penalty2d = vec![0.0; self.planeSize];
@@ -819,7 +823,7 @@ impl HighDensitySolverA03 {
 
     fn allowSharedUse(&self, activeConn: usize, existingConn: i32) -> bool {
         if existingConn < 0 { return false; }
-        self.connIdToRootNet[existingConn as usize] == self.connIdToRootNet[activeConn]
+        self.connIdToRootNetId[existingConn as usize] == self.connIdToRootNetId[activeConn]
     }
 
     fn shouldSkipFixedPortHalo(&self, flatIdx: usize, connId: usize) -> bool {
@@ -860,6 +864,9 @@ impl HighDensitySolverA03 {
             }
             name.into()
         });
+        let nextRootId = self.rootNetNameToId.len();
+        let rootId = *self.rootNetNameToId.entry(root.clone()).or_insert(nextRootId);
+        self.connIdToRootNetId.push(rootId);
         self.connIdToRootNet.push(root);
         self.connNameToId.insert(name.into(), id);
         id
