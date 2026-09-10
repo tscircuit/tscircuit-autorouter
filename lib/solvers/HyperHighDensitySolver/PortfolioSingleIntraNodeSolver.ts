@@ -97,7 +97,8 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
   private getTotalCandidateWork(): number {
     return (this.supervisedSolvers ?? []).reduce(
       (total, { solver }) =>
-        total + (solver instanceof HighDensitySolverA13 ? 0 : solver.iterations),
+        total +
+        (solver instanceof HighDensitySolverA13 ? 0 : solver.iterations),
       0,
     )
   }
@@ -453,7 +454,10 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     }
 
     if (hyperParameters.HIGH_DENSITY_A13) {
-      const maxSearchIterations = Math.max(1, Math.round(50_000_000 * this.effort))
+      const maxSearchIterations = Math.max(
+        1,
+        Math.round(50_000_000 * this.effort),
+      )
       const solver = new HighDensitySolverA13({
         nodeWithPortPoints: this.nodeWithPortPoints,
         cellSizeMm: 0.1,
