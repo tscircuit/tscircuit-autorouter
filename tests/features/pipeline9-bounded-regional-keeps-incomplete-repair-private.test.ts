@@ -23,6 +23,7 @@ test("a regional improvement stays private while a reference connectivity error 
   })
   expect(result.acceptedRegionCount).toBeGreaterThan(0)
   expect(result.finalDrcIssueCount).toBe(1)
+  expect(result.publishedDrcIssueCount).toBe(result.initialDrcIssueCount)
   expect(result.repaired).toBeFalse()
   expect(result.routes).toBe(fixture.routes)
   expect(fixture.routes).toEqual(original)

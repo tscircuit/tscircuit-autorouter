@@ -1,7 +1,7 @@
 {
   "name": "@tscircuit/capacity-autorouter",
   "main": "./dist/index.js",
-  "version": "0.0.896",
+  "version": "0.0.899",
   "type": "module",
   "repository": {
     "type": "git",
@@ -11,6 +11,7 @@
     "dist"
   ],
   "scripts": {
+    "prepublishOnly": "bun run build && bun scripts/check-published-autorouter-version.ts",
     "start": "cosmos",
     "build": "tsup ./lib/index.ts --minify terser --external @tscircuit/core --external circuit-to-svg --format esm --dts --sourcemap",
     "bench": "bun test tests/spatial-index-bench.test.ts",
