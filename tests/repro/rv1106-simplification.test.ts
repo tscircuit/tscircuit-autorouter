@@ -14,6 +14,9 @@ import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import { Pipeline9JointDrcRepairSolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9JointDrcRepairSolver"
 import type { HighDensityRoute } from "lib/types/high-density-types"
 
+import { applyPipeline9TraceShortcuts } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/applyPipeline9TraceShortcuts"
+import { doHdRoutesTouch } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/doHdRoutesTouch"
+
 type JointInput = ConstructorParameters<typeof Pipeline9JointDrcRepairSolver>[0]
 type FrozenRepair = {
   jointInput: Omit<JointInput, "connMap" | "mutatedPreloadedTraceIds"> & { mutatedPreloadedTraceIds: string[] }
@@ -71,10 +74,40 @@ test("RV1106 phased Pipeline9 preserves the captured post-repair board", async (
     mutatedPreloadedTraceIds: new Set(frozen.jointInput.mutatedPreloadedTraceIds),
   })
   expect(joint.exactRepairSolver).toBeDefined()
-  const routes = frozen.routes
+  let routes = frozen.routes
   joint.exactRepairSolver!.getOutput = () => routes
   pipeline.pipeline9JointDrcRepairSolver = joint
-  expect(routes.reduce((count, route) => count + route.route.length, 0)).toBe(6031)
+  routes = applyPipeline9TraceShortcuts({
+    routes,
+    otherHdRoutes: joint.fixedPreloadedObstacleRoutes,
+    srj: { ...joint.params.originalSrj, obstacles: joint.params.obstacles },
+    connMap: joint.params.connMap,
+    colorMap: joint.params.colorMap,
+    drcEvaluator: ({ routes: proposed }) => {
+      if (!proposed) throw new Error("Expected candidate routes")
+      joint.exactRepairSolver!.getOutput = () => proposed
+      return evaluateRelaxedDrc({
+        inputSrj: originalInput,
+        srjWithPointPairs: pipeline.srjWithPointPairs!,
+        routedTraces: [...joint.getMutatedPreloadedTraces(), ...pipeline.getNewTracesBeforePowerExpansion()],
+      }).errors.map((error) => ({ ...error }))
+    },
+  })
+  joint.exactRepairSolver!.getOutput = () => routes
+  expect(routes.reduce((count, route) => count + route.route.length, 0)).toBe(4350)
+  for (let i = 0; i < routes.length; i++) {
+    expect(routes[i]!.vias).toEqual(frozen.routes[i]!.vias)
+    expect(routes[i]!.route[0]).toEqual(frozen.routes[i]!.route[0])
+    expect(routes[i]!.route.at(-1)).toEqual(frozen.routes[i]!.route.at(-1))
+    for (const fixed of joint.fixedPreloadedObstacleRoutes) {
+      if (doHdRoutesTouch(frozen.routes[i]!, fixed)) expect(doHdRoutesTouch(routes[i]!, fixed)).toBe(true)
+    }
+    for (let j = i + 1; j < routes.length; j++) {
+      if (doHdRoutesTouch(frozen.routes[i]!, frozen.routes[j]!)) {
+        expect(doHdRoutesTouch(routes[i]!, routes[j]!)).toBe(true)
+      }
+    }
+  }
   pipeline.activeSubSolver = null
   pipeline.currentPipelineStepIndex = pipeline.pipelineDef.findIndex((stage) => stage.solverName === "lengthMatchingPostProcessingSolver")
   pipeline.solve()
@@ -83,9 +116,9 @@ test("RV1106 phased Pipeline9 preserves the captured post-repair board", async (
   const routedTraces = pipeline.getOutputSimplifiedPcbTraces()
   const validation = { inputSrj: originalInput, srjWithPointPairs: pipeline.srjWithPointPairs!, routedTraces }
   const drc = evaluateRelaxedDrc(validation)
-  expect(drc.errors).toHaveLength(26)
+  expect(drc.errors).toHaveLength(25)
   expect(drc.errors.filter((error) => error.type === "pcb_via_clearance_error")).toHaveLength(0)
-  expect(drc.errors.filter((error) => error.type === "pcb_via_trace_clearance_error")).toHaveLength(2)
+  expect(drc.errors.filter((error) => error.type === "pcb_via_trace_clearance_error")).toHaveLength(1)
   expect(checkSourceTracesHavePcbTraces(drc.circuitJson)).toEqual([])
   expect(checkEachPcbPortConnectedToPcbTraces(drc.circuitJson)).toEqual([])
   await expect(getBugReportSnapshotSvg(validation)).toMatchSvgSnapshot(import.meta.path)
