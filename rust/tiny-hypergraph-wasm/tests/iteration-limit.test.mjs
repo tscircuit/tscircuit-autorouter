@@ -1,6 +1,6 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
-import { createInput, RustTinyHyperGraphSolver } from "./fixture.mjs"
+import { createInput, RustTinyHyperGraphSolver } from "./rawFixture.mjs"
 
 test("batch execution respects the solver iteration limit and preserves failure", () => {
   const { topology, problem, options } = createInput()

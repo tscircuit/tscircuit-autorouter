@@ -1,6 +1,6 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
-import { createInput, RustTinyHyperGraphSolver } from "./fixture.mjs"
+import { createInput, RustTinyHyperGraphSolver } from "./rawFixture.mjs"
 
 test("solver inputs, snapshots, and instances have independent ownership", () => {
   const { topology, problem, options } = createInput()

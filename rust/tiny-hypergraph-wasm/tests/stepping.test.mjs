@@ -1,6 +1,6 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
-import { createInput, RustTinyHyperGraphSolver } from "./fixture.mjs"
+import { createInput, RustTinyHyperGraphSolver } from "./rawFixture.mjs"
 
 test("single steps, batches, and solve produce the same routed graph", () => {
   const solvers = [1, 100, null].map(() => {
