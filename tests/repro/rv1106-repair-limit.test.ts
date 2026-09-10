@@ -38,7 +38,10 @@ test("Pipeline9 repairs the RV1106 remaining phase up to its sample limit", asyn
     gunzipSync(
       new Uint8Array(
         readFileSync(
-          new URL("./assets/rv1106-autorouting-phases.json.gz", import.meta.url),
+          new URL(
+            "./assets/rv1106-autorouting-phases.json.gz",
+            import.meta.url,
+          ),
         ),
       ),
     ).toString(),
