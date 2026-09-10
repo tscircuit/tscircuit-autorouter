@@ -14,7 +14,13 @@ export function attributeNodeWrappers(solvers: SolverRecord[]): SolverRecord[] {
     else children.set(solver.parentId, [solver])
   }
   for (const solver of attributed) {
-    if (solver.nodeId || !["HighDensitySolver", "Pipeline9RegionalFallbackSolver"].includes(solver.solver)) continue
+    if (
+      solver.nodeId ||
+      !["HighDensitySolver", "Pipeline9RegionalFallbackSolver"].includes(
+        solver.solver,
+      )
+    )
+      continue
     const pending = [...(children.get(solver.id) ?? [])]
     const descendantNodeIds = new Set<string>()
     while (pending.length && descendantNodeIds.size < 2) {

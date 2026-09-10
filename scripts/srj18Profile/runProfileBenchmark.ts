@@ -1,5 +1,12 @@
 import { parseArgs } from "node:util"
-import { cp, mkdir, readFile, readdir, unlink, writeFile } from "node:fs/promises"
+import {
+  cp,
+  mkdir,
+  readFile,
+  readdir,
+  unlink,
+  writeFile,
+} from "node:fs/promises"
 import { arch, cpus, platform, release, totalmem } from "node:os"
 import { resolve } from "node:path"
 import { createHash } from "node:crypto"
@@ -12,7 +19,9 @@ import { renderReportHtml } from "./renderReportHtml"
 
 type Mode = "all" | "baseline" | "detailed" | "cpu"
 
-async function relayOutput(stream: ReadableStream<Uint8Array>): Promise<string> {
+async function relayOutput(
+  stream: ReadableStream<Uint8Array>,
+): Promise<string> {
   const reader = stream.getReader()
   const decoder = new TextDecoder()
   let output = ""
@@ -28,11 +37,16 @@ async function relayOutput(stream: ReadableStream<Uint8Array>): Promise<string> 
 
 export async function runProfileBenchmark(args: string[]): Promise<void> {
   const { values } = parseArgs({
-    args, strict: true,
+    args,
+    strict: true,
     options: {
-      help: { type: "boolean" }, sample: { type: "string" }, limit: { type: "string" },
-      repeats: { type: "string", default: "3" }, effort: { type: "string", default: "1" },
-      "out-dir": { type: "string" }, mode: { type: "string", default: "all" },
+      help: { type: "boolean" },
+      sample: { type: "string" },
+      limit: { type: "string" },
+      repeats: { type: "string", default: "3" },
+      effort: { type: "string", default: "1" },
+      "out-dir": { type: "string" },
+      mode: { type: "string", default: "all" },
       "timeout-seconds": { type: "string", default: "1800" },
       "cpu-interval-us": { type: "string", default: "1000" },
       "cpu-smol": { type: "boolean", default: false },
@@ -65,16 +79,34 @@ No routing parameters, source files or dependency files are modified.`)
   const effort = Number(values.effort)
   const timeoutMs = Number(values["timeout-seconds"]) * 1000
   const cpuIntervalUs = Number(values["cpu-interval-us"])
-  if (!Number.isInteger(cpuIntervalUs) || cpuIntervalUs < 1) throw new Error("--cpu-interval-us must be a positive integer")
-  if (!Number.isInteger(repeats) || repeats < 1 || !Number.isFinite(effort) || effort <= 0 || !Number.isFinite(timeoutMs) || timeoutMs <= 0) throw new Error("repeats, effort and timeout must be positive; repeats must be an integer")
-  if (!["all", "baseline", "detailed", "cpu"].includes(values.mode!)) throw new Error(`Unknown mode: ${values.mode}`)
+  if (!Number.isInteger(cpuIntervalUs) || cpuIntervalUs < 1)
+    throw new Error("--cpu-interval-us must be a positive integer")
+  if (
+    !Number.isInteger(repeats) ||
+    repeats < 1 ||
+    !Number.isFinite(effort) ||
+    effort <= 0 ||
+    !Number.isFinite(timeoutMs) ||
+    timeoutMs <= 0
+  )
+    throw new Error(
+      "repeats, effort and timeout must be positive; repeats must be an integer",
+    )
+  if (!["all", "baseline", "detailed", "cpu"].includes(values.mode!))
+    throw new Error(`Unknown mode: ${values.mode}`)
   const mode = values.mode as Mode
-  if (values.sample && values.limit) throw new Error("Choose --sample or --limit, not both")
-  let samples = Object.keys(dataset).filter((key) => /^sample\d{3}$/.test(key)).map((key) => Number(key.slice(6))).sort((left, right) => left - right)
-  if (values.sample) samples = samples.filter((sample) => sample === Number(values.sample))
+  if (values.sample && values.limit)
+    throw new Error("Choose --sample or --limit, not both")
+  let samples = Object.keys(dataset)
+    .filter((key) => /^sample\d{3}$/.test(key))
+    .map((key) => Number(key.slice(6)))
+    .sort((left, right) => left - right)
+  if (values.sample)
+    samples = samples.filter((sample) => sample === Number(values.sample))
   if (values.limit) {
     const limit = Number(values.limit)
-    if (!Number.isInteger(limit) || limit < 1) throw new Error("--limit must be a positive integer")
+    if (!Number.isInteger(limit) || limit < 1)
+      throw new Error("--limit must be a positive integer")
     samples = samples.slice(0, limit)
   }
   if (!samples.length) throw new Error("No matching samples")
@@ -84,47 +116,115 @@ No routing parameters, source files or dependency files are modified.`)
   } else {
     await mkdir("results", { recursive: true })
     const existing = await readdir("results")
-    const next = Math.max(0, ...existing.filter((name) => /^run\d+$/.test(name)).map((name) => Number(name.slice(3)))) + 1
+    const next =
+      Math.max(
+        0,
+        ...existing
+          .filter((name) => /^run\d+$/.test(name))
+          .map((name) => Number(name.slice(3))),
+      ) + 1
     outDir = resolve(`results/run${String(next).padStart(3, "0")}`)
   }
   await mkdir(outDir, { recursive: true })
-  const existingResults = (await readdir(outDir)).filter((name) =>
-    ((mode === "all" || mode === "baseline") && /^baseline-\d+$/.test(name)) ||
-    ((mode === "all" || mode === "detailed") && name === "detailed") ||
-    ((mode === "all" || mode === "cpu") && name === "cpu"),
+  const existingResults = (await readdir(outDir)).filter(
+    (name) =>
+      ((mode === "all" || mode === "baseline") &&
+        /^baseline-\d+$/.test(name)) ||
+      ((mode === "all" || mode === "detailed") && name === "detailed") ||
+      ((mode === "all" || mode === "cpu") && name === "cpu"),
   )
-  if (existingResults.length) throw new Error(`Destination already contains ${existingResults.join(", ")}; use a new --out-dir to avoid mixing independent runs`)
-  const revision = Bun.spawnSync(["git", "rev-parse", "HEAD"]).stdout.toString().trim()
-  const branch = Bun.spawnSync(["git", "branch", "--show-current"]).stdout.toString().trim()
+  if (existingResults.length)
+    throw new Error(
+      `Destination already contains ${existingResults.join(", ")}; use a new --out-dir to avoid mixing independent runs`,
+    )
+  const revision = Bun.spawnSync(["git", "rev-parse", "HEAD"])
+    .stdout.toString()
+    .trim()
+  const branch = Bun.spawnSync(["git", "branch", "--show-current"])
+    .stdout.toString()
+    .trim()
   const packageJson = await readFile("package.json", "utf8")
-  const dependencies: { path: string; name: string; version: string | null; packageJsonSha256: string }[] = []
-  for await (const path of new Bun.Glob("**/package.json").scan("node_modules")) {
+  const dependencies: {
+    path: string
+    name: string
+    version: string | null
+    packageJsonSha256: string
+  }[] = []
+  for await (const path of new Bun.Glob("**/package.json").scan(
+    "node_modules",
+  )) {
     const contents = await readFile(resolve("node_modules", path), "utf8")
-    const installed = JSON.parse(contents) as { name?: string; version?: string }
-    if (installed.name) dependencies.push({ path, name: installed.name, version: installed.version ?? null,
-      packageJsonSha256: createHash("sha256").update(contents).digest("hex") })
+    const installed = JSON.parse(contents) as {
+      name?: string
+      version?: string
+    }
+    if (installed.name)
+      dependencies.push({
+        path,
+        name: installed.name,
+        version: installed.version ?? null,
+        packageJsonSha256: createHash("sha256").update(contents).digest("hex"),
+      })
   }
   dependencies.sort((left, right) => left.path.localeCompare(right.path))
-  await writeFile(resolve(outDir, "dependencies.json"), JSON.stringify(dependencies, null, 2))
+  await writeFile(
+    resolve(outDir, "dependencies.json"),
+    JSON.stringify(dependencies, null, 2),
+  )
   const manifest = {
-    startedAt: new Date().toISOString(), revision, branch, mode, samples, repeats, effort,
-    timeoutMs, bun: Bun.version, bunRevision: Bun.revision,
-    cpuIntervalUs, cpuSmol: values["cpu-smol"],
-    platform: platform(), release: release(), arch: arch(), cpu: cpus()[0]?.model,
-    logicalCpuCount: cpus().length, totalMemoryBytes: totalmem(),
+    startedAt: new Date().toISOString(),
+    revision,
+    branch,
+    mode,
+    samples,
+    repeats,
+    effort,
+    timeoutMs,
+    bun: Bun.version,
+    bunRevision: Bun.revision,
+    cpuIntervalUs,
+    cpuSmol: values["cpu-smol"],
+    platform: platform(),
+    release: release(),
+    arch: arch(),
+    cpu: cpus()[0]?.model,
+    logicalCpuCount: cpus().length,
+    totalMemoryBytes: totalmem(),
     packageJsonSha256: createHash("sha256").update(packageJson).digest("hex"),
-    lockfilePresent: await Bun.file("bun.lock").exists() || await Bun.file("bun.lockb").exists(),
+    lockfilePresent:
+      (await Bun.file("bun.lock").exists()) ||
+      (await Bun.file("bun.lockb").exists()),
     cachePolicy: "fresh_process_per_sample_and_repetition",
-    instrumentationPolicy: "temporary_source_transform_no_prototype_replacement",
+    instrumentationPolicy:
+      "temporary_source_transform_no_prototype_replacement",
   }
-  await writeFile(resolve(outDir, `manifest-${mode}.json`), JSON.stringify(manifest, null, 2))
-  await writeFile(resolve(outDir, "source.patch"), Bun.spawnSync(["git", "diff", "HEAD"]).stdout.toString())
-  const detailedEntrypoint = mode === "all" || mode === "detailed" ? await buildProfile(resolve(outDir, "instrumented")) : null
+  await writeFile(
+    resolve(outDir, `manifest-${mode}.json`),
+    JSON.stringify(manifest, null, 2),
+  )
+  await writeFile(
+    resolve(outDir, "source.patch"),
+    Bun.spawnSync(["git", "diff", "HEAD"]).stdout.toString(),
+  )
+  const detailedEntrypoint =
+    mode === "all" || mode === "detailed"
+      ? await buildProfile(resolve(outDir, "instrumented"))
+      : null
   const originalEntrypoint = `${import.meta.dir}/sample.ts`
   const runs = [
-    ...(mode === "all" || mode === "baseline" ? Array.from({ length: repeats }, (_, repeat) => ({ kind: "baseline", directory: `baseline-${repeat + 1}`, repeat })) : []),
-    ...(mode === "all" || mode === "detailed" ? [{ kind: "detailed", directory: "detailed", repeat: 0 }] : []),
-    ...(mode === "all" || mode === "cpu" ? [{ kind: "cpu", directory: "cpu", repeat: 0 }] : []),
+    ...(mode === "all" || mode === "baseline"
+      ? Array.from({ length: repeats }, (_, repeat) => ({
+          kind: "baseline",
+          directory: `baseline-${repeat + 1}`,
+          repeat,
+        }))
+      : []),
+    ...(mode === "all" || mode === "detailed"
+      ? [{ kind: "detailed", directory: "detailed", repeat: 0 }]
+      : []),
+    ...(mode === "all" || mode === "cpu"
+      ? [{ kind: "cpu", directory: "cpu", repeat: 0 }]
+      : []),
   ]
   let runFailures = 0
   for (const run of runs) {
@@ -137,51 +237,92 @@ No routing parameters, source files or dependency files are modified.`)
       const outFile = resolve(sampleDir, `${sampleId}.json`)
       const cpuDir = resolve(sampleDir, sampleId)
       if (run.kind === "cpu") await mkdir(cpuDir, { recursive: true })
-      const command = [process.execPath,
-        ...(run.kind === "cpu" ? [
-          ...(values["cpu-smol"] ? ["--smol"] : []),
-          "--cpu-prof", "--cpu-prof-md", "--cpu-prof-interval", String(cpuIntervalUs), "--cpu-prof-dir", cpuDir,
-        ] : []),
+      const command = [
+        process.execPath,
+        ...(run.kind === "cpu"
+          ? [
+              ...(values["cpu-smol"] ? ["--smol"] : []),
+              "--cpu-prof",
+              "--cpu-prof-md",
+              "--cpu-prof-interval",
+              String(cpuIntervalUs),
+              "--cpu-prof-dir",
+              cpuDir,
+            ]
+          : []),
         run.kind === "detailed" ? detailedEntrypoint! : originalEntrypoint,
-        String(sample), String(effort), outFile,
+        String(sample),
+        String(effort),
+        outFile,
       ]
       console.log(`START ${run.directory} ${sampleId}`)
       const processStartMs = performance.now()
       const child = Bun.spawn(command, {
-        cwd: process.cwd(), env: { ...process.env, SRJ18_DETAILED_PROFILE: run.kind === "detailed" ? "1" : "0" },
-        stdout: "pipe", stderr: "pipe",
+        cwd: process.cwd(),
+        env: {
+          ...process.env,
+          SRJ18_DETAILED_PROFILE: run.kind === "detailed" ? "1" : "0",
+        },
+        stdout: "pipe",
+        stderr: "pipe",
       })
       let timedOut = false
-      const timeout = setTimeout(() => { timedOut = true; child.kill("SIGKILL") }, timeoutMs)
+      const timeout = setTimeout(() => {
+        timedOut = true
+        child.kill("SIGKILL")
+      }, timeoutMs)
       const childResults = await Promise.all([
-        child.exited, relayOutput(child.stdout), relayOutput(child.stderr),
+        child.exited,
+        relayOutput(child.stdout),
+        relayOutput(child.stderr),
       ])
       clearTimeout(timeout)
       const [exitCode, stdout, stderr] = childResults
       const processDurationMs = performance.now() - processStartMs
       const log = `${stdout}${stderr}\nprocessDuration=${(processDurationMs / 1000).toFixed(3)}s exitCode=${exitCode} timedOut=${timedOut}\n`
       await writeFile(resolve(sampleDir, `${sampleId}.log`), log)
-      console.log(`END ${run.directory} ${sampleId} processDuration=${(processDurationMs / 1000).toFixed(3)}s exitCode=${exitCode} timedOut=${timedOut}`)
+      console.log(
+        `END ${run.directory} ${sampleId} processDuration=${(processDurationMs / 1000).toFixed(3)}s exitCode=${exitCode} timedOut=${timedOut}`,
+      )
       if (exitCode !== 0) {
         runFailures++
-        await writeFile(resolve(sampleDir, `${sampleId}-failure.json`), JSON.stringify({ sampleId, exitCode, timedOut, processDurationMs }, null, 2))
+        await writeFile(
+          resolve(sampleDir, `${sampleId}-failure.json`),
+          JSON.stringify(
+            { sampleId, exitCode, timedOut, processDurationMs },
+            null,
+            2,
+          ),
+        )
       }
-      if (run.kind === "detailed" && await Bun.file(outFile).exists()) {
-        await writeFile(`${outFile}.gz`, Bun.gzipSync(await Bun.file(outFile).arrayBuffer()))
+      if (run.kind === "detailed" && (await Bun.file(outFile).exists())) {
+        await writeFile(
+          `${outFile}.gz`,
+          Bun.gzipSync(await Bun.file(outFile).arrayBuffer()),
+        )
         await unlink(outFile)
       }
       if (run.kind === "cpu") {
         for (const filename of await readdir(cpuDir)) {
-          if (!filename.endsWith(".cpuprofile") && !filename.endsWith(".md")) continue
+          if (!filename.endsWith(".cpuprofile") && !filename.endsWith(".md"))
+            continue
           const path = resolve(cpuDir, filename)
-          await writeFile(`${path}.gz`, Bun.gzipSync(await Bun.file(path).arrayBuffer()))
+          await writeFile(
+            `${path}.gz`,
+            Bun.gzipSync(await Bun.file(path).arrayBuffer()),
+          )
           await unlink(path)
         }
       }
     }
   }
-  await cp(`${import.meta.dir}/../profile-srj18.ts`, resolve(outDir, "profile-srj18.ts"))
-  await cp(import.meta.dir, resolve(outDir, "srj18Profile"), { recursive: true })
+  await cp(
+    `${import.meta.dir}/../profile-srj18.ts`,
+    resolve(outDir, "profile-srj18.ts"),
+  )
+  await cp(import.meta.dir, resolve(outDir, "srj18Profile"), {
+    recursive: true,
+  })
   if (mode === "all" || mode === "cpu") await summarizeCpuProfiles(outDir)
   if (mode === "all" || mode === "baseline") {
     await summarizeResults(outDir)

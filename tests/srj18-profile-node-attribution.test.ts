@@ -3,8 +3,19 @@ import { attributeNodeWrappers } from "../scripts/srj18Profile/attributeNodeWrap
 import type { SolverRecord } from "../scripts/srj18Profile/reportTypes"
 
 test("node attribution fills single-node wrappers without mislabeling multi-node wrappers or mutating raw records", () => {
-  const record = (id: number, parentId: number | null, solver: string, nodeId: string | null): SolverRecord => ({
-    id, parentId, solver, nodeId, stage: "highDensityRouteSolver", inclusiveMs: 0, winningSolverId: null,
+  const record = (
+    id: number,
+    parentId: number | null,
+    solver: string,
+    nodeId: string | null,
+  ): SolverRecord => ({
+    id,
+    parentId,
+    solver,
+    nodeId,
+    stage: "highDensityRouteSolver",
+    inclusiveMs: 0,
+    winningSolverId: null,
   })
   const raw = [
     record(1, null, "Pipeline", null),

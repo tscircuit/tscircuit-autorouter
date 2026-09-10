@@ -31,9 +31,19 @@ type MethodTiming = {
 }
 
 function getNodeId(receiver: object): string | null {
-  for (const property of ["nodeWithPortPoints", "node", "activeNode", "originalNodeWithPortPoints"]) {
+  for (const property of [
+    "nodeWithPortPoints",
+    "node",
+    "activeNode",
+    "originalNodeWithPortPoints",
+  ]) {
     const node: unknown = Reflect.get(receiver, property)
-    if (node && typeof node === "object" && "capacityMeshNodeId" in node && typeof node.capacityMeshNodeId === "string") {
+    if (
+      node &&
+      typeof node === "object" &&
+      "capacityMeshNodeId" in node &&
+      typeof node.capacityMeshNodeId === "string"
+    ) {
       return node.capacityMeshNodeId
     }
   }
@@ -42,16 +52,41 @@ function getNodeId(receiver: object): string | null {
 
 function snapshotSolver(receiver: object): Record<string, unknown> {
   const snapshot: Record<string, unknown> = {}
-  for (const property of ["iterations", "MAX_ITERATIONS", "solved", "failed", "error", "progress", "cacheHit", "growthAttempts", "adaptiveSearchExpanded", "ripCount", "rips", "phase", "currentStage", "connectionName"]) {
+  for (const property of [
+    "iterations",
+    "MAX_ITERATIONS",
+    "solved",
+    "failed",
+    "error",
+    "progress",
+    "cacheHit",
+    "growthAttempts",
+    "adaptiveSearchExpanded",
+    "ripCount",
+    "rips",
+    "phase",
+    "currentStage",
+    "connectionName",
+  ]) {
     const field: unknown = Reflect.get(receiver, property)
-    if (field === null || ["string", "number", "boolean"].includes(typeof field)) snapshot[property] = field
+    if (
+      field === null ||
+      ["string", "number", "boolean"].includes(typeof field)
+    )
+      snapshot[property] = field
   }
   for (const property of ["hyperParameters", "stats"]) {
     const fields: unknown = Reflect.get(receiver, property)
     if (!fields || typeof fields !== "object") continue
     const scalars: Record<string, Scalar> = {}
     for (const [key, field] of Object.entries(fields)) {
-      if (field === null || typeof field === "string" || typeof field === "number" || typeof field === "boolean") scalars[key] = field
+      if (
+        field === null ||
+        typeof field === "string" ||
+        typeof field === "number" ||
+        typeof field === "boolean"
+      )
+        scalars[key] = field
     }
     snapshot[property] = scalars
   }
@@ -66,16 +101,24 @@ export class SolverProfile {
   private solvers: SolverSnapshot[] = []
   private methods = new Map<MethodKey, MethodTiming>()
 
-  enter(receiver: object, label: { owner: string; method: string }): Span | null {
+  enter(
+    receiver: object,
+    label: { owner: string; method: string },
+  ): Span | null {
     if (!this.enabled) return null
     const parent = this.stack.at(-1)
     let solver = this.byReceiver.get(receiver)
     if (!solver) {
       solver = {
-        id: this.solvers.length + 1, parentId: parent?.solver.id ?? null,
-        solver: receiver.constructor.name, stage: this.stage,
+        id: this.solvers.length + 1,
+        parentId: parent?.solver.id ?? null,
+        solver: receiver.constructor.name,
+        stage: this.stage,
         nodeId: getNodeId(receiver) ?? parent?.solver.nodeId ?? null,
-        snapshot: snapshotSolver(receiver), winningSolverId: null, activeDepth: 0, inclusiveMs: 0,
+        snapshot: snapshotSolver(receiver),
+        winningSolverId: null,
+        activeDepth: 0,
+        inclusiveMs: 0,
       }
       this.byReceiver.set(receiver, solver)
       this.solvers.push(solver)
@@ -83,11 +126,25 @@ export class SolverProfile {
     const key = `${solver.id}/${this.stage}/${label.owner}/${label.method}`
     let method = this.methods.get(key)
     if (!method) {
-      method = { solverId: solver.id, owner: label.owner, method: label.method,
-        stage: this.stage, calls: 0, inclusiveMs: 0, selfMs: 0, maxCallMs: 0 }
+      method = {
+        solverId: solver.id,
+        owner: label.owner,
+        method: label.method,
+        stage: this.stage,
+        calls: 0,
+        inclusiveMs: 0,
+        selfMs: 0,
+        maxCallMs: 0,
+      }
       this.methods.set(key, method)
     }
-    const span = { startMs: performance.now(), childDurationMs: 0, solver, method, receiver }
+    const span = {
+      startMs: performance.now(),
+      childDurationMs: 0,
+      solver,
+      method,
+      receiver,
+    }
     solver.activeDepth++
     this.stack.push(span)
     return span
@@ -96,7 +153,8 @@ export class SolverProfile {
   exit(span: Span | null): void {
     if (!span) return
     const endMs = performance.now()
-    if (this.stack.pop() !== span) throw new Error("Unbalanced synchronous solver profile stack")
+    if (this.stack.pop() !== span)
+      throw new Error("Unbalanced synchronous solver profile stack")
     const durationMs = endMs - span.startMs
     if (--span.solver.activeDepth === 0) span.solver.inclusiveMs += durationMs
     span.method.calls++
@@ -110,7 +168,9 @@ export class SolverProfile {
       if (Reflect.get(receiver, "solved") || Reflect.get(receiver, "failed")) {
         span.solver.snapshot = snapshotSolver(receiver)
       }
-      span.solver.winningSolverId = this.byReceiver.get(Reflect.get(receiver, "winningSolver") ?? {})?.id ?? null
+      span.solver.winningSolverId =
+        this.byReceiver.get(Reflect.get(receiver, "winningSolver") ?? {})?.id ??
+        null
     }
     const parent = this.stack.at(-1)
     if (parent) parent.childDurationMs += durationMs
@@ -142,7 +202,8 @@ export class SolverProfile {
   }
 
   export(): { solvers: Record<string, unknown>[]; methods: MethodTiming[] } {
-    if (this.stack.length) throw new Error("Profile export attempted during an active span")
+    if (this.stack.length)
+      throw new Error("Profile export attempted during an active span")
     const solvers = this.solvers.map(({ snapshot, activeDepth, ...solver }) => {
       let nodeId = solver.nodeId
       let parentId = solver.parentId

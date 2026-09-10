@@ -1,22 +1,54 @@
 import { readdir, writeFile } from "node:fs/promises"
 import { resolve } from "node:path"
-import type { ClassTiming, NodeSolverTiming, NodeSummary, SampleSummary, SampleStageSummary, StageSummary } from "./reportTypes"
+import type {
+  ClassTiming,
+  NodeSolverTiming,
+  NodeSummary,
+  SampleSummary,
+  SampleStageSummary,
+  StageSummary,
+} from "./reportTypes"
 
 type BenchmarkSummary = {
-  totalMedianMs: number; averageMs: number; p50Ms: number; p95Ms: number;
-  baselineRuns: number; samples: SampleSummary[]; stages: StageSummary[];
-  sampleStages: SampleStageSummary[]; nodes: NodeSummary[]; classes: ClassTiming[]; nodeSolvers: NodeSolverTiming[];
+  totalMedianMs: number
+  averageMs: number
+  p50Ms: number
+  p95Ms: number
+  baselineRuns: number
+  samples: SampleSummary[]
+  stages: StageSummary[]
+  sampleStages: SampleStageSummary[]
+  nodes: NodeSummary[]
+  classes: ClassTiming[]
+  nodeSolvers: NodeSolverTiming[]
 }
 
 export async function renderReportHtml(outDir: string): Promise<void> {
-  const summary = await Bun.file(resolve(outDir, "summary.json")).json() as BenchmarkSummary
-  const manifests = (await readdir(outDir)).filter((name) => /^manifest-.*\.json$/.test(name)).sort()
-  if (!manifests.length) throw new Error("Missing benchmark environment manifest")
-  const manifest = await Bun.file(resolve(outDir, manifests[0]!)).json() as { revision: string; effort: number }
-  const detailedReportLink = await Bun.file(resolve(outDir, "detailed-report.md")).exists() ? '<a href="detailed-report.md">Detailed findings and explanations</a>' : ""
+  const summary = (await Bun.file(
+    resolve(outDir, "summary.json"),
+  ).json()) as BenchmarkSummary
+  const manifests = (await readdir(outDir))
+    .filter((name) => /^manifest-.*\.json$/.test(name))
+    .sort()
+  if (!manifests.length)
+    throw new Error("Missing benchmark environment manifest")
+  const manifest = (await Bun.file(resolve(outDir, manifests[0]!)).json()) as {
+    revision: string
+    effort: number
+  }
+  const detailedReportLink = (await Bun.file(
+    resolve(outDir, "detailed-report.md"),
+  ).exists())
+    ? '<a href="detailed-report.md">Detailed findings and explanations</a>'
+    : ""
   const cpuFile = Bun.file(resolve(outDir, "cpu-summary.json"))
-  const cpu = await cpuFile.exists() ? await cpuFile.json() as { functions: Record<string, unknown>[] } : null
-  const embeddedSummary = JSON.stringify({ ...summary, cpuFunctions: cpu?.functions ?? [] }).replaceAll("<", "\\u003c")
+  const cpu = (await cpuFile.exists())
+    ? ((await cpuFile.json()) as { functions: Record<string, unknown>[] })
+    : null
+  const embeddedSummary = JSON.stringify({
+    ...summary,
+    cpuFunctions: cpu?.functions ?? [],
+  }).replaceAll("<", "\\u003c")
   const html = `<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>SRJ18 · Pipeline9 performance report</title>
