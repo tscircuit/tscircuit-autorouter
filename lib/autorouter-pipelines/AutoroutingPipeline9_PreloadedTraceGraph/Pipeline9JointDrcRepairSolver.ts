@@ -1181,7 +1181,13 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
 
     const referenceDrcEvaluator = (
       { routes, hdRoutes }: Parameters<DrcEvaluator>[0],
-      includeTraceContinuity = true,
+      // Pipeline9 routes are phase-local sections joined at synthetic breakout
+      // points, not complete source-to-port traces. Whole-board continuity DRC
+      // therefore reports every valid section endpoint as disconnected and can
+      // reject a copper-clean repair. Continuity is checked after the phased
+      // routes are materialized by core; this evaluator only ranks physical
+      // copper legality inside the phase.
+      includeTraceContinuity = false,
     ): ReturnType<DrcEvaluator> => {
       const evaluatedRoutes = routes ?? hdRoutes
       if (!evaluatedRoutes) {

@@ -22,6 +22,7 @@ import {
   CapacityMeshEdge,
   CapacityMeshNode,
   DifferentialPair,
+  Obstacle,
   SimpleRouteConnection,
   SimpleRouteJson,
   SimplifiedPcbTraces,
@@ -66,6 +67,8 @@ import { SingleLayerNodeMergerSolver } from "../../solvers/SingleLayerNodeMerger
 import { StrawSolver } from "../../solvers/StrawSolver/StrawSolver"
 import { TraceSimplificationSolver } from "../../solvers/TraceSimplificationSolver/TraceSimplificationSolver"
 import { TraceWidthSolver } from "../../solvers/TraceWidthSolver/TraceWidthSolver"
+import { getLengthMatchingPreloadedTraceObstacles } from "../../solvers/getLengthMatchingPreloadedTraceObstacles"
+import { getSimplifiedPcbTraceConnectionLengthOffsets } from "../../solvers/getSimplifiedPcbTraceConnectionLengthOffsets"
 import { LengthMatchingPostProcessingSolver } from "../../solvers/length-matching-post-processing-solver"
 import { applyFixedRouteReplacementsToPreloadedTraces } from "./applyFixedRouteReplacementsToPreloadedTraces"
 import { assignUniquePcbTraceIdsToNewTraces } from "./assignUniquePcbTraceIdsToNewTraces"
@@ -882,6 +885,17 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           }
         }
         const hdRoutes = cms.pipeline9JointDrcRepairSolver!.getOutput()
+        const updatedPreloadedTraces = cms.getUpdatedPreloadedTraces()
+        const preloadedTraceObstacles =
+          getLengthMatchingPreloadedTraceObstacles({
+            srj: cms.srj,
+            traces: updatedPreloadedTraces,
+            connMap: cms.connMap,
+          })
+        const lengthMatchingObstacles: Obstacle[] = [
+          ...cms.srj.obstacles,
+          ...preloadedTraceObstacles,
+        ]
         const differentialPairs = (cms.srj.differentialPairs ?? []).map(
           (pair) => {
             const connectionNames = pair.connectionNames.map(
@@ -936,10 +950,15 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             differentialPairs,
             buses: cms.srj.buses ?? [],
             connections: cms.srj.connections,
-            obstacles: cms.srj.obstacles,
+            obstacles: lengthMatchingObstacles,
             bounds: cms.srj.bounds,
             layerCount: cms.srj.layerCount,
             obstacleMargin: cms.srj.minTraceToPadEdgeClearance ?? 0.15,
+            connectionLengthOffsets:
+              getSimplifiedPcbTraceConnectionLengthOffsets(
+                updatedPreloadedTraces,
+                cms.connMap,
+              ),
           },
         ]
       },
