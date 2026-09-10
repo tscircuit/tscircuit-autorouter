@@ -31,6 +31,7 @@ import {
 } from "./applyPipeline9ClearancePrecisionRepairs"
 import { applyPipeline9BoundedRegionalRepairs } from "./applyPipeline9BoundedRegionalRepairs"
 import { applyPipeline9RegionalB01Repairs } from "./applyPipeline9RegionalB01Repairs"
+import { applyPipeline9SameNetViaRepairs } from "./applyPipeline9SameNetViaRepairs"
 import { applyPipeline9TerminalEscapeRelocations } from "./applyPipeline9TerminalEscapeRelocations"
 import { assignUniquePcbTraceIdsToNewTraces } from "./assignUniquePcbTraceIdsToNewTraces"
 import {
@@ -1590,7 +1591,15 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       syntheticConnectionNames: this.syntheticConnectionNames,
       drcEvaluator: this.cachedReferenceDrcEvaluator!,
     })
-    this.combinedOutput = boundedRegionalRepairResult.routes
+    this.combinedOutput = applyPipeline9SameNetViaRepairs({
+      routes: boundedRegionalRepairResult.routes,
+      otherHdRoutes: this.fixedPreloadedObstacleRoutes,
+      obstacles: this.params.obstacles,
+      colorMap: this.params.colorMap,
+      layerCount: this.params.layerCount,
+      connMap: this.params.connMap,
+      drcEvaluator: this.cachedReferenceDrcEvaluator!,
+    })
     this.stats = {
       ...this.stats,
       ...this.exactRepairSolver.stats,

@@ -1,4 +1,8 @@
 import { expect, test } from "bun:test"
+import {
+  checkEachPcbPortConnectedToPcbTraces,
+  checkSourceTracesHavePcbTraces,
+} from "@tscircuit/checks"
 import { HighDensityForceImproveSolver } from "high-density-repair01/lib/HighDensityForceImproveSolver"
 import { readFileSync } from "node:fs"
 import { gunzipSync } from "node:zlib"
@@ -152,8 +156,10 @@ test("routes the RV1106 remaining phase through Pipeline9", async (): Promise<vo
     routedTraces: pipeline.getOutputSimplifiedPcbTraces(),
   }
   const drc = evaluateRelaxedDrc(validation)
-  expect(drc.errors).toHaveLength(36)
+  expect(drc.errors).toHaveLength(29)
   expect(validation.routedTraces).toHaveLength(239)
+  expect(checkSourceTracesHavePcbTraces(drc.circuitJson)).toEqual([])
+  expect(checkEachPcbPortConnectedToPcbTraces(drc.circuitJson)).toEqual([])
   console.log({
     drcCount: drc.errors.length,
     traceCount: validation.routedTraces.length,
