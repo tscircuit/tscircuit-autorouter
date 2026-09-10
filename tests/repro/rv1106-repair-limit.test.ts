@@ -24,12 +24,24 @@ type AutoroutingPhases = {
 }
 
 test("Pipeline9 skips RV1106 remaining-phase repair above the sample limit", async () => {
-  const input: RepairInput = JSON.parse(gunzipSync(new Uint8Array(readFileSync(
-    new URL("./assets/rv1106-repair-input.json.gz", import.meta.url),
-  ))).toString())
-  const phases: AutoroutingPhases = JSON.parse(gunzipSync(new Uint8Array(readFileSync(
-    new URL("./assets/rv1106-autorouting-phases.json.gz", import.meta.url),
-  ))).toString())
+  const input: RepairInput = JSON.parse(
+    gunzipSync(
+      new Uint8Array(
+        readFileSync(
+          new URL("./assets/rv1106-repair-input.json.gz", import.meta.url),
+        ),
+      ),
+    ).toString(),
+  )
+  const phases: AutoroutingPhases = JSON.parse(
+    gunzipSync(
+      new Uint8Array(
+        readFileSync(
+          new URL("./assets/rv1106-autorouting-phases.json.gz", import.meta.url),
+        ),
+      ),
+    ).toString(),
+  )
   expect(phases.clocks.output).toHaveLength(11)
   expect(phases.bootFlash.input.traces).toEqual(phases.clocks.output)
   expect(phases.bootFlash.output).toHaveLength(21)
@@ -38,13 +50,17 @@ test("Pipeline9 skips RV1106 remaining-phase repair above the sample limit", asy
   const params = {
     ...input,
     connMap: new ConnectivityMap(input.netMap),
-    colorMap: Object.fromEntries(Object.entries(input.colorMap!).map(
-      ([name, color]) => [name, safeTransparentize(color, 0)],
-    )),
+    colorMap: Object.fromEntries(
+      Object.entries(input.colorMap!).map(([name, color]) => [
+        name,
+        safeTransparentize(color, 0),
+      ]),
+    ),
   }
   const allSamples = new Pipeline4HighDensityRepairSolver(params).sampleEntries
   const pipeline = new AutoroutingPipelineSolver9_PreloadedTraceGraph(
-    phases.remaining, { cacheProvider: null },
+    phases.remaining,
+    { cacheProvider: null },
   )
   pipeline.highDensityNodePortPoints = input.nodeWithPortPoints
   pipeline.connMap = params.connMap
@@ -79,7 +95,9 @@ test("Pipeline9 skips RV1106 remaining-phase repair above the sample limit", asy
       route: output[entry.routeIndexes[index]!]!.route,
     }))
     boundaryViolations += findInteriorDiagonalSegmentsInBufferZone(
-      routes, boundary, solver.repairMargin,
+      routes,
+      boundary,
+      solver.repairMargin,
     ).length
   }
   expect(boundaryViolations).toBe(33)
@@ -89,7 +107,9 @@ test("Pipeline9 skips RV1106 remaining-phase repair above the sample limit", asy
     for (const endpointIndex of [0, -1]) {
       const before = original.route.at(endpointIndex)!
       const after = route.route.at(endpointIndex)!
-      expect(Math.hypot(before.x - after.x, before.y - after.y)).toBeLessThan(0.001)
+      expect(Math.hypot(before.x - after.x, before.y - after.y)).toBeLessThan(
+        0.001,
+      )
       expect(after.z).toBe(before.z)
     }
   }
@@ -107,5 +127,7 @@ test("Pipeline9 skips RV1106 remaining-phase repair above the sample limit", asy
   board.title = `RV1106: ${solver.sampleEntries.length}/791 samples repaired; first 80 boundary violations: ${boundaryViolations}`
   detail.title = "Repair detail: sample 16"
   await expect(board).toMatchGraphicsSvg(import.meta.path)
-  await expect(detail).toMatchGraphicsSvg(import.meta.path, { svgName: "rv1106-repair-detail" })
+  await expect(detail).toMatchGraphicsSvg(import.meta.path, {
+    svgName: "rv1106-repair-detail",
+  })
 })
