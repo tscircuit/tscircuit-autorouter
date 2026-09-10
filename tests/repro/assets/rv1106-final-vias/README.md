@@ -28,8 +28,9 @@ The snapshots and assertions use the existing relaxed checker without changing
 its rules. Remaining errors still require repair; this is not a fabrication-ready
 board.
 
-With final same-net via repair, the same replay has 29 relaxed DRC reports:
-23 trace errors, two via-spacing errors, three via-trace errors, and one
-pad-trace error. Seven via-spacing reports are removed. Candidates are accepted
-one net at a time only when the total decreases and every remaining conflict
-is unchanged (including exact measured clearance and physical location).
+Net-wide final same-net via repair (#2520) leaves 29 relaxed DRC reports.
+Trying independent routes when a net-wide merge is rejected reduces this to 26:
+23 trace errors, zero via-spacing errors, two via-trace errors, and one
+pad-trace error. The other routes stay fixed during each local attempt.
+Candidates are accepted only when the total decreases and every remaining
+conflict is unchanged (including exact measured clearance and physical location).

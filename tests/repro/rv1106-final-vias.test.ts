@@ -62,8 +62,9 @@ test("RV1106 phased Pipeline9 repairs final same-net via spacing", async (): Pro
   const routedTraces = pipeline.getOutputSimplifiedPcbTraces()
   const validation = { inputSrj: originalInput, srjWithPointPairs: pipeline.srjWithPointPairs!, routedTraces }
   const drc = evaluateRelaxedDrc(validation)
-  expect(drc.errors).toHaveLength(29)
-  expect(drc.errors.filter((error) => error.type === "pcb_via_clearance_error")).toHaveLength(2)
+  expect(drc.errors).toHaveLength(26)
+  expect(drc.errors.filter((error) => error.type === "pcb_via_clearance_error")).toHaveLength(0)
+  expect(drc.errors.filter((error) => error.type === "pcb_via_trace_clearance_error")).toHaveLength(2)
   expect(checkSourceTracesHavePcbTraces(drc.circuitJson)).toEqual([])
   expect(checkEachPcbPortConnectedToPcbTraces(drc.circuitJson)).toEqual([])
   await expect(getBugReportSnapshotSvg(validation)).toMatchSvgSnapshot(import.meta.path)

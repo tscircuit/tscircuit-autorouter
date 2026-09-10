@@ -1,6 +1,6 @@
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import stringify from "fast-json-stable-stringify"
-import type { DrcEvaluator } from "high-density-repair03/lib"
+import type { DrcError, DrcEvaluator } from "high-density-repair03/lib"
 import { SameNetViaMergerSolver } from "lib/solvers/SameNetViaMergerSolver/SameNetViaMergerSolver"
 import type { HighDensityRoute } from "lib/types/high-density-types"
 import type { Obstacle } from "lib/types"
@@ -24,39 +24,46 @@ export const applyPipeline9SameNetViaRepairs = ({
   drcEvaluator: DrcEvaluator
 }): HighDensityRoute[] => {
   const before = drcEvaluator({ traces: [], routes, hdRoutes: routes })
-  let beforeErrors = before
-  if (!Array.isArray(beforeErrors)) beforeErrors = beforeErrors.errors
+  let beforeErrors: DrcError[]
+  if (Array.isArray(before)) {
+    beforeErrors = before
+  } else {
+    beforeErrors = before.errors
+  }
   if (!beforeErrors.some((error) => error.type === "pcb_via_clearance_error")) {
     return routes
   }
   const netByConnectionName = getPipeline9NetByConnectionName(
     [...routes, ...otherHdRoutes], connMap,
   )
-  const solver = new SameNetViaMergerSolver({
-    inputHdRoutes: routes,
-    otherHdRoutes,
-    netByConnectionName,
-    obstacles,
-    colorMap,
-    layerCount,
-    connMap,
-    preserveRouteEndpoints: true,
-  })
-  solver.solve()
-  if (solver.failed) throw new Error(solver.error ?? "Via merge failed")
-  const candidate = solver.getMergedViaHdRoutes()
-  if (!candidate) throw new Error("Via merger completed without routes")
-  let accepted = routes
-  for (const net of new Set(netByConnectionName.values())) {
-    const proposed = accepted.map((route, index) => {
-      if (netByConnectionName.get(route.connectionName) === net) return candidate[index]!
-      return route
+  const mergeRoutes = (
+    inputHdRoutes: HighDensityRoute[],
+    fixedRoutes: HighDensityRoute[],
+  ): HighDensityRoute[] => {
+    const solver = new SameNetViaMergerSolver({
+      inputHdRoutes,
+      otherHdRoutes: fixedRoutes,
+      netByConnectionName,
+      obstacles,
+      colorMap,
+      layerCount,
+      connMap,
+      preserveRouteEndpoints: true,
     })
-    if (stringify(proposed) === stringify(accepted)) continue
+    solver.solve()
+    if (solver.failed) throw new Error(solver.error ?? "Via merge failed")
+    const merged = solver.getMergedViaHdRoutes()
+    if (!merged) throw new Error("Via merger completed without routes")
+    return merged
+  }
+  const candidate = mergeRoutes(routes, otherHdRoutes)
+  let accepted = routes
+  const acceptImprovement = (proposed: HighDensityRoute[]): boolean => {
+    if (stringify(proposed) === stringify(accepted)) return false
     const after = drcEvaluator({ traces: [], routes: proposed, hdRoutes: proposed })
     let afterErrors = after
     if (!Array.isArray(afterErrors)) afterErrors = afterErrors.errors
-    if (afterErrors.length >= beforeErrors.length) continue
+    if (afterErrors.length >= beforeErrors.length) return false
     const unmatched = [...beforeErrors]
     const unchangedErrors = afterErrors.every((error) => {
       const index = unmatched.findIndex((original) => {
@@ -75,9 +82,32 @@ export const applyPipeline9SameNetViaRepairs = ({
       unmatched.splice(index, 1)
       return true
     })
-    if (!unchangedErrors) continue
+    if (!unchangedErrors) return false
     accepted = proposed
     beforeErrors = afterErrors
+    return true
+  }
+  for (const net of new Set(netByConnectionName.values())) {
+    const proposed = accepted.map((route, index) => {
+      if (netByConnectionName.get(route.connectionName) === net) return candidate[index]!
+      return route
+    })
+    if (acceptImprovement(proposed)) continue
+    // A blocked merge elsewhere on this net must not discard an independent repair.
+    for (let index = 0; index < accepted.length; index++) {
+      const route = accepted[index]!
+      if (netByConnectionName.get(route.connectionName) !== net) continue
+      if (stringify(candidate[index]) === stringify(routes[index])) continue
+      const fixedRoutes = [
+        ...otherHdRoutes,
+        ...accepted.filter((_, routeIndex) => routeIndex !== index),
+      ]
+      const merged = mergeRoutes([route], fixedRoutes)
+      const localCandidate = [...accepted]
+      localCandidate[index] = merged[0]!
+      if (stringify(localCandidate) === stringify(proposed)) continue
+      acceptImprovement(localCandidate)
+    }
   }
   return accepted
 }
