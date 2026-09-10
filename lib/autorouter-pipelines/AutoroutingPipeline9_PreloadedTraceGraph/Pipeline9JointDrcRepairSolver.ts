@@ -26,13 +26,13 @@ import { convertHdRouteToSimplifiedRoute } from "lib/utils/convertHdRouteToSimpl
 import { mapZToLayerName } from "lib/utils/mapZToLayerName"
 import { createPipeline7HdRoutesToSimplifiedPcbTracesConverter } from "../AutoroutingPipeline7_MultiGraph/convertPipeline7HdRoutesToSimplifiedPcbTraces"
 import {
-  applyPipeline9ClearancePrecisionRepairs,
-  type ClearanceMarginDrcEvaluator,
-} from "./applyPipeline9ClearancePrecisionRepairs"
-import {
-  applyPipeline9BoundedRegionalRepairs,
   PIPELINE9_BOUNDED_REPAIR_BUDGET,
+  applyPipeline9BoundedRegionalRepairs,
 } from "./applyPipeline9BoundedRegionalRepairs"
+import {
+  type ClearanceMarginDrcEvaluator,
+  applyPipeline9ClearancePrecisionRepairs,
+} from "./applyPipeline9ClearancePrecisionRepairs"
 import { applyPipeline9RegionalB01Repairs } from "./applyPipeline9RegionalB01Repairs"
 import { applyPipeline9TerminalEscapeRelocations } from "./applyPipeline9TerminalEscapeRelocations"
 import { assignUniquePcbTraceIdsToNewTraces } from "./assignUniquePcbTraceIdsToNewTraces"
@@ -47,10 +47,10 @@ import { getPipeline9PreloadedViaPairTraceGroups } from "./getPipeline9Preloaded
 import { mergePipeline9MovablePreloadedVias } from "./mergePipeline9MovablePreloadedVias"
 import { normalizePipeline9DrcErrorsForRepair } from "./normalizePipeline9DrcErrorsForRepair"
 import {
-  getPipeline9DrcErrors,
-  getPipeline9RouteIndexByTraceId,
   type Pipeline9CollapsedTraceParticipant,
   type Pipeline9PreloadRepairTraceIds,
+  getPipeline9DrcErrors,
+  getPipeline9RouteIndexByTraceId,
 } from "./pipeline9JointDrcRepairUtils"
 import { preparePipeline9DrcRoutedTracesWithMetadata } from "./preparePipeline9DrcRoutedTraces"
 
