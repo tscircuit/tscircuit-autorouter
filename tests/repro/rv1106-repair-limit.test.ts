@@ -125,7 +125,9 @@ test("Pipeline9 repairs the RV1106 remaining phase up to its sample limit", asyn
         output[first]!.connectionName,
         output[second]!.connectionName,
       )
-    ) continue
+    ) {
+      continue
+    }
     // Ignore sub-micron movement from the repair solver's boundary snapping.
     expect(
       regression.previousClearance - regression.nextClearance,
