@@ -25,12 +25,24 @@ type AutoroutingPhases = {
 }
 
 test("Pipeline9 repairs the RV1106 remaining phase up to its sample limit", async () => {
-  const input: RepairInput = JSON.parse(gunzipSync(new Uint8Array(readFileSync(
-    new URL("./assets/rv1106-repair-input.json.gz", import.meta.url),
-  ))).toString())
-  const phases: AutoroutingPhases = JSON.parse(gunzipSync(new Uint8Array(readFileSync(
-    new URL("./assets/rv1106-autorouting-phases.json.gz", import.meta.url),
-  ))).toString())
+  const input: RepairInput = JSON.parse(
+    gunzipSync(
+      new Uint8Array(
+        readFileSync(
+          new URL("./assets/rv1106-repair-input.json.gz", import.meta.url),
+        ),
+      ),
+    ).toString(),
+  )
+  const phases: AutoroutingPhases = JSON.parse(
+    gunzipSync(
+      new Uint8Array(
+        readFileSync(
+          new URL("./assets/rv1106-autorouting-phases.json.gz", import.meta.url),
+        ),
+      ),
+    ).toString(),
+  )
   expect(phases.clocks.output).toHaveLength(11)
   expect(phases.bootFlash.input.traces).toEqual(phases.clocks.output)
   expect(phases.bootFlash.output).toHaveLength(21)
@@ -39,13 +51,17 @@ test("Pipeline9 repairs the RV1106 remaining phase up to its sample limit", asyn
   const params = {
     ...input,
     connMap: new ConnectivityMap(input.netMap),
-    colorMap: Object.fromEntries(Object.entries(input.colorMap!).map(
-      ([name, color]) => [name, safeTransparentize(color, 0)],
-    )),
+    colorMap: Object.fromEntries(
+      Object.entries(input.colorMap!).map(([name, color]) => [
+        name,
+        safeTransparentize(color, 0),
+      ]),
+    ),
   }
   const allSamples = new Pipeline4HighDensityRepairSolver(params).sampleEntries
   const pipeline = new AutoroutingPipelineSolver9_PreloadedTraceGraph(
-    phases.remaining, { cacheProvider: null },
+    phases.remaining,
+    { cacheProvider: null },
   )
   pipeline.highDensityNodePortPoints = input.nodeWithPortPoints
   pipeline.connMap = params.connMap
@@ -72,6 +88,12 @@ test("Pipeline9 repairs the RV1106 remaining phase up to its sample limit", asyn
   expect(solver.failed).toBe(false)
   expect(solver.sampleEntries).toHaveLength(80)
   expect(solver.stats.skippedSampleCount).toBe(711)
+  expect(
+    new Pipeline4HighDensityRepairSolver({
+      ...params,
+      maxSampleEntries: 80,
+    }).sampleEntries,
+  ).toHaveLength(0)
 
   let boundaryViolations = 0
   for (const entry of allSamples.slice(0, 80)) {
@@ -81,7 +103,9 @@ test("Pipeline9 repairs the RV1106 remaining phase up to its sample limit", asyn
       route: output[entry.routeIndexes[index]!]!.route,
     }))
     boundaryViolations += findInteriorDiagonalSegmentsInBufferZone(
-      routes, boundary, solver.repairMargin,
+      routes,
+      boundary,
+      solver.repairMargin,
     ).length
   }
   expect(boundaryViolations).toBe(4)
@@ -93,11 +117,16 @@ test("Pipeline9 repairs the RV1106 remaining phase up to its sample limit", asyn
   })
   for (const regression of regressions) {
     const [first, second] = regression.routeIndexes
-    if (params.connMap.areIdsConnected(
-      output[first]!.connectionName, output[second]!.connectionName,
-    )) continue
+    if (
+      params.connMap.areIdsConnected(
+        output[first]!.connectionName,
+        output[second]!.connectionName,
+      )
+    ) continue
     // Ignore sub-micron movement from the repair solver's boundary snapping.
-    expect(regression.previousClearance - regression.nextClearance).toBeLessThan(0.001)
+    expect(
+      regression.previousClearance - regression.nextClearance,
+    ).toBeLessThan(0.001)
   }
   for (const [index, route] of output.entries()) {
     const original = input.hdRoutes[index]!
@@ -105,7 +134,9 @@ test("Pipeline9 repairs the RV1106 remaining phase up to its sample limit", asyn
     for (const endpointIndex of [0, -1]) {
       const before = original.route.at(endpointIndex)!
       const after = route.route.at(endpointIndex)!
-      expect(Math.hypot(before.x - after.x, before.y - after.y)).toBeLessThan(0.001)
+      expect(Math.hypot(before.x - after.x, before.y - after.y)).toBeLessThan(
+        0.001,
+      )
       expect(after.z).toBe(before.z)
     }
   }
@@ -123,5 +154,7 @@ test("Pipeline9 repairs the RV1106 remaining phase up to its sample limit", asyn
   board.title = `RV1106: ${solver.sampleEntries.length}/791 samples repaired; first 80 boundary violations: ${boundaryViolations}`
   detail.title = "Repair detail: sample 16"
   await expect(board).toMatchGraphicsSvg(import.meta.path)
-  await expect(detail).toMatchGraphicsSvg(import.meta.path, { svgName: "rv1106-repair-detail" })
+  await expect(detail).toMatchGraphicsSvg(import.meta.path, {
+    svgName: "rv1106-repair-detail",
+  })
 })
