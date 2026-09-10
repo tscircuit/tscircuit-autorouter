@@ -91,10 +91,20 @@ export class WasmTinyHypergraphPipeline extends BaseSolver {
       variant: selectiveRerip ? "selective-rerip" : "base",
       preserveInitialAssignments: selectiveRerip,
     })
+    const solver = this.solver
+    let snapshot = solver.getRoutingSnapshot()
+    let snapshotIterations = solver.iterations
     this.solveGraph = {
       topology: loaded.topology,
       problem: loaded.problem,
-      state: this.solver.getRoutingSnapshot(),
+      // Debugging and metrics can inspect current state without copying it every batch.
+      get state() {
+        if (snapshotIterations !== solver.iterations) {
+          snapshot = solver.getRoutingSnapshot()
+          snapshotIterations = solver.iterations
+        }
+        return snapshot
+      },
       iterations: 0,
       stats: {},
       solved: false,
@@ -113,11 +123,12 @@ export class WasmTinyHypergraphPipeline extends BaseSolver {
       this.solveGraph.iterations = status.iterations
       this.solveGraph.solved = status.solved
       this.solveGraph.failed = status.failed
-      this.solveGraph.state = this.solver.getRoutingSnapshot()
       this.stats = { ...this.solver.getStats(), tinyHypergraphBackend: "wasm" }
       this.solveGraph.stats = this.stats
       this.progress = this.solved ? 1 : status.iterations / this.MAX_ITERATIONS
       if (this.solved || this.failed) {
+        // Cache the terminal state while the WASM handle is still alive.
+        void this.solveGraph.state
         if (this.solved) {
           this.replaySolvedGraph()
         } else {
