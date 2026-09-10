@@ -21,7 +21,7 @@ type Checkpoint = {
 type CapturedPhase = { input: SimpleRouteJson; output: SimplifiedPcbTrace[] }
 type Phases = { clocks: CapturedPhase; bootFlash: CapturedPhase; remaining: SimpleRouteJson }
 
-test("RV1106 phased Pipeline9 retains overlapping same-net vias after repair", async (): Promise<void> => {
+test("RV1106 phased Pipeline9 repairs final same-net via spacing", async (): Promise<void> => {
   const phases: Phases = JSON.parse(gunzipSync(new Uint8Array(readFileSync(new URL("./assets/rv1106-final-vias/phases.json.gz", import.meta.url)))).toString())
 
   const checkpoint: Checkpoint = JSON.parse(gunzipSync(new Uint8Array(readFileSync(new URL("./assets/rv1106-final-vias/checkpoint.json.gz", import.meta.url)))).toString())
@@ -62,8 +62,8 @@ test("RV1106 phased Pipeline9 retains overlapping same-net vias after repair", a
   const routedTraces = pipeline.getOutputSimplifiedPcbTraces()
   const validation = { inputSrj: originalInput, srjWithPointPairs: pipeline.srjWithPointPairs!, routedTraces }
   const drc = evaluateRelaxedDrc(validation)
-  expect(drc.errors).toHaveLength(36)
-  expect(drc.errors.filter((error) => error.type === "pcb_via_clearance_error")).toHaveLength(9)
+  expect(drc.errors).toHaveLength(29)
+  expect(drc.errors.filter((error) => error.type === "pcb_via_clearance_error")).toHaveLength(2)
   expect(checkSourceTracesHavePcbTraces(drc.circuitJson)).toEqual([])
   expect(checkEachPcbPortConnectedToPcbTraces(drc.circuitJson)).toEqual([])
   await expect(getBugReportSnapshotSvg(validation)).toMatchSvgSnapshot(import.meta.path)
