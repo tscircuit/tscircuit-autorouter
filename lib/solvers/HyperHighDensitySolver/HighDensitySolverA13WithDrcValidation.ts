@@ -1,5 +1,5 @@
+import type { HighDensitySolverA13 } from "@tscircuit/high-density-a13"
 import { getFixedObstacleViolations } from "@tscircuit/repair04"
-import { HighDensitySolverA13 } from "@tscircuit/high-density-a13"
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import { isObstacleConnectedToRoute } from "lib/solvers/TraceWidthSolver/isObstacleConnectedToRoute"
 import { getDrcErrors } from "lib/testing/getDrcErrors"
@@ -7,6 +7,7 @@ import { convertToCircuitJson } from "lib/testing/utils/convertToCircuitJson"
 import type { Obstacle, SimpleRouteJson } from "lib/types"
 import { convertHdRouteToSimplifiedRoute } from "lib/utils/convertHdRouteToSimplifiedRoute"
 import { mapZToLayerName } from "lib/utils/mapZToLayerName"
+import { HighDensitySolverA13WithBoundaryClearance } from "./HighDensitySolverA13WithBoundaryClearance"
 
 type A13Params = ConstructorParameters<typeof HighDensitySolverA13>[0]
 type ValidatedA13Params = A13Params & {
@@ -16,7 +17,7 @@ type ValidatedA13Params = A13Params & {
 }
 
 /** A node-local search is provisional until it also clears fixed board copper. */
-export class HighDensitySolverA13WithDrcValidation extends HighDensitySolverA13 {
+export class HighDensitySolverA13WithDrcValidation extends HighDensitySolverA13WithBoundaryClearance {
   constructor(readonly validationParams: ValidatedA13Params) {
     super(validationParams)
   }

@@ -1559,9 +1559,9 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       fixedPreloadedObstacleRoutes: this.fixedPreloadedObstacleRoutes,
       updatedPreloadedTraces: this.params.updatedPreloadedTraces,
     })
-    // Try coupled clearance repair before enumerating expensive regional
-    // reroutes. Reserve one region's share of the existing budget; unsuccessful
-    // candidates stay private and the later pass gets only the unused work.
+    // Try coupled clearance projection before enumerating regional reroutes.
+    // Keep all regional search work for the later pass, where earlier repairs
+    // have already reduced the congestion.
     const boundedRegionalRepairStartedAt = performance.now()
     const boundedRepairParams = {
       originalSrj: {
@@ -1580,13 +1580,9 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       routes: terminalEscapeResult.routes,
       requireSingleRegion: true,
       budget: {
-        maxRegions: 1,
-        maxCandidateAttempts:
-          PIPELINE9_BOUNDED_REPAIR_BUDGET.maxCandidateAttempts /
-          PIPELINE9_BOUNDED_REPAIR_BUDGET.maxRegions,
-        maxPathSearchNodes:
-          PIPELINE9_BOUNDED_REPAIR_BUDGET.maxPathSearchNodes /
-          PIPELINE9_BOUNDED_REPAIR_BUDGET.maxRegions,
+        maxRegions: 0,
+        maxCandidateAttempts: 0,
+        maxPathSearchNodes: 0,
       },
     })
     const earlyBoundedRepairClean =

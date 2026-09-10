@@ -5,6 +5,7 @@ import {
 import { expect, test } from "bun:test"
 import { convertPipeline7HdRoutesToSimplifiedPcbTraces } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/convertPipeline7HdRoutesToSimplifiedPcbTraces"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
+import { RELAXED_DRC_OPTIONS } from "lib/testing/drcPresets"
 import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import { loadScenarioBySampleNumber } from "../../scripts/benchmark/scenarios"
 
@@ -63,7 +64,13 @@ test("Pipeline9 repairs SRJ18 sample 8's crowded trace/via clearances", async ()
       continue
     }
     const pair = `${error.type === "pcb_via_trace_clearance_error" ? error.pcb_via_id : error.pcb_pad_id}/${error.pcb_trace_id}`
-    expect(measuredPairs.get(pair)).toBeGreaterThanOrEqual(0.11)
+    const requiredClearance =
+      error.type === "pcb_via_trace_clearance_error"
+        ? RELAXED_DRC_OPTIONS.viaClearance!
+        : RELAXED_DRC_OPTIONS.traceClearance!
+    expect(measuredPairs.get(pair)).toBeGreaterThanOrEqual(
+      requiredClearance - 1e-8,
+    )
   }
   const repairStats = solver.pipeline9JointDrcRepairSolver!.stats
   expect(

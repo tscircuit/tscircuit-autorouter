@@ -248,7 +248,7 @@ export const applyPipeline9BoundedRegionalRepairs = ({
     // Wider context can move coupled errors away from a smaller region's
     // locked collar. Both sizes share the same call and search-node budgets.
     for (const size of regionSizes) {
-      const center = centers.find(
+      const pendingCenters = centers.filter(
         ({ x, y }) =>
           !attemptedRegions.some(
             ({ bounds, size: attemptedSize }) =>
@@ -259,8 +259,35 @@ export const applyPipeline9BoundedRegionalRepairs = ({
               y <= bounds.maxY,
           ),
       )
-      if (center) {
-        nextRegion = { center, size }
+      const seed = pendingCenters[0]
+      if (seed) {
+        // Center the mutable area around nearby errors as a group. Centering
+        // on the first error can leave another repairable pad in the collar.
+        let minX = seed.x
+        let maxX = seed.x
+        let minY = seed.y
+        let maxY = seed.y
+        const mutableSize = size - 2 * boundaryMargin
+        for (const point of pendingCenters.slice(1)) {
+          const nextMinX = Math.min(minX, point.x)
+          const nextMaxX = Math.max(maxX, point.x)
+          const nextMinY = Math.min(minY, point.y)
+          const nextMaxY = Math.max(maxY, point.y)
+          if (
+            nextMaxX - nextMinX >= mutableSize ||
+            nextMaxY - nextMinY >= mutableSize
+          ) {
+            continue
+          }
+          minX = nextMinX
+          maxX = nextMaxX
+          minY = nextMinY
+          maxY = nextMaxY
+        }
+        nextRegion = {
+          center: { x: (minX + maxX) / 2, y: (minY + maxY) / 2 },
+          size,
+        }
         break
       }
     }
