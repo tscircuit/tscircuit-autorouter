@@ -29,3 +29,11 @@ bun rust/high-density-wasm/integration/parity.ts 16
 ```
 
 A03 calls the host `Math.hypot` for identical floating-point rounding and heap ordering across JS runtimes. Engine parity tests run under both Node and Bun.
+
+To separate factory/construction, setup, search, and output costs on actual portfolio candidates:
+
+```sh
+bun rust/high-density-wasm/integration/timing.ts 16 /tmp/high-density-timing
+```
+
+This diagnostic runs TS/WASM/WASM/TS in fresh processes with tiny-hypergraph fixed to WASM. It times search in the portfolio's 100-step batches, retains timing records rather than solver instances, and checks every candidate's workload/state/output hashes plus final trace hashes. It writes per-candidate JSON for each run. Board times include instrumentation and output hashing; use them as diagnostic measurements.
