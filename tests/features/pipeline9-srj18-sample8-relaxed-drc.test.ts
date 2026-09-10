@@ -39,16 +39,16 @@ test("Pipeline9 repairs SRJ18 sample 8's crowded trace/via clearances", async ()
       connMap: repairSolver.params.connMap,
     }),
   })
-  // A wider diagnostic radius reports physical gaps even after relaxed DRC
-  // accepts them. Keep this independent of the repair's margin evaluator.
-  const measuredPairs = new Map(
+  // Check the required clearance directly: repaired contacts may move beyond
+  // the diagnostic radius. Keep this independent of the repair's evaluator.
+  const insufficientClearancePairs = new Set(
     [
-      ...checkViaTraceClearance(circuitJson, { minClearance: 0.2 }),
-      ...checkPadTraceClearance(circuitJson, { minClearance: 0.2 }),
-    ].map((error) => [
-      `${error.type === "pcb_via_trace_clearance_error" ? error.pcb_via_id : error.pcb_pad_id}/${error.pcb_trace_id}`,
-      error.actual_clearance,
-    ]),
+      ...checkViaTraceClearance(circuitJson, { minClearance: 0.11 }),
+      ...checkPadTraceClearance(circuitJson, { minClearance: 0.11 }),
+    ].map(
+      (error) =>
+        `${error.type === "pcb_via_trace_clearance_error" ? error.pcb_via_id : error.pcb_pad_id}/${error.pcb_trace_id}`,
+    ),
   )
   // Derive the contacts from this revision's exact output. Upstream routing
   // changes can remove a historical contact before precision repair starts.
@@ -60,7 +60,7 @@ test("Pipeline9 repairs SRJ18 sample 8's crowded trace/via clearances", async ()
       throw new Error(`Unexpected original DRC error: ${error.type}`)
     }
     const pair = `${error.type === "pcb_via_trace_clearance_error" ? error.pcb_via_id : error.pcb_pad_id}/${error.pcb_trace_id}`
-    expect(measuredPairs.get(pair)).toBeGreaterThanOrEqual(0.11)
+    expect(insufficientClearancePairs.has(pair)).toBeFalse()
   }
   const repairStats = solver.pipeline9JointDrcRepairSolver!.stats
   expect(

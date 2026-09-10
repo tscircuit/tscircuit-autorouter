@@ -192,8 +192,6 @@ test(
         "bun",
         "run",
         "scripts/run-sample.ts",
-        "--pipeline",
-        "7",
         "--srj-path",
         srjPath,
         "--out-dir",
