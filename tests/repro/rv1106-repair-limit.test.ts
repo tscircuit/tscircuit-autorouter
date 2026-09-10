@@ -4,6 +4,9 @@ import { gunzipSync } from "node:zlib"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import "graphics-debug/matcher"
 import { HighDensityRepairSolver } from "high-density-repair02"
+import { HighDensityForceImproveSolver } from "high-density-repair01/lib/HighDensityForceImproveSolver"
+import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
+import type { SimpleRouteJson, SimplifiedPcbTraces } from "lib/types"
 import { findInteriorDiagonalSegmentsInBufferZone } from "high-density-repair02/lib/high-density-repair-solver/functions/findInteriorDiagonalSegmentsInBufferZone"
 import { getBoundaryRect } from "high-density-repair02/lib/high-density-repair-solver/functions/getBoundaryRect"
 import { findTraceClearanceRegressions } from "high-density-repair02/lib/high-density-repair-solver/functions/findTraceClearanceRegressions"
@@ -15,10 +18,24 @@ type RepairInput = Omit<
   "connMap"
 > & { netMap: ConnectivityMap["netMap"] }
 
-test("RV1106 full board repairs up to the sample limit", async () => {
+type AutoroutingPhases = {
+  clocks: { input: SimpleRouteJson; output: SimplifiedPcbTraces }
+  bootFlash: { input: SimpleRouteJson; output: SimplifiedPcbTraces }
+  remaining: SimpleRouteJson
+}
+
+test("Pipeline9 repairs the RV1106 remaining phase up to its sample limit", async () => {
   const input: RepairInput = JSON.parse(gunzipSync(new Uint8Array(readFileSync(
     new URL("./assets/rv1106-repair-input.json.gz", import.meta.url),
   ))).toString())
+  const phases: AutoroutingPhases = JSON.parse(gunzipSync(new Uint8Array(readFileSync(
+    new URL("./assets/rv1106-autorouting-phases.json.gz", import.meta.url),
+  ))).toString())
+  expect(phases.clocks.output).toHaveLength(11)
+  expect(phases.bootFlash.input.traces).toEqual(phases.clocks.output)
+  expect(phases.bootFlash.output).toHaveLength(21)
+  expect(phases.remaining.traces).toEqual(phases.bootFlash.output)
+  expect(phases.remaining.connections).toHaveLength(36)
   const params = {
     ...input,
     connMap: new ConnectivityMap(input.netMap),
@@ -27,11 +44,27 @@ test("RV1106 full board repairs up to the sample limit", async () => {
     )),
   }
   const allSamples = new Pipeline4HighDensityRepairSolver(params).sampleEntries
-  const solver = new Pipeline4HighDensityRepairSolver({
-    ...params,
-    maxSampleEntries: 80,
+  const pipeline = new AutoroutingPipelineSolver9_PreloadedTraceGraph(
+    phases.remaining, { cacheProvider: null },
+  )
+  pipeline.highDensityNodePortPoints = input.nodeWithPortPoints
+  pipeline.connMap = params.connMap
+  pipeline.colorMap = params.colorMap
+  pipeline.srj.obstacles = input.obstacles
+  // Restore the captured post-force-improve checkpoint without rerunning pathing.
+  pipeline.highDensityForceImproveSolver = new HighDensityForceImproveSolver({
+    nodeWithPortPoints: input.nodeWithPortPoints,
+    hdRoutes: input.hdRoutes,
   })
-  solver.solve()
+  pipeline.currentPipelineStepIndex = pipeline.pipelineDef.findIndex(
+    (step) => step.solverName === "highDensityRepairSolver",
+  )
+  expect(pipeline.currentPipelineStepIndex).toBeGreaterThanOrEqual(0)
+  pipeline.step()
+  const solver = pipeline.highDensityRepairSolver!
+  expect(solver).toBeDefined()
+  while (!solver.solved && !pipeline.failed) pipeline.step()
+  expect(pipeline.failed).toBe(false)
   const output = solver.getOutput()
   expect(allSamples).toHaveLength(791)
   expect(output).toHaveLength(1413)
