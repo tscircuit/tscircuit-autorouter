@@ -1,4 +1,4 @@
-import { HighDensitySolverA13 } from "@tscircuit/high-density-a13"
+import { HighDensitySolverA13 } from "@tscircuit/high-density-a01"
 import type { PortPoint } from "lib/types/high-density-types"
 
 type A13Params = ConstructorParameters<typeof HighDensitySolverA13>[0]
