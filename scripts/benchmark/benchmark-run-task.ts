@@ -471,6 +471,17 @@ export const runTask = async (
   task: BenchmarkTask,
   options: RunTaskOptions = {},
 ): Promise<WorkerResultWithImage> => {
+  if (process.env.TINY_HYPERGRAPH_BACKEND === "wasm") {
+    const { readFile } = await import("node:fs/promises")
+    const { enableTinyHypergraphWasm } = await import(
+      "../../lib/solvers/PortPointPathingSolver/tinyhypergraph/WasmTinyHypergraphPipeline"
+    )
+    const wasm = await readFile(new URL(
+      "../../rust/tiny-hypergraph-wasm/pkg/tiny_hypergraph_wasm_bg.wasm",
+      import.meta.url,
+    ))
+    await enableTinyHypergraphWasm(wasm)
+  }
   const solver = createSolverForTask(task)
   const start = performance.now()
   let solveError: string | undefined

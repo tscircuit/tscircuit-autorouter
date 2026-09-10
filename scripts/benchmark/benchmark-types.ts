@@ -58,6 +58,7 @@ export type WorkerProgress = {
 }
 
 export type TinyHypergraphBenchmarkMetrics = {
+  backend?: "typescript" | "wasm"
   routeCount: number
   traceDensityCandidateEvaluated?: boolean
   traceDensityCandidateSelected?: boolean

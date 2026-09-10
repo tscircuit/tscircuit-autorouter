@@ -196,7 +196,7 @@ impl SelectiveReripTinyHyperGraphSolver {
 
     pub fn on_out_of_candidates(&mut self) -> () {
         let failed=self.state.current_route_id.expect("SelectiveReripTinyHyperGraphSolver: candidate search exhausted without a current route");
-        let direct = self.find_relaxed_blocker_path(&HashSet::new());
+        let direct = self.find_relaxed_blocker_path_preferring_preserved_routes(&HashSet::new());
         let direct = match direct {
             SearchResult::Failure(f) => {
                 let stats = &mut self.selective_rerip_stats;
@@ -250,7 +250,7 @@ impl SelectiveReripTinyHyperGraphSolver {
 
         let alternate = if !repeated.is_empty() {
             self.selective_rerip_stats.alternate_blocker_search_count += 1;
-            match self.find_relaxed_blocker_path(&repeated.iter().copied().collect()) {
+            match self.find_relaxed_blocker_path_preferring_preserved_routes(&repeated.iter().copied().collect()) {
                 SearchResult::Failure(f) => {
                     let stats = &mut self.selective_rerip_stats;
                     stats.global_rerip_count += 1;
@@ -329,6 +329,27 @@ impl SelectiveReripTinyHyperGraphSolver {
                 * self.options.rip_congestion_region_cost_factor;
             self.state.region_congestion_cost[region] += cost;
         }
+    }
+
+    fn find_relaxed_blocker_path_preferring_preserved_routes(
+        &self,
+        forbidden: &HashSet<RouteId>,
+    ) -> SearchResult {
+        if self.preserve_initial_assignments {
+            let mut preferred = forbidden.clone();
+            if let Some(assignments) = &self.problem.initial_assignments {
+                preferred.extend(assignments.iter().map(|assignment| assignment.route_id));
+            }
+            if preferred.len() > forbidden.len() {
+                let path = self.find_relaxed_blocker_path(&preferred);
+                if let SearchResult::Success(ref success) = path {
+                    if !success.owners.is_empty() {
+                        return path;
+                    }
+                }
+            }
+        }
+        self.find_relaxed_blocker_path(forbidden)
     }
 
     pub fn find_relaxed_blocker_path(&self, forbidden: &HashSet<RouteId>) -> SearchResult {

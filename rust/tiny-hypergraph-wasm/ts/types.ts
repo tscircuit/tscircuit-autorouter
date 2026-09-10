@@ -76,6 +76,7 @@ export interface TinyHyperGraphSolverOptions {
   RIP_THRESHOLD_END?: number
   RIP_THRESHOLD_RAMP_ATTEMPTS?: number
   RIP_CONGESTION_REGION_COST_FACTOR?: number
+  TRACE_DENSITY_COST_FACTOR?: number
   USE_LAZY_ROUTE_HEURISTIC?: boolean
   USE_SPARSE_CANDIDATE_STORAGE?: boolean
   MAX_ITERATIONS?: number
@@ -97,4 +98,9 @@ export interface TinyHyperGraphSolverOptions {
   PARTIAL_RIP_MAX_TOTAL_COST_GROWTH_RATIO?: number
   OUTSIDE_IN_ROUTING?: boolean
   OUTSIDE_IN_MAX_DISTANCE?: number
+}
+
+export interface TinyHyperGraphSolverConfiguration {
+  variant?: "base" | "outside-in" | "selective-rerip"
+  preserveInitialAssignments?: boolean
 }

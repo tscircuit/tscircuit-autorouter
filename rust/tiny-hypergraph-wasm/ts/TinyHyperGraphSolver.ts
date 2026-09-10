@@ -6,6 +6,7 @@ import type {
   TinyHyperGraphProblem,
   TinyHyperGraphRoutingSnapshot,
   TinyHyperGraphSolverOptions,
+  TinyHyperGraphSolverConfiguration,
   TinyHyperGraphStats,
   TinyHyperGraphStatus,
   TinyHyperGraphTopology,
@@ -28,9 +29,10 @@ export class TinyHyperGraphSolver {
     topology: TinyHyperGraphTopology,
     problem: TinyHyperGraphProblem,
     options?: TinyHyperGraphSolverOptions,
+    configuration?: TinyHyperGraphSolverConfiguration,
   ) {
     assertTinyHypergraphWasmInitialized()
-    this.handle = new RustTinyHyperGraphSolver(topology, problem, options)
+    this.handle = new RustTinyHyperGraphSolver(topology, problem, options, configuration)
     this.updateStatus(this.handle.getStatus() as WasmStatus)
   }
 

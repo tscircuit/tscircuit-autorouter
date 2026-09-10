@@ -92,6 +92,7 @@ Options:
   --sample-timeout D   Override per-sample timeout directly; otherwise timeout is 300s + 60s * effort
   --sample N           Run one 1-based sample number from the dataset order
   --sample-numbers L   Run comma-separated 1-based sample numbers
+  --tiny-hypergraph-backend NAME  Select typescript (default) or wasm; build WASM first
   --dataset NAME       Dataset to benchmark: 1/dataset01 (default), zdwiel, 5/srj05, 11/srj11, 12/srj12, 13/srj13, 14/srj14, 15/srj15, 16/srj16, 18/srj18, 19/srj19, 20/srj20, 21/srj21, 23/srj23, 24/srj24, 27/srj27, 28/srj28, or 29/srj29
   --include-assignable Include assignable pipelines (excluded by default)
   -h, --help           Show this help
@@ -198,6 +199,13 @@ while [ "$#" -gt 0 ]; do
       SAMPLE_NUMBERS="${2:-}"
       shift 2
       ;;
+    --tiny-hypergraph-backend)
+      case "${2:-}" in
+        typescript|wasm) export TINY_HYPERGRAPH_BACKEND="$2" ;;
+        *) echo "Expected --tiny-hypergraph-backend typescript|wasm" >&2; exit 1 ;;
+      esac
+      shift 2
+      ;;
     --dataset)
       DATASET="${2:-}"
       shift 2
@@ -278,6 +286,11 @@ fi
 
 if [ "$INCLUDE_ASSIGNABLE" != true ]; then
   CMD+=("--exclude-assignable")
+fi
+
+if [ "${TINY_HYPERGRAPH_BACKEND:-typescript}" = "wasm" ] && [ ! -f rust/tiny-hypergraph-wasm/pkg/tiny_hypergraph_wasm_bg.wasm ]; then
+  echo "Build WASM first: npm run build --prefix rust/tiny-hypergraph-wasm" >&2
+  exit 1
 fi
 
 "${CMD[@]}"

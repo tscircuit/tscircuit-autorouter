@@ -1,5 +1,5 @@
 use crate::compute_region_cost::{
-    DEFAULT_MIN_VIA_PAD_DIAMETER, compute_region_cost, is_known_single_layer_mask,
+    DEFAULT_MIN_VIA_PAD_DIAMETER, is_known_single_layer_mask,
 };
 use crate::count_new_intersections::count_new_intersections_with_values;
 use crate::graphics::GraphicsObject;
@@ -151,6 +151,8 @@ pub struct TinyHyperGraphSolverOptions {
     pub rip_threshold_ramp_attempts: Option<f64>,
     #[serde(rename = "RIP_CONGESTION_REGION_COST_FACTOR")]
     pub rip_congestion_region_cost_factor: Option<f64>,
+    #[serde(rename = "TRACE_DENSITY_COST_FACTOR")]
+    pub trace_density_cost_factor: Option<f64>,
     #[serde(rename = "USE_LAZY_ROUTE_HEURISTIC")]
     pub use_lazy_route_heuristic: Option<bool>,
     #[serde(rename = "USE_SPARSE_CANDIDATE_STORAGE")]
@@ -203,6 +205,7 @@ pub struct TinyHyperGraphSolverOptionTarget {
     pub rip_threshold_end: f64,
     pub rip_threshold_ramp_attempts: f64,
     pub rip_congestion_region_cost_factor: f64,
+    pub trace_density_cost_factor: f64,
     pub use_lazy_route_heuristic: bool,
     pub use_sparse_candidate_storage: bool,
     pub max_iterations: f64,
@@ -235,6 +238,7 @@ impl Default for TinyHyperGraphSolverOptionTarget {
             rip_threshold_end: 0.8,
             rip_threshold_ramp_attempts: 50.0,
             rip_congestion_region_cost_factor: 0.1,
+            trace_density_cost_factor: 0.0,
             use_lazy_route_heuristic: false,
             use_sparse_candidate_storage: false,
             max_iterations: 1000000.0,
@@ -285,6 +289,9 @@ pub fn apply_tiny_hyper_graph_solver_options(
             target.rip_threshold_ramp_attempts = value;
         }
 
+        if let Some(value) = options.trace_density_cost_factor {
+            target.trace_density_cost_factor = value.max(0.0);
+        }
         if let Some(value) = options.rip_congestion_region_cost_factor {
             target.rip_congestion_region_cost_factor = value;
         }
@@ -385,6 +392,7 @@ pub fn get_tiny_hyper_graph_solver_options(
         rip_threshold_end: Some(target.rip_threshold_end),
         rip_threshold_ramp_attempts: Some(target.rip_threshold_ramp_attempts),
         rip_congestion_region_cost_factor: Some(target.rip_congestion_region_cost_factor),
+        trace_density_cost_factor: Some(target.trace_density_cost_factor),
         use_lazy_route_heuristic: Some(target.use_lazy_route_heuristic),
         use_sparse_candidate_storage: Some(target.use_sparse_candidate_storage),
         max_iterations: Some(target.max_iterations),
@@ -507,6 +515,7 @@ pub struct TinyHyperGraphSolver {
     pub iterations: usize,
     pub stats: Value,
     pub is_setup: bool,
+    pub preserve_initial_assignments: bool,
 }
 
 impl TinyHyperGraphSolver {
@@ -590,6 +599,7 @@ impl TinyHyperGraphSolver {
             iterations: 0,
             stats: json!({}),
             is_setup: false,
+            preserve_initial_assignments: false,
         };
         if let Some(stats) = crate::initial_assignments::apply_initial_assignments(&mut solver) {
             solver.merge_stats(json!({"initialAssignmentCount":stats.initial_assignment_count,"initiallyRoutedRouteCount":stats.initially_routed_route_count}));
@@ -979,28 +989,16 @@ impl TinyHyperGraphSolver {
             .as_ref()
             .map(|m| m[region])
             .unwrap_or(0);
-        if let Some(area) = &self.region_area {
-            return crate::compute_region_cost::compute_region_cost_for_area(
-                area[region],
-                same,
-                cross,
-                changes,
-                count,
-                mask,
-                self.options.min_via_pad_diameter,
-            );
-        }
-
-        compute_region_cost(
-            self.topology.region_width[region],
-            self.topology.region_height[region],
-            same,
-            cross,
-            changes,
-            count,
-            mask,
-            self.options.min_via_pad_diameter,
-        )
+        let area = self.region_area.as_ref().map(|areas| areas[region]).unwrap_or(
+            self.topology.region_width[region] * self.topology.region_height[region],
+        );
+        let base_cost = crate::compute_region_cost::compute_region_cost_for_area(
+            area, same, cross, changes, count, mask, self.options.min_via_pad_diameter,
+        );
+        let layer_count = if mask == 0 { 2 } else { (mask as u32).count_ones() };
+        let trace_density_cost = self.options.trace_density_cost_factor
+            * (count as f64 / layer_count as f64).powi(2) * 0.1_f64.powi(2) / area;
+        base_cost + trace_density_cost
     }
 
     pub fn populate_segment_geometry_scratch(
@@ -1118,6 +1116,9 @@ impl TinyHyperGraphSolver {
         self.state.candidate_queue.clear();
         self.reset_candidate_best_costs();
         self.state.goal_port_id = -1;
+        if self.preserve_initial_assignments {
+            crate::initial_assignments::apply_initial_assignments(self);
+        }
     }
 
     pub fn get_max_region_cost(&self) -> f64 {

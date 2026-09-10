@@ -1,4 +1,6 @@
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
+use std::ops::{Deref, DerefMut};
+use tiny_hypergraph::{OutsideInPartialRipTinyHyperGraphSolver, SelectiveReripTinyHyperGraphSolver};
 use tiny_hypergraph::{
     TinyHyperGraphProblem, TinyHyperGraphSolver, TinyHyperGraphSolverOptions,
     TinyHyperGraphTopology,
@@ -28,7 +30,79 @@ struct RoutingSnapshot<'a> {
 /// Owns one solver; generated bindings provide free() for deterministic disposal.
 #[wasm_bindgen]
 pub struct RustTinyHyperGraphSolver {
-    solver: TinyHyperGraphSolver,
+    solver: Solver,
+}
+
+#[derive(Default, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+struct SolverConfiguration {
+    #[serde(default)]
+    variant: SolverVariant,
+    #[serde(default)]
+    preserve_initial_assignments: bool,
+}
+
+#[derive(Default, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+enum SolverVariant {
+    #[default]
+    Base,
+    OutsideIn,
+    SelectiveRerip,
+}
+
+enum Solver {
+    Base(TinyHyperGraphSolver),
+    OutsideIn(OutsideInPartialRipTinyHyperGraphSolver),
+    SelectiveRerip(SelectiveReripTinyHyperGraphSolver),
+}
+
+impl Deref for Solver {
+    type Target = TinyHyperGraphSolver;
+
+    fn deref(&self) -> &Self::Target {
+        match self {
+            Self::Base(solver) => solver,
+            Self::OutsideIn(solver) => &solver.distance_aware.core,
+            Self::SelectiveRerip(solver) => &solver.outside_in.distance_aware.core,
+        }
+    }
+}
+
+impl DerefMut for Solver {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        match self {
+            Self::Base(solver) => solver,
+            Self::OutsideIn(solver) => &mut solver.distance_aware.core,
+            Self::SelectiveRerip(solver) => &mut solver.outside_in.distance_aware.core,
+        }
+    }
+}
+
+impl Solver {
+    fn setup(&mut self) {
+        match self {
+            Self::Base(solver) => solver.setup(),
+            Self::OutsideIn(solver) => solver.distance_aware.setup(),
+            Self::SelectiveRerip(solver) => solver.outside_in.distance_aware.setup(),
+        }
+    }
+
+    fn step(&mut self) {
+        match self {
+            Self::Base(solver) => solver.step(),
+            Self::OutsideIn(solver) => solver.step(),
+            Self::SelectiveRerip(solver) => solver.step(),
+        }
+    }
+
+    fn solve(&mut self) {
+        match self {
+            Self::Base(solver) => solver.solve(),
+            Self::OutsideIn(solver) => solver.solve(),
+            Self::SelectiveRerip(solver) => solver.solve(),
+        }
+    }
 }
 
 fn serialize(value: &impl Serialize) -> Result<JsValue, JsValue> {
@@ -50,16 +124,23 @@ pub fn load_serialized_hyper_graph(graph: JsValue) -> Result<JsValue, JsValue> {
 #[wasm_bindgen]
 impl RustTinyHyperGraphSolver {
     #[wasm_bindgen(constructor)]
-    pub fn new(topology: JsValue, problem: JsValue, options: JsValue) -> Result<Self, JsValue> {
+    pub fn new(topology: JsValue, problem: JsValue, options: JsValue, configuration: JsValue) -> Result<Self, JsValue> {
         let topology: TinyHyperGraphTopology = serde_wasm_bindgen::from_value(topology)
             .map_err(|error| js_sys::Error::new(&format!("Invalid topology: {error}")))?;
         let problem: TinyHyperGraphProblem = serde_wasm_bindgen::from_value(problem)
             .map_err(|error| js_sys::Error::new(&format!("Invalid problem: {error}")))?;
         let options: Option<TinyHyperGraphSolverOptions> = serde_wasm_bindgen::from_value(options)
             .map_err(|error| js_sys::Error::new(&format!("Invalid solver options: {error}")))?;
-        Ok(Self {
-            solver: TinyHyperGraphSolver::new(topology, problem, options),
-        })
+        let configuration: Option<SolverConfiguration> = serde_wasm_bindgen::from_value(configuration)
+            .map_err(|error| js_sys::Error::new(&format!("Invalid solver configuration: {error}")))?;
+        let configuration = configuration.unwrap_or_default();
+        let mut solver = match configuration.variant {
+            SolverVariant::Base => Solver::Base(TinyHyperGraphSolver::new(topology, problem, options)),
+            SolverVariant::OutsideIn => Solver::OutsideIn(OutsideInPartialRipTinyHyperGraphSolver::new(topology, problem, options)),
+            SolverVariant::SelectiveRerip => Solver::SelectiveRerip(SelectiveReripTinyHyperGraphSolver::new(topology, problem, options)),
+        };
+        solver.preserve_initial_assignments = configuration.preserve_initial_assignments;
+        Ok(Self { solver })
     }
 
     pub fn step(&mut self) -> Result<JsValue, JsValue> {

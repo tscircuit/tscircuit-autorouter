@@ -2,7 +2,8 @@
 
 A typed TypeScript adapter around the Rust `TinyHyperGraphSolver`. The graph,
 queues, and routing state live in Rust for the lifetime of each solver instance.
-This package is private and does not yet replace autorouter imports.
+This package is private. The autorouter can opt into Rust graph loading and
+main routing through the benchmark switch below; TypeScript remains the default.
 
 ## Build and test
 
@@ -28,6 +29,45 @@ For Bun, run from this package so the autorouter's graphics preload is not used:
 ```sh
 cd rust/tiny-hypergraph-wasm
 bun test --timeout 9999999
+```
+
+## srj18 benchmark
+
+After building this package and installing the root dependencies:
+
+```sh
+./benchmark.sh --dataset srj18 --tiny-hypergraph-backend wasm --concurrency 4
+```
+
+For a one-sample smoke run:
+
+```sh
+./benchmark.sh --dataset srj18 --tiny-hypergraph-backend wasm \
+  --limit 1 --concurrency 1 --sample-timeout 60s
+```
+
+The benchmark initializes WASM once per worker before timing the solve. Results
+include `routingMetrics.tinyHypergraph.backend` so Rust runs can be identified.
+The default pipeline 9 uses Rust loading and selective reripping, including
+restoration of preloaded assignments on global retries and preference for other
+blockers during selective reripping. Terminal reservations, metadata penalties,
+and preloaded endpoint policies run in the existing TS helpers before the graph
+is copied into Rust. The trace-density portfolio also uses Rust when selected.
+
+The port-duplication prepass still runs in TypeScript. The main autorouter's
+section mask is empty, so this bridge contains only the solveGraph stage;
+section optimization, poly routing, and bus routing are not switched over.
+This is a source-tree benchmark integration, not published browser packaging.
+
+Validation so far: pipeline 9 completed srj18 sample 1 and passed relaxed DRC.
+This does not establish full-dataset parity or a speed improvement.
+
+Run the isolated srj18 port-pathing integration test from this package:
+
+```sh
+cd rust/tiny-hypergraph-wasm
+bun test --timeout 9999999 integration/srj18.test.ts
+cargo test
 ```
 
 ## TypeScript interface
@@ -73,7 +113,12 @@ Browser asset copying and bundler integration remain untested.
 The constructor accepts numeric topology/problem shapes with camelCase fields.
 JS typed arrays and regular numeric arrays are accepted and copied into Rust
 vectors. Metadata must be serializable by serde-wasm-bindgen into JSON values.
-Options retain their uppercase keys, such as `MAX_ITERATIONS`.
+Options retain their uppercase keys, such as `MAX_ITERATIONS` and
+`TRACE_DENSITY_COST_FACTOR`. An optional fourth constructor argument selects
+`{ variant: "base" | "outside-in" | "selective-rerip",
+preserveInitialAssignments?: boolean }`. The default variant is `base`.
+`preserveInitialAssignments` restores initial occupancy on global retries and,
+for selective reripping, prefers blockers outside those preloaded routes.
 
 For the autorouter's serialized graph format, load through Rust first:
 
@@ -98,8 +143,8 @@ segments. The `solution` describes serialized solved routes; initial occupancy
 comes from region assignments in `problem.initialAssignments`. The loader keeps
 the Rust implementation's obstacle filtering and directly connected route rules.
 Metadata survives loading, including terminal reservation and preloaded trace
-metadata. Autorouter-specific policies that interpret that metadata still need
-to be integrated; loading alone does not apply them.
+metadata. The autorouter bridge applies its policies to this loaded input before
+constructing a solver; loading alone does not apply them.
 
 - `step()` advances one algorithm iteration, handling setup first.
 - `stepMany(maxSteps)` batches a positive integer count and stops on completion,
@@ -135,10 +180,12 @@ contract tests check the public package exports with strict TypeScript settings.
 
 ## Scope and validation
 
-Six tests pass in Node and Bun: adapter initialization/lifecycle, raw single-
+Seven package tests pass in Node and Bun: adapter initialization/lifecycle, raw single-
 step/batched/full-solve agreement, iteration limits, isolated ownership/disposal,
 input/method errors, and serialized-graph loading/routing with preloaded
-assignments. They exercise small deterministic routes, not full
+assignments, plus variant dispatch. Two native tests cover retry preservation
+and trace-density costs; an isolated Bun integration test exercises pipeline 9
+port pathing on srj18 sample 1. These checks do not establish full
 TypeScript/Rust behavior parity. Native checking and the release WASM build pass
 with the core's existing four dead-code warnings.
 
@@ -150,7 +197,7 @@ Output follows the existing core serializer: arbitrary route metadata is not
 included in serialized connections. Port/region metadata is preserved according
 to that serializer's existing behavior.
 
-Next work: solver variants and the autorouter's
-reservation/preloaded-route policies. Section pipelines are not exported yet;
+Next work: broader srj18 parity checks and replacing the TS duplication prepass.
+Section pipelines are not exported yet;
 expected candidate rejection must use explicit error handling in place of
 `catch_unwind` before exposing them on the default WASM target.

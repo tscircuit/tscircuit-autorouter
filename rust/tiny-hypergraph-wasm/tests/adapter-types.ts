@@ -7,6 +7,7 @@ import {
   type SerializedHyperGraph,
   type TinyHyperGraphProblem,
   type TinyHyperGraphSolverOptions,
+  type TinyHyperGraphSolverConfiguration,
   type TinyHyperGraphTopology,
 } from "@tscircuit/tiny-hypergraph-wasm"
 
@@ -15,6 +16,13 @@ declare const problem: TinyHyperGraphProblem
 
 const options: TinyHyperGraphSolverOptions = { MAX_ITERATIONS: 100, VERBOSE: false }
 const solver = new TinyHyperGraphSolver(topology, problem, options)
+const configuration: TinyHyperGraphSolverConfiguration = {
+  variant: "selective-rerip",
+  preserveInitialAssignments: true,
+}
+new TinyHyperGraphSolver(topology, problem, options, configuration)
+// @ts-expect-error Solver variants are an explicit union.
+new TinyHyperGraphSolver(topology, problem, options, { variant: "unknown" })
 const output: SerializedHyperGraph = solver.getOutput()
 const loaded: LoadedHyperGraph = loadSerializedHyperGraph(output)
 new TinyHyperGraphSolver(loaded.topology, loaded.problem)
