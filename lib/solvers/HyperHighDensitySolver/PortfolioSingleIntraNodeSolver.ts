@@ -46,7 +46,9 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     return "PortfolioSingleIntraNodeSolver"
   }
 
-  constructorParams: ConstructorParameters<typeof CachedIntraNodeRouteSolver>[0] & {
+  constructorParams: ConstructorParameters<
+    typeof CachedIntraNodeRouteSolver
+  >[0] & {
     boardGeometry?: HighDensityBoardGeometry
   }
   solvedRoutes: HighDensityIntraNodeRoute[] = []
