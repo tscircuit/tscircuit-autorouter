@@ -612,6 +612,11 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
         return [
           {
             nodePortPoints: nodePortPointsSource,
+            boardGeometry: {
+              bounds: cms.originalSrj.bounds,
+              outline: cms.originalSrj.outline,
+              minBoardEdgeClearance: cms.originalSrj.minBoardEdgeClearance,
+            },
             fixedHdRoutes,
             connMap: cms.connMap,
             colorMap: cms.colorMap,

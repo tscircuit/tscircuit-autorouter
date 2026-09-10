@@ -180,6 +180,7 @@ export class Pipeline9NetworkedHighDensitySolver extends Pipeline9HighDensitySol
       obstacleMargin: this.obstacleMargin,
       effort: 1,
       obstacles: projectedInput.obstacles,
+      boardGeometry: this.boardGeometry,
       regionalObstacles: regionalInput.obstacles,
       layerCount: this.layerCount,
       nodePf: this.nodePfById.get(node.capacityMeshNodeId) ?? null,
