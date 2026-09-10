@@ -19,7 +19,7 @@ export type TinyHypergraphPolicyCounts = {
 }
 
 export type TinyHypergraphRoutingInput = Pick<
-  TinyHyperGraphSectionPipelineInput, "serializedHyperGraph" | "solveGraphOptions"
+  TinyHyperGraphSectionPipelineInput, "serializedHyperGraph" | "solveGraphOptions" | "sectionSolverOptions"
 >
 
 export type TinyHypergraphBackend = {

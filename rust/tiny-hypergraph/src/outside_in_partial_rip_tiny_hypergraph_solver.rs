@@ -438,6 +438,14 @@ impl OutsideInPartialRipTinyHyperGraphSolver {
             return false;
         }
 
+        let preferred: HashSet<RouteId> = if self.preserve_initial_assignments {
+            self.problem.initial_assignments.iter().flatten()
+                .map(|assignment| assignment.route_id).collect()
+        } else {
+            HashSet::new()
+        };
+        let has_non_preferred = touching.iter().any(|route| !preferred.contains(route));
+
         let mut retained = vec![vec![]; self.topology.region_count];
         let mut plans = HashMap::new();
         let mut ripped_count = 0;
@@ -447,7 +455,7 @@ impl OutsideInPartialRipTinyHyperGraphSolver {
             let Some(segments) = self.get_committed_route_segments(route) else {
                 return false;
             };
-            if !touching.contains(&route) {
+            if !touching.contains(&route) || (has_non_preferred && preferred.contains(&route)) {
                 for s in segments {
                     retained[s.region_id as usize].push((route, s.from_port_id, s.to_port_id));
                     retained_count += 1;

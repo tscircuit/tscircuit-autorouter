@@ -248,6 +248,22 @@ impl SelectiveReripTinyHyperGraphSolver {
             }
         }
 
+        if direct_ids.iter().any(|&owner| self.has_failed_owner_path(owner, failed)) {
+            let stats = &mut self.selective_rerip_stats;
+            stats.global_rerip_count += 1;
+            stats.global_rerip_reason = Some("failed_owner_cycle".into());
+            stats.last_failed_route_id = Some(failed);
+            stats.last_direct_owner_route_ids = direct_ids;
+            stats.last_repeated_owner_route_ids = repeated;
+            stats.last_alternate_owner_route_ids.clear();
+            stats.last_ripped_route_ids.clear();
+            stats.last_relaxed_search_expanded_label_count = direct.expanded_label_count;
+            stats.last_alternate_search_expanded_label_count = 0;
+            self.failed_owner_pair_counts.clear();
+            self.global_rerip();
+            return;
+        }
+
         let alternate = if !repeated.is_empty() {
             self.selective_rerip_stats.alternate_blocker_search_count += 1;
             match self.find_relaxed_blocker_path_preferring_preserved_routes(&repeated.iter().copied().collect()) {
@@ -329,6 +345,22 @@ impl SelectiveReripTinyHyperGraphSolver {
                 * self.options.rip_congestion_region_cost_factor;
             self.state.region_congestion_cost[region] += cost;
         }
+    }
+
+    fn has_failed_owner_path(&self, from: RouteId, target: RouteId) -> bool {
+        let mut pending = vec![from];
+        let mut visited = HashSet::new();
+        while let Some(route) = pending.pop() {
+            if route == target {
+                return true;
+            }
+            if visited.insert(route) {
+                if let Some(owners) = self.failed_owner_pair_counts.get(&route) {
+                    pending.extend(owners.keys().copied());
+                }
+            }
+        }
+        false
     }
 
     fn find_relaxed_blocker_path_preferring_preserved_routes(
@@ -665,5 +697,28 @@ impl SelectiveReripTinyHyperGraphSolver {
             ),
             None => route.to_string(),
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use serde_json::json;
+
+    #[test]
+    fn detects_owner_cycles_without_looping_on_unrelated_cycles() {
+        let loaded = crate::load_serialized_hyper_graph(&json!({
+            "regions": [], "ports": [], "connections": []
+        }));
+        let mut solver = SelectiveReripTinyHyperGraphSolver::new(
+            loaded.topology, loaded.problem, None,
+        );
+        solver.failed_owner_pair_counts.insert(0, HashMap::from([(1, 1)]));
+        solver.failed_owner_pair_counts.insert(1, HashMap::from([(2, 1)]));
+        assert!(solver.has_failed_owner_path(0, 2));
+        assert!(!solver.has_failed_owner_path(2, 0));
+        solver.failed_owner_pair_counts.insert(2, HashMap::from([(0, 1)]));
+        assert!(solver.has_failed_owner_path(2, 1));
+        assert!(!solver.has_failed_owner_path(0, 3));
     }
 }

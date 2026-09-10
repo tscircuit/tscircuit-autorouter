@@ -52,7 +52,7 @@ function loadGraph(graph: SerializedHyperGraph): LoadedTinyHypergraph {
   }
 }
 
-/** One Rust search stage; the main autorouter currently selects an empty section. */
+/** Rust search followed by the main autorouter's empty-section solution replay. */
 export class WasmTinyHypergraphPipeline extends BaseSolver {
   readonly duplicatePortPenaltyCount: number
   readonly metadataPortPenaltyCount: number
@@ -66,11 +66,12 @@ export class WasmTinyHypergraphPipeline extends BaseSolver {
   private timeSpent = 0
   private output?: SerializedHyperGraph
   private graphics?: GraphicsObject
+  private replayedGraph?: TinyHypergraphSolverView
 
   constructor(
-    input: TinyHypergraphRoutingInput,
+    private readonly input: TinyHypergraphRoutingInput,
     selectiveRerip: boolean,
-    configure: (loaded: LoadedTinyHypergraph) => TinyHypergraphPolicyCounts,
+    private readonly configure: (loaded: LoadedTinyHypergraph) => TinyHypergraphPolicyCounts,
   ) {
     super()
     const start = performance.now()
@@ -117,8 +118,11 @@ export class WasmTinyHypergraphPipeline extends BaseSolver {
       this.solveGraph.stats = this.stats
       this.progress = this.solved ? 1 : status.iterations / this.MAX_ITERATIONS
       if (this.solved || this.failed) {
-        this.graphics = this.solver.visualize()
-        if (this.solved) this.output = this.solver.getOutput()
+        if (this.solved) {
+          this.replaySolvedGraph()
+        } else {
+          this.graphics = this.solver.visualize()
+        }
         this.solver.dispose()
       }
     } catch (error) {
@@ -129,11 +133,36 @@ export class WasmTinyHypergraphPipeline extends BaseSolver {
     }
   }
 
+  private replaySolvedGraph(): void {
+    const loaded = loadGraph(this.solver.getOutput())
+    this.configure(loaded)
+    loaded.problem.portSectionMask.fill(0)
+    const replay = new TinyHyperGraphSolver(
+      loaded.topology, loaded.problem, this.input.sectionSolverOptions,
+    )
+    try {
+      replay.replaySolution(loaded.solution)
+      this.replayedGraph = {
+        topology: loaded.topology,
+        problem: loaded.problem,
+        state: replay.getRoutingSnapshot(),
+        iterations: replay.iterations,
+        stats: replay.getStats(),
+        solved: replay.solved,
+        failed: replay.failed,
+      }
+      this.output = replay.getOutput()
+      this.graphics = replay.visualize()
+    } finally {
+      replay.dispose()
+    }
+  }
+
   getSolvedTinySolver(): TinyHypergraphSolverView {
-    if (!this.solved || this.failed) {
+    if (!this.solved || this.failed || !this.replayedGraph) {
       throw new Error("WASM tiny-hypergraph pipeline has no solved graph")
     }
-    return this.solveGraph
+    return this.replayedGraph
   }
 
   getStageStats(): Record<string, { timeSpent: number }> {

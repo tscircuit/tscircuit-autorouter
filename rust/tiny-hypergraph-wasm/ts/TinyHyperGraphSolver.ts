@@ -6,6 +6,7 @@ import type {
   TinyHyperGraphProblem,
   TinyHyperGraphRoutingSnapshot,
   TinyHyperGraphSolverOptions,
+  TinyHyperGraphSolution,
   TinyHyperGraphSolverConfiguration,
   TinyHyperGraphStats,
   TinyHyperGraphStatus,
@@ -83,6 +84,12 @@ export class TinyHyperGraphSolver {
 
   getOutput(): SerializedHyperGraph {
     return this.getHandleOrThrow().getOutput() as SerializedHyperGraph
+  }
+
+  /** Rebuilds a complete solved state in route order, validating each route path. */
+  replaySolution(solution: TinyHyperGraphSolution): TinyHyperGraphStatus {
+    const status = this.getHandleOrThrow().replaySolution(solution) as WasmStatus
+    return this.updateStatus(status)
   }
 
   visualize(): GraphicsObject {

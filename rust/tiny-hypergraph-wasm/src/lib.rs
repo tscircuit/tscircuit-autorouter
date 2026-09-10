@@ -96,6 +96,14 @@ impl Solver {
         }
     }
 
+    fn try_final_acceptance(&mut self) {
+        match self {
+            Self::Base(solver) => solver.try_final_acceptance(),
+            Self::OutsideIn(solver) => solver.try_final_acceptance(),
+            Self::SelectiveRerip(solver) => solver.try_final_acceptance(),
+        }
+    }
+
     fn solve(&mut self) {
         match self {
             Self::Base(solver) => solver.solve(),
@@ -224,6 +232,19 @@ impl RustTinyHyperGraphSolver {
             return Err(js_sys::Error::new("Output requires a solved, non-failed solver").into());
         }
         serialize(&self.solver.get_output())
+    }
+
+    #[wasm_bindgen(js_name = replaySolution)]
+    pub fn replay_solution(&mut self, solution: JsValue) -> Result<JsValue, JsValue> {
+        let solution: tiny_hypergraph::TinyHyperGraphSolution = serde_wasm_bindgen::from_value(solution)
+            .map_err(|error| js_sys::Error::new(&format!("Invalid solution: {error}")))?;
+        let options = tiny_hypergraph::get_tiny_hyper_graph_solver_options(&self.solver.options);
+        self.solver = Solver::Base(
+            tiny_hypergraph::section_solver::create_solved_solver_from_solution(
+                &self.solver.topology, &self.solver.problem, &solution, &options,
+            ),
+        );
+        self.get_status()
     }
 
     pub fn visualize(&self) -> Result<JsValue, JsValue> {

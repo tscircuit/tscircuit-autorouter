@@ -64,6 +64,7 @@ for (const call of [
   () => solver.step(),
   () => solver.stepMany(1),
   () => solver.solve(),
+  () => solver.replaySolution({ solvedRoutePathSegments: [] }),
   () => solver.getStatus(),
   () => solver.getStats(),
   () => solver.getRoutingSnapshot(),

@@ -85,6 +85,7 @@ function createTinyPipeline(
   return backend.createPipeline({
     serializedHyperGraph: input.serializedHyperGraph,
     solveGraphOptions: input.solveGraphOptions,
+    sectionSolverOptions: input.sectionSolverOptions,
   }, selectiveRerip, (loaded) => {
     restorePreloadedTraceSectionMetadata(loaded, input.serializedHyperGraph)
     const metadataPortPenaltyCount = applyMetadataPortPenalties(loaded)

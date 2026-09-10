@@ -218,7 +218,7 @@ fn solved_from_segments(
     solver
 }
 
-fn solved_from_solution(
+pub fn create_solved_solver_from_solution(
     topology: &TinyHyperGraphTopology,
     problem: &TinyHyperGraphProblem,
     solution: &TinyHyperGraphSolution,
@@ -669,7 +669,7 @@ impl TinyHyperGraphSectionSolver {
             .extra_rips_after_beating_baseline_max_region_cost
             .get_or_insert(10.0);
         let baseline_solver =
-            solved_from_solution(&topology, &problem, &initial_solution, &options.core);
+            create_solved_solver_from_solution(&topology, &problem, &initial_solution, &options.core);
         let caches = &baseline_solver.state.region_intersection_caches;
         let baseline_summary = summarize(caches, 0..caches.len());
         let section_region_ids = section_regions(&topology, &problem);

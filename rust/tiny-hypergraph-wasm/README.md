@@ -55,19 +55,28 @@ and preloaded endpoint policies run in the existing TS helpers before the graph
 is copied into Rust. The trace-density portfolio also uses Rust when selected.
 
 The port-duplication prepass still runs in TypeScript. The main autorouter's
-section mask is empty, so this bridge contains only the solveGraph stage;
-section optimization, poly routing, and bus routing are not switched over.
+section mask is empty. The bridge preserves its solved-graph replay, including
+route ordering and segment direction, without doing section optimization.
+Section optimization, poly routing, and bus routing are not switched over.
 This is a source-tree benchmark integration, not published browser packaging.
 
-Validation so far: pipeline 9 completed srj18 sample 1 and passed relaxed DRC.
-This does not establish full-dataset parity or a speed improvement.
+The srj18 parity test compares every sample's port-pathing output and search
+iteration count against TS, including failed samples. The end-to-end benchmark
+completes 13/16 samples with relaxed DRC passing, matching TS. Samples 14 and 15
+retain their routing-limit failures; sample 6 reproduces TS's downstream
+`repair04` non-colocated-via error when run alone.
+These are correctness checks, not a controlled speed comparison.
 
-Run the isolated srj18 port-pathing integration test from this package:
+Run the isolated srj18 port-pathing integration tests from this package
+(with the root autorouter dependencies installed):
 
 ```sh
 cd rust/tiny-hypergraph-wasm
 bun test --timeout 9999999 integration/srj18.test.ts
+bun test --timeout 9999999 integration/parity.test.ts
+bunx tsc -p tsconfig.integration.json
 cargo test
+cargo test --manifest-path ../tiny-hypergraph/Cargo.toml
 ```
 
 ## TypeScript interface
@@ -151,6 +160,9 @@ constructing a solver; loading alone does not apply them.
   failure, or the solver's iteration limit. Its argument does not change the
   solver's total iteration budget.
 - `solve()` runs synchronously until completion or failure.
+- `replaySolution(solution)` validates and rebuilds complete solved routes in
+  route order and start-to-end direction, without running a search. It resets
+  the solver to the replayed solved state and returns its status.
 - `solved`, `failed`, `error`, `iterations`, `pendingRouteCount`, and `ripCount`
   reflect the latest observed Rust status. They are refreshed by stepping,
   solving, or `getStatus()`. Assigning these TS fields does not configure Rust.
@@ -180,12 +192,14 @@ contract tests check the public package exports with strict TypeScript settings.
 
 ## Scope and validation
 
-Seven package tests pass in Node and Bun: adapter initialization/lifecycle, raw single-
+Nine package tests pass in Node and Bun: adapter initialization/lifecycle, raw single-
 step/batched/full-solve agreement, iteration limits, isolated ownership/disposal,
 input/method errors, and serialized-graph loading/routing with preloaded
-assignments, plus variant dispatch. Two native tests cover retry preservation
-and trace-density costs; an isolated Bun integration test exercises pipeline 9
-port pathing on srj18 sample 1. These checks do not establish full
+assignments, variant dispatch, timeout acceptance, and solution replay. Four
+native tests cover retry preservation, owner-cycle detection, quality-rerip
+preservation, and trace-density costs. Isolated Bun integration tests exercise
+pipeline 9 and compare its TS/WASM port-pathing results on srj18. These checks
+do not establish universal
 TypeScript/Rust behavior parity. Native checking and the release WASM build pass
 with the core's existing four dead-code warnings.
 

@@ -26,6 +26,9 @@ new TinyHyperGraphSolver(topology, problem, options, { variant: "unknown" })
 const output: SerializedHyperGraph = solver.getOutput()
 const loaded: LoadedHyperGraph = loadSerializedHyperGraph(output)
 new TinyHyperGraphSolver(loaded.topology, loaded.problem)
+solver.replaySolution(loaded.solution)
+// @ts-expect-error Replayed solutions require numeric port pairs.
+solver.replaySolution({ solvedRoutePathSegments: [[["a", "b"]]] })
 const segment: [number, number] | undefined = loaded.solution.solvedRoutePathSegments[0]?.[0]
 // @ts-expect-error Serialized graph geometry is required.
 loadSerializedHyperGraph({ connections: [] })
