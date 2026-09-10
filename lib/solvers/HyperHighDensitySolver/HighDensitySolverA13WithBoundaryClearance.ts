@@ -27,7 +27,10 @@ export class HighDensitySolverA13WithBoundaryClearance extends HighDensitySolver
       const key = `${point.x},${point.y},${point.z}`
       const previous = projectedTerminals.get(key)
       const original = point[originalPortPoint]
-      if (previous && (previous.x !== original.x || previous.y !== original.y)) {
+      if (
+        previous &&
+        (previous.x !== original.x || previous.y !== original.y)
+      ) {
         collapsedTerminals = true
       }
       projectedTerminals.set(key, original)

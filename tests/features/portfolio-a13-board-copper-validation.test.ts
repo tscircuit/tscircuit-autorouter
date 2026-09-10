@@ -19,6 +19,14 @@ test("A13 rejects a pad-crossing candidate before the portfolio accepts it", () 
     viaDiameter: 0.3,
     layerCount: 2,
     obstacles: [
+      ...Array.from({ length: 2_000 }, (_, index) => ({
+        type: "rect" as const,
+        center: { x: 100 + index, y: 100 },
+        width: 0.5,
+        height: 0.5,
+        layers: ["top"],
+        connectedTo: [`distant_pad_${index}`],
+      })),
       {
         type: "rect",
         center: { x: 0, y: 0 },
@@ -37,6 +45,7 @@ test("A13 rejects a pad-crossing candidate before the portfolio accepts it", () 
   expect(solver.solved).toBeFalse()
   expect(solver.failed).toBeTrue()
   expect(solver.stats.boardDrcIssueCount).toBeGreaterThan(0)
+  expect(solver.stats.boardObstaclesChecked).toBe(1)
   expect(solver.error).toContain("board copper validation")
   const ownPadSolver = new HighDensitySolverA13WithDrcValidation({
     ...solver.validationParams,

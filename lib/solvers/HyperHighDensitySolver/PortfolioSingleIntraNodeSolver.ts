@@ -4,6 +4,7 @@ import {
 } from "@tscircuit/high-density-a01"
 import { HighDensitySolverA13 } from "@tscircuit/high-density-a13"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
+import type { HighDensityBoardGeometry } from "lib/types/high-density-board-geometry"
 import {
   HighDensityIntraNodeRoute,
   NodeWithPortPoints,
@@ -45,7 +46,9 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     return "PortfolioSingleIntraNodeSolver"
   }
 
-  constructorParams: ConstructorParameters<typeof CachedIntraNodeRouteSolver>[0]
+  constructorParams: ConstructorParameters<typeof CachedIntraNodeRouteSolver>[0] & {
+    boardGeometry?: HighDensityBoardGeometry
+  }
   solvedRoutes: HighDensityIntraNodeRoute[] = []
   nodeWithPortPoints: NodeWithPortPoints
   connMap?: ConnectivityMap
@@ -125,6 +128,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     opts: ConstructorParameters<typeof CachedIntraNodeRouteSolver>[0] & {
       effort?: number
       enableNegotiatedSearch?: boolean
+      boardGeometry?: HighDensityBoardGeometry
     },
   ) {
     super()
@@ -478,6 +482,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       )
       const solver = new HighDensitySolverA13WithDrcValidation({
         obstacles: this.constructorParams.obstacles ?? [],
+        boardGeometry: this.constructorParams.boardGeometry,
         connMap: this.connMap,
         layerCount: this.constructorParams.layerCount ?? 2,
         nodeWithPortPoints: this.nodeWithPortPoints,
