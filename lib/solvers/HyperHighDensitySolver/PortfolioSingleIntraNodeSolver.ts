@@ -1,6 +1,7 @@
 import {
   HighDensitySolverA03 as HighDensityA03Solver,
   HighDensitySolverA01,
+  HighDensitySolverA13,
 } from "@tscircuit/high-density-a01"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import {
@@ -37,6 +38,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
   | SingleTransitionThroughObstacleIntraNodeSolver
   | SingleLayerNoDifferentRootIntersectionsIntraNodeSolver
   | HighDensityA03Solver
+  | HighDensitySolverA13
 > {
   override getSolverName(): string {
     return "PortfolioSingleIntraNodeSolver"
@@ -73,6 +75,18 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
   }
 
   private getCandidateProgress(solver: { progress: number }): number {
+    if (solver instanceof HighDensitySolverA13) {
+      if (solver.solved) return 1
+      const connectionCount = solver.connections.length
+      if (connectionCount === 0) return 0
+      // A complete set of provisional paths still needs congestion negotiation.
+      const routedFraction = solver.routedCount / connectionCount
+      const conflictFreeFraction = Math.max(
+        0,
+        (solver.routedCount - solver.conflictCount) / connectionCount,
+      )
+      return Math.min(0.99, (routedFraction + conflictFreeFraction) / 2)
+    }
     const solvedSegmentCount = this.getSolvedSegmentCount(solver)
     if (solvedSegmentCount !== null) {
       return Math.min(1, solvedSegmentCount / this.getNodeSegmentCount())
@@ -82,7 +96,8 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
 
   private getTotalCandidateWork(): number {
     return (this.supervisedSolvers ?? []).reduce(
-      (total, { solver }) => total + solver.iterations,
+      (total, { solver }) =>
+        total + (solver instanceof HighDensitySolverA13 ? 0 : solver.iterations),
       0,
     )
   }
@@ -94,9 +109,11 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     // to fail or introducing a wall-clock iteration constant.
     return Math.max(
       1,
-      ...(this.supervisedSolvers ?? []).map(
-        ({ solver }) => solver.MAX_ITERATIONS,
-      ),
+      // A13 negotiates route orders internally. Its larger budget must not
+      // delay expansion of the existing A01 ordering search.
+      ...(this.supervisedSolvers ?? [])
+        .filter(({ solver }) => !(solver instanceof HighDensitySolverA13))
+        .map(({ solver }) => solver.MAX_ITERATIONS),
     )
   }
 
@@ -128,6 +145,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       // ["closedFormTwoTrace"],
       ["highDensityA01"],
       ["highDensityA03"],
+      ["highDensityA13"],
     ]
   }
 
@@ -266,6 +284,10 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
           },
         ],
       },
+      {
+        name: "highDensityA13",
+        possibleValues: [{ HIGH_DENSITY_A13: true, SHUFFLE_SEED: 0 }],
+      },
     ]
   }
 
@@ -372,10 +394,11 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     }
   }
 
-  computeG(solver: IntraNodeRouteSolver) {
+  computeG(solver: IntraNodeRouteSolver): number {
     if (
       (solver as any) instanceof HighDensitySolverA01 ||
-      (solver as any) instanceof HighDensityA03Solver
+      (solver as any) instanceof HighDensityA03Solver ||
+      (solver as any) instanceof HighDensitySolverA13
     ) {
       return (solver as any).iterations / 1_000_000
     }
@@ -392,7 +415,10 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     )
   }
 
-  computeH(solver: IntraNodeRouteSolver) {
+  computeH(solver: IntraNodeRouteSolver): number {
+    if (solver instanceof HighDensitySolverA13) {
+      return 1 - this.getCandidateProgress(solver)
+    }
     if (this.adaptiveSearchExpanded) {
       return 1 - this.getCandidateProgress(solver)
     }
@@ -426,6 +452,24 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       }) as any
     }
 
+    if (hyperParameters.HIGH_DENSITY_A13) {
+      const maxSearchIterations = Math.max(1, Math.round(50_000_000 * this.effort))
+      const solver = new HighDensitySolverA13({
+        nodeWithPortPoints: this.nodeWithPortPoints,
+        cellSizeMm: 0.1,
+        viaDiameter: this.constructorParams.viaDiameter ?? 0.3,
+        viaMinDistFromBorder: (this.constructorParams.viaDiameter ?? 0.3) / 2,
+        traceThickness: this.constructorParams.traceWidth ?? 0.15,
+        traceMargin: 0.1,
+        // One search pop per step keeps portfolio scheduling comparable to A01.
+        stepMultiplier: 1,
+        maxSearchIterations,
+        maxRounds: Math.max(1, Math.round(200 * this.effort)),
+        hyperParameters: { shuffleSeed: hyperParameters.SHUFFLE_SEED ?? 0 },
+      })
+      solver.MAX_ITERATIONS = maxSearchIterations * 2
+      return solver as any
+    }
     if (hyperParameters.HIGH_DENSITY_A01) {
       const solver = new HighDensitySolverA01({
         nodeWithPortPoints: this.nodeWithPortPoints,
@@ -506,7 +550,8 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     let routes: HighDensityIntraNodeRoute[]
     if (
       (solver.solver as any) instanceof HighDensitySolverA01 ||
-      (solver.solver as any) instanceof HighDensityA03Solver
+      (solver.solver as any) instanceof HighDensityA03Solver ||
+      (solver.solver as any) instanceof HighDensitySolverA13
     ) {
       routes = (solver.solver as any).getOutput()
     } else {
