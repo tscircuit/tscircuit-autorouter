@@ -31,6 +31,7 @@ import {
 } from "./applyPipeline9ClearancePrecisionRepairs"
 import { applyPipeline9BoundedRegionalRepairs } from "./applyPipeline9BoundedRegionalRepairs"
 import { applyPipeline9RegionalB01Repairs } from "./applyPipeline9RegionalB01Repairs"
+import { applyPipeline9TraceShortcuts } from "./applyPipeline9TraceShortcuts"
 import { applyPipeline9SameNetViaRepairs } from "./applyPipeline9SameNetViaRepairs"
 import { applyPipeline9TerminalEscapeRelocations } from "./applyPipeline9TerminalEscapeRelocations"
 import { assignUniquePcbTraceIdsToNewTraces } from "./assignUniquePcbTraceIdsToNewTraces"
@@ -1598,6 +1599,14 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       colorMap: this.params.colorMap,
       layerCount: this.params.layerCount,
       connMap: this.params.connMap,
+      drcEvaluator: this.cachedReferenceDrcEvaluator!,
+    })
+    this.combinedOutput = applyPipeline9TraceShortcuts({
+      routes: this.combinedOutput,
+      otherHdRoutes: this.fixedPreloadedObstacleRoutes,
+      srj: { ...this.params.originalSrj, obstacles: this.params.obstacles },
+      connMap: this.params.connMap,
+      colorMap: this.params.colorMap,
       drcEvaluator: this.cachedReferenceDrcEvaluator!,
     })
     this.stats = {
