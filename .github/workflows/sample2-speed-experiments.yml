@@ -25,8 +25,6 @@ jobs:
     timeout-minutes: 160
     env:
       EXPERIMENT_RESULTS: sample2-speed-results
-      EXPERIMENT_RUNNER_NAME: ${{ runner.name }}
-      EXPERIMENT_RUNNER_ARCH: ${{ runner.arch }}
       EXPERIMENT_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
 
     steps:
@@ -46,7 +44,7 @@ jobs:
           [install.lockfile]
           save = true
           TOML
-          bun install --config /tmp/srj18-experiment-bunfig.toml --save-text-lockfile
+          bun install --config=/tmp/srj18-experiment-bunfig.toml --save-text-lockfile
 
       - name: Record source, runtime, and dependency provenance
         id: provenance
@@ -77,8 +75,8 @@ jobs:
             sourceCommit: execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim(),
             baselineSourceCommit: '2b24a39e585fb9f1a642d1a7f7432de81c219b68',
             bunVersion: execFileSync('bun', ['--version'], { encoding: 'utf8' }).trim(),
-            runnerName: process.env.EXPERIMENT_RUNNER_NAME,
-            runnerArch: process.env.EXPERIMENT_RUNNER_ARCH,
+            runnerName: process.env.RUNNER_NAME,
+            runnerArch: process.env.RUNNER_ARCH,
             runUrl: process.env.EXPERIMENT_RUN_URL,
             operatingSystem: { platform: os.platform(), release: os.release(), architecture: os.arch() },
             cpuModel: os.cpus()[0].model,

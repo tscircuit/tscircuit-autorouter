@@ -71,7 +71,7 @@ for (const testCase of cases) {
 const lines = [
   `## SRJ18 sample 2 search policy experiment: ${mode}`,
   "",
-  `Runner: ${process.env.EXPERIMENT_RUNNER_NAME}. All ${cases.length} cases ran sequentially in fresh Bun 1.3.8 processes.`,
+  `Runner: ${process.env.RUNNER_NAME}. All ${cases.length} cases ran sequentially in fresh Bun 1.3.8 processes.`,
   "",
   mode === "node"
     ? "Node timings use three repetitions in rotated order."
