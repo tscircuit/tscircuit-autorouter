@@ -62,6 +62,7 @@ import { HighDensitySolver } from "../../solvers/HighDensitySolver/HighDensitySo
 import { MultiSectionPortPointOptimizer } from "../../solvers/MultiSectionPortPointOptimizer"
 import { NetToPointPairsSolver } from "../../solvers/NetToPointPairsSolver/NetToPointPairsSolver"
 import { NetToPointPairsSolver2_OffBoardConnection } from "../../solvers/NetToPointPairsSolver2_OffBoardConnection/NetToPointPairsSolver2_OffBoardConnection"
+import { PreRoutingDiagnosticSolver } from "../../solvers/PreRoutingDiagnosticSolver/PreRoutingDiagnosticSolver"
 import { MultipleHighDensityRouteStitchSolver3 } from "../../solvers/RouteStitchingSolver/MultipleHighDensityRouteStitchSolver3"
 import { SingleLayerNodeMergerSolver } from "../../solvers/SingleLayerNodeMerger/SingleLayerNodeMergerSolver"
 import { StrawSolver } from "../../solvers/StrawSolver/StrawSolver"
@@ -211,6 +212,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
     return "AutoroutingPipelineSolver7_MultiGraph"
   }
 
+  preRoutingDiagnosticSolver?: PreRoutingDiagnosticSolver
   preprocessSimpleRouteJsonSolver?: PreprocessSimpleRouteJsonSolver
   escapeViaLocationSolver?: EscapeViaLocationSolver
   netToPointPairsSolver?: NetToPointPairsSolver
@@ -267,6 +269,11 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
 
   cacheProvider: CacheProvider | null = null
   pipelineDef = [
+    definePipelineStep(
+      "preRoutingDiagnosticSolver",
+      PreRoutingDiagnosticSolver,
+      (cms) => [cms.originalSrj],
+    ),
     definePipelineStep(
       "preprocessSimpleRouteJsonSolver",
       PreprocessSimpleRouteJsonSolver,
@@ -903,6 +910,13 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
         this.currentPipelineStepIndex++
       } else if (this.activeSubSolver.failed) {
         this.error = this.activeSubSolver?.error
+        if (this.activeSubSolver?.diagnostics) {
+          for (const d of this.activeSubSolver.diagnostics) {
+            if (!this.diagnostics?.includes(d)) {
+              this.emitDiagnostic?.(d)
+            }
+          }
+        }
         this.failed = true
         this.activeSubSolver = null
       }
@@ -912,6 +926,11 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
     const constructorParams = pipelineStepDef.getConstructorParams(this)
     // @ts-ignore
     this.activeSubSolver = new pipelineStepDef.solverClass(...constructorParams)
+    if (typeof (this.activeSubSolver as any)?.on === "function") {
+      ;(this.activeSubSolver as any).on("diagnostic", (diagnostic: any) => {
+        this.emitDiagnostic?.(diagnostic)
+      })
+    }
     if (
       pipelineStepDef.solverName === "lengthMatchingPostProcessingSolver" ||
       pipelineStepDef.solverName === "powerTraceExpansionSolver"
