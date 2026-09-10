@@ -58,6 +58,7 @@ export class HighDensitySolver extends BaseSolver {
   obstacles: Obstacle[]
   layerCount: number
   useGrowShrinkHighDensityIntraNodeSolver: boolean
+  enableNegotiatedSearch: boolean
   preserveTerminalPcbPortIds: boolean
   growShrinkMaxInnerIterationsPerGrowthAttempt?: number
   growShrinkFallbackToInvalidGeometryOnFailure: boolean
@@ -93,6 +94,7 @@ export class HighDensitySolver extends BaseSolver {
     obstacles,
     layerCount,
     useGrowShrinkHighDensityIntraNodeSolver,
+    enableNegotiatedSearch = false,
     preserveTerminalPcbPortIds,
     growShrinkMaxInnerIterationsPerGrowthAttempt,
     growShrinkFallbackToInvalidGeometryOnFailure,
@@ -109,6 +111,7 @@ export class HighDensitySolver extends BaseSolver {
     obstacles?: Obstacle[]
     layerCount?: number
     useGrowShrinkHighDensityIntraNodeSolver?: boolean
+    enableNegotiatedSearch?: boolean
     preserveTerminalPcbPortIds?: boolean
     growShrinkMaxInnerIterationsPerGrowthAttempt?: number
     growShrinkFallbackToInvalidGeometryOnFailure?: boolean
@@ -132,6 +135,7 @@ export class HighDensitySolver extends BaseSolver {
     this.obstacleMargin = obstacleMargin ?? 0.15
     this.obstacles = obstacles ?? []
     this.layerCount = layerCount ?? 2
+    this.enableNegotiatedSearch = enableNegotiatedSearch
     this.useGrowShrinkHighDensityIntraNodeSolver =
       useGrowShrinkHighDensityIntraNodeSolver ?? false
     this.preserveTerminalPcbPortIds = preserveTerminalPcbPortIds ?? false
@@ -373,6 +377,7 @@ export class HighDensitySolver extends BaseSolver {
 
     const intraNodeSolverParams = {
       nodeWithPortPoints: node,
+      enableNegotiatedSearch: this.enableNegotiatedSearch,
       colorMap: this.colorMap,
       connMap: this.connMap,
       viaDiameter: this.viaDiameter,
