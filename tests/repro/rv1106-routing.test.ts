@@ -156,7 +156,7 @@ test("routes the RV1106 remaining phase through Pipeline9", async (): Promise<vo
     routedTraces: pipeline.getOutputSimplifiedPcbTraces(),
   }
   const drc = evaluateRelaxedDrc(validation)
-  expect(drc.errors).toHaveLength(29)
+  expect(drc.errors).toHaveLength(26)
   expect(validation.routedTraces).toHaveLength(239)
   expect(checkSourceTracesHavePcbTraces(drc.circuitJson)).toEqual([])
   expect(checkEachPcbPortConnectedToPcbTraces(drc.circuitJson)).toEqual([])
