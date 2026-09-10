@@ -1,8 +1,8 @@
 import {
   HighDensitySolverA03 as HighDensityA03Solver,
   HighDensitySolverA01,
-  HighDensitySolverA13,
 } from "@tscircuit/high-density-a01"
+import { HighDensitySolverA13 } from "@tscircuit/high-density-a13"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import {
   HighDensityIntraNodeRoute,
@@ -50,6 +50,8 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
   connMap?: ConnectivityMap
   effort: number
   adaptiveSearchExpanded = false
+  negotiatedSearchStarted = false
+  readonly enableNegotiatedSearch: boolean
 
   private getSolvedSegmentCount(solver: unknown): number | null {
     const solvedConnectionsMap = (solver as any).solvedConnectionsMap
@@ -121,6 +123,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
   constructor(
     opts: ConstructorParameters<typeof CachedIntraNodeRouteSolver>[0] & {
       effort?: number
+      enableNegotiatedSearch?: boolean
     },
   ) {
     super()
@@ -128,6 +131,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     this.connMap = opts.connMap
     this.constructorParams = opts
     this.effort = opts.effort ?? 1
+    this.enableNegotiatedSearch = opts.enableNegotiatedSearch ?? false
     this.MAX_ITERATIONS = 20_000_000 * this.effort
     this.GREEDY_MULTIPLIER = 5
     this.MIN_SUBSTEPS = 100
@@ -146,7 +150,6 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       // ["closedFormTwoTrace"],
       ["highDensityA01"],
       ["highDensityA03"],
-      ["highDensityA13"],
     ]
   }
 
@@ -386,6 +389,21 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       !this.getSupervisedSolverWithBestFitness()
     ) {
       this.expandAdaptiveSearch()
+    }
+
+    // Preserve successful route orders from the existing portfolio. Use
+    // negotiated congestion only after those orders are exhausted, before
+    // grow/shrink changes the physical clearance problem.
+    if (
+      this.enableNegotiatedSearch &&
+      this.adaptiveSearchExpanded &&
+      !this.negotiatedSearchStarted &&
+      !this.getSupervisedSolverWithBestFitness()
+    ) {
+      this.negotiatedSearchStarted = true
+      this.addSupervisedCandidate({ HIGH_DENSITY_A13: true, SHUFFLE_SEED: 0 })
+      this.stats.negotiatedSearchStartedAtIteration = this.iterations
+      this.refreshDynamicIterationLimit()
     }
 
     super._step()

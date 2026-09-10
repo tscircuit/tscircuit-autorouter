@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test"
-import { HighDensitySolverA13 } from "@tscircuit/high-density-a01"
+import { HighDensitySolverA13 } from "@tscircuit/high-density-a13"
 import { PortfolioSingleIntraNodeSolver } from "lib/solvers/HyperHighDensitySolver/PortfolioSingleIntraNodeSolver"
 
 test("A13 provisional routes retain nonzero scheduling cost and respect effort", () => {
