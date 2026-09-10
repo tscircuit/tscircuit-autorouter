@@ -1578,6 +1578,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     const earlyBoundedRepair = applyPipeline9BoundedRegionalRepairs({
       ...boundedRepairParams,
       routes: terminalEscapeResult.routes,
+      requireSingleRegion: true,
       budget: {
         maxRegions: 1,
         maxCandidateAttempts:
@@ -1675,7 +1676,9 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       boundedRegionalRepairPublishedDrcIssueCount:
         boundedRegionalRepairResult.publishedDrcIssueCount,
       boundedRegionalRepairTimeMs:
-        earlyBoundedRepairTimeMs + performance.now() - lateBoundedRepairStartedAt,
+        earlyBoundedRepairTimeMs +
+        performance.now() -
+        lateBoundedRepairStartedAt,
       earlyBoundedRepairTimeMs,
       earlyBoundedRepairRepaired: earlyBoundedRepair.repaired,
       regionalB01RepairCandidateCount:
