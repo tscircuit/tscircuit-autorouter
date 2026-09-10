@@ -76,7 +76,10 @@ test("routes the RV1106 remaining phase through Pipeline9", async (): Promise<vo
       gunzipSync(
         new Uint8Array(
           readFileSync(
-            new URL("./assets/rv1106-routing/checkpoint.json.gz", import.meta.url),
+            new URL(
+              "./assets/rv1106-routing/checkpoint.json.gz",
+              import.meta.url,
+            ),
           ),
         ),
       ).toString(),
@@ -99,7 +102,10 @@ test("routes the RV1106 remaining phase through Pipeline9", async (): Promise<vo
       pipeline.step()
     expect(pipeline.failed).toBe(false)
     pipeline.step()
-    for (const [connectionName, replacement] of checkpoint.fixedRouteReplacements) {
+    for (const [
+      connectionName,
+      replacement,
+    ] of checkpoint.fixedRouteReplacements) {
       pipeline.highDensityRouteSolver!.fixedRouteReplacements.set(
         connectionName,
         replacement,
