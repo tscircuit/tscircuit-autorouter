@@ -54,7 +54,7 @@ test("repair reference DRC includes the physical board outline when requested", 
     includeBoardClearance: true,
   })
   expect(physical.errors.length).toBeGreaterThan(0)
-  expect(physical.errors.every((error) => error.message.includes("board"))).toBe(
-    true,
-  )
+  expect(
+    physical.errors.every((error) => error.message.includes("board")),
+  ).toBe(true)
 })
