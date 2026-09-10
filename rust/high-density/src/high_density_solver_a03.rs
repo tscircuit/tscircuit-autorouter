@@ -204,6 +204,8 @@ pub struct HighDensitySolverA03 {
     pub max_iterations: usize,
     pub progress: f64,
     pub stats: Value,
+    // WASM uses the host Math.hypot so platform-specific rounding preserves search ties.
+    pub hypot: Option<fn(f64, f64) -> f64>,
     pub initial_penalty_fn: Option<Box<dyn Fn(&Value) -> f64>>,
     nodeWithPortPoints: Value,
     penaltyMap: Value,
@@ -516,7 +518,7 @@ impl HighDensitySolverA03 {
             if a == b { return; }
             let dx = self.cellCenterX[a] - self.cellCenterX[b];
             let dy = self.cellCenterY[a] - self.cellCenterY[b];
-            let cost = dx.hypot(dy);
+            let cost = self.hypot.unwrap_or(f64::hypot)(dx, dy);
             if !neighbors[a].iter().any(|e| e.0 == b) { neighbors[a].push((b, cost)); }
             if !neighbors[b].iter().any(|e| e.0 == a) { neighbors[b].push((a, cost)); }
         };
@@ -843,7 +845,7 @@ impl HighDensitySolverA03 {
     }
 
     fn computeH(&self, z: usize, cellId: usize, toZ: usize, toCellId: usize) -> f64 {
-        let dist = (self.cellCenterX[cellId] - self.cellCenterX[toCellId]).hypot(self.cellCenterY[cellId] - self.cellCenterY[toCellId]);
+        let dist = self.hypot.unwrap_or(f64::hypot)(self.cellCenterX[cellId] - self.cellCenterX[toCellId], self.cellCenterY[cellId] - self.cellCenterY[toCellId]);
         if z == toZ { return dist; }
         dist + self.viaBaseCost
     }

@@ -482,6 +482,17 @@ export const runTask = async (
     ))
     await enableTinyHypergraphWasm(wasm)
   }
+  if (process.env.HIGH_DENSITY_BACKEND === "wasm") {
+    const { readFile } = await import("node:fs/promises")
+    const { enableHighDensityWasm } = await import(
+      "../../lib/solvers/HyperHighDensitySolver/enableHighDensityWasm"
+    )
+    const wasm = await readFile(new URL(
+      "../../rust/high-density-wasm/pkg/high_density_wasm_bg.wasm",
+      import.meta.url,
+    ))
+    await enableHighDensityWasm({ module_or_path: wasm })
+  }
   const solver = createSolverForTask(task)
   const start = performance.now()
   let solveError: string | undefined
