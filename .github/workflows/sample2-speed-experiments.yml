@@ -1,0 +1,127 @@
+name: SRJ18 Sample 2 Search Policies
+
+on:
+  push:
+    branches:
+      - experiment/srj18-sample2-search-policies
+    paths:
+      - .github/workflows/sample2-speed-experiments.yml
+      - scripts/speed-experiments/**
+      - lib/**
+      - package.json
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sample2-search-policies-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  compare:
+    name: Sequential search policy comparison
+    runs-on: blacksmith-8vcpu-ubuntu-2404-arm
+    timeout-minutes: 160
+    env:
+      EXPERIMENT_RESULTS: sample2-speed-results
+      EXPERIMENT_RUNNER_NAME: ${{ runner.name }}
+      EXPERIMENT_RUNNER_ARCH: ${{ runner.arch }}
+      EXPERIMENT_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+
+    steps:
+      - name: Checkout experiment
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.8
+
+      - name: Install one dependency tree for every approach
+        run: |
+          cat > /tmp/srj18-experiment-bunfig.toml <<'TOML'
+          [install.lockfile]
+          save = true
+          TOML
+          bun install --config /tmp/srj18-experiment-bunfig.toml --save-text-lockfile
+
+      - name: Record source, runtime, and dependency provenance
+        id: provenance
+        run: |
+          mkdir -p "$EXPERIMENT_RESULTS"
+          node --input-type=module <<'NODE'
+          import { readFileSync, writeFileSync, copyFileSync, existsSync } from 'node:fs'
+          import { createHash } from 'node:crypto'
+          import { execFileSync } from 'node:child_process'
+          import os from 'node:os'
+          const root = process.env.EXPERIMENT_RESULTS
+          const packageJson = JSON.parse(readFileSync('package.json', 'utf8'))
+          const expectedPins = {
+            'dataset-srj18': 'git+https://github.com/tscircuit/dataset-srj18.git#100e8957ce789b5b288e14c476dc83f4efc5214b',
+            'high-density-repair03': 'git+https://github.com/tscircuit/high-density-repair03.git#5f6c9af547dbb70c8948227011e1769b5dfa16a5',
+            '@tscircuit/high-density-a01': 'git+https://github.com/tscircuit/high-density-a01.git#9a3a3d',
+          }
+          for (const [name, pin] of Object.entries(expectedPins)) {
+            if (packageJson.devDependencies[name] !== pin) {
+              throw new Error(`Unexpected dependency pin for ${name}: ${packageJson.devDependencies[name]}`)
+            }
+          }
+          const lockPath = ['bun.lock', 'bun.lockb'].find(path => existsSync(path))
+          if (!lockPath) throw new Error('bun install did not produce a dependency lockfile')
+          copyFileSync(lockPath, `${root}/${lockPath}`)
+          copyFileSync('package.json', `${root}/package.json`)
+          const metadata = {
+            sourceCommit: execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim(),
+            baselineSourceCommit: '2b24a39e585fb9f1a642d1a7f7432de81c219b68',
+            bunVersion: execFileSync('bun', ['--version'], { encoding: 'utf8' }).trim(),
+            runnerName: process.env.EXPERIMENT_RUNNER_NAME,
+            runnerArch: process.env.EXPERIMENT_RUNNER_ARCH,
+            runUrl: process.env.EXPERIMENT_RUN_URL,
+            operatingSystem: { platform: os.platform(), release: os.release(), architecture: os.arch() },
+            cpuModel: os.cpus()[0].model,
+            logicalCpuCount: os.cpus().length,
+            totalMemoryBytes: os.totalmem(),
+            dependencyPins: expectedPins,
+            lockFile: lockPath,
+            lockSha256: createHash('sha256').update(readFileSync(lockPath)).digest('hex'),
+            conditions: {
+              oneRunner: true,
+              oneDependencyInstall: true,
+              sequentialCases: true,
+              freshProcessPerCase: true,
+              nodeRepeats: 3,
+              fullSampleRepeats: 1,
+              nodeTimeoutSeconds: 180,
+              sampleTimeoutSeconds: 1200,
+            },
+          }
+          writeFileSync(`${root}/provenance.json`, JSON.stringify(metadata, null, 2) + '\n')
+          NODE
+
+      - name: Run three isolated node repetitions per approach
+        run: node scripts/speed-experiments/compare.mjs --mode node
+
+      - name: Upload node measurements before full sample runs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: srj18-sample2-search-policies-node-${{ github.run_id }}
+          path: sample2-speed-results
+          if-no-files-found: warn
+          retention-days: 30
+
+      - name: Run one full sample comparison per approach
+        if: ${{ !cancelled() && steps.provenance.outcome == 'success' }}
+        run: node scripts/speed-experiments/compare.mjs --mode sample
+
+      - name: Upload every completed, failed, or timed-out case
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: srj18-sample2-search-policies-${{ github.run_id }}
+          path: sample2-speed-results
+          if-no-files-found: warn
+          retention-days: 30
