@@ -64,22 +64,18 @@ export class HighDensitySolverA13WithDrcValidation extends HighDensitySolverA13 
             .filter((obstacle) =>
               isObstacleConnectedToRoute(obstacle, route, connMap),
             )
-            .flatMap((obstacle) =>
-              [
-                ...new Set([
-                  obstacle.circuitJsonMetadata?.pcb_port_id,
-                  ...obstacle.connectedTo.filter((id) =>
-                    id.startsWith("pcb_port_"),
-                  ),
-                ]),
-              ]
-                .filter((id): id is string => typeof id === "string")
-                .map((pcb_port_id) => ({
-                  ...obstacle.center,
-                  layer: mapZToLayerName(0, layerCount),
-                  pcb_port_id,
-                })),
-            ),
+            .flatMap((obstacle) => {
+              const pcbPortId = obstacle.circuitJsonMetadata?.pcb_port_id
+              return pcbPortId
+                ? [
+                    {
+                      ...obstacle.center,
+                      layer: mapZToLayerName(0, layerCount),
+                      pcb_port_id: pcbPortId,
+                    },
+                  ]
+                : []
+            }),
         ],
       })),
     }
