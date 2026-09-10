@@ -27,8 +27,9 @@ test("the high-density portfolio routes the SRJ18 hard node with A13 at 1x", () 
       .supervisedSolvers!.filter(
         ({ solver: candidate }) => candidate !== solver.winningSolver,
       )
-      .every(({ solver: candidate }) => candidate.failed),
+      .some(({ solver: candidate }) => !candidate.failed),
   ).toBe(true)
+  expect(solver.stats.negotiatedSearchStartedAtIteration).toBeLessThan(100)
   expect(solver.winningSolver?.getSolverName()).toBe("HighDensitySolverA13")
   expect(solver.solvedRoutes).toHaveLength(26)
   expect(

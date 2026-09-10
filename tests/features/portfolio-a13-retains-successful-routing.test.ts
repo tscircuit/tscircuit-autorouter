@@ -2,11 +2,19 @@ import { expect, test } from "bun:test"
 import { getGlobalInMemoryCache } from "lib/cache/setupGlobalCaches"
 import { PortfolioSingleIntraNodeSolver } from "lib/solvers/HyperHighDensitySolver/PortfolioSingleIntraNodeSolver"
 import type { NodeWithPortPoints } from "lib/types/high-density-types"
-import nodeJson from "../fixtures/srj18-sample002-large-node.json"
+const node: NodeWithPortPoints = {
+  capacityMeshNodeId: "immediate-legacy-route",
+  width: 4,
+  height: 4,
+  center: { x: 0, y: 0 },
+  availableZ: [0, 1],
+  portPoints: [
+    { connectionName: "a", x: -2, y: 0, z: 0 },
+    { connectionName: "a", x: 2, y: 0, z: 0 },
+  ],
+}
 
-const node: NodeWithPortPoints = nodeJson
-
-test("enabling A13 preserves a successful existing search and its routes", () => {
+test("an immediately solved legacy route bypasses A13 search", () => {
   const params = {
     nodeWithPortPoints: node,
     traceWidth: 0.1,

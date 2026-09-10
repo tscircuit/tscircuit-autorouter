@@ -151,6 +151,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       // ["closedFormTwoTrace"],
       ["highDensityA01"],
       ["highDensityA03"],
+      ...(this.enableNegotiatedSearch ? [["highDensityA13"]] : []),
     ]
   }
 
@@ -302,6 +303,8 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
    * not advance the solver or give it preference in the portfolio.
    */
   private initializeCandidateBudget(solver: unknown) {
+    // A13 already declares its search limit; allocate its grid only if selected.
+    if (solver instanceof HighDensitySolverA13) return
     const setup = (solver as any).setup
     if (typeof setup === "function") setup.call(solver)
   }
@@ -392,22 +395,15 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       this.expandAdaptiveSearch()
     }
 
-    // Preserve successful route orders from the existing portfolio. Use
-    // negotiated congestion only after those orders are exhausted, before
-    // grow/shrink changes the physical clearance problem.
+    super._step()
+
     if (
-      this.enableNegotiatedSearch &&
-      this.adaptiveSearchExpanded &&
       !this.negotiatedSearchStarted &&
-      !this.getSupervisedSolverWithBestFitness()
+      this.activeSubSolver instanceof HighDensitySolverA13
     ) {
       this.negotiatedSearchStarted = true
-      this.addSupervisedCandidate({ HIGH_DENSITY_A13: true, SHUFFLE_SEED: 0 })
       this.stats.negotiatedSearchStartedAtIteration = this.iterations
-      this.refreshDynamicIterationLimit()
     }
-
-    super._step()
 
     if (!this.solved && !this.failed && this.shouldExpandPortfolio()) {
       this.expandAdaptiveSearch()
@@ -415,6 +411,9 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
   }
 
   computeG(solver: IntraNodeRouteSolver): number {
+    if (solver instanceof HighDensitySolverA13) {
+      return solver.routingIterations / 1_000_000
+    }
     if (
       (solver as any) instanceof HighDensitySolverA01 ||
       (solver as any) instanceof HighDensityA03Solver ||
@@ -487,8 +486,9 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
         viaMinDistFromBorder: (this.constructorParams.viaDiameter ?? 0.3) / 2,
         traceThickness: this.constructorParams.traceWidth ?? 0.15,
         traceMargin: 0.1,
-        // One search pop per step keeps portfolio scheduling comparable to A01.
-        stepMultiplier: 1,
+        // Use the optimized kernel in batches; fitness accounts for search work
+        // rather than the number of calls into the kernel.
+        stepMultiplier: 1000,
         maxSearchIterations,
         maxRounds: Math.max(1, Math.round(200 * this.effort)),
         hyperParameters: { shuffleSeed: hyperParameters.SHUFFLE_SEED ?? 0 },
