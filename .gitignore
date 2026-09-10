@@ -193,6 +193,7 @@ benchmark-result.txt
 benchmark-result.json
 benchmark-snapshots.html
 profile-solvers.json
+/results/
 result-*
 tmp
 
