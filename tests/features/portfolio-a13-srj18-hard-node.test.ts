@@ -23,8 +23,10 @@ test("the high-density portfolio routes the SRJ18 hard node with A13 at 1x", () 
   expect(solver.failed).toBe(false)
   expect(solver.negotiatedSearchStarted).toBe(true)
   expect(
-    solver.supervisedSolvers!
-      .filter(({ solver: candidate }) => candidate !== solver.winningSolver)
+    solver
+      .supervisedSolvers!.filter(
+        ({ solver: candidate }) => candidate !== solver.winningSolver,
+      )
       .every(({ solver: candidate }) => candidate.failed),
   ).toBe(true)
   expect(solver.winningSolver?.getSolverName()).toBe("HighDensitySolverA13")

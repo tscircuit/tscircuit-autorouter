@@ -28,12 +28,23 @@ export type Pipeline9BoundedRegionalRepairResult = {
   repaired: boolean
 }
 
+export const PIPELINE9_BOUNDED_REPAIR_BUDGET = {
+  maxRegions: 4,
+  maxCandidateAttempts: 1024,
+  maxPathSearchNodes: 480_000,
+} as const
+
 type Pipeline9BoundedRegionalRepairParams = {
   originalSrj: SimpleRouteJson
   routes: HighDensityRoute[]
   syntheticConnectionNames: ReadonlySet<string>
   drcEvaluator: DrcEvaluator
   viaHoleDiameter?: number
+  budget?: {
+    maxRegions: number
+    maxCandidateAttempts: number
+    maxPathSearchNodes: number
+  }
 }
 
 type RepairRegionLocation = {
@@ -41,9 +52,6 @@ type RepairRegionLocation = {
   size: number
 }
 
-const MAX_REGIONS = 4
-const MAX_CANDIDATE_ATTEMPTS = 1024
-const MAX_PATH_SEARCH_NODES = 480_000
 const REGION_SIZES = [10, 16] as const
 
 /** Publishes complete repairs or guarded improvements with only fixed-pad errors left. */
@@ -53,6 +61,7 @@ export const applyPipeline9BoundedRegionalRepairs = ({
   syntheticConnectionNames,
   drcEvaluator,
   viaHoleDiameter,
+  budget = PIPELINE9_BOUNDED_REPAIR_BUDGET,
 }: Pipeline9BoundedRegionalRepairParams): Pipeline9BoundedRegionalRepairResult => {
   const result: Pipeline9BoundedRegionalRepairResult = {
     routes,
@@ -157,9 +166,9 @@ export const applyPipeline9BoundedRegionalRepairs = ({
     ),
   )
   while (
-    result.attemptedRegionCount < MAX_REGIONS &&
-    result.candidateAttemptCount < MAX_CANDIDATE_ATTEMPTS &&
-    result.pathSearchNodeCount < MAX_PATH_SEARCH_NODES
+    result.attemptedRegionCount < budget.maxRegions &&
+    result.candidateAttemptCount < budget.maxCandidateAttempts &&
+    result.pathSearchNodeCount < budget.maxPathSearchNodes
   ) {
     const centeredErrors = Array.isArray(reference)
       ? reference
@@ -249,8 +258,8 @@ export const applyPipeline9BoundedRegionalRepairs = ({
       dirtyRouteIndices,
       isLocked: (routeIndex, pointIndex): boolean =>
         region.lockedPointIndices[routeIndex]![pointIndex]!,
-      maxPathSearchCalls: MAX_CANDIDATE_ATTEMPTS - result.candidateAttemptCount,
-      maxPathSearchNodes: MAX_PATH_SEARCH_NODES - result.pathSearchNodeCount,
+      maxPathSearchCalls: budget.maxCandidateAttempts - result.candidateAttemptCount,
+      maxPathSearchNodes: budget.maxPathSearchNodes - result.pathSearchNodeCount,
       allowLayerChanges: true,
       traceClearance: RELAXED_DRC_OPTIONS.traceClearance!,
       viaClearance: RELAXED_DRC_OPTIONS.viaClearance!,
@@ -261,10 +270,10 @@ export const applyPipeline9BoundedRegionalRepairs = ({
       !Number.isSafeInteger(candidateAttempts) ||
       candidateAttempts < 0 ||
       candidateAttempts + result.candidateAttemptCount >
-        MAX_CANDIDATE_ATTEMPTS ||
+        budget.maxCandidateAttempts ||
       !Number.isSafeInteger(pathSearchNodes) ||
       pathSearchNodes < 0 ||
-      pathSearchNodes + result.pathSearchNodeCount > MAX_PATH_SEARCH_NODES
+      pathSearchNodes + result.pathSearchNodeCount > budget.maxPathSearchNodes
     ) {
       throw new Error(
         "Pipeline9 bounded regional repair exceeded its work budget",

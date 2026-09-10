@@ -57,7 +57,10 @@ test("Pipeline9 repairs SRJ18 sample 8's crowded trace/via clearances", async ()
       error.type !== "pcb_via_trace_clearance_error" &&
       error.type !== "pcb_pad_trace_clearance_error"
     ) {
-      throw new Error(`Unexpected original DRC error: ${error.type}`)
+      // Trace-pair errors have no via/pad gap to measure here. The final
+      // zero-error assertion above still requires them to be repaired.
+      expect(error.type).toBe("pcb_trace_error")
+      continue
     }
     const pair = `${error.type === "pcb_via_trace_clearance_error" ? error.pcb_via_id : error.pcb_pad_id}/${error.pcb_trace_id}`
     expect(measuredPairs.get(pair)).toBeGreaterThanOrEqual(0.11)
