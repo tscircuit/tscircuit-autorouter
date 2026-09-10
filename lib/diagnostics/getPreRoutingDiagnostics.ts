@@ -40,8 +40,10 @@ export function isValidLayerName(layer: string, layerCount: number): boolean {
 }
 
 function getConnectionPointLayers(p: ConnectionPoint): string[] {
-  if ("layer" in p && typeof p.layer === "string") return [p.layer]
-  if ("layers" in p && Array.isArray(p.layers)) return p.layers
+  if ("layer" in p && typeof (p as any).layer === "string")
+    return [(p as any).layer]
+  if ("layers" in p && Array.isArray((p as any).layers))
+    return (p as any).layers
   return []
 }
 
@@ -56,6 +58,22 @@ export function getPreRoutingDiagnostics(
   const { bounds, outline, layerCount, connections, obstacles } = srj
 
   const connectionNameSet = new Set<string>()
+
+  // Calculate effective bounding box including obstacles and a 2mm tolerance
+  // to avoid false positives for edge pads, connectors, or overhanging components.
+  let effMinX = (bounds?.minX ?? 0) - 2
+  let effMaxX = (bounds?.maxX ?? 0) + 2
+  let effMinY = (bounds?.minY ?? 0) - 2
+  let effMaxY = (bounds?.maxY ?? 0) + 2
+
+  for (const obstacle of obstacles ?? []) {
+    const halfW = (obstacle.width ?? 0) / 2
+    const halfH = (obstacle.height ?? 0) / 2
+    effMinX = Math.min(effMinX, obstacle.center.x - halfW - 2)
+    effMaxX = Math.max(effMaxX, obstacle.center.x + halfW + 2)
+    effMinY = Math.min(effMinY, obstacle.center.y - halfH - 2)
+    effMaxY = Math.max(effMaxY, obstacle.center.y + halfH + 2)
+  }
 
   // 1. Connection-level checks
   for (const connection of connections ?? []) {
@@ -72,58 +90,72 @@ export function getPreRoutingDiagnostics(
       })
     }
 
+    const isOffBoard =
+      (connection as any).isOffBoard === true ||
+      (connection as any).offBoardConnectsTo?.length > 0
+
     // Check each connection point
     for (const point of points) {
       const ptLayers = getConnectionPointLayers(point)
+      const isPointOffBoard = isOffBoard || (point as any).isOffBoard === true
 
-      // Check boundary: bounds
-      const isOutsideBounds =
-        bounds &&
-        (point.x < bounds.minX ||
-          point.x > bounds.maxX ||
-          point.y < bounds.minY ||
-          point.y > bounds.maxY)
+      if (!isPointOffBoard) {
+        let isOutside = false
 
-      // Check boundary: outline polygon (if provided)
-      const isOutsideOutline =
-        outline && outline.length >= 3 && !isPointInsidePolygon(point, outline)
+        if (outline && outline.length >= 3) {
+          isOutside = !isPointInsidePolygon(point, outline)
+        } else if (bounds) {
+          isOutside =
+            point.x < effMinX ||
+            point.x > effMaxX ||
+            point.y < effMinY ||
+            point.y > effMaxY
+        }
 
-      if (isOutsideBounds || isOutsideOutline) {
-        diagnostics.push({
-          code: "CONNECTION_POINT_OUTSIDE_BOARD",
-          message: `Connection "${connection.name}" has connection point at (${point.x}, ${point.y}) outside the board boundary.`,
-          severity: "error",
-          recommendedAction: "stop_and_fix",
-          connectionNames: [connection.name],
-          pcbPortIds: point.pcb_port_id ? [point.pcb_port_id] : undefined,
-          locations: [
-            {
-              x: point.x,
-              y: point.y,
-              layer: ptLayers[0],
-            },
-          ],
-        })
-      }
-
-      // Check layer validity
-      for (const layer of ptLayers) {
-        if (!isValidLayerName(layer, layerCount)) {
+        if (isOutside) {
           diagnostics.push({
-            code: "INVALID_ROUTING_LAYER",
-            message: `Connection "${connection.name}" specifies layer "${layer}", which does not exist on this ${layerCount}-layer board.`,
+            code: "CONNECTION_POINT_OUTSIDE_BOARD",
+            message: `Connection "${connection.name}" has connection point at (${point.x}, ${point.y}) outside the board boundary.`,
             severity: "error",
             recommendedAction: "stop_and_fix",
             connectionNames: [connection.name],
             pcbPortIds: point.pcb_port_id ? [point.pcb_port_id] : undefined,
-            locations: [{ x: point.x, y: point.y, layer }],
+            locations: [
+              {
+                x: point.x,
+                y: point.y,
+                layer: ptLayers[0],
+              },
+            ],
           })
         }
       }
 
-      // Check if point is completely inside a foreign obstacle/keepout
+      // Check layer validity: connection point must have at least one valid layer
+      if (
+        ptLayers.length > 0 &&
+        ptLayers.every((layer) => !isValidLayerName(layer, layerCount))
+      ) {
+        diagnostics.push({
+          code: "INVALID_ROUTING_LAYER",
+          message: `Connection "${connection.name}" specifies layer(s) "${ptLayers.join(", ")}", none of which exist on this ${layerCount}-layer board.`,
+          severity: "error",
+          recommendedAction: "stop_and_fix",
+          connectionNames: [connection.name],
+          pcbPortIds: point.pcb_port_id ? [point.pcb_port_id] : undefined,
+          locations: [{ x: point.x, y: point.y, layer: ptLayers[0] }],
+        })
+      }
+
+      // Check if point is inside a designated keepout
       for (const obstacle of obstacles ?? []) {
-        if (obstacle.connectedTo?.includes(connection.name)) continue
+        const isKeepout =
+          (obstacle as any).isKeepout === true ||
+          (obstacle as any).is_keepout === true ||
+          (obstacle as any).obstacleType === "keepout"
+
+        if (!isKeepout) continue
+
         if (obstacle.type === "rect") {
           const halfW = obstacle.width / 2
           const halfH = obstacle.height / 2
@@ -135,12 +167,12 @@ export function getPreRoutingDiagnostics(
 
           if (inside && ptLayers.length > 0) {
             const allLayersBlocked = ptLayers.every((l) =>
-              obstacle.layers.includes(l),
+              obstacle.layers?.includes(l),
             )
             if (allLayersBlocked) {
               diagnostics.push({
-                code: "TERMINAL_COMPLETELY_BLOCKED",
-                message: `Connection "${connection.name}" terminal at (${point.x}, ${point.y}) is completely inside foreign obstacle "${obstacle.obstacleId ?? "unknown"}" on layer(s) ${ptLayers.join(", ")}.`,
+                code: "TERMINAL_BLOCKED_BY_KEEPOUT",
+                message: `Connection "${connection.name}" terminal at (${point.x}, ${point.y}) is inside keepout "${obstacle.obstacleId ?? "unknown"}" on layer(s) ${ptLayers.join(", ")}.`,
                 severity: "error",
                 recommendedAction: "stop_and_fix",
                 connectionNames: [connection.name],
@@ -161,7 +193,6 @@ export function getPreRoutingDiagnostics(
     const maxLength =
       (connection as any).maxLength ?? (connection as any).max_length
     if (typeof maxLength === "number" && points.length >= 2) {
-      // Check Euclidean distance between first two points
       const p1 = points[0]!
       const p2 = points[1]!
       const euclideanDist = Math.hypot(p2.x - p1.x, p2.y - p1.y)
@@ -181,19 +212,27 @@ export function getPreRoutingDiagnostics(
     }
   }
 
-  // 2. Obstacle-level layer checks
+  // 2. Obstacle-level layer checks: only flag if obstacle has NO valid layers on the board
   for (const obstacle of obstacles ?? []) {
-    for (const layer of obstacle.layers ?? []) {
-      if (!isValidLayerName(layer, layerCount)) {
-        diagnostics.push({
-          code: "INVALID_ROUTING_LAYER",
-          message: `Obstacle "${obstacle.obstacleId ?? "unknown"}" specifies invalid layer "${layer}" for ${layerCount}-layer board.`,
-          severity: "error",
-          recommendedAction: "stop_and_fix",
-          obstacleIds: obstacle.obstacleId ? [obstacle.obstacleId] : undefined,
-          locations: [{ x: obstacle.center.x, y: obstacle.center.y, layer }],
-        })
-      }
+    if (
+      obstacle.layers &&
+      obstacle.layers.length > 0 &&
+      obstacle.layers.every((layer) => !isValidLayerName(layer, layerCount))
+    ) {
+      diagnostics.push({
+        code: "INVALID_ROUTING_LAYER",
+        message: `Obstacle "${obstacle.obstacleId ?? "unknown"}" specifies no valid layers for a ${layerCount}-layer board (layers: ${obstacle.layers.join(", ")}).`,
+        severity: "error",
+        recommendedAction: "stop_and_fix",
+        obstacleIds: obstacle.obstacleId ? [obstacle.obstacleId] : undefined,
+        locations: [
+          {
+            x: obstacle.center.x,
+            y: obstacle.center.y,
+            layer: obstacle.layers[0],
+          },
+        ],
+      })
     }
   }
 
