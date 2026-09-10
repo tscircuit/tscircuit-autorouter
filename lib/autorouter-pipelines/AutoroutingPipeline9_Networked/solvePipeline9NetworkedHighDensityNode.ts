@@ -43,6 +43,7 @@ const solvePipeline9OrdinaryHighDensityNode = ({
       [input.nodeWithPortPoints.capacityMeshNodeId]: input.nodePf,
     },
     obstacles: input.obstacles,
+    boardGeometry: input.boardGeometry,
     layerCount: input.layerCount,
   })
   solver.solve()

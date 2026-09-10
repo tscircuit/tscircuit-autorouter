@@ -8,6 +8,7 @@ import { RELAXED_DRC_OPTIONS } from "lib/testing/drcPresets"
 import type { SimpleRouteJson } from "lib/types"
 import type { HighDensityRoute } from "lib/types/high-density-types"
 import { createSrjWithBoardValidObstacleLayers } from "lib/utils/create-srj-with-board-valid-obstacle-layers"
+import { materializePipeline9HdRouteVias } from "./materializePipeline9HdRouteVias"
 
 /** Opens coupled copper gaps while keeping terminals, junctions and widths fixed. */
 export const applyPipeline9ClearanceProjection = ({
@@ -26,15 +27,36 @@ export const applyPipeline9ClearanceProjection = ({
     ...createSrjWithBoardValidObstacleLayers(originalSrj),
     traces: undefined,
   }
+  const canonicalRoutes = materializePipeline9HdRouteVias(routes).map(
+    (route): HighDensityRoute => ({
+      ...route,
+      route: route.route.flatMap((point, index) => {
+        const previous = route.route[index - 1]
+        if (
+          !previous ||
+          previous.z === point.z ||
+          previous.toNextSegmentType === "through_obstacle" ||
+          (previous.x === point.x && previous.y === point.y)
+        ) {
+          return [point]
+        }
+        // Materialization accepts sub-micrometre coincidence; repair04 needs
+        // exact XY equality. Preserve both endpoints with an explicit lead.
+        return [{ x: point.x, y: point.y, z: previous.z }, point]
+      }),
+    }),
+  )
   // Whole-board projection needs no cropping or splicing. Preserve every
   // transition's point indices so the via guard can prove its identity.
   const candidate = relaxTraceClearance({
     srj,
-    routes,
+    routes: canonicalRoutes,
     bounds: srj.bounds,
     boundaryMargin: 0,
     boardEdgeClearance: originalSrj.minBoardEdgeClearance ?? 0,
-    lockedPointIndices: routes.map((route) => route.route.map(() => false)),
+    lockedPointIndices: canonicalRoutes.map((route) =>
+      route.route.map(() => false),
+    ),
     allowViaMovement: true,
     traceClearance:
       originalSrj.minTraceToPadEdgeClearance ??
@@ -42,10 +64,9 @@ export const applyPipeline9ClearanceProjection = ({
     viaClearance: RELAXED_DRC_OPTIONS.viaClearance,
   })
   const fixedViolations = new Map(
-    getFixedObstacleViolations({ srj, routes }).map((violation) => [
-      violation.key,
-      violation.severity,
-    ]),
+    getFixedObstacleViolations({ srj, routes: canonicalRoutes }).map(
+      (violation) => [violation.key, violation.severity],
+    ),
   )
   if (
     getFixedObstacleViolations({ srj, routes: candidate }).some(
@@ -55,7 +76,7 @@ export const applyPipeline9ClearanceProjection = ({
     ) ||
     getNewViaPadViolations({
       srj,
-      previousRoutes: routes,
+      previousRoutes: canonicalRoutes,
       routes: candidate,
     }).length > 0
   ) {

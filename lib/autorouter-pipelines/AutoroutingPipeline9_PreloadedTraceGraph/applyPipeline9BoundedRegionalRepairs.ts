@@ -28,12 +28,24 @@ export type Pipeline9BoundedRegionalRepairResult = {
   repaired: boolean
 }
 
+export const PIPELINE9_BOUNDED_REPAIR_BUDGET = {
+  maxRegions: 4,
+  maxCandidateAttempts: 1024,
+  maxPathSearchNodes: 480_000,
+} as const
+
 type Pipeline9BoundedRegionalRepairParams = {
   originalSrj: SimpleRouteJson
   routes: HighDensityRoute[]
   syntheticConnectionNames: ReadonlySet<string>
   drcEvaluator: DrcEvaluator
   viaHoleDiameter?: number
+  requireSingleRegion?: boolean
+  budget?: {
+    maxRegions: number
+    maxCandidateAttempts: number
+    maxPathSearchNodes: number
+  }
 }
 
 type RepairRegionLocation = {
@@ -41,9 +53,6 @@ type RepairRegionLocation = {
   size: number
 }
 
-const MAX_REGIONS = 4
-const MAX_CANDIDATE_ATTEMPTS = 1024
-const MAX_PATH_SEARCH_NODES = 480_000
 const REGION_SIZES = [10, 16] as const
 
 /** Publishes complete repairs or guarded improvements with only fixed-pad errors left. */
@@ -53,6 +62,8 @@ export const applyPipeline9BoundedRegionalRepairs = ({
   syntheticConnectionNames,
   drcEvaluator,
   viaHoleDiameter,
+  requireSingleRegion = false,
+  budget = PIPELINE9_BOUNDED_REPAIR_BUDGET,
 }: Pipeline9BoundedRegionalRepairParams): Pipeline9BoundedRegionalRepairResult => {
   const result: Pipeline9BoundedRegionalRepairResult = {
     routes,
@@ -107,6 +118,46 @@ export const applyPipeline9BoundedRegionalRepairs = ({
     return result
   }
 
+  if (requireSingleRegion) {
+    const centeredErrors = Array.isArray(reference)
+      ? reference
+      : (reference.errorsWithCenters ?? reference.errors)
+    const centers = centeredErrors.map((error) => {
+      const obstacle =
+        typeof error.pcb_pad_id === "string"
+          ? originalSrj.obstacles.find(
+              (candidate) =>
+                candidate.circuitJsonMetadata?.pcb_smtpad_id ===
+                error.pcb_pad_id,
+            )
+          : undefined
+      return obstacle?.center ?? error.center ?? error.pcb_center
+    })
+    // An early one-region pass must not spend the shared search budget on a
+    // board whose violations cannot fit inside a single mutable region.
+    const validCenters = centers.filter(
+      (point): point is { x: number; y: number } =>
+        point !== null &&
+        typeof point === "object" &&
+        "x" in point &&
+        "y" in point &&
+        typeof point.x === "number" &&
+        typeof point.y === "number" &&
+        Number.isFinite(point.x) &&
+        Number.isFinite(point.y),
+    )
+    if (validCenters.length !== centers.length) return result
+    const xs = validCenters.map((point) => point.x)
+    const ys = validCenters.map((point) => point.y)
+    const mutableSize = Math.max(...regionSizes) - 2 * boundaryMargin
+    if (
+      Math.max(...xs) - Math.min(...xs) > mutableSize ||
+      Math.max(...ys) - Math.min(...ys) > mutableSize
+    ) {
+      return result
+    }
+  }
+
   const projectedRoutes = applyPipeline9ClearanceProjection({
     originalSrj,
     routes: currentRoutes,
@@ -157,9 +208,9 @@ export const applyPipeline9BoundedRegionalRepairs = ({
     ),
   )
   while (
-    result.attemptedRegionCount < MAX_REGIONS &&
-    result.candidateAttemptCount < MAX_CANDIDATE_ATTEMPTS &&
-    result.pathSearchNodeCount < MAX_PATH_SEARCH_NODES
+    result.attemptedRegionCount < budget.maxRegions &&
+    result.candidateAttemptCount < budget.maxCandidateAttempts &&
+    result.pathSearchNodeCount < budget.maxPathSearchNodes
   ) {
     const centeredErrors = Array.isArray(reference)
       ? reference
@@ -197,7 +248,7 @@ export const applyPipeline9BoundedRegionalRepairs = ({
     // Wider context can move coupled errors away from a smaller region's
     // locked collar. Both sizes share the same call and search-node budgets.
     for (const size of regionSizes) {
-      const center = centers.find(
+      const pendingCenters = centers.filter(
         ({ x, y }) =>
           !attemptedRegions.some(
             ({ bounds, size: attemptedSize }) =>
@@ -208,8 +259,35 @@ export const applyPipeline9BoundedRegionalRepairs = ({
               y <= bounds.maxY,
           ),
       )
-      if (center) {
-        nextRegion = { center, size }
+      const seed = pendingCenters[0]
+      if (seed) {
+        // Center the mutable area around nearby errors as a group. Centering
+        // on the first error can leave another repairable pad in the collar.
+        let minX = seed.x
+        let maxX = seed.x
+        let minY = seed.y
+        let maxY = seed.y
+        const mutableSize = size - 2 * boundaryMargin
+        for (const point of pendingCenters.slice(1)) {
+          const nextMinX = Math.min(minX, point.x)
+          const nextMaxX = Math.max(maxX, point.x)
+          const nextMinY = Math.min(minY, point.y)
+          const nextMaxY = Math.max(maxY, point.y)
+          if (
+            nextMaxX - nextMinX >= mutableSize ||
+            nextMaxY - nextMinY >= mutableSize
+          ) {
+            continue
+          }
+          minX = nextMinX
+          maxX = nextMaxX
+          minY = nextMinY
+          maxY = nextMaxY
+        }
+        nextRegion = {
+          center: { x: (minX + maxX) / 2, y: (minY + maxY) / 2 },
+          size,
+        }
         break
       }
     }
@@ -249,8 +327,10 @@ export const applyPipeline9BoundedRegionalRepairs = ({
       dirtyRouteIndices,
       isLocked: (routeIndex, pointIndex): boolean =>
         region.lockedPointIndices[routeIndex]![pointIndex]!,
-      maxPathSearchCalls: MAX_CANDIDATE_ATTEMPTS - result.candidateAttemptCount,
-      maxPathSearchNodes: MAX_PATH_SEARCH_NODES - result.pathSearchNodeCount,
+      maxPathSearchCalls:
+        budget.maxCandidateAttempts - result.candidateAttemptCount,
+      maxPathSearchNodes:
+        budget.maxPathSearchNodes - result.pathSearchNodeCount,
       allowLayerChanges: true,
       traceClearance: RELAXED_DRC_OPTIONS.traceClearance!,
       viaClearance: RELAXED_DRC_OPTIONS.viaClearance!,
@@ -261,10 +341,10 @@ export const applyPipeline9BoundedRegionalRepairs = ({
       !Number.isSafeInteger(candidateAttempts) ||
       candidateAttempts < 0 ||
       candidateAttempts + result.candidateAttemptCount >
-        MAX_CANDIDATE_ATTEMPTS ||
+        budget.maxCandidateAttempts ||
       !Number.isSafeInteger(pathSearchNodes) ||
       pathSearchNodes < 0 ||
-      pathSearchNodes + result.pathSearchNodeCount > MAX_PATH_SEARCH_NODES
+      pathSearchNodes + result.pathSearchNodeCount > budget.maxPathSearchNodes
     ) {
       throw new Error(
         "Pipeline9 bounded regional repair exceeded its work budget",

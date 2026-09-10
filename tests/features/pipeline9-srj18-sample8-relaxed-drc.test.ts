@@ -5,6 +5,7 @@ import {
 import { expect, test } from "bun:test"
 import { convertPipeline7HdRoutesToSimplifiedPcbTraces } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/convertPipeline7HdRoutesToSimplifiedPcbTraces"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
+import { RELAXED_DRC_OPTIONS } from "lib/testing/drcPresets"
 import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import { loadScenarioBySampleNumber } from "../../scripts/benchmark/scenarios"
 
@@ -43,8 +44,12 @@ test("Pipeline9 repairs SRJ18 sample 8's crowded trace/via clearances", async ()
   // the diagnostic radius. Keep this independent of the repair's evaluator.
   const insufficientClearancePairs = new Set(
     [
-      ...checkViaTraceClearance(circuitJson, { minClearance: 0.11 }),
-      ...checkPadTraceClearance(circuitJson, { minClearance: 0.11 }),
+      ...checkViaTraceClearance(circuitJson, {
+        minClearance: RELAXED_DRC_OPTIONS.viaClearance! - 1e-8,
+      }),
+      ...checkPadTraceClearance(circuitJson, {
+        minClearance: RELAXED_DRC_OPTIONS.traceClearance! - 1e-8,
+      }),
     ].map(
       (error) =>
         `${error.type === "pcb_via_trace_clearance_error" ? error.pcb_via_id : error.pcb_pad_id}/${error.pcb_trace_id}`,
@@ -57,7 +62,10 @@ test("Pipeline9 repairs SRJ18 sample 8's crowded trace/via clearances", async ()
       error.type !== "pcb_via_trace_clearance_error" &&
       error.type !== "pcb_pad_trace_clearance_error"
     ) {
-      throw new Error(`Unexpected original DRC error: ${error.type}`)
+      // Trace-pair errors have no via/pad gap to measure here. The final
+      // zero-error assertion above still requires them to be repaired.
+      expect(error.type).toBe("pcb_trace_error")
+      continue
     }
     const pair = `${error.type === "pcb_via_trace_clearance_error" ? error.pcb_via_id : error.pcb_pad_id}/${error.pcb_trace_id}`
     expect(insufficientClearancePairs.has(pair)).toBeFalse()

@@ -29,7 +29,10 @@ import {
   applyPipeline9ClearancePrecisionRepairs,
   type ClearanceMarginDrcEvaluator,
 } from "./applyPipeline9ClearancePrecisionRepairs"
-import { applyPipeline9BoundedRegionalRepairs } from "./applyPipeline9BoundedRegionalRepairs"
+import {
+  applyPipeline9BoundedRegionalRepairs,
+  PIPELINE9_BOUNDED_REPAIR_BUDGET,
+} from "./applyPipeline9BoundedRegionalRepairs"
 import { applyPipeline9RegionalB01Repairs } from "./applyPipeline9RegionalB01Repairs"
 import { applyPipeline9TerminalEscapeRelocations } from "./applyPipeline9TerminalEscapeRelocations"
 import { assignUniquePcbTraceIdsToNewTraces } from "./assignUniquePcbTraceIdsToNewTraces"
@@ -719,6 +722,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       0.1
     const viaClearance = RELAXED_DRC_OPTIONS.viaClearance ?? 0.1
     const baselineDrc = evaluateRelaxedDrc({
+      includeBoardClearance: true,
       inputSrj: params.originalSrj,
       srjWithPointPairs: params.srjWithPointPairs,
       routedTraces: [],
@@ -740,6 +744,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       evaluatedTraceIds: baselineEvaluatedTraceIds,
     })
     const currentDrcResult = evaluateRelaxedDrc({
+      includeBoardClearance: true,
       inputSrj: params.originalSrj,
       srjWithPointPairs: params.srjWithPointPairs,
       routedTraces: preparedCurrentOutput.routedTraces,
@@ -1184,6 +1189,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       }
       const candidateDrcInput = prepareCandidateDrcInput(evaluatedRoutes)
       const evaluatedDrc = evaluateRelaxedDrc({
+        includeBoardClearance: true,
         inputSrj: params.originalSrj,
         srjWithPointPairs: params.srjWithPointPairs,
         routedTraces: candidateDrcInput.routedTraces,
@@ -1556,14 +1562,53 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       fixedPreloadedObstacleRoutes: this.fixedPreloadedObstacleRoutes,
       updatedPreloadedTraces: this.params.updatedPreloadedTraces,
     })
+    // Try coupled clearance projection before enumerating regional reroutes.
+    // Keep all regional search work for the later pass, where earlier repairs
+    // have already reduced the congestion.
+    const boundedRegionalRepairStartedAt = performance.now()
+    const boundedRepairParams = {
+      originalSrj: {
+        ...this.params.originalSrj,
+        connections: [
+          ...this.params.originalSrj.connections,
+          ...this.params.newConnections,
+        ],
+      },
+      viaHoleDiameter: this.params.defaultViaHoleDiameter,
+      syntheticConnectionNames: this.syntheticConnectionNames,
+      drcEvaluator: this.cachedReferenceDrcEvaluator!,
+    }
+    const earlyBoundedRepair = applyPipeline9BoundedRegionalRepairs({
+      ...boundedRepairParams,
+      routes: terminalEscapeResult.routes,
+      requireSingleRegion: true,
+      budget: {
+        maxRegions: 0,
+        maxCandidateAttempts: 0,
+        maxPathSearchNodes: 0,
+      },
+    })
+    const earlyBoundedRepairClean =
+      earlyBoundedRepair.repaired &&
+      earlyBoundedRepair.publishedDrcIssueCount === 0
+    const earlyBoundedRepairTimeMs =
+      performance.now() - boundedRegionalRepairStartedAt
     const regionalB01RepairResult = applyPipeline9RegionalB01Repairs({
       srj: this.params.srj,
-      routes: terminalEscapeResult.routes,
+      routes: earlyBoundedRepair.repaired
+        ? earlyBoundedRepair.routes
+        : terminalEscapeResult.routes,
       fixedObstacleRoutes: this.fixedPreloadedObstacleRoutes,
       newConnections: this.params.newConnections,
       syntheticConnectionNames: this.syntheticConnectionNames,
       drcEvaluator: this.drcEvaluator!,
-      initialErrors: terminalEscapeResult.remainingErrors,
+      // A zero reference count is authoritative. A partial improvement must
+      // still be evaluated before regional repair chooses its next targets.
+      initialErrors: earlyBoundedRepairClean
+        ? []
+        : earlyBoundedRepair.repaired
+          ? undefined
+          : terminalEscapeResult.remainingErrors,
       allowTracePairRepair: true,
       preloadRepairTraceIds,
       connMap: this.params.connMap,
@@ -1576,20 +1621,34 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         0.15,
       effort: this.params.effort,
     })
-    const boundedRegionalRepairStartedAt = performance.now()
-    const boundedRegionalRepairResult = applyPipeline9BoundedRegionalRepairs({
-      originalSrj: {
-        ...this.params.originalSrj,
-        connections: [
-          ...this.params.originalSrj.connections,
-          ...this.params.newConnections,
-        ],
-      },
-      viaHoleDiameter: this.params.defaultViaHoleDiameter,
-      routes: regionalB01RepairResult.routes,
-      syntheticConnectionNames: this.syntheticConnectionNames,
-      drcEvaluator: this.cachedReferenceDrcEvaluator!,
-    })
+    const lateBoundedRepairStartedAt = performance.now()
+    const boundedRegionalRepairResult = earlyBoundedRepairClean
+      ? earlyBoundedRepair
+      : applyPipeline9BoundedRegionalRepairs({
+          ...boundedRepairParams,
+          routes: regionalB01RepairResult.routes,
+          budget: {
+            maxRegions:
+              PIPELINE9_BOUNDED_REPAIR_BUDGET.maxRegions -
+              earlyBoundedRepair.attemptedRegionCount,
+            maxCandidateAttempts:
+              PIPELINE9_BOUNDED_REPAIR_BUDGET.maxCandidateAttempts -
+              earlyBoundedRepair.candidateAttemptCount,
+            maxPathSearchNodes:
+              PIPELINE9_BOUNDED_REPAIR_BUDGET.maxPathSearchNodes -
+              earlyBoundedRepair.pathSearchNodeCount,
+          },
+        })
+    if (!earlyBoundedRepairClean) {
+      boundedRegionalRepairResult.attemptedRegionCount +=
+        earlyBoundedRepair.attemptedRegionCount
+      boundedRegionalRepairResult.candidateAttemptCount +=
+        earlyBoundedRepair.candidateAttemptCount
+      boundedRegionalRepairResult.pathSearchNodeCount +=
+        earlyBoundedRepair.pathSearchNodeCount
+      boundedRegionalRepairResult.referenceValidationCount +=
+        earlyBoundedRepair.referenceValidationCount
+    }
     this.combinedOutput = boundedRegionalRepairResult.routes
     this.stats = {
       ...this.stats,
@@ -1616,7 +1675,11 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       boundedRegionalRepairPublishedDrcIssueCount:
         boundedRegionalRepairResult.publishedDrcIssueCount,
       boundedRegionalRepairTimeMs:
-        performance.now() - boundedRegionalRepairStartedAt,
+        earlyBoundedRepairTimeMs +
+        performance.now() -
+        lateBoundedRepairStartedAt,
+      earlyBoundedRepairTimeMs,
+      earlyBoundedRepairRepaired: earlyBoundedRepair.repaired,
       regionalB01RepairCandidateCount:
         regionalB01RepairResult.attemptedCandidateCount,
       regionalB01RepairAcceptedCount:

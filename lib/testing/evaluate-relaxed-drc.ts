@@ -6,7 +6,10 @@ import {
   type GetDrcErrorsOptions,
   type GetDrcErrorsResult,
 } from "./getDrcErrors"
-import { convertToCircuitJson } from "./utils/convertToCircuitJson"
+import {
+  convertToCircuitJson,
+  createPcbBoardElement,
+} from "./utils/convertToCircuitJson"
 
 /** Inputs used by the benchmark's relaxed DRC evaluation. */
 export interface EvaluateRelaxedDrcInput {
@@ -16,6 +19,8 @@ export interface EvaluateRelaxedDrcInput {
   routedTraces: SimplifiedPcbTrace[]
   /** Override benchmark defaults when validating a board's declared rules. */
   drcOptions?: GetDrcErrorsOptions
+  /** Preserve physical board clearance when validating repair candidates. */
+  includeBoardClearance?: boolean
 }
 
 /** Benchmark relaxed DRC errors and the Circuit JSON evaluated to produce them. */
@@ -50,6 +55,7 @@ export const evaluateRelaxedDrc = ({
   srjWithPointPairs,
   routedTraces,
   drcOptions,
+  includeBoardClearance = false,
 }: EvaluateRelaxedDrcInput): EvaluateRelaxedDrcResult => {
   const preloadedTraces = inputSrj.traces ?? []
   const jointTraces = combinePreloadedAndRoutedTraces(
@@ -62,6 +68,17 @@ export const evaluateRelaxedDrc = ({
     originalSrj: inputSrj,
     includeOriginalConnections: true,
   })
+
+  if (includeBoardClearance) {
+    circuitJson.push(
+      createPcbBoardElement({
+        ...inputSrj,
+        // Match the repair solver's board constraint instead of introducing
+        // the manufacturing checker's default margin for an unspecified rule.
+        minBoardEdgeClearance: inputSrj.minBoardEdgeClearance ?? 0,
+      }),
+    )
+  }
 
   return {
     circuitJson,
