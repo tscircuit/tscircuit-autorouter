@@ -213,6 +213,8 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
     repairMargin?: number
     colorMap?: Record<string, string>
     maxSampleEntries?: number
+    /** Repair a bounded prefix without skipping the entire board. */
+    maxSamplesToRepair?: number
     connMap?: ConnectivityMap
   }) {
     super()
@@ -309,14 +311,14 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
       sampleEntries.length > params.maxSampleEntries
         ? []
         : sampleEntries
+    if (params.maxSamplesToRepair !== undefined) {
+      this.sampleEntries = this.sampleEntries.slice(0, params.maxSamplesToRepair)
+    }
 
     this.MAX_ITERATIONS = Math.max(this.sampleEntries.length * 1_000, 100_000)
     this.stats = {
       sampleCount: this.sampleEntries.length,
-      skippedSampleCount:
-        sampleEntries.length > this.sampleEntries.length
-          ? sampleEntries.length
-          : 0,
+      skippedSampleCount: sampleEntries.length - this.sampleEntries.length,
       repairedNodeCount: 0,
       repairedRouteCount: 0,
     }
@@ -380,6 +382,7 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
       this.activeSubSolver = null
       this.activeSampleIndex += 1
       this.stats = {
+        ...this.stats,
         sampleCount: this.sampleEntries.length,
         repairedNodeCount: this.activeSampleIndex,
         repairedRouteCount: this.repairedRoutesByIndex.size,

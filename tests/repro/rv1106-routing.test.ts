@@ -83,7 +83,7 @@ test("routes the RV1106 remaining phase through Pipeline9", async (): Promise<vo
     routedTraces: pipeline.getOutputSimplifiedPcbTraces(),
   }
   const drc = evaluateRelaxedDrc(validation)
-  expect(drc.errors).toHaveLength(36)
+  expect(drc.errors).toHaveLength(35)
   expect(validation.routedTraces).toHaveLength(239)
   console.log({ drcCount: drc.errors.length, traceCount: validation.routedTraces.length, timings: pipeline.timeSpentOnPhase })
   await expect(getBugReportSnapshotSvg(validation)).toMatchSvgSnapshot(import.meta.path)
