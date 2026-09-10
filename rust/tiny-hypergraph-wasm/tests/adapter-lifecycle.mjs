@@ -1,10 +1,11 @@
 import assert from "node:assert/strict"
 import { readFile } from "node:fs/promises"
-import { initTinyHypergraphWasm, TinyHyperGraphSolver } from "@tscircuit/tiny-hypergraph-wasm"
+import { initTinyHypergraphWasm, loadSerializedHyperGraph, TinyHyperGraphSolver } from "@tscircuit/tiny-hypergraph-wasm"
 import { createInput } from "./fixture.mjs"
 
 const { topology, problem, options } = createInput()
 assert.throws(() => new TinyHyperGraphSolver(topology, problem), /await initTinyHypergraphWasm/)
+assert.throws(() => loadSerializedHyperGraph({ regions: [], ports: [] }), /await initTinyHypergraphWasm/)
 await assert.rejects(initTinyHypergraphWasm(new Uint8Array([0])))
 assert.throws(() => new TinyHyperGraphSolver(topology, problem), /await initTinyHypergraphWasm/)
 

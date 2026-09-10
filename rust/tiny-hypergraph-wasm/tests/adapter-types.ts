@@ -1,6 +1,8 @@
 import {
   TinyHyperGraphSolver,
   initTinyHypergraphWasm,
+  loadSerializedHyperGraph,
+  type LoadedHyperGraph,
   type GraphicsObject,
   type SerializedHyperGraph,
   type TinyHyperGraphProblem,
@@ -14,6 +16,13 @@ declare const problem: TinyHyperGraphProblem
 const options: TinyHyperGraphSolverOptions = { MAX_ITERATIONS: 100, VERBOSE: false }
 const solver = new TinyHyperGraphSolver(topology, problem, options)
 const output: SerializedHyperGraph = solver.getOutput()
+const loaded: LoadedHyperGraph = loadSerializedHyperGraph(output)
+new TinyHyperGraphSolver(loaded.topology, loaded.problem)
+const segment: [number, number] | undefined = loaded.solution.solvedRoutePathSegments[0]?.[0]
+// @ts-expect-error Serialized graph geometry is required.
+loadSerializedHyperGraph({ connections: [] })
+// @ts-expect-error Loaded graphs have a typed numeric topology.
+const invalidLoaded: string = loaded.topology
 const graphics: GraphicsObject = solver.visualize()
 const error: string | null = solver.getStatus().error
 const route: number | undefined = solver.getRoutingSnapshot().currentRouteId

@@ -1,4 +1,5 @@
 export { TinyHyperGraphSolver } from "./TinyHyperGraphSolver.js"
+export { loadSerializedHyperGraph } from "./loadSerializedHyperGraph.js"
 export { initTinyHypergraphWasm } from "./initTinyHypergraphWasm.js"
 export type { TinyHyperGraphWasmInput } from "./initTinyHypergraphWasm.js"
 export type * from "./types.js"

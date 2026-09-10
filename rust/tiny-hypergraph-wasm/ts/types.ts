@@ -49,6 +49,17 @@ export interface TinyHyperGraphStatus {
   ripCount: number
 }
 
+export interface TinyHyperGraphSolution {
+  solvedRoutePathSegments: [fromPortId: number, toPortId: number][][]
+  solvedRoutePathRegionIds?: (number | undefined)[][]
+}
+
+export interface LoadedHyperGraph {
+  topology: TinyHyperGraphTopology
+  problem: TinyHyperGraphProblem
+  solution: TinyHyperGraphSolution
+}
+
 export interface TinyHyperGraphRoutingSnapshot {
   portAssignment: number[]
   regionSegments: [routeId: number, fromPortId: number, toPortId: number][][]

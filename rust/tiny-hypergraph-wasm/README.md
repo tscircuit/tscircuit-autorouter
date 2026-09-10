@@ -75,6 +75,32 @@ JS typed arrays and regular numeric arrays are accepted and copied into Rust
 vectors. Metadata must be serializable by serde-wasm-bindgen into JSON values.
 Options retain their uppercase keys, such as `MAX_ITERATIONS`.
 
+For the autorouter's serialized graph format, load through Rust first:
+
+```ts
+import { loadSerializedHyperGraph, TinyHyperGraphSolver } from "@tscircuit/tiny-hypergraph-wasm"
+
+// After awaiting initTinyHypergraphWasm(...):
+const { topology, problem, solution } = loadSerializedHyperGraph(serializedGraph)
+const solver = new TinyHyperGraphSolver(topology, problem)
+try {
+  solver.solve()
+  if (solver.failed) throw new Error(solver.error ?? "Routing failed")
+  const routedGraph = solver.getOutput()
+} finally {
+  solver.dispose()
+}
+```
+
+`loadSerializedHyperGraph` returns independent JS arrays containing numeric IDs,
+geometry, net IDs, port penalties, initial assignments, and existing solution
+segments. The `solution` describes serialized solved routes; initial occupancy
+comes from region assignments in `problem.initialAssignments`. The loader keeps
+the Rust implementation's obstacle filtering and directly connected route rules.
+Metadata survives loading, including terminal reservation and preloaded trace
+metadata. Autorouter-specific policies that interpret that metadata still need
+to be integrated; loading alone does not apply them.
+
 - `step()` advances one algorithm iteration, handling setup first.
 - `stepMany(maxSteps)` batches a positive integer count and stops on completion,
   failure, or the solver's iteration limit. Its argument does not change the
@@ -109,9 +135,10 @@ contract tests check the public package exports with strict TypeScript settings.
 
 ## Scope and validation
 
-Five tests pass in Node and Bun: adapter initialization/lifecycle, raw single-
+Six tests pass in Node and Bun: adapter initialization/lifecycle, raw single-
 step/batched/full-solve agreement, iteration limits, isolated ownership/disposal,
-and input/method errors. They exercise a small deterministic route, not full
+input/method errors, and serialized-graph loading/routing with preloaded
+assignments. They exercise small deterministic routes, not full
 TypeScript/Rust behavior parity. Native checking and the release WASM build pass
 with the core's existing four dead-code warnings.
 
@@ -123,7 +150,7 @@ Output follows the existing core serializer: arbitrary route metadata is not
 included in serialized connections. Port/region metadata is preserved according
 to that serializer's existing behavior.
 
-Next work: serialized-graph loading, solver variants, and the autorouter's
+Next work: solver variants and the autorouter's
 reservation/preloaded-route policies. Section pipelines are not exported yet;
 expected candidate rejection must use explicit error handling in place of
 `catch_unwind` before exposing them on the default WASM target.

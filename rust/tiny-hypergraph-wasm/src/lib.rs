@@ -39,6 +39,14 @@ fn serialize(value: &impl Serialize) -> Result<JsValue, JsValue> {
     })
 }
 
+#[wasm_bindgen(js_name = loadSerializedHyperGraph)]
+pub fn load_serialized_hyper_graph(graph: JsValue) -> Result<JsValue, JsValue> {
+    let graph: serde_json::Value = serde_wasm_bindgen::from_value(graph)
+        .map_err(|error| js_sys::Error::new(&format!("Invalid serialized graph: {error}")))?;
+    let loaded = tiny_hypergraph::compat::load_serialized_hyper_graph(&graph);
+    serialize(&loaded)
+}
+
 #[wasm_bindgen]
 impl RustTinyHyperGraphSolver {
     #[wasm_bindgen(constructor)]

@@ -4,6 +4,7 @@ use crate::layer_labels::{get_available_z_from_mask, get_z_layer_label};
 use serde_json::{Value, json};
 use std::collections::{HashMap, HashSet};
 
+#[derive(serde::Serialize)]
 pub struct LoadedHyperGraph {
     pub topology: TinyHyperGraphTopology,
     pub problem: TinyHyperGraphProblem,
