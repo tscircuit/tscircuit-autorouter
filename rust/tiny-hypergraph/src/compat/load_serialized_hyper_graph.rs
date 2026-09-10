@@ -2,6 +2,7 @@ use crate::core::{TinyHyperGraphProblem, TinyHyperGraphSolution, TinyHyperGraphT
 use crate::initial_assignments::TinyHyperGraphInitialAssignment;
 use crate::layer_labels::{get_available_z_from_mask, get_z_layer_label};
 use serde_json::{Value, json};
+use std::borrow::Cow;
 use std::collections::{HashMap, HashSet};
 
 #[derive(serde::Serialize)]
@@ -53,7 +54,7 @@ fn region_net(region: &Value) -> Option<i32> {
     net.as_f64().filter(|n| n.is_finite()).map(|n| n as i32)
 }
 
-fn filter_obstacle_regions(graph: &Value) -> Value {
+fn filter_obstacle_regions(graph: &Value) -> Cow<'_, Value> {
     let connected: HashSet<&str> = items(&graph["connections"])
         .iter()
         .flat_map(|c| {
@@ -73,7 +74,7 @@ fn filter_obstacle_regions(graph: &Value) -> Value {
         .map(|r| r["regionId"].as_str().unwrap())
         .collect();
     if removed.is_empty() {
-        return graph.clone();
+        return Cow::Borrowed(graph);
     }
 
     let mut result = graph.clone();
@@ -100,7 +101,7 @@ fn filter_obstacle_regions(graph: &Value) -> Value {
         );
     }
 
-    result
+    Cow::Owned(result)
 }
 
 pub(crate) fn metadata(data: &Value, key: &str, id: &Value, layer: String) -> Value {

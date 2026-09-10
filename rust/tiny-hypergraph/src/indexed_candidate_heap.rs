@@ -93,11 +93,12 @@ impl IndexedCandidateHeap {
     }
 
     pub fn dequeue(&mut self) -> Option<Candidate> {
-        let best = self.items.first()?.clone();
+        if self.items.is_empty() {
+            return None;
+        }
+        let best = self.items.swap_remove(0);
         self.close_hop(self.get_hop_id(&best));
-        let last = self.items.pop().unwrap();
         if !self.items.is_empty() {
-            self.items[0] = last;
             self.sift_down(0);
         }
 

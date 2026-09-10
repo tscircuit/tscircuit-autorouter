@@ -749,10 +749,9 @@ impl TinyHyperGraphSolver {
             return;
         }
 
-        let neighbors =
-            self.topology.region_incident_ports[candidate.next_region_id as usize].clone();
-
-        for neighbor in neighbors {
+        let region = candidate.next_region_id as usize;
+        for index in 0..self.topology.region_incident_ports[region].len() {
+            let neighbor = self.topology.region_incident_ports[region][index];
             let assigned = self.state.port_assignment[neighbor as usize];
             if self.is_port_reserved_for_different_net(neighbor) {
                 continue;
@@ -763,7 +762,7 @@ impl TinyHyperGraphSolver {
                     continue;
                 }
 
-                self.on_path_found(candidate.clone());
+                self.on_path_found(candidate);
                 return;
             }
 
@@ -1041,31 +1040,30 @@ impl TinyHyperGraphSolver {
     ) -> () {
         let geo = self.populate_segment_geometry_scratch(region, p1, p2);
         let net = self.state.current_route_net_id.expect("segment route net");
-        let mut cache = self.state.region_intersection_caches[region as usize].clone();
+        let cache = &self.state.region_intersection_caches[region as usize];
         let (same, cross, changes) = count_new_intersections_with_values(
-            &cache,
+            cache,
             net,
             geo.lesser_angle,
             geo.greater_angle,
             geo.layer_mask,
             geo.entry_exit_layer_changes,
         );
+        let same = cache.existing_same_layer_intersections + same;
+        let cross = cache.existing_crossing_layer_intersections + cross;
+        let changes = cache.existing_entry_exit_layer_changes + changes;
+        let count = cache.lesser_angles.len() + 1;
+        let cost = self.compute_region_cost_for_region(region, same, cross, changes, count);
+        let cache = &mut self.state.region_intersection_caches[region as usize];
         cache.net_ids.push(net);
         cache.lesser_angles.push(geo.lesser_angle);
         cache.greater_angles.push(geo.greater_angle);
         cache.layer_masks.push(geo.layer_mask);
-        cache.existing_same_layer_intersections += same;
-        cache.existing_crossing_layer_intersections += cross;
-        cache.existing_entry_exit_layer_changes += changes;
-        cache.existing_segment_count = cache.lesser_angles.len();
-        cache.existing_region_cost = self.compute_region_cost_for_region(
-            region,
-            cache.existing_same_layer_intersections,
-            cache.existing_crossing_layer_intersections,
-            cache.existing_entry_exit_layer_changes,
-            cache.existing_segment_count,
-        );
-        self.state.region_intersection_caches[region as usize] = cache;
+        cache.existing_same_layer_intersections = same;
+        cache.existing_crossing_layer_intersections = cross;
+        cache.existing_entry_exit_layer_changes = changes;
+        cache.existing_segment_count = count;
+        cache.existing_region_cost = cost;
     }
 
     pub fn get_solved_path_segments(&self, final_candidate: &Candidate) -> Vec<SolvedPathSegment> {

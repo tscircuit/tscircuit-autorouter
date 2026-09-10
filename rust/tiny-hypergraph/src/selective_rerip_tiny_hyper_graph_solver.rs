@@ -628,7 +628,8 @@ impl SelectiveReripTinyHyperGraphSolver {
             .collect();
 
         for region in 0..self.state.region_segments.len() {
-            for (route, from, to) in self.state.region_segments[region].clone() {
+            for index in 0..self.state.region_segments[region].len() {
+                let (route, from, to) = self.state.region_segments[region][index];
                 let net = self.problem.route_net[route as usize];
                 self.state.current_route_net_id = Some(net);
 

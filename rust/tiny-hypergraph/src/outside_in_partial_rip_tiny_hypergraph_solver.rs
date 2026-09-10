@@ -653,12 +653,12 @@ impl OutsideInPartialRipTinyHyperGraphSolver {
         list.truncate(16);
     }
 
-    pub fn get_candidate_path(candidate: &Candidate) -> Vec<Candidate> {
+    pub fn get_candidate_path(candidate: &Candidate) -> Vec<&Candidate> {
         let mut path = vec![];
         let mut cursor = Some(candidate);
 
         while let Some(c) = cursor {
-            path.push(c.clone());
+            path.push(c);
             cursor = c.prev_candidate.as_deref();
         }
 
@@ -755,20 +755,16 @@ impl OutsideInPartialRipTinyHyperGraphSolver {
         } else {
             &search.forward
         };
-        let mut candidates = vec![];
-        if let Some(c) = opposite.settled_by_port_id.get(&candidate.port_id) {
-            candidates.push(c.clone());
-        }
-
-        if let Some(list) = opposite.settled_by_region_id.get(&candidate.next_region_id) {
-            candidates.extend(list.clone());
-        }
+        let candidates = opposite.settled_by_port_id.get(&candidate.port_id)
+            .into_iter()
+            .chain(opposite.settled_by_region_id.get(&candidate.next_region_id)
+                .into_iter().flatten());
 
         for opposite in candidates {
             let joined = if expanding_forward {
-                self.build_joined_candidate(candidate, &opposite)
+                self.build_joined_candidate(candidate, opposite)
             } else {
-                self.build_joined_candidate(&opposite, candidate)
+                self.build_joined_candidate(opposite, candidate)
             };
             if let Some(joined) = joined {
                 if joined.cost < search.best_joined_cost {
@@ -819,10 +815,9 @@ impl OutsideInPartialRipTinyHyperGraphSolver {
 
         Self::record_settled_candidate(frontier, &candidate);
         self.consider_outside_in_joins(&mut search, &candidate, forward);
-        let neighbors =
-            self.topology.region_incident_ports[candidate.next_region_id as usize].clone();
-
-        for neighbor in neighbors {
+        let region = candidate.next_region_id as usize;
+        for index in 0..self.topology.region_incident_ports[region].len() {
+            let neighbor = self.topology.region_incident_ports[region][index];
             if neighbor == candidate.port_id || self.is_port_reserved_for_different_net(neighbor) {
                 continue;
             }
