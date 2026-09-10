@@ -270,6 +270,7 @@ pub fn load_serialized_hyper_graph(graph: &Value) -> LoadedHyperGraph {
     let mut port_z = vec![0; port_count];
     let mut angle1 = port_z.clone();
     let mut angle2 = port_z.clone();
+    let mut shared_region_pairs = HashSet::with_capacity(port_count);
 
     for (i, p) in ports.iter().enumerate() {
         let a = *region_ids
@@ -289,6 +290,7 @@ pub fn load_serialized_hyper_graph(graph: &Value) -> LoadedHyperGraph {
                 )
             });
         incident_port_region[i] = vec![a, b];
+        shared_region_pairs.insert((a.min(b), a.max(b)));
         port_x[i] = number(&p["d"]["x"], 0.0);
         port_y[i] = number(&p["d"]["y"], 0.0);
         let z = number(&p["d"]["z"], 0.0);
@@ -356,10 +358,9 @@ pub fn load_serialized_hyper_graph(graph: &Value) -> LoadedHyperGraph {
     let routable: Vec<&Value> = connections
         .iter()
         .filter(|c| {
-            let shared = ports.iter().any(|p| {
-                (p["region1Id"] == c["startRegionId"] && p["region2Id"] == c["endRegionId"])
-                    || (p["region2Id"] == c["startRegionId"] && p["region1Id"] == c["endRegionId"])
-            });
+            let start = region_ids[c["startRegionId"].as_str().unwrap()];
+            let end = region_ids[c["endRegionId"].as_str().unwrap()];
+            let shared = shared_region_pairs.contains(&(start.min(end), start.max(end)));
             !shared
                 || solved
                     .get(c["connectionId"].as_str().unwrap())
