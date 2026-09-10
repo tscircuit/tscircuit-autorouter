@@ -155,14 +155,6 @@ export class SingleSimplifiedPathSolver5 extends SingleSimplifiedPathSolver {
           ),
       )
       .filter((obstacle) => {
-        if (
-          obstacle.connectedTo.some((obsId) =>
-            this.connMap.areIdsConnected(this.inputRoute.connectionName, obsId),
-          )
-        ) {
-          return false
-        }
-
         const distance = computeGapBetweenBoxes(boundsBox, obstacle)
 
         if (

@@ -530,8 +530,8 @@ export class TraceWidthSolver extends BaseSolver {
 
     for (const obstacle of this.obstacles) {
       if (!this.isObstacleOnPointLayer(obstacle, endpoint)) continue
-      if (!isObstacleConnectedToRoute(obstacle, route, this.connMap)) continue
       if (pointToBoxDistance(endpoint, obstacle) > COORDINATE_EPSILON) continue
+      if (!isObstacleConnectedToRoute(obstacle, route, this.connMap)) continue
 
       const limit = this.getObstacleWidthAlongVector(obstacle, normal)
       if (limit <= COORDINATE_EPSILON) continue
