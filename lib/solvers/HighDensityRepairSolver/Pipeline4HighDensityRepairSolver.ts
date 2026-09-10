@@ -304,19 +304,12 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
         }
       },
     )
-    this.sampleEntries =
-      params.maxSampleEntries !== undefined &&
-      sampleEntries.length > params.maxSampleEntries
-        ? []
-        : sampleEntries
+    this.sampleEntries = sampleEntries.slice(0, params.maxSampleEntries)
 
     this.MAX_ITERATIONS = Math.max(this.sampleEntries.length * 1_000, 100_000)
     this.stats = {
       sampleCount: this.sampleEntries.length,
-      skippedSampleCount:
-        sampleEntries.length > this.sampleEntries.length
-          ? sampleEntries.length
-          : 0,
+      skippedSampleCount: sampleEntries.length - this.sampleEntries.length,
       repairedNodeCount: 0,
       repairedRouteCount: 0,
     }
@@ -380,6 +373,7 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
       this.activeSubSolver = null
       this.activeSampleIndex += 1
       this.stats = {
+        ...this.stats,
         sampleCount: this.sampleEntries.length,
         repairedNodeCount: this.activeSampleIndex,
         repairedRouteCount: this.repairedRoutesByIndex.size,

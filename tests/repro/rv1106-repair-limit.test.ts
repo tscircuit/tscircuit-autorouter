@@ -6,6 +6,7 @@ import "graphics-debug/matcher"
 import { HighDensityRepairSolver } from "high-density-repair02"
 import { findInteriorDiagonalSegmentsInBufferZone } from "high-density-repair02/lib/high-density-repair-solver/functions/findInteriorDiagonalSegmentsInBufferZone"
 import { getBoundaryRect } from "high-density-repair02/lib/high-density-repair-solver/functions/getBoundaryRect"
+import { findTraceClearanceRegressions } from "high-density-repair02/lib/high-density-repair-solver/functions/findTraceClearanceRegressions"
 import { Pipeline4HighDensityRepairSolver } from "lib/solvers/HighDensityRepairSolver/Pipeline4HighDensityRepairSolver"
 import { safeTransparentize } from "lib/solvers/colors"
 
@@ -14,7 +15,7 @@ type RepairInput = Omit<
   "connMap"
 > & { netMap: ConnectivityMap["netMap"] }
 
-test("RV1106 full board skips repair above the sample limit", async () => {
+test("RV1106 full board repairs up to the sample limit", async () => {
   const input: RepairInput = JSON.parse(gunzipSync(new Uint8Array(readFileSync(
     new URL("./assets/rv1106-repair-input.json.gz", import.meta.url),
   ))).toString())
@@ -36,7 +37,8 @@ test("RV1106 full board skips repair above the sample limit", async () => {
   expect(output).toHaveLength(1413)
   expect(solver.solved).toBe(true)
   expect(solver.failed).toBe(false)
-  expect(solver.sampleEntries).toHaveLength(0)
+  expect(solver.sampleEntries).toHaveLength(80)
+  expect(solver.stats.skippedSampleCount).toBe(711)
 
   let boundaryViolations = 0
   for (const entry of allSamples.slice(0, 80)) {
@@ -49,7 +51,21 @@ test("RV1106 full board skips repair above the sample limit", async () => {
       routes, boundary, solver.repairMargin,
     ).length
   }
-  expect(boundaryViolations).toBe(33)
+  expect(boundaryViolations).toBe(4)
+  const regressions = findTraceClearanceRegressions({
+    currentRoutes: input.hdRoutes,
+    candidateRoutes: output,
+    candidateRouteIndexes: new Set(solver.repairedRoutesByIndex.keys()),
+    maximumAllowedClearance: solver.repairMargin,
+  })
+  for (const regression of regressions) {
+    const [first, second] = regression.routeIndexes
+    if (params.connMap.areIdsConnected(
+      output[first]!.connectionName, output[second]!.connectionName,
+    )) continue
+    // Ignore sub-micron movement from the repair solver's boundary snapping.
+    expect(regression.previousClearance - regression.nextClearance).toBeLessThan(0.001)
+  }
   for (const [index, route] of output.entries()) {
     const original = input.hdRoutes[index]!
     expect(route.connectionName).toBe(original.connectionName)
