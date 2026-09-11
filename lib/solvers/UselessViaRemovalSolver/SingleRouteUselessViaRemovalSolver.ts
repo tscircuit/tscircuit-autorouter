@@ -54,6 +54,7 @@ export class SingleRouteUselessViaRemovalSolver extends BaseSolver {
   GEOMETRY_SHORTCUT_TRACE_MARGIN = 0.1
   GEOMETRY_SHORTCUT_OBSTACLE_MARGIN = 0.15
   MAX_GEOMETRY_SHORTCUT_ADDED_LENGTH = 4
+  MAX_GEOMETRY_SHORTCUT_SEARCH_DISTANCE = 10
   ENABLE_GEOMETRY_SHORTCUTS = true
   ENABLE_OBSTACLE_DETOUR_SHORTCUTS = false
   PRESERVE_ROUTE_ENDPOINTS = false
@@ -70,6 +71,7 @@ export class SingleRouteUselessViaRemovalSolver extends BaseSolver {
     outline?: Array<{ x: number; y: number }>
     geometryShortcutTraceMargin?: number
     geometryShortcutObstacleMargin?: number
+    geometryShortcutSearchDistance?: number
     enableGeometryShortcuts?: boolean
     enableObstacleDetourShortcuts?: boolean
     preserveRouteEndpoints?: boolean
@@ -89,6 +91,9 @@ export class SingleRouteUselessViaRemovalSolver extends BaseSolver {
     this.GEOMETRY_SHORTCUT_OBSTACLE_MARGIN =
       params.geometryShortcutObstacleMargin ??
       this.GEOMETRY_SHORTCUT_OBSTACLE_MARGIN
+    this.MAX_GEOMETRY_SHORTCUT_SEARCH_DISTANCE =
+      params.geometryShortcutSearchDistance ??
+      this.MAX_GEOMETRY_SHORTCUT_SEARCH_DISTANCE
     this.ENABLE_GEOMETRY_SHORTCUTS = params.enableGeometryShortcuts ?? true
     this.ENABLE_OBSTACLE_DETOUR_SHORTCUTS =
       params.enableObstacleDetourShortcuts ?? false
@@ -229,37 +234,124 @@ export class SingleRouteUselessViaRemovalSolver extends BaseSolver {
     currentSection: RouteSection,
     nextSection: RouteSection,
   ): ViaPairShortcut | null {
-    let bestShortcut: ViaPairShortcut | null = null
-    for (
-      let previousPointIndex = 0;
-      previousPointIndex < previousSection.points.length;
-      previousPointIndex++
+    if (
+      currentSection.points.some(
+        (point) => point.insideJumperPad || point.toNextSegmentType,
+      )
     ) {
-      const start = previousSection.points[previousPointIndex]
+      return null
+    }
+
+    const prevPoints = previousSection.points
+    const nextPoints = nextSection.points
+    const P = prevPoints.length
+    const N = nextPoints.length
+    if (P === 0 || N === 0) return null
+
+    // Precompute cumulative lengths along previousSection and nextSection for O(1) length checks
+    const prevCumLengths = new Float64Array(P)
+    for (let i = 1; i < P; i++) {
+      prevCumLengths[i] =
+        prevCumLengths[i - 1] +
+        Math.hypot(
+          prevPoints[i].x - prevPoints[i - 1].x,
+          prevPoints[i].y - prevPoints[i - 1].y,
+        )
+    }
+
+    const nextCumLengths = new Float64Array(N)
+    for (let i = 1; i < N; i++) {
+      nextCumLengths[i] =
+        nextCumLengths[i - 1] +
+        Math.hypot(
+          nextPoints[i].x - nextPoints[i - 1].x,
+          nextPoints[i].y - nextPoints[i - 1].y,
+        )
+    }
+
+    const prevToCurrDist = Math.hypot(
+      currentSection.points[0].x - prevPoints[P - 1].x,
+      currentSection.points[0].y - prevPoints[P - 1].y,
+    )
+    const currentSectionLength = this.getPathLength(currentSection.points)
+    const currToNextDist = Math.hypot(
+      nextPoints[0].x -
+        currentSection.points[currentSection.points.length - 1].x,
+      nextPoints[0].y -
+        currentSection.points[currentSection.points.length - 1].y,
+    )
+    const middleSectionLength =
+      prevToCurrDist + currentSectionLength + currToNextDist
+
+    let lastInvalidPrev = -1
+    for (let i = 0; i < P; i++) {
+      if (prevPoints[i].insideJumperPad || prevPoints[i].toNextSegmentType) {
+        lastInvalidPrev = i
+      }
+    }
+
+    let firstInvalidNext = N
+    for (let i = 0; i < N; i++) {
+      if (nextPoints[i].insideJumperPad || nextPoints[i].toNextSegmentType) {
+        firstInvalidNext = i
+        break
+      }
+    }
+
+    let bestShortcut: ViaPairShortcut | null = null
+
+    // Search outwards from via transition points:
+    // previousSection searches from P - 1 backwards down to 0
+    // nextSection searches from 0 forwards up to N - 1
+    for (let pOffset = 0; pOffset < P; pOffset++) {
+      const previousPointIndex = P - 1 - pOffset
+      if (previousPointIndex <= lastInvalidPrev) break
+
+      const distFromViaPrev =
+        prevCumLengths[P - 1] - prevCumLengths[previousPointIndex]
+      if (distFromViaPrev > this.MAX_GEOMETRY_SHORTCUT_SEARCH_DISTANCE) {
+        break
+      }
+
+      const start = prevPoints[previousPointIndex]
+
       for (
         let nextPointIndex = 0;
-        nextPointIndex < nextSection.points.length;
+        nextPointIndex < firstInvalidNext;
         nextPointIndex++
       ) {
-        const end = nextSection.points[nextPointIndex]
-        const replacedPoints = [
-          ...previousSection.points.slice(previousPointIndex),
-          ...currentSection.points,
-          ...nextSection.points.slice(0, nextPointIndex + 1),
-        ]
+        const distFromViaNext = nextCumLengths[nextPointIndex]
+        if (distFromViaNext > this.MAX_GEOMETRY_SHORTCUT_SEARCH_DISTANCE) {
+          break
+        }
+
+        const end = nextPoints[nextPointIndex]
+
+        const replacedLength =
+          distFromViaPrev + middleSectionLength + distFromViaNext
+        const euclideanDist = Math.hypot(end.x - start.x, end.y - start.y)
+        const maxPossibleSaved = replacedLength - euclideanDist
+
+        // Theoretical upper bound on savedLength cannot beat bestShortcut or save length
         if (
-          replacedPoints.some(
-            (point) => point.insideJumperPad || point.toNextSegmentType,
-          )
+          maxPossibleSaved < -1e-6 ||
+          (bestShortcut && maxPossibleSaved <= bestShortcut.savedLength)
         ) {
           continue
         }
 
         for (const possiblePath of calculate45DegreePaths(start, end)) {
           const path = this.normalizeShortcutPath(possiblePath, start, end)
-          const savedLength =
-            this.getPathLength(replacedPoints) - this.getPathLength(path)
-          if (savedLength < -1e-6 || this.shortcutCrossesOutline(path)) continue
+          const pathLength = this.getPathLength(path)
+          const savedLength = replacedLength - pathLength
+
+          if (
+            savedLength < -1e-6 ||
+            (bestShortcut && savedLength <= bestShortcut.savedLength) ||
+            this.shortcutCrossesOutline(path)
+          ) {
+            continue
+          }
 
           const candidateSection: RouteSection = {
             startIndex: previousSection.startIndex + previousPointIndex,
@@ -299,7 +391,71 @@ export class SingleRouteUselessViaRemovalSolver extends BaseSolver {
     currentSection: RouteSection,
     nextSection: RouteSection,
   ): ViaPairShortcut | null {
-    const transitionIndex = previousSection.points.length - 1
+    if (
+      currentSection.points.some(
+        (point) => point.insideJumperPad || point.toNextSegmentType,
+      )
+    ) {
+      return null
+    }
+
+    const prevPoints = previousSection.points
+    const nextPoints = nextSection.points
+    const P = prevPoints.length
+    const N = nextPoints.length
+    if (P === 0 || N === 0) return null
+
+    // Precompute cumulative lengths along previousSection and nextSection for O(1) length checks
+    const prevCumLengths = new Float64Array(P)
+    for (let i = 1; i < P; i++) {
+      prevCumLengths[i] =
+        prevCumLengths[i - 1] +
+        Math.hypot(
+          prevPoints[i].x - prevPoints[i - 1].x,
+          prevPoints[i].y - prevPoints[i - 1].y,
+        )
+    }
+
+    const nextCumLengths = new Float64Array(N)
+    for (let i = 1; i < N; i++) {
+      nextCumLengths[i] =
+        nextCumLengths[i - 1] +
+        Math.hypot(
+          nextPoints[i].x - nextPoints[i - 1].x,
+          nextPoints[i].y - nextPoints[i - 1].y,
+        )
+    }
+
+    const prevToCurrDist = Math.hypot(
+      currentSection.points[0].x - prevPoints[P - 1].x,
+      currentSection.points[0].y - prevPoints[P - 1].y,
+    )
+    const currentSectionLength = this.getPathLength(currentSection.points)
+    const currToNextDist = Math.hypot(
+      nextPoints[0].x -
+        currentSection.points[currentSection.points.length - 1].x,
+      nextPoints[0].y -
+        currentSection.points[currentSection.points.length - 1].y,
+    )
+    const middleSectionLength =
+      prevToCurrDist + currentSectionLength + currToNextDist
+
+    let lastInvalidPrev = -1
+    for (let i = 0; i < P; i++) {
+      if (prevPoints[i].insideJumperPad || prevPoints[i].toNextSegmentType) {
+        lastInvalidPrev = i
+      }
+    }
+
+    let firstInvalidNext = N
+    for (let i = 0; i < N; i++) {
+      if (nextPoints[i].insideJumperPad || nextPoints[i].toNextSegmentType) {
+        firstInvalidNext = i
+        break
+      }
+    }
+
+    const transitionIndex = P - 1
     const anchorPairs: Array<[number, number]> = []
     // Keep one anchor at a layer transition so candidate growth is P + N,
     // rather than the quadratic P * N direct-shortcut search above.
@@ -308,33 +464,25 @@ export class SingleRouteUselessViaRemovalSolver extends BaseSolver {
       previousIndex <= transitionIndex;
       previousIndex++
     ) {
-      anchorPairs.push([previousIndex, 0])
+      if (previousIndex > lastInvalidPrev && firstInvalidNext > 0) {
+        anchorPairs.push([previousIndex, 0])
+      }
     }
-    for (
-      let nextIndex = 1;
-      nextIndex < nextSection.points.length;
-      nextIndex++
-    ) {
-      anchorPairs.push([transitionIndex, nextIndex])
+    for (let nextIndex = 1; nextIndex < firstInvalidNext; nextIndex++) {
+      if (transitionIndex > lastInvalidPrev) {
+        anchorPairs.push([transitionIndex, nextIndex])
+      }
     }
 
     const candidateShortcuts: ViaPairShortcut[] = []
     for (const [previousPointIndex, nextPointIndex] of anchorPairs) {
-      const start = previousSection.points[previousPointIndex]
-      const end = nextSection.points[nextPointIndex]
-      const replacedPoints = [
-        ...previousSection.points.slice(previousPointIndex),
-        ...currentSection.points,
-        ...nextSection.points.slice(0, nextPointIndex + 1),
-      ]
-      if (
-        replacedPoints.some(
-          (point) => point.insideJumperPad || point.toNextSegmentType,
-        )
-      ) {
-        continue
-      }
-      const replacedLength = this.getPathLength(replacedPoints)
+      const start = prevPoints[previousPointIndex]
+      const end = nextPoints[nextPointIndex]
+      const distFromViaPrev =
+        prevCumLengths[P - 1] - prevCumLengths[previousPointIndex]
+      const distFromViaNext = nextCumLengths[nextPointIndex]
+      const replacedLength =
+        distFromViaPrev + middleSectionLength + distFromViaNext
 
       for (const {
         path,
@@ -726,6 +874,8 @@ export class SingleRouteUselessViaRemovalSolver extends BaseSolver {
       outline: this.outline,
       geometryShortcutTraceMargin: this.GEOMETRY_SHORTCUT_TRACE_MARGIN,
       geometryShortcutObstacleMargin: this.GEOMETRY_SHORTCUT_OBSTACLE_MARGIN,
+      geometryShortcutSearchDistance:
+        this.MAX_GEOMETRY_SHORTCUT_SEARCH_DISTANCE,
       enableGeometryShortcuts: this.ENABLE_GEOMETRY_SHORTCUTS,
       enableObstacleDetourShortcuts: this.ENABLE_OBSTACLE_DETOUR_SHORTCUTS,
       preserveRouteEndpoints: this.PRESERVE_ROUTE_ENDPOINTS,
