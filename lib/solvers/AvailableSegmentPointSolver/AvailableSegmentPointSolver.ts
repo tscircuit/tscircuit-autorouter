@@ -72,6 +72,7 @@ export class AvailableSegmentPointSolver extends BaseSolver {
   edges: CapacityMeshEdge[]
   traceWidth: number
   obstacleMargin: number
+  minimumPortDistanceFromEdgeEndpoint: number
   minPortSpacing: number
 
   nodeMap: Map<CapacityMeshNodeId, CapacityMeshNode>
@@ -96,6 +97,7 @@ export class AvailableSegmentPointSolver extends BaseSolver {
     edges,
     traceWidth,
     obstacleMargin,
+    minimumPortDistanceFromEdgeEndpoint,
     colorMap,
     shouldReturnCrampedPortPoints,
   }: {
@@ -103,6 +105,7 @@ export class AvailableSegmentPointSolver extends BaseSolver {
     edges: CapacityMeshEdge[]
     traceWidth: number
     obstacleMargin?: number
+    minimumPortDistanceFromEdgeEndpoint?: number
     colorMap?: Record<string, string>
     shouldReturnCrampedPortPoints: boolean
   }) {
@@ -111,6 +114,8 @@ export class AvailableSegmentPointSolver extends BaseSolver {
     this.edges = edges
     this.traceWidth = traceWidth
     this.obstacleMargin = obstacleMargin ?? 0.15
+    this.minimumPortDistanceFromEdgeEndpoint =
+      minimumPortDistanceFromEdgeEndpoint ?? 0
     this.shouldReturnCrampedPortPoints = shouldReturnCrampedPortPoints
     // Port spacing: each trace extends traceWidth/2 from center, plus obstacleMargin clearance
     // Center-to-center distance = traceWidth + obstacleMargin
@@ -172,9 +177,12 @@ export class AvailableSegmentPointSolver extends BaseSolver {
       node1._isNarrowQfpPadGap || node2._isNarrowQfpPadGap,
     )
 
-    // Apply edge margin to avoid placing points too close to corners
-    // The margin is half the port spacing to ensure points are at least that far from edges
-    const edgeMargin = (this.minPortSpacing * 3) / 4 // this.edgeMargin + segmentLength * 0.1
+    // Keep port centerlines away from shared-edge endpoints, where obstacles on
+    // the adjacent mesh boundary can invalidate a detailed-router transition.
+    const edgeMargin = Math.max(
+      (this.minPortSpacing * 3) / 4,
+      this.minimumPortDistanceFromEdgeEndpoint,
+    )
     const effectiveLength = Math.max(0, segmentLength - edgeMargin * 2)
 
     if (

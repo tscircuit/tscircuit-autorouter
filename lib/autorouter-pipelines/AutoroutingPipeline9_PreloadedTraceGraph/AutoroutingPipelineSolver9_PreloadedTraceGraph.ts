@@ -85,7 +85,10 @@ import {
   convertPreloadedTraceToHdRoutes,
   type PreloadedHighDensityRoute,
 } from "./convertPreloadedTraceToHdRoutes"
-import { Pipeline9HighDensitySolver } from "./Pipeline9HighDensitySolver"
+import {
+  PIPELINE9_PRELOADED_TRACE_CLEARANCE,
+  Pipeline9HighDensitySolver,
+} from "./Pipeline9HighDensitySolver"
 import { Pipeline9JointDrcRepairSolver } from "./Pipeline9JointDrcRepairSolver"
 import { PreloadedTraceGraphSolver } from "./PreloadedTraceGraphSolver"
 import { PreprocessSimpleRouteJsonWithoutTraceObstaclesSolver } from "./PreprocessSimpleRouteJsonWithoutTraceObstaclesSolver"
@@ -443,15 +446,32 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     definePipelineStep(
       "availableSegmentPointSolver",
       AvailableSegmentPointSolver,
-      (cms) => [
-        {
-          nodes: cms.capacityNodes!,
-          edges: cms.capacityEdges || [],
-          traceWidth: cms.minTraceWidth,
-          colorMap: cms.colorMap,
-          shouldReturnCrampedPortPoints: true,
-        },
-      ],
+      (cms) => {
+        const needsMultilayerHighFanoutPortClearance =
+          cms.srj.layerCount > 2 &&
+          (cms.srj.traces?.length ?? 0) > 0 &&
+          cms.srj.connections.some(
+            (connection) => connection.pointsToConnect.length > 3,
+          )
+        return [
+          {
+            nodes: cms.capacityNodes!,
+            edges: cms.capacityEdges || [],
+            traceWidth: cms.minTraceWidth,
+            // High-fanout nets beside preloaded multilayer routes may need a
+            // boundary port to enter a layer transition immediately. Keep every
+            // candidate far enough from mesh corners for B01's obstacle clearance.
+            ...(needsMultilayerHighFanoutPortClearance
+              ? {
+                  minimumPortDistanceFromEdgeEndpoint:
+                    cms.minTraceWidth / 2 + PIPELINE9_PRELOADED_TRACE_CLEARANCE,
+                }
+              : {}),
+            colorMap: cms.colorMap,
+            shouldReturnCrampedPortPoints: true,
+          },
+        ]
+      },
     ),
     definePipelineStep(
       "necessaryCrampedPortPointSolver",

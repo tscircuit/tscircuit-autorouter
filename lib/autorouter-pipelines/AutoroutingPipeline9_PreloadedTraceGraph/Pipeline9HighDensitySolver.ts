@@ -61,7 +61,7 @@ type NodeBounds = {
   maxY: number
 }
 
-const PRELOADED_TRACE_CLEARANCE = 0.15
+export const PIPELINE9_PRELOADED_TRACE_CLEARANCE = 0.15
 
 const getNodeBounds = (
   node: NodeWithPortPoints,
@@ -1026,7 +1026,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       viaMinDistFromBorder: this.viaDiameter / 2,
       traceThickness: this.traceWidth,
       traceMargin: this.obstacleMargin,
-      obstacleClearanceMargin: PRELOADED_TRACE_CLEARANCE,
+      obstacleClearanceMargin: PIPELINE9_PRELOADED_TRACE_CLEARANCE,
       effort: this.effort,
     })
     if (this.maxB01Rips !== undefined) {
