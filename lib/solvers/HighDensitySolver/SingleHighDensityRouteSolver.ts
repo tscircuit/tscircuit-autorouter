@@ -759,7 +759,9 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
       if (segments && nearbySegmentIds) {
         for (const segmentId of nearbySegmentIds) {
           const segment = segments[segmentId]!
-          if (pointToSegmentDistance(this.B, segment.A, segment.B) < clearance) {
+          if (
+            pointToSegmentDistance(this.B, segment.A, segment.B) < clearance
+          ) {
             this.failed = true
             this.error = `Target for ${this.connectionName} on layer ${this.B.z} is inside fixed obstacle segment clearance`
             return

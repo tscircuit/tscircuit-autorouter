@@ -14,13 +14,18 @@ test("a target inside fixed trace clearance fails before exploring candidates", 
       bounds: { minX: 0, minY: 0, maxX: 10, maxY: 10 },
       minDistBetweenEnteringPoints: 0.1,
       captureSearchDebug: false,
-      obstacleRoutes: [{
-        connectionName: "obstacle",
-        traceThickness: 0.15,
-        viaDiameter: 0.3,
-        route: [{ x: 7, y: 8, z: 0 }, { x: 9, y: 8, z: 0 }],
-        vias: [],
-      }],
+      obstacleRoutes: [
+        {
+          connectionName: "obstacle",
+          traceThickness: 0.15,
+          viaDiameter: 0.3,
+          route: [
+            { x: 7, y: 8, z: 0 },
+            { x: 9, y: 8, z: 0 },
+          ],
+          vias: [],
+        },
+      ],
     })
     solver.solve()
     expect(solver.failed).toBe(true)
