@@ -9,7 +9,6 @@
     "32252254138"
   ],
   "timings": {
-    "tests/bugs/rv1106-pathing.test.ts": 442.439,
     "tests/auto-capacity-depth.test.ts": 0,
     "tests/autorouting-dataset18-sample10-exact-drc-residue-visual.test.ts": 96,
     "tests/autorouting-pipeline-debugger-joint-circuit-json.test.ts": 0,
