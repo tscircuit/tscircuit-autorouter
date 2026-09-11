@@ -33,8 +33,12 @@ export function hasOverlappingSingleAndMultilayerFreeMeshes({
   const [layersA, layersB] = freeLayerSets
   if (layersA!.some((z) => layersB!.includes(z))) return false
 
-  const nodesA = freeNodes.filter(({ node }) => node.availableZ[0] === layersA![0])
-  const nodesB = freeNodes.filter(({ node }) => node.availableZ[0] === layersB![0])
+  const nodesA = freeNodes.filter(
+    ({ node }) => node.availableZ[0] === layersA![0],
+  )
+  const nodesB = freeNodes.filter(
+    ({ node }) => node.availableZ[0] === layersB![0],
+  )
   for (const nodeA of nodesA) {
     for (const nodeB of nodesB) {
       const overlap = boundsIntersection(nodeA.bounds, nodeB.bounds)
