@@ -1533,8 +1533,8 @@ jobs:
               repo: context.repo.repo,
               branch: pr.data.base.ref,
             })
-            const mainSha = base.data.commit.sha
-            const prSha = pr.data.head.sha
+            const mainSha = "109c67baebc709be95fb37df1fdac9b3b74624c5"
+            const prSha = "ba35610329d713097b194c1c08495c9335795e6f"
             const runUrl = `${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}`
             const statusComment = await github.rest.issues.createComment({
               owner: context.repo.owner,
