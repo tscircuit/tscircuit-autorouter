@@ -14,8 +14,8 @@ test("applied Repair03 clears multiple overlaps under the benchmark DRC checker"
     viaDiameter: 0.3,
     vias: [],
     route: [
-      { x: -10, y: index * 10, z: 0, pcb_port_id: `start_${index}` },
-      { x: 10, y: index * 10, z: 0, pcb_port_id: `end_${index}` },
+      { x: -10, y: index * 10, z: 0, pcb_port_id: `pcb_port_start_${index}` },
+      { x: 10, y: index * 10, z: 0, pcb_port_id: `pcb_port_end_${index}` },
     ],
   }))
   const srj: SimpleRouteJson = {
@@ -26,16 +26,33 @@ test("applied Repair03 clears multiple overlaps under the benchmark DRC checker"
     minTraceToPadEdgeClearance: 0.1,
     connections: routes.map((route) => ({
       name: route.connectionName,
-      pointsToConnect: [],
+      pointsToConnect: route.route.map((point) => ({
+        x: point.x,
+        y: point.y,
+        layer: "top",
+        pcb_port_id: point.pcb_port_id,
+      })),
     })),
-    obstacles: routes.map((_, index) => ({
-      type: "rect",
-      layers: ["top"],
-      center: { x: 0, y: index * 10 },
-      width: 2,
-      height: 6,
-      connectedTo: [`foreign_${index}`, `pcb_smtpad_foreign_${index}`],
-    })),
+    obstacles: [
+      ...routes.map((_, index) => ({
+        type: "rect" as const,
+        layers: ["top"],
+        center: { x: 0, y: index * 10 },
+        width: 2,
+        height: 6,
+        connectedTo: [`foreign_${index}`, `pcb_smtpad_foreign_${index}`],
+      })),
+      ...routes.flatMap((route) =>
+        route.route.map((point) => ({
+          type: "rect" as const,
+          layers: ["top"],
+          center: { x: point.x, y: point.y },
+          width: 0.5,
+          height: 0.5,
+          connectedTo: [route.connectionName, point.pcb_port_id!],
+        })),
+      ),
+    ],
   }
   const solver = new GlobalDrcForceImproveSolver({
     srj,
