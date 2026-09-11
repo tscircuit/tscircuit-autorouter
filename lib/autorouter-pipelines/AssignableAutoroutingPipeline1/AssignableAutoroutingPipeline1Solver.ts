@@ -47,6 +47,7 @@ import { HyperAssignableViaCapacityPathingSolver } from "./HyperAssignableViaCap
 import { AssignableViaCapacityPathingSolver_DirectiveSubOptimal } from "./AssignableViaCapacityPathing/AssignableViaCapacityPathingSolver_DirectiveSubOptimal"
 import { OffboardCapacityNodeSolver } from "./OffboardCapacityNodeSolver"
 import { OffboardPathFragmentSolver } from "./OffboardPathFragmentSolver"
+import { materializeAndValidateGeneratedThroughVias } from "lib/utils/materializeAndValidateGeneratedThroughVias"
 
 interface CapacityMeshSolverOptions {
   capacityDepth?: number
@@ -739,14 +740,19 @@ export class AssignableAutoroutingPipeline1Solver extends BaseSolver {
           pcb_trace_id: `${connection.name}_${i}`,
           connection_name:
             netConnectionName ?? rootConnectionName ?? connection.name,
-          route: convertHdRouteToSimplifiedRoute(hdRoute, this.srj.layerCount),
+          route: convertHdRouteToSimplifiedRoute(hdRoute, this.srj.layerCount, {
+            allowBlindAndBuriedVias: this.srj.allowBlindAndBuriedVias,
+          }),
         }
 
         traces.push(simplifiedPcbTrace)
       }
     }
 
-    return traces
+    return materializeAndValidateGeneratedThroughVias({
+      srj: this.srj,
+      outputTraces: traces,
+    })
   }
 
   getOutputSimpleRouteJson(): SimpleRouteJson {

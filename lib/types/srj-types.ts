@@ -61,6 +61,11 @@ export interface SimpleRouteJson {
   minViaPadDiameter?: number
   min_via_hole_diameter?: number
   min_via_pad_diameter?: number
+  /**
+   * Allows generated vias to use partial layer spans. Omission preserves the
+   * legacy standalone-SRJ behavior; set false for full-stack through vias.
+   */
+  allowBlindAndBuriedVias?: boolean
   defaultObstacleMargin?: number
   minTraceToPadEdgeClearance?: number
   minBoardEdgeClearance?: number

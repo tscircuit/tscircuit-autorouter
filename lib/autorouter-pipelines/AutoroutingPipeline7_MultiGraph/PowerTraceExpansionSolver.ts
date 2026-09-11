@@ -6,6 +6,7 @@ import {
 import type { GraphicsObject } from "graphics-debug"
 import type { SimpleRouteJson, SimplifiedPcbTraces } from "lib/types"
 import { convertSrjToGraphicsObject } from "lib/utils/convertSrjToGraphicsObject"
+import { materializeAndValidateGeneratedThroughVias } from "lib/utils/materializeAndValidateGeneratedThroughVias"
 import { BaseSolver } from "../../solvers/BaseSolver"
 
 export class PowerTraceExpansionSolver extends BaseSolver {
@@ -58,7 +59,11 @@ export class PowerTraceExpansionSolver extends BaseSolver {
       throw new Error("Cannot get power trace expansion output before solving")
     }
 
-    return this.powerTraceExpanderSolver.getOutput() as SimplifiedPcbTraces
+    return materializeAndValidateGeneratedThroughVias({
+      srj: this.inputSrj,
+      outputTraces:
+        this.powerTraceExpanderSolver.getOutput() as SimplifiedPcbTraces,
+    })
   }
 
   override visualize(): GraphicsObject {

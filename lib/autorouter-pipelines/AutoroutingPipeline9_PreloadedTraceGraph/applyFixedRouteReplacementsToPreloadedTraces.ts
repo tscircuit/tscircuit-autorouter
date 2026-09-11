@@ -14,6 +14,7 @@ type ApplyFixedRouteReplacementsParams = {
   defaultViaHoleDiameter: number
   obstacles: Obstacle[]
   connMap: ConnectivityMap
+  allowBlindAndBuriedVias?: boolean
 }
 
 type ApplyFixedRouteReplacementsResult = {
@@ -33,6 +34,7 @@ type ConvertUpdatedTraceRoutesParams = {
   defaultViaHoleDiameter: number
   obstacles: Obstacle[]
   connMap: ConnectivityMap
+  allowBlindAndBuriedVias?: boolean
 }
 
 type RebuildThroughObstacleTraceParams = ConvertUpdatedTraceRoutesParams & {
@@ -109,6 +111,7 @@ const convertUpdatedTraceRoutes = ({
   defaultViaHoleDiameter,
   obstacles,
   connMap,
+  allowBlindAndBuriedVias,
 }: ConvertUpdatedTraceRoutesParams): SimplifiedPcbTrace["route"] => {
   if (updatedTraceRoutes.length === 0) {
     throw new Error(
@@ -146,6 +149,7 @@ const convertUpdatedTraceRoutes = ({
     defaultViaHoleDiameter,
     obstacles,
     connMap,
+    allowBlindAndBuriedVias,
   })
 }
 
@@ -207,6 +211,7 @@ const rebuildThroughObstacleTrace = ({
   defaultViaHoleDiameter,
   obstacles,
   connMap,
+  allowBlindAndBuriedVias,
 }: RebuildThroughObstacleTraceParams): SimplifiedPcbTrace["route"] => {
   if (updatedTraceRoutes.length === 0) {
     throw new Error(
@@ -258,6 +263,7 @@ const rebuildThroughObstacleTrace = ({
             defaultViaHoleDiameter,
             obstacles,
             connMap,
+            allowBlindAndBuriedVias,
           })
         : trace.route.slice(
             section.routePositionStart,
@@ -283,6 +289,7 @@ export const applyFixedRouteReplacementsToPreloadedTraces = ({
   defaultViaHoleDiameter,
   obstacles,
   connMap,
+  allowBlindAndBuriedVias,
 }: ApplyFixedRouteReplacementsParams): ApplyFixedRouteReplacementsResult => {
   const originalFixedRoutesByTraceIndex = new Map<
     number,
@@ -343,6 +350,7 @@ export const applyFixedRouteReplacementsToPreloadedTraces = ({
             defaultViaHoleDiameter,
             obstacles,
             connMap,
+            allowBlindAndBuriedVias,
           })
         : convertUpdatedTraceRoutes({
             trace,
@@ -351,6 +359,7 @@ export const applyFixedRouteReplacementsToPreloadedTraces = ({
             defaultViaHoleDiameter,
             obstacles,
             connMap,
+            allowBlindAndBuriedVias,
           }),
     }
     mutatedPreloadedTraces.push(mutatedTrace)
