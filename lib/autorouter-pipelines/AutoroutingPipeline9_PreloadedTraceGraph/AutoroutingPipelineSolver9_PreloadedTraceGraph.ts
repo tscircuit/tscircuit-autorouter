@@ -246,7 +246,6 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     return "AutoroutingPipelineSolver9_PreloadedTraceGraph"
   }
 
-  preRoutingDiagnosticSolver?: PreRoutingDiagnosticSolver
   preprocessSimpleRouteJsonSolver?: PreprocessSimpleRouteJsonWithoutTraceObstaclesSolver
   escapeViaLocationSolver?: EscapeViaLocationSolver
   netToPointPairsSolver?: NetToPointPairsSolver
@@ -305,11 +304,6 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
 
   cacheProvider: CacheProvider | null = null
   pipelineDef = [
-    definePipelineStep(
-      "preRoutingDiagnosticSolver",
-      PreRoutingDiagnosticSolver,
-      (cms) => [cms.originalSrj],
-    ),
     definePipelineStep(
       "preprocessSimpleRouteJsonSolver",
       PreprocessSimpleRouteJsonWithoutTraceObstaclesSolver,

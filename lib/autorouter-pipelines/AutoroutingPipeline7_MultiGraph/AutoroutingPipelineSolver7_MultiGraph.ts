@@ -62,7 +62,6 @@ import { HighDensitySolver } from "../../solvers/HighDensitySolver/HighDensitySo
 import { MultiSectionPortPointOptimizer } from "../../solvers/MultiSectionPortPointOptimizer"
 import { NetToPointPairsSolver } from "../../solvers/NetToPointPairsSolver/NetToPointPairsSolver"
 import { NetToPointPairsSolver2_OffBoardConnection } from "../../solvers/NetToPointPairsSolver2_OffBoardConnection/NetToPointPairsSolver2_OffBoardConnection"
-import { PreRoutingDiagnosticSolver } from "../../solvers/PreRoutingDiagnosticSolver/PreRoutingDiagnosticSolver"
 import { MultipleHighDensityRouteStitchSolver3 } from "../../solvers/RouteStitchingSolver/MultipleHighDensityRouteStitchSolver3"
 import { SingleLayerNodeMergerSolver } from "../../solvers/SingleLayerNodeMerger/SingleLayerNodeMergerSolver"
 import { StrawSolver } from "../../solvers/StrawSolver/StrawSolver"
@@ -212,7 +211,6 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
     return "AutoroutingPipelineSolver7_MultiGraph"
   }
 
-  preRoutingDiagnosticSolver?: PreRoutingDiagnosticSolver
   preprocessSimpleRouteJsonSolver?: PreprocessSimpleRouteJsonSolver
   escapeViaLocationSolver?: EscapeViaLocationSolver
   netToPointPairsSolver?: NetToPointPairsSolver
@@ -269,11 +267,6 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
 
   cacheProvider: CacheProvider | null = null
   pipelineDef = [
-    definePipelineStep(
-      "preRoutingDiagnosticSolver",
-      PreRoutingDiagnosticSolver,
-      (cms) => [cms.originalSrj],
-    ),
     definePipelineStep(
       "preprocessSimpleRouteJsonSolver",
       PreprocessSimpleRouteJsonSolver,
