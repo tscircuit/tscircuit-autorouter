@@ -4,9 +4,13 @@ on:
     inputs:
       repair_sha:
         type: string
-        required: true
+        required: false
+      autorouter_sha:
+        type: string
+        required: false
 jobs:
   validate:
+    if: inputs.repair_sha != ''
     runs-on: blacksmith-8vcpu-ubuntu-2404-arm
     timeout-minutes: 20
     steps:
@@ -30,3 +34,17 @@ jobs:
             tests/fixtures/expectClearanceDetour.ts
       - run: bun run typecheck
       - run: bun test tests/clearance-detour-*.test.ts
+
+  applied:
+    if: inputs.autorouter_sha != ''
+    runs-on: blacksmith-8vcpu-ubuntu-2404-arm
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.autorouter_sha }}
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.8
+      - run: bun install
+      - run: bun test tests/features/pipeline9-general-overlap-repair.test.ts
