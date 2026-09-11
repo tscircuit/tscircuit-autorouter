@@ -903,6 +903,13 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
         this.currentPipelineStepIndex++
       } else if (this.activeSubSolver.failed) {
         this.error = this.activeSubSolver?.error
+        if (this.activeSubSolver?.diagnostics) {
+          for (const d of this.activeSubSolver.diagnostics) {
+            if (!this.diagnostics?.includes(d)) {
+              this.emitDiagnostic?.(d)
+            }
+          }
+        }
         this.failed = true
         this.activeSubSolver = null
       }
@@ -912,6 +919,11 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
     const constructorParams = pipelineStepDef.getConstructorParams(this)
     // @ts-ignore
     this.activeSubSolver = new pipelineStepDef.solverClass(...constructorParams)
+    if (typeof (this.activeSubSolver as any)?.on === "function") {
+      ;(this.activeSubSolver as any).on("diagnostic", (diagnostic: any) => {
+        this.emitDiagnostic?.(diagnostic)
+      })
+    }
     if (
       pipelineStepDef.solverName === "lengthMatchingPostProcessingSolver" ||
       pipelineStepDef.solverName === "powerTraceExpansionSolver"
