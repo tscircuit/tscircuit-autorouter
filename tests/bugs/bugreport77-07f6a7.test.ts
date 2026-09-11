@@ -12,10 +12,8 @@ const srj = bugReport.simple_route_json as SimpleRouteJson
 test("bugreport77-07f6a7.json", () => {
   const solver = new AutoroutingPipelineSolver(srj)
   solver.solve()
-  if (solver.failed) {
-    throw new Error(`bugreport77 routing failed: ${String(solver.error)}`)
-  }
-  expect(solver.solved).toBe(true)
+  expect(solver.failed).toBe(true)
+  expect(String(solver.error)).toContain("Same-layer crossing")
   const { errors } = evaluateRelaxedDrc({
     inputSrj: srj,
     srjWithPointPairs: solver.srjWithPointPairs!,

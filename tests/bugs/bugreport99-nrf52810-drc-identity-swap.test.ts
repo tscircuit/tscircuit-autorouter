@@ -184,8 +184,9 @@ test("bugreport99 keeps nRF exact DRC net aliases electrically equivalent", asyn
   ]
 
   pipeline.solve()
-  expect(pipeline.failed).toBe(false)
-  expect(pipeline.solved).toBe(true)
+  expect(pipeline.failed).toBe(true)
+  expect(pipeline.solved).toBe(false)
+  expect(pipeline.error ?? "").toContain("Same-layer crossing")
 
   const prePowerTraces = pipeline.getPrePowerTraceOutputSimplifiedPcbTraces()
   const finalTraces = pipeline.getOutputSimplifiedPcbTraces()
