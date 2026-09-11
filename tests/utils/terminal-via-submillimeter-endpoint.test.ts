@@ -23,7 +23,10 @@ test("terminal vias retain an exact wire endpoint after submillimeter rounding",
     defaultViaHoleDiameter: 0.3,
   })
   expect(route).toHaveLength(6)
-  for (const [viaIndex, wireIndex] of [[0, 1], [5, 4]]) {
+  for (const [viaIndex, wireIndex] of [
+    [0, 1],
+    [5, 4],
+  ]) {
     const via = route[viaIndex]!
     const wire = route[wireIndex]!
     expect(via.route_type).toBe("via")
