@@ -62,10 +62,34 @@ test.failing(
           },
         }}
       >
-        <resistor name="R1" resistance="1k" footprint="0402" pcbX={-1.5} pcbY={-1} />
-        <resistor name="R2" resistance="1k" footprint="0402" pcbX={1.5} pcbY={1} />
-        <resistor name="R3" resistance="1k" footprint="0402" pcbX={-1.5} pcbY={1} />
-        <resistor name="R4" resistance="1k" footprint="0402" pcbX={1.5} pcbY={-1} />
+        <resistor
+          name="R1"
+          resistance="1k"
+          footprint="0402"
+          pcbX={-1.5}
+          pcbY={-1}
+        />
+        <resistor
+          name="R2"
+          resistance="1k"
+          footprint="0402"
+          pcbX={1.5}
+          pcbY={1}
+        />
+        <resistor
+          name="R3"
+          resistance="1k"
+          footprint="0402"
+          pcbX={-1.5}
+          pcbY={1}
+        />
+        <resistor
+          name="R4"
+          resistance="1k"
+          footprint="0402"
+          pcbX={1.5}
+          pcbY={-1}
+        />
         {/* The pinned Core supports phases; the repository's legacy JSX types
             do not yet include these two props. */}
         <trace
@@ -96,8 +120,8 @@ test.failing(
       import.meta.path,
     )
     // Do not exclude any native connectivity, placement, or copper errors.
-    expect(circuitJson.filter((element) => element.type.includes("error"))).toEqual(
-      [],
-    )
+    expect(
+      circuitJson.filter((element) => element.type.includes("error")),
+    ).toEqual([])
   },
 )
