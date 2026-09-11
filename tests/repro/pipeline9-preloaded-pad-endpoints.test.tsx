@@ -40,7 +40,7 @@ class Pipeline9Autorouter extends EventEmitter {
   }
 }
 
-test.failing(
+test(
   "Pipeline9 retains pad endpoints of a previously routed connection",
   async (): Promise<void> => {
     const routers: Pipeline9Autorouter[] = []

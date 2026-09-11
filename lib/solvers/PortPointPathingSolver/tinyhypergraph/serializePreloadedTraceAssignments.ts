@@ -154,7 +154,7 @@ export const serializePreloadedTraceAssignments = (
       connection.endRegionId,
     ]),
   )
-  const removedObstacleRegionIds = new Set(
+  const inactiveObstacleRegionIds = new Set(
     serializedHyperGraph.regions
       .filter((region) => {
         const netId =
@@ -177,12 +177,8 @@ export const serializePreloadedTraceAssignments = (
     const metadata = port.d as PortMetadataWithPreloadedAssignments | undefined
     const assignments = metadata?._preloadedTracePortAssignments ?? []
     if (assignments.length > 0) preloadedPortCount++
-    if (
-      removedObstacleRegionIds.has(port.region1Id) ||
-      removedObstacleRegionIds.has(port.region2Id)
-    ) {
-      continue
-    }
+    // An inactive pad can still terminate existing copper. Its boundary
+    // crossing is needed to represent that copper in the adjacent free region.
 
     for (const assignment of assignments) {
       const existingFixedNetId = fixedNetIdByTraceId.get(assignment.traceId)
@@ -240,7 +236,9 @@ export const serializePreloadedTraceAssignments = (
         pairIndex,
         previousRegionId,
       )
-      if (!regionId) {
+      // An inactive pad terminates the preloaded section at its boundary;
+      // subdivisions inside that pad do not need a serialized graph route.
+      if (!regionId || inactiveObstacleRegionIds.has(regionId)) {
         previousRegionId = undefined
         continue
       }
