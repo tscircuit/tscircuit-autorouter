@@ -741,6 +741,33 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
   }
 
   _step() {
+    if (this.iterations === 1 && this.NEARBY_SEGMENT_CLEARANCE > 0) {
+      // Every accepted final segment ends at B on B.z. If B is already
+      // inside a fixed foreign segment's clearance, no search path can pass
+      // doesPathToParentIntersectObstacle's final-segment check.
+      // Check on the first step so subclass hyperparameters are initialized.
+      const clearance = this.NEARBY_SEGMENT_CLEARANCE
+      const segments = this.obstacleSegmentsByLayer.get(this.B.z)
+      const nearbySegmentIds = this.obstacleSegmentIndexByLayer
+        .get(this.B.z)
+        ?.search(
+          this.B.x - clearance,
+          this.B.y - clearance,
+          this.B.x + clearance,
+          this.B.y + clearance,
+        )
+      if (segments && nearbySegmentIds) {
+        for (const segmentId of nearbySegmentIds) {
+          const segment = segments[segmentId]!
+          if (pointToSegmentDistance(this.B, segment.A, segment.B) < clearance) {
+            this.failed = true
+            this.error = `Target for ${this.connectionName} on layer ${this.B.z} is inside fixed obstacle segment clearance`
+            return
+          }
+        }
+      }
+    }
+
     let currentNode = this.candidates.dequeue()
     let currentNodeKey = currentNode ? this.getNodeKey(currentNode) : undefined
 
