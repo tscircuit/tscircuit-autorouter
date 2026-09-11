@@ -6,13 +6,15 @@ export const createEnclosedTerminalFixture = (): SimpleRouteJson => ({
   minTraceWidth: 0.15,
   minTraceToPadEdgeClearance: 0.1,
   minViaDiameter: 0.45,
-  connections: [{
-    name: "signal",
-    pointsToConnect: [
-      { x: 0, y: 0, layer: "top", pcb_port_id: "center_port" },
-      { x: 2, y: 0, layer: "top", pcb_port_id: "outside_port" },
-    ],
-  }],
+  connections: [
+    {
+      name: "signal",
+      pointsToConnect: [
+        { x: 0, y: 0, layer: "top", pcb_port_id: "center_port" },
+        { x: 2, y: 0, layer: "top", pcb_port_id: "outside_port" },
+      ],
+    },
+  ],
   obstacles: [
     {
       type: "rect",
@@ -22,7 +24,12 @@ export const createEnclosedTerminalFixture = (): SimpleRouteJson => ({
       height: 0.208,
       connectedTo: ["center_pad", "center_port"],
     },
-    ...[{ x: -0.4, y: 0 }, { x: 0.4, y: 0 }, { x: 0, y: -0.4 }, { x: 0, y: 0.4 }].map((center, index) => ({
+    ...[
+      { x: -0.4, y: 0 },
+      { x: 0.4, y: 0 },
+      { x: 0, y: -0.4 },
+      { x: 0, y: 0.4 },
+    ].map((center, index) => ({
       type: "rect" as const,
       layers: ["top"],
       center,

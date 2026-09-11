@@ -1,10 +1,14 @@
 import { expect, test } from "bun:test"
-import { sample051 } from "@tscircuit/dataset-srj33-drc-failures"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
-import type { SimpleRouteJson } from "lib/types"
+import { loadScenarioBySampleNumber } from "../../scripts/benchmark/scenarios"
 
-test("Pipeline9 rejects the enclosed SRJ33 sample051 terminal before producing shorted copper", (): void => {
-  const srj = structuredClone(sample051) as SimpleRouteJson
+test("Pipeline9 rejects the enclosed SRJ33 sample051 terminal before producing shorted copper", async (): Promise<void> => {
+  const { scenario: srj, scenarioName } = await loadScenarioBySampleNumber(
+    "srj33",
+    32,
+  )
+  const original = structuredClone(srj)
+  expect(scenarioName).toBe("sample051")
   const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(srj, {
     cacheProvider: null,
     effort: 1,
@@ -20,5 +24,5 @@ test("Pipeline9 rejects the enclosed SRJ33 sample051 terminal before producing s
   expect(solver.error).toContain("allowViaInPad is false")
   expect(solver.iterations).toBe(1)
   expect(solver.highDensityRouteSolver).toBeUndefined()
-  expect(srj).toEqual(sample051)
+  expect(srj).toEqual(original)
 })
