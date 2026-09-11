@@ -17,6 +17,7 @@ test("Pipeline9 completes sample051 with permitted small via-in-pad escapes", as
     minViaHoleDiameter: 0.15,
     min_via_hole_diameter: 0.15,
   }
+  expect(input.traces ?? []).toHaveLength(0)
   const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(input, {
     cacheProvider: null,
     effort: 1,
@@ -54,6 +55,7 @@ test("Pipeline9 completes sample051 with permitted small via-in-pad escapes", as
   const violations = getNewViaPadViolations({
     srj: {
       ...input,
+      traces: [],
       connections: [
         ...input.connections,
         ...solver.srjWithPointPairs!.connections,
