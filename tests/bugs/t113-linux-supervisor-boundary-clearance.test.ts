@@ -2,6 +2,7 @@ import { expect, test } from "bun:test"
 import type { CircuitJson } from "circuit-json"
 import { convertCircuitJsonToPcbSvg } from "circuit-to-svg"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
+import { convertToCircuitJson } from "lib/testing/utils/convertToCircuitJson"
 import type { SimpleRouteJson } from "lib/types"
 import { readFileSync } from "node:fs"
 import { gunzipSync } from "node:zlib"
@@ -24,7 +25,7 @@ const srj = JSON.parse(
 ) as SimpleRouteJson
 
 test(
-  "Pipeline9 reproduces the exact unrouted T113-S3 supervisor PCB",
+  "Pipeline9 routes the exact T113-S3 supervisor PCB",
   async () => {
     expect(
       circuitJson.filter((element) => element.type === "source_component"),
@@ -47,11 +48,6 @@ test(
     expect(autoroutingErrors[0]!.message).toContain(
       "B01 failed: No path found for source_net_2_mst0",
     )
-    await expect(convertCircuitJsonToPcbSvg(circuitJson)).toMatchSvgSnapshot(
-      import.meta.path,
-      { tolerance: 0 },
-    )
-
     expect(srj.obstacles).toHaveLength(222)
     expect(srj.traces).toHaveLength(40)
     expect(
@@ -64,20 +60,36 @@ test(
     )
     solver.solve()
 
-    expect(solver.solved).toBe(false)
-    expect(solver.failed).toBe(true)
-    expect(solver.error).toContain(
-      "B01 failed: No path found for source_net_2_mst0",
-    )
-    expect(solver.error).toContain(
-      "regional force-improve output failed its candidate validator",
-    )
-    const failedConnection = solver.srjWithPointPairs?.connections.find(
+    expect(solver.solved).toBe(true)
+    expect(solver.failed).toBe(false)
+    expect(solver.error).toBeNull()
+    const pllToRtcConnection = solver.srjWithPointPairs?.connections.find(
       (connection) => connection.name === "source_net_2_mst0",
     )
     expect(
-      failedConnection?.pointsToConnect.map((point) => point.pcb_port_id),
+      pllToRtcConnection?.pointsToConnect.map((point) => point.pcb_port_id),
     ).toEqual(["pcb_port_19", "pcb_port_25"])
+    const pllToRtcTrace = solver
+      .getNewTracesBeforePowerExpansion()
+      .find((trace) => trace.pcb_trace_id === "source_net_2_mst0_0")
+    expect(pllToRtcTrace?.connectsTo).toEqual(["pcb_port_19", "pcb_port_25"])
+    expect(pllToRtcTrace?.route.length).toBeGreaterThan(2)
+
+    const outputTraces = solver.getOutputSimpleRouteJson().traces!
+    expect(outputTraces).toHaveLength(94)
+    const routedCopper = convertToCircuitJson(srj, outputTraces).filter(
+      (element) => element.type === "pcb_trace" || element.type === "pcb_via",
+    )
+    expect(
+      routedCopper.filter((element) => element.type === "pcb_trace"),
+    ).toHaveLength(94)
+    const routedVias = routedCopper.filter(
+      (element) => element.type === "pcb_via",
+    )
+    expect(routedVias).toHaveLength(47)
+    await expect(
+      convertCircuitJsonToPcbSvg([...circuitJson, ...routedCopper]),
+    ).toMatchSvgSnapshot(import.meta.path, { tolerance: 0 })
   },
   { timeout: 60_000 },
 )
