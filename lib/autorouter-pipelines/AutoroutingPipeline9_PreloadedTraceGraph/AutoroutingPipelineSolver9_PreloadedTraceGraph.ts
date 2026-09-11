@@ -70,6 +70,7 @@ import { LengthMatchingPostProcessingSolver } from "../../solvers/length-matchin
 import { applyFixedRouteReplacementsToPreloadedTraces } from "./applyFixedRouteReplacementsToPreloadedTraces"
 import { assignUniquePcbTraceIdsToNewTraces } from "./assignUniquePcbTraceIdsToNewTraces"
 import { getTerminalLayerIndicesByPcbPortId } from "./getTerminalLayerIndicesByPcbPortId"
+import { getEnclosedTerminalError } from "./getEnclosedTerminalError"
 import { getPipeline9NetByConnectionName } from "./getPipeline9NetByConnectionName"
 import {
   getMaterializedPreloadedSectionHdRoutes,
@@ -1037,6 +1038,18 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
   }
 
   _step() {
+    if (this.currentPipelineStepIndex === 0 && !this.activeSubSolver) {
+      const terminalError = getEnclosedTerminalError(
+        this.originalSrj,
+        this.connMap,
+        this.viaDiameter,
+      )
+      if (terminalError) {
+        this.error = terminalError
+        this.failed = true
+        return
+      }
+    }
     const pipelineStepDef = this.pipelineDef[this.currentPipelineStepIndex]
     if (!pipelineStepDef) {
       this.solved = true
