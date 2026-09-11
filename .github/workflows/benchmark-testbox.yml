@@ -12,7 +12,7 @@ jobs:
           - revision: main
             ref: 109c67baebc709be95fb37df1fdac9b3b74624c5
           - revision: pr
-            ref: de161e0ce
+            ref: ba35610329d713097b194c1c08495c9335795e6f
     steps:
       - uses: actions/checkout@v4
         with:
