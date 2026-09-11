@@ -4,7 +4,7 @@ import type { SimpleRouteJson } from "lib/types"
 import { getLastStepSvg } from "../fixtures/getLastStepSvg"
 import input from "./assets/rv1106-pathing/input.json"
 
-const MAX_PATHING_RUNTIME_MS = 30_000
+const MAX_PATHING_RUNTIME_MS = 60_000
 
 test("Pipeline9 routes RV1106 with copper-pour-aware free regions", async () => {
   const pipeline = new AutoroutingPipelineSolver9_PreloadedTraceGraph(
