@@ -6,7 +6,7 @@ import input from "./assets/rv1106-pathing/input.json"
 
 const MAX_PATHING_RUNTIME_MS = 30_000
 
-test("Pipeline9 routes RV1106 after connecting overlapping free layers", async () => {
+test("Pipeline9 routes RV1106 with copper-pour-aware free regions", async () => {
   const pipeline = new AutoroutingPipelineSolver9_PreloadedTraceGraph(
     structuredClone(input) as SimpleRouteJson,
     { cacheProvider: null },

@@ -2,7 +2,6 @@ import { BaseSolver } from "@tscircuit/solver-utils"
 import type { GraphicsObject } from "graphics-debug"
 import type { CapacityMeshNode } from "lib/types"
 import { createRectFromCapacityNode } from "lib/utils/createRectFromCapacityNode"
-import { hasOverlappingSingleAndMultilayerFreeMeshes } from "./hasOverlappingSingleAndMultilayerFreeMeshes"
 import { prepareTopologyMergingInput } from "./topology-merging-input"
 import {
   createTopologyMergingOutputNodes,
@@ -39,7 +38,6 @@ export class TopologyMergingSolver extends BaseSolver {
     sourceKeysByNodeId: new Map<string, string[]>(),
   }
   private readonly xCoordinates: number[]
-  private readonly shouldMergeSingleAndMultilayerFreeMeshes: boolean
   private readonly atomicRegions: TopologyMergingRegion[] = []
   private outputNodes: CapacityMeshNode[] = []
   private currentXIndex = 0
@@ -55,11 +53,6 @@ export class TopologyMergingSolver extends BaseSolver {
     this.xCoordinates = getCanonicalCoordinates(
       this.preparedNodes.flatMap(({ bounds }) => [bounds.minX, bounds.maxX]),
     )
-    this.shouldMergeSingleAndMultilayerFreeMeshes =
-      hasOverlappingSingleAndMultilayerFreeMeshes({
-        nodeGroups: inputProblem.nodeGroups,
-        preparedNodes: this.preparedNodes,
-      })
     this.stats = {
       inputNodeCount: this.preparedNodes.length,
       xSlabCount: Math.max(0, this.xCoordinates.length - 1),
@@ -74,10 +67,7 @@ export class TopologyMergingSolver extends BaseSolver {
   }
 
   override _step(): void {
-    if (
-      this.inputProblem.nodeGroups.length === 1 &&
-      !this.shouldMergeSingleAndMultilayerFreeMeshes
-    ) {
+    if (this.inputProblem.nodeGroups.length === 1) {
       this.completePassthroughTopology()
       return
     }
