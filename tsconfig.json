@@ -49,5 +49,5 @@
     "main.tsx",
     "vite.config.ts"
   ],
-  "exclude": ["dist", "fixtures", "examples/legacy/assets/**/*.json"]
+  "exclude": ["dist", "fixtures", "examples/legacy/assets/**/*.json", "tests/gps-logger"]
 }

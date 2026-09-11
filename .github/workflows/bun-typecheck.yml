@@ -25,3 +25,9 @@ jobs:
 
       - name: Run type check
         run: bunx tsc --noEmit
+
+      - name: Install gps logger reproduction dependencies
+        run: bun install --cwd tests/gps-logger --frozen-lockfile
+
+      - name: Type check gps logger reproduction
+        run: bunx tsc --noEmit -p tests/gps-logger/tsconfig.check.json

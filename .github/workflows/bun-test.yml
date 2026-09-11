@@ -36,6 +36,9 @@ jobs:
       - name: Install dependencies
         run: bun install
 
+      - name: Install gps logger reproduction dependencies
+        run: bun install --cwd tests/gps-logger --frozen-lockfile
+
       # Replaces `npm install -g @tscircuit/bun-test-plan && bun-test-plan`.
       # Distributes by recorded runtime instead of alphabetical round-robin,
       # and drops a global npm install from every shard.
