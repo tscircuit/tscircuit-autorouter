@@ -255,7 +255,8 @@ const TINY_SECTION_SOLVER_BASE_OPTIONS: TinyHyperGraphSectionSolverOptions = {
 const DUPLICATE_PORT_TRAVERSAL_PENALTY = 150
 const DEFAULT_CRAMPED_PORT_TRAVERSAL_PENALTY = 150
 
-const getEffortScale = (effort: number) => Math.max(effort, 1e-2)
+export const getEffortScale = (effort?: number) =>
+  Math.max(Number.isFinite(effort) ? (effort as number) : 1, 1e-2)
 
 const getTinyViaSizeOptions = (
   minViaPadDiameter?: number,
@@ -265,7 +266,7 @@ const getTinyViaSizeOptions = (
     : {}
 
 const getTinyHyperGraphSolveGraphOptions = (
-  effort: number,
+  effort?: number,
   minViaPadDiameter?: number,
 ): TinyHyperGraphSolverOptions => {
   const effortScale = getEffortScale(effort)
@@ -279,7 +280,7 @@ const getTinyHyperGraphSolveGraphOptions = (
 }
 
 const getTinyHyperGraphSectionSolverOptions = (
-  effort: number,
+  effort?: number,
   minViaPadDiameter?: number,
 ): TinyHyperGraphSectionSolverOptions => {
   const effortScale = getEffortScale(effort)
@@ -294,7 +295,7 @@ const getTinyHyperGraphSectionSolverOptions = (
 
 const getTinyHyperGraphPipelineInput = (
   serializedHyperGraph: SerializedHyperGraph,
-  effort: number,
+  effort?: number,
   minViaPadDiameter?: number,
   enablePartialRip = true,
   partialRipEligibilityCount?: number,

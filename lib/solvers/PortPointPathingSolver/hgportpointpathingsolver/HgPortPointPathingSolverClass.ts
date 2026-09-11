@@ -56,7 +56,7 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
     this.totalRipCount = 0
     if (params.weights.MAX_ITERATIONS_PER_PATH > 0) {
       this.MAX_ITERATIONS =
-        params.weights.MAX_ITERATIONS_PER_PATH * params.effort
+        params.weights.MAX_ITERATIONS_PER_PATH * (params.effort ?? 1)
     }
   }
 
