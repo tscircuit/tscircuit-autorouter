@@ -3,6 +3,7 @@ import type { GraphicsObject } from "graphics-debug"
 import type { CapacityMeshNode } from "lib/types"
 import { createRectFromCapacityNode } from "lib/utils/createRectFromCapacityNode"
 import { prepareTopologyMergingInput } from "./topology-merging-input"
+import { hasTwoOverlappingFreeLayerMeshes } from "./hasTwoOverlappingFreeLayerMeshes"
 import {
   createTopologyMergingOutputNodes,
   type TopologyMergingOutputProvenance,
@@ -38,7 +39,7 @@ export class TopologyMergingSolver extends BaseSolver {
     sourceKeysByNodeId: new Map<string, string[]>(),
   }
   private readonly xCoordinates: number[]
-  private readonly shouldPassthroughSingleGroup: boolean
+  private readonly shouldMergeSingleGroupFreeLayers: boolean
   private readonly atomicRegions: TopologyMergingRegion[] = []
   private outputNodes: CapacityMeshNode[] = []
   private currentXIndex = 0
@@ -54,9 +55,10 @@ export class TopologyMergingSolver extends BaseSolver {
     this.xCoordinates = getCanonicalCoordinates(
       this.preparedNodes.flatMap(({ bounds }) => [bounds.minX, bounds.maxX]),
     )
-    this.shouldPassthroughSingleGroup =
-      inputProblem.nodeGroups.length === 1 &&
-      !this.hasOverlappingFreeNodesWithDifferentLayers()
+    this.shouldMergeSingleGroupFreeLayers = hasTwoOverlappingFreeLayerMeshes({
+      nodeGroups: inputProblem.nodeGroups,
+      preparedNodes: this.preparedNodes,
+    })
     this.stats = {
       inputNodeCount: this.preparedNodes.length,
       xSlabCount: Math.max(0, this.xCoordinates.length - 1),
@@ -71,7 +73,10 @@ export class TopologyMergingSolver extends BaseSolver {
   }
 
   override _step(): void {
-    if (this.shouldPassthroughSingleGroup) {
+    if (
+      this.inputProblem.nodeGroups.length === 1 &&
+      !this.shouldMergeSingleGroupFreeLayers
+    ) {
       this.completePassthroughTopology()
       return
     }
@@ -152,41 +157,6 @@ export class TopologyMergingSolver extends BaseSolver {
     }
   }
 
-  private hasOverlappingFreeNodesWithDifferentLayers(): boolean {
-    const freeNodes = this.preparedNodes.filter(
-      ({ node }) => node._containsObstacle !== true,
-    )
-    for (let aIndex = 0; aIndex < freeNodes.length; aIndex++) {
-      const nodeA = freeNodes[aIndex]!
-      for (let bIndex = aIndex + 1; bIndex < freeNodes.length; bIndex++) {
-        const nodeB = freeNodes[bIndex]!
-        if (
-          nodeA.node.availableZ.length === nodeB.node.availableZ.length &&
-          nodeA.node.availableZ.every(
-            (z, index) => z === nodeB.node.availableZ[index],
-          )
-        ) {
-          continue
-        }
-
-        const overlapWidth =
-          Math.min(nodeA.bounds.maxX, nodeB.bounds.maxX) -
-          Math.max(nodeA.bounds.minX, nodeB.bounds.minX)
-        const overlapHeight =
-          Math.min(nodeA.bounds.maxY, nodeB.bounds.maxY) -
-          Math.max(nodeA.bounds.minY, nodeB.bounds.minY)
-        if (
-          overlapWidth > TOPOLOGY_MERGING_EPSILON &&
-          overlapHeight > TOPOLOGY_MERGING_EPSILON
-        ) {
-          return true
-        }
-      }
-    }
-
-    return false
-  }
-
   private completePassthroughTopology(): void {
     const passthroughGroup = this.inputProblem.nodeGroups[0]!
     this.outputNodes = passthroughGroup.nodes
@@ -237,6 +207,7 @@ export class TopologyMergingSolver extends BaseSolver {
         coveringNodes,
         nodeGroups: this.inputProblem.nodeGroups,
         layerCount: this.inputProblem.layerCount,
+        mergeSingleGroupFreeLayers: this.shouldMergeSingleGroupFreeLayers,
       })
       for (const layerTopology of layerTopologies) {
         this.atomicRegions.push({
