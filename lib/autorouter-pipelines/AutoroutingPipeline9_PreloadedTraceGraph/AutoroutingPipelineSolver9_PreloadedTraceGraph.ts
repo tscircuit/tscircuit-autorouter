@@ -1,5 +1,5 @@
-import { RectDiffPipeline } from "@tscircuit/rectdiff"
 import type { PowerTraceExpanderOptions } from "@tscircuit/power-trace-expander"
+import { RectDiffPipeline } from "@tscircuit/rectdiff"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { GraphicsObject, Line } from "graphics-debug"
 import { HighDensityForceImproveSolver } from "high-density-repair01/lib/HighDensityForceImproveSolver"
@@ -14,14 +14,15 @@ import {
   type ChangedPreloadedTraceSection,
   TinyHypergraphPortPointPathingSolver,
 } from "lib/solvers/PortPointPathingSolver/tinyhypergraph/TinyHypergraphPortPointPathingSolver"
-import { MultiGraphTopologyPlannerSolver } from "lib/solvers/TopologyPlanningSolver/MultiGraphTopologyPlannerSolver"
 import { TopologyMergingSolver } from "lib/solvers/TopologyMergingSolver/TopologyMergingSolver"
+import { MultiGraphTopologyPlannerSolver } from "lib/solvers/TopologyPlanningSolver/MultiGraphTopologyPlannerSolver"
 import { UniformPortDistributionSolver } from "lib/solvers/UniformPortDistributionSolver/UniformPortDistributionSolver"
 import { getColorMap } from "lib/solvers/colors"
 import {
   CapacityMeshEdge,
   CapacityMeshNode,
   DifferentialPair,
+  Obstacle,
   SimpleRouteConnection,
   SimpleRouteJson,
   SimplifiedPcbTraces,
@@ -30,16 +31,16 @@ import {
   HighDensityRoute,
   NodeWithPortPoints,
 } from "lib/types/high-density-types"
-import { combineVisualizations } from "lib/utils/combineVisualizations"
 import { applyNetColorsToGraphicsObject } from "lib/utils/applyNetColorsToGraphicsObject"
+import { combineVisualizations } from "lib/utils/combineVisualizations"
 import {
-  convertSrjToGraphicsObject,
   type TraceColorMode,
+  convertSrjToGraphicsObject,
 } from "lib/utils/convertSrjToGraphicsObject"
 import { createSrjWithBoardValidObstacleLayers } from "lib/utils/create-srj-with-board-valid-obstacle-layers"
 import { createObstacleLabelFormatter } from "lib/utils/formatObstacleLabel"
-import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
 import { getInitiallyConnectedMapFromSimpleRouteJson } from "lib/utils/get-initially-connected-map-from-simple-route-json"
+import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
 import {
   getGraphicsLayerForConnectionPoint,
   getGraphicsLayerForObstacle,
@@ -66,11 +67,30 @@ import { SingleLayerNodeMergerSolver } from "../../solvers/SingleLayerNodeMerger
 import { StrawSolver } from "../../solvers/StrawSolver/StrawSolver"
 import { TraceSimplificationSolver } from "../../solvers/TraceSimplificationSolver/TraceSimplificationSolver"
 import { TraceWidthSolver } from "../../solvers/TraceWidthSolver/TraceWidthSolver"
+import { getLengthMatchingPreloadedTraceObstacles } from "../../solvers/getLengthMatchingPreloadedTraceObstacles"
+import { getSimplifiedPcbTraceConnectionLengthOffsets } from "../../solvers/getSimplifiedPcbTraceConnectionLengthOffsets"
 import { LengthMatchingPostProcessingSolver } from "../../solvers/length-matching-post-processing-solver"
+import { MergedComponentTopologyView } from "../AutoroutingPipeline7_MultiGraph/MergedComponentTopologyView"
+import { PowerTraceExpansionSolver } from "../AutoroutingPipeline7_MultiGraph/PowerTraceExpansionSolver"
+import { convertPipeline7HdRoutesToSimplifiedPcbTraces } from "../AutoroutingPipeline7_MultiGraph/convertPipeline7HdRoutesToSimplifiedPcbTraces"
+import { getPowerTraceExpansionConnectionNames } from "../AutoroutingPipeline7_MultiGraph/getPowerTraceExpansionConnectionNames"
+import { lockHdRouteTerminals } from "../AutoroutingPipeline7_MultiGraph/lock-hd-route-terminals"
+import {
+  type Pipeline7PowerTraceExpansionInput,
+  preparePipeline7PowerTraceExpansionInput,
+} from "../AutoroutingPipeline7_MultiGraph/prepare-pipeline7-power-trace-expansion-input"
+import { Pipeline9HighDensitySolver } from "./Pipeline9HighDensitySolver"
+import { Pipeline9JointDrcRepairSolver } from "./Pipeline9JointDrcRepairSolver"
+import { PreloadedTraceGraphSolver } from "./PreloadedTraceGraphSolver"
+import { PreprocessSimpleRouteJsonWithoutTraceObstaclesSolver } from "./PreprocessSimpleRouteJsonWithoutTraceObstaclesSolver"
 import { applyFixedRouteReplacementsToPreloadedTraces } from "./applyFixedRouteReplacementsToPreloadedTraces"
 import { assignUniquePcbTraceIdsToNewTraces } from "./assignUniquePcbTraceIdsToNewTraces"
-import { getTerminalLayerIndicesByPcbPortId } from "./getTerminalLayerIndicesByPcbPortId"
+import {
+  type PreloadedHighDensityRoute,
+  convertPreloadedTraceToHdRoutes,
+} from "./convertPreloadedTraceToHdRoutes"
 import { getPipeline9NetByConnectionName } from "./getPipeline9NetByConnectionName"
+import { getTerminalLayerIndicesByPcbPortId } from "./getTerminalLayerIndicesByPcbPortId"
 import {
   getMaterializedPreloadedSectionHdRoutes,
   removeChangedSectionsFromFixedHdRoutes,
@@ -81,23 +101,6 @@ import {
   applyPipeline9MutatedPreloadedSections,
   preparePipeline9MutatedPreloadedSections,
 } from "./pipeline9MutatedPreloadedTraceSimplification"
-import {
-  convertPreloadedTraceToHdRoutes,
-  type PreloadedHighDensityRoute,
-} from "./convertPreloadedTraceToHdRoutes"
-import { Pipeline9HighDensitySolver } from "./Pipeline9HighDensitySolver"
-import { Pipeline9JointDrcRepairSolver } from "./Pipeline9JointDrcRepairSolver"
-import { PreloadedTraceGraphSolver } from "./PreloadedTraceGraphSolver"
-import { PreprocessSimpleRouteJsonWithoutTraceObstaclesSolver } from "./PreprocessSimpleRouteJsonWithoutTraceObstaclesSolver"
-import { MergedComponentTopologyView } from "../AutoroutingPipeline7_MultiGraph/MergedComponentTopologyView"
-import { PowerTraceExpansionSolver } from "../AutoroutingPipeline7_MultiGraph/PowerTraceExpansionSolver"
-import { convertPipeline7HdRoutesToSimplifiedPcbTraces } from "../AutoroutingPipeline7_MultiGraph/convertPipeline7HdRoutesToSimplifiedPcbTraces"
-import { getPowerTraceExpansionConnectionNames } from "../AutoroutingPipeline7_MultiGraph/getPowerTraceExpansionConnectionNames"
-import { lockHdRouteTerminals } from "../AutoroutingPipeline7_MultiGraph/lock-hd-route-terminals"
-import {
-  preparePipeline7PowerTraceExpansionInput,
-  type Pipeline7PowerTraceExpansionInput,
-} from "../AutoroutingPipeline7_MultiGraph/prepare-pipeline7-power-trace-expansion-input"
 
 interface CapacityMeshSolverOptions {
   capacityDepth?: number
@@ -882,6 +885,17 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           }
         }
         const hdRoutes = cms.pipeline9JointDrcRepairSolver!.getOutput()
+        const updatedPreloadedTraces = cms.getUpdatedPreloadedTraces()
+        const preloadedTraceObstacles =
+          getLengthMatchingPreloadedTraceObstacles({
+            srj: cms.srj,
+            traces: updatedPreloadedTraces,
+            connMap: cms.connMap,
+          })
+        const lengthMatchingObstacles: Obstacle[] = [
+          ...cms.srj.obstacles,
+          ...preloadedTraceObstacles,
+        ]
         const differentialPairs = (cms.srj.differentialPairs ?? []).map(
           (pair) => {
             const connectionNames = pair.connectionNames.map(
@@ -936,10 +950,15 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             differentialPairs,
             buses: cms.srj.buses ?? [],
             connections: cms.srj.connections,
-            obstacles: cms.srj.obstacles,
+            obstacles: lengthMatchingObstacles,
             bounds: cms.srj.bounds,
             layerCount: cms.srj.layerCount,
             obstacleMargin: cms.srj.minTraceToPadEdgeClearance ?? 0.15,
+            connectionLengthOffsets:
+              getSimplifiedPcbTraceConnectionLengthOffsets(
+                updatedPreloadedTraces,
+                cms.connMap,
+              ),
           },
         ]
       },
