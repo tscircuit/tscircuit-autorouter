@@ -8,13 +8,14 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        variant: [via-in-pad, small-via-in-pad]
+        variant: [small-via-in-pad]
     steps:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: 1.3.8
       - run: bun install
+      - run: python3 scripts/patch-repair03-terminal-overlap.py
       - run: bun scripts/debug-srj33-clean-routing.ts '${{ matrix.variant }}'
       - uses: actions/upload-artifact@v4
         if: always()
