@@ -14,6 +14,7 @@ test("Pipeline9 rejects the enclosed SRJ33 sample051 terminal before producing s
     effort: 1,
   })
 
+  solver.solveUntilPhase("highDensityRouteSolver")
   solver.solve()
 
   expect(solver.failed).toBeTrue()

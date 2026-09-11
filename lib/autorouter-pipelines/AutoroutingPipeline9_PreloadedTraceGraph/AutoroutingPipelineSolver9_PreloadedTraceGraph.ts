@@ -1091,7 +1091,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
   }
 
   solveUntilPhase(phase: string) {
-    while (this.getCurrentPhase() !== phase) {
+    while (this.getCurrentPhase() !== phase && !this.solved && !this.failed) {
       this.step()
     }
   }
