@@ -1534,7 +1534,7 @@ jobs:
               branch: pr.data.base.ref,
             })
             const mainSha = "109c67baebc709be95fb37df1fdac9b3b74624c5"
-            const prSha = "8cfff696de618d8662cc48defc24eb952b127f33"
+            const prSha = "2f3a778f017c39ea6b83df776621fa827e42ee6d"
             const runUrl = `${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}`
             const statusComment = await github.rest.issues.createComment({
               owner: context.repo.owner,
