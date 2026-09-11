@@ -64,12 +64,10 @@ export function getLayerTopologiesForCoveredNodes({
   coveringNodes,
   nodeGroups,
   layerCount,
-  mergeSingleGroupFreeLayers,
 }: {
   coveringNodes: PreparedTopologyMergingNode[]
   nodeGroups: readonly TopologyMergingNodeGroup[]
   layerCount: number
-  mergeSingleGroupFreeLayers: boolean
 }): TopologyMergingLayerTopology[] {
   const freeNodesAcrossLayers = coveringNodes.filter(
     ({ node }) => node._containsObstacle !== true,
@@ -97,7 +95,7 @@ export function getLayerTopologiesForCoveredNodes({
       targetObstacleNodes.map(({ groupIndex }) => groupIndex),
     )
     const shouldMergeFreeLayers =
-      mergeSingleGroupFreeLayers &&
+      nodeGroups.length === 1 &&
       freeNodesAcrossLayers.length > nodesOnLayer.length &&
       nodesOnLayer.every(({ node }) => node._containsObstacle !== true)
     const topologyMode: TopologyMergingMode =
@@ -108,11 +106,11 @@ export function getLayerTopologiesForCoveredNodes({
         : activeGroupIndexes.size === 1 && !shouldMergeFreeLayers
           ? "passthrough"
           : "merged"
+    let sourceNodes = nodesOnLayer
+    if (shouldMergeFreeLayers) sourceNodes = freeNodesAcrossLayers
     const sourceKeyGroups = getSourceKeyGroupsForTopologyMode({
       topologyMode,
-      nodesOnLayer: shouldMergeFreeLayers
-        ? freeNodesAcrossLayers
-        : nodesOnLayer,
+      nodesOnLayer: sourceNodes,
       targetObstacleNodes,
       globalTargetObstacleNodes,
     })
