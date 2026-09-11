@@ -4,7 +4,7 @@ import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-p
 import type { SimpleRouteJson } from "lib/types"
 import { TinyHyperGraphSolver } from "tiny-hypergraph/lib/index"
 
-test("Pipeline9 completes the pedometer graph at low effort", async () => {
+test("Pipeline9 routes every pedometer high-density region", async (): Promise<void> => {
   const srj: SimpleRouteJson = await Bun.file(
     new URL(
       "../../public/fixtures/bugreport103-pedometer.srj.json",
@@ -12,11 +12,11 @@ test("Pipeline9 completes the pedometer graph at low effort", async () => {
     ),
   ).json()
   const pipeline = new AutoroutingPipelineSolver9_PreloadedTraceGraph(srj, {
-    effort: 0.01,
+    effort: 1,
     cacheProvider: null,
   })
   let tinySolver: TinyHyperGraphSolver | undefined
-  while (!pipeline.portPointPathingSolver?.solved && !pipeline.failed) {
+  while (!pipeline.highDensityRouteSolver?.solved && !pipeline.failed) {
     pipeline.step()
     let active = pipeline.activeSubSolver
     while (active) {
@@ -32,8 +32,6 @@ test("Pipeline9 completes the pedometer graph at low effort", async () => {
   }
   expect(tinySolver.failed).toBe(false)
   expect(tinySolver.solved).toBe(true)
-  expect(tinySolver.iterations).toBe(tinySolver.MAX_ITERATIONS)
-  expect(tinySolver.stats.acceptedGreedyFinalRouteOnTimeout).toBe(true)
   expect(tinySolver.getOutput().solvedRoutes).toHaveLength(230)
   expect(tinySolver.state.unroutedRoutes).toEqual([])
   for (
@@ -41,6 +39,13 @@ test("Pipeline9 completes the pedometer graph at low effort", async () => {
     regionId < tinySolver.topology.regionCount;
     regionId++
   ) {
+    const layerMask = tinySolver.topology.regionAvailableZMask?.[regionId] ?? 0
+    if (layerMask > 0 && (layerMask & (layerMask - 1)) === 0) {
+      expect(
+        tinySolver.state.regionIntersectionCaches[regionId]!
+          .existingSameLayerIntersections,
+      ).toBe(0)
+    }
     for (const [routeId, fromPortId, toPortId] of tinySolver.state
       .regionSegments[regionId]) {
       const netId = tinySolver.problem.routeNet[routeId]
@@ -50,7 +55,14 @@ test("Pipeline9 completes the pedometer graph at low effort", async () => {
       expect(reservedNetId === -1 || reservedNetId === netId).toBe(true)
     }
   }
-  const svg = getSvgFromGraphicsObject(tinySolver.visualize(), {
+  const highDensitySolver = pipeline.highDensityRouteSolver!
+  expect(highDensitySolver.failed).toBe(false)
+  expect(highDensitySolver.solved).toBe(true)
+  expect(highDensitySolver.stats.solvedNodeCount).toBe(
+    highDensitySolver.stats.nodeCount,
+  )
+  expect(highDensitySolver.unsolvedNodePortPoints).toHaveLength(0)
+  const svg = getSvgFromGraphicsObject(highDensitySolver.visualize(), {
     backgroundColor: "white",
   })
   await expect(svg.replace(/[ \t]+$/gm, "")).toMatchSvgSnapshot(
