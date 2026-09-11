@@ -3,7 +3,7 @@ import {
   GlobalDrcForceImproveSolver,
   type HighDensityRoute,
   type SimpleRouteJson,
-} from "high-density-repair03"
+} from "high-density-repair03/lib"
 import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import { convertHdRouteToSimplifiedRoute } from "lib/utils/convertHdRouteToSimplifiedRoute"
 
