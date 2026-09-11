@@ -5,7 +5,7 @@ import type {
 } from "./topology-merging-types"
 import { TOPOLOGY_MERGING_EPSILON } from "./topology-merging-types"
 
-export function hasTwoOverlappingFreeLayerMeshes({
+export function hasOverlappingSingleAndMultilayerFreeMeshes({
   nodeGroups,
   preparedNodes,
 }: {
@@ -28,6 +28,7 @@ export function hasTwoOverlappingFreeLayerMeshes({
     if (freeLayerSets.length > 2) return false
   }
   if (freeLayerSets.length !== 2) return false
+  if (freeLayerSets.every((layers) => layers.length === 1)) return false
 
   for (let aIndex = 0; aIndex < freeNodes.length; aIndex++) {
     const nodeA = freeNodes[aIndex]!
