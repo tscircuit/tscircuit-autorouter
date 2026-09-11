@@ -33,7 +33,9 @@ const traces = solver.getOutputSimplifiedPcbTraces()
 const validation = evaluateRelaxedDrc({ inputSrj: input, srjWithPointPairs: solver.srjWithPointPairs!, routedTraces: traces })
 const routes = solver._getOutputHdRoutes()
 const expandedSrj = { ...input, connections: [...input.connections, ...solver.srjWithPointPairs!.connections] }
-const viaPadViolations = getNewViaPadViolations({ srj: expandedSrj, routes, previousRoutes: [], viaClearance: 0.1 }).filter((violation) => {
+mkdirSync("debug-artifacts", { recursive: true })
+await Bun.write(`debug-artifacts/${variant}-routed.json`, JSON.stringify({ input, routes, traces, srjWithPointPairs: solver.srjWithPointPairs, circuitJson: validation.circuitJson, errors: validation.errors }, null, 2))
+const viaPadViolations = getNewViaPadViolations({ srj: expandedSrj, routes, previousRoutes: routes.map((route) => ({ ...route, route: [], vias: [] })), viaClearance: 0.1 }).filter((violation) => {
   const route = routes[violation.routeIndex]!
   const obstacle = input.obstacles[violation.obstacleIndex]!
   const routeNet = solver.connMap.getNetConnectedToId(route.connectionName)
