@@ -38,6 +38,7 @@ export class TopologyMergingSolver extends BaseSolver {
     sourceKeysByNodeId: new Map<string, string[]>(),
   }
   private readonly xCoordinates: number[]
+  private readonly shouldPassthroughSingleGroup: boolean
   private readonly atomicRegions: TopologyMergingRegion[] = []
   private outputNodes: CapacityMeshNode[] = []
   private currentXIndex = 0
@@ -53,6 +54,9 @@ export class TopologyMergingSolver extends BaseSolver {
     this.xCoordinates = getCanonicalCoordinates(
       this.preparedNodes.flatMap(({ bounds }) => [bounds.minX, bounds.maxX]),
     )
+    this.shouldPassthroughSingleGroup =
+      inputProblem.nodeGroups.length === 1 &&
+      !this.hasOverlappingFreeNodesWithDifferentLayers()
     this.stats = {
       inputNodeCount: this.preparedNodes.length,
       xSlabCount: Math.max(0, this.xCoordinates.length - 1),
@@ -67,7 +71,7 @@ export class TopologyMergingSolver extends BaseSolver {
   }
 
   override _step(): void {
-    if (this.inputProblem.nodeGroups.length === 1) {
+    if (this.shouldPassthroughSingleGroup) {
       this.completePassthroughTopology()
       return
     }
@@ -146,6 +150,41 @@ export class TopologyMergingSolver extends BaseSolver {
       circles: [],
       texts: [],
     }
+  }
+
+  private hasOverlappingFreeNodesWithDifferentLayers(): boolean {
+    const freeNodes = this.preparedNodes.filter(
+      ({ node }) => node._containsObstacle !== true,
+    )
+    for (let aIndex = 0; aIndex < freeNodes.length; aIndex++) {
+      const nodeA = freeNodes[aIndex]!
+      for (let bIndex = aIndex + 1; bIndex < freeNodes.length; bIndex++) {
+        const nodeB = freeNodes[bIndex]!
+        if (
+          nodeA.node.availableZ.length === nodeB.node.availableZ.length &&
+          nodeA.node.availableZ.every(
+            (z, index) => z === nodeB.node.availableZ[index],
+          )
+        ) {
+          continue
+        }
+
+        const overlapWidth =
+          Math.min(nodeA.bounds.maxX, nodeB.bounds.maxX) -
+          Math.max(nodeA.bounds.minX, nodeB.bounds.minX)
+        const overlapHeight =
+          Math.min(nodeA.bounds.maxY, nodeB.bounds.maxY) -
+          Math.max(nodeA.bounds.minY, nodeB.bounds.minY)
+        if (
+          overlapWidth > TOPOLOGY_MERGING_EPSILON &&
+          overlapHeight > TOPOLOGY_MERGING_EPSILON
+        ) {
+          return true
+        }
+      }
+    }
+
+    return false
   }
 
   private completePassthroughTopology(): void {
