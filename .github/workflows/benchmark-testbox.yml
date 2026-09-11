@@ -8,17 +8,29 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        variant: [small-via-in-pad]
+        include:
+          - revision: main
+            ref: 109c67baebc709be95fb37df1fdac9b3b74624c5
+          - revision: pr
+            ref: de161e0ce
     steps:
       - uses: actions/checkout@v4
+        with:
+          path: controller
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ matrix.ref }}
+          path: router
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: 1.3.8
       - run: bun install
-      - run: python3 scripts/patch-repair03-terminal-overlap.py
-      - run: bun scripts/debug-srj33-clean-routing.ts '${{ matrix.variant }}'
+        working-directory: router
+      - run: cp controller/scripts/debug-srj33-clean-routing.ts router/scripts/debug-srj33-clean-routing.ts
+      - run: bun scripts/debug-srj33-clean-routing.ts small-via-in-pad
+        working-directory: router
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: clean-routing-${{ matrix.variant }}
-          path: debug-artifacts/
+          name: clean-routing-${{ matrix.revision }}
+          path: router/debug-artifacts/

@@ -30,7 +30,7 @@ while (!solver.solved && !solver.failed) {
 }
 if (solver.failed) throw new Error(solver.error!)
 const traces = solver.getOutputSimplifiedPcbTraces()
-const validation = evaluateRelaxedDrc({ inputSrj: input, srjWithPointPairs: solver.srjWithPointPairs!, routedTraces: traces })
+const validation = evaluateRelaxedDrc({ inputSrj: input, srjWithPointPairs: solver.srjWithPointPairs!, routedTraces: traces, includeBoardClearance: true })
 const routes = solver._getOutputHdRoutes()
 const expandedSrj = { ...input, connections: [...input.connections, ...solver.srjWithPointPairs!.connections] }
 mkdirSync("debug-artifacts", { recursive: true })
