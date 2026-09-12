@@ -77,6 +77,10 @@ fn route_color(solver: &RegionPathSolver, route: i32, alpha: f64) -> String {
     format!("hsla({}, 70%, 50%, {alpha})", (hash as i64).abs() % 360)
 }
 
+#[expect(
+    clippy::manual_clamp,
+    reason = "Preserve the existing min/max behavior for NaN inputs."
+)]
 fn region_fill(solver: &RegionPathSolver, region: usize) -> String {
     let utilization = (solver.state.region_usage[region] as f64
         / solver.region_graph.region_capacity[region])
@@ -119,7 +123,7 @@ fn region_label(solver: &RegionPathSolver, region: usize) -> String {
     label
 }
 
-fn push_route_hints(solver: &RegionPathSolver, graphics: &mut Value) -> () {
+fn push_route_hints(solver: &RegionPathSolver, graphics: &mut Value) {
     for route in 0..solver.region_problem.route_count {
         let start = solver.region_problem.route_start_region[route];
         let end = solver.region_problem.route_end_region[route];
@@ -127,7 +131,7 @@ fn push_route_hints(solver: &RegionPathSolver, graphics: &mut Value) -> () {
     }
 }
 
-fn push_solved_routes(solver: &RegionPathSolver, graphics: &mut Value) -> () {
+fn push_solved_routes(solver: &RegionPathSolver, graphics: &mut Value) {
     for (route, path) in solver.state.solved_route_region_ids.iter().enumerate() {
         if path.len() < 2 {
             continue;
@@ -137,7 +141,7 @@ fn push_solved_routes(solver: &RegionPathSolver, graphics: &mut Value) -> () {
     }
 }
 
-fn push_route_endpoints(solver: &RegionPathSolver, graphics: &mut Value) -> () {
+fn push_route_endpoints(solver: &RegionPathSolver, graphics: &mut Value) {
     for route in 0..solver.region_problem.route_count {
         for (region, endpoint) in [
             (solver.region_problem.route_start_region[route], "start"),
@@ -156,7 +160,7 @@ fn push_route_endpoints(solver: &RegionPathSolver, graphics: &mut Value) -> () {
     }
 }
 
-fn push_active_frontier(solver: &RegionPathSolver, graphics: &mut Value) -> () {
+fn push_active_frontier(solver: &RegionPathSolver, graphics: &mut Value) {
     let mut candidates = solver.state.candidate_queue.to_array();
     candidates.sort_by(|a, b| a.f.total_cmp(&b.f));
     candidates.truncate(128);

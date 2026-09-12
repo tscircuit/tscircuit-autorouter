@@ -8,10 +8,18 @@ pub fn get_bounds_from_node_with_port_points(node: &NodeWithPortPoints) -> Bound
         max_y: node.center.y + node.height / 2.0,
     };
     for point in &node.port_points {
-        if point.x < bounds.min_x { bounds.min_x = point.x; }
-        if point.x > bounds.max_x { bounds.max_x = point.x; }
-        if point.y < bounds.min_y { bounds.min_y = point.y; }
-        if point.y > bounds.max_y { bounds.max_y = point.y; }
+        if point.x < bounds.min_x {
+            bounds.min_x = point.x;
+        }
+        if point.x > bounds.max_x {
+            bounds.max_x = point.x;
+        }
+        if point.y < bounds.min_y {
+            bounds.min_y = point.y;
+        }
+        if point.y > bounds.max_y {
+            bounds.max_y = point.y;
+        }
     }
     bounds
 }

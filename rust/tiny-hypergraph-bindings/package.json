@@ -5,7 +5,6 @@
   "type": "module",
   "scripts": {
     "build": "npm run build:bindings && npm run build:adapter",
-    "test": "npm run build:adapter && node --test tests/*.test.mjs",
     "build:adapter": "tsc -p tsconfig.json",
     "build:bindings": "node scripts/build.mjs"
   },

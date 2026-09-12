@@ -19,12 +19,15 @@ fn scalar(value: &Value) -> Result<H, String> {
                     _ => Err("Invalid cache scalar tag".into()),
                 },
                 Value::Array(units) => Ok(H::String(
-                    units.iter().map(|v| {
-                        v.as_u64()
-                            .filter(|n| *n <= 65535)
-                            .map(|n| n as u16)
-                            .ok_or("Invalid UTF16 cache string".to_owned())
-                    }).collect::<Result<_, _>>()?,
+                    units
+                        .iter()
+                        .map(|v| {
+                            v.as_u64()
+                                .filter(|n| *n <= 65535)
+                                .map(|n| n as u16)
+                                .ok_or("Invalid UTF16 cache string".to_owned())
+                        })
+                        .collect::<Result<_, _>>()?,
                 )),
                 _ => Err("Invalid cache scalar".into()),
             }
@@ -51,7 +54,8 @@ fn rounded(value: f64) -> H {
 }
 
 fn array<'a>(value: &'a Value, name: &str) -> Result<&'a Vec<Value>, String> {
-    value.get(name)
+    value
+        .get(name)
         .and_then(Value::as_array)
         .ok_or_else(|| format!("Cache {name} must be an array"))
 }
@@ -94,7 +98,7 @@ impl LocaleStrings {
                     text = text.concat(&js_sys::JsString::from_char_code(chunk));
                 }
                 text
-            },
+            }
         };
         self.values.insert(value.to_vec(), text.clone());
         text
@@ -103,7 +107,8 @@ impl LocaleStrings {
     fn compare(&mut self, locale: &js_sys::Function, left: &[u16], right: &[u16]) -> Ordering {
         let a = self.get(left);
         let b = self.get(right);
-        let n = locale.call2(&JsValue::UNDEFINED, &a, &b)
+        let n = locale
+            .call2(&JsValue::UNDEFINED, &a, &b)
             .expect("localeCompare failed")
             .as_f64()
             .expect("localeCompare must return a number");
@@ -121,10 +126,11 @@ fn default_sort_string(value: &H) -> Result<Vec<u16>, String> {
     }
 }
 
-
 pub fn compute(snapshot_json: &str, locale: &js_sys::Function) -> Result<String, String> {
     let snapshot: Value = serde_json::from_str(snapshot_json).map_err(|error| error.to_string())?;
-    let mut locale_strings = LocaleStrings { values: HashMap::new() };
+    let mut locale_strings = LocaleStrings {
+        values: HashMap::new(),
+    };
     let node = &snapshot["node"];
     let center = &snapshot["normalizationCenter"];
     let cx = number(center, "x")?;
@@ -145,24 +151,30 @@ pub fn compute(snapshot_json: &str, locale: &js_sys::Function) -> Result<String,
         }
         normalized_connections.push(obj(vec![
             ("connectionName", name),
-            ("rootConnectionName", field(connection, "rootConnectionName")?),
+            (
+                "rootConnectionName",
+                field(connection, "rootConnectionName")?,
+            ),
             ("points", H::Array(points)),
         ]));
     }
 
-    let mut ports = array(&snapshot, "portPoints")?.iter().map(|port| {
-        Ok((
-            port,
-            text(field(port, "connectionName")?)?,
-            text(nullish(field(port, "portPointId")?, H::String(vec![])))?,
-            number(port, "x")?,
-            number(port, "y")?,
-            match nullish(field(port, "z")?, H::Number(0.0)) {
-                H::Number(v) => v,
-                _ => return Err("Cache layer must be numeric".into()),
-            },
-        ))
-    }).collect::<Result<Vec<_>, String>>()?;
+    let mut ports = array(&snapshot, "portPoints")?
+        .iter()
+        .map(|port| {
+            Ok((
+                port,
+                text(field(port, "connectionName")?)?,
+                text(nullish(field(port, "portPointId")?, H::String(vec![])))?,
+                number(port, "x")?,
+                number(port, "y")?,
+                match nullish(field(port, "z")?, H::Number(0.0)) {
+                    H::Number(v) => v,
+                    _ => return Err("Cache layer must be numeric".into()),
+                },
+            ))
+        })
+        .collect::<Result<Vec<_>, String>>()?;
 
     ports.sort_by(|a, b| {
         if a.1 != b.1 {
@@ -180,18 +192,21 @@ pub fn compute(snapshot_json: &str, locale: &js_sys::Function) -> Result<String,
         (a.5 - b.5).partial_cmp(&0.0).unwrap_or(Ordering::Equal)
     });
 
-    let normalized_ports = ports.iter().map(|(port, _, _, _, _, _)| {
-        Ok(obj(vec![
-            ("connectionName", field(port, "connectionName")?),
-            ("rootConnectionName", field(port, "rootConnectionName")?),
-            ("portPointId", field(port, "portPointId")?),
-            ("prevPortPointId", field(port, "prevPortPointId")?),
-            ("nextPortPointId", field(port, "nextPortPointId")?),
-            ("x", rounded(number(port, "x")? - cx)),
-            ("y", rounded(number(port, "y")? - cy)),
-            ("z", nullish(field(port, "z")?, H::Number(0.0))),
-        ]))
-    }).collect::<Result<Vec<_>, String>>()?;
+    let normalized_ports = ports
+        .iter()
+        .map(|(port, _, _, _, _, _)| {
+            Ok(obj(vec![
+                ("connectionName", field(port, "connectionName")?),
+                ("rootConnectionName", field(port, "rootConnectionName")?),
+                ("portPointId", field(port, "portPointId")?),
+                ("prevPortPointId", field(port, "prevPortPointId")?),
+                ("nextPortPointId", field(port, "nextPortPointId")?),
+                ("x", rounded(number(port, "x")? - cx)),
+                ("y", rounded(number(port, "y")? - cy)),
+                ("z", nullish(field(port, "z")?, H::Number(0.0))),
+            ]))
+        })
+        .collect::<Result<Vec<_>, String>>()?;
 
     let mut hyper = Vec::new();
     for pair in array(&snapshot, "hyperParameters")? {
@@ -234,7 +249,10 @@ pub fn compute(snapshot_json: &str, locale: &js_sys::Function) -> Result<String,
             unique.sort();
             normalized.push(obj(vec![
                 ("connectionName", field(group, "connectionName")?),
-                ("connectedIds", H::Array(unique.into_iter().map(H::String).collect())),
+                (
+                    "connectedIds",
+                    H::Array(unique.into_iter().map(H::String).collect()),
+                ),
             ]));
         }
         H::Array(normalized)
@@ -244,10 +262,13 @@ pub fn compute(snapshot_json: &str, locale: &js_sys::Function) -> Result<String,
 
     let available_z = match node.get("availableZ") {
         Some(Value::Array(values)) => {
-            let mut values = values.iter().map(|v| {
-                let h = scalar(v)?;
-                Ok((default_sort_string(&h)?, h))
-            }).collect::<Result<Vec<_>, String>>()?;
+            let mut values = values
+                .iter()
+                .map(|v| {
+                    let h = scalar(v)?;
+                    Ok((default_sort_string(&h)?, h))
+                })
+                .collect::<Result<Vec<_>, String>>()?;
             values.sort_by(|a, b| a.0.cmp(&b.0));
             H::Array(values.into_iter().map(|(_, v)| v).collect())
         }
@@ -256,22 +277,34 @@ pub fn compute(snapshot_json: &str, locale: &js_sys::Function) -> Result<String,
 
     let key_data = obj(vec![
         ("cacheSchemaVersion", H::Number(4.0)),
-        ("node", obj(vec![
-            ("width", rounded(number(node, "width")?)),
-            ("height", rounded(number(node, "height")?)),
-            ("center", obj(vec![
-                ("x", rounded(number(&node["center"], "x")?)),
-                ("y", rounded(number(&node["center"], "y")?)),
-            ])),
-            ("availableZ", available_z),
-            ("portPoints", H::Array(normalized_ports)),
-        ])),
+        (
+            "node",
+            obj(vec![
+                ("width", rounded(number(node, "width")?)),
+                ("height", rounded(number(node, "height")?)),
+                (
+                    "center",
+                    obj(vec![
+                        ("x", rounded(number(&node["center"], "x")?)),
+                        ("y", rounded(number(&node["center"], "y")?)),
+                    ]),
+                ),
+                ("availableZ", available_z),
+                ("portPoints", H::Array(normalized_ports)),
+            ]),
+        ),
         ("normalizedConnections", H::Array(normalized_connections)),
         ("normalizedHyperParameters", hyper),
-        ("minDistBetweenEnteringPoints", rounded(number(&snapshot, "minDistBetweenEnteringPoints")?)),
+        (
+            "minDistBetweenEnteringPoints",
+            rounded(number(&snapshot, "minDistBetweenEnteringPoints")?),
+        ),
         ("traceWidth", rounded(number(&snapshot, "traceWidth")?)),
         ("viaDiameter", rounded(number(&snapshot, "viaDiameter")?)),
-        ("obstacleMargin", rounded(number(&snapshot, "obstacleMargin")?)),
+        (
+            "obstacleMargin",
+            rounded(number(&snapshot, "obstacleMargin")?),
+        ),
         ("normalizedConnMap", conn_map),
     ]);
 

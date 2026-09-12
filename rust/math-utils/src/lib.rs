@@ -32,24 +32,41 @@ pub struct Circle {
 }
 
 pub fn js_min(a: f64, b: f64) -> f64 {
-    if a.is_nan() || b.is_nan() { return f64::NAN; }
+    if a.is_nan() || b.is_nan() {
+        return f64::NAN;
+    }
     if a == 0.0 && b == 0.0 {
-        return if a.is_sign_negative() || b.is_sign_negative() { -0.0 } else { 0.0 };
+        return if a.is_sign_negative() || b.is_sign_negative() {
+            -0.0
+        } else {
+            0.0
+        };
     }
     if a < b { a } else { b }
 }
 
 pub fn js_max(a: f64, b: f64) -> f64 {
-    if a.is_nan() || b.is_nan() { return f64::NAN; }
+    if a.is_nan() || b.is_nan() {
+        return f64::NAN;
+    }
     if a == 0.0 && b == 0.0 {
-        return if a.is_sign_positive() || b.is_sign_positive() { 0.0 } else { -0.0 };
+        return if a.is_sign_positive() || b.is_sign_positive() {
+            0.0
+        } else {
+            -0.0
+        };
     }
     if a > b { a } else { b }
 }
 
 pub fn js_to_fixed(number: f64, digits: u8) -> String {
-    assert!(digits <= 100, "toFixed() digits argument must be between 0 and 100");
-    ryu_js::Buffer::new().format_to_fixed(number, digits).to_owned()
+    assert!(
+        digits <= 100,
+        "toFixed() digits argument must be between 0 and 100"
+    );
+    ryu_js::Buffer::new()
+        .format_to_fixed(number, digits)
+        .to_owned()
 }
 
 pub fn js_number_to_string(number: f64) -> String {

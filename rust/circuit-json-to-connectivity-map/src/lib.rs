@@ -1,4 +1,3 @@
-
 #[cfg_attr(feature = "wasm-types", derive(tsify::Tsify))]
 #[cfg_attr(feature = "wasm-types", tsify(type_prefix = "Connectivity"))]
 #[derive(serde::Deserialize, serde::Serialize)]
@@ -24,10 +23,14 @@ impl WireString {
     }
 }
 
-pub fn deserialize_js_number<'de, D: serde::Deserializer<'de>>(deserializer: D) -> Result<f64, D::Error> {
+pub fn deserialize_js_number<'de, D: serde::Deserializer<'de>>(
+    deserializer: D,
+) -> Result<f64, D::Error> {
     use serde::Deserialize;
     match serde_json::Value::deserialize(deserializer)? {
-        serde_json::Value::Number(number) => number.as_f64().ok_or_else(|| serde::de::Error::custom("Number required")),
+        serde_json::Value::Number(number) => number
+            .as_f64()
+            .ok_or_else(|| serde::de::Error::custom("Number required")),
         serde_json::Value::String(tag) => match tag.as_str() {
             "NaN" => Ok(f64::NAN),
             "Infinity" => Ok(f64::INFINITY),

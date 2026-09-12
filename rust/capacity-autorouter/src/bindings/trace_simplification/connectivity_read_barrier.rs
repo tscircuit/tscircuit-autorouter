@@ -1,6 +1,6 @@
+use crate::bindings::trace_simplification::types::ConnectivityMap;
 use std::cell::RefCell;
 use std::rc::Rc;
-use crate::bindings::trace_simplification::types::ConnectivityMap;
 
 pub type ReadHook = Rc<dyn Fn(&Rc<ConnectivityMap>) -> Result<(), String>>;
 
@@ -21,7 +21,9 @@ impl ReadScope {
 
 impl Drop for ReadScope {
     fn drop(&mut self) {
-        READ_HOOK.with(|slot| { slot.replace(self.previous.take()); });
+        READ_HOOK.with(|slot| {
+            slot.replace(self.previous.take());
+        });
     }
 }
 
@@ -36,7 +38,9 @@ pub fn check(map: &Rc<ConnectivityMap>) -> Result<(), String> {
 pub fn check_all() -> Result<(), String> {
     let current = READ_HOOK.with(|slot| slot.borrow().clone());
     if let Some((hook, maps)) = current {
-        for map in maps { hook(&map)?; }
+        for map in maps {
+            hook(&map)?;
+        }
     }
     Ok(())
 }

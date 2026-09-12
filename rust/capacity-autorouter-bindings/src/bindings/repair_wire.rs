@@ -4,19 +4,33 @@ use tsify::Tsify;
 
 #[derive(Deserialize, Serialize, Tsify)]
 #[serde(transparent)]
-pub struct RepairSrj(#[tsify(type = "import('high-density-repair03/lib').SimpleRouteJson")] pub Value);
+pub struct RepairSrj(
+    #[tsify(type = "import('high-density-repair03/lib').SimpleRouteJson")] pub Value,
+);
 
 #[derive(Deserialize, Serialize, Tsify)]
 #[serde(transparent)]
-pub struct RepairConnectivity(#[tsify(type = "{ idToNetMap: Record<string, string>; netMap?: Record<string, string[]> } | null | undefined")] pub Option<Value>);
+pub struct RepairConnectivity(
+    #[tsify(
+        type = "{ idToNetMap: Record<string, string>; netMap?: Record<string, string[]> } | null | undefined"
+    )]
+    pub Option<Value>,
+);
 
 #[derive(Deserialize, Serialize, Tsify)]
 #[serde(transparent)]
-pub struct RepairRoutes(#[tsify(type = "import('high-density-repair03/lib').HighDensityRoute[]")] pub Vec<Value>);
+pub struct RepairRoutes(
+    #[tsify(type = "import('high-density-repair03/lib').HighDensityRoute[]")] pub Vec<Value>,
+);
 
 #[derive(Deserialize, Serialize, Tsify)]
 #[serde(transparent)]
-pub struct RepairPortfolioInput(#[tsify(type = "Omit<import('high-density-repair03/lib').GlobalDrcBranchPortfolioSolverParams, 'drcEvaluator' | 'viaInPadDrcEvaluator' | 'referenceDrcEvaluator' | 'autoroutingDrcEngine' | 'connMap'>")] pub Value);
+pub struct RepairPortfolioInput(
+    #[tsify(
+        type = "Omit<import('high-density-repair03/lib').GlobalDrcBranchPortfolioSolverParams, 'drcEvaluator' | 'viaInPadDrcEvaluator' | 'referenceDrcEvaluator' | 'autoroutingDrcEngine' | 'connMap'>"
+    )]
+    pub Value,
+);
 
 #[derive(Deserialize, Serialize, Tsify)]
 #[serde(transparent)]
@@ -24,7 +38,9 @@ pub struct RepairDescriptor(#[tsify(type = "Record<string, unknown>")] pub Value
 
 #[derive(Deserialize, Serialize, Tsify)]
 #[serde(transparent)]
-pub struct RepairSnapshot(#[tsify(type = "import('high-density-repair03/lib').DrcSnapshot")] pub Value);
+pub struct RepairSnapshot(
+    #[tsify(type = "import('high-density-repair03/lib').DrcSnapshot")] pub Value,
+);
 
 #[derive(Serialize, Tsify)]
 #[serde(rename_all = "camelCase")]
@@ -35,7 +51,9 @@ pub struct RepairPortfolioState {
     pub iterations: usize,
     pub max_iterations: usize,
     pub progress: f64,
-    #[tsify(type = "Record<string, unknown> & { indexedDrcEvaluationCount: number; indexedDrcCacheHitCount: number; indexedDrcEvaluationTimeMs: number; indexedDrcCandidateCacheSize: number }")]
+    #[tsify(
+        type = "Record<string, unknown> & { indexedDrcEvaluationCount: number; indexedDrcCacheHitCount: number; indexedDrcEvaluationTimeMs: number; indexedDrcCandidateCacheSize: number }"
+    )]
     pub stats: Value,
 }
 
@@ -49,19 +67,33 @@ pub struct DrcSrj(#[tsify(type = "Record<string, unknown>")] pub Value);
 
 #[derive(Deserialize, Serialize, Tsify)]
 #[serde(transparent)]
-pub struct DrcOptions(#[tsify(type = "Omit<import('high-density-repair03/lib').AutoroutingDrcEngineOptions, 'connMap'>")] pub Value);
+pub struct DrcOptions(
+    #[tsify(
+        type = "Omit<import('high-density-repair03/lib').AutoroutingDrcEngineOptions, 'connMap'>"
+    )]
+    pub Value,
+);
 
 #[derive(Deserialize, Serialize, Tsify)]
 #[serde(transparent)]
-pub struct DrcTraces(#[tsify(type = "import('high-density-repair03/lib').SimplifiedPcbTraces")] pub Value);
+pub struct DrcTraces(
+    #[tsify(type = "import('high-density-repair03/lib').SimplifiedPcbTraces")] pub Value,
+);
 
 #[derive(Serialize, Tsify)]
 #[serde(transparent)]
-pub struct DrcResult(#[tsify(type = "import('high-density-repair03/lib').AutoroutingDrcResult")] pub Value);
+pub struct DrcResult(
+    #[tsify(type = "import('high-density-repair03/lib').AutoroutingDrcResult")] pub Value,
+);
 
 #[derive(Deserialize, Serialize, Tsify)]
 #[serde(transparent)]
-pub struct CandidateProps(#[tsify(type = "Omit<import('../ts/types').HighDensitySolverA01Props, 'initialPenaltyFn'> | Omit<import('../ts/types').HighDensitySolverA03Props, 'initialPenaltyFn'>")] pub Value);
+pub struct CandidateProps(
+    #[tsify(
+        type = "Omit<import('../ts/types').HighDensitySolverA01Props, 'initialPenaltyFn'> | Omit<import('../ts/types').HighDensitySolverA03Props, 'initialPenaltyFn'>"
+    )]
+    pub Value,
+);
 
 #[derive(Deserialize, Serialize, Tsify)]
 #[serde(transparent)]
@@ -73,11 +105,18 @@ pub struct IntraNodeHyperParameters(#[tsify(type = "Record<string, unknown>")] p
 
 #[derive(Deserialize, Serialize, Tsify)]
 #[serde(transparent)]
-pub struct IntraNodeRoutes(#[tsify(type = "import('../ts/types').HighDensityIntraNodeRoute[]")] pub Value);
+pub struct IntraNodeRoutes(
+    #[tsify(type = "import('../ts/types').HighDensityIntraNodeRoute[]")] pub Value,
+);
 
 #[derive(Serialize, Tsify)]
 #[serde(transparent)]
-pub struct IntraNodeDiagnostics(#[tsify(type = "{ unsolvedConnections: import('../../../lib/solvers/HighDensitySolver/IntraNodeSolver').IntraNodeRouteSolver['unsolvedConnections']; rerouteAttemptsByConnection: [string, number][]; activeChildId: number | null; failedChildIds: number[] } | null")] pub Value);
+pub struct IntraNodeDiagnostics(
+    #[tsify(
+        type = "{ unsolvedConnections: import('../../../lib/solvers/HighDensitySolver/IntraNodeSolver').IntraNodeRouteSolver['unsolvedConnections']; rerouteAttemptsByConnection: [string, number][]; activeChildId: number | null; failedChildIds: number[] } | null"
+    )]
+    pub Value,
+);
 
 #[derive(Serialize, Tsify)]
 #[serde(rename_all = "camelCase")]
@@ -102,4 +141,6 @@ pub struct RepairCallbackRoutes<'a>(#[tsify(type = "RepairRoutes")] pub &'a [Val
 
 #[derive(Deserialize, Serialize, Tsify)]
 #[serde(transparent)]
-pub struct RepairEvaluationResult(#[tsify(type = "ReturnType<import('high-density-repair03/lib').DrcEvaluator>")] pub Value);
+pub struct RepairEvaluationResult(
+    #[tsify(type = "ReturnType<import('high-density-repair03/lib').DrcEvaluator>")] pub Value,
+);

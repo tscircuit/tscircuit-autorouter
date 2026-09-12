@@ -12,4 +12,8 @@ pub mod should_ignore_port_point;
 #[cfg(target_arch = "wasm32")]
 pub mod should_ignore_shared_edge;
 pub mod types;
+#[expect(
+    clippy::module_inception,
+    reason = "Keep the TypeScript directory and primary source file names."
+)]
 pub mod uniform_port_distribution_solver;

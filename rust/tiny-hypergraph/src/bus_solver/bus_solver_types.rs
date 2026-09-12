@@ -114,8 +114,8 @@ pub fn compute_median_trace_pitch(order: &BusTraceOrder) -> f64 {
 #[cfg(test)]
 mod candidate_representation_tests {
     use super::*;
-    use std::rc::Rc;
     use crate::bus_solver::bus_path_helpers::get_candidate_boundary_normal;
+    use std::rc::Rc;
 
     #[test]
     fn shared_bus_fields_preserve_absence_bits_and_independent_mutations() {
@@ -123,7 +123,12 @@ mod candidate_representation_tests {
         assert!(base.bus.is_none());
         assert!(base.clone().bus.is_none());
         assert!(get_candidate_boundary_normal(&base).is_none());
-        for value in [f64::from_bits(0x7ff8000000000042), -0.0, f64::INFINITY, f64::NEG_INFINITY] {
+        for value in [
+            f64::from_bits(0x7ff8000000000042),
+            -0.0,
+            f64::INFINITY,
+            f64::NEG_INFINITY,
+        ] {
             let original = Candidate {
                 bus: Some(Rc::new(BusCandidateState {
                     bus_cost: Some(value),
@@ -133,8 +138,14 @@ mod candidate_representation_tests {
                 ..Default::default()
             };
             let mut copy = original.clone();
-            assert!(Rc::ptr_eq(original.bus.as_ref().unwrap(), copy.bus.as_ref().unwrap()));
-            assert_eq!(copy.bus.as_ref().unwrap().bus_cost.unwrap().to_bits(), value.to_bits());
+            assert!(Rc::ptr_eq(
+                original.bus.as_ref().unwrap(),
+                copy.bus.as_ref().unwrap()
+            ));
+            assert_eq!(
+                copy.bus.as_ref().unwrap().bus_cost.unwrap().to_bits(),
+                value.to_bits()
+            );
             assert!(get_candidate_boundary_normal(&copy).is_none());
             Rc::make_mut(copy.bus.as_mut().unwrap()).boundary_normal_y = Some(f64::INFINITY);
             Rc::make_mut(copy.bus.as_mut().unwrap()).bus_cost = None;
@@ -142,7 +153,10 @@ mod candidate_representation_tests {
             assert_eq!(normal.x.to_bits(), (-0.0_f64).to_bits());
             assert_eq!(normal.y, f64::INFINITY);
             assert!(original.bus.as_ref().unwrap().boundary_normal_y.is_none());
-            assert_eq!(original.bus.as_ref().unwrap().bus_cost.unwrap().to_bits(), value.to_bits());
+            assert_eq!(
+                original.bus.as_ref().unwrap().bus_cost.unwrap().to_bits(),
+                value.to_bits()
+            );
         }
     }
 }

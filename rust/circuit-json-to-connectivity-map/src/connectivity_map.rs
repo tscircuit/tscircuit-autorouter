@@ -28,18 +28,32 @@ pub struct ConnectivityMap {
 
 impl ConnectivityMap {
     pub fn new(strings: Vec<Vec<u16>>, prototype_values: IndexMap<usize, Option<usize>>) -> Self {
-        let string_ids = strings.iter().cloned().enumerate().map(|(id, value)| (value, id)).collect();
+        let string_ids = strings
+            .iter()
+            .cloned()
+            .enumerate()
+            .map(|(id, value)| (value, id))
+            .collect();
         Self {
-            string_offset: strings.len(), generated_strings: Vec::new(), strings, string_ids,
-            prototype_values, arrays: Vec::new(), net_map: IndexMap::new(),
-            id_to_net_map: IndexMap::new(), failed_group: None,
+            string_offset: strings.len(),
+            generated_strings: Vec::new(),
+            strings,
+            string_ids,
+            prototype_values,
+            arrays: Vec::new(),
+            net_map: IndexMap::new(),
+            id_to_net_map: IndexMap::new(),
+            failed_group: None,
         }
     }
 
     pub fn intern(&mut self, value: Vec<u16>) -> usize {
-        if let Some(id) = self.string_ids.get(&value) { return *id; }
+        if let Some(id) = self.string_ids.get(&value) {
+            return *id;
+        }
         let id = self.strings.len();
-        self.generated_strings.push(crate::WireString::from_units(value.clone()));
+        self.generated_strings
+            .push(crate::WireString::from_units(value.clone()));
         self.strings.push(value.clone());
         self.string_ids.insert(value, id);
         id
@@ -53,19 +67,31 @@ impl ConnectivityMap {
                     existing_nets.insert(*net);
                 } else if let Some(net) = self.prototype_values.get(id) {
                     match net {
-                        Some(net) => { existing_nets.insert(*net); }
-                        None => { self.failed_group = Some(connection.clone()); return false; }
+                        Some(net) => {
+                            existing_nets.insert(*net);
+                        }
+                        None => {
+                            self.failed_group = Some(connection.clone());
+                            return false;
+                        }
                     }
                 }
             }
             // An inherited value may name a missing net. Let the original JS
             // method materialize its own exception from this pre-group state.
-            if existing_nets.iter().any(|net| !self.net_map.contains_key(net)) {
+            if existing_nets
+                .iter()
+                .any(|net| !self.net_map.contains_key(net))
+            {
                 self.failed_group = Some(connection.clone());
                 return false;
             }
             let target_net_id = if existing_nets.is_empty() {
-                let id = self.intern(format!("connectivity_net{}", self.net_map.len()).encode_utf16().collect());
+                let id = self.intern(
+                    format!("connectivity_net{}", self.net_map.len())
+                        .encode_utf16()
+                        .collect(),
+                );
                 let array = self.arrays.len();
                 self.arrays.push(Vec::new());
                 self.net_map.insert(id, array);
@@ -83,14 +109,18 @@ impl ConnectivityMap {
                         let source = self.arrays[source].clone();
                         self.arrays[target].extend_from_slice(&source);
                         self.net_map.insert(net_id, target);
-                        for id in &self.arrays[target] { self.id_to_net_map.insert(*id, target_net_id); }
+                        for id in &self.arrays[target] {
+                            self.id_to_net_map.insert(*id, target_net_id);
+                        }
                     }
                 }
             }
 
             for id in connection {
                 let target = self.net_map[&target_net_id];
-                if !self.arrays[target].contains(id) { self.arrays[target].push(*id); }
+                if !self.arrays[target].contains(id) {
+                    self.arrays[target].push(*id);
+                }
                 self.id_to_net_map.insert(*id, target_net_id);
             }
         }
@@ -98,9 +128,14 @@ impl ConnectivityMap {
     }
 }
 
-fn ordered_entries<S: serde::Serializer>(values: &IndexMap<usize, usize>, serializer: S) -> Result<S::Ok, S::Error> {
+fn ordered_entries<S: serde::Serializer>(
+    values: &IndexMap<usize, usize>,
+    serializer: S,
+) -> Result<S::Ok, S::Error> {
     use serde::ser::SerializeSeq;
     let mut entries = serializer.serialize_seq(Some(values.len()))?;
-    for entry in values { entries.serialize_element(&entry)?; }
+    for entry in values {
+        entries.serialize_element(&entry)?;
+    }
     entries.end()
 }

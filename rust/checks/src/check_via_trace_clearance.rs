@@ -74,8 +74,14 @@ pub fn check_via_trace_clearance(
             if are_ids_connected(segment, via) {
                 continue;
             }
-            let start = Point { x: segment.x1, y: segment.y1 };
-            let end = Point { x: segment.x2, y: segment.y2 };
+            let start = Point {
+                x: segment.x1,
+                y: segment.y1,
+            };
+            let end = Point {
+                x: segment.x2,
+                y: segment.y2,
+            };
             let trace_radius = segment.thickness / 2.0;
             let circle = Circle {
                 x: via.x,

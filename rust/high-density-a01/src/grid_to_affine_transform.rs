@@ -1,5 +1,5 @@
-use serde::{Deserialize, Serialize};
 use crate::types::Point;
+use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct AffineTransform {
@@ -24,20 +24,41 @@ pub struct GridToAffineTransformParams {
 }
 
 pub fn compute_grid_to_affine_transform(params: GridToAffineTransformParams) -> AffineTransform {
-    let GridToAffineTransformParams { origin_x, origin_y, rows, cols, cell_size_mm, width, height } = params;
+    let GridToAffineTransformParams {
+        origin_x,
+        origin_y,
+        rows,
+        cols,
+        cell_size_mm,
+        width,
+        height,
+    } = params;
     let (a, c) = if cols > 1.0 {
         let a = width / ((cols - 1.0) * cell_size_mm);
         (a, origin_x * (1.0 - a) - 0.5 * cell_size_mm * a)
     } else {
-        (1.0, origin_x + width / 2.0 - (origin_x + 0.5 * cell_size_mm))
+        (
+            1.0,
+            origin_x + width / 2.0 - (origin_x + 0.5 * cell_size_mm),
+        )
     };
     let (e, f) = if rows > 1.0 {
         let e = height / ((rows - 1.0) * cell_size_mm);
         (e, origin_y * (1.0 - e) - 0.5 * cell_size_mm * e)
     } else {
-        (1.0, origin_y + height / 2.0 - (origin_y + 0.5 * cell_size_mm))
+        (
+            1.0,
+            origin_y + height / 2.0 - (origin_y + 0.5 * cell_size_mm),
+        )
     };
-    AffineTransform { a, b: 0.0, c, d: 0.0, e, f }
+    AffineTransform {
+        a,
+        b: 0.0,
+        c,
+        d: 0.0,
+        e,
+        f,
+    }
 }
 
 pub fn apply_affine_transform_to_point(t: &AffineTransform, p: &Point) -> Point {

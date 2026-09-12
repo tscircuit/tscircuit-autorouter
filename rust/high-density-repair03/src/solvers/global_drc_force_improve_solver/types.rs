@@ -1,9 +1,9 @@
-use std::cell::{RefCell, OnceCell};
-use std::rc::Rc;
-use indexmap::IndexMap;
-use serde::{Serialize, Deserialize};
-use serde_json::Value;
 use crate::solvers::global_drc_force_improve_solver::internal_types::MutableRoute;
+use indexmap::IndexMap;
+use serde::{Deserialize, Serialize};
+use serde_json::Value;
+use std::cell::{OnceCell, RefCell};
+use std::rc::Rc;
 
 #[derive(Debug)]
 struct RouteVersion {
@@ -16,23 +16,30 @@ pub struct Routes(Rc<RouteVersion>);
 
 impl Routes {
     pub fn new(routes: Vec<MutableRoute>) -> Self {
-        Self(Rc::new(RouteVersion { routes, next: OnceCell::new() }))
+        Self(Rc::new(RouteVersion {
+            routes,
+            next: OnceCell::new(),
+        }))
     }
 
     pub fn ptr_eq(left: &Self, right: &Self) -> bool {
         Rc::ptr_eq(&left.0, &right.0)
     }
 
-    pub fn as_ref(&self) -> &Vec<MutableRoute> {
-        self
-    }
-
     pub fn replace(&self, routes: Vec<MutableRoute>) {
         let mut version = self.0.as_ref();
-        while let Some(next) = version.next.get() { version = next; }
+        while let Some(next) = version.next.get() {
+            version = next;
+        }
         // Older versions stay alive so references held across an explicit JS
         // callback remain valid; cloned handles subsequently read the new version.
-        version.next.set(Box::new(RouteVersion { routes, next: OnceCell::new() })).expect("Route version already replaced");
+        version
+            .next
+            .set(Box::new(RouteVersion {
+                routes,
+                next: OnceCell::new(),
+            }))
+            .expect("Route version already replaced");
     }
 }
 
@@ -40,7 +47,9 @@ impl std::ops::Deref for Routes {
     type Target = Vec<MutableRoute>;
     fn deref(&self) -> &Self::Target {
         let mut version = self.0.as_ref();
-        while let Some(next) = version.next.get() { version = next; }
+        while let Some(next) = version.next.get() {
+            version = next;
+        }
         &version.routes
     }
 }
@@ -57,5 +66,16 @@ pub struct DrcSnapshot {
 }
 
 pub trait DrcEvaluator {
-    fn snapshot(&mut self, routes: &Routes, topology: bool, legacy: bool) -> Result<DrcSnapshot, String>;
+    fn snapshot(
+        &mut self,
+        routes: &Routes,
+        topology: bool,
+        legacy: bool,
+    ) -> Result<DrcSnapshot, String>;
+}
+
+impl AsRef<Vec<MutableRoute>> for Routes {
+    fn as_ref(&self) -> &Vec<MutableRoute> {
+        self
+    }
 }

@@ -1,5 +1,5 @@
-use serde_json::Value;
 use crate::bindings::high_density::specialized_solver::SpecializedEngine;
+use serde_json::Value;
 
 pub fn invoke(
     engine: &mut SpecializedEngine,
@@ -13,13 +13,25 @@ pub fn invoke(
                 Value::Null
             }
             "getSolvedRoutes" => Value::Array(solver.get_solved_routes().to_vec()),
-            _ => return Err(format!("Unknown TwoCrossingRoutesHighDensitySolver method: {method}")),
+            _ => {
+                return Err(format!(
+                    "Unknown TwoCrossingRoutesHighDensitySolver method: {method}"
+                ));
+            }
         },
         SpecializedEngine::TransitionCrossing(solver) => match method {
             "getSolvedRoutes" => Value::Array(solver.get_solved_routes().to_vec()),
-            _ => return Err(format!("Unknown SingleTransitionCrossingRouteSolver method: {method}")),
+            _ => {
+                return Err(format!(
+                    "Unknown SingleTransitionCrossingRouteSolver method: {method}"
+                ));
+            }
         },
-        _ => return Err(format!("Crossing method dispatcher cannot invoke {method} on this solver")),
+        _ => {
+            return Err(format!(
+                "Crossing method dispatcher cannot invoke {method} on this solver"
+            ));
+        }
     };
     Ok((result, args))
 }

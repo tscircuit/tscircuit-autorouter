@@ -211,6 +211,10 @@ fn compute_polygon_geometry(polygon: &[PolyPoint]) -> PolygonGeometry {
     }
 }
 
+#[expect(
+    clippy::manual_clamp,
+    reason = "Preserve the existing min/max behavior for NaN inputs."
+)]
 fn project_boundary(
     point: PolyPoint,
     polygon: &[PolyPoint],
@@ -323,8 +327,7 @@ pub fn load_serialized_hyper_graph_as_poly(
     };
     let mut metadata = vec![];
 
-    for r in 0..n {
-        let polygon = &polygons[r];
+    for (r, polygon) in polygons[..n].iter().enumerate() {
         let g = compute_polygon_geometry(polygon);
         let side = g.area.max(MIN_REGION_DIMENSION).sqrt();
         topology.region_vertex_start[r] = topology.region_vertex_x.len() as i32;
@@ -509,11 +512,11 @@ impl PolyHyperGraphSolver {
         }
     }
 
-    pub fn step(&mut self) -> () {
+    pub fn step(&mut self) {
         self.core.step();
     }
 
-    pub fn solve(&mut self) -> () {
+    pub fn solve(&mut self) {
         self.core.solve();
     }
 
@@ -592,6 +595,10 @@ fn region_polygon(topology: &PolyHyperGraphTopology, region: usize) -> Vec<PolyP
         .collect()
 }
 
+#[expect(
+    clippy::manual_clamp,
+    reason = "Preserve the existing min/max behavior for NaN inputs."
+)]
 fn region_fill(solver: &PolyVisualizationView, region: usize) -> String {
     let cost = solver
         .core
@@ -678,7 +685,7 @@ fn segment_style(solver: &PolyVisualizationView, route: i32, a: i32, b: i32) -> 
     }
 }
 
-fn push_route_endpoints(solver: &PolyVisualizationView, graphics: &mut Value) -> () {
+fn push_route_endpoints(solver: &PolyVisualizationView, graphics: &mut Value) {
     for route in 0..solver.core.problem.route_count {
         let label = route_label(solver, route as i32);
         let color = route_color(solver, route as i32, 0.85);
@@ -699,7 +706,7 @@ fn push_route_endpoints(solver: &PolyVisualizationView, graphics: &mut Value) ->
     }
 }
 
-fn push_solved_segments(solver: &PolyVisualizationView, graphics: &mut Value) -> () {
+fn push_solved_segments(solver: &PolyVisualizationView, graphics: &mut Value) {
     for (region, segments) in solver.core.state.region_segments.iter().enumerate() {
         for &(route, a, b) in segments {
             let mut line = segment_style(solver, route, a, b);
@@ -726,7 +733,7 @@ fn push_solved_segments(solver: &PolyVisualizationView, graphics: &mut Value) ->
     }
 }
 
-fn push_candidate_frontier(solver: &PolyVisualizationView, graphics: &mut Value) -> () {
+fn push_candidate_frontier(solver: &PolyVisualizationView, graphics: &mut Value) {
     if solver.core.solved {
         return;
     }
@@ -805,7 +812,7 @@ pub fn visualize_poly_hyper_graph_parts(
     let mut graphics = json!({"arrows":[],"circles":[],"infiniteLines":[],"lines":[],"points":[],"polygons":[],"rects":[],"texts":[],"title":"Poly HyperGraph","coordinateSystem":"cartesian"});
 
     for region in 0..solver.topology.base.region_count {
-        let mut points = region_polygon(&solver.topology, region);
+        let mut points = region_polygon(solver.topology, region);
         let layers = region_layers(solver, region);
         let multi = layers.len() > 1;
         let colors = layers
@@ -860,11 +867,11 @@ impl PolyHyperGraphSectionPipelineSolver {
         Self { base }
     }
 
-    pub fn step(&mut self) -> () {
+    pub fn step(&mut self) {
         self.base.step();
     }
 
-    pub fn solve(&mut self) -> () {
+    pub fn solve(&mut self) {
         self.base.solve();
     }
 

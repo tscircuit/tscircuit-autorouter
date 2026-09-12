@@ -83,7 +83,9 @@ pub struct InputPortPoint {
 #[cfg_attr(feature = "wasm-types", tsify(type_prefix = "Uniform"))]
 #[derive(Clone, Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct InputNodeWithPortPoints { pub port_points: Vec<InputPortPoint> }
+pub struct InputNodeWithPortPoints {
+    pub port_points: Vec<InputPortPoint>,
+}
 
 #[cfg_attr(feature = "wasm-types", derive(tsify::Tsify))]
 #[cfg_attr(feature = "wasm-types", tsify(type_prefix = "Uniform"))]
@@ -108,13 +110,21 @@ pub struct Bounds {
 #[cfg_attr(feature = "wasm-types", tsify(type_prefix = "Uniform"))]
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "lowercase")]
-pub enum Side { Left, Right, Top, Bottom }
+pub enum Side {
+    Left,
+    Right,
+    Top,
+    Bottom,
+}
 
 #[cfg_attr(feature = "wasm-types", derive(tsify::Tsify))]
 #[cfg_attr(feature = "wasm-types", tsify(type_prefix = "Uniform"))]
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "lowercase")]
-pub enum EdgeOrientation { Vertical, Horizontal }
+pub enum EdgeOrientation {
+    Vertical,
+    Horizontal,
+}
 
 #[cfg_attr(feature = "wasm-types", derive(tsify::Tsify))]
 #[cfg_attr(feature = "wasm-types", tsify(type_prefix = "Uniform"))]
@@ -146,7 +156,10 @@ pub struct SharedEdge {
     pub node_side_by_owner_id: IndexMap<Name, Side>,
 }
 
-fn serialize_node_sides<S: serde::Serializer>(sides: &IndexMap<Name, Side>, serializer: S) -> Result<S::Ok, S::Error> {
+fn serialize_node_sides<S: serde::Serializer>(
+    sides: &IndexMap<Name, Side>,
+    serializer: S,
+) -> Result<S::Ok, S::Error> {
     // JS reconstructs computed properties with Object.fromEntries, including
     // __proto__ as an own property rather than invoking its inherited setter.
     let entries: Vec<_> = sides.iter().collect();
@@ -178,11 +191,17 @@ mod wire_number {
     use serde::{Deserialize, Serialize};
 
     pub fn serialize<S: serde::Serializer>(value: &f64, serializer: S) -> Result<S::Ok, S::Error> {
-        let wire = if value.is_nan() { UniformNumber::Special(UniformNumberSpecial::NaN) }
-            else if *value == f64::INFINITY { UniformNumber::Special(UniformNumberSpecial::Infinity) }
-            else if *value == f64::NEG_INFINITY { UniformNumber::Special(UniformNumberSpecial::NegativeInfinity) }
-            else if *value == 0.0 && value.is_sign_negative() { UniformNumber::Special(UniformNumberSpecial::NegativeZero) }
-            else { UniformNumber::Number(*value) };
+        let wire = if value.is_nan() {
+            UniformNumber::Special(UniformNumberSpecial::NaN)
+        } else if *value == f64::INFINITY {
+            UniformNumber::Special(UniformNumberSpecial::Infinity)
+        } else if *value == f64::NEG_INFINITY {
+            UniformNumber::Special(UniformNumberSpecial::NegativeInfinity)
+        } else if *value == 0.0 && value.is_sign_negative() {
+            UniformNumber::Special(UniformNumberSpecial::NegativeZero)
+        } else {
+            UniformNumber::Number(*value)
+        };
         wire.serialize(serializer)
     }
 

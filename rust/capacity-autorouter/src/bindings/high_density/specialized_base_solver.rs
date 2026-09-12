@@ -55,7 +55,8 @@ pub trait SpecializedSolver {
         if !self.base().solved && self.base().iterations as f64 > self.base().max_iterations {
             self.base_mut().error = Some(format!(
                 "{} ran out of iterations (MAX_ITERATIONS={})",
-                self.get_solver_name(), crate::utils::js_number::js_number_to_string(self.base().max_iterations),
+                self.get_solver_name(),
+                crate::utils::js_number::js_number_to_string(self.base().max_iterations),
             ));
             self.base_mut().failed = true;
         }

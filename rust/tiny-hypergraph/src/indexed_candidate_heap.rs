@@ -1,7 +1,7 @@
 use crate::core::{Candidate, TinyHyperGraphCandidateQueue};
 use crate::types::RegionId;
-use std::collections::{HashMap, HashSet};
 use rustc_hash::FxBuildHasher;
+use std::collections::{HashMap, HashSet};
 
 #[derive(Clone, Debug)]
 pub struct CompactCandidateHopIndex {
@@ -54,12 +54,18 @@ impl IndexedCandidateHeap {
     }
 
     pub fn to_array(&self) -> Vec<Candidate> {
-        self.items.iter().map(|entry| {
-            self.payloads[entry.payload].as_ref().expect("Queued candidate payload").clone()
-        }).collect()
+        self.items
+            .iter()
+            .map(|entry| {
+                self.payloads[entry.payload]
+                    .as_ref()
+                    .expect("Queued candidate payload")
+                    .clone()
+            })
+            .collect()
     }
 
-    pub fn clear(&mut self) -> () {
+    pub fn clear(&mut self) {
         self.items.clear();
         self.payloads.clear();
         self.free_payloads.clear();
@@ -80,7 +86,7 @@ impl IndexedCandidateHeap {
         self.is_hop_closed(self.get_hop_id_from_values(port_id, next_region_id))
     }
 
-    pub fn queue(&mut self, candidate: Candidate) -> () {
+    pub fn queue(&mut self, candidate: Candidate) {
         let hop_id = self.get_hop_id(&candidate);
         if self.is_hop_closed(hop_id) {
             return;
@@ -88,7 +94,9 @@ impl IndexedCandidateHeap {
 
         if let Some(existing_index) = self.get_queued_hop_index(hop_id) {
             let entry = self.items[existing_index];
-            let existing = self.payloads[entry.payload].as_ref().expect("Queued candidate payload");
+            let existing = self.payloads[entry.payload]
+                .as_ref()
+                .expect("Queued candidate payload");
             if candidate.g >= existing.g {
                 return;
             }
@@ -106,14 +114,18 @@ impl IndexedCandidateHeap {
         }
 
         let index = self.items.len();
-        let entry = HeapEntry { f: candidate.f, hop_id, payload: if let Some(slot) = self.free_payloads.pop() {
-            self.payloads[slot] = Some(candidate);
-            slot
-        } else {
-            let slot = self.payloads.len();
-            self.payloads.push(Some(candidate));
-            slot
-        }};
+        let entry = HeapEntry {
+            f: candidate.f,
+            hop_id,
+            payload: if let Some(slot) = self.free_payloads.pop() {
+                self.payloads[slot] = Some(candidate);
+                slot
+            } else {
+                let slot = self.payloads.len();
+                self.payloads.push(Some(candidate));
+                slot
+            },
+        };
         self.items.push(entry);
         self.sift_up(index);
     }
@@ -128,7 +140,9 @@ impl IndexedCandidateHeap {
             self.sift_down(0);
         }
 
-        let candidate = self.payloads[best.payload].take().expect("Dequeued candidate payload");
+        let candidate = self.payloads[best.payload]
+            .take()
+            .expect("Dequeued candidate payload");
         self.free_payloads.push(best.payload);
         Some(candidate)
     }
@@ -152,8 +166,8 @@ impl IndexedCandidateHeap {
         }
 
         if let Some(regions) = compact.incident_port_region.get(port_id as usize) {
-            for slot in 2..regions.len() {
-                if regions[slot] == next_region_id {
+            for (slot, &region) in regions.iter().enumerate().skip(2) {
+                if region == next_region_id {
                     return base + slot as i64;
                 }
             }
@@ -163,58 +177,62 @@ impl IndexedCandidateHeap {
     }
 
     fn get_queued_hop_index(&self, hop_id: i64) -> Option<usize> {
-        if hop_id >= 0 {
-            if let Some(generation) = &self.hop_state_generation {
-                // Compact nonnegative hops are stored only in these arrays;
-                // fallback maps can contain only negative hops in this mode.
-                if generation.get(hop_id as usize).copied() != Some(self.current_hop_state_generation) {
-                    return None;
-                }
-                let index = self.hop_index_or_closed.as_ref().unwrap()[hop_id as usize];
-                return if index >= 0 { Some(index as usize) } else { None };
+        if hop_id >= 0
+            && let Some(generation) = &self.hop_state_generation
+        {
+            // Compact nonnegative hops are stored only in these arrays;
+            // fallback maps can contain only negative hops in this mode.
+            if generation.get(hop_id as usize).copied() != Some(self.current_hop_state_generation) {
+                return None;
             }
+            let index = self.hop_index_or_closed.as_ref().unwrap()[hop_id as usize];
+            return if index >= 0 {
+                Some(index as usize)
+            } else {
+                None
+            };
         }
         self.index_by_hop_id.get(&hop_id).copied()
     }
 
     fn is_hop_closed(&self, hop_id: i64) -> bool {
-        if hop_id >= 0 {
-            if let Some(generation) = &self.hop_state_generation {
-                if generation.get(hop_id as usize).copied() != Some(self.current_hop_state_generation) {
-                    return false;
-                }
-                return self.hop_index_or_closed.as_ref().unwrap()[hop_id as usize] == -1;
+        if hop_id >= 0
+            && let Some(generation) = &self.hop_state_generation
+        {
+            if generation.get(hop_id as usize).copied() != Some(self.current_hop_state_generation) {
+                return false;
             }
+            return self.hop_index_or_closed.as_ref().unwrap()[hop_id as usize] == -1;
         }
         self.closed_hop_ids.contains(&hop_id)
     }
 
-    fn set_queued_hop_index(&mut self, hop_id: i64, index: usize) -> () {
-        if hop_id >= 0 {
-            if let Some(generation) = self.hop_state_generation.as_mut() {
-                generation[hop_id as usize] = self.current_hop_state_generation;
-                self.hop_index_or_closed.as_mut().unwrap()[hop_id as usize] = index as i32;
-                return;
-            }
+    fn set_queued_hop_index(&mut self, hop_id: i64, index: usize) {
+        if hop_id >= 0
+            && let Some(generation) = self.hop_state_generation.as_mut()
+        {
+            generation[hop_id as usize] = self.current_hop_state_generation;
+            self.hop_index_or_closed.as_mut().unwrap()[hop_id as usize] = index as i32;
+            return;
         }
 
         self.index_by_hop_id.insert(hop_id, index);
     }
 
-    fn close_hop(&mut self, hop_id: i64) -> () {
-        if hop_id >= 0 {
-            if let Some(generation) = self.hop_state_generation.as_mut() {
-                generation[hop_id as usize] = self.current_hop_state_generation;
-                self.hop_index_or_closed.as_mut().unwrap()[hop_id as usize] = -1;
-                return;
-            }
+    fn close_hop(&mut self, hop_id: i64) {
+        if hop_id >= 0
+            && let Some(generation) = self.hop_state_generation.as_mut()
+        {
+            generation[hop_id as usize] = self.current_hop_state_generation;
+            self.hop_index_or_closed.as_mut().unwrap()[hop_id as usize] = -1;
+            return;
         }
 
         self.index_by_hop_id.remove(&hop_id);
         self.closed_hop_ids.insert(hop_id);
     }
 
-    fn sift_up(&mut self, start_index: usize) -> () {
+    fn sift_up(&mut self, start_index: usize) {
         let candidate = self.items[start_index];
         let mut index = start_index;
 
@@ -236,7 +254,7 @@ impl IndexedCandidateHeap {
         self.set_queued_hop_index(hop_id, index);
     }
 
-    fn sift_down(&mut self, start_index: usize) -> () {
+    fn sift_down(&mut self, start_index: usize) {
         let candidate = self.items[start_index];
         let mut index = start_index;
 
@@ -279,11 +297,11 @@ impl TinyHyperGraphCandidateQueue for IndexedCandidateHeap {
         IndexedCandidateHeap::to_array(self)
     }
 
-    fn clear(&mut self) -> () {
+    fn clear(&mut self) {
         IndexedCandidateHeap::clear(self);
     }
 
-    fn queue(&mut self, candidate: Candidate) -> () {
+    fn queue(&mut self, candidate: Candidate) {
         IndexedCandidateHeap::queue(self, candidate);
     }
 
@@ -305,19 +323,31 @@ mod tests {
     fn compact_payloads_preserve_queue_order_replacement_and_retained_ancestry() {
         for compact in [false, true] {
             let index = compact.then(|| CompactCandidateHopIndex {
-                hop_capacity: 32, hop_slot_stride: 2,
-                first_region_by_port_id: vec![0; 16], second_region_by_port_id: vec![1; 16],
+                hop_capacity: 32,
+                hop_slot_stride: 2,
+                first_region_by_port_id: vec![0; 16],
+                second_region_by_port_id: vec![1; 16],
                 incident_port_region: vec![vec![0, 1]; 16],
             });
             let mut heap = IndexedCandidateHeap::new(3, index);
             let parent = Rc::new(Candidate::default());
             let candidate = |port_id, f, g| Candidate {
-                port_id, next_region_id: 0, f, g, prev_candidate: Some(parent.clone()), ..Default::default()
+                port_id,
+                next_region_id: 0,
+                f,
+                g,
+                prev_candidate: Some(parent.clone()),
+                ..Default::default()
             };
-            for port in 0..3 { heap.queue(candidate(port, 1.0, 1.0)); }
+            for port in 0..3 {
+                heap.queue(candidate(port, 1.0, 1.0));
+            }
             let held = heap.to_array();
-            assert_eq!(held.iter().map(|c|c.port_id).collect::<Vec<_>>(), vec![0,1,2]);
-            for expected in [0,2,1] {
+            assert_eq!(
+                held.iter().map(|c| c.port_id).collect::<Vec<_>>(),
+                vec![0, 1, 2]
+            );
+            for expected in [0, 2, 1] {
                 let popped = heap.dequeue().unwrap();
                 assert_eq!(popped.port_id, expected);
                 assert!(Rc::ptr_eq(popped.prev_candidate.as_ref().unwrap(), &parent));
@@ -330,7 +360,9 @@ mod tests {
             assert_eq!(heap.payloads.len(), 3);
             assert_eq!(held[0].g, 1.0);
             heap.clear();
-            for port in 0..3 { heap.queue(candidate(port, 1.0, 1.0)); }
+            for port in 0..3 {
+                heap.queue(candidate(port, 1.0, 1.0));
+            }
             heap.queue(candidate(2, -1.0, 1.0)); // Equal g does not replace.
             assert_eq!(heap.to_array()[0].port_id, 0);
             heap.queue(candidate(2, -1.0, 0.0));
@@ -342,14 +374,24 @@ mod tests {
             heap.queue(candidate(0, 1.0, 0.0));
             heap.queue(candidate(1, f64::NAN, 0.0));
             heap.queue(candidate(2, 0.0, 0.0));
-            assert_eq!(heap.to_array().iter().map(|c|c.port_id).collect::<Vec<_>>(), vec![2,0,1]);
-            for expected in [2,0,1] { assert_eq!(heap.dequeue().unwrap().port_id, expected); }
+            assert_eq!(
+                heap.to_array()
+                    .iter()
+                    .map(|c| c.port_id)
+                    .collect::<Vec<_>>(),
+                vec![2, 0, 1]
+            );
+            for expected in [2, 0, 1] {
+                assert_eq!(heap.dequeue().unwrap().port_id, expected);
+            }
             heap.clear();
             heap.queue(candidate(0, -0.0, 0.0));
             heap.queue(candidate(1, 0.0, 0.0));
             heap.queue(candidate(2, -0.0, 0.0));
             assert_eq!(heap.to_array()[0].f.to_bits(), (-0.0f64).to_bits());
-            for expected in [0,2,1] { assert_eq!(heap.dequeue().unwrap().port_id, expected); }
+            for expected in [0, 2, 1] {
+                assert_eq!(heap.dequeue().unwrap().port_id, expected);
+            }
             heap.clear();
             let mut fallback = candidate(0, 2.0, 1.0);
             fallback.next_region_id = 2;
@@ -361,7 +403,9 @@ mod tests {
             // Exercise dense and fallback domains together while fallback maps
             // are nonempty, then invalidate dense stamps including epoch wrap.
             for wrap in [false, true] {
-                if wrap { heap.current_hop_state_generation = u32::MAX; }
+                if wrap {
+                    heap.current_hop_state_generation = u32::MAX;
+                }
                 let mut fallback = candidate(0, 2.0, 1.0);
                 fallback.next_region_id = 2;
                 heap.queue(fallback);
@@ -370,18 +414,27 @@ mod tests {
                 assert!(!heap.is_hop_closed(fresh));
                 heap.queue(candidate(1, 1.0, 1.0));
                 assert_eq!(heap.get_queued_hop_index(fresh), Some(0));
-                if compact { assert!(heap.index_by_hop_id.keys().all(|id| *id < 0)); }
+                if compact {
+                    assert!(heap.index_by_hop_id.keys().all(|id| *id < 0));
+                }
                 assert_eq!(heap.dequeue().unwrap().port_id, 1);
                 assert_eq!(heap.dequeue().unwrap().next_region_id, 2);
                 assert!(heap.is_hop_closed(fresh));
-                if compact { assert!(heap.closed_hop_ids.iter().all(|id| *id < 0)); }
+                if compact {
+                    assert!(heap.closed_hop_ids.iter().all(|id| *id < 0));
+                }
                 heap.clear();
                 assert_eq!(heap.get_queued_hop_index(fresh), None);
                 assert!(!heap.is_hop_closed(fresh));
                 assert!(!heap.is_closed_hop(0, 2));
-                if compact && wrap { assert_eq!(heap.current_hop_state_generation, 1); }
+                if compact && wrap {
+                    assert_eq!(heap.current_hop_state_generation, 1);
+                }
             }
-            assert!(Rc::ptr_eq(held[0].prev_candidate.as_ref().unwrap(), &parent));
+            assert!(Rc::ptr_eq(
+                held[0].prev_candidate.as_ref().unwrap(),
+                &parent
+            ));
         }
     }
 }

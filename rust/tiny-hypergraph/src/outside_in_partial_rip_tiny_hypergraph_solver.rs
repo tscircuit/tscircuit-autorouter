@@ -172,7 +172,7 @@ impl OutsideInPartialRipTinyHyperGraphSolver {
         }
     }
 
-    pub fn sync_partial_rip_endpoints(&mut self) -> () {
+    pub fn sync_partial_rip_endpoints(&mut self) {
         let mut endpoints = HashMap::new();
         let mut regions = vec![None; self.problem.route_count];
         if self.options.partial_rip_enabled {
@@ -187,10 +187,10 @@ impl OutsideInPartialRipTinyHyperGraphSolver {
     }
 
     pub fn get_ending_next_region_id(&self, route: RouteId, end: PortId) -> Option<RegionId> {
-        if let Some(plan) = self.partial_rip_route_plans.get(&route) {
-            if plan.active_end_port_id == end {
-                return Some(plan.forced_end_region_id);
-            }
+        if let Some(plan) = self.partial_rip_route_plans.get(&route)
+            && plan.active_end_port_id == end
+        {
+            return Some(plan.forced_end_region_id);
         }
 
         self.distance_aware
@@ -198,7 +198,7 @@ impl OutsideInPartialRipTinyHyperGraphSolver {
             .get_starting_next_region_id(route, end)
     }
 
-    pub fn on_path_found(&mut self, candidate: Candidate) -> () {
+    pub fn on_path_found(&mut self, candidate: Candidate) {
         let route = self.state.current_route_id;
         let outside =
             route.is_some() && self.outside_in_route_search.as_ref().map(|s| s.route_id) == route;
@@ -206,21 +206,21 @@ impl OutsideInPartialRipTinyHyperGraphSolver {
         self.finish_route_transition(route, outside);
     }
 
-    pub fn finish_route_transition(&mut self, route: Option<RouteId>, outside: bool) -> () {
+    pub fn finish_route_transition(&mut self, route: Option<RouteId>, outside: bool) {
         if !self.options.partial_rip_enabled && !self.options.outside_in_routing {
             return;
         }
 
-        if let Some(route) = route {
-            if self.state.current_route_id.is_none() {
-                self.partial_rip_route_plans.remove(&route);
-                if outside {
-                    self.outside_in_completed_route_count += 1;
-                }
+        if let Some(route) = route
+            && self.state.current_route_id.is_none()
+        {
+            self.partial_rip_route_plans.remove(&route);
+            if outside {
+                self.outside_in_completed_route_count += 1;
+            }
 
-                if self.one_sided_fallback_route_id == Some(route) {
-                    self.one_sided_fallback_route_id = None;
-                }
+            if self.one_sided_fallback_route_id == Some(route) {
+                self.one_sided_fallback_route_id = None;
             }
         }
 
@@ -229,7 +229,7 @@ impl OutsideInPartialRipTinyHyperGraphSolver {
         self.publish_outside_in_stats();
     }
 
-    pub fn reset_routing_state_for_rerip(&mut self) -> () {
+    pub fn reset_routing_state_for_rerip(&mut self) {
         if self.options.partial_rip_enabled || self.options.outside_in_routing {
             self.partial_rip_route_plans.clear();
             self.outside_in_route_search = None;
@@ -240,7 +240,7 @@ impl OutsideInPartialRipTinyHyperGraphSolver {
         self.distance_aware.core.reset_routing_state_for_rerip();
     }
 
-    pub fn clear_partial_rip_plans(&mut self, routes: &HashSet<RouteId>) -> () {
+    pub fn clear_partial_rip_plans(&mut self, routes: &HashSet<RouteId>) {
         for route in routes {
             self.partial_rip_route_plans.remove(route);
         }
@@ -439,8 +439,12 @@ impl OutsideInPartialRipTinyHyperGraphSolver {
         }
 
         let preferred: HashSet<RouteId> = if self.preserve_initial_assignments {
-            self.problem.initial_assignments.iter().flatten()
-                .map(|assignment| assignment.route_id).collect()
+            self.problem
+                .initial_assignments
+                .iter()
+                .flatten()
+                .map(|assignment| assignment.route_id)
+                .collect()
         } else {
             HashSet::new()
         };
@@ -513,7 +517,7 @@ impl OutsideInPartialRipTinyHyperGraphSolver {
         &mut self,
         retained: Vec<Vec<(RouteId, PortId, PortId)>>,
         unrouted: Vec<RouteId>,
-    ) -> () {
+    ) {
         self.state.port_assignment.fill(-1);
         self.state.region_segments = vec![vec![]; self.topology.region_count];
         self.state.region_intersection_caches = (0..self.topology.region_count)
@@ -550,12 +554,12 @@ impl OutsideInPartialRipTinyHyperGraphSolver {
         self.state.current_route_net_id = None;
     }
 
-    pub fn publish_partial_rip_stats(&mut self) -> () {
+    pub fn publish_partial_rip_stats(&mut self) {
         let values = json!({"partialRipCount":self.partial_rip_count,"partiallyRippedRouteCount":self.partially_ripped_route_count,"partiallyRippedSegmentCount":self.partially_ripped_segment_count,"retainedPartialRipSegmentCount":self.retained_partial_rip_segment_count,"partialRipMaxDistance":self.partial_rip_window_distance.unwrap_or(self.options.partial_rip_max_distance),"partialRipBaseMaxDistance":self.options.partial_rip_max_distance,"partialRipQualityMaxDistance":self.options.partial_rip_quality_max_distance.unwrap_or(self.options.partial_rip_max_distance*2.0),"partialRipMaxAttempts":self.options.partial_rip_max_attempts});
         self.merge_stats(values);
     }
 
-    pub fn publish_outside_in_stats(&mut self) -> () {
+    pub fn publish_outside_in_stats(&mut self) {
         let values = json!({"outsideInRouteCount":self.outside_in_route_count,"outsideInCompletedRouteCount":self.outside_in_completed_route_count,"outsideInFallbackRouteCount":self.outside_in_fallback_route_count,"outsideInForwardExpansionCount":self.outside_in_forward_expansion_count,"outsideInReverseExpansionCount":self.outside_in_reverse_expansion_count,"outsideInDistancePruneCount":self.outside_in_distance_prune_count,"outsideInMaxDistance":self.options.outside_in_max_distance});
         self.merge_stats(values);
     }
@@ -633,7 +637,7 @@ impl OutsideInPartialRipTinyHyperGraphSolver {
         None
     }
 
-    pub fn record_settled_candidate(frontier: &mut OutsideInFrontier, candidate: &Candidate) -> () {
+    pub fn record_settled_candidate(frontier: &mut OutsideInFrontier, candidate: &Candidate) {
         if frontier
             .settled_by_port_id
             .get(&candidate.port_id)
@@ -749,16 +753,23 @@ impl OutsideInPartialRipTinyHyperGraphSolver {
         search: &mut OutsideInRouteSearch,
         candidate: &Candidate,
         expanding_forward: bool,
-    ) -> () {
+    ) {
         let opposite = if expanding_forward {
             &search.reverse
         } else {
             &search.forward
         };
-        let candidates = opposite.settled_by_port_id.get(&candidate.port_id)
+        let candidates = opposite
+            .settled_by_port_id
+            .get(&candidate.port_id)
             .into_iter()
-            .chain(opposite.settled_by_region_id.get(&candidate.next_region_id)
-                .into_iter().flatten());
+            .chain(
+                opposite
+                    .settled_by_region_id
+                    .get(&candidate.next_region_id)
+                    .into_iter()
+                    .flatten(),
+            );
 
         for opposite in candidates {
             let joined = if expanding_forward {
@@ -766,12 +777,12 @@ impl OutsideInPartialRipTinyHyperGraphSolver {
             } else {
                 self.build_joined_candidate(opposite, candidate)
             };
-            if let Some(joined) = joined {
-                if joined.cost < search.best_joined_cost {
-                    search.best_joined_candidate = Some(joined.candidate);
-                    search.best_joined_cost = joined.cost;
-                    search.remaining_post_meeting_expansions = Some(24);
-                }
+            if let Some(joined) = joined
+                && joined.cost < search.best_joined_cost
+            {
+                search.best_joined_candidate = Some(joined.candidate);
+                search.best_joined_cost = joined.cost;
+                search.remaining_post_meeting_expansions = Some(24);
             }
         }
     }
@@ -892,9 +903,9 @@ impl OutsideInPartialRipTinyHyperGraphSolver {
                 port_id: neighbor,
                 prev_region_id: Some(candidate.next_region_id),
                 next_region_id: next,
-                prev_candidate: Some(Rc::clone(previous_candidate.get_or_insert_with(|| {
-                    Rc::new(candidate.clone())
-                }))),
+                prev_candidate: Some(Rc::clone(
+                    previous_candidate.get_or_insert_with(|| Rc::new(candidate.clone())),
+                )),
                 f: g + h,
                 g,
                 h,
@@ -907,7 +918,7 @@ impl OutsideInPartialRipTinyHyperGraphSolver {
         true
     }
 
-    pub fn fall_back_to_one_sided_route_search(&mut self) -> () {
+    pub fn fall_back_to_one_sided_route_search(&mut self) {
         let Some(route) = self.state.current_route_id else {
             return;
         };
@@ -923,7 +934,7 @@ impl OutsideInPartialRipTinyHyperGraphSolver {
         self.publish_outside_in_stats();
     }
 
-    pub fn step_one_sided(&mut self) -> () {
+    pub fn step_one_sided(&mut self) {
         let route = self
             .state
             .current_route_id
@@ -942,7 +953,7 @@ impl OutsideInPartialRipTinyHyperGraphSolver {
         }
     }
 
-    pub fn step(&mut self) -> () {
+    pub fn step(&mut self) {
         let route = self
             .state
             .current_route_id
@@ -1023,7 +1034,7 @@ impl OutsideInPartialRipTinyHyperGraphSolver {
         self.publish_outside_in_stats();
     }
 
-    pub fn on_out_of_candidates(&mut self) -> () {
+    pub fn on_out_of_candidates(&mut self) {
         if self.defer_out_of_candidates {
             self.pending_out_of_candidates = true;
             return;
@@ -1038,13 +1049,13 @@ impl OutsideInPartialRipTinyHyperGraphSolver {
         self.sync_partial_rip_endpoints();
     }
 
-    pub fn try_final_acceptance(&mut self) -> () {
+    pub fn try_final_acceptance(&mut self) {
         self.deferred_section_callbacks = false;
         self.distance_aware.core.try_final_acceptance();
         self.deferred_section_callbacks = true;
     }
 
-    pub fn solve(&mut self) -> () {
+    pub fn solve(&mut self) {
         if !self.is_setup {
             self.distance_aware.setup();
         }
@@ -1111,7 +1122,7 @@ impl OutsideInPartialRipTinyHyperGraphSolver {
         compare() < 0.0
     }
 
-    pub fn on_all_routes_routed(&mut self) -> () {
+    pub fn on_all_routes_routed(&mut self) {
         if !self.options.partial_rip_enabled {
             self.deferred_section_callbacks = false;
             self.distance_aware.core.on_all_routes_routed();
@@ -1142,9 +1153,9 @@ impl OutsideInPartialRipTinyHyperGraphSolver {
             squared_region_segment_count: 0,
         };
 
-        for region in 0..self.topology.region_count {
+        for (region, stored_cost) in costs[..self.topology.region_count].iter_mut().enumerate() {
             let cost = self.state.region_intersection_caches[region].existing_region_cost;
-            costs[region] = cost;
+            *stored_cost = cost;
             round.max_region_cost = round.max_region_cost.max(cost);
             round.total_region_cost += cost;
             let count = self.state.region_segments[region].len();
@@ -1214,8 +1225,8 @@ impl OutsideInPartialRipTinyHyperGraphSolver {
             return;
         }
 
-        for region in 0..self.topology.region_count {
-            let addition = costs[region] * self.options.rip_congestion_region_cost_factor;
+        for (region, cost) in costs[..self.topology.region_count].iter().enumerate() {
+            let addition = cost * self.options.rip_congestion_region_cost_factor;
             self.state.region_congestion_cost[region] += addition;
         }
 

@@ -20,6 +20,5 @@ rebuilds and embeds the modules; `bun run build:ts` rebuilds the package and
 declarations. Package consumers do not need Rust or asynchronous initialization.
 
 Each crate has its own Cargo manifest. Run native tests with
-`cargo test --manifest-path rust/<crate>/Cargo.toml`. After building the bindings,
-run the hypergraph adapter tests with
-`bun run --cwd rust/tiny-hypergraph-bindings test`.
+`cargo test --manifest-path rust/<crate>/Cargo.toml`. TypeScript adapter tests run
+with the repository’s normal `bun test` suite after building the bindings.

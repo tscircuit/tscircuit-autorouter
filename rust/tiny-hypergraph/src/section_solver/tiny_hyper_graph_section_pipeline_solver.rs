@@ -1,3 +1,5 @@
+type CreateSectionMask = Box<dyn Fn(TinyHyperGraphSectionMaskContext<'_>) -> Vec<i32>>;
+
 pub use super::section_candidate_families::*;
 use super::{
     TinyHyperGraphSectionSolver, TinyHyperGraphSectionSolverOptions, get_active_section_route_ids,
@@ -46,7 +48,7 @@ pub struct TinyHyperGraphSectionMaskContext<'a> {
 pub struct TinyHyperGraphSectionPipelineInput {
     pub serialized_hyper_graph: Value,
     pub min_via_pad_diameter: Option<f64>,
-    pub create_section_mask: Option<Box<dyn Fn(TinyHyperGraphSectionMaskContext<'_>) -> Vec<i32>>>,
+    pub create_section_mask: Option<CreateSectionMask>,
     pub solve_graph_options: Option<TinyHyperGraphSolverOptions>,
     pub section_solver_options: Option<TinyHyperGraphSectionSolverOptions>,
     pub section_search_config: Option<TinyHyperGraphSectionPipelineSearchConfig>,
@@ -416,7 +418,7 @@ impl TinyHyperGraphSectionPipelineSolver {
         self.initial_visualize()
     }
 
-    pub fn step(&mut self) -> () {
+    pub fn step(&mut self) {
         if self.solved || self.failed {
             return;
         }
@@ -478,29 +480,31 @@ impl TinyHyperGraphSectionPipelineSolver {
         }
     }
 
-    pub fn solve(&mut self) -> () {
+    pub fn solve(&mut self) {
         while !self.solved && !self.failed {
             self.step();
         }
     }
 
     pub fn get_output(&self) -> Value {
-        if let Some(section) = &self.optimize_section {
-            if section.solved && !section.failed {
-                return section.get_output();
-            }
+        if let Some(section) = &self.optimize_section
+            && section.solved
+            && !section.failed
+        {
+            return section.get_output();
         }
 
-        if let Some(solver) = &self.solve_graph {
-            if solver.solved && !solver.failed {
-                return solver.get_output();
-            }
+        if let Some(solver) = &self.solve_graph
+            && solver.solved
+            && !solver.failed
+        {
+            return solver.get_output();
         }
 
         Value::Null
     }
 
-    pub fn try_final_acceptance(&mut self) -> () {
+    pub fn try_final_acceptance(&mut self) {
         if self
             .solve_graph
             .as_ref()

@@ -1,4 +1,10 @@
-export function createInput() {
+import type { TinyHyperGraphTopology, TinyHyperGraphProblem, TinyHyperGraphSolverOptions } from "../../rust/tiny-hypergraph-bindings/ts"
+
+export function createTinyHypergraphInput(): {
+  topology: TinyHyperGraphTopology
+  problem: TinyHyperGraphProblem
+  options: TinyHyperGraphSolverOptions
+} {
   return {
     topology: {
       portCount: 2,

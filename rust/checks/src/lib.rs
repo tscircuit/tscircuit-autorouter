@@ -1,5 +1,5 @@
+pub use check_traces_are_contiguous::{ErrorDescriptor, check};
 pub use types::Math;
-pub use check_traces_are_contiguous::{check, ErrorDescriptor};
 pub mod check_traces_are_contiguous;
 pub mod check_via_trace_clearance;
 pub mod connectivity_map;

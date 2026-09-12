@@ -20,9 +20,16 @@ pub(crate) struct QueuedNode {
 
 impl QueuedNode {
     fn materialize(&self) -> Rc<Node> {
-        self.materialized.get_or_init(|| {
-            Rc::new(self.value.as_ref().expect("Queued node must have a value").clone())
-        }).clone()
+        self.materialized
+            .get_or_init(|| {
+                Rc::new(
+                    self.value
+                        .as_ref()
+                        .expect("Queued node must have a value")
+                        .clone(),
+                )
+            })
+            .clone()
     }
 
     pub(crate) fn node(&self) -> &Node {
@@ -34,9 +41,9 @@ impl QueuedNode {
     }
 
     pub(crate) fn into_node(self) -> Rc<Node> {
-        self.materialized.into_inner().unwrap_or_else(|| {
-            Rc::new(self.value.expect("Queued node must have a value"))
-        })
+        self.materialized
+            .into_inner()
+            .unwrap_or_else(|| Rc::new(self.value.expect("Queued node must have a value")))
     }
 }
 
@@ -83,32 +90,43 @@ impl SingleRouteCandidatePriorityQueue {
         self.heap[0] = self.heap[self.heap.len() - 1];
         self.heap.pop();
         self.heapify_down();
-        let queued = self.nodes[item.slot].take().expect("Heap entry must have a node");
+        let queued = self.nodes[item.slot]
+            .take()
+            .expect("Heap entry must have a node");
         self.free_slots.push(item.slot);
         Some(queued)
     }
 
     pub fn peek(&self) -> Option<Rc<Node>> {
         let item = self.heap.first()?;
-        Some(self.nodes[item.slot].as_ref()
-            .expect("Heap entry must have a node")
-            .materialize())
+        Some(
+            self.nodes[item.slot]
+                .as_ref()
+                .expect("Heap entry must have a node")
+                .materialize(),
+        )
     }
 
     pub fn enqueue(&mut self, item: Rc<Node>) {
         let f = item.f;
-        self.enqueue_node(QueuedNode {
-            value: None,
-            materialized: OnceCell::from(item),
-        }, f);
+        self.enqueue_node(
+            QueuedNode {
+                value: None,
+                materialized: OnceCell::from(item),
+            },
+            f,
+        );
     }
 
     pub fn enqueue_owned(&mut self, item: Node) {
         let f = item.f;
-        self.enqueue_node(QueuedNode {
-            value: Some(item),
-            materialized: OnceCell::new(),
-        }, f);
+        self.enqueue_node(
+            QueuedNode {
+                value: Some(item),
+                materialized: OnceCell::new(),
+            },
+            f,
+        );
     }
 
     fn enqueue_node(&mut self, node: QueuedNode, f: f64) {
@@ -141,7 +159,9 @@ impl SingleRouteCandidatePriorityQueue {
     pub fn heapify_down(&mut self) {
         let mut index = 0;
         let heap_length = self.heap.len();
-        let Some(item) = self.heap.first().copied() else { return; };
+        let Some(item) = self.heap.first().copied() else {
+            return;
+        };
         loop {
             let left_child_index = 2 * index + 1;
             if left_child_index >= heap_length {
@@ -165,11 +185,21 @@ impl SingleRouteCandidatePriorityQueue {
 
     pub fn get_top_n(&self, n: usize) -> Vec<Rc<Node>> {
         let mut candidates = self.heap.clone();
-        candidates.sort_by(|a, b| (a.f - b.f).partial_cmp(&0.0).unwrap_or(std::cmp::Ordering::Equal));
+        candidates.sort_by(|a, b| {
+            (a.f - b.f)
+                .partial_cmp(&0.0)
+                .unwrap_or(std::cmp::Ordering::Equal)
+        });
         candidates.truncate(n);
-        candidates.into_iter().map(|entry| {
-            self.nodes[entry.slot].as_ref().expect("Heap entry must have a node").materialize()
-        }).collect()
+        candidates
+            .into_iter()
+            .map(|entry| {
+                self.nodes[entry.slot]
+                    .as_ref()
+                    .expect("Heap entry must have a node")
+                    .materialize()
+            })
+            .collect()
     }
 }
 
@@ -181,30 +211,53 @@ mod tests {
     #[test]
     fn owned_queue_preserves_ties_identity_and_recycled_slots() {
         let parent = Rc::new(Node {
-            x: -1.0, y: 0.0, z: 0.0, g: 0.0, h: 0.0, f: 0.0, parent: None,
+            x: -1.0,
+            y: 0.0,
+            z: 0.0,
+            g: 0.0,
+            h: 0.0,
+            f: 0.0,
+            parent: None,
         });
         let mut queue = SingleRouteCandidatePriorityQueue::default();
         for (index, f) in [3.0, 1.0, 1.0, 2.0, 1.0].into_iter().enumerate() {
             queue.enqueue_owned(Node {
-                x: index as f64, y: 0.0, z: 0.0, g: f, h: 0.0, f,
+                x: index as f64,
+                y: 0.0,
+                z: 0.0,
+                g: f,
+                h: 0.0,
+                f,
                 parent: Some(parent.clone()),
             });
         }
         let first = queue.peek().expect("first candidate");
         let ranked = queue.get_top_n(5);
         assert!(Rc::ptr_eq(&first, &ranked[0]));
-        assert_eq!(ranked.iter().map(|node| node.x).collect::<Vec<_>>(), vec![1.0, 4.0, 2.0, 3.0, 0.0]);
+        assert_eq!(
+            ranked.iter().map(|node| node.x).collect::<Vec<_>>(),
+            vec![1.0, 4.0, 2.0, 3.0, 0.0]
+        );
         let mut copied = queue.clone();
         for expected in ranked {
             let actual = queue.dequeue().expect("candidate");
             assert!(Rc::ptr_eq(&actual, &expected));
-            assert!(Rc::ptr_eq(&actual, &copied.dequeue().expect("copied candidate")));
+            assert!(Rc::ptr_eq(
+                &actual,
+                &copied.dequeue().expect("copied candidate")
+            ));
             assert!(Rc::ptr_eq(actual.parent.as_ref().unwrap(), &parent));
         }
         assert!(queue.dequeue().is_none());
         let capacity = queue.nodes.len();
         queue.enqueue_owned(Node {
-            x: 9.0, y: 0.0, z: 0.0, g: 0.0, h: 0.0, f: 0.0, parent: Some(parent),
+            x: 9.0,
+            y: 0.0,
+            z: 0.0,
+            g: 0.0,
+            h: 0.0,
+            f: 0.0,
+            parent: Some(parent),
         });
         assert_eq!(queue.nodes.len(), capacity);
         let recycled = queue.peek().expect("recycled slot candidate");
@@ -213,7 +266,12 @@ mod tests {
         assert_eq!(first.x, 1.0);
         for index in 0..2 {
             queue.enqueue_owned(Node {
-                x: index as f64, y: 0.0, z: 0.0, g: 0.0, h: 0.0, f: index as f64,
+                x: index as f64,
+                y: 0.0,
+                z: 0.0,
+                g: 0.0,
+                h: 0.0,
+                f: index as f64,
                 parent: None,
             });
         }

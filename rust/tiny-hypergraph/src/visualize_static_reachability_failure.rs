@@ -95,7 +95,7 @@ fn get_route_net_label(solver: &TinyHyperGraphSolver, route: RouteId) -> String 
 pub fn visualize_static_reachability_failure(
     solver: &TinyHyperGraphSolver,
     graphics: &mut GraphicsObject,
-) -> () {
+) {
     for route in solver.get_statically_unroutable_routes() {
         let start_point = get_port_render_point(solver, route.start_port_id);
         let end_point = get_port_render_point(solver, route.end_port_id);

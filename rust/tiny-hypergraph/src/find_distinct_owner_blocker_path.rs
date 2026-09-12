@@ -1,3 +1,5 @@
+type GetHops<'a, S, O, D> = dyn Fn(&S) -> Vec<DistinctOwnerBlockerHop<S, O, D>> + 'a;
+
 use std::cell::RefCell;
 use std::collections::{HashMap, HashSet};
 use std::hash::Hash;
@@ -15,7 +17,7 @@ pub struct DistinctOwnerBlockerSearchOptions<'a, S, K, O, D = serde_json::Value>
     pub start: S,
     pub get_state_key: &'a dyn Fn(&S) -> K,
     pub is_goal: &'a dyn Fn(&S) -> bool,
-    pub get_hops: &'a dyn Fn(&S) -> Vec<DistinctOwnerBlockerHop<S, O, D>>,
+    pub get_hops: &'a GetHops<'a, S, O, D>,
     pub max_expanded_labels: Option<usize>,
 }
 
@@ -45,23 +47,19 @@ pub enum DistinctOwnerBlockerSearchResult<S, O, D = serde_json::Value> {
     Success(DistinctOwnerBlockerSearchSuccess<S, O, D>),
     Failure(DistinctOwnerBlockerSearchFailure),
 }
-type LabelRef<S, K, O, D> = Rc<RefCell<SearchLabel<S, K, O, D>>>;
+type LabelRef<S, O, D> = Rc<RefCell<SearchLabel<S, O, D>>>;
 
-struct SearchLabel<S, K, O, D> {
+struct SearchLabel<S, O, D> {
     state: S,
-    state_key: K,
     owners: HashSet<O>,
     distance: f64,
-    parent: Option<LabelRef<S, K, O, D>>,
+    parent: Option<LabelRef<S, O, D>>,
     incoming_hop: Option<DistinctOwnerBlockerHop<S, O, D>>,
     queue_order: usize,
     active: bool,
 }
 
-fn compare_labels<S, K, O, D>(
-    left: &SearchLabel<S, K, O, D>,
-    right: &SearchLabel<S, K, O, D>,
-) -> f64 {
+fn compare_labels<S, O, D>(left: &SearchLabel<S, O, D>, right: &SearchLabel<S, O, D>) -> f64 {
     let owner_difference = left.owners.len() as f64 - right.owners.len() as f64;
     if owner_difference != 0.0 {
         return owner_difference;
@@ -75,12 +73,12 @@ fn compare_labels<S, K, O, D>(
     left.queue_order as f64 - right.queue_order as f64
 }
 
-struct SearchLabelQueue<S, K, O, D> {
-    heap: Vec<LabelRef<S, K, O, D>>,
+struct SearchLabelQueue<S, O, D> {
+    heap: Vec<LabelRef<S, O, D>>,
 }
 
-impl<S, K, O, D> SearchLabelQueue<S, K, O, D> {
-    fn push(&mut self, label: LabelRef<S, K, O, D>) -> () {
+impl<S, O, D> SearchLabelQueue<S, O, D> {
+    fn push(&mut self, label: LabelRef<S, O, D>) {
         self.heap.push(label);
         let mut index = self.heap.len() - 1;
 
@@ -95,7 +93,7 @@ impl<S, K, O, D> SearchLabelQueue<S, K, O, D> {
         }
     }
 
-    fn pop(&mut self) -> Option<LabelRef<S, K, O, D>> {
+    fn pop(&mut self) -> Option<LabelRef<S, O, D>> {
         let first = self.heap.first()?.clone();
         let last = self.heap.pop().unwrap();
         if self.heap.is_empty() {
@@ -150,9 +148,9 @@ fn is_owner_subset<O: Eq + Hash>(
     true
 }
 
-fn label_dominates<S, K, O: Eq + Hash, D>(
-    left: &SearchLabel<S, K, O, D>,
-    right: &SearchLabel<S, K, O, D>,
+fn label_dominates<S, O: Eq + Hash, D>(
+    left: &SearchLabel<S, O, D>,
+    right: &SearchLabel<S, O, D>,
 ) -> bool {
     if left.distance > right.distance {
         return false;
@@ -161,8 +159,8 @@ fn label_dominates<S, K, O: Eq + Hash, D>(
     is_owner_subset(&left.owners, &right.owners)
 }
 
-fn reconstruct_successful_search<S: Clone, K, O: Clone + Eq + Hash, D: Clone>(
-    goal: LabelRef<S, K, O, D>,
+fn reconstruct_successful_search<S: Clone, O: Clone + Eq + Hash, D: Clone>(
+    goal: LabelRef<S, O, D>,
     expanded_label_count: usize,
 ) -> DistinctOwnerBlockerSearchSuccess<S, O, D> {
     let mut states = Vec::new();
@@ -191,9 +189,9 @@ fn reconstruct_successful_search<S: Clone, K, O: Clone + Eq + Hash, D: Clone>(
     }
 }
 
-fn get_next_active_label<S, K, O, D>(
-    queue: &mut SearchLabelQueue<S, K, O, D>,
-) -> Option<LabelRef<S, K, O, D>> {
+fn get_next_active_label<S, O, D>(
+    queue: &mut SearchLabelQueue<S, O, D>,
+) -> Option<LabelRef<S, O, D>> {
     loop {
         let label = queue.pop()?;
         if label.borrow().active {
@@ -212,14 +210,13 @@ pub fn find_distinct_owner_blocker_path<
 ) -> DistinctOwnerBlockerSearchResult<S, O, D> {
     // usize makes the source's non-negative integer limit invariant explicit.
     let max_expanded_labels = options.max_expanded_labels.unwrap_or(usize::MAX);
-    let mut labels_by_state_key: HashMap<K, Vec<LabelRef<S, K, O, D>>> = HashMap::new();
+    let mut labels_by_state_key: HashMap<K, Vec<LabelRef<S, O, D>>> = HashMap::new();
     let mut queue = SearchLabelQueue { heap: Vec::new() };
     let mut next_queue_order = 0;
     let mut expanded_label_count = 0;
     let start_key = (options.get_state_key)(&options.start);
     let start = Rc::new(RefCell::new(SearchLabel {
         state: options.start,
-        state_key: start_key.clone(),
         owners: HashSet::new(),
         distance: 0.0,
         parent: None,
@@ -272,7 +269,6 @@ pub fn find_distinct_owner_blocker_path<
             let state_key = (options.get_state_key)(&hop.state);
             let candidate = Rc::new(RefCell::new(SearchLabel {
                 state: hop.state.clone(),
-                state_key: state_key.clone(),
                 owners,
                 distance,
                 parent: Some(current.clone()),

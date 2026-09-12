@@ -4,7 +4,11 @@ use std::cell::{Cell, RefCell};
 thread_local! { static NEXT_IDENTITY: Cell<u64> = const { Cell::new(1) }; }
 
 pub fn next_identity() -> u64 {
-    NEXT_IDENTITY.with(|counter| { let id = counter.get(); counter.set(id.checked_add(1).expect("Repair identity exhausted")); id })
+    NEXT_IDENTITY.with(|counter| {
+        let id = counter.get();
+        counter.set(id.checked_add(1).expect("Repair identity exhausted"));
+        id
+    })
 }
 use std::rc::Rc;
 
@@ -41,7 +45,10 @@ impl RoutePoint {
     }
 
     pub fn point(&self) -> Point {
-        Point { x: self.x, y: self.y }
+        Point {
+            x: self.x,
+            y: self.y,
+        }
     }
 
     pub fn to_value(&self) -> Value {
@@ -70,12 +77,18 @@ pub struct MutableRoute {
 impl Clone for MutableRoute {
     fn clone(&self) -> Self {
         Self {
-            identity: next_identity(), point_array_identity: next_identity(), via_array_identity: next_identity(),
+            identity: next_identity(),
+            point_array_identity: next_identity(),
+            via_array_identity: next_identity(),
             connection_name: self.connection_name.clone(),
             root_connection_name: self.root_connection_name.clone(),
             trace_thickness: self.trace_thickness,
             via_diameter: self.via_diameter,
-            route: self.route.iter().map(|point| Rc::new(RefCell::new(point.borrow().clone()))).collect(),
+            route: self
+                .route
+                .iter()
+                .map(|point| Rc::new(RefCell::new(point.borrow().clone())))
+                .collect(),
             vias: self.vias.clone(),
             metadata: self.metadata.clone(),
         }
@@ -84,34 +97,68 @@ impl Clone for MutableRoute {
 
 impl MutableRoute {
     pub fn shallow_clone(&self) -> Self {
-        Self { identity:self.identity, point_array_identity:self.point_array_identity, via_array_identity:self.via_array_identity,
-            connection_name:self.connection_name.clone(),root_connection_name:self.root_connection_name.clone(),
-            trace_thickness:self.trace_thickness,via_diameter:self.via_diameter,route:self.route.clone(),vias:self.vias.clone(),metadata:self.metadata.clone() }
+        Self {
+            identity: self.identity,
+            point_array_identity: self.point_array_identity,
+            via_array_identity: self.via_array_identity,
+            connection_name: self.connection_name.clone(),
+            root_connection_name: self.root_connection_name.clone(),
+            trace_thickness: self.trace_thickness,
+            via_diameter: self.via_diameter,
+            route: self.route.clone(),
+            vias: self.vias.clone(),
+            metadata: self.metadata.clone(),
+        }
     }
 
     pub fn from_value(value: &Value) -> Self {
         Self {
-            identity: next_identity(), point_array_identity: next_identity(), via_array_identity: next_identity(),
-            connection_name: value["connectionName"].as_str().expect("Route connectionName is required").to_owned(),
+            identity: next_identity(),
+            point_array_identity: next_identity(),
+            via_array_identity: next_identity(),
+            connection_name: value["connectionName"]
+                .as_str()
+                .expect("Route connectionName is required")
+                .to_owned(),
             root_connection_name: value["rootConnectionName"].as_str().map(str::to_owned),
             trace_thickness: value["traceThickness"].as_f64(),
             via_diameter: value["viaDiameter"].as_f64(),
-            route: value["route"].as_array().expect("Route points are required").iter().map(|point| Rc::new(RefCell::new(RoutePoint::from_value(point)))).collect(),
-            vias: value["vias"].as_array().expect("Route vias are required").clone(),
+            route: value["route"]
+                .as_array()
+                .expect("Route points are required")
+                .iter()
+                .map(|point| Rc::new(RefCell::new(RoutePoint::from_value(point))))
+                .collect(),
+            vias: value["vias"]
+                .as_array()
+                .expect("Route vias are required")
+                .clone(),
             metadata: Rc::new(value.clone()),
         }
     }
 
     pub fn from_owned_value(mut value: Value) -> Self {
-        let Value::Array(points) = value["route"].take() else { panic!("Route points are required"); };
-        let Value::Array(vias) = value["vias"].take() else { panic!("Route vias are required"); };
+        let Value::Array(points) = value["route"].take() else {
+            panic!("Route points are required");
+        };
+        let Value::Array(vias) = value["vias"].take() else {
+            panic!("Route vias are required");
+        };
         Self {
-            identity: next_identity(), point_array_identity: next_identity(), via_array_identity: next_identity(),
-            connection_name: value["connectionName"].as_str().expect("Route connectionName is required").to_owned(),
+            identity: next_identity(),
+            point_array_identity: next_identity(),
+            via_array_identity: next_identity(),
+            connection_name: value["connectionName"]
+                .as_str()
+                .expect("Route connectionName is required")
+                .to_owned(),
             root_connection_name: value["rootConnectionName"].as_str().map(str::to_owned),
             trace_thickness: value["traceThickness"].as_f64(),
             via_diameter: value["viaDiameter"].as_f64(),
-            route: points.into_iter().map(|point| Rc::new(RefCell::new(RoutePoint::from_owned_value(point)))).collect(),
+            route: points
+                .into_iter()
+                .map(|point| Rc::new(RefCell::new(RoutePoint::from_owned_value(point))))
+                .collect(),
             vias,
             metadata: Rc::new(value),
         }
@@ -119,7 +166,12 @@ impl MutableRoute {
 
     pub fn to_value(&self) -> Value {
         let mut value = self.metadata.as_ref().clone();
-        value["route"] = Value::Array(self.route.iter().map(|point| point.borrow().to_value()).collect());
+        value["route"] = Value::Array(
+            self.route
+                .iter()
+                .map(|point| point.borrow().to_value())
+                .collect(),
+        );
         value["vias"] = Value::Array(self.vias.clone());
         value
     }
@@ -151,4 +203,3 @@ pub struct Segment {
     pub z: f64,
     pub radius: f64,
 }
-

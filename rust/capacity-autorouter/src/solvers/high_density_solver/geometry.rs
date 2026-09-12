@@ -9,10 +9,7 @@ pub fn orientation(p: &Point, q: &Point, r: &Point) -> u8 {
 }
 
 pub fn on_segment(p: &Point, q: &Point, r: &Point) -> bool {
-    q.x <= p.x.max(r.x)
-        && q.x >= p.x.min(r.x)
-        && q.y <= p.y.max(r.y)
-        && q.y >= p.y.min(r.y)
+    q.x <= p.x.max(r.x) && q.x >= p.x.min(r.x) && q.y <= p.y.max(r.y) && q.y >= p.y.min(r.y)
 }
 
 pub fn do_segments_intersect(p1: &Point, q1: &Point, p2: &Point, q2: &Point) -> bool {
@@ -23,10 +20,18 @@ pub fn do_segments_intersect(p1: &Point, q1: &Point, p2: &Point, q2: &Point) -> 
     if o1 != o2 && o3 != o4 {
         return true;
     }
-    if o1 == 0 && on_segment(p1, p2, q1) { return true; }
-    if o2 == 0 && on_segment(p1, q2, q1) { return true; }
-    if o3 == 0 && on_segment(p2, p1, q2) { return true; }
-    if o4 == 0 && on_segment(p2, q1, q2) { return true; }
+    if o1 == 0 && on_segment(p1, p2, q1) {
+        return true;
+    }
+    if o2 == 0 && on_segment(p1, q2, q1) {
+        return true;
+    }
+    if o3 == 0 && on_segment(p2, p1, q2) {
+        return true;
+    }
+    if o4 == 0 && on_segment(p2, q1, q2) {
+        return true;
+    }
     false
 }
 
@@ -36,6 +41,10 @@ pub fn distance(p1: &Point, p2: &Point) -> f64 {
     (dx * dx + dy * dy).sqrt()
 }
 
+#[expect(
+    clippy::manual_clamp,
+    reason = "Preserve the existing min/max behavior for NaN inputs."
+)]
 pub fn point_to_segment_distance(p: &Point, v: &Point, w: &Point) -> f64 {
     let l2 = (w.x - v.x).powi(2) + (w.y - v.y).powi(2);
     if l2 == 0.0 {
@@ -53,7 +62,11 @@ pub fn point_to_segment_distance(p: &Point, v: &Point, w: &Point) -> f64 {
 
 pub fn js_round(value: f64) -> f64 {
     let floor = value.floor();
-    let rounded = if value - floor < 0.5 { floor } else { floor + 1.0 };
+    let rounded = if value - floor < 0.5 {
+        floor
+    } else {
+        floor + 1.0
+    };
     if rounded == 0.0 && value.is_sign_negative() {
         -0.0
     } else {

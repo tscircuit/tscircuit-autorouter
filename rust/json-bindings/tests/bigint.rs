@@ -28,7 +28,8 @@ fn bigint_metadata_keeps_existing_numeric_conversion_and_rejection_boundaries() 
         ("BigInt:9007199254740992", 9007199254740992.0, false),
         ("Number:10000000000000000", 1e16, true),
     ] {
-        let wire = json!({ "value": { "value": null }, "numbers": [{ "path": ["value"], "value": tag }] });
+        let wire =
+            json!({ "value": { "value": null }, "numbers": [{ "path": ["value"], "value": tag }] });
         let input: JsonInput<Metadata> = serde_json::from_value(wire.clone()).unwrap();
         let input = input.deserialize().unwrap();
         assert_eq!(input.value.as_f64(), Some(expected));

@@ -52,14 +52,6 @@ fn get_route_point_ids(metadata: Option<&Value>) -> Vec<String> {
         .unwrap_or_default()
 }
 
-fn get_default_route_connection_id(problem: &TinyHyperGraphProblem, route_id: RouteId) -> String {
-    get_route_metadata_from_problem(problem, route_id)
-        .and_then(|m| m.get("connectionId"))
-        .and_then(Value::as_str)
-        .map(str::to_owned)
-        .unwrap_or_else(|| format!("route-{route_id}"))
-}
-
 fn is_port_endpoint_reserved_for_static_reachability(
     setup: &TinyHyperGraphProblemSetup,
     net: NetId,
@@ -236,7 +228,7 @@ pub fn get_statically_unroutable_routes_for_solver(
             .as_ref()
             .expect("problem setup initialized"),
         port_assignment: &solver.state.port_assignment,
-        route_ids: &route_ids,
+        route_ids,
         max_precheck_hops: solver
             .options
             .static_reachability_precheck_max_hops

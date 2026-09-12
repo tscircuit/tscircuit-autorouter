@@ -120,7 +120,7 @@ impl RegionPathSolver {
         solver
     }
 
-    pub fn step(&mut self) -> () {
+    pub fn step(&mut self) {
         if self.solved || self.failed {
             return;
         }
@@ -135,13 +135,13 @@ impl RegionPathSolver {
         self.step_internal();
     }
 
-    pub fn solve(&mut self) -> () {
+    pub fn solve(&mut self) {
         while !self.solved && !self.failed {
             self.step();
         }
     }
 
-    pub fn step_internal(&mut self) -> () {
+    pub fn step_internal(&mut self) {
         if self.state.current_route_id.is_none() {
             if self.state.unrouted_routes.is_empty() {
                 self.solved = true;
@@ -233,7 +233,7 @@ impl RegionPathSolver {
         }
     }
 
-    pub fn reset_candidate_best_costs(&mut self) -> () {
+    pub fn reset_candidate_best_costs(&mut self) {
         if self.state.candidate_best_cost_generation == u32::MAX {
             self.state
                 .candidate_best_cost_generation_by_region_id
@@ -255,7 +255,7 @@ impl RegionPathSolver {
         }
     }
 
-    pub fn set_candidate_best_cost(&mut self, region: i32, cost: f64) -> () {
+    pub fn set_candidate_best_cost(&mut self, region: i32, cost: f64) {
         self.state.candidate_best_cost_generation_by_region_id[region as usize] =
             self.state.candidate_best_cost_generation;
         self.state.candidate_best_cost_by_region_id[region as usize] = cost;
@@ -284,7 +284,7 @@ impl RegionPathSolver {
         path
     }
 
-    pub fn on_path_found(&mut self, final_candidate: RegionPathCandidate) -> () {
+    pub fn on_path_found(&mut self, final_candidate: RegionPathCandidate) {
         let Some(route) = self.state.current_route_id else {
             return;
         };
@@ -304,7 +304,7 @@ impl RegionPathSolver {
         self.update_stats();
     }
 
-    pub fn update_stats(&mut self) -> () {
+    pub fn update_stats(&mut self) {
         let mut max_usage = 0;
         let mut max_utilization: f64 = 0.0;
 

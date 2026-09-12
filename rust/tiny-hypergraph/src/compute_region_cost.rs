@@ -6,6 +6,10 @@ pub fn is_known_single_layer_mask(mask: i32) -> bool {
     mask > 0 && (mask & (mask - 1)) == 0
 }
 
+#[expect(
+    clippy::too_many_arguments,
+    reason = "Keep the argument list aligned with the TypeScript source."
+)]
 pub fn compute_region_cost(
     region_width: f64,
     region_height: f64,

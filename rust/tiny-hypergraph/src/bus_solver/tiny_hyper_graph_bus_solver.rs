@@ -74,7 +74,6 @@ pub struct TinyHyperGraphBusSolver {
     centerline_neighbor_region_ids_by_region: Vec<Vec<RegionId>>,
     preview_touched_region_mask: Vec<u8>,
     preview_touched_port_mask: Vec<u8>,
-    region_index_by_serialized_id: HashMap<String, RegionId>,
     candidate_best_cost_by_state_key: HashMap<String, f64>,
     queued_candidate_best_cost_by_state_key: HashMap<String, f64>,
     preview_touched_region_ids: Vec<RegionId>,
@@ -215,7 +214,6 @@ impl TinyHyperGraphBusSolver {
                 .unwrap_or(false),
             boundary_planner: boundary,
             centerline_neighbor_region_ids_by_region: neighbors,
-            region_index_by_serialized_id: serialized,
             candidate_best_cost_by_state_key: HashMap::new(),
             queued_candidate_best_cost_by_state_key: HashMap::new(),
             preview_touched_region_ids: vec![],
@@ -232,7 +230,7 @@ impl TinyHyperGraphBusSolver {
         result
     }
 
-    pub fn _setup(&mut self) -> () {
+    pub fn _setup(&mut self) {
         self.core.get_problem_setup();
         self.core.is_setup = true;
         self.core.state.current_route_id = Some(self.center_route_id);
@@ -293,7 +291,7 @@ impl TinyHyperGraphBusSolver {
         self.update_bus_stats(None);
     }
 
-    pub fn _step(&mut self) -> () {
+    pub fn _step(&mut self) {
         if self.core.failed || self.core.solved {
             return;
         }
@@ -326,7 +324,8 @@ impl TinyHyperGraphBusSolver {
             self.update_bus_stats(Some("preview_failed"));
             return;
         };
-        Rc::make_mut(current.bus.get_or_insert_with(Default::default)).bus_cost = Some(preview.total_cost);
+        Rc::make_mut(current.bus.get_or_insert_with(Default::default)).bus_cost =
+            Some(preview.total_cost);
         self.last_expanded_candidate = Some(current.clone());
         if self.should_use_bus_state_pruning() {
             let key = self.get_bus_candidate_state_key(&current, &preview);
@@ -392,7 +391,8 @@ impl TinyHyperGraphBusSolver {
                 } else {
                     next.f
                 };
-                Rc::make_mut(next.bus.get_or_insert_with(Default::default)).bus_cost = Some(bus_cost);
+                Rc::make_mut(next.bus.get_or_insert_with(Default::default)).bus_cost =
+                    Some(bus_cost);
                 if self.should_use_bus_state_pruning() {
                     let key = self.get_bus_candidate_state_key(&next, &next_preview);
                     if bus_cost
@@ -427,7 +427,7 @@ impl TinyHyperGraphBusSolver {
             self.last_queued_neighbor_count = 0;
         }
 
-        if self.core.state.candidate_queue.len() == 0 {
+        if self.core.state.candidate_queue.is_empty() {
             self.core.failed = true;
             self.core.error = Some(preview.reason.unwrap_or_else(|| {
                 if current.at_goal {
@@ -445,7 +445,7 @@ impl TinyHyperGraphBusSolver {
         self.update_bus_stats(None);
     }
 
-    pub fn step(&mut self) -> () {
+    pub fn step(&mut self) {
         if !self.core.is_setup {
             self._setup();
         }
@@ -463,7 +463,7 @@ impl TinyHyperGraphBusSolver {
         }
     }
 
-    pub fn solve(&mut self) -> () {
+    pub fn solve(&mut self) {
         while !self.core.solved && !self.core.failed {
             self.step();
         }
@@ -486,39 +486,6 @@ impl TinyHyperGraphBusSolver {
                 ..Default::default()
             },
         )
-    }
-
-    fn resolve_center_goal_transit_region_id(&self) -> RegionId {
-        let goal = self.core.problem.route_end_port[self.center_route_id as usize];
-        let ids = &self.core.topology.incident_port_region[goal as usize];
-        let preferred =
-            self.get_serialized_region_id_from_route_metadata(self.center_route_id, "end");
-        ids.iter()
-            .find(|r| Some(**r) != preferred)
-            .or(ids.first())
-            .copied()
-            .unwrap_or(-1)
-    }
-
-    fn get_serialized_region_id_from_route_metadata(
-        &self,
-        route: RouteId,
-        side: &str,
-    ) -> Option<RegionId> {
-        let key = if side == "start" {
-            "startRegionId"
-        } else {
-            "endRegionId"
-        };
-        let id = self
-            .core
-            .problem
-            .route_metadata
-            .as_ref()?
-            .get(route as usize)?
-            .get(key)?
-            .as_str()?;
-        self.region_index_by_serialized_id.get(id).copied()
     }
 
     fn evaluate_candidate(&mut self, candidate: &BusCenterCandidate) -> Option<BusPreview> {
@@ -605,8 +572,7 @@ impl TinyHyperGraphBusSolver {
         let mut segments = vec![];
         let mut port = start;
 
-        for i in 0..shared {
-            let step = &steps[i];
+        for (i, step) in steps[..shared].iter().enumerate() {
             let boundary = *assignments.get(i)?.as_ref()?.get(trace)?;
             if region != step.from_region_id || !ensure_port_ownership(route, boundary, &mut local)
             {
@@ -741,6 +707,10 @@ impl TinyHyperGraphBusSolver {
         steps: &[BoundaryStep],
         assignments: &[Option<Vec<PortId>>],
     ) -> Option<BusPreview> {
+        #[expect(
+            clippy::too_many_arguments,
+            reason = "Keep the argument list aligned with the TypeScript source."
+        )]
         fn search(
             solver: &mut TinyHyperGraphBusSolver,
             path: &[BusCenterCandidate],
@@ -752,7 +722,7 @@ impl TinyHyperGraphBusSolver {
             best: &mut Option<Vec<TracePreview>>,
             best_intersections: &mut f64,
             best_length: &mut f64,
-        ) -> () {
+        ) {
             let counts = solver.get_preview_intersection_counts();
             let count = (counts.same_layer_intersection_count
                 + counts.crossing_layer_intersection_count) as f64;
@@ -1323,7 +1293,7 @@ impl TinyHyperGraphBusSolver {
         }
     }
 
-    fn restore_preview_metrics(&mut self, snapshot: PreviewMetricsSnapshot) -> () {
+    fn restore_preview_metrics(&mut self, snapshot: PreviewMetricsSnapshot) {
         for &r in &self.preview_touched_region_ids {
             self.preview_touched_region_mask[r as usize] = 0;
         }
@@ -1347,7 +1317,7 @@ impl TinyHyperGraphBusSolver {
         }
     }
 
-    fn clear_preview_working_state(&mut self) -> () {
+    fn clear_preview_working_state(&mut self) {
         for &p in &self.preview_touched_port_ids {
             self.core.state.port_assignment[p as usize] = -1;
             self.preview_touched_port_mask[p as usize] = 0;
@@ -1375,7 +1345,7 @@ impl TinyHyperGraphBusSolver {
         self.preview_total_region_cost = 0.0;
     }
 
-    fn record_preview_port_touch(&mut self, port: PortId) -> () {
+    fn record_preview_port_touch(&mut self, port: PortId) {
         if self.preview_touched_port_mask[port as usize] != 0 {
             return;
         }
@@ -1384,7 +1354,7 @@ impl TinyHyperGraphBusSolver {
         self.preview_touched_port_ids.push(port);
     }
 
-    fn record_preview_region_touch(&mut self, region: RegionId) -> () {
+    fn record_preview_region_touch(&mut self, region: RegionId) {
         if self.preview_touched_region_mask[region as usize] != 0 {
             return;
         }
@@ -1518,12 +1488,6 @@ impl TinyHyperGraphBusSolver {
         })
     }
 
-    fn is_usable_centerline_boundary_port(&self, port: PortId) -> bool {
-        self.core.problem.port_section_mask[port as usize] == 1
-            && self.core.topology.port_z[port as usize] == 0
-            && !self.is_port_reserved_for_different_bus_net(self.center_route_net_id, port)
-    }
-
     fn is_manual_center_finish_region(&self, region: RegionId) -> bool {
         let distance = self.center_goal_hop_distance_by_region[region as usize];
         distance >= 0 && distance <= self.manual_center_finish_max_hops
@@ -1604,8 +1568,16 @@ impl TinyHyperGraphBusSolver {
         let mut keys = HashSet::new();
         let mut completions = vec![];
         let hops = self.center_goal_hop_distance_by_region[region as usize];
-        let cost = current.bus.as_ref().and_then(|bus| bus.bus_cost).unwrap_or(current.g);
+        let cost = current
+            .bus
+            .as_ref()
+            .and_then(|bus| bus.bus_cost)
+            .unwrap_or(current.g);
 
+        #[expect(
+            clippy::too_many_arguments,
+            reason = "Keep the argument list aligned with the TypeScript source."
+        )]
         fn search(
             solver: &TinyHyperGraphBusSolver,
             candidate: &BusCenterCandidate,
@@ -1615,7 +1587,7 @@ impl TinyHyperGraphBusSolver {
             goal: PortId,
             keys: &mut HashSet<String>,
             completions: &mut Vec<BusCenterCandidate>,
-        ) -> () {
+        ) {
             if is_port_incident_to_region(&solver.core.topology, goal, region) {
                 let length = get_port_distance(&solver.core.topology, candidate.port_id, goal);
                 let g = cost
@@ -1753,7 +1725,11 @@ impl TinyHyperGraphBusSolver {
             return self.get_manual_center_finish_candidates(current);
         }
 
-        let parent = current.bus.as_ref().and_then(|bus| bus.bus_cost).unwrap_or(current.g);
+        let parent = current
+            .bus
+            .as_ref()
+            .and_then(|bus| bus.bus_cost)
+            .unwrap_or(current.g);
         let goal = self.core.problem.route_end_port[route as usize];
 
         for &port in self
@@ -1953,17 +1929,6 @@ impl TinyHyperGraphBusSolver {
         offset.abs()
     }
 
-    pub(super) fn get_trace_lane_penalty(&self, trace: usize, port: PortId) -> f64 {
-        let trace = &self.bus_trace_order.traces[trace];
-        let projection = get_port_projection(
-            &self.core.topology,
-            port,
-            self.bus_trace_order.normal_x,
-            self.bus_trace_order.normal_y,
-        );
-        (projection - trace.score).abs()
-    }
-
     pub(super) fn get_route_heuristic(&self, route: RouteId, port: PortId) -> f64 {
         self.core
             .problem_setup
@@ -1990,16 +1955,6 @@ impl TinyHyperGraphBusSolver {
 
     fn scale_center_heuristic(&self, h: f64) -> f64 {
         h * self.core.problem.route_count as f64 * self.center_greedy_heuristic_multiplier
-    }
-
-    fn is_port_reserved_for_different_bus_net(&self, net: NetId, port: PortId) -> bool {
-        self.core
-            .problem_setup
-            .as_ref()
-            .expect("Problem setup initialized")
-            .port_endpoint_net_ids
-            .get(port as usize)
-            .is_some_and(|ids| ids.iter().any(|id| *id != net))
     }
 
     pub(super) fn is_region_reserved_for_different_bus_net(
@@ -2039,7 +1994,7 @@ impl TinyHyperGraphBusSolver {
             .unwrap_or_else(|| format!("trace-{trace}"))
     }
 
-    fn update_bus_stats(&mut self, failure: Option<&str>) -> () {
+    fn update_bus_stats(&mut self, failure: Option<&str>) {
         let center = self.get_route_connection_id(self.center_route_id);
         let patch = json!({"routeCount":self.core.problem.route_count,"busCenterConnectionId":center,"currentTraceConnectionId":center,"openCandidateCount":self.core.state.candidate_queue.len(),"solvedTraceCount":self.last_preview.as_ref().map(|p|p.complete_trace_count).unwrap_or(0),"currentBusCost":self.last_expanded_candidate.as_ref().and_then(|c|c.bus.as_ref().and_then(|bus|bus.bus_cost)),"previewReason":failure.map(str::to_owned).or_else(||self.last_preview.as_ref().and_then(|p|p.reason.clone())),"previewRouteCount":self.last_preview.as_ref().map(|p|p.trace_previews.len()).unwrap_or(0),"lastNeighborCount":self.last_neighbor_count,"lastQueuedNeighborCount":self.last_queued_neighbor_count});
         let stats = self

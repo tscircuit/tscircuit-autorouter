@@ -326,23 +326,25 @@ impl<'a> BusTraceInferencePlanner<'a> {
             candidates.push(longest);
         }
 
-        if include_zero {
-            if let Some(preview) =
+        if include_zero
+            && let Some(preview) =
                 self.solver
                     .build_prefix_trace_preview(trace, 0, steps, assignments, owners)
-            {
-                if self.solver.is_trace_preview_usable(&preview, owners) {
-                    candidates.push(ExactPrefixTracePreview {
-                        preview,
-                        shared_step_count: 0,
-                    });
-                }
-            }
+            && self.solver.is_trace_preview_usable(&preview, owners)
+        {
+            candidates.push(ExactPrefixTracePreview {
+                preview,
+                shared_step_count: 0,
+            });
         }
 
         candidates
     }
 
+    #[expect(
+        clippy::too_many_arguments,
+        reason = "Keep the argument list aligned with the TypeScript source."
+    )]
     fn search_trace_alongside(
         &self,
         _trace: usize,
@@ -369,12 +371,12 @@ impl<'a> BusTraceInferencePlanner<'a> {
                 break;
             }
 
-            if goal.is_some() {
-                if let Some(completed) = self.try_complete_trace_from_current_region(
+            if goal.is_some()
+                && let Some(completed) = self.try_complete_trace_from_current_region(
                     route, port, region, deviation, guide, goal, &segments, owners,
-                ) {
-                    return Some(completed);
-                }
+                )
+            {
+                return Some(completed);
             }
 
             let Some(next) = self.get_closest_valid_port_move(
@@ -408,6 +410,10 @@ impl<'a> BusTraceInferencePlanner<'a> {
         }
     }
 
+    #[expect(
+        clippy::too_many_arguments,
+        reason = "Keep the argument list aligned with the TypeScript source."
+    )]
     fn try_complete_trace_from_current_region(
         &self,
         route: RouteId,
@@ -460,6 +466,10 @@ impl<'a> BusTraceInferencePlanner<'a> {
         })
     }
 
+    #[expect(
+        clippy::too_many_arguments,
+        reason = "Keep the argument list aligned with the TypeScript source."
+    )]
     fn get_closest_valid_port_move(
         &self,
         route: RouteId,

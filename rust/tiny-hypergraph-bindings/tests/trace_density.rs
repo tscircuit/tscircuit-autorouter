@@ -1,5 +1,7 @@
 use serde_json::json;
-use tiny_hypergraph::{load_serialized_hyper_graph, TinyHyperGraphSolver, TinyHyperGraphSolverOptions};
+use tiny_hypergraph::{
+    TinyHyperGraphSolver, TinyHyperGraphSolverOptions, load_serialized_hyper_graph,
+};
 
 #[test]
 fn trace_density_cost_scales_by_area_layers_and_configured_factor() {
@@ -9,12 +11,14 @@ fn trace_density_cost_scales_by_area_layers_and_configured_factor() {
                 "d": {"width": 2, "height": 2, "availableZ": layers}}],
             "ports": [], "connections": []
         }));
-        let mut solver = TinyHyperGraphSolver::new(loaded.topology, loaded.problem, Some(
-            TinyHyperGraphSolverOptions {
+        let mut solver = TinyHyperGraphSolver::new(
+            loaded.topology,
+            loaded.problem,
+            Some(TinyHyperGraphSolverOptions {
                 trace_density_cost_factor: Some(1.0),
                 ..Default::default()
-            },
-        ));
+            }),
+        );
         assert!((solver.compute_region_cost_for_region(0, 0, 0, 0, 4) - expected).abs() < 1e-12);
         solver.options.trace_density_cost_factor = 0.0;
         assert_eq!(solver.compute_region_cost_for_region(0, 0, 0, 0, 4), 0.0);

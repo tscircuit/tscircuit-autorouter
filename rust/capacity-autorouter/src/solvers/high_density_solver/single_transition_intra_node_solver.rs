@@ -1,22 +1,40 @@
-use indexmap::IndexMap;
-use serde::{Serialize, Deserialize};
-use serde_json::{Value, json};
 use crate::bindings::high_density::specialized_base_solver::{BaseSolverState, SpecializedSolver};
 use crate::bindings::high_density::specialized_utils::get_connection_port_point_pairs::get_connection_port_point_pairs;
+use crate::bindings::high_density::specialized_utils::math::{SpecializedMath, clamp};
 use crate::utils::js_number::js_number_to_string;
-use crate::bindings::high_density::specialized_utils::math::{clamp, SpecializedMath};
+use indexmap::IndexMap;
+use serde::{Deserialize, Serialize};
+use serde_json::{Value, json};
 
-fn n(value: &Value) -> f64 { value.as_f64().expect("Required numeric coordinate") }
-fn z_label(point: &Value) -> String { point.get("z").map(|v| if v.is_null() { "null".to_owned() } else { js_number_to_string(n(v)) }).unwrap_or_else(|| "undefined".to_owned()) }
+fn n(value: &Value) -> f64 {
+    value.as_f64().expect("Required numeric coordinate")
+}
+fn z_label(point: &Value) -> String {
+    point
+        .get("z")
+        .map(|v| {
+            if v.is_null() {
+                "null".to_owned()
+            } else {
+                js_number_to_string(n(v))
+            }
+        })
+        .unwrap_or_else(|| "undefined".to_owned())
+}
 
 pub fn clamp_with_fallback(value: f64, min: f64, max: f64) -> f64 {
-    if min <= max { clamp(value, min, max) } else { value }
+    if min <= max {
+        clamp(value, min, max)
+    } else {
+        value
+    }
 }
 
 #[derive(Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct SingleTransitionIntraNodeSolver {
-    #[serde(flatten)] pub base: BaseSolverState,
+    #[serde(flatten)]
+    pub base: BaseSolverState,
     pub node_with_port_points: Value,
     pub routes: Vec<Value>,
     pub via_diameter: f64,
@@ -27,17 +45,23 @@ pub struct SingleTransitionIntraNodeSolver {
 }
 
 impl SingleTransitionIntraNodeSolver {
-    pub fn new(params: Value) -> Result<Self, String> { Self::new_with_math(params, SpecializedMath::default()) }
+    pub fn new(params: Value) -> Result<Self, String> {
+        Self::new_with_math(params, SpecializedMath::default())
+    }
 
     pub fn new_with_math(params: Value, _math: SpecializedMath) -> Result<Self, String> {
         let mut solver = Self {
             base: BaseSolverState::default(),
-            node_with_port_points: params.get("nodeWithPortPoints").ok_or("Node required")?.clone(),
+            node_with_port_points: params
+                .get("nodeWithPortPoints")
+                .ok_or("Node required")?
+                .clone(),
             routes: Vec::new(),
             via_diameter: params["viaDiameter"].as_f64().unwrap_or(0.3),
             trace_thickness: params["traceThickness"].as_f64().unwrap_or(0.15),
             obstacle_margin: params["obstacleMargin"].as_f64().unwrap_or(0.1),
-            solved_routes: Vec::new(), bounds: Value::Null,
+            solved_routes: Vec::new(),
+            bounds: Value::Null,
         };
         solver.routes = solver.extract_routes_from_node();
         solver.bounds = solver.calculate_bounds();
@@ -62,7 +86,12 @@ impl SingleTransitionIntraNodeSolver {
             "x":clamp_with_fallback((n(&route["A"]["x"])+n(&route["B"]["x"]))/2.0,n(&solver.bounds["minX"])+margin,n(&solver.bounds["maxX"])-margin),
             "y":clamp_with_fallback((n(&route["A"]["y"])+n(&route["B"]["y"]))/2.0,n(&solver.bounds["minY"])+margin,n(&solver.bounds["maxY"])-margin),
         });
-        let output = solver.create_transition_route(&route["A"], &route["B"], &via, route["connectionName"].as_str().expect("Connection name"));
+        let output = solver.create_transition_route(
+            &route["A"],
+            &route["B"],
+            &via,
+            route["connectionName"].as_str().expect("Connection name"),
+        );
         solver.solved_routes.push(output);
         solver.base.solved = true;
         Ok(solver)
@@ -70,8 +99,14 @@ impl SingleTransitionIntraNodeSolver {
 
     pub fn extract_routes_from_node(&self) -> Vec<Value> {
         let mut groups: IndexMap<&str, Vec<&Value>> = IndexMap::new();
-        for point in self.node_with_port_points["portPoints"].as_array().expect("Port points") {
-            groups.entry(point["connectionName"].as_str().expect("Connection name")).or_default().push(point);
+        for point in self.node_with_port_points["portPoints"]
+            .as_array()
+            .expect("Port points")
+        {
+            groups
+                .entry(point["connectionName"].as_str().expect("Connection name"))
+                .or_default()
+                .push(point);
         }
         let mut routes = Vec::new();
         for (name, points) in groups {
@@ -90,7 +125,13 @@ impl SingleTransitionIntraNodeSolver {
             "maxY":n(&node["center"]["y"])+n(&node["height"])/2.0})
     }
 
-    pub fn create_transition_route(&self, start: &Value, end: &Value, via: &Value, name: &str) -> Value {
+    pub fn create_transition_route(
+        &self,
+        start: &Value,
+        end: &Value,
+        via: &Value,
+        name: &str,
+    ) -> Value {
         let route = json!([
             {"x":start["x"],"y":start["y"],"z":start["z"]},
             {"x":via["x"],"y":via["y"],"z":start["z"]},
@@ -120,9 +161,11 @@ impl SingleTransitionIntraNodeSolver {
             let name = route["connectionName"].as_str().unwrap();
             for pair in points.windows(2) {
                 let mut line = json!({"points":pair,"strokeColor":"rgba(0, 255, 0, 0.75)"});
-                if pair[0]["z"] != points[0]["z"] { line["strokeDash"] = json!([0.2,0.2]); }
+                if pair[0]["z"] != points[0]["z"] {
+                    line["strokeDash"] = json!([0.2, 0.2]);
+                }
                 line["strokeWidth"] = route["traceThickness"].clone();
-                line["label"] = json!(format!("{name} z={}",z_label(&pair[0])));
+                line["label"] = json!(format!("{name} z={}", z_label(&pair[0])));
                 graphics["lines"].as_array_mut().unwrap().push(line);
             }
             for via in route["vias"].as_array().unwrap() {
@@ -135,8 +178,17 @@ impl SingleTransitionIntraNodeSolver {
 }
 
 impl SpecializedSolver for SingleTransitionIntraNodeSolver {
-    fn base(&self) -> &BaseSolverState { &self.base }
-    fn base_mut(&mut self) -> &mut BaseSolverState { &mut self.base }
-    fn get_solver_name(&self) -> &'static str { "SingleTransitionIntraNodeSolver" }
-    fn _step(&mut self) -> Result<(), String> { self.base.solved = true; Ok(()) }
+    fn base(&self) -> &BaseSolverState {
+        &self.base
+    }
+    fn base_mut(&mut self) -> &mut BaseSolverState {
+        &mut self.base
+    }
+    fn get_solver_name(&self) -> &'static str {
+        "SingleTransitionIntraNodeSolver"
+    }
+    fn _step(&mut self) -> Result<(), String> {
+        self.base.solved = true;
+        Ok(())
+    }
 }

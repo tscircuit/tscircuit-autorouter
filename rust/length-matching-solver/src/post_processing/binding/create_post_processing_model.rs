@@ -16,10 +16,8 @@ pub fn expand_obstacle_connected_ids(
             if !connected_to.iter().any(|name| aliases.contains(name)) {
                 continue;
             }
-            let expanded: IndexSet<u32, FxBuildHasher> = connected_to.iter()
-                .chain(aliases.iter())
-                .copied()
-                .collect();
+            let expanded: IndexSet<u32, FxBuildHasher> =
+                connected_to.iter().chain(aliases.iter()).copied().collect();
             replacements[index] = Some(expanded.into_iter().collect());
         }
     }
@@ -35,19 +33,31 @@ mod tests {
         let aliases = vec![vec![2, 1, 2], vec![3, 2], vec![4, 3], vec![]];
         let obstacles = vec![vec![1, 1], vec![8, 8], vec![], vec![4], vec![2, 1]];
         let result = expand_obstacle_connected_ids(&aliases, &obstacles);
-        assert_eq!(result, vec![
-            Some(vec![1, 2, 3, 4]),
-            None,
-            None,
-            Some(vec![4, 3]),
-            Some(vec![2, 1, 3, 4]),
-        ]);
-        assert_eq!(obstacles[0],vec![1, 1]);
-        assert_eq!(obstacles[1],vec![8, 8]);
-        assert_eq!(expand_obstacle_connected_ids(&[vec![1]], &[vec![1]]),vec![Some(vec![1])]);
-        assert_eq!(expand_obstacle_connected_ids(&[], &obstacles),vec![None; obstacles.len()]);
+        assert_eq!(
+            result,
+            vec![
+                Some(vec![1, 2, 3, 4]),
+                None,
+                None,
+                Some(vec![4, 3]),
+                Some(vec![2, 1, 3, 4]),
+            ]
+        );
+        assert_eq!(obstacles[0], vec![1, 1]);
+        assert_eq!(obstacles[1], vec![8, 8]);
+        assert_eq!(
+            expand_obstacle_connected_ids(&[vec![1]], &[vec![1]]),
+            vec![Some(vec![1])]
+        );
+        assert_eq!(
+            expand_obstacle_connected_ids(&[], &obstacles),
+            vec![None; obstacles.len()]
+        );
         let mut reversed = aliases;
         reversed.reverse();
-        assert_eq!(expand_obstacle_connected_ids(&reversed, &[vec![1]]),vec![Some(vec![1, 2])]);
+        assert_eq!(
+            expand_obstacle_connected_ids(&reversed, &[vec![1]]),
+            vec![Some(vec![1, 2])]
+        );
     }
 }

@@ -159,7 +159,7 @@ impl SelectiveReripTinyHyperGraphSolver {
         self.selective_rerip_stats.clone()
     }
 
-    pub fn step(&mut self) -> () {
+    pub fn step(&mut self) {
         self.outside_in.step();
         if self.outside_in.pending_out_of_candidates {
             self.outside_in.pending_out_of_candidates = false;
@@ -167,7 +167,7 @@ impl SelectiveReripTinyHyperGraphSolver {
         }
     }
 
-    pub fn solve(&mut self) -> () {
+    pub fn solve(&mut self) {
         if !self.is_setup {
             self.outside_in.distance_aware.setup();
         }
@@ -187,14 +187,14 @@ impl SelectiveReripTinyHyperGraphSolver {
         }
     }
 
-    pub fn global_rerip(&mut self) -> () {
+    pub fn global_rerip(&mut self) {
         self.outside_in.defer_out_of_candidates = false;
         self.outside_in.on_out_of_candidates();
         self.outside_in.defer_out_of_candidates = true;
         self.publish_selective_rerip_stats();
     }
 
-    pub fn on_out_of_candidates(&mut self) -> () {
+    pub fn on_out_of_candidates(&mut self) {
         let failed=self.state.current_route_id.expect("SelectiveReripTinyHyperGraphSolver: candidate search exhausted without a current route");
         let direct = self.find_relaxed_blocker_path_preferring_preserved_routes(&HashSet::new());
         let direct = match direct {
@@ -248,7 +248,10 @@ impl SelectiveReripTinyHyperGraphSolver {
             }
         }
 
-        if direct_ids.iter().any(|&owner| self.has_failed_owner_path(owner, failed)) {
+        if direct_ids
+            .iter()
+            .any(|&owner| self.has_failed_owner_path(owner, failed))
+        {
             let stats = &mut self.selective_rerip_stats;
             stats.global_rerip_count += 1;
             stats.global_rerip_reason = Some("failed_owner_cycle".into());
@@ -266,7 +269,9 @@ impl SelectiveReripTinyHyperGraphSolver {
 
         let alternate = if !repeated.is_empty() {
             self.selective_rerip_stats.alternate_blocker_search_count += 1;
-            match self.find_relaxed_blocker_path_preferring_preserved_routes(&repeated.iter().copied().collect()) {
+            match self.find_relaxed_blocker_path_preferring_preserved_routes(
+                &repeated.iter().copied().collect(),
+            ) {
                 SearchResult::Failure(f) => {
                     let stats = &mut self.selective_rerip_stats;
                     stats.global_rerip_count += 1;
@@ -339,7 +344,7 @@ impl SelectiveReripTinyHyperGraphSolver {
         self.publish_selective_rerip_stats();
     }
 
-    pub fn add_congestion_cost_for_selective_rerip(&mut self) -> () {
+    pub fn add_congestion_cost_for_selective_rerip(&mut self) {
         for region in 0..self.topology.region_count {
             let cost = self.state.region_intersection_caches[region].existing_region_cost
                 * self.options.rip_congestion_region_cost_factor;
@@ -354,10 +359,10 @@ impl SelectiveReripTinyHyperGraphSolver {
             if route == target {
                 return true;
             }
-            if visited.insert(route) {
-                if let Some(owners) = self.failed_owner_pair_counts.get(&route) {
-                    pending.extend(owners.keys().copied());
-                }
+            if visited.insert(route)
+                && let Some(owners) = self.failed_owner_pair_counts.get(&route)
+            {
+                pending.extend(owners.keys().copied());
             }
         }
         false
@@ -374,10 +379,10 @@ impl SelectiveReripTinyHyperGraphSolver {
             }
             if preferred.len() > forbidden.len() {
                 let path = self.find_relaxed_blocker_path(&preferred);
-                if let SearchResult::Success(ref success) = path {
-                    if !success.owners.is_empty() {
-                        return path;
-                    }
+                if let SearchResult::Success(ref success) = path
+                    && !success.owners.is_empty()
+                {
+                    return path;
                 }
             }
         }
@@ -617,7 +622,7 @@ impl SelectiveReripTinyHyperGraphSolver {
                 && second.greater_angle < first.greater_angle)
     }
 
-    pub fn rebuild_committed_state(&mut self, ripped: &HashSet<RouteId>) -> () {
+    pub fn rebuild_committed_state(&mut self, ripped: &HashSet<RouteId>) {
         for segments in &mut self.state.region_segments {
             segments.retain(|(r, _, _)| !ripped.contains(r));
         }
@@ -660,7 +665,7 @@ impl SelectiveReripTinyHyperGraphSolver {
         *count
     }
 
-    pub fn publish_selective_rerip_stats(&mut self) -> () {
+    pub fn publish_selective_rerip_stats(&mut self) {
         let mut pairs = vec![];
 
         for (&failed, owners) in &self.failed_owner_pair_counts {
@@ -711,14 +716,19 @@ mod tests {
         let loaded = crate::load_serialized_hyper_graph(&json!({
             "regions": [], "ports": [], "connections": []
         }));
-        let mut solver = SelectiveReripTinyHyperGraphSolver::new(
-            loaded.topology, loaded.problem, None,
-        );
-        solver.failed_owner_pair_counts.insert(0, HashMap::from([(1, 1)]));
-        solver.failed_owner_pair_counts.insert(1, HashMap::from([(2, 1)]));
+        let mut solver =
+            SelectiveReripTinyHyperGraphSolver::new(loaded.topology, loaded.problem, None);
+        solver
+            .failed_owner_pair_counts
+            .insert(0, HashMap::from([(1, 1)]));
+        solver
+            .failed_owner_pair_counts
+            .insert(1, HashMap::from([(2, 1)]));
         assert!(solver.has_failed_owner_path(0, 2));
         assert!(!solver.has_failed_owner_path(2, 0));
-        solver.failed_owner_pair_counts.insert(2, HashMap::from([(0, 1)]));
+        solver
+            .failed_owner_pair_counts
+            .insert(2, HashMap::from([(0, 1)]));
         assert!(solver.has_failed_owner_path(2, 1));
         assert!(!solver.has_failed_owner_path(0, 3));
     }

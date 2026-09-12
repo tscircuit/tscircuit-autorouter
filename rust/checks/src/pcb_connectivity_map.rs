@@ -12,8 +12,12 @@ impl PcbConnectivityMap {
     pub fn new(traces: &[Trace], ports: &[Port]) -> Self {
         let mut trace_id_to_elm = IndexMap::new();
         let mut port_id_to_elm = IndexMap::new();
-        for (index, trace) in traces.iter().enumerate() { trace_id_to_elm.insert(trace.id.clone(), index); }
-        for (index, port) in ports.iter().enumerate() { port_id_to_elm.insert(port.id.clone(), index); }
+        for (index, trace) in traces.iter().enumerate() {
+            trace_id_to_elm.insert(trace.id.clone(), index);
+        }
+        for (index, port) in ports.iter().enumerate() {
+            port_id_to_elm.insert(port.id.clone(), index);
+        }
         let mut connections = Vec::new();
         for i in 0..trace_id_to_elm.len() {
             for j in i + 1..trace_id_to_elm.len() {
@@ -39,11 +43,20 @@ impl PcbConnectivityMap {
                 }
             }
         }
-        Self { trace_id_to_elm, conn_map: ConnectivityMap::new(find_connected_networks(&connections)) }
+        Self {
+            trace_id_to_elm,
+            conn_map: ConnectivityMap::new(find_connected_networks(&connections)),
+        }
     }
     pub fn get_all_traces_connected_to_trace(&self, id: &Id) -> Vec<usize> {
         match self.conn_map.get_net_connected_to_id(id) {
-            Some(net) => self.conn_map.get_ids_connected_to_net(net).into_iter().flatten().filter_map(|id| self.trace_id_to_elm.get(id).copied()).collect(),
+            Some(net) => self
+                .conn_map
+                .get_ids_connected_to_net(net)
+                .into_iter()
+                .flatten()
+                .filter_map(|id| self.trace_id_to_elm.get(id).copied())
+                .collect(),
             None => Vec::new(),
         }
     }
@@ -52,14 +65,28 @@ fn are_pcb_traces_connected(trace1: &Trace, trace2: &Trace) -> bool {
     for i in 0..trace1.route.len().saturating_sub(1) {
         let a = &trace1.route[i];
         let b = &trace1.route[i + 1];
-        if !a.wire { continue; }
-        if !b.wire { continue; }
+        if !a.wire {
+            continue;
+        }
+        if !b.wire {
+            continue;
+        }
         for j in 0..trace2.route.len().saturating_sub(1) {
             let c = &trace2.route[j];
             let d = &trace2.route[j + 1];
-            if !c.wire { continue; }
-            if !d.wire { continue; }
-            if does_line_intersect_line([a.position, b.position], [c.position, d.position], (a.width + c.width) / 2.0) { return true; }
+            if !c.wire {
+                continue;
+            }
+            if !d.wire {
+                continue;
+            }
+            if does_line_intersect_line(
+                [a.position, b.position],
+                [c.position, d.position],
+                (a.width + c.width) / 2.0,
+            ) {
+                return true;
+            }
         }
     }
     false
@@ -74,12 +101,32 @@ mod tests {
     #[test]
     fn duplicate_ids_keep_first_map_order_and_last_geometry_without_layer_filter() {
         let make = |index, id: &str, x: f64, y: f64| Trace {
-            index, id: Id::String(id.into()), source_id: Id::Missing,
-            route: vec![RoutePoint::read(&json!({"route_type":"wire","x":x,"y":y,"width":0.2,"layer":"top"})), RoutePoint::read(&json!({"route_type":"wire","x":x+1.0,"y":y,"width":0.2,"layer":"bottom"}))],
+            index,
+            id: Id::String(id.into()),
+            source_id: Id::Missing,
+            route: vec![
+                RoutePoint::read(
+                    &json!({"route_type":"wire","x":x,"y":y,"width":0.2,"layer":"top"}),
+                ),
+                RoutePoint::read(
+                    &json!({"route_type":"wire","x":x+1.0,"y":y,"width":0.2,"layer":"bottom"}),
+                ),
+            ],
         };
-        let traces = vec![make(0,"constructor",100.0,100.0), make(1,"b",0.5,0.0), make(2,"constructor",0.0,0.0), make(3,"__proto__",0.75,0.0)];
+        let traces = vec![
+            make(0, "constructor", 100.0, 100.0),
+            make(1, "b", 0.5, 0.0),
+            make(2, "constructor", 0.0, 0.0),
+            make(3, "__proto__", 0.75, 0.0),
+        ];
         let map = PcbConnectivityMap::new(&traces, &[]);
-        assert_eq!(map.get_all_traces_connected_to_trace(&Id::String("constructor".into())),vec![2,1,3]);
-        assert!(map.get_all_traces_connected_to_trace(&Id::String("__proto__".into())).is_empty());
+        assert_eq!(
+            map.get_all_traces_connected_to_trace(&Id::String("constructor".into())),
+            vec![2, 1, 3]
+        );
+        assert!(
+            map.get_all_traces_connected_to_trace(&Id::String("__proto__".into()))
+                .is_empty()
+        );
     }
 }

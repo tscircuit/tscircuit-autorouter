@@ -54,7 +54,7 @@ fn snapshot(solver: &TinyHyperGraphSolver) -> SectionSnapshot {
     }
 }
 
-fn restore(solver: &mut TinyHyperGraphSolver, state: &SectionSnapshot) -> () {
+fn restore(solver: &mut TinyHyperGraphSolver, state: &SectionSnapshot) {
     let cloned = state.clone();
     solver.state.port_assignment = cloned.port_assignment;
     solver.state.region_segments = cloned.region_segments;
@@ -170,10 +170,7 @@ fn ordered_route_path(
     (ports, regions)
 }
 
-fn apply_route_segments(
-    solver: &mut TinyHyperGraphSolver,
-    segments: Vec<Vec<(i32, i32, i32)>>,
-) -> () {
+fn apply_route_segments(solver: &mut TinyHyperGraphSolver, segments: Vec<Vec<(i32, i32, i32)>>) {
     solver.state.port_assignment.fill(-1);
     solver.state.region_segments = vec![vec![]; solver.topology.region_count];
     solver.state.region_intersection_caches = (0..solver.topology.region_count)
@@ -362,6 +359,10 @@ pub struct TinyHyperGraphSectionSearchSolver {
 }
 
 impl TinyHyperGraphSectionSearchSolver {
+    #[expect(
+        clippy::too_many_arguments,
+        reason = "Keep the argument list aligned with the TypeScript source."
+    )]
     fn new(
         topology: TinyHyperGraphTopology,
         problem: TinyHyperGraphProblem,
@@ -407,7 +408,7 @@ impl TinyHyperGraphSectionSearchSolver {
         solver
     }
 
-    fn apply_fixed_segments(&mut self) -> () {
+    fn apply_fixed_segments(&mut self) {
         for plan in &self.route_plans {
             for s in &plan.fixed_segments {
                 let net = self.core.problem.route_net[plan.route_id as usize];
@@ -428,7 +429,7 @@ impl TinyHyperGraphSectionSearchSolver {
         self.core.state.current_route_net_id = None;
     }
 
-    fn capture_best_state(&mut self, summary: RegionCostSummary) -> () {
+    fn capture_best_state(&mut self, summary: RegionCostSummary) {
         if self
             .best_summary
             .as_ref()
@@ -442,7 +443,7 @@ impl TinyHyperGraphSectionSearchSolver {
         self.best_snapshot = Some(snapshot(&self.core));
     }
 
-    fn restore_best_state(&mut self) -> () {
+    fn restore_best_state(&mut self) {
         let Some(best) = &self.best_snapshot else {
             return;
         };
@@ -455,7 +456,7 @@ impl TinyHyperGraphSectionSearchSolver {
         self.core.state.goal_port_id = -1;
     }
 
-    fn reset_routing_state_for_rerip(&mut self) -> () {
+    fn reset_routing_state_for_rerip(&mut self) {
         if let Some(fixed) = &self.fixed_snapshot {
             restore(&mut self.core, fixed);
         } else {
@@ -472,7 +473,7 @@ impl TinyHyperGraphSectionSearchSolver {
         self.core.state.goal_port_id = -1;
     }
 
-    fn on_all_routes_routed(&mut self) -> () {
+    fn on_all_routes_routed(&mut self) {
         let max_rips = self
             .max_rips
             .min(self.core.options.rip_threshold_ramp_attempts);
@@ -555,7 +556,7 @@ impl TinyHyperGraphSectionSearchSolver {
         );
     }
 
-    fn on_out_of_candidates(&mut self) -> () {
+    fn on_out_of_candidates(&mut self) {
         for region in &self.mutable_region_ids {
             let cost =
                 self.core.state.region_intersection_caches[*region as usize].existing_region_cost;
@@ -571,7 +572,7 @@ impl TinyHyperGraphSectionSearchSolver {
         );
     }
 
-    fn try_final_acceptance(&mut self) -> () {
+    fn try_final_acceptance(&mut self) {
         if self.best_snapshot.is_some() {
             self.restore_best_state();
             self.core.solved = true;
@@ -595,7 +596,7 @@ impl TinyHyperGraphSectionSearchSolver {
         self.core.solved = true;
     }
 
-    pub fn step(&mut self) -> () {
+    pub fn step(&mut self) {
         self.core.step();
         match self.core.pending_section_event.take() {
             Some(SectionEvent::AllRoutesRouted) => self.on_all_routes_routed(),
@@ -618,7 +619,7 @@ impl TinyHyperGraphSectionSearchSolver {
     }
 }
 
-pub(crate) fn merge_stats(stats: &mut Value, extra: Value) -> () {
+pub(crate) fn merge_stats(stats: &mut Value, extra: Value) {
     if !stats.is_object() {
         *stats = json!({});
     }
@@ -668,8 +669,12 @@ impl TinyHyperGraphSectionSolver {
         options
             .extra_rips_after_beating_baseline_max_region_cost
             .get_or_insert(10.0);
-        let baseline_solver =
-            create_solved_solver_from_solution(&topology, &problem, &initial_solution, &options.core);
+        let baseline_solver = create_solved_solver_from_solution(
+            &topology,
+            &problem,
+            &initial_solution,
+            &options.core,
+        );
         let caches = &baseline_solver.state.region_intersection_caches;
         let baseline_summary = summarize(caches, 0..caches.len());
         let section_region_ids = section_regions(&topology, &problem);
@@ -704,14 +709,14 @@ impl TinyHyperGraphSectionSolver {
         solver
     }
 
-    fn apply_section_rip_policy(&mut self) -> () {
+    fn apply_section_rip_policy(&mut self) {
         self.options.core.rip_threshold_start = Some(0.05);
         self.options.core.rip_threshold_end =
             Some(self.section_baseline_summary.max_region_cost.max(0.05));
         self.options.max_rips = Some(self.options.max_rips.unwrap_or(f64::INFINITY).min(20.0));
     }
 
-    fn setup(&mut self) -> () {
+    fn setup(&mut self) {
         self.apply_section_rip_policy();
         let (problem, plans, active) =
             create_section_route_plans(&self.topology, &self.problem, &self.initial_solution);
@@ -742,7 +747,7 @@ impl TinyHyperGraphSectionSolver {
         );
     }
 
-    pub fn step(&mut self) -> () {
+    pub fn step(&mut self) {
         if self.solved || self.failed {
             return;
         }
@@ -811,13 +816,13 @@ impl TinyHyperGraphSectionSolver {
         self.solved = true;
     }
 
-    pub fn solve(&mut self) -> () {
+    pub fn solve(&mut self) {
         while !self.solved && !self.failed {
             self.step();
         }
     }
 
-    pub fn try_final_acceptance(&mut self) -> () {
+    pub fn try_final_acceptance(&mut self) {
         self.use_baseline = true;
         merge_stats(
             &mut self.stats,

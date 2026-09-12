@@ -130,6 +130,10 @@ fn port_data(solver: &TinyHyperGraphSolver, id: usize) -> Value {
     d
 }
 
+#[expect(
+    clippy::too_many_arguments,
+    reason = "Keep the argument list aligned with the TypeScript source."
+)]
 fn append_simple_path(
     current: i32,
     end: i32,

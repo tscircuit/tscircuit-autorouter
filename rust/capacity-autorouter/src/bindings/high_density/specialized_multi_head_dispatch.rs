@@ -5,12 +5,11 @@ use crate::solvers::high_density_solver::multi_head_poly_line_intra_node_solver:
 use crate::solvers::high_density_solver::multi_head_poly_line_intra_node_solver::types1::{Candidate, PolyLine};
 
 fn argument<T: DeserializeOwned>(args: &[Value], index: usize, method: &str) -> Result<T, String> {
-    let value = args.get(index).ok_or_else(|| {
-        format!("Missing argument {index} for {method}")
-    })?;
-    serde_json::from_value(value.clone()).map_err(|error| {
-        format!("Invalid argument {index} for {method}: {error}")
-    })
+    let value = args
+        .get(index)
+        .ok_or_else(|| format!("Missing argument {index} for {method}"))?;
+    serde_json::from_value(value.clone())
+        .map_err(|error| format!("Invalid argument {index} for {method}: {error}"))
 }
 
 pub fn invoke(
@@ -32,7 +31,11 @@ pub fn invoke(
         SpecializedEngine::MultiHead(solver) => solver,
         SpecializedEngine::MultiHead2(solver) => &mut solver.inner,
         SpecializedEngine::MultiHead3(solver) => &mut solver.inner.inner,
-        _ => return Err(format!("MultiHead method dispatcher cannot invoke {method} on this solver")),
+        _ => {
+            return Err(format!(
+                "MultiHead method dispatcher cannot invoke {method} on this solver"
+            ));
+        }
     };
     let result = match method {
         "computeMinGapBtwPolyLines" => {
@@ -50,7 +53,9 @@ pub fn invoke(
         }
         "computeG" | "computeH" | "checkIfSolved" => {
             let index = if method == "computeG" { 1 } else { 0 };
-            let value = args.get(index).ok_or_else(|| format!("Missing argument {index} for {method}"))?;
+            let value = args
+                .get(index)
+                .ok_or_else(|| format!("Missing argument {index} for {method}"))?;
             // Public signatures accept Picks of Candidate; only decode the fields
             // consumed by the selected method, rather than requiring a full candidate.
             let mut candidate = Candidate {diagnostic_id: crate::solvers::high_density_solver::multi_head_poly_line_intra_node_solver::types1::next_diagnostic_id(), poly_lines_id: crate::solvers::high_density_solver::multi_head_poly_line_intra_node_solver::types1::next_diagnostic_id(), min_gaps_id: crate::solvers::high_density_solver::multi_head_poly_line_intra_node_solver::types1::next_diagnostic_id(),
@@ -65,30 +70,41 @@ pub fn invoke(
                 has_closed_same_layer_face: None,
             };
             if method == "computeG" {
-                candidate.g = serde_json::from_value(value["g"].clone()).map_err(|error| error.to_string())?;
-                candidate.via_count = serde_json::from_value(value["viaCount"].clone()).map_err(|error| error.to_string())?;
+                candidate.g = serde_json::from_value(value["g"].clone())
+                    .map_err(|error| error.to_string())?;
+                candidate.via_count = serde_json::from_value(value["viaCount"].clone())
+                    .map_err(|error| error.to_string())?;
                 json!(solver.compute_g(&[], &candidate))
             } else if method == "computeH" {
                 if solver.variant >= 2 {
-                    candidate.min_gaps = serde_json::from_value(value["minGaps"].clone()).map_err(|error| error.to_string())?;
+                    candidate.min_gaps = serde_json::from_value(value["minGaps"].clone())
+                        .map_err(|error| error.to_string())?;
                 } else {
-                    candidate.forces = serde_json::from_value(value["forces"].clone()).map_err(|error| error.to_string())?;
+                    candidate.forces = serde_json::from_value(value["forces"].clone())
+                        .map_err(|error| error.to_string())?;
                 }
                 json!(solver.compute_h(&candidate))
             } else {
-                candidate.min_gaps = serde_json::from_value(value["minGaps"].clone()).map_err(|error| error.to_string())?;
-                candidate.poly_lines = serde_json::from_value(value["polyLines"].clone()).map_err(|error| error.to_string())?;
+                candidate.min_gaps = serde_json::from_value(value["minGaps"].clone())
+                    .map_err(|error| error.to_string())?;
+                candidate.poly_lines = serde_json::from_value(value["polyLines"].clone())
+                    .map_err(|error| error.to_string())?;
                 json!(solver.check_if_solved(&candidate))
             }
         }
         "getNeighbors" => {
             let candidate: Candidate = argument(&args, 0, method)?;
-            serde_json::to_value(solver.get_neighbors(&candidate)).map_err(|error| error.to_string())?
+            serde_json::to_value(solver.get_neighbors(&candidate))
+                .map_err(|error| error.to_string())?
         }
         "_setSolvedRoutes" => {
             let returned_empty = !solver.base.solved || solver.last_candidate.is_none();
             solver.set_solved_routes();
-            if returned_empty { json!([]) } else { Value::Null }
+            if returned_empty {
+                json!([])
+            } else {
+                Value::Null
+            }
         }
         "applyForcesToPolyLines" if solver.variant >= 2 => {
             let mut lines: Vec<PolyLine> = argument(&args, 0, method)?;
@@ -105,9 +121,14 @@ pub fn invoke(
         }
         "createInitialCandidateFromSeed" if solver.variant == 3 => {
             let seed: f64 = argument(&args, 0, method)?;
-            serde_json::to_value(solver.create_initial_candidate_from_seed(seed)?).map_err(|error| error.to_string())?
+            serde_json::to_value(solver.create_initial_candidate_from_seed(seed)?)
+                .map_err(|error| error.to_string())?
         }
-        _ => return Err(format!("Unknown MultiHeadPolyLineIntraNodeSolver method: {method}")),
+        _ => {
+            return Err(format!(
+                "Unknown MultiHeadPolyLineIntraNodeSolver method: {method}"
+            ));
+        }
     };
     Ok((result, args))
 }

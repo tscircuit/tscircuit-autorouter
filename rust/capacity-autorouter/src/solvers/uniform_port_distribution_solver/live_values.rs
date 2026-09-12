@@ -105,14 +105,24 @@ pub fn set(value: &JsValue, key: &'static str, field: &JsValue) -> Result<(), Js
     }
     Ok(())
 }
-pub fn array(value: &JsValue) -> &Array { value.unchecked_ref() }
-pub fn number(value: JsValue) -> f64 { value.as_f64().unwrap_or_else(|| js_sys::Number::from(value).value_of()) }
-pub fn truthy(value: &JsValue) -> bool { value.is_truthy() }
+pub fn array(value: &JsValue) -> &Array {
+    value.unchecked_ref()
+}
+pub fn number(value: JsValue) -> f64 {
+    value
+        .as_f64()
+        .unwrap_or_else(|| js_sys::Number::from(value).value_of())
+}
+pub fn truthy(value: &JsValue) -> bool {
+    value.is_truthy()
+}
 pub fn call(value: &JsValue, name: &'static str, arguments: &Array) -> Result<JsValue, JsValue> {
     let method = get(value, name)?.dyn_into::<Function>()?;
     method.apply(value, arguments)
 }
-pub fn args(values: &[JsValue]) -> Array { values.iter().collect() }
+pub fn args(values: &[JsValue]) -> Array {
+    values.iter().collect()
+}
 pub fn values(value: &JsValue) -> Result<js_sys::IntoIter, JsValue> {
     js_sys::try_iter(value)?.ok_or_else(|| js_sys::TypeError::new("Value is not iterable").into())
 }

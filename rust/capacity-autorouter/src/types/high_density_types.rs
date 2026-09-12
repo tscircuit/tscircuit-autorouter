@@ -1,5 +1,5 @@
-use serde::{Deserialize, Serialize, Serializer};
 use serde::ser::SerializeMap;
+use serde::{Deserialize, Serialize, Serializer};
 use serde_json::{Map, Value};
 
 #[derive(Clone, Copy, Debug, Default, Serialize, Deserialize, PartialEq)]
@@ -69,12 +69,18 @@ impl Serialize for Route {
         }
         // handleSimpleCases inserts the route before dimensions; setSolvedPath
         // and the intra-node same-point case insert it after dimensions.
-        if self.simple_path { map.serialize_entry("route", &self.route)?; }
+        if self.simple_path {
+            map.serialize_entry("route", &self.route)?;
+        }
         map.serialize_entry("traceThickness", &self.trace_thickness)?;
         map.serialize_entry("viaDiameter", &self.via_diameter)?;
-        if !self.simple_path { map.serialize_entry("route", &self.route)?; }
+        if !self.simple_path {
+            map.serialize_entry("route", &self.route)?;
+        }
         map.serialize_entry("vias", &self.vias)?;
-        for (key, value) in &self.extra { map.serialize_entry(key, value)?; }
+        for (key, value) in &self.extra {
+            map.serialize_entry(key, value)?;
+        }
         map.end()
     }
 }
@@ -90,7 +96,11 @@ pub struct PortPoint {
     pub root_connection_name: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub port_point_id: Option<String>,
-    #[serde(default, rename = "pcb_port_id", skip_serializing_if = "Option::is_none")]
+    #[serde(
+        default,
+        rename = "pcb_port_id",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub pcb_port_id: Option<String>,
     pub x: f64,
     pub y: f64,

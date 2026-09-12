@@ -152,10 +152,9 @@ impl BusBoundaryPlanner {
         for ordered in [&ports, &reversed] {
             if let Some(assignments) = self
                 .build_boundary_port_assignments_from_ordered_ports(ordered, step.center_port_id)
+                && !candidates.contains(&assignments)
             {
-                if !candidates.contains(&assignments) {
-                    candidates.push(assignments);
-                }
+                candidates.push(assignments);
             }
         }
 
@@ -255,7 +254,7 @@ impl BusBoundaryPlanner {
         (self.options.problem.route_count - 1 - before - after) as f64 * 20.0
     }
 
-    fn build_shared_z0_ports_by_region_pair(&mut self) -> () {
+    fn build_shared_z0_ports_by_region_pair(&mut self) {
         self.shared_z0_ports_by_region_pair.clear();
 
         for port in 0..self.options.topology.port_count {
@@ -295,7 +294,7 @@ impl BusBoundaryPlanner {
         }
     }
 
-    fn build_usable_centerline_shared_z0_ports_by_region_pair(&mut self) -> () {
+    fn build_usable_centerline_shared_z0_ports_by_region_pair(&mut self) {
         self.usable_centerline_shared_z0_ports_by_region_pair
             .clear();
 
@@ -385,8 +384,8 @@ impl BusBoundaryPlanner {
 
         let mut assignments = vec![0; self.options.problem.route_count];
 
-        for trace in 0..assignments.len() {
-            assignments[trace] = *ports.get(center + trace - before)?;
+        for (trace, assignment) in assignments.iter_mut().enumerate() {
+            *assignment = *ports.get(center + trace - before)?;
         }
 
         Some(assignments)

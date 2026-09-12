@@ -33,7 +33,7 @@ impl DistanceAwareTinyHyperGraphSolver {
         Self { core }
     }
 
-    pub fn setup(&mut self) -> () {
+    pub fn setup(&mut self) {
         self.core.setup();
         self.core.state.candidate_queue = Box::new(IndexedCandidateHeap::new(
             self.core.topology.region_count,
@@ -47,11 +47,11 @@ impl DistanceAwareTinyHyperGraphSolver {
         ));
     }
 
-    pub fn on_path_found(&mut self, candidate: Candidate) -> () {
+    pub fn on_path_found(&mut self, candidate: Candidate) {
         self.core.on_path_found(candidate);
     }
 
-    pub fn solve(&mut self) -> () {
+    pub fn solve(&mut self) {
         if !self.core.is_setup {
             self.setup();
         }

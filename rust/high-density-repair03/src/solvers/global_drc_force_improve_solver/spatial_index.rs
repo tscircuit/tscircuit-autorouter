@@ -1,7 +1,7 @@
-use std::collections::{HashMap, HashSet};
+use crate::solvers::global_drc_force_improve_solver::internal_types::{Bounds2D, Point};
 use math_utils::{js_max, js_min};
 use rustc_hash::FxBuildHasher;
-use crate::solvers::global_drc_force_improve_solver::internal_types::{Bounds2D, Point};
+use std::collections::{HashMap, HashSet};
 
 pub type SpatialIndex = HashMap<(u64, u64), Vec<usize>, FxBuildHasher>;
 
@@ -47,7 +47,11 @@ fn get_spatial_cell_key(cell_x: f64, cell_y: f64) -> (u64, u64) {
     (x, y)
 }
 
-pub fn create_spatial_index<T>(items: &[T], get_bounds: impl Fn(&T) -> Bounds2D, cell_size: f64) -> SpatialIndex {
+pub fn create_spatial_index<T>(
+    items: &[T],
+    get_bounds: impl Fn(&T) -> Bounds2D,
+    cell_size: f64,
+) -> SpatialIndex {
     let mut index = SpatialIndex::default();
     for (item_index, item) in items.iter().enumerate() {
         let cell_range = get_spatial_cell_range(&get_bounds(item), cell_size);
@@ -69,7 +73,11 @@ pub fn create_spatial_index<T>(items: &[T], get_bounds: impl Fn(&T) -> Bounds2D,
     index
 }
 
-pub fn get_spatial_candidate_indexes(spatial_index: &SpatialIndex, bounds: &Bounds2D, cell_size: f64) -> Vec<usize> {
+pub fn get_spatial_candidate_indexes(
+    spatial_index: &SpatialIndex,
+    bounds: &Bounds2D,
+    cell_size: f64,
+) -> Vec<usize> {
     let mut candidate_indexes = HashSet::<usize, FxBuildHasher>::default();
     let cell_range = get_spatial_cell_range(bounds, cell_size);
     let mut cell_x = cell_range.min_cell_x;
@@ -77,7 +85,9 @@ pub fn get_spatial_candidate_indexes(spatial_index: &SpatialIndex, bounds: &Boun
         let mut cell_y = cell_range.min_cell_y;
         while cell_y <= cell_range.max_cell_y {
             if let Some(cell_indexes) = spatial_index.get(&get_spatial_cell_key(cell_x, cell_y)) {
-                for &index in cell_indexes { candidate_indexes.insert(index); }
+                for &index in cell_indexes {
+                    candidate_indexes.insert(index);
+                }
             }
             cell_y += 1.0;
         }

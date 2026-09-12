@@ -1,10 +1,7 @@
 use super::bus_solver_types::PreviewRoutingStateSnapshot;
 use crate::core::{TinyHyperGraphWorkingState, create_empty_region_intersection_cache};
 
-pub fn clear_preview_routing_state(
-    state: &mut TinyHyperGraphWorkingState,
-    region_count: usize,
-) -> () {
+pub fn clear_preview_routing_state(state: &mut TinyHyperGraphWorkingState, region_count: usize) {
     state.port_assignment.fill(-1);
     state.region_segments = vec![vec![]; region_count];
     state.region_intersection_caches = (0..region_count)
@@ -58,7 +55,7 @@ pub fn snapshot_preview_routing_state(
 pub fn restore_preview_routing_state(
     state: &mut TinyHyperGraphWorkingState,
     snapshot: &PreviewRoutingStateSnapshot,
-) -> () {
+) {
     state.port_assignment = snapshot.port_assignment.clone();
     state.region_segments = snapshot.region_segments.clone();
     state.region_intersection_caches = snapshot.region_intersection_caches.clone();

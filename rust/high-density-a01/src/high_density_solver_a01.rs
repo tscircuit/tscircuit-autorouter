@@ -1,9 +1,17 @@
-use serde_json::{json, Value};
+type InitialPenaltyFn = Box<dyn Fn(&Value) -> f64>;
+
+use serde_json::{Value, json};
 use std::collections::{HashMap, HashSet, VecDeque};
 
 use crate::get_connection_port_point_pairs::get_connection_port_point_pairs;
-use crate::grid_to_affine_transform::{AffineTransform, GridToAffineTransformParams, compute_grid_to_affine_transform, apply_affine_transform_to_point};
-use crate::max_iterations_by_node_size_and_connection_count::{compute_max_iterations_by_node_size_and_connection_count, MaxIterationsByNodeSizeAndConnectionCountInput};
+use crate::grid_to_affine_transform::{
+    AffineTransform, GridToAffineTransformParams, apply_affine_transform_to_point,
+    compute_grid_to_affine_transform,
+};
+use crate::max_iterations_by_node_size_and_connection_count::{
+    MaxIterationsByNodeSizeAndConnectionCountInput,
+    compute_max_iterations_by_node_size_and_connection_count,
+};
 
 type ConnId = i32;
 
@@ -24,7 +32,9 @@ fn ripped_contains(nodes: &[RippedNode], r: Option<usize>, id: ConnId) -> bool {
     let mut cur = r;
     while let Some(index) = cur {
         let node = &nodes[index];
-        if node.id == id { return true; }
+        if node.id == id {
+            return true;
+        }
         cur = node.prev;
     }
     false
@@ -62,7 +72,6 @@ struct ConnectionSeg {
 
 #[derive(Clone)]
 struct SolvedRouteInternal {
-    conn_id: ConnId,
     start_z: i32,
     start_row: i32,
     start_col: i32,
@@ -102,7 +111,9 @@ impl MinHeap {
         while i > 0 {
             let p = (i - 1) >> 1;
             let parent = entries[p];
-            if Self::less(parent, held) { break; }
+            if Self::less(parent, held) {
+                break;
+            }
             entries[i] = parent;
             i = p;
         }
@@ -130,10 +141,16 @@ impl MinHeap {
         loop {
             let l = i * 2 + 1;
             let r = l + 1;
-            if l >= n { break; }
+            if l >= n {
+                break;
+            }
             let mut m = l;
-            if r < n && !Self::less(entries[l], entries[r]) { m = r; }
-            if Self::less(held, entries[m]) { break; }
+            if r < n && !Self::less(entries[l], entries[r]) {
+                m = r;
+            }
+            if Self::less(held, entries[m]) {
+                break;
+            }
             entries[i] = entries[m];
             i = m;
         }
@@ -144,10 +161,11 @@ impl MinHeap {
     fn less(first: HeapEntry, second: HeapEntry) -> bool {
         let fi = first.f;
         let fj = second.f;
-        if fi != fj { return fi < fj; }
+        if fi != fj {
+            return fi < fj;
+        }
         first.seq < second.seq
     }
-
 }
 
 struct HyperParameters {
@@ -160,25 +178,31 @@ struct HyperParameters {
 }
 
 fn to_root_net_name(connection_name: &str, root_connection_name: Option<&str>) -> String {
-    if let Some(root) = root_connection_name { return root.to_owned(); }
-    if let Some((root, suffix)) = connection_name.rsplit_once("_mst") {
-        if !suffix.is_empty() && suffix.bytes().all(|c| c.is_ascii_digit()) {
-            return root.to_owned();
-        }
+    if let Some(root) = root_connection_name {
+        return root.to_owned();
+    }
+    if let Some((root, suffix)) = connection_name.rsplit_once("_mst")
+        && !suffix.is_empty()
+        && suffix.bytes().all(|c| c.is_ascii_digit())
+    {
+        return root.to_owned();
     }
     connection_name.to_owned()
 }
-
 
 fn js_round(value: f64) -> f64 {
     if !value.is_finite() || value == 0.0 {
         return value;
     }
-    if value >= -0.5 && value < 0.0 {
+    if (-0.5..0.0).contains(&value) {
         return -0.0;
     }
     let floor = value.floor();
-    if value - floor < 0.5 { floor } else { floor + 1.0 }
+    if value - floor < 0.5 {
+        floor
+    } else {
+        floor + 1.0
+    }
 }
 
 const DIRS_DR: [i32; 8] = [-1, -1, -1, 0, 0, 1, 1, 1];
@@ -206,7 +230,7 @@ pub struct HighDensitySolverA01 {
     step_multiplier: usize,
     hyper_parameters: HyperParameters,
     initial_penalty_map: Option<Vec<f64>>,
-    pub initial_penalty_fn: Option<Box<dyn Fn(&Value) -> f64>>,
+    pub initial_penalty_fn: Option<InitialPenaltyFn>,
     rows: i32,
     cols: i32,
     layers: i32,
@@ -260,12 +284,20 @@ impl HighDensitySolverA01 {
     pub fn new(props: Value) -> Self {
         let hp = &props["hyperParameters"];
         Self {
-            solved: false, failed: false, error: None, iterations: 0,
+            solved: false,
+            failed: false,
+            error: None,
+            iterations: 0,
             max_iterations: props["maxIterations"].as_u64().unwrap_or(100_000_000) as usize,
-            progress: 0.0, stats: json!({}),
+            progress: 0.0,
+            stats: json!({}),
             node_with_port_points: props["nodeWithPortPoints"].clone(),
-            cell_size_mm: props["cellSizeMm"].as_f64().expect("cellSizeMm is required"),
-            via_diameter: props["viaDiameter"].as_f64().expect("viaDiameter is required"),
+            cell_size_mm: props["cellSizeMm"]
+                .as_f64()
+                .expect("cellSizeMm is required"),
+            via_diameter: props["viaDiameter"]
+                .as_f64()
+                .expect("viaDiameter is required"),
             max_rips: 200,
             max_cell_count: props["maxCellCount"].as_f64(),
             trace_thickness: props["traceThickness"].as_f64().unwrap_or(0.1),
@@ -274,7 +306,11 @@ impl HighDensitySolverA01 {
             show_penalty_map: props["showPenaltyMap"].as_bool().unwrap_or(false),
             show_used_cell_map: props["showUsedCellMap"].as_bool().unwrap_or(false),
             effort: props["effort"].as_f64().unwrap_or(1.0),
-            step_multiplier: props["stepMultiplier"].as_f64().unwrap_or(1.0).floor().max(1.0) as usize,
+            step_multiplier: props["stepMultiplier"]
+                .as_f64()
+                .unwrap_or(1.0)
+                .floor()
+                .max(1.0) as usize,
             hyper_parameters: HyperParameters {
                 shuffle_seed: hp["shuffleSeed"].as_f64().unwrap_or(0.0),
                 rip_cost: hp["ripCost"].as_f64().unwrap_or(10.0),
@@ -284,36 +320,90 @@ impl HighDensitySolverA01 {
                 greedy_multiplier: hp["greedyMultiplier"].as_f64().unwrap_or(1.5),
             },
             initial_penalty_fn: None,
-            initial_penalty_map: props["penaltyMap"].as_array().map(|values| values.iter().map(|v| v.as_f64().expect("penaltyMap must contain numbers")).collect()),
-            rows: 0, cols: 0, layers: 0, grid_origin: (0.0, 0.0), grid_to_bounds_transform: None,
-            available_z: Vec::new(), conn_name_to_id: HashMap::new(), conn_id_to_name: Vec::new(),
-            conn_id_to_root_net: Vec::new(), conn_id_to_root_id: Vec::new(), conn_allows_root_overlap: Vec::new(), overlap_friendly_root_nets: HashSet::new(), plane_size: 0,
-            used_cells_flat: Vec::new(), port_owner_flat: Vec::new(), used_diag_flat: Vec::new(), penalty_2d: Vec::new(),
-            visited_stamp: Vec::new(), shared_cross_root_port_cells: HashSet::new(), stamp: 0,
-            via_offsets_dr: Vec::new(), via_offsets_dc: Vec::new(), via_offsets_len: 0,
-            min_via_row: 0, max_via_row: 0, min_via_col: 0, max_via_col: 0,
-            used_indices_by_conn: Vec::new(), used_diag_indices_by_conn: Vec::new(),
-            unsolved_segs: VecDeque::new(), solved_routes: Vec::new(), active_conn_seg: None,
-            active_conn_id: -1, cross_layer_search: false, node_pool: Vec::new(), heap: MinHeap::default(),
-            seq_counter: 0, via_occs: Vec::new(), rip_count: Vec::new(), total_rip_events: 0,
-            search_iterations: 0, consecutive_skips: 0, penalty_cap: 0.0, base_search_budget_iters: 0.0,
-            move_cost: 0.0, move_ripped: None, ripped_nodes: Vec::new(),
+            initial_penalty_map: props["penaltyMap"].as_array().map(|values| {
+                values
+                    .iter()
+                    .map(|v| v.as_f64().expect("penaltyMap must contain numbers"))
+                    .collect()
+            }),
+            rows: 0,
+            cols: 0,
+            layers: 0,
+            grid_origin: (0.0, 0.0),
+            grid_to_bounds_transform: None,
+            available_z: Vec::new(),
+            conn_name_to_id: HashMap::new(),
+            conn_id_to_name: Vec::new(),
+            conn_id_to_root_net: Vec::new(),
+            conn_id_to_root_id: Vec::new(),
+            conn_allows_root_overlap: Vec::new(),
+            overlap_friendly_root_nets: HashSet::new(),
+            plane_size: 0,
+            used_cells_flat: Vec::new(),
+            port_owner_flat: Vec::new(),
+            used_diag_flat: Vec::new(),
+            penalty_2d: Vec::new(),
+            visited_stamp: Vec::new(),
+            shared_cross_root_port_cells: HashSet::new(),
+            stamp: 0,
+            via_offsets_dr: Vec::new(),
+            via_offsets_dc: Vec::new(),
+            via_offsets_len: 0,
+            min_via_row: 0,
+            max_via_row: 0,
+            min_via_col: 0,
+            max_via_col: 0,
+            used_indices_by_conn: Vec::new(),
+            used_diag_indices_by_conn: Vec::new(),
+            unsolved_segs: VecDeque::new(),
+            solved_routes: Vec::new(),
+            active_conn_seg: None,
+            active_conn_id: -1,
+            cross_layer_search: false,
+            node_pool: Vec::new(),
+            heap: MinHeap::default(),
+            seq_counter: 0,
+            via_occs: Vec::new(),
+            rip_count: Vec::new(),
+            total_rip_events: 0,
+            search_iterations: 0,
+            consecutive_skips: 0,
+            penalty_cap: 0.0,
+            base_search_budget_iters: 0.0,
+            move_cost: 0.0,
+            move_ripped: None,
+            ripped_nodes: Vec::new(),
         }
     }
 
     pub fn setup(&mut self) {
-        let width = self.node_with_port_points["width"].as_f64().expect("width is required");
-        let height = self.node_with_port_points["height"].as_f64().expect("height is required");
-        let center_x = self.node_with_port_points["center"]["x"].as_f64().expect("center.x is required");
-        let center_y = self.node_with_port_points["center"]["y"].as_f64().expect("center.y is required");
-        let port_points = self.node_with_port_points["portPoints"].as_array().expect("portPoints is required").clone();
+        let width = self.node_with_port_points["width"]
+            .as_f64()
+            .expect("width is required");
+        let height = self.node_with_port_points["height"]
+            .as_f64()
+            .expect("height is required");
+        let center_x = self.node_with_port_points["center"]["x"]
+            .as_f64()
+            .expect("center.x is required");
+        let center_y = self.node_with_port_points["center"]["y"]
+            .as_f64()
+            .expect("center.y is required");
+        let port_points = self.node_with_port_points["portPoints"]
+            .as_array()
+            .expect("portPoints is required")
+            .clone();
         self.available_z = if let Some(zs) = self.node_with_port_points["availableZ"].as_array() {
-            zs.iter().map(|z| z.as_f64().expect("availableZ must contain numbers")).collect()
+            zs.iter()
+                .map(|z| z.as_f64().expect("availableZ must contain numbers"))
+                .collect()
         } else {
             let mut zs = Vec::new();
             for pp in &port_points {
                 let z = pp["z"].as_f64().expect("port point z is required");
-                if !zs.contains(&z) { zs.push(z); }
+                if !zs.contains(&z) {
+                    zs.push(z);
+                }
             }
             zs.sort_by(|a, b| a.partial_cmp(b).expect("z must be finite"));
             zs
@@ -323,19 +413,30 @@ impl HighDensitySolverA01 {
         self.layers = self.available_z.len() as i32;
         self.plane_size = (self.rows * self.cols) as usize;
         let total_cells = self.layers as usize * self.plane_size;
-        if let Some(max_cell_count) = self.max_cell_count {
-            if total_cells as f64 > max_cell_count {
-                self.error = Some(format!("Cell count {} exceeds maxCellCount {}", total_cells, max_cell_count));
-                self.failed = true;
-                return;
-            }
+        if let Some(max_cell_count) = self.max_cell_count
+            && total_cells as f64 > max_cell_count
+        {
+            self.error = Some(format!(
+                "Cell count {} exceeds maxCellCount {}",
+                total_cells, max_cell_count
+            ));
+            self.failed = true;
+            return;
         }
-        let total_diags = (self.layers * (self.rows - 1).max(0) * (self.cols - 1).max(0) * 2) as usize;
+        let total_diags =
+            (self.layers * (self.rows - 1).max(0) * (self.cols - 1).max(0) * 2) as usize;
         self.grid_origin = (center_x - width / 2.0, center_y - height / 2.0);
-        self.grid_to_bounds_transform = Some(compute_grid_to_affine_transform(GridToAffineTransformParams {
-            origin_x: self.grid_origin.0, origin_y: self.grid_origin.1, rows: self.rows as f64, cols: self.cols as f64,
-            cell_size_mm: self.cell_size_mm, width, height,
-        }));
+        self.grid_to_bounds_transform = Some(compute_grid_to_affine_transform(
+            GridToAffineTransformParams {
+                origin_x: self.grid_origin.0,
+                origin_y: self.grid_origin.1,
+                rows: self.rows as f64,
+                cols: self.cols as f64,
+                cell_size_mm: self.cell_size_mm,
+                width,
+                height,
+            },
+        ));
         self.conn_name_to_id.clear();
         self.conn_id_to_name.clear();
         self.conn_id_to_root_net.clear();
@@ -344,7 +445,11 @@ impl HighDensitySolverA01 {
         self.overlap_friendly_root_nets.clear();
         self.penalty_2d = vec![0.0; self.plane_size];
         if let Some(penalties) = &self.initial_penalty_map {
-            assert_eq!(penalties.len(), self.plane_size, "penaltyMap size must match grid");
+            assert_eq!(
+                penalties.len(),
+                self.plane_size,
+                "penaltyMap size must match grid"
+            );
             self.penalty_2d.clone_from(penalties);
         }
         if let Some(initial_penalty_fn) = &self.initial_penalty_fn {
@@ -355,7 +460,9 @@ impl HighDensitySolverA01 {
                     let y = self.grid_origin.1 + (row as f64 + 0.5) * self.cell_size_mm;
                     let px = (col as f64 + 0.5) / self.cols as f64;
                     let py = (row as f64 + 0.5) / self.rows as f64;
-                    self.penalty_2d[(row_base + col) as usize] = initial_penalty_fn(&json!({ "x": x, "y": y, "px": px, "py": py, "row": row, "col": col }));
+                    self.penalty_2d[(row_base + col) as usize] = initial_penalty_fn(
+                        &json!({ "x": x, "y": y, "px": px, "py": py, "row": row, "col": col }),
+                    );
                 }
             }
         }
@@ -396,27 +503,44 @@ impl HighDensitySolverA01 {
         // Root names and duplicate-segment eligibility are fixed after setup.
         // Retain names for output; search only needs equality and membership.
         let mut root_id_by_name = HashMap::new();
-        self.conn_id_to_root_id = self.conn_id_to_root_net.iter().map(|root| {
-            let next_id = root_id_by_name.len();
-            *root_id_by_name.entry(root.as_str()).or_insert(next_id)
-        }).collect();
-        self.conn_allows_root_overlap = self.conn_id_to_root_net.iter()
-            .map(|root| self.overlap_friendly_root_nets.contains(root)).collect();
+        self.conn_id_to_root_id = self
+            .conn_id_to_root_net
+            .iter()
+            .map(|root| {
+                let next_id = root_id_by_name.len();
+                *root_id_by_name.entry(root.as_str()).or_insert(next_id)
+            })
+            .collect();
+        self.conn_allows_root_overlap = self
+            .conn_id_to_root_net
+            .iter()
+            .map(|root| self.overlap_friendly_root_nets.contains(root))
+            .collect();
         self.shared_cross_root_port_cells.clear();
         let mut root_by_port_flat: HashMap<usize, usize> = HashMap::new();
         for pp in &port_points {
-            let name = pp["connectionName"].as_str().expect("connectionName is required");
-            let Some(&conn_id) = self.conn_name_to_id.get(name) else { continue; };
+            let name = pp["connectionName"]
+                .as_str()
+                .expect("connectionName is required");
+            let Some(&conn_id) = self.conn_name_to_id.get(name) else {
+                continue;
+            };
             let cell = self.point_to_cell(pp);
             let flat_idx = ((cell.z * self.rows + cell.row) * self.cols + cell.col) as usize;
             let root_net = &self.conn_id_to_root_id[conn_id as usize];
             if let Some(existing_root) = root_by_port_flat.get(&flat_idx) {
-                if existing_root != root_net { self.shared_cross_root_port_cells.insert(flat_idx); }
+                if existing_root != root_net {
+                    self.shared_cross_root_port_cells.insert(flat_idx);
+                }
             } else {
                 root_by_port_flat.insert(flat_idx, *root_net);
             }
             if let Some(existing) = self.port_owner_flat.get_mut(flat_idx) {
-                *existing = if *existing == -1 || *existing == conn_id { conn_id } else { -2 };
+                *existing = if *existing == -1 || *existing == conn_id {
+                    conn_id
+                } else {
+                    -2
+                };
             }
         }
         self.solved_routes.clear();
@@ -426,11 +550,15 @@ impl HighDensitySolverA01 {
         self.consecutive_skips = 0;
         self.penalty_cap = self.hyper_parameters.rip_cost * 0.5;
         self.shuffle_connections();
-        let budget = compute_max_iterations_by_node_size_and_connection_count(MaxIterationsByNodeSizeAndConnectionCountInput {
-            plane_size: self.plane_size as f64, layers: self.layers as f64,
-            connection_count: self.unsolved_segs.len() as f64, effort: self.effort,
-            max_iterations: self.max_iterations as f64,
-        });
+        let budget = compute_max_iterations_by_node_size_and_connection_count(
+            MaxIterationsByNodeSizeAndConnectionCountInput {
+                plane_size: self.plane_size as f64,
+                layers: self.layers as f64,
+                connection_count: self.unsolved_segs.len() as f64,
+                effort: self.effort,
+                max_iterations: self.max_iterations as f64,
+            },
+        );
         self.base_search_budget_iters = budget.base_search_budget_iters;
         self.max_iterations = budget.max_iterations_iters as usize;
         self.active_conn_seg = None;
@@ -444,7 +572,9 @@ impl HighDensitySolverA01 {
 
     pub fn step(&mut self) {
         for _ in 0..self.step_multiplier {
-            if self.solved || self.failed { return; }
+            if self.solved || self.failed {
+                return;
+            }
             self.step_once();
         }
     }
@@ -466,19 +596,41 @@ impl HighDensitySolverA01 {
             self.seq_counter = 0;
             self.search_iterations = 0;
             self.next_stamp();
-            let h = self.compute_h(next.start_z, next.start_row, next.start_col, next.end_z, next.end_row, next.end_col);
+            let h = self.compute_h(
+                next.start_z,
+                next.start_row,
+                next.start_col,
+                next.end_z,
+                next.end_row,
+                next.end_col,
+            );
             let f = h * self.hyper_parameters.greedy_multiplier;
-            self.node_pool.push(SearchNode { z: next.start_z, row: next.start_row, col: next.start_col, g: 0.0, parent_idx: -1, ripped: None });
+            self.node_pool.push(SearchNode {
+                z: next.start_z,
+                row: next.start_row,
+                col: next.start_col,
+                g: 0.0,
+                parent_idx: -1,
+                ripped: None,
+            });
             self.heap.push(f, self.seq_counter, 0);
             self.seq_counter += 1;
             return;
         }
         self.search_iterations += 1;
-        let conn_rips = self.rip_count.get(self.active_conn_id as usize).copied().unwrap_or(0);
-        let budget = js_round(self.base_search_budget_iters * (1.0 + conn_rips.min(10) as f64 * 0.25));
+        let conn_rips = self
+            .rip_count
+            .get(self.active_conn_id as usize)
+            .copied()
+            .unwrap_or(0);
+        let budget =
+            js_round(self.base_search_budget_iters * (1.0 + conn_rips.min(10) as f64 * 0.25));
         if self.search_iterations as f64 > budget {
-            for pen in &mut self.penalty_2d { *pen *= 0.9; }
-            self.unsolved_segs.push_back(self.active_conn_seg.take().unwrap());
+            for pen in &mut self.penalty_2d {
+                *pen *= 0.9;
+            }
+            self.unsolved_segs
+                .push_back(self.active_conn_seg.take().unwrap());
             self.active_conn_id = -1;
             self.heap.clear();
             self.node_pool.clear();
@@ -486,22 +638,39 @@ impl HighDensitySolverA01 {
             self.move_ripped = None;
             self.consecutive_skips += 1;
             if self.consecutive_skips >= self.unsolved_segs.len() * 3 {
-                self.error = Some(format!("Convergence failure: {} connections stuck", self.unsolved_segs.len()));
+                self.error = Some(format!(
+                    "Convergence failure: {} connections stuck",
+                    self.unsolved_segs.len()
+                ));
                 self.failed = true;
             }
             return;
         }
         if self.heap.n == 0 {
-            self.error = Some(format!("No path found for {}", self.conn_id_to_name[self.active_conn_id as usize]));
+            self.error = Some(format!(
+                "No path found for {}",
+                self.conn_id_to_name[self.active_conn_id as usize]
+            ));
             self.failed = true;
             return;
         }
         let node_idx = self.heap.pop();
         let node = self.node_pool[node_idx];
-        let SearchNode { z, row, col, g, ripped, .. } = node;
+        let SearchNode {
+            z,
+            row,
+            col,
+            g,
+            ripped,
+            ..
+        } = node;
         let cell_idx = ((z * self.rows + row) * self.cols + col) as usize;
-        if self.visited_stamp.get(cell_idx).copied() == Some(self.stamp) { return; }
-        if let Some(stamp) = self.visited_stamp.get_mut(cell_idx) { *stamp = self.stamp; }
+        if self.visited_stamp.get(cell_idx).copied() == Some(self.stamp) {
+            return;
+        }
+        if let Some(stamp) = self.visited_stamp.get_mut(cell_idx) {
+            *stamp = self.stamp;
+        }
         let seg = self.active_conn_seg.as_ref().unwrap();
         if z == seg.end_z && row == seg.end_row && col == seg.end_col {
             self.finalize_route(node_idx);
@@ -512,43 +681,93 @@ impl HighDensitySolverA01 {
         let (end_z, end_row, end_col) = (seg.end_z, seg.end_row, seg.end_col);
         let active_conn = ActiveConnection {
             id: self.active_conn_id,
-            root_id: self.conn_id_to_root_id.get(self.active_conn_id as usize).copied(),
+            root_id: self
+                .conn_id_to_root_id
+                .get(self.active_conn_id as usize)
+                .copied(),
             allows_root_overlap: self.conn_allows_root_overlap[self.active_conn_id as usize],
         };
         for d in 0..8 {
             let nr = row + DIRS_DR[d];
             let nc = col + DIRS_DC[d];
-            if nr < 0 || nr >= self.rows || nc < 0 || nc >= self.cols { continue; }
+            if nr < 0 || nr >= self.rows || nc < 0 || nc >= self.cols {
+                continue;
+            }
             let n_idx = ((z * self.rows + nr) * self.cols + nc) as usize;
-            if self.visited_stamp[n_idx] == self.stamp { continue; }
+            if self.visited_stamp[n_idx] == self.stamp {
+                continue;
+            }
             self.compute_move_cost_and_rips(active_conn, z, row, col, z, nr, nc, ripped);
-            if self.move_cost < 0.0 { continue; }
+            if self.move_cost < 0.0 {
+                continue;
+            }
             let g2 = g + self.move_cost;
-            let f2 = g2 + self.compute_h(z, nr, nc, end_z, end_row, end_col) * self.hyper_parameters.greedy_multiplier;
+            let f2 = g2
+                + self.compute_h(z, nr, nc, end_z, end_row, end_col)
+                    * self.hyper_parameters.greedy_multiplier;
             let new_node_idx = self.node_pool.len();
-            self.node_pool.push(SearchNode { z, row: nr, col: nc, g: g2, parent_idx: node_idx as isize, ripped: self.move_ripped });
+            self.node_pool.push(SearchNode {
+                z,
+                row: nr,
+                col: nc,
+                g: g2,
+                parent_idx: node_idx as isize,
+                ripped: self.move_ripped,
+            });
             self.heap.push(f2, self.seq_counter, new_node_idx);
             self.seq_counter += 1;
         }
-        let can_via = row >= self.min_via_row && row <= self.max_via_row && col >= self.min_via_col && col <= self.max_via_col;
+        let can_via = row >= self.min_via_row
+            && row <= self.max_via_row
+            && col >= self.min_via_col
+            && col <= self.max_via_col;
         if can_via {
             for nz in 0..self.layers {
-                if nz == z { continue; }
+                if nz == z {
+                    continue;
+                }
                 let n_idx = ((nz * self.rows + row) * self.cols + col) as usize;
-                if self.visited_stamp[n_idx] == self.stamp { continue; }
+                if self.visited_stamp[n_idx] == self.stamp {
+                    continue;
+                }
                 self.compute_move_cost_and_rips(active_conn, z, row, col, nz, row, col, ripped);
-                if self.move_cost < 0.0 { continue; }
+                if self.move_cost < 0.0 {
+                    continue;
+                }
                 let g2 = g + self.move_cost;
-                let f2 = g2 + self.compute_h(nz, row, col, end_z, end_row, end_col) * self.hyper_parameters.greedy_multiplier;
+                let f2 = g2
+                    + self.compute_h(nz, row, col, end_z, end_row, end_col)
+                        * self.hyper_parameters.greedy_multiplier;
                 let new_node_idx = self.node_pool.len();
-                self.node_pool.push(SearchNode { z: nz, row, col, g: g2, parent_idx: node_idx as isize, ripped: self.move_ripped });
+                self.node_pool.push(SearchNode {
+                    z: nz,
+                    row,
+                    col,
+                    g: g2,
+                    parent_idx: node_idx as isize,
+                    ripped: self.move_ripped,
+                });
                 self.heap.push(f2, self.seq_counter, new_node_idx);
                 self.seq_counter += 1;
             }
         }
     }
 
-    fn compute_move_cost_and_rips(&mut self, active_conn: ActiveConnection, from_z: i32, from_row: i32, from_col: i32, to_z: i32, to_row: i32, to_col: i32, ripped: Option<usize>) {
+    #[expect(
+        clippy::too_many_arguments,
+        reason = "Keep the argument list aligned with the TypeScript source."
+    )]
+    fn compute_move_cost_and_rips(
+        &mut self,
+        active_conn: ActiveConnection,
+        from_z: i32,
+        from_row: i32,
+        from_col: i32,
+        to_z: i32,
+        to_row: i32,
+        to_col: i32,
+        ripped: Option<usize>,
+    ) {
         let mut cost = 0.0;
         let ripped_start = self.ripped_nodes.len();
         let mut r = ripped;
@@ -558,10 +777,17 @@ impl HighDensitySolverA01 {
             cost += self.penalty_2d[(to_row * cols + to_col) as usize].min(self.penalty_cap);
             let to_flat_idx = ((to_z * self.rows + to_row) * cols + to_col) as usize;
             let fixed_owner = self.port_owner_flat[to_flat_idx];
-            let fixed_same_root = self.conn_id_to_root_id.get(fixed_owner as usize).copied() == active_conn.root_id;
+            let fixed_same_root =
+                self.conn_id_to_root_id.get(fixed_owner as usize).copied() == active_conn.root_id;
             let allow_fixed_overlap = fixed_same_root && active_conn.allows_root_overlap;
-            let is_seg_end = self.active_conn_seg.as_ref().is_some_and(|seg| to_z == seg.end_z && to_row == seg.end_row && to_col == seg.end_col);
-            if fixed_owner >= 0 && fixed_owner != active_conn.id && !allow_fixed_overlap && !is_seg_end {
+            let is_seg_end = self.active_conn_seg.as_ref().is_some_and(|seg| {
+                to_z == seg.end_z && to_row == seg.end_row && to_col == seg.end_col
+            });
+            if fixed_owner >= 0
+                && fixed_owner != active_conn.id
+                && !allow_fixed_overlap
+                && !is_seg_end
+            {
                 self.move_cost = -1.0;
                 self.move_ripped = r;
                 return;
@@ -578,20 +804,32 @@ impl HighDensitySolverA01 {
         } else {
             let dr = (from_row - to_row).abs();
             let dc = (from_col - to_col).abs();
-            cost += (if dr + dc > 1 { std::f64::consts::SQRT_2 } else { 1.0 }) * self.cell_size_mm;
+            cost += (if dr + dc > 1 {
+                std::f64::consts::SQRT_2
+            } else {
+                1.0
+            }) * self.cell_size_mm;
             cost += self.penalty_2d[(to_row * cols + to_col) as usize].min(self.penalty_cap);
             let flat_idx = ((to_z * self.rows + to_row) * cols + to_col) as usize;
             let fixed_owner = self.port_owner_flat[flat_idx];
-            let fixed_same_root = self.conn_id_to_root_id.get(fixed_owner as usize).copied() == active_conn.root_id;
+            let fixed_same_root =
+                self.conn_id_to_root_id.get(fixed_owner as usize).copied() == active_conn.root_id;
             let allow_fixed_overlap = fixed_same_root && active_conn.allows_root_overlap;
-            let is_seg_end = self.active_conn_seg.as_ref().is_some_and(|seg| to_z == seg.end_z && to_row == seg.end_row && to_col == seg.end_col);
-            if fixed_owner >= 0 && fixed_owner != active_conn.id && !allow_fixed_overlap && !is_seg_end {
+            let is_seg_end = self.active_conn_seg.as_ref().is_some_and(|seg| {
+                to_z == seg.end_z && to_row == seg.end_row && to_col == seg.end_col
+            });
+            if fixed_owner >= 0
+                && fixed_owner != active_conn.id
+                && !allow_fixed_overlap
+                && !is_seg_end
+            {
                 self.move_cost = -1.0;
                 self.move_ripped = r;
                 return;
             }
             let occ = self.used_cells_flat[flat_idx];
-            let same_root = self.conn_id_to_root_id.get(occ as usize).copied() == active_conn.root_id;
+            let same_root =
+                self.conn_id_to_root_id.get(occ as usize).copied() == active_conn.root_id;
             let allow_same_root_overlap = same_root && active_conn.allows_root_overlap;
             if occ != -1 && occ != active_conn.id && !allow_same_root_overlap {
                 if !ripped_contains(&self.ripped_nodes, r, occ) {
@@ -604,13 +842,16 @@ impl HighDensitySolverA01 {
             if dr == 1 && dc == 1 {
                 let sq_row = from_row.min(to_row);
                 let sq_col = from_col.min(to_col);
-                let is_backslash = (from_row < to_row && from_col < to_col) || (from_row > to_row && from_col > to_col);
+                let is_backslash = (from_row < to_row && from_col < to_col)
+                    || (from_row > to_row && from_col > to_col);
                 let diag_slot = if is_backslash { 0 } else { 1 };
                 let crossing_slot = diag_slot ^ 1;
                 let sq_cols = self.cols - 1;
                 let diag_base = ((to_z * (self.rows - 1) + sq_row) * sq_cols + sq_col) * 2;
                 let crossing_occ = self.used_diag_flat[(diag_base + crossing_slot) as usize];
-                let crossing_same_root = self.conn_id_to_root_id.get(crossing_occ as usize).copied() == active_conn.root_id;
+                let crossing_same_root =
+                    self.conn_id_to_root_id.get(crossing_occ as usize).copied()
+                        == active_conn.root_id;
                 let allow_crossing_overlap = crossing_same_root && active_conn.allows_root_overlap;
                 if crossing_occ != -1 && crossing_occ != active_conn.id && !allow_crossing_overlap {
                     self.move_cost = -1.0;
@@ -637,26 +878,45 @@ impl HighDensitySolverA01 {
             for i in 0..self.via_offsets_len {
                 let r = row + self.via_offsets_dr[i];
                 let c = col + self.via_offsets_dc[i];
-                if r < 0 || c < 0 || r >= self.rows || c >= self.cols { continue; }
+                if r < 0 || c < 0 || r >= self.rows || c >= self.cols {
+                    continue;
+                }
                 let occ = self.used_cells_flat[z_base + (r * self.cols + c) as usize];
-                if occ == -1 || occ == active_conn.id { continue; }
-                let same_root = self.conn_id_to_root_id.get(occ as usize).copied() == active_conn.root_id;
-                if same_root && active_conn.allows_root_overlap { continue; }
+                if occ == -1 || occ == active_conn.id {
+                    continue;
+                }
+                let same_root =
+                    self.conn_id_to_root_id.get(occ as usize).copied() == active_conn.root_id;
+                if same_root && active_conn.allows_root_overlap {
+                    continue;
+                }
                 let mut seen = false;
                 for &existing in &self.via_occs {
-                    if existing == occ { seen = true; break; }
+                    if existing == occ {
+                        seen = true;
+                        break;
+                    }
                 }
-                if !seen { self.via_occs.push(occ); }
+                if !seen {
+                    self.via_occs.push(occ);
+                }
             }
         }
     }
 
     fn should_skip_fixed_port_halo(&self, flat_idx: usize, conn_id: ConnId) -> bool {
         let fixed_owner = self.port_owner_flat[flat_idx];
-        if fixed_owner == conn_id { return false; }
-        if fixed_owner == -2 { return true; }
-        if fixed_owner < 0 { return false; }
-        let same_root = self.conn_id_to_root_id[fixed_owner as usize] == self.conn_id_to_root_id[conn_id as usize];
+        if fixed_owner == conn_id {
+            return false;
+        }
+        if fixed_owner == -2 {
+            return true;
+        }
+        if fixed_owner < 0 {
+            return false;
+        }
+        let same_root = self.conn_id_to_root_id[fixed_owner as usize]
+            == self.conn_id_to_root_id[conn_id as usize];
         !(same_root && self.conn_allows_root_overlap[conn_id as usize])
     }
 
@@ -672,7 +932,9 @@ impl HighDensitySolverA01 {
         let dr = (row - to_row).abs();
         let dc = (col - to_col).abs();
         let manhattan = dr + dc;
-        if z == to_z { return manhattan as f64 * self.cell_size_mm; }
+        if z == to_z {
+            return manhattan as f64 * self.cell_size_mm;
+        }
         if !self.cross_layer_search {
             return manhattan as f64 * self.cell_size_mm + self.hyper_parameters.via_base_cost;
         }
@@ -680,42 +942,63 @@ impl HighDensitySolverA01 {
         let vc1 = self.min_via_col.max(self.max_via_col.min(col));
         let vr2 = self.min_via_row.max(self.max_via_row.min(to_row));
         let vc2 = self.min_via_col.max(self.max_via_col.min(to_col));
-        let via1 = (row - vr1).abs() + (col - vc1).abs() + (vr1 - to_row).abs() + (vc1 - to_col).abs();
-        let via2 = (row - vr2).abs() + (col - vc2).abs() + (vr2 - to_row).abs() + (vc2 - to_col).abs();
-        via1.min(via2).max(manhattan) as f64 * self.cell_size_mm + self.hyper_parameters.via_base_cost
+        let via1 =
+            (row - vr1).abs() + (col - vc1).abs() + (vr1 - to_row).abs() + (vc1 - to_col).abs();
+        let via2 =
+            (row - vr2).abs() + (col - vc2).abs() + (vr2 - to_row).abs() + (vc2 - to_col).abs();
+        via1.min(via2).max(manhattan) as f64 * self.cell_size_mm
+            + self.hyper_parameters.via_base_cost
     }
 
     fn intern_conn(&mut self, name: &str, root_net_name: Option<&str>) -> ConnId {
-        if let Some(&existing) = self.conn_name_to_id.get(name) { return existing; }
+        if let Some(&existing) = self.conn_name_to_id.get(name) {
+            return existing;
+        }
         let id = self.conn_id_to_name.len() as ConnId;
         self.conn_id_to_name.push(name.to_owned());
-        self.conn_id_to_root_net.push(to_root_net_name(name, root_net_name));
+        self.conn_id_to_root_net
+            .push(to_root_net_name(name, root_net_name));
         self.conn_name_to_id.insert(name.to_owned(), id);
         id
     }
 
     fn build_connection_segs(&mut self) -> Vec<ConnectionSeg> {
         let mut by_name: Vec<(String, Vec<Value>, Option<String>)> = Vec::new();
-        for pp in self.node_with_port_points["portPoints"].as_array().expect("portPoints is required") {
-            let name = pp["connectionName"].as_str().expect("connectionName is required");
+        for pp in self.node_with_port_points["portPoints"]
+            .as_array()
+            .expect("portPoints is required")
+        {
+            let name = pp["connectionName"]
+                .as_str()
+                .expect("connectionName is required");
             if let Some((_, points, _)) = by_name.iter_mut().find(|(n, _, _)| n == name) {
                 points.push(pp.clone());
             } else {
-                by_name.push((name.to_owned(), vec![pp.clone()], pp["rootConnectionName"].as_str().map(str::to_owned)));
+                by_name.push((
+                    name.to_owned(),
+                    vec![pp.clone()],
+                    pp["rootConnectionName"].as_str().map(str::to_owned),
+                ));
             }
         }
         let mut segs = Vec::new();
         let mut seen_segment_keys = HashSet::new();
         for (name, pts, root_connection_name) in by_name {
             let point_pairs = get_connection_port_point_pairs(&pts);
-            if point_pairs.is_empty() { continue; }
+            if point_pairs.is_empty() {
+                continue;
+            }
             let conn_id = self.intern_conn(&name, root_connection_name.as_deref());
             for [start_point, end_point] in point_pairs {
                 let s = self.point_to_cell(start_point);
                 let e = self.point_to_cell(end_point);
                 let endpoint_a = format!("{}:{}:{}", s.z, s.row, s.col);
                 let endpoint_b = format!("{}:{}:{}", e.z, e.row, e.col);
-                let ordered_endpoints = if endpoint_a < endpoint_b { format!("{}|{}", endpoint_a, endpoint_b) } else { format!("{}|{}", endpoint_b, endpoint_a) };
+                let ordered_endpoints = if endpoint_a < endpoint_b {
+                    format!("{}|{}", endpoint_a, endpoint_b)
+                } else {
+                    format!("{}|{}", endpoint_b, endpoint_a)
+                };
                 let net_name = root_connection_name.as_deref().unwrap_or(&name);
                 let seg_key = format!("{}|{}", net_name, ordered_endpoints);
                 if seen_segment_keys.contains(&seg_key) {
@@ -724,8 +1007,15 @@ impl HighDensitySolverA01 {
                 }
                 seen_segment_keys.insert(seg_key);
                 segs.push(ConnectionSeg {
-                    conn_id, start_z: s.z, start_row: s.row, start_col: s.col, start_point: start_point.clone(),
-                    end_z: e.z, end_row: e.row, end_col: e.col, end_point: end_point.clone(),
+                    conn_id,
+                    start_z: s.z,
+                    start_row: s.row,
+                    start_col: s.col,
+                    start_point: start_point.clone(),
+                    end_z: e.z,
+                    end_row: e.row,
+                    end_col: e.col,
+                    end_point: end_point.clone(),
                 });
             }
         }
@@ -736,9 +1026,19 @@ impl HighDensitySolverA01 {
         let x = pt["x"].as_f64().expect("point x is required");
         let y = pt["y"].as_f64().expect("point y is required");
         let actual_z = pt["z"].as_f64().expect("point z is required");
-        let col = 0.0_f64.max(((self.cols - 1) as f64).min(js_round((x - self.grid_origin.0) / self.cell_size_mm - 0.5))) as i32;
-        let row = 0.0_f64.max(((self.rows - 1) as f64).min(js_round((y - self.grid_origin.1) / self.cell_size_mm - 0.5))) as i32;
-        let z = self.available_z.iter().rposition(|&z| z == actual_z).unwrap_or(0) as i32;
+        let col = 0.0_f64.max(
+            ((self.cols - 1) as f64)
+                .min(js_round((x - self.grid_origin.0) / self.cell_size_mm - 0.5)),
+        ) as i32;
+        let row = 0.0_f64.max(
+            ((self.rows - 1) as f64)
+                .min(js_round((y - self.grid_origin.1) / self.cell_size_mm - 0.5)),
+        ) as i32;
+        let z = self
+            .available_z
+            .iter()
+            .rposition(|&z| z == actual_z)
+            .unwrap_or(0) as i32;
         Cell { z, row, col }
     }
 
@@ -760,20 +1060,28 @@ impl HighDensitySolverA01 {
         let mut idx = goal_node_idx as isize;
         while idx >= 0 {
             let n = &self.node_pool[idx as usize];
-            cells.push(Cell { z: n.z, row: n.row, col: n.col });
+            cells.push(Cell {
+                z: n.z,
+                row: n.row,
+                col: n.col,
+            });
             idx = n.parent_idx;
         }
         cells.reverse();
         while cells.len() > 1 {
             let first = cells[0];
             let first_flat = ((first.z * self.rows + first.row) * self.cols + first.col) as usize;
-            if !self.shared_cross_root_port_cells.contains(&first_flat) { break; }
+            if !self.shared_cross_root_port_cells.contains(&first_flat) {
+                break;
+            }
             cells.remove(0);
         }
         while cells.len() > 1 {
             let last = cells[cells.len() - 1];
             let last_flat = ((last.z * self.rows + last.row) * self.cols + last.col) as usize;
-            if !self.shared_cross_root_port_cells.contains(&last_flat) { break; }
+            if !self.shared_cross_root_port_cells.contains(&last_flat) {
+                break;
+            }
             cells.pop();
         }
         let mut via_cells = Vec::new();
@@ -794,7 +1102,9 @@ impl HighDensitySolverA01 {
         }
         for &id in &ripped_ids {
             self.rip_trace(id);
-            if self.failed { return; }
+            if self.failed {
+                return;
+            }
         }
         let margin_cells = (self.trace_margin / self.cell_size_mm).ceil() as i32;
         let mut indices = Vec::new();
@@ -805,13 +1115,23 @@ impl HighDensitySolverA01 {
                 for dc in -margin_cells..=margin_cells {
                     let r = cell.row + dr;
                     let c = cell.col + dc;
-                    if r < 0 || r >= rows || c < 0 || c >= cols { continue; }
+                    if r < 0 || r >= rows || c < 0 || c >= cols {
+                        continue;
+                    }
                     let flat_idx = ((cell.z * rows + r) * cols + c) as usize;
-                    if (r != cell.row || c != cell.col) && self.should_skip_fixed_port_halo(flat_idx, conn_id) { continue; }
+                    if (r != cell.row || c != cell.col)
+                        && self.should_skip_fixed_port_halo(flat_idx, conn_id)
+                    {
+                        continue;
+                    }
                     let existing = self.used_cells_flat[flat_idx];
-                    let same_root = self.conn_id_to_root_id.get(existing as usize) == self.conn_id_to_root_id.get(conn_id as usize);
-                    let allow_same_root_overlap = same_root && self.conn_allows_root_overlap[conn_id as usize];
-                    if existing != -1 && existing != conn_id && !allow_same_root_overlap { continue; }
+                    let same_root = self.conn_id_to_root_id.get(existing as usize)
+                        == self.conn_id_to_root_id.get(conn_id as usize);
+                    let allow_same_root_overlap =
+                        same_root && self.conn_allows_root_overlap[conn_id as usize];
+                    if existing != -1 && existing != conn_id && !allow_same_root_overlap {
+                        continue;
+                    }
                     self.used_cells_flat[flat_idx] = conn_id;
                     indices.push(flat_idx);
                 }
@@ -824,18 +1144,31 @@ impl HighDensitySolverA01 {
                 for oi in 0..self.via_offsets_len {
                     let r = via_row + self.via_offsets_dr[oi];
                     let c = via_col + self.via_offsets_dc[oi];
-                    if r < 0 || r >= rows || c < 0 || c >= cols { continue; }
+                    if r < 0 || r >= rows || c < 0 || c >= cols {
+                        continue;
+                    }
                     let flat_idx = z_base + (r * cols + c) as usize;
-                    if (r != via_row || c != via_col) && self.should_skip_fixed_port_halo(flat_idx, conn_id) { continue; }
+                    if (r != via_row || c != via_col)
+                        && self.should_skip_fixed_port_halo(flat_idx, conn_id)
+                    {
+                        continue;
+                    }
                     let existing = self.used_cells_flat[flat_idx];
-                    let same_root = self.conn_id_to_root_id.get(existing as usize) == self.conn_id_to_root_id.get(conn_id as usize);
-                    let allow_same_root_overlap = same_root && self.conn_allows_root_overlap[conn_id as usize];
+                    let same_root = self.conn_id_to_root_id.get(existing as usize)
+                        == self.conn_id_to_root_id.get(conn_id as usize);
+                    let allow_same_root_overlap =
+                        same_root && self.conn_allows_root_overlap[conn_id as usize];
                     if existing != -1 && existing != conn_id && !allow_same_root_overlap {
                         let mut seen = false;
                         for &id in &displaced_by_vias {
-                            if id == existing { seen = true; break; }
+                            if id == existing {
+                                seen = true;
+                                break;
+                            }
                         }
-                        if !seen { displaced_by_vias.push(existing); }
+                        if !seen {
+                            displaced_by_vias.push(existing);
+                        }
                     }
                     self.used_cells_flat[flat_idx] = conn_id;
                     indices.push(flat_idx);
@@ -847,34 +1180,53 @@ impl HighDensitySolverA01 {
         for i in 1..cells.len() {
             let prev = cells[i - 1];
             let curr = cells[i];
-            if prev.z != curr.z { continue; }
+            if prev.z != curr.z {
+                continue;
+            }
             let dr = (prev.row - curr.row).abs();
             let dc = (prev.col - curr.col).abs();
-            if dr != 1 || dc != 1 { continue; }
+            if dr != 1 || dc != 1 {
+                continue;
+            }
             let sq_row = prev.row.min(curr.row);
             let sq_col = prev.col.min(curr.col);
-            let is_backslash = (prev.row < curr.row && prev.col < curr.col) || (prev.row > curr.row && prev.col > curr.col);
+            let is_backslash = (prev.row < curr.row && prev.col < curr.col)
+                || (prev.row > curr.row && prev.col > curr.col);
             let diag_slot = if is_backslash { 0 } else { 1 };
             let crossing_slot = diag_slot ^ 1;
             let diag_base = ((prev.z * (self.rows - 1) + sq_row) * sq_cols + sq_col) * 2;
             let crossing_idx = (diag_base + crossing_slot) as usize;
             let crossing_occ = self.used_diag_flat[crossing_idx];
-            let crossing_same_root = self.conn_id_to_root_id.get(crossing_occ as usize) == self.conn_id_to_root_id.get(conn_id as usize);
-            let allow_crossing_overlap = crossing_same_root && self.conn_allows_root_overlap[conn_id as usize];
-            if crossing_occ != -1 && crossing_occ != conn_id && !allow_crossing_overlap { continue; }
+            let crossing_same_root = self.conn_id_to_root_id.get(crossing_occ as usize)
+                == self.conn_id_to_root_id.get(conn_id as usize);
+            let allow_crossing_overlap =
+                crossing_same_root && self.conn_allows_root_overlap[conn_id as usize];
+            if crossing_occ != -1 && crossing_occ != conn_id && !allow_crossing_overlap {
+                continue;
+            }
             let diag_idx = (diag_base + diag_slot) as usize;
             self.used_diag_flat[diag_idx] = conn_id;
             diag_indices.push(diag_idx);
         }
-        while self.used_indices_by_conn.len() <= conn_id as usize { self.used_indices_by_conn.push(Vec::new()); }
+        while self.used_indices_by_conn.len() <= conn_id as usize {
+            self.used_indices_by_conn.push(Vec::new());
+        }
         self.used_indices_by_conn[conn_id as usize].extend(indices);
-        while self.used_diag_indices_by_conn.len() <= conn_id as usize { self.used_diag_indices_by_conn.push(Vec::new()); }
+        while self.used_diag_indices_by_conn.len() <= conn_id as usize {
+            self.used_diag_indices_by_conn.push(Vec::new());
+        }
         self.used_diag_indices_by_conn[conn_id as usize].extend(diag_indices);
         let route = SolvedRouteInternal {
-            conn_id, start_z: first_cell.z, start_row: first_cell.row, start_col: first_cell.col,
+            start_z: first_cell.z,
+            start_row: first_cell.row,
+            start_col: first_cell.col,
             start_point: self.active_conn_seg.as_ref().unwrap().start_point.clone(),
-            end_z: last_cell.z, end_row: last_cell.row, end_col: last_cell.col,
-            end_point: self.active_conn_seg.as_ref().unwrap().end_point.clone(), cells, via_cells,
+            end_z: last_cell.z,
+            end_row: last_cell.row,
+            end_col: last_cell.col,
+            end_point: self.active_conn_seg.as_ref().unwrap().end_point.clone(),
+            cells,
+            via_cells,
         };
         if let Some((_, routes)) = self.solved_routes.iter_mut().find(|(id, _)| *id == conn_id) {
             routes.push(route);
@@ -883,29 +1235,45 @@ impl HighDensitySolverA01 {
         }
         for &id in &displaced_by_vias {
             self.rip_trace(id);
-            if self.failed { return; }
+            if self.failed {
+                return;
+            }
         }
         if !ripped_ids.is_empty() || !displaced_by_vias.is_empty() {
             if self.total_rip_events > 50 {
-                for pen in &mut self.penalty_2d { *pen *= 0.99; }
+                for pen in &mut self.penalty_2d {
+                    *pen *= 0.99;
+                }
             } else {
                 for pen in &mut self.penalty_2d {
-                    if *pen > self.penalty_cap { *pen *= 0.5; }
+                    if *pen > self.penalty_cap {
+                        *pen *= 0.5;
+                    }
                 }
             }
         }
     }
 
     fn rip_trace(&mut self, conn_id: ConnId) {
-        while self.rip_count.len() <= conn_id as usize { self.rip_count.push(0); }
+        while self.rip_count.len() <= conn_id as usize {
+            self.rip_count.push(0);
+        }
         self.rip_count[conn_id as usize] += 1;
         self.total_rip_events += 1;
         if self.total_rip_events >= self.max_rips {
-            self.error = Some(format!("Convergence failure: exceeded MAX_RIPS {}", self.max_rips));
+            self.error = Some(format!(
+                "Convergence failure: exceeded MAX_RIPS {}",
+                self.max_rips
+            ));
             self.failed = true;
             return;
         }
-        let routes = self.solved_routes.iter().find(|(id, _)| *id == conn_id).map(|(_, routes)| routes.clone()).unwrap_or_default();
+        let routes = self
+            .solved_routes
+            .iter()
+            .find(|(id, _)| *id == conn_id)
+            .map(|(_, routes)| routes.clone())
+            .unwrap_or_default();
         if !routes.is_empty() {
             for route in &routes {
                 for cell in &route.cells {
@@ -920,24 +1288,38 @@ impl HighDensitySolverA01 {
         }
         if let Some(indices) = self.used_indices_by_conn.get_mut(conn_id as usize) {
             for &flat_idx in indices.iter() {
-                if self.used_cells_flat[flat_idx] == conn_id { self.used_cells_flat[flat_idx] = -1; }
+                if self.used_cells_flat[flat_idx] == conn_id {
+                    self.used_cells_flat[flat_idx] = -1;
+                }
             }
             indices.clear();
         }
         if let Some(diag_indices) = self.used_diag_indices_by_conn.get_mut(conn_id as usize) {
             for &flat_idx in diag_indices.iter() {
-                if self.used_diag_flat[flat_idx] == conn_id { self.used_diag_flat[flat_idx] = -1; }
+                if self.used_diag_flat[flat_idx] == conn_id {
+                    self.used_diag_flat[flat_idx] = -1;
+                }
             }
             diag_indices.clear();
         }
         if !routes.is_empty() {
-            let position = self.solved_routes.iter().position(|(id, _)| *id == conn_id).unwrap();
+            let position = self
+                .solved_routes
+                .iter()
+                .position(|(id, _)| *id == conn_id)
+                .unwrap();
             self.solved_routes.remove(position);
             for route in routes {
                 self.unsolved_segs.push_back(ConnectionSeg {
-                    conn_id, start_z: route.start_z, start_row: route.start_row, start_col: route.start_col,
-                    start_point: route.start_point, end_z: route.end_z, end_row: route.end_row,
-                    end_col: route.end_col, end_point: route.end_point,
+                    conn_id,
+                    start_z: route.start_z,
+                    start_row: route.start_row,
+                    start_col: route.start_col,
+                    start_point: route.start_point,
+                    end_z: route.end_z,
+                    end_row: route.end_row,
+                    end_col: route.end_col,
+                    end_point: route.end_point,
                 });
             }
         }
@@ -957,19 +1339,29 @@ impl HighDensitySolverA01 {
         if self.show_penalty_map {
             let mut max_penalty = 0.0;
             for &p in &self.penalty_2d {
-                if p > max_penalty { max_penalty = p; }
+                if p > max_penalty {
+                    max_penalty = p;
+                }
             }
             if max_penalty > 0.0 {
-                let vt = self.grid_to_bounds_transform.as_ref().expect("grid transform must exist after setup");
+                let vt = self
+                    .grid_to_bounds_transform
+                    .as_ref()
+                    .expect("grid transform must exist after setup");
                 for row in 0..self.rows {
                     for col in 0..self.cols {
                         let p = self.penalty_2d[(row * self.cols + col) as usize];
-                        if p <= 0.0 { continue; }
+                        if p <= 0.0 {
+                            continue;
+                        }
                         let alpha = 0.6_f64.min((p / max_penalty) * 0.6);
-                        let tc = apply_affine_transform_to_point(vt, &crate::types::Point {
-                            x: self.grid_origin.0 + (col as f64 + 0.5) * self.cell_size_mm,
-                            y: self.grid_origin.1 + (row as f64 + 0.5) * self.cell_size_mm,
-                        });
+                        let tc = apply_affine_transform_to_point(
+                            vt,
+                            &crate::types::Point {
+                                x: self.grid_origin.0 + (col as f64 + 0.5) * self.cell_size_mm,
+                                y: self.grid_origin.1 + (row as f64 + 0.5) * self.cell_size_mm,
+                            },
+                        );
                         rects.push(json!({
                             "center": tc, "width": self.cell_size_mm * vt.a, "height": self.cell_size_mm * vt.e,
                             "fill": format!("rgba(255,165,0,{:.3})", alpha),
@@ -982,13 +1374,22 @@ impl HighDensitySolverA01 {
             for z in 0..self.layers {
                 for row in 0..self.rows {
                     for col in 0..self.cols {
-                        let occ = self.used_cells_flat[((z * self.rows + row) * self.cols + col) as usize];
-                        if occ == -1 { continue; }
-                        let vt = self.grid_to_bounds_transform.as_ref().expect("grid transform must exist after setup");
-                        let tc = apply_affine_transform_to_point(vt, &crate::types::Point {
-                            x: self.grid_origin.0 + (col as f64 + 0.5) * self.cell_size_mm,
-                            y: self.grid_origin.1 + (row as f64 + 0.5) * self.cell_size_mm,
-                        });
+                        let occ = self.used_cells_flat
+                            [((z * self.rows + row) * self.cols + col) as usize];
+                        if occ == -1 {
+                            continue;
+                        }
+                        let vt = self
+                            .grid_to_bounds_transform
+                            .as_ref()
+                            .expect("grid transform must exist after setup");
+                        let tc = apply_affine_transform_to_point(
+                            vt,
+                            &crate::types::Point {
+                                x: self.grid_origin.0 + (col as f64 + 0.5) * self.cell_size_mm,
+                                y: self.grid_origin.1 + (row as f64 + 0.5) * self.cell_size_mm,
+                            },
+                        );
                         rects.push(json!({
                             "center": tc, "width": self.cell_size_mm * vt.a, "height": self.cell_size_mm * vt.e,
                             "fill": "rgba(0,0,255,0.5)",
@@ -997,16 +1398,30 @@ impl HighDensitySolverA01 {
                 }
             }
         }
-        for pp in node["portPoints"].as_array().expect("portPoints is required") {
+        for pp in node["portPoints"]
+            .as_array()
+            .expect("portPoints is required")
+        {
             let z = pp["z"].as_f64().expect("port z is required");
-            let color = if z >= 0.0 && z.fract() == 0.0 { layer_colors.get(z as usize).copied().unwrap_or("gray") } else { "gray" };
+            let color = if z >= 0.0 && z.fract() == 0.0 {
+                layer_colors.get(z as usize).copied().unwrap_or("gray")
+            } else {
+                "gray"
+            };
             points.push(json!({ "x": pp["x"], "y": pp["y"], "color": color, "label": pp["connectionName"] }));
         }
-        let trace_colors = ["rgba(255,0,0,0.75)", "rgba(0,0,255,0.75)", "rgba(255,165,0,0.75)", "rgba(0,128,0,0.75)"];
+        let trace_colors = [
+            "rgba(255,0,0,0.75)",
+            "rgba(0,0,255,0.75)",
+            "rgba(255,165,0,0.75)",
+            "rgba(0,128,0,0.75)",
+        ];
         let transformed_routes = self.get_output();
         for route in transformed_routes.as_array().unwrap() {
             let route_points = route["route"].as_array().unwrap();
-            if route_points.len() < 2 { continue; }
+            if route_points.len() < 2 {
+                continue;
+            }
             let mut seg_start = 0;
             for i in 1..route_points.len() {
                 let prev = &route_points[i - 1];
@@ -1014,7 +1429,14 @@ impl HighDensitySolverA01 {
                 if curr["z"].as_f64() != prev["z"].as_f64() {
                     if i - seg_start >= 2 {
                         let z = prev["z"].as_f64().unwrap();
-                        let color = if z >= 0.0 && z.fract() == 0.0 { trace_colors.get(z as usize).copied().unwrap_or("rgba(128,128,128,0.75)") } else { "rgba(128,128,128,0.75)" };
+                        let color = if z >= 0.0 && z.fract() == 0.0 {
+                            trace_colors
+                                .get(z as usize)
+                                .copied()
+                                .unwrap_or("rgba(128,128,128,0.75)")
+                        } else {
+                            "rgba(128,128,128,0.75)"
+                        };
                         lines.push(json!({
                             "points": route_points[seg_start..i].iter().map(|p| json!({ "x": p["x"], "y": p["y"] })).collect::<Vec<_>>(),
                             "strokeColor": color, "strokeWidth": self.trace_thickness,
@@ -1025,7 +1447,14 @@ impl HighDensitySolverA01 {
             }
             if route_points.len() - seg_start >= 2 {
                 let z = route_points[seg_start]["z"].as_f64().unwrap();
-                let color = if z >= 0.0 && z.fract() == 0.0 { trace_colors.get(z as usize).copied().unwrap_or("rgba(128,128,128,0.75)") } else { "rgba(128,128,128,0.75)" };
+                let color = if z >= 0.0 && z.fract() == 0.0 {
+                    trace_colors
+                        .get(z as usize)
+                        .copied()
+                        .unwrap_or("rgba(128,128,128,0.75)")
+                } else {
+                    "rgba(128,128,128,0.75)"
+                };
                 lines.push(json!({
                     "points": route_points[seg_start..].iter().map(|p| json!({ "x": p["x"], "y": p["y"] })).collect::<Vec<_>>(),
                     "strokeColor": color, "strokeWidth": self.trace_thickness,
@@ -1042,15 +1471,25 @@ impl HighDensitySolverA01 {
         }
         if self.active_conn_seg.is_some() {
             let current_stamp = self.stamp;
-            let vt = self.grid_to_bounds_transform.as_ref().expect("grid transform must exist after setup");
+            let vt = self
+                .grid_to_bounds_transform
+                .as_ref()
+                .expect("grid transform must exist after setup");
             for z in 0..self.layers {
                 for row in 0..self.rows {
                     for col in 0..self.cols {
-                        if self.visited_stamp[((z * self.rows + row) * self.cols + col) as usize] != current_stamp { continue; }
-                        let tc = apply_affine_transform_to_point(vt, &crate::types::Point {
-                            x: self.grid_origin.0 + (col as f64 + 0.5) * self.cell_size_mm,
-                            y: self.grid_origin.1 + (row as f64 + 0.5) * self.cell_size_mm,
-                        });
+                        if self.visited_stamp[((z * self.rows + row) * self.cols + col) as usize]
+                            != current_stamp
+                        {
+                            continue;
+                        }
+                        let tc = apply_affine_transform_to_point(
+                            vt,
+                            &crate::types::Point {
+                                x: self.grid_origin.0 + (col as f64 + 0.5) * self.cell_size_mm,
+                                y: self.grid_origin.1 + (row as f64 + 0.5) * self.cell_size_mm,
+                            },
+                        );
                         points.push(json!({ "x": tc.x, "y": tc.y, "color": "rgba(0,0,255,0.2)" }));
                     }
                 }
@@ -1065,7 +1504,10 @@ impl HighDensitySolverA01 {
     pub fn get_output(&self) -> Value {
         let mut result = Vec::new();
         for (conn_id, routes) in &self.solved_routes {
-            let t = self.grid_to_bounds_transform.as_ref().expect("grid transform must exist after setup");
+            let t = self
+                .grid_to_bounds_transform
+                .as_ref()
+                .expect("grid transform must exist after setup");
             let conn_name = &self.conn_id_to_name[*conn_id as usize];
             for route in routes {
                 let mut points: Vec<Value> = route.cells.iter().map(|cell| {
@@ -1092,7 +1534,11 @@ impl HighDensitySolverA01 {
                         apply_affine_transform_to_point(t, &crate::types::Point { x: raw_x, y: raw_y })
                     }).collect::<Vec<_>>(),
                 });
-                if self.node_with_port_points.get("capacityMeshNodeId").is_none() {
+                if self
+                    .node_with_port_points
+                    .get("capacityMeshNodeId")
+                    .is_none()
+                {
                     output.as_object_mut().unwrap().shift_remove("regionId");
                 }
                 result.push(output);
@@ -1102,7 +1548,10 @@ impl HighDensitySolverA01 {
     }
 
     pub fn solved_segment_count(&self) -> usize {
-        self.solved_routes.iter().map(|(_, routes)| routes.len()).sum()
+        self.solved_routes
+            .iter()
+            .map(|(_, routes)| routes.len())
+            .sum()
     }
 }
 
@@ -1116,25 +1565,33 @@ mod allocation_tests {
         solver.rows = 2;
         solver.cols = 2;
         solver.layers = 1;
-        solver.penalty_2d = vec![0.0;4];
-        solver.port_owner_flat = vec![-1;4];
-        solver.used_cells_flat = vec![-1,-1,-1,1];
-        solver.used_diag_flat = vec![-1,2];
-        solver.conn_id_to_root_id = vec![0,1,2];
-        solver.ripped_nodes.push(RippedNode { id:3,prev:None });
-        let active = ActiveConnection {id:0,root_id:Some(0),allows_root_overlap:false};
-        solver.compute_move_cost_and_rips(active,0,0,0,0,1,1,Some(0));
-        assert_eq!(solver.move_cost,-1.0);
-        assert_eq!(solver.move_ripped,Some(0));
-        assert_eq!(solver.ripped_nodes.len(),1);
-        assert_eq!(solver.ripped_nodes[0].id,3);
+        solver.penalty_2d = vec![0.0; 4];
+        solver.port_owner_flat = vec![-1; 4];
+        solver.used_cells_flat = vec![-1, -1, -1, 1];
+        solver.used_diag_flat = vec![-1, 2];
+        solver.conn_id_to_root_id = vec![0, 1, 2];
+        solver.ripped_nodes.push(RippedNode { id: 3, prev: None });
+        let active = ActiveConnection {
+            id: 0,
+            root_id: Some(0),
+            allows_root_overlap: false,
+        };
+        solver.compute_move_cost_and_rips(active, 0, 0, 0, 0, 1, 1, Some(0));
+        assert_eq!(solver.move_cost, -1.0);
+        assert_eq!(solver.move_ripped, Some(0));
+        assert_eq!(solver.ripped_nodes.len(), 1);
+        assert_eq!(solver.ripped_nodes[0].id, 3);
         solver.used_diag_flat[1] = -1;
-        solver.compute_move_cost_and_rips(active,0,0,0,0,1,1,Some(0));
-        assert_eq!(solver.move_cost,std::f64::consts::SQRT_2 + 10.0 + 0.5);
-        assert_eq!(solver.move_ripped,Some(1));
-        assert_eq!(solver.ripped_nodes.len(),2);
-        assert_eq!(solver.ripped_nodes[1].prev,Some(0));
-        assert_eq!(solver.ripped_nodes[1].id,1);
-        eprintln!("SearchNode native size: {} bytes; RippedNode: {} bytes", std::mem::size_of::<SearchNode>(),std::mem::size_of::<RippedNode>());
+        solver.compute_move_cost_and_rips(active, 0, 0, 0, 0, 1, 1, Some(0));
+        assert_eq!(solver.move_cost, std::f64::consts::SQRT_2 + 10.0 + 0.5);
+        assert_eq!(solver.move_ripped, Some(1));
+        assert_eq!(solver.ripped_nodes.len(), 2);
+        assert_eq!(solver.ripped_nodes[1].prev, Some(0));
+        assert_eq!(solver.ripped_nodes[1].id, 1);
+        eprintln!(
+            "SearchNode native size: {} bytes; RippedNode: {} bytes",
+            std::mem::size_of::<SearchNode>(),
+            std::mem::size_of::<RippedNode>()
+        );
     }
 }

@@ -133,13 +133,12 @@ fn get_region_center(region: Option<&Value>) -> Point {
     if let Some(center) = region
         .and_then(|r| r.get("d"))
         .and_then(|d| d.get("center"))
+        && center.is_object()
     {
-        if center.is_object() {
-            return Point {
-                x: get_number(&center["x"], 0.0),
-                y: get_number(&center["y"], 0.0),
-            };
-        }
+        return Point {
+            x: get_number(&center["x"], 0.0),
+            y: get_number(&center["y"], 0.0),
+        };
     }
 
     let bounds = get_region_bounds(region);
@@ -149,7 +148,11 @@ fn get_region_center(region: Option<&Value>) -> Point {
     }
 }
 
-fn find_nearest_port_on_same_boundary<'a>(source: &Value, ports: &'a [Value], hypot: fn(f64, f64) -> f64) -> Option<&'a Value> {
+fn find_nearest_port_on_same_boundary<'a>(
+    source: &Value,
+    ports: &'a [Value],
+    hypot: fn(f64, f64) -> f64,
+) -> Option<&'a Value> {
     let key = get_boundary_key(source);
     let point = get_port_point(source);
     let mut nearest = None;
@@ -172,13 +175,20 @@ fn find_nearest_port_on_same_boundary<'a>(source: &Value, ports: &'a [Value], hy
     nearest
 }
 
-fn get_fallback_boundary_direction(source: &Value, regions: &HashMap<String, Value>, hypot: fn(f64, f64) -> f64) -> Point {
+fn get_fallback_boundary_direction(
+    source: &Value,
+    regions: &HashMap<String, Value>,
+    hypot: fn(f64, f64) -> f64,
+) -> Point {
     let first = get_region_center(source["region1Id"].as_str().and_then(|id| regions.get(id)));
     let second = get_region_center(source["region2Id"].as_str().and_then(|id| regions.get(id)));
-    normalize(Point {
-        x: -(second.y - first.y),
-        y: second.x - first.x,
-    }, hypot)
+    normalize(
+        Point {
+            x: -(second.y - first.y),
+            y: second.x - first.x,
+        },
+        hypot,
+    )
     .unwrap_or(Point { x: 1.0, y: 0.0 })
 }
 
@@ -191,10 +201,13 @@ fn get_duplicate_direction(
     let point = get_port_point(source);
     if let Some(nearest) = nearest {
         let nearest = get_port_point(nearest);
-        if let Some(direction) = normalize(Point {
-            x: point.x - nearest.x,
-            y: point.y - nearest.y,
-        }, hypot) {
+        if let Some(direction) = normalize(
+            Point {
+                x: point.x - nearest.x,
+                y: point.y - nearest.y,
+            },
+            hypot,
+        ) {
             return direction;
         }
     }
@@ -224,7 +237,7 @@ fn insert_duplicate_port_ids_after_source(
     points: &mut Vec<Value>,
     source: &str,
     duplicates: &[String],
-) -> () {
+) {
     let index = points
         .iter()
         .position(|p| p.as_str() == Some(source))
@@ -238,13 +251,11 @@ fn get_serialized_port_id(topology: &TinyHyperGraphTopology, port: PortId) -> St
         .port_metadata
         .as_ref()
         .and_then(|m| m.get(port as usize))
-    {
-        if let Some(id) = metadata["serializedPortId"]
+        && let Some(id) = metadata["serializedPortId"]
             .as_str()
             .or_else(|| metadata["portId"].as_str())
-        {
-            return id.to_owned();
-        }
+    {
+        return id.to_owned();
     }
 
     format!("port-{port}")
@@ -374,7 +385,7 @@ impl DuplicateCongestedPortSolver {
         counts: BTreeMap<String, usize>,
     ) -> Result<Value, String> {
         let proximity = self.get_duplicate_port_proximity();
-        if !(proximity > 0.0) {
+        if proximity.partial_cmp(&0.0) != Some(std::cmp::Ordering::Greater) {
             return Err("duplicatePortProximity must be greater than zero".into());
         }
 
@@ -476,7 +487,7 @@ impl DuplicateCongestedPortSolver {
         Ok(graph)
     }
 
-    pub fn setup(&mut self) -> () {
+    pub fn setup(&mut self) {
         let result = self
             .get_port_use_counts()
             .and_then(|counts| self.duplicate_congested_ports(counts));
@@ -501,13 +512,13 @@ impl DuplicateCongestedPortSolver {
         }
     }
 
-    pub fn step(&mut self) -> () {
+    pub fn step(&mut self) {
         if !self.failed {
             self.solved = true;
         }
     }
 
-    pub fn solve(&mut self) -> () {
+    pub fn solve(&mut self) {
         self.setup();
     }
 

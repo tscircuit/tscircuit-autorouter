@@ -14,7 +14,9 @@ pub struct ObstacleAliasExpansionInput {
 pub struct ObstacleAliasReplacements(Vec<Option<Vec<u32>>>);
 
 #[wasm_bindgen(js_name = expandPostProcessingObstacleConnectedIds)]
-pub fn expand_post_processing_obstacle_connected_ids(params: Ts<ObstacleAliasExpansionInput>) -> Result<Ts<ObstacleAliasReplacements>, JsError> {
+pub fn expand_post_processing_obstacle_connected_ids(
+    params: Ts<ObstacleAliasExpansionInput>,
+) -> Result<Ts<ObstacleAliasReplacements>, JsError> {
     let params = params.to_rust()?;
     let replacements = length_matching_solver::post_processing::binding::create_post_processing_model::expand_obstacle_connected_ids(
         &params.aliases_by_route,

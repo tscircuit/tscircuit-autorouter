@@ -22,7 +22,7 @@ fn assert_assignments_connect_route(
     problem: &TinyHyperGraphProblem,
     route_id: RouteId,
     assignments: &[TinyHyperGraphInitialAssignment],
-) -> () {
+) {
     let start = problem.route_start_port[route_id as usize];
     let end = problem.route_end_port[route_id as usize];
     let mut adjacent: HashMap<PortId, HashSet<PortId>> = HashMap::new();

@@ -1,5 +1,5 @@
 use serde_json::json;
-use tiny_hypergraph::{load_serialized_hyper_graph, SelectiveReripTinyHyperGraphSolver};
+use tiny_hypergraph::{SelectiveReripTinyHyperGraphSolver, load_serialized_hyper_graph};
 
 #[test]
 fn global_rerip_restores_preloaded_assignments_when_configured() {
@@ -19,7 +19,8 @@ fn global_rerip_restores_preloaded_assignments_when_configured() {
     });
     for preserve in [false, true] {
         let loaded = load_serialized_hyper_graph(&graph);
-        let mut solver = SelectiveReripTinyHyperGraphSolver::new(loaded.topology, loaded.problem, None);
+        let mut solver =
+            SelectiveReripTinyHyperGraphSolver::new(loaded.topology, loaded.problem, None);
         solver.preserve_initial_assignments = preserve;
         assert_eq!(solver.state.region_segments[1], vec![(0, 0, 1)]);
         solver.reset_routing_state_for_rerip();

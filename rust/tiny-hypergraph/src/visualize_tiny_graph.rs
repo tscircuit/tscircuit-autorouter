@@ -64,6 +64,10 @@ fn format_label(lines: &[Option<String>]) -> String {
         .join("\n")
 }
 
+#[expect(
+    clippy::manual_clamp,
+    reason = "Preserve the existing min/max behavior for NaN inputs."
+)]
 fn clamp01(value: f64) -> f64 {
     value.max(0.0).min(1.0)
 }
@@ -204,20 +208,20 @@ fn get_region_bounds(solver: &TinyHyperGraphSolver, region: RegionId) -> Bounds 
         };
     }
 
-    if let Some(bounds) = metadata.and_then(|m| m.get("bounds")) {
-        if let (Some(min_x), Some(max_x), Some(min_y), Some(max_y)) = (
+    if let Some(bounds) = metadata.and_then(|m| m.get("bounds"))
+        && let (Some(min_x), Some(max_x), Some(min_y), Some(max_y)) = (
             bounds["minX"].as_f64(),
             bounds["maxX"].as_f64(),
             bounds["minY"].as_f64(),
             bounds["maxY"].as_f64(),
-        ) {
-            return Bounds {
-                min_x,
-                max_x,
-                min_y,
-                max_y,
-            };
-        }
+        )
+    {
+        return Bounds {
+            min_x,
+            max_x,
+            min_y,
+            max_y,
+        };
     }
 
     let width = solver.topology.region_width[i];
@@ -246,10 +250,9 @@ fn get_region_visualization_layer(solver: &TinyHyperGraphSolver, region: RegionI
     if let Some(layers) = metadata
         .and_then(|m| m.get("availableZ"))
         .and_then(Value::as_array)
+        && let Some(layer) = get_z_layer_label(layers)
     {
-        if let Some(layer) = get_z_layer_label(layers) {
-            return layer;
-        }
+        return layer;
     }
 
     let mask = solver
@@ -604,7 +607,7 @@ fn push_solved_region_segments(
     solver: &TinyHyperGraphSolver,
     graphics: &mut GraphicsObject,
     options: &TinyHyperGraphVisualizationOptions,
-) -> () {
+) {
     for (region, segments) in solver.state.region_segments.iter().enumerate() {
         for &(route, p1, p2) in segments {
             let mut line = json!({"points": [get_port_render_point(solver,p1), get_port_render_point(solver,p2)],
@@ -625,7 +628,7 @@ fn push_route_port_z_points(
     solver: &TinyHyperGraphSolver,
     graphics: &mut GraphicsObject,
     options: &TinyHyperGraphVisualizationOptions,
-) -> () {
+) {
     let mut seen = HashSet::new();
 
     for segments in &solver.state.region_segments {
@@ -657,10 +660,7 @@ fn is_route_endpoint_port(solver: &TinyHyperGraphSolver, port: PortId) -> bool {
     false
 }
 
-fn push_unassigned_port_circles(
-    solver: &TinyHyperGraphSolver,
-    graphics: &mut GraphicsObject,
-) -> () {
+fn push_unassigned_port_circles(solver: &TinyHyperGraphSolver, graphics: &mut GraphicsObject) {
     for i in 0..solver.topology.port_count {
         let port = i as i32;
         if solver.state.port_assignment[i] >= 0 || is_route_endpoint_port(solver, port) {
@@ -680,7 +680,7 @@ fn push_initial_route_hints(
     graphics: &mut GraphicsObject,
     routes: Option<&HashSet<RouteId>>,
     options: &TinyHyperGraphVisualizationOptions,
-) -> () {
+) {
     for i in 0..solver.problem.route_count {
         let route = i as i32;
         if routes.is_some_and(|set| !set.contains(&route)) {
@@ -708,7 +708,7 @@ fn push_route_endpoints(
     graphics: &mut GraphicsObject,
     routes: Option<&HashSet<RouteId>>,
     options: &TinyHyperGraphVisualizationOptions,
-) -> () {
+) {
     for i in 0..solver.problem.route_count {
         let route = i as i32;
         if routes.is_some_and(|set| !set.contains(&route)) {
@@ -731,7 +731,7 @@ fn push_active_route(
     solver: &TinyHyperGraphSolver,
     graphics: &mut GraphicsObject,
     options: &TinyHyperGraphVisualizationOptions,
-) -> () {
+) {
     let Some(route) = solver.state.current_route_id else {
         return;
     };
@@ -750,7 +750,7 @@ fn push_candidates(
     solver: &TinyHyperGraphSolver,
     graphics: &mut GraphicsObject,
     options: &TinyHyperGraphVisualizationOptions,
-) -> () {
+) {
     if solver.solved {
         return;
     }
@@ -794,7 +794,7 @@ fn push_section_mask_overlay(
     graphics: &mut GraphicsObject,
     mask: &[i32],
     options: &TinyHyperGraphVisualizationOptions,
-) -> () {
+) {
     let stroke = "rgba(245, 158, 11, 0.95)";
     let fill = "rgba(245, 158, 11, 0.08)";
 
@@ -811,7 +811,7 @@ fn push_section_mask_overlay(
         let layer = get_region_visualization_layer(solver, region);
         let label = format_label(&[
             Some("section region".into()),
-            Some(get_region_cost_label(solver, region, &options)),
+            Some(get_region_cost_label(solver, region, options)),
         ]);
         if let Some(polygon) = polygon {
             graphics["polygons"].as_array_mut().unwrap().push(json!({"points":polygon,"fill":fill,"stroke":stroke,"strokeWidth":2,"layer":layer,"label":label}));
@@ -837,7 +837,7 @@ fn push_section_mask_overlay(
 fn push_never_successfully_routed_endpoints(
     solver: &TinyHyperGraphSolver,
     graphics: &mut GraphicsObject,
-) -> () {
+) {
     if !solver.failed {
         return;
     }

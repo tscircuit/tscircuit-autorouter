@@ -15,7 +15,9 @@ pub fn js_json_slice(values: &[Value]) -> String {
 fn write_js_json_slice(values: &[Value], output: &mut String) {
     output.push('[');
     for (index, value) in values.iter().enumerate() {
-        if index != 0 { output.push(','); }
+        if index != 0 {
+            output.push(',');
+        }
         write_js_json(value, output);
     }
     output.push(']');
@@ -34,7 +36,9 @@ pub fn write_json_string(value: &str, output: &mut String) {
     output.push('"');
     let mut start = 0;
     for (index, byte) in value.bytes().enumerate() {
-        if byte != b'"' && byte != b'\\' && byte >= 0x20 { continue; }
+        if byte != b'"' && byte != b'\\' && byte >= 0x20 {
+            continue;
+        }
         // Every escaped byte is ASCII, so both slice boundaries are UTF-8 boundaries.
         output.push_str(&value[start..index]);
         match byte {
@@ -64,7 +68,9 @@ pub fn write_js_json(value: &Value, output: &mut String) {
         Value::Object(values) => {
             output.push('{');
             for (index, (key, value)) in values.iter().enumerate() {
-                if index != 0 { output.push(','); }
+                if index != 0 {
+                    output.push(',');
+                }
                 write_json_string(key, output);
                 output.push(':');
                 write_js_json(value, output);

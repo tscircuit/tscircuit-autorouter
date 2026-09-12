@@ -30,32 +30,52 @@ pub const MAX_LARGE_BOARD_BROAD_FALLBACK_MISSES: usize = 2;
 pub const BROAD_SPATIAL_CELL_SIZE_MIN: f64 = 1.0;
 
 pub fn get_trace_to_pad_edge_clearance(srj: &Value) -> f64 {
-    srj["minTraceToPadEdgeClearance"].as_f64().unwrap_or(PREFERRED_TRACE_TO_PAD_CLEARANCE)
+    srj["minTraceToPadEdgeClearance"]
+        .as_f64()
+        .unwrap_or(PREFERRED_TRACE_TO_PAD_CLEARANCE)
 }
 
 pub fn get_via_edge_to_pad_edge_clearance(srj: &Value) -> f64 {
-    srj["minViaEdgeToPadEdgeClearance"].as_f64().unwrap_or(PREFERRED_VIA_TO_PAD_CLEARANCE)
+    srj["minViaEdgeToPadEdgeClearance"]
+        .as_f64()
+        .unwrap_or(PREFERRED_VIA_TO_PAD_CLEARANCE)
 }
 
 pub fn js_round(value: f64) -> f64 {
-    if !value.is_finite() || value == 0.0 { return value; }
-    if value < 0.0 && value >= -0.5 { return -0.0; }
+    if !value.is_finite() || value == 0.0 {
+        return value;
+    }
+    if (-0.5..0.0).contains(&value) {
+        return -0.0;
+    }
     let floor = value.floor();
-    if value - floor < 0.5 { floor } else { floor + 1.0 }
+    if value - floor < 0.5 {
+        floor
+    } else {
+        floor + 1.0
+    }
 }
 
 pub fn get_base_max_iterations(effort: f64) -> f64 {
-    js_max(MIN_MAX_ITERATIONS, js_round(BASE_MAX_ITERATIONS_PER_EFFORT * js_max(1.0, effort)))
+    js_max(
+        MIN_MAX_ITERATIONS,
+        js_round(BASE_MAX_ITERATIONS_PER_EFFORT * js_max(1.0, effort)),
+    )
 }
 
 pub fn get_drc_scaled_max_iterations(drc_issue_count: f64, effort: f64) -> f64 {
-    js_max(get_base_max_iterations(effort), (drc_issue_count * MAX_ITERATIONS_PER_DRC_ERROR * js_max(1.0, effort)).ceil())
+    js_max(
+        get_base_max_iterations(effort),
+        (drc_issue_count * MAX_ITERATIONS_PER_DRC_ERROR * js_max(1.0, effort)).ceil(),
+    )
 }
 
 pub fn get_route_complexity_min_iterations(route_count: usize, drc_issue_count: usize) -> f64 {
     if route_count > BROAD_FALLBACK_SMALL_ROUTE_LIMIT && drc_issue_count > 0 {
         MIN_ITERATIONS_FOR_LARGE_BOARD_BROAD_FALLBACK
-    } else { MIN_MAX_ITERATIONS }
+    } else {
+        MIN_MAX_ITERATIONS
+    }
 }
 
 pub fn get_large_board_broad_fallback_cadence(centered_drc_issue_count: f64) -> f64 {
@@ -67,13 +87,22 @@ pub fn get_drc_count_improvement_check_interval(initial_drc_issue_count: usize) 
         LARGE_DRC_COUNT_IMPROVEMENT_CHECK_INTERVAL
     } else if initial_drc_issue_count <= 2 {
         LOW_DRC_COUNT_IMPROVEMENT_CHECK_INTERVAL
-    } else { SMALL_DRC_COUNT_IMPROVEMENT_CHECK_INTERVAL }
+    } else {
+        SMALL_DRC_COUNT_IMPROVEMENT_CHECK_INTERVAL
+    }
 }
 
 pub fn get_force_scales_for_effort(effort: f64) -> [f64; 3] {
-    if effort >= 2.0 { DEEP_ERROR_FORCE_SCALES } else { FAST_ERROR_FORCE_SCALES }
+    if effort >= 2.0 {
+        DEEP_ERROR_FORCE_SCALES
+    } else {
+        FAST_ERROR_FORCE_SCALES
+    }
 }
 
 pub fn get_max_targeted_candidate_attempts_for_effort(effort: f64) -> f64 {
-    js_max(1.0, js_round(BASE_MAX_TARGETED_CANDIDATE_ATTEMPTS * js_max(1.0, effort)))
+    js_max(
+        1.0,
+        js_round(BASE_MAX_TARGETED_CANDIDATE_ATTEMPTS * js_max(1.0, effort)),
+    )
 }

@@ -9,8 +9,7 @@ pub fn count_intersections_from_angle_pairs_dynamic(
     for i in 0..angle_pairs.len() {
         let [n1, a, az, b, bz] = angle_pairs[i];
 
-        for u in i + 1..angle_pairs.len() {
-            let [n2, c, cz, d, dz] = angle_pairs[u];
+        for &[n2, c, cz, d, dz] in angle_pairs.iter().skip(i + 1) {
             if n1 == n2 {
                 continue;
             }

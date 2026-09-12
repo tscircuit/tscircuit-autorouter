@@ -1,7 +1,7 @@
 use serde_json::json;
 use tiny_hypergraph::{
-    load_serialized_hyper_graph, SelectiveReripTinyHyperGraphSolver, TinyHyperGraphSolution,
-    TinyHyperGraphSolverOptions,
+    SelectiveReripTinyHyperGraphSolver, TinyHyperGraphSolution, TinyHyperGraphSolverOptions,
+    load_serialized_hyper_graph,
 };
 
 #[test]
@@ -37,11 +37,13 @@ fn quality_rerips_preserve_initial_routes_when_other_routes_touch_the_hot_region
         solved_route_path_region_ids: Some(vec![vec![Some(4)], vec![Some(4)]]),
     };
     let baseline = tiny_hypergraph::section_solver::create_solved_solver_from_solution(
-        &loaded.topology, &loaded.problem, &solution, &options,
+        &loaded.topology,
+        &loaded.problem,
+        &solution,
+        &options,
     );
-    let mut solver = SelectiveReripTinyHyperGraphSolver::new(
-        loaded.topology, loaded.problem, Some(options),
-    );
+    let mut solver =
+        SelectiveReripTinyHyperGraphSolver::new(loaded.topology, loaded.problem, Some(options));
     solver.outside_in.distance_aware.core = baseline;
     solver.preserve_initial_assignments = true;
     assert!(solver.prepare_partial_rip(&[4], &[0.0, 0.0, 0.0, 0.0, 1.0]));

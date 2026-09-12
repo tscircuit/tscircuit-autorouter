@@ -254,10 +254,10 @@ pub fn load_serialized_hyper_graph(graph: &Value) -> LoadedHyperGraph {
         region_center_y[i] = d["center"]["y"].as_f64().unwrap_or((min_y + max_y) / 2.0);
 
         for z in items(&d["availableZ"]) {
-            if let Some(z) = z.as_i64() {
-                if (0..31).contains(&z) {
-                    region_available_z_mask[i] |= 1 << z;
-                }
+            if let Some(z) = z.as_i64()
+                && (0..31).contains(&z)
+            {
+                region_available_z_mask[i] |= 1 << z;
             }
         }
 

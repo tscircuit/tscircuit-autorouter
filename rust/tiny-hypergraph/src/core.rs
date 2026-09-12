@@ -1,6 +1,4 @@
-use crate::compute_region_cost::{
-    DEFAULT_MIN_VIA_PAD_DIAMETER, is_known_single_layer_mask,
-};
+use crate::compute_region_cost::{DEFAULT_MIN_VIA_PAD_DIAMETER, is_known_single_layer_mask};
 use crate::count_new_intersections::count_new_intersections_with_values;
 use crate::graphics::GraphicsObject;
 use crate::initial_assignments::TinyHyperGraphInitialAssignment;
@@ -28,7 +26,10 @@ pub struct TinyHyperGraphTopology {
     #[cfg_attr(feature = "wasm-types", tsify(optional))]
     pub region_available_z_mask: Option<Vec<i32>>,
     #[cfg_attr(feature = "wasm-types", tsify(optional))]
-    #[cfg_attr(feature = "wasm-types", serde(serialize_with = "json_bindings::serialize_optional_js_values"))]
+    #[cfg_attr(
+        feature = "wasm-types",
+        serde(serialize_with = "json_bindings::serialize_optional_js_values")
+    )]
     pub region_metadata: Option<Vec<Value>>,
     pub port_angle_for_region1: Vec<i32>,
     #[cfg_attr(feature = "wasm-types", tsify(optional))]
@@ -37,7 +38,10 @@ pub struct TinyHyperGraphTopology {
     pub port_y: Vec<f64>,
     pub port_z: Vec<i32>,
     #[cfg_attr(feature = "wasm-types", tsify(optional))]
-    #[cfg_attr(feature = "wasm-types", serde(serialize_with = "json_bindings::serialize_optional_js_values"))]
+    #[cfg_attr(
+        feature = "wasm-types",
+        serde(serialize_with = "json_bindings::serialize_optional_js_values")
+    )]
     pub port_metadata: Option<Vec<Value>>,
 }
 
@@ -48,7 +52,10 @@ pub struct TinyHyperGraphProblem {
     pub route_count: usize,
     pub port_section_mask: Vec<i32>,
     #[cfg_attr(feature = "wasm-types", tsify(optional))]
-    #[cfg_attr(feature = "wasm-types", serde(serialize_with = "json_bindings::serialize_optional_js_values"))]
+    #[cfg_attr(
+        feature = "wasm-types",
+        serde(serialize_with = "json_bindings::serialize_optional_js_values")
+    )]
     pub route_metadata: Option<Vec<Value>>,
     pub route_start_port: Vec<i32>,
     pub route_end_port: Vec<i32>,
@@ -114,6 +121,10 @@ pub struct Candidate {
 
 pub trait TinyHyperGraphCandidateQueue {
     fn len(&self) -> usize;
+
+    fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
 
     fn to_array(&self) -> Vec<Candidate>;
 
@@ -651,7 +662,7 @@ impl TinyHyperGraphSolver {
         solver
     }
 
-    pub fn merge_stats(&mut self, stats: Value) -> () {
+    pub fn merge_stats(&mut self, stats: Value) {
         self.stats_revision += 1;
         for (key, value) in stats.as_object().expect("stats must be object") {
             self.stats[key] = value.clone();
@@ -715,7 +726,7 @@ impl TinyHyperGraphSolver {
             .expect("problem setup initialized")
     }
 
-    pub fn setup(&mut self) -> () {
+    pub fn setup(&mut self) {
         self.get_problem_setup();
         self.is_setup = true;
         if self.options.static_reachability_precheck {
@@ -733,7 +744,7 @@ impl TinyHyperGraphSolver {
         }
     }
 
-    pub fn solve(&mut self) -> () {
+    pub fn solve(&mut self) {
         if !self.is_setup {
             self.setup();
         }
@@ -753,7 +764,7 @@ impl TinyHyperGraphSolver {
         }
     }
 
-    pub fn step(&mut self) -> () {
+    pub fn step(&mut self) {
         if self.state.current_route_id.is_none() {
             if self.state.unrouted_routes.is_empty() {
                 self.on_all_routes_routed();
@@ -858,9 +869,9 @@ impl TinyHyperGraphSolver {
                 g,
                 h,
                 f: g + h,
-                prev_candidate: Some(Rc::clone(previous_candidate.get_or_insert_with(|| {
-                    Rc::new(candidate.clone())
-                }))),
+                prev_candidate: Some(Rc::clone(
+                    previous_candidate.get_or_insert_with(|| Rc::new(candidate.clone())),
+                )),
                 ..Default::default()
             };
             if neighbor == self.state.goal_port_id {
@@ -873,7 +884,7 @@ impl TinyHyperGraphSolver {
         }
     }
 
-    pub fn reset_candidate_best_costs(&mut self) -> () {
+    pub fn reset_candidate_best_costs(&mut self) {
         self.candidate_overflow_best_cost.clear();
         if self.state.candidate_best_cost_generation == u32::MAX {
             if let CandidateStorage::Sparse(m) = &mut self.state.candidate_best_cost_by_hop_id {
@@ -915,7 +926,7 @@ impl TinyHyperGraphSolver {
         }
     }
 
-    pub fn set_candidate_best_cost(&mut self, hop: HopId, cost: f64) -> () {
+    pub fn set_candidate_best_cost(&mut self, hop: HopId, cost: f64) {
         if hop < 0 {
             self.candidate_overflow_best_cost.insert(hop, cost);
             return;
@@ -963,10 +974,10 @@ impl TinyHyperGraphSolver {
     }
 
     pub fn get_starting_next_region_id(&self, route: RouteId, start: PortId) -> Option<RegionId> {
-        if let Some(regions) = &self.forced_start_region_ids {
-            if let Some(region) = regions[route as usize] {
-                return Some(region);
-            }
+        if let Some(regions) = &self.forced_start_region_ids
+            && let Some(region) = regions[route as usize]
+        {
+            return Some(region);
         }
 
         let incident = &self.topology.incident_port_region[start as usize];
@@ -1036,15 +1047,29 @@ impl TinyHyperGraphSolver {
             .as_ref()
             .map(|m| m[region])
             .unwrap_or(0);
-        let area = self.region_area.as_ref().map(|areas| areas[region]).unwrap_or(
-            self.topology.region_width[region] * self.topology.region_height[region],
-        );
+        let area = self
+            .region_area
+            .as_ref()
+            .map(|areas| areas[region])
+            .unwrap_or(self.topology.region_width[region] * self.topology.region_height[region]);
         let base_cost = crate::compute_region_cost::compute_region_cost_for_area(
-            area, same, cross, changes, count, mask, self.options.min_via_pad_diameter,
+            area,
+            same,
+            cross,
+            changes,
+            count,
+            mask,
+            self.options.min_via_pad_diameter,
         );
-        let layer_count = if mask == 0 { 2 } else { (mask as u32).count_ones() };
+        let layer_count = if mask == 0 {
+            2
+        } else {
+            (mask as u32).count_ones()
+        };
         let trace_density_cost = self.options.trace_density_cost_factor
-            * (count as f64 / layer_count as f64).powi(2) * 0.1_f64.powi(2) / area;
+            * (count as f64 / layer_count as f64).powi(2)
+            * 0.1_f64.powi(2)
+            / area;
         base_cost + trace_density_cost
     }
 
@@ -1080,12 +1105,7 @@ impl TinyHyperGraphSolver {
         }
     }
 
-    pub fn append_segment_to_region_cache(
-        &mut self,
-        region: RegionId,
-        p1: PortId,
-        p2: PortId,
-    ) -> () {
+    pub fn append_segment_to_region_cache(&mut self, region: RegionId, p1: PortId, p2: PortId) {
         let geo = self.populate_segment_geometry_scratch(region, p1, p2);
         let net = self.state.current_route_net_id.expect("segment route net");
         let cache = &self.state.region_intersection_caches[region as usize];
@@ -1134,20 +1154,20 @@ impl TinyHyperGraphSolver {
             });
         }
 
-        if let Some(last) = path.last() {
-            if last.port_id != self.state.goal_port_id {
-                segments.push(SolvedPathSegment {
-                    region_id: last.next_region_id,
-                    from_port_id: last.port_id,
-                    to_port_id: self.state.goal_port_id,
-                });
-            }
+        if let Some(last) = path.last()
+            && last.port_id != self.state.goal_port_id
+        {
+            segments.push(SolvedPathSegment {
+                region_id: last.next_region_id,
+                from_port_id: last.port_id,
+                to_port_id: self.state.goal_port_id,
+            });
         }
 
         segments
     }
 
-    pub fn reset_routing_state_for_rerip(&mut self) -> () {
+    pub fn reset_routing_state_for_rerip(&mut self) {
         self.state.port_assignment.fill(-1);
         self.state.region_segments = vec![vec![]; self.topology.region_count];
         self.state.region_intersection_caches = (0..self.topology.region_count)
@@ -1224,7 +1244,7 @@ impl TinyHyperGraphSolver {
         &self.statically_unroutable_routes
     }
 
-    pub fn log_never_successfully_routed_routes(&mut self) -> () {
+    pub fn log_never_successfully_routed_routes(&mut self) {
         if !self.options.verbose || self.has_logged_never_successfully_routed_routes {
             return;
         }
@@ -1259,7 +1279,7 @@ impl TinyHyperGraphSolver {
         }
     }
 
-    pub fn log_rip_event(&self, reason: &str, max_cost: f64, extra: Value) -> () {
+    pub fn log_rip_event(&self, reason: &str, max_cost: f64, extra: Value) {
         if !self.options.verbose {
             return;
         }
@@ -1299,7 +1319,7 @@ impl TinyHyperGraphSolver {
         }
     }
 
-    pub fn capture_best_solved_state(&mut self, summary: RegionCostSummary) -> () {
+    pub fn capture_best_solved_state(&mut self, summary: RegionCostSummary) {
         if self
             .best_solved_state_summary
             .as_ref()
@@ -1321,12 +1341,12 @@ impl TinyHyperGraphSolver {
         }
     }
 
-    pub fn replace_best_solved_state(&mut self, summary: RegionCostSummary) -> () {
+    pub fn replace_best_solved_state(&mut self, summary: RegionCostSummary) {
         self.best_solved_state_summary = Some(summary);
         self.best_solved_state_snapshot = Some(self.snapshot());
     }
 
-    pub fn restore_best_solved_state(&mut self) -> () {
+    pub fn restore_best_solved_state(&mut self) {
         let Some(snapshot) = self.best_solved_state_snapshot.clone() else {
             return;
         };
@@ -1345,10 +1365,10 @@ impl TinyHyperGraphSolver {
 
     pub fn get_remaining_route_ids_for_greedy_final_route(&self) -> Vec<RouteId> {
         let mut routes = self.state.unrouted_routes.clone();
-        if let Some(route) = self.state.current_route_id {
-            if !routes.contains(&route) {
-                routes.push(route);
-            }
+        if let Some(route) = self.state.current_route_id
+            && !routes.contains(&route)
+        {
+            routes.push(route);
         }
 
         routes
@@ -1358,7 +1378,7 @@ impl TinyHyperGraphSolver {
         solver: &mut TinyHyperGraphSolver,
         snapshot: &SolvedStateSnapshot,
         routes: &[RouteId],
-    ) -> () {
+    ) {
         solver.state.port_assignment = snapshot.port_assignment.clone();
         solver.state.region_segments = snapshot.region_segments.clone();
         solver.state.region_intersection_caches = snapshot.region_intersection_caches.clone();
@@ -1441,7 +1461,7 @@ impl TinyHyperGraphSolver {
         false
     }
 
-    pub fn on_all_routes_routed(&mut self) -> () {
+    pub fn on_all_routes_routed(&mut self) {
         if self.deferred_section_callbacks {
             self.pending_section_event = Some(SectionEvent::AllRoutesRouted);
             return;
@@ -1493,7 +1513,7 @@ impl TinyHyperGraphSolver {
         );
     }
 
-    pub fn on_out_of_candidates(&mut self) -> () {
+    pub fn on_out_of_candidates(&mut self) {
         if self.deferred_section_callbacks {
             self.pending_section_event = Some(SectionEvent::OutOfCandidates);
             return;
@@ -1520,7 +1540,7 @@ impl TinyHyperGraphSolver {
         );
     }
 
-    pub fn on_path_found(&mut self, final_candidate: Candidate) -> () {
+    pub fn on_path_found(&mut self, final_candidate: Candidate) {
         if self.distance_aware_goal && final_candidate.port_id != self.state.goal_port_id {
             let goal = self.state.goal_port_id;
             let g = self.compute_g(&final_candidate, goal, f64::INFINITY, None);
@@ -1632,7 +1652,7 @@ impl TinyHyperGraphSolver {
         candidate.g + cost + congestion + penalty + distance_cost
     }
 
-    pub fn try_final_acceptance(&mut self) -> () {
+    pub fn try_final_acceptance(&mut self) {
         if self.deferred_section_callbacks {
             self.pending_section_event = Some(SectionEvent::FinalAcceptance);
             return;
@@ -1668,10 +1688,10 @@ impl TinyHyperGraphSolver {
     pub fn compute_h(&mut self, neighbor: PortId) -> f64 {
         let route = self.state.current_route_id.expect("active route");
         let count = self.problem.route_count;
-        if !self.active_route_endpoints.contains_key(&route) {
-            if let Some(costs) = &self.get_problem_setup().port_h_cost_to_end_of_route {
-                return costs[neighbor as usize * count + route as usize];
-            }
+        if !self.active_route_endpoints.contains_key(&route)
+            && let Some(costs) = &self.get_problem_setup().port_h_cost_to_end_of_route
+        {
+            return costs[neighbor as usize * count + route as usize];
         }
 
         let end = self.get_route_end_port_id(route) as usize;

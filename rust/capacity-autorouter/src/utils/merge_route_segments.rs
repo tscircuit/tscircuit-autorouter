@@ -1,4 +1,4 @@
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 
 pub struct MergedSegment {
     pub points: Vec<Value>,
@@ -7,7 +7,11 @@ pub struct MergedSegment {
     pub color: Option<Value>,
 }
 
-pub fn merge_route_segments(route: &[Value], connection_name: &str, color: Option<&Value>) -> Vec<MergedSegment> {
+pub fn merge_route_segments(
+    route: &[Value],
+    connection_name: &str,
+    color: Option<&Value>,
+) -> Vec<MergedSegment> {
     let mut segments = Vec::new();
     let mut current: Option<MergedSegment> = None;
     for point in route {
@@ -16,10 +20,15 @@ pub fn merge_route_segments(route: &[Value], connection_name: &str, color: Optio
             segments.push(current.take().unwrap());
         }
         let segment = current.get_or_insert_with(|| MergedSegment {
-            points: Vec::new(), z, connection_name: connection_name.to_owned(), color: color.cloned(),
+            points: Vec::new(),
+            z,
+            connection_name: connection_name.to_owned(),
+            color: color.cloned(),
         });
         segment.points.push(json!({"x":point["x"],"y":point["y"]}));
     }
-    if let Some(segment) = current { segments.push(segment); }
+    if let Some(segment) = current {
+        segments.push(segment);
+    }
     segments
 }

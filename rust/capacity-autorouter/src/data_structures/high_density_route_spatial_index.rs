@@ -1,9 +1,9 @@
-use std::collections::HashSet;
-use rustc_hash::FxHashMap as HashMap;
-use std::rc::Rc;
-use indexmap::IndexMap;
 use crate::solvers::high_density_solver::geometry::do_segments_intersect;
 use crate::types::high_density_types::{Bounds, Point, Point2, Route};
+use indexmap::IndexMap;
+use rustc_hash::FxHashMap as HashMap;
+use std::collections::HashSet;
+use std::rc::Rc;
 
 fn get_segment_bounds(segment: &[Point; 2]) -> Bounds {
     Bounds {
@@ -20,6 +20,10 @@ fn compute_dist_sq(p1: Point2, p2: Point2) -> f64 {
     dx * dx + dy * dy
 }
 
+#[expect(
+    clippy::manual_clamp,
+    reason = "Preserve the existing min/max behavior for NaN inputs."
+)]
 fn point_to_segment_distance_sq(p: Point2, a: Point2, b: Point2) -> f64 {
     let l2 = compute_dist_sq(a, b);
     if l2 == 0.0 {
@@ -91,7 +95,12 @@ impl HighDensityRouteSpatialIndex {
         index
     }
 
-    pub fn get_conflicting_routes_for_segment(&self, segment_start: &Point, segment_end: &Point, margin: f64) -> Vec<RouteConflict> {
+    pub fn get_conflicting_routes_for_segment(
+        &self,
+        segment_start: &Point,
+        segment_end: &Point,
+        margin: f64,
+    ) -> Vec<RouteConflict> {
         let bounds = get_segment_bounds(&[*segment_start, *segment_end]);
         let broad_phase_margin = margin + self.maximum_copper_radius;
         let search_min_x = bounds.min_x - broad_phase_margin;
@@ -106,8 +115,14 @@ impl HighDensityRouteSpatialIndex {
         let mut conflicting_route_data: IndexMap<String, (Rc<Route>, f64)> = IndexMap::new();
         let mut checked_segments: HashSet<String> = HashSet::new();
         let mut checked_vias: HashSet<String> = HashSet::new();
-        let query_p1 = Point2 { x: segment_start.x, y: segment_start.y };
-        let query_p2 = Point2 { x: segment_end.x, y: segment_end.y };
+        let query_p1 = Point2 {
+            x: segment_start.x,
+            y: segment_start.y,
+        };
+        let query_p2 = Point2 {
+            x: segment_end.x,
+            y: segment_end.y,
+        };
         for ix in min_index_x..=max_index_x {
             for iy in min_index_y..=max_index_y {
                 let bucket_key = (ix, iy);
@@ -118,16 +133,23 @@ impl HighDensityRouteSpatialIndex {
                         }
                         let route = &segment_info.parent_route;
                         let [p1, p2] = &segment_info.segment;
-                        if segment_start.z != segment_end.z || p1.z != p2.z || p1.z != segment_start.z {
+                        if segment_start.z != segment_end.z
+                            || p1.z != p2.z
+                            || p1.z != segment_start.z
+                        {
                             continue;
                         }
                         let required_separation = margin + route.trace_thickness / 2.0;
                         let required_separation_sq = required_separation * required_separation;
-                        let dist_sq = segment_to_segment_distance_sq(segment_start, segment_end, p1, p2);
+                        let dist_sq =
+                            segment_to_segment_distance_sq(segment_start, segment_end, p1, p2);
                         if dist_sq < required_separation_sq {
                             let existing = conflicting_route_data.get(&route.connection_name);
                             if existing.is_none() || dist_sq < existing.unwrap().1 {
-                                conflicting_route_data.insert(route.connection_name.clone(), (route.clone(), dist_sq));
+                                conflicting_route_data.insert(
+                                    route.connection_name.clone(),
+                                    (route.clone(), dist_sq),
+                                );
                             }
                         }
                     }
@@ -138,14 +160,20 @@ impl HighDensityRouteSpatialIndex {
                             continue;
                         }
                         let route = &via_info.parent_route;
-                        let via_point = Point2 { x: via_info.x, y: via_info.y };
+                        let via_point = Point2 {
+                            x: via_info.x,
+                            y: via_info.y,
+                        };
                         let required_separation = margin + route.via_diameter / 2.0;
                         let required_separation_sq = required_separation * required_separation;
                         let dist_sq = point_to_segment_distance_sq(via_point, query_p1, query_p2);
                         if dist_sq < required_separation_sq {
                             let existing = conflicting_route_data.get(&route.connection_name);
                             if existing.is_none() || dist_sq < existing.unwrap().1 {
-                                conflicting_route_data.insert(route.connection_name.clone(), (route.clone(), dist_sq));
+                                conflicting_route_data.insert(
+                                    route.connection_name.clone(),
+                                    (route.clone(), dist_sq),
+                                );
                             }
                         }
                     }
@@ -154,7 +182,10 @@ impl HighDensityRouteSpatialIndex {
         }
         let mut results = Vec::new();
         for (route, min_dist_sq) in conflicting_route_data.into_values() {
-            results.push(RouteConflict { conflicting_route: route, distance: min_dist_sq.sqrt() });
+            results.push(RouteConflict {
+                conflicting_route: route,
+                distance: min_dist_sq.sqrt(),
+            });
         }
         results
     }
@@ -175,7 +206,8 @@ impl HighDensityRouteSpatialIndex {
             eprintln!("Skipping route with missing data: {:?}", route);
             return;
         }
-        self.maximum_copper_radius = self.maximum_copper_radius
+        self.maximum_copper_radius = self
+            .maximum_copper_radius
             .max(route.trace_thickness / 2.0)
             .max(route.via_diameter / 2.0);
         let epsilon = 1e-9;
@@ -203,7 +235,10 @@ impl HighDensityRouteSpatialIndex {
                 let max_index_y = ((bounds.max_y + epsilon) / self.cell_size).floor() as i64;
                 for ix in min_index_x..=max_index_x {
                     for iy in min_index_y..=max_index_y {
-                        self.segment_buckets.entry((ix, iy)).or_default().push(segment_info.clone());
+                        self.segment_buckets
+                            .entry((ix, iy))
+                            .or_default()
+                            .push(segment_info.clone());
                     }
                 }
             }
@@ -217,11 +252,18 @@ impl HighDensityRouteSpatialIndex {
             });
             let ix = (via.x / self.cell_size).floor() as i64;
             let iy = (via.y / self.cell_size).floor() as i64;
-            self.via_buckets.entry((ix, iy)).or_default().push(stored_via);
+            self.via_buckets
+                .entry((ix, iy))
+                .or_default()
+                .push(stored_via);
         }
     }
 
-    pub fn get_conflicting_routes_near_point(&self, point: &Point, margin: f64) -> Vec<RouteConflict> {
+    pub fn get_conflicting_routes_near_point(
+        &self,
+        point: &Point,
+        margin: f64,
+    ) -> Vec<RouteConflict> {
         let broad_phase_margin = margin + self.maximum_copper_radius;
         let search_min_x = point.x - broad_phase_margin;
         let search_min_y = point.y - broad_phase_margin;
@@ -235,7 +277,10 @@ impl HighDensityRouteSpatialIndex {
         let mut conflicting_route_data: IndexMap<String, (Rc<Route>, f64)> = IndexMap::new();
         let mut checked_segments: HashSet<String> = HashSet::new();
         let mut checked_vias: HashSet<String> = HashSet::new();
-        let query_point = Point2 { x: point.x, y: point.y };
+        let query_point = Point2 {
+            x: point.x,
+            y: point.y,
+        };
         for ix in min_index_x..=max_index_x {
             for iy in min_index_y..=max_index_y {
                 let bucket_key = (ix, iy);
@@ -249,15 +294,24 @@ impl HighDensityRouteSpatialIndex {
                             continue;
                         }
                         let route = &segment_info.parent_route;
-                        let p1 = Point2 { x: p1_seg.x, y: p1_seg.y };
-                        let p2 = Point2 { x: p2_seg.x, y: p2_seg.y };
+                        let p1 = Point2 {
+                            x: p1_seg.x,
+                            y: p1_seg.y,
+                        };
+                        let p2 = Point2 {
+                            x: p2_seg.x,
+                            y: p2_seg.y,
+                        };
                         let required_separation = margin + route.trace_thickness / 2.0;
                         let required_separation_sq = required_separation * required_separation;
                         let dist_sq = point_to_segment_distance_sq(query_point, p1, p2);
                         if dist_sq < required_separation_sq {
                             let existing = conflicting_route_data.get(&route.connection_name);
                             if existing.is_none() || dist_sq < existing.unwrap().1 {
-                                conflicting_route_data.insert(route.connection_name.clone(), (route.clone(), dist_sq));
+                                conflicting_route_data.insert(
+                                    route.connection_name.clone(),
+                                    (route.clone(), dist_sq),
+                                );
                             }
                         }
                     }
@@ -268,14 +322,20 @@ impl HighDensityRouteSpatialIndex {
                             continue;
                         }
                         let route = &via_info.parent_route;
-                        let via_point = Point2 { x: via_info.x, y: via_info.y };
+                        let via_point = Point2 {
+                            x: via_info.x,
+                            y: via_info.y,
+                        };
                         let required_separation = margin + route.via_diameter / 2.0;
                         let required_separation_sq = required_separation * required_separation;
                         let dist_sq = compute_dist_sq(query_point, via_point);
                         if dist_sq < required_separation_sq {
                             let existing = conflicting_route_data.get(&route.connection_name);
                             if existing.is_none() || dist_sq < existing.unwrap().1 {
-                                conflicting_route_data.insert(route.connection_name.clone(), (route.clone(), dist_sq));
+                                conflicting_route_data.insert(
+                                    route.connection_name.clone(),
+                                    (route.clone(), dist_sq),
+                                );
                             }
                         }
                     }
@@ -284,7 +344,10 @@ impl HighDensityRouteSpatialIndex {
         }
         let mut results = Vec::new();
         for (route, min_dist_sq) in conflicting_route_data.into_values() {
-            results.push(RouteConflict { conflicting_route: route, distance: min_dist_sq.sqrt() });
+            results.push(RouteConflict {
+                conflicting_route: route,
+                distance: min_dist_sq.sqrt(),
+            });
         }
         results
     }

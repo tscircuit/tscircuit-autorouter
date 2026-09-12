@@ -1,6 +1,8 @@
+type Comparator<T> = Box<dyn Fn(&T, &T) -> f64>;
+
 pub struct MinHeap<T> {
     items: Vec<T>,
-    compare: Box<dyn Fn(&T, &T) -> f64>,
+    compare: Comparator<T>,
 }
 
 impl<T: Clone> MinHeap<T> {
@@ -19,11 +21,11 @@ impl<T: Clone> MinHeap<T> {
         self.items.clone()
     }
 
-    pub fn clear(&mut self) -> () {
+    pub fn clear(&mut self) {
         self.items.clear();
     }
 
-    pub fn queue(&mut self, item: T) -> () {
+    pub fn queue(&mut self, item: T) {
         self.items.push(item);
         self.sift_up(self.items.len() - 1);
     }
@@ -39,7 +41,7 @@ impl<T: Clone> MinHeap<T> {
         Some(best)
     }
 
-    fn sift_up(&mut self, start_index: usize) -> () {
+    fn sift_up(&mut self, start_index: usize) {
         let mut index = start_index;
 
         while index > 0 {
@@ -53,7 +55,7 @@ impl<T: Clone> MinHeap<T> {
         }
     }
 
-    fn sift_down(&mut self, start_index: usize) -> () {
+    fn sift_down(&mut self, start_index: usize) {
         let mut index = start_index;
 
         loop {

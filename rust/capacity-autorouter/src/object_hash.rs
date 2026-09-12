@@ -39,7 +39,9 @@ fn write_length(prefix: &[u8], mut length: usize, stream: &mut Vec<u8>) {
         start -= 1;
         digits[start] = b'0' + (length % 10) as u8;
         length /= 10;
-        if length == 0 { break; }
+        if length == 0 {
+            break;
+        }
     }
     stream.extend_from_slice(&digits[start..]);
     stream.push(b':');

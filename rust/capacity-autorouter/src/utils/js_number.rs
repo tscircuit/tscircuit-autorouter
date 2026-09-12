@@ -3,13 +3,21 @@ pub fn js_number_to_string(value: f64) -> String {
         return "NaN".to_owned();
     }
     if value.is_infinite() {
-        return if value.is_sign_negative() { "-Infinity" } else { "Infinity" }.to_owned();
+        return if value.is_sign_negative() {
+            "-Infinity"
+        } else {
+            "Infinity"
+        }
+        .to_owned();
     }
     ryu_js::Buffer::new().format(value).to_owned()
 }
 
 pub fn js_to_fixed(value: f64, fraction_digits: usize) -> String {
-    assert!(fraction_digits <= 16, "fixed decimal precision exceeds supported range");
+    assert!(
+        fraction_digits <= 16,
+        "fixed decimal precision exceeds supported range"
+    );
     if !value.is_finite() || value.abs() >= 1e21 {
         return js_number_to_string(value);
     }
@@ -20,7 +28,10 @@ pub fn js_to_fixed(value: f64, fraction_digits: usize) -> String {
     let (mantissa, exponent) = if biased_exponent == 0 {
         (fraction as u128, -1074)
     } else {
-        ((fraction | (1_u64 << 52)) as u128, biased_exponent - 1023 - 52)
+        (
+            (fraction | (1_u64 << 52)) as u128,
+            biased_exponent - 1023 - 52,
+        )
     };
     let scale = 10_u128.pow(fraction_digits as u32);
     let scaled_mantissa = mantissa * scale;
@@ -40,6 +51,11 @@ pub fn js_to_fixed(value: f64, fraction_digits: usize) -> String {
     if fraction_digits == 0 {
         format!("{sign}{rounded}")
     } else {
-        format!("{sign}{}.{:0width$}", rounded / scale, rounded % scale, width = fraction_digits)
+        format!(
+            "{sign}{}.{:0width$}",
+            rounded / scale,
+            rounded % scale,
+            width = fraction_digits
+        )
     }
 }

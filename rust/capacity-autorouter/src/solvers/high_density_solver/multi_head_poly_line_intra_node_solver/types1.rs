@@ -3,11 +3,15 @@ use std::cell::Cell;
 
 thread_local! { static NEXT_DIAGNOSTIC_ID: Cell<u64> = const { Cell::new(1) }; }
 pub fn next_diagnostic_id() -> u64 {
-    NEXT_DIAGNOSTIC_ID.with(|next| { let value = next.get(); next.set(value + 1); value })
+    NEXT_DIAGNOSTIC_ID.with(|next| {
+        let value = next.get();
+        next.set(value + 1);
+        value
+    })
 }
 
-use serde::{Serialize, Deserialize, Serializer, Deserializer};
 use serde::ser::SerializeMap;
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use serde_json::{Map, Value};
 
 #[derive(Clone, Debug)]
@@ -34,9 +38,20 @@ impl Serialize for MHPoint {
 impl<'de> Deserialize<'de> for MHPoint {
     fn deserialize<D: Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
         let metadata = Map::<String, Value>::deserialize(deserializer)?;
-        let number = |name: &str| metadata.get(name).and_then(Value::as_f64)
-            .ok_or_else(|| serde::de::Error::custom(format!("Missing numeric MHPoint.{name}")));
-        Ok(Self { diagnostic_id: next_diagnostic_id(), x: number("x")?, y: number("y")?, z1: number("z1")?, z2: number("z2")?, metadata })
+        let number = |name: &str| {
+            metadata
+                .get(name)
+                .and_then(Value::as_f64)
+                .ok_or_else(|| serde::de::Error::custom(format!("Missing numeric MHPoint.{name}")))
+        };
+        Ok(Self {
+            diagnostic_id: next_diagnostic_id(),
+            x: number("x")?,
+            y: number("y")?,
+            z1: number("z1")?,
+            z2: number("z2")?,
+            metadata,
+        })
     }
 }
 
@@ -54,7 +69,10 @@ pub struct PolyLine {
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct Force { pub fx: f64, pub fy: f64 }
+pub struct Force {
+    pub fx: f64,
+    pub fy: f64,
+}
 
 #[derive(Clone, Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -86,14 +104,20 @@ impl Serialize for Candidate {
         map.serialize_entry("g", &self.g)?;
         map.serialize_entry("h", &self.h)?;
         map.serialize_entry("f", &self.f)?;
-        if self.forces.is_none() { map.serialize_entry("viaCount", &self.via_count)?; }
+        if self.forces.is_none() {
+            map.serialize_entry("viaCount", &self.via_count)?;
+        }
         map.serialize_entry("minGaps", &self.min_gaps)?;
         if let Some(forces) = &self.forces {
             map.serialize_entry("forces", forces)?;
             map.serialize_entry("viaCount", &self.via_count)?;
         }
-        if let Some(value) = self.mag_force_applied { map.serialize_entry("magForceApplied", &value)?; }
-        if let Some(value) = self.has_closed_same_layer_face { map.serialize_entry("hasClosedSameLayerFace", &value)?; }
+        if let Some(value) = self.mag_force_applied {
+            map.serialize_entry("magForceApplied", &value)?;
+        }
+        if let Some(value) = self.has_closed_same_layer_face {
+            map.serialize_entry("hasClosedSameLayerFace", &value)?;
+        }
         map.end()
     }
 }
@@ -112,31 +136,48 @@ pub fn candidate_identity(candidate: &Candidate) -> Value {
 }
 
 fn identity_id(value: &Value) -> Result<u64, String> {
-    value["id"].as_u64().filter(|id| *id > 0)
+    value["id"]
+        .as_u64()
+        .filter(|id| *id > 0)
         .ok_or_else(|| "Candidate diagnostic identity requires a positive integer ID".into())
 }
 
-pub fn restore_candidate_identity(candidate: &mut Candidate, identity: &Value) -> Result<(), String> {
+pub fn restore_candidate_identity(
+    candidate: &mut Candidate,
+    identity: &Value,
+) -> Result<(), String> {
     candidate.diagnostic_id = identity_id(identity)?;
     let fields = &identity["fields"];
     candidate.poly_lines_id = identity_id(&fields["polyLines"])?;
     candidate.min_gaps_id = identity_id(&fields["minGaps"])?;
-    let lines = fields["polyLines"]["items"].as_array().ok_or("Candidate identity requires polyline identities")?;
-    if lines.len() != candidate.poly_lines.len() { return Err("Candidate polyline identity count mismatch".into()); }
+    let lines = fields["polyLines"]["items"]
+        .as_array()
+        .ok_or("Candidate identity requires polyline identities")?;
+    if lines.len() != candidate.poly_lines.len() {
+        return Err("Candidate polyline identity count mismatch".into());
+    }
     for (line, identity) in candidate.poly_lines.iter_mut().zip(lines) {
         line.diagnostic_id = identity_id(identity)?;
         let fields = &identity["fields"];
         line.start.diagnostic_id = identity_id(&fields["start"])?;
         line.end.diagnostic_id = identity_id(&fields["end"])?;
         line.m_points_id = identity_id(&fields["mPoints"])?;
-        let points = fields["mPoints"]["items"].as_array().ok_or("Polyline identity requires middle-point identities")?;
-        if points.len() != line.m_points.len() { return Err("Middle-point identity count mismatch".into()); }
-        for (point, identity) in line.m_points.iter_mut().zip(points) { point.diagnostic_id = identity_id(identity)?; }
+        let points = fields["mPoints"]["items"]
+            .as_array()
+            .ok_or("Polyline identity requires middle-point identities")?;
+        if points.len() != line.m_points.len() {
+            return Err("Middle-point identity count mismatch".into());
+        }
+        for (point, identity) in line.m_points.iter_mut().zip(points) {
+            point.diagnostic_id = identity_id(identity)?;
+        }
     }
     Ok(())
 }
 
-pub fn multi_head_mut(engine: &mut crate::bindings::high_density::specialized_solver::SpecializedEngine) -> Option<&mut super::multi_head_poly_line_intra_node_solver::MultiHeadPolyLineIntraNodeSolver> {
+pub fn multi_head_mut(
+    engine: &mut crate::bindings::high_density::specialized_solver::SpecializedEngine,
+) -> Option<&mut super::multi_head_poly_line_intra_node_solver::MultiHeadPolyLineIntraNodeSolver> {
     use crate::bindings::high_density::specialized_solver::SpecializedEngine;
     match engine {
         SpecializedEngine::MultiHead(solver) => Some(solver),
@@ -146,22 +187,40 @@ pub fn multi_head_mut(engine: &mut crate::bindings::high_density::specialized_so
     }
 }
 
-pub fn snapshot_identity(engine: &mut crate::bindings::high_density::specialized_solver::SpecializedEngine) -> Value {
-    let Some(solver) = multi_head_mut(engine) else { return Value::Null; };
+pub fn snapshot_identity(
+    engine: &mut crate::bindings::high_density::specialized_solver::SpecializedEngine,
+) -> Value {
+    let Some(solver) = multi_head_mut(engine) else {
+        return Value::Null;
+    };
     serde_json::json!({"fields":{
         "candidates":{"items":solver.candidates.iter().map(candidate_identity).collect::<Vec<_>>()},
         "lastCandidate":solver.last_candidate.as_ref().map(candidate_identity)
     }})
 }
 
-pub fn restore_snapshot_identity(engine: &mut crate::bindings::high_density::specialized_solver::SpecializedEngine, identity: &Value) -> Result<(), String> {
+pub fn restore_snapshot_identity(
+    engine: &mut crate::bindings::high_density::specialized_solver::SpecializedEngine,
+    identity: &Value,
+) -> Result<(), String> {
     let solver = multi_head_mut(engine).ok_or("Candidate identities require a MultiHead solver")?;
-    let candidates = identity["fields"]["candidates"]["items"].as_array().ok_or("Missing queued candidate identities")?;
-    if candidates.len() != solver.candidates.len() { return Err("Queued candidate identity count mismatch".into()); }
-    for (candidate, identity) in solver.candidates.iter_mut().zip(candidates) { restore_candidate_identity(candidate, identity)?; }
-    if let Some(candidate) = &mut solver.last_candidate { restore_candidate_identity(candidate, &identity["fields"]["lastCandidate"])?; }
+    let candidates = identity["fields"]["candidates"]["items"]
+        .as_array()
+        .ok_or("Missing queued candidate identities")?;
+    if candidates.len() != solver.candidates.len() {
+        return Err("Queued candidate identity count mismatch".into());
+    }
+    for (candidate, identity) in solver.candidates.iter_mut().zip(candidates) {
+        restore_candidate_identity(candidate, identity)?;
+    }
+    if let Some(candidate) = &mut solver.last_candidate {
+        restore_candidate_identity(candidate, &identity["fields"]["lastCandidate"])?;
+    }
     let mut queued_ids = std::collections::HashSet::new();
-    solver.has_candidate_aliases = solver.candidates.iter().any(|candidate| !queued_ids.insert(candidate.diagnostic_id));
+    solver.has_candidate_aliases = solver
+        .candidates
+        .iter()
+        .any(|candidate| !queued_ids.insert(candidate.diagnostic_id));
     Ok(())
 }
 
@@ -172,27 +231,48 @@ pub fn invoke_with_identity(
     identity: Value,
 ) -> Result<(Value, Vec<Value>, Value), String> {
     if matches!(method, "insertCandidate" | "getNeighbors") {
-        let solver = multi_head_mut(engine).ok_or("Candidate identity methods require a MultiHead solver")?;
-        let mut candidate: Candidate = serde_json::from_value(args.first().ok_or("Missing candidate argument")?.clone()).map_err(|error|error.to_string())?;
+        let solver = multi_head_mut(engine)
+            .ok_or("Candidate identity methods require a MultiHead solver")?;
+        let mut candidate: Candidate =
+            serde_json::from_value(args.first().ok_or("Missing candidate argument")?.clone())
+                .map_err(|error| error.to_string())?;
         restore_candidate_identity(&mut candidate, &identity["args"][0])?;
         if method == "insertCandidate" {
-            if solver.candidates.iter().any(|queued| queued.diagnostic_id == candidate.diagnostic_id) { solver.has_candidate_aliases = true; }
+            if solver
+                .candidates
+                .iter()
+                .any(|queued| queued.diagnostic_id == candidate.diagnostic_id)
+            {
+                solver.has_candidate_aliases = true;
+            }
             solver.insert_candidate(candidate);
             return Ok((Value::Null, args, identity));
         }
         let neighbors = solver.get_neighbors(&candidate);
         let result_identity = serde_json::json!({"items":neighbors.iter().map(candidate_identity).collect::<Vec<_>>()});
-        let result = serde_json::to_value(neighbors).map_err(|error|error.to_string())?;
-        return Ok((result, args, serde_json::json!({"args":identity["args"],"result":result_identity})));
+        let result = serde_json::to_value(neighbors).map_err(|error| error.to_string())?;
+        return Ok((
+            result,
+            args,
+            serde_json::json!({"args":identity["args"],"result":result_identity}),
+        ));
     }
     if method == "createInitialCandidateFromSeed" {
-        let solver = multi_head_mut(engine).ok_or("Candidate identity methods require a MultiHead solver")?;
-        let seed = args.first().and_then(Value::as_f64).ok_or("Missing shuffle seed")?;
+        let solver = multi_head_mut(engine)
+            .ok_or("Candidate identity methods require a MultiHead solver")?;
+        let seed = args
+            .first()
+            .and_then(Value::as_f64)
+            .ok_or("Missing shuffle seed")?;
         let candidate = solver.create_initial_candidate_from_seed(seed)?;
         let result_identity = candidate.as_ref().map(candidate_identity);
-        let result = serde_json::to_value(candidate).map_err(|error|error.to_string())?;
-        return Ok((result, args, serde_json::json!({"args":identity["args"],"result":result_identity})));
+        let result = serde_json::to_value(candidate).map_err(|error| error.to_string())?;
+        return Ok((
+            result,
+            args,
+            serde_json::json!({"args":identity["args"],"result":result_identity}),
+        ));
     }
-    let (result, args) = engine.invoke(method,args)?;
-    Ok((result,args,identity))
+    let (result, args) = engine.invoke(method, args)?;
+    Ok((result, args, identity))
 }

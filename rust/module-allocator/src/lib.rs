@@ -10,6 +10,12 @@ use dlmalloc::Dlmalloc;
 
 pub struct ModuleAllocator(UnsafeCell<Dlmalloc>);
 
+impl Default for ModuleAllocator {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl ModuleAllocator {
     pub const fn new() -> Self {
         let mut allocator = Dlmalloc::new();
