@@ -75,6 +75,7 @@ import {
   getMaterializedPreloadedSectionHdRoutes,
   removeChangedSectionsFromFixedHdRoutes,
 } from "./materializeHypergraphPreloadedTraceSections"
+import { canonicalizePipeline9HdRoutes } from "./canonicalizePipeline9HdRoutes"
 import { materializePipeline9HdRouteVias } from "./materializePipeline9HdRouteVias"
 import {
   type PreparedPipeline9MutationSections,
@@ -1482,7 +1483,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     const routedTraces = convertPipeline7HdRoutesToSimplifiedPcbTraces({
       connections: this.netToPointPairsSolver?.newConnections ?? [],
       originalConnections: this.originalSrj.connections,
-      hdRoutes: this._getOutputHdRoutes(),
+      hdRoutes: canonicalizePipeline9HdRoutes(this._getOutputHdRoutes()),
       layerCount: this.srj.layerCount,
       obstacles: this.srj.obstacles,
       defaultViaHoleDiameter: this.viaHoleDiameter,

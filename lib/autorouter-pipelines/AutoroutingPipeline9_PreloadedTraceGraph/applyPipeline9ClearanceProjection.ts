@@ -8,7 +8,7 @@ import { RELAXED_DRC_OPTIONS } from "lib/testing/drcPresets"
 import type { SimpleRouteJson } from "lib/types"
 import type { HighDensityRoute } from "lib/types/high-density-types"
 import { createSrjWithBoardValidObstacleLayers } from "lib/utils/create-srj-with-board-valid-obstacle-layers"
-import { canonicalizePipeline9RepairRoutes } from "./canonicalizePipeline9RepairRoutes"
+import { canonicalizePipeline9HdRoutes } from "./canonicalizePipeline9HdRoutes"
 
 /** Opens coupled copper gaps while keeping terminals, junctions and widths fixed. */
 export const applyPipeline9ClearanceProjection = ({
@@ -27,7 +27,7 @@ export const applyPipeline9ClearanceProjection = ({
     ...createSrjWithBoardValidObstacleLayers(originalSrj),
     traces: undefined,
   }
-  const canonicalRoutes = canonicalizePipeline9RepairRoutes(routes)
+  const canonicalRoutes = canonicalizePipeline9HdRoutes(routes)
   // Whole-board projection needs no cropping or splicing. Preserve every
   // transition's point indices so the via guard can prove its identity.
   const candidate = relaxTraceClearance({

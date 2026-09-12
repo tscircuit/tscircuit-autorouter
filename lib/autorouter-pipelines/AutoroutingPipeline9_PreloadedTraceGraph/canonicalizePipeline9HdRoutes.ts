@@ -1,8 +1,8 @@
 import type { HighDensityRoute } from "lib/types/high-density-types"
 import { materializePipeline9HdRouteVias } from "./materializePipeline9HdRouteVias"
 
-/** Represents every via with exactly co-located points for repair04. */
-export const canonicalizePipeline9RepairRoutes = (
+/** Represents every via with exactly co-located points before repair or SRJ export. */
+export const canonicalizePipeline9HdRoutes = (
   routes: HighDensityRoute[],
 ): HighDensityRoute[] => {
   return materializePipeline9HdRouteVias(routes).map(
