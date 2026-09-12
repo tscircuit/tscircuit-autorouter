@@ -38,7 +38,9 @@ test("reference DRC includes Core's via-pad checker and declared pad-edge cleara
     routedTraces: traces,
     includeBoardClearance: true,
   })
-  const board = result.circuitJson.find((element) => element.type === "pcb_board")
+  const board = result.circuitJson.find(
+    (element) => element.type === "pcb_board",
+  )
   expect(board?.min_pad_edge_to_pad_edge_clearance).toBe(0.25)
   const coreErrors = checkViaPadClearance(result.circuitJson)
   expect(coreErrors).toHaveLength(1)

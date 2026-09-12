@@ -15,5 +15,5 @@ test("physical through-via detection preserves Core's same-net contact exemption
   ).toEqual(["top", "inner1", "inner2", "bottom"])
   const coreErrors = await runAllRoutingChecks(circuitJson)
   expect(coreErrors).toEqual([])
-  expect(getDrcErrors(circuitJson).errors).toEqual(coreErrors)
+  expect(coreErrors).toEqual(getDrcErrors(circuitJson).errors)
 })

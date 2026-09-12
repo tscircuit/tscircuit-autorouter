@@ -86,7 +86,9 @@ test("reference DRC respects Core's declared trace-to-pad clearance instead of b
     routedTraces: traces,
     includeBoardClearance: true,
   })
-  const board = result.circuitJson.find((element) => element.type === "pcb_board")
+  const board = result.circuitJson.find(
+    (element) => element.type === "pcb_board",
+  )
   expect(board).toMatchObject({
     min_trace_to_pad_edge_clearance: 0.2,
     min_board_edge_clearance: 0.3,

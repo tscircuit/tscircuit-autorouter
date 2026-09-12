@@ -160,8 +160,11 @@ const renderCommonDrcComparison = (
   prReport: BenchmarkReport,
 ): string[] => {
   if (!mainReport.drcScoring && !prReport.drcScoring) return []
-  if (!mainReport.drcScoring || !prReport.drcScoring ||
-      mainReport.drcScoring.evaluatorSha !== prReport.drcScoring.evaluatorSha) {
+  if (
+    !mainReport.drcScoring ||
+    !prReport.drcScoring ||
+    mainReport.drcScoring.evaluatorSha !== prReport.drcScoring.evaluatorSha
+  ) {
     throw new Error("Both benchmark reports must use the same DRC evaluator")
   }
   const lines = [
@@ -172,21 +175,50 @@ const renderCommonDrcComparison = (
     "| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |",
   ]
   for (const row of prReport.summary) {
-    for (const [revision, report] of [["Main", mainReport], ["PR", prReport]] as const) {
-      const solved = report.tests.filter((test) => test.solverName === row.solverName && test.didSolve)
+    for (const [revision, report] of [
+      ["Main", mainReport],
+      ["PR", prReport],
+    ] as const) {
+      const solved = report.tests.filter(
+        (test) => test.solverName === row.solverName && test.didSolve,
+      )
       const native = solved.map((test) => {
-        if (!test.nativeDrc) throw new Error(`Missing native DRC score for ${test.scenarioName}`)
+        if (!test.nativeDrc)
+          throw new Error(`Missing native DRC score for ${test.scenarioName}`)
         return test.nativeDrc
       })
-      const nativeTimes = native.flatMap((score) => typeof score.evaluationTimeMs === "number" ? [score.evaluationTimeMs] : [])
-      const commonTimes = solved.flatMap((test) => typeof test.commonDrcEvaluationTimeMs === "number" ? [test.commonDrcEvaluationTimeMs] : [])
-      const nativeMean = nativeTimes.length === 0 ? null : nativeTimes.reduce((sum, value) => sum + value, 0) / nativeTimes.length
-      const commonMean = commonTimes.length === 0 ? null : commonTimes.reduce((sum, value) => sum + value, 0) / commonTimes.length
-      lines.push(`| ${formatSolverName(row.solverName)} | ${revision} | ${native.filter((score) => score.passed).length}/${report.scenarioCount} | ${native.reduce((sum, score) => sum + score.errorCount, 0)} | ${getDrcIssueCount(report, row.solverName) ?? "n/a"} | ${formatTime(nativeMean)} | ${formatTime(commonMean)} |`)
+      const nativeTimes = native.flatMap((score) =>
+        typeof score.evaluationTimeMs === "number"
+          ? [score.evaluationTimeMs]
+          : [],
+      )
+      const commonTimes = solved.flatMap((test) =>
+        typeof test.commonDrcEvaluationTimeMs === "number"
+          ? [test.commonDrcEvaluationTimeMs]
+          : [],
+      )
+      const nativeMean =
+        nativeTimes.length === 0
+          ? null
+          : nativeTimes.reduce((sum, value) => sum + value, 0) /
+            nativeTimes.length
+      const commonMean =
+        commonTimes.length === 0
+          ? null
+          : commonTimes.reduce((sum, value) => sum + value, 0) /
+            commonTimes.length
+      lines.push(
+        `| ${formatSolverName(row.solverName)} | ${revision} | ${native.filter((score) => score.passed).length}/${report.scenarioCount} | ${native.reduce((sum, score) => sum + score.errorCount, 0)} | ${getDrcIssueCount(report, row.solverName) ?? "n/a"} | ${formatTime(nativeMean)} | ${formatTime(commonMean)} |`,
+      )
     }
   }
-  lines.push("", "Final checker timings are separate from routing timings. In-pipeline validation and repair costs remain included in routing time. Native scores use each branch's checker and cannot establish routing regressions by themselves.")
-  const mainTests = new Map(mainReport.tests.map((test) => [testKey(test), test]))
+  lines.push(
+    "",
+    "Final checker timings are separate from routing timings. In-pipeline validation and repair costs remain included in routing time. Native scores use each branch's checker and cannot establish routing regressions by themselves.",
+  )
+  const mainTests = new Map(
+    mainReport.tests.map((test) => [testKey(test), test]),
+  )
   const changes: string[] = []
   let drcImprovements = 0
   let drcRegressions = 0
@@ -194,29 +226,51 @@ const renderCommonDrcComparison = (
   for (const prTest of prReport.tests) {
     const mainTest = mainTests.get(testKey(prTest))
     if (!mainTest || !mainTest.didSolve || !prTest.didSolve) continue
-    if (!mainTest.nativeDrc || !prTest.nativeDrc ||
-        typeof mainTest.drcErrorCount !== "number" || typeof prTest.drcErrorCount !== "number") {
+    if (
+      !mainTest.nativeDrc ||
+      !prTest.nativeDrc ||
+      typeof mainTest.drcErrorCount !== "number" ||
+      typeof prTest.drcErrorCount !== "number"
+    ) {
       throw new Error(`Missing DRC comparison score for ${prTest.scenarioName}`)
     }
     const commonDelta = prTest.drcErrorCount - mainTest.drcErrorCount
-    const nativeDelta = prTest.nativeDrc.errorCount - mainTest.nativeDrc.errorCount
+    const nativeDelta =
+      prTest.nativeDrc.errorCount - mainTest.nativeDrc.errorCount
     if (commonDelta === 0 && nativeDelta === 0) continue
-    const unchangedCopper = mainTest.routedGeometryHash === prTest.routedGeometryHash
+    const unchangedCopper =
+      mainTest.routedGeometryHash === prTest.routedGeometryHash
     if (commonDelta < 0) drcImprovements += 1
     if (commonDelta > 0) drcRegressions += 1
     if (commonDelta === 0 && unchangedCopper) detectorReclassifications += 1
-    const classification = commonDelta === 0 && unchangedCopper
-      ? "Detector-only reclassification; unchanged copper"
-      : commonDelta > 0 ? "More DRCs under common rules"
-      : commonDelta < 0 ? "Fewer DRCs under common rules"
-      : "Changed copper; common DRC count unchanged"
-    changes.push(`| ${formatSolverName(prTest.solverName)} | ${prTest.sampleNumber} | ${mainTest.nativeDrc.errorCount} → ${prTest.nativeDrc.errorCount} | ${mainTest.drcErrorCount} → ${prTest.drcErrorCount} | ${unchangedCopper ? "Unchanged" : "Changed"} | ${classification} |`)
+    const classification =
+      commonDelta === 0 && unchangedCopper
+        ? "Detector-only reclassification; unchanged copper"
+        : commonDelta > 0
+          ? "More DRCs under common rules"
+          : commonDelta < 0
+            ? "Fewer DRCs under common rules"
+            : "Changed copper; common DRC count unchanged"
+    changes.push(
+      `| ${formatSolverName(prTest.solverName)} | ${prTest.sampleNumber} | ${mainTest.nativeDrc.errorCount} → ${prTest.nativeDrc.errorCount} | ${mainTest.drcErrorCount} → ${prTest.drcErrorCount} | ${unchangedCopper ? "Unchanged" : "Changed"} | ${classification} |`,
+    )
   }
-  lines.push("", `Common-rule DRC count changes: **${drcImprovements} improved**, **${drcRegressions} regressed**. Detector-only reclassifications: **${detectorReclassifications}**; these are excluded from routing regressions.`)
+  lines.push(
+    "",
+    `Common-rule DRC count changes: **${drcImprovements} improved**, **${drcRegressions} regressed**. Detector-only reclassifications: **${detectorReclassifications}**; these are excluded from routing regressions.`,
+  )
   if (changes.length > 0) {
-    lines.push("", "<details>", `<summary>DRC count and detector changes (${changes.length})</summary>`, "",
+    lines.push(
+      "",
+      "<details>",
+      `<summary>DRC count and detector changes (${changes.length})</summary>`,
+      "",
       "| Solver | Sample | Native issues | Common-rule issues | Routed copper | Assessment |",
-      "| --- | ---: | ---: | ---: | --- | --- |", ...changes, "", "</details>")
+      "| --- | ---: | ---: | ---: | --- | --- |",
+      ...changes,
+      "",
+      "</details>",
+    )
   }
   return lines
 }

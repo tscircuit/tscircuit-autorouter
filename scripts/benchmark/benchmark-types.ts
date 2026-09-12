@@ -1,4 +1,7 @@
-import type { SimpleRouteJson, SimplifiedPcbTrace } from "../../lib/types/srj-types"
+import type {
+  SimpleRouteJson,
+  SimplifiedPcbTrace,
+} from "../../lib/types/srj-types"
 
 export type BenchmarkDrcInput = {
   inputSrj: SimpleRouteJson
