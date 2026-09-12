@@ -23,12 +23,10 @@ export const getConnectivityMapFromSimpleRouteJson = (srj: SimpleRouteJson) => {
       connMap.addConnections([
         [
           connection.name,
-          `${pointHash(point)}:${
-            getConnectionPointLayers(point)
-              .map((layer) => mapLayerNameToZ(layer, srj.layerCount))
-              .sort()
-              .join("-")
-          }`,
+          `${pointHash(point)}:${getConnectionPointLayers(point)
+            .map((layer) => mapLayerNameToZ(layer, srj.layerCount))
+            .sort()
+            .join("-")}`,
         ],
       ])
       if ("pcb_port_id" in point && point.pcb_port_id) {

@@ -14,13 +14,23 @@ import { getPointKey } from "../../lib/utils/getPointKey"
 
 type Assert<T extends true> = T
 type MixedPoint = { x: number; y: number; layer: string; layers: string[] }
-type RejectMixedSingle = Assert<MixedPoint extends SingleLayerConnectionPoint ? false : true>
-type RejectMixedMulti = Assert<MixedPoint extends MultiLayerConnectionPoint ? false : true>
-type RejectMixedUnion = Assert<MixedPoint extends ConnectionPoint ? false : true>
+type RejectMixedSingle = Assert<
+  MixedPoint extends SingleLayerConnectionPoint ? false : true
+>
+type RejectMixedMulti = Assert<
+  MixedPoint extends MultiLayerConnectionPoint ? false : true
+>
+type RejectMixedUnion = Assert<
+  MixedPoint extends ConnectionPoint ? false : true
+>
 
 test("single-layer and multilayer points are exclusive and use consistent layer helpers", () => {
   const single: SingleLayerConnectionPoint = { x: 0, y: 0, layer: "top" }
-  const multi: MultiLayerConnectionPoint = { x: 0, y: 0, layers: ["top", "bottom"] }
+  const multi: MultiLayerConnectionPoint = {
+    x: 0,
+    y: 0,
+    layers: ["top", "bottom"],
+  }
   expect(isSingleLayerConnectionPoint(single)).toBe(true)
   expect(isMultiLayerConnectionPoint(single)).toBe(false)
   expect(isSingleLayerConnectionPoint(multi)).toBe(false)

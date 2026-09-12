@@ -10,7 +10,9 @@ export function getPointKey(connectionPoint: ConnectionPoint): PointKey {
     return connectionPoint.pointId
   }
 
-  const layerKey = [...getConnectionPointLayers(connectionPoint)].sort().join("-")
+  const layerKey = [...getConnectionPointLayers(connectionPoint)]
+    .sort()
+    .join("-")
 
   // Using toFixed(4) for precision in coordinate-based keys
   return `${connectionPoint.x.toFixed(4)},${connectionPoint.y.toFixed(4)},${layerKey}`
