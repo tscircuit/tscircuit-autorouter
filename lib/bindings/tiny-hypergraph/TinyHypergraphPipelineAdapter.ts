@@ -64,7 +64,7 @@ function loadGraph(graph: SerializedHyperGraph): LoadedTinyHypergraph {
   }
 }
 
-class TinyHypergraphSearchStage
+export class TinyHypergraphSearchStage
   extends BaseSolver
   implements TinyHypergraphSolverView
 {
