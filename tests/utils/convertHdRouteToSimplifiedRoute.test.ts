@@ -1,7 +1,7 @@
-import { expect, test, describe } from "bun:test"
-import { convertHdRouteToSimplifiedRoute } from "../../lib/utils/convertHdRouteToSimplifiedRoute"
+import { describe, expect, test } from "bun:test"
 import type { ConnectionPoint } from "../../lib/types"
 import { HighDensityIntraNodeRoute } from "../../lib/types/high-density-types"
+import { convertHdRouteToSimplifiedRoute } from "../../lib/utils/convertHdRouteToSimplifiedRoute"
 
 describe("convertHdRouteToSimplifiedRoute", () => {
   test("converts a simple single layer route correctly", () => {
@@ -210,7 +210,7 @@ describe("convertHdRouteToSimplifiedRoute", () => {
     }
 
     const result = convertHdRouteToSimplifiedRoute(input, 2)
-    expect(result).toMatchInlineSnapshot(`[]`)
+    expect(result).toMatchInlineSnapshot("[]")
   })
 
   test("correctly ignores via data when actual z-level change doesn't have a matching via", () => {
@@ -427,5 +427,28 @@ describe("convertHdRouteToSimplifiedRoute", () => {
         },
       ]
     `)
+  })
+
+  test("completes a degenerate same-region route from the connection endpoints", () => {
+    const input: HighDensityIntraNodeRoute = {
+      connectionName: "same-region",
+      traceThickness: 0.15,
+      viaDiameter: 0.6,
+      route: [{ x: -4.92, y: 4.4, z: 0 }],
+      vias: [],
+    }
+    const connectionPoints: ConnectionPoint[] = [
+      { x: -4.92, y: 5.2, layer: "top" },
+      { x: -4.92, y: 4.4, layer: "top" },
+    ]
+
+    const result = convertHdRouteToSimplifiedRoute(input, 2, {
+      connectionPoints,
+    })
+
+    expect(result).toEqual([
+      { route_type: "wire", x: -4.92, y: 5.2, width: 0.15, layer: "top" },
+      { route_type: "wire", x: -4.92, y: 4.4, width: 0.15, layer: "top" },
+    ])
   })
 })
