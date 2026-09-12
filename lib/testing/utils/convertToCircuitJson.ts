@@ -839,7 +839,11 @@ function extractViasFromRoutes(
                 outer_diameter: viaDiameter,
                 hole_diameter: viaHoleDiameter,
                 layers: (allowBlindAndBuriedVias
-                  ? getViaLayers(segment, layerCount)
+                  ? getViaLayers(
+                      segment,
+                      layerCount,
+                      allowBlindAndBuriedVias,
+                    )
                   : throughViaLayers) as LayerName[],
               })
               viaLocations.add(locationKey)
@@ -880,6 +884,7 @@ function extractViasFromRoutes(
                   ? getViaLayers(
                       { from_layer: fromLayer, to_layer: toLayer },
                       layerCount,
+                      allowBlindAndBuriedVias,
                     )
                   : throughViaLayers) as LayerName[],
               })
