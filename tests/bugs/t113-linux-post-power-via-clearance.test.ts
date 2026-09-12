@@ -85,6 +85,11 @@ test("Pipeline9 clears post-power vias on the exact T113-S3 PCB", async () => {
   ])
   expect(afterDrc.errors).toEqual([])
 
+  const snapshotPath =
+    process.platform === "linux"
+      ? import.meta.path.replace(/\.test\.ts$/, "-linux.test.ts")
+      : import.meta.path
+
   await expect(
     stackSvgsHorizontally(
       [
@@ -93,7 +98,7 @@ test("Pipeline9 clears post-power vias on the exact T113-S3 PCB", async () => {
       ],
       { gap: 12, normalizeSize: false },
     ),
-  ).toMatchSvgSnapshot(import.meta.path, {
+  ).toMatchSvgSnapshot(snapshotPath, {
     svgName: "before-after",
     tolerance: 0,
   })
