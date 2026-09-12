@@ -805,9 +805,13 @@ function extractViasFromRoutes(
   layerCount: number,
   minViaDiameter = 0.3,
   minViaHoleDiameter = minViaDiameter * 0.5,
+  allowBlindAndBuriedVias = false,
 ): PcbVia[] {
   const vias: PcbVia[] = []
   const viaLocations = new Set<string>() // Track unique via locations
+  const throughViaLayers = Array.from({ length: layerCount }, (_, z) =>
+    mapZToLayerName(z, layerCount),
+  ) as LayerName[]
 
   if (routes.length > 0) {
     if ("type" in routes[0] && routes[0].type === "pcb_trace") {
@@ -834,7 +838,9 @@ function extractViasFromRoutes(
                 y: segment.y,
                 outer_diameter: viaDiameter,
                 hole_diameter: viaHoleDiameter,
-                layers: getViaLayers(segment, layerCount) as LayerName[],
+                layers: (allowBlindAndBuriedVias
+                  ? getViaLayers(segment, layerCount)
+                  : throughViaLayers) as LayerName[],
               })
               viaLocations.add(locationKey)
             }
@@ -870,10 +876,12 @@ function extractViasFromRoutes(
                 y: currPoint.y,
                 outer_diameter: viaDiameter,
                 hole_diameter: viaHoleDiameter,
-                layers: getViaLayers(
-                  { from_layer: fromLayer, to_layer: toLayer },
-                  layerCount,
-                ) as LayerName[],
+                layers: (allowBlindAndBuriedVias
+                  ? getViaLayers(
+                      { from_layer: fromLayer, to_layer: toLayer },
+                      layerCount,
+                    )
+                  : throughViaLayers) as LayerName[],
               })
               viaLocations.add(locationKey)
             }
@@ -916,6 +924,18 @@ export function createPcbBoardElement(srj: SimpleRouteJson): PcbBoard {
     material: "fr4",
     ...(srj.minBoardEdgeClearance !== undefined
       ? { min_board_edge_clearance: srj.minBoardEdgeClearance }
+      : {}),
+    ...(srj.minTraceToPadEdgeClearance !== undefined
+      ? { min_trace_to_pad_edge_clearance: srj.minTraceToPadEdgeClearance }
+      : {}),
+    ...(srj.minPadEdgeToPadEdgeClearance !== undefined
+      ? { min_pad_edge_to_pad_edge_clearance: srj.minPadEdgeToPadEdgeClearance }
+      : {}),
+    ...(srj.minViaHoleEdgeToViaHoleEdgeClearance !== undefined
+      ? {
+          min_via_hole_edge_to_via_hole_edge_clearance:
+            srj.minViaHoleEdgeToViaHoleEdgeClearance,
+        }
       : {}),
   }
 }
@@ -977,6 +997,7 @@ export function convertToCircuitJson(
       srjWithPointPairs.layerCount,
       resolvedMinViaDiameter,
       resolvedMinViaHoleDiameter,
+      (originalSrj ?? srjWithPointPairs).allowBlindAndBuriedVias ?? false,
     ),
   )
 

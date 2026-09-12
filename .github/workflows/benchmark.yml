@@ -43,6 +43,10 @@ on:
         description: Git ref (branch, tag, or SHA) to benchmark
         required: false
         type: string
+      comparison_base_ref:
+        description: Optional pinned main commit for a same-machine comparison
+        required: false
+        type: string
       pr_number:
         description: Pull request number where this benchmark posts its result
         required: false
@@ -1514,6 +1518,8 @@ jobs:
         env:
           PR_NUMBER: ${{ inputs.pr_number }}
           DATASET_NAME: ${{ inputs.dataset_name }}
+          PR_REF: ${{ inputs.ref }}
+          MAIN_REF: ${{ inputs.comparison_base_ref }}
         with:
           github-token: ${{ secrets.TSCIRCUIT_BOT_GITHUB_TOKEN }}
           script: |
@@ -1533,8 +1539,8 @@ jobs:
               repo: context.repo.repo,
               branch: pr.data.base.ref,
             })
-            const mainSha = base.data.commit.sha
-            const prSha = pr.data.head.sha
+            const mainSha = process.env.MAIN_REF || base.data.commit.sha
+            const prSha = process.env.PR_REF || pr.data.head.sha
             const runUrl = `${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}`
             const statusComment = await github.rest.issues.createComment({
               owner: context.repo.owner,
@@ -1593,11 +1599,18 @@ jobs:
       - name: Prepare comparison artifacts
         run: mkdir -p same-machine-results/main same-machine-results/pr
 
+      - name: Capture main routing output for shared DRC scoring
+        run: |
+          # Copy instrumentation only; main retains its own router and DRC implementation.
+          cp same-machine-pr/scripts/benchmark/benchmark-run-task.ts same-machine-main/scripts/benchmark/benchmark-run-task.ts
+          cp same-machine-pr/scripts/benchmark/benchmark-types.ts same-machine-main/scripts/benchmark/benchmark-types.ts
+
       - name: Benchmark current main
         working-directory: same-machine-main
         env:
           BENCHMARK_ARGS_JSON: ${{ inputs.benchmark_args_json }}
           BENCHMARK_DATASET: ${{ steps.refs.outputs.dataset }}
+          BENCHMARK_EXPORT_ROUTED_GEOMETRY: '1'
         run: |
           chmod +x ./benchmark.sh
           node <<'NODE'
@@ -1622,6 +1635,7 @@ jobs:
         env:
           BENCHMARK_ARGS_JSON: ${{ inputs.benchmark_args_json }}
           BENCHMARK_DATASET: ${{ steps.refs.outputs.dataset }}
+          BENCHMARK_EXPORT_ROUTED_GEOMETRY: '1'
         run: |
           chmod +x ./benchmark.sh
           node <<'NODE'
@@ -1641,16 +1655,25 @@ jobs:
           cp benchmark-result.txt ../same-machine-results/pr/benchmark-result.txt
           cp benchmark-snapshots.html ../same-machine-results/pr/benchmark-snapshots.html
 
+      - name: Score both outputs with the same Core DRC rules
+        working-directory: same-machine-pr
+        env:
+          PR_SHA: ${{ steps.refs.outputs.pr_sha }}
+        run: |
+          bun scripts/benchmark/rescore-benchmark-results.ts "$PR_SHA" \
+            ../same-machine-results/main/benchmark-result.json \
+            ../same-machine-results/pr/benchmark-result.json
+
       - name: Render same-machine comparison
-        working-directory: same-machine-controller
+        working-directory: same-machine-pr
         env:
           MAIN_SHA: ${{ steps.refs.outputs.main_sha }}
           PR_SHA: ${{ steps.refs.outputs.pr_sha }}
           RUNNER_NAME: ${{ runner.name }}
         run: |
           bun scripts/benchmark/same-machine-results.ts \
-            --main-report ../same-machine-results/main/benchmark-result.json \
-            --pr-report ../same-machine-results/pr/benchmark-result.json \
+            --main-report ../same-machine-results/main/benchmark-result-common.json \
+            --pr-report ../same-machine-results/pr/benchmark-result-common.json \
             --main-sha "$MAIN_SHA" \
             --pr-sha "$PR_SHA" \
             --repository "${{ github.repository }}" \

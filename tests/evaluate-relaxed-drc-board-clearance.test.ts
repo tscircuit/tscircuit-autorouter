@@ -2,7 +2,7 @@ import { expect, test } from "bun:test"
 import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import type { SimpleRouteJson, SimplifiedPcbTrace } from "lib/types"
 
-test("repair reference DRC includes the physical board outline when requested", () => {
+test("repair reference DRC includes the physical board outline by default", () => {
   const srj: SimpleRouteJson = {
     layerCount: 2,
     minTraceWidth: 0.1,
@@ -41,14 +41,16 @@ test("repair reference DRC includes the physical board outline when requested", 
     routedTraces: [trace],
     drcOptions: { includeTraceContinuity: false },
   }
-  expect(evaluateRelaxedDrc(input).errors).toEqual([])
+  expect(
+    evaluateRelaxedDrc({ ...input, includeBoardClearance: false }).errors,
+  ).toEqual([])
   expect(
     evaluateRelaxedDrc({
       ...input,
       inputSrj: { ...srj, minBoardEdgeClearance: undefined },
       includeBoardClearance: true,
     }).errors,
-  ).toEqual([])
+  ).not.toEqual([])
   const physical = evaluateRelaxedDrc({
     ...input,
     includeBoardClearance: true,
