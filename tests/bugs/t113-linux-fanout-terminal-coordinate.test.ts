@@ -120,4 +120,4 @@ test("Pipeline9 preserves the exact fanout terminals on the 66-component T113-S3
     svgName: "unrouted-routed",
     tolerance: 0,
   })
-}, 60_000)
+})
