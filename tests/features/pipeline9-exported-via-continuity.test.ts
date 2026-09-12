@@ -47,7 +47,10 @@ test("Pipeline9 exports exactly connected wires around an explicit endpoint via"
   expect(viaIndex).toBeGreaterThan(0)
   const via = trace!.route[viaIndex]!
   expect(via).toMatchObject({ route_type: "via", x: 0, y: 0 })
-  for (const point of [trace!.route[viaIndex - 1], trace!.route[viaIndex + 1]]) {
+  for (const point of [
+    trace!.route[viaIndex - 1],
+    trace!.route[viaIndex + 1],
+  ]) {
     expect(point).toMatchObject({ route_type: "wire", x: 0, y: 0 })
   }
   expect(hdRoute).toEqual(original)
