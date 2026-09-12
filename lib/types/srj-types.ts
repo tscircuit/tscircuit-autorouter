@@ -65,6 +65,10 @@ export interface SimpleRouteJson {
   minTraceToPadEdgeClearance?: number
   minBoardEdgeClearance?: number
   minViaEdgeToPadEdgeClearance?: number
+  minPadEdgeToPadEdgeClearance?: number
+  minViaHoleEdgeToViaHoleEdgeClearance?: number
+  /** False by default: every via physically occupies the full board stack. */
+  allowBlindAndBuriedVias?: boolean
   obstacles: Obstacle[]
   connections: Array<SimpleRouteConnection>
   differentialPairs?: Array<DifferentialPair>
