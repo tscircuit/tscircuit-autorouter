@@ -816,6 +816,7 @@ impl OutsideInPartialRipTinyHyperGraphSolver {
         Self::record_settled_candidate(frontier, &candidate);
         self.consider_outside_in_joins(&mut search, &candidate, forward);
         let region = candidate.next_region_id as usize;
+        let mut previous_candidate = None;
         for index in 0..self.topology.region_incident_ports[region].len() {
             let neighbor = self.topology.region_incident_ports[region][index];
             if neighbor == candidate.port_id || self.is_port_reserved_for_different_net(neighbor) {
@@ -891,7 +892,9 @@ impl OutsideInPartialRipTinyHyperGraphSolver {
                 port_id: neighbor,
                 prev_region_id: Some(candidate.next_region_id),
                 next_region_id: next,
-                prev_candidate: Some(Rc::new(candidate.clone())),
+                prev_candidate: Some(Rc::clone(previous_candidate.get_or_insert_with(|| {
+                    Rc::new(candidate.clone())
+                }))),
                 f: g + h,
                 g,
                 h,

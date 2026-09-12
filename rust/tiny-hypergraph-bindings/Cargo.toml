@@ -1,0 +1,24 @@
+[package]
+name = "tiny-hypergraph-bindings"
+version = "0.1.0"
+edition = "2024"
+publish = false
+license = "MIT"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[profile.release]
+lto = "fat"
+codegen-units = 1
+
+[dependencies]
+tiny-hypergraph = { path = "../tiny-hypergraph" }
+serde = { version = "1", features = ["derive"] }
+serde-wasm-bindgen = "0.6"
+serde_json = { version = "1", features = ["preserve_order", "float_roundtrip"] }
+wasm-bindgen = "=0.2.128"
+js-sys = "0.3"
+
+[target.'cfg(all(target_arch = "wasm32", target_os = "unknown"))'.dependencies]
+module-allocator = { path = "../module-allocator" }

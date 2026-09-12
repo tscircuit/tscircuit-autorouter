@@ -1,0 +1,35 @@
+[package]
+name = "autorouter-bindings"
+version = "0.1.0"
+edition = "2024"
+publish = false
+license = "MIT"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+trace-contiguity = { path = "../trace-contiguity" }
+length-matching = { path = "../length-matching" }
+uniform-port-distribution = { path = "../uniform-port-distribution" }
+connectivity-map = { path = "../connectivity-map" }
+high-density-a01 = { path = "../high-density-a01" }
+intra-node-routing = { path = "../intra-node-routing" }
+autorouting-drc = { path = "../drc" }
+repair = { path = "../repair" }
+trace-simplification = { path = "../trace-simplification" }
+serde = { version = "1", features = ["derive"] }
+serde-wasm-bindgen = "0.6"
+serde_json = { version = "1", features = ["preserve_order", "float_roundtrip"] }
+wasm-bindgen = "=0.2.128"
+js-sys = "0.3"
+indexmap = { version = "2", features = ["serde"] }
+sha1 = "0.10.6"
+ryu-js = "1.0.3"
+
+[profile.release]
+lto = "fat"
+codegen-units = 1
+
+[target.'cfg(all(target_arch = "wasm32", target_os = "unknown"))'.dependencies]
+module-allocator = { path = "../module-allocator" }

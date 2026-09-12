@@ -1,6 +1,6 @@
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { GraphicsObject, Line } from "graphics-debug"
-import { GlobalDrcForceImproveSolver } from "high-density-repair03/lib"
+import { GlobalDrcForceImproveSolver } from "../../bindings/repair/GlobalDrcForceImproveSolver"
 import { getGlobalInMemoryCache } from "lib/cache/setupGlobalCaches"
 import { CacheProvider } from "lib/cache/types"
 import { BaseSolver } from "lib/solvers/BaseSolver"

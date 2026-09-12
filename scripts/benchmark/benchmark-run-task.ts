@@ -1,3 +1,5 @@
+import { initializeTinyHypergraphBindings } from "../../lib/bindings/initializeTinyHypergraphBindings"
+import { initializeAutorouterBindings } from "../../lib/bindings/initializeAutorouterBindings"
 import { getSvgFromGraphicsObject } from "graphics-debug"
 import * as autorouterModule from "../../lib"
 import { convertSrjToGraphicsObject } from "../../lib"
@@ -471,28 +473,8 @@ export const runTask = async (
   task: BenchmarkTask,
   options: RunTaskOptions = {},
 ): Promise<WorkerResultWithImage> => {
-  if (process.env.TINY_HYPERGRAPH_BACKEND === "wasm") {
-    const { readFile } = await import("node:fs/promises")
-    const { enableTinyHypergraphWasm } = await import(
-      "../../lib/solvers/PortPointPathingSolver/tinyhypergraph/WasmTinyHypergraphPipeline"
-    )
-    const wasm = await readFile(new URL(
-      "../../rust/tiny-hypergraph-wasm/pkg/tiny_hypergraph_wasm_bg.wasm",
-      import.meta.url,
-    ))
-    await enableTinyHypergraphWasm(wasm)
-  }
-  if (process.env.HIGH_DENSITY_BACKEND === "wasm") {
-    const { readFile } = await import("node:fs/promises")
-    const { enableHighDensityWasm } = await import(
-      "../../lib/solvers/HyperHighDensitySolver/enableHighDensityWasm"
-    )
-    const wasm = await readFile(new URL(
-      "../../rust/high-density-wasm/pkg/high_density_wasm_bg.wasm",
-      import.meta.url,
-    ))
-    await enableHighDensityWasm({ module_or_path: wasm })
-  }
+  initializeTinyHypergraphBindings()
+  initializeAutorouterBindings()
   const solver = createSolverForTask(task)
   const start = performance.now()
   let solveError: string | undefined
@@ -547,6 +529,9 @@ export const runTask = async (
     const traces = solver.failed
       ? []
       : (solver.getOutputSimplifiedPcbTraces?.() ?? [])
+    if (process.env.BENCHMARK_TRACE_DIR) {
+      await Bun.write(`${process.env.BENCHMARK_TRACE_DIR}/${task.sampleNumber}.json`, JSON.stringify(traces))
+    }
     const viaCount = countTraceVias(traces)
     const { errors } = evaluateRelaxedDrc({
       inputSrj: task.scenario,

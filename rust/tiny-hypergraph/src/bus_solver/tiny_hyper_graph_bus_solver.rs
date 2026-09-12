@@ -326,7 +326,7 @@ impl TinyHyperGraphBusSolver {
             self.update_bus_stats(Some("preview_failed"));
             return;
         };
-        current.bus_cost = Some(preview.total_cost);
+        Rc::make_mut(current.bus.get_or_insert_with(Default::default)).bus_cost = Some(preview.total_cost);
         self.last_expanded_candidate = Some(current.clone());
         if self.should_use_bus_state_pruning() {
             let key = self.get_bus_candidate_state_key(&current, &preview);
@@ -392,7 +392,7 @@ impl TinyHyperGraphBusSolver {
                 } else {
                     next.f
                 };
-                next.bus_cost = Some(bus_cost);
+                Rc::make_mut(next.bus.get_or_insert_with(Default::default)).bus_cost = Some(bus_cost);
                 if self.should_use_bus_state_pruning() {
                     let key = self.get_bus_candidate_state_key(&next, &next_preview);
                     if bus_cost
@@ -446,23 +446,20 @@ impl TinyHyperGraphBusSolver {
     }
 
     pub fn step(&mut self) -> () {
+        if !self.core.is_setup {
+            self._setup();
+        }
         if self.core.solved || self.core.failed {
             return;
         }
-
-        if !self.core.is_setup {
-            self._setup();
-        } else {
-            self._step();
-        }
-
         self.core.iterations += 1;
-        if self.core.iterations as f64 >= self.core.options.max_iterations
-            && !self.core.solved
-            && !self.core.failed
-        {
+        self._step();
+        if !self.core.solved && self.core.iterations as f64 >= self.core.options.max_iterations {
+            self.core.try_final_acceptance();
+        }
+        if !self.core.solved && self.core.iterations as f64 >= self.core.options.max_iterations {
+            self.core.error = Some("TinyHyperGraphBusSolver ran out of iterations".into());
             self.core.failed = true;
-            self.core.error = Some("Maximum iterations reached".into());
         }
     }
 
@@ -1607,7 +1604,7 @@ impl TinyHyperGraphBusSolver {
         let mut keys = HashSet::new();
         let mut completions = vec![];
         let hops = self.center_goal_hop_distance_by_region[region as usize];
-        let cost = current.bus_cost.unwrap_or(current.g);
+        let cost = current.bus.as_ref().and_then(|bus| bus.bus_cost).unwrap_or(current.g);
 
         fn search(
             solver: &TinyHyperGraphBusSolver,
@@ -1678,8 +1675,11 @@ impl TinyHyperGraphBusSolver {
                         f: next_cost,
                         prev_region_id: Some(region),
                         prev_candidate: Some(Rc::new(candidate.clone())),
-                        boundary_normal_x: Some(option.boundary_step.normal_x),
-                        boundary_normal_y: Some(option.boundary_step.normal_y),
+                        bus: Some(Rc::new(BusCandidateState {
+                            boundary_normal_x: Some(option.boundary_step.normal_x),
+                            boundary_normal_y: Some(option.boundary_step.normal_y),
+                            ..Default::default()
+                        })),
                         ..Default::default()
                     };
                     search(
@@ -1727,8 +1727,11 @@ impl TinyHyperGraphBusSolver {
             f: 0.0,
             prev_region_id: Some(current.next_region_id),
             prev_candidate: Some(Rc::new(current.clone())),
-            boundary_normal_x: Some(nx),
-            boundary_normal_y: Some(ny),
+            bus: Some(Rc::new(BusCandidateState {
+                boundary_normal_x: Some(nx),
+                boundary_normal_y: Some(ny),
+                ..Default::default()
+            })),
             ..Default::default()
         };
         self.get_manual_center_finish_candidates(&seed)
@@ -1750,7 +1753,7 @@ impl TinyHyperGraphBusSolver {
             return self.get_manual_center_finish_candidates(current);
         }
 
-        let parent = current.bus_cost.unwrap_or(current.g);
+        let parent = current.bus.as_ref().and_then(|bus| bus.bus_cost).unwrap_or(current.g);
         let goal = self.core.problem.route_end_port[route as usize];
 
         for &port in self
@@ -1859,8 +1862,11 @@ impl TinyHyperGraphBusSolver {
                 f: g + h,
                 prev_region_id: Some(current.next_region_id),
                 prev_candidate: Some(Rc::new(current.clone())),
-                boundary_normal_x: Some(step.normal_x),
-                boundary_normal_y: Some(step.normal_y),
+                bus: Some(Rc::new(BusCandidateState {
+                    boundary_normal_x: Some(step.normal_x),
+                    boundary_normal_y: Some(step.normal_y),
+                    ..Default::default()
+                })),
                 ..Default::default()
             });
         }
@@ -2035,7 +2041,7 @@ impl TinyHyperGraphBusSolver {
 
     fn update_bus_stats(&mut self, failure: Option<&str>) -> () {
         let center = self.get_route_connection_id(self.center_route_id);
-        let patch = json!({"routeCount":self.core.problem.route_count,"busCenterConnectionId":center,"currentTraceConnectionId":center,"openCandidateCount":self.core.state.candidate_queue.len(),"solvedTraceCount":self.last_preview.as_ref().map(|p|p.complete_trace_count).unwrap_or(0),"currentBusCost":self.last_expanded_candidate.as_ref().and_then(|c|c.bus_cost),"previewReason":failure.map(str::to_owned).or_else(||self.last_preview.as_ref().and_then(|p|p.reason.clone())),"previewRouteCount":self.last_preview.as_ref().map(|p|p.trace_previews.len()).unwrap_or(0),"lastNeighborCount":self.last_neighbor_count,"lastQueuedNeighborCount":self.last_queued_neighbor_count});
+        let patch = json!({"routeCount":self.core.problem.route_count,"busCenterConnectionId":center,"currentTraceConnectionId":center,"openCandidateCount":self.core.state.candidate_queue.len(),"solvedTraceCount":self.last_preview.as_ref().map(|p|p.complete_trace_count).unwrap_or(0),"currentBusCost":self.last_expanded_candidate.as_ref().and_then(|c|c.bus.as_ref().and_then(|bus|bus.bus_cost)),"previewReason":failure.map(str::to_owned).or_else(||self.last_preview.as_ref().and_then(|p|p.reason.clone())),"previewRouteCount":self.last_preview.as_ref().map(|p|p.trace_previews.len()).unwrap_or(0),"lastNeighborCount":self.last_neighbor_count,"lastQueuedNeighborCount":self.last_queued_neighbor_count});
         let stats = self
             .core
             .stats

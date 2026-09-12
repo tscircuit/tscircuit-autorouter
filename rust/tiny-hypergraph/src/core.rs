@@ -95,9 +95,7 @@ pub struct Candidate {
     pub h: f64,
     pub travel_distance: f64,
     pub at_goal: bool,
-    pub bus_cost: Option<f64>,
-    pub boundary_normal_x: Option<f64>,
-    pub boundary_normal_y: Option<f64>,
+    pub bus: Option<Rc<crate::bus_solver::bus_solver_types::BusCandidateState>>,
 }
 
 pub trait TinyHyperGraphCandidateQueue {
@@ -514,6 +512,7 @@ pub struct TinyHyperGraphSolver {
     pub error: Option<String>,
     pub iterations: usize,
     pub stats: Value,
+    pub stats_revision: usize,
     pub is_setup: bool,
     pub preserve_initial_assignments: bool,
 }
@@ -598,6 +597,7 @@ impl TinyHyperGraphSolver {
             error: None,
             iterations: 0,
             stats: json!({}),
+            stats_revision: 0,
             is_setup: false,
             preserve_initial_assignments: false,
         };
@@ -609,6 +609,7 @@ impl TinyHyperGraphSolver {
     }
 
     pub fn merge_stats(&mut self, stats: Value) -> () {
+        self.stats_revision += 1;
         for (key, value) in stats.as_object().expect("stats must be object") {
             self.stats[key] = value.clone();
         }
@@ -682,6 +683,7 @@ impl TinyHyperGraphSolver {
                 self.error = Some(crate::static_reachability::get_static_reachability_error(
                     &self.statically_unroutable_routes,
                 ));
+                self.stats_revision += 1;
                 self.stats["staticallyUnroutableRouteCount"] =
                     json!(self.statically_unroutable_routes.len());
             }
@@ -750,6 +752,7 @@ impl TinyHyperGraphSolver {
         }
 
         let region = candidate.next_region_id as usize;
+        let mut previous_candidate = None;
         for index in 0..self.topology.region_incident_ports[region].len() {
             let neighbor = self.topology.region_incident_ports[region][index];
             let assigned = self.state.port_assignment[neighbor as usize];
@@ -812,7 +815,9 @@ impl TinyHyperGraphSolver {
                 g,
                 h,
                 f: g + h,
-                prev_candidate: Some(Rc::new(candidate.clone())),
+                prev_candidate: Some(Rc::clone(previous_candidate.get_or_insert_with(|| {
+                    Rc::new(candidate.clone())
+                }))),
                 ..Default::default()
             };
             if neighbor == self.state.goal_port_id {
@@ -1590,6 +1595,7 @@ impl TinyHyperGraphSolver {
             return;
         }
 
+        self.stats_revision += 1;
         self.stats["neverSuccessfullyRoutedRouteCount"] =
             json!(self.get_never_successfully_routed_routes().len());
         if self.options.accept_best_solution_on_timeout

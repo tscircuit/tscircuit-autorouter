@@ -1,0 +1,650 @@
+diff --git a/lib/solvers/GlobalDrcForceImproveSolver/solverHelpers.ts b/lib/solvers/GlobalDrcForceImproveSolver/solverHelpers.ts
+--- a/lib/solvers/GlobalDrcForceImproveSolver/solverHelpers.ts
++++ b/lib/solvers/GlobalDrcForceImproveSolver/solverHelpers.ts
+@@ -3057,6 +3057,27 @@
+   return changed
+ }
+ 
++export type BroadRepulsionBackend = (
++  srj: SimpleRouteJson,
++  routes: HighDensityRoute[],
++  effort: number,
++  passMultiplier: number,
++  connMap: ConnectivityMap | undefined,
++  allowSameNetViaPairs: boolean,
++  runFinalViaSegmentCleanup: boolean,
++) => HighDensityRoute[]
++
++let broadRepulsionBackend: BroadRepulsionBackend | undefined
++
++export const registerBroadRepulsionBackend = (
++  backend: BroadRepulsionBackend,
++): void => {
++  if (broadRepulsionBackend && broadRepulsionBackend !== backend) {
++    throw new Error("A broad repulsion backend is already registered")
++  }
++  broadRepulsionBackend = backend
++}
++
+ export const applyBroadRepulsionForces = (
+   srj: SimpleRouteJson,
+   routes: HighDensityRoute[],
+@@ -3065,30 +3086,18 @@
+   connMap?: ConnectivityMap,
+   allowSameNetViaPairs = false,
+   runFinalViaSegmentCleanup = true,
+-) => {
+-  const mutableRoutes = cloneRoutes(routes)
+-  const maxPasses = Math.max(
+-    2,
+-    Math.round(BROAD_FORCE_PASSES * Math.max(1, effort) * passMultiplier),
+-  )
+-  let changed = false
+-
+-  for (let pass = 0; pass < maxPasses; pass += 1) {
+-    const passChanged = applyBroadRepulsionPass(
+-      srj,
+-      mutableRoutes,
+-      connMap,
+-      allowSameNetViaPairs,
+-    )
+-    if (!passChanged) break
+-    changed = true
+-  }
+-
+-  if (changed && runFinalViaSegmentCleanup) {
+-    applyBroadViaSegmentCleanupPass(srj, mutableRoutes, connMap)
+-  }
+-
+-  return changed ? materializeRoutes(mutableRoutes) : routes
++): HighDensityRoute[] => {
++  if (!broadRepulsionBackend) throw new Error("Rust repair implementation has not been initialized")
++  const implementation = broadRepulsionBackend
++  return implementation(
++    srj,
++    routes,
++    effort,
++    passMultiplier,
++    connMap,
++    allowSameNetViaPairs,
++    runFinalViaSegmentCleanup,
++  )
+ }
+ 
+ const deriveVias = (route: MutableRoute): MutableRoute["vias"] => {
+@@ -4739,6 +4748,28 @@
+   )
+ }
+ 
++export type DrcErrorForceBackend = (
++  srj: SimpleRouteJson,
++  routes: MutableRoute[],
++  errors: Array<Record<string, unknown>>,
++  traceRouteIndexById: Map<string, number>,
++  scale: number,
++  connMap: ConnectivityMap | undefined,
++  enableCanonicalPairRepairs: boolean,
++  enableSameNetViaCanonicalization: boolean,
++  allowSharedViaSiteMove: boolean,
++  enableTraceViaOwnerTargeting: boolean,
++) => boolean
++
++let drcErrorForceBackend: DrcErrorForceBackend | undefined
++
++export const registerDrcErrorForceBackend = (backend: DrcErrorForceBackend): void => {
++  if (drcErrorForceBackend && drcErrorForceBackend !== backend) {
++    throw new Error("A applyDrcErrorForces backend is already registered")
++  }
++  drcErrorForceBackend = backend
++}
++
+ export const applyDrcErrorForces = (
+   srj: SimpleRouteJson,
+   routes: MutableRoute[],
+@@ -4750,234 +4781,12 @@
+   enableSameNetViaCanonicalization = false,
+   allowSharedViaSiteMove = true,
+   enableTraceViaOwnerTargeting = false,
+-) => {
+-  let changed = false
+-  const vias = collectViaNodes(routes)
+-  const segments = collectSegments(routes)
+-
+-  for (const error of errors) {
+-    const center = getErrorCenter(error)
+-    if (!center) continue
+-    let repulsionPoint = center
+-
+-    const viaIds = error.pcb_via_ids
+-    const isViaPairError = getDrcErrorType(error) === "pcb_via_clearance_error"
+-    const isViaPadError = isViaPadDrcError(error)
+-    const hasReportedViaIds = Array.isArray(viaIds) && viaIds.length > 0
+-    const hasTraceViaMetadata =
+-      !isViaPairError &&
+-      !isViaPadError &&
+-      hasReportedViaIds &&
+-      (typeof error.pcb_trace_id === "string" ||
+-        Array.isArray(error.pcb_trace_ids))
+-    const hasTargetedTraceViaMetadata =
+-      enableTraceViaOwnerTargeting && hasTraceViaMetadata
+-    if (hasReportedViaIds && !hasTraceViaMetadata) {
+-      repulsionPoint = getRepulsionPointForError(srj, error, center)
+-      const targetRouteIndex = getTraceRouteIndexForError(
+-        error,
+-        traceRouteIndexById,
+-      )
+-      const nearestViaPair =
+-        viaIds.length > 1 ? getNearestViaPair(vias, center) : undefined
+-      if (nearestViaPair) {
+-        const shouldCanonicalizeSameNetViaPair =
+-          enableSameNetViaCanonicalization &&
+-          getDrcErrorType(error) === "pcb_via_clearance_error" &&
+-          error.pcb_via_pair_net_relation === "same_net"
+-        const isCanonicalViaPairError =
+-          enableCanonicalPairRepairs &&
+-          getDrcErrorType(error) === "pcb_via_clearance_error"
+-        changed =
+-          (shouldCanonicalizeSameNetViaPair
+-            ? canonicalizeSameNetViaPair(
+-                routes,
+-                nearestViaPair[0],
+-                nearestViaPair[1],
+-                srj,
+-                connMap,
+-              )
+-            : pushViaViaPair(
+-                routes,
+-                nearestViaPair[0],
+-                nearestViaPair[1],
+-                srj,
+-                connMap,
+-                VIA_PAIR_REPAIR_MAX_MOVE * Math.abs(scale),
+-                isCanonicalViaPairError,
+-              )) || changed
+-      } else {
+-        const nearestVia = getNearestVia(vias, center, targetRouteIndex)
+-        if (nearestVia) {
+-          changed =
+-            moveViaAwayFromPoint(routes, nearestVia, repulsionPoint, srj) ||
+-            changed
+-        }
+-      }
+-      continue
+-    }
+-
+-    const traceId = error.pcb_trace_id
+-    const routeIndex = getTraceRouteIndexForError(error, traceRouteIndexById)
+-    if (hasTargetedTraceViaMetadata && routeIndex === undefined) continue
+-    const explicitTraceIds = Array.isArray(error.pcb_trace_ids)
+-      ? error.pcb_trace_ids.filter(
+-          (explicitTraceId): explicitTraceId is string =>
+-            typeof explicitTraceId === "string",
+-        )
+-      : []
+-    // A promoted trace-via error maps its movable via owner as the primary
+-    // route while retaining the fixed, unmapped segment owner in the metadata.
+-    const hasPromotedViaOwner =
+-      hasTargetedTraceViaMetadata &&
+-      typeof traceId === "string" &&
+-      routeIndex !== undefined &&
+-      explicitTraceIds.includes(traceId) &&
+-      explicitTraceIds.some(
+-        (explicitTraceId) =>
+-          explicitTraceId !== traceId &&
+-          !traceRouteIndexById.has(explicitTraceId),
+-      )
+-    if (hasPromotedViaOwner) {
+-      const nearestOwnerVia = getNearestVia(vias, center, routeIndex)
+-      if (nearestOwnerVia) {
+-        changed =
+-          moveViaAwayFromPoint(routes, nearestOwnerVia, center, srj) || changed
+-        continue
+-      }
+-    }
+-    const traceRoutePair =
+-      enableCanonicalPairRepairs && !hasTraceViaMetadata
+-        ? getTraceRoutePairForError(error, traceRouteIndexById)
+-        : undefined
+-    if (traceRoutePair) {
+-      const leftSegment = getNearestSegment(segments, center, traceRoutePair[0])
+-      const rightSegment = getNearestSegment(
+-        segments,
+-        center,
+-        traceRoutePair[1],
+-      )
+-      if (
+-        leftSegment &&
+-        rightSegment &&
+-        pushSegmentSegmentPair(routes, leftSegment, rightSegment, srj, connMap)
+-      ) {
+-        changed = true
+-        continue
+-      }
+-    }
+-    const isObstacleError = isTraceObstacleDrcError(error)
+-    const traceObstaclePair =
+-      isObstacleError && routeIndex !== undefined
+-        ? getNearestTraceObstacleSegmentPair(
+-            srj,
+-            routes,
+-            routeIndex,
+-            center,
+-            connMap,
+-          )
+-        : undefined
+-    const nearestSegment = isObstacleError
+-      ? traceObstaclePair?.segment
+-      : getNearestSegment(segments, center, routeIndex)
+-    if (nearestSegment) {
+-      const nearestObstacle = isObstacleError
+-        ? traceObstaclePair?.obstacle
+-        : getNearestObstacleNearPoint(srj, center)
+-      if (isObstacleError && !nearestObstacle) {
+-        continue
+-      }
+-      repulsionPoint = isObstacleError
+-        ? (nearestObstacle?.center ?? center)
+-        : getRepulsionPointForError(srj, error, center)
+-      const nearestVia = hasTargetedTraceViaMetadata
+-        ? undefined
+-        : getNearestVia(vias, center)
+-      const isExactViaTraceError =
+-        getDrcErrorType(error) === "pcb_via_trace_clearance_error"
+-      const traceErrorId =
+-        typeof error.pcb_trace_error_id === "string"
+-          ? error.pcb_trace_error_id.toLowerCase()
+-          : ""
+-      const traceErrorMessage =
+-        typeof error.message === "string" ? error.message.toLowerCase() : ""
+-      const identifiesVia =
+-        isExactViaTraceError ||
+-        typeof error.pcb_via_id === "string" ||
+-        Array.isArray(error.pcb_via_ids) ||
+-        traceErrorId.includes("_via_") ||
+-        traceErrorMessage.includes("via")
+-      const involvesPort =
+-        Array.isArray(error.pcb_port_ids) && error.pcb_port_ids.length > 0
+-      if (
+-        nearestVia &&
+-        !sharesNet(
+-          nearestVia.rootConnectionName,
+-          nearestSegment.rootConnectionName,
+-          connMap,
+-        ) &&
+-        (isExactViaTraceError ||
+-          Math.hypot(nearestVia.x - center.x, nearestVia.y - center.y) < 0.45)
+-      ) {
+-        const pushedViaSegment = pushViaSegmentPair(
+-          routes,
+-          nearestVia,
+-          nearestSegment,
+-          srj,
+-          connMap,
+-          TRACE_PAD_REPAIR_MAX_MOVE * Math.abs(scale),
+-          1,
+-          allowSharedViaSiteMove,
+-        )
+-        if (pushedViaSegment) {
+-          changed = true
+-          if (identifiesVia && !involvesPort) continue
+-        }
+-      }
+-
+-      const shouldUseObstacleMove =
+-        nearestObstacle !== undefined &&
+-        (isObstacleError ||
+-          (!obstacleSharesNet(
+-            nearestSegment.rootConnectionName,
+-            nearestObstacle,
+-            connMap,
+-          ) &&
+-            obstacleAppliesToSegment(
+-              nearestObstacle,
+-              nearestSegment,
+-              srj.layerCount,
+-            )))
+-      const movedSegment = shouldUseObstacleMove
+-        ? moveSegmentAwayFromObstacle(
+-            routes,
+-            nearestSegment,
+-            nearestObstacle!,
+-            srj,
+-            connMap,
+-            scale,
+-          )
+-        : moveSegmentAwayFromPoint(
+-            routes,
+-            nearestSegment,
+-            repulsionPoint,
+-            srj,
+-            scale,
+-          )
+-      changed = movedSegment || changed
+-    }
+-
+-    const nearestVia = hasTargetedTraceViaMetadata
+-      ? undefined
+-      : getNearestVia(vias, center)
+-    if (
+-      nearestVia &&
+-      Math.hypot(nearestVia.x - center.x, nearestVia.y - center.y) < 0.35
+-    ) {
+-      changed =
+-        moveViaAwayFromPoint(routes, nearestVia, repulsionPoint, srj) || changed
+-    }
+-  }
+-
+-  return changed
+-}
++): boolean => {
++  if (!drcErrorForceBackend) throw new Error("Rust repair implementation has not been initialized")
++  const implementation = drcErrorForceBackend
++  return implementation(
++    srj, routes, errors, traceRouteIndexById, scale, connMap,
++    enableCanonicalPairRepairs, enableSameNetViaCanonicalization,
++    allowSharedViaSiteMove, enableTraceViaOwnerTargeting,
++  )
++}
+diff --git a/lib/solvers/GlobalDrcForceImproveSolver/findPadClearanceViaPosition.ts b/lib/solvers/GlobalDrcForceImproveSolver/findPadClearanceViaPosition.ts
+--- a/lib/solvers/GlobalDrcForceImproveSolver/findPadClearanceViaPosition.ts
++++ b/lib/solvers/GlobalDrcForceImproveSolver/findPadClearanceViaPosition.ts
+@@ -256,6 +256,24 @@
+  * clearance regions. This computes geometry only: the existing route-candidate
+  * DRC evaluation still checks its adjacent traces and all other constraints.
+  */
++export type PadClearanceBackend = (
++  srj: SimpleRouteJson,
++  route: HighDensityRoute,
++  preferred: Point,
++  viaRadius: number,
++  zLayers: readonly number[],
++  connMap?: ConnectivityMap,
++) => Point | undefined
++
++let padClearanceBackend: PadClearanceBackend | undefined
++
++export const registerPadClearanceBackend = (backend: PadClearanceBackend): void => {
++  if (padClearanceBackend && padClearanceBackend !== backend) {
++    throw new Error("A findPadClearanceViaPosition backend is already registered")
++  }
++  padClearanceBackend = backend
++}
++
+ export const findPadClearanceViaPosition = (
+   srj: SimpleRouteJson,
+   route: HighDensityRoute,
+@@ -264,79 +282,9 @@
+   zLayers: readonly number[],
+   connMap?: ConnectivityMap,
+ ): Point | undefined => {
+-  const boardMargin = viaRadius + (srj.minBoardEdgeClearance ?? 0)
+-  const board: Bounds = {
+-    minX: srj.bounds.minX + boardMargin,
+-    maxX: srj.bounds.maxX - boardMargin,
+-    minY: srj.bounds.minY + boardMargin,
+-    maxY: srj.bounds.maxY - boardMargin,
+-  }
+-  if (board.minX > board.maxX || board.minY > board.maxY) return undefined
+-
+-  const pads = getPadRegions(srj, route, viaRadius, zLayers, connMap)
+-  const isFeasible = (point: Point) =>
+-    isPointInsideBounds(point, board) &&
+-    pads.every((pad) => distanceToPad(point, pad) >= pad.clearance)
+-  const projected = projectToBounds(preferred, board)
+-  if (isFeasible(projected))
+-    return isPointInsideBounds(preferred, board) ? preferred : projected
+-
+-  // Only the connected local obstruction can displace this point. Bounding
+-  // boxes conservatively connect rounded regions without enumerating the
+-  // boundaries of unrelated pads elsewhere on the board.
+-  const component = pads.filter(
+-    (pad) => distanceToPad(projected, pad) < pad.clearance,
++  if (!padClearanceBackend) throw new Error("Rust repair implementation has not been initialized")
++  const implementation = padClearanceBackend
++  return implementation(
++    srj, route, preferred, viaRadius, zLayers, connMap,
+   )
+-  const included = new Set(component)
+-  for (let index = 0; index < component.length; index += 1) {
+-    for (const pad of pads) {
+-      if (
+-        !included.has(pad) &&
+-        doBoundsOverlap(component[index]!.bounds, pad.bounds)
+-      ) {
+-        included.add(pad)
+-        component.push(pad)
+-      }
+-    }
+-  }
+-  const boundaries = component.flatMap(getPadBoundaries)
+-  const bottomLeft = { x: board.minX, y: board.minY }
+-  const bottomRight = { x: board.maxX, y: board.minY }
+-  const topRight = { x: board.maxX, y: board.maxY }
+-  const topLeft = { x: board.minX, y: board.maxY }
+-  boundaries.push(
+-    createLine(bottomLeft, bottomRight),
+-    createLine(bottomRight, topRight),
+-    createLine(topRight, topLeft),
+-    createLine(topLeft, bottomLeft),
+-  )
+-
+-  let best: Point | undefined
+-  let bestDistance = Number.POSITIVE_INFINITY
+-  const consider = (candidate: Point) => {
+-    const candidateDistance = distSq(candidate, preferred)
+-    if (candidateDistance < bestDistance && isFeasible(candidate)) {
+-      best = candidate
+-      bestDistance = candidateDistance
+-    }
+-  }
+-  for (const boundary of boundaries) {
+-    for (const point of boundaryProjections(preferred, boundary))
+-      consider(point)
+-  }
+-  for (let left = 0; left < boundaries.length; left += 1) {
+-    const a = boundaries[left]!
+-    if (distSq(preferred, projectToBounds(preferred, a.bounds)) > bestDistance)
+-      continue
+-    for (let right = left + 1; right < boundaries.length; right += 1) {
+-      const b = boundaries[right]!
+-      if (!doBoundsOverlap(a.bounds, b.bounds)) continue
+-      if (
+-        distSq(preferred, projectToBounds(preferred, b.bounds)) > bestDistance
+-      )
+-        continue
+-      for (const point of boundaryIntersections(a, b)) consider(point)
+-    }
+-  }
+-  return best
+-}
++}
+diff --git a/lib/solvers/GlobalDrcForceImproveSolver/findTraceClearanceViaPositions.ts b/lib/solvers/GlobalDrcForceImproveSolver/findTraceClearanceViaPositions.ts
+--- a/lib/solvers/GlobalDrcForceImproveSolver/findTraceClearanceViaPositions.ts
++++ b/lib/solvers/GlobalDrcForceImproveSolver/findTraceClearanceViaPositions.ts
+@@ -19,80 +19,31 @@
+  * Finds local via placements on the clearance capsules of neighboring traces.
+  * The caller checks pads, attached traces, and complete-board DRC.
+  */
++export type TraceClearanceBackend = (
++  via: ViaNode,
++  segments: readonly Segment[],
++  clearance: number,
++  connMap?: ConnectivityMap,
++) => Point[]
++
++let traceClearanceBackend: TraceClearanceBackend | undefined
++
++export const registerTraceClearanceBackend = (backend: TraceClearanceBackend): void => {
++  if (traceClearanceBackend && traceClearanceBackend !== backend) {
++    throw new Error("A findTraceClearanceViaPositions backend is already registered")
++  }
++  traceClearanceBackend = backend
++}
++
+ export const findTraceClearanceViaPositions = (
+   via: ViaNode,
+   segments: readonly Segment[],
+   clearance: number,
+   connMap?: ConnectivityMap,
+ ): Point[] => {
+-  const minZ = Math.min(...via.zLayers)
+-  const maxZ = Math.max(...via.zLayers)
+-  const constraints = segments
+-    .filter(
+-      (segment) =>
+-        segment.z >= minZ &&
+-        segment.z <= maxZ &&
+-        !sharesNet(via.rootConnectionName, segment.rootConnectionName, connMap),
+-    )
+-    .map((segment) => ({
+-      segment,
+-      required: via.radius + segment.radius + clearance,
+-    }))
+-    .filter(
+-      ({ segment, required }) =>
+-        pointToSegmentDistance(via, segment.start, segment.end) <=
+-        required + MAX_ERROR_MOVE,
+-    )
+-  const boundaries = constraints
+-    .flatMap(({ segment, required }) => {
+-      const { start, end } = segment
+-      const length = Math.sqrt(distSq(start, end))
+-      if (length <= POSITION_EPSILON) return []
+-      const radius = required + POSITION_EPSILON
+-      const dx = ((end.y - start.y) / length) * radius
+-      const dy = ((start.x - end.x) / length) * radius
+-      return [
+-        createLine(
+-          { x: start.x + dx, y: start.y + dy },
+-          { x: end.x + dx, y: end.y + dy },
+-        ),
+-        createLine(
+-          { x: start.x - dx, y: start.y - dy },
+-          { x: end.x - dx, y: end.y - dy },
+-        ),
+-        createCircle(start, radius),
+-        createCircle(end, radius),
+-      ]
+-    })
+-    .filter(
+-      (boundary) =>
+-        pointToBoundsDistance(via, boundary.bounds) <= MAX_ERROR_MOVE,
+-    )
+-  const candidates: Point[] = []
+-  const consider = (point: Point) => {
+-    if (
+-      distSq(point, via) > MAX_ERROR_MOVE ** 2 ||
+-      candidates.some(
+-        (candidate) => distSq(candidate, point) < POSITION_EPSILON ** 2,
+-      ) ||
+-      constraints.some(
+-        ({ segment, required }) =>
+-          pointToSegmentDistance(point, segment.start, segment.end) < required,
+-      )
+-    ) {
+-      return
+-    }
+-    candidates.push(point)
+-  }
+-  consider(via)
+-  for (let left = 0; left < boundaries.length; left += 1) {
+-    const a = boundaries[left]!
+-    for (const point of boundaryProjections(via, a)) consider(point)
+-    for (let right = left + 1; right < boundaries.length; right += 1) {
+-      const b = boundaries[right]!
+-      if (!doBoundsOverlap(a.bounds, b.bounds)) continue
+-      for (const point of boundaryIntersections(a, b)) consider(point)
+-    }
+-  }
+-  return candidates.sort((a, b) => distSq(a, via) - distSq(b, via))
++  if (!traceClearanceBackend) throw new Error("Rust repair implementation has not been initialized")
++  const implementation = traceClearanceBackend
++  return implementation(
++    via, segments, clearance, connMap,
++  )
+ }
+diff --git a/lib/index.ts b/lib/index.ts
+--- a/lib/index.ts
++++ b/lib/index.ts
+@@ -26,3 +26,22 @@
+ } from "./solvers/GlobalDrcForceImproveSolver"
+ export { getViaLayers } from "./utils/getViaLayers"
+ 
++export {
++  registerBroadRepulsionBackend,
++  type BroadRepulsionBackend,
++} from "./solvers/GlobalDrcForceImproveSolver/solverHelpers"
++
++export {
++  registerDrcErrorForceBackend,
++  type DrcErrorForceBackend,
++} from "./solvers/GlobalDrcForceImproveSolver/solverHelpers"
++
++export {
++  registerPadClearanceBackend,
++  type PadClearanceBackend,
++} from "./solvers/GlobalDrcForceImproveSolver/findPadClearanceViaPosition"
++
++export {
++  registerTraceClearanceBackend,
++  type TraceClearanceBackend,
++} from "./solvers/GlobalDrcForceImproveSolver/findTraceClearanceViaPositions"
+
+diff --git a/lib/solvers/GlobalDrcForceImproveSolver/GlobalDrcForceImproveSolver.ts b/lib/solvers/GlobalDrcForceImproveSolver/GlobalDrcForceImproveSolver.ts
+--- a/lib/solvers/GlobalDrcForceImproveSolver/GlobalDrcForceImproveSolver.ts
++++ b/lib/solvers/GlobalDrcForceImproveSolver/GlobalDrcForceImproveSolver.ts
+@@ -62,17 +62,11 @@
+ import type { SimpleRouteJson } from "../../types"
+ import type { HighDensityRoute } from "../../types/high-density-types"
+ 
+-export type GlobalDrcForceImproveSolverVisualizer = (
+-  solver: GlobalDrcForceImproveSolver,
+-) => GraphicsObject
+-
+-let registeredVisualizer: GlobalDrcForceImproveSolverVisualizer | undefined
+-
+-export const setGlobalDrcForceImproveSolverVisualizer = (
+-  visualizer: GlobalDrcForceImproveSolverVisualizer,
+-) => {
+-  registeredVisualizer = visualizer
+-}
++import { getGlobalDrcForceImproveSolverVisualizer } from "./globalDrcForceImproveSolverVisualizer"
++export {
++  setGlobalDrcForceImproveSolverVisualizer,
++  type GlobalDrcForceImproveSolverVisualizer,
++} from "./globalDrcForceImproveSolverVisualizer"
+ 
+ const TRACE_PAIR_DETOUR_GEOMETRY_VARIANTS = [0.2, 0.4, 0.8, 1.2].flatMap(
+   (halfSpan) =>
+@@ -1534,7 +1528,7 @@
+   }
+ 
+   override visualize(): GraphicsObject {
+-    return registeredVisualizer?.(this) ?? super.visualize()
++    return getGlobalDrcForceImproveSolverVisualizer()?.(this) ?? super.visualize()
+   }
+ 
+   override preview(): GraphicsObject {
+
+diff --git a/lib/solvers/GlobalDrcForceImproveSolver/globalDrcForceImproveSolverVisualizer.ts b/lib/solvers/GlobalDrcForceImproveSolver/globalDrcForceImproveSolverVisualizer.ts
+--- /dev/null
++++ b/lib/solvers/GlobalDrcForceImproveSolver/globalDrcForceImproveSolverVisualizer.ts
+@@ -0,0 +1,18 @@
++import type { GraphicsObject } from "graphics-debug"
++import type { GlobalDrcForceImproveSolver } from "./GlobalDrcForceImproveSolver"
++
++export type GlobalDrcForceImproveSolverVisualizer = (
++  solver: GlobalDrcForceImproveSolver,
++) => GraphicsObject
++
++let registeredVisualizer: GlobalDrcForceImproveSolverVisualizer | undefined
++
++export const setGlobalDrcForceImproveSolverVisualizer = (
++  visualizer: GlobalDrcForceImproveSolverVisualizer,
++): void => {
++  registeredVisualizer = visualizer
++}
++
++export const getGlobalDrcForceImproveSolverVisualizer = (): GlobalDrcForceImproveSolverVisualizer | undefined => {
++  return registeredVisualizer
++}

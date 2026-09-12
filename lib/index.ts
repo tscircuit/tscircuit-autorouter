@@ -88,8 +88,8 @@ export { HyperSingleIntraNodeSolver } from "./solvers/HyperHighDensitySolver/Hyp
 export { GrowShrinkHighDensityIntraNodeSolver } from "./solvers/HyperHighDensitySolver/GrowShrinkHighDensityIntraNodeSolver"
 export {
   GlobalDrcBranchPortfolioSolver,
-  GlobalDrcForceImproveSolver,
 } from "high-density-repair03/lib"
+export { GlobalDrcForceImproveSolver } from "./bindings/repair/GlobalDrcForceImproveSolver"
 export type {
   DrcError,
   DrcEvaluator,

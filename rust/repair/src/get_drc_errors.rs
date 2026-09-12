@@ -1,0 +1,2 @@
+pub const MIN_VIA_TO_VIA_CLEARANCE: f64 = 0.1;
+pub const PREFERRED_VIA_TO_VIA_CLEARANCE: f64 = 0.2;

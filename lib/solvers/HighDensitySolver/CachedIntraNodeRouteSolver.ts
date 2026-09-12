@@ -1,4 +1,4 @@
-import objectHash from "object-hash"
+import { computeIntraNodeCacheKey } from "lib/cache/computeIntraNodeCacheKey"
 
 import {
   getGlobalInMemoryCache,
@@ -15,16 +15,12 @@ type CachedSolvedIntraNodeRouteSolver =
 
 type CacheToIntraNodeSolverTransform = Record<string, never>
 
-const roundCoord = (n: number) => Math.round(n * 200) / 200
-
 const cloneValue = <T>(value: T): T =>
   typeof structuredClone === "function"
     ? structuredClone(value)
     : JSON.parse(JSON.stringify(value))
 
 setupGlobalCaches()
-
-const INTRA_NODE_CACHE_SCHEMA_VERSION = 4
 
 export class CachedIntraNodeRouteSolver
   extends IntraNodeRouteSolver
@@ -55,13 +51,14 @@ export class CachedIntraNodeRouteSolver
     params: ConstructorParameters<typeof IntraNodeRouteSolver>[0] & {
       cacheProvider?: CacheProvider | null
     },
+    sharedProps: object = params,
   ) {
-    super(params)
+    super(params, sharedProps)
     this.cacheProvider =
       params.cacheProvider === undefined
         ? getGlobalInMemoryCache()
         : params.cacheProvider
-    this.initialUnsolvedConnections = cloneValue(this.unsolvedConnections)
+    this.initialUnsolvedConnections = cloneValue(this.getInitialUnsolvedConnections())
 
     if ((this.solved || this.failed) && this.cacheProvider && !this.cacheHit) {
       this.saveToCacheSync()
@@ -78,7 +75,7 @@ export class CachedIntraNodeRouteSolver
     const wasSolved = this.solved
     const wasFailed = this.failed
 
-    super._step()
+    this.stepUncached()
 
     if (
       this.cacheProvider &&
@@ -90,92 +87,15 @@ export class CachedIntraNodeRouteSolver
     }
   }
 
+  protected stepUncached(): void {
+    super._step()
+  }
+
   computeCacheKeyAndTransform(): {
     cacheKey: string
     cacheToSolveSpaceTransform: CacheToIntraNodeSolverTransform
   } {
-    const center = this.nodeWithPortPoints.center
-    const normalizedConnections = this.initialUnsolvedConnections.map(
-      ({ connectionName, rootConnectionName, points }) => ({
-        connectionName,
-        rootConnectionName,
-        points: points.map((point) => ({
-          connectionName,
-          x: roundCoord(point.x - center.x),
-          y: roundCoord(point.y - center.y),
-          z: point.z ?? 0,
-        })),
-      }),
-    )
-    const normalizedPortPoints = [...this.nodeWithPortPoints.portPoints]
-      .sort((a, b) => {
-        if (a.connectionName !== b.connectionName) {
-          return a.connectionName.localeCompare(b.connectionName)
-        }
-        if ((a.portPointId ?? "") !== (b.portPointId ?? "")) {
-          return (a.portPointId ?? "").localeCompare(b.portPointId ?? "")
-        }
-        if (a.x !== b.x) return a.x - b.x
-        if (a.y !== b.y) return a.y - b.y
-        return (a.z ?? 0) - (b.z ?? 0)
-      })
-      .map((portPoint) => ({
-        connectionName: portPoint.connectionName,
-        rootConnectionName: portPoint.rootConnectionName,
-        portPointId: portPoint.portPointId,
-        prevPortPointId: portPoint.prevPortPointId,
-        nextPortPointId: portPoint.nextPortPointId,
-        x: roundCoord(portPoint.x - center.x),
-        y: roundCoord(portPoint.y - center.y),
-        z: portPoint.z ?? 0,
-      }))
-
-    const normalizedHyperParameters = Object.fromEntries(
-      Object.entries(this.hyperParameters ?? {})
-        .filter(([, value]) => value !== undefined)
-        .sort(([a], [b]) => a.localeCompare(b)),
-    )
-
-    const normalizedConnMap = this.connMap
-      ? this.initialUnsolvedConnections.map(({ connectionName }) => ({
-          connectionName,
-          connectedIds: [
-            ...new Set(
-              this.connMap!.getIdsConnectedToNet(connectionName) ?? [],
-            ),
-          ].sort(),
-        }))
-      : undefined
-
-    const keyData = {
-      cacheSchemaVersion: INTRA_NODE_CACHE_SCHEMA_VERSION,
-      node: {
-        width: roundCoord(this.nodeWithPortPoints.width),
-        height: roundCoord(this.nodeWithPortPoints.height),
-        center: {
-          x: roundCoord(this.nodeWithPortPoints.center.x),
-          y: roundCoord(this.nodeWithPortPoints.center.y),
-        },
-        availableZ: this.nodeWithPortPoints.availableZ
-          ? [...this.nodeWithPortPoints.availableZ].sort()
-          : undefined,
-        portPoints: normalizedPortPoints,
-      },
-      normalizedConnections,
-      normalizedHyperParameters,
-      minDistBetweenEnteringPoints: roundCoord(
-        this.minDistBetweenEnteringPoints,
-      ),
-      traceWidth: roundCoord(this.traceWidth),
-      viaDiameter: roundCoord(this.viaDiameter),
-      obstacleMargin: roundCoord(this.obstacleMargin),
-      normalizedConnMap,
-    }
-
-    const cacheKey = `intranode-solver:${objectHash(keyData, {
-      respectType: false,
-      unorderedObjects: false,
-    })}`
+    const cacheKey = computeIntraNodeCacheKey(this)
     const cacheToSolveSpaceTransform: CacheToIntraNodeSolverTransform = {}
 
     this.cacheKey = cacheKey

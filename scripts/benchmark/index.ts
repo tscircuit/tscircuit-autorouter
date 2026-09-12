@@ -28,6 +28,7 @@ import {
 } from "./scenarios"
 
 type BenchmarkOptions = {
+
   solverName?: string
   networkedColdHot: boolean
   scenarioLimit?: number
@@ -713,6 +714,7 @@ const parseArgs = (): BenchmarkOptions => {
       ? os.availableParallelism()
       : os.cpus().length
   const options: BenchmarkOptions = {
+
     concurrency: defaultConcurrency,
     excludeAssignable: false,
     datasetName: "dataset01",
@@ -721,6 +723,10 @@ const parseArgs = (): BenchmarkOptions => {
 
   for (let i = 0; i < args.length; i += 1) {
     const arg = args[i]
+
+
+
+
     if (arg === "--solver") {
       options.solverName = args[i + 1]
       i += 1
@@ -1659,6 +1665,7 @@ export const validateNetworkedColdHotResults = (
 
 const main = async () => {
   const {
+
     solverName,
     networkedColdHot,
     scenarioLimit,
@@ -1751,6 +1758,7 @@ const main = async () => {
           ({ scenarioName, sampleNumber, scenario }) =>
             ({
               datasetName,
+
               solverName: solverRun.displayName,
               solverConstructorName: solverRun.constructorName,
               networkedCachePass: solverRun.networkedCachePass,
@@ -1766,6 +1774,7 @@ const main = async () => {
             ({ scenarioName, sampleNumber, scenario }) =>
               ({
                 datasetName,
+
                 solverName: solverRun.displayName,
                 solverConstructorName: solverRun.constructorName,
                 scenarioName,

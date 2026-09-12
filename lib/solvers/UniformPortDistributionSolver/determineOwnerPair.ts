@@ -1,5 +1,7 @@
 import { InputNodeWithPortPoints } from "../PortPointPathingSolver/PortPointPathingSolver"
-import { normalizeOwnerPair } from "./getOwnerPairKey"
+import { initializeAutorouterBindings } from "../../bindings/initializeAutorouterBindings"
+import { decodeName, encodeName, encodeInputNodes, type EncodedName } from "../../bindings/uniform-port-distribution/UniformPortDistributionCodec"
+import { determineUniformPortOwnerPair } from "../../../rust/autorouter-bindings/pkg/autorouter_bindings.js"
 import { OwnerPair } from "./types"
 
 interface DetermineOwnerPairParams {
@@ -17,24 +19,11 @@ export const determineOwnerPair = ({
   currentNodeId,
   inputNodes,
 }: DetermineOwnerPairParams): OwnerPair => {
-  let connectionNodeIds: [string, string] | undefined
-
-  if (portPointId) {
-    for (const node of inputNodes) {
-      const point = node.portPoints.find((p) => p.portPointId === portPointId)
-      if (point?.connectionNodeIds) {
-        connectionNodeIds = point.connectionNodeIds
-        break
-      }
-    }
-  }
-
-  if (!connectionNodeIds || connectionNodeIds.length !== 2) {
-    return [currentNodeId, currentNodeId]
-  }
-
-  const [nodeA, nodeB] = connectionNodeIds
-  if (!nodeA || !nodeB) return [currentNodeId, currentNodeId]
-
-  return normalizeOwnerPair(nodeA, nodeB)
+  initializeAutorouterBindings()
+  const pair = determineUniformPortOwnerPair({
+    portPointId: portPointId == null ? undefined : encodeName(portPointId),
+    currentNodeId: encodeName(currentNodeId),
+    inputNodes: encodeInputNodes(inputNodes),
+  }) as [EncodedName, EncodedName]
+  return pair.map(decodeName) as OwnerPair
 }

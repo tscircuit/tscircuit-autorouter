@@ -1,14 +1,16 @@
+import "lib/bindings/repair/BroadRepulsionAdapter"
+import "lib/bindings/repair/TargetedRepairAdapter"
 import type { AnyCircuitElement } from "circuit-json"
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { GraphicsObject } from "graphics-debug"
 import {
-  AutoroutingDrcEngine,
   type DrcEvaluator,
-  GlobalDrcBranchPortfolioSolver,
   type SimpleRouteJson as RepairSimpleRouteJson,
   type SimplifiedPcbTraces as RepairSimplifiedPcbTraces,
 } from "high-density-repair03/lib"
 import { BaseSolver } from "lib/solvers/BaseSolver"
+import { createAutoroutingDrcEngine } from "lib/bindings/repair/autoroutingDrcEngineFactory"
+import { createRepairPortfolio, type RepairPortfolio, type RepairPortfolioDescriptor } from "lib/bindings/repair/repairPortfolio"
 import { RELAXED_DRC_OPTIONS } from "lib/testing/drcPresets"
 import {
   combinePreloadedAndRoutedTraces,
@@ -47,7 +49,6 @@ import { getPipeline9PreloadedViaPairTraceGroups } from "./getPipeline9Preloaded
 import { mergePipeline9MovablePreloadedVias } from "./mergePipeline9MovablePreloadedVias"
 import { normalizePipeline9DrcErrorsForRepair } from "./normalizePipeline9DrcErrorsForRepair"
 import {
-  getPipeline9DrcErrors,
   getPipeline9RouteIndexByTraceId,
   type Pipeline9CollapsedTraceParticipant,
   type Pipeline9PreloadRepairTraceIds,
@@ -653,7 +654,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
   readonly movablePreloadedSections: MovablePreloadedSection[]
   readonly fixedPreloadedObstacleRoutes: PreloadedHighDensityRoute[]
   readonly syntheticConnectionNames: ReadonlySet<string>
-  readonly exactRepairSolver?: GlobalDrcBranchPortfolioSolver
+  readonly exactRepairSolver?: RepairPortfolio
   private drcEvaluator?: DrcEvaluator
   private cachedReferenceDrcEvaluator?: DrcEvaluator
   private clearancePrecisionDrcEvaluator?: DrcEvaluator
@@ -1005,25 +1006,26 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         ...syntheticConnectionByName.values(),
       ],
     }
-    const autoroutingDrcEngine = new AutoroutingDrcEngine(
-      {
-        ...extendedSrjWithPointPairs,
-        obstacles: params.originalSrj.obstacles,
-        minTraceWidth: params.originalSrj.minTraceWidth,
-        minViaDiameter:
-          params.originalSrj.minViaDiameter ?? params.defaultViaDiameter,
-      } as RepairSimpleRouteJson,
-      {
-        connMap: params.connMap,
-        traceClearance,
-        viaClearance,
-        includeTraceViaOwnerMetadata: true,
-        spatialCellSize:
-          Math.max(
-            params.defaultViaDiameter,
-            params.originalSrj.minTraceWidth,
-          ) + Math.max(traceClearance, viaClearance),
-      },
+    const autoroutingEngineSrj = {
+      ...extendedSrjWithPointPairs,
+      obstacles: params.originalSrj.obstacles,
+      minTraceWidth: params.originalSrj.minTraceWidth,
+      minViaDiameter:
+        params.originalSrj.minViaDiameter ?? params.defaultViaDiameter,
+    } as RepairSimpleRouteJson
+    const autoroutingEngineOptions = {
+      traceClearance,
+      viaClearance,
+      includeTraceViaOwnerMetadata: true,
+      spatialCellSize:
+        Math.max(
+          params.defaultViaDiameter,
+          params.originalSrj.minTraceWidth,
+        ) + Math.max(traceClearance, viaClearance),
+    }
+    const autoroutingDrcEngine = createAutoroutingDrcEngine(
+      autoroutingEngineSrj,
+      { ...autoroutingEngineOptions, connMap: params.connMap },
     )
     const autoroutingBaselineDrcResult = autoroutingDrcEngine.evaluate(
       (params.originalSrj.traces ?? []) as RepairSimplifiedPcbTraces,
@@ -1403,7 +1405,34 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     }
     this.drcEvaluator = drcEvaluator
 
-    this.exactRepairSolver = new GlobalDrcBranchPortfolioSolver({
+    const repairDescriptor: RepairPortfolioDescriptor = {
+      engineSrj: autoroutingEngineSrj,
+      engineOptions: autoroutingEngineOptions,
+      solverSrj: extendedSrjWithPointPairs as RepairSimpleRouteJson,
+      connMap: { netMap: params.connMap.netMap, idToNetMap: params.connMap.idToNetMap },
+      originalTraces: params.originalSrj.traces ?? [],
+      newConnections: params.newConnections,
+      originalConnections: params.originalSrj.connections,
+      layerCount: params.layerCount,
+      defaultViaHoleDiameter: params.defaultViaHoleDiameter,
+      obstacles: params.obstacles,
+      movablePreloadedSections: this.movablePreloadedSections.map((section) => ({
+        syntheticConnectionName: section.syntheticConnectionName,
+        evaluationTraceId: section.evaluationTraceId,
+        originalTrace: section.originalTrace,
+      })),
+      nonMovableMutatedPreloadedTraces,
+    }
+    const nativeReferenceEvaluator: DrcEvaluator = (input): ReturnType<DrcEvaluator> => {
+      const validationCountBefore = this.referenceDrcValidationCount
+      const result = cachedReferenceDrcEvaluator(input)
+      const errors = Array.isArray(result) ? result : result.errors
+      if (this.referenceDrcValidationCount > validationCountBefore && errors.length > 0) {
+        this.referenceDrcFalseNegativeCount += 1
+      }
+      return result
+    }
+    this.exactRepairSolver = createRepairPortfolio({
       srj: extendedSrjWithPointPairs as RepairSimpleRouteJson,
       hdRoutes: [
         ...params.newHdRoutes,
@@ -1427,7 +1456,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       viaInPadMaxIterations: EXACT_REPAIR_MAX_ITERATIONS,
       broadMaxIterations: EXACT_REPAIR_BROAD_MAX_ITERATIONS,
       broadPassMultiplier: 3,
-    })
+    }, repairDescriptor, nativeReferenceEvaluator, { engine: autoroutingDrcEngine, baseline: autoroutingBaselineDrc })
     this.activeSubSolver = this.exactRepairSolver
     this.MAX_ITERATIONS = this.exactRepairSolver.MAX_ITERATIONS + 1
   }
@@ -1449,6 +1478,15 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       return
     }
     if (!this.exactRepairSolver.solved) return
+    const getRepairEvaluationCounters = this.exactRepairSolver.getRepairEvaluationCounters?.()
+    if (getRepairEvaluationCounters) {
+      this.indexedDrcEvaluationCount += getRepairEvaluationCounters.indexedDrcEvaluationCount
+      this.indexedDrcCacheHitCount += getRepairEvaluationCounters.indexedDrcCacheHitCount
+      if (getRepairEvaluationCounters.indexedDrcEvaluationTimeMs !== undefined) {
+        this.indexedDrcEvaluationTimeMs += getRepairEvaluationCounters.indexedDrcEvaluationTimeMs
+      }
+      this.stats.nativeIndexedDrcCandidateCacheSize = getRepairEvaluationCounters.indexedDrcCandidateCacheSize
+    }
     let exactOutput = this.exactRepairSolver.getOutput()
     const exactIndexedDrcIssueCountStat =
       this.exactRepairSolver.stats.finalDrcIssueCount

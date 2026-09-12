@@ -2,16 +2,9 @@ import type { GraphicsObject } from "graphics-debug"
 import type {
   HighDensityIntraNodeRoute,
   NodeWithPortPoints,
-  PortPoint,
 } from "lib/types/high-density-types"
 import { BaseSolver } from "../../BaseSolver"
 import { PortfolioSingleIntraNodeSolver } from "../PortfolioSingleIntraNodeSolver"
-import {
-  createInvalidDirectConnectionRoutes,
-  createInvalidSameLayerCrossingRoutes,
-  hasImpossibleSameLayerCrossingGeometry,
-} from "./invalidSameLayerCrossingGeometry"
-
 type PortfolioSingleIntraNodeSolverParams = ConstructorParameters<
   typeof PortfolioSingleIntraNodeSolver
 >[0]
@@ -28,311 +21,273 @@ export type GrowShrinkHighDensityIntraNodeSolverParams =
     ) => boolean
   }
 
-const scalePoint = <T extends { x: number; y: number }>(
-  point: T,
-  center: { x: number; y: number },
-  scaleFactor: number,
-): T => ({
-  ...point,
-  x: center.x + (point.x - center.x) * scaleFactor,
-  y: center.y + (point.y - center.y) * scaleFactor,
-})
+import * as bindings from "../../../../rust/autorouter-bindings/pkg/autorouter_bindings.js"
+import { getGlobalInMemoryCache } from "../../../cache/setupGlobalCaches"
+import { initializeAutorouterBindings } from "../../../bindings/initializeAutorouterBindings"
+import { PortfolioCallbackScope } from "../../../bindings/high-density/PortfolioCallbackScope"
 
-const scalePortPoint = (
-  portPoint: PortPoint,
-  center: { x: number; y: number },
-  scaleFactor: number,
-): PortPoint => scalePoint(portPoint, center, scaleFactor)
-
-const scaleNodeWithPortPoints = (
-  node: NodeWithPortPoints,
-  scaleFactor: number,
-): NodeWithPortPoints => ({
-  ...node,
-  width: node.width * scaleFactor,
-  height: node.height * scaleFactor,
-  portPoints: node.portPoints.map((portPoint) =>
-    scalePortPoint(portPoint, node.center, scaleFactor),
-  ),
-  portPointsInPairs: node.portPointsInPairs?.map(([start, end]) => [
-    scalePortPoint(start, node.center, scaleFactor),
-    scalePortPoint(end, node.center, scaleFactor),
-  ]),
-})
-
-const scaleRoute = (
-  route: HighDensityIntraNodeRoute,
-  center: { x: number; y: number },
-  scaleFactor: number,
-): HighDensityIntraNodeRoute => ({
-  ...route,
-  route: route.route.map((point) => scalePoint(point, center, scaleFactor)),
-  vias: route.vias.map((via) => scalePoint(via, center, scaleFactor)),
-  jumpers: route.jumpers?.map((jumper) => ({
-    ...jumper,
-    start: scalePoint(jumper.start, center, scaleFactor),
-    end: scalePoint(jumper.end, center, scaleFactor),
-  })),
-})
-
-const routeColors = [
-  "#dc2626",
-  "#2563eb",
-  "#16a34a",
-  "#ca8a04",
-  "#9333ea",
-  "#0891b2",
-]
-
-const connectionLabel = (
-  connectionName: string,
-  rootConnectionName?: string,
-  extraLines: string[] = [],
-) =>
-  [
-    connectionName,
-    rootConnectionName
-      ? `rootConnectionName: ${rootConnectionName}`
-      : undefined,
-    ...extraLines,
-  ]
-    .filter(Boolean)
-    .join("\n")
+type SolverStateSnapshot = {
+  MAX_ITERATIONS: number
+  iterations: number
+  solved: boolean
+  failed: boolean
+  error: string | null
+  progress: number | null
+  nodeWithPortPoints: NodeWithPortPoints
+  scaleFactor: number
+  growthAttempts: number
+  maxGrowthAttempts: number
+  stats: Record<string, unknown>
+  activeId: number | null
+  winnerId: number | null
+  failedIds: number[]
+  solvedRoutes?: HighDensityIntraNodeRoute[]
+}
 
 export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
-  override getSolverName(): string {
-    return "GrowShrinkHighDensityIntraNodeSolver"
-  }
-
   constructorParams: GrowShrinkHighDensityIntraNodeSolverParams
   nodeWithPortPoints: NodeWithPortPoints
-  solvedRoutes: HighDensityIntraNodeRoute[] = []
   failedSolvers: PortfolioSingleIntraNodeSolver[] = []
   activeSubSolver: PortfolioSingleIntraNodeSolver | null = null
   winningSolver?: PortfolioSingleIntraNodeSolver
   scaleFactor = 1
   growthAttempts = 0
   maxGrowthAttempts: number
+  private readonly binding: bindings.GrowShrinkHighDensityIntraNodeSolver
+  private readonly scope: PortfolioCallbackScope
+  private readonly scopeKey: number
+  private readonly children = new Map<number, PortfolioSingleIntraNodeSolver>()
+  private routes?: HighDensityIntraNodeRoute[]
+  private synchronizing = false
+  private observed = false
+  private dirty = false
+  private initialized = false
 
   constructor(params: GrowShrinkHighDensityIntraNodeSolverParams) {
     super()
+    initializeAutorouterBindings()
     this.constructorParams = params
     this.nodeWithPortPoints = params.nodeWithPortPoints
-    this.maxGrowthAttempts =
-      params.maxGrowthAttempts ?? DEFAULT_MAX_GROWTH_ATTEMPTS
-    this.MAX_ITERATIONS =
-      20_000_000 * (params.effort ?? 1) * (this.maxGrowthAttempts + 1)
+    this.maxGrowthAttempts = params.maxGrowthAttempts ?? DEFAULT_MAX_GROWTH_ATTEMPTS
+    this.scope = PortfolioCallbackScope.current ?? new PortfolioCallbackScope()
+    const key = this.scope.registerGrowth(this)
+    this.scopeKey = key
+    const { growShrinkSolutionValidator: _, obstacles: _obstacles, connMap: _connMap, colorMap: _colorMap, ...input } = params
+    const inputJson = JSON.stringify({ ...input, hasCustomValidator: typeof params.growShrinkSolutionValidator === "function" })
+    this.binding = this.scope.run(() => GrowShrinkHighDensityIntraNodeSolver.createBinding(key, inputJson))
+    this.initialized = true
+    this.syncSolverState()
+    this.installStateAccessors()
+  }
 
-    if (hasImpossibleSameLayerCrossingGeometry(this.nodeWithPortPoints)) {
-      if (!params.fallbackToInvalidGeometryOnFailure) {
-        this.failed = true
-        this.progress = 1
-        this.error =
-          "GrowShrinkHighDensityIntraNodeSolver cannot route an impossible single-layer crossing"
-        return
-      }
-      this.solvedRoutes = createInvalidSameLayerCrossingRoutes(
-        this.nodeWithPortPoints,
-        params.traceWidth ?? 0.15,
-        params.viaDiameter ?? 0.3,
-      )
-      this.solved = true
-      this.progress = 1
-      this.stats = {
-        invalidGeometryFallback: true,
-        reason: "single-layer node has same-layer crossings",
-      }
+  private static createBinding(key: number, inputJson: string): bindings.GrowShrinkHighDensityIntraNodeSolver {
+    const owner = (): GrowShrinkHighDensityIntraNodeSolver => {
+      const scope = PortfolioCallbackScope.current
+      if (!scope) throw new Error("Grow/shrink callback requires an execution scope")
+      return scope.getGrowth(key)
+    }
+    return new bindings.GrowShrinkHighDensityIntraNodeSolver(
+      inputJson,
+      (nodeJson: string): number => {
+        const solver = owner()
+        const { growShrinkSolutionValidator: _, ...props } = solver.constructorParams
+        const child = new PortfolioSingleIntraNodeSolver({ ...props, nodeWithPortPoints: JSON.parse(nodeJson) as NodeWithPortPoints })
+        const id = solver.scope.adopt(child)
+        solver.children.set(id, child)
+        return id
+      },
+      (routesJson: string, stateJson: string): string => {
+        const solver = owner()
+        solver.syncSolverState(stateJson)
+        const validator = solver.constructorParams.growShrinkSolutionValidator
+        try {
+          const accepted = validator ? validator(JSON.parse(routesJson) as HighDensityIntraNodeRoute[]) : true
+          const state = solver.statePatch()
+          solver.dirty = false
+          return JSON.stringify({ accepted, state })
+        } finally {
+          const cache = getGlobalInMemoryCache()
+          bindings.HighDensitySolver.setCacheCounts(cache.cacheHits, cache.cacheMisses)
+        }
+      },
+      (id: number): string => {
+        const child = owner().child(id)
+        const supervisor = child.getPortfolioAdapter()
+        supervisor.finishSolverRun()
+        supervisor.synchronize()
+        return JSON.stringify(child.visualize())
+      },
+    )
+  }
+
+  private installStateAccessors(): void {
+    for (const field of ["MAX_ITERATIONS", "iterations", "solved", "failed", "error", "progress", "stats",
+      "nodeWithPortPoints", "scaleFactor", "growthAttempts", "maxGrowthAttempts", "activeSubSolver", "winningSolver", "failedSolvers"]) {
+      let value: unknown = Reflect.get(this, field)
+      Object.defineProperty(this, field, {
+        configurable: true, enumerable: true,
+        get: (): unknown => {
+          if (!this.synchronizing && PortfolioCallbackScope.current !== this.scope) {
+            this.observed = true
+            this.syncSolverState()
+          }
+          return value
+        },
+        set: (incoming: unknown): void => {
+          if (!this.synchronizing) {
+            if (PortfolioCallbackScope.current !== this.scope) this.syncSolverState()
+            this.dirty = true
+          }
+          value = incoming
+        },
+      })
     }
   }
 
-  getConstructorParams() {
-    return this.constructorParams
+  private childId(child: PortfolioSingleIntraNodeSolver): number {
+    for (const [id, entry] of this.children) if (entry === child) return id
+    const id = this.scope.adopt(child)
+    this.children.set(id, child)
+    return id
   }
 
-  private createActiveSubSolver() {
-    const { growShrinkSolutionValidator: _, ...portfolioParams } =
-      this.constructorParams
-    this.activeSubSolver = new PortfolioSingleIntraNodeSolver({
-      ...portfolioParams,
-      enableNegotiatedSearch:
-        this.scaleFactor === 1 &&
-        (portfolioParams.enableNegotiatedSearch ?? true),
-      nodeWithPortPoints: scaleNodeWithPortPoints(
-        this.nodeWithPortPoints,
-        this.scaleFactor,
-      ),
-    })
-    if (this.constructorParams.maxInnerIterationsPerGrowthAttempt) {
-      this.activeSubSolver.MAX_ITERATIONS =
-        this.constructorParams.maxInnerIterationsPerGrowthAttempt
+  prepareSolverRun(): void {
+    if (this.initialized && (this.dirty || this.observed || this.routes)) this.pushSolverState()
+  }
+
+  finishSolverRun(): void { this.syncObservedState() }
+
+  syncObservedState(): void {
+    if (this.initialized && !this.synchronizing && (this.observed || this.routes)) this.syncSolverState()
+  }
+
+  private child(id: number): PortfolioSingleIntraNodeSolver {
+    const child = this.children.get(id)
+    if (!child) throw new Error(`Unknown grow/shrink portfolio ${id}`)
+    return child
+  }
+
+  override getSolverName(): string { return "GrowShrinkHighDensityIntraNodeSolver" }
+  override getConstructorParams(): GrowShrinkHighDensityIntraNodeSolverParams { return this.constructorParams }
+
+  get solvedRoutes(): HighDensityIntraNodeRoute[] {
+    this.observed = true
+    if (PortfolioCallbackScope.current !== this.scope) this.syncSolverState()
+    if (!this.routes) {
+      this.routes = this.winningSolver && this.scaleFactor === 1
+        ? this.winningSolver.solvedRoutes
+        : JSON.parse(this.binding.routesJson()) as HighDensityIntraNodeRoute[]
+    }
+    return this.routes
+  }
+
+  set solvedRoutes(routes: HighDensityIntraNodeRoute[]) { if (PortfolioCallbackScope.current !== this.scope) this.syncSolverState(); this.routes = routes; this.dirty = true }
+
+  private statePatch(): Record<string, unknown> {
+    const { growShrinkSolutionValidator: _, obstacles: _obstacles, connMap: _connMap, colorMap: _colorMap, ...settings } = this.constructorParams
+    return {
+      MAX_ITERATIONS: this.MAX_ITERATIONS, iterations: this.iterations,
+      solved: this.solved, failed: this.failed, error: this.error, progress: this.progress,
+      constructorParams: { ...settings, hasCustomValidator: typeof this.constructorParams.growShrinkSolutionValidator === "function" }, nodeWithPortPoints: this.nodeWithPortPoints,
+      scaleFactor: this.scaleFactor, growthAttempts: this.growthAttempts,
+      maxGrowthAttempts: this.maxGrowthAttempts, stats: this.stats,
+      ...(this.routes ? { solvedRoutes: this.routes } : {}),
     }
   }
 
-  private acceptSolution(solver: PortfolioSingleIntraNodeSolver): boolean {
-    const solvedRoutes =
-      this.scaleFactor === 1
-        ? solver.solvedRoutes
-        : solver.solvedRoutes.map((route) =>
-            scaleRoute(
-              route,
-              this.nodeWithPortPoints.center,
-              1 / this.scaleFactor,
-            ),
-          )
-    if (
-      this.constructorParams.growShrinkSolutionValidator &&
-      !this.constructorParams.growShrinkSolutionValidator(solvedRoutes)
-    ) {
-      solver.solved = false
-      solver.failed = true
-      solver.error = "High-density scale solution rejected by validator"
-      return false
+  pushSolverState(): void {
+    if (!this.initialized) return
+    this.synchronizing = true
+    try {
+    const { growShrinkSolutionValidator: _, obstacles: _obstacles, connMap: _connMap, colorMap: _colorMap, ...settings } = this.constructorParams
+    this.binding.restoreJson(JSON.stringify({
+      MAX_ITERATIONS: this.MAX_ITERATIONS, iterations: this.iterations,
+      solved: this.solved, failed: this.failed, error: this.error, progress: this.progress,
+      constructorParams: { ...settings, hasCustomValidator: typeof this.constructorParams.growShrinkSolutionValidator === "function" }, nodeWithPortPoints: this.nodeWithPortPoints,
+      scaleFactor: this.scaleFactor, growthAttempts: this.growthAttempts,
+      maxGrowthAttempts: this.maxGrowthAttempts, stats: this.stats,
+      activeId: this.activeSubSolver ? this.childId(this.activeSubSolver) : null,
+      winnerId: this.winningSolver ? this.childId(this.winningSolver) : null,
+      failedIds: this.failedSolvers.map((child): number => this.childId(child)),
+      ...(this.routes ? { solvedRoutes: this.routes } : {}),
+    }))
+    this.dirty = false
+    } finally { this.synchronizing = false }
+  }
+
+  syncSolverState(detachedSnapshot?: string): void {
+    if (!this.initialized || this.synchronizing || (this.dirty && !detachedSnapshot)) return
+    this.synchronizing = true
+    try {
+    if (!detachedSnapshot) this.scope.sync()
+    const state = JSON.parse(detachedSnapshot ?? this.binding.snapshotJson()) as SolverStateSnapshot
+    if (detachedSnapshot && !this.routes && state.solvedRoutes) this.routes = state.solvedRoutes
+    const newlySolved = !this.solved && state.solved
+    if (newlySolved) this.routes = undefined
+    this.MAX_ITERATIONS = state.MAX_ITERATIONS
+    this.iterations = state.iterations
+    this.solved = state.solved
+    this.failed = state.failed
+    this.error = state.error
+    this.progress = state.progress ?? Number.NaN
+    this.scaleFactor = state.scaleFactor
+    this.growthAttempts = state.growthAttempts
+    this.maxGrowthAttempts = state.maxGrowthAttempts
+    Object.assign(this.stats, state.stats)
+    this.activeSubSolver = state.activeId === null ? null : this.child(state.activeId)
+    this.winningSolver = state.winnerId === null ? undefined : this.child(state.winnerId)
+    this.failedSolvers.splice(0, this.failedSolvers.length, ...state.failedIds.map((id): PortfolioSingleIntraNodeSolver => this.child(id)))
+    for (const child of this.failedSolvers) child.getPortfolioAdapter().finishSolverRun()
+    if (this.routes && !detachedSnapshot) {
+      const routes = this.winningSolver && this.scaleFactor === 1
+        ? this.winningSolver.solvedRoutes
+        : JSON.parse(this.binding.routesJson()) as HighDensityIntraNodeRoute[]
+      if (this.routes !== routes) this.routes.splice(0, this.routes.length, ...routes)
+      if (this.winningSolver && this.scaleFactor === 1) this.routes = routes
     }
-    this.winningSolver = solver
-    this.solvedRoutes = solvedRoutes
-    this.solved = true
-    this.failed = false
+    } finally { this.synchronizing = false }
+  }
+
+  override _step(): void {
+    this.prepareSolverRun()
+    try { this.scope.runGrowth(this.scopeKey, this, (): void => this.binding.stepInner(this.iterations, this.MAX_ITERATIONS)) }
+    finally { this.syncSolverState() }
+  }
+
+  override solve(): void {
+    const start = Date.now()
+    this.prepareSolverRun()
+    try { this.scope.runGrowth(this.scopeKey, this, (): void => this.binding.solve()) }
+    finally { this.syncSolverState() }
+    this.timeToSolve = Date.now() - start
+  }
+
+  computeProgress(): number {
+    return Math.min(0.99, (this.growthAttempts + (this.activeSubSolver?.progress ?? 0)) / (this.maxGrowthAttempts + 1))
+  }
+
+  override visualize(): GraphicsObject {
+    this.pushSolverState()
+    return this.scope.runGrowth(this.scopeKey, this, (): GraphicsObject => JSON.parse(this.binding.visualizeJson()) as GraphicsObject)
+  }
+
+  shareForOrchestration(): number {
+    this.pushSolverState()
+    return this.binding.shareForOrchestration()
+  }
+
+  disposeUnobserved(): boolean {
+    if (this.observed || this.dirty
+      || typeof this.constructorParams.growShrinkSolutionValidator === "function") return false
+    const supervisors = [...this.children.values()].map((child) => child.getPortfolioAdapter())
+    if (supervisors.some((supervisor): boolean => !supervisor.canDisposeUnobserved())) return false
+    for (const supervisor of supervisors) supervisor.disposeUnobserved()
+    this.children.clear()
+    this.dispose()
     return true
   }
 
-  computeProgress() {
-    return Math.min(
-      0.99,
-      (this.growthAttempts + (this.activeSubSolver?.progress ?? 0)) /
-        (this.maxGrowthAttempts + 1),
-    )
-  }
+  releaseOrchestrationScope(): void { this.scope.releaseGrowth(this.scopeKey) }
 
-  _step() {
-    if (!this.activeSubSolver) {
-      this.createActiveSubSolver()
-    }
-
-    this.activeSubSolver!.step()
-
-    if (this.activeSubSolver!.solved) {
-      if (this.acceptSolution(this.activeSubSolver!)) {
-        this.activeSubSolver = null
-        return
-      }
-    }
-
-    if (!this.activeSubSolver!.failed) {
-      return
-    }
-
-    this.failedSolvers.push(this.activeSubSolver!)
-    this.error = this.activeSubSolver!.error
-    this.activeSubSolver = null
-
-    if (this.growthAttempts >= this.maxGrowthAttempts) {
-      if (this.constructorParams.fallbackToInvalidGeometryOnFailure) {
-        this.solvedRoutes = createInvalidDirectConnectionRoutes(
-          this.nodeWithPortPoints,
-          this.constructorParams.traceWidth ?? 0.15,
-          this.constructorParams.viaDiameter ?? 0.3,
-        )
-        this.solved = true
-        this.failed = false
-        this.progress = 1
-        this.stats = {
-          ...this.stats,
-          invalidGeometryFallback: true,
-          reason: "growth attempts exhausted",
-          lastError: this.error,
-        }
-        this.error = null
-        return
-      }
-
-      this.failed = true
-      this.error = `GrowShrinkHighDensityIntraNodeSolver failed after resizing to ${this.scaleFactor}x. Last error: ${this.error}`
-      return
-    }
-
-    this.growthAttempts++
-    this.scaleFactor *= 2
-  }
-
-  visualize(): GraphicsObject {
-    const delegatedVisualization =
-      this.activeSubSolver?.visualize() ?? this.winningSolver?.visualize()
-    if (delegatedVisualization) return delegatedVisualization
-
-    if (this.solvedRoutes.length > 0) {
-      return {
-        title: this.stats.invalidGeometryFallback
-          ? "Invalid same-layer crossing geometry"
-          : "Grow/shrink high density routes",
-        lines: this.solvedRoutes.flatMap((route, routeIndex) =>
-          route.route.slice(0, -1).map((point, pointIndex) => {
-            const nextPoint = route.route[pointIndex + 1]
-            return {
-              points: [point, nextPoint],
-              strokeColor: routeColors[routeIndex % routeColors.length],
-              strokeWidth: route.traceThickness,
-              layer: `z${point.z}`,
-              label: connectionLabel(
-                route.connectionName,
-                route.rootConnectionName,
-                [
-                  `z${point.z}`,
-                  this.stats.invalidGeometryFallback
-                    ? "invalid fallback route"
-                    : undefined,
-                ].filter(Boolean) as string[],
-              ),
-            }
-          }),
-        ),
-        points: this.nodeWithPortPoints.portPoints.map((point) => ({
-          x: point.x,
-          y: point.y,
-          color:
-            routeColors[
-              Math.max(
-                0,
-                this.solvedRoutes.findIndex(
-                  (route) => route.connectionName === point.connectionName,
-                ),
-              ) % routeColors.length
-            ],
-          label: connectionLabel(
-            point.connectionName,
-            point.rootConnectionName,
-            [`z${point.z}`],
-          ),
-        })),
-        rects: [
-          {
-            center: this.nodeWithPortPoints.center,
-            width: this.nodeWithPortPoints.width,
-            height: this.nodeWithPortPoints.height,
-            fill: this.stats.invalidGeometryFallback
-              ? "rgba(245, 158, 11, 0.12)"
-              : "rgba(14, 165, 233, 0.08)",
-            stroke: this.stats.invalidGeometryFallback
-              ? "rgba(217, 119, 6, 0.8)"
-              : "rgba(14, 165, 233, 0.55)",
-            label: [
-              this.nodeWithPortPoints.capacityMeshNodeId,
-              this.stats.reason,
-            ]
-              .filter(Boolean)
-              .join("\n"),
-          },
-        ],
-        circles: [],
-      }
-    }
-
-    return (
-      delegatedVisualization ?? {
-        lines: [],
-        points: [],
-        rects: [],
-        circles: [],
-      }
-    )
-  }
+  dispose(): void { this.releaseOrchestrationScope(); this.binding.free() }
 }

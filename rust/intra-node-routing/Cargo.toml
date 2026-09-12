@@ -1,0 +1,13 @@
+[package]
+name = "intra-node-routing"
+version = "0.1.0"
+edition = "2024"
+publish = false
+license = "MIT"
+
+[dependencies]
+serde = { version = "1", features = ["derive", "rc"] }
+serde_json = { version = "1", features = ["preserve_order", "float_roundtrip"] }
+indexmap = { version = "2", features = ["serde"] }
+ryu-js = "1.0.3"
+rustc-hash = "2.1.2"

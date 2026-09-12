@@ -70,12 +70,12 @@ fn get_boundary_key(port: &Value) -> String {
     ids.join("\0")
 }
 
-fn get_distance(a: Point, b: Point) -> f64 {
-    (a.x - b.x).hypot(a.y - b.y)
+fn get_distance(a: Point, b: Point, hypot: fn(f64, f64) -> f64) -> f64 {
+    hypot(a.x - b.x, a.y - b.y)
 }
 
-fn normalize(point: Point) -> Option<Point> {
-    let length = point.x.hypot(point.y);
+fn normalize(point: Point, hypot: fn(f64, f64) -> f64) -> Option<Point> {
+    let length = hypot(point.x, point.y);
     if length <= EPSILON {
         None
     } else {
@@ -143,7 +143,7 @@ fn get_region_center(region: Option<&Value>) -> Point {
     }
 }
 
-fn find_nearest_port_on_same_boundary<'a>(source: &Value, ports: &'a [Value]) -> Option<&'a Value> {
+fn find_nearest_port_on_same_boundary<'a>(source: &Value, ports: &'a [Value], hypot: fn(f64, f64) -> f64) -> Option<&'a Value> {
     let key = get_boundary_key(source);
     let point = get_port_point(source);
     let mut nearest = None;
@@ -154,7 +154,7 @@ fn find_nearest_port_on_same_boundary<'a>(source: &Value, ports: &'a [Value]) ->
             continue;
         }
 
-        let current = get_distance(point, get_port_point(port));
+        let current = get_distance(point, get_port_point(port), hypot);
         if current <= EPSILON || current >= distance {
             continue;
         }
@@ -166,13 +166,13 @@ fn find_nearest_port_on_same_boundary<'a>(source: &Value, ports: &'a [Value]) ->
     nearest
 }
 
-fn get_fallback_boundary_direction(source: &Value, regions: &HashMap<String, Value>) -> Point {
+fn get_fallback_boundary_direction(source: &Value, regions: &HashMap<String, Value>, hypot: fn(f64, f64) -> f64) -> Point {
     let first = get_region_center(source["region1Id"].as_str().and_then(|id| regions.get(id)));
     let second = get_region_center(source["region2Id"].as_str().and_then(|id| regions.get(id)));
     normalize(Point {
         x: -(second.y - first.y),
         y: second.x - first.x,
-    })
+    }, hypot)
     .unwrap_or(Point { x: 1.0, y: 0.0 })
 }
 
@@ -180,6 +180,7 @@ fn get_duplicate_direction(
     source: &Value,
     nearest: Option<&Value>,
     regions: &HashMap<String, Value>,
+    hypot: fn(f64, f64) -> f64,
 ) -> Point {
     let point = get_port_point(source);
     if let Some(nearest) = nearest {
@@ -187,12 +188,12 @@ fn get_duplicate_direction(
         if let Some(direction) = normalize(Point {
             x: point.x - nearest.x,
             y: point.y - nearest.y,
-        }) {
+        }, hypot) {
             return direction;
         }
     }
 
-    get_fallback_boundary_direction(source, regions)
+    get_fallback_boundary_direction(source, regions, hypot)
 }
 
 fn create_duplicate_port_id(source: &str, index: usize, used: &mut HashSet<String>) -> String {
@@ -288,6 +289,8 @@ pub struct DuplicateCongestedPortSolver {
     pub failed: bool,
     pub error: Option<String>,
     pub stats: Value,
+    pub hypot: fn(f64, f64) -> f64,
+    pub compare_port_ids: fn(&str, &str) -> std::cmp::Ordering,
 }
 
 impl DuplicateCongestedPortSolver {
@@ -301,6 +304,8 @@ impl DuplicateCongestedPortSolver {
             failed: false,
             error: None,
             stats: json!({}),
+            hypot: f64::hypot,
+            compare_port_ids: |a, b| a.cmp(b),
         }
     }
 
@@ -390,7 +395,9 @@ impl DuplicateCongestedPortSolver {
         let mut used: HashSet<_> = source_by_id.keys().cloned().collect();
         let mut duplicated = vec![];
 
-        for (source_id, &use_count) in &counts {
+        let mut ordered_counts: Vec<_> = counts.iter().collect();
+        ordered_counts.sort_by(|(a, _), (b, _)| (self.compare_port_ids)(a, b));
+        for (source_id, &use_count) in ordered_counts {
             if use_count <= 1 {
                 continue;
             }
@@ -404,8 +411,9 @@ impl DuplicateCongestedPortSolver {
                 self.serialized_hyper_graph["ports"]
                     .as_array()
                     .expect("ports"),
+                self.hypot,
             );
-            let direction = get_duplicate_direction(source, nearest, &region_by_id);
+            let direction = get_duplicate_direction(source, nearest, &region_by_id, self.hypot);
             let point = get_port_point(source);
             let mut ids = vec![];
 

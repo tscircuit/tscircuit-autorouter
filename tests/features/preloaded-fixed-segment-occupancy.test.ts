@@ -3,7 +3,8 @@ import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import { buildHyperGraph } from "lib/solvers/PortPointPathingSolver/hgportpointpathingsolver"
 import { TinyHypergraphPortPointPathingSolver } from "lib/solvers/PortPointPathingSolver/tinyhypergraph/TinyHypergraphPortPointPathingSolver"
 import type { CapacityMeshNode, SimpleRouteConnection } from "lib/types"
-import type { TinyHyperGraphSolver } from "tiny-hypergraph/lib/index"
+import type { TinyHyperGraphSolver } from "../../rust/tiny-hypergraph-bindings/ts/index"
+import type { TinyHypergraphSolverView } from "lib/solvers/PortPointPathingSolver/tinyhypergraph/tinyHypergraphTypes"
 
 test("serialized preloaded assignments occupy existing hypergraph regions", () => {
   const capacityMeshNodes: CapacityMeshNode[] = [
@@ -106,14 +107,19 @@ test("serialized preloaded assignments occupy existing hypergraph regions", () =
       MIN_ALLOWED_BOARD_SCORE: -10000,
     },
   })
+  solver.step()
   const tinyPipeline = (
     solver as unknown as {
       tinyPipelineSolver: {
-        getInitialVisualizationSolver: () => TinyHyperGraphSolver
+        solveGraph: TinyHypergraphSolverView & {
+          iterations: number
+          solver: TinyHyperGraphSolver
+        }
       }
     }
   ).tinyPipelineSolver
-  const tinySolver = tinyPipeline.getInitialVisualizationSolver()
+  const tinySolver = tinyPipeline.solveGraph
+  expect(tinySolver.iterations).toBe(0)
   const centerRegionId = tinySolver.topology.regionMetadata?.findIndex(
     (metadata) => metadata.capacityMeshNodeId === "center",
   )
@@ -127,8 +133,7 @@ test("serialized preloaded assignments occupy existing hypergraph regions", () =
   expect(tinySolver.topology.regionCount).toBe(capacityMeshNodes.length + 2)
   expect(centerRegionId).toBeGreaterThanOrEqual(0)
   expect(
-    tinySolver.state.regionIntersectionCaches[centerRegionId!]
-      .existingSegmentCount,
+    tinySolver.state.regionSegments[centerRegionId!].length,
   ).toBe(1)
   const [[preloadedRouteId, preloadedFromPortId, preloadedToPortId]] =
     tinySolver.state.regionSegments[centerRegionId!]
@@ -141,10 +146,11 @@ test("serialized preloaded assignments occupy existing hypergraph regions", () =
     [preloadedFromPortId, preloadedToPortId].sort((a, b) => a - b),
   ).toEqual([westPortId, eastPortId].sort((a, b) => a - b))
 
-  tinySolver.resetRoutingStateForRerip()
+  tinySolver.solver.resetRoutingStateForRerip()
+  const resetState = tinySolver.solver.getRoutingSnapshot()
 
-  expect(tinySolver.state.regionSegments[centerRegionId!]).toEqual([
+  expect(resetState.regionSegments[centerRegionId!]).toEqual([
     [preloadedRouteId, preloadedFromPortId, preloadedToPortId],
   ])
-  expect(tinySolver.state.unroutedRoutes).not.toContain(preloadedRouteId)
+  expect(resetState.unroutedRoutes).not.toContain(preloadedRouteId)
 })

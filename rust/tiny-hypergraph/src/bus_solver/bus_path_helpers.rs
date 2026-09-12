@@ -77,9 +77,10 @@ pub fn get_guide_port_ids(
 }
 
 pub fn get_candidate_boundary_normal(candidate: &BusCenterCandidate) -> Option<BoundaryNormal> {
+    let bus = candidate.bus.as_ref()?;
     Some(BoundaryNormal {
-        x: candidate.boundary_normal_x?,
-        y: candidate.boundary_normal_y?,
+        x: bus.boundary_normal_x?,
+        y: bus.boundary_normal_y?,
     })
 }
 

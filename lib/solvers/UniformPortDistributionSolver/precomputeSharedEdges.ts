@@ -1,6 +1,7 @@
-import { getSharedEdgeForNodePair } from "./getSharedEdgeForNodePair"
 import { Bounds, OwnerPair, OwnerPairKey, SharedEdge } from "./types"
-import { getOwnerPairKey } from "./getOwnerPairKey"
+import { initializeAutorouterBindings } from "../../bindings/initializeAutorouterBindings"
+import { decodeName, decodeSharedEdge, encodeName, type EncodedName, type EncodedSharedEdge } from "../../bindings/uniform-port-distribution/UniformPortDistributionCodec"
+import { precomputeUniformSharedEdges } from "../../../rust/autorouter-bindings/pkg/autorouter_bindings.js"
 
 /**
  * Builds a reusable lookup of valid shared edges for all owner pairs that
@@ -13,19 +14,10 @@ export const precomputeSharedEdges = ({
   ownerPairs: OwnerPair[]
   nodeBounds: Map<string, Bounds>
 }): Map<OwnerPairKey, SharedEdge> => {
-  const sharedEdges = new Map<OwnerPairKey, SharedEdge>()
-  for (const ownerPair of ownerPairs) {
-    const [nodeAId, nodeBId] = ownerPair
-    if (nodeAId === nodeBId) continue
-
-    const sharedEdge = getSharedEdgeForNodePair({
-      nodeAId,
-      nodeBId,
-      nodeBounds,
-    })
-    if (!sharedEdge) continue
-
-    sharedEdges.set(getOwnerPairKey(ownerPair), sharedEdge)
-  }
-  return sharedEdges
+  initializeAutorouterBindings()
+  const entries = precomputeUniformSharedEdges({
+    ownerPairs: ownerPairs.map(pair => pair.map(encodeName)),
+    nodeBounds: [...nodeBounds].map(([key, bounds]) => [encodeName(key), bounds]),
+  }) as Array<[EncodedName, EncodedSharedEdge]>
+  return new Map(entries.map(([key, edge]) => [decodeName(key), decodeSharedEdge(edge)]))
 }

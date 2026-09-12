@@ -1,76 +1,73 @@
-import { getConnectionPointLayers } from "./connection-point-utils"
-import { SimpleRouteJson } from "lib/types"
+import type { SimpleRouteJson } from "lib/types"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
-import { mapLayerNameToZ } from "./mapLayerNameToZ"
+import { buildConnectivityMap } from "../../rust/autorouter-bindings/pkg/autorouter_bindings.js"
+import { initializeAutorouterBindings } from "../bindings/initializeAutorouterBindings"
 
-const pointHash = (point: { x: number; y: number }) =>
-  `${Math.round(point.x * 100)},${Math.round(point.y * 100)}`
+type NativeConnectivityMap = {
+  strings: (string | number[])[]
+  stringOffset: number
+  arrays: number[][]
+  netMap: [number, number][]
+  idToNetMap: [number, number][]
+  failedGroup: number[] | null
+}
 
-export const getConnectivityMapFromSimpleRouteJson = (srj: SimpleRouteJson) => {
-  const connMap = new ConnectivityMap({})
-  for (const connection of srj.connections) {
-    for (const rootConnectionName of connection.__rootConnectionNames ?? []) {
-      connMap.addConnections([[connection.name, rootConnectionName]])
-    }
-    // Also link the connection name to its overall netConnectionName if available
-    if (connection.__netConnectionName) {
-      connMap.addConnections([
-        [connection.name, connection.__netConnectionName],
-      ])
-    }
-
-    for (const point of connection.pointsToConnect) {
-      connMap.addConnections([
-        [
-          connection.name,
-          `${pointHash(point)}:${getConnectionPointLayers(point)
-            .map((layer) => mapLayerNameToZ(layer, srj.layerCount))
-            .sort()
-            .join("-")}`,
-        ],
-      ])
-      if ("pcb_port_id" in point && point.pcb_port_id) {
-        connMap.addConnections([[connection.name, point.pcb_port_id as string]])
-      }
-      if (point.pointId) {
-        connMap.addConnections([[connection.name, point.pointId]])
-      }
-    }
+export const getConnectivityMapFromSimpleRouteJson = (srj: SimpleRouteJson): ConnectivityMap => {
+  initializeAutorouterBindings()
+  const strings: string[] = []
+  const ids = new Map<string, number>()
+  const intern = (value: string): number => {
+    const existing = ids.get(value)
+    if (existing !== undefined) return existing
+    const id = strings.length
+    strings.push(value)
+    ids.set(value, id)
+    return id
   }
-  for (const obstacle of srj.obstacles) {
-    const offBoardConnections = obstacle.offBoardConnectsTo ?? []
-    const connectionGroup = Array.from(
-      new Set(
-        [
-          obstacle.obstacleId!,
-          ...obstacle.connectedTo,
-          ...offBoardConnections,
-          `${pointHash(obstacle.center)}:${obstacle.layers
-            .map((l) => mapLayerNameToZ(l, srj.layerCount))
-            .sort()
-            .join("-")}`,
-        ].filter(Boolean),
-      ),
-    )
-
-    if (connectionGroup.length > 0) {
-      connMap.addConnections([connectionGroup])
-    }
+  const optional = (value: string | undefined): number | null => value ? intern(value) : null
+  const number = (value: number): number | string => Number.isFinite(value) ? value : String(value)
+  const connections = srj.connections.map(connection => ({
+    name: intern(connection.name), roots: (connection.__rootConnectionNames ?? []).map(intern),
+    net: optional(connection.__netConnectionName),
+    points: connection.pointsToConnect.map(point => ({
+      x: number(point.x), y: number(point.y),
+      layers: "layers" in point ? point.layers.map(intern) : null,
+      layer: "layers" in point ? null : intern(point.layer),
+      port: "pcb_port_id" in point ? optional(point.pcb_port_id as string) : null,
+      pointId: optional(point.pointId),
+    })),
+  }))
+  const obstacles = srj.obstacles.map(obstacle => ({
+    id: optional(obstacle.obstacleId), connected: obstacle.connectedTo.filter(Boolean).map(intern),
+    offBoard: (obstacle.offBoardConnectsTo ?? []).filter(Boolean).map(intern),
+    x: number(obstacle.center.x), y: number(obstacle.center.y), layers: obstacle.layers.map(intern),
+  }))
+  const traces = (srj.traces ?? []).map(trace => ({ids: [trace.pcb_trace_id, trace.connection_name, ...(trace.connectsTo ?? [])].filter(Boolean).map(intern)}))
+  const prototypeValues: [number, number | null][] = []
+  for (const key of Object.getOwnPropertyNames(Object.prototype)) {
+    const value: unknown = Reflect.get({}, key)
+    if (value) prototypeValues.push([intern(key), typeof value === "string" ? intern(value) : null])
   }
-  for (const trace of srj.traces ?? []) {
-    const connectionGroup = Array.from(
-      new Set(
-        [
-          trace.pcb_trace_id,
-          trace.connection_name,
-          ...(trace.connectsTo ?? []),
-        ].filter(Boolean),
-      ),
-    )
-
-    if (connectionGroup.length > 0) {
-      connMap.addConnections([connectionGroup])
-    }
+  const encodedStrings = strings.map(value => /[\uD800-\uDFFF]/u.test(value)
+    ? Array.from({length: value.length}, (_, index) => value.charCodeAt(index)) : value)
+  const result = JSON.parse(buildConnectivityMap(JSON.stringify({strings: encodedStrings, prototypeValues,
+    layerCount: number(srj.layerCount), connections, obstacles, traces}))) as NativeConnectivityMap
+  if (result.stringOffset !== strings.length) throw new Error("Native connectivity string table offset differs")
+  for (const encoded of result.strings) {
+    if (typeof encoded === "string") { strings.push(encoded); continue }
+    let value = ""
+    for (let offset = 0; offset < encoded.length; offset += 8192) value += String.fromCharCode(...encoded.slice(offset, offset + 8192))
+    strings.push(value)
   }
-  return connMap
+  const map = new ConnectivityMap({})
+  const arrays = result.arrays.map(array => array.map(id => strings[id]!))
+  for (const [name, array] of result.netMap) map.netMap[strings[name]!] = arrays[array]!
+  for (const [id, net] of result.idToNetMap) map.idToNetMap[strings[id]!] = strings[net]!
+  if (result.failedGroup !== null) {
+    // Reproduce the actual dependency's exception, including runtime-specific
+    // TypeError text. Native detected the failing group before mutating it.
+    map.addConnections([result.failedGroup.map(id => strings[id]!)])
+    throw new Error("Native connectivity construction expected addConnections to throw")
+  }
+  return map
 }

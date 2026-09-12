@@ -255,6 +255,14 @@ jobs:
           ref: ${{ steps.parse.outputs.ref }}
           persist-credentials: false
 
+      - name: Checkout WASM preparation action
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.workflow_sha }}
+          path: wasm-controller
+          sparse-checkout: .github/actions/prepare-bindings
+          persist-credentials: false
+
       - name: Setup bun
         uses: oven-sh/setup-bun@v2
         with:
@@ -262,6 +270,10 @@ jobs:
 
       - name: Install dependencies
         run: bun install
+
+      - name: Prepare embedded WASM
+        if: hashFiles('scripts/embed-bindings.mjs') != ''
+        uses: ./wasm-controller/.github/actions/prepare-bindings
 
       - name: Verify production Pipeline9 network cache support
         if: steps.parse.outputs.pipeline9_networked == 'true'
@@ -953,6 +965,12 @@ jobs:
         working-directory: main-profile
         run: bun install
 
+      - name: Prepare main profile WASM
+        if: steps.parse.outputs.profile_solvers == 'true' && github.event_name == 'workflow_dispatch' && inputs.pr_number != '' && hashFiles('main-profile/scripts/embed-bindings.mjs') != ''
+        uses: ./wasm-controller/.github/actions/prepare-bindings
+        with:
+          working-directory: main-profile
+
       - name: Run profile-solvers (main)
         if: steps.parse.outputs.profile_solvers == 'true' && github.event_name == 'workflow_dispatch' && inputs.pr_number != ''
         env:
@@ -1559,7 +1577,7 @@ jobs:
       - name: Checkout benchmark controller
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.sha }}
+          ref: ${{ github.workflow_sha }}
           path: same-machine-controller
           persist-credentials: false
 
@@ -1586,9 +1604,21 @@ jobs:
         working-directory: same-machine-main
         run: bun install
 
+      - name: Prepare same-machine-main WASM
+        if: hashFiles('same-machine-main/scripts/embed-bindings.mjs') != ''
+        uses: ./same-machine-controller/.github/actions/prepare-bindings
+        with:
+          working-directory: same-machine-main
+
       - name: Install PR dependencies
         working-directory: same-machine-pr
         run: bun install
+
+      - name: Prepare same-machine-pr WASM
+        if: hashFiles('same-machine-pr/scripts/embed-bindings.mjs') != ''
+        uses: ./same-machine-controller/.github/actions/prepare-bindings
+        with:
+          working-directory: same-machine-pr
 
       - name: Prepare comparison artifacts
         run: mkdir -p same-machine-results/main same-machine-results/pr

@@ -1,0 +1,243 @@
+{
+  "nodeWithPortPoints": {
+    "capacityMeshNodeId": "cmn_0__sub_0_0",
+    "center": {
+      "x": -4.266332,
+      "y": -4.5061487499999995
+    },
+    "width": 6.909336,
+    "height": 10.3640045,
+    "availableZ": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "portPoints": [
+      {
+        "connectionName": "source_trace_21__source_net_21_mst2",
+        "rootConnectionName": "connectivity_net50",
+        "x": -7.721,
+        "y": -4.2936742500000005,
+        "z": 0
+      },
+      {
+        "connectionName": "source_trace_21__source_net_21_mst2",
+        "rootConnectionName": "connectivity_net50",
+        "x": -0.8116640000000004,
+        "y": -1.8903628333333327,
+        "z": 1
+      },
+      {
+        "connectionName": "source_trace_35__source_net_35",
+        "rootConnectionName": "connectivity_net36",
+        "x": -0.8116638785424524,
+        "y": -6.51562090890684,
+        "z": 0
+      },
+      {
+        "connectionName": "source_trace_35__source_net_35",
+        "rootConnectionName": "connectivity_net36",
+        "x": -5.993666,
+        "y": -9.688151000000001,
+        "z": 0
+      },
+      {
+        "connectionName": "source_trace_34__source_net_34",
+        "rootConnectionName": "connectivity_net37",
+        "x": -0.8116638785424524,
+        "y": -5.104557469635614,
+        "z": 0
+      },
+      {
+        "connectionName": "source_trace_34__source_net_34",
+        "rootConnectionName": "connectivity_net37",
+        "x": -7.721,
+        "y": -3.3901237500000003,
+        "z": 0
+      },
+      {
+        "connectionName": "source_trace_33__source_net_33",
+        "rootConnectionName": "connectivity_net38",
+        "x": -0.8116640000000004,
+        "y": -3.8563969999999994,
+        "z": 3
+      },
+      {
+        "connectionName": "source_trace_33__source_net_33",
+        "rootConnectionName": "connectivity_net38",
+        "x": -7.721,
+        "y": -2.48657325,
+        "z": 3
+      },
+      {
+        "connectionName": "source_trace_32__source_net_32",
+        "rootConnectionName": "connectivity_net39",
+        "x": -0.8116638785424524,
+        "y": -4.397450408906838,
+        "z": 0
+      },
+      {
+        "connectionName": "source_trace_32__source_net_32",
+        "rootConnectionName": "connectivity_net39",
+        "x": -7.721,
+        "y": -5.197224750000001,
+        "z": 0
+      },
+      {
+        "connectionName": "source_trace_31__source_net_31",
+        "rootConnectionName": "connectivity_net40",
+        "x": -0.8116638785424524,
+        "y": -4.751003939271226,
+        "z": 1
+      },
+      {
+        "connectionName": "source_trace_31__source_net_31",
+        "rootConnectionName": "connectivity_net40",
+        "x": -7.721,
+        "y": -2.48657325,
+        "z": 1
+      },
+      {
+        "connectionName": "source_trace_30__source_net_30",
+        "rootConnectionName": "connectivity_net41",
+        "x": -0.8116638785424524,
+        "y": -3.6903434999999996,
+        "z": 0
+      },
+      {
+        "connectionName": "source_trace_30__source_net_30",
+        "rootConnectionName": "connectivity_net41",
+        "x": -7.721,
+        "y": -2.48657325,
+        "z": 0
+      },
+      {
+        "connectionName": "source_trace_29__source_net_29",
+        "rootConnectionName": "connectivity_net42",
+        "x": -0.8116638785424524,
+        "y": -2.589802561210692,
+        "z": 0
+      },
+      {
+        "connectionName": "source_trace_29__source_net_29",
+        "rootConnectionName": "connectivity_net42",
+        "x": -7.721,
+        "y": -1.5830227499999996,
+        "z": 0
+      },
+      {
+        "connectionName": "source_trace_28__source_net_28",
+        "rootConnectionName": "connectivity_net43",
+        "x": -0.8116638785424524,
+        "y": -1.9415981826682396,
+        "z": 0
+      },
+      {
+        "connectionName": "source_trace_28__source_net_28",
+        "rootConnectionName": "connectivity_net43",
+        "x": -7.721,
+        "y": -0.6794722499999999,
+        "z": 0
+      },
+      {
+        "connectionName": "source_trace_27__source_net_27",
+        "rootConnectionName": "connectivity_net44",
+        "x": -0.8116638785424524,
+        "y": -0.9360780607287742,
+        "z": 0
+      },
+      {
+        "connectionName": "source_trace_27__source_net_27",
+        "rootConnectionName": "connectivity_net44",
+        "x": -7.721,
+        "y": 0.2240782500000007,
+        "z": 0
+      },
+      {
+        "connectionName": "source_trace_22__source_net_22",
+        "rootConnectionName": "connectivity_net49",
+        "x": -0.8116640000000004,
+        "y": -2.283569666666666,
+        "z": 1
+      },
+      {
+        "connectionName": "source_trace_22__source_net_22",
+        "rootConnectionName": "connectivity_net49",
+        "x": -7.721,
+        "y": -6.275999999999999,
+        "z": 0
+      },
+      {
+        "connectionName": "source_trace_11__source_net_11",
+        "rootConnectionName": "connectivity_net60",
+        "x": -0.8116640000000004,
+        "y": -3.8563969999999994,
+        "z": 1
+      },
+      {
+        "connectionName": "source_trace_11__source_net_11",
+        "rootConnectionName": "connectivity_net60",
+        "x": -7.721,
+        "y": -8.783999999999999,
+        "z": 0
+      },
+      {
+        "connectionName": "source_trace_10__source_net_10",
+        "rootConnectionName": "connectivity_net61",
+        "x": -0.8116638785424524,
+        "y": -7.573130939271227,
+        "z": 1
+      },
+      {
+        "connectionName": "source_trace_10__source_net_10",
+        "rootConnectionName": "connectivity_net61",
+        "x": -7.721,
+        "y": -7.529999999999999,
+        "z": 0
+      },
+      {
+        "connectionName": "source_trace_1__source_net_1",
+        "rootConnectionName": "connectivity_net70",
+        "x": -2.5389980000000003,
+        "y": -9.688151000000001,
+        "z": 0
+      },
+      {
+        "connectionName": "source_trace_1__source_net_1",
+        "rootConnectionName": "connectivity_net70",
+        "x": -0.8116638785424524,
+        "y": -8.630640969635614,
+        "z": 0
+      }
+    ]
+  },
+  "viaDiameter": 0.3,
+  "traceWidth": 0.1,
+  "obstacleMargin": 0.15,
+  "effort": 1,
+  "captureSearchDebug": false,
+  "connMap": {
+    "netMap": {},
+    "idToNetMap": {
+      "source_trace_35__source_net_35": "connectivity_net36",
+      "source_trace_34__source_net_34": "connectivity_net37",
+      "source_trace_33__source_net_33": "connectivity_net38",
+      "source_trace_32__source_net_32": "connectivity_net39",
+      "source_trace_31__source_net_31": "connectivity_net40",
+      "source_trace_30__source_net_30": "connectivity_net41",
+      "source_trace_29__source_net_29": "connectivity_net42",
+      "source_trace_28__source_net_28": "connectivity_net43",
+      "source_trace_27__source_net_27": "connectivity_net44",
+      "source_trace_22__source_net_22": "connectivity_net49",
+      "source_trace_21__source_net_21_mst2": "connectivity_net50",
+      "source_trace_11__source_net_11": "connectivity_net60",
+      "source_trace_10__source_net_10": "connectivity_net61",
+      "source_trace_1__source_net_1": "connectivity_net70"
+    }
+  },
+  "hyperParameters": {
+    "CELL_SIZE_FACTOR": 2,
+    "VIA_PENALTY_FACTOR_2": 10
+  }
+}

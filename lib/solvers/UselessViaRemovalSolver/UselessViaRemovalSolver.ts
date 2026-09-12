@@ -1,10 +1,9 @@
+import "./SingleRouteUselessViaRemovalSolver"
 import { ObstacleSpatialHashIndex } from "lib/data-structures/ObstacleTree"
-import { SegmentTree } from "lib/data-structures/SegmentTree"
-import { BaseSolver } from "../BaseSolver"
+import { TraceSimplificationSolverAdapter } from "../../bindings/trace-simplification/TraceSimplificationSolverAdapter"
 import { HighDensityRoute } from "lib/types/high-density-types"
 import { Obstacle } from "lib/types"
 import { GraphicsObject } from "graphics-debug"
-import { mapZToLayerName } from "lib/utils/mapZToLayerName"
 import { HighDensityRouteSpatialIndex } from "lib/data-structures/HighDensityRouteSpatialIndex"
 import { SingleRouteUselessViaRemovalSolver } from "./SingleRouteUselessViaRemovalSolver"
 import { getJumpersGraphics } from "lib/utils/getJumperGraphics"
@@ -33,81 +32,26 @@ export interface UselessViaRemovalSolverInput {
   terminalLayerIndicesByPcbPortId?: ReadonlyMap<string, ReadonlySet<number>>
 }
 
-export class UselessViaRemovalSolver extends BaseSolver {
-  override getSolverName(): string {
-    return "UselessViaRemovalSolver"
+export class UselessViaRemovalSolver extends TraceSimplificationSolverAdapter {
+  static solverKind = "via-removal"
+  static stateFields = ["unsimplifiedHdRoutes", "optimizedHdRoutes", "unprocessedRoutes", "activeSubSolver", "obstacleSHI", "hdRouteSHI"]
+
+  declare unsimplifiedHdRoutes: HighDensityRoute[]
+  declare optimizedHdRoutes: HighDensityRoute[]
+  declare unprocessedRoutes: HighDensityRoute[]
+  declare activeSubSolver: SingleRouteUselessViaRemovalSolver | null | undefined
+  declare obstacleSHI: ObstacleSpatialHashIndex | null
+  declare hdRouteSHI: HighDensityRouteSpatialIndex | null
+  private input: UselessViaRemovalSolverInput
+
+  constructor(input: UselessViaRemovalSolverInput) {
+    super(input)
+    this.input = { ...input, obstacles: createObjectsWithZLayers(input.obstacles, input.layerCount) }
   }
 
-  unsimplifiedHdRoutes: HighDensityRoute[]
-  optimizedHdRoutes: HighDensityRoute[]
-  unprocessedRoutes: HighDensityRoute[]
-
-  activeSubSolver?: SingleRouteUselessViaRemovalSolver | null | undefined = null
-
-  obstacleSHI: ObstacleSpatialHashIndex | null = null
-  hdRouteSHI: HighDensityRouteSpatialIndex | null = null
-
-  constructor(private input: UselessViaRemovalSolverInput) {
-    super()
-    this.input = {
-      ...input,
-      obstacles: createObjectsWithZLayers(input.obstacles, input.layerCount),
-    }
-    this.MAX_ITERATIONS = 1e6
-    this.unsimplifiedHdRoutes = input.unsimplifiedHdRoutes
-    this.optimizedHdRoutes = []
-    this.unprocessedRoutes = [...input.unsimplifiedHdRoutes]
-
-    this.obstacleSHI = new ObstacleSpatialHashIndex(
-      "flatbush",
-      this.input.obstacles,
-    )
-    this.hdRouteSHI = new HighDensityRouteSpatialIndex([
-      ...this.unsimplifiedHdRoutes,
-      ...(input.otherHdRoutes ?? []),
-    ])
-  }
-
-  _step() {
-    if (this.activeSubSolver) {
-      this.activeSubSolver.step()
-      if (this.activeSubSolver.solved) {
-        const optimizedRoute = this.activeSubSolver.getOptimizedHdRoute()
-        this.hdRouteSHI!.removeRoute(optimizedRoute.connectionName)
-        this.hdRouteSHI!.addRoute(optimizedRoute)
-        this.optimizedHdRoutes.push(optimizedRoute)
-        this.activeSubSolver = null
-      } else if (this.activeSubSolver.failed || this.activeSubSolver.error) {
-        this.error = this.activeSubSolver.error
-        this.failed = true
-      }
-      return
-    }
-
-    const unprocessedRoute = this.unprocessedRoutes.shift()
-    if (!unprocessedRoute) {
-      this.solved = true
-      return
-    }
-
-    this.activeSubSolver = new SingleRouteUselessViaRemovalSolver({
-      hdRouteSHI: this.hdRouteSHI!,
-      obstacleSHI: this.obstacleSHI!,
-      unsimplifiedRoute: unprocessedRoute,
-      connMap: this.input.connMap,
-      outline: this.input.outline,
-      geometryShortcutTraceMargin: this.input.geometryShortcutTraceMargin,
-      geometryShortcutObstacleMargin: this.input.geometryShortcutObstacleMargin,
-      enableGeometryShortcuts: this.input.enableGeometryShortcuts,
-      enableObstacleDetourShortcuts: this.input.enableObstacleDetourShortcuts,
-      preserveRouteEndpoints: this.input.preserveRouteEndpoints,
-      terminalLayerIndicesByPcbPortId:
-        this.input.terminalLayerIndicesByPcbPortId,
-    })
-  }
-
+  override getSolverName(): string { return "UselessViaRemovalSolver" }
   getOptimizedHdRoutes(): HighDensityRoute[] | null {
-    return this.optimizedHdRoutes
+    return this.invoke("getOptimizedHdRoutes", []) as HighDensityRoute[]
   }
 
   visualize(): GraphicsObject {
@@ -202,3 +146,5 @@ export class UselessViaRemovalSolver extends BaseSolver {
     return visualization
   }
 }
+
+TraceSimplificationSolverAdapter.register("via-removal", UselessViaRemovalSolver)

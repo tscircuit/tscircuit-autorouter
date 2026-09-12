@@ -20,6 +20,8 @@ Or [run the Create Bug Report workflow](https://github.com/tscircuit/capacity-au
 bun add @tscircuit/capacity-autorouter
 ```
 
+This `rust-experiment` branch ports selected routing and repair modules to Rust WASM through the existing synchronous solver API. The package embeds its WASM binaries and initializes them during solver construction; consumers do not fetch assets, call an initializer, or select a backend. Substantial TypeScript stages remain. See the [experiment scope, measurements, and validation](docs/rust-port/README.md).
+
 ## Usage as a Library
 
 ### Basic Usage
@@ -211,6 +213,9 @@ To work on this library:
 # Install dependencies
 bun install
 
+# Generate required WASM imports before source tests or development
+bun run build:bindings
+
 # Start the interactive development environment
 bun run start
 
@@ -220,6 +225,12 @@ bun test
 # Build the library
 bun run build
 ```
+
+Install Rust with the `wasm32-unknown-unknown` target and `wasm-bindgen-cli` 0.2.128 before generating assets. CI pins Rust 1.98.1. The generated imports are ignored by Git, so a fresh checkout needs `bun run build:bindings` after dependency installation and before source tests, type checks, benchmarks, or the dev server.
+
+`bun run build` requires that same tooling. It builds and embeds WASM before producing the package. After that, `bun run build:ts` rebuilds only JavaScript and declarations.
+
+Parity comparisons use a separate frozen TypeScript checkout with independently installed dependencies, selected by `TSCIRCUIT_TS_REFERENCE`. It is a development reference, never a production backend. See [Rust integration and validation](rust/autorouter-bindings/README.md).
 
 ## Maintainer resources
 

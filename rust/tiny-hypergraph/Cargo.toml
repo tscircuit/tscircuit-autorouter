@@ -10,6 +10,7 @@ description = "Rust port of tscircuit/tiny-hypergraph"
 path = "src/lib.rs"
 
 [dependencies]
+rustc-hash = "2.1.2"
 serde = { version = "1", features = ["derive", "rc"] }
 serde_json = "1"
 web-time = "1"
