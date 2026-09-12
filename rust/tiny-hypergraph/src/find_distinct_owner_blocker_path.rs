@@ -1,7 +1,8 @@
 type GetHops<'a, S, O, D> = dyn Fn(&S) -> Vec<DistinctOwnerBlockerHop<S, O, D>> + 'a;
 
+use indexmap::IndexSet;
 use std::cell::RefCell;
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 use std::hash::Hash;
 use std::rc::Rc;
 
@@ -25,7 +26,7 @@ pub struct DistinctOwnerBlockerSearchOptions<'a, S, K, O, D = serde_json::Value>
 pub struct DistinctOwnerBlockerSearchSuccess<S, O, D = serde_json::Value> {
     pub states: Vec<S>,
     pub hops: Vec<DistinctOwnerBlockerHop<S, O, D>>,
-    pub owners: HashSet<O>,
+    pub owners: IndexSet<O>,
     pub distance: f64,
     pub expanded_label_count: usize,
 }
@@ -51,7 +52,7 @@ type LabelRef<S, O, D> = Rc<RefCell<SearchLabel<S, O, D>>>;
 
 struct SearchLabel<S, O, D> {
     state: S,
-    owners: HashSet<O>,
+    owners: IndexSet<O>,
     distance: f64,
     parent: Option<LabelRef<S, O, D>>,
     incoming_hop: Option<DistinctOwnerBlockerHop<S, O, D>>,
@@ -132,8 +133,8 @@ impl<S, O, D> SearchLabelQueue<S, O, D> {
 }
 
 fn is_owner_subset<O: Eq + Hash>(
-    possible_subset: &HashSet<O>,
-    possible_superset: &HashSet<O>,
+    possible_subset: &IndexSet<O>,
+    possible_superset: &IndexSet<O>,
 ) -> bool {
     if possible_subset.len() > possible_superset.len() {
         return false;
@@ -217,7 +218,7 @@ pub fn find_distinct_owner_blocker_path<
     let start_key = (options.get_state_key)(&options.start);
     let start = Rc::new(RefCell::new(SearchLabel {
         state: options.start,
-        owners: HashSet::new(),
+        owners: IndexSet::new(),
         distance: 0.0,
         parent: None,
         incoming_hop: None,

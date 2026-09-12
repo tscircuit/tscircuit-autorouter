@@ -13,6 +13,7 @@ path = "src/lib.rs"
 wasm-types = ["dep:tsify", "dep:wasm-bindgen", "dep:json-bindings"]
 
 [dependencies]
+indexmap = "2"
 json-bindings = { path = "../json-bindings", optional = true }
 wasm-bindgen = { version = "=0.2.128", optional = true }
 tsify = { version = "=0.5.8", default-features = false, features = ["json"], optional = true }

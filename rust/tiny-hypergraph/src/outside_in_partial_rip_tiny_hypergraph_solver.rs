@@ -240,7 +240,7 @@ impl OutsideInPartialRipTinyHyperGraphSolver {
         self.distance_aware.core.reset_routing_state_for_rerip();
     }
 
-    pub fn clear_partial_rip_plans(&mut self, routes: &HashSet<RouteId>) {
+    pub fn clear_partial_rip_plans(&mut self, routes: &indexmap::IndexSet<RouteId>) {
         for route in routes {
             self.partial_rip_route_plans.remove(route);
         }

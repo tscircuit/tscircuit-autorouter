@@ -266,6 +266,7 @@ dependencies = [
 name = "tiny-hypergraph"
 version = "0.1.0"
 dependencies = [
+ "indexmap",
  "json-bindings",
  "rustc-hash",
  "serde",

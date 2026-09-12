@@ -3,6 +3,7 @@ use crate::{
     outside_in_partial_rip_tiny_hypergraph_solver::OutsideInPartialRipTinyHyperGraphSolver,
     types::*,
 };
+use indexmap::IndexSet;
 use serde::Serialize;
 use std::{
     collections::{HashMap, HashSet},
@@ -87,9 +88,9 @@ pub fn select_owner_route_ids_to_rip(
     failed: RouteId,
     direct: &[RouteId],
     alternate: Option<&[RouteId]>,
-) -> HashSet<RouteId> {
-    let mut ripped: HashSet<_> = alternate.unwrap_or(direct).iter().copied().collect();
-    ripped.remove(&failed);
+) -> IndexSet<RouteId> {
+    let mut ripped: IndexSet<_> = alternate.unwrap_or(direct).iter().copied().collect();
+    ripped.shift_remove(&failed);
     assert!(
         !ripped.is_empty(),
         "SelectiveReripTinyHyperGraphSolver: route {failed} has blocker resources but no distinct committed owner can be reripped"
@@ -100,7 +101,7 @@ pub fn select_owner_route_ids_to_rip(
 pub fn order_routes_after_selective_rerip(
     failed: RouteId,
     pending: &[RouteId],
-    ripped: &HashSet<RouteId>,
+    ripped: &IndexSet<RouteId>,
 ) -> Vec<RouteId> {
     let mut result = vec![failed];
     result.extend(
@@ -109,9 +110,7 @@ pub fn order_routes_after_selective_rerip(
             .copied()
             .filter(|r| *r != failed && !ripped.contains(r)),
     );
-    let mut ripped: Vec<_> = ripped.iter().copied().filter(|r| *r != failed).collect();
-    ripped.sort();
-    result.extend(ripped);
+    result.extend(ripped.iter().copied().filter(|r| *r != failed));
     result
 }
 
@@ -238,8 +237,7 @@ impl SelectiveReripTinyHyperGraphSolver {
 
             SearchResult::Success(s) => s,
         };
-        let mut direct_ids: Vec<_> = direct.owners.iter().copied().collect();
-        direct_ids.sort();
+        let direct_ids: Vec<_> = direct.owners.iter().copied().collect();
         let mut repeated = vec![];
 
         for &owner in &direct_ids {
@@ -300,11 +298,9 @@ impl SelectiveReripTinyHyperGraphSolver {
         } else {
             None
         };
-        let alternate_ids = alternate.as_ref().map(|s| {
-            let mut ids: Vec<_> = s.owners.iter().copied().collect();
-            ids.sort();
-            ids
-        });
+        let alternate_ids = alternate
+            .as_ref()
+            .map(|s| s.owners.iter().copied().collect::<Vec<_>>());
         let ripped = select_owner_route_ids_to_rip(failed, &direct_ids, alternate_ids.as_deref());
         self.clear_partial_rip_plans(&ripped);
         let alternate_only: Vec<_> = alternate_ids
@@ -337,7 +333,6 @@ impl SelectiveReripTinyHyperGraphSolver {
         stats.last_repeated_owner_route_ids = repeated;
         stats.last_alternate_owner_route_ids = alternate_only;
         stats.last_ripped_route_ids = ripped.iter().copied().collect();
-        stats.last_ripped_route_ids.sort();
         stats.last_relaxed_search_expanded_label_count = direct.expanded_label_count;
         stats.last_alternate_search_expanded_label_count =
             alternate.map(|s| s.expanded_label_count).unwrap_or(0);
@@ -431,7 +426,7 @@ impl SelectiveReripTinyHyperGraphSolver {
         state: &RelaxedSearchState,
         goal: PortId,
         net: NetId,
-        port_owners: &HashMap<PortId, HashSet<RouteId>>,
+        port_owners: &HashMap<PortId, IndexSet<RouteId>>,
         forbidden: &HashSet<RouteId>,
     ) -> Vec<DistinctOwnerBlockerHop<RelaxedSearchState, RouteId, RelaxedSearchHopData>> {
         if self.is_region_reserved_for_different_net(state.next_region_id) {
@@ -516,19 +511,18 @@ impl SelectiveReripTinyHyperGraphSolver {
         from: PortId,
         to: PortId,
         net: NetId,
-        port_owners: &HashMap<PortId, HashSet<RouteId>>,
+        port_owners: &HashMap<PortId, IndexSet<RouteId>>,
     ) -> Vec<SelectiveReripBlockerResource> {
         let mut resources = vec![];
         let assigned = self.state.port_assignment[to as usize];
         if assigned != -1 && assigned != net {
-            let mut owners: Vec<_> = port_owners
+            let owners: Vec<_> = port_owners
                 .get(&to)
                 .into_iter()
                 .flatten()
                 .copied()
                 .filter(|r| self.problem.route_net[*r as usize] != net)
                 .collect();
-            owners.sort();
             assert!(
                 !owners.is_empty(),
                 "SelectiveReripTinyHyperGraphSolver: port {to} is assigned to foreign net {assigned} without a committed route owner"
@@ -552,8 +546,8 @@ impl SelectiveReripTinyHyperGraphSolver {
         resources
     }
 
-    pub fn get_port_owners(&self) -> HashMap<PortId, HashSet<RouteId>> {
-        let mut owners: HashMap<_, HashSet<_>> = HashMap::new();
+    pub fn get_port_owners(&self) -> HashMap<PortId, IndexSet<RouteId>> {
+        let mut owners: HashMap<_, IndexSet<_>> = HashMap::new();
 
         for segments in &self.state.region_segments {
             for &(route, from, to) in segments {
@@ -622,7 +616,7 @@ impl SelectiveReripTinyHyperGraphSolver {
                 && second.greater_angle < first.greater_angle)
     }
 
-    pub fn rebuild_committed_state(&mut self, ripped: &HashSet<RouteId>) {
+    pub fn rebuild_committed_state(&mut self, ripped: &IndexSet<RouteId>) {
         for segments in &mut self.state.region_segments {
             segments.retain(|(r, _, _)| !ripped.contains(r));
         }
