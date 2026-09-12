@@ -1,0 +1,62 @@
+{
+  "schemaVersion": 1,
+  "name": "allwinner_t113_outer_layer_signals",
+  "inputFile": "fixed-input.srj.json",
+  "inputSha256": "ffee65917d821a9d49bc68ea44fbd02274b1b75b1eed2f0fba9095c300516820",
+  "description": "Fixed, common-model signal-routing projection of the Allwinner T113-S3 development board before fanout. This is a controlled routing workload, not fabrication data.",
+  "source": {
+    "boardUrl": "https://tscircuit.com/seveibar/allwinner-t113-dev-board",
+    "capturedDate": "2026-09-07",
+    "frozenFile": "frozen-source.srj.json.gz",
+    "uncompressedSha256": "447174f009434e9c5bb026bf53ed8a053fccd8b307328c5a092bba1c3f481bdb",
+    "originalFile": "base-plane-srj.json",
+    "tscircuitVersion": "0.0.2465",
+    "coreVersion": "0.0.1854",
+    "fanoutSolverVersion": "0.0.64",
+    "connections": 331,
+    "planeConnections": 193,
+    "obstacles": 699,
+    "note": "Saved intermediate SRJ used for direct fanout trials. The effective SRJ from the earlier 1,139-obstacle core failure was not captured; this fixture does not claim to reproduce that input."
+  },
+  "projection": {
+    "generator": "projectAllwinnerInput.ts",
+    "units": "mm",
+    "coordinateFrame": "+X right, +Y up; board center at origin",
+    "bounds": {
+      "minX": -71,
+      "maxX": 71,
+      "minY": -56,
+      "maxY": 56
+    },
+    "layerCount": 2,
+    "layers": [
+      "top",
+      "bottom"
+    ],
+    "connections": 138,
+    "terminals": 434,
+    "obstacles": 699,
+    "signalPads": 434,
+    "keepouts": 265,
+    "preloadedTraces": 0,
+    "traceWidthMm": 0.15,
+    "edgeClearanceMm": 0.15,
+    "viaPadDiameterMm": 0.6,
+    "viaHoleDiameterMm": 0.3,
+    "transformations": [
+      "Keep all 138 original multi-terminal signal/power point-to-point nets; omit 193 single-terminal plane-termination jobs. Net names are preserved.",
+      "Keep the original XY placement and board bounding rectangle; omit rounded outline and internal copper planes.",
+      "Map four-layer through pads to electrically connected top/bottom pads and expose both layers at their terminals.",
+      "Replace oval/circular copper and drill obstacles with bounding rectangles; swap width/height for the eight 90/270-degree rotated pads.",
+      "Reduce each signal pad connectedTo to its one requested net. Treat all 265 remaining obstacles as unrouted keepouts.",
+      "Use uniform 0.15 mm traces and copper clearance, 0.6 mm via pads and 0.3 mm drill; no blind/buried vias or via-in-pad.",
+      "Use no preloaded traces, special USB routing, differential pairs, bus constraints, net classes, planes, or fanout in either engine."
+    ],
+    "limitations": [
+      "This two-layer projection differs from the four-layer manufactured-board intent and the earlier failed routing attempts.",
+      "Rectangular bounding approximations are conservative for oval/circular shapes and may make some fine-pitch escapes harder.",
+      "Benchmark geometry checks do not validate controlled impedance, signal integrity, power integrity, drill manufacturing rules or the actual published PCB.",
+      "The fixture is a single workload; results cannot establish overall router superiority."
+    ]
+  }
+}
