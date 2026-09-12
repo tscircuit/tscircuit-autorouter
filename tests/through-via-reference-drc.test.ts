@@ -26,6 +26,13 @@ test("reference DRC checks a through-via on every board layer", () => {
           from_layer: "top",
           to_layer: "inner1",
         },
+        {
+          route_type: "via",
+          x: 0,
+          y: 0,
+          from_layer: "inner1",
+          to_layer: "inner2",
+        },
       ],
     },
     {
@@ -47,6 +54,9 @@ test("reference DRC checks a through-via on every board layer", () => {
     "inner2",
     "bottom",
   ])
+  expect(circuitJson.filter((element) => element.type === "pcb_via")).toHaveLength(
+    1,
+  )
   expect(
     getDrcErrors(circuitJson, { includeTraceContinuity: false }).errors.some(
       (error) => error.type === "pcb_trace_error",
