@@ -10,7 +10,7 @@ import {
 } from "high-density-repair03/lib"
 import { BaseSolver } from "lib/solvers/BaseSolver"
 import { AutoroutingDrcEngine } from "lib/bindings/repair/AutoroutingDrcEngine"
-import { createRepairPortfolio, type RepairPortfolio, type RepairPortfolioDescriptor } from "lib/bindings/repair/repairPortfolio"
+import { GlobalDrcBranchPortfolioSolver, type RepairPortfolioDescriptor } from "lib/bindings/repair/GlobalDrcBranchPortfolioSolver"
 import { RELAXED_DRC_OPTIONS } from "lib/testing/drcPresets"
 import {
   combinePreloadedAndRoutedTraces,
@@ -654,7 +654,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
   readonly movablePreloadedSections: MovablePreloadedSection[]
   readonly fixedPreloadedObstacleRoutes: PreloadedHighDensityRoute[]
   readonly syntheticConnectionNames: ReadonlySet<string>
-  readonly exactRepairSolver?: RepairPortfolio
+  readonly exactRepairSolver?: GlobalDrcBranchPortfolioSolver
   private drcEvaluator?: DrcEvaluator
   private cachedReferenceDrcEvaluator?: DrcEvaluator
   private clearancePrecisionDrcEvaluator?: DrcEvaluator
@@ -1432,7 +1432,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       }
       return result
     }
-    this.exactRepairSolver = createRepairPortfolio({
+    this.exactRepairSolver = new GlobalDrcBranchPortfolioSolver({
       srj: extendedSrjWithPointPairs as RepairSimpleRouteJson,
       hdRoutes: [
         ...params.newHdRoutes,
@@ -1478,15 +1478,13 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       return
     }
     if (!this.exactRepairSolver.solved) return
-    const getRepairEvaluationCounters = this.exactRepairSolver.getRepairEvaluationCounters?.()
-    if (getRepairEvaluationCounters) {
-      this.indexedDrcEvaluationCount += getRepairEvaluationCounters.indexedDrcEvaluationCount
-      this.indexedDrcCacheHitCount += getRepairEvaluationCounters.indexedDrcCacheHitCount
-      if (getRepairEvaluationCounters.indexedDrcEvaluationTimeMs !== undefined) {
-        this.indexedDrcEvaluationTimeMs += getRepairEvaluationCounters.indexedDrcEvaluationTimeMs
-      }
-      this.stats.nativeIndexedDrcCandidateCacheSize = getRepairEvaluationCounters.indexedDrcCandidateCacheSize
+    const counters = this.exactRepairSolver.getRepairEvaluationCounters()
+    this.indexedDrcEvaluationCount += counters.indexedDrcEvaluationCount
+    this.indexedDrcCacheHitCount += counters.indexedDrcCacheHitCount
+    if (counters.indexedDrcEvaluationTimeMs !== undefined) {
+      this.indexedDrcEvaluationTimeMs += counters.indexedDrcEvaluationTimeMs
     }
+    this.stats.nativeIndexedDrcCandidateCacheSize = counters.indexedDrcCandidateCacheSize
     let exactOutput = this.exactRepairSolver.getOutput()
     const exactIndexedDrcIssueCountStat =
       this.exactRepairSolver.stats.finalDrcIssueCount

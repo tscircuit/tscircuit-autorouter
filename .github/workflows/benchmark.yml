@@ -272,7 +272,7 @@ jobs:
         run: bun install
 
       - name: Prepare embedded WASM
-        if: hashFiles('scripts/embed-bindings.mjs') != ''
+        if: hashFiles('rust/tiny-hypergraph-bindings/Cargo.toml') != ''
         uses: ./wasm-controller/.github/actions/prepare-bindings
 
       - name: Verify production Pipeline9 network cache support
@@ -966,7 +966,7 @@ jobs:
         run: bun install
 
       - name: Prepare main profile WASM
-        if: steps.parse.outputs.profile_solvers == 'true' && github.event_name == 'workflow_dispatch' && inputs.pr_number != '' && hashFiles('main-profile/scripts/embed-bindings.mjs') != ''
+        if: steps.parse.outputs.profile_solvers == 'true' && github.event_name == 'workflow_dispatch' && inputs.pr_number != '' && hashFiles('main-profile/rust/tiny-hypergraph-bindings/Cargo.toml') != ''
         uses: ./wasm-controller/.github/actions/prepare-bindings
         with:
           working-directory: main-profile
@@ -1605,7 +1605,7 @@ jobs:
         run: bun install
 
       - name: Prepare same-machine-main WASM
-        if: hashFiles('same-machine-main/scripts/embed-bindings.mjs') != ''
+        if: hashFiles('same-machine-main/rust/tiny-hypergraph-bindings/Cargo.toml') != ''
         uses: ./same-machine-controller/.github/actions/prepare-bindings
         with:
           working-directory: same-machine-main
@@ -1615,7 +1615,7 @@ jobs:
         run: bun install
 
       - name: Prepare same-machine-pr WASM
-        if: hashFiles('same-machine-pr/scripts/embed-bindings.mjs') != ''
+        if: hashFiles('same-machine-pr/rust/tiny-hypergraph-bindings/Cargo.toml') != ''
         uses: ./same-machine-controller/.github/actions/prepare-bindings
         with:
           working-directory: same-machine-pr

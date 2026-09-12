@@ -117,7 +117,7 @@ jobs:
         run: bun install
 
       - name: Prepare profile-main WASM
-        if: hashFiles('profile-main/scripts/embed-bindings.mjs') != ''
+        if: hashFiles('profile-main/rust/tiny-hypergraph-bindings/Cargo.toml') != ''
         uses: ./profile-controller/.github/actions/prepare-bindings
         with:
           working-directory: profile-main
@@ -127,7 +127,7 @@ jobs:
         run: bun install
 
       - name: Prepare profile-pr WASM
-        if: hashFiles('profile-pr/scripts/embed-bindings.mjs') != ''
+        if: hashFiles('profile-pr/rust/tiny-hypergraph-bindings/Cargo.toml') != ''
         uses: ./profile-controller/.github/actions/prepare-bindings
         with:
           working-directory: profile-pr

@@ -1,23 +1,10 @@
 import { BaseSolver } from "@tscircuit/solver-utils"
-import type { HighDensityVariant, HighDensityProps, HighDensityIntraNodeRoute } from "./types.js"
+import type { HighDensityVariant, HighDensityProps } from "./types.js"
 export type * from "./types.js"
 import type { GraphicsObject } from "graphics-debug"
-import initialize from "../pkg/capacity_autorouter_bindings.js"
+import type { HighDensityIntraNodeRoute } from "lib/types/high-density-types"
+import { initializeAutorouterBindings } from "lib/bindings/initializeAutorouterBindings"
 import * as bindings from "../pkg/capacity_autorouter_bindings.js"
-
-export type AutorouterBindingsInput = Parameters<typeof initialize>[0]
-
-let initialization: Promise<void> | undefined
-
-export async function loadAutorouterBindings(input?: AutorouterBindingsInput): Promise<void> {
-  if (!initialization) {
-    initialization = initialize(input).then(() => undefined).catch((error: unknown) => {
-      initialization = undefined
-      throw error
-    })
-  }
-  await initialization
-}
 
 export class HighDensitySolverAdapter<V extends HighDensityVariant = HighDensityVariant> extends BaseSolver {
   private binding: bindings.HighDensityCandidateSolver | undefined
@@ -26,6 +13,7 @@ export class HighDensitySolverAdapter<V extends HighDensityVariant = HighDensity
 
   constructor(readonly variant: V, private readonly props: HighDensityProps[V]) {
     super()
+    initializeAutorouterBindings()
     this.MAX_ITERATIONS = 100e6
     const { initialPenaltyFn, ...input } = props
     let endpointIndexKey = "__wasmEndpointIndex"

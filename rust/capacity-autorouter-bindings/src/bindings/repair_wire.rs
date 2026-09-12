@@ -106,7 +106,8 @@ pub struct IntraNodeHyperParameters(#[tsify(type = "Record<string, unknown>")] p
 #[derive(Deserialize, Serialize, Tsify)]
 #[serde(transparent)]
 pub struct IntraNodeRoutes(
-    #[tsify(type = "import('../ts/types').HighDensityIntraNodeRoute[]")] pub Value,
+    #[tsify(type = "import('../../../lib/types/high-density-types').HighDensityIntraNodeRoute[]")]
+    pub Value,
 );
 
 #[derive(Serialize, Tsify)]

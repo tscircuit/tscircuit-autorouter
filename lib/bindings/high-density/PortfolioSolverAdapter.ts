@@ -5,7 +5,7 @@ import { getGlobalInMemoryCache } from "../../cache/setupGlobalCaches"
 import * as bindings from "../../../rust/capacity-autorouter-bindings/pkg/capacity_autorouter_bindings.js"
 import type { PortfolioSingleIntraNodeSolver } from "../../solvers/HyperHighDensitySolver/PortfolioSingleIntraNodeSolver"
 import { CachedIntraNodeRouteSolver } from "../../solvers/HighDensitySolver/CachedIntraNodeRouteSolver"
-import { isHighDensityCandidateSolver } from "lib/bindings/high-density/highDensitySolverFactory"
+import { HighDensitySolverAdapter } from "../../../rust/capacity-autorouter-bindings/ts/index"
 import { SpecializedIntraNodeSolverAdapter } from "lib/bindings/high-density/SpecializedIntraNodeSolverAdapter"
 import { withSpecializedRouterContext } from "lib/bindings/high-density/specializedRouterContext"
 
@@ -35,7 +35,7 @@ function getState(solver: Candidate): CandidateState {
     failed: solver.failed,
     error: solver.error,
     progress: solver.progress,
-    solvedSegmentCount: isHighDensityCandidateSolver(solver) ? solver.getSolvedSegmentCount() : null,
+    solvedSegmentCount: solver instanceof HighDensitySolverAdapter ? solver.getSolvedSegmentCount() : null,
   }
 }
 
@@ -46,7 +46,7 @@ function syncState(solver: Candidate, state: CandidateState): void {
   solver.failed = state.failed
   solver.error = state.error
   solver.progress = state.progress === null ? Number.NaN : state.progress
-  if (isHighDensityCandidateSolver(solver)) {
+  if (solver instanceof HighDensitySolverAdapter) {
     solver._setupDone = true
     if (state.solvedSegmentCount !== null) solver.syncPortfolioSegmentCount(state.solvedSegmentCount)
   }
@@ -99,9 +99,9 @@ export class PortfolioSolverAdapter {
         const solver = withSpecializedRouterContext(() => supervisor.owner.generateSolver(hyperParameters))
         const id = supervisor.candidates.push(solver) - 1
         const kind = solver instanceof CachedIntraNodeRouteSolver
-          ? "general" : isHighDensityCandidateSolver(solver) ? solver.variant
+          ? "general" : solver instanceof HighDensitySolverAdapter ? solver.variant
             : solver instanceof SpecializedIntraNodeSolverAdapter ? "specialized" : "external"
-        const handle = isHighDensityCandidateSolver(solver) || solver instanceof SpecializedIntraNodeSolverAdapter
+        const handle = solver instanceof HighDensitySolverAdapter || solver instanceof SpecializedIntraNodeSolverAdapter
           ? solver.shareForPortfolio() : undefined
         if (kind !== "external") supervisor.installCandidateGetters(solver, id)
         return { id, kind, handle, state: getState(solver),
@@ -243,7 +243,7 @@ export class PortfolioSolverAdapter {
     const candidate = solver as unknown as Record<string, unknown>
     const keys = ["iterations", "MAX_ITERATIONS", "solved", "failed", "error", "progress"]
     if (solver instanceof CachedIntraNodeRouteSolver) keys.push("solvedRoutes")
-    if (isHighDensityCandidateSolver(solver)) keys.push("solvedSegmentCount")
+    if (solver instanceof HighDensitySolverAdapter) keys.push("solvedSegmentCount")
     for (const key of keys) {
       let value = candidate[key]
       Object.defineProperty(solver, key, {
@@ -376,7 +376,7 @@ export class PortfolioSolverAdapter {
   computeG(solver: Candidate): number {
     const hyperParameters = "hyperParameters" in solver ? solver.hyperParameters : {}
     return bindings.PortfolioSingleIntraNodeSolver.computeCandidateG(
-      getState(solver), hyperParameters, isHighDensityCandidateSolver(solver),
+      getState(solver), hyperParameters, solver instanceof HighDensitySolverAdapter,
     )
   }
 
@@ -390,7 +390,7 @@ export class PortfolioSolverAdapter {
     return !this.observed && !this.ownerDirty && !this.observedGeneralCandidates?.size
       && !this.observedSpecializedCandidates?.size && !Object.hasOwn(this.owner, "generateSolver") && !Object.hasOwn(this.owner, "onSolve")
       && this.candidates.every((candidate): boolean => candidate instanceof IntraNodeRouteSolver
-        || candidate instanceof SpecializedIntraNodeSolverAdapter || isHighDensityCandidateSolver(candidate))
+        || candidate instanceof SpecializedIntraNodeSolverAdapter || candidate instanceof HighDensitySolverAdapter)
   }
 
   disposeUnobserved(): boolean {
@@ -398,7 +398,7 @@ export class PortfolioSolverAdapter {
     // Called only after the native parent has released its active child borrow.
     for (const candidate of this.candidates) {
       if (candidate instanceof IntraNodeRouteSolver
-        || candidate instanceof SpecializedIntraNodeSolverAdapter || isHighDensityCandidateSolver(candidate)) candidate.dispose()
+        || candidate instanceof SpecializedIntraNodeSolverAdapter || candidate instanceof HighDensitySolverAdapter) candidate.dispose()
     }
     this.dispose()
     return true

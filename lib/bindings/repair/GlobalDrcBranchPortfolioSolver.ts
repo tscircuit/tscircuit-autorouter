@@ -2,14 +2,42 @@ import { initializeAutorouterBindings } from "lib/bindings/initializeAutorouterB
 import { BaseSolver } from "@tscircuit/solver-utils"
 import type { DrcEvaluator, GlobalDrcBranchPortfolioSolverParams, HighDensityRoute } from "high-density-repair03/lib"
 import * as bindings from "../../../rust/capacity-autorouter-bindings/pkg/capacity_autorouter_bindings.js"
-import {
-  type RepairPortfolioDescriptor,
-  type RepairPortfolio,
-  type RepairEvaluationCounters,
-  type PreparedRepairDrc,
-} from "lib/bindings/repair/repairPortfolio"
+import type { AutoroutingDrcEngine } from "lib/bindings/repair/AutoroutingDrcEngine"
+import type { AutoroutingDrcEngineOptions, SimpleRouteJson as RepairSimpleRouteJson } from "high-density-repair03/lib"
+import type { Obstacle, SimpleRouteConnection, SimplifiedPcbTrace } from "lib/types"
 
-export class GlobalDrcBranchPortfolioSolver extends BaseSolver implements RepairPortfolio {
+export type RepairPortfolioDescriptor = {
+  engineSrj: RepairSimpleRouteJson
+  engineOptions: Omit<AutoroutingDrcEngineOptions, "connMap">
+  solverSrj: RepairSimpleRouteJson
+  connMap: { netMap: Record<string, string[]>; idToNetMap: Record<string, string> } | null
+  originalTraces: SimplifiedPcbTrace[]
+  newConnections: SimpleRouteConnection[]
+  originalConnections: SimpleRouteConnection[]
+  layerCount: number
+  defaultViaHoleDiameter: number
+  obstacles: Obstacle[]
+  movablePreloadedSections: Array<{
+    syntheticConnectionName: string
+    evaluationTraceId: string
+    originalTrace: SimplifiedPcbTrace
+  }>
+  nonMovableMutatedPreloadedTraces: SimplifiedPcbTrace[]
+}
+
+export type PreparedRepairDrc = {
+  engine: AutoroutingDrcEngine
+  baseline: { errors: unknown[]; errorsWithCenters: unknown[] }
+}
+
+export type RepairEvaluationCounters = {
+  indexedDrcEvaluationCount: number
+  indexedDrcCacheHitCount: number
+  indexedDrcCandidateCacheSize: number
+  indexedDrcEvaluationTimeMs?: number
+}
+
+export class GlobalDrcBranchPortfolioSolver extends BaseSolver {
   private binding: bindings.GlobalDrcBranchPortfolioSolver | undefined
   private output: HighDensityRoute[]
 

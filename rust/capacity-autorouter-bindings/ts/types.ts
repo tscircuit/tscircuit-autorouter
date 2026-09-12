@@ -1,48 +1,4 @@
-export type PortPoint = {
-  connectionName: string
-  rootConnectionName?: string
-  portPointId?: string
-  x: number
-  y: number
-  z: number
-  prevPortPointId?: string
-  nextPortPointId?: string
-}
-
-export type NodeWithPortPoints = {
-  capacityMeshNodeId: string
-  center: { x: number; y: number }
-  width: number
-  height: number
-  portPoints: PortPoint[]
-  availableZ?: number[]
-}
-
-export type HighDensityRoutePoint = {
-  x: number
-  y: number
-  z: number
-  insideJumperPad?: boolean
-  portPointId?: string
-}
-
-export type Jumper = {
-  route_type: "jumper"
-  start: { x: number; y: number }
-  end: { x: number; y: number }
-  footprint: "0603" | "1206" | "1206x4_pair"
-}
-
-export type HighDensityIntraNodeRoute = {
-  connectionName: string
-  rootConnectionName?: string
-  traceThickness: number
-  viaDiameter: number
-  route: HighDensityRoutePoint[]
-  vias: Array<{ x: number; y: number }>
-  jumpers?: Jumper[]
-  regionId?: string
-}
+import type { NodeWithPortPoints } from "lib/types/high-density-types"
 
 export type HighDensityHyperParameters = {
   shuffleSeed: number

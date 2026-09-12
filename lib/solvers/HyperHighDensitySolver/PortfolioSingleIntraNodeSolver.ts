@@ -1,4 +1,3 @@
-import type { HighDensitySolverAdapter } from "../../../rust/capacity-autorouter-bindings/ts/index"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import {
   HighDensityIntraNodeRoute,
@@ -15,7 +14,7 @@ import { TwoCrossingRoutesHighDensitySolver } from "../HighDensitySolver/TwoRout
 import { BaseSolver } from "../BaseSolver"
 import type { SupervisedSolver } from "../HyperParameterSupervisorSolver"
 import { PortfolioSolverAdapter } from "lib/bindings/high-density/PortfolioSolverAdapter"
-import { createHighDensityCandidateSolver, isHighDensityCandidateSolver } from "lib/bindings/high-density/highDensitySolverFactory"
+import { HighDensitySolverAdapter } from "../../../rust/capacity-autorouter-bindings/ts/index"
 import { repairDisconnectedSameRootPortPoints } from "./repairDisconnectedSameRootPortPoints"
 
 type PortfolioCandidate = IntraNodeRouteSolver | HighDensitySolverAdapter
@@ -147,7 +146,7 @@ export class PortfolioSingleIntraNodeSolver extends BaseSolver {
           shuffleSeed: hyperParameters.SHUFFLE_SEED ?? 0,
         },
       }
-      return createHighDensityCandidateSolver("a01", props)
+      return new HighDensitySolverAdapter("a01", props)
     }
     if (hyperParameters.HIGH_DENSITY_A03) {
       const props = {
@@ -166,7 +165,7 @@ export class PortfolioSingleIntraNodeSolver extends BaseSolver {
         effort: this.effort,
         hyperParameters,
       }
-      return createHighDensityCandidateSolver("a03", props)
+      return new HighDensitySolverAdapter("a03", props)
     }
     if (hyperParameters.CLOSED_FORM_TWO_TRACE_SAME_LAYER) {
       return new TwoCrossingRoutesHighDensitySolver({
@@ -210,9 +209,7 @@ export class PortfolioSingleIntraNodeSolver extends BaseSolver {
 
   onSolve(solver: NonNullable<PortfolioSingleIntraNodeSolver["supervisedSolvers"]>[number]) {
     let routes: HighDensityIntraNodeRoute[]
-    if (
-      isHighDensityCandidateSolver(solver.solver)
-    ) {
+    if (solver.solver instanceof HighDensitySolverAdapter) {
       routes = solver.solver.getOutput()
     } else {
       routes = solver.solver.solvedRoutes
