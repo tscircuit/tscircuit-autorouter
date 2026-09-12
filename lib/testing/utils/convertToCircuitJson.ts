@@ -800,11 +800,23 @@ function createPcbPadElements(srj: SimpleRouteJson): AnyCircuitElement[] {
  * @param minViaDiameter Default diameter for vias
  * @returns An array of PcbVia elements
  */
+const getPhysicalViaLayers = (
+  via: { from_layer: LayerName; to_layer: LayerName },
+  layerCount: number,
+  allowBlindAndBuriedVias?: boolean,
+): LayerName[] =>
+  allowBlindAndBuriedVias === false
+    ? Array.from({ length: layerCount }, (_, z) =>
+        mapZToLayerName(z, layerCount),
+      )
+    : (getViaLayers(via, layerCount) as LayerName[])
+
 function extractViasFromRoutes(
   routes: SimplifiedPcbTrace[] | HighDensityRoute[],
   layerCount: number,
   minViaDiameter = 0.3,
   minViaHoleDiameter = minViaDiameter * 0.5,
+  allowBlindAndBuriedVias?: boolean,
 ): PcbVia[] {
   const vias: PcbVia[] = []
   const viaLocations = new Set<string>() // Track unique via locations
@@ -834,7 +846,11 @@ function extractViasFromRoutes(
                 y: segment.y,
                 outer_diameter: viaDiameter,
                 hole_diameter: viaHoleDiameter,
-                layers: getViaLayers(segment, layerCount) as LayerName[],
+                layers: getPhysicalViaLayers(
+                  segment,
+                  layerCount,
+                  allowBlindAndBuriedVias,
+                ),
               })
               viaLocations.add(locationKey)
             }
@@ -870,10 +886,11 @@ function extractViasFromRoutes(
                 y: currPoint.y,
                 outer_diameter: viaDiameter,
                 hole_diameter: viaHoleDiameter,
-                layers: getViaLayers(
+                layers: getPhysicalViaLayers(
                   { from_layer: fromLayer, to_layer: toLayer },
                   layerCount,
-                ) as LayerName[],
+                  allowBlindAndBuriedVias,
+                ),
               })
               viaLocations.add(locationKey)
             }
@@ -977,6 +994,7 @@ export function convertToCircuitJson(
       srjWithPointPairs.layerCount,
       resolvedMinViaDiameter,
       resolvedMinViaHoleDiameter,
+      (originalSrj ?? srjWithPointPairs).allowBlindAndBuriedVias,
     ),
   )
 
