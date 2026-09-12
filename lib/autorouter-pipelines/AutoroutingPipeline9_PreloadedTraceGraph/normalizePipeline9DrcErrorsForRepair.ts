@@ -31,6 +31,12 @@ export const normalizePipeline9DrcErrorsForRepair = ({
         )
       : []
     const viaIds = [
+      ...(Array.isArray(error.pcb_pad_ids)
+        ? error.pcb_pad_ids.filter((id): id is string => typeof id === "string" && traceIdByViaId.has(id))
+        : []),
+      ...(typeof error.pcb_placement_error_id === "string" && error.pcb_placement_error_id.startsWith("copper_too_close_to_board_edge_")
+        ? [error.pcb_placement_error_id.slice("copper_too_close_to_board_edge_".length)].filter((id) => traceIdByViaId.has(id))
+        : []),
       ...(typeof error.pcb_via_id === "string" ? [error.pcb_via_id] : []),
       ...(Array.isArray(error.pcb_via_ids)
         ? error.pcb_via_ids.filter(

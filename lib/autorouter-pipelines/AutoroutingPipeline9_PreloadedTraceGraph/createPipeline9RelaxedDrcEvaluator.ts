@@ -32,6 +32,7 @@ export const createPipeline9RelaxedDrcEvaluator = (
     const newTraceIds = new Set(newTraces.map((trace) => trace.pcb_trace_id))
     const { errors, errorsWithCenters, circuitJson } = evaluateRelaxedDrc({
       inputSrj: options.originalSrj,
+      includeBoardClearance: true,
       srjWithPointPairs: options.srjWithPointPairs,
       routedTraces: preparePipeline9DrcRoutedTraces({
         originalPreloadedTraces: options.originalSrj.traces ?? [],
