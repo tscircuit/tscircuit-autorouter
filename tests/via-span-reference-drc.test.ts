@@ -12,6 +12,7 @@ test("reference and indexed DRC check the same declared via span", () => {
     layerCount: 4,
     minTraceWidth: 0.1,
     minViaDiameter: 0.3,
+    allowBlindAndBuriedVias: true,
     bounds: { minX: -2, minY: -2, maxX: 2, maxY: 2 },
     obstacles: [],
     connections: [],
