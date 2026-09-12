@@ -41,8 +41,6 @@ export class ValidateTraceSimplificationSolver extends BaseSolver {
       preparedInput.srj as RepairSimpleRouteJson,
       {
         connMap: preparedInput.connMap,
-        traceClearance: preparedInput.srj.minTraceToPadEdgeClearance ?? 0.1,
-        viaClearance: 0.1,
       },
     )
     this.MAX_ITERATIONS = 3

@@ -55,7 +55,7 @@ export const evaluateRelaxedDrc = ({
   srjWithPointPairs,
   routedTraces,
   drcOptions,
-  includeBoardClearance = false,
+  includeBoardClearance = true,
 }: EvaluateRelaxedDrcInput): EvaluateRelaxedDrcResult => {
   const preloadedTraces = inputSrj.traces ?? []
   const jointTraces = combinePreloadedAndRoutedTraces(
@@ -70,14 +70,7 @@ export const evaluateRelaxedDrc = ({
   })
 
   if (includeBoardClearance) {
-    circuitJson.push(
-      createPcbBoardElement({
-        ...inputSrj,
-        // Match the repair solver's board constraint instead of introducing
-        // the manufacturing checker's default margin for an unspecified rule.
-        minBoardEdgeClearance: inputSrj.minBoardEdgeClearance ?? 0,
-      }),
-    )
+    circuitJson.push(createPcbBoardElement(inputSrj))
   }
 
   return {

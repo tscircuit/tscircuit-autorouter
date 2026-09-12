@@ -9,6 +9,7 @@ test("converts ten-layer high-density routes and vias to circuit json", () => {
     layerCount: 10,
     minTraceWidth: 0.1,
     minViaDiameter: 0.3,
+    allowBlindAndBuriedVias: true,
     bounds: { minX: -2, maxX: 3, minY: -2, maxY: 2 },
     obstacles: [],
     connections: [

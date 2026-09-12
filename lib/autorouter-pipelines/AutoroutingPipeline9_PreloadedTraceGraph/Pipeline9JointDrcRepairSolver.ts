@@ -720,7 +720,8 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       params.originalSrj.minTraceToPadEdgeClearance ??
       RELAXED_DRC_OPTIONS.traceClearance ??
       0.1
-    const viaClearance = RELAXED_DRC_OPTIONS.viaClearance ?? 0.1
+    const viaClearance =
+      params.originalSrj.minViaHoleEdgeToViaHoleEdgeClearance ?? 0.1
     const baselineDrc = evaluateRelaxedDrc({
       includeBoardClearance: true,
       inputSrj: params.originalSrj,
@@ -1010,6 +1011,15 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         ...extendedSrjWithPointPairs,
         obstacles: params.originalSrj.obstacles,
         minTraceWidth: params.originalSrj.minTraceWidth,
+        minTraceToPadEdgeClearance:
+          params.originalSrj.minTraceToPadEdgeClearance,
+        minPadEdgeToPadEdgeClearance:
+          params.originalSrj.minPadEdgeToPadEdgeClearance,
+        minViaHoleEdgeToViaHoleEdgeClearance:
+          params.originalSrj.minViaHoleEdgeToViaHoleEdgeClearance,
+        minBoardEdgeClearance: params.originalSrj.minBoardEdgeClearance,
+        minViaHoleDiameter: params.defaultViaHoleDiameter,
+        allowBlindAndBuriedVias: params.originalSrj.allowBlindAndBuriedVias,
         minViaDiameter:
           params.originalSrj.minViaDiameter ?? params.defaultViaDiameter,
       } as RepairSimpleRouteJson,

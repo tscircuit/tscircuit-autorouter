@@ -23,7 +23,7 @@ test("relaxed DRC connects a preloaded fanout trace to its own pad", () => {
   const inputSrj: SimpleRouteJson = {
     layerCount: 2,
     minTraceWidth: 0.1,
-    bounds: { minX: -1, minY: -1, maxX: 2, maxY: 1 },
+    bounds: { minX: -1, minY: -1, maxX: 3, maxY: 1 },
     obstacles: [
       {
         type: "rect",

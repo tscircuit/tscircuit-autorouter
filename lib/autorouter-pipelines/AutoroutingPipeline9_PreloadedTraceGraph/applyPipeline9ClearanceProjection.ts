@@ -4,7 +4,6 @@ import {
   relaxTraceClearance,
 } from "@tscircuit/repair04"
 import type { DrcEvaluator } from "high-density-repair03/lib"
-import { RELAXED_DRC_OPTIONS } from "lib/testing/drcPresets"
 import type { SimpleRouteJson } from "lib/types"
 import type { HighDensityRoute } from "lib/types/high-density-types"
 import { createSrjWithBoardValidObstacleLayers } from "lib/utils/create-srj-with-board-valid-obstacle-layers"
@@ -53,15 +52,13 @@ export const applyPipeline9ClearanceProjection = ({
     routes: canonicalRoutes,
     bounds: srj.bounds,
     boundaryMargin: 0,
-    boardEdgeClearance: originalSrj.minBoardEdgeClearance ?? 0,
+    boardEdgeClearance: originalSrj.minBoardEdgeClearance ?? 0.2,
     lockedPointIndices: canonicalRoutes.map((route) =>
       route.route.map(() => false),
     ),
     allowViaMovement: true,
-    traceClearance:
-      originalSrj.minTraceToPadEdgeClearance ??
-      RELAXED_DRC_OPTIONS.traceClearance,
-    viaClearance: RELAXED_DRC_OPTIONS.viaClearance,
+    traceClearance: originalSrj.minTraceToPadEdgeClearance ?? 0.1,
+    viaClearance: 0.1,
   })
   const fixedViolations = new Map(
     getFixedObstacleViolations({ srj, routes: canonicalRoutes }).map(
