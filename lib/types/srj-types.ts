@@ -21,8 +21,11 @@ export type SingleLayerConnectionPoint = {
   x: number
   y: number
   layer: string
+  layers?: string[]
   pointId?: PointId
   pcb_port_id?: string
+  /** Stable semantic selector for the source port, e.g. `U1.USB_DM`. */
+  port_selector?: string
   terminalVia?: TerminalViaHint
 }
 export type MultiLayerConnectionPoint = {
@@ -32,6 +35,8 @@ export type MultiLayerConnectionPoint = {
   pointId?: PointId
   busId?: BusId
   pcb_port_id?: string
+  /** Stable semantic selector for the source port, e.g. `U1.USB_DM`. */
+  port_selector?: string
 }
 export type ConnectionPoint =
   | SingleLayerConnectionPoint
@@ -53,6 +58,8 @@ export type JumperType = "1206x4" | "0603"
 
 export interface SimpleRouteJson {
   layerCount: number
+  /** Whether autorouters may use vias that do not span the full board stack. */
+  allowBlindAndBuriedVias?: boolean
   minTraceWidth: number
   nominalTraceWidth?: number
   /** @deprecated Use `min_via_pad_diameter` / `minViaPadDiameter` instead. */
@@ -65,6 +72,9 @@ export interface SimpleRouteJson {
   minTraceToPadEdgeClearance?: number
   minBoardEdgeClearance?: number
   minViaEdgeToPadEdgeClearance?: number
+  minViaHoleEdgeToViaHoleEdgeClearance?: number
+  minPlatedHoleDrillEdgeToDrillEdgeClearance?: number
+  minPadEdgeToPadEdgeClearance?: number
   obstacles: Obstacle[]
   connections: Array<SimpleRouteConnection>
   differentialPairs?: Array<DifferentialPair>
@@ -93,22 +103,39 @@ export interface DifferentialPair {
   maxUncoupledLength?: number
 }
 
+export type SimpleRouteBusTermination =
+  | { type: "boundary" }
+  | { type: "plane"; layer: string }
+
 export interface SimpleRouteBus {
   busId: BusId
+  name?: string
   /** SimpleRouteJson connection names belonging to this bus, in bus order. */
   connectionNames: string[]
+  /** Downstream routing hints that guide fanout exits without replacing endpoints. */
+  connectionExitTargets?: Readonly<
+    Record<string, { x: number; y: number; layer?: string }>
+  >
   /** Maximum permitted routed-length difference in millimeters. */
   maxLengthSkew?: number
   /** Resolved copper width in millimeters for members without an override. */
   traceWidth?: number
   /** Layers on which this bus may be routed, including its terminal layers. */
   allowedLayers?: string[]
+  /** Highest-priority fanout layer for this bus. */
+  preferredLayer?: string
+  /** Additional preferred fanout layers for this bus, in priority order. */
+  preferredLayers?: string[]
+  termination?: SimpleRouteBusTermination
 }
 
 export interface Obstacle {
   obstacleId?: string
   /** Optional source component identifier associated with this obstacle. */
   componentId?: string
+  /** True when this obstacle replaces one completed fanout source footprint. */
+  isFanoutSourceKeepout?: boolean
+  shape?: "circle"
   /**
    * Optional Circuit JSON provenance carried through SRJ.
    * Routing algorithms must not use this field.
@@ -133,6 +160,8 @@ export interface Obstacle {
 
 export interface SimpleRouteConnection {
   name: string
+  routingPcbGroupId?: string
+  source_trace_id?: string
   rootConnectionName?: RootConnectionName
   mergedConnectionNames?: string[]
   __rootConnectionNames?: string[]
@@ -140,6 +169,8 @@ export interface SimpleRouteConnection {
   netConnectionName?: string
   __netConnectionName?: string
   nominalTraceWidth?: number
+  /** @deprecated Use `nominalTraceWidth` instead. */
+  width?: number
   pointsToConnect: Array<ConnectionPoint>
 
   /** @deprecated DO NOT USE **/
@@ -169,6 +200,8 @@ export interface SimplifiedPcbTrace {
         y: number
         to_layer: string
         from_layer: string
+        /** Physical copper layers occupied by the drilled barrel. */
+        layers?: string[]
         via_diameter?: number
         via_hole_diameter?: number
       }
