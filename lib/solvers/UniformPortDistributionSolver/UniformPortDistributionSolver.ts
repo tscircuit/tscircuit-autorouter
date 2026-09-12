@@ -2,6 +2,7 @@ import { BaseSolver } from "@tscircuit/solver-utils"
 import { GraphicsObject } from "graphics-debug"
 import { Obstacle } from "lib/types"
 import { NodeWithPortPoints } from "lib/types/high-density-types"
+import { getBoundsFromNodeWithPortPoints } from "lib/utils/getBoundsFromNodeWithPortPoints"
 import { InputNodeWithPortPoints } from "../PortPointPathingSolver/PortPointPathingSolver"
 import {
   Bounds,
@@ -48,14 +49,10 @@ export class UniformPortDistributionSolver extends BaseSolver {
   constructor(private input: UniformPortDistributionSolverInput) {
     super()
     for (const node of input.nodeWithPortPoints) {
-      // Crossing points may be offset from the boundary before redistribution.
-      // They must not change which mesh nodes share a boundary.
-      this.mapOfNodeIdToBounds.set(node.capacityMeshNodeId, {
-        minX: node.center.x - node.width / 2,
-        maxX: node.center.x + node.width / 2,
-        minY: node.center.y - node.height / 2,
-        maxY: node.center.y + node.height / 2,
-      })
+      this.mapOfNodeIdToBounds.set(
+        node.capacityMeshNodeId,
+        getBoundsFromNodeWithPortPoints(node),
+      )
     }
 
     const uniqueOwnerPairs = new Map<OwnerPairKey, OwnerPair>()

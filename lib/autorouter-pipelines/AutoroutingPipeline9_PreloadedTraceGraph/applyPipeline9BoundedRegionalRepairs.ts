@@ -13,6 +13,7 @@ import type { HighDensityRoute } from "lib/types/high-density-types"
 import { createSrjWithBoardValidObstacleLayers } from "lib/utils/create-srj-with-board-valid-obstacle-layers"
 import { getDrcErrorTraceIds } from "lib/utils/getDrcErrorTraceIds"
 import { applyPipeline9ClearanceProjection } from "./applyPipeline9ClearanceProjection"
+import { canonicalizePipeline9RepairRoutes } from "./canonicalizePipeline9RepairRoutes"
 import { canPublishPartialFixedObstacleRepair } from "./canPublishPartialFixedObstacleRepair"
 
 export type Pipeline9BoundedRegionalRepairResult = {
@@ -202,6 +203,7 @@ export const applyPipeline9BoundedRegionalRepairs = ({
     }
   }
   const attemptedRegions: Array<{ bounds: Bounds; size: number }> = []
+  currentRoutes = canonicalizePipeline9RepairRoutes(currentRoutes)
   let fixedViolations = new Map(
     getFixedObstacleViolations({ srj, routes: currentRoutes }).map(
       (violation) => [violation.key, violation.severity],
