@@ -1,8 +1,8 @@
 import {
   HighDensitySolverA03 as HighDensityA03Solver,
   HighDensitySolverA01,
+  HighDensitySolverA13,
 } from "@tscircuit/high-density-a01"
-import { HighDensitySolverA13 } from "@tscircuit/high-density-a13"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { HighDensityBoardGeometry } from "lib/types/high-density-board-geometry"
 import {

@@ -129,6 +129,7 @@ const getFixedRouteSlice = (
   const bounds = getNodeBounds(node)
   let start: RouteLocation | undefined
   let end: RouteLocation | undefined
+  let hasSurvivingSegment = false
 
   for (
     let segmentIndex = 0;
@@ -141,6 +142,10 @@ const getFixedRouteSlice = (
       bounds,
     )
     if (!clippedSegment) continue
+    hasSurvivingSegment ||= !pointsAreEqual(
+      clippedSegment.start,
+      clippedSegment.end,
+    )
 
     start ??= {
       segmentIndex,
@@ -152,14 +157,9 @@ const getFixedRouteSlice = (
     }
   }
 
-  if (!start || !end) return null
-  if (
-    Math.abs(start.point.x - end.point.x) <= POINT_EPSILON &&
-    Math.abs(start.point.y - end.point.y) <= POINT_EPSILON &&
-    start.point.z === end.point.z
-  ) {
-    return null
-  }
+  // A hairpin can enter and leave at the same point while retaining copper
+  // inside the node. Only discard slices with no surviving segment.
+  if (!start || !end || !hasSurvivingSegment) return null
 
   return {
     sourceRoute: route,
