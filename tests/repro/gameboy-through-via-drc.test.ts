@@ -25,9 +25,8 @@ const getCoreThroughViaDrcErrors = ({
   srjWithPointPairs: SimpleRouteJson
   routedTraces: SimplifiedPcbTrace[]
 }) => {
-  const throughViaLayers = Array.from(
-    { length: inputSrj.layerCount },
-    (_, z) => mapZToLayerName(z, inputSrj.layerCount),
+  const throughViaLayers = Array.from({ length: inputSrj.layerCount }, (_, z) =>
+    mapZToLayerName(z, inputSrj.layerCount),
   )
   const circuitJson = convertToCircuitJson(srjWithPointPairs, routedTraces, {
     minTraceWidth: inputSrj.minTraceWidth,
