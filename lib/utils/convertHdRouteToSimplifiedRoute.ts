@@ -200,7 +200,7 @@ const attachTerminalViasToSimplifiedRoute = ({
       !(
         firstLinearRouteSegment?.route_type === "wire" &&
         firstLinearRouteSegment.layer === startTerminalViaPoint.layer &&
-        distance(firstLinearRouteSegment, startTerminalViaPoint) <= 1e-3
+        areSameXyPoint(firstLinearRouteSegment, startTerminalViaPoint)
       )
     ) {
       prependSegments.push({
@@ -218,7 +218,7 @@ const attachTerminalViasToSimplifiedRoute = ({
       !(
         lastLinearRouteSegment?.route_type === "wire" &&
         lastLinearRouteSegment.layer === endTerminalViaPoint.layer &&
-        distance(lastLinearRouteSegment, endTerminalViaPoint) <= 1e-3
+        areSameXyPoint(lastLinearRouteSegment, endTerminalViaPoint)
       )
     ) {
       appendSegments.push({
