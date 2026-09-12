@@ -303,7 +303,15 @@ impl GrowthCore {
             let node = params["nodeWithPortPoints"].clone();
             let node_value = callback_output(&node)?;
             let value = factory_callback
-                .call1(&JsValue::UNDEFINED, &node_value)
+                .call2(
+                    &JsValue::UNDEFINED,
+                    &node_value,
+                    &JsValue::from_bool(
+                        params["enableNegotiatedSearch"]
+                            .as_bool()
+                            .expect("Growth negotiated search flag required"),
+                    ),
+                )
                 .map_err(error_text)?;
             let id = value.as_f64().ok_or("Growth factory handle required")? as u32;
             let engine = take_shared_portfolio(id)?;
@@ -430,7 +438,9 @@ impl GrowShrinkHighDensityIntraNodeSolver {
     #[wasm_bindgen(constructor)]
     pub fn new(
         params: Ts<HighDensityValue>,
-        #[wasm_bindgen(unchecked_param_type = "(node: HighDensityNode) => number")]
+        #[wasm_bindgen(
+            unchecked_param_type = "(node: HighDensityNode, enableNegotiatedSearch: boolean) => number"
+        )]
         factory: js_sys::Function,
         #[wasm_bindgen(
             unchecked_param_type = "((routes: HighDensityRoutes, state: GrowthSnapshot) => { accepted: boolean; state: Record<string, unknown> }) | undefined"

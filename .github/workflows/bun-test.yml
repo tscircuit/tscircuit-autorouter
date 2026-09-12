@@ -41,7 +41,9 @@ jobs:
 
       - name: Run Rust solver tests
         if: matrix.node == 1
-        run: cargo test --manifest-path rust/capacity-autorouter/Cargo.toml --locked
+        run: |
+          cargo test --manifest-path rust/capacity-autorouter/Cargo.toml --locked
+          cargo test --manifest-path rust/tiny-hypergraph/Cargo.toml --locked
         env:
           CARGO_TARGET_DIR: rust/capacity-autorouter-bindings/target
 

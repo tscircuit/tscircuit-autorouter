@@ -238,6 +238,10 @@ impl GrowShrinkHighDensityIntraNodeSolver {
                 .as_object_mut()
                 .expect("Params object required")
                 .remove("growShrinkSolutionValidator");
+            params["enableNegotiatedSearch"] = json!(
+                self.scale_factor == 1.0
+                    && params["enableNegotiatedSearch"].as_bool().unwrap_or(true)
+            );
             params["nodeWithPortPoints"] =
                 scale_node_with_port_points(&self.node_with_port_points, self.scale_factor);
             let mut solver = factory(params)?;

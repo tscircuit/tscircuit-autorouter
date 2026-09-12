@@ -1,3 +1,6 @@
+import { HighDensitySolverA13 } from "@tscircuit/high-density-a13"
+import { HighDensitySolverA13WithDrcValidation } from "./HighDensitySolverA13WithDrcValidation"
+import type { HighDensityBoardGeometry } from "lib/types/high-density-board-geometry"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import {
   HighDensityIntraNodeRoute,
@@ -20,6 +23,7 @@ import { repairDisconnectedSameRootPortPoints } from "./repairDisconnectedSameRo
 type PortfolioCandidate =
   | IntraNodeRouteSolver
   | HighDensitySolverAdapter
+  | HighDensitySolverA13
   | SingleLayerNoDifferentRootIntersectionsIntraNodeSolver
   | SingleTransitionIntraNodeSolver
   | SingleTransitionThroughObstacleIntraNodeSolver
@@ -37,17 +41,23 @@ export class PortfolioSingleIntraNodeSolver extends BaseSolver {
     return "PortfolioSingleIntraNodeSolver"
   }
 
-  constructorParams: ConstructorParameters<typeof CachedIntraNodeRouteSolver>[0]
+  constructorParams: ConstructorParameters<
+    typeof CachedIntraNodeRouteSolver
+  >[0] & { boardGeometry?: HighDensityBoardGeometry }
   solvedRoutes: HighDensityIntraNodeRoute[] = []
   nodeWithPortPoints: NodeWithPortPoints
   connMap?: ConnectivityMap
   effort: number
+  negotiatedSearchStarted = false
+  readonly enableNegotiatedSearch: boolean
   adaptiveSearchExpanded = false
   private readonly portfolioAdapter: PortfolioSolverAdapter
 
   constructor(
     opts: ConstructorParameters<typeof CachedIntraNodeRouteSolver>[0] & {
       effort?: number
+      enableNegotiatedSearch?: boolean
+      boardGeometry?: HighDensityBoardGeometry
     },
   ) {
     super()
@@ -55,6 +65,7 @@ export class PortfolioSingleIntraNodeSolver extends BaseSolver {
     this.connMap = opts.connMap
     this.constructorParams = opts
     this.effort = opts.effort ?? 1
+    this.enableNegotiatedSearch = opts.enableNegotiatedSearch ?? false
     this.MAX_ITERATIONS = 20_000_000 * this.effort
     this.GREEDY_MULTIPLIER = 5
     this.MIN_SUBSTEPS = 100
@@ -151,6 +162,32 @@ export class PortfolioSingleIntraNodeSolver extends BaseSolver {
       })
     }
 
+    if (hyperParameters.HIGH_DENSITY_A13) {
+      const maxSearchIterations = Math.max(
+        1,
+        Math.round(50_000_000 * this.effort),
+      )
+      const solver = new HighDensitySolverA13WithDrcValidation({
+        obstacles: this.constructorParams.obstacles ?? [],
+        boardGeometry: this.constructorParams.boardGeometry,
+        connMap: this.connMap,
+        layerCount: this.constructorParams.layerCount ?? 2,
+        nodeWithPortPoints: this.nodeWithPortPoints,
+        cellSizeMm: 0.1,
+        viaDiameter: this.constructorParams.viaDiameter ?? 0.3,
+        viaMinDistFromBorder: (this.constructorParams.viaDiameter ?? 0.3) / 2,
+        traceThickness: this.constructorParams.traceWidth ?? 0.15,
+        traceMargin: 0.1,
+        // Use the optimized kernel in batches; fitness accounts for search work
+        // rather than the number of calls into the kernel.
+        stepMultiplier: 1000,
+        maxSearchIterations,
+        maxRounds: Math.max(1, Math.round(200 * this.effort)),
+        hyperParameters: { shuffleSeed: hyperParameters.SHUFFLE_SEED ?? 0 },
+      })
+      solver.MAX_ITERATIONS = maxSearchIterations * 2
+      return solver as any
+    }
     if (hyperParameters.HIGH_DENSITY_A01) {
       const props = {
         nodeWithPortPoints: this.nodeWithPortPoints,
@@ -231,7 +268,10 @@ export class PortfolioSingleIntraNodeSolver extends BaseSolver {
     >[number],
   ) {
     let routes: HighDensityIntraNodeRoute[]
-    if (solver.solver instanceof HighDensitySolverAdapter) {
+    if (
+      solver.solver instanceof HighDensitySolverAdapter ||
+      solver.solver instanceof HighDensitySolverA13
+    ) {
       routes = solver.solver.getOutput()
     } else {
       routes = solver.solver.solvedRoutes

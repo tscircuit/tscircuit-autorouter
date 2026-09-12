@@ -1,3 +1,4 @@
+import { HighDensitySolverA13 } from "@tscircuit/high-density-a13"
 import { IntraNodeRouteSolver } from "../../solvers/HighDensitySolver/IntraNodeSolver"
 import { initializeAutorouterBindings } from "lib/bindings/initializeAutorouterBindings"
 import { PortfolioCallbackScope } from "lib/bindings/high-density/PortfolioCallbackScope"
@@ -38,7 +39,7 @@ function refreshCacheCounts(): void {
 }
 
 function getState(solver: Candidate): CandidateState {
-  return {
+  const state: CandidateState = {
     iterations: solver.iterations,
     maxIterations: solver.MAX_ITERATIONS,
     solved: solver.solved,
@@ -50,6 +51,26 @@ function getState(solver: Candidate): CandidateState {
         ? solver.getSolvedSegmentCount()
         : null,
   }
+  if (solver instanceof HighDensitySolverA13) {
+    state.routingIterations = solver.routingIterations
+    const connectionCount = solver.connections.length
+    if (solver.solved) {
+      state.negotiatedProgress = 1
+    } else if (connectionCount === 0) {
+      state.negotiatedProgress = 0
+    } else {
+      const routedFraction = solver.routedCount / connectionCount
+      const conflictFreeFraction = Math.max(
+        0,
+        (solver.routedCount - solver.conflictCount) / connectionCount,
+      )
+      state.negotiatedProgress = Math.min(
+        0.99,
+        (routedFraction + conflictFreeFraction) / 2,
+      )
+    }
+  }
+  return state
 }
 
 function syncState(solver: Candidate, state: CandidateState): void {
@@ -92,6 +113,7 @@ export class PortfolioSolverAdapter {
       "winningSolver",
       "stats",
       "adaptiveSearchExpanded",
+      "negotiatedSearchStarted",
     ] as const) {
       let value: unknown = owner[key]
       if (key === "stats") {
@@ -124,6 +146,7 @@ export class PortfolioSolverAdapter {
       this.callbackScope,
       owner.nodeWithPortPoints,
       owner.effort,
+      owner.enableNegotiatedSearch,
     )
   }
 
@@ -131,6 +154,7 @@ export class PortfolioSolverAdapter {
     scope: CallbackScope,
     node: bindings.HighDensityNode,
     effort: number,
+    enableNegotiatedSearch: boolean,
   ): bindings.PortfolioSingleIntraNodeSolver {
     return new bindings.PortfolioSingleIntraNodeSolver(
       node,
@@ -224,6 +248,7 @@ export class PortfolioSolverAdapter {
       },
       (state: SolverStateSnapshot): { routes: unknown[]; solverType: string } =>
         callbackOwner(scope).completeSolve(state),
+      enableNegotiatedSearch,
     )
   }
 
@@ -496,7 +521,9 @@ export class PortfolioSolverAdapter {
   }
 
   getCombinationDefs(): string[][] {
-    return bindings.PortfolioSingleIntraNodeSolver.getCombinationDefs()
+    return bindings.PortfolioSingleIntraNodeSolver.getCombinationDefs(
+      this.owner.enableNegotiatedSearch,
+    )
   }
 
   getHyperParameterCombinations(
@@ -641,6 +668,7 @@ export class PortfolioSolverAdapter {
     this.owner.MAX_ITERATIONS = state.MAX_ITERATIONS
     Object.assign(this.owner.stats, state.stats)
     this.owner.adaptiveSearchExpanded = state.adaptiveSearchExpanded
+    this.owner.negotiatedSearchStarted = state.negotiatedSearchStarted
     this.owner.activeSubSolver =
       state.activeId === null ? undefined : this.getCandidate(state.activeId)
     if (state.winnerId !== null && !this.owner.winningSolver) {

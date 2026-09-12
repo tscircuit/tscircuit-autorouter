@@ -141,6 +141,10 @@ fn read_state(value: &Value) -> Result<CandidateState, String> {
         failed: value["failed"]
             .as_bool()
             .ok_or("Candidate failed required")?,
+        routing_iterations: value["routingIterations"]
+            .as_u64()
+            .map(|count| count as usize),
+        negotiated_progress: value["negotiatedProgress"].as_f64(),
         progress: value["progress"].as_f64().unwrap_or(f64::NAN),
         error: value["error"].as_str().map(str::to_owned),
         solved_segment_count: value["solvedSegmentCount"]
@@ -483,6 +487,10 @@ pub struct CandidateStateSnapshot {
     progress: f64,
     error: Option<String>,
     solved_segment_count: Option<usize>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    routing_iterations: Option<usize>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    negotiated_progress: Option<f64>,
 }
 
 #[derive(Serialize, Tsify)]
@@ -521,6 +529,9 @@ pub struct SnapshotStats {
     #[serde(skip_serializing_if = "Option::is_none")]
     #[tsify(type = "unknown")]
     best_progress_at_expansion: Option<Value>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[tsify(type = "unknown")]
+    negotiated_search_started_at_iteration: Option<Value>,
 }
 
 #[derive(Serialize, Tsify)]
@@ -537,6 +548,7 @@ pub struct PortfolioSnapshot {
     max_iterations: f64,
     stats: SnapshotStats,
     adaptive_search_expanded: bool,
+    negotiated_search_started: bool,
     active_id: Option<usize>,
     winner_id: Option<usize>,
     order: Vec<usize>,
@@ -687,6 +699,8 @@ impl PortfolioCore {
                         progress: state.progress,
                         error: state.error.clone(),
                         solved_segment_count: state.solved_segment_count,
+                        routing_iterations: state.routing_iterations,
+                        negotiated_progress: state.negotiated_progress,
                     },
                 }
             })
@@ -710,8 +724,12 @@ impl PortfolioCore {
                     .cloned(),
                 candidate_work_at_expansion: stats.get("candidateWorkAtExpansion").cloned(),
                 best_progress_at_expansion: stats.get("bestProgressAtExpansion").cloned(),
+                negotiated_search_started_at_iteration: stats
+                    .get("negotiatedSearchStartedAtIteration")
+                    .cloned(),
             },
             adaptive_search_expanded: self.solver.adaptive_search_expanded,
+            negotiated_search_started: self.solver.negotiated_search_started,
             active_id: supervisor.active_sub_solver,
             winner_id: supervisor.winning_solver,
             order,
@@ -750,6 +768,7 @@ impl PortfolioSingleIntraNodeSolver {
             unchecked_param_type = "((state: PortfolioSnapshot) => { routes: unknown[]; solverType: string }) | undefined"
         )]
         terminal: Option<js_sys::Function>,
+        enable_negotiated_search: bool,
     ) -> Result<Self, JsValue> {
         let node = read_value(node)?;
         let hooks = Hooks {
@@ -760,7 +779,12 @@ impl PortfolioSingleIntraNodeSolver {
         };
         Ok(Self {
             engine: Rc::new(RefCell::new(PortfolioCore {
-                solver: portfolio_solver::PortfolioSingleIntraNodeSolver::new(node, effort),
+                solver: {
+                    let mut solver =
+                        portfolio_solver::PortfolioSingleIntraNodeSolver::new(node, effort);
+                    solver.enable_negotiated_search = enable_negotiated_search;
+                    solver
+                },
                 factory: Factory { hooks },
                 terminal,
                 output_routes: Vec::new(),
@@ -842,8 +866,10 @@ impl PortfolioSingleIntraNodeSolver {
     }
 
     #[wasm_bindgen(js_name = getCombinationDefs)]
-    pub fn get_combination_defs() -> Result<Ts<PortfolioCombinationDefinitions>, JsValue> {
-        PortfolioCombinationDefinitions(serde_json::json!(capacity_autorouter::solvers::hyper_high_density_solver::portfolio_single_intra_node_solver::get_combination_defs())).into_ts().map_err(|error| JsError::new(&error.to_string()).into())
+    pub fn get_combination_defs(
+        enable_negotiated_search: bool,
+    ) -> Result<Ts<PortfolioCombinationDefinitions>, JsValue> {
+        PortfolioCombinationDefinitions(serde_json::json!(capacity_autorouter::solvers::hyper_high_density_solver::portfolio_single_intra_node_solver::get_combination_defs(enable_negotiated_search))).into_ts().map_err(|error| JsError::new(&error.to_string()).into())
     }
 
     #[wasm_bindgen(js_name = getHyperParameterCombinations)]
@@ -923,7 +949,7 @@ impl PortfolioSingleIntraNodeSolver {
             state: read_state(&state).map_err(|error| JsValue::from_str(&error))?,
             specialized: false,
         };
-        if expanded {
+        if expanded || candidate.state.negotiated_progress.is_some() {
             let node = read_value(node)?;
             let solver = portfolio_solver::PortfolioSingleIntraNodeSolver::new(node, 1.0);
             Ok(1.0
@@ -974,7 +1000,9 @@ impl PortfolioSingleIntraNodeSolver {
             .iter()
             .find(|record| record.id == id)
             .ok_or_else(|| JsValue::from_str("Unknown candidate"))?;
-        if core.solver.adaptive_search_expanded {
+        if core.solver.adaptive_search_expanded
+            || record.solver.state().negotiated_progress.is_some()
+        {
             Ok(1.0
                 - portfolio_solver::PortfolioSingleIntraNodeSolver::get_candidate_progress(
                     record.solver.as_ref(),

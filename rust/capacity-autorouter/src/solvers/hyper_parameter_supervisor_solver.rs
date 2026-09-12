@@ -11,6 +11,8 @@ pub struct CandidateState {
     pub progress: f64,
     pub error: Option<String>,
     pub solved_segment_count: Option<usize>,
+    pub routing_iterations: Option<usize>,
+    pub negotiated_progress: Option<f64>,
 }
 
 pub trait Candidate {

@@ -10,14 +10,16 @@ pub struct PortfolioSingleIntraNodeSolver {
     pub node_with_port_points: Value,
     pub effort: f64,
     pub adaptive_search_expanded: bool,
+    pub enable_negotiated_search: bool,
+    pub negotiated_search_started: bool,
     pub iterations: usize,
     pub max_iterations: f64,
     pub progress: f64,
     pub stats: Value,
 }
 
-pub fn get_combination_defs() -> Vec<Vec<&'static str>> {
-    vec![
+pub fn get_combination_defs(enable_negotiated_search: bool) -> Vec<Vec<&'static str>> {
+    let mut definitions = vec![
         vec!["throughObstacle"],
         vec!["singleLayerNoDifferentRootIntersections"],
         vec!["multiHeadPolyLine"],
@@ -28,7 +30,11 @@ pub fn get_combination_defs() -> Vec<Vec<&'static str>> {
         vec!["closedFormSingleTrace"],
         vec!["highDensityA01"],
         vec!["highDensityA03"],
-    ]
+    ];
+    if enable_negotiated_search {
+        definitions.push(vec!["highDensityA13"]);
+    }
+    definitions
 }
 
 pub fn get_hyper_parameter_defs() -> Vec<HyperParameterDef> {
@@ -96,6 +102,10 @@ pub fn get_hyper_parameter_defs() -> Vec<HyperParameterDef> {
             name: "highDensityA03",
             possible_values: vec![json!({"HIGH_DENSITY_A03":true})],
         },
+        HyperParameterDef {
+            name: "highDensityA13",
+            possible_values: vec![json!({"HIGH_DENSITY_A13":true,"SHUFFLE_SEED":0})],
+        },
     ]
 }
 
@@ -125,6 +135,8 @@ impl PortfolioSingleIntraNodeSolver {
             node_with_port_points,
             effort,
             adaptive_search_expanded: false,
+            enable_negotiated_search: false,
+            negotiated_search_started: false,
             iterations: 0,
             max_iterations: 20_000_000.0 * effort,
             progress: 0.0,
@@ -152,6 +164,9 @@ impl PortfolioSingleIntraNodeSolver {
 
     pub fn get_candidate_progress(solver: &dyn Candidate, node_segment_count: usize) -> f64 {
         let state = solver.state();
+        if let Some(progress) = state.negotiated_progress {
+            return progress;
+        }
         if let Some(count) = state.solved_segment_count {
             return (count as f64 / node_segment_count as f64).min(1.0);
         }
@@ -164,6 +179,7 @@ impl PortfolioSingleIntraNodeSolver {
             .as_deref()
             .unwrap_or(&[])
             .iter()
+            .filter(|record| record.solver.state().routing_iterations.is_none())
             .fold(0.0, |total, record| {
                 total + record.solver.state().iterations as f64
             })
@@ -175,6 +191,7 @@ impl PortfolioSingleIntraNodeSolver {
             .as_deref()
             .unwrap_or(&[])
             .iter()
+            .filter(|record| record.solver.state().routing_iterations.is_none())
             .fold(1.0, |total, record| {
                 js_max(total, record.solver.state().max_iterations)
             })
@@ -205,12 +222,14 @@ impl PortfolioSingleIntraNodeSolver {
     pub fn initialize_solvers(&mut self, factory: &mut dyn CandidateFactory) -> Result<(), String> {
         self.supervisor.initialize_solvers(
             &get_hyper_parameter_defs(),
-            Some(&get_combination_defs()),
+            Some(&get_combination_defs(self.enable_negotiated_search)),
             factory,
             Self::compute_g,
         )?;
         for record in self.supervisor.supervised_solvers.as_mut().unwrap() {
-            record.solver.setup()?;
+            if record.solver.state().routing_iterations.is_none() {
+                record.solver.setup()?;
+            }
         }
         self.stats["dynamicExpansionWorkBudget"] = json!(self.get_dynamic_expansion_work_budget());
         self.refresh_dynamic_iteration_limit();
@@ -223,7 +242,9 @@ impl PortfolioSingleIntraNodeSolver {
         factory: &mut dyn CandidateFactory,
     ) -> Result<usize, String> {
         let mut solver = factory.generate(&hyper_parameters)?;
-        solver.setup()?;
+        if solver.state().routing_iterations.is_none() {
+            solver.setup()?;
+        }
         let g = Self::compute_g(solver.as_ref(), &hyper_parameters);
         Ok(self.supervisor.add_candidate(hyper_parameters, solver, g))
     }
@@ -292,12 +313,27 @@ impl PortfolioSingleIntraNodeSolver {
         };
         self.supervisor
             .step_initialized(Self::compute_g, |solver| {
-                if expanded {
+                if expanded || solver.state().negotiated_progress.is_some() {
                     1.0 - Self::get_candidate_progress(solver, count)
                 } else {
                     1.0 - progress_or_zero(solver.state().progress)
                 }
             })?;
+        if !self.negotiated_search_started
+            && self.supervisor.active_sub_solver.is_some_and(|id| {
+                self.supervisor
+                    .supervised_solvers
+                    .as_ref()
+                    .unwrap()
+                    .iter()
+                    .any(|record| {
+                        record.id == id && record.solver.state().routing_iterations.is_some()
+                    })
+            })
+        {
+            self.negotiated_search_started = true;
+            self.stats["negotiatedSearchStartedAtIteration"] = json!(self.iterations);
+        }
         if !self.supervisor.solved && !self.supervisor.failed && self.should_expand_portfolio() {
             self.expand_adaptive_search(factory)?;
         }
@@ -325,6 +361,9 @@ impl PortfolioSingleIntraNodeSolver {
     }
 
     pub fn compute_g(solver: &dyn Candidate, hyper_parameters: &Value) -> f64 {
+        if let Some(iterations) = solver.state().routing_iterations {
+            return iterations as f64 / 1_000_000.0;
+        }
         let iterations = solver.state().iterations as f64;
         if solver.is_specialized() {
             return iterations / 1_000_000.0;

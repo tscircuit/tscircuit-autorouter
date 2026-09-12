@@ -89,12 +89,13 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
     }
     return new bindings.GrowShrinkHighDensityIntraNodeSolver(
       input,
-      (node: NodeWithPortPoints): number => {
+      (node: NodeWithPortPoints, enableNegotiatedSearch: boolean): number => {
         const solver = owner()
         const { growShrinkSolutionValidator: _, ...props } =
           solver.constructorParams
         const child = new PortfolioSingleIntraNodeSolver({
           ...props,
+          enableNegotiatedSearch,
           nodeWithPortPoints: node,
         })
         const id = solver.scope.adopt(child)

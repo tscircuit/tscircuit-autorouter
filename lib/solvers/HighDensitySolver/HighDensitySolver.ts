@@ -2,6 +2,7 @@ import * as bindings from "../../../rust/capacity-autorouter-bindings/pkg/capaci
 import { initializeAutorouterBindings } from "lib/bindings/initializeAutorouterBindings"
 import { PortfolioCallbackScope } from "lib/bindings/high-density/PortfolioCallbackScope"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
+import type { HighDensityBoardGeometry } from "lib/types/high-density-board-geometry"
 import type { GraphicsObject } from "graphics-debug"
 import { getGlobalInMemoryCache } from "lib/cache/setupGlobalCaches"
 import type { CapacityMeshNodeId } from "lib/types/capacity-mesh-types"
@@ -66,6 +67,8 @@ export class HighDensitySolver extends BaseSolver {
   effort: number
   obstacles: Obstacle[]
   layerCount: number
+  enableNegotiatedSearch: boolean
+  boardGeometry?: HighDensityBoardGeometry
   useGrowShrinkHighDensityIntraNodeSolver: boolean
   preserveTerminalPcbPortIds: boolean
   growShrinkMaxInnerIterationsPerGrowthAttempt?: number
@@ -124,6 +127,8 @@ export class HighDensitySolver extends BaseSolver {
     nodePfById,
     obstacles,
     layerCount,
+    enableNegotiatedSearch = false,
+    boardGeometry,
     useGrowShrinkHighDensityIntraNodeSolver,
     preserveTerminalPcbPortIds,
     growShrinkMaxInnerIterationsPerGrowthAttempt,
@@ -140,6 +145,8 @@ export class HighDensitySolver extends BaseSolver {
     effort?: number
     obstacles?: Obstacle[]
     layerCount?: number
+    enableNegotiatedSearch?: boolean
+    boardGeometry?: HighDensityBoardGeometry
     useGrowShrinkHighDensityIntraNodeSolver?: boolean
     preserveTerminalPcbPortIds?: boolean
     growShrinkMaxInnerIterationsPerGrowthAttempt?: number
@@ -167,6 +174,8 @@ export class HighDensitySolver extends BaseSolver {
     this.obstacleMargin = obstacleMargin ?? 0.15
     this.obstacles = obstacles ?? []
     this.layerCount = layerCount ?? 2
+    this.enableNegotiatedSearch = enableNegotiatedSearch
+    this.boardGeometry = boardGeometry
     this.useGrowShrinkHighDensityIntraNodeSolver =
       useGrowShrinkHighDensityIntraNodeSolver ?? false
     this.preserveTerminalPcbPortIds = preserveTerminalPcbPortIds ?? false
@@ -351,6 +360,8 @@ export class HighDensitySolver extends BaseSolver {
     this.nodeReferences.set(node.capacityMeshNodeId, node)
     const params = {
       nodeWithPortPoints: node,
+      enableNegotiatedSearch: this.enableNegotiatedSearch,
+      boardGeometry: this.boardGeometry,
       colorMap: this.stateValues.colorMap as Record<string, string>,
       connMap: this.stateValues.connMap as ConnectivityMap | undefined,
       viaDiameter: this.viaDiameter,
