@@ -69,16 +69,16 @@ for (const fixture of fixtures) {
   const params = structuredClone(fixture.params)
   if (params.connMap) params.connMap = Object.assign(new ConnectivityMap({}), params.connMap)
   const expected = new references[fixture.kind](params)
-  const actual = new bindings.SpecializedIntraNodeDispatcher(fixture.kind, JSON.stringify(fixture.params))
+  const actual = new bindings.SpecializedIntraNodeDispatcher(fixture.kind, fixture.params)
   const compare = (stage: string): void => {
-    const state = JSON.parse(actual.stateJson())
-    for (const key of Object.keys(state)) assert.deepEqual(state[key], expected[key], `${fixture.name} ${stage} ${key}`)
-    assert.equal(JSON.stringify(JSON.parse(actual.solvedRoutesJson())), JSON.stringify(expected.solvedRoutes), `${fixture.name} ${stage} route bytes`)
-    const snapshot = JSON.parse(actual.snapshotJson())
+    const state = actual.state()
+    for (const [key, value] of Object.entries(state)) assert.deepEqual(value, expected[key], `${fixture.name} ${stage} ${key}`)
+    assert.equal(JSON.stringify(actual.solvedRoutes()), JSON.stringify(expected.solvedRoutes), `${fixture.name} ${stage} route bytes`)
+    const snapshot = actual.snapshot()
     for (const key of Object.keys(snapshot)) {
       assert.deepEqual(snapshot[key], JSON.parse(JSON.stringify(expected[key])), `${fixture.name} ${stage} snapshot ${key}`)
     }
-    const graphics = JSON.parse(actual.visualizeJson(safeTransparentize))
+    const graphics = actual.visualize(safeTransparentize)
     const referenceGraphics = expected.visualize()
     assert.equal(JSON.stringify(graphics), JSON.stringify(referenceGraphics), `${fixture.name} ${stage} graphics bytes`)
     assert.equal(getSvgFromGraphicsObject(graphics, { backgroundColor: "white" }), getSvgFromGraphicsObject(referenceGraphics, { backgroundColor: "white" }), `${fixture.name} ${stage} SVG`)
@@ -87,12 +87,13 @@ for (const fixture of fixtures) {
   try {
     compare("constructor")
     if (fixture.mutate) {
-      const snapshot = JSON.parse(actual.snapshotJson())
+      const snapshot = actual.snapshot()
       snapshot.traceWidth = expected.traceWidth = 0.225
       snapshot.viaDiameter = expected.viaDiameter = 0.45
-      snapshot.nodeWithPortPoints.portPoints[0].x += 0.01
+      const snapshotNode = snapshot.nodeWithPortPoints as { portPoints: Array<{ x: number }> }
+      snapshotNode.portPoints[0].x += 0.01
       expected.nodeWithPortPoints.portPoints[0].x += 0.01
-      actual.restoreJson(JSON.stringify(snapshot))
+      actual.restore(snapshot)
       compare("restore public mutation")
     }
     while (!expected.solved && !expected.failed) {

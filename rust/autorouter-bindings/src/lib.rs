@@ -12,9 +12,10 @@ mod bindings;
 use std::{cell::RefCell, rc::Rc};
 use high_density_a01::high_density_solver_a01::HighDensitySolverA01;
 use high_density_a01::high_density_solver_a03::HighDensitySolverA03;
-use serde::Serialize;
 use serde_json::{json, Value};
 use wasm_bindgen::prelude::*;
+use tsify::{Ts, Tsify};
+use bindings::repair_wire::*;
 
 enum Engine {
     A01(HighDensitySolverA01),
@@ -29,14 +30,11 @@ pub struct AutoroutingDrcEngine {
 #[wasm_bindgen]
 impl AutoroutingDrcEngine {
     #[wasm_bindgen(constructor)]
-    pub fn new(srj: JsValue, conn_map: JsValue, options: JsValue) -> Result<Self, JsValue> {
-        let srj: Value = serde_wasm_bindgen::from_value(srj)
+    pub fn new(srj: Ts<DrcSrj>, conn_map: Ts<RepairConnectivity>, options: Ts<DrcOptions>) -> Result<Self, JsValue> {
+        let srj = srj.to_rust().map(|value| value.0)
             .map_err(|error| JsValue::from_str(&error.to_string()))?;
-        let conn_map = if conn_map.is_null() || conn_map.is_undefined() { None } else {
-            Some(serde_wasm_bindgen::from_value(conn_map)
-                .map_err(|error| JsValue::from_str(&error.to_string()))?)
-        };
-        let options: Value = serde_wasm_bindgen::from_value(options)
+        let conn_map = conn_map.to_rust().map_err(|error| JsValue::from_str(&error.to_string()))?.0;
+        let options = options.to_rust().map(|value| value.0)
             .map_err(|error| JsValue::from_str(&error.to_string()))?;
         let math = autorouting_drc::autorouting_drc_engine::DrcMath {
             hypot: js_sys::Math::hypot,
@@ -53,41 +51,29 @@ impl AutoroutingDrcEngine {
         AutoroutingDrcEngine { engine: self.engine.fork_compiled() }
     }
 
-    pub fn evaluate(&mut self, traces: JsValue, include_via_pad_errors: bool) -> Result<JsValue, JsValue> {
-        let traces: Value = serde_wasm_bindgen::from_value(traces)
+    pub fn evaluate(&mut self, traces: Ts<DrcTraces>, include_via_pad_errors: bool) -> Result<Ts<DrcResult>, JsValue> {
+        let traces = traces.to_rust().map(|value| value.0)
             .map_err(|error| JsValue::from_str(&error.to_string()))?;
         let result = if include_via_pad_errors { self.engine.evaluate(&traces) }
             else { self.engine.evaluate_legacy(&traces) };
-        to_js(&result)
+        DrcResult(result).into_ts().map_err(|error| JsValue::from_str(&error.to_string()))
     }
 
-    #[wasm_bindgen(js_name = evaluateJson)]
-    pub fn evaluate_json(&mut self, traces: &str, include_via_pad_errors: bool) -> Result<JsValue, JsValue> {
-        let traces: Value = serde_json::from_str(traces)
-            .map_err(|error| JsValue::from_str(&error.to_string()))?;
-        let result = if include_via_pad_errors { self.engine.evaluate(&traces) }
-            else { self.engine.evaluate_legacy(&traces) };
-        to_js(&result)
-    }
-
-    pub fn stats(&self) -> Result<JsValue, JsValue> {
-        self.engine.last_run_stats.serialize(&serde_wasm_bindgen::Serializer::json_compatible())
-            .map_err(|error| JsValue::from_str(&error.to_string()))
+    pub fn stats(&self) -> Result<Ts<autorouting_drc::autorouting_drc_engine::AutoroutingDrcEngineRunStats>, JsValue> {
+        self.engine.last_run_stats.into_ts().map_err(|error| JsValue::from_str(&error.to_string()))
     }
 
     #[wasm_bindgen(js_name = setConnectivity)]
-    pub fn set_connectivity(&mut self, conn_map: JsValue) -> Result<(), JsValue> {
-        self.engine.conn_map = if conn_map.is_null() || conn_map.is_undefined() { None } else {
-            Some(serde_wasm_bindgen::from_value(conn_map)
-                .map_err(|error| JsValue::from_str(&error.to_string()))?)
-        };
+    pub fn set_connectivity(&mut self, conn_map: Ts<RepairConnectivity>) -> Result<(), JsValue> {
+        self.engine.conn_map = conn_map.to_rust().map_err(|error| JsValue::from_str(&error.to_string()))?.0
+            .map(serde_json::from_value).transpose().map_err(|error| JsValue::from_str(&error.to_string()))?;
         Ok(())
     }
 }
 
 fn to_js(value: &Value) -> Result<JsValue, JsValue> {
-    value.serialize(&serde_wasm_bindgen::Serializer::json_compatible())
-        .map_err(|error| JsValue::from_str(&error.to_string()))
+    Ok(RepairCallbackValue(value).into_ts()
+        .map_err(|error| JsValue::from_str(&error.to_string()))?.into())
 }
 
 #[wasm_bindgen]
@@ -98,8 +84,8 @@ pub struct HighDensityCandidateSolver {
 #[wasm_bindgen]
 impl HighDensityCandidateSolver {
     #[wasm_bindgen(constructor)]
-    pub fn new(variant: &str, props: JsValue, initial_penalty_fn: Option<js_sys::Function>) -> Result<Self, JsValue> {
-        let props: Value = serde_wasm_bindgen::from_value(props)
+    pub fn new(variant: &str, props: Ts<CandidateProps>, initial_penalty_fn: Option<js_sys::Function>) -> Result<Self, JsValue> {
+        let props = props.to_rust().map(|value| value.0)
             .map_err(|error| JsValue::from_str(&error.to_string()))?;
         let penalty = initial_penalty_fn.map(|callback| {
             Box::new(move |input: &Value| -> f64 {
@@ -126,17 +112,17 @@ impl HighDensityCandidateSolver {
         Ok(Self { engine: Rc::new(RefCell::new(engine)) })
     }
 
-    pub fn setup(&mut self, max_iterations: usize) -> Result<JsValue, JsValue> {
+    pub fn setup(&mut self, max_iterations: usize) -> Result<Ts<CandidateSetup>, JsValue> {
         match &mut *self.engine.borrow_mut() {
             Engine::A01(engine) => {
                 engine.max_iterations = max_iterations;
                 engine.setup();
-                to_js(&json!({ "maxIterations": engine.max_iterations, "solved": engine.solved, "failed": engine.failed, "error": engine.error }))
+                CandidateSetup { max_iterations: engine.max_iterations, solved: engine.solved, failed: engine.failed, error: engine.error.clone() }.into_ts().map_err(|error| JsValue::from_str(&error.to_string()))
             }
             Engine::A03(engine) => {
                 engine.max_iterations = max_iterations;
                 engine.setup();
-                to_js(&json!({ "maxIterations": engine.max_iterations, "solved": engine.solved, "failed": engine.failed, "error": engine.error }))
+                CandidateSetup { max_iterations: engine.max_iterations, solved: engine.solved, failed: engine.failed, error: engine.error.clone() }.into_ts().map_err(|error| JsValue::from_str(&error.to_string()))
             }
         }
     }
@@ -173,17 +159,17 @@ impl HighDensityCandidateSolver {
     }
 
     #[wasm_bindgen(js_name = getOutput)]
-    pub fn get_output(&self) -> Result<JsValue, JsValue> {
+    pub fn get_output(&self) -> Result<Ts<IntraNodeRoutes>, JsValue> {
         match &*self.engine.borrow() {
-            Engine::A01(engine) => to_js(&engine.get_output()),
-            Engine::A03(engine) => to_js(&engine.get_output()),
+            Engine::A01(engine) => IntraNodeRoutes(engine.get_output()).into_ts().map_err(|error| JsValue::from_str(&error.to_string())),
+            Engine::A03(engine) => IntraNodeRoutes(engine.get_output()).into_ts().map_err(|error| JsValue::from_str(&error.to_string())),
         }
     }
 
-    pub fn visualize(&self) -> Result<JsValue, JsValue> {
+    pub fn visualize(&self) -> Result<Ts<SolverGraphics>, JsValue> {
         match &*self.engine.borrow() {
-            Engine::A01(engine) => to_js(&engine.visualize()),
-            Engine::A03(engine) => to_js(&engine.visualize()),
+            Engine::A01(engine) => SolverGraphics(engine.visualize()).into_ts().map_err(|error| JsValue::from_str(&error.to_string())),
+            Engine::A03(engine) => SolverGraphics(engine.visualize()).into_ts().map_err(|error| JsValue::from_str(&error.to_string())),
         }
     }
 }
@@ -261,8 +247,8 @@ pub struct IntraNodeRouteContext {
 #[wasm_bindgen]
 impl IntraNodeRouteContext {
     #[wasm_bindgen(constructor)]
-    pub fn new(props: JsValue) -> Result<Self, JsValue> {
-        let props: Value = serde_wasm_bindgen::from_value(props)
+    pub fn new(props: Ts<IntraNodeProps>) -> Result<Self, JsValue> {
+        let props = props.to_rust().map(|value| value.0)
             .map_err(|error| JsValue::from_str(&error.to_string()))?;
         if !props.is_object() {
             return Err(JsValue::from_str("General router context must be an object"));
@@ -270,9 +256,9 @@ impl IntraNodeRouteContext {
         Ok(Self { props: Rc::new(props) })
     }
 
-    pub fn create(&self, hyper_parameters: JsValue) -> Result<IntraNodeRouteSolver, JsValue> {
+    pub fn create(&self, hyper_parameters: Ts<IntraNodeHyperParameters>) -> Result<IntraNodeRouteSolver, JsValue> {
         let mut props = self.props.as_ref().clone();
-        props["hyperParameters"] = serde_wasm_bindgen::from_value(hyper_parameters)
+        props["hyperParameters"] = hyper_parameters.to_rust().map(|value| value.0)
             .map_err(|error| JsValue::from_str(&error.to_string()))?;
         let mut engine = intra_node_routing::intra_node_solver::IntraNodeRouteSolver::new(props);
         engine.pow = js_sys::Math::pow;
@@ -281,8 +267,8 @@ impl IntraNodeRouteContext {
     }
 
     #[wasm_bindgen(js_name = createLazy)]
-    pub fn create_lazy(&self, hyper_parameters: JsValue) -> Result<IntraNodeRouteSolver, JsValue> {
-        let hyper_parameters = serde_wasm_bindgen::from_value(hyper_parameters)
+    pub fn create_lazy(&self, hyper_parameters: Ts<IntraNodeHyperParameters>) -> Result<IntraNodeRouteSolver, JsValue> {
+        let hyper_parameters = hyper_parameters.to_rust().map(|value| value.0)
             .map_err(|error| JsValue::from_str(&error.to_string()))?;
         Ok(IntraNodeRouteSolver { engine: Rc::new(RefCell::new(GeneralState {
             pending: Some((self.props.clone(), hyper_parameters)), engine: None,
@@ -295,8 +281,8 @@ impl IntraNodeRouteContext {
 #[wasm_bindgen]
 impl IntraNodeRouteSolver {
     #[wasm_bindgen(constructor)]
-    pub fn new(props: JsValue) -> Result<Self, JsValue> {
-        let props: Value = serde_wasm_bindgen::from_value(props)
+    pub fn new(props: Ts<IntraNodeProps>) -> Result<Self, JsValue> {
+        let props = props.to_rust().map(|value| value.0)
             .map_err(|error| JsValue::from_str(&error.to_string()))?;
         let mut engine = intra_node_routing::intra_node_solver::IntraNodeRouteSolver::new(props);
         engine.pow = js_sys::Math::pow;
@@ -326,13 +312,13 @@ impl IntraNodeRouteSolver {
     pub fn get_diagnostic_revision(&self) -> usize { self.engine.borrow().diagnostic_revision }
 
     #[wasm_bindgen(js_name = getDiagnostics)]
-    pub fn get_diagnostics(&self) -> Result<JsValue, JsValue> {
+    pub fn get_diagnostics(&self) -> Result<Ts<IntraNodeDiagnostics>, JsValue> {
         let state = self.engine.borrow();
-        let Some(engine) = &state.engine else { return Ok(JsValue::NULL); };
-        to_js(&serde_json::json!({"unsolvedConnections":engine.unsolved_connections,
+        let Some(engine) = &state.engine else { return IntraNodeDiagnostics(Value::Null).into_ts().map_err(|error| JsValue::from_str(&error.to_string())); };
+        IntraNodeDiagnostics(serde_json::json!({"unsolvedConnections":engine.unsolved_connections,
             "rerouteAttemptsByConnection":engine.reroute_attempts_by_connection.iter().collect::<Vec<_>>(),
             "activeChildId":engine.active_sub_solver.as_ref().map(|child|child.diagnostic_id),
-            "failedChildIds":engine.failed_sub_solvers.iter().map(|child|child.diagnostic_id).collect::<Vec<_>>()}))
+            "failedChildIds":engine.failed_sub_solvers.iter().map(|child|child.diagnostic_id).collect::<Vec<_>>()})).into_ts().map_err(|error| JsValue::from_str(&error.to_string()))
     }
 
     #[wasm_bindgen(js_name = getChild)]
@@ -355,16 +341,16 @@ impl IntraNodeRouteSolver {
     }
 
     #[wasm_bindgen(js_name = getOutput)]
-    pub fn get_output(&self) -> Result<JsValue, JsValue> {
-        to_js(&serde_json::to_value(&self.engine.borrow().routes()).map_err(|error| JsValue::from_str(&error.to_string()))?)
+    pub fn get_output(&self) -> Result<Ts<IntraNodeRoutes>, JsValue> {
+        IntraNodeRoutes(serde_json::to_value(&self.engine.borrow().routes()).map_err(|error| JsValue::from_str(&error.to_string()))?).into_ts().map_err(|error| JsValue::from_str(&error.to_string()))
     }
 
-    pub fn visualize(&self, transparentize: js_sys::Function) -> Result<JsValue, JsValue> {
-        to_js(&self.engine.borrow_mut().ensure_initialized().visualize_with_transparentize(&|color, amount| {
+    pub fn visualize(&self, transparentize: js_sys::Function) -> Result<Ts<SolverGraphics>, JsValue> {
+        SolverGraphics(self.engine.borrow_mut().ensure_initialized().visualize_with_transparentize(&|color, amount| {
             transparentize.call2(&JsValue::UNDEFINED, &JsValue::from_str(color), &JsValue::from_f64(amount))
                 .unwrap_or_else(|error| wasm_bindgen::throw_val(error))
                 .as_string().unwrap_or_else(|| wasm_bindgen::throw_str("Expected transparency color string"))
-        }))
+        })).into_ts().map_err(|error| JsValue::from_str(&error.to_string()))
     }
 }
 
@@ -376,10 +362,9 @@ pub struct BroadRepulsionEngine {
 #[wasm_bindgen]
 impl BroadRepulsionEngine {
     #[wasm_bindgen(constructor)]
-    pub fn new(srj_json: &str, connectivity_json: &str) -> Result<Self, JsValue> {
-        let srj: Value = serde_json::from_str(srj_json)
-            .map_err(|error| JsValue::from_str(&error.to_string()))?;
-        let connectivity: Option<Value> = serde_json::from_str(connectivity_json)
+    pub fn new(srj_input: Ts<RepairSrj>, connectivity_input: Ts<RepairConnectivity>) -> Result<Self, JsValue> {
+        let srj = srj_input.to_rust().map_err(|error| JsValue::from_str(&error.to_string()))?.0;
+        let connectivity: Option<Value> = connectivity_input.to_rust().map(|input| input.0)
             .map_err(|error| JsValue::from_str(&error.to_string()))?;
         let math = repair::solver_helpers::RepairMath {
             hypot: js_sys::Math::hypot,
@@ -391,19 +376,18 @@ impl BroadRepulsionEngine {
     }
 
     #[wasm_bindgen(js_name = setConnectivity)]
-    pub fn set_connectivity(&mut self, connectivity_json: &str) -> Result<(), JsValue> {
-        let connectivity: Option<Value> = serde_json::from_str(connectivity_json)
+    pub fn set_connectivity(&mut self, connectivity_input: Ts<RepairConnectivity>) -> Result<(), JsValue> {
+        let connectivity: Option<Value> = connectivity_input.to_rust().map(|input| input.0)
             .map_err(|error| JsValue::from_str(&error.to_string()))?;
         self.engine.set_connectivity(connectivity);
         Ok(())
     }
 
-    pub fn run(&self, routes_json: &str, effort: f64, pass_multiplier: f64,
-        allow_same_net_via_pairs: bool, run_final_cleanup: bool) -> Result<String, JsValue> {
-        let routes: Value = serde_json::from_str(routes_json)
-            .map_err(|error| JsValue::from_str(&error.to_string()))?;
+    pub fn run(&self, routes_input: Ts<RepairRoutes>, effort: f64, pass_multiplier: f64,
+        allow_same_net_via_pairs: bool, run_final_cleanup: bool) -> Result<Ts<repair::solver_helpers::BroadRepulsionResult>, JsValue> {
+        let routes = Value::Array(routes_input.to_rust().map_err(|error| JsValue::from_str(&error.to_string()))?.0);
         let result = self.engine.run(routes, effort, pass_multiplier, allow_same_net_via_pairs, run_final_cleanup);
-        serde_json::to_string(&result).map_err(|error| JsValue::from_str(&error.to_string()))
+        result.into_ts().map_err(|error| JsValue::from_str(&error.to_string()))
     }
 }
 
@@ -423,23 +407,9 @@ fn repair_math() -> repair::solver_helpers::RepairMath {
     }
 }
 
-#[derive(serde::Deserialize)]
+#[derive(serde::Deserialize, Tsify)]
 #[serde(rename_all = "camelCase")]
-struct RepairViaInput {
-    route_index: usize,
-    root_connection_name: String,
-    point_indexes: Vec<usize>,
-    z_layers: Vec<f64>,
-    x: f64,
-    y: f64,
-    radius: f64,
-    movable: bool,
-    can_canonicalize: bool,
-}
-
-#[derive(serde::Deserialize)]
-#[serde(rename_all = "camelCase")]
-struct RepairSegmentInput {
+pub struct RepairSegmentInput {
     root_connection_name: String,
     start: repair::internal_types::Point,
     end: repair::internal_types::Point,
@@ -447,15 +417,43 @@ struct RepairSegmentInput {
     radius: f64,
 }
 
+#[derive(serde::Deserialize, Tsify)]
+#[serde(rename_all = "camelCase")]
+pub struct RepairForceInput {
+    #[tsify(type = "import('high-density-repair03/lib').HighDensityRoute[]")]
+    routes: Vec<Value>,
+    #[tsify(type = "Record<string, unknown>[]")]
+    errors: Vec<Value>,
+    #[tsify(type = "Record<string, number>")]
+    trace_map: indexmap::IndexMap<String, usize>,
+}
+
+#[derive(serde::Deserialize, Tsify)]
+#[serde(rename_all = "camelCase")]
+pub struct RepairPadInput {
+    #[tsify(type = "import('high-density-repair03/lib').HighDensityRoute")]
+    route: Value,
+    preferred: repair::internal_types::Point,
+    #[tsify(type = "readonly number[]")]
+    z_layers: Vec<f64>,
+}
+
+#[derive(serde::Deserialize, Tsify)]
+pub struct RepairTraceInput {
+    via: repair::internal_types::ViaNode,
+    #[tsify(type = "readonly RepairSegmentInput[]")]
+    segments: Vec<RepairSegmentInput>,
+    connectivity: Option<repair::net_utils::RepairConnectivityMap>,
+}
+
 #[wasm_bindgen]
 impl TargetedRepairEngine {
     #[wasm_bindgen(constructor)]
-    pub fn new(srj_json: &str, connectivity_json: &str) -> Result<Self, JsValue> {
-        let srj: Value = serde_json::from_str(srj_json)
+    pub fn new(srj_input: Ts<RepairSrj>, connectivity_input: Ts<RepairConnectivity>) -> Result<Self, JsValue> {
+        let srj = srj_input.to_rust().map_err(|error| JsValue::from_str(&error.to_string()))?.0;
+        let connectivity_value: Option<Value> = connectivity_input.to_rust().map(|input| input.0)
             .map_err(|error| JsValue::from_str(&error.to_string()))?;
-        let connectivity_value: Option<Value> = serde_json::from_str(connectivity_json)
-            .map_err(|error| JsValue::from_str(&error.to_string()))?;
-        let connectivity: Option<repair::net_utils::RepairConnectivityMap> = serde_json::from_str(connectivity_json)
+        let connectivity: Option<repair::net_utils::RepairConnectivityMap> = connectivity_value.as_ref().map(|value| serde_json::from_value(value.clone())).transpose()
             .map_err(|error| JsValue::from_str(&error.to_string()))?;
         let pad_context = repair::find_pad_clearance_via_position::PadClearanceContext::new(&srj, &repair_math(), connectivity.as_ref());
         let engine = repair::solver_helpers::BroadRepulsionEngine::new(srj, connectivity_value, repair_math());
@@ -463,10 +461,10 @@ impl TargetedRepairEngine {
     }
 
     #[wasm_bindgen(js_name = setConnectivity)]
-    pub fn set_connectivity(&mut self, connectivity_json: &str) -> Result<(), JsValue> {
-        let connectivity_value: Option<Value> = serde_json::from_str(connectivity_json)
+    pub fn set_connectivity(&mut self, connectivity_input: Ts<RepairConnectivity>) -> Result<(), JsValue> {
+        let connectivity_value: Option<Value> = connectivity_input.to_rust().map(|input| input.0)
             .map_err(|error| JsValue::from_str(&error.to_string()))?;
-        self.connectivity = serde_json::from_str(connectivity_json)
+        self.connectivity = connectivity_value.as_ref().map(|value| serde_json::from_value(value.clone())).transpose()
             .map_err(|error| JsValue::from_str(&error.to_string()))?;
         self.pad_context.set_connectivity(self.connectivity.as_ref());
         self.engine.set_connectivity(connectivity_value);
@@ -474,35 +472,26 @@ impl TargetedRepairEngine {
     }
 
     #[wasm_bindgen(js_name = applyForces)]
-    pub fn apply_forces(&self, routes_json: &str, errors_json: &str, trace_map_json: &str,
-        scale: f64, canonical_pairs: bool, same_net: bool, shared_site: bool, owner_target: bool) -> Result<String, JsValue> {
-        let routes = serde_json::from_str(routes_json).map_err(|error| JsValue::from_str(&error.to_string()))?;
-        let errors = serde_json::from_str(errors_json).map_err(|error| JsValue::from_str(&error.to_string()))?;
-        let trace_map = serde_json::from_str(trace_map_json).map_err(|error| JsValue::from_str(&error.to_string()))?;
-        let result = self.engine.apply_error_forces(routes, errors, trace_map, scale, canonical_pairs, same_net, shared_site, owner_target);
-        serde_json::to_string(&result).map_err(|error| JsValue::from_str(&error.to_string()))
+    pub fn apply_forces(&self, input: Ts<RepairForceInput>, scale: f64,
+        canonical_pairs: bool, same_net: bool, shared_site: bool, owner_target: bool) -> Result<Ts<repair::solver_helpers::ErrorForceResult>, JsError> {
+        let input = input.to_rust()?;
+        let result = self.engine.apply_error_forces(input.routes, input.errors, input.trace_map,
+            scale, canonical_pairs, same_net, shared_site, owner_target);
+        Ok(result.into_ts()?)
     }
 
-    pub fn pad(&self, route_json: &str, preferred_json: &str, radius: f64, z_layers_json: &str) -> Result<String, JsValue> {
-        let route: Value = serde_json::from_str(route_json).map_err(|error| JsValue::from_str(&error.to_string()))?;
-        let preferred = serde_json::from_str(preferred_json).map_err(|error| JsValue::from_str(&error.to_string()))?;
-        let z_layers: Vec<f64> = serde_json::from_str(z_layers_json).map_err(|error| JsValue::from_str(&error.to_string()))?;
-        let route = repair::internal_types::MutableRoute::from_value(&route);
+    pub fn pad(&self, input: Ts<RepairPadInput>, radius: f64) -> Result<Ts<repair::find_pad_clearance_via_position::PadPlacement>, JsError> {
+        let input = input.to_rust()?;
+        let route = repair::internal_types::MutableRoute::from_value(&input.route);
         let result = self.pad_context.find_with_identity(
-            &route, preferred, radius, &z_layers, self.connectivity.as_ref(), &repair_math());
-        serde_json::to_string(&json!({"point":result.point,"isPreferred":result.is_preferred})).map_err(|error| JsValue::from_str(&error.to_string()))
+            &route, input.preferred, radius, &input.z_layers, self.connectivity.as_ref(), &repair_math());
+        Ok(result.into_ts()?)
     }
 
-    pub fn trace(via_json: &str, segments_json: &str, clearance: f64, connectivity_json: &str) -> Result<String, JsValue> {
-        use repair::internal_types::{ViaNode, Segment, RoutePoint};
+    pub fn trace(input: Ts<RepairTraceInput>, clearance: f64) -> Result<Ts<repair::find_trace_clearance_via_positions::TracePlacements>, JsError> {
+        use repair::internal_types::{Segment, RoutePoint};
         use std::{cell::RefCell, rc::Rc};
-        let via: RepairViaInput = serde_json::from_str(via_json).map_err(|error| JsValue::from_str(&error.to_string()))?;
-        let inputs: Vec<RepairSegmentInput> = serde_json::from_str(segments_json).map_err(|error| JsValue::from_str(&error.to_string()))?;
-        let connectivity: Option<repair::net_utils::RepairConnectivityMap> = serde_json::from_str(connectivity_json)
-            .map_err(|error| JsValue::from_str(&error.to_string()))?;
-        let via = ViaNode { route_index: via.route_index, root_connection_name: via.root_connection_name,
-            point_indexes: via.point_indexes, z_layers: via.z_layers, x: via.x, y: via.y,
-            radius: via.radius, movable: via.movable, can_canonicalize: via.can_canonicalize };
+        let RepairTraceInput { via, segments: inputs, connectivity } = input.to_rust()?;
         let segments: Vec<Segment> = inputs.into_iter().map(|input| Segment {
             route_index: 0, root_connection_name: input.root_connection_name,
             start_index: 0, end_index: 1,
@@ -521,7 +510,7 @@ impl TargetedRepairEngine {
         }).collect();
         let result = repair::find_trace_clearance_via_positions::find_trace_clearance_via_positions_with_identity(
             &via, &segments, clearance, connectivity.as_ref(), &repair_math());
-        serde_json::to_string(&json!({"points":result.points,"viaIdentityIndices":result.via_identity_indices})).map_err(|error| JsValue::from_str(&error.to_string()))
+        Ok(result.into_ts()?)
     }
 }
 
@@ -535,10 +524,10 @@ pub struct GlobalDrcBranchPortfolioSolver {
 #[wasm_bindgen]
 impl GlobalDrcBranchPortfolioSolver {
     #[wasm_bindgen(constructor)]
-    pub fn new(params_json: &str, descriptor_json: &str, reference: js_sys::Function, prepared_engine: Option<AutoroutingDrcEngine>) -> Result<Self, JsValue> {
+    pub fn new(params_input: Ts<RepairPortfolioInput>, descriptor_input: Ts<RepairDescriptor>, #[wasm_bindgen(unchecked_param_type = "(routes: RepairRoutes) => RepairEvaluationResult")] reference: js_sys::Function, prepared_engine: Option<AutoroutingDrcEngine>) -> Result<Self, JsValue> {
         use std::{cell::RefCell, rc::Rc};
-        let mut params: Value = serde_json::from_str(params_json).map_err(|error| JsValue::from_str(&error.to_string()))?;
-        let mut descriptor: Value = serde_json::from_str(descriptor_json).map_err(|error| JsValue::from_str(&error.to_string()))?;
+        let mut params: Value = params_input.to_rust().map(|input| input.0).map_err(|error| JsValue::from_str(&error.to_string()))?;
+        let mut descriptor: Value = descriptor_input.to_rust().map(|input| input.0).map_err(|error| JsValue::from_str(&error.to_string()))?;
         let route_values = params["hdRoutes"].take().as_array().ok_or_else(|| JsValue::from_str("Repair portfolio routes required"))?.clone();
         let routes = repair::types::Routes::new(route_values.into_iter().map(repair::internal_types::MutableRoute::from_owned_value).collect());
         let conn_map = descriptor.get("connMap").filter(|v| !v.is_null()).cloned();
@@ -550,14 +539,13 @@ impl GlobalDrcBranchPortfolioSolver {
         let pending_reference_error = Rc::new(RefCell::new(None));
         let callback_error = pending_reference_error.clone();
         evaluator.set_reference_callback(Box::new(move |routes| {
-            let json = serde_json::to_string(routes).map_err(|error| error.to_string())?;
-            let result = reference.call1(&JsValue::UNDEFINED, &JsValue::from_str(&json))
+            let input = RepairCallbackRoutes(routes).into_ts().map_err(|error| error.to_string())?;
+            let result = reference.call1(&JsValue::UNDEFINED, &input.js_value())
                 .map_err(|error| {
                     *callback_error.borrow_mut() = Some(error);
                     "Reference DRC callback failed".to_owned()
                 })?;
-            let result = result.as_string().ok_or_else(|| "Reference DRC must return JSON".to_owned())?;
-            serde_json::from_str(&result).map_err(|error| format!("Invalid reference DRC result: {error}"))
+            Ts::<RepairEvaluationResult>::new_unchecked(result).to_rust().map(|value| value.0).map_err(|error| format!("Invalid reference DRC result: {error}"))
         }));
         evaluator.set_clock(js_sys::Date::now);
         let evaluator = Rc::new(RefCell::new(evaluator));
@@ -568,59 +556,60 @@ impl GlobalDrcBranchPortfolioSolver {
         Ok(Self { solver, evaluator, pending_reference_error })
     }
 
-    pub fn step(&mut self) -> Result<String, JsValue> {
+    pub fn step(&mut self) -> Result<Ts<RepairPortfolioState>, JsValue> {
         let result = self.solver.step();
         result.map_err(|error| self.pending_reference_error.borrow_mut().take().unwrap_or_else(|| JsValue::from_str(&error)))?;
         self.state()
     }
 
-    pub fn state(&self) -> Result<String, JsValue> {
+    pub fn state(&self) -> Result<Ts<RepairPortfolioState>, JsValue> {
         let evaluator = self.evaluator.borrow();
         let mut stats = self.solver.stats.clone();
         stats["indexedDrcEvaluationCount"] = json!(evaluator.indexed_drc_evaluation_count);
         stats["indexedDrcCacheHitCount"] = json!(evaluator.indexed_drc_cache_hit_count);
         stats["indexedDrcEvaluationTimeMs"] = json!(evaluator.indexed_drc_evaluation_time_ms);
         stats["indexedDrcCandidateCacheSize"] = json!(evaluator.cache_len());
-        serde_json::to_string(&json!({
-            "solved":self.solver.solved,"failed":self.solver.failed,"error":self.solver.error,
-            "iterations":self.solver.iterations,"maxIterations":100000,"progress":self.solver.progress,"stats":stats,
-        })).map_err(|error| JsValue::from_str(&error.to_string()))
+        RepairPortfolioState {
+            solved: self.solver.solved, failed: self.solver.failed, error: self.solver.error.clone(),
+            iterations: self.solver.iterations, max_iterations: 100000, progress: self.solver.progress, stats,
+        }.into_ts().map_err(|error| JsValue::from_str(&error.to_string()))
     }
 
     #[wasm_bindgen(js_name = getOutput)]
-    pub fn get_output(&self) -> Result<String, JsValue> {
+    pub fn get_output(&self) -> Result<Ts<RepairRoutes>, JsValue> {
         let routes: Vec<_> = self.solver.get_output().iter().map(repair::internal_types::MutableRoute::to_value).collect();
-        serde_json::to_string(&routes).map_err(|error| JsValue::from_str(&error.to_string()))
+        RepairRoutes(routes).into_ts().map_err(|error| JsValue::from_str(&error.to_string()))
     }
 
     #[wasm_bindgen(js_name = debugState)]
-    pub fn debug_state(&self) -> Result<String, JsValue> {
-        serde_json::to_string(&self.solver.debug_state()).map_err(|error| JsValue::from_str(&error.to_string()))
+    pub fn debug_state(&self) -> Result<Ts<RepairDebugState>, JsValue> {
+        RepairDebugState(self.solver.debug_state()).into_ts().map_err(|error| JsValue::from_str(&error.to_string()))
     }
 
     #[wasm_bindgen(js_name = evaluateRoutes)]
-    pub fn evaluate_routes(&self, routes_json: &str) -> Result<String, JsValue> {
-        let routes: Vec<Value> = serde_json::from_str(routes_json).map_err(|error| JsValue::from_str(&error.to_string()))?;
+    pub fn evaluate_routes(&self, routes_input: Ts<RepairRoutes>) -> Result<Ts<RepairSnapshot>, JsValue> {
+        let routes: Vec<Value> = routes_input.to_rust().map(|input| input.0).map_err(|error| JsValue::from_str(&error.to_string()))?;
         let result = self.evaluator.borrow_mut().evaluate_values(&routes);
         let result = result.map_err(|error| self.pending_reference_error.borrow_mut().take().unwrap_or_else(|| JsValue::from_str(&error)))?;
-        serde_json::to_string(&result).map_err(|error| JsValue::from_str(&error.to_string()))
+        RepairSnapshot(result).into_ts().map_err(|error| JsValue::from_str(&error.to_string()))
     }
 }
 
 #[wasm_bindgen]
 impl GlobalDrcBranchPortfolioSolver {
-    pub fn relax(srj_json: &str, routes_json: &str, connectivity_json: &str, kind: &str) -> Result<String, JsValue> {
-        let srj: Value = serde_json::from_str(srj_json).map_err(|error| JsValue::from_str(&error.to_string()))?;
-        let values: Vec<Value> = serde_json::from_str(routes_json).map_err(|error| JsValue::from_str(&error.to_string()))?;
+    pub fn relax(srj_input: Ts<RepairSrj>, routes_input: Ts<RepairRoutes>, connectivity_input: Ts<RepairConnectivity>, kind: &str) -> Result<Ts<repair::solver_helpers::BroadRepulsionResult>, JsValue> {
+        let srj: Value = srj_input.to_rust().map(|input| input.0).map_err(|error| JsValue::from_str(&error.to_string()))?;
+        let values: Vec<Value> = routes_input.to_rust().map(|input| input.0).map_err(|error| JsValue::from_str(&error.to_string()))?;
         let routes = repair::types::Routes::new(values.into_iter().map(repair::internal_types::MutableRoute::from_owned_value).collect());
-        let conn: Option<repair::net_utils::RepairConnectivityMap> = serde_json::from_str(connectivity_json).map_err(|error| JsValue::from_str(&error.to_string()))?;
+        let conn_value = connectivity_input.to_rust().map_err(|error| JsValue::from_str(&error.to_string()))?.0;
+        let conn = conn_value.map(serde_json::from_value).transpose().map_err(|error| JsValue::from_str(&error.to_string()))?;
         let result = match kind {
             "trace" => repair::trace_to_pad_clearance_relaxation::apply_trace_to_pad_clearance_relaxation(&srj, &routes, conn.as_ref(), repair_math()),
             "via" => repair::via_to_pad_clearance_relaxation::apply_via_to_pad_clearance_relaxation(&srj, &routes, conn.as_ref(), repair_math()),
             _ => return Err(JsValue::from_str("Unknown clearance relaxation kind")),
         };
         let output: Vec<_> = result.iter().map(repair::internal_types::MutableRoute::to_value).collect();
-        serde_json::to_string(&json!({"changed":!repair::types::Routes::ptr_eq(&routes,&result),"routes":output})).map_err(|error| JsValue::from_str(&error.to_string()))
+        repair::solver_helpers::BroadRepulsionResult { changed: !repair::types::Routes::ptr_eq(&routes, &result), routes: Value::Array(output) }.into_ts().map_err(|error| JsValue::from_str(&error.to_string()))
     }
 }
 

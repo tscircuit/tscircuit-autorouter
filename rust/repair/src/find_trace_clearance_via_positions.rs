@@ -7,6 +7,9 @@ use crate::solver_config::{MAX_ERROR_MOVE, POSITION_EPSILON};
 use crate::solver_helpers::RepairMath;
 use autorouting_drc::math_utils::point_to_segment_distance;
 
+#[derive(serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "wasm-types", derive(tsify::Tsify))]
 pub struct TracePlacements {
     pub points: Vec<Point>,
     pub via_identity_indices: Vec<usize>,

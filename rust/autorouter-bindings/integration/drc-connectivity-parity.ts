@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { SimpleRouteJson, SimplifiedPcbTraces } from "high-density-repair03/lib"
 import { importReference } from "./tsReference"
-const { AutoroutingDrcEngine } = await importReference<typeof import("high-density-repair03/lib/drc/AutoroutingDrcEngine")>("node_modules/high-density-repair03/lib/drc/AutoroutingDrcEngine.ts")
+const { AutoroutingDrcEngine: ReferenceDrcEngine } = await importReference<typeof import("high-density-repair03/lib/drc/AutoroutingDrcEngine")>("node_modules/high-density-repair03/lib/drc/AutoroutingDrcEngine.ts")
 import { AutoroutingDrcEngine } from "../../../lib/bindings/repair/AutoroutingDrcEngine"
 import { loadAutorouterBindings } from "../ts/index"
 
@@ -19,7 +19,7 @@ const traces: SimplifiedPcbTraces = ["a", "b"].map((name, index) => ({
 }))
 const connMap = new ConnectivityMap({})
 connMap.addConnections([["a", "alias_a"], ["b", "alias_b"]])
-const expected = new AutoroutingDrcEngine(srj, { connMap })
+const expected = new ReferenceDrcEngine(srj, { connMap })
 const actual = new AutoroutingDrcEngine(srj, { connMap })
 for (let phase = 0; phase < 2; phase++) {
   if (phase === 1) connMap.addConnections([["alias_a", "alias_b"]])

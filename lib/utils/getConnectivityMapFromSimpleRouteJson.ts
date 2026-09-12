@@ -3,15 +3,6 @@ import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import { buildConnectivityMap } from "../../rust/autorouter-bindings/pkg/autorouter_bindings.js"
 import { initializeAutorouterBindings } from "../bindings/initializeAutorouterBindings"
 
-type NativeConnectivityMap = {
-  strings: (string | number[])[]
-  stringOffset: number
-  arrays: number[][]
-  netMap: [number, number][]
-  idToNetMap: [number, number][]
-  failedGroup: number[] | null
-}
-
 export const getConnectivityMapFromSimpleRouteJson = (srj: SimpleRouteJson): ConnectivityMap => {
   initializeAutorouterBindings()
   const strings: string[] = []
@@ -50,8 +41,8 @@ export const getConnectivityMapFromSimpleRouteJson = (srj: SimpleRouteJson): Con
   }
   const encodedStrings = strings.map(value => /[\uD800-\uDFFF]/u.test(value)
     ? Array.from({length: value.length}, (_, index) => value.charCodeAt(index)) : value)
-  const result = JSON.parse(buildConnectivityMap(JSON.stringify({strings: encodedStrings, prototypeValues,
-    layerCount: number(srj.layerCount), connections, obstacles, traces}))) as NativeConnectivityMap
+  const result = buildConnectivityMap({strings: encodedStrings, prototypeValues,
+    layerCount: number(srj.layerCount), connections, obstacles, traces})
   if (result.stringOffset !== strings.length) throw new Error("Native connectivity string table offset differs")
   for (const encoded of result.strings) {
     if (typeof encoded === "string") { strings.push(encoded); continue }

@@ -9,17 +9,19 @@ license = "MIT"
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-trace-contiguity = { path = "../trace-contiguity" }
+trace-contiguity = { path = "../trace-contiguity", features = ["wasm-types"] }
 length-matching = { path = "../length-matching" }
-uniform-port-distribution = { path = "../uniform-port-distribution" }
-connectivity-map = { path = "../connectivity-map" }
+uniform-port-distribution = { path = "../uniform-port-distribution", features = ["wasm-types"] }
+connectivity-map = { path = "../connectivity-map", features = ["wasm-types"] }
 high-density-a01 = { path = "../high-density-a01" }
 intra-node-routing = { path = "../intra-node-routing" }
 autorouting-drc = { path = "../drc" }
-repair = { path = "../repair" }
+repair = { path = "../repair", features = ["wasm-types"] }
 trace-simplification = { path = "../trace-simplification" }
 serde = { version = "1", features = ["derive"] }
-serde-wasm-bindgen = "0.6"
+json-bindings = { path = "../json-bindings" }
+# JSON preserves omitted metadata fields and avoids per-property WASM crossings.
+tsify = { version = "=0.5.8", default-features = false, features = ["json"] }
 serde_json = { version = "1", features = ["preserve_order", "float_roundtrip"] }
 wasm-bindgen = "=0.2.128"
 js-sys = "0.3"

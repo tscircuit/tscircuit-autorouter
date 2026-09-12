@@ -6,9 +6,12 @@ use indexmap::{IndexMap, IndexSet};
 use serde::Serialize;
 use serde_json::{json, Value};
 
+#[cfg_attr(feature = "wasm-types", derive(tsify::Tsify))]
+#[cfg_attr(feature = "wasm-types", tsify(rename = "NativeContiguityError"))]
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ErrorDescriptor {
+    #[cfg_attr(feature = "wasm-types", tsify(type = "'misalignedVia' | 'missingConnection' | 'disconnectedEndpoint'"))]
     pub kind: &'static str,
     pub trace_index: usize,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -22,8 +25,10 @@ pub struct ErrorDescriptor {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub center_point_index: Option<usize>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "wasm-types", tsify(type = "{ x: number | { $traceNumber: string }; y: number | { $traceNumber: string } }"))]
     pub center: Option<Value>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "wasm-types", tsify(type = "'start' | 'end'"))]
     pub endpoint: Option<&'static str>,
 }
 impl ErrorDescriptor {

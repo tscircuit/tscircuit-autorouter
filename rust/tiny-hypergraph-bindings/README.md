@@ -101,7 +101,8 @@ Browser asset copying and bundler integration remain untested.
 
 The constructor accepts numeric topology/problem shapes with camelCase fields.
 JS typed arrays and regular numeric arrays are accepted and copied into Rust
-vectors. Metadata must be serializable by serde-wasm-bindgen into JSON values.
+vectors. JSON-backed tsify generates the wire declarations; the adapter preserves
+special numeric values and the existing undefined metadata representation.
 Options retain their uppercase keys, such as `MAX_ITERATIONS` and
 `TRACE_DENSITY_COST_FACTOR`. An optional fourth constructor argument selects
 `{ variant: "base" | "outside-in" | "selective-rerip",
@@ -166,9 +167,10 @@ No JS callback is used in the Rust search loop.
 
 The raw generated bindings remain an implementation detail in `pkg/`, where
 `TinyHyperGraphSolver` supplies the lower-level interface and `free()`.
-Type assertions are confined to the adapter's return boundary; exported methods
-and declarations do not expose those generated `any` return types. Compile-only
-contract tests check the public package exports with strict TypeScript settings.
+Structured inputs and outputs use generated tsify declarations. The shared JSON
+codec handles typed arrays, special numbers, and undefined metadata; adapter
+methods use the generated return types. Compile-only contract tests check the
+public package exports with strict TypeScript settings.
 
 ## Scope and validation
 

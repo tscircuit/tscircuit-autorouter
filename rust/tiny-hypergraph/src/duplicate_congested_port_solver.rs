@@ -7,14 +7,19 @@ const EPSILON: f64 = 1e-9;
 
 #[derive(Clone, Debug, Default, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "wasm-types", derive(tsify::Tsify))]
 pub struct DuplicateCongestedPortSolverOptions {
+    #[cfg_attr(feature = "wasm-types", tsify(optional))]
     pub duplicate_port_proximity: Option<f64>,
+    #[cfg_attr(feature = "wasm-types", tsify(optional))]
     pub route_solve_options: Option<TinyHyperGraphSolverOptions>,
+    #[cfg_attr(feature = "wasm-types", tsify(optional))]
     pub use_serialized_port_penalties: Option<bool>,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "wasm-types", derive(tsify::Tsify))]
 pub struct DuplicatedPortSummary {
     pub source_port_id: String,
     pub duplicate_port_ids: Vec<String>,
@@ -23,6 +28,7 @@ pub struct DuplicatedPortSummary {
 
 #[derive(Clone, Debug, Default, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "wasm-types", derive(tsify::Tsify))]
 pub struct DuplicateCongestedPortSolverReport {
     pub port_use_counts: BTreeMap<String, usize>,
     pub duplicated_ports: Vec<DuplicatedPortSummary>,

@@ -37,7 +37,7 @@ function candidate(value: JsonObject | null | undefined): unknown {
 }
 
 function compare(binding: bindings.SpecializedIntraNodeDispatcher, reference: ReferenceSolver, kind: Kind, label: string): void {
-  const snapshot = JSON.parse(binding.snapshotJson()) as JsonObject
+  const snapshot = binding.snapshot()
   for (const key of ["iterations", "MAX_ITERATIONS", "solved", "failed", "error", "progress"]) {
     assert.deepEqual(snapshot[key], transport(reference[key]), `${label}/${key}`)
   }
@@ -53,7 +53,7 @@ function compare(binding: bindings.SpecializedIntraNodeDispatcher, reference: Re
     }
     assert.deepEqual(snapshot.candidates.map(candidate), reference.candidates.map(candidate), `${label}/candidates`)
     assert.deepEqual(candidate(snapshot.lastCandidate), candidate(reference.lastCandidate), `${label}/lastCandidate`)
-    assert.equal(JSON.stringify(JSON.parse(binding.solvedRoutesJson())), JSON.stringify(reference.solvedRoutes), `${label}/route bytes`)
+    assert.equal(JSON.stringify(binding.solvedRoutes()), JSON.stringify(reference.solvedRoutes), `${label}/route bytes`)
   }
 }
 
@@ -110,11 +110,11 @@ for (const fixture of cases) {
       props.connMap = map
     }
     const reference = new constructors[kind](props)
-    const binding = new bindings.SpecializedIntraNodeDispatcher(kind, JSON.stringify(fixture.params))
+    const binding = new bindings.SpecializedIntraNodeDispatcher(kind, fixture.params)
     try {
       compare(binding, reference, kind, `${fixture.name}/${kind}/initial`)
       // Restoring untouched state must preserve the variant's overrides and math hooks.
-      binding.restoreJson(binding.snapshotJson())
+      binding.restore(binding.snapshot())
       compare(binding, reference, kind, `${fixture.name}/${kind}/restore`)
       while (!reference.solved && !reference.failed) {
         reference.step()
@@ -122,7 +122,7 @@ for (const fixture of cases) {
         totalSteps++
         compare(binding, reference, kind, `${fixture.name}/${kind}/${reference.iterations}`)
       }
-      assert.deepEqual(JSON.parse(binding.visualizeJson(safeTransparentize)), transport(reference.visualize()), `${fixture.name}/${kind}/graphics`)
+      assert.deepEqual(binding.visualize(safeTransparentize), transport(reference.visualize()), `${fixture.name}/${kind}/graphics`)
       console.log(`${fixture.name}/${kind}: ${reference.iterations} steps, exact state, routes, and graphics`)
     } finally {
       binding.free()

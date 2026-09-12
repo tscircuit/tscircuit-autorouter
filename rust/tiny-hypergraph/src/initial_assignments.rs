@@ -4,6 +4,7 @@ use std::collections::{HashMap, HashSet};
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "wasm-types", derive(tsify::Tsify))]
 pub struct TinyHyperGraphInitialAssignment {
     pub route_id: RouteId,
     pub region_id: RegionId,

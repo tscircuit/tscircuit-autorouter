@@ -2,6 +2,8 @@ pub mod connectivity_map;
 pub mod get_connectivity_map_from_simple_route_json;
 pub mod map_layer_name_to_z;
 
+#[cfg_attr(feature = "wasm-types", derive(tsify::Tsify))]
+#[cfg_attr(feature = "wasm-types", tsify(type_prefix = "Connectivity"))]
 #[derive(serde::Deserialize, serde::Serialize)]
 #[serde(untagged)]
 pub enum WireString {

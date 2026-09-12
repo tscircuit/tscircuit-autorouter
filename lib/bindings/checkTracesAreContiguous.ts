@@ -3,18 +3,6 @@ import { getReadableNameForPcbPort, getReadableNameForPcbTrace } from "@tscircui
 import { checkTracesAreContiguousNative } from "../../rust/autorouter-bindings/pkg/autorouter_bindings.js"
 import { initializeAutorouterBindings } from "./initializeAutorouterBindings"
 
-type ContiguityError = {
-  kind: "misalignedVia" | "missingConnection" | "disconnectedEndpoint"
-  traceIndex: number
-  sourceTraceIndex?: number
-  pointIndex?: number
-  portIndex?: number
-  padIndex?: number
-  centerPointIndex?: number
-  center?: { x: number; y: number }
-  endpoint?: "start" | "end"
-}
-
 type PcbTrace = Extract<AnyCircuitElement, { type: "pcb_trace" }>
 type PcbPort = Extract<AnyCircuitElement, { type: "pcb_port" }>
 
@@ -68,30 +56,38 @@ function projectElement(element: AnyCircuitElement): object {
   return { type: element.type }
 }
 
-export const checkTracesAreContiguous = (circuitJson: AnyCircuitElement[]): PcbTraceError[] => {
-  initializeAutorouterBindings()
-  const prefix = "\u0000trace-contiguity:"
-  const input = JSON.stringify(circuitJson.map(projectElement), (_key: string, value: unknown): unknown => {
-    if (typeof value === "number" && (!Number.isFinite(value) || Object.is(value, -0))) {
-      return { $traceNumber: Object.is(value, -0) ? "-0" : String(value) }
-    }
-    if (typeof value !== "string") return value
+function encodeContiguityValue(value: unknown): unknown {
+  if (typeof value === "number" && (!Number.isFinite(value) || Object.is(value, -0))) {
+    return { $traceNumber: Object.is(value, -0) ? "-0" : String(value) }
+  }
+  if (typeof value === "string") {
+    const prefix = "\u0000trace-contiguity:"
     if (!/[\uD800-\uDFFF]/u.test(value) && !value.startsWith(prefix)) return value
     let encoded = prefix
     for (let index = 0; index < value.length; index++) {
       encoded += value.charCodeAt(index).toString(16).padStart(4, "0")
     }
     return encoded
-  })
-  const descriptors: ContiguityError[] = JSON.parse(checkTracesAreContiguousNative(input), (_key: string, value: unknown): unknown => {
-    if (typeof value !== "object" || value === null || !("$traceNumber" in value)) return value
-    const tag = (value as { $traceNumber: string }).$traceNumber
-    if (tag === "-0") return -0
-    if (tag === "NaN") return NaN
-    if (tag === "Infinity") return Infinity
-    if (tag === "-Infinity") return -Infinity
-    throw new Error(`Unknown native contiguity scalar ${tag}`)
-  })
+  }
+  if (Array.isArray(value)) return value.map(encodeContiguityValue)
+  if (value === null || typeof value !== "object") return value
+  return Object.fromEntries(Object.entries(value).map(([key, entry]) => [key, encodeContiguityValue(entry)]))
+}
+
+function decodeContiguityNumber(value: number | { $traceNumber: string }): number {
+  if (typeof value === "number") return value
+  const tag = value.$traceNumber
+  if (tag === "-0") return -0
+  if (tag === "NaN") return NaN
+  if (tag === "Infinity") return Infinity
+  if (tag === "-Infinity") return -Infinity
+  throw new Error(`Unknown native contiguity scalar ${tag}`)
+}
+
+export const checkTracesAreContiguous = (circuitJson: AnyCircuitElement[]): PcbTraceError[] => {
+  initializeAutorouterBindings()
+  const input = circuitJson.map((element) => encodeContiguityValue(projectElement(element)))
+  const descriptors = checkTracesAreContiguousNative(input)
   return descriptors.map((descriptor): PcbTraceError => {
     const trace = circuitJson[descriptor.traceIndex] as PcbTrace
     const sourceTrace = descriptor.sourceTraceIndex === undefined ? undefined : circuitJson[descriptor.sourceTraceIndex]
@@ -118,7 +114,10 @@ export const checkTracesAreContiguous = (circuitJson: AnyCircuitElement[]): PcbT
       const padType = pad.type.replace(/pcb_/, "")
       const centerPoint = descriptor.centerPointIndex === undefined ? undefined : trace.route[descriptor.centerPointIndex]
       if (centerPoint && centerPoint.route_type !== "wire") throw new Error("Missing connection center must refer to a wire")
-      const center = centerPoint ? { x: centerPoint.x, y: centerPoint.y } : descriptor.center!
+      const center = centerPoint ? { x: centerPoint.x, y: centerPoint.y } : {
+        x: decodeContiguityNumber(descriptor.center!.x),
+        y: decodeContiguityNumber(descriptor.center!.y),
+      }
       return {
         type: "pcb_trace_error",
         message: `Trace [${traceName}] is missing a connection to ${padType}${portName}`,

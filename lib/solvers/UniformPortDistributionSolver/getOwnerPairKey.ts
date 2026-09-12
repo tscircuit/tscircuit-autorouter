@@ -1,6 +1,6 @@
 import { OwnerPair, OwnerPairKey } from "./types"
 import { initializeAutorouterBindings } from "../../bindings/initializeAutorouterBindings"
-import { decodeName, encodeName, type EncodedName } from "../../bindings/uniform-port-distribution/UniformPortDistributionCodec"
+import { decodeName, encodeName } from "../../bindings/uniform-port-distribution/UniformPortDistributionCodec"
 import { normalizeUniformPortOwnerPair, getUniformPortOwnerPairKey } from "../../../rust/autorouter-bindings/pkg/autorouter_bindings.js"
 
 /**
@@ -11,8 +11,8 @@ export const normalizeOwnerPair = (nodeA: string, nodeB: string): OwnerPair => {
   initializeAutorouterBindings()
   const pair = normalizeUniformPortOwnerPair(
     encodeName(nodeA), encodeName(nodeB),
-  ) as [EncodedName, EncodedName]
-  return pair.map(decodeName) as OwnerPair
+  )
+  return [decodeName(pair[0]), decodeName(pair[1])]
 }
 
 /**
@@ -22,7 +22,7 @@ export const normalizeOwnerPair = (nodeA: string, nodeB: string): OwnerPair => {
 export const getOwnerPairKey = (ownerNodeIds: OwnerPair): OwnerPairKey => {
   initializeAutorouterBindings()
   const key = getUniformPortOwnerPairKey(
-    ownerNodeIds.map(encodeName),
-  ) as EncodedName
+    [encodeName(ownerNodeIds[0]), encodeName(ownerNodeIds[1])],
+  )
   return decodeName(key)
 }

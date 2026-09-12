@@ -100,7 +100,7 @@ export class HighDensitySolver extends BaseSolver {
   private readonly diagnosticDirty = new Set<string>()
   private expectedQueueLength = 0
   private readonly boardKey: number
-  private detachedParentState?: Record<string, any>
+  private detachedParentState?: bindings.HighDensityBoardSnapshot
   private readonly routeAliases = new Map<number, HighDensityIntraNodeRoute>()
 
   constructor({
@@ -198,7 +198,7 @@ export class HighDensitySolver extends BaseSolver {
         set: (value: unknown): void => { this.stateValues[field] = value; if (!this.syncing) { this.observed.add(field); this.diagnosticDirty.add(field) } },
       })
     }
-    for (const field of ["MAX_ITERATIONS", "iterations", "solved", "failed", "error", "progress"]) {
+    for (const field of ["MAX_ITERATIONS", "iterations", "solved", "failed", "error", "progress"] as const) {
       this.scalarValues[field] = (this as unknown as Record<string, unknown>)[field]
       Object.defineProperty(this, field, {
         configurable: true, enumerable: true,
@@ -212,33 +212,33 @@ export class HighDensitySolver extends BaseSolver {
     const boardKey = this.scope.registerBoard(this)
     this.boardKey = boardKey
     for (const field of HighDensitySolver.settingFields) this.settingValues[field] = (this as unknown as Record<string, unknown>)[field]
-    this.binding = HighDensitySolver.createBinding(boardKey, this.encode(params))
+    this.binding = HighDensitySolver.createBinding(boardKey, params)
     this.syncSolverState()
 
   }
 
 
-  private static createBinding(boardKey: number, paramsJson: string): bindings.HighDensitySolver {
-    return new bindings.HighDensitySolver(paramsJson,
+  private static createBinding(boardKey: number, params: bindings.HighDensityValue): bindings.HighDensitySolver {
+    return new bindings.HighDensitySolver(params,
       (useGrowth: boolean): number => {
         const scope = PortfolioCallbackScope.current
         if (!scope) throw new Error("High-density factory called outside its execution scope")
         return (scope.getBoard(boardKey) as HighDensitySolver).createChild(useGrowth)
       },
-      (id: number): string => {
+      (id: number): unknown => {
         const scope = PortfolioCallbackScope.current
         if (!scope) throw new Error("High-density visualization called outside its execution scope")
         return (scope.getBoard(boardKey) as HighDensitySolver).visualizeChild(id)
       }, safeTransparentize,
-      (id: number, failed: boolean, generalState: string | undefined, totalRoutes: number): void => {
+      (id: number, failed: boolean, generalState: bindings.HighDensityState | undefined, totalRoutes: number): void => {
         const scope = PortfolioCallbackScope.current
         if (!scope) throw new Error("High-density completion called outside its execution scope")
         scope.getBoard(boardKey).completeChild(id, failed, generalState, totalRoutes)
       },
-      (snapshotJson: string | null): void => {
+      (snapshot: bindings.HighDensityBoardSnapshot | null): void => {
         const scope = PortfolioCallbackScope.current
         if (!scope) throw new Error("Parent validator observation requires its execution scope")
-        scope.getBoard(boardKey).observeDetachedParent(snapshotJson)
+        scope.getBoard(boardKey).observeDetachedParent(snapshot)
       })
   }
 
@@ -269,7 +269,7 @@ export class HighDensitySolver extends BaseSolver {
     let id: number
     if (external) {
       const boardKey = this.boardKey
-      id = bindings.HighDensitySolver.shareExternal((method: string): string => {
+      id = bindings.HighDensitySolver.shareExternal((method: string): unknown => {
         const scope = PortfolioCallbackScope.current
         if (!scope) throw new Error("External child callback requires its execution scope")
         return scope.getBoard(boardKey).externalChildAction(id, method)
@@ -277,10 +277,10 @@ export class HighDensitySolver extends BaseSolver {
       this.externalChildren.add(id)
     } else if (child instanceof GrowShrinkHighDensityIntraNodeSolver) id = child.shareForOrchestration()
     else if (child instanceof PortfolioSingleIntraNodeSolver) id = this.scope.adopt(child)
-    else id = bindings.HighDensitySolver.shareGeneral(child.shareForPortfolio(), this.encode({
+    else id = bindings.HighDensitySolver.shareGeneral(child.shareForPortfolio(), {
       MAX_ITERATIONS: child.MAX_ITERATIONS, iterations: child.iterations, solved: child.solved, failed: child.failed,
       error: child.error, progress: child.progress,
-    }), this.encode(child.nodeWithPortPoints), this.getSolvedNodeSolverType(child))
+    }, child.nodeWithPortPoints, this.getSolvedNodeSolverType(child))
     this.nodeReferences.set(child.nodeWithPortPoints.capacityMeshNodeId, child.nodeWithPortPoints)
     this.childIds.set(child, id)
     this.children.set(id, child)
@@ -343,21 +343,21 @@ export class HighDensitySolver extends BaseSolver {
     return "SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost"
   }
 
-  private externalChildAction(id: number, method: string): string {
+  private externalChildAction(id: number, method: string): unknown {
     const child = this.getChild(id)
     if (method === "step") {
       child.step()
       const cache = getGlobalInMemoryCache()
       bindings.HighDensitySolver.setCacheCounts(cache.cacheHits, cache.cacheMisses)
     }
-    if (method === "step" || method === "state") return this.encode({
+    if (method === "step" || method === "state") return {
       MAX_ITERATIONS: child.MAX_ITERATIONS, iterations: child.iterations, solved: child.solved,
       failed: child.failed, error: child.error, progress: child.progress,
       solverType: this.getSolvedNodeSolverType(child),
-    })
-    if (method === "routes") return this.encode(child.solvedRoutes)
-    if (method === "node") return this.encode(child.nodeWithPortPoints)
-    if (method === "visualize") return this.encode(child.visualize())
+    }
+    if (method === "routes") return child.solvedRoutes
+    if (method === "node") return child.nodeWithPortPoints
+    if (method === "visualize") return child.visualize()
     throw new Error(`Unknown external high-density child method ${method}`)
   }
 
@@ -367,10 +367,10 @@ export class HighDensitySolver extends BaseSolver {
     return child
   }
 
-  private completeChild(id: number, failed: boolean, generalState: string | undefined, totalRoutes: number): void {
+  private completeChild(id: number, failed: boolean, generalState: bindings.HighDensityState | undefined, totalRoutes: number): void {
     const child = this.getChild(id)
     if (generalState !== undefined && child instanceof IntraNodeRouteSolver) {
-      const state = JSON.parse(generalState) as Record<string, unknown>
+      const state = generalState
       Object.assign(child, state)
       child.syncPortfolioOutput()
     }
@@ -396,12 +396,12 @@ export class HighDensitySolver extends BaseSolver {
   private getSolvedRoutesWithTerminalPcbPortIds(solver: HighDensityIntraNodeSolver): HighDensityIntraNodeRoute[] {
     const routes = solver.solvedRoutes
     if (!solver.nodeWithPortPoints.portPoints.some(point => point.pcb_port_id !== undefined)) return routes
-    const attached = JSON.parse(bindings.HighDensitySolver.attachTerminalPcbPortIds(this.encode(solver.nodeWithPortPoints), this.encode(routes))) as HighDensityIntraNodeRoute[]
+    const attached = bindings.HighDensitySolver.attachTerminalPcbPortIds(solver.nodeWithPortPoints, routes)
     return routes.map((route, index) => ({ ...route, startPcbPortId: attached[index]!.startPcbPortId, endPcbPortId: attached[index]!.endPcbPortId }))
   }
 
-  private visualizeChild(id: number): string {
-    return this.encode(this.getChild(id).visualize())
+  private visualizeChild(id: number): unknown {
+    return this.getChild(id).visualize()
   }
 
   private encode(value: unknown): string {
@@ -448,7 +448,7 @@ export class HighDensitySolver extends BaseSolver {
     if (Object.hasOwn(patch, "unsolvedNodePortPoints") && !this.observed.has("nodePfById")) {
       patch.nodePfById = this.getRelevantNodePfs(queue)
     }
-    if (Object.keys(patch).length > 0) this.scope.run((): void => this.binding.restoreJson(this.encode(patch)))
+    if (Object.keys(patch).length > 0) this.scope.run((): void => this.binding.restore(patch))
     for (const field of HighDensitySolver.settingFields) this.settingValues[field] = this[field]
     this.expectedQueueLength = queue.length
     this.scalarDirty.clear()
@@ -457,8 +457,8 @@ export class HighDensitySolver extends BaseSolver {
     bindings.HighDensitySolver.setCacheCounts(cache.cacheHits, cache.cacheMisses)
   }
 
-  private observeDetachedParent(snapshotJson: string | null): void {
-    this.detachedParentState = snapshotJson === null ? undefined : JSON.parse(snapshotJson) as Record<string, unknown>
+  private observeDetachedParent(snapshot: bindings.HighDensityBoardSnapshot | null): void {
+    this.detachedParentState = snapshot ?? undefined
     if (this.detachedParentState) this.syncSolverState()
   }
 
@@ -467,13 +467,13 @@ export class HighDensitySolver extends BaseSolver {
     this.syncing = true
     try {
       if (!this.detachedParentState) this.scope.sync()
-      const state = this.detachedParentState ?? JSON.parse(this.binding.stateJson()) as Record<string, any>
-      for (const field of ["MAX_ITERATIONS", "iterations", "solved", "failed", "error", "progress"]) {
+      const state = this.detachedParentState ?? this.binding.state()
+      for (const field of ["MAX_ITERATIONS", "iterations", "solved", "failed", "error", "progress"] as const) {
         if (!this.scalarDirty.has(field)) (this as unknown as Record<string, unknown>)[field] = field === "progress" ? state[field] ?? Number.NaN : state[field]
       }
       reconcileObservedValue(this.stateValues.stats, state.stats)
       if (this.observed.has("nodeSolveMetadataById") && !this.diagnosticDirty.has("nodeSolveMetadataById")) {
-        const incomingMetadata = this.detachedParentState?.nodeSolveMetadataById ?? JSON.parse(this.binding.metadataJson()) as Record<string, unknown>
+        const incomingMetadata = this.detachedParentState?.nodeSolveMetadataById ?? this.binding.metadata()
         const metadata = this.stateValues.nodeSolveMetadataById as Map<string, unknown>
       for (const id of metadata.keys()) if (!Object.hasOwn(incomingMetadata, id)) metadata.delete(id)
       for (const [id, incoming] of Object.entries(incomingMetadata)) {
@@ -490,17 +490,17 @@ export class HighDensitySolver extends BaseSolver {
       }
       if (this.observed.has("routes") && !this.diagnosticDirty.has("routes")) {
         const routes = this.stateValues.routes as HighDensityIntraNodeRoute[]
-        const incoming = this.detachedParentState?.routes ?? JSON.parse(this.binding.routesJson()) as HighDensityIntraNodeRoute[]
+        const incoming = this.detachedParentState?.routes ?? this.binding.routes()
         reconcileObservedValue(routes, incoming)
         for (const [index, route] of this.routeAliases) if (index < routes.length) routes[index] = route
       }
-      const activeId = state.activeId as number | null
-      const failedIds = state.failedIds as number[]
+      const activeId = state.activeId
+      const failedIds = state.failedIds
       for (const id of failedIds) if (!this.failedChildren.has(id)) this.failedChildren.set(id, this.getChild(id))
       for (const id of this.failedChildren.keys()) if (!failedIds.includes(id)) this.failedChildren.delete(id)
       this.activeChild = activeId === null ? null : this.getChild(activeId)
       if (!this.detachedParentState && this.activeChild instanceof IntraNodeRouteSolver && !this.externalChildren.has(activeId!)) {
-        Object.assign(this.activeChild, JSON.parse(this.binding.childStateJson(activeId!)))
+        Object.assign(this.activeChild, this.binding.childState(activeId!))
         this.activeChild.syncPortfolioOutput()
       }
       if (!this.diagnosticDirty.has("activeSubSolver")) this.stateValues.activeSubSolver = this.activeChild
@@ -532,8 +532,8 @@ export class HighDensitySolver extends BaseSolver {
   override visualize(): GraphicsObject {
     this.pushSolverState()
     return this.scope.run((): GraphicsObject => {
-      this.binding.restoreJson(this.encode({ colorMap: this.stateValues.colorMap }))
-      return JSON.parse(this.binding.visualizeJson()) as GraphicsObject
+      this.binding.restore({ colorMap: this.stateValues.colorMap })
+      return this.binding.visualize()
     })
   }
 }

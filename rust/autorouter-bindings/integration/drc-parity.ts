@@ -3,7 +3,7 @@ import assert from "node:assert/strict"
 import { readFileSync } from "node:fs"
 import { join } from "node:path"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
-const { AutoroutingDrcEngine } = await importReference<typeof import("high-density-repair03/lib/drc/AutoroutingDrcEngine")>("node_modules/high-density-repair03/lib/drc/AutoroutingDrcEngine.ts")
+const { AutoroutingDrcEngine: ReferenceDrcEngine } = await importReference<typeof import("high-density-repair03/lib/drc/AutoroutingDrcEngine")>("node_modules/high-density-repair03/lib/drc/AutoroutingDrcEngine.ts")
 import type { AutoroutingDrcEngineOptions } from "high-density-repair03/lib/drc/AutoroutingDrcEngine"
 import type { SimpleRouteJson, SimplifiedPcbTraces } from "high-density-repair03/lib/types"
 import { loadScenarioBySampleNumber } from "../../../scripts/benchmark/scenarios"
@@ -50,7 +50,7 @@ function checkBytes(actual: unknown, expected: unknown, label: string): void {
 
 function runFixture({ name, srj, traces, options = {} }: Fixture): void {
   const { connMap, ...rawOptions } = options
-  const expected = new AutoroutingDrcEngine(srj, options)
+  const expected = new ReferenceDrcEngine(srj, options)
   const rawMap: unknown = connMap === undefined ? undefined : JSON.parse(JSON.stringify(connMap))
   const actual = new bindings.AutoroutingDrcEngine(srj, rawMap, rawOptions)
   const adapter = new AutoroutingDrcEngine(srj, options)

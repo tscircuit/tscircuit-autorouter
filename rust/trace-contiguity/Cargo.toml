@@ -5,7 +5,12 @@ edition = "2021"
 publish = false
 license = "MIT"
 
+[features]
+wasm-types = ["dep:tsify", "dep:wasm-bindgen"]
+
 [dependencies]
+wasm-bindgen = { version = "0.2", optional = true }
+tsify = { version = "=0.5.8", default-features = false, features = ["json"], optional = true }
 serde = { version = "1", features = ["derive"] }
 serde_json = { version = "1", features = ["preserve_order", "float_roundtrip"] }
 indexmap = "2"

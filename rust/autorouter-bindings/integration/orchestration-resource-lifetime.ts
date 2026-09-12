@@ -65,10 +65,10 @@ try {
   }
   const scope = new PortfolioCallbackScope()
   const growthBinding = new binding.GrowShrinkHighDensityIntraNodeSolver(
-    JSON.stringify({ nodeWithPortPoints: node }),
+    { nodeWithPortPoints: node },
     (): number => scope.adopt(portfolio),
     undefined,
-    (): string => JSON.stringify(portfolio.visualize()),
+    () => portfolio.visualize(),
   )
   scope.run((): void => growthBinding.solve())
   assert.equal(portfolio.getPortfolioAdapter().disposeUnobserved(), false, "Custom onSolve can retain its winner before any public state read")

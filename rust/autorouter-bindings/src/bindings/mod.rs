@@ -12,3 +12,6 @@ pub(crate) mod trace_contiguity;
 pub(crate) mod via_trace_clearance;
 #[cfg(target_arch = "wasm32")]
 pub(crate) mod uniform_port_distribution_step;
+
+pub(crate) mod repair_wire;
+pub(crate) mod high_density_wire;

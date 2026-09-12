@@ -1,6 +1,6 @@
 import { InputNodeWithPortPoints } from "../PortPointPathingSolver/PortPointPathingSolver"
 import { initializeAutorouterBindings } from "../../bindings/initializeAutorouterBindings"
-import { decodeName, encodeName, encodeInputNodes, type EncodedName } from "../../bindings/uniform-port-distribution/UniformPortDistributionCodec"
+import { decodeName, encodeName, encodeInputNodes } from "../../bindings/uniform-port-distribution/UniformPortDistributionCodec"
 import { determineUniformPortOwnerPair } from "../../../rust/autorouter-bindings/pkg/autorouter_bindings.js"
 import { OwnerPair } from "./types"
 
@@ -21,9 +21,9 @@ export const determineOwnerPair = ({
 }: DetermineOwnerPairParams): OwnerPair => {
   initializeAutorouterBindings()
   const pair = determineUniformPortOwnerPair({
-    portPointId: portPointId == null ? undefined : encodeName(portPointId),
+    portPointId: portPointId == null ? null : encodeName(portPointId),
     currentNodeId: encodeName(currentNodeId),
     inputNodes: encodeInputNodes(inputNodes),
-  }) as [EncodedName, EncodedName]
-  return pair.map(decodeName) as OwnerPair
+  })
+  return [decodeName(pair[0]), decodeName(pair[1])]
 }

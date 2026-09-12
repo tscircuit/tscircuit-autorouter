@@ -53,9 +53,7 @@ export class HighDensitySolverAdapter<V extends HighDensityVariant = HighDensity
 
   override _setup(): void {
     if (!this.binding) throw new Error("High-density WASM solver has been disposed")
-    const status = this.binding.setup(this.MAX_ITERATIONS) as {
-      maxIterations: number; solved: boolean; failed: boolean; error: string | null
-    }
+    const status = this.binding.setup(this.MAX_ITERATIONS)
     this.MAX_ITERATIONS = status.maxIterations
     this.solved = status.solved
     this.failed = status.failed
@@ -90,7 +88,7 @@ export class HighDensitySolverAdapter<V extends HighDensityVariant = HighDensity
 
   override getOutput(): HighDensityIntraNodeRoute[] {
     if (!this.binding) throw new Error("High-density WASM solver has been disposed")
-    const routes = this.binding.getOutput() as HighDensityIntraNodeRoute[]
+    const routes = this.binding.getOutput()
     // TS returns spreads of the original endpoint objects. Preserve their own
     // undefined properties and metadata that JSON values cannot represent.
     for (const route of routes) {
@@ -110,7 +108,7 @@ export class HighDensitySolverAdapter<V extends HighDensityVariant = HighDensity
 
   override visualize(): GraphicsObject {
     if (!this.binding) throw new Error("High-density WASM solver has been disposed")
-    return this.binding.visualize() as GraphicsObject
+    return this.binding.visualize()
   }
 
   dispose(): void {

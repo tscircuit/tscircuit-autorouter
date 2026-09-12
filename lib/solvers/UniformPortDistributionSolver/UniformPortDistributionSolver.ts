@@ -4,7 +4,7 @@ import { Obstacle } from "lib/types"
 import { NodeWithPortPoints } from "lib/types/high-density-types"
 import { initializeAutorouterBindings } from "../../bindings/initializeAutorouterBindings"
 import { buildUniformPortDistribution, stepUniformPortDistribution, rebuildUniformPortDistributionNodes } from "../../../rust/autorouter-bindings/pkg/autorouter_bindings.js"
-import { decodeName, decodeSharedEdge, encodeConstructorInput, type UniformPortDistributionState } from "../../bindings/uniform-port-distribution/UniformPortDistributionCodec"
+import { decodeName, decodeSharedEdge, decodeBounds, encodeConstructorInput } from "../../bindings/uniform-port-distribution/UniformPortDistributionCodec"
 import { InputNodeWithPortPoints } from "../PortPointPathingSolver/PortPointPathingSolver"
 import {
   Bounds,
@@ -46,13 +46,13 @@ export class UniformPortDistributionSolver extends BaseSolver {
   constructor(private input: UniformPortDistributionSolverInput) {
     super()
     initializeAutorouterBindings()
-    const state = buildUniformPortDistribution(encodeConstructorInput(input)) as UniformPortDistributionState
-    this.mapOfNodeIdToBounds = new Map(state.nodeBounds.map(([key, bounds]) => [decodeName(key), bounds]))
+    const state = buildUniformPortDistribution(encodeConstructorInput(input))
+    this.mapOfNodeIdToBounds = new Map(state.nodeBounds.map(([key, bounds]) => [decodeName(key), decodeBounds(bounds)]))
     this.mapOfOwnerPairToPortPoints = new Map(state.ownerPairPortPoints.map(([key, points]) => [
       decodeName(key),
       points.map(({ nodeIndex, pointIndex, ownerNodeIds, ownerPairKey }) => ({
         ...input.nodeWithPortPoints[nodeIndex]!.portPoints[pointIndex]!,
-        ownerNodeIds: ownerNodeIds.map(decodeName) as OwnerPair,
+        ownerNodeIds: [decodeName(ownerNodeIds[0]), decodeName(ownerNodeIds[1])] as OwnerPair,
         ownerPairKey: decodeName(ownerPairKey),
       })),
     ]))

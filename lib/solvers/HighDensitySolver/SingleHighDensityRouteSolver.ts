@@ -153,14 +153,14 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
   }
 
   protected synchronize(): void {
-    const state = this.binding.snapshot() as Record<string, unknown>
+    const state = this.binding.snapshot()
     const { A, B, bounds, futureConnectionPoints, obstacleSegmentsByLayer, exploredNodes, debug_nodesTooCloseToObstacle, debug_nodePathToParentIntersectsObstacle, progress, ...plain } = state
     Object.assign(this, plain)
-    this.progress = progress === null ? Number.NaN : progress as number
-    this.exploredNodes = new Set(exploredNodes as number[])
-    this.debug_nodesTooCloseToObstacle = new Set(debug_nodesTooCloseToObstacle as number[])
-    this.debug_nodePathToParentIntersectsObstacle = new Set(debug_nodePathToParentIntersectsObstacle as number[])
-    this.obstacleSegmentsByLayer = new Map(obstacleSegmentsByLayer as Array<[number, IndexedObstacleSegment[]]>)
+    this.progress = progress === null ? Number.NaN : progress
+    this.exploredNodes = new Set(exploredNodes)
+    this.debug_nodesTooCloseToObstacle = new Set(debug_nodesTooCloseToObstacle)
+    this.debug_nodePathToParentIntersectsObstacle = new Set(debug_nodePathToParentIntersectsObstacle)
+    this.obstacleSegmentsByLayer = new Map(obstacleSegmentsByLayer)
     for (const layer of this.obstacleSegmentsByLayer.keys()) {
       if (!this.obstacleSegmentIndexByLayer.has(layer)) this.obstacleSegmentIndexByLayer.set(layer, this.index("layer", layer))
     }

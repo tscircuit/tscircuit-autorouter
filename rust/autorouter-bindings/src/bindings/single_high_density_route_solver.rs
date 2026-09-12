@@ -3,6 +3,8 @@ use std::rc::Rc;
 use std::cell::{RefCell, RefMut};
 use serde_json::{Value, json};
 use wasm_bindgen::prelude::*;
+use tsify::{Ts, Tsify};
+use crate::bindings::high_density_wire::*;
 use intra_node_routing::single_high_density_route_solver::{PlanarObstacleQuery, IndexedObstacleSegment};
 use intra_node_routing::single_route_candidate_priority_queue::Node;
 
@@ -56,24 +58,24 @@ pub struct SingleHighDensityRouteSolver {
 #[wasm_bindgen]
 impl SingleHighDensityRouteSolver {
     #[wasm_bindgen(constructor)]
-    pub fn new(props: JsValue, future_cost: bool) -> Result<Self, JsValue> {
-        let props: Value = serde_wasm_bindgen::from_value(props).map_err(|error| JsValue::from_str(&error.to_string()))?;
+    pub fn new(props: Ts<HighDensityValue>, future_cost: bool) -> Result<Self, JsValue> {
+        let props: Value = read_value(props)?;
         let mut engine = if future_cost { single_route_solver::SingleHighDensityRouteSolver::new_future_cost(props) } else { single_route_solver::SingleHighDensityRouteSolver::new(props) };
         engine.pow = js_sys::Math::pow;
         engine.exp = js_sys::Math::exp;
         Ok(Self { engine: SingleRouteStorage::Owned(RefCell::new(engine)) })
     }
 
-    pub fn options(&self) -> Result<JsValue, JsValue> {
+    pub fn options(&self) -> Result<Ts<SingleRouteOptions>, JsValue> {
         let e = self.borrow_engine();
-        crate::to_js(&json!({"connectionName":e.connection_name,"rootConnectionName":e.root_connection_name,
+        SingleRouteOptions(json!({"connectionName":e.connection_name,"rootConnectionName":e.root_connection_name,
             "regionId":e.region_id,"A":e.a,"B":e.b,"bounds":e.bounds,"obstacleRoutes":e.obstacle_routes,
             "futureConnections":e.future_connections,"hyperParameters":e.hyper_parameters,"viaDiameter":e.via_diameter,
             "traceThickness":e.trace_thickness,"obstacleMargin":e.obstacle_margin,"availableZ":e.available_z,
-            "layerCount":e.layer_count,"captureSearchDebug":e.debug_enabled,"minDistBetweenEnteringPoints":0}))
+            "layerCount":e.layer_count,"captureSearchDebug":e.debug_enabled,"minDistBetweenEnteringPoints":0})).into_ts().map_err(|error| JsError::new(&error.to_string()).into())
     }
 
-    pub fn snapshot(&self) -> Result<JsValue, JsValue> {
+    pub fn snapshot(&self) -> Result<Ts<SingleRouteSnapshot>, JsValue> {
         let borrowed = self.borrow_engine();
         let e = &*borrowed;
         let mut layers = Vec::new();
@@ -101,11 +103,11 @@ impl SingleHighDensityRouteSolver {
                 ("FUTURE_CONNECTION_VIA_TRACE_CLEARANCE",f.future_connection_via_trace_clearance)] { value[key] = json!(number); }
             value["FLIP_TRACE_ALIGNMENT_DIRECTION"] = json!(f.flip_trace_alignment_direction);
         }
-        crate::to_js(&value)
+        SingleRouteSnapshot(value).into_ts().map_err(|error| JsError::new(&error.to_string()).into())
     }
 
-    pub fn configure(&mut self, config: JsValue) -> Result<(), JsValue> {
-        let v: Value = serde_wasm_bindgen::from_value(config).map_err(|error| JsValue::from_str(&error.to_string()))?;
+    pub fn configure(&mut self, config: Ts<HighDensityValue>) -> Result<(), JsValue> {
+        let v: Value = read_value(config)?;
         let mut borrowed = self.borrow_engine();
         let e = &mut *borrowed;
         macro_rules! number { ($field:ident,$key:literal) => { if let Some(value) = v[$key].as_f64() { e.$field = value; } }; }
@@ -126,8 +128,8 @@ impl SingleHighDensityRouteSolver {
         Ok(())
     }
 
-    pub fn call(&mut self, method: &str, args: JsValue) -> Result<JsValue, JsValue> {
-        let a: Value = serde_wasm_bindgen::from_value(args).map_err(|error| JsValue::from_str(&error.to_string()))?;
+    pub fn call(&mut self, method: &str, args: Ts<HighDensityValue>) -> Result<Ts<HighDensityValue>, JsValue> {
+        let a: Value = read_value(args)?;
         let mut borrowed = self.borrow_engine();
         let e = &mut *borrowed;
         let query = a.get("query").filter(|q| !q.is_null()).map(|q| PlanarObstacleQuery {
@@ -187,6 +189,6 @@ impl SingleHighDensityRouteSolver {
             "visualize" => e.visualize(),
             _ => return Err(JsValue::from_str(&format!("Unknown single-route operation {method}"))),
         };
-        crate::to_js(&result)
+        HighDensityValue(result).into_ts().map_err(|error| JsError::new(&error.to_string()).into())
     }
 }

@@ -25,26 +25,26 @@ function bytes(actual: unknown, expected: unknown, label: string): void {
 function fixture(name: string, kind: Kind, props: Props, restore = false): void {
   const inputBytes = JSON.stringify(props)
   const expected = new (kind === "two-crossing" ? TwoCrossing : TransitionCrossing)(structuredClone(props))
-  const actual = new bindings.SpecializedIntraNodeDispatcher(kind, inputBytes)
+  const actual = new bindings.SpecializedIntraNodeDispatcher(kind, props)
   function compare(label: string): void {
-    const snapshot = JSON.parse(actual.snapshotJson()) as Record<string, unknown>
+    const snapshot = actual.snapshot()
     for (const [key, value] of Object.entries(snapshot)) {
       bytes(value, expected[key] ?? (value === null ? null : expected[key]), `${name}/${label}/${key}`)
     }
-    const state = JSON.parse(actual.stateJson()) as Record<string, unknown>
+    const state = actual.state()
     for (const [key, value] of Object.entries(state)) bytes(value, expected[key] ?? null, `${name}/${label}/state.${key}`)
-    bytes(JSON.parse(actual.solvedRoutesJson()), expected.solvedRoutes, `${name}/${label}/route bytes`)
-    if ((snapshot.routes as unknown[]).length === 2) bytes(JSON.parse(actual.visualizeJson(() => { throw new Error("Crossing visualization must not use a color callback") })), expected.visualize(), `${name}/${label}/visualization`)
+    bytes(actual.solvedRoutes(), expected.solvedRoutes, `${name}/${label}/route bytes`)
+    if ((snapshot.routes as unknown[]).length === 2) bytes(actual.visualize(() => { throw new Error("Crossing visualization must not use a color callback") }), expected.visualize(), `${name}/${label}/visualization`)
   }
   try {
     compare("constructor")
     if (restore) {
-      const snapshot = JSON.parse(actual.snapshotJson()) as Record<string, unknown>
+      const snapshot = actual.snapshot()
       snapshot.obstacleMargin = 0.13
       snapshot.traceThickness = 0.12
       expected.obstacleMargin = 0.13
       expected.traceThickness = 0.12
-      actual.restoreJson(JSON.stringify(snapshot))
+      actual.restore(snapshot)
       compare("restored mutable settings")
     }
     for (let i = 0; i < 5 && !expected.solved && !expected.failed; i++) {

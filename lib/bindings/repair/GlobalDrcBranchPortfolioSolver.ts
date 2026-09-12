@@ -10,16 +10,6 @@ import {
   type PreparedRepairDrc,
 } from "./repairPortfolio"
 
-type PortfolioState = {
-  solved: boolean
-  failed: boolean
-  error: string | null
-  iterations: number
-  maxIterations: number
-  progress: number
-  stats: Record<string, unknown> & RepairEvaluationCounters
-}
-
 export class GlobalDrcBranchPortfolioSolver extends BaseSolver implements RepairPortfolio {
   private binding: bindings.GlobalDrcBranchPortfolioSolver | undefined
   private output: HighDensityRoute[]
@@ -40,9 +30,8 @@ export class GlobalDrcBranchPortfolioSolver extends BaseSolver implements Repair
     const repairDescriptor = preparedDrc
       ? { ...descriptor, engineSrj: undefined, engineOptions: undefined, preparedBaseline: preparedDrc.baseline }
       : descriptor
-    this.binding = new bindings.GlobalDrcBranchPortfolioSolver(JSON.stringify(input), JSON.stringify(repairDescriptor), (routesJson: string): string => {
-      const routes = JSON.parse(routesJson) as HighDensityRoute[]
-      return JSON.stringify(referenceEvaluator({ traces: [], routes, hdRoutes: routes }))
+    this.binding = new bindings.GlobalDrcBranchPortfolioSolver(input, repairDescriptor, (routes) => {
+      return referenceEvaluator({ traces: [], routes, hdRoutes: routes })
     }, preparedDrc?.engine.forkForRepair())
   }
 
@@ -50,7 +39,7 @@ export class GlobalDrcBranchPortfolioSolver extends BaseSolver implements Repair
     const binding = this.binding
     if (!binding) throw new Error("Repair portfolio has been disposed")
     try {
-      const state = JSON.parse(binding.step()) as PortfolioState
+      const state = binding.step()
       this.solved = state.solved
       this.failed = state.failed
       this.error = state.error
@@ -59,7 +48,7 @@ export class GlobalDrcBranchPortfolioSolver extends BaseSolver implements Repair
       this.progress = state.progress
       this.stats = state.stats
       if (this.solved || this.failed) {
-        this.output = JSON.parse(binding.getOutput()) as HighDensityRoute[]
+        this.output = binding.getOutput()
         binding.free()
         this.binding = undefined
       }
@@ -74,7 +63,7 @@ export class GlobalDrcBranchPortfolioSolver extends BaseSolver implements Repair
 
   override getOutput(): HighDensityRoute[] {
     return this.binding
-      ? JSON.parse(this.binding.getOutput()) as HighDensityRoute[]
+      ? this.binding.getOutput()
       : this.output
   }
 

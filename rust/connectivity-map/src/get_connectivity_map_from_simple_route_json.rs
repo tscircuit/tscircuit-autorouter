@@ -2,18 +2,23 @@ use serde::Deserialize;
 use indexmap::{IndexMap, IndexSet};
 use crate::{connectivity_map::ConnectivityMap, map_layer_name_to_z::map_layer_name_to_z};
 
+#[cfg_attr(feature = "wasm-types", derive(tsify::Tsify))]
+#[cfg_attr(feature = "wasm-types", tsify(type_prefix = "Connectivity"))]
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Input {
     pub strings: Vec<crate::WireString>,
     pub prototype_values: Vec<(usize, Option<usize>)>,
     #[serde(deserialize_with = "crate::deserialize_js_number")]
+    #[cfg_attr(feature = "wasm-types", tsify(type = "number | string"))]
     pub layer_count: f64,
     pub connections: Vec<Connection>,
     pub obstacles: Vec<Obstacle>,
     pub traces: Vec<Trace>,
 }
 
+#[cfg_attr(feature = "wasm-types", derive(tsify::Tsify))]
+#[cfg_attr(feature = "wasm-types", tsify(type_prefix = "Connectivity"))]
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Connection {
@@ -23,12 +28,16 @@ pub struct Connection {
     pub points: Vec<Point>,
 }
 
+#[cfg_attr(feature = "wasm-types", derive(tsify::Tsify))]
+#[cfg_attr(feature = "wasm-types", tsify(type_prefix = "Connectivity"))]
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Point {
     #[serde(deserialize_with = "crate::deserialize_js_number")]
+    #[cfg_attr(feature = "wasm-types", tsify(type = "number | string"))]
     pub x: f64,
     #[serde(deserialize_with = "crate::deserialize_js_number")]
+    #[cfg_attr(feature = "wasm-types", tsify(type = "number | string"))]
     pub y: f64,
     pub layers: Option<Vec<usize>>,
     pub layer: Option<usize>,
@@ -36,6 +45,8 @@ pub struct Point {
     pub point_id: Option<usize>,
 }
 
+#[cfg_attr(feature = "wasm-types", derive(tsify::Tsify))]
+#[cfg_attr(feature = "wasm-types", tsify(type_prefix = "Connectivity"))]
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Obstacle {
@@ -43,12 +54,16 @@ pub struct Obstacle {
     pub connected: Vec<usize>,
     pub off_board: Vec<usize>,
     #[serde(deserialize_with = "crate::deserialize_js_number")]
+    #[cfg_attr(feature = "wasm-types", tsify(type = "number | string"))]
     pub x: f64,
     #[serde(deserialize_with = "crate::deserialize_js_number")]
+    #[cfg_attr(feature = "wasm-types", tsify(type = "number | string"))]
     pub y: f64,
     pub layers: Vec<usize>,
 }
 
+#[cfg_attr(feature = "wasm-types", derive(tsify::Tsify))]
+#[cfg_attr(feature = "wasm-types", tsify(type_prefix = "Connectivity"))]
 #[derive(Deserialize)]
 pub struct Trace {
     pub ids: Vec<usize>,

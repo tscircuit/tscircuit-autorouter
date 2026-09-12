@@ -3,28 +3,10 @@ import { midpoint } from "@tscircuit/math-utils"
 import { all_layers, type AnyCircuitElement, type PcbViaTraceClearanceError } from "circuit-json"
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import { formatMm } from "format-si-unit"
-import { checkViaTraceClearanceNative } from "../../rust/autorouter-bindings/pkg/autorouter_bindings.js"
+import { encodeJsonInput, decodeJsonOutput } from "../../rust/tiny-hypergraph-bindings/ts/jsonWire"
+import { checkViaTraceClearanceNative, type Point, type TraceSegment } from "../../rust/autorouter-bindings/pkg/autorouter_bindings.js"
 import { initializeAutorouterBindings } from "./initializeAutorouterBindings"
 
-type Point = { x: number; y: number }
-type TraceSegment = {
-  pcb_trace_id: string
-  thickness: number
-  layer: string
-  x1: number
-  y1: number
-  x2: number
-  y2: number
-  netId: string | undefined
-  center: Point
-}
-type Violation = {
-  pcb_via_id: string
-  pcb_trace_id: string
-  minimum_clearance: number
-  actual_clearance: number
-  center: Point
-}
 type Options = { connMap: ConnectivityMap; minClearance?: number }
 
 /** Projects the reference check's geometry; error messages retain the TS formatters. */
@@ -77,7 +59,7 @@ export function checkViaTraceClearance(
         thickness: Number("width" in first ? first.width : "width" in second ? second.width : 0.1),
         layer: encodeString(first.layer),
         x1: first.x, y1: first.y, x2: second.x, y2: second.y,
-        netId: traceNetId,
+        netId: traceNetId ?? null,
         center: center!,
       })
     }
@@ -86,7 +68,7 @@ export function checkViaTraceClearance(
   const board = circuitJson.find((element) => element.type === "pcb_board")
   minClearance ??= board?.min_trace_to_pad_edge_clearance ?? 0.1
   initializeAutorouterBindings()
-  const violations = checkViaTraceClearanceNative({
+  const violations = decodeJsonOutput(checkViaTraceClearanceNative(encodeJsonInput({
     vias: vias.map((via) => ({
       pcb_via_id: encodeString(via.pcb_via_id),
       x: via.x, y: via.y, outer_diameter: via.outer_diameter,
@@ -95,7 +77,7 @@ export function checkViaTraceClearance(
     })),
     segments,
     minClearance,
-  }) as Violation[]
+  })))
   return violations.map((violation): PcbViaTraceClearanceError => {
     const viaId = originalStrings.get(violation.pcb_via_id)!
     const traceId = originalStrings.get(violation.pcb_trace_id)!

@@ -23,10 +23,6 @@ const noObstacles: object[] = []
 const multiHeadContexts = new WeakMap<object, bindings.SpecializedRouterContext>()
 const throughObstacleContexts = new WeakMap<object[], WeakMap<object, Map<number, bindings.SpecializedRouterContext>>>()
 
-function serializeContext(props: ContextProps): string {
-  return JSON.stringify(props, (_key, value: unknown): unknown => value instanceof Map ? Object.fromEntries(value) : value)
-}
-
 export function getSpecializedRouterContext(
   kind: string,
   props: ContextProps,
@@ -37,7 +33,7 @@ export function getSpecializedRouterContext(
     const key = connMap ?? noConnectivity
     let context = multiHeadContexts.get(key)
     if (!context) {
-      context = new bindings.SpecializedRouterContext(serializeContext({ connMap }))
+      context = new bindings.SpecializedRouterContext({ connMap })
       multiHeadContexts.set(key, context)
     }
     return { context, params }
@@ -59,7 +55,7 @@ export function getSpecializedRouterContext(
     }
     let context = byLayer.get(layers)
     if (!context) {
-      context = new bindings.SpecializedRouterContext(serializeContext({ connMap, obstacles, layerCount: layers }))
+      context = new bindings.SpecializedRouterContext({ connMap, obstacles, layerCount: layers })
       byLayer.set(layers, context)
     }
     return { context, params }

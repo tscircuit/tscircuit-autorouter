@@ -10,7 +10,6 @@ import * as bindings from "../pkg/autorouter_bindings.js"
 import { loadAutorouterBindings } from "../ts/index"
 
 type Fixture = { name: string; srj: SimpleRouteJson; routes: HighDensityRoute[] }
-type Result = { changed: boolean; routes: HighDensityRoute[] }
 
 function board(obstacles: SimpleRouteJson["obstacles"] = []): SimpleRouteJson {
   return { layerCount: 2, minTraceWidth: 0.1, minViaDiameter: 0.3,
@@ -29,8 +28,8 @@ function runFixture(fixture: Fixture, connMap?: ConnectivityMap): void {
   for (const kind of ["trace", "via"] as const) {
     const expected = kind === "trace" ? applyTraceToPadClearanceRelaxation(srj, routes, connMap)
       : applyViaToPadClearanceRelaxation(srj, routes, connMap)
-    const actual = JSON.parse(bindings.GlobalDrcBranchPortfolioSolver.relax(JSON.stringify(srj), JSON.stringify(routes),
-      JSON.stringify(connMap ? { netMap: connMap.netMap, idToNetMap: connMap.idToNetMap } : null), kind)) as Result
+    const actual = bindings.GlobalDrcBranchPortfolioSolver.relax(srj, routes,
+      connMap ? { netMap: connMap.netMap, idToNetMap: connMap.idToNetMap } : null, kind)
     const expectedBytes = JSON.stringify(expected)
     const actualBytes = JSON.stringify(actual.routes)
     let first = 0

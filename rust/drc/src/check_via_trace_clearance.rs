@@ -7,6 +7,7 @@ use crate::math_utils::{Circle, Point, segment_to_circle_min_distance};
 const EPSILON: f64 = 5e-3;
 
 #[derive(Deserialize)]
+#[cfg_attr(feature = "wasm-types", derive(tsify::Tsify))]
 pub struct CheckViaTraceClearanceInput {
     pub vias: Vec<Via>,
     pub segments: Vec<TraceSegment>,
@@ -15,6 +16,7 @@ pub struct CheckViaTraceClearanceInput {
 }
 
 #[derive(Deserialize)]
+#[cfg_attr(feature = "wasm-types", derive(tsify::Tsify))]
 pub struct Via {
     pub pcb_via_id: String,
     pub x: f64,
@@ -26,6 +28,7 @@ pub struct Via {
 }
 
 #[derive(Deserialize)]
+#[cfg_attr(feature = "wasm-types", derive(tsify::Tsify))]
 pub struct TraceSegment {
     pub pcb_trace_id: String,
     pub thickness: f64,
@@ -40,6 +43,7 @@ pub struct TraceSegment {
 }
 
 #[derive(Serialize)]
+#[cfg_attr(feature = "wasm-types", derive(tsify::Tsify))]
 pub struct ViaTraceClearanceViolation {
     pub pcb_via_id: String,
     pub pcb_trace_id: String,

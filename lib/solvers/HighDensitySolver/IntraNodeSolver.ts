@@ -20,12 +20,6 @@ const contexts = new WeakMap<object, bindings.IntraNodeRouteContext>()
 
 type ConnectionPoint = { x: number; y: number; z: number }
 type UnsolvedConnection = { connectionName: string; rootConnectionName?: string; points: ConnectionPoint[] }
-type IntraNodeDiagnostics = {
-  unsolvedConnections: UnsolvedConnection[]
-  rerouteAttemptsByConnection: Array<[string, number]>
-  activeChildId: number | null
-  failedChildIds: number[]
-}
 
 const connectionLabel = (
   connectionName: string,
@@ -239,10 +233,13 @@ export class IntraNodeRouteSolver extends BaseSolver {
     if (child) return child
     if (!this.binding) throw new Error("Native child requires its parent router")
     const binding = this.binding.getChild(id)
-    const options = binding.options() as SingleRouteOptions
-    options.rootConnectionName ??= undefined
-    options.regionId ??= undefined
-    options.connMap = this.connMap
+    const nativeOptions = binding.options()
+    const options: SingleRouteOptions = {
+      ...nativeOptions,
+      rootConnectionName: nativeOptions.rootConnectionName ?? undefined,
+      regionId: nativeOptions.regionId ?? undefined,
+      connMap: this.connMap,
+    }
     const facade = new SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost(options, binding)
     let lastRevision = -1
     let terminal = false
@@ -272,7 +269,7 @@ export class IntraNodeRouteSolver extends BaseSolver {
     if (revision === this.diagnosticRevision) return
     this.synchronizingDiagnostics = true
     try {
-      const state = this.binding.getDiagnostics() as IntraNodeDiagnostics | null
+      const state = this.binding.getDiagnostics()
       if (!state) return
       const connections = this.diagnosticTargets.unsolvedConnections as UnsolvedConnection[]
       const existing = new Map(connections.map((connection) => [JSON.stringify(connection), connection]))
@@ -344,7 +341,7 @@ export class IntraNodeRouteSolver extends BaseSolver {
     if (!this.binding || ("cacheHit" in this && this.cacheHit)) return
     const revision = this.binding.getOutputRevision()
     if (revision === this.outputRevision) return
-    this.solvedRoutes = (this.binding.getOutput() as HighDensityIntraNodeRoute[]).map((route) => {
+    this.solvedRoutes = this.binding.getOutput().map((route) => {
       const { connectionName, rootConnectionName, regionId, ...rest } = route
       return { connectionName, rootConnectionName, regionId, ...rest }
     })
@@ -360,7 +357,7 @@ export class IntraNodeRouteSolver extends BaseSolver {
     this.failed = Math.floor(status / 2) % 2 === 1
     if (this.failed) this.error = binding.error() ?? null
     if (count !== this.routeCount) {
-      this.solvedRoutes = binding.getOutput() as HighDensityIntraNodeRoute[]
+      this.solvedRoutes = binding.getOutput()
       // Restore optional own properties that serde omits, preserving TS order.
       this.solvedRoutes = this.solvedRoutes.map((route) => {
         const { connectionName, rootConnectionName, regionId, ...rest } = route
@@ -379,7 +376,7 @@ export class IntraNodeRouteSolver extends BaseSolver {
   visualize(): GraphicsObject {
     if (this.disposed) throw new Error("General router WASM solver has been disposed")
     if (this.binding && !("cacheHit" in this && this.cacheHit)) {
-      return this.binding.visualize(safeTransparentize) as GraphicsObject
+      return this.binding.visualize(safeTransparentize)
     }
     const graphics: GraphicsObject = {
       lines: [],

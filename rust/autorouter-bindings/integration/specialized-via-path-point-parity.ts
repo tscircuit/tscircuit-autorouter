@@ -16,9 +16,9 @@ const params = {
   }, colorMap: { a: "red" },
 }
 const reference = new ReferenceVia(structuredClone(params))
-const raw = new bindings.SpecializedIntraNodeDispatcher("via-possibilities2", JSON.stringify(params))
+const raw = new bindings.SpecializedIntraNodeDispatcher("via-possibilities2", params)
 try {
-  const snapshot = JSON.parse(raw.snapshotJson())
+  const snapshot = raw.snapshot()
   const head = { metadata: { restored: ["head", null] }, x: -0.75, y: 0.25, z: 1 }
   const end = { ...reference.portPairMap.get("a").end, y: -0.25, z: 1 }
   reference.currentHead = head
@@ -27,21 +27,21 @@ try {
   const blocking = [{ metadata: "one", x: 0, y: -1, z: 1 }, { metadata: "two", x: 0, y: 1, z: 1 }]
   reference.placeholderPaths.set("blocker", blocking)
   snapshot.currentHead = head
-  snapshot.currentPath[1] = head
-  snapshot.portPairMap.a.end = end
-  snapshot.placeholderPaths.blocker = blocking
-  raw.restoreJson(JSON.stringify(snapshot))
+  ;(snapshot.currentPath as typeof head[])[1] = head
+  ;(snapshot.portPairMap as Record<string, { end: typeof end }>).a.end = end
+  ;(snapshot.placeholderPaths as Record<string, typeof blocking>).blocker = blocking
+  raw.restore(snapshot)
   let steps = 0
   while (!reference.solved && !reference.failed) {
     reference.step()
     raw.step()
     steps++
-    const actual = JSON.parse(raw.snapshotJson())
+    const actual = raw.snapshot()
     for (const key of ["currentHead", "currentPath", "currentViaCount", "iterations", "solved", "failed", "error"]) {
       assert.equal(JSON.stringify(actual[key]), JSON.stringify(reference[key]), `${steps}/${key}`)
     }
     assert.equal(JSON.stringify(actual.completedPaths), JSON.stringify(Object.fromEntries(reference.completedPaths)), `${steps}/completedPaths`)
-    assert.deepEqual(JSON.parse(raw.visualizeJson(safeTransparentize)), JSON.parse(JSON.stringify(reference.visualize())))
+    assert.deepEqual(raw.visualize(safeTransparentize), JSON.parse(JSON.stringify(reference.visualize())))
   }
   assert.ok(steps > 1, "Restored blocking geometry must affect the route scan")
   console.log(`Via2 restored coordinates, metadata bytes and graphics match frozen TS for ${steps} steps`)

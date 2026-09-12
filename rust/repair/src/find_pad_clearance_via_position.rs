@@ -215,6 +215,9 @@ impl PadClearanceContext {
     }
 }
 
+#[derive(serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "wasm-types", derive(tsify::Tsify))]
 pub struct PadPlacement {
     pub point: Option<Point>,
     pub is_preferred: bool,

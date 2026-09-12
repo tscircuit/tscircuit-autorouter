@@ -1,8 +1,9 @@
+import type { TraceGraphPacket, TraceConnectivityUpdate } from "../../../rust/autorouter-bindings/pkg/autorouter_bindings.js"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import { SegmentTree } from "../../data-structures/SegmentTree"
 import { encodeTraceSimplificationIndex, decodeTraceSimplificationIndex } from "./TraceSimplificationIndexCodec"
 type JsonRecord = Record<string, any>
-type Graph = { fields: unknown; points: JsonRecord[]; routes: JsonRecord[]; obstacles: JsonRecord[]; cloneGroups?: Array<{id:number;sources:unknown}>; captureCloneGroups?: boolean; jumpers?: Array<{id:number;value:any[]}> }
+type Graph = TraceGraphPacket
 type SourceWatch = { object: JsonRecord; isPoint: boolean; routingRequired: boolean; deferred: boolean; values: unknown[]; owners: Set<JsonRecord>; fields: Set<string> }
 let nextIdentity = 2 ** 40
 
@@ -20,7 +21,7 @@ export class TraceSimplificationGraphCodec {
   private readonly colorMaps = new WeakSet<object>()
   private readonly typedMaps = new WeakMap<object, "terminal" | "net" | "layers">()
   private readonly jumperArrays = new WeakSet<object>()
-  private readonly jumpers = new Map<number, JsonRecord>()
+  private readonly jumpers = new Map<number, { id: number; value: any[] }>()
   private readonly sourceWatches = new Map<object, SourceWatch>()
   private readonly connectivityBaselines = new WeakMap<object, { map: object; keys: string[]; values: unknown[] }>()
   private readonly connectivityOperations: Set<number>[] = []
@@ -133,7 +134,7 @@ export class TraceSimplificationGraphCodec {
     this.trackSources({ ...this.sourceFields, __callArgs: args }, this.sourceKind)
   }
 
-  sourceChanges(routingOnly: boolean | "read" = false): string | undefined {
+  sourceChanges(routingOnly: boolean | "read" = false): Graph | undefined {
     const owners = new Set<JsonRecord>(), fields: JsonRecord = {}
     for (const watch of this.sourceWatches.values()) {
       if (routingOnly === true && !watch.routingRequired) continue
@@ -153,7 +154,7 @@ export class TraceSimplificationGraphCodec {
       else this.encode(owner)
     }
     const encoded = this.encode(fields)
-    const packet = JSON.stringify({ fields: encoded, points: [...this.points.values()], routes: [...this.routes.values()], obstacles: [...this.obstacles.values()], jumpers: [...this.jumpers.values()] })
+    const packet = { fields: encoded, points: [...this.points.values()], routes: [...this.routes.values()], obstacles: [...this.obstacles.values()], jumpers: [...this.jumpers.values()] }
     this.points.clear(); this.routes.clear(); this.obstacles.clear(); this.jumpers.clear()
     this.trackSources(this.sourceFields, this.sourceKind)
     return packet
@@ -170,14 +171,14 @@ export class TraceSimplificationGraphCodec {
     for (const operation of this.connectivityOperations) operation.clear()
   }
 
-  connectivityForRead(identity: number): string | undefined {
+  connectivityForRead(identity: number): TraceConnectivityUpdate | undefined {
     const operation = this.connectivityOperations.at(-1)
-    let graph: string | undefined
+    let graph: Graph | undefined
     if (!operation?.has(-1)) {
       graph = this.sourceChanges("read")
       operation?.add(-1)
     }
-    let updated: unknown
+    let updated: TraceConnectivityUpdate["connectivity"]
     if (!operation?.has(identity)) {
       const connectivity = this.objects.get(identity)
       if (connectivity) {
@@ -192,7 +193,7 @@ export class TraceSimplificationGraphCodec {
       }
       operation?.add(identity)
     }
-    return graph === undefined && updated === undefined ? undefined : JSON.stringify({ connectivity: updated, graph })
+    return graph === undefined && updated === undefined ? undefined : { connectivity: updated, graph }
   }
 
   refreshSourceBaseline(): void {
@@ -291,10 +292,10 @@ export class TraceSimplificationGraphCodec {
     return fields
   }
 
-  graph(fields: unknown): string {
+  graph(fields: unknown): Graph {
     this.points.clear(); this.routes.clear(); this.obstacles.clear(); this.jumpers.clear()
     const encoded = this.encode(fields)
-    const packet = JSON.stringify({ fields: encoded, points: [...this.points.values()], routes: [...this.routes.values()], obstacles: [...this.obstacles.values()], jumpers: [...this.jumpers.values()] })
+    const packet = { fields: encoded, points: [...this.points.values()], routes: [...this.routes.values()], obstacles: [...this.obstacles.values()], jumpers: [...this.jumpers.values()] }
     this.points.clear(); this.routes.clear(); this.obstacles.clear(); this.jumpers.clear()
     return packet
   }
@@ -401,8 +402,7 @@ export class TraceSimplificationGraphCodec {
     return this.capturedCloneGroups.splice(0)
   }
 
-  hydrate(json: string, current?: any): any {
-    const graph = JSON.parse(json) as Graph
+  hydrate(graph: Graph, current?: any): any {
     const records = new Map<number, { record: JsonRecord; kind: string }>()
     for (const record of graph.points) records.set(record.id, { record, kind: "point" })
     for (const record of graph.obstacles) records.set(record.id, { record, kind: "obstacle" })

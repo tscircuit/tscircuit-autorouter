@@ -158,6 +158,7 @@ impl<T: SpatialItem> SpatialHash<T> {
 }
 
 #[derive(Default, Serialize)]
+#[cfg_attr(feature = "wasm-types", derive(tsify::Tsify))]
 #[serde(rename_all = "camelCase")]
 pub struct AutoroutingDrcEngineRunStats {
     pub trace_count: usize,

@@ -1,6 +1,6 @@
 import { Bounds, SharedEdge } from "./types"
 import { initializeAutorouterBindings } from "../../bindings/initializeAutorouterBindings"
-import { decodeSharedEdge, encodeName, type EncodedSharedEdge } from "../../bindings/uniform-port-distribution/UniformPortDistributionCodec"
+import { decodeSharedEdge, encodeName, encodeBounds } from "../../bindings/uniform-port-distribution/UniformPortDistributionCodec"
 import { getUniformSharedEdge } from "../../../rust/autorouter-bindings/pkg/autorouter_bindings.js"
 
 /**
@@ -20,7 +20,7 @@ export const getSharedEdgeForNodePair = ({
   const edge = getUniformSharedEdge({
     nodeAId: encodeName(nodeAId),
     nodeBId: encodeName(nodeBId),
-    nodeBounds: [...nodeBounds].map(([key, bounds]) => [encodeName(key), bounds]),
-  }) as EncodedSharedEdge | null
+    nodeBounds: [...nodeBounds].map(([key, bounds]) => [encodeName(key), encodeBounds(bounds)]),
+  })
   return edge == null ? null : decodeSharedEdge(edge)
 }

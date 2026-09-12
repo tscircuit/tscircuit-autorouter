@@ -1,3 +1,4 @@
+use tsify::{Ts, Tsify};
 use std::{cell::{Cell, RefCell}, collections::HashMap, rc::{Rc, Weak}};
 use serde_json::{Value, json};
 use wasm_bindgen::prelude::*;
@@ -18,6 +19,43 @@ use trace_simplification::same_net_via_merger_solver::{SameNetViaMergerSolver, S
 use trace_simplification::trace_simplification_solver::{TraceSimplificationSolver, TraceSimplificationParams, TraceChild, TraceChildKind};
 use trace_simplification::crossing_via_reduction_solver::{CrossingViaReductionSolver, CrossingViaReductionSolverInput};
 use trace_simplification::connectivity_read_barrier::{self, ReadScope};
+
+// Graph fields encode solver-specific references and numeric sentinels. Keep the
+// existing Value representation so crossing the boundary needs no second walk.
+#[derive(serde::Serialize, serde::Deserialize, Tsify)]
+#[serde(transparent)]
+pub struct TraceGraphPacket(
+    #[tsify(type = "{ fields: any; points: Record<string, any>[]; routes: Record<string, any>[]; obstacles: Record<string, any>[]; cloneGroups?: { id: number; sources: unknown }[]; captureCloneGroups?: boolean; jumpers?: { id: number; value: any[] }[] }")]
+    pub Value,
+);
+
+#[derive(serde::Serialize, serde::Deserialize, Tsify)]
+#[serde(rename_all = "camelCase")]
+pub struct TraceObstacleQuery {
+    index_id: u64,
+    method: String,
+    args: Vec<f64>,
+}
+
+#[derive(serde::Serialize, serde::Deserialize, Tsify)]
+pub struct TraceConnectivityUpdate {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[tsify(type = "{ netMap: Record<string, string[]>; idToNetMap: Record<string, string> }")]
+    connectivity: Option<Value>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    graph: Option<TraceGraphPacket>,
+}
+
+#[derive(serde::Serialize, Tsify)]
+#[serde(transparent)]
+pub struct TraceSolverState(
+    #[tsify(type = "{ MAX_ITERATIONS: number; iterations: number; solved: boolean; failed: boolean; error: string | null; progress: number }")]
+    intra_node_routing::specialized_base_solver::BaseSolverState,
+);
+
+#[derive(serde::Deserialize, Tsify)]
+#[serde(transparent)]
+pub struct TraceCloneGroupIds(Vec<u64>);
 
 fn connectivity_scope(
     query: Option<&js_sys::Function>,
@@ -49,16 +87,13 @@ fn connectivity_scope(
             message
         })?;
         if result.is_undefined() { return Ok(()); }
-        let json = result.as_string().ok_or("Connectivity synchronization must return JSON or undefined")?;
-        let response: Value = serde_json::from_str(&json).map_err(|error| error.to_string())?;
-        if let Some(value) = response.get("connectivity") {
-            let updated: ConnectivityMap = serde_json::from_value(value.clone()).map_err(|error| error.to_string())?;
+        let response = Ts::<TraceConnectivityUpdate>::new_unchecked(result).to_rust().map_err(|error| error.to_string())?;
+        if let Some(value) = response.connectivity {
+            let updated: ConnectivityMap = serde_json::from_value(value).map_err(|error| error.to_string())?;
             map.replace_from(&updated);
         }
-        if let Some(value) = response.get("graph") {
-            let json = value.as_str().ok_or("Input synchronization graph must be JSON")?;
-            let graph: Value = serde_json::from_str(json).map_err(|error| error.to_string())?;
-            let _imported = read_codec.borrow_mut().import_graph(&graph)?;
+        if let Some(graph) = response.graph {
+            let _imported = read_codec.borrow_mut().import_graph(&graph.0)?;
         }
         Ok(())
     }), retained_maps))
@@ -219,8 +254,8 @@ pub struct TraceSimplificationDispatcher {
 #[wasm_bindgen]
 impl TraceSimplificationDispatcher {
     #[wasm_bindgen(constructor)]
-    pub fn new(kind: &str, params_graph_json: &str, obstacle_query: Option<js_sys::Function>, connectivity_query: Option<js_sys::Function>) -> Result<Self, JsValue> {
-        let packet: Value = serde_json::from_str(params_graph_json).map_err(js_error)?;
+    pub fn new(kind: &str, params_graph: Ts<TraceGraphPacket>, #[wasm_bindgen(unchecked_param_type = "((request: TraceObstacleQuery) => TraceGraphPacket) | undefined")] obstacle_query: Option<js_sys::Function>, #[wasm_bindgen(unchecked_param_type = "((identity: number) => TraceConnectivityUpdate | undefined) | undefined")] connectivity_query: Option<js_sys::Function>) -> Result<Self, JsValue> {
+        let packet = params_graph.to_rust().map_err(js_error)?.0;
         let mut codec = GraphCodec::new();
         let _imported = codec.import_graph(&packet).map_err(js_error)?;
         let callback_error = Rc::new(RefCell::new(None));
@@ -230,15 +265,14 @@ impl TraceSimplificationDispatcher {
             let callback_codec = RefCell::new(callback_codec);
             let error_slot = callback_error.clone();
             codec.obstacle_query = Some(Rc::new(move |index_id, method, args| {
-                let request = serde_json::to_string(&json!({"indexId":index_id,"method":method,"args":args})).map_err(|error|error.to_string())?;
-                let result = query.call1(&JsValue::UNDEFINED, &JsValue::from_str(&request)).map_err(|error| {
+                let request = TraceObstacleQuery { index_id, method: method.to_owned(), args: args.to_vec() }.into_ts().map_err(|error|error.to_string())?;
+                let result = query.call1(&JsValue::UNDEFINED, &request.js_value()).map_err(|error| {
                     let message = js_sys::JsString::from(error.clone()).as_string().unwrap_or_else(||"Obstacle query failed".into());
                     *error_slot.borrow_mut() = Some(error);
                     message
                 })?;
                 connectivity_read_barrier::check_all()?;
-                let result = result.as_string().ok_or("Obstacle query must return a geometry graph")?;
-                let graph: Value = serde_json::from_str(&result).map_err(|error|error.to_string())?;
+                let graph = Ts::<TraceGraphPacket>::new_unchecked(result).to_rust().map_err(|error|error.to_string())?.0;
                 let mut codec = callback_codec.borrow_mut();
                 let _imported = codec.import_graph(&graph)?;
                 codec.read_obstacles(&graph["fields"])
@@ -332,9 +366,9 @@ impl TraceSimplificationDispatcher {
     pub fn progress(&self) -> f64 { self.engine.with_solver(|solver| solver.base().progress) }
     pub fn error(&self) -> Option<String> { self.engine.with_solver(|solver| solver.base().error.clone()) }
 
-    #[wasm_bindgen(js_name = stateJson)]
-    pub fn state_json(&self) -> Result<String, JsValue> {
-        self.engine.with_solver(|solver| serde_json::to_string(solver.base()).map_err(js_error))
+    #[wasm_bindgen(js_name = state)]
+    pub fn state(&self) -> Result<Ts<TraceSolverState>, JsValue> {
+        self.engine.with_solver(|solver| TraceSolverState(solver.base().clone()).into_ts().map_err(js_error))
     }
 
     pub fn step(&self, iterations: usize, max_iterations: f64) -> Result<u32, JsValue> {
@@ -348,10 +382,10 @@ impl TraceSimplificationDispatcher {
         Ok(status + self.pending_status())
     }
 
-    #[wasm_bindgen(js_name = resolveExtractJson)]
-    pub fn resolve_extract_json(&self, graph_json: &str) -> Result<u32,JsValue> {
+    #[wasm_bindgen(js_name = resolveExtract)]
+    pub fn resolve_extract(&self, graph: Ts<TraceGraphPacket>) -> Result<u32,JsValue> {
         let Engine::Trace(s) = &*self.engine else { return Err(js_error("Expected trace simplification extraction")); };
-        let packet:Value = serde_json::from_str(graph_json).map_err(js_error)?;
+        let packet = graph.to_rust().map_err(js_error)?.0;
         let mut codec = self.codec.borrow_mut();
         let _imported = codec.import_graph(&packet).map_err(js_error)?;
         let routes = codec.read_routes(&packet["fields"]).map_err(js_error)?;
@@ -364,14 +398,14 @@ impl TraceSimplificationDispatcher {
         Ok(status + self.pending_status())
     }
 
-    #[wasm_bindgen(js_name = acknowledgeCloneGroupsJson)]
-    pub fn acknowledge_clone_groups_json(&self, identities_json: &str) -> Result<(), JsValue> {
-        let identities: Vec<u64> = serde_json::from_str(identities_json).map_err(js_error)?;
+    #[wasm_bindgen(js_name = acknowledgeCloneGroups)]
+    pub fn acknowledge_clone_groups(&self, identities: Ts<TraceCloneGroupIds>) -> Result<(), JsValue> {
+        let identities = identities.to_rust().map_err(js_error)?.0;
         self.codec.borrow_mut().acknowledge_clone_groups(&identities).map_err(js_error)
     }
 
-    #[wasm_bindgen(js_name = initializationJson)]
-    pub fn initialization_json(&self) -> Result<String,JsValue> {
+    #[wasm_bindgen(js_name = initialization)]
+    pub fn initialization(&self) -> Result<Ts<TraceGraphPacket>,JsValue> {
         let Engine::Trace(s) = &*self.engine else { return Err(js_error("Expected trace phase initialization")); };
         let child = s.borrow().active_sub_solver.clone().ok_or_else(||js_error("Missing trace phase child"))?;
         let mut codec = self.codec.borrow_mut();
@@ -382,7 +416,7 @@ impl TraceSimplificationDispatcher {
         }
         let mut graph = codec.finish(Value::Null);
         graph["captureCloneGroups"] = Value::Bool(true);
-        let packet = serde_json::to_string(&graph).map_err(js_error)?;
+        let packet = TraceGraphPacket(graph).into_ts().map_err(js_error)?;
         self.initialized_child.set(Some(child.identity));
         Ok(packet)
     }
@@ -392,15 +426,15 @@ impl TraceSimplificationDispatcher {
         self.engine.with_solver_mut(|solver| solver.solve().map_err(|error| self.callback_error.borrow_mut().take().unwrap_or_else(||js_error(error))))
     }
 
-    #[wasm_bindgen(js_name = snapshotJson)]
-    pub fn snapshot_json(&self) -> Result<String, JsValue> {
+    #[wasm_bindgen(js_name = snapshot)]
+    pub fn snapshot(&self) -> Result<Ts<TraceGraphPacket>, JsValue> {
         let mut codec = self.codec.borrow_mut();
         let fields = self.engine.snapshot(&mut codec);
-        serde_json::to_string(&codec.finish(fields)).map_err(js_error)
+        TraceGraphPacket(codec.finish(fields)).into_ts().map_err(js_error)
     }
 
-    #[wasm_bindgen(js_name = obstaclesJson)]
-    pub fn obstacles_json(&self) -> Result<String, JsValue> {
+    #[wasm_bindgen(js_name = obstacles)]
+    pub fn obstacles(&self) -> Result<Ts<TraceGraphPacket>, JsValue> {
         let mut codec = self.codec.borrow_mut();
         let obstacles = match &*self.engine {
             Engine::Multi(s) => codec.obstacles(&s.borrow().params.obstacles),
@@ -410,11 +444,11 @@ impl TraceSimplificationDispatcher {
             Engine::Crossing(s) => codec.obstacles(&s.borrow().input.obstacles),
             _ => return Err(js_error("Only parent simplification stages normalize obstacles")),
         };
-        serde_json::to_string(&codec.finish(obstacles)).map_err(js_error)
+        TraceGraphPacket(codec.finish(obstacles)).into_ts().map_err(js_error)
     }
 
-    #[wasm_bindgen(js_name = outputJson)]
-    pub fn output_json(&self) -> Result<String, JsValue> {
+    #[wasm_bindgen(js_name = output)]
+    pub fn output(&self) -> Result<Ts<TraceGraphPacket>, JsValue> {
         let mut codec = self.codec.borrow_mut();
         let output = match &*self.engine {
             Engine::Path(s) => codec.route(&s.borrow().simplified_route()),
@@ -425,17 +459,17 @@ impl TraceSimplificationDispatcher {
             Engine::Trace(s) => { let s = s.borrow(); codec.route_array(s.hd_routes_array_identity, &s.hd_routes) },
             Engine::Crossing(s) => { let s = s.borrow(); codec.route_array(s.reduced_routes_array_identity, &s.reduced_hd_routes) },
         };
-        serde_json::to_string(&codec.finish(output)).map_err(js_error)
+        TraceGraphPacket(codec.finish(output)).into_ts().map_err(js_error)
     }
 
-    #[wasm_bindgen(js_name = invokeJson)]
-    pub fn invoke_json(&self, method: &str, args_graph_json: &str) -> Result<String, JsValue> {
-        let packet: Value = serde_json::from_str(args_graph_json).map_err(js_error)?;
+    #[wasm_bindgen(js_name = invoke)]
+    pub fn invoke(&self, method: &str, args_graph: Ts<TraceGraphPacket>) -> Result<Ts<TraceGraphPacket>, JsValue> {
+        let packet = args_graph.to_rust().map_err(js_error)?.0;
         let mut codec = self.codec.borrow_mut();
         let _imported = codec.import_graph(&packet).map_err(js_error)?;
         let _read_scope = connectivity_scope(self.connectivity_query.as_ref(), &codec, &self.callback_error, &self.read_codec);
         let output = self.engine.invoke(method, &packet["fields"], &mut codec).map_err(|error| self.callback_error.borrow_mut().take().unwrap_or_else(||js_error(error)))?;
-        serde_json::to_string(&codec.finish(output)).map_err(js_error)
+        TraceGraphPacket(codec.finish(output)).into_ts().map_err(js_error)
     }
 
     #[wasm_bindgen(js_name = activeChild)]
@@ -460,9 +494,9 @@ impl TraceSimplificationDispatcher {
         Some(Self { identity, kind: kind.to_owned(), engine, codec: self.codec.clone(), children: self.children.clone(), callback_error: self.callback_error.clone(), connectivity_query: self.connectivity_query.clone(), read_codec: self.read_codec.clone(), initialized_child: Cell::new(None) })
     }
 
-    #[wasm_bindgen(js_name = restoreJson)]
-    pub fn restore_json(&self, graph_json: &str) -> Result<(), JsValue> {
-        let packet: Value = serde_json::from_str(graph_json).map_err(js_error)?;
+    #[wasm_bindgen(js_name = restore)]
+    pub fn restore(&self, graph: Ts<TraceGraphPacket>) -> Result<(), JsValue> {
+        let packet = graph.to_rust().map_err(js_error)?.0;
         let fields = &packet["fields"];
         let mut codec = self.codec.borrow_mut();
         let _imported = codec.import_graph(&packet).map_err(js_error)?;

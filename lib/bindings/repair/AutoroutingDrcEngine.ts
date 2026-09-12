@@ -57,7 +57,7 @@ export class AutoroutingDrcEngine implements DrcEngine {
   }
 
   get lastRunStats(): AutoroutingDrcEngineRunStats {
-    return this.binding.stats() as AutoroutingDrcEngineRunStats
+    return this.binding.stats()
   }
 
   evaluate(traces: SimplifiedPcbTraces): AutoroutingDrcResult {
@@ -78,7 +78,7 @@ export class AutoroutingDrcEngine implements DrcEngine {
         this.connectivitySnapshot = { ...current }
       }
     }
-    const result = this.binding.evaluateJson(JSON.stringify(traces), complete) as AutoroutingDrcResult
+    const result = this.binding.evaluate(traces, complete)
     result.errorsWithCenters = result.errors.filter((error) => error.center)
     result.locationAwareErrors = result.errorsWithCenters as AutoroutingDrcResult["locationAwareErrors"]
     return result

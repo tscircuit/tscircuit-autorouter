@@ -3,6 +3,9 @@
 static ALLOCATOR: module_allocator::ModuleAllocator = module_allocator::ModuleAllocator::new();
 
 use serde::{Deserialize, Serialize};
+use tsify::{Ts, Tsify};
+mod json_wire;
+use json_bindings::{JsonInput, JsonOutput};
 use std::ops::{Deref, DerefMut};
 use tiny_hypergraph::{OutsideInPartialRipTinyHyperGraphSolver, SelectiveReripTinyHyperGraphSolver};
 use tiny_hypergraph::{
@@ -11,63 +14,24 @@ use tiny_hypergraph::{
 };
 use wasm_bindgen::prelude::*;
 
-#[derive(Serialize)]
+#[derive(Serialize, Tsify)]
 #[serde(rename_all = "camelCase")]
-struct SolverStatus<'a> {
+pub struct SolverStatus {
     solved: bool,
     failed: bool,
-    error: Option<&'a str>,
+    error: Option<String>,
     iterations: usize,
     pending_route_count: usize,
     rip_count: usize,
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Tsify)]
 #[serde(rename_all = "camelCase")]
-struct RoutingSnapshot<'a> {
+pub struct RoutingSnapshot<'a> {
     port_assignment: &'a [i32],
     region_segments: &'a [Vec<(i32, i32, i32)>],
     current_route_id: Option<i32>,
     unrouted_routes: &'a [i32],
-}
-
-#[derive(Clone, Serialize)]
-#[serde(untagged)]
-enum StatsPathPart<'a> {
-    Key(&'a str),
-    Index(usize),
-}
-
-#[derive(Serialize)]
-#[serde(rename_all = "camelCase")]
-struct StatsSnapshot<'a> {
-    stats: &'a serde_json::Value,
-    undefined_paths: Vec<Vec<StatsPathPart<'a>>>,
-}
-
-fn collect_undefined_stats<'a>(
-    value: &'a serde_json::Value,
-    path: &mut Vec<StatsPathPart<'a>>,
-    paths: &mut Vec<Vec<StatsPathPart<'a>>>,
-) {
-    match value {
-        serde_json::Value::Null => paths.push(path.clone()),
-        serde_json::Value::Array(values) => {
-            for (index, value) in values.iter().enumerate() {
-                path.push(StatsPathPart::Index(index));
-                collect_undefined_stats(value, path, paths);
-                path.pop();
-            }
-        }
-        serde_json::Value::Object(values) => {
-            for (key, value) in values {
-                path.push(StatsPathPart::Key(key));
-                collect_undefined_stats(value, path, paths);
-                path.pop();
-            }
-        }
-        _ => {}
-    }
 }
 
 /// Owns one solver; generated bindings provide free() for deterministic disposal.
@@ -77,16 +41,16 @@ pub struct TinyHyperGraphSolver {
     step_status: [u32; 3],
 }
 
-#[derive(Default, Deserialize)]
+#[derive(Default, Deserialize, Tsify)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-struct SolverConfiguration {
+pub struct SolverConfiguration {
     #[serde(default)]
     variant: SolverVariant,
     #[serde(default)]
     preserve_initial_assignments: bool,
 }
 
-#[derive(Default, Deserialize)]
+#[derive(Default, Deserialize, Tsify)]
 #[serde(rename_all = "kebab-case")]
 enum SolverVariant {
     #[default]
@@ -157,34 +121,104 @@ impl Solver {
     }
 }
 
-fn serialize(value: &impl Serialize) -> Result<JsValue, JsValue> {
-    // Metadata and stats must remain plain objects, not JavaScript Maps.
-    let serializer = serde_wasm_bindgen::Serializer::new().serialize_maps_as_objects(true);
-    value.serialize(&serializer).map_err(|error| {
-        js_sys::Error::new(&format!("Could not serialize solver data: {error}")).into()
-    })
-}
+#[wasm_bindgen(typescript_custom_section)]
+const EXTERNAL_TYPES: &str = r#"
+import type { SerializedHyperGraph } from "@tscircuit/hypergraph";
+import type { GraphicsObject } from "graphics-debug";
+type PortId = number;
+type RegionId = number;
+type RouteId = number;
+type Value = unknown;
+"#;
+
+#[derive(Serialize, Deserialize, Tsify)]
+#[serde(transparent)]
+pub struct SerializedGraph(#[tsify(type = "SerializedHyperGraph")] #[serde(serialize_with = "json_bindings::serialize_js_value")] serde_json::Value);
+
+#[derive(Serialize, Tsify)]
+#[serde(transparent)]
+pub struct Graphics(#[tsify(type = "GraphicsObject")] #[serde(serialize_with = "json_bindings::serialize_js_value")] serde_json::Value);
+
+#[derive(Deserialize, Tsify)]
+#[serde(transparent)]
+pub struct TopologyInput(JsonInput<TinyHyperGraphTopology>);
+
+#[derive(Deserialize, Tsify)]
+#[serde(transparent)]
+pub struct ProblemInput(JsonInput<TinyHyperGraphProblem>);
+
+#[derive(Deserialize, Tsify)]
+#[serde(transparent)]
+pub struct OptionsInput(JsonInput<Option<TinyHyperGraphSolverOptions>>);
+
+#[derive(Deserialize, Tsify)]
+#[serde(transparent)]
+pub struct ConfigurationInput(JsonInput<Option<SolverConfiguration>>);
+
+#[derive(Deserialize, Tsify)]
+#[serde(transparent)]
+pub struct SolutionInput(JsonInput<tiny_hypergraph::TinyHyperGraphSolution>);
+
+#[derive(Deserialize, Tsify)]
+#[serde(transparent)]
+pub struct GraphInput(JsonInput<SerializedGraph>);
+
+#[derive(Deserialize, Tsify)]
+#[serde(transparent)]
+pub struct DuplicateOptionsInput(JsonInput<tiny_hypergraph::DuplicateCongestedPortSolverOptions>);
+
+#[derive(Deserialize, Tsify)]
+#[serde(transparent)]
+pub struct NetIdsInput(JsonInput<Vec<String>>);
+
+#[derive(Serialize, Tsify)]
+#[serde(transparent)]
+pub struct LoadedOutput(JsonOutput<tiny_hypergraph::compat::load_serialized_hyper_graph::LoadedHyperGraph>);
+
+#[derive(Serialize, Tsify)]
+#[serde(transparent)]
+pub struct GraphOutput(JsonOutput<SerializedGraph>);
+
+#[derive(Serialize, Tsify)]
+#[serde(transparent)]
+pub struct GraphicsOutput(JsonOutput<Graphics>);
+
+#[derive(Serialize, Tsify)]
+#[serde(transparent)]
+pub struct RoutingOutput<'a>(JsonOutput<RoutingSnapshot<'a>>);
+
+#[derive(Serialize, Tsify)]
+#[serde(transparent)]
+pub struct DuplicateOutput(JsonOutput<DuplicatePortResult>);
+
+#[derive(Serialize, Tsify)]
+#[serde(transparent)]
+pub struct IndexesOutput(JsonOutput<Vec<usize>>);
+
+#[derive(Serialize, Tsify)]
+#[serde(transparent)]
+pub struct StatsOutput<'a>(#[tsify(type = "JsonOutput<Record<string, unknown>>")] JsonOutput<&'a serde_json::Value>);
 
 #[wasm_bindgen(js_name = loadSerializedHyperGraph)]
-pub fn load_serialized_hyper_graph(graph: JsValue) -> Result<JsValue, JsValue> {
-    let graph: serde_json::Value = serde_wasm_bindgen::from_value(graph)
-        .map_err(|error| js_sys::Error::new(&format!("Invalid serialized graph: {error}")))?;
-    let loaded = tiny_hypergraph::compat::load_serialized_hyper_graph(&graph);
-    serialize(&loaded)
+pub fn load_serialized_hyper_graph(graph: Ts<GraphInput>) -> Result<Ts<LoadedOutput>, JsError> {
+    let graph = graph.to_rust()?.0.deserialize()?.0;
+    let mut loaded = tiny_hypergraph::compat::load_serialized_hyper_graph(&graph);
+    let numbers = json_wire::encode_loaded_numbers(&mut loaded);
+    Ok(LoadedOutput(JsonOutput { value: loaded, numbers }).into_ts()?)
 }
 
 #[wasm_bindgen]
 impl TinyHyperGraphSolver {
     #[wasm_bindgen(constructor)]
-    pub fn new(topology: JsValue, problem: JsValue, options: JsValue, configuration: JsValue) -> Result<Self, JsValue> {
-        let topology: TinyHyperGraphTopology = serde_wasm_bindgen::from_value(topology)
-            .map_err(|error| js_sys::Error::new(&format!("Invalid topology: {error}")))?;
-        let problem: TinyHyperGraphProblem = serde_wasm_bindgen::from_value(problem)
-            .map_err(|error| js_sys::Error::new(&format!("Invalid problem: {error}")))?;
-        let options: Option<TinyHyperGraphSolverOptions> = serde_wasm_bindgen::from_value(options)
-            .map_err(|error| js_sys::Error::new(&format!("Invalid solver options: {error}")))?;
-        let configuration: Option<SolverConfiguration> = serde_wasm_bindgen::from_value(configuration)
-            .map_err(|error| js_sys::Error::new(&format!("Invalid solver configuration: {error}")))?;
+    pub fn new(topology: Ts<TopologyInput>, problem: Ts<ProblemInput>, options: Ts<OptionsInput>, configuration: Ts<ConfigurationInput>) -> Result<Self, JsError> {
+        let topology = topology.to_rust()?.0.deserialize()
+            .map_err(|error| JsError::new(&format!("Invalid topology: {error}")))?;
+        let problem = problem.to_rust()?.0.deserialize()
+            .map_err(|error| JsError::new(&format!("Invalid problem: {error}")))?;
+        let options = options.to_rust()?.0.deserialize()
+            .map_err(|error| JsError::new(&format!("Invalid solver options: {error}")))?;
+        let configuration = configuration.to_rust()?.0.deserialize()
+            .map_err(|error| JsError::new(&format!("Invalid solver configuration: {error}")))?;
         let configuration = configuration.unwrap_or_default();
         let mut solver = match configuration.variant {
             SolverVariant::Base => Solver::Base(tiny_hypergraph::TinyHyperGraphSolver::new(topology, problem, options)),
@@ -197,7 +231,7 @@ impl TinyHyperGraphSolver {
         Ok(result)
     }
 
-    pub fn step(&mut self) -> Result<JsValue, JsValue> {
+    pub fn step(&mut self) -> Result<Ts<SolverStatus>, JsError> {
         self.step_many(1.0)
     }
 
@@ -239,13 +273,13 @@ impl TinyHyperGraphSolver {
     }
 
     #[wasm_bindgen(js_name = stepMany)]
-    pub fn step_many(&mut self, max_steps: f64) -> Result<JsValue, JsValue> {
+    pub fn step_many(&mut self, max_steps: f64) -> Result<Ts<SolverStatus>, JsError> {
         if !max_steps.is_finite()
             || max_steps.fract() != 0.0
             || max_steps <= 0.0
             || max_steps > u32::MAX as f64
         {
-            return Err(js_sys::Error::new("maxSteps must be a positive u32 integer").into());
+            return Err(JsError::new("maxSteps must be a positive u32 integer"));
         }
         self.advance_steps(max_steps as u32);
         self.get_status()
@@ -279,7 +313,7 @@ impl TinyHyperGraphSolver {
         self.refresh_step_status();
     }
 
-    pub fn solve(&mut self) -> Result<JsValue, JsValue> {
+    pub fn solve(&mut self) -> Result<Ts<SolverStatus>, JsError> {
         if !self.solver.solved && !self.solver.failed {
             self.solver.solve();
         }
@@ -294,26 +328,28 @@ impl TinyHyperGraphSolver {
     }
 
     #[wasm_bindgen(js_name = getStatus)]
-    pub fn get_status(&self) -> Result<JsValue, JsValue> {
-        serialize(&SolverStatus {
+    pub fn get_status(&self) -> Result<Ts<SolverStatus>, JsError> {
+        Ok(SolverStatus {
             solved: self.solver.solved,
             failed: self.solver.failed,
-            error: self.solver.error.as_deref(),
+            error: self.solver.error.clone(),
             iterations: self.solver.iterations,
             pending_route_count: self.solver.state.unrouted_routes.len()
                 + usize::from(self.solver.state.current_route_id.is_some()),
             rip_count: self.solver.state.rip_count,
-        })
+        }.into_ts()?)
     }
 
     #[wasm_bindgen(js_name = getRoutingSnapshot)]
-    pub fn get_routing_snapshot(&self) -> Result<JsValue, JsValue> {
-        serialize(&RoutingSnapshot {
+    pub fn get_routing_snapshot(&self) -> Result<Ts<RoutingOutput<'static>>, JsError> {
+        let snapshot = RoutingOutput(JsonOutput { value: RoutingSnapshot {
             port_assignment: &self.solver.state.port_assignment,
             region_segments: &self.solver.state.region_segments,
             current_route_id: self.solver.state.current_route_id,
             unrouted_routes: &self.solver.state.unrouted_routes,
-        })
+        }, numbers: Vec::new() }).into_ts()?;
+        // Serialization owns the JS snapshot; it retains no Rust references.
+        Ok(Ts::new_unchecked(snapshot.into()))
     }
 
     #[wasm_bindgen(js_name = getMaxRegionCost)]
@@ -328,30 +364,22 @@ impl TinyHyperGraphSolver {
     }
 
     #[wasm_bindgen(js_name = getStats)]
-    pub fn get_stats(&self) -> Result<JsValue, JsValue> {
-        serialize(&self.solver.stats)
-    }
-
-    #[wasm_bindgen(js_name = getStatsJson)]
-    pub fn get_stats_json(&self) -> Result<String, JsValue> {
-        let mut undefined_paths = Vec::new();
-        collect_undefined_stats(&self.solver.stats, &mut Vec::new(), &mut undefined_paths);
-        serde_json::to_string(&StatsSnapshot { stats: &self.solver.stats, undefined_paths })
-            .map_err(|error| js_sys::Error::new(&error.to_string()).into())
+    pub fn get_stats(&self) -> Result<Ts<StatsOutput<'static>>, JsError> {
+        // Serialization owns the JS snapshot; it retains no Rust references.
+        Ok(Ts::new_unchecked(StatsOutput(JsonOutput { value: &self.solver.stats, numbers: Vec::new() }).into_ts()?.into()))
     }
 
     #[wasm_bindgen(js_name = getOutput)]
-    pub fn get_output(&self) -> Result<JsValue, JsValue> {
+    pub fn get_output(&self) -> Result<Ts<GraphOutput>, JsError> {
         if !self.solver.solved || self.solver.failed {
-            return Err(js_sys::Error::new("Output requires a solved, non-failed solver").into());
+            return Err(JsError::new("Output requires a solved, non-failed solver"));
         }
-        serialize(&self.solver.get_output())
+        Ok(GraphOutput(JsonOutput { value: SerializedGraph(self.solver.get_output()), numbers: Vec::new() }).into_ts()?)
     }
 
     #[wasm_bindgen(js_name = replaySolution)]
-    pub fn replay_solution(&mut self, solution: JsValue) -> Result<JsValue, JsValue> {
-        let solution: tiny_hypergraph::TinyHyperGraphSolution = serde_wasm_bindgen::from_value(solution)
-            .map_err(|error| js_sys::Error::new(&format!("Invalid solution: {error}")))?;
+    pub fn replay_solution(&mut self, solution: Ts<SolutionInput>) -> Result<Ts<SolverStatus>, JsError> {
+        let solution = solution.to_rust()?.0.deserialize()?;
         let options = tiny_hypergraph::get_tiny_hyper_graph_solver_options(&self.solver.options);
         self.solver = Solver::Base(
             tiny_hypergraph::section_solver::create_solved_solver_from_solution(
@@ -362,19 +390,21 @@ impl TinyHyperGraphSolver {
         self.get_status()
     }
 
-    pub fn visualize(&self) -> Result<JsValue, JsValue> {
-        serialize(&self.solver.visualize())
+    pub fn visualize(&self) -> Result<Ts<GraphicsOutput>, JsError> {
+        Ok(GraphicsOutput(JsonOutput { value: Graphics(self.solver.visualize()), numbers: Vec::new() }).into_ts()?)
     }
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Tsify)]
 #[serde(rename_all = "camelCase")]
-struct DuplicatePortResult<'a> {
+pub struct DuplicatePortResult {
     solved: bool,
     failed: bool,
-    error: Option<&'a str>,
-    report: &'a tiny_hypergraph::DuplicateCongestedPortSolverReport,
-    output: Option<&'a serde_json::Value>,
+    error: Option<String>,
+    report: tiny_hypergraph::DuplicateCongestedPortSolverReport,
+    #[tsify(type = "SerializedHyperGraph | null")]
+    #[serde(serialize_with = "json_bindings::serialize_optional_js_value")]
+    output: Option<serde_json::Value>,
 }
 
 fn compare_port_ids(left: &str, right: &str) -> std::cmp::Ordering {
@@ -384,28 +414,25 @@ fn compare_port_ids(left: &str, right: &str) -> std::cmp::Ordering {
 }
 
 #[wasm_bindgen(js_name = duplicateCongestedPorts)]
-pub fn duplicate_congested_ports(graph: JsValue, options: JsValue) -> Result<JsValue, JsValue> {
-    let graph: serde_json::Value = serde_wasm_bindgen::from_value(graph)
-        .map_err(|error| js_sys::Error::new(&format!("Invalid serialized graph: {error}")))?;
-    let options: tiny_hypergraph::DuplicateCongestedPortSolverOptions = serde_wasm_bindgen::from_value(options)
-        .map_err(|error| js_sys::Error::new(&format!("Invalid duplicate-port options: {error}")))?;
+pub fn duplicate_congested_ports(graph: Ts<GraphInput>, options: Ts<DuplicateOptionsInput>) -> Result<Ts<DuplicateOutput>, JsError> {
+    let graph = graph.to_rust()?.0.deserialize()?.0;
+    let options = options.to_rust()?.0.deserialize()?;
     let mut solver = tiny_hypergraph::DuplicateCongestedPortSolver::new(graph, options);
     solver.hypot = js_sys::Math::hypot;
     solver.compare_port_ids = compare_port_ids;
     solver.solve();
-    serialize(&DuplicatePortResult {
+    Ok(DuplicateOutput(JsonOutput { value: DuplicatePortResult {
         solved: solver.solved,
         failed: solver.failed,
-        error: solver.error.as_deref(),
-        report: &solver.report,
-        output: solver.revised_serialized_hyper_graph.as_ref(),
-    })
+        error: solver.error,
+        report: solver.report,
+        output: solver.revised_serialized_hyper_graph,
+    }, numbers: Vec::new() }).into_ts()?)
 }
 
 #[wasm_bindgen(js_name = orderConnectionIndexesByNetCardinality)]
-pub fn order_connection_indexes_by_net_cardinality(net_ids: JsValue) -> Result<JsValue, JsValue> {
-    let ids: Vec<String> = serde_wasm_bindgen::from_value(net_ids)
-        .map_err(|error| js_sys::Error::new(&format!("Invalid connection net IDs: {error}")))?;
+pub fn order_connection_indexes_by_net_cardinality(net_ids: Ts<NetIdsInput>) -> Result<Ts<IndexesOutput>, JsError> {
+    let ids = net_ids.to_rust()?.0.deserialize()?;
     let indexes: Vec<usize> = (0..ids.len()).collect();
-    serialize(&tiny_hypergraph::order_connections_by_net_cardinality(&indexes, |index| &ids[*index]))
+    Ok(IndexesOutput(JsonOutput { value: tiny_hypergraph::order_connections_by_net_cardinality(&indexes, |index| &ids[*index]), numbers: Vec::new() }).into_ts()?)
 }

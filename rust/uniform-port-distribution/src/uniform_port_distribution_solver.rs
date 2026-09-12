@@ -6,28 +6,39 @@ use crate::get_bounds_from_node_with_port_points::get_bounds_from_node_with_port
 use crate::get_owner_pair_key::get_owner_pair_key;
 use crate::precompute_shared_edges::precompute_shared_edges;
 
+#[cfg_attr(feature = "wasm-types", derive(tsify::Tsify))]
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct UniformPortDistributionInput {
+    #[cfg_attr(feature = "wasm-types", tsify(type = "UniformNodeWithPortPoints[]"))]
     pub node_with_port_points: Vec<NodeWithPortPoints>,
+    #[cfg_attr(feature = "wasm-types", tsify(type = "UniformInputNodeWithPortPoints[]"))]
     pub input_nodes_with_port_points: Vec<InputNodeWithPortPoints>,
 }
 
+#[cfg_attr(feature = "wasm-types", derive(tsify::Tsify))]
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct FamilyPoint {
     pub node_index: usize,
     pub point_index: usize,
+    #[cfg_attr(feature = "wasm-types", tsify(type = "[UniformName, UniformName]"))]
     pub owner_node_ids: OwnerPair,
+    #[cfg_attr(feature = "wasm-types", tsify(type = "UniformName"))]
     pub owner_pair_key: Name,
 }
 
+#[cfg_attr(feature = "wasm-types", derive(tsify::Tsify))]
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct UniformPortDistributionConstructor {
+    #[cfg_attr(feature = "wasm-types", tsify(type = "[UniformName, UniformBounds][]"))]
     pub node_bounds: Vec<(Name, Bounds)>,
+    #[cfg_attr(feature = "wasm-types", tsify(type = "[UniformName, FamilyPoint[]][]"))]
     pub owner_pair_port_points: Vec<(Name, Vec<FamilyPoint>)>,
+    #[cfg_attr(feature = "wasm-types", tsify(type = "[UniformName, UniformSharedEdge][]"))]
     pub shared_edges: Vec<(Name, SharedEdge)>,
+    #[cfg_attr(feature = "wasm-types", tsify(type = "UniformName[]"))]
     pub owner_pairs_to_process: Vec<Name>,
 }
 

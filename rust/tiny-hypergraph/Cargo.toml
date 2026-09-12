@@ -9,7 +9,13 @@ description = "Rust port of tscircuit/tiny-hypergraph"
 [lib]
 path = "src/lib.rs"
 
+[features]
+wasm-types = ["dep:tsify", "dep:wasm-bindgen", "dep:json-bindings"]
+
 [dependencies]
+json-bindings = { path = "../json-bindings", optional = true }
+wasm-bindgen = { version = "=0.2.128", optional = true }
+tsify = { version = "=0.5.8", default-features = false, features = ["json"], optional = true }
 rustc-hash = "2.1.2"
 serde = { version = "1", features = ["derive", "rc"] }
 serde_json = "1"

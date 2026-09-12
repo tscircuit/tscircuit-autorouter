@@ -26,23 +26,7 @@ import { getGlobalInMemoryCache } from "../../../cache/setupGlobalCaches"
 import { initializeAutorouterBindings } from "../../../bindings/initializeAutorouterBindings"
 import { PortfolioCallbackScope } from "../../../bindings/high-density/PortfolioCallbackScope"
 
-type SolverStateSnapshot = {
-  MAX_ITERATIONS: number
-  iterations: number
-  solved: boolean
-  failed: boolean
-  error: string | null
-  progress: number | null
-  nodeWithPortPoints: NodeWithPortPoints
-  scaleFactor: number
-  growthAttempts: number
-  maxGrowthAttempts: number
-  stats: Record<string, unknown>
-  activeId: number | null
-  winnerId: number | null
-  failedIds: number[]
-  solvedRoutes?: HighDensityIntraNodeRoute[]
-}
+type SolverStateSnapshot = bindings.GrowthSnapshot
 
 export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
   constructorParams: GrowShrinkHighDensityIntraNodeSolverParams
@@ -73,49 +57,49 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
     const key = this.scope.registerGrowth(this)
     this.scopeKey = key
     const { growShrinkSolutionValidator: _, obstacles: _obstacles, connMap: _connMap, colorMap: _colorMap, ...input } = params
-    const inputJson = JSON.stringify({ ...input, hasCustomValidator: typeof params.growShrinkSolutionValidator === "function" })
-    this.binding = this.scope.run(() => GrowShrinkHighDensityIntraNodeSolver.createBinding(key, inputJson))
+    const nativeInput = { ...input, hasCustomValidator: typeof params.growShrinkSolutionValidator === "function" }
+    this.binding = this.scope.run(() => GrowShrinkHighDensityIntraNodeSolver.createBinding(key, nativeInput))
     this.initialized = true
     this.syncSolverState()
     this.installStateAccessors()
   }
 
-  private static createBinding(key: number, inputJson: string): bindings.GrowShrinkHighDensityIntraNodeSolver {
+  private static createBinding(key: number, input: bindings.HighDensityValue): bindings.GrowShrinkHighDensityIntraNodeSolver {
     const owner = (): GrowShrinkHighDensityIntraNodeSolver => {
       const scope = PortfolioCallbackScope.current
       if (!scope) throw new Error("Grow/shrink callback requires an execution scope")
       return scope.getGrowth(key)
     }
     return new bindings.GrowShrinkHighDensityIntraNodeSolver(
-      inputJson,
-      (nodeJson: string): number => {
+      input,
+      (node: NodeWithPortPoints): number => {
         const solver = owner()
         const { growShrinkSolutionValidator: _, ...props } = solver.constructorParams
-        const child = new PortfolioSingleIntraNodeSolver({ ...props, nodeWithPortPoints: JSON.parse(nodeJson) as NodeWithPortPoints })
+        const child = new PortfolioSingleIntraNodeSolver({ ...props, nodeWithPortPoints: node })
         const id = solver.scope.adopt(child)
         solver.children.set(id, child)
         return id
       },
-      (routesJson: string, stateJson: string): string => {
+      (routes: HighDensityIntraNodeRoute[], state: SolverStateSnapshot): { accepted: boolean; state: Record<string, unknown> } => {
         const solver = owner()
-        solver.syncSolverState(stateJson)
+        solver.syncSolverState(state)
         const validator = solver.constructorParams.growShrinkSolutionValidator
         try {
-          const accepted = validator ? validator(JSON.parse(routesJson) as HighDensityIntraNodeRoute[]) : true
+          const accepted = validator ? validator(routes) : true
           const state = solver.statePatch()
           solver.dirty = false
-          return JSON.stringify({ accepted, state })
+          return { accepted, state }
         } finally {
           const cache = getGlobalInMemoryCache()
           bindings.HighDensitySolver.setCacheCounts(cache.cacheHits, cache.cacheMisses)
         }
       },
-      (id: number): string => {
+      (id: number): GraphicsObject => {
         const child = owner().child(id)
         const supervisor = child.getPortfolioAdapter()
         supervisor.finishSolverRun()
         supervisor.synchronize()
-        return JSON.stringify(child.visualize())
+        return child.visualize()
       },
     )
   }
@@ -176,7 +160,7 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
     if (!this.routes) {
       this.routes = this.winningSolver && this.scaleFactor === 1
         ? this.winningSolver.solvedRoutes
-        : JSON.parse(this.binding.routesJson()) as HighDensityIntraNodeRoute[]
+        : this.binding.routes()
     }
     return this.routes
   }
@@ -200,7 +184,7 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
     this.synchronizing = true
     try {
     const { growShrinkSolutionValidator: _, obstacles: _obstacles, connMap: _connMap, colorMap: _colorMap, ...settings } = this.constructorParams
-    this.binding.restoreJson(JSON.stringify({
+    this.binding.restore({
       MAX_ITERATIONS: this.MAX_ITERATIONS, iterations: this.iterations,
       solved: this.solved, failed: this.failed, error: this.error, progress: this.progress,
       constructorParams: { ...settings, hasCustomValidator: typeof this.constructorParams.growShrinkSolutionValidator === "function" }, nodeWithPortPoints: this.nodeWithPortPoints,
@@ -210,17 +194,17 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
       winnerId: this.winningSolver ? this.childId(this.winningSolver) : null,
       failedIds: this.failedSolvers.map((child): number => this.childId(child)),
       ...(this.routes ? { solvedRoutes: this.routes } : {}),
-    }))
+    })
     this.dirty = false
     } finally { this.synchronizing = false }
   }
 
-  syncSolverState(detachedSnapshot?: string): void {
+  syncSolverState(detachedSnapshot?: SolverStateSnapshot): void {
     if (!this.initialized || this.synchronizing || (this.dirty && !detachedSnapshot)) return
     this.synchronizing = true
     try {
     if (!detachedSnapshot) this.scope.sync()
-    const state = JSON.parse(detachedSnapshot ?? this.binding.snapshotJson()) as SolverStateSnapshot
+    const state = detachedSnapshot ?? this.binding.snapshot()
     if (detachedSnapshot && !this.routes && state.solvedRoutes) this.routes = state.solvedRoutes
     const newlySolved = !this.solved && state.solved
     if (newlySolved) this.routes = undefined
@@ -241,7 +225,7 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
     if (this.routes && !detachedSnapshot) {
       const routes = this.winningSolver && this.scaleFactor === 1
         ? this.winningSolver.solvedRoutes
-        : JSON.parse(this.binding.routesJson()) as HighDensityIntraNodeRoute[]
+        : this.binding.routes()
       if (this.routes !== routes) this.routes.splice(0, this.routes.length, ...routes)
       if (this.winningSolver && this.scaleFactor === 1) this.routes = routes
     }
@@ -268,7 +252,7 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
 
   override visualize(): GraphicsObject {
     this.pushSolverState()
-    return this.scope.runGrowth(this.scopeKey, this, (): GraphicsObject => JSON.parse(this.binding.visualizeJson()) as GraphicsObject)
+    return this.scope.runGrowth(this.scopeKey, this, (): GraphicsObject => this.binding.visualize())
   }
 
   shareForOrchestration(): number {

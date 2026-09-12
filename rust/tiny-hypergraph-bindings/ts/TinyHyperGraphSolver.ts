@@ -2,7 +2,7 @@ import type { SerializedHyperGraph } from "@tscircuit/hypergraph"
 import type { GraphicsObject } from "graphics-debug"
 import * as bindings from "../pkg/tiny_hypergraph_bindings.js"
 import { assertTinyHypergraphBindingsInitialized, getTinyHypergraphMemory } from "./loadTinyHypergraphBindings.js"
-import { decodeStatsSnapshot } from "./decodeStatsSnapshot.js"
+import { encodeJsonInput, decodeUndefinedJsonOutput } from "./jsonWire.js"
 import type {
   TinyHyperGraphProblem,
   TinyHyperGraphRoutingSnapshot,
@@ -14,7 +14,7 @@ import type {
   TinyHyperGraphTopology,
 } from "./types.js"
 
-type SolverStatus = Omit<TinyHyperGraphStatus, "error"> & { error: string | undefined }
+type SolverStatus = bindings.SolverStatus
 
 /** Synchronous solver methods after one-time WASM initialization. */
 export class TinyHyperGraphSolver {
@@ -37,11 +37,11 @@ export class TinyHyperGraphSolver {
     configuration?: TinyHyperGraphSolverConfiguration,
   ) {
     assertTinyHypergraphBindingsInitialized()
-    this.handle = new bindings.TinyHyperGraphSolver(topology, problem, options, configuration)
+    this.handle = new bindings.TinyHyperGraphSolver(encodeJsonInput(topology), encodeJsonInput(problem), encodeJsonInput(options ?? null), encodeJsonInput(configuration ?? null))
     this.wasmMemory = getTinyHypergraphMemory()
     this.stepStatusPointer = this.handle.stepStatusPointer()
     this.stepStatus = new Uint32Array(this.wasmMemory.buffer, this.stepStatusPointer, 3)
-    this.updateStatus(this.handle.getStatus() as SolverStatus)
+    this.updateStatus(this.handle.getStatus())
   }
 
   private getHandleOrThrow(): bindings.TinyHyperGraphSolver {
@@ -82,17 +82,17 @@ export class TinyHyperGraphSolver {
   }
 
   stepMany(maxSteps: number): TinyHyperGraphStatus {
-    const status = this.getHandleOrThrow().stepMany(maxSteps) as SolverStatus
+    const status = this.getHandleOrThrow().stepMany(maxSteps)
     return this.updateStatus(status)
   }
 
   solve(): TinyHyperGraphStatus {
-    const status = this.getHandleOrThrow().solve() as SolverStatus
+    const status = this.getHandleOrThrow().solve()
     return this.updateStatus(status)
   }
 
   getStatus(): TinyHyperGraphStatus {
-    const status = this.getHandleOrThrow().getStatus() as SolverStatus
+    const status = this.getHandleOrThrow().getStatus()
     return this.updateStatus(status)
   }
 
@@ -101,7 +101,7 @@ export class TinyHyperGraphSolver {
   }
 
   getRoutingSnapshot(): TinyHyperGraphRoutingSnapshot {
-    return this.getHandleOrThrow().getRoutingSnapshot() as TinyHyperGraphRoutingSnapshot
+    return decodeUndefinedJsonOutput(this.getHandleOrThrow().getRoutingSnapshot())
   }
 
   getMaxRegionCost(): number {
@@ -117,21 +117,21 @@ export class TinyHyperGraphSolver {
   }
 
   getStats(): TinyHyperGraphStats {
-    return decodeStatsSnapshot(this.getHandleOrThrow().getStatsJson())
+    return decodeUndefinedJsonOutput(this.getHandleOrThrow().getStats())
   }
 
   getOutput(): SerializedHyperGraph {
-    return this.getHandleOrThrow().getOutput() as SerializedHyperGraph
+    return decodeUndefinedJsonOutput(this.getHandleOrThrow().getOutput())
   }
 
   /** Rebuilds a complete solved state in route order, validating each route path. */
   replaySolution(solution: TinyHyperGraphSolution): TinyHyperGraphStatus {
-    const status = this.getHandleOrThrow().replaySolution(solution) as SolverStatus
+    const status = this.getHandleOrThrow().replaySolution(encodeJsonInput(solution))
     return this.updateStatus(status)
   }
 
   visualize(): GraphicsObject {
-    return this.getHandleOrThrow().visualize() as GraphicsObject
+    return decodeUndefinedJsonOutput(this.getHandleOrThrow().visualize())
   }
 
   preview(): GraphicsObject {

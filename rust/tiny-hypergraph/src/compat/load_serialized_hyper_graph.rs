@@ -6,6 +6,7 @@ use std::borrow::Cow;
 use std::collections::{HashMap, HashSet};
 
 #[derive(serde::Serialize)]
+#[cfg_attr(feature = "wasm-types", derive(tsify::Tsify))]
 pub struct LoadedHyperGraph {
     pub topology: TinyHyperGraphTopology,
     pub problem: TinyHyperGraphProblem,

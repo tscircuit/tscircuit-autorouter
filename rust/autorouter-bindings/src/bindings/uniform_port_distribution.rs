@@ -1,92 +1,100 @@
 use indexmap::IndexMap;
 use serde::{Deserialize, Serialize};
+use tsify::{Ts, Tsify};
 use wasm_bindgen::prelude::*;
 use uniform_port_distribution::{determine_owner_pair, get_owner_pair_key, get_shared_edge_for_node_pair, precompute_shared_edges};
-use uniform_port_distribution::types::{Bounds, Name, InputNodeWithPortPoints, NodeWithPortPoints, OwnerPair};
+use uniform_port_distribution::types::{Bounds, Name, InputNodeWithPortPoints, NodeWithPortPoints, OwnerPair, SharedEdge};
 use uniform_port_distribution::uniform_port_distribution_solver::{UniformPortDistributionConstructor, UniformPortDistributionInput};
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Tsify)]
 #[serde(rename_all = "camelCase")]
-struct OwnerPairInput {
+pub struct UniformOwnerPairInput {
+    #[tsify(type = "UniformName | null")]
     port_point_id: Option<Name>,
+    #[tsify(type = "UniformName")]
     current_node_id: Name,
+    #[tsify(type = "UniformInputNodeWithPortPoints[]")]
     input_nodes: Vec<InputNodeWithPortPoints>,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Tsify)]
 #[serde(rename_all = "camelCase")]
-struct SharedEdgeInput {
+pub struct UniformSharedEdgeInput {
+    #[tsify(type = "UniformName")]
     node_a_id: Name,
+    #[tsify(type = "UniformName")]
     node_b_id: Name,
+    #[tsify(type = "[UniformName, UniformBounds][]")]
     node_bounds: Vec<(Name, Bounds)>,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Tsify)]
 #[serde(rename_all = "camelCase")]
-struct SharedEdgesInput {
+pub struct UniformSharedEdgesInput {
+    #[tsify(type = "UniformOwnerPair[]")]
     owner_pairs: Vec<OwnerPair>,
+    #[tsify(type = "[UniformName, UniformBounds][]")]
     node_bounds: Vec<(Name, Bounds)>,
 }
 
-fn encode<T: Serialize>(value: &T) -> Result<JsValue, JsValue> {
-    // Ordered Maps use entry arrays at this boundary; metadata stays in JS.
-    // Numeric fields remain JS numbers, including signed zero and NaN.
-    value.serialize(&serde_wasm_bindgen::Serializer::json_compatible())
-        .map_err(|error| JsValue::from_str(&error.to_string()))
-}
+#[derive(Deserialize, Serialize, Tsify)]
+#[serde(transparent)]
+pub struct UniformOwnerPair(#[tsify(type = "[UniformName, UniformName]")] OwnerPair);
+
+#[derive(Serialize, Tsify)]
+#[serde(transparent)]
+pub struct UniformOptionalSharedEdge(#[tsify(type = "UniformSharedEdge | null")] Option<SharedEdge>);
+
+#[derive(Serialize, Tsify)]
+#[serde(transparent)]
+pub struct UniformSharedEdges(#[tsify(type = "[UniformName, UniformSharedEdge][]")] Vec<(Name, SharedEdge)>);
 
 #[wasm_bindgen(js_name = buildUniformPortDistribution)]
-pub fn build_uniform_port_distribution(input: JsValue) -> Result<JsValue, JsValue> {
-    let input: UniformPortDistributionInput = serde_wasm_bindgen::from_value(input)
-        .map_err(|error| JsValue::from_str(&error.to_string()))?;
+pub fn build_uniform_port_distribution(input: Ts<UniformPortDistributionInput>) -> Result<Ts<UniformPortDistributionConstructor>, JsError> {
+    let input = input.to_rust()?;
     let result = UniformPortDistributionConstructor::new(&input);
-    encode(&result)
+    Ok(result.into_ts()?)
 }
 
 #[wasm_bindgen(js_name = determineUniformPortOwnerPair)]
-pub fn determine_uniform_port_owner_pair(input: JsValue) -> Result<JsValue, JsValue> {
-    let input: OwnerPairInput = serde_wasm_bindgen::from_value(input)
-        .map_err(|error| JsValue::from_str(&error.to_string()))?;
+pub fn determine_uniform_port_owner_pair(input: Ts<UniformOwnerPairInput>) -> Result<Ts<UniformOwnerPair>, JsError> {
+    let input = input.to_rust()?;
     let pair = determine_owner_pair::determine_owner_pair(input.port_point_id.as_ref(), &input.current_node_id, &input.input_nodes);
-    encode(&pair)
+    Ok(UniformOwnerPair(pair).into_ts()?)
 }
 
 #[wasm_bindgen(js_name = normalizeUniformPortOwnerPair)]
-pub fn normalize_uniform_port_owner_pair(node_a: JsValue, node_b: JsValue) -> Result<JsValue, JsValue> {
-    let a: Name = serde_wasm_bindgen::from_value(node_a).map_err(|error|JsValue::from_str(&error.to_string()))?;
-    let b: Name = serde_wasm_bindgen::from_value(node_b).map_err(|error|JsValue::from_str(&error.to_string()))?;
+pub fn normalize_uniform_port_owner_pair(node_a: Ts<Name>, node_b: Ts<Name>) -> Result<Ts<UniformOwnerPair>, JsError> {
+    let a = node_a.to_rust()?;
+    let b = node_b.to_rust()?;
     let pair = get_owner_pair_key::normalize_owner_pair(&a, &b);
-    encode(&pair)
+    Ok(UniformOwnerPair(pair).into_ts()?)
 }
 
 #[wasm_bindgen(js_name = getUniformPortOwnerPairKey)]
-pub fn get_uniform_port_owner_pair_key(owner_node_ids: JsValue) -> Result<JsValue, JsValue> {
-    let pair: OwnerPair = serde_wasm_bindgen::from_value(owner_node_ids)
-        .map_err(|error| JsValue::from_str(&error.to_string()))?;
-    encode(&get_owner_pair_key::get_owner_pair_key(&pair))
+pub fn get_uniform_port_owner_pair_key(owner_node_ids: Ts<UniformOwnerPair>) -> Result<Ts<Name>, JsError> {
+    let pair = owner_node_ids.to_rust()?.0;
+    Ok(get_owner_pair_key::get_owner_pair_key(&pair).into_ts()?)
 }
 
 #[wasm_bindgen(js_name = getUniformSharedEdge)]
-pub fn get_uniform_shared_edge(input: JsValue) -> Result<JsValue, JsValue> {
-    let input: SharedEdgeInput = serde_wasm_bindgen::from_value(input)
-        .map_err(|error| JsValue::from_str(&error.to_string()))?;
+pub fn get_uniform_shared_edge(input: Ts<UniformSharedEdgeInput>) -> Result<Ts<UniformOptionalSharedEdge>, JsError> {
+    let input = input.to_rust()?;
     let bounds: IndexMap<_, _> = input.node_bounds.into_iter().collect();
-    encode(&get_shared_edge_for_node_pair::get_shared_edge_for_node_pair(&input.node_a_id, &input.node_b_id, &bounds))
+    Ok(UniformOptionalSharedEdge(get_shared_edge_for_node_pair::get_shared_edge_for_node_pair(&input.node_a_id, &input.node_b_id, &bounds)).into_ts()?)
 }
 
 #[wasm_bindgen(js_name = precomputeUniformSharedEdges)]
-pub fn precompute_uniform_shared_edges(input: JsValue) -> Result<JsValue, JsValue> {
-    let input: SharedEdgesInput = serde_wasm_bindgen::from_value(input)
-        .map_err(|error| JsValue::from_str(&error.to_string()))?;
+pub fn precompute_uniform_shared_edges(input: Ts<UniformSharedEdgesInput>) -> Result<Ts<UniformSharedEdges>, JsError> {
+    let input = input.to_rust()?;
     let bounds: IndexMap<_, _> = input.node_bounds.into_iter().collect();
-    let edges: Vec<_> = precompute_shared_edges::precompute_shared_edges(&input.owner_pairs, &bounds).into_iter().collect();
-    encode(&edges)
+    let edges = precompute_shared_edges::precompute_shared_edges(&input.owner_pairs, &bounds).into_iter().collect();
+    Ok(UniformSharedEdges(edges).into_ts()?)
 }
 
 #[wasm_bindgen(js_name = getUniformNodeBounds)]
-pub fn get_uniform_node_bounds(input: JsValue) -> Result<JsValue, JsValue> {
-    let node: NodeWithPortPoints = serde_wasm_bindgen::from_value(input)
-        .map_err(|error| JsValue::from_str(&error.to_string()))?;
+pub fn get_uniform_node_bounds(input: Ts<NodeWithPortPoints>) -> Result<Ts<Bounds>, JsError> {
+    let node = input.to_rust()?;
     let bounds = uniform_port_distribution::get_bounds_from_node_with_port_points::get_bounds_from_node_with_port_points(&node);
-    encode(&bounds)
+    Ok(bounds.into_ts()?)
 }

@@ -3,6 +3,8 @@ use crate::ported::solvers::high_density_solver::high_density_solver;
 use std::{cell::RefCell, collections::HashMap, rc::{Rc, Weak}};
 use serde_json::{json, Value};
 use wasm_bindgen::prelude::*;
+use tsify::{Ts, Tsify};
+use crate::bindings::high_density_wire::*;
 use intra_node_routing::specialized_base_solver::BaseSolverState;
 use crate::bindings::portfolio_single_intra_node_solver::{PortfolioCore, take_shared_portfolio, allocate_orchestration_handle, take_shared_general};
 use crate::ported::solvers::hyper_high_density_solver::grow_shrink_high_density_intra_node_solver::grow_shrink_high_density_intra_node_solver::{GrowthPortfolio, GrowthPortfolioState};
@@ -40,14 +42,6 @@ fn return_error(error: String) -> JsValue {
     LAST_EXCEPTION.with(|stored| stored.borrow_mut().take()).unwrap_or_else(|| JsValue::from_str(&error))
 }
 
-fn parse_json(text: &str) -> Result<Value, JsValue> {
-    serde_json::from_str(text).map_err(|error| JsValue::from_str(&error.to_string()))
-}
-
-fn json_text(value: &Value) -> Result<String, JsValue> {
-    serde_json::to_string(value).map_err(|error| JsValue::from_str(&error.to_string()))
-}
-
 #[derive(Clone)]
 struct PortfolioChild {
     id: u32,
@@ -69,8 +63,7 @@ impl GrowthPortfolio for PortfolioChild {
     fn reject_solution(&mut self, error: &str) { self.engine.borrow_mut().reject_solution(error); }
     fn visualize(&self) -> Result<Value, String> {
         let value = self.visualize.call1(&JsValue::UNDEFINED, &JsValue::from_f64(self.id as f64)).map_err(error_text)?;
-        let text = value.as_string().ok_or("Child visualization must return JSON")?;
-        serde_json::from_str(&text).map_err(|error| error.to_string())
+        callback_value(value)
     }
 }
 
@@ -83,7 +76,10 @@ impl HighDensityNodeSolver for PortfolioChild {
     fn node_with_port_points(&self) -> &Value { &self.node }
     fn solver_type_name(&self) -> String { self.engine.borrow().resolved_solver_type.clone() }
     fn growth_attempts(&self) -> Option<f64> { None }
-    fn visualize(&self, _: &dyn Fn(&str, f64) -> String) -> Result<Value, String> { GrowthPortfolio::visualize(self) }
+    fn visualize(&self, _: &dyn Fn(&str, f64) -> String) -> Result<Value, String> {
+        let value = self.visualize.call1(&JsValue::UNDEFINED, &JsValue::from_f64(self.id as f64)).map_err(error_text)?;
+        callback_mapped_value(value).map_err(error_text)
+    }
 }
 
 #[derive(Clone)]
@@ -98,8 +94,7 @@ struct ExternalChild {
 impl ExternalChild {
     fn call(&self, method: &str) -> Result<Value, String> {
         let result = self.callback.call1(&JsValue::UNDEFINED, &JsValue::from_str(method)).map_err(error_text)?;
-        let text = result.as_string().ok_or("External child callback JSON required")?;
-        serde_json::from_str(&text).map_err(|error| error.to_string())
+        callback_mapped_value(result).map_err(error_text)
     }
 }
 
@@ -170,7 +165,7 @@ impl HighDensityNodeSolver for GeneralChild {
     fn growth_attempts(&self) -> Option<f64> { None }
     fn visualize(&self, _: &dyn Fn(&str, f64) -> String) -> Result<Value, String> {
         let output = self.visualize.call1(&JsValue::UNDEFINED, &JsValue::from_f64(self.id as f64)).map_err(error_text)?;
-        serde_json::from_str(&output.as_string().ok_or("General visualization JSON required")?).map_err(|error| error.to_string())
+        callback_mapped_value(output).map_err(error_text)
     }
 }
 
@@ -195,8 +190,8 @@ impl GrowthCore {
         let portfolios = &mut self.portfolios;
         let mut factory = |params: Value| -> Result<Box<dyn GrowthPortfolio>, String> {
             let node = params["nodeWithPortPoints"].clone();
-            let text = serde_json::to_string(&node).map_err(|error| error.to_string())?;
-            let value = factory_callback.call1(&JsValue::UNDEFINED, &JsValue::from_str(&text)).map_err(error_text)?;
+            let node_value = callback_output(&node)?;
+            let value = factory_callback.call1(&JsValue::UNDEFINED, &node_value).map_err(error_text)?;
             let id = value.as_f64().ok_or("Growth factory handle required")? as u32;
             let engine = take_shared_portfolio(id)?;
             portfolios.insert(id, engine.clone());
@@ -204,15 +199,14 @@ impl GrowthCore {
         };
         let custom_validator = self.solver.constructor_params["hasCustomValidator"].as_bool() == Some(true);
         let mut validator = |routes: &[Value], snapshot: &Value| -> Result<(bool, Option<Value>), String> {
-            let text = serde_json::to_string(routes).map_err(|error| error.to_string())?;
-            let state = serde_json::to_string(snapshot).map_err(|error| error.to_string())?;
+            let routes = callback_output(&json!(routes))?;
+            let state = callback_output(snapshot)?;
             if custom_validator { if let Some(observe) = observe_parent.as_mut() { observe(true)?; } }
-            let result = self.validator.as_ref().unwrap().call2(&JsValue::UNDEFINED, &JsValue::from_str(&text), &JsValue::from_str(&state));
+            let result = self.validator.as_ref().unwrap().call2(&JsValue::UNDEFINED, &routes, &state);
             let exit_result = if custom_validator { if let Some(observe) = observe_parent.as_mut() { observe(false) } else { Ok(()) } } else { Ok(()) };
             let result = result.map_err(error_text)?;
             exit_result?;
-            let text = result.as_string().ok_or("Growth validator must return JSON")?;
-            let result: Value = serde_json::from_str(&text).map_err(|error| error.to_string())?;
+            let result = callback_value(result)?;
             let accepted = result["accepted"].as_bool().ok_or("Growth validator accepted required")?;
             Ok((accepted, result.get("state").cloned()))
         };
@@ -252,7 +246,7 @@ impl HighDensityNodeSolver for GrowthChild {
         if let Some(winner) = &core.solver.winning_solver {
             return core.portfolios.get(&winner.id()).expect("Winning portfolio exists").borrow().resolved_solver_type.clone();
         }
-        "growth_solver::GrowShrinkHighDensityIntraNodeSolver".into()
+        "GrowShrinkHighDensityIntraNodeSolver".into()
     }
     fn growth_attempts(&self) -> Option<f64> { Some(self.engine.borrow().solver.growth_attempts) }
     fn visualize(&self, _: &dyn Fn(&str, f64) -> String) -> Result<Value, String> { self.engine.borrow().solver.visualize() }
@@ -264,8 +258,11 @@ pub struct GrowShrinkHighDensityIntraNodeSolver { engine: Rc<RefCell<GrowthCore>
 #[wasm_bindgen]
 impl GrowShrinkHighDensityIntraNodeSolver {
     #[wasm_bindgen(constructor)]
-    pub fn new(params_json: &str, factory: js_sys::Function, validator: Option<js_sys::Function>, visualize: js_sys::Function) -> Result<Self, JsValue> {
-        Ok(Self { engine: Rc::new(RefCell::new(GrowthCore { solver: growth_solver::GrowShrinkHighDensityIntraNodeSolver::new(parse_json(params_json)?), factory, validator, visualize, portfolios: HashMap::new() })) })
+    pub fn new(params: Ts<HighDensityValue>,
+        #[wasm_bindgen(unchecked_param_type = "(node: HighDensityNode) => number")] factory: js_sys::Function,
+        #[wasm_bindgen(unchecked_param_type = "((routes: HighDensityRoutes, state: GrowthSnapshot) => { accepted: boolean; state: Record<string, unknown> }) | undefined")] validator: Option<js_sys::Function>,
+        #[wasm_bindgen(unchecked_param_type = "(id: number) => HighDensityGraphics")] visualize: js_sys::Function) -> Result<Self, JsValue> {
+        Ok(Self { engine: Rc::new(RefCell::new(GrowthCore { solver: growth_solver::GrowShrinkHighDensityIntraNodeSolver::new(read_value(params)?), factory, validator, visualize, portfolios: HashMap::new() })) })
     }
 
     #[wasm_bindgen(js_name = stepInner)]
@@ -279,21 +276,21 @@ impl GrowShrinkHighDensityIntraNodeSolver {
         Ok(())
     }
 
-    #[wasm_bindgen(js_name = snapshotJson)]
-    pub fn snapshot_json(&self) -> Result<String, JsValue> { json_text(&self.engine.borrow().snapshot()) }
+    #[wasm_bindgen(js_name = snapshot)]
+    pub fn snapshot(&self) -> Result<Ts<GrowthSnapshot>, JsValue> { GrowthSnapshot(self.engine.borrow().snapshot()).into_ts().map_err(|error| JsError::new(&error.to_string()).into()) }
 
-    #[wasm_bindgen(js_name = routesJson)]
-    pub fn routes_json(&self) -> Result<String, JsValue> { json_text(&json!(self.engine.borrow().solver.solved_routes)) }
+    #[wasm_bindgen(js_name = routes)]
+    pub fn routes(&self) -> Result<Ts<HighDensityRoutes>, JsValue> { HighDensityRoutes(self.engine.borrow().solver.solved_routes.clone()).into_ts().map_err(|error| JsError::new(&error.to_string()).into()) }
 
-    #[wasm_bindgen(js_name = visualizeJson)]
-    pub fn visualize_json(&self) -> Result<String, JsValue> {
+    #[wasm_bindgen(js_name = visualize)]
+    pub fn visualize(&self) -> Result<Ts<HighDensityGraphics>, JsValue> {
         let value = self.engine.borrow().solver.visualize().map_err(return_error)?;
-        json_text(&value)
+        HighDensityGraphics(value).into_ts().map_err(|error| JsError::new(&error.to_string()).into())
     }
 
-    #[wasm_bindgen(js_name = restoreJson)]
-    pub fn restore_json(&self, patch_json: &str) -> Result<(), JsValue> {
-        let patch = parse_json(patch_json)?;
+    #[wasm_bindgen(js_name = restore)]
+    pub fn restore(&self, patch: Ts<HighDensityValue>) -> Result<(), JsValue> {
+        let patch = read_value(patch)?;
         let mut core = self.engine.borrow_mut();
         for key in ["activeId", "winnerId", "failedIds"] {
             if let Some(value) = patch.get(key) {
@@ -351,11 +348,16 @@ pub struct HighDensitySolver {
 #[wasm_bindgen]
 impl HighDensitySolver {
     #[wasm_bindgen(constructor)]
-    pub fn new(params_json: &str, factory: js_sys::Function, visualize: js_sys::Function, transparentize: js_sys::Function, completed: Option<js_sys::Function>, observe_parent: Option<js_sys::Function>) -> Result<Self, JsValue> {
-        let mut solver = high_density_solver::HighDensitySolver::new(parse_json(params_json)?).map_err(return_error)?;
+    pub fn new(params: Ts<HighDensityMappedValue>,
+        #[wasm_bindgen(unchecked_param_type = "(growth: boolean) => number")] factory: js_sys::Function,
+        #[wasm_bindgen(unchecked_param_type = "(id: number) => unknown")] visualize: js_sys::Function,
+        #[wasm_bindgen(unchecked_param_type = "(color: string, amount: number) => string")] transparentize: js_sys::Function,
+        #[wasm_bindgen(unchecked_param_type = "((id: number, failed: boolean, state: HighDensityState | undefined, totalRoutes: number) => void) | undefined")] completed: Option<js_sys::Function>,
+        #[wasm_bindgen(unchecked_param_type = "((snapshot: HighDensityBoardSnapshot | null) => void) | undefined")] observe_parent: Option<js_sys::Function>) -> Result<Self, JsValue> {
+        let mut solver = high_density_solver::HighDensitySolver::new(read_mapped_value(params)?).map_err(return_error)?;
         if let Some(callback) = observe_parent {
             solver.observe_parent = Some(Box::new(move |snapshot: Option<Value>| -> Result<(), String> {
-                let value = if let Some(snapshot) = snapshot { JsValue::from_str(&serde_json::to_string(&snapshot).map_err(|error| error.to_string())?) } else { JsValue::NULL };
+                let value = if let Some(snapshot) = snapshot { callback_output(&snapshot)? } else { JsValue::NULL };
                 callback.call1(&JsValue::UNDEFINED, &value).map_err(error_text)?;
                 Ok(())
             }));
@@ -364,37 +366,37 @@ impl HighDensitySolver {
     }
 
     #[wasm_bindgen(js_name = shareExternal)]
-    pub fn share_external(callback: js_sys::Function, solver_type: &str) -> u32 {
+    pub fn share_external(#[wasm_bindgen(unchecked_param_type = "(method: string) => unknown")] callback: js_sys::Function, solver_type: &str) -> u32 {
         let id = allocate_orchestration_handle();
         SHARED_EXTERNAL.with(|registry| registry.borrow_mut().insert(id, (callback, solver_type.to_owned())));
         id
     }
 
     #[wasm_bindgen(js_name = attachTerminalPcbPortIds)]
-    pub fn attach_terminal_pcb_port_ids(node_json: &str, routes_json: &str) -> Result<String, JsValue> {
-        let node = parse_json(node_json)?;
-        let routes = serde_json::from_str(routes_json).map_err(|error| JsValue::from_str(&error.to_string()))?;
+    pub fn attach_terminal_pcb_port_ids(node: Ts<HighDensityMappedValue>, routes: Ts<HighDensityMappedValue>) -> Result<Ts<HighDensityRoutes>, JsValue> {
+        let node = read_mapped_value(node)?;
+        let routes = serde_json::from_value(read_mapped_value(routes)?).map_err(|error| JsValue::from_str(&error.to_string()))?;
         let routes = high_density_solver::HighDensitySolver::attach_terminal_pcb_port_ids(&node, routes).map_err(return_error)?;
-        json_text(&json!(routes))
+        HighDensityRoutes(routes).into_ts().map_err(|error| JsError::new(&error.to_string()).into())
     }
 
     #[wasm_bindgen(js_name = shareGeneral)]
-    pub fn share_general(handle: u32, state_json: &str, node_json: &str, solver_type: &str) -> Result<u32, JsValue> {
-        let state = serde_json::from_str(state_json).map_err(|error| JsValue::from_str(&error.to_string()))?;
-        let node = parse_json(node_json)?;
+    pub fn share_general(handle: u32, state: Ts<HighDensityMappedValue>, node: Ts<HighDensityMappedValue>, solver_type: &str) -> Result<u32, JsValue> {
+        let state = serde_json::from_value(read_mapped_value(state)?).map_err(|error| JsValue::from_str(&error.to_string()))?;
+        let node = read_mapped_value(node)?;
         let engine = take_shared_general(handle).map_err(return_error)?;
         let id = allocate_orchestration_handle();
         SHARED_GENERAL.with(|registry| registry.borrow_mut().insert(id, Rc::new(RefCell::new(GeneralChildCore { engine, state, node, solver_type: solver_type.to_owned() }))));
         Ok(id)
     }
 
-    #[wasm_bindgen(js_name = metadataJson)]
-    pub fn metadata_json(&self) -> Result<String, JsValue> {
-        json_text(&json!(self.solver.node_solve_metadata_by_id))
+    #[wasm_bindgen(js_name = metadata)]
+    pub fn metadata(&self) -> Result<Ts<HighDensityRecord>, JsValue> {
+        HighDensityRecord(json!(self.solver.node_solve_metadata_by_id)).into_ts().map_err(|error| JsError::new(&error.to_string()).into())
     }
 
-    #[wasm_bindgen(js_name = childStateJson)]
-    pub fn child_state_json(&self, id: u32) -> Result<String, JsValue> {
+    #[wasm_bindgen(js_name = childState)]
+    pub fn child_state(&self, id: u32) -> Result<Ts<HighDensityState>, JsValue> {
         let state = match self.children.get(&id) {
             Some(BoardChildReference::External(child)) => serde_json::from_value(child.call("state").map_err(return_error)?).map_err(|error| JsValue::from_str(&error.to_string()))?,
             Some(BoardChildReference::General(engine, _)) => engine.borrow().state.clone(),
@@ -402,7 +404,7 @@ impl HighDensitySolver {
             Some(BoardChildReference::Growth(engine, _)) => engine.upgrade().ok_or_else(|| JsValue::from_str("Released Growth child"))?.borrow().state(),
             None => return Err(JsValue::from_str("Unknown board child")),
         };
-        json_text(&json!(state))
+        HighDensityState(json!(state)).into_ts().map_err(|error| JsError::new(&error.to_string()).into())
     }
 
     #[wasm_bindgen(js_name = setCacheCounts)]
@@ -421,38 +423,38 @@ impl HighDensitySolver {
 
     pub fn solve(&mut self) -> Result<(), JsValue> { self.run(true) }
 
-    #[wasm_bindgen(js_name = snapshotJson)]
-    pub fn snapshot_json(&self) -> Result<String, JsValue> {
-        json_text(&self.solver.snapshot().map_err(return_error)?)
+    #[wasm_bindgen(js_name = snapshot)]
+    pub fn snapshot(&self) -> Result<Ts<HighDensityBoardSnapshot>, JsValue> {
+        HighDensityBoardSnapshot(self.solver.snapshot().map_err(return_error)?).into_ts().map_err(|error| JsError::new(&error.to_string()).into())
     }
 
-    #[wasm_bindgen(js_name = stateJson)]
-    pub fn state_json(&self) -> Result<String, JsValue> {
+    #[wasm_bindgen(js_name = state)]
+    pub fn state(&self) -> Result<Ts<HighDensityBoardState>, JsValue> {
         let mut state = serde_json::to_value(&self.solver.base).map_err(|error| JsValue::from_str(&error.to_string()))?;
         state["stats"] = self.solver.stats.clone();
 
         state["unsolvedNodeCount"] = json!(self.solver.unsolved_node_port_points.len());
         state["activeId"] = self.solver.active_sub_solver.as_ref().map(|solver| json!(solver.id())).unwrap_or(Value::Null);
         state["failedIds"] = json!(self.solver.failed_solvers.iter().map(|solver| solver.id()).collect::<Vec<_>>());
-        json_text(&state)
+        HighDensityBoardState(state).into_ts().map_err(|error| JsError::new(&error.to_string()).into())
     }
 
-    #[wasm_bindgen(js_name = routesJson)]
-    pub fn routes_json(&self) -> Result<String, JsValue> { json_text(&json!(self.solver.routes)) }
+    #[wasm_bindgen(js_name = routes)]
+    pub fn routes(&self) -> Result<Ts<HighDensityRoutes>, JsValue> { HighDensityRoutes(self.solver.routes.clone()).into_ts().map_err(|error| JsError::new(&error.to_string()).into()) }
 
-    #[wasm_bindgen(js_name = visualizeJson)]
-    pub fn visualize_json(&self) -> Result<String, JsValue> {
+    #[wasm_bindgen(js_name = visualize)]
+    pub fn visualize(&self) -> Result<Ts<HighDensityGraphics>, JsValue> {
         let transparentize = |color: &str, amount: f64| -> String {
             self.transparentize.call2(&JsValue::UNDEFINED, &JsValue::from_str(color), &JsValue::from_f64(amount))
                 .expect("Visualization color callback failed").as_string().expect("Visualization color required")
         };
         let graphics = self.solver.visualize(&transparentize).map_err(return_error)?;
-        json_text(&graphics)
+        HighDensityGraphics(graphics).into_ts().map_err(|error| JsError::new(&error.to_string()).into())
     }
 
-    #[wasm_bindgen(js_name = restoreJson)]
-    pub fn restore_json(&mut self, patch_json: &str) -> Result<(), JsValue> {
-        let patch = parse_json(patch_json)?;
+    #[wasm_bindgen(js_name = restore)]
+    pub fn restore(&mut self, patch: Ts<HighDensityMappedValue>) -> Result<(), JsValue> {
+        let patch = read_mapped_value(patch)?;
         if let Some(value) = patch.get("activeId") {
             self.solver.active_sub_solver = if value.is_null() { None } else {
                 Some(self.resolve_child(value.as_u64().ok_or_else(|| JsValue::from_str("activeId must be a handle"))? as u32)?)
@@ -555,7 +557,7 @@ impl HighDensitySolver {
                     if let Some(callback) = &self.completed {
                         let failed = self.solver.failed_solvers.iter().any(|child| child.id() == id);
                         let state = if let Some(BoardChildReference::General(engine, _)) = children.borrow().get(&id) {
-                            JsValue::from_str(&serde_json::to_string(&engine.borrow().state).map_err(|error| JsValue::from_str(&error.to_string()))?)
+                            callback_output(&json!(engine.borrow().state)).map_err(return_error)?
                         } else { JsValue::UNDEFINED };
                         callback.call4(&JsValue::UNDEFINED, &JsValue::from_f64(id as f64), &JsValue::from_bool(failed), &state, &JsValue::from_f64(self.solver.routes.len() as f64))?;
                     }

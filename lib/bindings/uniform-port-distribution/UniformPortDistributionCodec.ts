@@ -1,36 +1,38 @@
+import type { UniformName, UniformSharedEdge, UniformInputNodeWithPortPoints, UniformPortDistributionInput, UniformBounds, UniformNumber } from "../../../rust/autorouter-bindings/pkg/autorouter_bindings.js"
 import type { InputNodeWithPortPoints } from "../../solvers/PortPointPathingSolver/PortPointPathingSolver"
-import type { Bounds, OwnerPair, SharedEdge, Side } from "../../solvers/UniformPortDistributionSolver/types"
+import type { Bounds, SharedEdge } from "../../solvers/UniformPortDistributionSolver/types"
 import type { UniformPortDistributionSolverInput } from "../../solvers/UniformPortDistributionSolver/UniformPortDistributionSolver"
 
-export type EncodedName = string | { __utf16: number[] }
-export type EncodedSharedEdge = Omit<SharedEdge, "ownerNodeIds" | "ownerPairKey" | "nodeSideByOwnerId"> & {
-  ownerNodeIds: [EncodedName, EncodedName]
-  ownerPairKey: EncodedName
-  nodeSideByOwnerId: Array<[EncodedName, Side]>
+export type EncodedName = UniformName
+
+export function encodeNumber(value: number): UniformNumber {
+  if (Object.is(value, -0)) return "-0"
+  if (Number.isNaN(value)) return "NaN"
+  if (value === Infinity) return "Infinity"
+  if (value === -Infinity) return "-Infinity"
+  return value
 }
-export type UniformPortDistributionState = {
-  nodeBounds: Array<[EncodedName, Bounds]>
-  ownerPairPortPoints: Array<[EncodedName, Array<{
-    nodeIndex: number
-    pointIndex: number
-    ownerNodeIds: [EncodedName, EncodedName]
-    ownerPairKey: EncodedName
-  }>]>
-  sharedEdges: Array<[EncodedName, EncodedSharedEdge]>
-  ownerPairsToProcess: EncodedName[]
+
+export function decodeNumber(value: UniformNumber): number {
+  if (value === "-0") return -0
+  if (value === "NaN") return NaN
+  if (value === "Infinity") return Infinity
+  if (value === "-Infinity") return -Infinity
+  return value
 }
-type EncodedInputNode = {
-  portPoints: Array<{ portPointId: EncodedName | undefined; connectionNodeIds: EncodedName[] | undefined }>
+
+export function encodeBounds(bounds: Bounds): UniformBounds {
+  return {
+    minX: encodeNumber(bounds.minX), maxX: encodeNumber(bounds.maxX),
+    minY: encodeNumber(bounds.minY), maxY: encodeNumber(bounds.maxY),
+  }
 }
-type EncodedConstructorInput = {
-  nodeWithPortPoints: Array<{
-    capacityMeshNodeId: EncodedName
-    center: { x: number; y: number }
-    width: number
-    height: number
-    portPoints: Array<{ portPointId: EncodedName | undefined; x: number; y: number }>
-  }>
-  inputNodesWithPortPoints: EncodedInputNode[]
+
+export function decodeBounds(bounds: UniformBounds): Bounds {
+  return {
+    minX: decodeNumber(bounds.minX), maxX: decodeNumber(bounds.maxX),
+    minY: decodeNumber(bounds.minY), maxY: decodeNumber(bounds.maxY),
+  }
 }
 
 export function encodeName(value: string): EncodedName {
@@ -49,36 +51,40 @@ export function decodeName(value: EncodedName): string {
   return text
 }
 
-export function encodeInputNodes(nodes: InputNodeWithPortPoints[]): EncodedInputNode[] {
+export function encodeInputNodes(nodes: InputNodeWithPortPoints[]): UniformInputNodeWithPortPoints[] {
   return nodes.map(node => ({
     portPoints: node.portPoints.map(point => ({
-      portPointId: point.portPointId == null ? undefined : encodeName(point.portPointId),
-      connectionNodeIds: point.connectionNodeIds?.map(encodeName),
+      portPointId: point.portPointId == null ? null : encodeName(point.portPointId),
+      connectionNodeIds: point.connectionNodeIds?.map(encodeName) ?? null,
     })),
   }))
 }
 
-export function encodeConstructorInput(input: UniformPortDistributionSolverInput): EncodedConstructorInput {
+export function encodeConstructorInput(input: UniformPortDistributionSolverInput): UniformPortDistributionInput {
   return {
     nodeWithPortPoints: input.nodeWithPortPoints.map(node => ({
       capacityMeshNodeId: encodeName(node.capacityMeshNodeId),
-      center: node.center,
-      width: node.width,
-      height: node.height,
+      center: { x: encodeNumber(node.center.x), y: encodeNumber(node.center.y) },
+      width: encodeNumber(node.width),
+      height: encodeNumber(node.height),
       portPoints: node.portPoints.map(point => ({
-        portPointId: point.portPointId == null ? undefined : encodeName(point.portPointId),
-        x: point.x,
-        y: point.y,
+        portPointId: point.portPointId == null ? null : encodeName(point.portPointId),
+        x: encodeNumber(point.x),
+        y: encodeNumber(point.y),
       })),
     })),
     inputNodesWithPortPoints: encodeInputNodes(input.inputNodesWithPortPoints),
   }
 }
 
-export function decodeSharedEdge(edge: EncodedSharedEdge): SharedEdge {
+export function decodeSharedEdge(edge: UniformSharedEdge): SharedEdge {
   return {
     ...edge,
-    ownerNodeIds: edge.ownerNodeIds.map(decodeName) as OwnerPair,
+    ownerNodeIds: [decodeName(edge.ownerNodeIds[0]), decodeName(edge.ownerNodeIds[1])],
+    x1: decodeNumber(edge.x1), y1: decodeNumber(edge.y1),
+    x2: decodeNumber(edge.x2), y2: decodeNumber(edge.y2),
+    center: { x: decodeNumber(edge.center.x), y: decodeNumber(edge.center.y) },
+    length: decodeNumber(edge.length),
     ownerPairKey: decodeName(edge.ownerPairKey),
     nodeSideByOwnerId: Object.fromEntries(edge.nodeSideByOwnerId.map(([name, side]) => [decodeName(name), side])),
   }

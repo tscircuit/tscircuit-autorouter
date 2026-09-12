@@ -90,7 +90,7 @@ export class TraceSimplificationSolver extends TraceSimplificationSolverAdapter 
     if (!child || !this.customExtractor) throw new Error("Missing custom trace extraction callback")
     const routes = this.customExtractor(child)
     this.push()
-    return super.resolveSolverStep(this.runSolver(() => this.binding.resolveExtractJson(this.graph.graph(routes))))
+    return super.resolveSolverStep(this.runSolver(() => this.binding.resolveExtract(this.graph.graph(routes))))
   }
 
   private validatePreservedRouteEndpoints(routes: HighDensityRoute[]): void { this.invoke("validatePreservedRouteEndpoints", [routes]) }

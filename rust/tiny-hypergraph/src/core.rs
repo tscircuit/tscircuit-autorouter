@@ -15,6 +15,7 @@ use std::{
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "wasm-types", derive(tsify::Tsify))]
 pub struct TinyHyperGraphTopology {
     pub port_count: usize,
     pub region_count: usize,
@@ -24,27 +25,38 @@ pub struct TinyHyperGraphTopology {
     pub region_height: Vec<f64>,
     pub region_center_x: Vec<f64>,
     pub region_center_y: Vec<f64>,
+    #[cfg_attr(feature = "wasm-types", tsify(optional))]
     pub region_available_z_mask: Option<Vec<i32>>,
+    #[cfg_attr(feature = "wasm-types", tsify(optional))]
+    #[cfg_attr(feature = "wasm-types", serde(serialize_with = "json_bindings::serialize_optional_js_values"))]
     pub region_metadata: Option<Vec<Value>>,
     pub port_angle_for_region1: Vec<i32>,
+    #[cfg_attr(feature = "wasm-types", tsify(optional))]
     pub port_angle_for_region2: Option<Vec<i32>>,
     pub port_x: Vec<f64>,
     pub port_y: Vec<f64>,
     pub port_z: Vec<i32>,
+    #[cfg_attr(feature = "wasm-types", tsify(optional))]
+    #[cfg_attr(feature = "wasm-types", serde(serialize_with = "json_bindings::serialize_optional_js_values"))]
     pub port_metadata: Option<Vec<Value>>,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "wasm-types", derive(tsify::Tsify))]
 pub struct TinyHyperGraphProblem {
     pub route_count: usize,
     pub port_section_mask: Vec<i32>,
+    #[cfg_attr(feature = "wasm-types", tsify(optional))]
+    #[cfg_attr(feature = "wasm-types", serde(serialize_with = "json_bindings::serialize_optional_js_values"))]
     pub route_metadata: Option<Vec<Value>>,
     pub route_start_port: Vec<i32>,
     pub route_end_port: Vec<i32>,
     pub route_net: Vec<i32>,
     pub region_net_id: Vec<i32>,
+    #[cfg_attr(feature = "wasm-types", tsify(optional))]
     pub port_penalty: Option<Vec<f64>>,
+    #[cfg_attr(feature = "wasm-types", tsify(optional))]
     pub initial_assignments: Option<Vec<TinyHyperGraphInitialAssignment>>,
 }
 
@@ -57,8 +69,10 @@ pub struct TinyHyperGraphProblemSetup {
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "wasm-types", derive(tsify::Tsify))]
 pub struct TinyHyperGraphSolution {
     pub solved_route_path_segments: Vec<Vec<(PortId, PortId)>>,
+    #[cfg_attr(feature = "wasm-types", tsify(optional))]
     pub solved_route_path_region_ids: Option<Vec<Vec<Option<RegionId>>>>,
 }
 
@@ -136,62 +150,91 @@ pub struct TinyHyperGraphWorkingState {
 }
 
 #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+#[cfg_attr(feature = "wasm-types", derive(tsify::Tsify))]
 pub struct TinyHyperGraphSolverOptions {
     #[serde(rename = "minViaPadDiameter")]
+    #[cfg_attr(feature = "wasm-types", tsify(optional))]
     pub min_via_pad_diameter: Option<f64>,
     #[serde(rename = "DISTANCE_TO_COST")]
+    #[cfg_attr(feature = "wasm-types", tsify(optional))]
     pub distance_to_cost: Option<f64>,
     #[serde(rename = "RIP_THRESHOLD_START")]
+    #[cfg_attr(feature = "wasm-types", tsify(optional))]
     pub rip_threshold_start: Option<f64>,
     #[serde(rename = "RIP_THRESHOLD_END")]
+    #[cfg_attr(feature = "wasm-types", tsify(optional))]
     pub rip_threshold_end: Option<f64>,
     #[serde(rename = "RIP_THRESHOLD_RAMP_ATTEMPTS")]
+    #[cfg_attr(feature = "wasm-types", tsify(optional))]
     pub rip_threshold_ramp_attempts: Option<f64>,
     #[serde(rename = "RIP_CONGESTION_REGION_COST_FACTOR")]
+    #[cfg_attr(feature = "wasm-types", tsify(optional))]
     pub rip_congestion_region_cost_factor: Option<f64>,
     #[serde(rename = "TRACE_DENSITY_COST_FACTOR")]
+    #[cfg_attr(feature = "wasm-types", tsify(optional))]
     pub trace_density_cost_factor: Option<f64>,
     #[serde(rename = "USE_LAZY_ROUTE_HEURISTIC")]
+    #[cfg_attr(feature = "wasm-types", tsify(optional))]
     pub use_lazy_route_heuristic: Option<bool>,
     #[serde(rename = "USE_SPARSE_CANDIDATE_STORAGE")]
+    #[cfg_attr(feature = "wasm-types", tsify(optional))]
     pub use_sparse_candidate_storage: Option<bool>,
     #[serde(rename = "MAX_ITERATIONS")]
+    #[cfg_attr(feature = "wasm-types", tsify(optional))]
     pub max_iterations: Option<f64>,
     #[serde(rename = "VERBOSE")]
+    #[cfg_attr(feature = "wasm-types", tsify(optional))]
     pub verbose: Option<bool>,
     #[serde(rename = "STATIC_REACHABILITY_PRECHECK")]
+    #[cfg_attr(feature = "wasm-types", tsify(optional))]
     pub static_reachability_precheck: Option<bool>,
     #[serde(rename = "STATIC_REACHABILITY_PRECHECK_MAX_HOPS")]
+    #[cfg_attr(feature = "wasm-types", tsify(optional))]
     pub static_reachability_precheck_max_hops: Option<f64>,
     #[serde(rename = "ACCEPT_BEST_SOLUTION_ON_TIMEOUT")]
+    #[cfg_attr(feature = "wasm-types", tsify(optional))]
     pub accept_best_solution_on_timeout: Option<bool>,
     #[serde(rename = "GREEDY_FINAL_ROUTE_ITERS")]
+    #[cfg_attr(feature = "wasm-types", tsify(optional))]
     pub greedy_final_route_iters: Option<f64>,
     #[serde(rename = "PARTIAL_RIP_ENABLED")]
+    #[cfg_attr(feature = "wasm-types", tsify(optional))]
     pub partial_rip_enabled: Option<bool>,
     #[serde(rename = "PARTIAL_RIP_MIN_ROUTE_COUNT")]
+    #[cfg_attr(feature = "wasm-types", tsify(optional))]
     pub partial_rip_min_route_count: Option<f64>,
     #[serde(rename = "PARTIAL_RIP_MAX_ROUTE_COUNT")]
+    #[cfg_attr(feature = "wasm-types", tsify(optional))]
     pub partial_rip_max_route_count: Option<f64>,
     #[serde(rename = "PARTIAL_RIP_MAX_DISTANCE")]
+    #[cfg_attr(feature = "wasm-types", tsify(optional))]
     pub partial_rip_max_distance: Option<f64>,
     #[serde(rename = "PARTIAL_RIP_QUALITY_MAX_DISTANCE")]
+    #[cfg_attr(feature = "wasm-types", tsify(optional))]
     pub partial_rip_quality_max_distance: Option<f64>,
     #[serde(rename = "PARTIAL_RIP_MAX_ATTEMPTS")]
+    #[cfg_attr(feature = "wasm-types", tsify(optional))]
     pub partial_rip_max_attempts: Option<f64>,
     #[serde(rename = "PARTIAL_RIP_WARMUP_FULL_RIP_ATTEMPTS")]
+    #[cfg_attr(feature = "wasm-types", tsify(optional))]
     pub partial_rip_warmup_full_rip_attempts: Option<f64>,
     #[serde(rename = "PARTIAL_RIP_COMPLEXITY_SELECTION_MIN_ROUTE_COUNT")]
+    #[cfg_attr(feature = "wasm-types", tsify(optional))]
     pub partial_rip_complexity_selection_min_route_count: Option<f64>,
     #[serde(rename = "PARTIAL_RIP_TARGET_MAX_COST_IMPROVEMENT_RATIO")]
+    #[cfg_attr(feature = "wasm-types", tsify(optional))]
     pub partial_rip_target_max_cost_improvement_ratio: Option<f64>,
     #[serde(rename = "PARTIAL_RIP_MAX_REGION_COST_GROWTH_RATIO")]
+    #[cfg_attr(feature = "wasm-types", tsify(optional))]
     pub partial_rip_max_region_cost_growth_ratio: Option<f64>,
     #[serde(rename = "PARTIAL_RIP_MAX_TOTAL_COST_GROWTH_RATIO")]
+    #[cfg_attr(feature = "wasm-types", tsify(optional))]
     pub partial_rip_max_total_cost_growth_ratio: Option<f64>,
     #[serde(rename = "OUTSIDE_IN_ROUTING")]
+    #[cfg_attr(feature = "wasm-types", tsify(optional))]
     pub outside_in_routing: Option<bool>,
     #[serde(rename = "OUTSIDE_IN_MAX_DISTANCE")]
+    #[cfg_attr(feature = "wasm-types", tsify(optional))]
     pub outside_in_max_distance: Option<f64>,
 }
 

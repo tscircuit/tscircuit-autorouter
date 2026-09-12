@@ -1,3 +1,4 @@
+use tsify::{Ts, Tsify};
 use repair::global_drc_force_improve_solver as force_improve_solver;
 use std::{cell::RefCell, rc::Rc, collections::HashMap};
 use wasm_bindgen::prelude::*;
@@ -5,6 +6,55 @@ use serde_json::{Value, json};
 use repair::{types::{Routes, DrcEvaluator, DrcSnapshot, Evaluator}, internal_types::MutableRoute,
     
     standalone_global_drc::StandaloneDrcEvaluator};
+
+#[derive(serde::Serialize, serde::Deserialize, Tsify)]
+#[serde(transparent)]
+pub struct GlobalDrcRoutePacket(
+    #[tsify(type = "{ id: number; routes: { id: number; pointArrayId: number; viaArrayId: number; sourceId: number; value: import('high-density-repair03/lib').HighDensityRoute; pointIds: number[]; pointSourceIds: number[] }[] }")]
+    Value,
+);
+
+#[derive(serde::Serialize, serde::Deserialize, Tsify)]
+#[serde(transparent)]
+pub struct GlobalDrcMutationPacket(
+    #[tsify(type = "{ id: number; routes: { id: number; pointArrayId: number; viaArrayId: number; value: import('high-density-repair03/lib').HighDensityRoute; pointIds: number[] }[] }")]
+    Value,
+);
+
+#[derive(serde::Serialize, serde::Deserialize, Tsify)]
+#[serde(transparent)]
+pub struct GlobalDrcSolverState(
+    #[tsify(type = "Record<string, unknown> & { iterations: number; MAX_ITERATIONS: number; solved: boolean; failed: boolean; error: string | null; progress: number; stats: Record<string, unknown>; outputIsInput?: boolean; drcStats?: import('high-density-repair03/lib/drc/AutoroutingDrcEngine').AutoroutingDrcEngine['lastRunStats'] }")]
+    Value,
+);
+
+#[derive(serde::Serialize, serde::Deserialize, Tsify)]
+#[serde(transparent)]
+pub struct GlobalDrcCallbackInput(
+    #[tsify(type = "{ routes: GlobalDrcRoutePacket; output: GlobalDrcRoutePacket | null; state: GlobalDrcSolverState; reference: boolean; topology: boolean; legacy: boolean }")]
+    Value,
+);
+
+#[derive(serde::Serialize, serde::Deserialize, Tsify)]
+#[serde(transparent)]
+pub struct GlobalDrcCallbackOutput(
+    #[tsify(type = "{ snapshot?: { errors: Record<string, unknown>[]; count: number; issueScore: number; legacyIssueScore: number; traceRouteIndexById: Record<string, number> }; thrown?: boolean; state: GlobalDrcSolverState; mutations: GlobalDrcMutationPacket[] }")]
+    Value,
+);
+
+#[derive(serde::Deserialize, Tsify)]
+#[serde(transparent)]
+pub struct GlobalDrcSolverParams(
+    #[tsify(type = "Omit<import('high-density-repair03/lib').GlobalDrcForceImproveSolverParams, 'drcEvaluator' | 'referenceDrcEvaluator' | 'autoroutingDrcEngine' | 'connMap'> & { connMap: { idToNetMap: Record<string, string> } | null; hasCustomDrcEvaluator: boolean; useHostEvaluator: boolean; hasReferenceEvaluator: boolean; initialReferenceSnapshot?: unknown }")]
+    Value,
+);
+
+#[derive(serde::Deserialize, Tsify)]
+#[serde(transparent)]
+pub struct GlobalDrcRoutes(
+    #[tsify(type = "import('high-density-repair03/lib').HighDensityRoute[]")]
+    Vec<Value>,
+);
 
 struct RouteRegistry {
     arrays: Vec<Routes>,
@@ -133,11 +183,11 @@ impl DrcEvaluator for CallbackEvaluator {
         let packet = self.registry.borrow_mut().packet(routes);
         let output = self.output.borrow().as_ref().map(|routes|self.registry.borrow_mut().packet(routes));
         let input = json!({"routes":packet,"output":output,"state":*self.state.borrow(),"reference":self.reference,"topology":topology,"legacy":legacy});
-        let input = serde_json::to_string(&input).map_err(|error|error.to_string())?;
-        let output = self.callback.call1(&JsValue::UNDEFINED,&JsValue::from_str(&input)).map_err(|error| {
+        let input = GlobalDrcCallbackInput(input).into_ts().map_err(|error|error.to_string())?;
+        let output = self.callback.call1(&JsValue::UNDEFINED,&input.js_value()).map_err(|error| {
             *self.pending_error.borrow_mut()=Some(error); "Global DRC callback failed".to_owned()
         })?;
-        let output: Value = serde_json::from_str(&output.as_string().ok_or("Global DRC callback must return JSON")?).map_err(|error|error.to_string())?;
+        let output = Ts::<GlobalDrcCallbackOutput>::new_unchecked(output).to_rust().map_err(|error|error.to_string())?.0;
         self.registry.borrow_mut().apply_mutations(&output["mutations"])?;
         *self.patch.borrow_mut()=output.get("state").cloned();
         if let Some(id)=output["state"]["outputId"].as_i64() { *self.output.borrow_mut()=Some(self.registry.borrow().array(id)?); }
@@ -157,8 +207,8 @@ pub struct GlobalDrcForceImproveSolver {
 #[wasm_bindgen]
 impl GlobalDrcForceImproveSolver {
     #[wasm_bindgen(constructor)]
-    pub fn new(params_json: &str, callback: js_sys::Function) -> Result<Self,JsValue> {
-        let mut params: Value=serde_json::from_str(params_json).map_err(js_error)?;
+    pub fn new(params: Ts<GlobalDrcSolverParams>, #[wasm_bindgen(unchecked_param_type = "(input: GlobalDrcCallbackInput) => GlobalDrcCallbackOutput")] callback: js_sys::Function) -> Result<Self,JsValue> {
+        let mut params = params.to_rust().map_err(js_error)?.0;
         let route_values=params["hdRoutes"].take();
         let Value::Array(route_values)=route_values else { return Err(JsValue::from_str("Global repair routes required")); };
         let routes=Routes::new(route_values.into_iter().map(MutableRoute::from_owned_value).collect());
@@ -189,8 +239,8 @@ impl GlobalDrcForceImproveSolver {
     }
 
     #[wasm_bindgen(js_name=stepInner)]
-    pub fn step_inner(&mut self, state_json: &str, final_acceptance: bool) -> Result<String,JsValue> {
-        let state:Value=serde_json::from_str(state_json).map_err(js_error)?;
+    pub fn step_inner(&mut self, state: Ts<GlobalDrcSolverState>, final_acceptance: bool) -> Result<Ts<GlobalDrcSolverState>,JsValue> {
+        let state = state.to_rust().map_err(js_error)?.0;
         self.registry.borrow_mut().apply_mutations(&state["mutations"]).map_err(js_error)?;
         self.solver.restore_public_state(&state);
         if let Some(conn) = state.get("connectivity") {
@@ -205,26 +255,26 @@ impl GlobalDrcForceImproveSolver {
         }
         let result=if final_acceptance { self.solver.try_final_acceptance() } else { self.solver.step_inner() };
         result.map_err(|error|self.pending_error.borrow_mut().take().unwrap_or_else(||js_error(error)))?;
-        self.state_json()
+        self.state()
     }
 
-    #[wasm_bindgen(js_name=stateJson)]
-    pub fn state_json(&self) -> Result<String,JsValue> {
+    #[wasm_bindgen(js_name=state)]
+    pub fn state(&self) -> Result<Ts<GlobalDrcSolverState>,JsValue> {
         let mut state=self.solver.debug_state();
         state["outputIsInput"]=json!(Routes::ptr_eq(&self.solver.output_hd_routes,&self.solver.input_hd_routes));
         if let Some(evaluator)=&self.default_evaluator { state["drcStats"]=serde_json::to_value(&evaluator.borrow().engine.last_run_stats).map_err(js_error)?; }
-        serde_json::to_string(&state).map_err(js_error)
+        GlobalDrcSolverState(state).into_ts().map_err(js_error)
     }
 
-    #[wasm_bindgen(js_name=routesJson)]
-    pub fn routes_json(&self, which: &str) -> Result<String,JsValue> {
+    #[wasm_bindgen(js_name=routes)]
+    pub fn routes(&self, which: &str) -> Result<Ts<GlobalDrcRoutePacket>,JsValue> {
         let routes=match which { "input"=>&self.solver.input_hd_routes,"guarded"=>&self.solver.guarded_input_hd_routes,"output"=>&self.solver.output_hd_routes,_=>return Err(js_error("Unknown route field")) };
-        serde_json::to_string(&self.registry.borrow_mut().packet(routes)).map_err(js_error)
+        GlobalDrcRoutePacket(self.registry.borrow_mut().packet(routes)).into_ts().map_err(js_error)
     }
 
     #[wasm_bindgen(js_name=importRoutes)]
-    pub fn import_routes(&self, routes_json: &str) -> Result<usize,JsValue> {
-        let values:Vec<Value>=serde_json::from_str(routes_json).map_err(js_error)?;
+    pub fn import_routes(&self, routes: Ts<GlobalDrcRoutes>) -> Result<usize,JsValue> {
+        let values = routes.to_rust().map_err(js_error)?.0;
         let routes=Routes::new(values.into_iter().map(MutableRoute::from_owned_value).collect());
         let mut registry=self.registry.borrow_mut(); let id=registry.arrays.len();registry.arrays.push(routes); Ok(id)
     }

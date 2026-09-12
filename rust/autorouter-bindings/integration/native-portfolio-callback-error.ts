@@ -7,14 +7,14 @@ type FailurePoint = "factory" | "setup" | "step" | null
 
 await loadAutorouterBindings({ module_or_path: readFileSync(new URL("../pkg/autorouter_bindings_bg.wasm", import.meta.url)) })
 
-const nodeJson = JSON.stringify({
+const node = {
   capacityMeshNodeId: "callback-error-fixture",
   center: { x: 0, y: 0 },
   width: 1,
   height: 1,
   availableZ: [0],
   portPoints: [],
-})
+}
 const initialState = {
   iterations: 0,
   maxIterations: 100,
@@ -27,17 +27,17 @@ const initialState = {
 
 function createPortfolio(failurePoint: FailurePoint, sentinel: Error): bindings.PortfolioSingleIntraNodeSolver {
   let nextId = 0
-  return new bindings.PortfolioSingleIntraNodeSolver(nodeJson, 1,
-    (): string => {
+  return new bindings.PortfolioSingleIntraNodeSolver(node, 1,
+    (): Record<string, unknown> => {
       if (failurePoint === "factory") throw sentinel
-      return JSON.stringify({ id: nextId++, kind: "external", state: initialState })
+      return { id: nextId++, kind: "external", state: initialState }
     },
-    (_id: number, action: "setup" | "step", count: number): string => {
+    (_id: number, action: "setup" | "step", count: number): bindings.CandidateStateSnapshot => {
       assert.equal(count, action === "setup" ? 0 : 100)
       if (failurePoint === action) throw sentinel
-      return JSON.stringify(action === "setup" ? initialState : {
+      return action === "setup" ? initialState : {
         ...initialState, iterations: 1, solved: true, progress: 1,
-      })
+      }
     },
     (): never => { throw new Error("External candidates must not access the General cache") },
   )
@@ -57,7 +57,7 @@ for (const failurePoint of ["factory", "setup", "step"] as const) {
   const fresh = createPortfolio(null, sentinel)
   try {
     assert.equal(fresh.step(1), 1)
-    const state = fresh.snapshot() as { solved: boolean; failed: boolean; error: string | null }
+    const state = fresh.snapshot()
     assert.equal(state.solved, true)
     assert.equal(state.failed, false)
     assert.equal(state.error, null)

@@ -3,6 +3,8 @@ use intra_node_routing::specialized_solver::SpecializedEngine;
 use intra_node_routing::specialized_utils::math::SpecializedMath;
 use serde_json::Value;
 use wasm_bindgen::prelude::*;
+use tsify::{Ts, Tsify};
+use crate::bindings::high_density_wire::*;
 
 fn host_math() -> SpecializedMath {
     SpecializedMath {
@@ -32,9 +34,8 @@ pub struct SpecializedRouterContext {
 #[wasm_bindgen]
 impl SpecializedRouterContext {
     #[wasm_bindgen(constructor)]
-    pub fn new(props_json: &str) -> Result<Self, JsValue> {
-        let mut props: Value = serde_json::from_str(props_json)
-            .map_err(|error| JsValue::from_str(&error.to_string()))?;
+    pub fn new(props: Ts<HighDensityMappedValue>) -> Result<Self, JsValue> {
+        let mut props: Value = read_mapped_value(props)?;
         let object = props.as_object_mut().ok_or_else(|| JsValue::from_str("Specialized context requires an object"))?;
         let connectivity_json = object.remove("connMap").filter(|value| !value.is_null()).map(Rc::new);
         let connectivity = connectivity_json.as_ref().map(|value| {
@@ -50,9 +51,8 @@ impl SpecializedRouterContext {
         Ok(Self { connectivity_json, connectivity, obstacles: Rc::new(obstacles) })
     }
 
-    pub fn create(&self, kind: &str, params_json: &str) -> Result<SpecializedIntraNodeDispatcher, JsValue> {
-        let params: Value = serde_json::from_str(params_json)
-            .map_err(|error| JsValue::from_str(&error.to_string()))?;
+    pub fn create(&self, kind: &str, params: Ts<HighDensityMappedValue>) -> Result<SpecializedIntraNodeDispatcher, JsValue> {
+        let params: Value = read_mapped_value(params)?;
         let engine = if kind == "through-obstacle" {
             let solver = intra_node_routing::single_transition_through_obstacle_intra_node_solver::SingleTransitionThroughObstacleIntraNodeSolver::new_with_context(
                 params, host_math(), self.obstacles.clone(), self.connectivity.clone(),
@@ -76,30 +76,28 @@ impl SpecializedRouterContext {
 #[wasm_bindgen]
 impl SpecializedIntraNodeDispatcher {
     #[wasm_bindgen(constructor)]
-    pub fn new(kind: &str, params_json: &str) -> Result<Self, JsValue> {
-        let params: Value = serde_json::from_str(params_json)
-            .map_err(|error| JsValue::from_str(&error.to_string()))?;
+    pub fn new(kind: &str, params: Ts<HighDensityMappedValue>) -> Result<Self, JsValue> {
+        let params: Value = read_mapped_value(params)?;
         let engine = SpecializedEngine::new(kind, params, host_math())
             .map_err(|error| JsValue::from_str(&error))?;
         Ok(Self { engine: Rc::new(RefCell::new(engine)) })
     }
 
-    #[wasm_bindgen(js_name = snapshotJson)]
-    pub fn snapshot_json(&self) -> Result<String, JsValue> {
+    #[wasm_bindgen(js_name = snapshot)]
+    pub fn snapshot(&self) -> Result<Ts<HighDensityRecord>, JsValue> {
         let snapshot = self.engine.borrow().snapshot().map_err(|error| JsValue::from_str(&error))?;
-        serde_json::to_string(&snapshot).map_err(|error| JsValue::from_str(&error.to_string()))
+        HighDensityRecord(snapshot).into_ts().map_err(|error| JsValue::from_str(&error.to_string()))
     }
 
-    #[wasm_bindgen(js_name = stateJson)]
-    pub fn state_json(&self) -> Result<String, JsValue> {
-        serde_json::to_string(self.engine.borrow().state())
+    #[wasm_bindgen(js_name = state)]
+    pub fn state(&self) -> Result<Ts<HighDensityState>, JsValue> {
+        HighDensityState(serde_json::to_value(self.engine.borrow().state()).map_err(|error| JsValue::from_str(&error.to_string()))?).into_ts()
             .map_err(|error| JsValue::from_str(&error.to_string()))
     }
 
-    #[wasm_bindgen(js_name = restoreStateJson)]
-    pub fn restore_state_json(&mut self, state_json: &str) -> Result<(), JsValue> {
-        let mut value: Value = serde_json::from_str(state_json)
-            .map_err(|error| JsValue::from_str(&error.to_string()))?;
+    #[wasm_bindgen(js_name = restoreState)]
+    pub fn restore_state(&mut self, state: Ts<HighDensityMappedValue>) -> Result<(), JsValue> {
+        let mut value: Value = read_mapped_value(state)?;
         let non_finite_progress = value["progress"].is_null();
         if non_finite_progress { value["progress"] = Value::from(0.0); }
         let mut state: intra_node_routing::specialized_base_solver::BaseSolverState = serde_json::from_value(value)
@@ -109,33 +107,30 @@ impl SpecializedIntraNodeDispatcher {
         Ok(())
     }
 
-    #[wasm_bindgen(js_name = invokeJson)]
-    pub fn invoke_json(&mut self, method: &str, args_json: &str) -> Result<String, JsValue> {
-        let args: Vec<Value> = serde_json::from_str(args_json)
-            .map_err(|error| JsValue::from_str(&error.to_string()))?;
+    #[wasm_bindgen(js_name = invoke)]
+    pub fn invoke(&mut self, method: &str, args: Ts<HighDensityMappedValue>) -> Result<Ts<SpecializedInvocation>, JsValue> {
+        let args: Vec<Value> = serde_json::from_value(read_mapped_value(args)?).map_err(|error| JsValue::from_str(&error.to_string()))?;
         let (result, args) = self.engine.borrow_mut().invoke(method, args)
             .map_err(|error| JsValue::from_str(&error))?;
-        serde_json::to_string(&serde_json::json!({ "result": result, "args": args }))
+        SpecializedInvocation { result, args, identity: None }.into_ts()
             .map_err(|error| JsValue::from_str(&error.to_string()))
     }
 
     #[wasm_bindgen(js_name = isApplicable)]
-    pub fn is_applicable(kind: &str, params_json: &str) -> Result<bool, JsValue> {
-        let params: Value = serde_json::from_str(params_json)
-            .map_err(|error| JsValue::from_str(&error.to_string()))?;
+    pub fn is_applicable(kind: &str, params: Ts<HighDensityMappedValue>) -> Result<bool, JsValue> {
+        let params: Value = read_mapped_value(params)?;
         intra_node_routing::specialized_simple_dispatch::is_applicable(kind, params)
             .map_err(|error| JsValue::from_str(&error))
     }
 
-    #[wasm_bindgen(js_name = restoreJson)]
-    pub fn restore_json(&mut self, snapshot_json: &str) -> Result<(), JsValue> {
-        let snapshot: Value = serde_json::from_str(snapshot_json)
-            .map_err(|error| JsValue::from_str(&error.to_string()))?;
+    #[wasm_bindgen(js_name = restore)]
+    pub fn restore(&mut self, snapshot: Ts<HighDensityMappedValue>) -> Result<(), JsValue> {
+        let snapshot: Value = read_mapped_value(snapshot)?;
         self.engine.borrow_mut().restore(snapshot, host_math()).map_err(|error| JsValue::from_str(&error))
     }
 
-    #[wasm_bindgen(js_name = visualizeJson)]
-    pub fn visualize_json(&self, transparentize: &js_sys::Function) -> Result<String, JsValue> {
+    #[wasm_bindgen(js_name = visualize)]
+    pub fn visualize(&self, #[wasm_bindgen(unchecked_param_type = "(color: string, amount: number) => string")] transparentize: &js_sys::Function) -> Result<Ts<HighDensityGraphics>, JsValue> {
         let callback_error = RefCell::new(None);
         let output = self.engine.borrow().visualize(&|color, amount| {
             match transparentize.call2(&JsValue::UNDEFINED, &JsValue::from_str(color), &JsValue::from_f64(amount)) {
@@ -153,14 +148,14 @@ impl SpecializedIntraNodeDispatcher {
             }
         });
         if let Some(error) = callback_error.into_inner() { return Err(error); }
-        serde_json::to_string(&output).map_err(|error| JsValue::from_str(&error.to_string()))
+        HighDensityGraphics(output).into_ts().map_err(|error| JsValue::from_str(&error.to_string()))
     }
 
-    #[wasm_bindgen(js_name = solvedRoutesJson)]
-    pub fn solved_routes_json(&self) -> Result<String, JsValue> {
+    #[wasm_bindgen(js_name = solvedRoutes)]
+    pub fn solved_routes(&self) -> Result<Ts<HighDensityRoutes>, JsValue> {
         let engine = self.engine.borrow();
         let routes = engine.solved_routes().map_err(|error| JsValue::from_str(&error))?;
-        serde_json::to_string(routes).map_err(|error| JsValue::from_str(&error.to_string()))
+        HighDensityRoutes(routes.to_vec()).into_ts().map_err(|error| JsValue::from_str(&error.to_string()))
     }
 
     pub fn step(&mut self) -> Result<(), JsValue> {
@@ -199,27 +194,27 @@ impl SpecializedIntraNodeDispatcher {
 
 #[wasm_bindgen]
 impl SpecializedIntraNodeDispatcher {
-    #[wasm_bindgen(js_name = snapshotIdentityJson)]
-    pub fn snapshot_identity_json(&self) -> Result<String, JsValue> {
+    #[wasm_bindgen(js_name = snapshotIdentity)]
+    pub fn snapshot_identity(&self) -> Result<Ts<CandidateIdentity>, JsValue> {
         let identity = intra_node_routing::multi_head_poly_line_intra_node_solver::types1::snapshot_identity(&mut self.engine.borrow_mut());
-        serde_json::to_string(&identity).map_err(|error|JsValue::from_str(&error.to_string()))
+        serde_json::from_value::<CandidateIdentity>(identity).map_err(|error| JsValue::from_str(&error.to_string()))?.into_ts().map_err(|error|JsValue::from_str(&error.to_string()))
     }
 
-    #[wasm_bindgen(js_name = restoreIdentityJson)]
-    pub fn restore_identity_json(&mut self, snapshot_json: &str, identity_json: &str) -> Result<(), JsValue> {
-        let identity: Value = serde_json::from_str(identity_json).map_err(|error|JsValue::from_str(&error.to_string()))?;
-        self.restore_json(snapshot_json)?;
+    #[wasm_bindgen(js_name = restoreIdentity)]
+    pub fn restore_identity(&mut self, snapshot: Ts<HighDensityMappedValue>, identity: Ts<HighDensityMappedValue>) -> Result<(), JsValue> {
+        let identity: Value = read_mapped_value(identity)?;
+        self.restore(snapshot)?;
         intra_node_routing::multi_head_poly_line_intra_node_solver::types1::restore_snapshot_identity(&mut self.engine.borrow_mut(), &identity)
             .map_err(|error|JsValue::from_str(&error))
     }
 
-    #[wasm_bindgen(js_name = invokeIdentityJson)]
-    pub fn invoke_identity_json(&mut self, method: &str, args_json: &str, identity_json: &str) -> Result<String, JsValue> {
-        let args: Vec<Value> = serde_json::from_str(args_json).map_err(|error|JsValue::from_str(&error.to_string()))?;
-        let identity: Value = serde_json::from_str(identity_json).map_err(|error|JsValue::from_str(&error.to_string()))?;
+    #[wasm_bindgen(js_name = invokeIdentity)]
+    pub fn invoke_identity(&mut self, method: &str, args: Ts<HighDensityMappedValue>, identity: Ts<HighDensityMappedValue>) -> Result<Ts<SpecializedInvocation>, JsValue> {
+        let args: Vec<Value> = serde_json::from_value(read_mapped_value(args)?).map_err(|error| JsValue::from_str(&error.to_string()))?;
+        let identity: Value = read_mapped_value(identity)?;
         let (result,args,identity) = intra_node_routing::multi_head_poly_line_intra_node_solver::types1::invoke_with_identity(&mut self.engine.borrow_mut(),method,args,identity)
             .map_err(|error|JsValue::from_str(&error))?;
-        serde_json::to_string(&serde_json::json!({"result":result,"args":args,"identity":identity}))
+        SpecializedInvocation { result, args, identity: Some(identity) }.into_ts()
             .map_err(|error|JsValue::from_str(&error.to_string()))
     }
 }

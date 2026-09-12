@@ -11,21 +11,17 @@ import {
   type BroadRepulsionBackend,
 } from "./broadRepulsionRegistration"
 
-type BroadRepulsionResult = {
-  changed: boolean
-  routes: HighDensityRoute[]
-}
-
 export class BroadRepulsionAdapter {
   private readonly binding: bindings.BroadRepulsionEngine
   private connectivityJson: string
 
   constructor(srj: SimpleRouteJson, connMap?: ConnectivityMap) {
     initializeAutorouterBindings()
-    this.connectivityJson = JSON.stringify(connMap
+    const connectivity = connMap
       ? { netMap: connMap.netMap, idToNetMap: connMap.idToNetMap }
-      : null)
-    this.binding = new bindings.BroadRepulsionEngine(JSON.stringify(srj), this.connectivityJson)
+      : null
+    this.connectivityJson = JSON.stringify(connectivity)
+    this.binding = new bindings.BroadRepulsionEngine(srj, connectivity)
   }
 
   run(
@@ -36,20 +32,21 @@ export class BroadRepulsionAdapter {
     allowSameNetViaPairs: boolean,
     runFinalViaSegmentCleanup: boolean,
   ): HighDensityRoute[] {
-    const connectivityJson = JSON.stringify(connMap
+    const connectivity = connMap
       ? { netMap: connMap.netMap, idToNetMap: connMap.idToNetMap }
-      : null)
+      : null
+    const connectivityJson = JSON.stringify(connectivity)
     if (connectivityJson !== this.connectivityJson) {
-      this.binding.setConnectivity(connectivityJson)
+      this.binding.setConnectivity(connectivity)
       this.connectivityJson = connectivityJson
     }
-    const result = JSON.parse(this.binding.run(
-      JSON.stringify(routes),
+    const result = this.binding.run(
+      routes,
       effort,
       passMultiplier,
       allowSameNetViaPairs,
       runFinalViaSegmentCleanup,
-    )) as BroadRepulsionResult
+    )
     return result.changed ? result.routes : routes
   }
 }

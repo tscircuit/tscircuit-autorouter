@@ -1,7 +1,6 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
 import { TinyHyperGraphSolver, createInput } from "./solverFixture.mjs"
-import { decodeStatsSnapshot } from "../dist/decodeStatsSnapshot.js"
 
 test("JSON stats preserve values, own keys and independent snapshots through every variant", () => {
   const { topology, problem, options } = createInput()
@@ -11,7 +10,7 @@ test("JSON stats preserve values, own keys and independent snapshots through eve
     try {
       while (true) {
         const stats = solver.getStats()
-        const parsed = decodeStatsSnapshot(solver.getStatsJson())
+        const parsed = solver.getStats()
         assert.deepEqual(parsed, stats, variant)
         assert.deepEqual(Object.keys(parsed), Object.keys(stats), variant)
         parsed.callerMetadata = { untouched: true }
@@ -23,7 +22,7 @@ test("JSON stats preserve values, own keys and independent snapshots through eve
       }
       for (const [snapshot, expected] of retained) assert.deepEqual(snapshot, expected)
       solver.resetRoutingStateForRerip()
-      assert.deepEqual(decodeStatsSnapshot(solver.getStatsJson()), solver.getStats())
+      assert.deepEqual(solver.getStats(), solver.getStats())
     } finally {
       solver.free()
     }

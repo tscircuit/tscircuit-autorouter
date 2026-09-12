@@ -2,6 +2,8 @@ use crate::ported::solvers::hyper_high_density_solver::portfolio_single_intra_no
 use std::{cell::RefCell, collections::HashMap, rc::Rc};
 use serde_json::Value;
 use serde::{Serialize, Serializer};
+use tsify::{Ts, Tsify};
+use crate::bindings::high_density_wire::*;
 use wasm_bindgen::prelude::*;
 use crate::ported::solvers::hyper_parameter_supervisor_solver::{Candidate, CandidateFactory, CandidateState};
 
@@ -69,8 +71,7 @@ impl Hooks {
             *self.error.borrow_mut() = Some(error);
             "High-density portfolio callback failed".to_owned()
         })?;
-        let text = result.as_string().ok_or("High-density callback must return JSON")?;
-        serde_json::from_str(&text).map_err(|error| error.to_string())
+        callback_value(result)
     }
 
     fn external_state(&self, id: usize, action: &str, count: usize) -> Result<CandidateState, String> {
@@ -79,8 +80,8 @@ impl Hooks {
     }
 
     fn cache_action(&self, id: usize, action: &str, state: &CandidateState) -> Result<Value, String> {
-        let state = serde_json::to_string(state).map_err(|error| error.to_string())?;
-        let result = self.parse_call(self.cache.call3(&JsValue::UNDEFINED, &JsValue::from_f64(id as f64), &JsValue::from_str(action), &JsValue::from_str(&state)))?;
+        let state = callback_output(&serde_json::to_value(state).map_err(|error| error.to_string())?)?;
+        let result = self.parse_call(self.cache.call3(&JsValue::UNDEFINED, &JsValue::from_f64(id as f64), &JsValue::from_str(action), &state))?;
         if let (Some(hits), Some(misses)) = (result["cacheHits"].as_f64(), result["cacheMisses"].as_f64()) {
             crate::bindings::high_density_orchestration::set_cache_counts(hits, misses);
         }
@@ -298,8 +299,8 @@ struct Factory { hooks: Hooks }
 
 impl CandidateFactory for Factory {
     fn generate(&mut self, hyper_parameters: &Value) -> Result<Box<dyn Candidate>, String> {
-        let json = serde_json::to_string(hyper_parameters).map_err(|error| error.to_string())?;
-        let descriptor = self.hooks.parse_call(self.hooks.factory.call1(&JsValue::UNDEFINED, &JsValue::from_str(&json)))?;
+        let parameters = callback_output(hyper_parameters)?;
+        let descriptor = self.hooks.parse_call(self.hooks.factory.call1(&JsValue::UNDEFINED, &parameters))?;
         let id = descriptor["id"].as_u64().ok_or("Candidate id required")? as usize;
         let state = read_state(&descriptor["state"])?;
         let kind = descriptor["kind"].as_str().ok_or("Candidate kind required")?;
@@ -331,68 +332,77 @@ fn serialize_json_number<S: Serializer>(value: &f64, serializer: S) -> Result<S:
     else { serializer.serialize_none() }
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Tsify)]
 #[serde(rename_all = "camelCase")]
-struct CandidateStateSnapshot<'a> {
+pub struct CandidateStateSnapshot {
     iterations: usize,
     #[serde(serialize_with = "serialize_json_number")]
     max_iterations: f64,
     solved: bool,
     failed: bool,
     #[serde(serialize_with = "serialize_json_number")]
+    #[tsify(type = "number | null")]
     progress: f64,
-    error: &'a Option<String>,
+    error: Option<String>,
     solved_segment_count: Option<usize>,
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Tsify)]
 #[serde(rename_all = "camelCase")]
-struct CandidateSnapshot<'a> {
+pub struct CandidateSnapshot {
     id: usize,
-    hyper_parameters: &'a Value,
+    #[tsify(type = "Record<string, unknown>")]
+    hyper_parameters: Value,
     #[serde(serialize_with = "serialize_json_number")]
     g: f64,
     #[serde(serialize_with = "serialize_json_number")]
     h: f64,
     #[serde(serialize_with = "serialize_json_number")]
     f: f64,
-    state: CandidateStateSnapshot<'a>,
+    state: CandidateStateSnapshot,
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Tsify)]
 #[serde(rename_all = "camelCase")]
-struct SnapshotStats<'a> {
+pub struct SnapshotStats {
     #[serde(skip_serializing_if = "Option::is_none")]
-    dynamic_expansion_work_budget: Option<&'a Value>,
+    #[tsify(type = "unknown")]
+    dynamic_expansion_work_budget: Option<Value>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    dynamic_supervisor_iteration_limit: Option<&'a Value>,
+    #[tsify(type = "unknown")]
+    dynamic_supervisor_iteration_limit: Option<Value>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    adaptive_search_expanded: Option<&'a Value>,
+    #[tsify(type = "unknown")]
+    adaptive_search_expanded: Option<Value>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    adaptive_search_expanded_at_iteration: Option<&'a Value>,
+    #[tsify(type = "unknown")]
+    adaptive_search_expanded_at_iteration: Option<Value>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    candidate_work_at_expansion: Option<&'a Value>,
+    #[tsify(type = "unknown")]
+    candidate_work_at_expansion: Option<Value>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    best_progress_at_expansion: Option<&'a Value>,
+    #[tsify(type = "unknown")]
+    best_progress_at_expansion: Option<Value>,
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Tsify)]
 #[serde(rename_all = "camelCase")]
-struct PortfolioSnapshot<'a> {
+pub struct PortfolioSnapshot {
     iterations: usize,
     #[serde(serialize_with = "serialize_json_number")]
+    #[tsify(type = "number | null")]
     progress: f64,
     solved: bool,
     failed: bool,
-    error: &'a Option<String>,
+    error: Option<String>,
     #[serde(rename = "MAX_ITERATIONS", serialize_with = "serialize_json_number")]
     max_iterations: f64,
-    stats: SnapshotStats<'a>,
+    stats: SnapshotStats,
     adaptive_search_expanded: bool,
     active_id: Option<usize>,
     winner_id: Option<usize>,
     order: Vec<usize>,
-    candidates: Vec<CandidateSnapshot<'a>>,
+    candidates: Vec<CandidateSnapshot>,
 }
 
 pub(crate) struct PortfolioCore {
@@ -447,9 +457,8 @@ impl PortfolioCore {
             if let Some(terminal) = &self.terminal {
                 self.output_completed = true;
                 let snapshot = self.snapshot()?;
-                let result = terminal.call1(&JsValue::UNDEFINED, &snapshot)?;
-                let text = result.as_string().ok_or_else(|| JsValue::from_str("Portfolio terminal callback must return JSON"))?;
-                let mut result: Value = serde_json::from_str(&text).map_err(|error| JsValue::from_str(&error.to_string()))?;
+                let result = terminal.call1(&JsValue::UNDEFINED, &snapshot.js_value())?;
+                let mut result = callback_value(result).map_err(|error| JsValue::from_str(&error))?;
                 self.output_routes = if self.solver.supervisor.solved {
                     let routes = result.get_mut("routes").and_then(Value::as_array_mut)
                         .ok_or_else(|| JsValue::from_str("Portfolio terminal routes required"))?;
@@ -489,32 +498,32 @@ impl PortfolioCore {
         self.solver.max_iterations = maximum;
     }
 
-    pub(crate) fn snapshot(&self) -> Result<JsValue, JsValue> {
+    pub(crate) fn snapshot(&self) -> Result<Ts<PortfolioSnapshot>, JsValue> {
         let supervisor = &self.solver.supervisor;
         let records = supervisor.supervised_solvers.as_deref().unwrap_or(&[]);
         let order: Vec<_> = records.iter().map(|record| record.id).collect();
         let candidates: Vec<_> = records.iter().map(|record| {
             let state = record.solver.state();
-            CandidateSnapshot { id: record.id, hyper_parameters: &record.hyper_parameters,
+            CandidateSnapshot { id: record.id, hyper_parameters: record.hyper_parameters.clone(),
                 g: record.g, h: record.h, f: record.f,
                 state: CandidateStateSnapshot { iterations: state.iterations, max_iterations: state.max_iterations,
                     solved: state.solved, failed: state.failed, progress: state.progress,
-                    error: &state.error, solved_segment_count: state.solved_segment_count } }
+                    error: state.error.clone(), solved_segment_count: state.solved_segment_count } }
         }).collect();
         let stats = &self.solver.stats;
-        let snapshot = PortfolioSnapshot { iterations: self.solver.iterations, progress: self.solver.progress, solved: supervisor.solved, failed: supervisor.failed, error: &supervisor.error,
+        let snapshot = PortfolioSnapshot { iterations: self.solver.iterations, progress: self.solver.progress, solved: supervisor.solved, failed: supervisor.failed, error: supervisor.error.clone(),
             max_iterations: self.solver.max_iterations,
             stats: SnapshotStats {
-                dynamic_expansion_work_budget: stats.get("dynamicExpansionWorkBudget"),
-                dynamic_supervisor_iteration_limit: stats.get("dynamicSupervisorIterationLimit"),
-                adaptive_search_expanded: stats.get("adaptiveSearchExpanded"),
-                adaptive_search_expanded_at_iteration: stats.get("adaptiveSearchExpandedAtIteration"),
-                candidate_work_at_expansion: stats.get("candidateWorkAtExpansion"),
-                best_progress_at_expansion: stats.get("bestProgressAtExpansion"),
+                dynamic_expansion_work_budget: stats.get("dynamicExpansionWorkBudget").cloned(),
+                dynamic_supervisor_iteration_limit: stats.get("dynamicSupervisorIterationLimit").cloned(),
+                adaptive_search_expanded: stats.get("adaptiveSearchExpanded").cloned(),
+                adaptive_search_expanded_at_iteration: stats.get("adaptiveSearchExpandedAtIteration").cloned(),
+                candidate_work_at_expansion: stats.get("candidateWorkAtExpansion").cloned(),
+                best_progress_at_expansion: stats.get("bestProgressAtExpansion").cloned(),
             },
             adaptive_search_expanded: self.solver.adaptive_search_expanded,
             active_id: supervisor.active_sub_solver, winner_id: supervisor.winning_solver, order, candidates };
-        snapshot.serialize(&serde_wasm_bindgen::Serializer::json_compatible())
+        snapshot.into_ts()
             .map_err(|error| JsValue::from_str(&error.to_string()))
     }
 }
@@ -527,8 +536,12 @@ pub struct PortfolioSingleIntraNodeSolver {
 #[wasm_bindgen]
 impl PortfolioSingleIntraNodeSolver {
     #[wasm_bindgen(constructor)]
-    pub fn new(node_json: &str, effort: f64, factory: js_sys::Function, external: js_sys::Function, cache: js_sys::Function, terminal: Option<js_sys::Function>) -> Result<Self, JsValue> {
-        let node = serde_json::from_str(node_json).map_err(|error| JsValue::from_str(&error.to_string()))?;
+    pub fn new(node: Ts<HighDensityValue>, effort: f64,
+        #[wasm_bindgen(unchecked_param_type = "(hyperParameters: Record<string, unknown>) => Record<string, unknown>")] factory: js_sys::Function,
+        #[wasm_bindgen(unchecked_param_type = "(id: number, action: 'setup' | 'step' | 'attach-general', count: number) => CandidateStateSnapshot | { handle: number }")] external: js_sys::Function,
+        #[wasm_bindgen(unchecked_param_type = "(id: number, action: 'lookup' | 'save', state: CandidateStateSnapshot) => Record<string, unknown>")] cache: js_sys::Function,
+        #[wasm_bindgen(unchecked_param_type = "((state: PortfolioSnapshot) => { routes: unknown[]; solverType: string }) | undefined")] terminal: Option<js_sys::Function>) -> Result<Self, JsValue> {
+        let node = read_value(node)?;
         let hooks = Hooks { factory, external, cache, error: Rc::new(RefCell::new(None)) };
         Ok(Self { engine: Rc::new(RefCell::new(PortfolioCore { solver: portfolio_solver::PortfolioSingleIntraNodeSolver::new(node, effort), factory: Factory { hooks }, terminal, output_routes: Vec::new(), resolved_solver_type: "portfolio_solver::PortfolioSingleIntraNodeSolver".into(), output_completed: false })) })
     }
@@ -547,11 +560,10 @@ impl PortfolioSingleIntraNodeSolver {
     }
 
     #[wasm_bindgen(js_name = setCandidateState)]
-    pub fn set_candidate_state(&mut self, id: usize, state_json: &str) -> Result<(), JsValue> {
+    pub fn set_candidate_state(&mut self, id: usize, state: Ts<HighDensityValue>) -> Result<(), JsValue> {
         let mut core = self.engine.borrow_mut();
 
-        let value: Value = serde_json::from_str(state_json)
-            .map_err(|error| JsValue::from_str(&error.to_string()))?;
+        let value: Value = read_value(state)?;
         let state = read_state(&value).map_err(|error| JsValue::from_str(&error))?;
         let record = core.solver.supervisor.supervised_solvers.as_mut()
             .and_then(|records| records.iter_mut().find(|record| record.id == id))
@@ -578,19 +590,19 @@ impl PortfolioSingleIntraNodeSolver {
     }
 
     #[wasm_bindgen(js_name = getHyperParameterDefs)]
-    pub fn get_hyper_parameter_defs() -> Result<JsValue, JsValue> {
+    pub fn get_hyper_parameter_defs() -> Result<Ts<PortfolioHyperParameterDefinitions>, JsValue> {
         let defs: Vec<_> = crate::ported::solvers::hyper_high_density_solver::portfolio_single_intra_node_solver::get_hyper_parameter_defs().into_iter()
             .map(|def| serde_json::json!({"name":def.name,"possibleValues":def.possible_values})).collect();
-        crate::to_js(&Value::Array(defs))
+        PortfolioHyperParameterDefinitions(defs).into_ts().map_err(|error| JsError::new(&error.to_string()).into())
     }
 
     #[wasm_bindgen(js_name = getCombinationDefs)]
-    pub fn get_combination_defs() -> Result<JsValue, JsValue> {
-        crate::to_js(&serde_json::json!(crate::ported::solvers::hyper_high_density_solver::portfolio_single_intra_node_solver::get_combination_defs()))
+    pub fn get_combination_defs() -> Result<Ts<PortfolioCombinationDefinitions>, JsValue> {
+        PortfolioCombinationDefinitions(serde_json::json!(crate::ported::solvers::hyper_high_density_solver::portfolio_single_intra_node_solver::get_combination_defs())).into_ts().map_err(|error| JsError::new(&error.to_string()).into())
     }
 
     #[wasm_bindgen(js_name = getHyperParameterCombinations)]
-    pub fn get_hyper_parameter_combinations(definitions: JsValue) -> Result<JsValue, JsValue> {
+    pub fn get_hyper_parameter_combinations(definitions: Ts<HighDensityValue>) -> Result<Ts<PortfolioHyperParameters>, JsValue> {
         fn combinations(defs: &[Value]) -> Vec<Value> {
             let Some((first, remaining)) = defs.split_first() else { return vec![serde_json::json!({})]; };
             let sub = combinations(remaining);
@@ -604,8 +616,8 @@ impl PortfolioSingleIntraNodeSolver {
             }
             output
         }
-        let defs: Vec<Value> = serde_wasm_bindgen::from_value(definitions).map_err(|error| JsValue::from_str(&error.to_string()))?;
-        crate::to_js(&Value::Array(combinations(&defs)))
+        let defs: Vec<Value> = serde_json::from_value(read_value(definitions)?).map_err(|error| JsValue::from_str(&error.to_string()))?;
+        PortfolioHyperParameters(combinations(&defs)).into_ts().map_err(|error| JsError::new(&error.to_string()).into())
     }
 
     #[wasm_bindgen(js_name = bestCandidateId)]
@@ -623,19 +635,19 @@ impl PortfolioSingleIntraNodeSolver {
     }
 
     #[wasm_bindgen(js_name = computeCandidateG)]
-    pub fn compute_candidate_g(state_json: &str, hyper_parameters_json: &str, specialized: bool) -> Result<f64, JsValue> {
-        let state: Value = serde_json::from_str(state_json).map_err(|error| JsValue::from_str(&error.to_string()))?;
-        let hyper_parameters = serde_json::from_str(hyper_parameters_json).map_err(|error| JsValue::from_str(&error.to_string()))?;
+    pub fn compute_candidate_g(state: Ts<HighDensityValue>, hyper_parameters: Ts<HighDensityValue>, specialized: bool) -> Result<f64, JsValue> {
+        let state: Value = read_value(state)?;
+        let hyper_parameters = read_value(hyper_parameters)?;
         let candidate = SnapshotCandidate { state: read_state(&state).map_err(|error| JsValue::from_str(&error))?, specialized };
         Ok(portfolio_solver::PortfolioSingleIntraNodeSolver::compute_g(&candidate, &hyper_parameters))
     }
 
     #[wasm_bindgen(js_name = computeCandidateH)]
-    pub fn compute_candidate_h(state_json: &str, node_json: &str, expanded: bool) -> Result<f64, JsValue> {
-        let state: Value = serde_json::from_str(state_json).map_err(|error| JsValue::from_str(&error.to_string()))?;
+    pub fn compute_candidate_h(state: Ts<HighDensityValue>, node: Ts<HighDensityValue>, expanded: bool) -> Result<f64, JsValue> {
+        let state: Value = read_value(state)?;
         let candidate = SnapshotCandidate { state: read_state(&state).map_err(|error| JsValue::from_str(&error))?, specialized: false };
         if expanded {
-            let node = serde_json::from_str(node_json).map_err(|error| JsValue::from_str(&error.to_string()))?;
+            let node = read_value(node)?;
             let solver = portfolio_solver::PortfolioSingleIntraNodeSolver::new(node, 1.0);
             Ok(1.0 - portfolio_solver::PortfolioSingleIntraNodeSolver::get_candidate_progress(&candidate, solver.get_node_segment_count()))
         } else {
@@ -667,13 +679,13 @@ impl PortfolioSingleIntraNodeSolver {
         }
     }
 
-    pub fn snapshot(&self) -> Result<JsValue, JsValue> {
+    pub fn snapshot(&self) -> Result<Ts<PortfolioSnapshot>, JsValue> {
         self.engine.borrow().snapshot()
     }
 
     #[wasm_bindgen(js_name = restoreState)]
-    pub fn restore_state(&mut self, state_json: &str) -> Result<(), JsValue> {
-        let state: Value = serde_json::from_str(state_json).map_err(|error| JsValue::from_str(&error.to_string()))?;
+    pub fn restore_state(&mut self, state: Ts<HighDensityValue>) -> Result<(), JsValue> {
+        let state: Value = read_value(state)?;
         let mut core = self.engine.borrow_mut();
         if let Some(value) = state.get("iterations") { core.solver.iterations = value.as_u64().ok_or_else(|| JsValue::from_str("Portfolio iterations required"))? as usize; }
         if let Some(value) = state.get("MAX_ITERATIONS") { core.solver.max_iterations = value.as_f64().unwrap_or(f64::NAN); }
@@ -699,3 +711,15 @@ impl PortfolioSingleIntraNodeSolver {
         })
     }
 }
+
+#[derive(Serialize, Tsify)]
+#[serde(transparent)]
+pub struct PortfolioHyperParameterDefinitions(#[tsify(type = "{ name: string; possibleValues: Record<string, unknown>[] }[]")] Vec<Value>);
+
+#[derive(Serialize, Tsify)]
+#[serde(transparent)]
+pub struct PortfolioCombinationDefinitions(#[tsify(type = "string[][]")] Value);
+
+#[derive(Serialize, Tsify)]
+#[serde(transparent)]
+pub struct PortfolioHyperParameters(#[tsify(type = "Record<string, unknown>[]")] Vec<Value>);

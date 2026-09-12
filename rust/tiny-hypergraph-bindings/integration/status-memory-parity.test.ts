@@ -1,6 +1,7 @@
 import { expect, test } from "bun:test"
 import { initializeTinyHypergraphBindings } from "../../../lib/bindings/initializeTinyHypergraphBindings"
 import * as bindings from "../pkg/tiny_hypergraph_bindings.js"
+import { encodeJsonInput, decodeUndefinedJsonOutput } from "../ts/jsonWire"
 import { TinyHyperGraphSolver } from "../ts/TinyHyperGraphSolver"
 import { getTinyHypergraphMemory } from "../ts/loadTinyHypergraphBindings"
 import type { TinyHyperGraphProblem, TinyHyperGraphTopology } from "../ts/types"
@@ -23,13 +24,16 @@ test("compact status survives memory growth, other solvers and every routing mut
   for (const variant of ["base", "outside-in", "selective-rerip"] as const) {
     const options = { MAX_ITERATIONS: 100 }
     const actual = new TinyHyperGraphSolver(topology, problem, options, { variant })
-    const expected = new bindings.TinyHyperGraphSolver(topology, problem, options, { variant })
+    const expected = new bindings.TinyHyperGraphSolver(
+      encodeJsonInput(topology), encodeJsonInput(problem),
+      encodeJsonInput(options), encodeJsonInput({ variant }),
+    )
     const other = new TinyHyperGraphSolver(topology, problem, options)
     const compareStatus = (): void => {
-      const status = expected.getStatus() as Record<string, unknown>
+      const status = expected.getStatus()
       expect(actual.getStatus()).toEqual({ ...status, error: status.error ?? null })
       expect(actual.getStatsRevision()).toBe(expected.getStatsRevision())
-      expect(actual.getStats()).toEqual(expected.getStats())
+      expect(actual.getStats()).toEqual(decodeUndefinedJsonOutput(expected.getStats()))
       expect(actual.pendingRouteCount).toBe(expected.pendingRouteCount())
       expect(actual.ripCount).toBe(expected.ripCount())
     }
@@ -38,7 +42,7 @@ test("compact status survives memory growth, other solvers and every routing mut
       getTinyHypergraphMemory().grow(1)
       other.solve()
       for (let index = 0; index < 3; index++) {
-        const status = expected.step() as Record<string, unknown>
+        const status = expected.step()
         expect(actual.step()).toEqual({ ...status, error: status.error ?? null })
         compareStatus()
       }
@@ -51,7 +55,7 @@ test("compact status survives memory growth, other solvers and every routing mut
       getTinyHypergraphMemory().grow(1)
       const solution = { solvedRoutePathSegments: [[[0, 1] as [number, number]]] }
       actual.replaySolution(solution)
-      expected.replaySolution(solution)
+      expected.replaySolution(encodeJsonInput(solution))
       compareStatus()
       actual.solve()
       expected.solve()

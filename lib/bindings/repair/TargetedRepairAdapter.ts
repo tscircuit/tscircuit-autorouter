@@ -16,15 +16,7 @@ import {
   type AutorouterBindingsInput,
 } from "../../../rust/autorouter-bindings/ts/index"
 
-type Point = { x: number; y: number }
-type PadResult = { point: Point | null; isPreferred: boolean }
-type TraceResult = { points: Point[]; viaIdentityIndices: number[] }
-type ForceResult = {
-  changed: boolean
-  routes: HighDensityRoute[]
-  routeIndexes: number[]
-  pointOrigins: Array<Array<number | null>>
-}
+type Point = bindings.Point
 
 export class TargetedRepairAdapter {
   private readonly binding: bindings.TargetedRepairEngine
@@ -32,18 +24,20 @@ export class TargetedRepairAdapter {
 
   constructor(srj: SimpleRouteJson, connMap?: ConnectivityMap) {
     initializeAutorouterBindings()
-    this.connectivityJson = JSON.stringify(connMap
+    const connectivity = connMap
       ? { idToNetMap: connMap.idToNetMap }
-      : null)
-    this.binding = new bindings.TargetedRepairEngine(JSON.stringify(srj), this.connectivityJson)
+      : null
+    this.connectivityJson = JSON.stringify(connectivity)
+    this.binding = new bindings.TargetedRepairEngine(srj, connectivity)
   }
 
   private synchronizeConnectivity(connMap?: ConnectivityMap): void {
-    const connectivityJson = JSON.stringify(connMap
+    const connectivity = connMap
       ? { idToNetMap: connMap.idToNetMap }
-      : null)
+      : null
+    const connectivityJson = JSON.stringify(connectivity)
     if (connectivityJson !== this.connectivityJson) {
-      this.binding.setConnectivity(connectivityJson)
+      this.binding.setConnectivity(connectivity)
       this.connectivityJson = connectivityJson
     }
   }
@@ -60,16 +54,14 @@ export class TargetedRepairAdapter {
     enableTraceViaOwnerTargeting: boolean,
   ): boolean {
     this.synchronizeConnectivity(connMap)
-    const result = JSON.parse(this.binding.applyForces(
-      JSON.stringify(routes),
-      JSON.stringify(errors),
-      JSON.stringify(Object.fromEntries(traceRouteIndexById)),
+    const result = this.binding.applyForces(
+      { routes, errors, traceMap: Object.fromEntries(traceRouteIndexById) },
       scale,
       enableCanonicalPairRepairs,
       enableSameNetViaCanonicalization,
       allowSharedViaSiteMove,
       enableTraceViaOwnerTargeting,
-    )) as ForceResult
+    )
     if (result.routes.length !== result.routeIndexes.length || result.pointOrigins.length !== result.routes.length) {
       throw new Error("Targeted repair changed the route count")
     }
@@ -108,9 +100,7 @@ export class TargetedRepairAdapter {
     connMap?: ConnectivityMap,
   ): Point | undefined {
     this.synchronizeConnectivity(connMap)
-    const result = JSON.parse(this.binding.pad(
-      JSON.stringify(route), JSON.stringify(preferred), viaRadius, JSON.stringify(zLayers),
-    )) as PadResult
+    const result = this.binding.pad({ route, preferred, zLayers }, viaRadius)
     if (result.point === null) return undefined
     return result.isPreferred ? preferred : result.point
   }
@@ -149,12 +139,10 @@ const findPadPosition: PadClearanceBackend = (
 const findTracePositions: TraceClearanceBackend = (
   via, segments, clearance, connMap,
 ): Point[] => {
-  const connectivityJson = JSON.stringify(connMap
-    ? { idToNetMap: connMap.idToNetMap }
-    : null)
-  const result = JSON.parse(bindings.TargetedRepairEngine.trace(
-    JSON.stringify(via), JSON.stringify(segments), clearance, connectivityJson,
-  )) as TraceResult
+  const result = bindings.TargetedRepairEngine.trace({
+    via, segments,
+    connectivity: connMap ? { idToNetMap: connMap.idToNetMap } : null,
+  }, clearance)
   for (const index of result.viaIdentityIndices) {
     if (!result.points[index]) throw new Error("Trace placement returned an invalid via identity index")
     result.points[index] = via

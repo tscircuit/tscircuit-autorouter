@@ -1,24 +1,10 @@
 import type { SerializedHyperGraph } from "@tscircuit/hypergraph"
-import { duplicateCongestedPorts } from "../pkg/tiny_hypergraph_bindings.js"
+import { encodeJsonInput, decodeUndefinedJsonOutput } from "./jsonWire.js"
+import { duplicateCongestedPorts, type DuplicateCongestedPortSolverReport } from "../pkg/tiny_hypergraph_bindings.js"
 import { assertTinyHypergraphBindingsInitialized } from "./loadTinyHypergraphBindings.js"
 import type { TinyHyperGraphSolverOptions } from "./types.js"
 
-export type DuplicateCongestedPortSolverReport = {
-  portUseCounts: Record<string, number>
-  duplicatedPorts: Array<{
-    sourcePortId: string
-    duplicatePortIds: string[]
-    useCount: number
-  }>
-}
-
-type DuplicatePortResult = {
-  solved: boolean
-  failed: boolean
-  error: string | null
-  report: DuplicateCongestedPortSolverReport
-  output?: SerializedHyperGraph
-}
+export type { DuplicateCongestedPortSolverReport } from "../pkg/tiny_hypergraph_bindings.js"
 
 export class DuplicateCongestedPortSolver {
   solved = false
@@ -38,7 +24,7 @@ export class DuplicateCongestedPortSolver {
 
   solve(): void {
     assertTinyHypergraphBindingsInitialized()
-    const result = duplicateCongestedPorts(this.graph, this.options) as DuplicatePortResult
+    const result = decodeUndefinedJsonOutput(duplicateCongestedPorts(encodeJsonInput(this.graph), encodeJsonInput(this.options)))
     this.solved = result.solved
     this.failed = result.failed
     this.error = result.error ?? null

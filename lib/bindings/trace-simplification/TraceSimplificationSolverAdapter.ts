@@ -44,11 +44,11 @@ export class TraceSimplificationSolverAdapter extends BaseSolver {
     initializeAutorouterBindings()
     this.graph = new TraceSimplificationGraphCodec()
     const ctor = new.target as SolverAdapterClass
-    const paramsJson = this.graph.graph(params)
-    this.binding = TraceSimplificationSolverAdapter.createBinding(ctor.solverKind, paramsJson, this.graph)
+    const paramsGraph = this.graph.graph(params)
+    this.binding = TraceSimplificationSolverAdapter.createBinding(ctor.solverKind, paramsGraph, this.graph)
     const normalizedObstacles = ["multi-path", "via-removal", "via-merger", "trace"].includes(ctor.solverKind)
-      ? this.hydrateSolver(this.binding.obstaclesJson()) : undefined
-    if (["via-merger", "crossing"].includes(ctor.solverKind)) this.hydrateSolver(this.binding.outputJson())
+      ? this.hydrateSolver(this.binding.obstacles()) : undefined
+    if (["via-merger", "crossing"].includes(ctor.solverKind)) this.hydrateSolver(this.binding.output())
     this.graph.trackSources(normalizedObstacles ? { ...params, __normalizedObstacles: normalizedObstacles } : params, ctor.solverKind)
     if (normalizedObstacles && ctor.stateFields.includes("obstacles")) this.stateValues.obstacles = normalizedObstacles
     if (ctor.solverKind === "trace") this.stateValues.simplificationConfig = { ...params, obstacles: normalizedObstacles }
@@ -57,12 +57,12 @@ export class TraceSimplificationSolverAdapter extends BaseSolver {
     this.syncBase()
   }
 
-  private static createBinding(kind: string, paramsJson: string, graph: TraceSimplificationGraphCodec): bindings.TraceSimplificationDispatcher {
-    return withQueryGraph(graph, () => new bindings.TraceSimplificationDispatcher(kind, paramsJson, TraceSimplificationSolverAdapter.createQueryCallback(queryGraphIds.get(graph)!), TraceSimplificationSolverAdapter.createConnectivityCallback(queryGraphIds.get(graph)!)))
+  private static createBinding(kind: string, params: bindings.TraceGraphPacket, graph: TraceSimplificationGraphCodec): bindings.TraceSimplificationDispatcher {
+    return withQueryGraph(graph, () => new bindings.TraceSimplificationDispatcher(kind, params, TraceSimplificationSolverAdapter.createQueryCallback(queryGraphIds.get(graph)!), TraceSimplificationSolverAdapter.createConnectivityCallback(queryGraphIds.get(graph)!)))
   }
 
-  private static createConnectivityCallback(graphId: number): (identity: number) => string | undefined {
-    return (identity: number): string | undefined => {
+  private static createConnectivityCallback(graphId: number): (identity: number) => bindings.TraceConnectivityUpdate | undefined {
+    return (identity: number): bindings.TraceConnectivityUpdate | undefined => {
       const graph = activeQueryGraphs.get(graphId)
       if (!graph) throw new Error("Connectivity read called outside native solver execution")
       return graph.connectivityForRead(identity)
@@ -71,12 +71,11 @@ export class TraceSimplificationSolverAdapter extends BaseSolver {
 
   protected runSolver<T>(run: () => T): T { return withQueryGraph(this.graph, run) }
 
-  private static createQueryCallback(graphId: number): (requestJson: string) => string {
-    return (requestJson: string): string => {
+  private static createQueryCallback(graphId: number): (request: bindings.TraceObstacleQuery) => bindings.TraceGraphPacket {
+    return (request: bindings.TraceObstacleQuery): bindings.TraceGraphPacket => {
       const graph = activeQueryGraphs.get(graphId)
       if (!graph) throw new Error("Obstacle query called outside native solver execution")
       graph.exposeNormalizedObstacles()
-      const request = JSON.parse(requestJson) as { indexId: number; method: string; args: number[] }
       const index = graph.objects.get(request.indexId) as ObstacleSpatialHashIndex | undefined
       if (!index) throw new Error(`Unknown obstacle index ${request.indexId}`)
       if (request.method === "search") {
@@ -93,10 +92,10 @@ export class TraceSimplificationSolverAdapter extends BaseSolver {
     }
   }
 
-  private hydrateSolver(json: string, current?: any): any {
-    const value = this.graph.hydrate(json, current)
+  private hydrateSolver(packet: bindings.TraceGraphPacket, current?: any): any {
+    const value = this.graph.hydrate(packet, current)
     const groups = this.graph.takeCapturedCloneGroups()
-    if (groups.length) this.binding.acknowledgeCloneGroupsJson(JSON.stringify(groups))
+    if (groups.length) this.binding.acknowledgeCloneGroups(groups)
     return value
   }
 
@@ -118,7 +117,7 @@ export class TraceSimplificationSolverAdapter extends BaseSolver {
 
   private syncBase(): void {
     this.syncingSolver = true
-    try { Object.assign(this, JSON.parse(this.binding.stateJson())) }
+    try { Object.assign(this, this.binding.state()) }
     finally { this.syncingSolver = false; this.dirtyBase = false; this.dirtyFields.clear() }
   }
 
@@ -155,11 +154,11 @@ export class TraceSimplificationSolverAdapter extends BaseSolver {
     if (this.syncingSolver) return
     this.graph.exposeNormalizedObstacles()
     const sourceChanges = this.graph.sourceChanges()
-    if (sourceChanges) this.binding.restoreJson(sourceChanges)
+    if (sourceChanges) this.binding.restore(sourceChanges)
     this.syncingSolver = true
     try {
-      const snapshot = this.binding.snapshotJson()
-      if (Object.hasOwn(JSON.parse(snapshot).fields, "activeSubSolver")) {
+      const snapshot = this.binding.snapshot()
+      if (Object.hasOwn(snapshot.fields, "activeSubSolver")) {
         this.registerChildTree()
       }
       const fields = this.hydrateSolver(snapshot, this.stateValues)
@@ -182,7 +181,7 @@ export class TraceSimplificationSolverAdapter extends BaseSolver {
 
   push(stepArguments = false, routingOnly = stepArguments): void {
     const sourceChanges = this.graph.sourceChanges(routingOnly)
-    if (sourceChanges) this.binding.restoreJson(sourceChanges)
+    if (sourceChanges) this.binding.restore(sourceChanges)
     const dirtyFields = [...this.dirtyFields].filter(field => !stepArguments || (field !== "iterations" && field !== "MAX_ITERATIONS"))
     if (!this.observed && dirtyFields.length === 0 && Object.keys(this.outputValues).length === 0) return
     const fields: Record<string, any> = this.observed ? { ...this.outputValues, ...this.stateValues, ...this.baseValues } : { ...this.outputValues, ...Object.fromEntries(dirtyFields.map(field => [field, this.baseValues[field]])) }
@@ -190,7 +189,7 @@ export class TraceSimplificationSolverAdapter extends BaseSolver {
       fields.activeSubSolver.push(false, routingOnly)
       fields.activeSubSolver = { $object: fields.activeSubSolver.binding.identity(), fields: {} }
     }
-    this.binding.restoreJson(this.graph.graph(fields))
+    this.binding.restore(this.graph.graph(fields))
     this.dirtyBase = false
     this.dirtyFields.clear()
   }
@@ -204,23 +203,23 @@ export class TraceSimplificationSolverAdapter extends BaseSolver {
 
   protected canSolveInBindings(): boolean { return true }
   protected resolveSolverStep(status: number): number {
-    if ((status & 8) !== 0) this.hydrateSolver(this.binding.initializationJson())
+    if ((status & 8) !== 0) this.hydrateSolver(this.binding.initialization())
     return status
   }
 
   invoke(method: string, args: unknown[] = []): any {
     this.graph.exposeNormalizedObstacles()
     this.push()
-    const argsJson = this.graph.graph(args)
+    const argsGraph = this.graph.graph(args)
     this.graph.trackArguments(args)
-    const value = this.hydrateSolver(withQueryGraph(this.graph, () => this.binding.invokeJson(method, argsJson)))
+    const value = this.hydrateSolver(withQueryGraph(this.graph, () => this.binding.invoke(method, argsGraph)))
     if (this.observed) this.sync()
     return value
   }
 
   private readOutput(track: boolean): any {
     if (track) this.graph.exposeNormalizedObstacles()
-    const value = this.hydrateSolver(this.binding.outputJson())
+    const value = this.hydrateSolver(this.binding.output())
     switch ((this.constructor as unknown as SolverAdapterClass).solverKind) {
       case "path-base": case "path": case "vertex": this.outputValues = { newRoute: value.route, newVias: value.vias }; break
       case "multi-path": this.outputValues = { simplifiedHdRoutes: value }; break

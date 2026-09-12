@@ -125,7 +125,9 @@ impl MutableRoute {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "wasm-types", derive(tsify::Tsify))]
 pub struct ViaNode {
     pub route_index: usize,
     pub root_connection_name: String,

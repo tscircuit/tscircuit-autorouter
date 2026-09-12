@@ -5,7 +5,12 @@ edition = "2024"
 publish = false
 license = "MIT"
 
+[features]
+wasm-types = ["dep:tsify", "dep:wasm-bindgen", "autorouting-drc/wasm-types"]
+
 [dependencies]
+wasm-bindgen = { version = "=0.2.128", optional = true }
+tsify = { version = "=0.5.8", optional = true, default-features = false, features = ["json"] }
 serde = { version = "1", features = ["derive", "rc"] }
 serde_json = { version = "1", features = ["preserve_order", "float_roundtrip"] }
 indexmap = { version = "2", features = ["serde"] }

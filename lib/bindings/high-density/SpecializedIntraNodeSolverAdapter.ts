@@ -56,8 +56,8 @@ export class SpecializedIntraNodeSolverAdapter extends BaseSolver {
     const ctor = this.constructor as SpecializedConstructor
     this.candidateIdentity = ctor.solverKind.startsWith("multi-head") ? new CandidateIdentityMap() : undefined
     const shared = getSpecializedRouterContext(ctor.solverKind, this.initialProps)
-    this.binding = shared ? shared.context.create(ctor.solverKind, encode(shared.params))
-      : new bindings.SpecializedIntraNodeDispatcher(ctor.solverKind, encode(props))
+    this.binding = shared ? shared.context.create(ctor.solverKind, shared.params)
+      : new bindings.SpecializedIntraNodeDispatcher(ctor.solverKind, props)
     this.syncState()
     for (const field of ["nodeWithPortPoints", "colorMap", "hyperParameters", "connMap"]) {
       const value = this.initialProps[field]
@@ -73,7 +73,7 @@ export class SpecializedIntraNodeSolverAdapter extends BaseSolver {
           get: (): unknown[] => {
             if (!this.observedRoutes) {
               this.diagnosticObserver?.()
-              this.observedRoutes = JSON.parse(this.binding.solvedRoutesJson()) as unknown[]
+              this.observedRoutes = this.binding.solvedRoutes()
               this.routesBytes = encode(this.observedRoutes)
             }
             this.restoreSourceMetadata(this.observedRoutes, "solvedRoutes")
@@ -103,7 +103,7 @@ export class SpecializedIntraNodeSolverAdapter extends BaseSolver {
   }
 
   protected syncState(): void {
-    const state = JSON.parse(this.binding.stateJson()) as { MAX_ITERATIONS: number; solved: boolean; failed: boolean; iterations: number; progress: number; error: string | null }
+    const state = this.binding.state()
     this.MAX_ITERATIONS = state.MAX_ITERATIONS
     this.solved = state.solved
     this.failed = state.failed
@@ -115,8 +115,8 @@ export class SpecializedIntraNodeSolverAdapter extends BaseSolver {
   setDiagnosticObserver(observer: () => void): void { this.diagnosticObserver = observer }
 
   pushObservedDiagnostics(): void {
-    this.binding.restoreStateJson(encode({ MAX_ITERATIONS: this.MAX_ITERATIONS, solved: this.solved,
-      failed: this.failed, iterations: this.iterations, progress: this.progress, error: this.error }))
+    this.binding.restoreState({ MAX_ITERATIONS: this.MAX_ITERATIONS, solved: this.solved,
+      failed: this.failed, iterations: this.iterations, progress: this.progress, error: this.error })
     const routesChanged = this.observedRoutes !== undefined && encode(this.observedRoutes) !== this.routesBytes
     if (this.observed.size === 0 && !routesChanged) return
     const snapshot = this.readSnapshot(true)
@@ -124,15 +124,15 @@ export class SpecializedIntraNodeSolverAdapter extends BaseSolver {
       iterations: this.iterations, progress: this.progress, error: this.error })
     for (const [field, value] of this.observed) snapshot[field] = value
     if (routesChanged) snapshot.solvedRoutes = this.observedRoutes
-    if (this.candidateIdentity) this.binding.restoreIdentityJson(encode(snapshot), encode(this.candidateIdentity.snapshot(snapshot)))
-    else this.binding.restoreJson(encode(snapshot))
+    if (this.candidateIdentity) this.binding.restoreIdentity(snapshot, this.candidateIdentity.snapshot(snapshot))
+    else this.binding.restore(snapshot)
     if (this.observedRoutes) this.routesBytes = encode(this.observedRoutes)
   }
 
   syncObservedDiagnostics(): void {
     this.syncState()
     if (this.observedRoutes) {
-      reconcile(this.observedRoutes, JSON.parse(this.binding.solvedRoutesJson()))
+      reconcile(this.observedRoutes, this.binding.solvedRoutes())
       this.routesBytes = encode(this.observedRoutes)
     }
     if (this.observed.size === 0) return
@@ -163,7 +163,7 @@ export class SpecializedIntraNodeSolverAdapter extends BaseSolver {
     if (!fields.some(name => this.observed.has(name))) return
     const missing = fields.filter(name => !this.observed.has(name))
     if (missing.length) {
-      const snapshot = JSON.parse(this.binding.snapshotJson()) as DiagnosticRecord
+      const snapshot = this.binding.snapshot()
       for (const name of missing) this.observed.set(name, reconcile(undefined, snapshot[name], name))
     }
     const ports = (this.initialProps.nodeWithPortPoints as { portPoints: DiagnosticRecord[] }).portPoints
@@ -218,10 +218,10 @@ export class SpecializedIntraNodeSolverAdapter extends BaseSolver {
   }
 
   private readSnapshot(preserveExisting: boolean): DiagnosticRecord {
-    const snapshot = JSON.parse(this.binding.snapshotJson()) as DiagnosticRecord
+    const snapshot = this.binding.snapshot()
     if (!this.candidateIdentity) return snapshot
-    const identity = JSON.parse(this.binding.snapshotIdentityJson())
-    for (const field of ["candidates", "lastCandidate"]) snapshot[field] = this.candidateIdentity.restore(this.observed.get(field), snapshot[field], identity.fields[field], reconcile, preserveExisting)
+    const identity = this.binding.snapshotIdentity()
+    for (const field of ["candidates", "lastCandidate"]) snapshot[field] = this.candidateIdentity.restore(this.observed.get(field), snapshot[field], identity.fields![field], reconcile, preserveExisting)
     return snapshot
   }
 
@@ -237,9 +237,9 @@ export class SpecializedIntraNodeSolverAdapter extends BaseSolver {
   protected invoke<T>(method: string, args: unknown[] = []): T {
     this.observeSourceAliases()
     this.pushObservedDiagnostics()
-    const output = JSON.parse(this.candidateIdentity
-      ? this.binding.invokeIdentityJson(method, encode(args), encode(this.candidateIdentity.arguments(method, args)))
-      : this.binding.invokeJson(method, encode(args))) as { result: T; args: unknown[]; identity?: { result?: Parameters<CandidateIdentityMap["restore"]>[2] } }
+    const output = this.candidateIdentity
+      ? this.binding.invokeIdentity(method, args, this.candidateIdentity.arguments(method, args))
+      : this.binding.invoke(method, args)
     for (let i = 0; i < args.length; i++) reconcile(args[i], output.args[i])
     const result = this.candidateIdentity
       ? this.candidateIdentity.restore(undefined, output.result, output.identity?.result, reconcile) as T
@@ -274,11 +274,11 @@ export class SpecializedIntraNodeSolverAdapter extends BaseSolver {
   override visualize(): GraphicsObject {
     this.observeSourceAliases()
     this.pushObservedDiagnostics()
-    return JSON.parse(this.binding.visualizeJson(safeTransparentize)) as GraphicsObject
+    return this.binding.visualize(safeTransparentize)
   }
 
   protected static applicable(kind: string, props: unknown): boolean {
     initializeAutorouterBindings()
-    return bindings.SpecializedIntraNodeDispatcher.isApplicable(kind, encode(props))
+    return bindings.SpecializedIntraNodeDispatcher.isApplicable(kind, props)
   }
 }

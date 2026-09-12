@@ -12,24 +12,8 @@ import type { GlobalDrcForceImproveSolverParams, HighDensityRoute, DrcSnapshot }
 import * as bindings from "../../../rust/autorouter-bindings/pkg/autorouter_bindings.js"
 import { initializeAutorouterBindings } from "../initializeAutorouterBindings"
 
-type RoutePacket = {
-  id: number
-  routes: Array<{
-    id: number
-    pointArrayId: number
-    viaArrayId: number
-    sourceId: number
-    value: HighDensityRoute
-    pointIds: number[]
-    pointSourceIds: number[]
-  }>
-}
-type SolverStateSnapshot = Record<string, unknown> & {
-  iterations: number; MAX_ITERATIONS: number; solved: boolean; failed: boolean
-  error: string | null; progress: number; stats: Record<string, unknown>
-  outputIsInput?: boolean
-}
-type CallbackInput = { routes: RoutePacket; output: RoutePacket | null; state: SolverStateSnapshot; reference: boolean; topology: boolean; legacy: boolean }
+type RoutePacket = bindings.GlobalDrcRoutePacket
+type SolverStateSnapshot = bindings.GlobalDrcSolverState
 
 type MutationGraph = {
   value: object
@@ -259,10 +243,9 @@ export class GlobalDrcForceImproveSolver extends BaseSolver {
     )
   }
 
-  private static evaluateCallback(inputJson: string): string {
+  private static evaluateCallback(input: bindings.GlobalDrcCallbackInput): bindings.GlobalDrcCallbackOutput {
     const owner = activeOwner
     if (!owner) throw new Error("Global DRC callback outside its solver scope")
-    const input = JSON.parse(inputJson) as CallbackInput
     owner.synchronizeState(input.state)
     const routes = owner.materialize(input.routes)
     if (input.output) { owner.outputMirror = owner.materialize(input.output); owner.outputStale = false }
@@ -276,11 +259,11 @@ export class GlobalDrcForceImproveSolver extends BaseSolver {
         issueScore: result.issueScore ?? 0, legacyIssueScore: result.legacyIssueScore ?? 0,
         traceRouteIndexById: Object.fromEntries(result.traceRouteIndexById ?? []),
       }
-      return JSON.stringify({ snapshot, state: owner.mutationState(), mutations: owner.captureMutations() })
+      return { snapshot, state: owner.mutationState(), mutations: owner.captureMutations() }
     } catch (error) {
       owner.callbackThrew = true
       owner.callbackError = error
-      return JSON.stringify({ thrown:true, state:owner.mutationState(), mutations:owner.captureMutations() })
+      return { thrown:true, state:owner.mutationState(), mutations:owner.captureMutations() }
     } finally { owner.inCallback = false }
   }
 
@@ -296,9 +279,9 @@ export class GlobalDrcForceImproveSolver extends BaseSolver {
       initialReferenceSnapshot: Reflect.get(this, "referenceInputSnapshot"),
     }
     this.connectivityJson = JSON.stringify(input.connMap)
-    this.binding = new bindings.GlobalDrcForceImproveSolver(JSON.stringify(input), GlobalDrcForceImproveSolver.evaluateCallback)
-    this.bindInitial(JSON.parse(this.binding.routesJson("input")) as RoutePacket, this.inputHdRoutes)
-    this.bindInitial(JSON.parse(this.binding.routesJson("guarded")) as RoutePacket, this.guardedInputHdRoutes)
+    this.binding = new bindings.GlobalDrcForceImproveSolver(input, GlobalDrcForceImproveSolver.evaluateCallback)
+    this.bindInitial(this.binding.routes("input"), this.inputHdRoutes)
+    this.bindInitial(this.binding.routes("guarded"), this.guardedInputHdRoutes)
     return this.binding
   }
 
@@ -374,7 +357,7 @@ export class GlobalDrcForceImproveSolver extends BaseSolver {
     return id
   }
 
-  private encodeArray(id:number,routes:HighDensityRoute[]):unknown {
+  private encodeArray(id:number,routes:HighDensityRoute[]):bindings.GlobalDrcMutationPacket {
     return {id,routes:routes.map(route=>{
       const id=this.clientIdentity(this.routeIds,route)
       this.routeObjects.set(id,route)
@@ -429,8 +412,8 @@ export class GlobalDrcForceImproveSolver extends BaseSolver {
     return index === graph.keys.length
   }
 
-  private captureMutations():unknown[] {
-    const mutations:unknown[]=[]
+  private captureMutations():bindings.GlobalDrcMutationPacket[] {
+    const mutations:bindings.GlobalDrcMutationPacket[]=[]
     for(const [id,routes]of this.routeArrays) {
       const graph = this.mutationGraphs.get(id)
       if (graph && this.mutationGraphMatches(graph, routes, ++this.mutationComparison)) continue
@@ -453,7 +436,7 @@ export class GlobalDrcForceImproveSolver extends BaseSolver {
   }
 
   private readRoutes(which: string): HighDensityRoute[] {
-    return this.materialize(JSON.parse(this.binding!.routesJson(which)) as RoutePacket)
+    return this.materialize(this.binding!.routes(which))
   }
 
   private publicState(): SolverStateSnapshot {
@@ -470,7 +453,7 @@ export class GlobalDrcForceImproveSolver extends BaseSolver {
         for (const [id, item] of Object.entries(value)) old.set(id, item)
       } else Reflect.set(this, key, value)
     }
-    if (state.drcStats && this.autoroutingDrcEngine) this.autoroutingDrcEngine.lastRunStats = state.drcStats as typeof this.autoroutingDrcEngine.lastRunStats
+    if (state.drcStats && this.autoroutingDrcEngine) this.autoroutingDrcEngine.lastRunStats = state.drcStats
   }
 
   private runSolver(finalAcceptance: boolean): void {
@@ -486,7 +469,7 @@ export class GlobalDrcForceImproveSolver extends BaseSolver {
         state.connectivity = connectivity
         this.connectivityJson = connectivityJson
       }
-      this.synchronizeState(JSON.parse(binding.stepInner(JSON.stringify(state), finalAcceptance)) as SolverStateSnapshot)
+      this.synchronizeState(binding.stepInner(state, finalAcceptance))
       this.outputStale = true
       if (this.outputObserved) {
         this.outputMirror = this.readRoutes("output")

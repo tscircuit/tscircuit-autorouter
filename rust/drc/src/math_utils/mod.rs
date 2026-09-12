@@ -9,6 +9,7 @@ pub use line_intersections::*;
 pub use segment_distance::*;
 
 #[derive(Clone, Copy, Debug, Default, Deserialize, Serialize, PartialEq)]
+#[cfg_attr(feature = "wasm-types", derive(tsify::Tsify))]
 pub struct Point {
     pub x: f64,
     pub y: f64,

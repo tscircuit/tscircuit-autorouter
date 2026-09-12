@@ -61,12 +61,11 @@ registerRepairPortfolioBackend((params, descriptor, referenceEvaluator) => {
   const { drcEvaluator, viaInPadDrcEvaluator, referenceDrcEvaluator, autoroutingDrcEngine, connMap, ...input } = params
   const prefix = `sample${sampleNumber}-portfolio${++portfolios}`
   writeFileSync(join(outputDirectory, `${prefix}-input.json`), JSON.stringify({ params: input, descriptor }))
-  const callback = (json: string): string => {
-    const routes = JSON.parse(json) as NonNullable<Parameters<DrcEvaluator>[0]["routes"]>
-    return JSON.stringify(referenceEvaluator({ traces: [], routes, hdRoutes: routes }))
+  const callback = (routes: bindings.RepairRoutes): ReturnType<DrcEvaluator> => {
+    return referenceEvaluator({ traces: [], routes, hdRoutes: routes })
   }
   let preparedEngine: AutoroutingDrcEngine | undefined
-  let nativeDescriptor: unknown = descriptor
+  let nativeDescriptor: bindings.RepairDescriptor = descriptor
   if (sharedDrc) {
     preparedEngine = new AutoroutingDrcEngine(descriptor.engineSrj,{...descriptor.engineOptions,connMap:params.connMap})
     const baseline = preparedEngine.evaluate(descriptor.originalTraces)
@@ -84,15 +83,15 @@ registerRepairPortfolioBackend((params, descriptor, referenceEvaluator) => {
     const errorsWithCenters = addAutoroutingViaTraceIds({errors:baseline.errorsWithCenters as unknown as Record<string,unknown>[],circuitJson:vias,evaluatedTraceIds})
     nativeDescriptor = {...descriptor,engineSrj:undefined,engineOptions:undefined,preparedBaseline:{errors,errorsWithCenters}}
   }
-  const checker = new bindings.GlobalDrcBranchPortfolioSolver(JSON.stringify(input), JSON.stringify(nativeDescriptor), callback, preparedEngine?.forkForRepair())
+  const checker = new bindings.GlobalDrcBranchPortfolioSolver(input, nativeDescriptor, callback, preparedEngine?.forkForRepair())
   allocated.add(checker)
-  const binding = new bindings.GlobalDrcBranchPortfolioSolver(JSON.stringify(input), JSON.stringify(nativeDescriptor), callback, preparedEngine?.forkForRepair())
+  const binding = new bindings.GlobalDrcBranchPortfolioSolver(input, nativeDescriptor, callback, preparedEngine?.forkForRepair())
   allocated.add(binding)
   const checkedEvaluator = (kind: string, evaluator: DrcEvaluator): DrcEvaluator => {
     const checked: DrcEvaluator = (arg) => {
       const expected = evaluator(arg)
       const routes = arg.routes ?? arg.hdRoutes
-      const actual = JSON.parse(checker.evaluateRoutes(JSON.stringify(routes))) as Json
+      const actual = checker.evaluateRoutes(routes!)
       evaluations++
       try {
         assert.deepStrictEqual(actual, jsonClone(expected))
@@ -115,13 +114,13 @@ registerRepairPortfolioBackend((params, descriptor, referenceEvaluator) => {
   const originalStep = ts.step.bind(ts)
   ts.step = (): void => {
     originalStep()
-    const actual = JSON.parse(binding.step()) as SolverStateSnapshot
+    const actual = binding.step()
     steps++
     const expected = { solved: ts.solved, failed: ts.failed, iterations: ts.iterations, stats: jsonClone(ts.stats) }
     const state = { ...actual, stats: withoutNativeCounters(actual.stats) }
-    const actualRoutes = JSON.parse(binding.getOutput()) as Json
+    const actualRoutes = binding.getOutput()
     const expectedRoutes = ts.getOutput()
-    const diagnostic = JSON.parse(binding.debugState()) as Json
+    const diagnostic = binding.debugState()
     const expectedDiagnostic = correspondingState(diagnostic, ts as unknown as DiagnosticObject)
     try {
       assert.deepStrictEqual({ solved: state.solved, failed: state.failed, iterations: state.iterations, stats: state.stats }, expected)

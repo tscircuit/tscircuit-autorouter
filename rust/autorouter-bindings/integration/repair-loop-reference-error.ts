@@ -43,10 +43,10 @@ const throwingReference = (): never => {
 }
 
 for (const method of ["step", "evaluateRoutes"] as const) {
-  const binding = new bindings.GlobalDrcBranchPortfolioSolver(JSON.stringify(params), JSON.stringify(descriptor), throwingReference)
+  const binding = new bindings.GlobalDrcBranchPortfolioSolver(params, descriptor, throwingReference)
   try {
-    assert.throws(() => method === "step" ? binding.step() : binding.evaluateRoutes("[]"), (error: unknown): boolean => error === sentinel)
-    assert.equal(JSON.parse(binding.state()).stats.indexedDrcCandidateCacheSize, 0, "Failed reference validation must not enter the candidate cache")
+    assert.throws(() => method === "step" ? binding.step() : binding.evaluateRoutes([]), (error: unknown): boolean => error === sentinel)
+    assert.equal(binding.state().stats.indexedDrcCandidateCacheSize, 0, "Failed reference validation must not enter the candidate cache")
   } finally {
     // This must succeed: the Rust evaluator and wasm-bindgen solver borrows
     // must have unwound before the original exception reaches JavaScript.

@@ -8,5 +8,5 @@ export const redistributePortPointsOnSharedEdge = (params: {
   portPoints: PortPointWithOwnerPair[]
 }): PortPointWithOwnerPair[] => {
   initializeAutorouterBindings()
-  return redistributeUniformPortPointsOnSharedEdge(params, spreadUniformPortPoint) as PortPointWithOwnerPair[]
+  return redistributeUniformPortPointsOnSharedEdge(params, spreadUniformPortPoint)
 }

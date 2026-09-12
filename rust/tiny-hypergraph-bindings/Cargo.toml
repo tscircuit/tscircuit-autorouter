@@ -13,9 +13,10 @@ lto = "fat"
 codegen-units = 1
 
 [dependencies]
-tiny-hypergraph = { path = "../tiny-hypergraph" }
+json-bindings = { path = "../json-bindings" }
+tiny-hypergraph = { path = "../tiny-hypergraph", features = ["wasm-types"] }
 serde = { version = "1", features = ["derive"] }
-serde-wasm-bindgen = "0.6"
+tsify = { version = "=0.5.8", default-features = false, features = ["json"] }
 serde_json = { version = "1", features = ["preserve_order", "float_roundtrip"] }
 wasm-bindgen = "=0.2.128"
 js-sys = "0.3"

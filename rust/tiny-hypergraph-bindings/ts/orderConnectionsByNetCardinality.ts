@@ -1,3 +1,4 @@
+import { encodeJsonInput, decodeJsonOutput } from "./jsonWire.js"
 import { orderConnectionIndexesByNetCardinality } from "../pkg/tiny_hypergraph_bindings.js"
 import { assertTinyHypergraphBindingsInitialized } from "./loadTinyHypergraphBindings.js"
 
@@ -6,6 +7,6 @@ export function orderConnectionsByNetCardinality<T>(
   getNetId: (connection: T) => string,
 ): T[] {
   assertTinyHypergraphBindingsInitialized()
-  const indexes = orderConnectionIndexesByNetCardinality(connections.map(getNetId)) as number[]
+  const indexes = decodeJsonOutput(orderConnectionIndexesByNetCardinality(encodeJsonInput(connections.map(getNetId))))
   return indexes.map((index) => connections[index]!)
 }

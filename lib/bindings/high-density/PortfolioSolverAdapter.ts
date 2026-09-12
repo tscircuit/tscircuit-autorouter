@@ -11,37 +11,8 @@ import { withSpecializedRouterContext } from "./specializedRouterContext"
 
 type Candidate = ReturnType<PortfolioSingleIntraNodeSolver["generateSolver"]>
 type SupervisedCandidate = NonNullable<PortfolioSingleIntraNodeSolver["supervisedSolvers"]>[number]
-type CandidateState = {
-  iterations: number
-  maxIterations: number
-  solved: boolean
-  failed: boolean
-  error: string | null
-  progress: number | null
-  solvedSegmentCount: number | null
-}
-type PortfolioCandidateSnapshot = {
-  id: number
-  hyperParameters: Record<string, unknown>
-  g: number
-  h: number
-  f: number
-  state: CandidateState
-}
-type SolverStateSnapshot = {
-  iterations: number
-  progress: number | null
-  solved: boolean
-  failed: boolean
-  error: string | null
-  MAX_ITERATIONS: number
-  stats: Record<string, unknown>
-  adaptiveSearchExpanded: boolean
-  activeId: number | null
-  winnerId: number | null
-  order: number[]
-  candidates: PortfolioCandidateSnapshot[]
-}
+type CandidateState = bindings.CandidateStateSnapshot
+type SolverStateSnapshot = bindings.PortfolioSnapshot
 
 type CallbackScope = { current: PortfolioSolverAdapter | undefined; orchestrationKey?: number }
 
@@ -116,16 +87,15 @@ export class PortfolioSolverAdapter {
       })
     }
     this.binding = PortfolioSolverAdapter.createBinding(
-      this.callbackScope, JSON.stringify(owner.nodeWithPortPoints), owner.effort,
+      this.callbackScope, owner.nodeWithPortPoints, owner.effort,
     )
   }
 
-  private static createBinding(scope: CallbackScope, nodeJson: string, effort: number): bindings.PortfolioSingleIntraNodeSolver {
+  private static createBinding(scope: CallbackScope, node: bindings.HighDensityNode, effort: number): bindings.PortfolioSingleIntraNodeSolver {
     return new bindings.PortfolioSingleIntraNodeSolver(
-      nodeJson, effort,
-      (hyperParametersJson: string): string => {
+      node, effort,
+      (hyperParameters: Record<string, unknown>): Record<string, unknown> => {
         const supervisor = callbackOwner(scope)
-        const hyperParameters = JSON.parse(hyperParametersJson) as Record<string, unknown>
         const solver = withSpecializedRouterContext(() => supervisor.owner.generateSolver(hyperParameters))
         const id = supervisor.candidates.push(solver) - 1
         const kind = solver instanceof CachedIntraNodeRouteSolver
@@ -134,16 +104,16 @@ export class PortfolioSolverAdapter {
         const handle = isHighDensityCandidateSolver(solver) || solver instanceof SpecializedIntraNodeSolverAdapter
           ? solver.shareForPortfolio() : undefined
         if (kind !== "external") supervisor.installCandidateGetters(solver, id)
-        return JSON.stringify({ id, kind, handle, state: getState(solver),
+        return { id, kind, handle, state: getState(solver),
           totalConnections: solver instanceof CachedIntraNodeRouteSolver ? solver.totalConnections : undefined,
-          hasCache: solver instanceof CachedIntraNodeRouteSolver && solver.cacheProvider !== null })
+          hasCache: solver instanceof CachedIntraNodeRouteSolver && solver.cacheProvider !== null }
       },
-      (id: number, action: "setup" | "step" | "attach-general", count: number): string => {
+      (id: number, action: "setup" | "step" | "attach-general", count: number): CandidateState | { handle: number } => {
         const supervisor = callbackOwner(scope)
         const solver = supervisor.getCandidate(id)
         if (action === "attach-general") {
           if (!(solver instanceof CachedIntraNodeRouteSolver)) throw new Error("Only General candidates can attach a General engine")
-          return JSON.stringify({ handle: solver.shareForPortfolio() })
+          return { handle: solver.shareForPortfolio() }
         }
         if (action === "setup") {
           if ("setup" in solver && typeof solver.setup === "function") solver.setup()
@@ -152,31 +122,31 @@ export class PortfolioSolverAdapter {
         } else {
           throw new Error(`Unknown native portfolio action: ${action}`)
         }
-        return JSON.stringify(getState(solver))
+        return getState(solver)
       },
-      (id: number, action: "lookup" | "save", stateJson: string): string => {
+      (id: number, action: "lookup" | "save", state: CandidateState): Record<string, unknown> => {
         const supervisor = callbackOwner(scope)
         const solver = supervisor.getCandidate(id)
         if (!(solver instanceof CachedIntraNodeRouteSolver)) {
           throw new Error("Native portfolio requested a cache operation for a non-General candidate")
         }
-        syncState(solver, JSON.parse(stateJson) as CandidateState)
+        syncState(solver, state)
         if (action === "lookup") {
           const hit = solver.attemptToUseCacheSync()
           refreshCacheCounts()
-          return JSON.stringify({ hit, state: getState(solver), routes: hit ? solver.solvedRoutes : [] })
+          return { hit, state: getState(solver), routes: hit ? solver.solvedRoutes : [] }
         }
         if (action !== "save") throw new Error(`Unknown binding portfolio cache action: ${action}`)
         solver.syncPortfolioOutput()
         solver.saveToCacheSync()
         refreshCacheCounts()
-        return JSON.stringify({ hit: false, state: getState(solver), routes: [] })
+        return { hit: false, state: getState(solver), routes: [] }
       },
-      (state: SolverStateSnapshot): string => callbackOwner(scope).completeSolve(state),
+      (state: SolverStateSnapshot): { routes: unknown[]; solverType: string } => callbackOwner(scope).completeSolve(state),
     )
   }
 
-  private completeSolve(state: SolverStateSnapshot): string {
+  private completeSolve(state: SolverStateSnapshot): { routes: unknown[]; solverType: string } {
     this.synchronizing = true
     try {
       this.syncState(state)
@@ -195,7 +165,7 @@ export class PortfolioSolverAdapter {
           : "SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost"
         if (winner.cacheHit) solverType += " [cached]"
       }
-      return JSON.stringify({ routes: state.solved ? this.owner.solvedRoutes : [], solverType })
+      return { routes: state.solved ? this.owner.solvedRoutes : [], solverType }
     } finally {
       this.synchronizing = false
       this.stepping = false
@@ -232,17 +202,17 @@ export class PortfolioSolverAdapter {
     if (this.observed || this.ownerDirty || this.observedSpecializedCandidates) this.synchronize()
     this.stepping = true
     if (this.ownerDirty) {
-      this.binding.restoreState(JSON.stringify({
+      this.binding.restoreState({
         iterations: this.owner.iterations, MAX_ITERATIONS: this.owner.MAX_ITERATIONS,
         solved: this.owner.solved, failed: this.owner.failed, error: this.owner.error,
         progress: this.owner.progress, GREEDY_MULTIPLIER: this.owner.GREEDY_MULTIPLIER,
         MIN_SUBSTEPS: this.owner.MIN_SUBSTEPS,
-      }))
+      })
       this.ownerDirty = false
     }
     for (const [solver, id] of this.observedSpecializedCandidates ?? []) {
       solver.pushObservedDiagnostics()
-      this.binding.setCandidateState(id, JSON.stringify(getState(solver as Candidate)))
+      this.binding.setCandidateState(id, getState(solver as Candidate))
     }
   }
 
@@ -304,7 +274,7 @@ export class PortfolioSolverAdapter {
         this.synchronize()
         for (const [solver, id] of this.observedSpecializedCandidates) {
           solver.pushObservedDiagnostics()
-          binding.setCandidateState(id, JSON.stringify(getState(solver as Candidate)))
+          binding.setCandidateState(id, getState(solver as Candidate))
         }
       }
       if (this.owner.GREEDY_MULTIPLIER !== this.greedyMultiplier || this.owner.MIN_SUBSTEPS !== this.minSubsteps) {
@@ -353,7 +323,7 @@ export class PortfolioSolverAdapter {
     this.synchronizing = true
     try {
       this.bestId = this.binding.bestCandidateId()
-      this.syncState(this.binding.snapshot() as SolverStateSnapshot)
+      this.syncState(this.binding.snapshot())
       this.dirty = false
     } finally {
       this.synchronizing = false
@@ -406,13 +376,13 @@ export class PortfolioSolverAdapter {
   computeG(solver: Candidate): number {
     const hyperParameters = "hyperParameters" in solver ? solver.hyperParameters : {}
     return bindings.PortfolioSingleIntraNodeSolver.computeCandidateG(
-      JSON.stringify(getState(solver)), JSON.stringify(hyperParameters), isHighDensityCandidateSolver(solver),
+      getState(solver), hyperParameters, isHighDensityCandidateSolver(solver),
     )
   }
 
   computeH(solver: Candidate): number {
     return bindings.PortfolioSingleIntraNodeSolver.computeCandidateH(
-      JSON.stringify(getState(solver)), JSON.stringify(this.owner.nodeWithPortPoints), this.owner.adaptiveSearchExpanded,
+      getState(solver), this.owner.nodeWithPortPoints, this.owner.adaptiveSearchExpanded,
     )
   }
 

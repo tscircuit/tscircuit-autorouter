@@ -1317,24 +1317,41 @@ impl BroadRepulsionEngine {
         self.pad_context.set_connectivity(self.conn_map.as_ref());
     }
 
-    pub fn run(&self, routes: Value, effort: f64, pass_multiplier: f64, allow_same_net_via_pairs: bool, run_final_cleanup: bool) -> Value {
+    pub fn run(&self, routes: Value, effort: f64, pass_multiplier: f64, allow_same_net_via_pairs: bool, run_final_cleanup: bool) -> BroadRepulsionResult {
         let mut mutable_routes: Vec<_> = routes.as_array().expect("Routes required").iter().map(MutableRoute::from_value).collect();
         let changed = apply_broad_repulsion_forces_compiled(&self.srj, &mut mutable_routes, effort, pass_multiplier, self.conn_map.as_ref(), allow_same_net_via_pairs, run_final_cleanup, self.math);
         let output = if changed { materialize_routes(&mut mutable_routes) } else { routes };
-        json!({ "changed": changed, "routes": output })
+        BroadRepulsionResult { changed, routes: output }
     }
 }
 
+#[derive(serde::Serialize)]
+#[cfg_attr(feature = "wasm-types", derive(tsify::Tsify))]
+pub struct BroadRepulsionResult {
+    pub changed: bool,
+    #[cfg_attr(feature = "wasm-types", tsify(type = "import('high-density-repair03/lib').HighDensityRoute[]"))]
+    pub routes: Value,
+}
+
+#[derive(serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "wasm-types", derive(tsify::Tsify))]
+pub struct ErrorForceResult {
+    pub changed: bool,
+    #[cfg_attr(feature = "wasm-types", tsify(type = "import('high-density-repair03/lib').HighDensityRoute[]"))]
+    pub routes: Vec<Value>,
+    pub route_indexes: Vec<usize>,
+    pub point_origins: Vec<Vec<Option<usize>>>,
+}
+
 impl BroadRepulsionEngine {
-    pub fn apply_error_forces(&self, routes: Value, errors: Value, trace_index: Value, scale: f64, enable_canonical_pair_repairs: bool, enable_same_net_via_canonicalization: bool, allow_shared_via_site_move: bool, enable_trace_via_owner_targeting: bool) -> Value {
-        let Value::Array(routes) = routes else { panic!("Routes required"); };
+    pub fn apply_error_forces(&self, routes: Vec<Value>, errors: Vec<Value>, trace_index: indexmap::IndexMap<String, usize>, scale: f64, enable_canonical_pair_repairs: bool, enable_same_net_via_canonicalization: bool, allow_shared_via_site_move: bool, enable_trace_via_owner_targeting: bool) -> ErrorForceResult {
         let mut mutable_routes: Vec<_> = routes.into_iter().map(MutableRoute::from_owned_value).collect();
         let original_points: Vec<Vec<(usize, u64, u64, u64)>> = mutable_routes.iter().map(|route| route.route.iter().map(|point| {
             let coordinates = point.borrow();
             (std::rc::Rc::as_ptr(point) as usize, coordinates.x.to_bits(), coordinates.y.to_bits(), coordinates.z.to_bits())
         }).collect()).collect();
-        let trace_index: indexmap::IndexMap<String, usize> = serde_json::from_value(trace_index).expect("Invalid trace route index map");
-        let changed = apply_drc_error_forces(&self.srj, &mut mutable_routes, errors.as_array().expect("Errors required"), &trace_index, scale, self.conn_map.as_ref(), enable_canonical_pair_repairs, enable_same_net_via_canonicalization, allow_shared_via_site_move, enable_trace_via_owner_targeting, self.math);
+        let changed = apply_drc_error_forces(&self.srj, &mut mutable_routes, &errors, &trace_index, scale, self.conn_map.as_ref(), enable_canonical_pair_repairs, enable_same_net_via_canonicalization, allow_shared_via_site_move, enable_trace_via_owner_targeting, self.math);
         let mut route_indexes = Vec::new();
         let mut point_origins: Vec<Vec<Option<usize>>> = Vec::new();
         let mut output = Vec::new();
@@ -1349,7 +1366,7 @@ impl BroadRepulsionEngine {
             point_origins.push(route.route.iter().map(|point| origins.get(&(std::rc::Rc::as_ptr(point) as usize)).copied()).collect());
             output.push(route.to_value());
         }
-        json!({ "changed": changed, "routes": output, "routeIndexes": route_indexes, "pointOrigins": point_origins })
+        ErrorForceResult { changed, routes: output, route_indexes, point_origins }
     }
 }
 

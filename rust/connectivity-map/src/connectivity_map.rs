@@ -1,6 +1,8 @@
 use indexmap::{IndexMap, IndexSet};
 use serde::Serialize;
 
+#[cfg_attr(feature = "wasm-types", derive(tsify::Tsify))]
+#[cfg_attr(feature = "wasm-types", tsify(rename = "ConnectivityMapOutput"))]
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ConnectivityMap {
@@ -8,11 +10,14 @@ pub struct ConnectivityMap {
     pub strings: Vec<Vec<u16>>,
     pub string_offset: usize,
     #[serde(rename = "strings")]
+    #[cfg_attr(feature = "wasm-types", tsify(type = "ConnectivityWireString[]"))]
     pub generated_strings: Vec<crate::WireString>,
     pub arrays: Vec<Vec<usize>>,
     #[serde(serialize_with = "ordered_entries")]
+    #[cfg_attr(feature = "wasm-types", tsify(type = "[number, number][]"))]
     pub net_map: IndexMap<usize, usize>,
     #[serde(serialize_with = "ordered_entries")]
+    #[cfg_attr(feature = "wasm-types", tsify(type = "[number, number][]"))]
     pub id_to_net_map: IndexMap<usize, usize>,
     pub failed_group: Option<Vec<usize>>,
     #[serde(skip)]

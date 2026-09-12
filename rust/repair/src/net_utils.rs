@@ -3,8 +3,10 @@ use serde::Deserialize;
 use indexmap::IndexMap;
 
 #[derive(Deserialize)]
+#[cfg_attr(feature = "wasm-types", derive(tsify::Tsify))]
 #[serde(rename_all = "camelCase")]
 pub struct RepairConnectivityMap {
+    #[cfg_attr(feature = "wasm-types", tsify(type = "Record<string, string>"))]
     pub id_to_net_map: IndexMap<String, String, rustc_hash::FxBuildHasher>,
 }
 use crate::internal_types::MutableRoute;
