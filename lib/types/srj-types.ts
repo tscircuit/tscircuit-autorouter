@@ -53,6 +53,11 @@ export type JumperType = "1206x4" | "0603"
 
 export interface SimpleRouteJson {
   layerCount: number
+  /**
+   * Enables blind and buried vias. When omitted or false, generated vias
+   * occupy every copper layer in the board stackup.
+   */
+  allowBlindAndBuriedVias?: boolean
   minTraceWidth: number
   nominalTraceWidth?: number
   /** @deprecated Use `min_via_pad_diameter` / `minViaPadDiameter` instead. */

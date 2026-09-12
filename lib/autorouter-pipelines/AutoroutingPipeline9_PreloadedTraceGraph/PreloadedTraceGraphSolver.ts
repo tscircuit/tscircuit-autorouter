@@ -31,7 +31,11 @@ const getLayersBetween = (
   fromLayer: string,
   toLayer: string,
   layerCount: number,
+  allowBlindAndBuriedVias = false,
 ): number[] => {
+  if (!allowBlindAndBuriedVias) {
+    return Array.from({ length: layerCount }, (_, z) => z)
+  }
   const fromZ = mapLayerNameToZ(fromLayer, layerCount)
   const toZ = mapLayerNameToZ(toLayer, layerCount)
   return Array.from(
@@ -71,6 +75,7 @@ const getPreloadedTracePrimitives = (
             routePoint.from_layer,
             routePoint.to_layer,
             srj.layerCount,
+            srj.allowBlindAndBuriedVias,
           ),
           start: routePoint,
           end: routePoint,
@@ -86,6 +91,7 @@ const getPreloadedTracePrimitives = (
             routePoint.from_layer,
             routePoint.to_layer,
             srj.layerCount,
+            srj.allowBlindAndBuriedVias,
           ),
           start: routePoint.start,
           end: routePoint.end,

@@ -40,6 +40,7 @@ export type Pipeline9HighDensitySolverParams = {
   obstacles: Obstacle[]
   boardGeometry?: HighDensityBoardGeometry
   layerCount: number
+  allowBlindAndBuriedVias?: boolean
   viaDiameter: number
   traceWidth: number
   obstacleMargin: number
@@ -384,6 +385,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
   readonly obstacles: Obstacle[]
   readonly boardGeometry?: HighDensityBoardGeometry
   readonly layerCount: number
+  readonly allowBlindAndBuriedVias: boolean
   readonly viaDiameter: number
   readonly traceWidth: number
   readonly obstacleMargin: number
@@ -418,6 +420,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     this.obstacles = params.obstacles
     this.boardGeometry = params.boardGeometry
     this.layerCount = params.layerCount
+    this.allowBlindAndBuriedVias = params.allowBlindAndBuriedVias ?? false
     this.viaDiameter = params.viaDiameter
     this.traceWidth = params.traceWidth
     this.obstacleMargin = params.obstacleMargin
@@ -558,6 +561,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     const fixedRouteObstacles = getPipeline9FixedRouteObstacles({
       fixedObstacleRoutes: this.activeFallbackFixedObstacleRoutes,
       layerCount: this.layerCount,
+      allowBlindAndBuriedVias: this.allowBlindAndBuriedVias,
     })
     this.activeFallbackSolver = new Pipeline9RegionalFallbackSolver({
       nodeWithPortPoints: fallbackProblem.nodeWithPortPoints,
@@ -573,6 +577,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       movablePreloadedConnectionNames: movableFixedRouteConnectionNames,
       viaToPadClearance: this.viaToPadClearance,
       layerCount: this.layerCount,
+      allowBlindAndBuriedVias: this.allowBlindAndBuriedVias,
     })
     if (promotedFixedRouteConnectionNames.size === 0) {
       this.stats.fallbackNodeCount =
@@ -683,6 +688,8 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
             left: candidateRoute,
             right: fixedRoute,
             clearance: this.obstacleMargin,
+            layerCount: this.layerCount,
+            allowBlindAndBuriedVias: this.allowBlindAndBuriedVias,
             leftBounds: candidateBounds,
           })
         ) {

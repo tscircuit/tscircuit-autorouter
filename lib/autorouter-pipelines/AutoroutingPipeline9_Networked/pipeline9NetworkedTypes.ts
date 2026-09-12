@@ -30,6 +30,7 @@ export type Pipeline9NetworkedHighDensityNodeInput = {
   boardGeometry?: HighDensityBoardGeometry
   regionalObstacles: Obstacle[]
   layerCount: number
+  allowBlindAndBuriedVias?: boolean
   nodePf: number | null
 }
 

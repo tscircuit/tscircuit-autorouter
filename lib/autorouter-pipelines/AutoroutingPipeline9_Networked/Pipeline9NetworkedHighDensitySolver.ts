@@ -183,6 +183,7 @@ export class Pipeline9NetworkedHighDensitySolver extends Pipeline9HighDensitySol
       boardGeometry: this.boardGeometry,
       regionalObstacles: regionalInput.obstacles,
       layerCount: this.layerCount,
+      allowBlindAndBuriedVias: this.allowBlindAndBuriedVias,
       nodePf: this.nodePfById.get(node.capacityMeshNodeId) ?? null,
     }
   }

@@ -86,6 +86,7 @@ test("Pipeline9 promotes only fixed copper that blocks an all-layer fallback", (
         left: route,
         right: updatedFixedRoute,
         clearance: 0.15,
+        layerCount: 2,
       }),
     ),
   ).toBeFalse()

@@ -324,12 +324,16 @@ const candidateConflictsWithFixedRoutes = ({
   obstacleMargin,
   connMap,
   candidateBounds,
+  layerCount,
+  allowBlindAndBuriedVias,
 }: {
   candidateRoutes: HighDensityRoute[]
   fixedObstacleRoutes: PreloadedHighDensityRoute[]
   obstacleMargin: number
   connMap: ConnectivityMap
   candidateBounds?: Bounds
+  layerCount: number
+  allowBlindAndBuriedVias?: boolean
 }): boolean => {
   for (const candidateRoute of candidateRoutes) {
     for (const fixedRoute of fixedObstacleRoutes) {
@@ -341,6 +345,8 @@ const candidateConflictsWithFixedRoutes = ({
           left: candidateRoute,
           right: fixedRoute,
           clearance: obstacleMargin,
+          layerCount,
+          allowBlindAndBuriedVias,
           leftBounds: candidateBounds,
         })
       ) {
@@ -419,6 +425,7 @@ const getRegionalCandidate = ({
     colorMap,
     obstacles: srj.obstacles,
     layerCount: srj.layerCount,
+    allowBlindAndBuriedVias: srj.allowBlindAndBuriedVias,
     viaDiameter,
     traceWidth,
     obstacleMargin,
@@ -517,6 +524,7 @@ const getRegularRegionalCandidate = ({
   const fixedRouteObstacles = getPipeline9FixedRouteObstacles({
     fixedObstacleRoutes: localFixedObstacleRoutes,
     layerCount: srj.layerCount,
+    allowBlindAndBuriedVias: srj.allowBlindAndBuriedVias,
   })
   const solver = new Pipeline9RegionalFallbackSolver({
     nodeWithPortPoints: problem.nodeWithPortPoints,
@@ -528,6 +536,7 @@ const getRegularRegionalCandidate = ({
     effort,
     obstacles: [...srj.obstacles, ...fixedRouteObstacles],
     layerCount: srj.layerCount,
+    allowBlindAndBuriedVias: srj.allowBlindAndBuriedVias,
   })
   solver.solve()
   if (!solver.solved || solver.failed) return undefined
@@ -567,6 +576,8 @@ const getRegularRegionalCandidate = ({
       obstacleMargin,
       connMap,
       candidateBounds,
+      layerCount: srj.layerCount,
+      allowBlindAndBuriedVias: srj.allowBlindAndBuriedVias,
     })
   ) {
     return undefined
