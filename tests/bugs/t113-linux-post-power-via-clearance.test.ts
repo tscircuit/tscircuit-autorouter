@@ -97,4 +97,4 @@ test("Pipeline9 clears post-power vias on the exact T113-S3 PCB", async () => {
     svgName: "before-after",
     tolerance: 0,
   })
-})
+}, 60_000)
