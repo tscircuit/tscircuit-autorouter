@@ -27,6 +27,7 @@ type PreparedConnection = {
   connection: SimpleRouteConnection
   connectsTo: string[]
   outputConnectionName: string
+  outputSourceTraceId?: string
 }
 
 export const createPipeline7HdRoutesToSimplifiedPcbTracesConverter = ({
@@ -69,6 +70,13 @@ export const createPipeline7HdRoutesToSimplifiedPcbTracesConverter = ({
           netConnectionNameByOriginalConnectionName.get(connection.name) ??
           connection.__rootConnectionNames?.[0] ??
           connection.name,
+        // Core normally resolves provenance from terminal PCB ports. Anonymous
+        // terminals such as fanout breakout points need it carried explicitly.
+        outputSourceTraceId: connection.pointsToConnect.some(
+          (point) => point.pcb_port_id,
+        )
+          ? undefined
+          : connection.__netConnectionName ?? connection.source_trace_id,
       }
     },
   )
@@ -118,6 +126,7 @@ export const createPipeline7HdRoutesToSimplifiedPcbTracesConverter = ({
       connection,
       connectsTo,
       outputConnectionName,
+      outputSourceTraceId,
     } of preparedConnections) {
       const connectionRoutes = routesByConnectionName.get(connection.name) ?? []
 
@@ -127,6 +136,9 @@ export const createPipeline7HdRoutesToSimplifiedPcbTracesConverter = ({
           type: "pcb_trace",
           pcb_trace_id: `${connection.name}_${index}`,
           connection_name: outputConnectionName,
+          ...(outputSourceTraceId
+            ? { source_trace_id: outputSourceTraceId }
+            : {}),
           connectsTo,
           route: convertHdRouteToSimplifiedRoute(hdRoute, layerCount, {
             connectionPoints: connection.pointsToConnect,

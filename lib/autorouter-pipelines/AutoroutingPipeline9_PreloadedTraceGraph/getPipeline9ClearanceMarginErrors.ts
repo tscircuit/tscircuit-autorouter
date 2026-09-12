@@ -64,9 +64,7 @@ export const getPipeline9ClearanceMarginErrors = ({
             element.pcb_plated_hole_id === obstacleId),
     )
     if (!originalTrace || !originalObstacle) {
-      throw new Error(
-        `Pipeline9 clearance margin has no original target ${obstacleId}/${target.pcb_trace_id}`,
-      )
+      return { status: "unsupported-identity" }
     }
     const trace = traces.get(target.pcb_trace_id)
     let obstacle = obstacles.get(obstacleId)
@@ -75,15 +73,11 @@ export const getPipeline9ClearanceMarginErrors = ({
         originalObstacle.type !== "pcb_via" ||
         typeof originalObstacle.pcb_trace_id !== "string"
       ) {
-        throw new Error(
-          "Pipeline9 clearance margin requires the original via owner",
-        )
+        return { status: "unsupported-identity" }
       }
       const originalOwner = originalTraces.get(originalObstacle.pcb_trace_id)
       if (!originalOwner) {
-        throw new Error(
-          "Pipeline9 clearance margin lost the original via owner",
-        )
+        return { status: "unsupported-identity" }
       }
       const originalTransitions = originalOwner.route.filter(
         (segment) => segment.route_type === "via",
@@ -110,9 +104,7 @@ export const getPipeline9ClearanceMarginErrors = ({
             ) === index,
         )
       if (matchingTransitions.length === 0) {
-        throw new Error(
-          "Pipeline9 clearance margin lost the original via transition",
-        )
+        return { status: "unsupported-identity" }
       }
       // Opposite-direction transitions at one site have separate converter
       // identities. Reject an ambiguous pair rather than infer its owner event.

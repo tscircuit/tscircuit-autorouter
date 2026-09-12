@@ -800,11 +800,23 @@ function createPcbPadElements(srj: SimpleRouteJson): AnyCircuitElement[] {
  * @param minViaDiameter Default diameter for vias
  * @returns An array of PcbVia elements
  */
+const getPhysicalViaLayers = (
+  via: { from_layer: LayerName; to_layer: LayerName },
+  layerCount: number,
+  allowBlindAndBuriedVias?: boolean,
+): LayerName[] =>
+  allowBlindAndBuriedVias === false
+    ? Array.from({ length: layerCount }, (_, z) =>
+        mapZToLayerName(z, layerCount),
+      )
+    : (getViaLayers(via, layerCount) as LayerName[])
+
 function extractViasFromRoutes(
   routes: SimplifiedPcbTrace[] | HighDensityRoute[],
   layerCount: number,
   minViaDiameter = 0.3,
   minViaHoleDiameter = minViaDiameter * 0.5,
+  allowBlindAndBuriedVias?: boolean,
 ): PcbVia[] {
   const vias: PcbVia[] = []
   const viaLocations = new Set<string>() // Track unique via locations
@@ -824,7 +836,15 @@ function extractViasFromRoutes(
             const viaDiameter = segment.via_diameter ?? minViaDiameter
             const viaHoleDiameter =
               segment.via_hole_diameter ?? minViaHoleDiameter
-            const locationKey = `${segment.x},${segment.y},${segment.from_layer},${segment.to_layer}`
+            const physicalLayers = getPhysicalViaLayers(
+              {
+                from_layer: segment.from_layer as LayerName,
+                to_layer: segment.to_layer as LayerName,
+              },
+              layerCount,
+              allowBlindAndBuriedVias,
+            )
+            const locationKey = `${segment.x},${segment.y},${physicalLayers.join(",")}`
             if (!viaLocations.has(locationKey)) {
               vias.push({
                 type: "pcb_via",
@@ -834,7 +854,7 @@ function extractViasFromRoutes(
                 y: segment.y,
                 outer_diameter: viaDiameter,
                 hole_diameter: viaHoleDiameter,
-                layers: getViaLayers(segment, layerCount) as LayerName[],
+                layers: physicalLayers,
               })
               viaLocations.add(locationKey)
             }
@@ -859,7 +879,12 @@ function extractViasFromRoutes(
           ) {
             const fromLayer = mapZToLayerName(prevPoint.z, layerCount)
             const toLayer = mapZToLayerName(currPoint.z, layerCount)
-            const locationKey = `${currPoint.x},${currPoint.y},${fromLayer},${toLayer}`
+            const physicalLayers = getPhysicalViaLayers(
+              { from_layer: fromLayer, to_layer: toLayer },
+              layerCount,
+              allowBlindAndBuriedVias,
+            )
+            const locationKey = `${currPoint.x},${currPoint.y},${physicalLayers.join(",")}`
 
             if (!viaLocations.has(locationKey)) {
               vias.push({
@@ -870,10 +895,7 @@ function extractViasFromRoutes(
                 y: currPoint.y,
                 outer_diameter: viaDiameter,
                 hole_diameter: viaHoleDiameter,
-                layers: getViaLayers(
-                  { from_layer: fromLayer, to_layer: toLayer },
-                  layerCount,
-                ) as LayerName[],
+                layers: physicalLayers,
               })
               viaLocations.add(locationKey)
             }
@@ -977,6 +999,7 @@ export function convertToCircuitJson(
       srjWithPointPairs.layerCount,
       resolvedMinViaDiameter,
       resolvedMinViaHoleDiameter,
+      (originalSrj ?? srjWithPointPairs).allowBlindAndBuriedVias,
     ),
   )
 
