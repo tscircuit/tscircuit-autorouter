@@ -23,7 +23,8 @@ export interface TinyHyperGraphTopology {
   portMetadata?: readonly unknown[]
 }
 
-export type TinyHyperGraphInitialAssignment = bindings.TinyHyperGraphInitialAssignment
+export type TinyHyperGraphInitialAssignment =
+  bindings.TinyHyperGraphInitialAssignment
 
 export interface TinyHyperGraphProblem {
   routeCount: number
@@ -60,7 +61,9 @@ export interface TinyHyperGraphRoutingSnapshot {
 export type TinyHyperGraphStats = Record<string, unknown>
 
 export type TinyHyperGraphSolverOptions = {
-  [K in keyof bindings.TinyHyperGraphSolverOptions]?: NonNullable<bindings.TinyHyperGraphSolverOptions[K]>
+  [K in keyof bindings.TinyHyperGraphSolverOptions]?: NonNullable<
+    bindings.TinyHyperGraphSolverOptions[K]
+  >
 }
 
 export type TinyHyperGraphSolverConfiguration = bindings.SolverConfiguration

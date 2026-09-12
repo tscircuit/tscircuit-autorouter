@@ -1,7 +1,10 @@
 import type { SerializedHyperGraph } from "@tscircuit/hypergraph"
 import type { GraphicsObject } from "graphics-debug"
 import * as bindings from "../pkg/tiny_hypergraph_bindings.js"
-import { assertTinyHypergraphBindingsInitialized, getTinyHypergraphMemory } from "./loadTinyHypergraphBindings.js"
+import {
+  assertTinyHypergraphBindingsInitialized,
+  getTinyHypergraphMemory,
+} from "./loadTinyHypergraphBindings.js"
 import { encodeJsonInput, decodeUndefinedJsonOutput } from "./jsonWire.js"
 import type {
   TinyHyperGraphProblem,
@@ -37,10 +40,19 @@ export class TinyHyperGraphSolver {
     configuration?: TinyHyperGraphSolverConfiguration,
   ) {
     assertTinyHypergraphBindingsInitialized()
-    this.handle = new bindings.TinyHyperGraphSolver(encodeJsonInput(topology), encodeJsonInput(problem), encodeJsonInput(options ?? null), encodeJsonInput(configuration ?? null))
+    this.handle = new bindings.TinyHyperGraphSolver(
+      encodeJsonInput(topology),
+      encodeJsonInput(problem),
+      encodeJsonInput(options ?? null),
+      encodeJsonInput(configuration ?? null),
+    )
     this.wasmMemory = getTinyHypergraphMemory()
     this.stepStatusPointer = this.handle.stepStatusPointer()
-    this.stepStatus = new Uint32Array(this.wasmMemory.buffer, this.stepStatusPointer, 3)
+    this.stepStatus = new Uint32Array(
+      this.wasmMemory.buffer,
+      this.stepStatusPointer,
+      3,
+    )
     this.updateStatus(this.handle.getStatus())
   }
 
@@ -70,13 +82,20 @@ export class TinyHyperGraphSolver {
     this.failed = (flags & 2) !== 0
     this.error = (flags & 4) !== 0 ? handle.currentError()! : null
     if (this.stepStatus.buffer !== this.wasmMemory.buffer) {
-      this.stepStatus = new Uint32Array(this.wasmMemory.buffer, this.stepStatusPointer, 3)
+      this.stepStatus = new Uint32Array(
+        this.wasmMemory.buffer,
+        this.stepStatusPointer,
+        3,
+      )
     }
     this.pendingRouteCount = this.stepStatus[0]!
     this.ripCount = this.stepStatus[1]!
     return {
-      solved: this.solved, failed: this.failed, error: this.error,
-      iterations: this.iterations, pendingRouteCount: this.pendingRouteCount,
+      solved: this.solved,
+      failed: this.failed,
+      error: this.error,
+      iterations: this.iterations,
+      pendingRouteCount: this.pendingRouteCount,
       ripCount: this.ripCount,
     }
   }
@@ -101,7 +120,9 @@ export class TinyHyperGraphSolver {
   }
 
   getRoutingSnapshot(): TinyHyperGraphRoutingSnapshot {
-    return decodeUndefinedJsonOutput(this.getHandleOrThrow().getRoutingSnapshot())
+    return decodeUndefinedJsonOutput(
+      this.getHandleOrThrow().getRoutingSnapshot(),
+    )
   }
 
   getMaxRegionCost(): number {
@@ -111,7 +132,11 @@ export class TinyHyperGraphSolver {
   getStatsRevision(): number {
     this.getHandleOrThrow()
     if (this.stepStatus.buffer !== this.wasmMemory.buffer) {
-      this.stepStatus = new Uint32Array(this.wasmMemory.buffer, this.stepStatusPointer, 3)
+      this.stepStatus = new Uint32Array(
+        this.wasmMemory.buffer,
+        this.stepStatusPointer,
+        3,
+      )
     }
     return this.stepStatus[2]!
   }
@@ -126,7 +151,9 @@ export class TinyHyperGraphSolver {
 
   /** Rebuilds a complete solved state in route order, validating each route path. */
   replaySolution(solution: TinyHyperGraphSolution): TinyHyperGraphStatus {
-    const status = this.getHandleOrThrow().replaySolution(encodeJsonInput(solution))
+    const status = this.getHandleOrThrow().replaySolution(
+      encodeJsonInput(solution),
+    )
     return this.updateStatus(status)
   }
 

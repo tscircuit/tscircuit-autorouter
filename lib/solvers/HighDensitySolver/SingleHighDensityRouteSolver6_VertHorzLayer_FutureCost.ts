@@ -1,9 +1,16 @@
 import * as bindings from "../../../rust/capacity-autorouter-bindings/pkg/capacity_autorouter_bindings.js"
 import type { Node } from "lib/data-structures/SingleRouteCandidatePriorityQueue"
-import { SingleHighDensityRouteSolver, type SingleRouteOptions } from "./SingleHighDensityRouteSolver"
+import {
+  SingleHighDensityRouteSolver,
+  type SingleRouteOptions,
+} from "./SingleHighDensityRouteSolver"
 
 type Point = { x: number; y: number; z: number }
-export type FutureConnectionSegment = { connectionName: string; start: Point; end: Point }
+export type FutureConnectionSegment = {
+  connectionName: string
+  start: Point
+  end: Point
+}
 
 export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends SingleHighDensityRouteSolver {
   declare FUTURE_CONNECTION_PROX_TRACE_PENALTY_FACTOR: number
@@ -16,9 +23,14 @@ export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends Sing
   declare futureConnectionPoints: Point[]
   futureConnectionSegmentsCache: FutureConnectionSegment[] | null = null
 
-  constructor(opts: SingleRouteOptions, existingBinding?: bindings.SingleHighDensityRouteSolver) {
+  constructor(
+    opts: SingleRouteOptions,
+    existingBinding?: bindings.SingleHighDensityRouteSolver,
+  ) {
     super(opts, true, existingBinding)
-    this.futureConnectionPoints = this.futureConnections.flatMap((connection) => connection.points)
+    this.futureConnectionPoints = this.futureConnections.flatMap(
+      (connection) => connection.points,
+    )
   }
 
   getClosestFutureConnectionPoint(node: Node): Point | null {
@@ -30,7 +42,8 @@ export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends Sing
   getFutureConnectionSegments(): FutureConnectionSegment[] {
     if (!this.futureConnectionSegmentsCache) {
       this.configure()
-      this.futureConnectionSegmentsCache = this.binding.getFutureConnectionSegments()
+      this.futureConnectionSegmentsCache =
+        this.binding.getFutureConnectionSegments()
     }
     return this.futureConnectionSegmentsCache
   }

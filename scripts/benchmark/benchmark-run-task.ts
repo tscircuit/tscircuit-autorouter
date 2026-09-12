@@ -530,7 +530,10 @@ export const runTask = async (
       ? []
       : (solver.getOutputSimplifiedPcbTraces?.() ?? [])
     if (process.env.BENCHMARK_TRACE_DIR) {
-      await Bun.write(`${process.env.BENCHMARK_TRACE_DIR}/${task.sampleNumber}.json`, JSON.stringify(traces))
+      await Bun.write(
+        `${process.env.BENCHMARK_TRACE_DIR}/${task.sampleNumber}.json`,
+        JSON.stringify(traces),
+      )
     }
     const viaCount = countTraceVias(traces)
     const { errors } = evaluateRelaxedDrc({

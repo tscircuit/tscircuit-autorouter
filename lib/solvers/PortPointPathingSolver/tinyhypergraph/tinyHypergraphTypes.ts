@@ -6,14 +6,25 @@ import type {
   TinyHyperGraphSolverOptions,
   TinyHyperGraphRoutingSnapshot,
 } from "../../../../rust/tiny-hypergraph-bindings/ts/index"
-import type { RouteMetadata, TinyPortMetadata, TinyRegionMetadata } from "./TinyHypergraphPortPointPathingSolver"
+import type {
+  RouteMetadata,
+  TinyPortMetadata,
+  TinyRegionMetadata,
+} from "./TinyHypergraphPortPointPathingSolver"
 
 export type LoadedTinyHypergraph = {
   topology: Omit<TinyHyperGraphTopology, "portMetadata" | "regionMetadata"> & {
     portMetadata?: TinyPortMetadata[]
     regionMetadata?: Array<TinyRegionMetadata & { _tinyTerminalNetId?: string }>
   }
-  problem: Omit<TinyHyperGraphProblem, "routeMetadata" | "routeNet" | "regionNetId" | "portPenalty" | "portSectionMask"> & {
+  problem: Omit<
+    TinyHyperGraphProblem,
+    | "routeMetadata"
+    | "routeNet"
+    | "regionNetId"
+    | "portPenalty"
+    | "portSectionMask"
+  > & {
     routeMetadata?: RouteMetadata[]
     routeNet: Int32Array
     regionNetId: Int32Array
@@ -24,7 +35,10 @@ export type LoadedTinyHypergraph = {
   solution: TinyHyperGraphSolution
 }
 
-export type TinyHypergraphSolverView = Pick<LoadedTinyHypergraph, "topology" | "problem"> & {
+export type TinyHypergraphSolverView = Pick<
+  LoadedTinyHypergraph,
+  "topology" | "problem"
+> & {
   iterations: number
   stats: Record<string, unknown>
   solved: boolean
@@ -32,7 +46,8 @@ export type TinyHypergraphSolverView = Pick<LoadedTinyHypergraph, "topology" | "
   state: Pick<TinyHyperGraphRoutingSnapshot, "regionSegments">
 }
 
-export interface TinyHyperGraphSectionSolverOptions extends TinyHyperGraphSolverOptions {
+export interface TinyHyperGraphSectionSolverOptions
+  extends TinyHyperGraphSolverOptions {
   MAX_RIPS?: number
   MAX_RIPS_WITHOUT_MAX_REGION_COST_IMPROVEMENT?: number
   EXTRA_RIPS_AFTER_BEATING_BASELINE_MAX_REGION_COST?: number

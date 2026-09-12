@@ -1,7 +1,13 @@
 import { OwnerPair, OwnerPairKey } from "./types"
 import { initializeAutorouterBindings } from "lib/bindings/initializeAutorouterBindings"
-import { decodeName, encodeName } from "lib/bindings/uniform-port-distribution/UniformPortDistributionCodec"
-import { normalizeUniformPortOwnerPair, getUniformPortOwnerPairKey } from "../../../rust/capacity-autorouter-bindings/pkg/capacity_autorouter_bindings.js"
+import {
+  decodeName,
+  encodeName,
+} from "lib/bindings/uniform-port-distribution/UniformPortDistributionCodec"
+import {
+  normalizeUniformPortOwnerPair,
+  getUniformPortOwnerPairKey,
+} from "../../../rust/capacity-autorouter-bindings/pkg/capacity_autorouter_bindings.js"
 
 /**
  * Creates a deterministic two-node owner identity so pair-based maps and
@@ -10,7 +16,8 @@ import { normalizeUniformPortOwnerPair, getUniformPortOwnerPairKey } from "../..
 export const normalizeOwnerPair = (nodeA: string, nodeB: string): OwnerPair => {
   initializeAutorouterBindings()
   const pair = normalizeUniformPortOwnerPair(
-    encodeName(nodeA), encodeName(nodeB),
+    encodeName(nodeA),
+    encodeName(nodeB),
   )
   return [decodeName(pair[0]), decodeName(pair[1])]
 }
@@ -21,8 +28,9 @@ export const normalizeOwnerPair = (nodeA: string, nodeB: string): OwnerPair => {
  */
 export const getOwnerPairKey = (ownerNodeIds: OwnerPair): OwnerPairKey => {
   initializeAutorouterBindings()
-  const key = getUniformPortOwnerPairKey(
-    [encodeName(ownerNodeIds[0]), encodeName(ownerNodeIds[1])],
-  )
+  const key = getUniformPortOwnerPairKey([
+    encodeName(ownerNodeIds[0]),
+    encodeName(ownerNodeIds[1]),
+  ])
   return decodeName(key)
 }

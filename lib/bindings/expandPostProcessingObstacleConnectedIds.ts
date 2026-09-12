@@ -18,12 +18,20 @@ export const expandPostProcessingObstacleConnectedIds = (
   }
   const result = expandNative({
     aliasesByRoute: aliasesByRoute.map((aliases) => aliases.map(intern)),
-    connectedToByObstacle: connectedToByObstacle.map((names) => names.map(intern)),
+    connectedToByObstacle: connectedToByObstacle.map((names) =>
+      names.map(intern),
+    ),
   })
-  return result.map((names) => names === null ? null : names.map((id) => {
-    if (!Number.isInteger(id) || id < 0 || id >= strings.length) {
-      throw new Error(`Native obstacle expansion returned unknown string ID ${id}`)
-    }
-    return strings[id]!
-  }))
+  return result.map((names) =>
+    names === null
+      ? null
+      : names.map((id) => {
+          if (!Number.isInteger(id) || id < 0 || id >= strings.length) {
+            throw new Error(
+              `Native obstacle expansion returned unknown string ID ${id}`,
+            )
+          }
+          return strings[id]!
+        }),
+  )
 }

@@ -17,10 +17,14 @@ import { PortfolioSolverAdapter } from "lib/bindings/high-density/PortfolioSolve
 import { HighDensitySolverAdapter } from "../../../rust/capacity-autorouter-bindings/ts/index"
 import { repairDisconnectedSameRootPortPoints } from "./repairDisconnectedSameRootPortPoints"
 
-type PortfolioCandidate = IntraNodeRouteSolver | HighDensitySolverAdapter
+type PortfolioCandidate =
+  | IntraNodeRouteSolver
+  | HighDensitySolverAdapter
   | SingleLayerNoDifferentRootIntersectionsIntraNodeSolver
-  | SingleTransitionIntraNodeSolver | SingleTransitionThroughObstacleIntraNodeSolver
-  | SingleTransitionCrossingRouteSolver | TwoCrossingRoutesHighDensitySolver
+  | SingleTransitionIntraNodeSolver
+  | SingleTransitionThroughObstacleIntraNodeSolver
+  | SingleTransitionCrossingRouteSolver
+  | TwoCrossingRoutesHighDensitySolver
   | MultiHeadPolyLineIntraNodeSolver3
 
 /** Coordinates the native fitness-scheduled portfolio of intra-node solvers. */
@@ -65,11 +69,19 @@ export class PortfolioSingleIntraNodeSolver extends BaseSolver {
     return this.portfolioAdapter.getCombinationDefs()
   }
 
-  getHyperParameterDefs(): Array<{ name: string; possibleValues: Record<string, unknown>[] }> {
+  getHyperParameterDefs(): Array<{
+    name: string
+    possibleValues: Record<string, unknown>[]
+  }> {
     return this.portfolioAdapter.getHyperParameterDefs()
   }
 
-  getHyperParameterCombinations(definitions?: Array<{ name: string; possibleValues: Record<string, unknown>[] }>): Record<string, unknown>[] {
+  getHyperParameterCombinations(
+    definitions?: Array<{
+      name: string
+      possibleValues: Record<string, unknown>[]
+    }>,
+  ): Record<string, unknown>[] {
     return this.portfolioAdapter.getHyperParameterCombinations(definitions)
   }
 
@@ -102,8 +114,14 @@ export class PortfolioSingleIntraNodeSolver extends BaseSolver {
   }
 
   override visualize(): import("graphics-debug").GraphicsObject {
-    return this.getSupervisedSolverWithBestFitness()?.solver.visualize()
-      ?? { lines: [], circles: [], points: [], rects: [] }
+    return (
+      this.getSupervisedSolverWithBestFitness()?.solver.visualize() ?? {
+        lines: [],
+        circles: [],
+        points: [],
+        rects: [],
+      }
+    )
   }
 
   generateSolver(hyperParameters: any): PortfolioCandidate {
@@ -207,7 +225,11 @@ export class PortfolioSingleIntraNodeSolver extends BaseSolver {
     return new CachedIntraNodeRouteSolver(props, this.constructorParams)
   }
 
-  onSolve(solver: NonNullable<PortfolioSingleIntraNodeSolver["supervisedSolvers"]>[number]) {
+  onSolve(
+    solver: NonNullable<
+      PortfolioSingleIntraNodeSolver["supervisedSolvers"]
+    >[number],
+  ) {
     let routes: HighDensityIntraNodeRoute[]
     if (solver.solver instanceof HighDensitySolverAdapter) {
       routes = solver.solver.getOutput()

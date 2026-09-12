@@ -9,6 +9,8 @@ export function loadSerializedHyperGraph(
   graph: SerializedHyperGraph,
 ): LoadedHyperGraph {
   assertTinyHypergraphBindingsInitialized()
-  const loaded = decodeUndefinedJsonOutput(rustLoadSerializedHyperGraph(encodeJsonInput(graph)))
+  const loaded = decodeUndefinedJsonOutput(
+    rustLoadSerializedHyperGraph(encodeJsonInput(graph)),
+  )
   return loaded
 }

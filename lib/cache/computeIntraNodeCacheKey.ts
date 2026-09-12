@@ -2,20 +2,35 @@ import * as bindings from "../../rust/capacity-autorouter-bindings/pkg/capacity_
 import { initializeAutorouterBindings } from "lib/bindings/initializeAutorouterBindings"
 import type { CachedIntraNodeRouteSolver } from "../solvers/HighDensitySolver/CachedIntraNodeRouteSolver"
 
-type EncodedScalar = string | number | boolean | null | undefined | {
-  cacheScalar: string | number[]
-}
+type EncodedScalar =
+  | string
+  | number
+  | boolean
+  | null
+  | undefined
+  | {
+      cacheScalar: string | number[]
+    }
 
-function encodeCacheScalar(value: string | number | boolean | null | undefined): EncodedScalar {
+function encodeCacheScalar(
+  value: string | number | boolean | null | undefined,
+): EncodedScalar {
   if (typeof value === "number" && !Number.isFinite(value)) {
     return { cacheScalar: String(value) }
   }
   if (typeof value === "string" && /[\uD800-\uDFFF]/u.test(value)) {
-    const units = Array.from({ length: value.length }, (_, index) => value.charCodeAt(index))
+    const units = Array.from({ length: value.length }, (_, index) =>
+      value.charCodeAt(index),
+    )
     return { cacheScalar: units }
   }
-  if (value !== null && typeof value !== "undefined" && typeof value !== "string"
-    && typeof value !== "number" && typeof value !== "boolean") {
+  if (
+    value !== null &&
+    typeof value !== "undefined" &&
+    typeof value !== "string" &&
+    typeof value !== "number" &&
+    typeof value !== "boolean"
+  ) {
     throw new Error("Cache key fields must be scalar values")
   }
   return value
@@ -23,7 +38,9 @@ function encodeCacheScalar(value: string | number | boolean | null | undefined):
 
 const localeCompare = (a: string, b: string): number => a.localeCompare(b)
 
-export function computeIntraNodeCacheKey(solver: CachedIntraNodeRouteSolver): string {
+export function computeIntraNodeCacheKey(
+  solver: CachedIntraNodeRouteSolver,
+): string {
   initializeAutorouterBindings()
   const node = solver.nodeWithPortPoints
   const normalizationCenter = {
@@ -40,23 +57,29 @@ export function computeIntraNodeCacheKey(solver: CachedIntraNodeRouteSolver): st
     y: encodeCacheScalar(point.y),
     z: encodeCacheScalar(point.z),
   }))
-  const initialUnsolvedConnections = solver.initialUnsolvedConnections.map((connection) => ({
-    connectionName: encodeCacheScalar(connection.connectionName),
-    rootConnectionName: encodeCacheScalar(connection.rootConnectionName),
-    points: connection.points.map((point) => ({
-      x: encodeCacheScalar(point.x),
-      y: encodeCacheScalar(point.y),
-      z: encodeCacheScalar(point.z),
-    })),
-  }))
+  const initialUnsolvedConnections = solver.initialUnsolvedConnections.map(
+    (connection) => ({
+      connectionName: encodeCacheScalar(connection.connectionName),
+      rootConnectionName: encodeCacheScalar(connection.rootConnectionName),
+      points: connection.points.map((point) => ({
+        x: encodeCacheScalar(point.x),
+        y: encodeCacheScalar(point.y),
+        z: encodeCacheScalar(point.z),
+      })),
+    }),
+  )
   const hyperParameters = Object.entries(solver.hyperParameters ?? {})
     .filter(([, value]) => value !== undefined)
     .map(([key, value]) => [encodeCacheScalar(key), encodeCacheScalar(value)])
   const connectedIds = solver.connMap
     ? solver.initialUnsolvedConnections.map(({ connectionName }) => ({
         connectionName: encodeCacheScalar(connectionName),
-        ids: (solver.connMap!.getIdsConnectedToNet(connectionName) ?? []).map((id) => id === undefined
-          ? { cacheScalar: "undefined" } : encodeCacheScalar(id)),
+        ids: (solver.connMap!.getIdsConnectedToNet(connectionName) ?? []).map(
+          (id) =>
+            id === undefined
+              ? { cacheScalar: "undefined" }
+              : encodeCacheScalar(id),
+        ),
       }))
     : undefined
 
@@ -64,7 +87,11 @@ export function computeIntraNodeCacheKey(solver: CachedIntraNodeRouteSolver): st
   // normalized coordinates use the center from before those callbacks.
   const keyNode = solver.nodeWithPortPoints
   const snapshot = {
-    normalizationCenter, portPoints, initialUnsolvedConnections, hyperParameters, connectedIds,
+    normalizationCenter,
+    portPoints,
+    initialUnsolvedConnections,
+    hyperParameters,
+    connectedIds,
     node: {
       width: encodeCacheScalar(keyNode.width),
       height: encodeCacheScalar(keyNode.height),
@@ -72,13 +99,19 @@ export function computeIntraNodeCacheKey(solver: CachedIntraNodeRouteSolver): st
         x: encodeCacheScalar(keyNode.center.x),
         y: encodeCacheScalar(keyNode.center.y),
       },
-      availableZ: keyNode.availableZ?.map((z) => z === undefined
-        ? { cacheScalar: "undefined" } : encodeCacheScalar(z)),
+      availableZ: keyNode.availableZ?.map((z) =>
+        z === undefined ? { cacheScalar: "undefined" } : encodeCacheScalar(z),
+      ),
     },
-    minDistBetweenEnteringPoints: encodeCacheScalar(solver.minDistBetweenEnteringPoints),
+    minDistBetweenEnteringPoints: encodeCacheScalar(
+      solver.minDistBetweenEnteringPoints,
+    ),
     traceWidth: encodeCacheScalar(solver.traceWidth),
     viaDiameter: encodeCacheScalar(solver.viaDiameter),
     obstacleMargin: encodeCacheScalar(solver.obstacleMargin),
   }
-  return bindings.computeIntraNodeCacheKey(JSON.stringify(snapshot), localeCompare)
+  return bindings.computeIntraNodeCacheKey(
+    JSON.stringify(snapshot),
+    localeCompare,
+  )
 }

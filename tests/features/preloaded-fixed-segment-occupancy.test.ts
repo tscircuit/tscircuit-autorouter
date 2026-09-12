@@ -132,9 +132,7 @@ test("serialized preloaded assignments occupy existing hypergraph regions", () =
 
   expect(tinySolver.topology.regionCount).toBe(capacityMeshNodes.length + 2)
   expect(centerRegionId).toBeGreaterThanOrEqual(0)
-  expect(
-    tinySolver.state.regionSegments[centerRegionId!].length,
-  ).toBe(1)
+  expect(tinySolver.state.regionSegments[centerRegionId!].length).toBe(1)
   const [[preloadedRouteId, preloadedFromPortId, preloadedToPortId]] =
     tinySolver.state.regionSegments[centerRegionId!]
   expect(

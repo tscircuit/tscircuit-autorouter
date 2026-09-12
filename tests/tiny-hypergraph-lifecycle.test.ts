@@ -17,7 +17,11 @@ test("tiny-hypergraph solvers own independent state and reject use after disposa
 
     const snapshot = first.getRoutingSnapshot()
     snapshot.regionSegments.length = 0
-    expect(first.getRoutingSnapshot().regionSegments).toEqual([[], [[0, 0, 1]], []])
+    expect(first.getRoutingSnapshot().regionSegments).toEqual([
+      [],
+      [[0, 0, 1]],
+      [],
+    ])
 
     first.dispose()
     expect(() => first.dispose()).not.toThrow()

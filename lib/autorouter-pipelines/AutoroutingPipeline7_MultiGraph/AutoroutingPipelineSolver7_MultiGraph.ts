@@ -7,9 +7,7 @@ import { RectDiffPipeline } from "@tscircuit/rectdiff"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { GraphicsObject, Line } from "graphics-debug"
 import { HighDensityForceImproveSolver } from "high-density-repair01/lib/HighDensityForceImproveSolver"
-import {
-  GlobalDrcBranchPortfolioSolver,
-} from "high-density-repair03/lib"
+import { GlobalDrcBranchPortfolioSolver } from "high-density-repair03/lib"
 import { getGlobalInMemoryCache } from "lib/cache/setupGlobalCaches"
 import { CacheProvider } from "lib/cache/types"
 import { ComponentDetectionSolver } from "lib/solvers/ComponentDetectionSolver/ComponentDetectionSolver"

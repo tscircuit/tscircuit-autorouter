@@ -13,13 +13,23 @@ test("tiny-hypergraph JSON transport preserves typed arrays and metadata semanti
     bigints: [0n, 42n, 9007199254740991n],
     largeNumbers: [1e16, 1e30],
     unicode: "x\ud800",
-    map: new Map<string, number | undefined>([["present", undefined], ["zero", -0]]),
+    map: new Map<string, number | undefined>([
+      ["present", undefined],
+      ["zero", -0],
+    ]),
   }
-  const solver = new TinyHyperGraphSolver({
-    ...topology,
-    portY: new Float64Array([-0, 0]),
-    portMetadata: [{ serializedPortId: "p0", custom: metadata }, { serializedPortId: "p1" }],
-  }, problem, { ...options, RIP_THRESHOLD_START: Infinity, DISTANCE_TO_COST: -0 })
+  const solver = new TinyHyperGraphSolver(
+    {
+      ...topology,
+      portY: new Float64Array([-0, 0]),
+      portMetadata: [
+        { serializedPortId: "p0", custom: metadata },
+        { serializedPortId: "p1" },
+      ],
+    },
+    problem,
+    { ...options, RIP_THRESHOLD_START: Infinity, DISTANCE_TO_COST: -0 },
+  )
   try {
     expect(solver.solve().solved).toBe(true)
     const output = solver.getOutput()

@@ -16,10 +16,24 @@ export type FutureConnection = {
 
 type Point = { x: number; y: number; z: number }
 type Bounds = { minX: number; maxX: number; minY: number; maxY: number }
-type IndexedObstacleSegment = { z: number; A: Point; B: Point; minX: number; minY: number; maxX: number; maxY: number; connectedToCurrentConnection: boolean }
+type IndexedObstacleSegment = {
+  z: number
+  A: Point
+  B: Point
+  minX: number
+  minY: number
+  maxX: number
+  maxY: number
+  connectedToCurrentConnection: boolean
+}
 type IndexedObstacleVia = { x: number; y: number }
-export type PlanarObstacleQuery = { segments: IndexedObstacleSegment[]; segmentIds: number[] }
-type SearchIndex = { search: (minX: number, minY: number, maxX: number, maxY: number) => number[] }
+export type PlanarObstacleQuery = {
+  segments: IndexedObstacleSegment[]
+  segmentIds: number[]
+}
+type SearchIndex = {
+  search: (minX: number, minY: number, maxX: number, maxY: number) => number[]
+}
 export type SingleRouteOptions = {
   connectionName: string
   rootConnectionName?: string
@@ -47,12 +61,30 @@ class CandidateQueue {
     private readonly configure: () => void,
   ) {}
 
-  enqueue(node: Node): void { this.configure(); this.binding.queueEnqueue(node) }
-  dequeue(): Node | undefined { this.configure(); return this.binding.queueDequeue() ?? undefined }
-  peek(): Node | undefined { this.configure(); return this.binding.queuePeek() ?? undefined }
-  heapifyUp(): void { this.configure(); this.binding.queueHeapifyUp() }
-  heapifyDown(): void { this.configure(); this.binding.queueHeapifyDown() }
-  getTopN(n: number): Node[] { this.configure(); return this.binding.queueTop(n) }
+  enqueue(node: Node): void {
+    this.configure()
+    this.binding.queueEnqueue(node)
+  }
+  dequeue(): Node | undefined {
+    this.configure()
+    return this.binding.queueDequeue() ?? undefined
+  }
+  peek(): Node | undefined {
+    this.configure()
+    return this.binding.queuePeek() ?? undefined
+  }
+  heapifyUp(): void {
+    this.configure()
+    this.binding.queueHeapifyUp()
+  }
+  heapifyDown(): void {
+    this.configure()
+    this.binding.queueHeapifyDown()
+  }
+  getTopN(n: number): Node[] {
+    this.configure()
+    return this.binding.queueTop(n)
+  }
 }
 
 export class SingleHighDensityRouteSolver extends BaseSolver {
@@ -98,12 +130,21 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
   obstacleSegmentIndexByLayer = new Map<number, SearchIndex>()
   obstacleSegmentIndex: SearchIndex | null = null
   obstacleViaIndex: SearchIndex | null = null
-  debug_exploredNodesOrdered: Array<{ key: number; x: number; y: number; z: number }> = []
+  debug_exploredNodesOrdered: Array<{
+    key: number
+    x: number
+    y: number
+    z: number
+  }> = []
   debug_nodesTooCloseToObstacle = new Set<number>()
   debug_nodePathToParentIntersectsObstacle = new Set<number>()
   readonly candidates: CandidateQueue
 
-  constructor(opts: SingleRouteOptions, futureCost = false, existingBinding?: bindings.SingleHighDensityRouteSolver) {
+  constructor(
+    opts: SingleRouteOptions,
+    futureCost = false,
+    existingBinding?: bindings.SingleHighDensityRouteSolver,
+  ) {
     super()
     initializeAutorouterBindings()
     this.constructorParams = opts
@@ -118,68 +159,148 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     this.futureConnections = opts.futureConnections ?? []
     this.hyperParameters = opts.hyperParameters ?? {}
     const { connMap, ...plain } = opts
-    let connectivity: { netMap: Record<string, string[]>; idToNetMap: Record<string, string> } | undefined
+    let connectivity:
+      | { netMap: Record<string, string[]>; idToNetMap: Record<string, string> }
+      | undefined
     if (connMap) {
-      const idToNetMap: Record<string, string> = { [opts.connectionName]: opts.connectionName }
-      for (const connection of [...opts.obstacleRoutes, ...this.futureConnections]) {
-        if (connMap.areIdsConnected?.(opts.connectionName, connection.connectionName)) idToNetMap[connection.connectionName] = opts.connectionName
+      const idToNetMap: Record<string, string> = {
+        [opts.connectionName]: opts.connectionName,
+      }
+      for (const connection of [
+        ...opts.obstacleRoutes,
+        ...this.futureConnections,
+      ]) {
+        if (
+          connMap.areIdsConnected?.(
+            opts.connectionName,
+            connection.connectionName,
+          )
+        )
+          idToNetMap[connection.connectionName] = opts.connectionName
       }
       connectivity = { netMap: {}, idToNetMap }
     }
-    this.binding = existingBinding ?? new bindings.SingleHighDensityRouteSolver({ ...plain, connMap: connectivity }, futureCost)
+    this.binding =
+      existingBinding ??
+      new bindings.SingleHighDensityRouteSolver(
+        { ...plain, connMap: connectivity },
+        futureCost,
+      )
     this.candidates = new CandidateQueue(this.binding, () => this.configure())
     this.synchronize()
   }
 
-  override getSolverName(): string { return "SingleHighDensityRouteSolver" }
-  override getConstructorParams(): SingleRouteOptions { return this.constructorParams }
+  override getSolverName(): string {
+    return "SingleHighDensityRouteSolver"
+  }
+  override getConstructorParams(): SingleRouteOptions {
+    return this.constructorParams
+  }
 
   protected configure(): void {
     const values: Record<string, unknown> = {}
-    for (const key of ["MAX_ITERATIONS", "viaDiameter", "traceThickness", "obstacleMargin", "cellStep", "minCellSize", "GREEDY_MULTIPLER", "VIA_PENALTY_FACTOR", "CELL_SIZE_FACTOR", "NEARBY_SEGMENT_CLEARANCE", "gridMinXIndex", "gridMinYIndex", "gridWidth", "gridHeight", "progress", "FUTURE_CONNECTION_PROX_TRACE_PENALTY_FACTOR", "FUTURE_CONNECTION_PROX_VIA_PENALTY_FACTOR", "FUTURE_CONNECTION_PROXIMITY_VD", "MISALIGNED_DIST_PENALTY_FACTOR", "VIA_PENALTY_FACTOR_2", "FUTURE_CONNECTION_VIA_TRACE_CLEARANCE", "FLIP_TRACE_ALIGNMENT_DIRECTION"]) {
+    for (const key of [
+      "MAX_ITERATIONS",
+      "viaDiameter",
+      "traceThickness",
+      "obstacleMargin",
+      "cellStep",
+      "minCellSize",
+      "GREEDY_MULTIPLER",
+      "VIA_PENALTY_FACTOR",
+      "CELL_SIZE_FACTOR",
+      "NEARBY_SEGMENT_CLEARANCE",
+      "gridMinXIndex",
+      "gridMinYIndex",
+      "gridWidth",
+      "gridHeight",
+      "progress",
+      "FUTURE_CONNECTION_PROX_TRACE_PENALTY_FACTOR",
+      "FUTURE_CONNECTION_PROX_VIA_PENALTY_FACTOR",
+      "FUTURE_CONNECTION_PROXIMITY_VD",
+      "MISALIGNED_DIST_PENALTY_FACTOR",
+      "VIA_PENALTY_FACTOR_2",
+      "FUTURE_CONNECTION_VIA_TRACE_CLEARANCE",
+      "FLIP_TRACE_ALIGNMENT_DIRECTION",
+    ]) {
       const value = (this as unknown as Record<string, unknown>)[key]
-      if (value !== undefined) values[key] = typeof value === "number" && !Number.isFinite(value) ? null : value
+      if (value !== undefined)
+        values[key] =
+          typeof value === "number" && !Number.isFinite(value) ? null : value
     }
     this.binding.configure(values)
   }
 
   protected synchronize(): void {
     const state = this.binding.snapshot()
-    const { A, B, bounds, futureConnectionPoints, obstacleSegmentsByLayer, exploredNodes, debug_nodesTooCloseToObstacle, debug_nodePathToParentIntersectsObstacle, progress, ...plain } = state
+    const {
+      A,
+      B,
+      bounds,
+      futureConnectionPoints,
+      obstacleSegmentsByLayer,
+      exploredNodes,
+      debug_nodesTooCloseToObstacle,
+      debug_nodePathToParentIntersectsObstacle,
+      progress,
+      ...plain
+    } = state
     Object.assign(this, plain)
     this.progress = progress === null ? Number.NaN : progress
     this.exploredNodes = new Set(exploredNodes)
     this.debug_nodesTooCloseToObstacle = new Set(debug_nodesTooCloseToObstacle)
-    this.debug_nodePathToParentIntersectsObstacle = new Set(debug_nodePathToParentIntersectsObstacle)
+    this.debug_nodePathToParentIntersectsObstacle = new Set(
+      debug_nodePathToParentIntersectsObstacle,
+    )
     this.obstacleSegmentsByLayer = new Map(obstacleSegmentsByLayer)
     for (const layer of this.obstacleSegmentsByLayer.keys()) {
-      if (!this.obstacleSegmentIndexByLayer.has(layer)) this.obstacleSegmentIndexByLayer.set(layer, {
-        search: (minX, minY, maxX, maxY): number[] => {
-          this.configure()
-          return this.binding.searchObstacleSegmentsOnLayer(layer, [minX, minY, maxX, maxY])
-        },
-      })
+      if (!this.obstacleSegmentIndexByLayer.has(layer))
+        this.obstacleSegmentIndexByLayer.set(layer, {
+          search: (minX, minY, maxX, maxY): number[] => {
+            this.configure()
+            return this.binding.searchObstacleSegmentsOnLayer(layer, [
+              minX,
+              minY,
+              maxX,
+              maxY,
+            ])
+          },
+        })
     }
-    for (const layer of this.obstacleSegmentIndexByLayer.keys()) if (!this.obstacleSegmentsByLayer.has(layer)) this.obstacleSegmentIndexByLayer.delete(layer)
-    this.obstacleSegmentIndex = this.obstacleSegments.length ? this.obstacleSegmentIndex ?? {
-      search: (minX, minY, maxX, maxY): number[] => {
-        this.configure()
-        return this.binding.searchObstacleSegments([minX, minY, maxX, maxY])
-      },
-    } : null
-    this.obstacleViaIndex = this.obstacleVias.length ? this.obstacleViaIndex ?? {
-      search: (minX, minY, maxX, maxY): number[] => {
-        this.configure()
-        return this.binding.searchObstacleVias([minX, minY, maxX, maxY])
-      },
-    } : null
+    for (const layer of this.obstacleSegmentIndexByLayer.keys())
+      if (!this.obstacleSegmentsByLayer.has(layer))
+        this.obstacleSegmentIndexByLayer.delete(layer)
+    this.obstacleSegmentIndex = this.obstacleSegments.length
+      ? (this.obstacleSegmentIndex ?? {
+          search: (minX, minY, maxX, maxY): number[] => {
+            this.configure()
+            return this.binding.searchObstacleSegments([minX, minY, maxX, maxY])
+          },
+        })
+      : null
+    this.obstacleViaIndex = this.obstacleVias.length
+      ? (this.obstacleViaIndex ?? {
+          search: (minX, minY, maxX, maxY): number[] => {
+            this.configure()
+            return this.binding.searchObstacleVias([minX, minY, maxX, maxY])
+          },
+        })
+      : null
     if (this.solvedPath) {
-      const { connectionName, rootConnectionName, regionId, ...rest } = this.solvedPath
-      this.solvedPath = { connectionName, rootConnectionName, regionId, ...rest }
+      const { connectionName, rootConnectionName, regionId, ...rest } =
+        this.solvedPath
+      this.solvedPath = {
+        connectionName,
+        rootConnectionName,
+        regionId,
+        ...rest,
+      }
     }
   }
 
-  refreshFromSolver(): void { this.synchronize() }
+  refreshFromSolver(): void {
+    this.synchronize()
+  }
 
   handleSimpleCases(): void {
     this.configure()
@@ -192,9 +313,19 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     return this.binding.viaPenaltyDistance()
   }
 
-  isNodeTooCloseToObstacle(node: Node, margin?: number, isVia = false, query?: PlanarObstacleQuery): boolean {
+  isNodeTooCloseToObstacle(
+    node: Node,
+    margin?: number,
+    isVia = false,
+    query?: PlanarObstacleQuery,
+  ): boolean {
     this.configure()
-    return this.binding.isNodeTooCloseToObstacle(node, margin, isVia, query ? { layer: node.z, segmentIds: query.segmentIds } : null)
+    return this.binding.isNodeTooCloseToObstacle(
+      node,
+      margin,
+      isVia,
+      query ? { layer: node.z, segmentIds: query.segmentIds } : null,
+    )
   }
 
   isNodeTooCloseToEdge(node: Node, isVia = false): boolean {
@@ -202,9 +333,15 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     return this.binding.isNodeTooCloseToEdge(node, isVia)
   }
 
-  doesPathToParentIntersectObstacle(node: Node, query?: PlanarObstacleQuery): boolean {
+  doesPathToParentIntersectObstacle(
+    node: Node,
+    query?: PlanarObstacleQuery,
+  ): boolean {
     this.configure()
-    return this.binding.doesPathToParentIntersectObstacle(node, query ? { layer: node.z, segmentIds: query.segmentIds } : null)
+    return this.binding.doesPathToParentIntersectObstacle(
+      node,
+      query ? { layer: node.z, segmentIds: query.segmentIds } : null,
+    )
   }
 
   getPlanarObstacleQuery(node: Node): PlanarObstacleQuery | undefined {
@@ -213,7 +350,8 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     if (!bounds) return undefined
     const index = this.obstacleSegmentIndexByLayer.get(node.z)
     const segments = this.obstacleSegmentsByLayer.get(node.z)
-    if (!index || !segments) throw new Error("Native planar query requires its layer index")
+    if (!index || !segments)
+      throw new Error("Native planar query requires its layer index")
     return { segments, segmentIds: index.search(...bounds) }
   }
 
@@ -287,7 +425,11 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     this.synchronize()
   }
 
-  computeProgress(_currentNode?: Node, goalDist?: number, isOnLayer?: boolean): number {
+  computeProgress(
+    _currentNode?: Node,
+    goalDist?: number,
+    isOnLayer?: boolean,
+  ): number {
     this.configure()
     return this.binding.computeProgress(goalDist, isOnLayer)
   }
@@ -303,5 +445,7 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     return this.binding.visualize()
   }
 
-  dispose(): void { this.binding.free() }
+  dispose(): void {
+    this.binding.free()
+  }
 }

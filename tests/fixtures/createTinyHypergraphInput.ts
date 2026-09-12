@@ -1,4 +1,8 @@
-import type { TinyHyperGraphTopology, TinyHyperGraphProblem, TinyHyperGraphSolverOptions } from "../../rust/tiny-hypergraph-bindings/ts"
+import type {
+  TinyHyperGraphTopology,
+  TinyHyperGraphProblem,
+  TinyHyperGraphSolverOptions,
+} from "../../rust/tiny-hypergraph-bindings/ts"
 
 export function createTinyHypergraphInput(): {
   topology: TinyHyperGraphTopology
@@ -10,7 +14,10 @@ export function createTinyHypergraphInput(): {
       portCount: 2,
       regionCount: 3,
       regionIncidentPorts: [[0], [0, 1], [1]],
-      incidentPortRegion: [[1, 0], [1, 2]],
+      incidentPortRegion: [
+        [1, 0],
+        [1, 2],
+      ],
       regionWidth: new Float64Array([1, 2, 1]),
       regionHeight: new Float64Array([1, 2, 1]),
       regionCenterX: new Float64Array([-2, 0, 2]),
@@ -38,13 +45,15 @@ export function createTinyHypergraphInput(): {
       routeEndPort: new Int32Array([1]),
       routeNet: new Int32Array([0]),
       regionNetId: new Int32Array([-1, -1, -1]),
-      routeMetadata: [{
-        connectionId: "route-0",
-        mutuallyConnectedNetworkId: "net-0",
-        startRegionId: "start",
-        endRegionId: "end",
-        customMetadata: { name: "retained" },
-      }],
+      routeMetadata: [
+        {
+          connectionId: "route-0",
+          mutuallyConnectedNetworkId: "net-0",
+          startRegionId: "start",
+          endRegionId: "end",
+          customMetadata: { name: "retained" },
+        },
+      ],
     },
     options: { MAX_ITERATIONS: 100, RIP_THRESHOLD_END: 0.8 },
   }

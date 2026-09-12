@@ -4,15 +4,35 @@ import type { GraphicsObject } from "graphics-debug"
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import { TraceSimplificationSolverAdapter } from "lib/bindings/trace-simplification/TraceSimplificationSolverAdapter"
 
-interface Point { x: number; y: number; z: number }
+interface Point {
+  x: number
+  y: number
+  z: number
+}
 export type SingleSimplifiedPathParams = {
-  inputRoute: HighDensityIntraNodeRoute; otherHdRoutes: HighDensityIntraNodeRoute[]; obstacles: Obstacle[];
-  connMap: ConnectivityMap; colorMap: Record<string, string>; outline?: Array<{ x: number; y: number }>;
-  minBoardEdgeClearance?: number;
+  inputRoute: HighDensityIntraNodeRoute
+  otherHdRoutes: HighDensityIntraNodeRoute[]
+  obstacles: Obstacle[]
+  connMap: ConnectivityMap
+  colorMap: Record<string, string>
+  outline?: Array<{ x: number; y: number }>
+  minBoardEdgeClearance?: number
 }
 export class SingleSimplifiedPathSolver extends TraceSimplificationSolverAdapter {
   static override solverKind = "path-base"
-  static override stateFields = ["newRoute", "newVias", "headIndex", "tailIndex", "inputRoute", "otherHdRoutes", "obstacles", "connMap", "colorMap", "outline", "minBoardEdgeClearance"]
+  static override stateFields = [
+    "newRoute",
+    "newVias",
+    "headIndex",
+    "tailIndex",
+    "inputRoute",
+    "otherHdRoutes",
+    "obstacles",
+    "connMap",
+    "colorMap",
+    "outline",
+    "minBoardEdgeClearance",
+  ]
   declare newRoute: HighDensityIntraNodeRoute["route"]
   declare newVias: HighDensityIntraNodeRoute["vias"]
   declare headIndex: number
@@ -24,13 +44,32 @@ export class SingleSimplifiedPathSolver extends TraceSimplificationSolverAdapter
   declare colorMap: Record<string, string>
   declare outline?: Array<{ x: number; y: number }>
   declare minBoardEdgeClearance: number
-  constructor(params: SingleSimplifiedPathParams) { super(params) }
-  override getSolverName(): string { return "SingleSimplifiedPathSolver" }
-  override getConstructorParams(): Omit<SingleSimplifiedPathParams, "connMap"> & { connMap: ConnectivityMap["netMap"] } {
-    return { inputRoute: this.inputRoute, otherHdRoutes: this.otherHdRoutes, obstacles: this.obstacles, connMap: this.connMap.netMap, colorMap: this.colorMap, outline: this.outline, minBoardEdgeClearance: this.minBoardEdgeClearance }
+  constructor(params: SingleSimplifiedPathParams) {
+    super(params)
   }
-  get simplifiedRoute(): HighDensityIntraNodeRoute { return this.output() }
-  isValidPath(pointsInRoute: Point[]): boolean { return this.callSolver(this.binding.isValidPath, [pointsInRoute]) }
+  override getSolverName(): string {
+    return "SingleSimplifiedPathSolver"
+  }
+  override getConstructorParams(): Omit<
+    SingleSimplifiedPathParams,
+    "connMap"
+  > & { connMap: ConnectivityMap["netMap"] } {
+    return {
+      inputRoute: this.inputRoute,
+      otherHdRoutes: this.otherHdRoutes,
+      obstacles: this.obstacles,
+      connMap: this.connMap.netMap,
+      colorMap: this.colorMap,
+      outline: this.outline,
+      minBoardEdgeClearance: this.minBoardEdgeClearance,
+    }
+  }
+  get simplifiedRoute(): HighDensityIntraNodeRoute {
+    return this.output()
+  }
+  isValidPath(pointsInRoute: Point[]): boolean {
+    return this.callSolver(this.binding.isValidPath, [pointsInRoute])
+  }
   getVisualsForNewRouteAndObstacles() {
     const graphics: GraphicsObject &
       Pick<Required<GraphicsObject>, "points" | "lines" | "rects" | "circles"> =
@@ -138,4 +177,7 @@ export class SingleSimplifiedPathSolver extends TraceSimplificationSolverAdapter
     return graphics
   }
 }
-TraceSimplificationSolverAdapter.register("path-base", SingleSimplifiedPathSolver)
+TraceSimplificationSolverAdapter.register(
+  "path-base",
+  SingleSimplifiedPathSolver,
+)

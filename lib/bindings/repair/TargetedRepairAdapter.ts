@@ -20,17 +20,13 @@ export class TargetedRepairAdapter {
 
   constructor(srj: SimpleRouteJson, connMap?: ConnectivityMap) {
     initializeAutorouterBindings()
-    const connectivity = connMap
-      ? { idToNetMap: connMap.idToNetMap }
-      : null
+    const connectivity = connMap ? { idToNetMap: connMap.idToNetMap } : null
     this.connectivityJson = JSON.stringify(connectivity)
     this.binding = new bindings.TargetedRepairEngine(srj, connectivity)
   }
 
   private synchronizeConnectivity(connMap?: ConnectivityMap): void {
-    const connectivity = connMap
-      ? { idToNetMap: connMap.idToNetMap }
-      : null
+    const connectivity = connMap ? { idToNetMap: connMap.idToNetMap } : null
     const connectivityJson = JSON.stringify(connectivity)
     if (connectivityJson !== this.connectivityJson) {
       this.binding.setConnectivity(connectivity)
@@ -58,13 +54,21 @@ export class TargetedRepairAdapter {
       allowSharedViaSiteMove,
       enableTraceViaOwnerTargeting,
     )
-    if (result.routes.length !== result.routeIndexes.length || result.pointOrigins.length !== result.routes.length) {
+    if (
+      result.routes.length !== result.routeIndexes.length ||
+      result.pointOrigins.length !== result.routes.length
+    ) {
       throw new Error("Targeted repair changed the route count")
     }
-    for (let outputIndex = 0; outputIndex < result.routes.length; outputIndex += 1) {
+    for (
+      let outputIndex = 0;
+      outputIndex < result.routes.length;
+      outputIndex += 1
+    ) {
       const routeIndex = result.routeIndexes[outputIndex]!
       const route = routes[routeIndex]
-      if (!route) throw new Error("Targeted repair returned an invalid route index")
+      if (!route)
+        throw new Error("Targeted repair returned an invalid route index")
       const output = result.routes[outputIndex]!
       const origins = result.pointOrigins[outputIndex]!
       if (origins.length !== output.route.length) {
@@ -74,8 +78,10 @@ export class TargetedRepairAdapter {
       const points = output.route.map((point, pointIndex) => {
         const origin = origins[pointIndex]
         if (origin === null) return point
-        const original = origin === undefined ? undefined : originalPoints[origin]
-        if (!original) throw new Error("Targeted repair returned an invalid point origin")
+        const original =
+          origin === undefined ? undefined : originalPoints[origin]
+        if (!original)
+          throw new Error("Targeted repair returned an invalid point origin")
         original.x = point.x
         original.y = point.y
         original.z = point.z
@@ -105,9 +111,16 @@ export class TargetedRepairAdapter {
 const contexts = new WeakMap<SimpleRouteJson, TargetedRepairAdapter>()
 
 const applyDrcErrorForces: DrcErrorForceBackend = (
-  srj, routes, errors, traceRouteIndexById, scale, connMap,
-  enableCanonicalPairRepairs, enableSameNetViaCanonicalization,
-  allowSharedViaSiteMove, enableTraceViaOwnerTargeting,
+  srj,
+  routes,
+  errors,
+  traceRouteIndexById,
+  scale,
+  connMap,
+  enableCanonicalPairRepairs,
+  enableSameNetViaCanonicalization,
+  allowSharedViaSiteMove,
+  enableTraceViaOwnerTargeting,
 ): boolean => {
   let context = contexts.get(srj)
   if (!context) {
@@ -115,14 +128,25 @@ const applyDrcErrorForces: DrcErrorForceBackend = (
     contexts.set(srj, context)
   }
   return context.applyForces(
-    routes, errors, traceRouteIndexById, scale, connMap,
-    enableCanonicalPairRepairs, enableSameNetViaCanonicalization,
-    allowSharedViaSiteMove, enableTraceViaOwnerTargeting,
+    routes,
+    errors,
+    traceRouteIndexById,
+    scale,
+    connMap,
+    enableCanonicalPairRepairs,
+    enableSameNetViaCanonicalization,
+    allowSharedViaSiteMove,
+    enableTraceViaOwnerTargeting,
   )
 }
 
 const findPadPosition: PadClearanceBackend = (
-  srj, route, preferred, viaRadius, zLayers, connMap,
+  srj,
+  route,
+  preferred,
+  viaRadius,
+  zLayers,
+  connMap,
 ): Point | undefined => {
   let context = contexts.get(srj)
   if (!context) {
@@ -133,14 +157,22 @@ const findPadPosition: PadClearanceBackend = (
 }
 
 const findTracePositions: TraceClearanceBackend = (
-  via, segments, clearance, connMap,
+  via,
+  segments,
+  clearance,
+  connMap,
 ): Point[] => {
-  const result = bindings.TargetedRepairEngine.trace({
-    via, segments,
-    connectivity: connMap ? { idToNetMap: connMap.idToNetMap } : null,
-  }, clearance)
+  const result = bindings.TargetedRepairEngine.trace(
+    {
+      via,
+      segments,
+      connectivity: connMap ? { idToNetMap: connMap.idToNetMap } : null,
+    },
+    clearance,
+  )
   for (const index of result.viaIdentityIndices) {
-    if (!result.points[index]) throw new Error("Trace placement returned an invalid via identity index")
+    if (!result.points[index])
+      throw new Error("Trace placement returned an invalid via identity index")
     result.points[index] = via
   }
   return result.points

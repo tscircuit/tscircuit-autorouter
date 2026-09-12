@@ -34,7 +34,14 @@ export interface UselessViaRemovalSolverInput {
 
 export class UselessViaRemovalSolver extends TraceSimplificationSolverAdapter {
   static solverKind = "via-removal"
-  static stateFields = ["unsimplifiedHdRoutes", "optimizedHdRoutes", "unprocessedRoutes", "activeSubSolver", "obstacleSHI", "hdRouteSHI"]
+  static stateFields = [
+    "unsimplifiedHdRoutes",
+    "optimizedHdRoutes",
+    "unprocessedRoutes",
+    "activeSubSolver",
+    "obstacleSHI",
+    "hdRouteSHI",
+  ]
 
   declare unsimplifiedHdRoutes: HighDensityRoute[]
   declare optimizedHdRoutes: HighDensityRoute[]
@@ -46,10 +53,15 @@ export class UselessViaRemovalSolver extends TraceSimplificationSolverAdapter {
 
   constructor(input: UselessViaRemovalSolverInput) {
     super(input)
-    this.input = { ...input, obstacles: createObjectsWithZLayers(input.obstacles, input.layerCount) }
+    this.input = {
+      ...input,
+      obstacles: createObjectsWithZLayers(input.obstacles, input.layerCount),
+    }
   }
 
-  override getSolverName(): string { return "UselessViaRemovalSolver" }
+  override getSolverName(): string {
+    return "UselessViaRemovalSolver"
+  }
   getOptimizedHdRoutes(): HighDensityRoute[] | null {
     return this.callSolver(this.binding.getOptimizedHdRoutes, [])
   }
@@ -147,4 +159,7 @@ export class UselessViaRemovalSolver extends TraceSimplificationSolverAdapter {
   }
 }
 
-TraceSimplificationSolverAdapter.register("via-removal", UselessViaRemovalSolver)
+TraceSimplificationSolverAdapter.register(
+  "via-removal",
+  UselessViaRemovalSolver,
+)

@@ -7,6 +7,10 @@ export function orderConnectionsByNetCardinality<T>(
   getNetId: (connection: T) => string,
 ): T[] {
   assertTinyHypergraphBindingsInitialized()
-  const indexes = decodeJsonOutput(orderConnectionIndexesByNetCardinality(encodeJsonInput(connections.map(getNetId))))
+  const indexes = decodeJsonOutput(
+    orderConnectionIndexesByNetCardinality(
+      encodeJsonInput(connections.map(getNetId)),
+    ),
+  )
   return indexes.map((index) => connections[index]!)
 }

@@ -20,15 +20,27 @@ export function withSpecializedRouterContext<T>(create: () => T): T {
 
 const noConnectivity = {}
 const noObstacles: object[] = []
-const multiHeadContexts = new WeakMap<object, bindings.SpecializedRouterContext>()
-const throughObstacleContexts = new WeakMap<object[], WeakMap<object, Map<number, bindings.SpecializedRouterContext>>>()
+const multiHeadContexts = new WeakMap<
+  object,
+  bindings.SpecializedRouterContext
+>()
+const throughObstacleContexts = new WeakMap<
+  object[],
+  WeakMap<object, Map<number, bindings.SpecializedRouterContext>>
+>()
 
 export function getSpecializedRouterContext(
   kind: string,
   props: ContextProps,
-): { context: bindings.SpecializedRouterContext; params: ContextProps } | undefined {
+):
+  | { context: bindings.SpecializedRouterContext; params: ContextProps }
+  | undefined {
   if (contextScopeDepth === 0) return undefined
-  if (kind === "multi-head" || kind === "multi-head2" || kind === "multi-head3") {
+  if (
+    kind === "multi-head" ||
+    kind === "multi-head2" ||
+    kind === "multi-head3"
+  ) {
     const { connMap, ...params } = props
     const key = connMap ?? noConnectivity
     let context = multiHeadContexts.get(key)
@@ -55,7 +67,11 @@ export function getSpecializedRouterContext(
     }
     let context = byLayer.get(layers)
     if (!context) {
-      context = new bindings.SpecializedRouterContext({ connMap, obstacles, layerCount: layers })
+      context = new bindings.SpecializedRouterContext({
+        connMap,
+        obstacles,
+        layerCount: layers,
+      })
       byLayer.set(layers, context)
     }
     return { context, params }

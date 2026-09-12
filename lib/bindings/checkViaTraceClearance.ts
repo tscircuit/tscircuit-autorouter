@@ -1,10 +1,21 @@
 import { getReadableNameForElement } from "@tscircuit/circuit-json-util"
 import { midpoint } from "@tscircuit/math-utils"
-import { all_layers, type AnyCircuitElement, type PcbViaTraceClearanceError } from "circuit-json"
+import {
+  all_layers,
+  type AnyCircuitElement,
+  type PcbViaTraceClearanceError,
+} from "circuit-json"
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import { formatMm } from "format-si-unit"
-import { encodeJsonInput, decodeJsonOutput } from "../../rust/tiny-hypergraph-bindings/ts/jsonWire"
-import { checkViaTraceClearanceNative, type Point, type TraceSegment } from "../../rust/capacity-autorouter-bindings/pkg/capacity_autorouter_bindings.js"
+import {
+  encodeJsonInput,
+  decodeJsonOutput,
+} from "../../rust/tiny-hypergraph-bindings/ts/jsonWire"
+import {
+  checkViaTraceClearanceNative,
+  type Point,
+  type TraceSegment,
+} from "../../rust/capacity-autorouter-bindings/pkg/capacity_autorouter_bindings.js"
 import { initializeAutorouterBindings } from "lib/bindings/initializeAutorouterBindings"
 
 type Options = { connMap: ConnectivityMap; minClearance?: number }
@@ -25,8 +36,9 @@ export function checkViaTraceClearance(
   const encodeString = (value: string): string => {
     const previous = encodedStrings.get(value)
     if (previous !== undefined) return previous
-    const encoded = value.replace(/[\\\u0000\uD800-\uDFFF]/g, (unit) =>
-      `\\u${unit.charCodeAt(0).toString(16).padStart(4, "0")}`,
+    const encoded = value.replace(
+      /[\\\u0000\uD800-\uDFFF]/g,
+      (unit) => `\\u${unit.charCodeAt(0).toString(16).padStart(4, "0")}`,
     )
     encodedStrings.set(value, encoded)
     originalStrings.set(encoded, value)
@@ -37,7 +49,8 @@ export function checkViaTraceClearance(
     if (!net) return undefined
     if (typeof net === "string") return encodeString(net)
     // Object-prototype keys can resolve to non-string identities in the TS map.
-    if (!netIdentities.has(net)) netIdentities.set(net, `\u0000net:${netIdentities.size}`)
+    if (!netIdentities.has(net))
+      netIdentities.set(net, `\u0000net:${netIdentities.size}`)
     return netIdentities.get(net)!
   }
   for (const trace of traces) {
@@ -48,7 +61,10 @@ export function checkViaTraceClearance(
     )
     const traceId = encodeString(trace.pcb_trace_id)
     const traceNetId = netId(trace.pcb_trace_id)
-    const center = routePoints.length === 0 ? undefined : midpoint(routePoints[0]!, routePoints[routePoints.length - 1]!)
+    const center =
+      routePoints.length === 0
+        ? undefined
+        : midpoint(routePoints[0]!, routePoints[routePoints.length - 1]!)
     for (let index = 0; index < trace.route.length - 1; index++) {
       const first = trace.route[index]!
       const second = trace.route[index + 1]!
@@ -56,9 +72,18 @@ export function checkViaTraceClearance(
       if (first.layer !== second.layer) continue
       segments.push({
         pcb_trace_id: traceId,
-        thickness: Number("width" in first ? first.width : "width" in second ? second.width : 0.1),
+        thickness: Number(
+          "width" in first
+            ? first.width
+            : "width" in second
+              ? second.width
+              : 0.1,
+        ),
         layer: encodeString(first.layer),
-        x1: first.x, y1: first.y, x2: second.x, y2: second.y,
+        x1: first.x,
+        y1: first.y,
+        x2: second.x,
+        y2: second.y,
         netId: traceNetId ?? null,
         center: center!,
       })
@@ -68,16 +93,24 @@ export function checkViaTraceClearance(
   const board = circuitJson.find((element) => element.type === "pcb_board")
   minClearance ??= board?.min_trace_to_pad_edge_clearance ?? 0.1
   initializeAutorouterBindings()
-  const violations = decodeJsonOutput(checkViaTraceClearanceNative(encodeJsonInput({
-    vias: vias.map((via) => ({
-      pcb_via_id: encodeString(via.pcb_via_id),
-      x: via.x, y: via.y, outer_diameter: via.outer_diameter,
-      layers: (Array.isArray(via.layers) ? via.layers : all_layers).map(encodeString),
-      netId: netId(via.pcb_via_id),
-    })),
-    segments,
-    minClearance,
-  })))
+  const violations = decodeJsonOutput(
+    checkViaTraceClearanceNative(
+      encodeJsonInput({
+        vias: vias.map((via) => ({
+          pcb_via_id: encodeString(via.pcb_via_id),
+          x: via.x,
+          y: via.y,
+          outer_diameter: via.outer_diameter,
+          layers: (Array.isArray(via.layers) ? via.layers : all_layers).map(
+            encodeString,
+          ),
+          netId: netId(via.pcb_via_id),
+        })),
+        segments,
+        minClearance,
+      }),
+    ),
+  )
   return violations.map((violation): PcbViaTraceClearanceError => {
     const viaId = originalStrings.get(violation.pcb_via_id)!
     const traceId = originalStrings.get(violation.pcb_trace_id)!

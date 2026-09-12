@@ -8,7 +8,10 @@ export class PortfolioCallbackScope {
   static current: PortfolioCallbackScope | undefined
   private nextKey = 0
   private readonly portfolios = new Map<number, PortfolioSolverAdapter>()
-  private readonly growth = new Map<number, GrowShrinkHighDensityIntraNodeSolver>()
+  private readonly growth = new Map<
+    number,
+    GrowShrinkHighDensityIntraNodeSolver
+  >()
   private readonly boards = new Map<number, HighDensitySolver>()
   private synchronizing = false
 
@@ -21,7 +24,8 @@ export class PortfolioCallbackScope {
 
   get(key: number): PortfolioSolverAdapter {
     const supervisor = this.portfolios.get(key)
-    if (!supervisor) throw new Error(`Unknown native portfolio callback owner ${key}`)
+    if (!supervisor)
+      throw new Error(`Unknown native portfolio callback owner ${key}`)
     return supervisor
   }
 
@@ -41,11 +45,18 @@ export class PortfolioCallbackScope {
     this.growth.delete(key)
   }
 
-  runGrowth<T>(key: number, solver: GrowShrinkHighDensityIntraNodeSolver, fn: () => T): T {
+  runGrowth<T>(
+    key: number,
+    solver: GrowShrinkHighDensityIntraNodeSolver,
+    fn: () => T,
+  ): T {
     const retained = this.growth.has(key)
     this.growth.set(key, solver)
-    try { return this.run(fn) }
-    finally { if (!retained) this.growth.delete(key) }
+    try {
+      return this.run(fn)
+    } finally {
+      if (!retained) this.growth.delete(key)
+    }
   }
 
   getGrowth(key: number): GrowShrinkHighDensityIntraNodeSolver {
@@ -69,13 +80,16 @@ export class PortfolioCallbackScope {
   run<T>(fn: () => T): T {
     const previous = PortfolioCallbackScope.current
     if (previous === this) return fn()
-    for (const supervisor of this.portfolios.values()) supervisor.prepareSolverRun()
+    for (const supervisor of this.portfolios.values())
+      supervisor.prepareSolverRun()
     for (const solver of this.growth.values()) solver.prepareSolverRun()
     PortfolioCallbackScope.current = this
-    try { return fn() }
-    finally {
+    try {
+      return fn()
+    } finally {
       PortfolioCallbackScope.current = previous
-      for (const supervisor of this.portfolios.values()) supervisor.finishSolverRun()
+      for (const supervisor of this.portfolios.values())
+        supervisor.finishSolverRun()
       for (const solver of this.growth.values()) solver.finishSolverRun()
     }
   }
@@ -84,8 +98,11 @@ export class PortfolioCallbackScope {
     if (this.synchronizing || PortfolioCallbackScope.current === this) return
     this.synchronizing = true
     try {
-      for (const supervisor of this.portfolios.values()) supervisor.syncObservedState()
+      for (const supervisor of this.portfolios.values())
+        supervisor.syncObservedState()
       for (const solver of this.growth.values()) solver.syncObservedState()
-    } finally { this.synchronizing = false }
+    } finally {
+      this.synchronizing = false
+    }
   }
 }

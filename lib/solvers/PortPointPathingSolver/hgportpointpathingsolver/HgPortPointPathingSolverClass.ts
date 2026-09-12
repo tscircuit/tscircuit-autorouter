@@ -4,7 +4,10 @@ import {
   doSegmentsIntersect,
   pointToSegmentDistance,
 } from "@tscircuit/math-utils"
-import type { NodeWithPortPoints, PortPoint } from "lib/types/high-density-types"
+import type {
+  NodeWithPortPoints,
+  PortPoint,
+} from "lib/types/high-density-types"
 import { cloneAndShuffleArray } from "lib/utils/cloneAndShuffleArray"
 import { getIntraNodeCrossingsUsingCircle } from "lib/utils/getIntraNodeCrossingsUsingCircle"
 import { calculateNodeProbabilityOfFailure } from "lib/solvers/UnravelSolver/calculateCrossingProbabilityOfFailure"

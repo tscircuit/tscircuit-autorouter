@@ -1,8 +1,6 @@
 import { GlobalDrcForceImproveSolver } from "lib/bindings/repair/GlobalDrcForceImproveSolver"
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
-import {
-  type DrcEvaluator,
-} from "high-density-repair03/lib"
+import { type DrcEvaluator } from "high-density-repair03/lib"
 import { applyBroadRepulsionForces } from "high-density-repair03/lib/solvers/GlobalDrcForceImproveSolver/solverHelpers"
 import type { SimpleRouteConnection, SimpleRouteJson } from "lib/types"
 import type { HighDensityRoute } from "lib/types/high-density-types"

@@ -141,14 +141,17 @@ export class LengthMatchingPostProcessingSolver extends BaseSolver {
     private readonly params: LengthMatchingPostProcessingSolverParams,
   ) {
     super()
-    this.differentialPairSolver = new PostProcessingSolver({
-      hdRoutes: params.hdRoutes,
-      differentialPairs: params.differentialPairs,
-      obstacles: params.obstacles,
-      bounds: params.bounds,
-      layerCount: params.layerCount,
-      minTraceToPadEdgeClearance: params.obstacleMargin,
-    }, expandPostProcessingObstacleConnectedIds)
+    this.differentialPairSolver = new PostProcessingSolver(
+      {
+        hdRoutes: params.hdRoutes,
+        differentialPairs: params.differentialPairs,
+        obstacles: params.obstacles,
+        bounds: params.bounds,
+        layerCount: params.layerCount,
+        minTraceToPadEdgeClearance: params.obstacleMargin,
+      },
+      expandPostProcessingObstacleConnectedIds,
+    )
     this.MAX_ITERATIONS =
       this.differentialPairSolver.MAX_ITERATIONS + 100_000 + 10
   }

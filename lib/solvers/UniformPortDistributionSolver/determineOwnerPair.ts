@@ -1,6 +1,10 @@
 import { InputNodeWithPortPoints } from "../PortPointPathingSolver/PortPointPathingSolver"
 import { initializeAutorouterBindings } from "lib/bindings/initializeAutorouterBindings"
-import { decodeName, encodeName, encodeInputNodes } from "lib/bindings/uniform-port-distribution/UniformPortDistributionCodec"
+import {
+  decodeName,
+  encodeName,
+  encodeInputNodes,
+} from "lib/bindings/uniform-port-distribution/UniformPortDistributionCodec"
 import { determineUniformPortOwnerPair } from "../../../rust/capacity-autorouter-bindings/pkg/capacity_autorouter_bindings.js"
 import { OwnerPair } from "./types"
 

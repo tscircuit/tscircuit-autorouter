@@ -38,7 +38,22 @@ export type Via = {
 
 export class SameNetViaMergerSolver extends TraceSimplificationSolverAdapter {
   static solverKind = "via-merger"
-  static stateFields = ["inputHdRoutes", "mergedViaHdRoutes", "unprocessedRoutes", "vias", "offendingVias", "currentViaRoutes", "connMap", "colorMap", "outline", "obstacles", "viasByNet", "netByConnectionName", "obstacleSHI", "hdRouteSHI"]
+  static stateFields = [
+    "inputHdRoutes",
+    "mergedViaHdRoutes",
+    "unprocessedRoutes",
+    "vias",
+    "offendingVias",
+    "currentViaRoutes",
+    "connMap",
+    "colorMap",
+    "outline",
+    "obstacles",
+    "viasByNet",
+    "netByConnectionName",
+    "obstacleSHI",
+    "hdRouteSHI",
+  ]
 
   declare inputHdRoutes: HighDensityRoute[]
   declare mergedViaHdRoutes: HighDensityRoute[]
@@ -58,19 +73,30 @@ export class SameNetViaMergerSolver extends TraceSimplificationSolverAdapter {
 
   constructor(input: SameNetViaMergerSolverInput) {
     super(input)
-    this.input = { ...input, obstacles: createObjectsWithZLayers(input.obstacles, input.layerCount) }
+    this.input = {
+      ...input,
+      obstacles: createObjectsWithZLayers(input.obstacles, input.layerCount),
+    }
   }
 
-  override getSolverName(): string { return "SameNetViaMergerSolver" }
+  override getSolverName(): string {
+    return "SameNetViaMergerSolver"
+  }
   private createHdRouteSpatialIndex(): HighDensityRouteSpatialIndex {
     return new HighDensityRouteSpatialIndex([
       ...this.mergedViaHdRoutes,
       ...(this.input.otherHdRoutes ?? []),
     ])
   }
-  private rebuildVias(): void { this.callSolver(this.binding.rebuildVias, []) }
-  private getViaKey(via: Via): string { return this.callSolver(this.binding.getViaKey, [via]) }
-  private dedupeRouteVias(route: HighDensityRoute): void { this.callSolver(this.binding.dedupeRouteVias, [route]) }
+  private rebuildVias(): void {
+    this.callSolver(this.binding.rebuildVias, [])
+  }
+  private getViaKey(via: Via): string {
+    return this.callSolver(this.binding.getViaKey, [via])
+  }
+  private dedupeRouteVias(route: HighDensityRoute): void {
+    this.callSolver(this.binding.dedupeRouteVias, [route])
+  }
   private getOffendingViaGroupsBatch(): Array<{ keep: Via; remove: Via[] }> {
     return this.callSolver(this.binding.getOffendingViaGroupsBatch, [])
   }

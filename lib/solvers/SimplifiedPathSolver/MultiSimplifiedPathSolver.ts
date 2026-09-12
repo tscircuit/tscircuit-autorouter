@@ -8,7 +8,21 @@ import "./SingleSimplifiedPathSolver5_Deg45"
 import "./VertexShortcutPathSolver"
 export class MultiSimplifiedPathSolver extends TraceSimplificationSolverAdapter {
   static override solverKind = "multi-path"
-  static override stateFields = ["simplifiedHdRoutes", "currentUnsimplifiedHdRouteIndex", "activeSubSolver", "unsimplifiedHdRoutes", "otherHdRoutes", "obstacles", "connMap", "colorMap", "outline", "minBoardEdgeClearance", "defaultViaDiameter", "useTraceWidthAwareClearance", "enableVertexShortcuts"]
+  static override stateFields = [
+    "simplifiedHdRoutes",
+    "currentUnsimplifiedHdRouteIndex",
+    "activeSubSolver",
+    "unsimplifiedHdRoutes",
+    "otherHdRoutes",
+    "obstacles",
+    "connMap",
+    "colorMap",
+    "outline",
+    "minBoardEdgeClearance",
+    "defaultViaDiameter",
+    "useTraceWidthAwareClearance",
+    "enableVertexShortcuts",
+  ]
   declare simplifiedHdRoutes: HighDensityIntraNodeRoute[]
   declare currentUnsimplifiedHdRouteIndex: number
   declare activeSubSolver: SingleSimplifiedPathSolver | null
@@ -22,8 +36,23 @@ export class MultiSimplifiedPathSolver extends TraceSimplificationSolverAdapter 
   declare defaultViaDiameter: number
   declare useTraceWidthAwareClearance: boolean
   declare enableVertexShortcuts: boolean
-  constructor(params: { unsimplifiedHdRoutes: HighDensityIntraNodeRoute[]; otherHdRoutes?: ReadonlyArray<HighDensityIntraNodeRoute>; obstacles: Obstacle[]; connMap?: ConnectivityMap; colorMap?: Record<string,string>; outline?: Array<{x:number;y:number}>; minBoardEdgeClearance?: number; defaultViaDiameter?: number; useTraceWidthAwareClearance?: boolean; enableVertexShortcuts?: boolean }) { super(params) }
-  override getSolverName(): string { return "MultiSimplifiedPathSolver" }
+  constructor(params: {
+    unsimplifiedHdRoutes: HighDensityIntraNodeRoute[]
+    otherHdRoutes?: ReadonlyArray<HighDensityIntraNodeRoute>
+    obstacles: Obstacle[]
+    connMap?: ConnectivityMap
+    colorMap?: Record<string, string>
+    outline?: Array<{ x: number; y: number }>
+    minBoardEdgeClearance?: number
+    defaultViaDiameter?: number
+    useTraceWidthAwareClearance?: boolean
+    enableVertexShortcuts?: boolean
+  }) {
+    super(params)
+  }
+  override getSolverName(): string {
+    return "MultiSimplifiedPathSolver"
+  }
   visualize(): GraphicsObject {
     if (this.activeSubSolver) {
       return this.activeSubSolver.visualize()
@@ -171,4 +200,7 @@ export class MultiSimplifiedPathSolver extends TraceSimplificationSolverAdapter 
     return graphics
   }
 }
-TraceSimplificationSolverAdapter.register("multi-path", MultiSimplifiedPathSolver)
+TraceSimplificationSolverAdapter.register(
+  "multi-path",
+  MultiSimplifiedPathSolver,
+)

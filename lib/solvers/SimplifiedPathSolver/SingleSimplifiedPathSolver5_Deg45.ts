@@ -4,18 +4,54 @@ import type { GraphicsObject } from "graphics-debug"
 import type { SegmentTree } from "lib/data-structures/SegmentTree"
 import { SingleSimplifiedPathSolver } from "./SingleSimplifiedPathSolver"
 import { TraceSimplificationSolverAdapter } from "lib/bindings/trace-simplification/TraceSimplificationSolverAdapter"
-interface Point { x: number; y: number; z: number }
-interface PathSegment { start: Point; end: Point; length: number; startDistance: number; endDistance: number }
+interface Point {
+  x: number
+  y: number
+  z: number
+}
+interface PathSegment {
+  start: Point
+  end: Point
+  length: number
+  startDistance: number
+  endDistance: number
+}
 export class SingleSimplifiedPathSolver5 extends SingleSimplifiedPathSolver {
   static override solverKind = "path"
-  static override stateFields = [...SingleSimplifiedPathSolver.stateFields, "pathSegments", "totalPathLength", "headDistanceAlongPath", "tailDistanceAlongPath", "minStepSize", "lastValidPath", "lastValidPathHeadDistance", "STEP_SIZE_REDUCTION_FACTOR", "maxStepSize", "currentStepSize", "lastHeadMoveDistance", "cachedValidPathSegments", "filteredObstacles", "filteredObstaclePathSegments", "traceThicknessByObstacleSegmentId", "filteredVias", "filteredJumperPads", "jumperPadPointIndices", "segmentTree", "OBSTACLE_MARGIN", "TRACE_THICKNESS", "useTraceWidthAwareClearance", "clearanceTraceThickness", "TAIL_JUMP_RATIO"]
-  declare private pathSegments: PathSegment[]
-  declare private totalPathLength: number
-  declare private headDistanceAlongPath: number
-  declare private tailDistanceAlongPath: number
-  declare private minStepSize: number
-  declare private lastValidPath: Point[] | null
-  declare private lastValidPathHeadDistance: number
+  static override stateFields = [
+    ...SingleSimplifiedPathSolver.stateFields,
+    "pathSegments",
+    "totalPathLength",
+    "headDistanceAlongPath",
+    "tailDistanceAlongPath",
+    "minStepSize",
+    "lastValidPath",
+    "lastValidPathHeadDistance",
+    "STEP_SIZE_REDUCTION_FACTOR",
+    "maxStepSize",
+    "currentStepSize",
+    "lastHeadMoveDistance",
+    "cachedValidPathSegments",
+    "filteredObstacles",
+    "filteredObstaclePathSegments",
+    "traceThicknessByObstacleSegmentId",
+    "filteredVias",
+    "filteredJumperPads",
+    "jumperPadPointIndices",
+    "segmentTree",
+    "OBSTACLE_MARGIN",
+    "TRACE_THICKNESS",
+    "useTraceWidthAwareClearance",
+    "clearanceTraceThickness",
+    "TAIL_JUMP_RATIO",
+  ]
+  private declare pathSegments: PathSegment[]
+  private declare totalPathLength: number
+  private declare headDistanceAlongPath: number
+  private declare tailDistanceAlongPath: number
+  private declare minStepSize: number
+  private declare lastValidPath: Point[] | null
+  private declare lastValidPathHeadDistance: number
   declare STEP_SIZE_REDUCTION_FACTOR: number
   declare maxStepSize: number
   declare currentStepSize: number
@@ -25,27 +61,68 @@ export class SingleSimplifiedPathSolver5 extends SingleSimplifiedPathSolver {
   declare filteredObstaclePathSegments: Array<[Point, Point]>
   declare traceThicknessByObstacleSegmentId: Map<string, number>
   declare filteredVias: Array<{ x: number; y: number; diameter: number }>
-  declare filteredJumperPads: Array<{ center: { x: number; y: number }; width: number; height: number; connectionName: string }>
+  declare filteredJumperPads: Array<{
+    center: { x: number; y: number }
+    width: number
+    height: number
+    connectionName: string
+  }>
   declare jumperPadPointIndices: Set<number>
   declare segmentTree: SegmentTree
   declare OBSTACLE_MARGIN: number
   declare TRACE_THICKNESS: number
-  declare private useTraceWidthAwareClearance: boolean
-  declare private clearanceTraceThickness: number
+  private declare useTraceWidthAwareClearance: boolean
+  private declare clearanceTraceThickness: number
   declare TAIL_JUMP_RATIO: number
-  constructor(params: ConstructorParameters<typeof SingleSimplifiedPathSolver>[0] & { useTraceWidthAwareClearance?: boolean }) { super(params) }
-  private isSameNetRoute(otherRoute: HighDensityIntraNodeRoute): boolean { return this.callSolver(this.binding.isSameNetRoute, [otherRoute]) }
-  private computePathSegments(): void { this.callSolver(this.binding.computePathSegments, []) }
-  private arePointsEqual(a: Point, b: Point): boolean { return this.callSolver(this.binding.arePointsEqual, [a, b]) }
-  private getPointAtDistance(distance: number): Point { return this.callSolver(this.binding.getPointAtDistance, [distance]) }
-  private getNearestIndexForDistance(distance: number): number { return this.callSolver(this.binding.getNearestIndexForDistance, [distance]) }
-  isValidPathSegment(start: Point, end: Point): boolean { return this.callSolver(this.binding.isValidPathSegment, [start, end]) }
-  override isValidPath(points: Point[]): boolean { return this.callSolver(this.binding.isValidPath, [points]) }
-  private find45DegreePath(start: Point, end: Point): Point[] | null { return this.callSolver(this.binding.find45DegreePath, [start, end]) }
-  private addPathToResult(path: Point[]): void { this.callSolver(this.binding.addPathToResult, [path]) }
-  private appendOriginalRouteSlice(startDistance: number, endIndexInclusive: number): void { this.callSolver(this.binding.appendOriginalRouteSlice, [startDistance, endIndexInclusive]) }
-  moveHead(distance: number): void { this.callSolver(this.binding.moveHead, [distance]) }
-  stepBackAndReduceStepSize(): void { this.callSolver(this.binding.stepBackAndReduceStepSize, []) }
+  constructor(
+    params: ConstructorParameters<typeof SingleSimplifiedPathSolver>[0] & {
+      useTraceWidthAwareClearance?: boolean
+    },
+  ) {
+    super(params)
+  }
+  private isSameNetRoute(otherRoute: HighDensityIntraNodeRoute): boolean {
+    return this.callSolver(this.binding.isSameNetRoute, [otherRoute])
+  }
+  private computePathSegments(): void {
+    this.callSolver(this.binding.computePathSegments, [])
+  }
+  private arePointsEqual(a: Point, b: Point): boolean {
+    return this.callSolver(this.binding.arePointsEqual, [a, b])
+  }
+  private getPointAtDistance(distance: number): Point {
+    return this.callSolver(this.binding.getPointAtDistance, [distance])
+  }
+  private getNearestIndexForDistance(distance: number): number {
+    return this.callSolver(this.binding.getNearestIndexForDistance, [distance])
+  }
+  isValidPathSegment(start: Point, end: Point): boolean {
+    return this.callSolver(this.binding.isValidPathSegment, [start, end])
+  }
+  override isValidPath(points: Point[]): boolean {
+    return this.callSolver(this.binding.isValidPath, [points])
+  }
+  private find45DegreePath(start: Point, end: Point): Point[] | null {
+    return this.callSolver(this.binding.find45DegreePath, [start, end])
+  }
+  private addPathToResult(path: Point[]): void {
+    this.callSolver(this.binding.addPathToResult, [path])
+  }
+  private appendOriginalRouteSlice(
+    startDistance: number,
+    endIndexInclusive: number,
+  ): void {
+    this.callSolver(this.binding.appendOriginalRouteSlice, [
+      startDistance,
+      endIndexInclusive,
+    ])
+  }
+  moveHead(distance: number): void {
+    this.callSolver(this.binding.moveHead, [distance])
+  }
+  stepBackAndReduceStepSize(): void {
+    this.callSolver(this.binding.stepBackAndReduceStepSize, [])
+  }
   visualize(): GraphicsObject {
     const graphics = this.getVisualsForNewRouteAndObstacles()
 

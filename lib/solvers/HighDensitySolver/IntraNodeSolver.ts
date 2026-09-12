@@ -11,7 +11,10 @@ import type { Obstacle } from "../../types/srj-types"
 import { BaseSolver } from "../BaseSolver"
 import { safeTransparentize } from "../colors"
 import { HighDensityHyperParameters } from "./HighDensityHyperParameters"
-import type { SingleHighDensityRouteSolver, SingleRouteOptions } from "./SingleHighDensityRouteSolver"
+import type {
+  SingleHighDensityRouteSolver,
+  SingleRouteOptions,
+} from "./SingleHighDensityRouteSolver"
 import { SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost } from "./SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost"
 import * as bindings from "../../../rust/capacity-autorouter-bindings/pkg/capacity_autorouter_bindings.js"
 import { initializeAutorouterBindings } from "lib/bindings/initializeAutorouterBindings"
@@ -19,7 +22,11 @@ import { initializeAutorouterBindings } from "lib/bindings/initializeAutorouterB
 const contexts = new WeakMap<object, bindings.IntraNodeRouteContext>()
 
 type ConnectionPoint = { x: number; y: number; z: number }
-type UnsolvedConnection = { connectionName: string; rootConnectionName?: string; points: ConnectionPoint[] }
+type UnsolvedConnection = {
+  connectionName: string
+  rootConnectionName?: string
+  points: ConnectionPoint[]
+}
 
 const connectionLabel = (
   connectionName: string,
@@ -106,18 +113,21 @@ export class IntraNodeRouteSolver extends BaseSolver {
     return this.activeSubSolver
   }
 
-  constructor(params: {
-    nodeWithPortPoints: NodeWithPortPoints
-    colorMap?: Record<string, string>
-    hyperParameters?: Partial<HighDensityHyperParameters>
-    connMap?: ConnectivityMap
-    viaDiameter?: number
-    traceWidth?: number
-    obstacleMargin?: number
-    captureSearchDebug?: boolean
-    obstacles?: Obstacle[]
-    layerCount?: number
-  }, private readonly sharedProps: object = params) {
+  constructor(
+    params: {
+      nodeWithPortPoints: NodeWithPortPoints
+      colorMap?: Record<string, string>
+      hyperParameters?: Partial<HighDensityHyperParameters>
+      connMap?: ConnectivityMap
+      viaDiameter?: number
+      traceWidth?: number
+      obstacleMargin?: number
+      captureSearchDebug?: boolean
+      obstacles?: Obstacle[]
+      layerCount?: number
+    },
+    private readonly sharedProps: object = params,
+  ) {
     const { nodeWithPortPoints, colorMap } = params
     super()
     this.nodeWithPortPoints = nodeWithPortPoints
@@ -197,10 +207,18 @@ export class IntraNodeRouteSolver extends BaseSolver {
   }
 
   private installDiagnosticGetters(): void {
-    for (const key of ["unsolvedConnections", "rerouteAttemptsByConnection", "activeSubSolver", "failedSubSolvers"]) {
-      this.diagnosticTargets[key] = (this as unknown as Record<string, unknown>)[key]
+    for (const key of [
+      "unsolvedConnections",
+      "rerouteAttemptsByConnection",
+      "activeSubSolver",
+      "failedSubSolvers",
+    ]) {
+      this.diagnosticTargets[key] = (
+        this as unknown as Record<string, unknown>
+      )[key]
       Object.defineProperty(this, key, {
-        enumerable: true, configurable: true,
+        enumerable: true,
+        configurable: true,
         get: (): unknown => {
           if (!this.synchronizingDiagnostics && !this.diagnosticsObserved) {
             this.diagnosticsObserved = true
@@ -209,7 +227,9 @@ export class IntraNodeRouteSolver extends BaseSolver {
           this.synchronizeDiagnostics()
           return this.diagnosticTargets[key]
         },
-        set: (value: unknown): void => { this.diagnosticTargets[key] = value },
+        set: (value: unknown): void => {
+          this.diagnosticTargets[key] = value
+        },
       })
     }
   }
@@ -218,7 +238,9 @@ export class IntraNodeRouteSolver extends BaseSolver {
     return this.diagnosticTargets.unsolvedConnections as UnsolvedConnection[]
   }
 
-  setDiagnosticObserver(observer: (solver: IntraNodeRouteSolver) => void): void {
+  setDiagnosticObserver(
+    observer: (solver: IntraNodeRouteSolver) => void,
+  ): void {
     this.diagnosticObserver = observer
     if (this.diagnosticsObserved) observer(this)
   }
@@ -228,10 +250,11 @@ export class IntraNodeRouteSolver extends BaseSolver {
   }
 
   private getDiagnosticChild(id: number): SingleHighDensityRouteSolver {
-    const children = this.diagnosticChildren ??= new Map()
+    const children = (this.diagnosticChildren ??= new Map())
     let child = children.get(id)
     if (child) return child
-    if (!this.binding) throw new Error("Native child requires its parent router")
+    if (!this.binding)
+      throw new Error("Native child requires its parent router")
     const binding = this.binding.getChild(id)
     const nativeOptions = binding.options()
     const options: SingleRouteOptions = {
@@ -240,23 +263,31 @@ export class IntraNodeRouteSolver extends BaseSolver {
       regionId: nativeOptions.regionId ?? undefined,
       connMap: this.connMap,
     }
-    const facade = new SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost(options, binding)
+    const facade = new SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost(
+      options,
+      binding,
+    )
     let lastRevision = -1
     let terminal = false
     child = new Proxy(facade, {
       get: (target, property): unknown => {
         const revision = this.binding?.getDiagnosticRevision()
-        if (!terminal && (revision === undefined || revision !== lastRevision)) {
+        if (
+          !terminal &&
+          (revision === undefined || revision !== lastRevision)
+        ) {
           target.refreshFromSolver()
           lastRevision = revision ?? -1
           terminal = target.solved || target.failed
         }
         const member: unknown = Reflect.get(target, property, target)
-        return typeof member === "function" ? (...args: unknown[]): unknown => {
-          const result: unknown = member.apply(target, args)
-          lastRevision = -1
-          return result
-        } : member
+        return typeof member === "function"
+          ? (...args: unknown[]): unknown => {
+              const result: unknown = member.apply(target, args)
+              lastRevision = -1
+              return result
+            }
+          : member
       },
     })
     children.set(id, child)
@@ -264,25 +295,55 @@ export class IntraNodeRouteSolver extends BaseSolver {
   }
 
   private synchronizeDiagnostics(): void {
-    if (this.synchronizingDiagnostics || !this.binding || this.disposed || this.cacheHit) return
+    if (
+      this.synchronizingDiagnostics ||
+      !this.binding ||
+      this.disposed ||
+      this.cacheHit
+    )
+      return
     const revision = this.binding.getDiagnosticRevision()
     if (revision === this.diagnosticRevision) return
     this.synchronizingDiagnostics = true
     try {
       const state = this.binding.getDiagnostics()
       if (!state) return
-      const connections = this.diagnosticTargets.unsolvedConnections as UnsolvedConnection[]
-      const existing = new Map(connections.map((connection) => [JSON.stringify(connection), connection]))
-      connections.splice(0, connections.length, ...state.unsolvedConnections.map((connection) => {
-        const restored = { connectionName: connection.connectionName, rootConnectionName: connection.rootConnectionName, points: connection.points }
-        return existing.get(JSON.stringify(restored)) ?? restored
-      }))
-      const attempts = this.diagnosticTargets.rerouteAttemptsByConnection as Map<string, number>
+      const connections = this.diagnosticTargets
+        .unsolvedConnections as UnsolvedConnection[]
+      const existing = new Map(
+        connections.map((connection) => [
+          JSON.stringify(connection),
+          connection,
+        ]),
+      )
+      connections.splice(
+        0,
+        connections.length,
+        ...state.unsolvedConnections.map((connection) => {
+          const restored = {
+            connectionName: connection.connectionName,
+            rootConnectionName: connection.rootConnectionName,
+            points: connection.points,
+          }
+          return existing.get(JSON.stringify(restored)) ?? restored
+        }),
+      )
+      const attempts = this.diagnosticTargets
+        .rerouteAttemptsByConnection as Map<string, number>
       attempts.clear()
-      for (const [connection, count] of state.rerouteAttemptsByConnection) attempts.set(connection, count)
-      this.activeSubSolver = state.activeChildId === null ? null : this.getDiagnosticChild(state.activeChildId)
-      const failed = this.diagnosticTargets.failedSubSolvers as SingleHighDensityRouteSolver[]
-      failed.splice(0, failed.length, ...state.failedChildIds.map((id) => this.getDiagnosticChild(id)))
+      for (const [connection, count] of state.rerouteAttemptsByConnection)
+        attempts.set(connection, count)
+      this.activeSubSolver =
+        state.activeChildId === null
+          ? null
+          : this.getDiagnosticChild(state.activeChildId)
+      const failed = this.diagnosticTargets
+        .failedSubSolvers as SingleHighDensityRouteSolver[]
+      failed.splice(
+        0,
+        failed.length,
+        ...state.failedChildIds.map((id) => this.getDiagnosticChild(id)),
+      )
       this.diagnosticRevision = revision
     } finally {
       this.synchronizingDiagnostics = false
@@ -291,11 +352,16 @@ export class IntraNodeRouteSolver extends BaseSolver {
 
   private getBinding(lazy = false): bindings.IntraNodeRouteSolver {
     initializeAutorouterBindings()
-    if (this.disposed) throw new Error("General router WASM solver has been disposed")
+    if (this.disposed)
+      throw new Error("General router WASM solver has been disposed")
     if (!this.binding) {
       let context = contexts.get(this.sharedProps)
       if (!context) {
-        const names = new Set(this.nodeWithPortPoints.portPoints.map((point) => point.connectionName))
+        const names = new Set(
+          this.nodeWithPortPoints.portPoints.map(
+            (point) => point.connectionName,
+          ),
+        )
         const idToNetMap: Record<string, string> = {}
         for (const name of names) {
           const net = this.connMap?.getNetConnectedToId(name)
@@ -304,7 +370,8 @@ export class IntraNodeRouteSolver extends BaseSolver {
         const node = this.nodeWithPortPoints
         const colorMap: Record<string, string> = {}
         for (const name of names) {
-          if (this.colorMap[name] !== undefined) colorMap[name] = this.colorMap[name]
+          if (this.colorMap[name] !== undefined)
+            colorMap[name] = this.colorMap[name]
         }
         // Only transfer fields the Rust router consumes; portfolio props also
         // contain board-wide obstacles and metadata unrelated to this node.
@@ -315,9 +382,15 @@ export class IntraNodeRouteSolver extends BaseSolver {
             width: node.width,
             height: node.height,
             availableZ: node.availableZ,
-            portPoints: node.portPoints.map(({ connectionName, rootConnectionName, x, y, z }) => ({
-              connectionName, rootConnectionName, x, y, z,
-            })),
+            portPoints: node.portPoints.map(
+              ({ connectionName, rootConnectionName, x, y, z }) => ({
+                connectionName,
+                rootConnectionName,
+                x,
+                y,
+                z,
+              }),
+            ),
           },
           colorMap,
           viaDiameter: this.viaDiameter,
@@ -328,7 +401,9 @@ export class IntraNodeRouteSolver extends BaseSolver {
         })
         contexts.set(this.sharedProps, context)
       }
-      this.binding = lazy ? context.createLazy(this.hyperParameters) : context.create(this.hyperParameters)
+      this.binding = lazy
+        ? context.createLazy(this.hyperParameters)
+        : context.create(this.hyperParameters)
     }
     return this.binding
   }
@@ -374,7 +449,8 @@ export class IntraNodeRouteSolver extends BaseSolver {
   }
 
   visualize(): GraphicsObject {
-    if (this.disposed) throw new Error("General router WASM solver has been disposed")
+    if (this.disposed)
+      throw new Error("General router WASM solver has been disposed")
     if (this.binding && !("cacheHit" in this && this.cacheHit)) {
       return this.binding.visualize(safeTransparentize)
     }

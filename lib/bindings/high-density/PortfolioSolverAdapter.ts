@@ -10,15 +10,25 @@ import { SpecializedIntraNodeSolverAdapter } from "lib/bindings/high-density/Spe
 import { withSpecializedRouterContext } from "lib/bindings/high-density/specializedRouterContext"
 
 type Candidate = ReturnType<PortfolioSingleIntraNodeSolver["generateSolver"]>
-type SupervisedCandidate = NonNullable<PortfolioSingleIntraNodeSolver["supervisedSolvers"]>[number]
+type SupervisedCandidate = NonNullable<
+  PortfolioSingleIntraNodeSolver["supervisedSolvers"]
+>[number]
 type CandidateState = bindings.CandidateStateSnapshot
 type SolverStateSnapshot = bindings.PortfolioSnapshot
 
-type CallbackScope = { current: PortfolioSolverAdapter | undefined; orchestrationKey?: number }
+type CallbackScope = {
+  current: PortfolioSolverAdapter | undefined
+  orchestrationKey?: number
+}
 
 function callbackOwner(scope: CallbackScope): PortfolioSolverAdapter {
-  const supervisor = scope.current ?? (scope.orchestrationKey === undefined ? undefined : PortfolioCallbackScope.current?.get(scope.orchestrationKey))
-  if (!supervisor) throw new Error("Native portfolio callback outside an active call")
+  const supervisor =
+    scope.current ??
+    (scope.orchestrationKey === undefined
+      ? undefined
+      : PortfolioCallbackScope.current?.get(scope.orchestrationKey))
+  if (!supervisor)
+    throw new Error("Native portfolio callback outside an active call")
   return supervisor
 }
 
@@ -35,7 +45,10 @@ function getState(solver: Candidate): CandidateState {
     failed: solver.failed,
     error: solver.error,
     progress: solver.progress,
-    solvedSegmentCount: solver instanceof HighDensitySolverAdapter ? solver.getSolvedSegmentCount() : null,
+    solvedSegmentCount:
+      solver instanceof HighDensitySolverAdapter
+        ? solver.getSolvedSegmentCount()
+        : null,
   }
 }
 
@@ -48,7 +61,8 @@ function syncState(solver: Candidate, state: CandidateState): void {
   solver.progress = state.progress === null ? Number.NaN : state.progress
   if (solver instanceof HighDensitySolverAdapter) {
     solver._setupDone = true
-    if (state.solvedSegmentCount !== null) solver.syncPortfolioSegmentCount(state.solvedSegmentCount)
+    if (state.solvedSegmentCount !== null)
+      solver.syncPortfolioSegmentCount(state.solvedSegmentCount)
   }
 }
 
@@ -72,51 +86,106 @@ export class PortfolioSolverAdapter {
 
   constructor(private readonly owner: PortfolioSingleIntraNodeSolver) {
     initializeAutorouterBindings()
-    for (const key of ["supervisedSolvers", "activeSubSolver", "winningSolver", "stats", "adaptiveSearchExpanded"] as const) {
+    for (const key of [
+      "supervisedSolvers",
+      "activeSubSolver",
+      "winningSolver",
+      "stats",
+      "adaptiveSearchExpanded",
+    ] as const) {
       let value: unknown = owner[key]
       if (key === "stats") {
         value = new Proxy(value as Record<string, unknown>, {
-          get: (target, property, receiver): unknown => { this.synchronize(); return Reflect.get(target, property, receiver) },
-          ownKeys: (target): ArrayLike<string | symbol> => { this.synchronize(); return Reflect.ownKeys(target) },
+          get: (target, property, receiver): unknown => {
+            this.synchronize()
+            return Reflect.get(target, property, receiver)
+          },
+          ownKeys: (target): ArrayLike<string | symbol> => {
+            this.synchronize()
+            return Reflect.ownKeys(target)
+          },
         })
       }
       Object.defineProperty(owner, key, {
-        configurable: true, enumerable: true,
-        get: (): unknown => { if (this.shared && !this.stepping && !this.synchronizing) this.observed = true; this.synchronize(); return value },
-        set: (next: unknown): void => { value = next },
+        configurable: true,
+        enumerable: true,
+        get: (): unknown => {
+          if (this.shared && !this.stepping && !this.synchronizing)
+            this.observed = true
+          this.synchronize()
+          return value
+        },
+        set: (next: unknown): void => {
+          value = next
+        },
       })
     }
     this.binding = PortfolioSolverAdapter.createBinding(
-      this.callbackScope, owner.nodeWithPortPoints, owner.effort,
+      this.callbackScope,
+      owner.nodeWithPortPoints,
+      owner.effort,
     )
   }
 
-  private static createBinding(scope: CallbackScope, node: bindings.HighDensityNode, effort: number): bindings.PortfolioSingleIntraNodeSolver {
+  private static createBinding(
+    scope: CallbackScope,
+    node: bindings.HighDensityNode,
+    effort: number,
+  ): bindings.PortfolioSingleIntraNodeSolver {
     return new bindings.PortfolioSingleIntraNodeSolver(
-      node, effort,
+      node,
+      effort,
       (hyperParameters: Record<string, unknown>): Record<string, unknown> => {
         const supervisor = callbackOwner(scope)
-        const solver = withSpecializedRouterContext(() => supervisor.owner.generateSolver(hyperParameters))
+        const solver = withSpecializedRouterContext(() =>
+          supervisor.owner.generateSolver(hyperParameters),
+        )
         const id = supervisor.candidates.push(solver) - 1
-        const kind = solver instanceof CachedIntraNodeRouteSolver
-          ? "general" : solver instanceof HighDensitySolverAdapter ? solver.variant
-            : solver instanceof SpecializedIntraNodeSolverAdapter ? "specialized" : "external"
-        const handle = solver instanceof HighDensitySolverAdapter || solver instanceof SpecializedIntraNodeSolverAdapter
-          ? solver.shareForPortfolio() : undefined
+        const kind =
+          solver instanceof CachedIntraNodeRouteSolver
+            ? "general"
+            : solver instanceof HighDensitySolverAdapter
+              ? solver.variant
+              : solver instanceof SpecializedIntraNodeSolverAdapter
+                ? "specialized"
+                : "external"
+        const handle =
+          solver instanceof HighDensitySolverAdapter ||
+          solver instanceof SpecializedIntraNodeSolverAdapter
+            ? solver.shareForPortfolio()
+            : undefined
         if (kind !== "external") supervisor.installCandidateGetters(solver, id)
-        return { id, kind, handle, state: getState(solver),
-          totalConnections: solver instanceof CachedIntraNodeRouteSolver ? solver.totalConnections : undefined,
-          hasCache: solver instanceof CachedIntraNodeRouteSolver && solver.cacheProvider !== null }
+        return {
+          id,
+          kind,
+          handle,
+          state: getState(solver),
+          totalConnections:
+            solver instanceof CachedIntraNodeRouteSolver
+              ? solver.totalConnections
+              : undefined,
+          hasCache:
+            solver instanceof CachedIntraNodeRouteSolver &&
+            solver.cacheProvider !== null,
+        }
       },
-      (id: number, action: "setup" | "step" | "attach-general", count: number): CandidateState | { handle: number } => {
+      (
+        id: number,
+        action: "setup" | "step" | "attach-general",
+        count: number,
+      ): CandidateState | { handle: number } => {
         const supervisor = callbackOwner(scope)
         const solver = supervisor.getCandidate(id)
         if (action === "attach-general") {
-          if (!(solver instanceof CachedIntraNodeRouteSolver)) throw new Error("Only General candidates can attach a General engine")
+          if (!(solver instanceof CachedIntraNodeRouteSolver))
+            throw new Error(
+              "Only General candidates can attach a General engine",
+            )
           return { handle: solver.shareForPortfolio() }
         }
         if (action === "setup") {
-          if ("setup" in solver && typeof solver.setup === "function") solver.setup()
+          if ("setup" in solver && typeof solver.setup === "function")
+            solver.setup()
         } else if (action === "step") {
           for (let index = 0; index < count; index++) solver.step()
         } else {
@@ -124,29 +193,44 @@ export class PortfolioSolverAdapter {
         }
         return getState(solver)
       },
-      (id: number, action: "lookup" | "save", state: CandidateState): Record<string, unknown> => {
+      (
+        id: number,
+        action: "lookup" | "save",
+        state: CandidateState,
+      ): Record<string, unknown> => {
         const supervisor = callbackOwner(scope)
         const solver = supervisor.getCandidate(id)
         if (!(solver instanceof CachedIntraNodeRouteSolver)) {
-          throw new Error("Native portfolio requested a cache operation for a non-General candidate")
+          throw new Error(
+            "Native portfolio requested a cache operation for a non-General candidate",
+          )
         }
         syncState(solver, state)
         if (action === "lookup") {
           const hit = solver.attemptToUseCacheSync()
           refreshCacheCounts()
-          return { hit, state: getState(solver), routes: hit ? solver.solvedRoutes : [] }
+          return {
+            hit,
+            state: getState(solver),
+            routes: hit ? solver.solvedRoutes : [],
+          }
         }
-        if (action !== "save") throw new Error(`Unknown binding portfolio cache action: ${action}`)
+        if (action !== "save")
+          throw new Error(`Unknown binding portfolio cache action: ${action}`)
         solver.syncPortfolioOutput()
         solver.saveToCacheSync()
         refreshCacheCounts()
         return { hit: false, state: getState(solver), routes: [] }
       },
-      (state: SolverStateSnapshot): { routes: unknown[]; solverType: string } => callbackOwner(scope).completeSolve(state),
+      (state: SolverStateSnapshot): { routes: unknown[]; solverType: string } =>
+        callbackOwner(scope).completeSolve(state),
     )
   }
 
-  private completeSolve(state: SolverStateSnapshot): { routes: unknown[]; solverType: string } {
+  private completeSolve(state: SolverStateSnapshot): {
+    routes: unknown[]
+    solverType: string
+  } {
     this.synchronizing = true
     try {
       this.syncState(state)
@@ -155,40 +239,66 @@ export class PortfolioSolverAdapter {
       let solverType = winner?.getSolverName() ?? this.owner.getSolverName()
       if (winner instanceof CachedIntraNodeRouteSolver) {
         const hp = winner.hyperParameters as Record<string, unknown>
-        solverType = hp?.MULTI_HEAD_POLYLINE_SOLVER ? "MultiHeadPolyLineIntraNodeSolver3"
-          : hp?.SINGLE_LAYER_NO_DIFFERENT_ROOT_INTERSECTIONS ? "SingleLayerNoDifferentRootIntersectionsIntraNodeSolver"
-          : hp?.CLOSED_FORM_SINGLE_TRANSITION ? "SingleTransitionIntraNodeSolver"
-          : hp?.CLOSED_FORM_TWO_TRACE_SAME_LAYER ? "TwoCrossingRoutesHighDensitySolver"
-          : hp?.CLOSED_FORM_TWO_TRACE_TRANSITION_CROSSING ? "SingleTransitionCrossingRouteSolver"
-          : hp?.HIGH_DENSITY_A01 ? "HighDensitySolverA01"
-          : hp?.HIGH_DENSITY_A03 ? "HighDensitySolverA03"
-          : "SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost"
+        solverType = hp?.MULTI_HEAD_POLYLINE_SOLVER
+          ? "MultiHeadPolyLineIntraNodeSolver3"
+          : hp?.SINGLE_LAYER_NO_DIFFERENT_ROOT_INTERSECTIONS
+            ? "SingleLayerNoDifferentRootIntersectionsIntraNodeSolver"
+            : hp?.CLOSED_FORM_SINGLE_TRANSITION
+              ? "SingleTransitionIntraNodeSolver"
+              : hp?.CLOSED_FORM_TWO_TRACE_SAME_LAYER
+                ? "TwoCrossingRoutesHighDensitySolver"
+                : hp?.CLOSED_FORM_TWO_TRACE_TRANSITION_CROSSING
+                  ? "SingleTransitionCrossingRouteSolver"
+                  : hp?.HIGH_DENSITY_A01
+                    ? "HighDensitySolverA01"
+                    : hp?.HIGH_DENSITY_A03
+                      ? "HighDensitySolverA03"
+                      : "SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost"
         if (winner.cacheHit) solverType += " [cached]"
       }
       return { routes: state.solved ? this.owner.solvedRoutes : [], solverType }
     } finally {
       this.synchronizing = false
       this.stepping = false
-      if (this.callbackScope.orchestrationKey !== undefined) this.executionScope?.release(this.callbackScope.orchestrationKey)
+      if (this.callbackScope.orchestrationKey !== undefined)
+        this.executionScope?.release(this.callbackScope.orchestrationKey)
     }
   }
 
   shareForOrchestration(scope: PortfolioCallbackScope, key: number): number {
-    if (!this.binding) throw new Error("Cannot share a disposed native portfolio")
+    if (!this.binding)
+      throw new Error("Cannot share a disposed native portfolio")
     this.executionScope = scope
     this.callbackScope.orchestrationKey = key
     this.shared = true
     this.ownerDirty = true
-    for (const field of ["iterations", "MAX_ITERATIONS", "solved", "failed", "error", "progress", "solvedRoutes", "GREEDY_MULTIPLIER", "MIN_SUBSTEPS"] as const) {
+    for (const field of [
+      "iterations",
+      "MAX_ITERATIONS",
+      "solved",
+      "failed",
+      "error",
+      "progress",
+      "solvedRoutes",
+      "GREEDY_MULTIPLIER",
+      "MIN_SUBSTEPS",
+    ] as const) {
       let value: unknown = this.owner[field]
       Object.defineProperty(this.owner, field, {
-        enumerable: true, configurable: true,
+        enumerable: true,
+        configurable: true,
         get: (): unknown => {
-          if (!this.synchronizing && !this.stepping) { this.observed = true; this.synchronize() }
+          if (!this.synchronizing && !this.stepping) {
+            this.observed = true
+            this.synchronize()
+          }
           return value
         },
         set: (next: unknown): void => {
-          if (!this.synchronizing && !this.stepping) { this.synchronize(); this.ownerDirty = true }
+          if (!this.synchronizing && !this.stepping) {
+            this.synchronize()
+            this.ownerDirty = true
+          }
           value = next
         },
       })
@@ -199,13 +309,18 @@ export class PortfolioSolverAdapter {
 
   prepareSolverRun(): void {
     if (!this.binding) return
-    if (this.observed || this.ownerDirty || this.observedSpecializedCandidates) this.synchronize()
+    if (this.observed || this.ownerDirty || this.observedSpecializedCandidates)
+      this.synchronize()
     this.stepping = true
     if (this.ownerDirty) {
       this.binding.restoreState({
-        iterations: this.owner.iterations, MAX_ITERATIONS: this.owner.MAX_ITERATIONS,
-        solved: this.owner.solved, failed: this.owner.failed, error: this.owner.error,
-        progress: this.owner.progress, GREEDY_MULTIPLIER: this.owner.GREEDY_MULTIPLIER,
+        iterations: this.owner.iterations,
+        MAX_ITERATIONS: this.owner.MAX_ITERATIONS,
+        solved: this.owner.solved,
+        failed: this.owner.failed,
+        error: this.owner.error,
+        progress: this.owner.progress,
+        GREEDY_MULTIPLIER: this.owner.GREEDY_MULTIPLIER,
         MIN_SUBSTEPS: this.owner.MIN_SUBSTEPS,
       })
       this.ownerDirty = false
@@ -226,36 +341,56 @@ export class PortfolioSolverAdapter {
   }
 
   private observedGeneralCandidates?: Set<IntraNodeRouteSolver>
-  private observedSpecializedCandidates?: Map<SpecializedIntraNodeSolverAdapter, number>
+  private observedSpecializedCandidates?: Map<
+    SpecializedIntraNodeSolverAdapter,
+    number
+  >
   private observeGeneralDiagnostics = (solver: IntraNodeRouteSolver): void => {
     ;(this.observedGeneralCandidates ??= new Set()).add(solver)
   }
 
   private installCandidateGetters(solver: Candidate, id: number): void {
-    if (solver instanceof CachedIntraNodeRouteSolver) solver.setDiagnosticObserver(this.observeGeneralDiagnostics)
+    if (solver instanceof CachedIntraNodeRouteSolver)
+      solver.setDiagnosticObserver(this.observeGeneralDiagnostics)
     const observeSpecialized = (): void => {
       if (this.synchronizing) return
       if (solver instanceof SpecializedIntraNodeSolverAdapter) {
         ;(this.observedSpecializedCandidates ??= new Map()).set(solver, id)
       }
     }
-    if (solver instanceof SpecializedIntraNodeSolverAdapter) solver.setDiagnosticObserver(observeSpecialized)
+    if (solver instanceof SpecializedIntraNodeSolverAdapter)
+      solver.setDiagnosticObserver(observeSpecialized)
     const candidate = solver as unknown as Record<string, unknown>
-    const keys = ["iterations", "MAX_ITERATIONS", "solved", "failed", "error", "progress"]
+    const keys = [
+      "iterations",
+      "MAX_ITERATIONS",
+      "solved",
+      "failed",
+      "error",
+      "progress",
+    ]
     if (solver instanceof CachedIntraNodeRouteSolver) keys.push("solvedRoutes")
-    if (solver instanceof HighDensitySolverAdapter) keys.push("solvedSegmentCount")
+    if (solver instanceof HighDensitySolverAdapter)
+      keys.push("solvedSegmentCount")
     for (const key of keys) {
       let value = candidate[key]
       Object.defineProperty(solver, key, {
-        configurable: true, enumerable: true,
-        get: (): unknown => { if (this.shared && !this.stepping && !this.synchronizing) this.observed = true; this.synchronize(); return value },
+        configurable: true,
+        enumerable: true,
+        get: (): unknown => {
+          if (this.shared && !this.stepping && !this.synchronizing)
+            this.observed = true
+          this.synchronize()
+          return value
+        },
         set: (next: unknown): void => {
           if (!this.synchronizing && !this.stepping) {
             this.synchronize()
             if (next !== value) observeSpecialized()
           }
           value = next
-          if (!this.synchronizing && !this.stepping) this.binding!.setCandidateState(id, getState(solver))
+          if (!this.synchronizing && !this.stepping)
+            this.binding!.setCandidateState(id, getState(solver))
         },
       })
     }
@@ -269,7 +404,8 @@ export class PortfolioSolverAdapter {
 
   step(): void {
     const binding = this.binding
-    if (!binding) throw new Error("Native portfolio supervisor has been disposed")
+    if (!binding)
+      throw new Error("Native portfolio supervisor has been disposed")
     try {
       if (this.observedSpecializedCandidates) {
         this.synchronize()
@@ -278,7 +414,10 @@ export class PortfolioSolverAdapter {
           binding.setCandidateState(id, getState(solver as Candidate))
         }
       }
-      if (this.owner.GREEDY_MULTIPLIER !== this.greedyMultiplier || this.owner.MIN_SUBSTEPS !== this.minSubsteps) {
+      if (
+        this.owner.GREEDY_MULTIPLIER !== this.greedyMultiplier ||
+        this.owner.MIN_SUBSTEPS !== this.minSubsteps
+      ) {
         this.greedyMultiplier = this.owner.GREEDY_MULTIPLIER
         this.minSubsteps = this.owner.MIN_SUBSTEPS
         binding.configure(this.greedyMultiplier, this.minSubsteps)
@@ -294,12 +433,14 @@ export class PortfolioSolverAdapter {
       }
       this.dirty = true
       if (this.observedGeneralCandidates) {
-        for (const solver of this.observedGeneralCandidates) solver.syncObservedDiagnostics()
+        for (const solver of this.observedGeneralCandidates)
+          solver.syncObservedDiagnostics()
       }
       if (this.observedSpecializedCandidates) {
         this.synchronizing = true
         try {
-          for (const solver of this.observedSpecializedCandidates.keys()) solver.syncObservedDiagnostics()
+          for (const solver of this.observedSpecializedCandidates.keys())
+            solver.syncObservedDiagnostics()
         } finally {
           this.synchronizing = false
         }
@@ -320,7 +461,8 @@ export class PortfolioSolverAdapter {
   }
 
   synchronize(): void {
-    if (!this.binding || !this.dirty || this.synchronizing || this.stepping) return
+    if (!this.binding || !this.dirty || this.synchronizing || this.stepping)
+      return
     this.synchronizing = true
     try {
       this.bestId = this.binding.bestCandidateId()
@@ -332,7 +474,8 @@ export class PortfolioSolverAdapter {
   }
 
   initialize(): void {
-    if (!this.binding) throw new Error("Native portfolio supervisor has been disposed")
+    if (!this.binding)
+      throw new Error("Native portfolio supervisor has been disposed")
     this.stepping = true
     this.callbackScope.current = this
     try {
@@ -345,7 +488,10 @@ export class PortfolioSolverAdapter {
     this.synchronize()
   }
 
-  getHyperParameterDefs(): Array<{ name: string; possibleValues: Record<string, unknown>[] }> {
+  getHyperParameterDefs(): Array<{
+    name: string
+    possibleValues: Record<string, unknown>[]
+  }> {
     return bindings.PortfolioSingleIntraNodeSolver.getHyperParameterDefs()
   }
 
@@ -353,13 +499,19 @@ export class PortfolioSolverAdapter {
     return bindings.PortfolioSingleIntraNodeSolver.getCombinationDefs()
   }
 
-  getHyperParameterCombinations(definitions = this.getHyperParameterDefs()): Record<string, unknown>[] {
-    return bindings.PortfolioSingleIntraNodeSolver.getHyperParameterCombinations(definitions)
+  getHyperParameterCombinations(
+    definitions = this.getHyperParameterDefs(),
+  ): Record<string, unknown>[] {
+    return bindings.PortfolioSingleIntraNodeSolver.getHyperParameterCombinations(
+      definitions,
+    )
   }
 
   getBestCandidate(): SupervisedCandidate | null {
     this.synchronize()
-    return this.bestId === undefined ? null : this.supervisedById.get(this.bestId) ?? null
+    return this.bestId === undefined
+      ? null
+      : (this.supervisedById.get(this.bestId) ?? null)
   }
 
   getFailureMessage(): string {
@@ -371,35 +523,58 @@ export class PortfolioSolverAdapter {
   }
 
   computeF(g: number, h: number): number {
-    return bindings.PortfolioSingleIntraNodeSolver.computeF(g, h, this.owner.GREEDY_MULTIPLIER)
+    return bindings.PortfolioSingleIntraNodeSolver.computeF(
+      g,
+      h,
+      this.owner.GREEDY_MULTIPLIER,
+    )
   }
 
   computeG(solver: Candidate): number {
-    const hyperParameters = "hyperParameters" in solver ? solver.hyperParameters : {}
+    const hyperParameters =
+      "hyperParameters" in solver ? solver.hyperParameters : {}
     return bindings.PortfolioSingleIntraNodeSolver.computeCandidateG(
-      getState(solver), hyperParameters, solver instanceof HighDensitySolverAdapter,
+      getState(solver),
+      hyperParameters,
+      solver instanceof HighDensitySolverAdapter,
     )
   }
 
   computeH(solver: Candidate): number {
     return bindings.PortfolioSingleIntraNodeSolver.computeCandidateH(
-      getState(solver), this.owner.nodeWithPortPoints, this.owner.adaptiveSearchExpanded,
+      getState(solver),
+      this.owner.nodeWithPortPoints,
+      this.owner.adaptiveSearchExpanded,
     )
   }
 
   canDisposeUnobserved(): boolean {
-    return !this.observed && !this.ownerDirty && !this.observedGeneralCandidates?.size
-      && !this.observedSpecializedCandidates?.size && !Object.hasOwn(this.owner, "generateSolver") && !Object.hasOwn(this.owner, "onSolve")
-      && this.candidates.every((candidate): boolean => candidate instanceof IntraNodeRouteSolver
-        || candidate instanceof SpecializedIntraNodeSolverAdapter || candidate instanceof HighDensitySolverAdapter)
+    return (
+      !this.observed &&
+      !this.ownerDirty &&
+      !this.observedGeneralCandidates?.size &&
+      !this.observedSpecializedCandidates?.size &&
+      !Object.hasOwn(this.owner, "generateSolver") &&
+      !Object.hasOwn(this.owner, "onSolve") &&
+      this.candidates.every(
+        (candidate): boolean =>
+          candidate instanceof IntraNodeRouteSolver ||
+          candidate instanceof SpecializedIntraNodeSolverAdapter ||
+          candidate instanceof HighDensitySolverAdapter,
+      )
+    )
   }
 
   disposeUnobserved(): boolean {
     if (!this.canDisposeUnobserved()) return false
     // Called only after the native parent has released its active child borrow.
     for (const candidate of this.candidates) {
-      if (candidate instanceof IntraNodeRouteSolver
-        || candidate instanceof SpecializedIntraNodeSolverAdapter || candidate instanceof HighDensitySolverAdapter) candidate.dispose()
+      if (
+        candidate instanceof IntraNodeRouteSolver ||
+        candidate instanceof SpecializedIntraNodeSolverAdapter ||
+        candidate instanceof HighDensitySolverAdapter
+      )
+        candidate.dispose()
     }
     this.dispose()
     return true
@@ -413,21 +588,37 @@ export class PortfolioSolverAdapter {
   private syncState(state: SolverStateSnapshot): void {
     if (this.shared) {
       this.owner.iterations = state.iterations
-      this.owner.progress = state.progress === null ? Number.NaN : state.progress
+      this.owner.progress =
+        state.progress === null ? Number.NaN : state.progress
     }
     for (const candidate of state.candidates) {
       const solver = this.getCandidate(candidate.id)
       syncState(solver, candidate.state)
-      if (solver instanceof CachedIntraNodeRouteSolver && candidate.id === state.activeId) solver.syncPortfolioOutput()
-      const entry = this.supervisedById.get(candidate.id)
-        ?? { solver, hyperParameters: candidate.hyperParameters, g: 0, h: 0, f: 0 }
+      if (
+        solver instanceof CachedIntraNodeRouteSolver &&
+        candidate.id === state.activeId
+      )
+        solver.syncPortfolioOutput()
+      const entry = this.supervisedById.get(candidate.id) ?? {
+        solver,
+        hyperParameters: candidate.hyperParameters,
+        g: 0,
+        h: 0,
+        f: 0,
+      }
       if (!this.supervisedById.has(candidate.id)) {
         for (const key of ["g", "h", "f"] as const) {
           let value = entry[key]
           Object.defineProperty(entry, key, {
-            configurable: true, enumerable: true,
-            get: (): number => { this.synchronize(); return value },
-            set: (next: number): void => { value = next },
+            configurable: true,
+            enumerable: true,
+            get: (): number => {
+              this.synchronize()
+              return value
+            },
+            set: (next: number): void => {
+              value = next
+            },
           })
         }
       }
@@ -438,7 +629,10 @@ export class PortfolioSolverAdapter {
     }
     this.owner.supervisedSolvers = state.order.map((id) => {
       const entry = this.supervisedById.get(id)
-      if (!entry) throw new Error(`Native portfolio order references an unknown candidate: ${id}`)
+      if (!entry)
+        throw new Error(
+          `Native portfolio order references an unknown candidate: ${id}`,
+        )
       return entry
     })
     this.owner.solved = state.solved
@@ -447,12 +641,18 @@ export class PortfolioSolverAdapter {
     this.owner.MAX_ITERATIONS = state.MAX_ITERATIONS
     Object.assign(this.owner.stats, state.stats)
     this.owner.adaptiveSearchExpanded = state.adaptiveSearchExpanded
-    this.owner.activeSubSolver = state.activeId === null ? undefined : this.getCandidate(state.activeId)
+    this.owner.activeSubSolver =
+      state.activeId === null ? undefined : this.getCandidate(state.activeId)
     if (state.winnerId !== null && !this.owner.winningSolver) {
       const winner = this.getCandidate(state.winnerId)
       this.owner.winningSolver = winner
-      const supervised = this.owner.supervisedSolvers.find((entry) => entry.solver === winner)
-      if (!supervised) throw new Error("Native portfolio winner is missing from its candidates")
+      const supervised = this.owner.supervisedSolvers.find(
+        (entry) => entry.solver === winner,
+      )
+      if (!supervised)
+        throw new Error(
+          "Native portfolio winner is missing from its candidates",
+        )
       this.owner.onSolve(supervised)
     }
   }

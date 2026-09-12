@@ -1,14 +1,24 @@
+import type { GlobalDrcForceImproveSolver as RepairSolver } from "high-density-repair03/lib/solvers/GlobalDrcForceImproveSolver/GlobalDrcForceImproveSolver"
 import { getGlobalDrcForceImproveSolverVisualizer } from "high-density-repair03/lib/globalDrcForceImproveSolverVisualizer"
 import { BaseSolver } from "@tscircuit/solver-utils"
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { GraphicsObject } from "graphics-debug"
 import { AutoroutingDrcEngine } from "high-density-repair03/lib/drc/AutoroutingDrcEngine"
 import { getBaseMaxIterations } from "high-density-repair03/lib/solvers/GlobalDrcForceImproveSolver/solverConfig"
-import { cloneRoutes, materializeRoutes, getDrcSnapshot, getTopologyRepairDrcSnapshot } from "high-density-repair03/lib/solvers/GlobalDrcForceImproveSolver/solverHelpers"
+import {
+  cloneRoutes,
+  materializeRoutes,
+  getDrcSnapshot,
+  getTopologyRepairDrcSnapshot,
+} from "high-density-repair03/lib/solvers/GlobalDrcForceImproveSolver/solverHelpers"
 import { RELAXED_DRC_OPTIONS } from "high-density-repair03/lib/solvers/GlobalDrcForceImproveSolver/drcPresets"
 import type { DrcEvaluator } from "high-density-repair03/lib/solvers/GlobalDrcForceImproveSolver/types"
 import type { SimpleRouteJson } from "high-density-repair03/lib/types"
-import type { GlobalDrcForceImproveSolverParams, HighDensityRoute, DrcSnapshot } from "high-density-repair03/lib"
+import type {
+  GlobalDrcForceImproveSolverParams,
+  HighDensityRoute,
+  DrcSnapshot,
+} from "high-density-repair03/lib"
 import * as bindings from "../../../rust/capacity-autorouter-bindings/pkg/capacity_autorouter_bindings.js"
 import { initializeAutorouterBindings } from "lib/bindings/initializeAutorouterBindings"
 
@@ -32,8 +42,15 @@ function copyMetadata<T extends object>(source: T | undefined, value: T): T {
   const result = { ...source, ...value }
   for (const key of Object.keys(source)) {
     const previous = Reflect.get(source, key)
-    if (!(key in value) && previous !== undefined) Reflect.deleteProperty(result, key)
-    else if (key !== "route" && key !== "vias" && previous !== null && typeof previous === "object") Reflect.set(result, key, previous)
+    if (!(key in value) && previous !== undefined)
+      Reflect.deleteProperty(result, key)
+    else if (
+      key !== "route" &&
+      key !== "vias" &&
+      previous !== null &&
+      typeof previous === "object"
+    )
+      Reflect.set(result, key, previous)
   }
   return result
 }
@@ -90,7 +107,6 @@ export class GlobalDrcForceImproveSolver extends BaseSolver {
   }
   private inputSnapshot?: DrcSnapshot
 
-
   private binding: bindings.GlobalDrcForceImproveSolver | undefined
   private readonly constructionParams: GlobalDrcForceImproveSolverParams
   private readonly routeArrays = new Map<number, HighDensityRoute[]>()
@@ -100,8 +116,14 @@ export class GlobalDrcForceImproveSolver extends BaseSolver {
   private readonly pointArrays = new Map<number, HighDensityRoute["route"]>()
   private readonly viaArrays = new Map<number, HighDensityRoute["vias"]>()
   private readonly routeIds = new WeakMap<HighDensityRoute, number>()
-  private readonly pointIds = new WeakMap<HighDensityRoute["route"][number], number>()
-  private readonly pointArrayIds = new WeakMap<HighDensityRoute["route"], number>()
+  private readonly pointIds = new WeakMap<
+    HighDensityRoute["route"][number],
+    number
+  >()
+  private readonly pointArrayIds = new WeakMap<
+    HighDensityRoute["route"],
+    number
+  >()
   private readonly viaArrayIds = new WeakMap<HighDensityRoute["vias"], number>()
   private readonly fingerprints = new Map<number, string>()
   private readonly mutationGraphs = new Map<number, MutationGraph>()
@@ -169,20 +191,32 @@ export class GlobalDrcForceImproveSolver extends BaseSolver {
     this.constructionParams = params
     this.outputMirror = this.outputHdRoutes
     Object.defineProperty(this, "outputHdRoutes", {
-      configurable: true, enumerable: true,
+      configurable: true,
+      enumerable: true,
       get: (): HighDensityRoute[] => {
-        if (this.binding && this.outputStale && !this.inCallback && !this.outputDirty) {
+        if (
+          this.binding &&
+          this.outputStale &&
+          !this.inCallback &&
+          !this.outputDirty
+        ) {
           this.outputMirror = this.readRoutes("output")
           this.outputStale = false
         }
         this.outputObserved = true
         return this.outputMirror
       },
-      set: (routes: HighDensityRoute[]): void => { this.outputMirror = routes; this.outputDirty = true; this.outputStale = false },
+      set: (routes: HighDensityRoute[]): void => {
+        this.outputMirror = routes
+        this.outputDirty = true
+        this.outputStale = false
+      },
     })
   }
 
-  override getConstructorParams(): ReturnType<import("high-density-repair03/lib/solvers/GlobalDrcForceImproveSolver/GlobalDrcForceImproveSolver").GlobalDrcForceImproveSolver["getConstructorParams"]> {
+  override getConstructorParams(): ReturnType<
+    RepairSolver["getConstructorParams"]
+  > {
     return [
       {
         srj: this.srj,
@@ -219,7 +253,9 @@ export class GlobalDrcForceImproveSolver extends BaseSolver {
     )
   }
 
-  private getReferenceDrcSnapshot(routes: HighDensityRoute[]): DrcSnapshot | { errors: Array<Record<string, unknown>>; count: number } {
+  private getReferenceDrcSnapshot(
+    routes: HighDensityRoute[],
+  ): DrcSnapshot | { errors: Array<Record<string, unknown>>; count: number } {
     const evaluatorInput = {
       traces: [],
       srj: this.srj,
@@ -243,43 +279,76 @@ export class GlobalDrcForceImproveSolver extends BaseSolver {
     )
   }
 
-  private static evaluateCallback(input: bindings.GlobalDrcCallbackInput): bindings.GlobalDrcCallbackOutput {
+  private static evaluateCallback(
+    input: bindings.GlobalDrcCallbackInput,
+  ): bindings.GlobalDrcCallbackOutput {
     const owner = activeOwner
     if (!owner) throw new Error("Global DRC callback outside its solver scope")
     owner.synchronizeState(input.state)
     const routes = owner.materialize(input.routes)
-    if (input.output) { owner.outputMirror = owner.materialize(input.output); owner.outputStale = false }
+    if (input.output) {
+      owner.outputMirror = owner.materialize(input.output)
+      owner.outputStale = false
+    }
     owner.inCallback = true
     try {
       const name = input.reference ? "getReferenceDrcSnapshot" : "getSnapshot"
-      const method = Reflect.get(GlobalDrcForceImproveSolver.prototype, name) as (routes: HighDensityRoute[]) => DrcSnapshot
+      const method = Reflect.get(
+        GlobalDrcForceImproveSolver.prototype,
+        name,
+      ) as (routes: HighDensityRoute[]) => DrcSnapshot
       const result = method.call(owner, routes)
       const snapshot = {
-        errors: result.errors, count: result.count,
-        issueScore: result.issueScore ?? 0, legacyIssueScore: result.legacyIssueScore ?? 0,
-        traceRouteIndexById: Object.fromEntries(result.traceRouteIndexById ?? []),
+        errors: result.errors,
+        count: result.count,
+        issueScore: result.issueScore ?? 0,
+        legacyIssueScore: result.legacyIssueScore ?? 0,
+        traceRouteIndexById: Object.fromEntries(
+          result.traceRouteIndexById ?? [],
+        ),
       }
-      return { snapshot, state: owner.mutationState(), mutations: owner.captureMutations() }
+      return {
+        snapshot,
+        state: owner.mutationState(),
+        mutations: owner.captureMutations(),
+      }
     } catch (error) {
       owner.callbackThrew = true
       owner.callbackError = error
-      return { thrown:true, state:owner.mutationState(), mutations:owner.captureMutations() }
-    } finally { owner.inCallback = false }
+      return {
+        thrown: true,
+        state: owner.mutationState(),
+        mutations: owner.captureMutations(),
+      }
+    } finally {
+      owner.inCallback = false
+    }
   }
 
   private getBinding(): bindings.GlobalDrcForceImproveSolver {
     if (this.binding) return this.binding
     initializeAutorouterBindings()
-    const { drcEvaluator, referenceDrcEvaluator, autoroutingDrcEngine, connMap, ...params } = this.constructionParams
+    const {
+      drcEvaluator,
+      referenceDrcEvaluator,
+      autoroutingDrcEngine,
+      connMap,
+      ...params
+    } = this.constructionParams
     const input = {
-      ...params, connMap: connMap ? { idToNetMap: connMap.idToNetMap } : null,
+      ...params,
+      connMap: connMap ? { idToNetMap: connMap.idToNetMap } : null,
       hasCustomDrcEvaluator: drcEvaluator !== undefined,
-      useHostEvaluator: drcEvaluator !== undefined || autoroutingDrcEngine !== undefined,
+      useHostEvaluator:
+        drcEvaluator !== undefined || autoroutingDrcEngine !== undefined,
       hasReferenceEvaluator: referenceDrcEvaluator !== undefined,
       initialReferenceSnapshot: Reflect.get(this, "referenceInputSnapshot"),
     }
     this.connectivityJson = JSON.stringify(input.connMap)
-    this.binding = new bindings.GlobalDrcForceImproveSolver(input, GlobalDrcForceImproveSolver.evaluateCallback)
+    this.binding = new bindings.GlobalDrcForceImproveSolver(
+      input,
+      GlobalDrcForceImproveSolver.evaluateCallback,
+    )
     this.bindInitial(this.binding.routes("input"), this.inputHdRoutes)
     this.bindInitial(this.binding.routes("guarded"), this.guardedInputHdRoutes)
     return this.binding
@@ -304,9 +373,19 @@ export class GlobalDrcForceImproveSolver extends BaseSolver {
         this.pointIds.set(point, id)
       }
     }
-    this.fingerprints.set(packet.id, JSON.stringify({ id: packet.id, routes: packet.routes.map(item => ({
-      id: item.id, value: item.value, pointArrayId: item.pointArrayId, viaArrayId: item.viaArrayId, pointIds: item.pointIds,
-    })) }))
+    this.fingerprints.set(
+      packet.id,
+      JSON.stringify({
+        id: packet.id,
+        routes: packet.routes.map((item) => ({
+          id: item.id,
+          value: item.value,
+          pointArrayId: item.pointArrayId,
+          viaArrayId: item.viaArrayId,
+          pointIds: item.pointIds,
+        })),
+      }),
+    )
     this.mutationGraphs.set(packet.id, this.snapshotMutationGraph(routes))
   }
 
@@ -319,63 +398,104 @@ export class GlobalDrcForceImproveSolver extends BaseSolver {
       const points = item.value.route.map((point, index) => {
         const id = item.pointIds[index]!
         const retained = this.points.get(id)
-        const value = copyMetadata(this.points.get(item.pointSourceIds[index]!), point)
+        const value = copyMetadata(
+          this.points.get(item.pointSourceIds[index]!),
+          point,
+        )
         const result = retained ?? value
         if (retained) this.updateObject(retained, value)
-        this.points.set(id,result);this.pointIds.set(result,id)
+        this.points.set(id, result)
+        this.pointIds.set(result, id)
         return result
       })
       const pointArray = this.pointArrays.get(item.pointArrayId) ?? []
-      pointArray.splice(0,pointArray.length,...points)
-      this.pointArrays.set(item.pointArrayId,pointArray);this.pointArrayIds.set(pointArray,item.pointArrayId)
-      value.route=pointArray
-      const vias=this.viaArrays.get(item.viaArrayId) ?? item.value.vias
-      value.vias=vias
-      this.viaArrays.set(item.viaArrayId,vias);this.viaArrayIds.set(vias,item.viaArrayId)
-      if(retained)this.updateObject(retained,value)
-      this.routeObjects.set(item.id,route);this.routeIds.set(route,item.id)
+      pointArray.splice(0, pointArray.length, ...points)
+      this.pointArrays.set(item.pointArrayId, pointArray)
+      this.pointArrayIds.set(pointArray, item.pointArrayId)
+      value.route = pointArray
+      const vias = this.viaArrays.get(item.viaArrayId) ?? item.value.vias
+      value.vias = vias
+      this.viaArrays.set(item.viaArrayId, vias)
+      this.viaArrayIds.set(vias, item.viaArrayId)
+      if (retained) this.updateObject(retained, value)
+      this.routeObjects.set(item.id, route)
+      this.routeIds.set(route, item.id)
       return route
     })
-    const result=this.routeArrays.get(packet.id) ?? []
-    result.splice(0,result.length,...routes)
-    this.routeArrays.set(packet.id,result);this.arrayIds.set(result,packet.id)
-    this.fingerprints.set(packet.id,JSON.stringify(this.encodeArray(packet.id,result)))
+    const result = this.routeArrays.get(packet.id) ?? []
+    result.splice(0, result.length, ...routes)
+    this.routeArrays.set(packet.id, result)
+    this.arrayIds.set(result, packet.id)
+    this.fingerprints.set(
+      packet.id,
+      JSON.stringify(this.encodeArray(packet.id, result)),
+    )
     this.mutationGraphs.set(packet.id, this.snapshotMutationGraph(result))
     return result
   }
 
-  private updateObject(target: object,value: object):void {
-    for(const key of Object.keys(target))if(!(key in value))Reflect.deleteProperty(target,key)
-    for(const [key,entry]of Object.entries(value))Reflect.set(target,key,entry)
+  private updateObject(target: object, value: object): void {
+    for (const key of Object.keys(target))
+      if (!(key in value)) Reflect.deleteProperty(target, key)
+    for (const [key, entry] of Object.entries(value))
+      Reflect.set(target, key, entry)
   }
 
-  private clientIdentity<T extends object>(map:WeakMap<T,number>,value:T):number {
-    const existing=map.get(value)
-    if(existing!==undefined)return existing
-    const id=this.nextClientId--
-    map.set(value,id)
+  private clientIdentity<T extends object>(
+    map: WeakMap<T, number>,
+    value: T,
+  ): number {
+    const existing = map.get(value)
+    if (existing !== undefined) return existing
+    const id = this.nextClientId--
+    map.set(value, id)
     return id
   }
 
-  private encodeArray(id:number,routes:HighDensityRoute[]):bindings.GlobalDrcMutationPacket {
-    return {id,routes:routes.map(route=>{
-      const id=this.clientIdentity(this.routeIds,route)
-      this.routeObjects.set(id,route)
-      return {id,value:route,pointArrayId:this.clientIdentity(this.pointArrayIds,route.route),viaArrayId:this.clientIdentity(this.viaArrayIds,route.vias),
-        pointIds:route.route.map(point=>{const id=this.clientIdentity(this.pointIds,point);this.points.set(id,point);return id})}
-    })}
+  private encodeArray(
+    id: number,
+    routes: HighDensityRoute[],
+  ): bindings.GlobalDrcMutationPacket {
+    return {
+      id,
+      routes: routes.map((route) => {
+        const id = this.clientIdentity(this.routeIds, route)
+        this.routeObjects.set(id, route)
+        return {
+          id,
+          value: route,
+          pointArrayId: this.clientIdentity(this.pointArrayIds, route.route),
+          viaArrayId: this.clientIdentity(this.viaArrayIds, route.vias),
+          pointIds: route.route.map((point) => {
+            const id = this.clientIdentity(this.pointIds, point)
+            this.points.set(id, point)
+            return id
+          }),
+        }
+      }),
+    }
   }
 
-  private snapshotMutationGraph(value: object, seen = new WeakMap<object, MutationGraph>()): MutationGraph {
+  private snapshotMutationGraph(
+    value: object,
+    seen = new WeakMap<object, MutationGraph>(),
+  ): MutationGraph {
     const existing = seen.get(value)
     if (existing) return existing
     const prototype = Object.getPrototypeOf(value)
-    const comparable = (Array.isArray(value) || prototype === Object.prototype || prototype === null)
-      && !("toJSON" in value)
+    const comparable =
+      (Array.isArray(value) ||
+        prototype === Object.prototype ||
+        prototype === null) &&
+      !("toJSON" in value)
     const graph: MutationGraph = {
-      value, keys: [], values: [], children: [],
+      value,
+      keys: [],
+      values: [],
+      children: [],
       arrayLength: Array.isArray(value) ? value.length : undefined,
-      comparable, comparedAt: 0,
+      comparable,
+      comparedAt: 0,
     }
     seen.set(value, graph)
     if (!comparable) return graph
@@ -388,14 +508,22 @@ export class GlobalDrcForceImproveSolver extends BaseSolver {
       const entry: unknown = descriptor.value
       graph.keys.push(key)
       graph.values.push(entry)
-      graph.children.push(entry !== null && typeof entry === "object"
-        ? this.snapshotMutationGraph(entry, seen) : undefined)
+      graph.children.push(
+        entry !== null && typeof entry === "object"
+          ? this.snapshotMutationGraph(entry, seen)
+          : undefined,
+      )
     }
     return graph
   }
 
-  private mutationGraphMatches(graph: MutationGraph, value: object, comparison: number): boolean {
-    if (!graph.comparable || graph.value !== value || "toJSON" in value) return false
+  private mutationGraphMatches(
+    graph: MutationGraph,
+    value: object,
+    comparison: number,
+  ): boolean {
+    if (!graph.comparable || graph.value !== value || "toJSON" in value)
+      return false
     if (graph.comparedAt === comparison) return true
     graph.comparedAt = comparison
     if (Array.isArray(value) && value.length !== graph.arrayLength) return false
@@ -406,31 +534,43 @@ export class GlobalDrcForceImproveSolver extends BaseSolver {
       const entry: unknown = Reflect.get(value, key)
       if (!Object.is(entry, graph.values[index])) return false
       const child = graph.children[index]
-      if (child && !this.mutationGraphMatches(child, entry as object, comparison)) return false
+      if (
+        child &&
+        !this.mutationGraphMatches(child, entry as object, comparison)
+      )
+        return false
       index++
     }
     return index === graph.keys.length
   }
 
-  private captureMutations():bindings.GlobalDrcMutationPacket[] {
-    const mutations:bindings.GlobalDrcMutationPacket[]=[]
-    for(const [id,routes]of this.routeArrays) {
+  private captureMutations(): bindings.GlobalDrcMutationPacket[] {
+    const mutations: bindings.GlobalDrcMutationPacket[] = []
+    for (const [id, routes] of this.routeArrays) {
       const graph = this.mutationGraphs.get(id)
-      if (graph && this.mutationGraphMatches(graph, routes, ++this.mutationComparison)) continue
-      const packet=this.encodeArray(id,routes),json=JSON.stringify(packet)
-      if(json!==this.fingerprints.get(id)) { mutations.push(packet);this.fingerprints.set(id,json) }
+      if (
+        graph &&
+        this.mutationGraphMatches(graph, routes, ++this.mutationComparison)
+      )
+        continue
+      const packet = this.encodeArray(id, routes),
+        json = JSON.stringify(packet)
+      if (json !== this.fingerprints.get(id)) {
+        mutations.push(packet)
+        this.fingerprints.set(id, json)
+      }
       this.mutationGraphs.set(id, this.snapshotMutationGraph(routes))
     }
     return mutations
   }
 
-  private mutationState():SolverStateSnapshot {
-    const state=this.publicState()
-    if(this.outputDirty) {
-      const id=this.clientIdentity(this.arrayIds,this.outputMirror)
-      this.routeArrays.set(id,this.outputMirror)
-      state.outputId=id
-      this.outputDirty=false
+  private mutationState(): SolverStateSnapshot {
+    const state = this.publicState()
+    if (this.outputDirty) {
+      const id = this.clientIdentity(this.arrayIds, this.outputMirror)
+      this.routeArrays.set(id, this.outputMirror)
+      state.outputId = id
+      this.outputDirty = false
     }
     return state
   }
@@ -440,8 +580,15 @@ export class GlobalDrcForceImproveSolver extends BaseSolver {
   }
 
   private publicState(): SolverStateSnapshot {
-    return { iterations: this.iterations, MAX_ITERATIONS: this.MAX_ITERATIONS, solved: this.solved,
-      failed: this.failed, error: this.error, progress: this.progress, stats: this.stats }
+    return {
+      iterations: this.iterations,
+      MAX_ITERATIONS: this.MAX_ITERATIONS,
+      solved: this.solved,
+      failed: this.failed,
+      error: this.error,
+      progress: this.progress,
+      stats: this.stats,
+    }
   }
 
   private synchronizeState(state: SolverStateSnapshot): void {
@@ -453,7 +600,8 @@ export class GlobalDrcForceImproveSolver extends BaseSolver {
         for (const [id, item] of Object.entries(value)) old.set(id, item)
       } else Reflect.set(this, key, value)
     }
-    if (state.drcStats && this.autoroutingDrcEngine) this.autoroutingDrcEngine.lastRunStats = state.drcStats
+    if (state.drcStats && this.autoroutingDrcEngine)
+      this.autoroutingDrcEngine.lastRunStats = state.drcStats
   }
 
   private runSolver(finalAcceptance: boolean): void {
@@ -462,8 +610,10 @@ export class GlobalDrcForceImproveSolver extends BaseSolver {
     try {
       const binding = this.getBinding()
       const state = this.mutationState()
-      state.mutations=this.captureMutations()
-      const connectivity = this.connMap ? { idToNetMap: this.connMap.idToNetMap } : null
+      state.mutations = this.captureMutations()
+      const connectivity = this.connMap
+        ? { idToNetMap: this.connMap.idToNetMap }
+        : null
       const connectivityJson = JSON.stringify(connectivity)
       if (connectivityJson !== this.connectivityJson) {
         state.connectivity = connectivity
@@ -475,23 +625,35 @@ export class GlobalDrcForceImproveSolver extends BaseSolver {
         this.outputMirror = this.readRoutes("output")
         this.outputStale = false
       }
-    } catch(error) {
-      if(this.callbackThrew) {
-        const original=this.callbackError
-        this.callbackError=undefined;this.callbackThrew=false
+    } catch (error) {
+      if (this.callbackThrew) {
+        const original = this.callbackError
+        this.callbackError = undefined
+        this.callbackThrew = false
         throw original
       }
       throw error
-    } finally { activeOwner = previous }
+    } finally {
+      activeOwner = previous
+    }
   }
 
-  override _step(): void { this.runSolver(false) }
-  override tryFinalAcceptance(): void { this.runSolver(true) }
-  override getOutput(): HighDensityRoute[] { return this.outputHdRoutes }
+  override _step(): void {
+    this.runSolver(false)
+  }
+  override tryFinalAcceptance(): void {
+    this.runSolver(true)
+  }
+  override getOutput(): HighDensityRoute[] {
+    return this.outputHdRoutes
+  }
 
   override visualize(): GraphicsObject {
     const visualizer = getGlobalDrcForceImproveSolverVisualizer()
-    return (visualizer ? Reflect.apply(visualizer, undefined, [this]) : undefined) ?? super.visualize()
+    return (
+      (visualizer ? Reflect.apply(visualizer, undefined, [this]) : undefined) ??
+      super.visualize()
+    )
   }
 
   override preview(): GraphicsObject {

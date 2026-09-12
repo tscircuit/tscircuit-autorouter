@@ -10,7 +10,10 @@ import {
 } from "high-density-repair03/lib"
 import { BaseSolver } from "lib/solvers/BaseSolver"
 import { AutoroutingDrcEngine } from "lib/bindings/repair/AutoroutingDrcEngine"
-import { GlobalDrcBranchPortfolioSolver, type RepairPortfolioDescriptor } from "lib/bindings/repair/GlobalDrcBranchPortfolioSolver"
+import {
+  GlobalDrcBranchPortfolioSolver,
+  type RepairPortfolioDescriptor,
+} from "lib/bindings/repair/GlobalDrcBranchPortfolioSolver"
 import { RELAXED_DRC_OPTIONS } from "lib/testing/drcPresets"
 import {
   combinePreloadedAndRoutedTraces,
@@ -1018,10 +1021,8 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       viaClearance,
       includeTraceViaOwnerMetadata: true,
       spatialCellSize:
-        Math.max(
-          params.defaultViaDiameter,
-          params.originalSrj.minTraceWidth,
-        ) + Math.max(traceClearance, viaClearance),
+        Math.max(params.defaultViaDiameter, params.originalSrj.minTraceWidth) +
+        Math.max(traceClearance, viaClearance),
     }
     const autoroutingDrcEngine = new AutoroutingDrcEngine(
       autoroutingEngineSrj,
@@ -1409,54 +1410,69 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       engineSrj: autoroutingEngineSrj,
       engineOptions: autoroutingEngineOptions,
       solverSrj: extendedSrjWithPointPairs as RepairSimpleRouteJson,
-      connMap: { netMap: params.connMap.netMap, idToNetMap: params.connMap.idToNetMap },
+      connMap: {
+        netMap: params.connMap.netMap,
+        idToNetMap: params.connMap.idToNetMap,
+      },
       originalTraces: params.originalSrj.traces ?? [],
       newConnections: params.newConnections,
       originalConnections: params.originalSrj.connections,
       layerCount: params.layerCount,
       defaultViaHoleDiameter: params.defaultViaHoleDiameter,
       obstacles: params.obstacles,
-      movablePreloadedSections: this.movablePreloadedSections.map((section) => ({
-        syntheticConnectionName: section.syntheticConnectionName,
-        evaluationTraceId: section.evaluationTraceId,
-        originalTrace: section.originalTrace,
-      })),
+      movablePreloadedSections: this.movablePreloadedSections.map(
+        (section) => ({
+          syntheticConnectionName: section.syntheticConnectionName,
+          evaluationTraceId: section.evaluationTraceId,
+          originalTrace: section.originalTrace,
+        }),
+      ),
       nonMovableMutatedPreloadedTraces,
     }
-    const nativeReferenceEvaluator: DrcEvaluator = (input): ReturnType<DrcEvaluator> => {
+    const nativeReferenceEvaluator: DrcEvaluator = (
+      input,
+    ): ReturnType<DrcEvaluator> => {
       const validationCountBefore = this.referenceDrcValidationCount
       const result = cachedReferenceDrcEvaluator(input)
       const errors = Array.isArray(result) ? result : result.errors
-      if (this.referenceDrcValidationCount > validationCountBefore && errors.length > 0) {
+      if (
+        this.referenceDrcValidationCount > validationCountBefore &&
+        errors.length > 0
+      ) {
         this.referenceDrcFalseNegativeCount += 1
       }
       return result
     }
-    this.exactRepairSolver = new GlobalDrcBranchPortfolioSolver({
-      srj: extendedSrjWithPointPairs as RepairSimpleRouteJson,
-      hdRoutes: [
-        ...params.newHdRoutes,
-        ...this.movablePreloadedSections.map(
-          (movableSection) => movableSection.hdRoute,
-        ),
-      ],
-      connMap: params.connMap,
-      effort: params.effort,
-      viaHoleDiameter: params.defaultViaHoleDiameter,
-      drcEvaluator,
-      viaInPadDrcEvaluator: drcEvaluator,
-      maxIterations: EXACT_REPAIR_MAX_ITERATIONS,
-      enableBroadFallback: false,
-      enableLargeBoardBroadFallback: false,
-      enableTargetedErrorSweep: true,
-      enableTraceViaOwnerTargeting: true,
-      enablePostSolveClearanceRelaxation: false,
-      enableSafeTraceLayerMoves: true,
-      enableViaInPadLayerMoves: params.originalSrj.allowViaInPad ?? false,
-      viaInPadMaxIterations: EXACT_REPAIR_MAX_ITERATIONS,
-      broadMaxIterations: EXACT_REPAIR_BROAD_MAX_ITERATIONS,
-      broadPassMultiplier: 3,
-    }, repairDescriptor, nativeReferenceEvaluator, { engine: autoroutingDrcEngine, baseline: autoroutingBaselineDrc })
+    this.exactRepairSolver = new GlobalDrcBranchPortfolioSolver(
+      {
+        srj: extendedSrjWithPointPairs as RepairSimpleRouteJson,
+        hdRoutes: [
+          ...params.newHdRoutes,
+          ...this.movablePreloadedSections.map(
+            (movableSection) => movableSection.hdRoute,
+          ),
+        ],
+        connMap: params.connMap,
+        effort: params.effort,
+        viaHoleDiameter: params.defaultViaHoleDiameter,
+        drcEvaluator,
+        viaInPadDrcEvaluator: drcEvaluator,
+        maxIterations: EXACT_REPAIR_MAX_ITERATIONS,
+        enableBroadFallback: false,
+        enableLargeBoardBroadFallback: false,
+        enableTargetedErrorSweep: true,
+        enableTraceViaOwnerTargeting: true,
+        enablePostSolveClearanceRelaxation: false,
+        enableSafeTraceLayerMoves: true,
+        enableViaInPadLayerMoves: params.originalSrj.allowViaInPad ?? false,
+        viaInPadMaxIterations: EXACT_REPAIR_MAX_ITERATIONS,
+        broadMaxIterations: EXACT_REPAIR_BROAD_MAX_ITERATIONS,
+        broadPassMultiplier: 3,
+      },
+      repairDescriptor,
+      nativeReferenceEvaluator,
+      { engine: autoroutingDrcEngine, baseline: autoroutingBaselineDrc },
+    )
     this.activeSubSolver = this.exactRepairSolver
     this.MAX_ITERATIONS = this.exactRepairSolver.MAX_ITERATIONS + 1
   }
@@ -1484,7 +1500,8 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     if (counters.indexedDrcEvaluationTimeMs !== undefined) {
       this.indexedDrcEvaluationTimeMs += counters.indexedDrcEvaluationTimeMs
     }
-    this.stats.nativeIndexedDrcCandidateCacheSize = counters.indexedDrcCandidateCacheSize
+    this.stats.nativeIndexedDrcCandidateCacheSize =
+      counters.indexedDrcCandidateCacheSize
     let exactOutput = this.exactRepairSolver.getOutput()
     const exactIndexedDrcIssueCountStat =
       this.exactRepairSolver.stats.finalDrcIssueCount

@@ -15,7 +15,11 @@ import { getJumpersGraphics } from "lib/utils/getJumperGraphics"
 import { CrossingViaReductionSolver } from "lib/solvers/CrossingViaReductionSolver/crossing-via-reduction-solver"
 import { TraceSimplificationSolverAdapter } from "lib/bindings/trace-simplification/TraceSimplificationSolverAdapter"
 
-type Phase = "via_removal" | "crossing_via_reduction" | "via_merging" | "path_simplification"
+type Phase =
+  | "via_removal"
+  | "crossing_via_reduction"
+  | "via_merging"
+  | "path_simplification"
 type ExtractResult = (solver: BaseSolver) => HighDensityRoute[]
 export type TraceSimplificationConfig = {
   readonly hdRoutes: ReadonlyArray<HighDensityRoute>
@@ -33,26 +37,50 @@ export type TraceSimplificationConfig = {
   readonly preserveRouteEndpoints?: boolean
   readonly useTraceWidthAwareClearance?: boolean
   readonly enableVertexShortcuts?: boolean
-  readonly terminalLayerIndicesByPcbPortId?: ReadonlyMap<string, ReadonlySet<number>>
+  readonly terminalLayerIndicesByPcbPortId?: ReadonlyMap<
+    string,
+    ReadonlySet<number>
+  >
 }
 
 export class TraceSimplificationSolver extends TraceSimplificationSolverAdapter {
   static override solverKind = "trace"
-  static override stateFields = ["hdRoutes", "preservedRouteEndpoints", "simplificationPipelineLoops", "MAX_SIMPLIFICATION_PIPELINE_LOOPS", "PHASE_ORDER", "currentPhase", "activeSubSolver", "simplificationConfig"]
+  static override stateFields = [
+    "hdRoutes",
+    "preservedRouteEndpoints",
+    "simplificationPipelineLoops",
+    "MAX_SIMPLIFICATION_PIPELINE_LOOPS",
+    "PHASE_ORDER",
+    "currentPhase",
+    "activeSubSolver",
+    "simplificationConfig",
+  ]
   declare hdRoutes: HighDensityRoute[]
-  declare private readonly preservedRouteEndpoints?: ReadonlyMap<string, { start: HighDensityRoute["route"][number]; end: HighDensityRoute["route"][number] }>
+  private declare readonly preservedRouteEndpoints?: ReadonlyMap<
+    string,
+    {
+      start: HighDensityRoute["route"][number]
+      end: HighDensityRoute["route"][number]
+    }
+  >
   declare simplificationPipelineLoops: number
   declare MAX_SIMPLIFICATION_PIPELINE_LOOPS: number
   declare PHASE_ORDER: Phase[]
   declare currentPhase: Phase
-  declare private readonly simplificationConfig: TraceSimplificationConfig
+  private declare readonly simplificationConfig: TraceSimplificationConfig
   private customExtractor: ExtractResult | null = null
   private defaultExtractorChild: BaseSolver | null = null
   private defaultExtractor: ExtractResult | null = null
 
-  constructor(config: TraceSimplificationConfig) { super(config) }
-  override getSolverName(): string { return "TraceSimplificationSolver" }
-  get simplifiedHdRoutes(): HighDensityRoute[] { return this.output() }
+  constructor(config: TraceSimplificationConfig) {
+    super(config)
+  }
+  override getSolverName(): string {
+    return "TraceSimplificationSolver"
+  }
+  get simplifiedHdRoutes(): HighDensityRoute[] {
+    return this.output()
+  }
 
   get extractResult(): ExtractResult | null {
     const mode = this.readSolverField("extractMode")
@@ -63,10 +91,22 @@ export class TraceSimplificationSolver extends TraceSimplificationSolverAdapter 
     if (child !== this.defaultExtractorChild) {
       this.defaultExtractorChild = child
       switch (this.currentPhase) {
-        case "via_removal": this.defaultExtractor = solver => (solver as UselessViaRemovalSolver).getOptimizedHdRoutes() ?? []; break
-        case "crossing_via_reduction": this.defaultExtractor = solver => (solver as CrossingViaReductionSolver).getReducedHdRoutes(); break
-        case "via_merging": this.defaultExtractor = solver => (solver as SameNetViaMergerSolver).getMergedViaHdRoutes() ?? []; break
-        case "path_simplification": this.defaultExtractor = solver => (solver as MultiSimplifiedPathSolver).simplifiedHdRoutes; break
+        case "via_removal":
+          this.defaultExtractor = (solver) =>
+            (solver as UselessViaRemovalSolver).getOptimizedHdRoutes() ?? []
+          break
+        case "crossing_via_reduction":
+          this.defaultExtractor = (solver) =>
+            (solver as CrossingViaReductionSolver).getReducedHdRoutes()
+          break
+        case "via_merging":
+          this.defaultExtractor = (solver) =>
+            (solver as SameNetViaMergerSolver).getMergedViaHdRoutes() ?? []
+          break
+        case "path_simplification":
+          this.defaultExtractor = (solver) =>
+            (solver as MultiSimplifiedPathSolver).simplifiedHdRoutes
+          break
       }
     }
     return this.defaultExtractor
@@ -87,17 +127,53 @@ export class TraceSimplificationSolver extends TraceSimplificationSolverAdapter 
     if ((status & 4) === 0) return status
     this.sync()
     const child = this.activeSubSolver
-    if (!child || !this.customExtractor) throw new Error("Missing custom trace extraction callback")
+    if (!child || !this.customExtractor)
+      throw new Error("Missing custom trace extraction callback")
     const routes = this.customExtractor(child)
     this.push()
-    return super.resolveSolverStep(this.runSolver(() => this.binding.resolveExtract(this.graph.graph(routes))))
+    return super.resolveSolverStep(
+      this.runSolver(() =>
+        this.binding.resolveExtract(this.graph.graph(routes)),
+      ),
+    )
   }
 
-  private validatePreservedRouteEndpoints(routes: HighDensityRoute[]): void { this.callSolver(this.binding.validatePreservedRouteEndpoints, [routes]) }
-  private isSameNetObstacle(route: HighDensityRoute, obstacle: Obstacle): boolean { return this.callSolver(this.binding.isSameNetObstacle, [route, obstacle]) }
-  private getSameNetObstacleForSegment(route: HighDensityRoute, start: {x:number;y:number}, end: {x:number;y:number}): Obstacle | undefined { return this.callSolver(this.binding.getSameNetObstacleForSegment, [route, start, end]) ?? undefined }
-  private isViaInsideSameNetObstacle(route: HighDensityRoute, via: {x:number;y:number}): boolean { return this.callSolver(this.binding.isViaInsideSameNetObstacle, [route, via]) }
-  markThroughObstacleSegments(routes: ReadonlyArray<HighDensityRoute>): HighDensityRoute[] { return this.callSolver(this.binding.markThroughObstacleSegments, [routes]) }
+  private validatePreservedRouteEndpoints(routes: HighDensityRoute[]): void {
+    this.callSolver(this.binding.validatePreservedRouteEndpoints, [routes])
+  }
+  private isSameNetObstacle(
+    route: HighDensityRoute,
+    obstacle: Obstacle,
+  ): boolean {
+    return this.callSolver(this.binding.isSameNetObstacle, [route, obstacle])
+  }
+  private getSameNetObstacleForSegment(
+    route: HighDensityRoute,
+    start: { x: number; y: number },
+    end: { x: number; y: number },
+  ): Obstacle | undefined {
+    return (
+      this.callSolver(this.binding.getSameNetObstacleForSegment, [
+        route,
+        start,
+        end,
+      ]) ?? undefined
+    )
+  }
+  private isViaInsideSameNetObstacle(
+    route: HighDensityRoute,
+    via: { x: number; y: number },
+  ): boolean {
+    return this.callSolver(this.binding.isViaInsideSameNetObstacle, [
+      route,
+      via,
+    ])
+  }
+  markThroughObstacleSegments(
+    routes: ReadonlyArray<HighDensityRoute>,
+  ): HighDensityRoute[] {
+    return this.callSolver(this.binding.markThroughObstacleSegments, [routes])
+  }
   visualize(): GraphicsObject {
     if (this.activeSubSolver) {
       return this.activeSubSolver.visualize()

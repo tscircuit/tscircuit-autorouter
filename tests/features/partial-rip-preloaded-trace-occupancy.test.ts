@@ -3,7 +3,10 @@ import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import { buildHyperGraph } from "lib/solvers/PortPointPathingSolver/hgportpointpathingsolver"
 import { TinyHypergraphPortPointPathingSolver } from "lib/solvers/PortPointPathingSolver/tinyhypergraph/TinyHypergraphPortPointPathingSolver"
 import type { CapacityMeshNode } from "lib/types"
-import type { TinyHypergraphRoutingInput, TinyHypergraphSolverView } from "lib/solvers/PortPointPathingSolver/tinyhypergraph/tinyHypergraphTypes"
+import type {
+  TinyHypergraphRoutingInput,
+  TinyHypergraphSolverView,
+} from "lib/solvers/PortPointPathingSolver/tinyhypergraph/tinyHypergraphTypes"
 
 const PRELOADED_PORT_COUNT = 102
 
@@ -87,13 +90,20 @@ const createSolver = (enablePartialRipWithPreloadedTraces: boolean) => {
 }
 
 test("Pipeline9 can use partial ripping with preloaded trace occupancy", () => {
-  const getTinyPipeline = (solver: TinyHypergraphPortPointPathingSolver): {
+  const getTinyPipeline = (
+    solver: TinyHypergraphPortPointPathingSolver,
+  ): {
     solveGraph: TinyHypergraphSolverView & { iterations: number }
     inputProblem: TinyHypergraphRoutingInput
-  } => (solver as unknown as { tinyPipelineSolver: {
-    solveGraph: TinyHypergraphSolverView & { iterations: number }
-    inputProblem: TinyHypergraphRoutingInput
-  } }).tinyPipelineSolver
+  } =>
+    (
+      solver as unknown as {
+        tinyPipelineSolver: {
+          solveGraph: TinyHypergraphSolverView & { iterations: number }
+          inputProblem: TinyHypergraphRoutingInput
+        }
+      }
+    ).tinyPipelineSolver
 
   const defaultSolver = createSolver(false)
   const pipeline9Solver = createSolver(true)
@@ -109,8 +119,18 @@ test("Pipeline9 can use partial ripping with preloaded trace occupancy", () => {
   expect(
     pipeline9TinySolver.problem.initialAssignments?.length,
   ).toBeGreaterThanOrEqual(100)
-  expect(defaultPipeline.inputProblem.solveGraphOptions?.PARTIAL_RIP_ENABLED).toBeFalse()
-  expect(defaultPipeline.inputProblem.solveGraphOptions?.OUTSIDE_IN_ROUTING).toBeFalse()
-  expect(pipeline9Pipeline.inputProblem.solveGraphOptions?.PARTIAL_RIP_ENABLED ?? true).toBeTrue()
-  expect(pipeline9Pipeline.inputProblem.solveGraphOptions?.OUTSIDE_IN_ROUTING ?? true).toBeTrue()
+  expect(
+    defaultPipeline.inputProblem.solveGraphOptions?.PARTIAL_RIP_ENABLED,
+  ).toBeFalse()
+  expect(
+    defaultPipeline.inputProblem.solveGraphOptions?.OUTSIDE_IN_ROUTING,
+  ).toBeFalse()
+  expect(
+    pipeline9Pipeline.inputProblem.solveGraphOptions?.PARTIAL_RIP_ENABLED ??
+      true,
+  ).toBeTrue()
+  expect(
+    pipeline9Pipeline.inputProblem.solveGraphOptions?.OUTSIDE_IN_ROUTING ??
+      true,
+  ).toBeTrue()
 })
