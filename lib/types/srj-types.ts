@@ -133,6 +133,8 @@ export interface Obstacle {
 
 export interface SimpleRouteConnection {
   name: string
+  /** Circuit JSON source-trace provenance supplied by tscircuit/core. */
+  source_trace_id?: string
   rootConnectionName?: RootConnectionName
   mergedConnectionNames?: string[]
   __rootConnectionNames?: string[]
@@ -149,6 +151,8 @@ export interface SimpleRouteConnection {
 export interface SimplifiedPcbTrace {
   type: "pcb_trace"
   pcb_trace_id: TraceId
+  /** Circuit JSON source trace or source net represented by this copper. */
+  source_trace_id?: string
   /** Preloaded trace intentionally replaced by this routed output. */
   __replaces_pcb_trace_id?: TraceId
   connection_name: string
