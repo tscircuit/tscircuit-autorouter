@@ -101,6 +101,12 @@ test("Pipeline9 routes the exact 86-component T113-S3 USB and UART PCB", async (
   const routedCopper = convertToCircuitJson(globalSrj, allRoutedTraces).filter(
     (element) => element.type === "pcb_trace" || element.type === "pcb_via",
   )
+  expect(
+    routedCopper.filter((element) => element.type === "pcb_trace"),
+  ).toHaveLength(241)
+  expect(
+    routedCopper.filter((element) => element.type === "pcb_via"),
+  ).toHaveLength(155)
   await expect(
     stackSvgsHorizontally(
       [

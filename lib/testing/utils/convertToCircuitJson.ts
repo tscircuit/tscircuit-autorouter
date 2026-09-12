@@ -836,7 +836,15 @@ function extractViasFromRoutes(
             const viaDiameter = segment.via_diameter ?? minViaDiameter
             const viaHoleDiameter =
               segment.via_hole_diameter ?? minViaHoleDiameter
-            const locationKey = `${segment.x},${segment.y},${segment.from_layer},${segment.to_layer}`
+            const physicalLayers = getPhysicalViaLayers(
+              {
+                from_layer: segment.from_layer as LayerName,
+                to_layer: segment.to_layer as LayerName,
+              },
+              layerCount,
+              allowBlindAndBuriedVias,
+            )
+            const locationKey = `${segment.x},${segment.y},${physicalLayers.join(",")}`
             if (!viaLocations.has(locationKey)) {
               vias.push({
                 type: "pcb_via",
@@ -846,14 +854,7 @@ function extractViasFromRoutes(
                 y: segment.y,
                 outer_diameter: viaDiameter,
                 hole_diameter: viaHoleDiameter,
-                layers: getPhysicalViaLayers(
-                  {
-                    from_layer: segment.from_layer as LayerName,
-                    to_layer: segment.to_layer as LayerName,
-                  },
-                  layerCount,
-                  allowBlindAndBuriedVias,
-                ),
+                layers: physicalLayers,
               })
               viaLocations.add(locationKey)
             }
@@ -878,7 +879,12 @@ function extractViasFromRoutes(
           ) {
             const fromLayer = mapZToLayerName(prevPoint.z, layerCount)
             const toLayer = mapZToLayerName(currPoint.z, layerCount)
-            const locationKey = `${currPoint.x},${currPoint.y},${fromLayer},${toLayer}`
+            const physicalLayers = getPhysicalViaLayers(
+              { from_layer: fromLayer, to_layer: toLayer },
+              layerCount,
+              allowBlindAndBuriedVias,
+            )
+            const locationKey = `${currPoint.x},${currPoint.y},${physicalLayers.join(",")}`
 
             if (!viaLocations.has(locationKey)) {
               vias.push({
@@ -889,11 +895,7 @@ function extractViasFromRoutes(
                 y: currPoint.y,
                 outer_diameter: viaDiameter,
                 hole_diameter: viaHoleDiameter,
-                layers: getPhysicalViaLayers(
-                  { from_layer: fromLayer, to_layer: toLayer },
-                  layerCount,
-                  allowBlindAndBuriedVias,
-                ),
+                layers: physicalLayers,
               })
               viaLocations.add(locationKey)
             }
