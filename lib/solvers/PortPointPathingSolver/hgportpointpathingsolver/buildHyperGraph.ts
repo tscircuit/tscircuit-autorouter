@@ -187,14 +187,18 @@ export function buildHyperGraph(params: {
     })
   }
 
+  const regionsById = new Map<string, RegionHg>()
+  for (const region of graph.regions) {
+    // Preserve the first matching region, as the previous Array.find did.
+    if (!regionsById.has(region.regionId)) {
+      regionsById.set(region.regionId, region)
+    }
+  }
+
   for (const spp of params.segmentPortPoints) {
     const [region1Id, region2Id] = spp.nodeIds
-    const region1 = graph.regions.find(
-      (region) => region.regionId === region1Id,
-    )
-    const region2 = graph.regions.find(
-      (region) => region.regionId === region2Id,
-    )
+    const region1 = regionsById.get(region1Id)
+    const region2 = regionsById.get(region2Id)
 
     assertDefined(
       region1,
