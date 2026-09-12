@@ -67,7 +67,7 @@ export type ClearanceMarginDrcEvaluator = (
 export const CLEARANCE_PRECISION_MARGIN = 0.01
 
 const MAX_PASSES = 8
-const FORCE_SCALES = [0.03, 0.1, 0.25]
+const FORCE_SCALES = [0.03, 0.1, 0.18, 0.25]
 
 const getIndexedClearanceDeficit = (
   errors: Pipeline9DrcError[],
@@ -208,9 +208,6 @@ export const applyPipeline9ClearancePrecisionRepairs = ({
     referenceValidationCount: 0,
     repaired: false,
   }
-  if ((srj.traces?.length ?? 0) > 0 || syntheticConnectionNames.size > 0) {
-    return unchanged
-  }
   if (initialErrors.length === 0) return unchanged
   const routeIndexByTraceId = getPipeline9RouteIndexByTraceId({
     routes,
@@ -265,7 +262,7 @@ export const applyPipeline9ClearancePrecisionRepairs = ({
       forceErrorsByPair.set(pairKey, error)
     }
     const forceErrors = [...forceErrorsByPair.values()]
-    let bestCandidate: IndexedClearanceCandidate | undefined
+    const candidates: IndexedClearanceCandidate[] = []
     for (const scale of FORCE_SCALES) {
       const candidateRoutes = cloneRoutes(currentRoutes)
       const changed = applyDrcErrorForces(
@@ -293,82 +290,115 @@ export const applyPipeline9ClearancePrecisionRepairs = ({
       )
       // Conservative indexed errors rank candidates only. Their absence never
       // establishes that a candidate is reference-clean.
-      if (
-        deficit !== undefined &&
-        (!bestCandidate || deficit < bestCandidate.deficit)
-      ) {
-        bestCandidate = { routes: materializedRoutes, deficit }
+      if (deficit !== undefined) {
+        candidates.push({ routes: materializedRoutes, deficit })
       }
     }
-    if (!bestCandidate) break
-    candidateValidationCount++
-    const candidateResult = candidateDrcEvaluator({
-      traces: [],
-      routes: bestCandidate.routes,
-      hdRoutes: bestCandidate.routes,
-    })
-    const candidateErrors = Array.isArray(candidateResult)
-      ? candidateResult
-      : candidateResult.errors
-    const prepared = prepareClearanceErrors({
-      errors: candidateErrors,
-      errorsWithCenters: Array.isArray(candidateResult)
-        ? candidateResult
-        : (candidateResult.errorsWithCenters ?? candidateResult.errors),
-      routeIndexByTraceId,
-      padPositionById,
-    })
-    if (!prepared) break
-    // Measure only the selected candidate. Indexed ranking stays bounded to
-    // the existing three candidates without repeating exact margin checks.
-    const marginMeasurement = marginDrcEvaluator(
-      bestCandidate.routes,
-      marginTargets,
-      routes,
-    )
-    if (marginMeasurement.status === "unsupported-identity") break
-    const marginErrors = marginMeasurement.errors
-    const preparedMargin = prepareClearanceErrors({
-      errors: marginErrors,
-      errorsWithCenters: marginErrors,
-      routeIndexByTraceId,
-      padPositionById,
-    })
-    if (!preparedMargin) break
-    if (candidateErrors.length === 0 && marginErrors.length === 0) {
-      // Private geometry validation omits continuity. Publish only after every
-      // full reference check passes, including continuity and errors with no center.
-      referenceValidationCount++
-      const referenceResult = drcEvaluator({
-        traces: [],
-        routes: bestCandidate.routes,
-        hdRoutes: bestCandidate.routes,
-      })
-      const referenceErrors = Array.isArray(referenceResult)
-        ? referenceResult
-        : referenceResult.errors
-      if (referenceErrors.length === 0) {
-        return {
-          routes: bestCandidate.routes,
-          attemptedCandidateCount,
-          candidateValidationCount,
-          referenceValidationCount,
-          repaired: true,
+    if (candidates.length === 0) break
+    candidates.sort((left, right) => left.deficit - right.deficit)
+    let bestImprovement:
+      | {
+          candidate: IndexedClearanceCandidate
+          prepared: PreparedClearanceErrors
+          preparedMargin: PreparedClearanceErrors
         }
+      | undefined
+    for (const candidate of candidates) {
+      candidateValidationCount++
+      const candidateResult = candidateDrcEvaluator({
+        traces: [],
+        routes: candidate.routes,
+        hdRoutes: candidate.routes,
+      })
+      const candidateErrors = Array.isArray(candidateResult)
+        ? candidateResult
+        : candidateResult.errors
+      const prepared = prepareClearanceErrors({
+        errors: candidateErrors,
+        errorsWithCenters: Array.isArray(candidateResult)
+          ? candidateResult
+          : (candidateResult.errorsWithCenters ?? candidateResult.errors),
+        routeIndexByTraceId,
+        padPositionById,
+      })
+      if (!prepared) continue
+      const marginMeasurement = marginDrcEvaluator(
+        candidate.routes,
+        marginTargets,
+        routes,
+      )
+      if (marginMeasurement.status === "unsupported-identity") {
+        if (candidateErrors.length !== 0) continue
+        referenceValidationCount++
+        const referenceResult = drcEvaluator({
+          traces: [],
+          routes: candidate.routes,
+          hdRoutes: candidate.routes,
+        })
+        const referenceErrors = Array.isArray(referenceResult)
+          ? referenceResult
+          : referenceResult.errors
+        if (referenceErrors.length === 0) {
+          return {
+            routes: candidate.routes,
+            attemptedCandidateCount,
+            candidateValidationCount,
+            referenceValidationCount,
+            repaired: true,
+          }
+        }
+        continue
       }
-      break
+      const marginErrors = marginMeasurement.errors
+      const preparedMargin = prepareClearanceErrors({
+        errors: marginErrors,
+        errorsWithCenters: marginErrors,
+        routeIndexByTraceId,
+        padPositionById,
+      })
+      if (!preparedMargin) continue
+      if (candidateErrors.length === 0 && marginErrors.length === 0) {
+        // Private geometry validation omits continuity. Publish only after every
+        // full reference check passes, including continuity and errors with no center.
+        referenceValidationCount++
+        const referenceResult = drcEvaluator({
+          traces: [],
+          routes: candidate.routes,
+          hdRoutes: candidate.routes,
+        })
+        const referenceErrors = Array.isArray(referenceResult)
+          ? referenceResult
+          : referenceResult.errors
+        if (referenceErrors.length === 0) {
+          return {
+            routes: candidate.routes,
+            attemptedCandidateCount,
+            candidateValidationCount,
+            referenceValidationCount,
+            repaired: true,
+          }
+        }
+        continue
+      }
+      const combinedDeficit = prepared.deficit + preparedMargin.deficit
+      const bestCombinedDeficit = bestImprovement
+        ? bestImprovement.prepared.deficit +
+          bestImprovement.preparedMargin.deficit
+        : Number.POSITIVE_INFINITY
+      if (
+        combinedDeficit <
+          current.deficit + currentMargin.deficit - 1e-9 &&
+        combinedDeficit < bestCombinedDeficit
+      ) {
+        bestImprovement = { candidate, prepared, preparedMargin }
+      }
     }
+    if (!bestImprovement) break
     // A coupled move can temporarily split one deficit between two objects.
     // Such intermediate routes stay private until every reference error clears.
-    if (
-      prepared.deficit + preparedMargin.deficit >=
-      current.deficit + currentMargin.deficit - 1e-9
-    ) {
-      break
-    }
-    currentRoutes = bestCandidate.routes
-    current = prepared
-    currentMargin = preparedMargin
+    currentRoutes = bestImprovement.candidate.routes
+    current = bestImprovement.prepared
+    currentMargin = bestImprovement.preparedMargin
   }
   return {
     routes,
