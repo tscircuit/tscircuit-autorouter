@@ -1,14 +1,7 @@
 import { expect, test } from "bun:test"
-import type { AnyCircuitElement } from "circuit-json"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
-import { RELAXED_DRC_OPTIONS } from "lib/testing/drcPresets"
-import { getDrcErrors } from "lib/testing/getDrcErrors"
-import {
-  convertToCircuitJson,
-  createPcbBoardElement,
-} from "lib/testing/utils/convertToCircuitJson"
+import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import type { SimpleRouteJson, SimplifiedPcbTrace } from "lib/types"
-import { mapZToLayerName } from "lib/utils/mapZToLayerName"
 import capturedPreFixTraces from "../../fixtures/bug-reports/gameboy-through-via-drc/gameboy-through-via-drc.pre-fix-traces.json" with {
   type: "json",
 }
@@ -16,38 +9,7 @@ import capturedGameBoySrj from "../../fixtures/bug-reports/gameboy-through-via-d
   type: "json",
 }
 
-const getCoreThroughViaDrcErrors = ({
-  inputSrj,
-  srjWithPointPairs,
-  routedTraces,
-}: {
-  inputSrj: SimpleRouteJson
-  srjWithPointPairs: SimpleRouteJson
-  routedTraces: SimplifiedPcbTrace[]
-}) => {
-  const throughViaLayers = Array.from({ length: inputSrj.layerCount }, (_, z) =>
-    mapZToLayerName(z, inputSrj.layerCount),
-  )
-  const circuitJson = convertToCircuitJson(srjWithPointPairs, routedTraces, {
-    minTraceWidth: inputSrj.minTraceWidth,
-    minViaDiameter: inputSrj.minViaDiameter,
-    originalSrj: inputSrj,
-    includeOriginalConnections: true,
-  }).map((element) =>
-    element.type === "pcb_via"
-      ? { ...element, layers: throughViaLayers }
-      : element,
-  ) as AnyCircuitElement[]
-  circuitJson.push(
-    createPcbBoardElement({
-      ...inputSrj,
-      minBoardEdgeClearance: inputSrj.minBoardEdgeClearance ?? 0,
-    }),
-  )
-  return getDrcErrors(circuitJson, RELAXED_DRC_OPTIONS).errors
-}
-
-test("Pipeline9 repairs the captured Game Boy's physical through-via DRCs", (): void => {
+test("Pipeline9 repairs the captured Game Boy's through-via DRCs", (): void => {
   // This is the 112-connection, four-layer Game Boy input captured from
   // gameboy-advance. Its published Pipeline9 result put a bottom trace
   // through two top-to-inner2 vias while blind/buried vias were disabled.
@@ -66,11 +28,13 @@ test("Pipeline9 repairs the captured Game Boy's physical through-via DRCs", (): 
   solver.solve()
 
   expect(solver.srjWithPointPairs).toBeDefined()
-  const capturedDrcErrors = getCoreThroughViaDrcErrors({
+  const capturedDrcErrors = evaluateRelaxedDrc({
     inputSrj,
     srjWithPointPairs: solver.srjWithPointPairs!,
     routedTraces: capturedPreFixTraces as SimplifiedPcbTrace[],
-  })
+    includeBoardClearance: true,
+    drcOptions: { includeTraceContinuity: false },
+  }).errors
   expect(capturedDrcErrors.map((error) => error.type).sort()).toEqual([
     "pcb_trace_error",
     "pcb_trace_error",
@@ -80,10 +44,12 @@ test("Pipeline9 repairs the captured Game Boy's physical through-via DRCs", (): 
   expect(solver.error).toBeNull()
   expect(solver.failed).toBeFalse()
   expect(solver.solved).toBeTrue()
-  const repairedDrcErrors = getCoreThroughViaDrcErrors({
+  const repairedDrcErrors = evaluateRelaxedDrc({
     inputSrj,
     srjWithPointPairs: solver.srjWithPointPairs!,
     routedTraces: solver.getOutputSimplifiedPcbTraces(),
-  })
+    includeBoardClearance: true,
+    drcOptions: { includeTraceContinuity: false },
+  }).errors
   expect(repairedDrcErrors).toEqual([])
 })
