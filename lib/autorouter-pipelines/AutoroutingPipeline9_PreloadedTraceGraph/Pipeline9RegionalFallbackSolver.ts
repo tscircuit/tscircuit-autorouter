@@ -172,8 +172,7 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
       boardObstacles,
       connMap: this.params.connMap,
       layerCount: this.params.layerCount,
-      allowBlindAndBuriedVias:
-        this.params.allowBlindAndBuriedVias ?? false,
+      allowBlindAndBuriedVias: this.params.allowBlindAndBuriedVias ?? false,
       viaToPadClearance,
     })
     if (hasViaConflict) {
