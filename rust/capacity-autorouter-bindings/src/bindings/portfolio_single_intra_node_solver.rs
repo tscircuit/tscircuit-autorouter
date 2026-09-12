@@ -238,17 +238,32 @@ impl Candidate for PortfolioCandidate {
     }
 
     fn set_state(&mut self, state: CandidateState) -> Result<(), String> {
-        let SharedEngine::Specialized(engine) = &self.engine else {
-            return Err("Mutable candidate state requires a specialized engine".into());
-        };
-        let mut engine = engine.borrow_mut();
-        let base = engine.solver_mut().base_mut();
-        base.iterations = state.iterations;
-        base.max_iterations = state.max_iterations;
-        base.solved = state.solved;
-        base.failed = state.failed;
-        base.error = state.error.clone();
-        base.progress = state.progress;
+        macro_rules! restore {
+            ($engine:expr, $limit:expr) => {{
+                let engine = $engine;
+                engine.iterations = state.iterations;
+                engine.max_iterations = $limit;
+                engine.solved = state.solved;
+                engine.failed = state.failed;
+                engine.error = state.error.clone();
+                engine.progress = state.progress;
+            }};
+        }
+        match &self.engine {
+            SharedEngine::PendingGeneral => {}
+            SharedEngine::General(engine) => {
+                let mut engine = engine.borrow_mut();
+                restore!(engine.ensure_initialized(), state.max_iterations);
+            }
+            SharedEngine::HighDensity(engine) => match &mut *engine.borrow_mut() {
+                Engine::A01(engine) => restore!(engine, state.max_iterations as usize),
+                Engine::A03(engine) => restore!(engine, state.max_iterations as usize),
+            },
+            SharedEngine::Specialized(engine) => {
+                let mut engine = engine.borrow_mut();
+                restore!(engine.solver_mut().base_mut(), state.max_iterations);
+            }
+        }
         self.state = state;
         Ok(())
     }

@@ -384,6 +384,14 @@ impl SingleRouteUselessViaRemovalSolver {
                 });
             }
         }
+        self.find_valid_obstacle_detour_shortcut(candidates, previous.z)
+    }
+
+    fn find_valid_obstacle_detour_shortcut(
+        &mut self,
+        mut candidates: Vec<ViaPairShortcut>,
+        target_z: f64,
+    ) -> Result<Option<ViaPairShortcut>, String> {
         candidates.sort_by(|a, b| {
             (b.saved_length - a.saved_length)
                 .partial_cmp(&0.0)
@@ -393,7 +401,7 @@ impl SingleRouteUselessViaRemovalSolver {
         let hd_routes = self.hd_route_shi.borrow();
         let obstacles = self.obstacle_shi.borrow();
         let mut validator = create_obstacle_detour_path_validator(
-            previous.z,
+            target_z,
             &self.unsimplified_route,
             &hd_routes,
             &obstacles,
@@ -1079,3 +1087,7 @@ impl SingleRouteUselessViaRemovalSolver {
         Ok(Value::Null)
     }
 }
+
+#[cfg(test)]
+#[path = "obstacle_detour_cache_test.rs"]
+mod obstacle_detour_cache_test;

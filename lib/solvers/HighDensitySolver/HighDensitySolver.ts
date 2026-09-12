@@ -354,6 +354,7 @@ export class HighDensitySolver extends BaseSolver {
       MAX_ITERATIONS: child.MAX_ITERATIONS, iterations: child.iterations, solved: child.solved,
       failed: child.failed, error: child.error, progress: child.progress,
       solverType: this.getSolvedNodeSolverType(child),
+      growthAttempts: child instanceof GrowShrinkHighDensityIntraNodeSolver ? child.growthAttempts : undefined,
     }
     if (method === "routes") return child.solvedRoutes
     if (method === "node") return child.nodeWithPortPoints

@@ -38,22 +38,3 @@ export const makeStraightRoute = (): HighDensityIntraNodeRoute => ({
   ],
   vias: [],
 })
-
-export const makeScaledRoute = (): HighDensityIntraNodeRoute => ({
-  connectionName: "a",
-  traceThickness: 0.15,
-  viaDiameter: 0.3,
-  route: [
-    { x: 9, y: 20, z: 0 },
-    { x: 10, y: 22, z: 0 },
-    { x: 11, y: 20, z: 0 },
-  ],
-  vias: [{ x: 10, y: 22 }],
-})
-
-export const emptyVisualization = () => ({
-  lines: [],
-  points: [],
-  rects: [],
-  circles: [],
-})

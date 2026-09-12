@@ -255,6 +255,7 @@ export class PortfolioSolverAdapter {
             if (next !== value) observeSpecialized()
           }
           value = next
+          if (!this.synchronizing && !this.stepping) this.binding!.setCandidateState(id, getState(solver))
         },
       })
     }

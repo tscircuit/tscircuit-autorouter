@@ -71,6 +71,8 @@ pub struct HighDensityRouteSpatialIndex {
     pub via_buckets: IndexMap<(i64, i64), Vec<Rc<StoredVia>>>,
     pub cell_size: f64,
     pub maximum_copper_radius: f64,
+    #[cfg(test)]
+    pub(crate) segment_clearance_queries: std::cell::Cell<usize>,
 }
 
 impl HighDensityRouteSpatialIndex {
@@ -81,6 +83,8 @@ impl HighDensityRouteSpatialIndex {
             via_buckets: IndexMap::new(),
             cell_size,
             maximum_copper_radius: 0.0,
+            #[cfg(test)]
+            segment_clearance_queries: std::cell::Cell::new(0),
         };
         for route in routes {
             index.add_route(route);
@@ -162,6 +166,9 @@ impl HighDensityRouteSpatialIndex {
         segment_end: &Point,
         margin: f64,
     ) -> Vec<RouteConflict> {
+        #[cfg(test)]
+        self.segment_clearance_queries
+            .set(self.segment_clearance_queries.get() + 1);
         let broad_phase_margin = margin + self.maximum_copper_radius;
         let search_min_x = min(segment_start.x, segment_end.x) - broad_phase_margin;
         let search_min_y = min(segment_start.y, segment_end.y) - broad_phase_margin;

@@ -27,6 +27,7 @@ export class TraceSimplificationSolverAdapter extends BaseSolver {
   protected graph!: TraceSimplificationGraphCodec
   protected readonly stateValues: Record<string, any> = {}
   protected observed = false
+  private statsObserved = false
   private outputValues: Record<string, any> = {}
   private syncingSolver = false
   private dirtyBase = false
@@ -110,8 +111,12 @@ export class TraceSimplificationSolverAdapter extends BaseSolver {
     if (!Object.hasOwn(this.stateValues, "stats")) this.stateValues.stats = this.stats
     const diagnosticFields = ctor.stateFields.includes("stats") ? ctor.stateFields : [...ctor.stateFields, "stats"]
     for (const field of diagnosticFields) Object.defineProperty(this, field, { enumerable: true, configurable: true,
-      get: (): any => { this.graph.exposeNormalizedObstacles(); this.observed = true; if (!this.hasSnapshot) { this.push(); this.sync() }; return this.stateValues[field] },
-      set: (value: any): void => { this.graph.exposeNormalizedObstacles(); this.observed = true; if (!this.hasSnapshot) { this.push(); this.sync() }; this.stateValues[field] = value },
+      get: (): any => this.readSolverField(field),
+      set: (value: any): void => {
+        if (value !== null && typeof value === "object") this.readSolverField(field)
+        this.stateValues[field] = value
+        this.dirtyFields.add(field)
+      },
     })
   }
 
@@ -128,7 +133,7 @@ export class TraceSimplificationSolverAdapter extends BaseSolver {
     const ctor = childConstructors.get(binding.kind())
     if (!ctor) throw new Error(`Unregistered binding simplification child ${binding.kind()}`)
     const child = Object.create(ctor.prototype) as TraceSimplificationSolverAdapter
-    Object.assign(child, new BaseSolver(), { binding: binding, graph: this.graph, stateValues: {}, outputValues: {}, observed: false, syncingSolver: false, dirtyBase: false, hasSnapshot: false, dirtyFields: new Set(), baseValues: {}, childViews: new Map(), sourceParams: this.sourceParams })
+    Object.assign(child, new BaseSolver(), { binding: binding, graph: this.graph, stateValues: {}, outputValues: {}, observed: false, statsObserved: false, syncingSolver: false, dirtyBase: false, hasSnapshot: false, dirtyFields: new Set(), baseValues: {}, childViews: new Map(), sourceParams: this.sourceParams })
     child.installAccessors(ctor)
     child.syncBase()
     this.graph.register(id, child)
@@ -183,8 +188,17 @@ export class TraceSimplificationSolverAdapter extends BaseSolver {
     const sourceChanges = this.graph.sourceChanges(routingOnly)
     if (sourceChanges) this.binding.restore(sourceChanges)
     const dirtyFields = [...this.dirtyFields].filter(field => !stepArguments || (field !== "iterations" && field !== "MAX_ITERATIONS"))
-    if (!this.observed && dirtyFields.length === 0 && Object.keys(this.outputValues).length === 0) return
-    const fields: Record<string, any> = this.observed ? { ...this.outputValues, ...this.stateValues, ...this.baseValues } : { ...this.outputValues, ...Object.fromEntries(dirtyFields.map(field => [field, this.baseValues[field]])) }
+    if (!this.observed && !this.statsObserved && dirtyFields.length === 0 && Object.keys(this.outputValues).length === 0) return
+    const fields: Record<string, any> = { ...this.outputValues }
+    if (this.observed) {
+      Object.assign(fields, this.stateValues, this.baseValues)
+    } else {
+      for (const field of dirtyFields) {
+        fields[field] = Object.hasOwn(this.baseValues, field)
+          ? this.baseValues[field] : this.stateValues[field]
+      }
+      if (this.statsObserved) fields.stats = this.stateValues.stats
+    }
     if (fields.activeSubSolver instanceof TraceSimplificationSolverAdapter) {
       fields.activeSubSolver.push(false, routingOnly)
       fields.activeSubSolver = { $object: fields.activeSubSolver.binding.identity(), fields: {} }
@@ -195,9 +209,13 @@ export class TraceSimplificationSolverAdapter extends BaseSolver {
   }
 
   protected readSolverField(key: string): any {
+    if (key === "stats" && !this.observed) {
+      if (!this.statsObserved) { this.push(); this.hydrateSolver(this.binding.statistics(), this.stateValues); this.statsObserved = true }
+      return this.stateValues.stats
+    }
     this.graph.exposeNormalizedObstacles()
-    this.observed = true
     if (!this.hasSnapshot) { this.push(); this.sync() }
+    this.observed = true
     return this.stateValues[key]
   }
 
@@ -217,6 +235,7 @@ export class TraceSimplificationSolverAdapter extends BaseSolver {
     this.graph.trackArguments(args)
     const value = this.hydrateSolver(withQueryGraph(this.graph, () => method.call(this.binding, argsGraph)))
     if (this.observed) this.sync()
+    else if (this.statsObserved) this.hydrateSolver(this.binding.statistics(), this.stateValues)
     return value
   }
 
@@ -254,7 +273,8 @@ export class TraceSimplificationSolverAdapter extends BaseSolver {
     } finally {
       if (!completed) this.syncBase()
       if (this.observed) this.sync()
-      else if (Object.keys(this.outputValues).length) this.readOutput(false)
+      else if (this.statsObserved) this.hydrateSolver(this.binding.statistics(), this.stateValues)
+      if (!this.observed && Object.keys(this.outputValues).length) this.readOutput(false)
     }
   }
 
@@ -266,7 +286,7 @@ export class TraceSimplificationSolverAdapter extends BaseSolver {
     const start = Date.now()
     this.push()
     try { withQueryGraph(this.graph, () => this.binding.solve()) }
-    finally { this.syncBase(); if (this.observed) this.sync(); else if (Object.keys(this.outputValues).length) this.readOutput(false) }
+    finally { this.syncBase(); if (this.observed) this.sync(); else { if (this.statsObserved) this.hydrateSolver(this.binding.statistics(), this.stateValues); if (Object.keys(this.outputValues).length) this.readOutput(false) } }
     this.timeToSolve = Date.now() - start
   }
 

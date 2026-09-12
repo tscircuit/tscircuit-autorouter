@@ -132,6 +132,7 @@ struct ExternalChild {
     solver_type: String,
     node: Value,
     state: BaseSolverState,
+    growth_attempts: Option<f64>,
 }
 
 impl ExternalChild {
@@ -160,6 +161,7 @@ impl HighDensityNodeSolver for ExternalChild {
             .as_str()
             .ok_or("External child solverType required")?
             .to_owned();
+        self.growth_attempts = state["growthAttempts"].as_f64();
         self.state = serde_json::from_value(state).map_err(|error| error.to_string())?;
         self.node = self.call("node")?;
         Ok(())
@@ -174,7 +176,7 @@ impl HighDensityNodeSolver for ExternalChild {
         self.solver_type.clone()
     }
     fn growth_attempts(&self) -> Option<f64> {
-        None
+        self.growth_attempts
     }
     fn visualize(&self, _: &dyn Fn(&str, f64) -> String) -> Result<Value, String> {
         self.call("visualize")
@@ -908,12 +910,14 @@ impl HighDensitySolver {
                     solver_type,
                     node: Value::Null,
                     state: BaseSolverState::default(),
+                    growth_attempts: None,
                 };
                 let state = child.call("state").map_err(return_error)?;
                 child.solver_type = state["solverType"]
                     .as_str()
                     .ok_or_else(|| JsValue::from_str("External child solverType required"))?
                     .to_owned();
+                child.growth_attempts = state["growthAttempts"].as_f64();
                 child.state = serde_json::from_value(state)
                     .map_err(|error| JsValue::from_str(&error.to_string()))?;
                 child.node = child.call("node").map_err(return_error)?;

@@ -1,3 +1,5 @@
+import "lib/bindings/repair/BroadRepulsionAdapter"
+import "lib/bindings/repair/TargetedRepairAdapter"
 import { GlobalDrcForceImproveSolver } from "lib/bindings/repair/GlobalDrcForceImproveSolver"
 import { PostProcessingSolver as DifferentialPairPostProcessingSolver } from "@tscircuit/length-matching-solver"
 import type { PowerTraceExpanderOptions } from "@tscircuit/power-trace-expander"

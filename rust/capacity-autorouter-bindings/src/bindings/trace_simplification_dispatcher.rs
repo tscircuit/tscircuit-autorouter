@@ -1124,6 +1124,25 @@ impl TraceSimplificationDispatcher {
         })
     }
 
+    pub fn statistics(&self) -> Result<Ts<TraceGraphPacket>, JsValue> {
+        let stats = match &*self.engine {
+            Engine::SingleVia(s) => Some(s.borrow().stats.clone()),
+            Engine::Via(s) => Some(s.borrow().stats.clone()),
+            Engine::Merger(s) => Some(s.borrow().stats.clone()),
+            Engine::Trace(s) => Some(s.borrow().stats.clone()),
+            Engine::Crossing(s) => Some(s.borrow().stats.clone()),
+            Engine::Path(_) | Engine::Multi(_) => None,
+        };
+        let mut codec = self.codec.borrow_mut();
+        let fields = match stats {
+            Some(stats) => serde_json::json!({"stats": codec.raw(stats)}),
+            None => serde_json::json!({}),
+        };
+        TraceGraphPacket(codec.finish(fields))
+            .into_ts()
+            .map_err(js_error)
+    }
+
     #[wasm_bindgen(js_name = snapshot)]
     pub fn snapshot(&self) -> Result<Ts<TraceGraphPacket>, JsValue> {
         let mut codec = self.codec.borrow_mut();

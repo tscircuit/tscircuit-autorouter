@@ -8,11 +8,13 @@ import * as bindings from "../pkg/capacity_autorouter_bindings.js"
 
 export class HighDensitySolverAdapter<V extends HighDensityVariant = HighDensityVariant> extends BaseSolver {
   private binding: bindings.HighDensityCandidateSolver | undefined
+  readonly hyperParameters: NonNullable<HighDensityProps[V]["hyperParameters"]>
   private solvedSegmentCount = 0
   private readonly endpointIndexKey: string
 
   constructor(readonly variant: V, private readonly props: HighDensityProps[V]) {
     super()
+    this.hyperParameters = props.hyperParameters ?? {}
     initializeAutorouterBindings()
     this.MAX_ITERATIONS = 100e6
     const { initialPenaltyFn, ...input } = props
