@@ -1416,101 +1416,111 @@ impl CrossingViaReductionSolver {
         }
         Ok(())
     }
-    pub fn invoke(
+    pub fn collapse_detour_section_graph(
         &mut self,
-        method: &str,
         args: &Value,
         codec: &mut crate::bindings::trace_simplification::graph_codec::GraphCodec,
     ) -> Result<Value, String> {
-        match method {
-            "collapseDetourSection" => {
-                let arg = &args[0];
-                let route = codec.read_route(&arg["route"])?;
-                let section = RouteSection::restore(&arg["section"], codec)?;
-                let target = arg["targetZ"].as_f64().ok_or("Missing targetZ")?;
-                Ok(codec.route(&self.collapse_detour_section(&route, &section, target)?))
-            }
-            "relocateTransitionVia" => {
-                let arg = &args[0];
-                let route = codec.read_route(&arg["route"])?;
-                let section = RouteSection::restore(&arg["section"], codec)?;
-                let target = arg["targetZ"].as_f64().ok_or("Missing targetZ")?;
-                let side = match arg["side"].as_str() {
-                    Some("start") => TransitionSide::Start,
-                    Some("end") => TransitionSide::End,
-                    _ => return Err("Invalid transition side".into()),
-                };
-                let distance = arg["newViaDistance"]
-                    .as_f64()
-                    .ok_or("Missing newViaDistance")?;
-                Ok(
-                    match self.relocate_transition_via(&route, &section, target, side, distance)? {
-                        Some((route, point)) => {
-                            json!({"route":codec.route(&route),"relocatedVia":point})
-                        }
-                        None => Value::Null,
+        let arg = &args[0];
+        let route = codec.read_route(&arg["route"])?;
+        let section = RouteSection::restore(&arg["section"], codec)?;
+        let target = arg["targetZ"].as_f64().ok_or("Missing targetZ")?;
+        Ok(codec.route(&self.collapse_detour_section(&route, &section, target)?))
+    }
+
+    pub fn relocate_transition_via_graph(
+        &mut self,
+        args: &Value,
+        codec: &mut crate::bindings::trace_simplification::graph_codec::GraphCodec,
+    ) -> Result<Value, String> {
+        let arg = &args[0];
+        let route = codec.read_route(&arg["route"])?;
+        let section = RouteSection::restore(&arg["section"], codec)?;
+        let target = arg["targetZ"].as_f64().ok_or("Missing targetZ")?;
+        let side = match arg["side"].as_str() {
+            Some("start") => TransitionSide::Start,
+            Some("end") => TransitionSide::End,
+            _ => return Err("Invalid transition side".into()),
+        };
+        let distance = arg["newViaDistance"]
+            .as_f64()
+            .ok_or("Missing newViaDistance")?;
+        Ok(
+            match self.relocate_transition_via(&route, &section, target, side, distance)? {
+                Some((route, point)) => {
+                    json!({"route":codec.route(&route),"relocatedVia":point})
+                }
+                None => Value::Null,
+            },
+        )
+    }
+
+    pub fn relocate_transition_vias_graph(
+        &mut self,
+        args: &Value,
+        codec: &mut crate::bindings::trace_simplification::graph_codec::GraphCodec,
+    ) -> Result<Value, String> {
+        let arg = &args[0];
+        let route = codec.read_route(&arg["route"])?;
+        let sections = arg["sections"]
+            .as_array()
+            .ok_or("Missing sections")?
+            .iter()
+            .map(|section| RouteSection::restore(section, codec))
+            .collect::<Result<Vec<_>, _>>()?;
+        let groups = arg["crossingGroups"]
+            .as_array()
+            .ok_or("Missing crossingGroups")?
+            .iter()
+            .map(|group| {
+                Ok(IndexedCrossingGroup {
+                    transition_route_index: group["transitionRouteIndex"]
+                        .as_u64()
+                        .ok_or("Missing transitionRouteIndex")?
+                        as usize,
+                    transition_section_index: group["transitionSectionIndex"]
+                        .as_u64()
+                        .ok_or("Missing transitionSectionIndex")?
+                        as usize,
+                    side: match group["side"].as_str() {
+                        Some("start") => TransitionSide::Start,
+                        Some("end") => TransitionSide::End,
+                        _ => return Err("Invalid side".to_string()),
                     },
-                )
-            }
-            "relocateTransitionVias" => {
-                let arg = &args[0];
-                let route = codec.read_route(&arg["route"])?;
-                let sections = arg["sections"]
-                    .as_array()
-                    .ok_or("Missing sections")?
-                    .iter()
-                    .map(|section| RouteSection::restore(section, codec))
-                    .collect::<Result<Vec<_>, _>>()?;
-                let groups = arg["crossingGroups"]
-                    .as_array()
-                    .ok_or("Missing crossingGroups")?
-                    .iter()
-                    .map(|group| {
-                        Ok(IndexedCrossingGroup {
-                            transition_route_index: group["transitionRouteIndex"]
-                                .as_u64()
-                                .ok_or("Missing transitionRouteIndex")?
-                                as usize,
-                            transition_section_index: group["transitionSectionIndex"]
-                                .as_u64()
-                                .ok_or("Missing transitionSectionIndex")?
-                                as usize,
-                            side: match group["side"].as_str() {
-                                Some("start") => TransitionSide::Start,
-                                Some("end") => TransitionSide::End,
-                                _ => return Err("Invalid side".to_string()),
-                            },
-                            crossing_distances: serde_json::from_value(
-                                group["crossingDistances"].clone(),
-                            )
-                            .map_err(|e| e.to_string())?,
-                        })
-                    })
-                    .collect::<Result<Vec<_>, String>>()?;
-                let z = arg["detourZ"].as_f64().ok_or("Missing detourZ")?;
-                let thickness = arg["detourTraceThickness"]
-                    .as_f64()
-                    .ok_or("Missing detourTraceThickness")?;
-                Ok(
-                    match self.relocate_transition_vias(&route, &sections, &groups, z, thickness)? {
-                        Some((route, vias)) => {
-                            json!({"route":codec.route(&route),"relocatedVias":vias})
-                        }
-                        None => Value::Null,
-                    },
-                )
-            }
-            "getReducedHdRoutes" => {
-                Ok(codec.route_array(self.reduced_routes_array_identity, &self.reduced_hd_routes))
-            }
-            "findCrossingReduction" => {
-                let candidate = self.find_crossing_reduction()?;
-                Ok(candidate.map(|c|json!({"detourRouteIndex":c.detour_route_index,"detourRoute":codec.route(&c.detour_route),"transitionUpdates":c.transition_updates.iter().map(|u|json!({"routeIndex":u.route_index,"route":codec.route(&u.route),"relocatedVias":u.relocated_vias})).collect::<Vec<_>>()})).unwrap_or(Value::Null))
-            }
-            _ => Err(format!(
-                "Unknown CrossingViaReductionSolver method: {method}"
-            )),
-        }
+                    crossing_distances: serde_json::from_value(group["crossingDistances"].clone())
+                        .map_err(|e| e.to_string())?,
+                })
+            })
+            .collect::<Result<Vec<_>, String>>()?;
+        let z = arg["detourZ"].as_f64().ok_or("Missing detourZ")?;
+        let thickness = arg["detourTraceThickness"]
+            .as_f64()
+            .ok_or("Missing detourTraceThickness")?;
+        Ok(
+            match self.relocate_transition_vias(&route, &sections, &groups, z, thickness)? {
+                Some((route, vias)) => {
+                    json!({"route":codec.route(&route),"relocatedVias":vias})
+                }
+                None => Value::Null,
+            },
+        )
+    }
+
+    pub fn get_reduced_hd_routes_graph(
+        &mut self,
+        _args: &Value,
+        codec: &mut crate::bindings::trace_simplification::graph_codec::GraphCodec,
+    ) -> Result<Value, String> {
+        Ok(codec.route_array(self.reduced_routes_array_identity, &self.reduced_hd_routes))
+    }
+
+    pub fn find_crossing_reduction_graph(
+        &mut self,
+        _args: &Value,
+        codec: &mut crate::bindings::trace_simplification::graph_codec::GraphCodec,
+    ) -> Result<Value, String> {
+        let candidate = self.find_crossing_reduction()?;
+        Ok(candidate.map(|c|json!({"detourRouteIndex":c.detour_route_index,"detourRoute":codec.route(&c.detour_route),"transitionUpdates":c.transition_updates.iter().map(|u|json!({"routeIndex":u.route_index,"route":codec.route(&u.route),"relocatedVias":u.relocated_vias})).collect::<Vec<_>>()})).unwrap_or(Value::Null))
     }
 }
 impl SpecializedSolver for CrossingViaReductionSolver {

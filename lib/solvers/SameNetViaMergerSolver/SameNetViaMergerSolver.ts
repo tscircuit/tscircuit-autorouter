@@ -26,7 +26,7 @@ export interface SameNetViaMergerSolverInput {
   preserveRouteEndpoints?: boolean
 }
 
-type Via = {
+export type Via = {
   x: number
   y: number
   diameter: number
@@ -68,17 +68,17 @@ export class SameNetViaMergerSolver extends TraceSimplificationSolverAdapter {
       ...(this.input.otherHdRoutes ?? []),
     ])
   }
-  private rebuildVias(): void { this.invoke("rebuildVias", []) }
-  private getViaKey(via: Via): string { return this.invoke("getViaKey", [via]) as string }
-  private dedupeRouteVias(route: HighDensityRoute): void { this.invoke("dedupeRouteVias", [route]) }
+  private rebuildVias(): void { this.callSolver(this.binding.rebuildVias, []) }
+  private getViaKey(via: Via): string { return this.callSolver(this.binding.getViaKey, [via]) }
+  private dedupeRouteVias(route: HighDensityRoute): void { this.callSolver(this.binding.dedupeRouteVias, [route]) }
   private getOffendingViaGroupsBatch(): Array<{ keep: Via; remove: Via[] }> {
-    return this.invoke("getOffendingViaGroupsBatch", []) as Array<{ keep: Via; remove: Via[] }>
+    return this.callSolver(this.binding.getOffendingViaGroupsBatch, [])
   }
   private moveViaTo(viaToRemove: Via, viaKeep: Via, rebuildVias = true): void {
-    this.invoke("moveViaTo", [viaToRemove, viaKeep, rebuildVias])
+    this.callSolver(this.binding.moveViaTo, [viaToRemove, viaKeep, rebuildVias])
   }
   getMergedViaHdRoutes(): HighDensityRoute[] | null {
-    return this.invoke("getMergedViaHdRoutes", []) as HighDensityRoute[]
+    return this.callSolver(this.binding.getMergedViaHdRoutes, [])
   }
 
   visualize(): GraphicsObject {

@@ -4,13 +4,10 @@ export class MultiHeadPolyLineIntraNodeSolver2 extends MultiHeadPolyLineIntraNod
   static override solverKind = "multi-head2"
   static override diagnosticFields = [...MultiHeadPolyLineIntraNodeSolver.diagnosticFields]
   override getSolverName(): string { return "MultiHeadPolyLineIntraNodeSolver2" }
-  computeG(polyLines: any, candidate: any): any { return this.invoke<any>("computeG", [polyLines, candidate]) }
-  computeH(candidate: any): number { return this.invoke<number>("computeH", [candidate]) }
+  computeG(polyLines: any, candidate: any): any { return this.call(() => this.binding.computeG(polyLines, candidate), [polyLines, candidate]) }
+  computeH(candidate: any): number { return this.call(() => this.binding.computeH(candidate), [candidate]) }
   applyForcesToPolyLines(polyLines: PolyLine2[]): {
         lastStepMoved: boolean;
         magForceApplied: number;
-    } { return this.invoke<{
-        lastStepMoved: boolean;
-        magForceApplied: number;
-    }>("applyForcesToPolyLines", [polyLines]) }
+    } { return this.call(() => this.binding.applyForcesToPolyLines(polyLines), [polyLines]) }
 }

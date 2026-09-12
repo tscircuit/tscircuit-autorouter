@@ -31,22 +31,22 @@ export class CrossingViaReductionSolver extends TraceSimplificationSolverAdapter
 
   override getSolverName(): string { return "CrossingViaReductionSolver" }
   private collapseDetourSection(input: { route: HighDensityRoute; section: RouteSection; targetZ: number }): HighDensityRoute {
-    return this.invoke("collapseDetourSection", [input]) as HighDensityRoute
+    return this.callSolver(this.binding.collapseDetourSection, [input])
   }
 
   private relocateTransitionVia(input: { route: HighDensityRoute; section: RouteSection; targetZ: number; side: "start" | "end"; newViaDistance: number }): { route: HighDensityRoute; relocatedVia: { x: number; y: number } } | null {
-    return this.invoke("relocateTransitionVia", [input]) as { route: HighDensityRoute; relocatedVia: { x: number; y: number } } | null
+    return this.callSolver(this.binding.relocateTransitionVia, [input])
   }
 
   private relocateTransitionVias(input: { route: HighDensityRoute; sections: RouteSection[]; crossingGroups: Array<{ transitionRouteIndex: number; transitionSectionIndex: number; side: "start" | "end"; crossingDistances: number[] }>; detourZ: number; detourTraceThickness: number }): { route: HighDensityRoute; relocatedVias: Array<{ x: number; y: number }> } | null {
-    return this.invoke("relocateTransitionVias", [input]) as { route: HighDensityRoute; relocatedVias: Array<{ x: number; y: number }> } | null
+    return this.callSolver(this.binding.relocateTransitionVias, [input])
   }
 
   private findCrossingReduction(): { detourRouteIndex: number; detourRoute: HighDensityRoute; transitionUpdates: Array<{ routeIndex: number; route: HighDensityRoute; relocatedVias: Array<{ x: number; y: number }> }> } | null {
-    return this.invoke("findCrossingReduction", []) as { detourRouteIndex: number; detourRoute: HighDensityRoute; transitionUpdates: Array<{ routeIndex: number; route: HighDensityRoute; relocatedVias: Array<{ x: number; y: number }> }> } | null
+    return this.callSolver(this.binding.findCrossingReduction, [])
   }
 
-  getReducedHdRoutes(): HighDensityRoute[] { return this.invoke("getReducedHdRoutes", []) as HighDensityRoute[] }
+  getReducedHdRoutes(): HighDensityRoute[] { return this.callSolver(this.binding.getReducedHdRoutes, []) }
 
   visualize(): GraphicsObject {
     const graphics: GraphicsObject &

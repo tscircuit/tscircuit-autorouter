@@ -807,46 +807,57 @@ impl TraceSimplificationSolver {
         Ok(())
     }
 
-    pub fn invoke(
+    pub fn mark_through_obstacle_segments_graph(
         &mut self,
-        method: &str,
         args: &Value,
-        codec: &mut GraphCodec,
+        codec: &mut crate::bindings::trace_simplification::graph_codec::GraphCodec,
     ) -> Result<Value, String> {
-        match method {
-            "markThroughObstacleSegments" => {
-                let routes = codec.read_routes(&args[0])?;
-                let routes = self.mark_through_obstacle_segments(&routes);
-                Ok(codec.routes(&routes))
-            }
-            "validatePreservedRouteEndpoints" => {
-                let routes = codec.read_routes(&args[0])?;
-                self.validate_preserved_route_endpoints(&routes)?;
-                Ok(Value::Null)
-            }
-            "isSameNetObstacle" => {
-                let route = codec.read_route(&args[0])?;
-                let obstacle = codec.read_obstacle(&args[1])?;
-                Ok(json!(self.is_same_net_obstacle(&route, &obstacle)))
-            }
-            "getSameNetObstacleForSegment" => {
-                let route = codec.read_route(&args[0])?;
-                let start = point2(&codec.read_point(&args[1])?);
-                let end = point2(&codec.read_point(&args[2])?);
-                Ok(self
-                    .get_same_net_obstacle_for_segment(&route, start, end)
-                    .map(|obstacle| codec.obstacle(&obstacle))
-                    .unwrap_or(Value::Null))
-            }
-            "isViaInsideSameNetObstacle" => {
-                let route = codec.read_route(&args[0])?;
-                let via = point2(&codec.read_point(&args[1])?);
-                Ok(json!(self.is_via_inside_same_net_obstacle(&route, via)))
-            }
-            "getOutput" | "simplifiedHdRoutes" => {
-                Ok(codec.route_array(self.hd_routes_array_identity, &self.hd_routes))
-            }
-            _ => Err(format!("Unknown trace simplification method: {method}")),
-        }
+        let routes = codec.read_routes(&args[0])?;
+        let routes = self.mark_through_obstacle_segments(&routes);
+        Ok(codec.routes(&routes))
+    }
+
+    pub fn validate_preserved_route_endpoints_graph(
+        &mut self,
+        args: &Value,
+        codec: &mut crate::bindings::trace_simplification::graph_codec::GraphCodec,
+    ) -> Result<Value, String> {
+        let routes = codec.read_routes(&args[0])?;
+        self.validate_preserved_route_endpoints(&routes)?;
+        Ok(Value::Null)
+    }
+
+    pub fn is_same_net_obstacle_graph(
+        &mut self,
+        args: &Value,
+        codec: &mut crate::bindings::trace_simplification::graph_codec::GraphCodec,
+    ) -> Result<Value, String> {
+        let route = codec.read_route(&args[0])?;
+        let obstacle = codec.read_obstacle(&args[1])?;
+        Ok(json!(self.is_same_net_obstacle(&route, &obstacle)))
+    }
+
+    pub fn get_same_net_obstacle_for_segment_graph(
+        &mut self,
+        args: &Value,
+        codec: &mut crate::bindings::trace_simplification::graph_codec::GraphCodec,
+    ) -> Result<Value, String> {
+        let route = codec.read_route(&args[0])?;
+        let start = point2(&codec.read_point(&args[1])?);
+        let end = point2(&codec.read_point(&args[2])?);
+        Ok(self
+            .get_same_net_obstacle_for_segment(&route, start, end)
+            .map(|obstacle| codec.obstacle(&obstacle))
+            .unwrap_or(Value::Null))
+    }
+
+    pub fn is_via_inside_same_net_obstacle_graph(
+        &mut self,
+        args: &Value,
+        codec: &mut crate::bindings::trace_simplification::graph_codec::GraphCodec,
+    ) -> Result<Value, String> {
+        let route = codec.read_route(&args[0])?;
+        let via = point2(&codec.read_point(&args[1])?);
+        Ok(json!(self.is_via_inside_same_net_obstacle(&route, via)))
     }
 }

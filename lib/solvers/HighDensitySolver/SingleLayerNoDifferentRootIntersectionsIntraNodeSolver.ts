@@ -13,5 +13,5 @@ export class SingleLayerNoDifferentRootIntersectionsIntraNodeSolver extends Spec
         traceWidth?: number;
         viaDiameter?: number;
     }) { super(props) }
-  static isApplicable(node: NodeWithPortPoints): boolean { return this.applicable("single-layer", node) }
+  static isApplicable(node: NodeWithPortPoints): boolean { return this.applicable(this.specializedBindings.isSingleLayerApplicable, node) }
 }

@@ -8,7 +8,7 @@ import type { RouteSection } from "./route-section"
 
 type RoutePoint = HighDensityRoute["route"][number]
 
-type ViaPairShortcut = {
+export type ViaPairShortcut = {
   path: RoutePoint[]
   previousPointIndex: number
   nextPointIndex: number
@@ -16,13 +16,13 @@ type ViaPairShortcut = {
   validationFirstSegmentIndex?: number
 }
 
-type ObstacleDetourPath = {
+export type ObstacleDetourPath = {
   path: RoutePoint[]
   length: number
   longestSegmentIndex: number
 }
 
-type MultilayerSectionCollapse = {
+export type MultilayerSectionCollapse = {
   targetZ: number
   mergeWith: "previous" | "next"
 }
@@ -68,28 +68,28 @@ export class SingleRouteUselessViaRemovalSolver extends TraceSimplificationSolve
   }
 
   override getSolverName(): string { return "SingleRouteUselessViaRemovalSolver" }
-  private getPathLength(points: RoutePoint[]): number { return this.invoke("getPathLength", [points]) as number }
+  private getPathLength(points: RoutePoint[]): number { return this.callSolver(this.binding.getPathLength, [points]) }
   private normalizeShortcutPath(path: Array<{ x: number; y: number }>, start: RoutePoint, end: RoutePoint): RoutePoint[] {
-    return this.invoke("normalizeShortcutPath", [path, start, end]) as RoutePoint[]
+    return this.callSolver(this.binding.normalizeShortcutPath, [path, start, end])
   }
-  private shortcutCrossesOutline(path: RoutePoint[]): boolean { return this.invoke("shortcutCrossesOutline", [path]) as boolean }
+  private shortcutCrossesOutline(path: RoutePoint[]): boolean { return this.callSolver(this.binding.shortcutCrossesOutline, [path]) }
   private getObstacleDetourPaths(start: RoutePoint, end: RoutePoint, targetZ: number, maxPathLength: number): ObstacleDetourPath[] {
-    return this.invoke("getObstacleDetourPaths", [start, end, targetZ, maxPathLength]) as ObstacleDetourPath[]
+    return this.callSolver(this.binding.getObstacleDetourPaths, [start, end, targetZ, maxPathLength])
   }
   private getDirectGeometryShortcut(previous: RouteSection, current: RouteSection, next: RouteSection): ViaPairShortcut | null {
-    return this.invoke("getDirectGeometryShortcut", [previous, current, next]) as ViaPairShortcut | null
+    return this.callSolver(this.binding.getDirectGeometryShortcut, [previous, current, next])
   }
   private getObstacleDetourShortcut(previous: RouteSection, current: RouteSection, next: RouteSection): ViaPairShortcut | null {
-    return this.invoke("getObstacleDetourShortcut", [previous, current, next]) as ViaPairShortcut | null
+    return this.callSolver(this.binding.getObstacleDetourShortcut, [previous, current, next])
   }
   private findGeometryShortcut(previous: RouteSection, current: RouteSection, next: RouteSection): ViaPairShortcut | null {
-    return this.invoke("findGeometryShortcut", [previous, current, next]) as ViaPairShortcut | null
+    return this.callSolver(this.binding.findGeometryShortcut, [previous, current, next])
   }
-  private applyGeometryShortcut(shortcut: ViaPairShortcut): void { this.invoke("applyGeometryShortcut", [shortcut]) }
+  private applyGeometryShortcut(shortcut: ViaPairShortcut): void { this.callSolver(this.binding.applyGeometryShortcut, [shortcut]) }
   private findMultilayerSectionCollapse(previous: RouteSection, current: RouteSection, next: RouteSection): MultilayerSectionCollapse | null {
-    return this.invoke("findMultilayerSectionCollapse", [previous, current, next]) as MultilayerSectionCollapse | null
+    return this.callSolver(this.binding.findMultilayerSectionCollapse, [previous, current, next])
   }
-  private applyMultilayerSectionCollapse(collapse: MultilayerSectionCollapse): void { this.invoke("applyMultilayerSectionCollapse", [collapse]) }
+  private applyMultilayerSectionCollapse(collapse: MultilayerSectionCollapse): void { this.callSolver(this.binding.applyMultilayerSectionCollapse, [collapse]) }
   getConstructorParams(): ConstructorParameters<typeof SingleRouteUselessViaRemovalSolver>[0] {
     return {
       obstacleSHI: this.obstacleSHI,
@@ -106,7 +106,7 @@ export class SingleRouteUselessViaRemovalSolver extends TraceSimplificationSolve
     }
   }
 
-  getOptimizedHdRoute(): HighDensityRoute { return this.invoke("getOptimizedHdRoute", []) as HighDensityRoute }
+  getOptimizedHdRoute(): HighDensityRoute { return this.callSolver(this.binding.getOptimizedHdRoute, []) }
 
   visualize(): GraphicsObject {
     const graphics: GraphicsObject &

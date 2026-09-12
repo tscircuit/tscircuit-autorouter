@@ -22,16 +22,29 @@ export class SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost extends Sing
   }
 
   getClosestFutureConnectionPoint(node: Node): Point | null {
-    const index = this.invoke<number | null>("closestFuturePointIndex", { node })
-    return index === null ? null : this.futureConnectionPoints[index]!
+    this.configure()
+    const index = this.binding.closestFuturePointIndex(node)
+    return index === undefined ? null : this.futureConnectionPoints[index]!
   }
 
   getFutureConnectionSegments(): FutureConnectionSegment[] {
-    if (!this.futureConnectionSegmentsCache) this.futureConnectionSegmentsCache = this.invoke("getFutureConnectionSegments")
-    return this.futureConnectionSegmentsCache!
+    if (!this.futureConnectionSegmentsCache) {
+      this.configure()
+      this.futureConnectionSegmentsCache = this.binding.getFutureConnectionSegments()
+    }
+    return this.futureConnectionSegmentsCache
   }
 
-  isViaTooCloseToFutureConnectionTrace(node: Node): boolean { return this.invoke("isViaTooCloseToFutureConnectionTrace", { node }) }
-  diminishCloseToGoal(node: Node): number { return this.number("diminishCloseToGoal", { node }) }
-  getFutureConnectionPenalty(node: Node, isVia: boolean): number { return this.number("getFutureConnectionPenalty", { node, isVia }) }
+  isViaTooCloseToFutureConnectionTrace(node: Node): boolean {
+    this.configure()
+    return this.binding.isViaTooCloseToFutureConnectionTrace(node)
+  }
+  diminishCloseToGoal(node: Node): number {
+    this.configure()
+    return this.binding.diminishCloseToGoal(node)
+  }
+  getFutureConnectionPenalty(node: Node, isVia: boolean): number {
+    this.configure()
+    return this.binding.getFutureConnectionPenalty(node, isVia)
+  }
 }

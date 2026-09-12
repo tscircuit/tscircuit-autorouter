@@ -38,11 +38,6 @@ export class CandidateIdentityMap {
     } }
   }
 
-  arguments(method: string, args: unknown[]): { args: Array<IdentityNode | null> } {
-    return { args: args.map((arg, index) => index === 0 && (method === "insertCandidate" || method === "getNeighbors")
-      ? this.candidate(arg as CandidateRecord) : null) }
-  }
-
   restore(
     current: unknown,
     incoming: unknown,

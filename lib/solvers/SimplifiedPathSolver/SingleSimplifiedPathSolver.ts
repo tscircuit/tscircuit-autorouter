@@ -30,7 +30,7 @@ export class SingleSimplifiedPathSolver extends TraceSimplificationSolverAdapter
     return { inputRoute: this.inputRoute, otherHdRoutes: this.otherHdRoutes, obstacles: this.obstacles, connMap: this.connMap.netMap, colorMap: this.colorMap, outline: this.outline, minBoardEdgeClearance: this.minBoardEdgeClearance }
   }
   get simplifiedRoute(): HighDensityIntraNodeRoute { return this.output() }
-  isValidPath(pointsInRoute: Point[]): boolean { return this.invoke("isValidPath", [pointsInRoute]) }
+  isValidPath(pointsInRoute: Point[]): boolean { return this.callSolver(this.binding.isValidPath, [pointsInRoute]) }
   getVisualsForNewRouteAndObstacles() {
     const graphics: GraphicsObject &
       Pick<Required<GraphicsObject>, "points" | "lines" | "rects" | "circles"> =

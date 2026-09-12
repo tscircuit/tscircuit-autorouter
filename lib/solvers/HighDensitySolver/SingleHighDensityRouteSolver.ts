@@ -42,13 +42,17 @@ export type SingleRouteOptions = {
 }
 
 class CandidateQueue {
-  constructor(private readonly invoke: <T>(method: string, args?: Record<string, unknown>) => T) {}
-  enqueue(node: Node): void { this.invoke("queueEnqueue", { node }) }
-  dequeue(): Node | undefined { return this.invoke<Node | null>("queueDequeue") ?? undefined }
-  peek(): Node | undefined { return this.invoke<Node | null>("queuePeek") ?? undefined }
-  heapifyUp(): void { this.invoke("queueHeapifyUp") }
-  heapifyDown(): void { this.invoke("queueHeapifyDown") }
-  getTopN(n: number): Node[] { return this.invoke("queueTop", { n }) }
+  constructor(
+    private readonly binding: bindings.SingleHighDensityRouteSolver,
+    private readonly configure: () => void,
+  ) {}
+
+  enqueue(node: Node): void { this.configure(); this.binding.queueEnqueue(node) }
+  dequeue(): Node | undefined { this.configure(); return this.binding.queueDequeue() ?? undefined }
+  peek(): Node | undefined { this.configure(); return this.binding.queuePeek() ?? undefined }
+  heapifyUp(): void { this.configure(); this.binding.queueHeapifyUp() }
+  heapifyDown(): void { this.configure(); this.binding.queueHeapifyDown() }
+  getTopN(n: number): Node[] { this.configure(); return this.binding.queueTop(n) }
 }
 
 export class SingleHighDensityRouteSolver extends BaseSolver {
@@ -123,7 +127,7 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
       connectivity = { netMap: {}, idToNetMap }
     }
     this.binding = existingBinding ?? new bindings.SingleHighDensityRouteSolver({ ...plain, connMap: connectivity }, futureCost)
-    this.candidates = new CandidateQueue(<T>(method: string, args?: Record<string, unknown>): T => this.invoke<T>(method, args))
+    this.candidates = new CandidateQueue(this.binding, () => this.configure())
     this.synchronize()
   }
 
@@ -139,19 +143,6 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     this.binding.configure(values)
   }
 
-  protected invoke<T>(method: string, args: Record<string, unknown> = {}): T {
-    this.configure()
-    return this.binding.call(method, args) as T
-  }
-
-  protected number(method: string, args: Record<string, unknown> = {}): number {
-    return this.invoke<number | null>(method, args) ?? Number.NaN
-  }
-
-  private index(kind: "segments" | "vias" | "layer", layer?: number): SearchIndex {
-    return { search: (minX, minY, maxX, maxY): number[] => this.invoke("search", { kind, layer, bounds: [minX, minY, maxX, maxY] }) }
-  }
-
   protected synchronize(): void {
     const state = this.binding.snapshot()
     const { A, B, bounds, futureConnectionPoints, obstacleSegmentsByLayer, exploredNodes, debug_nodesTooCloseToObstacle, debug_nodePathToParentIntersectsObstacle, progress, ...plain } = state
@@ -162,11 +153,26 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
     this.debug_nodePathToParentIntersectsObstacle = new Set(debug_nodePathToParentIntersectsObstacle)
     this.obstacleSegmentsByLayer = new Map(obstacleSegmentsByLayer)
     for (const layer of this.obstacleSegmentsByLayer.keys()) {
-      if (!this.obstacleSegmentIndexByLayer.has(layer)) this.obstacleSegmentIndexByLayer.set(layer, this.index("layer", layer))
+      if (!this.obstacleSegmentIndexByLayer.has(layer)) this.obstacleSegmentIndexByLayer.set(layer, {
+        search: (minX, minY, maxX, maxY): number[] => {
+          this.configure()
+          return this.binding.searchObstacleSegmentsOnLayer(layer, [minX, minY, maxX, maxY])
+        },
+      })
     }
     for (const layer of this.obstacleSegmentIndexByLayer.keys()) if (!this.obstacleSegmentsByLayer.has(layer)) this.obstacleSegmentIndexByLayer.delete(layer)
-    this.obstacleSegmentIndex = this.obstacleSegments.length ? this.obstacleSegmentIndex ?? this.index("segments") : null
-    this.obstacleViaIndex = this.obstacleVias.length ? this.obstacleViaIndex ?? this.index("vias") : null
+    this.obstacleSegmentIndex = this.obstacleSegments.length ? this.obstacleSegmentIndex ?? {
+      search: (minX, minY, maxX, maxY): number[] => {
+        this.configure()
+        return this.binding.searchObstacleSegments([minX, minY, maxX, maxY])
+      },
+    } : null
+    this.obstacleViaIndex = this.obstacleVias.length ? this.obstacleViaIndex ?? {
+      search: (minX, minY, maxX, maxY): number[] => {
+        this.configure()
+        return this.binding.searchObstacleVias([minX, minY, maxX, maxY])
+      },
+    } : null
     if (this.solvedPath) {
       const { connectionName, rootConnectionName, regionId, ...rest } = this.solvedPath
       this.solvedPath = { connectionName, rootConnectionName, regionId, ...rest }
@@ -175,55 +181,127 @@ export class SingleHighDensityRouteSolver extends BaseSolver {
 
   refreshFromSolver(): void { this.synchronize() }
 
-  handleSimpleCases(): void { this.invoke("handleSimpleCases"); this.synchronize() }
-  get viaPenaltyDistance(): number { return this.number("viaPenaltyDistance") }
+  handleSimpleCases(): void {
+    this.configure()
+    this.binding.handleSimpleCases()
+    this.synchronize()
+  }
+
+  get viaPenaltyDistance(): number {
+    this.configure()
+    return this.binding.viaPenaltyDistance()
+  }
+
   isNodeTooCloseToObstacle(node: Node, margin?: number, isVia = false, query?: PlanarObstacleQuery): boolean {
-    return this.invoke("isNodeTooCloseToObstacle", { node, margin, isVia, query: query ? { layer: node.z, segmentIds: query.segmentIds } : undefined })
+    this.configure()
+    return this.binding.isNodeTooCloseToObstacle(node, margin, isVia, query ? { layer: node.z, segmentIds: query.segmentIds } : null)
   }
-  isNodeTooCloseToEdge(node: Node, isVia = false): boolean { return this.invoke("isNodeTooCloseToEdge", { node, isVia }) }
+
+  isNodeTooCloseToEdge(node: Node, isVia = false): boolean {
+    this.configure()
+    return this.binding.isNodeTooCloseToEdge(node, isVia)
+  }
+
   doesPathToParentIntersectObstacle(node: Node, query?: PlanarObstacleQuery): boolean {
-    return this.invoke("doesPathToParentIntersectObstacle", { node, query: query ? { layer: node.z, segmentIds: query.segmentIds } : undefined })
+    this.configure()
+    return this.binding.doesPathToParentIntersectObstacle(node, query ? { layer: node.z, segmentIds: query.segmentIds } : null)
   }
+
   getPlanarObstacleQuery(node: Node): PlanarObstacleQuery | undefined {
-    const bounds = this.invoke<[number, number, number, number] | null>("queryBounds", { node })
+    this.configure()
+    const bounds = this.binding.queryBounds(node)
     if (!bounds) return undefined
     const index = this.obstacleSegmentIndexByLayer.get(node.z)
     const segments = this.obstacleSegmentsByLayer.get(node.z)
     if (!index || !segments) throw new Error("Native planar query requires its layer index")
     return { segments, segmentIds: index.search(...bounds) }
   }
-  buildObstacleIndexes(): void { this.invoke("buildObstacleIndexes", { routes: this.obstacleRoutes }); this.synchronize() }
-  computeH(node: Node): number { return this.number("computeH", { node }) }
-  computeG(node: Node): number { return this.number("computeG", { node }) }
-  computeF(g: number, h: number): number { return this.number("computeF", { g, h }) }
-  setNodeCosts(node: Node): void {
-    const costs = this.invoke<{ g: number | null; h: number | null; f: number | null }>("setNodeCosts", { node })
-    node.g = costs.g ?? Number.NaN; node.h = costs.h ?? Number.NaN; node.f = costs.f ?? Number.NaN
+
+  buildObstacleIndexes(): void {
+    this.configure()
+    this.binding.buildObstacleIndexes(this.obstacleRoutes)
+    this.synchronize()
   }
-  getNodeKey(node: Node): number { return this.number("getNodeKey", { node }) }
+
+  computeH(node: Node): number {
+    this.configure()
+    return this.binding.computeH(node)
+  }
+
+  computeG(node: Node): number {
+    this.configure()
+    return this.binding.computeG(node)
+  }
+
+  computeF(g: number, h: number): number {
+    this.configure()
+    return this.binding.computeF(g, h)
+  }
+
+  setNodeCosts(node: Node): void {
+    this.configure()
+    const costs = this.binding.setNodeCosts(node)
+    node.g = costs.g ?? Number.NaN
+    node.h = costs.h ?? Number.NaN
+    node.f = costs.f ?? Number.NaN
+  }
+
+  getNodeKey(node: Node): number {
+    this.configure()
+    return this.binding.getNodeKey(node)
+  }
+
   getNeighbors(node: Node): Node[] {
-    const neighbors = this.invoke<Node[]>("getNeighbors", { node })
+    this.configure()
+    const neighbors = this.binding.getNeighbors(node)
     this.synchronize()
     return neighbors.map((neighbor) => ({ ...neighbor, parent: node }))
   }
+
   getNodePath(node: Node): Node[] {
-    const path = this.invoke<Node[]>("getNodePath", { node })
+    this.configure()
+    const path = this.binding.getNodePath(node)
     const originals: Node[] = []
     let current: Node | null = node
     for (let i = 0; i < path.length; i++) {
       if (!current) throw new Error("Native path length exceeds node ancestry")
-      originals.push(current); current = current.parent
+      originals.push(current)
+      current = current.parent
     }
     return originals
   }
+
   getViasInNodePath(node: Node): IndexedObstacleVia[] {
     let result = this.viasInPathByNode.get(node)
-    if (!result) { result = this.invoke("getViasInNodePath", { node }); this.viasInPathByNode.set(node, result!) }
-    return result!
+    if (!result) {
+      this.configure()
+      result = this.binding.getViasInNodePath(node)
+      this.viasInPathByNode.set(node, result)
+    }
+    return result
   }
-  setSolvedPath(node: Node): void { this.invoke("setSolvedPath", { node }); this.synchronize() }
-  computeProgress(_currentNode?: Node, goalDist?: number, isOnLayer?: boolean): number { return this.number("computeProgress", { goalDist, isOnLayer }) }
-  override _step(): void { this.invoke("step", { iterations: this.iterations }); this.synchronize() }
-  override visualize(): GraphicsObject { return this.invoke("visualize") }
+
+  setSolvedPath(node: Node): void {
+    this.configure()
+    this.binding.setSolvedPath(node)
+    this.synchronize()
+  }
+
+  computeProgress(_currentNode?: Node, goalDist?: number, isOnLayer?: boolean): number {
+    this.configure()
+    return this.binding.computeProgress(goalDist, isOnLayer)
+  }
+
+  override _step(): void {
+    this.configure()
+    this.binding.step(this.iterations)
+    this.synchronize()
+  }
+
+  override visualize(): GraphicsObject {
+    this.configure()
+    return this.binding.visualize()
+  }
+
   dispose(): void { this.binding.free() }
 }

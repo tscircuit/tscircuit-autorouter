@@ -881,23 +881,63 @@ impl SameNetViaMergerSolver {
         Ok(())
     }
 
-    pub fn invoke(
+    pub fn get_merged_via_hd_routes_graph(
         &mut self,
-        method: &str,
+        _args: &Value,
+        codec: &mut crate::bindings::trace_simplification::graph_codec::GraphCodec,
+    ) -> Result<Value, String> {
+        Ok(codec.route_array(
+            self.merged_routes_array_identity,
+            &self.merged_via_hd_routes,
+        ))
+    }
+
+    pub fn rebuild_vias_graph(
+        &mut self,
+        _args: &Value,
+        _codec: &mut crate::bindings::trace_simplification::graph_codec::GraphCodec,
+    ) -> Result<Value, String> {
+        self.rebuild_vias()?;
+        Ok(Value::Null)
+    }
+
+    pub fn get_via_key_graph(
+        &mut self,
+        args: &Value,
+        _codec: &mut crate::bindings::trace_simplification::graph_codec::GraphCodec,
+    ) -> Result<Value, String> {
+        Ok(json!(self.get_via_key(Via::restore(&args[0])?.as_ref())))
+    }
+
+    pub fn dedupe_route_vias_graph(
+        &mut self,
         args: &Value,
         codec: &mut crate::bindings::trace_simplification::graph_codec::GraphCodec,
     ) -> Result<Value, String> {
-        match method {
-            "getMergedViaHdRoutes" => Ok(codec.route_array(self.merged_routes_array_identity,&self.merged_via_hd_routes)),
-            "rebuildVias" => { self.rebuild_vias()?; Ok(Value::Null) }
-            "getViaKey" => Ok(json!(self.get_via_key(Via::restore(&args[0])?.as_ref()))),
-            "dedupeRouteVias" => { self.dedupe_route_vias(&codec.read_route(&args[0])?); Ok(Value::Null) }
-            "moveViaTo" => { self.move_via_to(Via::restore(&args[0])?.as_ref(),Via::restore(&args[1])?.as_ref(),args[2].as_bool().unwrap_or(true))?; Ok(Value::Null) }
-            "canMoveViaTo" => Ok(json!(self.can_move_via_to(Via::restore(&args[0])?.as_ref(),Via::restore(&args[1])?.as_ref())?)),
-            "getOffendingViaGroupsBatch" => Ok(Value::Array(self.get_offending_via_groups_batch()?.iter().map(|group| json!({
+        self.dedupe_route_vias(&codec.read_route(&args[0])?);
+        Ok(Value::Null)
+    }
+
+    pub fn move_via_to_graph(
+        &mut self,
+        args: &Value,
+        _codec: &mut crate::bindings::trace_simplification::graph_codec::GraphCodec,
+    ) -> Result<Value, String> {
+        self.move_via_to(
+            Via::restore(&args[0])?.as_ref(),
+            Via::restore(&args[1])?.as_ref(),
+            args[2].as_bool().unwrap_or(true),
+        )?;
+        Ok(Value::Null)
+    }
+
+    pub fn get_offending_via_groups_batch_graph(
+        &mut self,
+        _args: &Value,
+        codec: &mut crate::bindings::trace_simplification::graph_codec::GraphCodec,
+    ) -> Result<Value, String> {
+        Ok(Value::Array(self.get_offending_via_groups_batch()?.iter().map(|group| json!({
                 "keep":group.keep.snapshot(codec),"remove":group.remove.iter().map(|via|via.snapshot(codec)).collect::<Vec<_>>()
-            })).collect())),
-            _ => Err(format!("Unknown SameNetViaMergerSolver method: {method}")),
-        }
+            })).collect()))
     }
 }

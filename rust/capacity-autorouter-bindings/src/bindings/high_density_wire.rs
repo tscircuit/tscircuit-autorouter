@@ -26,10 +26,6 @@ pub struct HighDensityGraphics(
 
 #[derive(Serialize, Deserialize, Tsify)]
 #[serde(transparent)]
-#[expect(
-    dead_code,
-    reason = "Tsify emits this type for TypeScript callbacks and solver state."
-)]
 pub struct HighDensityNode(
     #[tsify(type = "import('../../../lib/types/high-density-types').NodeWithPortPoints")] pub Value,
 );
@@ -61,17 +57,6 @@ pub struct CandidateIdentity {
     pub fields: Option<indexmap::IndexMap<String, Option<CandidateIdentity>>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub items: Option<Vec<CandidateIdentity>>,
-}
-
-#[derive(Serialize, Deserialize, Tsify)]
-pub struct SpecializedInvocation {
-    #[tsify(type = "unknown")]
-    pub result: Value,
-    #[tsify(type = "unknown[]")]
-    pub args: Vec<Value>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    #[tsify(type = "{ result?: CandidateIdentity | null }")]
-    pub identity: Option<Value>,
 }
 
 pub fn read_value(value: Ts<HighDensityValue>) -> Result<Value, JsValue> {

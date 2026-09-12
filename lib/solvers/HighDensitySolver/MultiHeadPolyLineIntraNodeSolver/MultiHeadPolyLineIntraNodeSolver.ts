@@ -42,12 +42,12 @@ export class MultiHeadPolyLineIntraNodeSolver extends SpecializedIntraNodeSolver
         connMap?: ConnectivityMap;
         viaDiameter?: number;
     }) { super(props) }
-  computeMinGapBtwPolyLines(polyLines: PolyLine2[]): number[] { return this.invoke<number[]>("computeMinGapBtwPolyLines", [polyLines]) }
-  insertCandidate(candidate: any): void { this.invoke<null>("insertCandidate", [candidate]) }
-  setupInitialPolyLines(): void { this.invoke<null>("setupInitialPolyLines", []) }
-  computeG(polyLines: PolyLine[], candidate: Candidate): number { return this.invoke<number>("computeG", [polyLines, candidate]) }
-  computeH(candidate: Pick<Candidate, "minGaps" | "forces">): number { return this.invoke<number>("computeH", [candidate]) }
-  getNeighbors(candidate: Candidate): Candidate[] { return this.invoke<Candidate[]>("getNeighbors", [candidate]) }
-  checkIfSolved(candidate: Pick<Candidate, "polyLines" | "minGaps">): boolean { return this.invoke<boolean>("checkIfSolved", [candidate]) }
-  _setSolvedRoutes(): never[] | undefined { const result = this.invoke<never[] | null>("_setSolvedRoutes", []); return result === null ? undefined : result }
+  computeMinGapBtwPolyLines(polyLines: PolyLine2[]): number[] { return this.call(() => this.binding.computeMinGapBtwPolyLines(polyLines), [polyLines]) }
+  insertCandidate(candidate: any): void { this.call(() => this.binding.insertCandidate(candidate, this.candidateIdentity!.candidate(candidate)), [candidate]) }
+  setupInitialPolyLines(): void { this.call(() => this.binding.setupInitialPolyLines()) }
+  computeG(polyLines: PolyLine[], candidate: Candidate): number { return this.call(() => this.binding.computeG(polyLines, candidate), [polyLines, candidate]) }
+  computeH(candidate: Pick<Candidate, "minGaps" | "forces">): number { return this.call(() => this.binding.computeH(candidate), [candidate]) }
+  getNeighbors(candidate: Candidate): Candidate[] { return this.call(() => this.binding.getNeighbors(candidate, this.candidateIdentity!.candidate(candidate)), [candidate]) }
+  checkIfSolved(candidate: Pick<Candidate, "polyLines" | "minGaps">): boolean { return this.call(() => this.binding.checkIfSolved(candidate), [candidate]) }
+  _setSolvedRoutes(): never[] | undefined { const result = this.call(() => this.binding.setSolvedRoutes()); return result === null ? undefined : result }
 }

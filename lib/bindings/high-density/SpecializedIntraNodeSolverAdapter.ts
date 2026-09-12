@@ -38,11 +38,12 @@ function reconcile(current: unknown, incoming: unknown, key = ""): unknown {
 }
 
 export class SpecializedIntraNodeSolverAdapter extends BaseSolver {
+  protected static readonly specializedBindings = bindings.SpecializedIntraNodeDispatcher
   static solverKind = ""
   static diagnosticFields: string[] = []
   protected readonly binding: bindings.SpecializedIntraNodeDispatcher
   private readonly observed = new Map<string, unknown>()
-  private readonly candidateIdentity: CandidateIdentityMap | undefined
+  protected readonly candidateIdentity: CandidateIdentityMap | undefined
   private readonly initialProps: DiagnosticRecord
   private diagnosticObserver?: () => void
   private observedRoutes?: unknown[]
@@ -234,18 +235,16 @@ export class SpecializedIntraNodeSolverAdapter extends BaseSolver {
     }
   }
 
-  protected invoke<T>(method: string, args: unknown[] = []): T {
+  protected call<T>(operation: () => bindings.SpecializedResult<T>, args: unknown[] = []): T {
     this.observeSourceAliases()
     this.pushObservedDiagnostics()
-    const output = this.candidateIdentity
-      ? this.binding.invokeIdentity(method, args, this.candidateIdentity.arguments(method, args))
-      : this.binding.invoke(method, args)
+    const output = operation()
     for (let i = 0; i < args.length; i++) reconcile(args[i], output.args[i])
     const result = this.candidateIdentity
-      ? this.candidateIdentity.restore(undefined, output.result, output.identity?.result, reconcile) as T
-      : reconcile(undefined, output.result) as T
+      ? this.candidateIdentity.restore(undefined, output.result, output.identity, reconcile)
+      : reconcile(undefined, output.result)
     this.syncObservedDiagnostics()
-    return result
+    return result as T
   }
 
   override solve(): void {
@@ -277,8 +276,8 @@ export class SpecializedIntraNodeSolverAdapter extends BaseSolver {
     return this.binding.visualize(safeTransparentize)
   }
 
-  protected static applicable(kind: string, props: unknown): boolean {
+  protected static applicable<T>(operation: (props: T) => boolean, props: NoInfer<T>): boolean {
     initializeAutorouterBindings()
-    return bindings.SpecializedIntraNodeDispatcher.isApplicable(kind, props)
+    return operation(props)
   }
 }

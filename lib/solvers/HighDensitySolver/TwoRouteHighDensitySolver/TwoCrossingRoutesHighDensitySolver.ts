@@ -39,6 +39,6 @@ export class TwoCrossingRoutesHighDensitySolver extends SpecializedIntraNodeSolv
         obstacleMargin?: number;
         layerCount?: number;
     }) { super(props) }
-  handleRoutesDontCross(): void { this.invoke<null>("handleRoutesDontCross", []) }
+  handleRoutesDontCross(): void { this.call(() => this.binding.handleRoutesDontCross()) }
   getSolvedRoutes(): HighDensityIntraNodeRoute[] { return this.solvedRoutes }
 }

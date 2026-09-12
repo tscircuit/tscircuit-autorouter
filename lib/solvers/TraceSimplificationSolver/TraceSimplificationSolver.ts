@@ -93,11 +93,11 @@ export class TraceSimplificationSolver extends TraceSimplificationSolverAdapter 
     return super.resolveSolverStep(this.runSolver(() => this.binding.resolveExtract(this.graph.graph(routes))))
   }
 
-  private validatePreservedRouteEndpoints(routes: HighDensityRoute[]): void { this.invoke("validatePreservedRouteEndpoints", [routes]) }
-  private isSameNetObstacle(route: HighDensityRoute, obstacle: Obstacle): boolean { return this.invoke("isSameNetObstacle", [route, obstacle]) }
-  private getSameNetObstacleForSegment(route: HighDensityRoute, start: {x:number;y:number}, end: {x:number;y:number}): Obstacle | undefined { return this.invoke("getSameNetObstacleForSegment", [route, start, end]) ?? undefined }
-  private isViaInsideSameNetObstacle(route: HighDensityRoute, via: {x:number;y:number}): boolean { return this.invoke("isViaInsideSameNetObstacle", [route, via]) }
-  markThroughObstacleSegments(routes: ReadonlyArray<HighDensityRoute>): HighDensityRoute[] { return this.invoke("markThroughObstacleSegments", [routes]) }
+  private validatePreservedRouteEndpoints(routes: HighDensityRoute[]): void { this.callSolver(this.binding.validatePreservedRouteEndpoints, [routes]) }
+  private isSameNetObstacle(route: HighDensityRoute, obstacle: Obstacle): boolean { return this.callSolver(this.binding.isSameNetObstacle, [route, obstacle]) }
+  private getSameNetObstacleForSegment(route: HighDensityRoute, start: {x:number;y:number}, end: {x:number;y:number}): Obstacle | undefined { return this.callSolver(this.binding.getSameNetObstacleForSegment, [route, start, end]) ?? undefined }
+  private isViaInsideSameNetObstacle(route: HighDensityRoute, via: {x:number;y:number}): boolean { return this.callSolver(this.binding.isViaInsideSameNetObstacle, [route, via]) }
+  markThroughObstacleSegments(routes: ReadonlyArray<HighDensityRoute>): HighDensityRoute[] { return this.callSolver(this.binding.markThroughObstacleSegments, [routes]) }
   visualize(): GraphicsObject {
     if (this.activeSubSolver) {
       return this.activeSubSolver.visualize()

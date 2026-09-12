@@ -38,6 +38,417 @@ use capacity_autorouter::solvers::trace_simplification_solver::trace_simplificat
     TraceChild, TraceChildKind, TraceSimplificationParams, TraceSimplificationSolver,
 };
 
+// The phantom value type follows decoded values through the identity-preserving
+// graph codec. It is erased at runtime; graph fields keep their existing format.
+#[wasm_bindgen(typescript_custom_section)]
+const TRACE_METHOD_TYPES: &str = r#"
+export type TraceMethodGraph<T> = TraceGraphPacket & { readonly __traceValue?: T };
+type TraceRoute = import("lib/types/high-density-types").HighDensityRoute;
+type TracePoint = TraceRoute["route"][number];
+type TraceObstacle = import("lib/types").Obstacle;
+type TraceRouteSection = import("lib/solvers/UselessViaRemovalSolver/route-section").RouteSection;
+type TraceVia = import("lib/solvers/SameNetViaMergerSolver/SameNetViaMergerSolver").Via;
+type TraceViaPairShortcut = import("lib/solvers/UselessViaRemovalSolver/SingleRouteUselessViaRemovalSolver").ViaPairShortcut;
+type TraceObstacleDetourPath = import("lib/solvers/UselessViaRemovalSolver/SingleRouteUselessViaRemovalSolver").ObstacleDetourPath;
+type TraceMultilayerSectionCollapse = import("lib/solvers/UselessViaRemovalSolver/SingleRouteUselessViaRemovalSolver").MultilayerSectionCollapse;
+"#;
+
+macro_rules! graph_method {
+    ($name:ident, $method:ident, $engine:ident, $args:ident, $args_type:literal, $result:ident, $result_type:literal) => {
+        #[derive(serde::Serialize, serde::Deserialize, Tsify)]
+        #[serde(transparent)]
+        pub struct $args(#[tsify(type = $args_type)] Value);
+
+        #[derive(serde::Serialize, serde::Deserialize, Tsify)]
+        #[serde(transparent)]
+        pub struct $result(#[tsify(type = $result_type)] Value);
+
+        #[wasm_bindgen]
+        impl TraceSimplificationDispatcher {
+            #[wasm_bindgen(js_name = $name)]
+            pub fn $method(&self, args: Ts<$args>) -> Result<Ts<$result>, JsValue> {
+                self.with_graph(
+                    args.to_rust().map_err(js_error)?.0,
+                    |engine, args, codec| {
+                        let Engine::$engine(solver) = engine else {
+                            return Err(concat!(
+                                stringify!($name),
+                                " requires ",
+                                stringify!($engine),
+                                " solver"
+                            )
+                            .into());
+                        };
+                        solver.borrow_mut().$method(args, codec)
+                    },
+                )
+                .and_then(|value| $result(value).into_ts().map_err(js_error))
+            }
+        }
+    };
+}
+
+graph_method!(
+    isValidPath,
+    is_valid_path_graph,
+    Path,
+    TraceIsValidPathArgs,
+    "TraceMethodGraph<[TracePoint[]]>",
+    TraceIsValidPathResult,
+    "TraceMethodGraph<boolean>"
+);
+graph_method!(
+    isValidPathSegment,
+    is_valid_path_segment_graph,
+    Path,
+    TraceIsValidPathSegmentArgs,
+    "TraceMethodGraph<[TracePoint, TracePoint]>",
+    TraceIsValidPathSegmentResult,
+    "TraceMethodGraph<boolean>"
+);
+graph_method!(
+    arePointsEqual,
+    are_points_equal_graph,
+    Path,
+    TraceArePointsEqualArgs,
+    "TraceMethodGraph<[TracePoint, TracePoint]>",
+    TraceArePointsEqualResult,
+    "TraceMethodGraph<boolean>"
+);
+graph_method!(
+    getPointAtDistance,
+    get_point_at_distance_graph,
+    Path,
+    TraceGetPointAtDistanceArgs,
+    "TraceMethodGraph<[number]>",
+    TraceGetPointAtDistanceResult,
+    "TraceMethodGraph<TracePoint>"
+);
+graph_method!(
+    getNearestIndexForDistance,
+    get_nearest_index_for_distance_graph,
+    Path,
+    TraceGetNearestIndexForDistanceArgs,
+    "TraceMethodGraph<[number]>",
+    TraceGetNearestIndexForDistanceResult,
+    "TraceMethodGraph<number>"
+);
+graph_method!(
+    find45DegreePath,
+    find_45_degree_path_graph,
+    Path,
+    TraceFind45DegreePathArgs,
+    "TraceMethodGraph<[TracePoint, TracePoint]>",
+    TraceFind45DegreePathResult,
+    "TraceMethodGraph<TracePoint[] | null>"
+);
+graph_method!(
+    addPathToResult,
+    add_path_to_result_graph,
+    Path,
+    TraceAddPathToResultArgs,
+    "TraceMethodGraph<[TracePoint[]]>",
+    TraceAddPathToResultResult,
+    "TraceMethodGraph<void>"
+);
+graph_method!(
+    appendOriginalRouteSlice,
+    append_original_route_slice_graph,
+    Path,
+    TraceAppendOriginalRouteSliceArgs,
+    "TraceMethodGraph<[number, number]>",
+    TraceAppendOriginalRouteSliceResult,
+    "TraceMethodGraph<void>"
+);
+graph_method!(
+    moveHead,
+    move_head_graph,
+    Path,
+    TraceMoveHeadArgs,
+    "TraceMethodGraph<[number]>",
+    TraceMoveHeadResult,
+    "TraceMethodGraph<void>"
+);
+graph_method!(
+    stepBackAndReduceStepSize,
+    step_back_and_reduce_step_size_graph,
+    Path,
+    TraceStepBackAndReduceStepSizeArgs,
+    "TraceMethodGraph<[]>",
+    TraceStepBackAndReduceStepSizeResult,
+    "TraceMethodGraph<void>"
+);
+graph_method!(
+    computePathSegments,
+    compute_path_segments_graph,
+    Path,
+    TraceComputePathSegmentsArgs,
+    "TraceMethodGraph<[]>",
+    TraceComputePathSegmentsResult,
+    "TraceMethodGraph<void>"
+);
+graph_method!(
+    isSameNetRoute,
+    is_same_net_route_graph,
+    Path,
+    TraceIsSameNetRouteArgs,
+    "TraceMethodGraph<[TraceRoute]>",
+    TraceIsSameNetRouteResult,
+    "TraceMethodGraph<boolean>"
+);
+graph_method!(
+    getOptimizedHdRoute,
+    get_optimized_hd_route_graph,
+    SingleVia,
+    TraceGetOptimizedHdRouteArgs,
+    "TraceMethodGraph<[]>",
+    TraceGetOptimizedHdRouteResult,
+    "TraceMethodGraph<TraceRoute>"
+);
+graph_method!(
+    getPathLength,
+    get_path_length_graph,
+    SingleVia,
+    TraceGetPathLengthArgs,
+    "TraceMethodGraph<[TracePoint[]]>",
+    TraceGetPathLengthResult,
+    "TraceMethodGraph<number>"
+);
+graph_method!(
+    normalizeShortcutPath,
+    normalize_shortcut_path_graph,
+    SingleVia,
+    TraceNormalizeShortcutPathArgs,
+    "TraceMethodGraph<[{ x: number; y: number }[], TracePoint, TracePoint]>",
+    TraceNormalizeShortcutPathResult,
+    "TraceMethodGraph<TracePoint[]>"
+);
+graph_method!(
+    shortcutCrossesOutline,
+    shortcut_crosses_outline_graph,
+    SingleVia,
+    TraceShortcutCrossesOutlineArgs,
+    "TraceMethodGraph<[TracePoint[]]>",
+    TraceShortcutCrossesOutlineResult,
+    "TraceMethodGraph<boolean>"
+);
+graph_method!(
+    getObstacleDetourPaths,
+    get_obstacle_detour_paths_graph,
+    SingleVia,
+    TraceGetObstacleDetourPathsArgs,
+    "TraceMethodGraph<[TracePoint, TracePoint, number, number]>",
+    TraceGetObstacleDetourPathsResult,
+    "TraceMethodGraph<TraceObstacleDetourPath[]>"
+);
+graph_method!(
+    getDirectGeometryShortcut,
+    get_direct_geometry_shortcut_graph,
+    SingleVia,
+    TraceGetDirectGeometryShortcutArgs,
+    "TraceMethodGraph<[TraceRouteSection, TraceRouteSection, TraceRouteSection]>",
+    TraceGetDirectGeometryShortcutResult,
+    "TraceMethodGraph<TraceViaPairShortcut | null>"
+);
+graph_method!(
+    getObstacleDetourShortcut,
+    get_obstacle_detour_shortcut_graph,
+    SingleVia,
+    TraceGetObstacleDetourShortcutArgs,
+    "TraceMethodGraph<[TraceRouteSection, TraceRouteSection, TraceRouteSection]>",
+    TraceGetObstacleDetourShortcutResult,
+    "TraceMethodGraph<TraceViaPairShortcut | null>"
+);
+graph_method!(
+    findGeometryShortcut,
+    find_geometry_shortcut_graph,
+    SingleVia,
+    TraceFindGeometryShortcutArgs,
+    "TraceMethodGraph<[TraceRouteSection, TraceRouteSection, TraceRouteSection]>",
+    TraceFindGeometryShortcutResult,
+    "TraceMethodGraph<TraceViaPairShortcut | null>"
+);
+graph_method!(
+    findMultilayerSectionCollapse,
+    find_multilayer_section_collapse_graph,
+    SingleVia,
+    TraceFindMultilayerSectionCollapseArgs,
+    "TraceMethodGraph<[TraceRouteSection, TraceRouteSection, TraceRouteSection]>",
+    TraceFindMultilayerSectionCollapseResult,
+    "TraceMethodGraph<TraceMultilayerSectionCollapse | null>"
+);
+graph_method!(
+    applyGeometryShortcut,
+    apply_geometry_shortcut_graph,
+    SingleVia,
+    TraceApplyGeometryShortcutArgs,
+    "TraceMethodGraph<[TraceViaPairShortcut]>",
+    TraceApplyGeometryShortcutResult,
+    "TraceMethodGraph<void>"
+);
+graph_method!(
+    applyMultilayerSectionCollapse,
+    apply_multilayer_section_collapse_graph,
+    SingleVia,
+    TraceApplyMultilayerSectionCollapseArgs,
+    "TraceMethodGraph<[TraceMultilayerSectionCollapse]>",
+    TraceApplyMultilayerSectionCollapseResult,
+    "TraceMethodGraph<void>"
+);
+graph_method!(
+    getOptimizedHdRoutes,
+    get_optimized_hd_routes_graph,
+    Via,
+    TraceGetOptimizedHdRoutesArgs,
+    "TraceMethodGraph<[]>",
+    TraceGetOptimizedHdRoutesResult,
+    "TraceMethodGraph<TraceRoute[]>"
+);
+graph_method!(
+    getMergedViaHdRoutes,
+    get_merged_via_hd_routes_graph,
+    Merger,
+    TraceGetMergedViaHdRoutesArgs,
+    "TraceMethodGraph<[]>",
+    TraceGetMergedViaHdRoutesResult,
+    "TraceMethodGraph<TraceRoute[]>"
+);
+graph_method!(
+    rebuildVias,
+    rebuild_vias_graph,
+    Merger,
+    TraceRebuildViasArgs,
+    "TraceMethodGraph<[]>",
+    TraceRebuildViasResult,
+    "TraceMethodGraph<void>"
+);
+graph_method!(
+    getViaKey,
+    get_via_key_graph,
+    Merger,
+    TraceGetViaKeyArgs,
+    "TraceMethodGraph<[TraceVia]>",
+    TraceGetViaKeyResult,
+    "TraceMethodGraph<string>"
+);
+graph_method!(
+    dedupeRouteVias,
+    dedupe_route_vias_graph,
+    Merger,
+    TraceDedupeRouteViasArgs,
+    "TraceMethodGraph<[TraceRoute]>",
+    TraceDedupeRouteViasResult,
+    "TraceMethodGraph<void>"
+);
+graph_method!(
+    moveViaTo,
+    move_via_to_graph,
+    Merger,
+    TraceMoveViaToArgs,
+    "TraceMethodGraph<[TraceVia, TraceVia, boolean]>",
+    TraceMoveViaToResult,
+    "TraceMethodGraph<void>"
+);
+graph_method!(
+    getOffendingViaGroupsBatch,
+    get_offending_via_groups_batch_graph,
+    Merger,
+    TraceGetOffendingViaGroupsBatchArgs,
+    "TraceMethodGraph<[]>",
+    TraceGetOffendingViaGroupsBatchResult,
+    "TraceMethodGraph<Array<{ keep: TraceVia; remove: TraceVia[] }>>"
+);
+graph_method!(
+    markThroughObstacleSegments,
+    mark_through_obstacle_segments_graph,
+    Trace,
+    TraceMarkThroughObstacleSegmentsArgs,
+    "TraceMethodGraph<[ReadonlyArray<TraceRoute>]>",
+    TraceMarkThroughObstacleSegmentsResult,
+    "TraceMethodGraph<TraceRoute[]>"
+);
+graph_method!(
+    validatePreservedRouteEndpoints,
+    validate_preserved_route_endpoints_graph,
+    Trace,
+    TraceValidatePreservedRouteEndpointsArgs,
+    "TraceMethodGraph<[TraceRoute[]]>",
+    TraceValidatePreservedRouteEndpointsResult,
+    "TraceMethodGraph<void>"
+);
+graph_method!(
+    isSameNetObstacle,
+    is_same_net_obstacle_graph,
+    Trace,
+    TraceIsSameNetObstacleArgs,
+    "TraceMethodGraph<[TraceRoute, TraceObstacle]>",
+    TraceIsSameNetObstacleResult,
+    "TraceMethodGraph<boolean>"
+);
+graph_method!(
+    getSameNetObstacleForSegment,
+    get_same_net_obstacle_for_segment_graph,
+    Trace,
+    TraceGetSameNetObstacleForSegmentArgs,
+    "TraceMethodGraph<[TraceRoute, { x: number; y: number }, { x: number; y: number }]>",
+    TraceGetSameNetObstacleForSegmentResult,
+    "TraceMethodGraph<TraceObstacle | null>"
+);
+graph_method!(
+    isViaInsideSameNetObstacle,
+    is_via_inside_same_net_obstacle_graph,
+    Trace,
+    TraceIsViaInsideSameNetObstacleArgs,
+    "TraceMethodGraph<[TraceRoute, { x: number; y: number }]>",
+    TraceIsViaInsideSameNetObstacleResult,
+    "TraceMethodGraph<boolean>"
+);
+graph_method!(
+    collapseDetourSection,
+    collapse_detour_section_graph,
+    Crossing,
+    TraceCollapseDetourSectionArgs,
+    "TraceMethodGraph<[{ route: TraceRoute; section: TraceRouteSection; targetZ: number }]>",
+    TraceCollapseDetourSectionResult,
+    "TraceMethodGraph<TraceRoute>"
+);
+graph_method!(
+    relocateTransitionVia,
+    relocate_transition_via_graph,
+    Crossing,
+    TraceRelocateTransitionViaArgs,
+    "TraceMethodGraph<[{ route: TraceRoute; section: TraceRouteSection; targetZ: number; side: \"start\" | \"end\"; newViaDistance: number }]>",
+    TraceRelocateTransitionViaResult,
+    "TraceMethodGraph<{ route: TraceRoute; relocatedVia: { x: number; y: number } } | null>"
+);
+graph_method!(
+    relocateTransitionVias,
+    relocate_transition_vias_graph,
+    Crossing,
+    TraceRelocateTransitionViasArgs,
+    "TraceMethodGraph<[{ route: TraceRoute; sections: TraceRouteSection[]; crossingGroups: Array<{ transitionRouteIndex: number; transitionSectionIndex: number; side: \"start\" | \"end\"; crossingDistances: number[] }>; detourZ: number; detourTraceThickness: number }]>",
+    TraceRelocateTransitionViasResult,
+    "TraceMethodGraph<{ route: TraceRoute; relocatedVias: Array<{ x: number; y: number }> } | null>"
+);
+graph_method!(
+    getReducedHdRoutes,
+    get_reduced_hd_routes_graph,
+    Crossing,
+    TraceGetReducedHdRoutesArgs,
+    "TraceMethodGraph<[]>",
+    TraceGetReducedHdRoutesResult,
+    "TraceMethodGraph<TraceRoute[]>"
+);
+graph_method!(
+    findCrossingReduction,
+    find_crossing_reduction_graph,
+    Crossing,
+    TraceFindCrossingReductionArgs,
+    "TraceMethodGraph<[]>",
+    TraceFindCrossingReductionResult,
+    "TraceMethodGraph<{ detourRouteIndex: number; detourRoute: TraceRoute; transitionUpdates: Array<{ routeIndex: number; route: TraceRoute; relocatedVias: Array<{ x: number; y: number }> }> } | null>"
+);
+
 // Graph fields encode solver-specific references and numeric sentinels. Keep the
 // existing Value representation so crossing the boundary needs no second walk.
 #[derive(serde::Serialize, serde::Deserialize, Tsify)]
@@ -238,18 +649,6 @@ impl Engine {
             _ => {}
         }
         fields
-    }
-
-    fn invoke(&self, method: &str, args: &Value, codec: &mut GraphCodec) -> Result<Value, String> {
-        match self {
-            Self::Path(s) => s.borrow_mut().invoke(method, args, codec),
-            Self::Multi(s) => s.borrow_mut().invoke(method, args, codec),
-            Self::SingleVia(s) => s.borrow_mut().invoke(method, args, codec),
-            Self::Via(s) => s.borrow_mut().invoke(method, args, codec),
-            Self::Merger(s) => s.borrow_mut().invoke(method, args, codec),
-            Self::Trace(s) => s.borrow_mut().invoke(method, args, codec),
-            Self::Crossing(s) => s.borrow_mut().invoke(method, args, codec),
-        }
     }
 }
 
@@ -783,35 +1182,6 @@ impl TraceSimplificationDispatcher {
             .map_err(js_error)
     }
 
-    #[wasm_bindgen(js_name = invoke)]
-    pub fn invoke(
-        &self,
-        method: &str,
-        args_graph: Ts<TraceGraphPacket>,
-    ) -> Result<Ts<TraceGraphPacket>, JsValue> {
-        let packet = args_graph.to_rust().map_err(js_error)?.0;
-        let mut codec = self.codec.borrow_mut();
-        let _imported = codec.import_graph(&packet).map_err(js_error)?;
-        let _read_scope = connectivity_scope(
-            self.connectivity_query.as_ref(),
-            &codec,
-            &self.callback_error,
-            &self.read_codec,
-        );
-        let output = self
-            .engine
-            .invoke(method, &packet["fields"], &mut codec)
-            .map_err(|error| {
-                self.callback_error
-                    .borrow_mut()
-                    .take()
-                    .unwrap_or_else(|| js_error(error))
-            })?;
-        TraceGraphPacket(codec.finish(output))
-            .into_ts()
-            .map_err(js_error)
-    }
-
     #[wasm_bindgen(js_name = activeChild)]
     pub fn active_child(&self) -> Option<Self> {
         let (identity, kind, engine) = match &*self.engine {
@@ -1004,6 +1374,28 @@ impl TraceSimplificationDispatcher {
 }
 
 impl TraceSimplificationDispatcher {
+    fn with_graph(
+        &self,
+        packet: Value,
+        run: impl FnOnce(&Engine, &Value, &mut GraphCodec) -> Result<Value, String>,
+    ) -> Result<Value, JsValue> {
+        let mut codec = self.codec.borrow_mut();
+        let _imported = codec.import_graph(&packet).map_err(js_error)?;
+        let _read_scope = connectivity_scope(
+            self.connectivity_query.as_ref(),
+            &codec,
+            &self.callback_error,
+            &self.read_codec,
+        );
+        let output = run(&self.engine, &packet["fields"], &mut codec).map_err(|error| {
+            self.callback_error
+                .borrow_mut()
+                .take()
+                .unwrap_or_else(|| js_error(error))
+        })?;
+        Ok(codec.finish(output))
+    }
+
     fn pending_status(&self) -> u32 {
         let Engine::Trace(s) = &*self.engine else {
             return 0;

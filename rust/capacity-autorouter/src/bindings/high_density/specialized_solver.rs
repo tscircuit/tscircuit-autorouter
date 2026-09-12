@@ -91,33 +91,6 @@ impl SpecializedEngine {
         self.solver().base()
     }
 
-    pub fn invoke(
-        &mut self,
-        method: &str,
-        args: Vec<Value>,
-    ) -> Result<(Value, Vec<Value>), String> {
-        match self {
-            Self::SingleLayer(_) | Self::SingleTransition(_) | Self::ThroughObstacle(_) => {
-                crate::bindings::high_density::specialized_simple_dispatch::invoke(
-                    self, method, args,
-                )
-            }
-            Self::TwoCrossing(_) | Self::TransitionCrossing(_) => {
-                crate::bindings::high_density::specialized_crossing_dispatch::invoke(
-                    self, method, args,
-                )
-            }
-            Self::MultiHead(_)
-            | Self::MultiHead2(_)
-            | Self::MultiHead3(_)
-            | Self::ViaPossibilities2(_) => {
-                crate::bindings::high_density::specialized_multi_head_dispatch::invoke(
-                    self, method, args,
-                )
-            }
-        }
-    }
-
     pub fn snapshot(&self) -> Result<Value, String> {
         let result = match self {
             Self::SingleLayer(solver) => serde_json::to_value(solver),

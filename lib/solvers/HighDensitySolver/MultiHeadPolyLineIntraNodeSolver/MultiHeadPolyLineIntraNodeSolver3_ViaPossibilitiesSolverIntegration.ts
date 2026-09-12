@@ -5,6 +5,6 @@ export class MultiHeadPolyLineIntraNodeSolver3 extends MultiHeadPolyLineIntraNod
   static override diagnosticFields = [...MultiHeadPolyLineIntraNodeSolver2.diagnosticFields]
   override getSolverName(): string { return "MultiHeadPolyLineIntraNodeSolver3" }
   constructor(props: ConstructorParameters<typeof MultiHeadPolyLineIntraNodeSolver2>[0]) { super(props) }
-  createInitialCandidateFromSeed(shuffleSeed: number): Candidate | null { return this.invoke<Candidate | null>("createInitialCandidateFromSeed", [shuffleSeed]) }
-  setupInitialPolyLines(): void { this.invoke<null>("setupInitialPolyLines", []) }
+  createInitialCandidateFromSeed(shuffleSeed: number): Candidate | null { return this.call(() => this.binding.createInitialCandidateFromSeed(shuffleSeed), [shuffleSeed]) }
+  setupInitialPolyLines(): void { this.call(() => this.binding.setupInitialPolyLines()) }
 }

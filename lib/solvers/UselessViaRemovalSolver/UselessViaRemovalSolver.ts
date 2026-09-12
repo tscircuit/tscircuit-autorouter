@@ -51,7 +51,7 @@ export class UselessViaRemovalSolver extends TraceSimplificationSolverAdapter {
 
   override getSolverName(): string { return "UselessViaRemovalSolver" }
   getOptimizedHdRoutes(): HighDensityRoute[] | null {
-    return this.invoke("getOptimizedHdRoutes", []) as HighDensityRoute[]
+    return this.callSolver(this.binding.getOptimizedHdRoutes, [])
   }
 
   visualize(): GraphicsObject {

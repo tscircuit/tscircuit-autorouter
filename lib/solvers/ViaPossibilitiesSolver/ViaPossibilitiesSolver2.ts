@@ -43,18 +43,10 @@ export class ViaPossibilitiesSolver2 extends SpecializedIntraNodeSolverAdapter {
         x: number;
         y: number;
         z: number;
-    } { return this.invoke<{
-        x: number;
-        y: number;
-        z: number;
-    }>("_padByNewHeadWallBuffer", [point]) }
+    } { return this.call(() => this.binding.padByNewHeadWallBuffer(point), [point]) }
   _padByPlaceholderWallBuffer(point: Point3): {
         x: number;
         y: number;
         z: number;
-    } { return this.invoke<{
-        x: number;
-        y: number;
-        z: number;
-    }>("_padByPlaceholderWallBuffer", [point]) }
+    } { return this.call(() => this.binding.padByPlaceholderWallBuffer(point), [point]) }
 }

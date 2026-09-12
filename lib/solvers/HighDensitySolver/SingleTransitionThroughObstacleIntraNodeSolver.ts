@@ -35,5 +35,5 @@ export class SingleTransitionThroughObstacleIntraNodeSolver extends SpecializedI
         obstacles?: Obstacle[];
         connMap?: ConnectivityMap;
         layerCount?: number;
-    }): boolean { return this.applicable("through-obstacle", params) }
+    }): boolean { return this.applicable(this.specializedBindings.isThroughObstacleApplicable, params) }
 }

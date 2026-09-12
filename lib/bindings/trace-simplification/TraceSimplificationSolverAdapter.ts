@@ -207,12 +207,15 @@ export class TraceSimplificationSolverAdapter extends BaseSolver {
     return status
   }
 
-  invoke(method: string, args: unknown[] = []): any {
+  protected callSolver<A extends unknown[], R>(
+    method: (args: bindings.TraceMethodGraph<A>) => bindings.TraceMethodGraph<R>,
+    args: NoInfer<A>,
+  ): R {
     this.graph.exposeNormalizedObstacles()
     this.push()
-    const argsGraph = this.graph.graph(args)
+    const argsGraph: bindings.TraceMethodGraph<A> = this.graph.graph(args)
     this.graph.trackArguments(args)
-    const value = this.hydrateSolver(withQueryGraph(this.graph, () => this.binding.invoke(method, argsGraph)))
+    const value = this.hydrateSolver(withQueryGraph(this.graph, () => method.call(this.binding, argsGraph)))
     if (this.observed) this.sync()
     return value
   }

@@ -251,18 +251,14 @@ impl UselessViaRemovalSolver {
         Ok(())
     }
 
-    pub fn invoke(
+    pub fn get_optimized_hd_routes_graph(
         &mut self,
-        method: &str,
         _args: &Value,
         codec: &mut crate::bindings::trace_simplification::graph_codec::GraphCodec,
     ) -> Result<Value, String> {
-        match method {
-            "getOptimizedHdRoutes" => Ok(codec.route_array(
-                self.optimized_routes_array_identity,
-                &self.optimized_hd_routes,
-            )),
-            _ => Err(format!("Unknown UselessViaRemovalSolver method: {method}")),
-        }
+        Ok(codec.route_array(
+            self.optimized_routes_array_identity,
+            &self.optimized_hd_routes,
+        ))
     }
 }

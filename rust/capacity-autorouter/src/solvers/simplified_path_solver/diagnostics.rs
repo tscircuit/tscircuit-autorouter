@@ -98,90 +98,156 @@ impl PathChild {
         }
         fields
     }
-    pub fn invoke(
+    pub fn is_valid_path_graph(
         &mut self,
-        method: &str,
         args: &Value,
-        codec: &mut GraphCodec,
+        codec: &mut crate::bindings::trace_simplification::graph_codec::GraphCodec,
     ) -> Result<Value, String> {
-        if method == "getSolverName" {
-            return Ok(json!(if matches!(&self.kind, PathChildKind::Vertex(_)) {
-                "VertexShortcutPathSolver"
-            } else {
-                "SingleSimplifiedPathSolver"
-            }));
-        }
-        if method == "simplifiedRoute" {
-            return Ok(codec.route(&self.simplified_route()));
-        }
-        if method == "getConstructorParams" {
-            let mut value = self.snapshot(codec);
-            let object = value.as_object_mut().unwrap();
-            object.retain(|key, _| {
-                [
-                    "inputRoute",
-                    "otherHdRoutes",
-                    "obstacles",
-                    "connMap",
-                    "colorMap",
-                    "outline",
-                    "minBoardEdgeClearance",
-                ]
-                .contains(&key.as_str())
-            });
-            value["connMap"] = codec
-                .raw(serde_json::to_value(&self.base_solver().params.conn_map.net_map).unwrap());
-            return Ok(value);
-        }
         let Some(s) = self.sampled_mut() else {
             return Err("Not implemented".into());
         };
-        match method {
-            "isValidPath" => Ok(json!(s.is_valid_path(&codec.read_points(&args[0])?)?)),
-            "isValidPathSegment" => Ok(json!(s.is_valid_path_segment(
-                &codec.read_point(&args[0])?,
-                &codec.read_point(&args[1])?
-            )?)),
-            "arePointsEqual" => Ok(json!(
-                s.are_points_equal(&codec.read_point(&args[0])?, &codec.read_point(&args[1])?)
-            )),
-            "getPointAtDistance" => {
-                Ok(codec
-                    .point(&s.get_point_at_distance(args[0].as_f64().ok_or("Distance required")?)))
-            }
-            "getNearestIndexForDistance" => Ok(json!(
-                s.get_nearest_index_for_distance(args[0].as_f64().ok_or("Distance required")?)
-            )),
-            "find45DegreePath" => Ok(s
-                .find_45_degree_path(&codec.read_point(&args[0])?, &codec.read_point(&args[1])?)?
+        Ok(json!(s.is_valid_path(&codec.read_points(&args[0])?)?))
+    }
+
+    pub fn is_valid_path_segment_graph(
+        &mut self,
+        args: &Value,
+        codec: &mut crate::bindings::trace_simplification::graph_codec::GraphCodec,
+    ) -> Result<Value, String> {
+        let Some(s) = self.sampled_mut() else {
+            return Err("Not implemented".into());
+        };
+        Ok(json!(s.is_valid_path_segment(
+            &codec.read_point(&args[0])?,
+            &codec.read_point(&args[1])?
+        )?))
+    }
+
+    pub fn are_points_equal_graph(
+        &mut self,
+        args: &Value,
+        codec: &mut crate::bindings::trace_simplification::graph_codec::GraphCodec,
+    ) -> Result<Value, String> {
+        let Some(s) = self.sampled_mut() else {
+            return Err("Not implemented".into());
+        };
+        Ok(json!(s.are_points_equal(
+            &codec.read_point(&args[0])?,
+            &codec.read_point(&args[1])?
+        )))
+    }
+
+    pub fn get_point_at_distance_graph(
+        &mut self,
+        args: &Value,
+        codec: &mut crate::bindings::trace_simplification::graph_codec::GraphCodec,
+    ) -> Result<Value, String> {
+        let Some(s) = self.sampled_mut() else {
+            return Err("Not implemented".into());
+        };
+        Ok(codec.point(&s.get_point_at_distance(args[0].as_f64().ok_or("Distance required")?)))
+    }
+
+    pub fn get_nearest_index_for_distance_graph(
+        &mut self,
+        args: &Value,
+        _codec: &mut crate::bindings::trace_simplification::graph_codec::GraphCodec,
+    ) -> Result<Value, String> {
+        let Some(s) = self.sampled_mut() else {
+            return Err("Not implemented".into());
+        };
+        Ok(json!(s.get_nearest_index_for_distance(
+            args[0].as_f64().ok_or("Distance required")?
+        )))
+    }
+
+    pub fn find_45_degree_path_graph(
+        &mut self,
+        args: &Value,
+        codec: &mut crate::bindings::trace_simplification::graph_codec::GraphCodec,
+    ) -> Result<Value, String> {
+        let Some(s) = self.sampled_mut() else {
+            return Err("Not implemented".into());
+        };
+        Ok(
+            s.find_45_degree_path(&codec.read_point(&args[0])?, &codec.read_point(&args[1])?)?
                 .map(|p| codec.points(&p))
-                .unwrap_or(Value::Null)),
-            "addPathToResult" => {
-                s.add_path_to_result(&codec.read_points(&args[0])?);
-                Ok(Value::Null)
-            }
-            "appendOriginalRouteSlice" => {
-                s.append_original_route_slice(
-                    args[0].as_f64().ok_or("Distance required")?,
-                    args[1].as_u64().ok_or("Route index required")? as usize,
-                )?;
-                Ok(Value::Null)
-            }
-            "moveHead" => {
-                s.move_head(args[0].as_f64().ok_or("Distance required")?);
-                Ok(Value::Null)
-            }
-            "stepBackAndReduceStepSize" => {
-                s.step_back_and_reduce_step_size();
-                Ok(Value::Null)
-            }
-            "computePathSegments" => {
-                s.compute_path_segments();
-                Ok(Value::Null)
-            }
-            "isSameNetRoute" => Ok(json!(s.is_same_net_route(&codec.read_route(&args[0])?))),
-            _ => Err(format!("Unknown simplified path method {method}")),
-        }
+                .unwrap_or(Value::Null),
+        )
+    }
+
+    pub fn add_path_to_result_graph(
+        &mut self,
+        args: &Value,
+        codec: &mut crate::bindings::trace_simplification::graph_codec::GraphCodec,
+    ) -> Result<Value, String> {
+        let Some(s) = self.sampled_mut() else {
+            return Err("Not implemented".into());
+        };
+        s.add_path_to_result(&codec.read_points(&args[0])?);
+        Ok(Value::Null)
+    }
+
+    pub fn append_original_route_slice_graph(
+        &mut self,
+        args: &Value,
+        _codec: &mut crate::bindings::trace_simplification::graph_codec::GraphCodec,
+    ) -> Result<Value, String> {
+        let Some(s) = self.sampled_mut() else {
+            return Err("Not implemented".into());
+        };
+        s.append_original_route_slice(
+            args[0].as_f64().ok_or("Distance required")?,
+            args[1].as_u64().ok_or("Route index required")? as usize,
+        )?;
+        Ok(Value::Null)
+    }
+
+    pub fn move_head_graph(
+        &mut self,
+        args: &Value,
+        _codec: &mut crate::bindings::trace_simplification::graph_codec::GraphCodec,
+    ) -> Result<Value, String> {
+        let Some(s) = self.sampled_mut() else {
+            return Err("Not implemented".into());
+        };
+        s.move_head(args[0].as_f64().ok_or("Distance required")?);
+        Ok(Value::Null)
+    }
+
+    pub fn step_back_and_reduce_step_size_graph(
+        &mut self,
+        _args: &Value,
+        _codec: &mut crate::bindings::trace_simplification::graph_codec::GraphCodec,
+    ) -> Result<Value, String> {
+        let Some(s) = self.sampled_mut() else {
+            return Err("Not implemented".into());
+        };
+        s.step_back_and_reduce_step_size();
+        Ok(Value::Null)
+    }
+
+    pub fn compute_path_segments_graph(
+        &mut self,
+        _args: &Value,
+        _codec: &mut crate::bindings::trace_simplification::graph_codec::GraphCodec,
+    ) -> Result<Value, String> {
+        let Some(s) = self.sampled_mut() else {
+            return Err("Not implemented".into());
+        };
+        s.compute_path_segments();
+        Ok(Value::Null)
+    }
+
+    pub fn is_same_net_route_graph(
+        &mut self,
+        args: &Value,
+        codec: &mut crate::bindings::trace_simplification::graph_codec::GraphCodec,
+    ) -> Result<Value, String> {
+        let Some(s) = self.sampled_mut() else {
+            return Err("Not implemented".into());
+        };
+        Ok(json!(s.is_same_net_route(&codec.read_route(&args[0])?)))
     }
 }
 
@@ -513,16 +579,5 @@ impl super::multi_simplified_path_solver::MultiSimplifiedPathSolver {
             self.active_sub_solver = child;
         }
         Ok(())
-    }
-    pub fn invoke(
-        &mut self,
-        method: &str,
-        _args: &Value,
-        _codec: &mut GraphCodec,
-    ) -> Result<Value, String> {
-        match method {
-            "getSolverName" => Ok(json!("MultiSimplifiedPathSolver")),
-            _ => Err(format!("Unknown multi simplified path method {method}")),
-        }
     }
 }

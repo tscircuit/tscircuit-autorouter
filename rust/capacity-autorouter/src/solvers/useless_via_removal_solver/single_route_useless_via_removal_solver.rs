@@ -925,113 +925,157 @@ impl SingleRouteUselessViaRemovalSolver {
         Ok(())
     }
 
-    pub fn invoke(
+    pub fn get_optimized_hd_route_graph(
         &mut self,
-        method: &str,
+        _args: &Value,
+        codec: &mut crate::bindings::trace_simplification::graph_codec::GraphCodec,
+    ) -> Result<Value, String> {
+        Ok(codec.route(&self.get_optimized_hd_route()))
+    }
+
+    pub fn get_path_length_graph(
+        &mut self,
         args: &Value,
         codec: &mut crate::bindings::trace_simplification::graph_codec::GraphCodec,
     ) -> Result<Value, String> {
-        match method {
-            "getOptimizedHdRoute" => Ok(codec.route(&self.get_optimized_hd_route())),
-            "getConstructorParams" => {
-                let mut params = json!({"unsimplifiedRoute":codec.route(&self.unsimplified_route),
-                    "connMap":codec.connectivity(&self.conn_map),
-                    "outline":codec.raw(serde_json::to_value(&self.outline).unwrap()),
-                    "geometryShortcutTraceMargin":self.geometry_shortcut_trace_margin,
-                    "geometryShortcutObstacleMargin":self.geometry_shortcut_obstacle_margin,
-                    "enableGeometryShortcuts":self.enable_geometry_shortcuts,
-                    "enableObstacleDetourShortcuts":self.enable_obstacle_detour_shortcuts,
-                    "preserveRouteEndpoints":self.preserve_route_endpoints});
-                params["terminalLayerIndicesByPcbPortId"] = self
-                    .terminal_layers
-                    .as_ref()
-                    .map(|map| codec.terminal_layers(map))
-                    .unwrap_or(Value::Null);
-                Ok(params)
-            }
-            "getPathLength" => Ok(json!(self.get_path_length(&codec.read_points(&args[0])?))),
-            "normalizeShortcutPath" => {
-                let path: Vec<Point2> = serde_json::from_value(codec.read_raw(&args[0]))
-                    .map_err(|error| error.to_string())?;
-                let start = codec.read_point(&args[1])?;
-                let end = codec.read_point(&args[2])?;
-                Ok(codec.points(&self.normalize_shortcut_path(&path, &start, &end)))
-            }
-            "shortcutCrossesOutline" => Ok(json!(
-                self.shortcut_crosses_outline(&codec.read_points(&args[0])?)
-            )),
-            "getObstacleDetourPaths" => {
-                let start = codec.read_point(&args[0])?;
-                let end = codec.read_point(&args[1])?;
-                let paths = self.get_obstacle_detour_paths(
-                    &start,
-                    &end,
-                    args[2].as_f64().ok_or("targetZ required")?,
-                    args[3].as_f64().ok_or("maxPathLength required")?,
-                )?;
-                Ok(Value::Array(paths.into_iter().map(|path| json!({"path":codec.points(&path.path),"length":path.length,"longestSegmentIndex":path.longest_segment_index})).collect()))
-            }
-            "getDirectGeometryShortcut"
-            | "getObstacleDetourShortcut"
-            | "findGeometryShortcut"
-            | "findMultilayerSectionCollapse" => {
-                let previous = RouteSection::restore(&args[0], codec)?;
-                let current = RouteSection::restore(&args[1], codec)?;
-                let next = RouteSection::restore(&args[2], codec)?;
-                if method == "findMultilayerSectionCollapse" {
-                    return Ok(self.find_multilayer_section_collapse(&previous, &current, &next)?.map(|collapse| json!({"targetZ":collapse.target_z,"mergeWith":match collapse.merge_with { MergeWith::Previous=>"previous",MergeWith::Next=>"next" }})).unwrap_or(Value::Null));
-                }
-                let shortcut = match method {
-                    "getDirectGeometryShortcut" => {
-                        self.get_direct_geometry_shortcut(&previous, &current, &next)?
-                    }
-                    "getObstacleDetourShortcut" => {
-                        self.get_obstacle_detour_shortcut(&previous, &current, &next)?
-                    }
-                    _ => self.find_geometry_shortcut(&previous, &current, &next)?,
-                };
-                Ok(shortcut.map(|shortcut| {
+        Ok(json!(self.get_path_length(&codec.read_points(&args[0])?)))
+    }
+
+    pub fn normalize_shortcut_path_graph(
+        &mut self,
+        args: &Value,
+        codec: &mut crate::bindings::trace_simplification::graph_codec::GraphCodec,
+    ) -> Result<Value, String> {
+        let path: Vec<Point2> =
+            serde_json::from_value(codec.read_raw(&args[0])).map_err(|error| error.to_string())?;
+        let start = codec.read_point(&args[1])?;
+        let end = codec.read_point(&args[2])?;
+        Ok(codec.points(&self.normalize_shortcut_path(&path, &start, &end)))
+    }
+
+    pub fn shortcut_crosses_outline_graph(
+        &mut self,
+        args: &Value,
+        codec: &mut crate::bindings::trace_simplification::graph_codec::GraphCodec,
+    ) -> Result<Value, String> {
+        Ok(json!(
+            self.shortcut_crosses_outline(&codec.read_points(&args[0])?)
+        ))
+    }
+
+    pub fn get_obstacle_detour_paths_graph(
+        &mut self,
+        args: &Value,
+        codec: &mut crate::bindings::trace_simplification::graph_codec::GraphCodec,
+    ) -> Result<Value, String> {
+        let start = codec.read_point(&args[0])?;
+        let end = codec.read_point(&args[1])?;
+        let paths = self.get_obstacle_detour_paths(
+            &start,
+            &end,
+            args[2].as_f64().ok_or("targetZ required")?,
+            args[3].as_f64().ok_or("maxPathLength required")?,
+        )?;
+        Ok(Value::Array(paths.into_iter().map(|path| json!({"path":codec.points(&path.path),"length":path.length,"longestSegmentIndex":path.longest_segment_index})).collect()))
+    }
+
+    pub fn get_direct_geometry_shortcut_graph(
+        &mut self,
+        args: &Value,
+        codec: &mut crate::bindings::trace_simplification::graph_codec::GraphCodec,
+    ) -> Result<Value, String> {
+        let previous = RouteSection::restore(&args[0], codec)?;
+        let current = RouteSection::restore(&args[1], codec)?;
+        let next = RouteSection::restore(&args[2], codec)?;
+        let shortcut = self.get_direct_geometry_shortcut(&previous, &current, &next)?;
+        Ok(shortcut.map(|shortcut| {
                     let mut value = json!({"path":codec.points(&shortcut.path),"previousPointIndex":shortcut.previous_point_index,"nextPointIndex":shortcut.next_point_index,"savedLength":shortcut.saved_length});
                     if let Some(index) = shortcut.validation_first_segment_index { value["validationFirstSegmentIndex"] = json!(index); }
                     value
                 }).unwrap_or(Value::Null))
-            }
-            "applyGeometryShortcut" => {
-                let value = &args[0];
-                self.apply_geometry_shortcut(ViaPairShortcut {
-                    path: codec.read_points(&value["path"])?,
-                    previous_point_index: value["previousPointIndex"]
-                        .as_u64()
-                        .ok_or("previousPointIndex required")?
-                        as usize,
-                    next_point_index: value["nextPointIndex"]
-                        .as_u64()
-                        .ok_or("nextPointIndex required")?
-                        as usize,
-                    saved_length: value["savedLength"]
-                        .as_f64()
-                        .ok_or("savedLength required")?,
-                    validation_first_segment_index: value["validationFirstSegmentIndex"]
-                        .as_u64()
-                        .map(|v| v as usize),
-                });
-                Ok(Value::Null)
-            }
-            "applyMultilayerSectionCollapse" => {
-                let merge_with = match args[0]["mergeWith"].as_str() {
-                    Some("previous") => MergeWith::Previous,
-                    Some("next") => MergeWith::Next,
-                    _ => return Err("Unknown mergeWith".into()),
-                };
-                self.apply_multilayer_section_collapse(MultilayerSectionCollapse {
-                    target_z: args[0]["targetZ"].as_f64().ok_or("targetZ required")?,
-                    merge_with,
-                });
-                Ok(Value::Null)
-            }
-            _ => Err(format!(
-                "Unknown SingleRouteUselessViaRemovalSolver method: {method}"
-            )),
-        }
+    }
+
+    pub fn get_obstacle_detour_shortcut_graph(
+        &mut self,
+        args: &Value,
+        codec: &mut crate::bindings::trace_simplification::graph_codec::GraphCodec,
+    ) -> Result<Value, String> {
+        let previous = RouteSection::restore(&args[0], codec)?;
+        let current = RouteSection::restore(&args[1], codec)?;
+        let next = RouteSection::restore(&args[2], codec)?;
+        let shortcut = self.get_obstacle_detour_shortcut(&previous, &current, &next)?;
+        Ok(shortcut.map(|shortcut| {
+                    let mut value = json!({"path":codec.points(&shortcut.path),"previousPointIndex":shortcut.previous_point_index,"nextPointIndex":shortcut.next_point_index,"savedLength":shortcut.saved_length});
+                    if let Some(index) = shortcut.validation_first_segment_index { value["validationFirstSegmentIndex"] = json!(index); }
+                    value
+                }).unwrap_or(Value::Null))
+    }
+
+    pub fn find_geometry_shortcut_graph(
+        &mut self,
+        args: &Value,
+        codec: &mut crate::bindings::trace_simplification::graph_codec::GraphCodec,
+    ) -> Result<Value, String> {
+        let previous = RouteSection::restore(&args[0], codec)?;
+        let current = RouteSection::restore(&args[1], codec)?;
+        let next = RouteSection::restore(&args[2], codec)?;
+        let shortcut = self.find_geometry_shortcut(&previous, &current, &next)?;
+        Ok(shortcut.map(|shortcut| {
+                    let mut value = json!({"path":codec.points(&shortcut.path),"previousPointIndex":shortcut.previous_point_index,"nextPointIndex":shortcut.next_point_index,"savedLength":shortcut.saved_length});
+                    if let Some(index) = shortcut.validation_first_segment_index { value["validationFirstSegmentIndex"] = json!(index); }
+                    value
+                }).unwrap_or(Value::Null))
+    }
+
+    pub fn find_multilayer_section_collapse_graph(
+        &mut self,
+        args: &Value,
+        codec: &mut crate::bindings::trace_simplification::graph_codec::GraphCodec,
+    ) -> Result<Value, String> {
+        let previous = RouteSection::restore(&args[0], codec)?;
+        let current = RouteSection::restore(&args[1], codec)?;
+        let next = RouteSection::restore(&args[2], codec)?;
+        Ok(self.find_multilayer_section_collapse(&previous, &current, &next)?.map(|collapse| json!({"targetZ":collapse.target_z,"mergeWith":match collapse.merge_with { MergeWith::Previous=>"previous",MergeWith::Next=>"next" }})).unwrap_or(Value::Null))
+    }
+
+    pub fn apply_geometry_shortcut_graph(
+        &mut self,
+        args: &Value,
+        codec: &mut crate::bindings::trace_simplification::graph_codec::GraphCodec,
+    ) -> Result<Value, String> {
+        let value = &args[0];
+        self.apply_geometry_shortcut(ViaPairShortcut {
+            path: codec.read_points(&value["path"])?,
+            previous_point_index: value["previousPointIndex"]
+                .as_u64()
+                .ok_or("previousPointIndex required")? as usize,
+            next_point_index: value["nextPointIndex"]
+                .as_u64()
+                .ok_or("nextPointIndex required")? as usize,
+            saved_length: value["savedLength"]
+                .as_f64()
+                .ok_or("savedLength required")?,
+            validation_first_segment_index: value["validationFirstSegmentIndex"]
+                .as_u64()
+                .map(|v| v as usize),
+        });
+        Ok(Value::Null)
+    }
+
+    pub fn apply_multilayer_section_collapse_graph(
+        &mut self,
+        args: &Value,
+        _codec: &mut crate::bindings::trace_simplification::graph_codec::GraphCodec,
+    ) -> Result<Value, String> {
+        let merge_with = match args[0]["mergeWith"].as_str() {
+            Some("previous") => MergeWith::Previous,
+            Some("next") => MergeWith::Next,
+            _ => return Err("Unknown mergeWith".into()),
+        };
+        self.apply_multilayer_section_collapse(MultilayerSectionCollapse {
+            target_z: args[0]["targetZ"].as_f64().ok_or("targetZ required")?,
+            merge_with,
+        });
+        Ok(Value::Null)
     }
 }
