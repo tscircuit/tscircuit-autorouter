@@ -722,7 +722,8 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       0.1
     const viaClearance = RELAXED_DRC_OPTIONS.viaClearance ?? 0.1
     const baselineDrc = evaluateRelaxedDrc({
-      includeBoardClearance: true,
+      includeBoardClearance:
+        params.originalSrj.boundsArePhysicalBoardEdges !== false,
       inputSrj: params.originalSrj,
       srjWithPointPairs: params.srjWithPointPairs,
       routedTraces: [],
@@ -744,7 +745,8 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       evaluatedTraceIds: baselineEvaluatedTraceIds,
     })
     const currentDrcResult = evaluateRelaxedDrc({
-      includeBoardClearance: true,
+      includeBoardClearance:
+        params.originalSrj.boundsArePhysicalBoardEdges !== false,
       inputSrj: params.originalSrj,
       srjWithPointPairs: params.srjWithPointPairs,
       routedTraces: preparedCurrentOutput.routedTraces,
@@ -1189,7 +1191,8 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       }
       const candidateDrcInput = prepareCandidateDrcInput(evaluatedRoutes)
       const evaluatedDrc = evaluateRelaxedDrc({
-        includeBoardClearance: true,
+        includeBoardClearance:
+          params.originalSrj.boundsArePhysicalBoardEdges !== false,
         inputSrj: params.originalSrj,
         srjWithPointPairs: params.srjWithPointPairs,
         routedTraces: candidateDrcInput.routedTraces,
