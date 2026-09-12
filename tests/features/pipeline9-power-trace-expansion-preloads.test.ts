@@ -3,6 +3,10 @@ import type { PowerTraceExpanderOptions } from "@tscircuit/power-trace-expander"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
 import { PowerTraceExpansionSolver } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/PowerTraceExpansionSolver"
 import type { Pipeline7PowerTraceExpansionInput } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/prepare-pipeline7-power-trace-expansion-input"
+import {
+  PostPowerTraceViaMergeSolver,
+  type PostPowerTraceViaMergeSolverInput,
+} from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/PostPowerTraceViaMergeSolver"
 import type {
   SimpleRouteJson,
   SimplifiedPcbTrace,
@@ -62,7 +66,12 @@ test("Pipeline9 power expansion uses current preloads without disabling its stag
   const newlyRoutedTraces: SimplifiedPcbTraces = [
     createTrace("new-route", "NEW", 3),
   ]
-  const powerStep = solver.pipelineDef.at(-1)!
+  const powerStep = solver.pipelineDef.find(
+    (step) => step.solverName === "powerTraceExpansionSolver",
+  )!
+  const postPowerViaMergeStep = solver.pipelineDef.find(
+    (step) => step.solverName === "postPowerTraceViaMergeSolver",
+  )!
 
   expect(() => solver.getOutputSimplifiedPcbTraces()).toThrow(
     "Cannot get output before solving is complete",
@@ -71,8 +80,8 @@ test("Pipeline9 power expansion uses current preloads without disabling its stag
     "Cannot get output before solving is complete",
   )
   expect(powerStep.solverName).toBe("powerTraceExpansionSolver")
-  expect(solver.pipelineDef.at(-2)?.solverName).toBe(
-    "lengthMatchingPostProcessingSolver",
+  expect(solver.pipelineDef.indexOf(postPowerViaMergeStep)).toBe(
+    solver.pipelineDef.indexOf(powerStep) + 1,
   )
   solver.getNewTracesBeforePowerExpansion = () => newlyRoutedTraces
   solver.getUpdatedPreloadedTraces = () => [
@@ -103,6 +112,14 @@ test("Pipeline9 power expansion uses current preloads without disabling its stag
   expansionSolver.solve()
   expect(expansionSolver.failed).toBeFalse()
   solver.powerTraceExpansionSolver = expansionSolver
+  const [postPowerViaMergeInput] =
+    postPowerViaMergeStep.getConstructorParams(solver)
+  const postPowerViaMergeSolver = new PostPowerTraceViaMergeSolver(
+    postPowerViaMergeInput as PostPowerTraceViaMergeSolverInput,
+  )
+  postPowerViaMergeSolver.solve()
+  expect(postPowerViaMergeSolver.failed).toBeFalse()
+  solver.postPowerTraceViaMergeSolver = postPowerViaMergeSolver
   solver.solved = true
 
   const simplifiedOutput = solver.getOutputSimplifiedPcbTraces()

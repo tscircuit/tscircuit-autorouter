@@ -81,6 +81,8 @@ export interface SimpleRouteJson {
    * Defaults to false because via-in-pad generally requires filled and capped vias.
    */
   allowViaInPad?: boolean
+  /** Whether vias may terminate on internal copper layers. Defaults to true. */
+  allowBlindAndBuriedVias?: boolean
   bounds: { minX: number; maxX: number; minY: number; maxY: number }
   outline?: Array<{ x: number; y: number }>
   traces?: SimplifiedPcbTraces
