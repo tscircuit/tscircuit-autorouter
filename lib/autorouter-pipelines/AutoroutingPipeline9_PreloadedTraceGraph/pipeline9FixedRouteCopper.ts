@@ -154,9 +154,11 @@ export const getPipeline9AxisAlignedWireApproximations = (
 export const getPipeline9FixedRouteObstacles = ({
   fixedObstacleRoutes,
   layerCount,
+  allowBlindAndBuriedVias = false,
 }: {
   fixedObstacleRoutes: PreloadedHighDensityRoute[]
   layerCount: number
+  allowBlindAndBuriedVias?: boolean
 }): Obstacle[] => {
   return fixedObstacleRoutes.flatMap((route, routeIndex) => {
     const connectedTo = [route.connectionName, route.rootConnectionName].filter(
@@ -184,11 +186,11 @@ export const getPipeline9FixedRouteObstacles = ({
         (via, viaIndex): Obstacle => ({
           obstacleId: `pipeline9_fixed_obstacle_${routeIndex}_via_${viaIndex}`,
           type: "rect",
-          layers: Array.from(
-            { length: via.maxZ - via.minZ + 1 },
-            (_, layerOffset) =>
-              mapZToLayerName(via.minZ + layerOffset, layerCount),
-          ),
+          layers: getPipeline9ViaSpanZLayers({
+            via,
+            layerCount,
+            allowBlindAndBuriedVias,
+          }).map((z) => mapZToLayerName(z, layerCount)),
           center: via.center,
           width: via.diameter,
           height: via.diameter,
@@ -197,6 +199,20 @@ export const getPipeline9FixedRouteObstacles = ({
       ),
     ]
   })
+}
+
+export const getPipeline9ViaSpanZLayers = ({
+  via,
+  layerCount,
+  allowBlindAndBuriedVias,
+}: {
+  via: Pipeline9RouteViaSpan
+  layerCount: number
+  allowBlindAndBuriedVias: boolean
+}): number[] => {
+  const minZ = allowBlindAndBuriedVias ? via.minZ : 0
+  const maxZ = allowBlindAndBuriedVias ? via.maxZ : layerCount - 1
+  return Array.from({ length: maxZ - minZ + 1 }, (_, z) => minZ + z)
 }
 
 export const arePipeline9RoutesOnSameNet = (
@@ -260,11 +276,15 @@ export const doPipeline9RoutesHaveCopperConflict = ({
   left,
   right,
   clearance,
+  layerCount,
+  allowBlindAndBuriedVias = false,
   leftBounds,
 }: {
   left: HighDensityRoute
   right: HighDensityRoute
   clearance: number
+  layerCount: number
+  allowBlindAndBuriedVias?: boolean
   leftBounds?: Pipeline9Bounds
 }): boolean => {
   const leftGeometry = getPipeline9RouteCopperGeometry(left)
@@ -296,7 +316,15 @@ export const doPipeline9RoutesHaveCopperConflict = ({
       }
     }
     for (const rightVia of rightGeometry.viaSpans) {
-      if (leftWire.z < rightVia.minZ || leftWire.z > rightVia.maxZ) continue
+      if (
+        !getPipeline9ViaSpanZLayers({
+          via: rightVia,
+          layerCount,
+          allowBlindAndBuriedVias,
+        }).includes(leftWire.z)
+      ) {
+        continue
+      }
       const requiredClearance =
         leftWire.width / 2 + rightVia.diameter / 2 + clearance
       if (
@@ -313,7 +341,15 @@ export const doPipeline9RoutesHaveCopperConflict = ({
   }
   for (const leftVia of leftVias) {
     for (const rightWire of rightGeometry.wireSegments) {
-      if (rightWire.z < leftVia.minZ || rightWire.z > leftVia.maxZ) continue
+      if (
+        !getPipeline9ViaSpanZLayers({
+          via: leftVia,
+          layerCount,
+          allowBlindAndBuriedVias,
+        }).includes(rightWire.z)
+      ) {
+        continue
+      }
       const requiredClearance =
         leftVia.diameter / 2 + rightWire.width / 2 + clearance
       if (
@@ -328,7 +364,17 @@ export const doPipeline9RoutesHaveCopperConflict = ({
       }
     }
     for (const rightVia of rightGeometry.viaSpans) {
-      if (leftVia.minZ > rightVia.maxZ || rightVia.minZ > leftVia.maxZ) continue
+      const leftZLayers = getPipeline9ViaSpanZLayers({
+        via: leftVia,
+        layerCount,
+        allowBlindAndBuriedVias,
+      })
+      const rightZLayers = getPipeline9ViaSpanZLayers({
+        via: rightVia,
+        layerCount,
+        allowBlindAndBuriedVias,
+      })
+      if (!leftZLayers.some((z) => rightZLayers.includes(z))) continue
       const requiredClearance =
         leftVia.diameter / 2 + rightVia.diameter / 2 + clearance
       if (

@@ -13,7 +13,10 @@ import type {
 import type { Obstacle } from "lib/types/srj-types"
 import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
 import { materializePipeline9HdRouteVias } from "./materializePipeline9HdRouteVias"
-import { getPipeline9RouteCopperGeometry } from "./pipeline9FixedRouteCopper"
+import {
+  getPipeline9RouteCopperGeometry,
+  getPipeline9ViaSpanZLayers,
+} from "./pipeline9FixedRouteCopper"
 
 type Pipeline9RegionalFallbackSolverParams = {
   nodeWithPortPoints: NodeWithPortPoints
@@ -31,6 +34,7 @@ type Pipeline9RegionalFallbackSolverParams = {
   movablePreloadedConnectionNames?: ReadonlySet<string>
   viaToPadClearance?: number
   layerCount: number
+  allowBlindAndBuriedVias?: boolean
 }
 
 type RegionalFallbackPhase = "route" | "improve" | "repair" | "done"
@@ -68,6 +72,7 @@ const hasPreloadedViaToBoardObstacleConflict = ({
   boardObstacles,
   connMap,
   layerCount,
+  allowBlindAndBuriedVias,
   viaToPadClearance,
 }: {
   routes: HighDensityRoute[]
@@ -75,6 +80,7 @@ const hasPreloadedViaToBoardObstacleConflict = ({
   boardObstacles: Obstacle[]
   connMap: ConnectivityMap
   layerCount: number
+  allowBlindAndBuriedVias: boolean
   viaToPadClearance: number
 }): boolean =>
   routes.some((route) => {
@@ -86,7 +92,12 @@ const hasPreloadedViaToBoardObstacleConflict = ({
       boardObstacles.some((obstacle) => {
         if (isObstacleConnectedToRoute(obstacle, route, connMap)) return false
         const obstacleZLayers = getObstacleZLayers(obstacle, layerCount)
-        if (!obstacleZLayers.some((z) => z >= via.minZ && z <= via.maxZ)) {
+        const viaZLayers = getPipeline9ViaSpanZLayers({
+          via,
+          layerCount,
+          allowBlindAndBuriedVias,
+        })
+        if (!obstacleZLayers.some((z) => viaZLayers.includes(z))) {
           return false
         }
         return (
@@ -161,6 +172,8 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
       boardObstacles,
       connMap: this.params.connMap,
       layerCount: this.params.layerCount,
+      allowBlindAndBuriedVias:
+        this.params.allowBlindAndBuriedVias ?? false,
       viaToPadClearance,
     })
     if (hasViaConflict) {

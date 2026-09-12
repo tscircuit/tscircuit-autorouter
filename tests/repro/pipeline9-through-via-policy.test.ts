@@ -2,7 +2,7 @@ import { expect, test } from "bun:test"
 import { getPipeline9FixedRouteObstacles } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/pipeline9FixedRouteCopper"
 import type { PreloadedHighDensityRoute } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/convertPreloadedTraceToHdRoutes"
 
-test.failing(
+test(
   "Pipeline9 keeps a preloaded top-to-inner2 via clear on bottom when blind vias are disabled",
   (): void => {
     const preloadedThroughVia: PreloadedHighDensityRoute = {
@@ -32,6 +32,24 @@ test.failing(
         width: 0.45,
         height: 0.45,
         layers: ["top", "inner1", "inner2", "bottom"],
+      }),
+    ])
+
+    const fixedObstaclesWithBlindViasEnabled =
+      getPipeline9FixedRouteObstacles({
+        fixedObstacleRoutes: [preloadedThroughVia],
+        layerCount: 4,
+        allowBlindAndBuriedVias: true,
+      })
+
+    // The explicit opt-in preserves the endpoint span for an actual blind
+    // via: top through inner2, excluding bottom.
+    expect(fixedObstaclesWithBlindViasEnabled).toEqual([
+      expect.objectContaining({
+        center: { x: 0, y: 0 },
+        width: 0.45,
+        height: 0.45,
+        layers: ["top", "inner1", "inner2"],
       }),
     ])
   },

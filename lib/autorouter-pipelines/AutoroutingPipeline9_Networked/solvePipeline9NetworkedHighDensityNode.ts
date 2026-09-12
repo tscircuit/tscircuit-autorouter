@@ -120,6 +120,7 @@ export function solvePipeline9NetworkedHighDensityNode(
     },
     obstacles: input.regionalObstacles,
     layerCount: input.layerCount,
+    allowBlindAndBuriedVias: input.allowBlindAndBuriedVias,
   })
   regionalSolver.solve()
   if (regionalSolver.solved) {
