@@ -17,20 +17,26 @@ export type TerminalViaHint = {
   toLayer: string
   viaDiameter?: number
 }
+/** A terminal on one routing layer. Never carries a `layers` array. */
 export type SingleLayerConnectionPoint = {
   x: number
   y: number
   layer: string
+  /** Forbids mixed single-layer/multilayer objects, including structural assignments. */
+  layers?: never
   pointId?: PointId
   pcb_port_id?: string
   /** Stable semantic selector for the source port, e.g. `U1.USB_DM`. */
   port_selector?: string
   terminalVia?: TerminalViaHint
 }
+/** A terminal accessible on multiple routing layers. Never carries `layer`. */
 export type MultiLayerConnectionPoint = {
   x: number
   y: number
   layers: string[]
+  /** Use SingleLayerConnectionPoint when the routing layer is fixed. */
+  layer?: never
   pointId?: PointId
   busId?: BusId
   pcb_port_id?: string

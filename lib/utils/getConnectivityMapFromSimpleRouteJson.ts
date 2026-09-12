@@ -1,3 +1,4 @@
+import { getConnectionPointLayers } from "./connection-point-utils"
 import { SimpleRouteJson } from "lib/types"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import { mapLayerNameToZ } from "./mapLayerNameToZ"
@@ -23,12 +24,10 @@ export const getConnectivityMapFromSimpleRouteJson = (srj: SimpleRouteJson) => {
         [
           connection.name,
           `${pointHash(point)}:${
-            "layers" in point
-              ? point.layers
-                  .map((l) => mapLayerNameToZ(l, srj.layerCount))
-                  .sort()
-                  .join("-")
-              : mapLayerNameToZ(point.layer, srj.layerCount)
+            getConnectionPointLayers(point)
+              .map((layer) => mapLayerNameToZ(layer, srj.layerCount))
+              .sort()
+              .join("-")
           }`,
         ],
       ])

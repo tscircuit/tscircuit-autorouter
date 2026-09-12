@@ -99,7 +99,21 @@ interface Obstacle {
 
 interface SimpleRouteConnection {
   name: string
-  pointsToConnect: Array<{ x: number; y: number; layer: string }>
+  pointsToConnect: Array<SingleLayerConnectionPoint | MultiLayerConnectionPoint>
+}
+
+type SingleLayerConnectionPoint = {
+  x: number
+  y: number
+  layer: string
+  layers?: never
+}
+
+type MultiLayerConnectionPoint = {
+  x: number
+  y: number
+  layers: string[]
+  layer?: never
 }
 
 interface SimpleRouteBus {
@@ -117,6 +131,13 @@ interface DifferentialPair {
   maxUncoupledLength?: number // Maximum uncoupled length in millimeters
 }
 ```
+
+Connection points use exactly one representation: `layer` for a fixed routing
+layer, or `layers` for a terminal accessible on multiple routing layers. Never
+include both fields. The optional `never` properties enforce this distinction
+in TypeScript; they are not JSON fields to emit. For multilayer points, the first
+entry is the primary layer. Obstacle and via `layers` arrays describe their
+physical copper span and are separate from the connection-point representation.
 
 `maxLengthSkew` records the maximum permitted routed-length difference for the
 bus. Bus metadata is preserved in the output so routing implementations can

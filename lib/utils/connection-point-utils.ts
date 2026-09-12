@@ -8,13 +8,13 @@ import type {
 export function isMultiLayerConnectionPoint(
   point: ConnectionPoint,
 ): point is MultiLayerConnectionPoint {
-  return "layers" in point && Array.isArray((point as any).layers)
+  return !("layer" in point) && Array.isArray(point.layers)
 }
 
 export function isSingleLayerConnectionPoint(
   point: ConnectionPoint,
 ): point is SingleLayerConnectionPoint {
-  return "layer" in point && typeof (point as any).layer === "string"
+  return !("layers" in point) && typeof point.layer === "string"
 }
 
 /**
@@ -22,10 +22,7 @@ export function isSingleLayerConnectionPoint(
  * For MultiLayerConnectionPoint, returns the first layer as default.
  */
 export function getConnectionPointLayer(point: ConnectionPoint): string {
-  if (isMultiLayerConnectionPoint(point)) {
-    return point.layers[0]
-  }
-  return point.layer
+  return getConnectionPointLayers(point)[0]
 }
 
 /**
@@ -36,5 +33,8 @@ export function getConnectionPointLayers(point: ConnectionPoint): string[] {
   if (isMultiLayerConnectionPoint(point)) {
     return point.layers
   }
-  return [point.layer]
+  if (isSingleLayerConnectionPoint(point)) {
+    return [point.layer]
+  }
+  throw new Error("Connection point must specify either layer or layers, never both")
 }

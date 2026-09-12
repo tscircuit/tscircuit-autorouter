@@ -1,3 +1,4 @@
+import { getConnectionPointLayers } from "./connection-point-utils"
 import { CONNECTION_REGION_SIZE } from "@tscircuit/fixed-via-hypergraph-solver/lib/FixedViaHypergraphSolver/via-graph-generator/createConnectionRegion"
 import {
   distance as calculateDistance,
@@ -86,9 +87,6 @@ interface Rect {
   width: number
   height: number
 }
-
-const getConnectionPointLayers = (point: ConnectionPoint): string[] =>
-  "layers" in point ? point.layers : [point.layer]
 
 const isPointInsideObstacle = (point: ConnectionPoint, obstacle: Obstacle) => {
   if (
