@@ -11,10 +11,6 @@ import {
   type SimpleRouteJson,
 } from "high-density-repair03/lib"
 import * as bindings from "../../../rust/autorouter-bindings/pkg/autorouter_bindings.js"
-import {
-  loadAutorouterBindings,
-  type AutorouterBindingsInput,
-} from "../../../rust/autorouter-bindings/ts/index"
 
 type Point = bindings.Point
 
@@ -148,10 +144,6 @@ const findTracePositions: TraceClearanceBackend = (
     result.points[index] = via
   }
   return result.points
-}
-
-export async function loadTargetedRepairBindings(input: AutorouterBindingsInput): Promise<void> {
-  await loadAutorouterBindings(input)
 }
 
 registerDrcErrorForceBackend(applyDrcErrorForces)

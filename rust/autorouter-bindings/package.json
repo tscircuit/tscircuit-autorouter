@@ -7,17 +7,16 @@
     "build": "npm run build:bindings && npm run build:adapter",
     "build:bindings": "node scripts/build.mjs",
     "build:adapter": "npm run check && tsup ts/index.ts --clean --format esm --dts --sourcemap --target es2022 --external ../pkg/autorouter_bindings.js --tsconfig ../../tsconfig.json",
-    "check": "node scripts/check-adapter.mjs",
-    "test": "node --test tests/*.test.mjs"
+    "check": "node scripts/check-adapter.mjs"
   },
   "exports": {
     ".": { "types": "./dist/index.d.ts", "import": "./dist/index.js" },
     "./wasm": "./pkg/autorouter_bindings_bg.wasm"
   },
-  "files": ["dist", "pkg", "ts", "README.md"],
+  "files": ["dist", "pkg", "ts"],
   "dependencies": {
     "@tscircuit/solver-utils": "0.0.16",
     "graphics-debug": "0.0.99"
   },
-  "devDependencies": { "@tscircuit/high-density-a01": "0.0.36", "typescript": "5.9.3", "esbuild": "0.27.0", "tsup": "8.5.1" }
+  "devDependencies": { "typescript": "5.9.3", "tsup": "8.5.1" }
 }

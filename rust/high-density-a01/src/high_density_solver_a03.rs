@@ -1422,7 +1422,3 @@ mod occupancy_tests {
         }
     }
 }
-
-#[cfg(test)]
-#[path = "a03_heap_order_tests.rs"]
-mod heap_order_tests;

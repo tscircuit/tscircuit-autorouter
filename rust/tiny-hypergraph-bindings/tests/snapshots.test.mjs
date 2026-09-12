@@ -26,4 +26,25 @@ test("solver inputs, snapshots, and instances have independent ownership", () =>
     second.free()
   }
   assert.throws(() => first.getStatus())
+
+  for (const variant of ["base", "outside-in", "selective-rerip"]) {
+    const input = createInput()
+    const solver = new TinyHyperGraphSolver(input.topology, input.problem, input.options, { variant })
+    const retained = []
+    try {
+      while (true) {
+        const stats = solver.getStats()
+        stats.callerMetadata = { untouched: true }
+        retained.push([stats, structuredClone(stats)])
+        assert.equal(solver.getStats().callerMetadata, undefined, variant)
+        const state = solver.getStatus()
+        if (state.solved || state.failed) break
+        solver.step()
+      }
+      solver.resetRoutingStateForRerip()
+      for (const [snapshot, expected] of retained) assert.deepEqual(snapshot, expected, variant)
+    } finally {
+      solver.free()
+    }
+  }
 })

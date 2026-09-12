@@ -9,7 +9,7 @@ import {
   type SimplifiedPcbTraces as RepairSimplifiedPcbTraces,
 } from "high-density-repair03/lib"
 import { BaseSolver } from "lib/solvers/BaseSolver"
-import { createAutoroutingDrcEngine } from "lib/bindings/repair/autoroutingDrcEngineFactory"
+import { AutoroutingDrcEngine } from "lib/bindings/repair/AutoroutingDrcEngine"
 import { createRepairPortfolio, type RepairPortfolio, type RepairPortfolioDescriptor } from "lib/bindings/repair/repairPortfolio"
 import { RELAXED_DRC_OPTIONS } from "lib/testing/drcPresets"
 import {
@@ -1023,7 +1023,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
           params.originalSrj.minTraceWidth,
         ) + Math.max(traceClearance, viaClearance),
     }
-    const autoroutingDrcEngine = createAutoroutingDrcEngine(
+    const autoroutingDrcEngine = new AutoroutingDrcEngine(
       autoroutingEngineSrj,
       { ...autoroutingEngineOptions, connMap: params.connMap },
     )

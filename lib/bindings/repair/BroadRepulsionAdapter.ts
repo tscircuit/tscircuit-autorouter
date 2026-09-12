@@ -1,15 +1,12 @@
 import { initializeAutorouterBindings } from "../initializeAutorouterBindings"
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
-import type { HighDensityRoute, SimpleRouteJson } from "high-density-repair03/lib"
-import * as bindings from "../../../rust/autorouter-bindings/pkg/autorouter_bindings.js"
-import {
-  loadAutorouterBindings,
-  type AutorouterBindingsInput,
-} from "../../../rust/autorouter-bindings/ts/index"
 import {
   registerBroadRepulsionBackend,
   type BroadRepulsionBackend,
-} from "./broadRepulsionRegistration"
+  type HighDensityRoute,
+  type SimpleRouteJson,
+} from "high-density-repair03/lib"
+import * as bindings from "../../../rust/autorouter-bindings/pkg/autorouter_bindings.js"
 
 export class BroadRepulsionAdapter {
   private readonly binding: bindings.BroadRepulsionEngine
@@ -75,10 +72,6 @@ const applyBroadRepulsion: BroadRepulsionBackend = (
     allowSameNetViaPairs,
     runFinalViaSegmentCleanup,
   )
-}
-
-export async function loadBroadRepulsionBindings(input: AutorouterBindingsInput): Promise<void> {
-  await loadAutorouterBindings(input)
 }
 
 registerBroadRepulsionBackend(applyBroadRepulsion)

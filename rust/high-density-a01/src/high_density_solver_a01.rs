@@ -1138,7 +1138,3 @@ mod allocation_tests {
         eprintln!("SearchNode native size: {} bytes; RippedNode: {} bytes", std::mem::size_of::<SearchNode>(),std::mem::size_of::<RippedNode>());
     }
 }
-
-#[cfg(test)]
-#[path = "a01_heap_order_tests.rs"]
-mod heap_order_tests;

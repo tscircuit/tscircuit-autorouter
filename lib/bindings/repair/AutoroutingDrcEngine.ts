@@ -7,13 +7,8 @@ import type {
   SimplifiedPcbTraces,
 } from "high-density-repair03/lib"
 import * as bindings from "../../../rust/autorouter-bindings/pkg/autorouter_bindings.js"
-import {
-  loadAutorouterBindings,
-  type AutorouterBindingsInput,
-} from "../../../rust/autorouter-bindings/ts/index"
-import { type DrcEngine } from "./autoroutingDrcEngineFactory"
 
-export class AutoroutingDrcEngine implements DrcEngine {
+export class AutoroutingDrcEngine {
   private readonly binding: bindings.AutoroutingDrcEngine
   private readonly connMap: AutoroutingDrcEngineOptions["connMap"]
   private connectivitySnapshot: Record<string, string>
@@ -83,8 +78,4 @@ export class AutoroutingDrcEngine implements DrcEngine {
     result.locationAwareErrors = result.errorsWithCenters as AutoroutingDrcResult["locationAwareErrors"]
     return result
   }
-}
-
-export async function loadDrcBindings(input: AutorouterBindingsInput): Promise<void> {
-  await loadAutorouterBindings(input)
 }

@@ -4,8 +4,6 @@ import type { GraphicsObject } from "graphics-debug"
 import {
   TinyHyperGraphSolver,
   loadSerializedHyperGraph,
-  loadTinyHypergraphBindings,
-  type TinyHypergraphBindingsInput,
 } from "../../../rust/tiny-hypergraph-bindings/ts/index"
 import { initializeTinyHypergraphBindings } from "../initializeTinyHypergraphBindings"
 import { getSerializedPreloadedTraceStats } from "../../solvers/PortPointPathingSolver/tinyhypergraph/serializePreloadedTraceAssignments"
@@ -295,10 +293,6 @@ export class TinyHypergraphPipelineAdapter extends BasePipelineSolver<TinyHyperg
     }
     return this.initialVisualizationSolver.visualize()
   }
-}
-
-export async function loadTinyHypergraphPipelineBindings(input: TinyHypergraphBindingsInput): Promise<void> {
-  await loadTinyHypergraphBindings(input)
 }
 
 export function captureTinyStageStats(stage: TinyHypergraphSolverView | undefined): Record<string, unknown> {

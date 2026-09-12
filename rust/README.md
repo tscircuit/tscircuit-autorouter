@@ -1,25 +1,23 @@
-# Rust source ports and bindings
+# Rust bindings
 
-Solver files retain their TypeScript source names and decomposition.
+Solver crates follow the TypeScript source files and decomposition. The two
+WebAssembly entry points are `autorouter-bindings` and `tiny-hypergraph-bindings`.
+Their generated types use tsify with JSON transport. TypeScript adapters preserve
+the public solver API, mutable object identity, and callbacks.
 
-| Directory | Contents |
-| --- | --- |
-| `tiny-hypergraph` | Main and poly hypergraph dependency ports |
-| `high-density-a01` | A01/A03 solver family from the high-density-a01 dependency |
-| `intra-node-routing` | General and specialized repository intra-node solvers |
-| `drc` | DRC evaluation and geometry |
-| `repair` | Repair solvers and Pipeline9 evaluation helpers |
-| `trace-simplification` | Trace simplification solvers and shared route state |
-| `trace-contiguity` | Reference trace continuity checking |
-| `connectivity-map` | SimpleRouteJson connectivity construction |
-| `uniform-port-distribution` | Port distribution construction, stepping and rebuild |
-| `length-matching` | Obstacle connectivity expansion; the length solver remains TS |
-| `autorouter-bindings` | Combined JavaScript exports and source-corresponding orchestration |
-| `tiny-hypergraph-bindings` | Hypergraph JavaScript exports and adapter |
-| `module-allocator` | Allocation implementation used independently by each compiled module |
+Install the build tools, then build from the repository root:
 
-In `autorouter-bindings`, `src/ported/` mirrors the source paths of orchestration algorithms and `src/bindings/` holds boundary exports. Existing mixed exports remain in the crate root. TypeScript compatibility support lives in `lib/bindings/`; public source solver classes remain in `lib/solvers/`. The private binding packages retain their own `ts/` adapters.
+```sh
+rustup target add wasm32-unknown-unknown
+cargo install wasm-bindgen-cli --version 0.2.128 --locked
+bun run build
+```
 
-The compatibility adapters preserve the TypeScript lifecycle, mutable diagnostic state, object identity, and callbacks. They are handwritten support around generated bindings. Source solver names do not gain implementation prefixes; use module-qualified names when a wrapper and its binding share a name. `NativeObstacleTree` is retained because it is already an upstream name.
+`WASM_BINDGEN` can select an existing matching executable. `bun run build:bindings`
+rebuilds and embeds the modules; `bun run build:ts` rebuilds the package and
+declarations. Package consumers do not need Rust or asynchronous initialization.
 
-From the repository root, `bun run build:bindings` builds both modules and embeds their binaries. `bun run build:ts` builds the package and declarations; `bun run build` performs both. The pinned `wasm-bindgen-cli` version is 0.2.128. Set `WASM_BINDGEN` to select an already installed matching executable. No runtime backend selection or asynchronous initialization is needed for ordinary package use.
+Each crate has its own Cargo manifest. Run native tests with
+`cargo test --manifest-path rust/<crate>/Cargo.toml`. After building the bindings,
+run the hypergraph adapter tests with
+`bun run --cwd rust/tiny-hypergraph-bindings test`.

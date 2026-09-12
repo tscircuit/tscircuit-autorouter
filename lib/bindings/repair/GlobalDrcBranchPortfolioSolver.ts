@@ -2,7 +2,6 @@ import { initializeAutorouterBindings } from "../initializeAutorouterBindings"
 import { BaseSolver } from "@tscircuit/solver-utils"
 import type { DrcEvaluator, GlobalDrcBranchPortfolioSolverParams, HighDensityRoute } from "high-density-repair03/lib"
 import * as bindings from "../../../rust/autorouter-bindings/pkg/autorouter_bindings.js"
-import { loadAutorouterBindings, type AutorouterBindingsInput } from "../../../rust/autorouter-bindings/ts/index"
 import {
   type RepairPortfolioDescriptor,
   type RepairPortfolio,
@@ -75,8 +74,4 @@ export class GlobalDrcBranchPortfolioSolver extends BaseSolver implements Repair
       indexedDrcEvaluationTimeMs: this.stats.indexedDrcEvaluationTimeMs,
     }
   }
-}
-
-export async function loadRepairPortfolioBindings(input: AutorouterBindingsInput): Promise<void> {
-  await loadAutorouterBindings(input)
 }
