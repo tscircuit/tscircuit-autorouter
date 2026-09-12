@@ -1,4 +1,4 @@
-import * as bindings from "../../../rust/autorouter-bindings/pkg/autorouter_bindings.js"
+import * as bindings from "../../../rust/capacity-autorouter-bindings/pkg/capacity_autorouter_bindings.js"
 import type { Node } from "lib/data-structures/SingleRouteCandidatePriorityQueue"
 import { SingleHighDensityRouteSolver, type SingleRouteOptions } from "./SingleHighDensityRouteSolver"
 

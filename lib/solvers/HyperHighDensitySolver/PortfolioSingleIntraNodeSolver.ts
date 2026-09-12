@@ -1,4 +1,4 @@
-import type { HighDensitySolverAdapter } from "../../../rust/autorouter-bindings/ts/index"
+import type { HighDensitySolverAdapter } from "../../../rust/capacity-autorouter-bindings/ts/index"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import {
   HighDensityIntraNodeRoute,
@@ -14,8 +14,8 @@ import { SingleTransitionCrossingRouteSolver } from "../HighDensitySolver/TwoRou
 import { TwoCrossingRoutesHighDensitySolver } from "../HighDensitySolver/TwoRouteHighDensitySolver/TwoCrossingRoutesHighDensitySolver"
 import { BaseSolver } from "../BaseSolver"
 import type { SupervisedSolver } from "../HyperParameterSupervisorSolver"
-import { PortfolioSolverAdapter } from "../../bindings/high-density/PortfolioSolverAdapter"
-import { createHighDensityCandidateSolver, isHighDensityCandidateSolver } from "../../bindings/high-density/highDensitySolverFactory"
+import { PortfolioSolverAdapter } from "lib/bindings/high-density/PortfolioSolverAdapter"
+import { createHighDensityCandidateSolver, isHighDensityCandidateSolver } from "lib/bindings/high-density/highDensitySolverFactory"
 import { repairDisconnectedSameRootPortPoints } from "./repairDisconnectedSameRootPortPoints"
 
 type PortfolioCandidate = IntraNodeRouteSolver | HighDensitySolverAdapter

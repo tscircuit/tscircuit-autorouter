@@ -11,7 +11,7 @@ import type {
   SimpleRouteConnection,
 } from "lib/types/srj-types"
 import { BaseSolver } from "./BaseSolver"
-import { expandPostProcessingObstacleConnectedIds } from "../bindings/expandPostProcessingObstacleConnectedIds"
+import { expandPostProcessingObstacleConnectedIds } from "lib/bindings/expandPostProcessingObstacleConnectedIds"
 
 type LengthMatchingPostProcessingSolverParams = {
   hdRoutes: HighDensityRoute[]

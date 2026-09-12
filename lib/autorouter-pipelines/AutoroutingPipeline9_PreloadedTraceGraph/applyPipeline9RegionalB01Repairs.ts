@@ -1,4 +1,4 @@
-import { GlobalDrcForceImproveSolver } from "../../bindings/repair/GlobalDrcForceImproveSolver"
+import { GlobalDrcForceImproveSolver } from "lib/bindings/repair/GlobalDrcForceImproveSolver"
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import {
   type DrcEvaluator,

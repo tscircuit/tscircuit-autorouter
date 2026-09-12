@@ -1,4 +1,4 @@
-import { initializeAutorouterBindings } from "../initializeAutorouterBindings"
+import { initializeAutorouterBindings } from "lib/bindings/initializeAutorouterBindings"
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import {
   registerDrcErrorForceBackend,
@@ -10,7 +10,7 @@ import {
   type HighDensityRoute,
   type SimpleRouteJson,
 } from "high-density-repair03/lib"
-import * as bindings from "../../../rust/autorouter-bindings/pkg/autorouter_bindings.js"
+import * as bindings from "../../../rust/capacity-autorouter-bindings/pkg/capacity_autorouter_bindings.js"
 
 type Point = bindings.Point
 

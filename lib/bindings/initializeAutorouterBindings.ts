@@ -1,6 +1,6 @@
-import * as bindings from "../../rust/autorouter-bindings/pkg/autorouter_bindings.js"
-import { decodeEmbeddedModule } from "./decodeEmbeddedModule"
-import { wasmBase64 } from "./generated/autorouterModule"
+import * as bindings from "../../rust/capacity-autorouter-bindings/pkg/capacity_autorouter_bindings.js"
+import { decodeEmbeddedModule } from "lib/bindings/decodeEmbeddedModule"
+import { wasmBase64 } from "lib/bindings/generated/autorouterModule"
 
 let initialized = false
 

@@ -1,4 +1,4 @@
-import { initializeTinyHypergraphBindings } from "../../../bindings/initializeTinyHypergraphBindings"
+import { initializeTinyHypergraphBindings } from "lib/bindings/initializeTinyHypergraphBindings"
 import type { SerializedHyperGraph } from "@tscircuit/hypergraph"
 import type { GraphicsObject } from "graphics-debug"
 import { BaseSolver } from "lib/solvers/BaseSolver"
@@ -45,7 +45,7 @@ import {
   serializePreloadedTraceAssignments,
 } from "./serializePreloadedTraceAssignments"
 import type { TinyHypergraphSolverView } from "./tinyHypergraphTypes"
-import { TinyHypergraphPipelineAdapter, captureTinyStageStats } from "../../../bindings/tiny-hypergraph/TinyHypergraphPipelineAdapter"
+import { TinyHypergraphPipelineAdapter, captureTinyStageStats } from "lib/bindings/tiny-hypergraph/TinyHypergraphPipelineAdapter"
 
 type TinyPipeline = TinyHypergraphPipelineAdapter
 

@@ -1,5 +1,5 @@
-import { expandPostProcessingObstacleConnectedIds as expandNative } from "../../rust/autorouter-bindings/pkg/autorouter_bindings.js"
-import { initializeAutorouterBindings } from "./initializeAutorouterBindings"
+import { expandPostProcessingObstacleConnectedIds as expandNative } from "../../rust/capacity-autorouter-bindings/pkg/capacity_autorouter_bindings.js"
+import { initializeAutorouterBindings } from "lib/bindings/initializeAutorouterBindings"
 
 export const expandPostProcessingObstacleConnectedIds = (
   aliasesByRoute: string[][],

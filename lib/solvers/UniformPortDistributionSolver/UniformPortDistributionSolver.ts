@@ -2,9 +2,9 @@ import { BaseSolver } from "@tscircuit/solver-utils"
 import { GraphicsObject } from "graphics-debug"
 import { Obstacle } from "lib/types"
 import { NodeWithPortPoints } from "lib/types/high-density-types"
-import { initializeAutorouterBindings } from "../../bindings/initializeAutorouterBindings"
-import { buildUniformPortDistribution, stepUniformPortDistribution, rebuildUniformPortDistributionNodes } from "../../../rust/autorouter-bindings/pkg/autorouter_bindings.js"
-import { decodeName, decodeSharedEdge, decodeBounds, encodeConstructorInput } from "../../bindings/uniform-port-distribution/UniformPortDistributionCodec"
+import { initializeAutorouterBindings } from "lib/bindings/initializeAutorouterBindings"
+import { buildUniformPortDistribution, stepUniformPortDistribution, rebuildUniformPortDistributionNodes } from "../../../rust/capacity-autorouter-bindings/pkg/capacity_autorouter_bindings.js"
+import { decodeName, decodeSharedEdge, decodeBounds, encodeConstructorInput } from "lib/bindings/uniform-port-distribution/UniformPortDistributionCodec"
 import { InputNodeWithPortPoints } from "../PortPointPathingSolver/PortPointPathingSolver"
 import {
   Bounds,
@@ -13,7 +13,7 @@ import {
   PortPointWithOwnerPair,
   SharedEdge,
 } from "./types"
-import { spreadUniformNode, spreadUniformPortPoint, findUniformInputNode, findUniformInputPoint, readUniformObstacleScalars } from "../../bindings/uniform-port-distribution/UniformPortDistributionLiveValues"
+import { spreadUniformNode, spreadUniformPortPoint, findUniformInputNode, findUniformInputPoint, readUniformObstacleScalars } from "lib/bindings/uniform-port-distribution/UniformPortDistributionLiveValues"
 import { visualizeUniformPortDistribution } from "./visualizeUniformPortDistribution"
 
 export interface UniformPortDistributionSolverInput {

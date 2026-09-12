@@ -89,7 +89,7 @@ export { GrowShrinkHighDensityIntraNodeSolver } from "./solvers/HyperHighDensity
 export {
   GlobalDrcBranchPortfolioSolver,
 } from "high-density-repair03/lib"
-export { GlobalDrcForceImproveSolver } from "./bindings/repair/GlobalDrcForceImproveSolver"
+export { GlobalDrcForceImproveSolver } from "lib/bindings/repair/GlobalDrcForceImproveSolver"
 export type {
   DrcError,
   DrcEvaluator,

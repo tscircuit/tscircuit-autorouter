@@ -1,5 +1,5 @@
-import type { AutoroutingDrcEngine } from "./AutoroutingDrcEngine"
-import { GlobalDrcBranchPortfolioSolver } from "./GlobalDrcBranchPortfolioSolver"
+import type { AutoroutingDrcEngine } from "lib/bindings/repair/AutoroutingDrcEngine"
+import { GlobalDrcBranchPortfolioSolver } from "lib/bindings/repair/GlobalDrcBranchPortfolioSolver"
 import type { BaseSolver } from "@tscircuit/solver-utils"
 import {
   type GlobalDrcBranchPortfolioSolverParams,

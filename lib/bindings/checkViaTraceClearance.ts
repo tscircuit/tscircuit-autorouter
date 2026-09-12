@@ -4,8 +4,8 @@ import { all_layers, type AnyCircuitElement, type PcbViaTraceClearanceError } fr
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import { formatMm } from "format-si-unit"
 import { encodeJsonInput, decodeJsonOutput } from "../../rust/tiny-hypergraph-bindings/ts/jsonWire"
-import { checkViaTraceClearanceNative, type Point, type TraceSegment } from "../../rust/autorouter-bindings/pkg/autorouter_bindings.js"
-import { initializeAutorouterBindings } from "./initializeAutorouterBindings"
+import { checkViaTraceClearanceNative, type Point, type TraceSegment } from "../../rust/capacity-autorouter-bindings/pkg/capacity_autorouter_bindings.js"
+import { initializeAutorouterBindings } from "lib/bindings/initializeAutorouterBindings"
 
 type Options = { connMap: ConnectivityMap; minClearance?: number }
 

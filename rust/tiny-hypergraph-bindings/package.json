@@ -7,7 +7,6 @@
     "build": "npm run build:bindings && npm run build:adapter",
     "test": "npm run build:adapter && node --test tests/*.test.mjs",
     "build:adapter": "tsc -p tsconfig.json",
-    "typecheck": "npm run build:adapter && tsc -p tsconfig.types.json",
     "build:bindings": "node scripts/build.mjs"
   },
   "exports": {

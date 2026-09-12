@@ -1,8 +1,8 @@
-import * as bindings from "../../../rust/autorouter-bindings/pkg/autorouter_bindings.js"
-import { initializeAutorouterBindings } from "../initializeAutorouterBindings"
+import * as bindings from "../../../rust/capacity-autorouter-bindings/pkg/capacity_autorouter_bindings.js"
+import { initializeAutorouterBindings } from "lib/bindings/initializeAutorouterBindings"
 import type { ObstacleSpatialHashIndex } from "../../data-structures/ObstacleTree"
 import { BaseSolver } from "../../solvers/BaseSolver"
-import { TraceSimplificationGraphCodec } from "./TraceSimplificationGraphCodec"
+import { TraceSimplificationGraphCodec } from "lib/bindings/trace-simplification/TraceSimplificationGraphCodec"
 
 type SolverAdapterClass = { prototype: TraceSimplificationSolverAdapter; solverKind: string; stateFields: readonly string[] }
 const childConstructors = new Map<string, SolverAdapterClass>()

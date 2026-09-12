@@ -30,11 +30,11 @@ runs:
           ~/.cargo/registry
           ~/.cargo/git
           ${{ inputs.working-directory }}/rust/tiny-hypergraph-bindings/target
-          ${{ inputs.working-directory }}/rust/autorouter-bindings/target
-        key: autorouter-bindings-${{ runner.os }}-${{ runner.arch }}-1.98.1-${{ hashFiles(format('{0}/rust/**/Cargo.lock', inputs.working-directory)) }}-${{ hashFiles(format('{0}/rust/**/*.rs', inputs.working-directory), format('{0}/rust/**/Cargo.toml', inputs.working-directory)) }}
+          ${{ inputs.working-directory }}/rust/capacity-autorouter-bindings/target
+        key: capacity-autorouter-bindings-${{ runner.os }}-${{ runner.arch }}-1.98.1-${{ hashFiles(format('{0}/rust/**/Cargo.lock', inputs.working-directory)) }}-${{ hashFiles(format('{0}/rust/**/*.rs', inputs.working-directory), format('{0}/rust/**/Cargo.toml', inputs.working-directory)) }}
         restore-keys: |
-          autorouter-bindings-${{ runner.os }}-${{ runner.arch }}-1.98.1-${{ hashFiles(format('{0}/rust/**/Cargo.lock', inputs.working-directory)) }}-
-          autorouter-bindings-${{ runner.os }}-${{ runner.arch }}-1.98.1-
+          capacity-autorouter-bindings-${{ runner.os }}-${{ runner.arch }}-1.98.1-${{ hashFiles(format('{0}/rust/**/Cargo.lock', inputs.working-directory)) }}-
+          capacity-autorouter-bindings-${{ runner.os }}-${{ runner.arch }}-1.98.1-
 
     - name: Install wasm-bindgen CLI
       if: steps.bindgen-cache.outputs.cache-hit != 'true'

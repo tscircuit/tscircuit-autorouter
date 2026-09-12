@@ -1,0 +1,21 @@
+{
+  "name": "@tscircuit/capacity-autorouter-bindings",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "npm run build:bindings && npm run build:adapter",
+    "build:bindings": "node scripts/build.mjs",
+    "build:adapter": "tsup ts/index.ts --clean --format esm --dts --sourcemap --target es2022 --external ../pkg/capacity_autorouter_bindings.js --tsconfig ../../tsconfig.json"
+  },
+  "exports": {
+    ".": { "types": "./dist/index.d.ts", "import": "./dist/index.js" },
+    "./wasm": "./pkg/capacity_autorouter_bindings_bg.wasm"
+  },
+  "files": ["dist", "pkg", "ts"],
+  "dependencies": {
+    "@tscircuit/solver-utils": "0.0.16",
+    "graphics-debug": "0.0.99"
+  },
+  "devDependencies": { "typescript": "5.9.3", "tsup": "8.5.1" }
+}

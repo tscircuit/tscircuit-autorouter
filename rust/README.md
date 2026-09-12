@@ -1,7 +1,9 @@
 # Rust bindings
 
-Solver crates follow the TypeScript source files and decomposition. The two
-WebAssembly entry points are `autorouter-bindings` and `tiny-hypergraph-bindings`.
+The `capacity-autorouter/src` tree mirrors this repository's `lib` tree. Dependency
+crates use their npm package names without the scope and contain the ported subsets.
+The WebAssembly entry points are `capacity-autorouter-bindings` and
+`tiny-hypergraph-bindings`.
 Their generated types use tsify with JSON transport. TypeScript adapters preserve
 the public solver API, mutable object identity, and callbacks.
 

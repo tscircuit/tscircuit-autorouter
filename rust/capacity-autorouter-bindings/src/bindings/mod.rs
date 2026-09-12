@@ -1,0 +1,18 @@
+pub(crate) mod global_drc_force_improve_solver;
+pub(crate) mod high_density_orchestration;
+pub(crate) mod portfolio_single_intra_node_solver;
+pub(crate) mod single_high_density_route_solver;
+pub(crate) mod specialized_intra_node_dispatcher;
+pub(crate) mod trace_simplification_dispatcher;
+pub(crate) mod trace_simplification_index_codec;
+pub(crate) mod uniform_port_distribution;
+pub(crate) mod connectivity_map;
+pub(crate) mod post_processing_model;
+pub(crate) mod trace_contiguity;
+pub(crate) mod via_trace_clearance;
+#[cfg(target_arch = "wasm32")]
+pub(crate) mod uniform_port_distribution_step;
+
+pub(crate) mod repair_wire;
+pub(crate) mod high_density_wire;
+pub(crate) mod cached_intra_node_route_solver;

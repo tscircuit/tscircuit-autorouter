@@ -1,4 +1,4 @@
-import type { UniformName, UniformSharedEdge, UniformInputNodeWithPortPoints, UniformPortDistributionInput, UniformBounds, UniformNumber } from "../../../rust/autorouter-bindings/pkg/autorouter_bindings.js"
+import type { UniformName, UniformSharedEdge, UniformInputNodeWithPortPoints, UniformPortDistributionInput, UniformBounds, UniformNumber } from "../../../rust/capacity-autorouter-bindings/pkg/capacity_autorouter_bindings.js"
 import type { InputNodeWithPortPoints } from "../../solvers/PortPointPathingSolver/PortPointPathingSolver"
 import type { Bounds, SharedEdge } from "../../solvers/UniformPortDistributionSolver/types"
 import type { UniformPortDistributionSolverInput } from "../../solvers/UniformPortDistributionSolver/UniformPortDistributionSolver"

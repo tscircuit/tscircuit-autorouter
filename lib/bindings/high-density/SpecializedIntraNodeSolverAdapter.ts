@@ -1,10 +1,10 @@
 import type { GraphicsObject } from "graphics-debug"
-import * as bindings from "../../../rust/autorouter-bindings/pkg/autorouter_bindings.js"
-import { initializeAutorouterBindings } from "../initializeAutorouterBindings"
+import * as bindings from "../../../rust/capacity-autorouter-bindings/pkg/capacity_autorouter_bindings.js"
+import { initializeAutorouterBindings } from "lib/bindings/initializeAutorouterBindings"
 import { BaseSolver } from "../../solvers/BaseSolver"
 import { safeTransparentize } from "../../solvers/colors"
-import { getSpecializedRouterContext } from "./specializedRouterContext"
-import { CandidateIdentityMap } from "./CandidateIdentityMap"
+import { getSpecializedRouterContext } from "lib/bindings/high-density/specializedRouterContext"
+import { CandidateIdentityMap } from "lib/bindings/high-density/CandidateIdentityMap"
 
 type DiagnosticRecord = Record<string, unknown>
 type SpecializedConstructor = typeof SpecializedIntraNodeSolverAdapter & { solverKind: string; diagnosticFields: string[] }

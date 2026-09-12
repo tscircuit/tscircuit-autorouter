@@ -1,4 +1,4 @@
-import { SpecializedIntraNodeSolverAdapter } from "../../../bindings/high-density/SpecializedIntraNodeSolverAdapter"
+import { SpecializedIntraNodeSolverAdapter } from "lib/bindings/high-density/SpecializedIntraNodeSolverAdapter"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map";
 import { HighDensityIntraNodeRoute, NodeWithPortPoints } from "lib/types/high-density-types";
 import { HighDensityHyperParameters } from "../HighDensityHyperParameters";

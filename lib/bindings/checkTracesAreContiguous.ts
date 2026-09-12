@@ -1,7 +1,7 @@
 import type { AnyCircuitElement, PcbTraceError } from "circuit-json"
 import { getReadableNameForPcbPort, getReadableNameForPcbTrace } from "@tscircuit/circuit-json-util"
-import { checkTracesAreContiguousNative } from "../../rust/autorouter-bindings/pkg/autorouter_bindings.js"
-import { initializeAutorouterBindings } from "./initializeAutorouterBindings"
+import { checkTracesAreContiguousNative } from "../../rust/capacity-autorouter-bindings/pkg/capacity_autorouter_bindings.js"
+import { initializeAutorouterBindings } from "lib/bindings/initializeAutorouterBindings"
 
 type PcbTrace = Extract<AnyCircuitElement, { type: "pcb_trace" }>
 type PcbPort = Extract<AnyCircuitElement, { type: "pcb_port" }>

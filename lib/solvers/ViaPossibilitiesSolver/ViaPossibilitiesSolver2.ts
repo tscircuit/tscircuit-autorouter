@@ -1,4 +1,4 @@
-import { SpecializedIntraNodeSolverAdapter } from "../../bindings/high-density/SpecializedIntraNodeSolverAdapter"
+import { SpecializedIntraNodeSolverAdapter } from "lib/bindings/high-density/SpecializedIntraNodeSolverAdapter"
 import { Bounds, Point3 } from "@tscircuit/math-utils";
 import { NodeWithPortPoints } from "lib/types/high-density-types";
 import { PortPairMap } from "lib/utils/getPortPairs";

@@ -1,5 +1,5 @@
 import { SingleSimplifiedPathSolver5 } from "./SingleSimplifiedPathSolver5_Deg45"
-import { TraceSimplificationSolverAdapter } from "../../bindings/trace-simplification/TraceSimplificationSolverAdapter"
+import { TraceSimplificationSolverAdapter } from "lib/bindings/trace-simplification/TraceSimplificationSolverAdapter"
 export class VertexShortcutPathSolver extends SingleSimplifiedPathSolver5 {
   static override solverKind = "vertex"
   static override stateFields = [...SingleSimplifiedPathSolver5.stateFields, "vertexIndex"]

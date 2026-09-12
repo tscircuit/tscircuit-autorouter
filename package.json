@@ -14,7 +14,7 @@
     "prepublishOnly": "bun run build && bun scripts/check-published-autorouter-version.ts",
     "start": "cosmos",
     "build": "bun run build:bindings && bun run build:ts",
-    "build:bindings": "node rust/tiny-hypergraph-bindings/scripts/build.mjs && node rust/autorouter-bindings/scripts/build.mjs && node scripts/embed-bindings.mjs",
+    "build:bindings": "node rust/tiny-hypergraph-bindings/scripts/build.mjs && node rust/capacity-autorouter-bindings/scripts/build.mjs && node scripts/embed-bindings.mjs",
     "build:ts": "tsup ./lib/index.ts --minify terser --external @tscircuit/core --external circuit-to-svg --format esm --dts --sourcemap",
     "bench": "bun test tests/spatial-index-bench.test.ts",
     "format": "biome format --write .",

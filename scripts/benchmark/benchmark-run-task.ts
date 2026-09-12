@@ -1,5 +1,5 @@
-import { initializeTinyHypergraphBindings } from "../../lib/bindings/initializeTinyHypergraphBindings"
-import { initializeAutorouterBindings } from "../../lib/bindings/initializeAutorouterBindings"
+import { initializeTinyHypergraphBindings } from "lib/bindings/initializeTinyHypergraphBindings"
+import { initializeAutorouterBindings } from "lib/bindings/initializeAutorouterBindings"
 import { getSvgFromGraphicsObject } from "graphics-debug"
 import * as autorouterModule from "../../lib"
 import { convertSrjToGraphicsObject } from "../../lib"

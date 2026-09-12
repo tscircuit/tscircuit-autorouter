@@ -1,13 +1,13 @@
 import { IntraNodeRouteSolver } from "../../solvers/HighDensitySolver/IntraNodeSolver"
-import { initializeAutorouterBindings } from "../initializeAutorouterBindings"
-import { PortfolioCallbackScope } from "./PortfolioCallbackScope"
+import { initializeAutorouterBindings } from "lib/bindings/initializeAutorouterBindings"
+import { PortfolioCallbackScope } from "lib/bindings/high-density/PortfolioCallbackScope"
 import { getGlobalInMemoryCache } from "../../cache/setupGlobalCaches"
-import * as bindings from "../../../rust/autorouter-bindings/pkg/autorouter_bindings.js"
+import * as bindings from "../../../rust/capacity-autorouter-bindings/pkg/capacity_autorouter_bindings.js"
 import type { PortfolioSingleIntraNodeSolver } from "../../solvers/HyperHighDensitySolver/PortfolioSingleIntraNodeSolver"
 import { CachedIntraNodeRouteSolver } from "../../solvers/HighDensitySolver/CachedIntraNodeRouteSolver"
-import { isHighDensityCandidateSolver } from "./highDensitySolverFactory"
-import { SpecializedIntraNodeSolverAdapter } from "./SpecializedIntraNodeSolverAdapter"
-import { withSpecializedRouterContext } from "./specializedRouterContext"
+import { isHighDensityCandidateSolver } from "lib/bindings/high-density/highDensitySolverFactory"
+import { SpecializedIntraNodeSolverAdapter } from "lib/bindings/high-density/SpecializedIntraNodeSolverAdapter"
+import { withSpecializedRouterContext } from "lib/bindings/high-density/specializedRouterContext"
 
 type Candidate = ReturnType<PortfolioSingleIntraNodeSolver["generateSolver"]>
 type SupervisedCandidate = NonNullable<PortfolioSingleIntraNodeSolver["supervisedSolvers"]>[number]

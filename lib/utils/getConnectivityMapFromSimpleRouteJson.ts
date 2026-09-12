@@ -1,7 +1,7 @@
 import type { SimpleRouteJson } from "lib/types"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
-import { buildConnectivityMap } from "../../rust/autorouter-bindings/pkg/autorouter_bindings.js"
-import { initializeAutorouterBindings } from "../bindings/initializeAutorouterBindings"
+import { buildConnectivityMap } from "../../rust/capacity-autorouter-bindings/pkg/capacity_autorouter_bindings.js"
+import { initializeAutorouterBindings } from "lib/bindings/initializeAutorouterBindings"
 
 export const getConnectivityMapFromSimpleRouteJson = (srj: SimpleRouteJson): ConnectivityMap => {
   initializeAutorouterBindings()

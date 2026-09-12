@@ -3,7 +3,7 @@ import { GraphicsObject } from "graphics-debug"
 import { HighDensityRouteSpatialIndex } from "lib/data-structures/HighDensityRouteSpatialIndex"
 import { ObstacleSpatialHashIndex } from "lib/data-structures/ObstacleTree"
 import type { HighDensityRoute } from "lib/types/high-density-types"
-import { TraceSimplificationSolverAdapter } from "../../bindings/trace-simplification/TraceSimplificationSolverAdapter"
+import { TraceSimplificationSolverAdapter } from "lib/bindings/trace-simplification/TraceSimplificationSolverAdapter"
 import type { RouteSection } from "./route-section"
 
 type RoutePoint = HighDensityRoute["route"][number]

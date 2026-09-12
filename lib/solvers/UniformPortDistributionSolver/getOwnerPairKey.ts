@@ -1,7 +1,7 @@
 import { OwnerPair, OwnerPairKey } from "./types"
-import { initializeAutorouterBindings } from "../../bindings/initializeAutorouterBindings"
-import { decodeName, encodeName } from "../../bindings/uniform-port-distribution/UniformPortDistributionCodec"
-import { normalizeUniformPortOwnerPair, getUniformPortOwnerPairKey } from "../../../rust/autorouter-bindings/pkg/autorouter_bindings.js"
+import { initializeAutorouterBindings } from "lib/bindings/initializeAutorouterBindings"
+import { decodeName, encodeName } from "lib/bindings/uniform-port-distribution/UniformPortDistributionCodec"
+import { normalizeUniformPortOwnerPair, getUniformPortOwnerPairKey } from "../../../rust/capacity-autorouter-bindings/pkg/capacity_autorouter_bindings.js"
 
 /**
  * Creates a deterministic two-node owner identity so pair-based maps and

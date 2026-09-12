@@ -1,5 +1,5 @@
 import type { PortfolioSingleIntraNodeSolver } from "../../solvers/HyperHighDensitySolver/PortfolioSingleIntraNodeSolver"
-import type { PortfolioSolverAdapter } from "./PortfolioSolverAdapter"
+import type { PortfolioSolverAdapter } from "lib/bindings/high-density/PortfolioSolverAdapter"
 import type { GrowShrinkHighDensityIntraNodeSolver } from "../../solvers/HyperHighDensitySolver/GrowShrinkHighDensityIntraNodeSolver"
 import type { HighDensitySolver } from "../../solvers/HighDensitySolver/HighDensitySolver"
 

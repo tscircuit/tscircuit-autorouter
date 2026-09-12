@@ -1,7 +1,7 @@
 import { Bounds, SharedEdge } from "./types"
-import { initializeAutorouterBindings } from "../../bindings/initializeAutorouterBindings"
-import { decodeSharedEdge, encodeName, encodeBounds } from "../../bindings/uniform-port-distribution/UniformPortDistributionCodec"
-import { getUniformSharedEdge } from "../../../rust/autorouter-bindings/pkg/autorouter_bindings.js"
+import { initializeAutorouterBindings } from "lib/bindings/initializeAutorouterBindings"
+import { decodeSharedEdge, encodeName, encodeBounds } from "lib/bindings/uniform-port-distribution/UniformPortDistributionCodec"
+import { getUniformSharedEdge } from "../../../rust/capacity-autorouter-bindings/pkg/capacity_autorouter_bindings.js"
 
 /**
  * Finds the single geometric boundary segment shared by two rectangular

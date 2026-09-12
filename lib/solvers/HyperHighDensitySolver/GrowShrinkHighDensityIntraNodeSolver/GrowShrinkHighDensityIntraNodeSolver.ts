@@ -21,10 +21,10 @@ export type GrowShrinkHighDensityIntraNodeSolverParams =
     ) => boolean
   }
 
-import * as bindings from "../../../../rust/autorouter-bindings/pkg/autorouter_bindings.js"
+import * as bindings from "../../../../rust/capacity-autorouter-bindings/pkg/capacity_autorouter_bindings.js"
 import { getGlobalInMemoryCache } from "../../../cache/setupGlobalCaches"
-import { initializeAutorouterBindings } from "../../../bindings/initializeAutorouterBindings"
-import { PortfolioCallbackScope } from "../../../bindings/high-density/PortfolioCallbackScope"
+import { initializeAutorouterBindings } from "lib/bindings/initializeAutorouterBindings"
+import { PortfolioCallbackScope } from "lib/bindings/high-density/PortfolioCallbackScope"
 
 type SolverStateSnapshot = bindings.GrowthSnapshot
 

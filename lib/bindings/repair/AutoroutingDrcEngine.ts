@@ -1,4 +1,4 @@
-import { initializeAutorouterBindings } from "../initializeAutorouterBindings"
+import { initializeAutorouterBindings } from "lib/bindings/initializeAutorouterBindings"
 import type {
   AutoroutingDrcEngineOptions,
   AutoroutingDrcEngineRunStats,
@@ -6,7 +6,7 @@ import type {
   SimpleRouteJson,
   SimplifiedPcbTraces,
 } from "high-density-repair03/lib"
-import * as bindings from "../../../rust/autorouter-bindings/pkg/autorouter_bindings.js"
+import * as bindings from "../../../rust/capacity-autorouter-bindings/pkg/capacity_autorouter_bindings.js"
 
 export class AutoroutingDrcEngine {
   private readonly binding: bindings.AutoroutingDrcEngine

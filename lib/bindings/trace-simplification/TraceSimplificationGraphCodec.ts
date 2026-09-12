@@ -1,7 +1,7 @@
-import type { TraceGraphPacket, TraceConnectivityUpdate } from "../../../rust/autorouter-bindings/pkg/autorouter_bindings.js"
+import type { TraceGraphPacket, TraceConnectivityUpdate } from "../../../rust/capacity-autorouter-bindings/pkg/capacity_autorouter_bindings.js"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import { SegmentTree } from "../../data-structures/SegmentTree"
-import { encodeTraceSimplificationIndex, decodeTraceSimplificationIndex } from "./TraceSimplificationIndexCodec"
+import { encodeTraceSimplificationIndex, decodeTraceSimplificationIndex } from "lib/bindings/trace-simplification/TraceSimplificationIndexCodec"
 type JsonRecord = Record<string, any>
 type Graph = TraceGraphPacket
 type SourceWatch = { object: JsonRecord; isPoint: boolean; routingRequired: boolean; deferred: boolean; values: unknown[]; owners: Set<JsonRecord>; fields: Set<string> }

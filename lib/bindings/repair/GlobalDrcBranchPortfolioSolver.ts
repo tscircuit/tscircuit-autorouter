@@ -1,13 +1,13 @@
-import { initializeAutorouterBindings } from "../initializeAutorouterBindings"
+import { initializeAutorouterBindings } from "lib/bindings/initializeAutorouterBindings"
 import { BaseSolver } from "@tscircuit/solver-utils"
 import type { DrcEvaluator, GlobalDrcBranchPortfolioSolverParams, HighDensityRoute } from "high-density-repair03/lib"
-import * as bindings from "../../../rust/autorouter-bindings/pkg/autorouter_bindings.js"
+import * as bindings from "../../../rust/capacity-autorouter-bindings/pkg/capacity_autorouter_bindings.js"
 import {
   type RepairPortfolioDescriptor,
   type RepairPortfolio,
   type RepairEvaluationCounters,
   type PreparedRepairDrc,
-} from "./repairPortfolio"
+} from "lib/bindings/repair/repairPortfolio"
 
 export class GlobalDrcBranchPortfolioSolver extends BaseSolver implements RepairPortfolio {
   private binding: bindings.GlobalDrcBranchPortfolioSolver | undefined

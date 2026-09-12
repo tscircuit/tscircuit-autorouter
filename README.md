@@ -230,8 +230,6 @@ Install Rust with the `wasm32-unknown-unknown` target and `wasm-bindgen-cli` 0.2
 
 `bun run build` requires that same tooling. It builds and embeds WASM before producing the package. After that, `bun run build:ts` rebuilds only JavaScript and declarations.
 
-Parity comparisons use a separate frozen TypeScript checkout with independently installed dependencies, selected by `TSCIRCUIT_TS_REFERENCE`. It is a development reference, never a production backend. See [Rust integration and validation](rust/autorouter-bindings/README.md).
-
 ## Maintainer resources
 
 Track routing performance and benchmark results in the [Autorouter Benchmark Dashboard](https://autorouter-benchmark-dashboard.vercel.app/).

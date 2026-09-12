@@ -5,7 +5,7 @@ import {
   TinyHyperGraphSolver,
   loadSerializedHyperGraph,
 } from "../../../rust/tiny-hypergraph-bindings/ts/index"
-import { initializeTinyHypergraphBindings } from "../initializeTinyHypergraphBindings"
+import { initializeTinyHypergraphBindings } from "lib/bindings/initializeTinyHypergraphBindings"
 import { getSerializedPreloadedTraceStats } from "../../solvers/PortPointPathingSolver/tinyhypergraph/serializePreloadedTraceAssignments"
 import type { RouteMetadata, TinyRegionMetadata, TinyPortMetadata } from "../../solvers/PortPointPathingSolver/tinyhypergraph/TinyHypergraphPortPointPathingSolver"
 import {

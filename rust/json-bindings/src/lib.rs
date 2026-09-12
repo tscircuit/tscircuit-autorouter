@@ -1,3 +1,4 @@
+pub mod js_json;
 use serde::{Deserialize, Serialize, de::{self, DeserializeOwned, DeserializeSeed, IntoDeserializer, MapAccess, SeqAccess, Visitor}};
 use serde_json::Value;
 use std::marker::PhantomData;

@@ -1,10 +1,10 @@
 import type { PortPoint } from "lib/types/high-density-types"
 import type { InputNodeWithPortPoints } from "../PortPointPathingSolver/PortPointPathingSolver"
 import type { OwnerPair } from "./types"
-import { shouldIgnoreUniformPortPoint } from "../../../rust/autorouter-bindings/pkg/autorouter_bindings.js"
-import { initializeAutorouterBindings } from "../../bindings/initializeAutorouterBindings"
+import { shouldIgnoreUniformPortPoint } from "../../../rust/capacity-autorouter-bindings/pkg/capacity_autorouter_bindings.js"
+import { initializeAutorouterBindings } from "lib/bindings/initializeAutorouterBindings"
 
-import { findUniformInputNode, findUniformInputPoint } from "../../bindings/uniform-port-distribution/UniformPortDistributionLiveValues"
+import { findUniformInputNode, findUniformInputPoint } from "lib/bindings/uniform-port-distribution/UniformPortDistributionLiveValues"
 
 interface ShouldIgnorePortPointParams {
   portPoint: PortPoint

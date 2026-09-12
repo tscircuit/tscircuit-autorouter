@@ -6,7 +6,7 @@ const output = new URL("lib/bindings/generated/", root)
 mkdirSync(output, { recursive: true })
 
 for (const [name, packageName, binaryName] of [
-  ["autorouter", "autorouter-bindings", "autorouter_bindings"],
+  ["autorouter", "capacity-autorouter-bindings", "capacity_autorouter_bindings"],
   ["tinyHypergraph", "tiny-hypergraph-bindings", "tiny_hypergraph_bindings"],
 ]) {
   const binary = readFileSync(new URL(`rust/${packageName}/pkg/${binaryName}_bg.wasm`, root))

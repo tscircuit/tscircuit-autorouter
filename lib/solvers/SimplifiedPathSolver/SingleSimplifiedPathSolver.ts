@@ -2,7 +2,7 @@ import type { HighDensityIntraNodeRoute } from "lib/types/high-density-types"
 import type { Obstacle } from "lib/types"
 import type { GraphicsObject } from "graphics-debug"
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
-import { TraceSimplificationSolverAdapter } from "../../bindings/trace-simplification/TraceSimplificationSolverAdapter"
+import { TraceSimplificationSolverAdapter } from "lib/bindings/trace-simplification/TraceSimplificationSolverAdapter"
 
 interface Point { x: number; y: number; z: number }
 export type SingleSimplifiedPathParams = {

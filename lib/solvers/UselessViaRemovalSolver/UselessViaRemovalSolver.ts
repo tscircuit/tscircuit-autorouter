@@ -1,6 +1,6 @@
 import "./SingleRouteUselessViaRemovalSolver"
 import { ObstacleSpatialHashIndex } from "lib/data-structures/ObstacleTree"
-import { TraceSimplificationSolverAdapter } from "../../bindings/trace-simplification/TraceSimplificationSolverAdapter"
+import { TraceSimplificationSolverAdapter } from "lib/bindings/trace-simplification/TraceSimplificationSolverAdapter"
 import { HighDensityRoute } from "lib/types/high-density-types"
 import { Obstacle } from "lib/types"
 import { GraphicsObject } from "graphics-debug"

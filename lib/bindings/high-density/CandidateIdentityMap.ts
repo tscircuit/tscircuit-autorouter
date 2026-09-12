@@ -1,4 +1,4 @@
-import type { CandidateIdentity as IdentityNode } from "../../../rust/autorouter-bindings/pkg/autorouter_bindings.js"
+import type { CandidateIdentity as IdentityNode } from "../../../rust/capacity-autorouter-bindings/pkg/capacity_autorouter_bindings.js"
 type CandidateRecord = { polyLines: Array<{ start: object; end: object; mPoints: object[] }>; minGaps: number[] }
 let nextExternalIdentity = 2 ** 52
 

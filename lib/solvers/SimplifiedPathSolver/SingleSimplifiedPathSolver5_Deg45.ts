@@ -3,7 +3,7 @@ import type { Obstacle } from "lib/types"
 import type { GraphicsObject } from "graphics-debug"
 import type { SegmentTree } from "lib/data-structures/SegmentTree"
 import { SingleSimplifiedPathSolver } from "./SingleSimplifiedPathSolver"
-import { TraceSimplificationSolverAdapter } from "../../bindings/trace-simplification/TraceSimplificationSolverAdapter"
+import { TraceSimplificationSolverAdapter } from "lib/bindings/trace-simplification/TraceSimplificationSolverAdapter"
 interface Point { x: number; y: number; z: number }
 interface PathSegment { start: Point; end: Point; length: number; startDistance: number; endDistance: number }
 export class SingleSimplifiedPathSolver5 extends SingleSimplifiedPathSolver {

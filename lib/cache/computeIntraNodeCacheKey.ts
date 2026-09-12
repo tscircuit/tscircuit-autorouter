@@ -1,5 +1,5 @@
-import * as bindings from "../../rust/autorouter-bindings/pkg/autorouter_bindings.js"
-import { initializeAutorouterBindings } from "../bindings/initializeAutorouterBindings"
+import * as bindings from "../../rust/capacity-autorouter-bindings/pkg/capacity_autorouter_bindings.js"
+import { initializeAutorouterBindings } from "lib/bindings/initializeAutorouterBindings"
 import type { CachedIntraNodeRouteSolver } from "../solvers/HighDensitySolver/CachedIntraNodeRouteSolver"
 
 type EncodedScalar = string | number | boolean | null | undefined | {

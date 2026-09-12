@@ -4,7 +4,7 @@ import type { Obstacle } from "lib/types"
 import type { HighDensityRoute } from "lib/types/high-density-types"
 import { createObjectsWithZLayers } from "lib/utils/createObjectsWithZLayers"
 import type { RouteSection } from "../UselessViaRemovalSolver/route-section"
-import { TraceSimplificationSolverAdapter } from "../../bindings/trace-simplification/TraceSimplificationSolverAdapter"
+import { TraceSimplificationSolverAdapter } from "lib/bindings/trace-simplification/TraceSimplificationSolverAdapter"
 
 export interface CrossingViaReductionSolverInput {
   inputHdRoutes: ReadonlyArray<HighDensityRoute>

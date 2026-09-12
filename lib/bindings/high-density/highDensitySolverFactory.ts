@@ -1,5 +1,5 @@
-import { initializeAutorouterBindings } from "../initializeAutorouterBindings"
-import { HighDensitySolverAdapter, type HighDensityProps, type HighDensityVariant } from "../../../rust/autorouter-bindings/ts/index"
+import { initializeAutorouterBindings } from "lib/bindings/initializeAutorouterBindings"
+import { HighDensitySolverAdapter, type HighDensityProps, type HighDensityVariant } from "../../../rust/capacity-autorouter-bindings/ts/index"
 
 const wasmSolvers = new WeakSet<object>()
 

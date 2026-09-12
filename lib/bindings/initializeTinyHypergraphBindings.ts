@@ -1,6 +1,6 @@
 import { initializeTinyHypergraphModule } from "../../rust/tiny-hypergraph-bindings/ts/loadTinyHypergraphBindings"
-import { decodeEmbeddedModule } from "./decodeEmbeddedModule"
-import { wasmBase64 } from "./generated/tinyHypergraphModule"
+import { decodeEmbeddedModule } from "lib/bindings/decodeEmbeddedModule"
+import { wasmBase64 } from "lib/bindings/generated/tinyHypergraphModule"
 
 let initialized = false
 

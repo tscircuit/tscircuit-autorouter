@@ -1,4 +1,4 @@
-import { SpecializedIntraNodeSolverAdapter } from "../../bindings/high-density/SpecializedIntraNodeSolverAdapter"
+import { SpecializedIntraNodeSolverAdapter } from "lib/bindings/high-density/SpecializedIntraNodeSolverAdapter"
 import type { HighDensityIntraNodeRoute, NodeWithPortPoints } from "lib/types/high-density-types";
 export class SingleLayerNoDifferentRootIntersectionsIntraNodeSolver extends SpecializedIntraNodeSolverAdapter {
   static override solverKind = "single-layer"

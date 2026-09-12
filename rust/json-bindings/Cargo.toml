@@ -10,3 +10,4 @@ serde = { version = "1", features = ["derive"] }
 serde_json = { version = "1", features = ["preserve_order", "float_roundtrip"] }
 tsify = { version = "=0.5.8", default-features = false, features = ["json"] }
 wasm-bindgen = "=0.2.128"
+ryu-js = "1.0.3"

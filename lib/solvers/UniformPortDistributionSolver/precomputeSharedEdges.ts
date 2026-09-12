@@ -1,7 +1,7 @@
 import { Bounds, OwnerPair, OwnerPairKey, SharedEdge } from "./types"
-import { initializeAutorouterBindings } from "../../bindings/initializeAutorouterBindings"
-import { decodeName, decodeSharedEdge, encodeName, encodeBounds } from "../../bindings/uniform-port-distribution/UniformPortDistributionCodec"
-import { precomputeUniformSharedEdges } from "../../../rust/autorouter-bindings/pkg/autorouter_bindings.js"
+import { initializeAutorouterBindings } from "lib/bindings/initializeAutorouterBindings"
+import { decodeName, decodeSharedEdge, encodeName, encodeBounds } from "lib/bindings/uniform-port-distribution/UniformPortDistributionCodec"
+import { precomputeUniformSharedEdges } from "../../../rust/capacity-autorouter-bindings/pkg/capacity_autorouter_bindings.js"
 
 /**
  * Builds a reusable lookup of valid shared edges for all owner pairs that

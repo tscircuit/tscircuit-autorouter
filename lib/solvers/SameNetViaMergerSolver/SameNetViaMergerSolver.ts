@@ -1,5 +1,5 @@
 import { ObstacleSpatialHashIndex } from "lib/data-structures/ObstacleTree"
-import { TraceSimplificationSolverAdapter } from "../../bindings/trace-simplification/TraceSimplificationSolverAdapter"
+import { TraceSimplificationSolverAdapter } from "lib/bindings/trace-simplification/TraceSimplificationSolverAdapter"
 import {
   HighDensityIntraNodeRoute,
   HighDensityRoute,
