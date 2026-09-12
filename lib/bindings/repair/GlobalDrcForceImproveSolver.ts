@@ -1,4 +1,4 @@
-import { getGlobalDrcForceImproveSolverVisualizer } from "high-density-repair03/lib/solvers/GlobalDrcForceImproveSolver/globalDrcForceImproveSolverVisualizer"
+import { getGlobalDrcForceImproveSolverVisualizer } from "high-density-repair03/lib/globalDrcForceImproveSolverVisualizer"
 import { BaseSolver } from "@tscircuit/solver-utils"
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { GraphicsObject } from "graphics-debug"

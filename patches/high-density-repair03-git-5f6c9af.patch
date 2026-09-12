@@ -589,7 +589,6 @@ diff --git a/lib/index.ts b/lib/index.ts
 +  registerTraceClearanceBackend,
 +  type TraceClearanceBackend,
 +} from "./solvers/GlobalDrcForceImproveSolver/findTraceClearanceViaPositions"
-
 diff --git a/lib/solvers/GlobalDrcForceImproveSolver/GlobalDrcForceImproveSolver.ts b/lib/solvers/GlobalDrcForceImproveSolver/GlobalDrcForceImproveSolver.ts
 --- a/lib/solvers/GlobalDrcForceImproveSolver/GlobalDrcForceImproveSolver.ts
 +++ b/lib/solvers/GlobalDrcForceImproveSolver/GlobalDrcForceImproveSolver.ts
@@ -608,11 +607,11 @@ diff --git a/lib/solvers/GlobalDrcForceImproveSolver/GlobalDrcForceImproveSolver
 -) => {
 -  registeredVisualizer = visualizer
 -}
-+import { getGlobalDrcForceImproveSolverVisualizer } from "./globalDrcForceImproveSolverVisualizer"
++import { getGlobalDrcForceImproveSolverVisualizer } from "../../globalDrcForceImproveSolverVisualizer"
 +export {
 +  setGlobalDrcForceImproveSolverVisualizer,
 +  type GlobalDrcForceImproveSolverVisualizer,
-+} from "./globalDrcForceImproveSolverVisualizer"
++} from "../../globalDrcForceImproveSolverVisualizer"
  
  const TRACE_PAIR_DETOUR_GEOMETRY_VARIANTS = [0.2, 0.4, 0.8, 1.2].flatMap(
    (halfSpan) =>
@@ -625,13 +624,14 @@ diff --git a/lib/solvers/GlobalDrcForceImproveSolver/GlobalDrcForceImproveSolver
    }
  
    override preview(): GraphicsObject {
-
-diff --git a/lib/solvers/GlobalDrcForceImproveSolver/globalDrcForceImproveSolverVisualizer.ts b/lib/solvers/GlobalDrcForceImproveSolver/globalDrcForceImproveSolverVisualizer.ts
+diff --git a/lib/globalDrcForceImproveSolverVisualizer.ts b/lib/globalDrcForceImproveSolverVisualizer.ts
+new file mode 100644
+index 0000000..cef0984
 --- /dev/null
-+++ b/lib/solvers/GlobalDrcForceImproveSolver/globalDrcForceImproveSolverVisualizer.ts
++++ b/lib/globalDrcForceImproveSolverVisualizer.ts
 @@ -0,0 +1,18 @@
 +import type { GraphicsObject } from "graphics-debug"
-+import type { GlobalDrcForceImproveSolver } from "./GlobalDrcForceImproveSolver"
++import type { GlobalDrcForceImproveSolver } from "./solvers/GlobalDrcForceImproveSolver/GlobalDrcForceImproveSolver"
 +
 +export type GlobalDrcForceImproveSolverVisualizer = (
 +  solver: GlobalDrcForceImproveSolver,
