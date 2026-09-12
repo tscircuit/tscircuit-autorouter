@@ -1,5 +1,7 @@
 import {
   checkDifferentNetViaSpacing,
+  checkViaPadClearance,
+  checkCopperToBoardEdgeClearance,
   checkEachPcbTraceNonOverlapping,
   checkPadTraceClearance,
   checkPcbTracesOutOfBoard,
@@ -10,6 +12,8 @@ import {
 import type {
   AnyCircuitElement,
   PcbPadTraceClearanceError,
+  PcbPadPadClearanceError,
+  PcbPlacementError,
   PcbTraceError,
   PcbViaClearanceError,
   PcbViaTraceClearanceError,
@@ -33,6 +37,8 @@ type DrcError =
   | PcbViaTraceClearanceError
   | PcbPadTraceClearanceError
   | PcbViaClearanceError
+  | PcbPadPadClearanceError
+  | PcbPlacementError
 
 type DrcErrorWithCenter = DrcError & { center?: Point }
 
@@ -116,6 +122,10 @@ export const getDrcErrors = (
     ...viaTraceErrors,
     ...padTraceErrors,
     ...viaErrors,
+    ...checkViaPadClearance(circuitJson, { connMap, minClearance: options.traceClearance }),
+    ...checkCopperToBoardEdgeClearance(
+      circuitJson.filter((element) => element.type === "pcb_via" || element.type === "pcb_board"),
+    ),
   ]
 
   const vias = circuitJson.filter(
