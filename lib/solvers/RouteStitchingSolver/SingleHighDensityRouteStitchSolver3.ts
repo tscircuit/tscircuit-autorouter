@@ -316,10 +316,13 @@ export class SingleHighDensityRouteStitchSolver3 extends BaseSolver {
       const terminalPoint = { ...this.end, z: lastMergedPoint.z }
       const terminalDistance = distance(lastMergedPoint, terminalPoint)
 
-      if (
-        terminalDistance > GEOMETRIC_TOLERANCE &&
-        terminalDistance <= MAX_TERMINAL_STITCH_GAP_DISTANCE_3
-      ) {
+      if (terminalDistance <= GEOMETRIC_TOLERANCE) {
+        this.mergedHdRoute.route[this.mergedHdRoute.route.length - 1] = {
+          ...lastMergedPoint,
+          x: terminalPoint.x,
+          y: terminalPoint.y,
+        }
+      } else if (terminalDistance <= MAX_TERMINAL_STITCH_GAP_DISTANCE_3) {
         if (
           !this.isPlanarStitchClear(lastMergedPoint, terminalPoint) &&
           this.stitchClearanceMode === "require_clear"
