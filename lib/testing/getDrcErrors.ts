@@ -53,7 +53,6 @@ export interface GetDrcErrorsResult {
 export interface GetDrcErrorsOptions {
   viaClearance?: number
   traceClearance?: number
-  padClearance?: number
   includeTraceContinuity?: boolean
   includeTypedTraceClearance?: boolean
 }
@@ -99,7 +98,6 @@ export const getDrcErrors = (
   const viaPadErrors = includeTypedTraceClearance
     ? checkViaPadClearance(circuitJson, {
         connMap,
-        minClearance: options.padClearance,
       })
     : []
   const viaErrors = [

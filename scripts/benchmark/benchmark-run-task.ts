@@ -526,14 +526,11 @@ export const runTask = async (
       ? []
       : (solver.getOutputSimplifiedPcbTraces?.() ?? [])
     const viaCount = countTraceVias(traces)
-    const drcInput = {
+    const { errors } = evaluateRelaxedDrc({
       inputSrj: task.scenario,
       srjWithPointPairs: solver.srjWithPointPairs ?? task.scenario,
       routedTraces: traces,
-    }
-    const drcStart = performance.now()
-    const { errors } = evaluateRelaxedDrc(drcInput)
-    const drcEvaluationTimeMs = performance.now() - drcStart
+    })
     const relaxedDrcPassed = errors.length === 0
     const drcSummary = summarizeDrcErrors(errors as object[])
     let benchmarkSnapshot: BenchmarkSnapshotWithImage | undefined
@@ -567,10 +564,6 @@ export const runTask = async (
       routingMetrics,
       benchmarkSnapshot,
       ...drcSummary,
-      drcEvaluationTimeMs,
-      ...(process.env.BENCHMARK_EXPORT_ROUTED_GEOMETRY === "1"
-        ? { drcInput }
-        : {}),
     }
   } catch (error) {
     return {

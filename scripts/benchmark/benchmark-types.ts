@@ -1,19 +1,4 @@
-import type {
-  SimpleRouteJson,
-  SimplifiedPcbTrace,
-} from "../../lib/types/srj-types"
-
-export type BenchmarkDrcInput = {
-  inputSrj: SimpleRouteJson
-  srjWithPointPairs: SimpleRouteJson
-  routedTraces: SimplifiedPcbTrace[]
-}
-
-export type BenchmarkNativeDrc = {
-  passed: boolean
-  errorCount: number
-  evaluationTimeMs?: number
-}
+import type { SimpleRouteJson } from "../../lib/types/srj-types"
 
 export type BenchmarkTask = {
   datasetName: string
@@ -140,13 +125,6 @@ export type WorkerResult<
     message: string
     count: number
   }>
-  /** Final reporting check only; solver/repair checks remain in elapsedTimeMs. */
-  drcEvaluationTimeMs?: number
-  /** Opt-in geometry export for scoring both revisions with one evaluator. */
-  drcInput?: BenchmarkDrcInput
-  nativeDrc?: BenchmarkNativeDrc
-  commonDrcEvaluationTimeMs?: number
-  routedGeometryHash?: string
   errorPhaseName?: string
   errorSolverName?: string
   error?: string
@@ -238,8 +216,4 @@ export type BenchmarkReport = {
   failureSummary: FailureSummary[]
   snapshots: BenchmarkSnapshot[]
   tests: WorkerResult[]
-  drcScoring?: {
-    evaluatorSha: string
-    kind: "common-core-rules"
-  }
 }
