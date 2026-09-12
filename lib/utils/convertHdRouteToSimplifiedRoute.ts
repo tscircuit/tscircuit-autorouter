@@ -20,6 +20,7 @@ type Point = {
   toNextSegmentCircuitJsonMetadata?: HighDensityIntraNodeRoute["route"][number]["toNextSegmentCircuitJsonMetadata"]
 }
 const DEFAULT_TERMINAL_VIA_ATTACH_TOLERANCE = 0.25
+const TERMINAL_COORDINATE_SNAP_TOLERANCE = 1e-3
 const SAME_POINT_TOLERANCE = 1e-12
 const SAME_NET_OBSTACLE_TOLERANCE = 1e-6
 
@@ -247,6 +248,46 @@ const attachTerminalViasToSimplifiedRoute = ({
   return [...prependSegments, ...linearRoute, ...appendSegments, ...jumpers]
 }
 
+const snapWireTerminalsToConnectionPoints = (
+  route: SimplifiedPcbTraces[number]["route"],
+  connectionPoints: ReadonlyArray<ConnectionPoint> = [],
+): SimplifiedPcbTraces[number]["route"] => {
+  const identifiedConnectionPoints = connectionPoints.filter(
+    (point) => point.pointId,
+  )
+  const wirePoints = route.filter(
+    (point): point is Extract<
+      SimplifiedPcbTraces[number]["route"][number],
+      { route_type: "wire" }
+    > => point.route_type === "wire",
+  )
+  if (wirePoints.length === 0 || identifiedConnectionPoints.length === 0) {
+    return route
+  }
+
+  for (const wirePoint of [wirePoints[0], wirePoints.at(-1)]) {
+    if (!wirePoint) continue
+    let nearestPoint: ConnectionPoint | undefined
+    let nearestDistance = Number.POSITIVE_INFINITY
+    for (const connectionPoint of identifiedConnectionPoints) {
+      const candidateDistance = distance(wirePoint, connectionPoint)
+      if (candidateDistance < nearestDistance) {
+        nearestPoint = connectionPoint
+        nearestDistance = candidateDistance
+      }
+    }
+    if (
+      nearestPoint &&
+      nearestDistance <= TERMINAL_COORDINATE_SNAP_TOLERANCE
+    ) {
+      wirePoint.x = nearestPoint.x
+      wirePoint.y = nearestPoint.y
+    }
+  }
+
+  return route
+}
+
 export const convertHdRouteToSimplifiedRoute = (
   hdRoute: HdRouteWithOptionalJumpers,
   layerCount: number,
@@ -366,7 +407,7 @@ export const convertHdRouteToSimplifiedRoute = (
     }
   }
 
-  return attachTerminalViasToSimplifiedRoute({
+  const routeWithTerminalVias = attachTerminalViasToSimplifiedRoute({
     route: result,
     hdRoute,
     layerCount,
@@ -374,4 +415,8 @@ export const convertHdRouteToSimplifiedRoute = (
     tolerance: opts.terminalViaAttachTolerance,
     defaultViaHoleDiameter: opts.defaultViaHoleDiameter,
   })
+  return snapWireTerminalsToConnectionPoints(
+    routeWithTerminalVias,
+    opts.connectionPoints,
+  )
 }

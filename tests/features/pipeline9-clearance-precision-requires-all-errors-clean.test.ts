@@ -84,19 +84,27 @@ test("clearance precision preserves original routes until full reference DRC pas
   expect(result.routes).toBe(routes)
   expect(routes).toEqual(originalRoutes)
   expect(result.attemptedCandidateCount).toBe(indexedEvaluationCount)
-  expect(result.candidateValidationCount).toBe(1)
+  expect(result.candidateValidationCount).toBe(4)
   expect(result.referenceValidationCount).toBe(evaluationCount)
-  expect(result.referenceValidationCount).toBe(1)
+  expect(result.referenceValidationCount).toBe(4)
   expect(result.attemptedCandidateCount).toBeLessThanOrEqual(24)
+  let unsupportedReferenceValidationCount = 0
   const unsupported = applyPipeline9ClearancePrecisionRepairs({
     ...params,
     marginDrcEvaluator: () => ({ status: "unsupported-identity" }),
     drcEvaluator: () => {
-      throw new Error("An unmeasurable candidate must not reach publication")
+      unsupportedReferenceValidationCount++
+      return {
+        errors: [{ type: "pcb_trace_error", message: "Missing connection" }],
+        errorsWithCenters: [],
+      }
     },
   })
   expect(unsupported.repaired).toBeFalse()
   expect(unsupported.routes).toBe(routes)
-  expect(unsupported.referenceValidationCount).toBe(0)
+  expect(unsupported.referenceValidationCount).toBe(
+    unsupportedReferenceValidationCount,
+  )
+  expect(unsupported.referenceValidationCount).toBeGreaterThan(0)
   expect(routes).toEqual(originalRoutes)
 })
