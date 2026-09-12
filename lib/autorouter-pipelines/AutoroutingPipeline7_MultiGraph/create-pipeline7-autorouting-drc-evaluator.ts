@@ -35,8 +35,8 @@ export const createPipeline7AutoroutingDrcEvaluator = (
     minViaHoleEdgeToViaHoleEdgeClearance:
       conversionOptions.originalSrj.minViaHoleEdgeToViaHoleEdgeClearance,
     minBoardEdgeClearance: conversionOptions.originalSrj.minBoardEdgeClearance,
-    minViaHoleDiameter:
-      getViaDimensions(conversionOptions.originalSrj).holeDiameter,
+    minViaHoleDiameter: getViaDimensions(conversionOptions.originalSrj)
+      .holeDiameter,
     allowBlindAndBuriedVias:
       conversionOptions.originalSrj.allowBlindAndBuriedVias,
     minViaDiameter:
