@@ -89,7 +89,7 @@ test("repairs dataset 18 sample 10's exact DRC errors", async () => {
   })
 
   expect(inputDrc.errors.length).toBeGreaterThan(0)
-  expect(outputDrc.errors).toHaveLength(0)
+  expect(outputDrc.errors).toEqual([])
   expect(pipeline.failed).toBe(false)
   expect(exactSolver.solved).toBe(true)
   expect(exactSolver.failed).toBe(false)
