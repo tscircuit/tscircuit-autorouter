@@ -7,7 +7,6 @@ import {
   type Bounds,
 } from "@tscircuit/repair04"
 import type { DrcEvaluator } from "high-density-repair03/lib"
-import { RELAXED_DRC_OPTIONS } from "lib/testing/drcPresets"
 import type { SimpleRouteJson } from "lib/types"
 import type { HighDensityRoute } from "lib/types/high-density-types"
 import { createSrjWithBoardValidObstacleLayers } from "lib/utils/create-srj-with-board-valid-obstacle-layers"
@@ -332,8 +331,8 @@ export const applyPipeline9BoundedRegionalRepairs = ({
       maxPathSearchNodes:
         budget.maxPathSearchNodes - result.pathSearchNodeCount,
       allowLayerChanges: true,
-      traceClearance: RELAXED_DRC_OPTIONS.traceClearance!,
-      viaClearance: RELAXED_DRC_OPTIONS.viaClearance!,
+      traceClearance: originalSrj.minTraceToPadEdgeClearance ?? 0.1,
+      viaClearance: 0.1,
       viaHoleDiameter,
     })
     const { pathSearchCalls: candidateAttempts, pathSearchNodes } = repair
