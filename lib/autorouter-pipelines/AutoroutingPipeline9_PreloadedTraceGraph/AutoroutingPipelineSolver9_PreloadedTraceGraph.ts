@@ -90,6 +90,7 @@ import {
   Pipeline9HighDensitySolver,
 } from "./Pipeline9HighDensitySolver"
 import { Pipeline9JointDrcRepairSolver } from "./Pipeline9JointDrcRepairSolver"
+import { PostPowerTraceViaMergeSolver } from "./PostPowerTraceViaMergeSolver"
 import { PreloadedTraceGraphSolver } from "./PreloadedTraceGraphSolver"
 import { PreprocessSimpleRouteJsonWithoutTraceObstaclesSolver } from "./PreprocessSimpleRouteJsonWithoutTraceObstaclesSolver"
 import { MergedComponentTopologyView } from "../AutoroutingPipeline7_MultiGraph/MergedComponentTopologyView"
@@ -272,6 +273,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
   mutatedPreloadedTraceSimplificationSolver?: TraceSimplificationSolver
   lengthMatchingPostProcessingSolver?: LengthMatchingPostProcessingSolver
   powerTraceExpansionSolver?: PowerTraceExpansionSolver
+  postPowerTraceViaMergeSolver?: PostPowerTraceViaMergeSolver
   availableSegmentPointSolver?: AvailableSegmentPointSolver
   portPointPathingSolver?: TinyHypergraphPortPointPathingSolver
   multiSectionPortPointOptimizer?: MultiSectionPortPointOptimizer
@@ -988,6 +990,21 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
         ]
       },
     ),
+    definePipelineStep(
+      "postPowerTraceViaMergeSolver",
+      PostPowerTraceViaMergeSolver,
+      (cms) => [
+        {
+          inputSrj: cms.originalSrj,
+          inputTraces: cms.powerTraceExpansionSolver!.getOutput(),
+          otherTraces: cms.getPowerTraceExpansionFixedTraces(),
+          connMap: cms.connMap,
+          colorMap: cms.colorMap,
+          viaDiameter: cms.viaDiameter,
+          viaHoleDiameter: cms.viaHoleDiameter,
+        },
+      ],
+    ),
   ]
 
   constructor(
@@ -1530,16 +1547,16 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     if (!this.solved) {
       throw new Error("Cannot get output before solving is complete")
     }
-    if (!this.powerTraceExpansionSolver) {
+    if (!this.postPowerTraceViaMergeSolver) {
       throw new Error(
-        "Pipeline9 invariant violated: solved pipeline is missing the unconditional power-trace expansion solver",
+        "Pipeline9 invariant violated: solved pipeline is missing the post-power via merge solver",
       )
     }
     return [
       ...this.getPowerTraceExpansionFixedTraces().filter(
         (trace) => trace.__replaces_pcb_trace_id !== undefined,
       ),
-      ...this.powerTraceExpansionSolver.getOutput(),
+      ...this.postPowerTraceViaMergeSolver.getOutput(),
     ]
   }
 
@@ -1547,14 +1564,14 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     if (!this.solved) {
       throw new Error("Cannot get output before solving is complete")
     }
-    if (!this.powerTraceExpansionSolver) {
+    if (!this.postPowerTraceViaMergeSolver) {
       throw new Error(
-        "Pipeline9 invariant violated: solved pipeline is missing the unconditional power-trace expansion solver",
+        "Pipeline9 invariant violated: solved pipeline is missing the post-power via merge solver",
       )
     }
     const traces = [
       ...this.getPowerTraceExpansionFixedTraces(),
-      ...this.powerTraceExpansionSolver.getOutput(),
+      ...this.postPowerTraceViaMergeSolver.getOutput(),
     ]
     return {
       ...this.originalSrj,
