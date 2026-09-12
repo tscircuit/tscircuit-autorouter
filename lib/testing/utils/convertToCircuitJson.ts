@@ -847,7 +847,10 @@ function extractViasFromRoutes(
                 outer_diameter: viaDiameter,
                 hole_diameter: viaHoleDiameter,
                 layers: getPhysicalViaLayers(
-                  segment,
+                  {
+                    from_layer: segment.from_layer as LayerName,
+                    to_layer: segment.to_layer as LayerName,
+                  },
                   layerCount,
                   allowBlindAndBuriedVias,
                 ),
