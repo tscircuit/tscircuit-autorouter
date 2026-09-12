@@ -1,6 +1,6 @@
 # Rust source ports and bindings
 
-Solver files retain their TypeScript source names and decomposition. Behavioral comparisons use the frozen checkout at `22800e78` with its retained local changes. The separate [upstream main audit at 109c67b](https://github.com/tscircuit/tscircuit-autorouter/tree/109c67baebc709be95fb37df1fdac9b3b74624c5) has not established main parity. See the [experiment overview](../docs/rust-port/README.md), [source map](../docs/rust-port/source-map.json), and [upstream reconciliation ledger](../docs/rust-port/upstream-changes.md).
+Solver files retain their TypeScript source names and decomposition.
 
 | Directory | Contents |
 | --- | --- |
@@ -23,5 +23,3 @@ In `autorouter-bindings`, `src/ported/` mirrors the source paths of orchestratio
 The compatibility adapters preserve the TypeScript lifecycle, mutable diagnostic state, object identity, and callbacks. They are handwritten support around generated bindings. Source solver names do not gain implementation prefixes; use module-qualified names when a wrapper and its binding share a name. `NativeObstacleTree` is retained because it is already an upstream name.
 
 From the repository root, `bun run build:bindings` builds both modules and embeds their binaries. `bun run build:ts` builds the package and declarations; `bun run build` performs both. The pinned `wasm-bindgen-cli` version is 0.2.128. Set `WASM_BINDGEN` to select an already installed matching executable. No runtime backend selection or asynchronous initialization is needed for ordinary package use.
-
-See [migration validation](../docs/rust-port/validation.md) for checks performed and known pre-existing failures. The naming migration does not claim full behavioral parity with newly pinned main.

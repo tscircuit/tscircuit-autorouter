@@ -20,7 +20,7 @@ Or [run the Create Bug Report workflow](https://github.com/tscircuit/capacity-au
 bun add @tscircuit/capacity-autorouter
 ```
 
-This `rust-experiment` branch ports selected routing and repair modules to Rust WASM through the existing synchronous solver API. The package embeds its WASM binaries and initializes them during solver construction; consumers do not fetch assets, call an initializer, or select a backend. Substantial TypeScript stages remain. See the [experiment scope, measurements, and validation](docs/rust-port/README.md).
+This `rust-experiment` branch ports selected routing and repair modules to Rust WASM through the existing synchronous solver API. The package embeds its WASM binaries and initializes them during solver construction; consumers do not fetch assets, call an initializer, or select a backend. Substantial TypeScript stages remain.
 
 ## Usage as a Library
 
