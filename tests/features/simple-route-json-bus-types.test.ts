@@ -22,7 +22,6 @@ test("preserves SimpleRouteJson bus metadata during preprocessing", () => {
             x: -1,
             y: 0,
             layer: "top",
-            layers: ["top", "bottom"],
             port_selector: "U1.DATA0",
           },
           { x: 1, y: 0, layer: "top" },

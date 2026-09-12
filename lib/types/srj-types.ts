@@ -21,7 +21,6 @@ export type SingleLayerConnectionPoint = {
   x: number
   y: number
   layer: string
-  layers?: string[]
   pointId?: PointId
   pcb_port_id?: string
   /** Stable semantic selector for the source port, e.g. `U1.USB_DM`. */
