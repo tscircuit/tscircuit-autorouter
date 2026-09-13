@@ -105,6 +105,7 @@ export type {
   MultiLayerConnectionPoint,
   Obstacle,
   SimpleRouteBus,
+  SimpleRouteBusTermination,
   SimpleRouteConnection,
   SimpleRouteJson,
   SimplifiedPcbTrace,

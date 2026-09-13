@@ -1,3 +1,4 @@
+import { getConnectionPointLayers } from "lib/utils/connection-point-utils"
 import { pointToBoxDistance } from "@tscircuit/math-utils"
 import type { ConnectionPoint } from "lib/types"
 import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
@@ -18,8 +19,7 @@ export function checkIfConnectionPointIsInRegion(params: {
     pointToBoxDistance(params.point, params.region.d) <=
     CONNECTION_POINT_REGION_TOLERANCE
   ) {
-    const layers =
-      "layers" in params.point ? params.point.layers : [params.point.layer]
+    const layers = getConnectionPointLayers(params.point)
     const intLayers = layers.map((layer) => {
       return mapLayerNameToZ(layer, params.layerCount)
     })

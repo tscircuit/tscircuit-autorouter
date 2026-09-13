@@ -1,3 +1,4 @@
+import { getConnectionPointLayers } from "lib/utils/connection-point-utils"
 import type { Obstacle, SimpleRouteConnection } from "lib/types"
 import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
 
@@ -27,7 +28,7 @@ export const getTerminalLayerIndicesByPcbPortId = (
       if (!point.pcb_port_id) continue
       const terminalLayerIndices =
         terminalLayerIndicesByPcbPortId.get(point.pcb_port_id) ?? new Set()
-      const layerNames = "layers" in point ? point.layers : [point.layer]
+      const layerNames = getConnectionPointLayers(point)
       for (const layerName of layerNames) {
         terminalLayerIndices.add(mapLayerNameToZ(layerName, layerCount))
       }
