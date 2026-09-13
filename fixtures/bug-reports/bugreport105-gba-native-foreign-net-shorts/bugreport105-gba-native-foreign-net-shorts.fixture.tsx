@@ -17,7 +17,8 @@ const createSolver = (
 
 export default function GameBoyNativeForeignNetShorts(): JSX.Element {
   const srj = structuredClone(capturedInput) as SimpleRouteJson
-  return (
-    <AutoroutingPipelineDebugger srj={srj} createSolver={createSolver} />
-  )
+  if (srj.layerCount !== 2) {
+    throw new Error("The captured Game Boy input must have two layers")
+  }
+  return <AutoroutingPipelineDebugger srj={srj} createSolver={createSolver} />
 }
