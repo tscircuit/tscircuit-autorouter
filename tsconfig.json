@@ -9,7 +9,6 @@
 
     "baseUrl": ".",
     "paths": {
-      "@tscircuit/high-density-a13": ["types/high-density-a13.ts"],
       "lib/*": ["lib/*"],
       "examples/*": ["examples/*"],
       "tests/*": ["tests/*"],
