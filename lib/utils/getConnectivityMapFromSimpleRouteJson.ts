@@ -2,6 +2,7 @@ import type { SimpleRouteJson } from "lib/types"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import { buildConnectivityMap } from "../../rust/capacity-autorouter-bindings/pkg/capacity_autorouter_bindings.js"
 import { initializeAutorouterBindings } from "lib/bindings/initializeAutorouterBindings"
+import { getConnectionPointLayers } from "./connection-point-utils"
 
 export const getConnectivityMapFromSimpleRouteJson = (
   srj: SimpleRouteJson,
@@ -28,8 +29,8 @@ export const getConnectivityMapFromSimpleRouteJson = (
     points: connection.pointsToConnect.map((point) => ({
       x: number(point.x),
       y: number(point.y),
-      layers: "layers" in point ? point.layers.map(intern) : null,
-      layer: "layers" in point ? null : intern(point.layer),
+      layers: getConnectionPointLayers(point).map(intern),
+      layer: null,
       port:
         "pcb_port_id" in point ? optional(point.pcb_port_id as string) : null,
       pointId: optional(point.pointId),
