@@ -269,6 +269,8 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
           ;[start, end] = [end, start]
         }
 
+        const selectedStart = start
+        const selectedEnd = end
         start = snapIslandEndpointToNearestTerminal({
           islandEndpoint: start,
           terminals: [globalStart, globalEnd],
@@ -277,6 +279,27 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
           islandEndpoint: end,
           terminals: [globalStart, globalEnd],
         })
+        const startPcbPortId = (
+          start as Point3 & { pcb_port_id?: string }
+        ).pcb_port_id
+        const endPcbPortId = (end as Point3 & { pcb_port_id?: string })
+          .pcb_port_id
+        const globalStartPcbPortId = (
+          globalStart as Point3 & { pcb_port_id?: string }
+        ).pcb_port_id
+        if (startPcbPortId && startPcbPortId === endPcbPortId) {
+          const otherTerminal =
+            startPcbPortId === globalStartPcbPortId
+              ? globalEnd
+              : globalStart
+          if (
+            distance(selectedStart, start) <= distance(selectedEnd, end)
+          ) {
+            end = otherTerminal
+          } else {
+            start = otherTerminal
+          }
+        }
       } else {
         start = {
           ...connection.pointsToConnect[0],

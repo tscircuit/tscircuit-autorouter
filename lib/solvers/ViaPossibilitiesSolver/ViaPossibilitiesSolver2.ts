@@ -54,6 +54,7 @@ export class ViaPossibilitiesSolver2 extends BaseSolver {
   bounds: Bounds
   maxViaCount: number
   portPairMap: PortPairMap
+  rootConnectionNameByConnectionName: Map<ConnectionName, string>
   colorMap: Record<string, string>
   nodeWidth: number
   availableZ: number[]
@@ -88,12 +89,18 @@ export class ViaPossibilitiesSolver2 extends BaseSolver {
     this.MAX_ITERATIONS = 100e3
     this.colorMap =
       colorMap ?? generateColorMapFromNodeWithPortPoints(nodeWithPortPoints)
-    this.maxViaCount = 5
     this.bounds = getBoundsFromNodeWithPortPoints(nodeWithPortPoints)
     this.nodeWidth = this.bounds.maxX - this.bounds.minX
     this.portPairMap = getPortPairMap(nodeWithPortPoints)
+    this.rootConnectionNameByConnectionName = new Map(
+      nodeWithPortPoints.portPoints.map((portPoint) => [
+        portPoint.connectionName,
+        portPoint.rootConnectionName ?? portPoint.connectionName,
+      ]),
+    )
     this.stats.solutionsFound = 0
     this.availableZ = nodeWithPortPoints.availableZ ?? [0, 1]
+    this.maxViaCount = 5
     this.hyperParameters = hyperParameters ?? {
       SHUFFLE_SEED: 0,
     }
@@ -203,7 +210,19 @@ export class ViaPossibilitiesSolver2 extends BaseSolver {
     const checkIntersectionsWithPathMap = (
       pathMap: Map<ConnectionName, Point3[]>,
     ) => {
-      for (const path of pathMap.values()) {
+      for (const [connectionName, path] of pathMap.entries()) {
+        const currentRootConnectionName =
+          this.rootConnectionNameByConnectionName.get(
+            this.currentConnectionName,
+          )
+        const pathRootConnectionName =
+          this.rootConnectionNameByConnectionName.get(connectionName)
+        if (
+          currentRootConnectionName !== undefined &&
+          currentRootConnectionName === pathRootConnectionName
+        ) {
+          continue
+        }
         for (let i = 0; i < path.length - 1; i++) {
           const segment: [Point3, Point3] = [path[i], path[i + 1]]
           // Skip checking intersection if segment is just a via (z change)
@@ -252,7 +271,7 @@ export class ViaPossibilitiesSolver2 extends BaseSolver {
       this.currentViaCount++
 
       // Check if adding this via would exceed the limit
-      if (this.currentViaCount >= this.maxViaCount) {
+      if (this.currentViaCount > this.maxViaCount) {
         this.failed = true
         this.error = `Exceeded max via count of ${this.maxViaCount}`
         return
@@ -282,8 +301,64 @@ export class ViaPossibilitiesSolver2 extends BaseSolver {
         }
       }
 
-      // Determine the Z level to switch to (the one NOT occupied by the intersected segment)
-      const nextZ = this.availableZ.find((z) => z !== intersectedSegmentZ)!
+      // Choose the available layer with the fewest remaining crossings. Using
+      // the first layer different from the current one makes multilayer routes
+      // bounce between layers 0 and 1 even when another layer is clear.
+      const intersectionCountByZ = new Map<number, number>()
+      for (const candidateZ of this.availableZ) {
+        if (candidateZ === intersectedSegmentZ) continue
+        let intersectionCount = 0
+        const candidateSegment: [Point3, Point3] = [
+          { ...viaXY, z: candidateZ },
+          { ...targetEnd, z: candidateZ },
+        ]
+        for (const pathMap of [this.completedPaths, this.placeholderPaths]) {
+          for (const [connectionName, path] of pathMap.entries()) {
+            const currentRootConnectionName =
+              this.rootConnectionNameByConnectionName.get(
+                this.currentConnectionName,
+              )
+            const pathRootConnectionName =
+              this.rootConnectionNameByConnectionName.get(connectionName)
+            if (
+              currentRootConnectionName !== undefined &&
+              currentRootConnectionName === pathRootConnectionName
+            ) {
+              continue
+            }
+            for (let pathIndex = 0; pathIndex < path.length - 1; pathIndex++) {
+              const segmentStart = path[pathIndex]!
+              const segmentEnd = path[pathIndex + 1]!
+              if (
+                segmentStart.z !== candidateZ ||
+                (segmentStart.x === segmentEnd.x &&
+                  segmentStart.y === segmentEnd.y)
+              ) {
+                continue
+              }
+              const intersection = getSegmentIntersection(
+                candidateSegment[0],
+                candidateSegment[1],
+                segmentStart,
+                segmentEnd,
+              )
+              if (
+                intersection &&
+                distance(candidateSegment[0], intersection) >= 1e-6
+              ) {
+                intersectionCount++
+              }
+            }
+          }
+        }
+        intersectionCountByZ.set(candidateZ, intersectionCount)
+      }
+      const nextZ = [...intersectionCountByZ.entries()].sort(
+        ([leftZ, leftCount], [rightZ, rightCount]) =>
+          leftCount - rightCount ||
+          Number(rightZ === targetEnd.z) - Number(leftZ === targetEnd.z) ||
+          leftZ - rightZ,
+      )[0]?.[0]
       if (nextZ === undefined) {
         this.error = "Could not determine next Z level for via placement!"
         this.failed = true // Mark as failed if Z logic breaks

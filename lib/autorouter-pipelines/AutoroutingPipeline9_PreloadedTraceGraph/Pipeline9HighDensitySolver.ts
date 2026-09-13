@@ -17,6 +17,7 @@ import type {
 } from "lib/types/high-density-types"
 import type { Obstacle } from "lib/types/srj-types"
 import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
+import { minimumDistanceBetweenSegments } from "lib/utils/minimumDistanceBetweenSegments"
 import { BaseSolver } from "../../solvers/BaseSolver"
 import { HighDensitySolver } from "../../solvers/HighDensitySolver/HighDensitySolver"
 import type { PreloadedHighDensityRoute } from "./convertPreloadedTraceToHdRoutes"
@@ -24,6 +25,7 @@ import {
   arePipeline9RoutesOnSameNet,
   doPipeline9RoutesHaveCopperConflict,
   getPipeline9FixedRouteObstacles,
+  getPipeline9RouteCopperGeometry,
 } from "./pipeline9FixedRouteCopper"
 import {
   createRegionalFallbackProblem,
@@ -103,37 +105,31 @@ const routeOverlapsNode = (
   const availableZ = new Set(
     node.availableZ ?? node.portPoints.map((portPoint) => portPoint.z),
   )
-  for (
-    let routePointIndex = 1;
-    routePointIndex < route.route.length;
-    routePointIndex++
-  ) {
-    const start = route.route[routePointIndex - 1]!
-    const end = route.route[routePointIndex]!
-    if (start.z === end.z) {
-      if (
-        availableZ.has(start.z) &&
-        segmentBoundsOverlapNode(
-          start,
-          end,
-          route.traceThickness / 2 + routedCopperRadius,
-          nodeBounds,
-        )
-      )
-        return true
-      continue
-    }
-    const minZ = Math.min(start.z, end.z)
-    const maxZ = Math.max(start.z, end.z)
+  const geometry = getPipeline9RouteCopperGeometry(route)
+  for (const segment of geometry.wireSegments) {
     if (
-      [...availableZ].some((z) => z >= minZ && z <= maxZ) &&
-      pointRadiusOverlapsNode(
-        end,
-        route.viaDiameter / 2 + routedCopperRadius,
+      availableZ.has(segment.z) &&
+      segmentBoundsOverlapNode(
+        segment.start,
+        segment.end,
+        segment.width / 2 + routedCopperRadius,
         nodeBounds,
       )
-    )
+    ) {
       return true
+    }
+  }
+  for (const via of geometry.viaSpans) {
+    if (
+      [...availableZ].some((z) => z >= via.minZ && z <= via.maxZ) &&
+      pointRadiusOverlapsNode(
+        via.center,
+        via.diameter / 2 + routedCopperRadius,
+        nodeBounds,
+      )
+    ) {
+      return true
+    }
   }
   return false
 }
@@ -158,36 +154,41 @@ const convertFixedRouteToB01Obstacles = (
     traceThickness: route.traceThickness,
     viaDiameter: route.viaDiameter,
   }
-  const obstacles: HighDensityRouteObstacle[] = []
-  for (
-    let routePointIndex = 1;
-    routePointIndex < route.route.length;
-    routePointIndex++
-  ) {
-    const start = route.route[routePointIndex - 1]!
-    const end = route.route[routePointIndex]!
-    if (start.z === end.z) {
-      if (!availableZ.has(start.z)) continue
-      obstacles.push({ ...baseObstacle, route: [start, end], vias: [] })
-      continue
-    }
-    const minZ = Math.min(start.z, end.z)
-    const maxZ = Math.max(start.z, end.z)
-    if (![...availableZ].some((z) => z >= minZ && z <= maxZ)) continue
-    obstacles.push({
-      ...baseObstacle,
-      route: [start, end],
-      vias: [
-        {
-          x: end.x,
-          y: end.y,
-          zStart: start.z,
-          zEnd: end.z,
-        },
-      ],
-    })
-  }
-  return obstacles
+  const geometry = getPipeline9RouteCopperGeometry(route)
+  return [
+    ...geometry.wireSegments.flatMap((segment) =>
+      availableZ.has(segment.z)
+        ? [
+            {
+              ...baseObstacle,
+              route: [segment.start, segment.end],
+              vias: [],
+            },
+          ]
+        : [],
+    ),
+    ...geometry.viaSpans.flatMap((via) =>
+      [...availableZ].some((z) => z >= via.minZ && z <= via.maxZ)
+        ? [
+            {
+              ...baseObstacle,
+              route: [
+                { ...via.center, z: via.minZ },
+                { ...via.center, z: via.maxZ },
+              ],
+              vias: [
+                {
+                  x: via.center.x,
+                  y: via.center.y,
+                  zStart: via.minZ,
+                  zEnd: via.maxZ,
+                },
+              ],
+            },
+          ]
+        : [],
+    ),
+  ]
 }
 
 const obstacleOverlapsNode = (
@@ -524,10 +525,32 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       // constrain which of these layers it can actually use.
       availableZ: Array.from({ length: this.layerCount }, (_, z) => z),
     }
+    const updatedFixedRoutes = this.getUpdatedFixedHdRoutes()
+    const promotedRoutes = updatedFixedRoutes.filter((route) =>
+      promotedFixedRouteConnectionNames.has(route.connectionName),
+    )
+    const expandedPromotedConnectionNames = new Set(
+      promotedRoutes.map((route) => route.connectionName),
+    )
+    const expansionMargin =
+      promotedRoutes.length === 0
+        ? 0
+        : Math.max(
+            1.5,
+            this.obstacleMargin +
+              this.traceWidth / 2 +
+              Math.max(
+                ...promotedRoutes.map((route) =>
+                  Math.max(route.traceThickness, route.viaDiameter),
+                ),
+              ) /
+                2,
+          )
     const fallbackProblem = createRegionalFallbackProblem(
       regionalNode,
-      this.getUpdatedFixedHdRoutes(),
-      promotedFixedRouteConnectionNames,
+      updatedFixedRoutes,
+      expandedPromotedConnectionNames,
+      expansionMargin,
     )
     const movableFixedRouteConnectionNames = new Set(
       [...fallbackProblem.fixedRouteSectionsByConnectionName.values()].flatMap(
@@ -542,7 +565,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       }
     }
     const newlyPromotedFixedRouteCount = [
-      ...promotedFixedRouteConnectionNames,
+      ...movableFixedRouteConnectionNames,
     ].filter(
       (connectionName) =>
         !this.activeFallbackPromotedFixedRouteConnectionNames.has(
@@ -553,7 +576,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       fallbackProblem.fixedRouteSectionsByConnectionName
     this.activeFallbackFixedObstacleRoutes = fallbackProblem.fixedObstacleRoutes
     this.activeFallbackPromotedFixedRouteConnectionNames = new Set(
-      promotedFixedRouteConnectionNames,
+      movableFixedRouteConnectionNames,
     )
     const fixedRouteObstacles = getPipeline9FixedRouteObstacles({
       fixedObstacleRoutes: this.activeFallbackFixedObstacleRoutes,
@@ -574,7 +597,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       viaToPadClearance: this.viaToPadClearance,
       layerCount: this.layerCount,
     })
-    if (promotedFixedRouteConnectionNames.size === 0) {
+    if (movableFixedRouteConnectionNames.size === 0) {
       this.stats.fallbackNodeCount =
         Number(this.stats.fallbackNodeCount ?? 0) + 1
     } else {
@@ -584,6 +607,61 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
         Number(this.stats.promotedFixedRouteCount ?? 0) +
         newlyPromotedFixedRouteCount
     }
+  }
+
+  private getFixedRoutesBlockingActiveNodeTerminals(): Set<string> {
+    if (!this.activeNode) return new Set()
+
+    const blockerConnectionNames = new Set<string>()
+    const getCanonicalConnectionId = (connectionId: string) =>
+      this.connMap.getNetConnectedToId(connectionId) ?? connectionId
+    for (const fixedRoute of this.getUpdatedFixedHdRoutes()) {
+      if (fixedRoute.isThroughObstacle === true) continue
+      const fixedRouteIds = [
+        fixedRoute.connectionName,
+        fixedRoute.rootConnectionName,
+      ]
+        .filter((id): id is string => typeof id === "string")
+        .map(getCanonicalConnectionId)
+      const geometry = getPipeline9RouteCopperGeometry(fixedRoute)
+      for (const portPoint of this.activeNode.portPoints) {
+        const portPointIds = [
+          portPoint.connectionName,
+          portPoint.rootConnectionName,
+        ]
+          .filter((id): id is string => typeof id === "string")
+          .map(getCanonicalConnectionId)
+        const isSameNet = portPointIds.some((portPointId) =>
+          fixedRouteIds.some((fixedRouteId) => portPointId === fixedRouteId),
+        )
+        if (isSameNet) continue
+
+        const requiredTraceClearance = this.traceWidth / 2 + this.obstacleMargin
+        const conflictsWithWire = geometry.wireSegments.some(
+          (segment) =>
+            segment.z === portPoint.z &&
+            minimumDistanceBetweenSegments(
+              portPoint,
+              portPoint,
+              segment.start,
+              segment.end,
+            ) <
+              requiredTraceClearance + segment.width / 2,
+        )
+        const conflictsWithVia = geometry.viaSpans.some(
+          (via) =>
+            portPoint.z >= via.minZ &&
+            portPoint.z <= via.maxZ &&
+            Math.hypot(portPoint.x - via.center.x, portPoint.y - via.center.y) <
+              requiredTraceClearance + via.diameter / 2,
+        )
+        if (conflictsWithWire || conflictsWithVia) {
+          blockerConnectionNames.add(fixedRoute.connectionName)
+          break
+        }
+      }
+    }
+    return blockerConnectionNames
   }
 
   private finishRegionalFallback(): void {
@@ -709,8 +787,11 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       const promotedConnectionNames = new Set(
         this.activeFallbackPromotedFixedRouteConnectionNames,
       )
-      for (const connectionName of reconstructableConnectionNames) {
-        promotedConnectionNames.add(connectionName)
+      const nextPromotedConnectionName = reconstructableConnectionNames.find(
+        (connectionName) => !promotedConnectionNames.has(connectionName),
+      )
+      if (nextPromotedConnectionName) {
+        promotedConnectionNames.add(nextPromotedConnectionName)
       }
       if (
         promotedConnectionNames.size ===
@@ -795,7 +876,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     const postSpliceProblem = createRegionalFallbackProblem(
       {
         ...normalizePipeline9NodeRootConnectionNames(
-          this.activeNode,
+          this.activeFallbackSolver.params.nodeWithPortPoints,
           this.connMap,
         ),
         portPoints: [],
@@ -894,6 +975,10 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     this.stats.regionalRepairCandidateRejectionCount =
       Number(this.stats.regionalRepairCandidateRejectionCount ?? 0) +
       Number(regionalStats.repairCandidateRejectionCount ?? 0)
+    this.stats.firstPreloadedViaCandidateConflict ??=
+      regionalStats.firstPreloadedViaCandidateConflict
+    this.stats.lastPreloadedViaCandidateConflict =
+      regionalStats.lastPreloadedViaCandidateConflict
   }
 
   protected finishRegularSolverFailure(error: string): void {
@@ -913,6 +998,9 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       this.activeFallbackSolver.step()
       if (this.activeFallbackSolver.failed) {
         this.recordRegionalCandidateRejections()
+        this.stats.failedRegionalPromotedConnectionNames = [
+          ...this.activeFallbackPromotedFixedRouteConnectionNames,
+        ]
         this.error = [
           `Pipeline9 primary high-density routing failed: ${this.activeFallbackReason ?? "unknown error"}`,
           `regional fallback failed: ${this.activeFallbackSolver.error ?? "unknown error"}`,
@@ -957,7 +1045,12 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
           this.activeNode = null
           return
         }
-        this.startRegionalFallback()
+        const terminalBlockers =
+          this.getFixedRoutesBlockingActiveNodeTerminals()
+        this.stats.initialTerminalBlockerPromotionCount =
+          Number(this.stats.initialTerminalBlockerPromotionCount ?? 0) +
+          terminalBlockers.size
+        this.startRegionalFallback(terminalBlockers)
         return
       }
       if (!this.activeB01Solver.solved) return
@@ -1006,7 +1099,11 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     this.activeNode = node
     if (node.width > 15 || node.height > 15) {
       this.activeFallbackReason = `B01 node "${node.capacityMeshNodeId}" exceeds the 15x15mm routing limit (${node.width}x${node.height}mm)`
-      this.startRegionalFallback()
+      const terminalBlockers = this.getFixedRoutesBlockingActiveNodeTerminals()
+      this.stats.initialTerminalBlockerPromotionCount =
+        Number(this.stats.initialTerminalBlockerPromotionCount ?? 0) +
+        terminalBlockers.size
+      this.startRegionalFallback(terminalBlockers)
       return
     }
 
