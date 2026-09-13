@@ -11,6 +11,11 @@ export type PreloadedHighDensityRoute = HighDensityRoute & {
   preloadedRoutePositionStart?: number
   preloadedRoutePositionEnd?: number
   isThroughObstacle?: boolean
+  physicalViaSpans?: Array<{
+    center: { x: number; y: number }
+    minZ: number
+    maxZ: number
+  }>
 }
 
 export const convertPreloadedTraceToHdRoutes = (
@@ -19,6 +24,7 @@ export const convertPreloadedTraceToHdRoutes = (
   layerCount: number,
   defaultViaDiameter: number,
   connMap: ConnectivityMap,
+  allowBlindAndBuriedVias?: boolean,
 ): PreloadedHighDensityRoute[] => {
   const rootConnectionName =
     connMap.getNetConnectedToId(trace.connection_name) ?? trace.connection_name
@@ -31,8 +37,17 @@ export const convertPreloadedTraceToHdRoutes = (
     routePositionStart?: number,
     routePositionEnd?: number,
     isThroughObstacle = false,
+    physicalViaSpans: PreloadedHighDensityRoute["physicalViaSpans"] = [],
   ) => {
     if (route.length < 2) return
+    const firstPoint = route[0]!
+    const hasPhysicalLength = route.some(
+      (point) =>
+        Math.abs(point.x - firstPoint.x) > MIN_ROUTE_DIMENSION ||
+        Math.abs(point.y - firstPoint.y) > MIN_ROUTE_DIMENSION ||
+        point.z !== firstPoint.z,
+    )
+    if (!hasPhysicalLength) return
     routes.push({
       connectionName: `${trace.connection_name}_fixed_${traceIndex}_${routes.length}`,
       rootConnectionName,
@@ -45,8 +60,20 @@ export const convertPreloadedTraceToHdRoutes = (
       viaDiameter: Math.max(MIN_ROUTE_DIMENSION, viaDiameter),
       route,
       vias,
+      ...(physicalViaSpans.length > 0 ? { physicalViaSpans } : {}),
     })
   }
+
+  const getPhysicalViaSpan = (center: { x: number; y: number }) =>
+    allowBlindAndBuriedVias === false
+      ? [
+          {
+            center,
+            minZ: 0,
+            maxZ: layerCount - 1,
+          },
+        ]
+      : []
 
   for (let pointIndex = 0; pointIndex < trace.route.length; pointIndex++) {
     const point = trace.route[pointIndex]!
@@ -69,6 +96,8 @@ export const convertPreloadedTraceToHdRoutes = (
         [{ x: point.x, y: point.y }],
         pointIndex,
         pointIndex,
+        false,
+        getPhysicalViaSpan({ x: point.x, y: point.y }),
       )
       continue
     }
@@ -94,6 +123,42 @@ export const convertPreloadedTraceToHdRoutes = (
     }
 
     const nextPoint = trace.route[pointIndex + 1]
+    if (
+      point.route_type === "wire" &&
+      nextPoint?.route_type === "wire" &&
+      point.layer !== nextPoint.layer
+    ) {
+      if (
+        Math.abs(point.x - nextPoint.x) > MIN_ROUTE_DIMENSION ||
+        Math.abs(point.y - nextPoint.y) > MIN_ROUTE_DIMENSION
+      ) {
+        throw new Error(
+          `Pipeline9 preloaded trace "${trace.pcb_trace_id}" changes layers without a via at one XY position`,
+        )
+      }
+      addRoute(
+        [
+          {
+            x: point.x,
+            y: point.y,
+            z: mapLayerNameToZ(point.layer, layerCount),
+          },
+          {
+            x: nextPoint.x,
+            y: nextPoint.y,
+            z: mapLayerNameToZ(nextPoint.layer, layerCount),
+          },
+        ],
+        MIN_ROUTE_DIMENSION,
+        defaultViaDiameter,
+        [{ x: point.x, y: point.y }],
+        pointIndex,
+        pointIndex + 1,
+        false,
+        getPhysicalViaSpan({ x: point.x, y: point.y }),
+      )
+      continue
+    }
     if (
       point.route_type !== "wire" ||
       nextPoint?.route_type !== "wire" ||

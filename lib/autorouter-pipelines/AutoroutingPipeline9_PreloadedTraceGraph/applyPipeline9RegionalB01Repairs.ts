@@ -59,9 +59,9 @@ type FixedRouteCopperSpatialIndex = {
 
 const REGION_SIZES = [3, 4, 5, 6, 8]
 const FIXED_ROUTE_INDEX_CELL_SIZE = 4
-const REGIONAL_REPAIR_SEARCH_VOLUME = 7_000
+const REGIONAL_REPAIR_SEARCH_VOLUME = 60_000
 const MIN_REGIONAL_REPAIR_SEARCH_BUDGET = 16
-const MAX_REGIONAL_REPAIR_SEARCH_BUDGET = 192
+const MAX_REGIONAL_REPAIR_SEARCH_BUDGET = 384
 
 export { getPipeline9FixedRouteObstacles }
 
@@ -675,6 +675,7 @@ export const applyPipeline9RegionalB01Repairs = ({
       (error) =>
         (error.type === "pcb_trace_error" ||
           error.type === "pcb_pad_trace_clearance_error" ||
+          error.type === "pcb_pad_pad_clearance_error" ||
           error.type === "pcb_via_trace_clearance_error" ||
           error.type === "pcb_via_clearance_error") &&
         typeof error.pcb_trace_id === "string",
