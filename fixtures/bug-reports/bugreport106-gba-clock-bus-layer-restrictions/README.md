@@ -53,9 +53,21 @@ or saved output copper is committed. The test follows existing bug-report
 snapshot conventions and does not assert that today's forbidden bottom
 detours must remain; a future fix will naturally change the generated image.
 The helper's DRC count is the benchmark evaluator, not complete Core checks,
-bus-layer enforcement or fabrication approval. The latest-main routing
-outcome is pending the first CI run; the observed lengths above are from the
-native 0.0.900 run, not an invented 0.0.905 result.
+bus-layer enforcement or fabrication approval.
+
+The native 0.0.905 CI replay completed successfully and generated the committed
+snapshot in run 34784544202, job 103797510669. Its relaxed DRC overlay is zero,
+but the TOP-only XOUT bus still uses bottom copper and two through-vias. The
+actual SVG path is XTAL.pin3 `(1.700074, 24.250011)` to via `(1, 26.845)`, then
+a bottom polyline to via `(-1.557818251, 23.262429115)`, then R_XOUT.pin2
+`(-2.54, 22.6328)`. Blue circles match both red/blue layer transitions.
+Measured from that native SVG, the planar path is 8.800572 mm, of which
+4.684281 mm is bottom copper; including two 1.6 mm through-vias gives
+12.000572 mm. This is not the old 0.0.900 geometry/length copied as new output.
+XIN now uses only TOP copper, with an actual complete length of 5.492494 mm;
+the old XIN bottom detour does not reappear. The bug is still demonstrated by
+XOUT, not by assuming every old failure persists. The snapshot SHA256 is
+`2110f68d141ba5bae5db26f076382dcf56a47c7e5e12528a56a1d5031987d759`.
 
 The test budget is owned by CI. No local solver replay, test suite, benchmark,
 production solver change, dependency override or Game Boy source adoption is
