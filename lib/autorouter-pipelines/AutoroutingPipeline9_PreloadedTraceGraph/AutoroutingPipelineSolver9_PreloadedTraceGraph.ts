@@ -47,6 +47,9 @@ import {
 import { getPresuppliedTraceVisualization } from "lib/utils/getPresuppliedTraceVisualization"
 import { calculateOptimalCapacityDepth } from "lib/utils/getTunedTotalCapacity1"
 import { getViaDimensions } from "lib/utils/getViaDimensions"
+import { addApproximatingRectsToSrj } from "lib/utils/addApproximatingRectsToSrj"
+import { createObjectsWithZLayers } from "lib/utils/createObjectsWithZLayers"
+import { getObstaclesFromSrjTraces } from "lib/utils/convertSrjTracesToObstacles"
 import {
   AvailableSegmentPointSolver,
   type SharedEdgeSegment,
@@ -443,15 +446,26 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     definePipelineStep(
       "availableSegmentPointSolver",
       AvailableSegmentPointSolver,
-      (cms) => [
-        {
-          nodes: cms.capacityNodes!,
-          edges: cms.capacityEdges || [],
-          traceWidth: cms.minTraceWidth,
-          colorMap: cms.colorMap,
-          shouldReturnCrampedPortPoints: true,
-        },
-      ],
+      (cms) => {
+        const preloadedTraceObstacles = addApproximatingRectsToSrj({
+          ...cms.originalSrj,
+          obstacles: getObstaclesFromSrjTraces(cms.originalSrj),
+        }).obstacles
+        return [
+          {
+            nodes: cms.capacityNodes!,
+            edges: cms.capacityEdges || [],
+            traceWidth: cms.minTraceWidth,
+            obstacleMargin: cms.srj.defaultObstacleMargin ?? 0.15,
+            obstacles: createObjectsWithZLayers(
+              [...cms.srj.obstacles, ...preloadedTraceObstacles],
+              cms.srj.layerCount,
+            ),
+            colorMap: cms.colorMap,
+            shouldReturnCrampedPortPoints: true,
+          },
+        ]
+      },
     ),
     definePipelineStep(
       "necessaryCrampedPortPointSolver",
