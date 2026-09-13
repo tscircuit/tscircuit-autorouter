@@ -2,6 +2,7 @@ import { expect, test } from "bun:test"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
 import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import { loadScenarioBySampleNumber } from "../../scripts/benchmark/scenarios"
+import { diagnoseStitchRepair } from "../fixtures/diagnoseStitchRepair"
 
 test("Pipeline9 clears SRJ18 sample 13 within its regional work budget", async (): Promise<void> => {
   const { scenario } = await loadScenarioBySampleNumber("srj18", 13)
@@ -10,8 +11,9 @@ test("Pipeline9 clears SRJ18 sample 13 within its regional work budget", async (
     { cacheProvider: null, effort: 1 },
   )
 
-  solver.solve()
+  diagnoseStitchRepair(solver)
 
+  expect(solver.error).toBeNull()
   expect(solver.solved).toBeTrue()
   expect(solver.failed).toBeFalse()
   const repairStats = solver.pipeline9JointDrcRepairSolver?.stats

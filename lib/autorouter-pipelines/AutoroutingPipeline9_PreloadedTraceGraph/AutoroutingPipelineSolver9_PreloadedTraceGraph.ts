@@ -686,6 +686,15 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           defaultViaDiameter: cms.viaDiameter,
           preserveTerminalPcbPortIds: true,
           preferSameLayerTerminalEndpoints: true,
+          additionalObstacleRoutes:
+            cms.highDensityRouteSolver!.getUpdatedFixedHdRoutes(),
+          obstacles: cms.srj.obstacles,
+          minClearance: cms.srj.minTraceToPadEdgeClearance ?? 0.1,
+          outline: cms.srj.outline,
+          minBoardEdgeClearance: cms.srj.minBoardEdgeClearance,
+          areIdsConnected: (firstId: string, secondId: string) =>
+            cms.connMap.areIdsConnected(firstId, secondId),
+          stitchClearanceMode: "require_clear",
         },
       ],
     ),

@@ -1,15 +1,21 @@
 import { distance, type Point3 } from "@tscircuit/math-utils"
 import { ConnectivityMap } from "connectivity-map"
 import { GraphicsObject } from "graphics-debug"
-import { SimpleRouteConnection } from "lib/types"
-import { HighDensityIntraNodeRoute } from "lib/types/high-density-types"
+import { type Obstacle, SimpleRouteConnection } from "lib/types"
+import {
+  HighDensityIntraNodeRoute,
+  type HighDensityRoute,
+} from "lib/types/high-density-types"
 import { getConnectionPointLayer } from "lib/types/srj-types"
 import { getJumpersGraphics } from "lib/utils/getJumperGraphics"
 import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
 import { BaseSolver } from "../BaseSolver"
 import { safeTransparentize } from "../colors"
 import { RouteStitchClearanceValidator } from "./route-stitch-clearance-validator"
-import { SingleHighDensityRouteStitchSolver3 } from "./SingleHighDensityRouteStitchSolver3"
+import {
+  SingleHighDensityRouteStitchSolver3,
+  type StitchClearanceMode,
+} from "./SingleHighDensityRouteStitchSolver3"
 import {
   EndpointClusterIndex,
   hasStitchableGapBetweenUnsolvedRoutes,
@@ -42,6 +48,7 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
   defaultViaDiameter: number
   allowedLayerTransitionPointKeys?: Set<string>
   preserveTerminalPcbPortIds: boolean
+  stitchClearanceMode: StitchClearanceMode
   private endpointIndex: EndpointClusterIndex
   private clearanceValidator: RouteStitchClearanceValidator
 
@@ -63,6 +70,11 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
       preserveTerminalPcbPortIds: this.preserveTerminalPcbPortIds,
       isStitchSegmentClear: (stitchSegment) =>
         this.clearanceValidator.isSegmentClear(stitchSegment),
+      findStitchSegmentPath:
+        this.stitchClearanceMode === "require_clear"
+          ? (stitchSegment) =>
+              this.clearanceValidator.findClearPath(stitchSegment)
+          : undefined,
       stitchClearanceMode: "require_clear",
     })
 
@@ -143,6 +155,13 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
     allowedLayerTransitionPointKeys?: Set<string>
     preserveTerminalPcbPortIds?: boolean
     preferSameLayerTerminalEndpoints?: boolean
+    additionalObstacleRoutes?: HighDensityRoute[]
+    obstacles?: Obstacle[]
+    minClearance?: number
+    outline?: Array<{ x: number; y: number }>
+    minBoardEdgeClearance?: number
+    areIdsConnected?: (firstId: string, secondId: string) => boolean
+    stitchClearanceMode?: StitchClearanceMode
   }) {
     super()
     this.endpointIndex = new EndpointClusterIndex(
@@ -152,10 +171,20 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
     this.allowedLayerTransitionPointKeys =
       params.allowedLayerTransitionPointKeys
     this.preserveTerminalPcbPortIds = params.preserveTerminalPcbPortIds ?? false
+    this.stitchClearanceMode = params.stitchClearanceMode ?? "prefer_clear"
 
     const canonicalHdRoutes = [...params.hdRoutes].sort(compareRoutes)
     this.clearanceValidator = new RouteStitchClearanceValidator({
-      hdRoutes: canonicalHdRoutes,
+      hdRoutes: [
+        ...canonicalHdRoutes,
+        ...(params.additionalObstacleRoutes ?? []),
+      ],
+      obstacles: params.obstacles,
+      layerCount: params.layerCount,
+      minClearance: params.minClearance,
+      outline: params.outline,
+      minBoardEdgeClearance: params.minBoardEdgeClearance,
+      areIdsConnected: params.areIdsConnected,
     })
 
     const firstRoute = canonicalHdRoutes[0]
@@ -435,7 +464,9 @@ export class MultipleHighDensityRouteStitchSolver3 extends BaseSolver {
       preserveTerminalPcbPortIds: this.preserveTerminalPcbPortIds,
       isStitchSegmentClear: (stitchSegment) =>
         this.clearanceValidator.isSegmentClear(stitchSegment),
-      stitchClearanceMode: "prefer_clear",
+      findStitchSegmentPath: (stitchSegment) =>
+        this.clearanceValidator.findClearPath(stitchSegment),
+      stitchClearanceMode: this.stitchClearanceMode,
     })
   }
 
