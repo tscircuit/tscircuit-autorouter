@@ -196,6 +196,7 @@ export class PrepareTraceSimplificationSolver extends BaseSolver {
           this.preparedInput.srj.layerCount,
           viaDimensions.padDiameter,
           this.preparedInput.connMap,
+          this.preparedInput.srj.allowBlindAndBuriedVias,
         ),
       )
       return
@@ -222,6 +223,7 @@ export class PrepareTraceSimplificationSolver extends BaseSolver {
         this.preparedInput.srj.layerCount,
         viaDimensions.padDiameter,
         this.preparedInput.connMap,
+        this.preparedInput.srj.allowBlindAndBuriedVias,
       ),
     )
   }

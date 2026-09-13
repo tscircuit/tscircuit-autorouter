@@ -104,10 +104,55 @@ export const getPipeline9RouteCopperGeometry = (
     }
     if (start.z === end.z) continue
     const viaPoint = viaEndpoint === "start" ? start : end
+    const physicalViaSpan = (
+      route as Partial<PreloadedHighDensityRoute>
+    ).physicalViaSpans?.find(
+      (span) =>
+        Math.hypot(span.center.x - viaPoint.x, span.center.y - viaPoint.y) <=
+        1e-9,
+    )
     viaSpans.push({
       center: { x: viaPoint.x, y: viaPoint.y },
-      minZ: Math.min(start.z, end.z),
-      maxZ: Math.max(start.z, end.z),
+      minZ: physicalViaSpan?.minZ ?? Math.min(start.z, end.z),
+      maxZ: physicalViaSpan?.maxZ ?? Math.max(start.z, end.z),
+      diameter: route.viaDiameter,
+    })
+  }
+  for (const explicitVia of route.vias) {
+    if (
+      viaSpans.some(
+        (via) =>
+          Math.hypot(
+            via.center.x - explicitVia.x,
+            via.center.y - explicitVia.y,
+          ) <= 1e-9,
+      )
+    ) {
+      continue
+    }
+    const physicalViaSpan = (
+      route as Partial<PreloadedHighDensityRoute>
+    ).physicalViaSpans?.find(
+      (span) =>
+        Math.hypot(
+          span.center.x - explicitVia.x,
+          span.center.y - explicitVia.y,
+        ) <= 1e-9,
+    )
+    const coincidentZLayers = route.route.flatMap((point) =>
+      Math.hypot(point.x - explicitVia.x, point.y - explicitVia.y) <= 1e-9
+        ? [point.z]
+        : [],
+    )
+    const zLayersAtVia =
+      coincidentZLayers.length > 0
+        ? coincidentZLayers
+        : route.route.map((point) => point.z)
+    if (!physicalViaSpan && zLayersAtVia.length === 0) continue
+    viaSpans.push({
+      center: { x: explicitVia.x, y: explicitVia.y },
+      minZ: physicalViaSpan?.minZ ?? Math.min(...zLayersAtVia),
+      maxZ: physicalViaSpan?.maxZ ?? Math.max(...zLayersAtVia),
       diameter: route.viaDiameter,
     })
   }

@@ -117,8 +117,17 @@ export class MultiHeadPolyLineIntraNodeSolver3 extends MultiHeadPolyLineIntraNod
       totalViaCount += currentViaCount
 
       // Ensure the polyline has SEGMENTS_PER_POLYLINE segments by splitting the longest ones
-      const targetSegmentCount = this.SEGMENTS_PER_POLYLINE
       let currentSegments = mPoints.length + 1
+      const hasPlanarSegment = pathPoints.some((point, pointIndex) => {
+        const nextPoint = pathPoints[pointIndex + 1]
+        return (
+          nextPoint !== undefined &&
+          (point.x !== nextPoint.x || point.y !== nextPoint.y)
+        )
+      })
+      const targetSegmentCount = hasPlanarSegment
+        ? this.SEGMENTS_PER_POLYLINE
+        : currentSegments
 
       while (currentSegments < targetSegmentCount) {
         let longestSegmentLength = -1

@@ -66,8 +66,8 @@ test("Pipeline9 clears post-power vias on the exact T113-S3 PCB", async () => {
     solver.powerTraceExpansionSolver!
       .inputSrj as Pipeline7PowerTraceExpansionInput
   ).fixedTraces
-  expect(beforeMergeTraces).toHaveLength(107)
-  expect(afterMergeTraces).toHaveLength(107)
+  expect(beforeMergeTraces).toHaveLength(108)
+  expect(afterMergeTraces).toHaveLength(108)
   expect(fixedTraces).toHaveLength(35)
 
   const beforeDrc = evaluateRelaxedDrc({
@@ -80,9 +80,7 @@ test("Pipeline9 clears post-power vias on the exact T113-S3 PCB", async () => {
     srjWithPointPairs: solver.srjWithPointPairs!,
     routedTraces: afterMergeTraces,
   })
-  expect(beforeDrc.errors.map((error) => error.type)).toEqual([
-    "pcb_via_clearance_error",
-  ])
+  expect(beforeDrc.errors).toEqual([])
   expect(afterDrc.errors).toEqual([])
 
   const snapshotPath =

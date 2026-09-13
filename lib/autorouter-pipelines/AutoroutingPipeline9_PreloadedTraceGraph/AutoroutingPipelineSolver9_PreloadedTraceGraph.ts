@@ -623,6 +623,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
               cms.originalSrj.layerCount,
               cms.viaDiameter,
               cms.connMap,
+              cms.originalSrj.allowBlindAndBuriedVias,
             ),
         )
         const fixedHdRoutes = removeChangedSectionsFromFixedHdRoutes({
@@ -724,6 +725,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
               cms.originalSrj.layerCount,
               cms.viaDiameter,
               cms.connMap,
+              cms.originalSrj.allowBlindAndBuriedVias,
             ).map((route) => ({
               ...route,
               // Simplification resolves IDs through connMap, not net keys.
@@ -1389,6 +1391,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
         this.originalSrj.layerCount,
         this.viaDiameter,
         this.connMap,
+        this.originalSrj.allowBlindAndBuriedVias,
       ),
     )
   }

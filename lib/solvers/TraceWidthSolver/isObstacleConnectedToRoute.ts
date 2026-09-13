@@ -10,13 +10,14 @@ export const isObstacleConnectedToRoute = (
   obstacle: Obstacle,
   route: RouteConnectionIds,
   connMap?: ConnectivityMap,
-) =>
-  obstacle.connectedTo.some(
-    (connectedId) =>
-      connectedId === route.connectionName ||
-      connectedId === route.rootConnectionName ||
-      (connMap?.areIdsConnected(route.connectionName, connectedId) ?? false) ||
-      (route.rootConnectionName !== undefined &&
-        (connMap?.areIdsConnected(route.rootConnectionName, connectedId) ??
-          false)),
+) => {
+  const getCanonicalConnectionId = (connectionId: string) =>
+    connMap?.getNetConnectedToId(connectionId) ?? connectionId
+  const routeConnectionIds = [route.connectionName, route.rootConnectionName]
+    .filter((connectionId): connectionId is string => Boolean(connectionId))
+    .map(getCanonicalConnectionId)
+
+  return obstacle.connectedTo.some((connectedId) =>
+    routeConnectionIds.includes(getCanonicalConnectionId(connectedId)),
   )
+}
