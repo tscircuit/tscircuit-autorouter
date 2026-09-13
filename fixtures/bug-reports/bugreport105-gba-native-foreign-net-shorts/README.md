@@ -54,7 +54,21 @@ its 900,000ms test budget (actual test runtime about 910 seconds). The generated
 SVG is copied unchanged from that CI artifact into the repo snapshot folder.
 The dedicated CI-owned budget is now 1,200,000ms; ordinary tests and snapshot
 comparisons are unchanged. A passing comparison on the new head is still pending.
-The two original published-output crossings are not automatically assumed to
-persist on latest main; the snapshot count is not a complete Core/Gerber gate.
+Both original published-output crossings are absent in the latest-main SVG:
+the endpoint-identified GPIO5 chain avoids the ground EP, and the QSPI
+clock/data0 TOP chains have zero intersections (minimum centreline gap 0.40005mm).
+
+However the latest-main snapshot has a newly confirmed physical foreign-pad
+short: the GPIO4/LEFT net (`source_trace_252`, `connectivity_net559`) crosses
+U1 GPIO24 (`pcb_smtpad_25`, `pcb_port_35`, `connectivity_net729`) on TOP.
+The 0.1mm wire segment `(-4.266, 16.196)` to `(-2.5475467, 16.183171549)`
+passes inside the pad bounds X `[-3.8125523, -2.9375477]`, Y
+`[16.0999732, 16.2999728]`. At pad-centre X the trace centre Y is
+`16.189348956`, inside the pad. This is genuine overlap, not just clearance.
+Snapshot polylines 419–427 uniquely connect GPIO4/LEFT ports 6/397; the foreign
+pad retains separate trace aliases 326/327 and ports 35/377/379 in the input.
+The snapshot omits trace IDs/stage history; unique endpoint-chain topology
+establishes this ownership, but cannot identify the stage introducing it.
+The 95-error count is still not a complete Core/Gerber fabrication gate.
 This is a reproduction-only PR: no Core, Pipeline9, Repair03, Repair04, or
 checks code fix.
