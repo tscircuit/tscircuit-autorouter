@@ -42,9 +42,6 @@ export const getPipeline9ClearanceMarginErrors = ({
   }
   const errors: Pipeline9DrcError[] = []
   for (const target of targets) {
-    if (target.type === "pcb_trace_error") {
-      return { status: "unsupported-identity" }
-    }
     const isVia = target.type === "pcb_via_trace_clearance_error"
     const obstacleId = isVia ? target.pcb_via_id : target.pcb_pad_id
     if (
@@ -189,6 +186,6 @@ export const getPipeline9ClearanceMarginErrors = ({
     }
   }
   // The typed clearance checks omit actual overlaps. The caller must still
-  // require complete reference geometry DRC, including actual overlaps.
+  // require complete reference DRC, including overlap and continuity checks.
   return { status: "measured", errors }
 }

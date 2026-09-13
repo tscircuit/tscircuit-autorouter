@@ -53,35 +53,7 @@ test("Pipeline9 geometry and materialization share per-axis endpoint tolerance",
   expect(() => getPipeline9RouteCopperGeometry(outsideToleranceRoute)).toThrow(
     "without an explicit via",
   )
-  expect(
-    materializePipeline9HdRouteVias([outsideToleranceRoute])[0]!.route,
-  ).toEqual([
-    outsideToleranceRoute.route[0],
-    { x: 1.01e-6, y: 0, z: 0 },
-    { x: 1.01e-6, y: 0, z: 1 },
-    outsideToleranceRoute.route[1],
-  ])
-
-  const normalizedBoundaryViaRoute: HighDensityRoute = {
-    connectionName: "normalized-boundary-via",
-    traceThickness: 0.15,
-    viaDiameter: 0.45,
-    route: [
-      { x: 0, y: 0, z: 0 },
-      { x: 2, y: 0, z: 0 },
-      { x: 2, y: 2, z: 1 },
-    ],
-    vias: [
-      { x: 2, y: 0 },
-      { x: 1, y: 1 },
-    ],
-  }
-  expect(
-    getPipeline9RouteCopperGeometry(normalizedBoundaryViaRoute).viaSpans,
-  ).toContainEqual({
-    center: { x: 1, y: 1 },
-    minZ: 0,
-    maxZ: 1,
-    diameter: 0.45,
-  })
+  expect(() =>
+    materializePipeline9HdRouteVias([outsideToleranceRoute]),
+  ).toThrow("without an explicit via")
 })

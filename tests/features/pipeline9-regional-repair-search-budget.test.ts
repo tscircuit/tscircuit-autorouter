@@ -65,6 +65,7 @@ test("Pipeline9 bounds failed regional candidate searches by route complexity", 
 
   expect(getPipeline9RegionalRepairSearchBudget(70)).toBe(100)
   expect(getPipeline9RegionalRepairSearchBudget(200)).toBe(35)
+  expect(getPipeline9RegionalRepairSearchBudget(59, 13)).toBe(384)
   expect(result.routes).toBe(routes)
   expect(result).toMatchObject({
     attemptedCandidateCount: 0,

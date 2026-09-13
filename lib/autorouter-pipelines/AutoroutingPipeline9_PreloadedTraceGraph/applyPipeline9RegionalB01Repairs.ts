@@ -59,7 +59,7 @@ type FixedRouteCopperSpatialIndex = {
 
 const REGION_SIZES = [3, 4, 5, 6, 8]
 const FIXED_ROUTE_INDEX_CELL_SIZE = 4
-const REGIONAL_REPAIR_SEARCH_VOLUME = 60_000
+const REGIONAL_REPAIR_SEARCH_VOLUME = 7_000
 const MIN_REGIONAL_REPAIR_SEARCH_BUDGET = 16
 const MAX_REGIONAL_REPAIR_SEARCH_BUDGET = 384
 
@@ -67,6 +67,7 @@ export { getPipeline9FixedRouteObstacles }
 
 export const getPipeline9RegionalRepairSearchBudget = (
   routeCount: number,
+  repairIssueCount = 1,
 ): number => {
   if (!Number.isInteger(routeCount) || routeCount < 0) {
     throw new Error("Pipeline9 regional repair route count must be nonnegative")
@@ -74,9 +75,10 @@ export const getPipeline9RegionalRepairSearchBudget = (
   const scaledBudget = Math.floor(
     REGIONAL_REPAIR_SEARCH_VOLUME / Math.max(1, routeCount),
   )
+  const issueScale = Math.max(1, Math.ceil(repairIssueCount / 4))
   return Math.max(
     MIN_REGIONAL_REPAIR_SEARCH_BUDGET,
-    Math.min(MAX_REGIONAL_REPAIR_SEARCH_BUDGET, scaledBudget),
+    Math.min(MAX_REGIONAL_REPAIR_SEARCH_BUDGET, scaledBudget * issueScale),
   )
 }
 
@@ -624,9 +626,6 @@ export const applyPipeline9RegionalB01Repairs = ({
   let fallbackCandidateCount = 0
   let candidateSearchCount = 0
   let candidateSearchBudgetExhausted = false
-  const candidateSearchBudget = getPipeline9RegionalRepairSearchBudget(
-    routes.length,
-  )
   const isPreloadRepairError = (error: Pipeline9DrcError): boolean => {
     return isPipeline9DrcErrorOwnedByPreloadRepair({
       error,
@@ -635,6 +634,10 @@ export const applyPipeline9RegionalB01Repairs = ({
   }
   const preloadEligibleDrcIssueCount =
     currentErrors.filter(isPreloadRepairError).length
+  const candidateSearchBudget = getPipeline9RegionalRepairSearchBudget(
+    routes.length,
+    preloadEligibleDrcIssueCount,
+  )
   const initialRouteIndexByTraceId = getPipeline9RouteIndexByTraceId({
     routes: currentRoutes,
     newConnections,

@@ -358,12 +358,8 @@ export class SingleSimplifiedPathSolver5 extends SingleSimplifiedPathSolver {
       const end = this.inputRoute.route[i + 1]
 
       // Calculate segment length using Euclidean distance
-      const geometricLength = Math.sqrt(
-        (end.x - start.x) ** 2 + (end.y - start.y) ** 2,
-      )
       const length =
-        geometricLength +
-        (i === 0 && geometricLength === 0 ? 1 / 10000 : i / 10000)
+        Math.sqrt((end.x - start.x) ** 2 + (end.y - start.y) ** 2) + i / 10000
 
       this.pathSegments.push({
         start,
@@ -722,7 +718,7 @@ export class SingleSimplifiedPathSolver5 extends SingleSimplifiedPathSolver {
 
     // If there's a potential layer change in this segment
     let layerChangeBtwHeadAndTail = false
-    let layerChangeSegmentIndex = -1
+    let layerChangeAtDistance = -1
 
     for (let i = tailIndex; i < headIndex; i++) {
       if (
@@ -732,7 +728,8 @@ export class SingleSimplifiedPathSolver5 extends SingleSimplifiedPathSolver {
         layerChangeBtwHeadAndTail = true
         // Find the segment with the layer change
         const changeSegmentIndex = i
-        layerChangeSegmentIndex = changeSegmentIndex
+        layerChangeAtDistance =
+          this.pathSegments[changeSegmentIndex].startDistance
         break
       }
     }
@@ -810,13 +807,14 @@ export class SingleSimplifiedPathSolver5 extends SingleSimplifiedPathSolver {
 
     // If there's a layer change, handle it
     // Inside the _step method, within the layer change handling block:
-    if (layerChangeBtwHeadAndTail && layerChangeSegmentIndex >= 0) {
+    if (layerChangeBtwHeadAndTail && layerChangeAtDistance > 0) {
       const connectorStartDistance = this.lastValidPath
         ? this.lastValidPathHeadDistance
         : this.tailDistanceAlongPath
       // Get the point *after* the layer change from the original route.
       // This point's XY coordinates define the via location.
-      const indexAfterLayerChange = layerChangeSegmentIndex + 1
+      const indexAfterLayerChange =
+        this.getNearestIndexForDistance(layerChangeAtDistance) + 1
       const pointAfterChange = this.inputRoute.route[indexAfterLayerChange]
       const viaLocation = { x: pointAfterChange.x, y: pointAfterChange.y }
 
