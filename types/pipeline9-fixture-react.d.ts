@@ -1,9 +1,11 @@
 declare module "react-for-pipeline9-fixtures/jsx-runtime" {
   import type {
     BoardProps,
+    CapacitorProps,
     ChipProps,
     FootprintProps,
     NetProps,
+    PinHeaderProps,
     ResistorProps,
     SilkscreenRectProps,
     SilkscreenTextProps,
@@ -30,6 +32,7 @@ declare module "react-for-pipeline9-fixtures/jsx-runtime" {
     interface IntrinsicElements {
       board: FixtureProps<BoardProps> & { layers?: 1 | 2 | 4 | 6 | 8 | 10 }
       chip: FixtureProps<ChipProps>
+      capacitor: FixtureProps<CapacitorProps>
       copperpour: Attributes & {
         name?: string
         connectsTo: string
@@ -37,6 +40,7 @@ declare module "react-for-pipeline9-fixtures/jsx-runtime" {
       }
       footprint: FixtureProps<FootprintProps>
       net: FixtureProps<NetProps>
+      pinheader: FixtureProps<PinHeaderProps>
       resistor: FixtureProps<ResistorProps> & {
         manufacturerPartNumber?: string
       }
