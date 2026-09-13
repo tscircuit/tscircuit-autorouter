@@ -180,9 +180,22 @@ fn are_same_xy(left: Point, right: Point) -> bool {
 }
 
 pub fn collect_via_nodes(routes: &[MutableRoute], default_via_diameter: f64) -> Vec<ViaNode> {
+    collect_via_nodes_for_root(routes, default_via_diameter, None)
+}
+
+fn collect_via_nodes_for_root(
+    routes: &[MutableRoute],
+    default_via_diameter: f64,
+    root_connection_name: Option<&str>,
+) -> Vec<ViaNode> {
     let mut vias = Vec::new();
+    let mut seen_indexes = Vec::new();
     for (route_index, route) in routes.iter().enumerate() {
-        let mut seen_indexes = vec![false; route.route.len()];
+        if root_connection_name.is_some_and(|root| get_root_connection_name(route) != root) {
+            continue;
+        }
+        seen_indexes.clear();
+        seen_indexes.resize(route.route.len(), false);
         for index in 0..route.route.len().saturating_sub(1) {
             let current = route.route[index].borrow();
             let next = route.route[index + 1].borrow();
@@ -939,7 +952,10 @@ fn get_same_root_via_site(
     via: &ViaNode,
     math: RepairMath,
 ) -> Vec<ViaNode> {
-    let current = collect_via_nodes(routes, 0.3);
+    let Some(route) = routes.get(via.route_index) else {
+        return Vec::new();
+    };
+    let current = collect_via_nodes_for_root(routes, 0.3, Some(get_root_connection_name(route)));
     let Some(found) = current.iter().find(|candidate| {
         candidate.route_index == via.route_index
             && candidate
@@ -1028,7 +1044,7 @@ fn get_segment_distance_candidates(
     left: &Segment,
     right: &Segment,
     math: RepairMath,
-) -> Vec<SegmentDistanceCandidate> {
+) -> [SegmentDistanceCandidate; 4] {
     let ls = point_xy(&left.start.borrow());
     let le = point_xy(&left.end.borrow());
     let rs = point_xy(&right.start.borrow());
@@ -1037,7 +1053,7 @@ fn get_segment_distance_candidates(
     let lep = point_to_segment_projection(le, right);
     let rsp = point_to_segment_projection(rs, left);
     let rep = point_to_segment_projection(re, left);
-    let mut candidates = vec![
+    let mut candidates = [
         SegmentDistanceCandidate {
             left_t: 0.0,
             right_t: lsp.t,
@@ -1426,8 +1442,8 @@ fn push_movables_away_from_obstacles(
     routes: &mut [MutableRoute],
     vias: &mut [ViaNode],
     segments: &[Segment],
-    via_index: &SpatialIndex,
-    segment_index: &SpatialIndex,
+    via_index: &mut SpatialIndex,
+    segment_index: &mut SpatialIndex,
     cell_size: f64,
     conn_map: Option<&RepairConnectivityMap>,
     math: RepairMath,
@@ -1442,7 +1458,7 @@ fn push_movables_away_from_obstacles(
             continue;
         }
         let bounds = get_obstacle_bounds(obstacle);
-        for index in get_spatial_candidate_indexes(
+        for &index in get_spatial_candidate_indexes(
             via_index,
             &expand_bounds_2d(&bounds, via_distance),
             cell_size,
@@ -1467,7 +1483,7 @@ fn push_movables_away_from_obstacles(
                 math,
             ) || changed;
         }
-        for index in get_spatial_candidate_indexes(
+        for &index in get_spatial_candidate_indexes(
             segment_index,
             &expand_bounds_2d(&bounds, search_distance),
             cell_size,
@@ -1515,15 +1531,15 @@ fn apply_broad_repulsion_pass(
     let segments = collect_segments(routes);
     let distance = get_broad_spatial_interaction_distance(srj, &vias, &segments);
     let cell_size = BROAD_SPATIAL_CELL_SIZE_MIN.max(distance * 2.0);
-    let via_index = create_spatial_index(&vias, get_via_bounds, cell_size);
-    let segment_index = create_spatial_index(&segments, get_segment_bounds, cell_size);
+    let mut via_index = create_spatial_index(&vias, get_via_bounds, cell_size);
+    let mut segment_index = create_spatial_index(&segments, get_segment_bounds, cell_size);
     for left_index in 0..vias.len() {
         let nearby = get_spatial_candidate_indexes(
-            &via_index,
+            &mut via_index,
             &expand_bounds_2d(&get_via_bounds(&vias[left_index]), distance),
             cell_size,
         );
-        for right_index in nearby {
+        for &right_index in nearby {
             if right_index <= left_index || right_index >= vias.len() {
                 continue;
             }
@@ -1542,11 +1558,11 @@ fn apply_broad_repulsion_pass(
     }
     for via in &mut vias {
         let nearby = get_spatial_candidate_indexes(
-            &segment_index,
+            &mut segment_index,
             &expand_bounds_2d(&get_via_bounds(via), distance),
             cell_size,
         );
-        for index in nearby {
+        for &index in nearby {
             let Some(segment) = segments.get(index) else {
                 continue;
             };
@@ -1566,11 +1582,11 @@ fn apply_broad_repulsion_pass(
     for left_index in 0..segments.len() {
         let left = &segments[left_index];
         let nearby = get_spatial_candidate_indexes(
-            &segment_index,
+            &mut segment_index,
             &expand_bounds_2d(&get_segment_bounds(left), distance),
             cell_size,
         );
-        for right_index in nearby {
+        for &right_index in nearby {
             if right_index <= left_index {
                 continue;
             }
@@ -1586,8 +1602,8 @@ fn apply_broad_repulsion_pass(
         routes,
         &mut vias,
         &segments,
-        &via_index,
-        &segment_index,
+        &mut via_index,
+        &mut segment_index,
         cell_size,
         conn_map,
         math,
@@ -1605,14 +1621,14 @@ fn apply_broad_via_segment_cleanup_pass(
     let segments = collect_segments(routes);
     let distance = get_broad_spatial_interaction_distance(srj, &vias, &segments);
     let cell_size = BROAD_SPATIAL_CELL_SIZE_MIN.max(distance * 2.0);
-    let segment_index = create_spatial_index(&segments, get_segment_bounds, cell_size);
+    let mut segment_index = create_spatial_index(&segments, get_segment_bounds, cell_size);
     for via in &mut vias {
         let nearby = get_spatial_candidate_indexes(
-            &segment_index,
+            &mut segment_index,
             &expand_bounds_2d(&get_via_bounds(via), distance),
             cell_size,
         );
-        for index in nearby {
+        for &index in nearby {
             let Some(segment) = segments.get(index) else {
                 continue;
             };
@@ -4718,4 +4734,41 @@ pub(crate) fn apply_trace_waypoint_detour_for_error(
         [start, point, end].into_iter().map(point_ref),
     );
     true
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn same_root_via_sites_keep_route_indices_and_read_current_geometry() {
+        let routes: Vec<_> = ["other", "shared", "shared"]
+            .iter()
+            .map(|name| {
+                MutableRoute::from_value(&json!({
+                    "connectionName": name,
+                    "route": [
+                        {"x": -1.0, "y": 0.0, "z": 0.0},
+                        {"x": 0.0, "y": 0.0, "z": 0.0},
+                        {"x": 0.0, "y": 0.0, "z": 1.0},
+                        {"x": 1.0, "y": 0.0, "z": 1.0}
+                    ],
+                    "vias": []
+                }))
+            })
+            .collect();
+        let via = collect_via_nodes(&routes, 0.3)[1].clone();
+        let site = get_same_root_via_site(&routes, &via, RepairMath::default());
+        assert_eq!(
+            site.iter().map(|via| via.route_index).collect::<Vec<_>>(),
+            [1, 2]
+        );
+        for index in [1, 2] {
+            routes[2].route[index].borrow_mut().x = 0.1;
+        }
+        let site = get_same_root_via_site(&routes, &via, RepairMath::default());
+        assert_eq!(site.len(), 1);
+        assert_eq!(site[0].route_index, 1);
+        assert_eq!(site[0].point_indexes, [1, 2]);
+    }
 }

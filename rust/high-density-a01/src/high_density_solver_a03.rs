@@ -330,6 +330,7 @@ pub struct HighDensitySolverA03 {
     moveOccupants: Vec<usize>,
     moveOccupantMembership: OccupantMembership,
     moveCells: Vec<usize>,
+    viaOccupantsByCell: HashMap<usize, Box<[usize]>>,
     shuffleSeed: u32,
     stamp: u32,
     seqCounter: u32,
@@ -419,6 +420,7 @@ impl HighDensitySolverA03 {
     }
 
     pub fn setup(&mut self) {
+        self.viaOccupantsByCell.clear();
         let width = self.nodeWithPortPoints["width"]
             .as_f64()
             .expect("width is required");
@@ -863,6 +865,8 @@ impl HighDensitySolverA03 {
             self.heap.n = 0;
             self.seqCounter = 0;
             self.searchIterations = 0;
+            // Occupancy and the active connection stay fixed until this search ends.
+            self.viaOccupantsByCell.clear();
             self.nextStamp();
             let h = self.computeH(next.startZ, next.startCellId, next.endZ, next.endCellId);
             let f = h * self.greedyMultiplier;
@@ -1045,11 +1049,18 @@ impl HighDensitySolverA03 {
                 self._moveRippedHead = head;
                 return;
             }
-            let mut occs = std::mem::take(&mut self.moveOccupants);
-            let mut cells = std::mem::take(&mut self.moveCells);
-            let mut membership = std::mem::take(&mut self.moveOccupantMembership);
-            self.fillViaOccupants(toCellId, activeConn, &mut occs, &mut cells, &mut membership);
-            for &occ in &occs {
+            if !self.viaOccupantsByCell.contains_key(&toCellId) {
+                let mut occs = std::mem::take(&mut self.moveOccupants);
+                let mut cells = std::mem::take(&mut self.moveCells);
+                let mut membership = std::mem::take(&mut self.moveOccupantMembership);
+                self.fillViaOccupants(toCellId, activeConn, &mut occs, &mut cells, &mut membership);
+                self.viaOccupantsByCell
+                    .insert(toCellId, occs.clone().into_boxed_slice());
+                self.moveOccupants = occs;
+                self.moveCells = cells;
+                self.moveOccupantMembership = membership;
+            }
+            for &occ in &self.viaOccupantsByCell[&toCellId] {
                 if !self.ripChain.contains(head, occ) {
                     cost += self.ripCost;
                     head = self.ripChain.append(head, occ);
@@ -1057,9 +1068,6 @@ impl HighDensitySolverA03 {
                 }
                 cost += self.ripViaPenalty;
             }
-            self.moveOccupants = occs;
-            self.moveCells = cells;
-            self.moveOccupantMembership = membership;
         } else {
             cost += lateralCost;
             cost += self.penalty2d[toCellId].min(self.penaltyCap);
@@ -2008,5 +2016,64 @@ mod occupancy_tests {
                 assert_eq!(membership.generation, 1);
             }
         }
+
+        let mut solver = HighDensitySolverA03::new(json!({
+            "viaDiameter": 0.3,
+            "nodeWithPortPoints": {
+                "width": 2.0, "height": 2.0,
+                "center": {"x": 0.0, "y": 0.0},
+                "availableZ": [0, 1], "portPoints": [],
+            },
+        }));
+        solver.setup();
+        for name in ["a", "b", "c", "active"] {
+            solver.internConn(name, None);
+        }
+        let cellId = solver.planeSize / 2;
+        solver.replaceOccupants(cellId, 0);
+        solver.addSharedOccupant(cellId, 1);
+        solver.addSharedOccupant(cellId, 2);
+        solver.replaceOccupants(solver.planeSize + cellId, 2);
+        let mut expected = Vec::new();
+        let mut cells = Vec::new();
+        let mut membership = OccupantMembership::default();
+        solver.fillViaOccupants(cellId, 3, &mut expected, &mut cells, &mut membership);
+        assert_eq!(expected, vec![0, 1, 2]);
+        solver.computeMoveCostAndRips(3, 1, cellId, true, -1, 0, 0.0);
+        let coldCost = solver._moveCost.to_bits();
+        let coldRips = solver.ripChain.collect(solver._moveRippedHead);
+        let generation = solver.moveOccupantMembership.generation;
+        solver.computeMoveCostAndRips(3, 0, cellId, true, -1, 0, 0.0);
+        assert_eq!(solver._moveCost.to_bits(), coldCost);
+        assert_eq!(solver.ripChain.collect(solver._moveRippedHead), coldRips);
+        assert_eq!(solver.moveOccupantMembership.generation, generation);
+        assert_eq!(&*solver.viaOccupantsByCell[&cellId], expected);
+        let rippedHead = solver._moveRippedHead;
+        solver.computeMoveCostAndRips(3, 1, cellId, true, rippedHead, 3, 0.0);
+        assert_eq!(solver._moveRippedHead, rippedHead);
+        assert_eq!(solver._moveRipCount, 3);
+        assert_eq!(
+            solver._moveCost,
+            solver.viaBaseCost + solver.ripViaPenalty * 3.0
+        );
+
+        // A new connection must see both changed occupancy and its own root filtering.
+        solver.removeOccupant(cellId, 1);
+        solver.unsolvedSegs.push(ConnectionSeg {
+            connId: 0,
+            startZ: 0,
+            startCellId: cellId,
+            startPoint: Value::Null,
+            endZ: 1,
+            endCellId: cellId,
+            endPoint: Value::Null,
+        });
+        solver.stepOnce();
+        assert!(solver.viaOccupantsByCell.is_empty());
+        solver.computeMoveCostAndRips(0, 1, cellId, true, -1, 0, 0.0);
+        assert_eq!(&*solver.viaOccupantsByCell[&cellId], &[2]);
+        assert_eq!(solver.ripChain.collect(solver._moveRippedHead), vec![2]);
+        solver.setup();
+        assert!(solver.viaOccupantsByCell.is_empty());
     }
 }

@@ -269,6 +269,7 @@ pub struct HighDensitySolverA01 {
     heap: MinHeap,
     seq_counter: usize,
     via_occs: Vec<ConnId>,
+    via_occupants_by_cell: HashMap<usize, Box<[ConnId]>>,
     rip_count: Vec<usize>,
     total_rip_events: usize,
     search_iterations: usize,
@@ -364,6 +365,7 @@ impl HighDensitySolverA01 {
             heap: MinHeap::default(),
             seq_counter: 0,
             via_occs: Vec::new(),
+            via_occupants_by_cell: HashMap::new(),
             rip_count: Vec::new(),
             total_rip_events: 0,
             search_iterations: 0,
@@ -377,6 +379,7 @@ impl HighDensitySolverA01 {
     }
 
     pub fn setup(&mut self) {
+        self.via_occupants_by_cell.clear();
         let width = self.node_with_port_points["width"]
             .as_f64()
             .expect("width is required");
@@ -595,6 +598,8 @@ impl HighDensitySolverA01 {
             self.heap.clear();
             self.seq_counter = 0;
             self.search_iterations = 0;
+            // Occupancy and the active connection stay fixed until this search ends.
+            self.via_occupants_by_cell.clear();
             self.next_stamp();
             let h = self.compute_h(
                 next.start_z,
@@ -792,8 +797,13 @@ impl HighDensitySolverA01 {
                 self.move_ripped = r;
                 return;
             }
-            self.fill_via_occupants(to_row, to_col, active_conn);
-            for &occ in &self.via_occs {
+            let cell_idx = (to_row * cols + to_col) as usize;
+            if !self.via_occupants_by_cell.contains_key(&cell_idx) {
+                self.fill_via_occupants(to_row, to_col, active_conn);
+                self.via_occupants_by_cell
+                    .insert(cell_idx, self.via_occs.clone().into_boxed_slice());
+            }
+            for &occ in &self.via_occupants_by_cell[&cell_idx] {
                 if !ripped_contains(&self.ripped_nodes, r, occ) {
                     cost += self.hyper_parameters.rip_cost;
                     self.ripped_nodes.push(RippedNode { id: occ, prev: r });
@@ -1593,5 +1603,61 @@ mod allocation_tests {
             std::mem::size_of::<SearchNode>(),
             std::mem::size_of::<RippedNode>()
         );
+
+        solver.layers = 2;
+        solver.plane_size = 4;
+        solver.port_owner_flat = vec![-1; 8];
+        solver.visited_stamp = vec![0; 8];
+        solver.used_cells_flat = vec![1, 2, -1, -1, 2, 1, -1, -1];
+        solver.via_offsets_dr = vec![0, 0];
+        solver.via_offsets_dc = vec![0, 1];
+        solver.via_offsets_len = 2;
+        solver.fill_via_occupants(0, 0, active);
+        assert_eq!(solver.via_occs, vec![1, 2]);
+        solver.compute_move_cost_and_rips(active, 0, 0, 0, 1, 0, 0, None);
+        let cold_cost = solver.move_cost.to_bits();
+        let cold_head = solver.move_ripped.unwrap();
+        solver.compute_move_cost_and_rips(active, 1, 0, 0, 0, 0, 0, None);
+        assert_eq!(solver.move_cost.to_bits(), cold_cost);
+        let warm_head = solver.move_ripped.unwrap();
+        assert_eq!(solver.ripped_nodes[cold_head].id, 2);
+        assert_eq!(solver.ripped_nodes[warm_head].id, 2);
+        assert_eq!(solver.ripped_nodes[warm_head - 1].id, 1);
+        assert_eq!(&*solver.via_occupants_by_cell[&0], &[1, 2]);
+        solver.compute_move_cost_and_rips(active, 0, 0, 0, 1, 0, 0, Some(warm_head));
+        assert_eq!(solver.move_ripped, Some(warm_head));
+        assert_eq!(
+            solver.move_cost,
+            solver.hyper_parameters.via_base_cost + 2.0 * solver.hyper_parameters.rip_via_penalty
+        );
+
+        solver.used_cells_flat[0] = 0;
+        solver.unsolved_segs.push_back(ConnectionSeg {
+            conn_id: 1,
+            start_z: 0,
+            start_row: 0,
+            start_col: 0,
+            start_point: Value::Null,
+            end_z: 1,
+            end_row: 0,
+            end_col: 0,
+            end_point: Value::Null,
+        });
+        solver.step_once();
+        assert!(solver.via_occupants_by_cell.is_empty());
+        let next_active = ActiveConnection {
+            id: 1,
+            root_id: Some(1),
+            allows_root_overlap: false,
+        };
+        solver.compute_move_cost_and_rips(next_active, 0, 0, 0, 1, 0, 0, None);
+        assert_eq!(&*solver.via_occupants_by_cell[&0], &[0, 2]);
+        solver.node_with_port_points = json!({
+            "width": 2.0, "height": 2.0,
+            "center": {"x": 0.0, "y": 0.0},
+            "availableZ": [0, 1], "portPoints": [],
+        });
+        solver.setup();
+        assert!(solver.via_occupants_by_cell.is_empty());
     }
 }

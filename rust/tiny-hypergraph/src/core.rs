@@ -540,7 +540,7 @@ pub struct TinyHyperGraphSolver {
     pub forced_start_region_ids: Option<Vec<Option<i32>>>,
     pub deferred_section_callbacks: bool,
     pub pending_section_event: Option<SectionEvent>,
-    pub topology: TinyHyperGraphTopology,
+    pub topology: Rc<TinyHyperGraphTopology>,
     pub problem: TinyHyperGraphProblem,
     pub options: TinyHyperGraphSolverOptionTarget,
     pub state: TinyHyperGraphWorkingState,
@@ -573,10 +573,11 @@ pub struct TinyHyperGraphSolver {
 
 impl TinyHyperGraphSolver {
     pub fn new(
-        topology: TinyHyperGraphTopology,
+        topology: impl Into<Rc<TinyHyperGraphTopology>>,
         problem: TinyHyperGraphProblem,
         options: Option<TinyHyperGraphSolverOptions>,
     ) -> Self {
+        let topology = topology.into();
         let mut settings = TinyHyperGraphSolverOptionTarget::default();
         apply_tiny_hyper_graph_solver_options(&mut settings, options.as_ref());
         let mut stride = 1;

@@ -347,7 +347,7 @@ impl DuplicateCongestedPortSolver {
 
     pub fn get_port_use_counts(&self) -> Result<BTreeMap<String, usize>, String> {
         let loaded = load_serialized_hyper_graph(&self.serialized_hyper_graph);
-        let topology = loaded.topology;
+        let topology = std::rc::Rc::new(loaded.topology);
         let mut problem = loaded.problem;
         if self.options.use_serialized_port_penalties == Some(false) {
             problem.port_penalty = None;

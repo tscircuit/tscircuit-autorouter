@@ -6,9 +6,10 @@ use super::geometry::{get_port_distance, get_port_projection};
 use crate::core::{TinyHyperGraphProblem, TinyHyperGraphTopology};
 use crate::types::{PortId, RegionId};
 use std::collections::HashMap;
+use std::rc::Rc;
 
 pub struct BusBoundaryPlannerOptions {
-    pub topology: TinyHyperGraphTopology,
+    pub topology: Rc<TinyHyperGraphTopology>,
     pub problem: TinyHyperGraphProblem,
     pub bus_trace_order: BusTraceOrder,
     pub center_trace_index: usize,
