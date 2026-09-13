@@ -134,14 +134,8 @@ const getEscapeCenters = ({
     })
     .sort(
       (left, right) =>
-        Math.hypot(
-          left.x - via.center.x,
-          left.y - via.center.y,
-        ) -
-        Math.hypot(
-          right.x - via.center.x,
-          right.y - via.center.y,
-        ),
+        Math.hypot(left.x - via.center.x, left.y - via.center.y) -
+        Math.hypot(right.x - via.center.x, right.y - via.center.y),
     )
 }
 
@@ -156,26 +150,27 @@ const getRadialEscapeCenters = ({
   traceWidth: number
   bounds: Bounds
 }): Array<{ x: number; y: number }> => {
-  const minimumOffset =
-    via.diameter / 2 + traceWidth / 2 + clearance + 0.006
-  return [1, 2].flatMap((offsetFactor) =>
-    Array.from({ length: 8 }, (_, directionIndex) => {
-      const offset = minimumOffset * offsetFactor
-      const angle = (directionIndex * Math.PI) / 4
-      return {
-        x: via.center.x + Math.cos(angle) * offset,
-        y: via.center.y + Math.sin(angle) * offset,
-      }
-    }),
-  ).filter((point) => {
-    const radius = via.diameter / 2
-    return (
-      point.x - radius >= bounds.minX &&
-      point.x + radius <= bounds.maxX &&
-      point.y - radius >= bounds.minY &&
-      point.y + radius <= bounds.maxY
+  const minimumOffset = via.diameter / 2 + traceWidth / 2 + clearance + 0.006
+  return [1, 2]
+    .flatMap((offsetFactor) =>
+      Array.from({ length: 8 }, (_, directionIndex) => {
+        const offset = minimumOffset * offsetFactor
+        const angle = (directionIndex * Math.PI) / 4
+        return {
+          x: via.center.x + Math.cos(angle) * offset,
+          y: via.center.y + Math.sin(angle) * offset,
+        }
+      }),
     )
-  })
+    .filter((point) => {
+      const radius = via.diameter / 2
+      return (
+        point.x - radius >= bounds.minX &&
+        point.x + radius <= bounds.maxX &&
+        point.y - radius >= bounds.minY &&
+        point.y + radius <= bounds.maxY
+      )
+    })
 }
 
 const moveSharedVia = ({
@@ -197,9 +192,7 @@ const moveSharedVia = ({
       route: route.route.map((point) =>
         matches(point) ? { ...point, ...to } : point,
       ),
-      vias: route.vias.map((via) =>
-        matches(via) ? { ...via, ...to } : via,
-      ),
+      vias: route.vias.map((via) => (matches(via) ? { ...via, ...to } : via)),
     }
   })
 }
@@ -319,6 +312,7 @@ export const applyPipeline9ViaPadEscapeRepairs = ({
         ) {
           continue
         }
+        const errorCenter = { x: center.x, y: center.y }
         const evaluatedViaSite = Array.isArray(error.__pipeline9_via_sites)
           ? error.__pipeline9_via_sites.find(
               (site) =>
@@ -352,8 +346,8 @@ export const applyPipeline9ViaPadEscapeRepairs = ({
                 .find(
                   (candidate) =>
                     Math.hypot(
-                      candidate.center.x - center.x,
-                      candidate.center.y - center.y,
+                      candidate.center.x - errorCenter.x,
+                      candidate.center.y - errorCenter.y,
                     ) <= 1e-6,
                 )
         if (!via) continue

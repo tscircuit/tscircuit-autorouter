@@ -567,17 +567,6 @@ export class SameNetViaMergerSolver extends BaseSolver {
     let mergedViaCount = 0
     for (const group of groups) {
       for (const viaToRemove of group.remove) {
-        // Groups are selected from one snapshot of the via set. An earlier
-        // merge in this batch can move onto and deduplicate a via referenced by
-        // a later group, making that later candidate stale.
-        const routeToUpdate = this.mergedViaHdRoutes[viaToRemove.routeIndex]
-        if (
-          !routeToUpdate?.vias.some(
-            (via) => via.x === viaToRemove.x && via.y === viaToRemove.y,
-          )
-        ) {
-          continue
-        }
         this.moveViaTo(viaToRemove, group.keep, false)
         mergedViaCount++
       }

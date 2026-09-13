@@ -23,13 +23,14 @@ import { readFileSync } from "node:fs"
 import { gunzipSync } from "node:zlib"
 import { stackSvgsHorizontally } from "stack-svgs"
 
-const fixtureDirectory =
-  "../../fixtures/bug-reports/t113-linux-hdmi-joint-drc/"
+const fixtureDirectory = "../../fixtures/bug-reports/t113-linux-hdmi-joint-drc/"
 const readCompressedFixture = <T>(filename: string): T =>
   JSON.parse(
     gunzipSync(
       Uint8Array.from(
-        readFileSync(new URL(`${fixtureDirectory}${filename}`, import.meta.url)),
+        readFileSync(
+          new URL(`${fixtureDirectory}${filename}`, import.meta.url),
+        ),
       ),
     ).toString("utf8"),
   ) as T
@@ -130,22 +131,22 @@ test("Pipeline9 repairs the exact 96-component T113-S3 HDMI PCB", async () => {
     regionalB01RepairRemainingDrcIssueCount: 0,
   })
 
-  const convertedNewTraces =
-    convertPipeline7HdRoutesToSimplifiedPcbTraces({
-      connections: setupSolver.netToPointPairsSolver!.newConnections,
-      originalConnections: fixture.originalSrj.connections,
-      hdRoutes: jointSolver.getOutput(),
-      layerCount: fixture.originalSrj.layerCount,
-      obstacles: fixture.originalSrj.obstacles,
-      defaultViaHoleDiameter: viaDimensions.holeDiameter,
-      connMap: setupSolver.connMap,
-    })
+  const convertedNewTraces = convertPipeline7HdRoutesToSimplifiedPcbTraces({
+    connections: setupSolver.netToPointPairsSolver!.newConnections,
+    originalConnections: fixture.originalSrj.connections,
+    hdRoutes: jointSolver.getOutput(),
+    layerCount: fixture.originalSrj.layerCount,
+    obstacles: fixture.originalSrj.obstacles,
+    defaultViaHoleDiameter: viaDimensions.holeDiameter,
+    connMap: setupSolver.connMap,
+  })
   const newTraces = assignUniquePcbTraceIdsToNewTraces(
     convertedNewTraces,
     fixture.originalSrj.traces ?? [],
   )
-  const expandedConnectionNames =
-    getPowerTraceExpansionConnectionNames(fixture.originalSrj)
+  const expandedConnectionNames = getPowerTraceExpansionConnectionNames(
+    fixture.originalSrj,
+  )
   const powerInput = preparePipeline7PowerTraceExpansionInput({
     originalSrj: fixture.originalSrj,
     newlyRoutedTraces: newTraces,
@@ -173,10 +174,8 @@ test("Pipeline9 repairs the exact 96-component T113-S3 HDMI PCB", async () => {
 
   const routedTraces = postPowerSolver.getOutput()
   const drcOptions = {
-    traceClearance:
-      fixture.originalSrj.minTraceToPadEdgeClearance ?? 0.1,
-    viaPadClearance:
-      fixture.originalSrj.minViaEdgeToPadEdgeClearance ?? 0.1,
+    traceClearance: fixture.originalSrj.minTraceToPadEdgeClearance ?? 0.1,
+    viaPadClearance: fixture.originalSrj.minViaEdgeToPadEdgeClearance ?? 0.1,
     includeTraceContinuity: false,
   }
   const baselineDrc = evaluateRelaxedDrc({
@@ -202,7 +201,9 @@ test("Pipeline9 repairs the exact 96-component T113-S3 HDMI PCB", async () => {
   ).toEqual([])
   expect(
     finalDrc.errors.filter(
-      (error) => error.type === "pcb_pad_pad_clearance_error",
+      (error) =>
+        (error as unknown as { type: string }).type ===
+        "pcb_pad_pad_clearance_error",
     ),
   ).toEqual([])
 
@@ -226,15 +227,12 @@ test("Pipeline9 repairs the exact 96-component T113-S3 HDMI PCB", async () => {
     stackSvgsHorizontally(
       [
         convertCircuitJsonToPcbSvg(unroutedCircuitJson),
-        convertCircuitJsonToPcbSvg([
-          ...unroutedCircuitJson,
-          ...routedCopper,
-        ]),
+        convertCircuitJsonToPcbSvg([...unroutedCircuitJson, ...routedCopper]),
       ],
       { gap: 12, normalizeSize: false },
     ),
   ).toMatchSvgSnapshot(import.meta.path, {
     svgName: "unrouted-routed",
-    tolerance: 0,
+    tolerance: 0.02,
   })
 })

@@ -163,10 +163,7 @@ export const addAutoroutingViaTraceIds = ({
     { x: number; y: number; diameter?: number }
   >()
   for (const element of circuitJson) {
-    if (
-      element.type !== "pcb_via" ||
-      typeof element.pcb_via_id !== "string"
-    ) {
+    if (element.type !== "pcb_via" || typeof element.pcb_via_id !== "string") {
       continue
     }
     const traceIds = new Set<string>()
@@ -174,8 +171,9 @@ export const addAutoroutingViaTraceIds = ({
       traceIds.add(element.pcb_trace_id)
     }
     if (typeof element.x === "number" && typeof element.y === "number") {
-      for (const traceId of
-        traceIdsByViaLocation.get(`${element.x},${element.y}`) ?? []) {
+      for (const traceId of traceIdsByViaLocation.get(
+        `${element.x},${element.y}`,
+      ) ?? []) {
         traceIds.add(traceId)
       }
     }
@@ -362,14 +360,12 @@ const getPreloadedTraceSectionGroups = ({
   layerCount,
   defaultViaDiameter,
   connMap,
-  allowBlindAndBuriedVias,
 }: {
   trace: SimplifiedPcbTrace
   traceIndex: number
   layerCount: number
   defaultViaDiameter: number
   connMap: ConnectivityMap
-  allowBlindAndBuriedVias?: boolean
 }): PreloadedTraceSectionGroup[] => {
   const throughObstaclePositions = trace.route.flatMap(
     (routePoint, routePosition) =>
@@ -382,7 +378,6 @@ const getPreloadedTraceSectionGroups = ({
     layerCount,
     defaultViaDiameter,
     connMap,
-    allowBlindAndBuriedVias,
   )
 
   for (const primitiveRoute of primitiveRoutes) {
@@ -790,7 +785,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       inputSrj: params.originalSrj,
       srjWithPointPairs: params.srjWithPointPairs,
       routedTraces: [],
-      drcOptions: { traceClearance, viaPadClearance },
+      drcOptions: { traceClearance },
     })
     const baselineEvaluatedTraceIds = new Set(
       (params.originalSrj.traces ?? []).map((trace) => trace.pcb_trace_id),
@@ -815,7 +810,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       inputSrj: params.originalSrj,
       srjWithPointPairs: params.srjWithPointPairs,
       routedTraces: preparedCurrentOutput.routedTraces,
-      drcOptions: { traceClearance, viaPadClearance },
+      drcOptions: { traceClearance },
     })
     const currentEvaluatedTraces = combinePreloadedAndRoutedTraces(
       params.originalSrj.traces ?? [],
@@ -890,7 +885,6 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       layerCount: params.layerCount,
       defaultViaDiameter: params.defaultViaDiameter,
       connMap: params.connMap,
-      allowBlindAndBuriedVias: params.originalSrj.allowBlindAndBuriedVias,
     })) {
       candidateMovablePreloadedTraceIds.add(traceId)
     }
@@ -915,7 +909,6 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         layerCount: params.layerCount,
         defaultViaDiameter: params.defaultViaDiameter,
         connMap: params.connMap,
-        allowBlindAndBuriedVias: params.originalSrj.allowBlindAndBuriedVias,
       })
       for (const [traceSectionIndex, sectionGroup] of sectionGroups.entries()) {
         const movableSectionIndex = this.movablePreloadedSections.length
@@ -953,7 +946,6 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
           params.layerCount,
           params.defaultViaDiameter,
           params.connMap,
-          params.originalSrj.allowBlindAndBuriedVias,
         )
         if (!movablePreloadedTraceIds.has(trace.pcb_trace_id)) {
           return fixedRoutes
@@ -1674,7 +1666,8 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         regionalB01RepairRemainingDrcIssueCount: 0,
         viaPadEscapeCandidateCount:
           exactViaPadEscapeResult.attemptedCandidateCount,
-        viaPadEscapeAcceptedCount: exactViaPadEscapeResult.acceptedCandidateCount,
+        viaPadEscapeAcceptedCount:
+          exactViaPadEscapeResult.acceptedCandidateCount,
         viaPadEscapeRemainingDrcIssueCount:
           exactViaPadEscapeResult.remainingErrors.length,
         regionalB01RepairPreloadEligibleDrcIssueCount: 0,
@@ -1776,6 +1769,10 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       syntheticConnectionNames: this.syntheticConnectionNames,
       connMap: this.params.connMap,
       allowTracePairEscapes: true,
+      maxCandidateEvaluations: Math.max(
+        0,
+        256 - terminalEscapeResult.attemptedCandidateCount,
+      ),
       drcEvaluator: this.geometryReferenceDrcEvaluator!,
     })
     const regionalGeometryDrcResult = this.geometryReferenceDrcEvaluator!({
@@ -1783,9 +1780,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       routes: lateTerminalEscapeResult.routes,
       hdRoutes: lateTerminalEscapeResult.routes,
     })
-    const regionalGeometryDrcErrors = Array.isArray(
-      regionalGeometryDrcResult,
-    )
+    const regionalGeometryDrcErrors = Array.isArray(regionalGeometryDrcResult)
       ? regionalGeometryDrcResult
       : regionalGeometryDrcResult.errors
     const regionalGeometryPrecisionResult =
@@ -1811,8 +1806,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       regionalGeometryPrecisionResult.candidateValidationCount
     clearancePrecisionReferenceValidationCount +=
       regionalGeometryPrecisionResult.referenceValidationCount
-    clearancePrecisionRepaired ||=
-      regionalGeometryPrecisionResult.repaired
+    clearancePrecisionRepaired ||= regionalGeometryPrecisionResult.repaired
     const routesAfterGeometryPrecision =
       regionalGeometryPrecisionResult.repaired
         ? regionalGeometryPrecisionResult.routes
@@ -1836,19 +1830,18 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         RELAXED_DRC_OPTIONS.traceClearance ??
         0.1,
     })
-    const viaPadEscapeReferenceDrcResult =
-      this.viaPadReferenceDrcEvaluator!({
-        traces: [],
-        routes: viaPadEscapeResult.routes,
-        hdRoutes: viaPadEscapeResult.routes,
-      })
+    const viaPadEscapeReferenceDrcResult = this.viaPadReferenceDrcEvaluator!({
+      traces: [],
+      routes: viaPadEscapeResult.routes,
+      hdRoutes: viaPadEscapeResult.routes,
+    })
     const viaPadEscapeReferenceDrcErrors = Array.isArray(
       viaPadEscapeReferenceDrcResult,
     )
       ? viaPadEscapeReferenceDrcResult
       : viaPadEscapeReferenceDrcResult.errors
-    const postRegionalPrecisionResult =
-      applyPipeline9ClearancePrecisionRepairs({
+    const postRegionalPrecisionResult = applyPipeline9ClearancePrecisionRepairs(
+      {
         srj: this.params.srj,
         routes: viaPadEscapeResult.routes,
         newConnections: this.params.newConnections,
@@ -1859,13 +1852,12 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         marginDrcEvaluator: this.clearanceMarginDrcEvaluator!,
         drcEvaluator: this.viaPadReferenceDrcEvaluator!,
         initialErrors: viaPadEscapeReferenceDrcErrors,
-        initialErrorsWithCenters: Array.isArray(
-          viaPadEscapeReferenceDrcResult,
-        )
+        initialErrorsWithCenters: Array.isArray(viaPadEscapeReferenceDrcResult)
           ? viaPadEscapeReferenceDrcResult
           : (viaPadEscapeReferenceDrcResult.errorsWithCenters ??
             viaPadEscapeReferenceDrcResult.errors),
-      })
+      },
+    )
     clearancePrecisionCandidateCount +=
       postRegionalPrecisionResult.attemptedCandidateCount
     clearancePrecisionCandidateValidationCount +=
@@ -1952,8 +1944,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         regionalB01RepairResult.safeTraceLayerRepairSkippedForBudget,
       regionalB01RepairRemainingDrcIssueCount:
         regionalB01RepairResult.remainingDrcIssueCount,
-      viaPadEscapeCandidateCount:
-        viaPadEscapeResult.attemptedCandidateCount,
+      viaPadEscapeCandidateCount: viaPadEscapeResult.attemptedCandidateCount,
       viaPadEscapeAcceptedCount: viaPadEscapeResult.acceptedCandidateCount,
       viaPadEscapeRemainingDrcIssueCount:
         viaPadEscapeResult.remainingErrors.length,
