@@ -21,40 +21,50 @@ type LengthMatchingPostProcessingSolverParams = {
   bounds: { minX: number; maxX: number; minY: number; maxY: number }
   layerCount: number
   obstacleMargin: number
+  connectionLengthOffsets: Record<string, number>
 }
 
 const getLogicalConnectionLength = (
   routes: HighDensityRoute[],
   connectionName: string,
+  connectionLengthOffsets: Record<string, number>,
 ): number | undefined => {
   const matchingRoutes = routes.filter(
     (route) =>
       (route.rootConnectionName ?? route.connectionName) === connectionName,
   )
   if (matchingRoutes.length === 0) return undefined
-  return matchingRoutes.reduce(
-    (connectionLength, route) =>
-      connectionLength +
-      route.route.slice(1).reduce((routeLength, point, pointIndex) => {
-        const previousPoint = route.route[pointIndex]!
-        return (
-          routeLength +
-          Math.hypot(point.x - previousPoint.x, point.y - previousPoint.y)
-        )
-      }, 0),
-    0,
+  return (
+    (connectionLengthOffsets[connectionName] ?? 0) +
+    matchingRoutes.reduce(
+      (connectionLength, route) =>
+        connectionLength +
+        route.route.slice(1).reduce((routeLength, point, pointIndex) => {
+          const previousPoint = route.route[pointIndex]!
+          return (
+            routeLength +
+            Math.hypot(point.x - previousPoint.x, point.y - previousPoint.y)
+          )
+        }, 0),
+      0,
+    )
   )
 }
 
 const getBusLengthMatchingPairs = (
   buses: SimpleRouteBus[],
   routes: HighDensityRoute[],
+  connectionLengthOffsets: Record<string, number>,
 ): DifferentialPair[] =>
   buses.flatMap((bus) => {
     const maxLengthSkew = bus.maxLengthSkew
     if (maxLengthSkew === undefined || bus.connectionNames.length < 2) return []
     const memberLengths = bus.connectionNames.map((connectionName) => {
-      const length = getLogicalConnectionLength(routes, connectionName)
+      const length = getLogicalConnectionLength(
+        routes,
+        connectionName,
+        connectionLengthOffsets,
+      )
       if (length === undefined)
         throw new Error(
           `Length matching: bus "${bus.busId}" has no routed geometry for connection "${connectionName}"`,
@@ -110,12 +120,17 @@ const getLogicalLengthMatchingConnections = (
 const assertBusLengthSkew = (
   buses: SimpleRouteBus[],
   routes: HighDensityRoute[],
+  connectionLengthOffsets: Record<string, number>,
 ): void => {
   for (const bus of buses) {
     if (bus.maxLengthSkew === undefined || bus.connectionNames.length < 2)
       continue
     const lengths = bus.connectionNames.map((connectionName) => {
-      const length = getLogicalConnectionLength(routes, connectionName)
+      const length = getLogicalConnectionLength(
+        routes,
+        connectionName,
+        connectionLengthOffsets,
+      )
       if (length === undefined)
         throw new Error(
           `Length matching: bus "${bus.busId}" lost routed geometry for connection "${connectionName}"`,
@@ -147,6 +162,7 @@ export class LengthMatchingPostProcessingSolver extends BaseSolver {
       bounds: params.bounds,
       layerCount: params.layerCount,
       minTraceToPadEdgeClearance: params.obstacleMargin,
+      connectionLengthOffsets: params.connectionLengthOffsets,
     })
     this.MAX_ITERATIONS =
       this.differentialPairSolver.MAX_ITERATIONS + 100_000 + 10
@@ -171,6 +187,7 @@ export class LengthMatchingPostProcessingSolver extends BaseSolver {
       const differentialPairs = getBusLengthMatchingPairs(
         this.params.buses,
         hdRoutes,
+        this.params.connectionLengthOffsets,
       )
       if (differentialPairs.length === 0) {
         this.outputHdRoutes = hdRoutes
@@ -184,10 +201,12 @@ export class LengthMatchingPostProcessingSolver extends BaseSolver {
           this.params.connections,
         ),
         differentialPairs,
+        connectionLengthOffsets: this.params.connectionLengthOffsets,
         obstacles: this.params.obstacles,
         bounds: this.params.bounds,
         layerCount: this.params.layerCount,
         obstacleMargin: this.params.obstacleMargin,
+        minMeanderGap: this.params.obstacleMargin,
       })
       return
     }
@@ -201,7 +220,11 @@ export class LengthMatchingPostProcessingSolver extends BaseSolver {
     if (!this.busLengthMatchingSolver.solved) return
     this.outputHdRoutes =
       this.busLengthMatchingSolver.getOutput().matchedHdRoutes
-    assertBusLengthSkew(this.params.buses, this.outputHdRoutes)
+    assertBusLengthSkew(
+      this.params.buses,
+      this.outputHdRoutes,
+      this.params.connectionLengthOffsets,
+    )
     this.solved = true
   }
 

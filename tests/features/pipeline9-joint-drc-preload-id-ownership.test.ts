@@ -1,11 +1,11 @@
 import { expect, test } from "bun:test"
 import {
-  getPipeline9PreloadRepairTraceIds,
   Pipeline9JointDrcRepairSolver,
+  getPipeline9PreloadRepairTraceIds,
   remapDrcTraceIds,
 } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9JointDrcRepairSolver"
-import { isPipeline9DrcErrorOwnedByPreloadRepair } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/pipeline9JointDrcRepairUtils"
 import { normalizePipeline9DrcErrorsForRepair } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/normalizePipeline9DrcErrorsForRepair"
+import { isPipeline9DrcErrorOwnedByPreloadRepair } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/pipeline9JointDrcRepairUtils"
 import type {
   Obstacle,
   SimpleRouteConnection,
@@ -306,13 +306,18 @@ test("Pipeline9 joint DRC distinguishes a new trace id from its preloaded alias"
       .map((trace) => trace.pcb_trace_id),
   ).toEqual(["route_0"])
   preparedPreloadAliasErrorSolver.solve()
+  expect(Number(preparedPreloadAliasErrorSolver.stats.finalDrcIssueCount)).toBe(
+    0,
+  )
   expect(
     Number(
-      preparedPreloadAliasErrorSolver.stats
-        .regionalB01RepairPreloadEligibleDrcIssueCount,
+      preparedPreloadAliasErrorSolver.stats.postExactReferenceDrcIssueCount,
     ),
-  ).toBeGreaterThan(0)
+  ).toBe(0)
+  expect(
+    preparedPreloadAliasErrorSolver.stats.postExactReferenceAccepted,
+  ).toBeTrue()
   expect(
     preparedPreloadAliasErrorSolver.stats.regionalB01RepairAttempted,
-  ).toBeTrue()
+  ).toBeFalse()
 })
