@@ -63,7 +63,10 @@ const restoreTerminalMetadata = (
 /** Enforces same-net via clearance after power expansion changes final copper. */
 export class PostPowerTraceViaMergeSolver extends BaseSolver {
   private readonly merger: SameNetViaMergerSolver
-  private readonly inputHdRouteByTraceId: ReadonlyMap<string, HighDensityRoute>
+  private readonly inputHdRouteByTraceId: ReadonlyMap<
+    string,
+    HighDensityRoute
+  >
   private outputTraces?: SimplifiedPcbTraces
 
   constructor(public readonly inputProblem: PostPowerTraceViaMergeSolverInput) {
@@ -93,15 +96,15 @@ export class PostPowerTraceViaMergeSolver extends BaseSolver {
       ),
       ...inputProblem.otherTraces,
     ]
-    const otherHdRoutes = immutableTraces.flatMap((trace, traceIndex) =>
-      convertPreloadedTraceToHdRoutes(
-        trace,
-        traceIndex,
-        inputProblem.inputSrj.layerCount,
-        inputProblem.viaDiameter,
-        inputProblem.connMap,
-        inputProblem.inputSrj.allowBlindAndBuriedVias,
-      ),
+    const otherHdRoutes = immutableTraces.flatMap(
+      (trace, traceIndex) =>
+        convertPreloadedTraceToHdRoutes(
+          trace,
+          traceIndex,
+          inputProblem.inputSrj.layerCount,
+          inputProblem.viaDiameter,
+          inputProblem.connMap,
+        ),
     )
     this.merger = new SameNetViaMergerSolver({
       inputHdRoutes,

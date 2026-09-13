@@ -150,24 +150,10 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
   }
 
   private createActiveSubSolver() {
-    const { growShrinkSolutionValidator, ...portfolioParams } =
+    const { growShrinkSolutionValidator: _, ...portfolioParams } =
       this.constructorParams
     this.activeSubSolver = new PortfolioSingleIntraNodeSolver({
       ...portfolioParams,
-      solutionValidator: growShrinkSolutionValidator
-        ? (routes) =>
-            growShrinkSolutionValidator(
-              this.scaleFactor === 1
-                ? routes
-                : routes.map((route) =>
-                    scaleRoute(
-                      route,
-                      this.nodeWithPortPoints.center,
-                      1 / this.scaleFactor,
-                    ),
-                  ),
-            )
-        : undefined,
       enableNegotiatedSearch:
         this.scaleFactor === 1 &&
         (portfolioParams.enableNegotiatedSearch ?? true),

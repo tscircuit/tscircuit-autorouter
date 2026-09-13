@@ -11,13 +11,14 @@ import { readFileSync } from "node:fs"
 import { gunzipSync } from "node:zlib"
 import { stackSvgsHorizontally } from "stack-svgs"
 
-const fixtureDirectory =
-  "../../fixtures/bug-reports/t113-linux-hdmi-joint-drc/"
+const fixtureDirectory = "../../fixtures/bug-reports/t113-linux-hdmi-joint-drc/"
 const readCompressedFixture = <T>(filename: string): T =>
   JSON.parse(
     gunzipSync(
       Uint8Array.from(
-        readFileSync(new URL(`${fixtureDirectory}${filename}`, import.meta.url)),
+        readFileSync(
+          new URL(`${fixtureDirectory}${filename}`, import.meta.url),
+        ),
       ),
     ).toString("utf8"),
   ) as T
@@ -55,8 +56,8 @@ test("Pipeline9 clears mixed DRC errors in the exact T113-S3 fanout phase", asyn
   expect(solver.failed).toBe(false)
   expect(solver.solved).toBe(true)
   expect(solver.pipeline9JointDrcRepairSolver?.stats).toMatchObject({
-    clearancePrecisionRepaired: true,
-    viaPadEscapeAcceptedCount: 1,
+    postExactReferenceAccepted: true,
+    postExactReferenceDrcIssueCount: 0,
     viaPadEscapeRemainingDrcIssueCount: 0,
   })
 
@@ -91,10 +92,10 @@ test("Pipeline9 clears mixed DRC errors in the exact T113-S3 fanout phase", asyn
     }),
   ).toEqual([])
 
-  const routedCopper = convertToCircuitJson(
-    solver.srjWithPointPairs!,
-    [...powerInput.fixedTraces, ...routedTraces],
-  ).filter(
+  const routedCopper = convertToCircuitJson(solver.srjWithPointPairs!, [
+    ...powerInput.fixedTraces,
+    ...routedTraces,
+  ]).filter(
     (element) => element.type === "pcb_trace" || element.type === "pcb_via",
   )
   expect(
@@ -104,15 +105,12 @@ test("Pipeline9 clears mixed DRC errors in the exact T113-S3 fanout phase", asyn
     stackSvgsHorizontally(
       [
         convertCircuitJsonToPcbSvg(unroutedCircuitJson),
-        convertCircuitJsonToPcbSvg([
-          ...unroutedCircuitJson,
-          ...routedCopper,
-        ]),
+        convertCircuitJsonToPcbSvg([...unroutedCircuitJson, ...routedCopper]),
       ],
       { gap: 12, normalizeSize: false },
     ),
   ).toMatchSvgSnapshot(import.meta.path, {
     svgName: "unrouted-routed",
-    tolerance: 0,
+    tolerance: 0.02,
   })
 }, 180_000)

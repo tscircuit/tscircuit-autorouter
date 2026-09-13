@@ -206,43 +206,54 @@ const fixedRouteSlicesAreContiguous = (
     next.sourceRoute.preloadedTraceIndex &&
   pointsAreEqual(previous.sourceRoute.route.at(-1)!, next.sourceRoute.route[0]!)
 
+const fixedRouteSliceTouchesTargetLayer = (
+  slice: FixedRouteSlice,
+  targetLayers: ReadonlySet<number>,
+): boolean => {
+  if (targetLayers.size === 0) return true
+  const routePointsInsideNode = [
+    slice.start.point,
+    ...slice.sourceRoute.route.slice(
+      slice.start.segmentIndex + 1,
+      slice.end.segmentIndex + 1,
+    ),
+    slice.end.point,
+  ]
+  return routePointsInsideNode.some((routePoint) =>
+    targetLayers.has(routePoint.z),
+  )
+}
+
 /**
  * Builds the regular high-density input used only after B01 fails. Fixed
- * copper remains immutable until a candidate proves that an exact route is a
- * blocker. Each explicitly promoted contiguous section then becomes one
- * ordinary port pair, which lets the portfolio reroute only that copper
- * together with the new traces. Repair-only callers with no target port
- * points continue to make every crossing section movable.
+ * each contiguous section of pre-routed copper crossing the node on a target
+ * connection layer becomes one ordinary port pair, which lets the portfolio
+ * reroute it together with the new traces in that region. Local fixed routes
+ * on other layers remain immutable obstacles unless an immutable-first solve
+ * proves that an exact route is the blocker and explicitly promotes it.
+ * Repair-only callers with no target port points continue to make every
+ * crossing section movable.
  */
 export const createRegionalFallbackProblem = (
   node: NodeWithPortPoints,
   fixedRoutes: PreloadedHighDensityRoute[],
   promotedFixedRouteConnectionNames: ReadonlySet<string> = new Set(),
-  expansionMargin = 0,
 ): RegionalFallbackProblem => {
   const fixedRouteSectionsByConnectionName = new Map<
     string,
     FixedRouteSection
   >()
   const fallbackPortPairs: Array<[PortPoint, PortPoint]> = []
-  const isRepairOnlyProblem = node.portPoints.length === 0
-  const regionalNode =
-    promotedFixedRouteConnectionNames.size > 0 && expansionMargin > 0
-      ? {
-          ...node,
-          width: node.width + expansionMargin * 2,
-          height: node.height + expansionMargin * 2,
-        }
-      : node
+  const targetLayers = new Set(node.portPoints.map((portPoint) => portPoint.z))
 
   const localSlices = fixedRoutes
-    .map((fixedRoute) => getFixedRouteSlice(fixedRoute, regionalNode))
+    .map((fixedRoute) => getFixedRouteSlice(fixedRoute, node))
     .filter((slice): slice is FixedRouteSlice => slice !== null)
   const slices = localSlices
     .filter(
       (slice) =>
         slice.sourceRoute.isThroughObstacle !== true &&
-        (isRepairOnlyProblem ||
+        (fixedRouteSliceTouchesTargetLayer(slice, targetLayers) ||
           promotedFixedRouteConnectionNames.has(
             slice.sourceRoute.connectionName,
           )),
@@ -291,13 +302,13 @@ export const createRegionalFallbackProblem = (
 
   return {
     nodeWithPortPoints: {
-      ...regionalNode,
+      ...node,
       portPoints: [
-        ...regionalNode.portPoints,
+        ...node.portPoints,
         ...fallbackPortPairs.flatMap((pair) => pair),
       ],
       portPointsInPairs: [
-        ...(regionalNode.portPointsInPairs ?? []),
+        ...(node.portPointsInPairs ?? []),
         ...fallbackPortPairs,
       ],
     },

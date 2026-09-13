@@ -174,10 +174,7 @@ const getTerminalCandidates = ({
           right.x - conflictingCenter.x,
           right.y - conflictingCenter.y,
         ) -
-        Math.hypot(
-          left.x - conflictingCenter.x,
-          left.y - conflictingCenter.y,
-        ),
+        Math.hypot(left.x - conflictingCenter.x, left.y - conflictingCenter.y),
     )
     .slice(0, 16)
 }
@@ -249,6 +246,7 @@ export const applyPipeline9TerminalEscapeRelocations = ({
   syntheticConnectionNames,
   connMap,
   allowTracePairEscapes = false,
+  maxCandidateEvaluations = MAX_CANDIDATE_EVALUATIONS,
   drcEvaluator,
 }: {
   srj: SimpleRouteJson
@@ -258,6 +256,7 @@ export const applyPipeline9TerminalEscapeRelocations = ({
   syntheticConnectionNames: ReadonlySet<string>
   connMap?: ConnectivityMap
   allowTracePairEscapes?: boolean
+  maxCandidateEvaluations?: number
   drcEvaluator: DrcEvaluator
 }): TerminalEscapeRelocationResult => {
   let currentRoutes = routes
@@ -278,7 +277,7 @@ export const applyPipeline9TerminalEscapeRelocations = ({
         isObstacleTraceError(error) ||
         (allowTracePairEscapes && isTracePairTerminalError(error)),
     )) {
-      if (attemptedCandidateCount >= MAX_CANDIDATE_EVALUATIONS) break
+      if (attemptedCandidateCount >= maxCandidateEvaluations) break
       const routeIndexes = [
         ...new Set(
           getPipeline9DrcErrorTraceIds(error)
@@ -293,7 +292,8 @@ export const applyPipeline9TerminalEscapeRelocations = ({
         getErrorObstacleId(error),
       )
       const errorCenter = error.center
-      const conflictingCenter = conflictingObstacle?.center ??
+      const conflictingCenter =
+        conflictingObstacle?.center ??
         (errorCenter &&
         typeof errorCenter === "object" &&
         "x" in errorCenter &&
@@ -315,7 +315,7 @@ export const applyPipeline9TerminalEscapeRelocations = ({
         layerSearch: for (const routeSide of [0, 1] as const) {
           for (let targetZ = 0; targetZ < srj.layerCount; targetZ++) {
             for (const spanExpansion of [1, 3, 5]) {
-              if (attemptedCandidateCount >= MAX_CANDIDATE_EVALUATIONS) {
+              if (attemptedCandidateCount >= maxCandidateEvaluations) {
                 break layerSearch
               }
               const layerCandidateRoutes = clonePipeline9HdRoutes(currentRoutes)
@@ -389,7 +389,7 @@ export const applyPipeline9TerminalEscapeRelocations = ({
             traceRadius: route.traceThickness / 2,
           })) {
             for (const collapseAdjacent of [false, true]) {
-              if (attemptedCandidateCount >= MAX_CANDIDATE_EVALUATIONS) {
+              if (attemptedCandidateCount >= maxCandidateEvaluations) {
                 break candidateSearch
               }
               const candidateRoutes = createTerminalCandidate({

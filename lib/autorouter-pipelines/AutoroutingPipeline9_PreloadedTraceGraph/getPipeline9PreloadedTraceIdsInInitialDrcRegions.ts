@@ -36,14 +36,12 @@ export const getPipeline9PreloadedTraceIdsInInitialDrcRegions = ({
   layerCount,
   defaultViaDiameter,
   connMap,
-  allowBlindAndBuriedVias,
 }: {
   errorsWithCenters: Array<Record<string, unknown>>
   traces: SimplifiedPcbTrace[]
   layerCount: number
   defaultViaDiameter: number
   connMap: ConnectivityMap
-  allowBlindAndBuriedVias?: boolean
 }): Set<string> => {
   const repairCenters = getTracePairErrorCenters(errorsWithCenters)
   const traceIds = new Set<string>()
@@ -55,7 +53,6 @@ export const getPipeline9PreloadedTraceIdsInInitialDrcRegions = ({
       layerCount,
       defaultViaDiameter,
       connMap,
-      allowBlindAndBuriedVias,
     )
     const intersectsRepairRegion = repairCenters.some((center) =>
       sections.some((section) => {

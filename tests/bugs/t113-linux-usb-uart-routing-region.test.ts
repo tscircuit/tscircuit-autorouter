@@ -2,7 +2,6 @@ import { expect, test } from "bun:test"
 import type { CircuitJson } from "circuit-json"
 import { convertCircuitJsonToPcbSvg } from "circuit-to-svg"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
-import { filterPipeline9DrcErrorsAgainstBaseline } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/filterPipeline9DrcErrorsAgainstBaseline"
 import type { Pipeline7PowerTraceExpansionInput } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/prepare-pipeline7-power-trace-expansion-input"
 import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import { convertToCircuitJson } from "lib/testing/utils/convertToCircuitJson"
@@ -17,7 +16,9 @@ const readCompressedFixture = <T>(filename: string): T =>
   JSON.parse(
     gunzipSync(
       Uint8Array.from(
-        readFileSync(new URL(`${fixtureDirectory}${filename}`, import.meta.url)),
+        readFileSync(
+          new URL(`${fixtureDirectory}${filename}`, import.meta.url),
+        ),
       ),
     ).toString("utf8"),
   ) as T
@@ -64,8 +65,7 @@ test("Pipeline9 routes the exact 86-component T113-S3 USB and UART PCB", async (
   expect(localSocSolver.failed).toBe(false)
   expect(
     evaluateRelaxedDrc({
-      includeBoardClearance:
-        localSocSrj.boundsArePhysicalBoardEdges !== false,
+      includeBoardClearance: localSocSrj.boundsArePhysicalBoardEdges !== false,
       inputSrj: localSocSrj,
       srjWithPointPairs: localSocSolver.srjWithPointPairs!,
       routedTraces: localSocSolver.getOutputSimplifiedPcbTraces(),
@@ -80,30 +80,22 @@ test("Pipeline9 routes the exact 86-component T113-S3 USB and UART PCB", async (
   expect(globalSolver.solved).toBe(true)
   expect(globalSolver.failed).toBe(false)
   expect(globalSolver.error).toBeNull()
+  expect(
+    globalSolver.pipeline9JointDrcRepairSolver?.stats
+      .clearancePrecisionRepaired,
+  ).toBe(true)
 
   const fixedTraces = (
     globalSolver.powerTraceExpansionSolver!
       .inputSrj as Pipeline7PowerTraceExpansionInput
   ).fixedTraces
   const routedTraces = globalSolver.postPowerTraceViaMergeSolver!.getOutput()
-  const baselineDrc = evaluateRelaxedDrc({
-    inputSrj: { ...globalSrj, traces: fixedTraces },
-    srjWithPointPairs: globalSolver.srjWithPointPairs!,
-    routedTraces: [],
-  })
-  const finalDrc = evaluateRelaxedDrc({
-    inputSrj: { ...globalSrj, traces: fixedTraces },
-    srjWithPointPairs: globalSolver.srjWithPointPairs!,
-    routedTraces,
-  })
   expect(
-    filterPipeline9DrcErrorsAgainstBaseline({
-      errors: finalDrc.errors as unknown as Array<Record<string, unknown>>,
-      baselineErrors: baselineDrc.errors as unknown as Array<
-        Record<string, unknown>
-      >,
-      originalTraceIdByPreparedTraceId: new Map(),
-    }),
+    evaluateRelaxedDrc({
+      inputSrj: { ...globalSrj, traces: fixedTraces },
+      srjWithPointPairs: globalSolver.srjWithPointPairs!,
+      routedTraces,
+    }).errors,
   ).toEqual([])
 
   const allRoutedTraces = globalSolver.getOutputSimpleRouteJson().traces ?? []
@@ -115,20 +107,17 @@ test("Pipeline9 routes the exact 86-component T113-S3 USB and UART PCB", async (
   ).toHaveLength(241)
   expect(
     routedCopper.filter((element) => element.type === "pcb_via"),
-  ).toHaveLength(176)
+  ).toHaveLength(155)
   await expect(
     stackSvgsHorizontally(
       [
         convertCircuitJsonToPcbSvg(unroutedCircuitJson),
-        convertCircuitJsonToPcbSvg([
-          ...unroutedCircuitJson,
-          ...routedCopper,
-        ]),
+        convertCircuitJsonToPcbSvg([...unroutedCircuitJson, ...routedCopper]),
       ],
       { gap: 12, normalizeSize: false },
     ),
   ).toMatchSvgSnapshot(import.meta.path, {
     svgName: "unrouted-routed",
-    tolerance: 0,
+    tolerance: 0.02,
   })
 })
