@@ -47,6 +47,7 @@ import {
 import { getPresuppliedTraceVisualization } from "lib/utils/getPresuppliedTraceVisualization"
 import { calculateOptimalCapacityDepth } from "lib/utils/getTunedTotalCapacity1"
 import { getViaDimensions } from "lib/utils/getViaDimensions"
+import { guaranteeNoSameLayerShorts } from "lib/utils/guaranteeNoSameLayerShorts"
 import {
   AvailableSegmentPointSolver,
   type SharedEdgeSegment,
@@ -1187,11 +1188,10 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
       throw new Error("Cannot get output before solving is complete")
     }
 
-    if (this.powerTraceExpansionSolver) {
-      return this.powerTraceExpansionSolver.getOutput()
-    }
-
-    return this.getPrePowerTraceOutputSimplifiedPcbTraces()
+    const traces = this.powerTraceExpansionSolver
+      ? this.powerTraceExpansionSolver.getOutput()
+      : this.getPrePowerTraceOutputSimplifiedPcbTraces()
+    return guaranteeNoSameLayerShorts(traces, 0)
   }
 
   getPrePowerTraceOutputSimplifiedPcbTraces(): SimplifiedPcbTraces {
