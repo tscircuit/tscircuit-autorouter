@@ -4,8 +4,6 @@ import {
   checkPadTraceClearance,
   checkPcbTracesOutOfBoard,
   checkSameNetViaSpacing,
-  checkTracesAreContiguous,
-  checkViaTraceClearance,
 } from "@tscircuit/checks"
 import type {
   AnyCircuitElement,
@@ -19,6 +17,8 @@ import {
   getFullConnectivityMapFromCircuitJson,
 } from "circuit-json-to-connectivity-map"
 import { Point } from "graphics-debug"
+import { checkTracesAreContiguous } from "lib/bindings/checkTracesAreContiguous"
+import { checkViaTraceClearance } from "lib/bindings/checkViaTraceClearance"
 
 type CircuitJson = AnyCircuitElement[]
 type CircuitJsonElement = CircuitJson[number]

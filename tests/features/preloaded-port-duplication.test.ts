@@ -8,7 +8,7 @@ import {
   hasPreloadedTraceSectionMetadata,
 } from "lib/solvers/PortPointPathingSolver/tinyhypergraph/serializePreloadedTraceAssignments"
 import type { CapacityMeshNode, SimpleRouteConnection } from "lib/types"
-import { loadSerializedHyperGraph } from "tiny-hypergraph/lib/index"
+import { loadSerializedHyperGraph } from "../../rust/tiny-hypergraph-bindings/ts/index"
 
 test("congestion duplicates preserve canonical preloaded assignments", () => {
   const capacityMeshNodes: CapacityMeshNode[] = [

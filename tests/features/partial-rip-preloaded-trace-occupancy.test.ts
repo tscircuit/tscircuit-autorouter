@@ -3,7 +3,10 @@ import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import { buildHyperGraph } from "lib/solvers/PortPointPathingSolver/hgportpointpathingsolver"
 import { TinyHypergraphPortPointPathingSolver } from "lib/solvers/PortPointPathingSolver/tinyhypergraph/TinyHypergraphPortPointPathingSolver"
 import type { CapacityMeshNode } from "lib/types"
-import type { TinyHyperGraphSolver } from "tiny-hypergraph/lib/index"
+import type {
+  TinyHypergraphRoutingInput,
+  TinyHypergraphSolverView,
+} from "lib/solvers/PortPointPathingSolver/tinyhypergraph/tinyHypergraphTypes"
 
 const PRELOADED_PORT_COUNT = 102
 
@@ -87,26 +90,47 @@ const createSolver = (enablePartialRipWithPreloadedTraces: boolean) => {
 }
 
 test("Pipeline9 can use partial ripping with preloaded trace occupancy", () => {
-  const getTinySolver = (
+  const getTinyPipeline = (
     solver: TinyHypergraphPortPointPathingSolver,
-  ): TinyHyperGraphSolver =>
+  ): {
+    solveGraph: TinyHypergraphSolverView & { iterations: number }
+    inputProblem: TinyHypergraphRoutingInput
+  } =>
     (
       solver as unknown as {
         tinyPipelineSolver: {
-          getInitialVisualizationSolver: () => TinyHyperGraphSolver
+          solveGraph: TinyHypergraphSolverView & { iterations: number }
+          inputProblem: TinyHypergraphRoutingInput
         }
       }
-    ).tinyPipelineSolver.getInitialVisualizationSolver()
+    ).tinyPipelineSolver
 
-  const defaultTinySolver = getTinySolver(createSolver(false))
-  const pipeline9TinySolver = getTinySolver(createSolver(true))
+  const defaultSolver = createSolver(false)
+  const pipeline9Solver = createSolver(true)
+  defaultSolver.step()
+  pipeline9Solver.step()
+  const defaultPipeline = getTinyPipeline(defaultSolver)
+  const pipeline9Pipeline = getTinyPipeline(pipeline9Solver)
+  expect(defaultPipeline.solveGraph.iterations).toBe(0)
+  expect(pipeline9Pipeline.solveGraph.iterations).toBe(0)
+  const pipeline9TinySolver = pipeline9Pipeline.solveGraph
 
   expect(pipeline9TinySolver.problem.routeCount).toBe(1)
   expect(
     pipeline9TinySolver.problem.initialAssignments?.length,
   ).toBeGreaterThanOrEqual(100)
-  expect(defaultTinySolver.PARTIAL_RIP_ENABLED).toBeFalse()
-  expect(defaultTinySolver.OUTSIDE_IN_ROUTING).toBeFalse()
-  expect(pipeline9TinySolver.PARTIAL_RIP_ENABLED).toBeTrue()
-  expect(pipeline9TinySolver.OUTSIDE_IN_ROUTING).toBeTrue()
+  expect(
+    defaultPipeline.inputProblem.solveGraphOptions?.PARTIAL_RIP_ENABLED,
+  ).toBeFalse()
+  expect(
+    defaultPipeline.inputProblem.solveGraphOptions?.OUTSIDE_IN_ROUTING,
+  ).toBeFalse()
+  expect(
+    pipeline9Pipeline.inputProblem.solveGraphOptions?.PARTIAL_RIP_ENABLED ??
+      true,
+  ).toBeTrue()
+  expect(
+    pipeline9Pipeline.inputProblem.solveGraphOptions?.OUTSIDE_IN_ROUTING ??
+      true,
+  ).toBeTrue()
 })

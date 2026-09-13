@@ -1,0 +1,24 @@
+[package]
+name = "capacity-autorouter"
+version = "0.1.0"
+edition = "2024"
+publish = false
+license = "MIT"
+
+[features]
+wasm-types = ["dep:tsify", "math-utils/wasm-types", "high-density-repair03/wasm-types", "circuit-json-to-connectivity-map/wasm-types"]
+
+[dependencies]
+js-sys = "0.3"
+serde = { version = "1", features = ["derive", "rc"] }
+serde_json = { version = "1", features = ["preserve_order", "float_roundtrip"] }
+indexmap = { version = "2", features = ["serde"] }
+ryu-js = "1.0.3"
+wasm-bindgen = "=0.2.128"
+tsify = { version = "=0.5.8", optional = true, default-features = false, features = ["json"] }
+rustc-hash = "2.1.2"
+sha1 = "0.10.6"
+math-utils = { path = "../math-utils" }
+high-density-repair03 = { path = "../high-density-repair03" }
+circuit-json-to-connectivity-map = { path = "../circuit-json-to-connectivity-map" }
+json-bindings = { path = "../json-bindings" }

@@ -280,4 +280,9 @@ if [ "$INCLUDE_ASSIGNABLE" != true ]; then
   CMD+=("--exclude-assignable")
 fi
 
+if [ ! -f lib/bindings/generated/autorouterModule.ts ] || [ ! -f lib/bindings/generated/tinyHypergraphModule.ts ]; then
+  echo "WASM assets are missing; run bun run build first" >&2
+  exit 1
+fi
+
 "${CMD[@]}"

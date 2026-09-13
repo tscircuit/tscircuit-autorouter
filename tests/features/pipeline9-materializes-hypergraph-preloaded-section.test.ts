@@ -3,7 +3,7 @@ import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import { buildHyperGraph } from "lib/solvers/PortPointPathingSolver/hgportpointpathingsolver"
 import { TinyHypergraphPortPointPathingSolver } from "lib/solvers/PortPointPathingSolver/tinyhypergraph/TinyHypergraphPortPointPathingSolver"
 import type { CapacityMeshNode } from "lib/types"
-import type { TinyHyperGraphSolver } from "tiny-hypergraph/lib/index"
+import type { TinyHypergraphSolverView } from "lib/solvers/PortPointPathingSolver/tinyhypergraph/tinyHypergraphTypes"
 
 test("Pipeline9 exposes an accepted preloaded hypergraph route change", () => {
   const capacityMeshNodes: CapacityMeshNode[] = [
@@ -89,15 +89,12 @@ test("Pipeline9 exposes an accepted preloaded hypergraph route change", () => {
   const tinyPipeline = (
     solver as unknown as {
       tinyPipelineSolver: {
-        pipelineDef: Array<{ solverName: string }>
-        getSolvedTinySolver: () => TinyHyperGraphSolver
+        backend: "wasm"
+        getSolvedTinySolver: () => TinyHypergraphSolverView
       }
     }
   ).tinyPipelineSolver
-  expect(tinyPipeline.pipelineDef.map((step) => step.solverName)).toEqual([
-    "solveGraph",
-    "optimizeSection",
-  ])
+  expect(tinyPipeline.backend).toBe("wasm")
 
   solver.solve()
   const tinySolver = tinyPipeline.getSolvedTinySolver()

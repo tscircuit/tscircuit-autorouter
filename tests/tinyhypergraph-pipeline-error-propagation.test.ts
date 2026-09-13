@@ -3,11 +3,9 @@ import input from "../fixtures/features/portpointpathing/tinyhypergraph-port-bri
 import { TinyHypergraphPortPointPathingSolver } from "lib/solvers/PortPointPathingSolver/tinyhypergraph/TinyHypergraphPortPointPathingSolver"
 
 type TinyPipelineTestHarness = {
-  activeSubSolver?: { step(): void } | null
+  solveGraph: { solver: { step(): unknown } }
   failed: boolean
   solved: boolean
-  getCurrentStageName(): string
-  step(): void
 }
 
 type TinyHypergraphParams = ConstructorParameters<
@@ -22,24 +20,12 @@ test("TinyHypergraph port-point pathing propagates pipeline errors", () => {
     solver as unknown as { tinyPipelineSolver: TinyPipelineTestHarness }
   ).tinyPipelineSolver
 
-  while (pipeline.getCurrentStageName() !== "optimizeSection") {
-    if (pipeline.solved || pipeline.failed) {
-      throw new Error("Pipeline ended before reaching optimizeSection")
-    }
-    pipeline.step()
+  solver.step() // Construct the search stage before its first native tick.
+  pipeline.solveGraph.solver.step = (): never => {
+    throw new Error("forced native tiny-hypergraph failure")
   }
 
-  pipeline.step()
-  const optimizeSectionSolver = pipeline.activeSubSolver
-  if (!optimizeSectionSolver) {
-    throw new Error("optimizeSection solver was not initialized")
-  }
-
-  optimizeSectionSolver.step = () => {
-    throw new Error("forced optimize-section failure")
-  }
-
-  expect(() => solver.step()).toThrow("forced optimize-section failure")
+  expect(() => solver.step()).toThrow("forced native tiny-hypergraph failure")
   expect(pipeline.solved).toBe(false)
   expect(pipeline.failed).toBe(true)
   expect(solver.solved).toBe(false)

@@ -1,10 +1,11 @@
+import * as bindings from "../../../rust/capacity-autorouter-bindings/pkg/capacity_autorouter_bindings.js"
+import { initializeAutorouterBindings } from "lib/bindings/initializeAutorouterBindings"
+import { PortfolioCallbackScope } from "lib/bindings/high-density/PortfolioCallbackScope"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
+import type { HighDensityBoardGeometry } from "lib/types/high-density-board-geometry"
 import type { GraphicsObject } from "graphics-debug"
 import { getGlobalInMemoryCache } from "lib/cache/setupGlobalCaches"
 import type { CapacityMeshNodeId } from "lib/types/capacity-mesh-types"
-import type { HighDensityBoardGeometry } from "lib/types/high-density-board-geometry"
-import { combineVisualizations } from "lib/utils/combineVisualizations"
-import { mergeRouteSegments } from "lib/utils/mergeRouteSegments"
 import type {
   HighDensityIntraNodeRoute,
   NodeWithPortPoints,
@@ -17,28 +18,36 @@ import {
 } from "../HyperHighDensitySolver/GrowShrinkHighDensityIntraNodeSolver"
 import { PortfolioSingleIntraNodeSolver } from "../HyperHighDensitySolver/PortfolioSingleIntraNodeSolver"
 import { safeTransparentize } from "../colors"
-import { CachedIntraNodeRouteSolver } from "./CachedIntraNodeRouteSolver"
 import { IntraNodeRouteSolver } from "./IntraNodeSolver"
+import { CachedIntraNodeRouteSolver } from "./CachedIntraNodeRouteSolver"
 
 type HighDensityIntraNodeSolver =
   | IntraNodeRouteSolver
   | PortfolioSingleIntraNodeSolver
   | GrowShrinkHighDensityIntraNodeSolver
 
-const connectionLabel = (
-  connectionName: string,
-  rootConnectionName?: string,
-  extraLines: string[] = [],
-) =>
-  [
-    connectionName,
-    rootConnectionName
-      ? `rootConnectionName: ${rootConnectionName}`
-      : undefined,
-    ...extraLines,
-  ]
-    .filter(Boolean)
-    .join("\n")
+function reconcileObservedValue(current: unknown, incoming: unknown): unknown {
+  if (Array.isArray(incoming)) {
+    const result: unknown[] = Array.isArray(current) ? current : []
+    incoming.forEach((value, index): void => {
+      result[index] = reconcileObservedValue(result[index], value)
+    })
+    result.length = incoming.length
+    return result
+  }
+  if (incoming !== null && typeof incoming === "object") {
+    const result =
+      current !== null && typeof current === "object" && !Array.isArray(current)
+        ? (current as Record<string, unknown>)
+        : {}
+    for (const key of Object.keys(result))
+      if (!Object.hasOwn(incoming, key)) delete result[key]
+    for (const [key, value] of Object.entries(incoming))
+      result[key] = reconcileObservedValue(result[key], value)
+    return result
+  }
+  return incoming
+}
 
 export class HighDensitySolver extends BaseSolver {
   override getSolverName(): string {
@@ -58,9 +67,9 @@ export class HighDensitySolver extends BaseSolver {
   effort: number
   obstacles: Obstacle[]
   layerCount: number
-  useGrowShrinkHighDensityIntraNodeSolver: boolean
   enableNegotiatedSearch: boolean
   boardGeometry?: HighDensityBoardGeometry
+  useGrowShrinkHighDensityIntraNodeSolver: boolean
   preserveTerminalPcbPortIds: boolean
   growShrinkMaxInnerIterationsPerGrowthAttempt?: number
   growShrinkFallbackToInvalidGeometryOnFailure: boolean
@@ -84,6 +93,29 @@ export class HighDensitySolver extends BaseSolver {
     }
   >
 
+  private readonly binding: bindings.HighDensitySolver
+  private readonly scope: PortfolioCallbackScope
+  private readonly children = new Map<number, HighDensityIntraNodeSolver>()
+  private readonly childIds = new WeakMap<HighDensityIntraNodeSolver, number>()
+  private readonly externalChildren = new Set<number>()
+  private activeChild: HighDensityIntraNodeSolver | null = null
+  private readonly failedChildren = new Map<
+    number,
+    HighDensityIntraNodeSolver
+  >()
+  private readonly nodeReferences = new Map<string, NodeWithPortPoints>()
+  private readonly stateValues: Record<string, unknown> = {}
+  private readonly observed = new Set<string>()
+  private syncing = false
+  private readonly scalarValues: Record<string, unknown> = {}
+  private readonly scalarDirty = new Set<string>()
+  private readonly settingValues: Record<string, unknown> = {}
+  private readonly diagnosticDirty = new Set<string>()
+  private expectedQueueLength = 0
+  private readonly boardKey: number
+  private detachedParentState?: bindings.HighDensityBoardSnapshot
+  private readonly routeAliases = new Map<number, HighDensityIntraNodeRoute>()
+
   constructor({
     nodePortPoints,
     colorMap,
@@ -95,9 +127,9 @@ export class HighDensitySolver extends BaseSolver {
     nodePfById,
     obstacles,
     layerCount,
-    useGrowShrinkHighDensityIntraNodeSolver,
     enableNegotiatedSearch = false,
     boardGeometry,
+    useGrowShrinkHighDensityIntraNodeSolver,
     preserveTerminalPcbPortIds,
     growShrinkMaxInnerIterationsPerGrowthAttempt,
     growShrinkFallbackToInvalidGeometryOnFailure,
@@ -113,9 +145,9 @@ export class HighDensitySolver extends BaseSolver {
     effort?: number
     obstacles?: Obstacle[]
     layerCount?: number
-    useGrowShrinkHighDensityIntraNodeSolver?: boolean
     enableNegotiatedSearch?: boolean
     boardGeometry?: HighDensityBoardGeometry
+    useGrowShrinkHighDensityIntraNodeSolver?: boolean
     preserveTerminalPcbPortIds?: boolean
     growShrinkMaxInnerIterationsPerGrowthAttempt?: number
     growShrinkFallbackToInvalidGeometryOnFailure?: boolean
@@ -129,6 +161,9 @@ export class HighDensitySolver extends BaseSolver {
   }) {
     super()
     this.unsolvedNodePortPoints = nodePortPoints
+    this.expectedQueueLength = nodePortPoints.length
+    for (const node of nodePortPoints)
+      this.nodeReferences.set(node.capacityMeshNodeId, node)
     this.colorMap = colorMap ?? {}
     this.connMap = connMap
     this.routes = []
@@ -166,6 +201,236 @@ export class HighDensitySolver extends BaseSolver {
       difficultNodePfs: {} as Record<string, number[]>,
       highDensityResizeCount: 0,
     }
+    initializeAutorouterBindings()
+    this.scope = PortfolioCallbackScope.current ?? new PortfolioCallbackScope()
+    for (const field of [
+      "unsolvedNodePortPoints",
+      "routes",
+      "colorMap",
+      "obstacles",
+      "connMap",
+      "nodePfById",
+      "nodeSolveMetadataById",
+      "failedSolvers",
+      "activeSubSolver",
+      "stats",
+    ]) {
+      this.stateValues[field] = (this as unknown as Record<string, unknown>)[
+        field
+      ]
+      Object.defineProperty(this, field, {
+        configurable: true,
+        enumerable: true,
+        get: (): unknown => {
+          if (!this.syncing) {
+            this.observed.add(field)
+            if (
+              field === "routes" ||
+              field === "activeSubSolver" ||
+              field === "failedSolvers" ||
+              field === "nodeSolveMetadataById" ||
+              field === "stats"
+            )
+              this.syncSolverState()
+          }
+          if (
+            !this.syncing &&
+            !this.detachedParentState &&
+            field !== "activeSubSolver"
+          )
+            this.diagnosticDirty.add(field)
+          return this.stateValues[field]
+        },
+        set: (value: unknown): void => {
+          this.stateValues[field] = value
+          if (!this.syncing) {
+            this.observed.add(field)
+            this.diagnosticDirty.add(field)
+          }
+        },
+      })
+    }
+    for (const field of [
+      "MAX_ITERATIONS",
+      "iterations",
+      "solved",
+      "failed",
+      "error",
+      "progress",
+    ] as const) {
+      this.scalarValues[field] = (this as unknown as Record<string, unknown>)[
+        field
+      ]
+      Object.defineProperty(this, field, {
+        configurable: true,
+        enumerable: true,
+        get: (): unknown => this.scalarValues[field],
+        set: (value: unknown): void => {
+          this.scalarValues[field] = value
+          if (!this.syncing) this.scalarDirty.add(field)
+        },
+      })
+    }
+    const params = {
+      nodePortPoints,
+      viaDiameter,
+      traceWidth,
+      obstacleMargin,
+      effort,
+      nodePfById: this.getRelevantNodePfs(nodePortPoints),
+      layerCount,
+      useGrowShrinkHighDensityIntraNodeSolver,
+      preserveTerminalPcbPortIds,
+      growShrinkMaxInnerIterationsPerGrowthAttempt,
+      growShrinkFallbackToInvalidGeometryOnFailure,
+      captureSearchDebug,
+    }
+    const boardKey = this.scope.registerBoard(this)
+    this.boardKey = boardKey
+    for (const field of HighDensitySolver.settingFields)
+      this.settingValues[field] = (this as unknown as Record<string, unknown>)[
+        field
+      ]
+    this.binding = HighDensitySolver.createBinding(boardKey, params)
+    this.syncSolverState()
+  }
+
+  private static createBinding(
+    boardKey: number,
+    params: bindings.HighDensityValue,
+  ): bindings.HighDensitySolver {
+    return new bindings.HighDensitySolver(
+      params,
+      (useGrowth: boolean): number => {
+        const scope = PortfolioCallbackScope.current
+        if (!scope)
+          throw new Error(
+            "High-density factory called outside its execution scope",
+          )
+        return (scope.getBoard(boardKey) as HighDensitySolver).createChild(
+          useGrowth,
+        )
+      },
+      (id: number): unknown => {
+        const scope = PortfolioCallbackScope.current
+        if (!scope)
+          throw new Error(
+            "High-density visualization called outside its execution scope",
+          )
+        return (scope.getBoard(boardKey) as HighDensitySolver).visualizeChild(
+          id,
+        )
+      },
+      safeTransparentize,
+      (
+        id: number,
+        failed: boolean,
+        generalState: bindings.HighDensityState | undefined,
+        totalRoutes: number,
+      ): void => {
+        const scope = PortfolioCallbackScope.current
+        if (!scope)
+          throw new Error(
+            "High-density completion called outside its execution scope",
+          )
+        scope
+          .getBoard(boardKey)
+          .completeChild(id, failed, generalState, totalRoutes)
+      },
+      (snapshot: bindings.HighDensityBoardSnapshot | null): void => {
+        const scope = PortfolioCallbackScope.current
+        if (!scope)
+          throw new Error(
+            "Parent validator observation requires its execution scope",
+          )
+        scope.getBoard(boardKey).observeDetachedParent(snapshot)
+      },
+    )
+  }
+
+  private createChild(useGrowth: boolean): number {
+    const queue = this.stateValues
+      .unsolvedNodePortPoints as NodeWithPortPoints[]
+    const node = queue.pop()
+    if (!node)
+      throw new Error(
+        "Native HighDensity requested a node from an empty input queue",
+      )
+    this.expectedQueueLength = queue.length
+    this.nodeReferences.set(node.capacityMeshNodeId, node)
+    const params = {
+      nodeWithPortPoints: node,
+      enableNegotiatedSearch: this.enableNegotiatedSearch,
+      boardGeometry: this.boardGeometry,
+      colorMap: this.stateValues.colorMap as Record<string, string>,
+      connMap: this.stateValues.connMap as ConnectivityMap | undefined,
+      viaDiameter: this.viaDiameter,
+      traceWidth: this.traceWidth,
+      obstacleMargin: this.obstacleMargin,
+      effort: this.effort,
+      obstacles: this.stateValues.obstacles as Obstacle[],
+      layerCount: this.layerCount,
+      maxInnerIterationsPerGrowthAttempt:
+        this.growShrinkMaxInnerIterationsPerGrowthAttempt,
+      fallbackToInvalidGeometryOnFailure:
+        this.growShrinkFallbackToInvalidGeometryOnFailure,
+      growShrinkSolutionValidator: this.growShrinkSolutionValidator,
+      captureSearchDebug: this.captureSearchDebug,
+    }
+    const child = useGrowth
+      ? new GrowShrinkHighDensityIntraNodeSolver(params)
+      : new PortfolioSingleIntraNodeSolver(params)
+    const id = this.adoptChild(child)
+    this.activeChild = child
+    return id
+  }
+
+  private adoptChild(
+    child: HighDensityIntraNodeSolver,
+    external = false,
+  ): number {
+    const existing = this.childIds.get(child)
+    if (existing !== undefined) return existing
+    let id: number
+    if (external) {
+      const boardKey = this.boardKey
+      id = bindings.HighDensitySolver.shareExternal(
+        (method: string): unknown => {
+          const scope = PortfolioCallbackScope.current
+          if (!scope)
+            throw new Error(
+              "External child callback requires its execution scope",
+            )
+          return scope.getBoard(boardKey).externalChildAction(id, method)
+        },
+        this.getSolvedNodeSolverType(child),
+      )
+      this.externalChildren.add(id)
+    } else if (child instanceof GrowShrinkHighDensityIntraNodeSolver)
+      id = child.shareForOrchestration()
+    else if (child instanceof PortfolioSingleIntraNodeSolver)
+      id = this.scope.adopt(child)
+    else
+      id = bindings.HighDensitySolver.shareGeneral(
+        child.shareForPortfolio(),
+        {
+          MAX_ITERATIONS: child.MAX_ITERATIONS,
+          iterations: child.iterations,
+          solved: child.solved,
+          failed: child.failed,
+          error: child.error,
+          progress: child.progress,
+        },
+        child.nodeWithPortPoints,
+        this.getSolvedNodeSolverType(child),
+      )
+    this.nodeReferences.set(
+      child.nodeWithPortPoints.capacityMeshNodeId,
+      child.nodeWithPortPoints,
+    )
+    this.childIds.set(child, id)
+    this.children.set(id, child)
+    return id
   }
 
   private getSolvedNodeSolverType(solver: HighDensityIntraNodeSolver): string {
@@ -182,48 +447,6 @@ export class HighDensitySolver extends BaseSolver {
       return this.getConcreteSolverTypeName(solver.winningSolver as BaseSolver)
     }
     return this.getConcreteSolverTypeName(solver)
-  }
-
-  private recordNodeSolveMetadata(
-    solver: HighDensityIntraNodeSolver,
-    status: "solved" | "failed",
-  ) {
-    const node = solver.nodeWithPortPoints
-    const nodePf = this.nodePfById.get(node.capacityMeshNodeId) ?? null
-    this.nodeSolveMetadataById.set(node.capacityMeshNodeId, {
-      node,
-      status,
-      solverType: this.getSolvedNodeSolverType(solver),
-      iterations: solver.iterations,
-      routeCount: solver.solvedRoutes.length,
-      nodePf,
-      error: solver.error ?? undefined,
-    })
-  }
-
-  private createNodeMarkerLabel(
-    capacityMeshNodeId: CapacityMeshNodeId,
-    metadata: {
-      status: "solved" | "failed"
-      solverType: string
-      iterations: number
-      routeCount: number
-      nodePf: number | null
-      node: NodeWithPortPoints
-      error?: string
-    },
-  ): string {
-    return [
-      "hd_node_marker",
-      `node: ${capacityMeshNodeId}`,
-      `status: ${metadata.status}`,
-      `solver: ${metadata.solverType}`,
-      `iterations: ${metadata.iterations}`,
-      `routes: ${metadata.routeCount}`,
-      `nodePf: ${metadata.nodePf ?? "n/a"}`,
-      `portPoints: ${metadata.node.portPoints.length}`,
-      ...(metadata.error ? [`error: ${metadata.error}`] : []),
-    ].join("\n")
   }
 
   private getConcreteSolverTypeName(solver: BaseSolver): string {
@@ -266,296 +489,329 @@ export class HighDensitySolver extends BaseSolver {
     return "SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost"
   }
 
-  private recordSolvedNodeStats(
-    solver: HighDensityIntraNodeSolver,
-    node: NodeWithPortPoints,
-  ) {
-    const solverType = this.getSolvedNodeSolverType(solver)
-    const solverNodeCount = this.stats.solverNodeCount as Record<string, number>
-    const difficultNodePfs = this.stats.difficultNodePfs as Record<
-      string,
-      number[]
-    >
-
-    solverNodeCount[solverType] = (solverNodeCount[solverType] ?? 0) + 1
-
-    const pf = this.nodePfById.get(node.capacityMeshNodeId) ?? null
-    if (pf !== null && pf > 0.05) {
-      if (!difficultNodePfs[solverType]) {
-        difficultNodePfs[solverType] = []
-      }
-      difficultNodePfs[solverType].push(pf)
+  private externalChildAction(id: number, method: string): unknown {
+    const child = this.getChild(id)
+    if (method === "step") {
+      child.step()
+      const cache = getGlobalInMemoryCache()
+      bindings.HighDensitySolver.setCacheCounts(
+        cache.cacheHits,
+        cache.cacheMisses,
+      )
     }
+    if (method === "step" || method === "state")
+      return {
+        MAX_ITERATIONS: child.MAX_ITERATIONS,
+        iterations: child.iterations,
+        solved: child.solved,
+        failed: child.failed,
+        error: child.error,
+        progress: child.progress,
+        solverType: this.getSolvedNodeSolverType(child),
+        growthAttempts:
+          child instanceof GrowShrinkHighDensityIntraNodeSolver
+            ? child.growthAttempts
+            : undefined,
+      }
+    if (method === "routes") return child.solvedRoutes
+    if (method === "node") return child.nodeWithPortPoints
+    if (method === "visualize") return child.visualize()
+    throw new Error(`Unknown external high-density child method ${method}`)
   }
 
-  private recordResizeStats(solver: HighDensityIntraNodeSolver) {
-    if (!(solver instanceof GrowShrinkHighDensityIntraNodeSolver)) return
-    this.stats.highDensityResizeCount =
-      (this.stats.highDensityResizeCount ?? 0) + solver.growthAttempts
+  private getChild(id: number): HighDensityIntraNodeSolver {
+    const child = this.failedChildren.get(id) ?? this.children.get(id)
+    if (!child) throw new Error(`Unknown or released high-density child ${id}`)
+    return child
+  }
+
+  private completeChild(
+    id: number,
+    failed: boolean,
+    generalState: bindings.HighDensityState | undefined,
+    totalRoutes: number,
+  ): void {
+    const child = this.getChild(id)
+    if (generalState !== undefined && child instanceof IntraNodeRouteSolver) {
+      const state = generalState
+      Object.assign(child, state)
+      child.syncPortfolioOutput()
+    }
+    if (!failed && this.observed.has("activeSubSolver")) {
+      if (child instanceof GrowShrinkHighDensityIntraNodeSolver)
+        child.syncSolverState()
+      const routes = this.preserveTerminalPcbPortIds
+        ? this.getSolvedRoutesWithTerminalPcbPortIds(child)
+        : child.solvedRoutes
+      const offset = totalRoutes - routes.length
+      routes.forEach((route, index): void => {
+        this.routeAliases.set(offset + index, route)
+      })
+    }
+    if (failed) this.failedChildren.set(id, child)
+    else {
+      this.children.delete(id)
+      this.childIds.delete(child)
+    }
+    if (!failed && child instanceof GrowShrinkHighDensityIntraNodeSolver)
+      child.releaseOrchestrationScope()
+    if (child === this.activeChild) this.activeChild = null
+    if (
+      !failed &&
+      !this.observed.has("activeSubSolver") &&
+      !this.externalChildren.has(id)
+    ) {
+      if (child instanceof GrowShrinkHighDensityIntraNodeSolver)
+        child.disposeUnobserved()
+      else if (child instanceof PortfolioSingleIntraNodeSolver)
+        child.getPortfolioAdapter().disposeUnobserved()
+    }
   }
 
   private getSolvedRoutesWithTerminalPcbPortIds(
     solver: HighDensityIntraNodeSolver,
   ): HighDensityIntraNodeRoute[] {
-    const terminalPortPoints = solver.nodeWithPortPoints.portPoints.filter(
-      (portPoint) => portPoint.pcb_port_id !== undefined,
-    )
-    if (terminalPortPoints.length === 0) return solver.solvedRoutes
-
-    const getTerminalPcbPortId = (
-      route: HighDensityIntraNodeRoute,
-      point: HighDensityIntraNodeRoute["route"][number],
-    ) => {
-      const matchingTerminals = terminalPortPoints.filter(
-        (terminal) =>
-          terminal.connectionName === route.connectionName &&
-          terminal.x === point.x &&
-          terminal.y === point.y &&
-          terminal.z === point.z,
+    const routes = solver.solvedRoutes
+    if (
+      !solver.nodeWithPortPoints.portPoints.some(
+        (point) => point.pcb_port_id !== undefined,
       )
-      if (matchingTerminals.length > 1) {
-        throw new Error(
-          `HighDensitySolver found multiple PCB terminals at an endpoint of "${route.connectionName}"`,
-        )
-      }
-      const terminal = matchingTerminals[0]
-      if (!terminal?.pcb_port_id) return undefined
-      return terminal.pcb_port_id
-    }
-    return solver.solvedRoutes.map((route) => ({
+    )
+      return routes
+    const attached = bindings.HighDensitySolver.attachTerminalPcbPortIds(
+      solver.nodeWithPortPoints,
+      routes,
+    )
+    return routes.map((route, index) => ({
       ...route,
-      startPcbPortId: route.route[0]
-        ? getTerminalPcbPortId(route, route.route[0])
-        : undefined,
-      endPcbPortId:
-        route.route.length > 1
-          ? getTerminalPcbPortId(route, route.route[route.route.length - 1]!)
-          : undefined,
+      startPcbPortId: attached[index]!.startPcbPortId,
+      endPcbPortId: attached[index]!.endPcbPortId,
     }))
   }
 
-  /**
-   * Each iteration, pop an unsolved node and attempt to find the routes inside
-   * of it.
-   */
-  _step() {
-    this.updateCacheStats()
-    if (this.activeSubSolver) {
-      this.activeSubSolver.step()
-      if (this.activeSubSolver.solved) {
-        this.routes.push(
-          ...(this.preserveTerminalPcbPortIds
-            ? this.getSolvedRoutesWithTerminalPcbPortIds(this.activeSubSolver)
-            : this.activeSubSolver.solvedRoutes),
-        )
-        this.recordNodeSolveMetadata(this.activeSubSolver, "solved")
-        this.recordSolvedNodeStats(
-          this.activeSubSolver,
-          this.activeSubSolver.nodeWithPortPoints,
-        )
-        this.recordResizeStats(this.activeSubSolver)
-        this.activeSubSolver = null
-      } else if (this.activeSubSolver.failed) {
-        this.recordNodeSolveMetadata(this.activeSubSolver, "failed")
-        this.recordResizeStats(this.activeSubSolver)
-        this.failedSolvers.push(this.activeSubSolver)
-        this.activeSubSolver = null
-      }
-      this.updateCacheStats()
-      return
-    }
-    if (this.unsolvedNodePortPoints.length === 0) {
-      if (this.failedSolvers.length > 0) {
-        this.solved = false
-        this.failed = true
-        // debugger
-        this.error = `Failed to solve ${this.failedSolvers.length} nodes, ${this.failedSolvers.slice(0, 5).map((fs) => fs.nodeWithPortPoints.capacityMeshNodeId)}. err0: ${this.failedSolvers[0].error}.`
-        this.updateCacheStats()
-        return
-      }
-
-      this.solved = true
-      this.updateCacheStats()
-      return
-    }
-    const node = this.unsolvedNodePortPoints.pop()!
-
-    const intraNodeSolverParams = {
-      nodeWithPortPoints: node,
-      enableNegotiatedSearch: this.enableNegotiatedSearch,
-      boardGeometry: this.boardGeometry,
-      colorMap: this.colorMap,
-      connMap: this.connMap,
-      viaDiameter: this.viaDiameter,
-      traceWidth: this.traceWidth,
-      obstacleMargin: this.obstacleMargin,
-      effort: this.effort,
-      obstacles: this.obstacles,
-      layerCount: this.layerCount,
-      maxInnerIterationsPerGrowthAttempt:
-        this.growShrinkMaxInnerIterationsPerGrowthAttempt,
-      fallbackToInvalidGeometryOnFailure:
-        this.growShrinkFallbackToInvalidGeometryOnFailure,
-      growShrinkSolutionValidator: this.growShrinkSolutionValidator,
-      captureSearchDebug: this.captureSearchDebug,
-    }
-    this.activeSubSolver = this.useGrowShrinkHighDensityIntraNodeSolver
-      ? new GrowShrinkHighDensityIntraNodeSolver(intraNodeSolverParams)
-      : new PortfolioSingleIntraNodeSolver(intraNodeSolverParams)
-    this.updateCacheStats()
+  private visualizeChild(id: number): unknown {
+    return this.getChild(id).visualize()
   }
 
-  private updateCacheStats() {
-    const cacheProvider = getGlobalInMemoryCache()
-    this.stats.intraNodeCacheHits = cacheProvider.cacheHits
-    this.stats.intraNodeCacheMisses = cacheProvider.cacheMisses
+  private encode(value: unknown): string {
+    return JSON.stringify(value, (_key, entry: unknown): unknown =>
+      entry instanceof Map ? Object.fromEntries(entry) : entry,
+    )
   }
 
-  visualize(): GraphicsObject {
-    let graphics: GraphicsObject = {
-      lines: [],
-      points: [],
-      rects: [],
-      circles: [],
-    }
-    for (const route of this.routes) {
-      // Merge segments based on z-coordinate
-      const mergedSegments = mergeRouteSegments(
-        route.route,
-        route.connectionName,
-        this.colorMap[route.connectionName],
+  private static readonly settingFields = [
+    "viaDiameter",
+    "traceWidth",
+    "obstacleMargin",
+    "effort",
+    "layerCount",
+    "useGrowShrinkHighDensityIntraNodeSolver",
+    "preserveTerminalPcbPortIds",
+    "growShrinkMaxInnerIterationsPerGrowthAttempt",
+    "growShrinkFallbackToInvalidGeometryOnFailure",
+    "captureSearchDebug",
+  ] as const
+
+  private getRelevantNodePfs(
+    nodes: NodeWithPortPoints[],
+  ): Map<CapacityMeshNodeId, number | null> {
+    const source = this.stateValues.nodePfById as Map<
+      CapacityMeshNodeId,
+      number | null
+    >
+    const selected = new Map<CapacityMeshNodeId, number | null>()
+    const ids = nodes.map((node) => node.capacityMeshNodeId)
+    if (this.activeChild)
+      ids.push(this.activeChild.nodeWithPortPoints.capacityMeshNodeId)
+    for (const id of ids) if (source.has(id)) selected.set(id, source.get(id)!)
+    return selected
+  }
+
+  private pushSolverState(stepArguments = false): void {
+    const patch: Record<string, unknown> = {}
+    for (const field of this.scalarDirty) {
+      if (
+        stepArguments &&
+        (field === "iterations" || field === "MAX_ITERATIONS")
       )
-
-      // Add merged segments to graphics
-      for (const segment of mergedSegments) {
-        graphics.lines!.push({
-          points: segment.points,
-          label: connectionLabel(
-            route.connectionName,
-            route.rootConnectionName,
-          ),
-          strokeColor:
-            segment.z === 0
-              ? segment.color
-              : safeTransparentize(segment.color, 0.5),
-          layer: `z${segment.z}`,
-          strokeWidth: route.traceThickness,
-          strokeDash: segment.z !== 0 ? [0.1, 0.3] : undefined,
-        })
-      }
-      for (const via of route.vias) {
-        graphics.circles!.push({
-          center: via,
-          layer: "z0,1",
-          radius: route.viaDiameter / 2,
-          fill: this.colorMap[route.connectionName],
-          label: connectionLabel(
-            route.connectionName,
-            route.rootConnectionName,
-            ["via"],
-          ),
-        })
-      }
+        continue
+      patch[field] = this.scalarValues[field]
     }
-    if (this.solved || this.failed) {
-      for (const [capacityMeshNodeId, metadata] of this.nodeSolveMetadataById) {
-        const left = metadata.node.center.x - metadata.node.width / 2
-        const right = metadata.node.center.x + metadata.node.width / 2
-        const top = metadata.node.center.y - metadata.node.height / 2
-        const bottom = metadata.node.center.y + metadata.node.height / 2
+    for (const field of HighDensitySolver.settingFields) {
+      const value = this[field]
+      if (!Object.is(value, this.settingValues[field])) patch[field] = value
+    }
+    for (const field of this.observed) {
+      if (field === "activeSubSolver") {
+        const child = this.stateValues
+          .activeSubSolver as HighDensityIntraNodeSolver | null
+        patch.activeId = child === null ? null : this.adoptChild(child, true)
+        this.activeChild = child
+        if (!this.observed.has("nodePfById"))
+          patch.nodePfById = this.getRelevantNodePfs(
+            this.stateValues.unsolvedNodePortPoints as NodeWithPortPoints[],
+          )
+      } else if (field === "failedSolvers") {
+        patch.failedIds = (
+          this.stateValues.failedSolvers as HighDensityIntraNodeSolver[]
+        ).map((child) => this.adoptChild(child, true))
+      } else if (
+        field !== "connMap" &&
+        field !== "obstacles" &&
+        field !== "colorMap"
+      )
+        patch[field] = this.stateValues[field]
+    }
+    const queue = this.stateValues
+      .unsolvedNodePortPoints as NodeWithPortPoints[]
+    if (queue.length !== this.expectedQueueLength)
+      patch.unsolvedNodePortPoints = queue
+    if (
+      Object.hasOwn(patch, "unsolvedNodePortPoints") &&
+      !this.observed.has("nodePfById")
+    ) {
+      patch.nodePfById = this.getRelevantNodePfs(queue)
+    }
+    if (Object.keys(patch).length > 0)
+      this.scope.run((): void => this.binding.restore(patch))
+    for (const field of HighDensitySolver.settingFields)
+      this.settingValues[field] = this[field]
+    this.expectedQueueLength = queue.length
+    this.scalarDirty.clear()
+    this.diagnosticDirty.clear()
+    const cache = getGlobalInMemoryCache()
+    bindings.HighDensitySolver.setCacheCounts(
+      cache.cacheHits,
+      cache.cacheMisses,
+    )
+  }
 
-        const label = this.createNodeMarkerLabel(capacityMeshNodeId, metadata)
-        const markerColor = metadata.status === "solved" ? "blue" : "red"
+  private observeDetachedParent(
+    snapshot: bindings.HighDensityBoardSnapshot | null,
+  ): void {
+    this.detachedParentState = snapshot ?? undefined
+    if (this.detachedParentState) this.syncSolverState()
+  }
 
-        graphics.lines!.push(
-          {
-            points: [
-              { x: left, y: top },
-              { x: right, y: top },
-            ],
-            layer: "hd_node_boundaries",
-            strokeColor: markerColor,
-            strokeDash: "6, 4",
-            strokeWidth: 0.03,
-            label,
-          },
-          {
-            points: [
-              { x: right, y: top },
-              { x: right, y: bottom },
-            ],
-            layer: "hd_node_boundaries",
-            strokeColor: markerColor,
-            strokeDash: "6, 4",
-            strokeWidth: 0.03,
-            label,
-          },
-          {
-            points: [
-              { x: right, y: bottom },
-              { x: left, y: bottom },
-            ],
-            layer: "hd_node_boundaries",
-            strokeColor: markerColor,
-            strokeDash: "6, 4",
-            strokeWidth: 0.03,
-            label,
-          },
-          {
-            points: [
-              { x: left, y: bottom },
-              { x: left, y: top },
-            ],
-            layer: "hd_node_boundaries",
-            strokeColor: markerColor,
-            strokeDash: "6, 4",
-            strokeWidth: 0.03,
-            label,
-          },
-        )
-
-        if (metadata.status === "solved") {
-          graphics.points!.push({
-            x: metadata.node.center.x,
-            y: metadata.node.center.y,
-            color: markerColor,
-            layer: "hd_node_markers",
-            label,
-          })
-        } else {
-          graphics.lines!.push({
-            points: [
-              { x: 0, y: 0 },
-              {
-                x: metadata.node.center.x,
-                y: metadata.node.center.y,
-              },
-            ],
-            layer: "hd_failed_node_guides",
-            strokeColor: "red",
-            strokeDash: "8, 6",
-            strokeWidth: 0.05,
-            label,
-          })
-          const rectWidth = Math.max(metadata.node.width * 0.1, 0.12)
-          const rectHeight = Math.max(metadata.node.height * 0.1, 0.12)
-          graphics.rects!.push({
-            center: metadata.node.center,
-            layer: "hd_node_markers",
-            width: rectWidth,
-            height: rectHeight,
-            fill: "red",
-            label,
-          })
+  private syncSolverState(): void {
+    if (this.syncing || !this.binding) return
+    this.syncing = true
+    try {
+      if (!this.detachedParentState) this.scope.sync()
+      const state = this.detachedParentState ?? this.binding.state()
+      for (const field of [
+        "MAX_ITERATIONS",
+        "iterations",
+        "solved",
+        "failed",
+        "error",
+        "progress",
+      ] as const) {
+        if (!this.scalarDirty.has(field))
+          (this as unknown as Record<string, unknown>)[field] =
+            field === "progress" ? (state[field] ?? Number.NaN) : state[field]
+      }
+      reconcileObservedValue(this.stateValues.stats, state.stats)
+      if (
+        this.observed.has("nodeSolveMetadataById") &&
+        !this.diagnosticDirty.has("nodeSolveMetadataById")
+      ) {
+        const incomingMetadata =
+          this.detachedParentState?.nodeSolveMetadataById ??
+          this.binding.metadata()
+        const metadata = this.stateValues.nodeSolveMetadataById as Map<
+          string,
+          unknown
+        >
+        for (const id of metadata.keys())
+          if (!Object.hasOwn(incomingMetadata, id)) metadata.delete(id)
+        for (const [id, incoming] of Object.entries(incomingMetadata)) {
+          const value = incoming as Record<string, unknown>
+          const node = this.nodeReferences.get(id)
+          if (node) value.node = node
+          const previous = metadata.get(id) as
+            | Record<string, unknown>
+            | undefined
+          const retainedNode = value.node
+          const next = reconcileObservedValue(previous, {
+            ...value,
+            node: undefined,
+          }) as Record<string, unknown>
+          next.node = retainedNode
+          if (!Object.hasOwn(next, "error")) next.error = undefined
+          metadata.set(id, next)
         }
       }
+      if (this.observed.has("routes") && !this.diagnosticDirty.has("routes")) {
+        const routes = this.stateValues.routes as HighDensityIntraNodeRoute[]
+        const incoming =
+          this.detachedParentState?.routes ?? this.binding.routes()
+        reconcileObservedValue(routes, incoming)
+        for (const [index, route] of this.routeAliases)
+          if (index < routes.length) routes[index] = route
+      }
+      const activeId = state.activeId
+      const failedIds = state.failedIds
+      for (const id of failedIds)
+        if (!this.failedChildren.has(id))
+          this.failedChildren.set(id, this.getChild(id))
+      for (const id of this.failedChildren.keys())
+        if (!failedIds.includes(id)) this.failedChildren.delete(id)
+      this.activeChild = activeId === null ? null : this.getChild(activeId)
+      if (
+        !this.detachedParentState &&
+        this.activeChild instanceof IntraNodeRouteSolver &&
+        !this.externalChildren.has(activeId!)
+      ) {
+        Object.assign(this.activeChild, this.binding.childState(activeId!))
+        this.activeChild.syncPortfolioOutput()
+      }
+      if (!this.diagnosticDirty.has("activeSubSolver"))
+        this.stateValues.activeSubSolver = this.activeChild
+      const failed = this.stateValues
+        .failedSolvers as HighDensityIntraNodeSolver[]
+      if (!this.diagnosticDirty.has("failedSolvers"))
+        failed.splice(
+          0,
+          failed.length,
+          ...failedIds.map((id) => this.getChild(id)),
+        )
+    } finally {
+      this.syncing = false
     }
-    if (this.activeSubSolver) {
-      graphics = combineVisualizations(
-        graphics,
-        this.activeSubSolver.visualize(),
+  }
+
+  override _step(): void {
+    this.pushSolverState(true)
+    let completed = false
+    let status = 0
+    try {
+      status = this.scope.run((): number =>
+        this.binding.stepInner(this.iterations, this.MAX_ITERATIONS),
       )
+      completed = true
+    } finally {
+      if (!completed || status !== 0 || this.observed.size > 0)
+        this.syncSolverState()
     }
-    return graphics
+  }
+
+  override solve(): void {
+    const start = Date.now()
+    this.pushSolverState()
+    try {
+      this.scope.run((): void => this.binding.solve())
+    } finally {
+      this.syncSolverState()
+    }
+    this.timeToSolve = Date.now() - start
+  }
+
+  override visualize(): GraphicsObject {
+    this.pushSolverState()
+    return this.scope.run((): GraphicsObject => {
+      this.binding.restore({ colorMap: this.stateValues.colorMap })
+      return this.binding.visualize()
+    })
   }
 }

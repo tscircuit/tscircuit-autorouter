@@ -1,6 +1,13 @@
-import { PortPoint } from "lib/types/high-density-types"
-import { InputNodeWithPortPoints } from "../PortPointPathingSolver/PortPointPathingSolver"
-import { OwnerPair } from "./types"
+import type { PortPoint } from "lib/types/high-density-types"
+import type { InputNodeWithPortPoints } from "../PortPointPathingSolver/PortPointPathingSolver"
+import type { OwnerPair } from "./types"
+import { shouldIgnoreUniformPortPoint } from "../../../rust/capacity-autorouter-bindings/pkg/capacity_autorouter_bindings.js"
+import { initializeAutorouterBindings } from "lib/bindings/initializeAutorouterBindings"
+
+import {
+  findUniformInputNode,
+  findUniformInputPoint,
+} from "lib/bindings/uniform-port-distribution/UniformPortDistributionLiveValues"
 
 interface ShouldIgnorePortPointParams {
   portPoint: PortPoint
@@ -8,31 +15,13 @@ interface ShouldIgnorePortPointParams {
   inputNodes: InputNodeWithPortPoints[]
 }
 
-/**
- * Excludes port points tied to target-containing nodes so redistribution
- * does not alter constrained entry/exit behavior around route endpoints.
- */
-export const shouldIgnorePortPoint = ({
-  portPoint,
-  ownerNodeIds,
-  inputNodes,
-}: ShouldIgnorePortPointParams): boolean => {
-  for (const ownerNodeId of ownerNodeIds) {
-    const inputNode = inputNodes.find(
-      (n) => n.capacityMeshNodeId === ownerNodeId,
-    )
-    if (inputNode?._containsTarget) return true
-    const inputPortPoint = inputNode?.portPoints.find(
-      (p) => p.portPointId === portPoint.portPointId,
-    )
-    if (
-      inputPortPoint?.connectionNodeIds?.some(
-        (id) =>
-          inputNodes.find((n) => n.capacityMeshNodeId === id)?._containsTarget,
-      )
-    ) {
-      return true
-    }
-  }
-  return false
+export const shouldIgnorePortPoint = (
+  params: ShouldIgnorePortPointParams,
+): boolean => {
+  initializeAutorouterBindings()
+  return shouldIgnoreUniformPortPoint(
+    params,
+    findUniformInputNode,
+    findUniformInputPoint,
+  )
 }

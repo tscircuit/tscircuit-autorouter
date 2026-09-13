@@ -1,0 +1,9 @@
+[package]
+name = "module-allocator"
+version = "0.1.0"
+edition = "2024"
+publish = false
+license = "MIT"
+
+[dependencies]
+dlmalloc = "=0.2.14"

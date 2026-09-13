@@ -1,6 +1,5 @@
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { GraphicsObject } from "graphics-debug"
-import { HighDensityRouteSpatialIndex } from "lib/data-structures/HighDensityRouteSpatialIndex"
 import { cloneAndShuffleArray } from "lib/utils/cloneAndShuffleArray"
 import { getBoundsFromNodeWithPortPoints } from "lib/utils/getBoundsFromNodeWithPortPoints"
 import { getMinDistBetweenEnteringPoints } from "lib/utils/getMinDistBetweenEnteringPoints"
@@ -12,10 +11,22 @@ import type { Obstacle } from "../../types/srj-types"
 import { BaseSolver } from "../BaseSolver"
 import { safeTransparentize } from "../colors"
 import { HighDensityHyperParameters } from "./HighDensityHyperParameters"
-import { SingleHighDensityRouteSolver } from "./SingleHighDensityRouteSolver"
+import type {
+  SingleHighDensityRouteSolver,
+  SingleRouteOptions,
+} from "./SingleHighDensityRouteSolver"
 import { SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost } from "./SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost"
+import * as bindings from "../../../rust/capacity-autorouter-bindings/pkg/capacity_autorouter_bindings.js"
+import { initializeAutorouterBindings } from "lib/bindings/initializeAutorouterBindings"
+
+const contexts = new WeakMap<object, bindings.IntraNodeRouteContext>()
 
 type ConnectionPoint = { x: number; y: number; z: number }
+type UnsolvedConnection = {
+  connectionName: string
+  rootConnectionName?: string
+  points: ConnectionPoint[]
+}
 
 const connectionLabel = (
   connectionName: string,
@@ -50,6 +61,17 @@ const dedupeConnectionPoints = (points: ConnectionPoint[]) => {
 }
 
 export class IntraNodeRouteSolver extends BaseSolver {
+  private binding: bindings.IntraNodeRouteSolver | undefined
+  private disposed = false
+  private routeCount = 0
+  private outputRevision = 0
+  private diagnosticRevision = -1
+  private synchronizingDiagnostics = false
+  private diagnosticsObserved = false
+  private diagnosticTargets: Record<string, unknown> = {}
+  private diagnosticChildren?: Map<number, SingleHighDensityRouteSolver>
+  private diagnosticObserver?: (solver: IntraNodeRouteSolver) => void
+
   override getSolverName(): string {
     return "IntraNodeRouteSolver"
   }
@@ -91,18 +113,21 @@ export class IntraNodeRouteSolver extends BaseSolver {
     return this.activeSubSolver
   }
 
-  constructor(params: {
-    nodeWithPortPoints: NodeWithPortPoints
-    colorMap?: Record<string, string>
-    hyperParameters?: Partial<HighDensityHyperParameters>
-    connMap?: ConnectivityMap
-    viaDiameter?: number
-    traceWidth?: number
-    obstacleMargin?: number
-    captureSearchDebug?: boolean
-    obstacles?: Obstacle[]
-    layerCount?: number
-  }) {
+  constructor(
+    params: {
+      nodeWithPortPoints: NodeWithPortPoints
+      colorMap?: Record<string, string>
+      hyperParameters?: Partial<HighDensityHyperParameters>
+      connMap?: ConnectivityMap
+      viaDiameter?: number
+      traceWidth?: number
+      obstacleMargin?: number
+      captureSearchDebug?: boolean
+      obstacles?: Obstacle[]
+      layerCount?: number
+    },
+    private readonly sharedProps: object = params,
+  ) {
     const { nodeWithPortPoints, colorMap } = params
     super()
     this.nodeWithPortPoints = nodeWithPortPoints
@@ -178,319 +203,257 @@ export class IntraNodeRouteSolver extends BaseSolver {
     this.minDistBetweenEnteringPoints = getMinDistBetweenEnteringPoints(
       this.nodeWithPortPoints,
     )
-
-    // const {
-    //   numEntryExitLayerChanges,
-    //   numSameLayerCrossings,
-    //   numTransitionPairCrossings,
-    //   numTransitions,
-    // } = getIntraNodeCrossings(this.nodeWithPortPoints)
-
-    // if (this.nodeWithPortPoints.portPoints.length === 4) {
-
-    // }
-
-    // if (
-    //   numSameLayerCrossings === 0 &&
-    //   numTransitions === 0 &&
-    //   numEntryExitLayerChanges === 0
-    // ) {
-    //   this.handleSimpleNoCrossingsCase()
-    // }
+    this.installDiagnosticGetters()
   }
 
-  // handleSimpleNoCrossingsCase() {
-  //   // TODO check to make sure there are no crossings due to trace width
-  //   this.solved = true
-  //   this.solvedRoutes = this.unsolvedConnections.map(
-  //     ({ connectionName, points }) => ({
-  //       connectionName,
-  //       route: points,
-  //       traceThickness: 0.1, // TODO load from hyperParameters
-  //       viaDiameter: 0.3,
-  //       vias: [],
-  //     }),
-  //   )
-  //   this.unsolvedConnections = []
-  // }
-
-  computeProgress() {
-    return (
-      (this.solvedRoutes.length + (this.activeSubSolver?.progress || 0)) /
-      this.totalConnections
-    )
-  }
-
-  private getSingleRouteSolverOpts(unsolvedConnection: {
-    connectionName: string
-    rootConnectionName?: string
-    points: { x: number; y: number; z: number }[]
-  }) {
-    const { connectionName, rootConnectionName, points } = unsolvedConnection
-    return {
-      connectionName,
-      rootConnectionName,
-      regionId: this.nodeWithPortPoints.capacityMeshNodeId,
-      minDistBetweenEnteringPoints: this.minDistBetweenEnteringPoints,
-      bounds: getBoundsFromNodeWithPortPoints(this.nodeWithPortPoints),
-      A: { x: points[0].x, y: points[0].y, z: points[0].z },
-      B: {
-        x: points[points.length - 1].x,
-        y: points[points.length - 1].y,
-        z: points[points.length - 1].z,
-      },
-      obstacleRoutes: this.connMap
-        ? this.solvedRoutes.filter(
-            (sr) =>
-              !this.connMap!.areIdsConnected(sr.connectionName, connectionName),
-          )
-        : this.solvedRoutes,
-      futureConnections: this.unsolvedConnections,
-      layerCount: this.nodeWithPortPoints.portPoints.reduce(
-        (max, p) => Math.max(max, (p.z ?? 0) + 1),
-        2,
-      ),
-      availableZ:
-        this.nodeWithPortPoints.availableZ &&
-        this.nodeWithPortPoints.availableZ.length > 0
-          ? this.nodeWithPortPoints.availableZ
-          : [
-              ...new Set(
-                this.nodeWithPortPoints.portPoints.map((point) => point.z ?? 0),
-              ),
-            ].sort((a, b) => a - b),
-      hyperParameters: this.hyperParameters,
-      connMap: this.connMap,
-      viaDiameter: this.viaDiameter,
-      traceThickness: this.traceWidth,
-      obstacleMargin: this.obstacleMargin,
-      captureSearchDebug: this.captureSearchDebug,
-    }
-  }
-
-  private trySolveSamePointLayerChange(unsolvedConnection: {
-    connectionName: string
-    rootConnectionName?: string
-    points: { x: number; y: number; z: number }[]
-  }) {
-    const opts = this.getSingleRouteSolverOpts(unsolvedConnection)
-    const obstacleChecker =
-      new SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost(opts)
-    const { A, B } = opts
-    const viaPoint = { x: A.x, y: A.y }
-
-    if (!isEndpointViaSafe(obstacleChecker, viaPoint, A, B)) {
-      return false
-    }
-
-    const route = [
-      { x: A.x, y: A.y, z: A.z },
-      { ...viaPoint, z: A.z },
-      { ...viaPoint, z: B.z },
-      { x: B.x, y: B.y, z: B.z },
-    ].filter(
-      (pt, idx, arr) =>
-        idx === 0 ||
-        Math.abs(pt.x - arr[idx - 1].x) > 1e-6 ||
-        Math.abs(pt.y - arr[idx - 1].y) > 1e-6 ||
-        pt.z !== arr[idx - 1].z,
-    )
-
-    this.solvedRoutes.push({
-      connectionName: unsolvedConnection.connectionName,
-      rootConnectionName: unsolvedConnection.rootConnectionName,
-      regionId: this.nodeWithPortPoints.capacityMeshNodeId,
-      traceThickness: this.traceWidth,
-      viaDiameter: this.viaDiameter,
-      route,
-      vias: [{ x: viaPoint.x, y: viaPoint.y }],
-    })
-    return true
-  }
-
-  private queueExtraBranchesForMultiPointConnection(unsolvedConnection: {
-    connectionName: string
-    rootConnectionName?: string
-    points: { x: number; y: number; z: number }[]
-  }) {
-    const [origin, ...extraPoints] = dedupeConnectionPoints(
-      unsolvedConnection.points,
-    )
-
-    if (!origin || extraPoints.length <= 1) return false
-
-    for (const point of extraPoints) {
-      this.unsolvedConnections.push({
-        connectionName: unsolvedConnection.connectionName,
-        rootConnectionName: unsolvedConnection.rootConnectionName,
-        points: [origin, point],
+  private installDiagnosticGetters(): void {
+    for (const key of [
+      "unsolvedConnections",
+      "rerouteAttemptsByConnection",
+      "activeSubSolver",
+      "failedSubSolvers",
+    ]) {
+      this.diagnosticTargets[key] = (
+        this as unknown as Record<string, unknown>
+      )[key]
+      Object.defineProperty(this, key, {
+        enumerable: true,
+        configurable: true,
+        get: (): unknown => {
+          if (!this.synchronizingDiagnostics && !this.diagnosticsObserved) {
+            this.diagnosticsObserved = true
+            this.diagnosticObserver?.(this)
+          }
+          this.synchronizeDiagnostics()
+          return this.diagnosticTargets[key]
+        },
+        set: (value: unknown): void => {
+          this.diagnosticTargets[key] = value
+        },
       })
     }
-
-    return true
   }
 
-  private getAvailableZLayers() {
-    if (
-      this.nodeWithPortPoints.availableZ &&
-      this.nodeWithPortPoints.availableZ.length > 0
-    ) {
-      return [...new Set(this.nodeWithPortPoints.availableZ)].sort(
-        (a, b) => a - b,
-      )
-    }
-
-    return [
-      ...new Set(
-        this.nodeWithPortPoints.portPoints.map((point) => point.z ?? 0),
-      ),
-    ].sort((a, b) => a - b)
+  protected getInitialUnsolvedConnections(): UnsolvedConnection[] {
+    return this.diagnosticTargets.unsolvedConnections as UnsolvedConnection[]
   }
 
-  private getFirstSolvedViaTraceConflict() {
-    if (this.solvedRoutes.length < 2) return null
-
-    const spatialIndex = new HighDensityRouteSpatialIndex(this.solvedRoutes)
-    const availableZ = this.getAvailableZLayers()
-
-    for (const route of this.solvedRoutes) {
-      const margin = route.viaDiameter / 2 + this.POSTROUTE_VIA_TRACE_CLEARANCE
-
-      for (const via of route.vias) {
-        for (const z of availableZ) {
-          const conflicts = spatialIndex
-            .getConflictingRoutesNearPoint({ x: via.x, y: via.y, z }, margin)
-            .filter(({ conflictingRoute }) => {
-              if (conflictingRoute.connectionName === route.connectionName) {
-                return false
-              }
-
-              return !(
-                this.connMap?.areIdsConnected(
-                  route.connectionName,
-                  conflictingRoute.connectionName,
-                ) ?? false
-              )
-            })
-
-          if (conflicts.length > 0) {
-            return {
-              route,
-              via,
-              conflictingRoute: conflicts[0]!.conflictingRoute,
-            }
-          }
-        }
-      }
-    }
-
-    return null
+  setDiagnosticObserver(
+    observer: (solver: IntraNodeRouteSolver) => void,
+  ): void {
+    this.diagnosticObserver = observer
+    if (this.diagnosticsObserved) observer(this)
   }
 
-  private queueConnectionForPostrouteRepair(connectionName: string) {
-    const points = this.originalConnectionPointsByName.get(connectionName)
-    if (!points || points.length < 2) {
-      return false
-    }
+  syncObservedDiagnostics(): void {
+    if (this.diagnosticsObserved) this.synchronizeDiagnostics()
+  }
 
-    this.solvedRoutes = this.solvedRoutes.filter(
-      (route) => route.connectionName !== connectionName,
+  private getDiagnosticChild(id: number): SingleHighDensityRouteSolver {
+    const children = (this.diagnosticChildren ??= new Map())
+    let child = children.get(id)
+    if (child) return child
+    if (!this.binding)
+      throw new Error("Native child requires its parent router")
+    const binding = this.binding.getChild(id)
+    const nativeOptions = binding.options()
+    const options: SingleRouteOptions = {
+      ...nativeOptions,
+      rootConnectionName: nativeOptions.rootConnectionName ?? undefined,
+      regionId: nativeOptions.regionId ?? undefined,
+      connMap: this.connMap,
+    }
+    const facade = new SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost(
+      options,
+      binding,
     )
-    this.unsolvedConnections.push({
-      connectionName,
-      rootConnectionName:
-        this.rootConnectionNameByConnectionName.get(connectionName),
-      points: points.map((point) => ({ ...point })),
-    })
-    this.rerouteAttemptsByConnection.set(
-      connectionName,
-      (this.rerouteAttemptsByConnection.get(connectionName) ?? 0) + 1,
-    )
-    return true
-  }
-
-  _step() {
-    if (this.activeSubSolver) {
-      this.activeSubSolver.step()
-      this.progress = this.computeProgress()
-      if (this.activeSubSolver.solved) {
-        this.solvedRoutes.push(this.activeSubSolver.solvedPath!)
-        this.activeSubSolver = null
-      } else if (this.activeSubSolver.failed) {
-        this.failedSubSolvers.push(this.activeSubSolver)
-        this.activeSubSolver = null
-        this.error = this.failedSubSolvers.map((s) => s.error).join("\n")
-        this.failed = true
-      }
-      return
-    }
-
-    const unsolvedConnection = this.unsolvedConnections.pop()
-    this.progress = this.computeProgress()
-    if (!unsolvedConnection) {
-      const viaTraceConflict = this.getFirstSolvedViaTraceConflict()
-      if (viaTraceConflict) {
-        const repairAttempts =
-          this.rerouteAttemptsByConnection.get(
-            viaTraceConflict.route.connectionName,
-          ) ?? 0
-
-        if (repairAttempts >= this.MAX_POSTROUTE_REPAIR_ATTEMPTS) {
-          this.error = [
-            "Post-route via/trace clearance repair exceeded retry budget",
-            `route: ${viaTraceConflict.route.connectionName}`,
-            `conflicts with: ${viaTraceConflict.conflictingRoute.connectionName}`,
-            `via: (${viaTraceConflict.via.x.toFixed(3)}, ${viaTraceConflict.via.y.toFixed(3)})`,
-          ].join("\n")
-          this.failed = true
-          return
-        }
-
+    let lastRevision = -1
+    let terminal = false
+    child = new Proxy(facade, {
+      get: (target, property): unknown => {
+        const revision = this.binding?.getDiagnosticRevision()
         if (
-          this.queueConnectionForPostrouteRepair(
-            viaTraceConflict.route.connectionName,
-          )
+          !terminal &&
+          (revision === undefined || revision !== lastRevision)
         ) {
-          this.progress = this.computeProgress()
-          return
+          target.refreshFromSolver()
+          lastRevision = revision ?? -1
+          terminal = target.solved || target.failed
         }
-      }
+        const member: unknown = Reflect.get(target, property, target)
+        return typeof member === "function"
+          ? (...args: unknown[]): unknown => {
+              const result: unknown = member.apply(target, args)
+              lastRevision = -1
+              return result
+            }
+          : member
+      },
+    })
+    children.set(id, child)
+    return child
+  }
 
-      this.solved = this.failedSubSolvers.length === 0
+  private synchronizeDiagnostics(): void {
+    if (
+      this.synchronizingDiagnostics ||
+      !this.binding ||
+      this.disposed ||
+      this.cacheHit
+    )
       return
-    }
-    if (unsolvedConnection.points.length === 1) {
-      return
-    }
-    if (unsolvedConnection.points.length > 2) {
-      if (this.queueExtraBranchesForMultiPointConnection(unsolvedConnection)) {
-        return
-      }
-    }
-    if (unsolvedConnection.points.length === 2) {
-      const [A, B] = unsolvedConnection.points
-      const sameX = Math.abs(A.x - B.x) < 1e-6
-      const sameY = Math.abs(A.y - B.y) < 1e-6
-
-      if (sameX && sameY && A.z === B.z) {
-        return
-      }
-
-      // Fast-path: if the points share the same x/y but differ in layer,
-      // prefer a pure via or a nearby obstacle-free via before invoking
-      // the heavier search-based solvers. This keeps the degenerate case
-      // fast, but avoids blindly routing through the node center.
-      if (sameX && sameY && A.z !== B.z) {
-        if (this.trySolveSamePointLayerChange(unsolvedConnection)) return
-      }
-    }
-    this.activeSubSolver =
-      new SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost(
-        this.getSingleRouteSolverOpts(unsolvedConnection),
+    const revision = this.binding.getDiagnosticRevision()
+    if (revision === this.diagnosticRevision) return
+    this.synchronizingDiagnostics = true
+    try {
+      const state = this.binding.getDiagnostics()
+      if (!state) return
+      const connections = this.diagnosticTargets
+        .unsolvedConnections as UnsolvedConnection[]
+      const existing = new Map(
+        connections.map((connection) => [
+          JSON.stringify(connection),
+          connection,
+        ]),
       )
+      connections.splice(
+        0,
+        connections.length,
+        ...state.unsolvedConnections.map((connection) => {
+          const restored = {
+            connectionName: connection.connectionName,
+            rootConnectionName: connection.rootConnectionName,
+            points: connection.points,
+          }
+          return existing.get(JSON.stringify(restored)) ?? restored
+        }),
+      )
+      const attempts = this.diagnosticTargets
+        .rerouteAttemptsByConnection as Map<string, number>
+      attempts.clear()
+      for (const [connection, count] of state.rerouteAttemptsByConnection)
+        attempts.set(connection, count)
+      this.activeSubSolver =
+        state.activeChildId === null
+          ? null
+          : this.getDiagnosticChild(state.activeChildId)
+      const failed = this.diagnosticTargets
+        .failedSubSolvers as SingleHighDensityRouteSolver[]
+      failed.splice(
+        0,
+        failed.length,
+        ...state.failedChildIds.map((id) => this.getDiagnosticChild(id)),
+      )
+      this.diagnosticRevision = revision
+    } finally {
+      this.synchronizingDiagnostics = false
+    }
+  }
+
+  private getBinding(lazy = false): bindings.IntraNodeRouteSolver {
+    initializeAutorouterBindings()
+    if (this.disposed)
+      throw new Error("General router WASM solver has been disposed")
+    if (!this.binding) {
+      let context = contexts.get(this.sharedProps)
+      if (!context) {
+        const names = new Set(
+          this.nodeWithPortPoints.portPoints.map(
+            (point) => point.connectionName,
+          ),
+        )
+        const idToNetMap: Record<string, string> = {}
+        for (const name of names) {
+          const net = this.connMap?.getNetConnectedToId(name)
+          if (net !== undefined) idToNetMap[name] = net
+        }
+        const node = this.nodeWithPortPoints
+        const colorMap: Record<string, string> = {}
+        for (const name of names) {
+          if (this.colorMap[name] !== undefined)
+            colorMap[name] = this.colorMap[name]
+        }
+        // Only transfer fields the Rust router consumes; portfolio props also
+        // contain board-wide obstacles and metadata unrelated to this node.
+        context = new bindings.IntraNodeRouteContext({
+          nodeWithPortPoints: {
+            capacityMeshNodeId: node.capacityMeshNodeId,
+            center: node.center,
+            width: node.width,
+            height: node.height,
+            availableZ: node.availableZ,
+            portPoints: node.portPoints.map(
+              ({ connectionName, rootConnectionName, x, y, z }) => ({
+                connectionName,
+                rootConnectionName,
+                x,
+                y,
+                z,
+              }),
+            ),
+          },
+          colorMap,
+          viaDiameter: this.viaDiameter,
+          traceWidth: this.traceWidth,
+          obstacleMargin: this.obstacleMargin,
+          captureSearchDebug: this.captureSearchDebug,
+          connMap: this.connMap ? { netMap: {}, idToNetMap } : undefined,
+        })
+        contexts.set(this.sharedProps, context)
+      }
+      this.binding = lazy
+        ? context.createLazy(this.hyperParameters)
+        : context.create(this.hyperParameters)
+    }
+    return this.binding
+  }
+
+  shareForPortfolio(): number {
+    return this.getBinding(true).shareForPortfolio()
+  }
+
+  syncPortfolioOutput(): void {
+    if (!this.binding || ("cacheHit" in this && this.cacheHit)) return
+    const revision = this.binding.getOutputRevision()
+    if (revision === this.outputRevision) return
+    this.solvedRoutes = this.binding.getOutput().map((route) => {
+      const { connectionName, rootConnectionName, regionId, ...rest } = route
+      return { connectionName, rootConnectionName, regionId, ...rest }
+    })
+    this.routeCount = this.solvedRoutes.length
+    this.outputRevision = revision
+  }
+
+  override _step(): void {
+    const binding = this.getBinding()
+    const status = binding.step(this.iterations)
+    const count = Math.floor(status / 4)
+    this.solved = status % 2 === 1
+    this.failed = Math.floor(status / 2) % 2 === 1
+    if (this.failed) this.error = binding.error() ?? null
+    if (count !== this.routeCount) {
+      this.solvedRoutes = binding.getOutput()
+      // Restore optional own properties that serde omits, preserving TS order.
+      this.solvedRoutes = this.solvedRoutes.map((route) => {
+        const { connectionName, rootConnectionName, regionId, ...rest } = route
+        return { connectionName, rootConnectionName, regionId, ...rest }
+      })
+      this.routeCount = count
+    }
+    this.syncObservedDiagnostics()
+  }
+
+  computeProgress(): number {
+    if (this.binding && !this.cacheHit) return this.binding.computeProgress()
+    return this.solvedRoutes.length / this.totalConnections
   }
 
   visualize(): GraphicsObject {
+    if (this.disposed)
+      throw new Error("General router WASM solver has been disposed")
+    if (this.binding && !("cacheHit" in this && this.cacheHit)) {
+      return this.binding.visualize(safeTransparentize)
+    }
     const graphics: GraphicsObject = {
       lines: [],
       points: [],
@@ -591,45 +554,11 @@ export class IntraNodeRouteSolver extends BaseSolver {
 
     return graphics
   }
-}
 
-const isEndpointViaSafe = (
-  obstacleChecker: SingleHighDensityRouteSolver6_VertHorzLayer_FutureCost,
-  viaPoint: { x: number; y: number },
-  A: { x: number; y: number; z: number },
-  B: { x: number; y: number; z: number },
-) => {
-  const viaNode = {
-    x: viaPoint.x,
-    y: viaPoint.y,
-    z: A.z,
-    parent: {
-      x: A.x,
-      y: A.y,
-      z: A.z,
-      g: 0,
-      h: 0,
-      f: 0,
-      parent: null,
-    },
-    g: 0,
-    h: 0,
-    f: 0,
+  dispose(): void {
+    if (this.diagnosticsObserved) this.synchronizeDiagnostics()
+    this.binding?.free()
+    this.binding = undefined
+    this.disposed = true
   }
-
-  if (
-    obstacleChecker.isNodeTooCloseToObstacle(
-      viaNode,
-      obstacleChecker.viaDiameter / 2 + obstacleChecker.obstacleMargin / 2,
-      true,
-    )
-  ) {
-    return false
-  }
-
-  if (obstacleChecker.isNodeTooCloseToEdge(viaNode, true)) {
-    return false
-  }
-
-  return true
 }

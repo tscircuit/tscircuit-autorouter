@@ -1,39 +1,43 @@
-import { ConnectivityMap } from "circuit-json-to-connectivity-map"
-import { GraphicsObject } from "graphics-debug"
-import { Obstacle } from "lib/types"
-import { HighDensityIntraNodeRoute } from "lib/types/high-density-types"
-import { combineVisualizations } from "lib/utils/combineVisualizations"
-import { createObjectsWithZLayers } from "lib/utils/createObjectsWithZLayers"
-import { BaseSolver } from "../BaseSolver"
+import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
+import type { GraphicsObject } from "graphics-debug"
+import type { Obstacle } from "lib/types"
+import type { HighDensityIntraNodeRoute } from "lib/types/high-density-types"
+import { TraceSimplificationSolverAdapter } from "lib/bindings/trace-simplification/TraceSimplificationSolverAdapter"
 import { SingleSimplifiedPathSolver } from "./SingleSimplifiedPathSolver"
-import { SingleSimplifiedPathSolver5 } from "./SingleSimplifiedPathSolver5_Deg45"
-import { VertexShortcutPathSolver } from "./VertexShortcutPathSolver"
-
-export class MultiSimplifiedPathSolver extends BaseSolver {
-  override getSolverName(): string {
-    return "MultiSimplifiedPathSolver"
-  }
-
-  simplifiedHdRoutes: HighDensityIntraNodeRoute[]
-
-  currentUnsimplifiedHdRouteIndex = 0
-
-  activeSubSolver: SingleSimplifiedPathSolver | null = null
-
-  unsimplifiedHdRoutes: HighDensityIntraNodeRoute[]
-  otherHdRoutes: ReadonlyArray<HighDensityIntraNodeRoute>
-  obstacles: Obstacle[]
-  connMap: ConnectivityMap
-  colorMap: Record<string, string>
-  outline?: Array<{ x: number; y: number }>
-  minBoardEdgeClearance: number
-  defaultViaDiameter: number
-  useTraceWidthAwareClearance: boolean
-  enableVertexShortcuts: boolean
-
+import "./SingleSimplifiedPathSolver5_Deg45"
+import "./VertexShortcutPathSolver"
+export class MultiSimplifiedPathSolver extends TraceSimplificationSolverAdapter {
+  static override solverKind = "multi-path"
+  static override stateFields = [
+    "simplifiedHdRoutes",
+    "currentUnsimplifiedHdRouteIndex",
+    "activeSubSolver",
+    "unsimplifiedHdRoutes",
+    "otherHdRoutes",
+    "obstacles",
+    "connMap",
+    "colorMap",
+    "outline",
+    "minBoardEdgeClearance",
+    "defaultViaDiameter",
+    "useTraceWidthAwareClearance",
+    "enableVertexShortcuts",
+  ]
+  declare simplifiedHdRoutes: HighDensityIntraNodeRoute[]
+  declare currentUnsimplifiedHdRouteIndex: number
+  declare activeSubSolver: SingleSimplifiedPathSolver | null
+  declare unsimplifiedHdRoutes: HighDensityIntraNodeRoute[]
+  declare otherHdRoutes: ReadonlyArray<HighDensityIntraNodeRoute>
+  declare obstacles: Obstacle[]
+  declare connMap: ConnectivityMap
+  declare colorMap: Record<string, string>
+  declare outline?: Array<{ x: number; y: number }>
+  declare minBoardEdgeClearance: number
+  declare defaultViaDiameter: number
+  declare useTraceWidthAwareClearance: boolean
+  declare enableVertexShortcuts: boolean
   constructor(params: {
     unsimplifiedHdRoutes: HighDensityIntraNodeRoute[]
-    /** Routed copper that participates in collision checks but is never changed. */
     otherHdRoutes?: ReadonlyArray<HighDensityIntraNodeRoute>
     obstacles: Obstacle[]
     connMap?: ConnectivityMap
@@ -44,84 +48,11 @@ export class MultiSimplifiedPathSolver extends BaseSolver {
     useTraceWidthAwareClearance?: boolean
     enableVertexShortcuts?: boolean
   }) {
-    super()
-    this.MAX_ITERATIONS = 100e6
-
-    this.unsimplifiedHdRoutes = params.unsimplifiedHdRoutes
-    this.otherHdRoutes = params.otherHdRoutes ?? []
-    const inferredLayerCount =
-      Math.max(
-        2,
-        ...[...params.unsimplifiedHdRoutes, ...this.otherHdRoutes].flatMap(
-          (r) => r.route.map((p) => p.z + 1),
-        ),
-      ) || 2
-    this.obstacles = createObjectsWithZLayers(
-      params.obstacles,
-      inferredLayerCount,
-    )
-    this.connMap = params.connMap || new ConnectivityMap({})
-    this.colorMap = params.colorMap || {}
-    this.outline = params.outline
-    this.minBoardEdgeClearance = params.minBoardEdgeClearance ?? 0.2
-    this.defaultViaDiameter = params.defaultViaDiameter ?? 0.3
-    this.useTraceWidthAwareClearance =
-      params.useTraceWidthAwareClearance ?? false
-    this.enableVertexShortcuts = params.enableVertexShortcuts ?? false
-
-    this.simplifiedHdRoutes = []
+    super(params)
   }
-
-  _step() {
-    const hdRoute =
-      this.unsimplifiedHdRoutes[this.currentUnsimplifiedHdRouteIndex]
-    if (!this.activeSubSolver) {
-      if (!hdRoute) {
-        this.solved = true
-        return
-      }
-
-      this.activeSubSolver = new SingleSimplifiedPathSolver5({
-        inputRoute: hdRoute,
-        otherHdRoutes: this.otherHdRoutes.concat(
-          this.unsimplifiedHdRoutes
-            .slice(this.currentUnsimplifiedHdRouteIndex + 1)
-            .concat(this.simplifiedHdRoutes),
-        ),
-        obstacles: this.obstacles,
-        connMap: this.connMap,
-        colorMap: this.colorMap,
-        outline: this.outline,
-        minBoardEdgeClearance: this.minBoardEdgeClearance,
-        useTraceWidthAwareClearance: this.useTraceWidthAwareClearance,
-      })
-      this.currentUnsimplifiedHdRouteIndex++
-      return
-    }
-
-    this.activeSubSolver.step()
-    if (this.activeSubSolver.solved) {
-      if (
-        this.enableVertexShortcuts &&
-        !(this.activeSubSolver instanceof VertexShortcutPathSolver)
-      ) {
-        this.activeSubSolver = new VertexShortcutPathSolver({
-          inputRoute: this.activeSubSolver.simplifiedRoute,
-          otherHdRoutes: this.activeSubSolver.otherHdRoutes,
-          obstacles: this.obstacles,
-          connMap: this.connMap,
-          colorMap: this.colorMap,
-          outline: this.outline,
-          minBoardEdgeClearance: this.minBoardEdgeClearance,
-          useTraceWidthAwareClearance: this.useTraceWidthAwareClearance,
-        })
-        return
-      }
-      this.simplifiedHdRoutes.push(this.activeSubSolver.simplifiedRoute)
-      this.activeSubSolver = null
-    }
+  override getSolverName(): string {
+    return "MultiSimplifiedPathSolver"
   }
-
   visualize(): GraphicsObject {
     if (this.activeSubSolver) {
       return this.activeSubSolver.visualize()
@@ -269,3 +200,7 @@ export class MultiSimplifiedPathSolver extends BaseSolver {
     return graphics
   }
 }
+TraceSimplificationSolverAdapter.register(
+  "multi-path",
+  MultiSimplifiedPathSolver,
+)
