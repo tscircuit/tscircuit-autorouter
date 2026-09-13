@@ -249,6 +249,20 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
       routeIndexesByNode.set(nodeIndex, routeIndexes)
     }
 
+    const skipSamples =
+      params.maxSampleEntries !== undefined &&
+      routeIndexesByNode.size > params.maxSampleEntries
+    const sampleCount = skipSamples ? 0 : routeIndexesByNode.size
+    this.sampleEntries = []
+    this.stats = {
+      sampleCount,
+      skippedSampleCount: skipSamples ? routeIndexesByNode.size : 0,
+      repairedNodeCount: 0,
+      repairedRouteCount: 0,
+    }
+    this.MAX_ITERATIONS = Math.max(sampleCount * 1_000, 100_000)
+    if (skipSamples) return
+
     const layeredObstacles = createObjectsWithZLayers(
       params.obstacles,
       Math.max(
@@ -258,7 +272,7 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
         ),
       ),
     )
-    const sampleEntries = Array.from(routeIndexesByNode.entries()).map(
+    this.sampleEntries = Array.from(routeIndexesByNode.entries()).map(
       ([nodeIndex, routeIndexes]) => {
         const node = params.nodeWithPortPoints[nodeIndex]
         return {
@@ -304,22 +318,6 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
         }
       },
     )
-    this.sampleEntries =
-      params.maxSampleEntries !== undefined &&
-      sampleEntries.length > params.maxSampleEntries
-        ? []
-        : sampleEntries
-
-    this.MAX_ITERATIONS = Math.max(this.sampleEntries.length * 1_000, 100_000)
-    this.stats = {
-      sampleCount: this.sampleEntries.length,
-      skippedSampleCount:
-        sampleEntries.length > this.sampleEntries.length
-          ? sampleEntries.length
-          : 0,
-      repairedNodeCount: 0,
-      repairedRouteCount: 0,
-    }
   }
 
   override getSolverName(): string {
