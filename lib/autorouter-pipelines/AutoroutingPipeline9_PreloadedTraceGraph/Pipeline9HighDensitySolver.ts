@@ -909,6 +909,28 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
   }
 
   override _step(): void {
+    this.stepNodeRouting()
+    this.activeSubSolver =
+      this.activeFallbackSolver ??
+      this.activeRegularSolver ??
+      this.activeB01Solver
+  }
+
+  computeProgress(): number {
+    if (this.solved) return 1
+    const nodeCount = Number(this.stats.nodeCount)
+    if (nodeCount === 0) return 0
+    const activeProgress = Math.max(
+      0,
+      Math.min(1, this.activeSubSolver?.progress ?? 0),
+    )
+    return Math.max(
+      this.progress,
+      (Number(this.stats.solvedNodeCount) + activeProgress) / nodeCount,
+    )
+  }
+
+  private stepNodeRouting(): void {
     if (this.activeFallbackSolver) {
       this.activeFallbackSolver.step()
       if (this.activeFallbackSolver.failed) {
