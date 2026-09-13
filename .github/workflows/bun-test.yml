@@ -96,7 +96,7 @@ jobs:
     name: Full-board native GBA repro
     if: github.event_name != 'pull_request' || !startsWith(github.head_ref, 'version-bumps/')
     runs-on: ubuntu-latest
-    # Its published capture took over eleven minutes; keep the budget in CI,
+    # The first native replay completed in about fifteen minutes; keep the budget in CI,
     # not in test code, without extending unrelated test timeouts.
     timeout-minutes: 30
     steps:
@@ -112,7 +112,7 @@ jobs:
         run: bun install
 
       - name: Run the complete native routing repro
-        run: bun test tests/bugs/bugreport105-gba-native-foreign-net-shorts.test.ts --timeout 900000
+        run: bun test tests/bugs/bugreport105-gba-native-foreign-net-shorts.test.ts --timeout 1200000
 
       - name: Upload native routing snapshot artifacts
         if: always()

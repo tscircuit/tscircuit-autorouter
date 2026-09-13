@@ -48,5 +48,13 @@ are benchmark rules, not every Core, Gerber, electrical, or manufacturing check.
 
 The fixture opens the same input in the native Pipeline9 debugger. Expensive
 replays and snapshot generation are delegated to PR CI, not the local machine.
-Latest-main outcome and its generated snapshot are pending CI. This is a
-reproduction-only PR: no Core, Pipeline9, Repair03, Repair04, or checks code fix.
+The first latest-main replay in CI returned solved, nonempty routes and wrote
+the real snapshot, with **95 relaxed DRC errors**. The job then failed only
+its 900,000ms test budget (actual test runtime about 910 seconds). The generated
+SVG is copied unchanged from that CI artifact into the repo snapshot folder.
+The dedicated CI-owned budget is now 1,200,000ms; ordinary tests and snapshot
+comparisons are unchanged. A passing comparison on the new head is still pending.
+The two original published-output crossings are not automatically assumed to
+persist on latest main; the snapshot count is not a complete Core/Gerber gate.
+This is a reproduction-only PR: no Core, Pipeline9, Repair03, Repair04, or
+checks code fix.
