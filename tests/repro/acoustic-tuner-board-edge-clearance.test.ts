@@ -1,11 +1,18 @@
 import { expect, test } from "bun:test"
 import { checkCopperToBoardEdgeClearance } from "@tscircuit/checks"
 import { pointToSegmentDistance } from "@tscircuit/math-utils"
-import type { PcbBoard, PcbVia } from "circuit-json"
+import type { AnyCircuitElement, PcbBoard, PcbVia } from "circuit-json"
+import {
+  getSvgFromGraphicsObject,
+  stackGraphicsHorizontally,
+} from "graphics-debug"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
 import type { SimpleRouteJson } from "lib/types"
 import type { HighDensityRoute } from "lib/types/high-density-types"
+import { readFileSync } from "node:fs"
+import { gunzipSync } from "node:zlib"
 import input from "../../fixtures/repro/acoustic-tuner-board-edge-clearance/input.srj.json"
+import { getAcousticTunerClearanceGraphics } from "./fixtures/getAcousticTunerClearanceGraphics"
 
 type Point = { x: number; y: number }
 type ViaMeasurement = Point & { diameter: number; clearance: number }
@@ -45,7 +52,7 @@ function measureNeckVia(routes: HighDensityRoute[]): ViaMeasurement {
   return measureVia(via, route.viaDiameter, input.outline)
 }
 
-test("Pipeline 9 reproduces a via-to-board clearance violation after global repair", (): void => {
+test("Pipeline 9 reproduces a via-to-board clearance violation after global repair", async (): Promise<void> => {
   expect(input.minBoardEdgeClearance).toBe(0.3)
   expect(input.minViaPadDiameter).toBe(0.6)
   const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(
@@ -137,5 +144,59 @@ test("Pipeline 9 reproduces a via-to-board clearance violation after global repa
       { ...via, x: beforeRepair.x, y: beforeRepair.y },
     ]),
   ).toEqual([])
+
+  // Keep the saved full-board picture tied to the fresh router's emitted copper.
+  const capturedCircuit = JSON.parse(
+    gunzipSync(
+      new Uint8Array(
+        readFileSync(
+          new URL(
+            "./assets/acoustic-tuner-rerouted-board.circuit.json.gz",
+            import.meta.url,
+          ),
+        ),
+      ),
+    ).toString("utf8"),
+  ) as AnyCircuitElement[]
+  const capturedTraces = capturedCircuit.filter(
+    (element) => element.type === "pcb_trace",
+  )
+  const routedTraces = solver.getOutputSimplifiedPcbTraces()
+  expect(capturedTraces).toHaveLength(routedTraces.length)
+  for (const trace of routedTraces) {
+    const captured = capturedTraces.find(
+      (element) => element.pcb_trace_id === trace.pcb_trace_id,
+    )
+    if (!captured)
+      throw new Error(`Missing captured trace ${trace.pcb_trace_id}`)
+    expect(captured.route).toHaveLength(trace.route.length)
+    for (let index = 0; index < trace.route.length; index++) {
+      // The captured board only adds source/port metadata to the emitted route.
+      expect(captured.route[index]).toMatchObject(trace.route[index])
+    }
+  }
+
+  const detailGraphics = stackGraphicsHorizontally(
+    [
+      getAcousticTunerClearanceGraphics(
+        beforeRepair,
+        input.minBoardEdgeClearance,
+        input.minViaHoleDiameter,
+      ),
+      getAcousticTunerClearanceGraphics(
+        finalVia,
+        input.minBoardEdgeClearance,
+        input.minViaHoleDiameter,
+      ),
+    ],
+    { titles: ["Before global repair", "Final output (after repair)"] },
+  )
+  await expect(
+    getSvgFromGraphicsObject(detailGraphics, {
+      backgroundColor: "white",
+      svgWidth: 1200,
+      svgHeight: 600,
+    }),
+  ).toMatchSvgSnapshot(import.meta.path)
   console.table({ beforeRepair, afterRepair, finalOutput: finalVia })
 })

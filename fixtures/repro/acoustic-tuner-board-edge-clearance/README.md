@@ -36,7 +36,7 @@ From the repository root:
 
 ```sh
 bun install
-bun test tests/repro/acoustic-tuner-board-edge-clearance.test.ts --timeout 9999999
+bun test tests/repro/acoustic-tuner-board-edge-clearance.test.ts tests/repro/acoustic-tuner-rerouted-board.test.ts --timeout 9999999
 ```
 
 The test prints the before-repair, after-repair, and final via measurements.
@@ -54,6 +54,43 @@ For interactive inspection, run `bun run start` and open
 `repro/acoustic-tuner-board-edge-clearance/acoustic-tuner-board-edge-clearance`
 in Cosmos. The fixture uses Pipeline 9 with caching disabled. Inspect the
 left side of the neck around **x = -3.94, y = 17.19 mm**.
+
+## Saved snapshots
+
+The live routing test saves a detail comparison from the measured before-repair
+and final via positions. Both panels use the same physical scale. Yellow marks
+the required 0.3 mm copper-free inset; the blue circle is the 0.6 mm copper pad
+and the white center is its 0.3 mm drill. This view isolates the via and the nearby
+outline so the small clearance change is visible.
+
+![Before repair and final via clearance](../../../tests/repro/__snapshots__/acoustic-tuner-board-edge-clearance.snap.svg)
+
+The captured-board test checks the declared board-edge rule and saves a full PCB
+SVG using `convertCircuitJsonToPcbSvg`. It records one copper-to-board-edge error,
+on the same `source_trace_67` via.
+
+![Complete acoustic tuner reroute](../../../tests/repro/__snapshots__/acoustic-tuner-rerouted-board.snap.svg)
+
+`tests/repro/assets/acoustic-tuner-rerouted-board.circuit.json.gz` contains the
+captured reroute, with 71 traces and 60 vias. It combines the published version
+1.0.10 board's component/pad/outline data with the fresh 0.3 mm reroute's copper.
+Published traces, vias, and copper pours were removed before inserting the new
+routes; source and endpoint metadata were attached without changing route geometry.
+It is a reconstructed reroute, not the published saved board.
+The live test compares every captured route point with the fresh solver output
+to keep the full-board snapshot tied to the reproduction.
+
+SHA-256 of the decompressed captured Circuit JSON:
+`e99968104b44bd2128033b10bfb2758f055b93b8ba30e8fa8bdf4be7f29b8ada`.
+
+To regenerate only these snapshots:
+
+```sh
+BUN_UPDATE_SNAPSHOTS=1 bun test tests/repro/acoustic-tuner-board-edge-clearance.test.ts tests/repro/acoustic-tuner-rerouted-board.test.ts --timeout 9999999
+```
+
+Updating an SVG records a visual change; the numerical clearance and captured
+route assertions must still pass.
 
 ## Observed result
 
