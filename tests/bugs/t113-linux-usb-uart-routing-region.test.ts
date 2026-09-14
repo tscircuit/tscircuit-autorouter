@@ -107,7 +107,7 @@ test("Pipeline9 routes the exact 86-component T113-S3 USB and UART PCB", async (
   ).toHaveLength(241)
   expect(
     routedCopper.filter((element) => element.type === "pcb_via"),
-  ).toHaveLength(157)
+  ).toHaveLength(161)
   await expect(
     stackSvgsHorizontally(
       [

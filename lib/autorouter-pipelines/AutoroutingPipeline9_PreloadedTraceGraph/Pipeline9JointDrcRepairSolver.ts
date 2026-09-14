@@ -113,6 +113,28 @@ type ReferenceDrcOptions = {
 
 const POINT_EPSILON = 1e-9
 
+const includePersistingViaPadErrors = <TError extends Record<string, unknown>>({
+  filteredErrors,
+  currentErrors,
+}: {
+  filteredErrors: TError[]
+  currentErrors: TError[]
+}): TError[] => {
+  const includedErrors = new Set(filteredErrors)
+  return [
+    ...filteredErrors,
+    ...currentErrors.filter(
+      (error) =>
+        !includedErrors.has(error) &&
+        error.type === "pcb_pad_pad_clearance_error" &&
+        ((typeof error.pcb_via_id === "string" &&
+          error.pcb_via_id.length > 0) ||
+          (Array.isArray(error.pcb_via_ids) &&
+            error.pcb_via_ids.some((viaId) => typeof viaId === "string"))),
+    ),
+  ]
+}
+
 const getAutoroutingViaElements = (
   traces: readonly SimplifiedPcbTrace[],
 ): AnyCircuitElement[] => {
@@ -801,7 +823,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       inputSrj: params.originalSrj,
       srjWithPointPairs: params.srjWithPointPairs,
       routedTraces: [],
-      drcOptions: { traceClearance },
+      drcOptions: { traceClearance, viaPadClearance },
     })
     const baselineEvaluatedTraceIds = new Set(
       (params.originalSrj.traces ?? []).map((trace) => trace.pcb_trace_id),
@@ -826,7 +848,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       inputSrj: params.originalSrj,
       srjWithPointPairs: params.srjWithPointPairs,
       routedTraces: preparedCurrentOutput.routedTraces,
-      drcOptions: { traceClearance },
+      drcOptions: { traceClearance, viaPadClearance },
     })
     const currentEvaluatedTraces = combinePreloadedAndRoutedTraces(
       params.originalSrj.traces ?? [],
@@ -851,19 +873,32 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       evaluatedTraceIds: currentEvaluatedTraceIds,
       evaluatedTraces: currentEvaluatedTraces,
     })
-    const currentDrc = {
-      ...currentDrcResult,
-      errors: filterPipeline9DrcErrorsAgainstBaseline({
-        errors: currentErrors,
-        baselineErrors,
-        originalTraceIdByPreparedTraceId:
-          preparedCurrentOutput.originalPreloadedTraceIdByPreparedTraceId,
-      }),
-      errorsWithCenters: filterPipeline9DrcErrorsAgainstBaseline({
+    const filteredCurrentErrors = filterPipeline9DrcErrorsAgainstBaseline({
+      errors: currentErrors,
+      baselineErrors,
+      originalTraceIdByPreparedTraceId:
+        preparedCurrentOutput.originalPreloadedTraceIdByPreparedTraceId,
+    })
+    const filteredCurrentErrorsWithCenters =
+      filterPipeline9DrcErrorsAgainstBaseline({
         errors: currentErrorsWithCenters,
         baselineErrors: baselineErrorsWithCenters,
         originalTraceIdByPreparedTraceId:
           preparedCurrentOutput.originalPreloadedTraceIdByPreparedTraceId,
+      })
+    const currentDrc = {
+      ...currentDrcResult,
+      // Pipeline9 has a dedicated via-to-pad repair pass and promises to
+      // publish without these manufacturing violations. Keep a persisting
+      // preloaded via-to-pad error repairable even when baseline filtering
+      // suppresses other inherited geometry.
+      errors: includePersistingViaPadErrors({
+        filteredErrors: filteredCurrentErrors,
+        currentErrors,
+      }),
+      errorsWithCenters: includePersistingViaPadErrors({
+        filteredErrors: filteredCurrentErrorsWithCenters,
+        currentErrors: currentErrorsWithCenters,
       }),
     }
     const preparedTraceIdsInErrors = getTraceIdsFromDrcErrors({
