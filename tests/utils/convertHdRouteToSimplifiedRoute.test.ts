@@ -213,7 +213,7 @@ describe("convertHdRouteToSimplifiedRoute", () => {
     expect(result).toMatchInlineSnapshot(`[]`)
   })
 
-  test("correctly ignores via data when actual z-level change doesn't have a matching via", () => {
+  test("materializes a colocated layer change when via metadata is missing", () => {
     const input: HighDensityIntraNodeRoute = {
       connectionName: "partial-vias",
       traceThickness: 0.2,
@@ -268,6 +268,14 @@ describe("convertHdRouteToSimplifiedRoute", () => {
           "layer": "inner1",
           "route_type": "wire",
           "width": 0.2,
+          "x": 3,
+          "y": 3,
+        },
+        {
+          "from_layer": "inner1",
+          "route_type": "via",
+          "to_layer": "inner2",
+          "via_diameter": 0.4,
           "x": 3,
           "y": 3,
         },
