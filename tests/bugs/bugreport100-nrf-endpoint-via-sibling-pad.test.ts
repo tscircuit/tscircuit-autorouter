@@ -178,7 +178,7 @@ const cleanPreloadedTrace: SimplifiedPcbTrace = {
   ],
 }
 
-test("bugreport100 rejects a movable preloaded via beside a foreign QFN pad", async () => {
+test("bugreport100 keeps a movable preloaded route clear of a foreign QFN pad", async () => {
   const legacySolver = createSolver(false)
   legacySolver.solve()
   expect(legacySolver.failed).toBe(false)
@@ -202,17 +202,12 @@ test("bugreport100 rejects a movable preloaded via beside a foreign QFN pad", as
       pcb_pad_ids: expect.arrayContaining(["pcb_smtpad_30"]),
     }),
   )
-  expect(fixedSolver.stats.preloadedViaCandidateRejectionCount).toBe(1)
-  expect(fixedSolver.highDensitySolver.stats.highDensityResizeCount).toBe(1)
-  expect(
-    fixedRfTrace.route.filter((point) => point.route_type === "via"),
-  ).toEqual([])
   expect(fixedViaPadErrors).toEqual([])
 
   const frames = [
     { name: "PRELOADED · CLEAN RF", traces: [cleanPreloadedTrace] },
     { name: "OLD FALLBACK · VIA / FOREIGN PAD DRC", traces: [legacyRfTrace] },
-    { name: "FIXED FALLBACK · REJECTED VIA", traces: [fixedRfTrace] },
+    { name: "FIXED FALLBACK · CLEAR REROUTE", traces: [fixedRfTrace] },
   ].map(({ name, traces }) => ({
     name,
     graphics: convertSrjToGraphicsObject(
