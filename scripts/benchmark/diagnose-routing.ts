@@ -23,4 +23,4 @@ const result = await runTask({
   solverName: "AutoroutingPipelineSolver9_PreloadedTraceGraph",
 })
 writeFileSync(`${outputDirectory}/result.json`, JSON.stringify(result, null, 2))
-console.log(JSON.stringify({ ...result, imageSvg: undefined }))
+console.log(JSON.stringify({ ...result, benchmarkSnapshot: undefined }))
