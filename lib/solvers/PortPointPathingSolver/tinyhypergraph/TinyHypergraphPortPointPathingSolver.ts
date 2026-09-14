@@ -36,6 +36,7 @@ import type {
   HgPortPointPathingSolverParams,
 } from "../hgportpointpathingsolver/types"
 import { createTinyRouteNetIndexer } from "./createTinyRouteNetIndexer"
+import { constrainDuplicatePortsToSharedEdges } from "./constrainDuplicatePortsToSharedEdges"
 import { getRegionNetIdByRegionId } from "./getRegionNetIdByRegionId"
 import { SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments } from "./SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments"
 import {
@@ -1102,6 +1103,13 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
     } else {
       this.duplicateCongestedPortReport = duplicateCongestedPortSolver.report
       graphForTiny = duplicateCongestedPortSolver.getOutput()
+      if (params.duplicatePortMinSpacing !== undefined) {
+        graphForTiny = constrainDuplicatePortsToSharedEdges({
+          graph: graphForTiny,
+          nodes: params.graph.regions.map((region) => region.d),
+          minPortSpacing: params.duplicatePortMinSpacing,
+        })
+      }
       for (const port of graphForTiny.ports) {
         const metadata = asTinyPortMetadata(port.d)
         if (typeof metadata.duplicatedFromPortId !== "string") continue
