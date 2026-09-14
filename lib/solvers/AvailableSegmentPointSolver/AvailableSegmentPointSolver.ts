@@ -47,6 +47,16 @@ export interface SegmentPortPoint {
    * obstacle's own net because same-net copper does not require clearance.
    */
   _clearanceObstacleConnectionIdGroups?: string[][]
+  /**
+   * Original position for a boundary point that was moved to satisfy foreign-
+   * net clearance. Same-net routes can use this position without adding a
+   * second port to the routing graph.
+   */
+  _sameNetAlternativePosition?: {
+    x: number
+    y: number
+    obstacleConnectionIdGroups: string[][]
+  }
 }
 
 export interface SharedEdgeSegment {
@@ -312,96 +322,80 @@ export class AvailableSegmentPointSolver extends BaseSolver {
 
     // Second pass: create port points with distance to centermost port
     for (let i = 0; i < maxPortPoints; i++) {
-      const { x, y } = xyPositions[i]
-
-      // Calculate XY distance to the centermost port position
-      const distToCentermostPortOnZ = Math.sqrt(
-        (x - centermostPos.x) ** 2 + (y - centermostPos.y) ** 2,
-      )
+      const legacyPosition = xyPositions[i]!
 
       // Create a separate port point for each available layer
       for (const z of availableZ) {
+        const endpointClearance = endpointClearanceByZ.get(z)
+        const endpoint =
+          i === 0
+            ? {
+                name: "start",
+                point: overlap.start,
+                inwardDirection: {
+                  x: dx / segmentLength,
+                  y: dy / segmentLength,
+                },
+                clearance: endpointClearance?.start,
+              }
+            : i === maxPortPoints - 1
+              ? {
+                  name: "end",
+                  point: overlap.end,
+                  inwardDirection: {
+                    x: -dx / segmentLength,
+                    y: -dy / segmentLength,
+                  },
+                  clearance: endpointClearance?.end,
+                }
+              : undefined
+        const clearanceObstacles = endpoint?.clearance?.obstacles ?? []
+        const safePosition = endpoint?.clearance
+          ? {
+              x:
+                endpoint.point.x +
+                endpoint.inwardDirection.x * endpoint.clearance.margin,
+              y:
+                endpoint.point.y +
+                endpoint.inwardDirection.y * endpoint.clearance.margin,
+            }
+          : undefined
+        const canUseSafePosition = Boolean(
+          endpoint?.clearance &&
+            endpoint.clearance.margin <
+              segmentLength - edgeMargin + 1e-6 &&
+            safePosition &&
+            this.getClearanceObstacles({ point: safePosition, z }).length === 0,
+        )
+        const position = canUseSafePosition ? safePosition! : legacyPosition
         const portPoint: SegmentPortPoint = {
           segmentPortPointId: `${edge.capacityMeshEdgeId}_pp${i}_z${z}`,
-          x,
-          y,
-          availableZ: [z],
-          nodeIds: [node1.capacityMeshNodeId, node2.capacityMeshNodeId],
-          edgeId: edge.capacityMeshEdgeId,
-          connectionName: null,
-          distToCentermostPortOnZ,
-          cramped: edgeTouchesNarrowQfpPadGap,
-        }
-        const endpointClearance = endpointClearanceByZ.get(z)
-        const clearanceObstacles =
-          i === 0
-            ? endpointClearance?.start.obstacles
-            : i === maxPortPoints - 1
-              ? endpointClearance?.end.obstacles
-              : undefined
-        if (clearanceObstacles && clearanceObstacles.length > 0) {
-          portPoint._clearanceObstacleConnectionIdGroups =
-            clearanceObstacles.map((obstacle) => obstacle.connectedTo)
-        }
-        portPoints.push(portPoint)
-      }
-    }
-
-    for (const [z, endpointClearance] of endpointClearanceByZ) {
-      const alternatives = [
-        {
-          endpointName: "start",
-          endpoint: overlap.start,
-          inwardDirection: { x: dx / segmentLength, y: dy / segmentLength },
-          clearance: endpointClearance.start,
-        },
-        {
-          endpointName: "end",
-          endpoint: overlap.end,
-          inwardDirection: { x: -dx / segmentLength, y: -dy / segmentLength },
-          clearance: endpointClearance.end,
-        },
-      ] as const
-
-      for (const alternative of alternatives) {
-        if (alternative.clearance.obstacles.length === 0) continue
-        if (
-          alternative.clearance.margin >=
-          segmentLength - edgeMargin + 1e-6
-        ) {
-          continue
-        }
-        const point = {
-          x:
-            alternative.endpoint.x +
-            alternative.inwardDirection.x * alternative.clearance.margin,
-          y:
-            alternative.endpoint.y +
-            alternative.inwardDirection.y * alternative.clearance.margin,
-        }
-        if (this.getClearanceObstacles({ point, z }).length > 0) continue
-        if (
-          portPoints.some(
-            (portPoint) =>
-              portPoint.availableZ.includes(z) &&
-              Math.hypot(portPoint.x - point.x, portPoint.y - point.y) <= 1e-6,
-          )
-        ) {
-          continue
-        }
-        portPoints.push({
-          segmentPortPointId: `${edge.capacityMeshEdgeId}_${alternative.endpointName}_clearance_z${z}`,
-          ...point,
+          x: position.x,
+          y: position.y,
           availableZ: [z],
           nodeIds: [node1.capacityMeshNodeId, node2.capacityMeshNodeId],
           edgeId: edge.capacityMeshEdgeId,
           connectionName: null,
           distToCentermostPortOnZ: Math.hypot(
-            point.x - centermostPos.x,
-            point.y - centermostPos.y,
+            position.x - centermostPos.x,
+            position.y - centermostPos.y,
           ),
           cramped: edgeTouchesNarrowQfpPadGap,
-        })
+        }
+        if (clearanceObstacles.length > 0 && !canUseSafePosition) {
+          portPoint._clearanceObstacleConnectionIdGroups =
+            clearanceObstacles.map((obstacle) => obstacle.connectedTo)
+        }
+        if (clearanceObstacles.length > 0 && canUseSafePosition) {
+          portPoint._sameNetAlternativePosition = {
+            x: legacyPosition.x,
+            y: legacyPosition.y,
+            obstacleConnectionIdGroups: clearanceObstacles.map(
+              (obstacle) => obstacle.connectedTo,
+            ),
+          }
+        }
+        portPoints.push(portPoint)
       }
     }
 

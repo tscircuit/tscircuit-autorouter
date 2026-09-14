@@ -240,6 +240,23 @@ export function buildHyperGraph(params: {
             }
             return null
           }),
+        _sameNetAlternativePosition: spp._sameNetAlternativePosition
+          ? {
+              x: spp._sameNetAlternativePosition.x,
+              y: spp._sameNetAlternativePosition.y,
+              obstacleNetIds:
+                spp._sameNetAlternativePosition.obstacleConnectionIdGroups.map(
+                  (connectionIds) => {
+                    for (const connectionId of connectionIds) {
+                      const netId =
+                        params.connectivityMap.getNetConnectedToId(connectionId)
+                      if (netId) return netId
+                    }
+                    return null
+                  },
+                ),
+            }
+          : undefined,
       }
       const hgPort: RegionPortHg = {
         portId: spp.segmentPortPointId,

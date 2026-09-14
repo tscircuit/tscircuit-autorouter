@@ -196,6 +196,11 @@ type TinyPortMetadata = {
   duplicatedFromPortId?: string
   _preloadedFixedNetIds?: string[]
   _preloadedTracePortAssignments?: PreloadedTracePortAssignment[]
+  _sameNetAlternativePosition?: {
+    x: number
+    y: number
+    obstacleNetIds: Array<string | null>
+  }
 }
 
 type LoadedTinyGraph = {
@@ -423,6 +428,7 @@ const toSerializedPortData = (
     cramped: port.d.cramped,
     _preloadedFixedNetIds: port.d._preloadedFixedNetIds,
     _preloadedTracePortAssignments: port.d._preloadedTracePortAssignments,
+    _sameNetAlternativePosition: port.d._sameNetAlternativePosition,
   }
 }
 
@@ -1570,6 +1576,16 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
         ) ?? routeMetadata.mutuallyConnectedNetworkId)
       : undefined
     const portMetadata = solvedTinySolver.topology.portMetadata?.[portId]
+    const sameNetAlternativePosition =
+      portMetadata?._sameNetAlternativePosition
+    const useSameNetAlternativePosition = Boolean(
+      routeMetadata &&
+        sameNetAlternativePosition &&
+        sameNetAlternativePosition.obstacleNetIds.every(
+          (obstacleNetId: string | null) =>
+            obstacleNetId === routeMetadata.mutuallyConnectedNetworkId,
+        ),
+    )
 
     return {
       portPointId: String(
@@ -1577,8 +1593,12 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
           portMetadata?.portId ??
           `tiny-port-${portId}`,
       ),
-      x: solvedTinySolver.topology.portX[portId],
-      y: solvedTinySolver.topology.portY[portId],
+      x: useSameNetAlternativePosition
+        ? sameNetAlternativePosition!.x
+        : solvedTinySolver.topology.portX[portId],
+      y: useSameNetAlternativePosition
+        ? sameNetAlternativePosition!.y
+        : solvedTinySolver.topology.portY[portId],
       z: solvedTinySolver.topology.portZ[portId],
       connectionName,
       rootConnectionName,

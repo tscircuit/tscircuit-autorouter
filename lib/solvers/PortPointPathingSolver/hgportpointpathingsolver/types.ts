@@ -28,6 +28,11 @@ export type RawPort = {
   _preloadedTracePortAssignments?: PreloadedTracePortAssignment[]
   /** One canonical net id per obstacle that requires boundary clearance. */
   _clearanceObstacleNetIds?: Array<string | null>
+  _sameNetAlternativePosition?: {
+    x: number
+    y: number
+    obstacleNetIds: Array<string | null>
+  }
 }
 
 export type RegionPortHg = Omit<RegionPort, "d" | "port"> & {

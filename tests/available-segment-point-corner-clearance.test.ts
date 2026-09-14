@@ -61,24 +61,21 @@ test("boundary ports preserve detailed-router corner clearance", () => {
   solver.solve()
 
   const segment = solver.getOutput()[0]!
-  const legacyTopPort = segment.portPoints.find(
-    (point) => point.segmentPortPointId === "shared_edge_pp0_z0",
-  )!
   const safeTopPort = segment.portPoints.find(
-    (point) =>
-      point.segmentPortPointId === "shared_edge_start_clearance_z0",
+    (point) => point.segmentPortPointId === "shared_edge_pp0_z0",
   )!
   const legacyInnerPort = segment.portPoints.find(
     (point) => point.segmentPortPointId === "shared_edge_pp0_z1",
   )!
 
-  expect(legacyTopPort.x).toBeCloseTo(-1.0 + 0.1875, 10)
-  expect(legacyTopPort._clearanceObstacleConnectionIdGroups).toEqual([
-    ["net_a"],
-  ])
   expect(safeTopPort.x).toBeCloseTo(-1 + requiredCornerClearance, 10)
   expect(safeTopPort._clearanceObstacleConnectionIdGroups).toBeUndefined()
-  expect(legacyInnerPort.x).toBe(legacyTopPort.x)
+  expect(safeTopPort._sameNetAlternativePosition).toEqual({
+    x: -1 + 0.1875,
+    y: 1,
+    obstacleConnectionIdGroups: [["net_a"]],
+  })
+  expect(legacyInnerPort.x).toBe(-1 + 0.1875)
   expect(legacyInnerPort._clearanceObstacleConnectionIdGroups).toBeUndefined()
 
   const inputSrj: SimpleRouteJson = {
@@ -89,23 +86,24 @@ test("boundary ports preserve detailed-router corner clearance", () => {
     connections: [],
     bounds: { minX: -2, minY: -1, maxX: 2, maxY: 3 },
   }
+  const connectivityMap = getConnectivityMapFromSimpleRouteJson(inputSrj)
   const { graph } = buildHyperGraph({
     simpleRouteJsonConnections: [],
     capacityMeshNodes: nodes,
     segmentPortPoints: segment.portPoints,
     layerCount: 2,
-    connectivityMap: getConnectivityMapFromSimpleRouteJson(inputSrj),
+    connectivityMap,
   })
-  const graphLegacyTopPort = graph.ports.find(
+  const obstacleNetId = connectivityMap.getNetConnectedToId("net_a")!
+  const graphSafeTopPort = graph.ports.find(
     (port) => port.d.portId === "shared_edge_pp0_z0::0",
   )!
-  const graphSafeTopPort = graph.ports.find(
-    (port) => port.d.portId === "shared_edge_start_clearance_z0::0",
-  )!
 
-  expect(graphLegacyTopPort.d._clearanceObstacleNetIds).toHaveLength(1)
-  const obstacleNetId = graphLegacyTopPort.d._clearanceObstacleNetIds![0]!
-  expect(isPortClearForNet(graphLegacyTopPort, obstacleNetId)).toBe(true)
-  expect(isPortClearForNet(graphLegacyTopPort, "foreign_net")).toBe(false)
+  expect(graph.ports).toHaveLength(segment.portPoints.length)
   expect(isPortClearForNet(graphSafeTopPort, "foreign_net")).toBe(true)
+  expect(graphSafeTopPort.d._sameNetAlternativePosition).toEqual({
+    x: -1 + 0.1875,
+    y: 1,
+    obstacleNetIds: [obstacleNetId],
+  })
 })
