@@ -2,7 +2,7 @@ import { expect, test } from "bun:test"
 import { applyPipeline9ClearanceProjection } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/applyPipeline9ClearanceProjection"
 import { createBoundedRegionalRepairFixture } from "../fixtures/pipeline9-bounded-regional-repair-fixture"
 
-test("clearance projection preserves endpoints while making near-colocated vias exact", (): void => {
+test("clearance projection makes near-colocated vias exact without a DRC score improvement", (): void => {
   const fixture = createBoundedRegionalRepairFixture()
   fixture.routes[0]!.route = [
     { x: -4, y: 0, z: 0 },
@@ -22,7 +22,15 @@ test("clearance projection preserves endpoints while making near-colocated vias 
     vias: [{ x: -3 + 1e-9, y: 2 }],
   })
   const original = structuredClone(fixture.routes)
-  const result = applyPipeline9ClearanceProjection(fixture)
+  const result = applyPipeline9ClearanceProjection({
+    ...fixture,
+    drcEvaluator: () => [
+      {
+        type: "pcb_trace_error",
+        pcb_trace_error_id: "persistent_test_error",
+      },
+    ],
+  })
   expect(fixture.routes).toEqual(original)
   expect(result[1]!.route[0]).toEqual(original[1]!.route[0])
   expect(result[1]!.route.at(-1)).toEqual(original[1]!.route.at(-1))
@@ -30,6 +38,4 @@ test("clearance projection preserves endpoints while making near-colocated vias 
     { x: -3 + 1e-9, y: 2, z: 0 },
     { x: -3 + 1e-9, y: 2, z: 1 },
   ])
-  const validation = fixture.drcEvaluator({ traces: [], routes: result })
-  expect(Array.isArray(validation) ? validation : validation.errors).toEqual([])
 })

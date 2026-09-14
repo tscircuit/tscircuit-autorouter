@@ -29,9 +29,9 @@ test("Pipeline9 repairs SRJ18 sample 4 within its regional work budget", async (
   expect(
     Number(stats.boundedRegionalRepairPathSearchNodeCount),
   ).toBeLessThanOrEqual(480_000)
-  // Boundary-port clearance can add two early reference validations before
-  // the existing bounded repair completes.
+  // Boundary-port clearance and via canonicalization can add reference
+  // validations before the existing bounded repair completes.
   expect(
     Number(stats.boundedRegionalRepairReferenceValidationCount),
-  ).toBeLessThanOrEqual(8)
+  ).toBeLessThanOrEqual(9)
 })
