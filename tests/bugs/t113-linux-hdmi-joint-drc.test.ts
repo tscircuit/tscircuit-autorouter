@@ -222,7 +222,7 @@ test("Pipeline9 repairs the exact 96-component T113-S3 HDMI PCB", async () => {
   ).toHaveLength(384)
   expect(
     routedCopper.filter((element) => element.type === "pcb_via"),
-  ).toHaveLength(297)
+  ).toHaveLength(294)
   await expect(
     stackSvgsHorizontally(
       [

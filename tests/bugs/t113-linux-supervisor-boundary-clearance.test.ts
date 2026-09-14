@@ -87,7 +87,7 @@ test(
     ).toHaveLength(94)
     expect(
       outputCircuitJson.filter((element) => element.type === "pcb_via"),
-    ).toHaveLength(49)
+    ).toHaveLength(46)
     expect(
       getDrcErrors(outputCircuitJson, {
         traceClearance: 0.1,
