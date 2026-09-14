@@ -29,8 +29,8 @@ const createViaPair = (centerDistance: number) =>
     },
   ] as any[]
 
-test("getDrcErrors reports different-net vias that are too close", () => {
-  const circuitJson = createViaPair(VIA_HOLE_DIAMETER + 0.1 - 0.01)
+test("getDrcErrors reports copper overlap when the via drills clear", () => {
+  const circuitJson = createViaPair(VIA_OUTER_DIAMETER - 0.01)
 
   const { errors, locationAwareErrors } = getDrcErrors(circuitJson, {
     viaClearance: 0.1,
@@ -44,7 +44,7 @@ test("getDrcErrors reports different-net vias that are too close", () => {
     pcb_via_ids: ["via_a", "via_b"],
   })
   expect(locationAwareErrors).toHaveLength(1)
-  expect(locationAwareErrors[0].center).toEqual({ x: 0.12, y: 0 })
+  expect(locationAwareErrors[0].center).toEqual({ x: 0.145, y: 0 })
 })
 
 test("getDrcErrors enforces 0.1 minimum via-to-via clearance", () => {
@@ -60,8 +60,11 @@ test("getDrcErrors enforces 0.1 minimum via-to-via clearance", () => {
   })
 })
 
-test("getDrcErrors allows vias at 0.1 clearance", () => {
-  const centerDistance = VIA_HOLE_DIAMETER + MIN_VIA_TO_VIA_CLEARANCE
+test("getDrcErrors allows vias when copper and holes meet their clearances", () => {
+  const centerDistance = Math.max(
+    VIA_OUTER_DIAMETER,
+    VIA_HOLE_DIAMETER + MIN_VIA_TO_VIA_CLEARANCE,
+  )
   const { errors } = getDrcErrors(createViaPair(centerDistance))
 
   expect(errors).toHaveLength(0)
