@@ -1549,6 +1549,14 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
         neverRouted: currentTinySolver?.getNeverSuccessfullyRoutedRoutes(),
         graph: this.params.graph.regions.map((region) => region.d),
         inputNodes: this.inputNodeWithPortPoints,
+        topology: currentTinySolver?.topology,
+        problem: currentTinySolver?.problem,
+        routeState: currentTinySolver && {
+          currentRouteId: currentTinySolver.state.currentRouteId,
+          unroutedRoutes: currentTinySolver.state.unroutedRoutes,
+          regionSegments: currentTinySolver.state.regionSegments,
+          portAssignment: currentTinySolver.state.portAssignment,
+        },
       })
     this.activeSubSolver = this.tinyPipelineSolver.activeSubSolver ?? null
   }

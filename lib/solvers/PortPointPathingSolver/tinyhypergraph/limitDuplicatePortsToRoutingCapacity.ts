@@ -2,6 +2,7 @@ import type { SerializedHyperGraph } from "@tscircuit/hypergraph"
 import type { CapacityMeshNode, CapacityMeshNodeId } from "lib/types"
 import { getSharedEdgeForNodePair } from "../../UniformPortDistributionSolver/getSharedEdgeForNodePair"
 import { getSharedEdgeRoutingIntervals } from "../../UniformPortDistributionSolver/getSharedEdgeRoutingIntervals"
+import { getSpacedPositionsInIntervals } from "../../UniformPortDistributionSolver/getSpacedPositionsInIntervals"
 import type {
   BoundaryRoutingGeometry,
   Bounds,
@@ -95,9 +96,85 @@ export function limitDuplicatePortsToRoutingCapacity({
     return true
   })
   const retainedPortIds = new Set(ports.map((port) => port.portId))
+  const families = new Map<BoundaryLayerKey, typeof ports>()
+  for (const port of ports) {
+    const owners = [port.region1Id, port.region2Id].sort()
+    const key: BoundaryLayerKey = `${owners.join("|")}:${port.d?.z}`
+    const family = families.get(key) ?? []
+    family.push(port)
+    families.set(key, family)
+  }
+  const positionsByPortId = new Map<string, { x: number; y: number }>()
+  for (const [key, family] of families) {
+    if (
+      !family.some(
+        (port) => typeof port.d?.duplicatedFromPortId === "string",
+      ) ||
+      family.some(
+        (port) =>
+          Array.isArray(port.d?._preloadedFixedNetIds) &&
+          port.d._preloadedFixedNetIds.length > 0,
+      )
+    )
+      continue
+    const firstPort = family[0]!
+    if (
+      nodeById.get(firstPort.region1Id)?._containsTarget ||
+      nodeById.get(firstPort.region2Id)?._containsTarget
+    )
+      continue
+    const sharedEdge = getSharedEdgeForNodePair({
+      nodeAId: firstPort.region1Id,
+      nodeBId: firstPort.region2Id,
+      nodeBounds,
+    })
+    if (!sharedEdge) continue
+    const z = firstPort.d?.z
+    if (typeof z !== "number")
+      throw new Error(`Boundary "${key}" has no routing layer`)
+    const horizontal = sharedEdge.orientation === "horizontal"
+    const coordinate = horizontal ? "x" : "y"
+    family.sort((left, right) => {
+      const a = left.d?.[coordinate]
+      const b = right.d?.[coordinate]
+      if (typeof a !== "number" || typeof b !== "number")
+        throw new Error(`Boundary "${key}" has a port without coordinates`)
+      return a - b
+    })
+    const edgeMin = horizontal ? sharedEdge.x1 : sharedEdge.y1
+    const preferredSpacing = Math.max(
+      sharedEdge.length / family.length,
+      minTraceCenterSpacing,
+    )
+    const firstOffset =
+      (sharedEdge.length - preferredSpacing * (family.length - 1)) / 2
+    const positions = getSpacedPositionsInIntervals({
+      intervals: getSharedEdgeRoutingIntervals({
+        sharedEdge,
+        z,
+        routingGeometry,
+      }),
+      preferredPositions: family.map(
+        (_, index) => edgeMin + firstOffset + preferredSpacing * index,
+      ),
+      spacing: minTraceCenterSpacing,
+      boundaryLabel: key,
+    })
+    // The path search must see the same physical ordering and separation that
+    // high-density routing will receive, rather than the provisional offsets.
+    for (const [index, port] of family.entries()) {
+      positionsByPortId.set(port.portId, {
+        x: horizontal ? positions[index]! : sharedEdge.x1,
+        y: horizontal ? sharedEdge.y1 : positions[index]!,
+      })
+    }
+  }
   return {
     ...graph,
-    ports,
+    ports: ports.map((port) => {
+      const position = positionsByPortId.get(port.portId)
+      return position ? { ...port, d: { ...port.d, ...position } } : port
+    }),
     regions: graph.regions.map((region) => ({
       ...region,
       pointIds: region.pointIds.filter((portId) => retainedPortIds.has(portId)),
