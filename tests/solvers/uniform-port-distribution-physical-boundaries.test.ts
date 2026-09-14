@@ -41,6 +41,11 @@ test("off-boundary duplicates retain their physical shared edge and are redistri
   const solver = new UniformPortDistributionSolver({
     nodeWithPortPoints: nodes,
     inputNodesWithPortPoints: inputNodes,
+    routingGeometry: {
+      capacityNodes: inputNodes,
+      layerCount: 2,
+      minTraceCenterSpacing: 0.2,
+    },
     obstacles: [],
   })
   solver.solve()
