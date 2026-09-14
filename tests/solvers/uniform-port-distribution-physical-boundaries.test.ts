@@ -1,6 +1,7 @@
 import { expect, test } from "bun:test"
 import type { InputNodeWithPortPoints } from "lib/solvers/PortPointPathingSolver/PortPointPathingSolver"
 import { UniformPortDistributionSolver } from "lib/solvers/UniformPortDistributionSolver/UniformPortDistributionSolver"
+import type { CapacityMeshNode } from "lib/types"
 import type {
   NodeWithPortPoints,
   PortPoint,
@@ -25,26 +26,31 @@ test("off-boundary duplicates retain their physical shared edge and are redistri
     availableZ: [0],
     portPoints: ports.map((port) => ({ ...port })),
   }))
-  const inputNodes: InputNodeWithPortPoints[] = nodes.map((node) => ({
-    ...node,
-    layer: "top",
-    availableZ: [0],
-    portPoints: ports.map((port) => ({
-      portPointId: port.portPointId!,
-      x: port.x,
-      y: port.y,
-      z: port.z,
-      connectionNodeIds: ["node_0", "node_1"],
-      distToCentermostPortOnZ: 0,
-    })),
-  }))
+  const inputNodes: (InputNodeWithPortPoints & CapacityMeshNode)[] = nodes.map(
+    (node) => ({
+      ...node,
+      layer: "top",
+      availableZ: [0],
+      portPoints: ports.map((port) => ({
+        portPointId: port.portPointId!,
+        duplicatedFromPortId:
+          port.portPointId === "duplicate" ? "original" : undefined,
+        x: port.x,
+        y: port.y,
+        z: port.z,
+        connectionNodeIds: ["node_0", "node_1"],
+        distToCentermostPortOnZ: 0,
+      })),
+    }),
+  )
   const solver = new UniformPortDistributionSolver({
     nodeWithPortPoints: nodes,
     inputNodesWithPortPoints: inputNodes,
     routingGeometry: {
       capacityNodes: inputNodes,
       layerCount: 2,
-      minTraceCenterSpacing: 0.2,
+      traceWidth: 0.1,
+      traceClearance: 0.1,
     },
     obstacles: [],
   })

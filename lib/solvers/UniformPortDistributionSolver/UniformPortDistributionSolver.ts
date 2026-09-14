@@ -1,6 +1,10 @@
 import { BaseSolver } from "@tscircuit/solver-utils"
 import { GraphicsObject } from "graphics-debug"
-import { type CapacityMeshNode, Obstacle } from "lib/types"
+import {
+  type CapacityMeshNode,
+  type CapacityMeshNodeId,
+  Obstacle,
+} from "lib/types"
 import { NodeWithPortPoints } from "lib/types/high-density-types"
 import { getBoundsFromNodeWithPortPoints } from "lib/utils/getBoundsFromNodeWithPortPoints"
 import { InputNodeWithPortPoints } from "../PortPointPathingSolver/PortPointPathingSolver"
@@ -10,9 +14,11 @@ import {
   OwnerPairKey,
   PortPointWithOwnerPair,
   SharedEdge,
+  type BoundaryRoutingGeometry,
 } from "./types"
 import { determineOwnerPair } from "./determineOwnerPair"
 import { getOwnerPairKey } from "./getOwnerPairKey"
+import { getSharedEdgeForNodePair } from "./getSharedEdgeForNodePair"
 import { precomputeSharedEdges } from "./precomputeSharedEdges"
 import { redistributePortPointsOnSharedEdge } from "./redistributePortPointsOnSharedEdge"
 import { shouldIgnorePortPoint } from "./shouldIgnorePortPoint"
@@ -23,10 +29,8 @@ export interface UniformPortDistributionSolverInput {
   nodeWithPortPoints: NodeWithPortPoints[]
   inputNodesWithPortPoints: InputNodeWithPortPoints[]
   obstacles: Obstacle[]
-  routingGeometry?: {
+  routingGeometry?: Omit<BoundaryRoutingGeometry, "obstacles"> & {
     capacityNodes: CapacityMeshNode[]
-    layerCount: number
-    minTraceCenterSpacing: number
   }
 }
 
@@ -50,27 +54,20 @@ export class UniformPortDistributionSolver extends BaseSolver {
   ownerPairsToProcess: OwnerPairKey[] = []
   currentOwnerPairBeingProcessed: OwnerPairKey | null = null
   redistributedNodes: NodeWithPortPoints[] = []
+  duplicatePortIds = new Set<string>()
 
   constructor(private input: UniformPortDistributionSolverInput) {
     super()
-    if (input.routingGeometry) {
-      // Port offsets must not change which capacity nodes share an edge.
-      // Expanding bounds to include a duplicate can hide the very boundary
-      // on which that duplicate needs to be redistributed.
-      for (const node of input.routingGeometry.capacityNodes) {
-        this.mapOfNodeIdToBounds.set(node.capacityMeshNodeId, {
-          minX: node.center.x - node.width / 2,
-          maxX: node.center.x + node.width / 2,
-          minY: node.center.y - node.height / 2,
-          maxY: node.center.y + node.height / 2,
-        })
-      }
-    } else {
-      for (const node of input.nodeWithPortPoints) {
-        this.mapOfNodeIdToBounds.set(
-          node.capacityMeshNodeId,
-          getBoundsFromNodeWithPortPoints(node),
-        )
+    for (const node of input.nodeWithPortPoints) {
+      this.mapOfNodeIdToBounds.set(
+        node.capacityMeshNodeId,
+        getBoundsFromNodeWithPortPoints(node),
+      )
+    }
+    for (const node of input.inputNodesWithPortPoints) {
+      for (const point of node.portPoints) {
+        if (point.duplicatedFromPortId !== undefined)
+          this.duplicatePortIds.add(point.portPointId)
       }
     }
 
@@ -106,6 +103,38 @@ export class UniformPortDistributionSolver extends BaseSolver {
       nodeBounds: this.mapOfNodeIdToBounds,
     })
 
+    if (input.routingGeometry) {
+      const physicalBounds = new Map<CapacityMeshNodeId, Bounds>(
+        input.routingGeometry.capacityNodes.map((node) => [
+          node.capacityMeshNodeId,
+          {
+            minX: node.center.x - node.width / 2,
+            maxX: node.center.x + node.width / 2,
+            minY: node.center.y - node.height / 2,
+            maxY: node.center.y + node.height / 2,
+          },
+        ]),
+      )
+      for (const [key, ports] of this.mapOfOwnerPairToPortPoints) {
+        if (
+          !ports.some(
+            (point) =>
+              point.portPointId !== undefined &&
+              this.duplicatePortIds.has(point.portPointId),
+          )
+        )
+          continue
+        const owners = uniqueOwnerPairs.get(key)!
+        const edge = getSharedEdgeForNodePair({
+          nodeAId: owners[0],
+          nodeBId: owners[1],
+          nodeBounds: physicalBounds,
+        })
+        if (edge) this.mapOfOwnerPairToSharedEdge.set(key, edge)
+        else this.mapOfOwnerPairToSharedEdge.delete(key)
+      }
+    }
+
     this.ownerPairsToProcess = Array.from(
       this.mapOfOwnerPairToSharedEdge.keys(),
     )
@@ -127,17 +156,24 @@ export class UniformPortDistributionSolver extends BaseSolver {
     const ownerPairKey = this.currentOwnerPairBeingProcessed
     const sharedEdge = this.mapOfOwnerPairToSharedEdge.get(ownerPairKey)
     if (!sharedEdge) return
+    const familyRaw = this.mapOfOwnerPairToPortPoints.get(ownerPairKey) ?? []
+    const routingGeometry = familyRaw.some(
+      (point) =>
+        point.portPointId !== undefined &&
+        this.duplicatePortIds.has(point.portPointId),
+    )
+      ? this.input.routingGeometry
+      : undefined
 
     if (
-      this.input.routingGeometry === undefined &&
+      routingGeometry === undefined &&
       shouldIgnoreSharedEdge({ sharedEdge, obstacles: this.input.obstacles })
     ) {
       return
     }
 
-    const familyRaw = this.mapOfOwnerPairToPortPoints.get(ownerPairKey) ?? []
     const blockedLayers = new Set<number>()
-    if (this.input.routingGeometry !== undefined) {
+    if (routingGeometry !== undefined) {
       for (const z of new Set(familyRaw.map((portPoint) => portPoint.z))) {
         if (
           shouldIgnoreSharedEdge({
@@ -145,7 +181,7 @@ export class UniformPortDistributionSolver extends BaseSolver {
             obstacles: this.input.obstacles,
             routingLayer: {
               z,
-              layerCount: this.input.routingGeometry.layerCount,
+              layerCount: routingGeometry.layerCount,
             },
           })
         ) {
@@ -170,7 +206,14 @@ export class UniformPortDistributionSolver extends BaseSolver {
     const redistributed = redistributePortPointsOnSharedEdge({
       sharedEdge,
       portPoints: family,
-      minTraceCenterSpacing: this.input.routingGeometry?.minTraceCenterSpacing,
+      minTraceCenterSpacing:
+        routingGeometry === undefined
+          ? undefined
+          : routingGeometry.traceWidth + routingGeometry.traceClearance,
+      routingGeometry:
+        routingGeometry === undefined
+          ? undefined
+          : { ...routingGeometry, obstacles: this.input.obstacles },
     })
 
     this.mapOfOwnerPairToPortPoints.set(ownerPairKey, [

@@ -1,4 +1,10 @@
-import { PortPointWithOwnerPair, SharedEdge } from "./types"
+import {
+  PortPointWithOwnerPair,
+  SharedEdge,
+  type BoundaryRoutingGeometry,
+} from "./types"
+import { getSharedEdgeRoutingIntervals } from "./getSharedEdgeRoutingIntervals"
+import { getSpacedPositionsInIntervals } from "./getSpacedPositionsInIntervals"
 
 /**
  * Repositions each owner-pair family uniformly along its shared edge while
@@ -8,10 +14,12 @@ export const redistributePortPointsOnSharedEdge = ({
   sharedEdge,
   portPoints,
   minTraceCenterSpacing,
+  routingGeometry,
 }: {
   sharedEdge: SharedEdge
   portPoints: PortPointWithOwnerPair[]
   minTraceCenterSpacing?: number
+  routingGeometry?: BoundaryRoutingGeometry
 }): PortPointWithOwnerPair[] => {
   if (
     minTraceCenterSpacing !== undefined &&
@@ -49,20 +57,35 @@ export const redistributePortPointsOnSharedEdge = ({
     portsOnZ.sort((a, b) =>
       sharedEdge.orientation === "horizontal" ? a.x - b.x : a.y - b.y,
     )
-
+    const preferredPositions: number[] = []
     for (let i = 0; i < count; i++) {
       const offset =
         spacing === sharedEdge.length / count
           ? sharedEdge.length * ((2 * i + 1) / (2 * count))
           : (sharedEdge.length - occupiedLength) / 2 + i * spacing
+      preferredPositions.push(
+        (sharedEdge.orientation === "horizontal"
+          ? sharedEdge.x1
+          : sharedEdge.y1) + offset,
+      )
+    }
+    const positions = routingGeometry
+      ? getSpacedPositionsInIntervals({
+          intervals: getSharedEdgeRoutingIntervals({
+            sharedEdge,
+            z,
+            routingGeometry,
+          }),
+          preferredPositions,
+          spacing: routingGeometry.traceWidth + routingGeometry.traceClearance,
+          boundaryLabel: `${sharedEdge.ownerPairKey}:${z}`,
+        })
+      : preferredPositions
+    for (let i = 0; i < count; i++) {
       const x =
-        sharedEdge.orientation === "horizontal"
-          ? sharedEdge.x1 + offset
-          : sharedEdge.x1
+        sharedEdge.orientation === "horizontal" ? positions[i]! : sharedEdge.x1
       const y =
-        sharedEdge.orientation === "horizontal"
-          ? sharedEdge.y1
-          : sharedEdge.y1 + offset
+        sharedEdge.orientation === "horizontal" ? sharedEdge.y1 : positions[i]!
       redistributed.push({ ...portsOnZ[i], x, y })
     }
   }

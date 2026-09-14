@@ -37,7 +37,7 @@ import type {
   HgPortPointPathingSolverParams,
 } from "../hgportpointpathingsolver/types"
 import { createTinyRouteNetIndexer } from "./createTinyRouteNetIndexer"
-import { removeDuplicatePortsOnSingleTraceBoundaries } from "./removeDuplicatePortsOnSingleTraceBoundaries"
+import { limitDuplicatePortsToRoutingCapacity } from "./limitDuplicatePortsToRoutingCapacity"
 import { getRegionNetIdByRegionId } from "./getRegionNetIdByRegionId"
 import { SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments } from "./SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments"
 import {
@@ -683,6 +683,10 @@ const buildInputNodesWithPortPoints = (
 
         return {
           portPointId: serializedPort.portId,
+          duplicatedFromPortId:
+            typeof portMetadata.duplicatedFromPortId === "string"
+              ? portMetadata.duplicatedFromPortId
+              : undefined,
           x: Number(portMetadata.x ?? 0),
           y: Number(portMetadata.y ?? 0),
           z: Number(portMetadata.z ?? 0),
@@ -1104,11 +1108,11 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
     } else {
       this.duplicateCongestedPortReport = duplicateCongestedPortSolver.report
       graphForTiny = duplicateCongestedPortSolver.getOutput()
-      if (params.minTraceCenterSpacing !== undefined) {
-        graphForTiny = removeDuplicatePortsOnSingleTraceBoundaries({
+      if (params.boundaryRoutingGeometry !== undefined) {
+        graphForTiny = limitDuplicatePortsToRoutingCapacity({
           graph: graphForTiny,
           nodes: params.graph.regions.map((region) => region.d),
-          minTraceCenterSpacing: params.minTraceCenterSpacing,
+          routingGeometry: params.boundaryRoutingGeometry,
         })
         const retainedPortIds = new Set(
           graphForTiny.ports.map((port) => port.portId),

@@ -14,6 +14,7 @@ import type {
   SimpleRouteConnection,
 } from "lib/types"
 import type { PreloadedTracePortAssignment } from "lib/solvers/AvailableSegmentPointSolver/AvailableSegmentPointSolver"
+import type { BoundaryRoutingGeometry } from "../../UniformPortDistributionSolver/types"
 
 export type RawPort = {
   portId: string
@@ -98,7 +99,7 @@ export interface HgPortPointPathingSolverParams {
   effort: number
   preserveTerminalPcbPortIds?: boolean
   minViaPadDiameter?: number
-  minTraceCenterSpacing?: number
+  boundaryRoutingGeometry?: BoundaryRoutingGeometry
   flags: {
     FORCE_CENTER_FIRST: boolean
     RIPPING_ENABLED: boolean

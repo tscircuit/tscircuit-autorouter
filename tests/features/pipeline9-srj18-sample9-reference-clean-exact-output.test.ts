@@ -15,8 +15,16 @@ test("Pipeline9 preserves SRJ18 sample 9's reference-clean exact output", async 
   expect(solver.solved).toBeTrue()
   expect(solver.failed).toBeFalse()
   const repairStats = solver.pipeline9JointDrcRepairSolver?.stats
+  const { errors } = evaluateRelaxedDrc({
+    inputSrj: scenario,
+    srjWithPointPairs: solver.srjWithPointPairs!,
+    routedTraces: solver.getOutputSimplifiedPcbTraces(),
+  })
   // Original pad geometry removes the indexed evaluator's false positives.
-  expect(Number(repairStats?.finalDrcIssueCount)).toBe(0)
+  expect(
+    Number(repairStats?.finalDrcIssueCount),
+    JSON.stringify({ errors, repairStats }),
+  ).toBe(0)
   expect(repairStats).toMatchObject({
     postExactReferenceValidationAttempted: true,
     postExactReferenceDrcIssueCount: 0,
@@ -29,11 +37,6 @@ test("Pipeline9 preserves SRJ18 sample 9's reference-clean exact output", async 
     terminalEscapeAcceptedCount: 0,
     regionalB01RepairAttempted: false,
     regionalB01RepairCandidateSearchCount: 0,
-  })
-  const { errors } = evaluateRelaxedDrc({
-    inputSrj: scenario,
-    srjWithPointPairs: solver.srjWithPointPairs!,
-    routedTraces: solver.getOutputSimplifiedPcbTraces(),
   })
   expect(errors).toHaveLength(0)
 })
