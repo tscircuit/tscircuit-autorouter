@@ -88,6 +88,8 @@ export function mergeConnections(
     let isOffBoard = false
     const mergedExternallyConnectedPointIds: PointId[][] = []
     const mergedNetConnectionNames: Set<string> = new Set()
+    const connectionsWithoutSourceTraceProvenance: SimpleRouteConnection[] = []
+    let hasSourceTraceProvenance = false
     let nominalTraceWidth: number | undefined = undefined
 
     simpleRouteConnectionGroup.forEach((simpleRouteConnection) => {
@@ -124,6 +126,11 @@ export function mergeConnections(
       if (simpleRouteConnection.__netConnectionName) {
         mergedNetConnectionNames.add(simpleRouteConnection.__netConnectionName)
       }
+      if (simpleRouteConnection.source_trace_id) {
+        hasSourceTraceProvenance = true
+      } else {
+        connectionsWithoutSourceTraceProvenance.push(simpleRouteConnection)
+      }
 
       // Take the nominalTraceWidth from the first connection for now
       // A more robust solution might average or pick the max/min based on context
@@ -134,6 +141,18 @@ export function mergeConnections(
         nominalTraceWidth = simpleRouteConnection.nominalTraceWidth
       }
     })
+
+    if (
+      mergedNetConnectionNames.size === 0 &&
+      hasSourceTraceProvenance &&
+      connectionsWithoutSourceTraceProvenance.length === 1
+    ) {
+      // Core tags explicit traces with source_trace_id. When exactly one
+      // connected input lacks that tag, it is the source-net connection.
+      mergedNetConnectionNames.add(
+        connectionsWithoutSourceTraceProvenance[0]!.name,
+      )
+    }
 
     // Create the new merged SimpleRouteConnection
     const newSimpleRouteConnection: SimpleRouteConnection = {

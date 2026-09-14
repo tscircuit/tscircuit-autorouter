@@ -59,14 +59,15 @@ jobs:
           fi
 
           echo "Running ${#test_files[@]} test files from $test_plan"
-          # This full-board regression takes just over five minutes even on
-          # successful main runs. Keep its assertions, but allow runner variance.
+          # These full-board regressions take over five minutes even on
+          # successful runs. Keep their assertions, but allow runner variance.
           slow_test="tests/features/pipeline9-srj18-sample2-bounded-regional-drc.test.ts"
+          t113_test="tests/bugs/t113-linux-hdmi-full-pipeline.test.ts"
           regular_tests=()
-          has_slow_test=false
+          slow_tests=()
           for test_file in "${test_files[@]}"; do
-            if [ "$test_file" = "$slow_test" ]; then
-              has_slow_test=true
+            if [ "$test_file" = "$slow_test" ] || [ "$test_file" = "$t113_test" ]; then
+              slow_tests+=("$test_file")
             else
               regular_tests+=("$test_file")
             fi
@@ -74,9 +75,9 @@ jobs:
           if [ "${#regular_tests[@]}" -gt 0 ]; then
             bun test "${regular_tests[@]}" --timeout 300000
           fi
-          if [ "$has_slow_test" = true ]; then
-            bun test "$slow_test" --timeout 600000
-          fi
+          for slow_test_file in "${slow_tests[@]}"; do
+            bun test "$slow_test_file" --timeout 900000
+          done
 
       - name: Upload diff PNG and SVG snapshot artifacts
         if: failure()

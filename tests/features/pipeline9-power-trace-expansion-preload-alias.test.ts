@@ -12,9 +12,17 @@ test("Pipeline9 expands a preloaded power trace named by a connected alias", () 
   const powerConnection = srj.connections[0]!
   powerConnection.nominalTraceWidth = 0.6
   const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(srj)
-  const powerStep = solver.pipelineDef.at(-1)!
+  const powerStep = solver.pipelineDef.find(
+    (step) => step.solverName === "powerTraceExpansionSolver",
+  )!
+  const postPowerViaMergeStep = solver.pipelineDef.find(
+    (step) => step.solverName === "postPowerTraceViaMergeSolver",
+  )!
 
   expect(powerStep.solverName).toBe("powerTraceExpansionSolver")
+  expect(solver.pipelineDef.indexOf(postPowerViaMergeStep)).toBe(
+    solver.pipelineDef.indexOf(powerStep) + 1,
+  )
   const originalGetNewTracesBeforePowerExpansion =
     solver.getNewTracesBeforePowerExpansion.bind(solver)
   const originalGetUpdatedPreloadedTraces =

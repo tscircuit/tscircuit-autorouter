@@ -64,6 +64,13 @@ export interface SimpleRouteJson {
   defaultObstacleMargin?: number
   minTraceToPadEdgeClearance?: number
   minBoardEdgeClearance?: number
+  /**
+   * Whether `bounds` describe physical board edges for DRC purposes.
+   * Routing regions such as fanout boxes set this to false because their
+   * bounds constrain the route search without representing manufactured edges.
+   * Defaults to true for backwards compatibility.
+   */
+  boundsArePhysicalBoardEdges?: boolean
   minViaEdgeToPadEdgeClearance?: number
   obstacles: Obstacle[]
   connections: Array<SimpleRouteConnection>
@@ -74,6 +81,8 @@ export interface SimpleRouteJson {
    * Defaults to false because via-in-pad generally requires filled and capped vias.
    */
   allowViaInPad?: boolean
+  /** Whether vias may terminate on internal copper layers. Defaults to true. */
+  allowBlindAndBuriedVias?: boolean
   bounds: { minX: number; maxX: number; minY: number; maxY: number }
   outline?: Array<{ x: number; y: number }>
   traces?: SimplifiedPcbTraces
@@ -133,6 +142,8 @@ export interface Obstacle {
 
 export interface SimpleRouteConnection {
   name: string
+  /** Circuit JSON source-trace provenance supplied by tscircuit/core. */
+  source_trace_id?: string
   rootConnectionName?: RootConnectionName
   mergedConnectionNames?: string[]
   __rootConnectionNames?: string[]
@@ -149,6 +160,8 @@ export interface SimpleRouteConnection {
 export interface SimplifiedPcbTrace {
   type: "pcb_trace"
   pcb_trace_id: TraceId
+  /** Circuit JSON source trace or source net represented by this copper. */
+  source_trace_id?: string
   /** Preloaded trace intentionally replaced by this routed output. */
   __replaces_pcb_trace_id?: TraceId
   connection_name: string

@@ -1,12 +1,12 @@
 import { expect, test } from "bun:test"
+import { readFileSync } from "node:fs"
+import { gunzipSync } from "node:zlib"
 import type { CircuitJson } from "circuit-json"
 import { convertCircuitJsonToPcbSvg } from "circuit-to-svg"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
 import { getDrcErrors } from "lib/testing/getDrcErrors"
 import { convertToCircuitJson } from "lib/testing/utils/convertToCircuitJson"
 import type { SimpleRouteJson } from "lib/types"
-import { readFileSync } from "node:fs"
-import { gunzipSync } from "node:zlib"
 
 const fixtureDirectory =
   "../../fixtures/bug-reports/t113-linux-supervisor-boundary-clearance/"

@@ -5,10 +5,12 @@ import {
   checkPcbTracesOutOfBoard,
   checkSameNetViaSpacing,
   checkTracesAreContiguous,
+  checkViaPadClearance,
   checkViaTraceClearance,
 } from "@tscircuit/checks"
 import type {
   AnyCircuitElement,
+  PcbPadPadClearanceError,
   PcbPadTraceClearanceError,
   PcbTraceError,
   PcbViaClearanceError,
@@ -32,6 +34,7 @@ type DrcError =
   | PcbTraceError
   | PcbViaTraceClearanceError
   | PcbPadTraceClearanceError
+  | PcbPadPadClearanceError
   | PcbViaClearanceError
 
 type DrcErrorWithCenter = DrcError & { center?: Point }
@@ -52,6 +55,7 @@ export interface GetDrcErrorsOptions {
   traceClearance?: number
   includeTraceContinuity?: boolean
   includeTypedTraceClearance?: boolean
+  viaPadClearance?: number
 }
 
 const createDrcConnectivityMap = (
@@ -67,6 +71,17 @@ const createDrcConnectivityMap = (
 
   connMap.addConnections(viaTraceConnections)
   return connMap
+}
+
+/** Uses the physical annular copper diameter for different-net via clearance. */
+const getCircuitJsonWithViaCopperDiameters = (
+  circuitJson: CircuitJson,
+): CircuitJson => {
+  return circuitJson.map((element) =>
+    element.type === "pcb_via"
+      ? { ...element, hole_diameter: element.outer_diameter }
+      : element,
+  )
 }
 
 export const getDrcErrors = (
@@ -96,7 +111,14 @@ export const getDrcErrors = (
         minClearance: options.traceClearance,
       })
     : []
-  const viaErrors = [
+  const viaPadErrors =
+    options.viaPadClearance === undefined
+      ? []
+      : checkViaPadClearance(circuitJson, {
+          connMap,
+          minClearance: options.viaPadClearance,
+        })
+  const viaDrillErrors = [
     ...checkSameNetViaSpacing(circuitJson, {
       connMap,
       minClearance: viaClearance,
@@ -105,6 +127,17 @@ export const getDrcErrors = (
       connMap,
       minClearance: viaClearance,
     }),
+  ]
+  const viaDrillErrorIds = new Set(
+    viaDrillErrors.map((error) => error.pcb_error_id),
+  )
+  const viaCopperOverlapErrors = checkDifferentNetViaSpacing(
+    getCircuitJsonWithViaCopperDiameters(circuitJson),
+    { connMap, minClearance: 0 },
+  ).filter((error) => !viaDrillErrorIds.has(error.pcb_error_id))
+  const viaErrors = [
+    ...viaDrillErrors,
+    ...viaCopperOverlapErrors,
   ]
 
   const errors: DrcError[] = [
@@ -115,6 +148,7 @@ export const getDrcErrors = (
       : checkTracesAreContiguous(circuitJson)),
     ...viaTraceErrors,
     ...padTraceErrors,
+    ...viaPadErrors,
     ...viaErrors,
   ]
 

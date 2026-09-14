@@ -25,6 +25,8 @@ export interface SameNetViaMergerSolverInput {
   outline?: Array<{ x: number; y: number }>
   /** Prevent transition clusters that touch a route endpoint from moving. */
   preserveRouteEndpoints?: boolean
+  /** Restrict candidate pairs to centers closer than this distance. */
+  maximumViaCenterDistance?: number
 }
 
 type Via = {
@@ -403,6 +405,13 @@ export class SameNetViaMergerSolver extends BaseSolver {
               const pairDx = keep.x - candidate.x
               const pairDy = keep.y - candidate.y
               const squaredDistance = pairDx * pairDx + pairDy * pairDy
+              if (
+                this.input.maximumViaCenterDistance !== undefined &&
+                squaredDistance >=
+                  this.input.maximumViaCenterDistance ** 2
+              ) {
+                continue
+              }
               const directOverlapDistance =
                 keep.diameter / 2 + candidate.diameter / 2
               const nearMergeDistance =
@@ -558,6 +567,17 @@ export class SameNetViaMergerSolver extends BaseSolver {
     let mergedViaCount = 0
     for (const group of groups) {
       for (const viaToRemove of group.remove) {
+        // Groups are selected from one snapshot of the via set. An earlier
+        // merge in this batch can move onto and deduplicate a via referenced by
+        // a later group, making that later candidate stale.
+        const routeToUpdate = this.mergedViaHdRoutes[viaToRemove.routeIndex]
+        if (
+          !routeToUpdate?.vias.some(
+            (via) => via.x === viaToRemove.x && via.y === viaToRemove.y,
+          )
+        ) {
+          continue
+        }
         this.moveViaTo(viaToRemove, group.keep, false)
         mergedViaCount++
       }

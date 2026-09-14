@@ -261,8 +261,20 @@ export const serializePreloadedTraceAssignments = (
       }
     }
 
+    let serializedRunCount = 0
     for (const [runIndex, run] of contiguousRuns.entries()) {
       const connectionId = getPreloadedTraceConnectionId(traceId, runIndex)
+      const firstSegment = run[0]!
+      const lastSegment = run.at(-1)!
+      const firstPort = firstSegment.from.port
+      const lastPort = lastSegment.to.port
+      if (firstPort.portId === lastPort.portId) {
+        // A closed excursion returns to the same graph boundary without
+        // connecting regions. The detailed router still receives the original
+        // fixed copper, while tiny-hypergraph requires two distinct endpoints
+        // for every serialized solved route.
+        continue
+      }
       for (const segment of run) {
         const region = regionById.get(segment.regionId)
         if (!region) {
@@ -281,10 +293,6 @@ export const serializePreloadedTraceAssignments = (
         preloadedAssignmentCount++
       }
 
-      const firstSegment = run[0]!
-      const lastSegment = run.at(-1)!
-      const firstPort = firstSegment.from.port
-      const lastPort = lastSegment.to.port
       const connection: SerializedConnection &
         PreloadedTraceConnectionMetadata = {
         connectionId,
@@ -320,8 +328,9 @@ export const serializePreloadedTraceAssignments = (
           ripRequired: false,
         })),
       })
+      serializedRunCount++
     }
-    if (contiguousRuns.length > 0) {
+    if (serializedRunCount > 0) {
       preloadedTraceCount++
     }
   }

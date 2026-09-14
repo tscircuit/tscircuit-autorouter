@@ -1,4 +1,5 @@
 import {
+  checkEachPcbTraceNonOverlapping,
   checkPadTraceClearance,
   checkViaTraceClearance,
 } from "@tscircuit/checks"
@@ -8,6 +9,7 @@ import {
   type ClearanceMarginMeasurement,
 } from "./applyPipeline9ClearancePrecisionRepairs"
 import type { Pipeline9DrcError } from "./pipeline9JointDrcRepairUtils"
+import { getPipeline9DrcErrorTraceIds } from "./pipeline9JointDrcRepairUtils"
 
 /** Measures the original failing pairs beyond the reference checker's tolerance. */
 export const getPipeline9ClearanceMarginErrors = ({
@@ -42,17 +44,64 @@ export const getPipeline9ClearanceMarginErrors = ({
   }
   const errors: Pipeline9DrcError[] = []
   for (const target of targets) {
+    const targetTraceIds = getPipeline9DrcErrorTraceIds(target)
+    const isTracePair =
+      target.type === "pcb_trace_error" && targetTraceIds.length >= 2
     const isVia = target.type === "pcb_via_trace_clearance_error"
     const obstacleId = isVia ? target.pcb_via_id : target.pcb_pad_id
     if (
-      (!isVia && target.type !== "pcb_pad_trace_clearance_error") ||
+      (!isVia &&
+        target.type !== "pcb_pad_trace_clearance_error" &&
+        !isTracePair) ||
       typeof target.pcb_trace_id !== "string" ||
-      typeof obstacleId !== "string" ||
+      (!isTracePair && typeof obstacleId !== "string") ||
       typeof target.minimum_clearance !== "number" ||
       !Number.isFinite(target.minimum_clearance) ||
       target.minimum_clearance <= 0
     ) {
       throw new Error("Pipeline9 clearance margin requires a valid target pair")
+    }
+    if (isTracePair) {
+      const [firstTraceId, secondTraceId] = targetTraceIds
+      const originalFirstTrace = originalTraces.get(firstTraceId!)
+      const originalSecondTrace = originalTraces.get(secondTraceId!)
+      const firstTrace = traces.get(firstTraceId!)
+      const secondTrace = traces.get(secondTraceId!)
+      if (
+        !originalFirstTrace ||
+        !originalSecondTrace ||
+        !firstTrace ||
+        !secondTrace
+      ) {
+        return { status: "unsupported-identity" }
+      }
+      const minimumClearance =
+        target.minimum_clearance + CLEARANCE_PRECISION_MARGIN
+      const measured = checkEachPcbTraceNonOverlapping(
+        [firstTrace, secondTrace],
+        { minClearance: minimumClearance + 1 },
+      )[0]
+      if (!measured) continue
+      const gapMatch = measured.message.match(/gap: (-?\d+(?:\.\d+)?)mm/)
+      if (!gapMatch) {
+        throw new Error("Pipeline9 trace-pair margin requires a finite gap")
+      }
+      // The checker reports three decimals. Subtract half of one display unit
+      // so rounded-up values cannot satisfy the requested safety margin.
+      const actualClearance = Number.parseFloat(gapMatch[1]!) - 0.0005
+      if (!Number.isFinite(actualClearance)) {
+        throw new Error("Pipeline9 trace-pair margin requires a finite gap")
+      }
+      if (actualClearance < minimumClearance) {
+        errors.push({
+          ...target,
+          pcb_trace_ids: targetTraceIds,
+          actual_clearance: actualClearance,
+          minimum_clearance: minimumClearance,
+          center: measured.center,
+        })
+      }
+      continue
     }
     const originalTrace = originalTraces.get(target.pcb_trace_id)
     const originalObstacle = originalCircuitJson.find((element) =>
@@ -64,9 +113,7 @@ export const getPipeline9ClearanceMarginErrors = ({
             element.pcb_plated_hole_id === obstacleId),
     )
     if (!originalTrace || !originalObstacle) {
-      throw new Error(
-        `Pipeline9 clearance margin has no original target ${obstacleId}/${target.pcb_trace_id}`,
-      )
+      return { status: "unsupported-identity" }
     }
     const trace = traces.get(target.pcb_trace_id)
     let obstacle = obstacles.get(obstacleId)
@@ -75,15 +122,11 @@ export const getPipeline9ClearanceMarginErrors = ({
         originalObstacle.type !== "pcb_via" ||
         typeof originalObstacle.pcb_trace_id !== "string"
       ) {
-        throw new Error(
-          "Pipeline9 clearance margin requires the original via owner",
-        )
+        return { status: "unsupported-identity" }
       }
       const originalOwner = originalTraces.get(originalObstacle.pcb_trace_id)
       if (!originalOwner) {
-        throw new Error(
-          "Pipeline9 clearance margin lost the original via owner",
-        )
+        return { status: "unsupported-identity" }
       }
       const originalTransitions = originalOwner.route.filter(
         (segment) => segment.route_type === "via",
@@ -110,9 +153,7 @@ export const getPipeline9ClearanceMarginErrors = ({
             ) === index,
         )
       if (matchingTransitions.length === 0) {
-        throw new Error(
-          "Pipeline9 clearance margin lost the original via transition",
-        )
+        return { status: "unsupported-identity" }
       }
       // Opposite-direction transitions at one site have separate converter
       // identities. Reject an ambiguous pair rather than infer its owner event.

@@ -11,6 +11,7 @@ import { RELAXED_DRC_OPTIONS } from "lib/testing/drcPresets"
 import type { SimpleRouteJson } from "lib/types"
 import type { HighDensityRoute } from "lib/types/high-density-types"
 import { createSrjWithBoardValidObstacleLayers } from "lib/utils/create-srj-with-board-valid-obstacle-layers"
+import { convertHdRouteToSimplifiedRoute } from "lib/utils/convertHdRouteToSimplifiedRoute"
 import { getDrcErrorTraceIds } from "lib/utils/getDrcErrorTraceIds"
 import { applyPipeline9ClearanceProjection } from "./applyPipeline9ClearanceProjection"
 import { canPublishPartialFixedObstacleRepair } from "./canPublishPartialFixedObstacleRepair"
@@ -38,6 +39,7 @@ type Pipeline9BoundedRegionalRepairParams = {
   originalSrj: SimpleRouteJson
   routes: HighDensityRoute[]
   syntheticConnectionNames: ReadonlySet<string>
+  fixedObstacleRoutes?: HighDensityRoute[]
   drcEvaluator: DrcEvaluator
   viaHoleDiameter?: number
   requireSingleRegion?: boolean
@@ -60,6 +62,7 @@ export const applyPipeline9BoundedRegionalRepairs = ({
   originalSrj,
   routes,
   syntheticConnectionNames,
+  fixedObstacleRoutes,
   drcEvaluator,
   viaHoleDiameter,
   requireSingleRegion = false,
@@ -77,7 +80,10 @@ export const applyPipeline9BoundedRegionalRepairs = ({
     publishedDrcIssueCount: undefined,
     repaired: false,
   }
-  if (originalSrj.traces?.length || syntheticConnectionNames.size > 0) {
+  if (
+    (originalSrj.traces?.length || syntheticConnectionNames.size > 0) &&
+    fixedObstacleRoutes === undefined
+  ) {
     return result
   }
   const clearance = Math.max(
@@ -188,7 +194,15 @@ export const applyPipeline9BoundedRegionalRepairs = ({
   // rotations, net aliases and board outline in the regional physical checks.
   const srj = {
     ...createSrjWithBoardValidObstacleLayers(originalSrj),
-    traces: undefined,
+    traces: fixedObstacleRoutes?.map((route, routeIndex) => ({
+      type: "pcb_trace" as const,
+      pcb_trace_id: `pipeline9_regional_fixed_${routeIndex}`,
+      connection_name: route.rootConnectionName ?? route.connectionName,
+      route: convertHdRouteToSimplifiedRoute(route, originalSrj.layerCount, {
+        defaultViaHoleDiameter: viaHoleDiameter,
+        obstacles: originalSrj.obstacles,
+      }),
+    })),
   }
   const obstacleCenterById = new Map<string, { x: number; y: number }>()
   for (const obstacle of originalSrj.obstacles) {
