@@ -1832,7 +1832,7 @@ jobs:
           git rev-parse HEAD > routing-diagnostics/commit.txt
           bun --version > routing-diagnostics/bun-version.txt
           cp package.json routing-diagnostics/package.json
-          cp bun.lock routing-diagnostics/bun.lock
+          bun pm ls --all > routing-diagnostics/installed-packages.txt
       - name: Run diagnostic benchmark
         env:
           SAMPLE: ${{ inputs.diagnostic_sample }}
