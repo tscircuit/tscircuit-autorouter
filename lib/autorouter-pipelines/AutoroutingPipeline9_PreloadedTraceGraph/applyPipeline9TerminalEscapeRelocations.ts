@@ -4,7 +4,10 @@ import type {
   SimpleRouteJson as RepairSimpleRouteJson,
 } from "high-density-repair03/lib"
 import {
+  applyTraceDetourForError,
   applyTracePairLayerMoveForError,
+  applyTraceSpanDetourForError,
+  applyTraceWaypointDetourForError,
   materializeRoutes,
 } from "high-density-repair03/lib/solvers/GlobalDrcForceImproveSolver/solverHelpers"
 import type {
@@ -310,40 +313,131 @@ export const applyPipeline9TerminalEscapeRelocations = ({
       if (
         allowTracePairEscapes &&
         pairTraceIds.length === 2 &&
-        pairTraceIds.every((traceId) => routeIndexByTraceId.has(traceId))
+        routeIndexes.length > 0
       ) {
-        layerSearch: for (const routeSide of [0, 1] as const) {
-          for (let targetZ = 0; targetZ < srj.layerCount; targetZ++) {
-            for (const spanExpansion of [1, 3, 5]) {
-              if (attemptedCandidateCount >= maxCandidateEvaluations) {
-                break layerSearch
+        const evaluatePairCandidate = (
+          mutate: (candidateRoutes: HighDensityRoute[]) => boolean,
+        ): boolean => {
+          if (attemptedCandidateCount >= maxCandidateEvaluations) return false
+          const candidateRoutes = clonePipeline9HdRoutes(currentRoutes)
+          if (!mutate(candidateRoutes)) return false
+          attemptedCandidateCount++
+          const materializedCandidateRoutes = materializeRoutes(candidateRoutes)
+          const candidateErrors = getPipeline9DrcErrors(
+            drcEvaluator,
+            materializedCandidateRoutes,
+          )
+          if (isPipeline9DrcCandidateBetter(candidateErrors, bestErrors)) {
+            bestRoutes = materializedCandidateRoutes
+            bestErrors = candidateErrors
+          }
+          return bestErrors.length === 0
+        }
+        detourSearch: for (const pairRouteIndex of routeIndexes) {
+          for (const halfSpan of [0.1, 0.25, 0.5, 1]) {
+            for (const offset of [
+              0.01, 0.02, 0.04, 0.08, 0.15, 0.25, 0.4, 0.6, 1,
+            ]) {
+              for (const directionSign of [-1, 1] as const) {
+                if (
+                  evaluatePairCandidate((candidateRoutes): boolean =>
+                    applyTraceDetourForError(
+                      candidateRoutes,
+                      error,
+                      pairRouteIndex,
+                      halfSpan,
+                      offset,
+                      directionSign,
+                    ),
+                  )
+                ) {
+                  break detourSearch
+                }
               }
-              const layerCandidateRoutes = clonePipeline9HdRoutes(currentRoutes)
-              if (
-                !applyTracePairLayerMoveForError(
-                  srj as RepairSimpleRouteJson,
-                  layerCandidateRoutes,
-                  error,
-                  routeIndexByTraceId,
-                  routeSide,
-                  targetZ,
-                  spanExpansion,
-                  connMap,
-                  srj.minViaHoleDiameter,
+            }
+          }
+          for (const spanExpansion of [1, 2, 3, 5]) {
+            for (const offset of [0.2, 0.4, 0.8]) {
+              for (const directionSign of [-1, 1] as const) {
+                if (
+                  evaluatePairCandidate((candidateRoutes): boolean =>
+                    applyTraceSpanDetourForError(
+                      srj as RepairSimpleRouteJson,
+                      candidateRoutes,
+                      error,
+                      pairRouteIndex,
+                      spanExpansion,
+                      offset,
+                      directionSign,
+                    ),
+                  )
+                ) {
+                  break detourSearch
+                }
+              }
+            }
+          }
+          for (const spanExpansion of [0, 1, 2, 3, 5]) {
+            for (const radius of [0.25, 0.5, 1, 2]) {
+              for (const angle of CANDIDATE_ANGLES) {
+                if (
+                  evaluatePairCandidate((candidateRoutes): boolean =>
+                    applyTraceWaypointDetourForError(
+                      srj as RepairSimpleRouteJson,
+                      candidateRoutes,
+                      error,
+                      pairRouteIndex,
+                      spanExpansion,
+                      {
+                        x: conflictingCenter.x + Math.cos(angle) * radius,
+                        y: conflictingCenter.y + Math.sin(angle) * radius,
+                      },
+                    ),
+                  )
+                ) {
+                  break detourSearch
+                }
+              }
+            }
+          }
+        }
+        if (pairTraceIds.every((traceId) => routeIndexByTraceId.has(traceId))) {
+          layerSearch: for (const routeSide of [0, 1] as const) {
+            for (let targetZ = 0; targetZ < srj.layerCount; targetZ++) {
+              for (const spanExpansion of [1, 3, 5]) {
+                if (attemptedCandidateCount >= maxCandidateEvaluations) {
+                  break layerSearch
+                }
+                const layerCandidateRoutes =
+                  clonePipeline9HdRoutes(currentRoutes)
+                if (
+                  !applyTracePairLayerMoveForError(
+                    srj as RepairSimpleRouteJson,
+                    layerCandidateRoutes,
+                    error,
+                    routeIndexByTraceId,
+                    routeSide,
+                    targetZ,
+                    spanExpansion,
+                    connMap,
+                    srj.minViaHoleDiameter,
+                  )
+                ) {
+                  continue
+                }
+                attemptedCandidateCount++
+                const materializedCandidateRoutes =
+                  materializeRoutes(layerCandidateRoutes)
+                const candidateErrors = getPipeline9DrcErrors(
+                  drcEvaluator,
+                  materializedCandidateRoutes,
                 )
-              ) {
-                continue
-              }
-              attemptedCandidateCount++
-              const materializedCandidateRoutes =
-                materializeRoutes(layerCandidateRoutes)
-              const candidateErrors = getPipeline9DrcErrors(
-                drcEvaluator,
-                materializedCandidateRoutes,
-              )
-              if (isPipeline9DrcCandidateBetter(candidateErrors, bestErrors)) {
-                bestRoutes = materializedCandidateRoutes
-                bestErrors = candidateErrors
+                if (
+                  isPipeline9DrcCandidateBetter(candidateErrors, bestErrors)
+                ) {
+                  bestRoutes = materializedCandidateRoutes
+                  bestErrors = candidateErrors
+                }
               }
             }
           }

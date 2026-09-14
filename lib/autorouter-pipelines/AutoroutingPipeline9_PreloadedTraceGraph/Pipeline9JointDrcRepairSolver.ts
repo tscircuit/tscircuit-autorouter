@@ -726,6 +726,22 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
   >()
   private combinedOutput?: HighDensityRoute[]
 
+  private mergeSharedFixedPreloadedVias(
+    routes: HighDensityRoute[],
+  ): HighDensityRoute[] {
+    return mergePipeline9MovablePreloadedVias({
+      routes,
+      otherHdRoutes: this.fixedPreloadedObstacleRoutes,
+      obstacles: this.params.obstacles,
+      colorMap: this.params.colorMap,
+      layerCount: this.params.layerCount,
+      connMap: this.params.connMap,
+      maximumViaCenterDistance:
+        this.params.defaultViaHoleDiameter +
+        (RELAXED_DRC_OPTIONS.viaClearance ?? 0.1),
+    })
+  }
+
   private cacheIndexedDrcResult(
     candidateKey: DrcCandidateKey,
     result: ReturnType<DrcEvaluator>,
@@ -959,6 +975,26 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         })
       },
     )
+    const coincidentViaMergedRoutes = mergePipeline9MovablePreloadedVias({
+      routes: this.movablePreloadedSections.map((section) => section.hdRoute),
+      otherHdRoutes: [
+        ...params.newHdRoutes,
+        ...this.fixedPreloadedObstacleRoutes,
+      ],
+      obstacles: params.obstacles,
+      colorMap: params.colorMap,
+      layerCount: params.layerCount,
+      connMap: params.connMap,
+      maximumViaCenterDistance: POINT_EPSILON * 2,
+    })
+    for (
+      let sectionIndex = 0;
+      sectionIndex < this.movablePreloadedSections.length;
+      sectionIndex++
+    ) {
+      this.movablePreloadedSections[sectionIndex]!.hdRoute =
+        coincidentViaMergedRoutes[sectionIndex]!
+    }
     const movableSectionIndexesByOriginalTraceId = new Map<string, number[]>()
     for (const [
       movableSectionIndex,
@@ -1636,7 +1672,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       postExactReferenceDrcIssueCount === 0 &&
       exactViaPadEscapeResult?.remainingErrors.length === 0
     ) {
-      this.combinedOutput = exactOutput
+      this.combinedOutput = this.mergeSharedFixedPreloadedVias(exactOutput)
       this.stats = {
         ...this.stats,
         ...this.exactRepairSolver.stats,
@@ -1716,6 +1752,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       },
       viaHoleDiameter: this.params.defaultViaHoleDiameter,
       syntheticConnectionNames: this.syntheticConnectionNames,
+      fixedObstacleRoutes: this.fixedPreloadedObstacleRoutes,
       drcEvaluator: this.geometryReferenceDrcEvaluator!,
     }
     const earlyBoundedRepair = applyPipeline9BoundedRegionalRepairs({
@@ -1771,14 +1808,17 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       allowTracePairEscapes: true,
       maxCandidateEvaluations: Math.max(
         0,
-        256 - terminalEscapeResult.attemptedCandidateCount,
+        768 - terminalEscapeResult.attemptedCandidateCount,
       ),
       drcEvaluator: this.geometryReferenceDrcEvaluator!,
     })
+    const routesAfterLateSharedViaMerge = this.mergeSharedFixedPreloadedVias(
+      lateTerminalEscapeResult.routes,
+    )
     const regionalGeometryDrcResult = this.geometryReferenceDrcEvaluator!({
       traces: [],
-      routes: lateTerminalEscapeResult.routes,
-      hdRoutes: lateTerminalEscapeResult.routes,
+      routes: routesAfterLateSharedViaMerge,
+      hdRoutes: routesAfterLateSharedViaMerge,
     })
     const regionalGeometryDrcErrors = Array.isArray(regionalGeometryDrcResult)
       ? regionalGeometryDrcResult
@@ -1786,7 +1826,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     const regionalGeometryPrecisionResult =
       applyPipeline9ClearancePrecisionRepairs({
         srj: this.params.srj,
-        routes: lateTerminalEscapeResult.routes,
+        routes: routesAfterLateSharedViaMerge,
         newConnections: this.params.newConnections,
         syntheticConnectionNames: this.syntheticConnectionNames,
         connMap: this.params.connMap,
@@ -1810,7 +1850,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     const routesAfterGeometryPrecision =
       regionalGeometryPrecisionResult.repaired
         ? regionalGeometryPrecisionResult.routes
-        : lateTerminalEscapeResult.routes
+        : routesAfterLateSharedViaMerge
     const regionalViaPadDrcResult = this.viaPadReferenceDrcEvaluator!({
       traces: [],
       routes: routesAfterGeometryPrecision,
@@ -1896,7 +1936,9 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       boundedRegionalRepairResult.referenceValidationCount +=
         earlyBoundedRepair.referenceValidationCount
     }
-    this.combinedOutput = boundedRegionalRepairResult.routes
+    this.combinedOutput = this.mergeSharedFixedPreloadedVias(
+      boundedRegionalRepairResult.routes,
+    )
     this.stats = {
       ...this.stats,
       ...this.exactRepairSolver.stats,

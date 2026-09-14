@@ -1,6 +1,7 @@
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { GraphicsObject } from "graphics-debug"
 import { HighDensityForceImproveSolver } from "high-density-repair01/lib/HighDensityForceImproveSolver"
+import { applyViaToPadClearanceRelaxation } from "high-density-repair03/lib/solvers/GlobalDrcForceImproveSolver/viaToPadClearanceRelaxation"
 import { BaseSolver } from "lib/solvers/BaseSolver"
 import { Pipeline4HighDensityRepairSolver } from "lib/solvers/HighDensityRepairSolver/Pipeline4HighDensityRepairSolver"
 import { HighDensitySolver } from "lib/solvers/HighDensitySolver/HighDensitySolver"
@@ -62,7 +63,7 @@ const getObstacleZLayers = (
   return obstacle.layers.map((layer) => mapLayerNameToZ(layer, layerCount))
 }
 
-const hasPreloadedViaToBoardObstacleConflict = ({
+const getPreloadedViaToBoardObstacleConflictCount = ({
   routes,
   movablePreloadedConnectionNames,
   boardObstacles,
@@ -76,26 +77,31 @@ const hasPreloadedViaToBoardObstacleConflict = ({
   connMap: ConnectivityMap
   layerCount: number
   viaToPadClearance: number
-}): boolean =>
-  routes.some((route) => {
+}): number => {
+  let conflictCount = 0
+  for (const route of routes) {
     if (!movablePreloadedConnectionNames.has(route.connectionName)) {
-      return false
+      continue
     }
     const viaSpans = getPipeline9RouteCopperGeometry(route).viaSpans
-    return viaSpans.some((via) =>
-      boardObstacles.some((obstacle) => {
-        if (isObstacleConnectedToRoute(obstacle, route, connMap)) return false
+    for (const via of viaSpans) {
+      for (const obstacle of boardObstacles) {
+        if (isObstacleConnectedToRoute(obstacle, route, connMap)) continue
         const obstacleZLayers = getObstacleZLayers(obstacle, layerCount)
         if (!obstacleZLayers.some((z) => z >= via.minZ && z <= via.maxZ)) {
-          return false
+          continue
         }
-        return (
+        if (
           getPointToObstacleDistance(via.center, obstacle) <
           via.diameter / 2 + viaToPadClearance
-        )
-      }),
-    )
-  })
+        ) {
+          conflictCount++
+        }
+      }
+    }
+  }
+  return conflictCount
+}
 
 /** Runs the regular high-density cleanup pipeline for a B01 fallback region. */
 export class Pipeline9RegionalFallbackSolver extends BaseSolver {
@@ -110,6 +116,7 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
     super()
     this.params = params
     this.stats = {
+      invalidLayerTransitionCandidateRejectionCount: 0,
       preloadedViaCandidateRejectionCount: 0,
       forceImproveCandidateRejectionCount: 0,
       repairCandidateRejectionCount: 0,
@@ -128,12 +135,8 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
       useGrowShrinkHighDensityIntraNodeSolver: true,
       preserveTerminalPcbPortIds: false,
       growShrinkFallbackToInvalidGeometryOnFailure: false,
-      growShrinkSolutionValidator:
-        params.boardObstacles &&
-        params.movablePreloadedConnectionNames &&
-        params.viaToPadClearance !== undefined
-          ? (routes) => this.validateCandidateRoutes(routes)
-          : undefined,
+      growShrinkSolutionValidator: (routes) =>
+        this.prepareCandidateRoutes(routes) !== undefined,
     })
     this.activeSubSolver = this.highDensitySolver
     this.MAX_ITERATIONS = 100e6 * params.effort
@@ -143,7 +146,7 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
     return "Pipeline9RegionalFallbackSolver"
   }
 
-  private validateCandidateRoutes(routes: HighDensityRoute[]): boolean {
+  private getViaToPadConflictCount(routes: HighDensityRoute[]): number {
     const {
       boardObstacles,
       movablePreloadedConnectionNames,
@@ -154,9 +157,9 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
       !movablePreloadedConnectionNames ||
       viaToPadClearance === undefined
     ) {
-      return true
+      return 0
     }
-    const hasViaConflict = hasPreloadedViaToBoardObstacleConflict({
+    return getPreloadedViaToBoardObstacleConflictCount({
       routes,
       movablePreloadedConnectionNames,
       boardObstacles,
@@ -164,11 +167,56 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
       layerCount: this.params.layerCount,
       viaToPadClearance,
     })
-    if (hasViaConflict) {
+  }
+
+  private prepareCandidateRoutes(
+    routes: HighDensityRoute[],
+  ): HighDensityRoute[] | undefined {
+    let materializedRoutes: HighDensityRoute[]
+    try {
+      materializedRoutes = materializePipeline9HdRouteVias(routes)
+    } catch (error) {
+      this.stats.invalidLayerTransitionCandidateRejectionCount =
+        Number(
+          this.stats.invalidLayerTransitionCandidateRejectionCount ?? 0,
+        ) + 1
+      this.stats.firstInvalidLayerTransitionCandidateError ??=
+        error instanceof Error ? error.message : String(error)
+      return undefined
+    }
+    if (this.getViaToPadConflictCount(materializedRoutes) === 0) {
+      return materializedRoutes
+    }
+
+    const { boardObstacles, viaToPadClearance } = this.params
+    if (!boardObstacles || viaToPadClearance === undefined) {
+      return materializedRoutes
+    }
+    const node = this.params.nodeWithPortPoints
+    const relaxedRoutes = applyViaToPadClearanceRelaxation(
+      {
+        layerCount: this.params.layerCount,
+        minTraceWidth: this.params.traceWidth,
+        minViaDiameter: this.params.viaDiameter,
+        minViaEdgeToPadEdgeClearance: viaToPadClearance,
+        obstacles: boardObstacles,
+        connections: [],
+        bounds: {
+          minX: node.center.x - node.width / 2,
+          maxX: node.center.x + node.width / 2,
+          minY: node.center.y - node.height / 2,
+          maxY: node.center.y + node.height / 2,
+        },
+      },
+      materializedRoutes,
+      this.params.connMap,
+    )
+    if (this.getViaToPadConflictCount(relaxedRoutes) > 0) {
       this.stats.preloadedViaCandidateRejectionCount =
         Number(this.stats.preloadedViaCandidateRejectionCount ?? 0) + 1
+      return undefined
     }
-    return !hasViaConflict
+    return relaxedRoutes
   }
 
   override _step(): void {
@@ -180,10 +228,10 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
         return
       }
       if (!this.highDensitySolver.solved) return
-      const routedCandidate = materializePipeline9HdRouteVias(
+      const routedCandidate = this.prepareCandidateRoutes(
         this.highDensitySolver.routes,
       )
-      if (!this.validateCandidateRoutes(routedCandidate)) {
+      if (!routedCandidate) {
         this.error =
           "Pipeline9 regional route output failed its candidate validator"
         this.failed = true
@@ -211,13 +259,13 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
       }
       if (!this.forceImproveSolver!.solved) return
       const forceImprovedRoutes = this.forceImproveSolver!.getOutput()
-      const forceImprovedCandidateIsValid =
-        this.validateCandidateRoutes(forceImprovedRoutes)
-      if (!forceImprovedCandidateIsValid) {
+      const preparedForceImprovedRoutes =
+        this.prepareCandidateRoutes(forceImprovedRoutes)
+      if (!preparedForceImprovedRoutes) {
         this.stats.forceImproveCandidateRejectionCount =
           Number(this.stats.forceImproveCandidateRejectionCount ?? 0) + 1
       } else {
-        this.acceptedRoutes = forceImprovedRoutes
+        this.acceptedRoutes = preparedForceImprovedRoutes
       }
       this.repairSolver = new Pipeline4HighDensityRepairSolver({
         nodeWithPortPoints: [this.params.nodeWithPortPoints],
@@ -242,11 +290,12 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
       }
       if (!this.repairSolver!.solved) return
       const repairedRoutes = this.repairSolver!.getOutput()
-      if (!this.validateCandidateRoutes(repairedRoutes)) {
+      const preparedRepairedRoutes = this.prepareCandidateRoutes(repairedRoutes)
+      if (!preparedRepairedRoutes) {
         this.stats.repairCandidateRejectionCount =
           Number(this.stats.repairCandidateRejectionCount ?? 0) + 1
       } else {
-        this.acceptedRoutes = repairedRoutes
+        this.acceptedRoutes = preparedRepairedRoutes
       }
       this.activeSubSolver = null
       this.phase = "done"
