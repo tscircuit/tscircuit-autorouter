@@ -71,15 +71,18 @@ export function limitDuplicatePortsToRoutingCapacity({
         z,
         routingGeometry,
       })
-      capacity = intervals.reduce(
-        (sum, interval) =>
-          sum +
+      capacity = 0
+      let nextPosition = Number.NEGATIVE_INFINITY
+      for (const interval of intervals) {
+        const firstPosition = Math.max(interval.min, nextPosition)
+        if (firstPosition > interval.max + 1e-6) continue
+        const intervalCount =
           Math.floor(
-            (interval.max - interval.min + 1e-6) / minTraceCenterSpacing,
-          ) +
-          1,
-        0,
-      )
+            (interval.max - firstPosition + 1e-6) / minTraceCenterSpacing,
+          ) + 1
+        capacity += intervalCount
+        nextPosition = firstPosition + intervalCount * minTraceCenterSpacing
+      }
       capacities.set(key, capacity)
     }
     const count = counts.get(key)
