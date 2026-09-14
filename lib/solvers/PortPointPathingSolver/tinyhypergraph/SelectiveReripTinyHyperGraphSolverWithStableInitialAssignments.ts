@@ -31,7 +31,33 @@ export class SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments exte
         ),
       )
     }
-    return this.initialAssignmentRouteIds
+    const currentRouteId = this.state.currentRouteId
+    if (currentRouteId === undefined) return this.initialAssignmentRouteIds
+
+    const failedOwnerPairs = this.getSelectiveReripStats().failedOwnerPairs
+    const dependentRouteIds = new Set<number>([currentRouteId])
+    const pendingRouteIds = [currentRouteId]
+    while (pendingRouteIds.length > 0) {
+      const ownerRouteId = pendingRouteIds.pop()!
+      for (const pair of failedOwnerPairs) {
+        if (
+          pair.ownerRouteId !== ownerRouteId ||
+          dependentRouteIds.has(pair.failedRouteId)
+        )
+          continue
+        dependentRouteIds.add(pair.failedRouteId)
+        pendingRouteIds.push(pair.failedRouteId)
+      }
+    }
+    dependentRouteIds.delete(currentRouteId)
+    this.stats.cyclePreservedRouteCount = Math.max(
+      Number(this.stats.cyclePreservedRouteCount ?? 0),
+      dependentRouteIds.size,
+    )
+    // If A already displaced B, prefer a different blocker when B is retried.
+    // The existing preservation-aware search can find an alternate owner before
+    // the ordinary cycle detector has to discard all committed routing.
+    return new Set([...this.initialAssignmentRouteIds, ...dependentRouteIds])
   }
 
   private preservePartialRoutingState(): void {

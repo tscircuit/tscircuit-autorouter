@@ -9,6 +9,7 @@ import type {
 } from "../../UniformPortDistributionSolver/types"
 
 type BoundaryLayerKey = string
+type SerializedPortId = SerializedHyperGraph["ports"][number]["portId"]
 
 /** Prevents synthetic capacity from exceeding the copper-clear boundary length. */
 export function limitDuplicatePortsToRoutingCapacity({
@@ -104,7 +105,10 @@ export function limitDuplicatePortsToRoutingCapacity({
     family.push(port)
     families.set(key, family)
   }
-  const positionsByPortId = new Map<string, { x: number; y: number }>()
+  const positionsByPortId = new Map<
+    SerializedPortId,
+    { x: number; y: number }
+  >()
   for (const [key, family] of families) {
     if (
       !family.some(
