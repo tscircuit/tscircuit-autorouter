@@ -26,6 +26,7 @@ export class TraceSimplificationStageSolver extends BaseSolver {
       connMap: preparedInput.connMap,
       colorMap: preparedInput.colorMap,
       outline: preparedInput.srj.outline,
+      bounds: preparedInput.srj.bounds,
       defaultViaDiameter: viaDimensions.padDiameter,
       layerCount: preparedInput.srj.layerCount,
       minTraceToPadEdgeClearance: preparedInput.srj.minTraceToPadEdgeClearance,
