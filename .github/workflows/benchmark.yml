@@ -8,6 +8,10 @@ on:
       - main
   workflow_dispatch:
     inputs:
+      diagnostic_sample:
+        description: SRJ18 sample to capture with candidate diagnostics
+        type: string
+        required: false
       solver_name:
         description: 'Solver name to benchmark (optional, default: AutoroutingPipelineSolver9_PreloadedTraceGraph; use "all" for all solvers)'
         required: false
@@ -72,7 +76,8 @@ jobs:
     if: |
       (
         github.event_name == 'workflow_dispatch' &&
-        inputs.same_machine_compare != true
+        inputs.same_machine_compare != true &&
+        inputs.diagnostic_sample == ''
       ) || (
         github.event_name == 'push' &&
         github.ref_name == 'main'
@@ -1808,3 +1813,32 @@ jobs:
             git -C .benchmark-dashboard commit -m "Update benchmark dashboard for workflow ${{ github.run_id }}"
             git -C .benchmark-dashboard push origin HEAD:main
           fi
+
+  diagnose:
+    if: github.event_name == 'workflow_dispatch' && inputs.diagnostic_sample != ''
+    runs-on: blacksmith-8vcpu-ubuntu-2404-arm
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.2
+      - run: bun install
+      - name: Record environment
+        run: |
+          mkdir -p routing-diagnostics
+          git rev-parse HEAD > routing-diagnostics/commit.txt
+          bun --version > routing-diagnostics/bun-version.txt
+          cp package.json routing-diagnostics/package.json
+          cp bun.lock routing-diagnostics/bun.lock
+      - name: Run diagnostic benchmark
+        env:
+          SAMPLE: ${{ inputs.diagnostic_sample }}
+        run: timeout 600s bun scripts/benchmark/diagnose-routing.ts "$SAMPLE" routing-diagnostics
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: routing-diagnostics
+          path: routing-diagnostics
