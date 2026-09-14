@@ -73,6 +73,17 @@ const createDrcConnectivityMap = (
   return connMap
 }
 
+/** Uses the physical annular copper diameter for different-net via clearance. */
+const getCircuitJsonWithViaCopperDiameters = (
+  circuitJson: CircuitJson,
+): CircuitJson => {
+  return circuitJson.map((element) =>
+    element.type === "pcb_via"
+      ? { ...element, hole_diameter: element.outer_diameter }
+      : element,
+  )
+}
+
 export const getDrcErrors = (
   circuitJson: CircuitJson,
   options: GetDrcErrorsOptions = {},
@@ -107,7 +118,7 @@ export const getDrcErrors = (
           connMap,
           minClearance: options.viaPadClearance,
         })
-  const viaErrors = [
+  const viaDrillErrors = [
     ...checkSameNetViaSpacing(circuitJson, {
       connMap,
       minClearance: viaClearance,
@@ -116,6 +127,17 @@ export const getDrcErrors = (
       connMap,
       minClearance: viaClearance,
     }),
+  ]
+  const viaDrillErrorIds = new Set(
+    viaDrillErrors.map((error) => error.pcb_error_id),
+  )
+  const viaCopperOverlapErrors = checkDifferentNetViaSpacing(
+    getCircuitJsonWithViaCopperDiameters(circuitJson),
+    { connMap, minClearance: 0 },
+  ).filter((error) => !viaDrillErrorIds.has(error.pcb_error_id))
+  const viaErrors = [
+    ...viaDrillErrors,
+    ...viaCopperOverlapErrors,
   ]
 
   const errors: DrcError[] = [
