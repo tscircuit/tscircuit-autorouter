@@ -361,7 +361,8 @@ export class AvailableSegmentPointSolver extends BaseSolver {
             }
           : undefined
         const canUseSafePosition = Boolean(
-          endpoint?.clearance &&
+          clearanceObstacles.length > 0 &&
+            endpoint?.clearance &&
             endpoint.clearance.margin <
               segmentLength - edgeMargin + 1e-6 &&
             safePosition &&
