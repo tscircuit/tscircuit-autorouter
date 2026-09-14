@@ -1,4 +1,4 @@
-import type { HighDensitySolverA13 } from "@tscircuit/high-density-a13"
+import type { HighDensitySolverA13 } from "@tscircuit/high-density-a01"
 import { getFixedObstacleViolations } from "@tscircuit/repair04"
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import { isObstacleConnectedToRoute } from "lib/solvers/TraceWidthSolver/isObstacleConnectedToRoute"

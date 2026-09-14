@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test"
-import { findRouteGeometryViolations } from "@tscircuit/high-density-a13"
+import { findRouteGeometryViolations } from "@tscircuit/high-density-a01"
 import { PortfolioSingleIntraNodeSolver } from "lib/solvers/HyperHighDensitySolver/PortfolioSingleIntraNodeSolver"
 import type { NodeWithPortPoints } from "lib/types/high-density-types"
 import nodeJson from "../fixtures/a13-srj18-hard-node.json"
