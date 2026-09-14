@@ -79,6 +79,7 @@ test("duplicate capacity and terminal placement share pad-clear intervals on eac
   graphPositions.forEach((port, index) => {
     expect(port.d?.x).toBe(0)
     expect(port.d?.y).toBeCloseTo(0.02 + index * 0.2, 10)
+    expect(port.d?.boundaryTraceSpacing).toBe(0.2)
   })
   const topIntervals = getSharedEdgeRoutingIntervals({
     sharedEdge,

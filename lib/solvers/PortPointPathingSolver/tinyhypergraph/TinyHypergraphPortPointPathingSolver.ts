@@ -196,6 +196,7 @@ type TinyPortMetadata = {
   _tinyTerminal?: boolean
   tinyHypergraphPortPenalty?: number
   duplicatedFromPortId?: string
+  boundaryTraceSpacing?: number
   _preloadedFixedNetIds?: string[]
   _preloadedTracePortAssignments?: PreloadedTracePortAssignment[]
 }
@@ -839,7 +840,13 @@ const applyPortMetadataPenalties = (
 
   for (let portId = 0; portId < loaded.topology.portCount; portId++) {
     const metadata = loaded.topology.portMetadata?.[portId]
-    if (typeof metadata?.duplicatedFromPortId === "string") {
+    // Provisional duplicates borrow space from their original port. Once the
+    // boundary allocator has given them real copper-clear slots, the ordinary
+    // distance, congestion, and cramped-region costs describe their routing cost.
+    if (
+      typeof metadata?.duplicatedFromPortId === "string" &&
+      metadata.boundaryTraceSpacing === undefined
+    ) {
       portPenalty[portId] += DUPLICATE_PORT_TRAVERSAL_PENALTY
       duplicatePortPenaltyCount++
     }

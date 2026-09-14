@@ -173,7 +173,16 @@ export function limitDuplicatePortsToRoutingCapacity({
     ...graph,
     ports: ports.map((port) => {
       const position = positionsByPortId.get(port.portId)
-      return position ? { ...port, d: { ...port.d, ...position } } : port
+      return position
+        ? {
+            ...port,
+            d: {
+              ...port.d,
+              ...position,
+              boundaryTraceSpacing: minTraceCenterSpacing,
+            },
+          }
+        : port
     }),
     regions: graph.regions.map((region) => ({
       ...region,
