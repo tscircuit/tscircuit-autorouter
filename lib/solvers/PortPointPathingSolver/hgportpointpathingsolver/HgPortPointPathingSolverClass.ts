@@ -32,6 +32,20 @@ import { visualizeSolvedRoute } from "./visualize/visualizeSolvedRoute"
 import { visualizeHgConnections } from "./visualize/visualizeHgConnections"
 import { visualizeHgHyperGraph } from "./visualize/visualizeHgHyperGraph"
 
+export const isPortClearForNet = (
+  port: RegionPortHg,
+  currentNetId: string | undefined,
+): boolean => {
+  const clearanceObstacleNetIds = port.d._clearanceObstacleNetIds
+  if (!clearanceObstacleNetIds) return true
+  return Boolean(
+    currentNetId &&
+      clearanceObstacleNetIds.every(
+        (obstacleNetId) => obstacleNetId === currentNetId,
+      ),
+  )
+}
+
 /** Solves port-point routing over an HG hypergraph using heuristics and optional ripping. */
 export class HgPortPointPathingSolver extends HyperGraphSolver<
   RegionHg,
@@ -213,6 +227,14 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
     assertDefined(endRegion, "Current connection or end region is undefined")
 
     const filterCandidates = candidates.filter((candidate) => {
+      if (
+        !isPortClearForNet(
+          candidate.port,
+          this.currentConnection?.mutuallyConnectedNetworkId,
+        )
+      ) {
+        return false
+      }
       const nextRegion = candidate.nextRegion
       if (!nextRegion?.d._containsObstacle) {
         return true
@@ -533,10 +555,12 @@ export class HgPortPointPathingSolver extends HyperGraphSolver<
   }
 
   private isPortAvailableForCurrentNet(port: RegionPortHg): boolean {
+    const currentNetId = this.currentConnection?.mutuallyConnectedNetworkId
+    if (!isPortClearForNet(port, currentNetId)) return false
+
     const assignment = port.assignment
     if (!assignment) return true
 
-    const currentNetId = this.currentConnection?.mutuallyConnectedNetworkId
     return assignment.connection.mutuallyConnectedNetworkId === currentNetId
   }
 

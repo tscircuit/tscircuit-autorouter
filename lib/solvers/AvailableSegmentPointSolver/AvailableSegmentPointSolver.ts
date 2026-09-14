@@ -8,6 +8,7 @@ import type {
 } from "../../types"
 import type { GraphicsObject } from "graphics-debug"
 import { getNodeEdgeMap } from "../CapacityMeshSolver/getNodeEdgeMap"
+import { pointToBoxDistance } from "@tscircuit/math-utils"
 
 export interface PreloadedTracePortAssignment {
   traceId: string
@@ -40,6 +41,12 @@ export interface SegmentPortPoint {
   _preloadedFixedNetIds?: string[]
   /** Ordered crossings used to create serialized graph assignments. */
   _preloadedTracePortAssignments?: PreloadedTracePortAssignment[]
+  /**
+   * Connectivity ids for obstacles that are too close to this boundary point.
+   * Each inner array represents one obstacle. The point remains usable by the
+   * obstacle's own net because same-net copper does not require clearance.
+   */
+  _clearanceObstacleConnectionIdGroups?: string[][]
 }
 
 export interface SharedEdgeSegment {
@@ -275,7 +282,10 @@ export class AvailableSegmentPointSolver extends BaseSolver {
 
     const endpointClearanceByZ = new Map<
       number,
-      { start: number; end: number }
+      {
+        start: { margin: number; obstacles: Obstacle[] }
+        end: { margin: number; obstacles: Obstacle[] }
+      }
     >()
     if (maxPortPoints > 1 && segmentLength > 0) {
       const unitDirection = { x: dx / segmentLength, y: dy / segmentLength }
@@ -302,41 +312,19 @@ export class AvailableSegmentPointSolver extends BaseSolver {
 
     // Second pass: create port points with distance to centermost port
     for (let i = 0; i < maxPortPoints; i++) {
-      const basePosition = xyPositions[i]!
+      const { x, y } = xyPositions[i]
+
+      // Calculate XY distance to the centermost port position
+      const distToCentermostPortOnZ = Math.sqrt(
+        (x - centermostPos.x) ** 2 + (y - centermostPos.y) ** 2,
+      )
 
       // Create a separate port point for each available layer
       for (const z of availableZ) {
-        const endpointClearance = endpointClearanceByZ.get(z)
-        const margin =
-          i === 0
-            ? endpointClearance?.start
-            : i === maxPortPoints - 1
-              ? endpointClearance?.end
-              : undefined
-        const boundedMargin =
-          margin === undefined
-            ? undefined
-            : Math.min(margin, segmentLength - edgeMargin)
-        const position =
-          boundedMargin === undefined
-            ? basePosition
-            : i === 0
-              ? {
-                  x: overlap.start.x + (dx / segmentLength) * boundedMargin,
-                  y: overlap.start.y + (dy / segmentLength) * boundedMargin,
-                }
-              : {
-                  x: overlap.end.x - (dx / segmentLength) * boundedMargin,
-                  y: overlap.end.y - (dy / segmentLength) * boundedMargin,
-                }
-        const distToCentermostPortOnZ = Math.hypot(
-          position.x - centermostPos.x,
-          position.y - centermostPos.y,
-        )
         const portPoint: SegmentPortPoint = {
           segmentPortPointId: `${edge.capacityMeshEdgeId}_pp${i}_z${z}`,
-          x: position.x,
-          y: position.y,
+          x,
+          y,
           availableZ: [z],
           nodeIds: [node1.capacityMeshNodeId, node2.capacityMeshNodeId],
           edgeId: edge.capacityMeshEdgeId,
@@ -344,7 +332,76 @@ export class AvailableSegmentPointSolver extends BaseSolver {
           distToCentermostPortOnZ,
           cramped: edgeTouchesNarrowQfpPadGap,
         }
+        const endpointClearance = endpointClearanceByZ.get(z)
+        const clearanceObstacles =
+          i === 0
+            ? endpointClearance?.start.obstacles
+            : i === maxPortPoints - 1
+              ? endpointClearance?.end.obstacles
+              : undefined
+        if (clearanceObstacles && clearanceObstacles.length > 0) {
+          portPoint._clearanceObstacleConnectionIdGroups =
+            clearanceObstacles.map((obstacle) => obstacle.connectedTo)
+        }
         portPoints.push(portPoint)
+      }
+    }
+
+    for (const [z, endpointClearance] of endpointClearanceByZ) {
+      const alternatives = [
+        {
+          endpointName: "start",
+          endpoint: overlap.start,
+          inwardDirection: { x: dx / segmentLength, y: dy / segmentLength },
+          clearance: endpointClearance.start,
+        },
+        {
+          endpointName: "end",
+          endpoint: overlap.end,
+          inwardDirection: { x: -dx / segmentLength, y: -dy / segmentLength },
+          clearance: endpointClearance.end,
+        },
+      ] as const
+
+      for (const alternative of alternatives) {
+        if (alternative.clearance.obstacles.length === 0) continue
+        if (
+          alternative.clearance.margin >=
+          segmentLength - edgeMargin + 1e-6
+        ) {
+          continue
+        }
+        const point = {
+          x:
+            alternative.endpoint.x +
+            alternative.inwardDirection.x * alternative.clearance.margin,
+          y:
+            alternative.endpoint.y +
+            alternative.inwardDirection.y * alternative.clearance.margin,
+        }
+        if (this.getClearanceObstacles({ point, z }).length > 0) continue
+        if (
+          portPoints.some(
+            (portPoint) =>
+              portPoint.availableZ.includes(z) &&
+              Math.hypot(portPoint.x - point.x, portPoint.y - point.y) <= 1e-6,
+          )
+        ) {
+          continue
+        }
+        portPoints.push({
+          segmentPortPointId: `${edge.capacityMeshEdgeId}_${alternative.endpointName}_clearance_z${z}`,
+          ...point,
+          availableZ: [z],
+          nodeIds: [node1.capacityMeshNodeId, node2.capacityMeshNodeId],
+          edgeId: edge.capacityMeshEdgeId,
+          connectionName: null,
+          distToCentermostPortOnZ: Math.hypot(
+            point.x - centermostPos.x,
+            point.y - centermostPos.y,
+          ),
+          cramped: edgeTouchesNarrowQfpPadGap,
+        })
       }
     }
 
@@ -358,6 +415,21 @@ export class AvailableSegmentPointSolver extends BaseSolver {
     }
   }
 
+  private getClearanceObstacles({
+    point,
+    z,
+  }: {
+    point: { x: number; y: number }
+    z: number
+  }): Obstacle[] {
+    const requiredClearance = this.traceWidth / 2 + this.obstacleMargin
+    return this.obstacles.filter((obstacle) => {
+      const obstacleZLayers = obstacle.__zLayers ?? obstacle.zLayers
+      if (obstacleZLayers && !obstacleZLayers.includes(z)) return false
+      return pointToBoxDistance(point, obstacle) < requiredClearance - 1e-6
+    })
+  }
+
   private getEndpointClearance({
     endpoint,
     inwardDirection,
@@ -368,8 +440,9 @@ export class AvailableSegmentPointSolver extends BaseSolver {
     inwardDirection: { x: number; y: number }
     z: number
     minimumMargin: number
-  }): number {
+  }): { margin: number; obstacles: Obstacle[] } {
     let margin = minimumMargin
+    const obstacles: Obstacle[] = []
     const requiredClearance = this.traceWidth / 2 + this.obstacleMargin
     const coordinateEpsilon = 0.0001
 
@@ -422,12 +495,12 @@ export class AvailableSegmentPointSolver extends BaseSolver {
       const obstacleMargin =
         Math.sqrt(requiredClearance ** 2 - perpendicularGap ** 2) -
         endpointGap
-      if (obstacleMargin > minimumMargin + 1e-6) {
-        margin = Math.max(margin, obstacleMargin)
-      }
+      if (obstacleMargin <= minimumMargin + 1e-6) continue
+      margin = Math.max(margin, obstacleMargin)
+      obstacles.push(obstacle)
     }
 
-    return margin
+    return { margin, obstacles }
   }
 
   /**
