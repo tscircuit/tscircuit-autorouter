@@ -8,7 +8,10 @@ export default function AcousticTunerBoardEdgeClearance(): ReactElement {
   return (
     <AutoroutingPipelineDebugger
       srj={input as SimpleRouteJson}
-      createSolver={(inputSrj, opts): AutoroutingPipelineSolver9_PreloadedTraceGraph => {
+      createSolver={(
+        inputSrj,
+        opts,
+      ): AutoroutingPipelineSolver9_PreloadedTraceGraph => {
         return new AutoroutingPipelineSolver9_PreloadedTraceGraph(
           structuredClone(inputSrj),
           { ...opts, cacheProvider: null },

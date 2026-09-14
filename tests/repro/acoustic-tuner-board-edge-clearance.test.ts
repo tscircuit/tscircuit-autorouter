@@ -20,7 +20,11 @@ function measureVia(
 ): ViaMeasurement {
   const centerToEdge = Math.min(
     ...outline.map((start, index): number =>
-      pointToSegmentDistance(point, start, outline[(index + 1) % outline.length]),
+      pointToSegmentDistance(
+        point,
+        start,
+        outline[(index + 1) % outline.length],
+      ),
     ),
   )
   return {
@@ -36,9 +40,7 @@ function measureNeckVia(routes: HighDensityRoute[]): ViaMeasurement {
     (candidate): boolean => candidate.connectionName === connectionName,
   )
   if (!route) throw new Error(`Missing route ${connectionName}`)
-  const via = route.vias.find(
-    (point): boolean => point.y > 10 && point.y < 26,
-  )
+  const via = route.vias.find((point): boolean => point.y > 10 && point.y < 26)
   if (!via) throw new Error(`Missing neck via on ${connectionName}`)
   return measureVia(via, route.viaDiameter, input.outline)
 }
@@ -71,7 +73,9 @@ test("Pipeline 9 reproduces a via-to-board clearance violation after global repa
     throw new Error("Global repair did not produce both measurements")
   }
   expect(beforeRepair.diameter).toBe(0.6)
-  expect(beforeRepair.clearance).toBeGreaterThanOrEqual(input.minBoardEdgeClearance)
+  expect(beforeRepair.clearance).toBeGreaterThanOrEqual(
+    input.minBoardEdgeClearance,
+  )
   expect(beforeRepair.clearance).toBeCloseTo(0.300001, 6)
   expect(afterRepair.clearance).toBeCloseTo(0.2611598809, 6)
 
@@ -85,7 +89,10 @@ test("Pipeline 9 reproduces a via-to-board clearance violation after global repa
         input.outline,
       )
       if (measurement.clearance < input.minBoardEdgeClearance - 1e-6) {
-        violations.push({ ...measurement, connectionName: trace.connection_name })
+        violations.push({
+          ...measurement,
+          connectionName: trace.connection_name,
+        })
       }
     }
   }
