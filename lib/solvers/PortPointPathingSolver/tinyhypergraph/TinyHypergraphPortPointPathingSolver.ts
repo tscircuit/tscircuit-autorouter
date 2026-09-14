@@ -37,7 +37,6 @@ import type {
   HgPortPointPathingSolverParams,
 } from "../hgportpointpathingsolver/types"
 import { createTinyRouteNetIndexer } from "./createTinyRouteNetIndexer"
-import { limitDuplicatePortsToBoundaryCapacity } from "./limitDuplicatePortsToBoundaryCapacity"
 import { getRegionNetIdByRegionId } from "./getRegionNetIdByRegionId"
 import { SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments } from "./SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments"
 import {
@@ -1104,27 +1103,6 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
     } else {
       this.duplicateCongestedPortReport = duplicateCongestedPortSolver.report
       graphForTiny = duplicateCongestedPortSolver.getOutput()
-      if (params.duplicatePortMinSpacing !== undefined) {
-        graphForTiny = limitDuplicatePortsToBoundaryCapacity({
-          graph: graphForTiny,
-          nodes: params.graph.regions.map((region) => region.d),
-          minPortSpacing: params.duplicatePortMinSpacing,
-        })
-        const retainedPortIds = new Set(
-          graphForTiny.ports.map((port) => port.portId),
-        )
-        this.duplicateCongestedPortReport = {
-          ...duplicateCongestedPortSolver.report,
-          duplicatedPorts: duplicateCongestedPortSolver.report.duplicatedPorts
-            .map((source) => ({
-              ...source,
-              duplicatePortIds: source.duplicatePortIds.filter((portId) =>
-                retainedPortIds.has(portId),
-              ),
-            }))
-            .filter((source) => source.duplicatePortIds.length > 0),
-        }
-      }
       for (const port of graphForTiny.ports) {
         const metadata = asTinyPortMetadata(port.d)
         if (typeof metadata.duplicatedFromPortId !== "string") continue

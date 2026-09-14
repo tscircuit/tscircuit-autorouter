@@ -98,8 +98,6 @@ export interface HgPortPointPathingSolverParams {
   effort: number
   preserveTerminalPcbPortIds?: boolean
   minViaPadDiameter?: number
-  /** Minimum physical separation for additional shared-boundary choices. */
-  duplicatePortMinSpacing?: number
   flags: {
     FORCE_CENTER_FIRST: boolean
     RIPPING_ENABLED: boolean

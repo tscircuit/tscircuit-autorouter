@@ -348,7 +348,11 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     for (const { solver } of this.supervisedSolvers ?? []) {
       const setupStart = routingDiagnostics.emit ? performance.now() : 0
       this.initializeCandidateBudget(solver)
-      recordCandidateTiming(solver, { setupMs: performance.now() - setupStart })
+      if (routingDiagnostics.emit) {
+        recordCandidateTiming(solver, {
+          setupMs: performance.now() - setupStart,
+        })
+      }
     }
     this.stats.dynamicExpansionWorkBudget = this.getDynamicExpansionWorkBudget()
     this.refreshDynamicIterationLimit()
@@ -357,12 +361,16 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
   private addSupervisedCandidate(hyperParameters: Record<string, any>) {
     const constructionStart = routingDiagnostics.emit ? performance.now() : 0
     const solver = this.generateSolver(hyperParameters)
-    recordCandidateTiming(solver, {
-      constructionMs: performance.now() - constructionStart,
-    })
+    if (routingDiagnostics.emit) {
+      recordCandidateTiming(solver, {
+        constructionMs: performance.now() - constructionStart,
+      })
+    }
     const setupStart = routingDiagnostics.emit ? performance.now() : 0
     this.initializeCandidateBudget(solver)
-    recordCandidateTiming(solver, { setupMs: performance.now() - setupStart })
+    if (routingDiagnostics.emit) {
+      recordCandidateTiming(solver, { setupMs: performance.now() - setupStart })
+    }
     const g = this.computeG(solver)
     this.supervisedSolvers!.push({
       hyperParameters,

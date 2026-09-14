@@ -93,9 +93,11 @@ export class HyperParameterSupervisorSolver<
           ? performance.now()
           : 0
         const solver = this.generateSolver(hyperParameters)
-        recordCandidateTiming(solver, {
-          constructionMs: performance.now() - constructionStart,
-        })
+        if (routingDiagnostics.emit) {
+          recordCandidateTiming(solver, {
+            constructionMs: performance.now() - constructionStart,
+          })
+        }
         const g = this.computeG(solver)
         this.supervisedSolvers.push({
           hyperParameters,
@@ -166,9 +168,11 @@ export class HyperParameterSupervisorSolver<
     for (let i = 0; i < this.MIN_SUBSTEPS; i++) {
       supervisedSolver.solver.step()
     }
-    recordCandidateTiming(supervisedSolver.solver, {
-      steppingMs: performance.now() - steppingStart,
-    })
+    if (routingDiagnostics.emit) {
+      recordCandidateTiming(supervisedSolver.solver, {
+        steppingMs: performance.now() - steppingStart,
+      })
+    }
     this.activeSubSolver = supervisedSolver.solver
 
     supervisedSolver.g = this.computeG(supervisedSolver.solver)
