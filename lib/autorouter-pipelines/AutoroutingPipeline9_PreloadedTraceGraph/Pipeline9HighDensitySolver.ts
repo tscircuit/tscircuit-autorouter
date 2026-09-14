@@ -20,6 +20,7 @@ import type { Obstacle } from "lib/types/srj-types"
 import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
 import { BaseSolver } from "../../solvers/BaseSolver"
 import { HighDensitySolver } from "../../solvers/HighDensitySolver/HighDensitySolver"
+import { isObstacleConnectedToRoute } from "../../solvers/TraceWidthSolver/isObstacleConnectedToRoute"
 import type { PreloadedHighDensityRoute } from "./convertPreloadedTraceToHdRoutes"
 import {
   arePipeline9RoutesOnSameNet,
@@ -375,7 +376,7 @@ export const createPipeline9RegularNodeSolver = ({
 
 /**
  * Uses Pipeline7's detailed solver for ordinary nodes and B01 where local
- * preloaded copper must remain a layer-aware obstacle. If B01 cannot finish,
+ * pads or preloaded copper must remain layer-aware obstacles. If B01 cannot finish,
  * the regional adapter reroutes and splices only the intersecting preload.
  */
 export class Pipeline9HighDensitySolver extends BaseSolver {
@@ -470,6 +471,11 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     const solvedRoutes = this.activeNode
       ? restoreRootConnectionNames(routes, this.activeNode)
       : routes
+    routingDiagnostics.emit?.({
+      kind: "node_end",
+      nodeId: this.activeNode?.capacityMeshNodeId,
+      routes: solvedRoutes,
+    })
     this.routes.push(
       ...(this.preserveTerminalPcbPortIds && this.activeNode
         ? addTerminalPcbPortIds(solvedRoutes, this.activeNode)
@@ -1013,6 +1019,11 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       Number(this.stats.fixedObstacleUses ?? 0) + fixedObstacles.length
     const boardObstacles = (this.includeBoardObstacles ? this.obstacles : [])
       .filter((obstacle) => obstacleOverlapsNode(obstacle, nodeBounds))
+      .filter((obstacle) =>
+        node.portPoints.some(
+          (point) => !isObstacleConnectedToRoute(obstacle, point, this.connMap),
+        ),
+      )
       .map((obstacle) =>
         convertObstacleToB01Obstacle({
           obstacle,
@@ -1043,6 +1054,13 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       node,
       this.connMap,
     )
+    routingDiagnostics.emit?.({
+      kind: "node_start",
+      mode: "board_copper",
+      node,
+      fixedObstacleCount: fixedObstacles.length,
+      boardObstacleCount: boardObstacles.length,
+    })
     this.stats.b01NodeCount = Number(this.stats.b01NodeCount ?? 0) + 1
     this.activeB01Solver = new HighDensitySolverB01({
       ...defaultB01Params,

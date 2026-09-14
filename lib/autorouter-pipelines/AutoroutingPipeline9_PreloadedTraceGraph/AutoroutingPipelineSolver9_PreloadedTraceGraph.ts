@@ -1109,6 +1109,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
         necessarySegments:
           this.sharedEdgeSegmentsWithNecessaryCrampedPortPoints,
         pathing: this.portPointPathingSolver!.getOutput(),
+        pathingStats: this.portPointPathingSolver!.stats,
         uniformNodes: this.uniformPortDistributionSolver!.getOutput(),
         sharedEdges:
           this.uniformPortDistributionSolver!.mapOfOwnerPairToSharedEdge,

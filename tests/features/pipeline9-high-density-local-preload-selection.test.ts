@@ -138,6 +138,24 @@ test("Pipeline9 selects the detailed solver by local copper overlap", () => {
   expect(distantPreloadSolver.routes).toHaveLength(1)
   expect(distantPreloadSolver.routes[0]!.connectionName).toBe("new-route")
   const padOnlyRoute = distantPreloadSolver.routes[0]!
+  const padCorners = [
+    { x: 0.75, y: -1 },
+    { x: 1.25, y: -1 },
+    { x: 1.25, y: 1 },
+    { x: 0.75, y: 1 },
+  ]
+  for (const [pointIndex, point] of padOnlyRoute.route.slice(0, -1).entries()) {
+    for (const [cornerIndex, corner] of padCorners.entries()) {
+      expect(
+        minimumDistanceBetweenSegments(
+          point,
+          padOnlyRoute.route[pointIndex + 1]!,
+          corner,
+          padCorners[(cornerIndex + 1) % padCorners.length]!,
+        ),
+      ).toBeGreaterThanOrEqual(0.15 - 1e-6)
+    }
+  }
   expect(
     padOnlyRoute.route.slice(0, -1).some((point, pointIndex) =>
       doesSegmentIntersectRect(point, padOnlyRoute.route[pointIndex + 1]!, {
@@ -166,6 +184,27 @@ test("Pipeline9 selects the detailed solver by local copper overlap", () => {
     ),
   ).toBeFalse()
   expect(crossingRoute.route.some(({ z }) => z === 1)).toBe(true)
+
+  const sameNetPadSolver = createSolver([], {
+    obstacles: [
+      {
+        obstacleId: "same-net-pad",
+        type: "rect",
+        layers: ["top", "bottom"],
+        center: { x: 1, y: 0 },
+        width: 0.5,
+        height: 2,
+        connectedTo: ["new-root"],
+      },
+    ],
+  })
+  sameNetPadSolver.step()
+  expect(sameNetPadSolver.activeRegularSolver).not.toBeNull()
+  expect(sameNetPadSolver.activeB01Solver).toBeNull()
+  sameNetPadSolver.solve()
+  expect(sameNetPadSolver.solved).toBeTrue()
+  expect(sameNetPadSolver.failed).toBeFalse()
+  expect(sameNetPadSolver.routes).toHaveLength(1)
 
   const singleLayerNode: NodeWithPortPoints = {
     ...node,
