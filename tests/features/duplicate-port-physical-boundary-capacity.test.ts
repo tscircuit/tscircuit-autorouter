@@ -35,7 +35,7 @@ test("duplicate boundary choices preserve terminals and fit physical clearance",
       portId: "wide",
       region1Id: "left",
       region2Id: "right",
-      d: { x: 0, y: 0, z: 0 },
+      d: { x: 0, y: 0, z: 0, _preloadedFixedNetIds: ["fixed-net"] },
     },
     {
       portId: "wide-extra",
@@ -95,4 +95,25 @@ test("duplicate boundary choices preserve terminals and fit physical clearance",
       (region) => !region.pointIds.includes("narrow-extra"),
     ),
   ).toBeTrue()
+  const movable = constrainDuplicatePortsToSharedEdges({
+    graph: {
+      ...graph,
+      ports: graph.ports.map((port) => ({
+        ...port,
+        d: { ...port.d, _preloadedFixedNetIds: undefined },
+      })),
+    },
+    nodes,
+    minPortSpacing: 0.25,
+  })
+  const wideChoices = movable.ports.filter((port) => port.region1Id === "left")
+  expect(wideChoices).toHaveLength(2)
+  expect(wideChoices.every((port) => port.d!.x === 0)).toBeTrue()
+  expect(
+    Math.abs(wideChoices[0]!.d!.y - wideChoices[1]!.d!.y),
+  ).toBeGreaterThanOrEqual(0.25)
+  expect(
+    movable.ports.some((port) => port.portId === "narrow-extra"),
+  ).toBeFalse()
+  expect(graph).toEqual(original)
 })

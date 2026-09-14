@@ -1,3 +1,4 @@
+import { routingDiagnostics } from "../../routingDiagnostics"
 import type { SerializedHyperGraph } from "@tscircuit/hypergraph"
 import type { GraphicsObject } from "graphics-debug"
 import { BaseSolver } from "lib/solvers/BaseSolver"
@@ -1109,6 +1110,20 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
           nodes: params.graph.regions.map((region) => region.d),
           minPortSpacing: params.duplicatePortMinSpacing,
         })
+        const retainedPortIds = new Set(
+          graphForTiny.ports.map((port) => port.portId),
+        )
+        this.duplicateCongestedPortReport = {
+          ...duplicateCongestedPortSolver.report,
+          duplicatedPorts: duplicateCongestedPortSolver.report.duplicatedPorts
+            .map((source) => ({
+              ...source,
+              duplicatePortIds: source.duplicatePortIds.filter((portId) =>
+                retainedPortIds.has(portId),
+              ),
+            }))
+            .filter((source) => source.duplicatePortIds.length > 0),
+        }
       }
       for (const port of graphForTiny.ports) {
         const metadata = asTinyPortMetadata(port.d)
@@ -1523,6 +1538,14 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       currentStage: this.tinyPipelineSolver.getCurrentStageName(),
       stageStats: this.tinyPipelineSolver.getStageStats(),
     }
+    if (this.failed)
+      routingDiagnostics.emit?.({
+        kind: "pathing_failure",
+        stats: this.stats,
+        neverRouted: currentTinySolver?.getNeverSuccessfullyRoutedRoutes(),
+        graph: this.params.graph.regions.map((region) => region.d),
+        inputNodes: this.inputNodeWithPortPoints,
+      })
     this.activeSubSolver = this.tinyPipelineSolver.activeSubSolver ?? null
   }
 

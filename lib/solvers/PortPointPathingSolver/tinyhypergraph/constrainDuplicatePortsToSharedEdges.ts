@@ -7,7 +7,7 @@ type SerializedPort = SerializedHyperGraph["ports"][number]
 type SerializedPortId = SerializedPort["portId"]
 type BoundaryLayerKey = string
 
-/** Adds only physically spaced boundary choices; original terminals stay fixed. */
+/** Fits extra boundary choices to copper capacity while retaining fixed terminals. */
 export function constrainDuplicatePortsToSharedEdges({
   graph,
   nodes,
@@ -45,6 +45,17 @@ export function constrainDuplicatePortsToSharedEdges({
     if (boundaryPorts) boundaryPorts.push(port)
     else originalPortsByBoundary.set(key, [port])
   }
+  const duplicatePortsByBoundary = new Map<BoundaryLayerKey, SerializedPort[]>()
+  for (const port of graph.ports) {
+    if (typeof port.d?.duplicatedFromPortId !== "string") continue
+    const owners = [port.region1Id, port.region2Id].sort()
+    const key: BoundaryLayerKey = `${owners[0]}|${owners[1]}:${port.d?.z}`
+    const boundaryPorts = duplicatePortsByBoundary.get(key)
+    if (boundaryPorts) boundaryPorts.push(port)
+    else duplicatePortsByBoundary.set(key, [port])
+  }
+  const redistributedBoundaries = new Set<BoundaryLayerKey>()
+  const replacementById = new Map<SerializedPortId, SerializedPort>()
   const occupiedCoordinates = new Map<BoundaryLayerKey, number[]>()
   const retainedPorts = [...originalPorts]
 
@@ -69,6 +80,53 @@ export function constrainDuplicatePortsToSharedEdges({
       throw new Error(`Source port "${sourcePortId}" has invalid coordinates`)
     }
     const key: BoundaryLayerKey = `${sharedEdge.ownerPairKey}:${z}`
+    if (redistributedBoundaries.has(key)) continue
+    const boundaryPorts = originalPortsByBoundary.get(key)
+    if (!boundaryPorts)
+      throw new Error(`Missing boundary ports for "${sourcePortId}"`)
+    const hasFixedTerminal = boundaryPorts.some(
+      (original) =>
+        original.d?._tinyTerminal ||
+        original.d?.pcb_port_id ||
+        original.d?._preloadedTracePortAssignments?.length ||
+        original.d?._preloadedFixedNetIds?.length,
+    )
+    if (!hasFixedTerminal) {
+      redistributedBoundaries.add(key)
+      const duplicates = duplicatePortsByBoundary.get(key)
+      if (!duplicates)
+        throw new Error(`Missing duplicate requests for "${sourcePortId}"`)
+      const edgeMargin = minPortSpacing * 0.75
+      const usableLength = Math.max(0, sharedEdge.length - 2 * edgeMargin)
+      const capacity = Math.max(
+        1,
+        Math.floor(usableLength / minPortSpacing) + 1,
+      )
+      const extraCount = Math.max(0, capacity - boundaryPorts.length)
+      const retainedDuplicates = duplicates.slice(0, extraCount)
+      if (retainedDuplicates.length === 0) continue
+      const choices = [...boundaryPorts, ...retainedDuplicates].sort(
+        (a, b) => a.d![axis] - b.d![axis],
+      )
+      const edgeStart = axis === "x" ? sharedEdge.x1 : sharedEdge.y1
+      const pitch = usableLength / (choices.length - 1)
+      const centerCoordinate =
+        edgeStart + edgeMargin + pitch * Math.floor((choices.length - 1) / 2)
+      for (const [index, choice] of choices.entries()) {
+        const coordinate = edgeStart + edgeMargin + pitch * index
+        replacementById.set(choice.portId, {
+          ...choice,
+          d: {
+            ...choice.d,
+            x: axis === "x" ? coordinate : sharedEdge.x1,
+            y: axis === "y" ? coordinate : sharedEdge.y1,
+            distToCentermostPortOnZ: Math.abs(coordinate - centerCoordinate),
+          },
+        })
+      }
+      retainedPorts.push(...retainedDuplicates)
+      continue
+    }
     let occupied = occupiedCoordinates.get(key)
     if (!occupied) {
       const boundaryPorts = originalPortsByBoundary.get(key)
@@ -117,7 +175,9 @@ export function constrainDuplicatePortsToSharedEdges({
   const retainedPortIds = new Set(retainedPorts.map((port) => port.portId))
   return {
     ...graph,
-    ports: retainedPorts,
+    ports: retainedPorts.map(
+      (port) => replacementById.get(port.portId) ?? port,
+    ),
     regions: graph.regions.map((region) => ({
       ...region,
       pointIds: region.pointIds.filter((portId) => retainedPortIds.has(portId)),
