@@ -1,3 +1,4 @@
+import { routingDiagnostics, describeCandidate } from "../../routingDiagnostics"
 import type { GraphicsObject } from "graphics-debug"
 import type {
   HighDensityIntraNodeRoute,
@@ -113,6 +114,7 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
   scaleFactor = 1
   growthAttempts = 0
   maxGrowthAttempts: number
+  diagnosticScaleStartedAt = 0
 
   constructor(params: GrowShrinkHighDensityIntraNodeSolverParams) {
     super()
@@ -152,6 +154,14 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
   private createActiveSubSolver() {
     const { growShrinkSolutionValidator: _, ...portfolioParams } =
       this.constructorParams
+    this.diagnosticScaleStartedAt = routingDiagnostics.emit
+      ? performance.now()
+      : 0
+    routingDiagnostics.emit?.({
+      kind: "scale_start",
+      scale: this.scaleFactor,
+      node: this.nodeWithPortPoints,
+    })
     this.activeSubSolver = new PortfolioSingleIntraNodeSolver({
       ...portfolioParams,
       enableNegotiatedSearch:
@@ -209,6 +219,24 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
     }
 
     this.activeSubSolver!.step()
+
+    if (this.activeSubSolver!.solved || this.activeSubSolver!.failed) {
+      routingDiagnostics.emit?.({
+        kind: "scale_end",
+        scale: this.scaleFactor,
+        nodeId: this.nodeWithPortPoints.capacityMeshNodeId,
+        elapsedMs: performance.now() - this.diagnosticScaleStartedAt,
+        solved: this.activeSubSolver!.solved,
+        failed: this.activeSubSolver!.failed,
+        error: this.activeSubSolver!.error,
+        candidates: this.activeSubSolver!.supervisedSolvers?.map(
+          ({ solver, hyperParameters }) => ({
+            ...describeCandidate(solver),
+            hyperParameters,
+          }),
+        ),
+      })
+    }
 
     if (this.activeSubSolver!.solved) {
       if (this.acceptSolution(this.activeSubSolver!)) {

@@ -1,3 +1,4 @@
+import { routingDiagnostics } from "../../solvers/routingDiagnostics"
 import {
   defaultB01Params,
   HighDensitySolverB01,
@@ -486,6 +487,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
   }
 
   protected startRegularSolver(node: NodeWithPortPoints): void {
+    routingDiagnostics.emit?.({ kind: "node_start", mode: "regular", node })
     this.activeNode = node
     this.activeRegularSolver = createPipeline9RegularNodeSolver({
       nodeWithPortPoints: node,
@@ -558,6 +560,12 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     const fixedRouteObstacles = getPipeline9FixedRouteObstacles({
       fixedObstacleRoutes: this.activeFallbackFixedObstacleRoutes,
       layerCount: this.layerCount,
+    })
+    routingDiagnostics.emit?.({
+      kind: "node_start",
+      mode: "regional",
+      node: fallbackProblem.nodeWithPortPoints,
+      obstacles: [...this.obstacles, ...fixedRouteObstacles],
     })
     this.activeFallbackSolver = new Pipeline9RegionalFallbackSolver({
       nodeWithPortPoints: fallbackProblem.nodeWithPortPoints,

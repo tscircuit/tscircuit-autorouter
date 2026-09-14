@@ -1,3 +1,4 @@
+import { routingDiagnostics, recordCandidateTiming } from "./routingDiagnostics"
 import { GraphicsObject } from "graphics-debug"
 import { BaseSolver } from "./BaseSolver"
 
@@ -88,7 +89,13 @@ export class HyperParameterSupervisorSolver<
       )
 
       for (const hyperParameters of hyperParameterCombinations) {
+        const constructionStart = routingDiagnostics.emit
+          ? performance.now()
+          : 0
         const solver = this.generateSolver(hyperParameters)
+        recordCandidateTiming(solver, {
+          constructionMs: performance.now() - constructionStart,
+        })
         const g = this.computeG(solver)
         this.supervisedSolvers.push({
           hyperParameters,
@@ -155,9 +162,13 @@ export class HyperParameterSupervisorSolver<
       return
     }
 
+    const steppingStart = routingDiagnostics.emit ? performance.now() : 0
     for (let i = 0; i < this.MIN_SUBSTEPS; i++) {
       supervisedSolver.solver.step()
     }
+    recordCandidateTiming(supervisedSolver.solver, {
+      steppingMs: performance.now() - steppingStart,
+    })
     this.activeSubSolver = supervisedSolver.solver
 
     supervisedSolver.g = this.computeG(supervisedSolver.solver)

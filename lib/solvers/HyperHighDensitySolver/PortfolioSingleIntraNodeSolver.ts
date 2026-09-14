@@ -1,4 +1,8 @@
 import {
+  routingDiagnostics,
+  recordCandidateTiming,
+} from "../routingDiagnostics"
+import {
   HighDensitySolverA03 as HighDensityA03Solver,
   HighDensitySolverA01,
 } from "@tscircuit/high-density-a01"
@@ -342,15 +346,23 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
   override initializeSolvers() {
     super.initializeSolvers()
     for (const { solver } of this.supervisedSolvers ?? []) {
+      const setupStart = routingDiagnostics.emit ? performance.now() : 0
       this.initializeCandidateBudget(solver)
+      recordCandidateTiming(solver, { setupMs: performance.now() - setupStart })
     }
     this.stats.dynamicExpansionWorkBudget = this.getDynamicExpansionWorkBudget()
     this.refreshDynamicIterationLimit()
   }
 
   private addSupervisedCandidate(hyperParameters: Record<string, any>) {
+    const constructionStart = routingDiagnostics.emit ? performance.now() : 0
     const solver = this.generateSolver(hyperParameters)
+    recordCandidateTiming(solver, {
+      constructionMs: performance.now() - constructionStart,
+    })
+    const setupStart = routingDiagnostics.emit ? performance.now() : 0
     this.initializeCandidateBudget(solver)
+    recordCandidateTiming(solver, { setupMs: performance.now() - setupStart })
     const g = this.computeG(solver)
     this.supervisedSolvers!.push({
       hyperParameters,

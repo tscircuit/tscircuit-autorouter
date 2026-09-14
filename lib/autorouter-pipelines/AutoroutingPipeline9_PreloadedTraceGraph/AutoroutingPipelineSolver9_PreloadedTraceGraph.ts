@@ -1,3 +1,4 @@
+import { routingDiagnostics } from "../../solvers/routingDiagnostics"
 import { RectDiffPipeline } from "@tscircuit/rectdiff"
 import type { PowerTraceExpanderOptions } from "@tscircuit/power-trace-expander"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
@@ -1051,7 +1052,15 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
         this.timeSpentOnPhase[pipelineStepDef.solverName] =
           this.endTimeOfPhase[pipelineStepDef.solverName] -
           this.startTimeOfPhase[pipelineStepDef.solverName]
+        const completionStart = routingDiagnostics.emit ? performance.now() : 0
         pipelineStepDef.onSolved?.(this)
+        routingDiagnostics.emit?.({
+          kind: "stage_end",
+          stage: pipelineStepDef.solverName,
+          iterations: this.activeSubSolver.iterations,
+          stepElapsedMs: this.timeSpentOnPhase[pipelineStepDef.solverName],
+          completionMs: performance.now() - completionStart,
+        })
         this.activeSubSolver = null
         this.currentPipelineStepIndex++
       } else if (this.activeSubSolver.failed) {
@@ -1062,6 +1071,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       return
     }
 
+    const constructionStart = routingDiagnostics.emit ? performance.now() : 0
     const constructorParams = pipelineStepDef.getConstructorParams(this)
     // @ts-ignore
     this.activeSubSolver = new pipelineStepDef.solverClass(...constructorParams)
@@ -1074,6 +1084,30 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
         this.iterations + this.activeSubSolver.MAX_ITERATIONS + 1,
       )
     ;(this as any)[pipelineStepDef.solverName] = this.activeSubSolver
+    routingDiagnostics.emit?.({
+      kind: "stage_start",
+      stage: pipelineStepDef.solverName,
+      constructionMs: performance.now() - constructionStart,
+    })
+    if (pipelineStepDef.solverName === "highDensityRouteSolver") {
+      routingDiagnostics.emit?.({
+        kind: "geometry",
+        srj: this.srjWithPointPairs,
+        capacityNodes: this.capacityNodes,
+        capacityEdges: this.capacityEdges,
+        availableSegments: this.availableSegmentPointSolver!.getOutput(),
+        necessarySegments:
+          this.sharedEdgeSegmentsWithNecessaryCrampedPortPoints,
+        pathing: this.portPointPathingSolver!.getOutput(),
+        uniformNodes: this.uniformPortDistributionSolver!.getOutput(),
+        sharedEdges:
+          this.uniformPortDistributionSolver!.mapOfOwnerPairToSharedEdge,
+        ownerPairs:
+          this.uniformPortDistributionSolver!.mapOfOwnerPairToPortPoints,
+        minTraceWidth: this.minTraceWidth,
+        viaDiameter: this.viaDiameter,
+      })
+    }
     this.timeSpentOnPhase[pipelineStepDef.solverName] = 0
     this.startTimeOfPhase[pipelineStepDef.solverName] = performance.now()
   }
