@@ -3,6 +3,7 @@ import * as autorouterModule from "../../lib"
 import { convertSrjToGraphicsObject } from "../../lib"
 import { KrtAutoroutingPipelineSolver } from "../../lib/testing/KrtAutoroutingPipelineSolver"
 import { evaluateRelaxedDrc } from "../../lib/testing/evaluate-relaxed-drc"
+import { routingDiagnostics } from "../../lib/solvers/routingDiagnostics"
 import type {
   SimpleRouteJson,
   SimplifiedPcbTrace,
@@ -532,6 +533,12 @@ export const runTask = async (
       routedTraces: traces,
     })
     const relaxedDrcPassed = errors.length === 0
+    routingDiagnostics.emit?.({
+      kind: "final_drc",
+      errors,
+      traces,
+      srjWithPointPairs: solver.srjWithPointPairs ?? task.scenario,
+    })
     const drcSummary = summarizeDrcErrors(errors as object[])
     let benchmarkSnapshot: BenchmarkSnapshotWithImage | undefined
 

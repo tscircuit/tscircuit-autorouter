@@ -1011,11 +1011,6 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       .flatMap((route) => convertFixedRouteToB01Obstacles(route, node))
     this.stats.fixedObstacleUses =
       Number(this.stats.fixedObstacleUses ?? 0) + fixedObstacles.length
-    if (fixedObstacles.length === 0) {
-      this.startRegularSolver(node)
-      return
-    }
-
     const boardObstacles = (this.includeBoardObstacles ? this.obstacles : [])
       .filter((obstacle) => obstacleOverlapsNode(obstacle, nodeBounds))
       .map((obstacle) =>
@@ -1032,6 +1027,10 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       )
     this.stats.boardObstacleUses =
       Number(this.stats.boardObstacleUses ?? 0) + boardObstacles.length
+    if (fixedObstacles.length === 0 && boardObstacles.length === 0) {
+      this.startRegularSolver(node)
+      return
+    }
 
     this.activeNode = node
     if (node.width > 15 || node.height > 15) {

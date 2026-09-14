@@ -81,7 +81,7 @@ const createSolver = (
     enableRegionalFallback: false,
   })
 
-test("Pipeline9 selects the detailed solver by local preload overlap", () => {
+test("Pipeline9 selects the detailed solver by local copper overlap", () => {
   const distantPreloadSolver = createSolver([
     createFixedRoute([
       { x: -5, y: -5, z: 0 },
@@ -98,14 +98,14 @@ test("Pipeline9 selects the detailed solver by local preload overlap", () => {
   distantPreloadSolver.step()
   crossingPreloadSolver.step()
 
-  expect(distantPreloadSolver.activeRegularSolver).not.toBeNull()
-  expect(distantPreloadSolver.activeB01Solver).toBeNull()
+  expect(distantPreloadSolver.activeRegularSolver).toBeNull()
+  expect(distantPreloadSolver.activeB01Solver).not.toBeNull()
   expect(distantPreloadSolver.stats).toMatchObject({
     fixedObstacleCount: 1,
     fixedObstacleUses: 0,
-    boardObstacleUses: 0,
-    regularNodeCount: 1,
-    b01NodeCount: 0,
+    boardObstacleUses: 1,
+    regularNodeCount: 0,
+    b01NodeCount: 1,
   })
   expect(crossingPreloadSolver.activeRegularSolver).toBeNull()
   expect(crossingPreloadSolver.activeB01Solver).not.toBeNull()
@@ -137,6 +137,17 @@ test("Pipeline9 selects the detailed solver by local preload overlap", () => {
   expect(distantPreloadSolver.failed).toBeFalse()
   expect(distantPreloadSolver.routes).toHaveLength(1)
   expect(distantPreloadSolver.routes[0]!.connectionName).toBe("new-route")
+  const padOnlyRoute = distantPreloadSolver.routes[0]!
+  expect(
+    padOnlyRoute.route.slice(0, -1).some((point, pointIndex) =>
+      doesSegmentIntersectRect(point, padOnlyRoute.route[pointIndex + 1]!, {
+        minX: 0.75,
+        maxX: 1.25,
+        minY: -1,
+        maxY: 1,
+      }),
+    ),
+  ).toBeFalse()
 
   crossingPreloadSolver.solve()
   expect(crossingPreloadSolver.solved).toBeTrue()

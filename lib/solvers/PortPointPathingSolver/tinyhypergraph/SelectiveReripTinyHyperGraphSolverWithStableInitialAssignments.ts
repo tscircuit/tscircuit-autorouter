@@ -1,6 +1,7 @@
 import { SelectiveReripTinyHyperGraphSolver } from "tiny-hypergraph/lib/index"
 import { applyInitialAssignments } from "tiny-hypergraph/lib/initialAssignments"
 import type { TinyHyperGraphWorkingState } from "tiny-hypergraph/lib/core"
+import { routingDiagnostics } from "../../routingDiagnostics"
 
 type PartialRoutingSnapshot = {
   snapshot: Pick<
@@ -86,10 +87,23 @@ export class SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments exte
   }
 
   override onOutOfCandidates(): void {
+    routingDiagnostics.emit?.({
+      kind: "pathing_blocker_search_start",
+      routeId: this.state.currentRouteId,
+      remainingRouteCount: this.state.unroutedRoutes.length + 1,
+      iterations: this.iterations,
+      selectiveRerip: this.getSelectiveReripStats(),
+    })
     super.onOutOfCandidates()
     if (!this.failed && !this.solved) {
       this.preservePartialRoutingState()
     }
+    routingDiagnostics.emit?.({
+      kind: "pathing_blocker_search_end",
+      remainingRouteCount: this.state.unroutedRoutes.length,
+      iterations: this.iterations,
+      selectiveRerip: this.getSelectiveReripStats(),
+    })
   }
 
   override resetRoutingStateForRerip(): void {
