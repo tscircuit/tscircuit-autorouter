@@ -1,9 +1,9 @@
 import { expect, test } from "bun:test"
 import type { SerializedHyperGraph } from "@tscircuit/hypergraph"
-import { constrainDuplicatePortsToSharedEdges } from "lib/solvers/PortPointPathingSolver/tinyhypergraph/constrainDuplicatePortsToSharedEdges"
+import { limitDuplicatePortsToBoundaryCapacity } from "lib/solvers/PortPointPathingSolver/tinyhypergraph/limitDuplicatePortsToBoundaryCapacity"
 import type { CapacityMeshNode } from "lib/types"
 
-test("duplicate boundary choices preserve terminals and fit physical clearance", (): void => {
+test("synthetic boundary capacity preserves original terminals and existing coordinates", (): void => {
   const nodes: CapacityMeshNode[] = [
     {
       capacityMeshNodeId: "left",
@@ -71,7 +71,7 @@ test("duplicate boundary choices preserve terminals and fit physical clearance",
     })),
   }
   const original = structuredClone(graph)
-  const constrained = constrainDuplicatePortsToSharedEdges({
+  const constrained = limitDuplicatePortsToBoundaryCapacity({
     graph,
     nodes,
     minPortSpacing: 0.25,
@@ -83,10 +83,9 @@ test("duplicate boundary choices preserve terminals and fit physical clearance",
   expect(constrained.ports.find((port) => port.portId === "narrow")).toEqual(
     ports[2],
   )
-  const extra = constrained.ports.find((port) => port.portId === "wide-extra")!
-  expect(extra.d!.x).toBe(0)
-  expect(Math.abs(extra.d!.y)).toBeGreaterThanOrEqual(0.25)
-  expect(Math.abs(extra.d!.y)).toBeLessThanOrEqual(0.75)
+  expect(
+    constrained.ports.find((port) => port.portId === "wide-extra"),
+  ).toEqual(ports[1])
   expect(
     constrained.ports.some((port) => port.portId === "narrow-extra"),
   ).toBeFalse()
@@ -95,25 +94,4 @@ test("duplicate boundary choices preserve terminals and fit physical clearance",
       (region) => !region.pointIds.includes("narrow-extra"),
     ),
   ).toBeTrue()
-  const movable = constrainDuplicatePortsToSharedEdges({
-    graph: {
-      ...graph,
-      ports: graph.ports.map((port) => ({
-        ...port,
-        d: { ...port.d, _preloadedFixedNetIds: undefined },
-      })),
-    },
-    nodes,
-    minPortSpacing: 0.25,
-  })
-  const wideChoices = movable.ports.filter((port) => port.region1Id === "left")
-  expect(wideChoices).toHaveLength(2)
-  expect(wideChoices.every((port) => port.d!.x === 0)).toBeTrue()
-  expect(
-    Math.abs(wideChoices[0]!.d!.y - wideChoices[1]!.d!.y),
-  ).toBeGreaterThanOrEqual(0.25)
-  expect(
-    movable.ports.some((port) => port.portId === "narrow-extra"),
-  ).toBeFalse()
-  expect(graph).toEqual(original)
 })
