@@ -1,3 +1,4 @@
+import { pointToSegmentClosestPoint } from "@tscircuit/math-utils"
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type {
   DrcEvaluator,
@@ -10,6 +11,8 @@ import {
 } from "high-density-repair03/lib/solvers/GlobalDrcForceImproveSolver/solverHelpers"
 import type { SimpleRouteConnection, SimpleRouteJson } from "lib/types"
 import type { HighDensityRoute } from "lib/types/high-density-types"
+import { minimumDistanceBetweenSegments } from "lib/utils/minimumDistanceBetweenSegments"
+import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
 import {
   getPipeline9DrcErrorTraceIds,
   getPipeline9RouteIndexByTraceId,
@@ -88,16 +91,110 @@ const getIndexedClearanceDeficit = (
   return deficit
 }
 
+const getPadTraceForceCenter = ({
+  error,
+  routes,
+  routeIndexByTraceId,
+  padObstacle,
+  layerCount,
+}: {
+  error: Pipeline9DrcError
+  routes: HighDensityRoute[]
+  routeIndexByTraceId: ReadonlyMap<string, number>
+  padObstacle: SimpleRouteJson["obstacles"][number]
+  layerCount: number
+}): Point | undefined => {
+  if (typeof error.pcb_trace_id !== "string") return undefined
+  const routeIndex = routeIndexByTraceId.get(error.pcb_trace_id)
+  const route = routeIndex === undefined ? undefined : routes[routeIndex]
+  if (!route) return undefined
+
+  const rotationRadians =
+    ((padObstacle.ccwRotationDegrees ?? 0) * Math.PI) / 180
+  const cos = Math.cos(rotationRadians)
+  const sin = Math.sin(rotationRadians)
+  const toLocal = (point: Point): Point => {
+    const offsetX = point.x - padObstacle.center.x
+    const offsetY = point.y - padObstacle.center.y
+    return {
+      x: offsetX * cos + offsetY * sin,
+      y: -offsetX * sin + offsetY * cos,
+    }
+  }
+  const isInsidePad = (point: Point): boolean => {
+    const local = toLocal(point)
+    return (
+      Math.abs(local.x) <= padObstacle.width / 2 &&
+      Math.abs(local.y) <= padObstacle.height / 2
+    )
+  }
+  const localCorners = [
+    { x: -padObstacle.width / 2, y: -padObstacle.height / 2 },
+    { x: padObstacle.width / 2, y: -padObstacle.height / 2 },
+    { x: padObstacle.width / 2, y: padObstacle.height / 2 },
+    { x: -padObstacle.width / 2, y: padObstacle.height / 2 },
+  ]
+  const corners = localCorners.map((corner) => ({
+    x: padObstacle.center.x + corner.x * cos - corner.y * sin,
+    y: padObstacle.center.y + corner.x * sin + corner.y * cos,
+  }))
+  const obstacleLayers = new Set(
+    padObstacle.zLayers ??
+      padObstacle.layers.map((layer) => mapLayerNameToZ(layer, layerCount)),
+  )
+  let closest:
+    | {
+        distance: number
+        center: Point
+      }
+    | undefined
+  for (let pointIndex = 1; pointIndex < route.route.length; pointIndex++) {
+    const start = route.route[pointIndex - 1]!
+    const end = route.route[pointIndex]!
+    if (start.z !== end.z || !obstacleLayers.has(start.z)) continue
+    // Pad-clearance display centers can be far from the offending copper on
+    // elongated or rotated pads. Rank route segments by the physical pad
+    // boundary, then give the force solver a point on the actual segment.
+    const distance =
+      isInsidePad(start) || isInsidePad(end)
+        ? 0
+        : Math.min(
+            ...corners.map((corner, cornerIndex) =>
+              minimumDistanceBetweenSegments(
+                start,
+                end,
+                corner,
+                corners[(cornerIndex + 1) % corners.length]!,
+              ),
+            ),
+          )
+    if (!closest || distance < closest.distance) {
+      closest = {
+        distance,
+        center: pointToSegmentClosestPoint(padObstacle.center, start, end),
+      }
+    }
+  }
+  return closest?.center
+}
+
 const prepareClearanceErrors = ({
   errors,
   errorsWithCenters,
   routeIndexByTraceId,
-  padPositionById,
+  routes,
+  padObstacleById,
+  layerCount,
 }: {
   errors: Pipeline9DrcError[]
   errorsWithCenters: Pipeline9DrcError[]
   routeIndexByTraceId: ReadonlyMap<string, number>
-  padPositionById: ReadonlyMap<string, Point>
+  routes: HighDensityRoute[]
+  padObstacleById: ReadonlyMap<
+    string,
+    SimpleRouteJson["obstacles"][number]
+  >
+  layerCount: number
 }): PreparedClearanceErrors | undefined => {
   const preparedErrors: PreparedClearanceError[] = []
   let deficit = 0
@@ -131,7 +228,18 @@ const prepareClearanceErrors = ({
     )
     const center = isPadTrace
       ? typeof error.pcb_pad_id === "string"
-        ? padPositionById.get(error.pcb_pad_id)
+        ? (() => {
+            const padObstacle = padObstacleById.get(error.pcb_pad_id)
+            return padObstacle
+              ? (getPadTraceForceCenter({
+                  error,
+                  routes,
+                  routeIndexByTraceId,
+                  padObstacle,
+                  layerCount,
+                }) ?? padObstacle.center)
+              : undefined
+          })()
         : undefined
       : (centeredError?.center ?? error.center)
     if (!center || typeof center !== "object") return undefined
@@ -214,7 +322,10 @@ export const applyPipeline9ClearancePrecisionRepairs = ({
     newConnections,
     syntheticConnectionNames,
   })
-  const padPositionById = new Map<string, Point>()
+  const padObstacleById = new Map<
+    string,
+    SimpleRouteJson["obstacles"][number]
+  >()
   for (const obstacle of srj.obstacles) {
     for (const id of [
       obstacle.obstacleId,
@@ -222,14 +333,16 @@ export const applyPipeline9ClearancePrecisionRepairs = ({
       obstacle.circuitJsonMetadata?.pcb_plated_hole_id,
       obstacle.connectedTo[0],
     ]) {
-      if (typeof id === "string") padPositionById.set(id, obstacle.center)
+      if (typeof id === "string") padObstacleById.set(id, obstacle)
     }
   }
   const initial = prepareClearanceErrors({
     errors: initialErrors,
     errorsWithCenters: initialErrorsWithCenters,
     routeIndexByTraceId,
-    padPositionById,
+    routes,
+    padObstacleById,
+    layerCount: srj.layerCount,
   })
   if (!initial) return unchanged
   let current: PreparedClearanceErrors = initial
@@ -319,7 +432,9 @@ export const applyPipeline9ClearancePrecisionRepairs = ({
           ? candidateResult
           : (candidateResult.errorsWithCenters ?? candidateResult.errors),
         routeIndexByTraceId,
-        padPositionById,
+        routes: candidate.routes,
+        padObstacleById,
+        layerCount: srj.layerCount,
       })
       if (!prepared) continue
       const marginMeasurement = marginDrcEvaluator(
@@ -328,23 +443,40 @@ export const applyPipeline9ClearancePrecisionRepairs = ({
         routes,
       )
       if (marginMeasurement.status === "unsupported-identity") {
-        if (candidateErrors.length !== 0) continue
-        referenceValidationCount++
-        const referenceResult = drcEvaluator({
-          traces: [],
-          routes: candidate.routes,
-          hdRoutes: candidate.routes,
-        })
-        const referenceErrors = Array.isArray(referenceResult)
-          ? referenceResult
-          : referenceResult.errors
-        if (referenceErrors.length === 0) {
-          return {
+        if (candidateErrors.length === 0) {
+          referenceValidationCount++
+          const referenceResult = drcEvaluator({
+            traces: [],
             routes: candidate.routes,
-            attemptedCandidateCount,
-            candidateValidationCount,
-            referenceValidationCount,
-            repaired: true,
+            hdRoutes: candidate.routes,
+          })
+          const referenceErrors = Array.isArray(referenceResult)
+            ? referenceResult
+            : referenceResult.errors
+          if (referenceErrors.length === 0) {
+            return {
+              routes: candidate.routes,
+              attemptedCandidateCount,
+              candidateValidationCount,
+              referenceValidationCount,
+              repaired: true,
+            }
+          }
+          continue
+        }
+        if (
+          prepared.deficit < current.deficit - 1e-9 &&
+          prepared.deficit <
+            (bestImprovement?.prepared.deficit ?? Number.POSITIVE_INFINITY)
+        ) {
+          // Synthetic preload identities cannot always be remeasured by the
+          // private margin evaluator. Keep strict reference-DRC improvements
+          // private so later passes can finish a coupled repair; publication
+          // still requires a clean full reference validation above.
+          bestImprovement = {
+            candidate,
+            prepared,
+            preparedMargin: currentMargin,
           }
         }
         continue
@@ -354,7 +486,9 @@ export const applyPipeline9ClearancePrecisionRepairs = ({
         errors: marginErrors,
         errorsWithCenters: marginErrors,
         routeIndexByTraceId,
-        padPositionById,
+        routes: candidate.routes,
+        padObstacleById,
+        layerCount: srj.layerCount,
       })
       if (!preparedMargin) continue
       if (candidateErrors.length === 0 && marginErrors.length === 0) {
