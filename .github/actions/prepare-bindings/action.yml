@@ -1,0 +1,48 @@
+name: Prepare embedded Rust WASM
+description: Install pinned tooling and generate the source imports used by the autorouter.
+inputs:
+  working-directory:
+    description: Checkout containing the autorouter package.
+    default: .
+  build-assets:
+    description: Set false when a following package build will generate the assets.
+    default: 'true'
+runs:
+  using: composite
+  steps:
+    - name: Install Rust toolchain and WASM target
+      uses: dtolnay/rust-toolchain@stable
+      with:
+        toolchain: 1.98.1
+        targets: wasm32-unknown-unknown
+
+    - name: Cache wasm-bindgen CLI
+      id: bindgen-cache
+      uses: actions/cache@v4
+      with:
+        path: ~/.cargo/bin/wasm-bindgen
+        key: wasm-bindgen-${{ runner.os }}-${{ runner.arch }}-0.2.128-rust-1.98.1
+
+    - name: Cache Rust builds
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cargo/registry
+          ~/.cargo/git
+          ${{ inputs.working-directory }}/rust/tiny-hypergraph-bindings/target
+          ${{ inputs.working-directory }}/rust/capacity-autorouter-bindings/target
+        key: capacity-autorouter-bindings-${{ runner.os }}-${{ runner.arch }}-1.98.1-${{ hashFiles(format('{0}/rust/**/Cargo.lock', inputs.working-directory)) }}-${{ hashFiles(format('{0}/rust/**/*.rs', inputs.working-directory), format('{0}/rust/**/Cargo.toml', inputs.working-directory)) }}
+        restore-keys: |
+          capacity-autorouter-bindings-${{ runner.os }}-${{ runner.arch }}-1.98.1-${{ hashFiles(format('{0}/rust/**/Cargo.lock', inputs.working-directory)) }}-
+          capacity-autorouter-bindings-${{ runner.os }}-${{ runner.arch }}-1.98.1-
+
+    - name: Install wasm-bindgen CLI
+      if: steps.bindgen-cache.outputs.cache-hit != 'true'
+      shell: bash
+      run: cargo install wasm-bindgen-cli --version 0.2.128 --locked --force
+
+    - name: Generate embedded WASM imports
+      if: inputs.build-assets == 'true'
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      run: bun run build:bindings

@@ -2,7 +2,7 @@ import { expect, test } from "bun:test"
 import { getSvgFromGraphicsObject } from "graphics-debug"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
 import type { SimpleRouteJson } from "lib/types"
-import { TinyHyperGraphSolver } from "tiny-hypergraph/lib/index"
+import { TinyHypergraphSearchStage } from "lib/bindings/tiny-hypergraph/TinyHypergraphPipelineAdapter"
 
 test("Pipeline9 completes the pedometer graph at low effort", async () => {
   const srj: SimpleRouteJson = await Bun.file(
@@ -15,12 +15,12 @@ test("Pipeline9 completes the pedometer graph at low effort", async () => {
     effort: 0.01,
     cacheProvider: null,
   })
-  let tinySolver: TinyHyperGraphSolver | undefined
+  let tinySolver: TinyHypergraphSearchStage | undefined
   while (!pipeline.portPointPathingSolver?.solved && !pipeline.failed) {
     pipeline.step()
     let active = pipeline.activeSubSolver
     while (active) {
-      if (active instanceof TinyHyperGraphSolver) tinySolver = active
+      if (active instanceof TinyHypergraphSearchStage) tinySolver = active
       active = active.activeSubSolver
     }
   }

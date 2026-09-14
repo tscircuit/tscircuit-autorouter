@@ -721,6 +721,7 @@ const parseArgs = (): BenchmarkOptions => {
 
   for (let i = 0; i < args.length; i += 1) {
     const arg = args[i]
+
     if (arg === "--solver") {
       options.solverName = args[i + 1]
       i += 1
@@ -1751,6 +1752,7 @@ const main = async () => {
           ({ scenarioName, sampleNumber, scenario }) =>
             ({
               datasetName,
+
               solverName: solverRun.displayName,
               solverConstructorName: solverRun.constructorName,
               networkedCachePass: solverRun.networkedCachePass,
@@ -1766,6 +1768,7 @@ const main = async () => {
             ({ scenarioName, sampleNumber, scenario }) =>
               ({
                 datasetName,
+
                 solverName: solverRun.displayName,
                 solverConstructorName: solverRun.constructorName,
                 scenarioName,

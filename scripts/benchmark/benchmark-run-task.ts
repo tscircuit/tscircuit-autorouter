@@ -1,3 +1,5 @@
+import { initializeTinyHypergraphBindings } from "lib/bindings/initializeTinyHypergraphBindings"
+import { initializeAutorouterBindings } from "lib/bindings/initializeAutorouterBindings"
 import { getSvgFromGraphicsObject } from "graphics-debug"
 import * as autorouterModule from "../../lib"
 import { convertSrjToGraphicsObject } from "../../lib"
@@ -471,6 +473,8 @@ export const runTask = async (
   task: BenchmarkTask,
   options: RunTaskOptions = {},
 ): Promise<WorkerResultWithImage> => {
+  initializeTinyHypergraphBindings()
+  initializeAutorouterBindings()
   const solver = createSolverForTask(task)
   const start = performance.now()
   let solveError: string | undefined
@@ -525,6 +529,12 @@ export const runTask = async (
     const traces = solver.failed
       ? []
       : (solver.getOutputSimplifiedPcbTraces?.() ?? [])
+    if (process.env.BENCHMARK_TRACE_DIR) {
+      await Bun.write(
+        `${process.env.BENCHMARK_TRACE_DIR}/${task.sampleNumber}.json`,
+        JSON.stringify(traces),
+      )
+    }
     const viaCount = countTraceVias(traces)
     const { errors } = evaluateRelaxedDrc({
       inputSrj: task.scenario,

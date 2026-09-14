@@ -36,6 +36,17 @@ jobs:
       - name: Install dependencies
         run: bun install
 
+      - name: Prepare embedded WASM
+        uses: ./.github/actions/prepare-bindings
+
+      - name: Run Rust solver tests
+        if: matrix.node == 1
+        run: |
+          cargo test --manifest-path rust/capacity-autorouter/Cargo.toml --locked
+          cargo test --manifest-path rust/tiny-hypergraph/Cargo.toml --locked
+        env:
+          CARGO_TARGET_DIR: rust/capacity-autorouter-bindings/target
+
       # Replaces `npm install -g @tscircuit/bun-test-plan && bun-test-plan`.
       # Distributes by recorded runtime instead of alphabetical round-robin,
       # and drops a global npm install from every shard.

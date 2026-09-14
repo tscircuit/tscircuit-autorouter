@@ -84,7 +84,7 @@ jobs:
       - name: Checkout profile controller
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.sha }}
+          ref: ${{ github.workflow_sha }}
           path: profile-controller
           persist-credentials: false
 
@@ -116,9 +116,21 @@ jobs:
         working-directory: profile-main
         run: bun install
 
+      - name: Prepare profile-main WASM
+        if: hashFiles('profile-main/rust/tiny-hypergraph-bindings/Cargo.toml') != ''
+        uses: ./profile-controller/.github/actions/prepare-bindings
+        with:
+          working-directory: profile-main
+
       - name: Install PR dependencies
         working-directory: profile-pr
         run: bun install
+
+      - name: Prepare profile-pr WASM
+        if: hashFiles('profile-pr/rust/tiny-hypergraph-bindings/Cargo.toml') != ''
+        uses: ./profile-controller/.github/actions/prepare-bindings
+        with:
+          working-directory: profile-pr
 
       - name: Prepare comparison artifacts
         run: mkdir -p profile-results/main profile-results/pr

@@ -197,3 +197,9 @@ result-*
 tmp
 
 *.received.svg
+
+# Embedded release WASM generated before bundling
+/lib/bindings/generated/
+
+# Rust compiler output for all source and binding crates
+/rust/**/target/

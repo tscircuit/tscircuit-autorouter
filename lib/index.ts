@@ -86,10 +86,8 @@ export { PortfolioSingleIntraNodeSolver } from "./solvers/HyperHighDensitySolver
 /** @deprecated Use `PortfolioSingleIntraNodeSolver` instead. */
 export { HyperSingleIntraNodeSolver } from "./solvers/HyperHighDensitySolver/HyperSingleIntraNodeSolver"
 export { GrowShrinkHighDensityIntraNodeSolver } from "./solvers/HyperHighDensitySolver/GrowShrinkHighDensityIntraNodeSolver"
-export {
-  GlobalDrcBranchPortfolioSolver,
-  GlobalDrcForceImproveSolver,
-} from "high-density-repair03/lib"
+export { GlobalDrcBranchPortfolioSolver } from "high-density-repair03/lib"
+export { GlobalDrcForceImproveSolver } from "lib/bindings/repair/GlobalDrcForceImproveSolver"
 export type {
   DrcError,
   DrcEvaluator,

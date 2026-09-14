@@ -2,7 +2,18 @@ import { BaseSolver } from "@tscircuit/solver-utils"
 import { GraphicsObject } from "graphics-debug"
 import { Obstacle } from "lib/types"
 import { NodeWithPortPoints } from "lib/types/high-density-types"
-import { getBoundsFromNodeWithPortPoints } from "lib/utils/getBoundsFromNodeWithPortPoints"
+import { initializeAutorouterBindings } from "lib/bindings/initializeAutorouterBindings"
+import {
+  buildUniformPortDistribution,
+  stepUniformPortDistribution,
+  rebuildUniformPortDistributionNodes,
+} from "../../../rust/capacity-autorouter-bindings/pkg/capacity_autorouter_bindings.js"
+import {
+  decodeName,
+  decodeSharedEdge,
+  decodeBounds,
+  encodeConstructorInput,
+} from "lib/bindings/uniform-port-distribution/UniformPortDistributionCodec"
 import { InputNodeWithPortPoints } from "../PortPointPathingSolver/PortPointPathingSolver"
 import {
   Bounds,
@@ -11,12 +22,13 @@ import {
   PortPointWithOwnerPair,
   SharedEdge,
 } from "./types"
-import { determineOwnerPair } from "./determineOwnerPair"
-import { getOwnerPairKey } from "./getOwnerPairKey"
-import { precomputeSharedEdges } from "./precomputeSharedEdges"
-import { redistributePortPointsOnSharedEdge } from "./redistributePortPointsOnSharedEdge"
-import { shouldIgnorePortPoint } from "./shouldIgnorePortPoint"
-import { shouldIgnoreSharedEdge } from "./shouldIgnoreSharedEdge"
+import {
+  spreadUniformNode,
+  spreadUniformPortPoint,
+  findUniformInputNode,
+  findUniformInputPoint,
+  readUniformObstacleScalars,
+} from "lib/bindings/uniform-port-distribution/UniformPortDistributionLiveValues"
 import { visualizeUniformPortDistribution } from "./visualizeUniformPortDistribution"
 
 export interface UniformPortDistributionSolverInput {
@@ -48,128 +60,54 @@ export class UniformPortDistributionSolver extends BaseSolver {
 
   constructor(private input: UniformPortDistributionSolverInput) {
     super()
-    for (const node of input.nodeWithPortPoints) {
-      this.mapOfNodeIdToBounds.set(
-        node.capacityMeshNodeId,
-        getBoundsFromNodeWithPortPoints(node),
-      )
-    }
-
-    const uniqueOwnerPairs = new Map<OwnerPairKey, OwnerPair>()
-    for (const node of input.nodeWithPortPoints) {
-      for (const portPoint of node.portPoints) {
-        if (!portPoint.portPointId) continue
-        const ownerNodeIds = determineOwnerPair({
-          portPointId: portPoint.portPointId,
-          currentNodeId: node.capacityMeshNodeId,
-          inputNodes: input.inputNodesWithPortPoints,
-        })
-        const ownerPairKey = getOwnerPairKey(ownerNodeIds)
-        const existing = this.mapOfOwnerPairToPortPoints.get(ownerPairKey) ?? []
-        const alreadyPresent = existing.some(
-          (point) =>
-            point.portPointId && point.portPointId === portPoint.portPointId,
-        )
-        if (!alreadyPresent) {
-          existing.push({
-            ...portPoint,
-            ownerNodeIds,
-            ownerPairKey,
-          })
-        }
-        this.mapOfOwnerPairToPortPoints.set(ownerPairKey, existing)
-        uniqueOwnerPairs.set(ownerPairKey, ownerNodeIds)
-      }
-    }
-
-    this.mapOfOwnerPairToSharedEdge = precomputeSharedEdges({
-      ownerPairs: Array.from(uniqueOwnerPairs.values()),
-      nodeBounds: this.mapOfNodeIdToBounds,
-    })
-
-    this.ownerPairsToProcess = Array.from(
-      this.mapOfOwnerPairToSharedEdge.keys(),
+    initializeAutorouterBindings()
+    const state = buildUniformPortDistribution(encodeConstructorInput(input))
+    this.mapOfNodeIdToBounds = new Map(
+      state.nodeBounds.map(([key, bounds]) => [
+        decodeName(key),
+        decodeBounds(bounds),
+      ]),
     )
-    this.ownerPairsToProcess.sort((a, b) => {
-      const edgeA = this.mapOfOwnerPairToSharedEdge.get(a)!
-      const edgeB = this.mapOfOwnerPairToSharedEdge.get(b)!
-      return edgeA.center.x - edgeB.center.x || edgeA.center.y - edgeB.center.y
-    })
+    this.mapOfOwnerPairToPortPoints = new Map(
+      state.ownerPairPortPoints.map(([key, points]) => [
+        decodeName(key),
+        points.map(({ nodeIndex, pointIndex, ownerNodeIds, ownerPairKey }) => ({
+          ...input.nodeWithPortPoints[nodeIndex]!.portPoints[pointIndex]!,
+          ownerNodeIds: [
+            decodeName(ownerNodeIds[0]),
+            decodeName(ownerNodeIds[1]),
+          ] as OwnerPair,
+          ownerPairKey: decodeName(ownerPairKey),
+        })),
+      ]),
+    )
+    this.mapOfOwnerPairToSharedEdge = new Map(
+      state.sharedEdges.map(([key, edge]) => [
+        decodeName(key),
+        decodeSharedEdge(edge),
+      ]),
+    )
+    this.ownerPairsToProcess = state.ownerPairsToProcess.map(decodeName)
   }
 
   step(): void {
-    if (this.ownerPairsToProcess.length === 0) {
-      this.rebuildNodes()
-      this.solved = true
-      return
-    }
-
-    this.currentOwnerPairBeingProcessed = this.ownerPairsToProcess.shift()!
-    const ownerPairKey = this.currentOwnerPairBeingProcessed
-    const sharedEdge = this.mapOfOwnerPairToSharedEdge.get(ownerPairKey)
-    if (!sharedEdge) return
-
-    if (
-      shouldIgnoreSharedEdge({ sharedEdge, obstacles: this.input.obstacles })
-    ) {
-      return
-    }
-
-    const familyRaw = this.mapOfOwnerPairToPortPoints.get(ownerPairKey) ?? []
-    const family: PortPointWithOwnerPair[] = []
-    for (const portPoint of familyRaw) {
-      if (
-        !shouldIgnorePortPoint({
-          portPoint,
-          ownerNodeIds: portPoint.ownerNodeIds,
-          inputNodes: this.input.inputNodesWithPortPoints,
-        })
-      ) {
-        family.push(portPoint)
-      }
-    }
-
-    const redistributed = redistributePortPointsOnSharedEdge({
-      sharedEdge,
-      portPoints: family,
-    })
-
-    this.mapOfOwnerPairToPortPoints.set(ownerPairKey, redistributed)
+    stepUniformPortDistribution(
+      this,
+      this.input,
+      spreadUniformPortPoint,
+      findUniformInputNode,
+      findUniformInputPoint,
+      readUniformObstacleScalars,
+    )
   }
 
   rebuildNodes(): void {
-    const redistributedPositions = new Map<string, { x: number; y: number }>()
-    for (const points of this.mapOfOwnerPairToPortPoints.values()) {
-      for (const p of points) {
-        if (p.portPointId) {
-          redistributedPositions.set(p.portPointId, { x: p.x, y: p.y })
-        }
-      }
-    }
-
-    const updatePortPointPosition = <
-      T extends { portPointId?: string; x: number; y: number },
-    >(
-      portPoint: T,
-    ): T => {
-      if (
-        portPoint.portPointId &&
-        redistributedPositions.has(portPoint.portPointId)
-      ) {
-        const newPos = redistributedPositions.get(portPoint.portPointId)!
-        return { ...portPoint, x: newPos.x, y: newPos.y }
-      }
-      return portPoint
-    }
-
-    this.redistributedNodes = this.input.nodeWithPortPoints.map((node) => ({
-      ...node,
-      portPoints: node.portPoints.map(updatePortPointPosition),
-      portPointsInPairs: node.portPointsInPairs?.map(([start, end]) => [
-        updatePortPointPosition(start),
-        updatePortPointPosition(end),
-      ]),
-    }))
+    rebuildUniformPortDistributionNodes(
+      this,
+      this.input,
+      spreadUniformPortPoint,
+      spreadUniformNode,
+    )
   }
 
   getOutput = () => this.redistributedNodes

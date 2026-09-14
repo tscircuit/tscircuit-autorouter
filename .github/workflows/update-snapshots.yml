@@ -93,6 +93,10 @@ jobs:
         if: steps.parse.outputs.can_push == 'true'
         run: bun install
 
+      - name: Prepare embedded WASM
+        if: steps.parse.outputs.can_push == 'true'
+        uses: ./.github/actions/prepare-bindings
+
       - name: Find failed test files
         if: steps.parse.outputs.can_push == 'true' && steps.parse.outputs.focused == 'true'
         id: failed_tests

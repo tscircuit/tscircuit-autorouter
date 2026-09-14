@@ -1,0 +1,96 @@
+diff --git a/lib/PostProcessingSolver.ts b/lib/PostProcessingSolver.ts
+--- a/lib/PostProcessingSolver.ts
++++ b/lib/PostProcessingSolver.ts
+@@ -11,7 +11,7 @@
+   createLengthMatchingBinding,
+   type LengthMatchingBinding,
+ } from "./post-processing/binding/createLengthMatchingBinding"
+-import { createPostProcessingModel } from "./post-processing/binding/createPostProcessingModel"
++import { createPostProcessingModel, type ExpandObstacleConnectedIds } from "./post-processing/binding/createPostProcessingModel"
+ import { reconstructHdRoutesFromMatchingOutput } from "./post-processing/binding/reconstructHdRoutesFromMatchingOutput"
+ import { DifferentialPairRoutingError } from "./post-processing/errors/DifferentialPairRoutingError"
+ import { PostProcessingConstraintError } from "./post-processing/errors/PostProcessingConstraintError"
+@@ -149,7 +149,10 @@
+     ),
+   ]
+ 
+-  constructor(params: PostProcessingSolverParams) {
++  constructor(
++    params: PostProcessingSolverParams,
++    private readonly expandObstacleConnectedIds?: ExpandObstacleConnectedIds,
++  ) {
+     super(structuredClone(params))
+     let gridCapacityError: PostProcessingGridCapacityError | null = null
+     try {
+@@ -158,7 +161,7 @@
+       if (!(error instanceof PostProcessingGridCapacityError)) throw error
+       gridCapacityError = error
+     }
+-    this.model = createPostProcessingModel(params)
++    this.model = createPostProcessingModel(params, expandObstacleConnectedIds)
+     if (gridCapacityError) {
+       this.finishWithBestEffortOutput({
+         stage: "differentialPairReroutingSolver",
+@@ -417,7 +420,7 @@
+     const outputModel = createPostProcessingModel({
+       ...this.inputProblem,
+       hdRoutes: this.getOutput().hdRoutes,
+-    })
++    }, this.expandObstacleConnectedIds)
+     const { traces, obstacles, bounds, layerCount } =
+       outputModel.params.simpleRouteJson
+     return createPostProcessingVisualization({
+diff --git a/lib/post-processing/binding/createPostProcessingModel.ts b/lib/post-processing/binding/createPostProcessingModel.ts
+--- a/lib/post-processing/binding/createPostProcessingModel.ts
++++ b/lib/post-processing/binding/createPostProcessingModel.ts
+@@ -5,9 +5,15 @@
+ import { getLayerName } from "../geometry/getLayerName"
+ import type { PostProcessingModel, PostProcessingSolverParams } from "../types"
+ 
++export type ExpandObstacleConnectedIds = (
++  aliasesByRoute: string[][],
++  connectedToByObstacle: string[][],
++) => (string[] | null)[]
++
+ /** Adapt native HD routes to the private simplified-copper routing model. */
+ export const createPostProcessingModel = (
+   params: PostProcessingSolverParams,
++  expandObstacleConnectedIds?: ExpandObstacleConnectedIds,
+ ): PostProcessingModel => {
+   const internalNamesByRouteIndex = new Map<number, string>()
+   for (const pair of params.differentialPairs) {
+@@ -170,6 +176,7 @@
+     },
+   )
+   const obstacles = structuredClone(params.obstacles)
++  const aliasesByRoute: string[][] = []
+   for (
+     let hdRouteIndex = 0;
+     hdRouteIndex < params.hdRoutes.length;
+@@ -187,9 +194,26 @@
+         internalNamesByRouteIndex.get(hdRouteIndex),
+       ].filter((name): name is string => name !== undefined),
+     )
++    if (expandObstacleConnectedIds) {
++      aliasesByRoute.push([...aliases])
++      continue
++    }
+     for (const obstacle of obstacles) {
+       if (!obstacle.connectedTo.some((name) => aliases.has(name))) continue
+       obstacle.connectedTo = [...new Set([...obstacle.connectedTo, ...aliases])]
++    }
++  }
++  if (expandObstacleConnectedIds) {
++    const expanded = expandObstacleConnectedIds(
++      aliasesByRoute,
++      obstacles.map((obstacle) => obstacle.connectedTo),
++    )
++    if (expanded.length !== obstacles.length) {
++      throw new Error("Obstacle expansion returned an incorrect result count")
++    }
++    for (let index = 0; index < obstacles.length; index++) {
++      const connectedTo = expanded[index]!
++      if (connectedTo !== null) obstacles[index]!.connectedTo = connectedTo
+     }
+   }
+   return {

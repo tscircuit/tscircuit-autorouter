@@ -1,0 +1,15 @@
+[package]
+name = "math-utils"
+version = "0.1.0"
+edition = "2024"
+publish = false
+license = "MIT"
+
+[features]
+wasm-types = ["dep:tsify", "dep:wasm-bindgen"]
+
+[dependencies]
+serde = { version = "1", features = ["derive", "rc"] }
+ryu-js = "1.0.3"
+wasm-bindgen = { version = "=0.2.128", optional = true }
+tsify = { version = "=0.5.8", optional = true, default-features = false, features = ["json"] }

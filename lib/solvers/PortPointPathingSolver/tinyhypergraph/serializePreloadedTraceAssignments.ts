@@ -346,14 +346,17 @@ export const getSerializedPreloadedTraceStats = (
       ((port.d as PortMetadataWithPreloadedAssignments | undefined)
         ?._preloadedTracePortAssignments?.length ?? 0) > 0,
   ).length
-  const preloadedAssignmentCount = serializedHyperGraph.regions.reduce(
-    (count, region: SerializedRegion) =>
-      count +
-      (region.assignments ?? []).filter((assignment) =>
-        preloadedConnectionIds.has(assignment.connectionId),
-      ).length,
-    0,
-  )
+  const preloadedAssignmentCount =
+    preloadedConnectionIds.size === 0
+      ? 0
+      : serializedHyperGraph.regions.reduce(
+          (count, region: SerializedRegion) =>
+            count +
+            (region.assignments ?? []).filter((assignment) =>
+              preloadedConnectionIds.has(assignment.connectionId),
+            ).length,
+          0,
+        )
 
   return {
     preloadedTraceCount: preloadedConnectionIds.size,

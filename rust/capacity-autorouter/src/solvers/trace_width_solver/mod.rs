@@ -1,0 +1,1 @@
+pub mod is_obstacle_connected_to_route;

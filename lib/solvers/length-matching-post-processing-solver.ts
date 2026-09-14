@@ -11,6 +11,7 @@ import type {
   SimpleRouteConnection,
 } from "lib/types/srj-types"
 import { BaseSolver } from "./BaseSolver"
+import { expandPostProcessingObstacleConnectedIds } from "lib/bindings/expandPostProcessingObstacleConnectedIds"
 
 type LengthMatchingPostProcessingSolverParams = {
   hdRoutes: HighDensityRoute[]
@@ -140,14 +141,17 @@ export class LengthMatchingPostProcessingSolver extends BaseSolver {
     private readonly params: LengthMatchingPostProcessingSolverParams,
   ) {
     super()
-    this.differentialPairSolver = new PostProcessingSolver({
-      hdRoutes: params.hdRoutes,
-      differentialPairs: params.differentialPairs,
-      obstacles: params.obstacles,
-      bounds: params.bounds,
-      layerCount: params.layerCount,
-      minTraceToPadEdgeClearance: params.obstacleMargin,
-    })
+    this.differentialPairSolver = new PostProcessingSolver(
+      {
+        hdRoutes: params.hdRoutes,
+        differentialPairs: params.differentialPairs,
+        obstacles: params.obstacles,
+        bounds: params.bounds,
+        layerCount: params.layerCount,
+        minTraceToPadEdgeClearance: params.obstacleMargin,
+      },
+      expandPostProcessingObstacleConnectedIds,
+    )
     this.MAX_ITERATIONS =
       this.differentialPairSolver.MAX_ITERATIONS + 100_000 + 10
   }
