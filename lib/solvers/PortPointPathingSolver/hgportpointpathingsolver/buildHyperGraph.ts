@@ -231,6 +231,32 @@ export function buildHyperGraph(params: {
               ].sort()
             : undefined,
         _preloadedTracePortAssignments: preloadedTracePortAssignments,
+        _clearanceObstacleNetIds:
+          spp._clearanceObstacleConnectionIdGroups?.map((connectionIds) => {
+            for (const connectionId of connectionIds) {
+              const netId =
+                params.connectivityMap.getNetConnectedToId(connectionId)
+              if (netId) return netId
+            }
+            return null
+          }),
+        _sameNetAlternativePosition: spp._sameNetAlternativePosition
+          ? {
+              x: spp._sameNetAlternativePosition.x,
+              y: spp._sameNetAlternativePosition.y,
+              obstacleNetIds:
+                spp._sameNetAlternativePosition.obstacleConnectionIdGroups.map(
+                  (connectionIds) => {
+                    for (const connectionId of connectionIds) {
+                      const netId =
+                        params.connectivityMap.getNetConnectedToId(connectionId)
+                      if (netId) return netId
+                    }
+                    return null
+                  },
+                ),
+            }
+          : undefined,
       }
       const hgPort: RegionPortHg = {
         portId: spp.segmentPortPointId,

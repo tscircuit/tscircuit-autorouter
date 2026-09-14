@@ -1,4 +1,5 @@
 import { pointToSegmentDistance } from "@tscircuit/math-utils"
+import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import { BaseSolver } from "lib/solvers/BaseSolver"
 import type {
   PreloadedTracePortAssignment,
@@ -42,6 +43,25 @@ const getLayersBetween = (
 
 const isWireRoutePoint = (point: RoutePoint): point is WireRoutePoint =>
   point.route_type === "wire"
+
+const getPortPointPositionForNet = (
+  portPoint: SegmentPortPoint,
+  fixedNetId: string,
+  connMap: ConnectivityMap,
+): Point => {
+  const alternative = portPoint._sameNetAlternativePosition
+  if (
+    alternative?.obstacleConnectionIdGroups.every((connectionIds) =>
+      connectionIds.some(
+        (connectionId) =>
+          connMap.getNetConnectedToId(connectionId) === fixedNetId,
+      ),
+    )
+  ) {
+    return alternative
+  }
+  return portPoint
+}
 
 const getPreloadedTracePrimitives = (
   srj: SimpleRouteJson,
@@ -144,6 +164,7 @@ const getClosestPortPoint = (
   segment: SharedEdgeSegment,
   primitive: PreloadedTracePrimitive,
   z: number,
+  connMap: ConnectivityMap,
 ): SegmentPortPoint | undefined =>
   segment.portPoints
     .filter(
@@ -158,7 +179,7 @@ const getClosestPortPoint = (
     .map((portPoint) => ({
       portPoint,
       distance: pointToSegmentDistance(
-        portPoint,
+        getPortPointPositionForNet(portPoint, primitive.fixedNetId, connMap),
         primitive.start,
         primitive.end,
       ),
@@ -177,6 +198,7 @@ const preloadPort = (
   portPoint: SegmentPortPoint,
   primitive: PreloadedTracePrimitive,
   z: number,
+  connMap: ConnectivityMap,
 ) => {
   portPoint._preloadedFixedNetIds = [
     ...new Set([
@@ -188,6 +210,11 @@ const preloadPort = (
   const dx = primitive.end.x - primitive.start.x
   const dy = primitive.end.y - primitive.start.y
   const lengthSquared = dx * dx + dy * dy
+  const portPointPosition = getPortPointPositionForNet(
+    portPoint,
+    primitive.fixedNetId,
+    connMap,
+  )
   const projection =
     lengthSquared === 0
       ? 0
@@ -195,8 +222,8 @@ const preloadPort = (
           0,
           Math.min(
             1,
-            ((portPoint.x - primitive.start.x) * dx +
-              (portPoint.y - primitive.start.y) * dy) /
+            ((portPointPosition.x - primitive.start.x) * dx +
+              (portPointPosition.y - primitive.start.y) * dy) /
               lengthSquared,
           ),
         )
@@ -241,6 +268,7 @@ const preloadPort = (
  */
 export class PreloadedTraceGraphSolver extends BaseSolver {
   private readonly primitives: PreloadedTracePrimitive[]
+  private readonly connMap: ConnectivityMap
 
   constructor(
     private readonly sharedEdgeSegments: SharedEdgeSegment[],
@@ -248,6 +276,7 @@ export class PreloadedTraceGraphSolver extends BaseSolver {
   ) {
     super()
     this.MAX_ITERATIONS = 1
+    this.connMap = getConnectivityMapFromSimpleRouteJson(srj)
     this.primitives = getPreloadedTracePrimitives(srj)
   }
 
@@ -271,8 +300,13 @@ export class PreloadedTraceGraphSolver extends BaseSolver {
 
         for (const z of primitive.zLayers) {
           if (!segment.availableZ.includes(z)) continue
-          const portPoint = getClosestPortPoint(segment, primitive, z)
-          if (portPoint) preloadPort(portPoint, primitive, z)
+          const portPoint = getClosestPortPoint(
+            segment,
+            primitive,
+            z,
+            this.connMap,
+          )
+          if (portPoint) preloadPort(portPoint, primitive, z, this.connMap)
         }
       }
     }

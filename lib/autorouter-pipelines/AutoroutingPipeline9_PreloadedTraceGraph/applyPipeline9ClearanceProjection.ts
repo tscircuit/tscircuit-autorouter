@@ -80,7 +80,7 @@ export const applyPipeline9ClearanceProjection = ({
       routes: candidate,
     }).length > 0
   ) {
-    return routes
+    return canonicalRoutes
   }
   const candidateReference = drcEvaluator({
     traces: [],
@@ -90,5 +90,5 @@ export const applyPipeline9ClearanceProjection = ({
   const candidateErrors = Array.isArray(candidateReference)
     ? candidateReference
     : candidateReference.errors
-  return candidateErrors.length < errors.length ? candidate : routes
+  return candidateErrors.length < errors.length ? candidate : canonicalRoutes
 }

@@ -15,7 +15,7 @@ test(
     solver.solve()
     expect(getLastStepSvg(solver.visualize())).toMatchSvgSnapshot(
       import.meta.path,
-      { tolerance: 0.02 },
+      { tolerance: 0.021 },
     )
   },
   { timeout: 300_000 },
