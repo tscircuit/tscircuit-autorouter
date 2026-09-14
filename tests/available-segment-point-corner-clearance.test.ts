@@ -107,3 +107,36 @@ test("boundary ports preserve detailed-router corner clearance", () => {
     obstacleNetIds: [obstacleNetId],
   })
 })
+
+test("boundary ports preserve legacy coordinates without a clearance obstacle", () => {
+  const traceWidth = 0.1
+  const obstacleMargin = 0.15
+  const startX = -0.43243243243243157
+  const segmentWidth = 0.6519192917372041
+  const centerX = startX + segmentWidth / 2
+  const decimalNodes = nodes.map((node) => ({
+    ...node,
+    center: { ...node.center, x: centerX },
+    width: segmentWidth,
+  }))
+  const solver = new AvailableSegmentPointSolver({
+    nodes: decimalNodes,
+    edges,
+    traceWidth,
+    obstacleMargin,
+    obstacles: [],
+    shouldReturnCrampedPortPoints: false,
+  })
+  solver.solve()
+
+  const firstTopPort = solver
+    .getOutput()[0]!
+    .portPoints.find(
+      (point) => point.segmentPortPointId === "shared_edge_pp0_z0",
+    )!
+  const edgeMargin = ((traceWidth + obstacleMargin) * 3) / 4
+  const legacyFirstX = startX + segmentWidth * (edgeMargin / segmentWidth)
+
+  expect(firstTopPort.x).toBe(legacyFirstX)
+  expect(firstTopPort._sameNetAlternativePosition).toBeUndefined()
+})
