@@ -1843,7 +1843,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       allowTracePairEscapes: true,
       maxCandidateEvaluations: Math.max(
         0,
-        768 - terminalEscapeResult.attemptedCandidateCount,
+        256 - terminalEscapeResult.attemptedCandidateCount,
       ),
       drcEvaluator: this.geometryReferenceDrcEvaluator!,
     })

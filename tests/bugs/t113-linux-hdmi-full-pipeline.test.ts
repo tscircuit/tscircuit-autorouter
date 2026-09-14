@@ -106,6 +106,10 @@ test("Pipeline9 routes the exact final T113-S3 HDMI phase", async () => {
   expect(
     routedCopper.filter((element) => element.type === "pcb_via").length,
   ).toBeGreaterThan(0)
+  const snapshotPath =
+    process.platform === "linux"
+      ? import.meta.path.replace(/\.test\.ts$/, "-linux.test.ts")
+      : import.meta.path
   await expect(
     stackSvgsHorizontally(
       [
@@ -114,7 +118,7 @@ test("Pipeline9 routes the exact final T113-S3 HDMI phase", async () => {
       ],
       { gap: 12, normalizeSize: false },
     ),
-  ).toMatchSvgSnapshot(import.meta.path, {
+  ).toMatchSvgSnapshot(snapshotPath, {
     svgName: "unrouted-routed",
     tolerance: 0.02,
   })
