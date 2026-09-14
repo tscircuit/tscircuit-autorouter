@@ -98,6 +98,7 @@ export interface HgPortPointPathingSolverParams {
   effort: number
   preserveTerminalPcbPortIds?: boolean
   minViaPadDiameter?: number
+  minTraceCenterSpacing?: number
   flags: {
     FORCE_CENTER_FIRST: boolean
     RIPPING_ENABLED: boolean

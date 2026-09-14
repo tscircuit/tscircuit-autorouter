@@ -531,6 +531,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             effort: cms.effort,
             preserveTerminalPcbPortIds: true,
             minViaPadDiameter: cms.viaDiameter,
+            minTraceCenterSpacing: cms.minTraceWidth + 0.1,
             flags: {
               FORCE_CENTER_FIRST: true,
               RIPPING_ENABLED: true,
