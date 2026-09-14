@@ -52,6 +52,7 @@ const createSolver = (
     node?: NodeWithPortPoints
     obstacles?: Obstacle[]
     layerCount?: number
+    allowBlindAndBuriedVias?: boolean
   } = {},
 ): Pipeline9HighDensitySolver =>
   new Pipeline9HighDensitySolver({
@@ -73,6 +74,7 @@ const createSolver = (
       },
     ],
     layerCount: options.layerCount ?? 2,
+    allowBlindAndBuriedVias: options.allowBlindAndBuriedVias,
     viaDiameter: 0.3,
     traceWidth: 0.1,
     obstacleMargin: 0.15,
@@ -209,7 +211,12 @@ test("Pipeline9 selects the detailed solver by local preload overlap", () => {
         { viaDiameter: 0.6, vias: [{ x: 0, y: 0 }] },
       ),
     ],
-    { node: fourLayerTopNode, obstacles: [], layerCount: 4 },
+    {
+      node: fourLayerTopNode,
+      obstacles: [],
+      layerCount: 4,
+      allowBlindAndBuriedVias: true,
+    },
   )
   innerLayerViaSolver.step()
   expect(innerLayerViaSolver.activeRegularSolver).not.toBeNull()
@@ -235,7 +242,12 @@ test("Pipeline9 selects the detailed solver by local preload overlap", () => {
         { viaDiameter: 0.6, vias: [{ x: 0, y: 0 }] },
       ),
     ],
-    { node: allLayerNode, obstacles: [], layerCount: 4 },
+    {
+      node: allLayerNode,
+      obstacles: [],
+      layerCount: 4,
+      allowBlindAndBuriedVias: true,
+    },
   )
   buriedViaSolver.step()
   expect(buriedViaSolver.activeRegularSolver).toBeNull()
