@@ -90,7 +90,57 @@ const getEscapeCenters = ({
   const halfWidth = obstacle.width / 2
   const halfHeight = obstacle.height / 2
   const minimumOffset = via.diameter / 2 + clearance + 0.006
-  const candidateLocalCenters = [1, 1.5, 2].flatMap((offsetFactor) => {
+  const nearestPoint = {
+    x: Math.max(-halfWidth, Math.min(halfWidth, localVia.x)),
+    y: Math.max(-halfHeight, Math.min(halfHeight, localVia.y)),
+  }
+  let outwardDirection = {
+    x: localVia.x - nearestPoint.x,
+    y: localVia.y - nearestPoint.y,
+  }
+  const distanceFromNearestPoint = Math.hypot(
+    outwardDirection.x,
+    outwardDirection.y,
+  )
+  if (distanceFromNearestPoint > 1e-9) {
+    outwardDirection = {
+      x: outwardDirection.x / distanceFromNearestPoint,
+      y: outwardDirection.y / distanceFromNearestPoint,
+    }
+  } else {
+    const exits = [
+      { distance: localVia.x + halfWidth, x: -1, y: 0 },
+      { distance: halfWidth - localVia.x, x: 1, y: 0 },
+      { distance: localVia.y + halfHeight, x: 0, y: -1 },
+      { distance: halfHeight - localVia.y, x: 0, y: 1 },
+    ].sort((left, right) => left.distance - right.distance)
+    outwardDirection = { x: exits[0]!.x, y: exits[0]!.y }
+    nearestPoint.x =
+      outwardDirection.x === 0
+        ? localVia.x
+        : outwardDirection.x * halfWidth
+    nearestPoint.y =
+      outwardDirection.y === 0
+        ? localVia.y
+        : outwardDirection.y * halfHeight
+  }
+  const offsetFactors = [1, 1.5, 2]
+  const nearestBoundaryCenters = offsetFactors.map((offsetFactor) => ({
+    x:
+      nearestPoint.x + outwardDirection.x * minimumOffset * offsetFactor,
+    y:
+      nearestPoint.y + outwardDirection.y * minimumOffset * offsetFactor,
+  }))
+  const alignedCenters = offsetFactors.flatMap((offsetFactor) => {
+    const offset = minimumOffset * offsetFactor
+    return [
+      { x: -halfWidth - offset, y: localVia.y },
+      { x: halfWidth + offset, y: localVia.y },
+      { x: localVia.x, y: -halfHeight - offset },
+      { x: localVia.x, y: halfHeight + offset },
+    ]
+  })
+  const cardinalCenters = offsetFactors.flatMap((offsetFactor) => {
     const offset = minimumOffset * offsetFactor
     return [
       {
@@ -111,6 +161,22 @@ const getEscapeCenters = ({
       },
     ]
   })
+  const localRadialCenters = [0.025, 0.05, 0.075, 0.1, 0.15, 0.2].flatMap(
+    (offset) =>
+      Array.from({ length: 16 }, (_, directionIndex) => {
+        const angle = (directionIndex * Math.PI) / 8
+        return {
+          x: localVia.x + Math.cos(angle) * offset,
+          y: localVia.y + Math.sin(angle) * offset,
+        }
+      }),
+  )
+  const candidateLocalCenters = [
+    ...localRadialCenters,
+    ...nearestBoundaryCenters,
+    ...alignedCenters,
+    ...cardinalCenters,
+  ]
   const inverseRadians = -radians
   return candidateLocalCenters
     .map((point) => ({
@@ -373,6 +439,14 @@ export const applyPipeline9ViaPadEscapeRepairs = ({
             drcEvaluator,
             candidateRoutes,
           )
+          if (candidateErrors.length === 0) {
+            return {
+              routes: candidateRoutes,
+              remainingErrors: [],
+              attemptedCandidateCount,
+              acceptedCandidateCount: acceptedCandidateCount + 1,
+            }
+          }
           if (isPipeline9DrcCandidateBetter(candidateErrors, bestErrors)) {
             bestRoutes = candidateRoutes
             bestErrors = candidateErrors
