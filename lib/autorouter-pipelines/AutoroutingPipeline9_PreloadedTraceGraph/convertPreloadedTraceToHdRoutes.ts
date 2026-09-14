@@ -103,6 +103,40 @@ export const convertPreloadedTraceToHdRoutes = (
 
     const nextPoint = trace.route[pointIndex + 1]
     if (
+      point.route_type === "wire" &&
+      nextPoint?.route_type === "wire" &&
+      point.layer !== nextPoint.layer
+    ) {
+      if (
+        Math.abs(point.x - nextPoint.x) > MIN_ROUTE_DIMENSION ||
+        Math.abs(point.y - nextPoint.y) > MIN_ROUTE_DIMENSION
+      ) {
+        throw new Error(
+          `Pipeline9 preloaded trace "${trace.pcb_trace_id}" changes layers without a via at one XY position`,
+        )
+      }
+      addRoute(
+        [
+          {
+            x: point.x,
+            y: point.y,
+            z: mapLayerNameToZ(point.layer, layerCount),
+          },
+          {
+            x: nextPoint.x,
+            y: nextPoint.y,
+            z: mapLayerNameToZ(nextPoint.layer, layerCount),
+          },
+        ],
+        MIN_ROUTE_DIMENSION,
+        defaultViaDiameter,
+        [{ x: point.x, y: point.y }],
+        pointIndex,
+        pointIndex + 1,
+      )
+      continue
+    }
+    if (
       point.route_type !== "wire" ||
       nextPoint?.route_type !== "wire" ||
       point.layer !== nextPoint.layer
