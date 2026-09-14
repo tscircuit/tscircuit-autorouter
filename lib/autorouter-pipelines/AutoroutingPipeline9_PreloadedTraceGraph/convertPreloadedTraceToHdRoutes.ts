@@ -33,6 +33,14 @@ export const convertPreloadedTraceToHdRoutes = (
     isThroughObstacle = false,
   ) => {
     if (route.length < 2) return
+    const firstPoint = route[0]!
+    const hasPhysicalLength = route.some(
+      (point) =>
+        Math.abs(point.x - firstPoint.x) > MIN_ROUTE_DIMENSION ||
+        Math.abs(point.y - firstPoint.y) > MIN_ROUTE_DIMENSION ||
+        point.z !== firstPoint.z,
+    )
+    if (!hasPhysicalLength) return
     routes.push({
       connectionName: `${trace.connection_name}_fixed_${traceIndex}_${routes.length}`,
       rootConnectionName,

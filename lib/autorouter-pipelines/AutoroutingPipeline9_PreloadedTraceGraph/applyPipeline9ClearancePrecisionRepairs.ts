@@ -45,6 +45,12 @@ type PreparedClearanceError = {
       pcb_pad_id: string
       pcb_via_id?: undefined
     }
+  | {
+      type: "pcb_trace_error"
+      pcb_trace_ids: string[]
+      pcb_pad_id?: undefined
+      pcb_via_id?: undefined
+    }
 )
 
 type PreparedClearanceErrors = {
@@ -74,18 +80,33 @@ const FORCE_SCALES = [0.03, 0.1, 0.18, 0.25]
 
 const getIndexedClearanceDeficit = (
   errors: Pipeline9DrcError[],
+  traceClearance: number,
 ): number | undefined => {
   let deficit = 0
   for (const error of errors) {
+    const message = typeof error.message === "string" ? error.message : ""
+    const gapMatch = message.match(/gap: (-?\d+(?:\.\d+)?)mm/)
+    const actualClearance =
+      typeof error.actual_clearance === "number"
+        ? error.actual_clearance
+        : gapMatch
+          ? Number.parseFloat(gapMatch[1]!)
+          : undefined
+    const minimumClearance =
+      typeof error.minimum_clearance === "number"
+        ? error.minimum_clearance
+        : error.type === "pcb_trace_error"
+          ? traceClearance
+          : undefined
     if (
-      typeof error.actual_clearance !== "number" ||
-      !Number.isFinite(error.actual_clearance) ||
-      typeof error.minimum_clearance !== "number" ||
-      !Number.isFinite(error.minimum_clearance)
+      typeof actualClearance !== "number" ||
+      !Number.isFinite(actualClearance) ||
+      typeof minimumClearance !== "number" ||
+      !Number.isFinite(minimumClearance)
     ) {
       return undefined
     }
-    deficit += Math.max(0, error.minimum_clearance - error.actual_clearance)
+    deficit += Math.max(0, minimumClearance - actualClearance)
     if (!Number.isFinite(deficit)) return undefined
   }
   return deficit
@@ -185,6 +206,7 @@ const prepareClearanceErrors = ({
   routes,
   padObstacleById,
   layerCount,
+  traceClearance,
 }: {
   errors: Pipeline9DrcError[]
   errorsWithCenters: Pipeline9DrcError[]
@@ -195,27 +217,49 @@ const prepareClearanceErrors = ({
     SimpleRouteJson["obstacles"][number]
   >
   layerCount: number
+  traceClearance: number
 }): PreparedClearanceErrors | undefined => {
   const preparedErrors: PreparedClearanceError[] = []
   let deficit = 0
   for (const error of errors) {
     const isViaTrace = error.type === "pcb_via_trace_clearance_error"
     const isPadTrace = error.type === "pcb_pad_trace_clearance_error"
+    const traceIds = getPipeline9DrcErrorTraceIds(error)
+    const isTracePair = error.type === "pcb_trace_error" && traceIds.length >= 2
+    const mutableTraceId = isTracePair
+      ? traceIds.find((traceId) => routeIndexByTraceId.has(traceId))
+      : typeof error.pcb_trace_id === "string"
+        ? error.pcb_trace_id
+        : undefined
+    const message = typeof error.message === "string" ? error.message : ""
+    const gapMatch = message.match(/gap: (-?\d+(?:\.\d+)?)mm/)
+    const measuredClearance =
+      typeof error.actual_clearance === "number"
+        ? error.actual_clearance
+        : gapMatch
+          ? Number.parseFloat(gapMatch[1]!)
+          : undefined
+    const requiredClearance =
+      typeof error.minimum_clearance === "number"
+        ? error.minimum_clearance
+        : isTracePair
+          ? traceClearance
+          : undefined
     if (
-      (!isViaTrace && !isPadTrace) ||
-      typeof error.pcb_trace_id !== "string" ||
-      !routeIndexByTraceId.has(error.pcb_trace_id) ||
-      typeof error.actual_clearance !== "number" ||
-      !Number.isFinite(error.actual_clearance) ||
-      typeof error.minimum_clearance !== "number" ||
-      !Number.isFinite(error.minimum_clearance)
+      (!isViaTrace && !isPadTrace && !isTracePair) ||
+      typeof mutableTraceId !== "string" ||
+      !routeIndexByTraceId.has(mutableTraceId) ||
+      typeof measuredClearance !== "number" ||
+      !Number.isFinite(measuredClearance) ||
+      typeof requiredClearance !== "number" ||
+      !Number.isFinite(requiredClearance)
     ) {
       return undefined
     }
-    const traceIds = getPipeline9DrcErrorTraceIds(error)
     if (
       (isViaTrace && traceIds.length < 2) ||
-      traceIds.some((traceId) => !routeIndexByTraceId.has(traceId))
+      (isViaTrace &&
+        traceIds.some((traceId) => !routeIndexByTraceId.has(traceId)))
     ) {
       return undefined
     }
@@ -255,9 +299,9 @@ const prepareClearanceErrors = ({
     }
     const measuredError = {
       ...error,
-      pcb_trace_id: error.pcb_trace_id,
-      actual_clearance: error.actual_clearance,
-      minimum_clearance: error.minimum_clearance,
+      pcb_trace_id: mutableTraceId,
+      actual_clearance: measuredClearance,
+      minimum_clearance: requiredClearance,
       center: { x: center.x, y: center.y },
     }
     if (isViaTrace) {
@@ -268,7 +312,7 @@ const prepareClearanceErrors = ({
         pcb_via_id: error.pcb_via_id,
         pcb_pad_id: undefined,
       })
-    } else {
+    } else if (isPadTrace) {
       if (typeof error.pcb_pad_id !== "string") return undefined
       preparedErrors.push({
         ...measuredError,
@@ -276,8 +320,16 @@ const prepareClearanceErrors = ({
         pcb_pad_id: error.pcb_pad_id,
         pcb_via_id: undefined,
       })
+    } else {
+      preparedErrors.push({
+        ...measuredError,
+        type: "pcb_trace_error",
+        pcb_trace_ids: traceIds,
+        pcb_pad_id: undefined,
+        pcb_via_id: undefined,
+      })
     }
-    deficit += Math.max(0, error.minimum_clearance - error.actual_clearance)
+    deficit += Math.max(0, requiredClearance - measuredClearance)
     if (!Number.isFinite(deficit)) return undefined
   }
   return { errors: preparedErrors, deficit }
@@ -343,6 +395,7 @@ export const applyPipeline9ClearancePrecisionRepairs = ({
     routes,
     padObstacleById,
     layerCount: srj.layerCount,
+    traceClearance: srj.minTraceToPadEdgeClearance ?? 0.1,
   })
   if (!initial) return unchanged
   let current: PreparedClearanceErrors = initial
@@ -351,7 +404,11 @@ export const applyPipeline9ClearancePrecisionRepairs = ({
     ...error,
     minimum_clearance: error.minimum_clearance + CLEARANCE_PRECISION_MARGIN,
   }))
-  const initialMarginDeficit = getIndexedClearanceDeficit(initialMarginErrors)
+  const traceClearance = srj.minTraceToPadEdgeClearance ?? 0.1
+  const initialMarginDeficit = getIndexedClearanceDeficit(
+    initialMarginErrors,
+    traceClearance,
+  )
   if (initialMarginDeficit === undefined) return unchanged
   let currentMargin: PreparedClearanceErrors = {
     errors: initialMarginErrors,
@@ -400,6 +457,7 @@ export const applyPipeline9ClearancePrecisionRepairs = ({
       })
       const deficit = getIndexedClearanceDeficit(
         Array.isArray(indexedResult) ? indexedResult : indexedResult.errors,
+        traceClearance,
       )
       // Conservative indexed errors rank candidates only. Their absence never
       // establishes that a candidate is reference-clean.
@@ -435,6 +493,7 @@ export const applyPipeline9ClearancePrecisionRepairs = ({
         routes: candidate.routes,
         padObstacleById,
         layerCount: srj.layerCount,
+        traceClearance: srj.minTraceToPadEdgeClearance ?? 0.1,
       })
       if (!prepared) continue
       const marginMeasurement = marginDrcEvaluator(
@@ -489,6 +548,7 @@ export const applyPipeline9ClearancePrecisionRepairs = ({
         routes: candidate.routes,
         padObstacleById,
         layerCount: srj.layerCount,
+        traceClearance: srj.minTraceToPadEdgeClearance ?? 0.1,
       })
       if (!preparedMargin) continue
       if (candidateErrors.length === 0 && marginErrors.length === 0) {

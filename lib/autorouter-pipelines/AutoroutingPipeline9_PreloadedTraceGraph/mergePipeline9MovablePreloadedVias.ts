@@ -11,6 +11,7 @@ export const mergePipeline9MovablePreloadedVias = ({
   colorMap,
   layerCount,
   connMap,
+  maximumViaCenterDistance,
 }: {
   routes: HighDensityRoute[]
   otherHdRoutes: HighDensityRoute[]
@@ -18,6 +19,7 @@ export const mergePipeline9MovablePreloadedVias = ({
   colorMap: Record<string, string>
   layerCount: number
   connMap: ConnectivityMap
+  maximumViaCenterDistance?: number
 }): HighDensityRoute[] => {
   const netByConnectionName = getPipeline9NetByConnectionName(
     [...routes, ...otherHdRoutes],
@@ -31,6 +33,7 @@ export const mergePipeline9MovablePreloadedVias = ({
     colorMap,
     layerCount,
     connMap,
+    maximumViaCenterDistance,
   })
   solver.solve()
   if (solver.failed) {
