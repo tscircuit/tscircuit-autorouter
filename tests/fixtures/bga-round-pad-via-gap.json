@@ -1,0 +1,14 @@
+{
+  "layerCount": 4,
+  "minTraceWidth": 0.1,
+  "minViaDiameter": 0.3,
+  "defaultObstacleMargin": 0.15,
+  "bounds": { "minX": -0.5, "maxX": 0.5, "minY": -0.5, "maxY": 0.5 },
+  "obstacles": [
+    { "type": "oval", "componentId": "chip", "layers": ["bottom"], "center": { "x": -0.32, "y": -0.25 }, "width": 0.2, "height": 0.2, "connectedTo": ["a"] },
+    { "type": "oval", "componentId": "chip", "layers": ["bottom"], "center": { "x": 0.32, "y": -0.25 }, "width": 0.2, "height": 0.2, "connectedTo": ["b"] },
+    { "type": "oval", "componentId": "chip", "layers": ["bottom"], "center": { "x": -0.32, "y": 0.25 }, "width": 0.2, "height": 0.2, "connectedTo": ["c"] },
+    { "type": "oval", "componentId": "chip", "layers": ["bottom"], "center": { "x": 0.32, "y": 0.25 }, "width": 0.2, "height": 0.2, "connectedTo": ["d"] }
+  ],
+  "connections": []
+}

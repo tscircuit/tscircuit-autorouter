@@ -44,6 +44,8 @@ export class BgaTopologyGeneratorSolver extends BasePipelineSolver<TopologyGener
           unmarkedComponentObstacles:
             bgaTopologyGeneratorSolver.unmarkedComponentObstacles,
           viaDiameter: bgaTopologyGeneratorSolver.inputProblem.viaDiameter,
+          obstacleMargin:
+            bgaTopologyGeneratorSolver.inputProblem.obstacleMargin,
         },
       ],
     ),
