@@ -112,5 +112,8 @@
     "fast-json-stable-stringify": "^2.1.0",
     "object-hash": "^3.0.0",
     "stack-svgs": "^0.0.1"
+  },
+  "patchedDependencies": {
+    "@tscircuit/high-density-a01@github:tscircuit/high-density-a01#9a3a3db": "patches/high-density-a01.patch"
   }
 }
