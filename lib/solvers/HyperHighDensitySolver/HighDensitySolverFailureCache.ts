@@ -79,7 +79,10 @@ export class HighDensitySolverFailureCacheController {
     if (this.checkedCache || this.inputKey === undefined) return false
     this.checkedCache = true
     this.initialIterationLimit = solver.MAX_ITERATIONS
-    this.cacheKey = JSON.stringify([this.inputKey, String(solver.MAX_ITERATIONS)])
+    this.cacheKey = JSON.stringify([
+      this.inputKey,
+      String(solver.MAX_ITERATIONS),
+    ])
     const failure = this.cache.get(this.cacheKey)
     if (!failure) return false
 
