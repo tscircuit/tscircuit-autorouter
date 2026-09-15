@@ -16,10 +16,15 @@ import type {
   NodeWithPortPoints,
 } from "lib/types/high-density-types"
 import type { Obstacle } from "lib/types/srj-types"
+import {
+  getViaCopperZSpan,
+  type ViaLayerPolicy,
+} from "lib/utils/getViaCopperZSpan"
 import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
 import { BaseSolver } from "../../solvers/BaseSolver"
 import { HighDensitySolver } from "../../solvers/HighDensitySolver/HighDensitySolver"
 import type { PreloadedHighDensityRoute } from "./convertPreloadedTraceToHdRoutes"
+import { isPipeline9ViaSegment } from "./isPipeline9ViaSegment"
 import {
   arePipeline9RoutesOnSameNet,
   doPipeline9RoutesHaveCopperConflict,
@@ -40,6 +45,7 @@ export type Pipeline9HighDensitySolverParams = {
   obstacles: Obstacle[]
   boardGeometry?: HighDensityBoardGeometry
   layerCount: number
+  allowBlindAndBuriedVias?: boolean
   viaDiameter: number
   traceWidth: number
   obstacleMargin: number
@@ -99,6 +105,7 @@ const routeOverlapsNode = (
   node: NodeWithPortPoints,
   nodeBounds: NodeBounds,
   routedCopperRadius: number,
+  viaLayerPolicy: ViaLayerPolicy,
 ): boolean => {
   const availableZ = new Set(
     node.availableZ ?? node.portPoints.map((portPoint) => portPoint.z),
@@ -110,7 +117,7 @@ const routeOverlapsNode = (
   ) {
     const start = route.route[routePointIndex - 1]!
     const end = route.route[routePointIndex]!
-    if (start.z === end.z) {
+    if (!isPipeline9ViaSegment({ hdRoute: route, start, end })) {
       if (
         availableZ.has(start.z) &&
         segmentBoundsOverlapNode(
@@ -123,8 +130,11 @@ const routeOverlapsNode = (
         return true
       continue
     }
-    const minZ = Math.min(start.z, end.z)
-    const maxZ = Math.max(start.z, end.z)
+    const { minZ, maxZ } = getViaCopperZSpan({
+      fromZ: start.z,
+      toZ: end.z,
+      ...viaLayerPolicy,
+    })
     if (
       [...availableZ].some((z) => z >= minZ && z <= maxZ) &&
       pointRadiusOverlapsNode(
@@ -141,6 +151,7 @@ const routeOverlapsNode = (
 const convertFixedRouteToB01Obstacles = (
   route: PreloadedHighDensityRoute,
   node: NodeWithPortPoints,
+  viaLayerPolicy: ViaLayerPolicy,
 ): HighDensityRouteObstacle[] => {
   const availableZ = new Set(
     node.availableZ ?? node.portPoints.map((portPoint) => portPoint.z),
@@ -166,23 +177,29 @@ const convertFixedRouteToB01Obstacles = (
   ) {
     const start = route.route[routePointIndex - 1]!
     const end = route.route[routePointIndex]!
-    if (start.z === end.z) {
+    if (!isPipeline9ViaSegment({ hdRoute: route, start, end })) {
       if (!availableZ.has(start.z)) continue
       obstacles.push({ ...baseObstacle, route: [start, end], vias: [] })
       continue
     }
-    const minZ = Math.min(start.z, end.z)
-    const maxZ = Math.max(start.z, end.z)
+    const { minZ, maxZ } = getViaCopperZSpan({
+      fromZ: start.z,
+      toZ: end.z,
+      ...viaLayerPolicy,
+    })
     if (![...availableZ].some((z) => z >= minZ && z <= maxZ)) continue
     obstacles.push({
       ...baseObstacle,
-      route: [start, end],
+      route: [
+        { ...start, z: minZ },
+        { ...end, z: maxZ },
+      ],
       vias: [
         {
           x: end.x,
           y: end.y,
-          zStart: start.z,
-          zEnd: end.z,
+          zStart: minZ,
+          zEnd: maxZ,
         },
       ],
     })
@@ -384,6 +401,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
   readonly obstacles: Obstacle[]
   readonly boardGeometry?: HighDensityBoardGeometry
   readonly layerCount: number
+  readonly allowBlindAndBuriedVias: boolean
   readonly viaDiameter: number
   readonly traceWidth: number
   readonly obstacleMargin: number
@@ -418,6 +436,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     this.obstacles = params.obstacles
     this.boardGeometry = params.boardGeometry
     this.layerCount = params.layerCount
+    this.allowBlindAndBuriedVias = params.allowBlindAndBuriedVias ?? false
     this.viaDiameter = params.viaDiameter
     this.traceWidth = params.traceWidth
     this.obstacleMargin = params.obstacleMargin
@@ -558,6 +577,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     const fixedRouteObstacles = getPipeline9FixedRouteObstacles({
       fixedObstacleRoutes: this.activeFallbackFixedObstacleRoutes,
       layerCount: this.layerCount,
+      allowBlindAndBuriedVias: this.allowBlindAndBuriedVias,
     })
     this.activeFallbackSolver = new Pipeline9RegionalFallbackSolver({
       nodeWithPortPoints: fallbackProblem.nodeWithPortPoints,
@@ -573,6 +593,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       movablePreloadedConnectionNames: movableFixedRouteConnectionNames,
       viaToPadClearance: this.viaToPadClearance,
       layerCount: this.layerCount,
+      allowBlindAndBuriedVias: this.allowBlindAndBuriedVias,
     })
     if (promotedFixedRouteConnectionNames.size === 0) {
       this.stats.fallbackNodeCount =
@@ -684,6 +705,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
             right: fixedRoute,
             clearance: this.obstacleMargin,
             leftBounds: candidateBounds,
+            viaLayerPolicy: this,
           })
         ) {
           conflictingFixedRoutesByConnectionName.set(
@@ -998,9 +1020,9 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     const routedCopperRadius = Math.max(this.traceWidth, this.viaDiameter) / 2
     const fixedObstacles = this.getUpdatedFixedHdRoutes()
       .filter((route) =>
-        routeOverlapsNode(route, node, nodeBounds, routedCopperRadius),
+        routeOverlapsNode(route, node, nodeBounds, routedCopperRadius, this),
       )
-      .flatMap((route) => convertFixedRouteToB01Obstacles(route, node))
+      .flatMap((route) => convertFixedRouteToB01Obstacles(route, node, this))
     this.stats.fixedObstacleUses =
       Number(this.stats.fixedObstacleUses ?? 0) + fixedObstacles.length
     if (fixedObstacles.length === 0) {

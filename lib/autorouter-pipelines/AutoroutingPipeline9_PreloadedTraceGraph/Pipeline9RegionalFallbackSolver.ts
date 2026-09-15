@@ -31,6 +31,7 @@ type Pipeline9RegionalFallbackSolverParams = {
   movablePreloadedConnectionNames?: ReadonlySet<string>
   viaToPadClearance?: number
   layerCount: number
+  allowBlindAndBuriedVias?: boolean
 }
 
 type RegionalFallbackPhase = "route" | "improve" | "repair" | "done"
@@ -68,6 +69,7 @@ const hasPreloadedViaToBoardObstacleConflict = ({
   boardObstacles,
   connMap,
   layerCount,
+  allowBlindAndBuriedVias,
   viaToPadClearance,
 }: {
   routes: HighDensityRoute[]
@@ -75,13 +77,17 @@ const hasPreloadedViaToBoardObstacleConflict = ({
   boardObstacles: Obstacle[]
   connMap: ConnectivityMap
   layerCount: number
+  allowBlindAndBuriedVias?: boolean
   viaToPadClearance: number
 }): boolean =>
   routes.some((route) => {
     if (!movablePreloadedConnectionNames.has(route.connectionName)) {
       return false
     }
-    const viaSpans = getPipeline9RouteCopperGeometry(route).viaSpans
+    const viaSpans = getPipeline9RouteCopperGeometry(route, {
+      layerCount,
+      allowBlindAndBuriedVias,
+    }).viaSpans
     return viaSpans.some((via) =>
       boardObstacles.some((obstacle) => {
         if (isObstacleConnectedToRoute(obstacle, route, connMap)) return false
@@ -161,6 +167,7 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
       boardObstacles,
       connMap: this.params.connMap,
       layerCount: this.params.layerCount,
+      allowBlindAndBuriedVias: this.params.allowBlindAndBuriedVias,
       viaToPadClearance,
     })
     if (hasViaConflict) {

@@ -7,6 +7,7 @@ import type { LayerName } from "lib/utils/mapZToLayerName"
 test("converts ten-layer high-density routes and vias to circuit json", () => {
   const srj: SimpleRouteJson = {
     layerCount: 10,
+    allowBlindAndBuriedVias: true,
     minTraceWidth: 0.1,
     minViaDiameter: 0.3,
     bounds: { minX: -2, maxX: 3, minY: -2, maxY: 2 },

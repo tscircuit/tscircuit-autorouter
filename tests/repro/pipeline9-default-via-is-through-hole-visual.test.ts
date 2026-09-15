@@ -3,7 +3,7 @@ import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-p
 import { getBugReportSnapshotSvg } from "lib/testing/getBugReportSnapshotSvg"
 import type { SimpleRouteJson } from "lib/types"
 
-test("Pipeline9 routes across a preloaded default via's missing bottom obstacle", (): void => {
+test("Pipeline9 routes bottom around a preloaded default through via", (): void => {
   const inputSrj: SimpleRouteJson = {
     layerCount: 4,
     minTraceWidth: 0.1,
