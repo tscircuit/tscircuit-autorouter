@@ -1,6 +1,7 @@
 import { expect, test } from "bun:test"
 import type { CircuitJson } from "circuit-json"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
+import { isPipeline9ObstacleConnectedToRoute } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9RegionalFallbackSolver"
 import type { SimpleRouteJson } from "lib/types"
 import { readFileSync } from "node:fs"
 import { gunzipSync } from "node:zlib"
@@ -19,7 +20,7 @@ const readCompressedFixture = <T>(filename: string): T =>
     ).toString("utf8"),
   ) as T
 
-test("reproduces the exact T113-S3 Pipeline9 root failure", () => {
+test("recognizes the exact T113 same-net pad during regional validation", () => {
   const circuitJson = readCompressedFixture<CircuitJson>(
     "t113-linux-exact-unrouted.circuit.json.gz",
   )
@@ -52,6 +53,23 @@ test("reproduces the exact T113-S3 Pipeline9 root failure", () => {
   expect(
     solver.connMap.areIdsConnected(canonicalNetId!, "source_trace_44"),
   ).toBe(false)
+
+  const t113PowerPad = srj.obstacles.find(
+    (obstacle) =>
+      obstacle.circuitJsonMetadata?.pcb_smtpad_id === "pcb_smtpad_139",
+  )
+  expect(t113PowerPad).toBeDefined()
+  expect(t113PowerPad!.connectedTo).toContain("source_trace_44")
+  expect(
+    isPipeline9ObstacleConnectedToRoute({
+      obstacle: t113PowerPad!,
+      route: {
+        connectionName: "source_trace_44_fixed_262_13",
+        rootConnectionName: canonicalNetId,
+      },
+      connMap: solver.connMap,
+    }),
+  ).toBe(true)
 
   const capturedPcbSvg = readFileSync(
     new URL(

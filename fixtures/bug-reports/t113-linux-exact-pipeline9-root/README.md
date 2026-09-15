@@ -23,9 +23,20 @@ after adding the routes Pipeline9 completes before its next failure, so
 GitHub's image diff compares like with like without making CI depend on a
 platform-sensitive solver path.
 
-On `v0.0.905`, `source_trace_44` belongs to `connectivity_net57`, but
-`areIdsConnected("connectivity_net57", "source_trace_44")` returns false. The
-regional candidate validator can therefore reject the trace's own pad as
-foreign copper. The later full-solver failure varies by runtime and platform,
-so the test asserts this ownership defect directly and verifies that the PCB
-review artifact is present.
+On `v0.0.905`, Pipeline9 gives a generated fixed route a canonical
+`rootConnectionName`, while the matching board pad carries the member trace and
+port IDs from that net. `ConnectivityMap.areIdsConnected` maps member IDs to a
+net; it does not map a net ID back to itself. Passing the canonical route root
+to that member-only comparison makes the regional via candidate validator
+reject the route's own pad as foreign copper.
+
+The fix resolves the route's net at that Pipeline9 boundary and compares it to
+the pad's mapped member IDs. The exact regression uses the captured
+`pcb_smtpad_139`, `source_trace_44`, generated fixed-route identity, and
+canonical net from this fixture. The connectivity package remains unchanged,
+so routing stages that operate only on member IDs retain their existing
+behavior. The updated PCB artifact uses the same renderer, viewport, and layer
+colors as the reproduction and adds the 42 routes reached after candidate
+validation. The full solver then stops at the next independent invariant,
+reconnecting
+`breakout:pcb_breakout_point_68_fixed_168_1`.

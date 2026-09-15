@@ -62,6 +62,34 @@ const getObstacleZLayers = (
   return obstacle.layers.map((layer) => mapLayerNameToZ(layer, layerCount))
 }
 
+export const isPipeline9ObstacleConnectedToRoute = ({
+  obstacle,
+  route,
+  connMap,
+}: {
+  obstacle: Obstacle
+  route: Pick<HighDensityRoute, "connectionName" | "rootConnectionName">
+  connMap: ConnectivityMap
+}): boolean => {
+  if (isObstacleConnectedToRoute(obstacle, route, connMap)) return true
+  if (!route.rootConnectionName) return false
+
+  const routeNetId =
+    connMap.getNetConnectedToId(route.connectionName) ??
+    connMap.getNetConnectedToId(route.rootConnectionName) ??
+    (connMap.netMap[route.rootConnectionName]
+      ? route.rootConnectionName
+      : undefined)
+  if (!routeNetId) return false
+
+  return obstacle.connectedTo.some((connectedId) => {
+    const connectedNetId =
+      connMap.getNetConnectedToId(connectedId) ??
+      (connMap.netMap[connectedId] ? connectedId : undefined)
+    return connectedNetId === routeNetId
+  })
+}
+
 const hasPreloadedViaToBoardObstacleConflict = ({
   routes,
   movablePreloadedConnectionNames,
@@ -84,7 +112,10 @@ const hasPreloadedViaToBoardObstacleConflict = ({
     const viaSpans = getPipeline9RouteCopperGeometry(route).viaSpans
     return viaSpans.some((via) =>
       boardObstacles.some((obstacle) => {
-        if (isObstacleConnectedToRoute(obstacle, route, connMap)) return false
+        if (
+          isPipeline9ObstacleConnectedToRoute({ obstacle, route, connMap })
+        )
+          return false
         const obstacleZLayers = getObstacleZLayers(obstacle, layerCount)
         if (!obstacleZLayers.some((z) => z >= via.minZ && z <= via.maxZ)) {
           return false
