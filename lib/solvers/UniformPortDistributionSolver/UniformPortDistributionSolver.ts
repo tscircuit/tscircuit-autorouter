@@ -1,7 +1,11 @@
 import { BaseSolver } from "@tscircuit/solver-utils"
 import { GraphicsObject } from "graphics-debug"
-import { Obstacle } from "lib/types"
-import { NodeWithPortPoints } from "lib/types/high-density-types"
+import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
+import type { Obstacle } from "lib/types"
+import type {
+  NodeWithPortPoints,
+  PortPoint,
+} from "lib/types/high-density-types"
 import { getBoundsFromNodeWithPortPoints } from "lib/utils/getBoundsFromNodeWithPortPoints"
 import { InputNodeWithPortPoints } from "../PortPointPathingSolver/PortPointPathingSolver"
 import {
@@ -12,6 +16,7 @@ import {
   SharedEdge,
 } from "./types"
 import { determineOwnerPair } from "./determineOwnerPair"
+import { getReservedCoordinateIntervals } from "./getReservedCoordinateIntervals"
 import { getOwnerPairKey } from "./getOwnerPairKey"
 import { precomputeSharedEdges } from "./precomputeSharedEdges"
 import { redistributePortPointsOnSharedEdge } from "./redistributePortPointsOnSharedEdge"
@@ -23,6 +28,9 @@ export interface UniformPortDistributionSolverInput {
   nodeWithPortPoints: NodeWithPortPoints[]
   inputNodesWithPortPoints: InputNodeWithPortPoints[]
   obstacles: Obstacle[]
+  connMap?: ConnectivityMap
+  minTraceWidth?: number
+  traceClearance?: number
 }
 
 /**
@@ -45,9 +53,14 @@ export class UniformPortDistributionSolver extends BaseSolver {
   ownerPairsToProcess: OwnerPairKey[] = []
   currentOwnerPairBeingProcessed: OwnerPairKey | null = null
   redistributedNodes: NodeWithPortPoints[] = []
+  allPortPoints: PortPoint[] = []
+  fixedPortPointIds = new Set<string>()
 
   constructor(private input: UniformPortDistributionSolverInput) {
     super()
+    this.allPortPoints = input.nodeWithPortPoints.flatMap(
+      (node) => node.portPoints,
+    )
     for (const node of input.nodeWithPortPoints) {
       this.mapOfNodeIdToBounds.set(
         node.capacityMeshNodeId,
@@ -86,6 +99,29 @@ export class UniformPortDistributionSolver extends BaseSolver {
       ownerPairs: Array.from(uniqueOwnerPairs.values()),
       nodeBounds: this.mapOfNodeIdToBounds,
     })
+
+    for (const [ownerPairKey, portPoints] of this.mapOfOwnerPairToPortPoints) {
+      const sharedEdge = this.mapOfOwnerPairToSharedEdge.get(ownerPairKey)
+      const sharedEdgeIsFixed =
+        !sharedEdge ||
+        shouldIgnoreSharedEdge({
+          sharedEdge,
+          obstacles: this.input.obstacles,
+        })
+      for (const portPoint of portPoints) {
+        if (
+          portPoint.portPointId &&
+          (sharedEdgeIsFixed ||
+            shouldIgnorePortPoint({
+              portPoint,
+              ownerNodeIds: portPoint.ownerNodeIds,
+              inputNodes: this.input.inputNodesWithPortPoints,
+            }))
+        ) {
+          this.fixedPortPointIds.add(portPoint.portPointId)
+        }
+      }
+    }
 
     this.ownerPairsToProcess = Array.from(
       this.mapOfOwnerPairToSharedEdge.keys(),
@@ -132,6 +168,25 @@ export class UniformPortDistributionSolver extends BaseSolver {
     const redistributed = redistributePortPointsOnSharedEdge({
       sharedEdge,
       portPoints: family,
+      reservedIntervalsByZ: new Map(
+        [...new Set(family.map((portPoint) => portPoint.z ?? 0))].map((z) => [
+          z,
+          getReservedCoordinateIntervals({
+            sharedEdge,
+            z,
+            familyPortPoints: family.filter(
+              (portPoint) => (portPoint.z ?? 0) === z,
+            ),
+            allPortPoints: this.allPortPoints,
+            fixedPortPointIds: this.fixedPortPointIds,
+            minTraceWidth: this.input.minTraceWidth ?? 0.1,
+            traceClearance: this.input.traceClearance ?? 0.1,
+            connMap: this.input.connMap,
+          }),
+        ]),
+      ),
+      minimumSpacing:
+        (this.input.minTraceWidth ?? 0.1) + (this.input.traceClearance ?? 0.1),
     })
 
     this.mapOfOwnerPairToPortPoints.set(ownerPairKey, redistributed)

@@ -55,7 +55,8 @@ test("advances the exact T113-S3 PCB past its closed fanout section", async () =
   expect(solver.error).not.toContain(
     "Route 201 could not determine endpoint regions",
   )
-  expect(solver.error).toContain("No path found for source_trace_194")
+  expect(solver.error).not.toContain("No path found for source_trace_194")
+  expect(solver.error).toContain("No path found for source_net_20_mst0")
 
   const preloadedFanoutCopper = convertToCircuitJson(
     srj,

@@ -23,6 +23,8 @@ type PreloadedTracePrimitive = {
   zLayers: number[]
   start: Point
   end: Point
+  clearanceRadius: number
+  blocksNearbyPorts: boolean
 }
 
 const GEOMETRIC_TOLERANCE = 1e-6
@@ -48,6 +50,9 @@ const getPreloadedTracePrimitives = (
 ): PreloadedTracePrimitive[] => {
   const primitives: PreloadedTracePrimitive[] = []
   const connMap = getConnectivityMapFromSimpleRouteJson(srj)
+  const newTraceRadius = srj.minTraceWidth / 2
+  const traceClearance =
+    srj.minTraceToPadEdgeClearance ?? srj.defaultObstacleMargin ?? 0.15
 
   for (const trace of srj.traces ?? []) {
     if (!trace.connection_name) {
@@ -74,6 +79,11 @@ const getPreloadedTracePrimitives = (
           ),
           start: routePoint,
           end: routePoint,
+          clearanceRadius:
+            (routePoint.via_diameter ?? srj.minTraceWidth) / 2 +
+            newTraceRadius +
+            traceClearance,
+          blocksNearbyPorts: true,
         })
       } else if (routePoint.route_type === "through_obstacle") {
         primitives.push({
@@ -89,6 +99,9 @@ const getPreloadedTracePrimitives = (
           ),
           start: routePoint.start,
           end: routePoint.end,
+          clearanceRadius:
+            routePoint.width / 2 + newTraceRadius + traceClearance,
+          blocksNearbyPorts: true,
         })
       } else if (routePoint.route_type === "jumper") {
         const z = mapLayerNameToZ(routePoint.layer, srj.layerCount)
@@ -105,6 +118,8 @@ const getPreloadedTracePrimitives = (
             zLayers: [z],
             start: padCenter,
             end: padCenter,
+            clearanceRadius: newTraceRadius * 2 + traceClearance,
+            blocksNearbyPorts: true,
           })
         }
       }
@@ -133,6 +148,11 @@ const getPreloadedTracePrimitives = (
         zLayers: [mapLayerNameToZ(start.layer, srj.layerCount)],
         start,
         end,
+        clearanceRadius:
+          Math.max(start.width, end.width) / 2 +
+          newTraceRadius +
+          traceClearance,
+        blocksNearbyPorts: false,
       })
     }
   }
@@ -236,7 +256,8 @@ const preloadPort = (
 }
 
 /**
- * Loads fixed copper onto existing capacity-graph boundary ports. Capacity
+ * Loads fixed copper onto existing capacity-graph boundary ports and marks
+ * nearby ports unavailable when they cannot provide trace clearance. Capacity
  * regions, edges, and ports are never added or removed.
  */
 export class PreloadedTraceGraphSolver extends BaseSolver {
@@ -256,23 +277,74 @@ export class PreloadedTraceGraphSolver extends BaseSolver {
   }
 
   override _step(): void {
+    const clearanceBlockedPortIds = new Set<string>()
+    const clearanceBlockedPortIdsBySegmentLayer = new Map<string, Set<string>>()
     for (const primitive of this.primitives) {
       for (const segment of this.sharedEdgeSegments) {
-        if (
-          minimumDistanceBetweenSegments(
-            primitive.start,
-            primitive.end,
-            segment.start,
-            segment.end,
-          ) > GEOMETRIC_TOLERANCE
-        ) {
+        const distanceToSegment = minimumDistanceBetweenSegments(
+          primitive.start,
+          primitive.end,
+          segment.start,
+          segment.end,
+        )
+        if (distanceToSegment > primitive.clearanceRadius) {
           continue
         }
 
         for (const z of primitive.zLayers) {
           if (!segment.availableZ.includes(z)) continue
-          const portPoint = getClosestPortPoint(segment, primitive, z)
-          if (portPoint) preloadPort(portPoint, primitive, z)
+          const assignedPortPoint =
+            distanceToSegment <= GEOMETRIC_TOLERANCE
+              ? getClosestPortPoint(segment, primitive, z)
+              : undefined
+          if (assignedPortPoint) preloadPort(assignedPortPoint, primitive, z)
+          if (!primitive.blocksNearbyPorts) continue
+
+          for (const portPoint of segment.portPoints) {
+            if (
+              !portPoint.availableZ.includes(z) ||
+              pointToSegmentDistance(
+                portPoint,
+                primitive.start,
+                primitive.end,
+              ) >
+                primitive.clearanceRadius + GEOMETRIC_TOLERANCE
+            ) {
+              continue
+            }
+            const segmentLayerKey = `${segment.edgeId}::${z}`
+            const blockedPortIds =
+              clearanceBlockedPortIdsBySegmentLayer.get(segmentLayerKey) ??
+              new Set<string>()
+            blockedPortIds.add(portPoint.segmentPortPointId)
+            clearanceBlockedPortIdsBySegmentLayer.set(
+              segmentLayerKey,
+              blockedPortIds,
+            )
+          }
+        }
+      }
+    }
+
+    for (const segment of this.sharedEdgeSegments) {
+      for (const z of segment.availableZ) {
+        const layerPortPoints = segment.portPoints.filter((portPoint) =>
+          portPoint.availableZ.includes(z),
+        )
+        const blockedPortIds = clearanceBlockedPortIdsBySegmentLayer.get(
+          `${segment.edgeId}::${z}`,
+        )
+        if (layerPortPoints.length === 0 || !blockedPortIds) continue
+        for (const portPoint of layerPortPoints) {
+          if (!blockedPortIds.has(portPoint.segmentPortPointId)) continue
+          const isAssignedToPreloadedTrace = (
+            portPoint._preloadedTracePortAssignments ?? []
+          ).some((assignment) => assignment.z === z)
+          if (isAssignedToPreloadedTrace) continue
+          portPoint._preloadedCopperBlockedZ = [
+            ...new Set([...(portPoint._preloadedCopperBlockedZ ?? []), z]),
+          ].sort((a, b) => a - b)
+          clearanceBlockedPortIds.add(`${portPoint.segmentPortPointId}::${z}`)
         }
       }
     }
@@ -296,6 +368,7 @@ export class PreloadedTraceGraphSolver extends BaseSolver {
           count + (portPoint._preloadedTracePortAssignments?.length ?? 0),
         0,
       ),
+      clearanceBlockedPortCount: clearanceBlockedPortIds.size,
       topologyChanged: false,
     }
     this.solved = true

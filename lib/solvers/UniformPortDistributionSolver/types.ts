@@ -5,6 +5,11 @@ export type OwnerPair = [string, string]
 export type OwnerPairKey = string
 export type EdgeOrientation = "vertical" | "horizontal"
 
+export type CoordinateInterval = {
+  min: number
+  max: number
+}
+
 export type Bounds = {
   minX: number
   maxX: number

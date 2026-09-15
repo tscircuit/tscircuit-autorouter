@@ -39,6 +39,8 @@ export interface SegmentPortPoint {
   _preloadedFixedNetIds?: string[]
   /** Ordered crossings used to create serialized graph assignments. */
   _preloadedTracePortAssignments?: PreloadedTracePortAssignment[]
+  /** Layers where this port cannot clear nearby fixed copper. */
+  _preloadedCopperBlockedZ?: number[]
 }
 
 export interface SharedEdgeSegment {

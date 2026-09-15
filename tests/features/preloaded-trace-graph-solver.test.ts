@@ -115,3 +115,69 @@ test("preloaded traces reserve existing ports without changing graph topology", 
     topologyChanged: false,
   })
 })
+
+test("blocks a boundary port inside fixed via clearance", () => {
+  const sharedEdgeSegments: SharedEdgeSegment[] = [
+    {
+      edgeId: "shared-edge",
+      nodeIds: ["left", "right"],
+      start: { x: 0, y: -1 },
+      end: { x: 0, y: 1 },
+      availableZ: [0, 1],
+      portPoints: [
+        createPort("top-low", -0.5, 0),
+        createPort("top-mid", 0, 0),
+        createPort("top-high", 0.5, 0),
+      ],
+    },
+  ]
+  const srj: SimpleRouteJson = {
+    layerCount: 2,
+    minTraceWidth: 0.1,
+    minTraceToPadEdgeClearance: 0.15,
+    bounds: { minX: -2, minY: -2, maxX: 2, maxY: 2 },
+    obstacles: [],
+    connections: [],
+    traces: [
+      {
+        type: "pcb_trace",
+        pcb_trace_id: "nearby-via",
+        connection_name: "fixed-net",
+        route: [
+          {
+            route_type: "via",
+            x: 0.3,
+            y: 0,
+            from_layer: "top",
+            to_layer: "bottom",
+            via_diameter: 0.45,
+            via_hole_diameter: 0.2,
+          },
+        ],
+      },
+    ],
+  }
+  const solver = new PreloadedTraceGraphSolver(sharedEdgeSegments, srj)
+
+  solver.solve()
+
+  expect(sharedEdgeSegments[0]!.portPoints).toMatchObject([
+    { segmentPortPointId: "top-low" },
+    {
+      segmentPortPointId: "top-mid",
+      _preloadedCopperBlockedZ: [0],
+    },
+    { segmentPortPointId: "top-high" },
+  ])
+  expect(
+    sharedEdgeSegments[0]!.portPoints.every(
+      (port) => port._preloadedTracePortAssignments === undefined,
+    ),
+  ).toBe(true)
+  expect(solver.stats).toMatchObject({
+    preloadedPortCount: 0,
+    tracePortAssignmentCount: 0,
+    clearanceBlockedPortCount: 1,
+    topologyChanged: false,
+  })
+})

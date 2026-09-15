@@ -206,6 +206,7 @@ export function buildHyperGraph(params: {
     )
 
     for (const z of spp.availableZ) {
+      if (spp._preloadedCopperBlockedZ?.includes(z)) continue
       const preloadedTracePortAssignments =
         spp._preloadedTracePortAssignments?.filter(
           (assignment) => assignment.z === z,
