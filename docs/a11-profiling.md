@@ -17,7 +17,8 @@ the default when `--pipeline` is omitted.
 unfinished candidates. A11 records include accumulated step time, iterations,
 progress, solved segment count, selection, and failure or rejection reason.
 Rejections retain the existing geometry, native endpoint and board copper errors.
-Captured native inputs can be replayed independently of portfolio scheduling.
+Captured native inputs and actual solver parameters (copper dimensions, effort,
+and search settings) can be replayed independently of portfolio scheduling.
 Grow/shrink records include the solver's existing `growthAttempts` counter.
 
 Times measure executed work, including package solver batches. They exclude time

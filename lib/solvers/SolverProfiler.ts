@@ -1,6 +1,17 @@
 import type { NodeWithPortPoints } from "../types/high-density-types"
 
-type ProfiledSolver = {
+type SolverParameters = {
+  traceThickness?: number
+  traceMargin?: number
+  viaDiameter?: number
+  viaMinDistFromBorder?: number
+  cellSizeMm?: number
+  effort?: number
+  stepMultiplier?: number
+  hyperParameters?: object
+}
+
+type ProfiledSolver = SolverParameters & {
   getSolverName(): string
   solved: boolean
   failed: boolean
@@ -30,6 +41,7 @@ export type SolverProfileRecord = {
   nodeId?: string
   nodeWithPortPoints?: NodeWithPortPoints
   growthAttempts?: number
+  solverParameters?: SolverParameters
   error: string | null
   rejectionReason?: string | null
   selected: boolean
@@ -81,6 +93,16 @@ export class SolverProfiler {
     record.nodeId = solver.nodeWithPortPoints?.capacityMeshNodeId
     if (record.name === "HighDensitySolverA11") {
       record.nodeWithPortPoints = solver.nodeWithPortPoints
+      if (!record.solverParameters) record.solverParameters = {
+        traceThickness: solver.traceThickness,
+        traceMargin: solver.traceMargin,
+        viaDiameter: solver.viaDiameter,
+        viaMinDistFromBorder: solver.viaMinDistFromBorder,
+        cellSizeMm: solver.cellSizeMm,
+        effort: solver.effort,
+        stepMultiplier: solver.stepMultiplier,
+        hyperParameters: solver.hyperParameters,
+      }
     }
     record.growthAttempts = solver.growthAttempts
     record.rejectionReason = solver.rejectionReason

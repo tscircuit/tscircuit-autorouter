@@ -36,6 +36,14 @@ test("profiling retains A11 work, progress, selection and rejected copper", () =
     expect(unfinished?.iterations).toBe(100)
     expect(unfinished?.timeMs).toBeGreaterThan(0)
     expect(unfinished?.nodeId).toBe(nodeWithPortPoints.capacityMeshNodeId)
+    expect(unfinished?.solverParameters).toMatchObject({
+      traceThickness: 0.1,
+      traceMargin: 0.1,
+      viaDiameter: 0.3,
+      viaMinDistFromBorder: 0.15,
+      cellSizeMm: 0.05,
+      hyperParameters: { shuffleSeed: 0 },
+    })
     portfolio.solve()
     expect(unfinished?.outcome).toBe("solved")
     expect(unfinished?.selected).toBe(true)
