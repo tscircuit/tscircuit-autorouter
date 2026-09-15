@@ -18,6 +18,7 @@ import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
 import { mapZToLayerName } from "lib/utils/mapZToLayerName"
 import { getPointKey } from "lib/utils/getPointKey"
 import { getViaDimensions } from "lib/utils/getViaDimensions"
+import { getViaCopperZSpan } from "lib/utils/getViaCopperZSpan"
 import {
   doesSegmentCrossPolygonBoundary,
   isPointInOrOnPolygon,
@@ -164,8 +165,12 @@ export class EscapeViaLocationSolver extends BaseSolver {
   } {
     const sourceZ = mapLayerNameToZ(sourceLayer, this.ogSrj.layerCount)
     const targetZ = mapLayerNameToZ(targetLayer, this.ogSrj.layerCount)
-    const minZ = Math.min(sourceZ, targetZ)
-    const maxZ = Math.max(sourceZ, targetZ)
+    const { minZ, maxZ } = getViaCopperZSpan({
+      fromZ: sourceZ,
+      toZ: targetZ,
+      layerCount: this.ogSrj.layerCount,
+      allowBlindAndBuriedVias: this.ogSrj.allowBlindAndBuriedVias,
+    })
     const zLayers = Array.from(
       { length: maxZ - minZ + 1 },
       (_, index) => minZ + index,
@@ -598,8 +603,12 @@ export class EscapeViaLocationSolver extends BaseSolver {
     targetZ: number
   }): number {
     const { candidate, connectionNetIds, sourceZ, targetZ } = params
-    const spanMinZ = Math.min(sourceZ, targetZ)
-    const spanMaxZ = Math.max(sourceZ, targetZ)
+    const { minZ: spanMinZ, maxZ: spanMaxZ } = getViaCopperZSpan({
+      fromZ: sourceZ,
+      toZ: targetZ,
+      layerCount: this.ogSrj.layerCount,
+      allowBlindAndBuriedVias: this.ogSrj.allowBlindAndBuriedVias,
+    })
     let minClearance = Number.POSITIVE_INFINITY
 
     for (const obstacle of this.ogSrj.obstacles) {

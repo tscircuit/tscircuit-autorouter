@@ -14,6 +14,7 @@ import { costFunction } from "./costFunction"
 import { ExploredPortPoint } from "./types"
 import { pointToBoxDistance } from "@tscircuit/math-utils"
 import { SingleTargetNecessaryCrampedPortPointSolver } from "./SingleTargetNecessaryCrampedPortPointSolver"
+import { getNecessaryCrampedPortPoints } from "./getNecessaryCrampedPortPoints"
 
 const CRAMPED_NON_NECESSARY_PORT_PENALTY = 1_000
 const MAX_CRAMPED_ESCAPE_BRANCHES_TO_KEEP = 5
@@ -242,6 +243,23 @@ export class MultiTargetNecessaryCrampedPortPointSolver extends BaseSolver {
       return this.filteredOutput
     }
 
+    const retainedPortPoints = new Set(this.crampedPortPointsToKeep)
+    for (const segment of this.input.sharedEdgeSegments) {
+      for (const portPoint of segment.portPoints) {
+        if (this.isMultilayerEscapePort(portPoint)) {
+          retainedPortPoints.add(portPoint)
+        }
+      }
+    }
+    const necessaryCrampedPortPoints = getNecessaryCrampedPortPoints({
+      capacityMeshNodes: this.input.capacityMeshNodes,
+      portPoints: this.input.sharedEdgeSegments.flatMap(
+        (segment) => segment.portPoints,
+      ),
+      retainedPortPoints,
+      simpleRouteJson: this.input.simpleRouteJson,
+    })
+
     this.filteredOutput = this.input.sharedEdgeSegments.map((segment) => ({
       ...segment,
       portPoints: segment.portPoints.flatMap((portPoint) => {
@@ -249,7 +267,10 @@ export class MultiTargetNecessaryCrampedPortPointSolver extends BaseSolver {
           return [portPoint]
         }
 
-        if (this.isMultilayerEscapePort(portPoint)) {
+        if (
+          this.isMultilayerEscapePort(portPoint) ||
+          necessaryCrampedPortPoints.has(portPoint)
+        ) {
           return [
             {
               ...portPoint,
