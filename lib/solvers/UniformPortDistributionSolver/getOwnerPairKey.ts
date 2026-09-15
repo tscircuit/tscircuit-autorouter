@@ -12,4 +12,4 @@ export const normalizeOwnerPair = (nodeA: string, nodeB: string): OwnerPair =>
  * state for bucketing, precompute lookup, and visualization.
  */
 export const getOwnerPairKey = (ownerNodeIds: OwnerPair): OwnerPairKey =>
-  `${ownerNodeIds[0]}|${ownerNodeIds[1]}`
+  `${ownerNodeIds[0]}|${ownerNodeIds[1]}` as OwnerPairKey

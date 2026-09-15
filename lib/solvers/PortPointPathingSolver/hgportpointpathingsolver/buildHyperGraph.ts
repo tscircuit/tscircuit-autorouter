@@ -210,6 +210,10 @@ export function buildHyperGraph(params: {
         spp._preloadedTracePortAssignments?.filter(
           (assignment) => assignment.z === z,
         )
+      const preloadedCopperReservations =
+        spp._preloadedCopperReservationsByZ?.find(
+          (reservation) => reservation.z === z,
+        )?.reservations
       const port: RawPort = {
         portId: `${spp.segmentPortPointId}::${z}`,
         x: spp.x,
@@ -231,6 +235,7 @@ export function buildHyperGraph(params: {
               ].sort()
             : undefined,
         _preloadedTracePortAssignments: preloadedTracePortAssignments,
+        _preloadedCopperReservations: preloadedCopperReservations,
       }
       const hgPort: RegionPortHg = {
         portId: spp.segmentPortPointId,

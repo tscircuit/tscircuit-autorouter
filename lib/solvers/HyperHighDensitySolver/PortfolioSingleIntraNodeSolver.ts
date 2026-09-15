@@ -50,6 +50,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     typeof CachedIntraNodeRouteSolver
   >[0] & {
     boardGeometry?: HighDensityBoardGeometry
+    candidateValidator?: (routes: HighDensityIntraNodeRoute[]) => boolean
   }
   solvedRoutes: HighDensityIntraNodeRoute[] = []
   nodeWithPortPoints: NodeWithPortPoints
@@ -131,6 +132,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       effort?: number
       enableNegotiatedSearch?: boolean
       boardGeometry?: HighDensityBoardGeometry
+      candidateValidator?: (routes: HighDensityIntraNodeRoute[]) => boolean
     },
   ) {
     super()
@@ -603,9 +605,23 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       return route
     })
 
-    this.solvedRoutes = repairDisconnectedSameRootPortPoints(
+    const repairedRoutes = repairDisconnectedSameRootPortPoints(
       routesWithRootConnectionNames,
       this.nodeWithPortPoints,
     )
+    if (
+      this.constructorParams.candidateValidator &&
+      !this.constructorParams.candidateValidator(repairedRoutes)
+    ) {
+      solver.solver.solved = false
+      solver.solver.failed = true
+      solver.solver.error = "High-density candidate rejected by validator"
+      this.solved = false
+      this.winningSolver = undefined
+      this.stats.candidateRejectionCount =
+        Number(this.stats.candidateRejectionCount ?? 0) + 1
+      return
+    }
+    this.solvedRoutes = repairedRoutes
   }
 }

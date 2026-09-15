@@ -112,6 +112,9 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
   winningSolver?: PortfolioSingleIntraNodeSolver
   scaleFactor = 1
   growthAttempts = 0
+  private currentPassGrowthAttempts = 0
+  private searchingAlternativeCandidates = false
+  private rejectedScaleSolution = false
   maxGrowthAttempts: number
 
   constructor(params: GrowShrinkHighDensityIntraNodeSolverParams) {
@@ -120,8 +123,12 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
     this.nodeWithPortPoints = params.nodeWithPortPoints
     this.maxGrowthAttempts =
       params.maxGrowthAttempts ?? DEFAULT_MAX_GROWTH_ATTEMPTS
+    const searchPassCount = params.growShrinkSolutionValidator ? 2 : 1
     this.MAX_ITERATIONS =
-      20_000_000 * (params.effort ?? 1) * (this.maxGrowthAttempts + 1)
+      20_000_000 *
+      (params.effort ?? 1) *
+      (this.maxGrowthAttempts + 1) *
+      searchPassCount
 
     if (hasImpossibleSameLayerCrossingGeometry(this.nodeWithPortPoints)) {
       if (!params.fallbackToInvalidGeometryOnFailure) {
@@ -150,7 +157,7 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
   }
 
   private createActiveSubSolver() {
-    const { growShrinkSolutionValidator: _, ...portfolioParams } =
+    const { growShrinkSolutionValidator, ...portfolioParams } =
       this.constructorParams
     this.activeSubSolver = new PortfolioSingleIntraNodeSolver({
       ...portfolioParams,
@@ -161,6 +168,21 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
         this.nodeWithPortPoints,
         this.scaleFactor,
       ),
+      candidateValidator:
+        growShrinkSolutionValidator && this.searchingAlternativeCandidates
+          ? (routes) =>
+              growShrinkSolutionValidator(
+                this.scaleFactor === 1
+                  ? routes
+                  : routes.map((route) =>
+                      scaleRoute(
+                        route,
+                        this.nodeWithPortPoints.center,
+                        1 / this.scaleFactor,
+                      ),
+                    ),
+              )
+          : undefined,
     })
     if (this.constructorParams.maxInnerIterationsPerGrowthAttempt) {
       this.activeSubSolver.MAX_ITERATIONS =
@@ -183,6 +205,7 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
       this.constructorParams.growShrinkSolutionValidator &&
       !this.constructorParams.growShrinkSolutionValidator(solvedRoutes)
     ) {
+      this.rejectedScaleSolution = true
       solver.solved = false
       solver.failed = true
       solver.error = "High-density scale solution rejected by validator"
@@ -196,10 +219,13 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
   }
 
   computeProgress() {
+    const searchPassCount = this.constructorParams.growShrinkSolutionValidator
+      ? 2
+      : 1
     return Math.min(
       0.99,
       (this.growthAttempts + (this.activeSubSolver?.progress ?? 0)) /
-        (this.maxGrowthAttempts + 1),
+        ((this.maxGrowthAttempts + 1) * searchPassCount),
     )
   }
 
@@ -225,7 +251,23 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
     this.error = this.activeSubSolver!.error
     this.activeSubSolver = null
 
-    if (this.growthAttempts >= this.maxGrowthAttempts) {
+    if (this.currentPassGrowthAttempts >= this.maxGrowthAttempts) {
+      if (
+        this.constructorParams.growShrinkSolutionValidator &&
+        !this.searchingAlternativeCandidates &&
+        this.rejectedScaleSolution
+      ) {
+        // Keep the established grow-first policy: a rejected winner is retried
+        // with more room before considering a lower-ranked candidate at the
+        // same scale. If every scale winner is invalid, a second pass lets the
+        // portfolio exhaust its remaining candidates under the validator.
+        this.searchingAlternativeCandidates = true
+        this.currentPassGrowthAttempts = 0
+        this.scaleFactor = 1
+        this.error = null
+        this.stats.alternativeCandidateSearch = true
+        return
+      }
       if (this.constructorParams.fallbackToInvalidGeometryOnFailure) {
         this.solvedRoutes = createInvalidDirectConnectionRoutes(
           this.nodeWithPortPoints,
@@ -250,6 +292,7 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
       return
     }
 
+    this.currentPassGrowthAttempts++
     this.growthAttempts++
     this.scaleFactor *= 2
   }

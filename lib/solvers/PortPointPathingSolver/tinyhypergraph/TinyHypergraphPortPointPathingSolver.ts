@@ -1,7 +1,10 @@
 import type { SerializedHyperGraph } from "@tscircuit/hypergraph"
 import type { GraphicsObject } from "graphics-debug"
 import { BaseSolver } from "lib/solvers/BaseSolver"
-import type { PreloadedTracePortAssignment } from "lib/solvers/AvailableSegmentPointSolver/AvailableSegmentPointSolver"
+import type {
+  PreloadedCopperPortReservation,
+  PreloadedTracePortAssignment,
+} from "lib/solvers/AvailableSegmentPointSolver/AvailableSegmentPointSolver"
 import type {
   InputNodeWithPortPoints,
   InputPortPoint,
@@ -29,6 +32,7 @@ import {
   type TinyHyperGraphSectionPipelineInput,
   type TinyHyperGraphSectionSolverOptions,
   type TinyHyperGraphSolverOptions,
+  type TinyHyperGraphInitialRoutePortReservation,
 } from "tiny-hypergraph/lib/index"
 import type {
   ConnectionHg,
@@ -196,6 +200,7 @@ type TinyPortMetadata = {
   duplicatedFromPortId?: string
   _preloadedFixedNetIds?: string[]
   _preloadedTracePortAssignments?: PreloadedTracePortAssignment[]
+  _preloadedCopperReservations?: PreloadedCopperPortReservation[]
 }
 
 type LoadedTinyGraph = {
@@ -209,7 +214,13 @@ type LoadedTinyGraph = {
     routeNet: Int32Array
     regionNetId: Int32Array
     portPenalty?: Float64Array
+    portReservationNetId?: Int32Array
+    initialRoutePortReservations?: TinyHyperGraphInitialRoutePortReservation[]
     metadataPortPenaltiesApplied?: boolean
+    fixedCopperReservationsApplied?: boolean
+  }
+  problemSetup?: {
+    portEndpointReservationNetId: Int32Array
   }
 }
 
@@ -423,6 +434,7 @@ const toSerializedPortData = (
     cramped: port.d.cramped,
     _preloadedFixedNetIds: port.d._preloadedFixedNetIds,
     _preloadedTracePortAssignments: port.d._preloadedTracePortAssignments,
+    _preloadedCopperReservations: port.d._preloadedCopperReservations,
   }
 }
 
@@ -899,6 +911,113 @@ const applyMetadataPortPenalties = (loaded: LoadedTinyGraph) => {
   return metadataPortPenaltyCount
 }
 
+type CanonicalNetId = string & { readonly __brand: "CanonicalNetId" }
+const ROUTE_POSITION_TOLERANCE = 1e-6
+
+const getOwningPreloadedRouteIds = ({
+  reservation,
+  routeMetadata,
+}: {
+  reservation: PreloadedCopperPortReservation
+  routeMetadata: RouteMetadata[]
+}) => {
+  const removableSection = reservation.removablePreloadedTraceSection
+  if (!removableSection) return []
+  return routeMetadata.flatMap((metadata, routeId) => {
+    const routeSection = metadata.preloadedTraceSection
+    return routeSection?.traceId === removableSection.traceId &&
+      routeSection.startRoutePosition <=
+        removableSection.startRoutePosition + ROUTE_POSITION_TOLERANCE &&
+      routeSection.endRoutePosition >=
+        removableSection.endRoutePosition - ROUTE_POSITION_TOLERANCE
+      ? [routeId]
+      : []
+  })
+}
+
+const applyFixedCopperPortReservations = (loaded: LoadedTinyGraph) => {
+  if (loaded.problem.fixedCopperReservationsApplied) return 0
+
+  const netIndexByCanonicalId = new Map<CanonicalNetId, number>()
+  for (
+    let routeIndex = 0;
+    routeIndex < (loaded.problem.routeMetadata?.length ?? 0);
+    routeIndex++
+  ) {
+    const canonicalNetId =
+      loaded.problem.routeMetadata?.[routeIndex]?.mutuallyConnectedNetworkId
+    if (typeof canonicalNetId !== "string") continue
+    netIndexByCanonicalId.set(
+      canonicalNetId as CanonicalNetId,
+      loaded.problem.routeNet[routeIndex]!,
+    )
+  }
+
+  let fixedCopperReservedPortCount = 0
+  const portReservations =
+    loaded.problem.portReservationNetId ??
+    new Int32Array(loaded.topology.portCount).fill(-1)
+  const initialRoutePortReservations = [
+    ...(loaded.problem.initialRoutePortReservations ?? []),
+  ]
+  const routeMetadata = loaded.problem.routeMetadata ?? []
+  for (let portId = 0; portId < loaded.topology.portCount; portId++) {
+    const copperReservations =
+      loaded.topology.portMetadata?.[portId]?._preloadedCopperReservations ?? []
+    if (copperReservations.length === 0) continue
+    const staticReservedNetIndices: number[] = []
+
+    for (const copperReservation of copperReservations) {
+      const reservedNetIndex = netIndexByCanonicalId.get(
+        copperReservation.netId as CanonicalNetId,
+      )
+      const ownerRouteIds = getOwningPreloadedRouteIds({
+        reservation: copperReservation,
+        routeMetadata,
+      })
+      if (
+        reservedNetIndex !== undefined &&
+        ownerRouteIds.length > 0 &&
+        ownerRouteIds.every(
+          (ownerRouteId) =>
+            loaded.problem.routeNet[ownerRouteId] === reservedNetIndex,
+        )
+      ) {
+        for (const ownerRouteId of ownerRouteIds) {
+          if (
+            !initialRoutePortReservations.some(
+              (reservation) =>
+                reservation.portId === portId &&
+                reservation.ownerRouteId === ownerRouteId,
+            )
+          ) {
+            initialRoutePortReservations.push({ portId, ownerRouteId })
+          }
+        }
+        continue
+      }
+      staticReservedNetIndices.push(reservedNetIndex ?? -2)
+    }
+
+    if (staticReservedNetIndices.length > 0) {
+      const uniqueReservedNetIndices = new Set(staticReservedNetIndices)
+      const fixedCopperReservation =
+        uniqueReservedNetIndices.size === 1 ? staticReservedNetIndices[0]! : -2
+      const existingReservation = portReservations[portId]!
+      portReservations[portId] =
+        existingReservation === -1 ||
+        existingReservation === fixedCopperReservation
+          ? fixedCopperReservation
+          : -2
+    }
+    fixedCopperReservedPortCount++
+  }
+  loaded.problem.portReservationNetId = portReservations
+  loaded.problem.initialRoutePortReservations = initialRoutePortReservations
+  loaded.problem.fixedCopperReservationsApplied = true
+  return fixedCopperReservedPortCount
+}
+
 class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSectionPipelineSolver {
   private configuredSolvers = new WeakSet<BaseSolver>()
   duplicatePortPenaltyCount = 0
@@ -942,6 +1061,7 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
       loaded,
       this.inputProblem.serializedHyperGraph,
     )
+    applyFixedCopperPortReservations(loaded)
     const metadataPortPenaltyCount = applyMetadataPortPenalties(loaded)
     const { duplicatePortPenaltyCount, crampedPortPenaltyCount } =
       applyPortMetadataPenalties(loaded, this.crampedPortTraversalPenalty)
@@ -1013,6 +1133,7 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
     ) {
       const loadedSolver = solver as typeof solver & LoadedTinyGraph
       applyMetadataPortPenalties(loadedSolver)
+      applyFixedCopperPortReservations(loadedSolver)
       applyTerminalRegionNetIds(loadedSolver)
       clearPreloadedEndpointRegionNetIds(loadedSolver)
     }

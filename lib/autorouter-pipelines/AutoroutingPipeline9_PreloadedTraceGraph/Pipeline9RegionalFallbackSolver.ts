@@ -62,6 +62,34 @@ const getObstacleZLayers = (
   return obstacle.layers.map((layer) => mapLayerNameToZ(layer, layerCount))
 }
 
+export const isPipeline9ObstacleConnectedToRoute = ({
+  obstacle,
+  route,
+  connMap,
+}: {
+  obstacle: Obstacle
+  route: Pick<HighDensityRoute, "connectionName" | "rootConnectionName">
+  connMap: ConnectivityMap
+}): boolean => {
+  if (isObstacleConnectedToRoute(obstacle, route, connMap)) return true
+  if (!route.rootConnectionName) return false
+
+  const routeNetId =
+    connMap.getNetConnectedToId(route.connectionName) ??
+    connMap.getNetConnectedToId(route.rootConnectionName) ??
+    (connMap.netMap[route.rootConnectionName]
+      ? route.rootConnectionName
+      : undefined)
+  if (!routeNetId) return false
+
+  return obstacle.connectedTo.some((connectedId) => {
+    const connectedNetId =
+      connMap.getNetConnectedToId(connectedId) ??
+      (connMap.netMap[connectedId] ? connectedId : undefined)
+    return connectedNetId === routeNetId
+  })
+}
+
 const hasPreloadedViaToBoardObstacleConflict = ({
   routes,
   movablePreloadedConnectionNames,
@@ -84,7 +112,8 @@ const hasPreloadedViaToBoardObstacleConflict = ({
     const viaSpans = getPipeline9RouteCopperGeometry(route).viaSpans
     return viaSpans.some((via) =>
       boardObstacles.some((obstacle) => {
-        if (isObstacleConnectedToRoute(obstacle, route, connMap)) return false
+        if (isPipeline9ObstacleConnectedToRoute({ obstacle, route, connMap }))
+          return false
         const obstacleZLayers = getObstacleZLayers(obstacle, layerCount)
         if (!obstacleZLayers.some((z) => z >= via.minZ && z <= via.maxZ)) {
           return false
@@ -103,6 +132,7 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
   readonly highDensitySolver: HighDensitySolver
   forceImproveSolver?: HighDensityForceImproveSolver
   repairSolver?: Pipeline4HighDensityRepairSolver
+  private acceptedRoutes?: HighDensityRoute[]
   private phase: RegionalFallbackPhase = "route"
 
   constructor(params: Pipeline9RegionalFallbackSolverParams) {
@@ -137,7 +167,6 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
     this.activeSubSolver = this.highDensitySolver
     this.MAX_ITERATIONS = 100e6 * params.effort
   }
-
   override getSolverName(): string {
     return "Pipeline9RegionalFallbackSolver"
   }
@@ -188,6 +217,7 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
         this.failed = true
         return
       }
+      this.acceptedRoutes = routedCandidate
       this.forceImproveSolver = new HighDensityForceImproveSolver({
         nodeWithPortPoints: [this.params.nodeWithPortPoints],
         hdRoutes: routedCandidate,
@@ -209,17 +239,20 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
       }
       if (!this.forceImproveSolver!.solved) return
       const forceImprovedRoutes = this.forceImproveSolver!.getOutput()
-      if (!this.validateCandidateRoutes(forceImprovedRoutes)) {
+      if (this.validateCandidateRoutes(forceImprovedRoutes)) {
+        this.acceptedRoutes = forceImprovedRoutes
+      } else {
         this.stats.forceImproveCandidateRejectionCount =
           Number(this.stats.forceImproveCandidateRejectionCount ?? 0) + 1
-        this.error =
-          "Pipeline9 regional force-improve output failed its candidate validator"
-        this.failed = true
-        return
+      }
+      if (!this.acceptedRoutes) {
+        throw new Error(
+          "Pipeline9 regional fallback has no validated route before repair",
+        )
       }
       this.repairSolver = new Pipeline4HighDensityRepairSolver({
         nodeWithPortPoints: [this.params.nodeWithPortPoints],
-        hdRoutes: forceImprovedRoutes,
+        hdRoutes: this.acceptedRoutes,
         obstacles: this.params.obstacles,
         colorMap: this.params.colorMap,
         repairMargin: this.params.obstacleMargin,
@@ -240,13 +273,11 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
       }
       if (!this.repairSolver!.solved) return
       const repairedRoutes = this.repairSolver!.getOutput()
-      if (!this.validateCandidateRoutes(repairedRoutes)) {
+      if (this.validateCandidateRoutes(repairedRoutes)) {
+        this.acceptedRoutes = repairedRoutes
+      } else {
         this.stats.repairCandidateRejectionCount =
           Number(this.stats.repairCandidateRejectionCount ?? 0) + 1
-        this.error =
-          "Pipeline9 regional repair output failed its candidate validator"
-        this.failed = true
-        return
       }
       this.activeSubSolver = null
       this.phase = "done"
@@ -256,11 +287,7 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
   }
 
   getOutput(): HighDensityRoute[] {
-    return (
-      this.repairSolver?.getOutput() ??
-      this.forceImproveSolver?.getOutput() ??
-      this.highDensitySolver.routes
-    )
+    return this.acceptedRoutes ?? this.highDensitySolver.routes
   }
 
   override visualize(): GraphicsObject {

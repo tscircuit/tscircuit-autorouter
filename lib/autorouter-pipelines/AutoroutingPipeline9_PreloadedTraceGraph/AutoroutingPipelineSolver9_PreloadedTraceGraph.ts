@@ -69,8 +69,9 @@ import { TraceWidthSolver } from "../../solvers/TraceWidthSolver/TraceWidthSolve
 import { LengthMatchingPostProcessingSolver } from "../../solvers/length-matching-post-processing-solver"
 import { applyFixedRouteReplacementsToPreloadedTraces } from "./applyFixedRouteReplacementsToPreloadedTraces"
 import { assignUniquePcbTraceIdsToNewTraces } from "./assignUniquePcbTraceIdsToNewTraces"
-import { getTerminalLayerIndicesByPcbPortId } from "./getTerminalLayerIndicesByPcbPortId"
+import { getPipeline9BoundaryPortKeepouts } from "./getPipeline9BoundaryPortKeepouts"
 import { getPipeline9NetByConnectionName } from "./getPipeline9NetByConnectionName"
+import { getTerminalLayerIndicesByPcbPortId } from "./getTerminalLayerIndicesByPcbPortId"
 import {
   getMaterializedPreloadedSectionHdRoutes,
   removeChangedSectionsFromFixedHdRoutes,
@@ -563,18 +564,31 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     definePipelineStep(
       "uniformPortDistributionSolver",
       UniformPortDistributionSolver,
-      (cms) => [
-        {
-          nodeWithPortPoints:
-            cms.portPointPathingSolver?.getOutput().nodesWithPortPoints ?? [],
-          inputNodesWithPortPoints:
-            cms.portPointPathingSolver?.getOutput().inputNodeWithPortPoints ??
-            [],
-          minTraceWidth: cms.minTraceWidth,
-          obstacles: cms.srj.obstacles,
-          layerCount: cms.srj.layerCount,
-        },
-      ],
+      (cms) => {
+        const portPointPathingOutput = cms.portPointPathingSolver?.getOutput()
+        return [
+          {
+            nodeWithPortPoints:
+              portPointPathingOutput?.nodesWithPortPoints ?? [],
+            inputNodesWithPortPoints:
+              portPointPathingOutput?.inputNodeWithPortPoints ?? [],
+            minTraceWidth: cms.minTraceWidth,
+            obstacles: cms.srj.obstacles,
+            connMap: cms.connMap,
+            traceClearance:
+              cms.srj.minTraceToPadEdgeClearance ??
+              cms.srj.defaultObstacleMargin ??
+              0.15,
+            copperKeepouts: getPipeline9BoundaryPortKeepouts({
+              srj: cms.originalSrj,
+              connMap: cms.connMap,
+              changedPreloadedTraceSections:
+                portPointPathingOutput?.changedPreloadedTraceSections ?? [],
+              defaultViaDiameter: cms.viaDiameter,
+            }),
+          },
+        ]
+      },
     ),
     definePipelineStep(
       "highDensityRouteSolver",

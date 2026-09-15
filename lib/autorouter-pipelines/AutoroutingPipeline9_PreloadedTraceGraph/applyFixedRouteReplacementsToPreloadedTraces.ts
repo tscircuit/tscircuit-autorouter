@@ -90,6 +90,42 @@ const comparePreloadedRouteOrder = (
   )
 }
 
+/**
+ * A regional splice can span multiple serialized route positions while a
+ * zero-length or out-of-region primitive inside that span remains in the
+ * fixed-route list. The wider route owns the complete serialized range, so
+ * reconnecting the contained primitive would duplicate superseded copper.
+ */
+const removeRoutesSupersededByWiderProvenance = (
+  routes: PreloadedHighDensityRoute[],
+): PreloadedHighDensityRoute[] =>
+  routes.filter((route, routeIndex) => {
+    const routeStart =
+      route.preloadedRoutePositionStart ?? route.preloadedRouteIndex
+    const routeEnd = route.preloadedRoutePositionEnd ?? routeStart
+    const rangeStart = Math.min(routeStart, routeEnd)
+    const rangeEnd = Math.max(routeStart, routeEnd)
+    return !routes.some((candidate, candidateIndex) => {
+      if (
+        candidateIndex === routeIndex ||
+        candidate.preloadedTraceIndex !== route.preloadedTraceIndex
+      ) {
+        return false
+      }
+      const candidateStart =
+        candidate.preloadedRoutePositionStart ?? candidate.preloadedRouteIndex
+      const candidateEnd = candidate.preloadedRoutePositionEnd ?? candidateStart
+      const candidateRangeStart = Math.min(candidateStart, candidateEnd)
+      const candidateRangeEnd = Math.max(candidateStart, candidateEnd)
+      return (
+        candidateRangeStart <= rangeStart + POINT_EPSILON &&
+        candidateRangeEnd >= rangeEnd - POINT_EPSILON &&
+        (candidateRangeStart < rangeStart - POINT_EPSILON ||
+          candidateRangeEnd > rangeEnd + POINT_EPSILON)
+      )
+    })
+  })
+
 const getMaximumOriginalTraceThickness = (
   trace: SimplifiedPcbTrace,
 ): number | undefined => {
@@ -119,7 +155,9 @@ const convertUpdatedTraceRoutes = ({
   let traceThickness = 0
   let viaDiameter = 0
   let rootConnectionName: string | undefined
-  for (const updatedTraceRoute of [...updatedTraceRoutes].sort(
+  const reconnectableRoutes =
+    removeRoutesSupersededByWiderProvenance(updatedTraceRoutes)
+  for (const updatedTraceRoute of reconnectableRoutes.sort(
     comparePreloadedRouteOrder,
   )) {
     appendConnectedRoute(combinedPoints, updatedTraceRoute)

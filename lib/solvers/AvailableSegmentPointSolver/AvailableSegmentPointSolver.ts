@@ -16,6 +16,16 @@ export interface PreloadedTracePortAssignment {
   z: number
 }
 
+export interface PreloadedCopperPortReservation {
+  keepoutId: string
+  netId: string
+  removablePreloadedTraceSection?: {
+    traceId: string
+    startRoutePosition: number
+    endRoutePosition: number
+  }
+}
+
 export interface SegmentPortPoint {
   segmentPortPointId: string
   x: number
@@ -39,6 +49,11 @@ export interface SegmentPortPoint {
   _preloadedFixedNetIds?: string[]
   /** Ordered crossings used to create serialized graph assignments. */
   _preloadedTracePortAssignments?: PreloadedTracePortAssignment[]
+  /** Fixed-copper reservations for this boundary point, grouped by layer. */
+  _preloadedCopperReservationsByZ?: Array<{
+    z: number
+    reservations: PreloadedCopperPortReservation[]
+  }>
 }
 
 export interface SharedEdgeSegment {

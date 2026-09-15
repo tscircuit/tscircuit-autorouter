@@ -1,5 +1,6 @@
 import { expect, test } from "bun:test"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
+import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import { loadScenarioBySampleNumber } from "../../scripts/benchmark/scenarios"
 import { getLastStepSvg } from "../fixtures/getLastStepSvg"
 
@@ -25,6 +26,13 @@ test("Pipeline9 visually solves representative SRJ23 samples", async () => {
     expect(scenario.traces?.length).toBeGreaterThan(0)
     expect(solver.solved).toBe(true)
     expect(solver.failed).toBe(false)
+    expect(
+      evaluateRelaxedDrc({
+        inputSrj: scenario,
+        srjWithPointPairs: solver.srjWithPointPairs!,
+        routedTraces: solver.getOutputSimplifiedPcbTraces(),
+      }).errors,
+    ).toEqual([])
 
     await expect(getLastStepSvg(solver.visualize())).toMatchSvgSnapshot(
       import.meta.path,

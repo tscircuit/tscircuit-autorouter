@@ -34,22 +34,22 @@ test("Pipeline9 uses Pipeline7 exact DRC budgets for SRJ23 sample 52", async ():
   ).toBe(12)
   expect(
     solver.pipeline9JointDrcRepairSolver?.stats.postExactReferenceAccepted,
-  ).toBeFalse()
+  ).toBeTrue()
   expect(
     Number(
       solver.pipeline9JointDrcRepairSolver?.stats
         .postExactReferenceDrcIssueCount,
     ),
-  ).toBeGreaterThan(0)
+  ).toBe(0)
   expect(
     solver.pipeline9JointDrcRepairSolver?.stats.regionalB01RepairAttempted,
-  ).toBeTrue()
+  ).toBeFalse()
   expect(
     Number(
       solver.pipeline9JointDrcRepairSolver?.stats
         .regionalB01RepairCandidateSearchCount,
     ),
-  ).toBeGreaterThan(0)
+  ).toBe(0)
   const { errors } = evaluateRelaxedDrc({
     inputSrj: scenario,
     srjWithPointPairs: solver.srjWithPointPairs!,

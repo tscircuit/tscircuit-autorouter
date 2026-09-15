@@ -2,8 +2,44 @@ import { PortPoint } from "lib/types/high-density-types"
 
 export type Side = "left" | "right" | "top" | "bottom"
 export type OwnerPair = [string, string]
-export type OwnerPairKey = string
+export type OwnerPairKey = string & { readonly __brand: "OwnerPairKey" }
+export type PortPointId = string & { readonly __brand: "PortPointId" }
 export type EdgeOrientation = "vertical" | "horizontal"
+
+export type CoordinateInterval = {
+  min: number
+  max: number
+}
+
+type BoundaryPortKeepoutBase = {
+  keepoutId: string
+  z: number
+  connectedTo: string[]
+  portPathingReservation: "sampled-coordinate" | "full-edge"
+  removablePreloadedTraceSection?: {
+    traceId: string
+    startRoutePosition: number
+    endRoutePosition: number
+  }
+}
+
+export type BoundaryPortCapsuleKeepout = BoundaryPortKeepoutBase & {
+  shape: "capsule"
+  start: { x: number; y: number }
+  end: { x: number; y: number }
+  copperRadius: number
+}
+
+export type BoundaryPortRectKeepout = BoundaryPortKeepoutBase & {
+  shape: "rect"
+  center: { x: number; y: number }
+  width: number
+  height: number
+}
+
+export type BoundaryPortKeepout =
+  | BoundaryPortCapsuleKeepout
+  | BoundaryPortRectKeepout
 
 export type Bounds = {
   minX: number

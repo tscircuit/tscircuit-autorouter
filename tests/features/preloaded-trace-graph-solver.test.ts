@@ -112,6 +112,7 @@ test("preloaded traces reserve existing ports without changing graph topology", 
     outputPortCount: 4,
     preloadedPortCount: 1,
     tracePortAssignmentCount: 1,
+    fixedCopperKeepoutPortCount: 0,
     topologyChanged: false,
   })
 })

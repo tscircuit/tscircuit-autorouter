@@ -13,7 +13,10 @@ import type {
   CapacityMeshNodeId,
   SimpleRouteConnection,
 } from "lib/types"
-import type { PreloadedTracePortAssignment } from "lib/solvers/AvailableSegmentPointSolver/AvailableSegmentPointSolver"
+import type {
+  PreloadedCopperPortReservation,
+  PreloadedTracePortAssignment,
+} from "lib/solvers/AvailableSegmentPointSolver/AvailableSegmentPointSolver"
 
 export type RawPort = {
   portId: string
@@ -26,6 +29,7 @@ export type RawPort = {
   tinyHypergraphPortPenalty?: number
   _preloadedFixedNetIds?: string[]
   _preloadedTracePortAssignments?: PreloadedTracePortAssignment[]
+  _preloadedCopperReservations?: PreloadedCopperPortReservation[]
 }
 
 export type RegionPortHg = Omit<RegionPort, "d" | "port"> & {
