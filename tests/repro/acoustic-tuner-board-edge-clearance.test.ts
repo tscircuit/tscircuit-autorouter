@@ -166,17 +166,16 @@ test("Pipeline 9 reproduces a via-to-board clearance violation after global repa
       throw new Error(`Missing captured trace ${trace.pcb_trace_id}`)
     expect(captured.route).toHaveLength(trace.route.length)
     for (let index = 0; index < trace.route.length; index++) {
-      // Allow cross-platform coordinate rounding at nine decimal places (mm).
-      // Route types, layers, widths, diameters, and metadata still match exactly.
+      // Physical values are millimeters; allow less than 0.0000005 mm of
+      // platform rounding, including calculated power-trace widths.
+      // Route types, layers, IDs, and other metadata still match exactly.
       const point = trace.route[index]
-      const expectedPoint =
-        "x" in point && "y" in point
-          ? {
-              ...point,
-              x: expect.closeTo(point.x, 9),
-              y: expect.closeTo(point.y, 9),
-            }
-          : point
+      const expectedPoint = Object.fromEntries(
+        Object.entries(point).map(([key, value]): [string, unknown] => [
+          key,
+          typeof value === "number" ? expect.closeTo(value, 6) : value,
+        ]),
+      )
       expect(captured.route[index]).toMatchObject(expectedPoint)
     }
   }
