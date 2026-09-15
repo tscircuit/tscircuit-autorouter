@@ -338,7 +338,8 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       {
         onSolved: (cms) => {
           cms.srjWithEscapeViaLocations =
-            cms.escapeViaLocationSolver?.getOutputSimpleRouteJson()
+            cms.escapeViaLocationSolver!.getOutputSimpleRouteJson()
+          cms.srj = cms.srjWithEscapeViaLocations
         },
       },
     ),

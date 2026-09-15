@@ -7,7 +7,6 @@ import { AutoroutingPipelineSolver } from "../../../lib"
 import { EscapeViaLocationSolver } from "../../../lib/solvers/EscapeViaLocationSolver/EscapeViaLocationSolver"
 import type { SimpleRouteJson } from "../../../lib/types"
 import { isPointInRect } from "../../../lib/utils/isPointInRect"
-import { mapLayerNameToZ } from "../../../lib/utils/mapLayerNameToZ"
 
 const srj = bugReport.simple_route_json as SimpleRouteJson
 
@@ -110,13 +109,9 @@ test("pour-via-escape01 adds escape via points for copper pour nets", () => {
     expect(escapeViaObstacle?.layers).toContain(metadata!.sourceLayer)
     expect(escapeViaObstacle?.layers).toContain(metadata!.targetLayer)
 
-    const sourceZ = mapLayerNameToZ(metadata!.sourceLayer, srj.layerCount)
-    const targetZ = mapLayerNameToZ(metadata!.targetLayer, srj.layerCount)
     const expectedZLayers = Array.from(
-      {
-        length: Math.abs(targetZ - sourceZ) + 1,
-      },
-      (_, index) => Math.min(sourceZ, targetZ) + index,
+      { length: srj.layerCount },
+      (_, z) => z,
     )
     expect(escapeViaObstacle?.__zLayers).toEqual(expectedZLayers)
   }
