@@ -40,3 +40,7 @@ colors as the reproduction and adds the 42 routes reached after candidate
 validation. The full solver then stops at the next independent invariant,
 reconnecting
 `breakout:pcb_breakout_point_68_fixed_168_1`.
+
+The next stacked layer pins the closed-route serialization fix from
+`tiny-hypergraph`. It requires port-point pathing to consume every assigned
+segment and complete without the Route 201 endpoint-region error seen on Linux.

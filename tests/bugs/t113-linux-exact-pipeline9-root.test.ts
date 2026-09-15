@@ -20,7 +20,7 @@ const readCompressedFixture = <T>(filename: string): T =>
     ).toString("utf8"),
   ) as T
 
-test("recognizes the exact T113 same-net pad during regional validation", () => {
+test("advances the exact T113 board through closed-route serialization", () => {
   const circuitJson = readCompressedFixture<CircuitJson>(
     "t113-linux-exact-unrouted.circuit.json.gz",
   )
@@ -70,6 +70,14 @@ test("recognizes the exact T113 same-net pad during regional validation", () => 
       connMap: solver.connMap,
     }),
   ).toBe(true)
+
+  while (!solver.portPointPathingSolver?.solved && !solver.failed) {
+    solver.step()
+  }
+
+  expect(solver.failed).toBe(false)
+  expect(solver.error).toBeNull()
+  expect(solver.portPointPathingSolver?.solved).toBe(true)
 
   const capturedPcbSvg = readFileSync(
     new URL(
