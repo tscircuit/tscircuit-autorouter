@@ -37,9 +37,16 @@ export function limitPortsToRoutingCapacity({
       },
     ]),
   )
-  const nodeById = new Map<CapacityMeshNodeId, CapacityMeshNode>(
-    nodes.map((node) => [node.capacityMeshNodeId, node]),
+  const reservedRegionIds = new Set(
+    graph.regions
+      .filter(
+        (region) => typeof region.d?.netId === "number" && region.d.netId >= 0,
+      )
+      .map((region) => region.regionId),
   )
+  for (const node of nodes) {
+    if (node._containsTarget) reservedRegionIds.add(node.capacityMeshNodeId)
+  }
   const families = new Map<BoundaryLayerKey, typeof graph.ports>()
   for (const port of graph.ports) {
     const owners = [port.region1Id, port.region2Id].sort()
@@ -55,10 +62,11 @@ export function limitPortsToRoutingCapacity({
   >()
   for (const [key, family] of families) {
     const firstPort = family[0]!
-    // Target regions already restrict every route to their owning net.
+    // The serialized graph also reserves pad and connected-copper regions
+    // without _containsTarget. Their owning net must be able to exit its copper.
     if (
-      nodeById.get(firstPort.region1Id)?._containsTarget ||
-      nodeById.get(firstPort.region2Id)?._containsTarget
+      reservedRegionIds.has(firstPort.region1Id) ||
+      reservedRegionIds.has(firstPort.region2Id)
     )
       continue
     const sharedEdge = getSharedEdgeForNodePair({

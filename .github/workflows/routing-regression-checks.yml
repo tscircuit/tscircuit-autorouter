@@ -24,6 +24,7 @@ jobs:
         run: |
           bun test --timeout 300000 \
             tests/solvers/original-port-pad-clearance-capacity.test.ts \
+            tests/solvers/reserved-region-boundary-capacity.test.ts \
             tests/solvers/duplicate-port-pad-clearance-capacity.test.ts \
             tests/solvers/single-trace-boundary-capacity.test.ts \
             tests/features/bga-round-pad-via-gap.test.ts \
