@@ -1,4 +1,14 @@
 import { PortPoint } from "lib/types/high-density-types"
+import type { Obstacle } from "lib/types"
+
+export type BoundaryRoutingGeometry = {
+  obstacles: Obstacle[]
+  layerCount: number
+  traceWidth: number
+  traceClearance: number
+}
+
+export type RoutingInterval = { min: number; max: number }
 
 export type Side = "left" | "right" | "top" | "bottom"
 export type OwnerPair = [string, string]

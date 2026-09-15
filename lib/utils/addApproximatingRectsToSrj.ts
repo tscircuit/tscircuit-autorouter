@@ -386,6 +386,7 @@ const convertObstacleToOldFormat = (obstacle: Obstacle): Obstacle[] => {
     return convertObstacleToOldFormat({
       ...obstacle,
       type: "rect",
+      ...(obstacle.width === obstacle.height ? { shape: "circle" } : {}),
     } as Obstacle)
   }
 

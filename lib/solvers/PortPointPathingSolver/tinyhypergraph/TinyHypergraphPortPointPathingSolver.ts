@@ -1,3 +1,4 @@
+import { routingDiagnostics } from "../../routingDiagnostics"
 import type { SerializedHyperGraph } from "@tscircuit/hypergraph"
 import type { GraphicsObject } from "graphics-debug"
 import { BaseSolver } from "lib/solvers/BaseSolver"
@@ -36,6 +37,7 @@ import type {
   HgPortPointPathingSolverParams,
 } from "../hgportpointpathingsolver/types"
 import { createTinyRouteNetIndexer } from "./createTinyRouteNetIndexer"
+import { limitPortsToRoutingCapacity } from "./limitPortsToRoutingCapacity"
 import { getRegionNetIdByRegionId } from "./getRegionNetIdByRegionId"
 import { SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments } from "./SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments"
 import {
@@ -194,6 +196,7 @@ type TinyPortMetadata = {
   _tinyTerminal?: boolean
   tinyHypergraphPortPenalty?: number
   duplicatedFromPortId?: string
+  boundaryTraceSpacing?: number
   _preloadedFixedNetIds?: string[]
   _preloadedTracePortAssignments?: PreloadedTracePortAssignment[]
 }
@@ -681,6 +684,11 @@ const buildInputNodesWithPortPoints = (
 
         return {
           portPointId: serializedPort.portId,
+          duplicatedFromPortId:
+            typeof portMetadata.duplicatedFromPortId === "string"
+              ? portMetadata.duplicatedFromPortId
+              : undefined,
+          boundaryTraceSpacing: portMetadata.boundaryTraceSpacing,
           x: Number(portMetadata.x ?? 0),
           y: Number(portMetadata.y ?? 0),
           z: Number(portMetadata.z ?? 0),
@@ -833,7 +841,13 @@ const applyPortMetadataPenalties = (
 
   for (let portId = 0; portId < loaded.topology.portCount; portId++) {
     const metadata = loaded.topology.portMetadata?.[portId]
-    if (typeof metadata?.duplicatedFromPortId === "string") {
+    // Provisional duplicates borrow space from their original port. Once the
+    // boundary allocator has given them real copper-clear slots, the ordinary
+    // distance, congestion, and cramped-region costs describe their routing cost.
+    if (
+      typeof metadata?.duplicatedFromPortId === "string" &&
+      metadata.boundaryTraceSpacing === undefined
+    ) {
       portPenalty[portId] += DUPLICATE_PORT_TRAVERSAL_PENALTY
       duplicatePortPenaltyCount++
     }
@@ -1102,6 +1116,27 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
     } else {
       this.duplicateCongestedPortReport = duplicateCongestedPortSolver.report
       graphForTiny = duplicateCongestedPortSolver.getOutput()
+      if (params.boundaryRoutingGeometry !== undefined) {
+        graphForTiny = limitPortsToRoutingCapacity({
+          graph: graphForTiny,
+          nodes: params.graph.regions.map((region) => region.d),
+          routingGeometry: params.boundaryRoutingGeometry,
+        })
+        const retainedPortIds = new Set(
+          graphForTiny.ports.map((port) => port.portId),
+        )
+        this.duplicateCongestedPortReport = {
+          ...duplicateCongestedPortSolver.report,
+          duplicatedPorts: duplicateCongestedPortSolver.report.duplicatedPorts
+            .map((source) => ({
+              ...source,
+              duplicatePortIds: source.duplicatePortIds.filter((portId) =>
+                retainedPortIds.has(portId),
+              ),
+            }))
+            .filter((source) => source.duplicatePortIds.length > 0),
+        }
+      }
       for (const port of graphForTiny.ports) {
         const metadata = asTinyPortMetadata(port.d)
         if (typeof metadata.duplicatedFromPortId !== "string") continue
@@ -1515,6 +1550,22 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       currentStage: this.tinyPipelineSolver.getCurrentStageName(),
       stageStats: this.tinyPipelineSolver.getStageStats(),
     }
+    if (this.failed)
+      routingDiagnostics.emit?.({
+        kind: "pathing_failure",
+        stats: this.stats,
+        neverRouted: currentTinySolver?.getNeverSuccessfullyRoutedRoutes(),
+        graph: this.params.graph.regions.map((region) => region.d),
+        inputNodes: this.inputNodeWithPortPoints,
+        topology: currentTinySolver?.topology,
+        problem: currentTinySolver?.problem,
+        routeState: currentTinySolver && {
+          currentRouteId: currentTinySolver.state.currentRouteId,
+          unroutedRoutes: currentTinySolver.state.unroutedRoutes,
+          regionSegments: currentTinySolver.state.regionSegments,
+          portAssignment: currentTinySolver.state.portAssignment,
+        },
+      })
     this.activeSubSolver = this.tinyPipelineSolver.activeSubSolver ?? null
   }
 

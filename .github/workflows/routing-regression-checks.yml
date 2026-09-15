@@ -1,0 +1,36 @@
+name: Routing Regression Checks
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: routing-regression-checks-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: 1.3.8
+      - run: bun install
+      - name: Check physical routing constraints and preload preservation
+        run: |
+          bun test --timeout 300000 \
+            tests/solvers/original-port-pad-clearance-capacity.test.ts \
+            tests/solvers/reserved-region-boundary-capacity.test.ts \
+            tests/solvers/duplicate-port-pad-clearance-capacity.test.ts \
+            tests/solvers/single-trace-boundary-capacity.test.ts \
+            tests/features/bga-round-pad-via-gap.test.ts \
+            tests/features/pipeline9-circular-pad-via-gap.test.ts \
+            tests/features/pipeline9-nearby-pad-copper-radius.test.ts \
+            tests/pipeline9/pipeline9-differential-pair-pad-clearance.test.ts \
+            tests/pipeline9/pipeline9-differential-pair-max-uncoupled-length.test.ts \
+            tests/features/preloaded-port-duplication.test.ts \
+            tests/features/pipeline9-srj23-sample3-preloaded-connectivity.test.ts

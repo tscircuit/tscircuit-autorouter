@@ -69,6 +69,8 @@ export interface PortPointPathingHyperParameters {
  */
 export interface InputPortPoint {
   portPointId: string
+  duplicatedFromPortId?: string
+  boundaryTraceSpacing?: number
   x: number
   y: number
   z: number

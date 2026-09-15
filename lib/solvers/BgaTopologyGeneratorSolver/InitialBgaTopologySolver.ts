@@ -12,8 +12,7 @@ import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
 import { BgaGrid } from "./bga-grid"
 import type { BgaGap, MissingBgaSlot } from "./bga-grid"
 import { getObstacleTargetConnectionName } from "./getObstacleTargetConnectionName"
-
-const BGA_MULTILAYER_REGION_VIA_DIAMETER_FACTOR = 1.2
+import { canFitViaInBgaGap } from "./canFitViaInBgaGap"
 
 export type InitialBgaTopologySolverInput = {
   srj: SimpleRouteJson
@@ -22,6 +21,7 @@ export type InitialBgaTopologySolverInput = {
   markedComponentObstacles: Obstacle[]
   unmarkedComponentObstacles: Obstacle[]
   viaDiameter?: number
+  obstacleMargin?: number
 }
 
 function getStableObstacleNodeToken(obstacle: Obstacle): string {
@@ -90,11 +90,9 @@ function createMeshNodesFromBgaGap(input: {
   componentId: string
   bgaGap: BgaGap
   freeLayers: number[]
-  multiLayerThreshold: number
+  canFitVia: boolean
 }): CapacityMeshNode[] {
-  const { componentId, bgaGap, freeLayers, multiLayerThreshold } = input
-  const isLargeEnoughForMultiLayer =
-    bgaGap.width > multiLayerThreshold && bgaGap.height > multiLayerThreshold
+  const { componentId, bgaGap, freeLayers, canFitVia } = input
   let orientationKey: string = "d"
   if (bgaGap.orientation === "horizontal") orientationKey = "h"
   if (bgaGap.orientation === "vertical") orientationKey = "v"
@@ -108,7 +106,7 @@ function createMeshNodesFromBgaGap(input: {
     height: bgaGap.height,
   })
 
-  if (bgaGap.orientation === "diagonal" && isLargeEnoughForMultiLayer) {
+  if (bgaGap.orientation === "diagonal" && canFitVia) {
     return [
       {
         center: bgaGap.center,
@@ -121,7 +119,7 @@ function createMeshNodesFromBgaGap(input: {
     ]
   }
 
-  if (!bgaGap.isBetweenTwoPads && isLargeEnoughForMultiLayer) {
+  if (!bgaGap.isBetweenTwoPads && canFitVia) {
     return [
       {
         center: bgaGap.center,
@@ -148,9 +146,9 @@ function createMeshNodeFromMissingBgaSlot(input: {
   componentId: string
   missingBgaSlot: MissingBgaSlot
   freeLayers: number[]
-  multiLayerThreshold: number
+  canFitVia: boolean
 }): CapacityMeshNode[] {
-  const { componentId, missingBgaSlot, freeLayers, multiLayerThreshold } = input
+  const { componentId, missingBgaSlot, freeLayers, canFitVia } = input
   const baseNodeId = getStableGapNodeToken({
     componentId,
     orientationKey: "missing",
@@ -160,11 +158,7 @@ function createMeshNodeFromMissingBgaSlot(input: {
     width: missingBgaSlot.width,
     height: missingBgaSlot.height,
   })
-  const isLargeEnoughForMultiLayer =
-    missingBgaSlot.width > multiLayerThreshold &&
-    missingBgaSlot.height > multiLayerThreshold
-
-  if (!isLargeEnoughForMultiLayer) {
+  if (!canFitVia) {
     return freeLayers.map((z) => ({
       center: missingBgaSlot.center,
       width: missingBgaSlot.width,
@@ -302,15 +296,23 @@ export class InitialBgaTopologySolver extends BaseSolver {
     const missingBgaSlots: MissingBgaSlot[] = bgaGrid.getMissingSlots()
     const viaDiameter =
       this.inputProblem.viaDiameter ?? getViaDimensions(srj).padDiameter
-    const multiLayerThreshold =
-      viaDiameter * BGA_MULTILAYER_REGION_VIA_DIAMETER_FACTOR
+    const viaGapConstraints = {
+      obstacles: [...markedComponentObstacles, ...unmarkedComponentObstacles],
+      viaDiameter,
+      clearance: Math.max(
+        this.inputProblem.obstacleMargin ?? srj.defaultObstacleMargin ?? 0.15,
+        srj.minViaEdgeToPadEdgeClearance ?? 0,
+      ),
+      freeLayers,
+      layerCount: srj.layerCount,
+    }
     this.meshNodes = [
       ...axisGaps.flatMap((bgaGap) =>
         createMeshNodesFromBgaGap({
           componentId,
           bgaGap,
           freeLayers,
-          multiLayerThreshold,
+          canFitVia: canFitViaInBgaGap({ gap: bgaGap, ...viaGapConstraints }),
         }),
       ),
       ...diagonalGaps.flatMap((bgaGap) =>
@@ -318,7 +320,7 @@ export class InitialBgaTopologySolver extends BaseSolver {
           componentId,
           bgaGap,
           freeLayers,
-          multiLayerThreshold,
+          canFitVia: canFitViaInBgaGap({ gap: bgaGap, ...viaGapConstraints }),
         }),
       ),
       ...missingBgaSlots.flatMap((missingBgaSlot) =>
@@ -326,7 +328,10 @@ export class InitialBgaTopologySolver extends BaseSolver {
           componentId,
           missingBgaSlot,
           freeLayers,
-          multiLayerThreshold,
+          canFitVia: canFitViaInBgaGap({
+            gap: missingBgaSlot,
+            ...viaGapConstraints,
+          }),
         }),
       ),
       ...markedComponentObstacles.flatMap((obstacle) => [

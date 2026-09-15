@@ -1,8 +1,13 @@
 import {
+  routingDiagnostics,
+  describeCandidate,
+} from "../../solvers/routingDiagnostics"
+import {
   defaultB01Params,
   HighDensitySolverB01,
   type HighDensityObstacle,
   type HighDensityRectObstacle,
+  type HighDensityCircleObstacle,
   type HighDensityRouteObstacle,
   type NodeWithPortPoints as B01NodeWithPortPoints,
 } from "@tscircuit/high-density-b01"
@@ -19,6 +24,7 @@ import type { Obstacle } from "lib/types/srj-types"
 import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
 import { BaseSolver } from "../../solvers/BaseSolver"
 import { HighDensitySolver } from "../../solvers/HighDensitySolver/HighDensitySolver"
+import { isObstacleConnectedToRoute } from "../../solvers/TraceWidthSolver/isObstacleConnectedToRoute"
 import type { PreloadedHighDensityRoute } from "./convertPreloadedTraceToHdRoutes"
 import {
   arePipeline9RoutesOnSameNet,
@@ -219,7 +225,7 @@ const convertObstacleToB01Obstacle = ({
   node: NodeWithPortPoints
   connMap: ConnectivityMap
   layerCount: number
-}): HighDensityRectObstacle | undefined => {
+}): HighDensityRectObstacle | HighDensityCircleObstacle | undefined => {
   const availableZ = new Set(
     node.availableZ ?? node.portPoints.map((portPoint) => portPoint.z),
   )
@@ -232,6 +238,20 @@ const convertObstacleToB01Obstacle = ({
     obstacle.connectedTo[0] ??
     obstacle.obstacleId ??
     `pipeline9_obstacle_${obstacle.center.x}_${obstacle.center.y}`
+  if (obstacle.shape === "circle") {
+    if (obstacle.width !== obstacle.height) {
+      throw new Error("Circular board copper must have equal width and height")
+    }
+    return {
+      type: "circle",
+      connectionName,
+      rootConnectionName:
+        connMap.getNetConnectedToId(connectionName) ?? connectionName,
+      center: obstacle.center,
+      radius: obstacle.width / 2,
+      zLayers,
+    }
+  }
   return {
     type: "rect",
     connectionName,
@@ -374,7 +394,7 @@ export const createPipeline9RegularNodeSolver = ({
 
 /**
  * Uses Pipeline7's detailed solver for ordinary nodes and B01 where local
- * preloaded copper must remain a layer-aware obstacle. If B01 cannot finish,
+ * pads or preloaded copper must remain layer-aware obstacles. If B01 cannot finish,
  * the regional adapter reroutes and splices only the intersecting preload.
  */
 export class Pipeline9HighDensitySolver extends BaseSolver {
@@ -469,6 +489,11 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     const solvedRoutes = this.activeNode
       ? restoreRootConnectionNames(routes, this.activeNode)
       : routes
+    routingDiagnostics.emit?.({
+      kind: "node_end",
+      nodeId: this.activeNode?.capacityMeshNodeId,
+      routes: solvedRoutes,
+    })
     this.routes.push(
       ...(this.preserveTerminalPcbPortIds && this.activeNode
         ? addTerminalPcbPortIds(solvedRoutes, this.activeNode)
@@ -486,6 +511,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
   }
 
   protected startRegularSolver(node: NodeWithPortPoints): void {
+    routingDiagnostics.emit?.({ kind: "node_start", mode: "regular", node })
     this.activeNode = node
     this.activeRegularSolver = createPipeline9RegularNodeSolver({
       nodeWithPortPoints: node,
@@ -558,6 +584,12 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     const fixedRouteObstacles = getPipeline9FixedRouteObstacles({
       fixedObstacleRoutes: this.activeFallbackFixedObstacleRoutes,
       layerCount: this.layerCount,
+    })
+    routingDiagnostics.emit?.({
+      kind: "node_start",
+      mode: "regional",
+      node: fallbackProblem.nodeWithPortPoints,
+      obstacles: [...this.obstacles, ...fixedRouteObstacles],
     })
     this.activeFallbackSolver = new Pipeline9RegionalFallbackSolver({
       nodeWithPortPoints: fallbackProblem.nodeWithPortPoints,
@@ -969,6 +1001,16 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
 
     if (this.activeB01Solver) {
       this.activeB01Solver.step()
+      if (this.activeB01Solver.failed || this.activeB01Solver.solved) {
+        routingDiagnostics.emit?.({
+          kind: "node_solver_end",
+          nodeId: this.activeNode?.capacityMeshNodeId,
+          ...describeCandidate(this.activeB01Solver),
+          ...(this.activeB01Solver.failed
+            ? { input: this.activeB01Solver.getConstructorParams()[0] }
+            : {}),
+        })
+      }
       if (this.activeB01Solver.failed) {
         this.failedSolvers.push(this.activeB01Solver)
         this.activeFallbackReason = `B01 failed: ${this.activeB01Solver.error ?? "unknown error"}`
@@ -996,6 +1038,10 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
 
     const nodeBounds = getNodeBounds(node, this.obstacleMargin)
     const routedCopperRadius = Math.max(this.traceWidth, this.viaDiameter) / 2
+    const boardObstacleBounds = getNodeBounds(
+      node,
+      this.obstacleMargin + routedCopperRadius,
+    )
     const fixedObstacles = this.getUpdatedFixedHdRoutes()
       .filter((route) =>
         routeOverlapsNode(route, node, nodeBounds, routedCopperRadius),
@@ -1003,13 +1049,13 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       .flatMap((route) => convertFixedRouteToB01Obstacles(route, node))
     this.stats.fixedObstacleUses =
       Number(this.stats.fixedObstacleUses ?? 0) + fixedObstacles.length
-    if (fixedObstacles.length === 0) {
-      this.startRegularSolver(node)
-      return
-    }
-
     const boardObstacles = (this.includeBoardObstacles ? this.obstacles : [])
-      .filter((obstacle) => obstacleOverlapsNode(obstacle, nodeBounds))
+      .filter((obstacle) => obstacleOverlapsNode(obstacle, boardObstacleBounds))
+      .filter((obstacle) =>
+        node.portPoints.some(
+          (point) => !isObstacleConnectedToRoute(obstacle, point, this.connMap),
+        ),
+      )
       .map((obstacle) =>
         convertObstacleToB01Obstacle({
           obstacle,
@@ -1019,11 +1065,17 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
         }),
       )
       .filter(
-        (obstacle): obstacle is HighDensityRectObstacle =>
+        (
+          obstacle,
+        ): obstacle is HighDensityRectObstacle | HighDensityCircleObstacle =>
           obstacle !== undefined,
       )
     this.stats.boardObstacleUses =
       Number(this.stats.boardObstacleUses ?? 0) + boardObstacles.length
+    if (fixedObstacles.length === 0 && boardObstacles.length === 0) {
+      this.startRegularSolver(node)
+      return
+    }
 
     this.activeNode = node
     if (node.width > 15 || node.height > 15) {
@@ -1036,6 +1088,13 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       node,
       this.connMap,
     )
+    routingDiagnostics.emit?.({
+      kind: "node_start",
+      mode: "board_copper",
+      node,
+      fixedObstacleCount: fixedObstacles.length,
+      boardObstacleCount: boardObstacles.length,
+    })
     this.stats.b01NodeCount = Number(this.stats.b01NodeCount ?? 0) + 1
     this.activeB01Solver = new HighDensitySolverB01({
       ...defaultB01Params,

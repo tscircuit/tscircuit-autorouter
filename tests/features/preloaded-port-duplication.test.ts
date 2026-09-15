@@ -179,7 +179,7 @@ test("congestion duplicates preserve canonical preloaded assignments", () => {
   ).toBeTrue()
 
   solver.solve()
-  expect(solver.solved).toBeTrue()
+  expect(solver.solved, solver.error ?? "No completed route").toBeTrue()
   expect(solver.failed).toBeFalse()
   const output = solver.getOutput()
   expect(

@@ -14,7 +14,7 @@ test("Pipeline9 forwards differential-pair maximum uncoupled length", async () =
 
   solver.solve()
 
-  expect(solver.solved).toBe(true)
+  expect(solver.solved, solver.error ?? "No completed route").toBe(true)
   expect(solver.failed).toBe(false)
   const lengthMatchingStep = solver.pipelineDef.find(
     (step) => step.solverClass === LengthMatchingPostProcessingSolver,

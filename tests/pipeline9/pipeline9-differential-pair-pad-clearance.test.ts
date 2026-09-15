@@ -8,7 +8,7 @@ test("Pipeline9 preserves declared pad clearance when length matching", () => {
     srj as SimpleRouteJson,
   )
   solver.solve()
-  expect(solver.solved).toBe(true)
+  expect(solver.solved, solver.error ?? "No completed route").toBe(true)
   expect(solver.failed).toBe(false)
   const routes = solver._getOutputHdRoutes()
   expect(routes).toHaveLength(2)
