@@ -20,3 +20,10 @@ On `v0.0.905`, Pipeline9 throws while serializing same-port route 201 because
 the route has no segments from which to infer endpoint regions. The snapshot is
 rendered from the exact unrouted Circuit JSON so the stacked fix changes the
 same real PCB SVG from unrouted to routed.
+
+On current `main`, the closed-route serialization fix lets the exact solver
+advance to `No path found for source_trace_194`. The checked-in
+`t113-linux-exact-pipeline9-state.svg` renders the complete board and its 342
+preloaded fanout traces at that failure boundary. The stacked canonical-net fix
+updates this same file with the 42 routes Pipeline9 reaches after accepting the
+previously rejected same-net candidate.
