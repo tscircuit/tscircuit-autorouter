@@ -1,6 +1,6 @@
 import {
-  HighDensitySolverA03 as HighDensityA03Solver,
   HighDensitySolverA01,
+  HighDensitySolverA03 as HighDensityA03Solver,
 } from "@tscircuit/high-density-a01"
 import { HighDensitySolverA13 } from "@tscircuit/high-density-a13"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
@@ -22,6 +22,8 @@ import {
   HyperParameterSupervisorSolver,
   SupervisedSolver,
 } from "../HyperParameterSupervisorSolver"
+import { HighDensitySolverA01WithFailureCache } from "./HighDensitySolverA01WithFailureCache"
+import { HighDensitySolverA03WithFailureCache } from "./HighDensitySolverA03WithFailureCache"
 import { HighDensitySolverA13WithDrcValidation } from "./HighDensitySolverA13WithDrcValidation"
 import { repairDisconnectedSameRootPortPoints } from "./repairDisconnectedSameRootPortPoints"
 
@@ -504,7 +506,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       return solver as any
     }
     if (hyperParameters.HIGH_DENSITY_A01) {
-      const solver = new HighDensitySolverA01({
+      const solver = new HighDensitySolverA01WithFailureCache({
         nodeWithPortPoints: this.nodeWithPortPoints,
         cellSizeMm: 0.1,
         viaDiameter: this.constructorParams.viaDiameter ?? 0.3,
@@ -519,7 +521,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       return solver as any
     }
     if (hyperParameters.HIGH_DENSITY_A03) {
-      const solver = new HighDensityA03Solver({
+      const solver = new HighDensitySolverA03WithFailureCache({
         nodeWithPortPoints: this.nodeWithPortPoints,
         highResolutionCellSize: 0.1,
         highResolutionCellThickness: 8,
