@@ -16,12 +16,16 @@ type ValidatedA11Params = HighDensitySolverA11Props &
 
 /** Accept only complete, native-size A11 routes that clear fixed board copper. */
 export class HighDensitySolverA11WithDrcValidation extends HighDensitySolverA11 {
+  rejectionReason: string | null = null
   constructor(readonly validationParams: ValidatedA11Params) {
     super(validationParams)
   }
 
   override _step(): void {
     super._step()
+    if (this.failed && this.error?.startsWith("A11 solution failed geometry validation:")) {
+      this.rejectionReason = this.error
+    }
     if (!this.solved) return
     const routes = this.getOutput()
     const nativeError = getNativeRouteValidationError(
@@ -32,6 +36,7 @@ export class HighDensitySolverA11WithDrcValidation extends HighDensitySolverA11 
       this.solved = false
       this.failed = true
       this.error = `A11 candidate fails native validation: ${nativeError}`
+      this.rejectionReason = this.error
       return
     }
     const validation = validateHighDensityBoardCopper({
@@ -47,6 +52,7 @@ export class HighDensitySolverA11WithDrcValidation extends HighDensitySolverA11 
       this.solved = false
       this.failed = true
       this.error = `A11 candidate fails board copper validation: ${validation.error}`
+      this.rejectionReason = this.error
     }
   }
 }

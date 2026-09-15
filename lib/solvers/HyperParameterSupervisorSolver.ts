@@ -1,5 +1,6 @@
 import { GraphicsObject } from "graphics-debug"
 import { BaseSolver } from "./BaseSolver"
+import { SolverProfiler } from "./SolverProfiler"
 
 export type SupervisedSolver<T extends BaseSolver> = {
   hyperParameters: any
@@ -155,8 +156,21 @@ export class HyperParameterSupervisorSolver<
       return
     }
 
-    for (let i = 0; i < this.MIN_SUBSTEPS; i++) {
-      supervisedSolver.solver.step()
+    // Package solvers have their own BaseSolver. Time their batch here;
+    // local solvers already report their individual steps.
+    const profiler = supervisedSolver.solver instanceof BaseSolver
+      ? null
+      : SolverProfiler.active
+    const stepStartedAt = profiler ? performance.now() : 0
+    try {
+      for (let i = 0; i < this.MIN_SUBSTEPS; i++) {
+        supervisedSolver.solver.step()
+      }
+    } finally {
+      profiler?.recordStep(
+        supervisedSolver.solver,
+        performance.now() - stepStartedAt,
+      )
     }
     this.activeSubSolver = supervisedSolver.solver
 

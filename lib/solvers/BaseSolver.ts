@@ -1,5 +1,6 @@
 import type { GraphicsObject } from "graphics-debug"
 import { CachableSolver, CacheProvider } from "lib/cache/types"
+import { SolverProfiler } from "./SolverProfiler"
 
 export type PendingEffect = {
   name: string
@@ -34,12 +35,15 @@ export class BaseSolver {
     if (this.solved) return
     if (this.failed) return
     this.iterations++
+    const profiler = SolverProfiler.active
+    const stepStartedAt = profiler ? performance.now() : 0
     try {
       this._step()
     } catch (e) {
       this.error = `${this.getSolverName()} error: ${e}`
       console.error(this.error)
       this.failed = true
+      profiler?.recordStep(this, performance.now() - stepStartedAt)
       throw e
     }
     if (!this.solved && this.iterations > this.MAX_ITERATIONS) {
@@ -53,6 +57,7 @@ export class BaseSolver {
       // @ts-ignore
       this.progress = this.computeProgress() as number
     }
+    profiler?.recordStep(this, performance.now() - stepStartedAt)
   }
 
   _step() {}
