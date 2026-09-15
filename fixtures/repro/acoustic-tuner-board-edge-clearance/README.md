@@ -28,9 +28,10 @@ source and endpoint metadata were attached without changing route geometry.
 
 - `acoustic-tuner-board-edge-clearance.test.ts` runs the complete pipeline with
   caching disabled, checks the before/after clearance and official board-edge
-  diagnostics, and compares captured route points with fresh output. Coordinates
-  and trace dimensions match to six decimal places in millimeters to tolerate
-  platform rounding (less than 0.0000005 mm); other fields still match exactly.
+  diagnostics, and compares the captured affected via with the fresh output.
+  Via coordinates match to six decimal places in millimeters; copper and drill
+  diameters match exactly. Unrelated trace segmentation and calculated widths
+  are not required to match the capture across platforms.
 - `acoustic-tuner-rerouted-board.test.ts` checks the captured board's one
   copper-to-board-edge violation and its full-board PCB SVG snapshot. It uses
   `convertCircuitJsonToPcbSvg` with a dark background and default PCB colors.
