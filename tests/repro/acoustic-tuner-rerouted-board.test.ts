@@ -44,14 +44,10 @@ test("captured acoustic tuner reroute records one copper-to-board edge violation
 
   await expect(
     convertCircuitJsonToPcbSvg(circuit, {
-      backgroundColor: "white",
+      backgroundColor: "#0f172a",
       height: 1200,
       matchBoardAspectRatio: true,
       shouldDrawErrors: false,
-      colorOverrides: {
-        silkscreen: { top: "#334155", bottom: "#64748b" },
-        boardOutline: "#334155",
-      },
     }),
   ).toMatchSvgSnapshot(import.meta.path)
 })

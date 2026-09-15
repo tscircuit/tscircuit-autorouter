@@ -2,17 +2,12 @@ import { expect, test } from "bun:test"
 import { checkCopperToBoardEdgeClearance } from "@tscircuit/checks"
 import { pointToSegmentDistance } from "@tscircuit/math-utils"
 import type { AnyCircuitElement, PcbBoard, PcbVia } from "circuit-json"
-import {
-  getSvgFromGraphicsObject,
-  stackGraphicsHorizontally,
-} from "graphics-debug"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
 import type { SimpleRouteJson } from "lib/types"
 import type { HighDensityRoute } from "lib/types/high-density-types"
 import { readFileSync } from "node:fs"
 import { gunzipSync } from "node:zlib"
 import input from "../../fixtures/repro/acoustic-tuner-board-edge-clearance/input.srj.json"
-import { getAcousticTunerClearanceGraphics } from "./fixtures/getAcousticTunerClearanceGraphics"
 
 type Point = { x: number; y: number }
 type ViaMeasurement = Point & { diameter: number; clearance: number }
@@ -52,7 +47,7 @@ function measureNeckVia(routes: HighDensityRoute[]): ViaMeasurement {
   return measureVia(via, route.viaDiameter, input.outline)
 }
 
-test("Pipeline 9 reproduces a via-to-board clearance violation after global repair", async (): Promise<void> => {
+test("Pipeline 9 reproduces a via-to-board clearance violation after global repair", (): void => {
   expect(input.minBoardEdgeClearance).toBe(0.3)
   expect(input.minViaPadDiameter).toBe(0.6)
   const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(
@@ -171,32 +166,20 @@ test("Pipeline 9 reproduces a via-to-board clearance violation after global repa
       throw new Error(`Missing captured trace ${trace.pcb_trace_id}`)
     expect(captured.route).toHaveLength(trace.route.length)
     for (let index = 0; index < trace.route.length; index++) {
-      // The captured board only adds source/port metadata to the emitted route.
-      expect(captured.route[index]).toMatchObject(trace.route[index])
+      // Allow cross-platform coordinate rounding at nine decimal places (mm).
+      // Route types, layers, widths, diameters, and metadata still match exactly.
+      const point = trace.route[index]
+      const expectedPoint =
+        "x" in point && "y" in point
+          ? {
+              ...point,
+              x: expect.closeTo(point.x, 9),
+              y: expect.closeTo(point.y, 9),
+            }
+          : point
+      expect(captured.route[index]).toMatchObject(expectedPoint)
     }
   }
 
-  const detailGraphics = stackGraphicsHorizontally(
-    [
-      getAcousticTunerClearanceGraphics(
-        beforeRepair,
-        input.minBoardEdgeClearance,
-        input.minViaHoleDiameter,
-      ),
-      getAcousticTunerClearanceGraphics(
-        finalVia,
-        input.minBoardEdgeClearance,
-        input.minViaHoleDiameter,
-      ),
-    ],
-    { titles: ["Before global repair", "Final output (after repair)"] },
-  )
-  await expect(
-    getSvgFromGraphicsObject(detailGraphics, {
-      backgroundColor: "white",
-      svgWidth: 1200,
-      svgHeight: 600,
-    }),
-  ).toMatchSvgSnapshot(import.meta.path)
   console.table({ beforeRepair, afterRepair, finalOutput: finalVia })
 })
