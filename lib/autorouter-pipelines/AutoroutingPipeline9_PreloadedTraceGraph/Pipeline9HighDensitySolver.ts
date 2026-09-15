@@ -1038,6 +1038,10 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
 
     const nodeBounds = getNodeBounds(node, this.obstacleMargin)
     const routedCopperRadius = Math.max(this.traceWidth, this.viaDiameter) / 2
+    const boardObstacleBounds = getNodeBounds(
+      node,
+      this.obstacleMargin + routedCopperRadius,
+    )
     const fixedObstacles = this.getUpdatedFixedHdRoutes()
       .filter((route) =>
         routeOverlapsNode(route, node, nodeBounds, routedCopperRadius),
@@ -1046,7 +1050,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     this.stats.fixedObstacleUses =
       Number(this.stats.fixedObstacleUses ?? 0) + fixedObstacles.length
     const boardObstacles = (this.includeBoardObstacles ? this.obstacles : [])
-      .filter((obstacle) => obstacleOverlapsNode(obstacle, nodeBounds))
+      .filter((obstacle) => obstacleOverlapsNode(obstacle, boardObstacleBounds))
       .filter((obstacle) =>
         node.portPoints.some(
           (point) => !isObstacleConnectedToRoute(obstacle, point, this.connMap),

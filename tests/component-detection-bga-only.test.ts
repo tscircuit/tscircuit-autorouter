@@ -1,4 +1,5 @@
 import { expect, test } from "bun:test"
+import { pointToBoxDistance } from "@tscircuit/math-utils"
 import { ComponentDetectionSolver } from "lib/solvers/ComponentDetectionSolver/ComponentDetectionSolver"
 import { createComponentObstacleSrj } from "lib/solvers/ComponentTopologyGeneratorSolver/ComponentTopologyGeneratorSolver"
 import { AvailableSegmentPointSolver } from "lib/solvers/AvailableSegmentPointSolver/AvailableSegmentPointSolver"
@@ -423,9 +424,19 @@ test("topology planning creates BGA component mesh nodes for larger components",
   ).toBe(true)
   expect(largeViaOutput.componentMeshNodes).toHaveLength(1)
   expect(largeViaGapNodes.length).toBeGreaterThan(0)
-  expect(largeViaGapNodes.every((node) => node.availableZ.length === 1)).toBe(
-    true,
+  const largeViaPockets = largeViaGapNodes.filter(
+    (node) => node.availableZ.length > 1,
   )
+  expect(largeViaPockets.length).toBeGreaterThan(0)
+  for (const pocket of largeViaPockets) {
+    expect(pocket.width).toBeGreaterThanOrEqual(0.8 - 1e-9)
+    expect(pocket.height).toBeGreaterThanOrEqual(0.8 - 1e-9)
+    for (const pad of largeViaInputSrj.obstacles) {
+      expect(
+        pointToBoxDistance(pocket.center, pad) - 0.4,
+      ).toBeGreaterThanOrEqual(0.15 - 1e-9)
+    }
+  }
   expect(
     output.componentMeshNodes[0]!.every((node) =>
       node.capacityMeshNodeId.includes("U_3X4"),

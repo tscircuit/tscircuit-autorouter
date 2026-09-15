@@ -98,6 +98,19 @@ export function limitPortsToRoutingCapacity({
     const duplicates = family.filter(
       (port) => typeof port.d?.duplicatedFromPortId === "string",
     )
+    const horizontal = sharedEdge.orientation === "horizontal"
+    const edgeMin = horizontal ? sharedEdge.x1 : sharedEdge.y1
+    const edgeMax = horizontal ? sharedEdge.x2 : sharedEdge.y2
+    const hasCopperRestriction =
+      intervals.length !== 1 ||
+      intervals[0]!.min > edgeMin ||
+      intervals[0]!.max < edgeMax
+    if (
+      duplicates.length === 0 &&
+      !hasCopperRestriction &&
+      capacity >= family.length
+    )
+      continue
     // Existing preloaded copper stays fixed. Only its synthetic spare capacity
     // can be removed; ordinary boundaries must also constrain original ports.
     const retained = [...originals, ...duplicates].slice(
@@ -110,7 +123,6 @@ export function limitPortsToRoutingCapacity({
         retainedPortIds.delete(port.portId)
     }
     if (hasFixedCopper || retained.length === 0) continue
-    const horizontal = sharedEdge.orientation === "horizontal"
     const coordinate = horizontal ? "x" : "y"
     retained.sort((left, right) => {
       const a = left.d?.[coordinate]
@@ -119,7 +131,6 @@ export function limitPortsToRoutingCapacity({
         throw new Error(`Boundary "${key}" has a port without coordinates`)
       return a - b
     })
-    const edgeMin = horizontal ? sharedEdge.x1 : sharedEdge.y1
     const preferredSpacing = Math.max(
       sharedEdge.length / retained.length,
       minTraceCenterSpacing,
@@ -128,9 +139,14 @@ export function limitPortsToRoutingCapacity({
       (sharedEdge.length - preferredSpacing * (retained.length - 1)) / 2
     const positions = getSpacedPositionsInIntervals({
       intervals,
-      preferredPositions: retained.map(
-        (_, index) => edgeMin + firstOffset + preferredSpacing * index,
-      ),
+      preferredPositions: retained.map((port, index) => {
+        if (duplicates.length > 0)
+          return edgeMin + firstOffset + preferredSpacing * index
+        const position = port.d?.[coordinate]
+        if (typeof position !== "number")
+          throw new Error(`Boundary "${key}" has a port without coordinates`)
+        return position
+      }),
       spacing: minTraceCenterSpacing,
       boundaryLabel: key,
     })
