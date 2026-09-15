@@ -3,10 +3,7 @@ import { readFileSync } from "node:fs"
 import { gunzipSync } from "node:zlib"
 import type { CircuitJson } from "circuit-json"
 import { convertCircuitJsonToPcbSvg } from "circuit-to-svg"
-import {
-  getSvgFromGraphicsObject,
-  type GraphicsObject,
-} from "graphics-debug"
+import { getSvgFromGraphicsObject, type GraphicsObject } from "graphics-debug"
 import {
   UniformPortDistributionSolver,
   type UniformPortDistributionSolverInput,
@@ -97,21 +94,21 @@ test("does not redistribute a real T113 supervisor port onto preloaded copper", 
   )
   if (!foreignTrace) throw new Error("Missing preloaded source_trace_27")
   const verticalSegment = foreignTrace.route.findIndex(
-    (point, index, route) =>
-      index > 0 &&
-      point.route_type === "wire" &&
-      route[index - 1]?.route_type === "wire" &&
-      point.x === route[index - 1]?.x &&
-      Math.min(point.y, route[index - 1]!.y) <= redistributedPortPoint.y &&
-      Math.max(point.y, route[index - 1]!.y) >= redistributedPortPoint.y,
+    (point, index, route) => {
+      const previousPoint = route[index - 1]
+      return (
+        point.route_type === "wire" &&
+        previousPoint?.route_type === "wire" &&
+        point.x === previousPoint.x &&
+        Math.min(point.y, previousPoint.y) <= redistributedPortPoint.y &&
+        Math.max(point.y, previousPoint.y) >= redistributedPortPoint.y
+      )
+    },
   )
   expect(verticalSegment).toBeGreaterThan(0)
   const segmentStart = foreignTrace.route[verticalSegment - 1]!
   const segmentEnd = foreignTrace.route[verticalSegment]!
-  if (
-    segmentStart.route_type !== "wire" ||
-    segmentEnd.route_type !== "wire"
-  ) {
+  if (segmentStart.route_type !== "wire" || segmentEnd.route_type !== "wire") {
     throw new Error("Expected the crossing segment to be copper wire")
   }
 
@@ -119,9 +116,7 @@ test("does not redistribute a real T113 supervisor port onto preloaded copper", 
     input.minTraceWidth / 2 +
     segmentEnd.width / 2 +
     (srj.minTraceToPadEdgeClearance ?? 0)
-  const actualCenterDistance = Math.abs(
-    redistributedPortPoint.x - segmentEnd.x,
-  )
+  const actualCenterDistance = Math.abs(redistributedPortPoint.x - segmentEnd.x)
 
   expect(originalPortPoint.x).toBeCloseTo(-2.042498, 6)
   expect(redistributedPortPoint.x).toBeCloseTo(-1.789999, 6)
@@ -174,10 +169,10 @@ test("does not redistribute a real T113 supervisor port onto preloaded copper", 
   })
 
   await expect(
-    stackSvgsHorizontally(
-      [convertCircuitJsonToPcbSvg(circuitJson), issueSvg],
-      { gap: 12, normalizeSize: false },
-    ).replace(/[ \t]+$/gm, ""),
+    stackSvgsHorizontally([convertCircuitJsonToPcbSvg(circuitJson), issueSvg], {
+      gap: 12,
+      normalizeSize: false,
+    }).replace(/[ \t]+$/gm, ""),
   ).toMatchSvgSnapshot(import.meta.path, {
     svgName: "real-pcb-and-uniform-stage",
     tolerance: 0.02,
