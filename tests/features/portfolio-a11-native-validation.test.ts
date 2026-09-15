@@ -91,8 +91,11 @@ test("A11 shares the native portfolio and rejects incomplete or invalid copper",
     },
   })
   distinctPairsInSameGridCells.solve()
-  expect(distinctPairsInSameGridCells.solved).toBe(false)
-  expect(distinctPairsInSameGridCells.error).toContain("omits physical port pairs")
+  expect(distinctPairsInSameGridCells.solved).toBe(true)
+  const distinctRoutes = distinctPairsInSameGridCells.getOutput()
+  expect(distinctRoutes).toHaveLength(2)
+  expect(getNativeRouteValidationError(distinctRoutes, distinctPairsInSameGridCells.nodeWithPortPoints)).toBeNull()
+  expect(getNativeRouteValidationError(distinctRoutes.slice(0, 1), distinctPairsInSameGridCells.nodeWithPortPoints)).toContain("omits physical port pairs")
   expect(getNativeRouteValidationError([], node)).toContain("omits")
   expect(getNativeRouteValidationError([...routes, ...routes], node)).toContain("duplicate")
   const movedEndpoint = structuredClone(routes)
