@@ -12,6 +12,9 @@ mkdirSync(outputDirectory, { recursive: true })
 const loaded = await loadScenarioBySampleNumber("srj18", sampleNumber, 1)
 const startedAt = performance.now()
 routingDiagnostics.emit = (event: Record<string, unknown>): void => {
+  if (event.kind === "pathing_failure") {
+    console.log(JSON.stringify({ pathingFailureStats: event.stats }))
+  }
   appendFileSync(
     `${outputDirectory}/events.jsonl`,
     `${JSON.stringify({ ...event, elapsedMsSinceStart: performance.now() - startedAt }, (_key, entry) => (entry instanceof Map ? [...entry] : entry instanceof Set ? [...entry] : entry))}\n`,
