@@ -4,6 +4,7 @@ import {
   HighDensitySolverB01,
   type HighDensityObstacle,
   type HighDensityRectObstacle,
+  type HighDensityCircleObstacle,
   type HighDensityRouteObstacle,
   type NodeWithPortPoints as B01NodeWithPortPoints,
 } from "@tscircuit/high-density-b01"
@@ -221,7 +222,7 @@ const convertObstacleToB01Obstacle = ({
   node: NodeWithPortPoints
   connMap: ConnectivityMap
   layerCount: number
-}): HighDensityRectObstacle | undefined => {
+}): HighDensityRectObstacle | HighDensityCircleObstacle | undefined => {
   const availableZ = new Set(
     node.availableZ ?? node.portPoints.map((portPoint) => portPoint.z),
   )
@@ -234,6 +235,20 @@ const convertObstacleToB01Obstacle = ({
     obstacle.connectedTo[0] ??
     obstacle.obstacleId ??
     `pipeline9_obstacle_${obstacle.center.x}_${obstacle.center.y}`
+  if (obstacle.shape === "circle") {
+    if (obstacle.width !== obstacle.height) {
+      throw new Error("Circular board copper must have equal width and height")
+    }
+    return {
+      type: "circle",
+      connectionName,
+      rootConnectionName:
+        connMap.getNetConnectedToId(connectionName) ?? connectionName,
+      center: obstacle.center,
+      radius: obstacle.width / 2,
+      zLayers,
+    }
+  }
   return {
     type: "rect",
     connectionName,
@@ -1033,7 +1048,9 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
         }),
       )
       .filter(
-        (obstacle): obstacle is HighDensityRectObstacle =>
+        (
+          obstacle,
+        ): obstacle is HighDensityRectObstacle | HighDensityCircleObstacle =>
           obstacle !== undefined,
       )
     this.stats.boardObstacleUses =
