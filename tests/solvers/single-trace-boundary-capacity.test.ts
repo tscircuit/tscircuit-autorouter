@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test"
 import type { SerializedHyperGraph } from "@tscircuit/hypergraph"
 import type { CapacityMeshNode } from "lib/types"
-import { limitDuplicatePortsToRoutingCapacity } from "lib/solvers/PortPointPathingSolver/tinyhypergraph/limitDuplicatePortsToRoutingCapacity"
+import { limitPortsToRoutingCapacity } from "lib/solvers/PortPointPathingSolver/tinyhypergraph/limitPortsToRoutingCapacity"
 
 test("single-trace boundaries reject synthetic capacity while preserving original ports and wider choices", () => {
   const nodes: CapacityMeshNode[] = []
@@ -42,7 +42,7 @@ test("single-trace boundaries reject synthetic capacity while preserving origina
     })
   }
   const before = structuredClone(graph)
-  const constrained = limitDuplicatePortsToRoutingCapacity({
+  const constrained = limitPortsToRoutingCapacity({
     graph,
     nodes,
     routingGeometry: {

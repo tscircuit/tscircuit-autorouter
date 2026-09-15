@@ -1844,7 +1844,7 @@ jobs:
       - name: Run diagnostic benchmark
         env:
           SAMPLE: ${{ inputs.diagnostic_sample }}
-        run: timeout 600s bun scripts/benchmark/diagnose-routing.ts "$SAMPLE" routing-diagnostics
+        run: timeout 600s bun --cpu-prof --cpu-prof-dir routing-diagnostics --cpu-prof-name routing.cpuprofile scripts/benchmark/diagnose-routing.ts "$SAMPLE" routing-diagnostics
       - uses: actions/upload-artifact@v4
         if: always()
         with:

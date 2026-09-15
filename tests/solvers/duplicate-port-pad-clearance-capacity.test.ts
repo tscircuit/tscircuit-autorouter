@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test"
 import type { SerializedHyperGraph } from "@tscircuit/hypergraph"
 import type { CapacityMeshNode } from "lib/types"
-import { limitDuplicatePortsToRoutingCapacity } from "lib/solvers/PortPointPathingSolver/tinyhypergraph/limitDuplicatePortsToRoutingCapacity"
+import { limitPortsToRoutingCapacity } from "lib/solvers/PortPointPathingSolver/tinyhypergraph/limitPortsToRoutingCapacity"
 import { getSharedEdgeRoutingIntervals } from "lib/solvers/UniformPortDistributionSolver/getSharedEdgeRoutingIntervals"
 import { getSpacedPositionsInIntervals } from "lib/solvers/UniformPortDistributionSolver/getSpacedPositionsInIntervals"
 import type {
@@ -64,7 +64,7 @@ test("duplicate capacity and terminal placement share pad-clear intervals on eac
       pointIds: ports.map((port) => port.portId),
     })),
   }
-  const constrained = limitDuplicatePortsToRoutingCapacity({
+  const constrained = limitPortsToRoutingCapacity({
     graph,
     nodes,
     routingGeometry,

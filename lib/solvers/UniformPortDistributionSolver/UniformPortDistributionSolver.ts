@@ -54,7 +54,7 @@ export class UniformPortDistributionSolver extends BaseSolver {
   ownerPairsToProcess: OwnerPairKey[] = []
   currentOwnerPairBeingProcessed: OwnerPairKey | null = null
   redistributedNodes: NodeWithPortPoints[] = []
-  duplicatePortIds = new Set<string>()
+  constrainedPortIds = new Set<string>()
 
   constructor(private input: UniformPortDistributionSolverInput) {
     super()
@@ -66,8 +66,11 @@ export class UniformPortDistributionSolver extends BaseSolver {
     }
     for (const node of input.inputNodesWithPortPoints) {
       for (const point of node.portPoints) {
-        if (point.duplicatedFromPortId !== undefined)
-          this.duplicatePortIds.add(point.portPointId)
+        if (
+          point.duplicatedFromPortId !== undefined ||
+          point.boundaryTraceSpacing !== undefined
+        )
+          this.constrainedPortIds.add(point.portPointId)
       }
     }
 
@@ -120,7 +123,7 @@ export class UniformPortDistributionSolver extends BaseSolver {
           !ports.some(
             (point) =>
               point.portPointId !== undefined &&
-              this.duplicatePortIds.has(point.portPointId),
+              this.constrainedPortIds.has(point.portPointId),
           )
         )
           continue
@@ -160,7 +163,7 @@ export class UniformPortDistributionSolver extends BaseSolver {
     const routingGeometry = familyRaw.some(
       (point) =>
         point.portPointId !== undefined &&
-        this.duplicatePortIds.has(point.portPointId),
+        this.constrainedPortIds.has(point.portPointId),
     )
       ? this.input.routingGeometry
       : undefined

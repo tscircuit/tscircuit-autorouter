@@ -11,8 +11,8 @@ import type {
 type BoundaryLayerKey = string
 type SerializedPortId = SerializedHyperGraph["ports"][number]["portId"]
 
-/** Prevents synthetic capacity from exceeding the copper-clear boundary length. */
-export function limitDuplicatePortsToRoutingCapacity({
+/** Limits every movable boundary port to physically routable copper clearance. */
+export function limitPortsToRoutingCapacity({
   graph,
   nodes,
   routingGeometry,
@@ -37,91 +37,25 @@ export function limitDuplicatePortsToRoutingCapacity({
       },
     ]),
   )
-  const counts = new Map<BoundaryLayerKey, number>()
-  const capacities = new Map<BoundaryLayerKey, number>()
   const nodeById = new Map<CapacityMeshNodeId, CapacityMeshNode>(
     nodes.map((node) => [node.capacityMeshNodeId, node]),
   )
+  const families = new Map<BoundaryLayerKey, typeof graph.ports>()
   for (const port of graph.ports) {
-    if (typeof port.d?.duplicatedFromPortId === "string") continue
-    const owners = [port.region1Id, port.region2Id].sort()
-    const key: BoundaryLayerKey = `${owners.join("|")}:${port.d?.z}`
-    counts.set(key, (counts.get(key) ?? 0) + 1)
-  }
-  const ports = graph.ports.filter((port) => {
-    if (typeof port.d?.duplicatedFromPortId !== "string") return true
-    // Target regions already restrict every route to their owning net.
-    if (
-      nodeById.get(port.region1Id)?._containsTarget ||
-      nodeById.get(port.region2Id)?._containsTarget
-    )
-      return true
-    const sharedEdge = getSharedEdgeForNodePair({
-      nodeAId: port.region1Id,
-      nodeBId: port.region2Id,
-      nodeBounds,
-    })
-    if (!sharedEdge) return true
-    const z = port.d?.z
-    if (typeof z !== "number")
-      throw new Error(`Duplicate port "${port.portId}" has no layer`)
-    const key: BoundaryLayerKey = `${sharedEdge.ownerPairKey}:${z}`
-    let capacity = capacities.get(key)
-    if (capacity === undefined) {
-      const intervals = getSharedEdgeRoutingIntervals({
-        sharedEdge,
-        z,
-        routingGeometry,
-      })
-      capacity = 0
-      let nextPosition = Number.NEGATIVE_INFINITY
-      for (const interval of intervals) {
-        const firstPosition = Math.max(interval.min, nextPosition)
-        if (firstPosition > interval.max + 1e-6) continue
-        const intervalCount =
-          Math.floor(
-            (interval.max - firstPosition + 1e-6) / minTraceCenterSpacing,
-          ) + 1
-        capacity += intervalCount
-        nextPosition = firstPosition + intervalCount * minTraceCenterSpacing
-      }
-      capacities.set(key, capacity)
-    }
-    const count = counts.get(key)
-    if (count === undefined)
-      throw new Error(
-        `Duplicate port "${port.portId}" has no original boundary`,
-      )
-    if (count >= capacity) return false
-    counts.set(key, count + 1)
-    return true
-  })
-  const retainedPortIds = new Set(ports.map((port) => port.portId))
-  const families = new Map<BoundaryLayerKey, typeof ports>()
-  for (const port of ports) {
     const owners = [port.region1Id, port.region2Id].sort()
     const key: BoundaryLayerKey = `${owners.join("|")}:${port.d?.z}`
     const family = families.get(key) ?? []
     family.push(port)
     families.set(key, family)
   }
+  const retainedPortIds = new Set(graph.ports.map((port) => port.portId))
   const positionsByPortId = new Map<
     SerializedPortId,
     { x: number; y: number }
   >()
   for (const [key, family] of families) {
-    if (
-      !family.some(
-        (port) => typeof port.d?.duplicatedFromPortId === "string",
-      ) ||
-      family.some(
-        (port) =>
-          Array.isArray(port.d?._preloadedFixedNetIds) &&
-          port.d._preloadedFixedNetIds.length > 0,
-      )
-    )
-      continue
     const firstPort = family[0]!
+    // Target regions already restrict every route to their owning net.
     if (
       nodeById.get(firstPort.region1Id)?._containsTarget ||
       nodeById.get(firstPort.region2Id)?._containsTarget
@@ -136,9 +70,49 @@ export function limitDuplicatePortsToRoutingCapacity({
     const z = firstPort.d?.z
     if (typeof z !== "number")
       throw new Error(`Boundary "${key}" has no routing layer`)
+    const intervals = getSharedEdgeRoutingIntervals({
+      sharedEdge,
+      z,
+      routingGeometry,
+    })
+    let capacity = 0
+    let nextPosition = Number.NEGATIVE_INFINITY
+    for (const interval of intervals) {
+      const firstPosition = Math.max(interval.min, nextPosition)
+      if (firstPosition > interval.max + 1e-6) continue
+      const intervalCount =
+        Math.floor(
+          (interval.max - firstPosition + 1e-6) / minTraceCenterSpacing,
+        ) + 1
+      capacity += intervalCount
+      nextPosition = firstPosition + intervalCount * minTraceCenterSpacing
+    }
+    const hasFixedCopper = family.some(
+      (port) =>
+        Array.isArray(port.d?._preloadedFixedNetIds) &&
+        port.d._preloadedFixedNetIds.length > 0,
+    )
+    const originals = family.filter(
+      (port) => typeof port.d?.duplicatedFromPortId !== "string",
+    )
+    const duplicates = family.filter(
+      (port) => typeof port.d?.duplicatedFromPortId === "string",
+    )
+    // Existing preloaded copper stays fixed. Only its synthetic spare capacity
+    // can be removed; ordinary boundaries must also constrain original ports.
+    const retained = [...originals, ...duplicates].slice(
+      0,
+      hasFixedCopper ? Math.max(originals.length, capacity) : capacity,
+    )
+    const retainedFamilyIds = new Set(retained.map((port) => port.portId))
+    for (const port of family) {
+      if (!retainedFamilyIds.has(port.portId))
+        retainedPortIds.delete(port.portId)
+    }
+    if (hasFixedCopper || retained.length === 0) continue
     const horizontal = sharedEdge.orientation === "horizontal"
     const coordinate = horizontal ? "x" : "y"
-    family.sort((left, right) => {
+    retained.sort((left, right) => {
       const a = left.d?.[coordinate]
       const b = right.d?.[coordinate]
       if (typeof a !== "number" || typeof b !== "number")
@@ -147,18 +121,14 @@ export function limitDuplicatePortsToRoutingCapacity({
     })
     const edgeMin = horizontal ? sharedEdge.x1 : sharedEdge.y1
     const preferredSpacing = Math.max(
-      sharedEdge.length / family.length,
+      sharedEdge.length / retained.length,
       minTraceCenterSpacing,
     )
     const firstOffset =
-      (sharedEdge.length - preferredSpacing * (family.length - 1)) / 2
+      (sharedEdge.length - preferredSpacing * (retained.length - 1)) / 2
     const positions = getSpacedPositionsInIntervals({
-      intervals: getSharedEdgeRoutingIntervals({
-        sharedEdge,
-        z,
-        routingGeometry,
-      }),
-      preferredPositions: family.map(
+      intervals,
+      preferredPositions: retained.map(
         (_, index) => edgeMin + firstOffset + preferredSpacing * index,
       ),
       spacing: minTraceCenterSpacing,
@@ -166,7 +136,7 @@ export function limitDuplicatePortsToRoutingCapacity({
     })
     // The path search must see the same physical ordering and separation that
     // high-density routing will receive, rather than the provisional offsets.
-    for (const [index, port] of family.entries()) {
+    for (const [index, port] of retained.entries()) {
       positionsByPortId.set(port.portId, {
         x: horizontal ? positions[index]! : sharedEdge.x1,
         y: horizontal ? sharedEdge.y1 : positions[index]!,
@@ -175,19 +145,21 @@ export function limitDuplicatePortsToRoutingCapacity({
   }
   return {
     ...graph,
-    ports: ports.map((port) => {
-      const position = positionsByPortId.get(port.portId)
-      return position
-        ? {
-            ...port,
-            d: {
-              ...port.d,
-              ...position,
-              boundaryTraceSpacing: minTraceCenterSpacing,
-            },
-          }
-        : port
-    }),
+    ports: graph.ports
+      .filter((port) => retainedPortIds.has(port.portId))
+      .map((port) => {
+        const position = positionsByPortId.get(port.portId)
+        return position
+          ? {
+              ...port,
+              d: {
+                ...port.d,
+                ...position,
+                boundaryTraceSpacing: minTraceCenterSpacing,
+              },
+            }
+          : port
+      }),
     regions: graph.regions.map((region) => ({
       ...region,
       pointIds: region.pointIds.filter((portId) => retainedPortIds.has(portId)),
