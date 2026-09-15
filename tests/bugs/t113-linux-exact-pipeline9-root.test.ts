@@ -22,7 +22,7 @@ const readCompressedFixture = <T>(filename: string): T =>
     ).toString("utf8"),
   ) as T
 
-test("advances the exact T113-S3 PCB past its closed fanout section", async () => {
+test("advances the exact T113-S3 PCB past canonical net ownership", async () => {
   const circuitJson = readCompressedFixture<CircuitJson>(
     "t113-linux-exact-unrouted.circuit.json.gz",
   )
@@ -49,13 +49,30 @@ test("advances the exact T113-S3 PCB past its closed fanout section", async () =
     structuredClone(srj),
     { cacheProvider: null },
   )
-  solver.solve()
+  const canonicalNetId = solver.connMap.getNetConnectedToId("source_trace_44")
 
-  expect(solver.portPointPathingSolver?.solved).toBe(true)
-  expect(solver.error).not.toContain(
-    "Route 201 could not determine endpoint regions",
+  expect(canonicalNetId).toBe("connectivity_net57")
+  expect(
+    solver.connMap.areIdsConnected(canonicalNetId!, "source_trace_44"),
+  ).toBe(true)
+
+  while (
+    solver.getCurrentPhase() !== "traceSimplificationSolver" &&
+    !solver.solved &&
+    !solver.failed
+  ) {
+    solver.step()
+  }
+
+  expect(solver.failed).toBe(false)
+  expect(solver.highDensityRouteSolver?.solved).toBe(true)
+  expect(solver.getCurrentPhase()).toBe("traceSimplificationSolver")
+
+  const newlyRoutedTraces = solver.getNewTracesBeforePowerExpansion()
+  expect(newlyRoutedTraces).toHaveLength(42)
+  expect(() => solver.step()).toThrow(
+    'Pipeline9 could not reconnect mutated preloaded segment "breakout:pcb_breakout_point_68_fixed_168_1"',
   )
-  expect(solver.error).toContain("No path found for source_trace_194")
 
   const preloadedFanoutCopper = convertToCircuitJson(
     srj,
@@ -70,6 +87,12 @@ test("advances the exact T113-S3 PCB past its closed fanout section", async () =
     preloadedFanoutCopper.filter((element) => element.type === "pcb_via")
       .length,
   ).toBeGreaterThan(0)
+  const newlyRoutedCopper = convertToCircuitJson(srj, newlyRoutedTraces).filter(
+    (element) => element.type === "pcb_trace" || element.type === "pcb_via",
+  )
+  expect(
+    newlyRoutedCopper.filter((element) => element.type === "pcb_trace"),
+  ).toHaveLength(42)
   await expect(convertCircuitJsonToPcbSvg(circuitJson)).toMatchSvgSnapshot(
     import.meta.path,
     { svgName: "pcb", tolerance: 0.02 },
@@ -77,8 +100,12 @@ test("advances the exact T113-S3 PCB past its closed fanout section", async () =
   await expect(
     stackSvgsHorizontally(
       [
-        convertCircuitJsonToPcbSvg(circuitJson),
         convertCircuitJsonToPcbSvg([...circuitJson, ...preloadedFanoutCopper]),
+        convertCircuitJsonToPcbSvg([
+          ...circuitJson,
+          ...preloadedFanoutCopper,
+          ...newlyRoutedCopper,
+        ]),
       ],
       { gap: 12, normalizeSize: false },
     ),
@@ -86,4 +113,4 @@ test("advances the exact T113-S3 PCB past its closed fanout section", async () =
     svgName: "unrouted-preloaded-fanout",
     tolerance: 0.02,
   })
-})
+}, 120_000)
