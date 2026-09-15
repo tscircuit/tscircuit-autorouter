@@ -1138,6 +1138,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
         ...tinyPipelineInput,
         solveGraphOptions: {
           ...tinyPipelineInput.solveGraphOptions,
+          TRACE_DENSITY_COST_FACTOR: 1,
         },
       }
     }
