@@ -4,7 +4,7 @@ Use the existing solver profiler with an explicit pipeline. For example:
 
 ```sh
 bun scripts/profile-solvers.ts --pipeline 9 --dataset srj18 --effort 1 \
-  --concurrency 4 --sample-timeout 360s \
+  --sample-timeout 360s \
   --solver-name HighDensitySolverA11 \
   --solver-name GrowShrinkHighDensityIntraNodeSolver
 ```

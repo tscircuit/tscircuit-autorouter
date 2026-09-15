@@ -176,33 +176,38 @@ export const selectIslandEndpoints = (params: {
   return { start, end }
 }
 
-/**
- * Pulls an island endpoint onto an actual terminal only when the endpoint is
- * already close enough to be considered the same stitch target.
- */
-export const snapIslandEndpointToNearestTerminal = (params: {
-  islandEndpoint: Point3
+/** Assign terminal identities jointly: one terminal cannot label both island ends. */
+export const snapIslandEndpointsToTerminals = (params: {
+  start: Point3
+  end: Point3
   terminals: Point3[]
-}) => {
-  const sortedTerminals = [...params.terminals].sort(comparePoints)
-  let closestTerminal = sortedTerminals[0]
-  let closestDistance = distance(params.islandEndpoint, closestTerminal)
-
-  for (const terminal of sortedTerminals.slice(1)) {
-    const terminalDistance = distance(params.islandEndpoint, terminal)
-    if (
-      terminalDistance < closestDistance - DISTANCE_TIE_TOLERANCE ||
-      (Math.abs(terminalDistance - closestDistance) <= DISTANCE_TIE_TOLERANCE &&
-        comparePoints(terminal, closestTerminal) < 0)
-    ) {
-      closestTerminal = terminal
-      closestDistance = terminalDistance
+}): { start: Point3; end: Point3 } => {
+  const terminals = [...params.terminals].sort(comparePoints)
+  const candidates: Array<Point3 | undefined> = [...terminals, undefined]
+  let best = { start: params.start, end: params.end }
+  let bestCount = -1
+  let bestDistance = Infinity
+  for (const startTerminal of candidates) {
+    const startDistance = startTerminal ? distance(params.start, startTerminal) : 0
+    if (startDistance > MAX_TERMINAL_STITCH_GAP_DISTANCE_3) continue
+    for (const endTerminal of candidates) {
+      if (startTerminal && startTerminal === endTerminal) continue
+      const endDistance = endTerminal ? distance(params.end, endTerminal) : 0
+      if (endDistance > MAX_TERMINAL_STITCH_GAP_DISTANCE_3) continue
+      const count = Number(Boolean(startTerminal)) + Number(Boolean(endTerminal))
+      const totalDistance = startDistance + endDistance
+      if (count > bestCount || (count === bestCount &&
+        totalDistance < bestDistance - DISTANCE_TIE_TOLERANCE)) {
+        bestCount = count
+        bestDistance = totalDistance
+        best = {
+          start: startTerminal === undefined ? params.start : startTerminal,
+          end: endTerminal === undefined ? params.end : endTerminal,
+        }
+      }
     }
   }
-
-  return closestDistance <= MAX_TERMINAL_STITCH_GAP_DISTANCE_3
-    ? closestTerminal
-    : params.islandEndpoint
+  return best
 }
 
 /**
