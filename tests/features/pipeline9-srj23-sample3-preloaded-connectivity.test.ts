@@ -17,7 +17,7 @@ test("Pipeline9 uses serialized connectivity for preloaded SRJ23 sample 3 traces
 
   solver.solve()
 
-  expect(solver.solved).toBeTrue()
+  expect(solver.solved, solver.error ?? "No completed route").toBeTrue()
   expect(solver.failed).toBeFalse()
   const routedConnectionNames = new Set(
     solver.netToPointPairsSolver?.newConnections.map(
