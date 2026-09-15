@@ -40,6 +40,8 @@ test("profiling retains A11 work, progress, selection and rejected copper", () =
     expect(unfinished?.outcome).toBe("solved")
     expect(unfinished?.selected).toBe(true)
     expect(unfinished?.solvedSegmentCount).toBe(1)
+    expect(unfinished?.pendingSegmentCount).toBe(0)
+    expect(unfinished?.progress).toBe(1)
     expect(profiler.records.filter((record) => record.name === "HighDensitySolverA11")).toHaveLength(1)
 
     const blocked = new A11Portfolio({

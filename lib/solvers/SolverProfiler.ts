@@ -10,6 +10,8 @@ type ProfiledSolver = {
   error: string | null
   nodeWithPortPoints?: NodeWithPortPoints
   solvedConnectionsMap?: ReadonlyMap<unknown, readonly unknown[]>
+  unsolvedConnections?: readonly unknown[]
+  activeConnection?: unknown
   growthAttempts?: number
   rejectionReason?: string | null
   winningSolver?: ProfiledSolver
@@ -24,6 +26,7 @@ export type SolverProfileRecord = {
   maxIterations: number
   progress: number
   solvedSegmentCount?: number
+  pendingSegmentCount?: number
   nodeId?: string
   nodeWithPortPoints?: NodeWithPortPoints
   growthAttempts?: number
@@ -85,6 +88,14 @@ export class SolverProfiler {
       record.solvedSegmentCount = 0
       for (const routes of solver.solvedConnectionsMap.values()) {
         record.solvedSegmentCount += routes.length
+      }
+      if (record.name === "HighDensitySolverA11" && solver.unsolvedConnections) {
+        record.pendingSegmentCount = solver.unsolvedConnections.length +
+          (solver.activeConnection ? 1 : 0)
+        const segmentCount = record.solvedSegmentCount + record.pendingSegmentCount
+        record.progress = segmentCount === 0
+          ? Number(record.success)
+          : record.solvedSegmentCount / segmentCount
       }
     }
   }
