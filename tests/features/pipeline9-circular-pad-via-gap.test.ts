@@ -1,7 +1,8 @@
 import { expect, test } from "bun:test"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import { Pipeline9HighDensitySolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9HighDensitySolver"
-import type { NodeWithPortPoints, Obstacle } from "lib/types"
+import type { Obstacle } from "lib/types"
+import type { NodeWithPortPoints } from "lib/types/high-density-types"
 
 test("Pipeline9 preserves circular copper when routing a narrow via gap", () => {
   const obstacles: Obstacle[] = [-0.32, 0.32].flatMap((x) =>

@@ -1,4 +1,7 @@
-import { routingDiagnostics } from "../../solvers/routingDiagnostics"
+import {
+  routingDiagnostics,
+  describeCandidate,
+} from "../../solvers/routingDiagnostics"
 import {
   defaultB01Params,
   HighDensitySolverB01,
@@ -998,6 +1001,16 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
 
     if (this.activeB01Solver) {
       this.activeB01Solver.step()
+      if (this.activeB01Solver.failed || this.activeB01Solver.solved) {
+        routingDiagnostics.emit?.({
+          kind: "node_solver_end",
+          nodeId: this.activeNode?.capacityMeshNodeId,
+          ...describeCandidate(this.activeB01Solver),
+          ...(this.activeB01Solver.failed
+            ? { input: this.activeB01Solver.getConstructorParams()[0] }
+            : {}),
+        })
+      }
       if (this.activeB01Solver.failed) {
         this.failedSolvers.push(this.activeB01Solver)
         this.activeFallbackReason = `B01 failed: ${this.activeB01Solver.error ?? "unknown error"}`
