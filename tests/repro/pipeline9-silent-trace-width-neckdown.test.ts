@@ -10,9 +10,10 @@ test("Pipeline9 narrows a 0.4mm trace instead of taking a legal detour", async (
   // minimum, so Pipeline9 is currently free to shrink to the board minimum.
   // A 0.4mm trace plus 0.13mm clearance on each side needs a 0.66mm gap,
   // greater than the 0.50mm gap between the two unrelated pads here. There
-  // is room around either obstacle for a legal 0.4mm detour.
+  // is ample room around either obstacle for a legal 0.4mm detour: the
+  // board extends to y=+/-10mm while the obstacles end at y=+/-2.6mm.
   const input: SimpleRouteJson = {
-    bounds: { minX: -13.4, maxX: 13.4, minY: -4, maxY: 4 },
+    bounds: { minX: -15, maxX: 15, minY: -10, maxY: 10 },
     layerCount: 1,
     minTraceWidth: 0.1,
     minTraceToPadEdgeClearance: 0.13,
@@ -98,6 +99,22 @@ test("Pipeline9 narrows a 0.4mm trace instead of taking a legal detour", async (
       (point) => point.width === 0.4 && Math.abs(point.y) > 2.9,
     ),
   ).toBe(true)
+  expect(controlWires.every((point) => Math.abs(point.y) < 4.5)).toBe(true)
+
+  const boardOutline = {
+    center: { x: 0, y: 0 },
+    width: 30,
+    height: 20,
+    fill: "none",
+    stroke: "gray",
+  }
+  const bugGraphics = convertSrjToGraphicsObject({ ...input, traces })
+  const controlGraphics = convertSrjToGraphicsObject({
+    ...controlInput,
+    traces: controlTraces,
+  })
+  bugGraphics.rects.push(boardOutline)
+  controlGraphics.rects.push(boardOutline)
 
   // Both panels are produced from real solver output, not hand-drawn routes.
   await expect(
@@ -106,15 +123,12 @@ test("Pipeline9 narrows a 0.4mm trace instead of taking a legal detour", async (
         {
           name: "BUG: board min 0.10mm, center route 0.2375mm",
           pipeline: "end",
-          graphics: convertSrjToGraphicsObject({ ...input, traces }),
+          graphics: bugGraphics,
         },
         {
           name: "CONTROL: board min 0.40mm, legal detour",
           pipeline: "end",
-          graphics: convertSrjToGraphicsObject({
-            ...controlInput,
-            traces: controlTraces,
-          }),
+          graphics: controlGraphics,
         },
       ],
       columns: 1,
