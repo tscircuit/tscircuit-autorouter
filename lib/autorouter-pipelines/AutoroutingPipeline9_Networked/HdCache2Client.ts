@@ -1,3 +1,4 @@
+import { canPipeline9RegionalFallbackAddLayers } from "../AutoroutingPipeline9_PreloadedTraceGraph/canPipeline9RegionalFallbackAddLayers"
 import { areNodePortPointPairsConnectedByRoutes } from "../../solvers/HyperHighDensitySolver/repairDisconnectedSameRootPortPoints"
 import type {
   HighDensityIntraNodeRoute,
@@ -653,7 +654,8 @@ export class HdCache2Client {
     if (
       response.solutionStage === "ordinary" &&
       response.status === "failed" &&
-      input.enableRegionalFallback
+      input.enableRegionalFallback &&
+      canPipeline9RegionalFallbackAddLayers(input)
     ) {
       throw new HdCache2RequestError(
         "invalid_response",

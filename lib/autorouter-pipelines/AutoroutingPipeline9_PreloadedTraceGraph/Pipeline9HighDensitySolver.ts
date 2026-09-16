@@ -1,4 +1,3 @@
-import { HighDensitySolverFailureCache } from "@tscircuit/high-density-a01"
 import {
   defaultB01Params,
   HighDensitySolverB01,
@@ -20,6 +19,7 @@ import type { Obstacle } from "lib/types/srj-types"
 import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
 import { BaseSolver } from "../../solvers/BaseSolver"
 import { HighDensitySolver } from "../../solvers/HighDensitySolver/HighDensitySolver"
+import { canPipeline9RegionalFallbackAddLayers } from "./canPipeline9RegionalFallbackAddLayers"
 import type { PreloadedHighDensityRoute } from "./convertPreloadedTraceToHdRoutes"
 import {
   arePipeline9RoutesOnSameNet,
@@ -339,45 +339,39 @@ export type Pipeline9RegularNodeSolverParams = {
  * helper calls the same factory with its projected JSON input so the local and
  * remote algorithm configuration cannot drift.
  */
-export const createPipeline9RegularNodeSolver = (
-  {
-    nodeWithPortPoints,
-    connMap,
+export const createPipeline9RegularNodeSolver = ({
+  nodeWithPortPoints,
+  connMap,
+  colorMap,
+  viaDiameter,
+  traceWidth,
+  obstacleMargin,
+  effort,
+  nodePfById,
+  obstacles,
+  boardGeometry,
+  layerCount,
+}: Pipeline9RegularNodeSolverParams): HighDensitySolver =>
+  new HighDensitySolver({
+    nodePortPoints: [
+      normalizePipeline9NodeRootConnectionNames(nodeWithPortPoints, connMap),
+    ],
     colorMap,
+    connMap,
     viaDiameter,
     traceWidth,
     obstacleMargin,
     effort,
     nodePfById,
     obstacles,
-    boardGeometry,
     layerCount,
-  }: Pipeline9RegularNodeSolverParams,
-  highDensitySolverFailureCache?: HighDensitySolverFailureCache,
-): HighDensitySolver =>
-  new HighDensitySolver(
-    {
-      nodePortPoints: [
-        normalizePipeline9NodeRootConnectionNames(nodeWithPortPoints, connMap),
-      ],
-      colorMap,
-      connMap,
-      viaDiameter,
-      traceWidth,
-      obstacleMargin,
-      effort,
-      nodePfById,
-      obstacles,
-      layerCount,
-      useGrowShrinkHighDensityIntraNodeSolver: true,
-      enableNegotiatedSearch: true,
-      boardGeometry,
-      preserveTerminalPcbPortIds: false,
-      growShrinkFallbackToInvalidGeometryOnFailure: false,
-      captureSearchDebug: false,
-    },
-    highDensitySolverFailureCache,
-  )
+    useGrowShrinkHighDensityIntraNodeSolver: true,
+    enableNegotiatedSearch: true,
+    boardGeometry,
+    preserveTerminalPcbPortIds: false,
+    growShrinkFallbackToInvalidGeometryOnFailure: false,
+    captureSearchDebug: false,
+  })
 
 /**
  * Uses Pipeline7's detailed solver for ordinary nodes and B01 where local
@@ -385,7 +379,6 @@ export const createPipeline9RegularNodeSolver = (
  * the regional adapter reroutes and splices only the intersecting preload.
  */
 export class Pipeline9HighDensitySolver extends BaseSolver {
-  readonly highDensitySolverFailureCache = new HighDensitySolverFailureCache()
   readonly fixedHdRoutes: PreloadedHighDensityRoute[]
   readonly connMap: ConnectivityMap
   readonly colorMap: Record<string, string>
@@ -495,22 +488,19 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
 
   protected startRegularSolver(node: NodeWithPortPoints): void {
     this.activeNode = node
-    this.activeRegularSolver = createPipeline9RegularNodeSolver(
-      {
-        nodeWithPortPoints: node,
-        colorMap: this.colorMap,
-        connMap: this.connMap,
-        viaDiameter: this.viaDiameter,
-        traceWidth: this.traceWidth,
-        obstacleMargin: this.obstacleMargin,
-        effort: this.effort,
-        nodePfById: this.nodePfById,
-        obstacles: this.obstacles,
-        boardGeometry: this.boardGeometry,
-        layerCount: this.layerCount,
-      },
-      this.highDensitySolverFailureCache,
-    )
+    this.activeRegularSolver = createPipeline9RegularNodeSolver({
+      nodeWithPortPoints: node,
+      colorMap: this.colorMap,
+      connMap: this.connMap,
+      viaDiameter: this.viaDiameter,
+      traceWidth: this.traceWidth,
+      obstacleMargin: this.obstacleMargin,
+      effort: this.effort,
+      nodePfById: this.nodePfById,
+      obstacles: this.obstacles,
+      boardGeometry: this.boardGeometry,
+      layerCount: this.layerCount,
+    })
     this.stats.regularNodeCount = Number(this.stats.regularNodeCount ?? 0) + 1
   }
 
@@ -570,24 +560,21 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       fixedObstacleRoutes: this.activeFallbackFixedObstacleRoutes,
       layerCount: this.layerCount,
     })
-    this.activeFallbackSolver = new Pipeline9RegionalFallbackSolver(
-      {
-        nodeWithPortPoints: fallbackProblem.nodeWithPortPoints,
-        colorMap: this.colorMap,
-        connMap: this.connMap,
-        viaDiameter: this.viaDiameter,
-        traceWidth: this.traceWidth,
-        obstacleMargin: this.obstacleMargin,
-        effort: this.effort,
-        nodePfById: this.nodePfById,
-        obstacles: [...this.obstacles, ...fixedRouteObstacles],
-        boardObstacles: this.obstacles,
-        movablePreloadedConnectionNames: movableFixedRouteConnectionNames,
-        viaToPadClearance: this.viaToPadClearance,
-        layerCount: this.layerCount,
-      },
-      this.highDensitySolverFailureCache,
-    )
+    this.activeFallbackSolver = new Pipeline9RegionalFallbackSolver({
+      nodeWithPortPoints: fallbackProblem.nodeWithPortPoints,
+      colorMap: this.colorMap,
+      connMap: this.connMap,
+      viaDiameter: this.viaDiameter,
+      traceWidth: this.traceWidth,
+      obstacleMargin: this.obstacleMargin,
+      effort: this.effort,
+      nodePfById: this.nodePfById,
+      obstacles: [...this.obstacles, ...fixedRouteObstacles],
+      boardObstacles: this.obstacles,
+      movablePreloadedConnectionNames: movableFixedRouteConnectionNames,
+      viaToPadClearance: this.viaToPadClearance,
+      layerCount: this.layerCount,
+    })
     if (promotedFixedRouteConnectionNames.size === 0) {
       this.stats.fallbackNodeCount =
         Number(this.stats.fallbackNodeCount ?? 0) + 1
@@ -911,9 +898,20 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
   }
 
   protected finishRegularSolverFailure(error: string): void {
+    if (!this.activeNode) {
+      throw new Error(
+        "Pipeline9 cannot finish regular routing without an active node",
+      )
+    }
     this.activeFallbackReason = `regular high-density routing failed: ${error}`
     this.activeRegularSolver = null
-    if (!this.enableRegionalFallback) {
+    if (
+      !this.enableRegionalFallback ||
+      !canPipeline9RegionalFallbackAddLayers({
+        nodeWithPortPoints: this.activeNode,
+        layerCount: this.layerCount,
+      })
+    ) {
       this.error = `Pipeline9 ${this.activeFallbackReason}`
       this.failed = true
       this.activeNode = null

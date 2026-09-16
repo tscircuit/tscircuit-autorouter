@@ -1,4 +1,3 @@
-import { HighDensitySolverFailureCache } from "@tscircuit/high-density-a01"
 import type { GraphicsObject } from "graphics-debug"
 import type {
   HighDensityIntraNodeRoute,
@@ -115,10 +114,7 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
   growthAttempts = 0
   maxGrowthAttempts: number
 
-  constructor(
-    params: GrowShrinkHighDensityIntraNodeSolverParams,
-    readonly highDensitySolverFailureCache = new HighDensitySolverFailureCache(),
-  ) {
+  constructor(params: GrowShrinkHighDensityIntraNodeSolverParams) {
     super()
     this.constructorParams = params
     this.nodeWithPortPoints = params.nodeWithPortPoints
@@ -156,19 +152,16 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
   private createActiveSubSolver() {
     const { growShrinkSolutionValidator: _, ...portfolioParams } =
       this.constructorParams
-    this.activeSubSolver = new PortfolioSingleIntraNodeSolver(
-      {
-        ...portfolioParams,
-        enableNegotiatedSearch:
-          this.scaleFactor === 1 &&
-          (portfolioParams.enableNegotiatedSearch ?? true),
-        nodeWithPortPoints: scaleNodeWithPortPoints(
-          this.nodeWithPortPoints,
-          this.scaleFactor,
-        ),
-      },
-      this.highDensitySolverFailureCache,
-    )
+    this.activeSubSolver = new PortfolioSingleIntraNodeSolver({
+      ...portfolioParams,
+      enableNegotiatedSearch:
+        this.scaleFactor === 1 &&
+        (portfolioParams.enableNegotiatedSearch ?? true),
+      nodeWithPortPoints: scaleNodeWithPortPoints(
+        this.nodeWithPortPoints,
+        this.scaleFactor,
+      ),
+    })
     if (this.constructorParams.maxInnerIterationsPerGrowthAttempt) {
       this.activeSubSolver.MAX_ITERATIONS =
         this.constructorParams.maxInnerIterationsPerGrowthAttempt
