@@ -23,10 +23,7 @@ const foreignTraceConnectionName = "source_trace_52"
 const foreignPcbTraceId =
   "source_trace_52__source_trace_54__source_trace_56__breakout:pcb_breakout_point_21_mst3_0"
 
-const readCompressedFixture = <T>(
-  directory: string,
-  filename: string,
-): T =>
+const readCompressedFixture = <T>(directory: string, filename: string): T =>
   JSON.parse(
     gunzipSync(
       Uint8Array.from(
@@ -54,7 +51,8 @@ const pointToSegmentDistance = (
   const dx = end.x - start.x
   const dy = end.y - start.y
   const lengthSquared = dx * dx + dy * dy
-  if (lengthSquared === 0) return Math.hypot(point.x - start.x, point.y - start.y)
+  if (lengthSquared === 0)
+    return Math.hypot(point.x - start.x, point.y - start.y)
   const projection =
     ((point.x - start.x) * dx + (point.y - start.y) * dy) / lengthSquared
   const clampedProjection = Math.max(0, Math.min(1, projection))
@@ -113,10 +111,12 @@ test("does not redistribute a T113 port onto preloaded copper", async () => {
   )
   if (!foreignTrace) throw new Error(`Missing ${foreignTraceConnectionName}`)
 
-  let closestSegment: [
-    Extract<(typeof foreignTrace.route)[number], { route_type: "wire" }>,
-    Extract<(typeof foreignTrace.route)[number], { route_type: "wire" }>,
-  ] | null = null
+  let closestSegment:
+    | [
+        Extract<(typeof foreignTrace.route)[number], { route_type: "wire" }>,
+        Extract<(typeof foreignTrace.route)[number], { route_type: "wire" }>,
+      ]
+    | null = null
   let redistributedDistance = Number.POSITIVE_INFINITY
   for (let index = 1; index < foreignTrace.route.length; index++) {
     const start = foreignTrace.route[index - 1]
@@ -129,11 +129,7 @@ test("does not redistribute a T113 port onto preloaded copper", async () => {
     ) {
       continue
     }
-    const distance = pointToSegmentDistance(
-      redistributedPortPoint,
-      start,
-      end,
-    )
+    const distance = pointToSegmentDistance(redistributedPortPoint, start, end)
     if (distance < redistributedDistance) {
       closestSegment = [start, end]
       redistributedDistance = distance
@@ -154,9 +150,7 @@ test("does not redistribute a T113 port onto preloaded copper", async () => {
   expect(originalPortPoint.y).toBeCloseTo(-8.547402, 6)
   expect(redistributedPortPoint.y).toBe(originalPortPoint.y)
   expect(originalDistance).toBeGreaterThanOrEqual(requiredCenterDistance)
-  expect(redistributedDistance).toBeGreaterThanOrEqual(
-    requiredCenterDistance,
-  )
+  expect(redistributedDistance).toBeGreaterThanOrEqual(requiredCenterDistance)
 
   const exactSegment: SimplifiedPcbTrace = {
     ...foreignTrace,
@@ -181,40 +175,37 @@ test("does not redistribute a T113 port onto preloaded copper", async () => {
     ...line,
     strokeColor: "#222222",
   }))
-  const focusGraphics = mergeGraphics(
-    segmentGraphics,
-    {
-      circles: [
-        {
-          center: originalPortPoint,
-          radius: input.minTraceWidth / 2,
-          fill: "#3388ff",
-          label: `original ${targetPortPointId}`,
-        },
-        {
-          center: redistributedPortPoint,
-          radius: input.minTraceWidth / 2,
-          fill: "#ff3344",
-          label: `redistributed ${targetPortPointId}`,
-        },
-        {
-          center: redistributedPortPoint,
-          radius: requiredCenterDistance,
-          fill: "#ff334418",
-          stroke: "#ff3344",
-          label: "required clearance",
-        },
-      ],
-      rects: [
-        {
-          center: redistributedPortPoint,
-          width: 1.2,
-          height: 1.2,
-          fill: "#00000000",
-        },
-      ],
-    },
-  )
+  const focusGraphics = mergeGraphics(segmentGraphics, {
+    circles: [
+      {
+        center: originalPortPoint,
+        radius: input.minTraceWidth / 2,
+        fill: "#3388ff",
+        label: `original ${targetPortPointId}`,
+      },
+      {
+        center: redistributedPortPoint,
+        radius: input.minTraceWidth / 2,
+        fill: "#ff3344",
+        label: `redistributed ${targetPortPointId}`,
+      },
+      {
+        center: redistributedPortPoint,
+        radius: requiredCenterDistance,
+        fill: "#ff334418",
+        stroke: "#ff3344",
+        label: "required clearance",
+      },
+    ],
+    rects: [
+      {
+        center: redistributedPortPoint,
+        width: 1.2,
+        height: 1.2,
+        fill: "#00000000",
+      },
+    ],
+  })
   const focusSvg = getSvgFromGraphicsObject(focusGraphics, {
     backgroundColor: "white",
     includeTextLabels: ["lines"],

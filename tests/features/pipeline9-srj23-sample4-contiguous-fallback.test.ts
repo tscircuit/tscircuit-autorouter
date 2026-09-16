@@ -3,7 +3,7 @@ import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-p
 import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import { loadScenarioBySampleNumber } from "../../scripts/benchmark/scenarios"
 
-test("Pipeline9 reroutes contiguous preloaded sections in corrected SRJ23 sample 4", async () => {
+test("Pipeline9 keeps corrected SRJ23 sample 4 clean without regional fallback", async () => {
   const { scenario } = await loadScenarioBySampleNumber("srj23", 4)
   const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(
     structuredClone(scenario),
@@ -14,10 +14,8 @@ test("Pipeline9 reroutes contiguous preloaded sections in corrected SRJ23 sample
 
   expect(solver.solved).toBeTrue()
   expect(solver.failed).toBeFalse()
-  expect(
-    Number(solver.highDensityRouteSolver?.stats.fallbackNodeCount),
-  ).toBeGreaterThan(0)
-  expect(solver.getMutatedPreloadedTraces().length).toBeGreaterThan(0)
+  expect(Number(solver.highDensityRouteSolver?.stats.fallbackNodeCount)).toBe(0)
+  expect(solver.getMutatedPreloadedTraces()).toHaveLength(0)
   const { errors } = evaluateRelaxedDrc({
     inputSrj: scenario,
     srjWithPointPairs: solver.srjWithPointPairs!,

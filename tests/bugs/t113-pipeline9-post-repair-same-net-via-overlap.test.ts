@@ -71,9 +71,7 @@ test("keeps same-net vias merged after T113 joint repair", async () => {
   if (!preloadedVia) throw new Error("Missing the exact T113 preloaded vias")
 
   const connMap = getConnectivityMapFromSimpleRouteJson(srj)
-  expect(connMap.areIdsConnected("source_net_19", "source_trace_52")).toBe(
-    true,
-  )
+  expect(connMap.areIdsConnected("source_net_19", "source_trace_52")).toBe(true)
   const centerDistance = Math.hypot(
     newVia.x - preloadedVia.x,
     newVia.y - preloadedVia.y,
@@ -82,9 +80,9 @@ test("keeps same-net vias merged after T113 joint repair", async () => {
     newVia.outer_diameter / 2 + preloadedVia.outer_diameter / 2 + 0.1
   expect(centerDistance).toBeGreaterThanOrEqual(minimumCenterDistance)
   expect(
-    getDrcErrors(routedCircuitJson, { includeTraceContinuity: false }).errors.filter(
-      (error) => error.type === "pcb_via_clearance_error",
-    ),
+    getDrcErrors(routedCircuitJson, {
+      includeTraceContinuity: false,
+    }).errors.filter((error) => error.type === "pcb_via_clearance_error"),
   ).toEqual([])
 
   const focusSvg = getSvgFromGraphicsObject(
@@ -122,10 +120,11 @@ test("keeps same-net vias merged after T113 joint repair", async () => {
     },
     { backgroundColor: "white", svgWidth: 700, svgHeight: 700 },
   )
-  await expect(
-    focusSvg.replace(/[ \t]+$/gm, ""),
-  ).toMatchSvgSnapshot(import.meta.path, {
-    svgName: "real-pcb-and-post-repair-vias",
-    tolerance: 0.02,
-  })
+  await expect(focusSvg.replace(/[ \t]+$/gm, "")).toMatchSvgSnapshot(
+    import.meta.path,
+    {
+      svgName: "real-pcb-and-post-repair-vias",
+      tolerance: 0.02,
+    },
+  )
 }, 600_000)

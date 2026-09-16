@@ -21,13 +21,9 @@ const exactBoardFixtureDirectory =
 const stageFixtureDirectory =
   "../../fixtures/bug-reports/t113-uniform-terminal-collision/"
 const targetPortPointId = "ce750_pp1_z0::0"
-const foreignTerminalId =
-  "tiny-terminal:end-port:breakout:pcb_breakout_point_5"
+const foreignTerminalId = "tiny-terminal:end-port:breakout:pcb_breakout_point_5"
 
-const readCompressedFixture = <T>(
-  directory: string,
-  filename: string,
-): T =>
+const readCompressedFixture = <T>(directory: string, filename: string): T =>
   JSON.parse(
     gunzipSync(
       Uint8Array.from(
@@ -61,10 +57,7 @@ test("does not redistribute a real T113 route onto a foreign terminal", async ()
       layerCount: number
       minTraceWidth: number
     }
-  >(
-    stageFixtureDirectory,
-    "t113-uniform-terminal-collision.input.json.gz",
-  )
+  >(stageFixtureDirectory, "t113-uniform-terminal-collision.input.json.gz")
 
   expect(
     circuitJson.filter((element) => element.type === "source_component"),

@@ -54,8 +54,7 @@ test("keeps the T113 promoted via clear of the foreign trace", async () => {
   const via = routedCircuitJson
     .filter(
       (element): element is PcbVia =>
-        element.type === "pcb_via" &&
-        element.pcb_trace_id === viaOwnerTraceId,
+        element.type === "pcb_via" && element.pcb_trace_id === viaOwnerTraceId,
     )
     .sort(
       (left, right) =>
