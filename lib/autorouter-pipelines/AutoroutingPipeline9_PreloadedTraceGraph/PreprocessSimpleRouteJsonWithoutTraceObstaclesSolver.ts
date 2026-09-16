@@ -10,6 +10,8 @@ import { PreprocessSimpleRouteJsonSolver } from "../AutoroutingPipeline4_TinyHyp
  */
 export class PreprocessSimpleRouteJsonWithoutTraceObstaclesSolver extends PreprocessSimpleRouteJsonSolver {
   override _step(): void {
+    if (!this.validatePreRoutingDiagnostics()) return
+
     const { traces, ...inputSrjWithoutTraces } = this.inputSrj
     const srjWithBoardValidObstacleLayers =
       createSrjWithBoardValidObstacleLayers(

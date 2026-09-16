@@ -161,6 +161,8 @@ export interface Obstacle {
   isCopperPour?: boolean
   netIsAssignable?: boolean
   offBoardConnectsTo?: Array<OffBoardConnectionId>
+  isKeepout?: boolean
+  is_keepout?: boolean
 }
 
 export interface SimpleRouteConnection {

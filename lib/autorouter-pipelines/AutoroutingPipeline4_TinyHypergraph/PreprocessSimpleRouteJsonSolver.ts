@@ -4,13 +4,15 @@ import type { SimpleRouteJson } from "lib/types"
 import { addApproximatingRectsToSrj } from "lib/utils/addApproximatingRectsToSrj"
 import { combineVisualizations } from "lib/utils/combineVisualizations"
 import {
-  convertSrjToGraphicsObject,
   type ConvertSrjToGraphicsObjectOptions,
+  convertSrjToGraphicsObject,
 } from "lib/utils/convertSrjToGraphicsObject"
 import { convertSrjTracesToObstacles } from "lib/utils/convertSrjTracesToObstacles"
 import { createSrjWithBoardValidObstacleLayers } from "lib/utils/create-srj-with-board-valid-obstacle-layers"
 import { filterObstaclesOutsideBoard } from "lib/utils/filterObstaclesOutsideBoard"
 import { getPresuppliedTraceVisualization } from "lib/utils/getPresuppliedTraceVisualization"
+
+import { getPreRoutingDiagnostics } from "lib/diagnostics/getPreRoutingDiagnostics"
 
 export class PreprocessSimpleRouteJsonSolver extends BaseSolver {
   outputSrj?: SimpleRouteJson
@@ -23,7 +25,25 @@ export class PreprocessSimpleRouteJsonSolver extends BaseSolver {
     this.MAX_ITERATIONS = 1
   }
 
+  protected validatePreRoutingDiagnostics(): boolean {
+    const diagnostics = getPreRoutingDiagnostics(this.inputSrj)
+    for (const d of diagnostics) {
+      this.emitDiagnostic?.(d)
+    }
+    const blockingError = diagnostics.find(
+      (d) => d.severity === "error" && d.recommendedAction === "stop_and_fix",
+    )
+    if (blockingError) {
+      this.error = `[${blockingError.code}] ${blockingError.message}`
+      this.failed = true
+      return false
+    }
+    return true
+  }
+
   override _step() {
+    if (!this.validatePreRoutingDiagnostics()) return
+
     const inputSrjWithBoardValidObstacleLayers =
       createSrjWithBoardValidObstacleLayers(this.inputSrj)
     const srjWithPreloadedRouteObstacles =
