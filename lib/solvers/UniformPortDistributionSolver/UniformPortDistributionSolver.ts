@@ -32,7 +32,7 @@ export interface UniformPortDistributionSolverInput {
   traceClearance: number
   layerCount: number
   viaDiameter: number
-  preloadedTraces: SimplifiedPcbTrace[]
+  preloadedTraces?: SimplifiedPcbTrace[]
   connMap: ConnectivityMap
 }
 
@@ -55,8 +55,7 @@ const getPointToSegmentDistance = (
     return Math.hypot(point.x - segment.start.x, point.y - segment.start.y)
   }
   const projection =
-    ((point.x - segment.start.x) * dx +
-      (point.y - segment.start.y) * dy) /
+    ((point.x - segment.start.x) * dx + (point.y - segment.start.y) * dy) /
     lengthSquared
   const clampedProjection = Math.max(0, Math.min(1, projection))
   return Math.hypot(
@@ -133,7 +132,7 @@ export class UniformPortDistributionSolver extends BaseSolver {
     this.allPortPoints = input.nodeWithPortPoints.flatMap(
       (node) => node.portPoints,
     )
-    for (const trace of input.preloadedTraces) {
+    for (const trace of input.preloadedTraces ?? []) {
       const connectedIds = [
         trace.pcb_trace_id,
         trace.connection_name,
@@ -141,10 +140,7 @@ export class UniformPortDistributionSolver extends BaseSolver {
       ]
       for (const routePoint of trace.route) {
         if (routePoint.route_type === "via") {
-          const fromZ = mapLayerNameToZ(
-            routePoint.from_layer,
-            input.layerCount,
-          )
+          const fromZ = mapLayerNameToZ(routePoint.from_layer, input.layerCount)
           const toZ = mapLayerNameToZ(routePoint.to_layer, input.layerCount)
           for (let z = Math.min(fromZ, toZ); z <= Math.max(fromZ, toZ); z++) {
             this.preloadedCopperPrimitives.push({
@@ -158,10 +154,7 @@ export class UniformPortDistributionSolver extends BaseSolver {
           continue
         }
         if (routePoint.route_type === "through_obstacle") {
-          const fromZ = mapLayerNameToZ(
-            routePoint.from_layer,
-            input.layerCount,
-          )
+          const fromZ = mapLayerNameToZ(routePoint.from_layer, input.layerCount)
           const toZ = mapLayerNameToZ(routePoint.to_layer, input.layerCount)
           for (let z = Math.min(fromZ, toZ); z <= Math.max(fromZ, toZ); z++) {
             this.preloadedCopperPrimitives.push({
@@ -349,7 +342,9 @@ export class UniformPortDistributionSolver extends BaseSolver {
       portPoints: family,
     })
     const unsafeZLayers = new Set<number>()
-    for (const z of new Set(redistributed.map((portPoint) => portPoint.z ?? 0))) {
+    for (const z of new Set(
+      redistributed.map((portPoint) => portPoint.z ?? 0),
+    )) {
       const redistributedOnLayer = redistributed.filter(
         (portPoint) => (portPoint.z ?? 0) === z,
       )
@@ -364,9 +359,7 @@ export class UniformPortDistributionSolver extends BaseSolver {
       ...redistributed.filter(
         (portPoint) => !unsafeZLayers.has(portPoint.z ?? 0),
       ),
-      ...familyRaw.filter((portPoint) =>
-        unsafeZLayers.has(portPoint.z ?? 0),
-      ),
+      ...familyRaw.filter((portPoint) => unsafeZLayers.has(portPoint.z ?? 0)),
     ])
   }
 
