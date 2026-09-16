@@ -27,7 +27,7 @@ const readCompressedFixture = <T>(filename: string): T =>
     ).toString("utf8"),
   ) as T
 
-test("reproduces the T113 promoted via clearance overshoot", async () => {
+test("keeps the T113 promoted via clear of the foreign trace", async () => {
   const srj = readCompressedFixture<SimpleRouteJson>(
     "t113-linux-exact.srj.json.gz",
   )
@@ -69,20 +69,15 @@ test("reproduces the T113 promoted via clearance overshoot", async () => {
   )
   if (!foreignTrace) throw new Error("Missing the exact T113 foreign trace")
 
-  const targetError = getDrcErrors(routedCircuitJson, {
+  const targetErrors = getDrcErrors(routedCircuitJson, {
     includeTraceContinuity: false,
-  }).errors.find(
+  }).errors.filter(
     (error) =>
       error.type === "pcb_via_trace_clearance_error" &&
       error.pcb_via_id === via.pcb_via_id &&
       error.pcb_trace_id === foreignTraceId,
   )
-  expect(targetError?.type).toBe("pcb_via_trace_clearance_error")
-  if (targetError?.type !== "pcb_via_trace_clearance_error") {
-    throw new Error("Missing the exact T113 via-to-trace clearance error")
-  }
-  expect(targetError.actual_clearance).toBeCloseTo(0.0913196441577734)
-  expect(targetError.minimum_clearance).toBe(0.1)
+  expect(targetErrors).toEqual([])
 
   const nearbyForeignWires = foreignTrace.route.filter(
     (routePoint) =>
