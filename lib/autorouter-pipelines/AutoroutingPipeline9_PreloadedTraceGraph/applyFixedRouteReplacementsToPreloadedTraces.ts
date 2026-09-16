@@ -26,6 +26,11 @@ type OrdinaryTraceSection = {
   routePositionEnd: number
 }
 
+type SimplifiedWireRoutePoint = Extract<
+  SimplifiedPcbTrace["route"][number],
+  { route_type: "wire" }
+>
+
 type ConvertUpdatedTraceRoutesParams = {
   trace: SimplifiedPcbTrace
   updatedTraceRoutes: PreloadedHighDensityRoute[]
@@ -40,6 +45,31 @@ type RebuildThroughObstacleTraceParams = ConvertUpdatedTraceRoutesParams & {
 }
 
 const POINT_EPSILON = 1e-9
+
+const restoreTerminalMetadata = (
+  originalRoute: SimplifiedPcbTrace["route"],
+  rebuiltRoute: SimplifiedPcbTrace["route"],
+): void => {
+  const originalWirePoints = originalRoute.filter(
+    (point): point is SimplifiedWireRoutePoint => point.route_type === "wire",
+  )
+  const rebuiltWirePoints = rebuiltRoute.filter(
+    (point): point is SimplifiedWireRoutePoint => point.route_type === "wire",
+  )
+  const startPcbPortId = originalWirePoints.find(
+    (point) => point.start_pcb_port_id,
+  )?.start_pcb_port_id
+  const endPcbPortId = [...originalWirePoints]
+    .reverse()
+    .find((point) => point.end_pcb_port_id)?.end_pcb_port_id
+
+  if (startPcbPortId && rebuiltWirePoints[0]) {
+    rebuiltWirePoints[0].start_pcb_port_id = startPcbPortId
+  }
+  if (endPcbPortId && rebuiltWirePoints.at(-1)) {
+    rebuiltWirePoints.at(-1)!.end_pcb_port_id = endPcbPortId
+  }
+}
 
 const pointsAreEqual = (
   a: HighDensityRoute["route"][number],
@@ -353,6 +383,7 @@ export const applyFixedRouteReplacementsToPreloadedTraces = ({
             connMap,
           }),
     }
+    restoreTerminalMetadata(trace.route, mutatedTrace.route)
     mutatedPreloadedTraces.push(mutatedTrace)
     return mutatedTrace
   })
