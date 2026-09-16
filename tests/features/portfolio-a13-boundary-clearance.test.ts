@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test"
-import { findRouteGeometryViolations } from "@tscircuit/high-density-a13"
+import { findRouteGeometryViolations } from "@tscircuit/high-density-a01"
 import { HighDensitySolverA13WithBoundaryClearance } from "lib/solvers/HyperHighDensitySolver/HighDensitySolverA13WithBoundaryClearance"
 import type { NodeWithPortPoints } from "lib/types/high-density-types"
 

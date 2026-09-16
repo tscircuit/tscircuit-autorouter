@@ -1,0 +1,70 @@
+diff --git a/lib/solvers/BaseSolver.ts b/lib/solvers/BaseSolver.ts
+index c1d9bc19..c8156199 100644
+--- a/lib/solvers/BaseSolver.ts
++++ b/lib/solvers/BaseSolver.ts
+@@ -1,5 +1,6 @@
+ import type { GraphicsObject } from "graphics-debug"
+ import { CachableSolver, CacheProvider } from "lib/cache/types"
++import { SolverProfiler } from "./SolverProfiler"
+ 
+ export type PendingEffect = {
+   name: string
+@@ -34,12 +35,15 @@ export class BaseSolver {
+     if (this.solved) return
+     if (this.failed) return
+     this.iterations++
++    const profiler = SolverProfiler.active
++    const stepStartedAt = profiler ? performance.now() : 0
+     try {
+       this._step()
+     } catch (e) {
+       this.error = `${this.getSolverName()} error: ${e}`
+       console.error(this.error)
+       this.failed = true
++      profiler?.recordStep(this, performance.now() - stepStartedAt)
+       throw e
+     }
+     if (!this.solved && this.iterations > this.MAX_ITERATIONS) {
+@@ -53,6 +57,7 @@ export class BaseSolver {
+       // @ts-ignore
+       this.progress = this.computeProgress() as number
+     }
++    profiler?.recordStep(this, performance.now() - stepStartedAt)
+   }
+ 
+   _step() {}
+diff --git a/lib/solvers/HyperParameterSupervisorSolver.ts b/lib/solvers/HyperParameterSupervisorSolver.ts
+index 933ee584..71d9f586 100644
+--- a/lib/solvers/HyperParameterSupervisorSolver.ts
++++ b/lib/solvers/HyperParameterSupervisorSolver.ts
+@@ -1,5 +1,6 @@
+ import { GraphicsObject } from "graphics-debug"
+ import { BaseSolver } from "./BaseSolver"
++import { SolverProfiler } from "./SolverProfiler"
+ 
+ export type SupervisedSolver<T extends BaseSolver> = {
+   hyperParameters: any
+@@ -155,8 +156,21 @@ export class HyperParameterSupervisorSolver<
+       return
+     }
+ 
+-    for (let i = 0; i < this.MIN_SUBSTEPS; i++) {
+-      supervisedSolver.solver.step()
++    // Package solvers have their own BaseSolver. Time their batch here;
++    // local solvers already report their individual steps.
++    const profiler = supervisedSolver.solver instanceof BaseSolver
++      ? null
++      : SolverProfiler.active
++    const stepStartedAt = profiler ? performance.now() : 0
++    try {
++      for (let i = 0; i < this.MIN_SUBSTEPS; i++) {
++        supervisedSolver.solver.step()
++      }
++    } finally {
++      profiler?.recordStep(
++        supervisedSolver.solver,
++        performance.now() - stepStartedAt,
++      )
+     }
+     this.activeSubSolver = supervisedSolver.solver
+ 

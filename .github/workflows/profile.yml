@@ -1,4 +1,4 @@
-name: Pipeline 7 Profile Comparison
+name: Pipeline Profile Comparison
 
 on:
   workflow_dispatch:
@@ -26,7 +26,7 @@ permissions:
 
 jobs:
   profile:
-    name: Compare Pipeline 7 profiles
+    name: Compare pipeline profiles
     runs-on: blacksmith-8vcpu-ubuntu-2404-arm
     timeout-minutes: 180
     env:
@@ -66,7 +66,7 @@ jobs:
               repo: context.repo.repo,
               issue_number: prNumber,
               body: [
-                '## Pipeline 7 Profile Comparison',
+                '## Pipeline Profile Comparison',
                 '',
                 `Queued \`${dataset}\` on current main \`${mainSha.slice(0, 7)}\` and PR head \`${prSha.slice(0, 7)}\`.`,
                 '',
@@ -104,8 +104,8 @@ jobs:
 
       - name: Use one profiling controller for both revisions
         run: |
-          cp profile-controller/scripts/profile-solvers.ts profile-main/scripts/profile-solvers.ts
-          cp profile-controller/scripts/profile-solvers.ts profile-pr/scripts/profile-solvers.ts
+          bash profile-controller/scripts/profile/prepare-checkout.sh profile-controller profile-main
+          bash profile-controller/scripts/profile/prepare-checkout.sh profile-controller profile-pr
 
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
@@ -189,7 +189,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: pipeline7-profile-${{ steps.refs.outputs.dataset }}
+          name: pipeline-profile-${{ steps.refs.outputs.dataset }}
           path: profile-results
           if-no-files-found: warn
 
@@ -208,7 +208,7 @@ jobs:
             const resultBody = fs.existsSync(resultPath)
               ? fs.readFileSync(resultPath, 'utf8').trim()
               : [
-                  '## Pipeline 7 Profile Comparison',
+                  '## Pipeline Profile Comparison',
                   '',
                   `The paired profile ended with **${process.env.JOB_STATUS}** before both reports were produced.`,
                 ].join('\n')

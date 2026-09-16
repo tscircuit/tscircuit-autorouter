@@ -14,6 +14,8 @@ type CompletedProfileScenario = {
 }
 
 type ProfileReport = {
+  // Reports predating pipeline selection contain Pipeline 7 measurements.
+  pipeline?: "7" | "9"
   datasetName: string
   scenarioCount: number
   solved: number
@@ -81,6 +83,10 @@ export const renderProfileComparison = ({
   repository,
   runnerName,
 }: ProfileComparisonInput): string => {
+  const pipeline = mainReport.pipeline ?? "7"
+  if (pipeline !== (prReport.pipeline ?? "7")) {
+    throw new Error("Cannot compare profiles from different pipelines")
+  }
   if (mainReport.datasetName !== prReport.datasetName) {
     throw new Error(
       `Dataset mismatch: main=${mainReport.datasetName}, PR=${prReport.datasetName}`,
@@ -137,7 +143,7 @@ export const renderProfileComparison = ({
     )
 
   return [
-    "## Pipeline 7 Profile Comparison",
+    `## Pipeline ${pipeline} Profile Comparison`,
     "",
     `Main and PR ran sequentially in one Blacksmith job on \`${runnerName}\`.`,
     "",
@@ -145,9 +151,9 @@ export const renderProfileComparison = ({
     `Percentile population: ${commonCompletedScenarioNames.size} problems completed by both revisions.`,
     `Main: [\`${mainSha.slice(0, 7)}\`](https://github.com/${repository}/commit/${mainSha}) · PR: [\`${prSha.slice(0, 7)}\`](https://github.com/${repository}/commit/${prSha})`,
     "",
-    "Only direct Pipeline 7 stages exceeding 4% at P50, P80, or P95 on either revision are shown.",
+    `Only direct Pipeline ${pipeline} stages exceeding 4% at P50, P80, or P95 on either revision are shown.`,
     "",
-    "| Pipeline 7 solver | Main P50 | PR P50 | Main P80 | PR P80 | Main P95 | PR P95 |",
+    `| Pipeline ${pipeline} solver | Main P50 | PR P50 | Main P80 | PR P80 | Main P95 | PR P95 |`,
     "| :--- | ---: | ---: | ---: | ---: | ---: | ---: |",
     ...rows.map(
       (row) =>

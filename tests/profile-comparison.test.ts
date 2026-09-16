@@ -34,4 +34,18 @@ test("profile comparison renders paired percentiles and hides small stages", () 
     "| repairSolver | 20.0% | 30.0% | 20.0% | 30.0% | 20.0% | 30.0% |",
   )
   expect(output).not.toContain("| smallSolver |")
+
+  const pipeline9Input = {
+    mainReport: { ...createReport(79, 20, 1), pipeline: "9" as const },
+    prReport: { ...createReport(69, 30, 1), pipeline: "9" as const },
+    mainSha: "1234567890",
+    prSha: "abcdef1234",
+    repository: "tscircuit/tscircuit-autorouter",
+    runnerName: "blacksmith-test-runner",
+  }
+  expect(renderProfileComparison(pipeline9Input)).toContain("Pipeline 9 Profile Comparison")
+  expect(() => renderProfileComparison({
+    ...pipeline9Input,
+    prReport: { ...pipeline9Input.prReport, pipeline: "7" },
+  })).toThrow("different pipelines")
 })

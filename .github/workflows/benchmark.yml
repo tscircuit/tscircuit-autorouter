@@ -117,6 +117,8 @@ jobs:
                     '--effort',
                     '--concurrency',
                     '--sample-timeout',
+                    '--pipeline',
+                    '--solver-name',
                   ].includes(arg)
                 ) {
                   const value = args[i + 1]
@@ -138,7 +140,6 @@ jobs:
                 if (
                   [
                     '--solver',
-                    '--pipeline',
                   ].includes(arg)
                 ) {
                   i += 1
@@ -942,11 +943,10 @@ jobs:
           ref: main
           path: main-profile
 
-      - name: Copy profile-solvers runner into main checkout
+      - name: Install profiling measurements in main checkout
         if: steps.parse.outputs.profile_solvers == 'true' && github.event_name == 'workflow_dispatch' && inputs.pr_number != ''
         run: |
-          cp scripts/profile-solvers.ts main-profile/scripts/profile-solvers.ts
-          cp scripts/benchmark/scenarios.ts main-profile/scripts/benchmark/scenarios.ts
+          bash scripts/profile/prepare-checkout.sh . main-profile
 
       - name: Install main dependencies for profile-solvers
         if: steps.parse.outputs.profile_solvers == 'true' && github.event_name == 'workflow_dispatch' && inputs.pr_number != ''

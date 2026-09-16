@@ -3,8 +3,8 @@
 import { type ChildProcessWithoutNullStreams, spawn } from "node:child_process"
 import * as os from "node:os"
 import * as readline from "node:readline"
-import { AutoroutingPipelineSolver } from "../lib"
-import { BaseSolver } from "../lib/solvers/BaseSolver"
+import { AutoroutingPipelineSolver, AutoroutingPipelineSolver9_PreloadedTraceGraph } from "../lib"
+import { SolverProfiler, type SolverProfileRecord } from "../lib/solvers/SolverProfiler"
 import type { SimpleRouteJson } from "../lib/types/srj-types"
 import {
   DATASET_OPTIONS_LABEL,
@@ -14,16 +14,11 @@ import {
 } from "./benchmark/scenarios"
 
 // --- Types ---
-type SolverRecord = {
-  name: string
-  success: boolean
-  timeMs: number
-  iterations: number
-  maxIterations: number
-  scenarioName: string
-}
+type SolverRecord = SolverProfileRecord & { scenarioName: string }
 
 type ProfileOptions = {
+  solverNames?: string[]
+  pipeline: "7" | "9"
   scenarioName?: string
   scenarioLimit?: number
   datasetName: DatasetName
@@ -35,6 +30,8 @@ type ProfileOptions = {
 
 type ProfileSolverRow = {
   solverName: string
+  outcomes: Record<SolverRecord["outcome"], number>
+  selectedCount: number
   attemptCount: number
   scenarioCount: number
   scenarioSuccessRate: number
@@ -66,6 +63,8 @@ type IncompleteProfileScenario = {
 }
 
 type ProfileTask = {
+  solverNames?: string[]
+  pipeline: "7" | "9"
   scenarioName: string
   scenario: SimpleRouteJson
 }
@@ -86,6 +85,7 @@ type ProfileTaskResult = {
 }
 
 type ProfileTaskResultMessage = {
+  partial?: boolean
   taskId: number
   result: ProfileTaskResult
 }
@@ -132,55 +132,6 @@ const DEFAULT_TASK_TIMEOUT_BASE_MS = 300 * 1000
 const DEFAULT_TASK_TIMEOUT_PER_EFFORT_MS = 60 * 1000
 const DEFAULT_TERMINATE_TIMEOUT_MS = 5 * 1000
 
-// --- Monkey-patch BaseSolver.step() to capture timing/iteration data ---
-const origStep = BaseSolver.prototype.step
-
-BaseSolver.prototype.step = function (
-  this: BaseSolver & {
-    __profilingStartTime?: number
-    __profilingRecorded?: boolean
-  },
-) {
-  // Record start time on first step
-  if (this.__profilingStartTime === undefined && !this.solved && !this.failed) {
-    this.__profilingStartTime = performance.now()
-  }
-
-  const wasDone = this.solved || this.failed
-
-  try {
-    origStep.call(this)
-  } finally {
-    const now = performance.now()
-    if (
-      !isWorkerProcess &&
-      heartbeatIntervalMs > 0 &&
-      currentScenarioName &&
-      now - lastHeartbeatAt >= heartbeatIntervalMs
-    ) {
-      lastHeartbeatAt = now
-      console.log(
-        `[profile-solvers] active ${currentScenarioIndex}/${scenarioCount} ${currentScenarioName} ${formatTime(now - currentScenarioStartedAt)} (${allRecords.length} solver records)`,
-      )
-    }
-
-    // Record once when solver transitions to solved/failed
-    if (!wasDone && !this.__profilingRecorded && (this.solved || this.failed)) {
-      this.__profilingRecorded = true
-      const timeMs =
-        performance.now() - (this.__profilingStartTime ?? performance.now())
-      allRecords.push({
-        name: this.getSolverName(),
-        success: this.solved && !this.failed,
-        timeMs,
-        iterations: this.iterations,
-        maxIterations: this.MAX_ITERATIONS,
-        scenarioName: currentScenarioName,
-      })
-    }
-  }
-}
-
 // --- Helpers ---
 const parseDurationArg = (rawValue: string, flagName: string) => {
   const value = rawValue.trim()
@@ -206,6 +157,7 @@ const parseArgs = (): ProfileOptions => {
       : os.cpus().length
   const options: ProfileOptions = {
     datasetName: "dataset01",
+    pipeline: "7",
     concurrency: defaultConcurrency,
   }
 
@@ -214,7 +166,18 @@ const parseArgs = (): ProfileOptions => {
     if (arg === "--worker") {
       continue
     }
-    if (arg === "--scenario") {
+    if (arg === "--solver-name") {
+      const solverName = args[++i]
+      if (!solverName || solverName.startsWith("--")) throw new Error("--solver-name requires a name")
+      options.solverNames ??= []
+      options.solverNames.push(solverName)
+    } else if (arg === "--pipeline") {
+      const pipeline = args[++i]
+      if (pipeline !== "7" && pipeline !== "9") {
+        throw new Error("--pipeline must be 7 or 9")
+      }
+      options.pipeline = pipeline
+    } else if (arg === "--scenario") {
       const scenarioName = args[i + 1]
       if (!scenarioName || scenarioName.startsWith("-")) {
         throw new Error("--scenario requires a scenario name")
@@ -281,6 +244,8 @@ const parseArgs = (): ProfileOptions => {
           "Usage: bun scripts/profile-solvers.ts [--scenario NAME] [--scenario-limit N] [--dataset NAME] [--effort N] [--concurrency N] [--sample-timeout DURATION]",
           "",
           "Options:",
+          "  --pipeline ID        Pipeline to profile: 7 (default) or 9",
+          "  --solver-name NAME   Retain this solver only; repeat to include more names",
           "  --scenario NAME      Run only the named scenario",
           "  --scenario-limit N   Run only first N scenarios",
           `  --dataset NAME       Dataset to profile: ${DATASET_OPTIONS_LABEL}`,
@@ -374,10 +339,12 @@ const formatDurationLabel = (timeMs: number) => {
 }
 
 const renderScenarioTimingMarkdown = ({
+  pipeline,
   datasetName,
   completedScenarios,
   incompleteScenarios,
 }: {
+  pipeline: "7" | "9"
   datasetName: DatasetName
   completedScenarios: CompletedProfileScenario[]
   incompleteScenarios: IncompleteProfileScenario[]
@@ -422,9 +389,9 @@ const renderScenarioTimingMarkdown = ({
           "",
         ]
       : []),
-    "P50 is the median, across completed problems, of the percentage of direct Pipeline 7 stage time spent in each solver. Conditional stages that did not run count as 0% for that problem. Rows are independent medians, so they do not sum to 100%.",
+    `P50 is the median, across completed problems, of the percentage of direct Pipeline ${pipeline} stage time spent in each solver. Conditional stages that did not run count as 0% for that problem. Rows are independent medians, so they do not sum to 100%.`,
     "",
-    "| Pipeline 7 solver | P50 time spent |",
+    `| Pipeline ${pipeline} solver | P50 time spent |`,
     "| :--- | ---: |",
     ...rows.map(
       (row) => `| ${row.solverName} | ${row.p50Percent.toFixed(2)}% |`,
@@ -500,7 +467,10 @@ const createFailedTaskResult = (
   didTimeout,
 })
 
-const runProfileTask = (task: ProfileTask): ProfileTaskResult => {
+const runProfileTask = (
+  task: ProfileTask,
+  onProgress: (result: ProfileTaskResult) => void,
+): ProfileTaskResult => {
   currentScenarioName = task.scenarioName
   currentScenarioIndex = 1
   currentScenarioStartedAt = performance.now()
@@ -508,14 +478,36 @@ const runProfileTask = (task: ProfileTask): ProfileTaskResult => {
   scenarioCount = 1
   allRecords.length = 0
 
-  const solver = new AutoroutingPipelineSolver(task.scenario)
+  const Solver = task.pipeline === "9"
+    ? AutoroutingPipelineSolver9_PreloadedTraceGraph
+    : AutoroutingPipelineSolver
+  const solver = new Solver(task.scenario, { effort: getTaskEffort(task.scenario) })
+  const profiler = new SolverProfiler(task.solverNames ? new Set(task.solverNames) : undefined)
+  SolverProfiler.active = profiler
   const startTimeMs = performance.now()
   let solveError: string | undefined
 
   try {
-    solver.solve()
+    while (!solver.solved && !solver.failed) {
+      solver.step()
+      const now = performance.now()
+      if (now - lastHeartbeatAt >= 30_000) {
+        lastHeartbeatAt = now
+        onProgress({
+          scenarioName: task.scenarioName,
+          solved: false,
+          elapsedTimeMs: now - startTimeMs,
+          records: profiler.records.map((record) => ({ ...record, scenarioName: task.scenarioName })),
+          stageTimings: Object.entries(solver.timeSpentOnPhase).map(
+            ([solverName, timeMs]) => ({ solverName, timeMs }),
+          ),
+        })
+      }
+    }
   } catch (error) {
     solveError = error instanceof Error ? error.message : String(error)
+  } finally {
+    SolverProfiler.active = null
   }
 
   const elapsedTimeMs = performance.now() - startTimeMs
@@ -524,11 +516,11 @@ const runProfileTask = (task: ProfileTask): ProfileTaskResult => {
     scenarioName: task.scenarioName,
     solved: Boolean(solver.solved),
     elapsedTimeMs,
-    records: allRecords.map((record) => ({ ...record })),
+    records: profiler.records.map((record) => ({ ...record, scenarioName: task.scenarioName })),
     stageTimings: Object.entries(solver.timeSpentOnPhase).map(
       ([solverName, timeMs]) => ({ solverName, timeMs }),
     ),
-    error: solveError,
+    error: solveError ?? solver.error ?? undefined,
   }
 }
 
@@ -551,7 +543,9 @@ const runWorkerProcess = async () => {
 
     const resultMessage: ProfileTaskResultMessage = {
       taskId: message.taskId,
-      result: runProfileTask(message.task),
+      result: runProfileTask(message.task, (result) => {
+        process.stdout.write(`${JSON.stringify({ taskId: message.taskId, partial: true, result })}\n`)
+      }),
     }
     process.stdout.write(`${JSON.stringify(resultMessage)}\n`)
   })
@@ -598,6 +592,7 @@ const terminateWorker = async (slot: WorkerSlot, context: string) => {
 
   await new Promise<void>((resolve) => {
     let settled = false
+    let latestProgress: ProfileTaskResult | undefined
     let timeoutHandle: ReturnType<typeof setTimeout> | null = null
 
     const finish = () => {
@@ -652,6 +647,7 @@ const executeTaskOnWorker = (
     const taskTimeoutMs = getTaskTimeoutMs(request.task, sampleTimeoutMs)
     const startedAtMs = performance.now()
     let settled = false
+    let latestProgress: ProfileTaskResult | undefined
 
     const finish = (result: ProfileTaskResult, restartWorker: boolean) => {
       if (settled) return
@@ -664,6 +660,10 @@ const executeTaskOnWorker = (
       slot.stderrReader.removeListener("line", onStderrLine)
       slot.child.removeListener("error", onError)
       slot.child.removeListener("exit", onExit)
+      if (restartWorker && latestProgress) {
+        result.records = latestProgress.records
+        result.stageTimings = latestProgress.stageTimings
+      }
       resolve({ result, restartWorker })
     }
 
@@ -682,6 +682,10 @@ const executeTaskOnWorker = (
         return
       }
 
+      if (message.partial) {
+        latestProgress = message.result
+        return
+      }
       finish(message.result, false)
     }
 
@@ -864,6 +868,8 @@ const main = async () => {
 
   const results = await runProfileTasks(
     scenarios.map(([scenarioName, scenario]) => ({
+      pipeline: opts.pipeline,
+      solverNames: opts.solverNames,
       scenarioName,
       scenario,
     })),
@@ -898,6 +904,8 @@ const main = async () => {
 
   type Row = {
     name: string
+    outcomes: Record<SolverRecord["outcome"], number>
+    selectedCount: number
     attemptCount: number
     scenarioCount: number
     scenarioSuccessRate: number
@@ -923,6 +931,13 @@ const main = async () => {
     const totalTimeMs = recs.reduce((sum, r) => sum + r.timeMs, 0)
     rows.push({
       name,
+      outcomes: {
+        running: recs.filter((record) => record.outcome === "running").length,
+        solved: recs.filter((record) => record.outcome === "solved").length,
+        failed: recs.filter((record) => record.outcome === "failed").length,
+        rejected: recs.filter((record) => record.outcome === "rejected").length,
+      },
+      selectedCount: recs.filter((record) => record.selected).length,
       attemptCount: recs.length,
       scenarioCount: scenariosTouched.size,
       scenarioSuccessRate:
@@ -948,6 +963,8 @@ const main = async () => {
   const headers = [
     "Solver",
     "Attempts",
+    "Run/Solve/Fail/Reject",
+    "Selected",
     "Scenarios",
     "Success %",
     "MAX_ITER",
@@ -962,6 +979,8 @@ const main = async () => {
   const body = rows.map((r) => [
     r.name,
     String(r.attemptCount),
+    `${r.outcomes.running}/${r.outcomes.solved}/${r.outcomes.failed}/${r.outcomes.rejected}`,
+    String(r.selectedCount),
     String(r.scenarioCount),
     `${r.scenarioSuccessRate.toFixed(0)}%`,
     String(r.maxIter),
@@ -978,6 +997,11 @@ const main = async () => {
   console.log()
 
   const profileReport = {
+    pipeline: opts.pipeline,
+    solverNames: opts.solverNames,
+    timing: "Accumulated step time; nested solvers overlap. Running candidates are retained.",
+    checkpointIntervalMs: 30_000,
+    records: allRecords,
     datasetName: opts.datasetName,
     scenarioCount: scenarios.length,
     scenarioName: opts.scenarioName ?? null,
@@ -1010,6 +1034,8 @@ const main = async () => {
     rows: rows.map(
       (r): ProfileSolverRow => ({
         solverName: r.name,
+        outcomes: r.outcomes,
+        selectedCount: r.selectedCount,
         attemptCount: r.attemptCount,
         scenarioCount: r.scenarioCount,
         scenarioSuccessRate: r.scenarioSuccessRate,
