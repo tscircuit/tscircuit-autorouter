@@ -83,6 +83,7 @@ test("does not redistribute a real T113 route onto a foreign terminal", async ()
     preloadedTraces: srj.traces,
     connMap: getConnectivityMapFromSimpleRouteJson(srj),
     traceClearance: srj.minTraceToPadEdgeClearance ?? 0,
+    viaDiameter: srj.minViaDiameter,
   } as UniformPortDistributionSolverInput)
   solver.solve()
 

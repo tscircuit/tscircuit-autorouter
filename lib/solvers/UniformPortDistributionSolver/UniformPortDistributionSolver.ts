@@ -1,11 +1,13 @@
 import { BaseSolver } from "@tscircuit/solver-utils"
+import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import { GraphicsObject } from "graphics-debug"
-import type { Obstacle } from "lib/types"
+import type { Obstacle, SimplifiedPcbTrace } from "lib/types"
 import type {
   NodeWithPortPoints,
   PortPoint,
 } from "lib/types/high-density-types"
 import { getBoundsFromNodeWithPortPoints } from "lib/utils/getBoundsFromNodeWithPortPoints"
+import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
 import { InputNodeWithPortPoints } from "../PortPointPathingSolver/PortPointPathingSolver"
 import {
   Bounds,
@@ -28,6 +30,39 @@ export interface UniformPortDistributionSolverInput {
   obstacles: Obstacle[]
   minTraceWidth: number
   traceClearance: number
+  layerCount: number
+  viaDiameter: number
+  preloadedTraces: SimplifiedPcbTrace[]
+  connMap: ConnectivityMap
+}
+
+interface PreloadedCopperPrimitive {
+  start: { x: number; y: number }
+  end: { x: number; y: number }
+  width: number
+  z: number
+  connectedIds: string[]
+}
+
+const getPointToSegmentDistance = (
+  point: { x: number; y: number },
+  segment: PreloadedCopperPrimitive,
+) => {
+  const dx = segment.end.x - segment.start.x
+  const dy = segment.end.y - segment.start.y
+  const lengthSquared = dx * dx + dy * dy
+  if (lengthSquared === 0) {
+    return Math.hypot(point.x - segment.start.x, point.y - segment.start.y)
+  }
+  const projection =
+    ((point.x - segment.start.x) * dx +
+      (point.y - segment.start.y) * dy) /
+    lengthSquared
+  const clampedProjection = Math.max(0, Math.min(1, projection))
+  return Math.hypot(
+    point.x - (segment.start.x + clampedProjection * dx),
+    point.y - (segment.start.y + clampedProjection * dy),
+  )
 }
 
 /**
@@ -52,6 +87,7 @@ export class UniformPortDistributionSolver extends BaseSolver {
   redistributedNodes: NodeWithPortPoints[] = []
   allPortPoints: PortPoint[] = []
   fixedPortPointIds = new Set<string>()
+  preloadedCopperPrimitives: PreloadedCopperPrimitive[] = []
 
   constructor(private input: UniformPortDistributionSolverInput) {
     super()
@@ -97,6 +133,66 @@ export class UniformPortDistributionSolver extends BaseSolver {
     this.allPortPoints = input.nodeWithPortPoints.flatMap(
       (node) => node.portPoints,
     )
+    for (const trace of input.preloadedTraces) {
+      const connectedIds = [
+        trace.pcb_trace_id,
+        trace.connection_name,
+        ...(trace.connectsTo ?? []),
+      ]
+      for (const routePoint of trace.route) {
+        if (routePoint.route_type === "via") {
+          const fromZ = mapLayerNameToZ(
+            routePoint.from_layer,
+            input.layerCount,
+          )
+          const toZ = mapLayerNameToZ(routePoint.to_layer, input.layerCount)
+          for (let z = Math.min(fromZ, toZ); z <= Math.max(fromZ, toZ); z++) {
+            this.preloadedCopperPrimitives.push({
+              start: routePoint,
+              end: routePoint,
+              width: routePoint.via_diameter ?? input.viaDiameter,
+              z,
+              connectedIds,
+            })
+          }
+          continue
+        }
+        if (routePoint.route_type === "through_obstacle") {
+          const fromZ = mapLayerNameToZ(
+            routePoint.from_layer,
+            input.layerCount,
+          )
+          const toZ = mapLayerNameToZ(routePoint.to_layer, input.layerCount)
+          for (let z = Math.min(fromZ, toZ); z <= Math.max(fromZ, toZ); z++) {
+            this.preloadedCopperPrimitives.push({
+              start: routePoint.start,
+              end: routePoint.end,
+              width: routePoint.width,
+              z,
+              connectedIds,
+            })
+          }
+        }
+      }
+      for (let index = 1; index < trace.route.length; index++) {
+        const start = trace.route[index - 1]
+        const end = trace.route[index]
+        if (
+          start?.route_type !== "wire" ||
+          end?.route_type !== "wire" ||
+          start.layer !== end.layer
+        ) {
+          continue
+        }
+        this.preloadedCopperPrimitives.push({
+          start,
+          end,
+          width: Math.max(start.width, end.width),
+          z: mapLayerNameToZ(start.layer, input.layerCount),
+          connectedIds,
+        })
+      }
+    }
     for (const [ownerPairKey, portPoints] of this.mapOfOwnerPairToPortPoints) {
       const sharedEdge = this.mapOfOwnerPairToSharedEdge.get(ownerPairKey)
       const edgeIsFixed =
@@ -130,10 +226,27 @@ export class UniformPortDistributionSolver extends BaseSolver {
     })
   }
 
-  private redistributionIntroducesFixedPortPointCollision(
+  private portPointIsConnectedToPreloadedSegment(
+    portPoint: PortPointWithOwnerPair,
+    segment: PreloadedCopperPrimitive,
+  ): boolean {
+    const portPointIds = [
+      portPoint.rootConnectionName,
+      portPoint.connectionName,
+    ].filter((id): id is string => Boolean(id))
+    return portPointIds.some((portPointId) =>
+      segment.connectedIds.some(
+        (connectedId) =>
+          portPointId === connectedId ||
+          this.input.connMap.areIdsConnected(portPointId, connectedId),
+      ),
+    )
+  }
+
+  private redistributionIntroducesFixedCopperCollision(
     redistributedPortPoints: PortPointWithOwnerPair[],
   ): boolean {
-    const requiredClearance =
+    const requiredPortPointClearance =
       this.input.minTraceWidth + this.input.traceClearance
 
     return redistributedPortPoints.some((redistributedPortPoint) => {
@@ -143,26 +256,57 @@ export class UniformPortDistributionSolver extends BaseSolver {
       )
       if (!originalPortPoint) return false
 
-      return this.allPortPoints.some((fixedPortPoint) => {
+      const introducesPortPointCollision = this.allPortPoints.some(
+        (fixedPortPoint) => {
+          if (
+            !fixedPortPoint.portPointId ||
+            fixedPortPoint.portPointId === redistributedPortPoint.portPointId ||
+            !this.fixedPortPointIds.has(fixedPortPoint.portPointId) ||
+            (fixedPortPoint.z ?? 0) !== (redistributedPortPoint.z ?? 0)
+          ) {
+            return false
+          }
+          const originalDistance = Math.hypot(
+            fixedPortPoint.x - originalPortPoint.x,
+            fixedPortPoint.y - originalPortPoint.y,
+          )
+          const redistributedDistance = Math.hypot(
+            fixedPortPoint.x - redistributedPortPoint.x,
+            fixedPortPoint.y - redistributedPortPoint.y,
+          )
+          return (
+            originalDistance >= requiredPortPointClearance &&
+            redistributedDistance < requiredPortPointClearance
+          )
+        },
+      )
+      if (introducesPortPointCollision) return true
+
+      return this.preloadedCopperPrimitives.some((segment) => {
         if (
-          !fixedPortPoint.portPointId ||
-          fixedPortPoint.portPointId === redistributedPortPoint.portPointId ||
-          !this.fixedPortPointIds.has(fixedPortPoint.portPointId) ||
-          (fixedPortPoint.z ?? 0) !== (redistributedPortPoint.z ?? 0)
+          segment.z !== (redistributedPortPoint.z ?? 0) ||
+          this.portPointIsConnectedToPreloadedSegment(
+            redistributedPortPoint,
+            segment,
+          )
         ) {
           return false
         }
-        const originalDistance = Math.hypot(
-          fixedPortPoint.x - originalPortPoint.x,
-          fixedPortPoint.y - originalPortPoint.y,
+        const requiredSegmentClearance =
+          this.input.minTraceWidth / 2 +
+          segment.width / 2 +
+          this.input.traceClearance
+        const originalDistance = getPointToSegmentDistance(
+          originalPortPoint,
+          segment,
         )
-        const redistributedDistance = Math.hypot(
-          fixedPortPoint.x - redistributedPortPoint.x,
-          fixedPortPoint.y - redistributedPortPoint.y,
+        const redistributedDistance = getPointToSegmentDistance(
+          redistributedPortPoint,
+          segment,
         )
         return (
-          originalDistance >= requiredClearance &&
-          redistributedDistance < requiredClearance
+          originalDistance >= requiredSegmentClearance &&
+          redistributedDistance < requiredSegmentClearance
         )
       })
     })
@@ -204,11 +348,26 @@ export class UniformPortDistributionSolver extends BaseSolver {
       sharedEdge,
       portPoints: family,
     })
-    if (this.redistributionIntroducesFixedPortPointCollision(redistributed)) {
-      return
+    const unsafeZLayers = new Set<number>()
+    for (const z of new Set(redistributed.map((portPoint) => portPoint.z ?? 0))) {
+      const redistributedOnLayer = redistributed.filter(
+        (portPoint) => (portPoint.z ?? 0) === z,
+      )
+      if (
+        this.redistributionIntroducesFixedCopperCollision(redistributedOnLayer)
+      ) {
+        unsafeZLayers.add(z)
+      }
     }
 
-    this.mapOfOwnerPairToPortPoints.set(ownerPairKey, redistributed)
+    this.mapOfOwnerPairToPortPoints.set(ownerPairKey, [
+      ...redistributed.filter(
+        (portPoint) => !unsafeZLayers.has(portPoint.z ?? 0),
+      ),
+      ...familyRaw.filter((portPoint) =>
+        unsafeZLayers.has(portPoint.z ?? 0),
+      ),
+    ])
   }
 
   rebuildNodes(): void {

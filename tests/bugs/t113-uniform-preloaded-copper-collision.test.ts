@@ -11,6 +11,7 @@ import {
 import { convertToCircuitJson } from "lib/testing/utils/convertToCircuitJson"
 import type { SimpleRouteJson, SimplifiedPcbTrace } from "lib/types"
 import { convertSrjToGraphicsObject } from "lib/utils/convertSrjToGraphicsObject"
+import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
 import { stackSvgsHorizontally } from "stack-svgs"
 
 const exactBoardFixtureDirectory =
@@ -71,7 +72,7 @@ const mergeGraphics = (...objects: GraphicsObject[]): GraphicsObject => ({
   texts: objects.flatMap((object) => object.texts ?? []),
 })
 
-test("captures T113 uniform redistribution onto preloaded copper", async () => {
+test("does not redistribute a T113 port onto preloaded copper", async () => {
   const circuitJson = readCompressedFixture<CircuitJson>(
     exactBoardFixtureDirectory,
     "t113-linux-exact-unrouted.circuit.json.gz",
@@ -93,6 +94,9 @@ test("captures T113 uniform redistribution onto preloaded copper", async () => {
   const solver = new UniformPortDistributionSolver({
     ...input,
     traceClearance: srj.minTraceToPadEdgeClearance ?? 0,
+    viaDiameter: srj.minViaDiameter,
+    preloadedTraces: srj.traces ?? [],
+    connMap: getConnectivityMapFromSimpleRouteJson(srj),
   })
   solver.solve()
 
@@ -148,9 +152,11 @@ test("captures T113 uniform redistribution onto preloaded copper", async () => {
     (srj.minTraceToPadEdgeClearance ?? 0)
 
   expect(originalPortPoint.y).toBeCloseTo(-8.547402, 6)
-  expect(redistributedPortPoint.y).toBeCloseTo(-8.944893125, 6)
+  expect(redistributedPortPoint.y).toBe(originalPortPoint.y)
   expect(originalDistance).toBeGreaterThanOrEqual(requiredCenterDistance)
-  expect(redistributedDistance).toBeLessThan(requiredCenterDistance)
+  expect(redistributedDistance).toBeGreaterThanOrEqual(
+    requiredCenterDistance,
+  )
 
   const exactSegment: SimplifiedPcbTrace = {
     ...foreignTrace,
