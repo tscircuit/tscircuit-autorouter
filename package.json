@@ -1,7 +1,7 @@
 {
   "name": "@tscircuit/capacity-autorouter",
   "main": "./dist/index.js",
-  "version": "0.0.906",
+  "version": "0.0.908",
   "type": "module",
   "repository": {
     "type": "git",
@@ -53,7 +53,7 @@
     "@tscircuit/hypergraph": "^0.0.71",
     "@tscircuit/jumper-topology-generator": "^0.0.4",
     "@tscircuit/krt-wasm": "^0.1.0",
-    "@tscircuit/length-matching-solver": "git+https://github.com/tscircuit/length-matching-solver.git#96cca6783a6e29d12bb1871185efe6ff2257bef8",
+    "@tscircuit/length-matching-solver": "git+https://github.com/tscircuit/length-matching-solver.git#9a5cd6cf4658505da600cec432933e091147e83d",
     "@tscircuit/math-utils": "^0.0.36",
     "@tscircuit/power-trace-expander": "git+https://github.com/tscircuit/power-trace-expander.git#c57511e7569f55bd72236a7da1bea318c2e994fc",
     "@tscircuit/rectdiff": "git+https://github.com/tscircuit/rectdiff.git#4a7735c9515590826d40e1e4681c9745196fbbd5",
