@@ -191,6 +191,19 @@ export class AutoroutingPipelineSolver4_TinyHypergraph extends BaseSolver {
         onSolved: (cms) => {
           cms.srjWithPointPairs =
             cms.netToPointPairsSolver?.getNewSimpleRouteJson()
+          if (
+            cms.srjWithPointPairs &&
+            cms.srj.defaultObstacleMargin !== undefined
+          ) {
+            cms.srjWithPointPairs.defaultObstacleMargin =
+              cms.srj.defaultObstacleMargin
+            if (
+              cms.srjWithPointPairs.minTraceToPadEdgeClearance === undefined
+            ) {
+              cms.srjWithPointPairs.minTraceToPadEdgeClearance =
+                cms.srj.defaultObstacleMargin
+            }
+          }
           cms.colorMap = getColorMap(cms.srjWithPointPairs!, cms.connMap)
           cms.connMap = getConnectivityMapFromSimpleRouteJson(
             cms.srjWithPointPairs!,
@@ -244,6 +257,7 @@ export class AutoroutingPipelineSolver4_TinyHypergraph extends BaseSolver {
           nodes: cms.capacityNodes!,
           edges: cms.capacityEdges || [],
           traceWidth: cms.minTraceWidth,
+          obstacleMargin: cms.srj.defaultObstacleMargin ?? 0.15,
           colorMap: cms.colorMap,
           shouldReturnCrampedPortPoints: true,
         },
@@ -427,7 +441,10 @@ export class AutoroutingPipelineSolver4_TinyHypergraph extends BaseSolver {
           outline: cms.srj.outline,
           defaultViaDiameter: cms.viaDiameter,
           layerCount: cms.srj.layerCount,
-          minTraceToPadEdgeClearance: cms.srj.minTraceToPadEdgeClearance,
+          obstacleMargin: cms.srj.defaultObstacleMargin,
+          traceMargin: cms.srj.defaultObstacleMargin,
+          minTraceToPadEdgeClearance:
+            cms.srj.minTraceToPadEdgeClearance ?? cms.srj.defaultObstacleMargin,
           iterations: 2,
         },
       ],
@@ -440,7 +457,10 @@ export class AutoroutingPipelineSolver4_TinyHypergraph extends BaseSolver {
         colorMap: cms.colorMap,
         minTraceWidth: cms.minTraceWidth,
         connection: cms.srj.connections,
-        obstacleMargin: cms.srj.minTraceToPadEdgeClearance ?? 0.15,
+        obstacleMargin:
+          cms.srj.defaultObstacleMargin ??
+          cms.srj.minTraceToPadEdgeClearance ??
+          0.15,
         layerCount: cms.srj.layerCount,
       },
     ]),
