@@ -670,6 +670,34 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
   >()
   private combinedOutput?: HighDensityRoute[]
 
+  private mergeMovablePreloadedVias(
+    routes: HighDensityRoute[],
+  ): HighDensityRoute[] {
+    const movableRoutes = routes.filter((route) =>
+      this.syntheticConnectionNames.has(route.connectionName),
+    )
+    if (movableRoutes.length === 0) return routes
+    const mergedRoutes = mergePipeline9MovablePreloadedVias({
+      routes: movableRoutes,
+      otherHdRoutes: [
+        ...routes.filter(
+          (route) => !this.syntheticConnectionNames.has(route.connectionName),
+        ),
+        ...this.fixedPreloadedObstacleRoutes,
+      ],
+      obstacles: this.params.obstacles,
+      colorMap: this.params.colorMap,
+      layerCount: this.params.layerCount,
+      connMap: this.params.connMap,
+    })
+    const mergedRouteByConnectionName = new Map(
+      mergedRoutes.map((route) => [route.connectionName, route]),
+    )
+    return routes.map(
+      (route) => mergedRouteByConnectionName.get(route.connectionName) ?? route,
+    )
+  }
+
   private cacheIndexedDrcResult(
     candidateKey: DrcCandidateKey,
     result: ReturnType<DrcEvaluator>,
@@ -1649,7 +1677,9 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       boundedRegionalRepairResult.referenceValidationCount +=
         earlyBoundedRepair.referenceValidationCount
     }
-    this.combinedOutput = boundedRegionalRepairResult.routes
+    this.combinedOutput = this.mergeMovablePreloadedVias(
+      boundedRegionalRepairResult.routes,
+    )
     this.stats = {
       ...this.stats,
       ...this.exactRepairSolver.stats,

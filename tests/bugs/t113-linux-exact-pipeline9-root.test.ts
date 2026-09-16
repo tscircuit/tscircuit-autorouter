@@ -4,6 +4,7 @@ import { gunzipSync } from "node:zlib"
 import type { CircuitJson } from "circuit-json"
 import { convertCircuitJsonToPcbSvg } from "circuit-to-svg"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
+import { getDrcErrors } from "lib/testing/getDrcErrors"
 import { convertToCircuitJson } from "lib/testing/utils/convertToCircuitJson"
 import type { SimpleRouteJson } from "lib/types"
 import { stackSvgsHorizontally } from "stack-svgs"
@@ -57,6 +58,9 @@ test("completes the exact T113-S3 Pipeline9 run", async () => {
   expect(solver.portPointPathingSolver?.solved).toBe(true)
   expect(solver.getNewTracesBeforePowerExpansion()).toHaveLength(42)
 
+  const routedSrj = solver.getOutputSimpleRouteJson()
+  const routedTraces = routedSrj.traces ?? []
+
   const preloadedFanoutCopper = convertToCircuitJson(
     srj,
     srj.traces ?? [],
@@ -70,6 +74,23 @@ test("completes the exact T113-S3 Pipeline9 run", async () => {
     preloadedFanoutCopper.filter((element) => element.type === "pcb_via")
       .length,
   ).toBeGreaterThan(0)
+  const routedCopper = convertToCircuitJson(
+    solver.srjWithPointPairs!,
+    routedTraces,
+    {
+      minTraceWidth: srj.minTraceWidth,
+      minViaDiameter: srj.minViaDiameter,
+      originalSrj: srj,
+      includeOriginalConnections: true,
+    },
+  ).filter(
+    (element) => element.type === "pcb_trace" || element.type === "pcb_via",
+  )
+  expect(
+    routedCopper.filter((element) => element.type === "pcb_trace"),
+  ).toHaveLength(384)
+  const routedCircuitJson = [...circuitJson, ...routedCopper]
+  expect(getDrcErrors(structuredClone(routedCircuitJson)).errors).toEqual([])
   await expect(convertCircuitJsonToPcbSvg(circuitJson)).toMatchSvgSnapshot(
     import.meta.path,
     { svgName: "pcb", tolerance: 0.02 },
@@ -84,6 +105,19 @@ test("completes the exact T113-S3 Pipeline9 run", async () => {
     ),
   ).toMatchSvgSnapshot(import.meta.path, {
     svgName: "unrouted-preloaded-fanout",
+    tolerance: 0.02,
+  })
+  await expect(
+    stackSvgsHorizontally(
+      [
+        convertCircuitJsonToPcbSvg(circuitJson),
+        convertCircuitJsonToPcbSvg([...circuitJson, ...preloadedFanoutCopper]),
+        convertCircuitJsonToPcbSvg(routedCircuitJson),
+      ],
+      { gap: 12, normalizeSize: false },
+    ),
+  ).toMatchSvgSnapshot(import.meta.path, {
+    svgName: "unrouted-preloaded-routed",
     tolerance: 0.02,
   })
 })

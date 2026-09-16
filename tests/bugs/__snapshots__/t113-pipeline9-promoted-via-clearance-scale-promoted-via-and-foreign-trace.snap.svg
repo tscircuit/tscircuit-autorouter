@@ -1,0 +1,44 @@
+<svg width="800" height="800" viewBox="0 0 800 800" xmlns="http://www.w3.org/2000/svg"><rect width="100%" height="100%" fill="white"/><g><polyline data-points="-1.612,-11.868 -1.753,-11.651 -2.025,-11.639 -2.313,-11.724 -2.306820212732447,-11.722176104452284" data-type="line" data-label="" points="687.04,533.4400000000005 619.36,429.27999999999975 488.79999999999995,423.5199999999995 350.55999999999995,464.3200000000006 353.52629788842546,463.444530137097" fill="none" stroke="#ff3344" stroke-linejoin="round" stroke-width="48"/></g><g><rect data-type="rect" data-label="" data-x="-2.21" data-y="-11.59" x="40" y="40" width="720" height="720" fill="#00000000" stroke="black" stroke-width="0.0020833333333333333"/></g><circle data-type="circle" data-label="" data-x="-2.2931039582534387" data-y="-11.3114966596238" cx="360.1101000383494" cy="266.31839661942377" r="180" fill="#3388ff12" stroke="#3388ff" stroke-width="0.0020833333333333333"/><circle data-type="circle" data-label="" data-x="-2.2931039582534387" data-y="-11.3114966596238" cx="360.1101000383494" cy="266.31839661942377" r="108" fill="#3388ff" stroke="black" stroke-width="0.0020833333333333333"/><g id="crosshair" style="display: none"><line id="crosshair-h" y1="0" y2="800" stroke="#666" stroke-width="0.5"/><line id="crosshair-v" x1="0" x2="800" stroke="#666" stroke-width="0.5"/><text id="coordinates" font-family="monospace" font-size="12" fill="#666"></text></g><script><![CDATA[
+              document.currentScript.parentElement.addEventListener('mousemove', (e) => {
+                const svg = e.currentTarget;
+                const rect = svg.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                const crosshair = svg.getElementById('crosshair');
+                const h = svg.getElementById('crosshair-h');
+                const v = svg.getElementById('crosshair-v');
+                const coords = svg.getElementById('coordinates');
+                
+                crosshair.style.display = 'block';
+                h.setAttribute('x1', '0');
+                h.setAttribute('x2', '800');
+                h.setAttribute('y1', y);
+                h.setAttribute('y2', y);
+                v.setAttribute('x1', x);
+                v.setAttribute('x2', x);
+                v.setAttribute('y1', '0');
+                v.setAttribute('y2', '800');
+
+                // Calculate real coordinates using inverse transformation
+                const matrix = {"a":480,"c":0,"e":1460.8,"b":0,"d":-480,"f":-5163.2};
+                // Manually invert and apply the affine transform
+                // Since we only use translate and scale, we can directly compute:
+                // x' = (x - tx) / sx
+                // y' = (y - ty) / sy
+                const sx = matrix.a;
+                const sy = matrix.d;
+                const tx = matrix.e; 
+                const ty = matrix.f;
+                const realPoint = {
+                  x: (x - tx) / sx,
+                  y: (y - ty) / sy // Flip y back since we used negative scale
+                }
+                
+                coords.textContent = `(${realPoint.x.toFixed(2)}, ${realPoint.y.toFixed(2)})`;
+                coords.setAttribute('x', (x + 5).toString());
+                coords.setAttribute('y', (y - 5).toString());
+              });
+              document.currentScript.parentElement.addEventListener('mouseleave', () => {
+                document.currentScript.parentElement.getElementById('crosshair').style.display = 'none';
+              });
+            ]]></script></svg>

@@ -323,6 +323,10 @@ export class AutoroutingPipelineSolver4_TinyHypergraph extends BaseSolver {
             cms.portPointPathingSolver?.getOutput().inputNodeWithPortPoints ??
             [],
           minTraceWidth: cms.minTraceWidth,
+          traceClearance: cms.srj.minTraceToPadEdgeClearance ?? 0,
+          viaDiameter: cms.viaDiameter,
+          preloadedTraces: cms.srj.traces ?? [],
+          connMap: cms.connMap,
           obstacles: cms.srj.obstacles,
           layerCount: cms.srj.layerCount,
         },
