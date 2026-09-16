@@ -19,6 +19,7 @@ import type { Obstacle } from "lib/types/srj-types"
 import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
 import { BaseSolver } from "../../solvers/BaseSolver"
 import { HighDensitySolver } from "../../solvers/HighDensitySolver/HighDensitySolver"
+import { canExpandNodeRoutingLayers } from "./canExpandNodeRoutingLayers"
 import type { PreloadedHighDensityRoute } from "./convertPreloadedTraceToHdRoutes"
 import {
   arePipeline9RoutesOnSameNet,
@@ -897,9 +898,20 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
   }
 
   protected finishRegularSolverFailure(error: string): void {
+    if (!this.activeNode) {
+      throw new Error(
+        "Pipeline9 cannot finish regular routing without an active node",
+      )
+    }
     this.activeFallbackReason = `regular high-density routing failed: ${error}`
     this.activeRegularSolver = null
-    if (!this.enableRegionalFallback) {
+    if (
+      !this.enableRegionalFallback ||
+      !canExpandNodeRoutingLayers({
+        nodeWithPortPoints: this.activeNode,
+        layerCount: this.layerCount,
+      })
+    ) {
       this.error = `Pipeline9 ${this.activeFallbackReason}`
       this.failed = true
       this.activeNode = null

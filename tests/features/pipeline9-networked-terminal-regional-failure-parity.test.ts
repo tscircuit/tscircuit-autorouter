@@ -8,7 +8,7 @@ import {
   solveNetworkedHighDensitySolver,
 } from "tests/fixtures/pipeline9-networked-fixtures"
 
-test("Pipeline9 networked terminal regional failure matches over HTTP", async () => {
+test("Pipeline9 networked skips an unchanged regional retry and preserves failure parity", async () => {
   const portPoints = [
     { x: -1, y: 0, z: 0, connectionName: "horizontal" },
     { x: 1, y: 0, z: 0, connectionName: "horizontal" },
@@ -60,7 +60,8 @@ test("Pipeline9 networked terminal regional failure matches over HTTP", async ()
     expect(networkedSolver.failed).toBeTrue()
     expect(networkedSolver.error).toBe(localSolver.error)
     expect(networkedSolver.stats).toMatchObject({
-      remoteRegionalFallbackResults: 1,
+      remoteOrdinaryResults: 1,
+      remoteRegionalFallbackResults: 0,
       remoteTransportFallbacks: 0,
     })
   } finally {
