@@ -1,7 +1,10 @@
 import { BaseSolver } from "@tscircuit/solver-utils"
 import { GraphicsObject } from "graphics-debug"
-import { Obstacle } from "lib/types"
-import { NodeWithPortPoints } from "lib/types/high-density-types"
+import type { Obstacle } from "lib/types"
+import type {
+  NodeWithPortPoints,
+  PortPoint,
+} from "lib/types/high-density-types"
 import { getBoundsFromNodeWithPortPoints } from "lib/utils/getBoundsFromNodeWithPortPoints"
 import { InputNodeWithPortPoints } from "../PortPointPathingSolver/PortPointPathingSolver"
 import {
@@ -23,6 +26,8 @@ export interface UniformPortDistributionSolverInput {
   nodeWithPortPoints: NodeWithPortPoints[]
   inputNodesWithPortPoints: InputNodeWithPortPoints[]
   obstacles: Obstacle[]
+  minTraceWidth: number
+  traceClearance: number
 }
 
 /**
@@ -45,6 +50,8 @@ export class UniformPortDistributionSolver extends BaseSolver {
   ownerPairsToProcess: OwnerPairKey[] = []
   currentOwnerPairBeingProcessed: OwnerPairKey | null = null
   redistributedNodes: NodeWithPortPoints[] = []
+  allPortPoints: PortPoint[] = []
+  fixedPortPointIds = new Set<string>()
 
   constructor(private input: UniformPortDistributionSolverInput) {
     super()
@@ -87,6 +94,32 @@ export class UniformPortDistributionSolver extends BaseSolver {
       nodeBounds: this.mapOfNodeIdToBounds,
     })
 
+    this.allPortPoints = input.nodeWithPortPoints.flatMap(
+      (node) => node.portPoints,
+    )
+    for (const [ownerPairKey, portPoints] of this.mapOfOwnerPairToPortPoints) {
+      const sharedEdge = this.mapOfOwnerPairToSharedEdge.get(ownerPairKey)
+      const edgeIsFixed =
+        !sharedEdge ||
+        shouldIgnoreSharedEdge({
+          sharedEdge,
+          obstacles: this.input.obstacles,
+        })
+      for (const portPoint of portPoints) {
+        if (
+          portPoint.portPointId &&
+          (edgeIsFixed ||
+            shouldIgnorePortPoint({
+              portPoint,
+              ownerNodeIds: portPoint.ownerNodeIds,
+              inputNodes: this.input.inputNodesWithPortPoints,
+            }))
+        ) {
+          this.fixedPortPointIds.add(portPoint.portPointId)
+        }
+      }
+    }
+
     this.ownerPairsToProcess = Array.from(
       this.mapOfOwnerPairToSharedEdge.keys(),
     )
@@ -94,6 +127,44 @@ export class UniformPortDistributionSolver extends BaseSolver {
       const edgeA = this.mapOfOwnerPairToSharedEdge.get(a)!
       const edgeB = this.mapOfOwnerPairToSharedEdge.get(b)!
       return edgeA.center.x - edgeB.center.x || edgeA.center.y - edgeB.center.y
+    })
+  }
+
+  private redistributionIntroducesFixedPortPointCollision(
+    redistributedPortPoints: PortPointWithOwnerPair[],
+  ): boolean {
+    const requiredClearance =
+      this.input.minTraceWidth + this.input.traceClearance
+
+    return redistributedPortPoints.some((redistributedPortPoint) => {
+      const originalPortPoint = this.allPortPoints.find(
+        (portPoint) =>
+          portPoint.portPointId === redistributedPortPoint.portPointId,
+      )
+      if (!originalPortPoint) return false
+
+      return this.allPortPoints.some((fixedPortPoint) => {
+        if (
+          !fixedPortPoint.portPointId ||
+          fixedPortPoint.portPointId === redistributedPortPoint.portPointId ||
+          !this.fixedPortPointIds.has(fixedPortPoint.portPointId) ||
+          (fixedPortPoint.z ?? 0) !== (redistributedPortPoint.z ?? 0)
+        ) {
+          return false
+        }
+        const originalDistance = Math.hypot(
+          fixedPortPoint.x - originalPortPoint.x,
+          fixedPortPoint.y - originalPortPoint.y,
+        )
+        const redistributedDistance = Math.hypot(
+          fixedPortPoint.x - redistributedPortPoint.x,
+          fixedPortPoint.y - redistributedPortPoint.y,
+        )
+        return (
+          originalDistance >= requiredClearance &&
+          redistributedDistance < requiredClearance
+        )
+      })
     })
   }
 
@@ -133,6 +204,9 @@ export class UniformPortDistributionSolver extends BaseSolver {
       sharedEdge,
       portPoints: family,
     })
+    if (this.redistributionIntroducesFixedPortPointCollision(redistributed)) {
+      return
+    }
 
     this.mapOfOwnerPairToPortPoints.set(ownerPairKey, redistributed)
   }

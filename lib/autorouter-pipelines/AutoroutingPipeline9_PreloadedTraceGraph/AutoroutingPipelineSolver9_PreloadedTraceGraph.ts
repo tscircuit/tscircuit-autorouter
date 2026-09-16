@@ -571,6 +571,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             cms.portPointPathingSolver?.getOutput().inputNodeWithPortPoints ??
             [],
           minTraceWidth: cms.minTraceWidth,
+          traceClearance: cms.srj.minTraceToPadEdgeClearance ?? 0,
           obstacles: cms.srj.obstacles,
           layerCount: cms.srj.layerCount,
         },
