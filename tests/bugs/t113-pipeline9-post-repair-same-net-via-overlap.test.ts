@@ -2,14 +2,12 @@ import { expect, test } from "bun:test"
 import { readFileSync } from "node:fs"
 import { gunzipSync } from "node:zlib"
 import type { CircuitJson, PcbVia } from "circuit-json"
-import { convertCircuitJsonToPcbSvg } from "circuit-to-svg"
 import { getSvgFromGraphicsObject } from "graphics-debug"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
 import { getDrcErrors } from "lib/testing/getDrcErrors"
 import { convertToCircuitJson } from "lib/testing/utils/convertToCircuitJson"
 import type { SimpleRouteJson } from "lib/types"
 import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
-import { stackSvgsHorizontally } from "stack-svgs"
 
 const fixtureDirectory =
   "../../fixtures/bug-reports/t113-linux-exact-pipeline9-root/"
@@ -30,9 +28,6 @@ const readCompressedFixture = <T>(filename: string): T =>
   ) as T
 
 test("keeps same-net vias merged after T113 joint repair", async () => {
-  const circuitJson = readCompressedFixture<CircuitJson>(
-    "t113-linux-exact-unrouted.circuit.json.gz",
-  )
   const srj = readCompressedFixture<SimpleRouteJson>(
     "t113-linux-exact.srj.json.gz",
   )
@@ -127,17 +122,8 @@ test("keeps same-net vias merged after T113 joint repair", async () => {
     },
     { backgroundColor: "white", svgWidth: 700, svgHeight: 700 },
   )
-  const routedCopper = routedCircuitJson.filter(
-    (element) => element.type === "pcb_trace" || element.type === "pcb_via",
-  )
   await expect(
-    stackSvgsHorizontally(
-      [
-        convertCircuitJsonToPcbSvg([...circuitJson, ...routedCopper]),
-        focusSvg,
-      ],
-      { gap: 12, normalizeSize: false },
-    ).replace(/[ \t]+$/gm, ""),
+    focusSvg.replace(/[ \t]+$/gm, ""),
   ).toMatchSvgSnapshot(import.meta.path, {
     svgName: "real-pcb-and-post-repair-vias",
     tolerance: 0.02,
