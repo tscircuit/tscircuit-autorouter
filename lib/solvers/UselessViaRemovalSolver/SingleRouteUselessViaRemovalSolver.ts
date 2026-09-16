@@ -229,34 +229,110 @@ export class SingleRouteUselessViaRemovalSolver extends BaseSolver {
     currentSection: RouteSection,
     nextSection: RouteSection,
   ): ViaPairShortcut | null {
+    if (
+      currentSection.points.some(
+        (point) => point.insideJumperPad || point.toNextSegmentType,
+      )
+    ) {
+      return null
+    }
+
+    const prevPoints = previousSection.points
+    const nextPoints = nextSection.points
+    const P = prevPoints.length
+    const N = nextPoints.length
+    if (P === 0 || N === 0) return null
+
+    // Precompute cumulative lengths along previousSection and nextSection for O(1) upper-bound pruning
+    const prevCumLengths = new Float64Array(P)
+    for (let i = 1; i < P; i++) {
+      prevCumLengths[i] =
+        prevCumLengths[i - 1] +
+        Math.hypot(
+          prevPoints[i].x - prevPoints[i - 1].x,
+          prevPoints[i].y - prevPoints[i - 1].y,
+        )
+    }
+
+    const nextCumLengths = new Float64Array(N)
+    for (let i = 1; i < N; i++) {
+      nextCumLengths[i] =
+        nextCumLengths[i - 1] +
+        Math.hypot(
+          nextPoints[i].x - nextPoints[i - 1].x,
+          nextPoints[i].y - nextPoints[i - 1].y,
+        )
+    }
+
+    const prevToCurrDist = Math.hypot(
+      currentSection.points[0].x - prevPoints[P - 1].x,
+      currentSection.points[0].y - prevPoints[P - 1].y,
+    )
+    const currentSectionLength = this.getPathLength(currentSection.points)
+    const currToNextDist = Math.hypot(
+      nextPoints[0].x -
+        currentSection.points[currentSection.points.length - 1].x,
+      nextPoints[0].y -
+        currentSection.points[currentSection.points.length - 1].y,
+    )
+    const middleSectionLength =
+      prevToCurrDist + currentSectionLength + currToNextDist
+
+    let lastInvalidPrev = -1
+    for (let i = 0; i < P; i++) {
+      if (prevPoints[i].insideJumperPad || prevPoints[i].toNextSegmentType) {
+        lastInvalidPrev = i
+      }
+    }
+
+    let firstInvalidNext = N
+    for (let i = 0; i < N; i++) {
+      if (nextPoints[i].insideJumperPad || nextPoints[i].toNextSegmentType) {
+        firstInvalidNext = i
+        break
+      }
+    }
+
     let bestShortcut: ViaPairShortcut | null = null
     for (
       let previousPointIndex = 0;
-      previousPointIndex < previousSection.points.length;
+      previousPointIndex < P;
       previousPointIndex++
     ) {
-      const start = previousSection.points[previousPointIndex]
+      if (previousPointIndex <= lastInvalidPrev) continue
+
+      const distFromViaPrev =
+        prevCumLengths[P - 1] - prevCumLengths[previousPointIndex]
+      const start = prevPoints[previousPointIndex]
+
       for (
         let nextPointIndex = 0;
-        nextPointIndex < nextSection.points.length;
+        nextPointIndex < firstInvalidNext;
         nextPointIndex++
       ) {
-        const end = nextSection.points[nextPointIndex]
-        const replacedPoints = [
-          ...previousSection.points.slice(previousPointIndex),
-          ...currentSection.points,
-          ...nextSection.points.slice(0, nextPointIndex + 1),
-        ]
+        const distFromViaNext = nextCumLengths[nextPointIndex]
+        const end = nextPoints[nextPointIndex]
+
+        const replacedLengthBound =
+          distFromViaPrev + middleSectionLength + distFromViaNext
+        const euclideanDist = Math.hypot(end.x - start.x, end.y - start.y)
+        const maxPossibleSaved = replacedLengthBound - euclideanDist
+
+        // Theoretical upper bound on savedLength cannot beat bestShortcut or save length
         if (
-          replacedPoints.some(
-            (point) => point.insideJumperPad || point.toNextSegmentType,
-          )
+          maxPossibleSaved < -1e-6 ||
+          (bestShortcut && maxPossibleSaved <= bestShortcut.savedLength)
         ) {
           continue
         }
 
         for (const possiblePath of calculate45DegreePaths(start, end)) {
           const path = this.normalizeShortcutPath(possiblePath, start, end)
+          const replacedPoints = [
+            ...previousSection.points.slice(previousPointIndex),
+            ...currentSection.points,
+            ...nextSection.points.slice(0, nextPointIndex + 1),
+          ]
           const savedLength =
             this.getPathLength(replacedPoints) - this.getPathLength(path)
           if (savedLength < -1e-6 || this.shortcutCrossesOutline(path)) continue
