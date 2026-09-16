@@ -1,0 +1,112 @@
+<svg width="1416" height="570" viewBox="0 0 1416 570" xmlns="http://www.w3.org/2000/svg">
+  <g transform="translate(0, 0) scale(1, 1) translate(0, 0)">
+    <g transform="translate(0, 0) scale(1, 1) translate(0, 0)">
+    <rect width="700" height="70" fill="#f4f4f4" />
+  <text x="350" y="26" fill="#111" font-family="Arial, sans-serif"
+    font-size="18" font-weight="700" text-anchor="middle">BEFORE · PORT MOVED ONTO PRELOADED TRACE</text>
+  <text x="350" y="51" fill="#4b5563" font-family="Arial, sans-serif"
+    font-size="14" text-anchor="middle">RED route port enters the BLUE copper clearance</text>
+  </g>
+  <g transform="translate(0, 70) scale(1, 1) translate(0, 0)">
+    <rect width="100%" height="100%" fill="white"/><g><polyline data-points="-0.7093105966671991,-8.918640883929791 -1.422815186195846,-8.94829772488841" data-type="line" data-label="required clearance from preloaded copper" points="367.9494503844894,242.97702808456143 177.07345315456365,250.9107949807285" fill="none" stroke="#2563eb20" stroke-linejoin="round" stroke-width="107.00757922581641"/></g><g><polyline data-points="-0.7299979999999999,-9.529884249999999 -0.7299979999999999,-8.359902000000002" data-type="line" data-label="shared capacity edge" points="362.41517800671164,406.4962103870921 362.41517800671164,93.50378961290835" fill="none" stroke="#9ca3af" stroke-linejoin="round" stroke-width="5.35037896129082"/></g><g><polyline data-points="-0.7093105966671991,-8.918640883929791 -1.422815186195846,-8.94829772488841" data-type="line" data-label="preloaded trace" points="367.9494503844894,242.97702808456143 177.07345315456365,250.9107949807285" fill="none" stroke="#2563eb" stroke-linejoin="round" stroke-width="26.751894806454104"/></g><g><rect data-type="rect" data-label="" data-x="-0.7299979999999999" data-y="-8.944893125" x="201.90380916798708" y="40" width="321.02273767744913" height="420" fill="#00000000" stroke="#00000000" stroke-width="0.0037380529761904652"/></g><circle data-type="circle" data-label="" data-x="-0.7299979999999999" data-y="-8.944893125" cx="362.41517800671164" cy="250" r="13.375947403227052" fill="#dc2626" stroke="#991b1b" stroke-width="0.0037380529761904652"/><g id="crosshair__stack1" style="display: none"><line id="crosshair-h__stack1" y1="0" y2="500" stroke="#666" stroke-width="0.5"/><line id="crosshair-v__stack1" x1="0" x2="700" stroke="#666" stroke-width="0.5"/><text id="coordinates__stack1" font-family="monospace" font-size="12" fill="#666"></text></g><script><![CDATA[
+              document.currentScript.parentElement.addEventListener('mousemove', (e) => {
+                const svg = e.currentTarget;
+                const rect = svg.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                const crosshair = svg.getElementById('crosshair');
+                const h = svg.getElementById('crosshair-h');
+                const v = svg.getElementById('crosshair-v');
+                const coords = svg.getElementById('coordinates');
+
+                crosshair.style.display = 'block';
+                h.setAttribute('x1', '0');
+                h.setAttribute('x2', '700');
+                h.setAttribute('y1', y);
+                h.setAttribute('y2', y);
+                v.setAttribute('x1', x);
+                v.setAttribute('x2', x);
+                v.setAttribute('y1', '0');
+                v.setAttribute('y2', '500');
+
+                // Calculate real coordinates using inverse transformation
+                const matrix = {"a":267.518948064541,"c":0,"e":557.7034750559304,"b":0,"d":-267.518948064541,"f":-2142.9283993497447};
+                // Manually invert and apply the affine transform
+                // Since we only use translate and scale, we can directly compute:
+                // x' = (x - tx) / sx
+                // y' = (y - ty) / sy
+                const sx = matrix.a;
+                const sy = matrix.d;
+                const tx = matrix.e;
+                const ty = matrix.f;
+                const realPoint = {
+                  x: (x - tx) / sx,
+                  y: (y - ty) / sy // Flip y back since we used negative scale
+                }
+
+                coords.textContent = `(${realPoint.x.toFixed(2)}, ${realPoint.y.toFixed(2)})`;
+                coords.setAttribute('x', (x + 5).toString());
+                coords.setAttribute('y', (y - 5).toString());
+              });
+              document.currentScript.parentElement.addEventListener('mouseleave', () => {
+                document.currentScript.parentElement.getElementById('crosshair').style.display = 'none';
+              });
+            ]]></script>
+  </g>
+  </g>
+  <g transform="translate(716, 0) scale(1, 1) translate(0, 0)">
+    <g transform="translate(0, 0) scale(1, 1) translate(0, 0)">
+    <rect width="700" height="70" fill="#f4f4f4" />
+  <text x="350" y="26" fill="#111" font-family="Arial, sans-serif"
+    font-size="18" font-weight="700" text-anchor="middle">AFTER · UNSAFE REDISTRIBUTION SKIPPED</text>
+  <text x="350" y="51" fill="#4b5563" font-family="Arial, sans-serif"
+    font-size="14" text-anchor="middle">RED route port keeps its original safe position</text>
+  </g>
+  <g transform="translate(0, 70) scale(1, 1) translate(0, 0)">
+    <rect width="100%" height="100%" fill="white"/><g><polyline data-points="-0.7093105966671991,-8.918640883929791 -1.422815186195846,-8.94829772488841" data-type="line" data-label="required clearance from preloaded copper" points="367.9494503844894,242.97702808456143 177.07345315456365,250.9107949807285" fill="none" stroke="#2563eb20" stroke-linejoin="round" stroke-width="107.00757922581641"/></g><g><polyline data-points="-0.7299979999999999,-9.529884249999999 -0.7299979999999999,-8.359902000000002" data-type="line" data-label="shared capacity edge" points="362.41517800671164,406.4962103870921 362.41517800671164,93.50378961290835" fill="none" stroke="#9ca3af" stroke-linejoin="round" stroke-width="5.35037896129082"/></g><g><polyline data-points="-0.7093105966671991,-8.918640883929791 -1.422815186195846,-8.94829772488841" data-type="line" data-label="preloaded trace" points="367.9494503844894,242.97702808456143 177.07345315456365,250.9107949807285" fill="none" stroke="#2563eb" stroke-linejoin="round" stroke-width="26.751894806454104"/></g><g><rect data-type="rect" data-label="" data-x="-0.7299979999999999" data-y="-8.944893125" x="201.90380916798708" y="40" width="321.02273767744913" height="420" fill="#00000000" stroke="#00000000" stroke-width="0.0037380529761904652"/></g><circle data-type="circle" data-label="" data-x="-0.7299979999999999" data-y="-8.547402000000002" cx="362.41517800671164" cy="143.66359237500956" r="13.375947403227052" fill="#dc2626" stroke="#991b1b" stroke-width="0.0037380529761904652"/><g id="crosshair__stack1__stack1" style="display: none"><line id="crosshair-h__stack1__stack1" y1="0" y2="500" stroke="#666" stroke-width="0.5"/><line id="crosshair-v__stack1__stack1" x1="0" x2="700" stroke="#666" stroke-width="0.5"/><text id="coordinates__stack1__stack1" font-family="monospace" font-size="12" fill="#666"></text></g><script><![CDATA[
+              document.currentScript.parentElement.addEventListener('mousemove', (e) => {
+                const svg = e.currentTarget;
+                const rect = svg.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                const crosshair = svg.getElementById('crosshair');
+                const h = svg.getElementById('crosshair-h');
+                const v = svg.getElementById('crosshair-v');
+                const coords = svg.getElementById('coordinates');
+
+                crosshair.style.display = 'block';
+                h.setAttribute('x1', '0');
+                h.setAttribute('x2', '700');
+                h.setAttribute('y1', y);
+                h.setAttribute('y2', y);
+                v.setAttribute('x1', x);
+                v.setAttribute('x2', x);
+                v.setAttribute('y1', '0');
+                v.setAttribute('y2', '500');
+
+                // Calculate real coordinates using inverse transformation
+                const matrix = {"a":267.518948064541,"c":0,"e":557.7034750559304,"b":0,"d":-267.518948064541,"f":-2142.9283993497447};
+                // Manually invert and apply the affine transform
+                // Since we only use translate and scale, we can directly compute:
+                // x' = (x - tx) / sx
+                // y' = (y - ty) / sy
+                const sx = matrix.a;
+                const sy = matrix.d;
+                const tx = matrix.e;
+                const ty = matrix.f;
+                const realPoint = {
+                  x: (x - tx) / sx,
+                  y: (y - ty) / sy // Flip y back since we used negative scale
+                }
+
+                coords.textContent = `(${realPoint.x.toFixed(2)}, ${realPoint.y.toFixed(2)})`;
+                coords.setAttribute('x', (x + 5).toString());
+                coords.setAttribute('y', (y - 5).toString());
+              });
+              document.currentScript.parentElement.addEventListener('mouseleave', () => {
+                document.currentScript.parentElement.getElementById('crosshair').style.display = 'none';
+              });
+            ]]></script>
+  </g>
+  </g>
+</svg>

@@ -1,12 +1,17 @@
 import { BaseSolver } from "@tscircuit/solver-utils"
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import { GraphicsObject } from "graphics-debug"
-import { Obstacle } from "lib/types"
+import type { Obstacle, SimplifiedPcbTrace } from "lib/types"
 import { NodeWithPortPoints } from "lib/types/high-density-types"
 import { getBoundsFromNodeWithPortPoints } from "lib/utils/getBoundsFromNodeWithPortPoints"
 import { InputNodeWithPortPoints } from "../PortPointPathingSolver/PortPointPathingSolver"
 import { determineOwnerPair } from "./determineOwnerPair"
 import { getOwnerPairKey } from "./getOwnerPairKey"
+import {
+  type PreloadedTraceCopperPrimitive,
+  getPointToCopperPrimitiveDistance,
+  getPreloadedTraceCopperPrimitives,
+} from "./getPreloadedTraceCopperPrimitives"
 import { precomputeSharedEdges } from "./precomputeSharedEdges"
 import { redistributePortPointsOnSharedEdge } from "./redistributePortPointsOnSharedEdge"
 import { shouldIgnorePortPoint } from "./shouldIgnorePortPoint"
@@ -27,6 +32,11 @@ export interface UniformPortDistributionSolverInput {
   minTraceWidth: number
   traceClearance?: number
   connMap?: ConnectivityMap
+  preloadedCopper?: {
+    traces: SimplifiedPcbTrace[]
+    layerCount: number
+    viaDiameter: number
+  }
 }
 
 /**
@@ -50,6 +60,7 @@ export class UniformPortDistributionSolver extends BaseSolver {
   currentOwnerPairBeingProcessed: OwnerPairKey | null = null
   redistributedNodes: NodeWithPortPoints[] = []
   private readonly fixedPortPoints: PortPointWithOwnerPair[] = []
+  private readonly preloadedCopperPrimitives: PreloadedTraceCopperPrimitive[]
 
   private portPointsAreConnected(
     a: PortPointWithOwnerPair,
@@ -69,8 +80,33 @@ export class UniformPortDistributionSolver extends BaseSolver {
     )
   }
 
+  private portPointIsConnectedToCopper(
+    portPoint: PortPointWithOwnerPair,
+    primitive: PreloadedTraceCopperPrimitive,
+  ): boolean {
+    const portPointIds = [
+      portPoint.rootConnectionName,
+      portPoint.connectionName,
+    ].filter((id): id is string => Boolean(id))
+    return portPointIds.some((portPointId) =>
+      primitive.connectedIds.some(
+        (connectedId) =>
+          portPointId === connectedId ||
+          this.input.connMap?.areIdsConnected(portPointId, connectedId) ===
+            true,
+      ),
+    )
+  }
+
   constructor(private input: UniformPortDistributionSolverInput) {
     super()
+    this.preloadedCopperPrimitives = input.preloadedCopper
+      ? getPreloadedTraceCopperPrimitives({
+          traces: input.preloadedCopper.traces,
+          layerCount: input.preloadedCopper.layerCount,
+          defaultViaDiameter: input.preloadedCopper.viaDiameter,
+        })
+      : []
     for (const node of input.nodeWithPortPoints) {
       this.mapOfNodeIdToBounds.set(
         node.capacityMeshNodeId,
@@ -211,7 +247,31 @@ export class UniformPortDistributionSolver extends BaseSolver {
           )
         },
       )
-      if (redistributionIntroducesCollision) unsafeLayers.add(z)
+      const redistributionIntroducesCopperCollision =
+        this.preloadedCopperPrimitives.some((primitive) => {
+          if (
+            primitive.z !== z ||
+            this.portPointIsConnectedToCopper(candidate, primitive)
+          ) {
+            return false
+          }
+          const requiredDistance =
+            this.input.minTraceWidth / 2 +
+            primitive.width / 2 +
+            (this.input.traceClearance ?? 0)
+          return (
+            getPointToCopperPrimitiveDistance(original, primitive) >=
+              requiredDistance &&
+            getPointToCopperPrimitiveDistance(candidate, primitive) <
+              requiredDistance
+          )
+        })
+      if (
+        redistributionIntroducesCollision ||
+        redistributionIntroducesCopperCollision
+      ) {
+        unsafeLayers.add(z)
+      }
     }
 
     this.mapOfOwnerPairToPortPoints.set(ownerPairKey, [

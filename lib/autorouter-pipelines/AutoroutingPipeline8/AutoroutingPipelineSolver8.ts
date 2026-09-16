@@ -349,6 +349,11 @@ export class AutoroutingPipelineSolver8 extends BaseSolver {
           minTraceWidth: cms.minTraceWidth,
           traceClearance: cms.srj.minTraceToPadEdgeClearance,
           connMap: cms.connMap,
+          preloadedCopper: {
+            traces: cms.srj.traces ?? [],
+            layerCount: cms.srj.layerCount,
+            viaDiameter: cms.viaDiameter,
+          },
           obstacles: cms.srj.obstacles,
           layerCount: cms.srj.layerCount,
         },
