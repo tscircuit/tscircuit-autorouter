@@ -129,7 +129,6 @@ const getFixedRouteSlice = (
   const bounds = getNodeBounds(node)
   let start: RouteLocation | undefined
   let end: RouteLocation | undefined
-  let hasNonzeroSegment = false
 
   for (
     let segmentIndex = 0;
@@ -142,10 +141,6 @@ const getFixedRouteSlice = (
       bounds,
     )
     if (!clippedSegment) continue
-    hasNonzeroSegment ||= !pointsAreEqual(
-      clippedSegment.start,
-      clippedSegment.end,
-    )
 
     start ??= {
       segmentIndex,
@@ -157,9 +152,7 @@ const getFixedRouteSlice = (
     }
   }
 
-  // A hairpin can contain copper even when its entry and exit are identical.
-  // Exclude only point touches, which have no segment inside the node.
-  if (!start || !end || !hasNonzeroSegment) return null
+  if (!start || !end) return null
 
   return {
     sourceRoute: route,
@@ -290,6 +283,11 @@ export const createRegionalFallbackProblem = (
   }
 
   for (const section of sections) {
+    // A zero-length slice still owns its position in a contiguous source
+    // section, so a replacement spanning its neighbors must absorb it. An
+    // isolated zero-length section has no copper to reroute and cannot form a
+    // meaningful fallback port pair.
+    if (pointsAreEqual(section.start.point, section.end.point)) continue
     const connectionName = section.sourceRoutes[0]!.connectionName
     if (fixedRouteSectionsByConnectionName.has(connectionName)) {
       throw new Error(

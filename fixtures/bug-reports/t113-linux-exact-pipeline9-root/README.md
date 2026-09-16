@@ -40,3 +40,11 @@ nets at that validation boundary. The connectivity package keeps its existing
 member-ID semantics. `t113-linux-exact-pipeline9-state.svg` is a full-board PCB
 render of the 42 routes reached after the candidate is accepted, using the same
 viewport and layer colors as the reproduction.
+
+This layer retains the zero-length `1..2` fanout span in the regional
+section that replaces positions `0..3`. The exact solver then completes with
+`solved=true`, `failed=false`, and materializes all 42 routed or mutated traces
+in the updated SVG. This is routing progress rather than a clean board: the
+strict repository DRC reports 69 errors, and `tsci check shorts` reports 47
+physical shorts. Those downstream violations require separate reproductions
+and root fixes.
