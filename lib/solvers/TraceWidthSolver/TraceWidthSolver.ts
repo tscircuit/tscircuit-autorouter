@@ -201,8 +201,7 @@ export class TraceWidthSolver extends BaseSolver {
       }
 
       this.currentTrace = nextTrace
-      this.currentHasConnectionMinimum =
-        connectionMinTraceWidth !== undefined
+      this.currentHasConnectionMinimum = connectionMinTraceWidth !== undefined
       this.currentMinTraceWidth = Math.max(
         this.minTraceWidth,
         connectionMinTraceWidth ?? this.minTraceWidth,
@@ -211,8 +210,7 @@ export class TraceWidthSolver extends BaseSolver {
         nominalTraceWidth ?? this.currentMinTraceWidth,
         this.currentMinTraceWidth,
       )
-      const midWidth =
-        (this.nominalTraceWidth + this.currentMinTraceWidth) / 2
+      const midWidth = (this.nominalTraceWidth + this.currentMinTraceWidth) / 2
       this.TRACE_WIDTH_SCHEDULE = [
         ...new Set([
           this.nominalTraceWidth,
