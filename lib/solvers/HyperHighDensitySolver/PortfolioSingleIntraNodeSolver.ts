@@ -1,5 +1,6 @@
 import {
   HighDensitySolverA01,
+  HighDensitySolverFailureCache,
   HighDensitySolverA03 as HighDensityA03Solver,
 } from "@tscircuit/high-density-a01"
 import { HighDensitySolverA13 } from "@tscircuit/high-density-a13"
@@ -22,8 +23,6 @@ import {
   HyperParameterSupervisorSolver,
   SupervisedSolver,
 } from "../HyperParameterSupervisorSolver"
-import { HighDensitySolverA01WithFailureCache } from "./HighDensitySolverA01WithFailureCache"
-import { HighDensitySolverA03WithFailureCache } from "./HighDensitySolverA03WithFailureCache"
 import { HighDensitySolverA13WithDrcValidation } from "./HighDensitySolverA13WithDrcValidation"
 import { repairDisconnectedSameRootPortPoints } from "./repairDisconnectedSameRootPortPoints"
 
@@ -134,6 +133,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       enableNegotiatedSearch?: boolean
       boardGeometry?: HighDensityBoardGeometry
     },
+    readonly highDensitySolverFailureCache = new HighDensitySolverFailureCache(),
   ) {
     super()
     this.nodeWithPortPoints = opts.nodeWithPortPoints
@@ -506,37 +506,43 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       return solver as any
     }
     if (hyperParameters.HIGH_DENSITY_A01) {
-      const solver = new HighDensitySolverA01WithFailureCache({
-        nodeWithPortPoints: this.nodeWithPortPoints,
-        cellSizeMm: 0.1,
-        viaDiameter: this.constructorParams.viaDiameter ?? 0.3,
-        viaMinDistFromBorder: (this.constructorParams.viaDiameter ?? 0.3) / 2,
-        traceMargin: 0.1,
-        traceThickness: this.constructorParams.traceWidth ?? 0.15,
-        effort: this.effort,
-        hyperParameters: {
-          shuffleSeed: hyperParameters.SHUFFLE_SEED ?? 0,
+      const solver = new HighDensitySolverA01(
+        {
+          nodeWithPortPoints: this.nodeWithPortPoints,
+          cellSizeMm: 0.1,
+          viaDiameter: this.constructorParams.viaDiameter ?? 0.3,
+          viaMinDistFromBorder: (this.constructorParams.viaDiameter ?? 0.3) / 2,
+          traceMargin: 0.1,
+          traceThickness: this.constructorParams.traceWidth ?? 0.15,
+          effort: this.effort,
+          hyperParameters: {
+            shuffleSeed: hyperParameters.SHUFFLE_SEED ?? 0,
+          },
         },
-      })
+        this.highDensitySolverFailureCache,
+      )
       return solver as any
     }
     if (hyperParameters.HIGH_DENSITY_A03) {
-      const solver = new HighDensitySolverA03WithFailureCache({
-        nodeWithPortPoints: this.nodeWithPortPoints,
-        highResolutionCellSize: 0.1,
-        highResolutionCellThickness: 8,
-        lowResolutionCellSize: 0.4,
-        viaDiameter: this.constructorParams.viaDiameter ?? 0.3,
-        viaMinDistFromBorder: (this.constructorParams.viaDiameter ?? 0.3) / 2,
-        traceMargin: 0.1,
-        // This likely needs to be corrected to use the actual trace width-
-        // but using anything but 0.1 for traceThickness is causing issues
-        // needs more debugging- repro01 in the high-density-a01 repo
-        // has a good reproduction
-        traceThickness: 0.1, // this.constructorParams.traceWidth ?? 0.15,
-        effort: this.effort,
-        hyperParameters,
-      })
+      const solver = new HighDensityA03Solver(
+        {
+          nodeWithPortPoints: this.nodeWithPortPoints,
+          highResolutionCellSize: 0.1,
+          highResolutionCellThickness: 8,
+          lowResolutionCellSize: 0.4,
+          viaDiameter: this.constructorParams.viaDiameter ?? 0.3,
+          viaMinDistFromBorder: (this.constructorParams.viaDiameter ?? 0.3) / 2,
+          traceMargin: 0.1,
+          // This likely needs to be corrected to use the actual trace width-
+          // but using anything but 0.1 for traceThickness is causing issues
+          // needs more debugging- repro01 in the high-density-a01 repo
+          // has a good reproduction
+          traceThickness: 0.1, // this.constructorParams.traceWidth ?? 0.15,
+          effort: this.effort,
+          hyperParameters,
+        },
+        this.highDensitySolverFailureCache,
+      )
       return solver as any
     }
     if (hyperParameters.CLOSED_FORM_TWO_TRACE_SAME_LAYER) {

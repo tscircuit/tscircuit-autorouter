@@ -1,3 +1,4 @@
+import { HighDensitySolverFailureCache } from "@tscircuit/high-density-a01"
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { GraphicsObject } from "graphics-debug"
 import { HighDensityForceImproveSolver } from "high-density-repair01/lib/HighDensityForceImproveSolver"
@@ -105,7 +106,10 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
   repairSolver?: Pipeline4HighDensityRepairSolver
   private phase: RegionalFallbackPhase = "route"
 
-  constructor(params: Pipeline9RegionalFallbackSolverParams) {
+  constructor(
+    params: Pipeline9RegionalFallbackSolverParams,
+    highDensitySolverFailureCache = new HighDensitySolverFailureCache(),
+  ) {
     super()
     this.params = params
     this.stats = {
@@ -113,27 +117,30 @@ export class Pipeline9RegionalFallbackSolver extends BaseSolver {
       forceImproveCandidateRejectionCount: 0,
       repairCandidateRejectionCount: 0,
     }
-    this.highDensitySolver = new HighDensitySolver({
-      nodePortPoints: [params.nodeWithPortPoints],
-      colorMap: params.colorMap,
-      connMap: params.connMap,
-      viaDiameter: params.viaDiameter,
-      traceWidth: params.traceWidth,
-      obstacleMargin: params.obstacleMargin,
-      effort: params.effort,
-      nodePfById: params.nodePfById,
-      obstacles: params.obstacles,
-      layerCount: params.layerCount,
-      useGrowShrinkHighDensityIntraNodeSolver: true,
-      preserveTerminalPcbPortIds: false,
-      growShrinkFallbackToInvalidGeometryOnFailure: false,
-      growShrinkSolutionValidator:
-        params.boardObstacles &&
-        params.movablePreloadedConnectionNames &&
-        params.viaToPadClearance !== undefined
-          ? (routes) => this.validateCandidateRoutes(routes)
-          : undefined,
-    })
+    this.highDensitySolver = new HighDensitySolver(
+      {
+        nodePortPoints: [params.nodeWithPortPoints],
+        colorMap: params.colorMap,
+        connMap: params.connMap,
+        viaDiameter: params.viaDiameter,
+        traceWidth: params.traceWidth,
+        obstacleMargin: params.obstacleMargin,
+        effort: params.effort,
+        nodePfById: params.nodePfById,
+        obstacles: params.obstacles,
+        layerCount: params.layerCount,
+        useGrowShrinkHighDensityIntraNodeSolver: true,
+        preserveTerminalPcbPortIds: false,
+        growShrinkFallbackToInvalidGeometryOnFailure: false,
+        growShrinkSolutionValidator:
+          params.boardObstacles &&
+          params.movablePreloadedConnectionNames &&
+          params.viaToPadClearance !== undefined
+            ? (routes) => this.validateCandidateRoutes(routes)
+            : undefined,
+      },
+      highDensitySolverFailureCache,
+    )
     this.activeSubSolver = this.highDensitySolver
     this.MAX_ITERATIONS = 100e6 * params.effort
   }

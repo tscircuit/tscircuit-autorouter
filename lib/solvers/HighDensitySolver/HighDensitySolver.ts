@@ -1,3 +1,4 @@
+import { HighDensitySolverFailureCache } from "@tscircuit/high-density-a01"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { GraphicsObject } from "graphics-debug"
 import { getGlobalInMemoryCache } from "lib/cache/setupGlobalCaches"
@@ -84,49 +85,52 @@ export class HighDensitySolver extends BaseSolver {
     }
   >
 
-  constructor({
-    nodePortPoints,
-    colorMap,
-    connMap,
-    viaDiameter,
-    traceWidth,
-    obstacleMargin,
-    effort,
-    nodePfById,
-    obstacles,
-    layerCount,
-    useGrowShrinkHighDensityIntraNodeSolver,
-    enableNegotiatedSearch = false,
-    boardGeometry,
-    preserveTerminalPcbPortIds,
-    growShrinkMaxInnerIterationsPerGrowthAttempt,
-    growShrinkFallbackToInvalidGeometryOnFailure,
-    growShrinkSolutionValidator,
-    captureSearchDebug,
-  }: {
-    nodePortPoints: NodeWithPortPoints[]
-    colorMap?: Record<string, string>
-    connMap?: ConnectivityMap
-    viaDiameter?: number
-    traceWidth?: number
-    obstacleMargin?: number
-    effort?: number
-    obstacles?: Obstacle[]
-    layerCount?: number
-    useGrowShrinkHighDensityIntraNodeSolver?: boolean
-    enableNegotiatedSearch?: boolean
-    boardGeometry?: HighDensityBoardGeometry
-    preserveTerminalPcbPortIds?: boolean
-    growShrinkMaxInnerIterationsPerGrowthAttempt?: number
-    growShrinkFallbackToInvalidGeometryOnFailure?: boolean
-    growShrinkSolutionValidator?: (
-      routes: HighDensityIntraNodeRoute[],
-    ) => boolean
-    captureSearchDebug?: boolean
-    nodePfById?:
-      | Map<CapacityMeshNodeId, number | null>
-      | Record<string, number | null>
-  }) {
+  constructor(
+    {
+      nodePortPoints,
+      colorMap,
+      connMap,
+      viaDiameter,
+      traceWidth,
+      obstacleMargin,
+      effort,
+      nodePfById,
+      obstacles,
+      layerCount,
+      useGrowShrinkHighDensityIntraNodeSolver,
+      enableNegotiatedSearch = false,
+      boardGeometry,
+      preserveTerminalPcbPortIds,
+      growShrinkMaxInnerIterationsPerGrowthAttempt,
+      growShrinkFallbackToInvalidGeometryOnFailure,
+      growShrinkSolutionValidator,
+      captureSearchDebug,
+    }: {
+      nodePortPoints: NodeWithPortPoints[]
+      colorMap?: Record<string, string>
+      connMap?: ConnectivityMap
+      viaDiameter?: number
+      traceWidth?: number
+      obstacleMargin?: number
+      effort?: number
+      obstacles?: Obstacle[]
+      layerCount?: number
+      useGrowShrinkHighDensityIntraNodeSolver?: boolean
+      enableNegotiatedSearch?: boolean
+      boardGeometry?: HighDensityBoardGeometry
+      preserveTerminalPcbPortIds?: boolean
+      growShrinkMaxInnerIterationsPerGrowthAttempt?: number
+      growShrinkFallbackToInvalidGeometryOnFailure?: boolean
+      growShrinkSolutionValidator?: (
+        routes: HighDensityIntraNodeRoute[],
+      ) => boolean
+      captureSearchDebug?: boolean
+      nodePfById?:
+        | Map<CapacityMeshNodeId, number | null>
+        | Record<string, number | null>
+    },
+    readonly highDensitySolverFailureCache = new HighDensitySolverFailureCache(),
+  ) {
     super()
     this.unsolvedNodePortPoints = nodePortPoints
     this.colorMap = colorMap ?? {}
@@ -400,8 +404,14 @@ export class HighDensitySolver extends BaseSolver {
       captureSearchDebug: this.captureSearchDebug,
     }
     this.activeSubSolver = this.useGrowShrinkHighDensityIntraNodeSolver
-      ? new GrowShrinkHighDensityIntraNodeSolver(intraNodeSolverParams)
-      : new PortfolioSingleIntraNodeSolver(intraNodeSolverParams)
+      ? new GrowShrinkHighDensityIntraNodeSolver(
+          intraNodeSolverParams,
+          this.highDensitySolverFailureCache,
+        )
+      : new PortfolioSingleIntraNodeSolver(
+          intraNodeSolverParams,
+          this.highDensitySolverFailureCache,
+        )
     this.updateCacheStats()
   }
 
