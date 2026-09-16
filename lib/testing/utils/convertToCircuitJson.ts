@@ -800,11 +800,29 @@ function createPcbPadElements(srj: SimpleRouteJson): AnyCircuitElement[] {
  * @param minViaDiameter Default diameter for vias
  * @returns An array of PcbVia elements
  */
+function getViaDrillLayers(
+  via: { from_layer: string; to_layer: string; layers?: string[] },
+  layerCount: number,
+  allowBlindAndBuriedVias: boolean,
+): LayerName[] {
+  if (allowBlindAndBuriedVias && via.layers !== undefined) {
+    return via.layers as LayerName[]
+  }
+  const drillSpan = allowBlindAndBuriedVias
+    ? via
+    : {
+        from_layer: "top",
+        to_layer: mapZToLayerName(layerCount - 1, layerCount),
+      }
+  return getViaLayers(drillSpan, layerCount) as LayerName[]
+}
+
 function extractViasFromRoutes(
   routes: SimplifiedPcbTrace[] | HighDensityRoute[],
   layerCount: number,
   minViaDiameter = 0.3,
   minViaHoleDiameter = minViaDiameter * 0.5,
+  allowBlindAndBuriedVias = false,
 ): PcbVia[] {
   const vias: PcbVia[] = []
   const viaLocations = new Set<string>() // Track unique via locations
@@ -834,7 +852,11 @@ function extractViasFromRoutes(
                 y: segment.y,
                 outer_diameter: viaDiameter,
                 hole_diameter: viaHoleDiameter,
-                layers: getViaLayers(segment, layerCount) as LayerName[],
+                layers: getViaDrillLayers(
+                  segment,
+                  layerCount,
+                  allowBlindAndBuriedVias,
+                ),
               })
               viaLocations.add(locationKey)
             }
@@ -870,10 +892,11 @@ function extractViasFromRoutes(
                 y: currPoint.y,
                 outer_diameter: viaDiameter,
                 hole_diameter: viaHoleDiameter,
-                layers: getViaLayers(
+                layers: getViaDrillLayers(
                   { from_layer: fromLayer, to_layer: toLayer },
                   layerCount,
-                ) as LayerName[],
+                  allowBlindAndBuriedVias,
+                ),
               })
               viaLocations.add(locationKey)
             }
@@ -977,6 +1000,7 @@ export function convertToCircuitJson(
       srjWithPointPairs.layerCount,
       resolvedMinViaDiameter,
       resolvedMinViaHoleDiameter,
+      (originalSrj ?? srjWithPointPairs).allowBlindAndBuriedVias === true,
     ),
   )
 
