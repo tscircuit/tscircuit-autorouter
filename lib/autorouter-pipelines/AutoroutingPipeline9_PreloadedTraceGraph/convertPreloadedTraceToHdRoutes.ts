@@ -102,19 +102,26 @@ export const convertPreloadedTraceToHdRoutes = (
       continue
     }
 
+    const start = {
+      x: point.x,
+      y: point.y,
+      z: mapLayerNameToZ(point.layer, layerCount),
+    }
+    const end = {
+      x: nextPoint.x,
+      y: nextPoint.y,
+      z: mapLayerNameToZ(nextPoint.layer, layerCount),
+    }
+    if (
+      Math.abs(start.x - end.x) <= MIN_ROUTE_DIMENSION &&
+      Math.abs(start.y - end.y) <= MIN_ROUTE_DIMENSION &&
+      start.z === end.z
+    ) {
+      continue
+    }
+
     addRoute(
-      [
-        {
-          x: point.x,
-          y: point.y,
-          z: mapLayerNameToZ(point.layer, layerCount),
-        },
-        {
-          x: nextPoint.x,
-          y: nextPoint.y,
-          z: mapLayerNameToZ(nextPoint.layer, layerCount),
-        },
-      ],
+      [start, end],
       Math.max(point.width, nextPoint.width),
       defaultViaDiameter,
       [],
