@@ -48,3 +48,10 @@ in the updated SVG. This is routing progress rather than a clean board: the
 strict repository DRC reports 69 errors, and `tsci check shorts` reports 47
 physical shorts. Those downstream violations require separate reproductions
 and root fixes.
+
+`t113-post-repair-via-overlap.json` captures the last DRC error after the
+focused uniform-distribution, terminal-metadata, and promoted-via clearance
+fixes. A repaired preloaded via and a new same-net via are only 0.0077 mm apart,
+which leaves their 0.2 mm drill holes overlapping by 0.1923 mm before the
+final same-net via merge. The board requires another 0.1 mm between drill
+edges.

@@ -1,0 +1,112 @@
+<svg width="1416" height="670" viewBox="0 0 1416 670" xmlns="http://www.w3.org/2000/svg">
+  <g transform="translate(0, 0) scale(1, 1) translate(0, 0)">
+    <g transform="translate(0, 0) scale(1, 1) translate(0, 0)">
+    <rect width="700" height="70" fill="#f4f4f4" />
+  <text x="350" y="26" fill="#111" font-family="Arial, sans-serif"
+    font-size="18" font-weight="700" text-anchor="middle">BEFORE · REPAIR CREATES OVERLAPPING VIAS</text>
+  <text x="350" y="51" fill="#4b5563" font-family="Arial, sans-serif"
+    font-size="14" text-anchor="middle">The two drill holes overlap despite sharing a net</text>
+  </g>
+  <g transform="translate(0, 70) scale(1, 1) translate(0, 0)">
+    <rect width="100%" height="100%" fill="white"/><g><rect data-type="rect" data-label="" data-x="-2.234" data-y="-12.096" x="90.00000000000011" y="40.00000000000023" width="519.9999999999995" height="519.9999999999995" fill="#00000000" stroke="#00000000" stroke-width="0.0030769230769230795"/></g><circle data-type="circle" data-label="" data-x="-2.2353105912015536" data-y="-12.09254199879256" cx="349.5740578594949" cy="298.8761496075822" r="97.49999999999993" fill="#2563eb14" stroke="#2563eb" stroke-width="0.0030769230769230795"/><circle data-type="circle" data-label="" data-x="-2.2353105912015536" data-y="-12.09254199879256" cx="349.5740578594949" cy="298.8761496075822" r="73.12499999999994" fill="#2563eb" stroke="black" stroke-width="0.0030769230769230795"/><circle data-type="circle" data-label="" data-x="-2.2326460155028616" data-y="-12.099739319381907" cx="350.4400449615699" cy="301.2152787991199" r="73.12499999999994" fill="#dc2626cc" stroke="#991b1b" stroke-width="0.0030769230769230795"/><circle data-type="circle" data-label="" data-x="-2.2353105912015536" data-y="-12.09254199879256" cx="349.5740578594949" cy="298.8761496075822" r="32.49999999999997" fill="white" stroke="#1e3a8a" stroke-width="0.0030769230769230795"/><circle data-type="circle" data-label="" data-x="-2.2326460155028616" data-y="-12.099739319381907" cx="350.4400449615699" cy="301.2152787991199" r="32.49999999999997" fill="white" stroke="#7f1d1d" stroke-width="0.0030769230769230795"/><g id="crosshair__stack1" style="display: none"><line id="crosshair-h__stack1" y1="0" y2="600" stroke="#666" stroke-width="0.5"/><line id="crosshair-v__stack1" x1="0" x2="700" stroke="#666" stroke-width="0.5"/><text id="coordinates__stack1" font-family="monospace" font-size="12" fill="#666"></text></g><script><![CDATA[
+              document.currentScript.parentElement.addEventListener('mousemove', (e) => {
+                const svg = e.currentTarget;
+                const rect = svg.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                const crosshair = svg.getElementById('crosshair');
+                const h = svg.getElementById('crosshair-h');
+                const v = svg.getElementById('crosshair-v');
+                const coords = svg.getElementById('coordinates');
+
+                crosshair.style.display = 'block';
+                h.setAttribute('x1', '0');
+                h.setAttribute('x2', '700');
+                h.setAttribute('y1', y);
+                h.setAttribute('y2', y);
+                v.setAttribute('x1', x);
+                v.setAttribute('x2', x);
+                v.setAttribute('y1', '0');
+                v.setAttribute('y2', '600');
+
+                // Calculate real coordinates using inverse transformation
+                const matrix = {"a":324.9999999999997,"c":0,"e":1076.0499999999993,"b":0,"d":-324.9999999999997,"f":-3631.1999999999966};
+                // Manually invert and apply the affine transform
+                // Since we only use translate and scale, we can directly compute:
+                // x' = (x - tx) / sx
+                // y' = (y - ty) / sy
+                const sx = matrix.a;
+                const sy = matrix.d;
+                const tx = matrix.e;
+                const ty = matrix.f;
+                const realPoint = {
+                  x: (x - tx) / sx,
+                  y: (y - ty) / sy // Flip y back since we used negative scale
+                }
+
+                coords.textContent = `(${realPoint.x.toFixed(2)}, ${realPoint.y.toFixed(2)})`;
+                coords.setAttribute('x', (x + 5).toString());
+                coords.setAttribute('y', (y - 5).toString());
+              });
+              document.currentScript.parentElement.addEventListener('mouseleave', () => {
+                document.currentScript.parentElement.getElementById('crosshair').style.display = 'none';
+              });
+            ]]></script>
+  </g>
+  </g>
+  <g transform="translate(716, 0) scale(1, 1) translate(0, 0)">
+    <g transform="translate(0, 0) scale(1, 1) translate(0, 0)">
+    <rect width="700" height="70" fill="#f4f4f4" />
+  <text x="350" y="26" fill="#111" font-family="Arial, sans-serif"
+    font-size="18" font-weight="700" text-anchor="middle">AFTER · SAME-NET VIAS MERGED AGAIN</text>
+  <text x="350" y="51" fill="#4b5563" font-family="Arial, sans-serif"
+    font-size="14" text-anchor="middle">The redundant overlap is removed after joint repair</text>
+  </g>
+  <g transform="translate(0, 70) scale(1, 1) translate(0, 0)">
+    <rect width="100%" height="100%" fill="white"/><g><rect data-type="rect" data-label="" data-x="-2.234" data-y="-12.096" x="120.10266258281001" y="100.20532516561957" width="459.79467483438" height="459.79467483438066" fill="#00000000" stroke="#00000000" stroke-width="0.0034798141161080797"/></g><circle data-type="circle" data-label="" data-x="-2.2353105912015536" data-y="-12.09254199879256" cx="349.62337321540053" cy="329.1089309948402" r="86.21150153144626" fill="#2563eb14" stroke="#2563eb" stroke-width="0.0034798141161080797"/><circle data-type="circle" data-label="" data-x="-2.2353105912015536" data-y="-12.09254199879256" cx="349.62337321540053" cy="329.1089309948402" r="64.65862614858469" fill="#2563eb" stroke="black" stroke-width="0.0034798141161080797"/><circle data-type="circle" data-label="" data-x="-2.2931039582534387" data-y="-11.3114966596238" cx="333.01519670839707" cy="104.65862614858497" r="64.65862614858469" fill="#dc2626cc" stroke="#991b1b" stroke-width="0.0034798141161080797"/><circle data-type="circle" data-label="" data-x="-2.2353105912015536" data-y="-12.09254199879256" cx="349.62337321540053" cy="329.1089309948402" r="28.737167177148752" fill="white" stroke="#1e3a8a" stroke-width="0.0034798141161080797"/><circle data-type="circle" data-label="" data-x="-2.2931039582534387" data-y="-11.3114966596238" cx="333.01519670839707" cy="104.65862614858497" r="28.737167177148752" fill="white" stroke="#7f1d1d" stroke-width="0.0034798141161080797"/><g id="crosshair__stack1__stack1" style="display: none"><line id="crosshair-h__stack1__stack1" y1="0" y2="600" stroke="#666" stroke-width="0.5"/><line id="crosshair-v__stack1__stack1" x1="0" x2="700" stroke="#666" stroke-width="0.5"/><text id="coordinates__stack1__stack1" font-family="monospace" font-size="12" fill="#666"></text></g><script><![CDATA[
+              document.currentScript.parentElement.addEventListener('mousemove', (e) => {
+                const svg = e.currentTarget;
+                const rect = svg.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                const crosshair = svg.getElementById('crosshair');
+                const h = svg.getElementById('crosshair-h');
+                const v = svg.getElementById('crosshair-v');
+                const coords = svg.getElementById('coordinates');
+
+                crosshair.style.display = 'block';
+                h.setAttribute('x1', '0');
+                h.setAttribute('x2', '700');
+                h.setAttribute('y1', y);
+                h.setAttribute('y2', y);
+                v.setAttribute('x1', x);
+                v.setAttribute('x2', x);
+                v.setAttribute('y1', '0');
+                v.setAttribute('y2', '600');
+
+                // Calculate real coordinates using inverse transformation
+                const matrix = {"a":287.3716717714875,"c":0,"e":991.9883147375031,"b":0,"d":-287.3716717714875,"f":-3145.945079165103};
+                // Manually invert and apply the affine transform
+                // Since we only use translate and scale, we can directly compute:
+                // x' = (x - tx) / sx
+                // y' = (y - ty) / sy
+                const sx = matrix.a;
+                const sy = matrix.d;
+                const tx = matrix.e;
+                const ty = matrix.f;
+                const realPoint = {
+                  x: (x - tx) / sx,
+                  y: (y - ty) / sy // Flip y back since we used negative scale
+                }
+
+                coords.textContent = `(${realPoint.x.toFixed(2)}, ${realPoint.y.toFixed(2)})`;
+                coords.setAttribute('x', (x + 5).toString());
+                coords.setAttribute('y', (y - 5).toString());
+              });
+              document.currentScript.parentElement.addEventListener('mouseleave', () => {
+                document.currentScript.parentElement.getElementById('crosshair').style.display = 'none';
+              });
+            ]]></script>
+  </g>
+  </g>
+</svg>
