@@ -39,9 +39,7 @@ test("Pipeline9 rejects a remote ordinary failure when another layer remains unt
       remoteFallbackReasonCounts: { invalid_response: 1 },
     })
     expect(
-      solver.routes.some((route) =>
-        route.route.some((point) => point.z === 1),
-      ),
+      solver.routes.some((route) => route.route.some((point) => point.z === 1)),
     ).toBeTrue()
   } finally {
     await server.close()
