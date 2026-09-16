@@ -70,9 +70,7 @@ test("Pipeline9 silently narrows a requested 0.4mm trace in a 0.5mm gap", async 
   const traces = solver.getOutputSimplifiedPcbTraces()
   const interiorWidths = traces.flatMap((trace) =>
     trace.route.flatMap((point) =>
-      point.route_type === "wire" && Math.abs(point.x) < 2
-        ? [point.width]
-        : [],
+      point.route_type === "wire" && Math.abs(point.x) < 2 ? [point.width] : [],
     ),
   )
   expect(interiorWidths.length).toBeGreaterThan(0)
