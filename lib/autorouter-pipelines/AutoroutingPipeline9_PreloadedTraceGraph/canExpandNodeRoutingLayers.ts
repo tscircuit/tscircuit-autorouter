@@ -1,7 +1,7 @@
 import type { NodeWithPortPoints } from "lib/types/high-density-types"
 
 /** Ordinary routing has no fixed copper to move; its retry must add layers. */
-export const canPipeline9RegionalFallbackAddLayers = ({
+export const canExpandNodeRoutingLayers = ({
   nodeWithPortPoints,
   layerCount,
 }: {

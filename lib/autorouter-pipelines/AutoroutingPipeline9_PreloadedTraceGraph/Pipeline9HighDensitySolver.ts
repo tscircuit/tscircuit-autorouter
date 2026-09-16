@@ -19,7 +19,7 @@ import type { Obstacle } from "lib/types/srj-types"
 import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
 import { BaseSolver } from "../../solvers/BaseSolver"
 import { HighDensitySolver } from "../../solvers/HighDensitySolver/HighDensitySolver"
-import { canPipeline9RegionalFallbackAddLayers } from "./canPipeline9RegionalFallbackAddLayers"
+import { canExpandNodeRoutingLayers } from "./canExpandNodeRoutingLayers"
 import type { PreloadedHighDensityRoute } from "./convertPreloadedTraceToHdRoutes"
 import {
   arePipeline9RoutesOnSameNet,
@@ -907,7 +907,7 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
     this.activeRegularSolver = null
     if (
       !this.enableRegionalFallback ||
-      !canPipeline9RegionalFallbackAddLayers({
+      !canExpandNodeRoutingLayers({
         nodeWithPortPoints: this.activeNode,
         layerCount: this.layerCount,
       })

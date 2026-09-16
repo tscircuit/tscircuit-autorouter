@@ -1,5 +1,5 @@
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
-import { canPipeline9RegionalFallbackAddLayers } from "../AutoroutingPipeline9_PreloadedTraceGraph/canPipeline9RegionalFallbackAddLayers"
+import { canExpandNodeRoutingLayers } from "../AutoroutingPipeline9_PreloadedTraceGraph/canExpandNodeRoutingLayers"
 import {
   createPipeline9RegularNodeSolver,
   normalizePipeline9NodeRootConnectionNames,
@@ -89,10 +89,7 @@ export function solvePipeline9NetworkedHighDensityNode(
   }
 
   const ordinaryFailure = ordinaryResult.error
-  if (
-    !input.enableRegionalFallback ||
-    !canPipeline9RegionalFallbackAddLayers(input)
-  ) {
+  if (!input.enableRegionalFallback || !canExpandNodeRoutingLayers(input)) {
     return {
       status: "failed",
       solutionStage: "ordinary",
