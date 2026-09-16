@@ -5,6 +5,7 @@ import type { CircuitJson, PcbVia } from "circuit-json"
 import { convertCircuitJsonToPcbSvg } from "circuit-to-svg"
 import { getSvgFromGraphicsObject } from "graphics-debug"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
+import { getDrcErrors } from "lib/testing/getDrcErrors"
 import { convertToCircuitJson } from "lib/testing/utils/convertToCircuitJson"
 import type { SimpleRouteJson } from "lib/types"
 import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
@@ -28,7 +29,7 @@ const readCompressedFixture = <T>(filename: string): T =>
     ).toString("utf8"),
   ) as T
 
-test("captures same-net vias separated again after T113 joint repair", async () => {
+test("keeps same-net vias merged after T113 joint repair", async () => {
   const circuitJson = readCompressedFixture<CircuitJson>(
     "t113-linux-exact-unrouted.circuit.json.gz",
   )
@@ -59,17 +60,20 @@ test("captures same-net vias separated again after T113 joint repair", async () 
   const vias = routedCircuitJson.filter(
     (element): element is PcbVia => element.type === "pcb_via",
   )
-  const findViaNearIssue = (pcbTraceId: string) =>
-    vias.find(
-      (via) =>
-        via.pcb_trace_id === pcbTraceId &&
-        Math.hypot(via.x - issueCenter.x, via.y - issueCenter.y) < 0.5,
-    )
-  const newVia = findViaNearIssue(newTraceId)
-  const preloadedVia = findViaNearIssue(preloadedTraceId)
-  if (!newVia || !preloadedVia) {
-    throw new Error("Missing the exact T113 post-repair via pair")
-  }
+  const newVia = vias.find(
+    (via) =>
+      via.pcb_trace_id === newTraceId &&
+      Math.hypot(via.x - issueCenter.x, via.y - issueCenter.y) < 0.5,
+  )
+  if (!newVia) throw new Error("Missing the exact T113 routed via")
+  const preloadedVia = vias
+    .filter((via) => via.pcb_trace_id === preloadedTraceId)
+    .sort(
+      (left, right) =>
+        Math.hypot(left.x - newVia.x, left.y - newVia.y) -
+        Math.hypot(right.x - newVia.x, right.y - newVia.y),
+    )[0]
+  if (!preloadedVia) throw new Error("Missing the exact T113 preloaded vias")
 
   const connMap = getConnectivityMapFromSimpleRouteJson(srj)
   expect(connMap.areIdsConnected("source_net_19", "source_trace_52")).toBe(
@@ -81,7 +85,12 @@ test("captures same-net vias separated again after T113 joint repair", async () 
   )
   const minimumCenterDistance =
     newVia.outer_diameter / 2 + preloadedVia.outer_diameter / 2 + 0.1
-  expect(centerDistance).toBeLessThan(minimumCenterDistance)
+  expect(centerDistance).toBeGreaterThanOrEqual(minimumCenterDistance)
+  expect(
+    getDrcErrors(routedCircuitJson, { includeTraceContinuity: false }).errors.filter(
+      (error) => error.type === "pcb_via_clearance_error",
+    ),
+  ).toEqual([])
 
   const focusSvg = getSvgFromGraphicsObject(
     {
