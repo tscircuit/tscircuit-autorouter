@@ -59,11 +59,13 @@ export interface TraceWidthSolverInput {
  *
  * For each trace, it walks along with a cursor checking clearance.
  * If clearance is insufficient for the current width, it tries the next
- * narrower width in the schedule.
+ * narrower width in the schedule. A connection's minTraceWidth is a hard
+ * constraint for the route outside short terminal pad tapers: if the route
+ * cannot fit at that width, the solver fails.
  *
  * It only runs width adjustments for routes whose connection provides a
- * nominalTraceWidth; routes without one are passed through unchanged.
- * The schedule is built per-route from that connection's nominalTraceWidth.
+ * nominalTraceWidth or minTraceWidth. Other routes pass through unchanged.
+ * The schedule is built per route from that connection's widths.
  */
 export class TraceWidthSolver extends BaseSolver {
   override getSolverName(): string {
@@ -78,6 +80,9 @@ export class TraceWidthSolver extends BaseSolver {
   obstacleMargin: number
   TRACE_WIDTH_SCHEDULE: number[]
   connectionNominalTraceWidthMap: Map<string, number>
+  connectionMinTraceWidthMap: Map<string, number>
+  currentMinTraceWidth = 0
+  currentHasConnectionMinimum = false
 
   unprocessedRoutes: HighDensityRoute[] = []
   processedRoutes: HighDensityRoute[] = []
@@ -121,15 +126,21 @@ export class TraceWidthSolver extends BaseSolver {
       inferredLayerCount,
     )
     this.connectionNominalTraceWidthMap = new Map()
+    this.connectionMinTraceWidthMap = new Map()
 
     for (const connection of input.connection) {
-      if (connection.nominalTraceWidth === undefined) {
-        continue
+      if (connection.nominalTraceWidth !== undefined) {
+        this.connectionNominalTraceWidthMap.set(
+          connection.name,
+          connection.nominalTraceWidth,
+        )
       }
-      this.connectionNominalTraceWidthMap.set(
-        connection.name,
-        connection.nominalTraceWidth,
-      )
+      if (connection.minTraceWidth !== undefined) {
+        this.connectionMinTraceWidthMap.set(
+          connection.name,
+          connection.minTraceWidth,
+        )
+      }
     }
 
     if (this.obstacles.length > 0) {
@@ -142,15 +153,16 @@ export class TraceWidthSolver extends BaseSolver {
     this.hdRouteSHI = new HighDensityRouteSpatialIndex(this.hdRoutes)
   }
 
-  private getNominalTraceWidthForRoute(
+  private getConnectionWidthForRoute(
     route: HighDensityRoute,
+    widthsByConnectionName: Map<string, number>,
   ): number | undefined {
-    const byName = this.connectionNominalTraceWidthMap.get(route.connectionName)
+    const byName = widthsByConnectionName.get(route.connectionName)
     if (byName !== undefined) {
       return byName
     }
     if (route.rootConnectionName) {
-      return this.connectionNominalTraceWidthMap.get(route.rootConnectionName)
+      return widthsByConnectionName.get(route.rootConnectionName)
     }
     return undefined
   }
@@ -168,8 +180,18 @@ export class TraceWidthSolver extends BaseSolver {
       }
 
       // Initialize the new trace processing
-      const nominalTraceWidth = this.getNominalTraceWidthForRoute(nextTrace)
-      if (nominalTraceWidth === undefined) {
+      const connectionMinTraceWidth = this.getConnectionWidthForRoute(
+        nextTrace,
+        this.connectionMinTraceWidthMap,
+      )
+      const nominalTraceWidth = this.getConnectionWidthForRoute(
+        nextTrace,
+        this.connectionNominalTraceWidthMap,
+      )
+      if (
+        nominalTraceWidth === undefined &&
+        connectionMinTraceWidth === undefined
+      ) {
         const traceWidth = nextTrace.traceThickness ?? this.minTraceWidth
         this.processedRoutes.push(
           this.createRouteWithWidth(nextTrace, traceWidth),
@@ -179,13 +201,34 @@ export class TraceWidthSolver extends BaseSolver {
       }
 
       this.currentTrace = nextTrace
-      this.nominalTraceWidth = nominalTraceWidth
-      const midWidth = (this.nominalTraceWidth + this.minTraceWidth) / 2
-      this.TRACE_WIDTH_SCHEDULE = [this.nominalTraceWidth, midWidth]
+      this.currentHasConnectionMinimum =
+        connectionMinTraceWidth !== undefined
+      this.currentMinTraceWidth = Math.max(
+        this.minTraceWidth,
+        connectionMinTraceWidth ?? this.minTraceWidth,
+      )
+      this.nominalTraceWidth = Math.max(
+        nominalTraceWidth ?? this.currentMinTraceWidth,
+        this.currentMinTraceWidth,
+      )
+      const midWidth =
+        (this.nominalTraceWidth + this.currentMinTraceWidth) / 2
+      this.TRACE_WIDTH_SCHEDULE = [
+        ...new Set([
+          this.nominalTraceWidth,
+          midWidth,
+          ...(connectionMinTraceWidth === undefined
+            ? []
+            : [this.currentMinTraceWidth]),
+        ]),
+      ]
       if (this.currentTrace.route.length < 2) {
-        // Trace is too short to process, just pass it through with minTraceWidth
+        // A point route has no copper segment whose clearance can be checked.
         this.processedRoutes.push(
-          this.createRouteWithWidth(this.currentTrace, this.minTraceWidth),
+          this.createRouteWithWidth(
+            this.currentTrace,
+            this.currentMinTraceWidth,
+          ),
         )
         this.currentTrace = null
         return
@@ -220,7 +263,12 @@ export class TraceWidthSolver extends BaseSolver {
           this.TRACE_WIDTH_SCHEDULE[this.currentScheduleIndex]!
         this.initializeCursor()
       } else {
-        // Exhausted all widths in schedule, use minTraceWidth as fallback
+        if (this.currentHasConnectionMinimum) {
+          this.error = `TraceWidthSolver cannot route "${this.currentTrace.connectionName}" at its minimum width of ${this.currentMinTraceWidth} mm`
+          this.failed = true
+          return
+        }
+        // Legacy nominal widths may still fall back to the board minimum.
         this.finalizeCurrentTrace(this.minTraceWidth)
       }
     } else if (!stepped) {
