@@ -22,7 +22,7 @@ const readCompressedFixture = <T>(filename: string): T =>
     ).toString("utf8"),
   ) as T
 
-test("advances the exact T113-S3 PCB to regional reconstruction", async () => {
+test("completes the exact T113-S3 Pipeline9 run", async () => {
   const circuitJson = readCompressedFixture<CircuitJson>(
     "t113-linux-exact-unrouted.circuit.json.gz",
   )
@@ -49,15 +49,13 @@ test("advances the exact T113-S3 PCB to regional reconstruction", async () => {
     structuredClone(srj),
     { cacheProvider: null },
   )
-  expect(() => solver.solve()).toThrow(
-    'Pipeline9 could not reconnect mutated preloaded segment "breakout:pcb_breakout_point_68_fixed_168_1"',
-  )
+  solver.solve()
 
+  expect(solver.solved).toBe(true)
+  expect(solver.failed).toBe(false)
+  expect(solver.error).toBeNull()
   expect(solver.portPointPathingSolver?.solved).toBe(true)
-  expect(solver.error).not.toContain(
-    "Route 201 could not determine endpoint regions",
-  )
-  expect(solver.error).not.toContain("No path found for source_trace_194")
+  expect(solver.getNewTracesBeforePowerExpansion()).toHaveLength(42)
 
   const preloadedFanoutCopper = convertToCircuitJson(
     srj,
