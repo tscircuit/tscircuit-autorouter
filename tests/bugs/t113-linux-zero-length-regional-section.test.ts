@@ -14,7 +14,7 @@ import type { NodeWithPortPoints } from "lib/types/high-density-types"
 const targetTraceId = "fanout:breakout:pcb_breakout_point_68:source-0"
 const targetFixedRouteName = "breakout:pcb_breakout_point_68_fixed_168_0"
 
-test("reconstructs the exact T113 fanout after rerouting across a duplicate point", (): void => {
+test("preserves T113 terminal metadata after regional repair", (): void => {
   const fixturePath = new URL(
     "../../fixtures/bug-reports/t113-linux-exact-pipeline9-root/t113-linux-exact.srj.json.gz",
     import.meta.url,
@@ -126,6 +126,9 @@ test("reconstructs the exact T113 fanout after rerouting across a duplicate poin
   expect(mutatedPreloadedTraces[0]!.route[0]).toMatchObject({
     x: 5,
     y: 20.1,
+  })
+  expect(mutatedPreloadedTraces[0]!.route[0]).toMatchObject({
+    start_pcb_port_id: "pcb_port_287",
   })
   expect(mutatedPreloadedTraces[0]!.route.at(-1)).toMatchObject({
     x: 5,
