@@ -81,7 +81,9 @@ test("Pipeline9 improves a 0.4mm trace by taking a legal detour", async (): Prom
   expect(solver.traceWidthSolver?.widthWarnings).toEqual([])
   expect(
     solver.traceSimplificationSolver!.simplifiedHdRoutes[0]!.route.length,
-  ).toBeLessThan(solver.highDensityStitchSolver!.mergedHdRoutes[0]!.route.length)
+  ).toBeLessThan(
+    solver.highDensityStitchSolver!.mergedHdRoutes[0]!.route.length,
+  )
   expect(
     traces.some((trace) =>
       trace.route.some(
