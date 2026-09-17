@@ -4,6 +4,7 @@ import type { Obstacle } from "lib/types"
 import { getIntraNodeCrossingsUsingCircle } from "lib/utils/getIntraNodeCrossingsUsingCircle"
 import { TinyHyperGraphSolver } from "tiny-hypergraph/lib/index"
 import { TinyHypergraphPortPointPathingSolver } from "./TinyHypergraphPortPointPathingSolver"
+import { hasPreloadedTraceSectionMetadata } from "./serializePreloadedTraceAssignments"
 
 type WidthImprovementInput = {
   pathingSolver: TinyHypergraphPortPointPathingSolver
@@ -37,6 +38,9 @@ export class HypergraphTraceWidthImprovementSolver extends BaseSolver {
         const metadata = this.selectedSolver.problem.routeMetadata?.[routeId] as
           | { connectionId: string }
           | undefined
+        // These synthetic routes represent existing copper, not requested
+        // connections whose width can be improved by this stage.
+        if (hasPreloadedTraceSectionMetadata(metadata)) return undefined
         if (!metadata?.connectionId) {
           throw new Error(
             `Missing connection ID for hypergraph route ${routeId}`,
