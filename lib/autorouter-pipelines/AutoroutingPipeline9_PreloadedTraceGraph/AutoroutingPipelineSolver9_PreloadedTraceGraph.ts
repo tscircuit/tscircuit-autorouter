@@ -733,8 +733,35 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             .getChangedPreloadedTraceSections()
             .map((section) => section.connectionName),
         )
-        const newHdRoutes = cms.highDensityStitchSolver!.mergedHdRoutes.filter(
-          (route) => !materializedConnectionNames.has(route.connectionName),
+        const requestedWidths = new Map<string, number>(
+          cms.srjWithPointPairs!.connections.map((connection) => [
+            connection.name,
+            Math.max(
+              cms.minTraceWidth,
+              connection.minTraceWidth ?? 0,
+              connection.nominalTraceWidth ?? 0,
+            ),
+          ]),
+        )
+        const improvedConnectionIds =
+          cms.hypergraphTraceWidthImprovementSolver!.getImprovedConnectionIds()
+        const stitchedNewRoutes =
+          cms.highDensityStitchSolver!.mergedHdRoutes.filter(
+            (route) => !materializedConnectionNames.has(route.connectionName),
+          )
+        const newHdRoutes = stitchedNewRoutes.map((route) =>
+          improvedConnectionIds.has(route.connectionName) ||
+          improvedConnectionIds.has(route.rootConnectionName ?? "")
+            ? {
+                ...route,
+                traceThickness: Math.max(
+                  route.traceThickness,
+                  requestedWidths.get(route.connectionName) ??
+                    requestedWidths.get(route.rootConnectionName ?? "") ??
+                    route.traceThickness,
+                ),
+              }
+            : route,
         )
         const netByConnectionName = getPipeline9NetByConnectionName(
           [...newHdRoutes, ...preloadedHdRoutes],
@@ -755,6 +782,10 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             otherHdRoutes: preloadedHdRoutes,
             netByConnectionName,
             enableCrossingViaReduction: true,
+            useTraceWidthAwareClearance: true,
+            widthImprovedConnectionIds: improvedConnectionIds,
+            pathObstacleMargin: cms.srj.minTraceToPadEdgeClearance ?? 0.15,
+            enableVertexShortcuts: true,
             terminalLayerIndicesByPcbPortId: getTerminalLayerIndicesByPcbPortId(
               cms.srj.connections,
               cms.srj.obstacles,

@@ -14,7 +14,11 @@ type WidthImprovementInput = {
   obstacles: Obstacle[]
 }
 
-type RouteWidth = { routeId: number; requestedWidth: number }
+type RouteWidth = {
+  routeId: number
+  connectionId: string
+  requestedWidth: number
+}
 
 const MAX_WIDTH_IMPROVEMENT_ATTEMPTS = 8
 
@@ -28,6 +32,7 @@ export class HypergraphTraceWidthImprovementSolver extends BaseSolver {
   private improvedRouteCount = 0
   private attemptedRouteCount = 0
   private rejectedCrossingCount = 0
+  private improvedConnectionIds = new Set<string>()
 
   constructor(private input: WidthImprovementInput) {
     super()
@@ -55,7 +60,7 @@ export class HypergraphTraceWidthImprovementSolver extends BaseSolver {
           connection.nominalTraceWidth ?? 0,
         )
         return requestedWidth > input.boardMinTraceWidth + 1e-6
-          ? { routeId, requestedWidth }
+          ? { routeId, connectionId: metadata.connectionId, requestedWidth }
           : undefined
       },
     )
@@ -236,6 +241,7 @@ export class HypergraphTraceWidthImprovementSolver extends BaseSolver {
       if (candidateCrossings <= originalCrossings) {
         this.selectedSolver = this.candidate
         this.improvedRouteCount++
+        this.improvedConnectionIds.add(this.currentRoute!.connectionId)
       } else {
         this.rejectedCrossingCount++
       }
@@ -247,6 +253,10 @@ export class HypergraphTraceWidthImprovementSolver extends BaseSolver {
 
   getOutput(): ReturnType<TinyHypergraphPortPointPathingSolver["getOutput"]> {
     return this.input.pathingSolver.getOutput(this.selectedSolver)
+  }
+
+  getImprovedConnectionIds(): ReadonlySet<string> {
+    return this.improvedConnectionIds
   }
 
   computeNodePfMap(): Map<string, number | null> {

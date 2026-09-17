@@ -99,6 +99,9 @@ export class TraceSimplificationSolver extends BaseSolver {
    *     coordinates or layers when routes represent spliceable local sections
    *   - useTraceWidthAwareClearance: Uses each route segment's actual copper
    *     width when checking path-simplification clearance
+   *   - widthImprovedConnectionIds: Applies width-aware path cleanup only to
+   *     the connections improved by the hypergraph stage
+   *   - pathObstacleMargin: Clearance to obstacles during path simplification
    *   - enableVertexShortcuts: Adds a vertex cleanup pass after path sampling
    *   - terminalLayerIndicesByPcbPortId: Physical copper-layer indices on
    *     which each PCB-port terminal can directly accept a route endpoint
@@ -121,6 +124,8 @@ export class TraceSimplificationSolver extends BaseSolver {
       readonly enableCrossingViaReduction?: boolean
       readonly preserveRouteEndpoints?: boolean
       readonly useTraceWidthAwareClearance?: boolean
+      readonly widthImprovedConnectionIds?: ReadonlySet<string>
+      readonly pathObstacleMargin?: number
       readonly enableVertexShortcuts?: boolean
       readonly terminalLayerIndicesByPcbPortId?: ReadonlyMap<
         string,
@@ -431,9 +436,12 @@ export class TraceSimplificationSolver extends BaseSolver {
               : undefined,
             minBoardEdgeClearance:
               this.simplificationConfig.minBoardEdgeClearance,
+            obstacleMargin: this.simplificationConfig.pathObstacleMargin,
             defaultViaDiameter: this.simplificationConfig.defaultViaDiameter,
             useTraceWidthAwareClearance:
               this.simplificationConfig.useTraceWidthAwareClearance,
+            widthImprovedConnectionIds:
+              this.simplificationConfig.widthImprovedConnectionIds,
             enableVertexShortcuts:
               this.simplificationConfig.enableVertexShortcuts,
           })

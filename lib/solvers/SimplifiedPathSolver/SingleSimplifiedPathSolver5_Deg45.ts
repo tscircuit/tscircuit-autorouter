@@ -94,6 +94,7 @@ export class SingleSimplifiedPathSolver5 extends SingleSimplifiedPathSolver {
   constructor(
     params: ConstructorParameters<typeof SingleSimplifiedPathSolver>[0] & {
       useTraceWidthAwareClearance?: boolean
+      obstacleMargin?: number
     },
   ) {
     super(params)
@@ -101,6 +102,7 @@ export class SingleSimplifiedPathSolver5 extends SingleSimplifiedPathSolver {
     this.cachedValidPathSegments = new Set()
     this.useTraceWidthAwareClearance =
       params.useTraceWidthAwareClearance ?? false
+    this.OBSTACLE_MARGIN = params.obstacleMargin ?? this.OBSTACLE_MARGIN
     this.clearanceTraceThickness = this.useTraceWidthAwareClearance
       ? this.inputRoute.traceThickness
       : this.TRACE_THICKNESS

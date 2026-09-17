@@ -112,6 +112,15 @@ test("Pipeline9 owns copied stages with minimal preloaded-trace changes", () => 
   expect(solver.pipelineDef[pathingIndex + 1]?.solverName).toBe(
     "hypergraphTraceWidthImprovementSolver",
   )
+  expect(
+    solver.pipelineDef.findIndex(
+      (step) => step.solverName === "hypergraphTraceWidthImprovementSolver",
+    ),
+  ).toBeLessThan(
+    solver.pipelineDef.findIndex(
+      (step) => step.solverName === "traceSimplificationSolver",
+    ),
+  )
   for (const stageName of [
     "highDensityForceImproveSolver",
     "highDensityRepairSolver",
@@ -169,6 +178,8 @@ test("Pipeline9 owns copied stages with minimal preloaded-trace changes", () => 
   expect(traceSimplificationParams).toMatchObject({
     minBoardEdgeClearance: 0.23,
     enableCrossingViaReduction: true,
+    useTraceWidthAwareClearance: true,
+    enableVertexShortcuts: true,
   })
   expect(immutableRoutes?.length).toBeGreaterThan(0)
   expect(

@@ -71,13 +71,17 @@ test("Pipeline9 improves a 0.4mm trace by taking a legal detour", async (): Prom
   expect(solver.solved).toBe(true)
   expect(solver.failed).toBe(false)
   const traces = solver.getOutputSimplifiedPcbTraces()
-  const interiorWidths = traces.flatMap((trace) =>
+  const wireWidths = traces.flatMap((trace) =>
     trace.route.flatMap((point) =>
-      point.route_type === "wire" && Math.abs(point.x) < 2 ? [point.width] : [],
+      point.route_type === "wire" ? [point.width] : [],
     ),
   )
-  expect(interiorWidths.length).toBeGreaterThan(0)
-  expect(interiorWidths.every((width) => width >= 0.4 - 1e-6)).toBe(true)
+  expect(wireWidths.length).toBeGreaterThan(0)
+  expect(wireWidths.every((width) => width >= 0.4 - 1e-6)).toBe(true)
+  expect(solver.traceWidthSolver?.widthWarnings).toEqual([])
+  expect(
+    solver.traceSimplificationSolver!.simplifiedHdRoutes[0]!.route.length,
+  ).toBeLessThan(solver.highDensityStitchSolver!.mergedHdRoutes[0]!.route.length)
   expect(
     traces.some((trace) =>
       trace.route.some(
