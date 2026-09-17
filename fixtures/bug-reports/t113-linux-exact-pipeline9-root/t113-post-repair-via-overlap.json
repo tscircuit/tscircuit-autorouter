@@ -1,0 +1,24 @@
+{
+  "minimumClearance": 0.1,
+  "actualClearance": -0.19232527607533048,
+  "newVia": {
+    "type": "pcb_via",
+    "pcb_via_id": "via_207",
+    "pcb_trace_id": "source_net_19_mst1_0",
+    "x": -2.2353105912015536,
+    "y": -12.09254199879256,
+    "outer_diameter": 0.45,
+    "hole_diameter": 0.2,
+    "layers": ["top", "inner1"]
+  },
+  "preloadedVia": {
+    "type": "pcb_via",
+    "pcb_via_id": "via_294",
+    "pcb_trace_id": "source_trace_52__source_trace_54__source_trace_56__breakout:pcb_breakout_point_21_mst3_0",
+    "x": -2.2326460155028616,
+    "y": -12.099739319381907,
+    "outer_diameter": 0.45,
+    "hole_diameter": 0.2,
+    "layers": ["top", "inner1"]
+  }
+}
