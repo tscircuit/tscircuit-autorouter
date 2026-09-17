@@ -12,22 +12,27 @@ test("cramped escape paths cannot pass through a foreign-net pad", (): void => {
     for (const padConnection of ["vcc", "gnd", "gnd-alias"]) {
       const sameNet = padConnection !== "vcc"
       const connectivityMap = new ConnectivityMap({ gnd: ["gnd", "gnd-alias"] })
-      const nodes: CapacityMeshNode[] = Array.from({ length: 5 }, (_, index) => ({
-        capacityMeshNodeId: `node-${index}`,
-        center: { x: index, y: 0 },
-        width: 1,
-        height: 1,
-        layer: "top",
-        availableZ: [0],
-        _containsObstacle: index === 0 || index === padIndex,
-        _connectedTo:
-          index === 0
-            ? ["gnd"]
-            : index === padIndex
-              ? [padConnection]
-              : undefined,
-      }))
-      const nodeMap = new Map(nodes.map((node) => [node.capacityMeshNodeId, node]))
+      const nodes: CapacityMeshNode[] = Array.from(
+        { length: 5 },
+        (_, index) => ({
+          capacityMeshNodeId: `node-${index}`,
+          center: { x: index, y: 0 },
+          width: 1,
+          height: 1,
+          layer: "top",
+          availableZ: [0],
+          _containsObstacle: index === 0 || index === padIndex,
+          _connectedTo:
+            index === 0
+              ? ["gnd"]
+              : index === padIndex
+                ? [padConnection]
+                : undefined,
+        }),
+      )
+      const nodeMap = new Map(
+        nodes.map((node) => [node.capacityMeshNodeId, node]),
+      )
       const portMap = new Map<CapacityMeshNodeId, SegmentPortPoint[]>()
       for (let index = 0; index < nodes.length - 1; index++) {
         const port: SegmentPortPoint = {

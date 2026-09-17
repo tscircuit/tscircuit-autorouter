@@ -28,16 +28,22 @@ export class SingleTargetNecessaryCrampedPortPointSolver extends BaseSolver {
     SegmentPortPoint,
     ExploredPortPoint
   >()
-  private targetConnectionIds: string[]
+  private targetConnectionIds: Set<string>
+  private targetNetIds: Set<string>
 
   constructor(private input: SingleTargetNecessaryCrampedPortPointSolverInput) {
     super()
-    this.targetConnectionIds = [
+    this.targetConnectionIds = new Set([
       ...(input.target._connectedTo ?? []),
       ...(input.target._targetConnectionName
         ? [input.target._targetConnectionName]
         : []),
-    ]
+    ])
+    this.targetNetIds = new Set(
+      [...this.targetConnectionIds]
+        .map((id) => input.connectivityMap.getNetConnectedToId(id))
+        .filter((netId) => netId !== undefined),
+    )
     if (this.input.depthLimit < 1) {
       throw new Error("Depth limit must be at least 1")
     }
@@ -164,13 +170,11 @@ export class SingleTargetNecessaryCrampedPortPointSolver extends BaseSolver {
         ...(node._connectedTo ?? []),
         ...(node._targetConnectionName ? [node._targetConnectionName] : []),
       ]
-      return connectionIds.some((id) =>
-        this.targetConnectionIds.some(
-          (targetId) =>
-            id === targetId ||
-            this.input.connectivityMap.areIdsConnected(id, targetId),
-        ),
-      )
+      return connectionIds.some((id) => {
+        if (this.targetConnectionIds.has(id)) return true
+        const netId = this.input.connectivityMap.getNetConnectedToId(id)
+        return netId !== undefined && this.targetNetIds.has(netId)
+      })
     })
   }
 
