@@ -1,0 +1,63 @@
+# Investigation inputs are already public repository fixtures, verified via the GitHub API:
+# https://github.com/tscircuit/tscircuit-autorouter/blob/1b2ef3b8361761369f5210b604ac778f1fb22193/public/fixtures/bugreport103-pedometer.srj.json
+# https://github.com/tscircuit/tscircuit-autorouter/blob/1b2ef3b8361761369f5210b604ac778f1fb22193/fixtures/bug-reports/bugreport77-07f6a7/bugreport77-07f6a7.json
+# https://github.com/tscircuit/dataset-srj18/blob/100e8957ce789b5b288e14c476dc83f4efc5214b/samples/sample006.json
+# No local user files, credentials, or private inputs are read or uploaded.
+name: Investigate final-hop CI failures
+on:
+  push:
+    branches: [codex/investigate-final-hop-ci]
+    paths:
+      - .github/workflows/investigate-final-hop.yml
+      - scripts/diagnose-final-hop.ts
+permissions:
+  contents: read
+jobs:
+  investigate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: main
+            tiny: 7745c91a426a64227eb9b4a3e2c093c24b9f9808
+          - name: final-hop
+            tiny: 56574de2c11f5442981879ff89726769384eb8d0
+          - name: combined
+            tiny: c8beb1cddcb5c3f339b22bde19cb327c3f781b77
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: 1.3.8
+      - name: Select dependency revision
+        env:
+          TINY_REVISION: ${{ matrix.tiny }}
+        run: |
+          bun -e 'const p = await Bun.file("package.json").json(); p.devDependencies["tiny-hypergraph"] = "git+https://github.com/tscircuit/tiny-hypergraph.git#" + process.env.TINY_REVISION; await Bun.write("package.json", JSON.stringify(p, null, 2) + "\n")'
+      - name: Install dependencies
+        run: bun install
+      - name: Capture routing graphs
+        run: |
+          mkdir -p routing-investigation
+          for fixture in pedometer-low pedometer-normal bugreport77 srj18-6; do
+            bun scripts/diagnose-final-hop.ts "$fixture" | tee "routing-investigation/${fixture}.log"
+          done
+      - name: Run the five unchanged regression tests
+        run: |
+          bun test --timeout 300000 \
+            tests/features/preloaded-port-duplication.test.ts \
+            tests/bugs/bugreport103-pedometer.test.ts \
+            tests/bugs/bugreport103-pedometer-high-density.test.ts \
+            tests/bugs/bugreport77-07f6a7.test.ts \
+            tests/features/pipeline7-dataset-srj18-sample006-selective-rerip.test.ts \
+            2>&1 | tee routing-investigation/tests.log
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: routing-investigation-${{ matrix.name }}
+          path: routing-investigation
+          retention-days: 7
