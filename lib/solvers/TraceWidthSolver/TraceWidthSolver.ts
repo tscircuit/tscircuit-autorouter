@@ -78,6 +78,7 @@ export class TraceWidthSolver extends BaseSolver {
   obstacleMargin: number
   TRACE_WIDTH_SCHEDULE: number[]
   connectionNominalTraceWidthMap: Map<string, number>
+  widthWarnings: string[] = []
 
   unprocessedRoutes: HighDensityRoute[] = []
   processedRoutes: HighDensityRoute[] = []
@@ -123,12 +124,18 @@ export class TraceWidthSolver extends BaseSolver {
     this.connectionNominalTraceWidthMap = new Map()
 
     for (const connection of input.connection) {
-      if (connection.nominalTraceWidth === undefined) {
+      if (
+        connection.nominalTraceWidth === undefined &&
+        connection.minTraceWidth === undefined
+      ) {
         continue
       }
       this.connectionNominalTraceWidthMap.set(
         connection.name,
-        connection.nominalTraceWidth,
+        Math.max(
+          connection.nominalTraceWidth ?? 0,
+          connection.minTraceWidth ?? 0,
+        ),
       )
     }
 
@@ -789,6 +796,13 @@ export class TraceWidthSolver extends BaseSolver {
    */
   private finalizeCurrentTrace(traceWidth: number) {
     if (!this.currentTrace) return
+    if (traceWidth + 1e-6 < this.nominalTraceWidth) {
+      const warning =
+        `Insufficient clearance for ${this.currentTrace.connectionName} at the requested width: ` +
+        `requested ${this.nominalTraceWidth}mm, used ${traceWidth}mm.`
+      this.widthWarnings.push(warning)
+      console.warn(warning)
+    }
 
     const routeWithWidth = this.createRouteWithWidth(
       this.currentTrace,

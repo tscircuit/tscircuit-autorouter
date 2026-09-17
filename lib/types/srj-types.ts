@@ -174,6 +174,7 @@ export interface SimpleRouteConnection {
   netConnectionName?: string
   __netConnectionName?: string
   nominalTraceWidth?: number
+  minTraceWidth?: number
   /** @deprecated Use `nominalTraceWidth` instead. */
   width?: number
   pointsToConnect: Array<ConnectionPoint>
