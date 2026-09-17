@@ -584,9 +584,11 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       (cms) => [
         {
           nodeWithPortPoints:
-            cms.hypergraphTraceWidthImprovementSolver!.getOutput().nodesWithPortPoints,
+            cms.hypergraphTraceWidthImprovementSolver!.getOutput()
+              .nodesWithPortPoints,
           inputNodesWithPortPoints:
-            cms.hypergraphTraceWidthImprovementSolver!.getOutput().inputNodeWithPortPoints,
+            cms.hypergraphTraceWidthImprovementSolver!.getOutput()
+              .inputNodeWithPortPoints,
           minTraceWidth: cms.minTraceWidth,
           obstacles: cms.srj.obstacles,
           layerCount: cms.srj.layerCount,
@@ -1376,8 +1378,8 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
 
   private getChangedPreloadedTraceSections(): ChangedPreloadedTraceSection[] {
     return (
-      this.hypergraphTraceWidthImprovementSolver?.getOutput().changedPreloadedTraceSections ??
-      []
+      this.hypergraphTraceWidthImprovementSolver?.getOutput()
+        .changedPreloadedTraceSections ?? []
     )
   }
 

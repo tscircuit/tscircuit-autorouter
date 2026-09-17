@@ -81,12 +81,13 @@ test("Pipeline9 improves a 0.4mm trace by taking a legal detour", async (): Prom
   expect(
     traces.some((trace) =>
       trace.route.some(
-        (point) =>
-          point.route_type === "wire" && Math.abs(point.y) > 2.9,
+        (point) => point.route_type === "wire" && Math.abs(point.y) > 2.9,
       ),
     ),
   ).toBe(true)
-  expect(solver.hypergraphTraceWidthImprovementSolver?.stats.improvedRouteCount).toBe(1)
+  expect(
+    solver.hypergraphTraceWidthImprovementSolver?.stats.improvedRouteCount,
+  ).toBe(1)
 
   // Same copper obstacles and connection, but with the board minimum raised
   // to 0.4mm: Pipeline9 can take the legal route around the lower obstacle.

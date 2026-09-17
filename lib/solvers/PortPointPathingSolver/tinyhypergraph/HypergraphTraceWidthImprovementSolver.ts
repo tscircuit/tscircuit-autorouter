@@ -38,7 +38,9 @@ export class HypergraphTraceWidthImprovementSolver extends BaseSolver {
           | { connectionId: string }
           | undefined
         if (!metadata?.connectionId) {
-          throw new Error(`Missing connection ID for hypergraph route ${routeId}`)
+          throw new Error(
+            `Missing connection ID for hypergraph route ${routeId}`,
+          )
         }
         const connection = input.pathingSolver.getConnectionByIdOrThrow(
           metadata.connectionId,
@@ -54,11 +56,12 @@ export class HypergraphTraceWidthImprovementSolver extends BaseSolver {
       },
     )
       .filter((route): route is RouteWidth => route !== undefined)
-      .sort((a, b) =>
-        b.requestedWidth -
-        this.getRouteClearance(this.selectedSolver, b.routeId) -
-        (a.requestedWidth -
-          this.getRouteClearance(this.selectedSolver, a.routeId)),
+      .sort(
+        (a, b) =>
+          b.requestedWidth -
+          this.getRouteClearance(this.selectedSolver, b.routeId) -
+          (a.requestedWidth -
+            this.getRouteClearance(this.selectedSolver, a.routeId)),
       )
       .slice(0, MAX_WIDTH_IMPROVEMENT_ATTEMPTS)
     this.MAX_ITERATIONS = Math.max(
@@ -80,7 +83,9 @@ export class HypergraphTraceWidthImprovementSolver extends BaseSolver {
       regionId++
     ) {
       if (solver.topology.regionMetadata?.[regionId]?._tinyTerminal) continue
-      if (!solver.state.regionSegments[regionId].some(([id]) => id === routeId)) {
+      if (
+        !solver.state.regionSegments[regionId].some(([id]) => id === routeId)
+      ) {
         continue
       }
       bottleneck = Math.min(
@@ -88,7 +93,8 @@ export class HypergraphTraceWidthImprovementSolver extends BaseSolver {
         Math.min(
           solver.topology.regionWidth[regionId],
           solver.topology.regionHeight[regionId],
-        ) - 2 * this.input.clearance,
+        ) -
+          2 * this.input.clearance,
       )
     }
     return bottleneck
@@ -96,15 +102,16 @@ export class HypergraphTraceWidthImprovementSolver extends BaseSolver {
 
   private createCandidate(route: RouteWidth): TinyHyperGraphSolver {
     const { topology, problem, state } = this.selectedSolver
-    const initialAssignments = state.regionSegments.flatMap((segments, regionId) =>
-      segments
-        .filter(([routeId]) => routeId !== route.routeId)
-        .map(([routeId, fromPortId, toPortId]) => ({
-          routeId,
-          regionId,
-          fromPortId,
-          toPortId,
-        })),
+    const initialAssignments = state.regionSegments.flatMap(
+      (segments, regionId) =>
+        segments
+          .filter(([routeId]) => routeId !== route.routeId)
+          .map(([routeId, fromPortId, toPortId]) => ({
+            routeId,
+            regionId,
+            fromPortId,
+            toPortId,
+          })),
     )
     const portPenalty = problem.portPenalty
       ? new Float64Array(problem.portPenalty)
@@ -118,7 +125,9 @@ export class HypergraphTraceWidthImprovementSolver extends BaseSolver {
             Math.min(
               topology.regionWidth[regionId],
               topology.regionHeight[regionId],
-            ) + 1e-6 < requiredSpace,
+            ) +
+              1e-6 <
+              requiredSpace,
         )
       ) {
         portPenalty[portId] += 100
@@ -146,11 +155,13 @@ export class HypergraphTraceWidthImprovementSolver extends BaseSolver {
     routeId: number,
   ): boolean {
     const segmentsForOtherRoutes = (solver: TinyHyperGraphSolver): string[] =>
-      solver.state.regionSegments.flatMap((segments, regionId) =>
-        segments
-          .filter(([id]) => id !== routeId)
-          .map(([id, from, to]) => `${regionId}:${id}:${from}:${to}`),
-      ).sort()
+      solver.state.regionSegments
+        .flatMap((segments, regionId) =>
+          segments
+            .filter(([id]) => id !== routeId)
+            .map(([id, from, to]) => `${regionId}:${id}:${from}:${to}`),
+        )
+        .sort()
     return (
       JSON.stringify(segmentsForOtherRoutes(candidate)) ===
       JSON.stringify(segmentsForOtherRoutes(this.selectedSolver))
@@ -182,7 +193,8 @@ export class HypergraphTraceWidthImprovementSolver extends BaseSolver {
         if (
           this.getRouteClearance(this.selectedSolver, route.routeId) >=
           route.requestedWidth - 1e-6
-        ) continue
+        )
+          continue
         this.currentRoute = route
         this.candidate = this.createCandidate(route)
         this.attemptedRouteCount++
@@ -207,11 +219,16 @@ export class HypergraphTraceWidthImprovementSolver extends BaseSolver {
       this.candidate.solved &&
       this.preservesOtherRoutes(this.candidate, this.currentRoute!.routeId) &&
       this.getRouteClearance(this.candidate, this.currentRoute!.routeId) >
-        this.getRouteClearance(this.selectedSolver, this.currentRoute!.routeId) +
+        this.getRouteClearance(
+          this.selectedSolver,
+          this.currentRoute!.routeId,
+        ) +
           1e-6
     if (improvesWidth) {
       const candidateCrossings = this.countDistributedCrossings(this.candidate)
-      const originalCrossings = this.countDistributedCrossings(this.selectedSolver)
+      const originalCrossings = this.countDistributedCrossings(
+        this.selectedSolver,
+      )
       if (candidateCrossings <= originalCrossings) {
         this.selectedSolver = this.candidate
         this.improvedRouteCount++
