@@ -174,14 +174,14 @@ export const renderSameMachineBenchmarkResults = ({
   )
   const changedOutcomes = getChangedOutcomes(mainReport, prReport)
   const lines = [
-    "## Same Machine Benchmark Results",
+    "## PR #199 — with versus without (same machine)",
     "",
     `Both revisions ran sequentially in one Blacksmith job on \`${runnerName}\`.`,
     "",
     `Dataset: \`${mainReport.datasetName}\` · Scenarios: ${mainReport.scenarioCount}`,
-    `Main: [\`${mainSha.slice(0, 7)}\`](https://github.com/${repository}/commit/${mainSha}) · PR: [\`${prSha.slice(0, 7)}\`](https://github.com/${repository}/commit/${prSha})`,
+    `Without #199: [\`${mainSha.slice(0, 7)}\`](https://github.com/${repository}/commit/${mainSha}) · With #199: [\`${prSha.slice(0, 7)}\`](https://github.com/${repository}/commit/${prSha})`,
     "",
-    "| Solver | Metric | Main | PR | Delta |",
+    "| Solver | Metric | Without #199 | With #199 | Delta |",
     "| --- | --- | ---: | ---: | ---: |",
   ]
 
@@ -233,8 +233,8 @@ export const renderSameMachineBenchmarkResults = ({
   )
 
   lines.push(
-    ...renderBenchmarkStageTimings(mainReport, "Main"),
-    ...renderBenchmarkStageTimings(prReport, "PR"),
+    ...renderBenchmarkStageTimings(mainReport, "Without #199"),
+    ...renderBenchmarkStageTimings(prReport, "With #199"),
   )
 
   if (changedOutcomes.length > 0) {
@@ -243,7 +243,7 @@ export const renderSameMachineBenchmarkResults = ({
       "<details>",
       `<summary>Changed outcomes (${changedOutcomes.length})</summary>`,
       "",
-      "| Solver | Sample | Main | PR | Main time | PR time | Delta |",
+      "| Solver | Sample | Without #199 | With #199 | Without time | With time | Delta |",
       "| --- | ---: | --- | --- | ---: | ---: | --- |",
       ...changedOutcomes.map(
         ({ solverName, sampleNumber, mainTest, prTest, delta }) =>

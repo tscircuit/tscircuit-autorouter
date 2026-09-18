@@ -1498,7 +1498,7 @@ jobs:
             })
 
   same-machine-benchmark:
-    name: Same machine benchmark
+    name: PR 199 with versus without benchmark
     if: github.event_name == 'workflow_dispatch' && inputs.same_machine_compare == true
     runs-on: blacksmith-8vcpu-ubuntu-2404-arm
     timeout-minutes: 180
@@ -1523,27 +1523,18 @@ jobs:
             }
 
             const dataset = (process.env.DATASET_NAME || '').trim() || 'srj18'
-            const pr = await github.rest.pulls.get({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              pull_number: prNumber,
-            })
-            const base = await github.rest.repos.getBranch({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              branch: pr.data.base.ref,
-            })
-            const mainSha = base.data.commit.sha
-            const prSha = pr.data.head.sha
+            // Fixed revisions differ only in the tiny-hypergraph dependency pin.
+            const mainSha = '2c46cafa7b0f4bab0a549a729f71c7e59bfba5bd'
+            const prSha = '768655125434b6018735087f0466a1fc1d374e44'
             const runUrl = `${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}`
             const statusComment = await github.rest.issues.createComment({
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: prNumber,
               body: [
-                '## Same Machine Benchmark Results',
+                '## PR #199 — with versus without (same machine)',
                 '',
-                `Queued \`${dataset}\` on current main \`${mainSha.slice(0, 7)}\` and PR head \`${prSha.slice(0, 7)}\`.`,
+                `Queued \`${dataset}\` without #199 \`${mainSha.slice(0, 7)}\` and with #199 \`${prSha.slice(0, 7)}\`.`,
                 '',
                 'Both revisions will run sequentially in one Blacksmith job.',
                 '',
@@ -1563,14 +1554,14 @@ jobs:
           path: same-machine-controller
           persist-credentials: false
 
-      - name: Checkout current main
+      - name: Checkout without PR 199
         uses: actions/checkout@v4
         with:
           ref: ${{ steps.refs.outputs.main_sha }}
           path: same-machine-main
           persist-credentials: false
 
-      - name: Checkout PR head
+      - name: Checkout with PR 199
         uses: actions/checkout@v4
         with:
           ref: ${{ steps.refs.outputs.pr_sha }}
@@ -1582,18 +1573,32 @@ jobs:
         with:
           bun-version: latest
 
-      - name: Install main dependencies
+      - name: Install dependencies without PR 199
         working-directory: same-machine-main
         run: bun install
 
-      - name: Install PR dependencies
+      - name: Install dependencies with PR 199
         working-directory: same-machine-pr
-        run: bun install
+        run: |
+          cp ../same-machine-main/bun.lock bun.lock
+          bun install
 
       - name: Prepare comparison artifacts
-        run: mkdir -p same-machine-results/main same-machine-results/pr
+        run: |
+          mkdir -p same-machine-results/main same-machine-results/pr
+          cp same-machine-main/bun.lock same-machine-results/main/bun.lock
+          cp same-machine-pr/bun.lock same-machine-results/pr/bun.lock
+          bun - <<'BUN'
+          import { deepStrictEqual } from 'node:assert'
+          const without = Bun.JSONC.parse(await Bun.file('same-machine-main/bun.lock').text())
+          const withPenalty = Bun.JSONC.parse(await Bun.file('same-machine-pr/bun.lock').text())
+          delete without.packages['tiny-hypergraph']
+          delete withPenalty.packages['tiny-hypergraph']
+          deepStrictEqual(without.packages, withPenalty.packages)
+          console.log('All other resolved dependencies are identical.')
+          BUN
 
-      - name: Benchmark current main
+      - name: Benchmark without PR 199
         working-directory: same-machine-main
         env:
           BENCHMARK_ARGS_JSON: ${{ inputs.benchmark_args_json }}
@@ -1617,7 +1622,7 @@ jobs:
           cp benchmark-result.txt ../same-machine-results/main/benchmark-result.txt
           cp benchmark-snapshots.html ../same-machine-results/main/benchmark-snapshots.html
 
-      - name: Benchmark PR head
+      - name: Benchmark with PR 199
         working-directory: same-machine-pr
         env:
           BENCHMARK_ARGS_JSON: ${{ inputs.benchmark_args_json }}
@@ -1680,7 +1685,7 @@ jobs:
             const resultBody = fs.existsSync(resultPath)
               ? fs.readFileSync(resultPath, 'utf8').trim()
               : [
-                  '## Same Machine Benchmark Results',
+                  '## PR #199 — with versus without (same machine)',
                   '',
                   `The paired benchmark ended with **${process.env.JOB_STATUS}** before both reports were produced.`,
                 ].join('\n')

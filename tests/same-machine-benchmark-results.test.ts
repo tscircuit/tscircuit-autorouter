@@ -90,7 +90,7 @@ test("same-machine benchmark comments compare matching reports", () => {
     runnerName: "blacksmith-test-runner",
   })
 
-  expect(markdown).toStartWith("## Same Machine Benchmark Results\n")
+  expect(markdown).toStartWith("## PR #199 — with versus without (same machine)\n")
   expect(markdown).toContain(
     "Both revisions ran sequentially in one Blacksmith job",
   )
