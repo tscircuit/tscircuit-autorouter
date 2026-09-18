@@ -124,7 +124,8 @@ const toRepairRoute = (
   capacityMeshNodeId: route.regionId,
   connectionName: route.connectionName,
   rootConnectionName:
-    connMap?.getNetConnectedToId(route.connectionName) ?? route.rootConnectionName,
+    connMap?.getNetConnectedToId(route.connectionName) ??
+    route.rootConnectionName,
   route: route.route.map((point) => ({
     x: point.x,
     y: point.y,
@@ -426,9 +427,7 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
           ),
         nodeClearanceCandidateCount:
           Number(this.stats.nodeClearanceCandidateCount ?? 0) +
-          Number(
-            this.activeSubSolver.stats.nodeClearanceCandidateCount ?? 0,
-          ),
+          Number(this.activeSubSolver.stats.nodeClearanceCandidateCount ?? 0),
       }
       for (let i = 0; i < sampleEntry.routeIndexes.length; i++) {
         const routeIndex = sampleEntry.routeIndexes[i]

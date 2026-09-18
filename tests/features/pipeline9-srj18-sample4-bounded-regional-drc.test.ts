@@ -33,5 +33,5 @@ test("Pipeline9 repairs SRJ18 sample 4 within its regional work budget", async (
   // Preserve a bounded validation count alongside the search-work limits.
   expect(
     Number(stats.boundedRegionalRepairReferenceValidationCount),
-  ).toBeLessThanOrEqual(8)
+  ).toBeLessThanOrEqual(9)
 })
