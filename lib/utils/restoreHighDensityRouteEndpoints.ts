@@ -14,12 +14,21 @@ export function restoreHighDensityRouteEndpoints(
     const end = original.route.at(-1)
     const adjustedStart = adjusted.route[0]
     const adjustedEnd = adjusted.route.at(-1)
-    if (original.connectionName !== adjusted.connectionName || original.regionId !== adjusted.regionId ||
-      !start || !end || !adjustedStart || !adjustedEnd ||
-      start.z !== adjustedStart.z || end.z !== adjustedEnd.z) {
-      throw new Error(`Endpoint restoration found incompatible regional route ${index}`)
+    if (
+      original.connectionName !== adjusted.connectionName ||
+      original.regionId !== adjusted.regionId ||
+      !start ||
+      !end ||
+      !adjustedStart ||
+      !adjustedEnd ||
+      start.z !== adjustedStart.z ||
+      end.z !== adjustedEnd.z
+    ) {
+      throw new Error(
+        `Endpoint restoration found incompatible regional route ${index}`,
+      )
     }
-    const points = adjusted.route.map(point => ({ ...point }))
+    const points = adjusted.route.map((point) => ({ ...point }))
     // Add same-layer copper instead of moving an adjusted via or losing its metadata.
     if (start.x !== adjustedStart.x || start.y !== adjustedStart.y) {
       const connector = { ...start }

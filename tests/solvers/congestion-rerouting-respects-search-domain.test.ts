@@ -6,7 +6,10 @@ test("does not reopen ports forbidden by the original search domain", (): void =
   const input = createCongestionFixture(true)
   const originalMask = new Int8Array(input.solver.problem.portSectionMask)
   input.solver.problem.portSectionMask.fill(0)
-  const solver = new CongestionReroutingSolver({ ...input, portSectionMask: originalMask })
+  const solver = new CongestionReroutingSolver({
+    ...input,
+    portSectionMask: originalMask,
+  })
   solver.solve()
   expect(solver.accepted).toBe(0)
   expect(solver.getOutput()).toBe(input.solver)

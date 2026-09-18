@@ -12,10 +12,18 @@ test("moves only one transit route around a congested region deterministically",
     const output = solver.getOutput()
     expect(solver.stats.maxPf).toBe(0)
     expect(solver.accepted).toBe(1)
-    expect(output.state.regionSegments[0].map(([routeId]) => routeId)).toEqual([1])
-    expect(output.state.regionSegments[5].map(([routeId]) => routeId)).toEqual([0])
-    expect(output.problem.routeStartPort).toEqual(input.solver.problem.routeStartPort)
-    expect(output.problem.routeEndPort).toEqual(input.solver.problem.routeEndPort)
+    expect(output.state.regionSegments[0].map(([routeId]) => routeId)).toEqual([
+      1,
+    ])
+    expect(output.state.regionSegments[5].map(([routeId]) => routeId)).toEqual([
+      0,
+    ])
+    expect(output.problem.routeStartPort).toEqual(
+      input.solver.problem.routeStartPort,
+    )
+    expect(output.problem.routeEndPort).toEqual(
+      input.solver.problem.routeEndPort,
+    )
     expect(JSON.stringify(input.solver.state.regionSegments)).toBe(baseline)
     outputs.push(JSON.stringify(output.state.regionSegments))
   }

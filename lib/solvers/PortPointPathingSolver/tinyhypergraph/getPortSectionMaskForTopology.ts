@@ -13,8 +13,14 @@ export function getPortSectionMaskForTopology(
   for (let portId = 0; portId < source.portCount; portId++) {
     const identity: unknown = source.portMetadata?.[portId]?.serializedPortId
     const permission = sourceMask[portId]
-    if (typeof identity !== "string" || identity.length === 0 || permissions.has(identity)) {
-      throw new Error(`Missing or duplicate original port identity at ${portId}`)
+    if (
+      typeof identity !== "string" ||
+      identity.length === 0 ||
+      permissions.has(identity)
+    ) {
+      throw new Error(
+        `Missing or duplicate original port identity at ${portId}`,
+      )
     }
     if (permission !== 0 && permission !== 1) {
       throw new Error(`Invalid original port permission at ${portId}`)
@@ -25,8 +31,14 @@ export function getPortSectionMaskForTopology(
   const seen = new Set<string>()
   for (let portId = 0; portId < target.portCount; portId++) {
     const identity: unknown = target.portMetadata?.[portId]?.serializedPortId
-    if (typeof identity !== "string" || seen.has(identity) || !permissions.has(identity)) {
-      throw new Error(`Missing, duplicate, or unknown target port identity at ${portId}`)
+    if (
+      typeof identity !== "string" ||
+      seen.has(identity) ||
+      !permissions.has(identity)
+    ) {
+      throw new Error(
+        `Missing, duplicate, or unknown target port identity at ${portId}`,
+      )
     }
     seen.add(identity)
     mask[portId] = permissions.get(identity)!
