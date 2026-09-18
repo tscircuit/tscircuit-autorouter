@@ -4,6 +4,7 @@ import type { SimpleRouteJson } from "lib/types"
 import { combineVisualizations } from "lib/utils/combineVisualizations"
 import { convertSrjToGraphicsObject } from "lib/utils/convertSrjToGraphicsObject"
 import { convertSrjTracesToObstacles } from "lib/utils/convertSrjTracesToObstacles"
+import { getConnectionPointOutsideBoundsError } from "lib/utils/getConnectionPointOutsideBoundsError"
 import { getPresuppliedTraceVisualization } from "lib/utils/getPresuppliedTraceVisualization"
 
 export class PreprocessSimpleRouteJsonSolver extends BaseSolver {
@@ -14,7 +15,12 @@ export class PreprocessSimpleRouteJsonSolver extends BaseSolver {
     this.MAX_ITERATIONS = 1
   }
 
-  override _step() {
+  override _step(): void {
+    this.error = getConnectionPointOutsideBoundsError(this.inputSrj)
+    if (this.error) {
+      this.failed = true
+      return
+    }
     this.outputSrj = convertSrjTracesToObstacles(this.inputSrj) ?? this.inputSrj
     this.solved = true
   }
