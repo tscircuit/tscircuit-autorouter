@@ -1,3 +1,5 @@
+import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
+import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
 import { BaseSolver } from "@tscircuit/solver-utils"
 import {
   CapacityMeshNode,
@@ -28,6 +30,7 @@ export type MultiTargetNecessaryCrampedPortPointSolverInput = {
  * This solver filters out cramped port points that are not necessary.
  */
 export class MultiTargetNecessaryCrampedPortPointSolver extends BaseSolver {
+  private connectivityMap: ConnectivityMap
   private unprocessedTargets: CapacityMeshNode[] = []
   private targetNode: CapacityMeshNode[] = []
 
@@ -52,6 +55,9 @@ export class MultiTargetNecessaryCrampedPortPointSolver extends BaseSolver {
   >()
   constructor(private input: MultiTargetNecessaryCrampedPortPointSolverInput) {
     super()
+    this.connectivityMap = getConnectivityMapFromSimpleRouteJson(
+      input.simpleRouteJson,
+    )
     /**
      * TODO: AutoroutingPipeline2_HgPortPointSolver does not call setup
      * Add support for calling setup in the pipeline runner and remove this call to setup in the constructor.
@@ -135,6 +141,7 @@ export class MultiTargetNecessaryCrampedPortPointSolver extends BaseSolver {
           this.activeSubSolver =
             new SingleTargetNecessaryCrampedPortPointSolver({
               target: this.currentTarget,
+              connectivityMap: this.connectivityMap,
               depthLimit: 3,
               shouldIgnoreCrampedPortPoints: false,
               mapOfCapacityMeshNodeIdToSegmentPortPoints:
@@ -227,6 +234,7 @@ export class MultiTargetNecessaryCrampedPortPointSolver extends BaseSolver {
       this.candidatesAtDepth = []
       this.activeSubSolver = new SingleTargetNecessaryCrampedPortPointSolver({
         target: this.currentTarget,
+        connectivityMap: this.connectivityMap,
         depthLimit: 2,
         shouldIgnoreCrampedPortPoints: true,
         mapOfCapacityMeshNodeIdToSegmentPortPoints:

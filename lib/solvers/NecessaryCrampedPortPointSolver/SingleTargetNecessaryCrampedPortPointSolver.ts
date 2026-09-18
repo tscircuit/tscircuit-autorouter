@@ -6,9 +6,11 @@ import { ExploredPortPoint } from "./types"
 import { SegmentPortPoint } from "../AvailableSegmentPointSolver/AvailableSegmentPointSolver"
 import { BaseSolver } from "@tscircuit/solver-utils"
 import { GraphicsObject } from "graphics-debug"
+import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 
 type SingleTargetNecessaryCrampedPortPointSolverInput = {
   target: CapacityMeshNode
+  connectivityMap: ConnectivityMap
   mapOfCapacityMeshNodeIdToSegmentPortPoints: Map<
     CapacityMeshNodeId,
     SegmentPortPoint[]
@@ -26,9 +28,22 @@ export class SingleTargetNecessaryCrampedPortPointSolver extends BaseSolver {
     SegmentPortPoint,
     ExploredPortPoint
   >()
+  private targetConnectionIds: Set<string>
+  private targetNetIds: Set<string>
 
   constructor(private input: SingleTargetNecessaryCrampedPortPointSolverInput) {
     super()
+    this.targetConnectionIds = new Set([
+      ...(input.target._connectedTo ?? []),
+      ...(input.target._targetConnectionName
+        ? [input.target._targetConnectionName]
+        : []),
+    ])
+    this.targetNetIds = new Set(
+      [...this.targetConnectionIds]
+        .map((id) => input.connectivityMap.getNetConnectedToId(id))
+        .filter((netId) => netId !== undefined),
+    )
     if (this.input.depthLimit < 1) {
       throw new Error("Depth limit must be at least 1")
     }
@@ -45,6 +60,7 @@ export class SingleTargetNecessaryCrampedPortPointSolver extends BaseSolver {
         this.input.target.capacityMeshNodeId,
       ) ?? []
     for (const seedPort of seedPorts) {
+      if (!this.isPortAccessible(seedPort)) continue
       if (this.input.shouldIgnoreCrampedPortPoints && seedPort.cramped) continue
       const initialCandidate: ExploredPortPoint = {
         port: seedPort,
@@ -105,6 +121,7 @@ export class SingleTargetNecessaryCrampedPortPointSolver extends BaseSolver {
       )
 
       for (const nextPort of nextPorts) {
+        if (!this.isPortAccessible(nextPort)) continue
         if (this.input.shouldIgnoreCrampedPortPoints && nextPort.cramped) {
           continue
         }
@@ -135,6 +152,30 @@ export class SingleTargetNecessaryCrampedPortPointSolver extends BaseSolver {
 
   private getCandidateCost(candidate: ExploredPortPoint): number {
     return candidate.depth + candidate.countOfCrampedPortPointsInPath * 1000
+  }
+
+  private isPortAccessible(port: SegmentPortPoint): boolean {
+    return port.nodeIds.every((nodeId) => {
+      const node = this.input.mapOfCapacityMeshNodeIdToRef.get(nodeId)
+      if (!node) {
+        throw new Error(`Could not find capacity mesh node for id ${nodeId}`)
+      }
+      if (
+        nodeId === this.input.target.capacityMeshNodeId ||
+        !node._containsObstacle
+      ) {
+        return true
+      }
+      const connectionIds = [
+        ...(node._connectedTo ?? []),
+        ...(node._targetConnectionName ? [node._targetConnectionName] : []),
+      ]
+      return connectionIds.some((id) => {
+        if (this.targetConnectionIds.has(id)) return true
+        const netId = this.input.connectivityMap.getNetConnectedToId(id)
+        return netId !== undefined && this.targetNetIds.has(netId)
+      })
+    })
   }
 
   getOutput() {
