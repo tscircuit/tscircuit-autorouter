@@ -212,7 +212,6 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
     obstacles: Obstacle[]
     repairMargin?: number
     colorMap?: Record<string, string>
-    maxSampleEntries?: number
     connMap?: ConnectivityMap
   }) {
     super()
@@ -304,19 +303,11 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
         }
       },
     )
-    this.sampleEntries =
-      params.maxSampleEntries !== undefined &&
-      sampleEntries.length > params.maxSampleEntries
-        ? []
-        : sampleEntries
+    this.sampleEntries = sampleEntries
 
     this.MAX_ITERATIONS = Math.max(this.sampleEntries.length * 1_000, 100_000)
     this.stats = {
       sampleCount: this.sampleEntries.length,
-      skippedSampleCount:
-        sampleEntries.length > this.sampleEntries.length
-          ? sampleEntries.length
-          : 0,
       repairedNodeCount: 0,
       repairedRouteCount: 0,
     }
