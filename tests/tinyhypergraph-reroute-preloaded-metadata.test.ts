@@ -1,10 +1,10 @@
 import { expect, test } from "bun:test"
-import { circuit004, circuit014 } from "@tscircuit/autorouting-dataset-01"
+import * as dataset01 from "@tscircuit/autorouting-dataset-01"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "../lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
 import type { SimpleRouteJson } from "../lib/types"
 
 test("full-connection rerouting preserves preloaded trace sections", () => {
-  for (const input of [circuit004, circuit014]) {
+  for (const input of [dataset01.circuit004, dataset01.circuit014]) {
     const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(
       structuredClone(input) as SimpleRouteJson,
     )
