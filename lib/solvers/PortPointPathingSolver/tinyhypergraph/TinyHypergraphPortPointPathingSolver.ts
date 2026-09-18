@@ -1473,9 +1473,10 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       this.tinyPipelineSolver.getSolver<TinyHyperGraphSectionSolver>(
         "optimizeSection",
       )
-    const rerouteSolver = this.tinyPipelineSolver.getSolver<FullConnectionRerouteSolver>(
-      "rerouteFullConnections",
-    )
+    const rerouteSolver =
+      this.tinyPipelineSolver.getSolver<FullConnectionRerouteSolver>(
+        "rerouteFullConnections",
+      )
     const currentTinySolver = this.getCurrentTinySolver()
 
     this.solved =
@@ -1535,9 +1536,10 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
   }
 
   private getCurrentTinySolver(): TinyHyperGraphSolver | undefined {
-    const rerouteSolver = this.tinyPipelineSolver.getSolver<FullConnectionRerouteSolver>(
-      "rerouteFullConnections",
-    )
+    const rerouteSolver =
+      this.tinyPipelineSolver.getSolver<FullConnectionRerouteSolver>(
+        "rerouteFullConnections",
+      )
     if (rerouteSolver && !rerouteSolver.failed) {
       return rerouteSolver.getSolvedSolver()
     }
