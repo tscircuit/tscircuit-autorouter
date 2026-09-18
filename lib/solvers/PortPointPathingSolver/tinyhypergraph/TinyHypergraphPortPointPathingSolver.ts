@@ -21,6 +21,7 @@ import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
 import { mapZToLayerName } from "lib/utils/mapZToLayerName"
 import {
   DuplicateCongestedPortSolver,
+  FullConnectionRerouteSolver,
   orderConnectionsByNetCardinality,
   type DuplicateCongestedPortSolverReport,
   TinyHyperGraphSectionPipelineSolver,
@@ -985,6 +986,13 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
   }
 
   getSolvedTinySolver(): TinyHyperGraphSolver {
+    const rerouteSolver = this.getSolver<FullConnectionRerouteSolver>(
+      "rerouteFullConnections",
+    )
+    if (rerouteSolver?.solved && !rerouteSolver.failed) {
+      return rerouteSolver.getSolvedSolver()
+    }
+
     const optimizeSectionSolver =
       this.getSolver<TinyHyperGraphSectionSolver>("optimizeSection")
 
@@ -1465,6 +1473,9 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       this.tinyPipelineSolver.getSolver<TinyHyperGraphSectionSolver>(
         "optimizeSection",
       )
+    const rerouteSolver = this.tinyPipelineSolver.getSolver<FullConnectionRerouteSolver>(
+      "rerouteFullConnections",
+    )
     const currentTinySolver = this.getCurrentTinySolver()
 
     this.solved =
@@ -1512,6 +1523,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       ...(this.tinyPipelineSolver.stats ?? {}),
       ...(currentTinySolver?.stats ?? {}),
       ...(optimizeSectionSolver?.stats ?? {}),
+      ...(rerouteSolver?.stats ?? {}),
       currentStage: this.tinyPipelineSolver.getCurrentStageName(),
       stageStats: this.tinyPipelineSolver.getStageStats(),
     }
@@ -1523,6 +1535,13 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
   }
 
   private getCurrentTinySolver(): TinyHyperGraphSolver | undefined {
+    const rerouteSolver = this.tinyPipelineSolver.getSolver<FullConnectionRerouteSolver>(
+      "rerouteFullConnections",
+    )
+    if (rerouteSolver && !rerouteSolver.failed) {
+      return rerouteSolver.getSolvedSolver()
+    }
+
     const optimizeSectionSolver =
       this.tinyPipelineSolver.getSolver<TinyHyperGraphSectionSolver>(
         "optimizeSection",
