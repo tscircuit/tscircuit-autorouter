@@ -1,3 +1,4 @@
+import { fadeInactiveRoutes } from "./fadeInactiveRoutes"
 import type { GraphicsObject } from "graphics-debug"
 import type { TinyHyperGraphSolver } from "tiny-hypergraph/lib/index"
 import type { CapacityMeshNode } from "lib/types"
@@ -48,6 +49,7 @@ export function visualizeCongestionRerouting(input: VisualizationInput): Graphic
     minY: node.center.y - radius, maxY: node.center.y + radius,
   }
   const graphics: GraphicsObject = input.focus ? { rects: [], lines: [], points: [] } : solver.visualize()
+  if (!input.focus) fadeInactiveRoutes(graphics, solver, attempt.routeId)
   const blocked = phase === "blocked" || phase === "searching"
   if (input.focus) {
     for (const region of input.nodesByRegionId.values()) {
@@ -89,7 +91,7 @@ export function visualizeCongestionRerouting(input: VisualizationInput): Graphic
         if (!points) continue
         const z = topology.portZ[from]
         graphics.lines.push({ points,
-          strokeColor: ghost ? "rgba(100,100,100,0.45)" : routeId === attempt.routeId ? "#2563eb" : affectedRoutes.has(routeId) ? "rgba(210,110,20,0.85)" : "rgba(100,100,100,0.15)",
+          strokeColor: ghost ? "rgba(100,100,100,0.2)" : routeId === attempt.routeId ? "#2563eb" : affectedRoutes.has(routeId) ? "rgba(210,110,20,0.18)" : "rgba(100,100,100,0.08)",
           strokeDash: ghost ? "4 4" : !node.availableZ.includes(z) ? "6 3" : undefined,
           layer: `z${[...new Set([z, topology.portZ[to]])].join(",")}`,
           label: `${ghost ? "Previous path" : "Assigned path"}: route ${routeId}, z${z} to z${topology.portZ[to]}`,

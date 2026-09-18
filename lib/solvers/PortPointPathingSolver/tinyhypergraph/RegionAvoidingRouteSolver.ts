@@ -1,3 +1,4 @@
+import { fadeInactiveRoutes } from "./fadeInactiveRoutes"
 import type { GraphicsObject } from "graphics-debug"
 import { createRectFromCapacityNode } from "lib/utils/createRectFromCapacityNode"
 import { TinyHyperGraphSolver, type TinyHyperGraphProblem } from "tiny-hypergraph/lib/index"
@@ -41,6 +42,7 @@ export class RegionAvoidingRouteSolver extends TinyHyperGraphSolver {
 
   override visualize(): GraphicsObject {
     const graphics = super.visualize()
+    fadeInactiveRoutes(graphics, this, this.routeId)
     // The exclusion is local to this trial; never mark it as a board obstacle.
     if (this.solved || this.failed) return graphics
     const regionId = this.avoidedRegionId

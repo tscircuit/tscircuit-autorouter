@@ -10,6 +10,15 @@ test("debug frames expose selection, temporary blocking, search, and the committ
     phases.push(solver.phase)
     const graphics = solver.visualize({ focus: true })
     expect(graphics.texts?.length ?? 0).toBe(0)
+    const fullGraphics = solver.visualize()
+    const fixedLines = fullGraphics.lines?.filter(line => line.label?.startsWith("route: route-1\n")) ?? []
+    expect(fixedLines.length).toBeGreaterThan(0)
+    expect(fixedLines.every(line => line.strokeColor?.endsWith(", 0.15)"))).toBe(true)
+    if (solver.phase === "accepted") {
+      const activeLines = fullGraphics.lines?.filter(line => line.label?.startsWith("route: route-0\n")) ?? []
+      expect(activeLines.length).toBeGreaterThan(0)
+      expect(activeLines.every(line => !line.strokeColor?.endsWith(", 0.15)"))).toBe(true)
+    }
     const obstacle = graphics.rects?.find(rect => rect.label?.includes("TEMPORARY OBSTACLE"))
     expect(Boolean(obstacle)).toBe(solver.phase === "blocked" || solver.phase === "searching")
     if (solver.phase === "blocked") {
