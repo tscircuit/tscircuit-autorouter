@@ -132,6 +132,12 @@ interface DifferentialPair {
 }
 ```
 
+Pipelines 4–9 validate connection points in the first preprocessing stage.
+On-board points must be inside `bounds`, including its edges. An outside point
+stops routing with `solved = false`, `failed = true`, and an `error` identifying
+the connection, point, coordinates, and bounds. Connections marked `isOffBoard`
+are exempt.
+
 Connection points use exactly one representation: `layer` for a fixed routing
 layer, or `layers` for a terminal accessible on multiple routing layers. Never
 include both fields. The optional `never` properties enforce this distinction
