@@ -2,6 +2,7 @@ import { expect, test } from "bun:test"
 import { TraceWidthSolver } from "lib/solvers/TraceWidthSolver/TraceWidthSolver"
 import type { HighDensityRoute } from "lib/types/high-density-types"
 import type { Obstacle } from "lib/types/srj-types"
+import { getGraphicsSvgFrames } from "../fixtures/solver-svg-frames"
 
 type MicrophonePadSlice = {
   padId: string
@@ -117,7 +118,7 @@ const microphonePadSlices: MicrophonePadSlice[] = [
   },
 ]
 
-test("acoustic tuner polygon terminals taper below minTraceWidth", (): void => {
+test("acoustic tuner polygon terminals taper below minTraceWidth", async (): Promise<void> => {
   const obstacles: Obstacle[] = microphonePadSlices.map((slice) => ({
     type: "rect",
     layers: ["top"],
@@ -167,4 +168,18 @@ test("acoustic tuner polygon terminals taper below minTraceWidth", (): void => {
   expect(taperedRoute.traceThickness).toBe(GROUND_TRACE_WIDTH)
   expect(terminalWidths.every((width) => width < MIN_TRACE_WIDTH)).toBe(true)
   expect(Math.min(...terminalWidths)).toBeCloseTo(0.1, 3)
+
+  await expect(
+    getGraphicsSvgFrames({
+      frames: [
+        {
+          name: "BUG: 0.10mm terminal taper below 0.15mm minimum",
+          pipeline: "end",
+          graphics: solver.visualize(),
+        },
+      ],
+      columns: 1,
+      backgroundColor: "white",
+    }),
+  ).toMatchSvgSnapshot(import.meta.path)
 })
