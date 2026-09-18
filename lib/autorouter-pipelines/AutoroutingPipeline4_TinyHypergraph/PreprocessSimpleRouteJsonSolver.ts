@@ -2,6 +2,7 @@ import type { GraphicsObject } from "graphics-debug"
 import { BaseSolver } from "lib/solvers/BaseSolver"
 import type { SimpleRouteJson } from "lib/types"
 import { addApproximatingRectsToSrj } from "lib/utils/addApproximatingRectsToSrj"
+import { assertConnectionPointsWithinBounds } from "lib/utils/assertConnectionPointsWithinBounds"
 import { combineVisualizations } from "lib/utils/combineVisualizations"
 import {
   convertSrjToGraphicsObject,
@@ -20,6 +21,7 @@ export class PreprocessSimpleRouteJsonSolver extends BaseSolver {
     public readonly visualizationOptions: ConvertSrjToGraphicsObjectOptions = {},
   ) {
     super()
+    assertConnectionPointsWithinBounds(inputSrj)
     this.MAX_ITERATIONS = 1
   }
 

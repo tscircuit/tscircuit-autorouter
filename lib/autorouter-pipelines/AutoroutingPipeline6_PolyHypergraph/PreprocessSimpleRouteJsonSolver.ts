@@ -1,6 +1,7 @@
 import type { GraphicsObject } from "graphics-debug"
 import { BaseSolver } from "lib/solvers/BaseSolver"
 import type { SimpleRouteJson } from "lib/types"
+import { assertConnectionPointsWithinBounds } from "lib/utils/assertConnectionPointsWithinBounds"
 import { combineVisualizations } from "lib/utils/combineVisualizations"
 import { convertSrjToGraphicsObject } from "lib/utils/convertSrjToGraphicsObject"
 import { convertSrjTracesToObstacles } from "lib/utils/convertSrjTracesToObstacles"
@@ -11,6 +12,7 @@ export class PreprocessSimpleRouteJsonSolver extends BaseSolver {
 
   constructor(public readonly inputSrj: SimpleRouteJson) {
     super()
+    assertConnectionPointsWithinBounds(inputSrj)
     this.MAX_ITERATIONS = 1
   }
 
