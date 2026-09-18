@@ -2,6 +2,7 @@ import type { SimpleRouteJson } from "lib/types"
 import { addApproximatingRectsToSrj } from "lib/utils/addApproximatingRectsToSrj"
 import { createSrjWithBoardValidObstacleLayers } from "lib/utils/create-srj-with-board-valid-obstacle-layers"
 import { filterObstaclesOutsideBoard } from "lib/utils/filterObstaclesOutsideBoard"
+import { getConnectionPointOutsideBoundsError } from "lib/utils/getConnectionPointOutsideBoundsError"
 import { PreprocessSimpleRouteJsonSolver } from "../AutoroutingPipeline4_TinyHypergraph/PreprocessSimpleRouteJsonSolver"
 
 /**
@@ -10,6 +11,11 @@ import { PreprocessSimpleRouteJsonSolver } from "../AutoroutingPipeline4_TinyHyp
  */
 export class PreprocessSimpleRouteJsonWithoutTraceObstaclesSolver extends PreprocessSimpleRouteJsonSolver {
   override _step(): void {
+    this.error = getConnectionPointOutsideBoundsError(this.inputSrj)
+    if (this.error) {
+      this.failed = true
+      return
+    }
     const { traces, ...inputSrjWithoutTraces } = this.inputSrj
     const srjWithBoardValidObstacleLayers =
       createSrjWithBoardValidObstacleLayers(

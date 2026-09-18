@@ -1,8 +1,8 @@
 import type { SimpleRouteJson } from "lib/types"
 
-export function assertConnectionPointsWithinBounds(
+export function getConnectionPointOutsideBoundsError(
   srj: SimpleRouteJson,
-): void {
+): string | null {
   const { minX, maxX, minY, maxY } = srj.bounds
   for (const connection of srj.connections) {
     if (connection.isOffBoard) continue
@@ -15,9 +15,8 @@ export function assertConnectionPointsWithinBounds(
       ) {
         continue
       }
-      throw new Error(
-        `Connection "${connection.name}" point "${point.pointId ?? pointIndex}" at (${point.x}, ${point.y}) is outside routing bounds: x [${minX}, ${maxX}], y [${minY}, ${maxY}]`,
-      )
+      return `Connection "${connection.name}" point "${point.pointId ?? pointIndex}" at (${point.x}, ${point.y}) is outside routing bounds: x [${minX}, ${maxX}], y [${minY}, ${maxY}]`
     }
   }
+  return null
 }

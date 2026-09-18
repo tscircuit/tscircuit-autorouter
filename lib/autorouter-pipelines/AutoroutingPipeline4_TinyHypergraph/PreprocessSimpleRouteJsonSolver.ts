@@ -2,7 +2,6 @@ import type { GraphicsObject } from "graphics-debug"
 import { BaseSolver } from "lib/solvers/BaseSolver"
 import type { SimpleRouteJson } from "lib/types"
 import { addApproximatingRectsToSrj } from "lib/utils/addApproximatingRectsToSrj"
-import { assertConnectionPointsWithinBounds } from "lib/utils/assertConnectionPointsWithinBounds"
 import { combineVisualizations } from "lib/utils/combineVisualizations"
 import {
   convertSrjToGraphicsObject,
@@ -11,6 +10,7 @@ import {
 import { convertSrjTracesToObstacles } from "lib/utils/convertSrjTracesToObstacles"
 import { createSrjWithBoardValidObstacleLayers } from "lib/utils/create-srj-with-board-valid-obstacle-layers"
 import { filterObstaclesOutsideBoard } from "lib/utils/filterObstaclesOutsideBoard"
+import { getConnectionPointOutsideBoundsError } from "lib/utils/getConnectionPointOutsideBoundsError"
 import { getPresuppliedTraceVisualization } from "lib/utils/getPresuppliedTraceVisualization"
 
 export class PreprocessSimpleRouteJsonSolver extends BaseSolver {
@@ -21,11 +21,15 @@ export class PreprocessSimpleRouteJsonSolver extends BaseSolver {
     public readonly visualizationOptions: ConvertSrjToGraphicsObjectOptions = {},
   ) {
     super()
-    assertConnectionPointsWithinBounds(inputSrj)
     this.MAX_ITERATIONS = 1
   }
 
-  override _step() {
+  override _step(): void {
+    this.error = getConnectionPointOutsideBoundsError(this.inputSrj)
+    if (this.error) {
+      this.failed = true
+      return
+    }
     const inputSrjWithBoardValidObstacleLayers =
       createSrjWithBoardValidObstacleLayers(this.inputSrj)
     const srjWithPreloadedRouteObstacles =
