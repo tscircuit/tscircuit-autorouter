@@ -1,4 +1,5 @@
 import { getSvgFromGraphicsObject } from "graphics-debug"
+import { extractRerouteMetrics } from "./extract-reroute-metrics"
 import * as autorouterModule from "../../lib"
 import { convertSrjToGraphicsObject } from "../../lib"
 import { KrtAutoroutingPipelineSolver } from "../../lib/testing/KrtAutoroutingPipelineSolver"
@@ -46,6 +47,7 @@ type SolverInstance = PipelineStageTimingSource & {
   getOutputSimpleRouteJson?: () => SimpleRouteJson
   getSolverName?: () => string
   portPointPathingSolver?: {
+    stats?: Record<string, unknown>
     getSolveGraphBenchmarkMetrics?: () =>
       | TinyHypergraphBenchmarkMetrics
       | undefined
@@ -329,6 +331,9 @@ const getRoutingBenchmarkMetrics = (
   return {
     tinyHypergraph:
       solver.portPointPathingSolver?.getSolveGraphBenchmarkMetrics?.(),
+    tinyHypergraphReroute: extractRerouteMetrics(
+      solver.portPointPathingSolver?.stats,
+    ),
     highDensityIterations: solver.highDensityRouteSolver?.iterations,
     phaseTimeMs: solver.timeSpentOnPhase,
     networkedHighDensity,
