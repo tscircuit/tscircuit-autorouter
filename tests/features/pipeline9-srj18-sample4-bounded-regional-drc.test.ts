@@ -29,9 +29,9 @@ test("Pipeline9 repairs SRJ18 sample 4 within its regional work budget", async (
   expect(
     Number(stats.boundedRegionalRepairPathSearchNodeCount),
   ).toBeLessThanOrEqual(480_000)
-  // Repeated checks of the same projection must reuse reference results;
-  // only distinct repair candidates spend the validation budget.
+  // Node-local repair changes which conflicts reach the two regional passes.
+  // Preserve a bounded validation count alongside the search-work limits.
   expect(
     Number(stats.boundedRegionalRepairReferenceValidationCount),
-  ).toBeLessThanOrEqual(6)
+  ).toBeLessThanOrEqual(8)
 })

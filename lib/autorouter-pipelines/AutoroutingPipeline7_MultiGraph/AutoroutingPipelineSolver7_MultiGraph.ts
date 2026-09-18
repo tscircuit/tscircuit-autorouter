@@ -70,8 +70,6 @@ import { TraceWidthSolver } from "../../solvers/TraceWidthSolver/TraceWidthSolve
 import { PreprocessSimpleRouteJsonSolver } from "../AutoroutingPipeline4_TinyHypergraph/PreprocessSimpleRouteJsonSolver"
 import { MergedComponentTopologyView } from "./MergedComponentTopologyView"
 import { PowerTraceExpansionSolver } from "./PowerTraceExpansionSolver"
-import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
-import { applyPipeline9BoundedRegionalRepairs } from "../AutoroutingPipeline9_PreloadedTraceGraph/applyPipeline9BoundedRegionalRepairs"
 import { convertPipeline7HdRoutesToSimplifiedPcbTraces } from "./convertPipeline7HdRoutesToSimplifiedPcbTraces"
 import { createPipeline7AutoroutingDrcEvaluator } from "./create-pipeline7-autorouting-drc-evaluator"
 import { getPowerTraceExpansionConnectionNames } from "./getPowerTraceExpansionConnectionNames"
@@ -703,52 +701,6 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
             broadPassMultiplier: 3,
           },
         ]
-      },
-      {
-        onSolved: (cms) => {
-          const exactSolver = cms.exactGeometryDrcForceImproveSolver!
-          const remainingIssueCount = Number(
-            exactSolver.stats.drcBranchPortfolioFinalNonViaPadDrcIssueCount,
-          )
-          // Negotiate the few coupled conflicts that force-based movement
-          // cannot untangle, using the same bounded search as Pipeline9.
-          if (remainingIssueCount === 0 || remainingIssueCount > 3) return
-          const repair = applyPipeline9BoundedRegionalRepairs({
-            originalSrj: cms.originalSrj,
-            routes: exactSolver.getOutput(),
-            syntheticConnectionNames: new Set(),
-            viaHoleDiameter: cms.viaHoleDiameter,
-            drcEvaluator: ({ routes, hdRoutes }) => {
-              const candidateRoutes = routes ?? hdRoutes
-              if (!candidateRoutes) {
-                throw new Error("Pipeline7 regional DRC requires HD routes")
-              }
-              const evaluation = evaluateRelaxedDrc({
-                includeBoardClearance: true,
-                inputSrj: cms.originalSrj,
-                srjWithPointPairs: cms.srjWithPointPairs!,
-                routedTraces: convertPipeline7HdRoutesToSimplifiedPcbTraces({
-                  connections: cms.netToPointPairsSolver!.newConnections,
-                  originalConnections: cms.originalSrj.connections,
-                  hdRoutes: candidateRoutes,
-                  layerCount: cms.srj.layerCount,
-                  obstacles: cms.srj.obstacles,
-                  defaultViaHoleDiameter: cms.viaHoleDiameter,
-                  connMap: cms.connMap,
-                }),
-              })
-              return {
-                errors: evaluation.errors.map((error) => ({ ...error })),
-                errorsWithCenters: evaluation.errorsWithCenters.map(
-                  (error) => ({ ...error }),
-                ),
-              }
-            },
-          })
-          exactSolver.outputHdRoutes = repair.routes
-          exactSolver.stats.boundedRegionalRepairAcceptedRegionCount =
-            repair.acceptedRegionCount
-        },
       },
     ),
     definePipelineStep(

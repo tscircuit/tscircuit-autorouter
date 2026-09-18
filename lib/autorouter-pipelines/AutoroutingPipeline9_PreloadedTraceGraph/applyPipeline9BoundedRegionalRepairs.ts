@@ -107,26 +107,9 @@ export const applyPipeline9BoundedRegionalRepairs = ({
     (size) => !Number.isFinite(boundaryMargin) || boundaryMargin * 2 < size,
   )
   if (regionSizes.length === 0) return result
-  // Projection evaluates its input and accepted output again. Reuse the last
-  // immutable candidate's result so these checks do not repeat reference DRC.
-  let lastEvaluatedRoutes: HighDensityRoute[] | undefined
-  let lastEvaluation: ReturnType<DrcEvaluator> | undefined
-  const evaluateRoutes: DrcEvaluator = (input) => {
-    const candidateRoutes = input.routes ?? input.hdRoutes
-    if (!candidateRoutes) {
-      throw new Error("Pipeline9 regional DRC requires HD routes")
-    }
-    if (candidateRoutes === lastEvaluatedRoutes && lastEvaluation) {
-      return lastEvaluation
-    }
-    const evaluation = drcEvaluator(input)
-    result.referenceValidationCount++
-    lastEvaluatedRoutes = candidateRoutes
-    lastEvaluation = evaluation
-    return evaluation
-  }
   let currentRoutes = routes
-  let reference = evaluateRoutes({ traces: [], routes, hdRoutes: routes })
+  let reference = drcEvaluator({ traces: [], routes, hdRoutes: routes })
+  result.referenceValidationCount++
   let currentErrors = Array.isArray(reference) ? reference : reference.errors
   const initialErrors = currentErrors
   result.publishedDrcIssueCount = currentErrors.length
@@ -179,15 +162,19 @@ export const applyPipeline9BoundedRegionalRepairs = ({
   const projectedRoutes = applyPipeline9ClearanceProjection({
     originalSrj,
     routes: currentRoutes,
-    drcEvaluator: evaluateRoutes,
+    drcEvaluator: (input): ReturnType<DrcEvaluator> => {
+      result.referenceValidationCount++
+      return drcEvaluator(input)
+    },
   })
   if (projectedRoutes !== currentRoutes) {
     currentRoutes = projectedRoutes
-    reference = evaluateRoutes({
+    reference = drcEvaluator({
       traces: [],
       routes: currentRoutes,
       hdRoutes: currentRoutes,
     })
+    result.referenceValidationCount++
     currentErrors = Array.isArray(reference) ? reference : reference.errors
     result.finalDrcIssueCount = currentErrors.length
     if (currentErrors.length === 0) {
@@ -332,9 +319,9 @@ export const applyPipeline9BoundedRegionalRepairs = ({
           ? [routeIndex]
           : [],
     )
-    // Reserve search work for other regions instead of letting the first
-    // congested region consume the entire board's budget.
-    const remainingRegions = budget.maxRegions - result.attemptedRegionCount + 1
+    // Share the work limit across regions so congestion history survives
+    // while a coupled group is rerouted. Early convergence leaves work for
+    // the next region without increasing the total search budget.
     const repair = negotiateTraceClearance({
       srj: region.srj,
       routes: region.routes,
@@ -342,14 +329,10 @@ export const applyPipeline9BoundedRegionalRepairs = ({
       dirtyRouteIndices,
       isLocked: (routeIndex, pointIndex): boolean =>
         region.lockedPointIndices[routeIndex]![pointIndex]!,
-      maxPathSearchCalls: Math.floor(
-        (budget.maxCandidateAttempts - result.candidateAttemptCount) /
-          remainingRegions,
-      ),
-      maxPathSearchNodes: Math.floor(
-        (budget.maxPathSearchNodes - result.pathSearchNodeCount) /
-          remainingRegions,
-      ),
+      maxPathSearchCalls:
+        budget.maxCandidateAttempts - result.candidateAttemptCount,
+      maxPathSearchNodes:
+        budget.maxPathSearchNodes - result.pathSearchNodeCount,
       allowLayerChanges: true,
       traceClearance: RELAXED_DRC_OPTIONS.traceClearance!,
       viaClearance: RELAXED_DRC_OPTIONS.viaClearance!,
@@ -386,7 +369,10 @@ export const applyPipeline9BoundedRegionalRepairs = ({
     const candidateRoutes = applyPipeline9ClearanceProjection({
       originalSrj,
       routes: negotiatedRoutes,
-      drcEvaluator: evaluateRoutes,
+      drcEvaluator: (input): ReturnType<DrcEvaluator> => {
+        result.referenceValidationCount++
+        return drcEvaluator(input)
+      },
     })
     const candidateFixedViolations = getFixedObstacleViolations({
       srj,
@@ -406,11 +392,12 @@ export const applyPipeline9BoundedRegionalRepairs = ({
     ) {
       continue
     }
-    const candidateReference = evaluateRoutes({
+    const candidateReference = drcEvaluator({
       traces: [],
       routes: candidateRoutes,
       hdRoutes: candidateRoutes,
     })
+    result.referenceValidationCount++
     const candidateErrors = Array.isArray(candidateReference)
       ? candidateReference
       : candidateReference.errors
