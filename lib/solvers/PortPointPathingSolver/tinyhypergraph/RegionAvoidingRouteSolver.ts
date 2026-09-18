@@ -1,3 +1,5 @@
+import type { GraphicsObject } from "graphics-debug"
+import { createRectFromCapacityNode } from "lib/utils/createRectFromCapacityNode"
 import { TinyHyperGraphSolver, type TinyHyperGraphProblem } from "tiny-hypergraph/lib/index"
 
 /** Search one alternate route while retaining every other committed assignment. */
@@ -35,6 +37,27 @@ export class RegionAvoidingRouteSolver extends TinyHyperGraphSolver {
       this.state.currentRouteId === this.routeId &&
       regionId === this.avoidedRegionId
     return isAvoidedRegion || super.isRegionReservedForDifferentNet(regionId)
+  }
+
+  override visualize(): GraphicsObject {
+    const graphics = super.visualize()
+    // The exclusion is local to this trial; never mark it as a board obstacle.
+    if (this.solved || this.failed) return graphics
+    const regionId = this.avoidedRegionId
+    const availableZ = Array.from({ length: 32 }, (_, z) => z)
+      .filter(z => (this.topology.regionAvailableZMask[regionId] & (1 << z)) !== 0)
+    const node = {
+      capacityMeshNodeId: String(regionId),
+      center: { x: this.topology.regionCenterX[regionId], y: this.topology.regionCenterY[regionId] },
+      width: this.topology.regionWidth[regionId], height: this.topology.regionHeight[regionId],
+      availableZ,
+    }
+    graphics.rects ??= []
+    graphics.rects.push({ ...createRectFromCapacityNode(node), center: node.center,
+      width: node.width, height: node.height, fill: "rgba(255,0,0,0.28)", stroke: "red",
+      label: `TEMPORARY OBSTACLE: region ${regionId}, route ${this.routeId} only`,
+    })
+    return graphics
   }
 
   override onOutOfCandidates(): void {

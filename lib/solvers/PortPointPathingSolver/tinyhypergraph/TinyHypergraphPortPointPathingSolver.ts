@@ -1148,7 +1148,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
     this.MAX_ITERATIONS =
       getTinyHyperGraphPipelineMaxIterations(tinyPipelineInput) *
       (this.alternativeTinyPipelineInput ? 2 : 1) +
-      (params.flags.USE_CONGESTION_REROUTING ? 16 * 10_003 + 3 : 0)
+      (params.flags.USE_CONGESTION_REROUTING ? 16 * 10_004 + 3 : 0)
 
     this.originalRegionById = new Map(
       params.graph.regions.map((region) => [region.regionId, region]),
@@ -1804,6 +1804,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
   }
 
   visualize(): GraphicsObject {
+    if (this.congestionReroutingSolver) return this.congestionReroutingSolver.visualize()
     return this.tinyPipelineSolver.visualize()
   }
 }
