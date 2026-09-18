@@ -1,0 +1,44 @@
+{
+  "baseline": {
+    "completed": 11,
+    "drcPassed": 8,
+    "timeouts": [
+      "sample002",
+      "sample006",
+      "sample012",
+      "sample014",
+      "sample015"
+    ],
+    "errors": {
+      "sample002": "child exit 143"
+    },
+    "missingPathing": []
+  },
+  "new": {
+    "completed": 11,
+    "drcPassed": 8,
+    "timeouts": [
+      "sample002",
+      "sample006",
+      "sample012",
+      "sample014",
+      "sample015"
+    ],
+    "errors": {},
+    "missingPathing": []
+  },
+  "lostCompleted": [],
+  "lostDrcPasses": [],
+  "drcRegressions": {
+    "sample004": [
+      5,
+      17
+    ],
+    "sample008": [
+      1,
+      4
+    ]
+  },
+  "countCriterionPassed": true,
+  "newInvariantErrors": {}
+}

@@ -37,6 +37,8 @@ import type {
 } from "../hgportpointpathingsolver/types"
 import { createTinyRouteNetIndexer } from "./createTinyRouteNetIndexer"
 import { getRegionNetIdByRegionId } from "./getRegionNetIdByRegionId"
+import { getPortSectionMaskForTopology } from "./getPortSectionMaskForTopology"
+import { CongestionReroutingSolver } from "./CongestionReroutingSolver"
 import { SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments } from "./SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments"
 import {
   getSerializedPreloadedTraceStats,
@@ -1022,6 +1024,7 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
 }
 
 export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
+  congestionReroutingSolver?: CongestionReroutingSolver
   private tinyPipelineSolver: TinyHyperGraphSectionPipelineWithTerminalNetIds
   private primaryTinyPipelineSolver?: TinyHyperGraphSectionPipelineWithTerminalNetIds
   private alternativeTinyPipelineSolver?: TinyHyperGraphSectionPipelineWithTerminalNetIds
@@ -1144,7 +1147,8 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
     }
     this.MAX_ITERATIONS =
       getTinyHyperGraphPipelineMaxIterations(tinyPipelineInput) *
-      (this.alternativeTinyPipelineInput ? 2 : 1)
+      (this.alternativeTinyPipelineInput ? 2 : 1) +
+      (params.flags.USE_CONGESTION_REROUTING ? 16 * 10_003 + 3 : 0)
 
     this.originalRegionById = new Map(
       params.graph.regions.map((region) => [region.regionId, region]),
@@ -1405,6 +1409,42 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
   }
 
   _step() {
+    if (this.candidatePortfolioPhase === "complete" &&
+      this.tinyPipelineSolver.solved && this.params.flags.USE_CONGESTION_REROUTING) {
+      if (!this.congestionReroutingSolver) {
+        const solver = this.tinyPipelineSolver.getSolvedTinySolver()
+        const nodesByRegionId = new Map<number, HgPortPointPathingSolverParams["graph"]["regions"][number]["d"]>()
+        for (let regionId = 0; regionId < solver.topology.regionCount; regionId++) {
+          const originalId = solver.topology.regionMetadata?.[regionId]?.capacityMeshNodeId
+          const originalRegion = this.originalRegionById.get(originalId)
+          if (originalRegion) nodesByRegionId.set(regionId, originalRegion.d)
+        }
+        const preservedRouteIds = new Set<number>()
+        for (let routeId = 0; routeId < solver.problem.routeCount; routeId++) {
+          if (hasPreloadedTraceSectionMetadata(this.getRouteMetadata(solver, routeId))) {
+            preservedRouteIds.add(routeId)
+          }
+        }
+        const routingSolver = this.tinyPipelineSolver.getSolver<TinyHyperGraphSolver>("solveGraph")
+        if (!routingSolver?.solved || routingSolver.failed) {
+          throw new Error("Congestion rerouting requires the original completed graph search")
+        }
+        const portSectionMask = getPortSectionMaskForTopology(
+          routingSolver.topology, routingSolver.problem.portSectionMask, solver.topology,
+        )
+        this.congestionReroutingSolver = new CongestionReroutingSolver({
+          solver, nodesByRegionId, preservedRouteIds, portSectionMask,
+        })
+      }
+      this.congestionReroutingSolver.step()
+      this.solved = this.congestionReroutingSolver.solved
+      this.failed = this.congestionReroutingSolver.failed
+      this.error = this.congestionReroutingSolver.error
+      this.activeSubSolver = this.congestionReroutingSolver
+      this.stats = { ...this.stats, currentStage: "congestionRerouting",
+        congestionRerouting: this.congestionReroutingSolver.stats }
+      return
+    }
     this.tinyPipelineSolver.step()
 
     if (
@@ -1469,7 +1509,8 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
 
     this.solved =
       this.candidatePortfolioPhase === "complete" &&
-      this.tinyPipelineSolver.solved
+      this.tinyPipelineSolver.solved &&
+      !this.params.flags.USE_CONGESTION_REROUTING
     this.failed =
       this.candidatePortfolioPhase === "complete" &&
       this.tinyPipelineSolver.failed
@@ -1523,6 +1564,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
   }
 
   private getCurrentTinySolver(): TinyHyperGraphSolver | undefined {
+    if (this.congestionReroutingSolver?.solved) return this.congestionReroutingSolver.getOutput()
     const optimizeSectionSolver =
       this.tinyPipelineSolver.getSolver<TinyHyperGraphSectionSolver>(
         "optimizeSection",
@@ -1543,6 +1585,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
   }
 
   private getSolvedTinySolver(): TinyHyperGraphSolver {
+    if (this.congestionReroutingSolver?.solved) return this.congestionReroutingSolver.getOutput()
     return this.tinyPipelineSolver.getSolvedTinySolver()
   }
 

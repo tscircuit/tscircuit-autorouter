@@ -1,3 +1,4 @@
+import { restoreHighDensityRouteEndpoints } from "lib/utils/restoreHighDensityRouteEndpoints"
 import { PostProcessingSolver as DifferentialPairPostProcessingSolver } from "@tscircuit/length-matching-solver"
 import type { PowerTraceExpanderOptions } from "@tscircuit/power-trace-expander"
 import { RectDiffPipeline } from "@tscircuit/rectdiff"
@@ -489,6 +490,7 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
               FORCE_CENTER_FIRST: true,
               RIPPING_ENABLED: true,
               USE_SELECTIVE_RERIP_ROUTING: true,
+              USE_CONGESTION_REROUTING: true,
             },
             weights: {
               SHUFFLE_SEED: 0,
@@ -600,10 +602,10 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
       (cms) => [
         {
           connections: cms.srjWithPointPairs!.connections,
-          hdRoutes:
-            cms.highDensityRepairSolver?.getOutput() ??
-            cms.highDensityForceImproveSolver?.getOutput() ??
+          hdRoutes: restoreHighDensityRouteEndpoints(
             cms.highDensityRouteSolver!.routes,
+            cms.highDensityRepairSolver!.getOutput(),
+          ),
           colorMap: cms.colorMap,
           layerCount: cms.srj.layerCount,
           defaultViaDiameter: cms.viaDiameter,
