@@ -1575,11 +1575,14 @@ jobs:
 
       - name: Install dependencies without PR 199
         working-directory: same-machine-main
-        run: bun install
+        run: |
+          sed -i 's/save = false/save = true/' bunfig.toml
+          bun install
 
       - name: Install dependencies with PR 199
         working-directory: same-machine-pr
         run: |
+          sed -i 's/save = false/save = true/' bunfig.toml
           cp ../same-machine-main/bun.lock bun.lock
           bun install
 
