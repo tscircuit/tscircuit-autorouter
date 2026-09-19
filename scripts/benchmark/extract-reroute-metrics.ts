@@ -12,6 +12,12 @@ export const extractRerouteMetrics = (
     finalMaxRegionCost: stats.finalMaxRegionCost,
     initialTotalRegionCost: stats.initialTotalRegionCost,
     finalTotalRegionCost: stats.finalTotalRegionCost,
+    initialEstimatedViaCount: stats.initialEstimatedViaCount,
+    finalEstimatedViaCount: stats.finalEstimatedViaCount,
+    initialLayerChangeCount: stats.initialLayerChangeCount,
+    finalLayerChangeCount: stats.finalLayerChangeCount,
+    initialSegmentCount: stats.initialSegmentCount,
+    finalSegmentCount: stats.finalSegmentCount,
   }
   for (const [key, value] of Object.entries(metrics)) {
     if (typeof value !== "number" || !Number.isFinite(value)) {

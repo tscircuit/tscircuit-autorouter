@@ -102,6 +102,12 @@ export type RoutingBenchmarkMetrics = {
     finalMaxRegionCost: number
     initialTotalRegionCost: number
     finalTotalRegionCost: number
+    initialEstimatedViaCount: number
+    finalEstimatedViaCount: number
+    initialLayerChangeCount: number
+    finalLayerChangeCount: number
+    initialSegmentCount: number
+    finalSegmentCount: number
   }
   tinyHypergraph?: TinyHypergraphBenchmarkMetrics
   highDensityIterations?: number

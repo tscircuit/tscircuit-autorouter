@@ -10,6 +10,12 @@ test("reroute metrics preserve counts and scores without inventing missing data"
     finalMaxRegionCost: 0.1,
     initialTotalRegionCost: 0.5,
     finalTotalRegionCost: 0.3,
+    initialEstimatedViaCount: 12,
+    finalEstimatedViaCount: 8,
+    initialLayerChangeCount: 4,
+    finalLayerChangeCount: 2,
+    initialSegmentCount: 20,
+    finalSegmentCount: 18,
   }
   expect(extractRerouteMetrics(stats)).toEqual(stats)
   expect(extractRerouteMetrics(undefined)).toBeUndefined()
