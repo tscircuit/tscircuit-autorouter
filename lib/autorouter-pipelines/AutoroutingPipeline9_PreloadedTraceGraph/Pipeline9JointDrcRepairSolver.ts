@@ -964,13 +964,17 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       currentDrc.errors.length >= 20 && repairRouteCount > 120
         ? Math.min(1, (120 * Math.max(1, params.effort)) / repairRouteCount)
         : 1
+    // Hundreds of unresolved conflicts trigger repeated nearby-copper pair
+    // checks. Reserve longer cleanup for boards closer to convergence.
+    const pairwiseRepairBudgetScale =
+      currentDrc.errors.length >= 200 ? repairBudgetScale ** 2 : repairBudgetScale
     const maxRepairIterations = Math.max(
-      8,
-      Math.floor(EXACT_REPAIR_MAX_ITERATIONS * repairBudgetScale),
+      currentDrc.errors.length >= 200 ? 2 : 8,
+      Math.floor(EXACT_REPAIR_MAX_ITERATIONS * pairwiseRepairBudgetScale),
     )
     const maxBroadRepairIterations = Math.max(
-      4,
-      Math.floor(EXACT_REPAIR_BROAD_MAX_ITERATIONS * repairBudgetScale),
+      currentDrc.errors.length >= 200 ? 1 : 4,
+      Math.floor(EXACT_REPAIR_BROAD_MAX_ITERATIONS * pairwiseRepairBudgetScale),
     )
     this.stats = {
       initialJointDrcIssueCount: currentDrc.errors.length,
@@ -1459,7 +1463,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       enableViaInPadLayerMoves: params.originalSrj.allowViaInPad ?? false,
       viaInPadMaxIterations: maxRepairIterations,
       broadMaxIterations: maxBroadRepairIterations,
-      broadPassMultiplier: 3 * repairBudgetScale,
+      broadPassMultiplier: 3 * pairwiseRepairBudgetScale,
     })
     this.activeSubSolver = this.exactRepairSolver
     this.MAX_ITERATIONS = this.exactRepairSolver.MAX_ITERATIONS + 1
