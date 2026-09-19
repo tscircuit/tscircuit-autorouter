@@ -313,6 +313,10 @@ const getTinyHyperGraphPipelineInput = (
     eligibilityCount <= maxPartialRipRouteCount
   return {
     serializedHyperGraph,
+    fullConnectionRerouteOptions: {
+      preserveAllRegionCosts: true,
+      maxRouteSegmentRatio: 2,
+    },
     createSectionMask: ({ topology }) => new Int8Array(topology.portCount),
     solveGraphOptions: {
       ...getTinyHyperGraphSolveGraphOptions(effort, minViaPadDiameter),
