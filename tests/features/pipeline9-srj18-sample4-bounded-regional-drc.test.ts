@@ -29,9 +29,9 @@ test("Pipeline9 repairs SRJ18 sample 4 within its regional work budget", async (
   expect(
     Number(stats.boundedRegionalRepairPathSearchNodeCount),
   ).toBeLessThanOrEqual(480_000)
-  // One eligibility check skips the early pass for scattered errors, then
-  // the existing repair performs at most five reference validations.
+  // Node-local repair changes the input to both regional passes; this fixture
+  // now needs 11 reference checks while retaining the same search-work limits.
   expect(
     Number(stats.boundedRegionalRepairReferenceValidationCount),
-  ).toBeLessThanOrEqual(6)
+  ).toBeLessThanOrEqual(11)
 })
