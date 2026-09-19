@@ -27,9 +27,9 @@ test("Pipeline9 routes the full Game Boy Advance parent directly to MCU pads", (
   expect(solver.failed).toBeFalse()
   expect(solver.solved).toBeTrue()
   const originalPreloadedTrace = srj.traces![70]!
-  const updatedPreloadedTrace = solver.getUpdatedPreloadedTraces().find(
-    (trace) => trace.pcb_trace_id === originalPreloadedTrace.pcb_trace_id,
-  )
+  const updatedPreloadedTrace = solver
+    .getUpdatedPreloadedTraces()
+    .find((trace) => trace.pcb_trace_id === originalPreloadedTrace.pcb_trace_id)
   expect(updatedPreloadedTrace).toBeDefined()
   // Hypergraph rerouting may materialize this section before high-density
   // routing. Its final copper must still connect the same MCU pads.
@@ -37,7 +37,7 @@ test("Pipeline9 routes the full Game Boy Advance parent directly to MCU pads", (
     originalPreloadedTrace.route[0],
   )
   expect(updatedPreloadedTrace!.route.at(-1)).toMatchObject(
-    originalPreloadedTrace.route.at(-1),
+    originalPreloadedTrace.route.at(-1)!,
   )
   expect(getLastStepSvg(solver.visualize())).toMatchSvgSnapshot(
     import.meta.path,
