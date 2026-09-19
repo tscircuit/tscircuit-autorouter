@@ -118,8 +118,23 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
     super()
     this.constructorParams = params
     this.nodeWithPortPoints = params.nodeWithPortPoints
+    // Sub-via-sized nodes spend their first growth attempts just reaching a
+    // usable routing scale. Preserve the normal search budget after that scale
+    // is reached instead of exhausting it before the portfolio can place vias.
+    const minNodeDimension = Math.min(
+      this.nodeWithPortPoints.width,
+      this.nodeWithPortPoints.height,
+    )
+    const growthAttemptsToFitVia =
+      minNodeDimension > 0
+        ? Math.max(
+            0,
+            Math.ceil(Math.log2((params.viaDiameter ?? 0.3) / minNodeDimension)),
+          )
+        : 0
     this.maxGrowthAttempts =
-      params.maxGrowthAttempts ?? DEFAULT_MAX_GROWTH_ATTEMPTS
+      params.maxGrowthAttempts ??
+      DEFAULT_MAX_GROWTH_ATTEMPTS + growthAttemptsToFitVia
     this.MAX_ITERATIONS =
       20_000_000 * (params.effort ?? 1) * (this.maxGrowthAttempts + 1)
 
