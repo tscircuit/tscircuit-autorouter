@@ -113,6 +113,7 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
   scaleFactor = 1
   growthAttempts = 0
   maxGrowthAttempts: number
+  minimumGrowthAttempts: number
 
   constructor(params: GrowShrinkHighDensityIntraNodeSolverParams) {
     super()
@@ -137,6 +138,34 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
     this.maxGrowthAttempts =
       params.maxGrowthAttempts ??
       DEFAULT_MAX_GROWTH_ATTEMPTS + growthAttemptsToFitVia
+    let minimumPortGap = Number.POSITIVE_INFINITY
+    const ports = this.nodeWithPortPoints.portPoints
+    for (let i = 0; i < ports.length; i++) {
+      for (let j = i + 1; j < ports.length; j++) {
+        const a = ports[i]!
+        const b = ports[j]!
+        if (
+          a.z !== b.z ||
+          (a.rootConnectionName ?? a.connectionName) ===
+            (b.rootConnectionName ?? b.connectionName)
+        ) {
+          continue
+        }
+        const gap = Math.hypot(a.x - b.x, a.y - b.y)
+        if (gap > 1e-9) minimumPortGap = Math.min(minimumPortGap, gap)
+      }
+    }
+    // Always try the physical node first. If that fails, skip intermediate
+    // scales that leave the node smaller than a via or unrelated terminals
+    // closer than a trace radius, while respecting the caller's growth cap.
+    this.minimumGrowthAttempts = Math.min(
+      this.maxGrowthAttempts,
+      Math.max(
+        growthAttemptsToFitVia,
+        0,
+        Math.ceil(Math.log2((params.traceWidth ?? 0.15) / 2 / minimumPortGap)),
+      ),
+    )
     this.MAX_ITERATIONS =
       20_000_000 * (params.effort ?? 1) * (this.maxGrowthAttempts + 1)
 
@@ -267,8 +296,11 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
       return
     }
 
-    this.growthAttempts++
-    this.scaleFactor *= 2
+    this.growthAttempts = Math.max(
+      this.growthAttempts + 1,
+      this.minimumGrowthAttempts,
+    )
+    this.scaleFactor = 2 ** this.growthAttempts
   }
 
   visualize(): GraphicsObject {

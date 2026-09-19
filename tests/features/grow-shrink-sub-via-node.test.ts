@@ -28,6 +28,11 @@ test("sub-via-sized nodes retain a routing budget after growing to fit a via", (
   expect(solver.solved).toBeTrue()
   expect(solver.failed).toBeFalse()
   expect(solver.scaleFactor).toBe(16)
+  expect(
+    solver.failedSolvers.map(
+      (attempt) => attempt.nodeWithPortPoints.width / node.width,
+    ),
+  ).toEqual([1, 8])
   expect(solver.stats.invalidGeometryFallback).not.toBe(true)
   expect(solver.solvedRoutes).toHaveLength(3)
   for (const route of solver.solvedRoutes) {
