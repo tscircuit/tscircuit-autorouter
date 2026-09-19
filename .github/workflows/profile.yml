@@ -53,12 +53,12 @@ jobs:
               repo: context.repo.repo,
               pull_number: prNumber,
             })
-            const base = await github.rest.repos.getBranch({
+            const main = await github.rest.repos.getBranch({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              branch: pr.data.base.ref,
+              branch: 'main',
             })
-            const mainSha = base.data.commit.sha
+            const mainSha = main.data.commit.sha
             const prSha = pr.data.head.sha
             const runUrl = `${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}`
             const statusComment = await github.rest.issues.createComment({
