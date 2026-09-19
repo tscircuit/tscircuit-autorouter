@@ -70,3 +70,22 @@ the fixture and default command here exercise the repository source for debuggin
 Validated against repository commit `a9bb99bd` using Bun 1.4.2 on macOS arm64:
 both the live solve and the frozen-output check reproduce the exact coordinates
 and negative gap above. The live solve returns `solved: true`, `failed: false`.
+
+## Visual snapshot
+
+```sh
+bun test tests/bugs/bugreport106-pipeline9-qspi-board.test.ts --timeout 9999999
+```
+
+The test renders the complete board after power-trace expansion, including
+preloaded copper. It snapshots the final routing candidate even if subsequent
+validation rejects it, allowing the same test to show before/after geometry in
+stacked fix PRs. The overlay uses benchmark relaxed DRC rules, not this board's
+stricter via-to-pad rule.
+
+Review `tests/bugs/__snapshots__/bugreport106-pipeline9-qspi-board.snap.svg`
+in GitHub's rendered image diff. To intentionally update it after routing changes:
+
+```sh
+BUN_UPDATE_SNAPSHOTS=1 bun test tests/bugs/bugreport106-pipeline9-qspi-board.test.ts --timeout 9999999
+```
