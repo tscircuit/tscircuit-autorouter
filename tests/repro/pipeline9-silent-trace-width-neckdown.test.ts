@@ -4,10 +4,10 @@ import type { SimpleRouteJson } from "lib/types"
 import { convertSrjToGraphicsObject } from "lib/utils/convertSrjToGraphicsObject"
 import { getGraphicsSvgFrames } from "../fixtures/solver-svg-frames"
 
-test("Pipeline9 narrows a 0.4mm trace instead of taking a legal detour", async (): Promise<void> => {
+test("Pipeline9 improves a 0.4mm trace by taking a legal detour", async (): Promise<void> => {
   // Reduced from a TSCircuit board with <trace thickness="0.4mm">. Core
   // sends the source minimum as nominalTraceWidth; SRJ has no per-connection
-  // minimum, so Pipeline9 is currently free to shrink to the board minimum.
+  // minimum; the post-pathing stage uses that requested width to seek a detour.
   // A 0.4mm trace plus 0.13mm clearance on each side needs a 0.66mm gap,
   // greater than the 0.50mm gap between the two unrelated pads here. There
   // is ample room around either obstacle for a legal 0.4mm detour: the
@@ -71,13 +71,29 @@ test("Pipeline9 narrows a 0.4mm trace instead of taking a legal detour", async (
   expect(solver.solved).toBe(true)
   expect(solver.failed).toBe(false)
   const traces = solver.getOutputSimplifiedPcbTraces()
-  const interiorWidths = traces.flatMap((trace) =>
+  const wireWidths = traces.flatMap((trace) =>
     trace.route.flatMap((point) =>
-      point.route_type === "wire" && Math.abs(point.x) < 2 ? [point.width] : [],
+      point.route_type === "wire" ? [point.width] : [],
     ),
   )
-  expect(interiorWidths.length).toBeGreaterThan(0)
-  expect(Math.max(...interiorWidths)).toBeLessThan(0.4)
+  expect(wireWidths.length).toBeGreaterThan(0)
+  expect(wireWidths.every((width) => width >= 0.4 - 1e-6)).toBe(true)
+  expect(solver.traceWidthSolver?.widthWarnings).toEqual([])
+  expect(
+    solver.traceSimplificationSolver!.simplifiedHdRoutes[0]!.route.length,
+  ).toBeLessThan(
+    solver.highDensityStitchSolver!.mergedHdRoutes[0]!.route.length,
+  )
+  expect(
+    traces.some((trace) =>
+      trace.route.some(
+        (point) => point.route_type === "wire" && Math.abs(point.y) > 2.9,
+      ),
+    ),
+  ).toBe(true)
+  expect(
+    solver.hypergraphTraceWidthImprovementSolver?.stats.improvedRouteCount,
+  ).toBe(1)
 
   // Same copper obstacles and connection, but with the board minimum raised
   // to 0.4mm: Pipeline9 can take the legal route around the lower obstacle.
@@ -121,7 +137,7 @@ test("Pipeline9 narrows a 0.4mm trace instead of taking a legal detour", async (
     getGraphicsSvgFrames({
       frames: [
         {
-          name: "BUG: board min 0.10mm, center route 0.2375mm",
+          name: "IMPROVED: board min 0.10mm, 0.40mm detour",
           pipeline: "end",
           graphics: bugGraphics,
         },

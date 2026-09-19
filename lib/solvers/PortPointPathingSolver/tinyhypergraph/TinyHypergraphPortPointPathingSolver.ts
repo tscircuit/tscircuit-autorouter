@@ -1542,8 +1542,20 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
     return undefined
   }
 
-  private getSolvedTinySolver(): TinyHyperGraphSolver {
+  getSolvedTinySolver(): TinyHyperGraphSolver {
     return this.tinyPipelineSolver.getSolvedTinySolver()
+  }
+
+  getConnectionByIdOrThrow(connectionId: string): SimpleRouteConnection {
+    const connection = this.params.connections.find(
+      (connection) => connection.connectionId === connectionId,
+    )
+    if (!connection?.simpleRouteConnection) {
+      throw new Error(
+        `Missing source connection for hypergraph route ${connectionId}`,
+      )
+    }
+    return connection.simpleRouteConnection
   }
 
   private getRouteMetadata(
@@ -1597,12 +1609,11 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
     }
   }
 
-  getOutput(): {
+  getOutput(solvedTinySolver = this.getSolvedTinySolver()): {
     nodesWithPortPoints: NodeWithPortPoints[]
     inputNodeWithPortPoints: InputNodeWithPortPoints[]
     changedPreloadedTraceSections: ChangedPreloadedTraceSection[]
   } {
-    const solvedTinySolver = this.getSolvedTinySolver()
     const nodesWithPortPoints: NodeWithPortPoints[] = []
     const regionSegments = solvedTinySolver.state.regionSegments
     const regionMetadata = solvedTinySolver.topology.regionMetadata ?? []
@@ -1716,9 +1727,11 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
     return this.computeSolvedNodePf(node.capacityMeshNodeId, solvedNode)
   }
 
-  computeNodePfMap(): Map<string, number | null> {
+  computeNodePfMap(
+    solvedTinySolver = this.getSolvedTinySolver(),
+  ): Map<string, number | null> {
     const solvedNodeById = new Map(
-      this.getOutput().nodesWithPortPoints.map((node) => [
+      this.getOutput(solvedTinySolver).nodesWithPortPoints.map((node) => [
         node.capacityMeshNodeId,
         node,
       ]),

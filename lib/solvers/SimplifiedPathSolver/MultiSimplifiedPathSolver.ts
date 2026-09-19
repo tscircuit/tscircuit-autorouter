@@ -17,6 +17,7 @@ export class MultiSimplifiedPathSolver extends BaseSolver {
   simplifiedHdRoutes: HighDensityIntraNodeRoute[]
 
   currentUnsimplifiedHdRouteIndex = 0
+  currentRouteWidthImproved = false
 
   activeSubSolver: SingleSimplifiedPathSolver | null = null
 
@@ -27,8 +28,10 @@ export class MultiSimplifiedPathSolver extends BaseSolver {
   colorMap: Record<string, string>
   outline?: Array<{ x: number; y: number }>
   minBoardEdgeClearance: number
+  obstacleMargin?: number
   defaultViaDiameter: number
   useTraceWidthAwareClearance: boolean
+  widthImprovedConnectionIds?: ReadonlySet<string>
   enableVertexShortcuts: boolean
 
   constructor(params: {
@@ -40,8 +43,10 @@ export class MultiSimplifiedPathSolver extends BaseSolver {
     colorMap?: Record<string, string>
     outline?: Array<{ x: number; y: number }>
     minBoardEdgeClearance?: number
+    obstacleMargin?: number
     defaultViaDiameter?: number
     useTraceWidthAwareClearance?: boolean
+    widthImprovedConnectionIds?: ReadonlySet<string>
     enableVertexShortcuts?: boolean
   }) {
     super()
@@ -64,9 +69,11 @@ export class MultiSimplifiedPathSolver extends BaseSolver {
     this.colorMap = params.colorMap || {}
     this.outline = params.outline
     this.minBoardEdgeClearance = params.minBoardEdgeClearance ?? 0.2
+    this.obstacleMargin = params.obstacleMargin
     this.defaultViaDiameter = params.defaultViaDiameter ?? 0.3
     this.useTraceWidthAwareClearance =
       params.useTraceWidthAwareClearance ?? false
+    this.widthImprovedConnectionIds = params.widthImprovedConnectionIds
     this.enableVertexShortcuts = params.enableVertexShortcuts ?? false
 
     this.simplifiedHdRoutes = []
@@ -81,6 +88,11 @@ export class MultiSimplifiedPathSolver extends BaseSolver {
         return
       }
 
+      this.currentRouteWidthImproved =
+        this.widthImprovedConnectionIds === undefined ||
+        this.widthImprovedConnectionIds.has(hdRoute.connectionName) ||
+        (hdRoute.rootConnectionName !== undefined &&
+          this.widthImprovedConnectionIds.has(hdRoute.rootConnectionName))
       this.activeSubSolver = new SingleSimplifiedPathSolver5({
         inputRoute: hdRoute,
         otherHdRoutes: this.otherHdRoutes.concat(
@@ -93,7 +105,11 @@ export class MultiSimplifiedPathSolver extends BaseSolver {
         colorMap: this.colorMap,
         outline: this.outline,
         minBoardEdgeClearance: this.minBoardEdgeClearance,
-        useTraceWidthAwareClearance: this.useTraceWidthAwareClearance,
+        obstacleMargin: this.currentRouteWidthImproved
+          ? this.obstacleMargin
+          : undefined,
+        useTraceWidthAwareClearance:
+          this.useTraceWidthAwareClearance && this.currentRouteWidthImproved,
       })
       this.currentUnsimplifiedHdRouteIndex++
       return
@@ -103,6 +119,7 @@ export class MultiSimplifiedPathSolver extends BaseSolver {
     if (this.activeSubSolver.solved) {
       if (
         this.enableVertexShortcuts &&
+        this.currentRouteWidthImproved &&
         !(this.activeSubSolver instanceof VertexShortcutPathSolver)
       ) {
         this.activeSubSolver = new VertexShortcutPathSolver({
@@ -113,6 +130,7 @@ export class MultiSimplifiedPathSolver extends BaseSolver {
           colorMap: this.colorMap,
           outline: this.outline,
           minBoardEdgeClearance: this.minBoardEdgeClearance,
+          obstacleMargin: this.obstacleMargin,
           useTraceWidthAwareClearance: this.useTraceWidthAwareClearance,
         })
         return

@@ -2,6 +2,7 @@ import { expect, test } from "bun:test"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
 import { convertPreloadedTraceToHdRoutes } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/convertPreloadedTraceToHdRoutes"
 import { MultipleHighDensityRouteStitchSolver3 } from "lib/solvers/RouteStitchingSolver/MultipleHighDensityRouteStitchSolver3"
+import type { HypergraphTraceWidthImprovementSolver } from "lib/solvers/PortPointPathingSolver/tinyhypergraph/HypergraphTraceWidthImprovementSolver"
 import { TraceSimplificationSolver } from "lib/solvers/TraceSimplificationSolver/TraceSimplificationSolver"
 import type { SimpleRouteJson } from "lib/types"
 import type { HighDensityRoute } from "lib/types/high-density-types"
@@ -38,6 +39,11 @@ test("Pipeline9 simplification recognizes connected preload aliases without igno
     }
     const preloadedSnapshot = structuredClone(srj.traces)
     const pipeline = new AutoroutingPipelineSolver9_PreloadedTraceGraph(srj)
+    pipeline.srjWithPointPairs = srj
+    pipeline.hypergraphTraceWidthImprovementSolver = {
+      getImprovedConnectionIds: () => new Set<string>(),
+      getOutput: () => ({ changedPreloadedTraceSections: [] }),
+    } as unknown as HypergraphTraceWidthImprovementSolver
     const route: HighDensityRoute = {
       connectionName: "new_route",
       rootConnectionName: "new_route",

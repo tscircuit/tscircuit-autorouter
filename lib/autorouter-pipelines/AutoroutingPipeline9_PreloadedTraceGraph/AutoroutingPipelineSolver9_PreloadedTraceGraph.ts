@@ -10,6 +10,7 @@ import { ComponentDetectionSolver } from "lib/solvers/ComponentDetectionSolver/C
 import { MultiTargetNecessaryCrampedPortPointSolver } from "lib/solvers/NecessaryCrampedPortPointSolver/MultiTargetNecessaryCrampedPortPointSolver"
 import { NodeDimensionSubdivisionSolver } from "lib/solvers/NodeDimensionSubdivisionSolver/NodeDimensionSubdivisionSolver"
 import { buildHyperGraph } from "lib/solvers/PortPointPathingSolver/hgportpointpathingsolver"
+import { HypergraphTraceWidthImprovementSolver } from "lib/solvers/PortPointPathingSolver/tinyhypergraph/HypergraphTraceWidthImprovementSolver"
 import {
   type ChangedPreloadedTraceSection,
   TinyHypergraphPortPointPathingSolver,
@@ -272,6 +273,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
   powerTraceExpansionSolver?: PowerTraceExpansionSolver
   availableSegmentPointSolver?: AvailableSegmentPointSolver
   portPointPathingSolver?: TinyHypergraphPortPointPathingSolver
+  hypergraphTraceWidthImprovementSolver?: HypergraphTraceWidthImprovementSolver
   multiSectionPortPointOptimizer?: MultiSectionPortPointOptimizer
   uniformPortDistributionSolver?: UniformPortDistributionSolver
   traceWidthSolver?: TraceWidthSolver
@@ -561,15 +563,32 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       },
     ),
     definePipelineStep(
+      "hypergraphTraceWidthImprovementSolver",
+      HypergraphTraceWidthImprovementSolver,
+      (cms) => [
+        {
+          pathingSolver: cms.portPointPathingSolver!,
+          boardMinTraceWidth: cms.minTraceWidth,
+          clearance:
+            cms.srj.minTraceToPadEdgeClearance ??
+            cms.srj.defaultObstacleMargin ??
+            0.15,
+          effort: cms.effort,
+          obstacles: cms.srj.obstacles,
+        },
+      ],
+    ),
+    definePipelineStep(
       "uniformPortDistributionSolver",
       UniformPortDistributionSolver,
       (cms) => [
         {
           nodeWithPortPoints:
-            cms.portPointPathingSolver?.getOutput().nodesWithPortPoints ?? [],
+            cms.hypergraphTraceWidthImprovementSolver!.getOutput()
+              .nodesWithPortPoints,
           inputNodesWithPortPoints:
-            cms.portPointPathingSolver?.getOutput().inputNodeWithPortPoints ??
-            [],
+            cms.hypergraphTraceWidthImprovementSolver!.getOutput()
+              .inputNodeWithPortPoints,
           minTraceWidth: cms.minTraceWidth,
           obstacles: cms.srj.obstacles,
           layerCount: cms.srj.layerCount,
@@ -580,7 +599,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       "highDensityRouteSolver",
       Pipeline9HighDensitySolver,
       (cms) => {
-        const portPointPathingSolver = cms.portPointPathingSolver
+        const portPointPathingSolver = cms.hypergraphTraceWidthImprovementSolver
         if (!portPointPathingSolver) {
           throw new Error(
             "Pipeline9 invariant violated: high-density routing requires the completed port-point pathing solver",
@@ -714,8 +733,35 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             .getChangedPreloadedTraceSections()
             .map((section) => section.connectionName),
         )
-        const newHdRoutes = cms.highDensityStitchSolver!.mergedHdRoutes.filter(
-          (route) => !materializedConnectionNames.has(route.connectionName),
+        const requestedWidths = new Map<string, number>(
+          cms.srjWithPointPairs!.connections.map((connection) => [
+            connection.name,
+            Math.max(
+              cms.minTraceWidth,
+              connection.minTraceWidth ?? 0,
+              connection.nominalTraceWidth ?? 0,
+            ),
+          ]),
+        )
+        const improvedConnectionIds =
+          cms.hypergraphTraceWidthImprovementSolver!.getImprovedConnectionIds()
+        const stitchedNewRoutes =
+          cms.highDensityStitchSolver!.mergedHdRoutes.filter(
+            (route) => !materializedConnectionNames.has(route.connectionName),
+          )
+        const newHdRoutes = stitchedNewRoutes.map((route) =>
+          improvedConnectionIds.has(route.connectionName) ||
+          improvedConnectionIds.has(route.rootConnectionName ?? "")
+            ? {
+                ...route,
+                traceThickness: Math.max(
+                  route.traceThickness,
+                  requestedWidths.get(route.connectionName) ??
+                    requestedWidths.get(route.rootConnectionName ?? "") ??
+                    route.traceThickness,
+                ),
+              }
+            : route,
         )
         const netByConnectionName = getPipeline9NetByConnectionName(
           [...newHdRoutes, ...preloadedHdRoutes],
@@ -736,6 +782,10 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             otherHdRoutes: preloadedHdRoutes,
             netByConnectionName,
             enableCrossingViaReduction: true,
+            useTraceWidthAwareClearance: true,
+            widthImprovedConnectionIds: improvedConnectionIds,
+            pathObstacleMargin: cms.srj.minTraceToPadEdgeClearance ?? 0.15,
+            enableVertexShortcuts: true,
             terminalLayerIndicesByPcbPortId: getTerminalLayerIndicesByPcbPortId(
               cms.srj.connections,
               cms.srj.obstacles,
@@ -1359,8 +1409,8 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
 
   private getChangedPreloadedTraceSections(): ChangedPreloadedTraceSection[] {
     return (
-      this.portPointPathingSolver?.getOutput().changedPreloadedTraceSections ??
-      []
+      this.hypergraphTraceWidthImprovementSolver?.getOutput()
+        .changedPreloadedTraceSections ?? []
     )
   }
 
