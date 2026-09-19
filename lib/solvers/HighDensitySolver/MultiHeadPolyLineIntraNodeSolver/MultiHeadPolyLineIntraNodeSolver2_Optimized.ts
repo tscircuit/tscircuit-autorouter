@@ -189,13 +189,15 @@ export class MultiHeadPolyLineIntraNodeSolver2 extends MultiHeadPolyLineIntraNod
     // Points move only after all forces have been accumulated.
     const geometry = polyLines.map((polyLine): ForceGeometry => {
       const points = [polyLine.start, ...polyLine.mPoints, polyLine.end]
-      const segments = points.slice(0, -1).map((point, index): ForceSegment => ({
-        p1: point,
-        p2: points[index + 1]!,
-        layer: point.z2,
-        p1Idx: index,
-        p2Idx: index + 1,
-      }))
+      const segments = points.slice(0, -1).map(
+        (point, index): ForceSegment => ({
+          p1: point,
+          p2: points[index + 1]!,
+          layer: point.z2,
+          p1Idx: index,
+          p2Idx: index + 1,
+        }),
+      )
       const vias = points.flatMap((point, index): ForceVia[] =>
         point.z1 === point.z2
           ? []

@@ -157,7 +157,9 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       150_000,
       10_000 * this.getNodeSegmentCount() ** 2,
       Math.round(
-        states * (8 + 1.2 * Math.sqrt(this.getNodeSegmentCount())) * this.effort,
+        states *
+          (8 + 1.2 * Math.sqrt(this.getNodeSegmentCount())) *
+          this.effort,
       ),
     )
   }
