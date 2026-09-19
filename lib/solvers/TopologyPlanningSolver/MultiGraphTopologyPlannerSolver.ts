@@ -198,6 +198,7 @@ export class MultiGraphTopologyPlannerSolver extends BasePipelineSolver<MultiGra
     return {
       simpleRouteJson: this.normalizedInput.globalNoConnectionSrj as any,
       maxGapFillPasses: 4,
+      transitClearance: this.inputProblem.obstacleMargin,
     }
   }
 
