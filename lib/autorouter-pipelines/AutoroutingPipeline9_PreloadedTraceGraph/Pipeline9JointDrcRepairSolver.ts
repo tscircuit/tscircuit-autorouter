@@ -967,7 +967,9 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     // Hundreds of unresolved conflicts trigger repeated nearby-copper pair
     // checks. Reserve longer cleanup for boards closer to convergence.
     const pairwiseRepairBudgetScale =
-      currentDrc.errors.length >= 200 ? repairBudgetScale ** 2 : repairBudgetScale
+      currentDrc.errors.length >= 200
+        ? repairBudgetScale ** 2
+        : repairBudgetScale
     const maxRepairIterations = Math.max(
       currentDrc.errors.length >= 200 ? 2 : 8,
       Math.floor(EXACT_REPAIR_MAX_ITERATIONS * pairwiseRepairBudgetScale),
