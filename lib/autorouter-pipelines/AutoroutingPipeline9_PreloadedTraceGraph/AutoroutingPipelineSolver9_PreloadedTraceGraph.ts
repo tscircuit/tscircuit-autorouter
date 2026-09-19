@@ -3,7 +3,13 @@ import type { PowerTraceExpanderOptions } from "@tscircuit/power-trace-expander"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { GraphicsObject, Line } from "graphics-debug"
 import { HighDensityForceImproveSolver } from "high-density-repair01/lib/HighDensityForceImproveSolver"
-import { GlobalDrcForceImproveSolver } from "high-density-repair03/lib"
+import {
+  AutoroutingDrcEngine,
+  GlobalDrcForceImproveSolver,
+  type AutoroutingDrcError,
+  type SimpleRouteJson as RepairSimpleRouteJson,
+  type SimplifiedPcbTraces as RepairSimplifiedPcbTraces,
+} from "high-density-repair03/lib"
 import { getGlobalInMemoryCache } from "lib/cache/setupGlobalCaches"
 import { CacheProvider } from "lib/cache/types"
 import { ComponentDetectionSolver } from "lib/solvers/ComponentDetectionSolver/ComponentDetectionSolver"
@@ -663,6 +669,8 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           colorMap: cms.colorMap,
           repairMargin: cms.srj.defaultObstacleMargin ?? 0.2,
           minimumTraceWidth: cms.srj.minTraceWidth,
+          minTraceToPadEdgeClearance: cms.srj.minTraceToPadEdgeClearance,
+          minViaEdgeToPadEdgeClearance: cms.srj.minViaEdgeToPadEdgeClearance,
           connMap: cms.connMap,
         },
       ],
@@ -1027,6 +1035,8 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     return [this.srj, this.opts] as const
   }
 
+  viaPadClearanceErrors: AutoroutingDrcError[] = []
+
   currentPipelineStepIndex = 0
 
   computeProgress(): number {
@@ -1040,6 +1050,37 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
   _step() {
     const pipelineStepDef = this.pipelineDef[this.currentPipelineStepIndex]
     if (!pipelineStepDef) {
+      // Repair stages are best-effort optimizers. Their completion does not
+      // prove that the final copper satisfies an explicitly requested rule.
+      if (this.originalSrj.minViaEdgeToPadEdgeClearance !== undefined) {
+        if (!this.powerTraceExpansionSolver) {
+          throw new Error(
+            "Pipeline9 final clearance validation requires power expansion output",
+          )
+        }
+        const evaluator = new AutoroutingDrcEngine(
+          this.originalSrj as RepairSimpleRouteJson,
+          { connMap: this.connMap },
+        )
+        const finalTraces = [
+          ...this.getPowerTraceExpansionFixedTraces(),
+          ...this.powerTraceExpansionSolver.getOutput(),
+        ]
+        const { errors } = evaluator.evaluate(
+          finalTraces as RepairSimplifiedPcbTraces,
+        )
+        this.viaPadClearanceErrors = errors.filter(
+          (error) => error.type === "pcb_pad_pad_clearance_error",
+        )
+        if (this.viaPadClearanceErrors.length > 0) {
+          this.failed = true
+          this.error =
+            `Pipeline9 could not satisfy minViaEdgeToPadEdgeClearance=${this.originalSrj.minViaEdgeToPadEdgeClearance}mm: ` +
+            `${this.viaPadClearanceErrors.length} via-to-pad violations remain. ` +
+            this.viaPadClearanceErrors[0]!.message
+          return
+        }
+      }
       this.solved = true
       return
     }

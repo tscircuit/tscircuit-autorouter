@@ -6,10 +6,12 @@ import {
   checkSameNetViaSpacing,
   checkTracesAreContiguous,
   checkViaTraceClearance,
+  checkViaPadClearance,
 } from "@tscircuit/checks"
 import type {
   AnyCircuitElement,
   PcbPadTraceClearanceError,
+  PcbPadPadClearanceError,
   PcbTraceError,
   PcbViaClearanceError,
   PcbViaTraceClearanceError,
@@ -29,6 +31,7 @@ type PcbViaWithTraceId = CircuitJsonElement & {
 }
 
 type DrcError =
+  | PcbPadPadClearanceError
   | PcbTraceError
   | PcbViaTraceClearanceError
   | PcbPadTraceClearanceError
@@ -48,6 +51,8 @@ export interface GetDrcErrorsResult {
 }
 
 export interface GetDrcErrorsOptions {
+  /** Enable via-to-pad checks with this copper-edge clearance in millimeters. */
+  viaToPadClearance?: number
   viaClearance?: number
   traceClearance?: number
   includeTraceContinuity?: boolean
@@ -107,7 +112,25 @@ export const getDrcErrors = (
     }),
   ]
 
+  const viaIds = new Set(
+    circuitJson
+      .filter((element) => element.type === "pcb_via")
+      .map((via) => via.pcb_via_id),
+  )
+  const viaPadErrors =
+    options.viaToPadClearance === undefined
+      ? []
+      : checkViaPadClearance(circuitJson, {
+          connMap,
+          minClearance: options.viaToPadClearance,
+        }).map((error) => ({
+          ...error,
+          // Repair needs the via owner as well as the two pad identities.
+          pcb_via_ids: error.pcb_pad_ids.filter((id) => viaIds.has(id)),
+        }))
+
   const errors: DrcError[] = [
+    ...viaPadErrors,
     ...traceErrors,
     ...checkPcbTracesOutOfBoard(circuitJson),
     ...(options.includeTraceContinuity === false

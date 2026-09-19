@@ -226,6 +226,8 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
     obstacles: Obstacle[]
     repairMargin?: number
     minimumTraceWidth?: number
+    minTraceToPadEdgeClearance?: number
+    minViaEdgeToPadEdgeClearance?: number
     colorMap?: Record<string, string>
     connMap?: ConnectivityMap
   }) {
@@ -311,13 +313,23 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
         )
         const bounds = getNodeBounds(
           node,
-          Math.max(this.repairMargin, copperRadius + 0.1),
+          Math.max(
+            this.repairMargin,
+            copperRadius +
+              Math.max(
+                0.1,
+                params.minTraceToPadEdgeClearance ?? 0,
+                params.minViaEdgeToPadEdgeClearance ?? 0,
+              ),
+          ),
         )
         const ownedIndexes = new Set(routeIndexes)
         return {
           node,
           routeIndexes,
           sample: {
+            minTraceToPadEdgeClearance: params.minTraceToPadEdgeClearance,
+            minViaEdgeToPadEdgeClearance: params.minViaEdgeToPadEdgeClearance,
             nodeWithPortPoints: {
               capacityMeshNodeId: node.capacityMeshNodeId,
               center: node.center,

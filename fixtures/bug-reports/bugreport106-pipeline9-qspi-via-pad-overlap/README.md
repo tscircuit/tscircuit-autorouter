@@ -70,3 +70,16 @@ the fixture and default command here exercise the repository source for debuggin
 Validated against repository commit `a9bb99bd` using Bun 1.4.2 on macOS arm64:
 both the live solve and the frozen-output check reproduce the exact coordinates
 and negative gap above. The live solve returns `solved: true`, `failed: false`.
+
+## Conservative fix
+
+The final via-to-pad validation now reports `failed: true` when routing leaves
+violations of the explicitly requested rule. It exposes the findings through
+`solver.viaPadClearanceErrors` and prevents retrieving unsafe output as a solved
+result. This board still needs further routing work. The historical script above
+now stops at its solver-status assertion; the regression test checks the new
+failure behavior:
+
+```sh
+bun test tests/bugs/bugreport106-pipeline9-qspi-via-pad-clearance.test.ts --timeout 9999999
+```
