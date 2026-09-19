@@ -8,6 +8,7 @@ import {
   hasPreloadedTraceSectionMetadata,
 } from "lib/solvers/PortPointPathingSolver/tinyhypergraph/serializePreloadedTraceAssignments"
 import type { CapacityMeshNode, SimpleRouteConnection } from "lib/types"
+import { getIntraNodeCrossingsUsingCircle } from "lib/utils/getIntraNodeCrossingsUsingCircle"
 import { loadSerializedHyperGraph } from "tiny-hypergraph/lib/index"
 
 test("congestion duplicates preserve canonical preloaded assignments", () => {
@@ -192,4 +193,19 @@ test("congestion duplicates preserve canonical preloaded assignments", () => {
     ),
   ).toEqual(new Set(["route-a", "route-b"]))
   expect(output.changedPreloadedTraceSections).toEqual([])
+
+  const centerNode = output.nodesWithPortPoints.find(
+    (node) => node.capacityMeshNodeId === "center",
+  )!
+  expect(centerNode).toBeDefined()
+  // Include the unchanged fixed trace when checking the newly routed nets.
+  const crossings = getIntraNodeCrossingsUsingCircle({
+    ...centerNode,
+    portPoints: [
+      ...centerNode.portPoints,
+      { connectionName: "fixed-root", x: -1, y: 0, z: 0 },
+      { connectionName: "fixed-root", x: 1, y: 0, z: 0 },
+    ],
+  })
+  expect(crossings.numSameLayerCrossings).toBe(0)
 })
