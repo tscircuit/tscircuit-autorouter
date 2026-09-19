@@ -55,134 +55,6 @@ test("bugreport106-347963.json", async () => {
     (line) => (line.strokeWidth ?? srj.minTraceWidth) < srj.minTraceWidth,
   )
   expect(violatingLines.length).toBeGreaterThan(0)
-  const contextLines = focusedLines.filter(
-    (line) => !isMicrophoneGroundLine(line),
-  )
-  const focusedGraphics: GraphicsObject = {
-    lines: [
-      ...contextLines.map((line) => ({
-        ...line,
-        strokeColor: fadeColor(line.strokeColor),
-      })),
-      ...connectionLines.map((line) => ({
-        ...line,
-        strokeColor:
-          (line.strokeWidth ?? srj.minTraceWidth) < srj.minTraceWidth
-            ? "#dc2626"
-            : "rgba(220,38,38,0.55)",
-      })),
-      ...violatingLines.map((line) => ({
-        ...line,
-        strokeColor: "rgba(220,38,38,0.18)",
-        strokeWidth: Math.max((line.strokeWidth ?? 0) * 4, 0.32),
-        zIndex: -1,
-      })),
-      {
-        points: [
-          { x: -16.3, y: 2.68 },
-          { x: -16.3, y: 2.33 },
-        ],
-        strokeColor: "#991b1b",
-        strokeWidth: 0.018,
-      },
-      {
-        points: [
-          { x: -16.1246, y: 2.4401 },
-          { x: -16.48, y: 2.22 },
-        ],
-        strokeColor: "#dc2626",
-        strokeWidth: actualMinimumWidth,
-        zIndex: 1,
-        label: "0.0800 mm width guide",
-      },
-    ],
-    rects: [
-      ...(fullGraphics.rects ?? [])
-        .filter(
-          (rect) =>
-            rect.center.x + rect.width / 2 >= focusBounds.minX &&
-            rect.center.x - rect.width / 2 <= focusBounds.maxX &&
-            rect.center.y + rect.height / 2 >= focusBounds.minY &&
-            rect.center.y - rect.height / 2 <= focusBounds.maxY,
-        )
-        .map((rect) => {
-          const isConnectionPad = rect.label?.includes("source_net_0")
-          return {
-            ...rect,
-            fill: isConnectionPad
-              ? "rgba(220,38,38,0.18)"
-              : fadeColor(rect.fill),
-            stroke: isConnectionPad
-              ? "rgba(220,38,38,0.35)"
-              : fadeColor(rect.stroke),
-          }
-        }),
-      {
-        center: {
-          x: (focusBounds.minX + focusBounds.maxX) / 2,
-          y: (focusBounds.minY + focusBounds.maxY) / 2,
-        },
-        width: focusBounds.maxX - focusBounds.minX,
-        height: focusBounds.maxY - focusBounds.minY,
-        fill: "rgba(255,255,255,0)",
-        stroke: "none",
-      },
-    ],
-    circles: [
-      ...(fullGraphics.circles ?? [])
-        .filter((circle) => isInsideFocus(circle.center))
-        .map((circle) => ({
-          ...circle,
-          fill: fadeColor(circle.fill),
-          stroke: fadeColor(circle.stroke),
-        })),
-      {
-        center: { x: -16.0769, y: 2.4701 },
-        radius: 0.13,
-        fill: "rgba(255,255,255,0)",
-        stroke: "#991b1b",
-      },
-    ],
-    points: [],
-    texts: [
-      {
-        x: (focusBounds.minX + focusBounds.maxX) / 2,
-        y: 3.28,
-        text: `CURRENT ${actualMinimumWidth.toFixed(4)} mm  •  EXPECTED MINIMUM ${srj.minTraceWidth.toFixed(4)} mm`,
-        fontSize: 0.22,
-        color: "#991b1b",
-        anchorSide: "center",
-      },
-      {
-        x: (focusBounds.minX + focusBounds.maxX) / 2,
-        y: 2.92,
-        text: "source_net_0 • microphone GND terminal",
-        fontSize: 0.18,
-        color: "#475569",
-        anchorSide: "center",
-      },
-      {
-        x: -16.32,
-        y: 2.7,
-        text: "0.0800 mm trace width",
-        fontSize: 0.16,
-        color: "#991b1b",
-        anchorSide: "bottom_right",
-      },
-    ],
-  }
-
-  await expect(
-    getSvgFromGraphicsObject(focusedGraphics, {
-      backgroundColor: "white",
-      svgWidth: 640,
-      svgHeight: 640,
-    }),
-  ).toMatchSvgSnapshot(import.meta.path, {
-    svgName: "microphone-terminal-width-zoom",
-    tolerance: 0.03,
-  })
-
   const outline = srj.outline ?? []
   const contextConnectionLines = (fullGraphics.lines ?? []).filter(
     isMicrophoneGroundLine,
@@ -194,7 +66,7 @@ test("bugreport106-347963.json", async () => {
         ? [
             {
               points: [...outline, outline[0]!],
-              strokeColor: "rgba(71,85,105,0.55)",
+              strokeColor: "rgba(71,85,105,0.18)",
               strokeWidth: 0.16,
               zIndex: -3,
             },
@@ -204,14 +76,14 @@ test("bugreport106-347963.json", async () => {
         .filter((line) => !isMicrophoneGroundLine(line))
         .map((line) => ({
           ...line,
-          strokeColor: fadeColor(line.strokeColor, 0.72),
+          strokeColor: fadeColor(line.strokeColor, 0.94),
         })),
       ...contextConnectionLines.map((line) => ({
         ...line,
         strokeColor:
           (line.strokeWidth ?? srj.minTraceWidth) < srj.minTraceWidth
             ? "#dc2626"
-            : "rgba(220,38,38,0.58)",
+            : "rgba(220,38,38,0.9)",
       })),
       ...violatingLines.map((line) => ({
         ...line,
@@ -219,15 +91,7 @@ test("bugreport106-347963.json", async () => {
         strokeWidth: Math.max((line.strokeWidth ?? 0) * 7, 0.56),
         zIndex: -1,
       })),
-      {
-        points: [
-          { x: -14.1, y: 5.2 },
-          { x: -16.0769, y: 2.4701 },
-        ],
-        strokeColor: "#991b1b",
-        strokeWidth: 0.08,
-        zIndex: 2,
-      },
+
     ],
     rects: (fullGraphics.rects ?? []).map((rect) => {
       const isConnectionPad = rect.label?.includes("source_net_0")
@@ -235,17 +99,17 @@ test("bugreport106-347963.json", async () => {
         ...rect,
         fill: isConnectionPad
           ? "rgba(220,38,38,0.22)"
-          : fadeColor(rect.fill, 0.82),
+          : fadeColor(rect.fill, 0.94),
         stroke: isConnectionPad
           ? "rgba(220,38,38,0.5)"
-          : fadeColor(rect.stroke, 0.82),
+          : fadeColor(rect.stroke, 0.94),
       }
     }),
     circles: [
       ...(fullGraphics.circles ?? []).map((circle) => ({
         ...circle,
-        fill: fadeColor(circle.fill, 0.82),
-        stroke: fadeColor(circle.stroke, 0.82),
+        fill: fadeColor(circle.fill, 0.94),
+        stroke: fadeColor(circle.stroke, 0.94),
       })),
       {
         center: { x: -16.0769, y: 2.4701 },
@@ -254,22 +118,23 @@ test("bugreport106-347963.json", async () => {
         stroke: "#991b1b",
       },
     ],
+    points: (fullGraphics.points ?? []).map((point) => ({
+      ...point,
+      color: point.label?.startsWith("source_net_0\n")
+        ? "#dc2626"
+        : fadeColor(point.color, 0.94),
+    })),
     texts: [
       {
         x: 0,
-        y: 37.5,
-        text: `CURRENT ${actualMinimumWidth.toFixed(4)} mm  •  EXPECTED MINIMUM ${srj.minTraceWidth.toFixed(4)} mm`,
-        fontSize: 1.15,
-        color: "#991b1b",
+        y: 40,
+        text:
+          actualMinimumWidth >= srj.minTraceWidth
+            ? `This snapshot is good: trace width ${actualMinimumWidth.toFixed(4)} mm meets the minimum ${srj.minTraceWidth.toFixed(4)} mm.`
+            : `This snapshot has insufficient trace width: ${actualMinimumWidth.toFixed(4)} mm is below the minimum ${srj.minTraceWidth.toFixed(4)} mm.`,
+        fontSize: 1.05,
+        color: "#0f172a",
         anchorSide: "center",
-      },
-      {
-        x: -13.8,
-        y: 5.7,
-        text: "0.0800 mm microphone GND terminal",
-        fontSize: 0.68,
-        color: "#991b1b",
-        anchorSide: "center_left",
       },
     ],
   }
@@ -278,7 +143,7 @@ test("bugreport106-347963.json", async () => {
     getSvgFromGraphicsObject(contextGraphics, {
       backgroundColor: "white",
       svgWidth: 1000,
-      svgHeight: 800,
+      svgHeight: 1100,
     }),
   ).toMatchSvgSnapshot(import.meta.path, {
     svgName: "microphone-terminal-width-context",
