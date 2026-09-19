@@ -97,6 +97,7 @@ test("Pipeline9 exposes an accepted preloaded hypergraph route change", () => {
   expect(tinyPipeline.pipelineDef.map((step) => step.solverName)).toEqual([
     "solveGraph",
     "optimizeSection",
+    "rerouteFullConnections",
   ])
 
   solver.solve()

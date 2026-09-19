@@ -94,6 +94,21 @@ export type TinyHypergraphBenchmarkMetrics = {
 }
 
 export type RoutingBenchmarkMetrics = {
+  tinyHypergraphReroute?: {
+    rerouteAttempts: number
+    acceptedReroutes: number
+    reroutedRouteCount: number
+    initialMaxRegionCost: number
+    finalMaxRegionCost: number
+    initialTotalRegionCost: number
+    finalTotalRegionCost: number
+    initialEstimatedViaCount: number
+    finalEstimatedViaCount: number
+    initialLayerChangeCount: number
+    finalLayerChangeCount: number
+    initialSegmentCount: number
+    finalSegmentCount: number
+  }
   tinyHypergraph?: TinyHypergraphBenchmarkMetrics
   highDensityIterations?: number
   phaseTimeMs?: Record<string, number>
