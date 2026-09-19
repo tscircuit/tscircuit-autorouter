@@ -23,6 +23,7 @@ import {
   DuplicateCongestedPortSolver,
   orderConnectionsByNetCardinality,
   type DuplicateCongestedPortSolverReport,
+  type FullConnectionRerouteSolver,
   TinyHyperGraphSectionPipelineSolver,
   TinyHyperGraphSectionSolver,
   TinyHyperGraphSolver,
@@ -985,6 +986,11 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
   }
 
   getSolvedTinySolver(): TinyHyperGraphSolver {
+    const rerouteSolver = this.getSolver<FullConnectionRerouteSolver>(
+      "rerouteFullConnections",
+    )
+    if (rerouteSolver) return rerouteSolver.getSolvedSolver()
+
     const optimizeSectionSolver =
       this.getSolver<TinyHyperGraphSectionSolver>("optimizeSection")
 
@@ -1523,6 +1529,9 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
   }
 
   private getCurrentTinySolver(): TinyHyperGraphSolver | undefined {
+    if (this.tinyPipelineSolver.getSolver("rerouteFullConnections")) {
+      return this.tinyPipelineSolver.getSolvedTinySolver()
+    }
     const optimizeSectionSolver =
       this.tinyPipelineSolver.getSolver<TinyHyperGraphSectionSolver>(
         "optimizeSection",
