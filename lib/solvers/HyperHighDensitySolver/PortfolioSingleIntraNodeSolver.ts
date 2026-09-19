@@ -144,6 +144,24 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     this.MIN_SUBSTEPS = 100
   }
 
+  private getGridSearchIterationBudget(): number {
+    const node = this.nodeWithPortPoints
+    const states =
+      Math.floor(node.width / 0.1) *
+      Math.floor(node.height / 0.1) *
+      (node.availableZ?.length ??
+        new Set(node.portPoints.map((point) => point.z)).size)
+    // Avoid the external solvers' two-million-iteration floor on small grids,
+    // while retaining room for interacting connections on crowded nodes.
+    return Math.max(
+      150_000,
+      10_000 * this.getNodeSegmentCount() ** 2,
+      Math.round(
+        states * (8 + 1.2 * Math.sqrt(this.getNodeSegmentCount())) * this.effort,
+      ),
+    )
+  }
+
   getCombinationDefs() {
     return [
       ["throughObstacle"],
@@ -313,6 +331,15 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     if (solver instanceof HighDensitySolverA13) return
     const setup = (solver as any).setup
     if (typeof setup === "function") setup.call(solver)
+    if (
+      solver instanceof HighDensitySolverA01 ||
+      solver instanceof HighDensityA03Solver
+    ) {
+      solver.MAX_ITERATIONS = Math.min(
+        solver.MAX_ITERATIONS,
+        this.getGridSearchIterationBudget(),
+      )
+    }
   }
 
   private refreshDynamicIterationLimit() {
