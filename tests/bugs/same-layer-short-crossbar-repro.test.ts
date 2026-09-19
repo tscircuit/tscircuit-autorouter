@@ -60,6 +60,8 @@ const overlapErrors = (traces: SimplifiedPcbTraces) =>
 // public Pipeline7 output path still calls that helper.
 test("guaranteeNoSameLayerShorts removes DRC overlap shorts from routed traces", () => {
   expect(overlapErrors(crossingTraces).length).toBeGreaterThan(0)
-  const fixed = guaranteeNoSameLayerShorts(crossingTraces, 0)
+  const fixed = guaranteeNoSameLayerShorts(crossingTraces, 0, {
+    layerNames: ["top", "bottom"],
+  })
   expect(overlapErrors(fixed).length).toBe(0)
 })
