@@ -73,7 +73,9 @@ test("large conflicted boards bound repair work while near-clean and higher-effo
     [480, 20, 4],
     [120, 20, 1],
   ]) {
-    expect(getPipeline9BoundedRepairBudget(routeCount!, errors!, effort!)).toEqual({
+    expect(
+      getPipeline9BoundedRepairBudget(routeCount!, errors!, effort!),
+    ).toEqual({
       maxRegions: 4,
       maxCandidateAttempts: 1024,
       maxPathSearchNodes: 480000,
