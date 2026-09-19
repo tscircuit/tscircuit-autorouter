@@ -800,7 +800,7 @@ function createPcbPadElements(srj: SimpleRouteJson): AnyCircuitElement[] {
  * @param minViaDiameter Default diameter for vias
  * @returns An array of PcbVia elements
  */
-function getPhysicalViaLayers(
+function getViaDrillLayers(
   via: { from_layer: string; to_layer: string; layers?: string[] },
   layerCount: number,
   allowBlindAndBuriedVias: boolean,
@@ -808,13 +808,13 @@ function getPhysicalViaLayers(
   if (allowBlindAndBuriedVias && via.layers !== undefined) {
     return via.layers as LayerName[]
   }
-  const physicalSpan = allowBlindAndBuriedVias
+  const drillSpan = allowBlindAndBuriedVias
     ? via
     : {
         from_layer: "top",
         to_layer: mapZToLayerName(layerCount - 1, layerCount),
       }
-  return getViaLayers(physicalSpan, layerCount) as LayerName[]
+  return getViaLayers(drillSpan, layerCount) as LayerName[]
 }
 
 function extractViasFromRoutes(
@@ -852,7 +852,7 @@ function extractViasFromRoutes(
                 y: segment.y,
                 outer_diameter: viaDiameter,
                 hole_diameter: viaHoleDiameter,
-                layers: getPhysicalViaLayers(
+                layers: getViaDrillLayers(
                   segment,
                   layerCount,
                   allowBlindAndBuriedVias,
@@ -892,7 +892,7 @@ function extractViasFromRoutes(
                 y: currPoint.y,
                 outer_diameter: viaDiameter,
                 hole_diameter: viaHoleDiameter,
-                layers: getPhysicalViaLayers(
+                layers: getViaDrillLayers(
                   { from_layer: fromLayer, to_layer: toLayer },
                   layerCount,
                   allowBlindAndBuriedVias,

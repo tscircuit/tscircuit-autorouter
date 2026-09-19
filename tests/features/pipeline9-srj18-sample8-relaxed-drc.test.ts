@@ -25,7 +25,6 @@ test("Pipeline9 reports SRJ18 sample 8's remaining via/pad clearances", async ()
     routedTraces: solver.getOutputSimplifiedPcbTraces(),
   })
   expect(errors.map((error) => error.type).sort()).toEqual([
-    "pcb_pad_trace_clearance_error",
     "pcb_via_trace_clearance_error",
     "pcb_via_trace_clearance_error",
     "pcb_via_trace_clearance_error",
