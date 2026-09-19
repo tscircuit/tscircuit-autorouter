@@ -18,6 +18,6 @@ test("Pipeline9 routes SRJ18 sample 16 and reports remaining DRC violations", as
     srjWithPointPairs: solver.srjWithPointPairs!,
     routedTraces: solver.getOutputSimplifiedPcbTraces(),
   })
-  // Full-stack via DRC exposes three remaining violations in this route.
-  expect(errors).toHaveLength(3)
+  // Full-stack via DRC exposes two remaining violations in this route.
+  expect(errors).toHaveLength(2)
 })
