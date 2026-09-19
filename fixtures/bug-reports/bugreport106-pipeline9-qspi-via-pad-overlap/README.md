@@ -89,3 +89,12 @@ in GitHub's rendered image diff. To intentionally update it after routing change
 ```sh
 BUN_UPDATE_SNAPSHOTS=1 bun test tests/bugs/bugreport106-pipeline9-qspi-board.test.ts --timeout 9999999
 ```
+
+## Conservative fix
+
+The final via-to-pad validation now reports `failed: true` when routing leaves
+violations of the explicitly requested rule. It exposes the findings through
+`solver.viaPadClearanceErrors` and prevents retrieving unsafe output as a solved
+result. This board still needs further routing work. The historical script above
+now stops at its solver-status assertion. The visual snapshot shows the final
+rejected candidate, so its geometry can be compared with the baseline in #2656.
