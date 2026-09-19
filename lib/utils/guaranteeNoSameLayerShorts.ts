@@ -1,4 +1,7 @@
-import type { SimplifiedPcbTrace, SimplifiedPcbTraces } from "lib/types/srj-types"
+import type {
+  SimplifiedPcbTrace,
+  SimplifiedPcbTraces,
+} from "lib/types/srj-types"
 import { minimumDistanceBetweenSegments } from "lib/utils/minimumDistanceBetweenSegments"
 
 /**
@@ -130,7 +133,11 @@ const relocationViolates = (
   )
 }
 
-const via = (point: WirePoint, fromLayer: string, toLayer: string): RoutePoint => ({
+const via = (
+  point: WirePoint,
+  fromLayer: string,
+  toLayer: string,
+): RoutePoint => ({
   route_type: "via",
   x: point.x,
   y: point.y,
