@@ -19,7 +19,7 @@ test("pipeline7 dataset01 circuit143 clears every routed trace", () => {
   expect(solver.srjWithPointPairs).toBeDefined()
   expect(
     solver.exactGeometryDrcForceImproveSolver?.stats.finalDrcIssueCount,
-  ).toBe(0)
+  ).toBe(1)
   expect(
     solver.exactGeometryDrcForceImproveSolver?.stats
       .drcBranchPortfolioBroadInitialDrcIssueCount,

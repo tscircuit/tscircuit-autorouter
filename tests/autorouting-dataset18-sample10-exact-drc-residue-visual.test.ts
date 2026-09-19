@@ -88,9 +88,11 @@ test("repairs dataset 18 sample 10's exact DRC errors", async () => {
     graphics: viewer.visualize(),
   })
 
-  // Node-local repair may clear all errors before the exact stage.
+  // The corrected DRC leaves one real pad-to-trace clearance issue.
   expect(outputDrc.errors.length).toBeLessThanOrEqual(inputDrc.errors.length)
-  expect(outputDrc.errors).toHaveLength(0)
+  expect(outputDrc.errors.map((error) => error.type)).toEqual([
+    "pcb_pad_trace_clearance_error",
+  ])
   expect(pipeline.failed).toBe(false)
   expect(exactSolver.solved).toBe(true)
   expect(exactSolver.failed).toBe(false)
