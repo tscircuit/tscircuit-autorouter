@@ -91,7 +91,6 @@ test("bugreport106-347963.json", async () => {
         strokeWidth: Math.max((line.strokeWidth ?? 0) * 7, 0.56),
         zIndex: -1,
       })),
-
     ],
     rects: (fullGraphics.rects ?? []).map((rect) => {
       const isConnectionPad = rect.label?.includes("source_net_0")
