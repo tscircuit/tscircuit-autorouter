@@ -32,7 +32,7 @@ import {
 } from "./applyPipeline9ClearancePrecisionRepairs"
 import {
   applyPipeline9BoundedRegionalRepairs,
-  PIPELINE9_BOUNDED_REPAIR_BUDGET,
+  getPipeline9BoundedRepairBudget,
 } from "./applyPipeline9BoundedRegionalRepairs"
 import { applyPipeline9RegionalB01Repairs } from "./applyPipeline9RegionalB01Repairs"
 import { applyPipeline9TerminalEscapeRelocations } from "./applyPipeline9TerminalEscapeRelocations"
@@ -1655,6 +1655,11 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         0.15,
       effort: this.params.effort,
     })
+    const regionalRepairBudget = getPipeline9BoundedRepairBudget(
+      regionalB01RepairResult.routes.length,
+      regionalB01RepairResult.remainingDrcIssueCount,
+      this.params.effort,
+    )
     const lateBoundedRepairStartedAt = performance.now()
     const boundedRegionalRepairResult = earlyBoundedRepairClean
       ? earlyBoundedRepair
@@ -1663,13 +1668,13 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
           routes: regionalB01RepairResult.routes,
           budget: {
             maxRegions:
-              PIPELINE9_BOUNDED_REPAIR_BUDGET.maxRegions -
+              regionalRepairBudget.maxRegions -
               earlyBoundedRepair.attemptedRegionCount,
             maxCandidateAttempts:
-              PIPELINE9_BOUNDED_REPAIR_BUDGET.maxCandidateAttempts -
+              regionalRepairBudget.maxCandidateAttempts -
               earlyBoundedRepair.candidateAttemptCount,
             maxPathSearchNodes:
-              PIPELINE9_BOUNDED_REPAIR_BUDGET.maxPathSearchNodes -
+              regionalRepairBudget.maxPathSearchNodes -
               earlyBoundedRepair.pathSearchNodeCount,
           },
         })

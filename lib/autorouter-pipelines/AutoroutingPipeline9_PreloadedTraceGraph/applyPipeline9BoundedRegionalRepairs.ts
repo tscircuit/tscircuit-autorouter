@@ -35,6 +35,37 @@ export const PIPELINE9_BOUNDED_REPAIR_BUDGET = {
   maxPathSearchNodes: 480_000,
 } as const
 
+export const getPipeline9BoundedRepairBudget = (
+  routeCount: number,
+  drcIssueCount: number,
+  effort: number,
+): {
+  maxRegions: number
+  maxCandidateAttempts: number
+  maxPathSearchNodes: number
+} => {
+  // Each region also projects and validates the entire board. Bound that
+  // repeated work on large boards, while retaining full effort near convergence.
+  const scale =
+    drcIssueCount >= 20 && routeCount > 120
+      ? Math.min(1, (120 * Math.max(1, effort)) / routeCount)
+      : 1
+  return {
+    maxRegions: Math.max(
+      1,
+      Math.floor(PIPELINE9_BOUNDED_REPAIR_BUDGET.maxRegions * scale),
+    ),
+    maxCandidateAttempts: Math.max(
+      1,
+      Math.floor(PIPELINE9_BOUNDED_REPAIR_BUDGET.maxCandidateAttempts * scale),
+    ),
+    maxPathSearchNodes: Math.max(
+      1,
+      Math.floor(PIPELINE9_BOUNDED_REPAIR_BUDGET.maxPathSearchNodes * scale),
+    ),
+  }
+}
+
 type Pipeline9BoundedRegionalRepairParams = {
   originalSrj: SimpleRouteJson
   routes: HighDensityRoute[]

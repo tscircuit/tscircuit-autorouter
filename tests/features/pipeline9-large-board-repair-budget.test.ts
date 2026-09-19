@@ -1,5 +1,6 @@
 import { expect, test } from "bun:test"
 import { Pipeline9JointDrcRepairSolver } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/Pipeline9JointDrcRepairSolver"
+import { getPipeline9BoundedRepairBudget } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/applyPipeline9BoundedRegionalRepairs"
 import type { SimpleRouteJson } from "lib/types"
 import type { HighDensityRoute } from "lib/types/high-density-types"
 import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
@@ -62,6 +63,22 @@ const makeParams = (
 }
 
 test("large conflicted boards bound repair work while near-clean and higher-effort boards retain the full budget", (): void => {
+  expect(getPipeline9BoundedRepairBudget(480, 20, 1)).toEqual({
+    maxRegions: 1,
+    maxCandidateAttempts: 256,
+    maxPathSearchNodes: 120000,
+  })
+  for (const [routeCount, errors, effort] of [
+    [480, 19, 1],
+    [480, 20, 4],
+    [120, 20, 1],
+  ]) {
+    expect(getPipeline9BoundedRepairBudget(routeCount!, errors!, effort!)).toEqual({
+      maxRegions: 4,
+      maxCandidateAttempts: 1024,
+      maxPathSearchNodes: 480000,
+    })
+  }
   const conflicted = new Pipeline9JointDrcRepairSolver(makeParams(40, 1))
   expect(conflicted.stats.initialJointDrcIssueCount).toBeGreaterThanOrEqual(20)
   expect(conflicted.exactRepairSolver!.params.maxIterations).toBe(8)
