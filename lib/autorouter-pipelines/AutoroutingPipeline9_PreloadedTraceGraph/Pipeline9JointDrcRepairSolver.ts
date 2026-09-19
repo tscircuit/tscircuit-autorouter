@@ -982,7 +982,11 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     }
 
     if (currentDrc.errors.length === 0) {
-      this.solved = true
+      this.combinedOutput = [
+        ...this.inputNewHdRoutes,
+        ...this.movablePreloadedSections.map((section) => section.hdRoute),
+      ]
+      this.startCoordinateRepair()
       return
     }
 
@@ -1445,14 +1449,38 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
   }
 
   private startCoordinateRepair(): void {
-    const routes = this.getOutput()
-    const traces = this.convertNewRoutes(routes)
+    const routes = this.getCombinedOutput()
+    const traces = this.convertNewRoutes(routes.filter(
+      (route) => !this.syntheticConnectionNames.has(route.connectionName),
+    ))
+    const movableOriginalIds = new Set<string>()
+    for (const section of this.movablePreloadedSections) {
+      const route = routes.find((route) => route.connectionName === section.syntheticConnectionName)
+      if (!route) throw new Error(`Coordinate repair is missing preloaded section "${section.syntheticConnectionName}"`)
+      movableOriginalIds.add(section.originalTrace.pcb_trace_id)
+      traces.push({
+        ...section.originalTrace,
+        pcb_trace_id: `${section.syntheticConnectionName}_0`,
+        route: convertHdRouteToSimplifiedRoute(route, this.params.layerCount, {
+          defaultViaHoleDiameter: this.params.defaultViaHoleDiameter,
+          obstacles: this.params.obstacles,
+          connMap: this.params.connMap,
+        }),
+      })
+    }
+    // Movable sections retain their anchored endpoints. The original immutable
+    // through-obstacle primitives are restored by getUpdatedPreloadedTraces().
+    const fixedTraces = this.inputUpdatedPreloadedTraces.map((trace) =>
+      movableOriginalIds.has(trace.pcb_trace_id)
+        ? { ...trace, route: trace.route.filter((point) => point.route_type === "through_obstacle") }
+        : trace,
+    )
     this.coordinateInputRoutes = routes
     this.coordinateInputTraces = traces
     this.coordinateRepairSolver = new GlobalDrcCoordinateRepairSolver({
       srj: {
         ...this.params.originalSrj,
-        traces: this.getUpdatedPreloadedTraces(),
+        traces: fixedTraces,
       } as RepairSimpleRouteJson,
       routedTraces: traces as RepairSimplifiedPcbTraces,
       connMap: this.params.connMap,

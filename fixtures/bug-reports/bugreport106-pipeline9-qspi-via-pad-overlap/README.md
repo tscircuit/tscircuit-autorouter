@@ -94,8 +94,10 @@ BUN_UPDATE_SNAPSHOTS=1 bun test tests/bugs/bugreport106-pipeline9-qspi-board.tes
 
 Pipeline9 now runs repair03 coordinate optimization inside its existing joint DRC
 repair solver, before length matching and power-trace expansion.
-It moves nearby vias and trace bends together while preserving fixed/preloaded
-copper, terminals, widths, and layers. Repair02 receives the board's distinct
+It moves nearby vias and trace bends together while preserving fixed copper,
+terminals, widths, layers, and immutable through-obstacle primitives. Already
+movable preloaded sections remain repairable through the joint solver's existing
+section reconstruction. Repair02 receives the board's distinct
 trace-to-pad and via-to-pad rules earlier in the pipeline.
 
 The final routed board has zero relaxed DRC errors and passes the separately
@@ -108,5 +110,15 @@ No additional pipeline stage is introduced. The power expander did not change
 any traces or DRC errors for this reproduction; the existing repair solver now
 clears the residual violations before downstream processing.
 
-The coordinate search is bounded and adds runtime on difficult boards. The full
-visual test took approximately 215 seconds on Bun 1.4.2 / macOS arm64.
+The coordinate search is bounded and adds runtime on difficult boards.
+
+Same-net SMT pads are included in via clearance checks in coordinate repair and
+final validation. Earlier relaxed-only checks missed five via-copper overlaps
+on this candidate. The independent geometry audit checks copper edges against
+pad rectangles, with the DRC engine's existing 0.005 mm clearance tolerance.
+No tolerance is applied when counting physical via-pad overlaps.
+
+Repair also uses clearance-checked shortcuts and a single bounded local wire
+refinement pass around residual contacts. Coordinate updates cannot increase
+trace-centerline intersections. The visual test requires final solver success,
+so a zero relaxed-DRC overlay alone cannot hide a rejected board.

@@ -36,4 +36,5 @@ test("Pipeline9 QSPI board after final routing", async (): Promise<void> => {
       routedTraces,
     }),
   ).toMatchSvgSnapshot(import.meta.path)
+  expect(solver.solved).toBe(true)
 })

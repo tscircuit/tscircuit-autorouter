@@ -1062,7 +1062,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
         }
         const evaluator = new AutoroutingDrcEngine(
           this.originalSrj as RepairSimpleRouteJson,
-          { connMap: this.connMap, traceToPadClearance: this.originalSrj.minTraceToPadEdgeClearance },
+          { connMap: this.connMap, traceToPadClearance: this.originalSrj.minTraceToPadEdgeClearance, disallowViaInSmtPad: true },
         )
         const finalTraces = [
           ...this.getPowerTraceExpansionFixedTraces(),
