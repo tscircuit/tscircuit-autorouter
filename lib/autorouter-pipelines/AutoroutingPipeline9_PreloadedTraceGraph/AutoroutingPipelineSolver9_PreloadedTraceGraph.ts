@@ -6,6 +6,7 @@ import { HighDensityForceImproveSolver } from "high-density-repair01/lib/HighDen
 import {
   AutoroutingDrcEngine,
   GlobalDrcForceImproveSolver,
+  GlobalDrcCoordinateRepairSolver,
   type AutoroutingDrcError,
   type SimpleRouteJson as RepairSimpleRouteJson,
   type SimplifiedPcbTraces as RepairSimplifiedPcbTraces,
@@ -264,6 +265,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
   edgeSolver?: CapacityMeshEdgeSolver
   colorMap!: Record<string, string>
   highDensityRouteSolver?: Pipeline9HighDensitySolver
+  finalCoordinateRepairSolver?: GlobalDrcCoordinateRepairSolver
   highDensityForceImproveSolver?: HighDensityForceImproveSolver
   highDensityRepairSolver?: Pipeline4HighDensityRepairSolver
   highDensityStitchSolver?: MultipleHighDensityRouteStitchSolver3
@@ -977,6 +979,18 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
         ]
       },
     ),
+    definePipelineStep(
+      "finalCoordinateRepairSolver",
+      GlobalDrcCoordinateRepairSolver,
+      (cms) => [{
+        srj: {
+          ...cms.originalSrj,
+          traces: cms.getPowerTraceExpansionFixedTraces(),
+        } as RepairSimpleRouteJson,
+        routedTraces: cms.powerTraceExpansionSolver!.getOutput() as RepairSimplifiedPcbTraces,
+        connMap: cms.connMap,
+      }],
+    ),
   ]
 
   constructor(
@@ -1052,19 +1066,20 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     if (!pipelineStepDef) {
       // Repair stages are best-effort optimizers. Their completion does not
       // prove that the final copper satisfies an explicitly requested rule.
-      if (this.originalSrj.minViaEdgeToPadEdgeClearance !== undefined) {
-        if (!this.powerTraceExpansionSolver) {
+      if (this.originalSrj.minViaEdgeToPadEdgeClearance !== undefined ||
+        this.originalSrj.minTraceToPadEdgeClearance !== undefined) {
+        if (!this.finalCoordinateRepairSolver) {
           throw new Error(
-            "Pipeline9 final clearance validation requires power expansion output",
+            "Pipeline9 final clearance validation requires coordinate repair output",
           )
         }
         const evaluator = new AutoroutingDrcEngine(
           this.originalSrj as RepairSimpleRouteJson,
-          { connMap: this.connMap },
+          { connMap: this.connMap, traceToPadClearance: this.originalSrj.minTraceToPadEdgeClearance },
         )
         const finalTraces = [
           ...this.getPowerTraceExpansionFixedTraces(),
-          ...this.powerTraceExpansionSolver.getOutput(),
+          ...this.finalCoordinateRepairSolver!.getOutput(),
         ]
         const { errors } = evaluator.evaluate(
           finalTraces as RepairSimplifiedPcbTraces,
@@ -1072,12 +1087,11 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
         this.viaPadClearanceErrors = errors.filter(
           (error) => error.type === "pcb_pad_pad_clearance_error",
         )
-        if (this.viaPadClearanceErrors.length > 0) {
+        if (errors.length > 0) {
           this.failed = true
           this.error =
-            `Pipeline9 could not satisfy minViaEdgeToPadEdgeClearance=${this.originalSrj.minViaEdgeToPadEdgeClearance}mm: ` +
-            `${this.viaPadClearanceErrors.length} via-to-pad violations remain. ` +
-            this.viaPadClearanceErrors[0]!.message
+            `Pipeline9 could not satisfy the final board clearance rules: ` +
+            `${errors.length} violations remain. ` + errors[0]!.message
           return
         }
       }
@@ -1552,16 +1566,16 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     if (!this.solved) {
       throw new Error("Cannot get output before solving is complete")
     }
-    if (!this.powerTraceExpansionSolver) {
+    if (!this.finalCoordinateRepairSolver) {
       throw new Error(
-        "Pipeline9 invariant violated: solved pipeline is missing the unconditional power-trace expansion solver",
+        "Pipeline9 invariant violated: solved pipeline is missing the unconditional final coordinate repair solver",
       )
     }
     return [
       ...this.getPowerTraceExpansionFixedTraces().filter(
         (trace) => trace.__replaces_pcb_trace_id !== undefined,
       ),
-      ...this.powerTraceExpansionSolver.getOutput(),
+      ...this.finalCoordinateRepairSolver.getOutput(),
     ]
   }
 
@@ -1569,14 +1583,14 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     if (!this.solved) {
       throw new Error("Cannot get output before solving is complete")
     }
-    if (!this.powerTraceExpansionSolver) {
+    if (!this.finalCoordinateRepairSolver) {
       throw new Error(
-        "Pipeline9 invariant violated: solved pipeline is missing the unconditional power-trace expansion solver",
+        "Pipeline9 invariant violated: solved pipeline is missing the unconditional final coordinate repair solver",
       )
     }
     const traces = [
       ...this.getPowerTraceExpansionFixedTraces(),
-      ...this.powerTraceExpansionSolver.getOutput(),
+      ...this.finalCoordinateRepairSolver.getOutput(),
     ]
     return {
       ...this.originalSrj,

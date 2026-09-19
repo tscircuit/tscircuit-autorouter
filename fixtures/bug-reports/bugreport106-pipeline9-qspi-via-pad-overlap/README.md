@@ -90,11 +90,18 @@ in GitHub's rendered image diff. To intentionally update it after routing change
 BUN_UPDATE_SNAPSHOTS=1 bun test tests/bugs/bugreport106-pipeline9-qspi-board.test.ts --timeout 9999999
 ```
 
-## Conservative fix
+## Clearance repair
 
-The final via-to-pad validation now reports `failed: true` when routing leaves
-violations of the explicitly requested rule. It exposes the findings through
-`solver.viaPadClearanceErrors` and prevents retrieving unsafe output as a solved
-result. This board still needs further routing work. The historical script above
-now stops at its solver-status assertion. The visual snapshot shows the final
-rejected candidate, so its geometry can be compared with the baseline in #2656.
+Pipeline9 now runs repair03 coordinate optimization after power-trace expansion.
+It moves nearby vias and trace bends together while preserving fixed/preloaded
+copper, terminals, widths, and layers. Repair02 receives the board's distinct
+trace-to-pad and via-to-pad rules earlier in the pipeline.
+
+The final routed board has zero relaxed DRC errors and passes the separately
+requested 0.25 mm via-to-pad and 0.16 mm trace-to-pad rules. Final validation still
+reports failure if clearance violations remain; the snapshot does not hide
+rejected candidates. The historical `--observed` reproduction continues to fail
+on the original copper, while the local-source reproduction now passes.
+
+The coordinate search is bounded and adds runtime on difficult boards. The full
+visual test took approximately 170 seconds on Bun 1.4.2 / macOS arm64.
