@@ -129,7 +129,9 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
       minNodeDimension > 0
         ? Math.max(
             0,
-            Math.ceil(Math.log2((params.viaDiameter ?? 0.3) / minNodeDimension)),
+            Math.ceil(
+              Math.log2((params.viaDiameter ?? 0.3) / minNodeDimension),
+            ),
           )
         : 0
     this.maxGrowthAttempts =
