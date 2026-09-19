@@ -1459,7 +1459,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       enableViaInPadLayerMoves: params.originalSrj.allowViaInPad ?? false,
       viaInPadMaxIterations: maxRepairIterations,
       broadMaxIterations: maxBroadRepairIterations,
-      broadPassMultiplier: 3,
+      broadPassMultiplier: 3 * repairBudgetScale,
     })
     this.activeSubSolver = this.exactRepairSolver
     this.MAX_ITERATIONS = this.exactRepairSolver.MAX_ITERATIONS + 1

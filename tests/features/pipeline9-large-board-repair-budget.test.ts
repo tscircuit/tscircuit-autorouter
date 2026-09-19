@@ -66,6 +66,7 @@ test("large conflicted boards bound repair work while near-clean and higher-effo
   expect(conflicted.stats.initialJointDrcIssueCount).toBeGreaterThanOrEqual(20)
   expect(conflicted.exactRepairSolver!.params.maxIterations).toBe(8)
   expect(conflicted.exactRepairSolver!.params.broadMaxIterations).toBe(4)
+  expect(conflicted.exactRepairSolver!.params.broadPassMultiplier).toBe(0.75)
 
   const nearClean = new Pipeline9JointDrcRepairSolver(makeParams(0.2, 1))
   expect(nearClean.stats.initialJointDrcIssueCount).toBe(1)
@@ -74,4 +75,5 @@ test("large conflicted boards bound repair work while near-clean and higher-effo
   const higherEffort = new Pipeline9JointDrcRepairSolver(makeParams(40, 4))
   expect(higherEffort.exactRepairSolver!.params.maxIterations).toBe(32)
   expect(higherEffort.exactRepairSolver!.params.broadMaxIterations).toBe(12)
+  expect(higherEffort.exactRepairSolver!.params.broadPassMultiplier).toBe(3)
 })
