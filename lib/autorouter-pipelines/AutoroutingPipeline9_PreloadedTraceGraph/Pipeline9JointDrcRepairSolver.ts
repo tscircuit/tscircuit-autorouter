@@ -956,6 +956,22 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         ]!.hdRoute = mergedRoutes[groupIndex]!
       }
     }
+    const repairRouteCount =
+      params.newHdRoutes.length + this.movablePreloadedSections.length
+    // Full-board evaluation cost grows with route count. Preserve the full
+    // budget near convergence; bound work on large, heavily conflicted boards.
+    const repairBudgetScale =
+      currentDrc.errors.length >= 20 && repairRouteCount > 120
+        ? Math.min(1, (120 * Math.max(1, params.effort)) / repairRouteCount)
+        : 1
+    const maxRepairIterations = Math.max(
+      8,
+      Math.floor(EXACT_REPAIR_MAX_ITERATIONS * repairBudgetScale),
+    )
+    const maxBroadRepairIterations = Math.max(
+      4,
+      Math.floor(EXACT_REPAIR_BROAD_MAX_ITERATIONS * repairBudgetScale),
+    )
     this.stats = {
       initialJointDrcIssueCount: currentDrc.errors.length,
       baselineJointDrcIssueCount: baselineDrc.errors.length,
@@ -968,10 +984,9 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       }, {}),
       movablePreloadedTraceCount: movablePreloadedTraceIds.size,
       movablePreloadedSectionCount: this.movablePreloadedSections.length,
-      exactRepairConfiguredMaxIterations: EXACT_REPAIR_MAX_ITERATIONS,
-      exactRepairConfiguredViaInPadMaxIterations: EXACT_REPAIR_MAX_ITERATIONS,
-      exactRepairConfiguredBroadMaxIterations:
-        EXACT_REPAIR_BROAD_MAX_ITERATIONS,
+      exactRepairConfiguredMaxIterations: maxRepairIterations,
+      exactRepairConfiguredViaInPadMaxIterations: maxRepairIterations,
+      exactRepairConfiguredBroadMaxIterations: maxBroadRepairIterations,
     }
 
     if (currentDrc.errors.length === 0) {
@@ -1434,7 +1449,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       viaHoleDiameter: params.defaultViaHoleDiameter,
       drcEvaluator,
       viaInPadDrcEvaluator: drcEvaluator,
-      maxIterations: EXACT_REPAIR_MAX_ITERATIONS,
+      maxIterations: maxRepairIterations,
       enableBroadFallback: false,
       enableLargeBoardBroadFallback: false,
       enableTargetedErrorSweep: true,
@@ -1442,8 +1457,8 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       enablePostSolveClearanceRelaxation: false,
       enableSafeTraceLayerMoves: true,
       enableViaInPadLayerMoves: params.originalSrj.allowViaInPad ?? false,
-      viaInPadMaxIterations: EXACT_REPAIR_MAX_ITERATIONS,
-      broadMaxIterations: EXACT_REPAIR_BROAD_MAX_ITERATIONS,
+      viaInPadMaxIterations: maxRepairIterations,
+      broadMaxIterations: maxBroadRepairIterations,
       broadPassMultiplier: 3,
     })
     this.activeSubSolver = this.exactRepairSolver
@@ -1572,6 +1587,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       newConnections: this.params.newConnections,
       syntheticConnectionNames: this.syntheticConnectionNames,
       drcEvaluator: this.drcEvaluator!,
+      effort: this.params.effort,
     })
     const preloadRepairTraceIds = getPipeline9PreloadRepairTraceIds({
       routes: terminalEscapeResult.routes,

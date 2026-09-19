@@ -25,6 +25,7 @@ type Point = { x: number; y: number }
 
 // Bound whole-board DRC evaluations across all errors and both passes.
 const MAX_CANDIDATE_EVALUATIONS = 256
+const MAX_CANDIDATE_ROUTE_EVALUATIONS = 16_384
 const CANDIDATE_RADIAL_FACTORS = [0.9, 0.72]
 const CANDIDATE_ANGLES = Array.from(
   { length: 16 },
@@ -231,6 +232,7 @@ export const applyPipeline9TerminalEscapeRelocations = ({
   newConnections,
   syntheticConnectionNames,
   drcEvaluator,
+  effort = 1,
 }: {
   srj: SimpleRouteJson
   originalSrj: SimpleRouteJson
@@ -238,11 +240,27 @@ export const applyPipeline9TerminalEscapeRelocations = ({
   newConnections: SimpleRouteConnection[]
   syntheticConnectionNames: ReadonlySet<string>
   drcEvaluator: DrcEvaluator
+  effort?: number
 }): TerminalEscapeRelocationResult => {
   let currentRoutes = routes
   let currentErrors = getPipeline9DrcErrors(drcEvaluator, currentRoutes)
   let attemptedCandidateCount = 0
   let acceptedCandidateCount = 0
+  // Each candidate invokes full-board DRC. Bound the total route evaluation
+  // work on large conflicted boards, but retain the full near-clean search.
+  const candidateBudget =
+    currentErrors.length < 20 || routes.length <= 120
+      ? MAX_CANDIDATE_EVALUATIONS
+      : Math.max(
+          32,
+          Math.min(
+            MAX_CANDIDATE_EVALUATIONS,
+            Math.floor(
+              (MAX_CANDIDATE_ROUTE_EVALUATIONS * Math.max(1, effort)) /
+                routes.length,
+            ),
+          ),
+        )
   const portPositionMap = getPcbPortPositionMap(originalSrj)
 
   for (let pass = 0; pass < 2; pass++) {
@@ -253,7 +271,7 @@ export const applyPipeline9TerminalEscapeRelocations = ({
       syntheticConnectionNames,
     })
     for (const error of currentErrors.filter(isObstacleTraceError)) {
-      if (attemptedCandidateCount >= MAX_CANDIDATE_EVALUATIONS) break
+      if (attemptedCandidateCount >= candidateBudget) break
       if (typeof error.pcb_trace_id !== "string") continue
       const routeIndex = routeIndexByTraceId.get(error.pcb_trace_id)
       const conflictingObstacle = getObstacleById(
@@ -299,7 +317,7 @@ export const applyPipeline9TerminalEscapeRelocations = ({
           traceRadius: route.traceThickness / 2,
         })) {
           for (const collapseAdjacent of [false, true]) {
-            if (attemptedCandidateCount >= MAX_CANDIDATE_EVALUATIONS) {
+            if (attemptedCandidateCount >= candidateBudget) {
               break candidateSearch
             }
             const candidateRoutes = createTerminalCandidate({
