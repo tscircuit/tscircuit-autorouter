@@ -55,7 +55,7 @@ export const PIPELINE_OPTIONS = [
   },
   {
     id: "AutoroutingPipelineSolver7_MultiGraph",
-    label: "Pipeline7 Multi Graph (Default)",
+    label: "Pipeline7 Multi Graph",
   },
   {
     id: "AutoroutingPipelineSolver8",
@@ -63,7 +63,7 @@ export const PIPELINE_OPTIONS = [
   },
   {
     id: "AutoroutingPipelineSolver9_PreloadedTraceGraph",
-    label: "Pipeline9 Preloaded Trace Graph",
+    label: "Pipeline9 Preloaded Trace Graph (Default)",
   },
   {
     id: "AssignableAutoroutingPipeline1Solver",
