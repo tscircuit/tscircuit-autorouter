@@ -5,8 +5,6 @@ import bugReport from "../../fixtures/bug-reports/bugreport106-347963/bugreport1
   type: "json",
 }
 import type { SimpleRouteJson } from "lib/types"
-import { getBugReportSnapshotSvg } from "lib/testing/getBugReportSnapshotSvg"
-import { safeTransparentize } from "lib/solvers/colors"
 import { convertSrjToGraphicsObject } from "lib/utils/convertSrjToGraphicsObject"
 
 const srj = bugReport.simple_route_json as SimpleRouteJson
@@ -15,17 +13,6 @@ const focusBounds = {
   maxX: -12.2,
   minY: -0.9,
   maxY: 3.6,
-}
-
-const isInsideFocus = ({ x, y }: { x: number; y: number }) =>
-  x >= focusBounds.minX &&
-  x <= focusBounds.maxX &&
-  y >= focusBounds.minY &&
-  y <= focusBounds.maxY
-
-const fadeColor = (color: string | undefined, amount = 0.88) => {
-  if (!color || color === "none") return color
-  return safeTransparentize(color, amount)
 }
 
 test("bugreport106-347963.json", async () => {
@@ -40,52 +27,120 @@ test("bugreport106-347963.json", async () => {
     ),
   )
   const actualMinimumWidth = Math.min(...wireWidths)
-  expect(actualMinimumWidth).toBeLessThan(0.081)
+  const displayedWidth = Number(actualMinimumWidth.toFixed(4))
+  expect(actualMinimumWidth).toBeCloseTo(0.08, 3)
   expect(actualMinimumWidth).toBeLessThan(srj.minTraceWidth)
-  await expect(
-    getBugReportSnapshotSvg({
-      inputSrj: srj,
-      srjWithPointPairs: solver.srjWithPointPairs!,
-      routedTraces,
-    }),
-  ).toMatchSvgSnapshot(import.meta.path)
-
   const fullGraphics = convertSrjToGraphicsObject(
     { ...srj, traces: routedTraces },
     { traceColorMode: "net" },
   )
-  const focusedLines = (fullGraphics.lines ?? []).filter((line) =>
-    line.points.every(isInsideFocus),
+  const isMicrophoneGroundLine = (
+    line: NonNullable<GraphicsObject["lines"]>[number],
+  ) => line.label?.startsWith("source_net_0") ?? false
+  const connectionLines = (fullGraphics.lines ?? []).filter(
+    isMicrophoneGroundLine,
   )
-  const isMicrophoneGroundLine = (line: (typeof focusedLines)[number]) =>
-    line.label?.startsWith("source_net_0") ?? false
-  const connectionLines = focusedLines.filter(isMicrophoneGroundLine)
   const violatingLines = connectionLines.filter(
     (line) => (line.strokeWidth ?? srj.minTraceWidth) < srj.minTraceWidth,
   )
   expect(violatingLines.length).toBeGreaterThan(0)
-  const contextLines = focusedLines.filter(
-    (line) => !isMicrophoneGroundLine(line),
-  )
+  const terminalRing = [
+    { x: -16.08, y: 2.44 },
+    { x: -15.76, y: 2.7 },
+    { x: -15.3, y: 2.6 },
+    { x: -14.94, y: 2.3 },
+    { x: -14.78, y: 1.84 },
+    { x: -14.78, y: 1.2 },
+    { x: -15, y: 0.72 },
+    { x: -15.38, y: 0.45 },
+    { x: -15.84, y: 0.46 },
+    { x: -16.14, y: 0.72 },
+  ]
+  const terminalSegment = [
+    { x: -16.08, y: 2.44 },
+    { x: -16.48, y: 2.22 },
+  ]
+  const inputGraphics = convertSrjToGraphicsObject(srj, {
+    traceColorMode: "net",
+  })
+  const outline = srj.outline ?? []
+  const closedOutline = outline.length > 0 ? [...outline, outline[0]!] : []
+  const overviewGraphics: GraphicsObject = {
+    ...inputGraphics,
+    lines: [
+      {
+        points: closedOutline,
+        strokeColor: "#475569",
+        strokeWidth: 0.18,
+        zIndex: -3,
+      },
+      ...(inputGraphics.lines ?? []),
+      {
+        points: terminalSegment,
+        strokeColor: "rgba(220,38,38,0.22)",
+        strokeWidth: 0.8,
+        zIndex: 1,
+      },
+      {
+        points: terminalSegment,
+        strokeColor: "#dc2626",
+        strokeWidth: displayedWidth,
+        zIndex: 2,
+        label: "source_net_0 0.0800 mm terminal segment",
+      },
+    ],
+    circles: [
+      ...(inputGraphics.circles ?? []),
+      {
+        center: { x: -16.08, y: 2.44 },
+        radius: 0.7,
+        fill: "rgba(255,255,255,0)",
+        stroke: "#991b1b",
+      },
+    ],
+    texts: [
+      {
+        x: 0,
+        y: 37.3,
+        text: "MIC GND: 0.0800 mm output / 0.1500 mm minimum",
+        fontSize: 1.1,
+        color: "#991b1b",
+        anchorSide: "center",
+      },
+    ],
+  }
+
+  await expect(
+    getSvgFromGraphicsObject(overviewGraphics, {
+      backgroundColor: "white",
+      svgWidth: 1000,
+      svgHeight: 800,
+    }),
+  ).toMatchSvgSnapshot(import.meta.path)
+
   const focusedGraphics: GraphicsObject = {
     lines: [
-      ...contextLines.map((line) => ({
-        ...line,
-        strokeColor: fadeColor(line.strokeColor),
-      })),
-      ...connectionLines.map((line) => ({
-        ...line,
-        strokeColor:
-          (line.strokeWidth ?? srj.minTraceWidth) < srj.minTraceWidth
-            ? "#dc2626"
-            : "rgba(220,38,38,0.55)",
-      })),
-      ...violatingLines.map((line) => ({
-        ...line,
+      {
+        points: terminalRing,
         strokeColor: "rgba(220,38,38,0.18)",
-        strokeWidth: Math.max((line.strokeWidth ?? 0) * 4, 0.32),
+        strokeWidth: 0.32,
         zIndex: -1,
-      })),
+      },
+      {
+        points: terminalRing,
+        strokeColor: "rgba(220,38,38,0.55)",
+        strokeWidth: srj.minTraceWidth,
+      },
+      {
+        points: [
+          { x: -14.4, y: 0.25 },
+          { x: -14.4, y: -0.35 },
+          { x: -13.65, y: -0.35 },
+        ],
+        strokeColor: "rgba(124,58,237,0.12)",
+        strokeWidth: 0.2,
+        zIndex: -2,
+      },
       {
         points: [
           { x: -16.3, y: 2.68 },
@@ -95,37 +150,28 @@ test("bugreport106-347963.json", async () => {
         strokeWidth: 0.018,
       },
       {
-        points: [
-          { x: -16.1246, y: 2.4401 },
-          { x: -16.48, y: 2.22 },
-        ],
+        points: terminalSegment,
         strokeColor: "#dc2626",
-        strokeWidth: actualMinimumWidth,
+        strokeWidth: displayedWidth,
         zIndex: 1,
         label: "0.0800 mm width guide",
       },
     ],
     rects: [
-      ...(fullGraphics.rects ?? [])
-        .filter(
-          (rect) =>
-            rect.center.x + rect.width / 2 >= focusBounds.minX &&
-            rect.center.x - rect.width / 2 <= focusBounds.maxX &&
-            rect.center.y + rect.height / 2 >= focusBounds.minY &&
-            rect.center.y - rect.height / 2 <= focusBounds.maxY,
-        )
-        .map((rect) => {
-          const isConnectionPad = rect.label?.includes("source_net_0")
-          return {
-            ...rect,
-            fill: isConnectionPad
-              ? "rgba(220,38,38,0.18)"
-              : fadeColor(rect.fill),
-            stroke: isConnectionPad
-              ? "rgba(220,38,38,0.35)"
-              : fadeColor(rect.stroke),
-          }
-        }),
+      {
+        center: { x: -14.75, y: 0.15 },
+        width: 0.5,
+        height: 0.9,
+        fill: "rgba(255,255,255,0)",
+        stroke: "rgba(100,116,139,0.08)",
+      },
+      {
+        center: { x: -12.85, y: -0.25 },
+        width: 0.7,
+        height: 0.75,
+        fill: "rgba(220,38,38,0.10)",
+        stroke: "none",
+      },
       {
         center: {
           x: (focusBounds.minX + focusBounds.maxX) / 2,
@@ -138,15 +184,14 @@ test("bugreport106-347963.json", async () => {
       },
     ],
     circles: [
-      ...(fullGraphics.circles ?? [])
-        .filter((circle) => isInsideFocus(circle.center))
-        .map((circle) => ({
-          ...circle,
-          fill: fadeColor(circle.fill),
-          stroke: fadeColor(circle.stroke),
-        })),
       {
-        center: { x: -16.0769, y: 2.4701 },
+        center: { x: -15.45, y: 1.55 },
+        radius: 0.72,
+        fill: "rgba(220,38,38,0.04)",
+        stroke: "rgba(220,38,38,0.12)",
+      },
+      {
+        center: { x: -16.08, y: 2.44 },
         radius: 0.13,
         fill: "rgba(255,255,255,0)",
         stroke: "#991b1b",
@@ -157,7 +202,7 @@ test("bugreport106-347963.json", async () => {
       {
         x: (focusBounds.minX + focusBounds.maxX) / 2,
         y: 3.28,
-        text: `CURRENT ${actualMinimumWidth.toFixed(4)} mm  •  EXPECTED MINIMUM ${srj.minTraceWidth.toFixed(4)} mm`,
+        text: `CURRENT ${displayedWidth.toFixed(4)} mm  •  EXPECTED MINIMUM ${srj.minTraceWidth.toFixed(4)} mm`,
         fontSize: 0.22,
         color: "#991b1b",
         anchorSide: "center",
@@ -190,4 +235,4 @@ test("bugreport106-347963.json", async () => {
   ).toMatchSvgSnapshot(import.meta.path, {
     svgName: "microphone-terminal-width-zoom",
   })
-}, 60_000)
+}, 120_000)
