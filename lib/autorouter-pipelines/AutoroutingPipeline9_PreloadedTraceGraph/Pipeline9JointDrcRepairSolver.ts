@@ -5,6 +5,7 @@ import {
   AutoroutingDrcEngine,
   type DrcEvaluator,
   GlobalDrcBranchPortfolioSolver,
+  GlobalDrcCoordinateRepairSolver,
   type SimpleRouteJson as RepairSimpleRouteJson,
   type SimplifiedPcbTraces as RepairSimplifiedPcbTraces,
 } from "high-density-repair03/lib"
@@ -35,6 +36,7 @@ import {
 } from "./applyPipeline9BoundedRegionalRepairs"
 import { applyPipeline9RegionalB01Repairs } from "./applyPipeline9RegionalB01Repairs"
 import { applyPipeline9TerminalEscapeRelocations } from "./applyPipeline9TerminalEscapeRelocations"
+import { convertSimplifiedPcbTraceToHighDensityRoute } from "../AutoroutingPipeline11_Simplification/convertSimplifiedPcbTraceToHighDensityRoute"
 import { assignUniquePcbTraceIdsToNewTraces } from "./assignUniquePcbTraceIdsToNewTraces"
 import {
   type PreloadedHighDensityRoute,
@@ -669,6 +671,10 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     ReturnType<DrcEvaluator>
   >()
   private combinedOutput?: HighDensityRoute[]
+  private coordinateRepairSolver?: GlobalDrcCoordinateRepairSolver
+  private coordinateInputTraces?: SimplifiedPcbTrace[]
+  private coordinateInputRoutes?: HighDensityRoute[]
+  private convertNewRoutes: ReturnType<typeof createPipeline7HdRoutesToSimplifiedPcbTracesConverter>
 
   private cacheIndexedDrcResult(
     candidateKey: DrcCandidateKey,
@@ -707,6 +713,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         defaultViaHoleDiameter: params.defaultViaHoleDiameter,
         connMap: params.connMap,
       })
+    this.convertNewRoutes = convertNewRoutes
     const currentNewTraces = convertNewRoutes(params.newHdRoutes)
     const currentNewTraceIds = new Set(
       currentNewTraces.map((trace) => trace.pcb_trace_id),
@@ -1437,7 +1444,79 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     return "Pipeline9JointDrcRepairSolver"
   }
 
+  private startCoordinateRepair(): void {
+    const routes = this.getOutput()
+    const traces = this.convertNewRoutes(routes)
+    this.coordinateInputRoutes = routes
+    this.coordinateInputTraces = traces
+    this.coordinateRepairSolver = new GlobalDrcCoordinateRepairSolver({
+      srj: {
+        ...this.params.originalSrj,
+        traces: this.getUpdatedPreloadedTraces(),
+      } as RepairSimpleRouteJson,
+      routedTraces: traces as RepairSimplifiedPcbTraces,
+      connMap: this.params.connMap,
+    })
+    this.activeSubSolver = this.coordinateRepairSolver
+    this.stats.coordinateInitialDrcIssueCount = this.coordinateRepairSolver.errors.length
+  }
+
+  private stepCoordinateRepair(): void {
+    const repair = this.coordinateRepairSolver!
+    repair.step()
+    if (repair.failed) {
+      this.failed = true
+      this.error = repair.error
+      return
+    }
+    if (!repair.solved) return
+    const repairedTraces = new Map(repair.getOutput().map((trace) => [trace.pcb_trace_id, trace]))
+    const inputTraces = new Map(this.coordinateInputTraces!.map((trace) => [trace.pcb_trace_id, trace]))
+    const indexByConnectionName = new Map<string, number>()
+    const updates = new Map<HighDensityRoute, HighDensityRoute>()
+    for (const route of this.coordinateInputRoutes!) {
+      const index = indexByConnectionName.get(route.connectionName) ?? 0
+      indexByConnectionName.set(route.connectionName, index + 1)
+      const traceId = `${route.connectionName}_${index}`
+      const trace = repairedTraces.get(traceId)
+      const inputTrace = inputTraces.get(traceId)
+      if (!trace || !inputTrace) {
+        throw new Error(`Coordinate repair is missing trace "${traceId}"`)
+      }
+      if (JSON.stringify(trace) === JSON.stringify(inputTrace)) continue
+      const converted = convertSimplifiedPcbTraceToHighDensityRoute(trace, {
+        layerCount: this.params.layerCount,
+        defaultTraceThickness: route.traceThickness,
+        defaultViaDiameter: route.viaDiameter,
+        rootConnectionName: route.rootConnectionName ?? route.connectionName,
+      })
+      // Simplified copper does not carry the HD terminal lock annotations.
+      // Keep them for downstream length matching and output conversion.
+      if (route.route[0]?.pcb_port_id) {
+        converted.route[0]!.pcb_port_id = route.route[0].pcb_port_id
+      }
+      if (route.route.at(-1)?.pcb_port_id) {
+        converted.route.at(-1)!.pcb_port_id = route.route.at(-1)!.pcb_port_id
+      }
+      updates.set(route, {
+        ...route,
+        route: converted.route,
+        vias: converted.vias,
+        traceThickness: converted.traceThickness,
+        viaDiameter: converted.viaDiameter,
+      })
+    }
+    this.combinedOutput = this.getCombinedOutput().map((route) => updates.get(route) ?? route)
+    this.stats.coordinateFinalDrcIssueCount = repair.errors.length
+    this.stats.coordinateRepairIterations = repair.iterations
+    this.solved = true
+  }
+
   override _step(): void {
+    if (this.coordinateRepairSolver) {
+      this.stepCoordinateRepair()
+      return
+    }
     if (!this.exactRepairSolver) {
       this.solved = true
       return
@@ -1545,7 +1624,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         indexedDrcCandidateCacheSize: this.indexedDrcCandidateCache.size,
         indexedDrcCandidateCacheCapacity: INDEXED_DRC_CANDIDATE_CACHE_SIZE,
       }
-      this.solved = true
+      this.startCoordinateRepair()
       return
     }
     const terminalEscapeResult = applyPipeline9TerminalEscapeRelocations({
@@ -1715,7 +1794,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       indexedDrcCandidateCacheSize: this.indexedDrcCandidateCache.size,
       indexedDrcCandidateCacheCapacity: INDEXED_DRC_CANDIDATE_CACHE_SIZE,
     }
-    this.solved = true
+    this.startCoordinateRepair()
   }
 
   private getCombinedOutput(): HighDensityRoute[] {

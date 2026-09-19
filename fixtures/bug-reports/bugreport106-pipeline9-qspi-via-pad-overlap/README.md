@@ -92,7 +92,8 @@ BUN_UPDATE_SNAPSHOTS=1 bun test tests/bugs/bugreport106-pipeline9-qspi-board.tes
 
 ## Clearance repair
 
-Pipeline9 now runs repair03 coordinate optimization after power-trace expansion.
+Pipeline9 now runs repair03 coordinate optimization inside its existing joint DRC
+repair solver, before length matching and power-trace expansion.
 It moves nearby vias and trace bends together while preserving fixed/preloaded
 copper, terminals, widths, and layers. Repair02 receives the board's distinct
 trace-to-pad and via-to-pad rules earlier in the pipeline.
@@ -103,5 +104,9 @@ reports failure if clearance violations remain; the snapshot does not hide
 rejected candidates. The historical `--observed` reproduction continues to fail
 on the original copper, while the local-source reproduction now passes.
 
+No additional pipeline stage is introduced. The power expander did not change
+any traces or DRC errors for this reproduction; the existing repair solver now
+clears the residual violations before downstream processing.
+
 The coordinate search is bounded and adds runtime on difficult boards. The full
-visual test took approximately 170 seconds on Bun 1.4.2 / macOS arm64.
+visual test took approximately 215 seconds on Bun 1.4.2 / macOS arm64.

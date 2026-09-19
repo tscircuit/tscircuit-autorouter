@@ -6,7 +6,6 @@ import { HighDensityForceImproveSolver } from "high-density-repair01/lib/HighDen
 import {
   AutoroutingDrcEngine,
   GlobalDrcForceImproveSolver,
-  GlobalDrcCoordinateRepairSolver,
   type AutoroutingDrcError,
   type SimpleRouteJson as RepairSimpleRouteJson,
   type SimplifiedPcbTraces as RepairSimplifiedPcbTraces,
@@ -265,7 +264,6 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
   edgeSolver?: CapacityMeshEdgeSolver
   colorMap!: Record<string, string>
   highDensityRouteSolver?: Pipeline9HighDensitySolver
-  finalCoordinateRepairSolver?: GlobalDrcCoordinateRepairSolver
   highDensityForceImproveSolver?: HighDensityForceImproveSolver
   highDensityRepairSolver?: Pipeline4HighDensityRepairSolver
   highDensityStitchSolver?: MultipleHighDensityRouteStitchSolver3
@@ -979,18 +977,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
         ]
       },
     ),
-    definePipelineStep(
-      "finalCoordinateRepairSolver",
-      GlobalDrcCoordinateRepairSolver,
-      (cms) => [{
-        srj: {
-          ...cms.originalSrj,
-          traces: cms.getPowerTraceExpansionFixedTraces(),
-        } as RepairSimpleRouteJson,
-        routedTraces: cms.powerTraceExpansionSolver!.getOutput() as RepairSimplifiedPcbTraces,
-        connMap: cms.connMap,
-      }],
-    ),
+
   ]
 
   constructor(
@@ -1068,9 +1055,9 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       // prove that the final copper satisfies an explicitly requested rule.
       if (this.originalSrj.minViaEdgeToPadEdgeClearance !== undefined ||
         this.originalSrj.minTraceToPadEdgeClearance !== undefined) {
-        if (!this.finalCoordinateRepairSolver) {
+        if (!this.powerTraceExpansionSolver) {
           throw new Error(
-            "Pipeline9 final clearance validation requires coordinate repair output",
+            "Pipeline9 final clearance validation requires power expansion output",
           )
         }
         const evaluator = new AutoroutingDrcEngine(
@@ -1079,7 +1066,7 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
         )
         const finalTraces = [
           ...this.getPowerTraceExpansionFixedTraces(),
-          ...this.finalCoordinateRepairSolver!.getOutput(),
+          ...this.powerTraceExpansionSolver!.getOutput(),
         ]
         const { errors } = evaluator.evaluate(
           finalTraces as RepairSimplifiedPcbTraces,
@@ -1566,16 +1553,16 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     if (!this.solved) {
       throw new Error("Cannot get output before solving is complete")
     }
-    if (!this.finalCoordinateRepairSolver) {
+    if (!this.powerTraceExpansionSolver) {
       throw new Error(
-        "Pipeline9 invariant violated: solved pipeline is missing the unconditional final coordinate repair solver",
+        "Pipeline9 invariant violated: solved pipeline is missing the unconditional power-trace expansion solver",
       )
     }
     return [
       ...this.getPowerTraceExpansionFixedTraces().filter(
         (trace) => trace.__replaces_pcb_trace_id !== undefined,
       ),
-      ...this.finalCoordinateRepairSolver.getOutput(),
+      ...this.powerTraceExpansionSolver.getOutput(),
     ]
   }
 
@@ -1583,14 +1570,14 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
     if (!this.solved) {
       throw new Error("Cannot get output before solving is complete")
     }
-    if (!this.finalCoordinateRepairSolver) {
+    if (!this.powerTraceExpansionSolver) {
       throw new Error(
-        "Pipeline9 invariant violated: solved pipeline is missing the unconditional final coordinate repair solver",
+        "Pipeline9 invariant violated: solved pipeline is missing the unconditional power-trace expansion solver",
       )
     }
     const traces = [
       ...this.getPowerTraceExpansionFixedTraces(),
-      ...this.finalCoordinateRepairSolver.getOutput(),
+      ...this.powerTraceExpansionSolver.getOutput(),
     ]
     return {
       ...this.originalSrj,
