@@ -590,6 +590,8 @@ export class AutoroutingPipelineSolver7_MultiGraph extends BaseSolver {
           obstacles: cms.srj.obstacles,
           colorMap: cms.colorMap,
           repairMargin: cms.srj.defaultObstacleMargin ?? 0.2,
+          minimumTraceWidth: cms.srj.minTraceWidth,
+          connMap: cms.connMap,
         },
       ],
     ),

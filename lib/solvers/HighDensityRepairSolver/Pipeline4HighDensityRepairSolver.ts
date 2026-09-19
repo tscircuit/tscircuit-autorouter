@@ -120,6 +120,7 @@ const findNodeIndexForRoute = (
 const toRepairRoute = (
   route: HighDensityRoute,
   connMap?: ConnectivityMap,
+  minimumTraceWidth?: number,
 ): RepairHdRoute => ({
   capacityMeshNodeId: route.regionId,
   connectionName: route.connectionName,
@@ -131,7 +132,12 @@ const toRepairRoute = (
     y: point.y,
     z: point.z,
   })),
-  traceThickness: route.traceThickness,
+  // Some HD solvers emit widths below the board rule; do not validate
+  // clearance against copper that will be widened downstream.
+  traceThickness: Math.max(
+    route.traceThickness,
+    minimumTraceWidth ?? route.traceThickness,
+  ),
   vias: route.vias.map((via) => ({
     x: via.x,
     y: via.y,
@@ -153,7 +159,7 @@ const fromRepairRoute = (
     ? { endPcbPortId: fallbackRoute.endPcbPortId }
     : {}),
   regionId: route.capacityMeshNodeId ?? fallbackRoute.regionId,
-  traceThickness: route.traceThickness ?? fallbackRoute.traceThickness,
+  traceThickness: fallbackRoute.traceThickness,
   viaDiameter: route.viaDiameter ?? fallbackRoute.viaDiameter,
   route:
     route.route?.map((point) => ({
@@ -200,6 +206,7 @@ const getAdjacentObstacles = (
 
 export class Pipeline4HighDensityRepairSolver extends BaseSolver {
   readonly repairMargin: number
+  readonly minimumTraceWidth?: number
   readonly sampleEntries: RepairSampleEntry[]
   readonly originalHdRoutes: HighDensityRoute[]
   readonly originalNodeWithPortPoints: NodeWithPortPoints[]
@@ -218,11 +225,13 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
     hdRoutes: HighDensityRoute[]
     obstacles: Obstacle[]
     repairMargin?: number
+    minimumTraceWidth?: number
     colorMap?: Record<string, string>
     connMap?: ConnectivityMap
   }) {
     super()
     this.repairMargin = params.repairMargin ?? DEFAULT_REPAIR_MARGIN
+    this.minimumTraceWidth = params.minimumTraceWidth
     this.originalHdRoutes = params.hdRoutes
     this.originalNodeWithPortPoints = params.nodeWithPortPoints
     this.originalObstacles = params.obstacles
@@ -265,7 +274,7 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
       ),
     )
     const repairRoutes = params.hdRoutes.map((route) =>
-      toRepairRoute(route, params.connMap),
+      toRepairRoute(route, params.connMap, params.minimumTraceWidth),
     )
     const routeIndex = new FlatbushIndex<{ routeIndex: number }>(
       params.hdRoutes.length,
@@ -277,7 +286,8 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
           `High density repair route "${route.connectionName}" has no points`,
         )
       }
-      const radius = Math.max(route.traceThickness, route.viaDiameter) / 2
+      const radius =
+        Math.max(repairRoutes[index].traceThickness!, route.viaDiameter) / 2
       routeIndex.insert(
         { routeIndex: index },
         Math.min(...points.map((point) => point.x)) - radius,
@@ -290,7 +300,19 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
     const sampleEntries = Array.from(routeIndexesByNode.entries()).map(
       ([nodeIndex, routeIndexes]) => {
         const node = params.nodeWithPortPoints[nodeIndex]
-        const bounds = getNodeBounds(node, this.repairMargin)
+        const copperRadius = Math.max(
+          ...routeIndexes.map(
+            (index) =>
+              Math.max(
+                repairRoutes[index].traceThickness!,
+                params.hdRoutes[index].viaDiameter,
+              ) / 2,
+          ),
+        )
+        const bounds = getNodeBounds(
+          node,
+          Math.max(this.repairMargin, copperRadius + 0.1),
+        )
         const ownedIndexes = new Set(routeIndexes)
         return {
           node,
@@ -330,10 +352,7 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
               .map(({ routeIndex }) => repairRoutes[routeIndex]),
             clearanceObstacles: layeredObstacles
               .filter((obstacle) =>
-                doesRectOverlap(
-                  getNodeBounds(node, this.repairMargin),
-                  getObstacleBounds(obstacle),
-                ),
+                doesRectOverlap(bounds, getObstacleBounds(obstacle)),
               )
               .map((obstacle) => ({
                 type: obstacle.type,
@@ -382,6 +401,7 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
         hdRoutes: this.originalHdRoutes,
         obstacles: this.originalObstacles,
         repairMargin: this.repairMargin,
+        minimumTraceWidth: this.minimumTraceWidth,
         colorMap: this.colorMap,
         connMap: this.connMap,
       },
