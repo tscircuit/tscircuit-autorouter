@@ -1031,6 +1031,7 @@ class TinyHyperGraphSectionPipelineWithTerminalNetIds extends TinyHyperGraphSect
 
 export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
   private tinyPipelineSolver: TinyHyperGraphSectionPipelineWithTerminalNetIds
+  private statsDirty = false
   private primaryTinyPipelineSolver?: TinyHyperGraphSectionPipelineWithTerminalNetIds
   private alternativeTinyPipelineSolver?: TinyHyperGraphSectionPipelineWithTerminalNetIds
   private alternativeTinyPipelineInput?: TinyHyperGraphSectionPipelineInput
@@ -1162,6 +1163,25 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       params,
       graphForTiny,
     )
+    // Diagnostics are read by the debugger and benchmark collector, but most
+    // search steps have no observer. Preserve fresh snapshots on reads without
+    // copying every nested solver's stats on every search expansion.
+    let cachedStats = this.stats
+    Object.defineProperty(this, "stats", {
+      configurable: true,
+      enumerable: true,
+      get: () => {
+        if (this.statsDirty) {
+          cachedStats = this.collectStats()
+          this.statsDirty = false
+        }
+        return cachedStats
+      },
+      set: (value: Record<string, any>) => {
+        cachedStats = value
+        this.statsDirty = false
+      },
+    })
   }
 
   getSolverName(): string {
@@ -1469,16 +1489,6 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       this.finishCandidatePortfolio()
     }
 
-    const optimizeSectionSolver =
-      this.tinyPipelineSolver.getSolver<TinyHyperGraphSectionSolver>(
-        "optimizeSection",
-      )
-    const rerouteSolver =
-      this.tinyPipelineSolver.getSolver<FullConnectionRerouteSolver>(
-        "rerouteFullConnections",
-      )
-    const currentTinySolver = this.getCurrentTinySolver()
-
     this.solved =
       this.candidatePortfolioPhase === "complete" &&
       this.tinyPipelineSolver.solved
@@ -1494,7 +1504,22 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
           : this.alternativeTinyPipelineInput
             ? this.tinyPipelineSolver.progress * 0.5
             : this.tinyPipelineSolver.progress
-    this.stats = {
+    this.statsDirty = true
+    this.activeSubSolver = this.tinyPipelineSolver.activeSubSolver ?? null
+  }
+
+  private collectStats(): Record<string, any> {
+    const optimizeSectionSolver =
+      this.tinyPipelineSolver.getSolver<TinyHyperGraphSectionSolver>(
+        "optimizeSection",
+      )
+    const rerouteSolver =
+      this.tinyPipelineSolver.getSolver<FullConnectionRerouteSolver>(
+        "rerouteFullConnections",
+      )
+    const currentTinySolver = this.getCurrentTinySolver()
+
+    return {
       duplicateCongestedPortSourceCount:
         this.duplicateCongestedPortReport?.duplicatedPorts.length ?? 0,
       duplicateCongestedPortCount:
@@ -1528,7 +1553,6 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       currentStage: this.tinyPipelineSolver.getCurrentStageName(),
       stageStats: this.tinyPipelineSolver.getStageStats(),
     }
-    this.activeSubSolver = this.tinyPipelineSolver.activeSubSolver ?? null
   }
 
   preview(): GraphicsObject {
