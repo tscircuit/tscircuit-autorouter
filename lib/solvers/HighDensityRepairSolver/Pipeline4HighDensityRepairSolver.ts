@@ -457,6 +457,8 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
     }
 
     this.activeSubSolver = new HighDensityRepairSolver({
+      // Boundary proximity alone is not a copper-clearance violation.
+      repairBoundaryDiagonals: false,
       sample: sampleEntry.sample,
       margin: this.repairMargin,
     })
