@@ -45,15 +45,17 @@ test("node repair checks the board's minimum width instead of an undersized HD t
   solver.solve()
   const output = solver.getOutput()[0]
   const gap = Math.min(
-    ...output.route.slice(1).map(
-      (point, index) =>
-        segmentDistance(
-          output.route[index],
-          point,
-          { x: -0.05, y: 0.25 },
-          { x: 0.05, y: 0.25 },
-        ) - 0.2,
-    ),
+    ...output.route
+      .slice(1)
+      .map(
+        (point, index) =>
+          segmentDistance(
+            output.route[index],
+            point,
+            { x: -0.05, y: 0.25 },
+            { x: 0.05, y: 0.25 },
+          ) - 0.2,
+      ),
   )
   expect(gap).toBeGreaterThanOrEqual(0.1 - 1e-6)
   expect(output.traceThickness).toBe(route.traceThickness)
