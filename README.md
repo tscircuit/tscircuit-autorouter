@@ -1,6 +1,8 @@
 # @tscircuit/capacity-autorouter
 
-An MIT-licensed full-pipeline PCB autorouter for node.js and TypeScript projects. Part of [tscircuit](https://github.com/tscircuit/tscircuit)
+An MIT-licensed PCB autorouter made for usage with [tscircuit](https://github.com/tscircuit/tscircuit). This is the builtin autorouter.
+
+The autorouter is composed of hundreds of algorithms organized in a Pipeline. The autorouter uses successive approximation and [Hypergraphs](https://blog.autorouting.com/p/hypergraph-autorouting) rather than sequential routing.
 
 [View Online Playground](https://autorouter.tscircuit.com) &middot; [tscircuit docs](https://docs.tscircuit.com) &middot; [discord](https://tscircuit.com/join) &middot; [twitter](https://x.com/seveibar) &middot; [try tscircuit online](https://tscircuit.com) &middot; [Report/Debug Autorouter Bugs](https://docs.tscircuit.com/contributing/report-autorouter-bugs)
 
