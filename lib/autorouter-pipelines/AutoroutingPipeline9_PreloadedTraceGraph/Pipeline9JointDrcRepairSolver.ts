@@ -23,6 +23,7 @@ import type {
 } from "lib/types"
 import type { HighDensityRoute } from "lib/types/high-density-types"
 import { convertHdRouteToSimplifiedRoute } from "lib/utils/convertHdRouteToSimplifiedRoute"
+import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
 import { mapZToLayerName } from "lib/utils/mapZToLayerName"
 import { createPipeline7HdRoutesToSimplifiedPcbTracesConverter } from "../AutoroutingPipeline7_MultiGraph/convertPipeline7HdRoutesToSimplifiedPcbTraces"
 import {
@@ -1179,6 +1180,21 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       }
     }
 
+    // Candidate repairs change route geometry, not the declared connectivity.
+    const connectivityMaps = {
+      source: getConnectivityMapFromSimpleRouteJson(
+        params.originalSrj === params.srjWithPointPairs
+          ? params.originalSrj
+          : {
+              ...params.originalSrj,
+              connections: [
+                ...params.srjWithPointPairs.connections,
+                ...params.originalSrj.connections,
+              ],
+            },
+      ),
+      route: getConnectivityMapFromSimpleRouteJson(params.srjWithPointPairs),
+    }
     const referenceDrcEvaluator = (
       { routes, hdRoutes }: Parameters<DrcEvaluator>[0],
       includeTraceContinuity = true,
@@ -1190,6 +1206,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       const candidateDrcInput = prepareCandidateDrcInput(evaluatedRoutes)
       const evaluatedDrc = evaluateRelaxedDrc({
         includeBoardClearance: true,
+        connectivityMaps,
         inputSrj: params.originalSrj,
         srjWithPointPairs: params.srjWithPointPairs,
         routedTraces: candidateDrcInput.routedTraces,
@@ -1273,6 +1290,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
           minViaDiameter: params.originalSrj.minViaDiameter,
           originalSrj: params.originalSrj,
           includeOriginalConnections: true,
+          connectivityMaps,
         },
       )
     }

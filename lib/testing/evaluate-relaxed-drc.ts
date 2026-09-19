@@ -7,6 +7,7 @@ import {
   type GetDrcErrorsResult,
 } from "./getDrcErrors"
 import {
+  type CircuitJsonConnectivityMaps,
   convertToCircuitJson,
   createPcbBoardElement,
 } from "./utils/convertToCircuitJson"
@@ -21,6 +22,7 @@ export interface EvaluateRelaxedDrcInput {
   drcOptions?: GetDrcErrorsOptions
   /** Preserve physical board clearance when validating repair candidates. */
   includeBoardClearance?: boolean
+  connectivityMaps?: CircuitJsonConnectivityMaps
 }
 
 /** Benchmark relaxed DRC errors and the Circuit JSON evaluated to produce them. */
@@ -56,6 +58,7 @@ export const evaluateRelaxedDrc = ({
   routedTraces,
   drcOptions,
   includeBoardClearance = false,
+  connectivityMaps,
 }: EvaluateRelaxedDrcInput): EvaluateRelaxedDrcResult => {
   const preloadedTraces = inputSrj.traces ?? []
   const jointTraces = combinePreloadedAndRoutedTraces(
@@ -67,6 +70,7 @@ export const evaluateRelaxedDrc = ({
     minViaDiameter: inputSrj.minViaDiameter,
     originalSrj: inputSrj,
     includeOriginalConnections: true,
+    connectivityMaps,
   })
 
   if (includeBoardClearance) {
