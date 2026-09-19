@@ -58,6 +58,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
   adaptiveSearchExpanded = false
   negotiatedSearchStarted = false
   readonly enableNegotiatedSearch: boolean
+  readonly growthScale: number
 
   private getSolvedSegmentCount(solver: unknown): number | null {
     const solvedConnectionsMap = (solver as any).solvedConnectionsMap
@@ -130,6 +131,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     opts: ConstructorParameters<typeof CachedIntraNodeRouteSolver>[0] & {
       effort?: number
       enableNegotiatedSearch?: boolean
+      growthScale?: number
       boardGeometry?: HighDensityBoardGeometry
     },
   ) {
@@ -139,6 +141,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     this.constructorParams = opts
     this.effort = opts.effort ?? 1
     this.enableNegotiatedSearch = opts.enableNegotiatedSearch ?? false
+    this.growthScale = opts.growthScale ?? 1
     this.MAX_ITERATIONS = 20_000_000 * this.effort
     this.GREEDY_MULTIPLIER = 5
     this.MIN_SUBSTEPS = 100
@@ -333,9 +336,12 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     if (solver instanceof HighDensitySolverA13) return
     const setup = (solver as any).setup
     if (typeof setup === "function") setup.call(solver)
+    // Preserve the physical-size portfolio's search order. Enlarged regions
+    // can use a grid-sized budget before trying their next growth scale.
     if (
-      solver instanceof HighDensitySolverA01 ||
-      solver instanceof HighDensityA03Solver
+      this.growthScale > 1 &&
+      (solver instanceof HighDensitySolverA01 ||
+        solver instanceof HighDensityA03Solver)
     ) {
       solver.MAX_ITERATIONS = Math.min(
         solver.MAX_ITERATIONS,
