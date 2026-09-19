@@ -86,6 +86,24 @@ test("bugreport106-347963.json", async () => {
         strokeWidth: Math.max((line.strokeWidth ?? 0) * 4, 0.32),
         zIndex: -1,
       })),
+      {
+        points: [
+          { x: -16.3, y: 2.68 },
+          { x: -16.3, y: 2.33 },
+        ],
+        strokeColor: "#991b1b",
+        strokeWidth: 0.018,
+      },
+      {
+        points: [
+          { x: -16.1246, y: 2.4401 },
+          { x: -16.48, y: 2.22 },
+        ],
+        strokeColor: "#dc2626",
+        strokeWidth: actualMinimumWidth,
+        zIndex: 1,
+        label: "0.0800 mm width guide",
+      },
     ],
     rects: [
       ...(fullGraphics.rects ?? [])
@@ -119,13 +137,21 @@ test("bugreport106-347963.json", async () => {
         stroke: "none",
       },
     ],
-    circles: (fullGraphics.circles ?? [])
-      .filter((circle) => isInsideFocus(circle.center))
-      .map((circle) => ({
-        ...circle,
-        fill: fadeColor(circle.fill),
-        stroke: fadeColor(circle.stroke),
-      })),
+    circles: [
+      ...(fullGraphics.circles ?? [])
+        .filter((circle) => isInsideFocus(circle.center))
+        .map((circle) => ({
+          ...circle,
+          fill: fadeColor(circle.fill),
+          stroke: fadeColor(circle.stroke),
+        })),
+      {
+        center: { x: -16.0769, y: 2.4701 },
+        radius: 0.13,
+        fill: "rgba(255,255,255,0)",
+        stroke: "#991b1b",
+      },
+    ],
     points: [],
     texts: [
       {
@@ -143,6 +169,14 @@ test("bugreport106-347963.json", async () => {
         fontSize: 0.18,
         color: "#475569",
         anchorSide: "center",
+      },
+      {
+        x: -16.32,
+        y: 2.7,
+        text: "0.0800 mm trace width",
+        fontSize: 0.16,
+        color: "#991b1b",
+        anchorSide: "bottom_right",
       },
     ],
   }
