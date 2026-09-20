@@ -10,6 +10,7 @@ import type { SimpleRouteJson } from "lib/types"
 test("reference and indexed DRC check the same declared via span", () => {
   const srj = {
     layerCount: 4,
+    allowBlindAndBuriedVias: true,
     minTraceWidth: 0.1,
     minViaDiameter: 0.3,
     bounds: { minX: -2, minY: -2, maxX: 2, maxY: 2 },
