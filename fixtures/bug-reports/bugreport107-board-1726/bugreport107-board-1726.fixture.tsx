@@ -1,6 +1,6 @@
 import { AutoroutingPipelineDebugger } from "lib/testing/AutoroutingPipelineDebugger"
 import type { SimpleRouteJson } from "lib/types"
-import bugReport from "./bugreport107-board-1730.json"
+import bugReport from "./bugreport107-board-1726.json"
 
 export default () => (
   <AutoroutingPipelineDebugger
