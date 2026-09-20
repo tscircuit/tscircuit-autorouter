@@ -47,6 +47,8 @@ export const getPipeline9BoundedRepairBudget = (
   maxCandidateAttempts: number
   maxPathSearchNodes: number
   maxPathSearchNodesPerCall?: number
+  maxCandidateAttemptsPerRegion?: number
+  pathGridSizeScale?: number
   pathHeuristicWeight?: number
   revisitChangedRegions?: boolean
 } => {
@@ -57,12 +59,14 @@ export const getPipeline9BoundedRepairBudget = (
   const scale = congested
     ? Math.min(1, (120 * Math.max(1, effort)) / routeCount)
     : 1
+  const coarseGrid = congested && drcIssueCount > routeCount / 4
+  const maxCandidateAttempts = Math.max(
+    1,
+    Math.floor(PIPELINE9_BOUNDED_REPAIR_BUDGET.maxCandidateAttempts * scale),
+  )
   return {
     maxRegions: congested ? 8 : PIPELINE9_BOUNDED_REPAIR_BUDGET.maxRegions,
-    maxCandidateAttempts: Math.max(
-      1,
-      Math.floor(PIPELINE9_BOUNDED_REPAIR_BUDGET.maxCandidateAttempts * scale),
-    ),
+    maxCandidateAttempts: maxCandidateAttempts * (coarseGrid ? 2 : 1),
     maxPathSearchNodes: Math.max(
       1,
       Math.floor(
@@ -71,6 +75,14 @@ export const getPipeline9BoundedRepairBudget = (
           : PIPELINE9_BOUNDED_REPAIR_BUDGET.maxPathSearchNodes,
       ),
     ),
+    // Coarse paths cost fewer grid expansions. Keep the same total node
+    // allowance and per-region call batch, but leave calls for refinement.
+    ...(coarseGrid
+      ? {
+          maxCandidateAttemptsPerRegion: Math.ceil(maxCandidateAttempts / 2),
+          pathGridSizeScale: 2,
+        }
+      : {}),
     ...(congested
       ? {
           maxPathSearchNodesPerCall: 500_000,
@@ -94,6 +106,8 @@ type Pipeline9BoundedRegionalRepairParams = {
     maxCandidateAttempts: number
     maxPathSearchNodes: number
     maxPathSearchNodesPerCall?: number
+    maxCandidateAttemptsPerRegion?: number
+    pathGridSizeScale?: number
     pathHeuristicWeight?: number
     revisitChangedRegions?: boolean
   }
@@ -381,15 +395,20 @@ export const applyPipeline9BoundedRegionalRepairs = ({
       isLocked: (routeIndex, pointIndex): boolean =>
         region.lockedPointIndices[routeIndex]![pointIndex]!,
       maxPathSearchCalls: Math.min(
-        budget.revisitChangedRegions
-          ? Math.ceil(budget.maxCandidateAttempts / 2)
-          : budget.maxCandidateAttempts,
+        budget.maxCandidateAttemptsPerRegion ??
+          (budget.revisitChangedRegions
+            ? Math.ceil(budget.maxCandidateAttempts / 2)
+            : budget.maxCandidateAttempts),
         budget.maxCandidateAttempts - result.candidateAttemptCount,
       ),
       maxPathSearchNodes:
         budget.maxPathSearchNodes - result.pathSearchNodeCount,
       maxPathSearchNodesPerCall: budget.maxPathSearchNodesPerCall,
       pathHeuristicWeight: budget.pathHeuristicWeight,
+      // Once congestion is localized, use the original fine grid to resolve
+      // tight final gaps. Every proposal still passes full reference DRC.
+      pathGridSizeScale:
+        currentErrors.length > 10 ? budget.pathGridSizeScale : undefined,
       allowLayerChanges: true,
       traceClearance: RELAXED_DRC_OPTIONS.traceClearance!,
       viaClearance: RELAXED_DRC_OPTIONS.viaClearance!,
