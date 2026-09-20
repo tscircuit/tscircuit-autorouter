@@ -366,6 +366,7 @@ export const createPipeline9RegularNodeSolver = ({
     layerCount,
     useGrowShrinkHighDensityIntraNodeSolver: true,
     enableNegotiatedSearch: true,
+    gridSearchSegmentWork: 1_000,
     boardGeometry,
     preserveTerminalPcbPortIds: false,
     growShrinkFallbackToInvalidGeometryOnFailure: false,

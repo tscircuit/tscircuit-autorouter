@@ -1662,9 +1662,17 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         0.15,
       effort: this.params.effort,
     })
+    const regionalReference = this.cachedReferenceDrcEvaluator!({
+      traces: [],
+      routes: regionalB01RepairResult.routes,
+      hdRoutes: regionalB01RepairResult.routes,
+    })
     const regionalRepairBudget = getPipeline9BoundedRepairBudget(
       regionalB01RepairResult.routes.length,
-      regionalB01RepairResult.remainingDrcIssueCount,
+      (Array.isArray(regionalReference)
+        ? regionalReference
+        : regionalReference.errors
+      ).length,
       this.params.effort,
     )
     const lateBoundedRepairStartedAt = performance.now()

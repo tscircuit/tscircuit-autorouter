@@ -153,9 +153,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       node.availableZ?.length ??
       new Set(node.portPoints.map((point) => point.z)).size
     const states =
-      Math.floor(node.width / 0.1) *
-      Math.floor(node.height / 0.1) *
-      layerCount
+      Math.floor(node.width / 0.1) * Math.floor(node.height / 0.1) * layerCount
     // Avoid the external solvers' two-million-iteration floor on small grids,
     // while retaining room for interacting connections on crowded nodes.
     return Math.max(

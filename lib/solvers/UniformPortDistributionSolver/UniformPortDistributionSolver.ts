@@ -23,8 +23,9 @@ export interface UniformPortDistributionSolverInput {
   nodeWithPortPoints: NodeWithPortPoints[]
   inputNodesWithPortPoints: InputNodeWithPortPoints[]
   obstacles: Obstacle[]
-  /** Enables redistribution using physical bounds and per-layer obstacles. */
   layerCount?: number
+  /** Redistribute using physical bounds and per-layer obstacles. */
+  useLayerAwareGeometry?: boolean
   preserveSolitaryPorts?: boolean
 }
 
@@ -56,7 +57,7 @@ export class UniformPortDistributionSolver extends BaseSolver {
       // adjacency, or the shared edge disappears before we can space them.
       this.mapOfNodeIdToBounds.set(
         node.capacityMeshNodeId,
-        input.layerCount === undefined
+        !input.useLayerAwareGeometry
           ? getBoundsFromNodeWithPortPoints(node)
           : {
               minX: node.center.x - node.width / 2,
@@ -126,6 +127,7 @@ export class UniformPortDistributionSolver extends BaseSolver {
       sharedEdge,
       obstacles: this.input.obstacles,
     })
+    if (!this.input.useLayerAwareGeometry && blockedOnAnotherLayer) return
     const portCountByLayer = new Map<number, number>()
     for (const portPoint of familyRaw) {
       portCountByLayer.set(
@@ -148,7 +150,7 @@ export class UniformPortDistributionSolver extends BaseSolver {
         !shouldIgnoreSharedEdge({
           sharedEdge,
           obstacles: this.input.obstacles,
-          z: this.input.layerCount === undefined ? undefined : portPoint.z,
+          z: this.input.useLayerAwareGeometry ? portPoint.z : undefined,
           layerCount: this.input.layerCount,
         }) &&
         !shouldIgnorePortPoint({

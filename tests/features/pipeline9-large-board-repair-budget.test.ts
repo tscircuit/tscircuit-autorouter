@@ -72,7 +72,7 @@ test("large conflicted boards bound repair work while near-clean and higher-effo
     revisitChangedRegions: true,
   })
   for (const [routeCount, errors, effort] of [
-    [480, 19, 1],
+    [480, 9, 1],
     [120, 20, 1],
   ]) {
     expect(

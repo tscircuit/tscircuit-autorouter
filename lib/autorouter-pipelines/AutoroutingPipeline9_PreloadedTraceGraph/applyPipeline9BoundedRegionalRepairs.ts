@@ -53,7 +53,7 @@ export const getPipeline9BoundedRepairBudget = (
   // Congested boards need coupled path search after the local force repairs.
   // Scale total search work with route count, and cap each path separately so
   // an infeasible span cannot consume the other regions' work allowance.
-  const congested = drcIssueCount >= 20 && routeCount > 120
+  const congested = drcIssueCount >= 10 && routeCount > 120
   const scale = congested
     ? Math.min(1, (120 * Math.max(1, effort)) / routeCount)
     : 1
@@ -370,9 +370,9 @@ export const applyPipeline9BoundedRegionalRepairs = ({
           ? [routeIndex]
           : [],
     )
-    // Share the work limit across regions so congestion history survives
-    // while a coupled group is rerouted. Early convergence leaves work for
-    // the next region without increasing the total search budget.
+    // Keep congestion history within each coupled group, but reserve calls
+    // for another region instead of letting one stalled queue consume them
+    // all. Every region still shares the same total call and node limits.
     const repair = negotiateTraceClearance({
       srj: region.srj,
       routes: region.routes,
@@ -380,8 +380,12 @@ export const applyPipeline9BoundedRegionalRepairs = ({
       dirtyRouteIndices,
       isLocked: (routeIndex, pointIndex): boolean =>
         region.lockedPointIndices[routeIndex]![pointIndex]!,
-      maxPathSearchCalls:
+      maxPathSearchCalls: Math.min(
+        budget.revisitChangedRegions
+          ? Math.ceil(budget.maxCandidateAttempts / 2)
+          : budget.maxCandidateAttempts,
         budget.maxCandidateAttempts - result.candidateAttemptCount,
+      ),
       maxPathSearchNodes:
         budget.maxPathSearchNodes - result.pathSearchNodeCount,
       maxPathSearchNodesPerCall: budget.maxPathSearchNodesPerCall,
@@ -427,6 +431,7 @@ export const applyPipeline9BoundedRegionalRepairs = ({
         return drcEvaluator(input)
       },
     })
+    let candidateReference: ReturnType<DrcEvaluator> | undefined
     if (connMap) {
       const beforeMerge = drcEvaluator({
         traces: [],
@@ -434,6 +439,7 @@ export const applyPipeline9BoundedRegionalRepairs = ({
         hdRoutes: candidateRoutes,
       })
       result.referenceValidationCount++
+      candidateReference = beforeMerge
       const beforeMergeErrors = Array.isArray(beforeMerge)
         ? beforeMerge
         : beforeMerge.errors
@@ -459,7 +465,9 @@ export const applyPipeline9BoundedRegionalRepairs = ({
         const movable = new Set(movableRoutes)
         const merger = new SameNetViaMergerSolver({
           inputHdRoutes: movableRoutes,
-          otherHdRoutes: candidateRoutes.filter((route): boolean => !movable.has(route)),
+          otherHdRoutes: candidateRoutes.filter(
+            (route): boolean => !movable.has(route),
+          ),
           netByConnectionName: getPipeline9NetByConnectionName(
             candidateRoutes,
             connMap,
@@ -475,8 +483,12 @@ export const applyPipeline9BoundedRegionalRepairs = ({
           throw new Error(`Regional via merge failed: ${merger.error}`)
         }
         const mergedByName = new Map(
-          merger.mergedViaHdRoutes.map((route) => [route.connectionName, route]),
+          merger.mergedViaHdRoutes.map((route) => [
+            route.connectionName,
+            route,
+          ]),
         )
+        candidateReference = undefined
         candidateRoutes = candidateRoutes.map(
           (route): HighDensityRoute =>
             mergedByName.get(route.connectionName) ?? route,
@@ -501,12 +513,14 @@ export const applyPipeline9BoundedRegionalRepairs = ({
     ) {
       continue
     }
-    const candidateReference = drcEvaluator({
-      traces: [],
-      routes: candidateRoutes,
-      hdRoutes: candidateRoutes,
-    })
-    result.referenceValidationCount++
+    if (candidateReference === undefined) {
+      candidateReference = drcEvaluator({
+        traces: [],
+        routes: candidateRoutes,
+        hdRoutes: candidateRoutes,
+      })
+      result.referenceValidationCount++
+    }
     const candidateErrors = Array.isArray(candidateReference)
       ? candidateReference
       : candidateReference.errors
