@@ -28,7 +28,7 @@ const roundCoord = (n: number) => Math.round(n * 200) / 200
 
 setupGlobalCaches()
 
-const PORTFOLIO_SINGLE_INTRA_NODE_CACHE_SCHEMA_VERSION = 3
+const PORTFOLIO_SINGLE_INTRA_NODE_CACHE_SCHEMA_VERSION = 4
 
 export class CachedPortfolioSingleIntraNodeSolver
   extends PortfolioSingleIntraNodeSolver
@@ -138,6 +138,9 @@ export class CachedPortfolioSingleIntraNodeSolver
       cacheSchemaVersion: PORTFOLIO_SINGLE_INTRA_NODE_CACHE_SCHEMA_VERSION,
       normalizedNodeData,
       normalizedHyperParameters,
+      gridSearchSegmentWork: this.gridSearchSegmentWork,
+      gridSearchWorkScale: this.gridSearchWorkScale,
+      rejectOverlappingTerminals: this.rejectOverlappingTerminals,
       traceWidth: roundCoord(this.constructorParams.traceWidth ?? 0.15),
       viaDiameter: roundCoord(this.constructorParams.viaDiameter ?? 0.3),
       obstacleMargin: roundCoord(this.constructorParams.obstacleMargin ?? 0.15),

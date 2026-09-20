@@ -59,6 +59,8 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
   negotiatedSearchStarted = false
   readonly enableNegotiatedSearch: boolean
   readonly gridSearchSegmentWork: number
+  readonly gridSearchWorkScale: number
+  readonly rejectOverlappingTerminals: boolean
 
   private getSolvedSegmentCount(solver: unknown): number | null {
     const solvedConnectionsMap = (solver as any).solvedConnectionsMap
@@ -132,6 +134,8 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       effort?: number
       enableNegotiatedSearch?: boolean
       gridSearchSegmentWork?: number
+      gridSearchWorkScale?: number
+      rejectOverlappingTerminals?: boolean
       boardGeometry?: HighDensityBoardGeometry
     },
   ) {
@@ -141,10 +145,39 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     this.constructorParams = opts
     this.effort = opts.effort ?? 1
     this.gridSearchSegmentWork = opts.gridSearchSegmentWork ?? 10_000
+    this.gridSearchWorkScale = opts.gridSearchWorkScale ?? 1
+    this.rejectOverlappingTerminals = opts.rejectOverlappingTerminals ?? false
     this.enableNegotiatedSearch = opts.enableNegotiatedSearch ?? false
     this.MAX_ITERATIONS = 20_000_000 * this.effort
     this.GREEDY_MULTIPLIER = 5
     this.MIN_SUBSTEPS = 100
+    // These endpoints are fixed within this attempt. No route ordering can
+    // separate overlapping copper; let the existing grow/shrink search move
+    // to a feasible scale instead of exhausting every candidate here.
+    if (this.rejectOverlappingTerminals) {
+      const ports = this.nodeWithPortPoints.portPoints
+      const traceWidth = opts.traceWidth ?? 0.15
+      for (let i = 0; i < ports.length; i++) {
+        for (let j = i + 1; j < ports.length; j++) {
+          const a = ports[i]!
+          const b = ports[j]!
+          if (
+            a.z !== b.z ||
+            (a.rootConnectionName ?? a.connectionName) ===
+              (b.rootConnectionName ?? b.connectionName) ||
+            this.connMap?.areIdsConnected(a.connectionName, b.connectionName)
+          ) {
+            continue
+          }
+          if (Math.hypot(a.x - b.x, a.y - b.y) < traceWidth - 1e-6) {
+            this.failed = true
+            this.error =
+              "Unrelated route terminals overlap at the requested trace width"
+            return
+          }
+        }
+      }
+    }
   }
 
   private getGridSearchIterationBudget(): number {
@@ -156,15 +189,19 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
       Math.floor(node.width / 0.1) * Math.floor(node.height / 0.1) * layerCount
     // Avoid the external solvers' two-million-iteration floor on small grids,
     // while retaining room for interacting connections on crowded nodes.
-    return Math.max(
-      150_000,
-      (layerCount <= 2 ? 10_000 : this.gridSearchSegmentWork) *
-        this.getNodeSegmentCount() ** 2,
-      Math.round(
-        states *
-          (8 + 1.2 * Math.sqrt(this.getNodeSegmentCount())) *
-          this.effort,
-      ),
+    const budgetScale = layerCount > 2 ? this.gridSearchWorkScale : 1
+    return Math.round(
+      budgetScale *
+        Math.max(
+          150_000,
+          (layerCount <= 2 ? 10_000 : this.gridSearchSegmentWork) *
+            this.getNodeSegmentCount() ** 2,
+          Math.round(
+            states *
+              (8 + 1.2 * Math.sqrt(this.getNodeSegmentCount())) *
+              this.effort,
+          ),
+        ),
     )
   }
 
