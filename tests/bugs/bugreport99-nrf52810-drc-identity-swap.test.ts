@@ -119,7 +119,7 @@ test("bugreport99 keeps nRF exact DRC net aliases electrically equivalent", asyn
     )
 
   expect(inputTargetIds).toEqual([])
-  expect(inputErrors).toHaveLength(2)
+  expect(inputErrors).toHaveLength(1)
   expect(knownBadTargetIds.sort()).toEqual([...TARGET_DRC_IDS].sort())
   expect(outputTargetIds).toEqual([])
 
@@ -170,7 +170,7 @@ test("bugreport99 keeps nRF exact DRC net aliases electrically equivalent", asyn
   }
   const frames: GraphicsSvgFrame[] = [
     {
-      name: "EXACT INPUT · 2 REAL DRC",
+      name: "EXACT INPUT · 1 REAL DRC",
       graphics: focusGraphics(exactInputRoutes),
     },
     {

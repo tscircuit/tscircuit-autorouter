@@ -1607,6 +1607,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     // have already reduced the congestion.
     const boundedRegionalRepairStartedAt = performance.now()
     const boundedRepairParams = {
+      connMap: this.params.connMap,
       originalSrj: {
         ...this.params.originalSrj,
         connections: [

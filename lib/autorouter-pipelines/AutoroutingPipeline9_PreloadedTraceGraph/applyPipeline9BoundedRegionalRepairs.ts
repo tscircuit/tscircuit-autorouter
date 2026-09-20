@@ -6,12 +6,15 @@ import {
   negotiateTraceClearance,
   type Bounds,
 } from "@tscircuit/repair04"
+import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { DrcEvaluator } from "high-density-repair03/lib"
+import { SameNetViaMergerSolver } from "lib/solvers/SameNetViaMergerSolver/SameNetViaMergerSolver"
 import { RELAXED_DRC_OPTIONS } from "lib/testing/drcPresets"
 import type { SimpleRouteJson } from "lib/types"
 import type { HighDensityRoute } from "lib/types/high-density-types"
 import { createSrjWithBoardValidObstacleLayers } from "lib/utils/create-srj-with-board-valid-obstacle-layers"
 import { getDrcErrorTraceIds } from "lib/utils/getDrcErrorTraceIds"
+import { getPipeline9NetByConnectionName } from "./getPipeline9NetByConnectionName"
 import { applyPipeline9ClearanceProjection } from "./applyPipeline9ClearanceProjection"
 import { canonicalizePipeline9HdRoutes } from "./canonicalizePipeline9HdRoutes"
 import { canPublishPartialFixedObstacleRepair } from "./canPublishPartialFixedObstacleRepair"
@@ -63,9 +66,9 @@ export const getPipeline9BoundedRepairBudget = (
     maxPathSearchNodes: Math.max(
       1,
       Math.floor(
-        (congested
-          ? 10_000_000
-          : PIPELINE9_BOUNDED_REPAIR_BUDGET.maxPathSearchNodes) * scale,
+        congested
+          ? 10_000_000 * scale
+          : PIPELINE9_BOUNDED_REPAIR_BUDGET.maxPathSearchNodes,
       ),
     ),
     ...(congested
@@ -80,6 +83,7 @@ export const getPipeline9BoundedRepairBudget = (
 
 type Pipeline9BoundedRegionalRepairParams = {
   originalSrj: SimpleRouteJson
+  connMap?: ConnectivityMap
   routes: HighDensityRoute[]
   syntheticConnectionNames: ReadonlySet<string>
   drcEvaluator: DrcEvaluator
@@ -105,6 +109,7 @@ const REGION_SIZES = [10, 16] as const
 /** Publishes complete repairs or guarded improvements with only fixed-pad errors left. */
 export const applyPipeline9BoundedRegionalRepairs = ({
   originalSrj,
+  connMap,
   routes,
   syntheticConnectionNames,
   drcEvaluator,
@@ -414,7 +419,7 @@ export const applyPipeline9BoundedRegionalRepairs = ({
     }
     // Negotiation can leave small coupled gaps. Project the complete proposal
     // before atomically validating it against the incoming physical copper.
-    const candidateRoutes = applyPipeline9ClearanceProjection({
+    let candidateRoutes = applyPipeline9ClearanceProjection({
       originalSrj,
       routes: negotiatedRoutes,
       drcEvaluator: (input): ReturnType<DrcEvaluator> => {
@@ -422,6 +427,62 @@ export const applyPipeline9BoundedRegionalRepairs = ({
         return drcEvaluator(input)
       },
     })
+    if (connMap) {
+      const beforeMerge = drcEvaluator({
+        traces: [],
+        routes: candidateRoutes,
+        hdRoutes: candidateRoutes,
+      })
+      result.referenceValidationCount++
+      const beforeMergeErrors = Array.isArray(beforeMerge)
+        ? beforeMerge
+        : beforeMerge.errors
+      const mergeErrors = beforeMergeErrors.filter(
+        (error): boolean =>
+          typeof error.pcb_error_id === "string" &&
+          error.pcb_error_id.startsWith("same_net_vias_close_"),
+      )
+      const mergeTraceIds = mergeErrors.flatMap(getDrcErrorTraceIds)
+      const movableRoutes = candidateRoutes.filter((route): boolean =>
+        mergeTraceIds.some(
+          (traceId): boolean =>
+            traceId === route.connectionName ||
+            traceId.startsWith(`${route.connectionName}_`),
+        ),
+      )
+      if (
+        movableRoutes.length > 0 &&
+        mergeErrors.length === beforeMergeErrors.length
+      ) {
+        // Merge only reported same-net conflicts. Other copper stays fixed,
+        // and the complete proposal still passes the physical guards below.
+        const movable = new Set(movableRoutes)
+        const merger = new SameNetViaMergerSolver({
+          inputHdRoutes: movableRoutes,
+          otherHdRoutes: candidateRoutes.filter((route): boolean => !movable.has(route)),
+          netByConnectionName: getPipeline9NetByConnectionName(
+            candidateRoutes,
+            connMap,
+          ),
+          obstacles: srj.obstacles,
+          layerCount: srj.layerCount,
+          connMap,
+          colorMap: {},
+          preserveRouteEndpoints: true,
+        })
+        merger.solve()
+        if (!merger.solved || merger.failed) {
+          throw new Error(`Regional via merge failed: ${merger.error}`)
+        }
+        const mergedByName = new Map(
+          merger.mergedViaHdRoutes.map((route) => [route.connectionName, route]),
+        )
+        candidateRoutes = candidateRoutes.map(
+          (route): HighDensityRoute =>
+            mergedByName.get(route.connectionName) ?? route,
+        )
+      }
+    }
     const candidateFixedViolations = getFixedObstacleViolations({
       srj,
       routes: candidateRoutes,

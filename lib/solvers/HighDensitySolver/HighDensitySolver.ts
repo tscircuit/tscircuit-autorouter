@@ -60,6 +60,7 @@ export class HighDensitySolver extends BaseSolver {
   layerCount: number
   useGrowShrinkHighDensityIntraNodeSolver: boolean
   enableNegotiatedSearch: boolean
+  gridSearchSegmentWork: number
   boardGeometry?: HighDensityBoardGeometry
   preserveTerminalPcbPortIds: boolean
   growShrinkMaxInnerIterationsPerGrowthAttempt?: number
@@ -97,6 +98,7 @@ export class HighDensitySolver extends BaseSolver {
     layerCount,
     useGrowShrinkHighDensityIntraNodeSolver,
     enableNegotiatedSearch = false,
+    gridSearchSegmentWork = 10_000,
     boardGeometry,
     preserveTerminalPcbPortIds,
     growShrinkMaxInnerIterationsPerGrowthAttempt,
@@ -115,6 +117,7 @@ export class HighDensitySolver extends BaseSolver {
     layerCount?: number
     useGrowShrinkHighDensityIntraNodeSolver?: boolean
     enableNegotiatedSearch?: boolean
+    gridSearchSegmentWork?: number
     boardGeometry?: HighDensityBoardGeometry
     preserveTerminalPcbPortIds?: boolean
     growShrinkMaxInnerIterationsPerGrowthAttempt?: number
@@ -140,6 +143,7 @@ export class HighDensitySolver extends BaseSolver {
     this.obstacles = obstacles ?? []
     this.layerCount = layerCount ?? 2
     this.enableNegotiatedSearch = enableNegotiatedSearch
+    this.gridSearchSegmentWork = gridSearchSegmentWork
     this.boardGeometry = boardGeometry
     this.useGrowShrinkHighDensityIntraNodeSolver =
       useGrowShrinkHighDensityIntraNodeSolver ?? false
@@ -383,6 +387,7 @@ export class HighDensitySolver extends BaseSolver {
     const intraNodeSolverParams = {
       nodeWithPortPoints: node,
       enableNegotiatedSearch: this.enableNegotiatedSearch,
+      gridSearchSegmentWork: this.gridSearchSegmentWork,
       boardGeometry: this.boardGeometry,
       colorMap: this.colorMap,
       connMap: this.connMap,

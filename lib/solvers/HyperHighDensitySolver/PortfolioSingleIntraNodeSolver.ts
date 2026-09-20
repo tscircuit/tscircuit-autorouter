@@ -58,6 +58,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
   adaptiveSearchExpanded = false
   negotiatedSearchStarted = false
   readonly enableNegotiatedSearch: boolean
+  readonly gridSearchSegmentWork: number
 
   private getSolvedSegmentCount(solver: unknown): number | null {
     const solvedConnectionsMap = (solver as any).solvedConnectionsMap
@@ -130,6 +131,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     opts: ConstructorParameters<typeof CachedIntraNodeRouteSolver>[0] & {
       effort?: number
       enableNegotiatedSearch?: boolean
+      gridSearchSegmentWork?: number
       boardGeometry?: HighDensityBoardGeometry
     },
   ) {
@@ -138,6 +140,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     this.connMap = opts.connMap
     this.constructorParams = opts
     this.effort = opts.effort ?? 1
+    this.gridSearchSegmentWork = opts.gridSearchSegmentWork ?? 10_000
     this.enableNegotiatedSearch = opts.enableNegotiatedSearch ?? false
     this.MAX_ITERATIONS = 20_000_000 * this.effort
     this.GREEDY_MULTIPLIER = 5
@@ -146,16 +149,19 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
 
   private getGridSearchIterationBudget(): number {
     const node = this.nodeWithPortPoints
+    const layerCount =
+      node.availableZ?.length ??
+      new Set(node.portPoints.map((point) => point.z)).size
     const states =
       Math.floor(node.width / 0.1) *
       Math.floor(node.height / 0.1) *
-      (node.availableZ?.length ??
-        new Set(node.portPoints.map((point) => point.z)).size)
+      layerCount
     // Avoid the external solvers' two-million-iteration floor on small grids,
     // while retaining room for interacting connections on crowded nodes.
     return Math.max(
       150_000,
-      1_000 * this.getNodeSegmentCount() ** 2,
+      (layerCount <= 2 ? 10_000 : this.gridSearchSegmentWork) *
+        this.getNodeSegmentCount() ** 2,
       Math.round(
         states *
           (8 + 1.2 * Math.sqrt(this.getNodeSegmentCount())) *

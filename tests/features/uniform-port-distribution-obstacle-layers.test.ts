@@ -45,9 +45,7 @@ test("shared-edge obstacles block only the copper layers they occupy", (): void 
   expect(
     shouldIgnoreSharedEdge({
       sharedEdge,
-      obstacles: [
-        { ...pad, layers: ["top", "inner1", "inner2", "bottom"] },
-      ],
+      obstacles: [{ ...pad, layers: ["top", "inner1", "inner2", "bottom"] }],
       z: 1,
       layerCount: 4,
     }),

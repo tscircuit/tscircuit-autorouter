@@ -26,6 +26,7 @@ test("displaced ports do not hide the physical shared edge during redistribution
     })),
   }))
   const solver = new UniformPortDistributionSolver({
+    layerCount: 4,
     nodeWithPortPoints: nodes,
     inputNodesWithPortPoints: inputNodes,
     obstacles: [],

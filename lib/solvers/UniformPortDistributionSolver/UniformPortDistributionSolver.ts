@@ -2,6 +2,7 @@ import { BaseSolver } from "@tscircuit/solver-utils"
 import { GraphicsObject } from "graphics-debug"
 import { Obstacle } from "lib/types"
 import { NodeWithPortPoints } from "lib/types/high-density-types"
+import { getBoundsFromNodeWithPortPoints } from "lib/utils/getBoundsFromNodeWithPortPoints"
 import { InputNodeWithPortPoints } from "../PortPointPathingSolver/PortPointPathingSolver"
 import {
   Bounds,
@@ -22,7 +23,9 @@ export interface UniformPortDistributionSolverInput {
   nodeWithPortPoints: NodeWithPortPoints[]
   inputNodesWithPortPoints: InputNodeWithPortPoints[]
   obstacles: Obstacle[]
+  /** Enables redistribution using physical bounds and per-layer obstacles. */
   layerCount?: number
+  preserveSolitaryPorts?: boolean
 }
 
 /**
@@ -51,12 +54,17 @@ export class UniformPortDistributionSolver extends BaseSolver {
     for (const node of input.nodeWithPortPoints) {
       // Off-edge duplicate ports must not expand the rectangles used to find
       // adjacency, or the shared edge disappears before we can space them.
-      this.mapOfNodeIdToBounds.set(node.capacityMeshNodeId, {
-        minX: node.center.x - node.width / 2,
-        maxX: node.center.x + node.width / 2,
-        minY: node.center.y - node.height / 2,
-        maxY: node.center.y + node.height / 2,
-      })
+      this.mapOfNodeIdToBounds.set(
+        node.capacityMeshNodeId,
+        input.layerCount === undefined
+          ? getBoundsFromNodeWithPortPoints(node)
+          : {
+              minX: node.center.x - node.width / 2,
+              maxX: node.center.x + node.width / 2,
+              minY: node.center.y - node.height / 2,
+              maxY: node.center.y + node.height / 2,
+            },
+      )
     }
 
     const uniqueOwnerPairs = new Map<OwnerPairKey, OwnerPair>()
@@ -114,13 +122,33 @@ export class UniformPortDistributionSolver extends BaseSolver {
     if (!sharedEdge) return
 
     const familyRaw = this.mapOfOwnerPairToPortPoints.get(ownerPairKey) ?? []
+    const blockedOnAnotherLayer = shouldIgnoreSharedEdge({
+      sharedEdge,
+      obstacles: this.input.obstacles,
+    })
+    const portCountByLayer = new Map<number, number>()
+    for (const portPoint of familyRaw) {
+      portCountByLayer.set(
+        portPoint.z,
+        (portCountByLayer.get(portPoint.z) ?? 0) + 1,
+      )
+    }
     const family: PortPointWithOwnerPair[] = []
     for (const portPoint of familyRaw) {
+      // A solitary crossing already has all the available spacing. Preserve
+      // its obstacle-aligned placement rather than moving it into fixed copper.
+      if (
+        this.input.preserveSolitaryPorts &&
+        blockedOnAnotherLayer &&
+        portCountByLayer.get(portPoint.z) === 1
+      ) {
+        continue
+      }
       if (
         !shouldIgnoreSharedEdge({
           sharedEdge,
           obstacles: this.input.obstacles,
-          z: portPoint.z,
+          z: this.input.layerCount === undefined ? undefined : portPoint.z,
           layerCount: this.input.layerCount,
         }) &&
         !shouldIgnorePortPoint({
