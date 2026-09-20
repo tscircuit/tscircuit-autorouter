@@ -444,9 +444,7 @@ export const applyPipeline9BoundedRegionalRepairs = ({
         ? beforeMerge
         : beforeMerge.errors
       const mergeErrors = beforeMergeErrors.filter(
-        (error): boolean =>
-          typeof error.pcb_error_id === "string" &&
-          error.pcb_error_id.startsWith("same_net_vias_close_"),
+        (error): boolean => error.type === "pcb_via_clearance_error",
       )
       const mergeTraceIds = mergeErrors.flatMap(getDrcErrorTraceIds)
       const movableRoutes = candidateRoutes.filter((route): boolean =>

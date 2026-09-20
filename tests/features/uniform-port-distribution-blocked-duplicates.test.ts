@@ -46,8 +46,7 @@ test("blocked shared edges retain a common position for duplicate ports", (): vo
   solver.solve()
   expect(solver.solved).toBeTrue()
   expect(solver.getOutput().map((node) => node.portPoints[0]!.x)).toEqual([
-    0.3,
-    0.3,
+    0.3, 0.3,
   ])
   expect(nodes[1]!.portPoints[0]!.x).toBe(0.5)
 })
