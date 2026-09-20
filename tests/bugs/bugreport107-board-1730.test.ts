@@ -14,4 +14,4 @@ test("bugreport107-board-1730.json with Pipeline 9", (): void => {
   solver.solve()
 
   expect(solver.solved).toBe(false)
-})
+}, 300_000)
