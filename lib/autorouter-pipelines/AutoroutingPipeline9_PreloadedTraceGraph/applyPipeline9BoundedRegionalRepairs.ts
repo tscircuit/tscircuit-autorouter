@@ -43,26 +43,38 @@ export const getPipeline9BoundedRepairBudget = (
   maxRegions: number
   maxCandidateAttempts: number
   maxPathSearchNodes: number
+  maxPathSearchNodesPerCall?: number
+  pathHeuristicWeight?: number
+  revisitChangedRegions?: boolean
 } => {
-  // Each region also projects and validates the entire board. Bound that
-  // repeated work on large boards, while retaining full effort near convergence.
-  const scale =
-    drcIssueCount >= 20 && routeCount > 120
-      ? Math.min(1, (120 * Math.max(1, effort)) / routeCount)
-      : 1
+  // Congested boards need coupled path search after the local force repairs.
+  // Scale total search work with route count, and cap each path separately so
+  // an infeasible span cannot consume the other regions' work allowance.
+  const congested = drcIssueCount >= 20 && routeCount > 120
+  const scale = congested
+    ? Math.min(1, (120 * Math.max(1, effort)) / routeCount)
+    : 1
   return {
-    maxRegions: Math.max(
-      1,
-      Math.floor(PIPELINE9_BOUNDED_REPAIR_BUDGET.maxRegions * scale),
-    ),
+    maxRegions: congested ? 8 : PIPELINE9_BOUNDED_REPAIR_BUDGET.maxRegions,
     maxCandidateAttempts: Math.max(
       1,
       Math.floor(PIPELINE9_BOUNDED_REPAIR_BUDGET.maxCandidateAttempts * scale),
     ),
     maxPathSearchNodes: Math.max(
       1,
-      Math.floor(PIPELINE9_BOUNDED_REPAIR_BUDGET.maxPathSearchNodes * scale),
+      Math.floor(
+        (congested
+          ? 10_000_000
+          : PIPELINE9_BOUNDED_REPAIR_BUDGET.maxPathSearchNodes) * scale,
+      ),
     ),
+    ...(congested
+      ? {
+          maxPathSearchNodesPerCall: 500_000,
+          pathHeuristicWeight: 2,
+          revisitChangedRegions: true,
+        }
+      : {}),
   }
 }
 
@@ -77,6 +89,9 @@ type Pipeline9BoundedRegionalRepairParams = {
     maxRegions: number
     maxCandidateAttempts: number
     maxPathSearchNodes: number
+    maxPathSearchNodesPerCall?: number
+    pathHeuristicWeight?: number
+    revisitChangedRegions?: boolean
   }
 }
 
@@ -364,6 +379,8 @@ export const applyPipeline9BoundedRegionalRepairs = ({
         budget.maxCandidateAttempts - result.candidateAttemptCount,
       maxPathSearchNodes:
         budget.maxPathSearchNodes - result.pathSearchNodeCount,
+      maxPathSearchNodesPerCall: budget.maxPathSearchNodesPerCall,
+      pathHeuristicWeight: budget.pathHeuristicWeight,
       allowLayerChanges: true,
       traceClearance: RELAXED_DRC_OPTIONS.traceClearance!,
       viaClearance: RELAXED_DRC_OPTIONS.viaClearance!,
@@ -443,6 +460,10 @@ export const applyPipeline9BoundedRegionalRepairs = ({
       ]),
     )
     result.acceptedRegionCount++
+    // Moving neighboring copper can open a path in an already visited region.
+    // Revisit against the new geometry; strict DRC improvement and the shared
+    // work limits bound these retries.
+    if (budget.revisitChangedRegions) attemptedRegions.length = 0
     result.finalDrcIssueCount = currentErrors.length
     if (currentErrors.length === 0) {
       result.routes = currentRoutes

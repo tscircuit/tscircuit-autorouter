@@ -1,4 +1,5 @@
 import { Obstacle } from "lib/types"
+import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
 import { SharedEdge } from "./types"
 
 const EPSILON = 1e-6
@@ -10,11 +11,23 @@ const EPSILON = 1e-6
 export const shouldIgnoreSharedEdge = ({
   sharedEdge,
   obstacles,
+  z,
+  layerCount,
 }: {
   sharedEdge: SharedEdge
   obstacles: Obstacle[]
+  z?: number
+  layerCount?: number
 }): boolean => {
   for (const obstacle of obstacles) {
+    const obstacleZLayers =
+      obstacle.zLayers ??
+      (layerCount === undefined
+        ? undefined
+        : obstacle.layers.map((layer) => mapLayerNameToZ(layer, layerCount)))
+    if (z !== undefined && obstacleZLayers && !obstacleZLayers.includes(z)) {
+      continue
+    }
     const obsMinX = obstacle.center.x - obstacle.width / 2
     const obsMaxX = obstacle.center.x + obstacle.width / 2
     const obsMinY = obstacle.center.y - obstacle.height / 2

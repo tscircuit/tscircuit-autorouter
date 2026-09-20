@@ -155,7 +155,7 @@ export class PortfolioSingleIntraNodeSolver extends HyperParameterSupervisorSolv
     // while retaining room for interacting connections on crowded nodes.
     return Math.max(
       150_000,
-      10_000 * this.getNodeSegmentCount() ** 2,
+      1_000 * this.getNodeSegmentCount() ** 2,
       Math.round(
         states *
           (8 + 1.2 * Math.sqrt(this.getNodeSegmentCount())) *

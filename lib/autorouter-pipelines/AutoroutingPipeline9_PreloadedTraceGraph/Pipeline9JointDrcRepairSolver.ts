@@ -1673,6 +1673,10 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
           ...boundedRepairParams,
           routes: regionalB01RepairResult.routes,
           budget: {
+            maxPathSearchNodesPerCall:
+              regionalRepairBudget.maxPathSearchNodesPerCall,
+            pathHeuristicWeight: regionalRepairBudget.pathHeuristicWeight,
+            revisitChangedRegions: regionalRepairBudget.revisitChangedRegions,
             maxRegions:
               regionalRepairBudget.maxRegions -
               earlyBoundedRepair.attemptedRegionCount,

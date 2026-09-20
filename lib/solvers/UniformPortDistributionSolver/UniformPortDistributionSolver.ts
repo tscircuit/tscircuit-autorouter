@@ -2,7 +2,6 @@ import { BaseSolver } from "@tscircuit/solver-utils"
 import { GraphicsObject } from "graphics-debug"
 import { Obstacle } from "lib/types"
 import { NodeWithPortPoints } from "lib/types/high-density-types"
-import { getBoundsFromNodeWithPortPoints } from "lib/utils/getBoundsFromNodeWithPortPoints"
 import { InputNodeWithPortPoints } from "../PortPointPathingSolver/PortPointPathingSolver"
 import {
   Bounds,
@@ -23,6 +22,7 @@ export interface UniformPortDistributionSolverInput {
   nodeWithPortPoints: NodeWithPortPoints[]
   inputNodesWithPortPoints: InputNodeWithPortPoints[]
   obstacles: Obstacle[]
+  layerCount?: number
 }
 
 /**
@@ -49,10 +49,14 @@ export class UniformPortDistributionSolver extends BaseSolver {
   constructor(private input: UniformPortDistributionSolverInput) {
     super()
     for (const node of input.nodeWithPortPoints) {
-      this.mapOfNodeIdToBounds.set(
-        node.capacityMeshNodeId,
-        getBoundsFromNodeWithPortPoints(node),
-      )
+      // Off-edge duplicate ports must not expand the rectangles used to find
+      // adjacency, or the shared edge disappears before we can space them.
+      this.mapOfNodeIdToBounds.set(node.capacityMeshNodeId, {
+        minX: node.center.x - node.width / 2,
+        maxX: node.center.x + node.width / 2,
+        minY: node.center.y - node.height / 2,
+        maxY: node.center.y + node.height / 2,
+      })
     }
 
     const uniqueOwnerPairs = new Map<OwnerPairKey, OwnerPair>()
@@ -109,16 +113,16 @@ export class UniformPortDistributionSolver extends BaseSolver {
     const sharedEdge = this.mapOfOwnerPairToSharedEdge.get(ownerPairKey)
     if (!sharedEdge) return
 
-    if (
-      shouldIgnoreSharedEdge({ sharedEdge, obstacles: this.input.obstacles })
-    ) {
-      return
-    }
-
     const familyRaw = this.mapOfOwnerPairToPortPoints.get(ownerPairKey) ?? []
     const family: PortPointWithOwnerPair[] = []
     for (const portPoint of familyRaw) {
       if (
+        !shouldIgnoreSharedEdge({
+          sharedEdge,
+          obstacles: this.input.obstacles,
+          z: portPoint.z,
+          layerCount: this.input.layerCount,
+        }) &&
         !shouldIgnorePortPoint({
           portPoint,
           ownerNodeIds: portPoint.ownerNodeIds,
