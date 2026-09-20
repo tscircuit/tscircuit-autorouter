@@ -74,7 +74,7 @@ export const getPipeline9BoundedRepairBudget = (
     ...(congested
       ? {
           maxPathSearchNodesPerCall: 500_000,
-          pathHeuristicWeight: drcIssueCount > routeCount / 4 ? 4 : 2,
+          pathHeuristicWeight: drcIssueCount > routeCount / 4 ? 3 : 2,
           revisitChangedRegions: true,
         }
       : {}),
