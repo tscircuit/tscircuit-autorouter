@@ -91,6 +91,9 @@ test("large conflicted boards bound repair work while near-clean and higher-effo
     pathHeuristicWeight: 2,
     revisitChangedRegions: true,
   })
+  expect(getPipeline9BoundedRepairBudget(480, 121, 1).pathHeuristicWeight).toBe(
+    4,
+  )
   const conflicted = new Pipeline9JointDrcRepairSolver(makeParams(40, 1))
   expect(conflicted.stats.initialJointDrcIssueCount).toBeGreaterThanOrEqual(20)
   expect(conflicted.exactRepairSolver!.params.maxIterations).toBe(8)
