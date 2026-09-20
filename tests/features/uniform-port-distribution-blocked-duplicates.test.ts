@@ -22,8 +22,10 @@ test("blocked shared edges retain a common position for duplicate ports", (): vo
   }))
   const inputNodes: InputNodeWithPortPoints[] = nodes.map((node) => ({
     ...node,
+    availableZ: [0, 1],
     portPoints: node.portPoints.map((port) => ({
       ...port,
+      portPointId: port.portPointId!,
       connectionNodeIds: ["lower", "upper"],
       distToCentermostPortOnZ: 0,
     })),
