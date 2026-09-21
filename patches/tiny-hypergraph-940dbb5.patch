@@ -1,0 +1,35 @@
+diff --git a/lib/indexed-candidate-heap.ts b/lib/indexed-candidate-heap.ts
+--- a/lib/indexed-candidate-heap.ts
++++ b/lib/indexed-candidate-heap.ts
+@@ -123,10 +123,10 @@
+   }
+ 
+   private getQueuedHopIndex(hopId: number): number | undefined {
+-    if (
+-      hopId >= 0 &&
+-      this.hopStateGeneration?.[hopId] === this.currentHopStateGeneration
+-    ) {
++    if (hopId >= 0 && this.hopStateGeneration) {
++      if (this.hopStateGeneration[hopId] !== this.currentHopStateGeneration) {
++        return undefined
++      }
+       const index = this.hopIndexOrClosed![hopId]!
+       return index >= 0 ? index : undefined
+     }
+@@ -134,11 +134,11 @@
+   }
+ 
+   private isHopClosed(hopId: number): boolean {
+-    if (
+-      hopId >= 0 &&
+-      this.hopStateGeneration?.[hopId] === this.currentHopStateGeneration
+-    ) {
+-      return this.hopIndexOrClosed![hopId] === -1
++    if (hopId >= 0 && this.hopStateGeneration) {
++      return (
++        this.hopStateGeneration[hopId] === this.currentHopStateGeneration &&
++        this.hopIndexOrClosed![hopId] === -1
++      )
+     }
+     return this.closedHopIds.has(hopId)
+   }
