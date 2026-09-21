@@ -14,11 +14,12 @@ import { NodeWithPortPoints } from "lib/types/high-density-types"
 import { cloneAndShuffleArray } from "lib/utils/cloneAndShuffleArray"
 import { generateColorMapFromNodeWithPortPoints } from "lib/utils/generateColorMapFromNodeWithPortPoints"
 import { getBoundsFromNodeWithPortPoints } from "lib/utils/getBoundsFromNodeWithPortPoints"
-import { PortPairMap, getPortPairMap } from "lib/utils/getPortPairs"
+import { getNodePortPointPairs } from "lib/utils/getNodePortPointPairs"
 import { BaseSolver } from "../BaseSolver"
 import { safeTransparentize } from "../colors"
 
 export type ConnectionName = string
+type PortPair = ReturnType<typeof getNodePortPointPairs>[number]
 
 export interface Segment {
   start: Point3
@@ -53,7 +54,7 @@ export class ViaPossibilitiesSolver2 extends BaseSolver {
 
   bounds: Bounds
   maxViaCount: number
-  portPairMap: PortPairMap
+  portPairs: PortPair[]
   colorMap: Record<string, string>
   nodeWidth: number
   availableZ: number[]
@@ -63,13 +64,17 @@ export class ViaPossibilitiesSolver2 extends BaseSolver {
   NEW_HEAD_WALL_BUFFER_DISTANCE = 0.05
   viaDiameter: number
 
-  unprocessedConnections: ConnectionName[]
+  unprocessedConnections: PortPair[]
 
-  completedPaths: Map<ConnectionName, Point3[]> = new Map()
-  placeholderPaths: Map<ConnectionName, Point3[]> = new Map()
+  completedPaths: Map<PortPair, Point3[]> = new Map()
+  placeholderPaths: Map<PortPair, Point3[]> = new Map()
 
   currentHead: Point3
-  currentConnectionName: ConnectionName
+  currentPair: PortPair
+
+  get currentConnectionName(): ConnectionName {
+    return this.currentPair[0].connectionName
+  }
   currentPath: Point3[]
   currentViaCount: number
 
@@ -91,7 +96,7 @@ export class ViaPossibilitiesSolver2 extends BaseSolver {
     this.maxViaCount = 5
     this.bounds = getBoundsFromNodeWithPortPoints(nodeWithPortPoints)
     this.nodeWidth = this.bounds.maxX - this.bounds.minX
-    this.portPairMap = getPortPairMap(nodeWithPortPoints)
+    this.portPairs = getNodePortPointPairs(nodeWithPortPoints)
     this.stats.solutionsFound = 0
     this.availableZ = nodeWithPortPoints.availableZ ?? [0, 1]
     this.hyperParameters = hyperParameters ?? {
@@ -99,7 +104,11 @@ export class ViaPossibilitiesSolver2 extends BaseSolver {
     }
     this.viaDiameter = viaDiameter ?? 0.3
 
-    this.unprocessedConnections = Array.from(this.portPairMap.keys()).sort()
+    this.unprocessedConnections = [...this.portPairs].sort((a, b) => {
+      if (a[0].connectionName < b[0].connectionName) return -1
+      if (a[0].connectionName > b[0].connectionName) return 1
+      return 0
+    })
     if (hyperParameters?.SHUFFLE_SEED) {
       this.unprocessedConnections = cloneAndShuffleArray(
         this.unprocessedConnections,
@@ -108,13 +117,14 @@ export class ViaPossibilitiesSolver2 extends BaseSolver {
     }
 
     // Generate placeholder paths
-    for (const [connectionName, { start, end }] of this.portPairMap.entries()) {
+    for (const pair of this.portPairs) {
+      const [start, end] = pair
       if (start.z === end.z) {
         const isVertical = Math.abs(start.x - end.x) < 1e-9 // Use tolerance for float comparison
         const isHorizontal = Math.abs(start.y - end.y) < 1e-9
 
         if (isVertical || isHorizontal) {
-          this.placeholderPaths.set(connectionName, [
+          this.placeholderPaths.set(pair, [
             start,
             this._padByPlaceholderWallBuffer(start),
             this._padByPlaceholderWallBuffer(end),
@@ -122,7 +132,7 @@ export class ViaPossibilitiesSolver2 extends BaseSolver {
           ])
         } else {
           // Diagonal line on the same Z plane
-          this.placeholderPaths.set(connectionName, [start, end])
+          this.placeholderPaths.set(pair, [start, end])
         }
       } else {
         // Create a path with a Z change at the midpoint for different Z levels
@@ -140,7 +150,7 @@ export class ViaPossibilitiesSolver2 extends BaseSolver {
           y: midY,
           z: end.z,
         })
-        this.placeholderPaths.set(connectionName, [
+        this.placeholderPaths.set(pair, [
           start,
           this._padByPlaceholderWallBuffer(start),
           midStart,
@@ -151,12 +161,12 @@ export class ViaPossibilitiesSolver2 extends BaseSolver {
       }
     }
 
-    this.currentConnectionName = this.unprocessedConnections.pop()!
-    const start = this.portPairMap.get(this.currentConnectionName)!.start
+    this.currentPair = this.unprocessedConnections.pop()!
+    const [start] = this.currentPair
     this.currentHead = this._padByNewHeadWallBuffer(start)
     this.currentPath = [start, this.currentHead]
     this.currentViaCount = 0
-    this.placeholderPaths.delete(this.currentConnectionName) // Delete placeholder when we start processing
+    this.placeholderPaths.delete(this.currentPair) // Delete placeholder when we start processing
   }
 
   _padByNewHeadWallBuffer(point: Point3) {
@@ -194,16 +204,17 @@ export class ViaPossibilitiesSolver2 extends BaseSolver {
   _step() {
     if (this.solved) return
 
-    const targetEnd = this.portPairMap.get(this.currentConnectionName)!.end
+    const targetEnd = this.currentPair[1]
     const proposedSegment: [Point3, Point3] = [this.currentHead, targetEnd]
 
     let closestIntersection: any = null
     let intersectedSegmentZ: number | null = null
 
     const checkIntersectionsWithPathMap = (
-      pathMap: Map<ConnectionName, Point3[]>,
+      pathMap: Map<PortPair, Point3[]>,
     ) => {
-      for (const path of pathMap.values()) {
+      for (const [[start], path] of pathMap) {
+        if (start.connectionName === this.currentConnectionName) continue
         for (let i = 0; i < path.length - 1; i++) {
           const segment: [Point3, Point3] = [path[i], path[i + 1]]
           // Skip checking intersection if segment is just a via (z change)
@@ -326,7 +337,7 @@ export class ViaPossibilitiesSolver2 extends BaseSolver {
     } else {
       // --- No Intersection, Z Matches: Path Clear ---
       this.currentPath.push(targetEnd)
-      this.completedPaths.set(this.currentConnectionName, this.currentPath)
+      this.completedPaths.set(this.currentPair, this.currentPath)
 
       if (this.unprocessedConnections.length === 0) {
         // All connections processed
@@ -334,12 +345,12 @@ export class ViaPossibilitiesSolver2 extends BaseSolver {
         this.stats.solutionsFound = 1 // Mark as solved
       } else {
         // Start next connection
-        this.currentConnectionName = this.unprocessedConnections.pop()!
-        const { start } = this.portPairMap.get(this.currentConnectionName)!
+        this.currentPair = this.unprocessedConnections.pop()!
+        const [start] = this.currentPair
         this.currentHead = this._padByNewHeadWallBuffer(start)
         this.currentPath = [start, this.currentHead]
         this.currentViaCount = 0
-        this.placeholderPaths.delete(this.currentConnectionName) // Remove placeholder
+        this.placeholderPaths.delete(this.currentPair) // Remove placeholder
       }
     }
   }
@@ -370,8 +381,9 @@ export class ViaPossibilitiesSolver2 extends BaseSolver {
       strokeWidth: 0.01,
     })
 
-    // Draw Start/End points from portPairMap
-    for (const [connectionName, { start, end }] of this.portPairMap.entries()) {
+    // Draw start/end points for every requested pair.
+    for (const [start, end] of this.portPairs) {
+      const connectionName = start.connectionName
       const color = this.colorMap[connectionName] ?? "black"
       graphics.points!.push({
         x: start.x,
@@ -388,10 +400,11 @@ export class ViaPossibilitiesSolver2 extends BaseSolver {
     }
 
     const drawPath = (
-      pathMap: Map<ConnectionName, Point3[]>,
+      pathMap: Map<PortPair, Point3[]>,
       labelPrefix: string,
     ) => {
-      for (const [connectionName, path] of pathMap.entries()) {
+      for (const [[start], path] of pathMap.entries()) {
+        const connectionName = start.connectionName
         const color = colorMap[connectionName] ?? "black"
         for (let i = 0; i < path.length - 1; i++) {
           const p1 = path[i]

@@ -53,7 +53,6 @@ export class MultiHeadPolyLineIntraNodeSolver3 extends MultiHeadPolyLineIntraNod
     viaSolver.solve()
 
     if (viaSolver.failed || !viaSolver.solved) {
-      this.failed = true
       this.error = `ViaPossibilitiesSolver2 failed with: ${viaSolver.error}`
       return null
     }
@@ -62,10 +61,8 @@ export class MultiHeadPolyLineIntraNodeSolver3 extends MultiHeadPolyLineIntraNod
     const polyLines: PolyLine[] = []
     let totalViaCount = 0
 
-    for (const [
-      connectionName,
-      pathPoints,
-    ] of viaSolver.completedPaths.entries()) {
+    for (const [[startPort], pathPoints] of viaSolver.completedPaths) {
+      const connectionName = startPort.connectionName
       if (pathPoints.length < 2) {
         console.warn(
           `Skipping connection "${connectionName}" due to insufficient points (${pathPoints.length}) in ViaPossibilitiesSolver2 path.`,
@@ -203,7 +200,6 @@ export class MultiHeadPolyLineIntraNodeSolver3 extends MultiHeadPolyLineIntraNod
     }
 
     if (polyLines.length === 0) {
-      this.failed = true
       this.error = "No valid polylines generated from ViaPossibilitiesSolver2."
       console.error(this.error)
       return null
@@ -242,5 +238,10 @@ export class MultiHeadPolyLineIntraNodeSolver3 extends MultiHeadPolyLineIntraNod
       this.candidates.push(newCandidate)
     }
     this.candidates.sort((a, b) => a.f - b.f) // Sort in case we add more initial candidates later
+    if (this.candidates.length === 0) {
+      this.failed = true
+    } else {
+      this.error = null
+    }
   }
 }
