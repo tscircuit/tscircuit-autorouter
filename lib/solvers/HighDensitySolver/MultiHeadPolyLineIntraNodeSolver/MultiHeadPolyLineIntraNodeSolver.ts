@@ -121,12 +121,16 @@ export class MultiHeadPolyLineIntraNodeSolver extends BaseSolver {
     )
 
     // This solver stores one start/end pair per connection name.
-    const portCounts = new Map<HighDensityIntraNodeRoute["connectionName"], number>()
+    const portCounts = new Map<
+      HighDensityIntraNodeRoute["connectionName"],
+      number
+    >()
     for (const port of this.nodeWithPortPoints.portPoints) {
       const count = (portCounts.get(port.connectionName) ?? 0) + 1
       if (count > 2) {
         this.failed = true
-        this.error = "Polyline solver does not support more than two port points per connection"
+        this.error =
+          "Polyline solver does not support more than two port points per connection"
         return
       }
       portCounts.set(port.connectionName, count)
