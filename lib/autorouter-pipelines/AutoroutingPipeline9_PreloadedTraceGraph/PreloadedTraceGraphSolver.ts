@@ -144,6 +144,7 @@ const getClosestPortPoint = (
   segment: SharedEdgeSegment,
   primitive: PreloadedTracePrimitive,
   z: number,
+  preferredPorts?: ReadonlySet<SegmentPortPoint>,
 ): SegmentPortPoint | undefined =>
   segment.portPoints
     .filter(
@@ -165,6 +166,8 @@ const getClosestPortPoint = (
     }))
     .sort(
       (left, right) =>
+        Number(preferredPorts?.has(right.portPoint) ?? false) -
+          Number(preferredPorts?.has(left.portPoint) ?? false) ||
         left.distance - right.distance ||
         left.portPoint.distToCentermostPortOnZ -
           right.portPoint.distToCentermostPortOnZ ||
@@ -245,6 +248,7 @@ export class PreloadedTraceGraphSolver extends BaseSolver {
   constructor(
     private readonly sharedEdgeSegments: SharedEdgeSegment[],
     private readonly srj: SimpleRouteJson,
+    private readonly preferredPorts?: ReadonlySet<SegmentPortPoint>,
   ) {
     super()
     this.MAX_ITERATIONS = 1
@@ -271,7 +275,12 @@ export class PreloadedTraceGraphSolver extends BaseSolver {
 
         for (const z of primitive.zLayers) {
           if (!segment.availableZ.includes(z)) continue
-          const portPoint = getClosestPortPoint(segment, primitive, z)
+          const portPoint = getClosestPortPoint(
+            segment,
+            primitive,
+            z,
+            this.preferredPorts,
+          )
           if (portPoint) preloadPort(portPoint, primitive, z)
         }
       }

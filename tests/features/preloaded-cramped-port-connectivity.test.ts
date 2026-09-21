@@ -36,6 +36,8 @@ test("cramped-port pruning preserves the preloaded trace corridor", (): void => 
     { capacityMeshNodeId: "middle", x: 0, y: 0 },
     { capacityMeshNodeId: "right", x: 2, y: 0 },
     { capacityMeshNodeId: "unused", x: 0, y: 2 },
+    { capacityMeshNodeId: "anchor-left", x: -4, y: 0 },
+    { capacityMeshNodeId: "anchor-right", x: 4, y: 0 },
   ].map(({ capacityMeshNodeId, x, y }) => ({
     capacityMeshNodeId,
     center: { x, y },
@@ -44,7 +46,28 @@ test("cramped-port pruning preserves the preloaded trace corridor", (): void => 
     availableZ: [0],
     layer: "top",
   }))
+  const leftAnchor = createCrampedBoundary(
+    "left-anchor",
+    ["anchor-left", "left"],
+    { x: -3, y: -1 },
+    { x: -3, y: 1 },
+    [
+      { x: -3, y: 0 },
+      { x: -3, y: 0.5 },
+    ],
+  )
+  leftAnchor.portPoints[1]!.cramped = false
+  const rightAnchor = createCrampedBoundary(
+    "right-anchor",
+    ["right", "anchor-right"],
+    { x: 3, y: -1 },
+    { x: 3, y: 1 },
+    [{ x: 3, y: 0 }],
+  )
+  rightAnchor.portPoints[0]!.cramped = false
   const sharedEdgeSegments = [
+    leftAnchor,
+    rightAnchor,
     createCrampedBoundary(
       "left-middle",
       ["left", "middle"],
@@ -76,7 +99,7 @@ test("cramped-port pruning preserves the preloaded trace corridor", (): void => 
   const simpleRouteJson: SimpleRouteJson = {
     layerCount: 1,
     minTraceWidth: 0.1,
-    bounds: { minX: -3, minY: -1, maxX: 3, maxY: 3 },
+    bounds: { minX: -5, minY: -1, maxX: 5, maxY: 3 },
     obstacles: [],
     connections: [],
     traces: [
@@ -85,23 +108,24 @@ test("cramped-port pruning preserves the preloaded trace corridor", (): void => 
         pcb_trace_id: "existing-trace",
         connection_name: "existing-net",
         route: [
-          { route_type: "wire", x: -2, y: 0, width: 0.1, layer: "top" },
-          { route_type: "wire", x: 2, y: 0, width: 0.1, layer: "top" },
+          { route_type: "wire", x: -4, y: 0, width: 0.1, layer: "top" },
+          { route_type: "wire", x: 4, y: 0, width: 0.1, layer: "top" },
         ],
       },
     ],
   }
-  const preloadedSolver = new PreloadedTraceGraphSolver(
-    sharedEdgeSegments,
-    simpleRouteJson,
-  )
-  preloadedSolver.solve()
   const crampedSolver = new MultiTargetNecessaryCrampedPortPointSolver({
-    sharedEdgeSegments: preloadedSolver.getOutput(),
+    sharedEdgeSegments,
     capacityMeshNodes,
     simpleRouteJson,
   })
   crampedSolver.solve()
+  const preloadedSolver = new PreloadedTraceGraphSolver(
+    sharedEdgeSegments,
+    simpleRouteJson,
+    crampedSolver.getNormallyKeptPortPoints(),
+  )
+  preloadedSolver.solve()
 
   expect(crampedSolver.solved).toBeTrue()
   expect(crampedSolver.failed).toBeFalse()
@@ -109,11 +133,15 @@ test("cramped-port pruning preserves the preloaded trace corridor", (): void => 
     .getOutput()
     .flatMap((segment) => segment.portPoints)
   expect(ports.map((port) => port.segmentPortPointId)).toEqual([
+    "left-anchor-1",
+    "right-anchor-0",
     "left-middle-0",
     "middle-right-0",
   ])
   expect(
-    ports.every((port) => port.tinyHypergraphPortPenalty === 1000),
+    ports
+      .filter((port) => port.cramped)
+      .every((port) => port.tinyHypergraphPortPenalty === 1000),
   ).toBeTrue()
 
   const reachableNodes = new Set(["left"])
@@ -129,5 +157,7 @@ test("cramped-port pruning preserves the preloaded trace corridor", (): void => 
       }
     }
   }
-  expect(reachableNodes).toEqual(new Set(["left", "middle", "right"]))
+  expect(reachableNodes).toEqual(
+    new Set(["left", "middle", "right", "anchor-left", "anchor-right"]),
+  )
 })

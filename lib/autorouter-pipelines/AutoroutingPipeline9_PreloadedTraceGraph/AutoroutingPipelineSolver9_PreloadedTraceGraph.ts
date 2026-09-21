@@ -454,16 +454,6 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
         },
       ],
     ),
-    // Mark existing copper crossings before pruning narrow boundary ports.
-    // Those ports must remain available if a preloaded section is rerouted.
-    definePipelineStep(
-      "preloadedTraceGraphSolver",
-      PreloadedTraceGraphSolver,
-      (cms) => [
-        cms.availableSegmentPointSolver!.getOutput(),
-        cms.srjWithPointPairs!,
-      ],
-    ),
     definePipelineStep(
       "necessaryCrampedPortPointSolver",
       MultiTargetNecessaryCrampedPortPointSolver,
@@ -489,12 +479,23 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           },
         ]
       },
+    ),
+    definePipelineStep(
+      "preloadedTraceGraphSolver",
+      PreloadedTraceGraphSolver,
+      (cms) => [
+        cms.availableSegmentPointSolver!.getOutput(),
+        cms.srjWithPointPairs!,
+        cms.necessaryCrampedPortPointSolver!.getNormallyKeptPortPoints(),
+      ],
       {
         onSolved: (cms) => {
           const componentCapacityMeshNodeIds = getComponentCapacityMeshNodeIds(
             cms.capacityNodes,
           )
 
+          // Finalize pruning after annotating copper, preferring the ports that
+          // were already kept and restoring only necessary preloaded paths.
           cms.sharedEdgeSegmentsWithNecessaryCrampedPortPoints =
             mergeComponentSharedEdgeSegments({
               originalSharedEdgeSegments:

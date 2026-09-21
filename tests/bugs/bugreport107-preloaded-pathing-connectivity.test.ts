@@ -16,7 +16,7 @@ const simpleRouteJson: SimpleRouteJson = JSON.parse(
   ).toString("utf8"),
 )
 
-test("bugreport107 preserves its preloaded endpoint escape", (): void => {
+test("bugreport107 preserves its preloaded endpoint escape and completes pathing", (): void => {
   const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(
     structuredClone(simpleRouteJson),
   )
@@ -77,4 +77,15 @@ test("bugreport107 preserves its preloaded endpoint escape", (): void => {
     }
   }
   expect(reachableNodes.has(endpointNode)).toBeTrue()
+
+  while (
+    !solver.solved &&
+    !solver.failed &&
+    solver.getCurrentPhase() !== "uniformPortDistributionSolver"
+  ) {
+    solver.step()
+  }
+  expect(solver.failed).toBeFalse()
+  expect(solver.portPointPathingSolver?.solved).toBeTrue()
+  expect(solver.getCurrentPhase()).toBe("uniformPortDistributionSolver")
 })
