@@ -1,6 +1,7 @@
 import { expect, test } from "bun:test"
 import { convertCircuitJsonToPcbSvg } from "circuit-to-svg"
 import { AutoroutingPipelineSolver7_MultiGraph } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/AutoroutingPipelineSolver7_MultiGraph"
+import { areNodePortPointPairsConnectedByRoutes } from "lib/solvers/HyperHighDensitySolver/repairDisconnectedSameRootPortPoints"
 import {
   convertToCircuitJson,
   createPcbBoardElement,
@@ -8,7 +9,7 @@ import {
 import type { SimpleRouteJson } from "lib/types"
 import board from "../fixtures/stm32-full-board-disconnected.json"
 
-test("STM32 full board reproduces disconnected LED_GREEN fragments", async (): Promise<void> => {
+test("STM32 full board routes LED_GREEN without disconnected fragments", async (): Promise<void> => {
   // Full 80 x 60 mm board, reconstructed from its saved routing result.
   // Output traces were removed; the original run had no preloaded traces.
   const input: SimpleRouteJson = structuredClone(board)
@@ -25,18 +26,27 @@ test("STM32 full board reproduces disconnected LED_GREEN fragments", async (): P
   const ledGreenTraces = traces.filter(
     (trace) => trace.connection_name === "source_net_2",
   )
-  // The pin-to-pin path exists, but two additional copper islands remain.
-  expect(ledGreenTraces).toHaveLength(3)
-  expect(ledGreenTraces.map((trace) => trace.route[0])).toMatchObject([
-    { x: -7.817, y: 2.5, layer: "bottom" },
-    { x: 1.25, y: -4.15, layer: "top" },
-    { x: -11.056, y: 2.5, layer: "top" },
-  ])
-  expect(ledGreenTraces[1]!.route.at(-1)).toMatchObject({
+  expect(ledGreenTraces).toHaveLength(1)
+  expect(ledGreenTraces[0]!.route[0]).toMatchObject({
+    x: 1.25,
+    y: -4.15,
+    layer: "top",
+  })
+  expect(ledGreenTraces[0]!.route.at(-1)).toMatchObject({
     x: -16.825,
     y: 11,
     layer: "top",
   })
+
+  const revisitedNode = solver.highDensityNodePortPoints!.find(
+    (node) => node.capacityMeshNodeId === "cmn_39",
+  )!
+  expect(
+    areNodePortPointPairsConnectedByRoutes(
+      solver.highDensityRouteSolver!.routes,
+      revisitedNode,
+    ),
+  ).toBeTrue()
 
   const circuitJson = [
     createPcbBoardElement(solver.originalSrj),
