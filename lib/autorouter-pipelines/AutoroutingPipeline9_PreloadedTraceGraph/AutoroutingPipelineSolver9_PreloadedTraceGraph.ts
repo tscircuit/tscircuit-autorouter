@@ -573,6 +573,8 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           minTraceWidth: cms.minTraceWidth,
           obstacles: cms.srj.obstacles,
           layerCount: cms.srj.layerCount,
+          useLayerAwareGeometry: cms.srj.layerCount > 2,
+          preserveSolitaryPorts: Boolean(cms.srj.traces?.length),
         },
       ],
     ),

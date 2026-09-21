@@ -1485,11 +1485,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
     this.stats = {
       duplicateCongestedPortSourceCount:
         this.duplicateCongestedPortReport?.duplicatedPorts.length ?? 0,
-      duplicateCongestedPortCount:
-        this.duplicateCongestedPortReport?.duplicatedPorts.reduce(
-          (sum, duplicatedPort) => sum + duplicatedPort.duplicatePortIds.length,
-          0,
-        ) ?? 0,
+      duplicateCongestedPortCount: this.duplicatedPortCount,
       duplicateCongestedPortFallbackToOriginal: Boolean(
         this.duplicateCongestedPortError,
       ),

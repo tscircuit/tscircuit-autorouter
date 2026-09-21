@@ -23,6 +23,7 @@ import type {
 } from "lib/types"
 import type { HighDensityRoute } from "lib/types/high-density-types"
 import { convertHdRouteToSimplifiedRoute } from "lib/utils/convertHdRouteToSimplifiedRoute"
+import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
 import { mapZToLayerName } from "lib/utils/mapZToLayerName"
 import { createPipeline7HdRoutesToSimplifiedPcbTracesConverter } from "../AutoroutingPipeline7_MultiGraph/convertPipeline7HdRoutesToSimplifiedPcbTraces"
 import {
@@ -31,7 +32,7 @@ import {
 } from "./applyPipeline9ClearancePrecisionRepairs"
 import {
   applyPipeline9BoundedRegionalRepairs,
-  PIPELINE9_BOUNDED_REPAIR_BUDGET,
+  getPipeline9BoundedRepairBudget,
 } from "./applyPipeline9BoundedRegionalRepairs"
 import { applyPipeline9RegionalB01Repairs } from "./applyPipeline9RegionalB01Repairs"
 import { applyPipeline9TerminalEscapeRelocations } from "./applyPipeline9TerminalEscapeRelocations"
@@ -955,6 +956,28 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         ]!.hdRoute = mergedRoutes[groupIndex]!
       }
     }
+    const repairRouteCount =
+      params.newHdRoutes.length + this.movablePreloadedSections.length
+    // Full-board evaluation cost grows with route count. Preserve the full
+    // budget near convergence; bound work on large, heavily conflicted boards.
+    const repairBudgetScale =
+      currentDrc.errors.length >= 20 && repairRouteCount > 120
+        ? Math.min(1, (120 * Math.max(1, params.effort)) / repairRouteCount)
+        : 1
+    // Hundreds of unresolved conflicts trigger repeated nearby-copper pair
+    // checks. Reserve longer cleanup for boards closer to convergence.
+    const pairwiseRepairBudgetScale =
+      currentDrc.errors.length >= 200
+        ? repairBudgetScale ** 2
+        : repairBudgetScale
+    const maxRepairIterations = Math.max(
+      currentDrc.errors.length >= 200 ? 2 : 8,
+      Math.floor(EXACT_REPAIR_MAX_ITERATIONS * pairwiseRepairBudgetScale),
+    )
+    const maxBroadRepairIterations = Math.max(
+      currentDrc.errors.length >= 200 ? 1 : 4,
+      Math.floor(EXACT_REPAIR_BROAD_MAX_ITERATIONS * pairwiseRepairBudgetScale),
+    )
     this.stats = {
       initialJointDrcIssueCount: currentDrc.errors.length,
       baselineJointDrcIssueCount: baselineDrc.errors.length,
@@ -967,10 +990,9 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       }, {}),
       movablePreloadedTraceCount: movablePreloadedTraceIds.size,
       movablePreloadedSectionCount: this.movablePreloadedSections.length,
-      exactRepairConfiguredMaxIterations: EXACT_REPAIR_MAX_ITERATIONS,
-      exactRepairConfiguredViaInPadMaxIterations: EXACT_REPAIR_MAX_ITERATIONS,
-      exactRepairConfiguredBroadMaxIterations:
-        EXACT_REPAIR_BROAD_MAX_ITERATIONS,
+      exactRepairConfiguredMaxIterations: maxRepairIterations,
+      exactRepairConfiguredViaInPadMaxIterations: maxRepairIterations,
+      exactRepairConfiguredBroadMaxIterations: maxBroadRepairIterations,
     }
 
     if (currentDrc.errors.length === 0) {
@@ -1179,6 +1201,21 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       }
     }
 
+    // Candidate repairs change route geometry, not the declared connectivity.
+    const connectivityMaps = {
+      source: getConnectivityMapFromSimpleRouteJson(
+        params.originalSrj === params.srjWithPointPairs
+          ? params.originalSrj
+          : {
+              ...params.originalSrj,
+              connections: [
+                ...params.srjWithPointPairs.connections,
+                ...params.originalSrj.connections,
+              ],
+            },
+      ),
+      route: getConnectivityMapFromSimpleRouteJson(params.srjWithPointPairs),
+    }
     const referenceDrcEvaluator = (
       { routes, hdRoutes }: Parameters<DrcEvaluator>[0],
       includeTraceContinuity = true,
@@ -1190,6 +1227,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       const candidateDrcInput = prepareCandidateDrcInput(evaluatedRoutes)
       const evaluatedDrc = evaluateRelaxedDrc({
         includeBoardClearance: true,
+        connectivityMaps,
         inputSrj: params.originalSrj,
         srjWithPointPairs: params.srjWithPointPairs,
         routedTraces: candidateDrcInput.routedTraces,
@@ -1273,6 +1311,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
           minViaDiameter: params.originalSrj.minViaDiameter,
           originalSrj: params.originalSrj,
           includeOriginalConnections: true,
+          connectivityMaps,
         },
       )
     }
@@ -1416,7 +1455,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       viaHoleDiameter: params.defaultViaHoleDiameter,
       drcEvaluator,
       viaInPadDrcEvaluator: drcEvaluator,
-      maxIterations: EXACT_REPAIR_MAX_ITERATIONS,
+      maxIterations: maxRepairIterations,
       enableBroadFallback: false,
       enableLargeBoardBroadFallback: false,
       enableTargetedErrorSweep: true,
@@ -1424,9 +1463,9 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       enablePostSolveClearanceRelaxation: false,
       enableSafeTraceLayerMoves: true,
       enableViaInPadLayerMoves: params.originalSrj.allowViaInPad ?? false,
-      viaInPadMaxIterations: EXACT_REPAIR_MAX_ITERATIONS,
-      broadMaxIterations: EXACT_REPAIR_BROAD_MAX_ITERATIONS,
-      broadPassMultiplier: 3,
+      viaInPadMaxIterations: maxRepairIterations,
+      broadMaxIterations: maxBroadRepairIterations,
+      broadPassMultiplier: 3 * pairwiseRepairBudgetScale,
     })
     this.activeSubSolver = this.exactRepairSolver
     this.MAX_ITERATIONS = this.exactRepairSolver.MAX_ITERATIONS + 1
@@ -1554,6 +1593,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
       newConnections: this.params.newConnections,
       syntheticConnectionNames: this.syntheticConnectionNames,
       drcEvaluator: this.drcEvaluator!,
+      effort: this.params.effort,
     })
     const preloadRepairTraceIds = getPipeline9PreloadRepairTraceIds({
       routes: terminalEscapeResult.routes,
@@ -1567,6 +1607,7 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
     // have already reduced the congestion.
     const boundedRegionalRepairStartedAt = performance.now()
     const boundedRepairParams = {
+      connMap: this.params.connMap,
       originalSrj: {
         ...this.params.originalSrj,
         connections: [
@@ -1621,6 +1662,19 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
         0.15,
       effort: this.params.effort,
     })
+    const regionalReference = this.cachedReferenceDrcEvaluator!({
+      traces: [],
+      routes: regionalB01RepairResult.routes,
+      hdRoutes: regionalB01RepairResult.routes,
+    })
+    const regionalRepairBudget = getPipeline9BoundedRepairBudget(
+      regionalB01RepairResult.routes.length,
+      (Array.isArray(regionalReference)
+        ? regionalReference
+        : regionalReference.errors
+      ).length,
+      this.params.effort,
+    )
     const lateBoundedRepairStartedAt = performance.now()
     const boundedRegionalRepairResult = earlyBoundedRepairClean
       ? earlyBoundedRepair
@@ -1628,14 +1682,21 @@ export class Pipeline9JointDrcRepairSolver extends BaseSolver {
           ...boundedRepairParams,
           routes: regionalB01RepairResult.routes,
           budget: {
+            maxPathSearchNodesPerCall:
+              regionalRepairBudget.maxPathSearchNodesPerCall,
+            pathHeuristicWeight: regionalRepairBudget.pathHeuristicWeight,
+            pathGridSizeScale: regionalRepairBudget.pathGridSizeScale,
+            maxCandidateAttemptsPerRegion:
+              regionalRepairBudget.maxCandidateAttemptsPerRegion,
+            revisitChangedRegions: regionalRepairBudget.revisitChangedRegions,
             maxRegions:
-              PIPELINE9_BOUNDED_REPAIR_BUDGET.maxRegions -
+              regionalRepairBudget.maxRegions -
               earlyBoundedRepair.attemptedRegionCount,
             maxCandidateAttempts:
-              PIPELINE9_BOUNDED_REPAIR_BUDGET.maxCandidateAttempts -
+              regionalRepairBudget.maxCandidateAttempts -
               earlyBoundedRepair.candidateAttemptCount,
             maxPathSearchNodes:
-              PIPELINE9_BOUNDED_REPAIR_BUDGET.maxPathSearchNodes -
+              regionalRepairBudget.maxPathSearchNodes -
               earlyBoundedRepair.pathSearchNodeCount,
           },
         })

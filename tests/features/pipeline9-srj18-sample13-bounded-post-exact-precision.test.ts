@@ -29,13 +29,13 @@ test("Pipeline9 routes SRJ18 sample 13 within its regional work budget", async (
   ).toBeLessThanOrEqual(24)
   expect(
     Number(repairStats?.boundedRegionalRepairAttemptedRegionCount),
-  ).toBeLessThanOrEqual(4)
+  ).toBeLessThanOrEqual(8)
   expect(
     Number(repairStats?.boundedRegionalRepairCandidateAttemptCount),
   ).toBeLessThanOrEqual(1_024)
   expect(
     Number(repairStats?.boundedRegionalRepairPathSearchNodeCount),
-  ).toBeLessThanOrEqual(480_000)
+  ).toBeLessThanOrEqual(10_000_000)
   const { errors } = evaluateRelaxedDrc({
     inputSrj: scenario,
     srjWithPointPairs: solver.srjWithPointPairs!,

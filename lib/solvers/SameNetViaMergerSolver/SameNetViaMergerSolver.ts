@@ -257,6 +257,7 @@ export class SameNetViaMergerSolver extends BaseSolver {
     this.MAX_ITERATIONS = 1e6
     this.inputHdRoutes = this.input.inputHdRoutes
     this.mergedViaHdRoutes = structuredClone(this.inputHdRoutes)
+    for (const route of this.mergedViaHdRoutes) this.dedupeRouteVias(route)
     this.unprocessedRoutes = [...this.input.inputHdRoutes]
     this.colorMap = this.input.colorMap
     this.outline = this.input.outline

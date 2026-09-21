@@ -3,7 +3,7 @@ import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-p
 import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import { loadScenarioBySampleNumber } from "../../scripts/benchmark/scenarios"
 
-test("Pipeline9 routes SRJ18 sample 16 and reports remaining DRC violations", async (): Promise<void> => {
+test("Pipeline9 routes SRJ18 sample 16 without full-stack via DRC violations", async (): Promise<void> => {
   const { scenario } = await loadScenarioBySampleNumber("srj18", 16)
   const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(
     structuredClone(scenario),
@@ -18,6 +18,5 @@ test("Pipeline9 routes SRJ18 sample 16 and reports remaining DRC violations", as
     srjWithPointPairs: solver.srjWithPointPairs!,
     routedTraces: solver.getOutputSimplifiedPcbTraces(),
   })
-  // Full-stack via DRC exposes two remaining violations in this route.
-  expect(errors).toHaveLength(2)
+  expect(errors).toHaveLength(0)
 })

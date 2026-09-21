@@ -378,6 +378,7 @@ function createSourceTraces(
   srj: SimpleRouteJson,
   hdRoutes: SimplifiedPcbTrace[] | HighDensityRoute[],
   sourceSrj = srj,
+  sourceConnectivityMap?: ConnectivityMap,
 ): AnyCircuitElement[] {
   const sourceTraces: AnyCircuitElement[] = []
   const connections =
@@ -388,9 +389,10 @@ function createSourceTraces(
   const circuitJsonSourceTraceIdResolver =
     createCircuitJsonSourceTraceIdResolver(
       connections,
-      getConnectivityMapFromSimpleRouteJson(
-        sourceSrj === srj ? srj : { ...sourceSrj, connections },
-      ),
+      sourceConnectivityMap ??
+        getConnectivityMapFromSimpleRouteJson(
+          sourceSrj === srj ? srj : { ...sourceSrj, connections },
+        ),
     )
   const declaredPcbPortIds = getSrjDeclaredPcbPortIds({
     connections,
@@ -914,12 +916,19 @@ function extractViasFromRoutes(
  * @param srjWithPointPairs The SimpleRouteJson created by the NetToPointPairsSolver
  * @param routes The SimplifiedPcbTraces or HighDensityRoutes to convert
  */
+export type CircuitJsonConnectivityMaps = {
+  source: ConnectivityMap
+  route: ConnectivityMap
+}
+
 export type ConvertToCircuitJsonOptions = {
   minTraceWidth?: number
   minViaDiameter?: number
   minViaHoleDiameter?: number
   originalSrj?: SimpleRouteJson
   includeOriginalConnections?: boolean
+  /** Reuse only while the source and point-pair SRJ connectivity is unchanged. */
+  connectivityMaps?: CircuitJsonConnectivityMaps
 }
 
 export function createPcbBoardElement(srj: SimpleRouteJson): PcbBoard {
@@ -978,6 +987,7 @@ export function convertToCircuitJson(
       includeOriginalConnections && originalSrj
         ? originalSrj
         : srjWithPointPairs,
+      options.connectivityMaps?.source,
     ),
   )
 
@@ -1007,7 +1017,8 @@ export function convertToCircuitJson(
   const routeCircuitJsonSourceTraceIdResolver =
     createCircuitJsonSourceTraceIdResolver(
       srjWithPointPairs.connections,
-      getConnectivityMapFromSimpleRouteJson(srjWithPointPairs),
+      options.connectivityMaps?.route ??
+        getConnectivityMapFromSimpleRouteJson(srjWithPointPairs),
     )
 
   // Process routes based on their type

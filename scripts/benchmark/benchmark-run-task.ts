@@ -296,8 +296,15 @@ const getProgressInfo = (
   }
 }
 
-const getProgressKey = (progress: WorkerProgress) =>
-  [progress.phaseName ?? "", progress.phaseSolverName ?? ""].join("|")
+const getProgressKey = (solver: SolverInstance): string => {
+  const pipelineStep = solver.pipelineDef[solver.currentPipelineStepIndex]
+  const phaseName = pipelineStep?.solverName ?? ""
+  const phaseSolverName =
+    pipelineStep?.solverClass?.name ??
+    getSolverInstanceName(solver.activeSubSolver) ??
+    ""
+  return `${phaseName}|${phaseSolverName}`
+}
 
 const getRoutingBenchmarkMetrics = (
   solver: SolverInstance,
@@ -357,12 +364,12 @@ const getNetworkedBenchmarkValidationError = (
   return undefined
 }
 
-const solveWithProgress = async (
+export const solveWithProgress = async (
   task: BenchmarkTask,
   solver: SolverInstance,
   start: number,
   options: RunTaskOptions,
-) => {
+): Promise<void> => {
   const progressIntervalMs =
     options.progressIntervalMs ?? DEFAULT_PROGRESS_INTERVAL_MS
   let lastProgressAt = -Infinity
@@ -374,8 +381,7 @@ const solveWithProgress = async (
     }
 
     const elapsedTimeMs = performance.now() - start
-    const progress = getProgressInfo(task, solver, elapsedTimeMs)
-    const progressKey = getProgressKey(progress)
+    const progressKey = getProgressKey(solver)
     if (
       !force &&
       progressKey === lastProgressKey &&
@@ -386,7 +392,9 @@ const solveWithProgress = async (
 
     lastProgressAt = elapsedTimeMs
     lastProgressKey = progressKey
-    options.onProgress(progress)
+    // Building stage timings walks the completed pipeline and allocates a
+    // report. Do that only for emitted updates, not every routing iteration.
+    options.onProgress(getProgressInfo(task, solver, elapsedTimeMs))
   }
 
   emitProgress(true)
