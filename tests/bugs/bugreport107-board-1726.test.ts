@@ -7,7 +7,7 @@ import bugReport from "../../fixtures/bug-reports/bugreport107-board-1726/bugrep
 
 const srj = bugReport.simple_route_json as SimpleRouteJson
 
-test.skip("bugreport107-board-1726.json with Pipeline 9", (): void => {
+test("bugreport107-board-1726.json with Pipeline 9", (): void => {
   const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(
     structuredClone(srj),
   )
