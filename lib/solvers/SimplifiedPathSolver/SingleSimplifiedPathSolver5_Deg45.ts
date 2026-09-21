@@ -147,33 +147,17 @@ export class SingleSimplifiedPathSolver5 extends SingleSimplifiedPathSolver {
       height: bounds.maxY - bounds.minY,
     }
 
-    this.filteredObstacles = this.obstacles
-      .filter(
-        (obstacle) =>
-          !obstacle.connectedTo.some((id) =>
-            this.connMap.areIdsConnected(this.inputRoute.connectionName, id),
-          ),
-      )
-      .filter((obstacle) => {
-        if (
-          obstacle.connectedTo.some((obsId) =>
-            this.connMap.areIdsConnected(this.inputRoute.connectionName, obsId),
-          )
-        ) {
-          return false
-        }
-
-        const distance = computeGapBetweenBoxes(boundsBox, obstacle)
-
-        if (
-          distance <
-          this.OBSTACLE_MARGIN + this.clearanceTraceThickness / 2
-        ) {
-          return true
-        }
-
+    this.filteredObstacles = this.obstacles.filter((obstacle) => {
+      const distance = computeGapBetweenBoxes(boundsBox, obstacle)
+      if (
+        !(distance < this.OBSTACLE_MARGIN + this.clearanceTraceThickness / 2)
+      ) {
         return false
-      })
+      }
+      return !obstacle.connectedTo.some((id) =>
+        this.connMap.areIdsConnected(this.inputRoute.connectionName, id),
+      )
+    })
 
     this.filteredObstaclePathSegments = this.otherHdRoutes.flatMap(
       (hdRoute) => {
@@ -187,6 +171,15 @@ export class SingleSimplifiedPathSolver5 extends SingleSimplifiedPathSolver {
           const start = route[i]
           const end = route[i + 1]
 
+          // Reject distant bounds before computing the exact segment distance.
+          if (
+            Math.max(start.x, end.x) < bounds.minX - routeSegmentMargin ||
+            Math.min(start.x, end.x) > bounds.maxX + routeSegmentMargin ||
+            Math.max(start.y, end.y) < bounds.minY - routeSegmentMargin ||
+            Math.min(start.y, end.y) > bounds.maxY + routeSegmentMargin
+          ) {
+            continue
+          }
           if (
             segmentToBoundsMinDistance(start, end, bounds) <= routeSegmentMargin
           ) {
