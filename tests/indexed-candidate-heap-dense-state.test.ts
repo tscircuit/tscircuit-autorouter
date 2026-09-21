@@ -1,9 +1,15 @@
 import { expect, test } from "bun:test"
 import type { Candidate } from "tiny-hypergraph/lib/core"
-import { IndexedCandidateHeap, type CompactCandidateHopIndex } from "tiny-hypergraph/lib/indexed-candidate-heap"
+import {
+  IndexedCandidateHeap,
+  type CompactCandidateHopIndex,
+} from "tiny-hypergraph/lib/indexed-candidate-heap"
 
 type GenerationAccess = { currentHopStateGeneration: number }
-type QueueOperation = { type: "queue"; candidate: Candidate } | { type: "dequeue" } | { type: "clear"; wrap?: boolean }
+type QueueOperation =
+  | { type: "queue"; candidate: Candidate }
+  | { type: "dequeue" }
+  | { type: "clear"; wrap?: boolean }
 
 const candidate = (
   portId: number,
@@ -18,7 +24,12 @@ test("dense hop state preserves map-mode behavior across improvements, closed ho
     hopSlotStride: 3,
     firstRegionByPortId: Int32Array.from([0, 1, 2, 3]),
     secondRegionByPortId: Int32Array.from([1, 2, 3, 4]),
-    incidentPortRegion: [[0, 1, 2], [1, 2, 3], [2, 3, 4], [3, 4, 5]],
+    incidentPortRegion: [
+      [0, 1, 2],
+      [1, 2, 3],
+      [2, 3, 4],
+      [3, 4, 5],
+    ],
   }
   const dense = new IndexedCandidateHeap(7, compact)
   const map = new IndexedCandidateHeap(7)
@@ -48,7 +59,15 @@ test("dense hop state preserves map-mode behavior across improvements, closed ho
     } else if (seed % 5 === 0) {
       operations.push({ type: "dequeue" })
     } else {
-      operations.push({ type: "queue", candidate: candidate(seed % 4, (seed >>> 8) % 7, (seed >>> 16) % 31, (seed >>> 24) % 31) })
+      operations.push({
+        type: "queue",
+        candidate: candidate(
+          seed % 4,
+          (seed >>> 8) % 7,
+          (seed >>> 16) % 31,
+          (seed >>> 24) % 31,
+        ),
+      })
     }
   }
   for (const operation of operations) {
@@ -59,7 +78,8 @@ test("dense hop state preserves map-mode behavior across improvements, closed ho
       expect(dense.dequeue()).toEqual(map.dequeue())
     } else {
       if (operation.wrap) {
-        (dense as unknown as GenerationAccess).currentHopStateGeneration = 0xffffffff
+        ;(dense as unknown as GenerationAccess).currentHopStateGeneration =
+          0xffffffff
       }
       dense.clear()
       map.clear()
@@ -68,7 +88,9 @@ test("dense hop state preserves map-mode behavior across improvements, closed ho
     expect(dense.length).toBe(map.length)
     for (let portId = 0; portId < 4; portId++) {
       for (let regionId = 0; regionId < 7; regionId++) {
-        expect(dense.isClosedHop(portId, regionId)).toBe(map.isClosedHop(portId, regionId))
+        expect(dense.isClosedHop(portId, regionId)).toBe(
+          map.isClosedHop(portId, regionId),
+        )
       }
     }
   }
