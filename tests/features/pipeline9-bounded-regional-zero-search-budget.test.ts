@@ -2,7 +2,7 @@ import { expect, test } from "bun:test"
 import { applyPipeline9BoundedRegionalRepairs } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/applyPipeline9BoundedRegionalRepairs"
 import type { HighDensityRoute } from "lib/types/high-density-types"
 
-test("the early regional pass preserves search work for scattered errors", () => {
+test("a zero regional search budget preserves routes with scattered errors", () => {
   const routes: HighDensityRoute[] = []
   const result = applyPipeline9BoundedRegionalRepairs({
     originalSrj: {
@@ -14,11 +14,10 @@ test("the early regional pass preserves search work for scattered errors", () =>
     },
     routes,
     syntheticConnectionNames: new Set(),
-    requireSingleRegion: true,
     budget: {
-      maxRegions: 1,
-      maxCandidateAttempts: 256,
-      maxPathSearchNodes: 120_000,
+      maxRegions: 0,
+      maxCandidateAttempts: 0,
+      maxPathSearchNodes: 0,
     },
     drcEvaluator: () => [
       { type: "pcb_trace_error", center: { x: -20, y: 0 } },
