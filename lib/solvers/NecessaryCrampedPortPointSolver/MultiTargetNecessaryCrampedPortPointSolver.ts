@@ -249,7 +249,12 @@ export class MultiTargetNecessaryCrampedPortPointSolver extends BaseSolver {
           return [portPoint]
         }
 
-        if (this.isMultilayerEscapePort(portPoint)) {
+        // Existing copper needs these crossings when its section is ripped.
+        // Keep the cramped penalty so ordinary routes prefer wider passages.
+        if (
+          this.isMultilayerEscapePort(portPoint) ||
+          (portPoint._preloadedTracePortAssignments?.length ?? 0) > 0
+        ) {
           return [
             {
               ...portPoint,

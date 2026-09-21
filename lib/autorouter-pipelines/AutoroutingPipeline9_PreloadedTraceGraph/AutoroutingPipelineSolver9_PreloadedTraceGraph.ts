@@ -454,6 +454,16 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
         },
       ],
     ),
+    // Mark existing copper crossings before pruning narrow boundary ports.
+    // Those ports must remain available if a preloaded section is rerouted.
+    definePipelineStep(
+      "preloadedTraceGraphSolver",
+      PreloadedTraceGraphSolver,
+      (cms) => [
+        cms.availableSegmentPointSolver!.getOutput(),
+        cms.srjWithPointPairs!,
+      ],
+    ),
     definePipelineStep(
       "necessaryCrampedPortPointSolver",
       MultiTargetNecessaryCrampedPortPointSolver,
@@ -495,14 +505,6 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
             })
         },
       },
-    ),
-    definePipelineStep(
-      "preloadedTraceGraphSolver",
-      PreloadedTraceGraphSolver,
-      (cms) => [
-        cms.sharedEdgeSegmentsWithNecessaryCrampedPortPoints!,
-        cms.srjWithPointPairs!,
-      ],
     ),
     definePipelineStep(
       "portPointPathingSolver",
