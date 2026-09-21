@@ -1,11 +1,7 @@
 import { expect, test } from "bun:test"
-import { convertCircuitJsonToPcbSvg } from "circuit-to-svg"
 import { AutoroutingPipelineSolver7_MultiGraph } from "lib/autorouter-pipelines/AutoroutingPipeline7_MultiGraph/AutoroutingPipelineSolver7_MultiGraph"
 import { areNodePortPointPairsConnectedByRoutes } from "lib/solvers/HyperHighDensitySolver/repairDisconnectedSameRootPortPoints"
-import {
-  convertToCircuitJson,
-  createPcbBoardElement,
-} from "lib/testing/utils/convertToCircuitJson"
+import { getLastStepSvg } from "../fixtures/getLastStepSvg"
 import type { SimpleRouteJson } from "lib/types"
 import board from "../fixtures/stm32-full-board-disconnected.json"
 
@@ -48,17 +44,7 @@ test("STM32 full board routes LED_GREEN without disconnected fragments", async (
     ),
   ).toBeTrue()
 
-  const circuitJson = [
-    createPcbBoardElement(solver.originalSrj),
-    ...convertToCircuitJson(solver.srjWithPointPairs!, traces, {
-      originalSrj: solver.originalSrj,
-    }),
-  ]
-  await expect(
-    convertCircuitJsonToPcbSvg(circuitJson, {
-      width: 1200,
-      height: 900,
-      includeVersion: false,
-    }),
-  ).toMatchSvgSnapshot(import.meta.path)
+  await expect(getLastStepSvg(solver.visualize())).toMatchSvgSnapshot(
+    import.meta.path,
+  )
 })
