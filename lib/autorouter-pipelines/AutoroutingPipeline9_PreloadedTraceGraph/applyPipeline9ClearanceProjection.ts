@@ -2,7 +2,6 @@ import {
   getFixedObstacleViolations,
   getNewViaPadViolations,
   relaxTraceClearance,
-  type Bounds,
 } from "@tscircuit/repair04"
 import type { DrcEvaluator } from "high-density-repair03/lib"
 import { RELAXED_DRC_OPTIONS } from "lib/testing/drcPresets"
@@ -16,12 +15,13 @@ export const applyPipeline9ClearanceProjection = ({
   originalSrj,
   routes,
   drcEvaluator,
-  mutableBounds,
+  previousRoutes,
 }: {
   originalSrj: SimpleRouteJson
   routes: HighDensityRoute[]
   drcEvaluator: DrcEvaluator
-  mutableBounds?: Bounds
+  /** Geometry before regional rerouting, matching the outer via guard. */
+  previousRoutes?: HighDensityRoute[]
 }): HighDensityRoute[] => {
   const reference = drcEvaluator({ traces: [], routes, hdRoutes: routes })
   const errors = Array.isArray(reference) ? reference : reference.errors
@@ -31,23 +31,16 @@ export const applyPipeline9ClearanceProjection = ({
     traces: undefined,
   }
   const canonicalRoutes = canonicalizePipeline9HdRoutes(routes)
-  // Preserve transition indices for the via guard. A regional proposal must
-  // keep copper outside its mutable area fixed during projection as well.
+  // Whole-board projection needs no cropping or splicing. Preserve every
+  // transition's point indices so the via guard can prove its identity.
   const candidate = relaxTraceClearance({
     srj,
     routes: canonicalRoutes,
-    bounds: mutableBounds ?? srj.bounds,
+    bounds: srj.bounds,
     boundaryMargin: 0,
     boardEdgeClearance: originalSrj.minBoardEdgeClearance ?? 0,
     lockedPointIndices: canonicalRoutes.map((route) =>
-      route.route.map((point) =>
-        mutableBounds
-          ? point.x < mutableBounds.minX ||
-            point.x > mutableBounds.maxX ||
-            point.y < mutableBounds.minY ||
-            point.y > mutableBounds.maxY
-          : false,
-      ),
+      route.route.map(() => false),
     ),
     allowViaMovement: true,
     traceClearance:
@@ -68,7 +61,7 @@ export const applyPipeline9ClearanceProjection = ({
     ) ||
     getNewViaPadViolations({
       srj,
-      previousRoutes: canonicalRoutes,
+      previousRoutes: previousRoutes ?? canonicalRoutes,
       routes: candidate,
     }).length > 0
   ) {
