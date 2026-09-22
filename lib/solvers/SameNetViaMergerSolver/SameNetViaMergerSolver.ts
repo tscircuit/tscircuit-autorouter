@@ -335,15 +335,8 @@ export class SameNetViaMergerSolver extends BaseSolver {
     }
   }
 
-  private getViaKey(via: Via): string {
-    return [
-      via.mutable ? "mutable" : "immutable",
-      via.routeIndex,
-      via.x,
-      via.y,
-      via.layers.join(","),
-      via.net,
-    ].join(":")
+  private getViaLocationKey(via: Via): string {
+    return [via.net, via.x, via.y].join(":")
   }
 
   private dedupeRouteVias(route: HighDensityRoute): void {
@@ -370,11 +363,16 @@ export class SameNetViaMergerSolver extends BaseSolver {
       )
       const cellSize = maxDiameter
       const buckets = new Map<string, number[]>()
+      const viasAtLocation = new Map<string, Via[]>()
 
       // Build stars instead of connected components so a via is only moved to
       // another via that directly overlaps or has a clear short same-net merge.
       for (let viaIndex = 0; viaIndex < viasInNet.length; viaIndex++) {
         const via = viasInNet[viaIndex]
+        const locationKey = this.getViaLocationKey(via)
+        const colocated = viasAtLocation.get(locationKey)
+        if (colocated) colocated.push(via)
+        else viasAtLocation.set(locationKey, [via])
         const cellX = Math.floor(via.x / cellSize)
         const cellY = Math.floor(via.y / cellSize)
         const bucketKey = `${cellX}:${cellY}`
@@ -438,7 +436,19 @@ export class SameNetViaMergerSolver extends BaseSolver {
           }
         }
 
-        if (remove.length > 0) candidateGroups.push({ keep, remove })
+        // A shared physical via can only move when every attached route can
+        // follow it. Moving a subset leaves the old site occupied and lets the
+        // next pass move those same routes back, without eliminating a via.
+        const removable = new Set(remove)
+        const completeLocations = remove.filter((via) =>
+          (via.x === keep.x && via.y === keep.y) ||
+          viasAtLocation.get(this.getViaLocationKey(via))!.every(
+            (attached) => attached.mutable && removable.has(attached),
+          ),
+        )
+        if (completeLocations.length > 0) {
+          candidateGroups.push({ keep, remove: completeLocations })
+        }
       }
     }
 
@@ -457,18 +467,18 @@ export class SameNetViaMergerSolver extends BaseSolver {
     })
 
     for (const candidateGroup of candidateGroups) {
-      const keepKey = this.getViaKey(candidateGroup.keep)
+      const keepKey = this.getViaLocationKey(candidateGroup.keep)
       if (touchedViaKeys.has(keepKey)) continue
 
       const remove = candidateGroup.remove.filter(
-        (viaToRemove) => !touchedViaKeys.has(this.getViaKey(viaToRemove)),
+        (viaToRemove) => !touchedViaKeys.has(this.getViaLocationKey(viaToRemove)),
       )
       if (remove.length === 0) continue
 
       groups.push({ keep: candidateGroup.keep, remove })
       touchedViaKeys.add(keepKey)
       for (const viaToRemove of remove) {
-        touchedViaKeys.add(this.getViaKey(viaToRemove))
+        touchedViaKeys.add(this.getViaLocationKey(viaToRemove))
       }
     }
 
