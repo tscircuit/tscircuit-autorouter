@@ -8,7 +8,7 @@ import {
 } from "@tscircuit/repair04"
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { DrcEvaluator } from "high-density-repair03/lib"
-import { SameNetViaMergerSolver } from "lib/solvers/SameNetViaMergerSolver/SameNetViaMergerSolver"
+import { SameNetViaMergerSolver } from "@tscircuit/trace-simplification-solver"
 import { RELAXED_DRC_OPTIONS } from "lib/testing/drcPresets"
 import type { SimpleRouteJson } from "lib/types"
 import type { HighDensityRoute } from "lib/types/high-density-types"
@@ -100,7 +100,6 @@ type Pipeline9BoundedRegionalRepairParams = {
   syntheticConnectionNames: ReadonlySet<string>
   drcEvaluator: DrcEvaluator
   viaHoleDiameter?: number
-  requireSingleRegion?: boolean
   budget?: {
     maxRegions: number
     maxCandidateAttempts: number
@@ -128,7 +127,6 @@ export const applyPipeline9BoundedRegionalRepairs = ({
   syntheticConnectionNames,
   drcEvaluator,
   viaHoleDiameter,
-  requireSingleRegion = false,
   budget = PIPELINE9_BOUNDED_REPAIR_BUDGET,
 }: Pipeline9BoundedRegionalRepairParams): Pipeline9BoundedRegionalRepairResult => {
   const result: Pipeline9BoundedRegionalRepairResult = {
@@ -182,46 +180,6 @@ export const applyPipeline9BoundedRegionalRepairs = ({
   result.finalDrcIssueCount = currentErrors.length
   if (currentErrors.length === 0) {
     return result
-  }
-
-  if (requireSingleRegion) {
-    const centeredErrors = Array.isArray(reference)
-      ? reference
-      : (reference.errorsWithCenters ?? reference.errors)
-    const centers = centeredErrors.map((error) => {
-      const obstacle =
-        typeof error.pcb_pad_id === "string"
-          ? originalSrj.obstacles.find(
-              (candidate) =>
-                candidate.circuitJsonMetadata?.pcb_smtpad_id ===
-                error.pcb_pad_id,
-            )
-          : undefined
-      return obstacle?.center ?? error.center ?? error.pcb_center
-    })
-    // An early one-region pass must not spend the shared search budget on a
-    // board whose violations cannot fit inside a single mutable region.
-    const validCenters = centers.filter(
-      (point): point is { x: number; y: number } =>
-        point !== null &&
-        typeof point === "object" &&
-        "x" in point &&
-        "y" in point &&
-        typeof point.x === "number" &&
-        typeof point.y === "number" &&
-        Number.isFinite(point.x) &&
-        Number.isFinite(point.y),
-    )
-    if (validCenters.length !== centers.length) return result
-    const xs = validCenters.map((point) => point.x)
-    const ys = validCenters.map((point) => point.y)
-    const mutableSize = Math.max(...regionSizes) - 2 * boundaryMargin
-    if (
-      Math.max(...xs) - Math.min(...xs) > mutableSize ||
-      Math.max(...ys) - Math.min(...ys) > mutableSize
-    ) {
-      return result
-    }
   }
 
   const projectedRoutes = applyPipeline9ClearanceProjection({
