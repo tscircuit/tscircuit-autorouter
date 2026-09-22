@@ -115,6 +115,8 @@ export type WorkerResult<
   scenarioName: string
   sampleNumber: number
   elapsedTimeMs: number
+  /** Configured per-sample limit used to score unsuccessful runs in percentiles. */
+  sampleTimeoutMs?: number
   didSolve: boolean
   didTimeout: boolean
   relaxedDrcPassed: boolean
