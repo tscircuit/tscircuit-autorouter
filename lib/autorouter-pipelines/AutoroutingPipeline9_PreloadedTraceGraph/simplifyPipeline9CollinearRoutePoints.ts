@@ -2,7 +2,7 @@ import type { HighDensityRoute } from "lib/types/high-density-types"
 
 // Short collinear runs still provide useful force-improvement control points.
 // Only collapse the long oversampled straight runs emitted by grid routing.
-const MIN_COLLINEAR_GRID_SEGMENTS = 16
+const MIN_COLLINEAR_GRID_SEGMENTS = 64
 
 /** Reduce dense grid runs while preserving ordinary force-improvement vertices. */
 export const simplifyPipeline9CollinearRoutePoints = (
