@@ -403,6 +403,7 @@ export const applyPipeline9BoundedRegionalRepairs = ({
     let candidateRoutes = applyPipeline9ClearanceProjection({
       originalSrj,
       routes: negotiatedRoutes,
+      previousRoutes: currentRoutes,
       drcEvaluator: (input): ReturnType<DrcEvaluator> => {
         result.referenceValidationCount++
         return drcEvaluator(input)
