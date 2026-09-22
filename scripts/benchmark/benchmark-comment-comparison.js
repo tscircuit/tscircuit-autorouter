@@ -91,8 +91,8 @@ const getTimePercentile = (report, solverName, percentile) => {
     // but did not record the limit for early failures. Do not guess that limit.
     const elapsedTime = result.didSolve
       ? result.elapsedTimeMs
-      : result.sampleTimeoutMs ??
-        (result.didTimeout ? result.elapsedTimeMs : undefined)
+      : (result.sampleTimeoutMs ??
+        (result.didTimeout ? result.elapsedTimeMs : undefined))
     if (typeof elapsedTime !== "number" || !Number.isFinite(elapsedTime)) {
       return null
     }

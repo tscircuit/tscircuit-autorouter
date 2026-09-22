@@ -46,9 +46,9 @@ test("benchmark timing percentiles count failures at each sample timeout", () =>
   expect(summary.p95TimeMs).toBeCloseTo(1_750)
   expect(summary.completedRateLabel).toBe("66.7% (🕒16.7%)")
   expect(summary.timedOutLabel).toBe("1/6")
-  expect(
-    summarizeSolverResults(solverName, results.slice(4)).p50TimeMs,
-  ).toBe(1_500)
+  expect(summarizeSolverResults(solverName, results.slice(4)).p50TimeMs).toBe(
+    1_500,
+  )
   expect(results[5].elapsedTimeMs).toBe(10)
   expect(results[5].didTimeout).toBe(false)
   expect(summarizeSolverResults(solverName, []).p50TimeMs).toBeNull()
