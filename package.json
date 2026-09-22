@@ -109,6 +109,7 @@
     "@tscircuit/high-density-b01": "git+https://github.com/tscircuit/high-density-b01.git#e651cab6c314e7aab6df31fd6067277436f67148"
   },
   "dependencies": {
+    "@tscircuit/trace-simplification-solver": "github:tscircuit/trace-simplification-solver#5c0ad217a1ee17a557ba160a5ca14ef1f22a244c",
     "fast-json-stable-stringify": "^2.1.0",
     "object-hash": "^3.0.0",
     "stack-svgs": "^0.0.1"

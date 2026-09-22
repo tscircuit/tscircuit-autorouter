@@ -4,7 +4,7 @@ import {
   pointToSegmentDistance,
 } from "@tscircuit/math-utils"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
-import { VertexShortcutPathSolver } from "lib/solvers/SimplifiedPathSolver/VertexShortcutPathSolver"
+import { VertexShortcutPathSolver } from "@tscircuit/trace-simplification-solver"
 import type { Obstacle } from "lib/types"
 import type { HighDensityRoute } from "lib/types/high-density-types"
 import { minimumDistanceBetweenSegments } from "lib/utils/minimumDistanceBetweenSegments"
