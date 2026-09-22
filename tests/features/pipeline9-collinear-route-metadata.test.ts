@@ -4,7 +4,9 @@ import type { HighDensityRoute } from "lib/types/high-density-types"
 
 test("collinear simplification keeps vias, reversals, layer transitions, and segment metadata", (): void => {
   const input: HighDensityRoute = {
-    connectionName: "signal", traceThickness: 0.1, viaDiameter: 0.3,
+    connectionName: "signal",
+    traceThickness: 0.1,
+    viaDiameter: 0.3,
     vias: [{ x: 1, y: 0 }],
     route: [
       { x: 0, y: 0, z: 0 },

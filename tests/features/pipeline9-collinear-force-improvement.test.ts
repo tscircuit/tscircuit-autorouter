@@ -19,19 +19,32 @@ test("AM3352 force improvement removes redundant grid points without changing co
     expect(result.viaDiameter).toBe(original.viaDiameter)
     // Every original grid vertex must still lie on its routed copper layer.
     for (const p of original.route) {
-      expect(result.route.some((a, j) => {
-        const b = result.route[j + 1]
-        if (!b || p.z !== a.z || p.z !== b.z) return false
-        const dx = b.x - a.x, dy = b.y - a.y
-        const lengthSquared = dx * dx + dy * dy
-        const t = lengthSquared === 0 ? 0 : Math.max(0, Math.min(1,
-          ((p.x - a.x) * dx + (p.y - a.y) * dy) / lengthSquared,
-        ))
-        return Math.hypot(p.x - a.x - t * dx, p.y - a.y - t * dy) < 1e-8
-      })).toBe(true)
+      expect(
+        result.route.some((a, j) => {
+          const b = result.route[j + 1]
+          if (!b || p.z !== a.z || p.z !== b.z) return false
+          const dx = b.x - a.x,
+            dy = b.y - a.y
+          const lengthSquared = dx * dx + dy * dy
+          const t =
+            lengthSquared === 0
+              ? 0
+              : Math.max(
+                  0,
+                  Math.min(
+                    1,
+                    ((p.x - a.x) * dx + (p.y - a.y) * dy) / lengthSquared,
+                  ),
+                )
+          return Math.hypot(p.x - a.x - t * dx, p.y - a.y - t * dy) < 1e-8
+        }),
+      ).toBe(true)
     }
   }
-  const solver = new HighDensityForceImproveSolver({ ...input, hdRoutes: simplified })
+  const solver = new HighDensityForceImproveSolver({
+    ...input,
+    hdRoutes: simplified,
+  })
   solver.solve()
   expect(solver.failed).toBe(false)
   expect(solver.solved).toBe(true)

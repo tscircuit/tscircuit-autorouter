@@ -162,7 +162,8 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
       growthAttemptsToFitVia,
       growthAttemptsToFitPorts,
     )
-    this.maxGrowthAttempts = params.maxGrowthAttempts ??
+    this.maxGrowthAttempts =
+      params.maxGrowthAttempts ??
       DEFAULT_MAX_GROWTH_ATTEMPTS + growthAttemptsToFitGeometry
     // Preserve the existing attempt order; only extend the upper search bound.
     this.minimumGrowthAttempts = Math.min(

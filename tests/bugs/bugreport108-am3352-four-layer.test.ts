@@ -18,7 +18,8 @@ test.skipIf(process.env.RUN_AM3352_FULL_SOLVE !== "1")(
     let lastPhase = ""
     while (
       solver.getCurrentPhase() !== "lengthMatchingPostProcessingSolver" &&
-      !solver.solved && !solver.failed
+      !solver.solved &&
+      !solver.failed
     ) {
       const phase = solver.getCurrentPhase()
       if (phase !== lastPhase) {
@@ -37,10 +38,12 @@ test.skipIf(process.env.RUN_AM3352_FULL_SOLVE !== "1")(
     )
     expect(solver.failed).toBe(true)
     expect(solver.solved).toBe(false)
-    await expect(getAm3352FailureSnapshotSvg({
-      inputSrj: input,
-      srjWithPointPairs: solver.srjWithPointPairs!,
-      routedTraces,
-    })).toMatchSvgSnapshot(import.meta.path)
+    await expect(
+      getAm3352FailureSnapshotSvg({
+        inputSrj: input,
+        srjWithPointPairs: solver.srjWithPointPairs!,
+        routedTraces,
+      }),
+    ).toMatchSvgSnapshot(import.meta.path)
   },
 )
