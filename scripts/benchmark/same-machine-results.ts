@@ -229,7 +229,7 @@ export const renderSameMachineBenchmarkResults = ({
   const regressionCount = changedOutcomes.length - improvementCount
   lines.push(
     "",
-    `Outcome changes: **${improvementCount} improved**, **${regressionCount} regressed**. DRC issues are totaled across solved samples. Timing percentiles include solved and timed-out samples; negative timing deltas are faster.`,
+    `Outcome changes: **${improvementCount} improved**, **${regressionCount} regressed**. DRC issues are totaled across solved samples. Timing percentiles include all samples, with failed and timed-out samples counted at their configured timeout; negative timing deltas are faster.`,
   )
 
   lines.push(

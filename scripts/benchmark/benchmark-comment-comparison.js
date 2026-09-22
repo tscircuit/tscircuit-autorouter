@@ -251,7 +251,7 @@ export const renderBenchmarkComparison = ({
     "| --- | --- | ---: | ---: | ---: |",
     ...rows,
     "",
-    "_DRC issues are totaled across solved samples. Timing percentiles include solved and timed-out samples; negative timing changes are faster._",
+    "_DRC issues are totaled across solved samples. Timing percentiles include all samples, with failed and timed-out samples counted at their configured timeout; negative timing changes are faster._",
     ...renderBenchmarkStageTimings(mainReport, "Main"),
     ...renderBenchmarkStageTimings(prReport, "PR"),
   ]

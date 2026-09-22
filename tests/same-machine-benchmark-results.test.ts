@@ -107,7 +107,7 @@ test("same-machine benchmark comments compare matching reports", () => {
   expect(markdown).toContain("| Pipeline7 | P95 time |")
   expect(markdown).toContain("Outcome changes: **1 improved**, **0 regressed**")
   expect(markdown).toContain(
-    "Timing percentiles include solved and timed-out samples",
+    "Timing percentiles include all samples, with failed and timed-out samples counted at their configured timeout",
   )
   expect(markdown).toContain("| Pipeline7 | 1 | Timeout | DRC passed |")
   expect(() =>
