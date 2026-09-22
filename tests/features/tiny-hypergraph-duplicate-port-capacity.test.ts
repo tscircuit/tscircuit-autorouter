@@ -89,7 +89,7 @@ test("cramped ports price overflow without cutting connectivity", async () => {
   ).toBe(2)
 
   const graphics: GraphicsObject = { lines: [], circles: [], texts: [] }
-  for (const [index, count] of [1, 5, 8].entries()) {
+  for (const [index, count] of [1, 5, 25].entries()) {
     const offset = index * 1.8
     graphics.lines!.push({
       points: [
@@ -102,11 +102,11 @@ test("cramped ports price overflow without cutting connectivity", async () => {
     for (let net = 0; net < count; net++) {
       graphics.lines!.push({
         points: [
-          { x: offset - 0.5, y: -0.5 + net * 0.15 },
-          { x: offset, y: -0.5 + net * 0.15 },
-          { x: offset + 0.5, y: -0.5 + net * 0.15 },
+          { x: offset - 0.5, y: -0.5 + net / count },
+          { x: offset, y: -0.5 + net / count },
+          { x: offset + 0.5, y: -0.5 + net / count },
         ],
-        strokeColor: count > 5 ? "#d97706" : "#059669",
+        strokeColor: count > 20 ? "#d97706" : "#059669",
         strokeWidth: 0.025,
       })
     }
@@ -119,7 +119,7 @@ test("cramped ports price overflow without cutting connectivity", async () => {
     graphics.texts!.push({
       x: offset,
       y: 0.8,
-      text: count > 5 ? "Prefer an available detour" : "No overflow preference",
+      text: count > 20 ? "Prefer an available detour" : "No overflow preference",
       fontSize: 0.09,
     })
   }

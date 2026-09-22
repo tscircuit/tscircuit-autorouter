@@ -43,11 +43,13 @@ export class CrampedPortAwareGreedyFinalRouteSolver extends TinyHyperGraphSolver
           owners.add(owner)
         }
       }
-      // Count real foreign nets, not virtual copies or same-net reuse. Capacity
-      // is a preference: all ports remain available when no detour exists.
+      // Mesh edges are approximate routing partitions, not copper bottlenecks.
+      // Small groups can fan out during detailed routing. Only bias severe
+      // crowding (over four times nominal capacity); retain every route choice.
+      // Count distinct foreign nets, not virtual copies or same-net branches.
       const overflow = Math.max(
         0,
-        owners.size + 1 - Number(metadata.crampedBoundaryCapacity),
+        owners.size + 1 - 4 * Number(metadata.crampedBoundaryCapacity),
       )
       cost =
         Number(metadata.crampedBoundaryPitch) *
