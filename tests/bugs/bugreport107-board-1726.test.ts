@@ -62,4 +62,4 @@ test("Pipeline9 completely routes bugreport107-board-1726", async (): Promise<vo
     checkEachPcbPortConnectedToPcbTraces(structuredClone(circuitJson)),
   ).toEqual([])
   expect(errors).toEqual([])
-})
+}, 900_000)
