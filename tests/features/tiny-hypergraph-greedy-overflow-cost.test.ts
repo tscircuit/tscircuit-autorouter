@@ -57,18 +57,23 @@ test("final greedy routing prefers free capacity but can use overflow when neces
     })
     const graph: SerializedHyperGraph = {
       ports,
-      regions: ["start", "left", "right", "end", "occupied-a", "occupied-b"].map(
-        (regionId, index) => ({
-          regionId,
-          pointIds: ports
-            .filter(
-              (port) =>
-                port.region1Id === regionId || port.region2Id === regionId,
-            )
-            .map((port) => port.portId),
-          d: { center: { x: index * 2 - 3, y: 0 }, width: 2, height: 6 },
-        }),
-      ),
+      regions: [
+        "start",
+        "left",
+        "right",
+        "end",
+        "occupied-a",
+        "occupied-b",
+      ].map((regionId, index) => ({
+        regionId,
+        pointIds: ports
+          .filter(
+            (port) =>
+              port.region1Id === regionId || port.region2Id === regionId,
+          )
+          .map((port) => port.portId),
+        d: { center: { x: index * 2 - 3, y: 0 }, width: 2, height: 6 },
+      })),
       connections: [
         {
           connectionId: "route",

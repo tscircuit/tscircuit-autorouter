@@ -28,7 +28,9 @@ export const assignCrampedPortCapacityCosts = (
       "Duplicate port capacity requires a positive width and nonnegative clearance",
     )
   }
-  const regions = new Map(graph.regions.map((region) => [region.regionId, region]))
+  const regions = new Map(
+    graph.regions.map((region) => [region.regionId, region]),
+  )
   const boundaryKey = (port: Port): string =>
     JSON.stringify([[port.region1Id, port.region2Id].sort(), port.d.z])
   const capacities = new Map<string, number>()
@@ -55,7 +57,10 @@ export const assignCrampedPortCapacityCosts = (
 
     // UniformPortDistributionSolver redistributes original ports too. Estimate
     // the whole edge's capacity, rather than treating initial positions as fixed.
-    const capacity = Math.max(1, Math.floor((length + clearance + 1e-9) / spacing))
+    const capacity = Math.max(
+      1,
+      Math.floor((length + clearance + 1e-9) / spacing),
+    )
     capacities.set(boundaryKey(port), capacity)
   }
   const ports = graph.ports.map((port): Port => {

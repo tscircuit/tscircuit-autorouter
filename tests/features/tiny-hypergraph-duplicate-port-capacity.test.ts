@@ -37,12 +37,12 @@ test("cramped ports price overflow without cutting connectivity", async () => {
   expect(graph).toEqual(before)
   expect(result.ports.length).toBe(graph.ports.length)
   expect(result.regions).toEqual(graph.regions)
-  expect(result.ports.every((port) => port.d.crampedBoundaryCapacity === 5)).toBe(
-    true,
-  )
-  expect(new Set(result.ports.map((port) => port.d.crampedBoundaryKey)).size).toBe(
-    1,
-  )
+  expect(
+    result.ports.every((port) => port.d.crampedBoundaryCapacity === 5),
+  ).toBe(true)
+  expect(
+    new Set(result.ports.map((port) => port.d.crampedBoundaryKey)).size,
+  ).toBe(1)
   const ids = new Set(result.ports.map((port) => port.portId))
   for (const region of result.regions) {
     expect(region.pointIds.every((id) => ids.has(id))).toBe(true)
@@ -84,9 +84,9 @@ test("cramped ports price overflow without cutting connectivity", async () => {
   }))
   const layered = assignCrampedPortCapacityCosts(twoLayers, 0.1, 0.15)
   expect(layered.ports.length).toBe(result.ports.length * 2)
-  expect(new Set(layered.ports.map((port) => port.d.crampedBoundaryKey)).size).toBe(
-    2,
-  )
+  expect(
+    new Set(layered.ports.map((port) => port.d.crampedBoundaryKey)).size,
+  ).toBe(2)
 
   const graphics: GraphicsObject = { lines: [], circles: [], texts: [] }
   for (const [index, count] of [1, 5, 8].entries()) {
