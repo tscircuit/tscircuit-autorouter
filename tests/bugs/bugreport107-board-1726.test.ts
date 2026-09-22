@@ -14,55 +14,52 @@ import { getLastStepSvg } from "../fixtures/getLastStepSvg"
 
 const srj = bugReport.simple_route_json as SimpleRouteJson
 
-test(
-  "Pipeline9 completely routes bugreport107-board-1726",
-  async (): Promise<void> => {
-    const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(
-      structuredClone(srj),
-      { cacheProvider: null },
-    )
-    await expect(getLastStepSvg(solver.visualize())).toMatchSvgSnapshot(
-      import.meta.path,
-      { svgName: "unrouted" },
-    )
-    solver.solve()
+test("Pipeline9 completely routes bugreport107-board-1726", async (): Promise<void> => {
+  const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(
+    structuredClone(srj),
+    { cacheProvider: null },
+  )
+  await expect(getLastStepSvg(solver.visualize())).toMatchSvgSnapshot(
+    import.meta.path,
+    { svgName: "unrouted" },
+  )
+  solver.solve()
 
-    expect(solver.error).toBeNull()
-    expect(solver.failed).toBeFalse()
-    expect(solver.solved).toBeTrue()
+  expect(solver.error).toBeNull()
+  expect(solver.failed).toBeFalse()
+  expect(solver.solved).toBeTrue()
 
-    const pointPairs = solver.netToPointPairsSolver!.newConnections
-    expect(pointPairs.length).toBeGreaterThan(0)
-    const routedPairNames = new Set(
-      solver
-        ._getOutputHdRoutes()
-        .filter((route) => route.route.length >= 2)
-        .map((route) => route.connectionName),
-    )
-    expect(
-      pointPairs
-        .filter((connection) => !routedPairNames.has(connection.name))
-        .map((connection) => connection.name),
-    ).toEqual([])
+  const pointPairs = solver.netToPointPairsSolver!.newConnections
+  expect(pointPairs.length).toBeGreaterThan(0)
+  const routedPairNames = new Set(
+    solver
+      ._getOutputHdRoutes()
+      .filter((route) => route.route.length >= 2)
+      .map((route) => route.connectionName),
+  )
+  expect(
+    pointPairs
+      .filter((connection) => !routedPairNames.has(connection.name))
+      .map((connection) => connection.name),
+  ).toEqual([])
 
-    const drcInput = {
-      inputSrj: srj,
-      srjWithPointPairs: solver.srjWithPointPairs!,
-      routedTraces: solver.getOutputSimplifiedPcbTraces(),
-      includeBoardClearance: true,
-    }
-    // Capture the routed board even when the final DRC assertion fails.
-    await expect(getBugReportSnapshotSvg(drcInput)).toMatchSvgSnapshot(
-      import.meta.path,
-      { svgName: "routed" },
-    )
-    const { circuitJson, errors } = evaluateRelaxedDrc(drcInput)
-    // Continuity checks inspect existing copper, so also check entirely missing
-    // source traces and ports before accepting the final board.
-    expect(checkSourceTracesHavePcbTraces(circuitJson)).toEqual([])
-    expect(
-      checkEachPcbPortConnectedToPcbTraces(structuredClone(circuitJson)),
-    ).toEqual([])
-    expect(errors).toEqual([])
-  },
-)
+  const drcInput = {
+    inputSrj: srj,
+    srjWithPointPairs: solver.srjWithPointPairs!,
+    routedTraces: solver.getOutputSimplifiedPcbTraces(),
+    includeBoardClearance: true,
+  }
+  // Capture the routed board even when the final DRC assertion fails.
+  await expect(getBugReportSnapshotSvg(drcInput)).toMatchSvgSnapshot(
+    import.meta.path,
+    { svgName: "routed" },
+  )
+  const { circuitJson, errors } = evaluateRelaxedDrc(drcInput)
+  // Continuity checks inspect existing copper, so also check entirely missing
+  // source traces and ports before accepting the final board.
+  expect(checkSourceTracesHavePcbTraces(circuitJson)).toEqual([])
+  expect(
+    checkEachPcbPortConnectedToPcbTraces(structuredClone(circuitJson)),
+  ).toEqual([])
+  expect(errors).toEqual([])
+})
