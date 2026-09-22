@@ -15,10 +15,13 @@ export const applyPipeline9ClearanceProjection = ({
   originalSrj,
   routes,
   drcEvaluator,
+  previousRoutes,
 }: {
   originalSrj: SimpleRouteJson
   routes: HighDensityRoute[]
   drcEvaluator: DrcEvaluator
+  /** Geometry before regional rerouting, matching the outer via guard. */
+  previousRoutes?: HighDensityRoute[]
 }): HighDensityRoute[] => {
   const reference = drcEvaluator({ traces: [], routes, hdRoutes: routes })
   const errors = Array.isArray(reference) ? reference : reference.errors
@@ -58,7 +61,7 @@ export const applyPipeline9ClearanceProjection = ({
     ) ||
     getNewViaPadViolations({
       srj,
-      previousRoutes: canonicalRoutes,
+      previousRoutes: previousRoutes ?? canonicalRoutes,
       routes: candidate,
     }).length > 0
   ) {
