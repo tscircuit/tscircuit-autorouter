@@ -1,9 +1,9 @@
 import type { SerializedHyperGraph } from "@tscircuit/hypergraph"
 import { expect, test } from "bun:test"
 import type { GraphicsObject } from "graphics-debug"
-import { fitDuplicatePortsToSharedBoundary } from "lib/solvers/PortPointPathingSolver/tinyhypergraph/fitDuplicatePortsToSharedBoundary"
+import { fitCrampedDuplicatePortsToSharedBoundary } from "lib/solvers/PortPointPathingSolver/tinyhypergraph/fitCrampedDuplicatePortsToSharedBoundary"
 
-test("duplicate ports use available boundary space instead of increasing capacity at one point", async () => {
+test("cramped duplicate ports use available boundary space instead of increasing capacity at one point", async () => {
   const ports = Array.from({ length: 16 }, (_, index) => ({
     portId: index === 0 ? "entry" : `entry::dup${index}`,
     region1Id: "left",
@@ -12,6 +12,7 @@ test("duplicate ports use available boundary space instead of increasing capacit
       x: 0,
       y: (0.05 * index) / 16,
       z: 0,
+      cramped: true,
       ...(index === 0 ? {} : { duplicatedFromPortId: "entry" }),
     },
   }))
@@ -23,8 +24,18 @@ test("duplicate ports use available boundary space instead of increasing capacit
     })),
     ports,
   }
+  const ordinary = {
+    ...graph,
+    ports: graph.ports.map((port) => ({
+      ...port,
+      d: { ...port.d, cramped: false },
+    })),
+  }
+  expect(fitCrampedDuplicatePortsToSharedBoundary(ordinary, 0.1, 0.15)).toEqual(
+    ordinary,
+  )
   const before = structuredClone(graph)
-  const result = fitDuplicatePortsToSharedBoundary(graph, 0.1, 0.15)
+  const result = fitCrampedDuplicatePortsToSharedBoundary(graph, 0.1, 0.15)
   expect(graph).toEqual(before)
   expect(result.ports[0]).toEqual(graph.ports[0])
   expect(result.ports.length).toBeGreaterThan(1)
@@ -47,7 +58,7 @@ test("duplicate ports use available boundary space instead of increasing capacit
       d: { ...region.d, height: 0.35 },
     })),
   }
-  expect(fitDuplicatePortsToSharedBoundary(narrow, 0.1, 0.15).ports).toEqual([
+  expect(fitCrampedDuplicatePortsToSharedBoundary(narrow, 0.1, 0.15).ports).toEqual([
     ports[0]!,
   ])
   const twoLayers = {
@@ -70,7 +81,7 @@ test("duplicate ports use available boundary space instead of increasing capacit
     pointIds: twoLayers.ports.map((port) => port.portId),
   }))
   expect(
-    fitDuplicatePortsToSharedBoundary(twoLayers, 0.1, 0.15).ports.length,
+    fitCrampedDuplicatePortsToSharedBoundary(twoLayers, 0.1, 0.15).ports.length,
   ).toBe(result.ports.length * 2)
 
   const graphics: GraphicsObject = { lines: [], circles: [], texts: [] }

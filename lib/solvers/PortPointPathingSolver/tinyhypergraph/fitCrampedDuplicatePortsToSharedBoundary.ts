@@ -16,8 +16,8 @@ const getBounds = (region: Region): Bounds => {
   )
 }
 
-/** Keep original ports fixed; place extra capacity only where another trace fits. */
-export const fitDuplicatePortsToSharedBoundary = (
+/** Limit duplicate cramped ports to physical space on their shared boundary. */
+export const fitCrampedDuplicatePortsToSharedBoundary = (
   graph: SerializedHyperGraph,
   traceWidth: number,
   clearance: number,
@@ -43,7 +43,12 @@ export const fitDuplicatePortsToSharedBoundary = (
   }
   const removed = new Set<string>()
   const ports = graph.ports.flatMap((port): Port[] => {
-    if (typeof port.d.duplicatedFromPortId !== "string") return [port]
+    // Ordinary duplicate ports remain virtual choices for later distribution.
+    // Cramped ports bypass normal sampling and must not create arbitrary
+    // capacity at narrow escape boundaries.
+    if (typeof port.d.duplicatedFromPortId !== "string" || !port.d.cramped) {
+      return [port]
+    }
     const a = regions.get(port.region1Id)
     const b = regions.get(port.region2Id)
     if (!a || !b) {

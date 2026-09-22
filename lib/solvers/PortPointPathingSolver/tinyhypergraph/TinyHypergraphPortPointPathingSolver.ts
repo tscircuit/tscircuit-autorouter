@@ -1,4 +1,4 @@
-import { fitDuplicatePortsToSharedBoundary } from "./fitDuplicatePortsToSharedBoundary"
+import { fitCrampedDuplicatePortsToSharedBoundary } from "./fitCrampedDuplicatePortsToSharedBoundary"
 import type { SerializedHyperGraph } from "@tscircuit/hypergraph"
 import type { GraphicsObject } from "graphics-debug"
 import { BaseSolver } from "lib/solvers/BaseSolver"
@@ -1104,7 +1104,7 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       this.duplicateCongestedPortReport = duplicateCongestedPortSolver.report
       graphForTiny = duplicateCongestedPortSolver.getOutput()
       if (params.duplicatePortTraceWidth !== undefined) {
-        graphForTiny = fitDuplicatePortsToSharedBoundary(
+        graphForTiny = fitCrampedDuplicatePortsToSharedBoundary(
           graphForTiny,
           params.duplicatePortTraceWidth,
           params.duplicatePortClearance ?? 0.15,
