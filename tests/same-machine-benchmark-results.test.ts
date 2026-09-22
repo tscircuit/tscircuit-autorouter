@@ -15,6 +15,7 @@ test("same-machine benchmark comments compare matching reports", () => {
     scenarioName: `sample${sampleNumber}`,
     sampleNumber,
     elapsedTimeMs: 1_000,
+    sampleTimeoutMs: 2_000,
     didSolve: true,
     didTimeout: false,
     relaxedDrcPassed: true,
@@ -110,6 +111,30 @@ test("same-machine benchmark comments compare matching reports", () => {
     "Timing percentiles include all samples, with failed and timed-out samples counted at their configured timeout",
   )
   expect(markdown).toContain("| Pipeline7 | 1 | Timeout | DRC passed |")
+  mainReport.tests[0] = {
+    ...mainReport.tests[0],
+    didTimeout: false,
+    elapsedTimeMs: 10,
+  }
+  const renderFailedMain = (): string =>
+    renderSameMachineBenchmarkResults({
+      mainReport,
+      prReport,
+      mainSha: "a".repeat(40),
+      prSha: "b".repeat(40),
+      repository: "tscircuit/tscircuit-autorouter",
+      runnerName: "blacksmith-test-runner",
+    })
+  expect(renderFailedMain()).toContain(
+    "| Pipeline7 | P50 time | 1.5s | 1.4s | -6.7% |",
+  )
+  expect(renderFailedMain()).toContain(
+    "| Pipeline7 | 1 | Failed | DRC passed | 10ms |",
+  )
+  delete mainReport.tests[0].sampleTimeoutMs
+  expect(renderFailedMain()).toContain(
+    "| Pipeline7 | P50 time | n/a | 1.4s | n/a |",
+  )
   expect(() =>
     renderSameMachineBenchmarkResults({
       mainReport,

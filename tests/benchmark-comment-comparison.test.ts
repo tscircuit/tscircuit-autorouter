@@ -16,6 +16,7 @@ test("PR benchmark comments render one main-versus-PR comparison table", () => {
     scenarioName: `sample${sampleNumber}`,
     sampleNumber,
     elapsedTimeMs,
+    sampleTimeoutMs: 2_000,
     didSolve: true,
     didTimeout: false,
     relaxedDrcPassed: true,
@@ -99,5 +100,17 @@ test("PR benchmark comments render one main-versus-PR comparison table", () => {
 | Pipeline7 | P95 time | 1.9s | 1.8s | -10.0% |
 | Pipeline7 | Average vias | 2.00 | 2.20 | +10.0% |
 
-_DRC issues are totaled across solved samples. Timing percentiles include all samples, with failed and timed-out samples counted at their configured timeout; negative timing changes are faster._`)
+_DRC issues are totaled across solved samples. Timing percentiles include all samples, with failed and timed-out samples counted at their configured timeout; negative timing changes are faster. Historical failures without timeout metadata make timing percentiles unavailable._`)
+  mainReport.tests[1] = {
+    ...mainReport.tests[1],
+    didTimeout: false,
+    elapsedTimeMs: 10,
+  }
+  expect(
+    renderBenchmarkComparison({ mainReport, prReport }).join("\n"),
+  ).toContain("| Pipeline7 | P50 time | 1.5s | 1.4s | -10.0% |")
+  delete mainReport.tests[1].sampleTimeoutMs
+  expect(
+    renderBenchmarkComparison({ mainReport, prReport }).join("\n"),
+  ).toContain("| Pipeline7 | P50 time | n/a | 1.4s | n/a |")
 })

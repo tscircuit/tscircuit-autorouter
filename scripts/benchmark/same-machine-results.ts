@@ -90,14 +90,22 @@ const getTimePercentile = (
   solverName: string,
   percentile: number,
 ): number | null => {
-  const elapsedTimes = report.tests
-    .filter(
-      (test) =>
-        test.solverName === solverName && (test.didSolve || test.didTimeout),
-    )
-    .map((test) => test.elapsedTimeMs)
-    .sort((a, b) => a - b)
+  const elapsedTimes: number[] = []
+  for (const result of report.tests) {
+    if (result.solverName !== solverName) continue
+    // Older reports recorded the timeout as elapsed time for timed-out samples,
+    // but did not record the limit for early failures. Do not guess that limit.
+    const elapsedTime = result.didSolve
+      ? result.elapsedTimeMs
+      : result.sampleTimeoutMs ??
+        (result.didTimeout ? result.elapsedTimeMs : undefined)
+    if (typeof elapsedTime !== "number" || !Number.isFinite(elapsedTime)) {
+      return null
+    }
+    elapsedTimes.push(elapsedTime)
+  }
   if (elapsedTimes.length === 0) return null
+  elapsedTimes.sort((a, b) => a - b)
 
   const index = (elapsedTimes.length - 1) * percentile
   const lowerIndex = Math.floor(index)
@@ -229,7 +237,7 @@ export const renderSameMachineBenchmarkResults = ({
   const regressionCount = changedOutcomes.length - improvementCount
   lines.push(
     "",
-    `Outcome changes: **${improvementCount} improved**, **${regressionCount} regressed**. DRC issues are totaled across solved samples. Timing percentiles include all samples, with failed and timed-out samples counted at their configured timeout; negative timing deltas are faster.`,
+    `Outcome changes: **${improvementCount} improved**, **${regressionCount} regressed**. DRC issues are totaled across solved samples. Timing percentiles include all samples, with failed and timed-out samples counted at their configured timeout; negative timing deltas are faster. Historical failures without timeout metadata make timing percentiles unavailable.`,
   )
 
   lines.push(
