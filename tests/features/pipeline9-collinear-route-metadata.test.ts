@@ -5,13 +5,16 @@ import type { HighDensityRoute } from "lib/types/high-density-types"
 test("collinear simplification keeps vias, reversals, layer transitions, and segment metadata", (): void => {
   const input: HighDensityRoute = {
     connectionName: "signal",
+    regionId: "dense",
     traceThickness: 0.1,
     viaDiameter: 0.3,
     vias: [{ x: 1, y: 0 }],
     route: [
-      { x: 0, y: 0, z: 0 },
-      { x: 0.5, y: 0, z: 0 },
-      { x: 1, y: 0, z: 0 },
+      ...Array.from({ length: 129 }, (_, index) => ({
+        x: index / 128,
+        y: 0,
+        z: 0,
+      })),
       { x: 2, y: 0, z: 0, pcb_port_id: "terminal" },
       { x: 3, y: 0, z: 0 },
       { x: 2.5, y: 0, z: 0 },
@@ -23,8 +26,23 @@ test("collinear simplification keeps vias, reversals, layer transitions, and seg
     ],
   }
   const original = structuredClone(input)
-  const [result] = simplifyPipeline9CollinearRoutePoints([input])
+  const [result] = simplifyPipeline9CollinearRoutePoints([
+    input,
+    {
+      ...input,
+      connectionName: "dense_grid",
+      vias: [],
+      route: Array.from({ length: 4_096 }, (_, index) => ({
+        x: index * 0.01,
+        y: 10,
+        z: 0,
+      })),
+    },
+  ])
   expect(input).toEqual(original)
-  expect(result!.route).toEqual(original.route)
+  expect(result!.route).toEqual([
+    original.route[0],
+    ...original.route.slice(128),
+  ])
   expect(result!.vias).toEqual(original.vias)
 })
