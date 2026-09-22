@@ -26,6 +26,11 @@ test("crowded AM3352 terminals retain a search budget after growing to fit trace
   expect(capped.failed).toBe(true)
   const solver = new GrowShrinkHighDensityIntraNodeSolver(params)
   solver.solve()
+  expect(
+    solver.failedSolvers
+      .slice(0, capped.failedSolvers.length)
+      .map((attempt) => attempt.nodeWithPortPoints),
+  ).toEqual(capped.failedSolvers.map((attempt) => attempt.nodeWithPortPoints))
   expect(solver.failed, solver.error ?? "").toBe(false)
   expect(solver.solved).toBe(true)
   expect(solver.error).toBeNull()
