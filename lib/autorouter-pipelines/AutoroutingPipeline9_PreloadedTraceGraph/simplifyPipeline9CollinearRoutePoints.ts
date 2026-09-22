@@ -3,12 +3,29 @@ import type { HighDensityRoute } from "lib/types/high-density-types"
 // Short collinear runs still provide useful force-improvement control points.
 // Only collapse the long oversampled straight runs emitted by grid routing.
 const MIN_COLLINEAR_GRID_SEGMENTS = 64
+const MIN_FORCE_REGION_POINT_COUNT = 4_096
 
 /** Reduce dense grid runs while preserving ordinary force-improvement vertices. */
 export const simplifyPipeline9CollinearRoutePoints = (
   hdRoutes: readonly HighDensityRoute[],
-): HighDensityRoute[] =>
-  hdRoutes.map((hdRoute): HighDensityRoute => {
+): HighDensityRoute[] => {
+  // Force updates depend on the control vertices even when the copper is
+  // collinear. Restrict this approximation to pathological grid-heavy regions,
+  // where thousands of points make segment-pair processing impractical.
+  const pointCountByRegion = new Map<string, number>()
+  for (const route of hdRoutes) {
+    if (!route.regionId) continue
+    pointCountByRegion.set(
+      route.regionId,
+      (pointCountByRegion.get(route.regionId) ?? 0) + route.route.length,
+    )
+  }
+  return hdRoutes.map((hdRoute): HighDensityRoute => {
+    if (
+      !hdRoute.regionId ||
+      pointCountByRegion.get(hdRoute.regionId)! < MIN_FORCE_REGION_POINT_COUNT
+    )
+      return hdRoute
     const route: HighDensityRoute["route"] = []
     const routeIndices: number[] = []
     for (const [index, point] of hdRoute.route.entries()) {
@@ -61,3 +78,4 @@ export const simplifyPipeline9CollinearRoutePoints = (
     }
     return { ...hdRoute, route: retainedRoute }
   })
+}
