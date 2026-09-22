@@ -1,3 +1,4 @@
+import { fitDuplicatePortsToSharedBoundary } from "./fitDuplicatePortsToSharedBoundary"
 import type { SerializedHyperGraph } from "@tscircuit/hypergraph"
 import type { GraphicsObject } from "graphics-debug"
 import { BaseSolver } from "lib/solvers/BaseSolver"
@@ -1102,6 +1103,13 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
     } else {
       this.duplicateCongestedPortReport = duplicateCongestedPortSolver.report
       graphForTiny = duplicateCongestedPortSolver.getOutput()
+      if (params.duplicatePortTraceWidth !== undefined) {
+        graphForTiny = fitDuplicatePortsToSharedBoundary(
+          graphForTiny,
+          params.duplicatePortTraceWidth,
+          params.duplicatePortClearance ?? 0.15,
+        )
+      }
       for (const port of graphForTiny.ports) {
         const metadata = asTinyPortMetadata(port.d)
         if (typeof metadata.duplicatedFromPortId !== "string") continue
@@ -1110,10 +1118,9 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
       }
     }
     this.duplicatedPortCount =
-      this.duplicateCongestedPortReport?.duplicatedPorts.reduce(
-        (sum, duplicatedPort) => sum + duplicatedPort.duplicatePortIds.length,
-        0,
-      ) ?? 0
+      graphForTiny.ports.filter(
+        (port) => typeof port.d.duplicatedFromPortId === "string",
+      ).length
     const tinyPipelineInput = getTinyHyperGraphPipelineInput(
       {
         ...graphForTiny,
