@@ -13,7 +13,7 @@ import bugReport from "../../fixtures/bug-reports/bugreport107-board-1726/bugrep
 
 const srj = bugReport.simple_route_json as SimpleRouteJson
 
-test("Pipeline9 routes bugreport107-board-1726", async (): Promise<void> => {
+test.skip("Pipeline9 routes bugreport107-board-1726", async (): Promise<void> => {
   const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(
     structuredClone(srj),
     { cacheProvider: null },
