@@ -25,6 +25,6 @@ test("collinear simplification keeps vias, reversals, layer transitions, and seg
   const original = structuredClone(input)
   const [result] = simplifyPipeline9CollinearRoutePoints([input])
   expect(input).toEqual(original)
-  expect(result!.route).toEqual(original.route.filter((_, i) => i !== 1))
+  expect(result!.route).toEqual(original.route)
   expect(result!.vias).toEqual(original.vias)
 })

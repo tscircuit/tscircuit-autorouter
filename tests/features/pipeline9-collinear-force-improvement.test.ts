@@ -8,7 +8,7 @@ test("AM3352 force improvement removes redundant grid points without changing co
   const routes = input.hdRoutes as HighDensityRoute[]
   const simplified = simplifyPipeline9CollinearRoutePoints(routes)
   expect(routes.reduce((n, r) => n + r.route.length, 0)).toBe(4735)
-  expect(simplified.reduce((n, r) => n + r.route.length, 0)).toBeLessThan(350)
+  expect(simplified.reduce((n, r) => n + r.route.length, 0)).toBeLessThan(600)
   for (let index = 0; index < routes.length; index++) {
     const original = routes[index]!
     const result = simplified[index]!

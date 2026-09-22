@@ -1,12 +1,17 @@
 import type { HighDensityRoute } from "lib/types/high-density-types"
 
-/** Remove redundant grid vertices before the force improver's segment-pair work. */
+// Short collinear runs still provide useful force-improvement control points.
+// Only collapse the long oversampled straight runs emitted by grid routing.
+const MIN_COLLINEAR_GRID_SEGMENTS = 16
+
+/** Reduce dense grid runs while preserving ordinary force-improvement vertices. */
 export const simplifyPipeline9CollinearRoutePoints = (
   hdRoutes: readonly HighDensityRoute[],
 ): HighDensityRoute[] =>
   hdRoutes.map((hdRoute): HighDensityRoute => {
     const route: HighDensityRoute["route"] = []
-    for (const point of hdRoute.route) {
+    const routeIndices: number[] = []
+    for (const [index, point] of hdRoute.route.entries()) {
       while (route.length >= 2) {
         const start = route[route.length - 2]!
         const middle = route[route.length - 1]!
@@ -36,8 +41,23 @@ export const simplifyPipeline9CollinearRoutePoints = (
         )
           break
         route.pop()
+        routeIndices.pop()
       }
       route.push(point)
+      routeIndices.push(index)
     }
-    return { ...hdRoute, route }
+    const retainedRoute: HighDensityRoute["route"] = []
+    for (let i = 0; i < route.length; i++) {
+      const point = route[i]!
+      const previous = route[i - 1]
+      if (previous) {
+        const start = routeIndices[i - 1]!
+        const end = routeIndices[i]!
+        if (end - start < MIN_COLLINEAR_GRID_SEGMENTS) {
+          retainedRoute.push(...hdRoute.route.slice(start + 1, end))
+        }
+      }
+      retainedRoute.push(point)
+    }
+    return { ...hdRoute, route: retainedRoute }
   })
