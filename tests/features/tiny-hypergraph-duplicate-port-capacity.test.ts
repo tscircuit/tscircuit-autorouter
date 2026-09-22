@@ -31,17 +31,19 @@ test("cramped ports price overflow without cutting connectivity", async () => {
       d: { ...port.d, cramped: false },
     })),
   }
-  expect(assignCrampedPortCapacityCosts(ordinary, 0.1, 0.15)).toEqual(
-    ordinary,
-  )
+  expect(assignCrampedPortCapacityCosts(ordinary, 0.1, 0.15)).toEqual(ordinary)
   const before = structuredClone(graph)
   const result = assignCrampedPortCapacityCosts(graph, 0.1, 0.15)
   expect(graph).toEqual(before)
   expect(result.ports[0]).toEqual(graph.ports[0])
   expect(result.ports.length).toBe(graph.ports.length)
   expect(result.regions).toEqual(graph.regions)
-  const physical = result.ports.filter((port) => !port.d.crampedPortOverflowPenalty)
-  const overflow = result.ports.filter((port) => port.d.crampedPortOverflowPenalty)
+  const physical = result.ports.filter(
+    (port) => !port.d.crampedPortOverflowPenalty,
+  )
+  const overflow = result.ports.filter(
+    (port) => port.d.crampedPortOverflowPenalty,
+  )
   expect(physical.length).toBe(5)
   expect(overflow.length).toBe(11)
   expect(overflow.map((port) => port.d.crampedPortOverflowPenalty)).toEqual(

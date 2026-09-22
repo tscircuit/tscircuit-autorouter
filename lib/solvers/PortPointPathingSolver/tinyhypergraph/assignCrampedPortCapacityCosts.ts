@@ -123,6 +123,5 @@ export const assignCrampedPortCapacityCosts = (
   return {
     ...graph,
     ports,
-
   }
 }

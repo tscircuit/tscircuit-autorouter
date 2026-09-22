@@ -65,6 +65,8 @@ test("final greedy routing prefers free capacity but can use overflow when neces
       (port) => port.serializedPortId === "overflow",
     )
     expect(overflowIndex).toBeGreaterThanOrEqual(0)
-    expect(solver.state.portAssignment[overflowIndex] >= 0).toBe(!withAlternative)
+    expect(solver.state.portAssignment[overflowIndex] >= 0).toBe(
+      !withAlternative,
+    )
   }
 })
