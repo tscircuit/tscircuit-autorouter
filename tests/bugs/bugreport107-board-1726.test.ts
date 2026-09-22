@@ -49,9 +49,13 @@ test("Pipeline9 completely routes bugreport107-board-1726", async (): Promise<vo
     routedTraces: solver.getOutputSimplifiedPcbTraces(),
     includeBoardClearance: true,
   }
+  const snapshotPath =
+    process.platform === "linux"
+      ? import.meta.path.replace(/\.test\.ts$/, "-linux.test.ts")
+      : import.meta.path
   // Capture the routed board even when the final DRC assertion fails.
   await expect(getBugReportSnapshotSvg(drcInput)).toMatchSvgSnapshot(
-    import.meta.path,
+    snapshotPath,
     { svgName: "routed" },
   )
   const { circuitJson, errors } = evaluateRelaxedDrc(drcInput)
