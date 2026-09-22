@@ -119,7 +119,8 @@ test("cramped ports price overflow without cutting connectivity", async () => {
     graphics.texts!.push({
       x: offset,
       y: 0.8,
-      text: count > 20 ? "Prefer an available detour" : "No overflow preference",
+      text:
+        count > 20 ? "Prefer an available detour" : "No overflow preference",
       fontSize: 0.09,
     })
   }
