@@ -2,6 +2,7 @@ import {
   getFixedObstacleViolations,
   getNewViaPadViolations,
   relaxTraceClearance,
+  type Bounds,
 } from "@tscircuit/repair04"
 import type { DrcEvaluator } from "high-density-repair03/lib"
 import { RELAXED_DRC_OPTIONS } from "lib/testing/drcPresets"
@@ -15,10 +16,12 @@ export const applyPipeline9ClearanceProjection = ({
   originalSrj,
   routes,
   drcEvaluator,
+  mutableBounds,
 }: {
   originalSrj: SimpleRouteJson
   routes: HighDensityRoute[]
   drcEvaluator: DrcEvaluator
+  mutableBounds?: Bounds
 }): HighDensityRoute[] => {
   const reference = drcEvaluator({ traces: [], routes, hdRoutes: routes })
   const errors = Array.isArray(reference) ? reference : reference.errors
@@ -28,16 +31,23 @@ export const applyPipeline9ClearanceProjection = ({
     traces: undefined,
   }
   const canonicalRoutes = canonicalizePipeline9HdRoutes(routes)
-  // Whole-board projection needs no cropping or splicing. Preserve every
-  // transition's point indices so the via guard can prove its identity.
+  // Preserve transition indices for the via guard. A regional proposal must
+  // keep copper outside its mutable area fixed during projection as well.
   const candidate = relaxTraceClearance({
     srj,
     routes: canonicalRoutes,
-    bounds: srj.bounds,
+    bounds: mutableBounds ?? srj.bounds,
     boundaryMargin: 0,
     boardEdgeClearance: originalSrj.minBoardEdgeClearance ?? 0,
     lockedPointIndices: canonicalRoutes.map((route) =>
-      route.route.map(() => false),
+      route.route.map((point) =>
+        mutableBounds
+          ? point.x < mutableBounds.minX ||
+            point.x > mutableBounds.maxX ||
+            point.y < mutableBounds.minY ||
+            point.y > mutableBounds.maxY
+          : false,
+      ),
     ),
     allowViaMovement: true,
     traceClearance:
