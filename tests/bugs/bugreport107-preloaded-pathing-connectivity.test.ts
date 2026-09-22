@@ -27,9 +27,10 @@ test("bugreport107 preserves its preloaded endpoint escape and completes pathing
   }
 
   expect(solver.failed).toBeFalse()
-  const ports = solver.sharedEdgeSegmentsWithNecessaryCrampedPortPoints!.flatMap(
-    (segment) => segment.portPoints,
-  )
+  const ports =
+    solver.sharedEdgeSegmentsWithNecessaryCrampedPortPoints!.flatMap(
+      (segment) => segment.portPoints,
+    )
   const endpointExit = ports.find(
     (port) => port.segmentPortPointId === "ce20829_pp0_z0_cramped",
   )
@@ -48,8 +49,10 @@ test("bugreport107 preserves its preloaded endpoint escape and completes pathing
   // crossing does not waive trace-width or clearance checks downstream.
   // Do not count a path through the adjacent foreign-net pad as an escape.
   const freeTopLayerNodes = new Set(
-    solver.capacityNodes!
-      .filter((node) => !node._containsObstacle && node.availableZ.includes(0))
+    solver
+      .capacityNodes!.filter(
+        (node) => !node._containsObstacle && node.availableZ.includes(0),
+      )
       .map((node) => node.capacityMeshNodeId),
   )
   const neighborsByNode = new Map<string, Set<string>>()
