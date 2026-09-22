@@ -3,7 +3,7 @@ import viaRemoval from "fixtures/legacy/assets/viaremoval01.json" with {
 }
 import { BaseSolver } from "lib/solvers/BaseSolver"
 import { GenericSolverDebugger } from "lib/testing/GenericSolverDebugger"
-import { UselessViaRemovalSolver } from "lib/solvers/UselessViaRemovalSolver/UselessViaRemovalSolver"
+import { UselessViaRemovalSolver } from "@tscircuit/trace-simplification-solver"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
 
 export default () => (
