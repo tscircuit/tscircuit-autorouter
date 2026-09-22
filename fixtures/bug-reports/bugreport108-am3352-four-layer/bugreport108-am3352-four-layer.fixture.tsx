@@ -8,9 +8,10 @@ export default function Am3352FourLayerBugReport(): React.JSX.Element {
       <div style={{ padding: 16 }}>
         <h2>AM3352 four-layer board — route from scratch</h2>
         <p style={{ color: "#b91c1c" }}>
-          Known Pipeline 9 failure: high-density routing cannot solve
-          {" "}topology_merge_3012 after expanding the region to 8x.
-          A fresh solve took about 187 seconds; it did not hit the test timeout.
+          Pipeline 9 now reaches length matching after about 21 minutes, but
+          DDR_BYTE0 fails: source_net_70 needs 5.1637 mm of added length.
+          The repaired routing still has thousands of DRC violations; this
+          board is not ready for fabrication.
         </p>
         <p>
           70 × 60 mm · 138 connections · 774 terminals · 907 obstacles.

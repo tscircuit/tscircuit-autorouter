@@ -43,20 +43,40 @@ The converter reconstructs bus membership from `source_bus` records because the
 core converter exports buses from live components rather than static circuit JSON.
 The fixture-integrity test checks completeness and absence of saved routing.
 
-## Full solve and failure snapshot
+## Full solve and snapshot
 
-A fresh Pipeline 9 solve with caching disabled terminates unsuccessfully after
-about 187 seconds locally. `highDensityRouteSolver` cannot solve
-`topology_merge_3012`, even after growing the region to 8x; the regular and regional
-routing attempts both fail. This is a solver failure, not a test timeout.
+This board exercises three routing bottlenecks:
 
-The full-solve regression test asserts this known failure and snapshots the failed
-high-density stage, with an explicit incomplete-routing label. It will need to be
-changed to assert success and snapshot the final board when the solver is fixed.
+- Crowded high-density nodes need a growth budget based on terminal spacing as
+  well as via diameter. The original failure was `topology_merge_3012`.
+- Dense grid routes contain thousands of redundant collinear points. Removing
+  those points before force improvement preserves copper geometry while reducing
+  segment-pair work.
+- Shared vias must move with every attached route. Moving only some branches can
+  make the via merger oscillate indefinitely between two occupied sites.
+
+Small extracted regressions run in normal CI. The complete, uncached Pipeline 9
+solve is opt-in because it takes about 21.5 minutes locally. It now passes routing,
+stitching, simplification, and joint DRC repair, then fails in length matching:
+`source_net_70` needs 5.1637 mm of added length and exhausts the matcher candidates.
+The test asserts this specific remaining failure and snapshots repaired routing
+with a failure header and the benchmark's relaxed-DRC count.
+
+The captured repaired output contains 637 traces and 3,413 relaxed-DRC errors:
+1,874 trace errors, 1,008 via/trace clearance errors, 314 pad/trace clearance
+errors, and 217 via clearance errors. No length constraints were removed.
+An isolated experiment with 0.1 mm meander spacing still failed (66 candidates).
+This output is not suitable for fabrication; congestion must be addressed before
+post-processing can produce clean, length-matched routing.
+
+Before length matching, planar routed skew is 14.0323 mm for DDR_BYTE0 and
+7.1412 mm for DDR_BYTE1 (both limited to 0.635 mm). DQS0, DQS1, and CK skew are
+4.7384, 2.9099, and 3.1275 mm respectively (limited to 0.127 mm). These are
+geometric route lengths, not electrical delay measurements.
 
 ```sh
-bun test tests/bugs/bugreport108-am3352-four-layer.test.ts --timeout 9999999
+RUN_AM3352_FULL_SOLVE=1 bun test tests/bugs/bugreport108-am3352-four-layer.test.ts --timeout 9999999
 
 # Regenerate only this snapshot:
-BUN_UPDATE_SNAPSHOTS=1 bun test tests/bugs/bugreport108-am3352-four-layer.test.ts --timeout 9999999
+RUN_AM3352_FULL_SOLVE=1 BUN_UPDATE_SNAPSHOTS=1 bun test tests/bugs/bugreport108-am3352-four-layer.test.ts --timeout 9999999
 ```
