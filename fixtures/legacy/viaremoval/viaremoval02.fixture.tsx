@@ -3,8 +3,10 @@ import viaRemoval from "fixtures/legacy/assets/viaremoval02.json" with {
 }
 import { BaseSolver } from "lib/solvers/BaseSolver"
 import { GenericSolverDebugger } from "lib/testing/GenericSolverDebugger"
-import { UselessViaRemovalSolver } from "lib/solvers/UselessViaRemovalSolver/UselessViaRemovalSolver"
-import { SingleRouteUselessViaRemovalSolver } from "lib/solvers/UselessViaRemovalSolver/SingleRouteUselessViaRemovalSolver"
+import {
+  UselessViaRemovalSolver,
+  SingleRouteUselessViaRemovalSolver,
+} from "@tscircuit/trace-simplification-solver"
 import { HighDensityRouteSpatialIndex } from "lib/data-structures/HighDensityRouteSpatialIndex"
 import { ObstacleSpatialHashIndex } from "lib/data-structures/ObstacleTree"
 import { ConnectivityMap } from "circuit-json-to-connectivity-map"
