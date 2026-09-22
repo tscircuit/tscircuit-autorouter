@@ -6,12 +6,14 @@ type Bounds = { minX: number; maxX: number; minY: number; maxY: number }
 
 const getBounds = (region: Region): Bounds => {
   const { center, width, height } = region.d
-  return region.d.bounds ?? {
-    minX: center.x - width / 2,
-    maxX: center.x + width / 2,
-    minY: center.y - height / 2,
-    maxY: center.y + height / 2,
-  }
+  return (
+    region.d.bounds ?? {
+      minX: center.x - width / 2,
+      maxX: center.x + width / 2,
+      minY: center.y - height / 2,
+      maxY: center.y + height / 2,
+    }
+  )
 }
 
 /** Keep original ports fixed; place extra capacity only where another trace fits. */

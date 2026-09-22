@@ -88,8 +88,7 @@ test("duplicate ports use available boundary space instead of increasing capacit
       graphics.circles!.push({
         center: { x: offset, y: port.d.y },
         radius: 0.05,
-        fill:
-          index === 0 ? "rgba(220,38,38,0.45)" : "rgba(5,150,105,0.65)",
+        fill: index === 0 ? "rgba(220,38,38,0.45)" : "rgba(5,150,105,0.65)",
       })
     }
     graphics.texts!.push({

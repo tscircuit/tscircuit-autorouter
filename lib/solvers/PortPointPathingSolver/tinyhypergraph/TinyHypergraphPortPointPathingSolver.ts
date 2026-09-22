@@ -1117,10 +1117,9 @@ export class TinyHypergraphPortPointPathingSolver extends BaseSolver {
         delete metadata._preloadedTracePortAssignments
       }
     }
-    this.duplicatedPortCount =
-      graphForTiny.ports.filter(
-        (port) => typeof port.d.duplicatedFromPortId === "string",
-      ).length
+    this.duplicatedPortCount = graphForTiny.ports.filter(
+      (port) => typeof port.d.duplicatedFromPortId === "string",
+    ).length
     const tinyPipelineInput = getTinyHyperGraphPipelineInput(
       {
         ...graphForTiny,
