@@ -58,9 +58,9 @@ test("cramped duplicate ports use available boundary space instead of increasing
       d: { ...region.d, height: 0.35 },
     })),
   }
-  expect(fitCrampedDuplicatePortsToSharedBoundary(narrow, 0.1, 0.15).ports).toEqual([
-    ports[0]!,
-  ])
+  expect(
+    fitCrampedDuplicatePortsToSharedBoundary(narrow, 0.1, 0.15).ports,
+  ).toEqual([ports[0]!])
   const twoLayers = {
     ...graph,
     ports: [
