@@ -16,7 +16,7 @@ const getBounds = (region: Region): Bounds => {
   )
 }
 
-/** Space cramped duplicates where possible and price virtual overflow slots. */
+/** Estimate cramped boundary capacity without changing graph geometry. */
 export const assignCrampedPortCapacityCosts = (
   graph: SerializedHyperGraph,
   traceWidth: number,
@@ -28,44 +28,12 @@ export const assignCrampedPortCapacityCosts = (
       "Duplicate port capacity requires a positive width and nonnegative clearance",
     )
   }
-  const regions = new Map(
-    graph.regions.map((region) => [region.regionId, region]),
-  )
+  const regions = new Map(graph.regions.map((region) => [region.regionId, region]))
   const boundaryKey = (port: Port): string =>
     JSON.stringify([[port.region1Id, port.region2Id].sort(), port.d.z])
-  const occupied = new Map<string, Port[]>()
+  const capacities = new Map<string, number>()
   for (const port of graph.ports) {
-    if (typeof port.d.duplicatedFromPortId === "string") continue
-    const key = boundaryKey(port)
-    const ports = occupied.get(key) ?? []
-    ports.push(port)
-    occupied.set(key, ports)
-  }
-  const overflowCount = new Map<string, number>()
-  const priceOverflow = (port: Port): Port[] => {
-    const key = boundaryKey(port)
-    const count = (overflowCount.get(key) ?? 0) + 1
-    overflowCount.set(key, count)
-    const penalty = 150 * count
-    return [
-      {
-        ...port,
-        d: {
-          ...port.d,
-          crampedPortOverflowPenalty: penalty,
-          tinyHypergraphPortPenalty:
-            (port.d.tinyHypergraphPortPenalty ?? 0) + penalty,
-        },
-      },
-    ]
-  }
-  const ports = graph.ports.flatMap((port): Port[] => {
-    // Ordinary duplicate ports remain virtual choices for later distribution.
-    // A mesh boundary is not always a physical bottleneck. Retain overflow
-    // choices, but make the router prefer space that can be demonstrated.
-    if (typeof port.d.duplicatedFromPortId !== "string" || !port.d.cramped) {
-      return [port]
-    }
+    if (!port.d.cramped) continue
     const a = regions.get(port.region1Id)
     const b = regions.get(port.region2Id)
     if (!a || !b) {
@@ -73,55 +41,36 @@ export const assignCrampedPortCapacityCosts = (
     }
     const aa = getBounds(a)
     const bb = getBounds(b)
-    const x1 = Math.max(aa.minX, bb.minX)
-    const x2 = Math.min(aa.maxX, bb.maxX)
-    const y1 = Math.max(aa.minY, bb.minY)
-    const y2 = Math.min(aa.maxY, bb.maxY)
-    const vertical = Math.abs(x2 - x1) < 1e-7 && y2 > y1
-    const horizontal = Math.abs(y2 - y1) < 1e-7 && x2 > x1
-    // Point contacts and overlapping regions do not provide a shared edge
-    // on which additional planar capacity can be demonstrated.
-    if (!vertical && !horizontal) {
-      return priceOverflow(port)
-    }
+    const dx = Math.min(aa.maxX, bb.maxX) - Math.max(aa.minX, bb.minX)
+    const dy = Math.min(aa.maxY, bb.maxY) - Math.max(aa.minY, bb.minY)
+    const length =
+      Math.abs(dx) < 1e-7 && dy > 0
+        ? dy
+        : Math.abs(dy) < 1e-7 && dx > 0
+          ? dx
+          : undefined
+    // Point contacts and overlapping regions have no shared-edge width to
+    // estimate. Their connectivity and existing routing costs stay unchanged.
+    if (length === undefined) continue
+
+    // UniformPortDistributionSolver redistributes original ports too. Estimate
+    // the whole edge's capacity, rather than treating initial positions as fixed.
+    const capacity = Math.max(1, Math.floor((length + clearance + 1e-9) / spacing))
+    capacities.set(boundaryKey(port), capacity)
+  }
+  const ports = graph.ports.map((port): Port => {
     const key = boundaryKey(port)
-    const existing = occupied.get(key) ?? []
-    const axis = vertical ? "y" : "x"
-    const low = (vertical ? y1 : x1) + traceWidth / 2
-    const high = (vertical ? y2 : x2) - traceWidth / 2
-    const positions = existing
-      .map((p) => p.d[axis] as number)
-      .sort((a, b) => a - b)
-    // Select the largest free interval after excluding all existing ports.
-    let cursor = low
-    let bestStart = low
-    let bestEnd = low - 1
-    for (const position of [...positions, high + spacing]) {
-      const end = Math.min(high, position - spacing)
-      if (end >= cursor && end - cursor > bestEnd - bestStart) {
-        bestStart = cursor
-        bestEnd = end
-      }
-      cursor = Math.max(cursor, position + spacing)
-    }
-    if (bestEnd < bestStart) {
-      return priceOverflow(port)
-    }
-    const position = bestStart
-    const placed: Port = {
+    const capacity = capacities.get(key)
+    if (capacity === undefined) return port
+    return {
       ...port,
       d: {
         ...port.d,
-        x: vertical ? (x1 + x2) / 2 : position,
-        y: vertical ? position : (y1 + y2) / 2,
+        crampedBoundaryKey: key,
+        crampedBoundaryCapacity: capacity,
+        crampedBoundaryPitch: spacing,
       },
     }
-    existing.push(placed)
-    occupied.set(key, existing)
-    return [placed]
   })
-  return {
-    ...graph,
-    ports,
-  }
+  return { ...graph, ports }
 }

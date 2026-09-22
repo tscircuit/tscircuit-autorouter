@@ -35,30 +35,21 @@ test("cramped ports price overflow without cutting connectivity", async () => {
   const before = structuredClone(graph)
   const result = assignCrampedPortCapacityCosts(graph, 0.1, 0.15)
   expect(graph).toEqual(before)
-  expect(result.ports[0]).toEqual(graph.ports[0])
   expect(result.ports.length).toBe(graph.ports.length)
   expect(result.regions).toEqual(graph.regions)
-  const physical = result.ports.filter(
-    (port) => !port.d.crampedPortOverflowPenalty,
+  expect(result.ports.every((port) => port.d.crampedBoundaryCapacity === 5)).toBe(
+    true,
   )
-  const overflow = result.ports.filter(
-    (port) => port.d.crampedPortOverflowPenalty,
-  )
-  expect(physical.length).toBe(5)
-  expect(overflow.length).toBe(11)
-  expect(overflow.map((port) => port.d.crampedPortOverflowPenalty)).toEqual(
-    Array.from({ length: 11 }, (_, index) => 150 * (index + 1)),
+  expect(new Set(result.ports.map((port) => port.d.crampedBoundaryKey)).size).toBe(
+    1,
   )
   const ids = new Set(result.ports.map((port) => port.portId))
   for (const region of result.regions) {
     expect(region.pointIds.every((id) => ids.has(id))).toBe(true)
   }
-  for (const [index, port] of physical.entries()) {
-    expect(port.d.x).toBe(0)
-    expect(Math.abs(port.d.y)).toBeLessThanOrEqual(0.55)
-    for (const other of physical.slice(index + 1)) {
-      expect(Math.abs(port.d.y - other.d.y)).toBeGreaterThanOrEqual(0.25 - 1e-9)
-    }
+  for (const [index, port] of result.ports.entries()) {
+    expect(port.d.x).toBe(graph.ports[index]!.d.x)
+    expect(port.d.y).toBe(graph.ports[index]!.d.y)
   }
   const narrow = {
     ...graph,
@@ -68,10 +59,10 @@ test("cramped ports price overflow without cutting connectivity", async () => {
     })),
   }
   expect(
-    assignCrampedPortCapacityCosts(narrow, 0.1, 0.15).ports.filter(
-      (port) => !port.d.crampedPortOverflowPenalty,
+    assignCrampedPortCapacityCosts(narrow, 0.1, 0.15).ports.every(
+      (port) => port.d.crampedBoundaryCapacity === 2,
     ),
-  ).toEqual([ports[0]!])
+  ).toBe(true)
   const twoLayers = {
     ...graph,
     ports: [
@@ -91,13 +82,15 @@ test("cramped ports price overflow without cutting connectivity", async () => {
     ...region,
     pointIds: twoLayers.ports.map((port) => port.portId),
   }))
-  expect(
-    assignCrampedPortCapacityCosts(twoLayers, 0.1, 0.15).ports.length,
-  ).toBe(result.ports.length * 2)
+  const layered = assignCrampedPortCapacityCosts(twoLayers, 0.1, 0.15)
+  expect(layered.ports.length).toBe(result.ports.length * 2)
+  expect(new Set(layered.ports.map((port) => port.d.crampedBoundaryKey)).size).toBe(
+    2,
+  )
 
   const graphics: GraphicsObject = { lines: [], circles: [], texts: [] }
-  for (const [index, output] of [graph, result].entries()) {
-    const offset = index * 2.8
+  for (const [index, count] of [1, 5, 8].entries()) {
+    const offset = index * 1.8
     graphics.lines!.push({
       points: [
         { x: offset, y: -0.6 },
@@ -106,26 +99,28 @@ test("cramped ports price overflow without cutting connectivity", async () => {
       strokeColor: "#475569",
       strokeWidth: 0.015,
     })
-    for (const port of output.ports) {
-      graphics.circles!.push({
-        center: { x: offset, y: port.d.y },
-        radius: 0.05,
-        fill:
-          index === 0
-            ? "rgba(220,38,38,0.45)"
-            : port.d.crampedPortOverflowPenalty
-              ? "rgba(217,119,6,0.25)"
-              : "rgba(5,150,105,0.65)",
+    for (let net = 0; net < count; net++) {
+      graphics.lines!.push({
+        points: [
+          { x: offset - 0.5, y: -0.5 + net * 0.15 },
+          { x: offset, y: -0.5 + net * 0.15 },
+          { x: offset + 0.5, y: -0.5 + net * 0.15 },
+        ],
+        strokeColor: count > 5 ? "#d97706" : "#059669",
+        strokeWidth: 0.025,
       })
     }
     graphics.texts!.push({
       x: offset,
       y: 1,
-      text:
-        index === 0
-          ? "Before: 16 ports in 0.05 mm"
-          : "After: 5 spaced + 11 costly virtual slots",
-      fontSize: 0.12,
+      text: `${count} distinct nets / 5 nominal slots`,
+      fontSize: 0.1,
+    })
+    graphics.texts!.push({
+      x: offset,
+      y: 0.8,
+      text: count > 5 ? "Prefer an available detour" : "No overflow preference",
+      fontSize: 0.09,
     })
   }
   await expect(graphics).toMatchGraphicsSvg(import.meta.path)
