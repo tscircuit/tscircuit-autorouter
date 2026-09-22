@@ -13,7 +13,6 @@ import { isAllCandidatesBlockedByObstacles } from "./isAllCandidatesBlockedByObs
 import { costFunction } from "./costFunction"
 import { ExploredPortPoint } from "./types"
 import { pointToBoxDistance } from "@tscircuit/math-utils"
-import { getConnectivityMapFromSimpleRouteJson } from "lib/utils/getConnectivityMapFromSimpleRouteJson"
 import { SingleTargetNecessaryCrampedPortPointSolver } from "./SingleTargetNecessaryCrampedPortPointSolver"
 
 const CRAMPED_NON_NECESSARY_PORT_PENALTY = 1_000
@@ -238,149 +237,11 @@ export class MultiTargetNecessaryCrampedPortPointSolver extends BaseSolver {
     }
   }
 
-  getNormallyKeptPortPoints(): Set<SegmentPortPoint> {
-    return new Set(
-      this.input.sharedEdgeSegments.flatMap((segment) =>
-        segment.portPoints.filter(
-          (port) =>
-            !port.cramped ||
-            this.crampedPortPointsToKeep.has(port) ||
-            this.isMultilayerEscapePort(port),
-        ),
-      ),
-    )
-  }
-
-  private getRequiredPreloadedCrampedPorts(): Set<SegmentPortPoint> {
-    const ports = this.input.sharedEdgeSegments.flatMap(
-      (segment) => segment.portPoints,
-    )
-    const normallyKept = this.getNormallyKeptPortPoints()
-    const candidates = ports.filter(
-      (port) =>
-        !normallyKept.has(port) &&
-        (port._preloadedTracePortAssignments?.length ?? 0) > 0,
-    )
-    const required = new Set<SegmentPortPoint>()
-    if (candidates.length === 0) return required
-    const connMap = getConnectivityMapFromSimpleRouteJson(
-      this.input.simpleRouteJson,
-    )
-    const fixedNetIds = new Set(
-      candidates.flatMap((port) =>
-        port._preloadedTracePortAssignments!.map(
-          ({ fixedNetId }) => fixedNetId,
-        ),
-      ),
-    )
-    for (const fixedNetId of fixedNetIds) {
-      const parents = new Map<string, string>()
-      const find = (key: string): string => {
-        let root = key
-        while (parents.has(root)) root = parents.get(root)!
-        while (key !== root) {
-          const next = parents.get(key)!
-          parents.set(key, root)
-          key = next
-        }
-        return root
-      }
-      const allowedNodes = new Set(
-        this.input.capacityMeshNodes
-          .filter(
-            (node) =>
-              !node._containsObstacle ||
-              node._connectedTo?.some(
-                (id) => connMap.getNetConnectedToId(id) === fixedNetId,
-              ),
-          )
-          .map((node) => node.capacityMeshNodeId),
-      )
-      // Same-net pads and multilayer regions are legal routes; foreign pads
-      // must not hide an isolated preloaded endpoint.
-      for (const node of this.input.capacityMeshNodes) {
-        if (!allowedNodes.has(node.capacityMeshNodeId)) continue
-        const [firstZ, ...otherLayers] = node.availableZ
-        for (const z of otherLayers) {
-          parents.set(
-            `${node.capacityMeshNodeId}:${z}`,
-            `${node.capacityMeshNodeId}:${firstZ}`,
-          )
-        }
-      }
-      for (const port of normallyKept) {
-        if (!port.nodeIds.every((id) => allowedNodes.has(id))) continue
-        for (const z of port.availableZ) {
-          const left = find(`${port.nodeIds[0]}:${z}`)
-          const right = find(`${port.nodeIds[1]}:${z}`)
-          if (left !== right) parents.set(left, right)
-        }
-      }
-      const anchors = new Set<string>()
-      for (const port of normallyKept) {
-        for (const assignment of port._preloadedTracePortAssignments ?? []) {
-          if (assignment.fixedNetId !== fixedNetId) continue
-          for (const id of port.nodeIds) {
-            if (allowedNodes.has(id)) anchors.add(find(`${id}:${assignment.z}`))
-          }
-        }
-      }
-      const edges = candidates.flatMap((port) =>
-        port.nodeIds.every((id) => allowedNodes.has(id))
-          ? port
-              ._preloadedTracePortAssignments!.filter(
-                (assignment) => assignment.fixedNetId === fixedNetId,
-              )
-              .map(({ z }) => ({
-                port,
-                left: find(`${port.nodeIds[0]}:${z}`),
-                right: find(`${port.nodeIds[1]}:${z}`),
-              }))
-          : [],
-      )
-      const adjacency = new Map<string, Set<number>>()
-      const retainedEdges = new Set<number>()
-      for (const [index, edge] of edges.entries()) {
-        const left = find(edge.left)
-        const right = find(edge.right)
-        if (left === right) continue
-        parents.set(left, right)
-        retainedEdges.add(index)
-        for (const endpoint of [edge.left, edge.right]) {
-          if (!adjacency.has(endpoint)) adjacency.set(endpoint, new Set())
-          adjacency.get(endpoint)!.add(index)
-        }
-      }
-      // Keep paths between existing preloaded regions, not dangling branches
-      // that introduce new sections without repairing any endpoint.
-      const leaves = [...adjacency.keys()].filter(
-        (key) => !anchors.has(key) && adjacency.get(key)!.size === 1,
-      )
-      while (leaves.length > 0) {
-        const leaf = leaves.pop()!
-        for (const index of adjacency.get(leaf)!) {
-          retainedEdges.delete(index)
-          const edge = edges[index]!
-          for (const endpoint of [edge.left, edge.right]) {
-            const neighbors = adjacency.get(endpoint)!
-            neighbors.delete(index)
-            if (!anchors.has(endpoint) && neighbors.size === 1) {
-              leaves.push(endpoint)
-            }
-          }
-        }
-      }
-      for (const index of retainedEdges) required.add(edges[index]!.port)
-    }
-    return required
-  }
-
   override getOutput(): SharedEdgeSegment[] {
     if (this.filteredOutput) {
       return this.filteredOutput
     }
 
-    const requiredPreloadedPorts = this.getRequiredPreloadedCrampedPorts()
     this.filteredOutput = this.input.sharedEdgeSegments.map((segment) => ({
       ...segment,
       portPoints: segment.portPoints.flatMap((portPoint) => {
@@ -388,12 +249,7 @@ export class MultiTargetNecessaryCrampedPortPointSolver extends BaseSolver {
           return [portPoint]
         }
 
-        // Preserve preloaded crossings only when needed for connectivity.
-        // Keep the cramped penalty so ordinary routes prefer wider passages.
-        if (
-          this.isMultilayerEscapePort(portPoint) ||
-          requiredPreloadedPorts.has(portPoint)
-        ) {
+        if (this.isMultilayerEscapePort(portPoint)) {
           return [
             {
               ...portPoint,
