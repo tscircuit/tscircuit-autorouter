@@ -16,8 +16,8 @@ const getBounds = (region: Region): Bounds => {
   )
 }
 
-/** Limit duplicate cramped ports to physical space on their shared boundary. */
-export const fitCrampedDuplicatePortsToSharedBoundary = (
+/** Space cramped duplicates where possible and price virtual overflow slots. */
+export const assignCrampedPortCapacityCosts = (
   graph: SerializedHyperGraph,
   traceWidth: number,
   clearance: number,
@@ -41,11 +41,28 @@ export const fitCrampedDuplicatePortsToSharedBoundary = (
     ports.push(port)
     occupied.set(key, ports)
   }
-  const removed = new Set<string>()
+  const overflowCount = new Map<string, number>()
+  const priceOverflow = (port: Port): Port[] => {
+    const key = boundaryKey(port)
+    const count = (overflowCount.get(key) ?? 0) + 1
+    overflowCount.set(key, count)
+    const penalty = 150 * count
+    return [
+      {
+        ...port,
+        d: {
+          ...port.d,
+          crampedPortOverflowPenalty: penalty,
+          tinyHypergraphPortPenalty:
+            (port.d.tinyHypergraphPortPenalty ?? 0) + penalty,
+        },
+      },
+    ]
+  }
   const ports = graph.ports.flatMap((port): Port[] => {
     // Ordinary duplicate ports remain virtual choices for later distribution.
-    // Cramped ports bypass normal sampling and must not create arbitrary
-    // capacity at narrow escape boundaries.
+    // A mesh boundary is not always a physical bottleneck. Retain overflow
+    // choices, but make the router prefer space that can be demonstrated.
     if (typeof port.d.duplicatedFromPortId !== "string" || !port.d.cramped) {
       return [port]
     }
@@ -65,8 +82,7 @@ export const fitCrampedDuplicatePortsToSharedBoundary = (
     // Point contacts and overlapping regions do not provide a shared edge
     // on which additional planar capacity can be demonstrated.
     if (!vertical && !horizontal) {
-      removed.add(port.portId)
-      return []
+      return priceOverflow(port)
     }
     const key = boundaryKey(port)
     const existing = occupied.get(key) ?? []
@@ -89,8 +105,7 @@ export const fitCrampedDuplicatePortsToSharedBoundary = (
       cursor = Math.max(cursor, position + spacing)
     }
     if (bestEnd < bestStart) {
-      removed.add(port.portId)
-      return []
+      return priceOverflow(port)
     }
     const position = bestStart
     const placed: Port = {
@@ -108,9 +123,6 @@ export const fitCrampedDuplicatePortsToSharedBoundary = (
   return {
     ...graph,
     ports,
-    regions: graph.regions.map((region) => ({
-      ...region,
-      pointIds: region.pointIds.filter((id) => !removed.has(id)),
-    })),
+
   }
 }

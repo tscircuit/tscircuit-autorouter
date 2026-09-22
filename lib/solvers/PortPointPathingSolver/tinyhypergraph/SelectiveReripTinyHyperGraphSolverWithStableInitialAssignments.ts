@@ -1,4 +1,9 @@
-import { SelectiveReripTinyHyperGraphSolver } from "tiny-hypergraph/lib/index"
+import {
+  SelectiveReripTinyHyperGraphSolver,
+  type TinyHyperGraphSolver,
+  type TinyHyperGraphSolverOptions,
+} from "tiny-hypergraph/lib/index"
+import { CrampedPortAwareGreedyFinalRouteSolver } from "./CrampedPortAwareGreedyFinalRouteSolver"
 import { applyInitialAssignments } from "tiny-hypergraph/lib/initialAssignments"
 
 /**
@@ -7,6 +12,18 @@ import { applyInitialAssignments } from "tiny-hypergraph/lib/initialAssignments"
  * discarding every preloaded route.
  */
 export class SelectiveReripTinyHyperGraphSolverWithStableInitialAssignments extends SelectiveReripTinyHyperGraphSolver {
+  protected override createGreedyFinalRouteSolver(
+    options: TinyHyperGraphSolverOptions,
+    attempt: number,
+  ): TinyHyperGraphSolver {
+    if (attempt < 0) return super.createGreedyFinalRouteSolver(options, attempt)
+    return new CrampedPortAwareGreedyFinalRouteSolver(
+      this.topology,
+      this.problem,
+      options,
+    )
+  }
+
   private initialAssignmentRouteIds?: ReadonlySet<number>
 
   protected override getRouteIdsPreferredForPreservation(): ReadonlySet<number> {

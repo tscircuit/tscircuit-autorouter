@@ -1,9 +1,9 @@
 import type { SerializedHyperGraph } from "@tscircuit/hypergraph"
 import { expect, test } from "bun:test"
 import type { GraphicsObject } from "graphics-debug"
-import { fitCrampedDuplicatePortsToSharedBoundary } from "lib/solvers/PortPointPathingSolver/tinyhypergraph/fitCrampedDuplicatePortsToSharedBoundary"
+import { assignCrampedPortCapacityCosts } from "lib/solvers/PortPointPathingSolver/tinyhypergraph/assignCrampedPortCapacityCosts"
 
-test("cramped duplicate ports use available boundary space instead of increasing capacity at one point", async () => {
+test("cramped ports price overflow without cutting connectivity", async () => {
   const ports = Array.from({ length: 16 }, (_, index) => ({
     portId: index === 0 ? "entry" : `entry::dup${index}`,
     region1Id: "left",
@@ -31,23 +31,30 @@ test("cramped duplicate ports use available boundary space instead of increasing
       d: { ...port.d, cramped: false },
     })),
   }
-  expect(fitCrampedDuplicatePortsToSharedBoundary(ordinary, 0.1, 0.15)).toEqual(
+  expect(assignCrampedPortCapacityCosts(ordinary, 0.1, 0.15)).toEqual(
     ordinary,
   )
   const before = structuredClone(graph)
-  const result = fitCrampedDuplicatePortsToSharedBoundary(graph, 0.1, 0.15)
+  const result = assignCrampedPortCapacityCosts(graph, 0.1, 0.15)
   expect(graph).toEqual(before)
   expect(result.ports[0]).toEqual(graph.ports[0])
-  expect(result.ports.length).toBeGreaterThan(1)
-  expect(result.ports.length).toBeLessThanOrEqual(5)
+  expect(result.ports.length).toBe(graph.ports.length)
+  expect(result.regions).toEqual(graph.regions)
+  const physical = result.ports.filter((port) => !port.d.crampedPortOverflowPenalty)
+  const overflow = result.ports.filter((port) => port.d.crampedPortOverflowPenalty)
+  expect(physical.length).toBe(5)
+  expect(overflow.length).toBe(11)
+  expect(overflow.map((port) => port.d.crampedPortOverflowPenalty)).toEqual(
+    Array.from({ length: 11 }, (_, index) => 150 * (index + 1)),
+  )
   const ids = new Set(result.ports.map((port) => port.portId))
   for (const region of result.regions) {
     expect(region.pointIds.every((id) => ids.has(id))).toBe(true)
   }
-  for (const [index, port] of result.ports.entries()) {
+  for (const [index, port] of physical.entries()) {
     expect(port.d.x).toBe(0)
     expect(Math.abs(port.d.y)).toBeLessThanOrEqual(0.55)
-    for (const other of result.ports.slice(index + 1)) {
+    for (const other of physical.slice(index + 1)) {
       expect(Math.abs(port.d.y - other.d.y)).toBeGreaterThanOrEqual(0.25 - 1e-9)
     }
   }
@@ -59,7 +66,9 @@ test("cramped duplicate ports use available boundary space instead of increasing
     })),
   }
   expect(
-    fitCrampedDuplicatePortsToSharedBoundary(narrow, 0.1, 0.15).ports,
+    assignCrampedPortCapacityCosts(narrow, 0.1, 0.15).ports.filter(
+      (port) => !port.d.crampedPortOverflowPenalty,
+    ),
   ).toEqual([ports[0]!])
   const twoLayers = {
     ...graph,
@@ -81,7 +90,7 @@ test("cramped duplicate ports use available boundary space instead of increasing
     pointIds: twoLayers.ports.map((port) => port.portId),
   }))
   expect(
-    fitCrampedDuplicatePortsToSharedBoundary(twoLayers, 0.1, 0.15).ports.length,
+    assignCrampedPortCapacityCosts(twoLayers, 0.1, 0.15).ports.length,
   ).toBe(result.ports.length * 2)
 
   const graphics: GraphicsObject = { lines: [], circles: [], texts: [] }
@@ -99,7 +108,12 @@ test("cramped duplicate ports use available boundary space instead of increasing
       graphics.circles!.push({
         center: { x: offset, y: port.d.y },
         radius: 0.05,
-        fill: index === 0 ? "rgba(220,38,38,0.45)" : "rgba(5,150,105,0.65)",
+        fill:
+          index === 0
+            ? "rgba(220,38,38,0.45)"
+            : port.d.crampedPortOverflowPenalty
+              ? "rgba(217,119,6,0.25)"
+              : "rgba(5,150,105,0.65)",
       })
     }
     graphics.texts!.push({
@@ -108,7 +122,7 @@ test("cramped duplicate ports use available boundary space instead of increasing
       text:
         index === 0
           ? "Before: 16 ports in 0.05 mm"
-          : `After: ${output.ports.length} ports, >=0.25 mm pitch`,
+          : "After: 5 spaced + 11 costly virtual slots",
       fontSize: 0.12,
     })
   }
