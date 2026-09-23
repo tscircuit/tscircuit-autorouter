@@ -1,4 +1,5 @@
 import { expect, test } from "bun:test"
+import type { GraphicsObject } from "graphics-debug"
 import type { SimpleRouteJson } from "lib/types"
 import type { HighDensityRoute } from "lib/types/high-density-types"
 import { convertHdRouteToSimplifiedRoute } from "lib/utils/convertHdRouteToSimplifiedRoute"
@@ -61,7 +62,7 @@ test("exports both path-defined vias when repair omits one from the via list", a
       },
     ],
   }
-  const graphics = convertSrjToGraphicsObject(output)
+  const graphics: GraphicsObject = convertSrjToGraphicsObject(output)
   graphics.texts = [
     {
       x: -2,

@@ -272,6 +272,14 @@ describe("convertHdRouteToSimplifiedRoute", () => {
           "y": 3,
         },
         {
+          "from_layer": "inner1",
+          "route_type": "via",
+          "to_layer": "inner2",
+          "via_diameter": 0.4,
+          "x": 3,
+          "y": 3,
+        },
+        {
           "layer": "inner2",
           "route_type": "wire",
           "width": 0.2,
