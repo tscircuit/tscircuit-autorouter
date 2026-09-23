@@ -14,7 +14,8 @@ test("Pipeline9 node and global repairs produce identical SRJ18 output over HTTP
   local.solve()
   expect(local.solved).toBeTrue()
   expect(
-    local.highDensityRepairSolver!.stats.nodeBoundaryClearanceResolvedConflictCount,
+    local.highDensityRepairSolver!.stats
+      .nodeBoundaryClearanceResolvedConflictCount,
   ).toBeGreaterThan(0)
 
   const server = new ExampleHdCache2Server()

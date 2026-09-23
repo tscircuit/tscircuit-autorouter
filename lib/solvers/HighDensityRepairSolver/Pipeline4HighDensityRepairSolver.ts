@@ -563,7 +563,8 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
       maxCandidates: Math.min(256, previousConflictCount * 48),
     })
     const accepted =
-      boundaryRepair.finalConflictCount < boundaryRepair.initialConflictCount
+      boundaryRepair.initialConflictCount > 0 &&
+      boundaryRepair.finalConflictCount === 0
     if (accepted) {
       for (const [index, routeIndex] of routeIndexes.entries()) {
         const repairedRoute = boundaryRepair.routes[index]!
@@ -629,7 +630,9 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
       )
       if (
         this.enableNodeBoundaryClearanceRepair &&
-        finalConflictCount > 0 &&
+        // Partial local improvements can change later global rerouting. Only
+        // finish nearly clean nodes, and publish a completely clear result.
+        finalConflictCount === 1 &&
         this.canRepairNodeBoundary(sampleEntry, repairedRoutes)
       ) {
         this.pendingBoundaryRepairs.push({
