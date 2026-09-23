@@ -24,8 +24,7 @@ test("Pipeline9 length matching roomy-preload snapshot", async (): Promise<void>
     srjWithPointPairs: solver.srjWithPointPairs!,
     routedTraces: solver.getOutputSimplifiedPcbTraces(),
   }
-  // This snapshot records the bug; the feature test asserts desired safety.
-  expect(evaluateRelaxedDrc(drcInput).errors.length).toBeGreaterThan(0)
+  expect(evaluateRelaxedDrc(drcInput).errors).toHaveLength(0)
   await expect(getBugReportSnapshotSvg(drcInput)).toMatchSvgSnapshot(
     import.meta.path,
     {
