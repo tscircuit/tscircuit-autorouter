@@ -345,6 +345,13 @@ export const applyPipeline9BoundedRegionalRepairs = ({
     // Keep congestion history within each coupled group, but reserve calls
     // for another region instead of letting one stalled queue consume them
     // all. Every region still shares the same total call and node limits.
+    const maxPathSearchCalls = Math.min(
+      budget.maxCandidateAttemptsPerRegion ??
+        (budget.revisitChangedRegions
+          ? Math.ceil(budget.maxCandidateAttempts / 2)
+          : budget.maxCandidateAttempts),
+      budget.maxCandidateAttempts - result.candidateAttemptCount,
+    )
     const repair = negotiateTraceClearance({
       srj: region.srj,
       routes: region.routes,
@@ -352,13 +359,7 @@ export const applyPipeline9BoundedRegionalRepairs = ({
       dirtyRouteIndices,
       isLocked: (routeIndex, pointIndex): boolean =>
         region.lockedPointIndices[routeIndex]![pointIndex]!,
-      maxPathSearchCalls: Math.min(
-        budget.maxCandidateAttemptsPerRegion ??
-          (budget.revisitChangedRegions
-            ? Math.ceil(budget.maxCandidateAttempts / 2)
-            : budget.maxCandidateAttempts),
-        budget.maxCandidateAttempts - result.candidateAttemptCount,
-      ),
+      maxPathSearchCalls,
       maxPathSearchNodes:
         budget.maxPathSearchNodes - result.pathSearchNodeCount,
       maxPathSearchNodesPerCall: budget.maxPathSearchNodesPerCall,
@@ -373,6 +374,17 @@ export const applyPipeline9BoundedRegionalRepairs = ({
       viaHoleDiameter,
     })
     const { pathSearchCalls: candidateAttempts, pathSearchNodes } = repair
+    // An exhausted queue with unresolved spans means the local context is
+    // blocked. Expand it rather than spending later retries on the same collar.
+    // Keep the small context while search is still consuming its work allowance.
+    if (
+      budget.revisitChangedRegions &&
+      repair.unresolvedSpanCount > 0 &&
+      candidateAttempts < maxPathSearchCalls &&
+      pathSearchNodes < budget.maxPathSearchNodes - result.pathSearchNodeCount
+    ) {
+      regionSizes.sort((a, b) => b - a)
+    }
     if (
       !Number.isSafeInteger(candidateAttempts) ||
       candidateAttempts < 0 ||
@@ -403,6 +415,7 @@ export const applyPipeline9BoundedRegionalRepairs = ({
     let candidateRoutes = applyPipeline9ClearanceProjection({
       originalSrj,
       routes: negotiatedRoutes,
+      previousRoutes: currentRoutes,
       drcEvaluator: (input): ReturnType<DrcEvaluator> => {
         result.referenceValidationCount++
         return drcEvaluator(input)

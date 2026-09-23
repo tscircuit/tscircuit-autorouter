@@ -77,6 +77,7 @@ import {
 } from "./materializeHypergraphPreloadedTraceSections"
 import { canonicalizePipeline9HdRoutes } from "./canonicalizePipeline9HdRoutes"
 import { materializePipeline9HdRouteVias } from "./materializePipeline9HdRouteVias"
+import { simplifyPipeline9CollinearRoutePoints } from "./simplifyPipeline9CollinearRoutePoints"
 import {
   type PreparedPipeline9MutationSections,
   applyPipeline9MutatedPreloadedSections,
@@ -643,8 +644,8 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
       (cms) => [
         {
           nodeWithPortPoints: cms.highDensityNodePortPoints ?? [],
-          hdRoutes: materializePipeline9HdRouteVias(
-            cms.highDensityRouteSolver!.routes,
+          hdRoutes: simplifyPipeline9CollinearRoutePoints(
+            materializePipeline9HdRouteVias(cms.highDensityRouteSolver!.routes),
           ),
           colorMap: cms.colorMap,
           totalStepsPerNode: Math.max(12, Math.round(20 * cms.effort)),

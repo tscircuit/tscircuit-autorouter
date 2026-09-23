@@ -135,9 +135,6 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
             ),
           )
         : 0
-    this.maxGrowthAttempts =
-      params.maxGrowthAttempts ??
-      DEFAULT_MAX_GROWTH_ATTEMPTS + growthAttemptsToFitVia
     let minimumPortGap = Number.POSITIVE_INFINITY
     const ports = this.nodeWithPortPoints.portPoints
     for (let i = 0; i < ports.length; i++) {
@@ -155,16 +152,24 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
         if (gap > 1e-9) minimumPortGap = Math.min(minimumPortGap, gap)
       }
     }
-    // Always try the physical node first. If that fails, skip intermediate
-    // scales that leave the node smaller than a via or unrelated terminals
-    // closer than a trace radius, while respecting the caller's growth cap.
+    // Crowded terminals can consume the initial scales just as sub-via nodes
+    // do. Keep the normal search budget after unrelated copper can first fit.
+    const growthAttemptsToFitPorts = Math.max(
+      0,
+      Math.ceil(Math.log2((params.traceWidth ?? 0.15) / minimumPortGap)),
+    )
+    const growthAttemptsToFitGeometry = Math.max(
+      growthAttemptsToFitVia,
+      growthAttemptsToFitPorts,
+    )
+    this.maxGrowthAttempts =
+      params.maxGrowthAttempts ??
+      DEFAULT_MAX_GROWTH_ATTEMPTS + growthAttemptsToFitGeometry
+    // Preserve the existing attempt order; only extend the upper search bound.
     this.minimumGrowthAttempts = Math.min(
-      this.maxGrowthAttempts,
-      Math.max(
-        growthAttemptsToFitVia,
-        0,
-        Math.ceil(Math.log2((params.traceWidth ?? 0.15) / 2 / minimumPortGap)),
-      ),
+      params.maxGrowthAttempts ??
+        DEFAULT_MAX_GROWTH_ATTEMPTS + growthAttemptsToFitVia,
+      Math.max(growthAttemptsToFitVia, 0, growthAttemptsToFitPorts - 1),
     )
     this.MAX_ITERATIONS =
       20_000_000 * (params.effort ?? 1) * (this.maxGrowthAttempts + 1)
@@ -235,6 +240,7 @@ export class GrowShrinkHighDensityIntraNodeSolver extends BaseSolver {
       return false
     }
     this.winningSolver = solver
+    this.error = null
     this.solvedRoutes = solvedRoutes
     this.solved = true
     this.failed = false
