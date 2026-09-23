@@ -1,6 +1,9 @@
 import { expect, test } from "bun:test"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
-import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
+import {
+  combinePreloadedAndRoutedTraces,
+  evaluateRelaxedDrc,
+} from "lib/testing/evaluate-relaxed-drc"
 import { getBugReportSnapshotSvg } from "lib/testing/getBugReportSnapshotSvg"
 import type { SimpleRouteJson } from "lib/types"
 import { convertSrjToGraphicsObject } from "lib/utils/convertSrjToGraphicsObject"
@@ -50,7 +53,7 @@ test("preserves vias while completing SOT-23 breakout routing", async (): Promis
   const inputGraphics = convertSrjToGraphicsObject(input)
   const routedGraphics = convertSrjToGraphicsObject({
     ...input,
-    traces: routedTraces,
+    traces: combinePreloadedAndRoutedTraces(input.traces ?? [], routedTraces),
   })
   inputGraphics.points = []
   routedGraphics.points = []

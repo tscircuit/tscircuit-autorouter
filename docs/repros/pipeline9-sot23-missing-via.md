@@ -4,7 +4,7 @@ This reproduction comes from `tscircuit/core` PR #4121, where upgrading the auto
 
 The affected preserved trace connects `pcb_breakout_point_2` to `pcb_port_0`. Its input is entirely on the top layer. Pipeline 9 repairs this trace onto the bottom layer, but the emitted route contains consecutive top and bottom wire points near (0.200, 3.080) mm without a via. A later bottom-to-top transition still has its via. Length-matching post-processing rejects the malformed route with `changes layer without a transition`; core receives no completed routes.
 
-The snapshot shows the valid input beside the preserved copper at failure. The red circle identifies the missing transition. Solid red copper is on top; dashed blue copper is on the bottom. This first PR intentionally asserts the known failure so the reproduction can be reviewed independently. The stacked fix will replace those assertions with successful routing and explicit transition checks.
+The parent reproduction PR shows the valid input beside the preserved copper at failure, with a red circle identifying the missing transition. Solid red copper is on top; dashed blue copper is on the bottom. The fixed test replaces the failure assertion with successful routing and explicit transition checks; its updated snapshots are described below.
 
 Run on Linux:
 
