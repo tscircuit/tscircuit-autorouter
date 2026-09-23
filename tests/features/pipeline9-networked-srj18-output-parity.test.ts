@@ -6,18 +6,21 @@ import type { SimpleRouteJson } from "lib/types"
 import { ExampleHdCache2Server } from "tests/fixtures/example-hd-cache2-server"
 
 test("Pipeline9 node and global repairs produce identical SRJ18 output over HTTP", async () => {
-  const sample003 = dataset.sample003!
+  const sample004 = dataset.sample004!
   const local = new AutoroutingPipelineSolver9_PreloadedTraceGraph(
-    structuredClone(sample003) as SimpleRouteJson,
+    structuredClone(sample004) as SimpleRouteJson,
     { effort: 1 },
   )
   local.solve()
   expect(local.solved).toBeTrue()
+  expect(
+    local.highDensityRepairSolver!.stats.nodeBoundaryClearanceResolvedConflictCount,
+  ).toBeGreaterThan(0)
 
   const server = new ExampleHdCache2Server()
   try {
     const networked = new AutoroutingPipelineSolver9_Networked(
-      structuredClone(sample003) as SimpleRouteJson,
+      structuredClone(sample004) as SimpleRouteJson,
       { effort: 1, hdCache2ServerUrl: server.url },
     )
     await networked.solveAsync()
