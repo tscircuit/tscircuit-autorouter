@@ -9,6 +9,8 @@
 
 > Don't format or lint the code.
 
+> Do not edit README.md unless the user explicitly requests README changes.
+
 ## Validation Policy
 
 - Run tests, builds, and focused checks locally by default.
