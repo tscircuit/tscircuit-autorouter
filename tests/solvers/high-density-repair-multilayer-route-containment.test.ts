@@ -30,17 +30,22 @@ test("repair preparation excludes only connected routes fully inside multilayer 
     regionId: "node",
     traceThickness: 0.1,
     viaDiameter: 0.3,
-    route: [{ x: startX, y: 0, z: 0 }, { x: endX, y: 0, z: 1 }],
+    route: [
+      { x: startX, y: 0, z: 0 },
+      { x: endX, y: 0, z: 1 },
+    ],
     vias: [],
   }))
   const solver = new Pipeline4HighDensityRepairSolver({
-    nodeWithPortPoints: [{
-      capacityMeshNodeId: "node",
-      center: { x: 5, y: 0 },
-      width: 20,
-      height: 4,
-      portPoints: [],
-    }],
+    nodeWithPortPoints: [
+      {
+        capacityMeshNodeId: "node",
+        center: { x: 5, y: 0 },
+        width: 20,
+        height: 4,
+        portPoints: [],
+      },
+    ],
     hdRoutes: routes,
     obstacles,
     connMap: new ConnectivityMap({ net: ["root", "pad"] }),
@@ -48,7 +53,9 @@ test("repair preparation excludes only connected routes fully inside multilayer 
   expect(solver.sampleEntries.map((entry) => entry.routeIndexes)).toEqual([
     [1, 2, 3, 4],
   ])
-  expect(solver.sampleEntries[0].sample.nodeHdRoutes.map(
-    (route) => route.connectionName,
-  )).toEqual(["route-1", "route-2", "route-3", "route-4"])
+  expect(
+    solver.sampleEntries[0].sample.nodeHdRoutes!.map(
+      (route) => route.connectionName,
+    ),
+  ).toEqual(["route-1", "route-2", "route-3", "route-4"])
 })

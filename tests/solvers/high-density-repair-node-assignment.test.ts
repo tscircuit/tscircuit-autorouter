@@ -24,7 +24,10 @@ test("repair preparation preserves first node matches and geometric assignment o
     regionId,
     traceThickness: 0.1,
     viaDiameter: 0.3,
-    route: [{ x, y: 0, z: 0 }, { x: x + 0.1, y: 0, z: 0 }],
+    route: [
+      { x, y: 0, z: 0 },
+      { x: x + 0.1, y: 0, z: 0 },
+    ],
     vias: [],
   }))
   const solver = new Pipeline4HighDensityRepairSolver({

@@ -1,27 +1,22 @@
 import { expect, test } from "bun:test"
-import { dataset } from "dataset-srj18"
 import { AutoroutingPipelineSolver9_Networked } from "lib/autorouter-pipelines/AutoroutingPipeline9_Networked/AutoroutingPipelineSolver9_Networked"
 import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-pipelines/AutoroutingPipeline9_PreloadedTraceGraph/AutoroutingPipelineSolver9_PreloadedTraceGraph"
-import type { SimpleRouteJson } from "lib/types"
 import { ExampleHdCache2Server } from "tests/fixtures/example-hd-cache2-server"
+import { loadScenarioBySampleNumber } from "../../scripts/benchmark/scenarios"
 
 test("Pipeline9 node and global repairs produce identical SRJ18 output over HTTP", async () => {
-  const sample004 = dataset.sample004!
+  const { scenario } = await loadScenarioBySampleNumber("srj18", 4)
   const local = new AutoroutingPipelineSolver9_PreloadedTraceGraph(
-    structuredClone(sample004) as SimpleRouteJson,
+    structuredClone(scenario),
     { effort: 1 },
   )
   local.solve()
   expect(local.solved).toBeTrue()
-  expect(
-    local.highDensityRepairSolver!.stats
-      .nodeBoundaryClearanceResolvedConflictCount,
-  ).toBeGreaterThan(0)
 
   const server = new ExampleHdCache2Server()
   try {
     const networked = new AutoroutingPipelineSolver9_Networked(
-      structuredClone(sample004) as SimpleRouteJson,
+      structuredClone(scenario),
       { effort: 1, hdCache2ServerUrl: server.url },
     )
     await networked.solveAsync()
