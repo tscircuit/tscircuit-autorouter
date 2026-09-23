@@ -30,6 +30,7 @@ import {
   type FixedRouteSection,
   spliceFixedRouteSectionWithMutationMask,
 } from "./pipeline9RegionalFallback"
+import { Pipeline9RegularNodeSolver } from "./Pipeline9RegularNodeSolver"
 import { Pipeline9RegionalFallbackSolver } from "./Pipeline9RegionalFallbackSolver"
 
 export type Pipeline9HighDensitySolverParams = {
@@ -351,7 +352,7 @@ export const createPipeline9RegularNodeSolver = ({
   boardGeometry,
   layerCount,
 }: Pipeline9RegularNodeSolverParams): HighDensitySolver =>
-  new HighDensitySolver({
+  new Pipeline9RegularNodeSolver({
     nodePortPoints: [
       normalizePipeline9NodeRootConnectionNames(nodeWithPortPoints, connMap),
     ],
@@ -966,6 +967,11 @@ export class Pipeline9HighDensitySolver extends BaseSolver {
       }
       if (!this.activeRegularSolver.solved) return
 
+      const simplification = this.activeRegularSolver.stats.nodeSimplification
+      for (const key of ["inputPoints", "outputPoints", "timeMs", "obstacleCount", "routeCount"]) {
+        this.stats[`nodeSimplification_${key}`] =
+          Number(this.stats[`nodeSimplification_${key}`] ?? 0) + Number(simplification[key])
+      }
       this.finishActiveNode(this.activeRegularSolver.routes)
       return
     }

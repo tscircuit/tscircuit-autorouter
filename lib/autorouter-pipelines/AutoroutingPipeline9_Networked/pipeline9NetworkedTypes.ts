@@ -8,7 +8,7 @@ import type { Obstacle } from "../../types/srj-types"
 export type Pipeline9NetworkedCacheSource = "cache" | "solver"
 
 export const PIPELINE9_NETWORKED_SOLVE_POLICY =
-  "ordinary_then_regional_without_fixed_copper_v1" as const
+  "ordinary_node_shortcuts_then_regional_without_fixed_copper_v2" as const
 
 /**
  * Every solution-affecting input for Pipeline9's terminal single-node policy:
