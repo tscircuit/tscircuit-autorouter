@@ -1,6 +1,7 @@
 import { segmentToBoxMinDistance } from "@tscircuit/math-utils"
 import { BaseSolver } from "@tscircuit/solver-utils"
 import { VertexShortcutPathSolver } from "@tscircuit/trace-simplification-solver"
+import type { GraphicsObject } from "graphics-debug"
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { HighDensityBoardGeometry } from "lib/types/high-density-board-geometry"
 import type { HighDensityRoute, NodeWithPortPoints } from "lib/types/high-density-types"
@@ -125,7 +126,34 @@ export class Pipeline9NodeSimplificationSolver extends BaseSolver {
       minBoardEdgeClearance: this.input.boardGeometry?.minBoardEdgeClearance,
       useTraceWidthAwareClearance: true,
     }, { ...this.input, obstacles: this.localObstacles })
+    // VertexShortcutPathSolver advances at least one source vertex per step.
+    // Its inherited 1,000-step cap is too small for dense grid routes.
+    this.shortcutSolver.MAX_ITERATIONS = route.route.length + 1
     this.activeSubSolver = this.shortcutSolver as unknown as BaseSolver
+  }
+
+  override visualize(): GraphicsObject {
+    if (this.shortcutSolver) return this.shortcutSolver.visualize()
+    return {
+      lines: this.routes.flatMap((route) => route.route.slice(1).flatMap((end, index) => {
+        const start = route.route[index]!
+        if (start.z !== end.z) return []
+        return [{
+          points: [start, end],
+          strokeWidth: start.traceThickness ?? route.traceThickness,
+          strokeColor: start.z === 0 ? "red" : "blue",
+          strokeDash: start.z === 0 ? undefined : [0.1, 0.3],
+          layer: `z${start.z}`,
+          label: route.connectionName,
+        }]
+      })),
+      circles: this.routes.flatMap((route) => route.vias.map((via) => ({
+        center: via,
+        radius: route.viaDiameter / 2,
+        fill: "blue",
+        label: route.connectionName,
+      }))),
+    }
   }
 
   override getConstructorParams(): [NodeSimplificationInput] {

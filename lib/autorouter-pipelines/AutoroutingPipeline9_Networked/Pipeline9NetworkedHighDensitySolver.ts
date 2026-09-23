@@ -18,7 +18,7 @@ import {
   projectPipeline9RegionalHighDensityInput,
 } from "./pipeline9NetworkedInputProjection"
 import type { Pipeline9NetworkedHighDensityNodeInput } from "./pipeline9NetworkedTypes"
-import { PIPELINE9_NETWORKED_SOLVE_POLICY } from "./pipeline9NetworkedTypes"
+import { PIPELINE9_NETWORKED_SOLVE_POLICY, PIPELINE9_NETWORKED_NODE_SIMPLIFICATION_SOLVE_POLICY } from "./pipeline9NetworkedTypes"
 
 export { DEFAULT_HD_CACHE2_SERVER_URL } from "./HdCache2Client"
 
@@ -167,7 +167,9 @@ export class Pipeline9NetworkedHighDensitySolver extends Pipeline9HighDensitySol
       viaDiameter: this.viaDiameter,
     })
     return {
-      solvePolicy: PIPELINE9_NETWORKED_SOLVE_POLICY,
+      solvePolicy: this.enableNodeSimplification
+        ? PIPELINE9_NETWORKED_NODE_SIMPLIFICATION_SOLVE_POLICY
+        : PIPELINE9_NETWORKED_SOLVE_POLICY,
       enableRegionalFallback: this.enableRegionalFallback,
       nodeWithPortPoints: node,
       connectivityNetMap: mergePipeline9ProjectedConnectivityNetMaps(

@@ -8,6 +8,9 @@ import type { Obstacle } from "../../types/srj-types"
 export type Pipeline9NetworkedCacheSource = "cache" | "solver"
 
 export const PIPELINE9_NETWORKED_SOLVE_POLICY =
+  "ordinary_then_regional_without_fixed_copper_v1" as const
+
+export const PIPELINE9_NETWORKED_NODE_SIMPLIFICATION_SOLVE_POLICY =
   "ordinary_node_shortcuts_then_regional_without_fixed_copper_v2" as const
 
 /**
@@ -17,7 +20,9 @@ export const PIPELINE9_NETWORKED_SOLVE_POLICY =
  * helper can run in the cache service.
  */
 export type Pipeline9NetworkedHighDensityNodeInput = {
-  solvePolicy: typeof PIPELINE9_NETWORKED_SOLVE_POLICY
+  solvePolicy:
+    | typeof PIPELINE9_NETWORKED_SOLVE_POLICY
+    | typeof PIPELINE9_NETWORKED_NODE_SIMPLIFICATION_SOLVE_POLICY
   enableRegionalFallback: boolean
   nodeWithPortPoints: NodeWithPortPoints
   connectivityNetMap: Record<string, string[]>

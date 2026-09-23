@@ -1,3 +1,4 @@
+import type { GraphicsObject } from "graphics-debug"
 import { HighDensitySolver } from "lib/solvers/HighDensitySolver/HighDensitySolver"
 import type { NodeWithPortPoints } from "lib/types/high-density-types"
 import { Pipeline9NodeSimplificationSolver } from "./Pipeline9NodeSimplificationSolver"
@@ -14,6 +15,13 @@ export class Pipeline9RegularNodeSolver extends HighDensitySolver {
       throw new Error("Pipeline9RegularNodeSolver requires one node and a connectivity map")
     }
     this.node = params.nodePortPoints[0]!
+  }
+
+  override visualize(): GraphicsObject {
+    if (this.nodeSimplificationSolver) {
+      return this.nodeSimplificationSolver.visualize()
+    }
+    return super.visualize()
   }
 
   override _step(): void {
