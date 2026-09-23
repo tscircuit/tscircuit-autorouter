@@ -255,3 +255,19 @@ Cosmos uses the sample IDs. The dataset records source links, pinned revisions,
 and Pipeline 9 selection evidence. Saved outputs for the original 12 are their
 historical Pipeline 7 baseline; additions include Pipeline 9 outputs and exact
 DRC errors.
+
+### Trace style linting
+
+After a successful solve, choose **Debug → Run Trace Linting** to inspect the
+routed traces in `GenericSolverDebugger`. The linter highlights each violating
+segment and lists its trace ID, layer, and endpoint coordinates. Closing the
+panel returns to routing; resetting or changing the routing solver discards
+stale lint results.
+
+`/benchmark` reports style errors by type, starting with **Avg Angled Traces**
+(non-45-degree segments, with the linter's default 0.1° tolerance). Each row is
+an average per completed sample with recorded lint counts for that type,
+including zero-error samples. Older/unlinted artifacts show `n/a`. Linting runs
+after the routing timer stops and does not affect routing completion or DRC
+pass criteria. Per-sample counts are stored as `traceLintIssueCounts`, with
+averages in `avgTraceLintIssues` in the benchmark JSON.

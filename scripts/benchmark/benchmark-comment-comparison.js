@@ -1,3 +1,4 @@
+import { getTraceLintTypes, TRACE_LINT_LABELS } from "./trace-lint-metrics.js"
 import { renderBenchmarkStageTimings } from "./renderBenchmarkStageTimings.js"
 
 const formatTime = (timeMs) => {
@@ -163,6 +164,13 @@ const renderNetworkedColdHotComparison = (report) => {
   rows.push(
     `| Average vias | ${formatAverage(coldSummary.avgVia)} | ${formatAverage(hotSummary.avgVia)} | ${formatRelativeDelta(coldSummary.avgVia, hotSummary.avgVia)} |`,
   )
+  for (const type of getTraceLintTypes(coldSummary, hotSummary)) {
+    const coldAverage = coldSummary.avgTraceLintIssues?.[type]
+    const hotAverage = hotSummary.avgTraceLintIssues?.[type]
+    rows.push(
+      `| ${TRACE_LINT_LABELS[type] ?? `Avg ${type}`} | ${formatAverage(coldAverage)} | ${formatAverage(hotAverage)} | ${formatRelativeDelta(coldAverage, hotAverage)} |`,
+    )
+  }
   if (coldSummary.networkCache && hotSummary.networkCache) {
     rows.push(
       `| HD cache hits | ${coldSummary.networkCache.cacheHits}/${coldSummary.networkCache.remoteRequests} | ${hotSummary.networkCache.cacheHits}/${hotSummary.networkCache.remoteRequests} | ${formatCountDelta(coldSummary.networkCache.cacheHits, hotSummary.networkCache.cacheHits)} |`,
@@ -178,6 +186,7 @@ const renderNetworkedColdHotComparison = (report) => {
     "| --- | ---: | ---: | ---: |",
     ...rows,
     "",
+    "_Style errors are averaged per completed sample with recorded lint counts for that type; angled traces counts violating segments._",
     "_The cold pass starts with a workflow-unique cache namespace; the hot pass reuses it after the full cold pass and an unmeasured Workers KV propagation interval complete. Negative timing changes are faster._",
   ]
 }
@@ -247,6 +256,13 @@ export const renderBenchmarkComparison = ({
     rows.push(
       `| ${solver} | Average vias | ${formatAverage(mainSummary?.avgVia)} | ${formatAverage(prSummary.avgVia)} | ${formatRelativeDelta(mainSummary?.avgVia, prSummary.avgVia)} |`,
     )
+    for (const type of getTraceLintTypes(mainSummary, prSummary)) {
+      const mainAverage = mainSummary?.avgTraceLintIssues?.[type]
+      const prAverage = prSummary.avgTraceLintIssues?.[type]
+      rows.push(
+        `| ${solver} | ${TRACE_LINT_LABELS[type] ?? `Avg ${type}`} | ${formatAverage(mainAverage)} | ${formatAverage(prAverage)} | ${formatRelativeDelta(mainAverage, prAverage)} |`,
+      )
+    }
   }
 
   return [
@@ -257,6 +273,7 @@ export const renderBenchmarkComparison = ({
     ...rows,
     "",
     "_DRC issues are totaled across solved samples. Timing percentiles include all samples, with failed and timed-out samples counted at their configured timeout; negative timing changes are faster. Historical failures without timeout metadata make timing percentiles unavailable._",
+    "_Style errors are averaged per completed sample with recorded lint counts for that type; historical/unlinted results are n/a. Angled traces counts violating segments._",
     ...renderBenchmarkStageTimings(mainReport, "Main"),
     ...renderBenchmarkStageTimings(prReport, "PR"),
   ]

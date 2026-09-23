@@ -122,6 +122,8 @@ export type WorkerResult<
   relaxedDrcPassed: boolean
   viaCount?: number
   drcErrorCount?: number
+  /** Per-type style issue counts; absent in historical/unlinted results. */
+  traceLintIssueCounts?: Record<string, number>
   drcErrorTypes?: Record<string, number>
   drcErrorMessages?: Array<{
     message: string
@@ -170,6 +172,8 @@ export type SolverRunSummary = {
   p90TimeMs?: number | null
   p95TimeMs: number | null
   avgVia: number | null
+  /** Average issues per completed, linted sample; absent in older artifacts. */
+  avgTraceLintIssues?: Record<string, number | null>
   networkCache?: {
     remoteRequests: number
     cacheHits: number

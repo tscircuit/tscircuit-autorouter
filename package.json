@@ -112,6 +112,7 @@
   "dependencies": {
     "fast-json-stable-stringify": "^2.1.0",
     "object-hash": "^3.0.0",
-    "stack-svgs": "^0.0.1"
+    "stack-svgs": "^0.0.1",
+    "@tscircuit/pcb-trace-linter": "github:tscircuit/pcb-trace-linter#4c035f9d40ffb03ba547a08975b5e64b20371123"
   }
 }
