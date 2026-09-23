@@ -17,10 +17,29 @@ Enabled requests use `ordinary_node_grid_simplification_then_regional_without_fi
 ## Validation
 
 - 39 focused simplification and networked tests pass, plus type checking and package build.
-- The real AM3352 dense-node fixture has 4,735 points. The node-local pass reduces it below 1,000 and produces exactly the same final force-improvement output as the existing normalization at its original placement.
+- The real AM3352 dense-node fixture has 4,735 points. The node-local pass reduces it to 889 (81.2% fewer points) and produces exactly the same final force-improvement output as the existing normalization at its original placement.
 - Tests preserve sparse-node control points, input immutability, metadata, copper paths, via positions, long routes, enabled defaults, and local/worker parity.
 
-A fresh `/benchmark --dataset 18` comparison will validate this revision with the early pass enabled.
+## Dataset 18 result
+
+`/benchmark --dataset 18` compared enabled revision `28bcf42` with main `eb7e607` sequentially on the same Blacksmith machine, effort 1, 360-second per-sample timeout. [Benchmark result](https://github.com/tscircuit/tscircuit-autorouter/pull/2703#issuecomment-5804314986), [raw reports](https://github.com/tscircuit/tscircuit-autorouter/actions/runs/35930952310).
+
+| Metric | Main | Node-local pass |
+| --- | ---: | ---: |
+| Completed / relaxed DRC passed | 16/16 | 16/16 |
+| DRC errors | 0 | 0 |
+| Timeouts | 0 | 0 |
+| Median time | 99.7 s | 100.6 s (+0.9%) |
+| P95 time | 317.6 s | 323.0 s (+1.7%) |
+| Average vias | 223.88 | 223.88 |
+
+The benchmark reports zero outcome regressions. This run does not establish an overall speedup. All nine CI test shards pass at the benchmarked revision, using the original snapshots and DRC expectations. No snapshots or existing DRC assertions were changed to accept this version.
+
+Pre-force route data is identical with the early pass enabled or disabled on samples 1, 14 and 15. The sample 15 comparison required fresh processes: reusing the global router cache across both cases changes some upstream routing and is not a valid equivalence check.
+
+The AM3352 dense fixture's serialized route payload decreases from 264,817 to 60,861 bytes (77.0%). This is a fixture measurement, not network-throughput evidence. Small nodes receive no grid reduction, and via canonicalization may add explicit transition vertices.
+
+The formatting CI check remains failing. `AGENTS.md` explicitly prohibits formatting or linting; no formatter was run. The draft remains open for review.
 
 ## Rejected approaches
 
