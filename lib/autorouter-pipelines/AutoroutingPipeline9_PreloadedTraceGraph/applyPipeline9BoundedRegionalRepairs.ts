@@ -65,10 +65,7 @@ export const getPipeline9BoundedRepairBudget = (
     Math.floor(PIPELINE9_BOUNDED_REPAIR_BUDGET.maxCandidateAttempts * scale),
   )
   return {
-    // More reported contacts can occupy separate regions even on smaller
-    // boards. Keep the same candidate and node budgets across those regions.
-    maxRegions:
-      drcIssueCount >= 10 ? 8 : PIPELINE9_BOUNDED_REPAIR_BUDGET.maxRegions,
+    maxRegions: congested ? 8 : PIPELINE9_BOUNDED_REPAIR_BUDGET.maxRegions,
     maxCandidateAttempts: maxCandidateAttempts * (coarseGrid ? 2 : 1),
     maxPathSearchNodes: Math.max(
       1,

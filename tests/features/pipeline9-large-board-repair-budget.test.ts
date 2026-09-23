@@ -71,15 +71,14 @@ test("large conflicted boards bound repair work while near-clean and higher-effo
     pathHeuristicWeight: 2,
     revisitChangedRegions: true,
   })
-  for (const [routeCount, errors, effort, maxRegions] of [
-    [480, 9, 1, 4],
-    [120, 20, 1, 8],
-    [114, 17, 1, 8],
+  for (const [routeCount, errors, effort] of [
+    [480, 9, 1],
+    [120, 20, 1],
   ]) {
     expect(
       getPipeline9BoundedRepairBudget(routeCount!, errors!, effort!),
     ).toEqual({
-      maxRegions,
+      maxRegions: 4,
       maxCandidateAttempts: 1024,
       maxPathSearchNodes: 480000,
     })

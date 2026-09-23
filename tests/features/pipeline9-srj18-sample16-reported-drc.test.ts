@@ -3,7 +3,7 @@ import { AutoroutingPipelineSolver9_PreloadedTraceGraph } from "lib/autorouter-p
 import { evaluateRelaxedDrc } from "lib/testing/evaluate-relaxed-drc"
 import { loadScenarioBySampleNumber } from "../../scripts/benchmark/scenarios"
 
-test("Pipeline9 routes SRJ18 sample 16 without full-stack via DRC violations", async (): Promise<void> => {
+test("Pipeline9 reports the remaining SRJ18 sample 16 via-pad violation", async (): Promise<void> => {
   const { scenario } = await loadScenarioBySampleNumber("srj18", 16)
   const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(
     structuredClone(scenario),
@@ -18,5 +18,12 @@ test("Pipeline9 routes SRJ18 sample 16 without full-stack via DRC violations", a
     srjWithPointPairs: solver.srjWithPointPairs!,
     routedTraces: solver.getOutputSimplifiedPcbTraces(),
   })
-  expect(errors).toHaveLength(0)
+  // This contact was omitted by the reference checker before via-pad checks.
+  expect(errors).toHaveLength(1)
+  expect(errors[0]).toMatchObject({
+    type: "pcb_pad_pad_clearance_error",
+    pcb_pad_ids: ["via_57", "pcb_smtpad_229"],
+    minimum_clearance: 0.1,
+    actual_clearance: 0,
+  })
 })

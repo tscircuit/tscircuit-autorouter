@@ -30,16 +30,11 @@ type PcbViaWithTraceId = CircuitJsonElement & {
   pcb_trace_id: string
 }
 
-type ViaPadClearanceError = PcbPadPadClearanceError & {
-  pcb_via_id?: string
-  pcb_trace_id?: string
-}
-
 type DrcError =
   | PcbTraceError
   | PcbViaTraceClearanceError
   | PcbPadTraceClearanceError
-  | ViaPadClearanceError
+  | PcbPadPadClearanceError
   | PcbViaClearanceError
 
 type DrcErrorWithCenter = DrcError & { center?: Point }
@@ -104,27 +99,10 @@ export const getDrcErrors = (
         minClearance: options.traceClearance,
       })
     : []
-  const viaTraceById = new Map(
-    circuitJson
-      .filter(
-        (element): element is PcbViaWithTraceId =>
-          element.type === "pcb_via" &&
-          typeof element.pcb_trace_id === "string",
-      )
-      .map((via) => [via.pcb_via_id, via.pcb_trace_id]),
-  )
   const viaErrors = [
     ...checkViaPadClearance(circuitJson, {
       connMap,
       minClearance: viaClearance,
-    }).map((error): ViaPadClearanceError => {
-      const viaId = error.pcb_pad_ids.find((id) => viaTraceById.has(id))
-      if (!viaId) return error
-      return {
-        ...error,
-        pcb_via_id: viaId,
-        pcb_trace_id: viaTraceById.get(viaId),
-      }
     }),
     ...checkSameNetViaSpacing(circuitJson, {
       connMap,
