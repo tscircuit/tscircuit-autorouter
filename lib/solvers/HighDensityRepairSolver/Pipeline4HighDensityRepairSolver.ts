@@ -1,4 +1,3 @@
-import { areBoundsCompletelyInsidePolygon } from "@tscircuit/math-utils"
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { GraphicsObject } from "graphics-debug"
 import { HighDensityRepairSolver } from "high-density-repair02"
@@ -6,8 +5,6 @@ import type {
   DatasetSample,
   HdRoute as RepairHdRoute,
 } from "high-density-repair02"
-import { FixedCopperClearanceGuard } from "high-density-repair02/lib/high-density-repair-solver/functions/FixedCopperClearanceGuard"
-import { repairNodeClearance } from "high-density-repair02/lib/high-density-repair-solver/functions/repairNodeClearance"
 import { FlatbushIndex } from "lib/data-structures/FlatbushIndex"
 import { ObstacleSpatialHashIndex } from "lib/data-structures/ObstacleTree"
 import type {
@@ -15,7 +12,6 @@ import type {
   NodeWithPortPoints,
 } from "lib/types/high-density-types"
 import type { Obstacle } from "lib/types/srj-types"
-import type { HighDensityBoardGeometry } from "lib/types/high-density-board-geometry"
 import { BaseSolver } from "../BaseSolver"
 import { safeTransparentize } from "../colors"
 import { isObstacleConnectedToRoute } from "../TraceWidthSolver/isObstacleConnectedToRoute"
@@ -211,8 +207,6 @@ const getAdjacentObstacles = (
 export class Pipeline4HighDensityRepairSolver extends BaseSolver {
   readonly repairMargin: number
   readonly minimumTraceWidth?: number
-  readonly enableNodeBoundaryClearanceRepair: boolean
-  readonly boardGeometry?: HighDensityBoardGeometry
   readonly sampleEntries: RepairSampleEntry[]
   readonly originalHdRoutes: HighDensityRoute[]
   readonly originalNodeWithPortPoints: NodeWithPortPoints[]
@@ -222,13 +216,6 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
   readonly connMap?: ConnectivityMap
 
   repairedRoutesByIndex = new Map<number, HighDensityRoute>()
-  private readonly repairedCopperByIndex = new Map<number, RepairHdRoute>()
-  private readonly pendingBoundaryRepairs: Array<{
-    entry: RepairSampleEntry
-    previousConflictCount: number
-  }> = []
-  private boundaryRepairRouteIndex?: FlatbushIndex<{ routeIndex: number }>
-  private boundaryRepairRoutes?: RepairHdRoute[]
   activeSampleIndex = 0
   override activeSubSolver: HighDensityRepairSolver | null = null
   latestVisualization: GraphicsObject = {}
@@ -239,16 +226,11 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
     obstacles: Obstacle[]
     repairMargin?: number
     minimumTraceWidth?: number
-    enableNodeBoundaryClearanceRepair?: boolean
-    boardGeometry?: HighDensityBoardGeometry
     colorMap?: Record<string, string>
     connMap?: ConnectivityMap
   }) {
     super()
     this.repairMargin = params.repairMargin ?? DEFAULT_REPAIR_MARGIN
-    this.enableNodeBoundaryClearanceRepair =
-      params.enableNodeBoundaryClearanceRepair ?? false
-    this.boardGeometry = params.boardGeometry
     this.minimumTraceWidth = params.minimumTraceWidth
     this.originalHdRoutes = params.hdRoutes
     this.originalNodeWithPortPoints = params.nodeWithPortPoints
@@ -420,190 +402,17 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
         obstacles: this.originalObstacles,
         repairMargin: this.repairMargin,
         minimumTraceWidth: this.minimumTraceWidth,
-        enableNodeBoundaryClearanceRepair:
-          this.enableNodeBoundaryClearanceRepair,
-        boardGeometry: this.boardGeometry,
         colorMap: this.colorMap,
         connMap: this.connMap,
       },
     ] as const
   }
 
-  private canRepairNodeBoundary(
-    entry: RepairSampleEntry,
-    routes: RepairHdRoute[],
-  ): boolean {
-    const copperRadius = Math.max(
-      ...routes.map(
-        (route) => Math.max(route.traceThickness!, route.viaDiameter!) / 2,
-      ),
-    )
-    if (this.boardGeometry) {
-      const { bounds, outline, minBoardEdgeClearance } = this.boardGeometry
-      const envelope = getNodeBounds(
-        entry.node,
-        copperRadius + (minBoardEdgeClearance ?? 0),
-      )
-      const boardOutline = outline ?? [
-        { x: bounds.minX, y: bounds.minY },
-        { x: bounds.maxX, y: bounds.minY },
-        { x: bounds.maxX, y: bounds.maxY },
-        { x: bounds.minX, y: bounds.maxY },
-      ]
-      if (!areBoundsCompletelyInsidePolygon(envelope, boardOutline)) {
-        return false
-      }
-    }
-    const repairBounds = getNodeBounds(entry.node, copperRadius + 0.1)
-    return !this.originalObstacles.some((obstacle) => {
-      if (!obstacle.ccwRotationDegrees) return false
-      // Repair02 uses axis-aligned pad geometry. Include the full rotated
-      // obstacle envelope when excluding unsupported nearby pads.
-      const radius = Math.hypot(obstacle.width, obstacle.height) / 2
-      return doesRectOverlap(repairBounds, {
-        minX: obstacle.center.x - radius,
-        maxX: obstacle.center.x + radius,
-        minY: obstacle.center.y - radius,
-        maxY: obstacle.center.y + radius,
-      })
-    })
-  }
-
-  private initializeBoundaryRepairRoutes(): void {
-    this.boundaryRepairRoutes = this.originalHdRoutes.map(
-      (route, index) =>
-        this.repairedCopperByIndex.get(index) ??
-        toRepairRoute(route, this.connMap, this.minimumTraceWidth),
-    )
-    const nodeByRouteIndex = new Map<number, NodeWithPortPoints>()
-    for (const entry of this.sampleEntries) {
-      for (const index of entry.routeIndexes) {
-        nodeByRouteIndex.set(index, entry.node)
-      }
-    }
-    this.boundaryRepairRouteIndex = new FlatbushIndex<{ routeIndex: number }>(
-      this.boundaryRepairRoutes.length,
-    )
-    for (const [index, route] of this.boundaryRepairRoutes.entries()) {
-      const points = [...route.route!, ...route.vias!]
-      const node = nodeByRouteIndex.get(index)
-      const nodeBounds = node ? getNodeBounds(node) : undefined
-      const radius = Math.max(route.traceThickness!, route.viaDiameter!) / 2
-      // Include the owning node's entire envelope: later accepted repairs can
-      // move copper anywhere inside it. The immutable index then stays valid
-      // while each query reads the latest route geometry below.
-      this.boundaryRepairRouteIndex.insert(
-        { routeIndex: index },
-        Math.min(
-          ...points.map((point) => point.x),
-          nodeBounds?.minX ?? Infinity,
-        ) - radius,
-        Math.min(
-          ...points.map((point) => point.y),
-          nodeBounds?.minY ?? Infinity,
-        ) - radius,
-        Math.max(
-          ...points.map((point) => point.x),
-          nodeBounds?.maxX ?? -Infinity,
-        ) + radius,
-        Math.max(
-          ...points.map((point) => point.y),
-          nodeBounds?.maxY ?? -Infinity,
-        ) + radius,
-      )
-    }
-    this.boundaryRepairRouteIndex.finish()
-  }
-
-  private repairNextNodeBoundaryClearance(): void {
-    if (!this.boundaryRepairRoutes) this.initializeBoundaryRepairRoutes()
-    const { entry, previousConflictCount } =
-      this.pendingBoundaryRepairs.shift()!
-    const { node, sample, routeIndexes } = entry
-    const routes = routeIndexes.map(
-      (index) => this.boundaryRepairRoutes![index]!,
-    )
-    const copperRadius = Math.max(
-      ...routes.map(
-        (route) => Math.max(route.traceThickness!, route.viaDiameter!) / 2,
-      ),
-    )
-    const bounds = getNodeBounds(
-      node,
-      Math.max(this.repairMargin, copperRadius + 0.1),
-    )
-    const ownedIndexes = new Set(routeIndexes)
-    const fixedRoutes = this.boundaryRepairRouteIndex!.search(
-      bounds.minX,
-      bounds.minY,
-      bounds.maxX,
-      bounds.maxY,
-    )
-      .filter(({ routeIndex }) => !ownedIndexes.has(routeIndex))
-      .map(({ routeIndex }) => this.boundaryRepairRoutes![routeIndex]!)
-    // The buffer is a routing heuristic, not a copper rule. Run after every
-    // ordinary node repair so each candidate sees finalized neighboring copper.
-    const boundaryRepair = repairNodeClearance({
-      routes,
-      fixedRoutes,
-      boundary: {
-        ...getNodeBounds(node),
-        center: node.center,
-        width: node.width,
-        height: node.height,
-      },
-      fixedCopperGuard: new FixedCopperClearanceGuard(
-        fixedRoutes,
-        0.1,
-        sample.clearanceObstacles,
-      ),
-      adjacentObstacles: sample.adjacentObstacles,
-      clearanceObstacles: sample.clearanceObstacles,
-      boundaryMargin: 0,
-      maxCandidates: Math.min(256, previousConflictCount * 48),
-    })
-    const accepted =
-      boundaryRepair.initialConflictCount > 0 &&
-      boundaryRepair.finalConflictCount === 0
-    if (accepted) {
-      for (const [index, routeIndex] of routeIndexes.entries()) {
-        const repairedRoute = boundaryRepair.routes[index]!
-        this.boundaryRepairRoutes![routeIndex] = repairedRoute
-        this.repairedRoutesByIndex.set(
-          routeIndex,
-          fromRepairRoute(repairedRoute, this.originalHdRoutes[routeIndex]!),
-        )
-      }
-    }
-    const resolvedConflictCount = accepted
-      ? boundaryRepair.initialConflictCount - boundaryRepair.finalConflictCount
-      : 0
-    this.stats.nodeClearanceFinalConflictCount =
-      Number(this.stats.nodeClearanceFinalConflictCount) +
-      boundaryRepair.initialConflictCount -
-      resolvedConflictCount -
-      previousConflictCount
-    this.stats.nodeClearanceCandidateCount =
-      Number(this.stats.nodeClearanceCandidateCount) +
-      boundaryRepair.candidateCount
-    this.stats.nodeBoundaryClearanceResolvedConflictCount =
-      Number(this.stats.nodeBoundaryClearanceResolvedConflictCount) +
-      resolvedConflictCount
-    this.stats.nodeBoundaryClearanceCandidateCount =
-      Number(this.stats.nodeBoundaryClearanceCandidateCount) +
-      boundaryRepair.candidateCount
-    if (this.pendingBoundaryRepairs.length === 0) this.solved = true
-  }
-
   override _step() {
     const sampleEntry = this.sampleEntries[this.activeSampleIndex]
 
     if (!sampleEntry) {
-      if (this.pendingBoundaryRepairs.length > 0) {
-        this.repairNextNodeBoundaryClearance()
-      } else {
-        this.solved = true
-      }
+      this.solved = true
       return
     }
 
@@ -625,21 +434,6 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
       }
 
       const repairedRoutes = this.activeSubSolver.getOutput().repairedRoutes
-      const finalConflictCount = Number(
-        this.activeSubSolver.stats.nodeClearanceFinalConflictCount ?? 0,
-      )
-      if (
-        this.enableNodeBoundaryClearanceRepair &&
-        // Partial local improvements can change later global rerouting. Only
-        // finish nearly clean nodes, and publish a completely clear result.
-        finalConflictCount === 1 &&
-        this.canRepairNodeBoundary(sampleEntry, repairedRoutes)
-      ) {
-        this.pendingBoundaryRepairs.push({
-          entry: sampleEntry,
-          previousConflictCount: finalConflictCount,
-        })
-      }
       const clearanceStats = {
         nodeClearanceInitialConflictCount:
           Number(this.stats.nodeClearanceInitialConflictCount ?? 0) +
@@ -648,20 +442,17 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
           ),
         nodeClearanceFinalConflictCount:
           Number(this.stats.nodeClearanceFinalConflictCount ?? 0) +
-          finalConflictCount,
+          Number(
+            this.activeSubSolver.stats.nodeClearanceFinalConflictCount ?? 0,
+          ),
         nodeClearanceCandidateCount:
           Number(this.stats.nodeClearanceCandidateCount ?? 0) +
           Number(this.activeSubSolver.stats.nodeClearanceCandidateCount ?? 0),
-        nodeBoundaryClearanceResolvedConflictCount: 0,
-        nodeBoundaryClearanceCandidateCount: 0,
       }
       for (let i = 0; i < sampleEntry.routeIndexes.length; i++) {
         const routeIndex = sampleEntry.routeIndexes[i]
         const fallbackRoute = this.originalHdRoutes[routeIndex]
         const repairedRoute = repairedRoutes[i]
-        if (this.enableNodeBoundaryClearanceRepair && repairedRoute) {
-          this.repairedCopperByIndex.set(routeIndex, repairedRoute)
-        }
         this.repairedRoutesByIndex.set(
           routeIndex,
           repairedRoute
@@ -679,10 +470,7 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
         repairedRouteCount: this.repairedRoutesByIndex.size,
       }
 
-      if (
-        this.activeSampleIndex >= this.sampleEntries.length &&
-        this.pendingBoundaryRepairs.length === 0
-      ) {
+      if (this.activeSampleIndex >= this.sampleEntries.length) {
         this.solved = true
       }
       return

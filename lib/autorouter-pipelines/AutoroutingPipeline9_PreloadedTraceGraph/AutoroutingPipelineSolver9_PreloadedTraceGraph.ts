@@ -666,17 +666,6 @@ export class AutoroutingPipelineSolver9_PreloadedTraceGraph extends BaseSolver {
           colorMap: cms.colorMap,
           repairMargin: cms.srj.defaultObstacleMargin ?? 0.2,
           minimumTraceWidth: cms.srj.minTraceWidth,
-          enableNodeBoundaryClearanceRepair:
-            (cms.originalSrj.traces?.length ?? 0) === 0 &&
-            (cms.srj.minTraceToPadEdgeClearance ?? 0.1) <= 0.1 &&
-            (cms.srj.minViaEdgeToPadEdgeClearance ?? 0.1) <= 0.1 &&
-            (cms.srj.minViaHoleEdgeToViaHoleEdgeClearance ?? 0.1) <= 0.1 &&
-            (cms.srj.minPlatedHoleDrillEdgeToDrillEdgeClearance ?? 0.1) <= 0.1,
-          boardGeometry: {
-            bounds: cms.originalSrj.bounds,
-            outline: cms.originalSrj.outline,
-            minBoardEdgeClearance: cms.originalSrj.minBoardEdgeClearance,
-          },
           connMap: cms.connMap,
         },
       ],
