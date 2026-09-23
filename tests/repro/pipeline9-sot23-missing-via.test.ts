@@ -10,10 +10,7 @@ test("reproduces a missing via in a repaired SOT-23 breakout trace", async (): P
   const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(input, {
     cacheProvider: null,
   })
-  solver.solve()
-
-  expect(solver.failed).toBe(true)
-  expect(solver.error).toContain("changes layer without a transition")
+  expect(() => solver.solve()).toThrow("changes layer without a transition")
   const repairedTraces = solver.getUpdatedPreloadedTraces()
   const affectedTrace = repairedTraces.find(
     (trace) =>
