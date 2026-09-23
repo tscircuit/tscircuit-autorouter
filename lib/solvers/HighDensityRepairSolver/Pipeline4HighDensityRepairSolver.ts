@@ -5,6 +5,8 @@ import type {
   DatasetSample,
   HdRoute as RepairHdRoute,
 } from "high-density-repair02"
+import { FixedCopperClearanceGuard } from "high-density-repair02/lib/high-density-repair-solver/functions/FixedCopperClearanceGuard"
+import { repairNodeClearance } from "high-density-repair02/lib/high-density-repair-solver/functions/repairNodeClearance"
 import { FlatbushIndex } from "lib/data-structures/FlatbushIndex"
 import { ObstacleSpatialHashIndex } from "lib/data-structures/ObstacleTree"
 import type {
@@ -207,6 +209,7 @@ const getAdjacentObstacles = (
 export class Pipeline4HighDensityRepairSolver extends BaseSolver {
   readonly repairMargin: number
   readonly minimumTraceWidth?: number
+  readonly enableNodeBoundaryClearanceRepair: boolean
   readonly sampleEntries: RepairSampleEntry[]
   readonly originalHdRoutes: HighDensityRoute[]
   readonly originalNodeWithPortPoints: NodeWithPortPoints[]
@@ -226,11 +229,14 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
     obstacles: Obstacle[]
     repairMargin?: number
     minimumTraceWidth?: number
+    enableNodeBoundaryClearanceRepair?: boolean
     colorMap?: Record<string, string>
     connMap?: ConnectivityMap
   }) {
     super()
     this.repairMargin = params.repairMargin ?? DEFAULT_REPAIR_MARGIN
+    this.enableNodeBoundaryClearanceRepair =
+      params.enableNodeBoundaryClearanceRepair ?? false
     this.minimumTraceWidth = params.minimumTraceWidth
     this.originalHdRoutes = params.hdRoutes
     this.originalNodeWithPortPoints = params.nodeWithPortPoints
@@ -402,6 +408,7 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
         obstacles: this.originalObstacles,
         repairMargin: this.repairMargin,
         minimumTraceWidth: this.minimumTraceWidth,
+        enableNodeBoundaryClearanceRepair: this.enableNodeBoundaryClearanceRepair,
         colorMap: this.colorMap,
         connMap: this.connMap,
       },
@@ -433,7 +440,42 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
         return
       }
 
-      const repairedRoutes = this.activeSubSolver.getOutput().repairedRoutes
+      let repairedRoutes = this.activeSubSolver.getOutput().repairedRoutes
+      let finalConflictCount = Number(
+        this.activeSubSolver.stats.nodeClearanceFinalConflictCount ?? 0,
+      )
+      let boundaryCandidateCount = 0
+      let boundaryResolvedConflictCount = 0
+      if (this.enableNodeBoundaryClearanceRepair && finalConflictCount > 0) {
+        // The boundary buffer is a routing heuristic, not a copper rule. A
+        // legal dogleg here can prevent a much more expensive board repair.
+        // Keep physical node bounds, fixed ports, and all copper guards.
+        const { sample, node } = sampleEntry
+        const boundaryRepair = repairNodeClearance({
+          routes: repairedRoutes,
+          fixedRoutes: sample.fixedHdRoutes,
+          boundary: {
+            ...getNodeBounds(node),
+            center: node.center,
+            width: node.width,
+            height: node.height,
+          },
+          fixedCopperGuard: new FixedCopperClearanceGuard(
+            sample.fixedHdRoutes ?? [],
+            0.1,
+            sample.clearanceObstacles,
+          ),
+          adjacentObstacles: sample.adjacentObstacles,
+          clearanceObstacles: sample.clearanceObstacles,
+          boundaryMargin: 0,
+          maxCandidates: Math.min(256, finalConflictCount * 48),
+        })
+        repairedRoutes = boundaryRepair.routes
+        boundaryResolvedConflictCount =
+          finalConflictCount - boundaryRepair.finalConflictCount
+        finalConflictCount = boundaryRepair.finalConflictCount
+        boundaryCandidateCount = boundaryRepair.candidateCount
+      }
       const clearanceStats = {
         nodeClearanceInitialConflictCount:
           Number(this.stats.nodeClearanceInitialConflictCount ?? 0) +
@@ -442,12 +484,17 @@ export class Pipeline4HighDensityRepairSolver extends BaseSolver {
           ),
         nodeClearanceFinalConflictCount:
           Number(this.stats.nodeClearanceFinalConflictCount ?? 0) +
-          Number(
-            this.activeSubSolver.stats.nodeClearanceFinalConflictCount ?? 0,
-          ),
+          finalConflictCount,
         nodeClearanceCandidateCount:
           Number(this.stats.nodeClearanceCandidateCount ?? 0) +
-          Number(this.activeSubSolver.stats.nodeClearanceCandidateCount ?? 0),
+          Number(this.activeSubSolver.stats.nodeClearanceCandidateCount ?? 0) +
+          boundaryCandidateCount,
+        nodeBoundaryClearanceResolvedConflictCount:
+          Number(this.stats.nodeBoundaryClearanceResolvedConflictCount ?? 0) +
+          boundaryResolvedConflictCount,
+        nodeBoundaryClearanceCandidateCount:
+          Number(this.stats.nodeBoundaryClearanceCandidateCount ?? 0) +
+          boundaryCandidateCount,
       }
       for (let i = 0; i < sampleEntry.routeIndexes.length; i++) {
         const routeIndex = sampleEntry.routeIndexes[i]
