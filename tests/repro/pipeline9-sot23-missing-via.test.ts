@@ -24,14 +24,16 @@ test("preserves vias while completing SOT-23 breakout routing", async (): Promis
       trace.pcb_trace_id ===
       "source_trace_0__breakout:pcb_breakout_point_2_mst1_0",
   )!
-  const missingTransitions = affectedTrace.route.flatMap((point, index, route) => {
-    const nextPoint = route[index + 1]
-    return point.route_type === "wire" &&
-      nextPoint?.route_type === "wire" &&
-      point.layer !== nextPoint.layer
-      ? [{ x: point.x, y: point.y }]
-      : []
-  })
+  const missingTransitions = affectedTrace.route.flatMap(
+    (point, index, route) => {
+      const nextPoint = route[index + 1]
+      return point.route_type === "wire" &&
+        nextPoint?.route_type === "wire" &&
+        point.layer !== nextPoint.layer
+        ? [{ x: point.x, y: point.y }]
+        : []
+    },
+  )
   expect(missingTransitions).toHaveLength(0)
   const transitionVias = affectedTrace.route.filter(
     (point) => point.route_type === "via",
