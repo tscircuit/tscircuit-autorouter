@@ -7,13 +7,17 @@ import { createPipeline9LengthMatchingPreloadedInput } from "../fixtures/createP
 test("reproduce length matching violating preloaded copper clearance", async (): Promise<void> => {
   for (const preloadedY of [0.3, 1]) {
     const srj = createPipeline9LengthMatchingPreloadedInput(preloadedY)
-    const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(srj, { cacheProvider: null })
+    const solver = new AutoroutingPipelineSolver9_PreloadedTraceGraph(srj, {
+      cacheProvider: null,
+    })
     solver.solveUntilPhase("lengthMatchingPostProcessingSolver")
-    expect(evaluateRelaxedDrc({
-      inputSrj: srj,
-      srjWithPointPairs: solver.srjWithPointPairs!,
-      routedTraces: solver.getNewTracesBeforePowerExpansion(),
-    }).errors).toHaveLength(0)
+    expect(
+      evaluateRelaxedDrc({
+        inputSrj: srj,
+        srjWithPointPairs: solver.srjWithPointPairs!,
+        routedTraces: solver.getNewTracesBeforePowerExpansion(),
+      }).errors,
+    ).toHaveLength(0)
     solver.solve()
     expect(solver.solved).toBe(true)
     const drcInput = {
@@ -23,8 +27,11 @@ test("reproduce length matching violating preloaded copper clearance", async ():
     }
     // This snapshot records the bug; the feature test asserts desired safety.
     expect(evaluateRelaxedDrc(drcInput).errors.length).toBeGreaterThan(0)
-    await expect(getBugReportSnapshotSvg(drcInput)).toMatchSvgSnapshot(import.meta.path, {
-      svgName: preloadedY === 0.3 ? "tight-preload" : "roomy-preload",
-    })
+    await expect(getBugReportSnapshotSvg(drcInput)).toMatchSvgSnapshot(
+      import.meta.path,
+      {
+        svgName: preloadedY === 0.3 ? "tight-preload" : "roomy-preload",
+      },
+    )
   }
 })

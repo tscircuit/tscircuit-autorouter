@@ -1,6 +1,8 @@
 import type { SimpleRouteJson } from "lib/types"
 
-export function createPipeline9LengthMatchingPreloadedInput(preloadedY: number): SimpleRouteJson {
+export function createPipeline9LengthMatchingPreloadedInput(
+  preloadedY: number,
+): SimpleRouteJson {
   const srj: SimpleRouteJson = {
     layerCount: 2,
     minTraceWidth: 0.15,
@@ -22,16 +24,30 @@ export function createPipeline9LengthMatchingPreloadedInput(preloadedY: number):
         ],
       },
     ],
-    traces: [{
-      type: "pcb_trace",
-      pcb_trace_id: "fixed",
-      connection_name: "fixednet",
-      connectsTo: ["fixed_start", "fixed_end"],
-      route: [
-        { route_type: "wire", x: 1, y: preloadedY, width: 0.15, layer: "top" },
-        { route_type: "wire", x: 9, y: preloadedY, width: 0.15, layer: "top" },
-      ],
-    }],
+    traces: [
+      {
+        type: "pcb_trace",
+        pcb_trace_id: "fixed",
+        connection_name: "fixednet",
+        connectsTo: ["fixed_start", "fixed_end"],
+        route: [
+          {
+            route_type: "wire",
+            x: 1,
+            y: preloadedY,
+            width: 0.15,
+            layer: "top",
+          },
+          {
+            route_type: "wire",
+            x: 9,
+            y: preloadedY,
+            width: 0.15,
+            layer: "top",
+          },
+        ],
+      },
+    ],
     buses: [{ busId: "bus", connectionNames: ["a", "b"], maxLengthSkew: 0.1 }],
   }
   for (const connection of srj.connections) {
