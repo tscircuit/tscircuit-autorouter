@@ -648,7 +648,9 @@ const isLayerName = (layer: string): layer is LayerName => layerNames.has(layer)
  * Multi-layer obstacles represent plated holes and must not be deduped away
  * against top-side SMT pads that share the same connectivity metadata.
  */
-export function createPcbPadElements(srj: SimpleRouteJson): AnyCircuitElement[] {
+export function createPcbPadElements(
+  srj: SimpleRouteJson,
+): AnyCircuitElement[] {
   const pads: AnyCircuitElement[] = []
   const addedSmtPadIds = new Set<string>()
   const addedPlatedHoleIds = new Set<string>()

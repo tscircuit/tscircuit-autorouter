@@ -108,7 +108,8 @@ export const getDrcErrors = (
     circuitJson
       .filter(
         (element): element is PcbViaWithTraceId =>
-          element.type === "pcb_via" && typeof element.pcb_trace_id === "string",
+          element.type === "pcb_via" &&
+          typeof element.pcb_trace_id === "string",
       )
       .map((via) => [via.pcb_via_id, via.pcb_trace_id]),
   )
